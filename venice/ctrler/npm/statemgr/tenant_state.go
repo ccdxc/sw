@@ -1,6 +1,7 @@
 package statemgr
 
 import (
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -52,7 +53,7 @@ func (sm *Statemgr) OnTenantCreate(tn *ctkit.Tenant) error {
 }
 
 // OnTenantUpdate handles update event
-func (sm *Statemgr) OnTenantUpdate(tn *ctkit.Tenant) error {
+func (sm *Statemgr) OnTenantUpdate(tn *ctkit.Tenant, ntn *cluster.Tenant) error {
 	return nil
 }
 

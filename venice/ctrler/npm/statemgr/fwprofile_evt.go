@@ -5,8 +5,10 @@ package statemgr
 import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -88,7 +90,15 @@ func (sm *Statemgr) OnFirewallProfileCreate(fwProfile *ctkit.FirewallProfile) er
 }
 
 // OnFirewallProfileUpdate handles update event
-func (sm *Statemgr) OnFirewallProfileUpdate(fwProfile *ctkit.FirewallProfile) error {
+func (sm *Statemgr) OnFirewallProfileUpdate(fwProfile *ctkit.FirewallProfile, nfwp *security.FirewallProfile) error {
+	// see if anything changed
+	fwProfile.ObjectMeta = nfwp.ObjectMeta
+	_, ok := ref.ObjDiff(fwProfile.Spec, nfwp.Spec)
+	if (nfwp.GenerationID == fwProfile.GenerationID) && !ok {
+		return nil
+	}
+	fwProfile.Spec = nfwp.Spec
+
 	fps, err := sm.FindFirewallProfile(fwProfile.Tenant, fwProfile.Name)
 	if err != nil {
 		log.Errorf("Could not find the firewall profile %+v. Err: %v", fwProfile.ObjectMeta, err)

@@ -53,8 +53,8 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 	// verify policy gets created in agent
 	AssertEventually(c, func() (bool, interface{}) {
 		notFound := false
-		for _, ag := range it.agents {
-			rsgp, cerr := ag.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+		for _, sn := range it.snics {
+			rsgp, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
 			if (cerr != nil) || (rsgp.Name != sgp.Name) {
 				notFound = true
 			}
@@ -97,8 +97,8 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 	// verify policy gets updated in agent
 	AssertEventually(c, func() (bool, interface{}) {
 		notFound := false
-		for _, ag := range it.agents {
-			rsgp, cerr := ag.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+		for _, sn := range it.snics {
+			rsgp, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
 			if (cerr != nil) || (rsgp.Name != sgp.Name) {
 				notFound = true
 			}
@@ -132,8 +132,8 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 	// verify policy gets deleted in agent
 	AssertEventually(c, func() (bool, interface{}) {
 		found := false
-		for _, ag := range it.agents {
-			_, cerr := ag.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+		for _, sn := range it.snics {
+			_, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
 			if cerr == nil {
 				found = true
 			}
@@ -143,10 +143,9 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 }
 
 func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
+	wrloads := make([]workload.Workload, it.config.NumHosts)
 	it.createHostObjects()
 	defer it.deleteHostObjects()
-
-	wrloads := make([]workload.Workload, it.config.NumHosts)
 
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
@@ -176,8 +175,8 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 		notFound := false
 		var cerr error
 		var rsg *netproto.SecurityGroup
-		for _, ag := range it.agents {
-			rsg, cerr = ag.NetworkAgent.FindSecurityGroup(sg.ObjectMeta)
+		for _, sn := range it.snics {
+			rsg, cerr = sn.agent.NetworkAgent.FindSecurityGroup(sg.ObjectMeta)
 			if (cerr != nil) || (rsg.Name != sg.Name) {
 				notFound = true
 			}
@@ -186,7 +185,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	}, "security group not found in agent", "100ms", it.pollTimeout())
 
 	// create a workload on each NIC/host
-	for i := range it.agents {
+	for i := range it.snics {
 		// workload params
 		wrloads[i] = workload.Workload{
 			TypeMeta: api.TypeMeta{Kind: "Workload"},
@@ -214,7 +213,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	}
 
 	// wait for all endpoints to be propagated to other agents
-	for _, ag := range it.agents {
+	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
 				return len(ag.NetworkAgent.ListEndpoint()) == it.config.NumHosts, nil
@@ -224,7 +223,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 				return
 			}
 			foundLocal := false
-			for i := range it.agents {
+			for i := range it.snics {
 				epname := fmt.Sprintf("testWorkload%d-0001.0203.04%02d", i, i)
 				epmeta := api.ObjectMeta{
 					Tenant:    "default",
@@ -249,7 +248,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 				return
 			}
 			waitCh <- nil
-		}(ag)
+		}(sn.agent)
 	}
 
 	// wait for all goroutines to complete
@@ -264,8 +263,8 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	// verify policy gets removed from agent
 	AssertEventually(c, func() (bool, interface{}) {
 		found := false
-		for _, ag := range it.agents {
-			_, cerr := ag.NetworkAgent.FindSecurityGroup(sg.ObjectMeta)
+		for _, sn := range it.snics {
+			_, cerr := sn.agent.NetworkAgent.FindSecurityGroup(sg.ObjectMeta)
 			if cerr == nil {
 				found = true
 			}
@@ -274,10 +273,10 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	}, "security group still found in agent", "100ms", it.pollTimeout())
 
 	// verify SG to endpoint association is removed
-	for _, ag := range it.agents {
+	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				for i := range it.agents {
+				for i := range it.snics {
 					epname := fmt.Sprintf("testWorkload%d-0001.0203.04%02d", i, i)
 					epmeta := api.ObjectMeta{
 						Tenant:    "default",
@@ -298,7 +297,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
 				return
 			}
-			for i := range it.agents {
+			for i := range it.snics {
 				epname := fmt.Sprintf("testWorkload%d-0001.0203.04%02d", i, i)
 				epmeta := api.ObjectMeta{
 					Tenant:    "default",
@@ -318,7 +317,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 			}
 
 			waitCh <- nil
-		}(ag)
+		}(sn.agent)
 	}
 
 	// wait for all goroutines to complete
@@ -327,13 +326,13 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 	}
 
 	// delete workloads
-	for i := range it.agents {
+	for i := range it.snics {
 		_, err = it.apisrvClient.WorkloadV1().Workload().Delete(ctx, &wrloads[i].ObjectMeta)
 		AssertOk(c, err, "Error creating workload")
 	}
 
 	// verify all endpoints are gone
-	for _, ag := range it.agents {
+	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			if !CheckEventually(func() (bool, interface{}) {
 				return len(ag.NetworkAgent.ListEndpoint()) == 0, nil
@@ -343,7 +342,7 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 			}
 
 			waitCh <- nil
-		}(ag)
+		}(sn.agent)
 	}
 
 	// wait for all goroutines to complete
@@ -427,8 +426,8 @@ func (it *veniceIntegSuite) TestSGPolicyRuleWithMultipleApps(c *C) {
 	// verify policy gets created in agent
 	AssertEventually(c, func() (bool, interface{}) {
 		notFound := false
-		for _, ag := range it.agents {
-			rsgp, cerr := ag.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+		for _, sn := range it.snics {
+			rsgp, cerr := sn.agent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
 			if (cerr != nil) || (rsgp.Name != sgp.Name) || len(rsgp.Spec.Rules) != 2 {
 				notFound = true
 			}

@@ -16,10 +16,9 @@ import (
 )
 
 func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
+	wrloads := make([]workload.Workload, it.config.NumHosts)
 	it.createHostObjects()
 	defer it.deleteHostObjects()
-
-	wrloads := make([]workload.Workload, it.config.NumHosts)
 
 	ctx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
@@ -28,11 +27,11 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	waitCh := make(chan error, it.config.NumHosts*2)
 
 	// create a workload on each NIC/host
-	for i, ag := range it.agents {
+	for i, sn := range it.snics {
 		// workload params
 		var name string
-		if name, err = strconv.ParseMacAddr(ag.NetworkAgent.NodeUUID); err != nil {
-			name = ag.NetworkAgent.NodeUUID
+		if name, err = strconv.ParseMacAddr(sn.macAddr); err != nil {
+			name = sn.agent.NetworkAgent.NodeUUID
 		}
 		wrloads[i] = workload.Workload{
 			TypeMeta: api.TypeMeta{Kind: "Workload"},
@@ -45,7 +44,7 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 				HostName: fmt.Sprintf("host%d", i),
 				Interfaces: []workload.WorkloadIntfSpec{
 					{
-						MACAddress:   ag.NetworkAgent.NodeUUID,
+						MACAddress:   sn.macAddr,
 						MicroSegVlan: uint32(i + 100),
 						ExternalVlan: 1,
 					},
@@ -65,16 +64,16 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	// list all workloads
 	wrlist, err := it.restClient.WorkloadV1().Workload().List(ctx, &api.ListWatchOptions{})
 	AssertOk(c, err, "Error listing workloads")
-	Assert(c, (len(wrlist) == len(it.agents)), fmt.Sprintf("Invalid number of workloads: expected %d found %d", len(wrlist), len(it.agents)))
+	Assert(c, (len(wrlist) == len(it.snics)), fmt.Sprintf("Invalid number of workloads: expected %d found %d", len(wrlist), len(it.snics)))
 
-	for i := range it.agents {
+	for i := range it.snics {
 		gwr, gerr := it.apisrvClient.WorkloadV1().Workload().Get(ctx, &wrloads[i].ObjectMeta)
 		AssertOk(c, gerr, "Error getting workload")
 		AssertEquals(c, gwr.Spec.HostName, wrloads[i].Spec.HostName, "workload params did not match")
 	}
 
 	// wait for all endpoints to be propagated to other agents
-	for _, ag := range it.agents {
+	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
 				return len(ag.NetworkAgent.ListEndpoint()) == it.config.NumHosts, nil
@@ -85,10 +84,10 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 				return
 			}
 			foundLocal := false
-			for _, nag := range it.agents {
-				name, err := strconv.ParseMacAddr(nag.NetworkAgent.NodeUUID)
+			for _, sn := range it.snics {
+				name, err := strconv.ParseMacAddr(sn.macAddr)
 				if err != nil {
-					name = nag.NetworkAgent.NodeUUID
+					name = sn.agent.NetworkAgent.NodeUUID
 				}
 				epname := fmt.Sprintf("testWorkload-%s-%s", name, name)
 				epmeta := api.ObjectMeta{
@@ -113,7 +112,7 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 			}
 
 			waitCh <- nil
-		}(ag)
+		}(sn.agent)
 	}
 
 	// wait for all goroutines to complete
@@ -122,7 +121,7 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	}
 
 	// delete workloads
-	for i := range it.agents {
+	for i := range it.snics {
 		_, err = it.apisrvClient.WorkloadV1().Workload().Delete(ctx, &wrloads[i].ObjectMeta)
 		AssertOk(c, err, "Error deleting workload")
 	}
@@ -140,7 +139,7 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	}, "Endpoint still found in venice", "100ms", it.pollTimeout())
 
 	// verify all endpoints are gone
-	for _, ag := range it.agents {
+	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			if !CheckEventually(func() (bool, interface{}) {
 				return len(ag.NetworkAgent.ListEndpoint()) == 0, nil
@@ -150,7 +149,7 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 			}
 
 			waitCh <- nil
-		}(ag)
+		}(sn.agent)
 	}
 
 	// wait for all goroutines to complete

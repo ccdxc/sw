@@ -67,7 +67,7 @@ func (stg *securityTestGroup) testSgpolicyCreateDelete() {
 	// verify we can read the policy back
 	rsg, err := stg.suite.restSvc.SecurityV1().SGPolicy().Get(stg.suite.loggedInCtx, &sg.ObjectMeta)
 	Expect(err).ShouldNot(HaveOccurred())
-	Expect(rsg).Should(Equal(resp))
+	Expect(rsg.Spec).Should(Equal(resp.Spec))
 
 	// verify agents have the policy
 	Eventually(func() bool {

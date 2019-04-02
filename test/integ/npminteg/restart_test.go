@@ -239,8 +239,9 @@ func (it *integTestSuite) TestRestartWithWorkload(c *C) {
 	it.CreateTenant("default")
 
 	// create a host for each agent if it doesnt exist
-	for idx, ag := range it.agents {
-		it.CreateHost(fmt.Sprintf("testHost-%d", idx), ag.nagent.NetworkAgent.NodeUUID)
+	for idx := range it.agents {
+		macAddr := fmt.Sprintf("00:02:00:00:%02x:00", idx)
+		it.CreateHost(fmt.Sprintf("testHost-%d", idx), macAddr)
 	}
 
 	// create 100 workloads on each host
@@ -286,7 +287,7 @@ func (it *integTestSuite) TestRestartWithWorkload(c *C) {
 	// verify agents have all endpoints
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), nil
+			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), len(ag.nagent.NetworkAgent.ListEndpoint())
 		}, "Endpoint count incorrect in agent", "100ms", it.pollTimeout())
 	}
 

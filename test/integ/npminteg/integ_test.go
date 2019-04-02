@@ -162,7 +162,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 
 	// create agents
 	for i := 0; i < it.numAgents; i++ {
-		agent, err := CreateAgent(it.datapathKind, globals.Npm, rc)
+		agent, err := CreateAgent(it.datapathKind, globals.Npm, fmt.Sprintf("testHost-%d", i), rc)
 		c.Assert(err, IsNil)
 		it.agents = append(it.agents, agent)
 	}
@@ -181,6 +181,16 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	}
 	if err != nil {
 		c.Fatalf("cannot create grpc client. Err: %v", err)
+	}
+
+	// if not present create the default tenant
+	err = it.CreateTenant("default")
+	AssertOk(c, err, "Error creating default tenant")
+
+	// create a host for each agent
+	for i := 0; i < it.numAgents; i++ {
+		err = it.CreateHost(fmt.Sprintf("testHost-%d", i), fmt.Sprintf("00:01:%02x:00:00:00", i))
+		AssertOk(c, err, "Error creating host")
 	}
 
 	// verify agents are all connected

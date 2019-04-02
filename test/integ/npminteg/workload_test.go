@@ -5,10 +5,12 @@ package npminteg
 import (
 	"context"
 	"fmt"
+	"time"
 
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -21,43 +23,16 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	// create a wait channel
 	waitCh := make(chan error, it.numAgents*2)
 
-	// create a host for each agent
-	for idx, ag := range it.agents {
-		err := it.CreateHost(fmt.Sprintf("testHost-%d", idx), ag.nagent.NetworkAgent.NodeUUID)
-		AssertOk(c, err, "Error creating host")
-	}
-
-	// create a network in controller
-	// FIXME: we shouldnt have to create this network
-	err := it.CreateNetwork("default", "default", "Vlan-1", "10.1.0.0/22", "10.1.1.254")
-	c.Assert(err, IsNil)
-	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "Vlan-1")
-		return (nerr == nil), nil
-	}, "Network not found in statemgr")
-
-	// wait till agent has the network
-	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, interface{}) {
-			ometa := api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "Vlan-1"}
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(ometa)
-			return (nerr == nil), nil
-		}, "Network not found in agent")
-	}
-
 	// create a workload on each host
-	for i, ag := range it.agents {
-		name, err := strconv.ParseMacAddr(ag.nagent.NetworkAgent.NodeUUID)
-		if err != nil {
-			name = ag.nagent.NetworkAgent.NodeUUID
-		}
-		err = it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%s", name), fmt.Sprintf("testHost-%d", i), ag.nagent.NetworkAgent.NodeUUID, uint32(100+i), 1)
+	for i := range it.agents {
+		macAddr := fmt.Sprintf("00:02:00:00:%02x:00", i)
+		err := it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%d", i), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+i), 1)
 		AssertOk(c, err, "Error creating workload")
 	}
 
 	// verify the network got created for external vlan
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "Vlan-1")
+		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "Network-Vlan-1")
 		return (nerr == nil), nil
 	}, "Network not found in statemgr")
 
@@ -72,12 +47,10 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 				return
 			}
 			foundLocal := false
-			for _, ag := range it.agents {
-				name, err := strconv.ParseMacAddr(ag.nagent.NetworkAgent.NodeUUID)
-				if err != nil {
-					name = ag.nagent.NetworkAgent.NodeUUID
-				}
-				epname := fmt.Sprintf("testWorkload-%s-%s", name, name)
+			for idx, ag := range it.agents {
+				macAddr := fmt.Sprintf("00:02:00:00:%02x:00", idx)
+				name, _ := strconv.ParseMacAddr(macAddr)
+				epname := fmt.Sprintf("testWorkload-%d-%s", idx, name)
 				epmeta := api.ObjectMeta{
 					Tenant:    "default",
 					Namespace: "default",
@@ -107,12 +80,8 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	}
 
 	// now delete the workloads
-	for _, ag := range it.agents {
-		name, err := strconv.ParseMacAddr(ag.nagent.NetworkAgent.NodeUUID)
-		if err != nil {
-			name = ag.nagent.NetworkAgent.NodeUUID
-		}
-		err = it.DeleteWorkload("default", "default", fmt.Sprintf("testWorkload-%s", name))
+	for idx := range it.agents {
+		err := it.DeleteWorkload("default", "default", fmt.Sprintf("testWorkload-%d", idx))
 		AssertOk(c, err, "Error deleting workload")
 	}
 
@@ -135,10 +104,10 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	}
 
 	// delete the network
-	err = it.DeleteNetwork("default", "Vlan-1")
+	err := it.DeleteNetwork("default", "Network-Vlan-1")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "Vlan-1")
+		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "Network-Vlan-1")
 		return (nerr != nil), nil
 	}, "Network still found in statemgr")
 }
@@ -147,7 +116,9 @@ func (it *integTestSuite) TestNpmWorkloadValidators(c *C) {
 	// if not present create the default tenant
 	it.CreateTenant("default")
 
-	err := it.CreateWorkload("default", "default", "testWorkload-validator", "invalidHost", it.agents[0].nagent.NetworkAgent.NodeUUID, 101, 1)
+	macAddr := fmt.Sprintf("00:02:00:00:00:00")
+	wpname, _ := strconv.ParseMacAddr(macAddr)
+	err := it.CreateWorkload("default", "default", "testWorkload-validator", "invalidHost", macAddr, 101, 1)
 	Assert(c, err != nil, "was able to create workload without a host")
 
 	// create a host
@@ -155,8 +126,14 @@ func (it *integTestSuite) TestNpmWorkloadValidators(c *C) {
 	AssertOk(c, err, "Error creating host")
 
 	// create workload for the new host
-	err = it.CreateWorkload("default", "default", "testWorkload-validator", "testHost", it.agents[0].nagent.NetworkAgent.NodeUUID, 101, 1)
+	err = it.CreateWorkload("default", "default", "testWorkload-validator", "testHost", macAddr, 101, 1)
 	AssertOk(c, err, "Error creating Workload")
+
+	// verify we can find the endpoint
+	AssertEventually(c, func() (bool, interface{}) {
+		_, nerr := it.ctrler.StateMgr.FindEndpoint("default", fmt.Sprintf("testWorkload-validator-%s", wpname))
+		return (nerr == nil), nil
+	}, "Endpoint not found in statemgr")
 
 	// try updating the workload to invalid host
 	wr := workload.Workload{
@@ -170,7 +147,7 @@ func (it *integTestSuite) TestNpmWorkloadValidators(c *C) {
 			HostName: "invalid",
 			Interfaces: []workload.WorkloadIntfSpec{
 				{
-					MACAddress:   it.agents[0].nagent.NetworkAgent.NodeUUID,
+					MACAddress:   macAddr,
 					MicroSegVlan: 101,
 					ExternalVlan: 1,
 				},
@@ -194,8 +171,258 @@ func (it *integTestSuite) TestNpmWorkloadValidators(c *C) {
 	// delete the workload
 	err = it.DeleteWorkload("default", "default", "testWorkload-validator")
 	AssertOk(c, err, "Error deleting Workload")
+	time.Sleep(time.Millisecond * 10)
 
 	// finalyy delete the host
 	err = it.DeleteHost("testHost")
 	AssertOk(c, err, "Error deleting host")
+}
+
+func (it *integTestSuite) TestNpmWorkloadUpdate(c *C) {
+	// if not present create the default tenant
+	it.CreateTenant("default")
+	// create a wait channel
+	waitCh := make(chan error, it.numAgents*2)
+
+	// create a workload on each host
+	for i := range it.agents {
+		macAddr := fmt.Sprintf("00:02:00:00:%02x:00", i)
+		err := it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%d", i), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+i), 1)
+		AssertOk(c, err, "Error creating workload")
+	}
+
+	// wait for all endpoints to be propagated to other agents
+	for _, ag := range it.agents {
+		go func(ag *Dpagent) {
+			found := CheckEventually(func() (bool, interface{}) {
+				return len(ag.nagent.NetworkAgent.ListEndpoint()) == it.numAgents, nil
+			}, "10ms", it.pollTimeout())
+			if !found {
+				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
+				return
+			}
+			waitCh <- nil
+		}(ag)
+	}
+
+	// wait for all goroutines to complete
+	for i := 0; i < it.numAgents; i++ {
+		AssertOk(c, <-waitCh, "Endpoint info incorrect in datapath")
+	}
+
+	numIter := 10
+	numChange := 10
+	// update workloads
+	for iter := 0; iter < numIter; iter++ {
+		for chidx := 0; chidx < numChange; chidx++ {
+			for i := range it.agents {
+				macAddr := fmt.Sprintf("00:02:00:%02x:%02x:%02x", iter, i, chidx)
+				err := it.UpdateWorkload("default", "default", fmt.Sprintf("testWorkload-%d", i), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+i), 1)
+				AssertOk(c, err, "Error creating workload")
+			}
+		}
+
+		// wait for all endpoints to be propagated to other agents
+		for _, ag := range it.agents {
+			go func(ag *Dpagent) {
+				found := CheckEventually(func() (bool, interface{}) {
+					if len(ag.nagent.NetworkAgent.ListEndpoint()) != it.numAgents {
+						return false, nil
+					}
+
+					for idx, ag := range it.agents {
+						macAddr := fmt.Sprintf("00:02:00:%02x:%02x:%02x", iter, idx, numChange-1)
+						name, _ := strconv.ParseMacAddr(macAddr)
+						epname := fmt.Sprintf("testWorkload-%d-%s", idx, name)
+						epmeta := api.ObjectMeta{
+							Tenant:    "default",
+							Namespace: "default",
+							Name:      epname,
+						}
+						_, perr := ag.nagent.NetworkAgent.FindEndpoint(epmeta)
+						if perr != nil {
+							return false, nil
+						}
+					}
+
+					return true, nil
+				}, "10ms", it.pollTimeout())
+				if !found {
+					waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
+					return
+				}
+
+				waitCh <- nil
+			}(ag)
+		}
+
+		// wait for all goroutines to complete
+		for i := 0; i < it.numAgents; i++ {
+			AssertOk(c, <-waitCh, "Endpoint info incorrect in datapath")
+
+		}
+	}
+
+	// now delete the workloads
+	for idx := range it.agents {
+		err := it.DeleteWorkload("default", "default", fmt.Sprintf("testWorkload-%d", idx))
+		AssertOk(c, err, "Error deleting workload")
+	}
+
+	for _, ag := range it.agents {
+		go func(ag *Dpagent) {
+			if !CheckEventually(func() (bool, interface{}) {
+				return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
+			}, "10ms", it.pollTimeout()) {
+				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
+				return
+			}
+
+			waitCh <- nil
+		}(ag)
+	}
+
+	// wait for all goroutines to complete
+	for i := 0; i < it.numAgents; i++ {
+		AssertOk(c, <-waitCh, "Endpoint delete error")
+	}
+}
+
+func (it *integTestSuite) TestNpmHostUpdate(c *C) {
+	// if not present create the default tenant
+	it.CreateTenant("default")
+	// create a wait channel
+	waitCh := make(chan error, it.numAgents*2)
+
+	// create a workload on each host
+	for i := range it.agents {
+		macAddr := fmt.Sprintf("00:02:00:00:%02x:00", i)
+		err := it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%d", i), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+i), 1)
+		AssertOk(c, err, "Error creating workload")
+	}
+
+	// wait for all endpoints to be propagated to other agents
+	for _, ag := range it.agents {
+		go func(ag *Dpagent) {
+			found := CheckEventually(func() (bool, interface{}) {
+				return len(ag.nagent.NetworkAgent.ListEndpoint()) == it.numAgents, nil
+			}, "10ms", it.pollTimeout())
+			if !found {
+				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
+				return
+			}
+			waitCh <- nil
+		}(ag)
+	}
+
+	// wait for all goroutines to complete
+	for i := 0; i < it.numAgents; i++ {
+		AssertOk(c, <-waitCh, "Endpoint info incorrect in datapath")
+	}
+
+	// update host and point it to invalid smartnic
+	for i := range it.agents {
+		hostName := fmt.Sprintf("testHost-%d", i)
+		invSnicMac := fmt.Sprintf("00:05:%02x:00:00:00", i)
+
+		host := cluster.Host{
+			TypeMeta: api.TypeMeta{Kind: "Host"},
+			ObjectMeta: api.ObjectMeta{
+				Name: hostName,
+			},
+			Spec: cluster.HostSpec{
+				SmartNICs: []cluster.SmartNICID{
+					{
+						MACAddress: invSnicMac,
+					},
+				},
+			},
+			Status: cluster.HostStatus{},
+		}
+
+		_, err := it.apisrvClient.ClusterV1().Host().Update(context.Background(), &host)
+		AssertOk(c, err, "Error updating host")
+	}
+
+	// verify all the endpoints are deleted
+	for _, ag := range it.agents {
+		go func(ag *Dpagent) {
+			if !CheckEventually(func() (bool, interface{}) {
+				return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
+			}, "10ms", it.pollTimeout()) {
+				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
+				return
+			}
+
+			waitCh <- nil
+		}(ag)
+	}
+	for i := 0; i < it.numAgents; i++ {
+		AssertOk(c, <-waitCh, "Endpoint delete error")
+	}
+
+	// update host and point it to correct smartnic
+	for i := range it.agents {
+		hostName := fmt.Sprintf("testHost-%d", i)
+		snicMac := fmt.Sprintf("00:01:%02x:00:00:00", i)
+
+		host := cluster.Host{
+			TypeMeta: api.TypeMeta{Kind: "Host"},
+			ObjectMeta: api.ObjectMeta{
+				Name: hostName,
+			},
+			Spec: cluster.HostSpec{
+				SmartNICs: []cluster.SmartNICID{
+					{
+						MACAddress: snicMac,
+					},
+				},
+			},
+			Status: cluster.HostStatus{},
+		}
+
+		_, err := it.apisrvClient.ClusterV1().Host().Update(context.Background(), &host)
+		AssertOk(c, err, "Error updating host")
+	}
+
+	// verify all endpoints come back
+	for _, ag := range it.agents {
+		go func(ag *Dpagent) {
+			found := CheckEventually(func() (bool, interface{}) {
+				return len(ag.nagent.NetworkAgent.ListEndpoint()) == it.numAgents, nil
+			}, "10ms", it.pollTimeout())
+			if !found {
+				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
+				return
+			}
+			waitCh <- nil
+		}(ag)
+	}
+	for i := 0; i < it.numAgents; i++ {
+		AssertOk(c, <-waitCh, "Endpoint info incorrect in datapath")
+	}
+
+	// now delete the workloads
+	for idx := range it.agents {
+		err := it.DeleteWorkload("default", "default", fmt.Sprintf("testWorkload-%d", idx))
+		AssertOk(c, err, "Error deleting workload")
+	}
+
+	for _, ag := range it.agents {
+		go func(ag *Dpagent) {
+			if !CheckEventually(func() (bool, interface{}) {
+				return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
+			}, "10ms", it.pollTimeout()) {
+				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
+				return
+			}
+
+			waitCh <- nil
+		}(ag)
+	}
+
+	// wait for all goroutines to complete
+	for i := 0; i < it.numAgents; i++ {
+		AssertOk(c, <-waitCh, "Endpoint delete error")
+	}
 }

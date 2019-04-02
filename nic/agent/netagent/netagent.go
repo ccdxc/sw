@@ -214,9 +214,7 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		}
 
 		// set Node UUID from FRU mac addr
-		if obj.Fru != nil {
-			ag.NetworkAgent.NodeUUID = obj.Fru.MacStr
-		}
+		ag.NetworkAgent.NodeUUID = obj.SmartNicName
 		ag.mgmtIPAddr = obj.MgmtIP
 
 		// initialize netagent's tsdb client

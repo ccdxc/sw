@@ -8,6 +8,7 @@ package ctkit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -19,7 +20,6 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -47,10 +47,8 @@ func (obj *User) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.User
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.AuthV1().User().Update(context.Background(), &nobj)
+		_, err = apicl.AuthV1().User().Update(context.Background(), &obj.User)
 	} else {
 		//  create
 		_, err = apicl.AuthV1().User().Create(context.Background(), &obj.User)
@@ -62,7 +60,7 @@ func (obj *User) Write() error {
 // UserHandler is the event handler for User object
 type UserHandler interface {
 	OnUserCreate(obj *User) error
-	OnUserUpdate(obj *User) error
+	OnUserUpdate(oldObj *User, newObj *auth.User) error
 	OnUserDelete(obj *User) error
 }
 
@@ -107,22 +105,15 @@ func (ct *ctrlerCtx) handleUserEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*User)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("User_Updated_Events").Inc()
 
-					ct.stats.Counter("User_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = userHandler.OnUserUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = userHandler.OnUserUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -164,6 +155,8 @@ func (ct *ctrlerCtx) diffUser(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffUser(): UserList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*auth.User)
 	for _, obj := range objlist {
@@ -174,6 +167,7 @@ func (ct *ctrlerCtx) diffUser(apicl apiclient.Services) {
 	for _, obj := range ct.User().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffUser(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -185,6 +179,7 @@ func (ct *ctrlerCtx) diffUser(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffUser(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -301,6 +296,7 @@ type UserAPI interface {
 	Create(obj *auth.User) error
 	Update(obj *auth.User) error
 	Delete(obj *auth.User) error
+	Find(meta *api.ObjectMeta) (*User, error)
 	List() []*User
 	Watch(handler UserHandler) error
 }
@@ -364,6 +360,24 @@ func (api *userAPI) Delete(obj *auth.User) error {
 	return api.ct.handleUserEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *userAPI) Find(meta *api.ObjectMeta) (*User, error) {
+	// find the object
+	obj, err := api.ct.FindObject("User", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *User:
+		hobj := obj.(*User)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all User objects
 func (api *userAPI) List() []*User {
 	var objlist []*User
@@ -416,10 +430,8 @@ func (obj *AuthenticationPolicy) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.AuthenticationPolicy
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), &nobj)
+		_, err = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), &obj.AuthenticationPolicy)
 	} else {
 		//  create
 		_, err = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), &obj.AuthenticationPolicy)
@@ -431,7 +443,7 @@ func (obj *AuthenticationPolicy) Write() error {
 // AuthenticationPolicyHandler is the event handler for AuthenticationPolicy object
 type AuthenticationPolicyHandler interface {
 	OnAuthenticationPolicyCreate(obj *AuthenticationPolicy) error
-	OnAuthenticationPolicyUpdate(obj *AuthenticationPolicy) error
+	OnAuthenticationPolicyUpdate(oldObj *AuthenticationPolicy, newObj *auth.AuthenticationPolicy) error
 	OnAuthenticationPolicyDelete(obj *AuthenticationPolicy) error
 }
 
@@ -476,22 +488,15 @@ func (ct *ctrlerCtx) handleAuthenticationPolicyEvent(evt *kvstore.WatchEvent) er
 			} else {
 				obj := fobj.(*AuthenticationPolicy)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("AuthenticationPolicy_Updated_Events").Inc()
 
-					ct.stats.Counter("AuthenticationPolicy_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = authenticationpolicyHandler.OnAuthenticationPolicyUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -533,6 +538,8 @@ func (ct *ctrlerCtx) diffAuthenticationPolicy(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffAuthenticationPolicy(): AuthenticationPolicyList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*auth.AuthenticationPolicy)
 	for _, obj := range objlist {
@@ -543,6 +550,7 @@ func (ct *ctrlerCtx) diffAuthenticationPolicy(apicl apiclient.Services) {
 	for _, obj := range ct.AuthenticationPolicy().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffAuthenticationPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -554,6 +562,7 @@ func (ct *ctrlerCtx) diffAuthenticationPolicy(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffAuthenticationPolicy(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -670,6 +679,7 @@ type AuthenticationPolicyAPI interface {
 	Create(obj *auth.AuthenticationPolicy) error
 	Update(obj *auth.AuthenticationPolicy) error
 	Delete(obj *auth.AuthenticationPolicy) error
+	Find(meta *api.ObjectMeta) (*AuthenticationPolicy, error)
 	List() []*AuthenticationPolicy
 	Watch(handler AuthenticationPolicyHandler) error
 }
@@ -733,6 +743,24 @@ func (api *authenticationpolicyAPI) Delete(obj *auth.AuthenticationPolicy) error
 	return api.ct.handleAuthenticationPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *authenticationpolicyAPI) Find(meta *api.ObjectMeta) (*AuthenticationPolicy, error) {
+	// find the object
+	obj, err := api.ct.FindObject("AuthenticationPolicy", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *AuthenticationPolicy:
+		hobj := obj.(*AuthenticationPolicy)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all AuthenticationPolicy objects
 func (api *authenticationpolicyAPI) List() []*AuthenticationPolicy {
 	var objlist []*AuthenticationPolicy
@@ -785,10 +813,8 @@ func (obj *Role) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Role
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.AuthV1().Role().Update(context.Background(), &nobj)
+		_, err = apicl.AuthV1().Role().Update(context.Background(), &obj.Role)
 	} else {
 		//  create
 		_, err = apicl.AuthV1().Role().Create(context.Background(), &obj.Role)
@@ -800,7 +826,7 @@ func (obj *Role) Write() error {
 // RoleHandler is the event handler for Role object
 type RoleHandler interface {
 	OnRoleCreate(obj *Role) error
-	OnRoleUpdate(obj *Role) error
+	OnRoleUpdate(oldObj *Role, newObj *auth.Role) error
 	OnRoleDelete(obj *Role) error
 }
 
@@ -845,22 +871,15 @@ func (ct *ctrlerCtx) handleRoleEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Role)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Role_Updated_Events").Inc()
 
-					ct.stats.Counter("Role_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = roleHandler.OnRoleUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = roleHandler.OnRoleUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -902,6 +921,8 @@ func (ct *ctrlerCtx) diffRole(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffRole(): RoleList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*auth.Role)
 	for _, obj := range objlist {
@@ -912,6 +933,7 @@ func (ct *ctrlerCtx) diffRole(apicl apiclient.Services) {
 	for _, obj := range ct.Role().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffRole(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -923,6 +945,7 @@ func (ct *ctrlerCtx) diffRole(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffRole(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1039,6 +1062,7 @@ type RoleAPI interface {
 	Create(obj *auth.Role) error
 	Update(obj *auth.Role) error
 	Delete(obj *auth.Role) error
+	Find(meta *api.ObjectMeta) (*Role, error)
 	List() []*Role
 	Watch(handler RoleHandler) error
 }
@@ -1102,6 +1126,24 @@ func (api *roleAPI) Delete(obj *auth.Role) error {
 	return api.ct.handleRoleEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *roleAPI) Find(meta *api.ObjectMeta) (*Role, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Role", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Role:
+		hobj := obj.(*Role)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all Role objects
 func (api *roleAPI) List() []*Role {
 	var objlist []*Role
@@ -1154,10 +1196,8 @@ func (obj *RoleBinding) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.RoleBinding
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.AuthV1().RoleBinding().Update(context.Background(), &nobj)
+		_, err = apicl.AuthV1().RoleBinding().Update(context.Background(), &obj.RoleBinding)
 	} else {
 		//  create
 		_, err = apicl.AuthV1().RoleBinding().Create(context.Background(), &obj.RoleBinding)
@@ -1169,7 +1209,7 @@ func (obj *RoleBinding) Write() error {
 // RoleBindingHandler is the event handler for RoleBinding object
 type RoleBindingHandler interface {
 	OnRoleBindingCreate(obj *RoleBinding) error
-	OnRoleBindingUpdate(obj *RoleBinding) error
+	OnRoleBindingUpdate(oldObj *RoleBinding, newObj *auth.RoleBinding) error
 	OnRoleBindingDelete(obj *RoleBinding) error
 }
 
@@ -1214,22 +1254,15 @@ func (ct *ctrlerCtx) handleRoleBindingEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*RoleBinding)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("RoleBinding_Updated_Events").Inc()
 
-					ct.stats.Counter("RoleBinding_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = rolebindingHandler.OnRoleBindingUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = rolebindingHandler.OnRoleBindingUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -1271,6 +1304,8 @@ func (ct *ctrlerCtx) diffRoleBinding(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffRoleBinding(): RoleBindingList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*auth.RoleBinding)
 	for _, obj := range objlist {
@@ -1281,6 +1316,7 @@ func (ct *ctrlerCtx) diffRoleBinding(apicl apiclient.Services) {
 	for _, obj := range ct.RoleBinding().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffRoleBinding(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -1292,6 +1328,7 @@ func (ct *ctrlerCtx) diffRoleBinding(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffRoleBinding(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1408,6 +1445,7 @@ type RoleBindingAPI interface {
 	Create(obj *auth.RoleBinding) error
 	Update(obj *auth.RoleBinding) error
 	Delete(obj *auth.RoleBinding) error
+	Find(meta *api.ObjectMeta) (*RoleBinding, error)
 	List() []*RoleBinding
 	Watch(handler RoleBindingHandler) error
 }
@@ -1469,6 +1507,24 @@ func (api *rolebindingAPI) Delete(obj *auth.RoleBinding) error {
 	}
 
 	return api.ct.handleRoleBindingEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+}
+
+// Find returns an object by meta
+func (api *rolebindingAPI) Find(meta *api.ObjectMeta) (*RoleBinding, error) {
+	// find the object
+	obj, err := api.ct.FindObject("RoleBinding", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *RoleBinding:
+		hobj := obj.(*RoleBinding)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
 }
 
 // List returns a list of all RoleBinding objects

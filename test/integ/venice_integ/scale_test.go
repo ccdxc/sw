@@ -79,9 +79,9 @@ func (it *veniceIntegSuite) createScaleConfig(loginCtx context.Context, c *C, cf
 
 // verify that all objects are created at the naples
 func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, cfg *cfgen.Cfgen) {
-	waitCh := make(chan error, len(it.agents)*2)
+	waitCh := make(chan error, len(it.snics)*2)
 
-	for _, ag := range it.agents {
+	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
 				return len(ag.NetworkAgent.ListNetwork()) == len(cfg.Networks), nil
@@ -106,13 +106,13 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 			}
 
 			waitCh <- nil
-		}(ag)
+		}(sn.agent)
 	}
-	for ii := 0; ii < len(it.agents); ii++ {
+	for ii := 0; ii < len(it.snics); ii++ {
 		AssertOk(c, <-waitCh, "Scale: Network info incorrect in datapath")
 	}
 
-	for _, ag := range it.agents {
+	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
 				return len(ag.NetworkAgent.ListApp()) == len(cfg.Apps), nil
@@ -137,13 +137,13 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 			}
 
 			waitCh <- nil
-		}(ag)
+		}(sn.agent)
 	}
-	for ii := 0; ii < len(it.agents); ii++ {
+	for ii := 0; ii < len(it.snics); ii++ {
 		AssertOk(c, <-waitCh, "Scale: App info incorrect in datapath")
 	}
 
-	for _, ag := range it.agents {
+	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			found := CheckEventually(func() (bool, interface{}) {
 				return len(ag.NetworkAgent.ListSGPolicy()) == len(cfg.SGPolicies), nil
@@ -169,9 +169,9 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 			}
 
 			waitCh <- nil
-		}(ag)
+		}(sn.agent)
 	}
-	for ii := 0; ii < len(it.agents); ii++ {
+	for ii := 0; ii < len(it.snics); ii++ {
 		AssertOk(c, <-waitCh, "Scale: SGPolicy info incorrect in datapath")
 	}
 }
@@ -224,9 +224,9 @@ func (it *veniceIntegSuite) deleteScaleConfig(loginCtx context.Context, c *C, cf
 
 // verify that various objects have been deleted at the agent
 func (it *veniceIntegSuite) verifyDeleteConfig(loginCtx context.Context, c *C, cfg *cfgen.Cfgen) {
-	waitCh := make(chan error, len(it.agents)*2)
+	waitCh := make(chan error, len(it.snics)*2)
 
-	for _, ag := range it.agents {
+	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			if !CheckEventually(func() (bool, interface{}) {
 				return len(ag.NetworkAgent.ListApp()) == 0, nil
@@ -236,13 +236,13 @@ func (it *veniceIntegSuite) verifyDeleteConfig(loginCtx context.Context, c *C, c
 			}
 
 			waitCh <- nil
-		}(ag)
+		}(sn.agent)
 	}
-	for ii := 0; ii < len(it.agents); ii++ {
+	for ii := 0; ii < len(it.snics); ii++ {
 		AssertOk(c, <-waitCh, "Scale: App info incorrect in datapath")
 	}
 
-	for _, ag := range it.agents {
+	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			if !CheckEventually(func() (bool, interface{}) {
 				return len(ag.NetworkAgent.ListSGPolicy()) == 0, nil
@@ -252,13 +252,13 @@ func (it *veniceIntegSuite) verifyDeleteConfig(loginCtx context.Context, c *C, c
 			}
 
 			waitCh <- nil
-		}(ag)
+		}(sn.agent)
 	}
-	for ii := 0; ii < len(it.agents); ii++ {
+	for ii := 0; ii < len(it.snics); ii++ {
 		AssertOk(c, <-waitCh, "Scale: SGPolicy info incorrect in datapath")
 	}
 
-	for _, ag := range it.agents {
+	for _, sn := range it.snics {
 		go func(ag *netagent.Agent) {
 			if !CheckEventually(func() (bool, interface{}) {
 				return len(ag.NetworkAgent.ListNetwork()) == 0, nil
@@ -268,9 +268,9 @@ func (it *veniceIntegSuite) verifyDeleteConfig(loginCtx context.Context, c *C, c
 			}
 
 			waitCh <- nil
-		}(ag)
+		}(sn.agent)
 	}
-	for ii := 0; ii < len(it.agents); ii++ {
+	for ii := 0; ii < len(it.snics); ii++ {
 		AssertOk(c, <-waitCh, "Scale: Network info incorrect in datapath")
 	}
 

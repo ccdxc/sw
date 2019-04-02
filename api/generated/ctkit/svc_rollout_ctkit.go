@@ -8,6 +8,7 @@ package ctkit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -19,7 +20,6 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -47,10 +47,8 @@ func (obj *Rollout) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Rollout
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.RolloutV1().Rollout().Update(context.Background(), &nobj)
+		_, err = apicl.RolloutV1().Rollout().Update(context.Background(), &obj.Rollout)
 	} else {
 		//  create
 		_, err = apicl.RolloutV1().Rollout().Create(context.Background(), &obj.Rollout)
@@ -62,7 +60,7 @@ func (obj *Rollout) Write() error {
 // RolloutHandler is the event handler for Rollout object
 type RolloutHandler interface {
 	OnRolloutCreate(obj *Rollout) error
-	OnRolloutUpdate(obj *Rollout) error
+	OnRolloutUpdate(oldObj *Rollout, newObj *rollout.Rollout) error
 	OnRolloutDelete(obj *Rollout) error
 }
 
@@ -107,22 +105,15 @@ func (ct *ctrlerCtx) handleRolloutEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Rollout)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Rollout_Updated_Events").Inc()
 
-					ct.stats.Counter("Rollout_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = rolloutHandler.OnRolloutUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = rolloutHandler.OnRolloutUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -164,6 +155,8 @@ func (ct *ctrlerCtx) diffRollout(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffRollout(): RolloutList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*rollout.Rollout)
 	for _, obj := range objlist {
@@ -174,6 +167,7 @@ func (ct *ctrlerCtx) diffRollout(apicl apiclient.Services) {
 	for _, obj := range ct.Rollout().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffRollout(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -185,6 +179,7 @@ func (ct *ctrlerCtx) diffRollout(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffRollout(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -301,6 +296,7 @@ type RolloutAPI interface {
 	Create(obj *rollout.Rollout) error
 	Update(obj *rollout.Rollout) error
 	Delete(obj *rollout.Rollout) error
+	Find(meta *api.ObjectMeta) (*Rollout, error)
 	List() []*Rollout
 	Watch(handler RolloutHandler) error
 }
@@ -362,6 +358,24 @@ func (api *rolloutAPI) Delete(obj *rollout.Rollout) error {
 	}
 
 	return api.ct.handleRolloutEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+}
+
+// Find returns an object by meta
+func (api *rolloutAPI) Find(meta *api.ObjectMeta) (*Rollout, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Rollout", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Rollout:
+		hobj := obj.(*Rollout)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
 }
 
 // List returns a list of all Rollout objects

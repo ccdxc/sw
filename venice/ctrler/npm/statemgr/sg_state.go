@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api/generated/ctkit"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -209,7 +210,7 @@ func (sm *Statemgr) OnSecurityGroupCreate(sg *ctkit.SecurityGroup) error {
 }
 
 // OnSecurityGroupUpdate handles sg updates
-func (sm *Statemgr) OnSecurityGroupUpdate(sg *ctkit.SecurityGroup) error {
+func (sm *Statemgr) OnSecurityGroupUpdate(sg *ctkit.SecurityGroup, nsg *security.SecurityGroup) error {
 	return nil
 }
 

@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -319,9 +320,19 @@ func (sm *Statemgr) OnSGPolicyCreate(sgp *ctkit.SGPolicy) error {
 }
 
 // OnSGPolicyUpdate updates a sg policy
-func (sm *Statemgr) OnSGPolicyUpdate(sgp *ctkit.SGPolicy) error {
+func (sm *Statemgr) OnSGPolicyUpdate(sgp *ctkit.SGPolicy, nsgp *security.SGPolicy) error {
+	log.Infof("Got sgpolicy update for %#v, %d rules. have %d rules", nsgp.ObjectMeta, len(nsgp.Spec.Rules), len(sgp.Spec.Rules))
+
+	// see if anything changed
+	sgp.ObjectMeta = nsgp.ObjectMeta
+	_, ok := ref.ObjDiff(sgp.Spec, nsgp.Spec)
+	if (nsgp.GenerationID == sgp.GenerationID) && !ok {
+		return nil
+	}
+	sgp.Spec = nsgp.Spec
+
 	// find the policy state
-	sgps, err := sm.FindSgpolicy(sgp.ObjectMeta.Tenant, sgp.ObjectMeta.Name)
+	sgps, err := SgpolicyStateFromObj(sgp)
 	if err != nil {
 		log.Errorf("Can find sg policy for updating {%+v}. Err: {%v}", sgp.ObjectMeta, err)
 		return fmt.Errorf("Can not find sg policy")
@@ -347,6 +358,8 @@ func (sm *Statemgr) OnSGPolicyUpdate(sgp *ctkit.SGPolicy) error {
 		log.Errorf("Error attching policy to sgs. Err: %v", err)
 		return err
 	}
+
+	log.Infof("Updated sgpolicy %#v", sgp.ObjectMeta)
 
 	return nil
 }

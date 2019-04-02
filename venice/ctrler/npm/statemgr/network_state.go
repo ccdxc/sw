@@ -12,6 +12,7 @@ import (
 	"github.com/willf/bitset"
 
 	"github.com/pensando/sw/api/generated/ctkit"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -86,9 +87,6 @@ func convertNetwork(nw *NetworkState) *netproto.Network {
 // allocIPv4Addr allocates new IP address
 func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 	var allocatedAddr string
-	// lock the network for bit allocation
-	ns.Lock()
-	defer ns.Unlock()
 
 	// parse the subnet
 	baseAddr, ipnet, err := net.ParseCIDR(ns.Network.Spec.IPv4Subnet)
@@ -154,9 +152,6 @@ func (ns *NetworkState) allocIPv4Addr(reqAddr string) (string, error) {
 
 // freeIPv4Addr free the address
 func (ns *NetworkState) freeIPv4Addr(reqAddr string) error {
-	ns.Lock()
-	defer ns.Unlock()
-
 	log.Infof("Freeing IPv4 address: %v", reqAddr)
 
 	reqIP, _, err := net.ParseCIDR(reqAddr)
@@ -212,7 +207,11 @@ func (ns *NetworkState) FindEndpoint(epName string) (*EndpointState, bool) {
 
 	// find the endpoint in the DB
 	eps, ok := ns.endpointDB[epName]
-	return eps, ok
+	if !ok {
+		return nil, ok
+	}
+
+	return eps, true
 }
 
 // ListEndpoints lists all endpoints on this network
@@ -275,6 +274,8 @@ func NewNetworkState(nw *ctkit.Network, stateMgr *Statemgr) (*NetworkState, erro
 		stateMgr:   stateMgr,
 	}
 	nw.HandlerCtx = ns
+	ns.Lock()
+	defer ns.Unlock()
 
 	// mark gateway addr as used
 	if nw.Spec.IPv4Gateway != "" {
@@ -344,7 +345,7 @@ func (sm *Statemgr) OnNetworkCreate(nw *ctkit.Network) error {
 }
 
 // OnNetworkUpdate handles network update
-func (sm *Statemgr) OnNetworkUpdate(nw *ctkit.Network) error {
+func (sm *Statemgr) OnNetworkUpdate(nw *ctkit.Network, nnw *network.Network) error {
 	return nil
 }
 

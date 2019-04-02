@@ -43,23 +43,23 @@ func EndpointStateFromObj(obj runtime.Object) (*EndpointState, error) {
 	}
 }
 
-func convertEndpoint(eps *EndpointState) *netproto.Endpoint {
+func convertEndpoint(eps *workload.Endpoint) *netproto.Endpoint {
 	// build endpoint
 	nep := netproto.Endpoint{
-		TypeMeta:   eps.Endpoint.TypeMeta,
-		ObjectMeta: agentObjectMeta(eps.Endpoint.ObjectMeta),
+		TypeMeta:   eps.TypeMeta,
+		ObjectMeta: agentObjectMeta(eps.ObjectMeta),
 		Spec: netproto.EndpointSpec{
-			WorkloadName:       eps.Endpoint.Status.WorkloadName,
-			WorkloadAttributes: eps.Endpoint.Status.WorkloadAttributes,
-			NetworkName:        eps.Endpoint.Status.Network,
-			SecurityGroups:     eps.Endpoint.Status.SecurityGroups,
-			IPv4Address:        eps.Endpoint.Status.IPv4Address,
-			IPv4Gateway:        eps.Endpoint.Status.IPv4Gateway,
-			IPv6Address:        eps.Endpoint.Status.IPv6Address,
-			IPv6Gateway:        eps.Endpoint.Status.IPv6Gateway,
-			MacAddress:         eps.Endpoint.Status.MacAddress,
-			UsegVlan:           eps.Endpoint.Status.MicroSegmentVlan,
-			NodeUUID:           eps.Endpoint.Status.NodeUUID,
+			WorkloadName:       eps.Status.WorkloadName,
+			WorkloadAttributes: eps.Status.WorkloadAttributes,
+			NetworkName:        eps.Status.Network,
+			SecurityGroups:     eps.Status.SecurityGroups,
+			IPv4Address:        eps.Status.IPv4Address,
+			IPv4Gateway:        eps.Status.IPv4Gateway,
+			IPv6Address:        eps.Status.IPv6Address,
+			IPv6Gateway:        eps.Status.IPv6Gateway,
+			MacAddress:         eps.Status.MacAddress,
+			UsegVlan:           eps.Status.MicroSegmentVlan,
+			NodeUUID:           eps.Status.NodeUUID,
 		},
 	}
 
@@ -83,7 +83,7 @@ func (eps *EndpointState) AddSecurityGroup(sgs *SecurityGroupState) error {
 		return err
 	}
 
-	return eps.stateMgr.mbus.UpdateObject(convertEndpoint(eps))
+	return eps.stateMgr.mbus.UpdateObject(convertEndpoint(&eps.Endpoint.Endpoint))
 }
 
 // DelSecurityGroup removes a security group from an endpoint
@@ -104,7 +104,7 @@ func (eps *EndpointState) DelSecurityGroup(sgs *SecurityGroupState) error {
 	}
 	delete(eps.groups, sgs.SecurityGroup.Name)
 
-	return eps.stateMgr.mbus.UpdateObject(convertEndpoint(eps))
+	return eps.stateMgr.mbus.UpdateObject(convertEndpoint(&eps.Endpoint.Endpoint))
 }
 
 // attachSecurityGroups attach all security groups
@@ -240,12 +240,17 @@ func (sm *Statemgr) ListEndpoints() ([]*EndpointState, error) {
 
 // OnEndpointCreate creates an endpoint
 func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
+	log.Infof("Creating endpoint: %#v", epinfo)
+
 	// find network
 	ns, err := sm.FindNetwork(epinfo.Tenant, epinfo.Status.Network)
 	if err != nil {
 		log.Errorf("could not find the network %s for endpoint %+v. Err: %v", epinfo.Status.Network, epinfo.ObjectMeta, err)
 		return err
 	}
+
+	ns.Lock()
+	defer ns.Unlock()
 
 	if ns.Network.Spec.IPv4Subnet != "" {
 		// allocate an IP address
@@ -273,6 +278,12 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 			epinfo.Status.MacAddress = macAddr.String()
 		}
 
+		// write the modified network state to api server
+		err = ns.Network.Write()
+		if err != nil {
+			log.Errorf("Error writing the network object. Err: %v", err)
+			return err
+		}
 	}
 
 	// create a new endpoint instance
@@ -283,27 +294,22 @@ func (sm *Statemgr) OnEndpointCreate(epinfo *ctkit.Endpoint) error {
 	}
 
 	// save the endpoint in the database
-	ns.Lock()
 	ns.endpointDB[eps.endpointKey()] = eps
-	ns.Unlock()
-	sm.mbus.AddObject(convertEndpoint(eps))
+	sm.mbus.AddObject(convertEndpoint(&epinfo.Endpoint))
 
-	// write the modified network state to api server
-	err = ns.Network.Write()
-	if err != nil {
-		log.Errorf("Error writing the network object. Err: %v", err)
-		return err
-	}
 	return nil
 }
 
 // OnEndpointUpdate handles update event
-func (sm *Statemgr) OnEndpointUpdate(epinfo *ctkit.Endpoint) error {
-	return fmt.Errorf("Endpoint update not implemented")
+func (sm *Statemgr) OnEndpointUpdate(epinfo *ctkit.Endpoint, nep *workload.Endpoint) error {
+	epinfo.ObjectMeta = nep.ObjectMeta
+	return nil
 }
 
 // OnEndpointDelete deletes an endpoint
 func (sm *Statemgr) OnEndpointDelete(epinfo *ctkit.Endpoint) error {
+	log.Infof("Deleting Endpoint: %#v", epinfo)
+
 	// see if we have the endpoint
 	eps, err := sm.FindEndpoint(epinfo.Tenant, epinfo.Name)
 	if err != nil {
@@ -317,12 +323,20 @@ func (sm *Statemgr) OnEndpointDelete(epinfo *ctkit.Endpoint) error {
 		log.Errorf("could not find the network %s for endpoint %+v. Err: %v", epinfo.Status.Network, epinfo.ObjectMeta, err)
 		return err
 	}
+	ns.Lock()
+	defer ns.Unlock()
 
 	// free the IPv4 address
 	if eps.Endpoint.Status.IPv4Address != "" {
 		err = ns.freeIPv4Addr(eps.Endpoint.Status.IPv4Address)
 		if err != nil {
 			log.Errorf("Error freeing the endpoint address. Err: %v", err)
+		}
+
+		// write the modified network state to api server
+		err = ns.Network.Write()
+		if err != nil {
+			log.Errorf("Error writing the network object. Err: %v", err)
 		}
 	}
 
@@ -332,18 +346,10 @@ func (sm *Statemgr) OnEndpointDelete(epinfo *ctkit.Endpoint) error {
 		log.Errorf("Error deleting the endpoint{%+v}. Err: %v", eps, err)
 	}
 	// remove it from the database
-	ns.Lock()
 	delete(ns.endpointDB, eps.endpointKey())
-	ns.Unlock()
-	sm.mbus.DeleteObject(convertEndpoint(eps))
+	sm.mbus.DeleteObject(convertEndpoint(&eps.Endpoint.Endpoint))
 
 	log.Infof("Deleted endpoint: %+v", eps)
-
-	// write the modified network state to api server
-	err = ns.Network.Write()
-	if err != nil {
-		log.Errorf("Error writing the network object. Err: %v", err)
-	}
 
 	return nil
 }

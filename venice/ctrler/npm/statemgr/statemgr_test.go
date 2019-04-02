@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/venice/utils/ref"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
@@ -224,12 +225,13 @@ func TestEndpointCreateDelete(t *testing.T) {
 			HomingHostName: "testHost",
 		},
 	}
+
 	err = stateMgr.ctrler.Endpoint().Create(&newEP)
 	AssertOk(t, err, "Endpoint failed")
 
 	nep, err := stateMgr.FindEndpoint("default", "newEndpoint")
 	AssertOk(t, err, "Error finding the endpoint")
-	Assert(t, (nep.Endpoint.Status.IPv4Address == "10.1.1.2/24"), "Endpoint address did not match", eps)
+	Assert(t, (nep.Endpoint.Status.IPv4Address == "10.1.1.2/24"), "Endpoint address did not match", nep)
 
 	// delete the endpoint
 	err = stateMgr.ctrler.Endpoint().Delete(&epinfo)
@@ -245,7 +247,7 @@ func TestEndpointCreateDelete(t *testing.T) {
 
 	// delete the second endpoint
 	err = stateMgr.ctrler.Endpoint().Delete(&newEP)
-	Assert(t, (err == nil), "Error deleting the endpoint", epinfo)
+	Assert(t, (err == nil), "Error deleting the endpoint", newEP)
 }
 
 func TestEndpointCreateFailure(t *testing.T) {
@@ -797,6 +799,154 @@ func TestWorkloadCreateDelete(t *testing.T) {
 	Assert(t, (ok == false), "Deleted endpoint still found in network db", "testWorkload-0001.0203.0405")
 }
 
+func TestWorkloadUpdate(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// smartNic params
+	snic := cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testSmartNIC",
+		},
+		Spec: cluster.SmartNICSpec{},
+		Status: cluster.SmartNICStatus{
+			PrimaryMAC: "00:01:02:03:04:05",
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.ctrler.SmartNIC().Create(&snic)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	// host params
+	host := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testHost",
+		},
+		Spec: cluster.HostSpec{
+			SmartNICs: []cluster.SmartNICID{
+				{
+					MACAddress: "00:01:02:03:04:05",
+				},
+			},
+		},
+	}
+
+	// create the host
+	err = stateMgr.ctrler.Host().Create(&host)
+	AssertOk(t, err, "Could not create the host")
+
+	// workload params
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "testHost",
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "00:01:02:03:04:05",
+					MicroSegVlan: 100,
+					ExternalVlan: 1,
+				},
+			},
+		},
+	}
+
+	// create the workload
+	err = stateMgr.ctrler.Workload().Create(&wr)
+	AssertOk(t, err, "Could not create the workload")
+
+	// verify we can find the endpoint associated with the workload
+	foundEp, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
+	AssertOk(t, err, "Could not find the endpoint")
+	Assert(t, (foundEp.Endpoint.Status.WorkloadName == wr.Name), "endpoint params did not match")
+
+	// update workload external vlan
+	nwr := ref.DeepCopy(wr).(workload.Workload)
+	nwr.Spec.Interfaces[0].ExternalVlan = 2
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	// verify we can find the new network for the workload
+	nw, err := stateMgr.FindNetwork("default", "Network-Vlan-2")
+	AssertOk(t, err, "Could not find updated network")
+
+	foundEp, ok := nw.FindEndpoint("testWorkload-0001.0203.0405")
+	Assert(t, ok, "Could not find the endpoint", "testWorkload-0001.0203.0405")
+	Assert(t, (foundEp.Endpoint.Status.Network == nw.Network.Name), "endpoint network did not match")
+
+	// change mac address of the workload
+	nwr = ref.DeepCopy(nwr).(workload.Workload)
+	nwr.Spec.Interfaces[0].MACAddress = "00:01:02:01:02:03"
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	// verify old endpoint is deleted
+	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
+	Assert(t, (err != nil), "found endpoint with old mac address", foundEp)
+	_, ok = nw.FindEndpoint("testWorkload-00:01:02:03:04:05")
+	Assert(t, (ok == false), "old endpoint still found in network db", "testWorkload-00:01:02:03:04:05")
+
+	// verify new endpoint is created
+	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0201.0203")
+	AssertOk(t, err, "Could not find the new endpoint")
+
+	// change useg vlan
+	nwr = ref.DeepCopy(nwr).(workload.Workload)
+	nwr.Spec.Interfaces[0].MicroSegVlan = 101
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	// verify new endpoint has new useg vlan
+	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0201.0203")
+	AssertOk(t, err, "Could not find the new endpoint")
+	Assert(t, (foundEp.Endpoint.Status.MicroSegmentVlan == 101), "endpoint useg vlan did not match")
+
+	// add new interface to workload
+	newIntf := workload.WorkloadIntfSpec{
+		MACAddress:   "00:02:04:06:08:00",
+		MicroSegVlan: 200,
+		ExternalVlan: 1,
+	}
+	nwr = ref.DeepCopy(nwr).(workload.Workload)
+	nwr.Spec.Interfaces = append(nwr.Spec.Interfaces, newIntf)
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	// verify we can find the new endpoint
+	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0002.0406.0800")
+	AssertOk(t, err, "Could not find the new endpoint")
+	Assert(t, (foundEp.Endpoint.Status.MicroSegmentVlan == 200), "endpoint useg vlan did not match")
+
+	// delete second interface
+	nwr = ref.DeepCopy(nwr).(workload.Workload)
+	nwr.Spec.Interfaces = nwr.Spec.Interfaces[0:1]
+	err = stateMgr.ctrler.Workload().Update(&nwr)
+	AssertOk(t, err, "Could not update the workload")
+
+	// verify endpoint is gone
+	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0002.0406.0800")
+	Assert(t, (err != nil), "found endpoint for deleted interface", foundEp)
+
+	// delete the workload
+	err = stateMgr.ctrler.Workload().Delete(&nwr)
+	AssertOk(t, err, "Error deleting the workload")
+
+	// verify endpoint is gone from the database
+	_, ok = nw.FindEndpoint("testWorkload-0001.0201.0203")
+	Assert(t, (ok == false), "Deleted endpoint still found in network db", "testWorkload-0001.0201.0203")
+}
+
 func TestHostCreateDelete(t *testing.T) {
 	// create network state manager
 	stateMgr, err := newStatemgr()
@@ -836,6 +986,118 @@ func TestHostCreateDelete(t *testing.T) {
 	// verify endpoint is gone from the database
 	_, err = stateMgr.FindHost("default", "testHost")
 	Assert(t, (err != nil), "Deleted host still found in db")
+}
+
+func TestHostUpdates(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// host params
+	host := cluster.Host{
+		TypeMeta: api.TypeMeta{Kind: "Host"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testHost",
+		},
+		Spec: cluster.HostSpec{
+			SmartNICs: []cluster.SmartNICID{
+				{
+					MACAddress: "00:01:02:03:04:05",
+				},
+			},
+		},
+	}
+
+	// create the host
+	err = stateMgr.ctrler.Host().Create(&host)
+	AssertOk(t, err, "Could not create the host")
+
+	// verify we can find the endpoint associated with the host
+	_, err = stateMgr.FindHost("default", "testHost")
+	AssertOk(t, err, "Could not find the host")
+
+	// create a workload on the host
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testWorkload",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: "testHost",
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   "00:01:02:03:04:05",
+					MicroSegVlan: 100,
+					ExternalVlan: 1,
+				},
+			},
+		},
+	}
+
+	// create the workload
+	err = stateMgr.ctrler.Workload().Create(&wr)
+	AssertOk(t, err, "workload create failed")
+
+	// verify we can not find the endpoint associated with the workload
+	_, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
+	Assert(t, err != nil, "Endpoint got created without smartnic")
+
+	// create the smartnic
+	snic := cluster.SmartNIC{
+		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testSmartNIC",
+		},
+		Spec: cluster.SmartNICSpec{
+			Hostname: "test-snic",
+		},
+		Status: cluster.SmartNICStatus{
+			PrimaryMAC: "00:01:02:03:04:05",
+		},
+	}
+
+	// create the smartNic
+	err = stateMgr.ctrler.SmartNIC().Create(&snic)
+	AssertOk(t, err, "Could not create the smartNic")
+
+	foundEP, err := stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
+	AssertOk(t, err, "could not find the endpoint")
+	Assert(t, foundEP.Endpoint.Status.NodeUUID == snic.Name, "Endpoint nodeUUID did not match")
+
+	// change host's mac address
+	nhst := ref.DeepCopy(host).(cluster.Host)
+	nhst.Spec.SmartNICs[0].MACAddress = "00:02:04:06:08:00"
+	err = stateMgr.ctrler.Host().Update(&nhst)
+	AssertOk(t, err, "Error updating the host")
+
+	// verify the endpoint is gone
+	_, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
+	Assert(t, err != nil, "endpoint still found when host isnt associated with snic")
+
+	// now associate by name
+	nhst = ref.DeepCopy(nhst).(cluster.Host)
+	nhst.Spec.SmartNICs[0].MACAddress = ""
+	nhst.Spec.SmartNICs[0].Name = "test-snic"
+	err = stateMgr.ctrler.Host().Update(&nhst)
+	AssertOk(t, err, "Error updating the host")
+
+	// verify we can find the endpoint
+	foundEP, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
+	AssertOk(t, err, "could not find the endpoint")
+	Assert(t, foundEP.Endpoint.Status.NodeUUID == snic.Name, "Endpoint nodeUUID did not match")
+
+	// delete the host
+	err = stateMgr.ctrler.SmartNIC().Delete(&snic)
+	AssertOk(t, err, "Error deleting the host")
+
+	// verify endpoint is gone from the database
+	_, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
+	Assert(t, err != nil, "endpoint still found when host isnt associated with snic")
 }
 
 func TestSmartNicCreateDelete(t *testing.T) {

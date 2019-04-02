@@ -8,6 +8,7 @@ package ctkit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -19,7 +20,6 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -47,10 +47,8 @@ func (obj *Buffer) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Buffer
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.StagingV1().Buffer().Update(context.Background(), &nobj)
+		_, err = apicl.StagingV1().Buffer().Update(context.Background(), &obj.Buffer)
 	} else {
 		//  create
 		_, err = apicl.StagingV1().Buffer().Create(context.Background(), &obj.Buffer)
@@ -62,7 +60,7 @@ func (obj *Buffer) Write() error {
 // BufferHandler is the event handler for Buffer object
 type BufferHandler interface {
 	OnBufferCreate(obj *Buffer) error
-	OnBufferUpdate(obj *Buffer) error
+	OnBufferUpdate(oldObj *Buffer, newObj *staging.Buffer) error
 	OnBufferDelete(obj *Buffer) error
 }
 
@@ -107,22 +105,15 @@ func (ct *ctrlerCtx) handleBufferEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Buffer)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Buffer_Updated_Events").Inc()
 
-					ct.stats.Counter("Buffer_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = bufferHandler.OnBufferUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = bufferHandler.OnBufferUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -164,6 +155,8 @@ func (ct *ctrlerCtx) diffBuffer(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffBuffer(): BufferList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*staging.Buffer)
 	for _, obj := range objlist {
@@ -174,6 +167,7 @@ func (ct *ctrlerCtx) diffBuffer(apicl apiclient.Services) {
 	for _, obj := range ct.Buffer().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffBuffer(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -185,6 +179,7 @@ func (ct *ctrlerCtx) diffBuffer(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffBuffer(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -301,6 +296,7 @@ type BufferAPI interface {
 	Create(obj *staging.Buffer) error
 	Update(obj *staging.Buffer) error
 	Delete(obj *staging.Buffer) error
+	Find(meta *api.ObjectMeta) (*Buffer, error)
 	List() []*Buffer
 	Watch(handler BufferHandler) error
 }
@@ -362,6 +358,24 @@ func (api *bufferAPI) Delete(obj *staging.Buffer) error {
 	}
 
 	return api.ct.handleBufferEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+}
+
+// Find returns an object by meta
+func (api *bufferAPI) Find(meta *api.ObjectMeta) (*Buffer, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Buffer", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Buffer:
+		hobj := obj.(*Buffer)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
 }
 
 // List returns a list of all Buffer objects

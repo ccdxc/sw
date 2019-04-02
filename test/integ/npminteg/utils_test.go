@@ -38,7 +38,7 @@ func (it *integTestSuite) pollTimeout() string {
 }
 
 // CreateAgent creates an instance of agent
-func CreateAgent(kind datapath.Kind, srvURL string, resolver resolver.Interface) (*Dpagent, error) {
+func CreateAgent(kind datapath.Kind, srvURL, nodeUUID string, resolver resolver.Interface) (*Dpagent, error) {
 	// create new network agent
 	nagent, err := netagent.NewAgent(kind.String(), "", srvURL, resolver, state.AgentMode_MANAGED)
 	if err != nil {
@@ -52,6 +52,7 @@ func CreateAgent(kind datapath.Kind, srvURL string, resolver resolver.Interface)
 		return nil, err
 	}
 	nagent.RestServer = restServer
+	nagent.NetworkAgent.NodeUUID = nodeUUID
 
 	// Create NPM Client.
 	// TODO Remove this when nmd and delphi hub are integrated with venice_integ and npm_integ
@@ -297,6 +298,33 @@ func (it *integTestSuite) CreateWorkload(tenant, namespace, name, host, macAddr 
 	return err
 }
 
+// UpdateWorkload updates an existing workload
+func (it *integTestSuite) UpdateWorkload(tenant, namespace, name, host, macAddr string, usegVlan, extVlan uint32) error {
+	// build workload object
+	wr := workload.Workload{
+		TypeMeta: api.TypeMeta{Kind: "Workload"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Tenant:    tenant,
+		},
+		Spec: workload.WorkloadSpec{
+			HostName: host,
+			Interfaces: []workload.WorkloadIntfSpec{
+				{
+					MACAddress:   macAddr,
+					MicroSegVlan: usegVlan,
+					ExternalVlan: extVlan,
+				},
+			},
+		},
+	}
+
+	_, err := it.apisrvClient.WorkloadV1().Workload().Update(context.Background(), &wr)
+
+	return err
+}
+
 // DeleteWorkload deletes a workload
 func (it *integTestSuite) DeleteWorkload(tenant, namespace, name string) error {
 	// create a dummy workload object
@@ -320,7 +348,7 @@ func (it *integTestSuite) CreateHost(name, macAddr string) error {
 	snic := cluster.SmartNIC{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
-			Name: name + "-NIC",
+			Name: name,
 		},
 		Spec: cluster.SmartNICSpec{
 			MgmtMode:    "NETWORK",
@@ -377,7 +405,7 @@ func (it *integTestSuite) DeleteHost(name string) error {
 	snic := cluster.SmartNIC{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
-			Name:      name + "-NIC",
+			Name:      name,
 			Namespace: "",
 			Tenant:    "default",
 		},

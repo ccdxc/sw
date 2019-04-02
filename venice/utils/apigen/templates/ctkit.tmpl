@@ -50,10 +50,8 @@ func (obj *{{.}}) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.{{.}}
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.{{$srvname}}().{{.}}().Update(context.Background(), &nobj)
+		_, err = apicl.{{$srvname}}().{{.}}().Update(context.Background(), &obj.{{.}})
 	} else {
 		//  create
 		_, err = apicl.{{$srvname}}().{{.}}().Create(context.Background(), &obj.{{.}})
@@ -65,7 +63,7 @@ func (obj *{{.}}) Write() error {
 // {{.}}Handler is the event handler for {{.}} object
 type {{.}}Handler interface {
 	On{{.}}Create(obj *{{.}}) error
-	On{{.}}Update(obj *{{.}}) error
+	On{{.}}Update(oldObj *{{.}}, newObj *{{$pkgname}}.{{.}}) error
 	On{{.}}Delete(obj *{{.}}) error
 }
 
@@ -110,22 +108,15 @@ func (ct *ctrlerCtx) handle{{.}}Event(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*{{.}})
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec);
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("{{.}}_Updated_Events").Inc()
 
-					ct.stats.Counter("{{.}}_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = {{ToLower .}}Handler.On{{.}}Update(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = {{ToLower .}}Handler.On{{.}}Update(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -168,6 +159,8 @@ func (ct *ctrlerCtx) diff{{.}}(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diff{{.}}(): {{.}}List returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*{{$pkgname}}.{{.}})
 	for _, obj := range objlist {
@@ -178,6 +171,7 @@ func (ct *ctrlerCtx) diff{{.}}(apicl apiclient.Services) {
 	for _, obj := range ct.{{.}}().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diff{{.}}(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -189,6 +183,7 @@ func (ct *ctrlerCtx) diff{{.}}(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diff{{.}}(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -306,6 +301,7 @@ type {{.}}API interface {
 	Create(obj *{{$pkgname}}.{{.}}) error
 	Update(obj *{{$pkgname}}.{{.}}) error
 	Delete(obj *{{$pkgname}}.{{.}}) error
+	Find(meta *api.ObjectMeta) (*{{.}}, error)
 	List() []*{{.}}
 	Watch(handler {{.}}Handler) error
 }
@@ -367,6 +363,24 @@ func (api *{{ToLower .}}API) Delete(obj *{{$pkgname}}.{{.}}) error {
 	}
 
 	return api.ct.handle{{.}}Event(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+}
+
+// Find returns an object by meta
+func (api *{{ToLower .}}API) Find(meta *api.ObjectMeta) (*{{.}}, error) {
+	// find the object
+	obj, err := api.ct.FindObject("{{.}}", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *{{.}}:
+		hobj := obj.(*{{.}})
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
 }
 
 // List returns a list of all {{.}} objects

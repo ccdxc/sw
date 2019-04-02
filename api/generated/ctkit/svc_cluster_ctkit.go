@@ -8,6 +8,7 @@ package ctkit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -19,7 +20,6 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -47,10 +47,8 @@ func (obj *Cluster) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Cluster
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.ClusterV1().Cluster().Update(context.Background(), &nobj)
+		_, err = apicl.ClusterV1().Cluster().Update(context.Background(), &obj.Cluster)
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().Cluster().Create(context.Background(), &obj.Cluster)
@@ -62,7 +60,7 @@ func (obj *Cluster) Write() error {
 // ClusterHandler is the event handler for Cluster object
 type ClusterHandler interface {
 	OnClusterCreate(obj *Cluster) error
-	OnClusterUpdate(obj *Cluster) error
+	OnClusterUpdate(oldObj *Cluster, newObj *cluster.Cluster) error
 	OnClusterDelete(obj *Cluster) error
 }
 
@@ -107,22 +105,15 @@ func (ct *ctrlerCtx) handleClusterEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Cluster)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Cluster_Updated_Events").Inc()
 
-					ct.stats.Counter("Cluster_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = clusterHandler.OnClusterUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = clusterHandler.OnClusterUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -164,6 +155,8 @@ func (ct *ctrlerCtx) diffCluster(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffCluster(): ClusterList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*cluster.Cluster)
 	for _, obj := range objlist {
@@ -174,6 +167,7 @@ func (ct *ctrlerCtx) diffCluster(apicl apiclient.Services) {
 	for _, obj := range ct.Cluster().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffCluster(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -185,6 +179,7 @@ func (ct *ctrlerCtx) diffCluster(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffCluster(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -301,6 +296,7 @@ type ClusterAPI interface {
 	Create(obj *cluster.Cluster) error
 	Update(obj *cluster.Cluster) error
 	Delete(obj *cluster.Cluster) error
+	Find(meta *api.ObjectMeta) (*Cluster, error)
 	List() []*Cluster
 	Watch(handler ClusterHandler) error
 }
@@ -364,6 +360,24 @@ func (api *clusterAPI) Delete(obj *cluster.Cluster) error {
 	return api.ct.handleClusterEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *clusterAPI) Find(meta *api.ObjectMeta) (*Cluster, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Cluster", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Cluster:
+		hobj := obj.(*Cluster)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all Cluster objects
 func (api *clusterAPI) List() []*Cluster {
 	var objlist []*Cluster
@@ -416,10 +430,8 @@ func (obj *Node) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Node
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.ClusterV1().Node().Update(context.Background(), &nobj)
+		_, err = apicl.ClusterV1().Node().Update(context.Background(), &obj.Node)
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().Node().Create(context.Background(), &obj.Node)
@@ -431,7 +443,7 @@ func (obj *Node) Write() error {
 // NodeHandler is the event handler for Node object
 type NodeHandler interface {
 	OnNodeCreate(obj *Node) error
-	OnNodeUpdate(obj *Node) error
+	OnNodeUpdate(oldObj *Node, newObj *cluster.Node) error
 	OnNodeDelete(obj *Node) error
 }
 
@@ -476,22 +488,15 @@ func (ct *ctrlerCtx) handleNodeEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Node)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Node_Updated_Events").Inc()
 
-					ct.stats.Counter("Node_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = nodeHandler.OnNodeUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = nodeHandler.OnNodeUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -533,6 +538,8 @@ func (ct *ctrlerCtx) diffNode(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffNode(): NodeList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*cluster.Node)
 	for _, obj := range objlist {
@@ -543,6 +550,7 @@ func (ct *ctrlerCtx) diffNode(apicl apiclient.Services) {
 	for _, obj := range ct.Node().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffNode(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -554,6 +562,7 @@ func (ct *ctrlerCtx) diffNode(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffNode(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -670,6 +679,7 @@ type NodeAPI interface {
 	Create(obj *cluster.Node) error
 	Update(obj *cluster.Node) error
 	Delete(obj *cluster.Node) error
+	Find(meta *api.ObjectMeta) (*Node, error)
 	List() []*Node
 	Watch(handler NodeHandler) error
 }
@@ -733,6 +743,24 @@ func (api *nodeAPI) Delete(obj *cluster.Node) error {
 	return api.ct.handleNodeEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *nodeAPI) Find(meta *api.ObjectMeta) (*Node, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Node", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Node:
+		hobj := obj.(*Node)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all Node objects
 func (api *nodeAPI) List() []*Node {
 	var objlist []*Node
@@ -785,10 +813,8 @@ func (obj *Host) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Host
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.ClusterV1().Host().Update(context.Background(), &nobj)
+		_, err = apicl.ClusterV1().Host().Update(context.Background(), &obj.Host)
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().Host().Create(context.Background(), &obj.Host)
@@ -800,7 +826,7 @@ func (obj *Host) Write() error {
 // HostHandler is the event handler for Host object
 type HostHandler interface {
 	OnHostCreate(obj *Host) error
-	OnHostUpdate(obj *Host) error
+	OnHostUpdate(oldObj *Host, newObj *cluster.Host) error
 	OnHostDelete(obj *Host) error
 }
 
@@ -845,22 +871,15 @@ func (ct *ctrlerCtx) handleHostEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Host)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Host_Updated_Events").Inc()
 
-					ct.stats.Counter("Host_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = hostHandler.OnHostUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = hostHandler.OnHostUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -902,6 +921,8 @@ func (ct *ctrlerCtx) diffHost(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffHost(): HostList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*cluster.Host)
 	for _, obj := range objlist {
@@ -912,6 +933,7 @@ func (ct *ctrlerCtx) diffHost(apicl apiclient.Services) {
 	for _, obj := range ct.Host().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffHost(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -923,6 +945,7 @@ func (ct *ctrlerCtx) diffHost(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffHost(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1039,6 +1062,7 @@ type HostAPI interface {
 	Create(obj *cluster.Host) error
 	Update(obj *cluster.Host) error
 	Delete(obj *cluster.Host) error
+	Find(meta *api.ObjectMeta) (*Host, error)
 	List() []*Host
 	Watch(handler HostHandler) error
 }
@@ -1102,6 +1126,24 @@ func (api *hostAPI) Delete(obj *cluster.Host) error {
 	return api.ct.handleHostEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *hostAPI) Find(meta *api.ObjectMeta) (*Host, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Host", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Host:
+		hobj := obj.(*Host)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all Host objects
 func (api *hostAPI) List() []*Host {
 	var objlist []*Host
@@ -1154,10 +1196,8 @@ func (obj *SmartNIC) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.SmartNIC
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.ClusterV1().SmartNIC().Update(context.Background(), &nobj)
+		_, err = apicl.ClusterV1().SmartNIC().Update(context.Background(), &obj.SmartNIC)
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().SmartNIC().Create(context.Background(), &obj.SmartNIC)
@@ -1169,7 +1209,7 @@ func (obj *SmartNIC) Write() error {
 // SmartNICHandler is the event handler for SmartNIC object
 type SmartNICHandler interface {
 	OnSmartNICCreate(obj *SmartNIC) error
-	OnSmartNICUpdate(obj *SmartNIC) error
+	OnSmartNICUpdate(oldObj *SmartNIC, newObj *cluster.SmartNIC) error
 	OnSmartNICDelete(obj *SmartNIC) error
 }
 
@@ -1214,22 +1254,15 @@ func (ct *ctrlerCtx) handleSmartNICEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*SmartNIC)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("SmartNIC_Updated_Events").Inc()
 
-					ct.stats.Counter("SmartNIC_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = smartnicHandler.OnSmartNICUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = smartnicHandler.OnSmartNICUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -1271,6 +1304,8 @@ func (ct *ctrlerCtx) diffSmartNIC(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffSmartNIC(): SmartNICList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*cluster.SmartNIC)
 	for _, obj := range objlist {
@@ -1281,6 +1316,7 @@ func (ct *ctrlerCtx) diffSmartNIC(apicl apiclient.Services) {
 	for _, obj := range ct.SmartNIC().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffSmartNIC(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -1292,6 +1328,7 @@ func (ct *ctrlerCtx) diffSmartNIC(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffSmartNIC(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1408,6 +1445,7 @@ type SmartNICAPI interface {
 	Create(obj *cluster.SmartNIC) error
 	Update(obj *cluster.SmartNIC) error
 	Delete(obj *cluster.SmartNIC) error
+	Find(meta *api.ObjectMeta) (*SmartNIC, error)
 	List() []*SmartNIC
 	Watch(handler SmartNICHandler) error
 }
@@ -1471,6 +1509,24 @@ func (api *smartnicAPI) Delete(obj *cluster.SmartNIC) error {
 	return api.ct.handleSmartNICEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *smartnicAPI) Find(meta *api.ObjectMeta) (*SmartNIC, error) {
+	// find the object
+	obj, err := api.ct.FindObject("SmartNIC", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *SmartNIC:
+		hobj := obj.(*SmartNIC)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all SmartNIC objects
 func (api *smartnicAPI) List() []*SmartNIC {
 	var objlist []*SmartNIC
@@ -1523,10 +1579,8 @@ func (obj *Tenant) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Tenant
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.ClusterV1().Tenant().Update(context.Background(), &nobj)
+		_, err = apicl.ClusterV1().Tenant().Update(context.Background(), &obj.Tenant)
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().Tenant().Create(context.Background(), &obj.Tenant)
@@ -1538,7 +1592,7 @@ func (obj *Tenant) Write() error {
 // TenantHandler is the event handler for Tenant object
 type TenantHandler interface {
 	OnTenantCreate(obj *Tenant) error
-	OnTenantUpdate(obj *Tenant) error
+	OnTenantUpdate(oldObj *Tenant, newObj *cluster.Tenant) error
 	OnTenantDelete(obj *Tenant) error
 }
 
@@ -1583,22 +1637,15 @@ func (ct *ctrlerCtx) handleTenantEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Tenant)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Tenant_Updated_Events").Inc()
 
-					ct.stats.Counter("Tenant_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = tenantHandler.OnTenantUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = tenantHandler.OnTenantUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -1640,6 +1687,8 @@ func (ct *ctrlerCtx) diffTenant(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffTenant(): TenantList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*cluster.Tenant)
 	for _, obj := range objlist {
@@ -1650,6 +1699,7 @@ func (ct *ctrlerCtx) diffTenant(apicl apiclient.Services) {
 	for _, obj := range ct.Tenant().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffTenant(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -1661,6 +1711,7 @@ func (ct *ctrlerCtx) diffTenant(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffTenant(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1777,6 +1828,7 @@ type TenantAPI interface {
 	Create(obj *cluster.Tenant) error
 	Update(obj *cluster.Tenant) error
 	Delete(obj *cluster.Tenant) error
+	Find(meta *api.ObjectMeta) (*Tenant, error)
 	List() []*Tenant
 	Watch(handler TenantHandler) error
 }
@@ -1838,6 +1890,24 @@ func (api *tenantAPI) Delete(obj *cluster.Tenant) error {
 	}
 
 	return api.ct.handleTenantEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+}
+
+// Find returns an object by meta
+func (api *tenantAPI) Find(meta *api.ObjectMeta) (*Tenant, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Tenant", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Tenant:
+		hobj := obj.(*Tenant)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
 }
 
 // List returns a list of all Tenant objects

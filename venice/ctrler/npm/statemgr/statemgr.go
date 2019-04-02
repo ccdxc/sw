@@ -63,27 +63,6 @@ func (sm *Statemgr) ListObjects(kind string) []runtime.Object {
 	return sm.ctrler.ListObjects(kind)
 }
 
-func (sm *Statemgr) smartNICCreated(nic *SmartNICState) {
-	// Update SGPolicies
-	policies, _ := sm.ListSgpolicies()
-	for _, policy := range policies {
-		if _, ok := policy.NodeVersions[nic.SmartNIC.Name]; ok == false {
-			policy.NodeVersions[nic.SmartNIC.Name] = ""
-		}
-	}
-}
-
-func (sm *Statemgr) smartNICDeleted(nic *SmartNICState) error {
-
-	// Update SGPolicies
-	policies, _ := sm.ListSgpolicies()
-	for _, policy := range policies {
-		delete(policy.NodeVersions, nic.SmartNIC.Name)
-	}
-
-	return nil
-}
-
 // Stop stops the watchers
 func (sm *Statemgr) Stop() error {
 	return sm.ctrler.Stop()

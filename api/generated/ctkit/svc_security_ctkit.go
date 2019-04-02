@@ -8,6 +8,7 @@ package ctkit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -19,7 +20,6 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -47,10 +47,8 @@ func (obj *SecurityGroup) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.SecurityGroup
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), &nobj)
+		_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), &obj.SecurityGroup)
 	} else {
 		//  create
 		_, err = apicl.SecurityV1().SecurityGroup().Create(context.Background(), &obj.SecurityGroup)
@@ -62,7 +60,7 @@ func (obj *SecurityGroup) Write() error {
 // SecurityGroupHandler is the event handler for SecurityGroup object
 type SecurityGroupHandler interface {
 	OnSecurityGroupCreate(obj *SecurityGroup) error
-	OnSecurityGroupUpdate(obj *SecurityGroup) error
+	OnSecurityGroupUpdate(oldObj *SecurityGroup, newObj *security.SecurityGroup) error
 	OnSecurityGroupDelete(obj *SecurityGroup) error
 }
 
@@ -107,22 +105,15 @@ func (ct *ctrlerCtx) handleSecurityGroupEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*SecurityGroup)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("SecurityGroup_Updated_Events").Inc()
 
-					ct.stats.Counter("SecurityGroup_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = securitygroupHandler.OnSecurityGroupUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = securitygroupHandler.OnSecurityGroupUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -164,6 +155,8 @@ func (ct *ctrlerCtx) diffSecurityGroup(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffSecurityGroup(): SecurityGroupList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*security.SecurityGroup)
 	for _, obj := range objlist {
@@ -174,6 +167,7 @@ func (ct *ctrlerCtx) diffSecurityGroup(apicl apiclient.Services) {
 	for _, obj := range ct.SecurityGroup().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffSecurityGroup(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -185,6 +179,7 @@ func (ct *ctrlerCtx) diffSecurityGroup(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffSecurityGroup(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -301,6 +296,7 @@ type SecurityGroupAPI interface {
 	Create(obj *security.SecurityGroup) error
 	Update(obj *security.SecurityGroup) error
 	Delete(obj *security.SecurityGroup) error
+	Find(meta *api.ObjectMeta) (*SecurityGroup, error)
 	List() []*SecurityGroup
 	Watch(handler SecurityGroupHandler) error
 }
@@ -364,6 +360,24 @@ func (api *securitygroupAPI) Delete(obj *security.SecurityGroup) error {
 	return api.ct.handleSecurityGroupEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *securitygroupAPI) Find(meta *api.ObjectMeta) (*SecurityGroup, error) {
+	// find the object
+	obj, err := api.ct.FindObject("SecurityGroup", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *SecurityGroup:
+		hobj := obj.(*SecurityGroup)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all SecurityGroup objects
 func (api *securitygroupAPI) List() []*SecurityGroup {
 	var objlist []*SecurityGroup
@@ -416,10 +430,8 @@ func (obj *SGPolicy) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.SGPolicy
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), &nobj)
+		_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), &obj.SGPolicy)
 	} else {
 		//  create
 		_, err = apicl.SecurityV1().SGPolicy().Create(context.Background(), &obj.SGPolicy)
@@ -431,7 +443,7 @@ func (obj *SGPolicy) Write() error {
 // SGPolicyHandler is the event handler for SGPolicy object
 type SGPolicyHandler interface {
 	OnSGPolicyCreate(obj *SGPolicy) error
-	OnSGPolicyUpdate(obj *SGPolicy) error
+	OnSGPolicyUpdate(oldObj *SGPolicy, newObj *security.SGPolicy) error
 	OnSGPolicyDelete(obj *SGPolicy) error
 }
 
@@ -476,22 +488,15 @@ func (ct *ctrlerCtx) handleSGPolicyEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*SGPolicy)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("SGPolicy_Updated_Events").Inc()
 
-					ct.stats.Counter("SGPolicy_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = sgpolicyHandler.OnSGPolicyUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = sgpolicyHandler.OnSGPolicyUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -533,6 +538,8 @@ func (ct *ctrlerCtx) diffSGPolicy(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffSGPolicy(): SGPolicyList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*security.SGPolicy)
 	for _, obj := range objlist {
@@ -543,6 +550,7 @@ func (ct *ctrlerCtx) diffSGPolicy(apicl apiclient.Services) {
 	for _, obj := range ct.SGPolicy().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffSGPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -554,6 +562,7 @@ func (ct *ctrlerCtx) diffSGPolicy(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffSGPolicy(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -670,6 +679,7 @@ type SGPolicyAPI interface {
 	Create(obj *security.SGPolicy) error
 	Update(obj *security.SGPolicy) error
 	Delete(obj *security.SGPolicy) error
+	Find(meta *api.ObjectMeta) (*SGPolicy, error)
 	List() []*SGPolicy
 	Watch(handler SGPolicyHandler) error
 }
@@ -733,6 +743,24 @@ func (api *sgpolicyAPI) Delete(obj *security.SGPolicy) error {
 	return api.ct.handleSGPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *sgpolicyAPI) Find(meta *api.ObjectMeta) (*SGPolicy, error) {
+	// find the object
+	obj, err := api.ct.FindObject("SGPolicy", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *SGPolicy:
+		hobj := obj.(*SGPolicy)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all SGPolicy objects
 func (api *sgpolicyAPI) List() []*SGPolicy {
 	var objlist []*SGPolicy
@@ -785,10 +813,8 @@ func (obj *App) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.App
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.SecurityV1().App().Update(context.Background(), &nobj)
+		_, err = apicl.SecurityV1().App().Update(context.Background(), &obj.App)
 	} else {
 		//  create
 		_, err = apicl.SecurityV1().App().Create(context.Background(), &obj.App)
@@ -800,7 +826,7 @@ func (obj *App) Write() error {
 // AppHandler is the event handler for App object
 type AppHandler interface {
 	OnAppCreate(obj *App) error
-	OnAppUpdate(obj *App) error
+	OnAppUpdate(oldObj *App, newObj *security.App) error
 	OnAppDelete(obj *App) error
 }
 
@@ -845,22 +871,15 @@ func (ct *ctrlerCtx) handleAppEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*App)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("App_Updated_Events").Inc()
 
-					ct.stats.Counter("App_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = appHandler.OnAppUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = appHandler.OnAppUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -902,6 +921,8 @@ func (ct *ctrlerCtx) diffApp(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffApp(): AppList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*security.App)
 	for _, obj := range objlist {
@@ -912,6 +933,7 @@ func (ct *ctrlerCtx) diffApp(apicl apiclient.Services) {
 	for _, obj := range ct.App().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffApp(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -923,6 +945,7 @@ func (ct *ctrlerCtx) diffApp(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffApp(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1039,6 +1062,7 @@ type AppAPI interface {
 	Create(obj *security.App) error
 	Update(obj *security.App) error
 	Delete(obj *security.App) error
+	Find(meta *api.ObjectMeta) (*App, error)
 	List() []*App
 	Watch(handler AppHandler) error
 }
@@ -1102,6 +1126,24 @@ func (api *appAPI) Delete(obj *security.App) error {
 	return api.ct.handleAppEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *appAPI) Find(meta *api.ObjectMeta) (*App, error) {
+	// find the object
+	obj, err := api.ct.FindObject("App", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *App:
+		hobj := obj.(*App)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all App objects
 func (api *appAPI) List() []*App {
 	var objlist []*App
@@ -1154,10 +1196,8 @@ func (obj *FirewallProfile) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.FirewallProfile
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.SecurityV1().FirewallProfile().Update(context.Background(), &nobj)
+		_, err = apicl.SecurityV1().FirewallProfile().Update(context.Background(), &obj.FirewallProfile)
 	} else {
 		//  create
 		_, err = apicl.SecurityV1().FirewallProfile().Create(context.Background(), &obj.FirewallProfile)
@@ -1169,7 +1209,7 @@ func (obj *FirewallProfile) Write() error {
 // FirewallProfileHandler is the event handler for FirewallProfile object
 type FirewallProfileHandler interface {
 	OnFirewallProfileCreate(obj *FirewallProfile) error
-	OnFirewallProfileUpdate(obj *FirewallProfile) error
+	OnFirewallProfileUpdate(oldObj *FirewallProfile, newObj *security.FirewallProfile) error
 	OnFirewallProfileDelete(obj *FirewallProfile) error
 }
 
@@ -1214,22 +1254,15 @@ func (ct *ctrlerCtx) handleFirewallProfileEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*FirewallProfile)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("FirewallProfile_Updated_Events").Inc()
 
-					ct.stats.Counter("FirewallProfile_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = firewallprofileHandler.OnFirewallProfileUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = firewallprofileHandler.OnFirewallProfileUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -1271,6 +1304,8 @@ func (ct *ctrlerCtx) diffFirewallProfile(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffFirewallProfile(): FirewallProfileList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*security.FirewallProfile)
 	for _, obj := range objlist {
@@ -1281,6 +1316,7 @@ func (ct *ctrlerCtx) diffFirewallProfile(apicl apiclient.Services) {
 	for _, obj := range ct.FirewallProfile().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffFirewallProfile(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -1292,6 +1328,7 @@ func (ct *ctrlerCtx) diffFirewallProfile(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffFirewallProfile(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1408,6 +1445,7 @@ type FirewallProfileAPI interface {
 	Create(obj *security.FirewallProfile) error
 	Update(obj *security.FirewallProfile) error
 	Delete(obj *security.FirewallProfile) error
+	Find(meta *api.ObjectMeta) (*FirewallProfile, error)
 	List() []*FirewallProfile
 	Watch(handler FirewallProfileHandler) error
 }
@@ -1471,6 +1509,24 @@ func (api *firewallprofileAPI) Delete(obj *security.FirewallProfile) error {
 	return api.ct.handleFirewallProfileEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *firewallprofileAPI) Find(meta *api.ObjectMeta) (*FirewallProfile, error) {
+	// find the object
+	obj, err := api.ct.FindObject("FirewallProfile", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *FirewallProfile:
+		hobj := obj.(*FirewallProfile)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all FirewallProfile objects
 func (api *firewallprofileAPI) List() []*FirewallProfile {
 	var objlist []*FirewallProfile
@@ -1523,10 +1579,8 @@ func (obj *Certificate) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Certificate
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.SecurityV1().Certificate().Update(context.Background(), &nobj)
+		_, err = apicl.SecurityV1().Certificate().Update(context.Background(), &obj.Certificate)
 	} else {
 		//  create
 		_, err = apicl.SecurityV1().Certificate().Create(context.Background(), &obj.Certificate)
@@ -1538,7 +1592,7 @@ func (obj *Certificate) Write() error {
 // CertificateHandler is the event handler for Certificate object
 type CertificateHandler interface {
 	OnCertificateCreate(obj *Certificate) error
-	OnCertificateUpdate(obj *Certificate) error
+	OnCertificateUpdate(oldObj *Certificate, newObj *security.Certificate) error
 	OnCertificateDelete(obj *Certificate) error
 }
 
@@ -1583,22 +1637,15 @@ func (ct *ctrlerCtx) handleCertificateEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Certificate)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Certificate_Updated_Events").Inc()
 
-					ct.stats.Counter("Certificate_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = certificateHandler.OnCertificateUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = certificateHandler.OnCertificateUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -1640,6 +1687,8 @@ func (ct *ctrlerCtx) diffCertificate(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffCertificate(): CertificateList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*security.Certificate)
 	for _, obj := range objlist {
@@ -1650,6 +1699,7 @@ func (ct *ctrlerCtx) diffCertificate(apicl apiclient.Services) {
 	for _, obj := range ct.Certificate().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffCertificate(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -1661,6 +1711,7 @@ func (ct *ctrlerCtx) diffCertificate(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffCertificate(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1777,6 +1828,7 @@ type CertificateAPI interface {
 	Create(obj *security.Certificate) error
 	Update(obj *security.Certificate) error
 	Delete(obj *security.Certificate) error
+	Find(meta *api.ObjectMeta) (*Certificate, error)
 	List() []*Certificate
 	Watch(handler CertificateHandler) error
 }
@@ -1840,6 +1892,24 @@ func (api *certificateAPI) Delete(obj *security.Certificate) error {
 	return api.ct.handleCertificateEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *certificateAPI) Find(meta *api.ObjectMeta) (*Certificate, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Certificate", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Certificate:
+		hobj := obj.(*Certificate)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all Certificate objects
 func (api *certificateAPI) List() []*Certificate {
 	var objlist []*Certificate
@@ -1892,10 +1962,8 @@ func (obj *TrafficEncryptionPolicy) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.TrafficEncryptionPolicy
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), &nobj)
+		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), &obj.TrafficEncryptionPolicy)
 	} else {
 		//  create
 		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Create(context.Background(), &obj.TrafficEncryptionPolicy)
@@ -1907,7 +1975,7 @@ func (obj *TrafficEncryptionPolicy) Write() error {
 // TrafficEncryptionPolicyHandler is the event handler for TrafficEncryptionPolicy object
 type TrafficEncryptionPolicyHandler interface {
 	OnTrafficEncryptionPolicyCreate(obj *TrafficEncryptionPolicy) error
-	OnTrafficEncryptionPolicyUpdate(obj *TrafficEncryptionPolicy) error
+	OnTrafficEncryptionPolicyUpdate(oldObj *TrafficEncryptionPolicy, newObj *security.TrafficEncryptionPolicy) error
 	OnTrafficEncryptionPolicyDelete(obj *TrafficEncryptionPolicy) error
 }
 
@@ -1952,22 +2020,15 @@ func (ct *ctrlerCtx) handleTrafficEncryptionPolicyEvent(evt *kvstore.WatchEvent)
 			} else {
 				obj := fobj.(*TrafficEncryptionPolicy)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("TrafficEncryptionPolicy_Updated_Events").Inc()
 
-					ct.stats.Counter("TrafficEncryptionPolicy_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = trafficencryptionpolicyHandler.OnTrafficEncryptionPolicyUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = trafficencryptionpolicyHandler.OnTrafficEncryptionPolicyUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -2009,6 +2070,8 @@ func (ct *ctrlerCtx) diffTrafficEncryptionPolicy(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffTrafficEncryptionPolicy(): TrafficEncryptionPolicyList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*security.TrafficEncryptionPolicy)
 	for _, obj := range objlist {
@@ -2019,6 +2082,7 @@ func (ct *ctrlerCtx) diffTrafficEncryptionPolicy(apicl apiclient.Services) {
 	for _, obj := range ct.TrafficEncryptionPolicy().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffTrafficEncryptionPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -2030,6 +2094,7 @@ func (ct *ctrlerCtx) diffTrafficEncryptionPolicy(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffTrafficEncryptionPolicy(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -2146,6 +2211,7 @@ type TrafficEncryptionPolicyAPI interface {
 	Create(obj *security.TrafficEncryptionPolicy) error
 	Update(obj *security.TrafficEncryptionPolicy) error
 	Delete(obj *security.TrafficEncryptionPolicy) error
+	Find(meta *api.ObjectMeta) (*TrafficEncryptionPolicy, error)
 	List() []*TrafficEncryptionPolicy
 	Watch(handler TrafficEncryptionPolicyHandler) error
 }
@@ -2207,6 +2273,24 @@ func (api *trafficencryptionpolicyAPI) Delete(obj *security.TrafficEncryptionPol
 	}
 
 	return api.ct.handleTrafficEncryptionPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+}
+
+// Find returns an object by meta
+func (api *trafficencryptionpolicyAPI) Find(meta *api.ObjectMeta) (*TrafficEncryptionPolicy, error) {
+	// find the object
+	obj, err := api.ct.FindObject("TrafficEncryptionPolicy", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *TrafficEncryptionPolicy:
+		hobj := obj.(*TrafficEncryptionPolicy)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
 }
 
 // List returns a list of all TrafficEncryptionPolicy objects

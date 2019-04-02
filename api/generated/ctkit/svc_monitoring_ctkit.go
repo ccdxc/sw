@@ -8,6 +8,7 @@ package ctkit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -19,7 +20,6 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -47,10 +47,8 @@ func (obj *EventPolicy) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.EventPolicy
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.MonitoringV1().EventPolicy().Update(context.Background(), &nobj)
+		_, err = apicl.MonitoringV1().EventPolicy().Update(context.Background(), &obj.EventPolicy)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().EventPolicy().Create(context.Background(), &obj.EventPolicy)
@@ -62,7 +60,7 @@ func (obj *EventPolicy) Write() error {
 // EventPolicyHandler is the event handler for EventPolicy object
 type EventPolicyHandler interface {
 	OnEventPolicyCreate(obj *EventPolicy) error
-	OnEventPolicyUpdate(obj *EventPolicy) error
+	OnEventPolicyUpdate(oldObj *EventPolicy, newObj *monitoring.EventPolicy) error
 	OnEventPolicyDelete(obj *EventPolicy) error
 }
 
@@ -107,22 +105,15 @@ func (ct *ctrlerCtx) handleEventPolicyEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*EventPolicy)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("EventPolicy_Updated_Events").Inc()
 
-					ct.stats.Counter("EventPolicy_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = eventpolicyHandler.OnEventPolicyUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = eventpolicyHandler.OnEventPolicyUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -164,6 +155,8 @@ func (ct *ctrlerCtx) diffEventPolicy(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffEventPolicy(): EventPolicyList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*monitoring.EventPolicy)
 	for _, obj := range objlist {
@@ -174,6 +167,7 @@ func (ct *ctrlerCtx) diffEventPolicy(apicl apiclient.Services) {
 	for _, obj := range ct.EventPolicy().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffEventPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -185,6 +179,7 @@ func (ct *ctrlerCtx) diffEventPolicy(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffEventPolicy(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -301,6 +296,7 @@ type EventPolicyAPI interface {
 	Create(obj *monitoring.EventPolicy) error
 	Update(obj *monitoring.EventPolicy) error
 	Delete(obj *monitoring.EventPolicy) error
+	Find(meta *api.ObjectMeta) (*EventPolicy, error)
 	List() []*EventPolicy
 	Watch(handler EventPolicyHandler) error
 }
@@ -364,6 +360,24 @@ func (api *eventpolicyAPI) Delete(obj *monitoring.EventPolicy) error {
 	return api.ct.handleEventPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *eventpolicyAPI) Find(meta *api.ObjectMeta) (*EventPolicy, error) {
+	// find the object
+	obj, err := api.ct.FindObject("EventPolicy", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *EventPolicy:
+		hobj := obj.(*EventPolicy)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all EventPolicy objects
 func (api *eventpolicyAPI) List() []*EventPolicy {
 	var objlist []*EventPolicy
@@ -416,10 +430,8 @@ func (obj *StatsPolicy) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.StatsPolicy
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.MonitoringV1().StatsPolicy().Update(context.Background(), &nobj)
+		_, err = apicl.MonitoringV1().StatsPolicy().Update(context.Background(), &obj.StatsPolicy)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().StatsPolicy().Create(context.Background(), &obj.StatsPolicy)
@@ -431,7 +443,7 @@ func (obj *StatsPolicy) Write() error {
 // StatsPolicyHandler is the event handler for StatsPolicy object
 type StatsPolicyHandler interface {
 	OnStatsPolicyCreate(obj *StatsPolicy) error
-	OnStatsPolicyUpdate(obj *StatsPolicy) error
+	OnStatsPolicyUpdate(oldObj *StatsPolicy, newObj *monitoring.StatsPolicy) error
 	OnStatsPolicyDelete(obj *StatsPolicy) error
 }
 
@@ -476,22 +488,15 @@ func (ct *ctrlerCtx) handleStatsPolicyEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*StatsPolicy)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("StatsPolicy_Updated_Events").Inc()
 
-					ct.stats.Counter("StatsPolicy_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = statspolicyHandler.OnStatsPolicyUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = statspolicyHandler.OnStatsPolicyUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -533,6 +538,8 @@ func (ct *ctrlerCtx) diffStatsPolicy(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffStatsPolicy(): StatsPolicyList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*monitoring.StatsPolicy)
 	for _, obj := range objlist {
@@ -543,6 +550,7 @@ func (ct *ctrlerCtx) diffStatsPolicy(apicl apiclient.Services) {
 	for _, obj := range ct.StatsPolicy().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffStatsPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -554,6 +562,7 @@ func (ct *ctrlerCtx) diffStatsPolicy(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffStatsPolicy(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -670,6 +679,7 @@ type StatsPolicyAPI interface {
 	Create(obj *monitoring.StatsPolicy) error
 	Update(obj *monitoring.StatsPolicy) error
 	Delete(obj *monitoring.StatsPolicy) error
+	Find(meta *api.ObjectMeta) (*StatsPolicy, error)
 	List() []*StatsPolicy
 	Watch(handler StatsPolicyHandler) error
 }
@@ -733,6 +743,24 @@ func (api *statspolicyAPI) Delete(obj *monitoring.StatsPolicy) error {
 	return api.ct.handleStatsPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *statspolicyAPI) Find(meta *api.ObjectMeta) (*StatsPolicy, error) {
+	// find the object
+	obj, err := api.ct.FindObject("StatsPolicy", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *StatsPolicy:
+		hobj := obj.(*StatsPolicy)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all StatsPolicy objects
 func (api *statspolicyAPI) List() []*StatsPolicy {
 	var objlist []*StatsPolicy
@@ -785,10 +813,8 @@ func (obj *FwlogPolicy) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.FwlogPolicy
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), &nobj)
+		_, err = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), &obj.FwlogPolicy)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().FwlogPolicy().Create(context.Background(), &obj.FwlogPolicy)
@@ -800,7 +826,7 @@ func (obj *FwlogPolicy) Write() error {
 // FwlogPolicyHandler is the event handler for FwlogPolicy object
 type FwlogPolicyHandler interface {
 	OnFwlogPolicyCreate(obj *FwlogPolicy) error
-	OnFwlogPolicyUpdate(obj *FwlogPolicy) error
+	OnFwlogPolicyUpdate(oldObj *FwlogPolicy, newObj *monitoring.FwlogPolicy) error
 	OnFwlogPolicyDelete(obj *FwlogPolicy) error
 }
 
@@ -845,22 +871,15 @@ func (ct *ctrlerCtx) handleFwlogPolicyEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*FwlogPolicy)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("FwlogPolicy_Updated_Events").Inc()
 
-					ct.stats.Counter("FwlogPolicy_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = fwlogpolicyHandler.OnFwlogPolicyUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = fwlogpolicyHandler.OnFwlogPolicyUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -902,6 +921,8 @@ func (ct *ctrlerCtx) diffFwlogPolicy(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffFwlogPolicy(): FwlogPolicyList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*monitoring.FwlogPolicy)
 	for _, obj := range objlist {
@@ -912,6 +933,7 @@ func (ct *ctrlerCtx) diffFwlogPolicy(apicl apiclient.Services) {
 	for _, obj := range ct.FwlogPolicy().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffFwlogPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -923,6 +945,7 @@ func (ct *ctrlerCtx) diffFwlogPolicy(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffFwlogPolicy(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1039,6 +1062,7 @@ type FwlogPolicyAPI interface {
 	Create(obj *monitoring.FwlogPolicy) error
 	Update(obj *monitoring.FwlogPolicy) error
 	Delete(obj *monitoring.FwlogPolicy) error
+	Find(meta *api.ObjectMeta) (*FwlogPolicy, error)
 	List() []*FwlogPolicy
 	Watch(handler FwlogPolicyHandler) error
 }
@@ -1102,6 +1126,24 @@ func (api *fwlogpolicyAPI) Delete(obj *monitoring.FwlogPolicy) error {
 	return api.ct.handleFwlogPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *fwlogpolicyAPI) Find(meta *api.ObjectMeta) (*FwlogPolicy, error) {
+	// find the object
+	obj, err := api.ct.FindObject("FwlogPolicy", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *FwlogPolicy:
+		hobj := obj.(*FwlogPolicy)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all FwlogPolicy objects
 func (api *fwlogpolicyAPI) List() []*FwlogPolicy {
 	var objlist []*FwlogPolicy
@@ -1154,10 +1196,8 @@ func (obj *FlowExportPolicy) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.FlowExportPolicy
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), &nobj)
+		_, err = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), &obj.FlowExportPolicy)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().FlowExportPolicy().Create(context.Background(), &obj.FlowExportPolicy)
@@ -1169,7 +1209,7 @@ func (obj *FlowExportPolicy) Write() error {
 // FlowExportPolicyHandler is the event handler for FlowExportPolicy object
 type FlowExportPolicyHandler interface {
 	OnFlowExportPolicyCreate(obj *FlowExportPolicy) error
-	OnFlowExportPolicyUpdate(obj *FlowExportPolicy) error
+	OnFlowExportPolicyUpdate(oldObj *FlowExportPolicy, newObj *monitoring.FlowExportPolicy) error
 	OnFlowExportPolicyDelete(obj *FlowExportPolicy) error
 }
 
@@ -1214,22 +1254,15 @@ func (ct *ctrlerCtx) handleFlowExportPolicyEvent(evt *kvstore.WatchEvent) error 
 			} else {
 				obj := fobj.(*FlowExportPolicy)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("FlowExportPolicy_Updated_Events").Inc()
 
-					ct.stats.Counter("FlowExportPolicy_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = flowexportpolicyHandler.OnFlowExportPolicyUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = flowexportpolicyHandler.OnFlowExportPolicyUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -1271,6 +1304,8 @@ func (ct *ctrlerCtx) diffFlowExportPolicy(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffFlowExportPolicy(): FlowExportPolicyList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*monitoring.FlowExportPolicy)
 	for _, obj := range objlist {
@@ -1281,6 +1316,7 @@ func (ct *ctrlerCtx) diffFlowExportPolicy(apicl apiclient.Services) {
 	for _, obj := range ct.FlowExportPolicy().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffFlowExportPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -1292,6 +1328,7 @@ func (ct *ctrlerCtx) diffFlowExportPolicy(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffFlowExportPolicy(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1408,6 +1445,7 @@ type FlowExportPolicyAPI interface {
 	Create(obj *monitoring.FlowExportPolicy) error
 	Update(obj *monitoring.FlowExportPolicy) error
 	Delete(obj *monitoring.FlowExportPolicy) error
+	Find(meta *api.ObjectMeta) (*FlowExportPolicy, error)
 	List() []*FlowExportPolicy
 	Watch(handler FlowExportPolicyHandler) error
 }
@@ -1471,6 +1509,24 @@ func (api *flowexportpolicyAPI) Delete(obj *monitoring.FlowExportPolicy) error {
 	return api.ct.handleFlowExportPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *flowexportpolicyAPI) Find(meta *api.ObjectMeta) (*FlowExportPolicy, error) {
+	// find the object
+	obj, err := api.ct.FindObject("FlowExportPolicy", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *FlowExportPolicy:
+		hobj := obj.(*FlowExportPolicy)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all FlowExportPolicy objects
 func (api *flowexportpolicyAPI) List() []*FlowExportPolicy {
 	var objlist []*FlowExportPolicy
@@ -1523,10 +1579,8 @@ func (obj *Alert) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Alert
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.MonitoringV1().Alert().Update(context.Background(), &nobj)
+		_, err = apicl.MonitoringV1().Alert().Update(context.Background(), &obj.Alert)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().Alert().Create(context.Background(), &obj.Alert)
@@ -1538,7 +1592,7 @@ func (obj *Alert) Write() error {
 // AlertHandler is the event handler for Alert object
 type AlertHandler interface {
 	OnAlertCreate(obj *Alert) error
-	OnAlertUpdate(obj *Alert) error
+	OnAlertUpdate(oldObj *Alert, newObj *monitoring.Alert) error
 	OnAlertDelete(obj *Alert) error
 }
 
@@ -1583,22 +1637,15 @@ func (ct *ctrlerCtx) handleAlertEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Alert)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Alert_Updated_Events").Inc()
 
-					ct.stats.Counter("Alert_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = alertHandler.OnAlertUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = alertHandler.OnAlertUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -1640,6 +1687,8 @@ func (ct *ctrlerCtx) diffAlert(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffAlert(): AlertList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*monitoring.Alert)
 	for _, obj := range objlist {
@@ -1650,6 +1699,7 @@ func (ct *ctrlerCtx) diffAlert(apicl apiclient.Services) {
 	for _, obj := range ct.Alert().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffAlert(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -1661,6 +1711,7 @@ func (ct *ctrlerCtx) diffAlert(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffAlert(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1777,6 +1828,7 @@ type AlertAPI interface {
 	Create(obj *monitoring.Alert) error
 	Update(obj *monitoring.Alert) error
 	Delete(obj *monitoring.Alert) error
+	Find(meta *api.ObjectMeta) (*Alert, error)
 	List() []*Alert
 	Watch(handler AlertHandler) error
 }
@@ -1840,6 +1892,24 @@ func (api *alertAPI) Delete(obj *monitoring.Alert) error {
 	return api.ct.handleAlertEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *alertAPI) Find(meta *api.ObjectMeta) (*Alert, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Alert", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Alert:
+		hobj := obj.(*Alert)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all Alert objects
 func (api *alertAPI) List() []*Alert {
 	var objlist []*Alert
@@ -1892,10 +1962,8 @@ func (obj *AlertPolicy) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.AlertPolicy
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), &nobj)
+		_, err = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), &obj.AlertPolicy)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().AlertPolicy().Create(context.Background(), &obj.AlertPolicy)
@@ -1907,7 +1975,7 @@ func (obj *AlertPolicy) Write() error {
 // AlertPolicyHandler is the event handler for AlertPolicy object
 type AlertPolicyHandler interface {
 	OnAlertPolicyCreate(obj *AlertPolicy) error
-	OnAlertPolicyUpdate(obj *AlertPolicy) error
+	OnAlertPolicyUpdate(oldObj *AlertPolicy, newObj *monitoring.AlertPolicy) error
 	OnAlertPolicyDelete(obj *AlertPolicy) error
 }
 
@@ -1952,22 +2020,15 @@ func (ct *ctrlerCtx) handleAlertPolicyEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*AlertPolicy)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("AlertPolicy_Updated_Events").Inc()
 
-					ct.stats.Counter("AlertPolicy_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = alertpolicyHandler.OnAlertPolicyUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = alertpolicyHandler.OnAlertPolicyUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -2009,6 +2070,8 @@ func (ct *ctrlerCtx) diffAlertPolicy(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffAlertPolicy(): AlertPolicyList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*monitoring.AlertPolicy)
 	for _, obj := range objlist {
@@ -2019,6 +2082,7 @@ func (ct *ctrlerCtx) diffAlertPolicy(apicl apiclient.Services) {
 	for _, obj := range ct.AlertPolicy().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffAlertPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -2030,6 +2094,7 @@ func (ct *ctrlerCtx) diffAlertPolicy(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffAlertPolicy(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -2146,6 +2211,7 @@ type AlertPolicyAPI interface {
 	Create(obj *monitoring.AlertPolicy) error
 	Update(obj *monitoring.AlertPolicy) error
 	Delete(obj *monitoring.AlertPolicy) error
+	Find(meta *api.ObjectMeta) (*AlertPolicy, error)
 	List() []*AlertPolicy
 	Watch(handler AlertPolicyHandler) error
 }
@@ -2209,6 +2275,24 @@ func (api *alertpolicyAPI) Delete(obj *monitoring.AlertPolicy) error {
 	return api.ct.handleAlertPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *alertpolicyAPI) Find(meta *api.ObjectMeta) (*AlertPolicy, error) {
+	// find the object
+	obj, err := api.ct.FindObject("AlertPolicy", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *AlertPolicy:
+		hobj := obj.(*AlertPolicy)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all AlertPolicy objects
 func (api *alertpolicyAPI) List() []*AlertPolicy {
 	var objlist []*AlertPolicy
@@ -2261,10 +2345,8 @@ func (obj *AlertDestination) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.AlertDestination
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.MonitoringV1().AlertDestination().Update(context.Background(), &nobj)
+		_, err = apicl.MonitoringV1().AlertDestination().Update(context.Background(), &obj.AlertDestination)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().AlertDestination().Create(context.Background(), &obj.AlertDestination)
@@ -2276,7 +2358,7 @@ func (obj *AlertDestination) Write() error {
 // AlertDestinationHandler is the event handler for AlertDestination object
 type AlertDestinationHandler interface {
 	OnAlertDestinationCreate(obj *AlertDestination) error
-	OnAlertDestinationUpdate(obj *AlertDestination) error
+	OnAlertDestinationUpdate(oldObj *AlertDestination, newObj *monitoring.AlertDestination) error
 	OnAlertDestinationDelete(obj *AlertDestination) error
 }
 
@@ -2321,22 +2403,15 @@ func (ct *ctrlerCtx) handleAlertDestinationEvent(evt *kvstore.WatchEvent) error 
 			} else {
 				obj := fobj.(*AlertDestination)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("AlertDestination_Updated_Events").Inc()
 
-					ct.stats.Counter("AlertDestination_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = alertdestinationHandler.OnAlertDestinationUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = alertdestinationHandler.OnAlertDestinationUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -2378,6 +2453,8 @@ func (ct *ctrlerCtx) diffAlertDestination(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffAlertDestination(): AlertDestinationList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*monitoring.AlertDestination)
 	for _, obj := range objlist {
@@ -2388,6 +2465,7 @@ func (ct *ctrlerCtx) diffAlertDestination(apicl apiclient.Services) {
 	for _, obj := range ct.AlertDestination().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffAlertDestination(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -2399,6 +2477,7 @@ func (ct *ctrlerCtx) diffAlertDestination(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffAlertDestination(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -2515,6 +2594,7 @@ type AlertDestinationAPI interface {
 	Create(obj *monitoring.AlertDestination) error
 	Update(obj *monitoring.AlertDestination) error
 	Delete(obj *monitoring.AlertDestination) error
+	Find(meta *api.ObjectMeta) (*AlertDestination, error)
 	List() []*AlertDestination
 	Watch(handler AlertDestinationHandler) error
 }
@@ -2578,6 +2658,24 @@ func (api *alertdestinationAPI) Delete(obj *monitoring.AlertDestination) error {
 	return api.ct.handleAlertDestinationEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *alertdestinationAPI) Find(meta *api.ObjectMeta) (*AlertDestination, error) {
+	// find the object
+	obj, err := api.ct.FindObject("AlertDestination", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *AlertDestination:
+		hobj := obj.(*AlertDestination)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all AlertDestination objects
 func (api *alertdestinationAPI) List() []*AlertDestination {
 	var objlist []*AlertDestination
@@ -2630,10 +2728,8 @@ func (obj *MirrorSession) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.MirrorSession
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), &nobj)
+		_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), &obj.MirrorSession)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().MirrorSession().Create(context.Background(), &obj.MirrorSession)
@@ -2645,7 +2741,7 @@ func (obj *MirrorSession) Write() error {
 // MirrorSessionHandler is the event handler for MirrorSession object
 type MirrorSessionHandler interface {
 	OnMirrorSessionCreate(obj *MirrorSession) error
-	OnMirrorSessionUpdate(obj *MirrorSession) error
+	OnMirrorSessionUpdate(oldObj *MirrorSession, newObj *monitoring.MirrorSession) error
 	OnMirrorSessionDelete(obj *MirrorSession) error
 }
 
@@ -2690,22 +2786,15 @@ func (ct *ctrlerCtx) handleMirrorSessionEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*MirrorSession)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("MirrorSession_Updated_Events").Inc()
 
-					ct.stats.Counter("MirrorSession_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = mirrorsessionHandler.OnMirrorSessionUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = mirrorsessionHandler.OnMirrorSessionUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -2747,6 +2836,8 @@ func (ct *ctrlerCtx) diffMirrorSession(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffMirrorSession(): MirrorSessionList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*monitoring.MirrorSession)
 	for _, obj := range objlist {
@@ -2757,6 +2848,7 @@ func (ct *ctrlerCtx) diffMirrorSession(apicl apiclient.Services) {
 	for _, obj := range ct.MirrorSession().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffMirrorSession(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -2768,6 +2860,7 @@ func (ct *ctrlerCtx) diffMirrorSession(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffMirrorSession(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -2884,6 +2977,7 @@ type MirrorSessionAPI interface {
 	Create(obj *monitoring.MirrorSession) error
 	Update(obj *monitoring.MirrorSession) error
 	Delete(obj *monitoring.MirrorSession) error
+	Find(meta *api.ObjectMeta) (*MirrorSession, error)
 	List() []*MirrorSession
 	Watch(handler MirrorSessionHandler) error
 }
@@ -2947,6 +3041,24 @@ func (api *mirrorsessionAPI) Delete(obj *monitoring.MirrorSession) error {
 	return api.ct.handleMirrorSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *mirrorsessionAPI) Find(meta *api.ObjectMeta) (*MirrorSession, error) {
+	// find the object
+	obj, err := api.ct.FindObject("MirrorSession", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *MirrorSession:
+		hobj := obj.(*MirrorSession)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all MirrorSession objects
 func (api *mirrorsessionAPI) List() []*MirrorSession {
 	var objlist []*MirrorSession
@@ -2999,10 +3111,8 @@ func (obj *TroubleshootingSession) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.TroubleshootingSession
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), &nobj)
+		_, err = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), &obj.TroubleshootingSession)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().TroubleshootingSession().Create(context.Background(), &obj.TroubleshootingSession)
@@ -3014,7 +3124,7 @@ func (obj *TroubleshootingSession) Write() error {
 // TroubleshootingSessionHandler is the event handler for TroubleshootingSession object
 type TroubleshootingSessionHandler interface {
 	OnTroubleshootingSessionCreate(obj *TroubleshootingSession) error
-	OnTroubleshootingSessionUpdate(obj *TroubleshootingSession) error
+	OnTroubleshootingSessionUpdate(oldObj *TroubleshootingSession, newObj *monitoring.TroubleshootingSession) error
 	OnTroubleshootingSessionDelete(obj *TroubleshootingSession) error
 }
 
@@ -3059,22 +3169,15 @@ func (ct *ctrlerCtx) handleTroubleshootingSessionEvent(evt *kvstore.WatchEvent) 
 			} else {
 				obj := fobj.(*TroubleshootingSession)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("TroubleshootingSession_Updated_Events").Inc()
 
-					ct.stats.Counter("TroubleshootingSession_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = troubleshootingsessionHandler.OnTroubleshootingSessionUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = troubleshootingsessionHandler.OnTroubleshootingSessionUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -3116,6 +3219,8 @@ func (ct *ctrlerCtx) diffTroubleshootingSession(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffTroubleshootingSession(): TroubleshootingSessionList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*monitoring.TroubleshootingSession)
 	for _, obj := range objlist {
@@ -3126,6 +3231,7 @@ func (ct *ctrlerCtx) diffTroubleshootingSession(apicl apiclient.Services) {
 	for _, obj := range ct.TroubleshootingSession().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffTroubleshootingSession(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -3137,6 +3243,7 @@ func (ct *ctrlerCtx) diffTroubleshootingSession(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffTroubleshootingSession(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -3253,6 +3360,7 @@ type TroubleshootingSessionAPI interface {
 	Create(obj *monitoring.TroubleshootingSession) error
 	Update(obj *monitoring.TroubleshootingSession) error
 	Delete(obj *monitoring.TroubleshootingSession) error
+	Find(meta *api.ObjectMeta) (*TroubleshootingSession, error)
 	List() []*TroubleshootingSession
 	Watch(handler TroubleshootingSessionHandler) error
 }
@@ -3316,6 +3424,24 @@ func (api *troubleshootingsessionAPI) Delete(obj *monitoring.TroubleshootingSess
 	return api.ct.handleTroubleshootingSessionEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *troubleshootingsessionAPI) Find(meta *api.ObjectMeta) (*TroubleshootingSession, error) {
+	// find the object
+	obj, err := api.ct.FindObject("TroubleshootingSession", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *TroubleshootingSession:
+		hobj := obj.(*TroubleshootingSession)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all TroubleshootingSession objects
 func (api *troubleshootingsessionAPI) List() []*TroubleshootingSession {
 	var objlist []*TroubleshootingSession
@@ -3368,10 +3494,8 @@ func (obj *TechSupportRequest) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.TechSupportRequest
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), &nobj)
+		_, err = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), &obj.TechSupportRequest)
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().TechSupportRequest().Create(context.Background(), &obj.TechSupportRequest)
@@ -3383,7 +3507,7 @@ func (obj *TechSupportRequest) Write() error {
 // TechSupportRequestHandler is the event handler for TechSupportRequest object
 type TechSupportRequestHandler interface {
 	OnTechSupportRequestCreate(obj *TechSupportRequest) error
-	OnTechSupportRequestUpdate(obj *TechSupportRequest) error
+	OnTechSupportRequestUpdate(oldObj *TechSupportRequest, newObj *monitoring.TechSupportRequest) error
 	OnTechSupportRequestDelete(obj *TechSupportRequest) error
 }
 
@@ -3428,22 +3552,15 @@ func (ct *ctrlerCtx) handleTechSupportRequestEvent(evt *kvstore.WatchEvent) erro
 			} else {
 				obj := fobj.(*TechSupportRequest)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("TechSupportRequest_Updated_Events").Inc()
 
-					ct.stats.Counter("TechSupportRequest_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = techsupportrequestHandler.OnTechSupportRequestUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = techsupportrequestHandler.OnTechSupportRequestUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -3485,6 +3602,8 @@ func (ct *ctrlerCtx) diffTechSupportRequest(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffTechSupportRequest(): TechSupportRequestList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*monitoring.TechSupportRequest)
 	for _, obj := range objlist {
@@ -3495,6 +3614,7 @@ func (ct *ctrlerCtx) diffTechSupportRequest(apicl apiclient.Services) {
 	for _, obj := range ct.TechSupportRequest().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffTechSupportRequest(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -3506,6 +3626,7 @@ func (ct *ctrlerCtx) diffTechSupportRequest(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffTechSupportRequest(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -3622,6 +3743,7 @@ type TechSupportRequestAPI interface {
 	Create(obj *monitoring.TechSupportRequest) error
 	Update(obj *monitoring.TechSupportRequest) error
 	Delete(obj *monitoring.TechSupportRequest) error
+	Find(meta *api.ObjectMeta) (*TechSupportRequest, error)
 	List() []*TechSupportRequest
 	Watch(handler TechSupportRequestHandler) error
 }
@@ -3683,6 +3805,24 @@ func (api *techsupportrequestAPI) Delete(obj *monitoring.TechSupportRequest) err
 	}
 
 	return api.ct.handleTechSupportRequestEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+}
+
+// Find returns an object by meta
+func (api *techsupportrequestAPI) Find(meta *api.ObjectMeta) (*TechSupportRequest, error) {
+	// find the object
+	obj, err := api.ct.FindObject("TechSupportRequest", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *TechSupportRequest:
+		hobj := obj.(*TechSupportRequest)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
 }
 
 // List returns a list of all TechSupportRequest objects

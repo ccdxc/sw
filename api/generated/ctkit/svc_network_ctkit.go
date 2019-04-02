@@ -8,6 +8,7 @@ package ctkit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -19,7 +20,6 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -47,10 +47,8 @@ func (obj *Network) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Network
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.NetworkV1().Network().Update(context.Background(), &nobj)
+		_, err = apicl.NetworkV1().Network().Update(context.Background(), &obj.Network)
 	} else {
 		//  create
 		_, err = apicl.NetworkV1().Network().Create(context.Background(), &obj.Network)
@@ -62,7 +60,7 @@ func (obj *Network) Write() error {
 // NetworkHandler is the event handler for Network object
 type NetworkHandler interface {
 	OnNetworkCreate(obj *Network) error
-	OnNetworkUpdate(obj *Network) error
+	OnNetworkUpdate(oldObj *Network, newObj *network.Network) error
 	OnNetworkDelete(obj *Network) error
 }
 
@@ -107,22 +105,15 @@ func (ct *ctrlerCtx) handleNetworkEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Network)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Network_Updated_Events").Inc()
 
-					ct.stats.Counter("Network_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = networkHandler.OnNetworkUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = networkHandler.OnNetworkUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -164,6 +155,8 @@ func (ct *ctrlerCtx) diffNetwork(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffNetwork(): NetworkList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*network.Network)
 	for _, obj := range objlist {
@@ -174,6 +167,7 @@ func (ct *ctrlerCtx) diffNetwork(apicl apiclient.Services) {
 	for _, obj := range ct.Network().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffNetwork(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -185,6 +179,7 @@ func (ct *ctrlerCtx) diffNetwork(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffNetwork(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -301,6 +296,7 @@ type NetworkAPI interface {
 	Create(obj *network.Network) error
 	Update(obj *network.Network) error
 	Delete(obj *network.Network) error
+	Find(meta *api.ObjectMeta) (*Network, error)
 	List() []*Network
 	Watch(handler NetworkHandler) error
 }
@@ -364,6 +360,24 @@ func (api *networkAPI) Delete(obj *network.Network) error {
 	return api.ct.handleNetworkEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *networkAPI) Find(meta *api.ObjectMeta) (*Network, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Network", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Network:
+		hobj := obj.(*Network)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all Network objects
 func (api *networkAPI) List() []*Network {
 	var objlist []*Network
@@ -416,10 +430,8 @@ func (obj *Service) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Service
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.NetworkV1().Service().Update(context.Background(), &nobj)
+		_, err = apicl.NetworkV1().Service().Update(context.Background(), &obj.Service)
 	} else {
 		//  create
 		_, err = apicl.NetworkV1().Service().Create(context.Background(), &obj.Service)
@@ -431,7 +443,7 @@ func (obj *Service) Write() error {
 // ServiceHandler is the event handler for Service object
 type ServiceHandler interface {
 	OnServiceCreate(obj *Service) error
-	OnServiceUpdate(obj *Service) error
+	OnServiceUpdate(oldObj *Service, newObj *network.Service) error
 	OnServiceDelete(obj *Service) error
 }
 
@@ -476,22 +488,15 @@ func (ct *ctrlerCtx) handleServiceEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Service)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Service_Updated_Events").Inc()
 
-					ct.stats.Counter("Service_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = serviceHandler.OnServiceUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = serviceHandler.OnServiceUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -533,6 +538,8 @@ func (ct *ctrlerCtx) diffService(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffService(): ServiceList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*network.Service)
 	for _, obj := range objlist {
@@ -543,6 +550,7 @@ func (ct *ctrlerCtx) diffService(apicl apiclient.Services) {
 	for _, obj := range ct.Service().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffService(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -554,6 +562,7 @@ func (ct *ctrlerCtx) diffService(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffService(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -670,6 +679,7 @@ type ServiceAPI interface {
 	Create(obj *network.Service) error
 	Update(obj *network.Service) error
 	Delete(obj *network.Service) error
+	Find(meta *api.ObjectMeta) (*Service, error)
 	List() []*Service
 	Watch(handler ServiceHandler) error
 }
@@ -733,6 +743,24 @@ func (api *serviceAPI) Delete(obj *network.Service) error {
 	return api.ct.handleServiceEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *serviceAPI) Find(meta *api.ObjectMeta) (*Service, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Service", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Service:
+		hobj := obj.(*Service)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all Service objects
 func (api *serviceAPI) List() []*Service {
 	var objlist []*Service
@@ -785,10 +813,8 @@ func (obj *LbPolicy) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.LbPolicy
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.NetworkV1().LbPolicy().Update(context.Background(), &nobj)
+		_, err = apicl.NetworkV1().LbPolicy().Update(context.Background(), &obj.LbPolicy)
 	} else {
 		//  create
 		_, err = apicl.NetworkV1().LbPolicy().Create(context.Background(), &obj.LbPolicy)
@@ -800,7 +826,7 @@ func (obj *LbPolicy) Write() error {
 // LbPolicyHandler is the event handler for LbPolicy object
 type LbPolicyHandler interface {
 	OnLbPolicyCreate(obj *LbPolicy) error
-	OnLbPolicyUpdate(obj *LbPolicy) error
+	OnLbPolicyUpdate(oldObj *LbPolicy, newObj *network.LbPolicy) error
 	OnLbPolicyDelete(obj *LbPolicy) error
 }
 
@@ -845,22 +871,15 @@ func (ct *ctrlerCtx) handleLbPolicyEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*LbPolicy)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("LbPolicy_Updated_Events").Inc()
 
-					ct.stats.Counter("LbPolicy_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = lbpolicyHandler.OnLbPolicyUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = lbpolicyHandler.OnLbPolicyUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -902,6 +921,8 @@ func (ct *ctrlerCtx) diffLbPolicy(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffLbPolicy(): LbPolicyList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*network.LbPolicy)
 	for _, obj := range objlist {
@@ -912,6 +933,7 @@ func (ct *ctrlerCtx) diffLbPolicy(apicl apiclient.Services) {
 	for _, obj := range ct.LbPolicy().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffLbPolicy(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -923,6 +945,7 @@ func (ct *ctrlerCtx) diffLbPolicy(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffLbPolicy(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1039,6 +1062,7 @@ type LbPolicyAPI interface {
 	Create(obj *network.LbPolicy) error
 	Update(obj *network.LbPolicy) error
 	Delete(obj *network.LbPolicy) error
+	Find(meta *api.ObjectMeta) (*LbPolicy, error)
 	List() []*LbPolicy
 	Watch(handler LbPolicyHandler) error
 }
@@ -1100,6 +1124,24 @@ func (api *lbpolicyAPI) Delete(obj *network.LbPolicy) error {
 	}
 
 	return api.ct.handleLbPolicyEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+}
+
+// Find returns an object by meta
+func (api *lbpolicyAPI) Find(meta *api.ObjectMeta) (*LbPolicy, error) {
+	// find the object
+	obj, err := api.ct.FindObject("LbPolicy", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *LbPolicy:
+		hobj := obj.(*LbPolicy)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
 }
 
 // List returns a list of all LbPolicy objects

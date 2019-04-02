@@ -85,6 +85,7 @@ import (
 	"github.com/pensando/sw/venice/utils/nodewatcher"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pensando/sw/venice/utils/strconv"
 	tutils "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 )
@@ -156,6 +157,16 @@ type SuiteConfig struct {
 	TsAgentRestPort      int    // TSAgent REST port
 }
 
+// naples state
+type naples struct {
+	macAddr  string
+	snicName string
+	agent    *netagent.Agent
+	tsAgent  *troubleshooting.Agent
+	tmAgent  *tmrestapi.RestServer
+	nmd      *nmd.Agent
+}
+
 // veniceIntegSuite is the state of integ test
 type veniceIntegSuite struct {
 	config              SuiteConfig // test suite config
@@ -168,10 +179,7 @@ type veniceIntegSuite struct {
 	ctrler              *npm.Netctrler
 	tpm                 *tpm.PolicyManager
 	tsCtrler            *tsm.TsCtrler
-	agents              []*netagent.Agent
-	tsAgents            []*troubleshooting.Agent
-	tmAgent             []*tmrestapi.RestServer
-	nmds                []*nmd.Agent
+	snics               []*naples
 	restClient          apiclient.Services
 	apisrvClient        apiclient.Services
 	vcHub               vchSuite
@@ -260,7 +268,7 @@ func (it *veniceIntegSuite) deleteHostObjects() {
 	for _, h := range hosts {
 		_, err := it.apisrvClient.ClusterV1().Host().Delete(it.ctx, &h.ObjectMeta)
 		if err != nil {
-			log.Fatalf("Couldn't delete host object %+v", h)
+			log.Errorf("Couldn't delete host object %+v", h)
 		}
 	}
 }
@@ -327,7 +335,7 @@ func (it *veniceIntegSuite) launchCMDServer() {
 func (it *veniceIntegSuite) startNmd(c *check.C) {
 	for i := 0; i < it.config.NumHosts; i++ {
 
-		hostID := it.agents[i].NetworkAgent.NodeUUID
+		snic := it.snics[i]
 		restURL := "localhost:0"
 		dbPath := fmt.Sprintf("/tmp/nmd-%d.db", i)
 
@@ -346,7 +354,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 		}
 
 		// Create the new NMD
-		nmd, err := nmd.NewAgent(pa, uc, dbPath, hostID, hostID, smartNICServerURL, restURL, "", "", "network",
+		nmd, err := nmd.NewAgent(pa, uc, dbPath, snic.snicName, snic.macAddr, smartNICServerURL, restURL, "", "", "network",
 			globals.NicRegIntvl*time.Second, globals.NicUpdIntvl*time.Second, it.resolverClient)
 		if err != nil {
 			log.Fatalf("Error creating NMD. Err: %v", err)
@@ -366,18 +374,17 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 		cfg.Spec.NetworkMode = nmdproto.NetworkMode_INBAND.String()
 		cfg.Spec.IPConfig = ipConfig
 		cfg.Spec.MgmtVlan = 0
-		cfg.Spec.Hostname = hostID
+		cfg.Spec.Hostname = snic.snicName
 
 		n.SetNaplesConfig(cfg.Spec)
 		n.IPClient.Update()
-		it.nmds = append(it.nmds, nmd)
+		snic.nmd = nmd
 	}
 
 	// verify NIC is admitted with CMD
 	for i := 0; i < it.config.NumHosts; i++ {
-		hostID := fmt.Sprintf("4444.4444.%02x%02x", i/256, i%256)
 		tutils.AssertEventually(c, func() (bool, interface{}) {
-			nm := it.nmds[i].GetNMD()
+			nm := it.snics[i].nmd.GetNMD()
 
 			// validate the mode is network
 			cfg := nm.GetNaplesConfig()
@@ -390,7 +397,7 @@ func (it *veniceIntegSuite) startNmd(c *check.C) {
 			// Fetch smartnic object
 			nic, err := nm.GetSmartNIC()
 			if nic == nil || err != nil {
-				log.Errorf("NIC not found in nicDB, mac:%s NIC : %s ERR : %s", hostID, nic, err)
+				log.Errorf("NIC not found in nicDB, NIC : %s ERR : %s", nic, err)
 				return false, nil
 			}
 
@@ -666,7 +673,10 @@ func (it *veniceIntegSuite) startAgent() {
 		}
 		// FIXME -- we should not override NodeUUID
 		// currently needed to get TestVeniceIntegSecuritygroup to pass with specific MAC address
-		agent.NetworkAgent.NodeUUID = it.getNaplesMac(i)
+		snicMac := it.getNaplesMac(i)
+		dotMac, _ := strconv.ParseMacAddr(snicMac)
+		snicName := fmt.Sprintf("naples%d", i+1)
+		agent.NetworkAgent.NodeUUID = dotMac
 
 		// TODO Remove this when nmd and delphi hub are integrated with venice_integ and npm_integ
 		npmClient, err := ctrlerif.NewNpmClient(agent.NetworkAgent, globals.Npm, rc)
@@ -725,8 +735,6 @@ func (it *veniceIntegSuite) startAgent() {
 			log.Fatalf("cannot create REST server . Err: %v", err)
 		}
 		agent.RestServer = restServer
-		it.agents = append(it.agents, agent)
-		it.tsAgents = append(it.tsAgents, tsa)
 
 		// report node metrics
 		node := &cluster.SmartNIC{
@@ -737,6 +745,14 @@ func (it *veniceIntegSuite) startAgent() {
 				Name: agent.NetworkAgent.NodeUUID,
 			},
 		}
+
+		snic := naples{
+			macAddr:  snicMac,
+			snicName: snicName,
+			agent:    agent,
+			tsAgent:  tsa,
+		}
+		it.snics = append(it.snics, &snic)
 
 		if i == 0 { // start only 1 instance
 			// Init the TSDB
@@ -778,9 +794,9 @@ func (it *veniceIntegSuite) startAgent() {
 			if err != nil {
 				log.Fatalf("Error creating tmagent rest server. Err: %v", err)
 			}
+			snic.tmAgent = res
 
 			go res.ReportMetrics(10)
-			it.tmAgent = append(it.tmAgent, res)
 		}
 	}
 }
@@ -882,7 +898,7 @@ func (it *veniceIntegSuite) verifyNaplesConnected(c *check.C) {
 		if err != nil {
 			return false, err
 		}
-		if len(snicList) < len(it.agents) {
+		if len(snicList) < len(it.snics) {
 			return false, snicList
 		}
 		for _, snic := range snicList {
@@ -895,7 +911,8 @@ func (it *veniceIntegSuite) verifyNaplesConnected(c *check.C) {
 	}, "Smartnics are not yet admitted", "1s", it.pollTimeout())
 
 	// verify agents are all connected
-	for _, ag := range it.agents {
+	for _, sn := range it.snics {
+		ag := sn.agent
 		tutils.AssertEventually(c, func() (bool, interface{}) {
 			return ag.IsNpmClientConnected(), nil
 		}, "agents are not connected to NPM", "1s", it.pollTimeout())
@@ -1073,23 +1090,20 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 	// stop delphi hub
 	it.hub.Stop()
 	// stop the agents
-	for _, ag := range it.agents {
-		ag.Stop()
+	for _, sn := range it.snics {
+		sn.agent.Stop()
+		sn.tsAgent.Stop()
+		if sn.tmAgent != nil {
+			sn.tmAgent.Stop()
+		}
 	}
-	for i, nmd := range it.nmds {
+	for i, sn := range it.snics {
 		// stop nmd
-		nmd.Stop()
+		sn.nmd.Stop()
 		dbPath := fmt.Sprintf("/tmp/nmd-%d.db", i)
 		os.Remove(dbPath)
 	}
 
-	for _, ag := range it.tmAgent {
-		ag.Stop()
-	}
-
-	for _, ag := range it.tsAgents {
-		ag.Stop()
-	}
 	if it.epsDir != "" {
 		os.RemoveAll(it.epsDir)
 	}
@@ -1098,8 +1112,7 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 	os.RemoveAll("/tmp/tstore/")
 
 	it.epsDir = ""
-	it.agents = []*netagent.Agent{}
-	it.tsAgents = []*troubleshooting.Agent{}
+	it.snics = []*naples{}
 
 	// stop server and client
 	log.Infof("Stop all Test Controllers")

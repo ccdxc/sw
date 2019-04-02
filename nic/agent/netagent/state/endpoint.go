@@ -372,7 +372,6 @@ func (na *Nagent) FindEndpoint(meta api.ObjectMeta) (*netproto.Endpoint, error) 
 	eps, ok := na.EndpointDB[key]
 	na.Unlock()
 	if !ok {
-		log.Errorf("Endpoint %#v was not found", key)
 		return nil, ErrEndpointNotFound
 	}
 

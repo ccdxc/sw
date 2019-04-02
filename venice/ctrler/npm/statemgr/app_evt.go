@@ -7,8 +7,10 @@ import (
 	"strconv"
 
 	"github.com/pensando/sw/api/generated/ctkit"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -182,7 +184,23 @@ func (sm *Statemgr) OnAppCreate(app *ctkit.App) error {
 }
 
 // OnAppUpdate handles update app event
-func (sm *Statemgr) OnAppUpdate(app *ctkit.App) error {
+func (sm *Statemgr) OnAppUpdate(app *ctkit.App, napp *security.App) error {
+	// see if anything changed
+	app.ObjectMeta = napp.ObjectMeta
+	_, ok := ref.ObjDiff(app.Spec, napp.Spec)
+	if (napp.GenerationID == app.GenerationID) && !ok {
+		return nil
+	}
+	app.Spec = napp.Spec
+
+	aps, err := sm.FindApp(app.Tenant, app.Name)
+	if err != nil {
+		return err
+	}
+
+	// save the updated app
+	sm.mbus.UpdateObject(convertApp(aps))
+
 	return nil
 }
 

@@ -115,6 +115,12 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 			}
 
 			if len(pp.Ports) != 0 {
+				// you can not specify ports for icmp
+				if strings.ToLower(pp.Protocol) == "icmp" {
+					return fmt.Errorf("Can not specify ports for ICMP protocol in Rule: %v", r)
+				}
+
+				// parse port ranges
 				portRanges := strings.Split(pp.Ports, ",")
 				for _, prange := range portRanges {
 					ports := strings.Split(prange, "-")
@@ -123,7 +129,7 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 						if err != nil {
 							return fmt.Errorf("port %v must be an integer value in the SGRule: %v", port, r)
 						}
-						if 0 > i || i > 65535 {
+						if i < 0 || i > 65535 {
 							return fmt.Errorf("port %v outside range in rule: %v", port, r)
 						}
 					}

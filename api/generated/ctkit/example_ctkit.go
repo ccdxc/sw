@@ -8,6 +8,7 @@ package ctkit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -19,7 +20,6 @@ import (
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
@@ -47,10 +47,8 @@ func (obj *Order) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Order
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.BookstoreV1().Order().Update(context.Background(), &nobj)
+		_, err = apicl.BookstoreV1().Order().Update(context.Background(), &obj.Order)
 	} else {
 		//  create
 		_, err = apicl.BookstoreV1().Order().Create(context.Background(), &obj.Order)
@@ -62,7 +60,7 @@ func (obj *Order) Write() error {
 // OrderHandler is the event handler for Order object
 type OrderHandler interface {
 	OnOrderCreate(obj *Order) error
-	OnOrderUpdate(obj *Order) error
+	OnOrderUpdate(oldObj *Order, newObj *bookstore.Order) error
 	OnOrderDelete(obj *Order) error
 }
 
@@ -107,22 +105,15 @@ func (ct *ctrlerCtx) handleOrderEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Order)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Order_Updated_Events").Inc()
 
-					ct.stats.Counter("Order_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = orderHandler.OnOrderUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = orderHandler.OnOrderUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -164,6 +155,8 @@ func (ct *ctrlerCtx) diffOrder(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffOrder(): OrderList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*bookstore.Order)
 	for _, obj := range objlist {
@@ -174,6 +167,7 @@ func (ct *ctrlerCtx) diffOrder(apicl apiclient.Services) {
 	for _, obj := range ct.Order().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffOrder(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -185,6 +179,7 @@ func (ct *ctrlerCtx) diffOrder(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffOrder(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -301,6 +296,7 @@ type OrderAPI interface {
 	Create(obj *bookstore.Order) error
 	Update(obj *bookstore.Order) error
 	Delete(obj *bookstore.Order) error
+	Find(meta *api.ObjectMeta) (*Order, error)
 	List() []*Order
 	Watch(handler OrderHandler) error
 }
@@ -364,6 +360,24 @@ func (api *orderAPI) Delete(obj *bookstore.Order) error {
 	return api.ct.handleOrderEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *orderAPI) Find(meta *api.ObjectMeta) (*Order, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Order", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Order:
+		hobj := obj.(*Order)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all Order objects
 func (api *orderAPI) List() []*Order {
 	var objlist []*Order
@@ -416,10 +430,8 @@ func (obj *Book) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Book
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.BookstoreV1().Book().Update(context.Background(), &nobj)
+		_, err = apicl.BookstoreV1().Book().Update(context.Background(), &obj.Book)
 	} else {
 		//  create
 		_, err = apicl.BookstoreV1().Book().Create(context.Background(), &obj.Book)
@@ -431,7 +443,7 @@ func (obj *Book) Write() error {
 // BookHandler is the event handler for Book object
 type BookHandler interface {
 	OnBookCreate(obj *Book) error
-	OnBookUpdate(obj *Book) error
+	OnBookUpdate(oldObj *Book, newObj *bookstore.Book) error
 	OnBookDelete(obj *Book) error
 }
 
@@ -476,22 +488,15 @@ func (ct *ctrlerCtx) handleBookEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Book)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Book_Updated_Events").Inc()
 
-					ct.stats.Counter("Book_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = bookHandler.OnBookUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = bookHandler.OnBookUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -533,6 +538,8 @@ func (ct *ctrlerCtx) diffBook(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffBook(): BookList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*bookstore.Book)
 	for _, obj := range objlist {
@@ -543,6 +550,7 @@ func (ct *ctrlerCtx) diffBook(apicl apiclient.Services) {
 	for _, obj := range ct.Book().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffBook(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -554,6 +562,7 @@ func (ct *ctrlerCtx) diffBook(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffBook(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -670,6 +679,7 @@ type BookAPI interface {
 	Create(obj *bookstore.Book) error
 	Update(obj *bookstore.Book) error
 	Delete(obj *bookstore.Book) error
+	Find(meta *api.ObjectMeta) (*Book, error)
 	List() []*Book
 	Watch(handler BookHandler) error
 }
@@ -733,6 +743,24 @@ func (api *bookAPI) Delete(obj *bookstore.Book) error {
 	return api.ct.handleBookEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *bookAPI) Find(meta *api.ObjectMeta) (*Book, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Book", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Book:
+		hobj := obj.(*Book)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all Book objects
 func (api *bookAPI) List() []*Book {
 	var objlist []*Book
@@ -785,10 +813,8 @@ func (obj *Publisher) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Publisher
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.BookstoreV1().Publisher().Update(context.Background(), &nobj)
+		_, err = apicl.BookstoreV1().Publisher().Update(context.Background(), &obj.Publisher)
 	} else {
 		//  create
 		_, err = apicl.BookstoreV1().Publisher().Create(context.Background(), &obj.Publisher)
@@ -800,7 +826,7 @@ func (obj *Publisher) Write() error {
 // PublisherHandler is the event handler for Publisher object
 type PublisherHandler interface {
 	OnPublisherCreate(obj *Publisher) error
-	OnPublisherUpdate(obj *Publisher) error
+	OnPublisherUpdate(oldObj *Publisher, newObj *bookstore.Publisher) error
 	OnPublisherDelete(obj *Publisher) error
 }
 
@@ -845,22 +871,15 @@ func (ct *ctrlerCtx) handlePublisherEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Publisher)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Publisher_Updated_Events").Inc()
 
-					ct.stats.Counter("Publisher_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = publisherHandler.OnPublisherUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = publisherHandler.OnPublisherUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -902,6 +921,8 @@ func (ct *ctrlerCtx) diffPublisher(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffPublisher(): PublisherList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*bookstore.Publisher)
 	for _, obj := range objlist {
@@ -912,6 +933,7 @@ func (ct *ctrlerCtx) diffPublisher(apicl apiclient.Services) {
 	for _, obj := range ct.Publisher().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffPublisher(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -923,6 +945,7 @@ func (ct *ctrlerCtx) diffPublisher(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffPublisher(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1039,6 +1062,7 @@ type PublisherAPI interface {
 	Create(obj *bookstore.Publisher) error
 	Update(obj *bookstore.Publisher) error
 	Delete(obj *bookstore.Publisher) error
+	Find(meta *api.ObjectMeta) (*Publisher, error)
 	List() []*Publisher
 	Watch(handler PublisherHandler) error
 }
@@ -1102,6 +1126,24 @@ func (api *publisherAPI) Delete(obj *bookstore.Publisher) error {
 	return api.ct.handlePublisherEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *publisherAPI) Find(meta *api.ObjectMeta) (*Publisher, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Publisher", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Publisher:
+		hobj := obj.(*Publisher)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all Publisher objects
 func (api *publisherAPI) List() []*Publisher {
 	var objlist []*Publisher
@@ -1154,10 +1196,8 @@ func (obj *Store) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Store
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.BookstoreV1().Store().Update(context.Background(), &nobj)
+		_, err = apicl.BookstoreV1().Store().Update(context.Background(), &obj.Store)
 	} else {
 		//  create
 		_, err = apicl.BookstoreV1().Store().Create(context.Background(), &obj.Store)
@@ -1169,7 +1209,7 @@ func (obj *Store) Write() error {
 // StoreHandler is the event handler for Store object
 type StoreHandler interface {
 	OnStoreCreate(obj *Store) error
-	OnStoreUpdate(obj *Store) error
+	OnStoreUpdate(oldObj *Store, newObj *bookstore.Store) error
 	OnStoreDelete(obj *Store) error
 }
 
@@ -1214,22 +1254,15 @@ func (ct *ctrlerCtx) handleStoreEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Store)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Store_Updated_Events").Inc()
 
-					ct.stats.Counter("Store_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = storeHandler.OnStoreUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = storeHandler.OnStoreUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -1271,6 +1304,8 @@ func (ct *ctrlerCtx) diffStore(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffStore(): StoreList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*bookstore.Store)
 	for _, obj := range objlist {
@@ -1281,6 +1316,7 @@ func (ct *ctrlerCtx) diffStore(apicl apiclient.Services) {
 	for _, obj := range ct.Store().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffStore(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -1292,6 +1328,7 @@ func (ct *ctrlerCtx) diffStore(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffStore(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1408,6 +1445,7 @@ type StoreAPI interface {
 	Create(obj *bookstore.Store) error
 	Update(obj *bookstore.Store) error
 	Delete(obj *bookstore.Store) error
+	Find(meta *api.ObjectMeta) (*Store, error)
 	List() []*Store
 	Watch(handler StoreHandler) error
 }
@@ -1471,6 +1509,24 @@ func (api *storeAPI) Delete(obj *bookstore.Store) error {
 	return api.ct.handleStoreEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *storeAPI) Find(meta *api.ObjectMeta) (*Store, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Store", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Store:
+		hobj := obj.(*Store)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all Store objects
 func (api *storeAPI) List() []*Store {
 	var objlist []*Store
@@ -1523,10 +1579,8 @@ func (obj *Coupon) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Coupon
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.BookstoreV1().Coupon().Update(context.Background(), &nobj)
+		_, err = apicl.BookstoreV1().Coupon().Update(context.Background(), &obj.Coupon)
 	} else {
 		//  create
 		_, err = apicl.BookstoreV1().Coupon().Create(context.Background(), &obj.Coupon)
@@ -1538,7 +1592,7 @@ func (obj *Coupon) Write() error {
 // CouponHandler is the event handler for Coupon object
 type CouponHandler interface {
 	OnCouponCreate(obj *Coupon) error
-	OnCouponUpdate(obj *Coupon) error
+	OnCouponUpdate(oldObj *Coupon, newObj *bookstore.Coupon) error
 	OnCouponDelete(obj *Coupon) error
 }
 
@@ -1583,22 +1637,15 @@ func (ct *ctrlerCtx) handleCouponEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Coupon)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Coupon_Updated_Events").Inc()
 
-					ct.stats.Counter("Coupon_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = couponHandler.OnCouponUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = couponHandler.OnCouponUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -1640,6 +1687,8 @@ func (ct *ctrlerCtx) diffCoupon(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffCoupon(): CouponList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*bookstore.Coupon)
 	for _, obj := range objlist {
@@ -1650,6 +1699,7 @@ func (ct *ctrlerCtx) diffCoupon(apicl apiclient.Services) {
 	for _, obj := range ct.Coupon().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffCoupon(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -1661,6 +1711,7 @@ func (ct *ctrlerCtx) diffCoupon(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffCoupon(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -1777,6 +1828,7 @@ type CouponAPI interface {
 	Create(obj *bookstore.Coupon) error
 	Update(obj *bookstore.Coupon) error
 	Delete(obj *bookstore.Coupon) error
+	Find(meta *api.ObjectMeta) (*Coupon, error)
 	List() []*Coupon
 	Watch(handler CouponHandler) error
 }
@@ -1840,6 +1892,24 @@ func (api *couponAPI) Delete(obj *bookstore.Coupon) error {
 	return api.ct.handleCouponEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
 }
 
+// Find returns an object by meta
+func (api *couponAPI) Find(meta *api.ObjectMeta) (*Coupon, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Coupon", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Coupon:
+		hobj := obj.(*Coupon)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
+}
+
 // List returns a list of all Coupon objects
 func (api *couponAPI) List() []*Coupon {
 	var objlist []*Coupon
@@ -1892,10 +1962,8 @@ func (obj *Customer) Write() error {
 
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
-		nobj := obj.Customer
-		// FIXME: clear the resource version till we figure out CAS semantics
 		// update it
-		_, err = apicl.BookstoreV1().Customer().Update(context.Background(), &nobj)
+		_, err = apicl.BookstoreV1().Customer().Update(context.Background(), &obj.Customer)
 	} else {
 		//  create
 		_, err = apicl.BookstoreV1().Customer().Create(context.Background(), &obj.Customer)
@@ -1907,7 +1975,7 @@ func (obj *Customer) Write() error {
 // CustomerHandler is the event handler for Customer object
 type CustomerHandler interface {
 	OnCustomerCreate(obj *Customer) error
-	OnCustomerUpdate(obj *Customer) error
+	OnCustomerUpdate(oldObj *Customer, newObj *bookstore.Customer) error
 	OnCustomerDelete(obj *Customer) error
 }
 
@@ -1952,22 +2020,15 @@ func (ct *ctrlerCtx) handleCustomerEvent(evt *kvstore.WatchEvent) error {
 			} else {
 				obj := fobj.(*Customer)
 
-				// see if it changed
-				_, ok := ref.ObjDiff(obj.Spec, eobj.Spec)
-				if ok || obj.ObjectMeta.GenerationID != eobj.ObjectMeta.GenerationID {
-					obj.ObjectMeta = eobj.ObjectMeta
-					obj.Spec = eobj.Spec
+				ct.stats.Counter("Customer_Updated_Events").Inc()
 
-					ct.stats.Counter("Customer_Updated_Events").Inc()
-
-					// call the event handler
-					obj.Lock()
-					err = customerHandler.OnCustomerUpdate(obj)
-					obj.Unlock()
-					if err != nil {
-						ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
-						return err
-					}
+				// call the event handler
+				obj.Lock()
+				err = customerHandler.OnCustomerUpdate(obj, eobj)
+				obj.Unlock()
+				if err != nil {
+					ct.logger.Errorf("Error creating %s %+v. Err: %v", kind, obj, err)
+					return err
 				}
 			}
 		case kvstore.Deleted:
@@ -2009,6 +2070,8 @@ func (ct *ctrlerCtx) diffCustomer(apicl apiclient.Services) {
 		return
 	}
 
+	ct.logger.Infof("diffCustomer(): CustomerList returned %d objects", len(objlist))
+
 	// build an object map
 	objmap := make(map[string]*bookstore.Customer)
 	for _, obj := range objlist {
@@ -2019,6 +2082,7 @@ func (ct *ctrlerCtx) diffCustomer(apicl apiclient.Services) {
 	for _, obj := range ct.Customer().List() {
 		_, ok := objmap[obj.GetKey()]
 		if !ok {
+			ct.logger.Infof("diffCustomer(): Deleting existing object %#v since its not in apiserver", obj.GetKey())
 			evt := kvstore.WatchEvent{
 				Type:   kvstore.Deleted,
 				Key:    obj.GetKey(),
@@ -2030,6 +2094,7 @@ func (ct *ctrlerCtx) diffCustomer(apicl apiclient.Services) {
 
 	// trigger create event for all others
 	for _, obj := range objlist {
+		ct.logger.Infof("diffCustomer(): Adding object %#v", obj.GetKey())
 		evt := kvstore.WatchEvent{
 			Type:   kvstore.Created,
 			Key:    obj.GetKey(),
@@ -2146,6 +2211,7 @@ type CustomerAPI interface {
 	Create(obj *bookstore.Customer) error
 	Update(obj *bookstore.Customer) error
 	Delete(obj *bookstore.Customer) error
+	Find(meta *api.ObjectMeta) (*Customer, error)
 	List() []*Customer
 	Watch(handler CustomerHandler) error
 }
@@ -2207,6 +2273,24 @@ func (api *customerAPI) Delete(obj *bookstore.Customer) error {
 	}
 
 	return api.ct.handleCustomerEvent(&kvstore.WatchEvent{Object: obj, Type: kvstore.Deleted})
+}
+
+// Find returns an object by meta
+func (api *customerAPI) Find(meta *api.ObjectMeta) (*Customer, error) {
+	// find the object
+	obj, err := api.ct.FindObject("Customer", meta)
+	if err != nil {
+		return nil, err
+	}
+
+	// asset type
+	switch obj.(type) {
+	case *Customer:
+		hobj := obj.(*Customer)
+		return hobj, nil
+	default:
+		return nil, errors.New("incorrect object type")
+	}
 }
 
 // List returns a list of all Customer objects

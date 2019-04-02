@@ -3,6 +3,10 @@
 package statemgr
 
 import (
+	"sync"
+
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -10,8 +14,9 @@ import (
 
 // HostState is a wrapper for host object
 type HostState struct {
-	Host     *ctkit.Host `json:"-"` // host object
-	stateMgr *Statemgr   // pointer to state manager
+	Host      *ctkit.Host `json:"-"` // host object
+	stateMgr  *Statemgr   // pointer to state manager
+	workloads sync.Map    // list of workloads
 }
 
 // HostStateFromObj conerts from memdb object to host state
@@ -42,6 +47,16 @@ func NewHostState(host *ctkit.Host, stateMgr *Statemgr) (*HostState, error) {
 	return hs, nil
 }
 
+// addWorkload adds a workload to host
+func (hst *HostState) addWorkload(wrk *ctkit.Workload) {
+	hst.workloads.Store(wrk.Name, wrk.ObjectMeta)
+}
+
+// removeWorkload removes a workload from host
+func (hst *HostState) removeWorkload(wrk *ctkit.Workload) {
+	hst.workloads.Delete(wrk.Name)
+}
+
 // OnHostCreate handles host creation
 func (sm *Statemgr) OnHostCreate(host *ctkit.Host) error {
 	// see if we already have the host
@@ -64,7 +79,54 @@ func (sm *Statemgr) OnHostCreate(host *ctkit.Host) error {
 }
 
 // OnHostUpdate handles host object update
-func (sm *Statemgr) OnHostUpdate(host *ctkit.Host) error {
+func (sm *Statemgr) OnHostUpdate(host *ctkit.Host, nhst *cluster.Host) error {
+	// see if we already have the host
+	hs, err := sm.FindHost(host.Tenant, host.Name)
+	if err != nil {
+		return err
+	}
+
+	rescanEps := false
+	// check if host mac address changed
+	if len(host.Spec.SmartNICs) != len(nhst.Spec.SmartNICs) {
+		rescanEps = true
+	} else {
+		for idx, sn := range nhst.Spec.SmartNICs {
+			if host.Spec.SmartNICs[idx].Name != sn.Name || host.Spec.SmartNICs[idx].MACAddress != sn.MACAddress {
+				rescanEps = true
+			}
+		}
+	}
+
+	hs.Host.Host = *nhst
+
+	if rescanEps {
+		var snic *SmartNICState
+		// find the smart nic by name or mac addr
+		for jj := range host.Host.Spec.SmartNICs {
+			if host.Host.Spec.SmartNICs[jj].Name != "" {
+				snic, err = sm.FindSmartNICByHname(host.Host.Spec.SmartNICs[jj].Name)
+				if err != nil {
+					log.Errorf("Error finding smart nic for name %v", host.Host.Spec.SmartNICs[jj].Name)
+				}
+			} else if host.Host.Spec.SmartNICs[jj].MACAddress != "" {
+				snicMac := host.Host.Spec.SmartNICs[jj].MACAddress
+				snic, err = sm.FindSmartNICByMacAddr(snicMac)
+				if err != nil {
+					log.Errorf("Error finding smart nic for mac add %v", snicMac)
+				}
+			}
+		}
+		hs.workloads.Range(func(key, value interface{}) bool {
+			wmeta := value.(api.ObjectMeta)
+			wrk, err := sm.FindWorkload(wmeta.Tenant, wmeta.Name)
+			if err == nil {
+				sm.reconcileWorkload(wrk.Workload, hs, snic)
+			}
+			return true
+		})
+	}
+
 	return nil
 }
 

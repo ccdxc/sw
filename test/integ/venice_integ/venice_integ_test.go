@@ -55,7 +55,7 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 
 	// verify network gets created in agent
 	AssertEventually(c, func() (bool, interface{}) {
-		_, cerr := it.agents[0].NetworkAgent.FindNetwork(nw.ObjectMeta)
+		_, cerr := it.snics[0].agent.NetworkAgent.FindNetwork(nw.ObjectMeta)
 		return (cerr == nil), nil
 	}, "Network not found in agent", "100ms", it.pollTimeout())
 
@@ -65,7 +65,7 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 
 	// verify network is removed from agent
 	AssertEventually(c, func() (bool, interface{}) {
-		_, cerr := it.agents[0].NetworkAgent.FindNetwork(nw.ObjectMeta)
+		_, cerr := it.snics[0].agent.NetworkAgent.FindNetwork(nw.ObjectMeta)
 		return (cerr != nil), nil
 	}, "Network still found in agent", "100ms", it.pollTimeout())
 }
