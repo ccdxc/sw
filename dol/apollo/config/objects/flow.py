@@ -48,6 +48,7 @@ class FlowMapObject(base.ConfigObjectBase):
               self.__lobj.VNIC.SUBNET.VPC.VPCId, self.__lobj.VNIC.VnicId))
         if self.__robj is None:
             logger.info("No Remote mapping object")
+            self.__routeTblObj.Show()
             return
         logger.info("Remote Id:%d|IPAddr:%s|SubnetId:%d|VPCId:%d"\
              %(self.__robj.MappingId, self.__robj.IPAddr,\

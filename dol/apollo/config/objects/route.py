@@ -65,7 +65,7 @@ class RouteObject(base.ConfigObjectBase):
         return
 
     def SetupTestcaseConfig(self, obj):
-        obj.local_mapping = self.l_obj
+        obj.localmapping = self.l_obj
         obj.route = self
         obj.hostport = 1
         obj.switchport = 2

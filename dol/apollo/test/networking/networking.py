@@ -1,7 +1,7 @@
 #! /usr/bin/python3
-# Test Module
+# Networking Module
 import pdb
-import apollo.test.callbacks.networking.modcbs as modcbs
+import apollo.test.callbacks.common.modcbs as modcbs
 
 def Setup(infra, module):
     modcbs.Setup(infra, module)

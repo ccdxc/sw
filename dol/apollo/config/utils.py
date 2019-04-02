@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 import sys
-from random import choices
+from random import sample
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
 from infra.common.logging import logger
@@ -26,7 +26,7 @@ def GetFilteredObjects(objs, maxlimits, random=True):
     if maxlimits is None or maxlimits is 0 or maxlimits >= len(objs):
         return objs
     if random:
-        return choices(objs, k = maxlimits)
+        return sample(objs, k = maxlimits)
     return objs[0:maxlimits]
 
 def GetTunnelType(e):
