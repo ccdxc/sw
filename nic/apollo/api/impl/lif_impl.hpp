@@ -76,14 +76,13 @@ public:
         return false;
     }
 
-    ///< \brief    program lif tx policer for given lif 
+    ///< \brief    program lif tx policer for given lif
     ///< param[in] lif_id     h/w lif id
     ///< param[in] policer    policer parameters
     static sdk_ret_t program_tx_policer(uint32_t lif_id,
                                         sdk::policer_t *policer);
 
-    ///< \brief  return the pinned port id of the lif
-    /// \return  ifindex this lif is pinned to
+    /// \brief     ifindex this lif is pinned to
     pds_ifindex_t pinned_ifindex(void) const {
         return pinned_if_idx_;
     }
@@ -101,7 +100,7 @@ private:
 
 private:
     pds_lif_key_t    key_;               ///< (s/w & h/w) lif id
-    pds_ifindex_t    pinned_if_idx_;     ///< pinnned port id, if any
+    pds_ifindex_t    pinned_if_idx_;     ///< pinnned if index, if any
     ht_ctxt_t        ht_ctxt_;           ///< hash table context
 
     friend class lif_impl_state;         ///< lif_impl_state is friend of lif_impl

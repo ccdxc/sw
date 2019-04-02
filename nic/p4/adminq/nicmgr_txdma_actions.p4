@@ -3,8 +3,13 @@
           before including the common p4 defines.
 */
 
-#include "../common-p4+/common_txdma_dummy.p4"
+#ifdef APOLLO
+#include "apollo/p4/txdma/common_txdma_dummy.p4"
+#else
+#include "nic/p4/common-p4+/common_txdma_dummy.p4"
+#endif
 
+#define common_p4plus_stage0_app_header_table_action_dummy nicmgr_fetch_desc
 #define tx_table_s0_t0_action nicmgr_fetch_desc
 #define tx_table_s0_t0_action1 nicmgr_drop
 #define tx_table_s1_t0_action nicmgr_process_desc_hdr
@@ -12,8 +17,12 @@
 #define tx_table_s2_t0_action nicmgr_post_adminq
 #define tx_table_s3_t0_action nicmgr_commit
 
+#ifdef APOLLO
+#include "apollo/p4/txdma/common_txdma.p4"
+#else
+#include "nic/p4/common-p4+/common_txdma.p4"
+#endif
 
-#include "../common-p4+/common_txdma.p4"
 #include "nicmgr_txdma.p4"
 #include "defines.h"
 

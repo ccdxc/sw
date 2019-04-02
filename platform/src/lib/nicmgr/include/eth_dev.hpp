@@ -15,6 +15,7 @@
 
 #include "nic/sdk/lib/indexer/indexer.hpp"
 #include "nic/sdk/platform/evutils/include/evutils.h"
+#include "nic/sdk/platform/devapi/devapi_types.hpp"
 
 #ifdef __aarch64__
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
@@ -106,7 +107,7 @@ public:
                                  void *resp, void *resp_data);
     static struct eth_devspec *ParseConfig(boost::property_tree::ptree::value_type node);
 
-    static types::LifType ConvertDevTypeToLifType(EthDevType dev_type);
+    static lif_type_t ConvertDevTypeToLifType(EthDevType dev_type);
 
     void LinkEventHandler(port_status_t *evd);
     void XcvrEventHandler(port_status_t *evd);

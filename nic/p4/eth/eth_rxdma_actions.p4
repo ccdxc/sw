@@ -3,7 +3,11 @@
           before including the common p4 defines.
 */
 
-#include "../common-p4+/common_rxdma_dummy.p4"
+#ifdef APOLLO
+#include "apollo/p4/rxdma/common_rxdma_dummy.p4"
+#else
+#include "nic/p4/common-p4+/common_rxdma_dummy.p4"
+#endif
 
 #define common_p4plus_stage0_app_header_table_action_dummy eth_rx_app_header
 #define rx_table_s0_t0_action eth_rx_app_header
@@ -17,7 +21,12 @@
 #define rx_table_s7_t0_action eth_rx_completion
 #define rx_table_s7_t1_action eth_rx_stats
 
-#include "../common-p4+/common_rxdma.p4"
+#ifdef APOLLO
+#include "apollo/p4/rxdma/common_rxdma.p4"
+#else
+#include "nic/p4/common-p4+/common_rxdma.p4"
+#endif
+
 #include "eth_rxdma.p4"
 #include "defines.h"
 

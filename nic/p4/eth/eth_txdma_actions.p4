@@ -3,7 +3,11 @@
           before including the common p4 defines.
 */
 
-#include "../common-p4+/common_txdma_dummy.p4"
+#ifdef APOLLO
+#include "apollo/p4/txdma/common_txdma_dummy.p4"
+#else
+#include "nic/p4/common-p4+/common_txdma_dummy.p4"
+#endif
 
 #define common_p4plus_stage0_app_header_table_action_dummy eth_tx_fetch_desc
 #define tx_table_s0_t0_action eth_tx_fetch_desc
@@ -15,7 +19,11 @@
 #define tx_table_s7_t0_action eth_tx_completion
 #define tx_table_s7_t1_action eth_tx_stats
 
-#include "../common-p4+/common_txdma.p4"
+#ifdef APOLLO
+#include "apollo/p4/txdma/common_txdma.p4"
+#else
+#include "nic/p4/common-p4+/common_txdma.p4"
+#endif
 #include "eth_txdma.p4"
 
 /******************************************************************************

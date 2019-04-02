@@ -60,6 +60,28 @@
              "size": "64M"
         },
         {
+            "name": "devcmd",
+            "size": "32768K"
+        },
+        {
+            "name": "nicmgrqstate_map",
+            "size": "32768K",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "nicmgr",
+            "size" : "32768K"
+        },
+        {
+            "name": "lif_stats",
+            "size": "1024K",
+            "reset": true
+        },
+        {
+            "name": "rss_indir_table",
+            "size": "1024K"
+        },
+        {
             "name": "lif2qstate_map",
             "size": "4K",
             "cache": "p4plus-all"
@@ -211,10 +233,6 @@
             "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
             "name": "timers",
             "size": "1088K"
-        },
-        {
-            "name": "devcmd",
-            "size": "32768K"
         }
     ]
 }

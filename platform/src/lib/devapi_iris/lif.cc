@@ -1170,7 +1170,6 @@ devapi_lif::populate_req(LifRequestMsg &req_msg,
     req->set_hw_lif_id(lif_info->lif_id);
     req->mutable_pinned_uplink_if_key_handle()->
         set_interface_id(get_uplink() ? get_uplink()->get_id() : 0);
-        // set_interface_id(lif_info->pinned_uplink ? lif_info->pinned_uplink->get_id() : 0);
     req->mutable_packet_filter()->set_receive_broadcast(lif_info->receive_broadcast);
     req->mutable_packet_filter()->set_receive_all_multicast(lif_info->receive_all_multicast);
     req->mutable_packet_filter()->set_receive_promiscuous(lif_info->receive_promiscuous);

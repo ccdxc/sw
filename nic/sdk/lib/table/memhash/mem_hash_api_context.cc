@@ -21,7 +21,7 @@ using sdk::table::mem_hash_properties_t;
 mem_hash_api_context g_api_contexts[16];
 uint8_t g_api_ctx_iter;
 
-mem_hash_api_context* 
+mem_hash_api_context*
 mem_hash_api_context::alloc_() {
     mem_hash_api_context *ctx = NULL;
     void *mem = NULL;
@@ -117,7 +117,7 @@ mem_hash_api_context::factory(mem_hash_api_context *pctx) {
 }
 
 mem_hash_api_context*
-mem_hash_api_context::factory(uint32_t op, 
+mem_hash_api_context::factory(uint32_t op,
                               sdk_table_api_params_t *params,
                               mem_hash_properties_t *props,
                               mem_hash_table_stats *table_stats,
@@ -179,7 +179,7 @@ mem_hash_api_context::factory(uint32_t op,
     return ctx;
 }
 
-void 
+void
 mem_hash_api_context::destroy(mem_hash_api_context* ctx) {
     MEMHASH_TRACE_VERBOSE("Destroying api context: %s", ctx->idstr());
 #ifdef MEM_HASH_API_CONTEXT_CALLOC

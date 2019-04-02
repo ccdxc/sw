@@ -31,6 +31,7 @@
 #include "nic/apollo/p4/include/defines.h"
 #include "nic/apollo/p4/include/table_sizes.h"
 #include "nic/apollo/p4/include/sacl_defines.h"
+#include "nic/apollo/core/trace.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
@@ -282,6 +283,8 @@ uint16_t g_sacl_ip_class_id = 0x355;
 uint16_t g_sacl_sport_class_id = 0x59;
 uint16_t g_sacl_proto_dport_class_id = 0xAA;
 uint16_t g_sacl_p1_class_id = 0x2BB;
+mpartition *g_mempartition;
+
 
 class sort_mpu_programs_compare {
 public:
@@ -330,6 +333,15 @@ static void
 init_service_lif ()
 {
     LIFQState qstate = {0};
+#if 0
+    uint8_t pgm_offset = 0;
+    program_info *pginfo = program_info::factory("conf/gen/mpu_prog_info.json");
+    SDK_ASSERT(pginfo != NULL);
+
+    sdk::platform::capri::get_pc_offset(pginfo,
+                                        "txdma_stage0.bin", "apollo_read_qstate", &pgm_offset);
+#endif
+
     qstate.lif_id = APOLLO_SERVICE_LIF;
     qstate.hbm_address = get_mem_addr(JLIFQSTATE);
     qstate.params_in.type[0].entries = 1;
@@ -337,6 +349,7 @@ init_service_lif ()
     push_qstate_to_capri(&qstate, 0);
 
     lifqstate_t lif_qstate = {0};
+    // lif_qstate.pc = pgm_offset;
     lif_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
     lif_qstate.ring0_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
     lif_qstate.total_rings = 1;
@@ -344,6 +357,7 @@ init_service_lif ()
                  sizeof(lif_qstate));
 
     txdma_qstate_t txdma_qstate = {0};
+    // txdma_qstate.pc = pgm_offset;
     txdma_qstate.rxdma_cindex_addr =
         qstate.hbm_address + offsetof(lifqstate_t, sw_cindex);
     txdma_qstate.ring_base = get_mem_addr(JPKTBUFFER);
@@ -936,6 +950,53 @@ vxlan_init (void) {
     vxlan_mappings_init();
 }
 
+#define MEM_REGION_LIF_STATS_BASE   "lif_stats_base"
+#define RXDMA_SYMBOLS_MAX           1
+#define TXDMA_SYMBOLS_MAX           1
+uint32_t
+rxdma_symbols_init (void **p4plus_symbols,
+                    platform_type_t platform_type)
+{
+    uint32_t    i = 0;
+
+    *p4plus_symbols = (sdk::p4::p4_param_info_t *)
+        SDK_CALLOC(SDK_MEM_ALLOC_PDS_RXDMA_SYMBOLS,
+                   RXDMA_SYMBOLS_MAX * sizeof(sdk::p4::p4_param_info_t));
+    sdk::p4::p4_param_info_t *symbols =
+        (sdk::p4::p4_param_info_t *)(*p4plus_symbols);
+
+    symbols[i].name = MEM_REGION_LIF_STATS_BASE;
+    // symbols[i].val = 0xce000000;
+    symbols[i].val = g_mempartition->
+                     start_addr(MEM_REGION_LIF_STATS_NAME);
+    i++;
+    SDK_ASSERT(i <= RXDMA_SYMBOLS_MAX);
+
+    return i;
+}
+
+uint32_t
+txdma_symbols_init (void **p4plus_symbols,
+                    platform_type_t platform_type)
+{
+    uint32_t    i = 0;
+
+    *p4plus_symbols = (sdk::p4::p4_param_info_t *)
+        SDK_CALLOC(SDK_MEM_ALLOC_PDS_TXDMA_SYMBOLS,
+                   TXDMA_SYMBOLS_MAX * sizeof(sdk::p4::p4_param_info_t));
+    sdk::p4::p4_param_info_t *symbols =
+        (sdk::p4::p4_param_info_t *)(*p4plus_symbols);
+
+    symbols[i].name = MEM_REGION_LIF_STATS_BASE;
+    symbols[i].val = g_mempartition->
+                     start_addr(MEM_REGION_LIF_STATS_NAME);
+    i++;
+    SDK_ASSERT(i <= TXDMA_SYMBOLS_MAX);
+
+    return i;
+}
+
+
 class apollo_test : public ::testing::Test {
 protected:
     apollo_test() {}
@@ -988,6 +1049,7 @@ TEST_F(apollo_test, test1)
     cfg.catalog = catalog;
     cfg.mempartition =
         sdk::platform::utils::mpartition::factory(mpart_json.c_str());
+    g_mempartition = cfg.mempartition;
 
     default_config_dir = std::getenv("HAL_PBC_INIT_CONFIG");
     if (default_config_dir) {
@@ -1023,9 +1085,11 @@ TEST_F(apollo_test, test1)
     cfg.asm_cfg[1].name = std::string("apollo_rxdma");
     cfg.asm_cfg[1].path = std::string("rxdma_asm");
     cfg.asm_cfg[1].base_addr = std::string(JRXDMA_PRGM);
+    cfg.asm_cfg[1].symbols_func = rxdma_symbols_init;
     cfg.asm_cfg[2].name = std::string("apollo_txdma");
     cfg.asm_cfg[2].path = std::string("txdma_asm");
     cfg.asm_cfg[2].base_addr = std::string(JTXDMA_PRGM);
+    cfg.asm_cfg[2].symbols_func = txdma_symbols_init;
 
     cfg.completion_func = NULL;
 

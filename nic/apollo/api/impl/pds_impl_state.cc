@@ -21,6 +21,7 @@ pds_impl_state g_pds_impl_state;
 sdk_ret_t
 pds_impl_state::init(pds_state *state) {
     apollo_impl_db_ = new apollo_impl_state(state);
+    lif_impl_db_ = new lif_impl_state(state);
     tep_impl_db_ = new tep_impl_state(state);
     vnic_impl_db_ = new vnic_impl_state(state);
     mapping_impl_db_ = new mapping_impl_state(state);
@@ -33,6 +34,7 @@ pds_impl_state::init(pds_state *state) {
 /**< @brief    constructor */
 pds_impl_state::pds_impl_state() {
     apollo_impl_db_ = NULL;
+    lif_impl_db_ = NULL;
     tep_impl_db_ = NULL;
     vnic_impl_db_ = NULL;
     mapping_impl_db_ = NULL;
@@ -43,6 +45,7 @@ pds_impl_state::pds_impl_state() {
 /**< @brief    destructor */
 pds_impl_state::~pds_impl_state() {
     delete apollo_impl_db_;
+    delete lif_impl_db_;
     delete tep_impl_db_;
     delete vnic_impl_db_;
     delete mapping_impl_db_;

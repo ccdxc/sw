@@ -13,7 +13,10 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+#ifndef APOLLO
 #include "gen/proto/device.pb.h"
+#include "accel_dev.hpp"
+#endif
 
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/sdk/platform/misc/include/maclib.h"
@@ -24,7 +27,7 @@
 #include "adminq.hpp"
 #include "dev.hpp"
 #include "eth_dev.hpp"
-#include "accel_dev.hpp"
+#include "nicmgr_init.hpp"
 
 using namespace std;
 
@@ -72,8 +75,10 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) ==
                sdk::lib::PAL_RET_OK);
 #elif __aarch64__
+#ifndef APOLLO
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) ==
                sdk::lib::PAL_RET_OK);
+#endif
 #endif
     this->fwd_mode = fwd_mode;
     this->config_file = config_file;
@@ -92,6 +97,7 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
 string
 DeviceManager::ParseDeviceConf(string filename)
 {
+#ifndef APOLLO
     boost::property_tree::ptree spec;
 
     cout << "Parsing Device conf, input: " << filename << endl;
@@ -125,7 +131,7 @@ DeviceManager::ParseDeviceConf(string filename)
         cout << "Unknown mode, returning classic default" << endl;
         return string("/platform/etc/nicmgrd/device.json");
     }
-
+#endif
     return string("");
 }
 
@@ -350,7 +356,7 @@ DeviceManager::HalEventHandler(bool status)
     if (status && !init_done) {
         NIC_LOG_DEBUG("Hal UP: Initializing hal client and creating VRFs.");
         // Instantiate HAL client
-        dev_api = devapi_iris::factory();
+        dev_api = devapi_init();
         dev_api->set_fwd_mode(fwd_mode);
         pd->update();
 

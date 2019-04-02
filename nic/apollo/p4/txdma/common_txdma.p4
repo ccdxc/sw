@@ -1072,6 +1072,7 @@ control ingress {
             apply(tx_table_s7_t0);
         }
         if (app_header.table1_valid == 1) {
+            apply(tx_table_s0_t1);
             apply(tx_table_s1_t1);
             apply(tx_table_s2_t1);
             apply(tx_table_s3_t1);

@@ -14,6 +14,8 @@ struct common_p4plus_stage0_app_header_table_eth_rx_app_header_d d;
 
 %%
 
+ .param          eth_rx_fetch_desc
+
 .align
 eth_rx_app_header:
   INIT_STATS(_r_stats)
@@ -57,5 +59,17 @@ eth_rx_app_header:
 
   SAVE_STATS(_r_stats)
 
+#ifndef APOLLO
   phvwr.e         p.eth_rx_cq_desc_len_lo, k.p4_to_p4plus_packet_len[7:0]
   phvwr.f         p.eth_rx_cq_desc_len_hi, k.p4_to_p4plus_packet_len[13:8]
+#else
+  phvwr           p.eth_rx_cq_desc_len_lo, k.p4_to_p4plus_packet_len[7:0]
+  phvwr           p.eth_rx_cq_desc_len_hi, k.p4_to_p4plus_packet_len[13:8]
+
+  // Launch qstate in next stage
+  phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)
+  phvwri          p.common_te0_phv_table_lock_en, 1
+  phvwri          p.common_te0_phv_table_pc, eth_rx_fetch_desc[38:6]
+  phvwr.e         p.common_te0_phv_table_addr, k.p4_rxdma_intr_qstate_addr
+  phvwri.f        p.common_te0_phv_table_raw_table_size, LG2_RX_QSTATE_SIZE
+#endif

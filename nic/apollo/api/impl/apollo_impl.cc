@@ -11,19 +11,23 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/asic/rw/asicrw.hpp"
+#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
+#include "nic/sdk/lib/p4/p4_api.hpp"
+#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/apollo/api/impl/apollo_impl.hpp"
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
+#include "gen/platform/mem_regions.hpp"
 
 extern int p4pd_txdma_get_max_action_id(uint32_t tableid);
 extern sdk_ret_t init_service_lif(void);
 
-#define JP4_PRGM        "p4_program"
-#define JRXDMA_PRGM     "rxdma_program"
-#define JTXDMA_PRGM     "txdma_program"
+#define MEM_REGION_LIF_STATS_BASE   "lif_stats_base"
+#define RXDMA_SYMBOLS_MAX           1
+#define TXDMA_SYMBOLS_MAX           1
 
 namespace api {
 namespace impl {
@@ -86,6 +90,56 @@ apollo_impl::sort_mpu_programs_(std::vector<std::string>& programs) {
     sort(programs.begin(), programs.end(), sort_compare);
 }
 
+/*
+ * @brief    apollo specific rxdma symbols init function
+ * @param[in] program information
+ */
+uint32_t
+apollo_impl::rxdma_symbols_init_ (void **p4plus_symbols,
+                                  platform_type_t platform_type)
+{
+    uint32_t    i = 0;
+
+    *p4plus_symbols = (sdk::p4::p4_param_info_t *)
+        SDK_CALLOC(SDK_MEM_ALLOC_PDS_RXDMA_SYMBOLS,
+                   RXDMA_SYMBOLS_MAX * sizeof(sdk::p4::p4_param_info_t));
+    sdk::p4::p4_param_info_t *symbols =
+        (sdk::p4::p4_param_info_t *)(*p4plus_symbols);
+
+    symbols[i].name = MEM_REGION_LIF_STATS_BASE;
+    symbols[i].val = api::g_pds_state.mempartition()->
+                     start_addr(MEM_REGION_LIF_STATS_NAME);
+    i++;
+    SDK_ASSERT(i <= RXDMA_SYMBOLS_MAX);
+
+    return i;
+}
+
+/*
+ * @brief    apollo specific txdma symbols init function
+ * @param[in] program information
+ */
+uint32_t
+apollo_impl::txdma_symbols_init_ (void **p4plus_symbols,
+                                  platform_type_t platform_type)
+{
+    uint32_t    i = 0;
+
+    *p4plus_symbols = (sdk::p4::p4_param_info_t *)
+        SDK_CALLOC(SDK_MEM_ALLOC_PDS_TXDMA_SYMBOLS,
+                   TXDMA_SYMBOLS_MAX * sizeof(sdk::p4::p4_param_info_t));
+    sdk::p4::p4_param_info_t *symbols =
+        (sdk::p4::p4_param_info_t *)(*p4plus_symbols);
+
+    symbols[i].name = MEM_REGION_LIF_STATS_BASE;
+    symbols[i].val = api::g_pds_state.mempartition()->
+                     start_addr(MEM_REGION_LIF_STATS_NAME);
+    i++;
+    SDK_ASSERT(i <= TXDMA_SYMBOLS_MAX);
+
+    return i;
+}
+
 /**
  * @brief    initialize an instance of apollo impl class
  * @param[in] pipeline_cfg    pipeline information
@@ -144,14 +198,16 @@ apollo_impl::asm_config_init(pds_init_params_t *init_params,
     memset(asic_cfg->asm_cfg, 0, sizeof(asic_cfg->asm_cfg));
     asic_cfg->asm_cfg[0].name = init_params->pipeline + "_p4";
     asic_cfg->asm_cfg[0].path = std::string("p4_asm");
-    asic_cfg->asm_cfg[0].base_addr = std::string(JP4_PRGM);
+    asic_cfg->asm_cfg[0].base_addr = std::string(MEM_REGION_P4_PROGRAM_NAME);
     asic_cfg->asm_cfg[0].sort_func = sort_mpu_programs_;
     asic_cfg->asm_cfg[1].name = init_params->pipeline + "_rxdma";
     asic_cfg->asm_cfg[1].path = std::string("rxdma_asm");
-    asic_cfg->asm_cfg[1].base_addr = std::string(JRXDMA_PRGM);
+    asic_cfg->asm_cfg[1].base_addr = std::string(MEM_REGION_RXDMA_PROGRAM_NAME);
+    asic_cfg->asm_cfg[1].symbols_func = rxdma_symbols_init_;
     asic_cfg->asm_cfg[2].name = init_params->pipeline + "_txdma";
     asic_cfg->asm_cfg[2].path = std::string("txdma_asm");
-    asic_cfg->asm_cfg[2].base_addr = std::string(JTXDMA_PRGM);
+    asic_cfg->asm_cfg[2].base_addr = std::string(MEM_REGION_TXDMA_PROGRAM_NAME);
+    asic_cfg->asm_cfg[2].symbols_func = txdma_symbols_init_;
 }
 
 /**
@@ -381,6 +437,54 @@ apollo_impl::table_init_(void) {
 }
 
 /**
+ * @brief    init routine to initialize p4plus tables
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+apollo_impl::p4plus_table_init_(void) {
+    p4pd_table_properties_t tbl_ctx_apphdr;
+    p4pd_table_properties_t tbl_ctx_apphdr_off;
+    p4pd_table_properties_t tbl_ctx_txdma_act;
+    p4pd_table_properties_t tbl_ctx_txdma_act_ext;
+    p4plus_prog_t prog;
+
+    p4pd_global_table_properties_get(P4_APOLLO_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
+                                     &tbl_ctx_apphdr);
+    p4pd_global_table_properties_get(P4_APOLLO_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64,
+                                     &tbl_ctx_apphdr_off);
+    memset(&prog, 0, sizeof(prog));
+    prog.stageid = tbl_ctx_apphdr.stage;
+    prog.stage_tableid = tbl_ctx_apphdr.stage_tableid;
+    prog.stage_tableid_off = tbl_ctx_apphdr_off.stage_tableid;
+    prog.control = "apollo_rxdma";
+    prog.prog_name = "rxdma_stage0.bin";
+    prog.pipe = P4_PIPELINE_RXDMA;
+    sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
+
+    p4pd_global_table_properties_get(P4_APOLLO_TXDMA_TBL_ID_TX_TABLE_S0_T0,
+                                     &tbl_ctx_txdma_act);
+    memset(&prog, 0, sizeof(prog));
+    prog.stageid = tbl_ctx_txdma_act.stage;
+    prog.stage_tableid = tbl_ctx_txdma_act.stage_tableid;
+    prog.control = "apollo_txdma";
+    prog.prog_name = "txdma_stage0.bin";
+    prog.pipe = P4_PIPELINE_TXDMA;
+    sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
+
+    p4pd_global_table_properties_get(P4_APOLLO_TXDMA_TBL_ID_TX_TABLE_S0_T1,
+                                     &tbl_ctx_txdma_act_ext);
+    memset(&prog, 0, sizeof(prog));
+    prog.stageid = tbl_ctx_txdma_act_ext.stage;
+    prog.stage_tableid = tbl_ctx_txdma_act_ext.stage_tableid;
+    prog.control = "apollo_txdma";
+    prog.prog_name = "txdma_stage0_ext.bin";
+    prog.pipe = P4_PIPELINE_TXDMA;
+    sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
+    return SDK_RET_OK;
+}
+
+
+/**
  * @brief    init routine to initialize the pipeline
  * @return    SDK_RET_OK on success, failure status code on error
  */
@@ -418,6 +522,8 @@ apollo_impl::pipeline_init(void) {
     SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
 
     ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    ret = p4plus_table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = sdk::asic::pd::asicpd_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
