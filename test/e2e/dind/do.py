@@ -6,6 +6,7 @@ import json
 import subprocess
 import argparse
 import http
+import httplib
 from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import cpu_count
 import ipaddr
