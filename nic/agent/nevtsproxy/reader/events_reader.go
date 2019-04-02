@@ -132,17 +132,19 @@ func (r *EvtReader) handler(nEvt *halproto.Event) error {
 		}
 		// key := dAny.Message.(*halproto.VrfKeyHandle) -> way to convert dynamic any to specific key types
 		messageName, err := types.AnyMessageName(nEvt.ObjectKey) // kh.VrfKeyHandle
-		if meta := r.translator.GetObjectMeta(messageName, dAny); meta != nil {
-			// override event's tenant and namespace
-			vEvt.ObjectMeta.Tenant = meta.GetTenant()
-			vEvt.ObjectMeta.Namespace = meta.GetNamespace()
+		if err == nil {
+			if meta := r.translator.GetObjectMeta(messageName, dAny); meta != nil {
+				// override event's tenant and namespace
+				vEvt.ObjectMeta.Tenant = meta.GetTenant()
+				vEvt.ObjectMeta.Namespace = meta.GetNamespace()
 
-			// update object ref
-			vEvt.EventAttributes.ObjectRef = &api.ObjectRef{
-				Tenant:    meta.GetTenant(),
-				Namespace: meta.GetNamespace(),
-				Name:      meta.GetName(),
-				// TODO: update kind, URI
+				// update object ref
+				vEvt.EventAttributes.ObjectRef = &api.ObjectRef{
+					Tenant:    meta.GetTenant(),
+					Namespace: meta.GetNamespace(),
+					Name:      meta.GetName(),
+					// TODO: update kind, URI
+				}
 			}
 		}
 	}

@@ -146,7 +146,12 @@ func TestReaderInstantiation(t *testing.T) {
 	dir, err := ioutil.TempDir("", "shm")
 	AssertOk(t, err, "failed to create temp dir")
 
+	f, err := ioutil.TempFile(dir, "*tfile")
+	AssertOk(t, err, "failed to create temp file")
+	f.Close()
+
 	rdr = NewReader(dir, time.Second, nil, tLogger)
+	rdr.SetSmartNicName(t.Name())
 	err = rdr.Start()
 	AssertOk(t, err, "failed to start file watcher, err: %v", err)
 
