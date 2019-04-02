@@ -899,6 +899,17 @@ llc_get(LlcGetResponse *rsp)
         return ret;
     }
 
+    if (llc_args.mask == 0xffffffff) {
+        rsp->set_type(debug::LLC_COUNTER_CACHE_NONE);
+    } else {
+        for (int i = 1; i <= 10; i ++) {
+            if ((llc_args.mask & (1 << (i - 1))) == 1) {
+                rsp->set_type(debug::LlcCounterType(i));
+                break;
+            }
+        }
+    }
+ 
     for (int i = 0; i < 16; i ++) {
         rsp->add_count(llc_args.data[i]);
     }

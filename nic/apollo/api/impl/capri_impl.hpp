@@ -9,6 +9,7 @@
 #define __CAPRI_IMPL_HPP__
 
 #include "nic/sdk/include/sdk/types.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/apollo/framework/asic_impl_base.hpp"
 
@@ -61,6 +62,18 @@ public:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t get_system_power(pds_system_power_t *pow) override;
+
+    /**
+     * @brief    LLC setup
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t llc_setup(sdk::asic::pd::llc_counters_t *llc_args) override;
+
+    /**
+     * @brief      LLC Get
+     * @return      SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t llc_get(sdk::asic::pd::llc_counters_t *llc_args) override;
 
     /**
      * @brief    dump all the debug information to given file

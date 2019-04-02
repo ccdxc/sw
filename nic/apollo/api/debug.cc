@@ -10,6 +10,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/port.hpp"
+#include "nic/apollo/api/debug.hpp"
 
 namespace debug {
 
@@ -217,4 +218,38 @@ pds_get_system_power (pds_system_power_t *pow)
 {
     return impl_base::asic_impl()->get_system_power(pow);
 }
+
+/**
+ * @brief       Gets API stats for different tables
+ * @param[in]   CB to fill API stats & ctxt
+ * @return      #SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+pds_table_stats_get (table_stats_get_cb_t cb, void *ctxt)
+{
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief       Setup LLC
+ * @param[in]   llc_counters_t with type set
+ * @return      #SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+pds_llc_setup (llc_counters_t *llc_args)
+{
+    return impl_base::asic_impl()->llc_setup(llc_args);
+}
+
+/**
+ * @brief       LLC Stats Get
+ * @param[out]  llc_counters_t to be filled
+ * @return      #SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+pds_llc_get (llc_counters_t *llc_args)
+{
+    return impl_base::asic_impl()->llc_get(llc_args);
+}
+
 }    // namespace debug

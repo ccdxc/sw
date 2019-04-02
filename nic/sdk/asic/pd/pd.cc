@@ -605,7 +605,7 @@ asic_pd_llc_setup (llc_counters_t *llc)
 sdk_ret_t
 asic_pd_llc_get (llc_counters_t *llc)
 {
-    return capri_nx_get_llc_counters(llc->data);
+    return capri_nx_get_llc_counters(&llc->mask, llc->data);
 }
 
 sdk_ret_t

@@ -16,6 +16,9 @@ service DebugSvc {
   rpc SystemTemperatureGet (types.Empty) returns (SystemTemperatureGetResponse) {}
   rpc SystemPowerGet (types.Empty) returns (SystemPowerGetResponse) {}
   rpc TraceUpdate (TraceRequest) returns (TraceResponse) {}
+  rpc TableStatsGet (types.Empty) returns (TableStatsGetResponse) {}
+  rpc LlcSetup (LlcSetupRequest) returns (LlcSetupResponse) {}
+  rpc LlcStatsGet (types.Empty) returns (LlcStatsGetResponse) {}
 }
 
 enum TraceLevel {
@@ -58,4 +61,82 @@ message ClockFrequencyRequest {
 
 message ClockFrequencyResponse {
   types.ApiStatus ApiStatus = 1;
+}
+
+enum TableApiStatsType {
+  TABLE_API_STATS_INSERT           = 0;
+  TABLE_API_STATS_INSERT_DUPLICATE = 1;
+  TABLE_API_STATS_INSERT_FAIL      = 2;
+  TABLE_API_STATS_REMOVE           = 3;
+  TABLE_API_STATS_REMOVE_NOT_FOUND = 4;
+  TABLE_API_STATS_REMOVE_FAIL      = 5;
+  TABLE_API_STATS_UPDATE           = 6;
+  TABLE_API_STATS_UPDATE_FAIL      = 7;
+  TABLE_API_STATS_GET              = 8;
+  TABLE_API_STATS_GET_FAIL         = 9;
+  TABLE_API_STATS_RESERVE          = 10;
+  TABLE_API_STATS_RESERVE_FAIL     = 11;
+  TABLE_API_STATS_RELEASE          = 12;
+  TABLE_API_STATS_RELEASE_FAIL     = 13;
+}
+
+message TableApiStatsEntry {
+  TableApiStatsType Type  = 1;
+  uint32            Count = 2;
+}
+
+message TableApiStats {
+  repeated TableApiStatsEntry Entry = 1;
+}
+
+enum TableStatsType {
+  TABLE_STATS_ENTRIES    = 0;
+  TABLE_STATS_COLLISIONS = 1;
+}
+
+message TableStatsEntry {
+  TableStatsType Type  = 1;
+  uint32         Count = 2;
+}
+
+message TableStats {
+  repeated TableStatsEntry Entry = 1;
+}
+
+message TableStatsGetResponse {
+  types.ApiStatus        ApiStatus = 1;
+  repeated TableApiStats ApiStats  = 2;
+  repeated TableStats    Stats     = 3;
+}
+
+enum LlcCounterType {
+  LLC_COUNTER_CACHE_NONE        = 0;
+  LLC_COUNTER_CACHE_READ        = 1;
+  LLC_COUNTER_CACHE_WRITE       = 2;
+  LLC_COUNTER_SCRATCHPAD_ACCESS = 3;
+  LLC_COUNTER_CACHE_HIT         = 4;
+  LLC_COUNTER_CACHE_MISS        = 5;
+  LLC_COUNTER_PARTIAL_WRITE     = 6;
+  LLC_COUNTER_CACHE_MAINT_OP    = 7;
+  LLC_COUNTER_EVICTION          = 8;
+  LLC_COUNTER_RETRY_NEEDED      = 9;
+  LLC_COUNTER_RETRY_ACCESS      = 10;
+}
+
+message LlcSetupRequest {
+  LlcCounterType Type = 1;
+}
+
+message LlcSetupResponse {
+  types.ApiStatus ApiStatus = 1;
+}
+
+message LlcStats {
+  LlcCounterType  Type  = 1;
+  repeated uint32 Count = 2;
+}
+
+message LlcStatsGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  LlcStats        Stats     = 2;
 }

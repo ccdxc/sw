@@ -62,7 +62,7 @@ typedef struct capri_small_page_s {
 
 sdk_ret_t capri_hbm_bw(uint32_t samples, uint32_t u_sleep,
                        bool ms_pcie, asic_hbm_bw_t *hbm_bw_arr);
-sdk_ret_t capri_nx_get_llc_counters(uint32_t *rd_data);
+sdk_ret_t capri_nx_get_llc_counters(uint32_t *mask, uint32_t *rd_data);
 sdk_ret_t capri_nx_setup_llc_counters(uint32_t mask);
 sdk_ret_t capri_hbm_cache_init(capri_cfg_t *cfg);
 sdk_ret_t capri_hbm_cache_regions_init(void);

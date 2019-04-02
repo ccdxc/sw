@@ -19,6 +19,10 @@ using pds::SystemTemperatureGetResponse;
 using pds::SystemPowerGetResponse;
 using pds::TraceRequest;
 using pds::TraceResponse;
+using pds::TableStatsGetResponse;
+using pds::LlcStatsGetResponse;
+using pds::LlcSetupRequest;
+using pds::LlcSetupResponse;
 
 class DebugSvcImpl final : public DebugSvc::Service {
 public:
@@ -31,6 +35,12 @@ public:
                           pds::SystemPowerGetResponse *rsp) override;
     Status TraceUpdate(ServerContext *context, const pds::TraceRequest *req,
                        pds::TraceResponse *rsp) override;
+    Status TableStatsGet(ServerContext *context, const Empty *req,
+                         pds::TableStatsGetResponse *rsp) override;
+    Status LlcSetup(ServerContext *context, const pds::LlcSetupRequest *req,
+                    pds::LlcSetupResponse *rsp) override;
+    Status LlcStatsGet(ServerContext *context, const Empty *req,
+                       pds::LlcStatsGetResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_DEBUG_HPP__

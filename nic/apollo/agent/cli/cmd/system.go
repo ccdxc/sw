@@ -18,6 +18,7 @@ import (
 var (
 	clockFreq  uint32
 	traceLevel string
+	llcTypeStr string
 )
 
 var systemDebugCmd = &cobra.Command{
@@ -41,6 +42,27 @@ var traceDebugCmd = &cobra.Command{
 	Run:   traceDebugCmdHandler,
 }
 
+var llcDebugCmd = &cobra.Command{
+	Use:   "llc-cache",
+	Short: "debug system llc-cache",
+	Long:  "debug system llc-cache",
+	Run:   llcSetupCmdHandler,
+}
+
+var llcShowCmd = &cobra.Command{
+	Use:   "llc-stats",
+	Short: "show system llc-stats",
+	Long:  "show system llc-stats",
+	Run:   llcShowCmdHandler,
+}
+
+var tableShowCmd = &cobra.Command{
+	Use:   "table-stats",
+	Short: "show system table-stats",
+	Long:  "show system table-stats",
+	Run:   tableShowCmdHandler,
+}
+
 func init() {
 	debugCmd.AddCommand(systemDebugCmd)
 	systemDebugCmd.Flags().Uint32VarP(&clockFreq, "clock-frequency", "c", 0, "Specify clock-frequency (Allowed: 833, 900, 957, 1033, 1100)")
@@ -52,6 +74,213 @@ func init() {
 
 	debugCmd.AddCommand(traceDebugCmd)
 	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level (Allowed: none, error, warn, info, debug, verbose)")
+
+	debugCmd.AddCommand(llcDebugCmd)
+	llcDebugCmd.Flags().StringVar(&llcTypeStr, "type", "none", "Specify LLC Cache type (Allowed: cache-read,cache-write,scratchpad-access,cache-hit,cache-miss,partial-write,cache-maint-op,eviction,retry-needed,retry-access,disable)")
+	llcDebugCmd.MarkFlagRequired("type")
+
+	showCmd.AddCommand(llcShowCmd)
+	showCmd.AddCommand(tableShowCmd)
+}
+
+func tableShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewDebugSvcClient(c)
+
+	var empty *pds.Empty
+
+	// PDS call
+	resp, err := client.TableStatsGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Table stats get failed. %v\n", err)
+		return
+	}
+
+	if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+		return
+	}
+
+	tableApiStatsPrintResp(resp.GetApiStats())
+
+	tableStatsPrintResp(resp.GetStats())
+}
+
+func tableApiStatsPrintHeader() {
+	fmt.Printf("\n")
+	hdrLine := strings.Repeat("-", 40)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-15s%-10s\n", "Type", "Count")
+	fmt.Println(hdrLine)
+}
+
+func tableApiStatsPrintResp(apiStats []*pds.TableApiStats) {
+	for _, resp := range apiStats {
+		tableApiStatsPrintHeader()
+		for _, entry := range resp.GetEntry() {
+			typeStr := strings.Replace(entry.GetType().String(), "TABLE_API_STATS_", "", -1)
+			typeStr = strings.Replace(typeStr, "_", " ", -1)
+			fmt.Printf("%-15s%-10d\n", typeStr, entry.GetCount())
+		}
+	}
+}
+
+func tableStatsPrintHeader() {
+	fmt.Printf("\n")
+	hdrLine := strings.Repeat("-", 40)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-15s%-10s\n", "Type", "Count")
+	fmt.Println(hdrLine)
+}
+
+func tableStatsPrintResp(apiStats []*pds.TableStats) {
+	for _, resp := range apiStats {
+		tableStatsPrintHeader()
+		for _, entry := range resp.GetEntry() {
+			typeStr := strings.Replace(entry.GetType().String(), "TABLE_STATS_", "", -1)
+			typeStr = strings.Replace(typeStr, "_", " ", -1)
+			fmt.Printf("%-15s%-10d\n", typeStr, entry.GetCount())
+		}
+	}
+}
+func llcShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewDebugSvcClient(c)
+
+	var empty *pds.Empty
+
+	// PDS call
+	resp, err := client.LlcStatsGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("LLC get failed. %v\n", err)
+		return
+	}
+
+	llcGetPrintHeader()
+
+	if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+		return
+	}
+
+	llcGetPrintResp(resp)
+}
+
+func llcGetPrintHeader() {
+	hdrLine := strings.Repeat("-", 40)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-20s%-10s\n", "Channel", "Type", "Count")
+	fmt.Println(hdrLine)
+}
+
+func llcGetPrintResp(resp *pds.LlcStatsGetResponse) {
+	stats := resp.GetStats()
+	count := stats.GetCount()
+	str := strings.ToLower(strings.Replace(stats.GetType().String(), "LLC_COUNTER_", "", -1))
+	str = strings.Replace(str, "_", "-", -1)
+	for i := 0; i < 16; i++ {
+		fmt.Printf("%-10d%-20s%-10d\n",
+			i, str, count[i])
+	}
+}
+
+func llcSetupCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	client := pds.NewDebugSvcClient(c)
+
+	var llcType pds.LlcCounterType
+
+	if cmd.Flags().Changed("type") {
+		if strings.Compare(llcTypeStr, "cache-read") == 0 {
+			llcType = pds.LlcCounterType_LLC_COUNTER_CACHE_READ
+		} else if strings.Compare(llcTypeStr, "cache-write") == 0 {
+			llcType = pds.LlcCounterType_LLC_COUNTER_CACHE_WRITE
+		} else if strings.Compare(llcTypeStr, "scratchpad-access") == 0 {
+			llcType = pds.LlcCounterType_LLC_COUNTER_SCRATCHPAD_ACCESS
+		} else if strings.Compare(llcTypeStr, "cache-hit") == 0 {
+			llcType = pds.LlcCounterType_LLC_COUNTER_CACHE_HIT
+		} else if strings.Compare(llcTypeStr, "cache-miss") == 0 {
+			llcType = pds.LlcCounterType_LLC_COUNTER_CACHE_MISS
+		} else if strings.Compare(llcTypeStr, "partial-write") == 0 {
+			llcType = pds.LlcCounterType_LLC_COUNTER_PARTIAL_WRITE
+		} else if strings.Compare(llcTypeStr, "cache-maint-op") == 0 {
+			llcType = pds.LlcCounterType_LLC_COUNTER_CACHE_MAINT_OP
+		} else if strings.Compare(llcTypeStr, "eviction") == 0 {
+			llcType = pds.LlcCounterType_LLC_COUNTER_EVICTION
+		} else if strings.Compare(llcTypeStr, "retry-needed") == 0 {
+			llcType = pds.LlcCounterType_LLC_COUNTER_RETRY_NEEDED
+		} else if strings.Compare(llcTypeStr, "retry-access") == 0 {
+			llcType = pds.LlcCounterType_LLC_COUNTER_RETRY_ACCESS
+		} else if strings.Compare(llcTypeStr, "none") == 0 {
+			llcType = pds.LlcCounterType_LLC_COUNTER_CACHE_NONE
+		} else {
+			fmt.Printf("Invalid argument\n")
+			return
+		}
+	} else {
+		fmt.Printf("Command needs an argument. Refer to help string.\n")
+		return
+	}
+
+	req := &pds.LlcSetupRequest{
+		Type: llcType,
+	}
+
+	// PDS call
+	resp, err := client.LlcSetup(context.Background(), req)
+	if err != nil {
+		fmt.Printf("LLC setup failed. %v\n", err)
+		return
+	}
+
+	if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+		return
+	}
+
+	str := strings.ToLower(strings.Replace(llcType.String(), "LLC_COUNTER_", "", -1))
+	str = strings.Replace(str, "_", "-", -1)
+	if strings.Compare(str, "cache-none") == 0 {
+		fmt.Printf("LLC tracking disabled\n")
+	} else {
+		fmt.Printf("LLC set to track %s\n", str)
+	}
 }
 
 func traceDebugCmdHandler(cmd *cobra.Command, args []string) {

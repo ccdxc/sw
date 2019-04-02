@@ -7,6 +7,7 @@
  */
 
 #include "nic/sdk/include/sdk/mem.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/platform/sensor/sensor.hpp"
 #include "nic/sdk/third-party/asic/capri/verif/apis/cap_freq_api.h"
@@ -199,6 +200,24 @@ capri_impl::get_system_power (pds_system_power_t *pow) {
     }
 
     return SDK_RET_OK;
+}
+
+/**
+ * @brief    LLC setup
+ * @return    SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+capri_impl::llc_setup (sdk::asic::pd::llc_counters_t *llc_args) {
+    return sdk::asic::pd::asic_pd_llc_setup(llc_args);
+}
+
+/**
+ * @brief      LLC Get
+ * @return      SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+capri_impl::llc_get (sdk::asic::pd::llc_counters_t *llc_args) {
+    return sdk::asic::pd::asic_pd_llc_get(llc_args);
 }
 
 /**

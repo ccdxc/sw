@@ -827,7 +827,7 @@ capri_nx_set_llc_counters (uint32_t *data)
 }
 
 sdk_ret_t
-capri_nx_get_llc_counters (uint32_t *rd_data)
+capri_nx_get_llc_counters (uint32_t *mask, uint32_t *rd_data)
 {
     for (int i = 0; i < 16; ++i) {
         switch (i) {
@@ -897,6 +897,10 @@ capri_nx_get_llc_counters (uint32_t *rd_data)
             break;
         }
     }
+
+    // We only need to read the mask from the first counter. Currently mask is being set the same for all counters
+    *mask = cap_nx_block_read(0,
+                    RBM_AGENT_(CCC0_LLC_EVENT_COUNTER_MASK), 1, false, 1);
 
     return SDK_RET_OK;
 }

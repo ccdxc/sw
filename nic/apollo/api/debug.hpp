@@ -7,6 +7,7 @@
  */
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/include/sdk/table.hpp"
 
 #if !defined (__DEBUG_HPP__)
 #define __DEBUG_HPP__

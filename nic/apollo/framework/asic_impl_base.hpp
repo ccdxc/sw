@@ -12,6 +12,7 @@
 #define __FRAMEWORK_ASIC_IMPL_BASE_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/asic/asic.hpp"
 #include "nic/apollo/framework/obj_base.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
@@ -61,6 +62,20 @@ public:
     /// \param[out] pow    system power to be read
     /// \return     SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t get_system_power(pds_system_power_t *pow) {
+        return SDK_RET_ERR;
+    }
+
+    /// \brief     LLC setup
+    /// \param[in]  llc_counters_t
+    /// \return     SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t llc_setup(sdk::asic::pd::llc_counters_t *llc_args) {
+        return SDK_RET_ERR;
+    }
+
+    /// \brief      LLC Get
+    /// \param[out]  llc_counters_t
+    /// \return      SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t llc_get(sdk::asic::pd::llc_counters_t *llc_args) {
         return SDK_RET_ERR;
     }
 
