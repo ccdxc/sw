@@ -109,12 +109,12 @@ var testMirrorSessions = []monitoring.MirrorSession{
 						Endpoints: []string{"Endpoint1"},
 					},
 					AppProtoSel: &monitoring.AppProtoSelector{
-						Ports: []string{"1234"},
+						ProtoPorts: []string{"1234"},
 					},
 				},
 				{
 					AppProtoSel: &monitoring.AppProtoSelector{
-						Ports: []string{"TCP/1234"},
+						ProtoPorts: []string{"TCP/1234"},
 					},
 				},
 			},
@@ -157,7 +157,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 						Endpoints: []string{"Endpoint1"},
 					},
 					AppProtoSel: &monitoring.AppProtoSelector{
-						Ports: []string{"UDP"},
+						ProtoPorts: []string{"UDP"},
 					},
 				},
 			},

@@ -42,7 +42,7 @@ export class FlowExport {
             monitoringFlowExportPolicy.spec['match-rules'][0].destination['mac-addresses'][0],
 
             monitoringFlowExportPolicy.spec['match-rules'][0]['app-protocol-selectors'].applications[0],
-            monitoringFlowExportPolicy.spec['match-rules'][0]['app-protocol-selectors'].ports[0]
+            monitoringFlowExportPolicy.spec['match-rules'][0]['app-protocol-selectors']["proto-ports"][0]
         ];
         // set values to syslog-inputs.
         await E2EuiTools.setMultipleInputBoxValues(syslogInputCSS, values);

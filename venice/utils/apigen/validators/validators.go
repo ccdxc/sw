@@ -392,9 +392,6 @@ func strProtoPortVldtr(in string) error {
 	// special case for icmp: icmp/<type>/<code>
 
 	port := in
-	if port == "" {
-		return nil
-	}
 	l3l4Info := strings.Split(port, "/")
 	l3l4proto := strings.ToLower(strings.TrimSpace(l3l4Info[0]))
 	l4Info, l4ok := l4ProtoMap[l3l4proto]
@@ -493,10 +490,6 @@ func ValidGroup(in string) error {
 
 // RegExp validates input string against the named regexp specified in args[0]
 func RegExp(in string, args []string) error {
-	// in, ok := i.(string)
-	// if !ok {
-	// 	return fmt.Errorf("Value must be a valid string")
-	// }
 	entry, ok := RegexpList[args[0]]
 	if !ok {
 		return fmt.Errorf("Internal error: regexp name given not recognized")

@@ -528,7 +528,7 @@ func init() {
 
 	validatorMapExport["ExportConfig"]["all"] = append(validatorMapExport["ExportConfig"]["all"], func(path string, i interface{}) error {
 		m := i.(*ExportConfig)
-		if err := validators.ProtoPort(m.Transport); err != nil {
+		if err := validators.EmptyOr(validators.ProtoPort, m.Transport, nil); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"Transport", err.Error())
 		}
 		return nil

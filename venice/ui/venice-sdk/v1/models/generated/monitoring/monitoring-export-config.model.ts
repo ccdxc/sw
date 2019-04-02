@@ -11,7 +11,7 @@ import { MonitoringExternalCred, IMonitoringExternalCred } from './monitoring-ex
 
 export interface IMonitoringExportConfig {
     'destination': string;
-    'transport': string;
+    'transport'?: string;
     'credentials'?: IMonitoringExternalCred;
 }
 
@@ -31,7 +31,7 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
         'transport': {
             description:  'should be a valid layer3 or layer 4 protocol and port/type',
             hint:  'tcp/1234, arp',
-            required: true,
+            required: false,
             type: 'string'
         },
         'credentials': {
@@ -98,7 +98,7 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'destination': CustomFormControl(new FormControl(this['destination'], [required, minLengthValidator(1), maxLengthValidator(2048), ]), MonitoringExportConfig.propInfo['destination']),
-                'transport': CustomFormControl(new FormControl(this['transport'], [required, ]), MonitoringExportConfig.propInfo['transport']),
+                'transport': CustomFormControl(new FormControl(this['transport']), MonitoringExportConfig.propInfo['transport']),
                 'credentials': CustomFormGroup(this['credentials'].$formGroup, MonitoringExportConfig.propInfo['credentials'].required),
             });
             // We force recalculation of controls under a form group

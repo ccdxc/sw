@@ -339,7 +339,7 @@ func init() {
 	validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"] = append(validatorMap{{getFileName $file.Name}}["{{$msgName}}"]["{{.Ver}}"], func(path string, i interface{}) error {
 		m := i.(*{{$msgName}}){{if $fldv.Repeated}}{{/*<9.1>*/}}
 		for k, v := range m.{{$fldk}} {
-			if err := {{if .AllowEmpty}}validators.EmptyOr({{$fnname}}, v, nil){{else}}validators.{{$fnname}}(v){{end}}; err != nil {
+			if err := {{if .AllowEmpty}}validators.EmptyOr(validators.{{.Fn}}, v, nil){{else}}validators.{{$fnname}}(v){{end}}; err != nil {
 				return fmt.Errorf("%v[%v] failed validation: %s", path + "." + "{{$fldk}}", k, err.Error())
 			}
 		}

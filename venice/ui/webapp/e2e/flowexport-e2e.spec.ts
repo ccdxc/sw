@@ -71,7 +71,7 @@ describe('venice-ui flowexport', () => {
               ]
             },
             'app-protocol-selectors': {
-              'ports': [
+              'proto-ports': [
                 'TCP/9000'
               ],
               'applications': [

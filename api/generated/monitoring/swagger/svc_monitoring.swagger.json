@@ -977,7 +977,7 @@
             }
           },
           {
-            "name": "app-protocol-selectors.ports",
+            "name": "app-protocol-selectors.proto-ports",
             "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. should be a valid layer3 or layer 4 protocol and port/type",
             "in": "query",
             "required": false,
@@ -6091,7 +6091,7 @@
             }
           },
           {
-            "name": "app-protocol-selectors.ports",
+            "name": "app-protocol-selectors.proto-ports",
             "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. should be a valid layer3 or layer 4 protocol and port/type",
             "in": "query",
             "required": false,
@@ -13481,11 +13481,8 @@
     },
     "monitoringAppProtoSelector": {
       "type": "object",
-      "required": [
-        "ports"
-      ],
       "properties": {
-        "ports": {
+        "proto-ports": {
           "type": "array",
           "items": {
             "type": "string"
@@ -13871,8 +13868,7 @@
     "monitoringExportConfig": {
       "type": "object",
       "required": [
-        "destination",
-        "transport"
+        "destination"
       ],
       "properties": {
         "destination": {

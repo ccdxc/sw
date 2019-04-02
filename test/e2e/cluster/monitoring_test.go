@@ -47,7 +47,7 @@ var _ = Describe("MirrorSession Tests", func() {
 								IPAddresses: []string{"10.1.1.10"},
 							},
 							AppProtoSel: &monitoring.AppProtoSelector{
-								Ports: []string{"TCP"},
+								ProtoPorts: []string{"TCP"},
 							},
 						},
 						{
@@ -55,7 +55,7 @@ var _ = Describe("MirrorSession Tests", func() {
 								IPAddresses: []string{"10.2.2.20"},
 							},
 							AppProtoSel: &monitoring.AppProtoSelector{
-								Ports: []string{"UDP"},
+								ProtoPorts: []string{"UDP"},
 							},
 						},
 					},

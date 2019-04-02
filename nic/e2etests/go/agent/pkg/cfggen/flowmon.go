@@ -105,7 +105,7 @@ func (c *CfgGen) generateFlowMonRules(namespace string, count int) (rules []moni
 				IPAddresses: s.Dst.Addresses,
 			},
 			AppProtoSel: &monitoring.AppProtoSelector{
-				Ports: protoPorts,
+				ProtoPorts: protoPorts,
 			},
 		}
 		rules = append(rules, r)

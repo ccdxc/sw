@@ -326,6 +326,7 @@ func TestL3L4Proto(t *testing.T) {
 		{s: "icmp/echo reply"},
 		{s: "icmp/redirect/5"},
 		// Bad cases
+		{s: "", errMsg: "Protocol must be a valid L3 or L4 <protocol>/<port>"},
 		{s: "SCP/1234", errMsg: "Protocol must be a valid L3 or L4 <protocol>/<port>"},
 		{s: "Udp/1/2", errMsg: "Value had invalid format for udp, unexpected second '/' "},
 		{s: "udp/-123", errMsg: "Value had invalid format for udp, protocol number must be a 16 bit value"},

@@ -57,7 +57,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 						IPAddresses: []string{"10.1.1.10"},
 					},
 					AppProtoSel: &monitoring.AppProtoSelector{
-						Ports: []string{"ipprotocol/6"},
+						ProtoPorts: []string{"ipprotocol/6"},
 					},
 				},
 				{
@@ -65,7 +65,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 						IPAddresses: []string{"10.1.2.20"},
 					},
 					AppProtoSel: &monitoring.AppProtoSelector{
-						Ports: []string{"TCP/1234"},
+						ProtoPorts: []string{"TCP/1234"},
 					},
 				},
 			},
@@ -109,7 +109,7 @@ var testMirrorSessions = []monitoring.MirrorSession{
 			MatchRules: []monitoring.MatchRule{
 				{
 					AppProtoSel: &monitoring.AppProtoSelector{
-						Ports: []string{"UDP"},
+						ProtoPorts: []string{"UDP"},
 					},
 				},
 			},

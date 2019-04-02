@@ -18,7 +18,7 @@ var typesMapMirror = map[string]*api.Struct{
 	"monitoring.AppProtoSelector": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(AppProtoSelector{}) },
 		Fields: map[string]api.Field{
-			"Ports": api.Field{Name: "Ports", CLITag: api.CLIInfo{ID: "ports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ports", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+			"ProtoPorts": api.Field{Name: "ProtoPorts", CLITag: api.CLIInfo{ID: "proto-ports", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "proto-ports", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Apps": api.Field{Name: "Apps", CLITag: api.CLIInfo{ID: "applications", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "applications", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
@@ -104,7 +104,7 @@ var typesMapMirror = map[string]*api.Struct{
 			"packet-filters":   api.CLIInfo{Path: "Spec.PacketFilters", Skip: false, Insert: "", Help: ""},
 			"packet-size":      api.CLIInfo{Path: "Spec.PacketSize", Skip: false, Insert: "", Help: ""},
 			"pcap-file-url":    api.CLIInfo{Path: "Status.PcapFileURL", Skip: false, Insert: "", Help: ""},
-			"ports":            api.CLIInfo{Path: "Spec.MatchRules[].AppProtoSel.Ports", Skip: false, Insert: "", Help: ""},
+			"proto-ports":      api.CLIInfo{Path: "Spec.MatchRules[].AppProtoSel.ProtoPorts", Skip: false, Insert: "", Help: ""},
 			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},

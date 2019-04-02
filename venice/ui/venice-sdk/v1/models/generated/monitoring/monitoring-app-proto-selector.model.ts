@@ -9,20 +9,20 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 
 export interface IMonitoringAppProtoSelector {
-    'ports': Array<string>;
+    'proto-ports'?: Array<string>;
     'applications'?: Array<string>;
 }
 
 
 export class MonitoringAppProtoSelector extends BaseModel implements IMonitoringAppProtoSelector {
     /** should be a valid layer3 or layer 4 protocol and port/type */
-    'ports': Array<string> = null;
+    'proto-ports': Array<string> = null;
     'applications': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
-        'ports': {
+        'proto-ports': {
             description:  'should be a valid layer3 or layer 4 protocol and port/type',
             hint:  'tcp/1234, arp',
-            required: true,
+            required: false,
             type: 'Array<string>'
         },
         'applications': {
@@ -53,7 +53,7 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
     */
     constructor(values?: any, setDefaults:boolean = true) {
         super();
-        this['ports'] = new Array<string>();
+        this['proto-ports'] = new Array<string>();
         this['applications'] = new Array<string>();
         this.setValues(values, setDefaults);
     }
@@ -63,12 +63,12 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['ports'] != null) {
-            this['ports'] = values['ports'];
-        } else if (fillDefaults && MonitoringAppProtoSelector.hasDefaultValue('ports')) {
-            this['ports'] = [ MonitoringAppProtoSelector.propInfo['ports'].default];
+        if (values && values['proto-ports'] != null) {
+            this['proto-ports'] = values['proto-ports'];
+        } else if (fillDefaults && MonitoringAppProtoSelector.hasDefaultValue('proto-ports')) {
+            this['proto-ports'] = [ MonitoringAppProtoSelector.propInfo['proto-ports'].default];
         } else {
-            this['ports'] = [];
+            this['proto-ports'] = [];
         }
         if (values && values['applications'] != null) {
             this['applications'] = values['applications'];
@@ -84,7 +84,7 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'ports': CustomFormControl(new FormControl(this['ports']), MonitoringAppProtoSelector.propInfo['ports']),
+                'proto-ports': CustomFormControl(new FormControl(this['proto-ports']), MonitoringAppProtoSelector.propInfo['proto-ports']),
                 'applications': CustomFormControl(new FormControl(this['applications']), MonitoringAppProtoSelector.propInfo['applications']),
             });
         }
@@ -97,7 +97,7 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['ports'].setValue(this['ports']);
+            this._formGroup.controls['proto-ports'].setValue(this['proto-ports']);
             this._formGroup.controls['applications'].setValue(this['applications']);
         }
     }

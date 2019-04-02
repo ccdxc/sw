@@ -110,7 +110,7 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
 
       ret += '    Apps: ';
       let apps = req['app-protocol-selectors'].applications || [];
-      apps = apps.concat(req['app-protocol-selectors'].ports);
+      apps = apps.concat(req['app-protocol-selectors']["proto-ports"]);
       if (apps.length === 0) {
         ret += '*';
       } else {

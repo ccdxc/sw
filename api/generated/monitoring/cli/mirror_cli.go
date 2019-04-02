@@ -71,7 +71,7 @@ var CreateMirrorSessionFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
-		ID:     "ports",
+		ID:     "proto-ports",
 		Type:   "StringSlice",
 		Help:   "",
 		Skip:   false,

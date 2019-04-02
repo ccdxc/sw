@@ -65,7 +65,7 @@ func buildNICMirrorSession(mss *statemgr.MirrorSessionState) *tsproto.MirrorSess
 		}
 		if mr.AppProtoSel != nil {
 			tmr.AppProtoSel = &tsproto.AppProtoSelector{}
-			for _, port := range mr.AppProtoSel.Ports {
+			for _, port := range mr.AppProtoSel.ProtoPorts {
 				tmr.AppProtoSel.Ports = append(tmr.AppProtoSel.Ports, port)
 			}
 			for _, app := range mr.AppProtoSel.Apps {
