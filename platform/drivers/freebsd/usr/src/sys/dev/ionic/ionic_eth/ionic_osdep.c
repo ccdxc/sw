@@ -36,62 +36,10 @@
 #include "ionic_osdep.h"
 #include "ionic.h"
 
-#ifdef notyet
-inline uint8_t
-ionic_read_reg_byte(struct ionic* ionic, uint32_t offset)
-{
-	uint32_t val;
-
-	val = bus_space_read_1(ionic->ctrl_reg_tag, ionic->ctrl_reg_handle, offset);
-
-#ifdef IONIC_DBG_REG
-	device_printf(ionic->dev, "[REG_READ BYTE]offste: 0x%lx 0x%x @ 0x%x\n", ionic->ctrl_reg_handle, val, offset);
-#endif
-
-	return (val);
-}
-
-inline uint32_t
-ionic_read_reg(struct ionic* ionic, uint32_t offset)
-{
-	uint32_t val;
-
-	val = bus_space_read_4(ionic->ctrl_reg_tag, ionic->ctrl_reg_handle, offset);
-
-#ifdef IONIC_DBG_REG
-	device_printf(ionic->dev, "[REG_READ] offset: 0x%lx 0x%x @ 0x%x\n", ionic->ctrl_reg_handle, val, offset);
-#endif
-
-	return (val);
-}
-
-inline void
-ionic_write_reg(struct ionic* ionic, uint32_t offset, uint32_t val)
-{
-#ifdef IONIC_DBG_REG
-	device_printf(ionic->dev, "[REG_WRITE] offset: 0x%lx 0x%x @ 0x%x\n", ionic->ctrl_reg_handle, val, offset);
-#endif
-	bus_space_write_4(ionic->ctrl_reg_tag, ionic->ctrl_reg_handle, offset, val);
-}
-
-/*
- * Write to doorbell register in BAR1
- */
-void
-ionic_write_doorbell(struct ionic* ionic,int pid, int qid,  uint64_t val)
-{
-	uint32_t offset = pid * PAGE_SIZE;
-
-	/* Jump to Interrupt control block area. */
-	offset += qid * sizeof(struct doorbell);
-	dev_info(ionic->dev, "[DOORBELL_WRITE] pid: %d qis: %d offset: 0x%x val: 0x%x\n",
-		pid, qid, offset, val);
-
-	bus_space_write_8(ionic->doorbells_tag, ionic->doorbells_handle, offset, val);
-}
-#endif
-
 /* DMA related functions. */
+/*
+ * Callback for DMA map function.
+ */
 static void
 ionic_dmamap_cb(void *arg, bus_dma_segment_t *segs, int nsegs, int error)
 {
@@ -111,18 +59,18 @@ ionic_dma_alloc(struct ionic* ionic, bus_size_t size,
 	int error;
 
 	error = bus_dma_tag_create(bus_get_dma_tag(dev),/* parent */
-			       1, 		            /* Alignment */
-				   0,					/* Bounds */
-			       BUS_SPACE_MAXADDR,	/* lowaddr */
-			       BUS_SPACE_MAXADDR,	/* highaddr */
-			       NULL, NULL,			/* filter, filterarg */
-			       size,				/* maxsize */
-			       1,					/* nsegments */
-			       size,				/* maxsegsize */
-			       BUS_DMA_ALLOCNOW,	/* flags */
-			       NULL,				/* lockfunc */
-			       NULL,				/* lockfuncarg */
-			       &dma->dma_tag);
+				1,	            	/* Alignment */
+				0,			/* Bounds */
+				IONIC_MAX_ADDR,		/* lowaddr */
+				BUS_SPACE_MAXADDR,	/* highaddr */
+				NULL, NULL,		/* filter, filterarg */
+				size,			/* maxsize */
+				1,			/* nsegments */
+				size,			/* maxsegsize */
+				0,			/* flags */
+				NULL,			/* lockfunc */
+				NULL,			/* lockfuncarg */
+				&dma->dma_tag);
 	if (error != 0) {
 		IONIC_DEV_ERROR(ionic->dev, "bus_dma_tag_create failed, error: %d\n", error);
 		dma->dma_tag = NULL;
@@ -130,7 +78,8 @@ ionic_dma_alloc(struct ionic* ionic, bus_size_t size,
 	}
 
 	error = bus_dmamem_alloc(dma->dma_tag, (void **)&dma->dma_vaddr,
-			     BUS_DMA_NOWAIT, &dma->dma_map);
+				BUS_DMA_COHERENT | BUS_DMA_ZERO,
+				&dma->dma_map);
 	if (error != 0) {
 		IONIC_DEV_ERROR(ionic->dev,"bus_dmamem_alloc failed, error: %d\n", error);
 		goto alloc_failed;
@@ -140,7 +89,7 @@ ionic_dma_alloc(struct ionic* ionic, bus_size_t size,
 			    size,
 			    ionic_dmamap_cb,
 			    &dma->dma_paddr,
-			    mapflags | BUS_DMA_NOWAIT);
+			    mapflags);
 	if (error != 0) {
 		IONIC_DEV_ERROR(ionic->dev, "bus_dmamap_load failed, error: %d\n", error);
 		goto map_failed;
@@ -160,6 +109,7 @@ alloc_failed:
 void
 ionic_dma_free(struct ionic* ionic, struct ionic_dma_info *dma)
 {
+
 	bus_dmamap_sync(dma->dma_tag, dma->dma_map,
 	    BUS_DMASYNC_POSTREAD | BUS_DMASYNC_POSTWRITE);
 	bus_dmamap_unload(dma->dma_tag, dma->dma_map);

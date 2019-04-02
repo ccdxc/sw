@@ -982,7 +982,6 @@ static int ionic_adminq_alloc(struct lif *lif, unsigned int qnum,
 
 	IONIC_QUE_INFO(adminq, "cmd base pa: 0x%lx size: 0x%x comp size: 0x%x total size: 0x%x\n",
 		adminq->cmd_ring_pa, cmd_ring_size, comp_ring_size, total_size);
-	bzero((void *)adminq->cmd_ring, total_size);
 
 	error = ionic_setup_intr(lif, &adminq->intr);
 	if (error) {
@@ -1047,8 +1046,6 @@ static int ionic_notifyq_alloc(struct lif *lif, unsigned int qnum,
 	 * Command and completion rings are side by side.
 	 */
 	notifyq->comp_ring = (union notifyq_comp *)(notifyq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE));
-
-	bzero((void *)notifyq->cmd_ring, total_size);
 
 	error = ionic_setup_intr(lif, &notifyq->intr);
 	if (error) {
@@ -1128,8 +1125,6 @@ static int ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 	rxq->sg_ring = (struct rxq_sg_desc *)(rxq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE) +
 			ALIGN(comp_ring_size, PAGE_SIZE));
 
-	bzero((void *)rxq->cmd_ring, total_size);
-
 	/* Setup interrupt */
 	error = ionic_setup_intr(lif, &rxq->intr);
 	if (error) {
@@ -1144,7 +1139,7 @@ static int ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 	         /*      parent */ bus_get_dma_tag(rxq->lif->ionic->dev->bsddev),
 	         /*   alignment */ 1,
 	         /*      bounds */ 0,
-	         /*     lowaddr */ BUS_SPACE_MAXADDR,
+	         /*     lowaddr */ IONIC_MAX_ADDR,
 	         /*    highaddr */ BUS_SPACE_MAXADDR,
 	         /*      filter */ NULL,
 	         /*   filterarg */ NULL,
@@ -1246,8 +1241,6 @@ static int ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	txq->comp_ring = (struct txq_comp *)(txq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE));
 	txq->sg_ring = (struct txq_sg_desc *)(txq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE) + ALIGN(comp_ring_size, PAGE_SIZE));
 
-	bzero((void *)txq->cmd_ring, total_size);
-
 	/* Allocate buffere ring. */
 	txq->br = buf_ring_alloc(4096, M_IONIC, M_WAITOK, &txq->tx_mtx);
 	if (txq->br == NULL) {
@@ -1262,7 +1255,7 @@ static int ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	         /*      parent */ bus_get_dma_tag(txq->lif->ionic->dev->bsddev),
 	         /*   alignment */ 1,
 	         /*      bounds */ 0,
-	         /*     lowaddr */ BUS_SPACE_MAXADDR,
+	         /*     lowaddr */ IONIC_MAX_ADDR,
 	         /*    highaddr */ BUS_SPACE_MAXADDR,
 	         /*      filter */ NULL,
 	         /*   filterarg */ NULL,
@@ -1648,7 +1641,7 @@ ionic_lif_stats_start(struct lif *lif, unsigned int ver)
 	int error;
 
 	if ((error = ionic_dma_alloc(lif->ionic, sizeof(struct ionic_lif_stats),
-				&lif->stats_dma, BUS_DMA_NOWAIT))) {
+				&lif->stats_dma, BUS_DMA_ZERO))) {
 		IONIC_NETDEV_ERROR(netdev, "no buffer for stats, err: %d\n", error);
 		return error;
 	}
@@ -1660,7 +1653,6 @@ ionic_lif_stats_start(struct lif *lif, unsigned int ver)
 		IONIC_NETDEV_ERROR(netdev, "failed to allocate stats buffer\n");
 		goto err_out_free;
 	}
-	bzero(lif->lif_stats, sizeof(struct ionic_lif_stats));
 	ctx.cmd.lif_stats.addr = lif->lif_stats_pa;
 
 	IONIC_NETDEV_INFO(netdev, "lif_stats START ver %d addr %p(0x%lx)\n", ver,
@@ -2053,19 +2045,17 @@ static int ionic_lif_notifyq_block_init(struct lif *lif)
 
 	lif->notifyblock_sz = ALIGN(sizeof(*lif->notifyblock), PAGE_SIZE);
 
-	if ((error = ionic_dma_alloc(lif->ionic, lif->notifyblock_sz, &lif->notify_dma, BUS_DMA_NOWAIT))) {
+	if ((error = ionic_dma_alloc(lif->ionic, lif->notifyblock_sz, &lif->notify_dma, BUS_DMA_ZERO))) {
 		IONIC_NETDEV_ERROR(netdev, "failed to allocated notifyq block, err: %d\n", error);
 		return error;
 	}
 
 	lif->notifyblock = (struct notify_block *)lif->notify_dma.dma_vaddr;
-
 	if (!lif->notifyblock) {
 		IONIC_NETDEV_ERROR(netdev, "failed to allocate notify block\n");
 		return ENOMEM;
 	}
 
-	bzero(lif->notifyblock, sizeof(struct notify_block ));
 	lif->notifyblock_pa = lif->notify_dma.dma_paddr;
 
 	IONIC_NETDEV_INFO(netdev, "notify addr %p(0x%lx)\n",
