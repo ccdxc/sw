@@ -13,7 +13,9 @@ func (na *Nagent) GetNaplesInfo() (*types.NaplesInfo, error) {
 	naplesInfo.UUID = na.NodeUUID
 	naplesInfo.ControllerIPs = na.ControllerIPs
 	naplesInfo.Mode = na.Mode
-	naplesInfo.IsNpmClientConnected = na.Ctrlerif.IsConnected()
+	if na.Ctrlerif != nil {
+		naplesInfo.IsNpmClientConnected = na.Ctrlerif.IsConnected()
+	}
 	return &naplesInfo, nil
 }
 
