@@ -3,6 +3,7 @@ package shm
 import (
 	"context"
 	"encoding/binary"
+	"fmt"
 	"sync"
 	"time"
 
@@ -140,6 +141,11 @@ func (r *IPCReader) readMsg(offset uint32) (*halproto.Event, error) {
 	index += GetSharedConstant("IPC_HDR_SIZE")            // update the Base pointer of the message
 
 	evt := &halproto.Event{}
+	if (index + msgSize) >= uint32(len(r.Base)) {
+		err := fmt.Errorf("length %d out of bounds %d when reading Event from shared memory", index+msgSize, len(r.Base))
+		log.Error(err.Error())
+		return nil, err
+	}
 	if err := proto.Unmarshal(r.Base[index:(index+msgSize)], evt); err != nil {
 		log.Errorf("error reading message to halproto.Event from shared memory, err: %v", err)
 		return nil, err
