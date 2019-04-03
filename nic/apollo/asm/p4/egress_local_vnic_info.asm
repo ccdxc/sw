@@ -13,11 +13,11 @@ egress_local_vnic_info:
     bcf         [c1], egress_local_vnic_info_tx
     nop
 egress_local_vnic_info_rx:
-    .assert(offsetof(p, ethernet_2_valid) - offsetof(p, ethernet_1_valid) == 9)
+    .assert(offsetof(p, ethernet_2_valid) - offsetof(p, ethernet_1_valid) == 12)
     phvwr       p.{ethernet_2_valid...ethernet_1_valid}, 0
     seq         c1, k.ethernet_2_valid, 1
-    phvwr.c1    p.{ethernet_0_dstAddr,ethernet_0_srcAddr,ethernet_0_etherType}, \
-                        k.{ethernet_2_dstAddr,ethernet_2_srcAddr,ethernet_2_etherType}
+    phvwr.c1    p.ethernet_0_dstAddr, k.ethernet_2_dstAddr
+    phvwr.c1    p.ethernet_0_etherType, k.ethernet_2_etherType
     bcf         [c1], egress_local_vnic_rx_l2payload
     phvwr.c1    p.ethernet_0_srcAddr, d.egress_local_vnic_info_d.vr_mac
     phvwr       p.ethernet_0_dstAddr, d.egress_local_vnic_info_d.overlay_mac

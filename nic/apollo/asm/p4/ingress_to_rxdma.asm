@@ -1,8 +1,9 @@
 #include "apollo.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_ingress_to_rxdma_k.h"
 
-struct ingress_to_rxdma_k k;
+struct ingress_to_rxdma_k_ k;
 struct phv_ p;
 
 %%
@@ -25,13 +26,12 @@ ingress_to_rxdma:
     phvwr           p.predicate_header_valid, TRUE
     phvwr           p.p4_to_txdma_header_valid, TRUE
     phvwr           p.p4i_apollo_i2e_valid, TRUE
-    add             r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5,\
-                        capri_p4_intrinsic_packet_len_sbit6_ebit13}, \
-                        APOLLO_I2E_HDR_SZ
+    add             r1, k.capri_p4_intrinsic_packet_len, APOLLO_I2E_HDR_SZ
     phvwr           p.p4_to_rxdma_header_table3_valid, TRUE
     phvwr           p.p4_to_rxdma_header_direction, k.control_metadata_direction
     phvwr           p.p4_to_txdma_header_payload_len, r1
     seq             c1, k.control_metadata_direction, RX_FROM_SWITCH
+    seq.!c1         c1, k.p4_to_txdma_header_lpm_addr, r0
     phvwr.c1        p.predicate_header_lpm_bypass, TRUE
     phvwr.e         p.service_header_valid, FALSE
     phvwr           p.predicate_header_direction, k.control_metadata_direction
@@ -55,8 +55,7 @@ classic_nic_to_rxdma:
                         p4_to_p4plus_classic_nic_valid}, 3
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
     // r7 : packet_len
-    or              r7, k.capri_p4_intrinsic_packet_len_sbit6_ebit13, \
-                        k.capri_p4_intrinsic_packet_len_sbit0_ebit5, 8
+    or              r7, r0, k.capri_p4_intrinsic_packet_len
     seq             c1, k.ctag_1_valid, TRUE
     seq             c2, k.control_metadata_vlan_strip, TRUE
     bcf             ![c1&c2], classic_nic_to_rxdma_post_vlan_strip
@@ -64,8 +63,7 @@ classic_nic_to_rxdma:
     phvwr           p.ethernet_1_etherType, k.ctag_1_etherType
     phvwr           p.{p4_to_p4plus_classic_nic_vlan_pcp...\
                         p4_to_p4plus_classic_nic_vlan_dei}, \
-                        k.{ctag_1_pcp,ctag_1_dei,ctag_1_vid_sbit0_ebit3,\
-                        ctag_1_vid_sbit4_ebit11}
+                        k.{ctag_1_pcp,ctag_1_dei,ctag_1_vid}
     phvwr           p.p4_to_p4plus_classic_nic_vlan_valid, TRUE
     phvwr           p.ctag_1_valid, FALSE
     sub             r7, r7, 4

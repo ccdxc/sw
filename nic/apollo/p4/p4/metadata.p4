@@ -2,6 +2,8 @@ header_type capri_deparser_len_t {
     fields {
         trunc_pkt_len       : 16;
         ipv4_0_hdr_len      : 16;
+        ipv4_1_hdr_len      : 16;
+        ipv4_2_hdr_len      : 16;
     }
 }
 

@@ -86,6 +86,21 @@ header udp_t udp_2;
 header tcp_t tcp;
 header icmp_t icmp;
 
+/******************************************************************************
+ * Parser OHI
+ *****************************************************************************/
+header_type parser_ohi_t {
+    fields {
+        ipv4_1_len  : 16;
+        ipv4_2_len  : 16;
+    }
+}
+@pragma parser_write_only
+metadata parser_ohi_t ohi;
+
+/******************************************************************************
+ * Parser start
+ *****************************************************************************/
 parser start {
     extract(capri_intrinsic);
     return select(capri_intrinsic.tm_iport) {
@@ -145,7 +160,6 @@ parser parse_txdma_ingress {
     return parse_packet;
 }
 
-
 /******************************************************************************
  * Layer 1
  *****************************************************************************/
@@ -174,6 +188,7 @@ parser parse_ctag_1 {
 
 parser parse_ipv4_1 {
     extract(ipv4_1);
+    set_metadata(ohi.ipv4_1_len, ipv4_1.ihl << 2);
     return select(latest.fragOffset, latest.protocol) {
         IP_PROTO_ICMP : parse_icmp;
         IP_PROTO_TCP : parse_tcp;
@@ -313,6 +328,7 @@ parser parse_ctag_2 {
 
 parser parse_ipv4_2 {
     extract(ipv4_2);
+    set_metadata(ohi.ipv4_2_len, ipv4_2.ihl << 2);
     return select(latest.fragOffset, latest.protocol) {
         IP_PROTO_ICMP : parse_icmp;
         IP_PROTO_TCP : parse_tcp;
@@ -344,8 +360,8 @@ parser parse_udp_2 {
 /******************************************************************************/
 /*
  * Any data pkts entering p4e either come from txdma or from p4i after looping
- * around the rxdma and txdma. So pkts entering p4e will always have txdma headers
- * p4i should not invalidate them
+ * around the rxdma and txdma. So pkts entering p4e will always have txdma
+ * headers p4i should not invalidate them
  */
 @pragma xgress egress
 parser egress_start {
@@ -493,4 +509,70 @@ field_list_calculation ipv4_0_checksum {
 
 calculated_field ipv4_0.hdrChecksum  {
     update ipv4_0_checksum;
+}
+
+/******************************************************************************
+ * Checksums : Layer 1
+ *****************************************************************************/
+field_list ipv4_1_checksum_list {
+    ipv4_1.version;
+    ipv4_1.ihl;
+    ipv4_1.diffserv;
+    ipv4_1.totalLen;
+    ipv4_1.identification;
+    ipv4_1.flags;
+    ipv4_1.fragOffset;
+    ipv4_1.ttl;
+    ipv4_1.protocol;
+    ipv4_1.srcAddr;
+    ipv4_1.dstAddr;
+}
+
+@pragma checksum hdr_len_expr ohi.ipv4_1_len + 0
+@pragma checksum verify_len ohi.ipv4_1_len
+@pragma checksum update_len capri_deparser_len.ipv4_1_hdr_len
+field_list_calculation ipv4_1_checksum {
+    input {
+        ipv4_1_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field ipv4_1.hdrChecksum  {
+    verify ipv4_1_checksum;
+    update ipv4_1_checksum;
+}
+
+/******************************************************************************
+ * Checksums : Layer 2
+ *****************************************************************************/
+field_list ipv4_2_checksum_list {
+    ipv4_2.version;
+    ipv4_2.ihl;
+    ipv4_2.diffserv;
+    ipv4_2.totalLen;
+    ipv4_2.identification;
+    ipv4_2.flags;
+    ipv4_2.fragOffset;
+    ipv4_2.ttl;
+    ipv4_2.protocol;
+    ipv4_2.srcAddr;
+    ipv4_2.dstAddr;
+}
+
+@pragma checksum hdr_len_expr ohi.ipv4_2_len + 0
+@pragma checksum verify_len ohi.ipv4_2_len
+@pragma checksum update_len capri_deparser_len.ipv4_2_hdr_len
+field_list_calculation ipv4_2_checksum {
+    input {
+        ipv4_2_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+calculated_field ipv4_2.hdrChecksum  {
+    verify ipv4_2_checksum;
+    update ipv4_2_checksum;
 }
