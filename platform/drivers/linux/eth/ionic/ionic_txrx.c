@@ -94,6 +94,12 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 		return;
 	}
 
+	if (unlikely(test_bit(LIF_QUEUE_RESET, q->lif->state))) {
+		/* no packet processing while resetting */
+		ionic_rx_recycle(q, desc_info, skb);
+		return;
+	}
+
 #ifdef CSUM_DEBUG
 	if (comp->len > netdev->mtu + VLAN_ETH_HLEN) {
 		netdev_warn(netdev, "RX PKT TOO LARGE!  comp->len %d\n",
