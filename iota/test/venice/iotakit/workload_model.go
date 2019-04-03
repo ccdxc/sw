@@ -328,12 +328,12 @@ func (wpc *WorkloadPairCollection) ReversePairs() *WorkloadPairCollection {
 	return &newWpc
 }
 
-// ListIpAddr lists work load ip address
-func (wpc *WorkloadPairCollection) ListIpAddr() [][]string {
+// ListIPAddr lists work load ip address
+func (wpc *WorkloadPairCollection) ListIPAddr() [][]string {
 	workloadNames := [][]string{}
 
 	for _, pair := range wpc.pairs {
-		workloadNames = append(workloadNames, []string{ strings.Split(pair.first.iotaWorkload.GetIpPrefix(), "/")[0], strings.Split(pair.second.iotaWorkload.GetIpPrefix(), "/")[0]})
+		workloadNames = append(workloadNames, []string{strings.Split(pair.first.iotaWorkload.GetIpPrefix(), "/")[0], strings.Split(pair.second.iotaWorkload.GetIpPrefix(), "/")[0]})
 	}
 
 	return workloadNames

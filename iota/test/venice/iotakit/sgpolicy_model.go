@@ -87,7 +87,7 @@ func (sm *SysModel) SGPolicies() *SGPolicyCollection {
 	return &spc
 }
 
-// Default policy resturns default-policy that prevails across tests cases in the system
+// DefaultSGPolicy resturns default-policy that prevails across tests cases in the system
 func (sm *SysModel) DefaultSGPolicy() *SGPolicyCollection {
 	return sm.NewSGPolicy("default-policy")
 }
@@ -149,8 +149,11 @@ func (spc *SGPolicyCollection) AddRule(fromIP, toIP, port, action string) *SGPol
 				spc.err = fmt.Errorf("Invalid protocol: %v", port)
 				return spc
 			}
-			_, err := strconv.Atoi(params[1])
-			if err != nil {
+			// Check if port is a hypen separted range.
+			components := strings.Split(params[1], "-")
+			if len(components) == 2 {
+				rport = params[1]
+			} else if _, err := strconv.Atoi(params[1]); err != nil {
 				spc.err = fmt.Errorf("Invalid port number: %v", port)
 				return spc
 			}

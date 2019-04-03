@@ -46,7 +46,7 @@ var _ = Describe("fwlog tests", func() {
 		ts.model.SGPolicy("default-policy").Delete()
 
 		// recreate default allow policy
-		Expect(ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "0-65535", "PERMIT").Commit()).ShouldNot(HaveOccurred())
+		Expect(ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "any", "PERMIT").Commit()).ShouldNot(HaveOccurred())
 
 		// verify policy was propagated correctly
 		Eventually(func() error {
@@ -67,7 +67,7 @@ var _ = Describe("fwlog tests", func() {
 					return ts.model.Action().PingPairs(workloadPairs)
 				}).Should(Succeed())
 
-				log.Infof("workload ip address %+v", workloadPairs.ListIpAddr())
+				log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
 
 				// ping is done during init, don't set time in query
 				Eventually(func() error {
@@ -89,7 +89,7 @@ var _ = Describe("fwlog tests", func() {
 						log.Infof("[%-3d] %v ", i+1, r.String())
 					}
 
-					for _, ips := range workloadPairs.ListIpAddr() {
+					for _, ips := range workloadPairs.ListIPAddr() {
 						if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 							err := fmt.Errorf("did not find %v in fwlog", ips)
 							log.Errorf("%v", err)
@@ -113,7 +113,7 @@ var _ = Describe("fwlog tests", func() {
 					return ts.model.Action().TCPSession(workloadPairs, 8000)
 				}).Should(Succeed())
 
-				log.Infof("workload ip address %+v", workloadPairs.ListIpAddr())
+				log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
 
 				// check fwlog
 				Eventually(func() error {
@@ -137,7 +137,7 @@ var _ = Describe("fwlog tests", func() {
 						log.Infof("[%-3d] %v ", i+1, r.String())
 					}
 
-					for _, ips := range workloadPairs.ListIpAddr() {
+					for _, ips := range workloadPairs.ListIPAddr() {
 						if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 							err := fmt.Errorf("did not find %+v in fwlog", ips)
 							log.Errorf("%v", err)
@@ -158,7 +158,7 @@ var _ = Describe("fwlog tests", func() {
 				stime := &api.Timestamp{}
 				stime.Parse(time.Now().String())
 
-				log.Infof("workload ip address %+v", workloadPairs.ListIpAddr())
+				log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
 
 				Eventually(func() error {
 					return ts.model.Action().UDPSession(workloadPairs, 9000)
@@ -186,7 +186,7 @@ var _ = Describe("fwlog tests", func() {
 						log.Infof("[%-3d] %v ", i+1, r.String())
 					}
 
-					for _, ips := range workloadPairs.ListIpAddr() {
+					for _, ips := range workloadPairs.ListIPAddr() {
 						if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 							err := fmt.Errorf("did not find %+v in fwlog", ips)
 							log.Errorf("%v", err)
@@ -207,7 +207,7 @@ var _ = Describe("fwlog tests", func() {
 				stime.Parse(time.Now().String())
 
 				// deny policy
-				denyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "ICMP", "DENY")
+				denyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "icmp", "DENY")
 				denyPolicy.AddRule("any", "any", "", "PERMIT")
 				Expect(denyPolicy.Commit()).ShouldNot(HaveOccurred())
 
@@ -217,7 +217,7 @@ var _ = Describe("fwlog tests", func() {
 				}).Should(Succeed())
 
 				workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-				log.Infof("workload ip address %+v", workloadPairs.ListIpAddr())
+				log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
 
 				Eventually(func() error {
 					return ts.model.Action().PingFails(workloadPairs)
@@ -244,7 +244,7 @@ var _ = Describe("fwlog tests", func() {
 						log.Infof("[%-3d] %v ", i+1, r.String())
 					}
 
-					for _, ips := range workloadPairs.ListIpAddr() {
+					for _, ips := range workloadPairs.ListIPAddr() {
 						if tclient.CheckIPAddrInFwlog([]string{ips[1], ips[0]}, res.Results) != true {
 							err := fmt.Errorf("did not find %+v in fwlog", ips)
 							log.Errorf("%v", err)
@@ -267,7 +267,7 @@ var _ = Describe("fwlog tests", func() {
 				stime.Parse(time.Now().String())
 
 				// reject policy
-				debyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "ICMP", "REJECT")
+				debyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "icmp", "REJECT")
 				debyPolicy.AddRule("any", "any", "", "PERMIT")
 				Expect(debyPolicy.Commit()).ShouldNot(HaveOccurred())
 
@@ -302,7 +302,7 @@ var _ = Describe("fwlog tests", func() {
 						log.Infof("[%-3d] %v ", i+1, r.String())
 					}
 
-					for _, ips := range workloadPairs.ListIpAddr() {
+					for _, ips := range workloadPairs.ListIPAddr() {
 						if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 							err := fmt.Errorf("did not find %+v in fwlog", ips)
 							log.Errorf("%v", err)
@@ -323,7 +323,7 @@ var _ = Describe("fwlog tests", func() {
 				stime.Parse(time.Now().String())
 
 				// deny policy
-				debyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "TCP", "DENY")
+				debyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "tcp/0-65535", "DENY")
 				debyPolicy.AddRule("any", "any", "", "PERMIT")
 				Expect(debyPolicy.Commit()).ShouldNot(HaveOccurred())
 
@@ -333,7 +333,7 @@ var _ = Describe("fwlog tests", func() {
 				}).Should(Succeed())
 
 				workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-				log.Infof("workload ip address %+v", workloadPairs.ListIpAddr())
+				log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
 
 				Eventually(func() error {
 					return ts.model.Action().TCPSessionFails(workloadPairs, 8100)
@@ -361,7 +361,7 @@ var _ = Describe("fwlog tests", func() {
 						log.Infof("[%-3d] %v ", i+1, r.String())
 					}
 
-					for _, ips := range workloadPairs.ListIpAddr() {
+					for _, ips := range workloadPairs.ListIPAddr() {
 						if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 							err := fmt.Errorf("did not find %+v in fwlog", ips)
 							log.Errorf("%v", err)
@@ -378,7 +378,7 @@ var _ = Describe("fwlog tests", func() {
 				}
 
 				// deny policy
-				debyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "UDP", "DENY")
+				debyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "udp/0-65535", "DENY")
 				debyPolicy.AddRule("any", "any", "", "PERMIT")
 				Expect(debyPolicy.Commit()).ShouldNot(HaveOccurred())
 
@@ -390,7 +390,7 @@ var _ = Describe("fwlog tests", func() {
 				workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 				stime := &api.Timestamp{}
 				stime.Parse(time.Now().String())
-				log.Infof("workload ip address %+v", workloadPairs.ListIpAddr())
+				log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
 
 				Eventually(func() error {
 					return ts.model.Action().UDPSessionFails(workloadPairs, 9100)
@@ -418,7 +418,7 @@ var _ = Describe("fwlog tests", func() {
 						log.Infof("[%-3d] %v ", i+1, r.String())
 					}
 
-					for _, ips := range workloadPairs.ListIpAddr() {
+					for _, ips := range workloadPairs.ListIPAddr() {
 						if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 							err := fmt.Errorf("did not find %+v in fwlog", ips)
 							log.Errorf("%v", err)

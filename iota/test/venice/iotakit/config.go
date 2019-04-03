@@ -262,7 +262,7 @@ func (tb *TestBed) CreateHost(host *cluster.Host) error {
 	return err
 }
 
-// GetHostList gets all hosts from venice cluster
+// ListHost gets all hosts from venice cluster
 func (tb *TestBed) ListHost() (objs []*cluster.Host, err error) {
 	ctx, err := tb.VeniceLoggedInCtx()
 	if err != nil {
