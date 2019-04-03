@@ -16,6 +16,7 @@
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/apollo/api/impl/apollo_impl.hpp"
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
@@ -674,6 +675,18 @@ apollo_impl::table_transaction_end(void) {
     mapping_impl_db()->table_transaction_end();
     route_table_impl_db()->table_transaction_end();
     security_policy_impl_db()->table_transaction_end();
+    return SDK_RET_OK;
+}
+
+/**
+ * @brief     API to get table stats
+ * @param[in]  cb    callback to be called on stats
+ *             ctxt    opaque ctxt passed to the callback
+ * @return     SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+apollo_impl::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
+    mapping_impl_db()->table_stats(cb, ctxt);
     return SDK_RET_OK;
 }
 

@@ -14,6 +14,7 @@
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 
 /// \defgroup PDS_VCN VCN API
 /// @{
@@ -39,8 +40,9 @@ typedef struct pds_system_power_e {
 } pds_system_power_t;
 
 typedef struct pds_table_stats_e {
-    sdk::table::sdk_table_api_stats_t *api_stats;
-    sdk::table::sdk_table_stats_t     *stats;
+    std::string table_name;
+    sdk::table::sdk_table_api_stats_t api_stats;
+    sdk::table::sdk_table_stats_t     table_stats;
 } pds_table_stats_t;
 
 namespace debug {

@@ -193,11 +193,13 @@ void
 pds_table_stats_entry_fill (pds_table_stats_t *stats, void *ctxt)
 {
     pds::TableStatsGetResponse *rsp = (pds::TableStatsGetResponse *)ctxt;
-    auto table_api_stats = rsp->add_apistats();
-    auto table_stats = rsp->add_stats();
+    auto response = rsp->add_response();
+    auto api_stats = response->mutable_apistats();
+    auto table_stats = response->mutable_tablestats();
 
-    pds_table_api_stats_fill(table_api_stats, stats->api_stats);
-    pds_table_stats_fill(table_stats, stats->stats);
+    response->set_tablename(stats->table_name);
+    pds_table_api_stats_fill(api_stats, &stats->api_stats);
+    pds_table_stats_fill(table_stats, &stats->table_stats);
     rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
 }
 

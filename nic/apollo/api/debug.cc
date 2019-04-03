@@ -225,9 +225,9 @@ pds_get_system_power (pds_system_power_t *pow)
  * @return      #SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-pds_table_stats_get (table_stats_get_cb_t cb, void *ctxt)
+pds_table_stats_get (debug::table_stats_get_cb_t cb, void *ctxt)
 {
-    return SDK_RET_OK;
+    return impl_base::pipeline_impl()->table_stats(cb, ctxt);
 }
 
 /**

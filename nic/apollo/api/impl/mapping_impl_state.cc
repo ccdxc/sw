@@ -13,6 +13,7 @@
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/mapping_impl.hpp"
+#include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/defines.h"
 #include "gen/p4gen/apollo/include/p4pd.h"
 
@@ -106,6 +107,32 @@ mapping_impl_state::table_transaction_end(void) {
     remote_vnic_mapping_rx_tbl_->txn_end();
     remote_vnic_mapping_tx_tbl_->txn_end();
     //nat_tbl_->txn_end();
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+mapping_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
+    pds_table_stats_t stats;
+    p4pd_table_properties_t    tinfo;
+
+    memset(&stats, 0, sizeof(pds_table_stats_t));
+    p4pd_table_properties_get(P4TBL_ID_LOCAL_IP_MAPPING, &tinfo);
+    stats.table_name = tinfo.tablename;
+    local_ip_mapping_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
+    cb(&stats, ctxt);
+
+    memset(&stats, 0, sizeof(pds_table_stats_t));
+    p4pd_table_properties_get(P4TBL_ID_REMOTE_VNIC_MAPPING_RX, &tinfo);
+    stats.table_name = tinfo.tablename;
+    remote_vnic_mapping_rx_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
+    cb(&stats, ctxt);
+
+    memset(&stats, 0, sizeof(pds_table_stats_t));
+    p4pd_table_properties_get(P4TBL_ID_REMOTE_VNIC_MAPPING_TX, &tinfo);
+    stats.table_name = tinfo.tablename;
+    remote_vnic_mapping_tx_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
+    cb(&stats, ctxt);
+
     return SDK_RET_OK;
 }
 

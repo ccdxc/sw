@@ -79,8 +79,8 @@ func init() {
 	llcDebugCmd.Flags().StringVar(&llcTypeStr, "type", "none", "Specify LLC Cache type (Allowed: cache-read,cache-write,scratchpad-access,cache-hit,cache-miss,partial-write,cache-maint-op,eviction,retry-needed,retry-access,disable)")
 	llcDebugCmd.MarkFlagRequired("type")
 
-	showCmd.AddCommand(llcShowCmd)
-	showCmd.AddCommand(tableShowCmd)
+	systemShowCmd.AddCommand(llcShowCmd)
+	systemShowCmd.AddCommand(tableShowCmd)
 }
 
 func tableShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -113,48 +113,35 @@ func tableShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	tableApiStatsPrintResp(resp.GetApiStats())
-
-	tableStatsPrintResp(resp.GetStats())
-}
-
-func tableApiStatsPrintHeader() {
-	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 40)
-	fmt.Println(hdrLine)
-	fmt.Printf("%-15s%-10s\n", "Type", "Count")
-	fmt.Println(hdrLine)
-}
-
-func tableApiStatsPrintResp(apiStats []*pds.TableApiStats) {
-	for _, resp := range apiStats {
-		tableApiStatsPrintHeader()
-		for _, entry := range resp.GetEntry() {
-			typeStr := strings.Replace(entry.GetType().String(), "TABLE_API_STATS_", "", -1)
-			typeStr = strings.Replace(typeStr, "_", " ", -1)
-			fmt.Printf("%-15s%-10d\n", typeStr, entry.GetCount())
-		}
-	}
+	tableStatsPrintResp(resp.GetResponse())
 }
 
 func tableStatsPrintHeader() {
-	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 40)
+	hdrLine := strings.Repeat("-", 30)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-15s%-10s\n", "Type", "Count")
+	fmt.Printf("%-20s%-10s\n", "Type", "Count")
 	fmt.Println(hdrLine)
 }
 
-func tableStatsPrintResp(apiStats []*pds.TableStats) {
-	for _, resp := range apiStats {
+func tableStatsPrintResp(stats []*pds.TableStatsResponse) {
+	for _, resp := range stats {
+		fmt.Printf("Table Name: %s\n", resp.GetTableName())
 		tableStatsPrintHeader()
-		for _, entry := range resp.GetEntry() {
+		for _, entry := range resp.GetApiStats().GetEntry() {
+			typeStr := strings.Replace(entry.GetType().String(), "TABLE_API_STATS_", "", -1)
+			typeStr = strings.Replace(typeStr, "_", " ", -1)
+			fmt.Printf("%-20s%-10d\n", typeStr, entry.GetCount())
+		}
+		tableStatsPrintHeader()
+		for _, entry := range resp.GetTableStats().GetEntry() {
 			typeStr := strings.Replace(entry.GetType().String(), "TABLE_STATS_", "", -1)
 			typeStr = strings.Replace(typeStr, "_", " ", -1)
-			fmt.Printf("%-15s%-10d\n", typeStr, entry.GetCount())
+			fmt.Printf("%-20s%-10d\n", typeStr, entry.GetCount())
 		}
+		fmt.Printf("\n")
 	}
 }
+
 func llcShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()

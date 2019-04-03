@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/include/pds_debug.hpp"
 
 namespace api {
 namespace impl {
@@ -55,6 +56,12 @@ public:
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_end(void);
 
+    /// \brief     API to get table stats
+    /// \param[in]  cb    callback to be called on stats
+    ///             ctxt    opaque ctxt passed to the callback
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
+ 
 private:
     mem_hash *local_ip_mapping_tbl(void) { return local_ip_mapping_tbl_; }
     mem_hash *remote_vnic_mapping_rx_tbl(void) {

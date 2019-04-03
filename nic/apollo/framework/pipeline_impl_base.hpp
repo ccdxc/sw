@@ -15,6 +15,7 @@
 #include "nic/sdk/asic/asic.hpp"
 #include "nic/apollo/framework/obj_base.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/apollo/api/include/pds_debug.hpp"
 
 namespace api {
 namespace impl {
@@ -93,6 +94,14 @@ public:
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t table_transaction_end(void) {
+        return SDK_RET_ERR;
+    }
+
+    /// \brief API to retrieve table stats
+    /// \param[in]  cb    callback to be called on stats
+    ///             ctxt    opaque ctxt passed to the callback
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
         return SDK_RET_ERR;
     }
 

@@ -103,10 +103,15 @@ message TableStats {
   repeated TableStatsEntry Entry = 1;
 }
 
+message TableStatsResponse {
+  string        TableName  = 1;
+  TableApiStats ApiStats   = 2;
+  TableStats    TableStats = 3;
+}
+
 message TableStatsGetResponse {
-  types.ApiStatus        ApiStatus = 1;
-  repeated TableApiStats ApiStats  = 2;
-  repeated TableStats    Stats     = 3;
+  types.ApiStatus             ApiStatus = 1;
+  repeated TableStatsResponse Response  = 2;
 }
 
 enum LlcCounterType {
