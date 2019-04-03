@@ -525,6 +525,10 @@ ipsec_global_statistics_get (ipsec::IpsecGlobalStatisticsGetRequest& req,
     rsp->mutable_spec()->set_dec_rnmdpr_sem_cindex(stats_cb.dec_rnmdpr_ci_counters);
     rsp->mutable_spec()->set_gcm0_barco_full_errors(stats_cb.gcm0_full_counters);
     rsp->mutable_spec()->set_gcm1_barco_full_errors(stats_cb.gcm1_full_counters);
+    rsp->mutable_spec()->set_enc_global_barco_pi(stats_cb.enc_global_barco_pi);
+    rsp->mutable_spec()->set_enc_global_barco_ci(stats_cb.enc_global_barco_ci);
+    rsp->mutable_spec()->set_dec_global_barco_pi(stats_cb.dec_global_barco_pi);
+    rsp->mutable_spec()->set_dec_global_barco_pi(stats_cb.dec_global_barco_ci);
     return ret;
 }
 

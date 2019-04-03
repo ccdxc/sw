@@ -286,6 +286,10 @@ typedef struct ipsec_global_stats_cb_s {
     uint32_t         enc_rnmdpr_ci_counters;
     uint32_t         dec_rnmdpr_pi_counters;
     uint32_t         dec_rnmdpr_ci_counters;
+    uint32_t         enc_global_barco_pi;
+    uint32_t         enc_global_barco_ci;
+    uint32_t         dec_global_barco_pi;
+    uint32_t         dec_global_barco_ci;
     uint32_t         gcm0_full_counters;
     uint32_t         gcm1_full_counters;
 } __PACK__ ipsec_global_stats_cb_t;

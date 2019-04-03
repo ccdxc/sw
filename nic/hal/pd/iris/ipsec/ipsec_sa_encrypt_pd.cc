@@ -642,19 +642,20 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
     pd_ipsec_global_stats_get_args_t *args = pd_func_args->pd_ipsec_global_stats_get;
     ipsec_global_stats_cb_t stats;
     uint32_t counter;
+    uint16_t barco_counter;
     uint64_t hwid =  get_mem_addr(CAPRI_HBM_REG_IPSEC_GLOBAL_DROP_STATS);
 
     if (args == NULL) {
         return HAL_RET_HW_FAIL;
     }
     HAL_TRACE_DEBUG("IPSEC Global Stats Addr {:#x}", hwid);
-    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats, sizeof(ipsec_global_stats_cb_t))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats, sizeof(ipsec_global_stats_cb_t))) {
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
     
     hwid = CAPRI_SEM_IPSEC_RNMDR_ALLOC_CI_RAW_ADDR - 4;
-    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))) {
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
@@ -662,7 +663,7 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
     stats.enc_rnmdpr_pi_counters = counter;
 
     hwid = CAPRI_SEM_IPSEC_RNMDR_ALLOC_CI_RAW_ADDR;
-    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))) {
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
@@ -670,7 +671,7 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
     stats.enc_rnmdpr_ci_counters = counter;
 
     hwid = CAPRI_SEM_IPSEC_BIG_RNMDR_ALLOC_CI_RAW_ADDR - 4;
-    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))) {
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
@@ -678,7 +679,7 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
     stats.dec_rnmdpr_pi_counters = counter;
 
     hwid = CAPRI_SEM_IPSEC_BIG_RNMDR_ALLOC_CI_RAW_ADDR;
-    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))) {
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
@@ -686,7 +687,7 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
     stats.dec_rnmdpr_ci_counters = counter;
 
     hwid = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + BARCO_GCM0_PI_HBM_TABLE_OFFSET + 4;
-    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))) {
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
@@ -694,15 +695,42 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
     stats.gcm0_full_counters = ntohl(counter);
 
     hwid = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + BARCO_GCM1_PI_HBM_TABLE_OFFSET + 4;
-    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))) {
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
     HAL_TRACE_DEBUG("Barco Decrypt Full Errors {}", htonl(counter));
     stats.gcm1_full_counters = ntohl(counter);
-     
+    
+    hwid = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + BARCO_GCM0_PI_HBM_TABLE_OFFSET;
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&barco_counter, sizeof(barco_counter))) {
+        HAL_TRACE_ERR("Failed to read IPSec global stats memory");
+        return HAL_RET_HW_FAIL;
+    }
+    stats.enc_global_barco_pi = ntohs(barco_counter);
+
+    hwid = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + BARCO_GCM0_PI_HBM_TABLE_OFFSET + sizeof(barco_counter);
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&barco_counter, sizeof(barco_counter))) {
+        HAL_TRACE_ERR("Failed to read IPSec global stats memory");
+        return HAL_RET_HW_FAIL;
+    }
+    stats.enc_global_barco_ci = ntohs(barco_counter);
+
+    hwid = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + BARCO_GCM1_PI_HBM_TABLE_OFFSET;
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&barco_counter, sizeof(barco_counter))) {
+        HAL_TRACE_ERR("Failed to read IPSec global stats memory");
+        return HAL_RET_HW_FAIL;
+    }
+    stats.dec_global_barco_pi = ntohs(barco_counter);
+
+    hwid = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + BARCO_GCM1_PI_HBM_TABLE_OFFSET + sizeof(barco_counter);
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&barco_counter, sizeof(barco_counter))) {
+        HAL_TRACE_ERR("Failed to read IPSec global stats memory");
+        return HAL_RET_HW_FAIL;
+    }
+    stats.dec_global_barco_ci = ntohs(barco_counter);
+
     memcpy(args->stats_cb, &stats, sizeof(ipsec_global_stats_cb_t));
-     
     
     ret = HAL_RET_OK;
     return ret;

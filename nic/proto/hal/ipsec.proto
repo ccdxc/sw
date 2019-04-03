@@ -233,6 +233,11 @@ message IPSecGlobalStatisticsGetSpec {
     uint32         dec_rnmdpr_sem_cindex             = 63;
     uint32         gcm0_barco_full_errors            = 64;
     uint32         gcm1_barco_full_errors            = 65;
+    uint32         enc_global_barco_pi               = 66;
+    uint32         enc_global_barco_ci               = 67;
+    uint32         dec_global_barco_pi               = 68;
+    uint32         dec_global_barco_ci               = 69;
+
 }
 
   
