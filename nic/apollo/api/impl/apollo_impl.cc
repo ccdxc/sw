@@ -23,7 +23,7 @@
 #include "gen/platform/mem_regions.hpp"
 
 extern int p4pd_txdma_get_max_action_id(uint32_t tableid);
-extern sdk_ret_t init_service_lif(void);
+extern sdk_ret_t init_service_lif(const char *cfg_path);
 
 #define MEM_REGION_LIF_STATS_BASE   "lif_stats_base"
 #define RXDMA_SYMBOLS_MAX           1
@@ -100,8 +100,8 @@ apollo_impl::rxdma_symbols_init_ (void **p4plus_symbols,
 {
     uint32_t    i = 0;
 
-    *p4plus_symbols = (sdk::p4::p4_param_info_t *)
-        SDK_CALLOC(SDK_MEM_ALLOC_PDS_RXDMA_SYMBOLS,
+    *p4plus_symbols =
+        (sdk::p4::p4_param_info_t *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_RXDMA_SYMBOLS,
                    RXDMA_SYMBOLS_MAX * sizeof(sdk::p4::p4_param_info_t));
     sdk::p4::p4_param_info_t *symbols =
         (sdk::p4::p4_param_info_t *)(*p4plus_symbols);
@@ -125,8 +125,8 @@ apollo_impl::txdma_symbols_init_ (void **p4plus_symbols,
 {
     uint32_t    i = 0;
 
-    *p4plus_symbols = (sdk::p4::p4_param_info_t *)
-        SDK_CALLOC(SDK_MEM_ALLOC_PDS_TXDMA_SYMBOLS,
+    *p4plus_symbols =
+        (sdk::p4::p4_param_info_t *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_TXDMA_SYMBOLS,
                    TXDMA_SYMBOLS_MAX * sizeof(sdk::p4::p4_param_info_t));
     sdk::p4::p4_param_info_t *symbols =
         (sdk::p4::p4_param_info_t *)(*p4plus_symbols);
@@ -536,7 +536,7 @@ apollo_impl::pipeline_init(void) {
 
     g_pds_impl_state.init(&api::g_pds_state);
 
-    ret = init_service_lif();
+    ret = init_service_lif(p4pd_cfg.cfg_path);
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);

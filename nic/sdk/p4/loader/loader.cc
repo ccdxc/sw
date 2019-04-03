@@ -70,7 +70,6 @@ read_programs(const char *handle, char *pathname, mpu_pgm_sort_t sort_func)
     /* Load context */
     ctx = loader_instances[handle];
     if (!ctx) {
-        SDK_TRACE_ERR("Invalid handle: %s", handle);
         return -1;
     }
 
@@ -146,7 +145,7 @@ param_check(p4_param_info_t *symbols, int num_symbols, std::string param, uint64
  * @prog_param_info: symbol table <name, val>
  * @num_prog_params: Number of elements in the prog_param_info array
  *
- * Return: sdk_ret_t 
+ * Return: sdk_ret_t
  */
 sdk_ret_t
 p4_load_mpu_programs (const char *handle,
@@ -213,7 +212,7 @@ p4_load_mpu_programs (const char *handle,
         /* Load the program from the ELF file and check for errors */
         std::string filename = path_str+ "/" + program_info[i].name;
         if (program_info[i].prog.load_from_elf(filename) < 0) {
-            SDK_TRACE_ERR("Error: %s : %s",
+            SDK_TRACE_ERR("Error %s, file %s",
                program_info[i].prog.errmap[program_info[i].prog.err].c_str(),
                filename.c_str());
             SDK_ASSERT_RETURN(0, SDK_RET_ERR);
@@ -236,7 +235,7 @@ p4_load_mpu_programs (const char *handle,
         for (j = 0; j < (int) program_info[i].prog.symtab.size(); j++) {
             /* Get each symbol by its id */
             if ((symbol = program_info[i].prog.symtab.get_byid(j)) == NULL) {
-                SDK_TRACE_ERR("Id: %d, Cannot get symbol", j);
+                SDK_TRACE_ERR("Id %d, Cannot get symbol", j);
                 SDK_ASSERT_RETURN(0, SDK_RET_ERR);
             } else {
                 /* Symbol is a parameter */
@@ -296,7 +295,7 @@ p4_load_mpu_programs (const char *handle,
             /* Get the unresolved parameter by id */
             if ((param_u = program_info[i].unresolved_params.get_byid(j))
                 == NULL) {
-                SDK_TRACE_ERR("Id: %d, Cannot get unresolved param", j);
+                SDK_TRACE_ERR("Id %d, Cannot get unresolved param", j);
                 SDK_ASSERT_RETURN(0, SDK_RET_ERR);
             } else {
                 /* Try to resolve it by looking at the global labels */
@@ -336,9 +335,9 @@ p4_load_mpu_programs (const char *handle,
                            program_info[i].copy.valid,
                            program_info[i].copy.complete);
 
-           SDK_TRACE_DEBUG("MPU symbol table: ");
+           SDK_TRACE_DEBUG("MPU symbol table ");
            program_info[i].copy.symtab.dump();
-           SDK_TRACE_DEBUG("MPU reloctab: ");
+           SDK_TRACE_DEBUG("MPU reloctab ");
            program_info[i].copy.reloctab.dump();
 
            SDK_ASSERT_RETURN(0, SDK_RET_ERR);
@@ -507,7 +506,6 @@ p4_program_to_base_addr(const char *handle,
     /* Load context */
     ctx = loader_instances[handle];
     if (!ctx) {
-        SDK_TRACE_ERR("Invalid handle: %s", handle);
         return SDK_RET_ERR;
     }
     program_info = ctx->program_info;

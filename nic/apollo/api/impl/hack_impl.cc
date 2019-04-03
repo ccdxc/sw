@@ -7,7 +7,6 @@
  */
 
 #include <cmath>
-//#include <boost/crc.hpp>
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/platform/utils/lif_manager_base.hpp"
 #include "nic/sdk/platform/utils/qstate_mgr.hpp"
@@ -77,11 +76,16 @@ typedef struct __attribute__((__packed__)) txdma_qstate_  {
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-init_service_lif (void)
+init_service_lif (const char *cfg_path)
 {
     uint8_t pgm_offset = 0;
+    std::string prog_info_file;
 
-    program_info *pginfo = program_info::factory("conf/gen/mpu_prog_info.json");
+    prog_info_file = std::string(cfg_path) + std::string("/") +
+        std::string(LDD_INFO_FILE_RPATH) +
+        std::string("/") + std::string(LDD_INFO_FILE_NAME);
+
+    program_info *pginfo = program_info::factory(prog_info_file.c_str());
     SDK_ASSERT(pginfo != NULL);
 /*
     api::g_pds_state.set_prog_info(pginfo);

@@ -1,4 +1,4 @@
-# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+# {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = notify_apollo.asmbin
 MODULE_PREREQS      = notify.p4bin

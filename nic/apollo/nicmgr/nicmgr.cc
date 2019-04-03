@@ -38,8 +38,7 @@ log_flush(void *arg)
 }
 
 void *
-nicmgrapi::nicmgr_thread_start (void *ctxt)
-{
+nicmgrapi::nicmgr_thread_start(void *ctxt) {
     evutil_check log_check/*, port_status_check*/;
     string config_file = "/nic/conf/device.json";
     fwd_mode_t fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
@@ -63,30 +62,22 @@ nicmgrapi::nicmgr_thread_start (void *ctxt)
 #if 0
     // port status event handler
     evutil_add_check(&port_status_check,
-                     &nicmgrapi::port_status_handler, NULL);
+                     &nicmgrapi::port_status_handler_, NULL);
 #endif
 
     PDS_TRACE_INFO("Listening to events ...");
     evutil_run();
 
-#if 0
-    while (true) {
-        pthread_yield();
-    }
-#endif
-
     return NULL;
 }
 
 void
-nicmgrapi::port_status_handler(void *arg)
-{
+nicmgrapi::port_status_handler_(void *ctxt) {
     port_status_t st = {0};
     core::event_t *event;
 
-    PDS_TRACE_INFO("Port status handler ...");
+    PDS_TRACE_DEBUG("Port status handler ...");
 
-    devmgr->LinkEventHandler(&st);
     event = core::event_dequeue(core::THREAD_ID_NICMGR);
     if (event == NULL) {
         return;
@@ -101,6 +92,7 @@ nicmgrapi::port_status_handler(void *arg)
                         st.id, st.speed, st.status);
         devmgr->LinkEventHandler(&st);
         break;
+
     default:
         PDS_TRACE_DEBUG("Unknown event %u", event->event_id);
         break;

@@ -1,4 +1,4 @@
-// {C} Copyright 2017 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 #include "port_utils.hpp"
 
@@ -39,7 +39,8 @@ port_speed_enum_to_mbps (port_speed_t speed_enum)
     return speed;
 }
 
-uint8_t port_admin_state_enum_to_uint (port_admin_state_t admin_st)
+uint8_t
+port_admin_state_enum_to_uint (port_admin_state_t admin_st)
 {
     switch(admin_st) {
     case port_admin_state_t::PORT_ADMIN_STATE_DOWN:
@@ -53,7 +54,8 @@ uint8_t port_admin_state_enum_to_uint (port_admin_state_t admin_st)
     }
 }
 
-uint8_t port_oper_state_enum_to_uint (port_oper_status_t oper_st)
+uint8_t
+port_oper_state_enum_to_uint (port_oper_status_t oper_st)
 {
     switch(oper_st) {
     case port_oper_status_t::PORT_OPER_STATUS_DOWN:

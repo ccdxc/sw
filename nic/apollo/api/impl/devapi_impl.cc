@@ -15,11 +15,11 @@
 #include "nic/apollo/api/impl/devapi_impl.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/asic/pd/scheduler.hpp"
+#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
+#include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
-#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
-#include "nic/sdk/linkmgr/port_mac.hpp"
 
 namespace api {
 namespace impl {
@@ -48,7 +48,7 @@ devapi_impl::lif_create(lif_info_t *info) {
     lif_impl *lif;
     pds_lif_spec_t spec = { 0 };
 
-    // Program TX Scheduler
+    // program tx scheduler
     lif_program_tx_scheduler_(info);
 
     spec.key = info->lif_id;
@@ -118,7 +118,7 @@ devapi_impl::lif_del_macvlan(uint32_t lif_id, mac_t mac, vlan_t vlan) {
 sdk_ret_t
 devapi_impl::lif_upd_vlan_offload(uint32_t lif_id, bool vlan_strip,
                                   bool vlan_insert) {
-    // TODO: Handle vlan strip
+    // TODO: handle vlan strip
     PDS_TRACE_WARN("Not implemented: Revisit");
     return SDK_RET_OK;
 }
@@ -250,7 +250,7 @@ devapi_impl::lif_program_tx_scheduler_(lif_info_t *info) {
     apd_lif.total_qcount = lif_get_qcount_(info);
     apd_lif.cos_bmp = lif_get_cos_bmp_(info);
 
-    // Allocate tx-scheduler resource
+    // allocate tx-scheduler resource
     ret = sdk::asic::pd::asicpd_tx_scheduler_map_alloc(&apd_lif);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to alloc tx sched. lif %lu. err %d",
@@ -258,7 +258,7 @@ devapi_impl::lif_program_tx_scheduler_(lif_info_t *info) {
         return ret;
     }
 
-    // Program TX scheduler and policer
+    // program tx scheduler and policer
     ret = sdk::asic::pd::asicpd_tx_scheduler_map_program(&apd_lif);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program tx sched. lif %lu. err %d",
