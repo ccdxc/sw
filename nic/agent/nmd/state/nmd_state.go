@@ -138,6 +138,9 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 		log.Info("Object found in NMD DB. Using persisted values.")
 		// Use the persisted config moving forward
 		config = *cfgObj.(*nmd.Naples)
+
+		// Always re-read the contents of fru.json upon startup
+		config.Status.Fru = ReadFruFromJSON()
 	} else {
 		// persist the default naples config
 		log.Info("Object not found in NMD DB. Persisting it in the DB.")
