@@ -648,7 +648,7 @@ flush_rq:
     RQCB0_ADDR_GET(r1)
 //    phvwrpair      p.p4_intr_rxdma.intr_qid, CAPRI_TXDMA_INTRINSIC_QID, p.p4_intr_rxdma.intr_qstate_addr, r1
     phvwr          p.p4_intr_rxdma.intr_qid, CAPRI_TXDMA_INTRINSIC_QID
-    phvwri         p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET
+    phvwri         p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_REQ_FEEDBACK_SPLITTER_OFFSET
 
     phvwrpair      p.p4_intr_rxdma.intr_qtype, Q_TYPE_RDMA_RQ, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, RESP_RX_FLAG_ERR_DIS_QP

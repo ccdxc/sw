@@ -367,12 +367,17 @@ completion_feedback:
     phvwrpair      p.cqe.status[7:0], CAPRI_COMPLETION_FEEDBACK_STATUS, p.cqe.error, CAPRI_COMPLETION_FEEDBACK_ERROR //BD Slot
 
 process_err_feedback:
-    scwlt24        c1, d.max_ssn, d.ssn
-    tblwr.c1       d.max_ssn, d.ssn
+    // if QP has to be err disabled instanly, then its likely that the problem
+    // happened in bktrack. SSN and TX_PSN in feedback msg are not valid, so do
+    // not update sqcb1's max_snn and tx_psn with those values.
+    bbeq           CAPRI_COMPLETION_FEEDBACK_ERR_QP_INSTANTLY, 1, trigger_completion_feedback
+    scwlt24        c1, d.max_ssn, CAPRI_COMPLETION_FEEDBACK_SSN // Branch Delay Slot
+    tblwr.c1       d.max_ssn, CAPRI_COMPLETION_FEEDBACK_SSN
 
-    scwlt24        c1, d.max_tx_psn, d.tx_psn
-    tblwr.c1       d.max_tx_psn, d.tx_psn
+    scwlt24        c1, d.max_tx_psn, CAPRI_COMPLETION_FEEDBACK_TX_PSN
+    tblwr.c1       d.max_tx_psn, CAPRI_COMPLETION_FEEDBACK_TX_PSN
 
+trigger_completion_feedback:
     phvwrpair      CAPRI_PHV_FIELD(SQCB1_TO_COMPL_FEEDBACK_P, status), CAPRI_COMPLETION_FEEDBACK_STATUS, \
                    CAPRI_PHV_FIELD(SQCB1_TO_COMPL_FEEDBACK_P, err_qp_instantly), CAPRI_COMPLETION_FEEDBACK_ERR_QP_INSTANTLY
     phvwr      CAPRI_PHV_FIELD(SQCB1_TO_COMPL_FEEDBACK_P, ssn), d.max_ssn

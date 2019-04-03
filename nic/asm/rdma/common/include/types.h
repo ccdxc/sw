@@ -1386,20 +1386,39 @@ struct rdma_feedback_t {
             sarm  : 1;
             pad   : 61;
         }arm;
+    };
+};
+
+struct rdma_req_feedback_t {
+    feedback_type:8;
+    union {
+        /* TYPE: RDMA_COMPLETION_FEEDBACK */
+        struct {
+            wrid: 64;
+            status: 8;
+            error: 1;
+            err_qp_instantly: 1;
+            lif_cqe_error_id_vld: 1;
+            lif_error_id_vld: 1;
+            lif_error_id: 4;
+            rsvd: 8;
+            ssn: 24;
+            tx_psn: 24;
+        }completion;
         /* TYPE: RDMA_TIMER_EXPIRY_FEEDBACK */
         struct {
             rexmit_psn: 24;
             ssn: 24;
             tx_psn: 24;
-            pad: 8;
+            pad: 64;
         }timer_expiry;
         /* TYPE: RDMA_SQ_DRAIN_FEEDBACK */
         struct {
             tx_psn: 24;
             ssn: 24;
-            pad: 32;
+            pad: 88;
         }sq_drain;
-    }; 
+    };
 };
 
 struct rdma_aq_feedback_t {
@@ -1461,6 +1480,9 @@ struct rdma_aq_feedback_t {
 
 #define RDMA_FEEDBACK_SPLITTER_OFFSET  \
     ((sizeof(struct phv_intr_global_t) + sizeof(struct phv_intr_p4_t) + sizeof(struct phv_intr_rxdma_t) + sizeof(struct p4_to_p4plus_roce_header_t) + sizeof(struct rdma_feedback_t)) >> 3)
+
+#define RDMA_REQ_FEEDBACK_SPLITTER_OFFSET  \
+    ((sizeof(struct phv_intr_global_t) + sizeof(struct phv_intr_p4_t) + sizeof(struct phv_intr_rxdma_t) + sizeof(struct p4_to_p4plus_roce_header_t) + sizeof(struct rdma_req_feedback_t)) >> 3)
 
 #define RDMA_AQ_FEEDBACK_SPLITTER_OFFSET                                   \
     ((sizeof(struct phv_intr_global_t) + sizeof(struct phv_intr_p4_t) + sizeof(struct phv_intr_rxdma_t) + sizeof(struct p4_to_p4plus_roce_header_t) + sizeof(struct rdma_aq_feedback_t)) >> 3)

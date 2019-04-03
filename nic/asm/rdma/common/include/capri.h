@@ -19,7 +19,7 @@
 #define CAPRI_RXDMA_INTRINSIC_RECIRC_COUNT k.p4_intr_recirc_count
 #define CAPRI_TXDMA_INTRINSIC_RECIRC_COUNT k.p4_intr_recirc_count
 
-#define CAPRI_RXDMA_RETH_VA k.{rdma_bth_reth_reth_va_1_sbit0_ebit7...rdma_bth_reth_reth_va_2_sbit8_ebit31}
+#define CAPRI_RXDMA_RETH_VA k.{rdma_bth_reth_reth_va_1_sbit0_ebit7...rdma_bth_reth_reth_va_2_sbit16_ebit31}
 
 #define CAPRI_RXDMA_BTH_ATOMICETH_SWAP_OR_ADD_DATA(_r) \
     add _r, k.{rdma_bth_atomiceth_atomiceth_swap_or_add_data_sbit56_ebit63}, k.{rdma_bth_atomiceth_atomiceth_swap_or_add_data_sbit0_ebit15...rdma_bth_atomiceth_atomiceth_swap_or_add_data_sbit48_ebit55}, 8
@@ -30,11 +30,11 @@
 #define CAPRI_RXDMA_RETH_VA_R_KEY k.{rdma_bth_reth_reth_va_1_sbit0_ebit7...rdma_bth_reth_reth_r_key_sbit24_ebit31}
 #define CAPRI_RXDMA_RETH_VA_R_KEY_LEN k.{rdma_bth_reth_reth_va_1_sbit0_ebit7...rdma_bth_reth_reth_dma_len2}
 
-#define CAPRI_RXDMA_BTH_IMMETH_IMMDATA  k.{rdma_bth_immeth_immeth_data_sbit0_ebit7...rdma_bth_immeth_immeth_data_sbit8_ebit31}
+#define CAPRI_RXDMA_BTH_IMMETH_IMMDATA  k.{rdma_bth_immeth_immeth_data_sbit0_ebit7...rdma_bth_immeth_immeth_data_sbit24_ebit31}
 #define CAPRI_RXDMA_BTH_RETH_IMMETH_IMMDATA_C(_r, _c_flag) \
     add._c_flag _r,  k.{rdma_bth_reth_immeth_immeth_data_sbit24_ebit31}, k.{rdma_bth_reth_immeth_immeth_data_sbit0_ebit15...rdma_bth_reth_immeth_immeth_data_sbit16_ebit23}, 8
 
-#define CAPRI_RXDMA_BTH_IETH_R_KEY k.{rdma_bth_ieth_ieth_r_key_sbit0_ebit7...rdma_bth_ieth_ieth_r_key_sbit8_ebit31}
+#define CAPRI_RXDMA_BTH_IETH_R_KEY k.{rdma_bth_ieth_ieth_r_key_sbit0_ebit7...rdma_bth_ieth_ieth_r_key_sbit24_ebit31}
 
 #define CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}
 #define CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR_WITH_SHIFT(_shift) k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33[31:_shift]}
@@ -68,15 +68,15 @@
 #define CAPRI_APP_DATA_BTH_OPCODE k.rdma_bth_bth_opcode
 #define CAPRI_APP_DATA_BTH_PAD k.rdma_bth_bth_pad
 #define CAPRI_APP_DATA_BTH_PSN k.{rdma_bth_bth_psn_sbit0_ebit7...rdma_bth_bth_psn_sbit16_ebit23}
-#define CAPRI_APP_DATA_AETH_MSN k.rdma_bth_aeth_aeth_msn
+#define CAPRI_APP_DATA_AETH_MSN k.{rdma_bth_aeth_aeth_msn_sbit0_ebit15...rdma_bth_aeth_aeth_msn_sbit16_ebit23}
 #define CAPRI_APP_DATA_AETH_SYNDROME k.rdma_bth_aeth_aeth_syndrome
 #define CAPRI_APP_DATA_BTH_ACK_REQ  k.rdma_bth_bth_a
 #define CAPRI_APP_DATA_BTH_SE k.rdma_bth_bth_se
 #define CAPRI_APP_DATA_BTH_P_KEY k.rdma_bth_bth_pkey
 
 //DETH header fields
-#define CAPRI_RXDMA_DETH_Q_KEY                k.{rdma_bth_deth_deth_q_key_sbit0_ebit7...rdma_bth_deth_deth_q_key_sbit8_ebit31}
-#define CAPRI_RXDMA_DETH_SRC_QP               k.rdma_bth_deth_deth_src_qp
+#define CAPRI_RXDMA_DETH_Q_KEY                k.{rdma_bth_deth_deth_q_key_sbit0_ebit7...rdma_bth_deth_deth_q_key_sbit24_ebit31}
+#define CAPRI_RXDMA_DETH_SRC_QP               k.{rdma_bth_deth_deth_src_qp_sbit0_ebit7...rdma_bth_deth_deth_src_qp_sbit8_ebit23}
 #define CAPRI_RXDMA_DETH_IMMETH_DATA          k.{rdma_bth_deth_immeth_immeth_data_sbit0_ebit23...rdma_bth_deth_immeth_immeth_data_sbit24_ebit31}
 #define CAPRI_RXDMA_DETH_SMAC(_r) \
    add _r, k.{rdma_bth_deth_smac_sbit40_ebit47}, k.{rdma_bth_deth_smac_sbit0_ebit15...rdma_bth_deth_smac_sbit32_ebit39}, 8
@@ -95,6 +95,8 @@ add _r, k.{rdma_completion_feedback_wrid_sbit32_ebit47...rdma_completion_feedbac
 #define CAPRI_COMPLETION_FEEDBACK_ERROR k.rdma_completion_feedback_error
 #define CAPRI_COMPLETION_FEEDBACK_ERR_QP_INSTANTLY k.rdma_completion_feedback_err_qp_instantly
 #define CAPRI_COMPLETION_FEEDBACK_LIF_STATS_INFO k.{rdma_completion_feedback_lif_cqe_error_id_vld, rdma_completion_feedback_lif_error_id_vld, rdma_completion_feedback_lif_error_id}
+#define CAPRI_COMPLETION_FEEDBACK_SSN k.{rdma_completion_feedback_ssn_sbit0_ebit7...rdma_completion_feedback_ssn_sbit8_ebit23}
+#define CAPRI_COMPLETION_FEEDBACK_TX_PSN k.{rdma_completion_feedback_tx_psn_sbit0_ebit7...rdma_completion_feedback_tx_psn_sbit16_ebit23}
 
 // Timer expiry feedback header fields
 #define CAPRI_TIMER_EXPIRY_FEEDBACK_SSN(_r) \

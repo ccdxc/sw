@@ -1184,6 +1184,8 @@ action rdma_stage0_completion_feedback_action () {
     modify_field(rdma_completion_feedback_scr.lif_cqe_error_id_vld, rdma_completion_feedback.lif_cqe_error_id_vld);
     modify_field(rdma_completion_feedback_scr.lif_error_id_vld, rdma_completion_feedback.lif_error_id_vld);
     modify_field(rdma_completion_feedback_scr.lif_error_id, rdma_completion_feedback.lif_error_id);
+    modify_field(rdma_completion_feedback_scr.ssn, rdma_completion_feedback.ssn);
+    modify_field(rdma_completion_feedback_scr.tx_psn, rdma_completion_feedback.tx_psn);
 }
 
 

@@ -12,6 +12,7 @@ struct key_entry_aligned_t d;
 #define IN_TO_S_P to_s4_frpmr_sqlkey_info
 
 #define TO_S7_STATS_INFO_P  to_s7_stats_info
+#define TO_S5_SQCB_WB_ADD_HDR_P to_s5_sqcb_wb_add_hdr_info
 
 #define WQE_TO_LKEY_T0      t0_s2s_sqwqe_to_lkey_frpmr_info
 #define WQE_TO_LKEY_T1      t1_s2s_sqwqe_to_lkey_frpmr_info
@@ -37,6 +38,7 @@ struct key_entry_aligned_t d;
 
     .param  req_tx_dcqcn_enforce_process
     .param  req_tx_frpmr_write_back_process
+    .param  req_tx_sqcb2_write_back_process
 
 .align
 req_tx_frpmr_sqlkey_process:
@@ -115,10 +117,11 @@ error_completion:
     phvwr          p.{rdma_feedback.completion.lif_cqe_error_id_vld, rdma_feedback.completion.lif_error_id_vld, rdma_feedback.completion.lif_error_id}, \
                        ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_REQ_STAT(LIF_STATS_REQ_TX_MEMORY_MGMT_ERR_OFFSET))
 
-    phvwr          CAPRI_PHV_FIELD(FRPMR_WRITE_BACK_P, spec_cindex), K_SPEC_CINDEX
-    b              load_frpmr_wb
+    phvwr      CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, spec_cindex), K_SPEC_CINDEX
     // Set error-disable-qp. 
     phvwr         CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1 //BD-slot
+    SQCB2_ADDR_GET(r2)
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqcb2_write_back_process, r2)
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_3

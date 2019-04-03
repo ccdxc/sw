@@ -145,7 +145,7 @@ struct req_tx_phv_t {
         struct rdma_reth_t reth;                        // 16B
         struct {                                        // 19B
             struct rdma_deth_t deth;                           //  8B
-            struct rdma_feedback_t rdma_feedback;              // 11B
+            struct rdma_req_feedback_t rdma_feedback;      // 18B
         };
         struct rdma_cnp_rsvd_t cnp_rsvd;                // 16B
         struct rdma_ieth_t ieth;                        //  4B

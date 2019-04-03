@@ -615,6 +615,7 @@ error_disable_exit:
 #endif
     // DMA commands for generating error-completion to RxDMA
     phvwr          p.rdma_feedback.feedback_type, RDMA_COMPLETION_FEEDBACK
+    phvwrpair      p.rdma_feedback.completion.ssn, d.ssn, p.rdma_feedback.completion.tx_psn, d.tx_psn
     add            r1, r0, offsetof(struct req_tx_phv_t, p4_to_p4plus)
     phvwrp         r1, 0, CAPRI_SIZEOF_RANGE(struct req_tx_phv_t, p4_intr_global, p4_to_p4plus), r0
     DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_ERR_FEEDBACK) 
@@ -625,7 +626,7 @@ error_disable_exit:
     phvwrpair      p.p4_intr_global.tm_iq, 0, p.p4_intr_global.lif, K_GLOBAL_LIF
     SQCB0_ADDR_GET(r1)
     phvwrpair      p.p4_intr_rxdma.intr_qid, K_GLOBAL_QID, p.p4_intr_rxdma.intr_qstate_addr, r1
-    phvwri         p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET
+    phvwri         p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_REQ_FEEDBACK_SPLITTER_OFFSET
 
     phvwrpair      p.p4_intr_rxdma.intr_qtype, K_GLOBAL_QTYPE, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
     phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK

@@ -34,17 +34,13 @@ req_tx_frpmr_write_back_process:
     seq           c1, K_SPEC_CINDEX, SQ_C_INDEX // Branch Delay Slot
     bcf            [!c1], spec_fail
     CAPRI_SET_TABLE_2_VALID(0) // BD-slot
-    
-    // Generate error-completion on FRPMR failure.
-    bbeq           K_GLOBAL_FLAG(_error_disable_qp), 1, error_exit
-
     /*
      * Prepare FRPMR DMA commands.
      */
     // 1 DMA MR PT-entries from host to HBM.
 
     // 1.1 PT-Table host-dma-src-addr
-    sll          r7, K_DMA_SIZE, CAPRI_LOG_SIZEOF_U64 //BD-Slot
+    sll          r7, K_DMA_SIZE, CAPRI_LOG_SIZEOF_U64
 
     seq          c1, r7, 1 << CAPRI_LOG_SIZEOF_U64
     add          r5, K_WQE_ADDR, FRPMR_DMA_ADDR_OFFSET
@@ -74,31 +70,6 @@ req_tx_frpmr_write_back_process:
 spec_fail:
     phvwr.e   p.common.p4_intr_global_drop, 1
     nop
-
-error_exit:
-    /*
-     *  TODO: Incrementing cindex to satisfy model. Ideally, on error disabling we should just exit and be
-     *  in the same state which caused the error.
-     */
-    tblmincri      SQ_C_INDEX, d.log_num_wqes, 1
-
-    // Send Error-Completion feedback PHV to req-rx.
-    DMA_CMD_STATIC_BASE_GET(r6, REQ_TX_DMA_CMD_START_FLIT_ID, REQ_TX_DMA_CMD_RDMA_ERR_FEEDBACK) 
-    add            r1, r0, offsetof(struct req_tx_phv_t, p4_to_p4plus)
-    phvwrp         r1, 0, CAPRI_SIZEOF_RANGE(struct req_tx_phv_t, p4_intr_global, p4_to_p4plus), r0
-    DMA_PHV2PKT_SETUP_MULTI_ADDR_0(r6, p4_intr_global, p4_to_p4plus, 2)
-    DMA_PHV2PKT_SETUP_MULTI_ADDR_N(r6, rdma_feedback, rdma_feedback, 1)
-
-    phvwrpair      p.p4_intr_global.tm_iport, TM_PORT_INGRESS, p.p4_intr_global.tm_oport, TM_PORT_DMA
-    phvwrpair      p.p4_intr_global.tm_iq, 0, p.p4_intr_global.lif, K_GLOBAL_LIF
-    SQCB0_ADDR_GET(r1)
-    phvwrpair      p.p4_intr_rxdma.intr_qid, K_GLOBAL_QID, p.p4_intr_rxdma.intr_qstate_addr, r1
-    phvwri         p.p4_intr_rxdma.intr_rx_splitter_offset, RDMA_FEEDBACK_SPLITTER_OFFSET
-
-    phvwrpair      p.p4_intr_rxdma.intr_qtype, K_GLOBAL_QTYPE, p.p4_to_p4plus.p4plus_app_id, P4PLUS_APPTYPE_RDMA
-    phvwri         p.p4_to_p4plus.raw_flags, REQ_RX_FLAG_RDMA_FEEDBACK
-    DMA_SET_END_OF_PKT_END_OF_CMDS_E(DMA_CMD_PHV2PKT_T, r6)
-    phvwri         p.p4_to_p4plus.table0_valid, 1 // BD-slot
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_5

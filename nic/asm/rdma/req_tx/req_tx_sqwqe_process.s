@@ -268,6 +268,8 @@ inline_data:
 
 zero_length:
     phvwr CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, packet_len), d.send.length
+    phvwr CAPRI_PHV_FIELD(TO_S5_SQCB_WB_ADD_HDR_P, packet_len), d.send.length
+    phvwr p.common.p4_intr_packet_len, d.send.length
 
     CAPRI_RESET_TABLE_2_ARG()
     //set first = 1, last_pkt = 1

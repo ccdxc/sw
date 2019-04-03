@@ -34,8 +34,8 @@ req_tx_sqlkey_rsvd_lkey_process:
     // it is assumed to be host_addr all the time
     DMA_MEM2PKT_SETUP(r3, c0, K_SGE_BYTES, K_SGE_VA)
 
-    CAPRI_SET_TABLE_0_VALID_CE(c2, 1)
-    CAPRI_SET_TABLE_1_VALID_C(!c2, 1)
+    CAPRI_SET_TABLE_0_VALID_CE(c2, 0)
+    CAPRI_SET_TABLE_1_VALID_C(!c2, 0)
 
 bubble_to_next_stage:
     seq           c1, r1[4:2], STAGE_3

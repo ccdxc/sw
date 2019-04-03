@@ -272,7 +272,7 @@ header_type p4_to_p4plus_roce_bth_xrceth_ieth_header_t {
     }
 }
 
-//248
+//248 + 52
 header_type rdma_completion_feedback_header_t {
     fields {
         common_header_bits  : 160;
@@ -284,6 +284,9 @@ header_type rdma_completion_feedback_header_t {
         lif_cqe_error_id_vld: 1;
         lif_error_id_vld    : 1;
         lif_error_id        : 4;
+        rsvd                : 8;
+        ssn                 : 24;
+        tx_psn              : 24;
     }
 }
 
