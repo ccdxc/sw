@@ -52,7 +52,7 @@ route_table_util::route_table_util(pds_route_table_id_t id,
 
     for (uint32_t i = 0; i < this->num_routes; ++i) {
         this->routes[i].ip_pfx = route_pfx;
-        this->routes[i].nh_type = PDS_NH_TYPE_REMOTE_TEP;
+        this->routes[i].nh_type = PDS_NH_TYPE_TEP;
         this->routes[i].vcn_id = PDS_VCN_ID_INVALID;
         ip_prefix_ip_next(&route_pfx, &route_addr);
         route_pfx.addr = route_addr;
@@ -85,9 +85,8 @@ route_table_util::create() {
             (this->num_routes * sizeof(pds_route_t)));
         for (i = 0; i < this->num_routes; ++i) {
             spec.routes[i].prefix = this->routes[i].ip_pfx;
-            spec.routes[i].nh_ip = this->routes[i].nh_ip;
             spec.routes[i].nh_type = this->routes[i].nh_type;
-            spec.routes[i].vcn_id = this->routes[i].vcn_id;
+            spec.routes[i].nh_ip = this->routes[i].nh_ip;
         }
     }
     return (pds_route_table_create(&spec));

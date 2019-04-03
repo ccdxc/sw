@@ -130,8 +130,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subne
                 tep_offset += 3;
             }
 
-            v6route_table.routes[j].nh_type = PDS_NH_TYPE_REMOTE_TEP;
-            v6route_table.routes[j].vcn_id = PDS_VCN_ID_INVALID;
+            v6route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
         }
 
 #ifdef TEST_GRPC_APP
@@ -153,7 +152,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subne
         return rv;
     }
 #endif
-    
+
     return rv;
 }
 
@@ -188,8 +187,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                 // skip MyTEP and gateway IPs
                 tep_offset += 3;
             }
-            route_table.routes[j].nh_type = PDS_NH_TYPE_REMOTE_TEP;
-            route_table.routes[j].vcn_id = PDS_VCN_ID_INVALID;
+            route_table.routes[j].nh_type = PDS_NH_TYPE_TEP;
         }
 #ifdef TEST_GRPC_APP
         printf("Route table: %d\n", i);
@@ -222,7 +220,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
 
     rv = create_v6_route_tables(num_teps, num_vcns, num_subnets,
                      num_routes, tep_pfx, route_pfx, v6_route_pfx);
-    
+
     return rv;
 }
 
@@ -295,7 +293,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vcns, uint32_t num_subnets,
                     // V6 mapping
                     pds_v6_mapping = pds_mapping;
                     pds_v6_mapping.key.ip_addr.af = IP_AF_IPV6;
-                    pds_v6_mapping.key.ip_addr.addr.v6_addr = 
+                    pds_v6_mapping.key.ip_addr.addr.v6_addr =
                            g_test_params.v6_vcn_pfx.addr.addr.v6_addr;
                     CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.key.ip_addr.addr.v6_addr,
                                                     pds_mapping.key.ip_addr.addr.v4_addr);
@@ -719,7 +717,7 @@ create_objects (void)
     string pfxstr;
     sdk_ret_t ret;
     char *tep_encap_env;
-    
+
 #ifndef TEST_GRPC_APP
     g_flow_test_obj = new flow_test();
 #endif
@@ -758,7 +756,7 @@ create_objects (void)
                     } else {
                         g_test_params.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
                     }
-                    printf("TEP encap env var: %s, encap: %d\n", 
+                    printf("TEP encap env var: %s, encap: %d\n",
                             tep_encap_env, g_test_params.fabric_encap.type);
                 }
             } else if (kind == "tep") {
@@ -812,7 +810,7 @@ create_objects (void)
         std::cerr << e.what() << std::endl;
         exit(1);
     }
-    
+
 
 #ifdef TEST_GRPC_APP
     /* BATCH START */
@@ -900,7 +898,7 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    
+
 #ifdef TEST_GRPC_APP
     /* BATCH COMMIT */
     ret = batch_commit_grpc();

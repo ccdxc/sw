@@ -160,14 +160,17 @@ populate_route_table_request (RouteTableRequest *req,
         spec->set_af(types::IP_AF_INET6);
     }
     spec->set_id(rt->key.id);
-    
+
     for (uint32_t i = 0; i < rt->num_routes; i++) {
         Route *route = spec->add_routes();
         ip_pfx_to_spec(route->mutable_prefix(), &rt->routes[i].prefix);
-        ip_addr_to_spec(route->mutable_nexthop(), &rt->routes[i].nh_ip);
-        route->set_vpcid(rt->routes[i].vcn_id);
+        if (rt->routes[i].nh_type == PDS_NH_TYPE_PEER_VCN) {
+            route->set_vpcid(rt->routes[i].vcn.id);
+        } else if (rt->routes[i].nh_type == PDS_NH_TYPE_TEP) {
+            ip_addr_to_spec(route->mutable_nexthop(), &rt->routes[i].nh_ip);
+        }
     }
-    
+
     return;
 }
 
@@ -176,7 +179,7 @@ populate_mapping_request (MappingRequest *req, pds_mapping_spec_t *mapping)
 {
     if (!mapping || !req)
         return;
-    
+
     MappingSpec *spec = req->add_request();
     spec->mutable_id()->set_vpcid(mapping->key.vcn.id);
     ip_addr_to_spec(spec->mutable_id()->mutable_ipaddr(),
@@ -197,7 +200,7 @@ populate_vnic_request (VnicRequest *req, pds_vnic_spec_t *vnic)
 {
     if (!vnic || !req)
         return;
-    
+
     VnicSpec *spec = req->add_request();
     spec->set_vnicid(vnic->vcn.id);
     spec->set_subnetid(vnic->subnet.id);
@@ -215,7 +218,7 @@ populate_subnet_request (SubnetRequest *req, pds_subnet_spec_t *subnet)
 {
     if (!subnet || !req)
         return;
-    
+
     SubnetSpec *spec = req->add_request();
     ipv4_pfx_to_spec(spec->mutable_v4prefix(), &subnet->v4_pfx);
     ip_pfx_to_spec(spec->mutable_v6prefix(), &subnet->v6_pfx);
@@ -239,7 +242,7 @@ populate_vpc_request (VPCRequest *req, pds_vcn_spec_t *vcn)
 {
     if (!vcn || !req)
         return;
-    
+
     VPCSpec *spec = req->add_request();
     ipv4_pfx_to_spec(spec->mutable_v4prefix(), &vcn->v4_pfx);
     ip_pfx_to_spec(spec->mutable_v6prefix(), &vcn->v6_pfx);
@@ -265,7 +268,7 @@ populate_tunnel_request (TunnelRequest *req,
     }
     spec = req->add_request();
     auto encap = spec->mutable_encap();
-    
+
     spec->set_id(tep_id);
     // TODO: Only filling up remote-ip for now
     ipv4_addr_to_spec(spec->mutable_remoteip(), &tep->key.ip_addr);
@@ -286,13 +289,13 @@ populate_tunnel_request (TunnelRequest *req,
        case PDS_ENCAP_TYPE_VXLAN:
            encap->set_type(types::ENCAP_TYPE_VXLAN);
            encap->mutable_value()->set_vnid(tep->encap.val.vnid);
-           break; 
+           break;
        case PDS_ENCAP_TYPE_MPLSoUDP:
            encap->set_type(types::ENCAP_TYPE_MPLSoUDP);
            encap->mutable_value()->set_mplstag(tep->encap.val.mpls_tag);
-           break; 
+           break;
        default:
-           break; 
+           break;
     }
 
     return;

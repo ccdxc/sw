@@ -19,9 +19,12 @@ service RouteSvc {
 
 // route object
 message Route {
-  types.IPPrefix  Prefix  = 1;
-  types.IPAddress NextHop = 2 [(gogoproto.moretags) = "meta:mandatory"];
-  uint32          VPCId   = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  types.IPPrefix      Prefix  = 1;
+  // route either points to a TEP IP or peer-VPC in case of VPC peering
+  oneof Nh {
+      types.IPAddress NextHop = 2 [(gogoproto.moretags) = "meta:mandatory"];
+      uint32          VPCId   = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  }
 }
 
 // route table specification

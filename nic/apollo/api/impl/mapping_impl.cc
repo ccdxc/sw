@@ -499,7 +499,8 @@ mapping_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
                     "pub_ip_valid %u pub_ip %s",
                     spec->key.vcn.id, ipaddr2str(&spec->key.ip_addr), is_local_,
                     spec->subnet.id, ipv4addr2str(spec->tep.ip_addr),
-                    spec->vnic.id, spec->public_ip_valid, ipaddr2str(&spec->public_ip));
+                    spec->vnic.id, spec->public_ip_valid,
+                    ipaddr2str(&spec->public_ip));
 
     if (is_local_) {
         return reserve_local_ip_mapping_resources_(orig_obj, vcn, spec);
@@ -631,8 +632,9 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &remote_vnic_mapping_tx_key,
                         &remote_vnic_mapping_tx_data,
                         REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID,
-                        is_local_ ? handle_.local_.overlay_ip_remote_vnic_tx_hdl_ 
-                                  : handle_.remote_.remote_vnic_tx_hdl_);
+                        is_local_ ?
+                            handle_.local_.overlay_ip_remote_vnic_tx_hdl_ :
+                            handle_.remote_.remote_vnic_tx_hdl_);
     ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->insert(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add program entry in REMOTE_VNIC_MAPPING_TX "

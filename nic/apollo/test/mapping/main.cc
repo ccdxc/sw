@@ -145,8 +145,7 @@ TEST_F(mapping_test, mapping_create) {
     rt_tbl.routes[0].nh_ip.af = IP_AF_IPV4;
     inet_aton(sub_rem_gw, &ipaddr);
     rt_tbl.routes[0].nh_ip.addr.v4_addr = ntohl(ipaddr.s_addr);
-    rt_tbl.routes[0].nh_type = PDS_NH_TYPE_REMOTE_TEP;
-    rt_tbl.routes[0].vcn_id = PDS_VCN_ID_INVALID;
+    rt_tbl.routes[0].nh_type = PDS_NH_TYPE_TEP;
     ASSERT_TRUE(pds_route_table_create(&rt_tbl) == SDK_RET_OK);
 
     // Create Subnet on the VCN

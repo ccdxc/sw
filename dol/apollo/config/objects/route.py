@@ -54,7 +54,6 @@ class RouteObject(base.ConfigObjectBase):
             utils.GetRpcIPPrefix(route, rtspec.Prefix)
             rtspec.NextHop.Af = types_pb2.IP_AF_INET
             rtspec.NextHop.V4Addr = int(self.TunIPAddr)
-            rtspec.VPCId = self.VPCId
         return grpcmsg
 
     def Show(self):

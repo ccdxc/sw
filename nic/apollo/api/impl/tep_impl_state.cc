@@ -42,7 +42,8 @@ tep_impl_state::tep_impl_state(pds_state *state) {
     SDK_ASSERT(nh_tx_tbl_ != NULL);
 
     // reserve system default blackhole/drop nexthop entry
-    SDK_ASSERT(nh_tx_tbl_->reserve_index(PDS_DROP_NEXTHOP_HW_ID) == SDK_RET_OK);
+    SDK_ASSERT(nh_tx_tbl_->reserve_index(PDS_SYSTEM_DROP_NEXTHOP_HW_ID) ==
+                   SDK_RET_OK);
 }
 
 tep_impl_state::~tep_impl_state() {

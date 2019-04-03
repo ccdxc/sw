@@ -99,9 +99,11 @@ sdk_ret_t
 route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                 ret;
     pds_route_table_spec_t    *spec;
+    pds_vcn_key_t             vcn_key;
     route_table_t             *rtable;
     pds_tep_key_t             tep_key;
-    api::tep_entry            *tep;
+    tep_entry                 *tep;
+    vcn_entry                 *vcn;
 
     spec = &obj_ctxt->api_params->route_table_spec;
     if (spec->num_routes == 0) {
@@ -119,7 +121,7 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         return sdk::SDK_RET_OOM;
     }
     rtable->af = spec->af;
-    rtable->default_nhid = PDS_DROP_NEXTHOP_HW_ID;
+    rtable->default_nhid = PDS_SYSTEM_DROP_NEXTHOP_HW_ID;
     if (rtable->af == IP_AF_IPV4) {
         rtable->max_routes = route_table_impl_db()->v4_max_routes();
     } else {
@@ -128,14 +130,60 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     rtable->num_routes = spec->num_routes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
         rtable->routes[i].prefix = spec->routes[i].prefix;
-        tep_key.ip_addr = spec->routes[i].nh_ip.addr.v4_addr;
-        tep = tep_db()->find(&tep_key);
-        SDK_ASSERT(tep != NULL);
-        rtable->routes[i].nhid = ((tep_impl *)(tep->impl()))->nh_id();
-        PDS_TRACE_DEBUG("Processing route table %u, route %s -> nh %u, TEP %s",
-                        spec->key.id, ippfx2str(&rtable->routes[i].prefix),
-                        rtable->routes[i].nhid,
-                        ipv4addr2str(tep->ip()));
+        // TODO:
+        // need a bit in the nh (in p4) to differentiate between vpc peering
+        // and non-vpc peering cases
+        switch (spec->routes[i].nh_type) {
+        case PDS_NH_TYPE_BLACKHOLE:
+            rtable->routes[i].nhid = PDS_SYSTEM_DROP_NEXTHOP_HW_ID;
+            PDS_TRACE_DEBUG("Processing route table %u, route %s -> blackhole "
+                            "nh id %u, ", spec->key.id,
+                            ippfx2str(&rtable->routes[i].prefix),
+                            rtable->routes[i].nhid);
+            break;
+        case PDS_NH_TYPE_TEP:
+            // non vpc peering case
+            tep_key.ip_addr = spec->routes[i].nh_ip.addr.v4_addr;
+            tep = tep_db()->find(&tep_key);
+            if (tep == NULL) {
+                PDS_TRACE_ERR("TEP %s not found while processing route %s in "
+                              "route table %u", ipv4addr2str(tep_key.ip_addr),
+                              ippfx2str(&spec->routes[i].prefix), spec->key.id);
+                ret = SDK_RET_INVALID_ARG;
+                goto cleanup;
+            }
+            rtable->routes[i].nhid = ((tep_impl *)(tep->impl()))->nh_id();
+            PDS_TRACE_DEBUG("Processing route table %u, route %s -> nh %u, "
+                            "TEP %s", spec->key.id,
+                            ippfx2str(&rtable->routes[i].prefix),
+                            rtable->routes[i].nhid, tep->key2str().c_str());
+            break;
+        case PDS_NH_TYPE_PEER_VCN:
+            // vpc peering case
+            PDS_TRACE_WARN("vpc peering not supported yet in the dataplane !!");
+            vcn = vcn_db()->find(&spec->routes[i].vcn);
+            if (vcn == NULL) {
+                PDS_TRACE_ERR("vcn %u not found while processing route %s in "
+                              "route table %u", spec->routes[i].vcn.id,
+                              ippfx2str(&spec->routes[i].prefix),
+                              spec->key.id);
+                ret = SDK_RET_INVALID_ARG;
+                goto cleanup;
+            }
+            rtable->routes[i].nhid = vcn->hw_id();
+            PDS_TRACE_DEBUG("Processing route table %u, route %s -> vcn hw "
+                            "id %u, ", spec->key.id,
+                            ippfx2str(&rtable->routes[i].prefix),
+                            rtable->routes[i].nhid);
+            break;
+        default:
+            PDS_TRACE_ERR("Unknown nh type %u while processing route %s in "
+                          "route table %u", spec->routes[i].nh_type,
+                          ippfx2str(&spec->routes[i].prefix), spec->key.id);
+            ret = SDK_RET_INVALID_ARG;
+            goto cleanup;
+            break;
+        }
     }
     ret = lpm_tree_create(rtable, lpm_root_addr_,
                           (spec->af == IP_AF_IPV4) ?
@@ -144,6 +192,8 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build LPM route table, err : %u", ret);
     }
+
+cleanup:
     SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE, rtable);
     return ret;
 }
