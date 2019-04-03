@@ -173,8 +173,8 @@ function build_sw () {
 print_vars
 setup_sw_repo
 setup_asic_repo
-export_asic_files
 apply_sw_patches
+export_asic_files
 
 # For ASIC repo, if ASSET_LABEL is not specified, use the SHA of the top commit
 cd $ASIC_REPO_DIR/asic
