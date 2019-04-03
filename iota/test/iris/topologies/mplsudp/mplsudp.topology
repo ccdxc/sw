@@ -8,10 +8,10 @@ nodes:
       role: auto
       workloads:
         linux:
-            type    : WORKLOAD_TYPE_BARE_METAL
+            type    : WORKLOAD_TYPE_BARE_METAL_MAC_VLAN
             image   : "N/A"
         freebsd:
-            type    : WORKLOAD_TYPE_BARE_METAL
+            type    : WORKLOAD_TYPE_BARE_METAL_MAC_VLAN
             image   : "N/A"
 
     - node: node2
@@ -19,8 +19,8 @@ nodes:
       role: auto
       workloads:
         linux:
-            type    : WORKLOAD_TYPE_BARE_METAL
+            type    : WORKLOAD_TYPE_BARE_METAL_MAC_VLAN
             image   : "N/A"
         freebsd:
-            type    : WORKLOAD_TYPE_BARE_METAL
+            type    : WORKLOAD_TYPE_BARE_METAL_MAC_VLAN
             image   : "N/A"
