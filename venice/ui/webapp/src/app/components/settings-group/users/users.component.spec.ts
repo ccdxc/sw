@@ -21,7 +21,7 @@ import { NewuserComponent } from './newuser/newuser.component';
 import { NewroleComponent } from './newrole/newrole.component';
 import { NewrolebindingComponent } from './newrolebinding/newrolebinding.component';
 import { UsersComponent } from './users.component';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 import { StagingService } from '@app/services/generated/staging.service';
 
 describe('UsersComponent', () => {

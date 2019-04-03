@@ -20,6 +20,7 @@ import { ConfirmationService } from 'primeng/primeng';
 
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { AuthService } from '@app/services/auth.service';
 import { CoreModule } from '@app/core';
 import { AlertlistModule } from '@app/components/alertlist';
@@ -40,7 +41,7 @@ import { SearchboxComponent } from '@app/components/search/searchbox/searchbox.c
 import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions/searchsuggestions.component';
 import { GuidesearchComponent } from '@app/components/search/guidedsearch/guidedsearch.component';
 import { SharedModule } from '@app/components/shared/shared.module';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 
 describe('AppComponent', () => {
   beforeEach(() => {
@@ -76,7 +77,8 @@ describe('AppComponent', () => {
         LogPublishersService,
         Store,
         OverlayContainer,
-        MessageService
+        MessageService,
+        AuthServiceGen,
       ],
     });
 

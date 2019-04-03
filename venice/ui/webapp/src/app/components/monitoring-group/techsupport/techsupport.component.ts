@@ -88,7 +88,6 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
       response => {
         this.techsupportrequestsEventUtility.processEvents(response);
       },
-      this.controllerService.restErrorHandler('Failed to get MonitoringTechSupportRequest')
     );
     this.subscriptions.push(sub);
   }

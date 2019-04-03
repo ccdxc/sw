@@ -9,7 +9,7 @@ import { MatIconRegistry } from '@angular/material';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { BehaviorSubject } from 'rxjs';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 import { ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 
 describe('EventsService', () => {

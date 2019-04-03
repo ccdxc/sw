@@ -20,7 +20,7 @@ import { PrimengModule } from '@lib/primeng.module';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { DestinationpolicyComponent } from './destinations.component';
 import { NewdestinationComponent } from './newdestination/newdestination.component';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 import { MonitoringGroupModule } from '@app/components/monitoring-group/monitoring-group.module';
 
 

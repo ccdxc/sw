@@ -14,7 +14,7 @@ import { MatIconRegistry } from '@angular/material';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { WidgetsModule } from 'web-app-framework';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MonitoringGroupModule } from '@app/components/monitoring-group/monitoring-group.module';
 

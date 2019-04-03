@@ -17,7 +17,7 @@ import { StagingService } from '@app/services/generated/staging.service';
 
 import { NewuserComponent } from '../newuser/newuser.component';
 import { UsersComponent } from '../users.component';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 import { NewroleComponent } from '../newrole/newrole.component';
 import { NewrolebindingComponent } from './newrolebinding.component';
 

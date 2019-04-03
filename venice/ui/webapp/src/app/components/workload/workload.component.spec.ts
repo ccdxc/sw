@@ -40,7 +40,7 @@ import { BehaviorSubject } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 
 @Component({
   template: ''

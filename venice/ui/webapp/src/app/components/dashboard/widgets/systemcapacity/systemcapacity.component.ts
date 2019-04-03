@@ -259,7 +259,6 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
       response => {
         this.nodeEventUtility.processEvents(response);
       },
-      this.controllerService.restErrorHandler('Failed to get Node info')
     );
     this.subscriptions.push(subscription);
   }
@@ -502,7 +501,7 @@ export class SystemcapacitywidgetComponent implements OnInit, AfterViewInit, OnD
    * it won't be clipped by the size of the canvas.
    */
   createCustomTooltip(chartTooltipId) {
-    return function (tooltip) {
+    return function(tooltip) {
       // This function will be called in the context of the chart
       const chartThis: any = this;
       // Tooltip Element

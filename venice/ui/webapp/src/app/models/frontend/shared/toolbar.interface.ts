@@ -9,7 +9,7 @@ export interface BreadcrumbItem {
 
 export interface ToolbarButton {
   text: string;
-  cssClass: string;
+  cssClass?: string;
   callback: (...args: any[]) => void;
   computeClass?: any;
 }
@@ -17,7 +17,7 @@ export interface ToolbarButton {
 export interface SplitButton {
   text: string;
   callback: (...args: any[]) => void;
-  items: MenuItem [];  // see splitbutton API.
+  items: MenuItem[];  // see splitbutton API.
   icon?: string;
   styleClass?: string; // splitbutton style-class
   menuStyleClass?: string;  // splitbutton menu style-class
@@ -25,7 +25,7 @@ export interface SplitButton {
 
 export interface Dropdown {
   callback: (...args: any[]) => void;
-  options: SelectItem [];  // see Dropdown API.
+  options: SelectItem[];  // see Dropdown API.
   model: any; // model
   styleClass?: string;     // Dropdown style-class
   panelStyleClass?: string; // Dropdown-panel style-class

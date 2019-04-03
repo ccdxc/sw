@@ -88,7 +88,6 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
       (response) => {
         this.fwlogPoliciesEventUtility.processEvents(response);
       },
-      this.controllerService.restErrorHandler('Failed to get Firewall Log Policies')
     );
     this.subscriptions.push(subscription);
   }

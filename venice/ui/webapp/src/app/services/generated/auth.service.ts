@@ -9,10 +9,10 @@ import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
 
-
-
-import { IAuthAuthenticationPolicy, IApiStatus, IAuthRoleBindingList, IAuthRoleBinding,
-  IAuthRoleList, IAuthRole, IAuthUserList, IAuthUser, IAuthAutoMsgAuthenticationPolicyWatchHelper, IAuthAutoMsgRoleBindingWatchHelper, IAuthAutoMsgRoleWatchHelper, IAuthAutoMsgUserWatchHelper } from '@sdk/v1/models/generated/auth';
+export interface GetUserObjRequest {
+  success: () => void;
+  err: () => void;
+}
 
 
 @Injectable()
@@ -68,4 +68,5 @@ export class AuthService extends Authv1Service {
     return Utility.getInstance().getTenant();
   }
 
+  
 }

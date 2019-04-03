@@ -7,7 +7,8 @@ import { AuthService } from './auth.service';
 import { ControllerService } from './controller.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
-import { MessageService, ConfirmationService } from 'primeng/primeng';
+import { ConfirmationService } from 'primeng/primeng';
+import { MessageService } from './message.service';
 
 describe('AuthService', () => {
   beforeEach(() => {

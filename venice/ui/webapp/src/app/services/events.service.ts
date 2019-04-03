@@ -84,7 +84,12 @@ export class EventsService extends EventGenService {
         }
       },
       (error) => {
-        console.error('Polling for events failed', error);
+        this._controllerService.invokeRESTErrorToaster("Failed to get events", error)
+        const poll = this.pollingUtility.pollingHandlerMap[key];
+        if (poll == null || poll.handler == null) {
+          return;
+        }
+        poll.handler.error(error);
       }
     );
   }

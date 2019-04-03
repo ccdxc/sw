@@ -2304,6 +2304,11 @@
       "resolved": "https://registry.npmjs.org/@types/jquery/-/jquery-3.3.6.tgz",
       "integrity": "sha512-403D4wN95Mtzt2EoQHARf5oe/jEPhzBOBNrunk+ydQGW8WmkQ/E8rViRAEB1qEt/vssfGfNVD6ujP4FVeegrLg=="
     },
+    "@types/lodash": {
+      "version": "4.14.123",
+      "resolved": "https://registry.npmjs.org/@types/lodash/-/lodash-4.14.123.tgz",
+      "integrity": "sha512-pQvPkc4Nltyx7G1Ww45OjVqUsJP4UsZm+GWJpigXgkikZqJgRm4c48g027o6tdgubWHwFRF15iFd+Y4Pmqv6+Q=="
+    },
     "@types/node": {
       "version": "9.4.7",
       "resolved": "https://registry.npmjs.org/@types/node/-/node-9.4.7.tgz",

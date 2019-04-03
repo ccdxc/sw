@@ -94,7 +94,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
         const body = response.body;
         this.authPolicy = new AuthAuthenticationPolicy(body);
       },
-      this.restErrorHandler('Failed to get Authentication Policy')
+      this._controllerService.restErrorHandler('Failed to get Authentication Policy')
     );
   }
 
@@ -128,16 +128,16 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
           this.handleLDAPServerCheckSuccess(LDAPCheckType.CONNECTION);
         }
       },
-      this.restErrorHandler('Failed to check LDAP server configuration')
+      this._controllerService.restErrorHandler('Failed to check LDAP server configuration')
     );
   }
 
   handleLDAPServerCheckSuccess(type: LDAPCheckType) {
-    this.invokeSuccessToaster('Test LDAP ' + type + ' pass', '');
+    this._controllerService.invokeSuccessToaster('Test LDAP ' + type + ' pass', '');
   }
 
   handleLDAPServerCheckFailure(type: LDAPCheckType) {
-    this.invokeRESTErrorToaster('Test LDAP ' + type + ' fails', '');
+    this._controllerService.invokeRESTErrorToaster('Test LDAP ' + type + ' fails', '');
   }
 
   onCheckLDAPBindConnect(ldap: AuthLdap) {
@@ -154,7 +154,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
           this.handleLDAPServerCheckSuccess(LDAPCheckType.BIND);
         }
       },
-      this.restErrorHandler('Failed to check LDAP server configuration')
+      this._controllerService.restErrorHandler('Failed to check LDAP server configuration')
     );
   }
 
@@ -192,7 +192,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
     handler = this._authService.UpdateAuthenticationPolicy(authAuthenticationPolicy);
     handler.subscribe(
       (response) => {
-        this.invokeSuccessToaster('Update Successful', 'Updated Authentication policy. System will log you out in 3 seconds');
+        this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Updated Authentication policy. System will log you out in 3 seconds');
         // update data so auth-policy UI will get refresh and UI remain in auth-policy page.
         const body = response.body;
         this.authPolicy = new AuthAuthenticationPolicy(body);
@@ -203,7 +203,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
           window.clearTimeout(setTime1);
         }, 3000);
       },
-      this.restErrorHandler('Authentication Policy Update Failed')
+      this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY)
     );
   }
 
@@ -219,17 +219,17 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
     this.saveAuthenticationPolicy(this.authPolicy.getFormGroupValues());
   }
 
-  onInvokeRemoveRadius(radius: AuthRadius ) {
-    this._onInvokeRemoveConfigHelper(AuthAuthenticators_authenticator_order.RADIUS );
+  onInvokeRemoveRadius(radius: AuthRadius) {
+    this._onInvokeRemoveConfigHelper(AuthAuthenticators_authenticator_order.RADIUS);
   }
 
-  onInvokeRemoveLDAP(ldap: AuthLdap ) {
-    this._onInvokeRemoveConfigHelper(AuthAuthenticators_authenticator_order.LDAP );
+  onInvokeRemoveLDAP(ldap: AuthLdap) {
+    this._onInvokeRemoveConfigHelper(AuthAuthenticators_authenticator_order.LDAP);
   }
 
   _onInvokeRemoveConfigHelper(type: any) {
     const saveData = this.authPolicy.getFormGroupValues(); // extract data out first
-    const configIndex = saveData.spec.authenticators['authenticator-order'].findIndex( (value) => value === type);
+    const configIndex = saveData.spec.authenticators['authenticator-order'].findIndex((value) => value === type);
     saveData.spec.authenticators['authenticator-order'].splice(configIndex, 1);
     delete saveData.spec.authenticators[type.toLowerCase()]; // remove radius or ldap
     this.saveAuthenticationPolicy(saveData);

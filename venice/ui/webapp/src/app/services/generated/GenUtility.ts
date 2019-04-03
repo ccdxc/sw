@@ -5,7 +5,7 @@ import { publishReplay, refCount } from 'rxjs/operators';
 import { Observable ,  Subject, Subscriber, TeardownLogic } from 'rxjs';
 import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
 import { MockDataUtil } from '@app/common/MockDataUtil';
-import { AUTH_KEY } from '@app/core';
+import { AUTH_KEY } from '@app/core/auth/auth.reducer';
 import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
 
 export class GenServiceUtility {
@@ -99,7 +99,31 @@ export class GenServiceUtility {
       if (this.urlWsMap[url] == null) {
         url = url.replace('http://', 'ws://');
         url = url.replace('https://', 'wss://');
-        const observer = new WebSocketSubject(url);
+        let output: Subject<any>;
+        const observer = new WebSocketSubject({
+          url: url,
+          openObserver: {
+            next: (v) => {
+              // when the socket connection opens, we save the 
+              // variable that subscribers will be listening too
+              output = observer._output;
+            }
+          },
+          closeObserver: {
+            next: (closeEvent) => {
+              // 1. Socket returned 400 error before connection was promoted.
+              //    output will be null since openObserer did not run
+              // 2. Socket was open and then closed. We check that this closed
+              //    wasn't caused by the UI unsubscribing from the socket by 
+              //    checking if there are listeners on the output observable
+              if (output == null || output.observers.length > 0) {
+                Utility.getInstance().getControllerService().webSocketErrorToaster(url, closeEvent)
+                output = null;
+              }
+            }
+          }
+        });
+
         this.urlWsMap[url] = observer;
       }
       return this.urlWsMap[url];

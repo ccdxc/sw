@@ -7,7 +7,7 @@ import { ConfirmationService } from 'primeng/primeng';
 import { SecurityComponent } from './security.component';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 
 
 

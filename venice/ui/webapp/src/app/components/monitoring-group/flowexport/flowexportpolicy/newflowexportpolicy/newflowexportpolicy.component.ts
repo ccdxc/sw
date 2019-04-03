@@ -130,17 +130,17 @@ export class NewflowexportpolicyComponent extends BaseComponent implements OnIni
     handler.subscribe(
       (response) => {
         if (this.isInline) {
-          this.invokeSuccessToaster('Update Successful', 'Updated policy ' + this.newPolicy.meta.name);
+          this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Updated policy ' + this.newPolicy.meta.name);
         } else {
-          this.invokeSuccessToaster('Creation Successful', 'Created policy ' + policy.meta.name);
+          this._controllerService.invokeSuccessToaster(Utility.CREATE_SUCCESS_SUMMARY, 'Created policy ' + policy.meta.name);
         }
         this.cancelPolicy();
       },
       (error) => {
         if (this.isInline) {
-          this.invokeRESTErrorToaster('Update Failed', error);
+          this._controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
         } else {
-          this.invokeRESTErrorToaster('Creation Failed', error);
+          this._controllerService.invokeRESTErrorToaster(Utility.CREATE_FAILED_SUMMARY, error);
         }
       }
     );

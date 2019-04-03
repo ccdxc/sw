@@ -23,11 +23,12 @@ import { PolicyhealthComponent } from './widgets/policyhealth/policyhealth.compo
 import { DsbdworkloadComponent } from './widgets/dsbdworkload/dsbdworkload.component';
 
 import { MatIconRegistry } from '@angular/material';
-import { MessageService, ConfirmationService } from 'primeng/primeng';
+import { ConfirmationService } from 'primeng/primeng';
 import { WorkloadsComponent } from './workloads/workloads.component';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MessageService } from '@app/services/message.service';
 
 @Component({
   template: ''

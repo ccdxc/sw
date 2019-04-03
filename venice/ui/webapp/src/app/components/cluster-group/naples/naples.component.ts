@@ -101,7 +101,6 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
       response => {
         this.naplesEventUtility.processEvents(response);
       },
-      this.restErrorHandler('Failed to get NAPLES info')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }

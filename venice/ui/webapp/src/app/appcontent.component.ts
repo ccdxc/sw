@@ -159,7 +159,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
           this.cluster = this.clusterArray[0];
         }
       },
-      this._controllerService.restErrorHandler('Failed to get Cluster info')
     );
     this.subscriptions.push(subscription);
   }
@@ -484,7 +483,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
         }
         this.alertNumbers = this.alerts.length;
       },
-      this._controllerService.restErrorHandler('Failed to get Alerts')
     );
     this.subscriptions.push(this.alertSubscription);
   }

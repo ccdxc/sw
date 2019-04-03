@@ -287,7 +287,6 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
         });
         this.filterAlerts();
       },
-      this.restErrorHandler('Failed to get Alerts')
     );
     this.subscriptions.push(this.alertSubscription);
   }
@@ -460,9 +459,9 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     payload.spec.state = newState;
     const subscription = this.monitoringService.UpdateAlert(payload.meta.name, payload).subscribe(
       response => {
-        this.invokeSuccessToaster(summary, msg);
+        this._controllerService.invokeSuccessToaster(summary, msg);
       },
-      this.restErrorHandler(summary + ' Failed')
+      this._controllerService.restErrorHandler(summary + ' Failed')
     );
     this.subscriptions.push(subscription);
   }

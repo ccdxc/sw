@@ -9,7 +9,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { ConfirmationService } from 'primeng/primeng';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { LogService } from '@app/services/logging/log.service';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 import { WidgetsModule } from 'web-app-framework';
 import { SearchresultComponent } from './searchresult.component';
 

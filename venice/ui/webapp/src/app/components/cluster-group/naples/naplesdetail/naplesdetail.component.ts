@@ -187,7 +187,6 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           this.selectedObj = null;
         }
       },
-      this.restErrorHandler('Failed to get Naples ' + this.selectedId)
     );
     this.subscriptions.push(subscription);
   }

@@ -4,6 +4,7 @@ import { required } from '@sdk/v1/utils/validators';
 import { UsersComponent } from '../users.component';
 import { Animations } from '@app/animations';
 import { SelectItem } from 'primeng/primeng';
+import { map, switchMap, tap, catchError } from 'rxjs/operators';
 import { ControllerService } from '@app/services/controller.service';
 import { AuthService } from '@app/services/generated/auth.service';
 import { StagingService } from '@app/services/generated/staging.service';
@@ -200,15 +201,15 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   }
 
   updateRole() {
-    const newRole = this.getRoleFromUI();
+    const newRole = Utility.TrimDefaultsAndEmptyFields(this.getRoleFromUI());
     this._authService.UpdateRole(newRole.meta.name, newRole).subscribe(
       response => {
         const createdRole: AuthRole = response.body as AuthRole;
 
-        this.invokeSuccessToaster('Update Successful', 'Ureated Role ' + newRole.meta.name);
+        this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Created Role ' + newRole.meta.name);
         this.formClose.emit(true);
       },
-      this.restErrorHandler('Update Role Failed')
+      this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY)
     );
   }
 
@@ -224,41 +225,38 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    *            commit buffer
    */
   addRole_with_staging() {
-    const newRole = this.getRoleFromUI();
+    const newRole = Utility.TrimDefaultsAndEmptyFields(this.getRoleFromUI());
 
-    this.createStagingBuffer().subscribe(
-      responseBuffer => {
+    const newRolebinding = new AuthRoleBinding();
+    newRolebinding.meta.name = newRole.meta.name + '_binding';
+
+    let buffername = null;
+
+    this.createStagingBuffer().pipe( // Create buffer
+      switchMap(responseBuffer => {
         const createdBuffer: StagingBuffer = responseBuffer.body as StagingBuffer;
-        const buffername = createdBuffer.meta.name;
-        this._authService.AddRole(newRole, buffername).subscribe(
-          responseAddRole => {
+        buffername = createdBuffer.meta.name;
+        return this._authService.AddRole(newRole, buffername).pipe( // add role to buffer
+          switchMap(responseAddRole => {
             const createdRole: AuthRole = responseAddRole.body as AuthRole;
-            const newRolebinding = new AuthRoleBinding();
-            newRolebinding.meta.name = newRole.meta.name + '_binding';
             newRolebinding.spec.role = createdRole.meta.name;
-            newRolebinding.setFormGroupValuesToBeModelValues();
-            this._authService.AddRoleBinding(newRolebinding, buffername).subscribe(
-              responseRoleBinding => {
-                this.commitStagingBuffer(buffername).subscribe(
-                  responseCommitBuffer => {
-                    this.invokeSuccessToaster('Creation Successful', 'Created Role ' + newRole.meta.name + ' , And Role-binding ' + newRolebinding.meta.name);
-                    this.formClose.emit(true);
-                  }
-                );
-              },
-              error => {
-                this.invokeRESTErrorToaster('Create Role-binding Failed', error);
-                this.deleteStagingBuffer(buffername, 'Failed to create role-binding');
-              }
-            );
-          },
-          error => {
-            this.invokeRESTErrorToaster('Create Role Failed', error);
-            this.deleteStagingBuffer(buffername, 'Failed to create role', false);
-          }
+            return this._authService.AddRoleBinding(newRolebinding, buffername).pipe( // add role binding to buffer
+              switchMap(responseRoleBinding => {
+                return this.commitStagingBuffer(buffername) // commit buffer
+              })
+            )
+          }),
         );
+      })
+    ).subscribe(
+      responseCommitBuffer => {
+        this._controllerService.invokeSuccessToaster(Utility.CREATE_SUCCESS_SUMMARY, 'Created Role ' + newRole.meta.name + ' and Role-binding ' + newRolebinding.meta.name);
+        this.formClose.emit(true);
       },
-      this.restErrorHandler('Create buffer failed when creating an role ')
+      error => {
+        this._controllerService.invokeRESTErrorToaster(Utility.CREATE_FAILED_SUMMARY, error);
+        this.deleteStagingBuffer(buffername, 'Failed to create role', false);
+      }
     );
   }
 
@@ -293,7 +291,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
         permissions[i]['resource-names'] = rnValues;
       }
     }
-    return newRole;
+    return new AuthRole(newRole, false);
   }
 
   /**
@@ -301,7 +299,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    */
   addPermission() {
     const permissionArray = this.newAuthRole.$formGroup.get(['spec', 'permissions']) as FormArray;
-    const newPermission = new AuthPermission() ;
+    const newPermission = new AuthPermission();
     newPermission['actions'] = []; // clear out action field's default value
     newPermission[NewroleComponent.KINDOPTIONS] = [];
     permissionArray.insert(0, newPermission.$formGroup);
@@ -374,11 +372,11 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    * @param selectItems
    */
   private addAllKindItem(selectItems: SelectItem[]): SelectItem[] {
-    selectItems.push({ label: 'All', value: NewroleComponent._ALL_});  // note: '_All_' is special in server.Auth
+    selectItems.push({ label: 'All', value: NewroleComponent._ALL_ });  // note: '_All_' is special in server.Auth
     return selectItems;
   }
 
-  onActionChange(event: any, permission: any , actionListboxWidget: any , permissionIndex: number) {
+  onActionChange(event: any, permission: any, actionListboxWidget: any, permissionIndex: number) {
     const values = event.value;
     if (values.length > 1) {
       const index = this.getAllActionIndex(values);
@@ -387,12 +385,12 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
         actionListboxWidget.value = values;
         this.permissionOptions = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [NewroleComponent.ACTIONOPTIONS_ALL]);
       }
-    } else if ( values.length === 1) {  // there is only one option selected
-        const index = this.getAllActionIndex(values);
-        if (index === -1 ) {
-          // NewroleComponent.ACTIONOTIONT_ALL is NOT the only selected option. we take out
-          this.permissionOptions = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [NewroleComponent.ACTIONOPTIONS_ALL]);
-        }
+    } else if (values.length === 1) {  // there is only one option selected
+      const index = this.getAllActionIndex(values);
+      if (index === -1) {
+        // NewroleComponent.ACTIONOTIONT_ALL is NOT the only selected option. we take out
+        this.permissionOptions = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint, [NewroleComponent.ACTIONOPTIONS_ALL]);
+      }
     } else {
       this.permissionOptions = Utility.convertEnumToSelectItem(AuthPermission_actions_uihint);
     }

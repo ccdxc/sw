@@ -102,7 +102,6 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
           this.cluster = this.clusterArray[0];
         }
       },
-      this.restErrorHandler('Failed to get Cluster info')
     );
     this.subscriptions.push(subscription);
   }
@@ -114,7 +113,6 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
       response => {
         this.nodeEventUtility.processEvents(response);
       },
-      this.restErrorHandler('Failed to get Node info')
     );
     this.subscriptions.push(subscription);
   }

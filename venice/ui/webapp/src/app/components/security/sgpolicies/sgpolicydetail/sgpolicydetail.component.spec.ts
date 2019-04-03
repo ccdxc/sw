@@ -30,7 +30,7 @@ import { SgpolicydetailComponent } from './sgpolicydetail.component';
 import { ActivatedRoute } from '@angular/router';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.spec';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 
 
 

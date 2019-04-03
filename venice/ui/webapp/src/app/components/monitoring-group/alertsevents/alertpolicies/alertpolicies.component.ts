@@ -84,7 +84,6 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
         this.metricPoliciesEventUtility.processEvents(response);
         this.objectPoliciesEventUtility.processEvents(response);
       },
-      this.restErrorHandler('Failed to get Alert Policies')
     );
     this.subscriptions.push(subscription);
   }
@@ -96,7 +95,6 @@ export class AlertpoliciesComponent extends BaseComponent implements OnInit, OnD
       (response) => {
         this.destinationsEventUtility.processEvents(response);
       },
-      this.restErrorHandler('Failed to get Alert Destinations')
     );
     this.subscriptions.push(subscription);
   }

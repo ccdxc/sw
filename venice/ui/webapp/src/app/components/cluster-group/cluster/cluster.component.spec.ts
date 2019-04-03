@@ -28,7 +28,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { BehaviorSubject } from 'rxjs';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { TestingUtility } from '@app/common/TestingUtility';
 

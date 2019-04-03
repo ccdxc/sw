@@ -50,8 +50,9 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ToasterComponent, ToasterItemComponent } from '@app/widgets/toaster/toaster.component';
-import { MessageService, ConfirmationService } from 'primeng/primeng';
+import { ConfirmationService } from 'primeng/primeng';
 import { ClusterService } from './services/generated/cluster.service';
+import { MessageService } from './services/message.service';
 
 
 describe('AppcontentComponent', () => {

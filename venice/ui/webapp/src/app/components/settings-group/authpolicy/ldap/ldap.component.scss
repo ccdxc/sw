@@ -51,12 +51,14 @@ $vertical-gutter: 5px;
 }
 
 .ldap-bind-connection-button {
+  font-size: 16px;
   margin-left:5px;
   padding: 3px 10px;
   line-height: 25px;
 }
 
 .ldap-test-connection-button {
+  font-size: 16px;
   margin: 4*$vertical-gutter 2*$horizontal-gutter;
   padding: 4px 10px;
   line-height: 25px;

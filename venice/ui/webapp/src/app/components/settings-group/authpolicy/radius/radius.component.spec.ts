@@ -12,7 +12,7 @@ import { MatIconRegistry } from '@angular/material';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 

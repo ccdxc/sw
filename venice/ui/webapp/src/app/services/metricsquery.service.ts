@@ -119,12 +119,12 @@ export class MetricsqueryService extends TelemetryqueryServiceGen {
 
       },
       (error) => {
-        console.error('Polling for metrics failed', error);
+        this._controllerService.invokeRESTErrorToaster("Failed to get metrics", error)
         const poll = this.pollingUtility.pollingHandlerMap[key];
         if (poll == null || poll.handler == null) {
           return;
         }
-        poll.handler.error('Metrics query failed');
+        poll.handler.error(error);
       }
     );
   }

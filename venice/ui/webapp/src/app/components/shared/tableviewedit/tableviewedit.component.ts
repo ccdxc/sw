@@ -219,6 +219,8 @@ export abstract class TableviewAbstract<I, T extends I> implements OnInit, OnDes
 
   closeRowExpand() {
     if (this.isRowExpanded()) {
+      this.controllerService.removeToaster(Utility.UPDATE_FAILED_SUMMARY);
+
       this.showRowExpand = false;
       this.editMode.emit(false);
       this.shouldEnableButtons = true;
@@ -282,6 +284,7 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
   creationFormClose() {
     this.creatingMode = false;
     this.editMode.emit(false);
+    this.controllerService.removeToaster(Utility.CREATE_FAILED_SUMMARY);
   }
 
   expandRowRequest(event, rowData) {
@@ -313,7 +316,7 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
       accept: () => {
         const sub = this.deleteRecord(object).subscribe(
           (response) => {
-            this.controllerService.invokeSuccessToaster('Delete Successful', this.generateDeleteSucessMsg(object));
+            this.controllerService.invokeSuccessToaster(Utility.DELETE_SUCCESS_SUMMARY, this.generateDeleteSucessMsg(object));
           },
           (error) => {
             if (error.body instanceof Error) {
@@ -322,7 +325,7 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
               console.error('Service returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
             }
             const errorMsg = error.body != null ? error.body.message : '';
-            this.controllerService.invokeErrorToaster('Delete Failed', errorMsg);
+            this.controllerService.invokeErrorToaster(Utility.DELETE_FAILED_SUMMARY, errorMsg);
           }
         );
         this.subscriptions.push(sub);

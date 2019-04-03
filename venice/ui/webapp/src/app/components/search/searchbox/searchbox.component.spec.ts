@@ -24,7 +24,7 @@ import { SearchboxComponent } from '@app/components/search/searchbox/searchbox.c
 import { SearchsuggestionsComponent } from '@app/components/search/searchsuggestions/searchsuggestions.component';
 import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
 import { GuidesearchComponent } from '@app/components/search/guidedsearch/guidedsearch.component';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 
 @Component({
   template: ''

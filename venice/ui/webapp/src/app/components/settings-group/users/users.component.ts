@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { Animations } from '@app/animations';
 import { Observable, forkJoin, throwError } from 'rxjs';
 
-import { map, switchMap, tap, catchError } from 'rxjs/operators';
+import { map, switchMap, tap, catchError, buffer } from 'rxjs/operators';
 
 import { SelectItem } from 'primeng/primeng';
 import { ErrorStateMatcher } from '@angular/material';
@@ -211,7 +211,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
           this.setDataReadyMap('users', true);
         }
       },
-      this.restErrorHandler('Failed to get Users')
+      this._controllerService.restErrorHandler('Failed to get Users')
     );
   }
 
@@ -225,7 +225,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
           this.setDataReadyMap('roles', true);
         }
       },
-      this.restErrorHandler('Failed to get Roles')
+      this._controllerService.restErrorHandler('Failed to get Roles')
     );
   }
 
@@ -239,7 +239,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
           this.setDataReadyMap('rolebindings', true);
         }
       },
-      this.restErrorHandler('Failed to get Role Bindings')
+      this._controllerService.restErrorHandler('Failed to get Role Bindings')
     );
   }
 
@@ -279,7 +279,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     const users: AuthUser[] = [];
     for (let i = 0; i < this.authusers.length; i++) {
       const user = this.authusers[i];
-      const value = _.result(user, 'status.roles');
+      const value: any = _.result(user, 'status.roles');
       const v = value.length > 0 ? value[0] : 'default';
       if (role === v) {
         users.push(user);
@@ -379,8 +379,8 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
                   })
                 );
               } else {
-                const apiStatus = this.buildOnForkJoinError('Failed to delete user', 'Failed to delete user');
-                return throwError(apiStatus);
+                const error = Utility.joinErrors(results);
+                return throwError(error);
               }
             })
           );
@@ -388,11 +388,11 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
       })
     ).subscribe(
       (responseCommitBuffer) => {
-        this.invokeSuccessToaster('Successful', ACTIONTYPE.DELETE + ' User ' + deletedUser.meta.name);
+        this._controllerService.invokeSuccessToaster(Utility.DELETE_SUCCESS_SUMMARY, ACTIONTYPE.DELETE + ' User ' + deletedUser.meta.name);
         this.getData(); // refresh data after deleting object
       },
       (error) => {
-        this.invokeRESTErrorToaster(msgFailedToDeleteUser, error);
+        this._controllerService.invokeRESTErrorToaster(Utility.DELETE_FAILED_SUMMARY, error);
         this.deleteStagingBuffer(buffername, msgFailedToDeleteUser, false);
       }
     );
@@ -400,13 +400,20 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
 
 
   deleteStagingBuffer(buffername: string, reason: string, isToshowToaster: boolean = true) {
+    if (buffername == null) {
+      return
+    }
+
+    this.stagingService.GetBuffer(buffername).subscribe( (rest) => {
+      console.log(rest)
+    })
     this.stagingService.DeleteBuffer(buffername).subscribe(
       response => {
         if (isToshowToaster) {
-          this.invokeSuccessToaster('Successful deleted buffer', 'Deleted Buffer ' + buffername + '\n' + reason);
+          this._controllerService.invokeSuccessToaster('Successfully deleted buffer', 'Deleted Buffer ' + buffername + '\n' + reason);
         }
       },
-      this.restErrorHandler('Delete Staging Buffer Failed')
+      this._controllerService.restErrorHandler('Delete Staging Buffer Failed')
     );
   }
 
@@ -469,7 +476,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
           // Delete role after delete role-bindings.
           observables.push(this._authService.DeleteRole(deletedRole.meta.name, buffername));
           if (observables.length > 0) {
-            return this.invokeForkJoin(observables, buffername, 'Failed to delete role using forkJoin.', 'Failed to delete Role.'); // (B-C)
+            return this.invokeForkJoin(observables, buffername); // (B-C)
           } else {
             // it is possible that user delete role-binding manually first, observables[] is empty
             return this.commitStagingBuffer(buffername);
@@ -479,40 +486,28 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
       .subscribe(
         // We are getting response for (C)
         (responseCommitBuffer) => {
-          this.invokeSuccessToaster('Successful', ACTIONTYPE.DELETE + ' Role ' + deletedRole.meta.name);
+          this._controllerService.invokeSuccessToaster(Utility.DELETE_SUCCESS_SUMMARY, ACTIONTYPE.DELETE + ' Role ' + deletedRole.meta.name);
           this.getData(); // refresh data after deleting object
         },
         (error) => {
           // any error in (A) (B) or (C), error will land here
-          this.invokeRESTErrorToaster('Failed to delete Role', error);
+          this._controllerService.invokeRESTErrorToaster(Utility.DELETE_FAILED_SUMMARY, error);
           this.deleteStagingBuffer(buffername, 'Failed to delete', false);
         }
       );
   }
 
-  invokeForkJoin(observables: Observable<any>[], buffername: any, forkJoinResultMsg: string, forkJoinSummaryMsg: string) {
+  invokeForkJoin(observables: Observable<any>[], buffername: any) {
     return forkJoin(observables) // (B)
       .pipe(switchMap((results) => {
         const isAllOK = Utility.isForkjoinResultAllOK(results);
         if (isAllOK) {
           return this.commitStagingBuffer(buffername); // (C)
         } else {
-          const apiStatus = this.buildOnForkJoinError(forkJoinResultMsg, forkJoinSummaryMsg);
-          return throwError(apiStatus);
+          const error = Utility.joinErrors(results);
+          return throwError(error);
         }
       }));
-  }
-
-  buildOnForkJoinError(resultMsg: string, msg: string): ApiStatus {
-    return new ApiStatus({
-      'kind': 'Status',
-      'result': {
-        'Str': resultMsg
-      },
-      'message': [msg],
-      'code': 400,
-      'object-ref': {}
-    });
   }
 
   /**
@@ -535,10 +530,10 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     this._authService.DeleteRoleBinding(rolebinding.meta.name).subscribe(
       (data) => {
         // refresh roles list
-        this.invokeSuccessToaster('Delete Successful', 'Deleted relebinding ' + rolebinding.meta.name);
-        this.getData(); // refresh data after deleting object
+        this._controllerService.invokeSuccessToaster(Utility.DELETE_SUCCESS_SUMMARY, 'Deleted rolebinding ' + rolebinding.meta.name);
+        this.getData();
       },
-      this.restErrorHandler('Delete Role-binding Failed')
+      this._controllerService.restErrorHandler(Utility.DELETE_FAILED_SUMMARY)
     );
   }
 
@@ -586,7 +581,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    */
   showEditUserButton(user: AuthUser): boolean {
     const _ = Utility.getLodash();
-    const value = _.result(user, 'status.roles');
+    const value: any = _.result(user, 'status.roles');
     return (value && value.length > 0) || true;
   }
 
@@ -609,7 +604,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    */
   showDeleteUserButton(user: AuthUser): boolean {
     const _ = Utility.getLodash();
-    const value = _.result(user, 'status.roles');
+    const value: any = _.result(user, 'status.roles');
     const loginname = Utility.getInstance().getLoginName();
     return ((value && value.length > 0) || true) && (user.meta.name !== loginname);
   }
@@ -687,7 +682,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
 
   onSaveEditUser($event, user) {
     if (!this.isSelectedAuthUserInputValid()) {
-      this._controllerService.invokeErrorToaster('Invalid', 'There are invalid inputs.');
+      this._controllerService.invokeErrorToaster(Utility.UPDATE_FAILED_SUMMARY, 'There are invalid inputs.');
       return;
     }
     if (this.userEditAction === UsersComponent.USER_ACTION_UPDATE) {
@@ -715,12 +710,12 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   changeUserPassword() {
     this._authService.PasswordChange(this.selectedAuthUser.meta.name, this.authPasswordChangeRequest.getFormGroupValues()).subscribe(
       response => {
-        this.invokeSuccessToaster('Change password Successful', 'Change Password ' + this.selectedAuthUser.meta.name);
+        this._controllerService.invokeSuccessToaster('Change password Successful', 'Change Password ' + this.selectedAuthUser.meta.name);
         const updatedAuthUser: AuthUser = response.body as AuthUser;
         this.selectedAuthUser = updatedAuthUser;
         this.userEditAction = null;
       },
-      this.restErrorHandler('Update User Failed')
+      this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY)
     );
   }
 
@@ -741,11 +736,13 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   updateUser_with_staging() {
     const updateUser = this.selectedAuthUser.getFormGroupValues();
     updateUser.meta.name = this.selectedAuthUser.meta.name;  // sine we don't let change login name, we have to patch the meta.name
+
+    let buffername;
     delete updateUser.status;  // remove status property
-    this.createStagingBuffer().subscribe(
-      responseBuffer => {
+    this.createStagingBuffer().pipe(
+      switchMap(responseBuffer => {
         const createdBuffer: StagingBuffer = responseBuffer.body as StagingBuffer;
-        const buffername = createdBuffer.meta.name;
+        buffername = createdBuffer.meta.name;
         const observables: Observable<any>[] = [];
         const username = updateUser.meta.name;
         observables.push(this._authService.UpdateUser(this.selectedAuthUser.meta.name, updateUser, buffername));
@@ -774,29 +771,24 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
             observables.push(observabe);
           }
         });
-        forkJoin(observables).subscribe(results => {
-          const isAllOK = Utility.isForkjoinResultAllOK(results);
-          if (isAllOK) {
-            this.commitStagingBuffer(buffername).subscribe(
-              responseCommitBuffer => {
-                this.invokeSuccessToaster('Successful', ACTIONTYPE.UPDATE + ' User ' + updateUser.meta.name);
-                this.getData();
-              },
-              error => {
-                this.invokeRESTErrorToaster('Failed to commit buffer when updating user ', error);
-              }
-            );
-          } else {
-            this.deleteStagingBuffer(buffername, 'Failed to add user');
-          }
-        },
-          (error) => {
-            this.invokeRESTErrorToaster('Failed to commit buffer when updating user ', error);
-            this.deleteStagingBuffer(buffername, 'Failed to update user', false);
-          });
+        if (observables.length > 0) {
+          return this.invokeForkJoin(observables, buffername)
+        } else {
+          return this.commitStagingBuffer(buffername)
+        }
+      })
+    ).subscribe(
+      (responseCommitBuffer) => {
+        this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, ACTIONTYPE.UPDATE + ' User ' + updateUser.meta.name);
+        this.creationRoleFormClose(true);
+        this.getData();
       },
-      this.restErrorHandler('Failed to create commit buffer when updating user')
-    );
+      (error) => {
+        // any error in (A) (B) or (C), error will land here
+        this._controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
+        this.deleteStagingBuffer(buffername, 'Failed to delete', false);
+      }
+    )
   }
 
   /**
@@ -805,11 +797,11 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   updateUser_without_staging() {
     this._authService.UpdateUser(this.selectedAuthUser.meta.name, this.selectedAuthUser.getFormGroupValues()).subscribe(
       response => {
-        this.invokeSuccessToaster('Update Successful', 'Updated user ' + this.selectedAuthUser.meta.name);
+        this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Updated user ' + this.selectedAuthUser.meta.name);
         const updatedAuthUser: AuthUser = response.body as AuthUser;
         this.userEditAction = null;
       },
-      this.restErrorHandler('Update User Failed')
+      this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY)
     );
   }
 
@@ -820,10 +812,10 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     // Updating role does not need commit-buffer.
     this._authService.UpdateRole(this.selectedAuthRole.meta.name, this.selectedAuthRole.getFormGroupValues()).subscribe(
       response => {
-        this.invokeSuccessToaster('Update Successful', 'Updated Role ' + this.selectedAuthUser.meta.name);
+        this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Updated Role ' + this.selectedAuthUser.meta.name);
         this.getData();
       },
-      this.restErrorHandler('Update Role Failed')
+      this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY)
     );
   }
 
@@ -906,7 +898,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    */
   showEditButton(user: AuthUser) {
     const _ = Utility.getLodash();
-    const value = _.result(user, 'status.roles');
+    const value: any = _.result(user, 'status.roles');
     return (value && value.length > 0) || true;
   }
 

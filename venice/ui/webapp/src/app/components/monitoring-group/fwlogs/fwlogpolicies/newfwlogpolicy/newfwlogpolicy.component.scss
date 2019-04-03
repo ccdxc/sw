@@ -49,10 +49,11 @@ $vertical-gutter: 5px;
 
 .newfwlogpolicy-save, 
 .newfwlogpolicy-cancel {
-    display: inline-block;
-    padding: 4px 10px;
-    line-height: 25px;
-    margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+  font-size: 16px;
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
 }
 
 .newfwlogpolicy-buttoncontainer {

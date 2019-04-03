@@ -10,12 +10,11 @@ import { MatIconRegistry } from '@angular/material';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { Observable, of } from 'rxjs';
-import { By } from '@angular/platform-browser';
-import { MessageService, ConfirmationService } from 'primeng/primeng';
+import { ConfirmationService } from 'primeng/primeng';
 import { PrimengModule } from '@app/lib/primeng.module';
 
 import { SystemupgradeComponent } from './systemupgrade.component';
+import { MessageService } from '@app/services/message.service';
 
 describe('SystemupgradeComponent', () => {
   let component: SystemupgradeComponent;

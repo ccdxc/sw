@@ -19,7 +19,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Observable, of } from 'rxjs';
 import { AuthAuthenticators_authenticator_order } from '@sdk/v1/models/generated/auth';
 import { By } from '@angular/platform-browser';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 
 class MockAuthService extends AuthService {

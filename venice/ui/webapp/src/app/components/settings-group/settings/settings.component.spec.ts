@@ -13,7 +13,7 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { SettingsComponent } from './settings.component';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 
 @Component({
   template: ''

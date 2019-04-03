@@ -1,7 +1,7 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ToasterComponent, ToasterItemComponent } from './toaster.component';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 
 describe('ToasterComponent', () => {
   let component: ToasterComponent;

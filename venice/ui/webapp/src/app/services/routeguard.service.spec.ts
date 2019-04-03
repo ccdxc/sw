@@ -6,7 +6,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { ConfirmationService } from 'primeng/primeng';
 import { RouteGuard } from '@app/services/routeguard.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 
 class MockUIConfigService extends UIConfigsService {
   static allowRoute = false;

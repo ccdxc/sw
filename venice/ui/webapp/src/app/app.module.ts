@@ -67,9 +67,10 @@ import { RouteGuard } from '@app/services/routeguard.service';
 import { AppcontentComponent } from '@app/appcontent.component';
 import { SecurityService } from '@app/services/generated/security.service';
 import { EventsService } from '@app/services/events.service';
-import { MessageService, ConfirmationService, DomHandler } from 'primeng/primeng';
+import { ConfirmationService, DomHandler } from 'primeng/primeng';
 import { ToasterComponent, ToasterItemComponent } from './widgets/toaster/toaster.component';
 import { MissingpageComponent } from './widgets/missingpage/missingpage.component';
+import { MessageService } from './services/message.service';
 
 
 /**

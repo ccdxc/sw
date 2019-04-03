@@ -92,7 +92,6 @@ export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDest
         // set all the policies to be the filtered set
         this.filteredSGPolicies = this.sgPolicies as any;
       },
-      this.restErrorHandler('Failed to get SG Policies')
     );
     this.subscriptions.push(subscription);
   }

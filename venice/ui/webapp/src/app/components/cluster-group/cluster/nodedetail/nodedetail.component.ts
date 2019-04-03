@@ -196,7 +196,6 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
           this.selectedObj = null;
         }
       },
-      this.restErrorHandler('Failed to get Node ' + this.selectedId)
     );
     this.subscriptions.push(subscription);
   }

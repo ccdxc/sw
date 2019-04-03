@@ -15,7 +15,7 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { WidgetsModule } from 'web-app-framework';
 import { SharedModule } from '@app/components/shared/shared.module';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 
 describe('NeweventalertpolicyComponent', () => {
   let component: NeweventalertpolicyComponent;

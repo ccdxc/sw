@@ -17,7 +17,8 @@ import { WorkloadService } from './workload.service';
 import { MatIconRegistry } from '@angular/material';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
-import { MessageService, ConfirmationService } from 'primeng/primeng';
+import { ConfirmationService } from 'primeng/primeng';
+import { MessageService } from './message.service';
 
 /**
  * workload.service.spec.ts

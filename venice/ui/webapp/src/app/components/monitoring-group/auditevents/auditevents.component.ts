@@ -203,8 +203,10 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
         this.totalRecords = parseInt(data['total-hits'], 10);
         this.loading = false;
       },
-      this.controllerService.restErrorHandler('Failed to get audit-events')
-
+      (error) => {
+        this.loading = false;
+        this.controllerService.invokeRESTErrorToaster('Failed to get audit-events', error)
+      }
     );
     this.subscriptions.push(subscription);
   }

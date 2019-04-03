@@ -14,7 +14,7 @@ import { MatIconRegistry } from '@angular/material';
 import { SecurityService } from '@app/services/generated/security.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 
 describe('SecurityappsComponent', () => {
   let component: SecurityappsComponent;

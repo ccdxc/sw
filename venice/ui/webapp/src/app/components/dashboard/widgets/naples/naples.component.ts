@@ -220,12 +220,12 @@ export class NaplesComponent implements OnInit, OnChanges, OnDestroy {
     this.flipState = FlipComponent.toggleState(this.flipState);
   }
 
-  export () {
+  export() {
     const exportObj = {
-        naples: this.naples,
-        admitted: this.secondStat.value ,
-        rejected: this.thirdStat.value ,
-        pending: this.fourthStat.value
+      naples: this.naples,
+      admitted: this.secondStat.value,
+      rejected: this.thirdStat.value,
+      pending: this.fourthStat.value
     };
     const fieldName = 'naples-dataset.json';
     Utility.exportContent(JSON.stringify(exportObj, null, 2), 'text/json;charset=utf-8;', fieldName);
@@ -256,7 +256,6 @@ export class NaplesComponent implements OnInit, OnChanges, OnDestroy {
         this.naplesEventUtility.processEvents(response);
         this.calculateNaplesStatus();
       },
-      this.controllerService.restErrorHandler('Failed to get NAPLES info')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }

@@ -85,7 +85,6 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
       (response) => {
         this.policyEventUtility.processEvents(response);
       },
-      this.controllerService.restErrorHandler('Failed to get event policies')
     );
     this.subscriptions.push(sub);
   }

@@ -48,7 +48,6 @@ export class FlowexportComponent extends BaseComponent implements OnInit {
       (response) => {
         this.flowExportPoliciesEventUtility.processEvents(response);
       },
-      this.restErrorHandler('Failed to get Flow Export Policies')
     );
     this.subscriptions.push(subscription);
   }

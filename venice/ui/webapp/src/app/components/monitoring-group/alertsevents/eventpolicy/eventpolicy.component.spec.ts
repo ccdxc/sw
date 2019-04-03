@@ -15,7 +15,7 @@ import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 import { NeweventpolicyComponent } from './neweventpolicy/neweventpolicy.component';
 import { MonitoringGroupModule } from '../../monitoring-group.module';
 

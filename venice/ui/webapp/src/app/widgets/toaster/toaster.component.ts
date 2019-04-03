@@ -1,7 +1,10 @@
 import { animate, animateChild, query, state, style, transition, trigger } from '@angular/animations';
-import { Component, OnInit } from '@angular/core';
-import { DomHandler, MessageService } from 'primeng/primeng';
+import { Component, OnInit, Input, ViewEncapsulation } from '@angular/core';
+import { DomHandler } from 'primeng/primeng';
 import { ToastItem, Toast } from 'primeng/toast';
+import { Utility } from '@app/common/Utility';
+import { MessageService, Message } from '@app/services/message.service';
+import { Subscription } from 'rxjs';
 
 /**
  * The templates are almost completely unchanged from the primeng version except that
@@ -34,8 +37,91 @@ import { ToastItem, Toast } from 'primeng/toast';
   providers: [DomHandler]
 })
 export class ToasterComponent extends Toast {
+  removeSubscription: Subscription;
+
   constructor(messageService: MessageService, domHandler: DomHandler) {
-    super(messageService, domHandler);
+    // Casting to any since our message service redeclares private properties
+    super(<any>messageService, domHandler);
+  }
+
+  addMessage(message) {
+    let hasMessage = false;
+    if (this.messages) {
+      if (message.summary === Utility.VENICE_CONNECT_FAILURE_SUMMARY) {
+        this.messages.some((m) => {
+          if (m.summary === message.summary) {
+            m.detail = message.detail;
+            return true;
+          }
+          return false
+        });
+        hasMessage = true;
+      }
+      hasMessage = this.messages.some((m) => {
+        return message.summary + '-' + message.detail === m.summary + '-' + m.detail;
+      });
+    }
+    if (!hasMessage) {
+      this.messages = this.messages ? [...this.messages, ...[message]] : [message];
+    }
+  }
+
+  ngOnInit() {
+    this.messageSubscription = this.messageService.messageObserver.subscribe(messages => {
+      if (messages) {
+        let allMessages = null;
+        if (messages instanceof Array) {
+          let filteredMessages = messages.filter(m => this.key === m.key);
+          filteredMessages.forEach((m) => {
+            this.addMessage(m);
+          })
+        }
+        else if (this.key === messages.key) {
+          this.addMessage(messages);
+        }
+
+        if (this.modal && this.messages && this.messages.length) {
+          this.enableModality();
+        }
+      }
+    });
+
+    this.clearSubscription = this.messageService.clearObserver.subscribe(key => {
+      if (key) {
+        if (this.key === key) {
+          this.messages = null;
+        }
+      }
+      else {
+        this.messages = null;
+      }
+
+      if (this.modal) {
+        this.disableModality();
+      }
+    });
+
+
+    // Casting to our message service, has to be cast to any first
+    // since there is no overlap as we don't extend Primeng's messageService
+    this.removeSubscription = (<any>this.messageService as MessageService).removeObserver.subscribe((req) => {
+      if (this.messages) {
+        this.messages = this.messages.filter(m => {
+          if (req.summary == m.summary &&
+            (req.detail == null || req.detail == m.detail)) {
+            return false
+          }
+          return true
+        });
+      }
+    })
+  }
+
+  ngOnDestroy() {
+    if (this.removeSubscription) {
+      this.removeSubscription.unsubscribe();
+    }
+    super.ngOnDestroy()
   }
 }
 
@@ -49,6 +135,7 @@ export class ToasterComponent extends Toast {
           <div class="ui-toast-message-content">
               <a href="#" class="ui-toast-close-icon pi pi-times" (click)="onCloseIconClick($event)" *ngIf="message.closable !== false"></a>
               <ng-container *ngIf="!template">
+                  <!-- THIS WILL NOT BE RENDERED, custom template used in appcontent.component.html -->
                   <span class="ui-toast-icon pi"
                       [ngClass]="{'pi-info-circle': message.severity == 'info', 'pi-exclamation-triangle': message.severity == 'warn',
                           'pi-times': message.severity == 'error', 'pi-check' :message.severity == 'success'}"></span>
@@ -83,6 +170,7 @@ export class ToasterComponent extends Toast {
   providers: [DomHandler]
 })
 export class ToasterItemComponent extends ToastItem implements OnInit {
+  @Input() message: Message;
   onCloseIconClickWrapper;
 
   constructor() {

@@ -97,7 +97,7 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
   addUser() {
     const newUser = this.newAuthUser.getFormGroupValues();
     if (this.isUserAlreadyExist(newUser.meta.name, this.authUsers)) {
-      this._controllerService.invokeErrorToaster('Can not create user',
+      this._controllerService.invokeErrorToaster(Utility.CREATE_FAILED_SUMMARY,
         newUser.meta.name + ' already exist');
       return;
     }
@@ -119,7 +119,6 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
    *             delete buffer
    */
   addUser_with_staging() {
-    const msgFailToAddUser = 'Failed to create user';
     const newUser = this.newAuthUser.getFormGroupValues();
     let createdBuffer: StagingBuffer = null;  // responseBuffer.body as StagingBuffer;
     let buffername = null; // createdBuffer.meta.name;
@@ -141,7 +140,7 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
               });
               if (observables.length > 0) {
               // Update all role-binding - add newly created usernam to selected role-binding
-              return this.invokeForkJoin(observables, buffername, 'Failed to add user using forkJoin.', 'Failed to add user.');
+              return this.invokeForkJoin(observables, buffername);
               } else {
                 return this.commitStagingBuffer(buffername);
               }
@@ -151,13 +150,13 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
       ).subscribe(
         // We are getting response for (B)
         (responseCommitBuffer) => {
-          this.invokeSuccessToaster('Successful', ACTIONTYPE.CREATE + ' User ' + newUser.meta.name);
+          this._controllerService.invokeSuccessToaster(Utility.CREATE_SUCCESS_SUMMARY, ACTIONTYPE.CREATE + ' User ' + newUser.meta.name);
           this.formClose.emit(true);
         },
         (error) => {
           // any error in (A) (B) or (C), error will land here
-          this.invokeRESTErrorToaster(msgFailToAddUser, error);
-          this.deleteStagingBuffer(buffername, msgFailToAddUser, false);
+          this._controllerService.invokeRESTErrorToaster(Utility.CREATE_FAILED_SUMMARY, error);
+          this.deleteStagingBuffer(buffername, Utility.CREATE_FAILED_SUMMARY, false);
         }
       );
   }

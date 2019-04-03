@@ -364,7 +364,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
         }
         this.loading = false;
       },
-      this.restErrorHandler('Policy search failed')
+      this._controllerService.restErrorHandler('Policy search failed')
     );
 
   }
@@ -447,7 +447,6 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
           this.sgPolicyRules = [];
         }
       },
-      this.restErrorHandler('Failed to get SG Policy')
     );
     this.subscriptions.push(subscription);
   }

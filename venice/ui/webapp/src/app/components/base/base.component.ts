@@ -5,6 +5,7 @@ import { SortEvent } from 'primeng/components/common/api';
 import { CommonComponent } from '../../common.component';
 import { ControllerService } from '../../services/controller.service';
 import { Utility } from '@app/common/Utility';
+import { ToolbarButton } from '@app/models/frontend/shared/toolbar.interface';
 // declare var google: any;
 
 /**
@@ -33,18 +34,6 @@ export class BaseComponent extends CommonComponent implements OnInit {
    */
   getClassName(): string {
     return this.constructor.name;
-  }
-
-  invokeSuccessToaster(summary, detail) {
-    this._controllerService.invokeSuccessToaster(summary, detail);
-  }
-
-  invokeRESTErrorToaster(summary, error) {
-    this._controllerService.invokeRESTErrorToaster(summary, error);
-  }
-
-  restErrorHandler(summary) {
-    return this._controllerService.restErrorHandler(summary);
   }
 
   routeToHomepage() {

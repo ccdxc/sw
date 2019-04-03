@@ -22,7 +22,7 @@ import { WidgetsModule } from 'web-app-framework';
 import { FlowexportComponent } from './flowexport.component';
 import { NewflowexportpolicyComponent } from './flowexportpolicy/newflowexportpolicy/newflowexportpolicy.component';
 import { FlowexportpolicyComponent } from './flowexportpolicy/flowexportpolicy.component';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 import { MonitoringGroupModule } from '../monitoring-group.module';
 
 

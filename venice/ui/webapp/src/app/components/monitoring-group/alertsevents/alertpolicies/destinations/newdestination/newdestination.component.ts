@@ -118,7 +118,6 @@ export class NewdestinationComponent extends BaseComponent implements OnInit, Af
     const destination: IMonitoringAlertDestination = this.newDestination.getFormGroupValues();
     destination.spec['syslog-export'] = this.syslogServers.getValues();
     // Commenting out since backend doesn't support it currently
-    // destination.spec.selector.requirements = this.fieldSelector.getValues();
     if (this.isInline) {
       handler = this._monitoringService.UpdateAlertDestination(this.newDestination.meta.name, destination);
     } else {
@@ -127,17 +126,17 @@ export class NewdestinationComponent extends BaseComponent implements OnInit, Af
     handler.subscribe(
       (response) => {
         if (this.isInline) {
-          this.invokeSuccessToaster('Update Successful', 'Updated destination ' + this.newDestination.meta.name);
+          this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Updated destination ' + this.newDestination.meta.name);
         } else {
-          this.invokeSuccessToaster('Creation Successful', 'Created destination ' + destination.meta.name);
+          this._controllerService.invokeSuccessToaster(Utility.CREATE_SUCCESS_SUMMARY, 'Created destination ' + destination.meta.name);
         }
         this.cancelDestination();
       },
       (error) => {
         if (this.isInline) {
-          this.invokeRESTErrorToaster('Update Failed', error);
+          this._controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
         } else {
-          this.invokeRESTErrorToaster('Creation Failed', error);
+          this._controllerService.invokeRESTErrorToaster(Utility.CREATE_FAILED_SUMMARY, error);
         }
       }
     );

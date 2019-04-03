@@ -12,7 +12,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { ConfirmationService } from 'primeng/primeng';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { LogService } from '@app/services/logging/log.service';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 import { BehaviorSubject } from 'rxjs';
 import { TableCol, TablevieweditHTMLComponent, TablevieweditAbstract } from './tableviewedit.component';
 import { LazyrenderComponent } from '../lazyrender/lazyrender.component';

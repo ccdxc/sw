@@ -22,7 +22,7 @@ import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 import { SearchsuggestionsComponent } from './searchsuggestions.component';
-import { MessageService } from 'primeng/primeng';
+import { MessageService } from '@app/services/message.service';
 
 @Component({
   template: ''

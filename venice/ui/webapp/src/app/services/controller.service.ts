@@ -9,17 +9,18 @@ import {
 import { MatIconRegistry } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import { Utility } from '@app/common/Utility';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { PinPayload } from '@app/models/frontend/shared/pinpayload.interface.ts';
-import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface.ts';
+import { ToolbarData, ToolbarButton } from '@app/models/frontend/shared/toolbar.interface.ts';
 import * as _ from 'lodash';
 import { Promise } from 'q';
 import { Subject, Subscription } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { LogService } from '@app/services/logging/log.service';
 import { AUTH_KEY, AUTH_BODY } from '@app/core/auth/auth.reducer';
-import { MessageService, ConfirmationService, Confirmation } from 'primeng/primeng';
+import { ConfirmationService, Confirmation } from 'primeng/primeng';
+import { MessageService } from './message.service';
+import { Utility } from '@app/common/Utility';
 
 interface Message {
   type: Eventtypes;
@@ -390,39 +391,119 @@ export class ControllerService {
   }
 
   // Toaster methods
-  invokeSuccessToaster(summary, detail) {
+  invokeSuccessToaster(summary: string, detail: string, clearErrorEditToasters: boolean = true, buttons: ToolbarButton[] = []) {
+    if (clearErrorEditToasters) {
+      this.messageService.clear();
+    }
     this.messageService.add({
       severity: 'success',
       summary: summary,
-      detail: detail
+      detail: detail,
+      buttons: buttons,
     });
   }
 
-  invokeInfoToaster(summary, detail) {
+  invokeInfoToaster(summary: string, detail: string, buttons: ToolbarButton[] = []) {
     this.messageService.add({
       severity: 'info',
+      summary: summary,
+      detail: detail,
+      buttons: buttons
+    });
+  }
+
+  // Removes any toaster that has the same summary and detail
+  // If detail is blank, will remove any toaster with the same summary
+  removeToaster(summary: string, detail: string = null) {
+    this.messageService.remove({
       summary: summary,
       detail: detail
     });
   }
 
-  invokeRESTErrorToaster(summary, error) {
-    // TODO: VS-138. (user role can not access web-socket url)  We use Utility.WS_ROLE_403 as error msg.
-    const errorMsg = error.body != null ? error.body.message : Utility.WEBSOCKET_403;
-    this.invokeErrorToaster(summary, errorMsg);
+  invokeRESTErrorToaster(summary: string, error: any, removeSameSummary: boolean = true) {
+    if (error == null) {
+      return
+    }
+    if (error.statusCode == null) {
+      error.statusCode = 0;
+    }
+    if (removeSameSummary) {
+      // Remove any toasters that already have this summary
+      this.removeToaster(summary)
+    }
+    const buttons: ToolbarButton[] = [
+      {
+        text: "Sign out",
+        callback: () => {
+          this.publish(Eventtypes.LOGOUT, { 'reason': 'User logged out' });
+        },
+        cssClass: "global-button-primary"
+      }
+    ]
+    if (error.statusCode == 401) {
+      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, "Your credentials have expired. Please sign in again.", buttons);
+    } else if (error.statusCode == 403) {
+      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, "Your authorization is insufficient. Please check with your system administrator.");
+    } else if (error.statusCode >= 500) {
+      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, "Venice is temporarily unavailable. Please try again later.");
+    }
+
+    if (error.statusCode != 0) {
+      // If status code is 400, we should almost always have a body with error message
+      const errorMsg = error.body != null ? error.body.message : "Bad request";
+      this.invokeErrorToaster(summary, errorMsg);
+      return;
+    }
+
+    // Don't know what the error is, websockets can come to here.
+    this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, "Your credentials are expired/insufficient or Venice is temporarily unavailable. Please sign in again or contact system administrator.", buttons);
   }
 
-  restErrorHandler(summary) {
+  // When web sockets have errors, it isn't usually possible to identify
+  // what went wrong. We make a request for the user's object to try
+  // to identify the cause of the error
+  webSocketErrorToaster(summary: string, _error: CloseEvent) {
+    // Get user's own object to determine the auth error
+    const authBody = JSON.parse(sessionStorage.getItem(AUTH_BODY));
+    if (authBody != null && authBody.meta != null && authBody.meta.name != null) {
+      this.publish(Eventtypes.FETCH_USER_OBJ, {
+        success: () => {
+          // Were able to get user obj, so we don't know what was wrong with the ws
+          this.invokeRESTErrorToaster(summary, _error, false)
+        },
+        err: (error) => {
+          if (error.statusCode == 400) {
+            // This should never happen
+            console.error("Controller.serverwebSocketErrorToaster() Failed to get user object when attempting to identify ws error")
+            this.invokeRESTErrorToaster(summary, _error, false)
+          } else {
+            this.invokeRESTErrorToaster(summary, error, false)
+          }
+        }
+      })
+    }
+  }
+
+  webSocketErrorHandler(summary: string) {
+    return (error) => {
+      this.webSocketErrorToaster(summary, error);
+    }
+  }
+
+  restErrorHandler(summary: string) {
     return (error) => {
       this.invokeRESTErrorToaster(summary, error);
     };
   }
 
-  invokeErrorToaster(summary: string, errorMsg: string) {
+  invokeErrorToaster(summary: string, errorMsg: string, buttons: ToolbarButton[] = []) {
     this.messageService.add({
       severity: 'error',
       summary: summary,
-      detail: errorMsg
+      detail: errorMsg,
+      sticky: true,
+      buttons: buttons
     });
   }
 
