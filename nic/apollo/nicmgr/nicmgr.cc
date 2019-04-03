@@ -44,8 +44,6 @@ nicmgrapi::nicmgr_thread_start(void *ctxt) {
     fwd_mode_t fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
     platform_t platform = PLATFORM_HW;
 
-    PDS_TRACE_INFO("Nicmgr thread running ...");
-
     // instantiate the logger
     utils::logger::init();
 
@@ -86,9 +84,10 @@ nicmgrapi::port_status_handler_(void *ctxt) {
     case EVENT_ID_PORT:
         st.speed = sdk::lib::port_speed_enum_to_mbps(event->port.speed);
         st.id = event->port.port_id;
-        st.status = (event->port.event == port_event_t::PORT_EVENT_LINK_UP) ? 1 : 0;
+        st.status =
+            (event->port.event == port_event_t::PORT_EVENT_LINK_UP) ? 1 : 0;
         // st.xcvr =
-        PDS_TRACE_DEBUG("Port Event for id %u, speed %u, status %u",
+        PDS_TRACE_DEBUG("Rcvd port event for ifidx 0x%x, speed %u, status %u",
                         st.id, st.speed, st.status);
         devmgr->LinkEventHandler(&st);
         break;

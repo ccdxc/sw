@@ -20,35 +20,29 @@ namespace nicmgr {
 
 class nicmgrapi {
 public:
-    /// \brief factory method to nicmgrapi instance
-    /// \return new instance of nicmgrapi or NULL, in case of error
+    /// \brief    factory method to nicmgrapi instance
+    /// \return    new instance of nicmgrapi or NULL, in case of error
     static nicmgrapi *factory(void);
 
 
-    /// \brief Destroy nicmgrapi instance
-    /// \param[in] nicmgr nicmgrapi instance
-    /// \remark
-    ///  - A valid nicmgr instance
+    /// \brief    destroy nicmgrapi instance
+    /// \param[in]    nicmgr nicmgrapi instance
     static void destroy(nicmgrapi *nicmgr);
 
-    /// \brief Nicmgr start thread
-    /// \param[in] ctxt thread start callback context
+    /// \brief    nicmgr thread's entry point
+    /// \param[in]    ctxt thread start callback context
     /// \return always NULL
-    /// \remark
-    ///  - Starts nicmgr thread with context
     static void *nicmgr_thread_start(void *ctxt);
 
 private:
-    /// \brief Constructor
+    /// \brief    constructor
     nicmgrapi() {}
 
-    /// \brief Destructor
+    /// \brief    destructor
     ~nicmgrapi() {}
 
-    /// \brief Port status handler callback
-    /// \param[in] ctxt callback context
-    /// \remark
-    ///  - A valid port object should be passed
+    /// \brief    port status handler callback
+    /// \param[in]    ctxt callback context
     static void port_status_handler_(void *ctxt);
 
 };
