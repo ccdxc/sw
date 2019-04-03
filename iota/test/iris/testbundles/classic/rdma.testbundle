@@ -40,98 +40,135 @@ testcases:
     # Send
     #=======================================
     -   name    : Rc_SendBw_Only_TcpCm
-        testcase: testcases.rdma.rc_send_bw
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1, 8]
-            rdma_cm: ['no']
+            type     : nested
+            num_qp   : [1, 8]
+            server   : [ 'yes', 'no']
+            size     : [1024]
+            command  : ['ib_send_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_SendBw_Only_RdmaCm
-        testcase: testcases.rdma.rc_send_bw
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1]
+            type     : nested
+            num_qp   : [1]
+            server   : [ 'yes', 'no']
+            size     : [1024]
             rdma_cm: ['yes']
+            command  : ['ib_send_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_SendBw_Fml
-        testcase: testcases.rdma.rc_send_bw_fml
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : simple
-            num_qp: [1, 2]
+            type     : nested
+            num_qp   : [1, 8]
+            server   : [ 'yes', 'no']
+            size     : [10000]
+            command  : ['ib_send_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_SendBw_Fml_Pad
-        testcase: testcases.rdma.packet_sweep
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
-            num_qp   : [1, 2]
-            threads  : [1]
-            rdma_cm  : [ 'no']
+            num_qp   : [1, 8]
             server   : [ 'yes', 'no']
-            mtu      : [4096]
             size     : [12601]
-            transport: ['RC']
             command  : ['ib_send_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_SendBw_Only_Inline_TcpCm
-        testcase: testcases.rdma.rc_send_bw_inline
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1, 8]
-            rdma_cm: ['no']
+            type     : nested
+            num_qp   : [1, 8]
+            server   : [ 'yes', 'no']
+            size     : [32]
+            command  : ['ib_send_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_SendBw_Only_Inline_RdmaCm
-        testcase: testcases.rdma.rc_send_bw_inline
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1]
-            rdma_cm: ['yes']
+            type     : nested
+            num_qp   : [1]
+            server   : [ 'yes', 'no']
+            size     : [32]
+            rdma_cm  : ['yes']
+            command  : ['ib_send_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_SendBw_Only_Bidir_TcpCm
-        testcase: testcases.rdma.rc_send_bw_bidir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1, 8]
-            rdma_cm: ['no']
+            type     : nested
+            num_qp   : [1, 8]
+            size     : [1024]
+            bidir    : ['yes']
+            command  : ['ib_send_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_SendBw_Only_Bidir_RdmaCm
-        testcase: testcases.rdma.rc_send_bw_bidir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1]
-            rdma_cm: ['yes']
+            type     : nested
+            num_qp   : [1]
+            size     : [1024]
+            bidir    : ['yes']
+            rdma_cm  : ['yes']
+            command  : ['ib_send_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_SendBw_Fml_16Sge_Bidir
-        testcase: testcases.rdma.rc_send_bw_fml_16sge_bidir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : simple
-            num_qp: [1, 2]
+            type     : nested
+            num_qp   : [1, 2]
+            size     : [65536]
+            bidir    : ['yes']
+            numsges  : [16]
+            command  : ['ib_send_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_SendLat_Only
-        testcase: testcases.rdma.rc_send_lat
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            size     : [32, 1024, 4096]
+            command  : ['ib_send_lat']
         args    :
             type: remote_only
 
     -   name    : Rc_SendLat_Fml_16Sge
-        testcase: testcases.rdma.rc_send_lat_16sge
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            size     : [65536]
+            numsges  : [1, 16]
+            command  : ['ib_send_lat']
         args    :
             type: remote_only
 
@@ -139,67 +176,98 @@ testcases:
     # Write
     #=======================================
     -   name    : Rc_WriteBw_Only
-        testcase: testcases.rdma.rc_write_bw
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : simple
-            num_qp: [1, 2]
+            type     : nested
+            num_qp   : [1, 8]
+            server   : [ 'yes', 'no']
+            size     : [1024]
+            command  : ['ib_write_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_WriteBw_Fml_TcpCm
-        testcase: testcases.rdma.rc_write_bw_fml
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1, 2]
-            rdma_cm: ['no']
+            type     : nested
+            num_qp   : [1, 8]
+            server   : [ 'yes', 'no']
+            size     : [10000]
+            command  : ['ib_write_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_WriteBw_Fml_RdmaCm
-        testcase: testcases.rdma.rc_write_bw_fml
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1]
-            rdma_cm: ['yes']
+            type     : nested
+            num_qp   : [1]
+            server   : [ 'yes', 'no']
+            size     : [10000]
+            rdma_cm  : ['yes']
+            command  : ['ib_write_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_WriteBw_Fml_Pad
-        testcase: testcases.rdma.rc_write_bw_fml_pad
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : simple
-            num_qp: [1, 2]
+            type     : nested
+            num_qp   : [1, 8]
+            server   : [ 'yes', 'no']
+            size     : [12602]
+            command  : ['ib_write_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_WriteBw_Only_Inline
-        testcase: testcases.rdma.rc_write_bw_inline
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : simple
-            num_qp: [1, 2]
+            type     : nested
+            num_qp   : [1, 8]
+            server   : [ 'yes', 'no']
+            size     : [32]
+            command  : ['ib_write_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_WriteBw_Only_Bidir_TcpCm
-        testcase: testcases.rdma.rc_write_bw_bidir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1, 8]
-            rdma_cm: ['no']
+            type     : nested
+            num_qp   : [1, 8]
+            size     : [1024]
+            bidir    : ['yes']
+            command  : ['ib_write_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_WriteBw_Only_Bidir_RdmaCm
-        testcase: testcases.rdma.rc_write_bw_bidir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1]
-            rdma_cm: ['yes']
+            type     : nested
+            num_qp   : [1]
+            size     : [1024]
+            bidir    : ['yes']
+            rdma_cm  : ['yes']
+            command  : ['ib_write_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_WriteLat_Only
-        testcase: testcases.rdma.rc_write_lat
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            size     : [32, 1024, 4096]
+            command  : ['ib_write_lat']
         args    :
             type: remote_only
 
@@ -207,59 +275,86 @@ testcases:
     # Read
     #=======================================
     -   name    : Rc_ReadBw_Only_TcpCm
-        testcase: testcases.rdma.rc_read_bw
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1,8]
-            rdma_cm: ['no']
+            type     : nested
+            num_qp   : [1, 8]
+            server   : [ 'yes', 'no']
+            size     : [1024]
+            command  : ['ib_read_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_ReadBw_Only_RdmaCm
-        testcase: testcases.rdma.rc_read_bw
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1]
-            rdma_cm: ['yes']
+            type     : nested
+            num_qp   : [1]
+            server   : [ 'yes', 'no']
+            size     : [1024]
+            rdma_cm  : ['yes']
+            command  : ['ib_read_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_ReadBw_Fml
-        testcase: testcases.rdma.rc_read_bw_fml
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : simple
-            num_qp: [1]
+            type     : nested
+            num_qp   : [1, 8]
+            server   : [ 'yes', 'no']
+            size     : [10000]
+            command  : ['ib_read_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_ReadBw_Fml_Pad
-        testcase: testcases.rdma.rc_read_bw_fml_pad
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : simple
-            num_qp: [1]
+            type     : nested
+            num_qp   : [1, 8]
+            server   : [ 'yes', 'no']
+            size     : [12603]
+            command  : ['ib_read_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_ReadBw_Only_Bidir_TcpCm
-        testcase: testcases.rdma.rc_read_bw_bidir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1,8]
-            rdma_cm: ['no']
+            type     : nested
+            num_qp   : [1, 8]
+            size     : [1024]
+            bidir    : ['yes']
+            command  : ['ib_read_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_ReadBw_Only_Bidir_RdmaCm
-        testcase: testcases.rdma.rc_read_bw_bidir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
         iterators :
-            type    : nested
-            num_qp: [1]
-            rdma_cm: ['yes']
+            type     : nested
+            num_qp   : [1]
+            size     : [1024]
+            bidir    : ['yes']
+            rdma_cm  : ['yes']
+            command  : ['ib_read_bw']
         args    :
             type: remote_only
 
     -   name    : Rc_ReadLat_Only
-        testcase: testcases.rdma.rc_read_lat
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            size     : [32, 1024, 4096]
+            command  : ['ib_read_lat']
         args    :
             type: remote_only
 
@@ -268,6 +363,7 @@ testcases:
     #=======================================
     -   name    : Rc_Bw_Only_Bidir_Vlan
         testcase: testcases.rdma.rc_bw_bidir_vlan
+        stress  : True
         iterators :
             type    : nested
             num_qp: [1]
@@ -280,32 +376,42 @@ testcases:
     #=======================================
     # Atomic
     #=======================================
-    #-   name    : Rc_AtomicBw_FetchNAdd
-    #    testcase: testcases.rdma.rc_atomic_bw
-    #    args    :
-    #        type: remote_only
+    -   name    : Rc_AtomicBw_FetchNAdd
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1, 8]
+            server   : [ 'yes', 'no']
+            size     : [1024]
+            command  : ['ib_atomic_bw']
+        args    :
+            type: remote_only
 
-    #-   name    : Rc_AtomicBw_CmpNSwap
-    #    testcase: testcases.rdma.rc_atomic_bw
-    #    args    :
-    #        type: remote_only
+    -   name    : Rc_AtomicBw_CmpNSwap
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1, 8]
+            server   : [ 'yes', 'no']
+            size     : [1024]
+            cmp_swp  : ['yes']
+            command  : ['ib_atomic_bw']
+        args    :
+            type: remote_only
 
     #=======================================
     # Multi SGE test: Send
     #=======================================
     -   name    : Rc_Bw_MultiSges_Send
-        testcase: testcases.rdma.packet_sweep
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
-            num_qp   : [1]
-            threads  : [1]
-            rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
-            mtu      : [4096]
             size     : [65536, 32768, 16384]
             numsges  : [4, 8, 16]
-            transport: ['RC']
             command  : ['ib_send_bw']
         args    :
             type: remote_only
@@ -314,18 +420,13 @@ testcases:
     # Multi SGE test: Read
     #=======================================
     -   name    : Rc_Bw_MultiSges_Read
-        testcase: testcases.rdma.packet_sweep
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
-            num_qp   : [1]
-            threads  : [1]
-            rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
-            mtu      : [4096]
             size     : [65536, 32768]
             numsges  : [8, 16]
-            transport: ['RC']
             command  : ['ib_read_bw']
         args    :
             type: remote_only
@@ -334,18 +435,13 @@ testcases:
     # Multi SGE test: Write
     #=======================================
     -   name    : Rc_Bw_MultiSges_Write
-        testcase: testcases.rdma.packet_sweep
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
-            num_qp   : [1]
-            threads  : [1]
-            rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
-            mtu      : [4096]
             size     : [65536, 16384]
             numsges  : [4, 16]
-            transport: ['RC']
             command  : ['ib_write_bw']
         args    :
             type: remote_only
@@ -354,18 +450,14 @@ testcases:
     # Multi SGE test, Multiple QPs, All Msgs
     #=======================================
     -   name    : Rc_Bw_MultiSges_MultiQPs
-        testcase: testcases.rdma.packet_sweep
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
             num_qp   : [8]
-            threads  : [1]
-            rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
-            mtu      : [4096]
             size     : [65536, 16384]
             numsges  : [16]
-            transport: ['RC']
             command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
         args    :
             type: remote_only
@@ -375,6 +467,7 @@ testcases:
     #=======================================
     -   name    : Rping
         testcase: testcases.rdma.rping
+        stress  : True
         args    :
             type: remote_only
         iterators :
@@ -387,6 +480,7 @@ testcases:
     #=======================================
     -   name    : KRping
         testcase: testcases.rdma.krping
+        stress  : True
         args    :
             type: remote_only
         iterators :
@@ -396,6 +490,7 @@ testcases:
 
     -   name    : KRping_Sweep
         testcase: testcases.rdma.krping
+        stress  : True
         args    :
             type: remote_only
         iterators :
@@ -406,6 +501,7 @@ testcases:
 
     -   name    : KRping_TxDepth
         testcase: testcases.rdma.krping
+        stress  : True
         args    :
             type: remote_only
         iterators :
@@ -417,6 +513,7 @@ testcases:
 
     -   name    : KRping_Fr
         testcase: testcases.rdma.krping
+        stress  : True
         args    :
             type: remote_only
         iterators :

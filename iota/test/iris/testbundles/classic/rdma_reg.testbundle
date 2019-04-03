@@ -40,51 +40,60 @@ testcases:
     # Packet Sweep
     #=======================================
     -   name    : RC_TCPCM_Packet_Sweep
-        testcase: testcases.rdma.packet_sweep
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 8, 64]
-            threads  : [1]
-            rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
             mtu      : [512, 1024, 2048, 4096]
-            transport: ['RC']
             command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
 
     -   name    : RC_TCPCM_Packet_Sweep_127QPs
-        testcase: testcases.rdma.packet_sweep
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
             num_qp   : [127]
-            threads  : [1]
-            rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
             mtu      : [512, 1024, 2048, 4096]
-            transport: ['RC']
             command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
 
     -   name    : RC_TCPCM_Packet_Sweep_1KQPs
-        testcase: testcases.rdma.packet_sweep
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
             num_qp   : [125]
             threads  : [8]
-            rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
-            mtu      : [4096]
-            transport: ['RC']
             command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
 
-    -   name    : RC_RDMACM_Packet_Sweep
-        testcase: testcases.rdma.packet_sweep
+    -   name    : RC_TCPCM_Packet_Sweep_1KQPs_BiDir
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
-            num_qp   : [1]
-            threads  : [1]
+            num_qp   : [125]
+            threads  : [8]
+            bidir    : ['yes']
+            command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
+
+    #-   name    : RC_TCPCM_Packet_Sweep_4KQPs_BiDir
+    #    testcase: testcases.rdma.rdma_perftest
+    #    stress  : True
+    #    iterators :
+    #        type     : nested
+    #        num_qp   : [125]
+    #        threads  : [32]
+    #        bidir    : ['yes']
+    #        command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
+
+    -   name    : RC_RDMACM_Packet_Sweep
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
             rdma_cm  : [ 'yes']
             server   : [ 'yes', 'no']
             mtu      : [512, 1024, 2048, 4096]
@@ -92,25 +101,21 @@ testcases:
             command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
 
     -   name    : UD_TCPCM_Packet_Sweep
-        testcase: testcases.rdma.packet_sweep
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 8, 64, 127]
-            threads  : [1]
-            rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
             mtu      : [512, 1024, 2048, 4096]
             transport: ['UD']
             command  : ['ib_send_bw']
 
     -   name    : UD_RDMACM_Packet_Sweep
-        testcase: testcases.rdma.packet_sweep
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
-            num_qp   : [1]
-            threads  : [1]
             rdma_cm  : [ 'yes']
             server   : [ 'yes', 'no']
             mtu      : [512, 1024, 2048, 4096]
@@ -120,15 +125,13 @@ testcases:
     #=======================================
     # Multi SGE test: Send
     #=======================================
-    -   name    : Rc_Bw_MultiSges_Send
-        testcase: testcases.rdma.packet_sweep
+    -   name    : Rc_Bw_MultiSges_Send_BiDir
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 8, 100]
-            threads  : [1]
-            rdma_cm  : [ 'no']
-            server   : [ 'yes', 'no']
+            bidir    : ['yes']
             mtu      : [4096, 2048, 1024]
             size     : [65536, 32768, 16384]
             numsges  : [2, 4, 8, 16]
@@ -140,15 +143,15 @@ testcases:
     #=======================================
     # Multi SGE test: Read
     #=======================================
-    -   name    : Rc_Bw_MultiSges_Read
-        testcase: testcases.rdma.packet_sweep
+    -   name    : Rc_Bw_MultiSges_Read_BiDir
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 100]
             threads  : [1]
             rdma_cm  : [ 'no']
-            server   : [ 'yes', 'no']
+            bidir    : ['yes']
             mtu      : [4096, 2048, 1024]
             size     : [65536, 32768, 16384]
             numsges  : [2, 4, 8, 16]
@@ -160,19 +163,16 @@ testcases:
     #=======================================
     # Multi SGE test: Write
     #=======================================
-    -   name    : Rc_Bw_MultiSges_Write
-        testcase: testcases.rdma.packet_sweep
+    -   name    : Rc_Bw_MultiSges_Write_BiDir
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
             num_qp   : [1, 8]
-            threads  : [1]
-            rdma_cm  : [ 'no']
             server   : [ 'yes', 'no']
             mtu      : [4096, 2048, 1024]
             size     : [65536, 32768, 16384]
             numsges  : [2, 4, 8, 16]
-            transport: ['RC']
             command  : ['ib_write_bw']
         args    :
             type: remote_only
