@@ -74,7 +74,7 @@ update_rewrite_info(fte::ctx_t&ctx)
     if ((ctx.sl2seg() == ctx.dl2seg())  && (ctx.l3_tunnel_flow() == TRUE)) {
         HAL_TRACE_DEBUG("l3-tunnel flow always route");
         dmac = hal::ep_get_mac_addr(ctx.dep());
-        smac = hal::ep_get_rmac(ctx.dep(), ctx.dl2seg());
+        smac = hal::is_forwarding_mode_host_pinned() ? hal::ep_get_mac_addr(ctx.sep()) : hal::ep_get_rmac(ctx.dep(), ctx.dl2seg());
 
         flowupd.header_rewrite.flags.dec_ttl = true;
         if (MAC_TO_UINT64(*dmac) != 0) {

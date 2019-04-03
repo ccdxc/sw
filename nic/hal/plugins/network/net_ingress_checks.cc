@@ -89,6 +89,12 @@ update_src_if(fte::ctx_t&ctx)
         return HAL_RET_OK;
     }
 
+    if (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
+        ((ctx.cpu_rxhdr()->flags & CPU_FLAGS_FROM_IPSEC_APP) == CPU_FLAGS_FROM_IPSEC_APP)) {
+        HAL_TRACE_DEBUG("Pkt from IPSec app, do not enforce ingress-checks");
+        return HAL_RET_OK;
+    }        
+
     // sif = hal::find_if_by_handle(ctx.dep()->pinned_if_handle);
     sif = ep_get_pinned_uplink(ctx.dep());
     SDK_ASSERT_RETURN(sif, HAL_RET_IF_NOT_FOUND);
@@ -101,8 +107,7 @@ update_src_if(fte::ctx_t&ctx)
     hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_HW_LIF_ID, &pd_func_args);
 
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR && ctx.cpu_rxhdr() &&
-        ctx.cpu_rxhdr()->src_lif != args.hw_lif_id) {
-        // ctx.cpu_rxhdr()->src_lif != hal::pd::if_get_hw_lif_id(sif)) {
+                    ctx.cpu_rxhdr()->src_lif != args.hw_lif_id) {
         HAL_TRACE_DEBUG("Dropping for srclif mismatch.. {} {}", args.hw_lif_id, ctx.cpu_rxhdr()->src_lif);
         ctx.set_drop();
     }

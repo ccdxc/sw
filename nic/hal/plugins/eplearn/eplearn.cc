@@ -89,6 +89,12 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
         return ret;
     }
 
+   if (((cpu_hdr->flags & CPU_FLAGS_FROM_IPSEC_APP) == CPU_FLAGS_FROM_IPSEC_APP)  && 
+       (cpu_hdr->src_lif == HAL_LIF_CPU)) {
+       HAL_TRACE_DEBUG("No EP lif update necessary for pkts coming from CPU lif");
+       return ret;
+    }
+
     HAL_TRACE_DEBUG("Doing EP lif update if necessary");
 
     args.flow_lkupid = cpu_hdr->lkp_vrf;
@@ -122,7 +128,7 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
         /* get the current lif ID if found */
         cur_lif_id = hal::lif_hw_lif_id_get(lif);
     }
-
+    
     /* Update lif nothing set or LIF id changed */
     if (cur_lif_id == 0 || cur_lif_id != cpu_hdr->src_lif) {
 

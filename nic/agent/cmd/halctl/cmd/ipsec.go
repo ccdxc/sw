@@ -349,4 +349,8 @@ func showIpsecGlobalStatistics(resp *halproto.IpsecGlobalStatisticsGetResponse) 
 	fmt.Printf("%-40s : %-6d\n", "decrypt_rnmdpr_sem_cindex", spec.DecRnmdprSemCindex)
 	fmt.Printf("%-40s : %-6d\n", "encrypt_barco_full_errors", spec.Gcm0BarcoFullErrors)
 	fmt.Printf("%-40s : %-6d\n", "decrypt_barco_full_errors", spec.Gcm1BarcoFullErrors)
+	fmt.Printf("%-40s : %-6d\n", "enc_global_barco_pi", spec.EncGlobalBarcoPi)
+	fmt.Printf("%-40s : %-6d\n", "enc_global_barco_ci", spec.EncGlobalBarcoCi)
+	fmt.Printf("%-40s : %-6d\n", "dec_global_barco_pi", spec.DecGlobalBarcoPi)
+	fmt.Printf("%-40s : %-6d\n", "dec_global_barco_pi", spec.DecGlobalBarcoCi)
 }
