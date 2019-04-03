@@ -654,7 +654,7 @@ func TestAuthzFailures(t *testing.T) {
 				retErr: errors.New("error in pre authz hook"),
 			},
 			authorizer: authzmgr.NewAlwaysAllowAuthorizer(),
-			err:        apierrors.ToGrpcError(errors.New("error in pre authz hook"), []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil),
+			err:        apierrors.ToGrpcError(errors.New("error in pre authz hook"), []string{"Pre authorization processing failed"}, int32(codes.InvalidArgument), "", nil),
 		},
 		{
 			name: "no operations in returns context",

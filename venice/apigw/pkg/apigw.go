@@ -624,7 +624,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 				nctx, i, err = h(nctx, i)
 				if err != nil {
 					a.logger.ErrorLog("method", "HandleRequest", "msg", "PreAuthZHook failed", "user", user.Name, "tenant", user.Tenant, "error", err)
-					return nil, apierrors.ToGrpcError(err, []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil)
+					return nil, apierrors.ToGrpcError(err, []string{"Pre authorization processing failed"}, int32(codes.InvalidArgument), "", nil)
 				}
 			}
 			// check authorization
@@ -909,7 +909,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				nctx, _, err = h(nctx, r)
 				if err != nil {
 					p.apiGw.logger.ErrorLog("method", "ServeHTTP", "msg", "PreAuthZHook failed", "user", user.Name, "tenant", user.Tenant, "error", err)
-					p.apiGw.HTTPOtherErrorHandler(w, r, "Authorization failed", int(codes.PermissionDenied))
+					p.apiGw.HTTPOtherErrorHandler(w, r, "Pre authorization processing failed", int(codes.InvalidArgument))
 					return
 				}
 			}

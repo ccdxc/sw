@@ -633,7 +633,7 @@ func TestClusterScopedAuthz(t *testing.T) {
 	role.Defaults("all")
 	role.Spec.Permissions = []auth.Permission{login.NewPermission(globals.DefaultTenant, string(apiclient.GroupCluster), string(cluster.KindHost), authz.ResourceNamespaceAll, "", auth.Permission_AllActions.String())}
 	_, err = tinfo.restcl.AuthV1().Role().Create(ctx, role)
-	Assert(t, err != nil, "permission for cluster scoped resource kind shouldn't have tenant")
+	Assert(t, err != nil && strings.Contains(err.Error(), "Code(400)"), "permission for cluster scoped resource kind shouldn't have tenant")
 
 	// shouldn't be able to create cluster scoped permissions for non-default tenant user
 	const testTenant = "testtenant"
