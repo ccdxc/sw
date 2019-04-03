@@ -7,8 +7,7 @@
 
 #define  DEFAULT_SPEC_FLAGS 0x0000
 #define  RESTARTABLE        0x0001
-#define  NO_WATCHDOG        0x0002
-#define  NON_CRITICAL       0x0004
+#define  NON_CRITICAL       0x0002
 
 enum service_spec_dep_kind {
     SERVICE_SPEC_DEP_SERVICE,
@@ -30,6 +29,7 @@ public:
     std::string                    command;
     std::vector<ServiceSpecDepPtr> dependencies;
     int                            flags;
+    double                         timeout;
     static std::shared_ptr<ServiceSpec>   create();
 };
 typedef std::shared_ptr<ServiceSpec> ServiceSpecPtr;

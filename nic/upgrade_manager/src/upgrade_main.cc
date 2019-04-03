@@ -11,7 +11,7 @@ using namespace upgrade;
 int main(int argc, char **argv) {
     // Create delphi SDK
     delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
-    string myName = "UpgradeService";
+    string myName = "upgrade";
 
     // if name is specified, use it
     if (argc > 1) {

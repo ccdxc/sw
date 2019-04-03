@@ -23,6 +23,10 @@ public:
     // OnMountComplete gets called when all the objects are mounted
     void OnMountComplete();
 
+    // Name returns the name of the delphi service. In the specific case
+    // "delphictl"
+    std::string Name();
+
     // MountKind mounts a kind of object
     void MountKind(string kind);
 };
@@ -60,6 +64,10 @@ void DelphictlService::OnMountComplete() {
     }
 
     exit(0);
+}
+
+std::string DelphictlService::Name() {
+    return "delphictl";
 }
 
 void printKvstoreInfo(string tbl_name) {

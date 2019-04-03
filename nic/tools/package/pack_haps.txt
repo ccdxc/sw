@@ -27,6 +27,7 @@ nic/build/aarch64/iris/bin/tmagent                                  /nic/bin/
 nic/build/aarch64/iris/bin/heimdall                                 /nic/bin/
 nic/build/aarch64/iris/bin/nmd                                      /nic/bin/
 nic/build/aarch64/iris/bin/penctl                                   /nic/bin/
+nic/build/aarch64/iris/bin/penlog                                   /nic/bin/
 # hal objects CLI
 nic/build/aarch64/iris/bin/halctl                                   /nic/bin/
 nic/build/aarch64/iris/bin/hal_test                                 /nic/bin/

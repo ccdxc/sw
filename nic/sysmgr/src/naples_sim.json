@@ -2,7 +2,8 @@
     "name": "delphi",
     "command": "/naples/nic/bin/delphi_hub /tmp/delphi.dat",
     "dependencies": [],
-    "flags": ["no_watchdog", "non_critical"]
+    "flags": ["non_critical"],
+    "timeout": 30.0
 }, {
     "name": "hal",
     "command": "/naples/nic/bin/hal -c hal.json",
@@ -12,7 +13,8 @@
 	    "service-name": "delphi"
 	}
     ],
-    "flags": ["no_watchdog", "non_critical"]
+    "flags": ["non_critical"],
+    "timeout": 30.0
 }, {
     "name": "netagent",
     "command": "/naples/nic/bin/netagent -datapath hal",
@@ -26,7 +28,8 @@
 	    "service-name": "hal"
 	}
     ],
-    "flags": ["no_watchdog", "non_critical", "restartable"]
+    "flags": ["non_critical", "restartable"],
+    "timeout": 30.0
 }, {
     "name": "nmd",
     "command": "/naples/nic/bin/nmd -hostif lo -standalone=false -mode host",
@@ -36,7 +39,8 @@
 	    "service-name": "delphi"
 	}
     ],
-    "flags": ["no_watchdog", "non_critical", "restartable"]
+    "flags": ["non_critical", "restartable"],
+    "timeout": 30.0
 }, {
     "name": "tmagent",
     "command": "/naples/nic/bin/tmagent",
@@ -50,7 +54,8 @@
 	    "service-name": "hal"
 	}
     ],
-    "flags": ["no_watchdog", "non_critical", "restartable"]
+    "flags": ["non_critical", "restartable"],
+    "timeout": 30.0
 }, {
     "name": "nevtsproxy",
     "command": "/naples/nic/bin/nevtsproxy",
@@ -64,7 +69,8 @@
 	    "service-name": "hal"
 	}
     ],
-    "flags": ["no_watchdog", "non_critical", "restartable"]
+    "flags": ["non_critical", "restartable"],
+    "timeout": 30.0
 }, {
     "name": "upgrade",
     "command": "/naples/nic/bin/upgrade",
@@ -74,5 +80,6 @@
 	    "service-name": "delphi"
 	}
     ],
-    "flags": ["no_watchdog", "non_critical"]
+    "flags": ["non_critical"],
+    "timeout": 30.0
 }]

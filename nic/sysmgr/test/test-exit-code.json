@@ -2,7 +2,8 @@
     "name": "delphi",
     "command": "/sw/nic/build/x86_64/iris/bin/delphi_hub /tmp/delphi.dat",
     "dependencies": [],
-    "flags": ["no_watchdog"]
+    "flags": [],
+    "timeout": 30.0
 }, {
     "name": "example1",
     "command": "/sw/nic/build/x86_64/iris/bin/sysmgr_example --name example1",
@@ -12,7 +13,8 @@
 	    "service-name": "delphi"
 	}
     ],
-    "flags": ["no_watchdog"]
+    "flags": [],
+    "timeout": 30.0
 }, {
     "name": "example2",
     "command": "/sw/nic/build/x86_64/iris/bin/sysmgr_example --name example2 --exit 12",
@@ -26,5 +28,6 @@
 	    "service-name": "example1"
 	}
     ],
-    "flags": ["no_watchdog", "non_critical"]
+    "flags": ["non_critical"],
+    "timeout": 30.0
 }]

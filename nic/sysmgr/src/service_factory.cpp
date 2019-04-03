@@ -26,8 +26,6 @@ static int flags_from_obj(pt::ptree obj)
    for (auto flag: obj.get_child("flags")) {
       if (boost::iequals(flag.second.data(), "restartable")) {
 	 flags |= RESTARTABLE;
-      } else if (boost::iequals(flag.second.data(), "no_watchdog")) {
-	 flags |= NO_WATCHDOG;
       } else if (boost::iequals(flag.second.data(), "non_critical")) {
 	 flags |= NON_CRITICAL;
       } else {
@@ -71,6 +69,7 @@ static ServiceSpecPtr spec_from_obj(pt::ptree obj)
     spec->name = obj.get<std::string>("name");
     spec->command =  obj.get<std::string>("command");
     spec->flags = flags_from_obj(obj);
+    spec->timeout = obj.get<double>("timeout");
     spec->dependencies = dependencies_from_obj(obj);
 
     return spec;

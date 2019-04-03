@@ -27,4 +27,6 @@ class SysmondService : public delphi::Service,
             delphi::objects::SysmgrSystemStatusPtr obj);
 
         virtual void SocketClosed();
+
+        virtual std::string Name();
 };

@@ -3,7 +3,8 @@
 	"name": "delphi",
 	"command": "/nic/bin/delphi_hub",
 	"dependencies": [],
-	"flags": ["no_watchdog", "non_critical"]
+	"flags": ["non_critical"],
+	"timeout": 30.0
     },
     {
 	"name": "pciemgrd",
@@ -13,10 +14,11 @@
 		"kind": "service",
 		"service-name": "delphi"
 	    }],
-	"flags": ["no_watchdog", "non_critical"]
+	"flags": ["non_critical"],
+	"timeout": 30.0
     },
     {
-	"name": "nicmgrd",
+	"name": "nicmgr",
 	"command": "/bin/sh /platform/tools/start-nicmgr-haps.sh",
 	"dependencies": [
 	    {
@@ -27,7 +29,8 @@
 		"kind": "service",
 		"service-name": "pciemgrd"
 	    }],
-	"flags": ["no_watchdog", "non_critical"]
+	"flags": ["non_critical"],
+	"timeout": 30.0
     },
     {
 	"name": "hal",
@@ -41,7 +44,8 @@
 		"kind": "service",
 		"service-name": "nicmgr"
 	    }],
-	"flags": ["no_watchdog", "non_critical"]
+	"flags": ["non_critical"],
+	"timeout": 30.0
     },
     {
 	"name": "netagent",
@@ -55,7 +59,8 @@
 		"kind": "service",
 		"service-name": "hal"
 	    }],
-	"flags": ["no_watchdog", "non_critical", "restartable"]
+	"flags": ["non_critical", "restartable"],
+	"timeout": 0.0
     },
     {
 	"name": "asicerrord",
@@ -69,7 +74,8 @@
 		"kind": "service",
 		"service-name": "hal"
 	    }],
-	"flags": ["no_watchdog", "non_critical"]
+	"flags": ["non_critical"],
+	"timeout": 0.0
     },
     {
 	"name": "nmd",
@@ -80,7 +86,8 @@
 		"service-name": "delphi"
 	    }
 	],
-	"flags": ["no_watchdog", "non_critical", "restartable"]
+	"flags": ["non_critical", "restartable"],
+	"timeout": 0.0
     },
     {
 	"name": "tmagent",
@@ -94,7 +101,8 @@
 		"kind": "service",
 		"service-name": "hal"
 	    }],
-	"flags": ["no_watchdog", "non_critical", "restartable"]
+	"flags": ["non_critical", "restartable"],
+	"timeout": 0.0
     },
     {
 	"name": "nevtsproxy",
@@ -108,7 +116,8 @@
 		"kind": "service",
 		"service-name": "hal"
 	    }],
-	"flags": ["no_watchdog", "non_critical"]
+	"flags": ["non_critical"],
+	"timeout": 0.0
     },
     {
 	"name": "sysmond",
@@ -122,7 +131,8 @@
 		"kind": "service",
 		"service-name": "hal"
 	    }],
-	"flags": ["no_watchdog", "non_critical"]
+	"flags": ["non_critical"],
+	"timeout": 30.0
     },
     {
 	"name": "upgrade",
@@ -133,6 +143,7 @@
 		"service-name": "delphi"
 	    }
 	],
-	"flags": ["no_watchdog", "non_critical"]
+	"flags": ["non_critical"],
+	"timeout": 30.0
     }
 ]

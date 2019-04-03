@@ -31,7 +31,7 @@ public:
     // Get the name of the service
     virtual string Name() {
         int     status;
-
+ 
         // get class name and demangle it
         return abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);
     };

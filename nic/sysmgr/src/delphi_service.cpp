@@ -40,6 +40,11 @@ void DelphiService::OnMountComplete()
 	sysmgr_events::EVENT_SYSTEM_COLDBOOT, "System booted");
 }
 
+std::string DelphiService::Name()
+{
+    return "sysmgr";
+}
+
 delphi::error DelphiService::OnSysmgrServiceStatusCreate(
     delphi::objects::SysmgrServiceStatusPtr obj)
 {

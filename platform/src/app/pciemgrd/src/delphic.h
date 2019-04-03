@@ -32,6 +32,7 @@ public:
     PciemgrService();
     void RegisterService();
     virtual void OnMountComplete();
+    virtual std::string Name();
     void UpdatePciePortStatus(const int port,
                               const enum pciemgr::PciePortOperStatus status,
                               const int gen = 0,

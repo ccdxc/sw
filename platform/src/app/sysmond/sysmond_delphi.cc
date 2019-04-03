@@ -39,6 +39,10 @@ SysmondService::SysmondService(delphi::SdkPtr sdk, string name) {
 void SysmondService::OnMountComplete(){
 }
 
+std::string SysmondService::Name() {
+    return "sysmond";
+}
+
 void SysmondService::SocketClosed() {
     TRACE_INFO(GetLogger(), "SysmondService::Delphi Crashed");
     systemled_t led;
@@ -56,3 +60,4 @@ void *delphi_thread_run(void *ctx)
 
     return NULL;
 }
+

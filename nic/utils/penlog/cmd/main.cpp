@@ -45,6 +45,9 @@ public:
         ev_timer_start (loop, &timer_watcher);
     }
 
+    virtual std::string Name() {
+	return "penlog";
+    }
 };
 
 static bool starts_with (const char *str, const char *prefix)

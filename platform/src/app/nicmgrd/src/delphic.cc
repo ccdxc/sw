@@ -55,6 +55,11 @@ void NicMgrService::OnMountComplete() {
     devmgr->DelphiMountEventHandler(true);
 }
 
+// Name returns the name of the delphi service
+std::string NicMgrService::Name() {
+    return "nicmgr";
+}
+
 // get_port_handler gets the port reactor object
 port_status_handler_ptr_t get_port_status_handler (void) {
     return g_port_status_handler;

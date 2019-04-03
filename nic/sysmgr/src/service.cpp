@@ -67,10 +67,14 @@ void Service::check_dep_and_launch()
 
 void Service::start_heartbeat()
 {
+    if (this->spec->timeout == 0.)
+    {
+	return;
+    }
     if (this->timer_watcher == nullptr)
     {
-	this->timer_watcher = TimerWatcher::create(15., 15.,
-	    shared_from_this());
+	this->timer_watcher = TimerWatcher::create(this->spec->timeout,
+	    this->spec->timeout, shared_from_this());
     }
     this->timer_watcher->repeat();
 }

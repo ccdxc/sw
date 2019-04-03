@@ -123,6 +123,11 @@ delphi_client::sdk (void)
     return sdk_;
 }
 
+std::string delphi_client::Name()
+{
+    return "hal";
+}
+    
 // API to update HAL status
 void
 set_hal_status (hal::hal_status_t hal_status)

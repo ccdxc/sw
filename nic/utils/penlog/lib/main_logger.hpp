@@ -30,6 +30,7 @@ namespace penlog {
             delphi::objects::PenlogReqPtr obj);
         virtual delphi::error OnPenlogReqUpdate(
             delphi::objects::PenlogReqPtr obj);
+	virtual std::string Name();
     };
 };
 

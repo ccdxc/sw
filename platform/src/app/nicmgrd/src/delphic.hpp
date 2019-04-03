@@ -38,6 +38,7 @@ public:
     delphi::SdkPtr sdk(void) const { return sdk_; }
     NicMgrService(delphi::SdkPtr sk);
     void OnMountComplete(void);
+    virtual std::string Name();
 };
 
 // port_status_handler is the reactor for the Port object

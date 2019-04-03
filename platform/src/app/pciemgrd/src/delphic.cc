@@ -106,6 +106,11 @@ void PciemgrService::OnMountComplete()
     this->sysmgr->init_done();
 }
 
+std::string PciemgrService::Name()
+{
+    return "pciemgrd";
+}
+
 void PciemgrService::UpdatePciePortStatus(
     const int port,
     const enum pciemgr::PciePortOperStatus status,

@@ -22,6 +22,7 @@ public:
    void OnMountComplete(void);
    void init_done(void);
    delphi::SdkPtr sdk(void);
+   virtual std::string Name();
 
 private:
     delphi::SdkPtr                                 sdk_;

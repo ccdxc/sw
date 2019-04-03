@@ -111,3 +111,8 @@ void MainLogger::register_lib_logger(LoggerPtr liblogger)
     this->libloggers.insert(std::pair<std::string, LoggerPtr>(
             liblogger->name, liblogger));
 }
+
+std::string MainLogger::Name()
+{
+    return "penlog-logger";
+}

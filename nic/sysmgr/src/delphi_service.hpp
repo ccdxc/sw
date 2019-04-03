@@ -19,6 +19,7 @@ class DelphiService : public delphi::Service,
   public:
     static std::shared_ptr<DelphiService> create(delphi::SdkPtr sdk);
     virtual void OnMountComplete();
+    virtual std::string Name();
     // SysmgrServiceStatusReactor
     virtual delphi::error OnSysmgrServiceStatusCreate(
         delphi::objects::SysmgrServiceStatusPtr obj);

@@ -17,7 +17,7 @@ EventLoggerPtr EventLogger::getInstance()
 	instance = std::make_shared<EventLogger>();
 
 	instance->recorder = events_recorder::init(
-	    "sysmgr.events", 4096, 256, "sysmgr",
+	    "sysmgr.events", 32768, 256, "sysmgr",
 	    sysmgr_events::Event_descriptor(), logger->get_spd());
     }
 
