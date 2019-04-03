@@ -4,7 +4,6 @@ selectors:
     maxlimits: 1
     flow: filter://any
     route: filter://any
-    localmapping: filter://any
 
 packets:
     - packet:

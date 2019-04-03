@@ -221,9 +221,16 @@ vpc:
                    - '0::\0'
 
              - type: specific # route table with empty routes
-               routetype: disjoint
+               routetype: empty
                v4routes:
                v6routes:
+
+             - type: specific # route table with only default routes
+               routetype: only_default
+               v4routes:
+                   - '0.0.0.0\0'
+               v6routes:
+                   - '0::\0'
 
              - type: specific # route table with right overlap routes
                routetype: right_overlap

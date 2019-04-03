@@ -9,6 +9,12 @@ feature:
 
 modules:
     - module:
+        name    : IPV4_DEFAULT_ROUTE
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=only_default
+
+    - module:
         name    : IPV4_ADJACENT_ROUTE
         spec    : lpm.testspec
         iterate :

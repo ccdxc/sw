@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import sys
+import ipaddress
 from random import sample
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
@@ -8,6 +9,9 @@ from apollo.config.store import Store
 
 IP_VERSION_6 = 6
 IP_VERSION_4 = 4
+
+IPV4_DEFAULT_ROUTE = ipaddress.ip_network("0.0.0.0/0")
+IPV6_DEFAULT_ROUTE = ipaddress.ip_network("0::/0")
 
 class rrobiniter:
     def __init__(self, objs):
@@ -68,6 +72,11 @@ def GetEncapTypeString(e):
         logger.error("ERROR: Invalid/Unknown Encap: %s" % e)
         sys.exit(1)
         return None
+
+def isDefaultRoute(ippfx):
+    if ippfx == IPV4_DEFAULT_ROUTE or ippfx == IPV6_DEFAULT_ROUTE:
+        return True
+    return False
 
 def GetRpcIPAddrFamily(ip_version):
     if ip_version == IP_VERSION_6:

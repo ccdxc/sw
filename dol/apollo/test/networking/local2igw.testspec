@@ -50,6 +50,7 @@ packets:
             mpls:
                 label   : ref://testcase/config/route/Tunnel/EncapValue
                 ttl     : 0
+                s       : 1
 
 
 trigger:
