@@ -2726,14 +2726,13 @@ int ionic_lifs_size(struct ionic *ionic)
 
 try_again:
 	/* interrupt usage:
-	 *    1 for master lif adminq
-	 *    1 for master lif notifyq
+	 *    1 for master lif adminq/notifyq
 	 *    1 for each CPU for master lif TxRx queue pairs
 	 *    2 for each slave lif: 1 adminq, 1 TxRx queuepair
 	 *    whatever's left is for RDMA queues
 	 */
-	nintrs = 1 + 1 + nxqs + (nslaves * 2) + neqs;
-	min_intrs = 3;  /* adminq + notifyq + 1 TxRx queue pair */
+	nintrs = 1 + nxqs + (nslaves * 2) + neqs;
+	min_intrs = 2;  /* adminq + 1 TxRx queue pair */
 
 	if (nintrs > dev_nintrs)
 		goto try_fewer;
