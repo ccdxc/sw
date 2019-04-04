@@ -11,9 +11,8 @@ aliases:
     - &INPUT_LEN_LIST_COMBO1 [ 4096, 8192 ]
     - &INPUT_LEN_LIST_COMBO2 [ 16384, 32768 ]
     - &INPUT_LEN_LIST_COMBO3 [ 16384 ]
-#    - &BATCH_DEPTH_ITER_LIST_COMBO1 [ 1, 31, 64, 256 ]
+    - &INPUT_LEN_LIST_COMBO4 [ 4096, 8192, 16384, 32768 ]
     - &BATCH_DEPTH_ITER_LIST_COMBO1 [ 1, 31, 64, 128 ]
-#    - &BATCH_DEPTH_ITER_LIST_COMBO2 [ 32, 33, 128, 512 ]
     - &BATCH_DEPTH_ITER_LIST_COMBO2 [ 32, 33 ]
     - &MODE_ITER_LIST_COMBO1 [ sync, poll ]
     - &MODE_ITER_LIST_COMBO2 [ poll, async ]
@@ -24,6 +23,7 @@ aliases:
     - &DC_FAIL_TEST_YML dc_fail.yml
     - &HASH_TEST_YML hash.yml
     - &CHKSUM_TEST_YML chksum.yml
+    - &CRYPTO_TEST_YML crypto.yml
     - &CP_CHKSUM_CHAIN_YML cp_chksum_chain.yml
     - &CP_BOF_CHKSUM_CHAIN_YML cp_bof_chksum_chain.yml
     - &CP_HASH_CHAIN_YML cp_hash_chain.yml
@@ -344,26 +344,14 @@ testcases:
             wait        : '1.0'
             test        : *DECRYPT_CHKSUM_CHAIN_YML
 
-#    -   name    : Crypto
-#        testcase: testcases.storage.ymltest
-#        enable  : False
-#        args    :
-#            dir : *STORAGE_TEST_DIR
-#            cfg : [ 4k.yml, globals.yml ]
-#            test: crypto1.yml
-#
-#    -   name    : CryptoFail
-#        testcase: testcases.storage.ymltest
-#        enable  : False
-#        args    :
-#            dir : *STORAGE_TEST_DIR
-#            cfg : [ 4k.yml, globals.yml ]
-#            test: crypto_fail.yml
-#
-#    -   name    : Test3
-#        testcase: testcases.storage.ymltest
-#        enable  : False
-#        args    :
-#            dir : *STORAGE_TEST_DIR
-#            cfg : [ 4k.yml, globals.yml ]
-#            test: test3.yml
+    -   name: Crypto
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST_COMBO1
+            batch_depth : *BATCH_DEPTH_ITER_LIST_COMBO1
+            mode        : *MODE_ITER_LIST_COMBO3
+            inputlen    : *INPUT_LEN_LIST_COMBO4
+        args    :
+            wait        : '0.5'
+            test        : *CRYPTO_TEST_YML

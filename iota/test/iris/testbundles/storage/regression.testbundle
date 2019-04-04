@@ -12,8 +12,6 @@ aliases:
     - &INPUT_LEN_16K 16384
     - &INPUT_LEN_32K 32768
     - &CPUS_ITER_LIST [ 1, 2, 4, 6 ]
-
-# TBD: Zero Pad Resource limitation
     - &CPUS_ITER_LIST_ZERO_PAD [ 1, 2, 4 ]
     - &BATCH_DEPTH_ITER_LIST [ 1, 16, 31, 32, 33, 64 ]
     - &BATCH_DEPTH_LARGE_ITER_LIST [ 128, 256, 512 ]
@@ -27,6 +25,7 @@ aliases:
     - &DC_FAIL_TEST_YML dc_fail.yml
     - &HASH_TEST_YML hash.yml
     - &CHKSUM_TEST_YML chksum.yml
+    - &CRYPTO_TEST_YML crypto.yml
     - &CPFLAGS_DEFAULT 0
     - &DCFLAGS_DEFAULT 0
     - &CPFLAGS_ZERO_PAD zero_pad
@@ -522,45 +521,14 @@ testcases:
             algo        : 'crc32c'
             test        : *CHKSUM_TEST_YML
 
-
-#    -   name    : Crypto
-#TBD TBD
-#        testcase: testcases.storage.ymltest
-#        enable  : False
-#        iterators   :
-#            type        : nested
-#            cpus        : *CPUS_ITER_LIST
-#            batch_depth : *BATCH_DEPTH_ITER_LIST
-#            mode        : *MODE_ITER_LIST
-#            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K, *INPUT_LEN_16K, *INPUT_LEN_32K ]
-#        args    :
-#            dir : *STORAGE_TEST_DIR
-#            wait: 5 # Wait in seconds.
-#            cfg : [ 4k.yml, globals.yml ]
-#            test: crypto1.yml
-#
-#    -   name    : CryptoFail
-#        testcase: testcases.storage.ymltest
-#        enable  : False
-#TBD TBD
-#        iterators:
-#            mode        : *MODE_ITER_LIST
-#            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K, *INPUT_LEN_16K, *INPUT_LEN_32K ]
-#        args    :
-#            dir : *STORAGE_TEST_DIR
-#            wait: 5 # Wait in seconds.
-#            cfg : [ 4k.yml, globals.yml ]
-#            test: crypto_fail.yml
-#
-#    -   name    : Test3
-#        testcase: testcases.storage.ymltest
-#TBD: Run only batch_depth 1, 16, 31 and 32
-#        enable  : False
-#        args    :
-#            dir : *STORAGE_TEST_DIR
-#            wait: 5 # Wait in seconds.
-#            cfg : [ 4k.yml, globals.yml ]
-#            test: test3.yml
-
-teardown:
-    #- step      : verif.utils.collect_logs_and_cores
+    -   name: Crypto
+        testcase    : testcases.storage.ymltest2
+        iterators   :
+            type        : nested
+            cpus        : *CPUS_ITER_LIST
+            batch_depth : *BATCH_DEPTH_ITER_LIST
+            mode        : *MODE_ITER_LIST
+            inputlen    : [ *INPUT_LEN_4K, *INPUT_LEN_8K, *INPUT_LEN_16K, *INPUT_LEN_32K ]
+        args    :
+            wait        : '0.5'
+            test        : *CRYPTO_TEST_YML

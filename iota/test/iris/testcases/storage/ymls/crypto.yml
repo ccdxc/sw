@@ -1,20 +1,21 @@
 svc_chains:
   - svc_chain:
       idx: 1
-      #description: "Encrypt"
+      name: "Encrypt"
       input:
         pattern: aaabbbaaabbb
-        len: '$2block'
+        len: 'param::inputlen'
         output_file: 'origin.bin'
       ops:
         - encrypt:
             key_idx: 1
             iv_data: 000102030405060708090a0b0c0d0e0f
             output_file: '%test_id%_encrypted.bin'
+
 svc_chains:
   - svc_chain:
       idx: 2
-      #description: "Decrypt"
+      name: "Decrypt"
       input:
         file: '1_encrypted.bin'
       ops:
@@ -22,16 +23,20 @@ svc_chains:
             key_idx: 1
             iv_data: 000102030405060708090a0b0c0d0e0f
             output_file: '%test_id%_decrypted.bin'
+
 tests:
   - test:
       idx: 1
       svc_chains: 1
-      repeat: 1
+      repeat        : 'param::repeat'
+      batch_depth   : 'param::batch_depth'
+      mode          : 'param::mode'
       validations:
         - size_compare:
             idx: 1
             file1: '1_encrypted.bin'
-            val: '$2block'
+            val: 'param::inputlen'
+
   - test:
       idx: 2
       svc_chains: 2
@@ -40,9 +45,9 @@ tests:
         - size_compare:
             idx: 1
             file1: '2_decrypted.bin'
-            val: '$2block'
+            val: 'param::inputlen'
         - data_compare:
             idx: 2
             file1: 'origin.bin'
             file2: '2_decrypted.bin'
-            len: '$2block'
+            len: 'param::inputlen'
