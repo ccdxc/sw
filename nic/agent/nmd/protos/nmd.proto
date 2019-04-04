@@ -125,6 +125,9 @@ message NaplesStatus {
 
     // TimeZone
     string TimeZone                 = 9 [(gogoproto.jsontag) = "timezone,omitempty", (venice.default)="UTC"];
+
+    // The reason why the SmartNIC is not in admitted phase, if known
+    string AdmissionPhaseReason     = 10 [(gogoproto.jsontag) = "adm-phase-reason,omitempty"];
 }
 
 // NaplesCmdExecute contains information on what command to execute

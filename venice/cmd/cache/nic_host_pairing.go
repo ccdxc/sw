@@ -126,10 +126,10 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 					nic.Status.Host = host.Name
 					nicUpdates = append(nicUpdates, nic.SmartNIC)
 					log.Infof("NIC %s(%s) paired with host %s", nic.Name, nic.Spec.Hostname, host.Name)
-				} else {
+				} else if nic.Status.Host != host.Name {
 					errMsg := fmt.Sprintf("NIC %s(%s) matches Spec IDs of host %s but is already associated with host %s", nic.Name, nic.Spec.Hostname, host.Name, nic.Status.Host)
-					log.Errorf(errMsg)
 					recorder.Event(cluster.HostSmartNICSpecConflict, evtsapi.SeverityLevel_WARNING, errMsg, nil)
+					log.Errorf(errMsg)
 				}
 			}
 			nic.Unlock()

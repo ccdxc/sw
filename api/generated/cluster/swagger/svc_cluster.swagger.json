@@ -1968,6 +1968,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "status.adm-phase-reason",
+            "description": "The reason why the SmartNIC is not in ADMITTED state.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -4558,6 +4565,10 @@
         "host": {
           "type": "string",
           "title": "The name of the host this SmartNIC is plugged into"
+        },
+        "adm-phase-reason": {
+          "type": "string",
+          "title": "The reason why the SmartNIC is not in ADMITTED state"
         }
       },
       "title": "SmartNICStatus contains current status of a SmartNIC"

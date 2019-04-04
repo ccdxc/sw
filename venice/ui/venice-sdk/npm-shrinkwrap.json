@@ -63,6 +63,12 @@
         "concat-map": "0.0.1"
       }
     },
+    "commander": {
+      "version": "2.19.0",
+      "resolved": "https://registry.npmjs.org/commander/-/commander-2.19.0.tgz",
+      "integrity": "sha512-6tvAOO+D6OENvRAh524Dh9jcfKTYDQAqvqezbCW82xj5X0pSrcpxtvRKHLG0yBY6SD7PSDrJaj+0AiOcKVd1Xg==",
+      "optional": true
+    },
     "concat-map": {
       "version": "0.0.1",
       "resolved": "https://registry.npmjs.org/concat-map/-/concat-map-0.0.1.tgz",
@@ -102,7 +108,7 @@
         "neo-async": "2.6.0",
         "optimist": "0.6.1",
         "source-map": "0.6.1",
-        "uglify-js": "3.5.2"
+        "uglify-js": "3.5.3"
       }
     },
     "inflight": {
@@ -220,11 +226,12 @@
       "integrity": "sha512-4krF8scpejhaOgqzBEcGM7yDIEfi0/8+8zDRZhNZZ2kjmHJ4hv3zCbQWxoJGz1iw5U0Jl0nma13xzHXcncMavQ=="
     },
     "uglify-js": {
-      "version": "3.5.2",
-      "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-3.5.2.tgz",
-      "integrity": "sha512-imog1WIsi9Yb56yRt5TfYVxGmnWs3WSGU73ieSOlMVFwhJCA9W8fqFFMMj4kgDqiS/80LGdsYnWL7O9UcjEBlg==",
+      "version": "3.5.3",
+      "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-3.5.3.tgz",
+      "integrity": "sha512-rIQPT2UMDnk4jRX+w4WO84/pebU2jiLsjgIyrCktYgSvx28enOE3iYQMr+BD1rHiitWnDmpu0cY/LfIEpKcjcw==",
       "optional": true,
       "requires": {
+        "commander": "2.19.0",
         "source-map": "0.6.1"
       }
     },

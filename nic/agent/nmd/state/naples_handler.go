@@ -174,6 +174,9 @@ func (n *NMD) StartManagedMode() error {
 			// Cache it in nicDB
 			if msg.AdmissionResponse != nil {
 				nicObj.Status.AdmissionPhase = msg.AdmissionResponse.Phase
+				nicObj.Status.AdmissionPhaseReason = msg.AdmissionResponse.Reason
+				n.config.Status.AdmissionPhase = msg.AdmissionResponse.Phase
+				n.config.Status.AdmissionPhaseReason = msg.AdmissionResponse.Reason
 			}
 			n.SetSmartNIC(nicObj)
 

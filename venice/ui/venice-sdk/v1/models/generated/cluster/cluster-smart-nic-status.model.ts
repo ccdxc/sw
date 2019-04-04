@@ -23,6 +23,7 @@ export interface IClusterSmartNICStatus {
     'smartNicVersion'?: string;
     'smartNicSku'?: string;
     'host'?: string;
+    'adm-phase-reason'?: string;
 }
 
 
@@ -45,6 +46,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     'smartNicVersion': string = null;
     'smartNicSku': string = null;
     'host': string = null;
+    'adm-phase-reason': string = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'admission-phase': {
             enum: ClusterSmartNICStatus_admission_phase_uihint,
@@ -86,6 +88,10 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
             type: 'string'
         },
         'host': {
+            required: false,
+            type: 'string'
+        },
+        'adm-phase-reason': {
             required: false,
             type: 'string'
         },
@@ -189,6 +195,13 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
         } else {
             this['host'] = null
         }
+        if (values && values['adm-phase-reason'] != null) {
+            this['adm-phase-reason'] = values['adm-phase-reason'];
+        } else if (fillDefaults && ClusterSmartNICStatus.hasDefaultValue('adm-phase-reason')) {
+            this['adm-phase-reason'] = ClusterSmartNICStatus.propInfo['adm-phase-reason'].default;
+        } else {
+            this['adm-phase-reason'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -206,6 +219,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
                 'smartNicVersion': CustomFormControl(new FormControl(this['smartNicVersion']), ClusterSmartNICStatus.propInfo['smartNicVersion']),
                 'smartNicSku': CustomFormControl(new FormControl(this['smartNicSku']), ClusterSmartNICStatus.propInfo['smartNicSku']),
                 'host': CustomFormControl(new FormControl(this['host']), ClusterSmartNICStatus.propInfo['host']),
+                'adm-phase-reason': CustomFormControl(new FormControl(this['adm-phase-reason']), ClusterSmartNICStatus.propInfo['adm-phase-reason']),
             });
             // generate FormArray control elements
             this.fillFormArray<ClusterSmartNICCondition>('conditions', this['conditions'], ClusterSmartNICCondition);
@@ -244,6 +258,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
             this._formGroup.controls['smartNicVersion'].setValue(this['smartNicVersion']);
             this._formGroup.controls['smartNicSku'].setValue(this['smartNicSku']);
             this._formGroup.controls['host'].setValue(this['host']);
+            this._formGroup.controls['adm-phase-reason'].setValue(this['adm-phase-reason']);
         }
     }
 }

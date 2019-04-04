@@ -277,12 +277,8 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 	refHealthCond := getNICCondition(refObj, cluster.SmartNICCondition_HEALTHY)
 	updHealthCond := getNICCondition(updObj, cluster.SmartNICCondition_HEALTHY)
 
-	if updHealthCond == nil {
-		return nil, fmt.Errorf("Received a NIC update without health condition: %+v", updObj)
-	}
-
 	// generate event if there was a health transition
-	if refHealthCond != nil && refHealthCond.Status != updHealthCond.Status {
+	if updHealthCond != nil && refHealthCond != nil && refHealthCond.Status != updHealthCond.Status {
 		var evtType string
 		var severity events.SeverityLevel
 		var msg string
@@ -307,15 +303,15 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 			recorder.Event(evtType, severity, msg, nil)
 			log.Infof("Generated event, type: %v, sev: %v, msg: %s", evtType, severity.String(), msg)
 		}
+
+		// Ignore the time-stamp provided by NMD and replace it with our own.
+		// This will help mitigating issues due to clock misalignments between Venice and NAPLES
+		// As long as it gets periodic updates, CMD is happy.
+		// If it happens to process an old message by mistake, the next one will correct it.
+		updHealthCond.LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
 	}
 
 	// Store the update in local cache
-
-	// Ignore the time-stamp provided by NMD and replace it with our own.
-	// This will help mitigating issues due to clock misalignments between Venice and NAPLES
-	// As long as it gets periodic updates, CMD is happy.
-	// If it happens to process an old message by mistake, the next one will correct it.
-	updHealthCond.LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
 	refObj.Status.Conditions = updObj.Status.Conditions
 	err = s.stateMgr.UpdateSmartNIC(refObj)
 	if err != nil {
@@ -353,6 +349,23 @@ func (s *RPCServer) DeleteSmartNIC(om api.ObjectMeta) error {
 	}
 
 	return nil
+}
+
+func (s *RPCServer) isHostnameUnique(subj *cluster.SmartNIC) (bool, error) {
+	nics, err := s.stateMgr.ListSmartNICs()
+	if err != nil {
+		return false, err
+	}
+
+	for _, n := range nics {
+		n.Lock()
+		if subj.Spec.Hostname == n.Spec.Hostname && subj.Name != n.Name {
+			n.Unlock()
+			return false, nil
+		}
+		n.Unlock()
+	}
+	return true, nil
 }
 
 // RegisterNIC handles the register NIC request and upon validation creates SmartNIC object.
@@ -405,8 +418,8 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		}
 
 		req = msg.AdmissionRequest
-		nic := req.GetNic()
-		name = nic.Name
+		naplesNIC := req.GetNic()
+		name = naplesNIC.Name
 
 		cert, err := x509.ParseCertificate(req.GetCert())
 		if err != nil {
@@ -414,9 +427,9 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		}
 
 		// Validate the factory cert obtained in the request
-		err = validateNICPlatformCert(cert, &nic)
+		err = validateNICPlatformCert(cert, &naplesNIC)
 		if err != nil {
-			return authErrResp, errors.Wrapf(err, "Invalid certificate, name: %v, cert subject: %v", nic.Name, cert.Subject)
+			return authErrResp, errors.Wrapf(err, "Invalid certificate, name: %v, cert subject: %v", naplesNIC.Name, cert.Subject)
 		}
 
 		// check the CSR
@@ -468,63 +481,95 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			return intErrResp, errors.Wrap(err, "Error signing certificate request")
 		}
 
+		log.Infof("Validated NIC: %s", name)
+
+		// If we make it to this point, we know the NAPLES is authentic.
+		// However, there are still reasons why the admission may fail.
+		// We create or update the object in ApiServer so that user knows
+		// if something went wrong and can take action.
+
 		// Get the Cluster object
 		clusterObj, err := s.GetCluster()
 		if err != nil {
 			return intErrResp, errors.Wrapf(err, "Error getting Cluster object")
 		}
 
-		log.Infof("Validated NIC: %s", name)
+		hostnameUnique, err := s.isHostnameUnique(&naplesNIC)
+		if err != nil {
+			return intErrResp, errors.Wrapf(err, "Error getting SmartNIC list")
+		}
 
 		nc := s.ClientGetter.APIClient()
 		if nc == nil {
 			return intErrResp, fmt.Errorf("Unable to get API client")
 		}
 
-		// Automatically admit to the cluster if there is no existing NIC object but cluster policy is auto-admit.
-		// If a NIC object is present, honor the value of Spec.Admit and set phase accordingly.
+		var smartNICObjExists bool // does the SmartNIC object already exist ?
 		nicObj, err := cl.SmartNIC().Get(context.Background(), &api.ObjectMeta{Name: name})
 		if err != nil {
 			if !strings.Contains(err.Error(), "NotFound") {
 				return intErrResp, errors.Wrapf(err, "Error reading NIC object")
 			}
-			// Error is not found. Create the NIC object and apply cluster-wide admission policy.
-			nic := req.GetNic()
-			if clusterObj.Spec.AutoAdmitNICs == true {
-				nic.Spec.Admit = true
-				nic.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
-			} else {
-				nic.Spec.Admit = false
-				nic.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
-				nicObj.Status.Conditions = []cluster.SmartNICCondition{}
-			}
-			nic.ObjectMeta.SelfLink = nic.MakeKey("cluster")
-			nicObj, err = cl.SmartNIC().Create(context.Background(), &nic)
-			if err != nil {
-				status := apierrors.FromError(err)
-				log.Errorf("Error creating smartNIC object: %+v err: %v status: %v", nicObj, err, status)
-				return intErrResp, errors.Wrapf(err, "Error creating smartNIC object")
-			}
+			// NIC object is not present. Create the NIC object based on the template provided by NAPLES and update it accordingly.
+			smartNICObjExists = false
+			nicObj = &naplesNIC
 		} else {
-			// NIC object is already present.
-			// Re-initialize status
-			nicObj.Status = req.GetNic().Status
+			smartNICObjExists = true
+		}
+
+		// If hostname supplied by NAPLES is not unique, reject but still create SmartNIC object
+		if !hostnameUnique {
+			nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_REJECTED.String()
+			nicObj.Status.AdmissionPhaseReason = "Hostname is not unique"
+			nicObj.Status.Conditions = []cluster.SmartNICCondition{}
+		} else {
+			// Re-initialize status as it might have changed
+			nicObj.Status = naplesNIC.Status
 			// clear out host pairing so that it will be recomputed
 			nicObj.Status.Host = ""
-			if nicObj.Spec.Admit == true {
+			// if smartNIC exists, honor the value of the "Admit" flag as set by user,
+			// otherwise apply cluster-wide auto-admit policy
+			if (smartNICObjExists && nicObj.Spec.Admit == true) ||
+				(!smartNICObjExists && clusterObj.Spec.AutoAdmitNICs == true) {
 				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
+				// If the NIC is admitted, override all spec parameters with the new supplied values,
+				// except those that are owned by Venice.
+				// Right now "Admit" is the only parameter owned by Venice.
+				nicObj.Spec = naplesNIC.Spec
+				nicObj.Spec.Admit = true
 			} else {
 				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
+				nicObj.Status.AdmissionPhaseReason = "SmartNIC waiting for manual admission"
 				nicObj.Status.Conditions = []cluster.SmartNICCondition{}
-			}
-			nicObj, err = cl.SmartNIC().Update(context.Background(), nicObj)
-			if err != nil {
-				status := apierrors.FromError(err)
-				log.Errorf("Error updating smartNIC object: %+v err: %v status: %v", nicObj, err, status)
-				return intErrResp, errors.Wrapf(err, "Error updating smartNIC object")
+				nicObj.Spec.Admit = false
 			}
 		}
 
+		// Create or update SmartNIC object in ApiServer
+		if smartNICObjExists {
+			nicObj, err = cl.SmartNIC().Update(context.Background(), nicObj)
+		} else {
+			nicObj, err = cl.SmartNIC().Create(context.Background(), nicObj)
+		}
+		if err != nil {
+			status := apierrors.FromError(err)
+			log.Errorf("Error creating or updating smartNIC object. Create:%v, obj:%+v err:%v status:%v", !smartNICObjExists, nicObj, err, status)
+			return intErrResp, errors.Wrapf(err, "Error updating smartNIC object")
+		}
+
+		if nicObj.Status.AdmissionPhase == cluster.SmartNICStatus_REJECTED.String() {
+			recorder.Event(cluster.NICRejected, evtsapi.SeverityLevel_WARNING,
+				fmt.Sprintf("Admission for SmartNIC %s was rejected, reason: %s", nicObj.Name, nicObj.Status.AdmissionPhaseReason), nil)
+
+			return &grpc.RegisterNICResponse{
+				AdmissionResponse: &grpc.NICAdmissionResponse{
+					Phase:  cluster.SmartNICStatus_REJECTED.String(),
+					Reason: nicObj.Status.AdmissionPhaseReason,
+				},
+			}, nil
+		}
+
+		// ADMITTED or PENDING
 		okResp := &grpc.RegisterNICResponse{
 			AdmissionResponse: &grpc.NICAdmissionResponse{
 				Phase: nicObj.Status.AdmissionPhase,
@@ -541,18 +586,16 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			okResp.AdmissionResponse.TrustRoots = cmdcertutils.GetTrustRoots(env.CertMgr)
 		}
 
-		status, version := s.versionChecker.CheckNICVersionForAdmission(nic.Status.GetSmartNICSku(), nic.Status.GetSmartNICVersion())
+		status, version := s.versionChecker.CheckNICVersionForAdmission(nicObj.Status.GetSmartNICSku(), nicObj.Status.GetSmartNICVersion())
 		if status != "" {
-			log.Infof("NIC %s with SKU %s and version %s is requested to rollout to version %s because %s. Skip temporarily.", name, nic.Status.GetSmartNICSku(), nic.Status.GetSmartNICVersion(), version, status)
+			log.Infof("NIC %s with SKU %s and version %s is requested to rollout to version %s because %s. Skip temporarily.", name, nicObj.Status.GetSmartNICSku(), nicObj.Status.GetSmartNICVersion(), version, status)
 			/*
 				okResp.AdmissionResponse.Phase = cluster.SmartNICStatus_PENDING.String()
 				okResp.AdmissionResponse.Reason = status
 				okResp.AdmissionResponse.RolloutVersion = version
 			*/
 		}
-
 		return okResp, nil
-
 	}
 
 	ctx, cancel := context.WithTimeout(stream.Context(), nicRegTimeout)
@@ -788,7 +831,6 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 	var retryInterval time.Duration
 	retryInterval = 1
 
-	var err error
 	var resp nmdstate.NaplesConfigResp
 
 	// check if Nic exists in RetryDB
@@ -812,6 +854,12 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 			}
 
 			nicObj := s.GetNicInRetryDB(s.getNicKey(nic))
+			controller, _, err := net.SplitHostPort(env.UnauthRPCServer.GetListenURL())
+			if err != nil {
+				log.Errorf("Error parsing unauth RPC server URL %s: %v", env.UnauthRPCServer.GetListenURL(), err)
+				// retry
+				continue
+			}
 
 			// Config to switch to Managed mode
 			naplesCfg := nmd.Naples{
@@ -819,8 +867,9 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 				TypeMeta:   api.TypeMeta{Kind: "Naples"},
 				Spec: nmd.NaplesSpec{
 					Mode:        nmd.MgmtMode_NETWORK.String(),
+					NetworkMode: nicObj.Spec.NetworkMode,
 					PrimaryMAC:  nicObj.Name,
-					Controllers: []string{env.UnauthRPCServer.GetListenURL()},
+					Controllers: []string{controller},
 					Hostname:    nicObj.Spec.Hostname,
 					IPConfig:    nicObj.Spec.IPConfig,
 				},

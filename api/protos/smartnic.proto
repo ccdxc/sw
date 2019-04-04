@@ -165,6 +165,9 @@ message SmartNICStatus {
 
     // The name of the host this SmartNIC is plugged into
     string Host                             = 10 [(gogoproto.jsontag) = "host,omitempty"];
+
+    // The reason why the SmartNIC is not in ADMITTED state
+    string AdmissionPhaseReason             = 11 [(gogoproto.jsontag) = "adm-phase-reason,omitempty"];
 }
 
 // SmartNICCondition describes the state of a SmartNIC at a certain point.

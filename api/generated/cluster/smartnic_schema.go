@@ -82,6 +82,7 @@ var typesMapSmartnic = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
+			"adm-phase-reason":     api.CLIInfo{Path: "Status.AdmissionPhaseReason", Skip: false, Insert: "", Help: ""},
 			"admission-phase":      api.CLIInfo{Path: "Status.AdmissionPhase", Skip: false, Insert: "", Help: ""},
 			"admit":                api.CLIInfo{Path: "Spec.Admit", Skip: false, Insert: "", Help: ""},
 			"api-version":          api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
@@ -187,6 +188,8 @@ var typesMapSmartnic = map[string]*api.Struct{
 			"SmartNICSku": api.Field{Name: "SmartNICSku", CLITag: api.CLIInfo{ID: "smartNicSku", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "smartNicSku", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Host": api.Field{Name: "Host", CLITag: api.CLIInfo{ID: "host", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"AdmissionPhaseReason": api.Field{Name: "AdmissionPhaseReason", CLITag: api.CLIInfo{ID: "adm-phase-reason", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "adm-phase-reason", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }

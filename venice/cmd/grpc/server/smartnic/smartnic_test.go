@@ -10,6 +10,7 @@ import (
 	"fmt"
 	mathrand "math/rand"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -54,7 +55,7 @@ import (
 )
 
 const (
-	smartNICServerURL = "localhost:9199"
+	smartNICServerURL = "localhost:" + globals.CMDSmartNICRegistrationAPIPort
 	resolverURLs      = ":" + globals.CMDResolverPort
 	healthInterval    = 1 * time.Second
 	deadtimeInterval  = 3 * time.Second
@@ -220,7 +221,8 @@ func createRPCServerClient() (*rpckit.RPCServer, *rpckit.RPCClient) {
 }
 
 // Create NMD and Agent
-func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error) {
+func createNMD(t *testing.T, dbPath, priMac, restURL string) (*nmd.Agent, error) {
+	CreateFruJSON(priMac)
 
 	// create a platform agent
 	pa, err := platform.NewNaplesPlatformAgent()
@@ -238,8 +240,8 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error)
 	ag, err := nmd.NewAgent(pa,
 		uc,
 		dbPath,
-		hostID,
-		hostID,
+		priMac,
+		priMac,
 		smartNICServerURL,
 		restURL,
 		"", // no local certs endpoint
@@ -252,10 +254,24 @@ func createNMD(t *testing.T, dbPath, hostID, restURL string) (*nmd.Agent, error)
 		t.Errorf("Error creating NMD. Err: %v", err)
 	}
 
+	// Fake IPConfig
+	ipConfig := &cmd.IPConfig{
+		IPAddress: "1.2.3.4",
+	}
+
 	// Ensure the NMD's rest server is started
 	nmdHandle := ag.GetNMD()
 	nmdHandle.CreateMockIPClient(nil)
-	nmdHandle.UpdateMgmtIP()
+
+	cfg := nmdHandle.GetNaplesConfig()
+	cfg.Spec.Controllers = []string{"localhost"}
+	cfg.Spec.NetworkMode = proto.NetworkMode_INBAND.String()
+	cfg.Spec.IPConfig = ipConfig
+	cfg.Spec.MgmtVlan = 0
+	cfg.Spec.Hostname = priMac
+
+	nmdHandle.SetNaplesConfig(cfg.Spec)
+	nmdHandle.IPClient.Update()
 
 	return ag, err
 }
@@ -986,8 +1002,6 @@ func TestDeleteSmartNIC(t *testing.T) {
 // - NMD would next do NIC registration
 // - CMD would validate NIC and admit NIC into cluster.
 func TestSmartNICConfigByUser(t *testing.T) {
-	t.Skip("Temporarily disabled. TODO. More investigation needed")
-
 	// Init required components
 	testSetup()
 	defer testTeardown()
@@ -1001,7 +1015,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	os.Remove(dbPath)
 
 	// create Agent and NMD
-	ag, err := createNMD(t, dbPath, hostID, restURL)
+	ag, err := createNMD(t, dbPath, testMac, restURL)
 	defer stopNMD(t, ag, dbPath)
 	Assert(t, (err == nil && ag != nil), "Failed to create agent", err)
 
@@ -1076,13 +1090,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 
 		// Verify Update NIC task is running
 		if nm.GetUpdStatus() == false {
-			log.Errorf("Update NIC is not in progress")
-			return false, nil
-		}
-
-		// Verify REST server is not up
-		if nm.GetRestServerStatus() == true {
-			log.Errorf("REST server is still up")
+			log.Errorf("Update NIC is not in progress: %+v", nm)
 			return false, nil
 		}
 		return true, nil
@@ -1127,8 +1135,6 @@ func TestSmartNICConfigByUser(t *testing.T) {
 }
 
 func TestSmartNICConfigByUserErrorCases(t *testing.T) {
-	t.Skip("Temporarily disabled. TODO. More investigation needed")
-
 	// Init required components
 	testSetup()
 	defer testTeardown()
@@ -1136,12 +1142,13 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 	hostID := getHostID(1)
 	dbPath := getDBPath(1)
 	restURL := getRESTUrl(1)
+	testMac := "4444.4444.4401"
 
 	// Cleanup any prior DB files
 	os.Remove(dbPath)
 
 	// create Agent and NMD
-	ag, err := createNMD(t, dbPath, hostID, restURL)
+	ag, err := createNMD(t, dbPath, testMac, restURL)
 	defer stopNMD(t, ag, dbPath)
 	Assert(t, (err == nil && ag != nil), "Failed to create agent", err)
 
@@ -1283,13 +1290,53 @@ func TestManualAdmission(t *testing.T) {
 	AssertOk(t, err, "Error deleting smartnic object")
 	verifySmartNICObj(t, mac, false, "", "")
 
-	// Register again. This time we should go to PENDING because no pre-existing object is there and AutoAdmit=false..
+	// Register again. This time we should go to PENDING because no pre-existing object is there and AutoAdmit=false.
 	r = doRegisterNIC(t, smartNICRegistrationRPCClient, mac, hostName)
 	Assert(t, r.Phase == cmd.SmartNICStatus_PENDING.String(),
 		fmt.Sprintf("Error in registration response. Expected phase: %s, got: %s", cmd.SmartNICStatus_PENDING.String(), r))
 	verifySmartNICObj(t, mac, true, cmd.SmartNICStatus_PENDING.String(), "")
 
+	// Now register with different MAC and same hostname, we should get back a "reject" response
+	mac2 := "4444.4444.0002"
+	nicObjMeta2 := &api.ObjectMeta{
+		Name: mac2,
+	}
+	mr.ClearEvents()
+	numExpectedRejectEvents := 0
+
+	r = doRegisterNIC(t, smartNICRegistrationRPCClient, mac2, hostName)
+	Assert(t, r.Phase == cmd.SmartNICStatus_REJECTED.String(),
+		fmt.Sprintf("Error in registration response. Expected phase: %s, got: %s", cmd.SmartNICStatus_REJECTED.String(), r))
+	verifySmartNICObj(t, mac2, true, cmd.SmartNICStatus_REJECTED.String(), "")
+	numExpectedRejectEvents++
+
+	// Mark NIC2 for admission, we should still get rejected
+	setSmartNICAdmit(t, nicObjMeta2, true)
+	r = doRegisterNIC(t, smartNICRegistrationRPCClient, mac2, hostName)
+	Assert(t, r.Phase == cmd.SmartNICStatus_REJECTED.String(),
+		fmt.Sprintf("Error in registration response. Expected phase: %s, got: %s", cmd.SmartNICStatus_REJECTED.String(), r))
+	verifySmartNICObj(t, mac2, true, cmd.SmartNICStatus_REJECTED.String(), "")
+	numExpectedRejectEvents++
+
+	// Now try to register with different hostname and check that it gets admitted
+	hostName2 := "XXX"
+	r = doRegisterNIC(t, smartNICRegistrationRPCClient, mac2, hostName2)
+	Assert(t, r.Phase == cmd.SmartNICStatus_ADMITTED.String(),
+		fmt.Sprintf("Error in registration response. Expected phase: %s, got: %s", cmd.SmartNICStatus_ADMITTED.String(), r))
+	verifySmartNICObj(t, mac2, true, cmd.SmartNICStatus_ADMITTED.String(), hostName2)
+
+	// check that events got generated
+	numRejectEvents := 0
+	for _, ev := range mr.GetEvents() {
+		if ev.EventType == cmd.NICRejected && strings.Contains(ev.Message, mac2) {
+			numRejectEvents++
+		}
+	}
+	Assert(t, numRejectEvents == numExpectedRejectEvents,
+		"Unexpected number of REJECT events. Have: %d, want: %d, events:%+v", numRejectEvents, numExpectedRejectEvents, mr.GetEvents())
+
 	err = tInfo.smartNICServer.DeleteSmartNIC(*nicObjMeta)
+	err = tInfo.smartNICServer.DeleteSmartNIC(*nicObjMeta2)
 	AssertOk(t, err, "Error deleting smartnic object")
 }
 
@@ -1304,7 +1351,6 @@ func TestReadmitSmartNIC(t *testing.T) {
 	// Create Host in Venice
 	host, err := createHost(hostObjName, cmd.SmartNICID{MACAddress: mac})
 	AssertOk(t, err, "Error creating Host object")
-	defer deleteHost(host.ObjectMeta)
 
 	smartNICRegistrationRPCClient := grpc.NewSmartNICRegistrationClient(tInfo.rpcClient.ClientConn)
 	smartNICUpdatesRPCClient := grpc.NewSmartNICUpdatesClient(tInfo.rpcClient.ClientConn)
@@ -1352,6 +1398,49 @@ func TestReadmitSmartNIC(t *testing.T) {
 			verifyHostObj(t, hostObjName, "")
 		}
 	}
+
+	// Try to re-admit with different spec.
+	// The new values supplied by NAPLES should override those in Venice,
+	// except for parameters that are exclusively owned by Venice.
+	// Right now "Admit" is the only parameter owned by Venice.
+	nicHostname = "hello-world"
+
+	// Create a new host object matching the new nic hostname
+	deleteHost(host.ObjectMeta)
+	host, err = createHost(hostObjName, cmd.SmartNICID{Name: nicHostname})
+	AssertOk(t, err, "Error creating Host object")
+	defer deleteHost(host.ObjectMeta)
+
+	// Set admit = false on ApiServer so the NIC does not get admitted immediately
+	setSmartNICAdmit(t, nicObjMeta, false)
+	verifySmartNICObj(t, mac, true, cmd.SmartNICStatus_PENDING.String(), "")
+	verifyHostObj(t, hostObjName, "")
+	refNicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), nicObjMeta)
+	AssertOk(t, err, "Error reading SmartNIC object from ApiServer")
+
+	// Try to register. Old parameters should not be overridden yet because NIC is not admitted
+	r = doRegisterNIC(t, smartNICRegistrationRPCClient, mac, nicHostname)
+	Assert(t, r.Phase == cmd.SmartNICStatus_PENDING.String(),
+		fmt.Sprintf("Error in registration response. Expected phase: %s, got: %s", cmd.SmartNICStatus_PENDING.String(), r))
+	curNicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), nicObjMeta)
+	AssertOk(t, err, "Error reading SmartNIC object from ApiServer")
+	Assert(t, reflect.DeepEqual(refNicObj.Spec, curNicObj.Spec),
+		"NIC registration modified Spec parameters even though NIC did not get admitted. Ref: %+v, Cur: %+v", refNicObj, curNicObj)
+
+	// Admit the SmartNIC and verify that new parameters are honored
+	setSmartNICAdmit(t, nicObjMeta, true)
+	r = doRegisterNIC(t, smartNICRegistrationRPCClient, mac, nicHostname)
+	Assert(t, r.Phase == cmd.SmartNICStatus_ADMITTED.String(),
+		"Error in registration response. Expected phase: %s, got: %s", cmd.SmartNICStatus_ADMITTED.String(), r)
+	// NIC and Host object should pick up the new host name and form the pairing
+	verifySmartNICObj(t, mac, true, cmd.SmartNICStatus_ADMITTED.String(), hostObjName)
+	verifyHostObj(t, hostObjName, mac)
+	// Hostname should have been overridden, Admit should not
+	curNicObj, err = tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), nicObjMeta)
+	AssertOk(t, err, "Error reading SmartNIC object from ApiServer")
+	Assert(t, curNicObj.Spec.Hostname == nicHostname && curNicObj.Spec.Hostname != refNicObj.Spec.Hostname,
+		"New NIC parameter (hostname) not honored: %+v", curNicObj)
+	Assert(t, curNicObj.Spec.Admit == true, "Old NIC parameter (Admit) should not have been overriden: %+v", curNicObj)
 }
 
 func TestHostNICPairing(t *testing.T) {
