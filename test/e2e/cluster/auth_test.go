@@ -296,12 +296,12 @@ var _ = Describe("auth tests", func() {
 								Values:   []string{auth.LoginFailed},
 							},
 							{
-								Key:      "meta.creation-time",
+								Key:      "meta.mod-time",
 								Operator: "gte",
 								Values:   []string{time.Now().Add(-3 * time.Second).Format(time.RFC3339Nano)},
 							},
 							{
-								Key:      "meta.creation-time",
+								Key:      "meta.mod-time",
 								Operator: "lte",
 								Values:   []string{time.Now().Format(time.RFC3339Nano)},
 							},
