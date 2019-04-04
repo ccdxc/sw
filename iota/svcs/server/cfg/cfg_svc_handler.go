@@ -152,7 +152,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 	tenantURL := fmt.Sprintf("%s/configs/cluster/v1/tenants", veniceAPIGw)
 	authPolicyURL := fmt.Sprintf("%s/configs/auth/v1/authn-policy", veniceAPIGw)
 	userURL := fmt.Sprintf("%s/configs/auth/v1/tenant/default/users", veniceAPIGw)
-	roleBindingURL := fmt.Sprintf("%s/configs/auth/v1/tenant/default/role-bindings", veniceAPIGw)
+	roleBindingURL := fmt.Sprintf("%s/configs/auth/v1/tenant/default/role-bindings/AdminRoleBinding", veniceAPIGw)
 	loginURL := fmt.Sprintf("%s/v1/login", veniceAPIGw)
 
 	log.Infof("CFG SVC | DEBUG | ConfigureAuth. Received Request Msg: %v", req)
@@ -161,8 +161,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 			Kind: "Tenant",
 		},
 		ObjectMeta: api.ObjectMeta{
-			Name:   "default",
-			Tenant: "default",
+			Name: "default",
 		},
 		Spec: cluster.TenantSpec{},
 	}
@@ -242,7 +241,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		},
 	}
 
-	_, response, err = common.HTTPSPost(roleBindingURL, "", &adminRole)
+	response, err = common.HTTPSPut(roleBindingURL, "", &adminRole)
 	log.Infof("CFG SVC | INFO | Assigning Admin role | Received Response Msg: %v", response)
 	if err != nil {
 		log.Errorf("CFG SVC | ERROR | ConfigureAuth call failed to assign admin role. Received Response Msg: %v. Err: %v", response, err)
@@ -407,7 +406,7 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 				Name: n.Name,
 			},
 			Spec: cluster.HostSpec{
-				SmartNICs: []cluster.SmartNICID{cluster.SmartNICID{MACAddress: n.Uuid}},
+				SmartNICs: []cluster.SmartNICID{{MACAddress: n.Uuid}},
 			},
 		}
 		hosts = append(hosts, &host)
@@ -435,7 +434,7 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 				Spec: workload.WorkloadSpec{
 					HostName: n.Name,
 					Interfaces: []workload.WorkloadIntfSpec{
-						workload.WorkloadIntfSpec{
+						{
 							ExternalVlan: vlan,
 							MicroSegVlan: uSegVlanIdx,
 							MACAddress:   mac,

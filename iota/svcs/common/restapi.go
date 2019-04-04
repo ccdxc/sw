@@ -1,7 +1,7 @@
 package common
 
 import (
-        "crypto/tls"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -50,210 +50,14 @@ func MakeHTTPHandler(handlerFunc RestAPIFunc) http.HandlerFunc {
 	}
 }
 
-// HTTPSPost performs http POST operation
-func HTTPSPost(url, token string, req interface{}) ([]*http.Cookie, string, error) {
-	// Prepend URL
-	url = fmt.Sprintf("https://%s", url)
-
-        tr := &http.Transport{
-            TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-        }
-	client := &http.Client{Transport: tr}
-	// Convert the req to json
-	jsonStr, err := json.Marshal(req)
-	if err != nil {
-		log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
-		return nil, "", err
-	}
-
-	request, err := http.NewRequest(http.MethodPost, url, strings.NewReader(string(jsonStr)))
-	if err != nil {
-		log.Errorf("Error during http POST. Err: %v", err)
-		return nil, "", err
-	}
-	request.Header.Set("Content-Type", "application/json")
-
-	if len(token) > 0 {
-		bearer := fmt.Sprintf("Bearer %s", token)
-		request.Header.Set("Authorization", bearer)
-	}
-
-	log.Info("Common | HTTP POST | Posting %v to %v", string(jsonStr), url)
-	log.Infof("HTTP HEADERS: %v", request.Header)
-	res, err := client.Do(request)
-	if err != nil {
-		log.Errorf("Error during http POST. Err: %v", err)
-		return nil, "", err
-	}
-
-	// Read the entire response
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Errorf("Error during ioutil readall. Err: %v", err)
-		return res.Cookies(), "", err
-	}
-	defer res.Body.Close()
-
-	response := string(body)
-
-	if res.StatusCode != http.StatusOK {
-		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-		return res.Cookies(), response, fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-	}
-	return res.Cookies(), response, nil
-}
-// HTTPPost performs http POST operation
-func HTTPPost(url, token string, req interface{}) ([]*http.Cookie, string, error) {
-	// Prepend URL
-	url = fmt.Sprintf("http://%s", url)
-
+func httpOp(url, method, token string, req interface{}) ([]*http.Cookie, string, error) {
 	client := &http.Client{}
-	// Convert the req to json
-	jsonStr, err := json.Marshal(req)
-	if err != nil {
-		log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
-		return nil, "", err
+	if strings.HasPrefix(url, "https") {
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
 	}
 
-	request, err := http.NewRequest(http.MethodPost, url, strings.NewReader(string(jsonStr)))
-	if err != nil {
-		log.Errorf("Error during http POST. Err: %v", err)
-		return nil, "", err
-	}
-	request.Header.Set("Content-Type", "application/json")
-
-	if len(token) > 0 {
-		bearer := fmt.Sprintf("Bearer %s", token)
-		request.Header.Set("Authorization", bearer)
-	}
-
-	log.Infof("Common | HTTP POST | Posting %v to %v", string(jsonStr), url)
-	log.Infof("HTTP HEADERS: %v", request.Header)
-	res, err := client.Do(request)
-	if err != nil {
-		log.Errorf("Error during http POST. Err: %v", err)
-		return nil, "", err
-	}
-
-	// Read the entire response
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Errorf("Error during ioutil readall. Err: %v", err)
-		return res.Cookies(), "", err
-	}
-	defer res.Body.Close()
-
-	response := string(body)
-
-	if res.StatusCode != http.StatusOK {
-		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-		return res.Cookies(), response, fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-	}
-	return res.Cookies(), response, nil
-}
-
-// HTTPGet fetches json object from an http get request
-func HTTPGet(url, token string, req interface{}) (string, error) {
-
-	url = fmt.Sprintf("http://%s", url)
-
-	client := &http.Client{}
-	// Convert the req to json
-	jsonStr, err := json.Marshal(req)
-	if err != nil {
-		log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
-		return "", err
-	}
-
-	request, err := http.NewRequest(http.MethodGet, url, strings.NewReader(string(jsonStr)))
-	if err != nil {
-		log.Errorf("Error during http POST. Err: %v", err)
-		return "", err
-	}
-	request.Header.Set("Content-Type", "application/json")
-
-	if len(token) > 0 {
-		bearer := fmt.Sprintf("Bearer %s", token)
-		request.Header.Set("Authorization", bearer)
-	}
-
-	res, err := client.Do(request)
-	if err != nil {
-		log.Errorf("Error during http POST. Err: %v", err)
-		return "", err
-	}
-
-	// Read the entire response
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Errorf("Error during ioutil readall. Err: %v", err)
-		return "", err
-	}
-	defer res.Body.Close()
-
-	response := string(body)
-
-	if res.StatusCode != http.StatusOK {
-		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-		return response, fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-	}
-	return response, nil
-}
-
-// HTTPPut provides wrapper for http PUT operations.
-func HTTPPut(url, token string, req interface{}) (string, error) {
-	// Prepend URL
-	url = fmt.Sprintf("http://%s", url)
-
-	client := &http.Client{}
-	// Convert the req to json
-	jsonStr, err := json.Marshal(req)
-	if err != nil {
-		log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
-		return "", err
-	}
-
-	request, err := http.NewRequest(http.MethodPut, url, strings.NewReader(string(jsonStr)))
-	if err != nil {
-		log.Errorf("Error during http PUT. Err: %v", err)
-	}
-
-	if len(token) > 0 {
-		bearer := fmt.Sprintf("Bearer %s", token)
-		request.Header.Set("Authorization", bearer)
-	}
-
-	request.Header.Set("Content-Type", "application/json")
-	res, err := client.Do(request)
-
-	if err != nil {
-		log.Errorf("Error during http PUT. Err: %v", err)
-		return "", err
-	}
-
-	// Read the entire response
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Errorf("Error during ioutil readall. Err: %v", err)
-		return "", err
-	}
-	defer res.Body.Close()
-
-	response := string(body)
-
-	if res.StatusCode != http.StatusOK {
-		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-		return response, fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-	}
-	return response, nil
-}
-
-// HTTPDelete provides wrapper for http DELETE operations.
-func HTTPDelete(url, token string, req interface{}, resp interface{}) (string, error) {
-	// Prepend URL
-	url = fmt.Sprintf("http://%s", url)
-
-	client := &http.Client{}
 	jsonStr := []byte{}
 	var err error
 	if req != nil {
@@ -261,13 +65,14 @@ func HTTPDelete(url, token string, req interface{}, resp interface{}) (string, e
 		jsonStr, err = json.Marshal(req)
 		if err != nil {
 			log.Errorf("Error converting request data(%#v) to Json. Err: %v", req, err)
-			return "", err
+			return nil, "", err
 		}
 	}
 
-	request, err := http.NewRequest(http.MethodDelete, url, strings.NewReader(string(jsonStr)))
+	request, err := http.NewRequest(method, url, strings.NewReader(string(jsonStr)))
 	if err != nil {
-		log.Errorf("Error during http DELETE. Err: %v", err)
+		log.Errorf("Error during http %s. Err: %v", method, err)
+		return nil, "", err
 	}
 	if len(token) > 0 {
 		bearer := fmt.Sprintf("Bearer %s", token)
@@ -278,15 +83,15 @@ func HTTPDelete(url, token string, req interface{}, resp interface{}) (string, e
 	res, err := client.Do(request)
 
 	if err != nil {
-		log.Errorf("Error during http DELETE. Err: %v", err)
-		return "", err
+		log.Errorf("Error during http %s. Err: %v", method, err)
+		return nil, "", err
 	}
 
 	// Read the entire response
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Errorf("Error during ioutil readall. Err: %v", err)
-		return "", err
+		return nil, "", err
 	}
 	defer res.Body.Close()
 
@@ -294,9 +99,62 @@ func HTTPDelete(url, token string, req interface{}, resp interface{}) (string, e
 
 	if res.StatusCode != http.StatusOK {
 		log.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
-		return response, fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
+		return nil, response, fmt.Errorf("HTTP error response. Status: %s, StatusCode: %d", res.Status, res.StatusCode)
 	}
-	return response, nil
+	return res.Cookies(), response, nil
+
+}
+
+// HTTPSPost performs http POST operation
+func HTTPSPost(url, token string, req interface{}) ([]*http.Cookie, string, error) {
+	// Prepend URL
+	url = fmt.Sprintf("https://%s", url)
+
+	return httpOp(http.MethodPost, url, token, req)
+}
+
+// HTTPPost performs http POST operation
+func HTTPPost(url, token string, req interface{}) ([]*http.Cookie, string, error) {
+	// Prepend URL
+	url = fmt.Sprintf("http://%s", url)
+
+	return httpOp(http.MethodPost, url, token, req)
+}
+
+// HTTPGet fetches json object from an http get request
+func HTTPGet(url, token string, req interface{}) (string, error) {
+	// Prepend URL
+	url = fmt.Sprintf("http://%s", url)
+
+	_, response, err := httpOp(http.MethodGet, url, token, req)
+	return response, err
+}
+
+// HTTPSPut performs https PUT operation
+func HTTPSPut(url, token string, req interface{}) (string, error) {
+	// Prepend URL
+	url = fmt.Sprintf("https://%s", url)
+
+	_, response, err := httpOp(http.MethodPut, url, token, req)
+	return response, err
+}
+
+// HTTPPut provides wrapper for http PUT operations.
+func HTTPPut(url, token string, req interface{}) (string, error) {
+	// Prepend URL
+	url = fmt.Sprintf("http://%s", url)
+
+	_, response, err := httpOp(http.MethodPut, url, token, req)
+	return response, err
+}
+
+// HTTPDelete provides wrapper for http DELETE operations.
+func HTTPDelete(url, token string, req interface{}, resp interface{}) (string, error) {
+	// Prepend URL
+	url = fmt.Sprintf("http://%s", url)
+
+	_, response, err := httpOp(http.MethodDelete, url, token, req)
+	return response, err
 }
 
 //WaitForSvcUp performs a get on the URL and waits till the service is up
