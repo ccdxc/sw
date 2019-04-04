@@ -77,10 +77,7 @@ rnr_retry_count:
     bbne        K_RNR_RETRY_COUNT_VALID, 1, pmtu
     nop
 
-    //TODO: For now keep default retry count of 7 (infinite retries) until
-    //data path starts supporting.
-
-    //tblwr     d.rnr_retry_count, K_RNR_RETRY_COUNT
+    tblwr     d.rnr_retry_count, K_RNR_RETRY_COUNT
 
 pmtu:
     bbne        CAPRI_KEY_FIELD(IN_P , pmtu_valid), 1, access_flags

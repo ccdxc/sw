@@ -384,7 +384,7 @@ create_qp:
 
     //infinite  retries                 
     phvwr.c3    p.sqcb1.credits, 0x1F
-    phvwr.c3    p.{sqcb1.err_retry_count, sqcb1.rnr_retry_count}, (0x7<<3|0x7)
+    phvwr.c3    p.{sqcb1.err_retry_count, sqcb1.rnr_retry_count}, (0x4<<3|0x4)
     phvwr       p.sqcb1.sqcb1_priv_oper_enable, d.qp.privileged
 
     phvwr       p.sqcb1.log_sqwqe_size, d.qp.sq_stride_log2[4:0]
@@ -404,7 +404,7 @@ create_qp:
     phvwr.c3        p.sqcb2.disable_credits, 0
 #endif
     phvwr.!c3       p.sqcb2.disable_credits, 1
-    phvwrpair.c3    p.{sqcb2.err_retry_ctr, sqcb2.rnr_retry_ctr}, (0x7<<4|0x7), p.sqcb2.lsn, 0
+    phvwrpair.c3    p.{sqcb2.err_retry_ctr, sqcb2.rnr_retry_ctr}, (0x4<<4|0x4), p.sqcb2.lsn, 0
     phvwrpair       p.sqcb2.lsn_tx, 0, p.sqcb2.lsn_rx, 0
     phvwr.c3        p.sqcb2.local_ack_timeout, 0xE
 
