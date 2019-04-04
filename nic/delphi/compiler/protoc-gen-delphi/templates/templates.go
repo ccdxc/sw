@@ -201,8 +201,8 @@ typedef struct {{.GetName | ToLower}}_ {
 // {{.GetName}} class
 class {{.GetName}} : public delphi::metrics::DelphiMetrics {
 private:
-    char                          *shm_ptr_;
-    uint64_t                      pal_addr_;
+    char                          *shm_ptr_ = NULL;
+    uint64_t                      pal_addr_ = 0;
     {{if (.HasExtOption "delphi.singleton")}}
 	uint32_t                            key_ = 0;
     {{end}}
@@ -236,22 +236,22 @@ public:
     string DebugString();
     static {{.GetName}}Iterator Iterator();
     void * Raw() { return shm_ptr_; };
-	static delphi::error  CreateTable();
+    static delphi::error  CreateTable();
 
     {{if (.HasExtOption "delphi.singleton")}}
-	{{$msgName}}(char *ptr);
-        {{$msgName}}(uint64_t pal_addr);
-	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(vptr){ };
-	{{$msgName}}(char *kptr, uint64_t pal_addr) : {{$msgName}}(pal_addr){ };
+    {{$msgName}}(char *ptr);
+    {{$msgName}}(uint64_t pal_addr);
+    {{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(vptr){ };
+    {{$msgName}}(char *kptr, uint64_t pal_addr) : {{$msgName}}(pal_addr){ };
+    ~{{$msgName}}();
     uint32_t GetKey() { return 0; };
       {{if $msg.HasExtOption "delphi.datapath_metrics" }}
     static {{$msgName}}Ptr New{{$msgName}}(uint64_t pal_addr);
       {{else}}
     static {{$msgName}}Ptr New{{$msgName}}();
       {{end}}
-	static delphi::error Publish({{$msgName | ToLower}}_t *mptr);
-	static {{$msgName}}Ptr Find();
-        static void Release({{$msgName}}Ptr ptr);
+    static delphi::error Publish({{$msgName | ToLower}}_t *mptr);
+    static {{$msgName}}Ptr Find();
     {{end}}
     {{$fields := .Fields}}
     {{range $fields}}
@@ -267,29 +267,29 @@ public:
     }
     {{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(get{{.GetCppTypeName}}FromPtr(kptr), vptr){ };
     {{$msgName}}(char *kptr, uint64_t pal_addr) : {{$msgName}}(get{{.GetCppTypeName}}FromPtr(kptr), pal_addr){ };
+    ~{{$msgName}}();
     {{$pkgName}}::{{.GetCppTypeName}} GetKey() { return key_; };
           {{if $msg.HasExtOption "delphi.datapath_metrics" }}
     static {{$msgName}}Ptr New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key, uint64_t pal_addr);
           {{else}}
     static {{$msgName}}Ptr New{{$msgName}}({{$pkgName}}::{{.GetCppTypeName}} key);
           {{end}}
-	static delphi::error Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr);
-	static {{$msgName}}Ptr Find({{$pkgName}}::{{.GetCppTypeName}} key);
-        static void Release({{$msgName}}Ptr ptr);
+    static delphi::error Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr);
+    static {{$msgName}}Ptr Find({{$pkgName}}::{{.GetCppTypeName}} key);
         {{else}}
     {{$msgName}}({{.GetCppTypeName}} key, char *ptr);
     {{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr);
-	{{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(*({{.GetCppTypeName}} *)kptr, vptr){ };
-	{{$msgName}}(char *kptr, uint64_t pal_addr) : {{$msgName}}(*({{.GetCppTypeName}} *)kptr, pal_addr){ };
+    {{$msgName}}(char *kptr, char *vptr) : {{$msgName}}(*({{.GetCppTypeName}} *)kptr, vptr){ };
+    {{$msgName}}(char *kptr, uint64_t pal_addr) : {{$msgName}}(*({{.GetCppTypeName}} *)kptr, pal_addr){ };
+    ~{{$msgName}}();
     {{.GetCppTypeName}} GetKey() { return key_; };
           {{if $msg.HasExtOption "delphi.datapath_metrics" }}
     static {{$msgName}}Ptr New{{$msgName}}({{.GetCppTypeName}} key, uint64_t pal_addr);
           {{else}}
     static {{$msgName}}Ptr New{{$msgName}}({{.GetCppTypeName}} key);
           {{end}}
-	static delphi::error Publish({{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr);
-	static {{$msgName}}Ptr Find({{.GetCppTypeName}} key);
-        static void Release({{$msgName}}Ptr ptr);
+    static delphi::error Publish({{.GetCppTypeName}} key, {{$msgName | ToLower}}_t *mptr);
+    static {{$msgName}}Ptr Find({{.GetCppTypeName}} key);
         {{end}}
       {{end}}
 
@@ -717,14 +717,14 @@ delphi::error {{$msgName}}::Publish({{$msgName | ToLower}}_t *mptr) {
       {{end}}
 }
 
-// Release release the metrics object memory
-void {{$msgName}}::Release({{$msgName}}Ptr ptr) {
+// {{$msgName}} destructor
+{{$msgName}}::~{{$msgName}}() {
     // get the shared memory object
     delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
     assert(shm != NULL);
 
     delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
-    tbl->Release(ptr->Raw());
+    if (shm_ptr_ != NULL) tbl->Release(shm_ptr_);
 }
 
     {{end}}
@@ -776,14 +776,14 @@ delphi::error {{$msgName}}::Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$ms
           {{end}}
 }
 
-// Release release the metrics object memory
-void {{$msgName}}::Release({{$msgName}}Ptr ptr) {
+// {{$msgName}} destructor
+{{$msgName}}::~{{$msgName}}() {
     // get the shared memory object
     delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
     assert(shm != NULL);
 
     delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
-    tbl->Release(ptr->Raw());
+    if (shm_ptr_ != NULL) tbl->Release(shm_ptr_);
 }
 
         {{else}}
@@ -828,14 +828,14 @@ delphi::error {{$msgName}}::Publish({{.GetCppTypeName}} key, {{$msgName | ToLowe
           {{end}}
 }
 
-// Release release the metrics object memory
-void {{$msgName}}::Release({{$msgName}}Ptr ptr) {
+// {{$msgName}} destructor
+{{$msgName}}::~{{$msgName}}() {
     // get the shared memory object
     delphi::shm::DelphiShmPtr shm = DelphiMetrics::GetDelphiShm();
     assert(shm != NULL);
 
     delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
-    tbl->Release(ptr->Raw());
+    if (shm_ptr_ != NULL) tbl->Release(shm_ptr_);
 }
 
         {{end}} 
