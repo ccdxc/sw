@@ -820,7 +820,7 @@ ionic_en_uplink_tx(vmk_AddrCookie driver_data,                    // IN
         struct ionic_en_priv_data *priv_data =
                 (struct ionic_en_priv_data *) driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle; 
-        vmk_Bool is_last_pkt;
+        vmk_PktHandle *last_one;
 
         VMK_PKTLIST_ITER_STACK_DEF(iter);
         vmk_PktListIterStart(iter, pkt_list);
@@ -830,6 +830,8 @@ ionic_en_uplink_tx(vmk_AddrCookie driver_data,                    // IN
                 return VMK_OK;
         }
  
+        last_one = vmk_PktListGetLastPkt(pkt_list);
+
         /*   
          * Per vmk_UplinkTxCB,
          *   All packets in pktList are guaranteed to have same TX queue
@@ -845,26 +847,24 @@ ionic_en_uplink_tx(vmk_AddrCookie driver_data,                    // IN
                 goto tx_ring_err;
         }
  
-        do {
+        while (vmk_PktListIterIsAtEnd(iter) != VMK_TRUE) {
                 vmk_PktListIterRemovePkt(iter, &pkt);
 
                 /* Debug if pkt is not valid */
                 VMK_ASSERT(pkt);
                 VMK_ASSERT(vmk_PktQueueIDGet(pkt) == vmk_qid);
 
-                is_last_pkt = vmk_PktListIterIsAtEnd(iter);
-
                 status = ionic_start_xmit(pkt,
                                           uplink_handle,
                                           tx_ring,
-                                          is_last_pkt);
+                                          (last_one == pkt));
                 if (status == VMK_BUSY) {
                         status = vmk_PktListIterInsertPktBefore(iter, pkt);
                         VMK_ASSERT(status == VMK_OK);
                         status = VMK_BUSY;
                         break;
                 }
-        } while(!is_last_pkt);
+        }
 
         return status;
 
