@@ -126,7 +126,7 @@ using std::chrono::seconds;
 
 namespace iris {
 
-#define HAL_GRPC_API_TIMEOUT 10     /* Secs */
+#define HAL_GRPC_API_TIMEOUT 25     /* Secs */
 
 #define CREATE_API(obj_api, obj_class)                                      \
     Status obj_api ## _create(obj_class ## RequestMsg& req_msg,             \

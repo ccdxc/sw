@@ -420,9 +420,10 @@ message ThreadResponseMsg {
 }
 
 enum TraceLevel {
-  TRACE_LEVEL_NONE  = 0;    // no tracing at all
-  TRACE_LEVEL_ERROR = 1;    // enable tracing only for error messages
-  TRACE_LEVEL_DEBUG = 2;    // enable tracing only for debug messages
+  TRACE_LEVEL_NONE    = 0;    // no tracing at all
+  TRACE_LEVEL_ERROR   = 1;    // enable tracing only for error messages
+  TRACE_LEVEL_DEBUG   = 2;    // enable tracing only for debug messages
+  TRACE_LEVEL_VERBOSE = 3;    // enable tracing for verbose messages  
 }
 
 message TraceSpec {

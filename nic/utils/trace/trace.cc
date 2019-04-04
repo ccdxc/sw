@@ -30,6 +30,9 @@ log::trace_level_to_spdlog_level(trace_level_e level) {
     case trace_debug:
         return spdlog::level::debug;
 
+    case trace_verbose:
+        return spdlog::level::trace;
+
     default:
         return spdlog::level::off;
     }

@@ -668,7 +668,7 @@ add_nwsec_rule_to_db (nwsec_policy_t *policy, nwsec_rule_t *rule, int rule_index
 
     nwsec_rulelist_t *rulelist = nwsec_rulelist_lookup_by_key(policy, rule->rule_id); 
     if (rulelist == NULL) {
-        HAL_TRACE_DEBUG("Create rule list:{}", rule->rule_id);
+        HAL_TRACE_VERBOSE("Create rule list:{}", rule->rule_id);
         rulelist = nwsec_rulelist_alloc_init();
         rulelist->rule_id = rule->rule_id;
         ret = add_nwsec_rulelist_to_db(policy, rulelist, rule_index);
@@ -1049,7 +1049,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
             rule->fw_rule_action.alg = app.alg();
             rule->fw_rule_action.idle_timeout = app.idle_timeout();
             union hal::alg_options::opt_ *opt = &rule->fw_rule_action.app_options.opt;
-            HAL_TRACE_DEBUG("Policy_rules::rule_id {} has_app_data: {} idle timeout: {}", rule->rule_id, spec.action().has_app_data(), rule->fw_rule_action.idle_timeout);
+            HAL_TRACE_VERBOSE("Policy_rules::rule_id {} has_app_data: {} idle timeout: {}", rule->rule_id, spec.action().has_app_data(), rule->fw_rule_action.idle_timeout);
             if (app.AppOptions_case() == AppData::kFtpOptionInfo) {
                 opt->ftp_opts.allow_mismatch_ip_address = app.ftp_option_info().allow_mismatch_ip_address(); 
             } else if (app.AppOptions_case() == AppData::kDnsOptionInfo) {
@@ -1069,7 +1069,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
                         __str_to_uuid((char *)app.msrpc_option_info().data(idx).program_id().c_str(), 
                                       opt->msrpc_opts.uuids[idx].uuid);
                         opt->msrpc_opts.uuids[idx].timeout = app.msrpc_option_info().data(idx).idle_timeout();
-                        HAL_TRACE_DEBUG("timeout: {}",  opt->msrpc_opts.uuids[idx].timeout);
+                        HAL_TRACE_VERBOSE("timeout: {}",  opt->msrpc_opts.uuids[idx].timeout);
                     }
                 }
             } else if (app.AppOptions_case() == AppData::kSunRpcOptionInfo) {
@@ -1082,7 +1082,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
                          opt->sunrpc_opts.program_ids[idx].program_id = strtoul(\
                                        app.sun_rpc_option_info().data(idx).program_id().c_str(), NULL, 10);
                          opt->sunrpc_opts.program_ids[idx].timeout = app.sun_rpc_option_info().data(idx).idle_timeout();
-                         HAL_TRACE_DEBUG("Program id: {} timeout: {}", opt->sunrpc_opts.program_ids[idx].program_id, 
+                         HAL_TRACE_VERBOSE("Program id: {} timeout: {}", opt->sunrpc_opts.program_ids[idx].program_id, 
                                                                         opt->sunrpc_opts.program_ids[idx].timeout);
                     }
                 }
@@ -1106,7 +1106,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
 
     nwsec_policy_appid_t* nwsec_plcy_appid = NULL;
     uint32_t apps_sz = spec.appid_size();
-    HAL_TRACE_DEBUG("Policy_rules::rule_id {} AppidSize {}", rule->rule_id, apps_sz);
+    HAL_TRACE_VERBOSE("Policy_rules::rule_id {} AppidSize {}", rule->rule_id, apps_sz);
     for (uint32_t apps_cnt = 0; apps_cnt < apps_sz; apps_cnt++) {
         nwsec_plcy_appid = nwsec_policy_appid_alloc_and_init();
         if (nwsec_plcy_appid == NULL) {

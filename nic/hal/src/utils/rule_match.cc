@@ -176,7 +176,6 @@ rule_match_esp_app_spec_extract (const types::RuleMatch_AppMatch spec,
 {
     const types::RuleMatch_ESPInfo esp_info = spec.esp_info();
     app->esp_spi = esp_info.spi();
-    HAL_TRACE_DEBUG("SPI = {}", app->esp_spi);
     return HAL_RET_OK;
 } 
        
@@ -208,7 +207,6 @@ rule_match_app_spec_extract (const types::RuleMatch& spec, rule_match_t *match)
             return ret;
         }
     } else {
-        HAL_TRACE_ERR("App type not Handled {}", app.App_case());
         match->app.app_type = APP_NONE;
         return HAL_RET_OK;
     }
@@ -410,7 +408,7 @@ alloc_init_rule_ctr(rule_cfg_t *cfg, rule_key_t rule_key)
 
     ctr = (rule_ctr_t *)cfg->rule_ctr_ht->lookup((void *) &rule_key);
     if (ctr != NULL) {
-        HAL_TRACE_DEBUG("found rule ctr for rule key: {}", rule_key);
+        HAL_TRACE_VERBOSE("found rule ctr for rule key: {}", rule_key);
         ref_inc(&ctr->ref_count);
         return ctr;
     }
@@ -781,7 +779,6 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
                                 }
                             } else if ((match->proto == types::IPPROTO_ESP) || (match->proto == types::IPPROTO_NONE)) {
                                 uint32_t spi  = app_match->esp_spi;
-                                HAL_TRACE_DEBUG("spi = {}", spi);
                                 // temp until agent can pass proto esp in spec
                                 if (spi != 0) {
                                     match->proto = types::IPPROTO_ESP;

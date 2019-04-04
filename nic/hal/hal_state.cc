@@ -328,13 +328,13 @@ hal_cfg_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
 
     slab = register_slab(HAL_SLAB_V4ADDR_LIST_ELEM,
                          slab_args={.name="v4addr_list_elem",
-                        .size=(sizeof(hal::addr_list_elem_t) + sizeof(ipv4_range_t)), .num_elements=8,
+                        .size=(sizeof(hal::addr_list_elem_t) + sizeof(ipv4_range_t)), .num_elements=128,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
     slab = register_slab(HAL_SLAB_V6ADDR_LIST_ELEM,
                          slab_args={.name="v6addr_list_elem",
-                        .size=(sizeof(hal::addr_list_elem_t) + sizeof(ipv6_range_t)), .num_elements=8,
+                        .size=(sizeof(hal::addr_list_elem_t) + sizeof(ipv6_range_t)), .num_elements=128,
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 

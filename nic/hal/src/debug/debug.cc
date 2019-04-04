@@ -278,6 +278,9 @@ trace_update (TraceSpec& spec, TraceResponse *rsp)
     } else if (spec.trace_level() == debug::TRACE_LEVEL_DEBUG) {
         utils::g_trace_logger->set_trace_level(::utils::trace_debug);
         rsp->set_trace_level(debug::TRACE_LEVEL_DEBUG);
+    } else if (spec.trace_level() == debug::TRACE_LEVEL_VERBOSE) { 
+        utils::g_trace_logger->set_trace_level(::utils::trace_verbose);
+        rsp->set_trace_level(debug::TRACE_LEVEL_VERBOSE);
     } else {
         utils::g_trace_logger->set_trace_level(::utils::trace_none);
         rsp->set_trace_level(debug::TRACE_LEVEL_NONE);
@@ -303,6 +306,8 @@ trace_get (TraceResponseMsg *rsp)
             response->set_trace_level(debug::TRACE_LEVEL_ERROR);
         } else if (utils::g_trace_logger->trace_level() == ::utils::trace_debug) {
             response->set_trace_level(debug::TRACE_LEVEL_DEBUG);
+        } else if (utils::g_trace_logger->trace_level() == ::utils::trace_verbose) {
+            response->set_trace_level(debug::TRACE_LEVEL_VERBOSE);
         } else {
             response->set_trace_level(debug::TRACE_LEVEL_NONE);
         }
