@@ -1,7 +1,7 @@
 svc_chains:
     - svc_chain:
         idx: 1
-        #description: "Checksum full"
+        name: "Checksum"
         input:
             pattern: aaabbbaaabbb
             len: 'param::inputlen'
@@ -13,6 +13,7 @@ svc_chains:
 svc_chains:
     - svc_chain:
         idx     : 2
+        name    : "Checksumx2Block"
         input   :
             pattern: aaabbbaaabbb
             len: 'param::x2inputlen'
@@ -25,23 +26,33 @@ svc_chains:
 tests:
   - test:
       idx           : 1
+      name          : "Checksum full"
       svc_chains    : 1
       repeat        : 'param::repeat'
       batch_depth   : 'param::batch_depth'
       mode          : 'param::mode'
       validations:
-            - size_compare:
+            - retcode_compare:
                 idx     : 1
+                retcode : 0
+                svc_retcodes: 0
+            - size_compare:
+                idx     : 2
                 file1   : '%chain_id%_chksum_full.bin'
                 val     : 'param::chksum_compare_val1x'
   - test:
       idx           : 2
+      name          : "Checksum per-block"
       svc_chains    : 2
       repeat        : 'param::repeat'
       batch_depth   : 'param::batch_depth'
       mode          : 'param::mode'
       validations:
-            - size_compare:
+            - retcode_compare:
                 idx     : 1
+                retcode : 0
+                svc_retcodes: 0
+            - size_compare:
+                idx     : 2
                 file1   : '%chain_id%_chksum_per_block.bin'
                 val     : 'param::chksum_compare_val2x'

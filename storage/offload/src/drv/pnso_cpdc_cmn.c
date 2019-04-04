@@ -866,7 +866,7 @@ update_batch_tags(struct service_info *svc_info, uint32_t num_tags)
 	else
 		batch_page->bp_tags.bpt_num_chksums += num_tags;
 
-	OSAL_LOG_DEBUG("svc_type: %d page_idx: %u bpt_num_hashes: %u bpt_num_chksums: %u num_tags: %u",
+	OSAL_LOG_DEBUG("svc_type: %d desc_idx: %u bpt_num_hashes: %u bpt_num_chksums: %u num_tags: %u",
 			svc_info->si_type, svc_batch_info->sbi_desc_idx,
 			batch_page->bp_tags.bpt_num_hashes,
 			batch_page->bp_tags.bpt_num_chksums, num_tags);

@@ -32,8 +32,12 @@ tests:
         batch_depth : 'param::batch_depth'
         mode        : 'param::mode'
         validations :
-            - size_compare:
+            - retcode_compare:
                 idx     : 1
+                retcode : 0
+                svc_retcodes: 0
+            - size_compare:
+                idx     : 2
                 file1   : '%chain_id%_hash_full.bin'
                 val     : 'param::hash_compare_val1x'
 
@@ -45,7 +49,11 @@ tests:
         batch_depth : 'param::batch_depth'
         mode        : 'param::mode'
         validations :
-            - size_compare:
+            - retcode_compare:
                 idx     : 1
+                retcode : 0
+                svc_retcodes: 0
+            - size_compare:
+                idx     : 2
                 file1   : '%chain_id%_hash_per_block.bin'
                 val     : 'param::hash_compare_val2x'

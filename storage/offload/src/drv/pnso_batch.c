@@ -198,9 +198,10 @@ out:
 	return err;
 }
 
-static void
+static pnso_error_t
 get_bulk_batch_desc(struct batch_info *batch_info, uint32_t page_idx)
 {
+	pnso_error_t err;
 	struct mem_pool *mpool;
 	struct per_core_resource *pcr;
 
@@ -215,9 +216,20 @@ get_bulk_batch_desc(struct batch_info *batch_info, uint32_t page_idx)
 			cpdc_get_batch_bulk_desc(mpool);
 	}
 
+	if (!batch_info->bi_bulk_desc[page_idx]) {
+		err = ENOMEM;
+		OSAL_LOG_ERROR("failed to obtain batch bulk desc. pcr: 0x " PRIx64 " pool_type: %d page_idx: %d err: %d",
+			(uint64_t) pcr, batch_info->bi_mpool_type, page_idx, err);
+		goto out;
+	}
+
+	err = PNSO_OK;
+
 	OSAL_LOG_DEBUG("obtained batch desc. pcr: 0x" PRIx64 " pool_type: %d page_idx: %d desc: 0x" PRIx64,
 			(uint64_t) pcr, batch_info->bi_mpool_type, page_idx,
 			(uint64_t) batch_info->bi_bulk_desc[page_idx]);
+out:
+	return err;
 }
 
 static void
@@ -435,7 +447,9 @@ add_page(struct batch_info *batch_info)
 	batch_info->bi_pages[page_idx] = batch_page;
 
 	/* get a vector of either CPDC or Crypto bulk desc */
-	get_bulk_batch_desc(batch_info, page_idx);
+	err = get_bulk_batch_desc(batch_info, page_idx);
+	if (err)
+		goto out;
 
 	OSAL_LOG_DEBUG("added new page 0x" PRIx64 " page_idx: %d",
 			(uint64_t) batch_page, page_idx);
@@ -590,7 +604,8 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 			goto out;
 	}
 
-	OSAL_LOG_DEBUG("added all entries batch! num_entries: %d", num_entries);
+	OSAL_LOG_DEBUG("added all entries to batch! num_entries: %d",
+			num_entries);
 	PPRINT_BATCH_INFO(batch_info);
 
 	err = PNSO_OK;
