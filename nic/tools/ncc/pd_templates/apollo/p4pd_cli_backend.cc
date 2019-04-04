@@ -41,6 +41,10 @@
 
 using std::cout;
 
+#define P4CLI_MALLOC(ID, size) malloc(size)
+#define P4CLI_CALLOC(ID, size) calloc(1, size)
+#define P4CLI_FREE(ID, _ptr) free(_ptr)
+
 //::
 //::     tabledict = OrderedDict() # key=table-name
 //::     tableid = start_table_base
@@ -58,11 +62,10 @@ using std::cout;
 p4pd_error_t
 ${api_prefix}_entry_write (uint32_t tableid,
                            uint32_t index,
-                           void     *swkey,
-                           void     *swkey_mask,
-                           void     *actiondata)
+                           void *in_swkey,
+                           void *in_swkey_mask,
+                           void *in_actiondata)
 {
-#if 0
     p4pd_error_t    ret;
     void            *swkey = NULL, *swkey_mask = NULL, *actiondata = NULL;
     uint32_t        hwkey_len = 0, hwkeymask_len = 0, hwactiondata_len = 0;
@@ -81,23 +84,23 @@ ${api_prefix}_entry_write (uint32_t tableid,
         case P4${caps_p4prog}TBL_ID_${caps_tbl_}: /* p4-table '${tbl_}' */
         //::            #endif
         //::            if pddict['tables'][table]['type'] == 'Index' or pddict['tables'][table]['type'] == 'Mpu':
-            actiondata = (void *)(${table}_actiondata_t*)actiondata;
+            actiondata = (void *)(${table}_actiondata_t*)in_actiondata;
             break;
 
         //::            #endif
         //::            if pddict['tables'][table]['type'] == 'Hash' or pddict['tables'][table]['type'] == 'Hash_OTcam':
-            swkey = (void *)((${table}_swkey_t*)swkey);
+            swkey = (void *)((${table}_swkey_t*)in_swkey);
 
-            actiondata = (void *)((${table}_actiondata_t*)actiondata);
+            actiondata = (void *)((${table}_actiondata_t*)in_actiondata);
             break;
 
         //::            #endif
         //::            if pddict['tables'][table]['type'] == 'Ternary':
-            swkey = (void *)((${table}_swkey_t*)swkey);
+            swkey = (void *)((${table}_swkey_t*)in_swkey);
 
-            swkey_mask = (void *)((${table}_swkey_mask_t*)swkey_mask);
+            swkey_mask = (void *)((${table}_swkey_mask_t*)in_swkey_mask);
 
-            actiondata = (void *)((${table}_actiondata_t*)actiondata);
+            actiondata = (void *)((${table}_actiondata_t*)in_actiondata);
             break;
 
         //::            #endif
@@ -107,44 +110,33 @@ ${api_prefix}_entry_write (uint32_t tableid,
             return (P4PD_FAIL);
             break;
     }
-
     p4pd_hwentry_query(tableid, &hwkey_len, &hwkeymask_len, &hwactiondata_len);
-
-    hwkey = new(nothrow) char[(hwkey_len + 7)/8];
-    if (!hwkey) 
-        return P4PD_FAIL;
-
-    hwkeymask = new(nothrow) char[(hwkeymask_len + 7)/8];
-    if (!hwkeymask) {
-        delete[] hwkey;
+    hwkey = P4CLI_CALLOC(MEM_ALLOC_ID_CLI_INFRA, (hwkey_len + 7)/8);
+    if (!hwkey) {
         return P4PD_FAIL;
     }
-
-    memset(hwkey,     0, (hwkey_len     + 7)/8);
-    memset(hwkeymask, 0, (hwkeymask_len + 7)/8);
-
+    hwkeymask = P4CLI_CALLOC(MEM_ALLOC_ID_CLI_INFRA, (hwkeymask_len + 7)/8);
+    if (!hwkeymask) {
+        P4CLI_FREE(MEM_ALLOC_ID_CLI_INFRA, hwkey);
+        return P4PD_FAIL;
+    }
     ret = p4pd_hwkey_hwmask_build(tableid,
                                   swkey,
                                   swkey_mask,
                                   (uint8_t*)hwkey,
                                   (uint8_t*)hwkeymask);
-    if (et != P4PD_SUCCESS) {
-        delete[] hwkey;
-        delete[] hwkeymask;
-        return ret;
+    if (ret != P4PD_SUCCESS) {
+        goto cleanup;
     }
-
     ret = p4pd_global_entry_write(tableid,
                                   index,
                                   (uint8_t*)hwkey,
                                   (uint8_t*)hwkeymask,
                                   actiondata);
-
-    delete[] hwkey;
-    delete[] hwkeymask;
+cleanup:
+    P4CLI_FREE(MEM_ALLOC_ID_CLI_INFRA, hwkey);
+    P4CLI_FREE(MEM_ALLOC_ID_CLI_INFRA, hwkeymask);
     return ret;
-#endif
-    return 0;
 }
 
 #define MAX_RESP_SIZE_FOR_ONE_INDEX      512 /* Max table read response size for 1 index */ 
