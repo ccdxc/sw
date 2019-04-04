@@ -95,12 +95,16 @@ func convertApp(aps *AppState) *netproto.App {
 					MaxMessageLength:         aps.App.Spec.ALG.Dns.MaxMessageLength,
 					QueryResponseTimeout:     aps.App.Spec.ALG.Dns.QueryResponseTimeout,
 				}
+			} else {
+				app.Spec.ALG.DNS = &netproto.DNS{}
 			}
 		case "FTP":
 			if aps.App.Spec.ALG.Ftp != nil {
 				app.Spec.ALG.FTP = &netproto.FTP{
 					AllowMismatchIPAddresses: aps.App.Spec.ALG.Ftp.AllowMismatchIPAddress,
 				}
+			} else {
+				app.Spec.ALG.FTP = &netproto.FTP{}
 			}
 		case "SunRPC":
 			for _, sunrpc := range aps.App.Spec.ALG.Sunrpc {
@@ -110,6 +114,10 @@ func convertApp(aps *AppState) *netproto.App {
 						ProgramIDTimeout: sunrpc.Timeout,
 					})
 			}
+
+			if len(app.Spec.ALG.SUNRPC) == 0 {
+				app.Spec.ALG.SUNRPC = []*netproto.RPC{}
+			}
 		case "MSRPC":
 			for _, msrpc := range aps.App.Spec.ALG.Msrpc {
 				app.Spec.ALG.MSRPC = append(app.Spec.ALG.MSRPC,
@@ -117,6 +125,9 @@ func convertApp(aps *AppState) *netproto.App {
 						ProgramID:        msrpc.ProgramUUID,
 						ProgramIDTimeout: msrpc.Timeout,
 					})
+			}
+			if len(app.Spec.ALG.MSRPC) == 0 {
+				app.Spec.ALG.MSRPC = []*netproto.RPC{}
 			}
 		case "TFTP":
 			app.Spec.ALG.TFTP = &netproto.TFTP{}
