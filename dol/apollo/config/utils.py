@@ -78,10 +78,10 @@ def isDefaultRoute(ippfx):
         return True
     return False
 
-def GetRpcIPAddrFamily(ip_version):
-    if ip_version == IP_VERSION_6:
+def GetRpcIPAddrFamily(ipaddrfamily):
+    if ipaddrfamily == 'IPV6':
         return types_pb2.IP_AF_INET6
-    elif ip_version == IP_VERSION_4:
+    elif ipaddrfamily == 'IPV4':
         return types_pb2.IP_AF_INET
     else:
         return types_pb2.IP_AF_NONE
