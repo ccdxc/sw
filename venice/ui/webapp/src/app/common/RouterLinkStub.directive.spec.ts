@@ -11,9 +11,10 @@ import { Directive, Input, HostListener } from '@angular/core';
  * testingUtility.sendClick(buttons[0]);
  * expect(routerLinks[0].navigatedTo).toBe('../');
  *
+ * Escaping selector linting error since this is only for testing
  */
 @Directive({
-  selector: '[routerLink]',
+  selector: '[routerLink]', // tslint:disable-line
 })
 export class RouterLinkStubDirective {
   @Input('routerLink') linkParams: any;

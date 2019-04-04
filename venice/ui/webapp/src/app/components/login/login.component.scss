@@ -244,13 +244,18 @@
   border-radius: 0px;
   border-color: #fec32f;
   background-color: #fec32f;
-  animation: loginProgress 5s; /* IE 10+, Fx 29+ */
-  -moz-animation: loginProgress 5s infinite; /* Firefox */
-  -webkit-animation: loginProgress 5s infinite; /* Safari and Chrome */
-  -o-animation: loginProgress 5s infinite; /* Opera 12+ */
+  animation: loginProgress 5s;
+  /* IE 10+, Fx 29+ */
+  -moz-animation: loginProgress 5s infinite;
+  /* Firefox */
+  -webkit-animation: loginProgress 5s infinite;
+  /* Safari and Chrome */
+  -o-animation: loginProgress 5s infinite;
+  /* Opera 12+ */
 }
 
 @keyframes loginProgress {
+
   /*  0%   {background:#fec32f;}
     50%  {background:yellow;}
     100%   {background:#fec32f;} */

@@ -105,6 +105,7 @@ $vertical-gutter: 5px;
 .sgpolicy-search-error {
   color: #e57553;
   margin-left: 40px;
+
   div {
     margin-left: 10px;
   }
@@ -145,16 +146,19 @@ $vertical-gutter: 5px;
   left: 0;
   right: 0;
   top: 115px;
-  margin:auto;
+  margin: auto;
+
   button {
     color: #676763 !important;
     background-color: white !important;
     border: solid lightgray 1px;
     border-radius: 30px;
+
     &:hover {
       background: rgba(244, 249, 255, 1) !important;
     }
   }
+
   mat-icon {
     color: #77a746
   }
@@ -169,7 +173,7 @@ $vertical-gutter: 5px;
   right: 0;
   bottom: 0;
   background-color: rgba(255, 255, 255, 0.6);
-  z-index:10;
+  z-index: 10;
 }
 
 .sgpolicy-overlay-content {
@@ -185,7 +189,7 @@ $vertical-gutter: 5px;
   background: url("/assets/images/icons/security/icon-security-policy-missing.svg") center center no-repeat;
   background-size: contain;
 }
-  
+
 .sgpolicy-overlay-text {
   @include primary-font(45px, #676763, 600);
   text-align: center;

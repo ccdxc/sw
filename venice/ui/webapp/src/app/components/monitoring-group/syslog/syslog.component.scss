@@ -4,36 +4,36 @@ $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
 .syslog-syslog,
-.syslog-font  {
+.syslog-font {
   @include primary-font();
 }
 
 .syslog-format {
-    margin-left: 5px;
-    margin-top: 9px;
-    @include global-mat-radio(12px);
+  margin-left: 5px;
+  margin-top: 9px;
+  @include global-mat-radio(12px);
 }
 
 .syslog-credential-radio {
-    @include global-mat-radio(12px);
+  @include global-mat-radio(12px);
 }
 
 .syslog-override {
-    width: 155px;
+  width: 155px;
 }
 
 .syslog-name,
 .syslog-description {
-    margin: $vertical-gutter $horizontal-gutter;
-    height: 30px !important;
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
 }
 
 .syslog-input {
-    width: 155px;
+  width: 155px;
 }
 
 .syslog-value {
-    margin: $vertical-gutter $horizontal-gutter;
+  margin: $vertical-gutter $horizontal-gutter;
 }
 
 .syslog-testconnectionbutton {
@@ -43,25 +43,27 @@ $vertical-gutter: 5px;
 }
 
 .syslog-fieldtitle {
-    margin: $vertical-gutter $horizontal-gutter;
+  margin: $vertical-gutter $horizontal-gutter;
 }
 
 .syslog-and {
-    white-space: nowrap;
-    margin-top: 2*$vertical-gutter;
-    color: #6ba0e5;
-    display: inline-block;
-    > span:hover {
-        text-decoration: underline;
-        cursor: pointer;
-    }
-    > mat-icon:hover {
-        cursor: pointer;
-    }
+  white-space: nowrap;
+  margin-top: 2*$vertical-gutter;
+  color: #6ba0e5;
+  display: inline-block;
+
+  >span:hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  >mat-icon:hover {
+    cursor: pointer;
+  }
 }
 
 .syslog-group {
-    margin-top: 2*$vertical-gutter;
+  margin-top: 2*$vertical-gutter;
 }
 
 .syslog-divider {

@@ -36,7 +36,7 @@
 }
 
 // Last breadcrumb icon is bolded and is not shown as clickable
-.ui-breadcrumb ul li:last-child > a > span {
+.ui-breadcrumb ul li:last-child>a>span {
   font-weight: 500;
   cursor: auto;
 }
@@ -52,10 +52,12 @@
   padding: 0.1em;
 }
 
-.toolbar-splitbutton .ui-widget.ui-button, .ui-button {
+.toolbar-splitbutton .ui-widget.ui-button,
+.ui-button {
   border: 1px solid #97b8df;
   background: #97b8df;
-  margin-top:1px;
+  margin-top: 1px;
+
   &:hover {
     background: #86a8d7;
   }

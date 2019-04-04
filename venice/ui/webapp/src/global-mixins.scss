@@ -43,6 +43,7 @@
 }
 
 @mixin global-mat-radio($mat-radio-size) {
+
   // Container for radio circles and ripple.
   .mat-radio-container {
     width: $mat-radio-size !important;
@@ -164,6 +165,7 @@
 }
 
 @mixin _tab-label-focus() {
+
   .mat-tab-label:not(.mat-tab-disabled):focus,
   .mat-tab-link:not(.mat-tab-disabled):focus {
     background-color: white;
@@ -177,6 +179,7 @@
     border-bottom: 1px solid white;
   }
 }
+
 /* The following rules customzie primeng widgets UI.  theme.scss includes this mixin.  Once it is stablized, we should move it to web-app-framework */
 @mixin penui-primeng-misc($theme) {
   $matchColor: #6ba0e5;
@@ -224,21 +227,22 @@
     color: #1b1d1f;
   }
 
-  .ui-chips  {
+  .ui-chips {
     @include primary-font(16px);
   }
 
-  .ui-chips  ul.ui-inputtext .ui-chips-token {    
+  .ui-chips ul.ui-inputtext .ui-chips-token {
     background: #86a8d7 !important;
-    color: #ffffff  !important;;
+    color: #ffffff !important;
+    ;
   }
 
-  .ui-chips  .ui-chips-token .ui-chips-token-icon {
+  .ui-chips .ui-chips-token .ui-chips-token-icon {
     right: 10px;
   }
 
-  .ui-chips  .ui-inputtext {
-    padding-left:0px;
+  .ui-chips .ui-inputtext {
+    padding-left: 0px;
   }
 
   .ui-chips :focus {

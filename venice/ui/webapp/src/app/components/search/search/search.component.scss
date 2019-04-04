@@ -1,55 +1,55 @@
-
 .searchwidget .ui-autocomplete-loader {
-    position: relative;
-    right: 0;
-    top: 0px;
-    margin-top: 0px;
-}
-.searchwidget-select-panel-template-item-options-item{
-    cursor: pointer;
-    display:inline-block;
-    width:100%;
+  position: relative;
+  right: 0;
+  top: 0px;
+  margin-top: 0px;
 }
 
-span.searchwidget-select-panel-template-item-options-item:hover{
-    background-color:#186ba0;
-    color:#ffffff
+.searchwidget-select-panel-template-item-options-item {
+  cursor: pointer;
+  display: inline-block;
+  width: 100%;
 }
 
-.searchwidget-select-panel-template-item{
-    cursor: default
+span.searchwidget-select-panel-template-item-options-item:hover {
+  background-color: #186ba0;
+  color: #ffffff
+}
+
+.searchwidget-select-panel-template-item {
+  cursor: default
 }
 
 .searchwidget-autocomplete-token-icon-rmAll {
-    right: 1.4em;
+  right: 1.4em;
 }
 
 .searchwidget-autocomplete-token-icon-search {
-    margin-right:5px;
+  margin-right: 5px;
 }
 
 .searchwidget-autocomplete-token-icon-guided {
-    margin-right:5px;
+  margin-right: 5px;
 }
 
 .searchwidget-panel-separator-hr {
-    margin: 2px;
+  margin: 2px;
 }
 
 .searchwidget .ui-autocomplete-input-token {
-    width:100%;
+  width: 100%;
 }
 
-.searchwidget .ui-autocomplete-input-text{
-    min-width: 500px;
-    font-family: "Fira Sans Condensed"; 
+.searchwidget .ui-autocomplete-input-text {
+  min-width: 500px;
+  font-family: "Fira Sans Condensed";
 }
 
 .searchwidget .searchwidget-multi-selected-item-li {
-    display:none;
+  display: none;
 }
 
-.searchwidget_keyword_label{
+.searchwidget_keyword_label {
   width: 61px;
   height: 20px;
   font-family: "Fira Sans Condensed";
@@ -63,66 +63,64 @@ span.searchwidget-select-panel-template-item-options-item:hover{
 }
 
 .searchwidget-searchsuggestions {
-    font-family: "Fira Sans Condensed" !important ;
+  font-family: "Fira Sans Condensed" !important;
 }
 
 .searchwidget .ui-autocomplete-panel .ui-autocomplete-list {
-    padding: 0.01em 0.2em;
-    font-family: "Fira Sans Condensed"; 
-    font-weight: 400;
+  padding: 0.01em 0.2em;
+  font-family: "Fira Sans Condensed";
+  font-weight: 400;
 }
 
 .searchwidget .ui-autocomplete-panel {
-    top:45px !important; /* force the panel is below the search input box */
+  top: 45px !important;
+  /* force the panel is below the search input box */
 }
 
 .searchwidget .searchwidget-search-keyword-div {
-    border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #eee;
 }
 
-.searchwidget  .searchwidget-search-keyword-button {
-    font-family: "Fira Sans Condensed"; 
-    float: right;
-    height: 24px;
-    font-size: 16px;
-    border-radius: 3px;
-    color: #383838;
-    margin-top:1px;
+.searchwidget .searchwidget-search-keyword-button {
+  font-family: "Fira Sans Condensed";
+  float: right;
+  height: 24px;
+  font-size: 16px;
+  border-radius: 3px;
+  color: #383838;
+  margin-top: 1px;
 }
 
-.searchwidget  .searchwidget-search-keyword-button-icon {
-    font-size: 13px;
-    margin-top: 2px;
+.searchwidget .searchwidget-search-keyword-button-icon {
+  font-size: 13px;
+  margin-top: 2px;
 
 }
 
 .searchwidget_keyword_no_suggestion {
-    font-size: 16px;
-    color: #383838;
+  font-size: 16px;
+  color: #383838;
 }
 
 .searchwidget .ui-autocomplete-token-icon-icon-btn {
-    color: #383838;
+  color: #383838;
 }
 
 .searchwidget .ui-autocomplete-multiple-container.ui-widget.ui-inputtext.ui-state-default.ui-state-focus {
-    border:0px;
-    box-shadow: none;
+  border: 0px;
+  box-shadow: none;
 }
 
-.searchwidget .ui-autocomplete-input-text{
-    border: 0px;
-    color: #222222;
-    transition: .2s;
-    margin-top: 1px;
-    width:100%;
+.searchwidget .ui-autocomplete-input-text {
+  border: 0px;
+  color: #222222;
+  transition: .2s;
+  margin-top: 1px;
+  width: 100%;
 
 }
 
 .searchwidget .ui-autocomplete-multiple-container {
-    background: transparent ;
-    padding-right: 0px;
+  background: transparent;
+  padding-right: 0px;
 }
-
-
-

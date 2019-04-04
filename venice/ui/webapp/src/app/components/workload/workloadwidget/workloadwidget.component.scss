@@ -165,19 +165,20 @@
 
 .wlWidget-collapsed {
   @include primary-font(18px);
-	text-align: left;
+  text-align: left;
   width: 234px;
   height: 24px;
   margin-top: 20px;
   margin-bottom: 20px;
   margin-left: 20px;
   margin-right: 10px;
+
   &:hover {
     color: #6ba0e5;
   }
 }
 
-.wlWidget-collapsed-container.ng-leave.ng-leave-active{
+.wlWidget-collapsed-container.ng-leave.ng-leave-active {
   height: 0px;
 }
 

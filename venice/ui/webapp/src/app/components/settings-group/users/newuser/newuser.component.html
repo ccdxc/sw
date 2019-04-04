@@ -1,68 +1,76 @@
 <div class="newuser" [formGroup]="newAuthUser.$formGroup">
-    <div fxLayout="row wrap" fxLayoutAlign="start" class="newuser-panel-rolegroup-header-add-row">
-        <div fxFlex="33" fxLayout="column" class="newuser-panel-rolegroup-column">
-            <div fxLayout="row" formGroupName="spec">
-                <div class="newuser-panel-rolegroup-header-add-property-label">Full Name:</div>
-                <div class="newuser-panel-rolegroup-header-add-property-value">
-                    <input fxFlex="200px" formControlName="fullname" class="newuser-input-item newuser-fullname" spellcheck="false" type="text"
-                        pInputText placeholder="Full Name..." 
-                        app-errorTooltip>
-                </div>
-            </div>
-            <div fxLayout="row" formGroupName="spec">
-                <div class="newuser-panel-rolegroup-header-add-property-label">Email:</div>
-                <div class="newuser-panel-rolegroup-header-add-property-value ">
-                    <input fxFlex="200px" formControlName="email" class="newuser-input-item newuser-email" spellcheck="false" type="email" pInputText
-                        placeholder="Email"
-                        app-errorTooltip>
-                </div>
-            </div>
+  <div fxLayout="row wrap" fxLayoutAlign="start" class="newuser-panel-rolegroup-header-add-row">
+    <div fxFlex="33" fxLayout="column" class="newuser-panel-rolegroup-column">
+      <div fxLayout="row" formGroupName="spec">
+        <div class="newuser-panel-rolegroup-header-add-property-label">Full Name:</div>
+        <div class="newuser-panel-rolegroup-header-add-property-value">
+          <input fxFlex="200px" formControlName="fullname"
+                 class="newuser-input-item newuser-fullname" spellcheck="false" type="text"
+                 pInputText placeholder="Full Name..."
+                 appErrorTooltip>
         </div>
-        <div fxFlex="33" fxLayout="column" class="newuser-panel-rolegroup-column">
-            <div fxLayout="row" formGroupName="meta">
-                <div class="newuser-panel-rolegroup-header-add-property-label">Login Name:</div>
-                <div class="newuser-panel-rolegroup-header-add-property-value">
-                    <input fxFlex="200px" formControlName="name" class="newuser-input-item newuser-loginname" spellcheck="false" type="text"
-                        pInputText placeholder="Login Name..."
-                        app-errorTooltip>
-                </div>
-            </div>
-            <div fxLayout="row" formGroupName="spec">
-                <div class="newuser-panel-rolegroup-header-add-property-label">Password:</div>
-                <div class="newuser-panel-rolegroup-header-add-property-value">
-                    <input fxFlex="200px" formControlName="password" class="newuser-input-item newuser-Password" 
-                        spellcheck="false" type="password"
-                        pInputText placeholder="Password..."  app-errorTooltip>
-                </div>
-            </div>
+      </div>
+      <div fxLayout="row" formGroupName="spec">
+        <div class="newuser-panel-rolegroup-header-add-property-label">Email:</div>
+        <div class="newuser-panel-rolegroup-header-add-property-value ">
+          <input fxFlex="200px" formControlName="email" class="newuser-input-item newuser-email"
+                 spellcheck="false" type="email" pInputText
+                 placeholder="Email"
+                 appErrorTooltip>
         </div>
-        <div fxFlex="33" fxLayout="column" class="newuser-panel-rolegroup-column">
-            <div fxLayout="row" formGroupName="spec">
-                <div class="newuser-panel-rolegroup-header-add-property-label">Auth-Type:</div>
-                <div class="newuser-panel-rolegroup-header-add-property-value">
-                    <input fxFlex="200px" formControlName="type" class="newuser-input-item newuser-type" spellcheck="false" type="text" readonly="true" value="LOACL"
-                        pInputText placeholder="LOCAL" >
-                </div>
-            </div>
-            <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start" >
-                <div class="newuser-panel-rolegroup-header-add-property-label">Bind to Role:</div> 
-                <!--ngModel will not work within FormGroup. Thus we use onChange to capture change-->
-                <p-multiSelect class="newuser-rolebinding" fxFlex="200px" styleClass="newuser-rolebinding-select" dataKey="meta.name"               
-                [options]="rolebindingOptions"
-                (onChange)="onRolebindingChange($event)" ></p-multiSelect>
-            </div>
-            
-        </div>
+      </div>
     </div>
-    <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
-            <div fxFlex="nogrow">
-                <button (click)="onCancelAddUser($event)" tabindex="0" (keydown)="($event.which ==13)? onCancelAddUser($event) : ''"
-                    class="global-button-neutral newuser-addnewuser newuser-addnewuser-clear">Cancel</button>
-            </div>
-            <div fxFlex="nogrow">
-                <button (click)="onSaveAddUser($event)" tabindex="0" (keydown)="($event.which ==13)? onSaveAddUser($event) : ''"
-                    class="global-button-primary newuser-addnewuser newuser-addnewuser-save"
-                    [disabled]="!isAllInputsValidated()">Save</button>
-            </div>
+    <div fxFlex="33" fxLayout="column" class="newuser-panel-rolegroup-column">
+      <div fxLayout="row" formGroupName="meta">
+        <div class="newuser-panel-rolegroup-header-add-property-label">Login Name:</div>
+        <div class="newuser-panel-rolegroup-header-add-property-value">
+          <input fxFlex="200px" formControlName="name" class="newuser-input-item newuser-loginname"
+                 spellcheck="false" type="text"
+                 pInputText placeholder="Login Name..."
+                 appErrorTooltip>
+        </div>
+      </div>
+      <div fxLayout="row" formGroupName="spec">
+        <div class="newuser-panel-rolegroup-header-add-property-label">Password:</div>
+        <div class="newuser-panel-rolegroup-header-add-property-value">
+          <input fxFlex="200px" formControlName="password"
+                 class="newuser-input-item newuser-Password"
+                 spellcheck="false" type="password"
+                 pInputText placeholder="Password..." appErrorTooltip>
+        </div>
+      </div>
     </div>
+    <div fxFlex="33" fxLayout="column" class="newuser-panel-rolegroup-column">
+      <div fxLayout="row" formGroupName="spec">
+        <div class="newuser-panel-rolegroup-header-add-property-label">Auth-Type:</div>
+        <div class="newuser-panel-rolegroup-header-add-property-value">
+          <input fxFlex="200px" formControlName="type" class="newuser-input-item newuser-type"
+                 spellcheck="false" type="text" readonly="true" value="LOACL"
+                 pInputText placeholder="LOCAL">
+        </div>
+      </div>
+      <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start">
+        <div class="newuser-panel-rolegroup-header-add-property-label">Bind to Role:</div>
+        <!--ngModel will not work within FormGroup. Thus we use onChange to capture change-->
+        <p-multiSelect class="newuser-rolebinding" fxFlex="200px"
+                       styleClass="newuser-rolebinding-select" dataKey="meta.name"
+                       [options]="rolebindingOptions"
+                       (onChange)="onRolebindingChange($event)"></p-multiSelect>
+      </div>
+
+    </div>
+  </div>
+  <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
+    <div fxFlex="nogrow">
+      <button (click)="onCancelAddUser($event)" tabindex="0"
+              (keydown)="($event.which ==13)? onCancelAddUser($event) : ''"
+              class="global-button-neutral newuser-addnewuser newuser-addnewuser-clear">Cancel</button>
+    </div>
+    <div fxFlex="nogrow">
+      <button (click)="onSaveAddUser($event)" tabindex="0"
+              (keydown)="($event.which ==13)? onSaveAddUser($event) : ''"
+              class="global-button-primary newuser-addnewuser newuser-addnewuser-save"
+              [disabled]="!isAllInputsValidated()">Save</button>
+    </div>
+  </div>
 </div>

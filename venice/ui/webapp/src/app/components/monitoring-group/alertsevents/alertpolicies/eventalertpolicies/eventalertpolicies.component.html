@@ -1,5 +1,5 @@
 <app-tableviewedit fxLayout="column" class="eventalertpolicies-widget"
-                   [creatingMode]="creatingMode" 
+                   [creatingMode]="creatingMode"
                    [showRowExpand]="showRowExpand"
                    [data]="dataObjects"
                    [cols]="cols"
@@ -9,18 +9,18 @@
                    [actionTemplate]="actionTemplate"
                    [expandTemplate]="expandTemplate"
                    [createTemplate]="createTemplate"
-                   (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
-                   >
+                   (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
 </app-tableviewedit>
 
 <ng-template #createTemplate>
-  <app-neweventalertpolicy [destinations]="destinations" (formClose)="creationFormClose()" fxFlex="none" ></app-neweventalertpolicy>
+  <app-neweventalertpolicy [destinations]="destinations" (formClose)="creationFormClose()"
+                           fxFlex="none"></app-neweventalertpolicy>
 </ng-template>
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
   <app-tableheader title="Event Alert Policies" [total]="count" [icon]="headerIcon" width="250px">
-    <div class="eventalertpolicies-search" fxFlex="fxFlex" fxLayoutAlign="start center" >
+    <div class="eventalertpolicies-search" fxFlex="fxFlex" fxLayoutAlign="start center">
       <!-- Lazy render currently doesn't support filtering -->
       <!-- Find Policy by: 
       <mat-form-field fxFlex="nogrow" floatLabel="never">
@@ -33,31 +33,38 @@
 <ng-template #bodyTemplate let-rowData let-col="col">
   <ng-container [ngSwitch]="col.field">
     <ng-container *ngSwitchCase="'spec.severity'">
-        <div fxLayout="row" fxLayoutAlign="start center">
-          <mat-icon *ngIf="rowData.spec.severity === 'CRITICAL'" fxFlex="nogrow" class="eventalertpolicies-icon global-alert-critical-icon">error</mat-icon>
-          <mat-icon *ngIf="rowData.spec.severity === 'WARNING'" fxFlex="nogrow" class="eventalertpolicies-icon global-alert-warning-icon">error</mat-icon>
-          <mat-icon *ngIf="rowData.spec.severity === 'INFO'" fxFlex="nogrow" class="eventalertpolicies-icon global-alert-info-icon">notifications</mat-icon>
-          <div fxFlex="nogrow" style="margin-left: 25px"> {{ severityEnum[rowData.spec.severity] }} </div>
+      <div fxLayout="row" fxLayoutAlign="start center">
+        <mat-icon *ngIf="rowData.spec.severity === 'CRITICAL'" fxFlex="nogrow"
+                  class="eventalertpolicies-icon global-alert-critical-icon">error</mat-icon>
+        <mat-icon *ngIf="rowData.spec.severity === 'WARNING'" fxFlex="nogrow"
+                  class="eventalertpolicies-icon global-alert-warning-icon">error</mat-icon>
+        <mat-icon *ngIf="rowData.spec.severity === 'INFO'" fxFlex="nogrow"
+                  class="eventalertpolicies-icon global-alert-info-icon">notifications</mat-icon>
+        <div fxFlex="nogrow" style="margin-left: 25px"> {{ severityEnum[rowData.spec.severity] }}
         </div>
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'spec.requirements'">
+      <ng-container *ngFor="let req of formatRequirements(rowData)">
+        <span style="display: block">{{req}}</span>
       </ng-container>
-      <ng-container *ngSwitchCase="'spec.requirements'">
-       <ng-container *ngFor="let req of formatRequirements(rowData)">
-         <span style="display: block">{{req}}</span>
-       </ng-container>
-      </ng-container>
-       <ng-container *ngSwitchDefault>
-        {{displayColumn(rowData, col)}}
-       </ng-container>
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      {{displayColumn(rowData, col)}}
+    </ng-container>
   </ng-container>
 </ng-template>
 
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-      <mat-icon matTooltip="Edit policy" class="global-table-action-icon" (click)="expandRowRequest($event, rowData)">edit</mat-icon>
-      <mat-icon matTooltip="Delete policy" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+    <mat-icon matTooltip="Edit policy" class="global-table-action-icon"
+              (click)="expandRowRequest($event, rowData)">edit</mat-icon>
+    <mat-icon matTooltip="Delete policy" class="global-table-action-icon"
+              (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-neweventalertpolicy [policyData]="rowData" [destinations]="destinations" [isInline]="true" (formClose)="closeRowExpand()"></app-neweventalertpolicy>
+  <app-neweventalertpolicy [policyData]="rowData" [destinations]="destinations" [isInline]="true"
+                           (formClose)="closeRowExpand()"></app-neweventalertpolicy>
 </ng-template>

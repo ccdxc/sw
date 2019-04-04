@@ -68,5 +68,5 @@ export class AuthService extends Authv1Service {
     return Utility.getInstance().getTenant();
   }
 
-  
+
 }

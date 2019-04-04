@@ -6,6 +6,7 @@
 
 .ui-toast {
   width: 410px;
+
   .ui-toast-message {
     background: white;
     border: solid 1px #cec5bd;
@@ -31,7 +32,7 @@
   .ui-toast-message-error {
     box-shadow: 0 3px 3px 0 #e57553;
   }
-  
+
   // Hiding the default close icon
   // We will creat our own
   .ui-toast-close-icon {
@@ -58,6 +59,7 @@
 
 .app-ptoast-success {
   color: #77a746;
+
   .app-toast-button {
     background-color: #77a746;
   }
@@ -84,7 +86,8 @@
 .app-toast-button {
   &:active {
     box-shadow: inset 0 0 3px 0 rgba(0, 0, 0, 0.5);
-}
+  }
+
   @include primary-font(14px, white, 500);
   margin-right: 4px;
   cursor: pointer;

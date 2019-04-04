@@ -5,8 +5,9 @@ $vertical-gutter: 5px;
 
 .newflowexportpolicy-container {
   background: white;
+
   &:hover {
-      background: white;
+    background: white;
   }
 }
 
@@ -44,7 +45,7 @@ $vertical-gutter: 5px;
   height: 30px !important;
 }
 
-.newflowexportpolicy-save, 
+.newflowexportpolicy-save,
 .newflowexportpolicy-cancel {
   font-size: 16px;
   display: inline-block;
@@ -54,5 +55,5 @@ $vertical-gutter: 5px;
 }
 
 .newflowexportpolicy-buttoncontainer {
-    margin-top: 1.5 * $vertical-gutter;
+  margin-top: 1.5 * $vertical-gutter;
 }

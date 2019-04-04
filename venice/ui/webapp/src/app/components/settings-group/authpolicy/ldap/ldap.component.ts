@@ -277,12 +277,12 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
   /**
   * This api serves API
   */
-  hasBindConfigError(checkResponse: LDAPCheckResponse): boolean {
+  hasBindConfigError(): boolean {
     const bindCheckResponseError = this.hasConfigErrorHelper(this.ldapBindCheckResponse);
     return (bindCheckResponseError.errors.length > 0);
   }
 
-  hasConnConfigError(checkResponse: LDAPCheckResponse): boolean {
+  hasConnConfigError(): boolean {
     const connCheckResponseError = this.hasConfigErrorHelper(this.ldapConnCheckResponse);
     return (connCheckResponseError.errors.length > 0);
   }
@@ -294,12 +294,12 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     return AuthPolicyUtil.processLDAPCheckResponse(checkResponse);  // invoke index.ts function
   }
 
-  onBindErrorMessageClick($event) {
+  onBindErrorMessageClick() {
     const msgs = this.getErrorMessages(this.ldapBindCheckResponse);
     alert(JSON.stringify(Object.values(msgs)));
   }
 
-  onConnErrorMessageClick($event) {
+  onConnErrorMessageClick() {
     const msgs = this.getErrorMessages(this.ldapConnCheckResponse);
     alert(JSON.stringify(Object.values(msgs)));
   }

@@ -11,9 +11,11 @@
     outline: none;
     border-radius: 2px;
     cursor: pointer;
+
     &:active {
-        box-shadow: inset 0 0 3px 0 rgba(0, 0, 0, 0.5);
+      box-shadow: inset 0 0 3px 0 rgba(0, 0, 0, 0.5);
     }
+
     font-family: 'Fira Sans Condensed';
     font-weight: 500;
     text-align: center;
@@ -49,6 +51,7 @@
   .global-alert-info-icon {
     color: #6ba0e5;
   }
+
   /* Button styling */
   .global-button-disabled {
     pointer-events: none;
@@ -59,41 +62,45 @@
   .global-button {
     @extend %button_base;
   }
-  
-  .global-button-primary {
-      @extend %button_base;
-      background-color: map-get($colorPalette, primary);
-      &:hover {
-        background-color: map-get($colorPalette, primary_hover);
-      }
-  }
-  
-  .global-button-secondary {
-      @extend %button_base;
-      background-color: map-get($colorPalette, secondary);
-      &:hover {
-        background-color: map-get($colorPalette, secondary_hover);
-      }
-  }
-  
-  .global-button-warning {
-      @extend %button_base;
-      background-color: map-get($colorPalette, warning);
-      &:hover {
-        background-color: map-get($colorPalette, warning_hover);
-      }
-  }
-  
-  .global-button-neutral {
-      @extend %button_base;
-      background-color: map-get($colorPalette, neutral);
-      &:hover {
-        background-color: map-get($colorPalette, neutral_hover);
-      }
-  } 
 
-  .penui-table-header-icon{
-      margin-right:5px;
+  .global-button-primary {
+    @extend %button_base;
+    background-color: map-get($colorPalette, primary);
+
+    &:hover {
+      background-color: map-get($colorPalette, primary_hover);
+    }
+  }
+
+  .global-button-secondary {
+    @extend %button_base;
+    background-color: map-get($colorPalette, secondary);
+
+    &:hover {
+      background-color: map-get($colorPalette, secondary_hover);
+    }
+  }
+
+  .global-button-warning {
+    @extend %button_base;
+    background-color: map-get($colorPalette, warning);
+
+    &:hover {
+      background-color: map-get($colorPalette, warning_hover);
+    }
+  }
+
+  .global-button-neutral {
+    @extend %button_base;
+    background-color: map-get($colorPalette, neutral);
+
+    &:hover {
+      background-color: map-get($colorPalette, neutral_hover);
+    }
+  }
+
+  .penui-table-header-icon {
+    margin-right: 5px;
   }
 
   .global-mat-expansion-panel {
@@ -101,14 +108,18 @@
     box-shadow: none !important;
     border-top: solid 1px #dddddd;
     border-bottom: solid 1px #dddddd;
+
     .mat-expansion-panel-content {
       border-top: solid 1px #dddddd;
     }
+
     .mat-expansion-panel-header {
       background: white;
+
       &:focus {
         background: white !important;
       }
+
       &:hover {
         background: rgba(244, 249, 255, 1) !important;
       }
@@ -142,6 +153,7 @@
     padding-left: 6px;
     padding-top: 5px;
     cursor: pointer;
+
     &:hover {
       color: black;
       background-color: rgba(black, 0.12);
@@ -153,23 +165,26 @@
   %primeng-table {
     .ui-table {
       .ui-table-caption {
-          background: #ffffff;
+        background: #ffffff;
       }
+
       //Column headers
-      .ui-table-thead > tr > th {
+      .ui-table-thead>tr>th {
         @include primary-font();
-        background-color: #e7e7e3 !important;;
+        background-color: #e7e7e3 !important;
+        ;
         text-align: left;
         // font-size: 14px !important; 
 
-        &:hover, 
+        &:hover,
         &.ui-state-highlight {
           color: #353532 !important;
           background-color: #cfcfcb !important;
         }
       }
+
       // Body
-      .ui-table-tbody > tr {
+      .ui-table-tbody>tr {
         background-color: white;
         color: #767676;
         vertical-align: middle;
@@ -178,14 +193,14 @@
         .global-table-action-icon {
           opacity: 0;
         }
-        
+
         &:hover .global-table-action-icon {
           opacity: 1;
         }
 
 
 
-        > td {
+        >td {
           border-left: none;
           border-right: none;
           text-align: left;
@@ -221,45 +236,50 @@
         }
       }
 
-      .ui-table-tbody > tr {
+      .ui-table-tbody>tr {
         display: flex;
         width: 100%;
+
         &:hover {
           display: table;
         }
 
-        > td {
+        >td {
           // height: 100%;
           padding: 4px 7px;
           height: inherit;
         }
       }
-      .ui-table-tbody > tr:not(.global-rowexpand) {
-        > td  {
+
+      .ui-table-tbody>tr:not(.global-rowexpand) {
+        >td {
           text-overflow: ellipsis;
           vertical-align: top;
         }
-        &:hover > td {
+
+        &:hover>td {
           white-space: normal;
           word-break: break-all;
         }
       }
-      
+
       .ui-chkbox-box.ui-state-default {
-          border: 2px solid #676763;
-          &:hover {
-              border-color: #343434;
-          }
+        border: 2px solid #676763;
+
+        &:hover {
+          border-color: #343434;
+        }
       }
     }
-  } 
+  }
+
   .global-primeng-table {
     @extend %primeng-table;
   }
 
   .global-primeng-table-lazyload {
     @extend %primeng-table;
-    height:100%;
+    height: 100%;
     // .ui-table {
     //   .ui-table-tbody > tr {
     //     display: flex;
@@ -315,7 +335,7 @@
     z-index: 100;
     white-space: nowrap;
   }
-  
+
   .global-error-tooltip {
     background: white;
     outline: #e57553 solid 1px;
@@ -333,5 +353,3 @@
     border-color: #86a8d7;
   }
 }
-
-

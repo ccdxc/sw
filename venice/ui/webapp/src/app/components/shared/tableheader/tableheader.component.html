@@ -1,14 +1,18 @@
 <div fxLayout="row" fxLayoutAlign="start center" class="tableheader-container">
-  <div fxFlex="noshrink" [style.width]="width" class="tableheader-title-container" fxLayout="row" fxLayoutAlign="start center">
-      <mat-icon fxFlex="30px" [ngStyle]="_iconStyles" *ngIf="icon.svgIcon" [svgIcon]="icon.svgIcon" class="tableheader-icon">
-      </mat-icon>
-      <mat-icon fxFlex="30px" [ngStyle]="_iconStyles" *ngIf="icon.matIcon" class="tableheader-icon tableheader-icon-byname">
-          {{icon.matIcon}}
-      </mat-icon>
-    <div *ngIf="count == null && total == null" fxFlex="nogrow" class="tableheader-title" >
+  <div fxFlex="noshrink" [style.width]="width" class="tableheader-title-container" fxLayout="row"
+       fxLayoutAlign="start center">
+    <mat-icon fxFlex="30px" [ngStyle]="_iconStyles" *ngIf="icon.svgIcon" [svgIcon]="icon.svgIcon"
+              class="tableheader-icon">
+    </mat-icon>
+    <mat-icon fxFlex="30px" [ngStyle]="_iconStyles" *ngIf="icon.matIcon"
+              class="tableheader-icon tableheader-icon-byname">
+      {{icon.matIcon}}
+    </mat-icon>
+    <div *ngIf="count == null && total == null" fxFlex="nogrow" class="tableheader-title">
       {{title}}
     </div>
-    <div *ngIf="(count != null && count === total) || (count == null && total != null)" fxFlex="nogrow" class="tableheader-title" >
+    <div *ngIf="(count != null && count === total) || (count == null && total != null)"
+         fxFlex="nogrow" class="tableheader-title">
       <ng-container *ngIf="max != null && total >= max">
         {{title}} (Past {{max | number}})
       </ng-container>
@@ -16,7 +20,7 @@
         {{title}} ({{total | number}})
       </ng-container>
     </div>
-    <div *ngIf="count != null && count !== total" fxFlex="nogrow" class="tableheader-title" >
+    <div *ngIf="count != null && count !== total" fxFlex="nogrow" class="tableheader-title">
       {{title}} ({{count | number}} / {{ total | number }})
     </div>
   </div>

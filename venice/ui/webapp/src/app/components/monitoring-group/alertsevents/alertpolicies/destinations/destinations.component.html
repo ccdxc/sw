@@ -1,5 +1,5 @@
 <app-tableviewedit fxLayout="column" class="destinations-widget"
-                   [creatingMode]="creatingMode" 
+                   [creatingMode]="creatingMode"
                    [showRowExpand]="showRowExpand"
                    [data]="dataObjects"
                    [cols]="cols"
@@ -9,18 +9,17 @@
                    [actionTemplate]="actionTemplate"
                    [expandTemplate]="expandTemplate"
                    [createTemplate]="createTemplate"
-                   (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
-                   >
+                   (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
 </app-tableviewedit>
 
 <ng-template #createTemplate>
-  <app-newdestination (formClose)="creationFormClose()" fxFlex="none" ></app-newdestination>
+  <app-newdestination (formClose)="creationFormClose()" fxFlex="none"></app-newdestination>
 </ng-template>
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
   <app-tableheader title="Destinations" [total]="count" [icon]="headerIcon" width="250px">
-    <div class="destinations-search" fxFlex="fxFlex" fxLayoutAlign="start center" >
+    <div class="destinations-search" fxFlex="fxFlex" fxLayoutAlign="start center">
       <!-- Find destination by: 
       <mat-form-field fxFlex="nogrow" floatLabel="never">
         <input matInput placeholder="Name" (input)="destinationsTurboTable?.filterGlobal($event.target.value, 'contains')">
@@ -37,11 +36,14 @@
 
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon matTooltip="Edit destination" class="global-table-action-icon" (click)="expandRowRequest($event, rowData)">edit</mat-icon>
-    <mat-icon matTooltip="Delete destination" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+    <mat-icon matTooltip="Edit destination" class="global-table-action-icon"
+              (click)="expandRowRequest($event, rowData)">edit</mat-icon>
+    <mat-icon matTooltip="Delete destination" class="global-table-action-icon"
+              (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-newdestination [destinationData]="rowData"  [isInline]="true" (formClose)="closeRowExpand()"></app-newdestination>
+  <app-newdestination [destinationData]="rowData" [isInline]="true" (formClose)="closeRowExpand()">
+  </app-newdestination>
 </ng-template>

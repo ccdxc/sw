@@ -1,23 +1,22 @@
 <app-pagebody class="techsupportrequests" header="Tech Support" [icon]="bodyicon">
   <app-tableviewedit fxLayout="column" class="techsupportrequests-widget"
-                    [creatingMode]="creatingMode" 
-                    [showRowExpand]="showRowExpand"
-                    [data]="dataObjects"
-                    [cols]="cols"
-                    [virtualRowHeight]="48"
-                    [expandedRowData]="expandedRowData"
-                    [captionTemplate]="captionTemplate"
-                    [bodyTemplate]="bodyTemplate"
-                    [actionTemplate]="actionTemplate"
-                    [createTemplate]="createTemplate"
-                    (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
-                    >
+                     [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand"
+                     [data]="dataObjects"
+                     [cols]="cols"
+                     [virtualRowHeight]="48"
+                     [expandedRowData]="expandedRowData"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [actionTemplate]="actionTemplate"
+                     [createTemplate]="createTemplate"
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
   </app-tableviewedit>
 
 </app-pagebody>
 
 <ng-template #createTemplate>
-  <app-newtechsupport (formClose)="creationFormClose()" fxFlex="none" ></app-newtechsupport>
+  <app-newtechsupport (formClose)="creationFormClose()" fxFlex="none"></app-newtechsupport>
 </ng-template>
 
 <ng-template #captionTemplate let-count="count">
@@ -38,7 +37,9 @@
 </ng-template>
 
 <ng-template #actionTemplate let-rowData>
-  <div class="global-column-action-icon-container  global-column-action-icon-container-techsupport_{{rowData.meta.name}}" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon matTooltip="Delete tech-support" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+  <div class="global-column-action-icon-container  global-column-action-icon-container-techsupport_{{rowData.meta.name}}"
+       fxLayout="row" fxLayoutGap="5px">
+    <mat-icon matTooltip="Delete tech-support" class="global-table-action-icon"
+              (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
 </ng-template>

@@ -4,51 +4,58 @@
   </div>
   <div fxFlex class="tableviewedit-tablecontainer">
     <ng-container #table *ngTemplateOutlet="TableTemplate"></ng-container>
-    <div *ngIf="creatingMode || (showRowExpand && disableTableWhenRowExpanded)" class="tableviewedit-overlay"></div>
+    <div *ngIf="creatingMode || (showRowExpand && disableTableWhenRowExpanded)"
+         class="tableviewedit-overlay"></div>
   </div>
 </div>
 
 <ng-template #TableTemplate>
-  <app-lazyrender [data]="data" [rows]="28" [runDoCheck]="runDoCheck" [virtualRowHeight]="virtualRowHeight"
-  [isToFetchDataOnSort]="isToFetchDataOnSort" 
-  (dataUpdate)='dataUpdated()'
-  (lazyLoadEvent)="lazyLoadEvent.emit($event)">
+  <app-lazyrender [data]="data" [rows]="28" [runDoCheck]="runDoCheck"
+                  [virtualRowHeight]="virtualRowHeight"
+                  [isToFetchDataOnSort]="isToFetchDataOnSort"
+                  (dataUpdate)='dataUpdated()'
+                  (lazyLoadEvent)="lazyLoadEvent.emit($event)">
     <p-table [columns]="cols" [sortField]="sortField" [dataKey]="dataKey"
-    [sortOrder]="sortOrder"
-    [compareSelectionBy]="compareSelectionBy"
-      #primengTable
-      class="global-primeng-table-lazyload"  [responsive]="true" 
-      [loading]="tableLoading" [resizableColumns]="true" rowExpandMode="single"
-     >
+             [sortOrder]="sortOrder"
+             [compareSelectionBy]="compareSelectionBy"
+             #primengTable
+             class="global-primeng-table-lazyload" [responsive]="true"
+             [loading]="tableLoading" [resizableColumns]="true" rowExpandMode="single">
 
       <ng-template pTemplate="caption" *ngIf="captionTemplate != null">
-        <ng-container *ngTemplateOutlet="captionTemplate; context {count: displayedItemCount}"></ng-container>
+        <ng-container *ngTemplateOutlet="captionTemplate; context {count: displayedItemCount}">
+        </ng-container>
       </ng-template>
 
       <ng-template pTemplate="header" let-columns>
         <tr>
-          <th *ngFor="let col of cols; let last = last" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" 
-          [style.width]="col.width + '%'"
-          [colSpan]="last && actionTemplate != null ? 2 : 1"
-          >
-            <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
+          <th *ngFor="let col of cols; let last = last"
+              [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class"
+              [style.width]="col.width + '%'"
+              [colSpan]="last && actionTemplate != null ? 2 : 1">
+            <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
+            </app-sorticon>
           </th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-rowData>
-        <tr [ngClass]="expandedRowData ?checkIfSelected(rowData) : ''" [pSelectableRow]="rowData" class="tableviewedit-tr tableviewedit-tr_{{rowData?.meta?.name}}" [style.min-height]="virtualRowHeight + 'px'"
-        (click)="rowClick.emit({event: $event, rowData: rowData})"
-        >
+        <tr [ngClass]="expandedRowData ?checkIfSelected(rowData) : ''" [pSelectableRow]="rowData"
+            class="tableviewedit-tr tableviewedit-tr_{{rowData?.meta?.name}}"
+            [style.min-height]="virtualRowHeight + 'px'"
+            (click)="rowClick.emit({event: $event, rowData: rowData})">
           <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class"
-          [style.width]="last && actionTemplate != null ? col.width - actionWidth + '%' : col.width + '%'">
-            <ng-container *ngTemplateOutlet="bodyTemplate; context: {col: col, $implicit: rowData}"></ng-container>
+              [style.width]="last && actionTemplate != null ? col.width - actionWidth + '%' : col.width + '%'">
+            <ng-container *ngTemplateOutlet="bodyTemplate; context: {col: col, $implicit: rowData}">
+            </ng-container>
           </td>
           <!--
             To assist E2E-UI test, we use rawData to make up td class. 
           -->
-          <td *ngIf="actionTemplate != null" [style.width]="actionWidth + '%'" class="tableviewedit-actiontd tableviewedit-action-icon-{{rowData?.meta?.name}}">
-            <ng-container *ngTemplateOutlet="actionTemplate; context: {$implicit: rowData}"></ng-container>
+          <td *ngIf="actionTemplate != null" [style.width]="actionWidth + '%'"
+              class="tableviewedit-actiontd tableviewedit-action-icon-{{rowData?.meta?.name}}">
+            <ng-container *ngTemplateOutlet="actionTemplate; context: {$implicit: rowData}">
+            </ng-container>
           </td>
         </tr>
       </ng-template>
@@ -56,8 +63,11 @@
       <ng-template pTemplate="rowexpansion" let-rowData let-columns="columns">
         <tr class="global-rowexpand tableviewedit-rowexpand-tr">
           <td [attr.colspan]="actionTemplate != null ? columns.length + 1 : columns.length">
-            <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete.emit($event)" *ngIf="showRowExpand" class="tableviewedit-rowexpand">
-              <ng-container *ngTemplateOutlet="expandTemplate; context: {$implicit: rowData, columns: columns}"></ng-container>
+            <div [@slideInOut] (@slideInOut.done)="rowExpandAnimationComplete.emit($event)"
+                 *ngIf="showRowExpand" class="tableviewedit-rowexpand">
+              <ng-container
+                            *ngTemplateOutlet="expandTemplate; context: {$implicit: rowData, columns: columns}">
+              </ng-container>
             </div>
           </td>
         </tr>

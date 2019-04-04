@@ -104,8 +104,10 @@ export class GenServiceUtility {
           url: url,
           openObserver: {
             next: (v) => {
-              // when the socket connection opens, we save the 
+              // when the socket connection opens, we save the
               // variable that subscribers will be listening too
+               // _output is an internal variable, but is the only way to get the subscriber state.
+              // tslint:disable-next-line
               output = observer._output;
             }
           },
@@ -114,10 +116,10 @@ export class GenServiceUtility {
               // 1. Socket returned 400 error before connection was promoted.
               //    output will be null since openObserer did not run
               // 2. Socket was open and then closed. We check that this closed
-              //    wasn't caused by the UI unsubscribing from the socket by 
+              //    wasn't caused by the UI unsubscribing from the socket by
               //    checking if there are listeners on the output observable
               if (output == null || output.observers.length > 0) {
-                Utility.getInstance().getControllerService().webSocketErrorToaster(url, closeEvent)
+                Utility.getInstance().getControllerService().webSocketErrorToaster(url, closeEvent);
                 output = null;
               }
             }

@@ -12,6 +12,7 @@ import { LazyrenderComponent } from '@app/components/shared/lazyrender/lazyrende
 
 
 import { Subscription } from 'rxjs';
+import { Icon } from '@app/models/frontend/shared/icon.interface';
 
 @Component({
   selector: 'app-securityapps',
@@ -41,6 +42,16 @@ export class SecurityappsComponent extends BaseComponent implements OnInit, OnDe
     },
     url: '/assets/images/icons/security/ico-app-black.svg',
   };
+
+  tableIcon: Icon = {
+    margin: {
+      top: '0px',
+      left: '10px',
+    },
+    matIcon: 'grid_on'
+  };
+
+
   cols: any[] = [
     { field: 'meta.name', header: 'Name', class: 'securityapps-column-metaname', sortable: true },
     { field: 'spec.alg.type', header: 'ALG Type', class: 'securityapps-column-host-name', sortable: false },

@@ -4,50 +4,51 @@ $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
 .newdestination-container {
+  background: white;
+
+  &:hover {
     background: white;
-    &:hover {
-        background: white;
-    }
+  }
 }
 
 .newdestination-border {
-    border-bottom: 6px solid #6ba0e5;
+  border-bottom: 6px solid #6ba0e5;
 }
 
 .newdestination-content {
-    background: white;
-    min-height: 180px;
-    margin-top: 4* $vertical-gutter;
-    @include primary-font();
+  background: white;
+  min-height: 180px;
+  margin-top: 4* $vertical-gutter;
+  @include primary-font();
 }
 
-.newdestination-font  {
-    @include primary-font();
+.newdestination-font {
+  @include primary-font();
 }
 
 .newdestination-row {
-    margin: 0px $horizontal-gutter;
+  margin: 0px $horizontal-gutter;
 }
 
 .newdestination-toggle {
-    margin: 10px;
-    @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+  margin: 10px;
+  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
 }
 
 .newdestination-format {
-    margin-left: 48px;
-    margin-top: 5px;
-    @include global-mat-radio(12px);
+  margin-left: 48px;
+  margin-top: 5px;
+  @include global-mat-radio(12px);
 }
 
 .newdestination-credential-radio {
-    @include global-mat-radio(12px);
+  @include global-mat-radio(12px);
 }
 
 .newdestination-name,
 .newdestination-description {
-    margin: $vertical-gutter $horizontal-gutter;
-    height: 30px !important;
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
 }
 
 .newdestination-host,
@@ -58,28 +59,28 @@ $vertical-gutter: 5px;
 .newdestination-authpassword,
 .newdestination-encryptalgo,
 .newdestination-encryptpassword {
-    width: 155px;
+  width: 155px;
 }
 
 .newdestination-value {
-    margin: $vertical-gutter $horizontal-gutter;
+  margin: $vertical-gutter $horizontal-gutter;
 }
 
 .newdestination-name {
-    margin-left: 0px;
+  margin-left: 0px;
 }
 
-.newdestination-save, 
+.newdestination-save,
 .newdestination-cancel {
-    font-size: 16px;
-    display: inline-block;
-    padding: 4px 10px;
-    line-height: 25px;
-    margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+  font-size: 16px;
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
 }
 
 .newdestination-buttoncontainer {
-    margin-top: 1.5 * $vertical-gutter;
+  margin-top: 1.5 * $vertical-gutter;
 
 }
 
@@ -90,36 +91,38 @@ $vertical-gutter: 5px;
 }
 
 .newdestination-text {
-    margin-top: 2*$vertical-gutter;
-    height: 30px;
+  margin-top: 2*$vertical-gutter;
+  height: 30px;
 }
 
 .newdestination-divider {
-    border-bottom: 1px solid #dddddd;
+  border-bottom: 1px solid #dddddd;
 }
 
 .newdestination-snmp {
-    border-top: 1px solid #dddddd;
+  border-top: 1px solid #dddddd;
 }
 
 .newdestination-fieldtitle {
-    margin: $vertical-gutter $horizontal-gutter;
+  margin: $vertical-gutter $horizontal-gutter;
 }
 
 .newdestination-and {
-    white-space: nowrap;
-    margin-top: 2*$vertical-gutter;
-    color: #6ba0e5;
-    display: inline-block;
-    > span:hover {
-        text-decoration: underline;
-        cursor: pointer;
-    }
-    > mat-icon:hover {
-        cursor: pointer;
-    }
+  white-space: nowrap;
+  margin-top: 2*$vertical-gutter;
+  color: #6ba0e5;
+  display: inline-block;
+
+  >span:hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  >mat-icon:hover {
+    cursor: pointer;
+  }
 }
 
 .newdestination-group {
-    margin-top: 2*$vertical-gutter;
+  margin-top: 2*$vertical-gutter;
 }

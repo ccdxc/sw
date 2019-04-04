@@ -5,8 +5,9 @@ $vertical-gutter: 5px;
 
 .neweventpolicy-container {
   background: white;
+
   &:hover {
-      background: white;
+    background: white;
   }
 }
 
@@ -22,10 +23,10 @@ $vertical-gutter: 5px;
 }
 
 .neweventpolicy-text {
-    margin-top: 2*$vertical-gutter;
-    margin-left: $horizontal-gutter;
-    height: 30px;
-    @include primary-font();
+  margin-top: 2*$vertical-gutter;
+  margin-left: $horizontal-gutter;
+  height: 30px;
+  @include primary-font();
 }
 
 .neweventpolicy-border {
@@ -37,15 +38,15 @@ $vertical-gutter: 5px;
   border-bottom: 1px solid #dddddd;
 }
 
-.neweventpolicy-save, 
+.neweventpolicy-save,
 .neweventpolicy-cancel {
-    font-size: 16px;
-    display: inline-block;
-    padding: 4px 10px;
-    line-height: 25px;
-    margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+  font-size: 16px;
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
 }
 
 .neweventpolicy-buttoncontainer {
-    margin-top: 1.5 * $vertical-gutter;
+  margin-top: 1.5 * $vertical-gutter;
 }

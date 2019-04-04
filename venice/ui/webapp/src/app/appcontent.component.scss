@@ -27,7 +27,7 @@
 .app-shell-header-logo-div .mat-icon-button {
   height: 30px;
   width: 30px;
-  padding:1px 3px;
+  padding: 1px 3px;
   margin: auto 4px auto 1px;
 }
 
@@ -36,12 +36,15 @@
   outline: none !important;
   margin-left: 10px;
   @include primary-font(14px, black);
+
   .mat-button {
     outline: none !important;
+
     .mat-button-focus-overlay {
       background: #676763;
     }
   }
+
   .mat-button:hover {
     .mat-button-focus-overlay {
       opacity: 0.2;
@@ -156,6 +159,7 @@
     box-shadow: 0 0 0 0 rgba(221, 59, 9, 0);
   }
 }
+
 /*----- alert notification icon -----*/
 
 /*====== header left =====*/
@@ -168,9 +172,10 @@ $sidenavWidth: 200px;
 .app-header-logo.navbar-btn {
   margin-right: 45px;
   margin-left: 10px;
-  margin-top:5px;
+  margin-top: 5px;
   margin-bottom: 5pxl;
 }
+
 /*----- header left -----*/
 
 .app-shell-container.mat-drawer-container {
@@ -222,8 +227,8 @@ $sidenavWidth: 200px;
 }
 
 .app-shell-sideNav-right-Settings .mat-icon.material-icons {
-    margin-left: 8px;
-    margin-right: 4px;
+  margin-left: 8px;
+  margin-right: 4px;
 }
 
 .app-shell-build-info {
@@ -238,7 +243,7 @@ $sidenavWidth: 200px;
   margin-left: 10px;
   background: #bfd2eb;
   border-radius: 2px;
-  width:920px;
+  width: 920px;
 }
 
 .app-search-button {
@@ -246,9 +251,8 @@ $sidenavWidth: 200px;
   font-size: 20px;
   padding: 5px;
   margin: 0px -40px 3px 5px;
-} 
+}
 
 
 
 /*-------- Seach --------*/
-

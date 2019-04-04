@@ -8,27 +8,27 @@ $vertical-gutter: 5px;
 }
 
 .matchrule-format {
-    margin-left: 5px;
-    margin-top: 9px;
-    @include global-mat-radio(12px);
+  margin-left: 5px;
+  margin-top: 9px;
+  @include global-mat-radio(12px);
 }
 
 .matchrule-credential-radio {
-    @include global-mat-radio(12px);
+  @include global-mat-radio(12px);
 }
 
 .matchrule-name,
 .matchrule-description {
-    margin: $vertical-gutter $horizontal-gutter;
-    height: 30px !important;
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
 }
 
 .matchrule-input {
-    width: 155px;
+  width: 155px;
 }
 
 .matchrule-value {
-    margin: $vertical-gutter $horizontal-gutter;
+  margin: $vertical-gutter $horizontal-gutter;
 }
 
 .matchrule-testconnectionbutton {
@@ -38,25 +38,27 @@ $vertical-gutter: 5px;
 }
 
 .matchrule-fieldtitle {
-    margin: $vertical-gutter $horizontal-gutter;
+  margin: $vertical-gutter $horizontal-gutter;
 }
 
 .matchrule-and {
-    white-space: nowrap;
-    margin-top: 2*$vertical-gutter;
-    color: #6ba0e5;
-    display: inline-block;
-    > span:hover {
-        text-decoration: underline;
-        cursor: pointer;
-    }
-    > mat-icon:hover {
-        cursor: pointer;
-    }
+  white-space: nowrap;
+  margin-top: 2*$vertical-gutter;
+  color: #6ba0e5;
+  display: inline-block;
+
+  >span:hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  >mat-icon:hover {
+    cursor: pointer;
+  }
 }
 
 .matchrule-group {
-    margin-top: 2*$vertical-gutter;
+  margin-top: 2*$vertical-gutter;
 }
 
 .matchrule-divider {

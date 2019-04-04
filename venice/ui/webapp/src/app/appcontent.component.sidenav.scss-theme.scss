@@ -4,9 +4,10 @@
 
   $sidenav: map-get($theme, sidenav);
   $colorPalette: map-get($theme, colors);
-  
+
   .app-sidenav-item {
     color: map-get($sidenav, text);
+
     i {
       color: white;
     }
@@ -52,10 +53,12 @@
       a:hover {
         background: map-get($sidenav, hover);
       }
+
       ul li a {
         background: map-get($sidenav, nested);
 
-        &.app-sidenav-selected, &:hover {
+        &.app-sidenav-selected,
+        &:hover {
           background: map-get($sidenav, nested_hover);
           color: map-get($colorPalette, primary);
         }
@@ -63,8 +66,3 @@
     }
   }
 }
-
-
-
-
-

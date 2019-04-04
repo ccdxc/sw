@@ -1,6 +1,6 @@
 @import 'src/global-mixins';
 
-.tableheader-container{
+.tableheader-container {
   @include primary-font();
   background: white;
   height: 60px;

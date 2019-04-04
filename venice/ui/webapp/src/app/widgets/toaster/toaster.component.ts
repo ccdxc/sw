@@ -1,5 +1,5 @@
 import { animate, animateChild, query, state, style, transition, trigger } from '@angular/animations';
-import { Component, OnInit, Input, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, Input, ViewEncapsulation, OnDestroy } from '@angular/core';
 import { DomHandler } from 'primeng/primeng';
 import { ToastItem, Toast } from 'primeng/toast';
 import { Utility } from '@app/common/Utility';
@@ -36,7 +36,7 @@ import { Subscription } from 'rxjs';
   ],
   providers: [DomHandler]
 })
-export class ToasterComponent extends Toast {
+export class ToasterComponent extends Toast implements OnInit, OnDestroy {
   removeSubscription: Subscription;
 
   constructor(messageService: MessageService, domHandler: DomHandler) {
@@ -53,7 +53,7 @@ export class ToasterComponent extends Toast {
             m.detail = message.detail;
             return true;
           }
-          return false
+          return false;
         });
         hasMessage = true;
       }
@@ -69,14 +69,13 @@ export class ToasterComponent extends Toast {
   ngOnInit() {
     this.messageSubscription = this.messageService.messageObserver.subscribe(messages => {
       if (messages) {
-        let allMessages = null;
+        const allMessages = null;
         if (messages instanceof Array) {
-          let filteredMessages = messages.filter(m => this.key === m.key);
+          const filteredMessages = messages.filter(m => this.key === m.key);
           filteredMessages.forEach((m) => {
             this.addMessage(m);
-          })
-        }
-        else if (this.key === messages.key) {
+          });
+        } else if (this.key === messages.key) {
           this.addMessage(messages);
         }
 
@@ -91,8 +90,7 @@ export class ToasterComponent extends Toast {
         if (this.key === key) {
           this.messages = null;
         }
-      }
-      else {
+      } else {
         this.messages = null;
       }
 
@@ -107,21 +105,21 @@ export class ToasterComponent extends Toast {
     this.removeSubscription = (<any>this.messageService as MessageService).removeObserver.subscribe((req) => {
       if (this.messages) {
         this.messages = this.messages.filter(m => {
-          if (req.summary == m.summary &&
-            (req.detail == null || req.detail == m.detail)) {
-            return false
+          if (req.summary === m.summary &&
+            (req.detail == null || req.detail === m.detail)) {
+            return false;
           }
-          return true
+          return true;
         });
       }
-    })
+    });
   }
 
   ngOnDestroy() {
     if (this.removeSubscription) {
       this.removeSubscription.unsubscribe();
     }
-    super.ngOnDestroy()
+    super.ngOnDestroy();
   }
 }
 

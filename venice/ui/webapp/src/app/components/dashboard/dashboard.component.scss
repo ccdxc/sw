@@ -25,7 +25,7 @@
 }
 
 .dsbd-gridster {
-  background-color: rgb(242,238,234);
+  background-color: rgb(242, 238, 234);
 }
 
 .dsbd-gridster-item {
@@ -34,7 +34,7 @@
 
 .dsbd-main-gridster-content {
   // as each grid-item is 275x275 ,  there are 6x2 cells and  gridster.option.margin=10,so we set the height as 565px, width=1705px.
-  position: relative; 
+  position: relative;
   padding: 0 10px;
   top: 0px;
   left: 0;
@@ -43,7 +43,7 @@
   height: 565px;
   width: 1705px;
   overflow-y: auto;
-  
+
 }
 
 .dsbd-pinned-gridster-content {
@@ -56,7 +56,7 @@
 
 .dsbd-item-div {
   margin: 0px;
-  height:100%;
+  height: 100%;
 }
 
 .dsbd-main-content .gridster-item-inner {
@@ -67,19 +67,3 @@
   // width: 250;
   height: 100%;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

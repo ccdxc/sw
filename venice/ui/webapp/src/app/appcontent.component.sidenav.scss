@@ -90,7 +90,7 @@
 }
 
 /* When pindown button dismiss SideNav panel. We set SideNav to hide */
-#app-sidebar  nav.pindown {
+#app-sidebar nav.pindown {
   display: none !important;
 }
 
@@ -133,16 +133,16 @@ a[aria-expanded="true"]::before {
   margin-bottom: 5px;
 }
 
-.app-l-side-nav-li{
-  width:24px;
-  height:24px;
+.app-l-side-nav-li {
+  width: 24px;
+  height: 24px;
 }
 
-#app-sidebar.active ul li a .app-l-side-nav-li{ 
-  width:60px;
+#app-sidebar.active ul li a .app-l-side-nav-li {
+  width: 60px;
 }
 
-.app-l-side-nav-cluster{
+.app-l-side-nav-cluster {
   background: url("/assets/images/icons/icon-app-sidenav-cluster.svg") center center no-repeat;
 }
 
@@ -158,11 +158,11 @@ a[aria-expanded="true"]::before {
   background: url("/assets/images/icons/cluster/naples/ico-naples-white.svg") center center no-repeat;
 }
 
-.app-l-side-nav-workload{
+.app-l-side-nav-workload {
   background: url("/assets/images/icons/icon-app-sidenav-workload.svg") center center no-repeat;
 }
 
-.app-l-side-nav-security{
+.app-l-side-nav-security {
   background: url("/assets/images/icons/icon-app-sidenav-security.svg") center center no-repeat;
 }
 
@@ -186,7 +186,7 @@ a[aria-expanded="true"]::before {
   background: url("/assets/images/icons/network/ico-mirror-policy.svg") center center no-repeat;
 }
 
-.app-l-side-nav-monitoring{
+.app-l-side-nav-monitoring {
   background: url("/assets/images/icons/icon-app-sidenav-monitoring.svg") center center no-repeat;
 }
 
@@ -226,9 +226,10 @@ a[aria-expanded="true"]::before {
   background: url("/assets/images/icons/security/ico-app.svg") center center no-repeat;
 }
 
-.app-l-side-nav-monitoring-auditevents {  
+.app-l-side-nav-monitoring-auditevents {
   background: url("/assets/images/icons/monitoring/ic_audit_w.svg") center center no-repeat;
 }
+
 .app-l-side-nav-monitoring-techsupport {
   background: url("/assets/images/icons/monitoring/ic_tech_support_w.svg") center center no-repeat;
 }

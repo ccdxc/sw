@@ -1,19 +1,24 @@
  <div class="searchsuggestion">
-    <ul class="ui-autocomplete-items ui-autocomplete-list ui-widget-content ui-widget ui-corner-all ui-helper-reset" ((mouseover)="onMouseOver($event)" (mouseout)="onMouseOut($event)">
-        <li *ngFor="let option of suggestions; let idx = index" class="searchsuggestion-option-li" tabindex="-1"
-             (mouseenter)="highlightOption=option" 
-            (click)="onOptionClick($event, option)"  
-            [ngClass]="{'searchsuggestion-ui-state-highlight':(highlightOption==option)}"
-            title = "right-arrow key to select"
-            >
-            <div class="searchsuggestion-option-div" >
-                <span >
-                    <span class="searchbox-select-panel-template-item-options-item-init searchbox-select-panel-template-item-options-item-init-name">{{option.name}}</span> 
-                    <span class="searchbox-select-panel-template-item-options-item-init searchbox-select-panel-template-item-options-item-init-labe">{{option.label}}</span> 
-                    <span class="searchbox-select-panel-template-item-options-item-init searchbox-select-panel-template-item-options-item-init-sample">{{option.sample}}</span> 
-                    <span class="searchbox-select-panel-template-item-options-item-init searchbox-select-panel-template-item-options-item-init-count">{{option.count}}</span> 
-                </span>
-            </div>
-        </li>
-    </ul>
-</div>
+   <ul class="ui-autocomplete-items ui-autocomplete-list ui-widget-content ui-widget ui-corner-all ui-helper-reset"
+       ((mouseover)="onMouseOver($event)" (mouseout)="onMouseOut($event)">
+     <li *ngFor="let option of suggestions; let idx = index" class="searchsuggestion-option-li"
+         tabindex="-1"
+         (mouseenter)="highlightOption=option"
+         (click)="onOptionClick($event, option)"
+         [ngClass]="{'searchsuggestion-ui-state-highlight':(highlightOption==option)}"
+         title="right-arrow key to select">
+       <div class="searchsuggestion-option-div">
+         <span>
+           <span
+                 class="searchbox-select-panel-template-item-options-item-init searchbox-select-panel-template-item-options-item-init-name">{{option.name}}</span>
+           <span
+                 class="searchbox-select-panel-template-item-options-item-init searchbox-select-panel-template-item-options-item-init-labe">{{option.label}}</span>
+           <span
+                 class="searchbox-select-panel-template-item-options-item-init searchbox-select-panel-template-item-options-item-init-sample">{{option.sample}}</span>
+           <span
+                 class="searchbox-select-panel-template-item-options-item-init searchbox-select-panel-template-item-options-item-init-count">{{option.count}}</span>
+         </span>
+       </div>
+     </li>
+   </ul>
+ </div>

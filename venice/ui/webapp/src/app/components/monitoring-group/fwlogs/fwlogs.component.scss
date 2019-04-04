@@ -2,6 +2,7 @@
 
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
+
 .fwlogs {
   @include primary-font();
 }
@@ -43,7 +44,7 @@ $vertical-gutter: 5px;
   @include primary-font();
 }
 
-.fwlogs-inputport{
+.fwlogs-inputport {
   width: 100px;
   @include primary-font();
 }

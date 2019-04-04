@@ -87,10 +87,7 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
 
   telemetryKind: string = 'Node';
 
-  alertseventsSelector: AlertsEventsSelector = {
-    eventSelector: 'source.node-name=' + this.selectedId,
-    alertSelector: 'status.source.node-name=' + this.selectedId
-  };
+  alertseventsSelector: AlertsEventsSelector;
 
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute,
@@ -184,8 +181,14 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
           this.selectedObj = this.objList[0];
           this.startMetricPolls();
           this.alertseventsSelector = {
-            eventSelector: 'source.node-name=' + this.selectedId,
-            alertSelector: 'status.source.node-name=' + this.selectedId,
+            eventSelector: {
+              selector: 'source.node-name=' + this.selectedId,
+              name: this.selectedId
+            },
+            alertSelector: {
+              selector: 'status.source.node-name=' + this.selectedId,
+              name: this.selectedId
+            }
           };
         } else {
           // Must have received a delete event.

@@ -1,65 +1,69 @@
 <app-pagebody class="auditevents" header="Audit Events" [icon]="bodyicon">
   <!-- Since we are manually calculating table dimensions, whenever this panel changes
         state we need to recalculate the table -->
-  <mat-expansion-panel #auditeventSearchPanel fxFlex="none" class="global-mat-expansion-panel" [expanded]="true" (closed)="tableWrapper?.lazyRenderWrapper?.resizeTable(501)"
-    (opened)="tableWrapper.lazyRenderWrapper?.resizeTable(501)">
+  <mat-expansion-panel #auditeventSearchPanel fxFlex="none" class="global-mat-expansion-panel"
+                       [expanded]="true"
+                       (closed)="tableWrapper?.lazyRenderWrapper?.resizeTable(501)"
+                       (opened)="tableWrapper.lazyRenderWrapper?.resizeTable(501)">
     <mat-expansion-panel-header class="auditevents-expansionpanel-header">
       <mat-panel-title class="auditevents-summary-panel-header">
         Filter Audit Event
       </mat-panel-title>
       <mat-panel-description>
-          {{currentSearchCriteria}}
-        </mat-panel-description>
+        {{currentSearchCriteria}}
+      </mat-panel-description>
     </mat-expansion-panel-header>
-    <div class="auditevents-summary-panel-content" fxLayout="column" >
-      <div fxLayout="row" fxFlex="nogrow" >
+    <div class="auditevents-summary-panel-content" fxLayout="column">
+      <div fxLayout="row" fxFlex="nogrow">
         <app-fieldselector #fieldRepeater kind="AuditEvent"
-          (repeaterValues)="handleFieldRepeaterData($event)" [formArray]="fieldFormArray">
+                           (repeaterValues)="handleFieldRepeaterData($event)"
+                           [formArray]="fieldFormArray">
         </app-fieldselector>
       </div>
       <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
-          <div fxFlex="nogrow">
-              <button (click)="onCancelAuditSearch($event)" tabindex="0" (keydown)="($event.which ==13)? onCancelAuditSearch($event) : ''"
+        <div fxFlex="nogrow">
+          <button (click)="onCancelAuditSearch($event)" tabindex="0"
+                  (keydown)="($event.which ==13)? onCancelAuditSearch($event) : ''"
                   class="global-button-neutral auditevents-searchbutton auditevents-searchbutton-clear">CANCEL</button>
-          </div>
-          <div fxFlex="nogrow">
-              <button (click)="getAuditevents()" tabindex="0" (keydown)="($event.which ==13)? getAuditevents() : ''"
-                  class="global-button-primary auditevents-searchbutton auditevents-searchbutton-save"
-                  >SEARCH</button>
-          </div>
+        </div>
+        <div fxFlex="nogrow">
+          <button (click)="getAuditevents()" tabindex="0"
+                  (keydown)="($event.which ==13)? getAuditevents() : ''"
+                  class="global-button-primary auditevents-searchbutton auditevents-searchbutton-save">SEARCH</button>
+        </div>
       </div>
     </div>
   </mat-expansion-panel>
 
   <app-tableviewedit fxLayout="column" class="auditevents-widget"
-    [showRowExpand]="showRowExpand"
-    [data]="dataObjects"
-    [cols]="cols"
-    [sortField]="startingSortField"
-    [sortOrder]="startingSortOrder"
-    [tableLoading]="loading"
-    [disableTableWhenRowExpanded]="disableTableWhenRowExpanded"
+                     [showRowExpand]="showRowExpand"
+                     [data]="dataObjects"
+                     [cols]="cols"
+                     [sortField]="startingSortField"
+                     [sortOrder]="startingSortOrder"
+                     [tableLoading]="loading"
+                     [disableTableWhenRowExpanded]="disableTableWhenRowExpanded"
 
-    [runDoCheck]="false"
-    [expandedRowData]="expandedRowData"
-    [captionTemplate]="captionTemplate"
-    [bodyTemplate]="bodyTemplate"
-    [expandTemplate]="expandTemplate"
-    [isToFetchDataOnSort]="true"
-    (lazyLoadEvent)="onTableSort($event)"
-    (rowClick)="onAuditeventsTableRowClick($event)"
-    (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
-    >
-  </app-tableviewedit> 
+                     [runDoCheck]="false"
+                     [expandedRowData]="expandedRowData"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [expandTemplate]="expandTemplate"
+                     [isToFetchDataOnSort]="true"
+                     (lazyLoadEvent)="onTableSort($event)"
+                     (rowClick)="onAuditeventsTableRowClick($event)"
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+  </app-tableviewedit>
 
 </app-pagebody>
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Audit Events" [max]="maxRecords" [total]="totalRecords"  width="250px">
+  <app-tableheader title="Audit Events" [max]="maxRecords" [total]="totalRecords" width="250px">
   </app-tableheader>
   <div fxFlex></div>
-  <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="end center" class="auditevents auditevents-lastupdate">
+  <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="end center"
+       class="auditevents auditevents-lastupdate">
     <div fxFlex="30px">
       Last Updated: {{ lastUpdateTime | PrettyDate }}
     </div>

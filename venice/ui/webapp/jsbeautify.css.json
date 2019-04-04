@@ -1,0 +1,8 @@
+{
+  "indent-size": 2,
+  "end_with_newline": true,
+  "wrap-attributes": "preserve",
+  "preserve-newlines": true,
+  "wrap-line-length": 0,
+  "newline-between-rules": true
+}

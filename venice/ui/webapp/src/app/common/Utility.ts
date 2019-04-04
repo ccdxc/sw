@@ -30,13 +30,13 @@ export class Utility {
   // Key for the observable obtained from localStorage.getUserdataObservable
   public static USER_DATA_OBSERVABLE = 'UserDataObservable';
   public static WEBSOCKET_403 = 'Please check your authorization settings and contact system administrator.';  // see VS=157
-  public static UPDATE_FAILED_SUMMARY = "Update Failed";
-  public static CREATE_FAILED_SUMMARY = "Create Failed";
-  public static DELETE_FAILED_SUMMARY = "Delete Failed";
-  public static UPDATE_SUCCESS_SUMMARY = "Update Successful";
-  public static CREATE_SUCCESS_SUMMARY = "Create Successful";
-  public static DELETE_SUCCESS_SUMMARY = "Delete Successful";
-  public static VENICE_CONNECT_FAILURE_SUMMARY = "Failed to connect to Vencie"
+  public static UPDATE_FAILED_SUMMARY = 'Update Failed';
+  public static CREATE_FAILED_SUMMARY = 'Create Failed';
+  public static DELETE_FAILED_SUMMARY = 'Delete Failed';
+  public static UPDATE_SUCCESS_SUMMARY = 'Update Successful';
+  public static CREATE_SUCCESS_SUMMARY = 'Create Successful';
+  public static DELETE_SUCCESS_SUMMARY = 'Delete Successful';
+  public static VENICE_CONNECT_FAILURE_SUMMARY = 'Failed to connect to Vencie';
 
   myControllerService: ControllerService;
   myLogService: LogService;
@@ -1327,7 +1327,7 @@ export class Utility {
       return r.statusCode !== 200;
     }).map((r) => {
       if (r.body != null) {
-        return r.body.message
+        return r.body.message;
       }
       return '';
     }).join('\n');
@@ -1336,7 +1336,7 @@ export class Utility {
       body: {
         message: err
       }
-    }
+    };
     return retError;
   }
 

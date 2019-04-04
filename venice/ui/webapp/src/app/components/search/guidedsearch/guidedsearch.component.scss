@@ -1,88 +1,89 @@
-
 @import 'src/global-mixins';
 
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
 .guidesearch {
-    font-family: "Fira Sans Condensed";
-    color: #676763;
-    font-size:14px;
-    padding: 5px;
-}
-.guidesearch-row,
-.guidesearch-selected-list-div {
-    border-bottom: 1px solid #eee;
+  font-family: "Fira Sans Condensed";
+  color: #676763;
+  font-size: 14px;
+  padding: 5px;
 }
 
-.guidesearch-section-title  {
-    cursor: default
+.guidesearch-row,
+.guidesearch-selected-list-div {
+  border-bottom: 1px solid #eee;
+}
+
+.guidesearch-section-title {
+  cursor: default
 }
 
 
 .guidesearch-category-checkbox {
-    width:140px;
-    font-weight: 400;
+  width: 140px;
+  font-weight: 400;
 }
 
 .guidesearch-kind-checkbox {
-    width:140px;
-    font-weight: 400;
+  width: 140px;
+  font-weight: 400;
 }
 
-.guidesearch .repeater-group p-dropdown > div .ui-dropdown-label {
-    font-family: "Fira Sans Condensed" !important;
-    color: #555555;
+.guidesearch .repeater-group p-dropdown>div .ui-dropdown-label {
+  font-family: "Fira Sans Condensed" !important;
+  color: #555555;
 }
 
-.guidesearch .ui-chkbox-box.ui-state-active, .ui-radiobutton-box.ui-state-active {
-    border: 1px solid #86a8d7;
-    background: #86a8d7;
-    color: #FFFFFF;
+.guidesearch .ui-chkbox-box.ui-state-active,
+.ui-radiobutton-box.ui-state-active {
+  border: 1px solid #86a8d7;
+  background: #86a8d7;
+  color: #FFFFFF;
 }
 
-.guidesearch .guidesearch-checkbox  {
-    margin-bottom: 0px;
+.guidesearch .guidesearch-checkbox {
+  margin-bottom: 0px;
 }
 
 .guidesearch .guidesearch-checkbox.ui-chkbox-label:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .guidesearch-button-div {
-    padding-top:5px;
+  padding-top: 5px;
 }
 
 .guidesearch-search {
-    font-size: 16px;
-    padding: 4px 8px;
-    line-height: 16px;
-    margin: 5px 10px;
+  font-size: 16px;
+  padding: 4px 8px;
+  line-height: 16px;
+  margin: 5px 10px;
 }
 
 .guidesearch-search:disabled {
-    opacity: 0.7;
-    cursor: not-allowed ;
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .guidesearch-clear {
-    font-size: 16px;
-    padding: 4px 10px;
-    line-height: 25px;
-    margin: $vertical-gutter $horizontal-gutter;
+  font-size: 16px;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: $vertical-gutter $horizontal-gutter;
 }
 
 .guidesearch-row-fieldtag {
-    padding: 5px 0px;
+  padding: 5px 0px;
 }
 
 .guidesearch-set-selectfield {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .guidesearch-title-label-left {
   width: 20px;
-  height: 19px;  
+  height: 19px;
   font-size: 16px;
   font-weight: 500;
   font-style: normal;
@@ -92,9 +93,9 @@ $vertical-gutter: 5px;
 }
 
 .guidesearch-title-label-right {
-  margin-left:15px;
-  margin-right:10px;
-//   width: 190px;
+  margin-left: 15px;
+  margin-right: 10px;
+  //   width: 190px;
   height: 17px;
   font-size: 14px;
   font-weight: normal;
@@ -106,14 +107,14 @@ $vertical-gutter: 5px;
 }
 
 .guidesearch .repeater-trash-icon .mat-icon {
-    font-size: 24px;
+  font-size: 24px;
 }
 
-.guidesearch .repeater-key .ui-dropdown-filter.ui-inputtext{
-    text-indent: 2px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    padding-left: 2px;
-    padding-right: 2px;
-    height: 28px;
+.guidesearch .repeater-key .ui-dropdown-filter.ui-inputtext {
+  text-indent: 2px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 2px;
+  padding-right: 2px;
+  height: 28px;
 }

@@ -1,9 +1,8 @@
 <div style="height:100%">
   <!-- Since we are resizing lazy rendered tables manually, it needs to be called
         when tabs change so it knows to resize itself -->
-  <mat-tab-group fxFlex [disableRipple]="true" 
-                  (selectedIndexChange)="selectedIndexChangeEvent($event)"
-                  >
+  <mat-tab-group fxFlex [disableRipple]="true"
+                 (selectedIndexChange)="selectedIndexChangeEvent($event)">
     <mat-tab label="ALERTS">
       <ng-container *ngTemplateOutlet="AlertsTableTemplate"></ng-container>
     </mat-tab>
@@ -16,75 +15,84 @@
 <ng-template #EventsTableTemplate>
   <div fxFlex class="alertsevents-events-table">
     <app-lazyrender [data]="filteredEvents" [rows]="28" [virtualRowHeight]="36">
-      <p-table #eventTable class="global-primeng-table-lazyload" [columns]="eventCols" 
-                dataKey="meta.name" [responsive]="true"
-                sortField="meta.mod-time" [sortOrder]='-1'
-                [loading]="eventsLoading" [resizableColumns]="true">
+      <p-table #eventTable class="global-primeng-table-lazyload" [columns]="eventCols"
+               dataKey="meta.name" [responsive]="true"
+               sortField="meta.mod-time" [sortOrder]='-1'
+               [loading]="eventsLoading" [resizableColumns]="true">
         <!-- Table Caption -->
         <ng-template pTemplate="caption">
-          <app-tableheader title="Events" [count]="filteredEvents.length" [total]="events.length" [icon]="eventsIcon" width="250px">
+          <app-tableheader title="Events" [count]="filteredEvents.length" [total]="events.length"
+                           [icon]="eventsIcon" width="250px">
             <div fxFlex></div>
             <!-- All events are currently informational, so we do not display severity filters or search filter -->
             <!-- <div class="alertsevents-search" fxFlex="fxFlex" fxLayoutAlign="start center" > -->
-              <!-- Find Event by:  -->
-              <!-- <mat-form-field fxFlex="nogrow" floatLabel="never"> -->
-                <!-- Max length is picked to be the same as Elastic search limit -->
-                <!-- <input matInput [formControl]="eventSearchFormControl" placeholder="Leader, Service, ... " maxlength="256" autocomplete="off"> -->
-              <!-- </mat-form-field> -->
+            <!-- Find Event by:  -->
+            <!-- <mat-form-field fxFlex="nogrow" floatLabel="never"> -->
+            <!-- Max length is picked to be the same as Elastic search limit -->
+            <!-- <input matInput [formControl]="eventSearchFormControl" placeholder="Leader, Service, ... " maxlength="256" autocomplete="off"> -->
+            <!-- </mat-form-field> -->
             <!-- </div> -->
-            <div *ngIf="sourceNode" class="alertsevents-filter-sourcenode">
-              Filtering by {{sourceNode}}
+            <div *ngIf="selector && selector.eventSelector && selector.eventSelector.name"
+                 class="alertsevents-filter-sourcenode">
+              Filtering by {{selector.eventSelector.name}}
             </div>
-            <div class="global-button global-alert-neutral alertsevents-main-menu-number " 
-                  (click)="onEventNumberClick($event, null)"
-                  *ngIf="currentEventSeverityFilter != null">All</div>
-            <div class="global-button global-alert-critical alertsevents-main-menu-number " 
-                  (click)="onEventNumberClick($event, 'CRITICAL')"
-                  *ngIf="eventNumbers.CRITICAL>0 && eventNumbers.CRITICAL !== events.length"
-                  >{{ eventNumbers.CRITICAL }}</div>
-            <div class="global-button global-alert-warning alertsevents-main-menu-number " 
-                  (click)="onEventNumberClick($event, 'WARNING')"
-                  *ngIf="eventNumbers.WARNING>0 && eventNumbers.WARNING !== events.length"
-                  >{{ eventNumbers.WARNING }}</div>
-            <div class="global-button global-alert-info alertsevents-main-menu-number " 
-                  (click)="onEventNumberClick($event, 'INFO')" 
-                  *ngIf="eventNumbers.INFO>0 && eventNumbers.INFO !== events.length"
-                  >{{ eventNumbers.INFO }}</div>
+            <div class="global-button global-alert-neutral alertsevents-main-menu-number "
+                 (click)="onEventNumberClick($event, null)"
+                 *ngIf="currentEventSeverityFilter != null">All</div>
+            <div class="global-button global-alert-critical alertsevents-main-menu-number "
+                 (click)="onEventNumberClick($event, 'CRITICAL')"
+                 *ngIf="eventNumbers.CRITICAL>0 && eventNumbers.CRITICAL !== events.length">
+              {{ eventNumbers.CRITICAL }}</div>
+            <div class="global-button global-alert-warning alertsevents-main-menu-number "
+                 (click)="onEventNumberClick($event, 'WARNING')"
+                 *ngIf="eventNumbers.WARNING>0 && eventNumbers.WARNING !== events.length">
+              {{ eventNumbers.WARNING }}</div>
+            <div class="global-button global-alert-info alertsevents-main-menu-number "
+                 (click)="onEventNumberClick($event, 'INFO')"
+                 *ngIf="eventNumbers.INFO>0 && eventNumbers.INFO !== events.length">
+              {{ eventNumbers.INFO }}</div>
           </app-tableheader>
         </ng-template>
-      <!-- Table Header -->
-      <ng-template pTemplate="header" let-columns>
-        <tr>
-          <th *ngFor="let col of eventCols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class">
-            <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
-          </th>
-        </tr>
-      </ng-template>
-      <!-- Table Body -->
-      <ng-template pTemplate="body" let-rowData>
-        <tr class="alertsevents-tablerow">
-          <td *ngFor="let col of eventCols" [ngSwitch]="col.field" [class]="col.class">
-            <div *ngSwitchCase="'meta.mod-time'">
-              {{rowData.meta['mod-time'] | PrettyDate }}
-            </div>
-            <div *ngSwitchCase="'meta.creation-time'">
-              {{rowData.meta['creation-time'] | PrettyDate }}
-            </div>
-            <ng-container *ngSwitchCase="'severity'" >
-                <mat-icon *ngIf="rowData.severity === 'CRITICAL'" class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
-                <mat-icon *ngIf="rowData.severity === 'WARNING'" class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
-                <mat-icon *ngIf="rowData.severity === 'INFO'" class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>
-                <div style="display: inline; margin-left: 25px"> {{ severityEnum[rowData.severity] }} </div>
-            </ng-container>
-            <ng-container *ngSwitchCase="'source'" >
-              <span *ngIf="rowData.source != null" style="display: block"> {{ rowData.source['node-name'] }}  :  {{ rowData.source.component }} </span>
-            </ng-container>
-            <ng-container *ngSwitchDefault>
-              {{displayColumn(rowData, col)}}
-            </ng-container>
-         </td>
-        </tr>
-      </ng-template>
+        <!-- Table Header -->
+        <ng-template pTemplate="header" let-columns>
+          <tr>
+            <th *ngFor="let col of eventCols" [pSortableColumn]="col.sortable? col.field : ''"
+                [class]="col.class">
+              <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
+              </app-sorticon>
+            </th>
+          </tr>
+        </ng-template>
+        <!-- Table Body -->
+        <ng-template pTemplate="body" let-rowData>
+          <tr class="alertsevents-tablerow">
+            <td *ngFor="let col of eventCols" [ngSwitch]="col.field" [class]="col.class">
+              <div *ngSwitchCase="'meta.mod-time'">
+                {{rowData.meta['mod-time'] | PrettyDate }}
+              </div>
+              <div *ngSwitchCase="'meta.creation-time'">
+                {{rowData.meta['creation-time'] | PrettyDate }}
+              </div>
+              <ng-container *ngSwitchCase="'severity'">
+                <mat-icon *ngIf="rowData.severity === 'CRITICAL'"
+                          class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
+                <mat-icon *ngIf="rowData.severity === 'WARNING'"
+                          class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
+                <mat-icon *ngIf="rowData.severity === 'INFO'"
+                          class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>
+                <div style="display: inline; margin-left: 25px">
+                  {{ severityEnum[rowData.severity] }} </div>
+              </ng-container>
+              <ng-container *ngSwitchCase="'source'">
+                <span *ngIf="rowData.source != null" style="display: block">
+                  {{ rowData.source['node-name'] }} : {{ rowData.source.component }} </span>
+              </ng-container>
+              <ng-container *ngSwitchDefault>
+                {{displayColumn(rowData, col)}}
+              </ng-container>
+            </td>
+          </tr>
+        </ng-template>
 
       </p-table>
     </app-lazyrender>
@@ -92,56 +100,59 @@
 </ng-template>
 
 <ng-template #AlertsTableTemplate>
-    <div fxFlex class="alertsevents-events-table">
-      <app-lazyrender [data]="filteredAlerts" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
-        <p-table #eventTable class="global-primeng-table-lazyload" [columns]="alertCols" 
-                  [rowTrackBy]='alertTrackBy'
-                  sortField="meta.mod-time" [sortOrder]='-1'
-                  dataKey="meta.name" [responsive]="true" 
-                  [loading]="alertsLoading" [resizableColumns]="true">
-          <!-- Table Caption -->
-          <ng-template pTemplate="caption">
-            <app-tableheader title="Alerts" [count]="filteredAlerts.length" [total]="alerts.length" [icon]="alertsIcon" width="250px">
-              <div fxFlex></div>
-              <div *ngIf="sourceNode" class="alertsevents-filter-sourcenode">
-                Filtering by {{sourceNode}}
-              </div>
-              <!-- Checkboxes for Open, Ack, Resolved states -->
-              <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
-                <ng-container *ngFor="let state of possibleFilterStates">
-                  <p-checkbox name="stateFilter"
-                        styleClass="alertsevents-checkbox" 
-                        labelStyleClass="alertsevents-checkbox-label" 
-                        [value]="state"
-                        [label]="state"
-                        [disabled]="selectedStateFilters.length === 1 && selectedStateFilters[0] === state"
-                        [(ngModel)]="selectedStateFilters"
-                        (onChange)="filterAlerts()"
-                        ></p-checkbox>
-                </ng-container>
-              </div>
-              <div class="global-button global-alert-neutral alertsevents-main-menu-number " 
-                    (click)="onAlertNumberClick(null)"
-                    *ngIf="currentAlertSeverityFilter != null">All</div>
-              <div class="global-button global-alert-critical alertsevents-main-menu-number " 
-                    (click)="onAlertNumberClick('CRITICAL')"
-                    *ngIf="alertNumbers.CRITICAL>0 && alertNumbers.CRITICAL !== alerts.length"
-                    >{{ alertNumbers.CRITICAL }}</div>
-              <div class="global-button global-alert-warning alertsevents-main-menu-number " 
-                    (click)="onAlertNumberClick('WARNING')"
-                    *ngIf="alertNumbers.WARNING>0 && alertNumbers.WARNING !== alerts.length"
-                    >{{ alertNumbers.WARNING }}</div>
-              <div class="global-button global-alert-info alertsevents-main-menu-number " 
-                    (click)="onAlertNumberClick('INFO')" 
-                    *ngIf="alertNumbers.INFO>0 && alertNumbers.INFO !== alerts.length"
-                    >{{ alertNumbers.INFO }}</div>
-            </app-tableheader>
-          </ng-template>
+  <div fxFlex class="alertsevents-events-table">
+    <app-lazyrender [data]="filteredAlerts" [rows]="28" [virtualRowHeight]="36" [runDoCheck]="true">
+      <p-table #eventTable class="global-primeng-table-lazyload" [columns]="alertCols"
+               [rowTrackBy]='alertTrackBy'
+               sortField="meta.mod-time" [sortOrder]='-1'
+               dataKey="meta.name" [responsive]="true"
+               [loading]="alertsLoading" [resizableColumns]="true">
+        <!-- Table Caption -->
+        <ng-template pTemplate="caption">
+          <app-tableheader title="Alerts" [count]="filteredAlerts.length" [total]="alerts.length"
+                           [icon]="alertsIcon" width="250px">
+            <div fxFlex></div>
+            <div *ngIf="selector && selector.alertSelector && selector.alertSelector.name"
+                 class="alertsevents-filter-sourcenode">
+              Filtering by {{selector.alertSelector.name}}
+            </div>
+            <!-- Checkboxes for Open, Ack, Resolved states -->
+            <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
+              <ng-container *ngFor="let state of possibleFilterStates">
+                <p-checkbox name="stateFilter"
+                            styleClass="alertsevents-checkbox"
+                            labelStyleClass="alertsevents-checkbox-label"
+                            [value]="state"
+                            [label]="state"
+                            [disabled]="selectedStateFilters.length === 1 && selectedStateFilters[0] === state"
+                            [(ngModel)]="selectedStateFilters"
+                            (onChange)="filterAlerts()"></p-checkbox>
+              </ng-container>
+            </div>
+            <div class="global-button global-alert-neutral alertsevents-main-menu-number "
+                 (click)="onAlertNumberClick(null)"
+                 *ngIf="currentAlertSeverityFilter != null">All</div>
+            <div class="global-button global-alert-critical alertsevents-main-menu-number "
+                 (click)="onAlertNumberClick('CRITICAL')"
+                 *ngIf="alertNumbers.CRITICAL>0 && alertNumbers.CRITICAL !== alerts.length">
+              {{ alertNumbers.CRITICAL }}</div>
+            <div class="global-button global-alert-warning alertsevents-main-menu-number "
+                 (click)="onAlertNumberClick('WARNING')"
+                 *ngIf="alertNumbers.WARNING>0 && alertNumbers.WARNING !== alerts.length">
+              {{ alertNumbers.WARNING }}</div>
+            <div class="global-button global-alert-info alertsevents-main-menu-number "
+                 (click)="onAlertNumberClick('INFO')"
+                 *ngIf="alertNumbers.INFO>0 && alertNumbers.INFO !== alerts.length">
+              {{ alertNumbers.INFO }}</div>
+          </app-tableheader>
+        </ng-template>
         <!-- Table Header -->
         <ng-template pTemplate="header" let-columns>
           <tr>
-            <th *ngFor="let col of alertCols" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" [colSpan]=" col.isLast ? 2 : 1">
-              <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
+            <th *ngFor="let col of alertCols" [pSortableColumn]="col.sortable? col.field : ''"
+                [class]="col.class" [colSpan]=" col.isLast ? 2 : 1">
+              <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
+              </app-sorticon>
             </th>
           </tr>
         </ng-template>
@@ -155,44 +166,50 @@
               <div *ngSwitchCase="'meta.creation-time'" class="alertseventsrecord-date-row">
                 {{rowData.meta['creation-time'] | PrettyDate }}
               </div>
-              <ng-container *ngSwitchCase="'status.severity'" >
-                  <mat-icon *ngIf="rowData.status.severity === 'CRITICAL'" class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
-                  <mat-icon *ngIf="rowData.status.severity === 'WARNING'" class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
-                  <mat-icon *ngIf="rowData.status.severity === 'INFO'" class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>
-                  <div style="display: inline; margin-left: 25px"> {{ severityEnum[rowData.status.severity] }} </div>
+              <ng-container *ngSwitchCase="'status.severity'">
+                <mat-icon *ngIf="rowData.status.severity === 'CRITICAL'"
+                          class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
+                <mat-icon *ngIf="rowData.status.severity === 'WARNING'"
+                          class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
+                <mat-icon *ngIf="rowData.status.severity === 'INFO'"
+                          class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>
+                <div style="display: inline; margin-left: 25px">
+                  {{ severityEnum[rowData.status.severity] }} </div>
               </ng-container>
               <div *ngSwitchCase="'status.source'">
-                <div *ngIf="rowData.status.source != null" style="display: inline"> {{ rowData.status.source['node-name'] }}  :  {{ rowData.status.source.component }} </div>
+                <div *ngIf="rowData.status.source != null" style="display: inline">
+                  {{ rowData.status.source['node-name'] }} : {{ rowData.status.source.component }}
+                </div>
               </div>
               <ng-container *ngSwitchDefault>
                 {{displayColumn(rowData, col)}}
               </ng-container>
-           </td>
-           <td class="global-column-action">
+            </td>
+            <td class="global-column-action">
               <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-                  <mat-icon *ngIf="rowData.spec.state !== 'RESOLVED'" 
-                            matTooltip="Resolve Alert" 
-                            class="global-table-action-icon" 
-                            (click)="resolveAlert(rowData)">
-                    done
-                  </mat-icon>
-                  <mat-icon *ngIf="rowData.spec.state !== 'ACKNOWLEDGED'" 
-                            matTooltip="Acknowledge Alert" 
-                            class="global-table-action-icon alertsevents-acknowledge-icon" 
-                            (click)="acknowledgeAlert(rowData)">
-                    archive
-                  </mat-icon>
-                  <mat-icon *ngIf="rowData.spec.state !== 'OPEN'" 
-                            matTooltip="Mark Alert as Open" 
-                            class="global-table-action-icon alertsevents-open-icon" 
-                            (click)="openAlert(rowData)">
-                    priority_high
-                  </mat-icon>
+                <mat-icon *ngIf="rowData.spec.state !== 'RESOLVED'"
+                          matTooltip="Resolve Alert"
+                          class="global-table-action-icon"
+                          (click)="resolveAlert(rowData)">
+                  done
+                </mat-icon>
+                <mat-icon *ngIf="rowData.spec.state !== 'ACKNOWLEDGED'"
+                          matTooltip="Acknowledge Alert"
+                          class="global-table-action-icon alertsevents-acknowledge-icon"
+                          (click)="acknowledgeAlert(rowData)">
+                  archive
+                </mat-icon>
+                <mat-icon *ngIf="rowData.spec.state !== 'OPEN'"
+                          matTooltip="Mark Alert as Open"
+                          class="global-table-action-icon alertsevents-open-icon"
+                          (click)="openAlert(rowData)">
+                  priority_high
+                </mat-icon>
               </div>
             </td>
           </tr>
         </ng-template>
-        </p-table>
-      </app-lazyrender>
-    </div>
-  </ng-template>
+      </p-table>
+    </app-lazyrender>
+  </div>
+</ng-template>

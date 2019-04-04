@@ -10,12 +10,12 @@ $vertical-gutter: 5px;
   right: 0;
   bottom: 0;
   background-color: rgba(255, 255, 255, 0.6);
-  z-index:10;
+  z-index: 10;
 }
 
 .radius-create {
   z-index: 20; // Needs to be higher than radius-overlay, but less
-               // than authpolicy overlay
+  // than authpolicy overlay
 }
 
 .radius-toggle {
@@ -74,15 +74,16 @@ $vertical-gutter: 5px;
 
 .radius-and {
   white-space: nowrap;
-    // margin-top: 2*$vertical-gutter;
-    color: #6ba0e5;
-    display: inline-block;
-    > span:hover {
-        text-decoration: underline;
-        cursor: pointer;
-    }
-    > mat-icon:hover {
-        cursor: pointer;
-    }
-}
+  // margin-top: 2*$vertical-gutter;
+  color: #6ba0e5;
+  display: inline-block;
 
+  >span:hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  >mat-icon:hover {
+    cursor: pointer;
+  }
+}

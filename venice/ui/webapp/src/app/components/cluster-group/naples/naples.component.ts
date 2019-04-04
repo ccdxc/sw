@@ -56,6 +56,14 @@ export class NaplesComponent extends BaseComponent implements OnInit, OnDestroy 
     svgIcon: 'naples'
   };
 
+  naplesIcon: Icon = {
+    margin: {
+      top: '0px',
+      left: '0px',
+    },
+    matIcon: 'grid_on'
+  };
+
   lastUpdateTime: string = '';
 
   cpuChartData: HeroCardOptions = MetricsUtility.clusterLevelCPUHeroCard(this.cardColor, this.cardIcon);

@@ -1,5 +1,5 @@
 <app-tableviewedit fxLayout="column" class="flowexportpolicy-widget"
-                   [creatingMode]="creatingMode" 
+                   [creatingMode]="creatingMode"
                    [showRowExpand]="showRowExpand"
                    [data]="dataObjects"
                    [cols]="cols"
@@ -9,13 +9,13 @@
                    [actionTemplate]="actionTemplate"
                    [expandTemplate]="expandTemplate"
                    [createTemplate]="createTemplate"
-                   (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
-                   >
+                   (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
 </app-tableviewedit>
 
 
 <ng-template #createTemplate>
-  <app-newflowexportpolicy (formClose)="creationFormClose()" fxFlex="none" ></app-newflowexportpolicy>
+  <app-newflowexportpolicy (formClose)="creationFormClose()" fxFlex="none">
+  </app-newflowexportpolicy>
 </ng-template>
 
 <!-- TABLE HEADER -->
@@ -41,11 +41,16 @@
 
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
 
-    <mat-icon matTooltip="Edit policy" class="global-table-action-icon flowexportpolicy-table-action-icon-edit" (click)="expandRowRequest($event, rowData)">edit</mat-icon>
-    <mat-icon matTooltip="Delete policy" class="global-table-action-icon flowexportpolicy-table-action-icon-delete" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+    <mat-icon matTooltip="Edit policy"
+              class="global-table-action-icon flowexportpolicy-table-action-icon-edit"
+              (click)="expandRowRequest($event, rowData)">edit</mat-icon>
+    <mat-icon matTooltip="Delete policy"
+              class="global-table-action-icon flowexportpolicy-table-action-icon-delete"
+              (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-newflowexportpolicy [policyData]="rowData" [isInline]="true" (formClose)="closeRowExpand()"></app-newflowexportpolicy>
+  <app-newflowexportpolicy [policyData]="rowData" [isInline]="true" (formClose)="closeRowExpand()">
+  </app-newflowexportpolicy>
 </ng-template>

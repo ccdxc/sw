@@ -5,6 +5,14 @@ import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { ControllerService } from '@app/services/controller.service';
+import { MessageService } from '@app/services/message.service';
+import { LogService } from '@app/services/logging/log.service';
+import { ConfirmationService } from 'primeng/primeng';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { MatIconRegistry } from '@angular/material';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { RouterTestingModule } from '@angular/router/testing';
 
 describe('MatchruleComponent', () => {
   let component: MatchruleComponent;
@@ -15,10 +23,20 @@ describe('MatchruleComponent', () => {
       declarations: [MatchruleComponent],
       imports: [
         MaterialdesignModule,
+        RouterTestingModule,
         PrimengModule,
         ReactiveFormsModule,
         FormsModule,
         NoopAnimationsModule,
+      ],
+      providers: [
+        ControllerService,
+        ConfirmationService,
+        LogService,
+        LogPublishersService,
+        MatIconRegistry,
+        UIConfigsService,
+        MessageService,
       ]
     })
       .compileComponents();

@@ -17,5 +17,3 @@
     background: if(map-has-key($background, breadcrumb_background), map-get($background, breadcrumb_background), map-get($background, background));
   }
 }
-
-

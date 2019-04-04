@@ -2,7 +2,8 @@
   <!-- Since we are manually calculating table dimensions, whenever this panel changes
         state we need to recalculate the table -->
   <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel" [expanded]="true"
-        (closed)="lazyRenderWrapper?.resizeTable(501)" (opened)="lazyRenderWrapper?.resizeTable(501)">
+                       (closed)="lazyRenderWrapper?.resizeTable(501)"
+                       (opened)="lazyRenderWrapper?.resizeTable(501)">
     <mat-expansion-panel-header class="sgpolicy-expansionpanel-header">
       <mat-panel-title class="sgpolicy-summary-panel-header">
         Security Policy Details
@@ -15,99 +16,110 @@
           <div class="sgpolicy-summary-panel-content-value">{{selectedPolicy?.meta.name}} </div>
         </div>
         <div fxFlex="50">
-            <div class="sgpolicy-summary-panel-content-label2">Created on:</div>
-            <div class="sgpolicy-summary-panel-content-value">{{selectedPolicy?.meta["creation-time"] | PrettyDate }}</div>
+          <div class="sgpolicy-summary-panel-content-label2">Created on:</div>
+          <div class="sgpolicy-summary-panel-content-value">
+            {{selectedPolicy?.meta["creation-time"] | PrettyDate }}</div>
         </div>
       </div>
       <div fxLayout="row">
         <div fxFlex="50">
           <!-- Commented out as creator is not available currently -->
-            <!-- <div class="sgpolicy-summary-panel-content-label"> Created By: </div>
+          <!-- <div class="sgpolicy-summary-panel-content-label"> Created By: </div>
             <div class="sgpolicy-summary-panel-content-value">{{creator}}</div> -->
-            <!--VS-126 add sgPolicy-vs-Naples statistics  -->
-            <div class="sgpolicy-summary-panel-content-label"> Propagation: </div>
-            <div class="sgpolicy-summary-panel-content-value sgpolicy-summary-panel-content-value-warning" 
-                 *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] != selectedPolicy?.meta['generation-id']" >
-                 Policy not propagated</div>
-            <div class="sgpolicy-summary-panel-content-value  sgpolicy-summary-panel-content-value-warning" 
-                  *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] == selectedPolicy?.meta['generation-id'] && selectedPolicy?.status['propagation-status'].pending>0">
-                  {{selectedPolicy.status['propagation-status'].pending}} Out Of {{selectedPolicy.status['propagation-status'].pending + selectedPolicy.status['propagation-status'].updated }} Pending</div>
-            <div class="sgpolicy-summary-panel-content-value" 
-                  *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] == selectedPolicy?.meta['generation-id'] && selectedPolicy?.status['propagation-status'].pending==0">
-                  Complete</div>
+          <!--VS-126 add sgPolicy-vs-Naples statistics  -->
+          <div class="sgpolicy-summary-panel-content-label"> Propagation: </div>
+          <div class="sgpolicy-summary-panel-content-value sgpolicy-summary-panel-content-value-warning"
+               *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] != selectedPolicy?.meta['generation-id']">
+            Policy not propagated</div>
+          <div class="sgpolicy-summary-panel-content-value  sgpolicy-summary-panel-content-value-warning"
+               *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] == selectedPolicy?.meta['generation-id'] && selectedPolicy?.status['propagation-status'].pending>0">
+            {{selectedPolicy.status['propagation-status'].pending}} Out Of
+            {{selectedPolicy.status['propagation-status'].pending + selectedPolicy.status['propagation-status'].updated }}
+            Pending</div>
+          <div class="sgpolicy-summary-panel-content-value"
+               *ngIf="selectedPolicy?.status['propagation-status']['generation-id'] == selectedPolicy?.meta['generation-id'] && selectedPolicy?.status['propagation-status'].pending==0">
+            Complete</div>
         </div>
         <div fxFlex="50">
-            <div class="sgpolicy-summary-panel-content-label2">Last Modified: </div>
-            <div class="sgpolicy-summary-panel-content-value">{{selectedPolicy?.meta["mod-time"]  | PrettyDate }}</div>
+          <div class="sgpolicy-summary-panel-content-label2">Last Modified: </div>
+          <div class="sgpolicy-summary-panel-content-value">
+            {{selectedPolicy?.meta["mod-time"] | PrettyDate }}</div>
         </div>
       </div>
     </div>
   </mat-expansion-panel>
-  <ng-container *ngTemplateOutlet="DataTable" ></ng-container>
+  <ng-container *ngTemplateOutlet="DataTable"></ng-container>
   <!-- Deletion screen overlay displays when the policy we are viewing is deleted -->
   <!-- Missing screen overlay displays when the policy does not exist-->
-  <div #overlay *ngIf="showDeletionScreen || showMissingScreen" fxLayout="row" fxLayoutAlign="center stretch" class="sgpolicy-overlay">
+  <div #overlay *ngIf="showDeletionScreen || showMissingScreen" fxLayout="row"
+       fxLayoutAlign="center stretch" class="sgpolicy-overlay">
     <div fxFlex="50%" fxLayout="column" class="sgpolicy-overlay-content">
-        <div fxFlex='20%'></div>
-        <div *ngIf="showDeletionScreen" fxFlex='15%' class="sgpolicy-deleted-policy"></div>
-        <div *ngIf="showMissingScreen" fxFlex='15%' class="sgpolicy-missing-policy"></div>
-        <div *ngIf="showDeletionScreen" fxFlex="none" class="sgpolicy-overlay-text">*
-          {{selectedPolicyId}} has been deleted
-        </div>
-        <div *ngIf="showMissingScreen" fxFlex="none" class="sgpolicy-overlay-text">
-          {{selectedPolicyId}} does not exist
-        </div>
-        <div fxFlex="5%"></div>
-        <div fxFlex="none" fxLayout="row" fxLayoutAlign="center stretch" fxLayoutGap="40px">
-          <button  fxFlex="none" class="global-button-primary sgpolicy-overlay-button" routerLink="../">SG POLICIES</button>
-          <button  fxFlex="none" class="global-button-primary sgpolicy-overlay-button" (click)="routeToHomepage()">HOMEPAGE</button>
-        </div>
+      <div fxFlex='20%'></div>
+      <div *ngIf="showDeletionScreen" fxFlex='15%' class="sgpolicy-deleted-policy"></div>
+      <div *ngIf="showMissingScreen" fxFlex='15%' class="sgpolicy-missing-policy"></div>
+      <div *ngIf="showDeletionScreen" fxFlex="none" class="sgpolicy-overlay-text">*
+        {{selectedPolicyId}} has been deleted
+      </div>
+      <div *ngIf="showMissingScreen" fxFlex="none" class="sgpolicy-overlay-text">
+        {{selectedPolicyId}} does not exist
+      </div>
+      <div fxFlex="5%"></div>
+      <div fxFlex="none" fxLayout="row" fxLayoutAlign="center stretch" fxLayoutGap="40px">
+        <button fxFlex="none" class="global-button-primary sgpolicy-overlay-button"
+                routerLink="../">SG POLICIES</button>
+        <button fxFlex="none" class="global-button-primary sgpolicy-overlay-button"
+                (click)="routeToHomepage()">HOMEPAGE</button>
+      </div>
     </div>
   </div>
 </app-pagebody>
 
 <ng-template #DataTable>
   <div fxFlex class="sgpolicy-widget">
-    <app-lazyrender [data]="sgPolicyRules" [rows]="28" [virtualRowHeight]="36" (dataUpdate)='dataUpdated()'>
+    <app-lazyrender [data]="sgPolicyRules" [rows]="28" [virtualRowHeight]="36"
+                    (dataUpdate)='dataUpdated()'>
       <p-table [columns]="cols" sortField="order" dataKey="order"
-              #sgpolicyTable
-              class="global-primeng-table sgpolicy-table"  [responsive]="true" 
-              [loading]="loading" [resizableColumns]="true"
-              (sortFunction)="customSort($event)" [customSort]="true">
+               #sgpolicyTable
+               class="global-primeng-table sgpolicy-table" [responsive]="true"
+               [loading]="loading" [resizableColumns]="true"
+               (sortFunction)="customSort($event)" [customSort]="true">
         <!-- Table Caption -->
         <ng-template pTemplate="caption">
           <app-tableheader title="Policy Rules" [total]="ruleCount" [icon]="policyIcon">
-            <div class="sgpolicy-search-ip" fxFlex="fxFlex" fxLayoutAlign="start center" >
-              Search for a rule: 
+            <div class="sgpolicy-search-ip" fxFlex="fxFlex" fxLayoutAlign="start center">
+              Search for a rule:
               <div fxflex="nogrow" fxlayout="row" class="sgpolicydetail-value">
                 <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
-                    [formControl]="sourceIpFormControl" type="text" pInputText
-                    (keyup)="keyUpInput($event)" app-errorTooltip
-                  placeholder="Source IP" maxlength="15" autocomplete="off">
+                       [formControl]="sourceIpFormControl" type="text" pInputText
+                       (keyup)="keyUpInput($event)" appErrorTooltip
+                       placeholder="Source IP" maxlength="15" autocomplete="off">
               </div>
               <div fxflex="nogrow" fxlayout="row" class="sgpolicydetail-value">
                 <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
-                    [formControl]="destIpFormControl" type="text" pInputText
-                    (keyup)="keyUpInput($event)" app-errorTooltip
-                  placeholder="Destination IP" maxlength="15" autocomplete="off">
+                       [formControl]="destIpFormControl" type="text" pInputText
+                       (keyup)="keyUpInput($event)" appErrorTooltip
+                       placeholder="Destination IP" maxlength="15" autocomplete="off">
               </div>
               <div fxflex="nogrow" fxlayout="row" class="sgpolicydetail-value">
                 <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
-                    [formControl]="portFormControl" type="text" pInputText
-                    (keyup)="keyUpInput($event)" app-errorTooltip
-                  placeholder="<Protocol>/<Port> or App" maxlength="15" autocomplete="off">
+                       [formControl]="portFormControl" type="text" pInputText
+                       (keyup)="keyUpInput($event)" appErrorTooltip
+                       placeholder="<Protocol>/<Port> or App" maxlength="15" autocomplete="off">
               </div>
               <mat-icon fxFlex="none" class="sgpolicy-search-button"
-                        (click)="invokePolicySearch()" (keydown)="($event.which ==13)? invokePolicySearch() : return " tabindex="0"
-                        *ngIf="showSearchButton()" >
+                        (click)="invokePolicySearch()"
+                        (keydown)="($event.which ==13)? invokePolicySearch() : '' " tabindex="0"
+                        *ngIf="showSearchButton()">
                 search
               </mat-icon>
               <mat-icon fxFlex="none" class="sgpolicy-search-clear-button"
-                        (click)="clearSearch()"   (keydown)="($event.which ==13)? clearSearch() : return " tabindex="0"
-                        *ngIf="showSearchButton()"  tabindex="0" >
-               close 
+                        (click)="clearSearch()" (keydown)="($event.which ==13)? clearSearch() : '' "
+                        tabindex="0"
+                        *ngIf="showSearchButton()" tabindex="0">
+                close
               </mat-icon>
-              <div class="sgpolicy-search-error" fxFlex="none" fxLayoutAlign="start center" *ngIf="searchErrorMessage !== null && searchErrorMessage !== ''">
+              <div class="sgpolicy-search-error" fxFlex="none" fxLayoutAlign="start center"
+                   *ngIf="searchErrorMessage !== null && searchErrorMessage !== ''">
                 <mat-icon fxFlex="none">error</mat-icon>
                 <div fxFlex="none">
                   {{searchErrorMessage}}
@@ -119,21 +131,23 @@
         </ng-template>
         <!-- Table Header -->
         <ng-template pTemplate="header" let-columns>
-            <tr>
-              <th *ngFor="let col of cols; let last = last" [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class" 
-              [style.width]="col.width + '%'"
-              [colSpan]="last && actionTemplate != null ? 2 : 1"
-              >
-                <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}</app-sorticon>
-              </th>
-            </tr>
+          <tr>
+            <th *ngFor="let col of cols; let last = last"
+                [pSortableColumn]="col.sortable? col.field : ''" [class]="col.class"
+                [style.width]="col.width + '%'"
+                [colSpan]="1">
+              <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
+              </app-sorticon>
+            </th>
+          </tr>
         </ng-template>
         <!-- Table Body -->
         <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
-          <tr [class]="rowData.order===selectedRuleIndex ? 'sgpolicy-row sgpolicy-match' : 'sgpolicy-row'">
-              <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class"
-          [style.width]="col.width + '%'">
-          {{displayColumn(rowData, col)}}
+          <tr
+              [class]="rowData.order===selectedRuleIndex ? 'sgpolicy-row sgpolicy-match' : 'sgpolicy-row'">
+            <td *ngFor="let col of cols; let last = last" [ngSwitch]="col.field" [class]="col.class"
+                [style.width]="col.width + '%'">
+              {{displayColumn(rowData, col)}}
         </ng-template>
       </p-table>
     </app-lazyrender>

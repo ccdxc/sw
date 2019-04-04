@@ -1,0 +1,9 @@
+{
+  "indent-size": 2,
+  "end_with_newline": true,
+  "wrap-attributes": "preserve-aligned",
+  "wrap-attributes-indent-size": 4,
+  "preserve-newlines": true,
+  "wrap-line-length": 100,
+  "newline-between-rules": true
+}

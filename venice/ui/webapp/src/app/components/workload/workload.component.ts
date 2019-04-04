@@ -129,6 +129,10 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
   //   });
   // }
 
+  toggleHeroStats() {
+    this.heroStatsToggled = !this.heroStatsToggled;
+  }
+
   ngOnDestroy() {
     if (this.subscriptions != null) {
       this.subscriptions.forEach(subscription => {

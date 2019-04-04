@@ -10,19 +10,19 @@
 }
 
 .systemcapacity-nodecount {
-    @include primary-font(100px, #b592e3);
-    position: absolute;
-    top: -10px;
-    left: 0;
-    right: 0;
+  @include primary-font(100px, #b592e3);
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
 }
 
 .systemcapacity-image-text {
-    @include primary-font(14px);
-    position: absolute;
-    top: 135px;
-    left: 0;
-    right: 0;
+  @include primary-font(14px);
+  position: absolute;
+  top: 135px;
+  left: 0;
+  right: 0;
 }
 
 .systemcapacity-background {
@@ -58,7 +58,7 @@
   top: -25px;
 }
 
-.systemcapacity-right{
+.systemcapacity-right {
   margin-right: 10px;
 }
 

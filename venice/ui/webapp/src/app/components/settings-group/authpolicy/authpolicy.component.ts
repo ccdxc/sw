@@ -31,6 +31,9 @@ import { Eventtypes } from '@app/enum/eventtypes.enum';
   encapsulation: ViewEncapsulation.None
 })
 export class AuthpolicyComponent extends BaseComponent implements OnInit {
+  // Allows accessing enum value in html
+  authTypes = AuthAuthenticators_authenticator_order;
+
   secretFormControl: FormControl = new FormControl('', []);
   enableUpdateSecretButton: boolean = false;
   authOrder = ['LOCAL', 'LDAP', 'RADIUS'];

@@ -1,8 +1,8 @@
 @import 'src/global-mixins';
 
 .alertsevents-button {
-    padding-left: 10px;
-    padding-right: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .alertsevents-widget {
@@ -60,6 +60,7 @@ app-shared-alertsevents {
   .mat-tab-body-wrapper {
     height: 100%;
   }
+
   mat-tab-group {
     height: 100%;
   }
@@ -91,16 +92,16 @@ th.alerts-column-source {
   width: 20%;
 }
 
-.alertsevents-column-message{
+.alertsevents-column-message {
   width: 40%;
 }
 
 .alertsevents-column-severity {
-  width:10%;
+  width: 10%;
 }
 
 .alertsevents-column-state {
-  width:5%;
+  width: 5%;
 }
 
 .alertsevents-header-div {
@@ -168,7 +169,7 @@ th.alerts-column-source {
     outline: none;
     box-shadow: none;
 
-    &.ui-state-active  {
+    &.ui-state-active {
       border: 1px solid #86a8d7 !important;
       background: #86a8d7 !important;
       color: #FFFFFF;

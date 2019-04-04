@@ -1,21 +1,21 @@
-
 @import 'src/global-mixins';
 
-.techsupportrequests {    
+.techsupportrequests {
   @include primary-font();
 }
 
 .techsupportrequests-widget {
   height: 100%;
-  .global-primeng-table .ui-table .ui-table-tbody > tr, .global-primeng-table-lazyload .ui-table .ui-table-tbody > tr
-  {
+
+  .global-primeng-table .ui-table .ui-table-tbody>tr,
+  .global-primeng-table-lazyload .ui-table .ui-table-tbody>tr {
     // Fixing row height to be 48 instead of the standard 36
-    height: 48px;  
+    height: 48px;
   }
 }
 
-.techsupportrequests-column-name{
-    color: #007bff;
+.techsupportrequests-column-name {
+  color: #007bff;
 }
 
 .techsupportrequests-toolbar-button {
@@ -25,5 +25,5 @@
   text-align: center;
   display: block;
   padding: 0px 10px;
-  min-width:80px;
+  min-width: 80px;
 }

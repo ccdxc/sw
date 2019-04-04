@@ -21,8 +21,14 @@ import { Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 export interface AlertsEventsSelector {
-  alertSelector: string;
-  eventSelector: string;
+  alertSelector: {
+    selector: string,
+    name: string
+  };
+  eventSelector: {
+    selector: string,
+    name: string
+  };
 }
 
 /**
@@ -93,7 +99,10 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   ];
 
   // Will hold mapping from severity types to counts
-  protected eventNumbers = {
+  eventNumbers: { [severity in EventsEvent_severity]: number} = {
+    'INFO': 0,
+    'WARNING': 0,
+    'CRITICAL': 0,
   };
 
   eventsIcon: Icon = {
@@ -143,7 +152,10 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   selectedAlerts: any[];
 
   // Will hold mapping from severity types to counts
-  alertNumbers = {
+  alertNumbers: { [severity in MonitoringAlertStatus_severity]: number} = {
+    'INFO': 0,
+    'WARNING': 0,
+    'CRITICAL': 0,
   };
 
   // The current alert severity filter, set to null if it is on All.
@@ -212,11 +224,11 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   genQueryBodies() {
     if (this.selector != null) {
       this.eventsPostBody = {
-        'field-selector': this.selector.eventSelector,
+        'field-selector': this.selector.eventSelector.selector,
         'sort-order': ApiListWatchOptions_sort_order.None
       };
       this.alertQuery = {
-        'field-selector': this.selector.alertSelector
+        'field-selector': this.selector.alertSelector.selector
       };
     }
   }

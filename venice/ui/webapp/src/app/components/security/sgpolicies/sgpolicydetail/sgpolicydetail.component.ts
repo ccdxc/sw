@@ -114,13 +114,13 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
 
 
   sourceIpFormControl: FormControl = CustomFormControl(new FormControl('', [IPUtility.isValidIPValidator
-  ]), { description: "Value must be in dot notation" });
+  ]), { description: 'Value must be in dot notation' });
 
   destIpFormControl: FormControl = CustomFormControl(new FormControl('', [IPUtility.isValidIPValidator
-  ]), { description: "Value must be in dot notation" });
+  ]), { description: 'Value must be in dot notation' });
 
   portFormControl: FormControl = CustomFormControl(new FormControl('', [
-  ]), { description: "Value should be either <protocol>/<port> or app name" });
+  ]), { description: 'Value should be either <protocol>/<port> or app name' });
 
   // Holds all policy objects
   sgPolicies: ReadonlyArray<SecuritySGPolicy>;

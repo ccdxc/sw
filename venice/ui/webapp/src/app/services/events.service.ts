@@ -84,7 +84,7 @@ export class EventsService extends EventGenService {
         }
       },
       (error) => {
-        this._controllerService.invokeRESTErrorToaster("Failed to get events", error)
+        this._controllerService.invokeRESTErrorToaster('Failed to get events', error);
         const poll = this.pollingUtility.pollingHandlerMap[key];
         if (poll == null || poll.handler == null) {
           return;

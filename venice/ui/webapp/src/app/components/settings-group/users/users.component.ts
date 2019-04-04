@@ -80,11 +80,11 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
   selectedAuthRole: AuthRole = null;
   selectedAuthRolebinding: AuthRoleBinding = null;
 
-  protected rolebindingOptions: SelectItem[] = [];
-  protected selectedRolebindingsForUsers: AuthRoleBinding[] = [];
-  protected rolebindingUpdateMap = {};
+  rolebindingOptions: SelectItem[] = [];
+  selectedRolebindingsForUsers: AuthRoleBinding[] = [];
+  rolebindingUpdateMap = {};
 
-  protected whichPanel = UsersComponent.UI_PANEL_USER;
+  whichPanel = UsersComponent.UI_PANEL_USER;
   selectedDropdown: any = UsersComponent.UI_PANEL_USER;
 
   dataReadyMap: UserDataReadyMap = {
@@ -401,12 +401,12 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
 
   deleteStagingBuffer(buffername: string, reason: string, isToshowToaster: boolean = true) {
     if (buffername == null) {
-      return
+      return;
     }
 
     this.stagingService.GetBuffer(buffername).subscribe( (rest) => {
-      console.log(rest)
-    })
+      console.log(rest);
+    });
     this.stagingService.DeleteBuffer(buffername).subscribe(
       response => {
         if (isToshowToaster) {
@@ -772,9 +772,9 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
           }
         });
         if (observables.length > 0) {
-          return this.invokeForkJoin(observables, buffername)
+          return this.invokeForkJoin(observables, buffername);
         } else {
-          return this.commitStagingBuffer(buffername)
+          return this.commitStagingBuffer(buffername);
         }
       })
     ).subscribe(
@@ -788,7 +788,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
         this._controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
         this.deleteStagingBuffer(buffername, 'Failed to delete', false);
       }
-    )
+    );
   }
 
   /**

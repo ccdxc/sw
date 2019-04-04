@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormGroup } from '@angular/forms';
+import { FormArray, FormGroup, AbstractControl } from '@angular/forms';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SortEvent } from 'primeng/components/common/api';
 import { CommonComponent } from '../../common.component';
@@ -39,6 +39,8 @@ export class BaseComponent extends CommonComponent implements OnInit {
   routeToHomepage() {
     if (this.uiconfigsService != null) {
       this.uiconfigsService.navigateToHomepage();
+    } else {
+      console.error('UIConfig service is null');
     }
   }
 
@@ -212,6 +214,10 @@ export class BaseComponent extends CommonComponent implements OnInit {
 
   displayColumn(data, col, hasUiHints: boolean = true): any {
     return Utility.displayColumn(data, col, hasUiHints);
+  }
+
+  controlAsFormArray(control: AbstractControl): FormArray {
+    return control as FormArray;
   }
 
 }

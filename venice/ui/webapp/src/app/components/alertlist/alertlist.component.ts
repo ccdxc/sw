@@ -30,9 +30,9 @@ export class AlertlistComponent implements OnInit, OnDestroy, OnChanges {
     INFO: 0
   };
 
-  protected menuIndicatorCSS = {};
-  protected alerts = [];
-  protected currentAlertFilterType = 'TOTAL';
+  menuIndicatorCSS = {};
+  alerts = [];
+  currentAlertFilterType = 'TOTAL';
 
   constructor() { }
 

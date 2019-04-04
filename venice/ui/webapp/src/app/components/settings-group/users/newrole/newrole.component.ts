@@ -242,9 +242,9 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
             newRolebinding.spec.role = createdRole.meta.name;
             return this._authService.AddRoleBinding(newRolebinding, buffername).pipe( // add role binding to buffer
               switchMap(responseRoleBinding => {
-                return this.commitStagingBuffer(buffername) // commit buffer
+                return this.commitStagingBuffer(buffername); // commit buffer
               })
-            )
+            );
           }),
         );
       })

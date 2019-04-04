@@ -1,22 +1,25 @@
 @import 'src/global-mixins';
 
-.dsbd-widgetheader{
+.dsbd-widgetheader {
   @include primary-font();
 }
+
 .dsbd-widgetheader-icon {
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
   border-radius: 50%;
+
   svg {
     vertical-align: initial;
   }
+
   z-index: 10;
 }
 
 .dsbd-widgetheader-title {
   padding: 10px 0px 2px 10px;
-  
+
   font-size: 18px;
   font-stretch: condensed;
   text-align: left;
@@ -53,12 +56,11 @@
 }
 
 /* In case we use mat-icon by name (not svgIcon), we have to adjust padding a little bit. */
-.dsbd-widgetheader-icon-byname{
-  padding-left:10px;
+.dsbd-widgetheader-icon-byname {
+  padding-left: 10px;
 }
 
 /* override the */
-.pensando-ui  .mat-menu-panel {
+.pensando-ui .mat-menu-panel {
   background: #fff !important;
 }
-

@@ -1,23 +1,26 @@
 <div class="pagebody-container" fxLayout="column">
-    <div *ngIf="header" fxFlex="nogrow" fxLayout="row" class="pagebody-header">
-        <div fxFlex="48px" class="pagebody-iconcontainer">
-            <mat-icon fxFlex="30px" [ngStyle]="_iconStyles" *ngIf="icon.svgIcon" [svgIcon]="icon.svgIcon" class="pagebody-icon">
-                </mat-icon>
-            <mat-icon fxFlex="30px" [ngStyle]="_iconStyles" *ngIf="icon.matIcon" class="pagebody-icon pagebody-icon-byname">
-                {{icon.matIcon}}
-            </mat-icon>
-            <div *ngIf="icon.matIcon == null && icon.svgIcon == null" [ngStyle]="_iconStyles" class="pagebody-icon"></div>
-        </div>
-        <div fxFlex="noshrink" class="pagebody-headercontent">
-            {{header}}
-        </div>
-        <div fxFlex class="pagebody-optionsicon" >
-            <ng-content select="[pagebody-options]"></ng-content>
-        </div>
+  <div *ngIf="header" fxFlex="nogrow" fxLayout="row" class="pagebody-header">
+    <div fxFlex="48px" class="pagebody-iconcontainer">
+      <mat-icon fxFlex="30px" [ngStyle]="_iconStyles" *ngIf="icon.svgIcon" [svgIcon]="icon.svgIcon"
+                class="pagebody-icon">
+      </mat-icon>
+      <mat-icon fxFlex="30px" [ngStyle]="_iconStyles" *ngIf="icon.matIcon"
+                class="pagebody-icon pagebody-icon-byname">
+        {{icon.matIcon}}
+      </mat-icon>
+      <div *ngIf="icon.matIcon == null && icon.svgIcon == null" [ngStyle]="_iconStyles"
+           class="pagebody-icon"></div>
     </div>
-    <div fxFlex fxLayout="column" class="pagebody-content-container">
-        <div fxFlex fxLayout="column" class="pagebody-content">
-            <ng-content></ng-content>
-        </div>
+    <div fxFlex="noshrink" class="pagebody-headercontent">
+      {{header}}
     </div>
+    <div fxFlex class="pagebody-optionsicon">
+      <ng-content select="[pagebody-options]"></ng-content>
+    </div>
+  </div>
+  <div fxFlex fxLayout="column" class="pagebody-content-container">
+    <div fxFlex fxLayout="column" class="pagebody-content">
+      <ng-content></ng-content>
+    </div>
+  </div>
 </div>

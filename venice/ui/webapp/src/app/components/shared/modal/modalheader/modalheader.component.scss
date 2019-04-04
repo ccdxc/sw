@@ -1,40 +1,39 @@
 @import 'src/global-mixins';
 
 .modalheader-container {
-    @include primary-font(36px);
-    background-color: #97b8df;
-    height: 80px;
-    width: 100%;
+  @include primary-font(36px);
+  background-color: #97b8df;
+  height: 80px;
+  width: 100%;
 }
 
 :host {
-    width: 100%;
+  width: 100%;
 }
 
-.modalheader-title{
-    font-size: 24px;
-    color: #484848;
-    margin-top: 10px;
-    font-weight: bold;
+.modalheader-title {
+  font-size: 24px;
+  color: #484848;
+  margin-top: 10px;
+  font-weight: bold;
 }
 
 .modalheader-subtitle {
-    font-size: 18px;
-    color: white;
+  font-size: 18px;
+  color: white;
 }
 
 .modalheader-icon {
-    height: 45px;
-    width: 45px;
-    color: white;
+  height: 45px;
+  width: 45px;
+  color: white;
 }
 
 .modalheader-cancel-icon {
-    color: white;
-    height: 30px;
-    width: 30px;
-    margin-top: 10px;
-    margin-right: 10px;
-    cursor: pointer;
+  color: white;
+  height: 30px;
+  width: 30px;
+  margin-top: 10px;
+  margin-right: 10px;
+  cursor: pointer;
 }
-

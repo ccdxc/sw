@@ -1,7 +1,6 @@
-
 @import 'src/global-mixins';
 
-.searchresult {    
+.searchresult {
   @include primary-font();
 }
 
@@ -42,6 +41,7 @@
   margin-right: 5px;
   padding-bottom: 5px;
   border: 1px solid transparent;
+
   &:hover {
     background-color: whitesmoke;
     border: 1px solid #e3e3e3;
@@ -69,7 +69,8 @@
   cursor: pointer;
 }
 
-.searchresult-button-category-kind-entry-content, .searchresult-button-category-kind-entry-label {
+.searchresult-button-category-kind-entry-content,
+.searchresult-button-category-kind-entry-label {
   font-size: 16px;
   font-weight: normal;
   font-style: normal;
@@ -88,7 +89,7 @@
 }
 
 .searchresult-kind-template {
-    padding: .5em 1em;
+  padding: .5em 1em;
 }
 
 .searchresult-kind-template-badge {
@@ -99,35 +100,36 @@
 
 
 .searchresult-kind-template-badge:hover {
-    color: #212121;
+  color: #212121;
 }
- 
+
 .searchresult-kind-template:hover .searchresult-kind-template-badge:not(:hover) {
-    color: #212121;
+  color: #212121;
 }
 
 .searchresult-button-div .ui-selectbutton .ui-button.ui-state-active .searchresult-kind-template:hover .searchresult-kind-template-badge:not(:hover) {
-    color: #212121;
+  color: #212121;
 }
 
 /** not data */
 .searchresult-empty-items-div {
   width: 100%;
   min-height: 400px;
-  background: #fff;  
+  background: #fff;
   background-color: #ffffff;
-  text-align: center; 
+  text-align: center;
 }
 
 .searchresult-empty-items-img {
   height: 240px;
   background: url("/assets/images/search/no-results.svg") center center no-repeat;
 }
+
 .searchresult-empty-items-message-div {
-   margin: auto;
-    margin-bottom: 10px;
-    text-align: left;
-    display: inline-block;
+  margin: auto;
+  margin-bottom: 10px;
+  text-align: left;
+  display: inline-block;
 }
 
 .searchresult-empty-items-label {
@@ -140,11 +142,11 @@
   letter-spacing: normal;
   text-align: left;
   color: #676763;
-  display:block;
+  display: block;
 }
 
 .searchresult-empty-items-label-tryagain {
-  margin-bottom :10px;
+  margin-bottom: 10px;
 }
 
 .searchresult-empty-items-label-link {

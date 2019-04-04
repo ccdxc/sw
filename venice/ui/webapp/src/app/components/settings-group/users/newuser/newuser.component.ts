@@ -35,7 +35,7 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
 
   @Input() rolebindingOptions: SelectItem[] = [];
 
-  protected rolebindingUpdateMap = {};
+  rolebindingUpdateMap = {};
 
   constructor(protected _controllerService: ControllerService,
     protected _authService: AuthService,

@@ -423,41 +423,41 @@ export class ControllerService {
 
   invokeRESTErrorToaster(summary: string, error: any, removeSameSummary: boolean = true) {
     if (error == null) {
-      return
+      return;
     }
     if (error.statusCode == null) {
       error.statusCode = 0;
     }
     if (removeSameSummary) {
       // Remove any toasters that already have this summary
-      this.removeToaster(summary)
+      this.removeToaster(summary);
     }
     const buttons: ToolbarButton[] = [
       {
-        text: "Sign out",
+        text: 'Sign out',
         callback: () => {
           this.publish(Eventtypes.LOGOUT, { 'reason': 'User logged out' });
         },
-        cssClass: "global-button-primary"
+        cssClass: 'global-button-primary'
       }
-    ]
-    if (error.statusCode == 401) {
-      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, "Your credentials have expired. Please sign in again.", buttons);
-    } else if (error.statusCode == 403) {
-      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, "Your authorization is insufficient. Please check with your system administrator.");
+    ];
+    if (error.statusCode === 401) {
+      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Your credentials have expired. Please sign in again.', buttons);
+    } else if (error.statusCode === 403) {
+      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Your authorization is insufficient. Please check with your system administrator.');
     } else if (error.statusCode >= 500) {
-      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, "Venice is temporarily unavailable. Please try again later.");
+      this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Venice is temporarily unavailable. Please try again later.');
     }
 
-    if (error.statusCode != 0) {
+    if (error.statusCode !== 0) {
       // If status code is 400, we should almost always have a body with error message
-      const errorMsg = error.body != null ? error.body.message : "Bad request";
+      const errorMsg = error.body != null ? error.body.message : 'Bad request';
       this.invokeErrorToaster(summary, errorMsg);
       return;
     }
 
     // Don't know what the error is, websockets can come to here.
-    this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, "Your credentials are expired/insufficient or Venice is temporarily unavailable. Please sign in again or contact system administrator.", buttons);
+    this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Your credentials are expired/insufficient or Venice is temporarily unavailable. Please sign in again or contact system administrator.', buttons);
   }
 
   // When web sockets have errors, it isn't usually possible to identify
@@ -470,25 +470,25 @@ export class ControllerService {
       this.publish(Eventtypes.FETCH_USER_OBJ, {
         success: () => {
           // Were able to get user obj, so we don't know what was wrong with the ws
-          this.invokeRESTErrorToaster(summary, _error, false)
+          this.invokeRESTErrorToaster(summary, _error, false);
         },
         err: (error) => {
-          if (error.statusCode == 400) {
+          if (error.statusCode === 400) {
             // This should never happen
-            console.error("Controller.serverwebSocketErrorToaster() Failed to get user object when attempting to identify ws error")
-            this.invokeRESTErrorToaster(summary, _error, false)
+            console.error('Controller.serverwebSocketErrorToaster() Failed to get user object when attempting to identify ws error');
+            this.invokeRESTErrorToaster(summary, _error, false);
           } else {
-            this.invokeRESTErrorToaster(summary, error, false)
+            this.invokeRESTErrorToaster(summary, error, false);
           }
         }
-      })
+      });
     }
   }
 
   webSocketErrorHandler(summary: string) {
     return (error) => {
       this.webSocketErrorToaster(summary, error);
-    }
+    };
   }
 
   restErrorHandler(summary: string) {

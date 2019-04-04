@@ -2,7 +2,8 @@
   <app-penuitabs [style.height]="'100%'">
     <app-penuitab title="EVENT ALERT POLICIES" [count]="eventPolicies?.length">
       <ng-template>
-        <app-eventalertpolicies #tabContent [dataObjects]="eventPolicies" [destinations]="destinations"></app-eventalertpolicies>
+        <app-eventalertpolicies #tabContent [dataObjects]="eventPolicies"
+                                [destinations]="destinations"></app-eventalertpolicies>
       </ng-template>
     </app-penuitab>
     <app-penuitab title="DESTINATIONS" [count]="destinations?.length">

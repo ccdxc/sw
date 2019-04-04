@@ -5,16 +5,16 @@ $vertical-gutter: 5px;
 
 .authpolicy-widget {
   @include primary-font();
-  
+
 }
 
 .authpolicy-toolbar-button {
-    height: 30px;
-    font-weight: 500;
-    text-align: center;
-    display: block;
-    padding: 0px 10px;
-    min-width:80px;
+  height: 30px;
+  font-weight: 500;
+  text-align: center;
+  display: block;
+  padding: 0px 10px;
+  min-width: 80px;
 }
 
 .authpolicy-group {
@@ -42,12 +42,12 @@ $vertical-gutter: 5px;
 
 .authpolicy-update-secret,
 .authpolicy-button,
-.authpolicy-save, 
+.authpolicy-save,
 .authpolicy-cancel {
-    font-size: 16px;
-    padding: 4px 10px;
-    line-height: 25px;
-    margin: 20px 20px 20px 0px;
+  font-size: 16px;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 20px 20px 20px 0px;
 }
 
 .authpolicy-update-secret {
@@ -68,9 +68,11 @@ $vertical-gutter: 5px;
 .authpolicy-authenticators-shadow {
   background: #f7f7f7;
 }
+
 .authpolicy-group {
   border-left: solid 1px #dddddd;
 }
+
 // ***********************************
 
 .authpolicy-panel-content-input {
@@ -80,7 +82,7 @@ $vertical-gutter: 5px;
 .authpolicy-auth-description {
   margin-bottom: 20px;
   @include primary-font(16px, #484848);
-  
+
   mat-form-field {
     @include global-mat-form-field;
     margin-top: 0px;
@@ -96,6 +98,7 @@ $vertical-gutter: 5px;
 .authpolicy-arrow-up {
   color: #6ba0e5;
   margin: 20px 20px 0px 0px;
+
   &:hover {
     cursor: pointer;
   }
@@ -104,6 +107,7 @@ $vertical-gutter: 5px;
 .authpolicy-arrow-down {
   color: #6ba0e5;
   margin: 0px 20px 20px 0px;
+
   &:hover {
     cursor: pointer;
   }
@@ -134,15 +138,17 @@ $vertical-gutter: 5px;
 
 .authpolicy-and {
   white-space: nowrap;
-    color: #6ba0e5;
-    display: inline-block;
-    > span:hover {
-        text-decoration: underline;
-        cursor: pointer;
-    }
-    > mat-icon:hover {
-        cursor: pointer;
-    }
+  color: #6ba0e5;
+  display: inline-block;
+
+  >span:hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  >mat-icon:hover {
+    cursor: pointer;
+  }
 }
 
 .authpolicy-lock {

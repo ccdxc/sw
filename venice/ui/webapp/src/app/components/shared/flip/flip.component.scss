@@ -23,16 +23,16 @@
   left: 0;
 }
 
-.flip-front  {
-  -webkit-transform : rotateX(0deg);
-  -ms-transform     : rotateX(0deg);
-  transform         : rotateX(0deg);
+.flip-front {
+  -webkit-transform: rotateX(0deg);
+  -ms-transform: rotateX(0deg);
+  transform: rotateX(0deg);
 }
 
 .flip-back {
-  -webkit-transform : rotateX(180deg);
-  -ms-transform     : rotateX(180deg);
-  transform         : rotateX(180deg);
+  -webkit-transform: rotateX(180deg);
+  -ms-transform: rotateX(180deg);
+  transform: rotateX(180deg);
 }
 
 .flip-active {

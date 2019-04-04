@@ -9,7 +9,7 @@ import { MatTooltip, MatTooltipDefaultOptions, MAT_TOOLTIP_DEFAULT_OPTIONS, MAT_
 import { HammerLoader, HAMMER_LOADER } from '@angular/platform-browser';
 
 @Directive({
-  selector: '[app-errorTooltip]',
+  selector: '[appErrorTooltip]',
   exportAs: 'errorTooltip',
   host: {
     '(longpress)': 'show()',

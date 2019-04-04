@@ -1,30 +1,29 @@
 <app-pagebody [icon]="bodyIcon" header="Event Policies">
   <app-tableviewedit fxLayout="column" class="eventpolicy-widget"
-                    [creatingMode]="creatingMode" 
-                    [showRowExpand]="showRowExpand"
-                    [data]="dataObjects"
-                    [cols]="cols"
-                    [expandedRowData]="expandedRowData"
-                    [captionTemplate]="captionTemplate"
-                    [bodyTemplate]="bodyTemplate"
-                    [actionTemplate]="actionTemplate"
-                    [expandTemplate]="expandTemplate"
-                    [createTemplate]="createTemplate"
-                    (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
-                    >
+                     [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand"
+                     [data]="dataObjects"
+                     [cols]="cols"
+                     [expandedRowData]="expandedRowData"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [actionTemplate]="actionTemplate"
+                     [expandTemplate]="expandTemplate"
+                     [createTemplate]="createTemplate"
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
   </app-tableviewedit>
 </app-pagebody>
 
 <ng-template #createTemplate>
-  <app-neweventpolicy (formClose)="creationFormClose()" fxFlex="none" ></app-neweventpolicy>
+  <app-neweventpolicy (formClose)="creationFormClose()" fxFlex="none"></app-neweventpolicy>
 </ng-template>
-  
-  <!-- TABLE HEADER -->
+
+<!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
   <app-tableheader title="Policies" [total]="count" [icon]="headerIcon" width="250px">
   </app-tableheader>
 </ng-template>
-  
+
 <ng-template #bodyTemplate let-rowData let-col="col">
   <ng-container [ngSwitch]="col.field">
     <ng-container *ngSwitchCase="'spec.selector'">
@@ -37,14 +36,17 @@
     </ng-container>
   </ng-container>
 </ng-template>
-  
+
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon matTooltip="Edit policy" class="global-table-action-icon" (click)="expandRowRequest($event, rowData)">edit</mat-icon>
-    <mat-icon matTooltip="Delete policy" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+    <mat-icon matTooltip="Edit policy" class="global-table-action-icon"
+              (click)="expandRowRequest($event, rowData)">edit</mat-icon>
+    <mat-icon matTooltip="Delete policy" class="global-table-action-icon"
+              (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
 </ng-template>
-  
+
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-neweventpolicy [policyData]="rowData" [isInline]="true" (formClose)="closeRowExpand()"></app-neweventpolicy>
+  <app-neweventpolicy [policyData]="rowData" [isInline]="true" (formClose)="closeRowExpand()">
+  </app-neweventpolicy>
 </ng-template>

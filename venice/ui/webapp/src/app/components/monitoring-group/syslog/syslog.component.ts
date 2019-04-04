@@ -3,7 +3,9 @@ import { Animations } from '@app/animations';
 import { SelectItem } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
 import { MonitoringSyslogExport, MonitoringExternalCred, IMonitoringSyslogExport, MonitoringExportConfig, MonitoringSyslogExportConfig } from '@sdk/v1/models/generated/monitoring';
-import { FormArray, FormGroup } from '@angular/forms';
+import { FormArray, FormGroup, AbstractControl } from '@angular/forms';
+import { BaseComponent } from '@app/components/base/base.component';
+import { ControllerService } from '@app/services/controller.service';
 
 @Component({
   selector: 'app-syslog',
@@ -12,7 +14,7 @@ import { FormArray, FormGroup } from '@angular/forms';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class SyslogComponent implements OnInit {
+export class SyslogComponent extends BaseComponent implements OnInit {
   @Input() syslogExport: IMonitoringSyslogExport;
   @Input() showSyslogOptions: boolean = true;
   @Input() formatOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSyslogExport.propInfo['format'].enum);
@@ -24,7 +26,9 @@ export class SyslogComponent implements OnInit {
 
   targets: any;
 
-  constructor() { }
+  constructor(protected _controllerService: ControllerService) {
+    super(_controllerService);
+  }
 
   ngOnInit() {
     let syslogExport;

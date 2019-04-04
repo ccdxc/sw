@@ -1,131 +1,137 @@
 <div class="pensUI-app {{os}} {{browsertype}} {{browserversion}} {{_currentComponent? _currentComponent['component']: ''}} "
-    id="pensando-ui-screen">
-    <p-confirmDialog header="Confirmation" [closable]="false" icon="pi pi-exclamation-triangle">
-    </p-confirmDialog>
-    <div class="pensUI-app-center">
-        <ng-container>
-            <mat-toolbar color="primary">
-                <mat-toolbar-row class="app-shell-tool-bar-row">
-                    <div class="app-shell-header-logo-div">
-                        <img id="app-header-logo" class="navbar-btn app-header-logo" src="../../../assets/images/headers/pensando-header-logo.svg" />
-                        <!-- Commenting out collapsed sidenav for August release
+     id="pensando-ui-screen">
+  <p-confirmDialog header="Confirmation" [closable]="false" icon="pi pi-exclamation-triangle">
+  </p-confirmDialog>
+  <div class="pensUI-app-center">
+    <ng-container>
+      <mat-toolbar color="primary">
+        <mat-toolbar-row class="app-shell-tool-bar-row">
+          <div class="app-shell-header-logo-div">
+            <img id="app-header-logo" class="navbar-btn app-header-logo"
+                 src="../../../assets/images/headers/pensando-header-logo.svg" />
+            <!-- Commenting out collapsed sidenav for August release
                             The pin/unpin isn't completely smooth
                             Menu expanded doesn't always cause the main content
                             to flow correctly -->
-                        <!-- <button mat-icon-button (click)="sidenav.toggle()" title="Show Or Hide Side Menu">
+            <!-- <button mat-icon-button (click)="sidenav.toggle()" title="Show Or Hide Side Menu">
                             <mat-icon svgIcon="menu-pin"></mat-icon>
                         </button>
                         <button mat-icon-button (click)="onSidebarCollapseClick($event);" title="Expand Or Collapse Side Menu" [style.visibility]="sidenav.opened ? 'visible' : 'hidden'">
                             <mat-icon svgIcon="menu-expand" *ngIf="!isSideNavExpanded"></mat-icon>
                             <mat-icon svgIcon="menu-collapse" *ngIf="isSideNavExpanded"></mat-icon>
                         </button> -->
-                    </div>
+          </div>
 
-                    <div class="app-shell-header-search-div">
-                        <app-searchbox></app-searchbox>
-                    </div>
+          <div class="app-shell-header-search-div">
+            <app-searchbox></app-searchbox>
+          </div>
 
-                    <span class="app-shell-spacer"></span>
-                    <div class="app-shell-toolbar-icon-div">
-                        <a class="app-shell-doclink" [href]="docLink" target="_blank">
-                            <button [disableRipple]="true" mat-button>DOCS</button>
-                        </a> 
-                        <!-- Commenting out for August release -->
-                        <!-- <button mat-button>Save</button> -->
-                        <button mat-icon-button (click)="onToolbarIconClick($event, 'notifications')">
-                            <mat-icon>notifications </mat-icon>
-                            <span class="app-notification-number" *ngIf="alertNumbers>0">{{alertNumbers}}</span>
-                        </button>
-                        <button mat-icon-button class="app-user-button" [matMenuTriggerFor]="toolbarUserMenu">
-                            <mat-icon>person</mat-icon>
-                        </button>
-                        <mat-menu class="app-shell-toolbar-user-menu" #toolbarUserMenu="matMenu">
-                            <div class="app-shell-toolbar-user-menu-name">User: {{ userName}} </div>
-                            <button mat-menu-item class="app-logout-button" (click)="onLogoutClick()">
-                                <mat-icon style="color: black">power_settings_new</mat-icon>
-                                <span>Sign out</span>
-                            </button>
-                        </mat-menu>
-                        <button mat-icon-button (click)="onToolbarIconClick($event, 'settings')" class="hidden-sm-down">
-                            <mat-icon>settings</mat-icon>
-                        </button>
-                    </div>
-                </mat-toolbar-row>
+          <span class="app-shell-spacer"></span>
+          <div class="app-shell-toolbar-icon-div">
+            <a class="app-shell-doclink" [href]="docLink" target="_blank">
+              <button [disableRipple]="true" mat-button>DOCS</button>
+            </a>
+            <!-- Commenting out for August release -->
+            <!-- <button mat-button>Save</button> -->
+            <button mat-icon-button (click)="onToolbarIconClick($event, 'notifications')">
+              <mat-icon>notifications </mat-icon>
+              <span class="app-notification-number" *ngIf="alertNumbers>0">{{alertNumbers}}</span>
+            </button>
+            <button mat-icon-button class="app-user-button" [matMenuTriggerFor]="toolbarUserMenu">
+              <mat-icon>person</mat-icon>
+            </button>
+            <mat-menu class="app-shell-toolbar-user-menu" #toolbarUserMenu="matMenu">
+              <div class="app-shell-toolbar-user-menu-name">User: {{ userName}} </div>
+              <button mat-menu-item class="app-logout-button" (click)="onLogoutClick()">
+                <mat-icon style="color: black">power_settings_new</mat-icon>
+                <span>Sign out</span>
+              </button>
+            </mat-menu>
+            <button mat-icon-button (click)="onToolbarIconClick($event, 'settings')"
+                    class="hidden-sm-down">
+              <mat-icon>settings</mat-icon>
+            </button>
+          </div>
+        </mat-toolbar-row>
 
-            </mat-toolbar>
+      </mat-toolbar>
 
-            <mat-sidenav-container #container class="app-shell-container" autosize>
-                <mat-sidenav #rightSideNav opened="false" mode="over" position="end" [ngSwitch]="whichRightSideNav()"
-                    class="app-shell-right-sidenav">
-                    <div *ngSwitchCase="'notifications'">
-                        <ng-container *ngTemplateOutlet="sideNavNotification; "></ng-container>
-                    </div>
-                    <ng-container *ngSwitchCase="'settings'">
-                        <ng-container *ngTemplateOutlet="sideNavSettings; "></ng-container>
-                    </ng-container>
-                </mat-sidenav>
-                <mat-sidenav #sidenav class="app-shell-left-sidenav" mode="side" opened="true" id="app-sidebar">
-                    <!-- Side Nav Items -->
-                    <ul class="list-unstyled components">
-                        <li routerLink="/dashboard" routerLinkActive="app-sidenav-selected">
-                            <a class="app-sidenav-item" id="dashboard">
-                                <i class="material-icons">dashboard</i>
-                                <span class="app-l-side-nav-item-label">Dashboard</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#clusterSubmenu" data-toggle="collapse" aria-expanded="false" class="app-sidenav-group-header">
-                                <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster"></i>
-                                <span class="app-l-side-nav-item-label">Cluster</span>
-                            </a>
-                            <ul class="collapse list-unstyled app-l-side-nav-ul-submenu" id="clusterSubmenu">
-                                <li>
-                                    <a class="app-sidenav-item" id="cluster">
-                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster-detail"></i>
-                                        <span class="app-l-side-nav-item-label">Cluster</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="app-sidenav-item" id="naples">
-                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster-naples"></i>
-                                        <span class="app-l-side-nav-item-label">NAPLES</span>
-                                    </a>
-                                </li>
-                                <!-- Commenting out for August release -->
-                                <!-- <li>
+      <mat-sidenav-container #container class="app-shell-container" autosize>
+        <mat-sidenav #rightSideNav opened="false" mode="over" position="end"
+                     [ngSwitch]="whichRightSideNav()"
+                     class="app-shell-right-sidenav">
+          <div *ngSwitchCase="'notifications'">
+            <ng-container *ngTemplateOutlet="sideNavNotification; "></ng-container>
+          </div>
+          <ng-container *ngSwitchCase="'settings'">
+            <ng-container *ngTemplateOutlet="sideNavSettings; "></ng-container>
+          </ng-container>
+        </mat-sidenav>
+        <mat-sidenav #sidenav class="app-shell-left-sidenav" mode="side" opened="true"
+                     id="app-sidebar">
+          <!-- Side Nav Items -->
+          <ul class="list-unstyled components">
+            <li routerLink="/dashboard" routerLinkActive="app-sidenav-selected">
+              <a class="app-sidenav-item" id="dashboard">
+                <i class="material-icons">dashboard</i>
+                <span class="app-l-side-nav-item-label">Dashboard</span>
+              </a>
+            </li>
+            <li>
+              <a href="#clusterSubmenu" data-toggle="collapse" aria-expanded="false"
+                 class="app-sidenav-group-header">
+                <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster"></i>
+                <span class="app-l-side-nav-item-label">Cluster</span>
+              </a>
+              <ul class="collapse list-unstyled app-l-side-nav-ul-submenu" id="clusterSubmenu">
+                <li>
+                  <a class="app-sidenav-item" id="cluster">
+                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster-detail"></i>
+                    <span class="app-l-side-nav-item-label">Cluster</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="app-sidenav-item" id="naples">
+                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster-naples"></i>
+                    <span class="app-l-side-nav-item-label">NAPLES</span>
+                  </a>
+                </li>
+                <!-- Commenting out for August release -->
+                <!-- <li>
                                     <a class="app-sidenav-item" id="updates">Updates</a>
                                 </li> -->
-                            </ul>
-                        </li>
-                        <li routerLink="/workload" routerLinkActive="app-sidenav-selected">
-                            <a class="app-sidenav-item" id="workload">
-                                <i class="glyphicon app-l-side-nav-li app-l-side-nav-workload"></i>
-                                <span class="app-l-side-nav-item-label">Workloads</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#securitySubmenu" data-toggle="collapse" aria-expanded="false">
-                                <i class="glyphicon app-l-side-nav-li app-l-side-nav-security"></i>
-                                <span class="app-l-side-nav-item-label">Security</span>
-                            </a>
-                            <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="securitySubmenu">
-                                <li>
-                                    <a class="app-sidenav-item" id="sgpolicies">
-                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-security-securitypolicy"></i>
-                                        <span class="app-l-side-nav-item-label">SG Policies</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="app-sidenav-item" id="securityapps">
-                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-security-apps"></i>
-                                        <span class="app-l-side-nav-item-label">Security Apps</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
+              </ul>
+            </li>
+            <li routerLink="/workload" routerLinkActive="app-sidenav-selected">
+              <a class="app-sidenav-item" id="workload">
+                <i class="glyphicon app-l-side-nav-li app-l-side-nav-workload"></i>
+                <span class="app-l-side-nav-item-label">Workloads</span>
+              </a>
+            </li>
+            <li>
+              <a href="#securitySubmenu" data-toggle="collapse" aria-expanded="false">
+                <i class="glyphicon app-l-side-nav-li app-l-side-nav-security"></i>
+                <span class="app-l-side-nav-item-label">Security</span>
+              </a>
+              <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="securitySubmenu">
+                <li>
+                  <a class="app-sidenav-item" id="sgpolicies">
+                    <i
+                       class="glyphicon app-l-side-nav-li app-l-side-nav-security-securitypolicy"></i>
+                    <span class="app-l-side-nav-item-label">SG Policies</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="app-sidenav-item" id="securityapps">
+                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-security-apps"></i>
+                    <span class="app-l-side-nav-item-label">Security Apps</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
 
-                        <!-- Commenting out for August release -->
-                        <!-- <li>
+            <!-- Commenting out for August release -->
+            <!-- <li>
                             <a href="#networkSubmenu" data-toggle="collapse" aria-expanded="false">
                                 <i class="glyphicon app-l-side-nav-li app-l-side-nav-network"></i>
                                 <span class="app-l-side-nav-item-label">Network</span>
@@ -139,142 +145,157 @@
                                 </li>
                             </ul>
                         </li> -->
-                        <li>
-                            <a href="#monitoringSubmenu" data-toggle="collapse" aria-expanded="false">
-                                <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring"></i>
-                                <span class="app-l-side-nav-item-label">Monitoring</span>
-                            </a>
-                            <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="monitoringSubmenu">
-                                <!-- Commenting out for August release -->
-                                <!-- <li>
+            <li>
+              <a href="#monitoringSubmenu" data-toggle="collapse" aria-expanded="false">
+                <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring"></i>
+                <span class="app-l-side-nav-item-label">Monitoring</span>
+              </a>
+              <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="monitoringSubmenu">
+                <!-- Commenting out for August release -->
+                <!-- <li>
                                     <a class="app-sidenav-item" id="metrics">Metrics</a>
                                 </li> -->
-                                <li>
-                                    <a class="app-sidenav-item" id="alertsevents">
-                                        <i class="material-icons">event_available</i>
-                                        <span class="app-l-side-nav-item-label">Alerts & Events</span>
-                                    </a>
-                                </li>
-                                <li>
-                                        <a class="app-sidenav-item" id="auditevents">
-                                            <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring-auditevents"></i>
-                                            <span class="app-l-side-nav-item-label">Audit Events</span>
-                                        </a>
-                                    </li>
-                                
-                                <li>
-                                    <a class="app-sidenav-item" id="fwlogs">
-                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring-fwlogs"></i>
-                                        <span class="app-l-side-nav-item-label">Firewall Logs</span>
-                                    </a>
-				                </li>
-                                <li>
-                                    <a class="app-sidenav-item" id="flowexport">
-                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring-flowexport"></i>
-                                        <span class="app-l-side-nav-item-label">Flow Export</span>
-                                    </a>
-                                </li>
-                                <li>
-                                        <a class="app-sidenav-item" id="techsupport">
-                                            <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring-techsupport"></i>
-                                            <span class="app-l-side-nav-item-label">Tech Support</span>
-                                        </a>
-                                    </li>
-                                <!-- 
+                <li>
+                  <a class="app-sidenav-item" id="alertsevents">
+                    <i class="material-icons">event_available</i>
+                    <span class="app-l-side-nav-item-label">Alerts & Events</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="app-sidenav-item" id="auditevents">
+                    <i
+                       class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring-auditevents"></i>
+                    <span class="app-l-side-nav-item-label">Audit Events</span>
+                  </a>
+                </li>
+
+                <li>
+                  <a class="app-sidenav-item" id="fwlogs">
+                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring-fwlogs"></i>
+                    <span class="app-l-side-nav-item-label">Firewall Logs</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="app-sidenav-item" id="flowexport">
+                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring-flowexport"></i>
+                    <span class="app-l-side-nav-item-label">Flow Export</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="app-sidenav-item" id="techsupport">
+                    <i
+                       class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring-techsupport"></i>
+                    <span class="app-l-side-nav-item-label">Tech Support</span>
+                  </a>
+                </li>
+                <!-- 
                                 <li>
                                     <a class="app-sidenav-item" id="troubleshooting">Troubleshooting</a>
                                 </li> 
                                 -->
-                            </ul>
-                        </li>
-                    </ul>
-                </mat-sidenav>
-                <mat-sidenav-content>
-                    <app-toolbar #breadcrumbToolbar></app-toolbar>
-                    <div class="app-shell-router-outter-div">
-                        <app-toaster>
-                            <ng-template let-message let-onClose="onClose" pTemplate="message">
-                                <div fxLayout="row" [class]="'app-ptoast-' + message.severity + ' app-ptoast-template'">
-                                    <mat-icon *ngIf="message.severity === 'success'" fxFlex="none" class="app-ptoast-icon">
-                                        check_circle
-                                    </mat-icon>
-                                    <mat-icon *ngIf="message.severity === 'info'" fxFlex="none" class="app-ptoast-icon">
-                                        info
-                                    </mat-icon>
-                                    <mat-icon *ngIf="message.severity === 'warn'" fxFlex="none" class="app-ptoast-icon">
-                                        warning
-                                    </mat-icon>
-                                    <mat-icon *ngIf="message.severity === 'error'" fxFlex="none" class="app-ptoast-icon">
-                                        error
-                                    </mat-icon>
-                                    <div fxFlex fxLayout="column">
-                                        <div fxFlex="nogrow" class="ui-toast-summary">{{message.summary}}</div>
-                                        <div fxFlex="nogrow" class="ui-toast-detail">{{message.detail}}</div>
-                                        <div fxFlex="nogrow" class="app-toast-container" *ngIf="message.buttons != null && message.buttons.length > 0">
-                                            <span *ngFor="let button of message.buttons" class="app-toast-button" [ngClass]="[button.cssClass != null ? button.cssClass : '', button.computeClass != null ? button.computeClass() : '' ]" (click)="button.callback($event)">
-                                            {{button.text}}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
-                                        <mat-icon fxFlex="none" class="app-ptoast-close" (click)="onClose($event)">close</mat-icon>
-                                    </div>
-                                </div>
-                            </ng-template>
-                        </app-toaster>
-                        <router-outlet></router-outlet>
+              </ul>
+            </li>
+          </ul>
+        </mat-sidenav>
+        <mat-sidenav-content>
+          <app-toolbar #breadcrumbToolbar></app-toolbar>
+          <div class="app-shell-router-outter-div">
+            <app-toaster>
+              <ng-template let-message let-onClose="onClose" pTemplate="message">
+                <div fxLayout="row"
+                     [class]="'app-ptoast-' + message.severity + ' app-ptoast-template'">
+                  <mat-icon *ngIf="message.severity === 'success'" fxFlex="none"
+                            class="app-ptoast-icon">
+                    check_circle
+                  </mat-icon>
+                  <mat-icon *ngIf="message.severity === 'info'" fxFlex="none"
+                            class="app-ptoast-icon">
+                    info
+                  </mat-icon>
+                  <mat-icon *ngIf="message.severity === 'warn'" fxFlex="none"
+                            class="app-ptoast-icon">
+                    warning
+                  </mat-icon>
+                  <mat-icon *ngIf="message.severity === 'error'" fxFlex="none"
+                            class="app-ptoast-icon">
+                    error
+                  </mat-icon>
+                  <div fxFlex fxLayout="column">
+                    <div fxFlex="nogrow" class="ui-toast-summary">{{message.summary}}</div>
+                    <div fxFlex="nogrow" class="ui-toast-detail">{{message.detail}}</div>
+                    <div fxFlex="nogrow" class="app-toast-container"
+                         *ngIf="message.buttons != null && message.buttons.length > 0">
+                      <span *ngFor="let button of message.buttons" class="app-toast-button"
+                            [ngClass]="[button.cssClass != null ? button.cssClass : '', button.computeClass != null ? button.computeClass() : '' ]"
+                            (click)="button.callback($event)">
+                        {{button.text}}
+                      </span>
                     </div>
+                  </div>
+                  <div fxFlex="none" fxLayout="column" fxLayoutAlign="center center">
+                    <mat-icon fxFlex="none" class="app-ptoast-close" (click)="onClose($event)">close
+                    </mat-icon>
+                  </div>
+                </div>
+              </ng-template>
+            </app-toaster>
+            <router-outlet></router-outlet>
+          </div>
 
-                </mat-sidenav-content>
-            </mat-sidenav-container>
+        </mat-sidenav-content>
+      </mat-sidenav-container>
 
-            <mat-toolbar class="app-shell-footer">Pensando Systems</mat-toolbar>
-        </ng-container>
-    </div>
+      <mat-toolbar class="app-shell-footer">Pensando Systems</mat-toolbar>
+    </ng-container>
+  </div>
 </div>
 
 <ng-template #sideNavNotification let-item="item">
-    <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Notification">
-        <app-alertlist *ngIf="alerts" [data]="alerts" (expandAllAlertsClick)="onExpandAllAlertsClick($event)"></app-alertlist>
-    </div>
+  <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Notification">
+    <app-alertlist *ngIf="alerts" [data]="alerts"
+                   (expandAllAlertsClick)="onExpandAllAlertsClick($event)"></app-alertlist>
+  </div>
 </ng-template>
 
 <ng-template #sideNavSettings let-item="item">
-    <div fxFlex fxLayout="column">
-        <div fxFlex="auto" class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Settings">
-            <!-- comment out for GS0.3 -->
-            <!--  
+  <div fxFlex fxLayout="column">
+    <div fxFlex="auto" class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Settings">
+      <!-- comment out for GS0.3 -->
+      <!--  
             <button mat-icon-button routerLink="settings" class="hidden-sm-down">
                 <mat-icon>settings</mat-icon>
                 Themes and endpoints
             </button>
             -->
-            <!-- Material-Design sideNav will auto highlight the first button when open. Check scss to see style rules -->
-            <button mat-icon-button (click)="settingsNavigate(['/settings', 'authpolicy'])" class="hidden-sm-down">
-                <mat-icon>settings</mat-icon>
-                Authentication Policy
-            </button>       
-            <button mat-icon-button (click)="settingsNavigate(['/settings', 'users'])" class="hidden-sm-down">
-            <mat-icon>person</mat-icon>
-                User Management
-            </button>
-            <button mat-icon-button (click)="settingsNavigate(['/settings', 'upgrade'])" class="hidden-sm-down">
-                <mat-icon>cloud_upload</mat-icon>
-                Upload system upgrade file
-            </button>
-        </div>
-
-        <div fxFlex></div>
-        <div fxFlex="nogrow" class="app-shell-build-info">
-            <div>
-                Build Version: {{cluster?.status["build-version"]}}
-            </div>
-            <div>
-                VCS Commit ID: {{ cluster?.status["vcs-commit"] }}
-            </div>
-            <div>
-                Build Date: {{ cluster?.status["build-date"] }}
-            </div>
-        </div>
+      <!-- Material-Design sideNav will auto highlight the first button when open. Check scss to see style rules -->
+      <button mat-icon-button (click)="settingsNavigate(['/settings', 'authpolicy'])"
+              class="hidden-sm-down">
+        <mat-icon>settings</mat-icon>
+        Authentication Policy
+      </button>
+      <button mat-icon-button (click)="settingsNavigate(['/settings', 'users'])"
+              class="hidden-sm-down">
+        <mat-icon>person</mat-icon>
+        User Management
+      </button>
+      <button mat-icon-button (click)="settingsNavigate(['/settings', 'upgrade'])"
+              class="hidden-sm-down">
+        <mat-icon>cloud_upload</mat-icon>
+        Upload system upgrade file
+      </button>
     </div>
+
+    <div fxFlex></div>
+    <div fxFlex="nogrow" class="app-shell-build-info">
+      <div>
+        Build Version: {{cluster?.status["build-version"]}}
+      </div>
+      <div>
+        VCS Commit ID: {{ cluster?.status["vcs-commit"] }}
+      </div>
+      <div>
+        Build Date: {{ cluster?.status["build-date"] }}
+      </div>
+    </div>
+  </div>
 </ng-template>

@@ -35,7 +35,7 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
   inCreateMode: boolean = false;
   radiusObject: AuthRadius = new AuthRadius();
 
-  serverAuthMethodOptions: SelectItem[] = Utility.convertEnumToSelectItem(AuthRadiusServer.propInfo['auth-method'].enum, ["PEAP_MSCHAPv2", "EAP_TTLS_PAP"]);
+  serverAuthMethodOptions: SelectItem[] = Utility.convertEnumToSelectItem(AuthRadiusServer.propInfo['auth-method'].enum, ['PEAP_MSCHAPv2', 'EAP_TTLS_PAP']);
 
 
   @Input() radiusData: AuthRadius;

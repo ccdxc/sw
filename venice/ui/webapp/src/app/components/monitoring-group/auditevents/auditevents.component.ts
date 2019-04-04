@@ -205,7 +205,7 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
       },
       (error) => {
         this.loading = false;
-        this.controllerService.invokeRESTErrorToaster('Failed to get audit-events', error)
+        this.controllerService.invokeRESTErrorToaster('Failed to get audit-events', error);
       }
     );
     this.subscriptions.push(subscription);

@@ -1,20 +1,22 @@
 <div class="container">
   <div class="row">
-    <div class="col-sm-12"><h4>Settings</h4></div>
+    <div class="col-sm-12">
+      <h4>Settings</h4>
+    </div>
   </div>
   <br>
   <div class="row penui-setting-theme-div">
-      <mat-card>
-        <mat-card-title>
-          Theme
-        </mat-card-title>
-    <mat-select class="col-md-6" placeholder="Select theme" name="theme"
-               [ngModel]="theme" (change)="onThemeSelect($event)">
-      <mat-option *ngFor="let t of themes" [value]="t.value">
-        {{t.label}}
-      </mat-option>
-    </mat-select>
-  </mat-card>
+    <mat-card>
+      <mat-card-title>
+        Theme
+      </mat-card-title>
+      <mat-select class="col-md-6" placeholder="Select theme" name="theme"
+                  [ngModel]="theme" (change)="onThemeSelect($event)">
+        <mat-option *ngFor="let t of themes" [value]="t.value">
+          {{t.label}}
+        </mat-option>
+      </mat-select>
+    </mat-card>
   </div>
   <div class="row penui-setting-endpoint">
     <mat-card>
@@ -32,7 +34,7 @@
     <mat-card>
       <mat-slide-toggle [checked]="startStateIdle" (change)="toggleHandlerIdle($event)">
         Enable idling feature
-      </mat-slide-toggle> 
+      </mat-slide-toggle>
     </mat-card>
   </div>
 </div>

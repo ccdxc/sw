@@ -37,7 +37,7 @@ export class AppComponent extends CommonComponent implements OnInit, OnDestroy {
     Utility.getInstance().setControllerService(this._controllerService);
     Utility.getInstance().setLogService(this._logService);
     const sub = this._controllerService.subscribe(Eventtypes.FETCH_USER_OBJ, (payload) => {
-      this.getUserObj(payload)
+      this.getUserObj(payload);
     });
     this.subscriptions.push(sub);
   }

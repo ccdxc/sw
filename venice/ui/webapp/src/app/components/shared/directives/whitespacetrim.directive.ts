@@ -9,12 +9,16 @@ const TAB = 9;
  *
  * Automatically registers onto any inputs or textareas
  * Can opt out of it by adding the class penui-allow-spaces
+ *
+ * Escaping tslint since selector is not used as an attribute
  */
 @Directive({
+  /* tslint:disable */
   selector: `
     input:not([type=checkbox]):not([type=radio]):not([type=password]):not([readonly]):not(.ng-trim-ignore),
     textarea:not([readonly]):not(.penui-allow-spaces),
   `,
+  /* tslint:enable */
 })
 export class WhitespaceTrimDirective {
 

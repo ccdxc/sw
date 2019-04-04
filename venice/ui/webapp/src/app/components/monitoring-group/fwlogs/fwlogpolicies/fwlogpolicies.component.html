@@ -1,18 +1,17 @@
-<app-pagebody  [icon]="bodyIcon" header="Firewall Log Policies">
-<app-tableviewedit fxLayout="column" class="fwlogpolicies-widget"
-                   [creatingMode]="creatingMode" 
-                   [showRowExpand]="showRowExpand"
-                   [data]="dataObjects"
-                   [cols]="cols"
-                   [expandedRowData]="expandedRowData"
-                   [captionTemplate]="captionTemplate"
-                   [bodyTemplate]="bodyTemplate"
-                   [actionTemplate]="actionTemplate"
-                   [expandTemplate]="expandTemplate"
-                   [createTemplate]="createTemplate"
-                   (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
-                   >
-</app-tableviewedit>
+<app-pagebody [icon]="bodyIcon" header="Firewall Log Policies">
+  <app-tableviewedit fxLayout="column" class="fwlogpolicies-widget"
+                     [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand"
+                     [data]="dataObjects"
+                     [cols]="cols"
+                     [expandedRowData]="expandedRowData"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [actionTemplate]="actionTemplate"
+                     [expandTemplate]="expandTemplate"
+                     [createTemplate]="createTemplate"
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+  </app-tableviewedit>
 </app-pagebody>
 
 <!-- TABLE HEADER -->
@@ -22,7 +21,8 @@
 </ng-template>
 
 <ng-template #createTemplate>
-  <app-newfwlogpolicy [@slideInOut] (formClose)="creationFormClose()" fxFlex="none" ></app-newfwlogpolicy>
+  <app-newfwlogpolicy [@slideInOut] (formClose)="creationFormClose()" fxFlex="none">
+  </app-newfwlogpolicy>
 </ng-template>
 
 <ng-template #bodyTemplate let-rowData let-col="col">
@@ -33,12 +33,16 @@
 
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon matTooltip="Edit policy" class="global-table-action-icon fwlogpolicies-table-action-icon-edit" (click)="expandRowRequest($event, rowData)">edit</mat-icon>
-    <mat-icon matTooltip="Delete policy" class="global-table-action-icon fwlogpolicies-table-action-icon-delete" (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+    <mat-icon matTooltip="Edit policy"
+              class="global-table-action-icon fwlogpolicies-table-action-icon-edit"
+              (click)="expandRowRequest($event, rowData)">edit</mat-icon>
+    <mat-icon matTooltip="Delete policy"
+              class="global-table-action-icon fwlogpolicies-table-action-icon-delete"
+              (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-newfwlogpolicy [style.width]="'100%'" [@slideInOut] [policyData]="rowData" [isInline]="true"  (formClose)="closeRowExpand()" fxFlex="none"></app-newfwlogpolicy>
+  <app-newfwlogpolicy [style.width]="'100%'" [@slideInOut] [policyData]="rowData" [isInline]="true"
+                      (formClose)="closeRowExpand()" fxFlex="none"></app-newfwlogpolicy>
 </ng-template>
-

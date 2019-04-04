@@ -62,27 +62,27 @@ describe('NaplesdetailComponent', () => {
     if (naples.status['primary-mac'] != null) {
       expect(fields[0].nativeElement.textContent).toContain(naples.status['primary-mac']);
     } else {
-      expect(fields[0].nativeElement.textContent).toBe('');
+      expect(fields[0].nativeElement.textContent.trim()).toBe('');
     }
     if (naples.spec['ip-config'] != null && naples.spec['ip-config']['ip-address'] != null) {
       expect(fields[1].nativeElement.textContent).toContain(naples.spec['ip-config']['ip-address']);
     } else {
-      expect(fields[1].nativeElement.textContent).toBe('');
+      expect(fields[1].nativeElement.textContent.trim()).toBe('');
     }
     if (naples.spec['hostname'] != null) {
       expect(fields[2].nativeElement.textContent).toContain(naples.spec['hostname']);
     } else {
-      expect(fields[2].nativeElement.textContent).toBe('');
+      expect(fields[2].nativeElement.textContent.trim()).toBe('');
     }
     if (naples.status['admission-phase'] != null) {
       expect(fields[3].nativeElement.textContent).toContain(naples.status['admission-phase']);
     } else {
-      expect(fields[3].nativeElement.textContent).toBe('');
+      expect(fields[3].nativeElement.textContent.trim()).toBe('');
     }
     if (naples.status['serial-num'] != null) {
       expect(fields[4].nativeElement.textContent).toContain(naples.status['serial-num']);
     } else {
-      expect(fields[4].nativeElement.textContent).toBe('');
+      expect(fields[4].nativeElement.textContent.trim()).toBe('');
     }
   }
 

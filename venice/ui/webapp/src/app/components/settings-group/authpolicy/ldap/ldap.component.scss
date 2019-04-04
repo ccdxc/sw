@@ -10,12 +10,12 @@ $vertical-gutter: 5px;
   right: 0;
   bottom: 0;
   background-color: rgba(255, 255, 255, 0.6);
-  z-index:10;
+  z-index: 10;
 }
 
 .ldap-create {
   z-index: 20; // Needs to be higher than ldap-overlay, but less
-               // than authpolicy overlay
+  // than authpolicy overlay
 }
 
 .ldap-toggle {
@@ -52,7 +52,7 @@ $vertical-gutter: 5px;
 
 .ldap-bind-connection-button {
   font-size: 16px;
-  margin-left:5px;
+  margin-left: 5px;
   padding: 3px 10px;
   line-height: 25px;
 }
@@ -78,20 +78,21 @@ $vertical-gutter: 5px;
 
 .ldap-and {
   white-space: nowrap;
-    // margin-top: 2*$vertical-gutter;
-    color: #6ba0e5;
-    display: inline-block;
-    > span:hover {
-        text-decoration: underline;
-        cursor: pointer;
-    }
-    > mat-icon:hover {
-        cursor: pointer;
-    }
+  // margin-top: 2*$vertical-gutter;
+  color: #6ba0e5;
+  display: inline-block;
+
+  >span:hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  >mat-icon:hover {
+    cursor: pointer;
+  }
 }
 
 .ldap-test-error-icon {
   cursor: pointer;
   margin-left: 10px;
 }
-

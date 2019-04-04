@@ -1,11 +1,12 @@
-<div fxFlex="noshrink" fxLayout="row" class="authpolicy-group" [ngClass]="!LDAPEditMode ? 'authpolicy-group-hover' : '' ">
+<div fxFlex="noshrink" fxLayout="row" class="authpolicy-group"
+     [ngClass]="!LDAPEditMode ? 'authpolicy-group-hover' : '' ">
   <ng-container *ngIf="LDAPData != null">
     <ng-container *ngTemplateOutlet="LDAP"></ng-container>
   </ng-container>
   <ng-container *ngIf="LDAPData == null">
-      <ng-container *ngTemplateOutlet="LDAPCreate"></ng-container>
-    </ng-container>
-</div> 
+    <ng-container *ngTemplateOutlet="LDAPCreate"></ng-container>
+  </ng-container>
+</div>
 
 <ng-template #LDAPCreate>
   <div class="ldap-overlay"></div>
@@ -16,7 +17,8 @@
         LDAP
       </div>
       <div fxFlex></div>
-      <div fxFlex="nogrow" class="global-button-primary authpolicy-button ldap-create" (click)="createLDAP()">
+      <div fxFlex="nogrow" class="global-button-primary authpolicy-button ldap-create"
+           (click)="createLDAP()">
         CREATE LDAP AUTHENTICATOR
       </div>
     </div>
@@ -35,14 +37,15 @@
 <ng-template #LDAP>
   <div fxFlex fxLayout="column">
     <div fxFlex="nogrow" fxLayout="row" [formGroup]="LDAPObject.$formGroup">
-      <mat-slide-toggle formControlName="enabled" fxFlex='nogrow' class="ldap-toggle" ></mat-slide-toggle>
+      <mat-slide-toggle formControlName="enabled" fxFlex='nogrow' class="ldap-toggle">
+      </mat-slide-toggle>
       <div class="ldap-title authpolicy-config-title">
         LDAP
       </div>
     </div>
     <ng-container *ngTemplateOutlet="LDAPConfig"></ng-container>
     <div fxFlex="40px"></div>
-  
+
     <!-- Server setup -->
     <div fxFlex="noshrink" fxLayout="row" [style.position]="'relative'">
       <div fxFlex fxLayout="column">
@@ -54,32 +57,39 @@
     </div>
   </div>
   <div *ngIf="!LDAPEditMode" fxFlex="nogrow" fxLayout="column">
-    <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" fxLayoutGap="10px" class="authpolicy-arrow-up">
+    <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" fxLayoutGap="10px"
+         class="authpolicy-arrow-up">
       <!-- NOT EDIT MODE, SHOW EDIT BUTTON AND ARROW -->
-      <mat-icon  [matTooltip]="'Edit LDAP Config'" class="ldap-edit-icon" *ngIf="isHover && !LDAPEditMode" fxFlex="nogrow" (click)="toggleEdit()">
+      <mat-icon [matTooltip]="'Edit LDAP Config'" class="ldap-edit-icon"
+                *ngIf="isHover && !LDAPEditMode" fxFlex="nogrow" (click)="toggleEdit()">
         edit
       </mat-icon>
-      <mat-icon [matTooltip]="'Delete LDAP Config'" class="ldap-edit-icon" *ngIf="isHover && !LDAPEditMode" fxFlex="nogrow" (click)="onDeleteLDAP()">
-          delete
-        </mat-icon>
-      <mat-icon  [matTooltip]="'Move LDAP Order Up'" *ngIf="!LDAPEditMode && canRaiseAuthRank()" (click)="raiseAuthRank()">
+      <mat-icon [matTooltip]="'Delete LDAP Config'" class="ldap-edit-icon"
+                *ngIf="isHover && !LDAPEditMode" fxFlex="nogrow" (click)="onDeleteLDAP()">
+        delete
+      </mat-icon>
+      <mat-icon [matTooltip]="'Move LDAP Order Up'" *ngIf="!LDAPEditMode && canRaiseAuthRank()"
+                (click)="raiseAuthRank()">
         arrow_upward
       </mat-icon>
     </div>
     <div fxFlex="noshrink" fxLayout="row" fxLayoutAlign="end center">
-      <div *ngIf="currentRank != null" fxFlex="nogrow" class="authpolicy-rank"> {{currentRank + 1}} </div>
+      <div *ngIf="currentRank != null" fxFlex="nogrow" class="authpolicy-rank"> {{currentRank + 1}}
+      </div>
     </div>
     <div fxFlex="24px" fxLayout="row" fxLayoutAlign="end stretch" class="authpolicy-arrow-down">
-      <mat-icon   [matTooltip]="'Move LDAP Order Down'" fxFlex="nogrow" *ngIf="!LDAPEditMode && canLowerAuthRank()" (click)="lowerAuthRank()">
-          arrow_downward
+      <mat-icon [matTooltip]="'Move LDAP Order Down'" fxFlex="nogrow"
+                *ngIf="!LDAPEditMode && canLowerAuthRank()" (click)="lowerAuthRank()">
+        arrow_downward
       </mat-icon>
     </div>
   </div>
   <!-- EDIT MODE, SHOW SAVE/CANCEL BUTTON -->
-  <div *ngIf="LDAPEditMode" fxFlex="nogrow" fxLayout="row">    
-    <div  fxFlex="nogrow">
-      <button (click)="saveLDAP()" class="global-button-primary authpolicy-save authpolicy-save-ldap" 
-       [disabled]="!enableSaveButton()" >SAVE</button>
+  <div *ngIf="LDAPEditMode" fxFlex="nogrow" fxLayout="row">
+    <div fxFlex="nogrow">
+      <button (click)="saveLDAP()"
+              class="global-button-primary authpolicy-save authpolicy-save-ldap"
+              [disabled]="!enableSaveButton()">SAVE</button>
     </div>
     <div fxFlex="nogrow">
       <div (click)="cancelEdit()" class="global-button-neutral authpolicy-cancel">CANCEL</div>
@@ -99,7 +109,7 @@
         </div> -->
         <div fxFlex="30px" class="ldap-fieldtitle">CREDENTIALS</div>
         <div fxFlex="noshrink" fxLayout="row">
-          <!-- Field Title --> 
+          <!-- Field Title -->
           <div fxFlex="nogrow" fxLayout="column">
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
               <span>* Bind DN:</span>
@@ -111,26 +121,33 @@
           <!-- Field Values - edit mode -->
           <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
-              <input fxFlex="nogrow" formControlName="bind-dn"  app-errorTooltip  class="ldap-input" spellcheck="false" type="text"  pInputText  placeholder="">
-              <div fxFlex="nogrow" class="global-button-primary ldap-bind-connection-button" (click)="onCheckLDAPBindConnect($event)">Test Bind</div>
-              <mat-icon *ngIf="hasBindConfigError()" (click)="onBindErrorMessageClick()"  title="{{getBindConfigErrorTooltip()}}" class="ldap-test-error-icon ldap-test-error-icon-bind">
-                  error
+              <input fxFlex="nogrow" formControlName="bind-dn" appErrorTooltip class="ldap-input"
+                     spellcheck="false" type="text" pInputText placeholder="">
+              <div fxFlex="nogrow" class="global-button-primary ldap-bind-connection-button"
+                   (click)="onCheckLDAPBindConnect($event)">Test Bind</div>
+              <mat-icon *ngIf="hasBindConfigError()" (click)="onBindErrorMessageClick()"
+                        title="{{getBindConfigErrorTooltip()}}"
+                        class="ldap-test-error-icon ldap-test-error-icon-bind">
+                error
               </mat-icon>
             </div>
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" formControlName="bind-password"  app-errorTooltip  class="ldap-input" spellcheck="false" type="text"  pInputText  placeholder="">
+              <input fxFlex="nogrow" formControlName="bind-password" appErrorTooltip
+                     class="ldap-input" spellcheck="false" type="text" pInputText placeholder="">
             </div>
           </div>
           <!-- Field Values - view mode -->
           <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
-            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input" fxLayoutAlign="start center">
+            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
+                 fxLayoutAlign="start center">
               {{ LDAPObject["bind-dn"] }}
             </div>
-            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input" fxLayoutAlign="start center">
+            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
+                 fxLayoutAlign="start center">
               {{ LDAPObject["bind-password"] }}
             </div>
           </div>
-  
+
         </div>
       </div>
 
@@ -141,7 +158,7 @@
         </div> -->
         <div fxFlex="30px" class="ldap-fieldtitle">SCOPE</div>
         <div fxFlex="noshrink" fxLayout="row">
-          <!-- Field Title --> 
+          <!-- Field Title -->
           <div fxFlex="nogrow" fxLayout="column">
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
               <span>* Base DN:</span>
@@ -156,26 +173,32 @@
           <!-- Field Values - edit mode -->
           <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
-              <input fxFlex="nogrow" class="ldap-input" formControlName="base-dn"  app-errorTooltip  spellcheck="false" type="text"  pInputText  placeholder="">
+              <input fxFlex="nogrow" class="ldap-input" formControlName="base-dn" appErrorTooltip
+                     spellcheck="false" type="text" pInputText placeholder="">
             </div>
             <ng-container formGroupName="attribute-mapping">
               <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input" formControlName="user-object-class" spellcheck="false" type="text"  pInputText  placeholder="">
+                <input fxFlex="nogrow" class="ldap-input" formControlName="user-object-class"
+                       spellcheck="false" type="text" pInputText placeholder="">
               </div>
               <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input" formControlName="group-object-class" spellcheck="false" type="text"  pInputText  placeholder="">
+                <input fxFlex="nogrow" class="ldap-input" formControlName="group-object-class"
+                       spellcheck="false" type="text" pInputText placeholder="">
               </div>
             </ng-container>
           </div>
           <!-- Field Values - view mode -->
           <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
-            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input" fxLayoutAlign="start center">
+            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
+                 fxLayoutAlign="start center">
               {{ LDAPObject["base-dn"] }}
             </div>
-            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input" fxLayoutAlign="start center">
+            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
+                 fxLayoutAlign="start center">
               {{ LDAPObject["attribute-mapping"]["user-object-class"]}}
             </div>
-            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input" fxLayoutAlign="start center">
+            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
+                 fxLayoutAlign="start center">
               {{ LDAPObject["attribute-mapping"]["group-object-class"]}}
             </div>
           </div>
@@ -183,183 +206,212 @@
       </div>
 
       <!-- INPUT GROUP 2 -->
-      <div fxFlex="nogrow" fxLayout="column" formGroupName="attribute-mapping" class="ldap-input-group">
+      <div fxFlex="nogrow" fxLayout="column" formGroupName="attribute-mapping"
+           class="ldap-input-group">
         <!-- <div fxFlex="nogrow" class="ldap-group-title">
           Scope
         </div> -->
-        <div fxFlex="30px" class="ldap-fieldtitle" >ATTRIBUTE MAPPING</div>
+        <div fxFlex="30px" class="ldap-fieldtitle">ATTRIBUTE MAPPING</div>
         <div fxFlex="noshrink" fxLayout="row">
-            <!-- Field Title --> 
-            <div fxFlex="nogrow" fxLayout="column">
-              <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-                <span>User:</span>
-              </div>
-              <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-                <span>Group:</span>
-              </div>
-              <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-                <span>Tenant:</span>
-              </div>
+          <!-- Field Title -->
+          <div fxFlex="nogrow" fxLayout="column">
+            <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+              <span>User:</span>
             </div>
-            <!-- Field Values - edit mode -->
-            <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
-              <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input" formControlName="user" spellcheck="false" type="text"  pInputText  placeholder="">
-              </div>
-              <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input" formControlName="group" spellcheck="false" type="text"  pInputText  placeholder="">
-              </div>
-              <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input" formControlName="tenant" spellcheck="false" type="text"  pInputText  placeholder="">
-              </div>
+            <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+              <span>Group:</span>
             </div>
-            <!-- Field Values - view mode -->
-            <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
-              <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input" fxLayoutAlign="start center">
-                {{ LDAPObject["attribute-mapping"].user }}
-              </div>
-              <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input" fxLayoutAlign="start center">
-                {{ LDAPObject["attribute-mapping"].group }}
-              </div>
-              <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input" fxLayoutAlign="start center">
-                {{ LDAPObject["attribute-mapping"].tenant }}
-              </div>
+            <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+              <span>Tenant:</span>
             </div>
-
-            
-            <!-- SUB GROUP 3 -->
-            <div fxFlex="nogrow" fxLayout="column">
-              <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-                <span>Full name:</span>
-              </div>
-              <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-                <span>Email:</span>
-              </div>
-            </div>
-            <!-- Field Values - edit mode -->
-            <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
-              <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input" formControlName="fullname" spellcheck="false" type="text"  pInputText  placeholder="">
-              </div>
-              <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input" formControlName="email" spellcheck="false" type="text"  pInputText  placeholder="">
-              </div>
-            </div>
-            <!-- Field Values - view mode -->
-            <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
-              <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input" fxLayoutAlign="start center">
-                {{ LDAPObject["attribute-mapping"]["fullname"]}}
-              </div>
-              <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input" fxLayoutAlign="start center">
-                {{ LDAPObject["attribute-mapping"].email }}
-              </div>
-            </div>
-
-
-
           </div>
+          <!-- Field Values - edit mode -->
+          <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
+            <div fxFlex="30px" fxLayout="row" class="ldap-value">
+              <input fxFlex="nogrow" class="ldap-input" formControlName="user" spellcheck="false"
+                     type="text" pInputText placeholder="">
+            </div>
+            <div fxFlex="30px" fxLayout="row" class="ldap-value">
+              <input fxFlex="nogrow" class="ldap-input" formControlName="group" spellcheck="false"
+                     type="text" pInputText placeholder="">
+            </div>
+            <div fxFlex="30px" fxLayout="row" class="ldap-value">
+              <input fxFlex="nogrow" class="ldap-input" formControlName="tenant" spellcheck="false"
+                     type="text" pInputText placeholder="">
+            </div>
+          </div>
+          <!-- Field Values - view mode -->
+          <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
+            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
+                 fxLayoutAlign="start center">
+              {{ LDAPObject["attribute-mapping"].user }}
+            </div>
+            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
+                 fxLayoutAlign="start center">
+              {{ LDAPObject["attribute-mapping"].group }}
+            </div>
+            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
+                 fxLayoutAlign="start center">
+              {{ LDAPObject["attribute-mapping"].tenant }}
+            </div>
+          </div>
+
+
+          <!-- SUB GROUP 3 -->
+          <div fxFlex="nogrow" fxLayout="column">
+            <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+              <span>Full name:</span>
+            </div>
+            <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+              <span>Email:</span>
+            </div>
+          </div>
+          <!-- Field Values - edit mode -->
+          <div fxFlex fxLayout="column" *ngIf="LDAPEditMode">
+            <div fxFlex="30px" fxLayout="row" class="ldap-value">
+              <input fxFlex="nogrow" class="ldap-input" formControlName="fullname"
+                     spellcheck="false" type="text" pInputText placeholder="">
+            </div>
+            <div fxFlex="30px" fxLayout="row" class="ldap-value">
+              <input fxFlex="nogrow" class="ldap-input" formControlName="email" spellcheck="false"
+                     type="text" pInputText placeholder="">
+            </div>
+          </div>
+          <!-- Field Values - view mode -->
+          <div fxFlex fxLayout="column" *ngIf="!LDAPEditMode">
+            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
+                 fxLayoutAlign="start center">
+              {{ LDAPObject["attribute-mapping"]["fullname"]}}
+            </div>
+            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
+                 fxLayoutAlign="start center">
+              {{ LDAPObject["attribute-mapping"].email }}
+            </div>
+          </div>
+
+
+
+        </div>
       </div>
-  
+
     </div>
     <div fxFlex="50px"></div>
   </div>
 </ng-template>
-  
-<ng-template #LDAPServersViewMode >
-  <div fxFlex="nogrow" fxLayout="row wrap" fxLayoutGap="20px" class="ldap-input-group ldap-server-viewmode" >
+
+<ng-template #LDAPServersViewMode>
+  <div fxFlex="nogrow" fxLayout="row wrap" fxLayoutGap="20px"
+       class="ldap-input-group ldap-server-viewmode">
     <div fxFlex="30px"></div>
     <div fxFlex="nogrow" class="ldap-fieldtitle">
-      SERVERS: 
+      SERVERS:
     </div>
     <ng-container *ngFor="let server of LDAPObject.servers">
       <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px">
-        <mat-icon fxFlex="nogrow" *ngIf="server['tls-options']['start-tls'] && !server['tls-options']['skip-server-cert-verification']" class="authpolicy-lock">lock</mat-icon>
-        <mat-icon fxFlex="nogrow" *ngIf="!server['tls-options']['start-tls'] || server['tls-options']['skip-server-cert-verification']" class="authpolicy-lock-open">lock_open</mat-icon>
-        <div fxFlex="nogrow"> 
+        <mat-icon fxFlex="nogrow"
+                  *ngIf="server['tls-options']['start-tls'] && !server['tls-options']['skip-server-cert-verification']"
+                  class="authpolicy-lock">lock</mat-icon>
+        <mat-icon fxFlex="nogrow"
+                  *ngIf="!server['tls-options']['start-tls'] || server['tls-options']['skip-server-cert-verification']"
+                  class="authpolicy-lock-open">lock_open</mat-icon>
+        <div fxFlex="nogrow">
           {{ server.url }}
         </div>
-      </div> 
+      </div>
     </ng-container>
   </div>
 </ng-template>
-  
-<ng-template #LDAPServers >
-  <div fxFlex="noshrink" fxLayout="column" class="ldap-servergroup" [@slideInOut] 
-          *ngFor="let server of LDAPObject.$formGroup.get('servers').controls; let index = index; let first = first" [formGroup]="server">
+
+<ng-template #LDAPServers>
+  <div fxFlex="noshrink" fxLayout="column" class="ldap-servergroup" [@slideInOut]
+       *ngFor="let server of controlAsFormArray(LDAPObject.$formGroup.get('servers')).controls; let index = index; let first = first"
+       [formGroup]="server">
     <div fxFlex="20px"></div>
     <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="space-between start">
       <div fxFlex class="ldap-fieldtitle">
         SERVER CONFIGURATION
       </div>
-      <div fxFlex="nogrow" fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="end center" class="ldap-and">
-          <span *ngIf="first" fxFlex="nogrow" (click)="addServer()">+ ADD</span>
-          <mat-icon *ngIf="LDAPObject.$formGroup.get('servers').length > 1" fxFlex="nogrow" (click)="removeServer(index)" [style.color]="'#767676'">delete</mat-icon>
+      <div fxFlex="nogrow" fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="end center"
+           class="ldap-and">
+        <span *ngIf="first" fxFlex="nogrow" (click)="addServer()">+ ADD</span>
+        <mat-icon *ngIf="controlAsFormArray(LDAPObject.$formGroup.get('servers')).length > 1"
+                  fxFlex="nogrow" (click)="removeServer(index)" [style.color]="'#767676'">delete
+        </mat-icon>
       </div>
     </div>
     <div fxFlex="10px"></div>
     <!-- <div fxFlex fxLayout="row"> -->
 
     <div fxFlex="noshrink" fxLayout="row wrap">
-        <!-- GROUP 1 -->
-        <div fxFlex="nogrow" fxLayout="column" class="ldap-input-group">
-          <div fxFlex="nogrow" fxLayout="row">
-            <!-- Field Title --> 
-            <div fxFlex="nogrow" fxLayout="column">
-              <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-                <span>Server/Port:</span>
-              </div>
-              <!-- <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+      <!-- GROUP 1 -->
+      <div fxFlex="nogrow" fxLayout="column" class="ldap-input-group">
+        <div fxFlex="nogrow" fxLayout="row">
+          <!-- Field Title -->
+          <div fxFlex="nogrow" fxLayout="column">
+            <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+              <span>Server/Port:</span>
+            </div>
+            <!-- <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
                 <span>ServerName:</span>
               </div> -->
-              <!-- <mat-slide-toggle fxFlex='30px' class="ldap-toggle ldap-fieldtitle"></mat-slide-toggle> -->
-            </div>
-            <!-- Field Values -->
-            <div fxFlex fxLayout="column">
-              <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input" formControlName="url"  app-errorTooltip  spellcheck="false" type="text"  pInputText  placeholder="">
-              </div>           
+            <!-- <mat-slide-toggle fxFlex='30px' class="ldap-toggle ldap-fieldtitle"></mat-slide-toggle> -->
+          </div>
+          <!-- Field Values -->
+          <div fxFlex fxLayout="column">
+            <div fxFlex="30px" fxLayout="row" class="ldap-value">
+              <input fxFlex="nogrow" class="ldap-input" formControlName="url" appErrorTooltip
+                     spellcheck="false" type="text" pInputText placeholder="">
             </div>
           </div>
         </div>
-        
-        <!-- Group 2 -->
-        <div fxFlex="nogrow" fxLayout="column" class="ldap-input-group" formGroupName="tls-options">
-          <div fxFlex="nogrow" fxLayout="row">
-            <!-- Field Title --> 
-            <div fxFlex="nogrow" fxLayout="column">
-              <mat-slide-toggle formControlName="start-tls" fxFlex='30px' class="ldap-toggle ldap-fieldtitle"
-                                (change)="toggleStartTls(server, index, $event)"></mat-slide-toggle>
-              <mat-slide-toggle #skipVerificationToggle
-                                [formControl]="verifyCertToggleFormArray.at(index)" 
-                                (change)="toggleSkipVerification(server, index, $event)" fxFlex='30px' class="ldap-toggle ldap-fieldtitle"></mat-slide-toggle>
-              <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-                <span>Server Name:</span>
-              </div>
+      </div>
+
+      <!-- Group 2 -->
+      <div fxFlex="nogrow" fxLayout="column" class="ldap-input-group" formGroupName="tls-options">
+        <div fxFlex="nogrow" fxLayout="row">
+          <!-- Field Title -->
+          <div fxFlex="nogrow" fxLayout="column">
+            <mat-slide-toggle formControlName="start-tls" fxFlex='30px'
+                              class="ldap-toggle ldap-fieldtitle"
+                              (change)="toggleStartTls(server, index, $event)"></mat-slide-toggle>
+            <mat-slide-toggle #skipVerificationToggle
+                              [formControl]="verifyCertToggleFormArray.at(index)"
+                              (change)="toggleSkipVerification(server, index, $event)" fxFlex='30px'
+                              class="ldap-toggle ldap-fieldtitle"></mat-slide-toggle>
+            <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+              <span>Server Name:</span>
             </div>
-            <!-- Field Values -->
-            <div fxFlex fxLayout="column">
-              <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle">
-                Use TLS
-              </div>
-              <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle">
-                Verify Server Certificate
-              </div>
-              <div fxFlex="30px" fxLayout="row" class="ldap-value">
-                <input fxFlex="nogrow" class="ldap-input" formControlName="server-name"  app-errorTooltip  spellcheck="false" type="text"  pInputText placeholder="">
-              </div>
+          </div>
+          <!-- Field Values -->
+          <div fxFlex fxLayout="column">
+            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle">
+              Use TLS
+            </div>
+            <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle">
+              Verify Server Certificate
+            </div>
+            <div fxFlex="30px" fxLayout="row" class="ldap-value">
+              <input fxFlex="nogrow" class="ldap-input" formControlName="server-name"
+                     appErrorTooltip spellcheck="false" type="text" pInputText placeholder="">
             </div>
           </div>
         </div>
-        <ng-container formGroupName="tls-options">
-          <textarea fxFlex formControlName="trusted-certs"  app-errorTooltip   placeholder="Trusted Certificates..." class="ldap-server-certs" pInputTextarea></textarea>
-        </ng-container>
+      </div>
+      <ng-container formGroupName="tls-options">
+        <textarea fxFlex formControlName="trusted-certs" appErrorTooltip
+                  placeholder="Trusted Certificates..." class="ldap-server-certs"
+                  pInputTextarea></textarea>
+      </ng-container>
     </div>
     <div fxFlex="10px"></div>
   </div>
   <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end center">
-      <mat-icon *ngIf="hasConnConfigError()" (click)="onConnErrorMessageClick($event)"  title="{{getConnConfigErrorTooltip()}}" class="ldap-test-error-icon ldap-test-error-icon-connection">
-          error
-      </mat-icon>
-    <div fxFlex="nogrow" class="global-button-primary ldap-test-connection-button"  (click)="onCheckLdapConnection($event)">Test Connections</div>
-  </div> 
+    <mat-icon *ngIf="hasConnConfigError()" (click)="onConnErrorMessageClick()"
+              title="{{getConnConfigErrorTooltip()}}"
+              class="ldap-test-error-icon ldap-test-error-icon-connection">
+      error
+    </mat-icon>
+    <div fxFlex="nogrow" class="global-button-primary ldap-test-connection-button"
+         (click)="onCheckLdapConnection($event)">Test Connections</div>
+  </div>
 </ng-template>

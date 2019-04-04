@@ -1,12 +1,14 @@
-<app-pagebody  [icon]="bodyIcon" header="Upload System Image File" class="systemupgrade">
-    <div class="systemupgrade-fileupload-info-div">File type is *.tgz and maximum file size is 10G </div>
-    <p-fileUpload name="file" url="/objstore/v1/uploads/images/" (onUpload)="onUpload($event)" (onError)="onError($event)"
-             accept=".tgz" maxFileSize="1000000000000">
-        <ng-template pTemplate="content">
-            <ul *ngIf="uploadedFiles.length">
-                <li *ngFor="let file of uploadedFiles">{{file.name}} - {{file.size}} bytes</li>
-            </ul>
-        </ng-template>
-    </p-fileUpload>
+<app-pagebody [icon]="bodyIcon" header="Upload System Image File" class="systemupgrade">
+  <div class="systemupgrade-fileupload-info-div">File type is *.tgz and maximum file size is 10G
+  </div>
+  <p-fileUpload name="file" url="/objstore/v1/uploads/images/" (onUpload)="onUpload($event)"
+                (onError)="onError($event)"
+                accept=".tgz" maxFileSize="1000000000000">
+    <ng-template pTemplate="content">
+      <ul *ngIf="uploadedFiles.length">
+        <li *ngFor="let file of uploadedFiles">{{file.name}} - {{file.size}} bytes</li>
+      </ul>
+    </ng-template>
+  </p-fileUpload>
 
 </app-pagebody>

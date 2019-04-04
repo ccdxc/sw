@@ -174,8 +174,14 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           this.showMissingScreen = false;
           this.selectedObj = this.objList[0];
           this.alertseventsSelector = {
-            eventSelector: 'object-ref.name=' + this.selectedId + ',object-ref.kind=SmartNIC',
-            alertSelector: 'status.object-ref.name=' + this.selectedId + ',status.object-ref.kind=SmartNIC',
+            eventSelector: {
+              selector: 'object-ref.name=' + this.selectedId + ',object-ref.kind=SmartNIC',
+              name: this.selectedId,
+            },
+            alertSelector: {
+              selector: 'status.object-ref.name=' + this.selectedId + ',status.object-ref.kind=SmartNIC',
+              name: this.selectedId
+            }
           };
           this.startMetricPolls();
         } else if (this.objList.length === 0) {

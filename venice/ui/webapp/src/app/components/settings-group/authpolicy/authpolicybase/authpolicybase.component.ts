@@ -2,6 +2,7 @@ import { Component, OnInit, Output, EventEmitter, Input, ViewEncapsulation } fro
 import { ControllerService } from '@app/services/controller.service';
 import { AbstractControl } from '@angular/forms';
 import { Utility } from '@app/common/Utility';
+import { BaseComponent } from '@app/components/base/base.component';
 
 @Component({
   selector: 'app-authpolicybase',
@@ -13,7 +14,7 @@ import { Utility } from '@app/common/Utility';
     '(mouseleave)': 'onMouseLeave()'
   }
 })
-export class AuthpolicybaseComponent implements OnInit {
+export class AuthpolicybaseComponent extends BaseComponent implements OnInit {
   isHover: boolean = false;
 
   // current rank, zero indexed
@@ -26,7 +27,9 @@ export class AuthpolicybaseComponent implements OnInit {
   // actually changing the rank
   @Output() changeAuthRank: EventEmitter<number> = new EventEmitter();
 
-  constructor(protected _controllerService: ControllerService) { }
+  constructor(protected _controllerService: ControllerService) {
+    super(_controllerService);
+   }
 
   ngOnInit() {
   }

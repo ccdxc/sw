@@ -77,7 +77,7 @@ export class VeniceUIHttpInterceptor implements HttpInterceptor {
           } else {
             errMsg = errorReponse.message ? errorReponse.message : errorReponse.toString();
           }
-          // If there is an RBAC issue with the connection, it will be caught and a 
+          // If there is an RBAC issue with the connection, it will be caught and a
           // useful error message shown when the error reaches the controller service.
           this.logger.error(`VeniceUIHttpInterceptor log: Request for ${req.urlWithParams} took ${elapsed} ms.`, this.getClassName());
           this.logger.error('VeniceUIHttpInterceptor log ' + errMsg, this.getClassName());

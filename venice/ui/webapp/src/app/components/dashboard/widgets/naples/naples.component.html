@@ -6,45 +6,50 @@
 </div>
 
 <ng-template #cardFront>
-  <app-basecard [title]="title" 
+  <app-basecard [title]="title"
                 [backgroundIcon]="backgroundIcon"
                 [themeColor]="themeColor"
                 [icon]="icon"
                 [timeRange]="'Past 24 hours'"
                 [cardState]="cardState"
                 [menuItems]="menuItems"
-                (click)="toggleFlip()"
-                >
-  <div fxFlex="100%" fxLayout="row">
-    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="50%" fxLayout="row" fxLayoutAlign="space-between stretch">
-      <div fxFlex="nogrow" fxLayout="column" class="dsbdnaples-stat-left">
-        <ng-container *ngTemplateOutlet="stat; context: {statData: firstStat}"></ng-container>
-        <ng-container *ngTemplateOutlet="stat; context: {statData: secondStat}"></ng-container>
+                (click)="toggleFlip()">
+    <div fxFlex="100%" fxLayout="row">
+      <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="50%" fxLayout="row"
+           fxLayoutAlign="space-between stretch">
+        <div fxFlex="nogrow" fxLayout="column" class="dsbdnaples-stat-left">
+          <ng-container *ngTemplateOutlet="stat; context: {statData: firstStat}"></ng-container>
+          <ng-container *ngTemplateOutlet="stat; context: {statData: secondStat}"></ng-container>
+        </div>
+        <div fxFlex="nogrow" fxLayout="column" class="dsbdnaples-stat-right">
+          <ng-container *ngTemplateOutlet="stat; context: {statData: thirdStat}"></ng-container>
+          <ng-container *ngTemplateOutlet="stat; context: {statData: fourthStat}"></ng-container>
+        </div>
       </div>
-      <div fxFlex="nogrow" fxLayout="column" class="dsbdnaples-stat-right">
-        <ng-container *ngTemplateOutlet="stat; context: {statData: thirdStat}"></ng-container>
-        <ng-container *ngTemplateOutlet="stat; context: {statData: fourthStat}"></ng-container>
+      <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="50%" fxLayout="row"
+           fxLayoutAlign="start start" class="dsbdnaples-card-right">
+        <ng-container *ngTemplateOutlet="piechart"></ng-container>
       </div>
     </div>
-    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="50%" fxLayout="row" fxLayoutAlign="start start" class="dsbdnaples-card-right">
-      <ng-container *ngTemplateOutlet="piechart"></ng-container>
-    </div>
-  </div>
   </app-basecard>
 </ng-template>
 
 
 <ng-template #stat let-statData="statData">
   <ng-container *ngIf="statData != null && statData.value != null">
-    <div fxFlex="autp" fxLayout="column" fxLayoutAlign="start start" class="dsbdnaples-stat" 
-          [matTooltip]="statData.tooltip"
-          [style.cursor]="statData.url != null ? 'pointer' : 'auto'" 
-          (click)="statData.onClick != null ? statData.onClick() : ''"
-          >
+    <div fxFlex="autp" fxLayout="column" fxLayoutAlign="start start" class="dsbdnaples-stat"
+         [matTooltip]="statData.tooltip"
+         [style.cursor]="statData.url != null ? 'pointer' : 'auto'"
+         (click)="statData.onClick != null ? statData.onClick() : ''">
       <div fxFlex="nogrow" fxLayout="row">
-        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='UP'" [style.color]="statData.statColor" fxFlex="none" class="dsbdnaples-stat-arrow">arrow_upward</mat-icon>
-        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='DOWN'" [style.color]="statData.statColor" fxFlex="none" class="dsbdnaples-stat-arrow">arrow_downward</mat-icon>
-        <div fxFlex="nogrow" [style.color]="statData.statColor" class="dsbdnaples-stat-value">{{ statData.value }}</div>
+        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='UP'"
+                  [style.color]="statData.statColor" fxFlex="none" class="dsbdnaples-stat-arrow">
+          arrow_upward</mat-icon>
+        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='DOWN'"
+                  [style.color]="statData.statColor" fxFlex="none" class="dsbdnaples-stat-arrow">
+          arrow_downward</mat-icon>
+        <div fxFlex="nogrow" [style.color]="statData.statColor" class="dsbdnaples-stat-value">
+          {{ statData.value }}</div>
       </div>
       <div fxFlex="nogrow" class="dsbdnaples-stat-description">{{ statData.description }}</div>
     </div>
@@ -52,23 +57,24 @@
 </ng-template>
 
 <ng-template #piechart>
-    <div class="dsbdnaples-label-canvas" fxLayout="column" fxLayoutAlign="center center" >
-      <div fxFlex="none" class="dsbdnaples-percent">10%</div>
-      <div fxFlex="none">UNHEALTHY</div>
-    </div>
-    <p-chart type="doughnut" [data]="dataDoughnut" width="224px" class="dsbdnaples-doughnut" height="173px" [options]="options"></p-chart>
+  <div class="dsbdnaples-label-canvas" fxLayout="column" fxLayoutAlign="center center">
+    <div fxFlex="none" class="dsbdnaples-percent">10%</div>
+    <div fxFlex="none">UNHEALTHY</div>
+  </div>
+  <p-chart type="doughnut" [data]="dataDoughnut" width="224px" class="dsbdnaples-doughnut"
+           height="173px" [options]="options"></p-chart>
 </ng-template>
 
 <ng-template #cardBack>
-  <app-basecard [title]="title" 
-              [backgroundIcon]="backgroundIcon"
-              [themeColor]="themeColor"
-              [icon]="icon"
-              [timeRange]="'Past 24 hours'"
-              [cardState]="cardState"
-              [menuItems]="menuItems"
-              (click)="toggleFlip()"
-              >
-    <app-linegraph [@fade] *ngIf="cardState === cardStates.READY" fxFlex="100%" fxLayout="row" class="dsbdnaples-card-back" [stats]="linegraphStats"></app-linegraph>
+  <app-basecard [title]="title"
+                [backgroundIcon]="backgroundIcon"
+                [themeColor]="themeColor"
+                [icon]="icon"
+                [timeRange]="'Past 24 hours'"
+                [cardState]="cardState"
+                [menuItems]="menuItems"
+                (click)="toggleFlip()">
+    <app-linegraph [@fade] *ngIf="cardState === cardStates.READY" fxFlex="100%" fxLayout="row"
+                   class="dsbdnaples-card-back" [stats]="linegraphStats"></app-linegraph>
   </app-basecard>
 </ng-template>

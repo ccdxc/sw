@@ -4,70 +4,78 @@
     <ng-container flip-back *ngTemplateOutlet="cardBack"></ng-container>
   </app-flip>
 </div>
-  
+
 <ng-template #cardFront>
-  <app-basecard [title]="title" 
+  <app-basecard [title]="title"
                 [backgroundIcon]="backgroundIcon"
                 [themeColor]="themeColor"
                 [icon]="icon"
                 [timeRange]="'Past 24 hours'"
                 [cardState]="cardState"
                 [menuItems]="menuItems"
-                (click)="toggleFlip()"
-                >
-  <div fxFlex="100%" fxLayout="row">
-    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="40%" fxLayout="row" fxLayoutAlign="space-between stretch" class="dsbdpolicyhealth-stats">
-      <div fxFlex="nogrow" fxLayout="column">
-        <ng-container *ngTemplateOutlet="stat; context: {statData: firstStat}"></ng-container>
-        <ng-container *ngTemplateOutlet="stat; context: {statData: secondStat}"></ng-container>
-        <ng-container *ngTemplateOutlet="stat; context: {statData: thirdStat}"></ng-container>
+                (click)="toggleFlip()">
+    <div fxFlex="100%" fxLayout="row">
+      <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex="40%" fxLayout="row"
+           fxLayoutAlign="space-between stretch" class="dsbdpolicyhealth-stats">
+        <div fxFlex="nogrow" fxLayout="column">
+          <ng-container *ngTemplateOutlet="stat; context: {statData: firstStat}"></ng-container>
+          <ng-container *ngTemplateOutlet="stat; context: {statData: secondStat}"></ng-container>
+          <ng-container *ngTemplateOutlet="stat; context: {statData: thirdStat}"></ng-container>
+        </div>
+      </div>
+
+      <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex fxLayout="row"
+           fxLayoutAlign="start start" class="dsbdpolicyhealth-card-right">
+        <ng-container *ngTemplateOutlet="piechart"></ng-container>
       </div>
     </div>
-
-    <div [@fade] *ngIf="cardState === cardStates.READY" fxFlex fxLayout="row" fxLayoutAlign="start start" class="dsbdpolicyhealth-card-right">
-      <ng-container *ngTemplateOutlet="piechart"></ng-container>
-    </div>
-  </div>
   </app-basecard>
 </ng-template>
 
 
 <ng-template #stat let-statData="statData">
   <ng-container *ngIf="statData != null && statData.value != null">
-    <div fxFlex="autp" fxLayout="row" fxLayoutAlign="start start" class="dsbdpolicyhealth-stat" 
-          [matTooltip]="statData.tooltip"
-          [style.cursor]="statData.url != null ? 'pointer' : 'auto'" 
-          (click)="statData.onClick != null ? statData.onClick() : ''"
-          >
+    <div fxFlex="autp" fxLayout="row" fxLayoutAlign="start start" class="dsbdpolicyhealth-stat"
+         [matTooltip]="statData.tooltip"
+         [style.cursor]="statData.url != null ? 'pointer' : 'auto'"
+         (click)="statData.onClick != null ? statData.onClick() : ''">
       <div fxFlex="85px" fxLayout="row" fxLayoutAlign="end stretch">
-        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='UP'" [style.color]="statData.statColor" fxFlex="none" class="dsbdpolicyhealth-stat-arrow">arrow_upward</mat-icon>
-        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='DOWN'" [style.color]="statData.statColor" fxFlex="none" class="dsbdpolicyhealth-stat-arrow">arrow_downward</mat-icon>
-        <div fxFlex="nogrow" [style.color]="statData.statColor" class="dsbdpolicyhealth-stat-value">{{ statData.value }}</div>
+        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='UP'"
+                  [style.color]="statData.statColor" fxFlex="none"
+                  class="dsbdpolicyhealth-stat-arrow">arrow_upward</mat-icon>
+        <mat-icon fxFlex="none" *ngIf="statData.arrowDirection==='DOWN'"
+                  [style.color]="statData.statColor" fxFlex="none"
+                  class="dsbdpolicyhealth-stat-arrow">arrow_downward</mat-icon>
+        <div fxFlex="nogrow" [style.color]="statData.statColor" class="dsbdpolicyhealth-stat-value">
+          {{ statData.value }}</div>
       </div>
-      <div fxFlex="nogrow" class="dsbdpolicyhealth-stat-description">{{ statData.description }}</div>
+      <div fxFlex="nogrow" class="dsbdpolicyhealth-stat-description">{{ statData.description }}
+      </div>
     </div>
   </ng-container>
 </ng-template>
 
 <ng-template #piechart>
   <div fxFlex="auto" fxLayout="column" fxLayoutAlign="start center">
-    <p-chart fxFlex="none" type="doughnut" [data]="dataDoughnut" width="125px" class="dsbdpolicyhealth-doughnut" height="125px" [options]="options"></p-chart>
-    <div fxFlex="none" [style.color]="themeColor" class="dsbdpolicyhealth-pie-value">10,000,000</div>
+    <p-chart fxFlex="none" type="doughnut" [data]="dataDoughnut" width="125px"
+             class="dsbdpolicyhealth-doughnut" height="125px" [options]="options"></p-chart>
+    <div fxFlex="none" [style.color]="themeColor" class="dsbdpolicyhealth-pie-value">10,000,000
+    </div>
     <div fxFlex="none" class="dsbdpolicyhealth-pie-description">Total Flows</div>
   </div>
 </ng-template>
 
 <ng-template #cardBack>
-  <app-basecard [title]="title" 
-              [backgroundIcon]="backgroundIcon"
-              [themeColor]="themeColor"
-              [icon]="icon"
-              [timeRange]="'Past 24 hours'"
-              [cardState]="cardState"
-              [menuItems]="menuItems"
-              (click)="toggleFlip()"
-              >
-  <app-linegraph [@fade] *ngIf="cardState === cardStates.READY" fxFlex="100%" fxLayout="row" class="dsbdpolicyhealth-card-back" [stats]="linegraphStats"></app-linegraph>
-</app-basecard>
-  
+  <app-basecard [title]="title"
+                [backgroundIcon]="backgroundIcon"
+                [themeColor]="themeColor"
+                [icon]="icon"
+                [timeRange]="'Past 24 hours'"
+                [cardState]="cardState"
+                [menuItems]="menuItems"
+                (click)="toggleFlip()">
+    <app-linegraph [@fade] *ngIf="cardState === cardStates.READY" fxFlex="100%" fxLayout="row"
+                   class="dsbdpolicyhealth-card-back" [stats]="linegraphStats"></app-linegraph>
+  </app-basecard>
+
 </ng-template>

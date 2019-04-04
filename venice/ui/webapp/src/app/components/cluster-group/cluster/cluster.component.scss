@@ -1,85 +1,86 @@
 @import 'src/global-mixins';
 
 .cluster-card-container {
-    margin-right: 10px;
+  margin-right: 10px;
 }
 
 .pagebody-icon {
-    opacity: 0.5 !important
+  opacity: 0.5 !important
 }
 
 .cluster-toolbar-button {
-    @include primary-font(16px, #ffffff);
-    height: 30px;
-    text-align: center;
-    width: 120px;
-    display: block;
-    padding: 0px 10px;
+  @include primary-font(16px, #ffffff);
+  height: 30px;
+  text-align: center;
+  width: 120px;
+  display: block;
+  padding: 0px 10px;
 }
 
 /** TABLE RELATED CSS **/
 $table-headerheight: 55px;
 
 .cluster-alertsevents-container {
-    min-height: 600px;
+  min-height: 600px;
 }
 
 .cluster-node-table-container {
-    margin: 10px;
-    padding: 5px 20px;
-    width: 450px;
-    border: solid 2px #dddddd;
+  margin: 10px;
+  padding: 5px 20px;
+  width: 450px;
+  border: solid 2px #dddddd;
 }
 
 .cluster-node-table-title {
-    @include primary-font(20px);
-    margin-bottom: 10px;
+  @include primary-font(20px);
+  margin-bottom: 10px;
 }
 
 .cluster-node-fieldtitle {
-    @include primary-font(16px, #676763, 500);
+  @include primary-font(16px, #676763, 500);
 }
 
 .cluster-node-value {
-    @include primary-font(16px);
-    margin-left: 5px;
+  @include primary-font(16px);
+  margin-left: 5px;
 }
 
 .cluster-node-name {
-    font-size: 20px;
-    color: black;
-    cursor: pointer;
+  font-size: 20px;
+  color: black;
+  cursor: pointer;
 }
 
 .cluster-node-status {
-    background-color: #77a746;
-    border-radius: 50%;
-    height: 7px;
-    width: 7px;
+  background-color: #77a746;
+  border-radius: 50%;
+  height: 7px;
+  width: 7px;
 }
 
 .cluster-node-container {
-    padding: 0px 5px 5px 5px;
-    outline: none;
-    &:hover {
-        background-color: #e7e7e3;
-        cursor: pointer;
-    }
+  padding: 0px 5px 5px 5px;
+  outline: none;
+
+  &:hover {
+    background-color: #e7e7e3;
+    cursor: pointer;
+  }
 }
 
 .cluster-node-star {
-    font-size: 16px;
-    height: 16px;
-    width: 16px;
-    color: #fcb710;
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+  color: #fcb710;
 }
 
 .cluster-details {
-    border-top: solid 1px #f0f0f0;
-    margin-top: 10px;
-    padding-top: 10px;
+  border-top: solid 1px #f0f0f0;
+  margin-top: 10px;
+  padding-top: 10px;
 }
 
 .cluster-details-title {
-    @include primary-font(20px);
+  @include primary-font(20px);
 }

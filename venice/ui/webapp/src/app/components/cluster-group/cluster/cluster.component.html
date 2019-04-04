@@ -4,18 +4,17 @@
       <ng-container *ngTemplateOutlet="nodeTable"></ng-container>
       <ng-container *ngFor="let cardData of heroCards">
         <app-herocard fxFlex="nogrow"
-                      [title]="cardData.title" 
-                      [firstStat]="cardData.firstStat" 
-                      [secondStat]="cardData.secondStat" 
-                      [thirdStat]="cardData.thirdStat" 
+                      [title]="cardData.title"
+                      [firstStat]="cardData.firstStat"
+                      [secondStat]="cardData.secondStat"
+                      [thirdStat]="cardData.thirdStat"
                       [backgroundIcon]="cardData.backgroundIcon"
                       [themeColor]="cardData.themeColor"
                       [icon]="cardData.icon"
                       [data]="cardData.data"
                       [arrowDirection]="cardData.arrowDirection"
                       [lastUpdateTime]="lastUpdateTime"
-                      [cardState]="cardData.cardState"
-                      >
+                      [cardState]="cardData.cardState">
         </app-herocard>
       </ng-container>
     </div>
@@ -26,35 +25,42 @@
 </app-pagebody>
 
 <ng-template #nodeTable>
-  <div fxFlex="none" fxLayout="column" class="cluster-node-table-container" >
+  <div fxFlex="none" fxLayout="column" class="cluster-node-table-container">
     <div fxFlex="none" fxLayout="row" class="cluster-node-table-title">
       Nodes ({{nodes.length }})
     </div>
     <ng-container *ngFor="let node of nodes">
-      <div routerLink="./{{node.meta.name}}" fxFlex="none" fxLayout="column"  class="cluster-node-container">
-        <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px" class="cluster-node-name">
+      <div routerLink="./{{node.meta.name}}" fxFlex="none" fxLayout="column"
+           class="cluster-node-container">
+        <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px"
+             class="cluster-node-name">
           <div fxFlex="none" class="cluster-node-status"></div>
-          <span class="cluster-node-name" fxFlex="none" >{{ node.meta.name }}</span>
-          <mat-icon fxFlex="none" *ngIf="cluster.status.leader === node.meta.name" class="cluster-node-star" title="Leader">star_rate</mat-icon>
+          <span class="cluster-node-name" fxFlex="none">{{ node.meta.name }}</span>
+          <mat-icon fxFlex="none" *ngIf="cluster.status.leader === node.meta.name"
+                    class="cluster-node-star" title="Leader">star_rate</mat-icon>
         </div>
         <div fxLayout="row">
           <div fxFlex="none" fxLayout="column">
-            <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+            <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                 fxLayoutAlign="start center">
               <div>Quorum Node:</div>
             </div>
           </div>
           <div fxFlex fxLayout="column">
-            <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
+            <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                 class="cluster-node-value">
               <div class="cluster-node-quorum">{{ node.status.quorum }}</div>
             </div>
           </div>
           <div fxFlex="none" fxLayout="column">
-            <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+            <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                 fxLayoutAlign="start center">
               <div>Phase:</div>
             </div>
           </div>
           <div fxFlex fxLayout="column">
-            <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
+            <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                 class="cluster-node-value">
               <div class="cluster-node-phase">{{ phaseEnum[node.status.phase] }}</div>
             </div>
           </div>
@@ -66,16 +72,20 @@
       <div fxFlex="none" fxLayout="row">
         <!-- Field titles -->
         <div fxFlex="50" fxLayout="column">
-          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
+               fxLayoutAlign="start center">
             <div>Virtual IP:</div>
           </div>
-          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
+               fxLayoutAlign="start center">
             <div>NTP Servers:</div>
           </div>
-          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
+               fxLayoutAlign="start center">
             <div>Last Leader Transition Time:</div>
           </div>
-          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
+          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
+               fxLayoutAlign="start center">
             <div>Auto Admit NICs:</div>
           </div>
         </div>
@@ -85,13 +95,16 @@
             <div class="cluster-details-panel-virtual-ip">{{ cluster?.spec['virtual-ip'] }}</div>
           </div>
           <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
-            <div class="cluster-details-panel-ntp-servers">{{ cluster?.spec['ntp-servers'].join(', ') }}</div>
+            <div class="cluster-details-panel-ntp-servers">
+              {{ cluster?.spec['ntp-servers'].join(', ') }}</div>
           </div>
           <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
-            <div class="cluster-details-panel-last-leader-transition-time">{{ cluster?.status['last-leader-transition-time'] | PrettyDate }}</div>
+            <div class="cluster-details-panel-last-leader-transition-time">
+              {{ cluster?.status['last-leader-transition-time'] | PrettyDate }}</div>
           </div>
           <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
-            <div class="cluster-details-panel-auto-admit-nics">{{ (cluster?.spec['auto-admit-nics'] === true) ? 'yes' : 'no' }}</div>
+            <div class="cluster-details-panel-auto-admit-nics">
+              {{ (cluster?.spec['auto-admit-nics'] === true) ? 'yes' : 'no' }}</div>
           </div>
         </div>
       </div>

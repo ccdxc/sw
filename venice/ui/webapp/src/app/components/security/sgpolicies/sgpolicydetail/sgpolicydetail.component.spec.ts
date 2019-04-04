@@ -162,14 +162,14 @@ describe('SgpolicydetailComponent', () => {
     // Creation time
     const formattedCreationTime = new PrettyDatePipe('en-US').transform(creationTime);
     if (formattedCreationTime == null) {
-      expect(fields[1].nativeElement.textContent.length).toBe(0);
+      expect(fields[1].nativeElement.textContent.trim().length).toBe(0);
     } else {
       expect(fields[1].nativeElement.textContent).toContain(formattedCreationTime);
     }
     // Mod time
     const formattedModTime = new PrettyDatePipe('en-US').transform(modTime);
     if (formattedModTime == null) {
-      expect(fields[2].nativeElement.textContent.length).toBe(0);
+      expect(fields[2].nativeElement.textContent.trim().length).toBe(0);
     } else {
       expect(fields[2].nativeElement.textContent).toContain(formattedModTime);
     }

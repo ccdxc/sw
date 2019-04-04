@@ -4,7 +4,6 @@ import { Utility } from '@app/common/Utility';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ITelemetry_queryFwlogsQueryResponse, ITelemetry_queryFwlogsQueryList, Telemetry_queryFwlogsQuerySpec, Telemetry_queryFwlog, Telemetry_queryFwlogsQuerySpec_sort_order, ITelemetry_queryFwlog } from '@sdk/v1/models/generated/telemetry_query';
 import { TelemetryqueryService } from '@app/services/generated/telemetryquery.service';
-import { Table } from 'primeng/table';
 import { IPUtility } from '@app/common/IPUtility';
 import { LazyLoadEvent } from 'primeng/primeng';
 import { TableCol, TableviewAbstract, TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';

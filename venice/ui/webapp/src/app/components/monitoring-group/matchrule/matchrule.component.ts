@@ -2,6 +2,8 @@ import { Component, OnInit, ViewEncapsulation, Input } from '@angular/core';
 import { Animations } from '@app/animations';
 import { MonitoringMatchRule, IMonitoringMatchRule, MonitoringFlowExportPolicySpec } from '@sdk/v1/models/generated/monitoring';
 import { FormArray, FormGroup } from '@angular/forms';
+import { BaseComponent } from '@app/components/base/base.component';
+import { ControllerService } from '@app/services/controller.service';
 
 @Component({
   selector: 'app-matchrule',
@@ -10,12 +12,14 @@ import { FormArray, FormGroup } from '@angular/forms';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class MatchruleComponent implements OnInit {
+export class MatchruleComponent extends BaseComponent implements OnInit {
   @Input() rules: IMonitoringMatchRule[] = [];
   flowTarget: FormGroup;
   matchRules: FormGroup[];
 
-  constructor() { }
+  constructor(controllerService: ControllerService) {
+    super(controllerService, null);
+   }
 
   ngOnInit() {
     let flowTarget;

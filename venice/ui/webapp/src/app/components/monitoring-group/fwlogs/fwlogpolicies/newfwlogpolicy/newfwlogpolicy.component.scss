@@ -5,8 +5,9 @@ $vertical-gutter: 5px;
 
 .newfwlogpolicy-container {
   background: white;
+
   &:hover {
-      background: white;
+    background: white;
   }
 }
 
@@ -23,14 +24,14 @@ $vertical-gutter: 5px;
 }
 
 .newfwlogpolicy-text {
-    margin-top: 2*$vertical-gutter;
-    margin-left: $horizontal-gutter;
-    height: 30px;
-    @include primary-font();
+  margin-top: 2*$vertical-gutter;
+  margin-left: $horizontal-gutter;
+  height: 30px;
+  @include primary-font();
 }
 
-.newfwlogpolicy-font  {
-    @include primary-font();
+.newfwlogpolicy-font {
+  @include primary-font();
 }
 
 .newfwlogpolicy-border {
@@ -47,7 +48,7 @@ $vertical-gutter: 5px;
   height: 30px !important;
 }
 
-.newfwlogpolicy-save, 
+.newfwlogpolicy-save,
 .newfwlogpolicy-cancel {
   font-size: 16px;
   display: inline-block;
@@ -57,5 +58,5 @@ $vertical-gutter: 5px;
 }
 
 .newfwlogpolicy-buttoncontainer {
-    margin-top: 1.5 * $vertical-gutter;
+  margin-top: 1.5 * $vertical-gutter;
 }
