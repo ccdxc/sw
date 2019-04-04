@@ -109,7 +109,7 @@ pds_port_fill (sdk::linkmgr::port_args_t *port_info, void *ctxt)
 
 Status
 PortSvcImpl::PortGet(ServerContext *context, const pds::PortGetRequest *proto_req,
-                      pds::PortGetResponse *proto_rsp) {
+                     pds::PortGetResponse *proto_rsp) {
     sdk_ret_t ret;
 
     PDS_TRACE_VERBOSE("Received Port Get");
@@ -126,5 +126,33 @@ PortSvcImpl::PortGet(ServerContext *context, const pds::PortGetRequest *proto_re
             }
         }
     }
+    return Status::OK;
+}
+
+static inline port_admin_state_t
+proto_port_admin_state_to_sdk_admin_state (pds::PortAdminState proto_state)
+{
+    switch (proto_state) {
+    case pds::PORT_ADMIN_STATE_NONE:
+        return port_admin_state_t::PORT_ADMIN_STATE_NONE;
+    case pds::PORT_ADMIN_STATE_DOWN:
+        return port_admin_state_t::PORT_ADMIN_STATE_DOWN;
+    case pds::PORT_ADMIN_STATE_UP:
+        return port_admin_state_t::PORT_ADMIN_STATE_UP;
+    default:
+        return port_admin_state_t::PORT_ADMIN_STATE_NONE;
+    }
+}
+
+Status
+PortSvcImpl::PortUpdate(ServerContext *context, const pds::PortUpdateRequest *proto_req,
+                        pds::PortUpdateResponse *proto_rsp) {
+    sdk_ret_t ret;
+
+    PDS_TRACE_VERBOSE("Received Port Update");
+    ret = api::update_port(proto_req->spec().portid(),
+                           proto_port_admin_state_to_sdk_admin_state(proto_req->spec().adminstate()));
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+
     return Status::OK;
 }

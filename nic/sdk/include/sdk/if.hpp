@@ -25,6 +25,7 @@ enum {
 #define IF_SLOT_MASK                             0xF
 #define IF_PARENT_PORT_MASK                      0xFF
 #define IF_CHILD_PORT_MASK                       0xFF
+#define IF_DEFAULT_CHILD_PORT                    1
 
 ///< interface index is formed from
 ///<     t_ --> type of the interface (4 bits)

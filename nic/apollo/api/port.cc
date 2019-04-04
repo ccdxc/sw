@@ -9,6 +9,7 @@
 #include "nic/sdk/linkmgr/port.hpp"
 #include "nic/sdk/platform/drivers/xcvr.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
+#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/core/event.hpp"
@@ -91,6 +92,41 @@ xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
     }
 
     if_db()->walk(IF_TYPE_ETH, xvcr_event_walk_cb, xcvr_event_info);
+}
+
+/**
+ * @brief        create a port with the given configuration information
+ * @param[in]    ifindex               interface index
+ * @param[in]    port_admin_state_t    port admin state
+ * @return       SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+update_port (pds_ifindex_t ifindex, port_admin_state_t admin_state)
+{
+    sdk_ret_t ret;
+    if_entry *intf;
+    port_args_t port_info;
+
+    ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(), ifindex, IF_DEFAULT_CHILD_PORT);
+    intf = if_db()->find(&ifindex);
+    if (intf == NULL) {
+        PDS_TRACE_ERR("port 0x%x update failed", ifindex);
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+
+    memset(&port_info, 0, sizeof(port_info));
+    ret = sdk::linkmgr::port_get(intf->if_info(), &port_info);
+    if (ret != sdk::SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", ifindex, ret);
+        return ret;
+    }
+    port_info.port_num = intf->key();
+
+    // Set the admin state as per the argument
+    port_info.admin_state = admin_state;
+
+    ret = sdk::linkmgr::port_update(intf->if_info(), &port_info);
+    return ret;
 }
 
 /**
@@ -197,7 +233,7 @@ create_ports (void)
 
     num_phy_ports = g_pds_state.catalogue()->num_fp_ports();
     for (uint32_t phy_port = 1; phy_port <= num_phy_ports; phy_port++) {
-        ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(), phy_port, 1);
+        ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(), phy_port, IF_DEFAULT_CHILD_PORT);
         memset(&port_args, 0, sizeof(port_args));
         populate_port_info(ifindex, phy_port, &port_args);
         create_port(ifindex, &port_args);
@@ -257,6 +293,7 @@ port_get (uint32_t ifindex, port_get_cb_t port_get_cb, void *ctxt)
     if (ifindex == 0) {
         if_db()->walk(IF_TYPE_ETH, if_walk_port_get_cb, &cb_ctxt);
     } else {
+        ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(), ifindex, IF_DEFAULT_CHILD_PORT);
         intf = if_db()->find(&ifindex);
         if (intf == NULL)  {
             PDS_TRACE_ERR("Port %u not created", ifindex);

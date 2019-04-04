@@ -41,6 +41,8 @@ public:
                     pds::LlcSetupResponse *rsp) override;
     Status LlcStatsGet(ServerContext *context, const Empty *req,
                        pds::LlcStatsGetResponse *rsp) override;
+    Status PbStatsGet(ServerContext *context, const Empty *proto_req,
+                      pds::PbStatsGetResponse *proto_rsp) override;
 };
 
 #endif    // __AGENT_SVC_DEBUG_HPP__

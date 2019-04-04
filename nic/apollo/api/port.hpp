@@ -7,6 +7,7 @@
  */
 
 #include "nic/sdk/linkmgr/linkmgr.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 
 #if !defined (__PORT_HPP__)
 #define __PORT_HPP__
@@ -24,6 +25,14 @@ typedef void (*port_get_cb_t)(sdk::linkmgr::port_args_t *port_info, void *ctxt);
   * @return    SDK_RET_OK on success, failure status code on error
   */
 sdk_ret_t port_get(uint32_t fp_port, port_get_cb_t port_get_cb, void *ctxt);
+
+/**
+ * @brief        get port information based on port number
+ * @param[in]    ifindex       interface index
+ * @param[in]    admin_state   port admin state
+ * @return       SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t update_port(pds_ifindex_t ifindex, port_admin_state_t admin_state);
 
 /**
  * @brief     create all ports based on the catalog information

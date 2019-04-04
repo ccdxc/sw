@@ -79,6 +79,14 @@ public:
     virtual sdk_ret_t llc_get(sdk::asic::pd::llc_counters_t *llc_args) override;
 
     /**
+     * @brief      PB Stats Get
+     * @param[in]   cb      Callback
+     *              ctxt    Opaque context to be passed to callback
+     * @return      SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t pb_stats(debug::pb_stats_get_cb_t cb, void *ctxt) override;
+
+    /**
      * @brief    dump all the debug information to given file
      * @param[in] fp    file handle
      */

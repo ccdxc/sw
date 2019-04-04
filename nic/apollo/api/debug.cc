@@ -252,4 +252,10 @@ pds_llc_get (llc_counters_t *llc_args)
     return impl_base::asic_impl()->llc_get(llc_args);
 }
 
+sdk_ret_t
+pds_pb_stats_get (debug::pb_stats_get_cb_t cb, void *ctxt)
+{
+    return impl_base::asic_impl()->pb_stats(cb, ctxt);
+}
+
 }    // namespace debug

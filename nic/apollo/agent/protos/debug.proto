@@ -19,6 +19,7 @@ service DebugSvc {
   rpc TableStatsGet (types.Empty) returns (TableStatsGetResponse) {}
   rpc LlcSetup (LlcSetupRequest) returns (LlcSetupResponse) {}
   rpc LlcStatsGet (types.Empty) returns (LlcStatsGetResponse) {}
+  rpc PbStatsGet (types.Empty) returns (PbStatsGetResponse) {}
 }
 
 enum TraceLevel {
@@ -144,4 +145,93 @@ message LlcStats {
 message LlcStatsGetResponse {
   types.ApiStatus ApiStatus = 1;
   LlcStats        Stats     = 2;
+}
+
+enum OflowFifoDropType {
+  OCCUPANCY_DROP                = 0;    // Pkts dropped due to fifo full
+  EMERGENCY_STOP_DROP           = 1;    // Pkts dropped due to emergency condition hit due to slow oflow memory to write-buffer communication
+  WRITE_BUFFER_ACK_FILL_UP_DROP = 2;    // Pkts dropped due to write buffer's ack fifo filling up
+  WRITE_BUFFER_ACK_FULL_DROP    = 3;    // Pkts dropped due to write buffer's ack fifo full
+  WRITE_BUFFER_FULL_DROP        = 4;    // Pkts dropped due to write buffer filling up
+  CONTROL_FIFO_FULL_DROP        = 5;    // Pkts dropped due to control fifo full
+}
+
+message OflowFifoDropStatsEntry {
+  OflowFifoDropType Type  = 1;
+  uint32            Count = 2;
+}
+
+message OflowFifoDropStats {
+  repeated OflowFifoDropStatsEntry Entry = 1;
+}
+
+// OflowFifoStats captures instantaneous counters at the overflow fifo interface
+message OflowFifoStats {
+  uint32             SopCountIn  = 1;    // Count of start-of-packets in
+  uint32             EopCountIn  = 2;    // Count of end-of-packets in
+  uint32             SopCountOut = 3;    // Count of start-of-packets out
+  uint32             EopCountOut = 4;    // Count of end-of-packets out
+  OflowFifoDropStats DropCounts  = 5;    // Drop counts
+}
+
+enum BufferDropReasons {
+   INTRINSIC_DROP            = 0;     // Pkts dropped due to intrinsic drop bit being set
+   DISCARDED                 = 1;     // Pkts dropped due to error
+   ADMITTED                  = 2;     // Errored pkts admitted to buffering
+   OUT_OF_CELLS_DROP         = 3;     // Pkts dropped due to cell exhaustion (first cell)
+   OUT_OF_CELLS_DROP_2       = 4;     // Pkts dropped due to cell exhaustion (subsequent cell)
+   OUT_OF_CREDIT_DROP        = 5;     // Pkts dropped due to cell-credits exhaustion
+   TRUNCATION_DROP           = 6;     // Pkts dropped due to size bigger than the configured MTU
+   PORT_DISABLED_DROP        = 7;     // Pkts dropped due to port disable
+   COPY_TO_CPU_TAIL_DROP     = 8;     // Copy-to-cpu pkts tail dropped
+   SPAN_TAIL_DROP            = 9;     // Span pkts tail dropped
+   MIN_SIZE_VIOLATION_DROP   = 10;    // Pkts dropped due to lesser than min size
+   ENQUEUE_ERROR_DROP        = 11;    // Pkts dropped due to enqueue to reserved queues
+   INVALID_PORT_DROP         = 12;    // Pkts dropped due to destined to invalid ports
+   INVALID_OUTPUT_QUEUE_DROP = 13;    // Pkts dropped due to destined to invalid output queues
+}
+
+message BufferDropStatsEntry {
+  BufferDropReasons Reasons   = 1;    // drop reasons
+  uint32            DropCount = 2;    // drop count for multiple drop reasons
+}
+
+message BufferDropStats {
+  repeated BufferDropStatsEntry StatsEntries = 1;
+}
+
+message BufferStats {
+  uint32          SopCountIn  = 1;    // Count of start-of-packets in
+  uint32          EopCountIn  = 2;    // Count of end-of-packets in
+  uint32          SopCountOut = 3;    // Count of start-of-packets out
+  uint32          EopCountOut = 4;    // Count of end-of-packets out
+  BufferDropStats DropCounts  = 5;    // Drop counts 
+}
+
+enum PacketBufferPortType {
+  PACKET_BUFFER_PORT_TYPE_DMA    = 0;
+  PACKET_BUFFER_PORT_TYPE_P4IG   = 1;
+  PACKET_BUFFER_PORT_TYPE_P4EG   = 2;
+  PACKET_BUFFER_PORT_TYPE_UPLINK = 3;
+}
+
+message PacketBufferPort {
+  PacketBufferPortType PortType = 1;
+  uint32               PortNum  = 2;
+}
+
+message PacketBufferPortStats {
+  PacketBufferPort PacketBufferPort = 1;    // Port identifier
+  BufferStats      BufferStats       = 2;    // PBC block statistics
+  OflowFifoStats   OflowFifoStats   = 3;    // Overflow fifo statistics
+}
+
+// PacketBufferStats captures all the statistics of the packet buffering module
+message PacketBufferStats {
+  repeated PacketBufferPortStats PortStats = 1; // list of stats, one per packet buffer port
+}
+
+message PbStatsGetResponse {
+  types.ApiStatus   ApiStatus = 1;
+  PacketBufferStats PbStats   = 2;
 }

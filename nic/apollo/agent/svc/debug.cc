@@ -3,6 +3,7 @@
 // -----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/table.hpp"
+#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/agent/core/state.hpp"
@@ -205,7 +206,7 @@ pds_table_stats_entry_fill (pds_table_stats_t *stats, void *ctxt)
 
 Status
 DebugSvcImpl::TableStatsGet(ServerContext *context, const Empty *proto_req,
-                          pds::TableStatsGetResponse *proto_rsp) {
+                            pds::TableStatsGetResponse *proto_rsp) {
     sdk_ret_t ret;
 
     if ((ret = debug::pds_table_stats_get(pds_table_stats_entry_fill, proto_rsp)) != SDK_RET_OK) {
@@ -259,6 +260,82 @@ DebugSvcImpl::LlcStatsGet(ServerContext *context, const Empty *proto_req,
         }
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+
+    return Status::OK;
+}
+
+void
+pds_pb_stats_port_fill (pds::PacketBufferPort *buf_port, uint32_t port)
+{
+    if ((port >= TM_UPLINK_PORT_BEGIN) && (port <= TM_UPLINK_PORT_END)) {
+        buf_port->set_porttype(pds::PACKET_BUFFER_PORT_TYPE_UPLINK);
+        buf_port->set_portnum(port-TM_UPLINK_PORT_BEGIN);
+    } else if ((port >= TM_DMA_PORT_BEGIN) && (port <= TM_DMA_PORT_END)) {
+        buf_port->set_porttype(pds::PACKET_BUFFER_PORT_TYPE_DMA);
+        buf_port->set_portnum(TM_PORT_DMA);
+    } else if (port == TM_PORT_INGRESS) {
+        buf_port->set_porttype(pds::PACKET_BUFFER_PORT_TYPE_P4IG);
+        buf_port->set_portnum(TM_PORT_INGRESS);
+    } else if (port == TM_PORT_EGRESS) {
+        buf_port->set_porttype(pds::PACKET_BUFFER_PORT_TYPE_P4EG);
+        buf_port->set_portnum(TM_PORT_EGRESS);
+    }
+}
+
+void
+pds_pb_stats_entry_fill (pds_pb_debug_stats_t *pds_stats, void *ctxt)
+{
+    sdk::platform::capri::tm_pb_debug_stats_t *stats = &pds_stats->stats;
+    pds::PbStatsGetResponse *rsp = (pds::PbStatsGetResponse *)ctxt;
+    auto pb_stats = rsp->mutable_pbstats()->add_portstats();
+    auto port = pb_stats->mutable_packetbufferport();
+    auto buffer_stats = pb_stats->mutable_bufferstats();
+    auto oflow_fifo_stats = pb_stats->mutable_oflowfifostats();
+
+    pds_pb_stats_port_fill(port, pds_stats->port);
+
+    buffer_stats->set_sopcountin(stats->buffer_stats.sop_count_in);
+    buffer_stats->set_eopcountin(stats->buffer_stats.eop_count_in);
+    buffer_stats->set_sopcountout(stats->buffer_stats.sop_count_out);
+    buffer_stats->set_eopcountout(stats->buffer_stats.eop_count_out);
+
+    auto drop_stats = buffer_stats->mutable_dropcounts();
+    for (int i = sdk::platform::capri::BUFFER_INTRINSIC_DROP; i < sdk::platform::capri::BUFFER_DROP_MAX; i ++) {
+        auto drop_stats_entry = drop_stats->add_statsentries();
+        drop_stats_entry->set_reasons(pds::BufferDropReasons(i));
+        drop_stats_entry->set_dropcount(stats->buffer_stats.drop_counts[i]);
+    }
+
+    oflow_fifo_stats->set_sopcountin(stats->oflow_fifo_stats.sop_count_in);
+    oflow_fifo_stats->set_eopcountin(stats->oflow_fifo_stats.eop_count_in);
+    oflow_fifo_stats->set_sopcountout(stats->oflow_fifo_stats.sop_count_out);
+    oflow_fifo_stats->set_eopcountout(stats->oflow_fifo_stats.eop_count_out);
+
+    auto drop_counts = oflow_fifo_stats->mutable_dropcounts();
+    drop_counts->add_entry()->set_type(pds::OflowFifoDropType::OCCUPANCY_DROP);
+    drop_counts->mutable_entry(0)->set_count(stats->oflow_fifo_stats.drop_counts.occupancy_drop_count);
+    drop_counts->add_entry()->set_type(pds::OflowFifoDropType::EMERGENCY_STOP_DROP);
+    drop_counts->mutable_entry(1)->set_count(stats->oflow_fifo_stats.drop_counts.emergency_stop_drop_count);
+    drop_counts->add_entry()->set_type(pds::OflowFifoDropType::WRITE_BUFFER_ACK_FILL_UP_DROP);
+    drop_counts->mutable_entry(2)->set_count(stats->oflow_fifo_stats.drop_counts.write_buffer_ack_fill_up_drop_count);
+    drop_counts->add_entry()->set_type(pds::OflowFifoDropType::WRITE_BUFFER_ACK_FULL_DROP);
+    drop_counts->mutable_entry(3)->set_count(stats->oflow_fifo_stats.drop_counts.write_buffer_ack_full_drop_count);
+    drop_counts->add_entry()->set_type(pds::OflowFifoDropType::WRITE_BUFFER_FULL_DROP);
+    drop_counts->mutable_entry(4)->set_count(stats->oflow_fifo_stats.drop_counts.write_buffer_full_drop_count);
+    drop_counts->add_entry()->set_type(pds::OflowFifoDropType::CONTROL_FIFO_FULL_DROP);
+    drop_counts->mutable_entry(5)->set_count(stats->oflow_fifo_stats.drop_counts.control_fifo_full_drop_count);
+
+    rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+}
+
+Status
+DebugSvcImpl::PbStatsGet(ServerContext *context, const Empty *proto_req,
+                         pds::PbStatsGetResponse *proto_rsp) {
+    sdk_ret_t ret;
+
+    if ((ret = debug::pds_pb_stats_get(pds_pb_stats_entry_fill, proto_rsp)) != SDK_RET_OK) {
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    }
 
     return Status::OK;
 }

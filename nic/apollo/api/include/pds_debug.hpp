@@ -15,6 +15,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 
 /// \defgroup PDS_VCN VCN API
 /// @{
@@ -45,16 +46,22 @@ typedef struct pds_table_stats_e {
     sdk::table::sdk_table_stats_t     table_stats;
 } pds_table_stats_t;
 
+typedef struct pds_pb_debug_stats_e {
+    uint32_t port;
+    sdk::platform::capri::tm_pb_debug_stats_t stats;
+} pds_pb_debug_stats_t;
+
 namespace debug {
 
 typedef void (*table_stats_get_cb_t)(pds_table_stats_t *stats, void *ctxt);
-
+typedef void (*pb_stats_get_cb_t) (pds_pb_debug_stats_t *stats, void *ctxt);
 sdk_ret_t pds_clock_frequency_update(pds_clock_freq_t freq);
 sdk_ret_t pds_get_system_temperature(pds_system_temperature_t *temp);
 sdk_ret_t pds_get_system_power(pds_system_power_t *pow);
 sdk_ret_t pds_table_stats_get(table_stats_get_cb_t cb, void *ctxt);
 sdk_ret_t pds_llc_setup(sdk::asic::pd::llc_counters_t *llc_args);
 sdk_ret_t pds_llc_get(sdk::asic::pd::llc_counters_t *llc_args);
+sdk_ret_t pds_pb_stats_get(debug::pb_stats_get_cb_t cb, void *ctxt);
 
 }    // namespace debug
 

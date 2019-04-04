@@ -246,6 +246,30 @@ capri_impl::llc_get (sdk::asic::pd::llc_counters_t *llc_args) {
 }
 
 /**
+ * @brief      PB Stats Get
+ * @param[in]   cb      Callback
+ *              ctxt    Opaque context to be passed to callback
+ * @return      SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+capri_impl::pb_stats(debug::pb_stats_get_cb_t cb, void *ctxt) {
+    sdk_ret_t ret;
+    pds_pb_debug_stats_t pb_stats = {0};
+
+    for (uint32_t tm_port = 0; tm_port < TM_NUM_PORTS; tm_port++) {
+        memset(&pb_stats, 0, sizeof(pb_stats));
+        ret = capri_tm_get_pb_debug_stats(tm_port, &pb_stats.stats, false);
+        if (ret != SDK_RET_OK) {
+            OBFL_LOG_ERR("Get PB stats failed for port {}", tm_port);
+            continue;
+        }
+        pb_stats.port = tm_port;
+        cb(&pb_stats, ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+/**
  * @brief    monitor the asic
  * @return    SDK_RET_OK on success, failure status code on error
  */

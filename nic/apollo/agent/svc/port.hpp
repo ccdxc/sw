@@ -20,7 +20,9 @@ using pds::PortGetResponse;
 class PortSvcImpl final : public PortSvc::Service {
 public:
     Status PortGet(ServerContext *context, const pds::PortGetRequest *req,
-                     pds::PortGetResponse *rsp) override;
+                   pds::PortGetResponse *rsp) override;
+    Status PortUpdate(ServerContext *context, const pds::PortUpdateRequest *req,
+                      pds::PortUpdateResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_PORT_HPP__

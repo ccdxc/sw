@@ -25,7 +25,8 @@ const IfParentPortMask = 0xFF
 const IfChildPortMask = 0xFF
 
 var (
-	portID uint32
+	portID         uint32
+	portAdminState string
 )
 
 var portShowCmd = &cobra.Command{
@@ -48,12 +49,101 @@ var portStatusShowCmd = &cobra.Command{
 	Run:   portShowStatusCmdHandler,
 }
 
+var portUpdateCmd = &cobra.Command{
+	Use:   "port",
+	Short: "set port debug information",
+	Long:  "set port debug information",
+	Run:   portUpdateCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatsShowCmd)
 	portStatsShowCmd.Flags().Uint32VarP(&portID, "id", "i", 0, "Specify Port ID")
 	portShowCmd.AddCommand(portStatusShowCmd)
 	portStatusShowCmd.Flags().Uint32VarP(&portID, "id", "i", 0, "Specify Port ID")
+
+	debugCmd.AddCommand(portUpdateCmd)
+	portUpdateCmd.Flags().Uint32VarP(&portID, "id", "i", 0, "Specify Port ID")
+	portUpdateCmd.Flags().StringVarP(&portAdminState, "admin-state", "a", "up", "Set port admin state - up, down")
+	portUpdateCmd.MarkFlagRequired("admin-state")
+	portUpdateCmd.MarkFlagRequired("id")
+}
+
+func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to PDS
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+		return
+	}
+	defer c.Close()
+
+	adminState := inputToAdminState("none")
+
+	if len(args) > 0 {
+		fmt.Printf("Invalid argument\n")
+		return
+	}
+
+	if cmd.Flags().Changed("admin-state") == false ||
+		cmd.Flags().Changed("id") == false {
+		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+		return
+	}
+
+	if isAdminStateValid(portAdminState) == false {
+		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
+		return
+	}
+	adminState = inputToAdminState(portAdminState)
+
+	client := pds.NewPortSvcClient(c)
+
+	var req *pds.PortUpdateRequest
+
+	req = &pds.PortUpdateRequest{
+		Spec: &pds.PortSpec{
+			PortId:     portID,
+			AdminState: adminState,
+		},
+	}
+
+	// PDS call
+	respMsg, err := client.PortUpdate(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Update Port failed. %v\n", err)
+		return
+	}
+
+	if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+		return
+	}
+
+	fmt.Printf("Update port succeeded\n")
+}
+
+func isAdminStateValid(str string) bool {
+	switch str {
+	case "up":
+		return true
+	case "down":
+		return true
+	default:
+		return false
+	}
+}
+
+func inputToAdminState(str string) pds.PortAdminState {
+	switch str {
+	case "up":
+		return pds.PortAdminState_PORT_ADMIN_STATE_UP
+	case "down":
+		return pds.PortAdminState_PORT_ADMIN_STATE_DOWN
+	default:
+		return pds.PortAdminState_PORT_ADMIN_STATE_NONE
+	}
 }
 
 func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {

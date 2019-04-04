@@ -12,6 +12,7 @@ import "types.proto";
 
 service PortSvc {
   rpc PortGet (PortGetRequest) returns (PortGetResponse) {}
+  rpc PortUpdate (PortUpdateRequest) returns (PortUpdateResponse) {}
 }
 
 //------------------------------------------------------------------------------
@@ -269,4 +270,12 @@ message PortGetRequest {
 message PortGetResponse {
   types.ApiStatus ApiStatus = 1;
   repeated Port   Response  = 2;
+}
+
+message PortUpdateRequest {
+  PortSpec Spec = 1;
+}
+
+message PortUpdateResponse {
+  types.ApiStatus ApiStatus = 1;
 }
