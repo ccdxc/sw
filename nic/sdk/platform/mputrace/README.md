@@ -284,8 +284,8 @@ Following is a sample config.json file for reference -
         - this will generate captrace.syms in nic/
     2 Run captrace.py script on the binary with mpu_prog_info.conf and
       captrace.syms files
-        To list all packets
-            sdk/platform/mputrace/captrace.py decode captrace.bin --load=mpu_prog_info.json --sym=captrace.syms —list
+        To decode the trace dump file
+            sdk/platform/mputrace/captrace.py decode captrace.bin --load=mpu_prog_info.json --sym=captrace.syms
         To track packet with PHV timestamp “0x1c07a80c” across stages
             sdk/platform/mputrace/captrace.py decode captrace.bin --fltr phv_timestamp_capture=0x1c07a80c --load=mpu_prog_info.json --sym=captrace.syms > pkt1c07.log
         To dump info about the packet
