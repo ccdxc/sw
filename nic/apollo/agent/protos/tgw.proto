@@ -1,0 +1,105 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for Transit Gateway object
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+service TGwSvc {
+  rpc TGwCreate (TGwRequest) returns (TGwResponse) {}
+  rpc TGwGet (TGwGetRequest) returns (TGwGetResponse) {}
+  rpc TGwDelete (TGwDeleteRequest) returns (TGwDeleteResponse) {}
+}
+
+// VPC attachment to Transit Gateway
+message TGwVPCAttachment {
+  // VPC to be attached to the Transit Gateway
+  uint32 VPCId              = 1;
+  // Subnet to be attached the Transit Gateway
+  uint32 SubnetId           = 2;
+  // IPv4 route table to be used for this attachment, 0 for default route table
+  uint32 IPv4RouteTableId   = 3;
+  // IPv6 route table to be used for this attachment, 0 for default route table
+  uint32 IPv6RouteTableId   = 4;
+  // if RoutePropagationEn is true, attached VPC will have its
+  // routes added to route table of the attachment or default route table of
+  // the Transit Gateway this attachment is part of
+  bool   RoutePropagationEn = 5;
+}
+
+// VPN attachment to Transit Gateway
+message TGwVPNAttachment {
+}
+
+// TGwSpec captures Trasnit Gawteway configuration
+message TGwSpec {
+  // unique key/identifier of Tranit Gateway
+  uint32   Id                              = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // IPv4 route tables of the Transit Gateway
+  repeated uint32 IPv4RouteTableId         = 2;
+  // IPv6 route tables of the Transit Gateway
+  repeated uint32 IPv6RouteTableId         = 3;
+  // default IPv4 route table id to be used for this TGw or 0, if none
+  uint32   IPv4DefaultRouteTableId         = 4;
+  // default IPv6 route table id to be used for this TGw or 0, if none
+  uint32   IPv6DefaultRouteTableId         = 5;
+  // VPC attachments
+  repeated TGwVPCAttachment VPCAttachments = 6;
+  // VPN attachments
+  repeated TGwVPNAttachment VPNAttachments = 7;
+}
+
+// operational status of a Transit Gateway, if any
+message TGwStatus {
+}
+
+// stats of a Transit Gateway, if any
+message TGwStats {
+}
+
+// Transit Gateway object
+message TGw {
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  TGwSpec       Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  TGwStatus     Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  TGwStats      Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// Transit Gateway create and update request
+message TGwRequest {
+  repeated TGwSpec Request = 1; // batched requests
+}
+
+// Transit Gateway create and update response
+message TGwResponse {
+  types.ApiStatus    ApiStatus = 1;
+  repeated TGwStatus Response  = 2; // batched response
+}
+
+// Transit Gateway get request
+message TGwGetRequest {
+  repeated uint32 Id = 1;
+}
+
+// Transit Gateway get response
+message TGwGetResponse {
+  types.ApiStatus ApiStatus = 1; // API status code
+  repeated TGw    Response  = 2;
+}
+
+// Transit Gateway delete request
+message TGwDeleteRequest {
+  repeated uint32 Id = 1;
+}
+
+// Transit Gateway delete response
+message TGwDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1; // API status code
+}

@@ -52,11 +52,11 @@ message VnicStats {
 
 // vnic object
 message Vnic {
-  meta.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta    ObjMeta    = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
-  VnicSpec        Spec       = 3 [(gogoproto.jsontag) = "spec,omitempty"];
-  VnicStatus      Status     = 4 [(gogoproto.jsontag) = "status,omitempty"];
-  VnicStats       Stats      = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  VnicSpec      Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  VnicStatus    Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  VnicStats     Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
 
 // vnic create and update request

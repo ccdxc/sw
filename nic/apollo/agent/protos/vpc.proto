@@ -54,11 +54,11 @@ message VPCStats {
 
 // Virtual Private Cloud object
 message VPC {
-  meta.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta    ObjMeta    = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
-  VPCSpec         Spec       = 3 [(gogoproto.jsontag) = "spec,omitempty"];
-  VPCStatus       Status     = 4 [(gogoproto.jsontag) = "status,omitempty"];
-  VPCStats        Stats      = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  VPCSpec       Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  VPCStatus     Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  VPCStats      Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
 
 // VPC create and update request
