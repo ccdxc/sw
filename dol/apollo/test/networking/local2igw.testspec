@@ -7,17 +7,10 @@ selectors:
 
 packets:
     - packet:
-        id          : FROM_HOST_PKT # Input packet from host
+        id          : BASE_PKT # Base Packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=UDP
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QTAG
         headers     :
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
                 src     : ref://testcase/config/localmapping/IP
                 dst     : callback://networking/packets/GetUsableHostFromRoute
@@ -33,10 +26,21 @@ packets:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 
     - packet:
-        id          : TO_SWITCH_PKT # Expected packet to network
-        clone       : ref://testcase/packets/id=FROM_HOST_PKT
+        id          : FROM_HOST_PKT # Input packet from host
+        clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
-            - ref://factory/packets/id=ENCAP_MPLS
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:02:00:00:00:00
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+
+    - packet:
+        id          : TO_SWITCH_PKT # Expected packet to network
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncapFromMapping
         headers     :
             outereth:
                 src     : ref://testcase/config/devicecfg/MACAddr
@@ -51,7 +55,15 @@ packets:
                 label   : ref://testcase/config/route/Tunnel/EncapValue
                 ttl     : 0
                 s       : 1
-
+            vxlan:
+                vni     : ref://testcase/config/route/Tunnel/EncapValue
+            ipv4:
+                src     : callback://networking/packets/GetIPFromLocalMapping
+            ipv6:
+                src     : callback://networking/packets/GetIPFromLocalMapping
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:02:00:00:00:00
 
 trigger:
     packets:

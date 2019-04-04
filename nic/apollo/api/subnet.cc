@@ -60,7 +60,7 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
 
     PDS_TRACE_DEBUG(
         "Initializing subnet (vcn %u, subnet %u), v4 pfx %s, v6 pfx %s, "
-        "vr ip %s, vr_mac %s, v4 route table %u, v6 route table %u, "
+        "v4_vr_ip %s, v6_vr_ip %s, vr_mac %s, v4 route table %u, v6 route table %u, "
         "ingress v4 policy %u, ingress v6 policy %u, "
         "egress v4 policy %u, egress v6 policy %u",
         spec->vcn.id, spec->key.id, ipv4pfx2str(&spec->v4_pfx),

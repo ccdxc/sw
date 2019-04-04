@@ -80,8 +80,11 @@ class RouteObjectClient:
         self.__v6iter = {}
         return
 
-    def __internet_tunnel_get(self):
-        return resmgr.RemoteMplsInternetTunAllocator.rrnext()
+    def __internet_tunnel_get(self, nat):
+        if nat is False:
+            return resmgr.RemoteInternetNonNatTunAllocator.rrnext()
+        else:
+            return resmgr.RemoteInternetNatTunAllocator.rrnext()
 
     def Objects(self):
         return self.__objs
@@ -116,11 +119,11 @@ class RouteObjectClient:
         self.__v4iter[vpcid] = None
         self.__v6iter[vpcid] = None
 
-        if resmgr.RemoteMplsInternetTunAllocator == None:
+        if resmgr.RemoteInternetNonNatTunAllocator == None and resmgr.RemoteInternetNatTunAllocator == None:
             logger.info("Skipping route creation as there are no Internet tunnels")
             return
 
-        tunobj = self.__internet_tunnel_get()
+        tunobj = self.__internet_tunnel_get(False)
 
         def __get_next_subnet(ip):
             if ip.version == 4:
@@ -198,6 +201,10 @@ class RouteObjectClient:
             # get user specified routes if any for 'base' routetbltype
             user_specified_v4routes = __get_user_specified_routes(routetbl_spec_obj.v4routes)
             user_specified_v6routes = __get_user_specified_routes(routetbl_spec_obj.v6routes)
+            nat = False
+            if hasattr(routetbl_spec_obj, 'nat'):
+                nat = routetbl_spec_obj.nat
+            tunobj = self.__internet_tunnel_get(nat)
             for i in range(routetablecount):
                 if 'adjacent' in routetype:
                     if __is_v4stack():
@@ -224,6 +231,7 @@ class RouteObjectClient:
 
         if len(self.__v4objs[vpcid]) != 0:
             self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
+
 
     def CreateObjects(self):
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))

@@ -18,6 +18,7 @@ class rrobiniter:
         assert len(objs) != 0
         self.objs = objs
         self.iterator = iter(objs)
+        self.size = len(objs)
     def rrnext(self):
         while True:
             try:
@@ -25,6 +26,8 @@ class rrobiniter:
             except:
                 self.iterator = iter(self.objs)
                 continue
+    def size(self):
+        return self.size
 
 def GetFilteredObjects(objs, maxlimits, random=True):
     if maxlimits is None or maxlimits is 0 or maxlimits >= len(objs):

@@ -24,6 +24,9 @@ class TunnelObject(base.ConfigObjectBase):
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
         self.LocalIPAddr = parent.IPAddr
         self.EncapValue = 0
+        self.Nat = False
+        if (hasattr(spec, 'nat')):
+            self.Nat = spec.nat
         if local == True:
             self.RemoteIPAddr = self.LocalIPAddr
             self.Type = tunnel_pb2.TUNNEL_TYPE_NONE
@@ -45,9 +48,8 @@ class TunnelObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "Tunnel%d|LocalIPAddr:%s|RemoteIPAddr:%s|TunnelType:%s|EncapValue:%d" %\
-               (self.Id,self.LocalIPAddr, self.RemoteIPAddr,
-               utils.GetTunnelTypeString(self.Type), self.EncapValue)
+        return "Tunnel%d|LocalIPAddr:%s|RemoteIPAddr:%s|TunnelType:%s|EncapValue:%d|Nat:%s" %\
+               (self.Id,self.LocalIPAddr, self.RemoteIPAddr, utils.GetTunnelTypeString(self.Type), self.EncapValue, self.Nat)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = tunnel_pb2.TunnelRequest()
@@ -60,6 +62,7 @@ class TunnelObject(base.ConfigObjectBase):
         spec.LocalIP.V4Addr = int(self.LocalIPAddr)
         spec.RemoteIP.Af = types_pb2.IP_AF_INET
         spec.RemoteIP.V4Addr = int(self.RemoteIPAddr)
+        spec.Nat = self.Nat
         return grpcmsg
 
     def IsWorkload(self):
@@ -69,6 +72,11 @@ class TunnelObject(base.ConfigObjectBase):
 
     def IsIgw(self):
         if self.Type == tunnel_pb2.TUNNEL_TYPE_IGW:
+            return True
+        return False
+
+    def IsNat(self):
+        if self.Nat is True:
             return True
         return False
 
@@ -95,8 +103,8 @@ class TunnelObjectClient:
                 obj = TunnelObject(parent, t, False)
                 self.__objs.append(obj)
         Store.SetTunnels(self.__objs)
-        resmgr.CreateMplsInternetTunnels()
-        resmgr.CreateMplsVnicTunnels()
+        resmgr.CreateInternetTunnels()
+        resmgr.CreateVnicTunnels()
         return
 
     def CreateObjects(self):

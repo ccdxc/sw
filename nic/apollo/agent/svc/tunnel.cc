@@ -32,6 +32,7 @@ tep_api_spec_to_proto_spec (pds::TunnelSpec *proto_spec,
     pds_encap_to_proto_encap(proto_spec->mutable_encap(),
                              &api_spec->encap);
     // TODO: fill Nat here
+    proto_spec->set_nat(api_spec->nat);
 }
 
 // Populate proto buf status from tep API status
@@ -96,6 +97,7 @@ tep_proto_spec_to_api_spec (pds_tep_spec_t *api_spec,
     if (types::IP_AF_INET == remoteip.af()) {
         api_spec->key.ip_addr = remoteip.v4addr();
     }
+    api_spec->nat = proto_spec.nat();
 }
 
 // Create Tunnel Object

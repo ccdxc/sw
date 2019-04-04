@@ -13,9 +13,15 @@ import apollo.config.utils as utils
 from infra.common.logging import logger
 from apollo.config.store import Store
 
+def IsNatEnabled(routetblobj):
+    tunnel = routetblobj.Tunnel
+    if tunnel is not None:
+        return tunnel.Nat
+    return False
+
 # Flow based on Local and Remote mapping
 class FlowMapObject(base.ConfigObjectBase):
-    def __init__(self, lobj, robj, fwdmode, routetblobj = None):
+    def __init__(self, lobj, robj, fwdmode, routetblobj = None, tunobj = None):
         super().__init__()
         self.Clone(Store.templates.Get('FLOW'))
         self.FlowMapId = next(resmgr.FlowIdAllocator)
@@ -24,6 +30,7 @@ class FlowMapObject(base.ConfigObjectBase):
         self.__lobj = lobj
         self.__robj = robj
         self.__routeTblObj = routetblobj
+        self.__tunobj = tunobj
         self.__dev = Store.GetDevice()
         self.Show()
         return
@@ -33,6 +40,7 @@ class FlowMapObject(base.ConfigObjectBase):
         obj.localmapping = self.__lobj
         obj.remotemapping = self.__robj
         obj.route = self.__routeTblObj
+        obj.tunnel = self.__tunobj
         obj.devicecfg = self.__dev
         obj.hostport = 1
         obj.switchport = 2
@@ -88,14 +96,29 @@ class FlowMapObjectHelper:
         if value != None:
             rmapsel.flow.filters.remove((key, value))
 
-        assert (fwdmode == 'L2' or fwdmode == 'L3' or fwdmode == 'IGW') == True
+        assert (fwdmode == 'L2' or fwdmode == 'L3' or fwdmode == 'IGW' or fwdmode == 'IGW_NAT') == True
 
         if fwdmode == 'IGW':
             for lobj in lmapping.GetMatchingObjects(mapsel):
                 for routetblobj in routetable.GetMatchingObjects(mapsel):
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
-                    obj = FlowMapObject(lobj, None, fwdmode, routetblobj)
+                    if IsNatEnabled(routetblobj) is True:
+                    # Skip IGWs with nat flag set to True
+                        continue
+                    obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.Tunnel)
+                    objs.append(obj)
+        elif fwdmode == 'IGW_NAT':
+            for lobj in lmapping.GetMatchingObjects(mapsel):
+                if hasattr(lobj, "PublicIP") == False:
+                    continue
+                for routetblobj in routetable.GetMatchingObjects(mapsel):
+                    if not self.__is_lmapping_match(routetblobj, lobj):
+                        continue
+                    if IsNatEnabled(routetblobj) is False:
+                    # Skip IGWs without nat flag set to True
+                        continue
+                    obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.Tunnel)
                     objs.append(obj)
         else:
             for lobj in lmapping.GetMatchingObjects(mapsel):
@@ -107,7 +130,7 @@ class FlowMapObjectHelper:
                     else:
                         if lobj.VNIC.SUBNET.SubnetId == robj.SUBNET.SubnetId:
                             continue
-                    obj = FlowMapObject(lobj, robj, fwdmode)
+                    obj = FlowMapObject(lobj, robj, fwdmode, None, robj.TunObj)
                     objs.append(obj)
         return utils.GetFilteredObjects(objs, selectors.maxlimits)
 

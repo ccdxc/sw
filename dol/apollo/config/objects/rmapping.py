@@ -25,6 +25,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         self.TunIPAddr = tunobj.RemoteIPAddr
         self.MplsSlot =  next(tunobj.RemoteVnicMplsSlotIdAllocator)
         self.Vnid = next(tunobj.RemoteVnicVxlanIdAllocator)
+        self.TunObj = tunobj
         if ipversion == utils.IP_VERSION_6:
             self.IPAddr = parent.AllocIPv6Address();
             self.AddrFamily = 'IPV6'

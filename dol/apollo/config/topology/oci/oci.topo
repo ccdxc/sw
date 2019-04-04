@@ -21,7 +21,10 @@ device:
     macaddress  : macaddr/0002.0100.0001
     encap       : mplsoudp
     tunnel      :
-        - count : 32
+        - count : 16
+          type  : internet-gateway
+          nat   : true
+        - count : 16
           type  : internet-gateway
         - count : 32
           type  : workload
@@ -32,17 +35,18 @@ vpc:
       count : 1
       type  : tenant
       subnet:
-        - count     : 30
+        - count     : 50
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
             - count   : 1             # VNICs per subnet
               ipcount : 2             # Local IP mapping per vnic
               srcguard : true         # true or false (default false)
+              public  : true
             - count   : 1             # VNICs per subnet
               ipcount : 2             # Local IP mapping per vnic
-              public  : true
               srcguard : false        # true or false (default false)
+              public  : true
           rmap:                       # Remote IP mappings per subnet
             - count : 2
         - count     : 2
@@ -52,7 +56,7 @@ vpc:
             - count : 2
       routetbl:
              - type: specific # route table with disjoint routes
-               count : 1.   # always 1 if routes specified by user
+               count : 1 # always 1 if routes specified by user
                routetype: disjoint
                v4routes:
                    - '10.10.0.0\16'
@@ -118,7 +122,8 @@ vpc:
 
              - type: base
                routetype: adjacent
-               count : 2
+               count : 8
+               nat : true # tunnel with nat flag set will be used as next-hop
                v4base: '64.0.0.0\16' # TEMP Infra issue and will reverse this in test logic
                v4prefixlen : 28
                nv4routes   : 10
@@ -130,7 +135,7 @@ vpc:
 
              - type: base
                routetype: adjacent_with_default
-               count : 1
+               count : 8
                v4base: '65.0.0.0\16' # TEMP Infra issue and will reverse this in test logic
                v4prefixlen : 28
                nv4routes   : 10

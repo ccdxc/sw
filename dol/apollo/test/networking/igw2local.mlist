@@ -5,7 +5,7 @@ feature:
     package     : test.networking
     module      : networking
     enable      : True
-    ignore      : True   # TODO , Sai please fix this for msft and enable
+    ignore      : False
 
 modules:
     - module:
@@ -20,15 +20,15 @@ modules:
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
 
-    # Commenting till dnat_required flag is set in the p4
+    # dnat on msft is not working
     #- module:
     #    name    : IPV4_DNAT
-    #    spec    : igw2local_dnat.testspec
+    #    spec    : igw2local.testspec
     #    iterate :
-    #        - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+    #        - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
 
     #- module:
     #    name    : IPV6_DNAT
-    #    spec    : igw2local_dnat.testspec
+    #    spec    : igw2local.testspec
     #    iterate :
-    #        - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+    #        - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING

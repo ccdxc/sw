@@ -27,7 +27,8 @@ RemoteMappingMacAllocator = objects.TemplateFieldObject("macstep/00EE.0000.0001/
 TepIpAddressAllocator = ipaddress.IPv4Network('172.16.0.0/21').hosts()
 IGWMplsSlotIdAllocator = iter(irange(30001,31024))
 InvalidMplsSlotIdAllocator = iter(irange(50001,90000))
-RemoteMplsInternetTunAllocator = None
+RemoteInternetNonNatTunAllocator = None
+RemoteInternetNatTunAllocator = None
 RemoteMplsVnicTunAllocator = None
 PublicIpAddressAllocator = ipaddress.IPv4Network('200.0.0.0/24').hosts()
 PublicIpv6AddressAllocator = ipaddress.IPv6Network('eeee:0:0:0::/64').hosts()
@@ -65,13 +66,17 @@ def CreateIpv6AddrPool(subnet):
     assert(isinstance(subnet, ipaddress.IPv6Network))
     return iter(subnet.hosts())
 
-def CreateMplsInternetTunnels():
-    global RemoteMplsInternetTunAllocator
-    objs = Store.GetIgwTunnels()
+def CreateInternetTunnels():
+    global RemoteInternetNonNatTunAllocator
+    global RemoteInternetNatTunAllocator
+    objs = Store.GetIgwNonNatTunnels()
     if len(objs) != 0:
-        RemoteMplsInternetTunAllocator = utils.rrobiniter(objs)
+        RemoteInternetNonNatTunAllocator = utils.rrobiniter(objs)
+    objs = Store.GetIgwNatTunnels()
+    if len(objs) != 0:
+        RemoteInternetNatTunAllocator = utils.rrobiniter(objs)
 
-def CreateMplsVnicTunnels():
+def CreateVnicTunnels():
     global RemoteMplsVnicTunAllocator
     objs = Store.GetWorkloadTunnels()
     if len(objs) != 0:

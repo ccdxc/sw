@@ -39,14 +39,22 @@ class ApolloConfigStore:
             if tun.IsWorkload(): tunnels.append(tun)
         return tunnels
 
-    def GetIgwTunnels(self):
+    def GetIgwNonNatTunnels(self):
         tunnels = []
         for tun in self.tunnels.GetAllInList():
-            if tun.IsIgw(): tunnels.append(tun)
+            if tun.IsIgw() and tun.IsNat() is False:
+                 tunnels.append(tun)
+        return tunnels
+
+    def GetIgwNatTunnels(self):
+        tunnels = []
+        for tun in self.tunnels.GetAllInList():
+            if tun.IsIgw() and tun.IsNat(): tunnels.append(tun)
         return tunnels
 
     def GetTrunkingUplinks(self):
         return self.trunks.GetAllInList()
+
     def SetTrunkingUplinks(self, objs):
         return self.trunks.SetAll(objs)
 
