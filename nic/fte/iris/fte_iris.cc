@@ -201,13 +201,21 @@ ctx_t::lookup_flow_objs()
             // Try to find sep by looking at L2.
             ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
             sep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->smac);
-            if (sep_) {
-                sep_handle_ = sep_->hal_handle;
-                HAL_TRACE_INFO("fte: src ep found by L2 lookup seg_id:{} smac:{}", sl2seg_->seg_id, macaddr2str(ethhdr->smac));
-                sif_ = hal::find_if_by_handle(sep_->if_handle);
-                SDK_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
-            }
+            HAL_TRACE_INFO("fte: src ep found by L2 lookup seg_id:{} smac:{}", sl2seg_->seg_id, macaddr2str(ethhdr->smac));
+        } else if (existing_session()) {
+            sep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id, session_->iflow->config.l2_info.smac);
+            HAL_TRACE_INFO("fte: src ep found by L2 lookup seg_id:{} smac:{}", 
+                            session_->iflow->config.l2_info.l2seg_id, 
+                            macaddr2str(session_->iflow->config.l2_info.smac));
         }
+        if (sep_) {
+            sep_handle_ = sep_->hal_handle;
+            sif_ = hal::find_if_by_handle(sep_->if_handle);
+            SDK_ASSERT_RETURN(sif_ , HAL_RET_IF_NOT_FOUND);
+
+            sl2seg_ = hal::l2seg_lookup_by_handle(sep_->l2seg_handle);
+            SDK_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
+       }
     }
 
     if (dep_) {
@@ -222,10 +230,15 @@ ctx_t::lookup_flow_objs()
         if (sl2seg_ != NULL && cpu_rxhdr_ != NULL) {
             ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
             dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->dmac);
-            if (dep_) {
-                HAL_TRACE_INFO("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}", sl2seg_->seg_id, macaddr2str(ethhdr->dmac));
-                dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
-            }
+            HAL_TRACE_INFO("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}", sl2seg_->seg_id, macaddr2str(ethhdr->dmac));
+        } else if (existing_session()) {
+            dep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id, session_->iflow->config.l2_info.dmac);
+            HAL_TRACE_INFO("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}", 
+                            session_->iflow->config.l2_info.l2seg_id, 
+                            macaddr2str(session_->iflow->config.l2_info.dmac));
+        }
+        if (dep_) {
+            dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
         }
     }
 

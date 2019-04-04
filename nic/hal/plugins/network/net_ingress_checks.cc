@@ -83,19 +83,24 @@ update_src_if(fte::ctx_t&ctx)
         return ctx.update_flow(flowupd);
     }
 
-    // no check needed if src is local or no pinned intf for dep
-    // if (src_local || ctx.dep()->pinned_if_handle == HAL_HANDLE_INVALID) {
-    if (src_local || ep_get_pinned_uplink(ctx.dep()) == NULL) {
-        return HAL_RET_OK;
-    }
-
     if (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
         ((ctx.cpu_rxhdr()->flags & CPU_FLAGS_FROM_IPSEC_APP) == CPU_FLAGS_FROM_IPSEC_APP)) {
         HAL_TRACE_DEBUG("Pkt from IPSec app, do not enforce ingress-checks");
         return HAL_RET_OK;
-    }        
+    }
 
-    // sif = hal::find_if_by_handle(ctx.dep()->pinned_if_handle);
+    // no check needed if src is local or no pinned intf for dep
+    // or if we actually got the packet from local EP and we are running
+    // the pipeline with flow swapped. This could happen if we are running
+    // the pipeline on existing sessions but received the packet fromo reverse flow
+    // if (src_local || ctx.dep()->pinned_if_handle == HAL_HANDLE_INVALID) {
+    if (src_local || ep_get_pinned_uplink(ctx.dep()) == NULL ||
+        (ctx.role() == hal::FLOW_ROLE_INITIATOR && 
+         ctx.is_flow_swapped() && dst_local)) {
+        HAL_TRACE_DEBUG("Source is local");
+        return HAL_RET_OK;
+    }
+
     sif = ep_get_pinned_uplink(ctx.dep());
     SDK_ASSERT_RETURN(sif, HAL_RET_IF_NOT_FOUND);
 

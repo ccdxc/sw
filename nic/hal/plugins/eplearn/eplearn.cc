@@ -187,7 +187,8 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
 
     ret = do_learning_ep_lif_update(ctx);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Ep learning lif update failed!")
+        HAL_TRACE_ERR("Ep learning lif update failed!");
+        ctx.set_feature_status(ret);
         return fte::PIPELINE_END;
     }
 
