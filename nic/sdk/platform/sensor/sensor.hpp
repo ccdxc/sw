@@ -22,6 +22,9 @@ namespace sensor {
 #define POUT1_INPUT_FILE "/sys/class/hwmon/hwmon1/power2_input"
 #define POUT2_INPUT_FILE "/sys/class/hwmon/hwmon1/power3_input"
 #define LOCAL_TEMP_FILE "/sys/class/hwmon/hwmon0/temp1_input"
+#define DIE_TEMP_FILE "/sys/class/hwmon/hwmon0/temp2_input"
+
+#define DIE_TEMP_STANDARD_DEVIATION 22500
 
 typedef struct system_temperature {
     int dietemp;
@@ -41,7 +44,6 @@ int read_temperatures(system_temperature_t *temperature);
 
 //Read power functions will fill the value in microwatts
 int read_powers(system_power_t *power);
-
 
 } // namespace sensor
 } // namespace platform

@@ -40,6 +40,15 @@ int read_local_temperature(int *localtemp)
     return read_file(LOCAL_TEMP_FILE, localtemp);
 }
 
+static
+int read_die_temperature(int *dietemp)
+{
+    if (dietemp == NULL) {
+        return -EINVAL;
+    }
+    return read_file(DIE_TEMP_FILE, dietemp);
+}
+
 static int read_pin(int *pin)
 {
     if (pin == NULL) {
@@ -74,9 +83,10 @@ int read_temperatures(system_temperature_t *temperature)
     if (temperature == NULL) {
         return -EINVAL;
     }
-    if (read_local_temperature(&temperature->localtemp) == 0)
+    if (read_local_temperature(&temperature->localtemp) == 0 &&
+        read_die_temperature(&temperature->dietemp) == 0)
     {
-        temperature->dietemp = cap_get_temp();
+        temperature->dietemp = temperature->dietemp - DIE_TEMP_STANDARD_DEVIATION;
         temperature->hbmtemp = cap_nwl_sbus_get_1500_temperature();
         return 0;
     }

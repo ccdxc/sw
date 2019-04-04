@@ -52,7 +52,7 @@ checktemperature(void)
 
     ret = sdk::platform::sensor::read_temperatures(&temperature);
     if (!ret) {
-        asictemp.die_temperature = temperature.dietemp;
+        asictemp.die_temperature = temperature.dietemp / 1000;
         TRACE_INFO(GetLogger(), "{:s} is : {:d}C",
                    "Die temperature", asictemp.die_temperature);
         asictemp.local_temperature = temperature.localtemp / 1000;
