@@ -98,7 +98,7 @@ typedef struct xcvr_status_s {
 
 typedef struct port_status_s {
     uint32_t       speed;
-    uint8_t        id;
+    uint32_t       id;
     uint8_t        status;
     xcvr_status_t  xcvr;
 } __PACK__ port_status_t;

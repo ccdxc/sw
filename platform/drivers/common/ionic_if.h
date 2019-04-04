@@ -1219,7 +1219,7 @@ struct port_config {
  */
 struct port_status {
 	uint32_t            speed;
-	uint8_t             id;
+	uint32_t            id;
 	uint8_t             status;
 	struct xcvr_status  xcvr;
 };

@@ -1246,6 +1246,29 @@ EthLif::_CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
                  comp->qid, comp->qtype, notify_block->link_status,
                  notify_block->link_speed);
 
+
+    /*
+     * EDMA is not going through. We tried to write a well-known pattern during lif
+     * initialization in driver and thats being not updated without this hack.
+     * This hack tries to update the notify block multiple times and in the
+     * worst case we see the third attempt going through. Along with the original
+     * notify block update we retry 3 times.
+     */
+#ifdef APOLLO
+    uint8_t count = 3;
+    while(count--) {
+        port_status_t retry_status = {0};
+        retry_status.status = notify_block->link_status;
+        retry_status.speed = notify_block->link_speed;
+        retry_status.id = spec->uplink_port_num;
+        NIC_LOG_INFO("{}: Retrying link event status: {}, speed: {}, port_num: {}",
+                     hal_lif_info_.name, retry_status.status, retry_status.speed,
+                     retry_status.id);
+        LinkEventHandler(&retry_status);
+        usleep(1000 * 1000);
+    }
+#endif
+
     return (IONIC_RC_SUCCESS);
 }
 
@@ -2163,9 +2186,12 @@ void
 EthLif::LinkEventHandler(port_status_t *evd)
 {
     if (spec->uplink_port_num != evd->id) {
+        NIC_LOG_WARN("{}: Uplink port number not matching status_port: {}. up_port: {}",
+                     hal_lif_info_.name, evd->id, spec->uplink_port_num);
         return;
     }
     if (!dev_api) {
+        NIC_LOG_WARN("{}: devapi not initialized", hal_lif_info_.name);
         return;
     }
 
@@ -2225,8 +2251,10 @@ EthLif::LinkEventHandler(port_status_t *evd)
                 (hal_lif_info_.lif_id << 6) +
                 (ETH_NOTIFYQ_QTYPE << 3);
 
-    // NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
-    //     hal_lif_info_.lif_id, notify_block->eid, notify_ring_head, addr);
+#if 0
+    NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
+                  hal_lif_info_.lif_id, notify_block->eid, notify_ring_head, addr);
+#endif
     notify_ring_head = (notify_ring_head + 1) % ETH_NOTIFYQ_RING_SIZE;
     PAL_barrier();
     WRITE_DB64(req_db_addr, (ETH_NOTIFYQ_QID << 24) | notify_ring_head);
@@ -2398,9 +2426,12 @@ EthLif::NotifyBlockUpdate(void *obj)
 
     uint64_t addr, req_db_addr;
 
-    // NIC_LOG_DEBUG("{}: notify_block_addr local {:#x} host {:#x}",
-    //     eth->hal_lif_info_.name,
-    //     eth->notify_block_addr, eth->host_notify_block_addr);
+#if 0
+    NIC_LOG_DEBUG("{}: notify_block_addr local {:#x} host {:#x} host_dev: {}",
+                  eth->hal_lif_info_.name,
+                  eth->notify_block_addr, eth->host_notify_block_addr,
+                  eth->spec->host_dev);
+#endif
 
     struct edma_cmd_desc cmd = {
         .opcode = eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
@@ -2422,8 +2453,11 @@ EthLif::NotifyBlockUpdate(void *obj)
                 (eth->hal_lif_info_.lif_id << 6) +
                 (ETH_EDMAQ_QTYPE << 3);
 
-    // NIC_LOG_DEBUG("{}: Updating notify block, eid {} edma_idx {} edma_desc_addr {:#x}",
-    //     hal_lif_info_.name, notify_block->eid, edma_ring_head, addr);
+#if 0
+    NIC_LOG_DEBUG("{}: Updating notify block, eid {} edma_idx {} edma_desc_addr {:#x}",
+                  eth->hal_lif_info_.name, eth->notify_block->eid, eth->edma_ring_head,
+                  addr);
+#endif
     eth->edma_ring_head = (eth->edma_ring_head + 1) % ETH_EDMAQ_RING_SIZE;
     PAL_barrier();
     WRITE_DB64(req_db_addr, (ETH_EDMAQ_QID << 24) | eth->edma_ring_head);
