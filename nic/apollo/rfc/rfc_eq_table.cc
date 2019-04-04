@@ -1143,7 +1143,7 @@ rfc_compute_p2_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
 {
     int         rv;
     uint16_t    result;
-    uint32_t    posn = 0, new_posn = 0;
+    uint32_t    ruleidx, posn, start_posn = 0, new_posn = 0;
     uint64_t    slab = 0;
 
     // TODO: remove
@@ -1152,25 +1152,29 @@ rfc_compute_p2_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
     PDS_TRACE_DEBUG("a1ss %s\nbitmap %s",
                     a1ss.str().c_str(), a2ss.str().c_str());
 
-    rv = rte_bitmap_scan(cbm, &new_posn, &slab);
+    // remember the start position of the scan
+    rv = rte_bitmap_scan(cbm, &start_posn, &slab);
     if (rv == 0) {
         // no bit is set in the bitmap
         result = 0;
     } else {
         do {
-            //PDS_TRACE_DEBUG("posn %u", new_posn);
-            posn = new_posn;
-            // TODO: which bit is SL bit, which bit is SF bit ?
-            if (rfc_ctxt->policy->rules[posn].stateful) {
-                RFC_RESULT_SET_STATEFUL_BIT(result);
-            } else {
-                RFC_RESULT_SET_STATELESS_BIT(result);
+            posn = RTE_BITMAP_START_SLAB_SCAN_POS;
+            while (rte_bitmap_slab_scan(slab, posn, &new_posn) != 0) {
+                ruleidx =
+                    rte_bitmap_get_global_bit_pos(cbm->index2 - 1, new_posn);
+                if (rfc_ctxt->policy->rules[ruleidx].stateful) {
+                    RFC_RESULT_SET_STATEFUL_BIT(result);
+                } else {
+                    RFC_RESULT_SET_STATELESS_BIT(result);
+                }
+                if (RFC_RESULT_BOTH_BITS_SET(result)) {
+                    return result;
+                }
+                posn = new_posn;
             }
-            if (RFC_RESULT_BOTH_BITS_SET(result)) {
-                break;
-            }
-            rte_bitmap_scan(cbm, &new_posn, &slab);
-        } while (new_posn != posn);
+            rte_bitmap_scan(cbm, &posn, &slab);
+        } while (posn != start_posn);
     }
     return result;
 }
