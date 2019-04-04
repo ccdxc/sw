@@ -50,7 +50,7 @@ func MakeHTTPHandler(handlerFunc RestAPIFunc) http.HandlerFunc {
 	}
 }
 
-func httpOp(url, method, token string, req interface{}) ([]*http.Cookie, string, error) {
+func httpOp(method, url, token string, req interface{}) ([]*http.Cookie, string, error) {
 	client := &http.Client{}
 	if strings.HasPrefix(url, "https") {
 		client.Transport = &http.Transport{
