@@ -6,6 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
+
+	"github.com/gogo/protobuf/types"
+	"github.com/satori/go.uuid"
+
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
@@ -104,6 +112,110 @@ func (cl *clusterHooks) validateTenantConfig(tenantConfig cluster.Tenant) error 
 	}
 
 	return nil
+}
+
+// createFirewallProfile is a pre-commit hook to creates default firewall policy when a tenant is created
+func (cl *clusterHooks) createFirewallProfile(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(cluster.Tenant)
+	if !ok {
+		cl.logger.ErrorLog("method", "createFirewallProfile", "msg", fmt.Sprintf("API server hook to create default firewall profile called for invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+	fwp := &security.FirewallProfile{}
+	fwp.Defaults("all")
+	apiSrv := apisrvpkg.MustGetAPIServer()
+	fwp.APIVersion = apiSrv.GetVersion()
+	fwp.SelfLink = fwp.MakeURI("configs", fwp.APIVersion, string(apiclient.GroupSecurity))
+	fwp.Name = "default"
+	fwp.Tenant = r.Name
+	fwp.GenerationID = "1"
+	fwp.UUID = uuid.NewV4().String()
+	ts, err := types.TimestampProto(time.Now())
+	if err != nil {
+		return i, true, err
+	}
+	fwp.CreationTime, fwp.ModTime = api.Timestamp{Timestamp: *ts}, api.Timestamp{Timestamp: *ts}
+	fwk := fwp.MakeKey(string(apiclient.GroupSecurity))
+	err = txn.Create(fwk, fwp)
+	if err != nil {
+		return r, true, errors.New("adding create operation to transaction failed")
+	}
+	return r, true, nil
+}
+
+// deleteFirewallProfile is a pre-commit hook to delete default firewall policy when a tenant is deleted
+func (cl *clusterHooks) deleteFirewallProfile(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(cluster.Tenant)
+	if !ok {
+		cl.logger.ErrorLog("method", "deleteFirewallProfile", "msg", fmt.Sprintf("API server hook to delete default firewall profile called for invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+	fwp := &security.FirewallProfile{}
+	fwp.Defaults("all")
+	apiSrv := apisrvpkg.MustGetAPIServer()
+	fwp.APIVersion = apiSrv.GetVersion()
+	fwp.SelfLink = fwp.MakeURI("configs", fwp.APIVersion, string(apiclient.GroupSecurity))
+	fwp.Name = "default"
+	fwp.Tenant = r.Name
+	fwk := fwp.MakeKey(string(apiclient.GroupSecurity))
+	err := txn.Delete(fwk)
+	if err != nil {
+		return r, true, errors.New("adding delete operation to transaction failed")
+	}
+	return r, true, nil
+}
+
+// createDefaultVirtualRouter is a pre-commit hook to creates default VRF when a tenant is created
+func (cl *clusterHooks) createDefaultVirtualRouter(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(cluster.Tenant)
+	if !ok {
+		cl.logger.ErrorLog("method", "createDefaultVirtualRouter", "msg", fmt.Sprintf("API server hook to create default VRF called for invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+	vrf := &network.VirtualRouter{}
+	vrf.Defaults("all")
+	apiSrv := apisrvpkg.MustGetAPIServer()
+	vrf.APIVersion = apiSrv.GetVersion()
+	vrf.SelfLink = vrf.MakeURI("configs", vrf.APIVersion, string(apiclient.GroupNetwork))
+	vrf.Name = "default"
+	vrf.Tenant = r.Name
+	vrf.Namespace = r.Namespace
+	vrf.GenerationID = "1"
+	vrf.UUID = uuid.NewV4().String()
+	ts, err := types.TimestampProto(time.Now())
+	if err != nil {
+		return i, true, err
+	}
+	vrf.CreationTime, vrf.ModTime = api.Timestamp{Timestamp: *ts}, api.Timestamp{Timestamp: *ts}
+	vrfk := vrf.MakeKey(string(apiclient.GroupNetwork))
+	err = txn.Create(vrfk, vrf)
+	if err != nil {
+		return r, true, errors.New("adding create operation to transaction failed")
+	}
+	return r, true, nil
+}
+
+// deleteDefaultVirtualRouter is a pre-commit hook to delete default VRF when a tenant is deleted
+func (cl *clusterHooks) deleteDefaultVirtualRouter(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(cluster.Tenant)
+	if !ok {
+		cl.logger.ErrorLog("method", "deleteDefaultVirtualRouter", "msg", fmt.Sprintf("API server hook to delete default firewall profile called for invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+	vrf := &network.VirtualRouter{}
+	vrf.Defaults("all")
+	apiSrv := apisrvpkg.MustGetAPIServer()
+	vrf.APIVersion = apiSrv.GetVersion()
+	vrf.SelfLink = vrf.MakeURI("configs", vrf.APIVersion, string(apiclient.GroupNetwork))
+	vrf.Name = "default"
+	vrf.Tenant = r.Name
+	vrf.Namespace = r.Namespace
+	vrfk := vrf.MakeKey(string(apiclient.GroupNetwork))
+	err := txn.Delete(vrfk)
+	if err != nil {
+		return r, true, errors.New("adding delete operation to transaction failed")
+	}
+	return r, true, nil
 }
 
 // createDefaultRoles is a pre-commit hook for tenant create operation that creates default roles when a tenant is created
@@ -380,7 +492,11 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetMethod("UpdateTLSConfig").WithResponseWriter(r.getClusterObject)
 	// register hook to create default roles
 	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultRoles)
+	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createFirewallProfile)
+	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultVirtualRouter)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultRoles)
+	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteFirewallProfile)
+	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultVirtualRouter)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultTelemetryPolicies)
 }
 

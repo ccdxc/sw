@@ -25,21 +25,26 @@ var _ api.ObjectMeta
 type grpcServerNetworkV1 struct {
 	Endpoints EndpointsNetworkV1Server
 
-	AutoAddLbPolicyHdlr    grpctransport.Handler
-	AutoAddNetworkHdlr     grpctransport.Handler
-	AutoAddServiceHdlr     grpctransport.Handler
-	AutoDeleteLbPolicyHdlr grpctransport.Handler
-	AutoDeleteNetworkHdlr  grpctransport.Handler
-	AutoDeleteServiceHdlr  grpctransport.Handler
-	AutoGetLbPolicyHdlr    grpctransport.Handler
-	AutoGetNetworkHdlr     grpctransport.Handler
-	AutoGetServiceHdlr     grpctransport.Handler
-	AutoListLbPolicyHdlr   grpctransport.Handler
-	AutoListNetworkHdlr    grpctransport.Handler
-	AutoListServiceHdlr    grpctransport.Handler
-	AutoUpdateLbPolicyHdlr grpctransport.Handler
-	AutoUpdateNetworkHdlr  grpctransport.Handler
-	AutoUpdateServiceHdlr  grpctransport.Handler
+	AutoAddLbPolicyHdlr         grpctransport.Handler
+	AutoAddNetworkHdlr          grpctransport.Handler
+	AutoAddServiceHdlr          grpctransport.Handler
+	AutoAddVirtualRouterHdlr    grpctransport.Handler
+	AutoDeleteLbPolicyHdlr      grpctransport.Handler
+	AutoDeleteNetworkHdlr       grpctransport.Handler
+	AutoDeleteServiceHdlr       grpctransport.Handler
+	AutoDeleteVirtualRouterHdlr grpctransport.Handler
+	AutoGetLbPolicyHdlr         grpctransport.Handler
+	AutoGetNetworkHdlr          grpctransport.Handler
+	AutoGetServiceHdlr          grpctransport.Handler
+	AutoGetVirtualRouterHdlr    grpctransport.Handler
+	AutoListLbPolicyHdlr        grpctransport.Handler
+	AutoListNetworkHdlr         grpctransport.Handler
+	AutoListServiceHdlr         grpctransport.Handler
+	AutoListVirtualRouterHdlr   grpctransport.Handler
+	AutoUpdateLbPolicyHdlr      grpctransport.Handler
+	AutoUpdateNetworkHdlr       grpctransport.Handler
+	AutoUpdateServiceHdlr       grpctransport.Handler
+	AutoUpdateVirtualRouterHdlr grpctransport.Handler
 }
 
 // MakeGRPCServerNetworkV1 creates a GRPC server for NetworkV1 service
@@ -71,6 +76,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddService", logger)))...,
 		),
 
+		AutoAddVirtualRouterHdlr: grpctransport.NewServer(
+			endpoints.AutoAddVirtualRouterEndpoint,
+			DecodeGrpcReqVirtualRouter,
+			EncodeGrpcRespVirtualRouter,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddVirtualRouter", logger)))...,
+		),
+
 		AutoDeleteLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteLbPolicyEndpoint,
 			DecodeGrpcReqLbPolicy,
@@ -90,6 +102,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			DecodeGrpcReqService,
 			EncodeGrpcRespService,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteService", logger)))...,
+		),
+
+		AutoDeleteVirtualRouterHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteVirtualRouterEndpoint,
+			DecodeGrpcReqVirtualRouter,
+			EncodeGrpcRespVirtualRouter,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteVirtualRouter", logger)))...,
 		),
 
 		AutoGetLbPolicyHdlr: grpctransport.NewServer(
@@ -113,6 +132,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetService", logger)))...,
 		),
 
+		AutoGetVirtualRouterHdlr: grpctransport.NewServer(
+			endpoints.AutoGetVirtualRouterEndpoint,
+			DecodeGrpcReqVirtualRouter,
+			EncodeGrpcRespVirtualRouter,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetVirtualRouter", logger)))...,
+		),
+
 		AutoListLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoListLbPolicyEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -134,6 +160,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListService", logger)))...,
 		),
 
+		AutoListVirtualRouterHdlr: grpctransport.NewServer(
+			endpoints.AutoListVirtualRouterEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespVirtualRouterList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListVirtualRouter", logger)))...,
+		),
+
 		AutoUpdateLbPolicyHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateLbPolicyEndpoint,
 			DecodeGrpcReqLbPolicy,
@@ -153,6 +186,13 @@ func MakeGRPCServerNetworkV1(ctx context.Context, endpoints EndpointsNetworkV1Se
 			DecodeGrpcReqService,
 			EncodeGrpcRespService,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateService", logger)))...,
+		),
+
+		AutoUpdateVirtualRouterHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateVirtualRouterEndpoint,
+			DecodeGrpcReqVirtualRouter,
+			EncodeGrpcRespVirtualRouter,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateVirtualRouter", logger)))...,
 		),
 	}
 }
@@ -211,6 +251,24 @@ func decodeHTTPrespNetworkV1AutoAddService(_ context.Context, r *http.Response) 
 	return &resp, err
 }
 
+func (s *grpcServerNetworkV1) AutoAddVirtualRouter(ctx oldcontext.Context, req *VirtualRouter) (*VirtualRouter, error) {
+	_, resp, err := s.AutoAddVirtualRouterHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoAddVirtualRouter).V
+	return &r, resp.(respNetworkV1AutoAddVirtualRouter).Err
+}
+
+func decodeHTTPrespNetworkV1AutoAddVirtualRouter(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp VirtualRouter
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerNetworkV1) AutoDeleteLbPolicy(ctx oldcontext.Context, req *LbPolicy) (*LbPolicy, error) {
 	_, resp, err := s.AutoDeleteLbPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -261,6 +319,24 @@ func decodeHTTPrespNetworkV1AutoDeleteService(_ context.Context, r *http.Respons
 		return nil, errorDecoder(r)
 	}
 	var resp Service
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoDeleteVirtualRouter(ctx oldcontext.Context, req *VirtualRouter) (*VirtualRouter, error) {
+	_, resp, err := s.AutoDeleteVirtualRouterHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoDeleteVirtualRouter).V
+	return &r, resp.(respNetworkV1AutoDeleteVirtualRouter).Err
+}
+
+func decodeHTTPrespNetworkV1AutoDeleteVirtualRouter(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp VirtualRouter
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -319,6 +395,24 @@ func decodeHTTPrespNetworkV1AutoGetService(_ context.Context, r *http.Response) 
 	return &resp, err
 }
 
+func (s *grpcServerNetworkV1) AutoGetVirtualRouter(ctx oldcontext.Context, req *VirtualRouter) (*VirtualRouter, error) {
+	_, resp, err := s.AutoGetVirtualRouterHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoGetVirtualRouter).V
+	return &r, resp.(respNetworkV1AutoGetVirtualRouter).Err
+}
+
+func decodeHTTPrespNetworkV1AutoGetVirtualRouter(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp VirtualRouter
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerNetworkV1) AutoListLbPolicy(ctx oldcontext.Context, req *api.ListWatchOptions) (*LbPolicyList, error) {
 	_, resp, err := s.AutoListLbPolicyHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -369,6 +463,24 @@ func decodeHTTPrespNetworkV1AutoListService(_ context.Context, r *http.Response)
 		return nil, errorDecoder(r)
 	}
 	var resp ServiceList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerNetworkV1) AutoListVirtualRouter(ctx oldcontext.Context, req *api.ListWatchOptions) (*VirtualRouterList, error) {
+	_, resp, err := s.AutoListVirtualRouterHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoListVirtualRouter).V
+	return &r, resp.(respNetworkV1AutoListVirtualRouter).Err
+}
+
+func decodeHTTPrespNetworkV1AutoListVirtualRouter(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp VirtualRouterList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -427,6 +539,24 @@ func decodeHTTPrespNetworkV1AutoUpdateService(_ context.Context, r *http.Respons
 	return &resp, err
 }
 
+func (s *grpcServerNetworkV1) AutoUpdateVirtualRouter(ctx oldcontext.Context, req *VirtualRouter) (*VirtualRouter, error) {
+	_, resp, err := s.AutoUpdateVirtualRouterHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respNetworkV1AutoUpdateVirtualRouter).V
+	return &r, resp.(respNetworkV1AutoUpdateVirtualRouter).Err
+}
+
+func decodeHTTPrespNetworkV1AutoUpdateVirtualRouter(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp VirtualRouter
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerNetworkV1) AutoWatchSvcNetworkV1(in *api.ListWatchOptions, stream NetworkV1_AutoWatchSvcNetworkV1Server) error {
 	return s.Endpoints.AutoWatchSvcNetworkV1(in, stream)
 }
@@ -441,6 +571,10 @@ func (s *grpcServerNetworkV1) AutoWatchService(in *api.ListWatchOptions, stream 
 
 func (s *grpcServerNetworkV1) AutoWatchLbPolicy(in *api.ListWatchOptions, stream NetworkV1_AutoWatchLbPolicyServer) error {
 	return s.Endpoints.AutoWatchLbPolicy(in, stream)
+}
+
+func (s *grpcServerNetworkV1) AutoWatchVirtualRouter(in *api.ListWatchOptions, stream NetworkV1_AutoWatchVirtualRouterServer) error {
+	return s.Endpoints.AutoWatchVirtualRouter(in, stream)
 }
 
 func encodeHTTPLbPolicyList(ctx context.Context, req *http.Request, request interface{}) error {
@@ -542,5 +676,39 @@ func EncodeGrpcRespServiceList(ctx context.Context, response interface{}) (inter
 
 // DecodeGrpcRespServiceList decodes the GRPC response
 func DecodeGrpcRespServiceList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPVirtualRouterList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPVirtualRouterList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req VirtualRouterList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqVirtualRouterList encodes GRPC request
+func EncodeGrpcReqVirtualRouterList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*VirtualRouterList)
+	return req, nil
+}
+
+// DecodeGrpcReqVirtualRouterList decodes GRPC request
+func DecodeGrpcReqVirtualRouterList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*VirtualRouterList)
+	return req, nil
+}
+
+// EncodeGrpcRespVirtualRouterList endodes the GRPC response
+func EncodeGrpcRespVirtualRouterList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespVirtualRouterList decodes the GRPC response
+func DecodeGrpcRespVirtualRouterList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }

@@ -314,43 +314,11 @@ func restGetFirewallProfile(hostname, tenant, token string, obj interface{}) err
 }
 
 func restDeleteFirewallProfile(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*security.FirewallProfile); ok {
-		nv, err := restcl.SecurityV1().FirewallProfile().Delete(loginCtx, &v.ObjectMeta)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("delete operation not supported for FirewallProfile object")
 }
 
 func restPostFirewallProfile(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*security.FirewallProfile); ok {
-		nv, err := restcl.SecurityV1().FirewallProfile().Create(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("create operation not supported for FirewallProfile object")
 }
 
 func restPutFirewallProfile(hostname, token string, obj interface{}) error {
@@ -572,8 +540,6 @@ func init() {
 	cl.AddRestPutFunc("security.App", "v1", restPutApp)
 	cl.AddRestGetFunc("security.App", "v1", restGetApp)
 
-	cl.AddRestPostFunc("security.FirewallProfile", "v1", restPostFirewallProfile)
-	cl.AddRestDeleteFunc("security.FirewallProfile", "v1", restDeleteFirewallProfile)
 	cl.AddRestPutFunc("security.FirewallProfile", "v1", restPutFirewallProfile)
 	cl.AddRestGetFunc("security.FirewallProfile", "v1", restGetFirewallProfile)
 

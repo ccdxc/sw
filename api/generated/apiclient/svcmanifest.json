@@ -83,12 +83,14 @@
         "Messages": [
           "Network",
           "Service",
-          "LbPolicy"
+          "LbPolicy",
+          "VirtualRouter"
         ]
       }
     },
     "Files": [
-      "svc_network.proto"
+      "svc_network.proto",
+      "vrf.proto"
     ]
   },
   "objstore": {

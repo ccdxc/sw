@@ -1297,6 +1297,7 @@ retryLoop:
 	for k := range c.overlay {
 		delete(c.overlay, k)
 	}
+	c.reqs = requirement.NewRequirementSet(c.server.GetGraphDB(), c, c.server)
 	c.primaryCount = 0
 	log.Infof("Completing commit for buffer [%s/%s] with %d primary and %d secondary objects %d objects left in overlay", c.tenant, c.id, pCount, sCount, len(c.overlay))
 	return resp, nil

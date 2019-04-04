@@ -160,6 +160,55 @@ func (m *AutoMsgServiceWatchHelper_WatchEvent) GetObject() *Service {
 	return nil
 }
 
+// AutoMsgVirtualRouterWatchHelper is a wrapper object for watch events for VirtualRouter objects
+type AutoMsgVirtualRouterWatchHelper struct {
+	Events []*AutoMsgVirtualRouterWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events,json=events" json:"events"`
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper) Reset()         { *m = AutoMsgVirtualRouterWatchHelper{} }
+func (m *AutoMsgVirtualRouterWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgVirtualRouterWatchHelper) ProtoMessage()    {}
+func (*AutoMsgVirtualRouterWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcNetwork, []int{3}
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper) GetEvents() []*AutoMsgVirtualRouterWatchHelper_WatchEvent {
+	if m != nil {
+		return m.Events
+	}
+	return nil
+}
+
+type AutoMsgVirtualRouterWatchHelper_WatchEvent struct {
+	Type   string         `protobuf:"bytes,1,opt,name=Type,proto3" json:"type,omitempty"`
+	Object *VirtualRouter `protobuf:"bytes,2,opt,name=Object" json:"object,omitempty"`
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Reset() {
+	*m = AutoMsgVirtualRouterWatchHelper_WatchEvent{}
+}
+func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) String() string {
+	return proto.CompactTextString(m)
+}
+func (*AutoMsgVirtualRouterWatchHelper_WatchEvent) ProtoMessage() {}
+func (*AutoMsgVirtualRouterWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcNetwork, []int{3, 0}
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) GetObject() *VirtualRouter {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
 // LbPolicyList is a container object for list of LbPolicy objects
 type LbPolicyList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,json=,inline,embedded=T" json:",inline"`
@@ -171,7 +220,7 @@ type LbPolicyList struct {
 func (m *LbPolicyList) Reset()                    { *m = LbPolicyList{} }
 func (m *LbPolicyList) String() string            { return proto.CompactTextString(m) }
 func (*LbPolicyList) ProtoMessage()               {}
-func (*LbPolicyList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{3} }
+func (*LbPolicyList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{4} }
 
 func (m *LbPolicyList) GetItems() []*LbPolicy {
 	if m != nil {
@@ -191,7 +240,7 @@ type NetworkList struct {
 func (m *NetworkList) Reset()                    { *m = NetworkList{} }
 func (m *NetworkList) String() string            { return proto.CompactTextString(m) }
 func (*NetworkList) ProtoMessage()               {}
-func (*NetworkList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{4} }
+func (*NetworkList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{5} }
 
 func (m *NetworkList) GetItems() []*Network {
 	if m != nil {
@@ -211,9 +260,29 @@ type ServiceList struct {
 func (m *ServiceList) Reset()                    { *m = ServiceList{} }
 func (m *ServiceList) String() string            { return proto.CompactTextString(m) }
 func (*ServiceList) ProtoMessage()               {}
-func (*ServiceList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{5} }
+func (*ServiceList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{6} }
 
 func (m *ServiceList) GetItems() []*Service {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+// VirtualRouterList is a container object for list of VirtualRouter objects
+type VirtualRouterList struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,json=list-meta,inline,embedded=ListMeta" json:"list-meta,inline"`
+	// List of VirtualRouter objects
+	Items []*VirtualRouter `protobuf:"bytes,4,rep,name=Items,json=items" json:"items"`
+}
+
+func (m *VirtualRouterList) Reset()                    { *m = VirtualRouterList{} }
+func (m *VirtualRouterList) String() string            { return proto.CompactTextString(m) }
+func (*VirtualRouterList) ProtoMessage()               {}
+func (*VirtualRouterList) Descriptor() ([]byte, []int) { return fileDescriptorSvcNetwork, []int{7} }
+
+func (m *VirtualRouterList) GetItems() []*VirtualRouter {
 	if m != nil {
 		return m.Items
 	}
@@ -227,9 +296,12 @@ func init() {
 	proto.RegisterType((*AutoMsgNetworkWatchHelper_WatchEvent)(nil), "network.AutoMsgNetworkWatchHelper.WatchEvent")
 	proto.RegisterType((*AutoMsgServiceWatchHelper)(nil), "network.AutoMsgServiceWatchHelper")
 	proto.RegisterType((*AutoMsgServiceWatchHelper_WatchEvent)(nil), "network.AutoMsgServiceWatchHelper.WatchEvent")
+	proto.RegisterType((*AutoMsgVirtualRouterWatchHelper)(nil), "network.AutoMsgVirtualRouterWatchHelper")
+	proto.RegisterType((*AutoMsgVirtualRouterWatchHelper_WatchEvent)(nil), "network.AutoMsgVirtualRouterWatchHelper.WatchEvent")
 	proto.RegisterType((*LbPolicyList)(nil), "network.LbPolicyList")
 	proto.RegisterType((*NetworkList)(nil), "network.NetworkList")
 	proto.RegisterType((*ServiceList)(nil), "network.ServiceList")
+	proto.RegisterType((*VirtualRouterList)(nil), "network.VirtualRouterList")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -249,30 +321,40 @@ type NetworkV1Client interface {
 	AutoAddNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
 	// Create Service object
 	AutoAddService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
+	// Create VirtualRouter object
+	AutoAddVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error)
 	// Delete LbPolicy object
 	AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
 	// Delete Network object
 	AutoDeleteNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
 	// Delete Service object
 	AutoDeleteService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
+	// Delete VirtualRouter object
+	AutoDeleteVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error)
 	// Get LbPolicy object
 	AutoGetLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
 	// Get Network object
 	AutoGetNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
 	// Get Service object
 	AutoGetService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
+	// Get VirtualRouter object
+	AutoGetVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error)
 	// List LbPolicy objects
 	AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*LbPolicyList, error)
 	// List Network objects
 	AutoListNetwork(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*NetworkList, error)
 	// List Service objects
 	AutoListService(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*ServiceList, error)
+	// List VirtualRouter objects
+	AutoListVirtualRouter(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*VirtualRouterList, error)
 	// Update LbPolicy object
 	AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error)
 	// Update Network object
 	AutoUpdateNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (*Network, error)
 	// Update Service object
 	AutoUpdateService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error)
+	// Update VirtualRouter object
+	AutoUpdateVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error)
 	// Watch LbPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchLbPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchLbPolicyClient, error)
 	// Watch Network objects. Supports WebSockets or HTTP long poll
@@ -280,6 +362,8 @@ type NetworkV1Client interface {
 	// Watch Service objects. Supports WebSockets or HTTP long poll
 	AutoWatchService(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchServiceClient, error)
 	AutoWatchSvcNetworkV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchSvcNetworkV1Client, error)
+	// Watch VirtualRouter objects. Supports WebSockets or HTTP long poll
+	AutoWatchVirtualRouter(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchVirtualRouterClient, error)
 }
 
 type networkV1Client struct {
@@ -317,6 +401,15 @@ func (c *networkV1Client) AutoAddService(ctx context.Context, in *Service, opts 
 	return out, nil
 }
 
+func (c *networkV1Client) AutoAddVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error) {
+	out := new(VirtualRouter)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoAddVirtualRouter", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *networkV1Client) AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error) {
 	out := new(LbPolicy)
 	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoDeleteLbPolicy", in, out, c.cc, opts...)
@@ -338,6 +431,15 @@ func (c *networkV1Client) AutoDeleteNetwork(ctx context.Context, in *Network, op
 func (c *networkV1Client) AutoDeleteService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error) {
 	out := new(Service)
 	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoDeleteService", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkV1Client) AutoDeleteVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error) {
+	out := new(VirtualRouter)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoDeleteVirtualRouter", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -371,6 +473,15 @@ func (c *networkV1Client) AutoGetService(ctx context.Context, in *Service, opts 
 	return out, nil
 }
 
+func (c *networkV1Client) AutoGetVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error) {
+	out := new(VirtualRouter)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoGetVirtualRouter", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *networkV1Client) AutoListLbPolicy(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*LbPolicyList, error) {
 	out := new(LbPolicyList)
 	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoListLbPolicy", in, out, c.cc, opts...)
@@ -398,6 +509,15 @@ func (c *networkV1Client) AutoListService(ctx context.Context, in *api.ListWatch
 	return out, nil
 }
 
+func (c *networkV1Client) AutoListVirtualRouter(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*VirtualRouterList, error) {
+	out := new(VirtualRouterList)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoListVirtualRouter", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *networkV1Client) AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy, opts ...grpc.CallOption) (*LbPolicy, error) {
 	out := new(LbPolicy)
 	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoUpdateLbPolicy", in, out, c.cc, opts...)
@@ -419,6 +539,15 @@ func (c *networkV1Client) AutoUpdateNetwork(ctx context.Context, in *Network, op
 func (c *networkV1Client) AutoUpdateService(ctx context.Context, in *Service, opts ...grpc.CallOption) (*Service, error) {
 	out := new(Service)
 	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoUpdateService", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *networkV1Client) AutoUpdateVirtualRouter(ctx context.Context, in *VirtualRouter, opts ...grpc.CallOption) (*VirtualRouter, error) {
+	out := new(VirtualRouter)
+	err := grpc.Invoke(ctx, "/network.NetworkV1/AutoUpdateVirtualRouter", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -553,6 +682,38 @@ func (x *networkV1AutoWatchSvcNetworkV1Client) Recv() (*api.WatchEventList, erro
 	return m, nil
 }
 
+func (c *networkV1Client) AutoWatchVirtualRouter(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (NetworkV1_AutoWatchVirtualRouterClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_NetworkV1_serviceDesc.Streams[4], c.cc, "/network.NetworkV1/AutoWatchVirtualRouter", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &networkV1AutoWatchVirtualRouterClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type NetworkV1_AutoWatchVirtualRouterClient interface {
+	Recv() (*AutoMsgVirtualRouterWatchHelper, error)
+	grpc.ClientStream
+}
+
+type networkV1AutoWatchVirtualRouterClient struct {
+	grpc.ClientStream
+}
+
+func (x *networkV1AutoWatchVirtualRouterClient) Recv() (*AutoMsgVirtualRouterWatchHelper, error) {
+	m := new(AutoMsgVirtualRouterWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // Server API for NetworkV1 service
 
 type NetworkV1Server interface {
@@ -562,30 +723,40 @@ type NetworkV1Server interface {
 	AutoAddNetwork(context.Context, *Network) (*Network, error)
 	// Create Service object
 	AutoAddService(context.Context, *Service) (*Service, error)
+	// Create VirtualRouter object
+	AutoAddVirtualRouter(context.Context, *VirtualRouter) (*VirtualRouter, error)
 	// Delete LbPolicy object
 	AutoDeleteLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
 	// Delete Network object
 	AutoDeleteNetwork(context.Context, *Network) (*Network, error)
 	// Delete Service object
 	AutoDeleteService(context.Context, *Service) (*Service, error)
+	// Delete VirtualRouter object
+	AutoDeleteVirtualRouter(context.Context, *VirtualRouter) (*VirtualRouter, error)
 	// Get LbPolicy object
 	AutoGetLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
 	// Get Network object
 	AutoGetNetwork(context.Context, *Network) (*Network, error)
 	// Get Service object
 	AutoGetService(context.Context, *Service) (*Service, error)
+	// Get VirtualRouter object
+	AutoGetVirtualRouter(context.Context, *VirtualRouter) (*VirtualRouter, error)
 	// List LbPolicy objects
 	AutoListLbPolicy(context.Context, *api.ListWatchOptions) (*LbPolicyList, error)
 	// List Network objects
 	AutoListNetwork(context.Context, *api.ListWatchOptions) (*NetworkList, error)
 	// List Service objects
 	AutoListService(context.Context, *api.ListWatchOptions) (*ServiceList, error)
+	// List VirtualRouter objects
+	AutoListVirtualRouter(context.Context, *api.ListWatchOptions) (*VirtualRouterList, error)
 	// Update LbPolicy object
 	AutoUpdateLbPolicy(context.Context, *LbPolicy) (*LbPolicy, error)
 	// Update Network object
 	AutoUpdateNetwork(context.Context, *Network) (*Network, error)
 	// Update Service object
 	AutoUpdateService(context.Context, *Service) (*Service, error)
+	// Update VirtualRouter object
+	AutoUpdateVirtualRouter(context.Context, *VirtualRouter) (*VirtualRouter, error)
 	// Watch LbPolicy objects. Supports WebSockets or HTTP long poll
 	AutoWatchLbPolicy(*api.ListWatchOptions, NetworkV1_AutoWatchLbPolicyServer) error
 	// Watch Network objects. Supports WebSockets or HTTP long poll
@@ -593,6 +764,8 @@ type NetworkV1Server interface {
 	// Watch Service objects. Supports WebSockets or HTTP long poll
 	AutoWatchService(*api.ListWatchOptions, NetworkV1_AutoWatchServiceServer) error
 	AutoWatchSvcNetworkV1(*api.ListWatchOptions, NetworkV1_AutoWatchSvcNetworkV1Server) error
+	// Watch VirtualRouter objects. Supports WebSockets or HTTP long poll
+	AutoWatchVirtualRouter(*api.ListWatchOptions, NetworkV1_AutoWatchVirtualRouterServer) error
 }
 
 func RegisterNetworkV1Server(s *grpc.Server, srv NetworkV1Server) {
@@ -653,6 +826,24 @@ func _NetworkV1_AutoAddService_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NetworkV1_AutoAddVirtualRouter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VirtualRouter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoAddVirtualRouter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoAddVirtualRouter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoAddVirtualRouter(ctx, req.(*VirtualRouter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _NetworkV1_AutoDeleteLbPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LbPolicy)
 	if err := dec(in); err != nil {
@@ -703,6 +894,24 @@ func _NetworkV1_AutoDeleteService_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NetworkV1Server).AutoDeleteService(ctx, req.(*Service))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkV1_AutoDeleteVirtualRouter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VirtualRouter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoDeleteVirtualRouter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoDeleteVirtualRouter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoDeleteVirtualRouter(ctx, req.(*VirtualRouter))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -761,6 +970,24 @@ func _NetworkV1_AutoGetService_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NetworkV1_AutoGetVirtualRouter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VirtualRouter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoGetVirtualRouter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoGetVirtualRouter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoGetVirtualRouter(ctx, req.(*VirtualRouter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _NetworkV1_AutoListLbPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.ListWatchOptions)
 	if err := dec(in); err != nil {
@@ -815,6 +1042,24 @@ func _NetworkV1_AutoListService_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NetworkV1_AutoListVirtualRouter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoListVirtualRouter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoListVirtualRouter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoListVirtualRouter(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _NetworkV1_AutoUpdateLbPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LbPolicy)
 	if err := dec(in); err != nil {
@@ -865,6 +1110,24 @@ func _NetworkV1_AutoUpdateService_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(NetworkV1Server).AutoUpdateService(ctx, req.(*Service))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NetworkV1_AutoUpdateVirtualRouter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VirtualRouter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NetworkV1Server).AutoUpdateVirtualRouter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/network.NetworkV1/AutoUpdateVirtualRouter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NetworkV1Server).AutoUpdateVirtualRouter(ctx, req.(*VirtualRouter))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -953,6 +1216,27 @@ func (x *networkV1AutoWatchSvcNetworkV1Server) Send(m *api.WatchEventList) error
 	return x.ServerStream.SendMsg(m)
 }
 
+func _NetworkV1_AutoWatchVirtualRouter_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(NetworkV1Server).AutoWatchVirtualRouter(m, &networkV1AutoWatchVirtualRouterServer{stream})
+}
+
+type NetworkV1_AutoWatchVirtualRouterServer interface {
+	Send(*AutoMsgVirtualRouterWatchHelper) error
+	grpc.ServerStream
+}
+
+type networkV1AutoWatchVirtualRouterServer struct {
+	grpc.ServerStream
+}
+
+func (x *networkV1AutoWatchVirtualRouterServer) Send(m *AutoMsgVirtualRouterWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "network.NetworkV1",
 	HandlerType: (*NetworkV1Server)(nil),
@@ -970,6 +1254,10 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _NetworkV1_AutoAddService_Handler,
 		},
 		{
+			MethodName: "AutoAddVirtualRouter",
+			Handler:    _NetworkV1_AutoAddVirtualRouter_Handler,
+		},
+		{
 			MethodName: "AutoDeleteLbPolicy",
 			Handler:    _NetworkV1_AutoDeleteLbPolicy_Handler,
 		},
@@ -980,6 +1268,10 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AutoDeleteService",
 			Handler:    _NetworkV1_AutoDeleteService_Handler,
+		},
+		{
+			MethodName: "AutoDeleteVirtualRouter",
+			Handler:    _NetworkV1_AutoDeleteVirtualRouter_Handler,
 		},
 		{
 			MethodName: "AutoGetLbPolicy",
@@ -994,6 +1286,10 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _NetworkV1_AutoGetService_Handler,
 		},
 		{
+			MethodName: "AutoGetVirtualRouter",
+			Handler:    _NetworkV1_AutoGetVirtualRouter_Handler,
+		},
+		{
 			MethodName: "AutoListLbPolicy",
 			Handler:    _NetworkV1_AutoListLbPolicy_Handler,
 		},
@@ -1006,6 +1302,10 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _NetworkV1_AutoListService_Handler,
 		},
 		{
+			MethodName: "AutoListVirtualRouter",
+			Handler:    _NetworkV1_AutoListVirtualRouter_Handler,
+		},
+		{
 			MethodName: "AutoUpdateLbPolicy",
 			Handler:    _NetworkV1_AutoUpdateLbPolicy_Handler,
 		},
@@ -1016,6 +1316,10 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AutoUpdateService",
 			Handler:    _NetworkV1_AutoUpdateService_Handler,
+		},
+		{
+			MethodName: "AutoUpdateVirtualRouter",
+			Handler:    _NetworkV1_AutoUpdateVirtualRouter_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
@@ -1037,6 +1341,11 @@ var _NetworkV1_serviceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "AutoWatchSvcNetworkV1",
 			Handler:       _NetworkV1_AutoWatchSvcNetworkV1_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "AutoWatchVirtualRouter",
+			Handler:       _NetworkV1_AutoWatchVirtualRouter_Handler,
 			ServerStreams: true,
 		},
 	},
@@ -1235,6 +1544,70 @@ func (m *AutoMsgServiceWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, erro
 	return i, nil
 }
 
+func (m *AutoMsgVirtualRouterWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, msg := range m.Events {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintSvcNetwork(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintSvcNetwork(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintSvcNetwork(dAtA, i, uint64(m.Object.Size()))
+		n4, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	return i, nil
+}
+
 func (m *LbPolicyList) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1253,19 +1626,19 @@ func (m *LbPolicyList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
-	n4, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n4
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.ListMeta.Size()))
-	n5, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n5, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n5
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.ListMeta.Size()))
+	n6, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n6
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -1299,19 +1672,19 @@ func (m *NetworkList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
-	n6, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n6
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.ListMeta.Size()))
-	n7, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n7, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n7
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.ListMeta.Size()))
+	n8, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n8
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -1345,19 +1718,65 @@ func (m *ServiceList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
-	n8, err := m.TypeMeta.MarshalTo(dAtA[i:])
-	if err != nil {
-		return 0, err
-	}
-	i += n8
-	dAtA[i] = 0x1a
-	i++
-	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.ListMeta.Size()))
-	n9, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n9, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
 	i += n9
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.ListMeta.Size()))
+	n10, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n10
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintSvcNetwork(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *VirtualRouterList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VirtualRouterList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.TypeMeta.Size()))
+	n11, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n11
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSvcNetwork(dAtA, i, uint64(m.ListMeta.Size()))
+	n12, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n12
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -1460,6 +1879,32 @@ func (m *AutoMsgServiceWatchHelper_WatchEvent) Size() (n int) {
 	return n
 }
 
+func (m *AutoMsgVirtualRouterWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, e := range m.Events {
+			l = e.Size()
+			n += 1 + l + sovSvcNetwork(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovSvcNetwork(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovSvcNetwork(uint64(l))
+	}
+	return n
+}
+
 func (m *LbPolicyList) Size() (n int) {
 	var l int
 	_ = l
@@ -1493,6 +1938,22 @@ func (m *NetworkList) Size() (n int) {
 }
 
 func (m *ServiceList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovSvcNetwork(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovSvcNetwork(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovSvcNetwork(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *VirtualRouterList) Size() (n int) {
 	var l int
 	_ = l
 	l = m.TypeMeta.Size()
@@ -2100,6 +2561,199 @@ func (m *AutoMsgServiceWatchHelper_WatchEvent) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *AutoMsgVirtualRouterWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgVirtualRouterWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgVirtualRouterWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Events", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Events = append(m.Events, &AutoMsgVirtualRouterWatchHelper_WatchEvent{})
+			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: WatchEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: WatchEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &VirtualRouter{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *LbPolicyList) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2523,6 +3177,147 @@ func (m *ServiceList) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *VirtualRouterList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcNetwork
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VirtualRouterList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VirtualRouterList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcNetwork
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &VirtualRouter{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcNetwork(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcNetwork
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipSvcNetwork(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -2631,82 +3426,92 @@ var (
 func init() { proto.RegisterFile("svc_network.proto", fileDescriptorSvcNetwork) }
 
 var fileDescriptorSvcNetwork = []byte{
-	// 1221 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x98, 0xcf, 0x6f, 0xe3, 0x44,
-	0x14, 0xc7, 0x33, 0xfd, 0xdd, 0xe9, 0x6e, 0x9b, 0x4e, 0xb7, 0x10, 0x9b, 0xaa, 0x29, 0x86, 0x95,
-	0xaa, 0x6a, 0x1b, 0xb7, 0x05, 0x15, 0xa9, 0x07, 0xc4, 0x46, 0xfb, 0xa3, 0xa0, 0x6e, 0xbb, 0x94,
-	0x2e, 0x0b, 0x0b, 0x5a, 0x70, 0x9c, 0xd9, 0xd4, 0xe0, 0xd8, 0x56, 0x3c, 0x49, 0x55, 0xa1, 0xbd,
-	0x6c, 0xb2, 0x82, 0x03, 0x12, 0x12, 0x3f, 0x84, 0xb4, 0xe2, 0xb4, 0x07, 0x0e, 0x7b, 0xec, 0x89,
-	0x23, 0x17, 0xa4, 0x15, 0xa7, 0x95, 0x38, 0xb1, 0x48, 0x11, 0xaa, 0x90, 0x90, 0xf2, 0x57, 0xa0,
-	0x19, 0xcf, 0xc4, 0x4e, 0x1c, 0x27, 0x36, 0x07, 0xc4, 0x5e, 0x62, 0x7b, 0xfc, 0xde, 0xcc, 0xe7,
-	0xcd, 0xf7, 0xbd, 0x67, 0x3b, 0x70, 0xd6, 0xad, 0xe9, 0x1f, 0x59, 0x98, 0x1c, 0xd9, 0x95, 0x4f,
-	0x73, 0x4e, 0xc5, 0x26, 0x36, 0x1a, 0xe7, 0x97, 0xf2, 0x42, 0xc9, 0xb6, 0x4b, 0x26, 0x56, 0x35,
-	0xc7, 0x50, 0x35, 0xcb, 0xb2, 0x89, 0x46, 0x0c, 0xdb, 0x72, 0x3d, 0x33, 0xf9, 0x72, 0xc9, 0x20,
-	0x87, 0xd5, 0x42, 0x4e, 0xb7, 0xcb, 0xaa, 0x83, 0x2d, 0x57, 0xb3, 0x8a, 0xb6, 0xea, 0x1e, 0xa9,
-	0x35, 0x6c, 0x19, 0x3a, 0x56, 0xab, 0xc4, 0x30, 0x5d, 0xea, 0x5a, 0xc2, 0x56, 0xd0, 0x5b, 0x35,
-	0x2c, 0xdd, 0xac, 0x16, 0xb1, 0x98, 0x66, 0x35, 0x30, 0x4d, 0xc9, 0x2e, 0xd9, 0x2a, 0x1b, 0x2e,
-	0x54, 0xef, 0xb0, 0x2b, 0x76, 0xc1, 0xce, 0xb8, 0x79, 0x2e, 0x62, 0x55, 0xca, 0xc8, 0x2c, 0x5c,
-	0x95, 0x60, 0x4b, 0xb3, 0x08, 0xb7, 0x5f, 0xeb, 0x63, 0x6f, 0x6a, 0x05, 0x6c, 0xba, 0xaa, 0x8b,
-	0x4d, 0xac, 0x13, 0xbb, 0xc2, 0x3d, 0xce, 0x76, 0xec, 0x86, 0x3c, 0x61, 0x16, 0xc4, 0x0d, 0x17,
-	0x57, 0x6a, 0x86, 0x8e, 0xf9, 0xe5, 0xf9, 0x3e, 0x33, 0x97, 0x31, 0xd1, 0x3c, 0x33, 0xa5, 0x05,
-	0xa0, 0x7c, 0xb1, 0x4a, 0xec, 0x6b, 0x6e, 0x69, 0xa7, 0x70, 0xdd, 0x36, 0x0d, 0xfd, 0xf8, 0xa6,
-	0x46, 0xf4, 0xc3, 0x6d, 0x6c, 0x3a, 0xb8, 0x82, 0xf6, 0xe1, 0xd8, 0xe5, 0x1a, 0xb6, 0x88, 0x9b,
-	0x01, 0x4b, 0xc3, 0xcb, 0x53, 0x1b, 0xb9, 0x9c, 0x58, 0x3e, 0xda, 0x29, 0xc7, 0xce, 0x99, 0x5b,
-	0x1e, 0xb6, 0x9a, 0xd9, 0x31, 0xcc, 0x66, 0xd8, 0xe7, 0x47, 0xb9, 0x04, 0xa1, 0x6f, 0x81, 0x96,
-	0xe0, 0xc8, 0xc1, 0xb1, 0x83, 0x33, 0x60, 0x09, 0x2c, 0x4f, 0xe6, 0x51, 0xab, 0x99, 0x9d, 0x26,
-	0xc7, 0x0e, 0xbe, 0x60, 0x97, 0x0d, 0x82, 0xcb, 0x0e, 0x39, 0x46, 0xaf, 0xc1, 0xb1, 0xbd, 0xc2,
-	0x27, 0x58, 0x27, 0x99, 0xa1, 0x25, 0xb0, 0x3c, 0xb5, 0x31, 0xdb, 0x66, 0x10, 0x8b, 0xe7, 0xcf,
-	0xb5, 0x9a, 0xd9, 0xb4, 0xcd, 0x8c, 0x7c, 0xc7, 0xad, 0x99, 0xa7, 0xf7, 0xa5, 0xa9, 0x23, 0xba,
-	0xd4, 0x21, 0x03, 0x53, 0xfe, 0x06, 0x50, 0xe2, 0xdc, 0xbb, 0xde, 0x14, 0xc1, 0x58, 0xdf, 0xee,
-	0x8a, 0x75, 0xb5, 0x3b, 0xd6, 0xb0, 0xcf, 0xa0, 0x50, 0xef, 0x24, 0x0c, 0x75, 0xb3, 0x2b, 0xd4,
-	0x74, 0x1b, 0x81, 0xaf, 0xfd, 0x2f, 0x22, 0x7d, 0xc7, 0x4b, 0x8b, 0x44, 0x91, 0x86, 0x7d, 0xfe,
-	0xbb, 0x48, 0xf9, 0xda, 0x71, 0x23, 0xfd, 0x03, 0xc0, 0x33, 0x22, 0x0f, 0x76, 0x0c, 0x97, 0xa0,
-	0x4d, 0x08, 0x0e, 0xf8, 0xa4, 0x67, 0x73, 0x9a, 0x63, 0xe4, 0x28, 0xc9, 0x35, 0x4c, 0xb4, 0xfc,
-	0xdc, 0xe3, 0x66, 0x36, 0xf5, 0xa4, 0x99, 0x05, 0xad, 0x66, 0x76, 0xfc, 0x82, 0x61, 0x99, 0x86,
-	0x85, 0xf7, 0xc5, 0x09, 0xda, 0x83, 0x13, 0xd4, 0x9f, 0x5a, 0x66, 0x86, 0x03, 0xee, 0x62, 0x30,
-	0xbf, 0x10, 0x70, 0x4f, 0x9b, 0x86, 0x4b, 0x56, 0x69, 0x1d, 0x89, 0x79, 0x42, 0x23, 0x68, 0x03,
-	0x8e, 0xbe, 0x49, 0x70, 0xd9, 0xcd, 0x8c, 0xb0, 0x4d, 0xee, 0x91, 0xb6, 0x93, 0xad, 0x66, 0x76,
-	0x94, 0x46, 0xe6, 0xee, 0x7b, 0x87, 0xad, 0xe9, 0xa7, 0xf7, 0x25, 0x48, 0x67, 0xe2, 0xd1, 0xfd,
-	0x0e, 0xe0, 0x14, 0x97, 0xfe, 0xff, 0x15, 0xdc, 0x7a, 0x67, 0x70, 0xe1, 0x44, 0x8d, 0x17, 0x1b,
-	0x17, 0xfb, 0x19, 0x89, 0x4d, 0xa4, 0xe6, 0xc0, 0xd8, 0x36, 0x7e, 0x79, 0x1e, 0x4e, 0xf2, 0x9d,
-	0x78, 0x77, 0x1d, 0x7d, 0x0e, 0xe0, 0x0c, 0xad, 0xac, 0x8b, 0xc5, 0xa2, 0xd0, 0x1e, 0x85, 0xd3,
-	0x41, 0x0e, 0x0f, 0x29, 0xbb, 0x27, 0x0d, 0x69, 0x4c, 0xaf, 0x60, 0x8d, 0xe0, 0x9f, 0x1a, 0x12,
-	0xf8, 0xb9, 0x21, 0x81, 0x7b, 0xbf, 0xfd, 0xf5, 0xcd, 0xd0, 0x26, 0x4c, 0x6d, 0x81, 0x95, 0x5b,
-	0xb3, 0xec, 0xa0, 0x40, 0xd5, 0x2c, 0xac, 0x3a, 0x9e, 0xc7, 0x02, 0x7f, 0xc0, 0xa8, 0x9f, 0xed,
-	0xe5, 0x0e, 0xd8, 0xd9, 0x5d, 0xff, 0x2e, 0xba, 0x07, 0xe0, 0x34, 0x27, 0xe1, 0x78, 0x28, 0x24,
-	0x9d, 0x1c, 0x1a, 0x51, 0x76, 0x22, 0x30, 0x5e, 0xf5, 0x30, 0xd2, 0x1e, 0xc6, 0xa4, 0xca, 0xfd,
-	0x5c, 0xe5, 0x85, 0x1e, 0x14, 0xe2, 0x66, 0x10, 0x82, 0xef, 0x28, 0x0a, 0xed, 0xb1, 0x1c, 0x1a,
-	0x89, 0x0d, 0xc1, 0x9f, 0x83, 0xbd, 0x21, 0xc4, 0x4d, 0xf4, 0x00, 0x40, 0x44, 0x21, 0x2e, 0x61,
-	0x13, 0x13, 0x9c, 0x50, 0x96, 0xdb, 0x14, 0xa5, 0xc8, 0x3c, 0x3b, 0x50, 0xae, 0xc0, 0xd4, 0x56,
-	0xea, 0x96, 0x44, 0x7f, 0x57, 0xe6, 0xfc, 0x6d, 0xa7, 0x00, 0xbb, 0x5a, 0x19, 0xdf, 0x5d, 0x39,
-	0xdf, 0x4f, 0x9d, 0xb6, 0x19, 0xfa, 0x0e, 0xc0, 0x59, 0x1f, 0x2e, 0x89, 0x52, 0x1f, 0x46, 0x90,
-	0x5d, 0x62, 0x64, 0x19, 0x46, 0x86, 0xda, 0x52, 0xf8, 0x60, 0x2f, 0xf7, 0x11, 0x2c, 0x8a, 0x2b,
-	0x89, 0x78, 0xf1, 0xb8, 0x84, 0x3a, 0xfd, 0xb9, 0x42, 0x56, 0xe8, 0x5b, 0x5e, 0x60, 0x57, 0x31,
-	0x49, 0xa8, 0xe4, 0x07, 0x27, 0x0d, 0x69, 0xb8, 0x84, 0x49, 0x94, 0x8c, 0xa8, 0x97, 0x8c, 0x28,
-	0xa6, 0x8c, 0x5f, 0xf1, 0x44, 0xbf, 0x8a, 0x49, 0x12, 0x0d, 0xdf, 0xef, 0xc5, 0x14, 0xd8, 0x28,
-	0xd4, 0x43, 0x40, 0x14, 0x4f, 0xc0, 0x00, 0x51, 0x12, 0xf5, 0x62, 0x10, 0x85, 0x45, 0x89, 0x27,
-	0xdd, 0x97, 0x00, 0xa6, 0x29, 0x11, 0xed, 0xd6, 0x6d, 0xed, 0xe6, 0xdb, 0x0d, 0x9c, 0xbd, 0x54,
-	0xec, 0x39, 0xec, 0xdd, 0x5c, 0x9e, 0x0f, 0xe9, 0x47, 0x4d, 0x94, 0xb7, 0x4e, 0x1a, 0xd2, 0x08,
-	0x6d, 0xbe, 0xa1, 0xb6, 0x90, 0x62, 0x5d, 0x21, 0x85, 0x02, 0x0d, 0x12, 0xf5, 0x6f, 0x90, 0x5f,
-	0xf0, 0x4c, 0xa2, 0x13, 0x0b, 0xcd, 0x22, 0x68, 0xce, 0x75, 0x0b, 0xc7, 0x60, 0xb6, 0x7b, 0xc2,
-	0x6c, 0x30, 0x98, 0x19, 0x06, 0xe3, 0xb7, 0x49, 0xd4, 0xb7, 0x4d, 0x06, 0x51, 0x84, 0x58, 0x03,
-	0x51, 0x02, 0x0f, 0xd4, 0x58, 0x28, 0xed, 0x7e, 0xd8, 0xb7, 0x59, 0xfe, 0xc0, 0x9b, 0xe5, 0x0d,
-	0xa7, 0xa8, 0x25, 0x6e, 0x96, 0x1f, 0xd3, 0xd2, 0xaf, 0x32, 0xcf, 0x0e, 0x90, 0x6d, 0xaf, 0x6f,
-	0xcb, 0xec, 0x20, 0xf7, 0xaa, 0x33, 0x39, 0x66, 0x9d, 0x7d, 0xcf, 0xdb, 0x92, 0x87, 0x97, 0xa4,
-	0xd4, 0x6e, 0x47, 0xb0, 0x5d, 0xf1, 0xd8, 0x24, 0x8f, 0xad, 0x47, 0xbd, 0xc9, 0xf1, 0xea, 0xad,
-	0x93, 0x2c, 0x49, 0xc9, 0xc5, 0x25, 0x0b, 0x55, 0x94, 0x1c, 0xaf, 0xee, 0x1e, 0x71, 0x32, 0x96,
-	0x47, 0x83, 0x0a, 0xef, 0xa5, 0x18, 0x9f, 0x7d, 0xca, 0xcd, 0x93, 0x86, 0x34, 0xca, 0x5e, 0xcd,
-	0x3b, 0x80, 0xdf, 0x60, 0xf9, 0xf6, 0x1c, 0xcb, 0xb7, 0xb4, 0xca, 0xee, 0x07, 0xea, 0x4d, 0xe1,
-	0x23, 0x7d, 0x74, 0x5e, 0x03, 0xe8, 0x47, 0xde, 0x24, 0xd8, 0x72, 0x03, 0xca, 0x52, 0x19, 0xfc,
-	0xd9, 0xa6, 0xdc, 0xe8, 0x8d, 0xfa, 0x3a, 0x43, 0x9d, 0x67, 0xa8, 0x33, 0x1c, 0xac, 0x5d, 0x8e,
-	0x2f, 0x46, 0x92, 0x0a, 0x93, 0x6e, 0xd0, 0x01, 0x45, 0xab, 0x0c, 0xfe, 0xea, 0x4a, 0x02, 0xda,
-	0x2e, 0xd6, 0x68, 0x50, 0x61, 0xb2, 0x06, 0xd0, 0x7b, 0x70, 0xde, 0xe7, 0xac, 0xe9, 0xfe, 0xbb,
-	0x6a, 0x04, 0xec, 0x1c, 0x1b, 0xf6, 0x3f, 0xf1, 0x58, 0x83, 0x99, 0xed, 0xa6, 0x4b, 0xad, 0x01,
-	0xf9, 0x57, 0xf0, 0x75, 0x5d, 0x1a, 0xaa, 0xad, 0x3f, 0xa8, 0x4b, 0xe2, 0xaf, 0x9a, 0x87, 0x75,
-	0x69, 0x7c, 0xd7, 0x3f, 0xe5, 0x71, 0x3e, 0xac, 0x4b, 0x13, 0x22, 0x8f, 0x1e, 0xd5, 0xa5, 0x1c,
-	0x14, 0x36, 0x88, 0x3e, 0x6a, 0xd0, 0xb0, 0x53, 0x25, 0x88, 0xbf, 0x32, 0xa0, 0x11, 0xc7, 0x76,
-	0x09, 0x62, 0xcd, 0x0c, 0x79, 0x2b, 0x7a, 0x1e, 0x62, 0x8b, 0x63, 0x7a, 0xa8, 0xb0, 0xbd, 0x62,
-	0x2c, 0x97, 0xfc, 0x99, 0xc7, 0xa7, 0x8b, 0xe0, 0xc9, 0xe9, 0x22, 0xf8, 0xf3, 0x74, 0x11, 0x5c,
-	0x07, 0x85, 0x31, 0xf6, 0xaf, 0xc9, 0x2b, 0xff, 0x04, 0x00, 0x00, 0xff, 0xff, 0x72, 0x93, 0x26,
-	0xc4, 0x98, 0x12, 0x00, 0x00,
+	// 1385 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x98, 0xcf, 0x6f, 0xdc, 0x44,
+	0x14, 0xc7, 0x3d, 0x4d, 0x9a, 0x36, 0x93, 0xb6, 0xd9, 0x9d, 0x36, 0x61, 0x6d, 0xa2, 0x6c, 0x30,
+	0x54, 0x8a, 0xa2, 0x66, 0x9d, 0xa4, 0x28, 0x95, 0x22, 0x84, 0xe8, 0xaa, 0x6d, 0x02, 0x4a, 0x93,
+	0x12, 0xd2, 0x06, 0x42, 0x29, 0x78, 0x77, 0x27, 0x1b, 0x83, 0xd7, 0xb6, 0xd6, 0xb3, 0x1b, 0x45,
+	0xa8, 0x97, 0xee, 0x56, 0x70, 0x40, 0x42, 0xe2, 0x87, 0x2a, 0x55, 0x9c, 0x72, 0xe0, 0xd0, 0x63,
+	0x4e, 0x1c, 0x39, 0xf6, 0x58, 0x89, 0x13, 0xad, 0xb4, 0x42, 0x11, 0x08, 0x69, 0xff, 0x03, 0x6e,
+	0xc8, 0xe3, 0xb1, 0xd7, 0x5e, 0xdb, 0xbb, 0x36, 0x54, 0xa8, 0x5c, 0xd6, 0xf6, 0x78, 0xde, 0xcc,
+	0xe7, 0xeb, 0xf9, 0xce, 0x7b, 0x5e, 0xc3, 0xb4, 0x59, 0x2f, 0x7e, 0xac, 0x61, 0xb2, 0xa7, 0x57,
+	0x3f, 0xcb, 0x19, 0x55, 0x9d, 0xe8, 0xe8, 0x04, 0xbb, 0x14, 0x26, 0xca, 0xba, 0x5e, 0x56, 0xb1,
+	0x24, 0x1b, 0x8a, 0x24, 0x6b, 0x9a, 0x4e, 0x64, 0xa2, 0xe8, 0x9a, 0x69, 0x77, 0x13, 0xae, 0x96,
+	0x15, 0xb2, 0x5b, 0x2b, 0xe4, 0x8a, 0x7a, 0x45, 0x32, 0xb0, 0x66, 0xca, 0x5a, 0x49, 0x97, 0xcc,
+	0x3d, 0xa9, 0x8e, 0x35, 0xa5, 0x88, 0xa5, 0x1a, 0x51, 0x54, 0xd3, 0x0a, 0x2d, 0x63, 0xcd, 0x1b,
+	0x2d, 0x29, 0x5a, 0x51, 0xad, 0x95, 0xb0, 0x33, 0xcc, 0xac, 0x67, 0x98, 0xb2, 0x5e, 0xd6, 0x25,
+	0xda, 0x5c, 0xa8, 0xed, 0xd0, 0x2b, 0x7a, 0x41, 0xcf, 0x58, 0xf7, 0x5c, 0xc4, 0xac, 0x16, 0x23,
+	0xed, 0x61, 0x4a, 0x04, 0x6b, 0xb2, 0x46, 0x58, 0xff, 0xb9, 0x1e, 0xfd, 0x55, 0xb9, 0x80, 0x55,
+	0x53, 0x32, 0xb1, 0x8a, 0x8b, 0x44, 0xaf, 0xb2, 0x88, 0xd3, 0xbe, 0xa7, 0x21, 0x9c, 0x54, 0x0b,
+	0xce, 0x0d, 0x13, 0x57, 0xeb, 0x4a, 0x11, 0xb3, 0xcb, 0xe1, 0x7a, 0x75, 0x87, 0x9d, 0x9e, 0xef,
+	0x31, 0x49, 0x05, 0x13, 0xd9, 0xee, 0x26, 0xb6, 0x01, 0x14, 0x2e, 0xd7, 0x88, 0x7e, 0xdd, 0x2c,
+	0xaf, 0x16, 0x6e, 0xe8, 0xaa, 0x52, 0xdc, 0xdf, 0x92, 0x49, 0x71, 0x77, 0x05, 0xab, 0x06, 0xae,
+	0xa2, 0x0d, 0x38, 0x74, 0xb5, 0x8e, 0x35, 0x62, 0x66, 0xc0, 0xd4, 0xc0, 0xf4, 0xc8, 0x42, 0x2e,
+	0xe7, 0x90, 0x44, 0x07, 0xe5, 0xe8, 0x39, 0x0d, 0xcb, 0xc3, 0x76, 0x2b, 0x3b, 0x84, 0xe9, 0x08,
+	0x1b, 0xec, 0x28, 0x94, 0x21, 0xec, 0xf4, 0x40, 0x53, 0x70, 0x70, 0x73, 0xdf, 0xc0, 0x19, 0x30,
+	0x05, 0xa6, 0x87, 0xf3, 0xa8, 0xdd, 0xca, 0x9e, 0x21, 0xfb, 0x06, 0xbe, 0xa0, 0x57, 0x14, 0x82,
+	0x2b, 0x06, 0xd9, 0x47, 0x97, 0xe0, 0xd0, 0x7a, 0xe1, 0x53, 0x5c, 0x24, 0x99, 0x63, 0x53, 0x60,
+	0x7a, 0x64, 0x21, 0xed, 0x32, 0x38, 0x93, 0xe7, 0xcf, 0xb5, 0x5b, 0xd9, 0x94, 0x4e, 0x3b, 0x75,
+	0x02, 0x97, 0x46, 0x9f, 0xde, 0xe7, 0x47, 0xf6, 0xac, 0xa9, 0x76, 0x29, 0x98, 0xf8, 0x27, 0x80,
+	0x3c, 0xe3, 0x5e, 0xb3, 0x87, 0xf0, 0x6a, 0x7d, 0xb7, 0x4b, 0xeb, 0x6c, 0xb7, 0xd6, 0x60, 0x4c,
+	0x3f, 0xa9, 0x3b, 0x09, 0xa5, 0x2e, 0x76, 0x49, 0x4d, 0xb9, 0x08, 0x6c, 0xee, 0x7f, 0xa0, 0xf4,
+	0x3d, 0xdb, 0x21, 0x89, 0x94, 0x06, 0x63, 0xfe, 0x3b, 0xa5, 0x6c, 0xee, 0xb8, 0x4a, 0xff, 0x02,
+	0x30, 0xcb, 0xa8, 0x6f, 0x29, 0x55, 0x52, 0x93, 0xd5, 0x0d, 0xbd, 0x46, 0x70, 0xd5, 0xab, 0x77,
+	0xab, 0x4b, 0xef, 0xc5, 0x6e, 0xbd, 0x51, 0x91, 0xfd, 0x54, 0xab, 0x09, 0x55, 0xbf, 0xd1, 0xa5,
+	0x7a, 0xdc, 0x05, 0xf1, 0x11, 0xc4, 0xd5, 0xfe, 0x0c, 0xc0, 0x53, 0xce, 0x1e, 0x58, 0x55, 0x4c,
+	0x82, 0x16, 0x21, 0xd8, 0x64, 0x43, 0x9f, 0xce, 0xc9, 0x86, 0x92, 0xb3, 0x78, 0xae, 0x63, 0x22,
+	0xe7, 0xcf, 0x3e, 0x6e, 0x65, 0xb9, 0x27, 0xad, 0x2c, 0x68, 0xb7, 0xb2, 0x27, 0x2e, 0x28, 0x9a,
+	0xaa, 0x68, 0x78, 0xc3, 0x39, 0x41, 0xeb, 0xf0, 0xa4, 0x15, 0x6f, 0xf5, 0xcc, 0x0c, 0x78, 0xc2,
+	0x9d, 0xc6, 0xfc, 0x84, 0x27, 0x3c, 0xa5, 0x2a, 0x26, 0x99, 0xb5, 0x72, 0x88, 0x33, 0x4e, 0xa0,
+	0x05, 0x2d, 0xc0, 0xe3, 0x6f, 0x13, 0x5c, 0x31, 0x33, 0x83, 0xf4, 0x81, 0x87, 0x6c, 0xd9, 0xe1,
+	0x76, 0x2b, 0x7b, 0xdc, 0x52, 0x66, 0x6e, 0xd8, 0x87, 0xa5, 0x33, 0x4f, 0xef, 0xf3, 0xd0, 0x1a,
+	0x89, 0xa9, 0xfb, 0x15, 0xc0, 0x11, 0x66, 0xfb, 0x17, 0x4b, 0xdc, 0xbc, 0x5f, 0x5c, 0x70, 0x93,
+	0xc6, 0xd3, 0xc6, 0x8c, 0xfe, 0x3f, 0xd1, 0xe6, 0x6c, 0xcb, 0xfe, 0xda, 0xfe, 0x00, 0x30, 0xed,
+	0xb3, 0xf3, 0x8b, 0xa5, 0xf0, 0x92, 0x5f, 0x61, 0xd4, 0x16, 0xec, 0xab, 0x73, 0xe1, 0xc1, 0x04,
+	0x1c, 0x66, 0x2b, 0x7e, 0x6b, 0x1e, 0x7d, 0x01, 0xe0, 0xa8, 0x95, 0x4d, 0x2e, 0x97, 0x4a, 0x8e,
+	0xc7, 0x51, 0xd0, 0xf6, 0x42, 0xb0, 0x49, 0x5c, 0x3b, 0x6c, 0xf2, 0x43, 0xc5, 0x2a, 0x96, 0x09,
+	0xfe, 0xa9, 0xc9, 0x83, 0x9f, 0x9b, 0x3c, 0xb8, 0xf7, 0xcb, 0xef, 0xdf, 0x1e, 0x5b, 0x84, 0xdc,
+	0x12, 0x98, 0xd9, 0x4e, 0xd3, 0x83, 0x08, 0x25, 0xb5, 0x30, 0x6b, 0xd8, 0x11, 0x13, 0xec, 0x7d,
+	0x42, 0xfa, 0x7c, 0x3d, 0xb7, 0x49, 0xcf, 0xee, 0x76, 0xee, 0xa2, 0x7b, 0x00, 0x9e, 0x61, 0x24,
+	0x0c, 0x0f, 0x05, 0x2c, 0x2a, 0x04, 0x5a, 0xc4, 0xd5, 0x08, 0x8c, 0xd7, 0x6d, 0x8c, 0x94, 0x8d,
+	0x31, 0x2c, 0xb1, 0x38, 0x53, 0x7c, 0x39, 0x84, 0xc2, 0xb9, 0xe9, 0x85, 0x60, 0xce, 0x41, 0x01,
+	0x2f, 0x09, 0x81, 0x96, 0xd8, 0x10, 0xec, 0xb5, 0x27, 0x1c, 0xc2, 0xb9, 0x89, 0xb6, 0xe1, 0x39,
+	0xc6, 0xe0, 0x5b, 0x5b, 0x14, 0xb1, 0xe6, 0x42, 0x44, 0xbb, 0x88, 0x02, 0x54, 0x1c, 0x7a, 0x08,
+	0x20, 0xb2, 0x06, 0xbf, 0x82, 0x55, 0x4c, 0x70, 0xc2, 0x25, 0xbf, 0x63, 0x0d, 0x58, 0xa2, 0x91,
+	0x3e, 0x99, 0xd7, 0x20, 0xb7, 0xc4, 0x6d, 0xf3, 0xd6, 0xef, 0xcc, 0xd9, 0xce, 0x92, 0x5a, 0xe2,
+	0xd6, 0xe4, 0x0a, 0xbe, 0x3b, 0x73, 0xbe, 0xd7, 0xca, 0xbb, 0xdd, 0xd0, 0xf7, 0x00, 0xa6, 0x3b,
+	0x70, 0x49, 0x5c, 0x70, 0x3b, 0x82, 0xec, 0x0a, 0x25, 0xcb, 0x50, 0x32, 0xe4, 0x2e, 0x73, 0x07,
+	0xec, 0xb5, 0x1e, 0x66, 0x88, 0xe2, 0x4a, 0x62, 0x8c, 0x78, 0x5c, 0xce, 0xca, 0xf7, 0xe6, 0x0a,
+	0xf4, 0x42, 0x1f, 0xc1, 0x97, 0x3a, 0x58, 0xcf, 0xc1, 0x2b, 0x3e, 0x50, 0x0e, 0x7d, 0xc7, 0x72,
+	0xc3, 0x32, 0x26, 0x09, 0x8d, 0xf2, 0xe1, 0x61, 0x93, 0x1f, 0x28, 0x63, 0x12, 0xe5, 0x12, 0x14,
+	0xe6, 0x12, 0x14, 0xd3, 0x25, 0x5f, 0xb3, 0x3d, 0xba, 0x8c, 0x49, 0x12, 0x8b, 0x7c, 0x10, 0xc6,
+	0xe4, 0x59, 0x07, 0x14, 0xe2, 0x0f, 0x14, 0xcf, 0x1f, 0x1e, 0xa2, 0x24, 0xe6, 0x88, 0x41, 0x14,
+	0x5c, 0xf3, 0x78, 0xce, 0xd8, 0xb2, 0x53, 0xc8, 0x32, 0x26, 0xff, 0xce, 0x16, 0xa3, 0x7e, 0x44,
+	0x0e, 0x7d, 0x05, 0x60, 0xca, 0x1a, 0xd9, 0xaa, 0x63, 0xae, 0x29, 0xc6, 0xdc, 0xd2, 0x46, 0x5f,
+	0x2b, 0xd7, 0x0d, 0xfa, 0xf7, 0x54, 0x18, 0x0b, 0x18, 0xc3, 0xea, 0x22, 0xbe, 0x73, 0xd8, 0xe4,
+	0x07, 0xad, 0x82, 0x14, 0x48, 0x95, 0x1c, 0xcd, 0x94, 0x1c, 0xf2, 0x14, 0x0d, 0xd4, 0xbb, 0x68,
+	0x7c, 0xc9, 0x2c, 0x6a, 0x0d, 0xec, 0x98, 0x21, 0x82, 0xe6, 0x5c, 0xb7, 0x23, 0x28, 0xcc, 0x4a,
+	0x28, 0xcc, 0x02, 0x85, 0x19, 0xa5, 0x30, 0x9d, 0xd2, 0x81, 0x7a, 0x96, 0x0e, 0x2f, 0x8a, 0xe3,
+	0x82, 0xbe, 0x28, 0x9e, 0x97, 0xa9, 0x58, 0x28, 0x6e, 0x8d, 0xe8, 0x59, 0x40, 0x6e, 0xc3, 0x31,
+	0x87, 0xc4, 0xbf, 0xfc, 0x11, 0x3c, 0x42, 0xf8, 0xea, 0x53, 0xaa, 0x54, 0x17, 0x15, 0x87, 0x7e,
+	0x60, 0x25, 0xe4, 0xa6, 0x51, 0x92, 0x13, 0x97, 0x90, 0x4f, 0xac, 0x3c, 0x53, 0xa3, 0x91, 0x3e,
+	0x99, 0x2b, 0x76, 0xa5, 0x14, 0xe8, 0x41, 0x08, 0x4b, 0x0f, 0x42, 0xcc, 0xf4, 0xf0, 0x80, 0x25,
+	0x6b, 0x1b, 0x2f, 0x49, 0x86, 0xb8, 0x13, 0xc1, 0x76, 0xcd, 0x66, 0xe3, 0x6d, 0xb6, 0x90, 0x34,
+	0x21, 0xc4, 0x4b, 0x13, 0x7e, 0xb2, 0x24, 0x99, 0x22, 0x2e, 0x59, 0x20, 0x11, 0x08, 0x89, 0x0a,
+	0x89, 0x0d, 0xf6, 0x1c, 0x0a, 0x89, 0x0f, 0x95, 0x43, 0x8f, 0x98, 0x70, 0x6a, 0xba, 0x7e, 0x59,
+	0xe3, 0xd5, 0x18, 0xdf, 0x6a, 0xc4, 0xad, 0xc3, 0x26, 0x7f, 0x9c, 0xfe, 0xa7, 0xf4, 0x3d, 0x8f,
+	0xb7, 0xe8, 0x66, 0x19, 0xa7, 0x9b, 0x25, 0x25, 0xd1, 0xfb, 0x9e, 0x64, 0x21, 0xb2, 0x96, 0x1e,
+	0x36, 0x9a, 0x03, 0xe8, 0x47, 0x96, 0xe1, 0xe8, 0x74, 0x7d, 0x72, 0x8a, 0xd8, 0xff, 0x5b, 0x8b,
+	0x78, 0x33, 0x1c, 0xf5, 0x4d, 0x8a, 0x3a, 0x46, 0x51, 0x47, 0x19, 0x98, 0x9b, 0x4b, 0x5e, 0x89,
+	0x24, 0x75, 0xba, 0x74, 0x83, 0xf6, 0xc9, 0x38, 0x62, 0xff, 0x4f, 0x25, 0x49, 0x40, 0xdd, 0x4c,
+	0x13, 0x0d, 0xea, 0x74, 0x99, 0x03, 0xe8, 0x7d, 0x3b, 0x1d, 0xd9, 0x9c, 0xf5, 0x62, 0xe7, 0xcf,
+	0x47, 0x04, 0xec, 0x59, 0xda, 0xdc, 0xf9, 0x42, 0x41, 0xf3, 0x50, 0xba, 0x9b, 0x8e, 0x9b, 0x03,
+	0x48, 0x83, 0xe3, 0xee, 0xc8, 0xb1, 0x32, 0xdd, 0x74, 0xdc, 0x4f, 0x28, 0xa1, 0xf3, 0x09, 0xcf,
+	0xc0, 0x37, 0x0d, 0xfe, 0x58, 0x7d, 0xfe, 0x61, 0x83, 0x77, 0x3e, 0xed, 0x1e, 0x34, 0xf8, 0x13,
+	0x6b, 0x9d, 0x53, 0xf6, 0x5c, 0x0f, 0x1a, 0xfc, 0x49, 0xc7, 0xb7, 0x07, 0x0d, 0xfe, 0xb4, 0x6f,
+	0x9a, 0x47, 0x0d, 0x3e, 0x07, 0x9d, 0x20, 0x64, 0x95, 0x57, 0x34, 0x60, 0xd4, 0x08, 0x62, 0xef,
+	0x5f, 0x68, 0xd0, 0xd0, 0x4d, 0x82, 0x68, 0xd2, 0x45, 0x36, 0x82, 0x1d, 0xe1, 0xac, 0x71, 0xcc,
+	0x08, 0x09, 0xba, 0x08, 0xb1, 0x42, 0xf2, 0xa7, 0x1e, 0x1f, 0x4d, 0x82, 0x27, 0x47, 0x93, 0xe0,
+	0xb7, 0xa3, 0x49, 0x70, 0x03, 0x14, 0x86, 0xe8, 0xb7, 0xd6, 0x8b, 0x7f, 0x07, 0x00, 0x00, 0xff,
+	0xff, 0x7b, 0x1f, 0x37, 0x40, 0xd9, 0x16, 0x00, 0x00,
 }

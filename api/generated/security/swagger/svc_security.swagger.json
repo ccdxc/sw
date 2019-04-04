@@ -1287,67 +1287,6 @@
         "tags": [
           "security/v1"
         ]
-      },
-      "post": {
-        "summary": "Create FirewallProfile object",
-        "operationId": "AddFirewallProfile_1",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/securityFirewallProfile"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/securityFirewallProfile"
-            }
-          }
-        ],
-        "tags": [
-          "security/v1"
-        ]
       }
     },
     "/configs/security/v1/firewallprofiles/{O.Name}": {
@@ -1552,65 +1491,6 @@
             "description": "Icmp Timeout is the period for which a ICMP session is kept alive during inactivity. should be a valid time duration",
             "in": "query",
             "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "security/v1"
-        ]
-      },
-      "delete": {
-        "summary": "Delete FirewallProfile object",
-        "operationId": "DeleteFirewallProfile_1",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/securityFirewallProfile"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
             "type": "string"
           }
         ],
@@ -4050,73 +3930,6 @@
         "tags": [
           "security/v1"
         ]
-      },
-      "post": {
-        "summary": "Create FirewallProfile object",
-        "operationId": "AddFirewallProfile",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/securityFirewallProfile"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/securityFirewallProfile"
-            }
-          }
-        ],
-        "tags": [
-          "security/v1"
-        ]
       }
     },
     "/configs/security/v1/tenant/{O.Tenant}/firewallprofiles/{O.Name}": {
@@ -4320,71 +4133,6 @@
             "description": "Icmp Timeout is the period for which a ICMP session is kept alive during inactivity. should be a valid time duration",
             "in": "query",
             "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "security/v1"
-        ]
-      },
-      "delete": {
-        "summary": "Delete FirewallProfile object",
-        "operationId": "DeleteFirewallProfile",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/securityFirewallProfile"
-            }
-          },
-          "400": {
-            "description": "Bad request parameters",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "401": {
-            "description": "Unauthorized request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "409": {
-            "description": "Conflict while processing request",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "412": {
-            "description": "Pre-condition failed",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          },
-          "501": {
-            "description": "Request not implemented",
-            "schema": {
-              "$ref": "#/definitions/apiStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "O.Tenant",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "O.Name",
-            "in": "path",
-            "required": true,
             "type": "string"
           }
         ],

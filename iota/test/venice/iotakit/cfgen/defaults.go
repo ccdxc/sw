@@ -92,7 +92,7 @@ var scaleCfgenParams = &Cfgen{
 		FirewallProfileTemplate: &security.FirewallProfile{
 			TypeMeta: api.TypeMeta{Kind: "FirewallProfile"},
 			ObjectMeta: api.ObjectMeta{
-				Name:      "default-fwprofile",
+				Name:      "default",
 				Namespace: "default",
 				Tenant:    "default",
 			},

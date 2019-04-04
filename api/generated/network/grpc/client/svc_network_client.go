@@ -72,6 +72,20 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		).Endpoint()
 		lAutoAddServiceEndpoint = trace.ClientEndPoint("NetworkV1:AutoAddService")(lAutoAddServiceEndpoint)
 	}
+	var lAutoAddVirtualRouterEndpoint endpoint.Endpoint
+	{
+		lAutoAddVirtualRouterEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoAddVirtualRouter",
+			network.EncodeGrpcReqVirtualRouter,
+			network.DecodeGrpcRespVirtualRouter,
+			&network.VirtualRouter{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddVirtualRouterEndpoint = trace.ClientEndPoint("NetworkV1:AutoAddVirtualRouter")(lAutoAddVirtualRouterEndpoint)
+	}
 	var lAutoDeleteLbPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoDeleteLbPolicyEndpoint = grpctransport.NewClient(
@@ -113,6 +127,20 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteServiceEndpoint = trace.ClientEndPoint("NetworkV1:AutoDeleteService")(lAutoDeleteServiceEndpoint)
+	}
+	var lAutoDeleteVirtualRouterEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteVirtualRouterEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoDeleteVirtualRouter",
+			network.EncodeGrpcReqVirtualRouter,
+			network.DecodeGrpcRespVirtualRouter,
+			&network.VirtualRouter{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteVirtualRouterEndpoint = trace.ClientEndPoint("NetworkV1:AutoDeleteVirtualRouter")(lAutoDeleteVirtualRouterEndpoint)
 	}
 	var lAutoGetLbPolicyEndpoint endpoint.Endpoint
 	{
@@ -156,6 +184,20 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		).Endpoint()
 		lAutoGetServiceEndpoint = trace.ClientEndPoint("NetworkV1:AutoGetService")(lAutoGetServiceEndpoint)
 	}
+	var lAutoGetVirtualRouterEndpoint endpoint.Endpoint
+	{
+		lAutoGetVirtualRouterEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoGetVirtualRouter",
+			network.EncodeGrpcReqVirtualRouter,
+			network.DecodeGrpcRespVirtualRouter,
+			&network.VirtualRouter{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetVirtualRouterEndpoint = trace.ClientEndPoint("NetworkV1:AutoGetVirtualRouter")(lAutoGetVirtualRouterEndpoint)
+	}
 	var lAutoListLbPolicyEndpoint endpoint.Endpoint
 	{
 		lAutoListLbPolicyEndpoint = grpctransport.NewClient(
@@ -197,6 +239,20 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListServiceEndpoint = trace.ClientEndPoint("NetworkV1:AutoListService")(lAutoListServiceEndpoint)
+	}
+	var lAutoListVirtualRouterEndpoint endpoint.Endpoint
+	{
+		lAutoListVirtualRouterEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoListVirtualRouter",
+			network.EncodeGrpcReqListWatchOptions,
+			network.DecodeGrpcRespVirtualRouterList,
+			&network.VirtualRouterList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListVirtualRouterEndpoint = trace.ClientEndPoint("NetworkV1:AutoListVirtualRouter")(lAutoListVirtualRouterEndpoint)
 	}
 	var lAutoUpdateLbPolicyEndpoint endpoint.Endpoint
 	{
@@ -240,24 +296,43 @@ func NewNetworkV1(conn *grpc.ClientConn, logger log.Logger) network.ServiceNetwo
 		).Endpoint()
 		lAutoUpdateServiceEndpoint = trace.ClientEndPoint("NetworkV1:AutoUpdateService")(lAutoUpdateServiceEndpoint)
 	}
+	var lAutoUpdateVirtualRouterEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateVirtualRouterEndpoint = grpctransport.NewClient(
+			conn,
+			"network.NetworkV1",
+			"AutoUpdateVirtualRouter",
+			network.EncodeGrpcReqVirtualRouter,
+			network.DecodeGrpcRespVirtualRouter,
+			&network.VirtualRouter{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateVirtualRouterEndpoint = trace.ClientEndPoint("NetworkV1:AutoUpdateVirtualRouter")(lAutoUpdateVirtualRouterEndpoint)
+	}
 	return network.EndpointsNetworkV1Client{
 		Client: network.NewNetworkV1Client(conn),
 
-		AutoAddLbPolicyEndpoint:    lAutoAddLbPolicyEndpoint,
-		AutoAddNetworkEndpoint:     lAutoAddNetworkEndpoint,
-		AutoAddServiceEndpoint:     lAutoAddServiceEndpoint,
-		AutoDeleteLbPolicyEndpoint: lAutoDeleteLbPolicyEndpoint,
-		AutoDeleteNetworkEndpoint:  lAutoDeleteNetworkEndpoint,
-		AutoDeleteServiceEndpoint:  lAutoDeleteServiceEndpoint,
-		AutoGetLbPolicyEndpoint:    lAutoGetLbPolicyEndpoint,
-		AutoGetNetworkEndpoint:     lAutoGetNetworkEndpoint,
-		AutoGetServiceEndpoint:     lAutoGetServiceEndpoint,
-		AutoListLbPolicyEndpoint:   lAutoListLbPolicyEndpoint,
-		AutoListNetworkEndpoint:    lAutoListNetworkEndpoint,
-		AutoListServiceEndpoint:    lAutoListServiceEndpoint,
-		AutoUpdateLbPolicyEndpoint: lAutoUpdateLbPolicyEndpoint,
-		AutoUpdateNetworkEndpoint:  lAutoUpdateNetworkEndpoint,
-		AutoUpdateServiceEndpoint:  lAutoUpdateServiceEndpoint,
+		AutoAddLbPolicyEndpoint:         lAutoAddLbPolicyEndpoint,
+		AutoAddNetworkEndpoint:          lAutoAddNetworkEndpoint,
+		AutoAddServiceEndpoint:          lAutoAddServiceEndpoint,
+		AutoAddVirtualRouterEndpoint:    lAutoAddVirtualRouterEndpoint,
+		AutoDeleteLbPolicyEndpoint:      lAutoDeleteLbPolicyEndpoint,
+		AutoDeleteNetworkEndpoint:       lAutoDeleteNetworkEndpoint,
+		AutoDeleteServiceEndpoint:       lAutoDeleteServiceEndpoint,
+		AutoDeleteVirtualRouterEndpoint: lAutoDeleteVirtualRouterEndpoint,
+		AutoGetLbPolicyEndpoint:         lAutoGetLbPolicyEndpoint,
+		AutoGetNetworkEndpoint:          lAutoGetNetworkEndpoint,
+		AutoGetServiceEndpoint:          lAutoGetServiceEndpoint,
+		AutoGetVirtualRouterEndpoint:    lAutoGetVirtualRouterEndpoint,
+		AutoListLbPolicyEndpoint:        lAutoListLbPolicyEndpoint,
+		AutoListNetworkEndpoint:         lAutoListNetworkEndpoint,
+		AutoListServiceEndpoint:         lAutoListServiceEndpoint,
+		AutoListVirtualRouterEndpoint:   lAutoListVirtualRouterEndpoint,
+		AutoUpdateLbPolicyEndpoint:      lAutoUpdateLbPolicyEndpoint,
+		AutoUpdateNetworkEndpoint:       lAutoUpdateNetworkEndpoint,
+		AutoUpdateServiceEndpoint:       lAutoUpdateServiceEndpoint,
+		AutoUpdateVirtualRouterEndpoint: lAutoUpdateVirtualRouterEndpoint,
 	}
 }
 
@@ -802,13 +877,192 @@ func (a *restObjNetworkV1LbPolicy) Allowed(oper apiintf.APIOperType) bool {
 	}
 }
 
+type grpcObjNetworkV1VirtualRouter struct {
+	logger log.Logger
+	client network.ServiceNetworkV1Client
+}
+
+func (a *grpcObjNetworkV1VirtualRouter) Create(ctx context.Context, in *network.VirtualRouter) (*network.VirtualRouter, error) {
+	a.logger.DebugLog("msg", "received call", "object", "VirtualRouter", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddVirtualRouter(nctx, in)
+}
+
+func (a *grpcObjNetworkV1VirtualRouter) Update(ctx context.Context, in *network.VirtualRouter) (*network.VirtualRouter, error) {
+	a.logger.DebugLog("msg", "received call", "object", "VirtualRouter", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateVirtualRouter(nctx, in)
+}
+
+func (a *grpcObjNetworkV1VirtualRouter) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.VirtualRouter, error) {
+	a.logger.DebugLog("msg", "received call", "object", "VirtualRouter", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.VirtualRouter{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetVirtualRouter(nctx, &in)
+}
+
+func (a *grpcObjNetworkV1VirtualRouter) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.VirtualRouter, error) {
+	a.logger.DebugLog("msg", "received call", "object", "VirtualRouter", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.VirtualRouter{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteVirtualRouter(nctx, &in)
+}
+
+func (a *grpcObjNetworkV1VirtualRouter) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.VirtualRouter, error) {
+	a.logger.DebugLog("msg", "received call", "object", "VirtualRouter", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListVirtualRouter(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjNetworkV1VirtualRouter) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "VirtualRouter", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchVirtualRouter(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(network.NetworkV1_AutoWatchVirtualRouterClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjNetworkV1VirtualRouter) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjNetworkV1VirtualRouter struct {
+	endpoints network.EndpointsNetworkV1RestClient
+	instance  string
+}
+
+func (a *restObjNetworkV1VirtualRouter) Create(ctx context.Context, in *network.VirtualRouter) (*network.VirtualRouter, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddVirtualRouter(ctx, in)
+}
+
+func (a *restObjNetworkV1VirtualRouter) Update(ctx context.Context, in *network.VirtualRouter) (*network.VirtualRouter, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateVirtualRouter(ctx, in)
+}
+
+func (a *restObjNetworkV1VirtualRouter) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.VirtualRouter, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.VirtualRouter{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetVirtualRouter(ctx, &in)
+}
+
+func (a *restObjNetworkV1VirtualRouter) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.VirtualRouter, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := network.VirtualRouter{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteVirtualRouter(ctx, &in)
+}
+
+func (a *restObjNetworkV1VirtualRouter) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.VirtualRouter, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	if options.Tenant == "" {
+		options.Tenant = globals.DefaultTenant
+	}
+	r, err := a.endpoints.AutoListVirtualRouter(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjNetworkV1VirtualRouter) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchVirtualRouter(ctx, options)
+}
+
+func (a *restObjNetworkV1VirtualRouter) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return false
+	case apiintf.UpdateOper:
+		return false
+	case apiintf.GetOper:
+		return false
+	case apiintf.DeleteOper:
+		return false
+	case apiintf.ListOper:
+		return false
+	case apiintf.WatchOper:
+		return false
+	default:
+		return false
+	}
+}
+
 type crudClientNetworkV1 struct {
 	logger log.Logger
 	client network.ServiceNetworkV1Client
 
-	grpcNetwork  network.NetworkV1NetworkInterface
-	grpcService  network.NetworkV1ServiceInterface
-	grpcLbPolicy network.NetworkV1LbPolicyInterface
+	grpcNetwork       network.NetworkV1NetworkInterface
+	grpcService       network.NetworkV1ServiceInterface
+	grpcLbPolicy      network.NetworkV1LbPolicyInterface
+	grpcVirtualRouter network.NetworkV1VirtualRouterInterface
 }
 
 // NewGrpcCrudClientNetworkV1 creates a GRPC client for the service
@@ -818,9 +1072,10 @@ func NewGrpcCrudClientNetworkV1(conn *grpc.ClientConn, logger log.Logger) networ
 		logger: logger,
 		client: client,
 
-		grpcNetwork:  &grpcObjNetworkV1Network{client: client, logger: logger},
-		grpcService:  &grpcObjNetworkV1Service{client: client, logger: logger},
-		grpcLbPolicy: &grpcObjNetworkV1LbPolicy{client: client, logger: logger},
+		grpcNetwork:       &grpcObjNetworkV1Network{client: client, logger: logger},
+		grpcService:       &grpcObjNetworkV1Service{client: client, logger: logger},
+		grpcLbPolicy:      &grpcObjNetworkV1LbPolicy{client: client, logger: logger},
+		grpcVirtualRouter: &grpcObjNetworkV1VirtualRouter{client: client, logger: logger},
 	}
 }
 
@@ -834,6 +1089,10 @@ func (a *crudClientNetworkV1) Service() network.NetworkV1ServiceInterface {
 
 func (a *crudClientNetworkV1) LbPolicy() network.NetworkV1LbPolicyInterface {
 	return a.grpcLbPolicy
+}
+
+func (a *crudClientNetworkV1) VirtualRouter() network.NetworkV1VirtualRouterInterface {
+	return a.grpcVirtualRouter
 }
 
 func (a *crudClientNetworkV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
@@ -879,9 +1138,10 @@ func (a *crudClientNetworkV1) Watch(ctx context.Context, options *api.ListWatchO
 }
 
 type crudRestClientNetworkV1 struct {
-	restNetwork  network.NetworkV1NetworkInterface
-	restService  network.NetworkV1ServiceInterface
-	restLbPolicy network.NetworkV1LbPolicyInterface
+	restNetwork       network.NetworkV1NetworkInterface
+	restService       network.NetworkV1ServiceInterface
+	restLbPolicy      network.NetworkV1LbPolicyInterface
+	restVirtualRouter network.NetworkV1VirtualRouterInterface
 }
 
 // NewRestCrudClientNetworkV1 creates a REST client for the service.
@@ -892,9 +1152,10 @@ func NewRestCrudClientNetworkV1(url string, httpClient *http.Client) network.Net
 	}
 	return &crudRestClientNetworkV1{
 
-		restNetwork:  &restObjNetworkV1Network{endpoints: endpoints, instance: url},
-		restService:  &restObjNetworkV1Service{endpoints: endpoints, instance: url},
-		restLbPolicy: &restObjNetworkV1LbPolicy{endpoints: endpoints, instance: url},
+		restNetwork:       &restObjNetworkV1Network{endpoints: endpoints, instance: url},
+		restService:       &restObjNetworkV1Service{endpoints: endpoints, instance: url},
+		restLbPolicy:      &restObjNetworkV1LbPolicy{endpoints: endpoints, instance: url},
+		restVirtualRouter: &restObjNetworkV1VirtualRouter{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -906,9 +1167,10 @@ func NewStagedRestCrudClientNetworkV1(url string, id string, httpClient *http.Cl
 	}
 	return &crudRestClientNetworkV1{
 
-		restNetwork:  &restObjNetworkV1Network{endpoints: endpoints, instance: url},
-		restService:  &restObjNetworkV1Service{endpoints: endpoints, instance: url},
-		restLbPolicy: &restObjNetworkV1LbPolicy{endpoints: endpoints, instance: url},
+		restNetwork:       &restObjNetworkV1Network{endpoints: endpoints, instance: url},
+		restService:       &restObjNetworkV1Service{endpoints: endpoints, instance: url},
+		restLbPolicy:      &restObjNetworkV1LbPolicy{endpoints: endpoints, instance: url},
+		restVirtualRouter: &restObjNetworkV1VirtualRouter{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -922,6 +1184,10 @@ func (a *crudRestClientNetworkV1) Service() network.NetworkV1ServiceInterface {
 
 func (a *crudRestClientNetworkV1) LbPolicy() network.NetworkV1LbPolicyInterface {
 	return a.restLbPolicy
+}
+
+func (a *crudRestClientNetworkV1) VirtualRouter() network.NetworkV1VirtualRouterInterface {
+	return a.restVirtualRouter
 }
 
 func (a *crudRestClientNetworkV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {

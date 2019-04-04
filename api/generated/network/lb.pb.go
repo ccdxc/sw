@@ -11,6 +11,7 @@
 		network.proto
 		service.proto
 		svc_network.proto
+		vrf.proto
 
 	It has these top-level messages:
 		HealthCheckSpec
@@ -28,9 +29,14 @@
 		AutoMsgLbPolicyWatchHelper
 		AutoMsgNetworkWatchHelper
 		AutoMsgServiceWatchHelper
+		AutoMsgVirtualRouterWatchHelper
 		LbPolicyList
 		NetworkList
 		ServiceList
+		VirtualRouterList
+		VirtualRouter
+		VirtualRouterSpec
+		VirtualRouterStatus
 */
 package network
 

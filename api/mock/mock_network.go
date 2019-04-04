@@ -355,6 +355,119 @@ func (mr *MockNetworkV1LbPolicyInterfaceMockRecorder) Allowed(oper interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockNetworkV1LbPolicyInterface)(nil).Allowed), oper)
 }
 
+// MockNetworkV1VirtualRouterInterface is a mock of (network.NetworkV1VirtualRouterInterface)interface
+type MockNetworkV1VirtualRouterInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockNetworkV1VirtualRouterInterfaceMockRecorder
+}
+
+// MockNetworkV1VirtualRouterInterfaceMockRecorder is the mock recorder for MockNetworkV1VirtualRouterInterface
+type MockNetworkV1VirtualRouterInterfaceMockRecorder struct {
+	mock *MockNetworkV1VirtualRouterInterface
+}
+
+// NewMockNetworkV1VirtualRouterInterface creates a new mock instance
+func NewMockNetworkV1VirtualRouterInterface(ctrl *gomock.Controller) *MockNetworkV1VirtualRouterInterface {
+	mock := &MockNetworkV1VirtualRouterInterface{ctrl: ctrl}
+	mock.recorder = &MockNetworkV1VirtualRouterInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockNetworkV1VirtualRouterInterface) EXPECT() *MockNetworkV1VirtualRouterInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method
+func (m *MockNetworkV1VirtualRouterInterface) Create(ctx context.Context, in *network.VirtualRouter) (*network.VirtualRouter, error) {
+	ret := m.ctrl.Call(m, "Create", ctx, in)
+	ret0, _ := ret[0].(*network.VirtualRouter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (mr *MockNetworkV1VirtualRouterInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockNetworkV1VirtualRouterInterface)(nil).Create), ctx, in)
+}
+
+// Update mocks base method
+func (m *MockNetworkV1VirtualRouterInterface) Update(ctx context.Context, in *network.VirtualRouter) (*network.VirtualRouter, error) {
+	ret := m.ctrl.Call(m, "Update", ctx, in)
+	ret0, _ := ret[0].(*network.VirtualRouter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (mr *MockNetworkV1VirtualRouterInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockNetworkV1VirtualRouterInterface)(nil).Update), ctx, in)
+}
+
+// Get mocks base method
+func (m *MockNetworkV1VirtualRouterInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.VirtualRouter, error) {
+	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*network.VirtualRouter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockNetworkV1VirtualRouterInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockNetworkV1VirtualRouterInterface)(nil).Get), ctx, objMeta)
+}
+
+// Delete mocks base method
+func (m *MockNetworkV1VirtualRouterInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*network.VirtualRouter, error) {
+	ret := m.ctrl.Call(m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*network.VirtualRouter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockNetworkV1VirtualRouterInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockNetworkV1VirtualRouterInterface)(nil).Delete), ctx, objMeta)
+}
+
+// List mocks base method
+func (m *MockNetworkV1VirtualRouterInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*network.VirtualRouter, error) {
+	ret := m.ctrl.Call(m, "List", ctx, options)
+	ret0, _ := ret[0].([]*network.VirtualRouter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (mr *MockNetworkV1VirtualRouterInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockNetworkV1VirtualRouterInterface)(nil).List), ctx, options)
+}
+
+// Watch mocks base method
+func (m *MockNetworkV1VirtualRouterInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := m.ctrl.Call(m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (mr *MockNetworkV1VirtualRouterInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockNetworkV1VirtualRouterInterface)(nil).Watch), ctx, options)
+}
+
+// Allowed mocks base method
+func (m *MockNetworkV1VirtualRouterInterface) Allowed(oper interfaces.APIOperType) bool {
+	ret := m.ctrl.Call(m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (mr *MockNetworkV1VirtualRouterInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockNetworkV1VirtualRouterInterface)(nil).Allowed), oper)
+}
+
 // MockNetworkV1Interface is a mock of NetworkV1Interface interface
 type MockNetworkV1Interface struct {
 	ctrl     *gomock.Controller
@@ -412,6 +525,18 @@ func (m *MockNetworkV1Interface) LbPolicy() network.NetworkV1LbPolicyInterface {
 // LbPolicy indicates an expected call of LbPolicy
 func (mr *MockNetworkV1InterfaceMockRecorder) LbPolicy() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LbPolicy", reflect.TypeOf((*MockNetworkV1Interface)(nil).LbPolicy))
+}
+
+// VirtualRouter mocks base method
+func (m *MockNetworkV1Interface) VirtualRouter() network.NetworkV1VirtualRouterInterface {
+	ret := m.ctrl.Call(m, "VirtualRouter")
+	ret0, _ := ret[0].(network.NetworkV1VirtualRouterInterface)
+	return ret0
+}
+
+// VirtualRouter indicates an expected call of VirtualRouter
+func (mr *MockNetworkV1InterfaceMockRecorder) VirtualRouter() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VirtualRouter", reflect.TypeOf((*MockNetworkV1Interface)(nil).VirtualRouter))
 }
 
 // Watch mocks base method

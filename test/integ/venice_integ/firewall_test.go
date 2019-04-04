@@ -25,7 +25,7 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 	fwp := security.FirewallProfile{
 		TypeMeta: api.TypeMeta{Kind: "FirewallProfile"},
 		ObjectMeta: api.ObjectMeta{
-			Name:      "testProfile",
+			Name:      "default",
 			Namespace: "default",
 			Tenant:    "default",
 		},
@@ -44,10 +44,9 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 		},
 	}
 
-	// create firewall profile
-	_, err = it.restClient.SecurityV1().FirewallProfile().Create(ctx, &fwp)
-	AssertOk(c, err, "Error creating firewall profile")
-
+	fwpDefault := security.FirewallProfile{}
+	fwpDefault.Defaults("all")
+	// There should already be a firewall profile created by default.
 	// verify policy gets created in agent
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
@@ -63,17 +62,17 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 	for _, sn := range it.snics {
 		secp, cerr := sn.agent.NetworkAgent.FindSecurityProfile(fwp.ObjectMeta)
 		AssertOk(c, cerr, "Security profile not found in agent")
-		AssertEquals(c, secp.Spec.Timeouts.SessionIdle, fwp.Spec.SessionIdleTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCP, fwp.Spec.TcpTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCPDrop, fwp.Spec.TCPDropTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCPConnectionSetup, fwp.Spec.TCPConnectionSetupTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCPClose, fwp.Spec.TCPCloseTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCPHalfClose, fwp.Spec.TCPHalfClosedTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.Drop, fwp.Spec.DropTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.UDP, fwp.Spec.UdpTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.UDPDrop, fwp.Spec.UDPDropTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.ICMP, fwp.Spec.IcmpTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.ICMPDrop, fwp.Spec.ICMPDropTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.SessionIdle, fwpDefault.Spec.SessionIdleTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.TCP, fwpDefault.Spec.TcpTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.TCPDrop, fwpDefault.Spec.TCPDropTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.TCPConnectionSetup, fwpDefault.Spec.TCPConnectionSetupTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.TCPClose, fwpDefault.Spec.TCPCloseTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.TCPHalfClose, fwpDefault.Spec.TCPHalfClosedTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.Drop, fwpDefault.Spec.DropTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.UDP, fwpDefault.Spec.UdpTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.UDPDrop, fwpDefault.Spec.UDPDropTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.ICMP, fwpDefault.Spec.IcmpTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.ICMPDrop, fwpDefault.Spec.ICMPDropTimeout, "incorrect params")
 	}
 
 	// change conn track and session timeout
@@ -91,21 +90,25 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 		}
 		return true, nil
 	}, "Firewall profile params incorrect in agent", "100ms", it.pollTimeout())
+	// verify all the parameters
+	for _, sn := range it.snics {
+		secp, cerr := sn.agent.NetworkAgent.FindSecurityProfile(fwp.ObjectMeta)
+		AssertOk(c, cerr, "Security profile not found in agent")
+		AssertEquals(c, secp.Spec.Timeouts.SessionIdle, fwp.Spec.SessionIdleTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.TCP, fwp.Spec.TcpTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.TCPDrop, fwp.Spec.TCPDropTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.TCPConnectionSetup, fwp.Spec.TCPConnectionSetupTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.TCPClose, fwp.Spec.TCPCloseTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.TCPHalfClose, fwp.Spec.TCPHalfClosedTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.Drop, fwp.Spec.DropTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.UDP, fwp.Spec.UdpTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.UDPDrop, fwp.Spec.UDPDropTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.ICMP, fwp.Spec.IcmpTimeout, "incorrect params")
+		AssertEquals(c, secp.Spec.Timeouts.ICMPDrop, fwp.Spec.ICMPDropTimeout, "incorrect params")
+	}
 
-	// delete firewall profile
+	// delete firewall profile is not allowed.
 	_, err = it.restClient.SecurityV1().FirewallProfile().Delete(ctx, &fwp.ObjectMeta)
-	AssertOk(c, err, "Error deleting firewall profile")
-
-	// verify firewall profile is deleted from agent
-	AssertEventually(c, func() (bool, interface{}) {
-		for _, sn := range it.snics {
-			secp, cerr := sn.agent.NetworkAgent.FindSecurityProfile(fwp.ObjectMeta)
-			if cerr == nil {
-				return false, secp
-			}
-		}
-		return true, nil
-	}, "Firewall profile still found in agent after deleting", "100ms", it.pollTimeout())
 }
 
 func (it *veniceIntegSuite) TestIcmpApp(c *C) {

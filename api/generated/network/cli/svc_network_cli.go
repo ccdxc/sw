@@ -284,6 +284,22 @@ func restPutLbPolicy(hostname, token string, obj interface{}) error {
 
 }
 
+func restGetVirtualRouter(hostname, tenant, token string, obj interface{}) error {
+	return fmt.Errorf("get operation not supported for VirtualRouter object")
+}
+
+func restDeleteVirtualRouter(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("delete operation not supported for VirtualRouter object")
+}
+
+func restPostVirtualRouter(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("create operation not supported for VirtualRouter object")
+}
+
+func restPutVirtualRouter(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("put operation not supported for VirtualRouter object")
+}
+
 func init() {
 	cl := gen.GetInfo()
 	if cl == nil {

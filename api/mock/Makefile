@@ -45,6 +45,7 @@ mock_network.go: ../generated/network/svc_network_crudinterface.go Makefile
 	sed -i.bak_ -e 's/[[:space:](]NetworkV1LbPolicyInterface[[:space:])]/ (network.NetworkV1LbPolicyInterface)/g' $@
 	sed -i.bak_ -e 's/[[:space:](]NetworkV1ServiceInterface[[:space:])]/ (network.NetworkV1ServiceInterface)/g' $@
 	sed -i.bak_ -e 's/[[:space:](]NetworkV1NetworkInterface[[:space:])]/ (network.NetworkV1NetworkInterface)/g' $@
+	sed -i.bak_ -e 's/[[:space:](]NetworkV1VirtualRouterInterface[[:space:])]/ (network.NetworkV1VirtualRouterInterface)/g' $@
 	goimports -local "github.com/pensando/sw" -w $@
 	rm -f *.bak_
 

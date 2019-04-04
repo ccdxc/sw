@@ -76,6 +76,7 @@ type Controller interface {
 	Network() NetworkAPI                                 // return Network API interface
 	Service() ServiceAPI                                 // return Service API interface
 	LbPolicy() LbPolicyAPI                               // return LbPolicy API interface
+	VirtualRouter() VirtualRouterAPI                     // return VirtualRouter API interface
 	Bucket() BucketAPI                                   // return Bucket API interface
 	Object() ObjectAPI                                   // return Object API interface
 	Rollout() RolloutAPI                                 // return Rollout API interface

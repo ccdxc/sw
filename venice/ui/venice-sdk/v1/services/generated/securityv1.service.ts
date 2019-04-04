@@ -124,15 +124,6 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, 'ListFirewallProfile_1') as Observable<{body: ISecurityFirewallProfileList | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Create FirewallProfile object */
-  public AddFirewallProfile_1(body: ISecurityFirewallProfile, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/firewallprofiles';
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-    }
-    return this.invokeAJAXPostCall(url, body, 'AddFirewallProfile_1') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
-  }
-  
   /** Get FirewallProfile object */
   public GetFirewallProfile_1(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/firewallprofiles/{O.Name}';
@@ -141,16 +132,6 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXGetCall(url, queryParam, 'GetFirewallProfile_1') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Delete FirewallProfile object */
-  public DeleteFirewallProfile_1(O_Name, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/firewallprofiles/{O.Name}';
-    url = url.replace('{O.Name}', O_Name);
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-    }
-    return this.invokeAJAXDeleteCall(url, 'DeleteFirewallProfile_1') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update FirewallProfile object */
@@ -375,16 +356,6 @@ export class Securityv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, 'ListFirewallProfile') as Observable<{body: ISecurityFirewallProfileList | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Create FirewallProfile object */
-  public AddFirewallProfile(body: ISecurityFirewallProfile, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/firewallprofiles';
-    url = url.replace('{O.Tenant}', this['O_Tenant']);
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-    }
-    return this.invokeAJAXPostCall(url, body, 'AddFirewallProfile') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
-  }
-  
   /** Get FirewallProfile object */
   public GetFirewallProfile(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/firewallprofiles/{O.Name}';
@@ -394,17 +365,6 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXGetCall(url, queryParam, 'GetFirewallProfile') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Delete FirewallProfile object */
-  public DeleteFirewallProfile(O_Name, stagingID: string = ""):Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/security/v1/tenant/{O.Tenant}/firewallprofiles/{O.Name}';
-    url = url.replace('{O.Tenant}', this['O_Tenant']);
-    url = url.replace('{O.Name}', O_Name);
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-    }
-    return this.invokeAJAXDeleteCall(url, 'DeleteFirewallProfile') as Observable<{body: ISecurityFirewallProfile | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Update FirewallProfile object */

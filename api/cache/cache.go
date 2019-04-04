@@ -996,9 +996,12 @@ func (c *cache) WatchFiltered(ctx context.Context, key string, opts api.ListWatc
 				}
 			}
 		}
-		ret.ch <- &kvstore.WatchEvent{
+		select {
+		case ret.ch <- &kvstore.WatchEvent{
 			Type:   evType,
 			Object: item,
+		}:
+		case <-nctx.Done():
 		}
 	}
 	wq := c.queues.Add(key, peer)

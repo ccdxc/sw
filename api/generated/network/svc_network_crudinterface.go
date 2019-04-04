@@ -48,10 +48,22 @@ type NetworkV1LbPolicyInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 }
 
+// NetworkV1VirtualRouterInterface exposes the CRUD methods for VirtualRouter
+type NetworkV1VirtualRouterInterface interface {
+	Create(ctx context.Context, in *VirtualRouter) (*VirtualRouter, error)
+	Update(ctx context.Context, in *VirtualRouter) (*VirtualRouter, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*VirtualRouter, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*VirtualRouter, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*VirtualRouter, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+}
+
 // NetworkV1Interface exposes objects with CRUD operations allowed by the service
 type NetworkV1Interface interface {
 	Network() NetworkV1NetworkInterface
 	Service() NetworkV1ServiceInterface
 	LbPolicy() NetworkV1LbPolicyInterface
+	VirtualRouter() NetworkV1VirtualRouterInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

@@ -2449,7 +2449,8 @@ func makeURISecurityV1AutoAddCertificateCreateOper(in *Certificate) string {
 
 //
 func makeURISecurityV1AutoAddFirewallProfileCreateOper(in *FirewallProfile) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/firewallprofiles")
+	return ""
+
 }
 
 //
@@ -2479,7 +2480,8 @@ func makeURISecurityV1AutoDeleteCertificateDeleteOper(in *Certificate) string {
 
 //
 func makeURISecurityV1AutoDeleteFirewallProfileDeleteOper(in *FirewallProfile) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/firewallprofiles/", in.Name)
+	return ""
+
 }
 
 //
@@ -3100,24 +3102,7 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchApp(ctx context.Context, option
 
 // AutoAddFirewallProfile CRUD method for FirewallProfile
 func (r *EndpointsSecurityV1RestClient) AutoAddFirewallProfile(ctx context.Context, in *FirewallProfile) (*FirewallProfile, error) {
-	path := makeURISecurityV1AutoAddFirewallProfileCreateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer httpresp.Body.Close()
-	ret, err := decodeHTTPrespSecurityV1AutoAddFirewallProfile(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*FirewallProfile), nil
+	return nil, errors.New("not allowed")
 }
 
 // AutoUpdateFirewallProfile CRUD method for FirewallProfile
@@ -3166,24 +3151,7 @@ func (r *EndpointsSecurityV1RestClient) AutoGetFirewallProfile(ctx context.Conte
 
 // AutoDeleteFirewallProfile CRUD method for FirewallProfile
 func (r *EndpointsSecurityV1RestClient) AutoDeleteFirewallProfile(ctx context.Context, in *FirewallProfile) (*FirewallProfile, error) {
-	path := makeURISecurityV1AutoDeleteFirewallProfileDeleteOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespSecurityV1AutoDeleteFirewallProfile(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*FirewallProfile), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoListFirewallProfile CRUD method for FirewallProfile

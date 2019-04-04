@@ -1170,8 +1170,6 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoAddCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiintf.CreateOper)
 
-	e.svcProf["AutoAddFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FirewallProfile", "security", apiintf.CreateOper)
-
 	e.svcProf["AutoAddSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicy", "security", apiintf.CreateOper)
 
 	e.svcProf["AutoAddSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroup", "security", apiintf.CreateOper)
@@ -1181,8 +1179,6 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 	e.svcProf["AutoDeleteApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "App", "security", apiintf.DeleteOper)
 
 	e.svcProf["AutoDeleteCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiintf.DeleteOper)
-
-	e.svcProf["AutoDeleteFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FirewallProfile", "security", apiintf.DeleteOper)
 
 	e.svcProf["AutoDeleteSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicy", "security", apiintf.DeleteOper)
 

@@ -14,6 +14,7 @@ import "github.com/pensando/sw/api/labels/selector.proto";
 import "network.proto";
 import "lb.proto";
 import "service.proto";
+import "vrf.proto";
 
 // Network REST API
 service NetworkV1 {
@@ -25,6 +26,7 @@ service NetworkV1 {
      option (venice.apiGrpcCrudService) = "Network";
      option (venice.apiGrpcCrudService) = "Service";
      option (venice.apiGrpcCrudService) = "LbPolicy";
+     option (venice.apiGrpcCrudService) = "VirtualRouter";
 
      option (venice.apiRestService) = {
          Object: "Network"

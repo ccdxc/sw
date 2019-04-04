@@ -282,7 +282,7 @@ func (sm *SysModel) SetupDefaultConfig(scale bool) error {
 	}
 
 	// create a default firewall profile
-	err := sm.createDefaultFwprofile()
+	err := sm.updateDefaultFwprofile()
 	if err != nil {
 		log.Errorf("Error creating firewall profile: %v", err)
 		return err
@@ -436,12 +436,12 @@ func (sm *SysModel) allocMacAddress() (string, error) {
 	return "", fmt.Errorf("Could not allocate a mac address")
 }
 
-// creates a default firewall profile for the tests
-func (sm *SysModel) createDefaultFwprofile() error {
+// update the default firewall profile for the tests
+func (sm *SysModel) updateDefaultFwprofile() error {
 	fwp := security.FirewallProfile{
 		TypeMeta: api.TypeMeta{Kind: "FirewallProfile"},
 		ObjectMeta: api.ObjectMeta{
-			Name:      "default-fwprofile",
+			Name:      "default",
 			Namespace: "default",
 			Tenant:    "default",
 		},
@@ -461,7 +461,7 @@ func (sm *SysModel) createDefaultFwprofile() error {
 		},
 	}
 
-	return sm.tb.CreateFirewallProfile(&fwp)
+	return sm.tb.UpdateFirewallProfile(&fwp)
 }
 
 // createDefaultAlgs creates some algs

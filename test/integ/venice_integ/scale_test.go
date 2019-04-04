@@ -61,16 +61,13 @@ func (it *veniceIntegSuite) createScaleConfig(loginCtx context.Context, c *C, cf
 		AssertOk(c, err, fmt.Sprintf("Error creating workload %+v", *w))
 	}
 
-	_, err := it.restClient.SecurityV1().FirewallProfile().Create(loginCtx, cfg.Fwprofile)
-	AssertOk(c, err, fmt.Sprintf("Error creating fwprofile %+v", *cfg.Fwprofile))
-
 	for _, app := range cfg.Apps {
-		_, err = it.restClient.SecurityV1().App().Create(loginCtx, app)
+		_, err := it.restClient.SecurityV1().App().Create(loginCtx, app)
 		AssertOk(c, err, fmt.Sprintf("Error creating sgp %+v", *app))
 	}
 
 	for _, sgp := range cfg.SGPolicies {
-		_, err = it.restClient.SecurityV1().SGPolicy().Create(loginCtx, sgp)
+		_, err := it.restClient.SecurityV1().SGPolicy().Create(loginCtx, sgp)
 		AssertOk(c, err, fmt.Sprintf("Error creating sgp %+v", *sgp))
 	}
 
@@ -186,9 +183,6 @@ func (it *veniceIntegSuite) deleteScaleConfig(loginCtx context.Context, c *C, cf
 		_, err := it.restClient.SecurityV1().App().Delete(loginCtx, &app.ObjectMeta)
 		AssertOk(c, err, fmt.Sprintf("Error deleting app %+v", &app.ObjectMeta))
 	}
-
-	_, err := it.restClient.SecurityV1().FirewallProfile().Delete(loginCtx, &cfg.Fwprofile.ObjectMeta)
-	AssertOk(c, err, fmt.Sprintf("Error deleting fwprofile %+v", &cfg.Fwprofile.ObjectMeta))
 
 	for _, w := range cfg.Workloads {
 		_, err := it.restClient.WorkloadV1().Workload().Delete(loginCtx, &w.ObjectMeta)

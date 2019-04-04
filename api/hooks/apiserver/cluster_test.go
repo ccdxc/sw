@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pensando/sw/api/cache/mocks"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -980,4 +982,90 @@ jkyfA7bgnrfYqr+pv2Y+319JpMCr6t+e+vLafbU=
 		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
 	}
+}
+
+// TestDeafaultFirewallPolicy tests create and delete of default Firewall Policy
+func TestDefaultFirewallProfile(t *testing.T) {
+	// Test with wrong object
+	// error from txn
+	// Good one.
+	txn := &mocks.FakeTxn{}
+	kvs := &mocks.FakeKvStore{}
+	ctx := context.TODO()
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+	_, _, err := clusterHooks.createFirewallProfile(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, txn)
+	Assert(t, err != nil, "should have failed due to wrong object")
+	tenant := cluster.Tenant{}
+	tenant.Name = "default"
+	txn.Error = fmt.Errorf("some error")
+	_, _, err = clusterHooks.createFirewallProfile(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, tenant)
+	Assert(t, err != nil, "should have failed due to txn failure")
+	txn.Ops = nil
+	txn.Error = nil
+	_, kvn, err := clusterHooks.createFirewallProfile(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, tenant)
+	AssertOk(t, err, "createFireWallProfile pre-commit hook")
+	Assert(t, kvn, "unexpected kvwrite returned")
+	Assert(t, len(txn.Ops) == 1, "unexpected number of entries in transaction (%v)", len(txn.Ops))
+	Assert(t, txn.Ops[0].Op == "create", "unexpected operation in txn (%s)", txn.Ops[0].Op)
+
+	txn.Ops = nil
+	_, _, err = clusterHooks.deleteFirewallProfile(ctx, kvs, txn, "/test/key", apiintf.DeleteOper, false, txn)
+	Assert(t, err != nil, "should have failed due to wrong object")
+	txn.Error = fmt.Errorf("some error")
+	_, _, err = clusterHooks.deleteFirewallProfile(ctx, kvs, txn, "/test/key", apiintf.DeleteOper, false, tenant)
+	Assert(t, err != nil, "should have failed due to txn failure")
+	txn.Ops = nil
+	txn.Error = nil
+	_, kvn, err = clusterHooks.deleteFirewallProfile(ctx, kvs, txn, "/test/key", apiintf.DeleteOper, false, tenant)
+	AssertOk(t, err, "createFireWallProfile pre-commit hook")
+	Assert(t, kvn, "unexpected kvwrite returned")
+	Assert(t, len(txn.Ops) == 1, "unexpected number of entries in transaction (%v)", len(txn.Ops))
+	Assert(t, txn.Ops[0].Op == "delete", "unexpected operation in txn (%s)", txn.Ops[0].Op)
+}
+
+// TestDeafaultFirewallPolicy tests create and delete of default Firewall Policy
+func TestDefaultVirtualRouter(t *testing.T) {
+	// Test with wrong object
+	// error from txn
+	// Good one.
+	txn := &mocks.FakeTxn{}
+	kvs := &mocks.FakeKvStore{}
+	ctx := context.TODO()
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+	_, _, err := clusterHooks.createDefaultVirtualRouter(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, txn)
+	Assert(t, err != nil, "should have failed due to wrong object")
+	tenant := cluster.Tenant{}
+	tenant.Name = "default"
+	txn.Error = fmt.Errorf("some error")
+	_, _, err = clusterHooks.createDefaultVirtualRouter(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, tenant)
+	Assert(t, err != nil, "should have failed due to txn failure")
+	txn.Ops = nil
+	txn.Error = nil
+	_, kvn, err := clusterHooks.createDefaultVirtualRouter(ctx, kvs, txn, "/test/key", apiintf.CreateOper, false, tenant)
+	AssertOk(t, err, "createFireWallProfile pre-commit hook")
+	Assert(t, kvn, "unexpected kvwrite returned")
+	Assert(t, len(txn.Ops) == 1, "unexpected number of entries in transaction (%v)", len(txn.Ops))
+	Assert(t, txn.Ops[0].Op == "create", "unexpected operation in txn (%s)", txn.Ops[0].Op)
+
+	txn.Ops = nil
+	_, _, err = clusterHooks.deleteDefaultVirtualRouter(ctx, kvs, txn, "/test/key", apiintf.DeleteOper, false, txn)
+	Assert(t, err != nil, "should have failed due to wrong object")
+	txn.Error = fmt.Errorf("some error")
+	_, _, err = clusterHooks.deleteDefaultVirtualRouter(ctx, kvs, txn, "/test/key", apiintf.DeleteOper, false, tenant)
+	Assert(t, err != nil, "should have failed due to txn failure")
+	txn.Ops = nil
+	txn.Error = nil
+	_, kvn, err = clusterHooks.deleteDefaultVirtualRouter(ctx, kvs, txn, "/test/key", apiintf.DeleteOper, false, tenant)
+	AssertOk(t, err, "createFireWallProfile pre-commit hook")
+	Assert(t, kvn, "unexpected kvwrite returned")
+	Assert(t, len(txn.Ops) == 1, "unexpected number of entries in transaction (%v)", len(txn.Ops))
+	Assert(t, txn.Ops[0].Op == "delete", "unexpected operation in txn (%s)", txn.Ops[0].Op)
 }

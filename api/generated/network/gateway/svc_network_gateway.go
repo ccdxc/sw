@@ -120,6 +120,29 @@ func (a adapterNetworkV1) AutoAddService(oldctx oldcontext.Context, t *network.S
 	return ret.(*network.Service), err
 }
 
+func (a adapterNetworkV1) AutoAddVirtualRouter(oldctx oldcontext.Context, t *network.VirtualRouter, options ...grpc.CallOption) (*network.VirtualRouter, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddVirtualRouter")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "VirtualRouter", t.Tenant, t.Namespace, "network", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.VirtualRouter)
+		return a.service.AutoAddVirtualRouter(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.VirtualRouter), err
+}
+
 func (a adapterNetworkV1) AutoDeleteLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -189,6 +212,29 @@ func (a adapterNetworkV1) AutoDeleteService(oldctx oldcontext.Context, t *networ
 	return ret.(*network.Service), err
 }
 
+func (a adapterNetworkV1) AutoDeleteVirtualRouter(oldctx oldcontext.Context, t *network.VirtualRouter, options ...grpc.CallOption) (*network.VirtualRouter, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteVirtualRouter")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "VirtualRouter", t.Tenant, t.Namespace, "network", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.VirtualRouter)
+		return a.service.AutoDeleteVirtualRouter(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.VirtualRouter), err
+}
+
 func (a adapterNetworkV1) AutoGetLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -256,6 +302,29 @@ func (a adapterNetworkV1) AutoGetService(oldctx oldcontext.Context, t *network.S
 		return nil, err
 	}
 	return ret.(*network.Service), err
+}
+
+func (a adapterNetworkV1) AutoGetVirtualRouter(oldctx oldcontext.Context, t *network.VirtualRouter, options ...grpc.CallOption) (*network.VirtualRouter, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetVirtualRouter")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "VirtualRouter", t.Tenant, t.Namespace, "network", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.VirtualRouter)
+		return a.service.AutoGetVirtualRouter(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.VirtualRouter), err
 }
 
 func (a adapterNetworkV1) AutoListLbPolicy(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.LbPolicyList, error) {
@@ -342,6 +411,34 @@ func (a adapterNetworkV1) AutoListService(oldctx oldcontext.Context, t *api.List
 	return ret.(*network.ServiceList), err
 }
 
+func (a adapterNetworkV1) AutoListVirtualRouter(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*network.VirtualRouterList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListVirtualRouter")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	if t.Tenant == "" {
+		t.Tenant = globals.DefaultTenant
+	}
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "VirtualRouter", t.Tenant, t.Namespace, "network", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListVirtualRouter(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.VirtualRouterList), err
+}
+
 func (a adapterNetworkV1) AutoUpdateLbPolicy(oldctx oldcontext.Context, t *network.LbPolicy, options ...grpc.CallOption) (*network.LbPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -409,6 +506,29 @@ func (a adapterNetworkV1) AutoUpdateService(oldctx oldcontext.Context, t *networ
 		return nil, err
 	}
 	return ret.(*network.Service), err
+}
+
+func (a adapterNetworkV1) AutoUpdateVirtualRouter(oldctx oldcontext.Context, t *network.VirtualRouter, options ...grpc.CallOption) (*network.VirtualRouter, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateVirtualRouter")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "VirtualRouter", t.Tenant, t.Namespace, "network", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*network.VirtualRouter)
+		return a.service.AutoUpdateVirtualRouter(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*network.VirtualRouter), err
 }
 
 func (a adapterNetworkV1) AutoWatchSvcNetworkV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.NetworkV1_AutoWatchSvcNetworkV1Client, error) {
@@ -631,6 +751,62 @@ func (a adapterNetworkV1) AutoWatchLbPolicy(oldctx oldcontext.Context, in *api.L
 		return nil, err
 	}
 	return ret.(network.NetworkV1_AutoWatchLbPolicyClient), err
+}
+
+func (a adapterNetworkV1) AutoWatchVirtualRouter(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (network.NetworkV1_AutoWatchVirtualRouterClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchVirtualRouter")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	in.Namespace = ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "VirtualRouter", in.Tenant, in.Namespace, "network"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchVirtualRouter] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchVirtualRouter(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(network.NetworkV1_AutoWatchVirtualRouterClient), err
 }
 
 func (e *sNetworkV1GwService) setupSvcProfile() {

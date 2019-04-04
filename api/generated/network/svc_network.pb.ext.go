@@ -54,6 +54,16 @@ func (m *ServiceList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *VirtualRouterList) MakeKey(prefix string) string {
+	obj := VirtualRouter{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *VirtualRouterList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *AutoMsgLbPolicyWatchHelper) MakeKey(prefix string) string {
 	obj := LbPolicy{}
 	return obj.MakeKey(prefix)
@@ -68,6 +78,12 @@ func (m *AutoMsgNetworkWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgServiceWatchHelper) MakeKey(prefix string) string {
 	obj := Service{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgVirtualRouterWatchHelper) MakeKey(prefix string) string {
+	obj := VirtualRouter{}
 	return obj.MakeKey(prefix)
 }
 
@@ -198,6 +214,48 @@ func (m *AutoMsgServiceWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgVirtualRouterWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgVirtualRouterWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgVirtualRouterWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgVirtualRouterWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgVirtualRouterWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgVirtualRouterWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgVirtualRouterWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgVirtualRouterWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *LbPolicyList) Clone(into interface{}) (interface{}, error) {
 	var out *LbPolicyList
 	var ok bool
@@ -257,6 +315,27 @@ func (m *ServiceList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *ServiceList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *VirtualRouterList) Clone(into interface{}) (interface{}, error) {
+	var out *VirtualRouterList
+	var ok bool
+	if into == nil {
+		out = &VirtualRouterList{}
+	} else {
+		out, ok = into.(*VirtualRouterList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *VirtualRouterList) Defaults(ver string) bool {
 	return false
 }
 
@@ -436,6 +515,64 @@ func (m *AutoMsgServiceWatchHelper_WatchEvent) Normalize() {
 
 }
 
+func (m *AutoMsgVirtualRouterWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *LbPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -514,6 +651,35 @@ func (m *ServiceList) Validate(ver, path string, ignoreStatus bool) []error {
 }
 
 func (m *ServiceList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
+func (m *VirtualRouterList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *VirtualRouterList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *VirtualRouterList) Normalize() {
 
 	for _, v := range m.Items {
 		if v != nil {

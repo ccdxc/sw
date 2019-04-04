@@ -6,7 +6,7 @@ true browser browser.proto svc_browser.proto
 true cluster cluster.proto networkinterface.proto smartnic.proto svc_cluster.proto tenant.proto 
 true events events.proto svc_events.proto 
 true monitoring alerts.proto eventpolicy.proto export.proto mirror.proto svc_monitoring.proto techsupport.proto telemetry.proto troubleshooting.proto 
-true network lb.proto network.proto service.proto svc_network.proto 
+true network lb.proto network.proto service.proto svc_network.proto vrf.proto 
 true objstore objstore.proto svc_objstore.proto 
 true rollout rollout.proto svc_rollout.proto 
 true search search.proto svc_search.proto 

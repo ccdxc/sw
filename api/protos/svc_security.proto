@@ -49,7 +49,7 @@ service SecurityV1 {
 
  option (venice.apiRestService) = {
    Object: "FirewallProfile"
-   Method: ["get", "put", "delete", "post", "list", "watch" ]
+   Method: ["get", "put", "list", "watch" ]
  };
 
  option (venice.apiRestService) = {

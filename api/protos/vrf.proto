@@ -1,0 +1,29 @@
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+// Service name
+package network;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+message VirtualRouterSpec {
+    // Empty
+}
+
+message VirtualRouterStatus {
+    // Empty
+}
+
+// VirtualRouter - represents a forwarding instance. Could be multiple per tenant.
+message VirtualRouter {
+    option (venice.objectPrefix) = {Collection: "virtualrouters", Path: "/{O.Tenant}"};
+    api.TypeMeta T = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    VirtualRouterSpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    VirtualRouterStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
+}

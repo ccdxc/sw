@@ -4836,6 +4836,29 @@
         }
       }
     },
+    "networkAutoMsgVirtualRouterWatchHelper": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkAutoMsgVirtualRouterWatchHelperWatchEvent"
+          }
+        }
+      },
+      "title": "AutoMsgVirtualRouterWatchHelper is a wrapper object for watch events for VirtualRouter objects"
+    },
+    "networkAutoMsgVirtualRouterWatchHelperWatchEvent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "object": {
+          "$ref": "#/definitions/networkVirtualRouter"
+        }
+      }
+    },
     "networkHealthCheckSpec": {
       "type": "object",
       "properties": {
@@ -5199,6 +5222,55 @@
         }
       },
       "description": "The Service TLS configuration for inbound connections.\nIt is used on all ports specified in the Service spec.\nMultiple Service objects can select the same workload and provide different\nserver TLS configurations for disjoint sets of ports."
+    },
+    "networkVirtualRouter": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/networkVirtualRouterSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/networkVirtualRouterStatus"
+        }
+      },
+      "description": "VirtualRouter - represents a forwarding instance. Could be multiple per tenant."
+    },
+    "networkVirtualRouterList": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "list-meta": {
+          "$ref": "#/definitions/apiListMeta"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/networkVirtualRouter"
+          },
+          "title": "List of VirtualRouter objects"
+        }
+      },
+      "title": "VirtualRouterList is a container object for list of VirtualRouter objects"
+    },
+    "networkVirtualRouterSpec": {
+      "type": "object"
+    },
+    "networkVirtualRouterStatus": {
+      "type": "object"
     }
   }
 }

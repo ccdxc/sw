@@ -1189,13 +1189,13 @@ func (a *restObjSecurityV1FirewallProfile) Watch(ctx context.Context, options *a
 func (a *restObjSecurityV1FirewallProfile) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
 	case apiintf.CreateOper:
-		return true
+		return false
 	case apiintf.UpdateOper:
 		return true
 	case apiintf.GetOper:
 		return true
 	case apiintf.DeleteOper:
-		return true
+		return false
 	case apiintf.ListOper:
 		return true
 	case apiintf.WatchOper:

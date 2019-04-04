@@ -690,7 +690,7 @@ func (tb *TestBed) ListEndpoints(tenant string) (eps []*workload.Endpoint, err e
 }
 
 // CreateFirewallProfile creates firewall profile
-func (tb *TestBed) CreateFirewallProfile(fwp *security.FirewallProfile) error {
+func (tb *TestBed) UpdateFirewallProfile(fwp *security.FirewallProfile) error {
 	ctx, err := tb.VeniceLoggedInCtx()
 	if err != nil {
 		return err
@@ -701,7 +701,7 @@ func (tb *TestBed) CreateFirewallProfile(fwp *security.FirewallProfile) error {
 	}
 
 	for _, restcl := range restcls {
-		_, err = restcl.SecurityV1().FirewallProfile().Create(ctx, fwp)
+		_, err = restcl.SecurityV1().FirewallProfile().Update(ctx, fwp)
 		if err == nil {
 			break
 		} else if strings.Contains(err.Error(), "already exists") {

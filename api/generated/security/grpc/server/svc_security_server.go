@@ -289,11 +289,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoAddFirewallProfile = srv.AddMethod("AutoAddFirewallProfile",
 			apisrvpkg.NewMethod(srv, pkgMessages["security.FirewallProfile"], pkgMessages["security.FirewallProfile"], "security", "AutoAddFirewallProfile")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.FirewallProfile)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/firewallprofiles/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoAddSGPolicy = srv.AddMethod("AutoAddSGPolicy",
@@ -343,11 +339,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoDeleteFirewallProfile = srv.AddMethod("AutoDeleteFirewallProfile",
 			apisrvpkg.NewMethod(srv, pkgMessages["security.FirewallProfile"], pkgMessages["security.FirewallProfile"], "security", "AutoDeleteFirewallProfile")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.FirewallProfile)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/firewallprofiles/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteSGPolicy = srv.AddMethod("AutoDeleteSGPolicy",

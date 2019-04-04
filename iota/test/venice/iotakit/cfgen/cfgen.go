@@ -107,7 +107,6 @@ func (cfgen *Cfgen) Do() {
 	cfgen.Networks = cfgen.genNetworks()
 	cfgen.Hosts = cfgen.genHosts()
 	cfgen.Workloads = cfgen.genWorkloads()
-	cfgen.Fwprofile = cfgen.genFirewallProfile()
 	cfgen.Apps = cfgen.genApps()
 	cfgen.SGPolicies = cfgen.genSGPolicies()
 }
