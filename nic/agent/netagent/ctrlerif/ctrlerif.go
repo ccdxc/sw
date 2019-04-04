@@ -39,6 +39,7 @@ type NpmClient struct {
 	sgGrpcClient    *rpckit.RPCClient             // grpc client for security group
 	epGrpcClient    *rpckit.RPCClient             // grpc client for endpoint
 	sgpGrpcClient   *rpckit.RPCClient             // grpc client for security policy
+	sgpGrpcTxClient *rpckit.RPCClient             // grpc client to send security policy status updates
 	secpGrpcClient  *rpckit.RPCClient             // grpc client for security profile
 	appGrpcClient   *rpckit.RPCClient             // grpc client for app object
 	watchCtx        context.Context               // ctx for network watch
@@ -355,14 +356,12 @@ func (client *NpmClient) processSecurityPolicyEvent(evt netproto.SGPolicyEvent) 
 		// return if there is no error
 		if err == nil {
 			if evt.EventType == api.EventType_CreateEvent || evt.EventType == api.EventType_UpdateEvent {
-				sgpRPCClient := netproto.NewSGPolicyApiClient(client.sgpGrpcClient.ClientConn)
 				rsgp := netproto.SGPolicy{
 					TypeMeta:   evt.SGPolicy.TypeMeta,
 					ObjectMeta: evt.SGPolicy.ObjectMeta,
 					Status:     evt.SGPolicy.Status,
 				}
-				log.Infof("SGPolicy: Sending update back {%+v}", &rsgp)
-				sgpRPCClient.UpdateSGPolicy(context.Background(), &rsgp)
+				client.updateSGPolicyStatus(&rsgp)
 			}
 			return
 		}
@@ -370,6 +369,61 @@ func (client *NpmClient) processSecurityPolicyEvent(evt netproto.SGPolicyEvent) 
 		// else, retry after some time, with exponential backoff
 		time.Sleep(time.Second * time.Duration(math.Exp2(float64(iter))))
 	}
+}
+
+// newRPCClient creates a new grpc client to NPM
+func (client *NpmClient) newRPCClient() *rpckit.RPCClient {
+	for i := 0; i < maxOpretry; i++ {
+		rpcClient, err := client.clientFactory.NewRPCClient(client.getAgentName(), client.srvURL,
+			rpckit.WithBalancer(balancer.New(client.resolverClient)), rpckit.WithRemoteServerName(globals.Npm))
+		if err == nil {
+			log.Infof("%v connected to %v to send SGPolicy Status", client.getAgentName(), globals.Npm)
+			return rpcClient
+		}
+
+		log.Errorf("error connecting to %s. Err: %v", globals.Npm, err)
+
+		if client.isStopped() {
+			log.Infof("npm client stopped")
+			return nil
+		}
+		time.Sleep(time.Second)
+	}
+
+	log.Errorf("failed to connect to %s", globals.Npm)
+	return nil
+}
+
+// updateSGPolicyStatus sends status back to the controller
+func (client *NpmClient) updateSGPolicyStatus(resp *netproto.SGPolicy) {
+	for i := 0; i < maxOpretry; i++ {
+		if client.sgpGrpcTxClient == nil {
+			// create new client
+			rpcClient := client.newRPCClient()
+			if rpcClient == nil {
+				return
+			}
+			client.sgpGrpcTxClient = rpcClient
+		}
+
+		sgpRPCClient := netproto.NewSGPolicyApiClient(client.sgpGrpcTxClient.ClientConn)
+		_, err := sgpRPCClient.UpdateSGPolicy(context.Background(), resp)
+		if err == nil {
+			return
+		}
+
+		log.Errorf("failed to send SGPolicy Status, %s", err)
+		if client.isStopped() {
+			log.Infof("npm client stopped")
+			return
+		}
+
+		client.sgpGrpcTxClient.Close()
+		client.sgpGrpcTxClient = nil
+		time.Sleep(time.Second)
+	}
+
+	log.Errorf("failed to send SGPolicy Status")
 }
 
 // processSecurityProfileEvent handles security policy event
@@ -910,6 +964,9 @@ func (client *NpmClient) Stop() {
 	}
 	if client.sgpGrpcClient != nil {
 		client.sgpGrpcClient.Close()
+	}
+	if client.sgpGrpcTxClient != nil {
+		client.sgpGrpcTxClient.Close()
 	}
 	if client.secpGrpcClient != nil {
 		client.secpGrpcClient.Close()
