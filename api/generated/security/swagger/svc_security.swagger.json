@@ -8985,6 +8985,9 @@
     },
     "securityMsrpc": {
       "type": "object",
+      "required": [
+        "timeout"
+      ],
       "properties": {
         "program-uuid": {
           "type": "string",
@@ -9269,6 +9272,9 @@
     },
     "securitySunrpc": {
       "type": "object",
+      "required": [
+        "timeout"
+      ],
       "properties": {
         "program-id": {
           "type": "string",

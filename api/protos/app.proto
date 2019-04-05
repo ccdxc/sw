@@ -75,7 +75,7 @@ message Sunrpc {
     // RPC Program identifier
     string ProgramID        = 1 [(gogoproto.jsontag) = "program-id,omitempty"];
     // Timeout for this program id
-    string Timeout          = 2 [(gogoproto.jsontag) = "timeout,omitempty", (venice.check) = "EmptyOr(Duration(0,0))"];
+    string Timeout          = 2 [(gogoproto.jsontag) = "timeout,omitempty", (venice.check) = "Duration(0,0)"];
 }
 
 // MSRPC ALG configuration
@@ -83,7 +83,7 @@ message Msrpc {
     // MSRPC Program identifier
     string ProgramUUID      = 1 [(gogoproto.jsontag) = "program-uuid,omitempty"];
     // Timeout for this program id
-    string Timeout          = 2 [(gogoproto.jsontag) = "timeout,omitempty", (venice.check) = "EmptyOr(Duration(0,0))"];
+    string Timeout          = 2 [(gogoproto.jsontag) = "timeout,omitempty", (venice.check) = "Duration(0,0)"];
 }
 
 // AppStatus - status part of App object

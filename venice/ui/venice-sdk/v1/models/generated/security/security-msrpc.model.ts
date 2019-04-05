@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 export interface ISecurityMsrpc {
     'program-uuid'?: string;
-    'timeout'?: string;
+    'timeout': string;
 }
 
 
@@ -27,7 +27,7 @@ export class SecurityMsrpc extends BaseModel implements ISecurityMsrpc {
         'timeout': {
             description:  'should be a valid time duration ',
             hint:  '2h',
-            required: false,
+            required: true,
             type: 'string'
         },
     }
@@ -84,7 +84,7 @@ export class SecurityMsrpc extends BaseModel implements ISecurityMsrpc {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'program-uuid': CustomFormControl(new FormControl(this['program-uuid']), SecurityMsrpc.propInfo['program-uuid']),
-                'timeout': CustomFormControl(new FormControl(this['timeout']), SecurityMsrpc.propInfo['timeout']),
+                'timeout': CustomFormControl(new FormControl(this['timeout'], [required, ]), SecurityMsrpc.propInfo['timeout']),
             });
         }
         return this._formGroup;

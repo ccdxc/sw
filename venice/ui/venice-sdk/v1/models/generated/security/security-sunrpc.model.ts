@@ -10,7 +10,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 export interface ISecuritySunrpc {
     'program-id'?: string;
-    'timeout'?: string;
+    'timeout': string;
 }
 
 
@@ -27,7 +27,7 @@ export class SecuritySunrpc extends BaseModel implements ISecuritySunrpc {
         'timeout': {
             description:  'should be a valid time duration ',
             hint:  '2h',
-            required: false,
+            required: true,
             type: 'string'
         },
     }
@@ -84,7 +84,7 @@ export class SecuritySunrpc extends BaseModel implements ISecuritySunrpc {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'program-id': CustomFormControl(new FormControl(this['program-id']), SecuritySunrpc.propInfo['program-id']),
-                'timeout': CustomFormControl(new FormControl(this['timeout']), SecuritySunrpc.propInfo['timeout']),
+                'timeout': CustomFormControl(new FormControl(this['timeout'], [required, ]), SecuritySunrpc.propInfo['timeout']),
             });
         }
         return this._formGroup;

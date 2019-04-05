@@ -591,7 +591,7 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if err := validators.EmptyOr(validators.Duration, m.Timeout, args); err != nil {
+		if err := validators.Duration(m.Timeout, args); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"Timeout", err.Error())
 		}
 		return nil
@@ -604,7 +604,7 @@ func init() {
 		args = append(args, "0")
 		args = append(args, "0")
 
-		if err := validators.EmptyOr(validators.Duration, m.Timeout, args); err != nil {
+		if err := validators.Duration(m.Timeout, args); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"Timeout", err.Error())
 		}
 		return nil

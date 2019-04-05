@@ -84,21 +84,21 @@ func (s *securityHooks) validateSGPolicy(i interface{}, ver string, ignoreStatus
 // validateProtoPort will enforce a valid proto/port declaration.
 // references to the named apps will be handled by the controller.
 func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
-	for _, r := range rules {
+	for i, r := range rules {
 		// verify a rule cant have both proto port and app
 		if len(r.Apps) != 0 && len(r.ProtoPorts) != 0 {
-			return fmt.Errorf("Can not have both app and protocol/port in rule: %v", r)
+			return fmt.Errorf("Can not have both app and protocol/port in rule[%d]: %v", i, r)
 		}
 		// error out on a rule which is missing proto-ports and a valid app
 		if len(r.ProtoPorts) == 0 && len(r.Apps) == 0 {
-			return fmt.Errorf("proto-ports are mandatory, when the rules don't refer to an App")
+			return fmt.Errorf("proto-ports are mandatory, when the rules don't refer to an App in rule[%d]: %v", i, r)
 		}
 		for _, pp := range r.ProtoPorts {
 			protoNum, err := strconv.Atoi(pp.Protocol)
 			if err == nil {
 				// protocol number specified, check its between 0-255 range (0 is valid proto)
 				if protoNum < 0 || protoNum >= 255 {
-					return fmt.Errorf("Invalid protocol number %v in rule: %v", pp.Protocol, r)
+					return fmt.Errorf("Invalid protocol number %v in rule[%d]: %v", pp.Protocol, i, r)
 				}
 			} else {
 				found := false
@@ -110,14 +110,14 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 				}
 
 				if !found {
-					return fmt.Errorf("invalid protocol %v in SGRule: %v", pp.Protocol, r)
+					return fmt.Errorf("invalid protocol %v in rule[%d]: %v", pp.Protocol, i, r)
 				}
 			}
 
 			if len(pp.Ports) != 0 {
 				// you can not specify ports for icmp
 				if strings.ToLower(pp.Protocol) == "icmp" {
-					return fmt.Errorf("Can not specify ports for ICMP protocol in Rule: %v", r)
+					return fmt.Errorf("Can not specify ports for ICMP protocol in rule[%d]: %v", i, r)
 				}
 
 				// parse port ranges
@@ -127,25 +127,25 @@ func (s *securityHooks) validateProtoPort(rules []security.SGRule) error {
 					for _, port := range ports {
 						i, err := strconv.Atoi(port)
 						if err != nil {
-							return fmt.Errorf("port %v must be an integer value in the SGRule: %v", port, r)
+							return fmt.Errorf("port %v must be an integer value in the rule[%d]: %v", port, i, r)
 						}
 						if i < 0 || i > 65535 {
-							return fmt.Errorf("port %v outside range in rule: %v", port, r)
+							return fmt.Errorf("port %v outside range in rule[%d]: %v", port, i, r)
 						}
 					}
 					if len(ports) == 2 {
 						first, _ := strconv.Atoi(ports[0])
 						second, _ := strconv.Atoi(ports[1])
 						if first > second {
-							return fmt.Errorf("Invalid port range %v. first number bigger than second", prange)
+							return fmt.Errorf("Invalid port range %v. first number bigger than second in rule[%d]: %v", prange, i, r)
 						}
 					} else if len(ports) > 2 {
-						return fmt.Errorf("Invalid port range format: %v", prange)
+						return fmt.Errorf("Invalid port range format: %v in rule[%d]: %v", prange, i, r)
 					}
 				}
 			} else if s.isProtocolTCPorUDP(pp.Protocol) {
 				// Reject empty ports only on non icmp protocol
-				return fmt.Errorf("ports are mandatory. Use 0-65535 if the intent is to allow all")
+				return fmt.Errorf("ports are mandatory. Use 0-65535 if the intent is to allow all in rule[%d]: %v", i, r)
 			}
 		}
 	}
