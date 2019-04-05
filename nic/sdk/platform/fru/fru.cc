@@ -7,6 +7,9 @@
 
 using namespace std;
 
+namespace sdk {
+namespace platform {
+
 static boost::property_tree::ptree input;
 static bool validatefruchecksum(const uint8_t *arr, int length)
 {
@@ -171,7 +174,7 @@ static int openfile()
     return 0;
 }
 
-int readKey(std::string key, std::string &value)
+int readFruKey(std::string key, std::string &value)
 {
     if (input.empty()) {
         if (openfile()) {
@@ -186,3 +189,6 @@ int readKey(std::string key, std::string &value)
     }
     return 0;
 }
+
+}    //namespace platform
+}    //namespace sdk

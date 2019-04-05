@@ -464,6 +464,16 @@ catalog::populate_pcie(ptree &prop_tree)
 }
 
 sdk_ret_t
+catalog::populate_voltages(ptree &prop_tree)
+{
+
+    catalog_db_.voltages.startup_arm  = prop_tree.get<std::uint32_t>("voltages.startup_arm", 0);
+    catalog_db_.voltages.startup_vdd  = prop_tree.get<std::uint32_t>("voltages.startup_vdd", 0);
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 catalog::populate_serdes(char *dir_name, ptree &prop_tree)
 {
     std::string jtag_id = prop_tree.get<std::string>("serdes.jtag_id", "");
@@ -550,6 +560,8 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
                             prop_tree.get<uint32_t>("num_logical_ports", 0);
 
     catalog_db_.num_fp_ports = prop_tree.get<uint32_t>("num_fp_ports", 0);
+
+    populate_voltages(prop_tree);
 
     populate_asics(prop_tree);
 
@@ -642,7 +654,7 @@ catalog::factory(std::string catalog_file_path, std::string catalog_file_name, p
             std::string part_num(32, '\0');
             std::string part_id;
 
-            readKey(PARTNUM_KEY, part_num);
+            sdk::platform::readFruKey(PARTNUM_KEY, part_num);
 
             //first 7 characters are the part identifiers
             part_id = part_num.substr(0, 7);

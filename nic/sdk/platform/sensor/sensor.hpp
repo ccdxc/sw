@@ -21,6 +21,9 @@ namespace sensor {
 #define PIN_INPUT_FILE "/sys/class/hwmon/hwmon1/power1_input"
 #define POUT1_INPUT_FILE "/sys/class/hwmon/hwmon1/power2_input"
 #define POUT2_INPUT_FILE "/sys/class/hwmon/hwmon1/power3_input"
+#define VIN_INPUT_FILE "/sys/class/hwmon/hwmon1/in1_input"
+#define VOUT1_INPUT_FILE "/sys/class/hwmon/hwmon1/in2_input"
+#define VOUT2_INPUT_FILE "/sys/class/hwmon/hwmon1/in3_input"
 #define LOCAL_TEMP_FILE "/sys/class/hwmon/hwmon0/temp1_input"
 #define DIE_TEMP_FILE "/sys/class/hwmon/hwmon0/temp2_input"
 
@@ -38,9 +41,16 @@ typedef struct system_power {
     int pout2;
 } system_power_t;
 
+typedef struct system_voltage {
+    int vin;
+    int vout1;
+    int vout2;
+} system_voltage_t;
+
 //Read temperature functions will fill the value in millidegrees
 int read_local_temperature(int *localtemp);
 int read_temperatures(system_temperature_t *temperature);
+int read_voltages(system_voltage_t *voltage);
 
 //Read power functions will fill the value in microwatts
 int read_powers(system_power_t *power);

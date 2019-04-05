@@ -93,6 +93,11 @@ typedef struct catalog_asic_s {
     catalog_asic_port_t ports[MAX_ASIC_PORTS];
 } catalog_asic_t;
 
+typedef struct catalog_voltage_s {
+    uint32_t     startup_arm;
+    uint32_t     startup_vdd;
+} catalog_voltage_t;
+
 typedef struct aacs_info_s {
     uint8_t                  server_en;                         // enable aacs server
     uint8_t                  connect;                           // connect to aacs server
@@ -120,6 +125,7 @@ typedef struct catalog_s {
     catalog_fp_port_t        fp_ports[MAX_FP_PORTS];            // per port information
     mac_profile_t            mac_profiles[MAC_MODE_MAX];        // MAC profiles
     mac_profile_t            mgmt_mac_profiles[MAC_MODE_MAX];   // MGMT MAC profiles
+    catalog_voltage_t        voltages;                          // Voltage parameters for the board.
 
     // pcie parameters
     uint8_t                  pcie_hostport_mask;                // host ports enabled
@@ -176,6 +182,8 @@ public:
     uint32_t mpu_trace_size (void) const {
         return catalog_db_.mpu_trace_size;
     }
+    uint32_t startup_vdd (void) const { return catalog_db_.voltages.startup_vdd; }
+    uint32_t startup_arm (void) const { return catalog_db_.voltages.startup_arm; }
 
     // lookups based on asic, asic_port
     uint32_t num_asic_ports(uint32_t asic) {
@@ -248,6 +256,9 @@ private:
     // populate asic level config
     sdk_ret_t populate_asic(ptree::value_type &asic,
                             catalog_asic_t *asic_p);
+
+    // populate the board voltages
+    sdk_ret_t populate_voltages(ptree &prop_tree);
 
     // populate config for all asics
     sdk_ret_t populate_asics(ptree &prop_tree);

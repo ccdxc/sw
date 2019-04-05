@@ -7,6 +7,8 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+namespace sdk {
+namespace platform {
 
 #define MAX_FRU_RETRIES 5
 
@@ -75,6 +77,8 @@ typedef struct fru_data
     board_fru_area_t boardfru;
 } fru_data_t;
 
-int readKey(std::string key, std::string &value);
+int readFruKey(std::string key, std::string &value);
 
+}    // namespace platform
+}    // namespace sdk
 #endif /* __FRU_HPP__ */

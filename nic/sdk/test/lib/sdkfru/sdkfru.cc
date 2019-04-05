@@ -31,43 +31,43 @@ TEST_F(sdkfru_test, read_key) {
     string key;
     string value = "";
 
-    ASSERT_EQ(readKey(MANUFACTURERDATE_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(MANUFACTURERDATE_KEY,value), 0);
     cout << MANUFACTURERDATE_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(MANUFACTURER_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(MANUFACTURER_KEY,value), 0);
     cout << MANUFACTURER_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(PRODUCTNAME_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(PRODUCTNAME_KEY,value), 0);
     cout << PRODUCTNAME_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(SERIALNUMBER_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(SERIALNUMBER_KEY,value), 0);
     cout << SERIALNUMBER_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(PARTNUM_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(PARTNUM_KEY,value), 0);
     cout << PARTNUM_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(BOARDID_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(BOARDID_KEY,value), 0);
     cout << BOARDID_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(ENGCHANGELEVEL_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(ENGCHANGELEVEL_KEY,value), 0);
     cout << ENGCHANGELEVEL_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(MACADDRESS_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(MACADDRESS_KEY,value), 0);
     cout << MACADDRESS_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(NUMMACADDR_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(NUMMACADDR_KEY,value), 0);
     cout << NUMMACADDR_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey("UKNOWN",value), -1);
+    ASSERT_EQ(sdk::platform::readFruKey("UKNOWN",value), -1);
 
 }
 
@@ -75,43 +75,43 @@ TEST_F(sdkfru_test, open_file) {
     string key;
     string value = "";
 
-    ASSERT_EQ(readKey(MANUFACTURERDATE_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(MANUFACTURERDATE_KEY,value), 0);
     cout << MANUFACTURERDATE_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(MANUFACTURER_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(MANUFACTURER_KEY,value), 0);
     cout << MANUFACTURER_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(PRODUCTNAME_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(PRODUCTNAME_KEY,value), 0);
     cout << PRODUCTNAME_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(SERIALNUMBER_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(SERIALNUMBER_KEY,value), 0);
     cout << SERIALNUMBER_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(PARTNUM_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(PARTNUM_KEY,value), 0);
     cout << PARTNUM_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(BOARDID_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(BOARDID_KEY,value), 0);
     cout << BOARDID_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(ENGCHANGELEVEL_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(ENGCHANGELEVEL_KEY,value), 0);
     cout << ENGCHANGELEVEL_KEY << " is " << value << endl;
     value = "";
     
-    ASSERT_EQ(readKey(MACADDRESS_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(MACADDRESS_KEY,value), 0);
     cout << MACADDRESS_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey(NUMMACADDR_KEY,value), 0);
+    ASSERT_EQ(sdk::platform::readFruKey(NUMMACADDR_KEY,value), 0);
     cout << NUMMACADDR_KEY << " is " << value << endl;
     value = "";
 
-    ASSERT_EQ(readKey("UKNOWN",value), -1);
+    ASSERT_EQ(sdk::platform::readFruKey("UKNOWN",value), -1);
 
 }
 

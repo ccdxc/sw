@@ -155,12 +155,12 @@ DeviceManager::LoadConfig(string path)
     string num_macs_str;
     uplink_t *up = NULL;
 #ifdef __aarch64__
-    if (readKey(MACADDRESS_KEY, mac_str) == 0) {
+    if (sdk::platform::readFruKey(MACADDRESS_KEY, mac_str) == 0) {
         mac_from_str(&fru_mac, mac_str.c_str());
     } else {
         NIC_LOG_ERR("Failed to read MAC address from FRU");
     }
-    if (readKey(NUMMACADDR_KEY, num_macs_str) == 0) {
+    if (sdk::platform::readFruKey(NUMMACADDR_KEY, num_macs_str) == 0) {
         num_macs = std::stoi(num_macs_str);
     } else {
         NIC_LOG_ERR("Failed to read MAC address from FRU");

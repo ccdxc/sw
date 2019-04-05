@@ -73,6 +73,29 @@ static int read_pout2(int *pout2)
     return read_file(POUT2_INPUT_FILE, pout2);
 }
 
+static int read_vin(int *vin)
+{
+    if (vin == NULL) {
+        return -EINVAL;
+    }
+    return read_file(VIN_INPUT_FILE, vin);
+}
+
+static int read_vout1(int *vout1)
+{
+    if (vout1 == NULL) {
+        return -EINVAL;
+    }
+    return read_file(VOUT1_INPUT_FILE, vout1);
+}
+
+static int read_vout2(int *vout2)
+{
+    if (vout2 == NULL) {
+        return -EINVAL;
+    }
+    return read_file(VOUT2_INPUT_FILE, vout2);
+}
 /**
     Read temperature function provides an API to read
     all the temperatures and fills in the structure.
@@ -111,6 +134,23 @@ int read_powers(system_power_t *power)
     return -EINVAL;
 }
 
+/**
+    Read voltage function provides an API to read
+    all the volatges and fills in the structure.
+*/
+int read_voltages(system_voltage_t *voltage)
+{
+    if (voltage == NULL) {
+        return -EINVAL;
+    }
+    if (read_vin(&voltage->vin) == 0 &&
+        read_vout1(&voltage->vout1) == 0 &&
+        read_vout2(&voltage->vout2) == 0)
+    {
+        return 0;
+    }
+    return -EINVAL;
+}
 } // namespace sensor
 } // namespace platform
 } // namespace sdk

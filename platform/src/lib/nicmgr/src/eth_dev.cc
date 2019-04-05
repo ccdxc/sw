@@ -585,7 +585,7 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     rsp->dev.asic_rev  = (sta_ver >> 4) & 0xfff;
 
     std::string sn;
-    readKey(SERIALNUMBER_KEY, sn);
+    sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
     strncpy0(rsp->dev.serial_num, sn.c_str(), sizeof(rsp->dev.serial_num));
 
     boost::property_tree::ptree ver;

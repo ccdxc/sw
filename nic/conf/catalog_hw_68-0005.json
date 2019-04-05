@@ -8,6 +8,11 @@
     "emmc_size": "8",
     "memory_size": "4",
     "num_asics" : "1",
+    "voltages" :
+    {
+        "startup_arm" : "",
+        "startup_vdd" : "700"
+    },
     "asics" :
     [
         {

@@ -14,39 +14,39 @@ static int usage(int argc, char* argv[]) {
 static int printfru() {
     std::string value;
 
-    if (readKey(MANUFACTURERDATE_KEY, value))
+    if (sdk::platform::readFruKey(MANUFACTURERDATE_KEY, value))
         return -1;
     printf("Manufacturing Date: %s\n", value.c_str());
 
-    if (readKey(MANUFACTURER_KEY, value))
+    if (sdk::platform::readFruKey(MANUFACTURER_KEY, value))
         return -1;
     printf("Manufacturer: %s\n", value.c_str());
 
-    if (readKey(PRODUCTNAME_KEY, value))
+    if (sdk::platform::readFruKey(PRODUCTNAME_KEY, value))
         return -1;
     printf("Product Name: %s\n", value.c_str());
 
-    if (readKey(SERIALNUMBER_KEY, value))
+    if (sdk::platform::readFruKey(SERIALNUMBER_KEY, value))
         return -1;
     printf("Serial Number: %s\n", value.c_str());
 
-    if (readKey(PARTNUM_KEY, value))
+    if (sdk::platform::readFruKey(PARTNUM_KEY, value))
         return -1;
     printf("Part Number: %s\n", value.c_str());
 
-    if (readKey(BOARDID_KEY, value))
+    if (sdk::platform::readFruKey(BOARDID_KEY, value))
         return -1;
     printf("Board Id: %s\n", value.c_str());
 
-    if (readKey(ENGCHANGELEVEL_KEY, value))
+    if (sdk::platform::readFruKey(ENGCHANGELEVEL_KEY, value))
         return -1;
     printf("Eng Change Level: %s\n", value.c_str());
 
-    if (readKey(NUMMACADDR_KEY, value))
+    if (sdk::platform::readFruKey(NUMMACADDR_KEY, value))
         return -1;
     printf("Num of Macaddr: %s\n", value.c_str());
     
-    if (readKey(MACADDRESS_KEY, value))
+    if (sdk::platform::readFruKey(MACADDRESS_KEY, value))
         return -1;
     printf("Base Macaddr: %s\n", value.c_str());
 

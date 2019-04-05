@@ -21,6 +21,9 @@ CORE_MIN_DISK=512
 mkdir -p /data/core
 echo "|/nic/bin/coremgr -P /data/core -p %p -e %e -m $CORE_MIN_DISK" > /proc/sys/kernel/core_pattern
 
+# Set the power voltage for the board
+/platform/bin/powerctl -set > /obfl/voltage.txt 2>&1
+
 # POST
 if [[ -f /sysconfig/config0/post_disable ]]; then
     echo "Skipping Power On Self Test (POST)"
