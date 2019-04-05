@@ -1,6 +1,7 @@
 #define LPM_STAGE_FANOUT_64B 8
 #define LPM_STAGE_FANOUT_32B 16
 
+#ifdef action_keys32b
 action action_keys32b(key0, key1, key2, key3, key4, key5, key6, key7,
                       key8, key9, key10, key11, key12, key13, key14) {
 
@@ -129,7 +130,9 @@ action action_keys32b(key0, key1, key2, key3, key4, key5, key6, key7,
         }
     }
 }
+#endif
 
+#ifdef action_data32b
 action action_data32b(data_, key0, data0, key1, data1, key2, data2, key3,
                       data3, key4, data4, key5, data5, key6, data6) {
 
@@ -152,46 +155,46 @@ action action_data32b(data_, key0, data0, key1, data1, key2, data2, key3,
     if (key >= key3) {
         if (key >= key5) {
             if (key >= key6) {
-                modify_field(res_field, data6);
+                modify_field(lpm_result, data6);
             }
             else {
-                modify_field(res_field, data5);
+                modify_field(lpm_result, data5);
             }
         }
         else {
             if (key >= key4) {
-                modify_field(res_field, data4);
+                modify_field(lpm_result, data4);
             }
             else {
-                modify_field(res_field, data3);
+                modify_field(lpm_result, data3);
             }
         }
     }
     else {
         if (key >= key1) {
             if (key >= key2) {
-                modify_field(res_field, data2);
+                modify_field(lpm_result, data2);
             }
             else {
-                modify_field(res_field, data1);
+                modify_field(lpm_result, data1);
             }
         }
         else {
             if (key >= key0) {
-                modify_field(res_field, data0);
+                modify_field(lpm_result, data0);
             }
             else {
-                modify_field(res_field, data_);
+                modify_field(lpm_result, data_);
             }
         }
     }
 
-    // Disable further LPM stages.
-    modify_field(ctrl_field, FALSE);
-    // Handle any post processing.
+    // Handle Result.
     res_handler();
 }
+#endif
 
+#ifdef action_keys64b
 action action_keys64b(key0, key1, key2, key3, key4, key5, key6) {
 
     modify_field(key_field64b, key0);
@@ -255,7 +258,8 @@ action action_keys64b(key0, key1, key2, key3, key4, key5, key6) {
         }
     }
 }
-
+#endif
+#ifdef action_data64b
 action action_data64b(data_, key0, data0, key1, data1, key2, data2) {
 
     modify_field(dat_field64b, data_);
@@ -268,26 +272,25 @@ action action_data64b(data_, key0, data0, key1, data1, key2, data2) {
 
     if (key >= key1) {
         if (key >= key2) {
-            modify_field(res_field, data2);
+            modify_field(lpm_result, data2);
         }
         else {
-            modify_field(res_field, data1);
+            modify_field(lpm_result, data1);
         }
     }
     else {
         if (key >= key0) {
-            modify_field(res_field, data0);
+            modify_field(lpm_result, data0);
         }
         else {
-            modify_field(res_field, data_);
+            modify_field(lpm_result, data_);
         }
     }
 
-    // Disable further LPM stages.
-    modify_field(ctrl_field, FALSE);
-    // Handle any post processing.
+    // Handle Result.
     res_handler();
 }
+#endif
 
 @pragma stage stage_num
 @pragma hbm_table
@@ -297,9 +300,17 @@ table table_name {
         curr_addr : exact;
     }
     actions {
+#ifdef action_keys32b
         action_keys32b;
+#endif
+#ifdef action_data32b
         action_data32b;
+#endif
+#ifdef action_keys64b
         action_keys64b;
+#endif
+#ifdef action_data64b
         action_data64b;
+#endif
     }
 }

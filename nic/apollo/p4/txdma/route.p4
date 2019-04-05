@@ -4,45 +4,52 @@
 
 #include "../include/lpm_defines.h"
 
-/* Global definitions */
-#define key            p4_to_txdma_header.lpm_dst
+/**    Global Definitions    **/
+/* Select key-widths and define table field names for them */
 #define key_field32b   scratch_metadata.field32
 #define dat_field32b   scratch_metadata.field16
 #define key_field64b   scratch_metadata.field64
 #define dat_field64b   scratch_metadata.field16
+
+/* Define key fields */
+#define key            p4_to_txdma_header.lpm_dst
 #define base_addr      p4_to_txdma_header.lpm_addr
+
+/* Define PHV fields */
 #define next_addr      txdma_control.lpm_addr
-#define res_field      txdma_to_p4e_header.nexthop_index
-#define ctrl_field     app_header.table0_valid
+
+// Define LPM result field and handler function
+#define lpm_result     scratch_metadata.field16
 #define res_handler    route_res_handler
 
+/**    Per Stage Definitions    **/
 /* Stage 0 */
 #define stage_num      2
 #define table_name     route
-#define curr_addr      base_addr
 #define action_keys32b search_ipv4
 #define action_keys64b search_ipv6
 #define action_data32b search_ipv4_retrieve
 #define action_data64b search_ipv6_retrieve
+#define curr_addr      base_addr
 
 #include "../include/lpm.h"
 
 #undef stage_num
 #undef table_name
-#undef curr_addr
 #undef action_keys32b
 #undef action_keys64b
 #undef action_data32b
 #undef action_data64b
+#undef curr_addr
 
 /* Stage 1 */
 #define stage_num      3
 #define table_name     route1
-#define curr_addr      next_addr
 #define action_keys32b search1_ipv4
 #define action_keys64b search1_ipv6
 #define action_data32b search1_ipv4_retrieve
 #define action_data64b search1_ipv6_retrieve
+#define curr_addr      next_addr
 
 #include "../include/lpm.h"
 
@@ -122,6 +129,10 @@
 #undef action_data64b
 
 action res_handler() {
+    // Set NHID in the PHV from the LPM result
+    modify_field(txdma_to_p4e_header.nexthop_index, lpm_result);
+    // Disable further LPM stages.
+    modify_field(app_header.table0_valid, FALSE);
 }
 
 control route_lookup {
@@ -133,13 +144,13 @@ control route_lookup {
     apply(route5);
 }
 
-#undef key
 #undef key_field32b
 #undef key_field64b
 #undef dat_field32b
 #undef dat_field64b
+#undef key
 #undef base_addr
-#undef curr_addr
 #undef next_addr
-#undef res_field
+#undef curr_addr
+#undef lpm_result
 #undef res_handler

@@ -1,3 +1,4 @@
+#ifdef action_keys32b
 /*****************************************************************************/
 /*             Non Terminal Action for 32b Keys                              */
 /*****************************************************************************/
@@ -125,42 +126,45 @@ lessthan0_32b:
     phvwr      next_addr,  r1                          //next_addr = r1
     // Total 15 instructions; 3 branch delay slot waste
 
+#endif
+#ifdef action_data32b
 /*****************************************************************************/
 /*               Terminal Action for 32b Keys                                */
 /*****************************************************************************/
 .align
 action_data32b:
-    phvwr       ctrl_field, FALSE                       //No more stages
     slt         c1,         key,            keys32b_(3) //if key < keys32b[3]
     bcf         [c1],       lessthan3_32b_              //then goto lessthan3
     slt         c1,         key,            keys32b_(5) //if key < keys32b[5]
     bcf         [c1],       lessthan5_32b_              //then goto lessthan5
     slt         c1,         key,            keys32b_(6) //if key < keys32b[6]
     b           res_handler
-    cmov        r7,         c1,             data32b(5), data32b(6)
-    //then phv.result = nh5
-    //else phv.result = nh6
+    cmov        res_reg,    c1,             data32b(5), data32b(6)
+    //then res_reg = nh5
+    //else res_reg = nh6
 lessthan5_32b_:
     slt         c1,         key,            keys32b_(4) //if key < keys32b[4]
     b           res_handler
-    cmov        r7,         c1,             data32b(3), data32b(4)
-    //then phv.result = nh3
-    //else phv.result = nh4
+    cmov        res_reg,    c1,             data32b(3), data32b(4)
+    //then res_reg = nh3
+    //else res_reg = nh4
 lessthan3_32b_:
     slt         c1,         key,            keys32b_(1) //if key < keys32b[1]
     bcf         [c1],       lessthan1_32b_              //then goto lessthan1
     slt         c1,         key,            keys32b_(2) //if key < keys32b[2]
     b           res_handler
-    cmov        r7,         c1,             data32b(1), data32b(2)
-    //then phv.result = nh1
-    //else phv.result = nh2
+    cmov        res_reg,    c1,             data32b(1), data32b(2)
+    //then res_reg = nh1
+    //else res_reg = nh2
 lessthan1_32b_:
     slt         c1,         key,            keys32b_(0) //if key < keys32b[0]
     b           res_handler
-    cmov        r7,         c1,             data32b(_), data32b(0)
-    //then phv.result = nh_
-    //else phv.result = nh0
+    cmov        res_reg,    c1,             data32b(_), data32b(0)
+    //then res_reg = nh_
+    //else res_reg = nh0
 
+#endif
+#ifdef action_keys64b
 /*****************************************************************************/
 /*             Non Terminal Action for 64b Keys                              */
 /*****************************************************************************/
@@ -226,26 +230,28 @@ lessthan0_64b:
     phvwr      next_addr,  r1                           //next_addr = r1
     // Total 12 instructions; 2 branch delay slot waste
 
+#endif
+#ifdef action_data64b
 /*****************************************************************************/
 /*               Terminal Action for 64b Keys                                */
 /*****************************************************************************/
 .align
 action_data64b:
-    phvwr       ctrl_field, FALSE                       //No more stages
     slt         c1,         key,            keys64b_(1) //if key < keys64b_[1]
     bcf         [c1],       lessthan1_64b_              //then goto lessthan1
     slt         c1,         key,            keys64b_(2) //if key < keys64b_[2]
     b           res_handler
-    cmov        r7,         c1,             data64b(1), data64b(2)
-    //then phv.result = nh1
-    //else phv.result = nh2
+    cmov        res_reg,    c1,             data64b(1), data64b(2)
+    //then res_reg = nh1
+    //else res_reg = nh2
 lessthan1_64b_:
     slt         c1,         key,            keys64b_(0) //if key < keys64b_[0]
     b           res_handler
-    cmov        r7,         c1,             data64b(_), data64b(0)
-    //then phv.result = nh_
-    //else phv.result = nh0
+    cmov        res_reg,    c1,             data64b(_), data64b(0)
+    //then res_reg = nh_
+    //else res_reg = nh0
 
+#endif
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/

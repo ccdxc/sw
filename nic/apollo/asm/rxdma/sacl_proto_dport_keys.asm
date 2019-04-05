@@ -8,13 +8,23 @@ struct phv_                        p;
 struct sacl_proto_dport_keys_k     k;
 struct sacl_proto_dport_keys_d     d;
 
-#define action_name         search_sacl_proto_dport
-#define keys(a)             d.search_sacl_proto_dport_d.key ## a
-#define key                 k.sacl_metadata_proto_dport
-#define base_addr           k.{sacl_metadata_proto_dport_table_addr_sbit0_ebit1,\
-                               sacl_metadata_proto_dport_table_addr_sbit2_ebit33}
-#define curr_addr           k.{sacl_metadata_proto_dport_table_addr_sbit0_ebit1,\
-                               sacl_metadata_proto_dport_table_addr_sbit2_ebit33}
-#define next_addr           p.sacl_metadata_proto_dport_table_addr_next
+// Define Table Name and Action Names
+#define table_name         sacl_proto_dport_keys
+#define action_keys32b     match_proto_dport
 
-#include "../include/lpm32b_keys.h"
+// Define table field names for the selected key-widths
+#define keys32b(a)         d.match_proto_dport_d.key ## a
+
+// Define key field names
+#define key                k.sacl_metadata_proto_dport
+#define base_addr          k.{sacl_metadata_proto_dport_table_addr_sbit0_ebit1,\
+                              sacl_metadata_proto_dport_table_addr_sbit2_ebit33}
+#define curr_addr          k.{sacl_metadata_proto_dport_table_addr_sbit0_ebit1,\
+                              sacl_metadata_proto_dport_table_addr_sbit2_ebit33}
+
+// Define PHV field names
+#define next_addr          p.sacl_metadata_proto_dport_table_addr_next
+
+%%
+
+#include "../include/lpm.h"

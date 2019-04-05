@@ -1,5 +1,5 @@
 #include "../include/sacl_defines.h"
-#include "sacl_ipv4.p4"
+#include "sacl_ip.p4"
 #include "sacl_sport.p4"
 #include "sacl_proto_dport.p4"
 
@@ -404,9 +404,9 @@ control sacl {
          */
         apply(sacl_sport_lpm_s0);
         apply(sacl_sport_lpm_s1);
-        apply(sacl_ipv4_keys);
-        apply(sacl_ipv4_keys1);
-        apply(sacl_ipv4_data);
+        apply(sacl_ip_keys);
+        apply(sacl_ip_keys1);
+        apply(sacl_ip_data);
         apply(sacl_proto_dport_keys);
         apply(sacl_proto_dport_keys1);
         apply(sacl_proto_dport_data);

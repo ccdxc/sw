@@ -42,6 +42,10 @@ header_type scratch_metadata_t {
         pad2            : 2;
         data510         : 510;
         data512         : 512;
+        field16         : 16;
+        field32         : 32;
+        field64         : 64;
+        field128        : 128;
         ipv4_addr       : 32;
         proto_dport     : 24;
     }

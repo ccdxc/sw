@@ -608,11 +608,23 @@ sdk_ret_t
 apollo_impl::write_to_rxdma_table(mem_addr_t addr, uint32_t tableid,
                                   uint8_t action_id, void *actiondata) {
     uint32_t     len;
-    uint8_t      packed_entry[CACHE_LINE_SIZE];
+    uint8_t      packed_bytes[CACHE_LINE_SIZE];
+    uint8_t      *packed_entry = packed_bytes;
+
+    if (p4pd_rxdma_get_max_action_id(tableid) > 1) {
+        struct line_s {
+            uint8_t action_pc;
+            uint8_t packed_entry[CACHE_LINE_SIZE-sizeof(action_pc)];
+        };
+
+        auto line = (struct line_s *) packed_bytes;
+        line->action_pc = sdk::asic::pd::asicpd_get_action_pc(tableid, action_id);
+        packed_entry = line->packed_entry;
+    }
 
     p4pd_apollo_rxdma_raw_table_hwentry_query(tableid, action_id, &len);
     p4pd_apollo_rxdma_entry_pack(tableid, action_id, actiondata, packed_entry);
-    return asic_mem_write(addr, packed_entry, len >> 3,
+    return asic_mem_write(addr, packed_bytes, 1 + (len >> 3),
                           ASIC_WRITE_MODE_WRITE_THRU);
 }
 
