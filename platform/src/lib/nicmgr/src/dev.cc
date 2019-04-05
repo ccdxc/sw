@@ -82,7 +82,7 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
 #endif
     this->fwd_mode = fwd_mode;
     this->config_file = config_file;
-    pd = PdClient::factory(platform);
+    pd = PdClient::factory(platform, fwd_mode);
     assert(pd);
 
     // Reserve all the LIF ids used by HAL

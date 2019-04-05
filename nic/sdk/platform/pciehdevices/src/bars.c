@@ -344,6 +344,7 @@ add_common_cmb_bar(pciehbars_t *pbars,
         pbar.type = PCIEHBARTYPE_MEM64;
         pbar.size = roundup_power2(pres->cmbsz);
         pbar.cfgidx = 4;
+        pbar.prefetch = pres->cmbprefetch;
 
         memset(&preg, 0, sizeof(preg));
         pmt_bar_enc(&preg.pmt,

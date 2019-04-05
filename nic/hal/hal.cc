@@ -184,6 +184,8 @@ hal_init (hal_cfg_t *hal_cfg)
     sdk::lib::catalog  *catalog = NULL;
     hal_ret_t          ret      = HAL_RET_OK;
     std::string         mpart_json =
+        hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC ?
+        hal_cfg->cfg_path + "/" + hal_cfg->feature_set + "/hbm_classic_mem.json" :
         hal_cfg->cfg_path + "/" + hal_cfg->feature_set + "/hbm_mem.json";
 
     // do SDK initialization, if any

@@ -50,7 +50,7 @@ extern class pciemgr *pciemgr;
 #define ACCEL_DEV_NUM_CRYPTO_KEYS_MIN           512     // arbitrary low water mark
 
 // Minimum amount of STORAGE_SEQ_HBM_HANDLE we want to enforce
-#define ACCEL_DEV_SEQ_HBM_SIZE_MIN              (128 * 1024 * 1024)
+#define ACCEL_DEV_SEQ_HBM_SIZE_MIN              (256 * 1024 * 1024)
 
 static types::CryptoKeyType crypto_key_type_tbl[] = {
     [CMD_CRYPTO_KEY_TYPE_AES128] = types::CRYPTO_KEY_TYPE_AES128,
@@ -169,7 +169,9 @@ AccelDev::AccelDev(devapi *dapi,
         cmb_mem_addr = ACCEL_DEV_ADDR_ALIGN(cmb_mem_addr, cmb_mem_size);
     }
 
-    if (cmb_mem_size < ACCEL_DEV_SEQ_HBM_SIZE_MIN) {
+    if (platform_is_hw(pd->platform_) &&
+        (pd->fwd_mode_ == sdk::platform::FWD_MODE_CLASSIC) &&
+        (cmb_mem_size < ACCEL_DEV_SEQ_HBM_SIZE_MIN)) {
         NIC_LOG_ERR("{}: HBM aligned size {} is too small for {}",
                     DevNameGet(), cmb_mem_size, STORAGE_SEQ_HBM_HANDLE);
         throw;
@@ -309,6 +311,7 @@ AccelDev::_CreateHostDevice(void)
     pci_resources.devcmddbpa = devcmddb_mem_addr;
     pci_resources.cmbpa = cmb_mem_addr;
     pci_resources.cmbsz = cmb_mem_size;
+    pci_resources.cmbprefetch = true;
 
     // Create PCI device
     NIC_LOG_DEBUG("{}: Creating PCI device", DevNameGet());

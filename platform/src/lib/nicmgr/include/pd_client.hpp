@@ -88,13 +88,14 @@ const uint32_t kNumMaxLIFs = 2048;
 
 class PdClient {
 public:
-    static PdClient* factory(platform_t platform);
+    static PdClient* factory(platform_t platform, fwd_mode_t fwd_mode);
     void update(void);
     void destroy(PdClient *pdc);
 
     std::string hal_cfg_path_;
     std::string gen_dir_path_;
     platform_t platform_;
+    fwd_mode_t fwd_mode_;
     sdk::platform::utils::program_info *pinfo_;
     sdk::platform::utils::mpartition *mp_;
     sdk::platform::utils::lif_mgr *lm_;
@@ -196,7 +197,7 @@ public:
 private:
     PdClient(){}
     ~PdClient(){}
-    void init(void);
+    void init(fwd_mode_t fwd_mode);
 
 #if 0
     uint64_t rdma_hbm_base_;

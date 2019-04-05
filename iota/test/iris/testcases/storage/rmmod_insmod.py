@@ -39,6 +39,7 @@ def Trigger(tc):
                                        timeout = int(tc.args.maxcpus) * 100)
             api.Trigger_AddHostCommand(req, n, "insmod %s/pencake.ko repeat=1" % api.GetHostToolsDir(),
                                        timeout = int(tc.args.maxcpus) * 100)
+            api.Trigger_AddHostCommand(req, n, "sleep 40", timeout=300)
         else:
             api.Trigger_AddHostCommand(req, n, "kldunload pencake || true", timeout = int(tc.args.maxcpus) * 100)
             api.Trigger_AddHostCommand(req, n, "kldunload sonic || true", timeout = int(tc.args.maxcpus) * 100)
@@ -47,7 +48,8 @@ def Trigger(tc):
                                        timeout = int(tc.args.maxcpus) * 100)
             api.Trigger_AddHostCommand(req, n, "kldload %s/pencake.ko" % api.GetHostToolsDir(), 
                                        timeout = int(tc.args.maxcpus) * 100) 
-        api.Trigger_AddHostCommand(req, n, "sleep 10")
+            api.Trigger_AddHostCommand(req, n, "sleep 20", timeout=300)
+
         cmd = api.Trigger_AddHostCommand(req, n, "dmesg | tail -n 100")
         tc.dmesg_commands.append(cmd)
 

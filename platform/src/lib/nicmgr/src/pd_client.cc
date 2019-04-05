@@ -454,13 +454,15 @@ PdClient::create_dirs() {
     return 0;
 }
 
-void PdClient::init(void)
+void PdClient::init(fwd_mode_t fwd_mode)
 {
     hal::hal_cfg_t hal_cfg;
 #ifdef APOLLO
     std::string mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
 #else
-    std::string mpart_json = hal_cfg_path_ + "/iris/hbm_mem.json";
+    std::string mpart_json = fwd_mode == sdk::platform::FWD_MODE_CLASSIC ?
+            hal_cfg_path_ + "/iris/hbm_classic_mem.json" :
+            hal_cfg_path_ + "/iris/hbm_mem.json";
 #endif
 
     int ret;
@@ -520,17 +522,18 @@ void PdClient::update(void)
     set_program_info();
 }
 
-PdClient* PdClient::factory(platform_t platform)
+PdClient* PdClient::factory(platform_t platform, fwd_mode_t fwd_mode)
 {
     int ret;
     PdClient *pdc = new PdClient();
 
     assert(pdc);
     pdc->platform_ = platform;
+    pdc->fwd_mode_ = fwd_mode;
     pdc->hal_cfg_path_ = string(std::getenv("HAL_CONFIG_PATH")) + "/";
     ret = pdc->create_dirs();
     assert(ret == 0);
-    pdc->init();
+    pdc->init(fwd_mode);
 
     return pdc;
 }

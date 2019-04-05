@@ -1,28 +1,33 @@
 {
     "regions": [
-        {   
+        {
             "_comment" : "cache coherent",
-            "name": "cpu-dr",
+            "name": "cpu-tx-dr",
             "size": "128K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
-            "name": "cpu-pr",
+            "name": "cpu-tx-pr",
             "size": "128K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
-            "name": "cpu-descriptor",
+            "name": "cpu-rx-dpr",
+            "size": "128K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-tx-descriptor",
             "size": "2048K",
             "cc": "true"
-
         },
         {
-            "_comment" : "cache coherent",
-            "name": "cpu-page",
-            "size": "32768K",
+            "_comment" : "cache coherent, used only for cpu originated packets",
+            "name": "cpu-tx-page",
+            "size": "16384K",
             "cc": "true"
         },
         {
@@ -44,29 +49,46 @@
             "cc"     : "true"
         },
         {
-            "_comment" : "keep this to make cache coherent region order of 2 - currently 64MB from beg(hbm base) including this region",
-            "name" : "unused cache coherent",
-            "size" : "29696K",
+            "_comment" : "cache coherent, used for cpu rx packets allocated by",
+            "_comment1": "P4+, freed by ARM. The size of this region is to",
+            "_comment2": "make cache coherent region order of 2 - currently 64MB",
+            "_comment3": "from beg(hbm base) including this region",
+            "name" : "cpu-rx-desc-page",
+            "size" : "45952K",
             "cc"      : "true"
         },
         {
             "_comment" : "This reserved region is hardcoded to HBM base + 64MB(above cc regions)",
-            "_comment1" : "Used by memtun, pciemgr, and mputrace. Size is 64MB",
-            "_comment2" : "Refer sdk/platform/utils/mpart_rsvd.hpp",
+            "_comment1": "Used by memtun, pciemgr, and mputrace. Size is 64MB",
+            "_comment2": "Refer sdk/platform/utils/mpart_rsvd.hpp",
              "name": "reserved_common",
              "size": "64M"
         },
         {
-            "_comment" : "Storage region address is hereby aligned to 128MB for efficient PCIe BAR mapping,",
-            "_comment1": "allowing full use of the region. Please do not add any other regions in between.",
-            "_comment2": "If you need to change the size of any of the above mentioned regions, ",
-	    "_comment3": "please talk to Storage team first.",
-            "name": "storage",
-            "size": "131072K"
+            "name": "serq",
+            "size": "65536K"
         },
         {
             "name": "devcmd",
             "size": "32768K"
+        },
+        {
+            "_comment": "Combines sesq and asesq",
+            "name": "sesq",
+            "size": "32768K"
+        },
+        {
+            "_comment" : "Storage region address is hereby aligned to 256MB for efficient PCIe BAR mapping,",
+            "_comment1": "allowing full use of the region. Please do not add any other regions in between ",
+            "_comment2": "reserved_common and storage inclusive. ",
+            "_comment4": "If you need to change the size of any of the above mentioned regions, ",
+            "_comment5": "please talk to Storage team first.",
+            "name": "storage",
+            "size": "256M"
+        },
+        {
+             "name": "ipsec-global-drop-stats",
+             "size": "2K"
         },
         {
             "name": "lif2qstate_map",
@@ -79,12 +101,58 @@
             "cache": "p4plus-all"
         },
         {
+            "name": "ipsec-cb",
+            "size": "128K",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "ipsec_cb_barco",
+            "size": "2048K",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "ipsec-nmdr-tx",
+            "size": "128K"
+        },
+        {
+            "name": "ipsec-nmdr-rx",
+            "size": "128K"
+        },
+        {
+            "name": "ipsec-big-nmdr-tx",
+            "size": "128K"
+        },
+        {
+            "name": "ipsec-big-nmdr-rx",
+            "size": "128K"
+        },
+        {
             "name": "nmdr-tx-gc",
             "size": "128K"
         },
         {
             "name": "nmdr-rx-gc",
             "size": "128K"
+        },
+        {
+            "name": "ipsec-nmpr-tx",
+            "size": "1024K"
+        },
+        {
+            "name": "ipsec-nmpr-rx",
+            "size": "1024K"
+        },
+        {
+            "name": "ipsec-nmpr-big-tx",
+            "size": "10240K"
+        },
+        {
+            "name": "ipsec-nmpr-big-rx",
+            "size": "10240K"
+        },
+        {
+            "name": "bsq",
+            "size": "16384K"
         },
         {
             "name": "brq-ring-asym",
@@ -135,6 +203,22 @@
             "size": "512K"
         },
         {
+            "name": "ipsec-descriptor-tx",
+            "size": "2048K"
+        },
+        {
+            "name": "ipsec-descriptor-rx",
+            "size": "2048K"
+        },
+        {
+            "name": "ipsec-big-descriptor-tx",
+            "size": "2048K"
+        },
+        {
+            "name": "ipsec-big-descriptor-rx",
+            "size": "2048K"
+        },
+        {
             "name": "page-small-tx",
             "size": "24576K"
         },
@@ -143,12 +227,20 @@
             "size": "24576K"
         },
         {
-            "name": "page-big-tx",
-            "size": "81920K"
+            "name": "enc-page-big-tx",
+            "size": "8192K"
         },
         {
-            "name": "page-big-rx",
-            "size": "81920K"
+            "name": "enc-page-big-rx",
+            "size": "8192K"
+        },
+        {
+            "name": "dec-page-big-tx",
+            "size": "8192K"
+        },
+        {
+            "name": "dec-page-big-rx",
+            "size": "8192K"
         },
         {
             "_comment": "4K Entry Ring",
@@ -183,12 +275,12 @@
         {
             "_comment": "4K Objs of (9216 + 128)",
             "name": "big-tx-objs",
-            "size": "149504K"
+            "size": "74752K"
         },
         {
             "_comment": "4K Objs of (9216 + 128)",
             "name": "big-rx-objs",
-            "size": "149504K"
+            "size": "74752K"
         },
         {
             "name": "key-mem",
@@ -199,9 +291,8 @@
             "size": "1024K"
         },
         {
-            "_comment": "Combines sesq and asesq",
-            "name": "sesq",
-            "size": "32768K"
+            "name": "ipsec_pad_table",
+            "size": "1K"
         },
         {
             "name": "brq-ring-xts0",
@@ -210,6 +301,10 @@
         {
             "name": "brq-ring-xts1",
             "size": "512K"
+        },
+        {
+            "name": "tls_proxy_pad_table",
+            "size": "1K"
         },
         {
             "name": "lif_stats",
@@ -223,6 +318,11 @@
         {
             "name": "p4_atomic_stats",
             "size": "33792K",
+            "reset": true
+        },
+        {
+            "name": "tcp_proxy_stats",
+            "size": "1K",
             "reset": true
         },
         {
@@ -263,7 +363,7 @@
         },
         {
             "name": "rdma",
-            "size": "131072K",
+            "size": "280576K",
             "cache": "p4plus-all"
         },
         {
@@ -357,6 +457,38 @@
             "name": "eth_desc_cache",
             "size" : "65536K",
             "cache": "p4plus-all"
+        },
+        {
+            "name": "tls_proxy_global_stats",
+            "size": "1K",
+            "reset": true
+        },
+        {
+            "name": "tcp_ooo_rx2tx_queue",
+            "size": "16384K"
+        },
+        {
+            "name": "tcp_ooo_qbase_ring",
+            "size": "32K"
+        },
+        {
+            "name": "tcp_ooo_queue",
+            "size": "8192K"
+        },
+        {
+            "name": "session-summary-stats",
+            "size": "512B",
+            "reset": true
+        },
+        {
+            "name": "fte-stats",
+            "size": "512B",
+            "reset": true
+        },
+        {
+            "name": "p4_hwerr_stats",
+            "size": "1K",
+            "reset": true
         },
         {
             "name": "storage-qinfo",

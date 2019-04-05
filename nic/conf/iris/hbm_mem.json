@@ -65,9 +65,9 @@
              "size": "64M"
         },
         {
-            "_comment" : "Storage region address is hereby aligned to 128MB for efficient PCIe BAR mapping,",
-            "_comment1": "allowing full use of the region. Please do not add any other regions in between.",
-            "_comment2": "If you need to change the size of any of the above mentioned regions, ",
+            "_comment" : "Storage region is intended for use in classic forwarding mode, i.e., as defined",
+            "_comment1": "in hbm_classic_mem.json. For other modes, the region is expected to be used only", 
+            "_comment2": "for DOL purposes. If you need to change the size of this region,",
             "_comment3": "please talk to Storage team first.",
             "name": "storage",
             "size": "131072K"
