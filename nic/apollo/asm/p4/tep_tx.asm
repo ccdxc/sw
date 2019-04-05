@@ -14,8 +14,8 @@ mpls_udp_tep_tx:
                     ctag_0_valid,ethernet_0_valid}, 0x25
     phvwr       p.capri_deparser_len_ipv4_0_hdr_len, 20
     phvwrpair   p.mpls_dst_0_valid, 1, p.udp_0_valid, 1
-    phvwrpair   p.ethernet_0_dstAddr, d.u.mpls_udp_tep_tx_d.dmac, \
-                    p.ethernet_0_srcAddr, r5
+    phvwr       p.ethernet_0_dstAddr, d.u.mpls_udp_tep_tx_d.dmac
+    phvwr       p.ethernet_0_srcAddr, r5
     phvwr       p.ethernet_0_etherType, ETHERTYPE_IPV4
     add         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                        capri_p4_intrinsic_packet_len_sbit6_ebit13}, 18
@@ -44,8 +44,8 @@ vxlan_tep_tx:
                     ctag_0_valid,ethernet_0_valid}, 0x25
     phvwr       p.capri_deparser_len_ipv4_0_hdr_len, 20
     phvwrpair   p.vxlan_0_valid, 1, p.udp_0_valid, 1
-    phvwrpair   p.ethernet_0_dstAddr, d.u.vxlan_tep_tx_d.dmac, \
-                    p.ethernet_0_srcAddr, r5
+    phvwr       p.ethernet_0_dstAddr, d.u.vxlan_tep_tx_d.dmac
+    phvwr       p.ethernet_0_srcAddr, r5
     phvwr       p.ethernet_0_etherType, ETHERTYPE_IPV4
     add         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                        capri_p4_intrinsic_packet_len_sbit6_ebit13}, 36
@@ -73,8 +73,8 @@ gre_tep_tx:
                     ctag_0_valid,ethernet_0_valid}, 0x25
     phvwr       p.capri_deparser_len_ipv4_0_hdr_len, 20
     phvwrpair   p.mpls_dst_0_valid, 1, p.gre_0_valid, 1
-    phvwrpair   p.ethernet_0_dstAddr, d.u.gre_tep_tx_d.dmac, \
-                    p.ethernet_0_srcAddr, r5
+    phvwr       p.ethernet_0_dstAddr, d.u.gre_tep_tx_d.dmac
+    phvwr       p.ethernet_0_srcAddr, r5
     phvwr       p.ethernet_0_etherType, ETHERTYPE_IPV4
     add         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                        capri_p4_intrinsic_packet_len_sbit6_ebit13}, 14

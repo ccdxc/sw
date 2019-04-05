@@ -4,7 +4,7 @@ header_type apollo_i2e_metadata_t {
         local_vnic_tag              : 16;
         rvpath_subnet_id            : 16;
         rvpath_overlay_mac          : 48;
-        entropy_hash                : 16;
+        entropy_hash                : 32;
         traffic_class               : 3;
         dnat_required               : 1;
         pad0                        : 4;

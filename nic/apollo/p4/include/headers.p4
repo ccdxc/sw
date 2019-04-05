@@ -147,11 +147,29 @@ header_type egress_service_header_t {
 
 header_type predicate_header_t {
     fields {
-        txdma_drop_event      : 1;
-        pad0                  : 4;
-        is_ipv6               : 1;
-        lpm_bypass            : 1;
-        direction             : 1;
+        txdma_drop_event        : 1;
+        pad0                    : 4;
+        is_ipv6                 : 1;
+        lpm_bypass              : 1;
+        direction               : 1;
+    }
+}
+
+header_type p4_to_arm_header_t {
+    fields {
+        packet_len              : 16;
+        flags                   : 16;
+
+        local_vnic_tag          : 16;
+        flow_hash               : 32;
+
+        l2_1_offset             : 8;
+        l3_1_offset             : 8;
+        l4_1_offset             : 8;
+        l2_2_offset             : 8;
+        l3_2_offset             : 8;
+        l4_2_offset             : 8;
+        payload_offset          : 8;
     }
 }
 
@@ -193,13 +211,6 @@ header_type p4_to_rxdma_header_t {
         udp_q_counter           : 10;   // packets received while flow entry
                                         // is in 'queuing' state, 0 indicates
                                         // flow miss
-    }
-}
-
-header_type p4_to_arm_header_t {
-    fields {
-        packet_type         : 2;
-        packet_len          : 14;
     }
 }
 

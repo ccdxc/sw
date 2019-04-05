@@ -39,7 +39,15 @@ header p4plus_to_p4_s1_t p4plus_to_p4;
 @pragma pa_header_union ingress ctag_1
 header p4plus_to_p4_s2_t p4plus_to_p4_vlan;
 
-header p4_to_arm_header_t p4_to_arm_header;
+@pragma synthetic_header
+@pragma pa_field_union ingress p4_to_arm.local_vnic_tag             vnic_metadata.local_vnic_tag
+@pragma pa_field_union ingress p4_to_arm.l2_1_offset                offset_metadata.l2_1
+@pragma pa_field_union ingress p4_to_arm.l2_2_offset                offset_metadata.l2_2
+@pragma pa_field_union ingress p4_to_arm.l3_1_offset                offset_metadata.l3_1
+@pragma pa_field_union ingress p4_to_arm.l3_2_offset                offset_metadata.l3_2
+@pragma pa_field_union ingress p4_to_arm.l4_1_offset                offset_metadata.l4_1
+@pragma pa_field_union ingress p4_to_arm.l4_2_offset                offset_metadata.l4_2
+header p4_to_arm_header_t p4_to_arm;
 
 @pragma synthetic_header
 @pragma pa_field_union ingress p4_to_txdma_header.lpm_dst           key_metadata.dst
@@ -165,6 +173,7 @@ parser parse_txdma_ingress {
  *****************************************************************************/
 parser parse_packet {
     extract(ethernet_1);
+    set_metadata(offset_metadata.l2_1, current + 0);
     return select(latest.etherType) {
         ETHERTYPE_CTAG : parse_ctag_1;
         ETHERTYPE_IPV4 : parse_ipv4_1;
@@ -188,6 +197,7 @@ parser parse_ctag_1 {
 
 parser parse_ipv4_1 {
     extract(ipv4_1);
+    set_metadata(offset_metadata.l3_1, current + 0);
     set_metadata(ohi.ipv4_1_len, ipv4_1.ihl << 2);
     return select(latest.fragOffset, latest.protocol) {
         IP_PROTO_ICMP : parse_icmp;
@@ -210,6 +220,7 @@ parser parse_ipv6_in_ip_1 {
 
 parser parse_ipv6_1 {
     extract(ipv6_1);
+    set_metadata(offset_metadata.l3_1, current + 0);
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmp;
         IP_PROTO_TCP : parse_tcp;
@@ -223,11 +234,13 @@ parser parse_ipv6_1 {
 
 parser parse_icmp {
     extract(icmp);
+    set_metadata(offset_metadata.l4_2, current + 0);
     return ingress;
 }
 
 parser parse_tcp {
     extract(tcp);
+    set_metadata(offset_metadata.l4_2, current + 0);
     set_metadata(key_metadata.sport, latest.srcPort);
     set_metadata(key_metadata.dport, latest.dstPort);
     return ingress;
@@ -235,6 +248,7 @@ parser parse_tcp {
 
 parser parse_udp_1 {
     extract(udp_1);
+    set_metadata(offset_metadata.l4_1, current + 0);
     return select(latest.dstPort) {
         UDP_PORT_VXLAN : parse_vxlan_1;
         UDP_PORT_MPLS : parse_mpls;
@@ -308,6 +322,7 @@ parser parse_mpls_inner_ipv6 {
  * Layer 2
  *****************************************************************************/
 parser parse_ethernet_2 {
+    set_metadata(offset_metadata.l2_2, current + 0);
     extract(ethernet_2);
     return select(latest.etherType) {
         ETHERTYPE_CTAG : parse_ctag_2;
@@ -328,6 +343,7 @@ parser parse_ctag_2 {
 
 parser parse_ipv4_2 {
     extract(ipv4_2);
+    set_metadata(offset_metadata.l3_2, current + 0);
     set_metadata(ohi.ipv4_2_len, ipv4_2.ihl << 2);
     return select(latest.fragOffset, latest.protocol) {
         IP_PROTO_ICMP : parse_icmp;
@@ -339,6 +355,7 @@ parser parse_ipv4_2 {
 
 parser parse_ipv6_2 {
     extract(ipv6_2);
+    set_metadata(offset_metadata.l3_2, current + 0);
     set_metadata(key_metadata.src, latest.srcAddr);
     return select(latest.nextHdr) {
         IP_PROTO_ICMPV6 : parse_icmp;
@@ -350,6 +367,7 @@ parser parse_ipv6_2 {
 
 parser parse_udp_2 {
     extract(udp_2);
+    set_metadata(offset_metadata.l4_2, current + 0);
     set_metadata(key_metadata.sport, latest.srcPort);
     set_metadata(key_metadata.dport, latest.dstPort);
     return ingress;
@@ -439,10 +457,10 @@ parser deparse_ingress {
     extract(capri_rxdma_intrinsic);
 
     extract(p4_to_rxdma_header);
-    extract(p4_to_arm_header);
 
     extract(p4_to_p4plus_classic_nic);
     extract(p4_to_p4plus_classic_nic_ip);
+    extract(p4_to_arm);
 
     // set the splitter offset to here
     extract(predicate_header);

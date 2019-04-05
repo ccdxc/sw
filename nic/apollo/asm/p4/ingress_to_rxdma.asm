@@ -17,11 +17,9 @@ ingress_to_rxdma:
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
                         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                          CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
-                         APOLLO_P4_TO_ARM_HDR_SZ + \
                          APOLLO_P4_TO_RXDMA_HDR_SZ)
     phvwr           p.capri_p4_intrinsic_valid, TRUE
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
-    phvwr           p.p4_to_arm_header_valid, TRUE
     phvwr           p.p4_to_rxdma_header_valid, TRUE
     phvwr           p.predicate_header_valid, TRUE
     phvwr           p.p4_to_txdma_header_valid, TRUE
@@ -51,11 +49,12 @@ classic_nic_to_uplink:
     phvwr           p.capri_txdma_intrinsic_valid, 0
 
 classic_nic_to_rxdma:
+    // r1 : packet_len
+    add             r1, r0, k.capri_p4_intrinsic_packet_len
+classic_nic_to_rxdma_common:
     phvwr           p.{p4_to_p4plus_classic_nic_ip_valid, \
                         p4_to_p4plus_classic_nic_valid}, 3
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
-    // r7 : packet_len
-    or              r7, r0, k.capri_p4_intrinsic_packet_len
     seq             c1, k.ctag_1_valid, TRUE
     seq             c2, k.control_metadata_vlan_strip, TRUE
     bcf             ![c1&c2], classic_nic_to_rxdma_post_vlan_strip
@@ -66,9 +65,9 @@ classic_nic_to_rxdma:
                         k.{ctag_1_pcp,ctag_1_dei,ctag_1_vid}
     phvwr           p.p4_to_p4plus_classic_nic_vlan_valid, TRUE
     phvwr           p.ctag_1_valid, FALSE
-    sub             r7, r7, 4
+    sub             r1, r1, 4
 classic_nic_to_rxdma_post_vlan_strip:
-    phvwr           p.p4_to_p4plus_classic_nic_packet_len, r7
+    phvwr           p.p4_to_p4plus_classic_nic_packet_len, r1
     phvwr           p.p4_to_p4plus_classic_nic_p4plus_app_id, \
                         k.control_metadata_p4plus_app_id
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
@@ -99,6 +98,16 @@ classic_nic_to_rxdma_ipv4:
     nop.e
     phvwr           p.p4_to_p4plus_classic_nic_pkt_type, \
                         CLASSIC_NIC_PKT_TYPE_IPV4
+
+.align
+redirect_to_arm:
+    phvwr           p.capri_p4_intrinsic_valid, TRUE
+    phvwr           p.p4_to_arm_valid, TRUE
+    phvwr           p.p4_to_arm_packet_len, k.capri_p4_intrinsic_packet_len
+    phvwr           p.p4_to_arm_flow_hash, k.p4i_apollo_i2e_entropy_hash
+    phvwr           p.p4_to_arm_payload_offset, k.offset_metadata_payload_offset
+    b               classic_nic_to_rxdma_common
+    add             r1, k.capri_p4_intrinsic_packet_len, APOLLO_P4_TO_ARM_HDR_SZ
 
 /*****************************************************************************/
 /* error function                                                            */

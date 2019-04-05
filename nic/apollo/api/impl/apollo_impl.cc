@@ -355,6 +355,15 @@ apollo_impl::ingress_to_rxdma_init_(void) {
     if (p4pd_ret != P4PD_SUCCESS) {
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
+
+    data.action_id = INGRESS_TO_RXDMA_REDIRECT_TO_ARM_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_INGRESS_TO_RXDMA,
+                                       P4PLUS_APPTYPE_CPU,
+                                       NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
     return SDK_RET_OK;
 }
 

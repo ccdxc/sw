@@ -13,12 +13,10 @@ action ingress_to_rxdma() {
         add_header(capri_p4_intrinsic);
         add_header(capri_rxdma_intrinsic);
         add_header(p4_to_rxdma_header);
-        add_header(p4_to_arm_header);
         // Splitter offset should point to here
         modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
                      (CAPRI_GLOBAL_INTRINSIC_HDR_SZ +
                       CAPRI_RXDMA_INTRINSIC_HDR_SZ +
-                      APOLLO_P4_TO_ARM_HDR_SZ +
                       APOLLO_P4_TO_RXDMA_HDR_SZ));
         add_header(predicate_header);
         add_header(p4_to_txdma_header);
@@ -105,6 +103,26 @@ action classic_nic_to_uplink() {
     remove_header(p4plus_to_p4_vlan);
 }
 
+action add_p4_to_arm_header() {
+    add_header(p4_to_arm);
+    modify_field(p4_to_arm.packet_len, capri_p4_intrinsic.packet_len);
+    modify_field(p4_to_arm.flow_hash, p4i_apollo_i2e.entropy_hash);
+    modify_field(offset_metadata.l2_1, offset_metadata.l2_1);
+    modify_field(offset_metadata.l2_2, offset_metadata.l2_2);
+    modify_field(offset_metadata.l3_1, offset_metadata.l3_1);
+    modify_field(offset_metadata.l3_2, offset_metadata.l3_2);
+    modify_field(offset_metadata.l4_1, offset_metadata.l4_1);
+    modify_field(offset_metadata.l4_2, offset_metadata.l4_2);
+    modify_field(p4_to_arm.payload_offset, offset_metadata.payload_offset);
+}
+
+action redirect_to_arm() {
+    add_p4_to_arm_header();
+    classic_nic_to_rxdma();
+    modify_field(p4_to_p4plus_classic_nic.packet_len,
+                 capri_p4_intrinsic.packet_len + APOLLO_P4_TO_ARM_HDR_SZ);
+}
+
 @pragma stage 5
 @pragma index_table
 table ingress_to_rxdma {
@@ -114,6 +132,7 @@ table ingress_to_rxdma {
     actions {
         ingress_to_rxdma;
         classic_nic_app;
+        redirect_to_arm;
     }
     size : APP_TABLE_SIZE;
 }

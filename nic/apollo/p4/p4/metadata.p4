@@ -137,12 +137,27 @@ header_type scratch_metadata_t {
     }
 }
 
+header_type offset_metadata_t {
+    fields {
+        l2_1                : 8;
+        l2_2                : 8;
+        l3_1                : 8;
+        l3_2                : 8;
+        l4_1                : 8;
+        l4_2                : 8;
+        payload_offset      : 16;
+    }
+}
+
 metadata key_metadata_t         key_metadata;
 metadata vnic_metadata_t        vnic_metadata;
 metadata control_metadata_t     control_metadata;
 metadata rewrite_metadata_t     rewrite_metadata;
 metadata policer_metadata_t     policer_metadata;
 metadata nat_metadata_t         nat_metadata;
+
+@pragma parser_end_offset payload_offset
+metadata offset_metadata_t      offset_metadata;
 
 @pragma deparser_variable_length_header
 @pragma dont_trim

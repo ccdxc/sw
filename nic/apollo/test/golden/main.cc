@@ -950,6 +950,26 @@ vxlan_init (void) {
     vxlan_mappings_init();
 }
 
+static void
+inter_pipe_init (void) {
+    ingress_to_rxdma_actiondata_t data;
+    uint32_t tbl_id = P4TBL_ID_INGRESS_TO_RXDMA;
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = INGRESS_TO_RXDMA_INGRESS_TO_RXDMA_ID;
+    entry_write(tbl_id, 0, NULL, NULL, &data, false, APP_TABLE_SIZE);
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = INGRESS_TO_RXDMA_CLASSIC_NIC_APP_ID;
+    entry_write(tbl_id, P4PLUS_APPTYPE_CLASSIC_NIC, NULL, NULL, &data,
+                false, APP_TABLE_SIZE);
+
+    memset(&data, 0, sizeof(data));
+    data.action_id = INGRESS_TO_RXDMA_REDIRECT_TO_ARM_ID;
+    entry_write(tbl_id, P4PLUS_APPTYPE_CPU, NULL, NULL, &data,
+                false, APP_TABLE_SIZE);
+}
+
 #define MEM_REGION_LIF_STATS_BASE   "lif_stats_base"
 #define RXDMA_SYMBOLS_MAX           1
 #define TXDMA_SYMBOLS_MAX           1
@@ -1138,6 +1158,7 @@ TEST_F(apollo_test, test1)
     sacl_init();
 
     vxlan_init();
+    inter_pipe_init();
 
 #ifdef SIM
     uint32_t port = 0;
