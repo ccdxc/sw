@@ -541,6 +541,7 @@ static irqreturn_t ionic_rx_isr(int irq, void *data)
 	KASSERT((rxq->intr.index != INTR_INDEX_NOT_ASSIGNED),
 		("%s has no interrupt resource", rxq->name));
 
+	ionic_intr_mask(&rxq->intr, true);
 	IONIC_RX_LOCK(rxq);
 
 	IONIC_RX_TRACE(rxq, "[%ld]comp index: %d head: %d tail: %d\n",

@@ -1,0 +1,16 @@
+diff --git a/sys/compat/linuxkpi/common/include/linux/interrupt.h b/sys/compat/linuxkpi/common/include/linux/interrupt.h
+index 9e78b8a0b4c..6b261eb8a50 100644
+--- a/sys/compat/linuxkpi/common/include/linux/interrupt.h
++++ b/sys/compat/linuxkpi/common/include/linux/interrupt.h
+@@ -107,6 +107,11 @@ request_irq(unsigned int irq, irq_handler_t handler, unsigned long flags,
+        }
+        list_add(&irqe->links, &dev->irqents);
+ 
++       error = bus_describe_intr(dev->bsddev, res, irqe->tag, "%s", name);
++       if (error) {
++               printf("Couldn't set name: %s, error: %d\n", name, error);
++       }
++
+        return 0;
+ }
+ 
