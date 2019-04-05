@@ -36,7 +36,7 @@ export class Utility {
   public static UPDATE_SUCCESS_SUMMARY = 'Update Successful';
   public static CREATE_SUCCESS_SUMMARY = 'Create Successful';
   public static DELETE_SUCCESS_SUMMARY = 'Delete Successful';
-  public static VENICE_CONNECT_FAILURE_SUMMARY = 'Failed to connect to Vencie';
+  public static VENICE_CONNECT_FAILURE_SUMMARY = 'Failed to connect to Venice';
 
   myControllerService: ControllerService;
   myLogService: LogService;

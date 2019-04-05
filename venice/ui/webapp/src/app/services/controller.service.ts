@@ -443,10 +443,13 @@ export class ControllerService {
     ];
     if (error.statusCode === 401) {
       this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Your credentials have expired. Please sign in again.', buttons);
+      return;
     } else if (error.statusCode === 403) {
       this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Your authorization is insufficient. Please check with your system administrator.');
+      return;
     } else if (error.statusCode >= 500) {
       this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Venice is temporarily unavailable. Please try again later.');
+      return;
     }
 
     if (error.statusCode !== 0) {
