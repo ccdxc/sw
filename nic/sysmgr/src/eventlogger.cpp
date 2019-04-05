@@ -30,7 +30,8 @@ void EventLogger::LogServiceEvent(std::string name, sysmgr_events::Event event,
     sysmgr_events::EventKey key;
 
     key.set_name(name);
-    
+
+    logger->debug("Logging {} server event {}", name, description);
     this->recorder->event(events::INFO, event, "SysmgrProcessStatus", key,
 	description.c_str());
 }
@@ -42,7 +43,8 @@ void EventLogger::LogSystemEvent(sysmgr_events::Event event,
     sysmgr_events::EventKey key;
 
     key.set_name("default");
-    
+
+    logger->debug("Logging system event {}", description);
     this->recorder->event(events::INFO, event, "SysmgrSystemStatus", key,
 	description.c_str());
 }

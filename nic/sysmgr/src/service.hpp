@@ -41,6 +41,7 @@ private:
     void check_dep_and_launch();
     void start_heartbeat();
     void launch();
+    int restart_count;
 public:
     static std::shared_ptr<Service> create(ServiceSpecPtr spec);
     virtual void on_service_start(std::string name);

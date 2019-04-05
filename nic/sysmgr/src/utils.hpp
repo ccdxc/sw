@@ -19,5 +19,6 @@ extern std::string parse_status(int status);
 extern void        redirect(const std::string &filename, int fd);
 extern void        redirect_stds(const std::string &name, pid_t pid);
 extern void        switch_root();
+extern void        save_stdout_stderr(const std::string &name, pid_t pid);
 
 #endif // __UTILS_HPP__

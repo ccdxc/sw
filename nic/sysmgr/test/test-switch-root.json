@@ -8,6 +8,6 @@
     "name": "example2",
     "command": "/sw/nic/build/x86_64/iris/bin/sysmgr_example --name example2 --reboot",
     "dependencies": [],
-    "flags": ["non_critical"],
+    "flags": [],
     "timeout": 30.0
 }]

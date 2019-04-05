@@ -2,7 +2,7 @@
     "name": "delphi",
     "command": "/naples/nic/bin/delphi_hub /tmp/delphi.dat",
     "dependencies": [],
-    "flags": ["non_critical"],
+    "flags": [],
     "timeout": 30.0
 }, {
     "name": "hal",
@@ -13,7 +13,7 @@
 	    "service-name": "delphi"
 	}
     ],
-    "flags": ["non_critical"],
+    "flags": [],
     "timeout": 30.0
 }, {
     "name": "netagent",
@@ -28,7 +28,7 @@
 	    "service-name": "hal"
 	}
     ],
-    "flags": ["non_critical", "restartable"],
+    "flags": ["restartable"],
     "timeout": 30.0
 }, {
     "name": "nmd",
@@ -39,7 +39,7 @@
 	    "service-name": "delphi"
 	}
     ],
-    "flags": ["non_critical", "restartable"],
+    "flags": ["restartable"],
     "timeout": 30.0
 }, {
     "name": "tmagent",
@@ -54,7 +54,7 @@
 	    "service-name": "hal"
 	}
     ],
-    "flags": ["non_critical", "restartable"],
+    "flags": ["restartable"],
     "timeout": 30.0
 }, {
     "name": "nevtsproxy",
@@ -69,7 +69,7 @@
 	    "service-name": "hal"
 	}
     ],
-    "flags": ["non_critical", "restartable"],
+    "flags": ["restartable"],
     "timeout": 30.0
 }, {
     "name": "upgrade",
@@ -80,6 +80,6 @@
 	    "service-name": "delphi"
 	}
     ],
-    "flags": ["non_critical"],
+    "flags": [],
     "timeout": 30.0
 }]

@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 
-#define  DEFAULT_SPEC_FLAGS 0x0000
-#define  RESTARTABLE        0x0001
-#define  NON_CRITICAL       0x0002
+#define DEFAULT_SPEC_FLAGS   0x0000
+#define RESTARTABLE          0x0001
+#define COPY_STDOUT_ON_CRASH 0x0002
 
 enum service_spec_dep_kind {
     SERVICE_SPEC_DEP_SERVICE,

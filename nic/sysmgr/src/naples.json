@@ -3,7 +3,7 @@
 	"name": "delphi",
 	"command": "/nic/bin/delphi_hub",
 	"dependencies": [],
-	"flags": ["non_critical"],
+	"flags": [],
 	"timeout": 30.0
     },
     {
@@ -14,7 +14,7 @@
 		"kind": "service",
 		"service-name": "delphi"
 	    }],
-	"flags": ["non_critical"],
+	"flags": [],
 	"timeout": 30.0
     },
     {
@@ -29,7 +29,7 @@
 		"kind": "service",
 		"service-name": "pciemgrd"
 	    }],
-	"flags": ["non_critical"],
+	"flags": [],
 	"timeout": 30.0
     },
     {
@@ -44,7 +44,7 @@
 		"kind": "service",
 		"service-name": "nicmgr"
 	    }],
-	"flags": ["non_critical"],
+	"flags": [],
 	"timeout": 30.0
     },
     {
@@ -59,7 +59,7 @@
 		"kind": "service",
 		"service-name": "hal"
 	    }],
-	"flags": ["non_critical", "restartable"],
+	"flags": ["restartable"],
 	"timeout": 0.0
     },
     {
@@ -74,7 +74,7 @@
 		"kind": "service",
 		"service-name": "hal"
 	    }],
-	"flags": ["non_critical"],
+	"flags": [],
 	"timeout": 0.0
     },
     {
@@ -86,7 +86,7 @@
 		"service-name": "delphi"
 	    }
 	],
-	"flags": ["non_critical", "restartable"],
+	"flags": ["restartable"],
 	"timeout": 0.0
     },
     {
@@ -101,7 +101,7 @@
 		"kind": "service",
 		"service-name": "hal"
 	    }],
-	"flags": ["non_critical", "restartable"],
+	"flags": ["restartable"],
 	"timeout": 0.0
     },
     {
@@ -116,7 +116,7 @@
 		"kind": "service",
 		"service-name": "hal"
 	    }],
-	"flags": ["non_critical"],
+	"flags": ["restartable", "save_stdout_on_crash"],
 	"timeout": 0.0
     },
     {
@@ -131,7 +131,7 @@
 		"kind": "service",
 		"service-name": "hal"
 	    }],
-	"flags": ["non_critical"],
+	"flags": [],
 	"timeout": 30.0
     },
     {
@@ -143,7 +143,7 @@
 		"service-name": "delphi"
 	    }
 	],
-	"flags": ["non_critical"],
+	"flags": [],
 	"timeout": 30.0
     }
 ]

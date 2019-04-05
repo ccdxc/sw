@@ -24,13 +24,13 @@ static int flags_from_obj(pt::ptree obj)
    int flags = DEFAULT_SPEC_FLAGS;
    
    for (auto flag: obj.get_child("flags")) {
-      if (boost::iequals(flag.second.data(), "restartable")) {
-	 flags |= RESTARTABLE;
-      } else if (boost::iequals(flag.second.data(), "non_critical")) {
-	 flags |= NON_CRITICAL;
-      } else {
-	 throw std::runtime_error("Unknown flag: " + flag.second.data());
-      }
+       if (boost::iequals(flag.second.data(), "restartable")) {
+	   flags |= RESTARTABLE;
+       } else if (boost::iequals(flag.second.data(), "save_stdout_on_crash")) {
+	   flags |= COPY_STDOUT_ON_CRASH;
+       } else {
+	   throw std::runtime_error("Unknown flag: " + flag.second.data());
+       }
    }
    return flags;
 }

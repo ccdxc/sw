@@ -28,6 +28,6 @@
 	    "service-name": "example1"
 	}
     ],
-    "flags": ["non_critical"],
+    "flags": [],
     "timeout": 30.0
 }]

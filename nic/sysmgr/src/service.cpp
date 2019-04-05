@@ -97,6 +97,7 @@ ServicePtr Service::create(ServiceSpecPtr spec)
     svc->check_dep_and_launch();
     svc->child_watcher = nullptr;
     svc->timer_watcher = nullptr;
+    svc->restart_count = 0;
     ServiceLoop::getInstance()->register_event_reactor(SERVICE_EVENT_START,
 	spec->name, svc);
     ServiceLoop::getInstance()->register_event_reactor(SERVICE_EVENT_HEARTBEAT,
@@ -143,6 +144,18 @@ void Service::on_child(pid_t pid)
 {
     std::string reason = parse_status(this->child_watcher->get_status());
 
+    logger->info("Service {} {}", this->spec->name, reason);
+
+    if (this->spec->flags & COPY_STDOUT_ON_CRASH) {
+	save_stdout_stderr(this->spec->name, pid);
+    }
+
+    if (this->spec->flags & RESTARTABLE && this->restart_count < 5) {
+	this->restart_count += 1;
+	this->launch();
+	return;
+    }
+
     auto obj = std::make_shared<delphi::objects::SysmgrProcessStatus>();
 
     obj->set_key(this->spec->name);
@@ -152,11 +165,9 @@ void Service::on_child(pid_t pid)
 
     delphi_sdk->QueueUpdate(obj);
      
-    logger->info("Service {} {}", this->spec->name, reason);
     EventLogger::getInstance()->LogServiceEvent(
 	this->spec->name, sysmgr_events::EVENT_SERVICE_DOWN, "Service stopped");
 }
-
 
 void Service::on_timer()
 {
