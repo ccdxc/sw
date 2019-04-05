@@ -373,6 +373,7 @@ char *ionic_dev_asic_name(u8 asic_type);
 struct doorbell __iomem *ionic_db_map(struct lif *lif, struct queue *q);
 int ionic_db_page_num(struct lif *lif, int pid);
 
+void ionic_intr_clean(struct intr *intr);
 void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 		     unsigned long index);
 void ionic_intr_mask_on_assertion(struct intr *intr);

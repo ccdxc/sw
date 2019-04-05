@@ -103,6 +103,7 @@ static int ionic_qcq_enable(struct qcq *qcq)
 	if (qcq->intr.index != INTR_INDEX_NOT_ASSIGNED) {
 		irq_set_affinity_hint(qcq->intr.vector, &qcq->intr.affinity_mask);
 		napi_enable(&qcq->napi);
+		ionic_intr_clean(&qcq->intr);
 		ionic_intr_mask(&qcq->intr, false);
 	}
 

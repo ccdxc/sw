@@ -225,17 +225,21 @@ int ionic_db_page_num(struct lif *lif, int pid)
 	return (lif->index * lif->dbid_count) + pid;
 }
 
-void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
-		    unsigned long index)
+void ionic_intr_clean(struct intr *intr)
 {
 	u32 credits;
-
-	intr->index = index;
-	intr->ctrl = idev->intr_ctrl + index;
 
 	/* clear the credits by writing the current value back */
 	credits = 0xffff & ioread32(intr_to_credits(intr->ctrl));
 	ionic_intr_return_credits(intr, credits, false, true);
+}
+
+void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
+		    unsigned long index)
+{
+	intr->index = index;
+	intr->ctrl = idev->intr_ctrl + index;
+	ionic_intr_clean(intr);
 }
 
 void ionic_intr_mask_on_assertion(struct intr *intr)
