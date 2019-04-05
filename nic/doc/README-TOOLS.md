@@ -46,13 +46,14 @@ README for reload.py
 
     TODO:
     ======
-    - Clear the console once done using
+    - Clear the console once done using it
     - Add option to load with golden image (to recover)
     - Error out or get to the prompt if capview is running or if a file is opened on the console
     - Bring up interfaces optionally, based on json file input
 
     Fixed:
     =====
+    - If eth driver is not loaded, copy it, load it and then configure the MNIC interface
     - If memtun is not running on host, try to start it. If naples is running a good image, it should work. If not, throw an error
 
 

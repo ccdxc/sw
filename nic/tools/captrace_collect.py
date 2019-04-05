@@ -89,6 +89,14 @@ def collect(ch, args):
         sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/p4eg-all.json /captrace.cfg', '[Pp]assword.*')
         sendCmd(ch, 'docker', '#')
 
+    if (args.dma_all == '1'):
+        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/dma-all.json /captrace.cfg', '[Pp]assword.*')
+        sendCmd(ch, 'docker', '#')
+
+    if (args.p4_all == '1'):
+        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/p4-all.json /captrace.cfg', '[Pp]assword.*')
+        sendCmd(ch, 'docker', '#')
+
     if (args.all == '1'):
         sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/pipeline-all.json /captrace.cfg', '[Pp]assword.*')
         sendCmd(ch, 'docker', '#')
@@ -132,11 +140,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--host', help='hostname of server where NIC is present. e.g. --host cap-rdma')
-    parser.add_argument('--rxdma', help='enable captrace for RxDMA')
-    parser.add_argument('--txdma', help='enable captrace for TxDMA')
-    parser.add_argument('--p4ig', help='enable captrace for P4 ingress')
-    parser.add_argument('--p4eg', help='enable captrace for P4 egress')
-    parser.add_argument('--all', help='enable captrace for all pipelines')
+    parser.add_argument('--rxdma', type=str, help='enable captrace for RxDMA', metavar='1')
+    parser.add_argument('--txdma', type=str, help='enable captrace for TxDMA', metavar='1')
+    parser.add_argument('--p4ig', type=str, help='enable captrace for P4 ingress', metavar='1')
+    parser.add_argument('--p4eg', type=str, help='enable captrace for P4 egress', metavar='1')
+    parser.add_argument('--dma_all', type=str, help='enable captrace for RxDMA and TxDMA', metavar='1')
+    parser.add_argument('--p4_all', type=str, help='enable captrace for P4 ingress and egress', metavar='1')
+    parser.add_argument('--all', type=str, help='enable captrace for all pipelines', metavar='1')
     parser.add_argument('--pipeline', help='specify iris/apollo pipeline for captrace.syms')
 
     args=parser.parse_args()

@@ -104,6 +104,44 @@ def telnetToConsole(console, port):
     logging.info(op[2])
     return tn
 
+def copyDrivers(dev, hostOS):
+    # check if the drivers tar file is already present
+    pwd = getPwd()
+    if hostOS == 'Linux':
+        drivers = pwd + '/../../platform/gen/drivers-linux.tar.xz'
+        cmd = 'ls -lrt ' + drivers
+        ret = os.system(cmd)
+        if (ret != 0):
+            logging.info("drivers tar file is not present in the workspace. Generating it")
+            cmd = pwd + '/../../platform/tools/drivers-linux.sh'
+            ret = os.system(cmd)
+            if (ret != 0):
+                logging.info("ERROR: Failed to get the drivers tar file")
+                exit()
+
+    elif hostOS == 'FreeBSD':
+        drivers = pwd + '/../../platform/gen/drivers-freebsd.tar.xz'
+        cmd = 'ls -lrt ' + drivers
+        ret = os.system(cmd)
+        if (ret != 0):
+            logging.info("drivers tar file is not present in the workspace. Generating it")
+            cmd = pwd + '/../platform/tools/package-freebsd.sh'
+            ret = os.system(cmd)
+            if (ret != 0):
+                logging.info("ERROR: Failed to get the drivers tar file")
+                exit()
+
+    time.sleep(3)
+    # copy the drivers to the host
+    logging.info("Copying drivers tar file to {0}\n".format(dev['host']))
+    cmd = 'sshpass -p docker scp -o StrictHostKeyChecking=no ' + drivers + ' root@' + dev['host'] + ':/tmp/'
+    logging.info(cmd)
+    ret = os.system(cmd)
+    logging.info("ret is {0}".format(ret))
+    if (ret != 0):
+        logging.info("ERROR: Failed to copy drivers tar file to {0}".format(dev['host']))
+        exit()
+
 def update(ch):
     logging.info("Removing known_hosts")
     op = sendCmd(ch, 'rm /root/.ssh/known_hosts', '#')
@@ -148,46 +186,32 @@ def reset(ch, dev, hostOS):
         logging.info("ERROR: Timeout. Host is not reachable after 50 retries")
         exit()
 
-    # check if the drivers tar file is already present
-    pwd = getPwd()
-    if hostOS == 'Linux':
-        drivers = pwd + '/../../platform/gen/drivers-linux.tar.xz'
-        cmd = 'ls -lrt ' + drivers
-        ret = os.system(cmd)
-        if (ret != 0):
-            logging.info("drivers tar file is not present in the workspace. Generating it")
-            cmd = pwd + '/../../platform/tools/drivers-linux.sh'
-            ret = os.system(cmd)
-            if (ret != 0):
-                logging.info("ERROR: Failed to get the drivers tar file")
-                exit()
-
-    elif hostOS == 'FreeBSD':
-        drivers = pwd + '/../../platform/gen/drivers-freebsd.tar.xz'
-        cmd = 'ls -lrt ' + drivers
-        ret = os.system(cmd)
-        if (ret != 0):
-            logging.info("drivers tar file is not present in the workspace. Generating it")
-            cmd = pwd + '../platform/tools/package-freebsd.sh'
-            ret = os.system(cmd)
-            if (ret != 0):
-                logging.info("ERROR: Failed to get the drivers tar file")
-                exit()
-
-    time.sleep(3)
-    # copy the drivers to the host    
-    logging.info("Copying drivers tar file to {0}\n".format(dev['host']))
-    cmd = 'sshpass -p docker scp -o StrictHostKeyChecking=no ' + drivers + ' root@' + dev['host'] + ':/tmp/'
-    logging.info(cmd)
-    ret = os.system(cmd)
-    logging.info("ret is {0}".format(ret))
-    if (ret != 0):
-        logging.info("ERROR: Failed to copy drivers tar file to {0}".format(dev['host']))
-        exit()
+    copyDrivers(dev, hostOS)
 
     ch = sshToHost(dev['host'])
     loadDrivers(ch, dev, hostOS)
     ch.logfile = None
+    ch.close()
+
+    mnic_intf = dev['if2']
+    # try to setup MNIC interface
+    if hostOS == 'Linux':
+        cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + dev['host'] + ' -t ip addr add 169.254.0.2/24 dev ' + mnic_intf
+        ret = os.system(cmd)
+        if (ret != 0):
+            logging.info("Failed to assign IP to MNIC interface")
+
+        cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + dev['host'] + ' -t ifconfig ' + mnic_intf + ' up'
+        ret = os.system(cmd)
+        if (ret != 0):
+            logging.info("Failed to bring up MNIC interface")
+
+    elif hostOS == 'FreeBSD':
+        cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + dev['host'] + ' -t ifconfig ' + mnic_intf + ' 169.254.0.2/24 up'
+        ret = os.system(cmd)
+        if (ret != 0):
+            logging.info("Failed to assign IP to and/or bring up MNIC interface")
+
     logging.info("\nReloaded naples successfully\n")
     exit()
 
@@ -316,8 +340,18 @@ if __name__ == "__main__":
                 cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ip addr add 169.254.0.2/24 dev ' + mnic_intf
                 ret = os.system(cmd)
                 if (ret != 0):
-                    logging.info("ERROR: Failed to assign IP to MNIC interface")
-                    exit()
+                    logging.info("Failed to assign IP to MNIC interface. Copying drivers")
+                    # load eth driver, so that MNIC interface can be configured
+                    copyDrivers(dev, hostOS)
+                    ch = sshToHost(dev['host'])
+                    loadDrivers(ch, dev, hostOS)
+                    ch.close()
+
+                    # try to setup MNIC interface
+                    ret = os.system(cmd)
+                    if (ret != 0):
+                        logging.info("ERROR: Failed to assign IP to MNIC interface. Copying drivers")
+                        exit()
                 cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ifconfig ' + mnic_intf + ' up'
                 ret = os.system(cmd)
                 if (ret != 0):
@@ -328,8 +362,18 @@ if __name__ == "__main__":
                 cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ifconfig ' + mnic_intf + ' 169.254.0.2/24 up'
                 ret = os.system(cmd)
                 if (ret != 0):
-                    logging.info("ERROR: Failed to assign IP to and/or bring up MNIC interface")
-                    exit()
+                    logging.info("ERROR: Failed to assign IP to and/or bring up MNIC interface. Copying drivers")
+                    # load eth driver, so that MNIC interface can be configured
+                    copyDrivers(dev, hostOS)
+                    ch = sshToHost(dev['host'])
+                    loadDrivers(ch, dev, hostOS)
+                    ch.close()
+
+                    # try to setup MNIC interface
+                    ret = os.system(cmd)
+                    if (ret != 0):
+                        logging.info("ERROR: Failed to assign IP to MNIC interface. Copying drivers")
+                        exit()
             logging.info("Configured MNIC interface {0}".format(mnic_intf))
             # verify that ping works between arm and host thru mnic intf
             cmd = 'sshpass -p docker ssh -o StrictHostKeyChecking=no root@' + args.host + ' -t ping -c 5 169.254.0.1'
