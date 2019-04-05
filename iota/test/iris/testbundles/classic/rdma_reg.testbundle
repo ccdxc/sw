@@ -79,15 +79,44 @@ testcases:
             bidir    : ['yes']
             command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
 
-    #-   name    : RC_TCPCM_Packet_Sweep_4KQPs_BiDir
-    #    testcase: testcases.rdma.rdma_perftest
-    #    stress  : True
-    #    iterators :
-    #        type     : nested
-    #        num_qp   : [125]
-    #        threads  : [32]
-    #        bidir    : ['yes']
-    #        command  : ['ib_send_bw', 'ib_write_bw', 'ib_read_bw']
+    -   name    : RC_TCPCM_Packet_Sweep_4KQPs_Send_BiDir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1000]
+            threads  : [4]
+            bidir    : ['yes']
+            rxdepth  : [10]
+            txdepth  : [10]
+            size     : [4, 32, 4096, 16384, 32768, 65536, 1048576]
+            command  : ['ib_send_bw']
+
+    -   name    : RC_TCPCM_Packet_Sweep_4KQPs_Read_BiDir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1000]
+            threads  : [4]
+            bidir    : ['yes']
+            rxdepth  : [1]
+            txdepth  : [10]
+            size     : [4, 32, 4096, 16384, 32768, 65536, 1048576]
+            command  : ['ib_read_bw']
+
+    -   name    : RC_TCPCM_Packet_Sweep_4KQPs_Write_BiDir
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [1000]
+            threads  : [4]
+            bidir    : ['yes']
+            rxdepth  : [1]
+            txdepth  : [10]
+            size     : [4, 32, 4096, 16384, 32768, 65536, 1048576]
+            command  : ['ib_write_bw']
 
     -   name    : RC_RDMACM_Packet_Sweep
         testcase: testcases.rdma.rdma_perftest

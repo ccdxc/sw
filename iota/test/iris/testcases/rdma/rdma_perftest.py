@@ -54,6 +54,9 @@ def Trigger(tc):
     qp_opt        = ''
     numsges_opt   = ''
     bidir_opt     = ''
+    rxdepth_opt   = ''
+    txdepth_opt   = ''
+    atomic_opt    = ''
     tc.client_bkg = False
     s_port        = 12340
     e_port        = s_port + 1
@@ -102,9 +105,15 @@ def Trigger(tc):
        tc.iterators.bidir == 'yes':
         bidir_opt = ' -b '
 
+    if hasattr(tc.iterators, 'rxdepth'):
+        rxdepth_opt = ' -r {rxdepth} '.format(rxdepth = str(tc.iterators.rxdepth))
+
+    if hasattr(tc.iterators, 'txdepth'):
+        txdepth_opt = ' -t {txdepth} '.format(txdepth = str(tc.iterators.txdepth))
+
     if hasattr(tc.iterators, 'cmp_swp') and \
        tc.iterators.cmp_swp == 'yes':
-        bidir_opt = ' -A CMP_AND_SWAP '
+       atomic_opt = ' -A CMP_AND_SWAP '
 
     #==============================================================
     # run the cmds
@@ -129,7 +138,7 @@ def Trigger(tc):
         cmd       = tc.iterators.command
         cmd       += dev_opt + iter_opt + gid_opt 
         cmd       += size_opt + mtu_opt + qp_opt
-        cmd       += cm_opt + transport_opt + misc_opt + port_opt + bidir_opt
+        cmd       += cm_opt + transport_opt + misc_opt + port_opt + bidir_opt + rxdepth_opt + txdepth_opt + atomic_opt
         # add numsges_opt only for Naples
         if w1.IsNaples():
             cmd   += numsges_opt
@@ -160,7 +169,7 @@ def Trigger(tc):
         cmd       = tc.iterators.command
         cmd       += dev_opt + iter_opt + gid_opt 
         cmd       += size_opt + mtu_opt + qp_opt
-        cmd       += cm_opt + transport_opt + misc_opt + port_opt + bidir_opt
+        cmd       += cm_opt + transport_opt + misc_opt + port_opt + bidir_opt + rxdepth_opt + txdepth_opt + atomic_opt
         # add numsges_opt only for Naples
         if w2.IsNaples():
             cmd   += numsges_opt
