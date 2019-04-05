@@ -426,10 +426,8 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
         vmk_PktHandle *pkt = (vmk_PktHandle *) cb_arg;
         unsigned int i;
 
-//        dma_unmap_page(dev, (dma_addr_t)desc->addr,
-//                       desc->len, DMA_TO_DEVICE);
+        cb_arg = NULL;
 
-//num_sg_elems is not valid
         for (i = 0; i < desc->num_sg_elems; i++, elem++)
                 ionic_tx_unmap_frag(q,
                                     elem->len,
@@ -445,9 +443,9 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
                                                    VMK_TRUE);
                                 stats->wake++;
                         }
-                        ionic_en_pkt_release(pkt, NULL);
-                        stats->clean++;
-                }
+               }
+               ionic_en_pkt_release(pkt, qcq->netpoll);
+               stats->clean++;
         }
 }
 
