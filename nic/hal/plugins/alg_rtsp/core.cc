@@ -434,8 +434,6 @@ process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len)
             return pkt_len;
         }
 
-        DEBUG("rtsp control msg {}", msg);
-
         // noop if session id is not known
         if (!msg.hdrs.valid.session) {
             return pkt_len;

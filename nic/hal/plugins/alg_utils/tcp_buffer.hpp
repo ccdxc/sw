@@ -36,7 +36,7 @@ public:
 private:
 
     static const int MAX_SEGMENTS = 32;
-    static const int MIN_BUFF_SIZE = 256;
+    static const int MIN_BUFF_SIZE = 1024;
     static const int MAX_BUFF_SIZE = 16*1024;
 
     // As defined by RFC 1982 - 2 ^ (SERIAL_BITS - 1)
@@ -81,6 +81,7 @@ private:
     } __PACK__ ;
 
     uint8_t        *buff_;
+    size_t         free_buff_size_;
     size_t         buff_size_;
     uint32_t       cur_seq_;
     segment_t      *segments_;

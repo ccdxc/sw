@@ -2551,11 +2551,6 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
 
     //HAL_TRACE_DEBUG("Session {} IFlow State: {}", session_handle, state.iflow_state.state);
 
-    if (session->iflow)
-        session->iflow->state = state.iflow_state.state;
-    if (session->rflow)
-        session->rflow->state = state.rflow_state.state;
-
     session->tcp_cxntrack_timer = NULL;
 
     if (state.iflow_state.state < session::FLOW_TCP_STATE_ESTABLISHED ||
@@ -2569,6 +2564,15 @@ tcp_cxnsetup_cb (void *timer, uint32_t timer_id, void *ctxt)
                           session->hal_handle);
         }
     }
+
+    // Only update the established state.
+    // We dont want to update anything beyond that (RESET/FIN)
+    if (session->iflow &&
+        state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED)
+        session->iflow->state = state.iflow_state.state;
+    if (session->rflow &&
+        state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED)
+        session->rflow->state = state.rflow_state.state;
 }
 
 //------------------------------------------------------------------------------
