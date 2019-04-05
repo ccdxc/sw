@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # this script is run by customer after extracting the image.
 # this is supposed to install all the venice components in the system
@@ -41,7 +41,7 @@ function elasticSysctl() {
     if ${SUDO} grep -q "^[ ^I]*$TARGET_KEY[ ^I]*=" "$CONFIG_FILE"; then
         ${SUDO} sed -i -e "s^A^\\([ ^I]*$TARGET_KEY[ ^I]*=[ ^I]*\\).*$^A\\1$REPLACEMENT_VALUE^A" "$CONFIG_FILE"
     else
-        ${SUDO} echo "$TARGET_KEY = $REPLACEMENT_VALUE" >> "$CONFIG_FILE"
+        echo "$TARGET_KEY = $REPLACEMENT_VALUE" | ${SUDO} tee -a $CONFIG_FILE
     fi
     ${SUDO} sysctl -p
 }
@@ -72,6 +72,12 @@ if [ "$1" == "--clean-only" ]
 then
     cleanupNode
     exit 0
+fi
+
+# on some systems systemctl is in /bin/systemctl
+if  [ ! -f /usr/bin/systemctl  -a -f /bin/systemctl ]
+then
+    sudo ln -s /bin/systemctl /usr/bin/systemctl
 fi
 
 elasticSysctl
