@@ -21,6 +21,7 @@ import {
   AuthUserList, AuthUser, AuthRoleList, AuthPasswordChangeRequest
 } from '@sdk/v1/models/generated/auth';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
+import { required , patternValidator} from '@sdk/v1/utils/validators';
 
 export enum ACTIONTYPE {
   CREATE = 'Create',
@@ -63,6 +64,9 @@ export interface AuthPolicyObject {
   encapsulation: ViewEncapsulation.None,
 })
 export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
+
+  public static PASSWORD_REGEX: string = '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*([^a-zA-Z\d\s])).{9,}$';
+  public static PASSWORD_MESSAGE: string = 'Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character';
 
   public static UI_PANEL_USER = 'user';
   public static UI_PANEL_ROLE = 'role';
@@ -404,8 +408,9 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.stagingService.GetBuffer(buffername).subscribe( (rest) => {
-      console.log(rest);
+    // Whenever, we have to call delete buffer, there must be error occurred. We print out the buffer detail here.
+    this.stagingService.GetBuffer(buffername).subscribe( (res) => {
+      console.error(this.getClassName() +  '.deleteStagingBuffer() API. Invoke GetBuffer():' , res);
     });
     this.stagingService.DeleteBuffer(buffername).subscribe(
       response => {
@@ -913,7 +918,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     this.authPasswordChangeRequest = new AuthPasswordChangeRequest();
     const selectedUserData = this.selectedAuthUser.getFormGroupValues();
     this.authPasswordChangeRequest.setValues(selectedUserData); // this will populate data.
-    // note: auth.proto set new/odd password validation rules.
+
   }
 
 }

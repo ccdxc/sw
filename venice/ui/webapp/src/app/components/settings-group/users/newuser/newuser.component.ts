@@ -14,7 +14,7 @@ import { Utility } from '@app/common/Utility';
 import { StagingBuffer } from '@sdk/v1/models/generated/staging';
 import { AbstractControl, ValidatorFn } from '@angular/forms';
 
-import { required } from '@sdk/v1/utils/validators';
+import { required , patternValidator} from '@sdk/v1/utils/validators';
 
 
 @Component({
@@ -25,6 +25,8 @@ import { required } from '@sdk/v1/utils/validators';
   encapsulation: ViewEncapsulation.None
 })
 export class NewuserComponent extends UsersComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
+
+
 
   newAuthUser: AuthUser;
   selectedRolebindingsForUsers: AuthRoleBinding[] = [];
@@ -52,8 +54,9 @@ export class NewuserComponent extends UsersComponent implements OnInit, AfterVie
       this.newAuthUser.$formGroup.get(['meta', 'name']).validator,
       this.isUsernameValid(this.authUsers)
     ]);
-    // spec.password is required.
-    this.newAuthUser.$formGroup.get(['spec', 'password']).setValidators([required]);
+    // spec.password is required and must met input validation // online test reqex in https://www.freeformatter.com/regex-tester.html.
+    this.newAuthUser.$formGroup.get(['spec', 'password']).setValidators([required, patternValidator(UsersComponent.PASSWORD_REGEX, UsersComponent.PASSWORD_MESSAGE )]);
+
   }
 
   ngAfterViewInit() {
