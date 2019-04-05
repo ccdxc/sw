@@ -136,4 +136,10 @@ int sysfs_create_groups(struct kobject *kobj,
 void sysfs_remove_groups(struct kobject *kobj,
 			 const struct attribute_group **groups);
 
+static inline bool
+dev_is_pci(struct device *d)
+{
+	return true;
+}
+
 #endif

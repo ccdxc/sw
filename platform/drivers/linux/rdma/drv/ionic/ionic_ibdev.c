@@ -8,6 +8,7 @@
 #include <linux/mman.h>
 #include <linux/module.h>
 #include <linux/printk.h>
+#include <linux/pci.h>
 #include <net/addrconf.h>
 #include <rdma/ib_addr.h>
 #include <rdma/ib_cache.h>
@@ -6557,6 +6558,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 {
 	struct ib_device *ibdev;
 	struct ionic_ibdev *dev;
+	struct device *hwdev;
 	const union identity *ident;
 	struct dentry *lif_dbgfs;
 	int rc, val, lif_id, version;
@@ -6585,6 +6587,14 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		goto err_dev;
 	}
 
+	/* Ensure that our parent is a true PCI device */
+	hwdev = ndev->dev.parent;
+	if (!dev_is_pci(hwdev)) {
+		netdev_err(ndev, "ionic_rdma: Cannot bind to non-PCI device\n");
+		rc = -ENXIO;
+		goto err_dev;
+	}
+
 	ibdev = ib_alloc_device(sizeof(*dev));
 	if (!ibdev) {
 		rc = -ENOMEM;
@@ -6592,7 +6602,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	}
 
 	dev = to_ionic_ibdev(ibdev);
-	dev->hwdev = ndev->dev.parent;
+	dev->hwdev = hwdev;
 	dev->ndev = ndev;
 	dev->lif = lif;
 	dev->lif_id = lif_id;
@@ -6720,10 +6730,10 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->dev_attr.fw_ver = 0;
 	dev->dev_attr.sys_image_guid = 0;
 	dev->dev_attr.max_mr_size =
-		(dev->inuse_restbl.inuse_size * PAGE_SIZE / 2) <<
+		((u64)dev->inuse_restbl.inuse_size * PAGE_SIZE / 2) <<
 		(dev->cl_stride - dev->pte_stride);
 	dev->dev_attr.page_size_cap = ~0;
-	dev->dev_attr.vendor_id = 0;
+	dev->dev_attr.vendor_id = to_pci_dev(dev->hwdev)->vendor;
 	dev->dev_attr.vendor_part_id = 0;
 	dev->dev_attr.hw_ver = 0;
 	dev->dev_attr.max_qp = dev->size_qpid;

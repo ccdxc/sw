@@ -118,7 +118,7 @@ static void dcqcn_set_profile(struct dcqcn_profile *prof)
 	int prof_i = prof - dev->dcqcn->profiles;
 
 	/* TODO: modify profile i+1 on device */
-	pr_warn("ionic_rdma: dcqcn profile not set on device %d\n",
+	dev_dbg(&dev->ibdev.dev, "dcqcn profile not set on device %d\n",
 		1 + prof_i);
 }
 
