@@ -54,6 +54,8 @@ Eth::eth_dev_type_str_to_type(std::string const& s)
         return ETH_MNIC_INTERNAL_MGMT;
     } else if (s == "inband_mgmt") {
         return ETH_MNIC_INBAND_MGMT;
+    } else if (s == "cpu") {
+        return ETH_MNIC_CPU;
     } else {
         NIC_LOG_ERR("Unknown ETH dev type: {}", s);
         return ETH_UNKNOWN;
@@ -135,7 +137,7 @@ Eth::Eth(devapi *dev_api,
             throw;
         }
     } else {
-        NIC_LOG_DEBUG("{}: Skipped creating device", spec->name);
+        NIC_LOG_DEBUG("{}: Skipped creating host device", spec->name);
     }
 
     // Create all LIFs
@@ -865,7 +867,8 @@ Eth::HalEventHandler(bool status)
     // Create the MNIC devices
     if (spec->eth_type == ETH_MNIC_OOB_MGMT ||
         spec->eth_type == ETH_MNIC_INTERNAL_MGMT ||
-        spec->eth_type == ETH_MNIC_INBAND_MGMT) {
+        spec->eth_type == ETH_MNIC_INBAND_MGMT ||
+        spec->eth_type == ETH_MNIC_CPU) {
         if (!CreateLocalDevice()) {
             NIC_LOG_ERR("{}: Failed to create device", spec->name);
         }

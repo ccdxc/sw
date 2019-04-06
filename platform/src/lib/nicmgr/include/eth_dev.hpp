@@ -50,6 +50,7 @@ typedef enum EthDevType_s {
     ETH_MNIC_OOB_MGMT,
     ETH_MNIC_INTERNAL_MGMT,
     ETH_MNIC_INBAND_MGMT,
+    ETH_MNIC_CPU,
 } EthDevType;
 
 const char *eth_dev_type_to_str(EthDevType type);
