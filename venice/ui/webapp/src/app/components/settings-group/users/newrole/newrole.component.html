@@ -84,14 +84,14 @@
                           </div>
                           <div fxFlex="30px" fxLayout="row" class="newrole-value">
                             <p-dropdown class="newrole-severity" fxFlex="170px"
-                                        formControlName="resource-group" styleClass="newrole-font"
+                                        formControlName="resource-group" styleClass="newrole-font" appendTo="body"
                                         [options]="groupOptions" placeholder="group..."
                                         (onChange)="onGroupChange($event, permission, index)">
                             </p-dropdown>
                           </div>
                           <div fxFlex="30px" fxLayout="row" class="newrole-value">
                             <p-dropdown class="newrole-severity" fxFlex="170px"
-                                        formControlName="resource-kind" styleClass="newrole-font"
+                                        formControlName="resource-kind" styleClass="newrole-font" appendTo="body"
                                         [options]="permission.kindOptions" placeholder="kind...">
                             </p-dropdown>
                           </div>

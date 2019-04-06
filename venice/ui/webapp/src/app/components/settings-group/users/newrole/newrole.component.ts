@@ -74,6 +74,8 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   }
 
   ngOnInit() {
+    // VS-209. add "ALL" option for group.
+    this.groupOptions = this.addAllGroupOrKindItem(this.groupOptions );
   }
 
   setupData() {
@@ -325,7 +327,12 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       permission[NewroleComponent.KINDOPTIONS] = [];
     }
     permission[NewroleComponent.KINDOPTIONS].length = 0;
-    permission[NewroleComponent.KINDOPTIONS] = this.getKindOptions(permission);
+    // for VS-209, when group is "ALL", kind option must be "ALL"
+    if ($event.value === 'ALL') {
+      permission[NewroleComponent.KINDOPTIONS] = [{ label: 'All', value: NewroleComponent._ALL_ }];
+    } else {
+      permission[NewroleComponent.KINDOPTIONS] = this.getKindOptions(permission);
+    }
 
     this.setPermissionInputOnGroupChange($event.value, permission);
   }
@@ -363,7 +370,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     const selectedGroup = Utility.makeFirstLetterUppercase(groupValue);
     const kinds = Utility.getKindsByCategory(selectedGroup);
     const kindsItems = Utility.stringArrayToSelectItem(kinds, false);
-    return this.addAllKindItem(kindsItems);
+    return this.addAllGroupOrKindItem(kindsItems);
   }
 
   /**
@@ -371,10 +378,13 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    * We don’t want (group:all, kind:all), but we allow (group: Auth, kind:“_All_“).  Thus, add a "_All_"
    * @param selectItems
    */
-  private addAllKindItem(selectItems: SelectItem[]): SelectItem[] {
-    selectItems.push({ label: 'All', value: NewroleComponent._ALL_ });  // note: '_All_' is special in server.Auth
-    return selectItems;
+  private addAllGroupOrKindItem(selectItems: SelectItem[]): SelectItem[] {
+    let newSelectItems: SelectItem[] = [];
+    newSelectItems.push({ label: 'All', value: NewroleComponent._ALL_ });  // note: '_All_' is special in server.Auth
+    newSelectItems = newSelectItems.concat(selectItems);
+    return newSelectItems;
   }
+
 
   onActionChange(event: any, permission: any, actionListboxWidget: any, permissionIndex: number) {
     const values = event.value;
