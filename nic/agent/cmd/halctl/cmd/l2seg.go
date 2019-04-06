@@ -168,15 +168,18 @@ func l2segShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 		// Print Header
 		multicastShowOifListHeader(cmd, args)
 
+		// Get map of all ifs to if names
+		ifIDToStr := ifGetAllStr()
+
 		// Print Entries
 		for _, resp := range respMsg.Response {
 			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 				continue
 			}
-			multicastShowOifList(resp.GetStatus().GetBcastLst())
-			multicastShowOifList(resp.GetStatus().GetMcastLst())
-			multicastShowOifList(resp.GetStatus().GetPromLst())
+			multicastShowOifList(resp.GetStatus().GetBcastLst(), ifIDToStr)
+			multicastShowOifList(resp.GetStatus().GetMcastLst(), ifIDToStr)
+			multicastShowOifList(resp.GetStatus().GetPromLst(), ifIDToStr)
 		}
 	} else {
 		// Print Header

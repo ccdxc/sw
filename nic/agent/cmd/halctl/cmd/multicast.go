@@ -19,10 +19,11 @@ import (
 )
 
 var (
-	mcastHndl     uint64
-	multicastOif  bool
-	pdMulticastID uint64
-	pdMulticastBr bool
+	mcastHndl      uint64
+	multicastOif   bool
+	pdMulticastID  uint64
+	pdMulticastBr  bool
+	multicastBrief bool
 )
 
 var multicastShowCmd = &cobra.Command{
@@ -46,6 +47,7 @@ func init() {
 	multicastShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	multicastShowCmd.Flags().Uint64Var(&mcastHndl, "handle", 1, "Specify multicast handle")
 	multicastShowCmd.Flags().BoolVar(&multicastOif, "oif-list", false, "Display oif list")
+	multicastShowCmd.Flags().BoolVar(&multicastBrief, "brief", false, "Show multicast object in brief")
 	multicastSpecShowCmd.Flags().Uint64Var(&mcastHndl, "handle", 1, "Specify multicast handle")
 	multicastSpecShowCmd.Flags().BoolVar(&multicastOif, "oif-list", false, "Display oif list")
 }
@@ -101,13 +103,31 @@ func multicastShowSpecCmdHandler(cmd *cobra.Command, args []string) {
 		// Print Header
 		multicastShowOifListHeader(cmd, args)
 
+		// Get map of all ifs to if names
+		ifIDToStr := ifGetAllStr()
+
 		// Print Entries
 		for _, resp := range respMsg.Response {
 			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
 				continue
 			}
-			multicastShowOifList(resp.GetStatus().GetOifList())
+			multicastShowOifList(resp.GetStatus().GetOifList(), ifIDToStr)
+		}
+	} else if cmd.Flags().Changed("brief") {
+		// Print Header
+		multicastShowBriefHeader(cmd, args)
+
+		// Get map of all ifs to if names
+		ifIDToStr := ifGetAllStr()
+
+		// Print Entries
+		for _, resp := range respMsg.Response {
+			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+				continue
+			}
+			multicastShowBrief(resp, ifIDToStr)
 		}
 	} else {
 		// Print Header
@@ -187,8 +207,55 @@ func multicastDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	handleMulticastDetailShowCmd(cmd, nil)
 }
 
+func multicastShowBriefHeader(cmd *cobra.Command, args []string) {
+	fmt.Printf("L2SegId:      L2 segment id    Group:        Destination group\n")
+	fmt.Printf("OifList:      Oif list\n")
+	hdrLine := strings.Repeat("-", 60)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-10s%-20s%-30s\n",
+		"L2SegId", "Group", "OifList")
+	fmt.Println(hdrLine)
+}
+
+func multicastShowBrief(resp *halproto.MulticastEntryGetResponse, ifIDToStr map[uint64]string) {
+	grpStr := ""
+
+	if resp.GetSpec().GetKeyOrHandle().GetKey().GetIp() != nil {
+		grp := resp.GetSpec().GetKeyOrHandle().GetKey().GetIp().GetGroup()
+		grpStr = utils.IPAddrToStr(grp)
+	} else {
+		grp := resp.GetSpec().GetKeyOrHandle().GetKey().GetMac().GetGroup()
+		grpStr = utils.MactoStr(grp)
+	}
+
+	l2SegID := resp.GetSpec().GetKeyOrHandle().GetKey().
+		GetL2SegmentKeyHandle().GetSegmentId()
+
+	oifList := resp.GetSpec().GetOifKeyHandles()
+	oifStr := ""
+
+	if len(oifList) > 0 {
+		count := 0
+		for i := 0; i < len(oifList); i++ {
+			if i == len(oifList)-1 {
+				oifStr += fmt.Sprintf("%s", ifIDToStr[oifList[i].GetInterfaceId()])
+			} else {
+				oifStr += fmt.Sprintf("%s,", ifIDToStr[oifList[i].GetInterfaceId()])
+				count++
+				if count%2 == 0 {
+					oifStr += fmt.Sprintf("\n%-30s", "")
+				}
+			}
+		}
+	} else {
+		oifStr += "None"
+	}
+
+	fmt.Printf("%-10d%-20s%-30s\n",
+		l2SegID, grpStr, oifStr)
+}
+
 func multicastShowHeader(cmd *cobra.Command, args []string) {
-	fmt.Printf("\n")
 	fmt.Printf("Source:        Sender of the multicast traffic    Group:        Destination group\n")
 	fmt.Printf("Handle:        HAL Handle                         L2SegId:      L2 segment id\n")
 	fmt.Printf("NumOIFs:       Number of outgoing interfaces      OifListId:    Oif list id\n")
@@ -220,15 +287,6 @@ func multicastShowOneResp(resp *halproto.MulticastEntryGetResponse) {
 		GetL2SegmentKeyHandle().GetSegmentId()
 
 	oifList := resp.GetSpec().GetOifKeyHandles()
-	oifStr := ""
-
-	if len(oifList) > 0 {
-		for i := 0; i < len(oifList); i++ {
-			oifStr += fmt.Sprintf("%d ", oifList[i].GetInterfaceId())
-		}
-	} else {
-		oifStr += "None"
-	}
 
 	fmt.Printf("%-18s%-18s%-10d%-10d%-10d%-10d\n",
 		srcStr,
@@ -240,22 +298,20 @@ func multicastShowOneResp(resp *halproto.MulticastEntryGetResponse) {
 }
 
 func multicastShowOifListHeader(cmd *cobra.Command, args []string) {
-	fmt.Printf("\n")
 	fmt.Printf("Id:            Oif list id\n")
 	fmt.Printf("HonrIng:       Whether a copy will be generated as per the ingress lookup decision\n")
 	fmt.Printf("NextList:      The id of the next list, if any, that this list is spliced to\n")
-	fmt.Printf("L2SegId:       L2 segment id    IntfId:        Interface id\n")
-	fmt.Printf("QueueId:       Lif queue id     QueuePurpose:  Lif queue purpose\n")
-	hdrLine := strings.Repeat("-", 85)
+	fmt.Printf("L2SegId:       Oif L2 segment id\n")
+	fmt.Printf("OifIntf:       Oif Interface id:queue id:queue purpose\n")
+	hdrLine := strings.Repeat("-", 68)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-20s%-5s%-20s\n", "Id", "HonrIng", "NextList", "", "Oifs", "")
-	fmt.Printf("%-30s%-10s%-10s%-10s%-20s\n", "", "L2SegId", "IntfId", "QueueId", "QueuePurpose")
+	fmt.Printf("%-10s%-10s%-10s%-8s%-30s\n", "Id", "HonrIng", "NextList", "L2SegId", "OifIntf")
 	fmt.Println(hdrLine)
 }
 
-func multicastShowOifList(oifList *halproto.OifList) {
-
+func multicastShowOifList(oifList *halproto.OifList, ifIDToStr map[uint64]string) {
 	honorStr := ""
+	first := true
 
 	if oifList.GetIsHonorIngress() {
 		honorStr = "Yes"
@@ -263,13 +319,16 @@ func multicastShowOifList(oifList *halproto.OifList) {
 		honorStr = "No"
 	}
 
-	fmt.Printf("%-10d%-10s%-10d\n", oifList.GetId(), honorStr, oifList.GetAttachedListId())
+	fmt.Printf("%-10d%-10s%-10d", oifList.GetId(), honorStr, oifList.GetAttachedListId())
 	for i := 0; i < len(oifList.GetOifs()); i++ {
-		fmt.Printf("%-30s%-10d%-10d%-10d%-20d\n",
-			"",
+		if first != true {
+			fmt.Printf("%-30s", "")
+		}
+		fmt.Printf("%-8d%-30s\n",
 			oifList.GetOifs()[i].GetL2Segment().GetSegmentId(),
-			oifList.GetOifs()[i].GetInterface().GetInterfaceId(),
-			oifList.GetOifs()[i].GetQId(),
-			oifList.GetOifs()[i].GetQPurpose())
+			fmt.Sprintf("%s:%d:%d", ifIDToStr[oifList.GetOifs()[i].GetInterface().GetInterfaceId()],
+				oifList.GetOifs()[i].GetQId(),
+				oifList.GetOifs()[i].GetQPurpose()))
+		first = false
 	}
 }
