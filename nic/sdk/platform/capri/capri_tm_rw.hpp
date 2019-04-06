@@ -395,7 +395,6 @@ cap_pb_sched_spq_pgm (uint32_t chip_id,
 uint32_t capri_tm_get_port_occupancy(tm_port_t port, uint32_t iq);
 uint32_t capri_tm_get_xon_threshold(uint32_t ctx);
 uint32_t capri_tm_get_xoff_threshold(uint32_t ctx);
-sdk_ret_t capri_tm_set_reserved_min(uint32_t reserved_min);
 
 }    // namespace capri
 }    // namespace platform
