@@ -60,6 +60,7 @@ namespace hal {
 
 #define MAX_SG_PER_ARRAY                             0x10 //16
 
+#define EP_UPDATE_SESSION_TIMER                      (250) 
 typedef hal_ret_t (*dhcp_status_func_t)(vrf_id_t vrf_id, ip_addr_t *ip_addr,
         DhcpStatus *dhcp_status);
 typedef hal_ret_t (*arp_status_func_t)(vrf_id_t vrf_id, ip_addr_t *ip_addr,

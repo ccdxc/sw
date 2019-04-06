@@ -1133,27 +1133,55 @@ end:
     return ret;
 }
 
-hal_ret_t
-ep_handle_if_change (ep_t *ep, hal_handle_t new_if_handle)
+static void
+ep_update_session_walk_cb(void *timer, uint32_t timer_id, void *ctxt)
 {
     dllist_ctxt_t                   *curr, *next;
     hal_handle_id_list_entry_t      *entry = NULL;
     session_t                       *session = NULL;
+    hal_handle_t ep_handle    = (hal_handle_t) ctxt;
+    ep_t                            *ep;
+    hal_ret_t                       ret;
+
+    HAL_TRACE_VERBOSE("Ep Session update walk cb");
+
+    ep = find_ep_by_handle(ep_handle);
+    if (ep) {
+        // Walk though session list and call FTE provided API
+        dllist_for_each_safe(curr, next, &ep->session_list_head) {
+            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+            HAL_TRACE_VERBOSE("Session: {}", entry->handle_id);
+            session = find_session_by_handle(entry->handle_id);
+            SDK_ASSERT(session != NULL);
+            // TODO: Walk few more at a time to converge
+            // faster
+            ret = fte::session_update_async(session);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("failed to update the session");
+                return;
+            }
+        }
+    } else {
+        HAL_TRACE_ERR("ep not found for handle: {}", ep_handle);
+    }
+    return;
+}
+    
+hal_ret_t
+ep_handle_if_change (ep_t *ep, hal_handle_t new_if_handle)
+{
     hal_ret_t                       ret = HAL_RET_OK;
+    void                            *ep_timer = NULL;
 
     HAL_TRACE_DEBUG("Received IF change notification for ep: {}", ep->hal_handle);
- 
-    // Walk though session list and call FTE provided API
-    dllist_for_each_safe(curr, next, &ep->session_list_head) {
-        entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-        HAL_TRACE_DEBUG("Session: {}", entry->handle_id);
-        session = find_session_by_handle(entry->handle_id);
-        SDK_ASSERT(session != NULL);
-        // TODO: Walk few more at a time to converge
-        // faster
-        ret = fte::session_update_async(session);
+    ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_UPD, 
+                                 EP_UPDATE_SESSION_TIMER, 
+                                 (void *) ep->hal_handle,
+                                 ep_update_session_walk_cb, false); 
+    if (!ep_timer) {
+        HAL_TRACE_ERR("Failed to schedule the timer for the ep");
+        return HAL_RET_ERR;
     }
-
     return ret;
 }
 
@@ -1180,23 +1208,27 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep = (ep_t *)dhl_entry->obj;
 
     HAL_TRACE_DEBUG("EP update cb");
-    pd::pd_ep_update_args_init(&pd_ep_args);
-    pd_ep_args.ep            = ep;
-    pd_ep_args.iplist_change = app_ctxt->iplist_change;
-    pd_ep_args.add_iplist    = app_ctxt->add_iplist;
-    pd_ep_args.del_iplist    = app_ctxt->del_iplist;
-    pd_ep_args.app_ctxt      = app_ctxt;
-    pd_func_args.pd_ep_update = &pd_ep_args;
-    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_UPDATE, &pd_func_args);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to update ep pd, err : {}", ret);
+    if (app_ctxt->iplist_change) { 
+        pd::pd_ep_update_args_init(&pd_ep_args);
+        pd_ep_args.ep            = ep;
+        pd_ep_args.iplist_change = app_ctxt->iplist_change;
+        pd_ep_args.add_iplist    = app_ctxt->add_iplist;
+        pd_ep_args.del_iplist    = app_ctxt->del_iplist;
+        pd_ep_args.app_ctxt      = app_ctxt;
+        pd_func_args.pd_ep_update = &pd_ep_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_UPDATE, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to update ep pd, err : {}", ret);
+        }
     }
 
     // make FTE calls to process sessions
-    ret = ep_handle_if_change(ep, app_ctxt->new_if_handle);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed EP update, err : {}", ret);
-        goto end;
+    if (app_ctxt->if_change) {
+        ret = ep_handle_if_change(ep, app_ctxt->new_if_handle);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed EP update, err : {}", ret);
+            goto end;
+        }
     }
 
 end:
@@ -1264,6 +1296,8 @@ ep_copy_session_list (ep_t *dst_ep, ep_t *src_ep)
         sdk::lib::dllist_del(&entry->dllist_ctxt);
         sdk::lib::dllist_add(&dst_ep->session_list_head, &entry->dllist_ctxt);
     }
+    HAL_TRACE_VERBOSE("ep_clone no of sessions: {}", sdk::lib::dllist_count(&dst_ep->session_list_head));
+    
 
     return HAL_RET_OK;
 }
@@ -1682,7 +1716,6 @@ endpoint_update_ip_op (ep_t *ep, ip_addr_t *ip_addr,
     hal::hal_cfg_db_close();
     return ret;
 }
-
 
 hal_ret_t
 endpoint_update_if (ep_t *ep, if_t *new_hal_if) {
