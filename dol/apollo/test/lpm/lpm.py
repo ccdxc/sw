@@ -10,6 +10,8 @@ def Setup(infra, module):
 def TestCaseSetup(tc):
     tc.AddIgnorePacketField('UDP', 'sport')
     tc.AddIgnorePacketField('UDP', 'chksum')
+    tc.AddIgnorePacketField('TCP', 'chksum')
+    tc.AddIgnorePacketField('IP', 'chksum') #Needed to pass NAT testcase
     return True
 
 def TestCaseTeardown(tc):

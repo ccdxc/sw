@@ -1,0 +1,22 @@
+# Feature LPM Modules List
+feature:
+    id          : lpm
+    sub         : negative
+    package     : test.lpm
+    module      : lpm
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : IPV4_NO_ROUTE
+        spec    : lpm_no_route.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV4,RouteType=empty
+
+    - module:
+        name    : IPV6_NO_ROUTE
+        spec    : lpm_no_route.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=empty
+

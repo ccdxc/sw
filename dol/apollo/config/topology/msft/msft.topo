@@ -83,12 +83,17 @@ vpc:
 
              - type: base
                routetype: overlap
-               count : 256
+               count : 2
                v4base: '66.0.0.0\16' # TEMP Infra issue and will reverse this in test logic
                v4prefixlen: 24
                nv4routes   : 10
                v6base: '2000::\64' # TEMP Infra issue and will reverse this in test logic
                v6prefixlen: 120
                nv6routes   : 10
+               v4routes:
+               v6routes:
+
+             - type: specific # route table with empty routes
+               routetype: empty
                v4routes:
                v6routes:

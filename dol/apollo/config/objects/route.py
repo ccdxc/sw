@@ -66,6 +66,7 @@ class RouteObject(base.ConfigObjectBase):
     def SetupTestcaseConfig(self, obj):
         obj.localmapping = self.l_obj
         obj.route = self
+        obj.tunnel = self.Tunnel
         obj.hostport = 1
         obj.switchport = 2
         obj.devicecfg = Store.GetDevice()
@@ -258,7 +259,7 @@ class RouteTableObjectHelper:
         for route_obj in client.Objects():
             if not route_obj.IsFilterMatch(selectors.route.filters):
                 continue
-            if not route_obj.routes:
+            if rtype != 'empty' and 0 == len(route_obj.routes):
                 # skip route tables with no routes
                 continue
             for lobj in lmapping.GetMatchingObjects(selectors):

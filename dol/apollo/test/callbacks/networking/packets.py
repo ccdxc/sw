@@ -24,8 +24,6 @@ def GetPacketTemplateFromMapping(testcase, packet, args=None):
 def __get_non_default_random_route(routes):
     numroutes = len(routes)
     if numroutes == 0:
-        logger.error("ERROR: no routes")
-        sys.exit(1)
         return None
     elif numroutes == 1:
         route = None
@@ -43,8 +41,8 @@ def __get_host_from_route_impl(obj):
         returns a random usable host from random non-default route
         if only default route exists, returns IPV4_HOST / IPV6_HOST
     """
-    prefix = __get_non_default_random_route(obj.routes)
-    if prefix is None:
+    route = __get_non_default_random_route(obj.routes)
+    if route is None:
         if obj.AddrFamily == "IPV4":
             return str(IPV4_HOST)
         elif obj.AddrFamily == "IPV6":
@@ -53,10 +51,12 @@ def __get_host_from_route_impl(obj):
             logger.error("ERROR: invalid AddrFamily ", obj.AddrFamily)
             sys.exit(1)
             return None
-    host = next(prefix.hosts())
-    total_hosts = prefix.num_addresses - 2
+    total_hosts = route.num_addresses
     if total_hosts > 1:
+        host = next(route.hosts())
         host += random.randint(0, total_hosts-1)
+    else:
+        host = route.network_address
     return str(host)
 
 def GetUsableHostFromRoute(testcase, packet, args=None):
