@@ -23,6 +23,7 @@ static const struct ionic_stat_desc ionic_lif_stats_desc[] = {
 static const struct ionic_stat_desc ionic_tx_stats_desc[] = {
 	IONIC_TX_STAT_DESC(pkts),
 	IONIC_TX_STAT_DESC(bytes),
+	IONIC_TX_STAT_DESC(clean),
 };
 
 static const struct ionic_stat_desc ionic_rx_stats_desc[] = {

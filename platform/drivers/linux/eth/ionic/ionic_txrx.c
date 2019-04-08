@@ -186,8 +186,8 @@ void ionic_rx_flush(struct cq *cq)
 {
 	unsigned int work_done;
 
-	work_done = ionic_cq_service(cq, -1, ionic_rx_service, NULL, NULL);
-
+	work_done = ionic_cq_service(cq, cq->num_descs, ionic_rx_service,
+				     NULL, NULL);
 	if (work_done)
 		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
 }
@@ -208,7 +208,8 @@ void ionic_tx_flush(struct cq *cq)
 {
 	unsigned int work_done;
 
-	work_done = ionic_cq_service(cq, -1, ionic_tx_service, NULL, NULL);
+	work_done = ionic_cq_service(cq, cq->num_descs, ionic_tx_service,
+				     NULL, NULL);
 	if (work_done)
 		ionic_intr_return_credits(cq->bound_intr, work_done, 0, true);
 }

@@ -357,7 +357,7 @@ unsigned int ionic_cq_service(struct cq *cq, unsigned int work_to_do,
 		cq->tail = cq->tail->next;
 		DEBUG_STATS_CQE_CNT(cq);
 
-		if (++work_done == work_to_do)
+		if (++work_done >= work_to_do)
 			break;
 	}
 
