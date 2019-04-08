@@ -3,7 +3,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -14,15 +13,20 @@ import (
 	_ "github.com/influxdata/influxdb/tsdb/engine"
 	_ "github.com/influxdata/influxdb/tsdb/index"
 
+	"github.com/pensando/sw/api/generated/events"
+
+	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/citadel/broker"
 	"github.com/pensando/sw/venice/citadel/collector"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver"
 	"github.com/pensando/sw/venice/citadel/data"
-	httpserver "github.com/pensando/sw/venice/citadel/http"
+	"github.com/pensando/sw/venice/citadel/http"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/query"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/debug"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -65,8 +69,16 @@ func main() {
 
 	// Initialize logger config
 	log.SetConfig(logConfig)
-
 	logger := log.GetNewLogger(logConfig)
+
+	// create events recorder
+	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.Citadel},
+		EvtTypes: evtsapi.GetEventTypes()}, logger)
+	if err != nil {
+		log.Fatalf("failed to create events recorder, err: %v", err)
+	}
+	defer evtsRecorder.Close()
 
 	// get host name and use that for node url & uuid
 	if *nodeURL == "" || *nodeUUID == "" {
@@ -102,9 +114,7 @@ func main() {
 		log.Fatalf("Error creating broker. Err: %v", err)
 	}
 
-	if err := checkClusterHealth(br); err != nil {
-		log.Fatalf("%s", err)
-	}
+	checkClusterHealth(br)
 
 	log.Infof("Datanode %+v and broker %+v are running", dn, br)
 
@@ -137,14 +147,20 @@ func main() {
 	select {}
 }
 
-func checkClusterHealth(br *broker.Broker) error {
-	// wait till cluster is ready
-	for i := 0; i < maxRetry; i++ {
-		if err := br.ClusterCheck(); err == nil {
-			return nil
+func checkClusterHealth(br *broker.Broker) {
+	for { // wait till cluster is ready
+		var err error
+		for i := 0; i < maxRetry; i++ {
+			if err = br.ClusterCheck(); err == nil {
+				log.Infof("cluster is ready")
+				recorder.Event(events.ServiceRunning, events.SeverityLevel_INFO, globals.Citadel+" service is ready", nil)
+				return
+			}
+			log.Errorf("cluster failed %v", err)
+			time.Sleep(time.Second)
 		}
-		time.Sleep(time.Second)
-	}
 
-	return errors.New("cluster check failed")
+		// log event
+		recorder.Event(events.ServiceUnresponsive, events.SeverityLevel_WARNING, globals.Citadel+" service failed, "+err.Error(), nil)
+	}
 }
