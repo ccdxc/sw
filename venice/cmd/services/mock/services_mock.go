@@ -228,6 +228,16 @@ func (s *SystemdIf) DaemonReload() (err error) {
 	return nil
 }
 
+// GetUnitProperty is mock implementation of systemd daemon reload.
+func (s *SystemdIf) GetUnitProperty(name string, property string) (string, error) {
+	return "", nil
+}
+
+// GetServiceProperty is mock implementation of systemd daemon reload.
+func (s *SystemdIf) GetServiceProperty(name string, property string) (string, error) {
+	return "", nil
+}
+
 // StartTarget is mock implementation of starting a target.
 func (s *SystemdIf) StartTarget(name string) (err error) {
 	return nil

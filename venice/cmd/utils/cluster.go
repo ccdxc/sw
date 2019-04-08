@@ -89,7 +89,7 @@ type ImageConfig struct {
 	ImageMap                map[string]string   `json:"imageMap,omitempty"`
 	UpgradeOrder            []string            `json:"upgradeOrder,omitempty"`
 	SupportedNaplesVersions map[string][]string `json:"supportedNaplesVersions,omitempty"`
-	GitVersion              map[string]string   `json:"cmdVersion,omitempty"`
+	GitVersion              map[string]string   `json:"cmdVersionMap,omitempty"`
 }
 
 func readImageConfigFile(imageConfig *ImageConfig) error {

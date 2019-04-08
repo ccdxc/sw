@@ -14,7 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	k8sclient "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/pkg/api/v1"
+	v1 "k8s.io/client-go/pkg/api/v1"
 	clientTypes "k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	rbac "k8s.io/client-go/pkg/apis/rbac/v1beta1"
 
@@ -32,11 +32,13 @@ var (
 )
 
 const (
-	maxModules = 32
-	waitTime   = time.Second
-	daemonSet  = "DaemonSet"
-	deployment = "Deployment"
-	defaultNS  = "default"
+	maxModules           = 32
+	waitTime             = time.Second
+	daemonSet            = "DaemonSet"
+	deployment           = "Deployment"
+	defaultNS            = "default"
+	maxIters             = 24
+	sleepBetweenItersSec = 5
 )
 
 // k8sService is responsible for starting and reporting on controller
@@ -566,16 +568,32 @@ func (k *k8sService) UpgradeServices(services []string) error {
 func upgradeDaemonSet(client k8sclient.Interface, module *protos.Module) error {
 	dsConfig := createDaemonSetObject(module)
 	var retval error
+	restartSuccessful := false
 	for numTries := 0; numTries < 5; numTries++ {
 		d, err := client.Extensions().DaemonSets(defaultNS).Update(dsConfig)
 		if err == nil {
-			log.Infof("Updated DaemonSet %+v", d)
+			log.Infof("Updated DaemonSet spec %+v", d)
+			//Wait for daemonset restart to be complete
+			for ii := 0; ii < maxIters; ii++ {
+				cd, _ := client.Extensions().DaemonSets(defaultNS).Get(module.Name, metav1.GetOptions{})
+				if cd.Status.NumberReady != cd.Status.DesiredNumberScheduled {
+					log.Infof("DaemonSet not ready yet.. Waiting(%+v).. DeamonSet update Status %+v", cd.Name, cd.Status)
+					time.Sleep(sleepBetweenItersSec * time.Second)
+					continue
+				}
+				restartSuccessful = true
+				break
+			}
+			if !restartSuccessful {
+				log.Errorf("Daemonset restart failed for module %+v", module.Name)
+				err = fmt.Errorf(" Deamonset restart failed for module %+v", module.Name)
+				return err
+			}
 			return nil
 		}
 		retval = err
 		time.Sleep(time.Second)
 	}
-
 	log.Errorf("Failed to Update DaemonSet %+v with error: %v", dsConfig, retval)
 	return retval
 }
@@ -583,10 +601,28 @@ func upgradeDaemonSet(client k8sclient.Interface, module *protos.Module) error {
 func upgradeDeployment(client k8sclient.Interface, module *protos.Module) error {
 	dConfig := createDeploymentObject(module)
 	var retval error
+	restartSuccessful := false
 	for numTries := 0; numTries < 5; numTries++ {
 		d, err := client.Extensions().Deployments(defaultNS).Update(dConfig)
 		if err == nil {
-			log.Infof("Updated Deployment %+v", d)
+			log.Infof("Updated Deployment Spec %+v", d)
+			//Wait for service deployment to be complete
+			for ii := 0; ii < maxIters; ii++ {
+				cd, _ := client.Extensions().Deployments(defaultNS).Get(module.Name, metav1.GetOptions{})
+				log.Infof("ReadyReplicas %+v AvailableReplicas %+v", cd.Status.ReadyReplicas, cd.Status.AvailableReplicas)
+				if cd.Status.ReadyReplicas == 0 || cd.Status.ReadyReplicas != cd.Status.AvailableReplicas {
+					log.Infof("Deployment not complete yet.. Waiting(%+v).. Deployment update Status %+v", cd.Name, cd.Status)
+					time.Sleep(sleepBetweenItersSec * time.Second)
+					continue
+				}
+				restartSuccessful = true
+				break
+			}
+			if !restartSuccessful {
+				log.Errorf("Deployment failed for module %+v", module.Name)
+				err = fmt.Errorf(" Deployment failed for module %+v", module.Name)
+				return err
+			}
 			return nil
 		}
 		retval = err

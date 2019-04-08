@@ -117,10 +117,12 @@ func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 		if !found {
 			var st rolloutproto.VeniceOpStatus
 			cmdVersion := utils.GetGitVersion()
+			log.Infof("Rollout from %+v to OpSepc version %+v to cmdVersion %+v", env.GitVersion, opSpec.Version, cmdVersion[opSpec.Version])
 			if env.GitVersion != cmdVersion[opSpec.Version] {
-				log.Infof("Performing Rollout to version %v", utils.GetGitVersion())
+				log.Infof("Performing Rollout to version %+v", utils.GetGitVersion())
 				st = r.doOP(opSpec.Op, opSpec.Version)
 			} else {
+				log.Info("CMD cameup fine. Setting the  veniceRolloutStatus to Success")
 				st = rolloutproto.VeniceOpStatus{
 					Op:      opSpec.Op,
 					Version: opSpec.Version,

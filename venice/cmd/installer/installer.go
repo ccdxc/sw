@@ -9,9 +9,10 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
+	"time"
 
 	"github.com/pensando/sw/venice/cmd/env"
-
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/imagestore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -45,6 +46,7 @@ const (
 	installerTmpDir       = globals.RuntimeDir + "/installer"
 	tmpImageFileName      = "venice.tgz"
 	installerMetaFileName = "venice-install.json"
+	maxIters              = 10
 )
 
 // PreCheck installation of given version
@@ -148,9 +150,41 @@ func runSteps(steps []installationStep) error {
 			}
 
 		case "systemctl-reload-running":
+			oldpid, _ := syst.GetServiceProperty(step.Data, "MainPID")
+			log.Infof("restarting %s", step.Data)
 			if err := syst.RestartTargetIfRunning(step.Data); err != nil {
 				log.Errorf("Error %v while issuing systemctl-reload-running %v", err, step.Data)
 				return err
+			}
+
+			if strings.Contains(step.Data, "pen-etcd") {
+				//Just wait 10 seconds for etcd to comeup. etcd restart is usually followed by a leader election
+				//so we wait for 10 seconds during rollout for etcd to stabilize
+				log.Infof("Waiting for pen-etcd to comeup..")
+				time.Sleep(10 * time.Second)
+			}
+			//wait for the process to be up
+			log.Infof("Checking the status of %s", step.Data)
+			pid := getServiceProperty(step.Data, "MainPID")
+			if pid == "" {
+				errStr := fmt.Sprintf("Failed to rollout process %#v (oldpid: %v newpid: %v)", step.Data, oldpid, pid)
+				return errors.New(errStr)
+			}
+			activeState := getUnitProperty(step.Data, "ActiveState", "\"active\"")
+			if activeState != "\"active\"" {
+				errStr := fmt.Sprintf("Failed to rollout process %#v (ActiveState %s)", step.Data, activeState)
+				return errors.New(errStr)
+			}
+
+			subState := getUnitProperty(step.Data, "SubState", "\"running\"")
+			if subState != "\"running\"" {
+				errStr := fmt.Sprintf("Failed to rollout process %#v (SubState %s)", step.Data, subState)
+				return errors.New(errStr)
+			}
+
+			log.Infof("Process %s : oldpid(%s) newpid(%s) activeState(%s) subState(%s)", step.Data, oldpid, pid, activeState, subState)
+			if oldpid != pid && activeState == "\"active\"" && subState == "\"running\"" {
+				log.Infof("Rollout of %s successful.", step.Data)
 			}
 		default:
 			log.Errorf("unknown installType while executing step %#v", step)
@@ -209,6 +243,40 @@ func LoadAndInstallImage() error {
 	}
 
 	return err
+}
+func getServiceProperty(service string, property string) string {
+	syst := systemd.New()
+	var ii int
+	var pid string
+	var err error
+	for ; ii < maxIters; ii++ {
+		pid, err = syst.GetServiceProperty(service, property)
+		log.Infof("%s of %s [%s]", property, service, pid)
+		if pid == "" || err != nil {
+			log.Infof("Waiting to get [%s] of %s err %s", property, service, err)
+			time.Sleep(time.Second)
+			continue
+		}
+		break
+	}
+	return pid
+}
+func getUnitProperty(unit string, property string, expectedVal string) string {
+	syst := systemd.New()
+	var ii int
+	var propVal string
+	var err error
+	for ; ii < maxIters; ii++ {
+		propVal, err = syst.GetUnitProperty(unit, property)
+		log.Infof("%s of %s [%s]", property, unit, propVal)
+		if propVal != expectedVal || err != nil {
+			log.Infof("Waiting to get [%s] of %s: err[%s] currVal[%s]", property, unit, err, propVal)
+			time.Sleep(time.Second)
+			continue
+		}
+		break
+	}
+	return propVal
 }
 
 // Cleanup removes all downloaded/extracted image  contents

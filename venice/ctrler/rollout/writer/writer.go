@@ -4,6 +4,7 @@ package writer
 
 import (
 	"context"
+	"time"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/rollout"
@@ -61,12 +62,14 @@ func (wr *APISrvWriter) getAPIClient() (apiclient.Services, error) {
 func (wr *APISrvWriter) WriteRollout(ro *rollout.Rollout) error {
 	// if we have no URL, we are done
 	if wr.apisrvURL == "" {
+		log.Infof("apisrvURL is null")
 		return nil
 	}
 
 	// get the api client
 	apicl, err := wr.getAPIClient()
 	if err != nil {
+		log.Infof("Updating Rollout Failed to connect get APIClient %v", err)
 		return err
 	}
 
@@ -74,8 +77,18 @@ func (wr *APISrvWriter) WriteRollout(ro *rollout.Rollout) error {
 	ro.ObjectMeta.ResourceVersion = ""
 
 	// write it
-	log.Debugf("Updating Rollout %v Status %v", ro.Name, ro.Status)
-	_, err = apicl.RolloutV1().Rollout().Update(context.Background(), ro)
+
+	log.Infof("Updating Rollout %v Status %v", ro.Name, ro.Status)
+	for ii := 0; ii < 30; ii++ {
+		k, err := apicl.RolloutV1().Rollout().Update(context.Background(), ro)
+		if err != nil {
+			log.Infof("Rollout Update errored %v", err)
+			time.Sleep(time.Second)
+			continue
+		}
+		log.Infof("Rollout Update successful %+v", k)
+		break
+	}
 	return err
 }
 

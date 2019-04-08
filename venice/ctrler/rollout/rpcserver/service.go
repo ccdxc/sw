@@ -122,7 +122,7 @@ func (n *ServiceRolloutRPCServer) UpdateServiceRolloutStatus(ctx context.Context
 
 	sros, err := n.stateMgr.GetServiceRolloutState(status.ObjectMeta.Tenant, status.ObjectMeta.Name)
 	if err != nil {
-		log.Debugf("non-existent ServiceRollout {%+v}. Err: %v", status.ObjectMeta.Name, err)
+		log.Infof("non-existent ServiceRollout {%+v}. Err: %v", status.ObjectMeta.Name, err)
 		return &api.Empty{}, nil
 	}
 	sros.UpdateServiceRolloutStatus(&status.Status)

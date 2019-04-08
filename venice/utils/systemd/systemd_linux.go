@@ -19,6 +19,42 @@ var (
 type systemd struct {
 }
 
+func (s *systemd) GetServiceProperty(name string, property string) (string, error) {
+
+	conn, err := dbus.New()
+	if err != nil || conn == nil {
+		log.Infof("GetServiceProperty: unable to establish connection")
+		return "", errors.Wrap(err, "unable to establish dbus connection to systemd")
+	}
+	defer conn.Close()
+
+	propVal, err := conn.GetServiceProperty(name, property)
+	if err != nil || propVal == nil {
+		log.Errorf("GetServiceProperty returned err %#v", err)
+		return "", errors.Wrap(err, "GetServiceProperty returned error")
+	}
+
+	return propVal.Value.String(), nil
+}
+
+func (s *systemd) GetUnitProperty(name string, property string) (string, error) {
+
+	conn, err := dbus.New()
+	if err != nil || conn == nil {
+		log.Infof("GetUnitProperty unable to establish connection")
+		return "", errors.Wrap(err, "unable to establish dbus connection to systemd")
+	}
+	defer conn.Close()
+
+	propVal, err := conn.GetUnitProperty(name, property)
+	if err != nil || propVal == nil {
+		log.Errorf("GetUnitProperty returned err %#v", err)
+		return "", errors.Wrap(err, "GetUnitProperty returned error")
+	}
+
+	return propVal.Value.String(), nil
+}
+
 func (s *systemd) DaemonReload() error {
 	conn, err := dbus.New()
 	if err != nil {

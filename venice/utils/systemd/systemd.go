@@ -23,6 +23,8 @@ type Interface interface {
 	RestartTarget(name string) error
 	RestartTargetIfRunning(name string) error
 	NewWatcher() (Watcher, <-chan *UnitEvent, <-chan error)
+	GetUnitProperty(name string, property string) (string, error)
+	GetServiceProperty(name string, property string) (string, error)
 }
 
 // Watcher interface provides a channel for watching on systemd bus for interesting services

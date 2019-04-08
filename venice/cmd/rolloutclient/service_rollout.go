@@ -87,7 +87,7 @@ func (v *serviceRolloutClient) run() {
 				time.Sleep(time.Second)
 				break
 			}
-			log.Debugf("Received %#v", evt)
+			log.Infof("Received %#v", evt)
 
 			switch evt.EventType {
 			case api.EventType_CreateEvent:

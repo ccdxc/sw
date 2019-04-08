@@ -260,13 +260,15 @@ func (ros *RolloutState) issueServiceRollout() (bool, error) {
 
 		if !found {
 			v.Spec.Ops = append(v.Spec.Ops, &protos.ServiceOpSpec{Op: protos.ServiceOp_ServiceRunVersion, Version: version})
-			log.Debugf("setting serviceRollout with version %v", version)
+			log.Infof("setting serviceRollout with version %v", version)
 			err = sm.memDB.UpdateObject(v)
 			return true, err // return pending servicerollout with err
 		}
 		if statusFound {
+			log.Infof("Spec and Status found. no pending serviceRollout")
 			return false, nil // spec and status found. no pending servicerollout
 		}
+		log.Infof("Spec found but no Status. no pending serviceRollout")
 		return true, nil // spec found but status not found. return pending servicerollout
 	}
 
@@ -287,6 +289,7 @@ func (ros *RolloutState) issueServiceRollout() (bool, error) {
 			},
 		},
 	}
+	log.Infof("Creating serviceRollout")
 	err = sm.CreateServiceRolloutState(&serviceRollout, ros)
 	if err != nil {
 		log.Errorf("Error %v creating service rollout state", err)
