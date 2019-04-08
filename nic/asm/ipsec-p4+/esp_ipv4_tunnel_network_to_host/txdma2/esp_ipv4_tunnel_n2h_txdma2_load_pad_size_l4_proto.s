@@ -13,8 +13,7 @@ struct phv_ p;
         .param esp_ipv4_tunnel_n2h_txdma2_ipsec_update_tx_stats
 
 esp_ipv4_tunnel_n2h_txdma2_load_pad_size_l4_proto:
-    sub r2, k.ipsec_to_stage3_block_size, 1
-    and r1, d.pad_size, r2 
+    and r1, d.pad_size, (IPSEC_BLOCK_SIZE - 1)
     phvwr p.txdma2_global_pad_size, r1 
     add r5, r0, k.ipsec_to_stage3_ipsec_cb_addr
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_v4_tunnel_n2h_txdma2_build_decap_packet, r5, TABLE_SIZE_512_BITS)

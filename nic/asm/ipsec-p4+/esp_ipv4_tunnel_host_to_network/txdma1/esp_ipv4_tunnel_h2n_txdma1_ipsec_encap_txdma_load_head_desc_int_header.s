@@ -17,11 +17,12 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_load_head_desc_int_header:
     add r3, d.in_desc, IPSEC_SCRATCH_OFFSET 
 
     bgti r2, IPSEC_PAGE_ADDR_RX, esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_bad_barco_in_desc
-      
+    nop      
     phvwr p.barco_req_input_list_address, r3.dx
     phvwr p.barco_req_status_address, r2.dx
     add r1, d.out_desc, 64
     bgti r1, IPSEC_PAGE_ADDR_TX, esp_ipv4_tunnel_h2n_txdma1_ipsec_encap_txdma_bad_barco_out_desc
+    nop
     phvwr p.barco_req_output_list_address, r1.dx
     phvwr p.barco_req_iv_address, d.{in_page}.dx 
     add r1, d.pad_size, d.tailroom_offset

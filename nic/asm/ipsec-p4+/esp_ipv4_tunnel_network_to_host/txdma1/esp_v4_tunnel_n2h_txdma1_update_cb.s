@@ -12,7 +12,7 @@ struct phv_ p;
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
         .param esp_ipv4_tunnel_n2h_txdma1_ipsec_free_resources
 esp_v4_tunnel_n2h_txdma1_update_cb:
-    seq c1, k.txdma1_global_flags, 1
+    sne c1, k.txdma1_global_flags, 0
     bcf [c1], esp_ipv4_tunnel_n2h_hit_errors
     nop
     phvwri p.app_header_table0_valid, 0
@@ -23,7 +23,6 @@ esp_v4_tunnel_n2h_txdma1_update_cb:
 
 esp_ipv4_tunnel_n2h_hit_errors:
     phvwri p.brq_req_write_dma_cmd_type, 0
-    phvwri p.dma_cmd_post_barco_ring_dma_cmd_type, 0
     phvwri p.brq_in_desc_zero_dma_cmd_type, 0
     phvwri p.brq_out_desc_zero_dma_cmd_type, 0
     addi r5, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H

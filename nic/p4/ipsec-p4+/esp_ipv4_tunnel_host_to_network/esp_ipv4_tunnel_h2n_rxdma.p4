@@ -276,11 +276,11 @@ action ipsec_cb_tail_enqueue_input_desc2(pc, rsvd, cosA, cosB, cos_sel,
                                        barco_ring_pindex, barco_ring_cindex,
                                        key_index, iv_size, icv_size, spi,
                                        esn_lo, iv, barco_enc_cmd,
-                                       ipsec_cb_index, block_size,
+                                       ipsec_cb_index,
                                        cb_pindex, cb_cindex, barco_pindex, barco_cindex,
                                        cb_ring_base_addr_hi, cb_ring_base_addr,
                                        barco_ring_base_addr_hi, barco_ring_base_addr, 
-                                       iv_salt, flags)
+                                       iv_salt, barco_full_count, flags)
 {
     IPSEC_CB_SCRATCH_WITH_PC
     IPSEC_SCRATCH_GLOBAL
@@ -306,11 +306,11 @@ action ipsec_cb_tail_enqueue_input_desc(pc, rsvd, cosA, cosB, cos_sel,
                                        barco_ring_pindex, barco_ring_cindex,
                                        key_index, iv_size, icv_size, spi,
                                        esn_lo, iv, barco_enc_cmd,
-                                       ipsec_cb_index, block_size,
+                                       ipsec_cb_index,
                                        cb_pindex, cb_cindex, barco_pindex, barco_cindex,
                                        cb_ring_base_addr_hi, cb_ring_base_addr,
                                        barco_ring_base_addr_hi, barco_ring_base_addr, 
-                                       iv_salt, flags)
+                                       iv_salt, barco_full_count, flags)
 {
     IPSEC_CB_SCRATCH_WITH_PC
 
@@ -499,10 +499,10 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
                                        barco_ring_pindex, barco_ring_cindex,
                                        key_index, iv_size, icv_size, spi,
                                        esn_lo, iv, barco_enc_cmd,
-                                       ipsec_cb_index, block_size, 
+                                       ipsec_cb_index,
                                        cb_pindex, cb_cindex, barco_pindex, 
                                        barco_cindex, cb_ring_base_addr_hi, cb_ring_base_addr, 
-                                       barco_ring_base_addr_hi, barco_ring_base_addr, iv_salt, flags)
+                                       barco_ring_base_addr_hi, barco_ring_base_addr, iv_salt, barco_full_count, flags)
 {
     IPSEC_CB_SCRATCH
 
@@ -523,11 +523,11 @@ action ipsec_encap_rxdma_initial_table(rsvd, cosA, cosB, cos_sel,
     modify_field(ipsec_int_header.headroom, ESP_FIXED_HDR_SIZE+iv_size);
 
     modify_field(ipsec_int_header.payload_size, (p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start));
-    modify_field(ipsec_int_header.pad_size, block_size - ((p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start) & block_size));
+    modify_field(ipsec_int_header.pad_size, IPSEC_BLOCK_SIZE - ((p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start) & IPSEC_BLOCK_SIZE));
 
     // mem2mem HBM based ipsec pad-table
-    //modify_field(ipsec_to_stage3.pad_addr, (block_size - (((p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start) & block_size)) * 256) + IPSEC_PAD_BYTES_TABLE_BASE );
-    //modify_field(ipsec_to_stage3.pad_size, block_size - ((p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start) & block_size));
+    //modify_field(ipsec_to_stage3.pad_addr, (IPSEC_BLOCK_SIZE - (((p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start) & IPSEC_BLOCK_SIZE)) * 256) + IPSEC_PAD_BYTES_TABLE_BASE );
+    //modify_field(ipsec_to_stage3.pad_size, IPSEC_BLOCK_SIZE - ((p42p4plus_hdr.ipsec_payload_end - p42p4plus_hdr.ipsec_payload_start) & IPSEC_BLOCK_SIZE));
     
     //HLIR promoting block_size to 34 bits - do not want that
     modify_field(ipsec_to_stage3.pad_addr, 0);

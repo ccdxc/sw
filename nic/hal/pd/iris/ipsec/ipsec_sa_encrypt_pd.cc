@@ -95,18 +95,17 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         data.u.ipsec_encap_rxdma_initial_table_d.iv = ipsec_sa->iv;
         data.u.ipsec_encap_rxdma_initial_table_d.iv_salt = ipsec_sa->iv_salt;
         data.u.ipsec_encap_rxdma_initial_table_d.iv_size = ipsec_sa->iv_size;
-        data.u.ipsec_encap_rxdma_initial_table_d.block_size = ipsec_sa->block_size;
+        //data.u.ipsec_encap_rxdma_initial_table_d.block_size = ipsec_sa->block_size;
         data.u.ipsec_encap_rxdma_initial_table_d.icv_size = ipsec_sa->icv_size;
         data.u.ipsec_encap_rxdma_initial_table_d.barco_enc_cmd = ipsec_sa->barco_enc_cmd;
         data.u.ipsec_encap_rxdma_initial_table_d.esn_lo = htonl(ipsec_sa->esn_lo);
         data.u.ipsec_encap_rxdma_initial_table_d.spi = htonl(ipsec_sa->spi);
         data.u.ipsec_encap_rxdma_initial_table_d.ipsec_cb_index = htons(ipsec_sa->sa_id);
 
-        HAL_TRACE_DEBUG("iv {:#x} salt {:#x} iv_size {} block_size {} icv_size {} barco_cmd {:#x}  esn_lo {} spi {}",
+        HAL_TRACE_DEBUG("iv {:#x} salt {:#x} iv_size {} icv_size {} barco_cmd {:#x}  esn_lo {} spi {}",
             data.u.ipsec_encap_rxdma_initial_table_d.iv,
             data.u.ipsec_encap_rxdma_initial_table_d.iv_salt,
             data.u.ipsec_encap_rxdma_initial_table_d.iv_size,
-            data.u.ipsec_encap_rxdma_initial_table_d.block_size,
             data.u.ipsec_encap_rxdma_initial_table_d.icv_size,
             data.u.ipsec_encap_rxdma_initial_table_d.barco_enc_cmd,
             data.u.ipsec_encap_rxdma_initial_table_d.esn_lo,
@@ -116,13 +115,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         data.u.ipsec_encap_rxdma_initial_table_d.key_index = htons(key_index);
         HAL_TRACE_DEBUG("key_index = {}", ipsec_sa->key_index);
 
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_IPSECCBQ,
-                                     ipsec_sa_pd->ipsec_sa->sa_id,
-                                     &ipsec_cb_ring_addr);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("CB Ring Addr {:#x}", ipsec_cb_ring_addr);
-            return ret;
-        }
+        ipsec_cb_ring_addr = get_mem_addr(CAPRI_HBM_REG_IPSECCB) + ((ipsec_sa_pd->ipsec_sa->sa_id) * DEFAULT_WRING_SLOT_SIZE * IPSEC_PER_CB_RING_SIZE);
         HAL_TRACE_DEBUG("CB Ring Addr {:#x}", ipsec_cb_ring_addr);
 
         data.u.ipsec_encap_rxdma_initial_table_d.cb_ring_base_addr = htonl((uint32_t)(ipsec_cb_ring_addr & 0xFFFFFFFF));
@@ -132,10 +125,7 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         ret = wring_pd_get_base_addr(types::WRING_TYPE_IPSECCBQ_BARCO,
                                      ipsec_sa_pd->ipsec_sa->sa_id,
                                      &ipsec_barco_ring_addr);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("Barco Ring Addr {:#x}", ipsec_barco_ring_addr);
-            return ret;
-        }
+        ipsec_barco_ring_addr = get_mem_addr(CAPRI_HBM_REG_IPSECCB_BARCO) + ((ipsec_sa_pd->ipsec_sa->sa_id) * IPSEC_PER_CB_BARCO_SLOT_ELEM_SIZE * IPSEC_PER_CB_BARCO_RING_SIZE);
         HAL_TRACE_DEBUG("Barco Ring Addr {:#x}", ipsec_barco_ring_addr);
 
         data.u.ipsec_encap_rxdma_initial_table_d.barco_ring_base_addr = htonl((uint32_t) (ipsec_barco_ring_addr & 0xFFFFFFFF));
@@ -316,7 +306,7 @@ p4pd_get_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd)
     ipsec_sa->iv = ntohll(data.u.ipsec_encap_rxdma_initial_table_d.iv);
     ipsec_sa->iv_salt = data.u.ipsec_encap_rxdma_initial_table_d.iv_salt;
     ipsec_sa->iv_size = data.u.ipsec_encap_rxdma_initial_table_d.iv_size;
-    ipsec_sa->block_size = data.u.ipsec_encap_rxdma_initial_table_d.block_size;
+    //ipsec_sa->block_size = data.u.ipsec_encap_rxdma_initial_table_d.block_size;
     ipsec_sa->icv_size = data.u.ipsec_encap_rxdma_initial_table_d.icv_size;
     ipsec_sa->barco_enc_cmd = data.u.ipsec_encap_rxdma_initial_table_d.barco_enc_cmd;
     ipsec_sa->esn_lo = ntohl(data.u.ipsec_encap_rxdma_initial_table_d.esn_lo);
@@ -654,32 +644,32 @@ pd_ipsec_global_stats_get (pd_func_args_t *pd_func_args)
         return HAL_RET_HW_FAIL;
     }
     
-    hwid = CAPRI_SEM_IPSEC_RNMDR_ALLOC_CI_RAW_ADDR - 4;
-    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))) {
+    hwid = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_IPSEC_ENC_NMDR_ALLOC_PI;
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
     HAL_TRACE_DEBUG("Enc RNMDPR PI {}", counter); 
     stats.enc_rnmdpr_pi_counters = counter;
 
-    hwid = CAPRI_SEM_IPSEC_RNMDR_ALLOC_CI_RAW_ADDR;
-    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))) {
+    hwid = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_IPSEC_ENC_NMDR_ALLOC_CI;
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
     HAL_TRACE_DEBUG("Enc RNMDPR CI {}", counter);
     stats.enc_rnmdpr_ci_counters = counter;
 
-    hwid = CAPRI_SEM_IPSEC_BIG_RNMDR_ALLOC_CI_RAW_ADDR - 4;
-    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))) {
+    hwid = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_IPSEC_DEC_NMDR_ALLOC_PI;
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }
     HAL_TRACE_DEBUG("Dec RNMDPR PI {}", counter); 
     stats.dec_rnmdpr_pi_counters = counter;
 
-    hwid = CAPRI_SEM_IPSEC_BIG_RNMDR_ALLOC_CI_RAW_ADDR;
-    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))) {
+    hwid = get_mem_addr(CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_IPSEC_DEC_NMDR_ALLOC_CI;
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&counter, sizeof(counter))){
         HAL_TRACE_ERR("Failed to read IPSec global stats memory");
         return HAL_RET_HW_FAIL;
     }

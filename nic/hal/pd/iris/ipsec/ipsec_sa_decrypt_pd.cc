@@ -69,7 +69,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         HAL_TRACE_DEBUG("Received Decrypt TX pc address {}", pc_offset);
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.total = 2;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.iv_size = ipsec_sa_pd->ipsec_sa->iv_size;
-        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size = ipsec_sa_pd->ipsec_sa->block_size;
+        //data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size = ipsec_sa_pd->ipsec_sa->block_size;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.icv_size = ipsec_sa_pd->ipsec_sa->icv_size;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.ipsec_cb_index = htons(ipsec_sa_pd->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4));
 
@@ -86,34 +86,14 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         HAL_TRACE_DEBUG("key_index {}, new_key_index {}", ipsec_sa_pd->ipsec_sa->key_index, ipsec_sa_pd->ipsec_sa->new_key_index);
         // the below may have to use a different range for the reverse direction
 
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_IPSECCBQ,
-                                     (ipsec_sa_pd->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4)) + 4,
-                                     &ipsec_cb_ring_addr);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("CB Ring Addr {:#x}", ipsec_cb_ring_addr);
-            return ret;
-        }
+        ipsec_cb_ring_addr = get_mem_addr(CAPRI_HBM_REG_IPSECCB) + ((get_mem_size_kb(CAPRI_HBM_REG_IPSECCB)/2) * 1024) + ((ipsec_sa_pd->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4)) * DEFAULT_WRING_SLOT_SIZE * IPSEC_PER_CB_RING_SIZE);
         HAL_TRACE_DEBUG("CB Ring Addr {:#x}", ipsec_cb_ring_addr);
-
-#if 0
-        HAL_TRACE_DEBUG("HW- key_index {}, new_key_index {}", data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index, data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.new_key_index);
-        HAL_TRACE_DEBUG("key_index {}, new_key_index {}", ipsec_sa_pd->ipsec_sa->key_index, ipsec_sa_pd->ipsec_sa->new_key_index);
-        // the below may have to use a different range for the reverse direction
-        ipsec_cb_ring_base = get_mem_addr(CAPRI_HBM_REG_IPSECCB);
-        ipsec_cb_ring_addr = (ipsec_cb_ring_base+((ipsec_sa_pd->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4))* IPSEC_CB_RING_ENTRY_SIZE));
-#endif
 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_ring_base_addr = htonl((uint32_t)ipsec_cb_ring_addr & 0xFFFFFFFF);
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_cindex = 0;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.cb_pindex = 0;
 
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_IPSECCBQ_BARCO,
-                                     (ipsec_sa_pd->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4)) + 4,
-                                     &ipsec_barco_ring_addr);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("Barco Ring Addr {:#x}", ipsec_barco_ring_addr);
-            return ret;
-        }
+        ipsec_barco_ring_addr = get_mem_addr(CAPRI_HBM_REG_IPSECCB_BARCO) + ((get_mem_size_kb(CAPRI_HBM_REG_IPSECCB_BARCO)/2) * 1024) + ((ipsec_sa_pd->ipsec_sa->sa_id - (HAL_MAX_IPSEC_SA/4)) * IPSEC_PER_CB_BARCO_SLOT_ELEM_SIZE * IPSEC_PER_CB_BARCO_RING_SIZE);
         HAL_TRACE_DEBUG("Barco Ring Addr {:#x}", ipsec_barco_ring_addr);
 
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_ring_base_addr = htonll(ipsec_barco_ring_addr);
@@ -208,7 +188,7 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd)
     }
 
     ipsec_sa->iv_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.iv_size;
-    ipsec_sa->block_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size;
+    //ipsec_sa->block_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size;
     ipsec_sa->icv_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.icv_size;
     ipsec_sa->barco_enc_cmd = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd;
     ipsec_sa->key_index = ntohs(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index);

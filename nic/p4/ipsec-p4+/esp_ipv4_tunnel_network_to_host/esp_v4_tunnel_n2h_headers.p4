@@ -25,7 +25,8 @@ header_type ipsec_cb_metadata_t {
         replay_seq_no_bmp : 64;
         barco_enc_cmd  : 32;
         ipsec_cb_index : 16;
-        block_size     : 8;
+        barco_full_count : 8;
+        is_v6          : 8;
         cb_pindex      : 16;
         cb_cindex      : 16;
         barco_pindex   : 16;
@@ -33,7 +34,6 @@ header_type ipsec_cb_metadata_t {
         cb_ring_base_addr : 32;
         barco_ring_base_addr : 64;
         vrf_vlan       : 16;
-        is_v6          : 8;
     }
 }
 
@@ -131,7 +131,8 @@ header_type esp_header_t {
     modify_field(ipsec_cb_scratch.expected_seq_no, expected_seq_no); \
     modify_field(ipsec_cb_scratch.replay_seq_no_bmp, replay_seq_no_bmp); \
     modify_field(ipsec_cb_scratch.barco_enc_cmd,barco_enc_cmd); \
-    modify_field(ipsec_cb_scratch.block_size, block_size); \
+    modify_field(ipsec_cb_scratch.barco_full_count, barco_full_count); \
+    modify_field(ipsec_cb_scratch.is_v6, is_v6); \              
     modify_field(ipsec_cb_scratch.ipsec_cb_index, ipsec_cb_index); \
     modify_field(ipsec_cb_scratch.cb_pindex, cb_pindex); \
     modify_field(ipsec_cb_scratch.cb_cindex, cb_cindex); \
@@ -139,8 +140,7 @@ header_type esp_header_t {
     modify_field(ipsec_cb_scratch.barco_cindex, barco_cindex); \
     modify_field(ipsec_cb_scratch.cb_ring_base_addr, cb_ring_base_addr); \
     modify_field(ipsec_cb_scratch.barco_ring_base_addr, barco_ring_base_addr); \
-    modify_field(ipsec_cb_scratch.vrf_vlan, vrf_vlan); \
-    modify_field(ipsec_cb_scratch.is_v6, is_v6);               
+    modify_field(ipsec_cb_scratch.vrf_vlan, vrf_vlan);
 
 #define IPSEC_CB_SCRATCH_WITH_PC \
     modify_field(ipsec_cb_scratch.pc, pc); \

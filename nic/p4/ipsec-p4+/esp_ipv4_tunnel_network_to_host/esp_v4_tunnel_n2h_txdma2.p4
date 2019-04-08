@@ -36,15 +36,19 @@ header_type ipsec_txdma2_global_t {
 
 header_type ipsec_table0_s2s {
     fields {
-        in_page_addr : ADDRESS_WIDTH;
         out_page_addr : ADDRESS_WIDTH;
+        pad : 8;
+        cb_addr : 40;
+        barco_sw_cindex : 16;
         headroom_offset : 16;
         tailroom_offset : 16;
     }
 }
 
 #define IPSEC_DECRYPT_TXDMA2_T0_S2S_SCRATCH \
-    modify_field(t0_s2s_scratch.in_page_addr, t0_s2s.in_page_addr); \
+    modify_field(t0_s2s_scratch.pad, t0_s2s.pad); \
+    modify_field(t0_s2s_scratch.cb_addr, t0_s2s.cb_addr); \
+    modify_field(t0_s2s_scratch.barco_sw_cindex, t0_s2s.barco_sw_cindex); \
     modify_field(t0_s2s_scratch.out_page_addr, t0_s2s.out_page_addr); \
     modify_field(t0_s2s_scratch.headroom_offset, t0_s2s.headroom_offset); \
     modify_field(t0_s2s_scratch.tailroom_offset, t0_s2s.tailroom_offset); \
@@ -87,10 +91,10 @@ header_type ipsec_to_stage2_t {
 
 header_type ipsec_to_stage3_t {
     fields {
-        ipsec_cb_addr : ADDRESS_WIDTH;
-        block_size : 8;
-        sem_cindex : 32;
-        stage3_pad : 24;
+        ipsec_cb_addr   : ADDRESS_WIDTH;
+        block_size      : 8;
+        sem_cindex      : 32;
+        stage3_pad      : 24;
     }
 }
 
@@ -253,11 +257,11 @@ action esp_v4_tunnel_n2h_txdma2_build_decap_packet(pc, rsvd, cosA, cosB,
                                        key_index, new_key_index, iv_size, icv_size,
                                        expected_seq_no, last_replay_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
-                                       ipsec_cb_index, block_size,
+                                       ipsec_cb_index, barco_full_count, is_v6,
                                        cb_pindex, cb_cindex, 
                                        barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr, 
-                                       iv_salt, vrf_vlan, is_v6)
+                                       iv_salt, vrf_vlan)
 {
     IPSEC_DECRYPT_GLOBAL_SCRATCH
     IPSEC_DECRYPT_TXDMA2_T0_S2S_SCRATCH
@@ -324,19 +328,10 @@ action esp_v4_tunnel_n2h_txdma2_load_out_desc(addr0, offset0, length0,
 }
 
 //stage 2 table 0 
-action esp_v4_tunnel_n2h_txdma2_load_in_desc(addr0, offset0, length0,
-                                       addr1, offset1, length1,
-                                       addr2, offset2, length2,
-                                       nextptr, rsvd)
+action esp_v4_tunnel_n2h_txdma2_load_in_desc(BARCO_SHADOW_PARAMS)
 {
     IPSEC_DECRYPT_GLOBAL_SCRATCH
-    modify_field(t0_s2s.in_page_addr, addr0);
-
-    //modify_field(p4plus2p4_hdr.table0_valid, 1);
-    //modify_field(common_te0_phv.table_pc, 0);
-    //modify_field(common_te0_phv.table_raw_table_size, 0);
-    //modify_field(common_te0_phv.table_lock_en, 0);
-    //modify_field(common_te0_phv.table_addr, ipsec_to_stage3.ipsec_cb_addr);
+    GENERATE_BARCO_SHADOW_PARAMS_D
 }
 
 //stage 2 table0
@@ -349,7 +344,7 @@ action esp_v4_tunnel_n2h_txdma2_load_barco_req(input_list_address, output_list_a
 
 {
     BARCO_REQ_SCRTATCH_SET
-
+    IPSEC_DECRYPT_TXDMA2_T0_S2S_SCRATCH
     modify_field(txdma2_global.in_desc_addr, input_list_address);
 
     modify_field(p4plus2p4_hdr.table0_valid, 1);
@@ -397,11 +392,11 @@ action esp_v4_tunnel_n2h_txdma2_initial_table(rsvd, cosA, cosB,
                                        key_index, new_key_index, iv_size, icv_size,
                                        expected_seq_no, last_replay_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
-                                       ipsec_cb_index, block_size,
+                                       ipsec_cb_index, barco_full_count, is_v6,
                                        cb_pindex, cb_cindex, 
                                        barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr, 
-                                       iv_salt, vrf_vlan, is_v6)
+                                       iv_salt, vrf_vlan)
 {
     IPSEC_CB_SCRATCH
 

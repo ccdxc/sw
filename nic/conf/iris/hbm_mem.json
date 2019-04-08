@@ -97,7 +97,7 @@
         },
         {
             "name": "ipsec_cb_barco",
-            "size": "2048K",
+            "size": "8192K",
             "cache": "p4plus-all"
         },
         {

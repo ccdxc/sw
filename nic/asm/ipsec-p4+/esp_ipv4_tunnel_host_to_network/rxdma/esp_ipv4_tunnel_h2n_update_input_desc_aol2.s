@@ -35,7 +35,7 @@ dma_cmd_to_move_input_pkt_to_mem:
     phvwr p.pad_bytes_pad_bytes_8_15, r4
     
     CAPRI_DMA_CMD_PHV2MEM_SETUP_WITH_LEN(dma_cmd_pad_mem_dma_cmd, r2, pad_bytes_pad_bytes_0_7, k.ipsec_to_stage3_pad_size) 
-
+    phvwri p.dma_cmd_pad_mem_dma_cmd_cache, 1
     add r2, r2, k.ipsec_to_stage3_pad_size
     blti  r2, CAPRI_HBM_BASE,esp_ipv4_tunnel_h2n_update_input_desc_aol2_illegal_dma_tail_bytes
     nop

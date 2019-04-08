@@ -22,13 +22,16 @@ esp_ipv4_tunnel_n2h_txdma_initial_table:
     bcf [c1], esp_v4_tunnel_n2h_barco_ring_error
     nop
     phvwr p.ipsec_to_stage3_barco_pindex, d.barco_pindex
+    phvwr p.ipsec_to_stage1_barco_pindex, d.barco_pindex
+
     tblmincri d.barco_pindex, IPSEC_BARCO_RING_WIDTH, 1
-    seq c1, d.{rxdma_ring_pindex}.hx, d.{rxdma_ring_cindex}.hx
-    bcf [c1], esp_ipv4_tunnel_n2h_txdma1_initial_table_do_nothing
-    nop
-    and r2, d.cb_cindex, IPSEC_CB_RING_INDEX_MASK 
-    tblmincri d.cb_cindex, IPSEC_PER_CB_RING_WIDTH, 1
+    and r2, d.{rxdma_ring_cindex}.hx, IPSEC_CB_RING_INDEX_MASK
+
     tblmincri.f     d.{rxdma_ring_cindex}.hx, IPSEC_PER_CB_RING_WIDTH, 1
+    phvwr p.txdma1_global_cb_cindex, d.{rxdma_ring_cindex}.hx
+
+    phvwr p.ipsec_to_stage1_barco_cb_ring_base_addr, d.barco_ring_base_addr
+    phvwr p.ipsec_to_stage1_ipsec_cb_index, d.ipsec_cb_index
     phvwr p.txdma1_global_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33} 
     phvwr p.barco_req_command, d.barco_enc_cmd
     phvwr p.t0_s2s_iv_size, d.iv_size

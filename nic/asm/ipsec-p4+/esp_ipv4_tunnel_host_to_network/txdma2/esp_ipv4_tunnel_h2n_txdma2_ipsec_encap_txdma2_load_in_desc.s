@@ -13,9 +13,9 @@ struct phv_ p;
         .align
 esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_load_in_desc:
     phvwr p.t0_s2s_in_page_addr, d.{addr0}.dx 
-    add r5, r0, k.txdma2_global_in_desc_addr 
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet, r5, TABLE_SIZE_512_BITS)
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet2, r5, TABLE_SIZE_512_BITS)
+    //add r5, r0, k.txdma2_global_in_desc_addr 
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet)
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet2)
     nop.e
     nop
 

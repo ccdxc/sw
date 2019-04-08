@@ -35,7 +35,8 @@ esp_ipv4_tunnel_h2n_ipsec_cb_tail_enqueue_input_desc:
     seq c1, r6, IPSEC_N2H_GLOBAL_FLAGS
     bcf [c1], esp_ipv4_tunnel_h2n_rxdma_disbale_dma_cmds 
     nop
-    add r4, k.ipsec_global_ipsec_cb_addr, IPSEC_H2N_STATS_CB_OFFSET
+    //add r4, k.ipsec_global_ipsec_cb_addr, IPSEC_H2N_STATS_CB_OFFSET
+    //CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats, r4, TABLE_SIZE_512_BITS)
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(1, esp_ipv4_tunnel_h2n_rxdma_ipsec_update_rx_stats)
     nop.e
     nop

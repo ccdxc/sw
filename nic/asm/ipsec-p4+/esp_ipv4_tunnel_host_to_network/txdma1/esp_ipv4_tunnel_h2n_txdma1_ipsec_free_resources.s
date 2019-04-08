@@ -24,12 +24,14 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_free_resources:
     addi r4, r4, loword(IPSEC_RNMPR_TABLE_BASE)
     add r5, r0, k.ipsec_to_stage5_in_desc_addr
     bgti r5, IPSEC_PAGE_ADDR_RX, h2n_txdma1_bad_indesc_free
+    nop
     CAPRI_DMA_CMD_PHV2MEM_SETUP(rnmdr_dma_cmd, r4, ipsec_to_stage5_in_desc_addr, ipsec_to_stage5_in_desc_addr)
 
     addui r4, r3, hiword(IPSEC_TNMPR_TABLE_BASE)
     addi r4, r4, loword(IPSEC_TNMPR_TABLE_BASE)
     add r5, r0, k.ipsec_to_stage5_out_desc_addr
     bgti r5, IPSEC_PAGE_ADDR_TX, h2n_txdma1_bad_outdesc_free
+    nop
     CAPRI_DMA_CMD_PHV2MEM_SETUP(tnmdr_dma_cmd, r4, ipsec_to_stage5_out_desc_addr, ipsec_to_stage5_out_desc_addr)
 
     add r2, d.sem_cindex, IPSEC_DESC_RING_SIZE

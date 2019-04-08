@@ -282,11 +282,11 @@ action esp_v4_tunnel_n2h_ipsec_cb_tail_enqueue_input_desc (pc, rsvd, cosA, cosB,
                                        key_index, new_key_index, iv_size, icv_size,
                                        expected_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
-                                       ipsec_cb_index, block_size, 
+                                       ipsec_cb_index, barco_full_count, is_v6,
                                        cb_pindex, cb_cindex, 
                                        barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr, 
-                                       vrf_vlan, is_v6)
+                                       vrf_vlan)
 {
     IPSEC_CB_SCRATCH_WITH_PC
     IPSEC_SCRATCH_GLOBAL
@@ -455,11 +455,11 @@ action esp_v4_tunnel_n2h_rxdma_initial_table(pc, rsvd, cosA, cosB,
                                        key_index,new_key_index, iv_size, icv_size,
                                        expected_seq_no,
                                        replay_seq_no_bmp, barco_enc_cmd,
-                                       ipsec_cb_index, block_size, 
+                                       ipsec_cb_index, barco_full_count, is_v6,
                                        cb_pindex, cb_cindex, 
                                        barco_pindex, barco_cindex, 
                                        cb_ring_base_addr, barco_ring_base_addr, 
-                                       vrf_vlan, is_v6)
+                                       vrf_vlan)
 {
 
     IPSEC_CB_SCRATCH

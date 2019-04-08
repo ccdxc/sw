@@ -8,7 +8,6 @@ struct phv_ p;
 
 %%
         .param          IPSEC_PAD_BYTES_HBM_TABLE_BASE
-        .param          esp_ipv4_tunnel_h2n_rxmda_ring_full_error
         .param          esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore
         .param          IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
         .param          IPSEC_ENC_NMDR_PI
@@ -37,11 +36,10 @@ esp_ipv4_tunnel_h2n_ipsec_encap_rxdma_initial_table:
     add.c1 r3, r3, IPV6_HDR_SIZE
     phvwr p.t1_s2s_payload_size, r3
     phvwrpair p.t0_s2s_payload_size, r3, p.t0_s2s_payload_start, k.{p42p4plus_hdr_ipsec_payload_start_sbit0_ebit7, p42p4plus_hdr_ipsec_payload_start_sbit8_ebit15}
-    sub r6, d.block_size, 1
-    and r4, r3, r6 
-    sub r5, d.block_size, r4
+    and r4, r3, (IPSEC_BLOCK_SIZE - 1)
+    sub r5, IPSEC_BLOCK_SIZE, r4
     slt c2, r5, 2
-    add.c2 r5, r5, d.block_size 
+    add.c2 r5, r5, IPSEC_BLOCK_SIZE 
     subi r5, r5, 2
     phvwrpair p.ipsec_to_stage3_pad_size, r5, p.ipsec_to_stage3_iv_size, d.iv_size
     phvwr p.ipsec_int_header_payload_size, r3

@@ -106,7 +106,7 @@ ipsec_sadecrypt_create (IpsecSADecrypt& spec, IpsecSADecryptResponse *rsp)
         return HAL_RET_VRF_ID_INVALID;
     }
 
-    if (spec.key_or_handle().cb_id() > (HAL_MAX_IPSEC_SA/2)) {
+    if (spec.key_or_handle().cb_id() > HAL_MAX_IPSEC_SUPP_SA) {
         return HAL_RET_INVALID_ARG;
     }
 

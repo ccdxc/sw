@@ -1,6 +1,8 @@
 #include "../ipsec_defines.h"
 #include "../ipsec_common_headers.p4"
 
+#define IPSEC_BLOCK_SIZE 16
+
 header_type ipsec_int_header_t {
     fields {
         in_desc           : ADDRESS_WIDTH;
@@ -80,7 +82,6 @@ header_type ipsec_cb_metadata_t {
         iv        : 64;
         barco_enc_cmd  : 32;
         ipsec_cb_index : 16;
-        block_size     : 8;
         cb_pindex : 16;
         cb_cindex : 16;
         barco_pindex : 16;
@@ -88,6 +89,7 @@ header_type ipsec_cb_metadata_t {
         cb_ring_base_addr : 32;
         barco_ring_base_addr : 32;
         iv_salt   : 32;
+        barco_full_count : 8;
         flags : 8;
     }
 }
@@ -113,7 +115,7 @@ header_type ipsec_cb_metadata_t {
     modify_field(ipsec_cb_scratch.iv, iv); \
     modify_field(ipsec_cb_scratch.barco_enc_cmd, barco_enc_cmd); \
     modify_field(ipsec_cb_scratch.ipsec_cb_index, ipsec_cb_index); \
-    modify_field(ipsec_cb_scratch.block_size, block_size); \
+    modify_field(ipsec_cb_scratch.barco_full_count, barco_full_count); \
     modify_field(ipsec_cb_scratch.cb_pindex, cb_pindex); \
     modify_field(ipsec_cb_scratch.cb_cindex, cb_cindex); \
     modify_field(ipsec_cb_scratch.barco_pindex, barco_pindex); \

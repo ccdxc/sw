@@ -13,13 +13,19 @@ struct phv_ p;
         .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
         .align
 esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:
+
+    phvwr p.ipsec_to_stage5_in_desc_addr, d.in_desc
+    phvwr p.ipsec_to_stage5_out_desc_addr, d.out_desc
+    
     add r2, d.in_desc, IPSEC_STATUS_ADDR_OFFSET 
     add r3, d.in_desc, IPSEC_SCRATCH_OFFSET 
     bgti r2, IPSEC_PAGE_ADDR_RX, esp_ipv4_tunnel_n2h_txdma1_bad_barco_in_desc
+    nop
     phvwr p.barco_req_input_list_address, r3.dx
     phvwr p.barco_req_status_address, r2.dx
     add r1, d.out_desc, IPSEC_SCRATCH_OFFSET 
     bgti r1, IPSEC_PAGE_ADDR_RX, esp_ipv4_tunnel_n2h_txdma1_bad_barco_out_desc
+    nop
     phvwr p.barco_req_output_list_address, r1.dx
 
     seq c1, d.spi, k.ipsec_to_stage2_spi

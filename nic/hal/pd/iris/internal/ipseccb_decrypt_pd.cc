@@ -89,7 +89,7 @@ p4pd_add_or_del_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd, 
         HAL_TRACE_DEBUG("Received Decrypt TX pc address {}", pc_offset);
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.total = 2;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.iv_size = ipseccb_pd->ipseccb->iv_size;
-        data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size = ipseccb_pd->ipseccb->block_size;
+        //data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size = ipseccb_pd->ipseccb->block_size;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.icv_size = ipseccb_pd->ipseccb->icv_size;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd = 0x30100000;
         data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.expected_seq_no = ipseccb_pd->ipseccb->esn_lo;
@@ -219,7 +219,7 @@ p4pd_get_ipsec_decrypt_rx_stage0_entry(pd_ipseccb_decrypt_t* ipseccb_pd)
     }
 
     ipseccb_pd->ipseccb->iv_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.iv_size;
-    ipseccb_pd->ipseccb->block_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size;
+    //ipseccb_pd->ipseccb->block_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.block_size;
     ipseccb_pd->ipseccb->icv_size = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.icv_size;
     ipseccb_pd->ipseccb->barco_enc_cmd = data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.barco_enc_cmd;
     ipseccb_pd->ipseccb->key_index = ntohs(data.u.esp_v4_tunnel_n2h_rxdma_initial_table_d.key_index);

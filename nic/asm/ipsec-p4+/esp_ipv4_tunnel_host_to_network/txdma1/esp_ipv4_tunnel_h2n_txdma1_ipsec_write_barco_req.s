@@ -13,9 +13,13 @@ struct phv_ p;
         .param esp_ipv4_tunnel_h2n_txdma1_ipsec_free_resources
 
 esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req:
-    seq c1, k.txdma1_global_flags, 1
+    seq c1, k.ipsec_to_stage4_cb_cindex[3:0], 0
+    tblwr.c1 d.cb_cindex, k.ipsec_to_stage4_cb_cindex
+    sne c1, k.txdma1_global_flags, 0
     bcf [c1], esp_ipv4_tunnel_h2n_hit_errors
     nop
+
+    tblwr.f d.barco_full_count, 0
 
     sll r3, k.ipsec_to_stage4_barco_pindex, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
     add r3, r3, d.barco_ring_base_addr 
@@ -52,8 +56,27 @@ esp_ipv4_tunnel_h2n_txdma1_ipsec_write_barco_req_illegal_dma_barco_req:
     nop
 
 esp_ipv4_tunnel_h2n_hit_errors:
+    // Queue to record ring even on error
+    sll r3, k.ipsec_to_stage4_barco_pindex, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE
+    add r3, r3, d.barco_ring_base_addr 
+    phvwr p.dma_cmd_post_barco_ring_dma_cmd_addr, r3
+    phvwr p.barco_req_input_list_address, 0
+
+    // count consecutive barco full
+    tbladd d.barco_full_count, 1
+    sne c1, d.barco_full_count, (IPSEC_BARCO_RING_SIZE - 1)
+    bcf [c1], esp_ipv4_tunnel_h2n_skip_doorbell
+    nop
+
+
+    // We have queued ring full of dummy barco full requests
+    // Doorbell to TxDMA2
+    add r7, k.ipsec_to_stage4_barco_pindex, 1
+    andi r7, r7, IPSEC_BARCO_RING_INDEX_MASK
+    CAPRI_DMA_CMD_RING_DOORBELL2_SET_PI_FENCE(doorbell_cmd_dma_cmd, LIF_IPSEC_ESP, 0, d.ipsec_cb_index, 1, r7, db_data_pid, db_data_index)
+
+esp_ipv4_tunnel_h2n_skip_doorbell:
     phvwri p.brq_req_write_dma_cmd_type, 0
-    phvwri p.dma_cmd_post_barco_ring_dma_cmd_type, 0
     phvwri p.brq_in_desc_zero_dma_cmd_type, 0
     phvwri p.brq_out_desc_zero_dma_cmd_type, 0
     addi r5, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N

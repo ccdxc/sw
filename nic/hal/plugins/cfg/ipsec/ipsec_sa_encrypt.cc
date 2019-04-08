@@ -150,7 +150,7 @@ ipsec_saencrypt_create (IpsecSAEncrypt& spec, IpsecSAEncryptResponse *rsp)
         return HAL_RET_VRF_ID_INVALID; 
     }
 
-    if (spec.key_or_handle().cb_id() > (HAL_MAX_IPSEC_SA/2)) {
+    if (spec.key_or_handle().cb_id() > HAL_MAX_IPSEC_SUPP_SA) {
         return HAL_RET_INVALID_ARG;
     }
 
@@ -489,6 +489,7 @@ ipsec_global_statistics_get (ipsec::IpsecGlobalStatisticsGetRequest& req,
     rsp->mutable_spec()->set_encrypt_txdma2_sem_free_errors(stats_cb.encrypt_txdma2_sem_free_errors);
     rsp->mutable_spec()->set_encrypt_txdma1_barco_ring_full_errors(stats_cb.encrypt_txdma1_barco_ring_full_errors);
     rsp->mutable_spec()->set_encrypt_rxdma_cb_ring_full_errors(stats_cb.encrypt_rxdma_cb_ring_full_errors);
+    rsp->mutable_spec()->set_encrypt_txdma2_barco_req_errors(stats_cb.encrypt_txdma2_barco_req_errors);
     
     rsp->mutable_spec()->set_decrypt_input_desc_errors(stats_cb.decrypt_input_desc_errors);
     rsp->mutable_spec()->set_decrypt_output_desc_errors(stats_cb.decrypt_output_desc_errors);
@@ -517,6 +518,8 @@ ipsec_global_statistics_get (ipsec::IpsecGlobalStatisticsGetRequest& req,
     rsp->mutable_spec()->set_decrypt_txdma2_sem_free_errors(stats_cb.decrypt_txdma2_sem_free_errors);
     rsp->mutable_spec()->set_decrypt_rxdma_cb_ring_full_errors(stats_cb.decrypt_rxdma_cb_ring_full_errors);
     rsp->mutable_spec()->set_decrypt_txdma1_barco_ring_full_errors(stats_cb.decrypt_txdma1_barco_ring_full_errors);
+    rsp->mutable_spec()->set_decrypt_txdma1_barco_full_errors(stats_cb.decrypt_txdma1_barco_full_errors);
+    rsp->mutable_spec()->set_decrypt_txdma2_invalid_barco_req_errors(stats_cb.decrypt_txdma2_invalid_barco_req_errors);
 
 
     rsp->mutable_spec()->set_enc_rnmdpr_sem_pindex(stats_cb.enc_rnmdpr_pi_counters);
@@ -528,7 +531,7 @@ ipsec_global_statistics_get (ipsec::IpsecGlobalStatisticsGetRequest& req,
     rsp->mutable_spec()->set_enc_global_barco_pi(stats_cb.enc_global_barco_pi);
     rsp->mutable_spec()->set_enc_global_barco_ci(stats_cb.enc_global_barco_ci);
     rsp->mutable_spec()->set_dec_global_barco_pi(stats_cb.dec_global_barco_pi);
-    rsp->mutable_spec()->set_dec_global_barco_pi(stats_cb.dec_global_barco_ci);
+    rsp->mutable_spec()->set_dec_global_barco_ci(stats_cb.dec_global_barco_ci);
     return ret;
 }
 

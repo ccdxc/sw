@@ -28,11 +28,11 @@ esp_ipv4_tunnel_h2n_allocate_input_desc_semaphore:
 
     addui r2, r1, hiword(IPSEC_RNMPR_TABLE_BASE)
     addi r2, r2, loword(IPSEC_RNMPR_TABLE_BASE)
-    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_allocate_input_desc_index, r2, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_DIS, esp_ipv4_tunnel_h2n_allocate_input_desc_index, r2, TABLE_SIZE_64_BITS)
 
     addui r4, r1, hiword(IPSEC_TNMPR_TABLE_BASE)
     addi r4, r4, loword(IPSEC_TNMPR_TABLE_BASE)
-    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_allocate_output_desc_index, r4, TABLE_SIZE_64_BITS)
+    CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_DIS, esp_ipv4_tunnel_h2n_allocate_output_desc_index, r4, TABLE_SIZE_64_BITS)
     bcf [c_qfull], esp_ipv4_tunnel_h2n_desc_ring_full
     nop
     nop.e

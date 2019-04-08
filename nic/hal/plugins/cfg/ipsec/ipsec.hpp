@@ -251,7 +251,8 @@ typedef struct ipsec_global_stats_cb_s {
     uint64_t         encrypt_txdma2_sem_free_errors;
     uint64_t         encrypt_txdma1_barco_ring_full_errors;
     uint64_t         encrypt_rxdma_cb_ring_full_errors;
-    uint64_t         encrypt_pad[32];
+    uint64_t         encrypt_txdma2_barco_req_errors;
+    uint64_t         encrypt_pad[31];
 
     uint64_t         decrypt_input_desc_errors;
     uint64_t         decrypt_output_desc_errors;
@@ -280,7 +281,9 @@ typedef struct ipsec_global_stats_cb_s {
     uint64_t         decrypt_txdma1_bad_outdesc_free_errors;
     uint64_t         decrypt_rxdma_cb_ring_full_errors;
     uint64_t         decrypt_txdma1_barco_ring_full_errors;
-    uint64_t         decrypt_pad[37];
+    uint64_t         decrypt_txdma1_barco_full_errors;
+    uint64_t         decrypt_txdma2_invalid_barco_req_errors;
+    uint64_t         decrypt_pad[35];
 
     uint32_t         enc_rnmdpr_pi_counters;
     uint32_t         enc_rnmdpr_ci_counters;
@@ -296,6 +299,10 @@ typedef struct ipsec_global_stats_cb_s {
 
 // max. number of CBs supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_IPSEC_SA                          4096 
+#define HAL_MAX_IPSEC_SUPP_SA                     32
+#define IPSEC_PER_CB_RING_SIZE                    256 
+#define IPSEC_PER_CB_BARCO_RING_SIZE              512 
+#define IPSEC_PER_CB_BARCO_SLOT_ELEM_SIZE         128 
 #define IPSEC_BARCO_ENCRYPT_AES_GCM_256           0x30000000
 #define IPSEC_BARCO_DECRYPT_AES_GCM_256           0x30100000
 

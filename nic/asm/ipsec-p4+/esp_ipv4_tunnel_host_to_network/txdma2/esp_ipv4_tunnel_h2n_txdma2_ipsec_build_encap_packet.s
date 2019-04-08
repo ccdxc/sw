@@ -16,6 +16,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet:
     addi r5, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N 
     addi r5, r5, IPSEC_H2N_SEM_CINDEX_OFFSET 
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_txdma2_ipsec_free_resources, r5, TABLE_SIZE_32_BITS)
+
     // Outer-IP  
     add r1, k.ipsec_to_stage4_ipsec_cb_addr, IPSEC_IP_HDR_OFFSET+ETH_FIXED_HDR_SIZE
     blti r1, CAPRI_HBM_BASE, esp_ipv4_tunnel_h2n_txdma2_ipsec_build_encap_packet_illegal_dma_cb

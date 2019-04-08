@@ -8,7 +8,6 @@ struct phv_ p;
 
 %%
     .align
-    .param esp_ipv4_tunnel_n2h_rxmda_ring_full_error
     .param IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_N2H
     .param esp_ipv4_tunnel_n2h_allocate_input_desc_semaphore
     .param IPSEC_DEC_NMDR_PI

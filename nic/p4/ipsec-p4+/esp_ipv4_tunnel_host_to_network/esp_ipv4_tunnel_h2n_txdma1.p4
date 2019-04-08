@@ -71,8 +71,11 @@ header_type ipsec_to_stage1_t {
 
 header_type ipsec_to_stage2_t {
     fields {
-        stage2_pad     : ADDRESS_WIDTH;
-        stage2_pad2    : ADDRESS_WIDTH;
+        barco_cb_ring_base_addr : ADDRESS_WIDTH;
+        barco_pindex : 16;
+        ipsec_cb_index : 16;
+        stage2_pad2    : 32;
+        
     }
 }
 
@@ -88,7 +91,7 @@ header_type ipsec_to_stage4_t {
         barco_req_addr   : ADDRESS_WIDTH;
         barco_pindex : 16;
         sem_cindex   : 32;
-        stage4_pad1     :  16;
+        cb_cindex    : 16;
     }
 }
 header_type ipsec_to_stage5_t {
@@ -177,6 +180,8 @@ metadata dma_cmd_phv2mem_t rnmdr;
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t tnmdr;
 @pragma dont_trim
+metadata dma_cmd_phv2mem_t doorbell_cmd;
+@pragma dont_trim
 metadata dma_cmd_phv2mem_t sem_cindex;
 
 
@@ -262,7 +267,7 @@ metadata h2n_stats_header_t ipsec_stats_scratch;
     modify_field(scratch_to_s4.barco_req_addr, ipsec_to_stage4.barco_req_addr); \
     modify_field(scratch_to_s4.barco_pindex, ipsec_to_stage4.barco_pindex); \
     modify_field(scratch_to_s4.sem_cindex, ipsec_to_stage4.sem_cindex); \
-    modify_field(scratch_to_s4.stage4_pad1, ipsec_to_stage4.stage4_pad1);
+    modify_field(scratch_to_s4.cb_cindex, ipsec_to_stage4.cb_cindex);
 
 //stage 5
 action ipsec_release_resources(sem_cindex)
@@ -280,11 +285,11 @@ action ipsec_write_barco_req(pc, rsvd, cosA, cosB, cos_sel,
                              barco_ring_pindex, barco_ring_cindex,
                              key_index, iv_size, icv_size, spi,
                              esn_lo, iv, barco_enc_cmd,
-                             ipsec_cb_index, block_size,
+                             ipsec_cb_index,
                              cb_pindex, cb_cindex, barco_pindex, barco_cindex, 
                              cb_ring_base_addr_hi, cb_ring_base_addr,
                              barco_ring_base_addr_hi, barco_ring_base_addr, 
-                             iv_salt, flags)
+                             iv_salt, barco_full_count, flags)
 {
     IPSEC_TXDMA1_GLOBAL_SCRATCH_INIT
     IPSEC_CB_SCRATCH_WITH_PC
@@ -367,6 +372,9 @@ action ipsec_get_in_desc_from_cb_cindex(in_desc_addr)
 {
     modify_field(txdma1_global.in_desc_addr, in_desc_addr);
 
+    modify_field(scratch_to_s2.barco_cb_ring_base_addr, ipsec_to_stage2.barco_cb_ring_base_addr);
+    modify_field(scratch_to_s2.barco_pindex, ipsec_to_stage2.barco_pindex);
+    modify_field(scratch_to_s2.ipsec_cb_index, ipsec_to_stage2.ipsec_cb_index);
     modify_field(p4plus2p4_hdr.table0_valid, 1);
     modify_field(common_te0_phv.table_pc, 0);
     modify_field(common_te0_phv.table_raw_table_size, 6);
@@ -394,11 +402,11 @@ action ipsec_encap_txdma_initial_table(rsvd, cosA, cosB, cos_sel,
                                        barco_ring_pindex, barco_ring_cindex,
                                        key_index, iv_size, icv_size, spi,
                                        esn_lo, iv, barco_enc_cmd,
-                                       ipsec_cb_index, block_size,
+                                       ipsec_cb_index,
                                        cb_pindex, cb_cindex, barco_pindex, barco_cindex, 
                                        cb_ring_base_addr_hi, cb_ring_base_addr,
                                        barco_ring_base_addr_hi,  barco_ring_base_addr,
-                                       iv_salt, flags)
+                                       iv_salt, barco_full_count, flags)
 {
     IPSEC_CB_SCRATCH
   
