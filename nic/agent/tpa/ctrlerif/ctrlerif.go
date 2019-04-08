@@ -68,54 +68,49 @@ func (client *TpClient) runWatcher(ctx context.Context) {
 }
 
 func (w *watchChan) watchStatsPolicy(ctx context.Context, cl tpmproto.StatsPolicyApi_WatchStatsPolicyClient) {
-	defer w.wg.Done()
+	defer func() {
+		close(w.statsChan)
+		w.wg.Done()
+	}()
 
-	for {
+	for ctx.Err() == nil {
 		event, err := cl.Recv()
 		if err != nil {
-			if ctx.Err() != nil {
-				close(w.statsChan)
-				return
-			}
 			log.Errorf("received error in stats policy stream, error:%s", err)
-			time.Sleep(time.Second)
-			continue
+			return
 		}
 		w.statsChan <- event
 	}
 }
 
 func (w *watchChan) watchFwlogPolicy(ctx context.Context, cl tpmproto.FwlogPolicyApi_WatchFwlogPolicyClient) {
-	defer w.wg.Done()
+	defer func() {
+		close(w.fwlogChan)
+		w.wg.Done()
+	}()
 
-	for {
+	for ctx.Err() == nil {
 		event, err := cl.Recv()
 		if err != nil {
-			if ctx.Err() != nil {
-				close(w.fwlogChan)
-				return
-			}
 			log.Errorf("received error in fwlog policy stream, error:%s", err)
-			time.Sleep(time.Second)
-			continue
+			return
+
 		}
 		w.fwlogChan <- event
 	}
 }
 
 func (w *watchChan) watchFlowExpPolicy(ctx context.Context, cl tpmproto.FlowExportPolicyApi_WatchFlowExportPolicyClient) {
-	defer w.wg.Done()
+	defer func() {
+		close(w.flowExpChan)
+		w.wg.Done()
+	}()
 
-	for {
+	for ctx.Err() == nil {
 		event, err := cl.Recv()
 		if err != nil {
-			if ctx.Err() != nil {
-				close(w.flowExpChan)
-				return
-			}
 			log.Errorf("received error in flow export policy stream, error:%s", err)
-			time.Sleep(time.Second)
-			continue
+			return
 		}
 		w.flowExpChan <- event
 	}
@@ -173,15 +168,15 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 
 		case event, ok := <-wc.statsChan:
 			if ok != true {
-				log.Errorf("error in stats policy channel")
-				break
+				log.Errorf("stats policy channel closed")
+				return nil
 			}
 			log.Infof("received policy(%s) %+v", event.EventType, event.Policy)
 
 		case event, ok := <-wc.fwlogChan:
 			if ok != true {
-				log.Errorf("error in fwlog policy channel")
-				break
+				log.Errorf("fwlog policy channel closed")
+				return nil
 			}
 
 			log.Infof("received policy(%s) %+v", event.EventType, event.Policy)
@@ -196,8 +191,8 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 
 		case event, ok := <-wc.flowExpChan:
 			if ok != true {
-				log.Errorf("error in flow policy channel")
-				break
+				log.Errorf("flow policy channel closed")
+				return nil
 			}
 			log.Infof("received policy(%s) %+v", event.EventType, event.Policy)
 
