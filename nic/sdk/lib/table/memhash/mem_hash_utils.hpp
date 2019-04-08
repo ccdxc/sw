@@ -4,9 +4,7 @@
 #ifndef __MEM_HASH_UTILS_HPP__
 #define __MEM_HASH_UTILS_HPP__
 
-#ifndef PERF
-#define MEMHASH_TRACES_ENABLED 1
-#endif
+#define MEMHASH_TRACES_ENABLED
 
 #ifdef MEMHASH_TRACES_ENABLED
 #define MEMHASH_TRACE_VERBOSE(_msg, _args...) SDK_TRACE_VERBOSE(_msg, ##_args)
@@ -15,7 +13,6 @@
 #define MEMHASH_TRACE_VERBOSE(_msg, _args...)
 #define MEMHASH_TRACE_DEBUG(_msg, _args...)
 #endif
-#define MEMHASH_TRACE_PRINT(_msg, _args...) SDK_TRACE_DEBUG(_msg, ##_args)
 #define MEMHASH_TRACE_ERR(_msg, _args...) SDK_TRACE_ERR(_msg, ##_args)
 
 char*

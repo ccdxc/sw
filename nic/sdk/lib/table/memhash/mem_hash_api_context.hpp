@@ -45,7 +45,7 @@ namespace memhash {
         ((_hint) = mem_hash_api_context::hint_index::HINT_INDEX_INVALID)
 
 #define PRINT_API_CTX(_name, _ctx) {\
-    MEMHASH_TRACE_DEBUG("%s: %s, [%s]", _name, (_ctx)->idstr(), (_ctx)->metastr()); \
+    MEMHASH_TRACE_VERBOSE("%s: %s, [%s]", _name, (_ctx)->idstr(), (_ctx)->metastr()); \
 }
 
 class mem_hash_api_context {
@@ -224,9 +224,8 @@ public:
 
     // Debug string
     char* metastr() {
-        snprintf(str, sizeof(str),
-                 "id:%d,idx:%d,slot:%d,hint:%d,"
-                 "more:%d,pending:%d,hash_msbits:%#x,match_type:%d",
+        snprintf(str, sizeof(str), "tid:%d,idx:%d,slt:%d,hnt:%d,"
+                 "more:%d,pndg:%d,hmsb:%#x,mt:%d",
                  table_id, table_index, hint_slot,
                  hint, more_hashs, write_pending, hash_msbits, match_type);
         return str;

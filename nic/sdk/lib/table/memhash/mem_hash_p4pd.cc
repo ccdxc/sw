@@ -34,17 +34,17 @@ static struct memhash_p4pd_api_stats_s {
 
 void
 mem_hash_p4pd_stats_print() {
-    MEMHASH_TRACE_DEBUG("hwfield set:%d get:%d "
-                    "appdata set:%d get:%d "
-                    "entry read:%d install:%d "
-                    "hwkey build:%d",
-                    memhash_p4pd_api_stats.appdata_set,
-                    memhash_p4pd_api_stats.appdata_get,
-                    memhash_p4pd_api_stats.hwfield_set,
-                    memhash_p4pd_api_stats.hwfield_get,
-                    memhash_p4pd_api_stats.entry_read,
-                    memhash_p4pd_api_stats.entry_install,
-                    memhash_p4pd_api_stats.hwkey_build);
+    MEMHASH_TRACE_VERBOSE("hwfield set:%d get:%d "
+                          "appdata set:%d get:%d "
+                          "entry read:%d install:%d "
+                          "hwkey build:%d",
+                          memhash_p4pd_api_stats.appdata_set,
+                          memhash_p4pd_api_stats.appdata_get,
+                          memhash_p4pd_api_stats.hwfield_set,
+                          memhash_p4pd_api_stats.hwfield_get,
+                          memhash_p4pd_api_stats.entry_read,
+                          memhash_p4pd_api_stats.entry_install,
+                          memhash_p4pd_api_stats.hwkey_build);
     return;
 }
 

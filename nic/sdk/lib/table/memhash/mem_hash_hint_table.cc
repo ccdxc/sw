@@ -59,9 +59,9 @@ mem_hash_hint_table::init_(mem_hash_properties_t *props) {
         return SDK_RET_OOM;
     }
 
-    MEMHASH_TRACE_DEBUG("Created mem_hash_main_table TableID:%d TableSize:%d "
-                    "NumTableIndexBits:%d",
-                    table_id_, table_size_, num_table_index_bits_);
+    MEMHASH_TRACE_VERBOSE("Created mem_hash_main_table TableID:%d TableSize:%d "
+                          "NumTableIndexBits:%d",
+                          table_id_, table_size_, num_table_index_bits_);
     return ret;
 }
 
@@ -86,8 +86,8 @@ mem_hash_hint_table::alloc_(mem_hash_api_context *ctx) {
                       indexer_->get_size());
         return SDK_RET_NO_RESOURCE;
     }
-    MEMHASH_TRACE_DEBUG("%s: Allocated index:%d Meta:[%s]",
-                        ctx->idstr(), ctx->hint, ctx->metastr());
+    MEMHASH_TRACE_VERBOSE("%s: Allocated index:%d Meta:[%s]",
+                          ctx->idstr(), ctx->hint, ctx->metastr());
 
     // Set write pending
     ctx->write_pending = true;
@@ -108,7 +108,7 @@ mem_hash_hint_table::dealloc_(mem_hash_api_context *ctx) {
     if (irs != indexer::SUCCESS) {
         return SDK_RET_ERR;
     }
-    MEMHASH_TRACE_DEBUG("HintTable: Freed index:%d", ctx->hint);
+    MEMHASH_TRACE_VERBOSE("HintTable: Freed index:%d", ctx->hint);
 
     // Clear the hint and set write pending
     HINT_SET_INVALID(ctx->hint);
@@ -129,8 +129,8 @@ mem_hash_hint_table::initctx_(mem_hash_api_context *ctx) {
     // Save the table_id
     ctx->table_id = table_id_;
 
-    MEMHASH_TRACE_DEBUG("%s: TableID:%d Index:%d", ctx->idstr(),
-                    ctx->table_id, ctx->table_index);
+    MEMHASH_TRACE_VERBOSE("%s: TID:%d Idx:%d", ctx->idstr(),
+                          ctx->table_id, ctx->table_index);
 
     ctx->bucket = &buckets_[ctx->table_index];
     SDK_ASSERT(ctx->bucket);
@@ -204,7 +204,7 @@ mem_hash_hint_table::tail_(mem_hash_api_context *ctx,
     mem_hash_api_context *tctx = NULL;
 
     if (!HINT_IS_VALID(ctx->hint)) {
-        MEMHASH_TRACE_DEBUG("No hints, setting TAIL = EXACT.");
+        MEMHASH_TRACE_VERBOSE("No hints, setting TAIL = EXACT.");
         *retctx = ctx;
         return SDK_RET_OK;
     }
@@ -227,8 +227,8 @@ mem_hash_hint_table::tail_(mem_hash_api_context *ctx,
 
     ret = static_cast<mem_hash_table_bucket*>(tctx->bucket)->find_last_hint_(tctx);
     if (ret == SDK_RET_OK) {
-        MEMHASH_TRACE_DEBUG("%s: find_last_hint_ Ctx: [%s]", tctx->idstr(),
-                        tctx->metastr(), ret);
+        MEMHASH_TRACE_VERBOSE("%s: find_last_hint_ Ctx: [%s]", tctx->idstr(),
+                              tctx->metastr(), ret);
         // We have found a valid hint, recursively find the tail of this node
         ret = tail_(tctx, retctx);;
         // NOTE: We are not freeing any context right now, as it gets
@@ -276,8 +276,8 @@ mem_hash_hint_table::defragment_(mem_hash_api_context *ectx) {
     // 5) Write 'pctx' (make before break)
     // 6) Delete 'tctx'
 
-    MEMHASH_TRACE_DEBUG("%s: Starting defragmentation, Ctx: [%s]",
-                    ectx->idstr(), ectx->metastr());
+    MEMHASH_TRACE_VERBOSE("%s: Starting defragmentation, Ctx: [%s]",
+                          ectx->idstr(), ectx->metastr());
     // Get tail node context
     ret = tail_(ectx, &tctx);
     if (ret != SDK_RET_OK) {

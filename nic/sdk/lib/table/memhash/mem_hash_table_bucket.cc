@@ -18,25 +18,13 @@ using sdk::table::memhash::mem_hash_api_context;
 #define FOREACH_HINT(_n) for (uint32_t i = 1; i <= (_n); i++)
 #define FOREACH_HINT_REVERSE(_n) for (uint32_t i = (_n); i > 0; i--)
 
-#define PRINT_SW_KEY(_ctx) {\
-    MEMHASH_TRACE_DEBUG("- Key:[%s]", (_ctx)->key2str ? (_ctx)->key2str((_ctx)->sw_key) : \
-                        mem_hash_utils_rawstr((_ctx)->sw_key, (_ctx)->sw_key_len)); \
-}
-
-#define PRINT_SW_APPDATA(_ctx) {\
-    MEMHASH_TRACE_DEBUG("- AppData:[%s]", \
-                    (_ctx)->appdata2str ? (_ctx)->appdata2str((_ctx)->sw_appdata) : \
-                    mem_hash_utils_rawstr((_ctx)->sw_appdata, (_ctx)->sw_appdata_len)); \
-}
-
-#define PRINT_SW_DATA(_ctx) {\
-    MEMHASH_TRACE_DEBUG("- Data:[%s]", (_ctx)->sw_data2str()); \
-}
-
 #define PRINT_SW_ALL(_ctx) {\
-    PRINT_SW_KEY(_ctx); \
-    PRINT_SW_APPDATA(_ctx); \
-    PRINT_SW_DATA(_ctx); \
+    MEMHASH_TRACE_VERBOSE("- K:[%s] D:[%s] I:[%s]",\
+            (_ctx)->key2str ? (_ctx)->key2str((_ctx)->sw_key) \
+                            : mem_hash_utils_rawstr((_ctx)->sw_key, (_ctx)->sw_key_len),\
+            (_ctx)->appdata2str ? (_ctx)->appdata2str((_ctx)->sw_appdata) : \
+                    mem_hash_utils_rawstr((_ctx)->sw_appdata, (_ctx)->sw_appdata_len),\
+            (_ctx)->sw_data2str()); \
 }
 
 //---------------------------------------------------------------------------
@@ -61,14 +49,17 @@ mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {
 
     // Decode the appdata from sw_data
     get_sw_data_appdata_(ctx);
-    MEMHASH_TRACE_DEBUG("%s: HW Read: TableID:%d TableIndex:%d", ctx->idstr(),
-                        ctx->table_id, ctx->table_index);
-    PRINT_SW_ALL(ctx);
-
+    auto v = mem_hash_p4pd_get_entry_valid(ctx);
+    MEMHASH_TRACE_VERBOSE("%s: TID:%d I:%d V:%d",
+                          ctx->idstr(), ctx->table_id, ctx->table_index, v);
     ctx->sw_valid = true;
-    if (valid_ != mem_hash_p4pd_get_entry_valid(ctx)) {
-        MEMHASH_TRACE_ERR("SW and HW data are out of sync !!");
-        SDK_ASSERT_RETURN(0, SDK_RET_HW_READ_ERR);
+
+    if (v) {
+        PRINT_SW_ALL(ctx);
+        if (valid_ != v) {
+            MEMHASH_TRACE_ERR("SW and HW data are out of sync !!");
+            SDK_ASSERT_RETURN(0, SDK_RET_HW_READ_ERR);
+        }
     }
 
     return SDK_RET_OK;
@@ -103,22 +94,24 @@ mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
         }
     }
 
-    MEMHASH_TRACE_PRINT("%s: HW Write: TableID:%d TableIndex:%d", ctx->idstr(),
-                        ctx->table_id, ctx->table_index);
     if (ctx->props->entry_trace_en) {
+        MEMHASH_TRACE_DEBUG("memhash %s: TID:%d Idx:%d", ctx->idstr(),
+                            ctx->table_id, ctx->table_index);
         p4pd_global_table_ds_decoded_string_get(ctx->table_id, ctx->table_index,
                                                 ctx->sw_key, NULL,
                                                 ctx->sw_data, buff, sizeof(buff));
-        MEMHASH_TRACE_DEBUG("TableID:%d, EntryIndex:%u\n%s",
-                            ctx->table_id, ctx->table_index, buff);
+        MEMHASH_TRACE_DEBUG("TID:%d, Idx:%u\n%s",
+                              ctx->table_id, ctx->table_index, buff);
     } else {
+        MEMHASH_TRACE_VERBOSE("memhash %s: TID:%d Idx:%d", ctx->idstr(),
+                              ctx->table_id, ctx->table_index);
         PRINT_SW_ALL(ctx);
     }
 
     p4pdret = mem_hash_p4pd_entry_install(ctx->table_id, ctx->table_index,
                                           ctx->sw_key, NULL, ctx->sw_data);
     if (p4pdret != P4PD_SUCCESS) {
-        MEMHASH_TRACE_ERR("HW write failed: ret:%d", p4pdret);
+        MEMHASH_TRACE_ERR("failed: r:%d", p4pdret);
         // Write failure is fatal
         SDK_ASSERT(0);
         return SDK_RET_HW_PROGRAM_ERR;
@@ -166,7 +159,6 @@ mem_hash_table_bucket::set_sw_data_appdata_(mem_hash_api_context *ctx, void *app
     ctx->write_pending = true;
     memcpy(ctx->sw_appdata, appdata, ctx->sw_appdata_len);
     mem_hash_p4pd_appdata_set(ctx, appdata);
-    PRINT_SW_APPDATA(ctx);
     return SDK_RET_OK;
 }
 
@@ -212,8 +204,7 @@ sdk_ret_t
 mem_hash_table_bucket::create_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
-    MEMHASH_TRACE_DEBUG("%s: Creating new bucket.", ctx->idstr());
-    MEMHASH_TRACE_DEBUG("- Meta: [%s]", ctx->metastr());
+    MEMHASH_TRACE_VERBOSE("%s: Meta: [%s]", ctx->idstr(), ctx->metastr());
 
     if (ctx->is_reserve() == false) {
         // This is a new entry, key is present with the entry.
@@ -272,12 +263,12 @@ mem_hash_table_bucket::compare_(mem_hash_api_context *ctx) {
         if (hashX == ctx->hash_msbits && HINT_IS_VALID(hintX)) {
             ctx->hint_slot = i;
             ctx->hint = hintX;
-            MEMHASH_TRACE_DEBUG("%s: Match: Hash:%x Slot:%d Hint:%d",
+            MEMHASH_TRACE_VERBOSE("%s: Match: Hash:%x Slot:%d Hint:%d",
                             ctx->idstr(), hashX, i, hintX);
             break;
         } else if (!HINT_IS_VALID(hintX) && HINT_SLOT_IS_INVALID(ctx->hint_slot)) {
             // CASE 2: Save the firstfree slots
-            MEMHASH_TRACE_DEBUG("%s: FreeSlot: Hash:%x Slot:%d Hint:%d",
+            MEMHASH_TRACE_VERBOSE("%s: FreeSlot: Hash:%x Slot:%d Hint:%d",
                             ctx->idstr(), hashX, i, hintX);
             ctx->hint_slot = i;
             HINT_SET_INVALID(ctx->hint);
@@ -306,17 +297,17 @@ sdk_ret_t
 mem_hash_table_bucket::append_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
-    MEMHASH_TRACE_DEBUG("%s: Appending to bucket.", ctx->idstr());
-    MEMHASH_TRACE_DEBUG("- PreMeta : [%s]", ctx->metastr());
+    MEMHASH_TRACE_VERBOSE("%s: Appending to bucket.", ctx->idstr());
+    MEMHASH_TRACE_VERBOSE("- PreMeta : [%s]", ctx->metastr());
 
     ret = find_(ctx);
     if (ret == SDK_RET_OK) {
         SDK_ASSERT(ctx->match_type);
-        MEMHASH_TRACE_DEBUG("- PostMeta(find_): [%s]", ctx->metastr());
+        MEMHASH_TRACE_VERBOSE("- PostMeta(find_): [%s]", ctx->metastr());
         // CASE: Either a exact match (EXM) or a hint matched
         if (ctx->is_exact_match()) {
             // CASE: if exact match, then its a duplicate insert
-            MEMHASH_TRACE_DEBUG("%s: Entry already exists.", ctx->idstr());
+            MEMHASH_TRACE_VERBOSE("%s: Entry already exists.", ctx->idstr());
             return SDK_RET_ENTRY_EXISTS;
         } else if (ctx->is_hint_match()) {
             // CASE: if hint match, then its a collision, new entry should be
@@ -325,7 +316,7 @@ mem_hash_table_bucket::append_(mem_hash_api_context *ctx) {
         }
     } else if (ret == SDK_RET_ENTRY_NOT_FOUND) {
         ret = find_first_free_hint_(ctx);
-        MEMHASH_TRACE_DEBUG("- PostMeta(find_first_free_hint_): [%s]", ctx->metastr());
+        MEMHASH_TRACE_VERBOSE("- PostMeta(find_first_free_hint_): [%s]", ctx->metastr());
         if (ret != SDK_RET_OK) {
             MEMHASH_TRACE_ERR("failed to find_first_free_hint_ ret:%d", ret);
             return ret;
@@ -369,8 +360,8 @@ sdk_ret_t
 mem_hash_table_bucket::update_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
 
-    MEMHASH_TRACE_DEBUG("%s: Updating bucket.", ctx->idstr());
-    MEMHASH_TRACE_DEBUG("- Meta: [%s]", ctx->metastr());
+    MEMHASH_TRACE_VERBOSE("%s: Updating bucket.", ctx->idstr());
+    MEMHASH_TRACE_VERBOSE("- Meta: [%s]", ctx->metastr());
 
     // Bucket must be valid
     SDK_ASSERT(valid_);
@@ -405,20 +396,20 @@ mem_hash_table_bucket::find_first_free_hint_(mem_hash_api_context *ctx) {
 
     if (!HINT_SLOT_IS_INVALID(ctx->hint_slot)) {
         // We have found a valid hint slot.
-        MEMHASH_TRACE_DEBUG("hint slot %d is free", ctx->hint_slot);
+        MEMHASH_TRACE_VERBOSE("hint slot %d is free", ctx->hint_slot);
     } else {
         ctx->more_hashs = mem_hash_p4pd_get_more_hashs(ctx);
         if (ctx->more_hashs == 0) {
-            MEMHASH_TRACE_DEBUG("more_hashs slot is free");
+            MEMHASH_TRACE_VERBOSE("more_hashs slot is free");
             ctx->hint = mem_hash_p4pd_get_more_hints(ctx);
             HINT_SLOT_SET_MORE(ctx->hint_slot);
         } else {
-            MEMHASH_TRACE_DEBUG("all hint slots are full");
+            MEMHASH_TRACE_VERBOSE("all hint slots are full");
             ret = SDK_RET_NO_RESOURCE;
         }
     }
 
-    MEMHASH_TRACE_DEBUG("Result = [ %s: FirstFreeHint: Slot:%d Hint:%d More:%d ]",
+    MEMHASH_TRACE_VERBOSE("Result = [ %s: FirstFreeHint: Slot:%d Hint:%d More:%d ]",
                     ctx->idstr(), ctx->hint_slot, ctx->hint, ctx->more_hashs);
     return ret;
 }
@@ -454,7 +445,7 @@ mem_hash_table_bucket::find_last_hint_(mem_hash_api_context *ctx) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     
-    MEMHASH_TRACE_DEBUG("Result = [ LastHint: Slot:%d Hint:%d ]", ctx->hint_slot, ctx->hint);
+    MEMHASH_TRACE_VERBOSE("Result = [ LastHint: Slot:%d Hint:%d ]", ctx->hint_slot, ctx->hint);
 
     return SDK_RET_OK;
 }
@@ -478,8 +469,8 @@ mem_hash_table_bucket::find_hint_(mem_hash_api_context *ctx) {
             ctx->hint_slot = i;
             ctx->hint = hintX;
             ctx->set_hint_match();
-            MEMHASH_TRACE_DEBUG("HintMatch: Hash:%x Slot:%d Hint:%d",
-                            hashX, i, hintX);
+            MEMHASH_TRACE_VERBOSE("HintMatch: Hash:%x Slot:%d Hint:%d",
+                                  hashX, i, hintX);
             return SDK_RET_OK;
         }
     }
@@ -571,8 +562,8 @@ mem_hash_table_bucket::remove_(mem_hash_api_context *ctx) {
         MEMHASH_TRACE_ERR("failed to find match. ret:%d", ret);
         return ret;
     }
-    MEMHASH_TRACE_DEBUG("%s: find_ result ret:%d Ctx: [%s]", ctx->idstr(), ret,
-                    ctx->metastr());
+    MEMHASH_TRACE_VERBOSE("%s: find_ result ret:%d Ctx: [%s]", ctx->idstr(), ret,
+                          ctx->metastr());
 
     // If it is not an exact match, then no further processing is required
     // at this stage.
@@ -598,7 +589,7 @@ mem_hash_table_bucket::remove_(mem_hash_api_context *ctx) {
         ret = SDK_RET_OK;
         // Since this bucket has no hints, we can update stats here.
         // If it had hints, then it would be update during defragmentation
-        MEMHASH_TRACE_DEBUG("decrementing table_stats for %s", ctx->idstr());
+        MEMHASH_TRACE_VERBOSE("decrementing table_stats for %s", ctx->idstr());
         ctx->table_stats->remove(ctx->level);
     } else if (ret != SDK_RET_OK) {
         MEMHASH_TRACE_ERR("find_last_hint_ failed. ret:%d", ret);
@@ -638,13 +629,13 @@ mem_hash_table_bucket::move_(mem_hash_api_context *dst,
     p4pdret = clear_sw_data_appdata_(src);
     SDK_ASSERT(p4pdret == P4PD_SUCCESS);
 
-    MEMHASH_TRACE_DEBUG("- moved key and data");
+    MEMHASH_TRACE_VERBOSE("- moved key and data");
     // dst node is now dirty, set write pending
     dst->write_pending = true;
     PRINT_API_CTX("MOVE-DST", dst);
 
     // Source bucket is now ready to be deleted
-    MEMHASH_TRACE_DEBUG("- invalidate tail node");
+    MEMHASH_TRACE_VERBOSE("- invalidate tail node");
     sbkt->valid_ = false;
     src->write_pending = true;
     PRINT_API_CTX("MOVE-SRC", src);
@@ -663,7 +654,7 @@ mem_hash_table_bucket::delink_(mem_hash_api_context *ctx) {
     SDK_ASSERT(ctx);
     ret = clear_hint_(ctx);
     SDK_ASSERT(ret == SDK_RET_OK);
-    MEMHASH_TRACE_DEBUG("- cleared tail node hint link from parent node");
+    MEMHASH_TRACE_VERBOSE("- cleared tail node hint link from parent node");
     PRINT_API_CTX("DELINK", ctx);
     return ret;
 }
@@ -732,7 +723,7 @@ mem_hash_table_bucket::defragment_(mem_hash_api_context *ectx,
         // the main table level (0), however after defragmentation, we will move
         // some hint to this entry, but we never account that stats.
         tctx->table_stats->remove(!tctx->is_main());
-        MEMHASH_TRACE_DEBUG("decrementing table_stats for %s", tctx->idstr());
+        MEMHASH_TRACE_VERBOSE("decrementing table_stats for %s", tctx->idstr());
     }
     return SDK_RET_OK;
 }

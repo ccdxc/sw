@@ -21,10 +21,12 @@ memhash_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
         assert(logfp);
     }
 
-    va_start(args, format);
-    vsnprintf(logbuf, sizeof(logbuf), format, args);
-    fprintf(logfp, "%s\n", logbuf);
-    va_end(args);
+    if (trace_level <= sdk::lib::SDK_TRACE_LEVEL_DEBUG) {
+        va_start(args, format);
+        vsnprintf(logbuf, sizeof(logbuf), format, args);
+        fprintf(logfp, "%s\n", logbuf);
+        va_end(args);
+    }
     return 0;
 }
 

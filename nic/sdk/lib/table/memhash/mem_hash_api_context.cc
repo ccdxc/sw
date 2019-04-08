@@ -40,7 +40,7 @@ mem_hash_api_context::alloc_() {
     ctx = new (mem) mem_hash_api_context();
 
     numctx_++;
-    MEMHASH_TRACE_VERBOSE("Number of API Contexts = %d", numctx_);
+    MEMHASH_TRACE_VERBOSE("#ctx = %d", numctx_);
     return ctx;
 }
 
@@ -50,7 +50,7 @@ mem_hash_api_context::sw_data2str() {
     uint32_t len = 0;
     uint32_t i = 0;
 
-    len += sprintf(str, "Valid=%d,More=%d,MoreHints=%d,",
+    len += sprintf(str, "V=%d,M=%d,MHs=%d,",
                    mem_hash_p4pd_get_entry_valid(this),
                    mem_hash_p4pd_get_more_hashs(this),
                    mem_hash_p4pd_get_more_hints(this));
@@ -58,7 +58,7 @@ mem_hash_api_context::sw_data2str() {
         uint32_t hintX = mem_hash_p4pd_get_hint(this, i);
         uint32_t hash_msbitsX = mem_hash_p4pd_get_hash(this, i);
         if (hintX) {
-            len += sprintf(str + len, "HashMsbits%d=%#x,Hint%d=%d,",
+            len += sprintf(str + len, "HMsb%d=%#x,H%d=%d,",
                            i, hash_msbitsX, i, hintX);
         } else {
             // if hint is not valid, then hash must be zero.
@@ -181,20 +181,20 @@ mem_hash_api_context::factory(uint32_t op,
 
 void
 mem_hash_api_context::destroy(mem_hash_api_context* ctx) {
-    MEMHASH_TRACE_VERBOSE("Destroying api context: %s", ctx->idstr());
+    MEMHASH_TRACE_VERBOSE("%s", ctx->idstr());
 #ifdef MEM_HASH_API_CONTEXT_CALLOC
     SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_API_CTX, ctx);
 #endif
 
     numctx_--;
-    MEMHASH_TRACE_VERBOSE("Number of API Contexts = %d", numctx_);
+    MEMHASH_TRACE_VERBOSE("#ctx = %d", numctx_);
     return;
 }
 
 void
 mem_hash_api_context::print_handle() {
     char buff[SDK_TABLE_HANDLE_STR_LEN];
-    MEMHASH_TRACE_PRINT("- Handle: %s", handle->tostr(buff, sizeof(buff)));
+    MEMHASH_TRACE_VERBOSE("- Handle: %s", handle->tostr(buff, sizeof(buff)));
 }
 
 void
@@ -204,22 +204,14 @@ mem_hash_api_context::print_input() {
         return;
     }
 
-    if (in_key) {
-        if (key2str) {
-            MEMHASH_TRACE_DEBUG("- Key:[%s] Hash:[%#x]", key2str(in_key), in_hash_32b);
-        } else {
-            MEMHASH_TRACE_DEBUG("- RawSwKey:[%s]",
-                                mem_hash_utils_rawstr(in_key, sw_key_len));
-        }
-    }
+    char buff[SDK_TABLE_HANDLE_STR_LEN];
+    auto kstr = key2str ? key2str(in_key)
+                        : mem_hash_utils_rawstr(in_key, sw_key_len);
+    auto dstr = in_appdata ? appdata2str ? appdata2str(in_appdata)
+                                         : mem_hash_utils_rawstr(in_appdata,
+                                                                 sw_appdata_len)
+                           : "";
 
-    if (in_appdata) {
-        if (appdata2str) {
-            MEMHASH_TRACE_DEBUG("- AppData:[%s]", appdata2str(in_appdata));
-        } else {
-            MEMHASH_TRACE_DEBUG("- RawSwData:[%s]",
-                                mem_hash_utils_rawstr(in_appdata, sw_appdata_len));
-        }
-    }
-    print_handle();
+    MEMHASH_TRACE_VERBOSE("- H:[%#x] K:[%s] D:[%s] Hdl:[%s]",
+                          in_hash_32b, kstr, dstr, handle->tostr(buff, sizeof(buff)));
 }

@@ -51,9 +51,9 @@ mem_hash_main_table::init_(mem_hash_properties_t *props) {
                                      props->main_table_size);
 
     num_hash_bits_ = 32 - num_table_index_bits_;
-    MEMHASH_TRACE_DEBUG("MainTable: Created mem_hash_main_table "
-                    "TableID:%d TableSize:%d NumTableIndexBits:%d NumHashBits:%d",
-                    table_id_, table_size_, num_table_index_bits_, num_hash_bits_);
+    MEMHASH_TRACE_VERBOSE("MainTable: Created mem_hash_main_table "
+                          "TableID:%d TableSize:%d NumTableIndexBits:%d NumHashBits:%d",
+                          table_id_, table_size_, num_table_index_bits_, num_hash_bits_);
 
     hint_table_ = mem_hash_hint_table::factory(props);
     SDK_ASSERT_RETURN(hint_table_, SDK_RET_OOM);
@@ -86,8 +86,7 @@ mem_hash_main_table::initctx_(mem_hash_api_context *ctx) {
     ctx->bucket = &buckets_[ctx->table_index];
     SDK_ASSERT(ctx->bucket);
 
-    MEMHASH_TRACE_DEBUG("MainTable: TableID:%d Index:%d",
-                    ctx->table_id, ctx->table_index);
+    MEMHASH_TRACE_VERBOSE("M: TID:%d Idx:%d", ctx->table_id, ctx->table_index);
 
     return static_cast<mem_hash_table_bucket*>(ctx->bucket)->read_(ctx);
 }
@@ -98,17 +97,15 @@ mem_hash_main_table::initctx_(mem_hash_api_context *ctx) {
 sdk_ret_t
 mem_hash_main_table::insert_with_handle_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
- 
+
     SDK_ASSERT(ctx->handle->pvalid());
     SDK_ASSERT(ctx->table_index == ctx->handle->pindex());
     if (!ctx->handle->svalid()) {
         // This handle is for the main table.
         // Write key and data to the hardware.
-        MEMHASH_TRACE_DEBUG("writing to main table.");
         ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->insert_with_handle_(ctx);
     } else {
         ctx->hint = ctx->handle->sindex();
-        MEMHASH_TRACE_DEBUG("adding to hint table, hint=%d", ctx->hint);
         ret = hint_table_->insert_(ctx);
     }
 
@@ -149,9 +146,9 @@ mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
     if (ret == SDK_RET_OK) {
         // 2 CASES:
         // CASE 1: Write to HW only if this is a terminal node.
-        // 
-        // CASE 2: In case of collision, after the downstream nodes are 
-        //         written. we can update the main entry. This will ensure 
+        //
+        // CASE 2: In case of collision, after the downstream nodes are
+        //         written. we can update the main entry. This will ensure
         //         make before break for any downstream changes.
         ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->write_(ctx);
         ctx->handle->pindex(ctx->table_index);
@@ -168,17 +165,17 @@ mem_hash_main_table::insert_(mem_hash_api_context *ctx) {
 sdk_ret_t
 mem_hash_main_table::remove_with_handle_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
- 
+
     SDK_ASSERT(ctx->handle->pvalid());
     SDK_ASSERT(ctx->table_index == ctx->handle->pindex());
     if (!ctx->handle->svalid()) {
         // This handle is for the main table.
         // Write key and data to the hardware.
-        MEMHASH_TRACE_DEBUG("writing to main table.");
+        MEMHASH_TRACE_VERBOSE("writing to main table.");
         ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->remove_with_handle_(ctx);
     } else {
         ctx->hint = ctx->handle->sindex();
-        MEMHASH_TRACE_DEBUG("removing from hint table, hint=%d", ctx->hint);
+        MEMHASH_TRACE_VERBOSE("removing from hint table, hint=%d", ctx->hint);
         ret = hint_table_->remove_(ctx);
     }
 
@@ -211,14 +208,14 @@ mem_hash_main_table::remove_(mem_hash_api_context *ctx) {
         if (ctx->is_hint_valid()) {
             ret = hint_table_->defragment_(ctx);
             if (ret != SDK_RET_OK) {
-                MEMHASH_TRACE_DEBUG("defragment_ failed, ret:%d", ret);
+                MEMHASH_TRACE_ERR("defragment_ failed, ret:%d", ret);
             }
         }
     } else {
         // We have a hint match, traverse the hints to remove the entry.
         ret = hint_table_->remove_(ctx);
         if (ret != SDK_RET_OK) {
-            MEMHASH_TRACE_DEBUG("hint table remove_ failed, ret:%d", ret);
+            MEMHASH_TRACE_ERR("hint table remove_ failed, ret:%d", ret);
         }
     }
 
@@ -240,7 +237,7 @@ mem_hash_main_table::find_(mem_hash_api_context *ctx,
 
     ret = static_cast<mem_hash_table_bucket*>(ctx->bucket)->find_(ctx);
     if (ret != SDK_RET_OK) {
-         MEMHASH_TRACE_DEBUG("find_ failed, ret:%d", ret);
+         MEMHASH_TRACE_ERR("find_ failed, ret:%d", ret);
          return ret;
     }
 
@@ -310,7 +307,7 @@ __label__ done;
         match_ctx->handle->sindex(match_ctx->table_index);
     }
 
-    memcpy(ctx->in_appdata, ctx->sw_appdata, ctx->sw_appdata_len); 
+    memcpy(ctx->in_appdata, ctx->sw_appdata, ctx->sw_appdata_len);
 
 done:
     if (match_ctx && match_ctx != ctx) {
@@ -326,7 +323,7 @@ done:
 sdk_ret_t
 mem_hash_main_table::iterate_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
-    
+
     ret = mem_hash_base_table::iterate_(ctx);
     if (ret != SDK_RET_OK) {
         MEMHASH_TRACE_ERR("main table iteration failed. ret:%d", ret);

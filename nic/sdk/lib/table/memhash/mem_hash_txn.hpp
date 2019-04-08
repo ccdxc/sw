@@ -67,14 +67,14 @@ public:
 
     sdk_ret_t reserve() {
         reserved_count_++;
-        MEMHASH_TRACE_DEBUG("txn: reserved count = %d", reserved_count_);
+        MEMHASH_TRACE_VERBOSE("txn: reserved count = %d", reserved_count_);
         return SDK_RET_OK;
     }
 
     sdk_ret_t release() {
         SDK_ASSERT(reserved_count_);
         reserved_count_--;
-        MEMHASH_TRACE_DEBUG("txn: reserved count = %d", reserved_count_);
+        MEMHASH_TRACE_VERBOSE("txn: reserved count = %d", reserved_count_);
         return SDK_RET_OK;
     }
 
