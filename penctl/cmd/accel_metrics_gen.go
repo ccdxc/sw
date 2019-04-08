@@ -12,15 +12,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var accelhwringmetricsShowCmd = &cobra.Command{
-
-	Use:   "accelhwring",
-	Short: "Show AccelHwRingMetrics from Naples",
-	Long:  "\n---------------------------------\n Show AccelHwRingMetrics From Naples \n---------------------------------\n",
-	RunE:  accelhwringmetricsShowCmdHandler,
+//cmd - hw_ring
+//rootCmd = sonic
+//helpStr = Metrics for hardware rings\n Key indices - RId: ring ID, SubRId: sub-ring ID\n\n\nRing ID:\n\n  cp     : compression\n  cp_hot : compression (priority)\n  dc     : decompression\n  dc_hot : decompression (priority)\n  xts_enc: XTS encryption\n  xts_dec: XTS decryption\n  gcm_enc: GCM encryption\n  gcm_dec: GCM decryption\n\n\nValue Description:\n\nPIndex     : ring producer index\nCIndex     : ring consumer index\nInputBytes : total input bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nOutputBytes: total output bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nSoftResets : number of soft resets executed
+var hw_ringShowCmd = &cobra.Command{
+	Use:   "hw_ring",
+	Short: "Metrics for hardware rings\n Key indices - RId: ring ID, SubRId: sub-ring ID\n\n\nRing ID:\n\n  cp     : compression\n  cp_hot : compression (priority)\n  dc     : decompression\n  dc_hot : decompression (priority)\n  xts_enc: XTS encryption\n  xts_dec: XTS decryption\n  gcm_enc: GCM encryption\n  gcm_dec: GCM decryption\n\n\nValue Description:\n\nPIndex     : ring producer index\nCIndex     : ring consumer index\nInputBytes : total input bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nOutputBytes: total output bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nSoftResets : number of soft resets executed",
+	Long:  "\n---------------------------------\n Metrics for hardware rings\n Key indices - RId: ring ID, SubRId: sub-ring ID\n\n\nRing ID:\n\n  cp     : compression\n  cp_hot : compression (priority)\n  dc     : decompression\n  dc_hot : decompression (priority)\n  xts_enc: XTS encryption\n  xts_dec: XTS decryption\n  gcm_enc: GCM encryption\n  gcm_dec: GCM decryption\n\n\nValue Description:\n\nPIndex     : ring producer index\nCIndex     : ring consumer index\nInputBytes : total input bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nOutputBytes: total output bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nSoftResets : number of soft resets executed\n---------------------------------\n",
+	RunE:  hw_ringShowCmdHandler,
 }
 
-func accelhwringmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
+func hw_ringShowCmdHandler(cmd *cobra.Command, args []string) error {
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/accelhwringmetrics/")
 	if err != nil {
@@ -28,20 +30,31 @@ func accelhwringmetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if bodyBytes == nil {
-		fmt.Println("No accelhwring object(s) found")
+		fmt.Println("No accelhwringmetrics object(s) found")
 	}
 	return nil
 }
 
-var accelseqqueueinfometricsShowCmd = &cobra.Command{
-
-	Use:   "accelseqqueueinfo",
-	Short: "Show AccelSeqQueueInfoMetrics from Naples",
-	Long:  "\n---------------------------------\n Show AccelSeqQueueInfoMetrics From Naples \n---------------------------------\n",
-	RunE:  accelseqqueueinfometricsShowCmdHandler,
+//cmd - sonic
+//rootCmd =
+//helpStr = Metrics for Storage Offload NIC
+var sonicShowCmd = &cobra.Command{
+	Use:   "sonic",
+	Short: "Metrics for Storage Offload NIC",
+	Long:  "\n---------------------------------\n Metrics for Storage Offload NIC\n---------------------------------\n",
 }
 
-func accelseqqueueinfometricsShowCmdHandler(cmd *cobra.Command, args []string) error {
+//cmd - sequencer_info
+//rootCmd = sonic
+//helpStr = Sequencer queues information:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\nQStateAddr: queue state memory address\nQGroup    : queue group\n            0 - compress/decompress\n            1 - compress/decompress status\n            2 - crypto\n            3 - crypto status\nCoreId    : CPU core ID (not available currently)
+var sequencer_infoShowCmd = &cobra.Command{
+	Use:   "sequencer_info",
+	Short: "Sequencer queues information:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\nQStateAddr: queue state memory address\nQGroup    : queue group\n            0 - compress/decompress\n            1 - compress/decompress status\n            2 - crypto\n            3 - crypto status\nCoreId    : CPU core ID (not available currently)",
+	Long:  "\n---------------------------------\n Sequencer queues information:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\nQStateAddr: queue state memory address\nQGroup    : queue group\n            0 - compress/decompress\n            1 - compress/decompress status\n            2 - crypto\n            3 - crypto status\nCoreId    : CPU core ID (not available currently)\n---------------------------------\n",
+	RunE:  sequencer_infoShowCmdHandler,
+}
+
+func sequencer_infoShowCmdHandler(cmd *cobra.Command, args []string) error {
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/accelseqqueueinfometrics/")
 	if err != nil {
@@ -49,20 +62,22 @@ func accelseqqueueinfometricsShowCmdHandler(cmd *cobra.Command, args []string) e
 		return err
 	}
 	if bodyBytes == nil {
-		fmt.Println("No accelseqqueueinfo object(s) found")
+		fmt.Println("No accelseqqueueinfometrics object(s) found")
 	}
 	return nil
 }
 
-var accelseqqueuemetricsShowCmd = &cobra.Command{
-
-	Use:   "accelseqqueue",
-	Short: "Show AccelSeqQueueMetrics from Naples",
-	Long:  "\n---------------------------------\n Show AccelSeqQueueMetrics From Naples \n---------------------------------\n",
-	RunE:  accelseqqueuemetricsShowCmdHandler,
+//cmd - sequencer_metrics
+//rootCmd = sonic
+//helpStr = Metrics for sequencer queues:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\nInterruptsRaised : CPU interrupts raised\nNextDBsRung      : chaining doorbells rung\nSeqDescsProcessed: sequencer descriptors processed\nSeqDescsAborted  : sequencer descriptors aborted (due to reset)\nStatusPdmaXfers  : status descriptors copied\nHwDescXfers      : descriptors transferred to hardware\nHwBatchErrors    : hardware batch (length) errors\nHwOpErrors       : hardware operation errors\nAolUpdateReqs    : AOL list updates requested\nSglUpdateReqs    : scatter/gather list updates requested\nSglPdmaXfers     : payload DMA transfers executed\nSglPdmaErrors    : payload DMA errors encountered\nSglPadOnlyXfers  : pad-data-only DMA transfers executed\nSglPadOnlyErrors : pad-data-only DMA errors encountered\nAltDescsTaken    : alternate (bypass-onfail) descriptors executed\nAltBufsTaken     : alternate buffers taken\nLenUpdateReqs    : length updates requested\nCpHeaderUpdates  : compression header updates requested\nSeqHwBytes       : bytes processed
+var sequencer_metricsShowCmd = &cobra.Command{
+	Use:   "sequencer_metrics",
+	Short: "Metrics for sequencer queues:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\nInterruptsRaised : CPU interrupts raised\nNextDBsRung      : chaining doorbells rung\nSeqDescsProcessed: sequencer descriptors processed\nSeqDescsAborted  : sequencer descriptors aborted (due to reset)\nStatusPdmaXfers  : status descriptors copied\nHwDescXfers      : descriptors transferred to hardware\nHwBatchErrors    : hardware batch (length) errors\nHwOpErrors       : hardware operation errors\nAolUpdateReqs    : AOL list updates requested\nSglUpdateReqs    : scatter/gather list updates requested\nSglPdmaXfers     : payload DMA transfers executed\nSglPdmaErrors    : payload DMA errors encountered\nSglPadOnlyXfers  : pad-data-only DMA transfers executed\nSglPadOnlyErrors : pad-data-only DMA errors encountered\nAltDescsTaken    : alternate (bypass-onfail) descriptors executed\nAltBufsTaken     : alternate buffers taken\nLenUpdateReqs    : length updates requested\nCpHeaderUpdates  : compression header updates requested\nSeqHwBytes       : bytes processed",
+	Long:  "\n---------------------------------\n Metrics for sequencer queues:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\nInterruptsRaised : CPU interrupts raised\nNextDBsRung      : chaining doorbells rung\nSeqDescsProcessed: sequencer descriptors processed\nSeqDescsAborted  : sequencer descriptors aborted (due to reset)\nStatusPdmaXfers  : status descriptors copied\nHwDescXfers      : descriptors transferred to hardware\nHwBatchErrors    : hardware batch (length) errors\nHwOpErrors       : hardware operation errors\nAolUpdateReqs    : AOL list updates requested\nSglUpdateReqs    : scatter/gather list updates requested\nSglPdmaXfers     : payload DMA transfers executed\nSglPdmaErrors    : payload DMA errors encountered\nSglPadOnlyXfers  : pad-data-only DMA transfers executed\nSglPadOnlyErrors : pad-data-only DMA errors encountered\nAltDescsTaken    : alternate (bypass-onfail) descriptors executed\nAltBufsTaken     : alternate buffers taken\nLenUpdateReqs    : length updates requested\nCpHeaderUpdates  : compression header updates requested\nSeqHwBytes       : bytes processed\n---------------------------------\n",
+	RunE:  sequencer_metricsShowCmdHandler,
 }
 
-func accelseqqueuemetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
+func sequencer_metricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/accelseqqueuemetrics/")
 	if err != nil {
@@ -70,17 +85,23 @@ func accelseqqueuemetricsShowCmdHandler(cmd *cobra.Command, args []string) error
 		return err
 	}
 	if bodyBytes == nil {
-		fmt.Println("No accelseqqueue object(s) found")
+		fmt.Println("No accelseqqueuemetrics object(s) found")
 	}
 	return nil
 }
 
 func init() {
 
-	metricsShowCmd.AddCommand(accelhwringmetricsShowCmd)
+	sonicShowCmd.AddCommand(hw_ringShowCmd)
 
-	metricsShowCmd.AddCommand(accelseqqueueinfometricsShowCmd)
+	//cmd - sonic
+	//rootCmd =
+	//helpStr = Metrics for Storage Offload NIC
 
-	metricsShowCmd.AddCommand(accelseqqueuemetricsShowCmd)
+	metricsShowCmd.AddCommand(sonicShowCmd)
+
+	sonicShowCmd.AddCommand(sequencer_infoShowCmd)
+
+	sonicShowCmd.AddCommand(sequencer_metricsShowCmd)
 
 }

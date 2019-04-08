@@ -5,10 +5,11 @@ MODULE_TARGET   = libnicmgrproto.so
 MODULE_PIPELINE = iris gft
 MODULE_INCS     = /usr/local/include \
                   ${TOPDIR}/nic/hal/third-party/google/include \
+                  ${BLD_PROTOGEN_DIR}/proto \
                   ${TOPDIR}/hal/third-party/grpc/include
 MODULE_FLAGS    = -O3
 MODULE_EXCLUDE_FLAGS = -O2
-MODULE_PREREQS  = nicmgr.proto
+MODULE_PREREQS  = nicmgr.proto penctl.proto libpenctlproto.so
 MODULE_SRCS     = ${BLD_PROTOGEN_DIR}/nicmgr/nicmgr.pb.cc \
                   ${BLD_PROTOGEN_DIR}/nicmgr/nicmgr.delphi.cc \
                   ${BLD_PROTOGEN_DIR}/nicmgr/metrics.pb.cc \
@@ -16,5 +17,5 @@ MODULE_SRCS     = ${BLD_PROTOGEN_DIR}/nicmgr/nicmgr.pb.cc \
                   ${BLD_PROTOGEN_DIR}/nicmgr/accel_metrics.pb.cc \
                   ${BLD_PROTOGEN_DIR}/nicmgr/accel_metrics.delphi.cc
 MODULE_INCS     = ${BLD_PROTOGEN_DIR}
-MODULE_SOLIBS   = delphisdk
+MODULE_SOLIBS   = delphisdk penctlproto
 include ${MKDEFS}/post.mk

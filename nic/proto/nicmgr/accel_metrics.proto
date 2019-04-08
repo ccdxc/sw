@@ -2,8 +2,29 @@ syntax = "proto3";
 package accel_metrics;
 
 import "delphi.proto";
+import "penctl.proto";
+
+message AccelMetricsPenctlRootCmd {
+    option (venice.penctlParentCmd) = {
+        Cmd:     "sonic",
+        HelpStr: "Metrics for Storage Offload NIC"
+    };
+}
 
 message AccelPfInfo {
+    option (venice.penctlCmd) = {
+        Cmd:     "device_info",
+        HelpStr: "Device information:\\n"
+                 " Key index - logical interface ID\\n"
+                 "\\n\\nValue Description:\\n\\n"
+                 "HwLifId         : hardware logical interface ID\\n"
+                 "NumSeqQueues    : number of sequencer queues available\\n"
+                 "CryptoKeyIdxBase: crypto key base index\\n"
+                 "NumCryptoKeysMax: maximum number of crypto keys allowed\\n"
+                 "IntrBase        : CPU interrupt base\\n"
+                 "IntrCount       : CPU interrupt vectors available",
+        RootCmd: "sonic"
+    };
     delphi.ObjectMeta   Meta                 = 1;
     string              Key                  = 2;
     uint64              HwLifId              = 3;
@@ -20,44 +41,84 @@ message AccelSeqQueueKey {
 }
 
 enum AccelSeqQGroup {
-    QGroupCpdc                               = 0;     // CP/DC sequencer submission queue group
-    QGroupCpdcStatus                         = 1;     // CP/DC sequencer status queue group
-    QGroupCrypto                             = 2;     // Crypto sequencer submission queue group
-    QGroupCryptoStatus                       = 3;     // Crypto sequencer status queue group
+    QGroupCpdc                               = 0;
+    QGroupCpdcStatus                         = 1;
+    QGroupCrypto                             = 2;
+    QGroupCryptoStatus                       = 3;
 }
 
 message AccelSeqQueueInfoMetrics {
+    option (venice.penctlCmd) = {
+        Cmd:     "sequencer_info",
+        HelpStr: "Sequencer queues information:\\n"
+                 " Key indices - LifId: logical interface ID, QId: queue ID\\n"
+                 "\\n\\nValue Description:\\n\\n"
+                 "QStateAddr: queue state memory address\\n"
+                 "QGroup    : queue group\\n"
+                 "            0 - compress/decompress\\n"
+                 "            1 - compress/decompress status\\n"
+                 "            2 - crypto\\n"
+                 "            3 - crypto status\\n"
+                 "CoreId    : CPU core ID (not available currently)",
+        RootCmd: "sonic"
+    };
     option (delphi.datapath_metrics) = true;
     AccelSeqQueueKey    Key                  = 1;
 
     delphi.Counter      QStateAddr           = 2;
-    delphi.Counter      QGroup               = 3;     // AccelSeqQGroup
+    delphi.Counter      QGroup               = 3;
     delphi.Counter      CoreId               = 4;
 }
 
 message AccelSeqQueueMetrics {
+    option (venice.penctlCmd) = {
+        Cmd:     "sequencer_metrics",
+        HelpStr: "Metrics for sequencer queues:\\n"
+                 " Key indices - LifId: logical interface ID, QId: queue ID\\n"
+                 "\\n\\nValue Description:\\n\\n"
+                 "InterruptsRaised : CPU interrupts raised\\n"
+                 "NextDBsRung      : chaining doorbells rung\\n"
+                 "SeqDescsProcessed: sequencer descriptors processed\\n"
+                 "SeqDescsAborted  : sequencer descriptors aborted (due to reset)\\n"
+                 "StatusPdmaXfers  : status descriptors copied\\n"
+                 "HwDescXfers      : descriptors transferred to hardware\\n"
+                 "HwBatchErrors    : hardware batch (length) errors\\n"
+                 "HwOpErrors       : hardware operation errors\\n"
+                 "AolUpdateReqs    : AOL list updates requested\\n"
+                 "SglUpdateReqs    : scatter/gather list updates requested\\n"
+                 "SglPdmaXfers     : payload DMA transfers executed\\n"
+                 "SglPdmaErrors    : payload DMA errors encountered\\n"
+                 "SglPadOnlyXfers  : pad-data-only DMA transfers executed\\n"
+                 "SglPadOnlyErrors : pad-data-only DMA errors encountered\\n"
+                 "AltDescsTaken    : alternate (bypass-onfail) descriptors executed\\n"
+                 "AltBufsTaken     : alternate buffers taken\\n"
+                 "LenUpdateReqs    : length updates requested\\n"
+                 "CpHeaderUpdates  : compression header updates requested\\n"
+                 "SeqHwBytes       : bytes processed",
+        RootCmd: "sonic"
+    };
     option (delphi.datapath_metrics) = true;
     AccelSeqQueueKey    Key                  = 1;
 
-    delphi.Counter InterruptsRaised          = 2;     // Interrupts raised
-    delphi.Counter NextDBsRung               = 3;     // Next doorbells rung
-    delphi.Counter SeqDescsProcessed         = 4;     // SeqSQ descriptors processed
-    delphi.Counter SeqDescsAborted           = 5;     // SeqSQ descriptors aborted
-    delphi.Counter StatusPdmaXfers           = 6;     // Status PDMA transfers
-    delphi.Counter HwDescXfers               = 7;     // HW descriptor transfers
-    delphi.Counter HwBatchErrors             = 8;     // HW batch transfer errors
-    delphi.Counter HwOpErrors                = 9;     // HW operation errors
-    delphi.Counter AolUpdateReqs             = 10;    // AOL update requests processed
-    delphi.Counter SglUpdateReqs             = 11;    // SGL update requests processed
-    delphi.Counter SglPdmaXfers              = 12;    // SGL PDMA transfers taken
-    delphi.Counter SglPdmaErrors             = 13;    // SGL PDMA errors
-    delphi.Counter SglPadOnlyXfers           = 14;    // SGL PDMA pad-only transfers taken
-    delphi.Counter SglPadOnlyErrors          = 15;    // SGL PDMA pad-only errors
-    delphi.Counter AltDescsTaken             = 16;    // Times an alternate descriptor were used
-    delphi.Counter AltBufsTaken              = 17;    // Times an alternate source buffer were used
-    delphi.Counter LenUpdateReqs             = 18;    // CP/DC length updates after decrypt
-    delphi.Counter CpHeaderUpdates           = 19;    // CP header updates requested
-    delphi.Counter SeqHwBytes                = 20;    // Bytes processed by HW engines
+    delphi.Counter InterruptsRaised          = 2;
+    delphi.Counter NextDBsRung               = 3;
+    delphi.Counter SeqDescsProcessed         = 4;
+    delphi.Counter SeqDescsAborted           = 5;
+    delphi.Counter StatusPdmaXfers           = 6;
+    delphi.Counter HwDescXfers               = 7;
+    delphi.Counter HwBatchErrors             = 8;
+    delphi.Counter HwOpErrors                = 9;
+    delphi.Counter AolUpdateReqs             = 10;
+    delphi.Counter SglUpdateReqs             = 11;
+    delphi.Counter SglPdmaXfers              = 12;
+    delphi.Counter SglPdmaErrors             = 13;
+    delphi.Counter SglPadOnlyXfers           = 14;
+    delphi.Counter SglPadOnlyErrors          = 15;
+    delphi.Counter AltDescsTaken             = 16;
+    delphi.Counter AltBufsTaken              = 17;
+    delphi.Counter LenUpdateReqs             = 18;
+    delphi.Counter CpHeaderUpdates           = 19;
+    delphi.Counter SeqHwBytes                = 20;
 }
 
 message AccelHwRingKey {
@@ -66,13 +127,34 @@ message AccelHwRingKey {
 }
 
 message AccelHwRingMetrics {
+    option (venice.penctlCmd) = {
+        Cmd:     "hw_ring",
+        HelpStr: "Metrics for hardware rings\\n"
+                 " Key indices - RId: ring ID, SubRId: sub-ring ID\\n"
+                 "\\n\\nRing ID:\\n\\n"
+                 "  cp     : compression\\n"
+                 "  cp_hot : compression (priority)\\n"
+                 "  dc     : decompression\\n"
+                 "  dc_hot : decompression (priority)\\n"
+                 "  xts_enc: XTS encryption\\n"
+                 "  xts_dec: XTS decryption\\n"
+                 "  gcm_enc: GCM encryption\\n"
+                 "  gcm_dec: GCM decryption\\n"
+                 "\\n\\nValue Description:\\n\\n"
+                 "PIndex     : ring producer index\\n"
+                 "CIndex     : ring consumer index\\n"
+                 "InputBytes : total input bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\\n"
+                 "OutputBytes: total output bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\\n"
+                 "SoftResets : number of soft resets executed",
+        RootCmd: "sonic"
+    };
     option (delphi.datapath_metrics) = true;
     AccelHwRingKey      Key                  = 1;
 
-    delphi.Counter      PIndex               = 2;     // Producer index
-    delphi.Counter      CIndex               = 3;     // Consumer index
-    delphi.Counter      InputBytes           = 4;     // Total input bytes (not available on some rings)
-    delphi.Counter      OutputBytes          = 5;     // Total output bytes (not available on some rings)
-    delphi.Counter      SoftResets           = 6;     // # soft resets executed
+    delphi.Counter      PIndex               = 2;
+    delphi.Counter      CIndex               = 3;
+    delphi.Counter      InputBytes           = 4;
+    delphi.Counter      OutputBytes          = 5;
+    delphi.Counter      SoftResets           = 6;
 }
 

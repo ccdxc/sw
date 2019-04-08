@@ -99,10 +99,10 @@ static const std::map<uint32_t,const char*> accel_ring_id2name_map = {
     {ACCEL_RING_CP_HOT,  "cp_hot"},
     {ACCEL_RING_DC,      "dc"},
     {ACCEL_RING_DC_HOT,  "dc_hot"},
-    {ACCEL_RING_XTS0,    "xts0"},
-    {ACCEL_RING_XTS1,    "xts1"},
-    {ACCEL_RING_GCM0,    "gcm0"},
-    {ACCEL_RING_GCM1,    "gcm1"},
+    {ACCEL_RING_XTS0,    "xts_enc"},
+    {ACCEL_RING_XTS1,    "xts_dec"},
+    {ACCEL_RING_GCM0,    "gcm_enc"},
+    {ACCEL_RING_GCM1,    "gcm_dec"},
 };
 
 static const char              *lif_state_str_table[] = {
