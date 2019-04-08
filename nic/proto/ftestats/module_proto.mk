@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = ftestats.proto
 MODULE_PIPELINE     = iris gft
-MODULE_GEN_TYPES    = CC PY DELPHI GOMETRICS PENMETRICS
+MODULE_GEN_TYPES    = CC PY DELPHI GOMETRICS
 MODULE_INCS         = ${MODULE_DIR} \
                       ${TOPDIR}/nic \
                       ${TOPDIR}/nic/hal/third-party/google/include \
