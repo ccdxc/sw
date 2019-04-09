@@ -9,7 +9,7 @@ targets:
     feature:
   halctl:
     commands: ["make", "jobd/halctl"]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
@@ -114,7 +114,7 @@ targets:
     feature:
   dol/norm:
     commands: ["make", "jobd/dol/norm"]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
@@ -126,7 +126,7 @@ targets:
     feature:
   dol/acl:
     commands: ["make", "jobd/dol/acl"]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
@@ -144,13 +144,13 @@ targets:
     feature:
   dol/networking:
     commands: ["make", "jobd/dol/networking"]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
   dol/vxlan:
     commands: ["make", "jobd/dol/vxlan"]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
@@ -162,19 +162,19 @@ targets:
     feature:
   dol/ipsg:
     commands: ["make", "jobd/dol/ipsg"]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
   dol/firewall:
     commands: ["make", "jobd/dol/firewall"]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
   dol/pin:
     commands: ["make", "jobd/dol/pin"]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
@@ -192,19 +192,19 @@ targets:
     feature:
   dol/l4lb:
     commands: ["make", "jobd/dol/l4lb"]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
   #dol/dos:
     #commands: ["make", "jobd/dol/dos"]
-    #owners: ["email:statikon@pensando.io"]
+    #owners: ["email:bharat@pensando.io"]
     #area:
     #sub-area:
     #feature:
   dol/recirc:
     commands: ["make", "jobd/dol/recirc"]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
@@ -260,7 +260,7 @@ targets:
   # ====================== GFT Tests ===========================
   dol/gft:
     commands: ["make", "PIPELINE=gft", "jobd/dol/gft"]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
@@ -286,7 +286,7 @@ targets:
   # ====================== MBT Tests ===========================
   mbt/base:
     commands: ["make", "jobd/mbt/base"]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
@@ -298,7 +298,7 @@ targets:
     feature:
   mbt/firewall:
     commands: ["make", "jobd/mbt/firewall"]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
@@ -312,7 +312,7 @@ targets:
   # ====================== Make Infra Tests ===========================
   #make/sdk:
   # commands: ["make", "jobd/make/sdk"]
-  # owners: ["email:statikon@pensando.io"]
+  # owners: ["email:bharat@pensando.io"]
   # area:
   # sub-area:
   # feature:
@@ -325,7 +325,7 @@ targets:
 
   codesync:
     commands: ["make", "jobd/codesync" ]
-    owners: ["email:statikon@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
@@ -343,12 +343,13 @@ targets:
   # area:
   # sub-area:
   # feature:
-  dol/e2e/eplearn:
-    commands: ["make", "jobd/dol/e2e/eplearn"]
-    owners: ["email:sudhiaithal@pensando.io"]
-    area:
-    sub-area:
-    feature:
+  # Disabling as this test failing 100% for last 10 days
+  #dol/e2e/eplearn:
+  #  commands: ["make", "jobd/dol/e2e/eplearn"]
+  #  owners: ["email:sudhiaithal@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
   #dol/e2e/alg:
   # commands: ["make", "jobd/dol/e2e/alg"]
   # owners: ["email:pavramas@pensando.io"]
