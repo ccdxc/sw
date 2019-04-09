@@ -253,7 +253,7 @@ class RouteTableObjectHelper:
             return lobj.AddrFamily == route_obj.AddrFamily and\
                lobj.VNIC.SUBNET.V6RouteTableId == route_obj.RouteTblId
 
-    def GetMatchingConfigObjects(self, selectors):
+    def GetMatchingConfigObjects(self, selectors, all_objs):
         objs = []
         rtype = selectors.route.GetValueByKey('RouteType')
         for route_obj in client.Objects():
@@ -267,10 +267,17 @@ class RouteTableObjectHelper:
                     route_obj.l_obj = lobj
                     objs.append(route_obj)
                     break
-        return utils.GetFilteredObjects(objs, selectors.maxlimits)
+        if all_objs is True:
+            maxlimits = 0
+        else:
+            maxlimits = selectors.maxlimits
+        return utils.GetFilteredObjects(objs, maxlimits)
 
 
 RouteTableHelper = RouteTableObjectHelper()
 
 def GetMatchingObjects(selectors):
-    return RouteTableHelper.GetMatchingConfigObjects(selectors)
+    return RouteTableHelper.GetMatchingConfigObjects(selectors, False)
+
+def GetAllMatchingObjects(selectors):
+    return RouteTableHelper.GetMatchingConfigObjects(selectors, True)

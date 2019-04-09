@@ -35,7 +35,7 @@ vpc:
       count : 1
       type  : tenant
       subnet:
-        - count     : 50
+        - count     : 34
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:

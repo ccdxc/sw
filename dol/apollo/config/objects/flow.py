@@ -112,7 +112,7 @@ class FlowMapObjectHelper:
             for lobj in lmapping.GetMatchingObjects(mapsel):
                 if hasattr(lobj, "PublicIP") == False:
                     continue
-                for routetblobj in routetable.GetMatchingObjects(mapsel):
+                for routetblobj in routetable.GetAllMatchingObjects(mapsel):
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
                     if IsNatEnabled(routetblobj) is False:
