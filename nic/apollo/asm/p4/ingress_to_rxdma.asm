@@ -17,7 +17,7 @@ ingress_to_rxdma:
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
                         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                          CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
-                         APOLLO_P4_TO_RXDMA_HDR_SZ)
+                         APOLLO_P4_TO_RXDMA_HDR_SZ + APOLLO_PREDICATE_HDR_SZ)
     phvwr           p.capri_p4_intrinsic_valid, TRUE
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
     phvwr           p.p4_to_rxdma_header_valid, TRUE
@@ -69,7 +69,7 @@ classic_nic_to_rxdma_common:
 classic_nic_to_rxdma_post_vlan_strip:
     phvwr           p.p4_to_p4plus_classic_nic_packet_len, r1
     phvwr           p.p4_to_p4plus_classic_nic_p4plus_app_id, \
-                        k.control_metadata_p4plus_app_id
+                        P4PLUS_APPTYPE_CLASSIC_NIC
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
                         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                         CAPRI_RXDMA_INTRINSIC_HDR_SZ + \

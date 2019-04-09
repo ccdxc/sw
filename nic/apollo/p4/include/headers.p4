@@ -149,7 +149,7 @@ header_type predicate_header_t {
     fields {
         txdma_drop_event        : 1;
         pad0                    : 4;
-        is_ipv6                 : 1;
+        redirect_to_arm         : 1;
         lpm_bypass              : 1;
         direction               : 1;
     }
@@ -270,7 +270,7 @@ header_type qstate_hdr_t {
     }
 }
 
-header_type qstate_txdma_fte_q_t {
+header_type qstate_txdma_q_t {
     fields {
         // sw dependent portion of qstate
         arm_pindex1     : 16;

@@ -73,33 +73,6 @@ header_type udp_flow_metadata_t {
         udp_flow_qid        : 8;
     }
 }
-header_type toeplitz_seed_t {
-    fields {
-        t_type  : 8;
-        seed    : 320;
-    }
-}
-header_type toeplitz_key0_t {
-    fields {
-        data : 128;
-    }
-}
-header_type toeplitz_key1_t {
-    fields {
-        data : 128;
-    }
-}
-header_type toeplitz_key2_t {
-    fields {
-        data : 64;
-    }
-}
-
-header_type toeplitz_result_t {
-    fields {
-        cpu_qid_hash : 32;
-    }
-}
 
 header_type flow_key_t {
     fields {
@@ -131,7 +104,7 @@ metadata p4_2_p4plus_ext_app_header_t ext_app_header;
 metadata p4_to_rxdma_header_t p4_to_rxdma_header;
 @pragma dont_trim
 @pragma pa_header_union ingress ext_app_header
-metadata p4_to_arm_header_t p4_to_arm_header;
+metadata predicate_header_t predicate_header;
 
 @pragma dont_trim
 metadata p4plus_common_to_stage_t to_stage_0;
@@ -176,10 +149,10 @@ header_type rxdma_common_pad_t {
 }
 
 @pragma dont_trim
-metadata rxdma_common_pad_t rxdma_common_pad;
+metadata rxdma_common_pad_t     rxdma_common_pad;
 
 @pragma dont_trim
-metadata sacl_metadata_t       sacl_metadata;
+metadata sacl_metadata_t        sacl_metadata;
 
 @pragma dont_trim
 @pragma scratch_metadata
@@ -191,7 +164,7 @@ metadata qstate_hdr_t           scratch_qstate_hdr;
 
 @pragma dont_trim
 @pragma scratch_metadata
-metadata qstate_txdma_fte_q_t   scratch_qstate_txdma_fte_q;
+metadata qstate_txdma_q_t       scratch_qstate_txdma_q;
 
 @pragma dont_trim
 @pragma scratch_metadata
@@ -200,38 +173,19 @@ metadata udp_scratch_metadata_t udp_scratch;
 @pragma dont_trim
 metadata udp_flow_metadata_t    udp_flow_metadata;
 
-metadata toeplitz_result_t      hash_results;
-
-@pragma scratch_metadata
-metadata toeplitz_result_t      scratch_hash_results;
-@pragma scratch_metadata
-metadata toeplitz_seed_t        scratch_toeplitz_seed;
-
 @pragma scratch_metadata
 metadata flow_key_t             scratch_flow_key;
 
-@pragma pa_header_union ingress to_stage_2
-metadata toeplitz_key0_t  toeplitz_key0;  // from packet
-@pragma pa_header_union ingress to_stage_3
-metadata toeplitz_key0_t  toeplitz_seed0; // same size as key
-@pragma pa_header_union ingress to_stage_4
-metadata toeplitz_key1_t  toeplitz_key1;  // from packet
-@pragma pa_header_union ingress to_stage_5
-metadata toeplitz_key1_t  toeplitz_seed1; // same size as key
-
-@pragma pa_header_union ingress to_stage_6
-metadata toeplitz_key2_t  toeplitz_key2;  // from packet
-@pragma pa_header_union ingress to_stage_7
-metadata toeplitz_key2_t  toeplitz_seed2; // same size as key
-
 @pragma dont_trim
-metadata doorbell_addr_t    doorbell_addr;
+metadata doorbell_addr_t        doorbell_addr;
 @pragma dont_trim
-metadata doorbell_data_t    doorbell_data;
+metadata doorbell_data_t        doorbell_data;
 
 // DMA commands
 @pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_pkt2mem_t dma_cmd_pkt2mem;
+metadata dma_cmd_phv2mem_t      predicate_phv2mem;
 @pragma dont_trim
-metadata dma_cmd_phv2mem_t dma_cmd_phv2mem;
+metadata dma_cmd_pkt2mem_t      dma_cmd_pkt2mem;
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t      doorbell_phv2mem;

@@ -86,30 +86,30 @@
 
 #define PKTQ_PAGE_SIZE                  10240
 
-/* Qstate definition for packet Q - RxDMA to TxDMA and RxDMA to FTE */
+/* Qstate definition for packet Q - RxDMA to TxDMA */
 #define PKTQ_QSTATE \
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host_rings, total_rings, pid, \
     p_index0, c_index0, arm_pindex1, arm_cindex1, sw_pindex0, sw_cindex0, \
     ring_base0, ring_base1, ring_size0, ring_size1
 
-#define PKTQ_QSTATE_DVEC_SCRATCH(_scratch_qstate_hdr, _scratch_qstate_txdma_fte_q) \
-    modify_field(_scratch_qstate_hdr.pc, pc);                                 \
-    modify_field(_scratch_qstate_hdr.rsvd, rsvd);                                 \
-    modify_field(_scratch_qstate_hdr.cosA, cosA);                                 \
-    modify_field(_scratch_qstate_hdr.cosB, cosB);                                 \
-    modify_field(_scratch_qstate_hdr.cos_sel, cos_sel);                           \
-    modify_field(_scratch_qstate_hdr.eval_last, eval_last);                       \
-    modify_field(_scratch_qstate_hdr.host_rings, host_rings);                     \
-    modify_field(_scratch_qstate_hdr.total_rings, total_rings);                   \
-    modify_field(_scratch_qstate_hdr.pid, pid);                                   \
-    modify_field(_scratch_qstate_hdr.p_index0, p_index0);                         \
-    modify_field(_scratch_qstate_hdr.c_index0, c_index0);                         \
-                                                                                  \
-    modify_field(_scratch_qstate_txdma_fte_q.arm_pindex1, arm_pindex1);           \
-    modify_field(_scratch_qstate_txdma_fte_q.arm_cindex1, arm_cindex1);           \
-    modify_field(_scratch_qstate_txdma_fte_q.sw_pindex0, sw_pindex0);             \
-    modify_field(_scratch_qstate_txdma_fte_q.sw_cindex0, sw_cindex0);             \
-    modify_field(_scratch_qstate_txdma_fte_q.ring_base0, ring_base0);             \
-    modify_field(_scratch_qstate_txdma_fte_q.ring_base1, ring_base1);             \
-    modify_field(_scratch_qstate_txdma_fte_q.ring_size0, ring_size0);             \
-    modify_field(_scratch_qstate_txdma_fte_q.ring_size1, ring_size1)
+#define PKTQ_QSTATE_DVEC_SCRATCH(_scratch_qstate_hdr, _scratch_qstate_txdma_q) \
+    modify_field(_scratch_qstate_hdr.pc, pc);                                  \
+    modify_field(_scratch_qstate_hdr.rsvd, rsvd);                              \
+    modify_field(_scratch_qstate_hdr.cosA, cosA);                              \
+    modify_field(_scratch_qstate_hdr.cosB, cosB);                              \
+    modify_field(_scratch_qstate_hdr.cos_sel, cos_sel);                        \
+    modify_field(_scratch_qstate_hdr.eval_last, eval_last);                    \
+    modify_field(_scratch_qstate_hdr.host_rings, host_rings);                  \
+    modify_field(_scratch_qstate_hdr.total_rings, total_rings);                \
+    modify_field(_scratch_qstate_hdr.pid, pid);                                \
+    modify_field(_scratch_qstate_hdr.p_index0, p_index0);                      \
+    modify_field(_scratch_qstate_hdr.c_index0, c_index0);                      \
+                                                                               \
+    modify_field(_scratch_qstate_txdma_q.arm_pindex1, arm_pindex1);            \
+    modify_field(_scratch_qstate_txdma_q.arm_cindex1, arm_cindex1);            \
+    modify_field(_scratch_qstate_txdma_q.sw_pindex0, sw_pindex0);              \
+    modify_field(_scratch_qstate_txdma_q.sw_cindex0, sw_cindex0);              \
+    modify_field(_scratch_qstate_txdma_q.ring_base0, ring_base0);              \
+    modify_field(_scratch_qstate_txdma_q.ring_base1, ring_base1);              \
+    modify_field(_scratch_qstate_txdma_q.ring_size0, ring_size0);              \
+    modify_field(_scratch_qstate_txdma_q.ring_size1, ring_size1)

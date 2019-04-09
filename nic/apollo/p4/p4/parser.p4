@@ -457,15 +457,14 @@ parser deparse_ingress {
     extract(capri_rxdma_intrinsic);
 
     extract(p4_to_rxdma_header);
+    extract(predicate_header);
 
     extract(p4_to_p4plus_classic_nic);
     extract(p4_to_p4plus_classic_nic_ip);
     extract(p4_to_arm);
 
     // set the splitter offset to here
-    extract(predicate_header);
     extract(p4_to_txdma_header);
-    // i2e should be extracted below
     extract(p4i_apollo_i2e);
 
     return parse_packet;

@@ -34,6 +34,7 @@
 #include "nic/apollo/core/trace.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
+#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
 #include "nic/utils/pack_bytes/pack_bytes.hpp"
 
 #define EPOCH 0xb055
@@ -99,6 +100,11 @@ typedef struct __attribute__((__packed__)) txdma_qstate_ {
 
     uint8_t pad[(512 - 256) / 8];
 } txdma_qstate_t;
+
+typedef struct cache_line_s {
+    uint8_t action_pc;
+    uint8_t packed_entry[CACHE_LINE_SIZE-sizeof(action_pc)];
+} cache_line_t;
 
 uint8_t g_snd_pkt1[] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xC1,
@@ -285,7 +291,6 @@ uint16_t g_sacl_proto_dport_class_id = 0xAA;
 uint16_t g_sacl_p1_class_id = 0x2BB;
 mpartition *g_mempartition;
 
-
 class sort_mpu_programs_compare {
 public:
     bool operator()(std::string p1, std::string p2) {
@@ -333,14 +338,6 @@ static void
 init_service_lif ()
 {
     LIFQState qstate = {0};
-#if 0
-    uint8_t pgm_offset = 0;
-    program_info *pginfo = program_info::factory("conf/gen/mpu_prog_info.json");
-    SDK_ASSERT(pginfo != NULL);
-
-    sdk::platform::capri::get_pc_offset(pginfo,
-                                        "txdma_stage0.bin", "apollo_read_qstate", &pgm_offset);
-#endif
 
     qstate.lif_id = APOLLO_SERVICE_LIF;
     qstate.hbm_address = get_mem_addr(JLIFQSTATE);
@@ -822,11 +819,7 @@ route_init (void)
     uint32_t len;
     uint64_t lpm_base_addr = get_mem_addr(JLPMV4BASE);
     route_actiondata_t sw_entry;
-
-    struct cache_line_s {
-        uint8_t action_pc;
-        uint8_t packed_entry[CACHE_LINE_SIZE-sizeof(action_pc)];
-    } cache_line;
+    cache_line_t cache_line;
 
     memset(&sw_entry, 0xFF, sizeof(sw_entry));
 
@@ -885,12 +878,18 @@ sacl_init (void)
         sacl_base_addr + SACL_P1_TABLE_OFFSET +
         (((g_sacl_ip_class_id | (g_sacl_sport_class_id << 10)) / 51) * 64);
     uint64_t sacl_p2_addr =
-        sacl_base_addr + SACL_P2_TABLE_OFFSET + (g_sacl_p1_class_id << 8);
+        sacl_base_addr + SACL_P2_TABLE_OFFSET + (g_sacl_p1_class_id << 6);
 
-    data = 0xFFFF;
-    data |= ((uint64_t)htonl((g_layer1_dip & 0xFFFF0000))) << 16;
-    data |= ((uint64_t)htons(g_sacl_ip_class_id)) << 48;
-    sdk::asic::asic_mem_write(sacl_ip_addr, (uint8_t *)&data, sizeof(data));
+    sacl_ip_data_actiondata_t sacl_ip;
+    memset(&sacl_ip, 0xFF, sizeof(sacl_ip));
+    sacl_ip.action_u.sacl_ip_data_match_ipv4_retrieve.key0 =
+        (g_layer1_dip & 0xFFFF0000);
+    sacl_ip.action_u.sacl_ip_data_match_ipv4_retrieve.data0 =
+        g_sacl_ip_class_id;
+    p4pd_apollo_rxdma_entry_pack(P4_APOLLO_RXDMA_TBL_ID_SACL_IP_DATA,
+                                 SACL_IP_DATA_MATCH_IPV4_RETRIEVE_ID,
+                                 &sacl_ip, c_data);
+    sdk::asic::asic_mem_write(sacl_ip_addr, (uint8_t *)&c_data, sizeof(c_data));
 
     data = -1;
     data &= ~((uint64_t)0xFFFF);
@@ -986,7 +985,6 @@ rxdma_symbols_init (void **p4plus_symbols,
         (sdk::p4::p4_param_info_t *)(*p4plus_symbols);
 
     symbols[i].name = MEM_REGION_LIF_STATS_BASE;
-    // symbols[i].val = 0xce000000;
     symbols[i].val = g_mempartition->
                      start_addr(MEM_REGION_LIF_STATS_NAME);
     i++;
