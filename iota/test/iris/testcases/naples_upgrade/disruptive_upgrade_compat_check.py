@@ -11,11 +11,23 @@ def Setup(tc):
     tc.Nodes = api.GetNaplesHostnames()
     for n in tc.Nodes:
         common.startTestUpgApp(n, tc.iterators.option)
+
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}.orig".format(UPGRADE_NAPLES_PKG_COMPAT_CHECK, UPGRADE_NAPLES_PKG_COMPAT_CHECK))
+    api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}.orig".format(UPGRADE_NAPLES_PKG, UPGRADE_NAPLES_PKG))
+    api.Trigger_AddNaplesCommand(req, node, "cp /update/{} /update/{}".format(UPGRADE_NAPLES_PKG_COMPAT_CHECK, UPGRADE_NAPLES_PKG))
+    resp = api.Trigger(req)
+    for cmd_resp in resp.commands:
+        api.PrintCommandResults(cmd_resp)
+        if cmd_resp.exit_code != 0:
+            api.Logger.error("Setup failed %s", cmd_resp.command)
+            return api.types.status.FAILURE
+
     return api.types.status.SUCCESS
 
 def Trigger(tc):
 
-    cmd = 'curl -d \'{"kind": "SmartNICRollout","meta": {"name": "test disruptive upgrade","tenant": "tenant-foo"},"spec": {"ops": [{"op": 1,"version": "0.1"},{"op": 3,"version": "0.1"}]}}\' -X POST -H "Content-Type:application/json" 169.254.0.1:8888/api/v1/naples/rollout/'
+    cmd = 'curl -d \'{"kind": "SmartNICRollout","meta": {"name": "test disruptive upgrade","tenant": "tenant-foo"},"spec": {"ops": [{"op": 1,"version": "0.1"}]}}\' -X POST -H "Content-Type:application/json" 169.254.0.1:8888/api/v1/naples/rollout/'
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:

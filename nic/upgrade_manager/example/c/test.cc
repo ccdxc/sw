@@ -23,6 +23,6 @@ TestUpgSvc::TestUpgSvc(delphi::SdkPtr sk, string name) {
 
 // createTimerHandler creates a dummy code upgrade request
 void TestUpgSvc::createTimerHandler(ev::timer &watcher, int revents) {
-    //upgsdk_->SendAppRespSuccess();
+    upgsdk_->SendAppRespSuccess();
 }
 } // namespace test 

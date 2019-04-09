@@ -20,7 +20,24 @@ bool test::HostUpFail;
 bool test::LinkUpFail;
 bool test::PostLinkUpFail;
 
+bool test::CompatCheckPause;
+bool test::PostRestartPause;
+bool test::ProcessQuiescePause;
+bool test::LinkDownPause;
+bool test::HostDownPause;
+bool test::PostHostDownPause;
+bool test::SaveStatePause;
+bool test::HostUpPause;
+bool test::LinkUpPause;
+bool test::PostLinkUpPause;
+
 int main(int argc, char **argv) {
+    FILE *fp;
+
+    fp = fopen("/run/testupgapp.pid", "w+");
+    fprintf(fp, "%d\n", getpid());
+    fclose(fp);
+
     if (argc > 1) {
         if (strcmp(argv[1], "compatcheckfail") == 0) {
             test::CompatCheckFail = true;
@@ -42,6 +59,26 @@ int main(int argc, char **argv) {
             test::LinkUpFail = true;
         } else if (strcmp(argv[1], "postlinkupfail") == 0) {
             test::PostLinkUpFail = true;
+        } else if (strcmp(argv[1], "compatcheckpause") == 0) {
+            test::CompatCheckPause = true;
+        } else if (strcmp(argv[1], "postrestartpause") == 0) {
+            test::PostRestartPause = true;
+        } else if (strcmp(argv[1], "processquiescepause") == 0) {
+            test::ProcessQuiescePause = true;
+        } else if (strcmp(argv[1], "linkdownpause") == 0) {
+            test::LinkDownPause = true;
+        } else if (strcmp(argv[1], "hostdownpause") == 0) {
+            test::HostDownPause = true;
+        } else if (strcmp(argv[1], "posthostdownpause") == 0) {
+            test::PostHostDownPause = true;
+        } else if (strcmp(argv[1], "savestatepause") == 0) {
+            test::SaveStatePause = true;
+        } else if (strcmp(argv[1], "hostuppause") == 0) {
+            test::HostUpPause = true;
+        } else if (strcmp(argv[1], "linkuppause") == 0) {
+            test::LinkUpPause = true;
+        } else if (strcmp(argv[1], "postlinkuppause") == 0) {
+            test::PostLinkUpPause = true;
         } else {
             cout << "Unknown flag " << argv[1];
         }
@@ -58,7 +95,7 @@ int main(int argc, char **argv) {
 
     // start a timer to create an object
     exupgsvc->createTimer.set<TestUpgSvc, &TestUpgSvc::createTimerHandler>(exupgsvc.get());
-    exupgsvc->createTimer.start(55, 0);
+    exupgsvc->createTimer.start(305, 0);
 
     // run the main loop
     return sdk->MainLoop();

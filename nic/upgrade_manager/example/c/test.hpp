@@ -23,6 +23,17 @@ extern bool HostUpFail;
 extern bool LinkUpFail;
 extern bool PostLinkUpFail;
 
+extern bool CompatCheckPause;
+extern bool PostRestartPause;
+extern bool ProcessQuiescePause;
+extern bool LinkDownPause;
+extern bool HostDownPause;
+extern bool PostHostDownPause;
+extern bool SaveStatePause;
+extern bool HostUpPause;
+extern bool LinkUpPause;
+extern bool PostLinkUpPause;
+
 // TestUpgSvc is the service object for test upgrade service 
 class TestUpgSvc : public delphi::Service, public enable_shared_from_this<TestUpgSvc> {
 private:
@@ -56,6 +67,9 @@ public:
         if (CompatCheckFail) {
             resp = {.resp=FAIL, .errStr=""};
         }
+        if (CompatCheckPause) {
+            resp = {.resp=INPROGRESS, .errStr=""};
+        }
         return resp;
     }
 
@@ -63,6 +77,9 @@ public:
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (PostRestartFail) {
             resp = {.resp=FAIL, .errStr=""};
+        }
+        if (PostRestartPause) {
+            resp = {.resp=INPROGRESS, .errStr=""};
         }
         return resp;
     }
@@ -72,6 +89,9 @@ public:
         if (ProcessQuiesceFail) {
             resp = {.resp=FAIL, .errStr=""};
         }
+        if (ProcessQuiescePause) {
+            resp = {.resp=INPROGRESS, .errStr=""};
+        }
         return resp;
     }
 
@@ -79,6 +99,9 @@ public:
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (LinkDownFail) {
             resp = {.resp=FAIL, .errStr=""};
+        }
+        if (LinkDownPause) {
+            resp = {.resp=INPROGRESS, .errStr=""};
         }
         return resp;
     }
@@ -88,6 +111,9 @@ public:
         if (HostDownFail) {
             resp = {.resp=FAIL, .errStr=""};
         }
+        if (HostDownPause) {
+            resp = {.resp=INPROGRESS, .errStr=""};
+        }
         return resp;
     }
 
@@ -95,6 +121,9 @@ public:
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (PostHostDownFail) {
             resp = {.resp=FAIL, .errStr=""};
+        }
+        if (PostHostDownPause) {
+            resp = {.resp=INPROGRESS, .errStr=""};
         }
         return resp;
     }
@@ -104,6 +133,9 @@ public:
         if (SaveStateFail) {
             resp = {.resp=FAIL, .errStr=""};
         }
+        if (SaveStatePause) {
+            resp = {.resp=INPROGRESS, .errStr=""};
+        }
         return resp;
     }
 
@@ -111,6 +143,9 @@ public:
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (HostUpFail) {
             resp = {.resp=FAIL, .errStr=""};
+        }
+        if (HostUpPause) {
+            resp = {.resp=INPROGRESS, .errStr=""};
         }
         return resp;
     }
@@ -120,6 +155,9 @@ public:
         if (LinkUpFail) {
             resp = {.resp=FAIL, .errStr=""};
         }
+        if (LinkUpPause) {
+            resp = {.resp=INPROGRESS, .errStr=""};
+        }
         return resp;
     }
 
@@ -127,6 +165,9 @@ public:
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         if (PostLinkUpFail) {
             resp = {.resp=FAIL, .errStr=""};
+        }
+        if (PostLinkUpPause) {
+            resp = {.resp=INPROGRESS, .errStr=""};
         }
         return resp;
     }
