@@ -100,7 +100,7 @@ class FlowMapObjectHelper:
 
         if fwdmode == 'IGW':
             for lobj in lmapping.GetMatchingObjects(mapsel):
-                for routetblobj in routetable.GetMatchingObjects(mapsel):
+                for routetblobj in routetable.GetAllMatchingObjects(mapsel):
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
                     if IsNatEnabled(routetblobj) is True:
