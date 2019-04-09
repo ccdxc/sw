@@ -96,32 +96,8 @@ func IsValidOperationValue(operation Operation) bool {
 
 // resource implements Resource interface
 type resource struct {
-	tenant       string
-	group        string
-	resourceKind string
-	namespace    string
-	name         string
-	owner        *auth.User
-}
-
-func (r *resource) GetTenant() string {
-	return r.tenant
-}
-
-func (r *resource) GetGroup() string {
-	return r.group
-}
-
-func (r *resource) GetKind() string {
-	return r.resourceKind
-}
-
-func (r *resource) GetNamespace() string {
-	return r.namespace
-}
-
-func (r *resource) GetName() string {
-	return r.name
+	auth.Resource
+	owner *auth.User
 }
 
 func (r *resource) GetOwner() *auth.User {
@@ -139,13 +115,16 @@ func NewResource(tenant, group, resourceKind, namespace, name string) Resource {
 
 // NewResourceWithOwner returns an instance of Resource
 func NewResourceWithOwner(tenant, group, resourceKind, namespace, name string, owner *auth.User) Resource {
+	res := auth.Resource{}
+	res.Defaults("all")
+	res.Tenant = tenant
+	res.Group = group
+	res.Kind = resourceKind
+	res.Namespace = namespace
+	res.Name = name
 	return &resource{
-		tenant:       tenant,
-		group:        group,
-		resourceKind: resourceKind,
-		namespace:    namespace,
-		name:         name,
-		owner:        owner,
+		Resource: res,
+		owner:    owner,
 	}
 }
 

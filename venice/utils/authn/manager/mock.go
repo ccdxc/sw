@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	invalidUserClaim     = "invalidUser"
-	invalidTenantClaim   = "invalidTenant"
-	nonExistentUserClaim = "nonExistentUser"
+	invalidUserClaim   = "invalidUser"
+	invalidTenantClaim = "invalidTenant"
+	// NonExistentUserClaim simulates non existent user
+	NonExistentUserClaim = "nonExistentUser"
 	invalidToken         = "invalidToken"
 )
 
@@ -26,8 +27,8 @@ func (tm *mockTokenManager) ValidateToken(token string) (map[string]interface{},
 		claims[SubClaim] = 0
 	case invalidTenantClaim:
 		claims[TenantClaim] = 0
-	case nonExistentUserClaim:
-		claims[SubClaim] = nonExistentUserClaim
+	case NonExistentUserClaim:
+		claims[SubClaim] = NonExistentUserClaim
 	case invalidToken:
 		return nil, false, nil
 	default:
@@ -52,7 +53,7 @@ type mockAuthGetter struct {
 
 func (ag *mockAuthGetter) GetUser(name, tenant string) (*auth.User, bool) {
 	switch name {
-	case nonExistentUserClaim:
+	case NonExistentUserClaim:
 		return nil, false
 	default:
 		// user object

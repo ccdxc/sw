@@ -3113,6 +3113,80 @@
         ]
       }
     },
+    "/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/IsAuthorized": {
+      "post": {
+        "operationId": "IsAuthorized",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authSubjectAccessReviewRequest"
+            }
+          }
+        ],
+        "tags": [
+          "auth/v1"
+        ]
+      }
+    },
     "/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/PasswordChange": {
       "post": {
         "operationId": "PasswordChange",
@@ -3811,6 +3885,74 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/authUser"
+            }
+          }
+        ],
+        "tags": [
+          "auth/v1"
+        ]
+      }
+    },
+    "/configs/auth/v1/users/{O.Name}/IsAuthorized": {
+      "post": {
+        "operationId": "IsAuthorized_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authUser"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authSubjectAccessReviewRequest"
             }
           }
         ],
@@ -5728,6 +5870,59 @@
         }
       }
     },
+    "authOperation": {
+      "type": "object",
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "resource": {
+          "$ref": "#/definitions/authResource"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "AllActions",
+            "Create",
+            "Read",
+            "Update",
+            "Delete",
+            "Commit",
+            "Clear"
+          ],
+          "default": "AllActions",
+          "x-ui-hints": {
+            "AllActions": "All Actions",
+            "Clear": "Clear Config",
+            "Commit": "Commit Config",
+            "Create": "Create",
+            "Delete": "Delete",
+            "Read": "Read",
+            "Update": "Update"
+          }
+        }
+      },
+      "title": "Operation represents an user action on a resource about which an authorization decision has to be made"
+    },
+    "authOperationStatus": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "$ref": "#/definitions/authOperation",
+          "title": "Operation for which authorization decision is resported"
+        },
+        "allowed": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Allowed indicates if Operation is authorized"
+        },
+        "message": {
+          "type": "string",
+          "title": "Message reports error validating Operation"
+        }
+      },
+      "title": "OperationStatus contains the result of the authorization check for a requested operation"
+    },
     "authPasswordChangeRequest": {
       "type": "object",
       "required": [
@@ -5905,6 +6100,32 @@
         }
       }
     },
+    "authResource": {
+      "type": "object",
+      "properties": {
+        "tenant": {
+          "type": "string",
+          "title": "Tenant to which the resource belongs"
+        },
+        "group": {
+          "type": "string",
+          "title": "Group of resource to which access is desired"
+        },
+        "kind": {
+          "type": "string",
+          "title": "Kind of resource to which access is desired"
+        },
+        "namespace": {
+          "type": "string",
+          "title": "Namespace of resource within which access to a resource is desired"
+        },
+        "name": {
+          "type": "string",
+          "title": "Name of a specific resource to which access is desired"
+        }
+      },
+      "title": "Resource represents an object or API endpoint resource on which authorization for an action needs to be checked"
+    },
     "authRole": {
       "type": "object",
       "properties": {
@@ -6036,6 +6257,27 @@
     "authRoleStatus": {
       "type": "object",
       "title": "status part of role object"
+    },
+    "authSubjectAccessReviewRequest": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authOperation"
+          }
+        }
+      },
+      "title": "SubjectAccessReviewRequest checks whether user can perform requested operations"
     },
     "authTLSOptions": {
       "type": "object",
@@ -6181,6 +6423,13 @@
           "type": "string",
           "format": "date-time",
           "title": "Last password change time for local user"
+        },
+        "operations-status": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/authOperationStatus"
+          },
+          "title": "Authorization information about requested operations"
         }
       },
       "title": "status part of user object"

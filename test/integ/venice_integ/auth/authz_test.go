@@ -405,6 +405,8 @@ func TestUserSelfOperations(t *testing.T) {
 
 	MustCreateTestUser(tinfo.apicl, "testUser2", testPassword, testTenant)
 	defer MustDeleteUser(tinfo.apicl, "testUser2", testTenant)
+	MustCreateTestUser(tinfo.apicl, "testUser3", testPassword, testTenant)
+	defer MustDeleteUser(tinfo.apicl, "testUser3", testTenant)
 	// login as testUser2 who has no roles assigned
 	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: "testUser2", Password: testPassword, Tenant: testTenant})
 	AssertOk(t, err, "error creating logged in context")
@@ -466,6 +468,29 @@ func TestUserSelfOperations(t *testing.T) {
 	}, "unable to reset password")
 	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, &auth.PasswordCredential{Username: "testUser2", Password: user.Spec.Password, Tenant: testTenant})
 	AssertOk(t, err, "unable to get logged in context with new reset password")
+	// test reset password of other user
+	user, err = tinfo.restcl.AuthV1().User().PasswordReset(ctx, &auth.PasswordResetRequest{
+		TypeMeta: api.TypeMeta{
+			Kind: string(auth.KindUser),
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "testUser3",
+			Tenant: testTenant,
+		},
+	})
+	Assert(t, err != nil, "testUser2 was able to reset password for testUser3")
+	user, err = tinfo.restcl.AuthV1().User().PasswordChange(ctx, &auth.PasswordChangeRequest{
+		TypeMeta: api.TypeMeta{
+			Kind: string(auth.KindUser),
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:   "testUser3",
+			Tenant: testTenant,
+		},
+		OldPassword: testPassword,
+		NewPassword: newPassword,
+	})
+	Assert(t, err != nil, "testUser2 was able to change password for testUser3")
 }
 
 func TestUserDelete(t *testing.T) {

@@ -65,7 +65,9 @@ func (ug *defaultAuthGetter) GetUser(name, tenant string) (*auth.User, bool) {
 		ug.cache.DeleteObject(&auth.User{TypeMeta: api.TypeMeta{Kind: "User"}, ObjectMeta: *objMeta})
 		return nil, ok
 	}
-	return user, ok
+	retUser := &auth.User{}
+	user.Clone(retUser)
+	return retUser, ok
 }
 
 func (ug *defaultAuthGetter) GetAuthenticationPolicy() (*auth.AuthenticationPolicy, error) {
@@ -88,7 +90,9 @@ func (ug *defaultAuthGetter) GetAuthenticationPolicy() (*auth.AuthenticationPoli
 		ug.cache.DeleteObject(&auth.AuthenticationPolicy{TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"}, ObjectMeta: *objMeta})
 		return nil, ErrInvalidObjectType
 	}
-	return policy, nil
+	retPolicy := &auth.AuthenticationPolicy{}
+	policy.Clone(retPolicy)
+	return retPolicy, nil
 }
 
 func (ug *defaultAuthGetter) GetTokenManager() (TokenManager, error) {

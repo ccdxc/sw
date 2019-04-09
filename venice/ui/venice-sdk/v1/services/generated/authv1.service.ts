@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IAuthAuthenticationPolicy,IApiStatus,IAuthRoleBindingList,IAuthRoleBinding,IAuthRoleList,IAuthRole,IAuthUserList,IAuthUser,IAuthPasswordChangeRequest,IAuthPasswordResetRequest,IAuthAutoMsgAuthenticationPolicyWatchHelper,IAuthAutoMsgRoleBindingWatchHelper,IAuthAutoMsgRoleWatchHelper,IAuthAutoMsgUserWatchHelper } from '../../models/generated/auth';
+import { IAuthAuthenticationPolicy,IApiStatus,IAuthRoleBindingList,IAuthRoleBinding,IAuthRoleList,IAuthRole,IAuthUserList,IAuthUser,IAuthSubjectAccessReviewRequest,IAuthPasswordChangeRequest,IAuthPasswordResetRequest,IAuthAutoMsgAuthenticationPolicyWatchHelper,IAuthAutoMsgRoleBindingWatchHelper,IAuthAutoMsgRoleWatchHelper,IAuthAutoMsgUserWatchHelper } from '../../models/generated/auth';
 
 @Injectable()
 export class Authv1Service extends AbstractService {
@@ -317,6 +317,16 @@ export class Authv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, 'UpdateUser') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
+  public IsAuthorized(O_Name, body: IAuthSubjectAccessReviewRequest, stagingID: string = ""):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/IsAuthorized';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXPostCall(url, body, 'IsAuthorized') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+  }
+  
   public PasswordChange(O_Name, body: IAuthPasswordChangeRequest, stagingID: string = ""):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/PasswordChange';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
@@ -383,6 +393,15 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXPutCall(url, body, 'UpdateUser_1') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  public IsAuthorized_1(O_Name, body: IAuthSubjectAccessReviewRequest, stagingID: string = ""):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/users/{O.Name}/IsAuthorized';
+    url = url.replace('{O.Name}', O_Name);
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXPostCall(url, body, 'IsAuthorized_1') as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
   
   public PasswordChange_1(O_Name, body: IAuthPasswordChangeRequest, stagingID: string = ""):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {

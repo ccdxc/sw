@@ -165,6 +165,16 @@ func (m *RoleBinding) MakeURI(cat, ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *SubjectAccessReviewRequest) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "users/", m.Tenant, "/", m.Name)
+}
+
+func (m *SubjectAccessReviewRequest) MakeURI(cat, ver, prefix string) string {
+	in := m
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/tenant/", in.Tenant, "/users/", in.Name)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *User) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "users/", m.Tenant, "/", m.Name)
 }
@@ -409,6 +419,58 @@ func (m *Local) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *Operation) Clone(into interface{}) (interface{}, error) {
+	var out *Operation
+	var ok bool
+	if into == nil {
+		out = &Operation{}
+	} else {
+		out, ok = into.(*Operation)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Operation) Defaults(ver string) bool {
+	var ret bool
+	ret = true
+	switch ver {
+	default:
+		m.Action = "AllActions"
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *OperationStatus) Clone(into interface{}) (interface{}, error) {
+	var out *OperationStatus
+	var ok bool
+	if into == nil {
+		out = &OperationStatus{}
+	} else {
+		out, ok = into.(*OperationStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *OperationStatus) Defaults(ver string) bool {
+	var ret bool
+	if m.Operation != nil {
+		ret = m.Operation.Defaults(ver) || ret
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *PasswordChangeRequest) Clone(into interface{}) (interface{}, error) {
 	var out *PasswordChangeRequest
 	var ok bool
@@ -588,6 +650,27 @@ func (m *RadiusServerStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *Resource) Clone(into interface{}) (interface{}, error) {
+	var out *Resource
+	var ok bool
+	if into == nil {
+		out = &Resource{}
+	} else {
+		out, ok = into.(*Resource)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Resource) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *Role) Clone(into interface{}) (interface{}, error) {
 	var out *Role
 	var ok bool
@@ -732,6 +815,34 @@ func (m *RoleStatus) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *SubjectAccessReviewRequest) Clone(into interface{}) (interface{}, error) {
+	var out *SubjectAccessReviewRequest
+	var ok bool
+	if into == nil {
+		out = &SubjectAccessReviewRequest{}
+	} else {
+		out, ok = into.(*SubjectAccessReviewRequest)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *SubjectAccessReviewRequest) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Operations {
+		if m.Operations[k] != nil {
+			i := m.Operations[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *TLSOptions) Clone(into interface{}) (interface{}, error) {
 	var out *TLSOptions
 	var ok bool
@@ -827,6 +938,12 @@ func (m *UserStatus) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *UserStatus) Defaults(ver string) bool {
 	var ret bool
+	for k := range m.OperationsStatus {
+		if m.OperationsStatus[k] != nil {
+			i := m.OperationsStatus[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
 	ret = true
 	switch ver {
 	default:
@@ -1108,6 +1225,63 @@ func (m *Local) Normalize() {
 
 }
 
+func (m *Operation) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *Operation) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if vs, ok := validatorMapAuth["Operation"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapAuth["Operation"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *Operation) Normalize() {
+
+	m.Action = Permission_ActionType_normal[strings.ToLower(m.Action)]
+
+}
+
+func (m *OperationStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *OperationStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Operation != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Operation"
+			if errs := m.Operation.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *OperationStatus) Normalize() {
+
+	if m.Operation != nil {
+		m.Operation.Normalize()
+	}
+
+}
+
 func (m *PasswordChangeRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1292,6 +1466,19 @@ func (m *RadiusServerStatus) Normalize() {
 	if m.Server != nil {
 		m.Server.Normalize()
 	}
+
+}
+
+func (m *Resource) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *Resource) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *Resource) Normalize() {
 
 }
 
@@ -1526,6 +1713,37 @@ func (m *RoleStatus) Normalize() {
 
 }
 
+func (m *SubjectAccessReviewRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *SubjectAccessReviewRequest) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Operations {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sOperations[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *SubjectAccessReviewRequest) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+	for _, v := range m.Operations {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
 func (m *TLSOptions) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1648,6 +1866,16 @@ func (m *UserStatus) References(tenant string, path string, resp map[string]apii
 
 func (m *UserStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.OperationsStatus {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sOperationsStatus[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	if vs, ok := validatorMapAuth["UserStatus"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
@@ -1668,6 +1896,12 @@ func (m *UserStatus) Normalize() {
 
 	for k, v := range m.Authenticators {
 		m.Authenticators[k] = Authenticators_AuthenticatorType_normal[strings.ToLower(v)]
+	}
+
+	for _, v := range m.OperationsStatus {
+		if v != nil {
+			v.Normalize()
+		}
 	}
 
 }
@@ -1762,6 +1996,7 @@ func init() {
 		&PasswordResetRequest{},
 		&Role{},
 		&RoleBinding{},
+		&SubjectAccessReviewRequest{},
 		&User{},
 	)
 
@@ -1806,6 +2041,20 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Result", vals)
+		}
+		return nil
+	})
+
+	validatorMapAuth["Operation"] = make(map[string][]func(string, interface{}) error)
+	validatorMapAuth["Operation"]["all"] = append(validatorMapAuth["Operation"]["all"], func(path string, i interface{}) error {
+		m := i.(*Operation)
+
+		if _, ok := Permission_ActionType_value[m.Action]; !ok {
+			vals := []string{}
+			for k1, _ := range Permission_ActionType_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Action", vals)
 		}
 		return nil
 	})

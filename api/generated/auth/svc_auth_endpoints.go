@@ -63,6 +63,7 @@ type EndpointsAuthV1Client struct {
 	AutoUpdateRoleEndpoint                 endpoint.Endpoint
 	AutoUpdateRoleBindingEndpoint          endpoint.Endpoint
 	AutoUpdateUserEndpoint                 endpoint.Endpoint
+	IsAuthorizedEndpoint                   endpoint.Endpoint
 	LdapBindCheckEndpoint                  endpoint.Endpoint
 	LdapConnectionCheckEndpoint            endpoint.Endpoint
 	PasswordChangeEndpoint                 endpoint.Endpoint
@@ -101,6 +102,7 @@ type EndpointsAuthV1RestClient struct {
 	AutoWatchRoleBindingEndpoint           endpoint.Endpoint
 	AutoWatchSvcAuthV1Endpoint             endpoint.Endpoint
 	AutoWatchUserEndpoint                  endpoint.Endpoint
+	IsAuthorizedEndpoint                   endpoint.Endpoint
 	LdapBindCheckEndpoint                  endpoint.Endpoint
 	LdapConnectionCheckEndpoint            endpoint.Endpoint
 	PasswordChangeEndpoint                 endpoint.Endpoint
@@ -134,6 +136,7 @@ type EndpointsAuthV1Server struct {
 	AutoUpdateRoleEndpoint                 endpoint.Endpoint
 	AutoUpdateRoleBindingEndpoint          endpoint.Endpoint
 	AutoUpdateUserEndpoint                 endpoint.Endpoint
+	IsAuthorizedEndpoint                   endpoint.Endpoint
 	LdapBindCheckEndpoint                  endpoint.Endpoint
 	LdapConnectionCheckEndpoint            endpoint.Endpoint
 	PasswordChangeEndpoint                 endpoint.Endpoint
@@ -421,6 +424,20 @@ func (e EndpointsAuthV1Client) AutoUpdateUser(ctx context.Context, in *User) (*U
 }
 
 type respAuthV1AutoUpdateUser struct {
+	V   User
+	Err error
+}
+
+// IsAuthorized is endpoint for IsAuthorized
+func (e EndpointsAuthV1Client) IsAuthorized(ctx context.Context, in *SubjectAccessReviewRequest) (*User, error) {
+	resp, err := e.IsAuthorizedEndpoint(ctx, in)
+	if err != nil {
+		return &User{}, err
+	}
+	return resp.(*User), nil
+}
+
+type respAuthV1IsAuthorized struct {
 	V   User
 	Err error
 }
@@ -945,6 +962,28 @@ func MakeAuthV1AutoUpdateUserEndpoint(s ServiceAuthV1Server, logger log.Logger) 
 	return trace.ServerEndpoint("AuthV1:AutoUpdateUser")(f)
 }
 
+// IsAuthorized implementation on server Endpoint
+func (e EndpointsAuthV1Server) IsAuthorized(ctx context.Context, in SubjectAccessReviewRequest) (User, error) {
+	resp, err := e.IsAuthorizedEndpoint(ctx, in)
+	if err != nil {
+		return User{}, err
+	}
+	return *resp.(*User), nil
+}
+
+// MakeAuthV1IsAuthorizedEndpoint creates  IsAuthorized endpoints for the service
+func MakeAuthV1IsAuthorizedEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*SubjectAccessReviewRequest)
+		v, err := s.IsAuthorized(ctx, *req)
+		return respAuthV1IsAuthorized{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:IsAuthorized")(f)
+}
+
 // LdapBindCheck implementation on server Endpoint
 func (e EndpointsAuthV1Server) LdapBindCheck(ctx context.Context, in AuthenticationPolicy) (AuthenticationPolicy, error) {
 	resp, err := e.LdapBindCheckEndpoint(ctx, in)
@@ -1122,6 +1161,7 @@ func MakeAuthV1ServerEndpoints(s ServiceAuthV1Server, logger log.Logger) Endpoin
 		AutoUpdateRoleEndpoint:                 MakeAuthV1AutoUpdateRoleEndpoint(s, logger),
 		AutoUpdateRoleBindingEndpoint:          MakeAuthV1AutoUpdateRoleBindingEndpoint(s, logger),
 		AutoUpdateUserEndpoint:                 MakeAuthV1AutoUpdateUserEndpoint(s, logger),
+		IsAuthorizedEndpoint:                   MakeAuthV1IsAuthorizedEndpoint(s, logger),
 		LdapBindCheckEndpoint:                  MakeAuthV1LdapBindCheckEndpoint(s, logger),
 		LdapConnectionCheckEndpoint:            MakeAuthV1LdapConnectionCheckEndpoint(s, logger),
 		PasswordChangeEndpoint:                 MakeAuthV1PasswordChangeEndpoint(s, logger),
@@ -1422,6 +1462,19 @@ func (m loggingAuthV1MiddlewareClient) AutoUpdateUser(ctx context.Context, in *U
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "AutoUpdateUser", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateUser(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) IsAuthorized(ctx context.Context, in *SubjectAccessReviewRequest) (resp *User, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "IsAuthorized", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.IsAuthorized(ctx, in)
 	return
 }
 func (m loggingAuthV1MiddlewareClient) LdapBindCheck(ctx context.Context, in *AuthenticationPolicy) (resp *AuthenticationPolicy, err error) {
@@ -1804,6 +1857,19 @@ func (m loggingAuthV1MiddlewareServer) AutoUpdateUser(ctx context.Context, in Us
 	resp, err = m.next.AutoUpdateUser(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareServer) IsAuthorized(ctx context.Context, in SubjectAccessReviewRequest) (resp User, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "IsAuthorized", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.IsAuthorized(ctx, in)
+	return
+}
 func (m loggingAuthV1MiddlewareServer) LdapBindCheck(ctx context.Context, in AuthenticationPolicy) (resp AuthenticationPolicy, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2076,6 +2142,11 @@ func makeURIAuthV1AutoWatchUserWatchOper(in *api.ListWatchOptions) string {
 }
 
 //
+func makeURIAuthV1IsAuthorizedCreateOper(in *SubjectAccessReviewRequest) string {
+	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users/", in.Name, "/IsAuthorized")
+}
+
+//
 func makeURIAuthV1LdapBindCheckCreateOper(in *AuthenticationPolicy) string {
 	return fmt.Sprint("/configs/auth/v1", "/authn-policy/LdapBindCheck")
 }
@@ -2289,6 +2360,27 @@ func (r *EndpointsAuthV1RestClient) PasswordResetUser(ctx context.Context, in *P
 	}
 	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1PasswordReset(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*User), err
+}
+
+func (r *EndpointsAuthV1RestClient) IsAuthorizedUser(ctx context.Context, in *SubjectAccessReviewRequest) (*User, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIAuthV1IsAuthorizedCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespAuthV1IsAuthorized(ctx, resp)
 	if err != nil {
 		return nil, err
 	}

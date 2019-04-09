@@ -32,15 +32,17 @@ message UserSpec {
 // status part of user object
 message UserStatus {
     // Roles assigned to user
-    repeated string Roles            = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "roles,omitempty"];
+    repeated string Roles                      = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "roles,omitempty"];
     // Groups that external user belongs to
-    repeated string UserGroups       = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "user-groups,omitempty"];
+    repeated string UserGroups                 = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "user-groups,omitempty"];
     // Last login time
-    api.Timestamp LastLogin          = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-login,omitempty"];
+    api.Timestamp LastLogin                    = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-login,omitempty"];
     // Authenticators used for last successful login
-    repeated string Authenticators   = 4 [(venice.check) = "StrEnum(Authenticators.AuthenticatorType)", (gogoproto.jsontag) = "authenticators,omitempty"];
+    repeated string Authenticators             = 4 [(venice.check) = "StrEnum(Authenticators.AuthenticatorType)", (gogoproto.jsontag) = "authenticators,omitempty"];
     // Last password change time for local user
-    api.Timestamp LastPasswordChange = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-password-change,omitempty"];
+    api.Timestamp LastPasswordChange           = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-password-change,omitempty"];
+    // Authorization information about requested operations
+    repeated OperationStatus OperationsStatus  = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "operations-status,omitempty"];
 }
 
 // User could be local or external
@@ -343,6 +345,49 @@ message PasswordResetRequest {
     api.TypeMeta T   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
 
     api.ObjectMeta O = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    option (venice.objectPrefix) = {Collection: "users", Path: "/{O.Tenant}"};
+}
+
+// ----------------------------- Subject Access Review -----------------------------
+
+// Resource represents an object or API endpoint resource on which authorization for an action needs to be checked
+message Resource {
+    // Tenant to which the resource belongs
+    string Tenant    = 1 [(gogoproto.jsontag) = "tenant,omitempty"];
+    // Group of resource to which access is desired
+    string Group     = 2 [(gogoproto.jsontag) = "group,omitempty"];
+    // Kind of resource to which access is desired
+    string Kind      = 3 [(gogoproto.jsontag) = "kind,omitempty"];
+    // Namespace of resource within which access to a resource is desired
+    string Namespace = 4 [(gogoproto.jsontag) = "namespace,omitempty"];
+    // Name of a specific resource to which access is desired
+    string Name      = 5 [(gogoproto.jsontag) = "name,omitempty"];
+}
+
+// Operation represents an user action on a resource about which an authorization decision has to be made
+message Operation {
+    Resource Resource = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "resource,omitempty"];
+    string Action     = 2 [(venice.check) = "StrEnum(Permission.ActionType)", (gogoproto.jsontag) = "action,omitempty"];
+}
+
+// OperationStatus contains the result of the authorization check for a requested operation
+message OperationStatus {
+    // Operation for which authorization decision is resported
+    Operation Operation = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "operation,omitempty"];
+    // Allowed indicates if Operation is authorized
+    bool Allowed        = 2 [(gogoproto.jsontag) = "allowed"];
+    // Message reports error validating Operation
+    string Message      = 3 [(gogoproto.jsontag) = "message"];
+}
+
+// SubjectAccessReviewRequest checks whether user can perform requested operations
+message SubjectAccessReviewRequest {
+    api.TypeMeta T                = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O              = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    repeated Operation Operations = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "operations,omitempty"];
 
     option (venice.objectPrefix) = {Collection: "users", Path: "/{O.Tenant}"};
 }

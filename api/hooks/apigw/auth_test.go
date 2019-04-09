@@ -20,6 +20,7 @@ import (
 	"github.com/pensando/sw/venice/utils/authn/ldap"
 	"github.com/pensando/sw/venice/utils/authn/manager"
 	"github.com/pensando/sw/venice/utils/authz"
+	authzmgr "github.com/pensando/sw/venice/utils/authz/manager"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
 	"github.com/pensando/sw/venice/utils/log"
@@ -614,6 +615,25 @@ func TestLdapConnectionCheck(t *testing.T) {
 	}
 }
 
+func TestLdapConnectionCheckHookRegistration(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	svc := mocks.NewFakeAPIGwService(l, false)
+	r := &authHooks{}
+	r.logger = l
+	err := r.registerLdapConnectionCheckHook(svc)
+	AssertOk(t, err, "ldapConnectionCheckHook hook registration failed")
+
+	prof, err := svc.GetServiceProfile("LdapConnectionCheck")
+	AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", "LdapConnectionCheck"))
+	Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre call hooks [%d] for User action [%v]", len(prof.PreCallHooks()), "LdapConnectionCheck"))
+
+	// test err
+	svc = mocks.NewFakeAPIGwService(l, true)
+	err = r.registerLdapConnectionCheckHook(svc)
+	Assert(t, err != nil, "expected error in ldapConnectionCheckHook hook registration")
+}
+
 func TestLdapBindCheck(t *testing.T) {
 	authpolicy := &auth.AuthenticationPolicy{
 		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
@@ -705,6 +725,25 @@ func TestLdapBindCheck(t *testing.T) {
 	}
 }
 
+func TestLdapBindCheckHookRegistration(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	svc := mocks.NewFakeAPIGwService(l, false)
+	r := &authHooks{}
+	r.logger = l
+	err := r.registerLdapBindCheckHook(svc)
+	AssertOk(t, err, "ldapBindCheckHook hook registration failed")
+
+	prof, err := svc.GetServiceProfile("LdapBindCheck")
+	AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", "LdapBindCheck"))
+	Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre call hooks [%d] for User action [%v]", len(prof.PreCallHooks()), "LdapBindCheck"))
+
+	// test err
+	svc = mocks.NewFakeAPIGwService(l, true)
+	err = r.registerLdapBindCheckHook(svc)
+	Assert(t, err != nil, "expected error in ldapBindCheckHook hook registration")
+}
+
 func TestAddOwner(t *testing.T) {
 	tests := []struct {
 		name               string
@@ -775,6 +814,27 @@ func TestAddOwner(t *testing.T) {
 					auth.Permission_Update.String()),
 			},
 			out: &auth.User{},
+			err: false,
+		},
+		{
+			name: "subject access review",
+			in:   &auth.SubjectAccessReviewRequest{},
+			operations: []authz.Operation{
+				authz.NewOperation(authz.NewResource(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test"),
+					auth.Permission_Create.String()),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(authz.NewResourceWithOwner(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test",
+					&auth.User{
+						ObjectMeta: api.ObjectMeta{Name: "test", Tenant: globals.DefaultTenant},
+					}),
+					auth.Permission_Create.String()),
+			},
+			out: &auth.SubjectAccessReviewRequest{},
 			err: false,
 		},
 		{
@@ -857,7 +917,7 @@ func TestAddOwnerHookRegistration(t *testing.T) {
 		AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", oper))
 		Assert(t, len(prof.PreAuthZHooks()) == 1, fmt.Sprintf("unexpected number of pre authz hooks [%d] for User operation [%v]", len(prof.PreAuthZHooks()), oper))
 	}
-	methods := []string{"PasswordChange", "PasswordReset"}
+	methods := []string{"PasswordChange", "PasswordReset", "IsAuthorized"}
 	for _, method := range methods {
 		prof, err := svc.GetServiceProfile(method)
 		AssertOk(t, err, fmt.Sprintf("error getting service profile for method [%s]", method))
@@ -1068,4 +1128,147 @@ func TestUserDeleteCheckHookRegistration(t *testing.T) {
 	svc = mocks.NewFakeAPIGwService(l, true)
 	err = r.registerUserDeleteCheckHook(svc)
 	Assert(t, err != nil, "expected error in userDeleteCheck hook registration")
+}
+
+func TestIsAuthorizedPreCallHook(t *testing.T) {
+	const (
+		globaladmin = "globaladmin"
+	)
+	authGetter := manager.NewMockAuthGetter(nil, false)
+	permGetter := rbac.NewMockPermissionGetter(nil, nil,
+		[]*auth.Role{login.NewClusterRole(globals.AdminRole, login.NewPermission(
+			authz.ResourceTenantAll,
+			authz.ResourceGroupAll,
+			authz.ResourceKindAll,
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_AllActions.String()))},
+		[]*auth.RoleBinding{login.NewClusterRoleBinding("AdminRoleBinding", globals.AdminRole, globaladmin, "")})
+	userfn := func(name, tenant string, ops []*auth.Operation, allowed bool, validationMsg string) *auth.User {
+		user, _ := authGetter.GetUser(name, tenant)
+		for _, op := range ops {
+			user.Status.OperationsStatus = append(user.Status.OperationsStatus, &auth.OperationStatus{Operation: op, Allowed: allowed, Message: validationMsg})
+		}
+		roles := permGetter.GetRolesForUser(user)
+		for _, role := range roles {
+			user.Status.Roles = append(user.Status.Roles, role.Name)
+		}
+		return user
+	}
+	tests := []struct {
+		name     string
+		in       interface{}
+		out      interface{}
+		skipCall bool
+		err      error
+	}{
+		{
+			name: "authorized operation",
+			in: &auth.SubjectAccessReviewRequest{
+				ObjectMeta: api.ObjectMeta{Name: globaladmin, Tenant: globals.DefaultTenant},
+				Operations: []*auth.Operation{
+					{
+						Resource: &auth.Resource{
+							Tenant: globals.DefaultTenant,
+							Group:  string(apiclient.GroupAuth),
+							Kind:   string(auth.KindUser),
+							Name:   "test",
+						},
+						Action: auth.Permission_Create.String(),
+					},
+				},
+			},
+			out: userfn(globaladmin, globals.DefaultTenant, []*auth.Operation{
+				{
+					Resource: &auth.Resource{
+						Tenant: globals.DefaultTenant,
+						Group:  string(apiclient.GroupAuth),
+						Kind:   string(auth.KindUser),
+						Name:   "test",
+					},
+					Action: auth.Permission_Create.String(),
+				},
+			}, true, ""),
+			skipCall: true,
+			err:      nil,
+		},
+		{
+			name:     "invalid object",
+			in:       &struct{ name string }{name: "invalid object type"},
+			out:      nil,
+			skipCall: true,
+			err:      errors.New("invalid input type"),
+		},
+		{
+			name: "non existent user",
+			in: &auth.SubjectAccessReviewRequest{
+				ObjectMeta: api.ObjectMeta{Name: manager.NonExistentUserClaim, Tenant: globals.DefaultTenant},
+				Operations: []*auth.Operation{
+					{
+						Resource: &auth.Resource{
+							Tenant: globals.DefaultTenant,
+							Group:  string(apiclient.GroupAuth),
+							Kind:   string(auth.KindRole),
+						},
+						Action: auth.Permission_Create.String(),
+					},
+				},
+			},
+			out:      nil,
+			skipCall: true,
+			err:      errors.New("user not found"),
+		},
+		{
+			name: "operation validation error",
+			in: &auth.SubjectAccessReviewRequest{
+				ObjectMeta: api.ObjectMeta{Name: globaladmin, Tenant: globals.DefaultTenant},
+				Operations: []*auth.Operation{
+					{
+						Action: auth.Permission_Create.String(),
+					},
+				},
+			},
+			out: userfn(globaladmin, globals.DefaultTenant, []*auth.Operation{
+				{
+					Action: auth.Permission_Create.String(),
+				},
+			}, false, "resource not specified"),
+			skipCall: true,
+			err:      nil,
+		},
+	}
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &authHooks{}
+	r.logger = l
+	r.permissionGetter = permGetter
+	r.authGetter = authGetter
+	r.authorizer = authzmgr.NewAlwaysAllowAuthorizer()
+	for _, test := range tests {
+		ctx := context.TODO()
+		_, out, ok, err := r.isAuthorizedPreCallHook(ctx, test.in)
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
+		Assert(t, reflect.DeepEqual(test.out, out),
+			fmt.Sprintf("[%s] test failed, expected object [%v], got [%v]", test.name, test.out, out))
+		Assert(t, test.skipCall == ok, fmt.Sprintf("[%s] test failed, expected skipcall [%v], got [%v]", test.name, test.skipCall, ok))
+	}
+}
+
+func TestIsAuthorizedPreCallHookRegistration(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	svc := mocks.NewFakeAPIGwService(l, false)
+	r := &authHooks{}
+	r.logger = l
+	err := r.registerIsAuthorizedPreCallHook(svc)
+	AssertOk(t, err, "isAuthorizedPreCallHook hook registration failed")
+
+	prof, err := svc.GetServiceProfile("IsAuthorized")
+	AssertOk(t, err, fmt.Sprintf("error getting service profile for oper :%v", "IsAuthorized"))
+	Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre call hooks [%d] for User action [%v]", len(prof.PreCallHooks()), "IsAuthorized"))
+
+	// test err
+	svc = mocks.NewFakeAPIGwService(l, true)
+	err = r.registerIsAuthorizedPreCallHook(svc)
+	Assert(t, err != nil, "expected error in isAuthorizedPreCallHook hook registration")
 }

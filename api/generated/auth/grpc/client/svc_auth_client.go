@@ -310,6 +310,20 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		).Endpoint()
 		lAutoUpdateUserEndpoint = trace.ClientEndPoint("AuthV1:AutoUpdateUser")(lAutoUpdateUserEndpoint)
 	}
+	var lIsAuthorizedEndpoint endpoint.Endpoint
+	{
+		lIsAuthorizedEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"IsAuthorized",
+			auth.EncodeGrpcReqSubjectAccessReviewRequest,
+			auth.DecodeGrpcRespUser,
+			&auth.User{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lIsAuthorizedEndpoint = trace.ClientEndPoint("AuthV1:IsAuthorized")(lIsAuthorizedEndpoint)
+	}
 	var lLdapBindCheckEndpoint endpoint.Endpoint
 	{
 		lLdapBindCheckEndpoint = grpctransport.NewClient(
@@ -389,6 +403,7 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		AutoUpdateRoleEndpoint:                 lAutoUpdateRoleEndpoint,
 		AutoUpdateRoleBindingEndpoint:          lAutoUpdateRoleBindingEndpoint,
 		AutoUpdateUserEndpoint:                 lAutoUpdateUserEndpoint,
+		IsAuthorizedEndpoint:                   lIsAuthorizedEndpoint,
 		LdapBindCheckEndpoint:                  lLdapBindCheckEndpoint,
 		LdapConnectionCheckEndpoint:            lLdapConnectionCheckEndpoint,
 		PasswordChangeEndpoint:                 lPasswordChangeEndpoint,
@@ -517,6 +532,15 @@ func (a *grpcObjAuthV1User) PasswordReset(ctx context.Context, in *auth.Password
 	return a.client.PasswordReset(nctx, in)
 }
 
+func (a *grpcObjAuthV1User) IsAuthorized(ctx context.Context, in *auth.SubjectAccessReviewRequest) (*auth.User, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{IsAuthorized SubjectAccessReviewRequest User}", "oper", "IsAuthorized")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.IsAuthorized(nctx, in)
+}
+
 func (a *grpcObjAuthV1User) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
@@ -610,6 +634,12 @@ func (a *restObjAuthV1User) PasswordReset(ctx context.Context, in *auth.Password
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.PasswordResetUser(ctx, in)
+}
+func (a *restObjAuthV1User) IsAuthorized(ctx context.Context, in *auth.SubjectAccessReviewRequest) (*auth.User, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.IsAuthorizedUser(ctx, in)
 }
 
 type grpcObjAuthV1AuthenticationPolicy struct {

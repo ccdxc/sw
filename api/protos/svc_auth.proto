@@ -46,6 +46,13 @@ service AuthV1 {
         Request: "PasswordResetRequest"
         Response: "User"
     };
+    // Action to check user authorization
+    option (venice.apiAction) = {
+        Object: "User"
+        Action: "IsAuthorized"
+        Request: "SubjectAccessReviewRequest"
+        Response: "User"
+    };
     option (venice.apiRestService) = {
         Object: "AuthenticationPolicy"
         Method: [ "get", "put", "post", "watch" ]

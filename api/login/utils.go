@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -201,10 +202,6 @@ func ValidatePerm(permission auth.Permission) error {
 				return fmt.Errorf("invalid API group [%q]", permission.ResourceGroup)
 			}
 		}
-	case auth.Permission_Event.String(), auth.Permission_Search.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwlogsQuery.String(), auth.Permission_AuditEvent.String():
-		if permission.ResourceGroup != "" {
-			return fmt.Errorf("invalid API group, should be empty instead of [%q]", permission.ResourceGroup)
-		}
 	case auth.Permission_APIEndpoint.String():
 		if permission.ResourceGroup != "" {
 			return fmt.Errorf("invalid API group, should be empty instead of [%q]", permission.ResourceGroup)
@@ -212,24 +209,18 @@ func ValidatePerm(permission auth.Permission) error {
 		if len(permission.ResourceNames) == 0 {
 			return fmt.Errorf("missing API endpoint resource name")
 		}
+		var errs []error
+		for _, resourceName := range permission.ResourceNames {
+			err := ValidateResource(permission.ResourceTenant, permission.ResourceGroup, permission.ResourceKind, resourceName)
+			if err != nil {
+				errs = append(errs, err)
+			}
+		}
+		if err := k8serrors.NewAggregate(errs); err != nil {
+			return err
+		}
 	default:
-		if s.Kind2APIGroup(permission.ResourceKind) != permission.ResourceGroup {
-			return fmt.Errorf("invalid resource kind [%q] and API group [%q]", permission.ResourceKind, permission.ResourceGroup)
-		}
-		ok, err := s.IsClusterScoped(permission.ResourceKind)
-		if err != nil {
-			log.Infof("unknown resource kind [%q], err: %v", permission.ResourceKind, err)
-		}
-		if ok && permission.ResourceTenant != "" {
-			return fmt.Errorf("tenant should be empty in permission for cluster scoped resource kind [%q]", permission.ResourceKind)
-		}
-		ok, err = s.IsTenantScoped(permission.ResourceKind)
-		if err != nil {
-			log.Infof("unknown resource kind [%q], err: %v", permission.ResourceKind, err)
-		}
-		if ok && permission.ResourceTenant == "" {
-			return fmt.Errorf("tenant should not be empty in permission for tenant scoped resource kind [%q]", permission.ResourceKind)
-		}
+		return ValidateResource(permission.ResourceTenant, permission.ResourceGroup, permission.ResourceKind, "")
 	}
 	return nil
 }
@@ -245,12 +236,85 @@ func ValidatePerms(permissions []auth.Permission) error {
 	return k8serrors.NewAggregate(errs)
 }
 
+// ValidateOperation validates operation
+func ValidateOperation(op *auth.Operation) (authz.Operation, error) {
+	// make sure interface type and value are not nil
+	if op == nil || reflect.ValueOf(op).IsNil() {
+		return nil, fmt.Errorf("operation not specified")
+	}
+	res := op.GetResource()
+	if res == nil || reflect.ValueOf(res).IsNil() {
+		return nil, fmt.Errorf("resource not specified")
+	}
+	if err := k8serrors.NewAggregate(op.Validate("all", "", true)); err != nil {
+		return nil, err
+	}
+	if err := ValidateResource(res.Tenant, res.Group, res.Kind, res.Name); err != nil {
+		return nil, err
+	}
+	return authz.NewOperation(authz.NewResource(res.Tenant, res.Group, res.Kind, res.Namespace, res.Name), op.Action), nil
+}
+
+// ValidateResource validates resource information
+func ValidateResource(tenant, group, kind, name string) error {
+	s := runtime.GetDefaultScheme()
+	switch kind {
+	case auth.Permission_Event.String(), auth.Permission_Search.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwlogsQuery.String(), auth.Permission_AuditEvent.String():
+		if group != "" {
+			return fmt.Errorf("invalid API group, should be empty instead of [%q]", group)
+		}
+	case auth.Permission_APIEndpoint.String():
+		if group != "" {
+			return fmt.Errorf("invalid API group, should be empty instead of [%q]", group)
+		}
+		if name == "" {
+			return fmt.Errorf("missing API endpoint resource name")
+		}
+	default:
+		if s.Kind2APIGroup(kind) != group {
+			return fmt.Errorf("invalid resource kind [%q] and API group [%q]", kind, group)
+		}
+		ok, err := s.IsClusterScoped(kind)
+		if err != nil {
+			log.Infof("unknown resource kind [%q], err: %v", kind, err)
+		}
+		if ok && tenant != "" {
+			return fmt.Errorf("tenant should be empty for cluster scoped resource kind [%q]", kind)
+		}
+		ok, err = s.IsTenantScoped(kind)
+		if err != nil {
+			log.Infof("unknown resource kind [%q], err: %v", kind, err)
+		}
+		if ok && tenant == "" {
+			return fmt.Errorf("tenant should not be empty for tenant scoped resource kind [%q]", kind)
+		}
+	}
+	return nil
+}
+
 // PrintOperations creates a string out of operations for logging
 func PrintOperations(operations []authz.Operation) string {
 	var message string
 	for _, oper := range operations {
 		if oper != nil {
-			message = message + fmt.Sprintf("%#v, action: %v; ", oper.GetResource(), oper.GetAction())
+			res := oper.GetResource()
+			if res != nil {
+				owner := res.GetOwner()
+				var ownerTenant, ownerName string
+				if owner != nil {
+					ownerTenant = owner.Tenant
+					ownerName = owner.Name
+				}
+				message = message + fmt.Sprintf("resource(tenant: %v, group: %v, kind: %v, namespace: %v, name: %v, owner: %v|%v), action: %v; ",
+					res.GetTenant(),
+					res.GetGroup(),
+					res.GetKind(),
+					res.GetNamespace(),
+					res.GetName(),
+					ownerTenant,
+					ownerName,
+					oper.GetAction())
+			}
 		}
 	}
 	return message

@@ -28,6 +28,7 @@ type serviceID struct {
 type authHooks struct {
 	authGetter       manager.AuthGetter
 	permissionGetter rbac.PermissionGetter
+	authorizer       authz.Authorizer
 	bootstrapper     bootstrapper.Bootstrapper
 	ldapChecker      ldap.ConnectionChecker
 	logger           log.Logger
@@ -53,23 +54,23 @@ func (a *authHooks) authBootstrap(ctx context.Context, i interface{}) (context.C
 	return ctx, i, !ok, err
 }
 
-// addOwner is a pre authz hook registered with PasswordChange and PasswordReset action and user get/update to add owner to user resource in authz.Operation
+// addOwner is a pre authz hook registered with PasswordChange, PasswordReset and IsAuthorized action and user get/update to add owner to user resource in authz.Operation
 func (a *authHooks) addOwner(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
 	a.logger.DebugLog("msg", "APIGw addOwner pre-authz hook called")
 	switch in.(type) {
-	case *auth.User, *auth.PasswordResetRequest, *auth.PasswordChangeRequest:
+	case *auth.User, *auth.PasswordResetRequest, *auth.PasswordChangeRequest, *auth.SubjectAccessReviewRequest:
 	default:
 		return ctx, in, errors.New("invalid input type")
 	}
 	// get existing operations from context
 	operations, ok := apigwpkg.OperationsFromContext(ctx)
 	if !ok || operations == nil {
-		a.logger.Errorf("addOwner pre-authz hook failed, operation not present in context")
+		a.logger.ErrorLog("method", "addOwner", "msg", "pre-authz hook failed, operation not present in context")
 		return ctx, in, errors.New("internal error")
 	}
 	for _, operation := range operations {
 		if !authz.IsValidOperationValue(operation) {
-			a.logger.Errorf("addOwner pre-authz hook failed, invalid operation: %v", operation)
+			a.logger.ErrorLog("method", "addOwner", "msg", "pre-authz hook failed, invalid operation: %v", operation)
 			return ctx, in, errors.New("internal error")
 		}
 		resource := operation.GetResource()
@@ -242,6 +243,55 @@ func (a *authHooks) userContext(ctx context.Context, in interface{}) (context.Co
 	return nctx, in, false, nil
 }
 
+// isAuthorizedPreCallHook is to check authorization information
+func (a *authHooks) isAuthorizedPreCallHook(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+	a.logger.DebugLog("method", "isAuthorizedPreCallHook", "msg", "Pre-call hook called for IsAuthorized user action")
+	obj, ok := in.(*auth.SubjectAccessReviewRequest)
+	if !ok {
+		return ctx, nil, true, errors.New("invalid input type")
+	}
+	user, ok := a.authGetter.GetUser(obj.Name, obj.Tenant)
+	if !ok {
+		return ctx, nil, true, errors.New("user not found")
+	}
+	user.Status.OperationsStatus = []*auth.OperationStatus{}
+	user.Status.Roles = []string{}
+	for _, op := range obj.Operations {
+		opStatus := &auth.OperationStatus{
+			Operation: op,
+		}
+		authzOp, err := login.ValidateOperation(op)
+		if err != nil {
+			opStatus.Message = err.Error()
+			user.Status.OperationsStatus = append(user.Status.OperationsStatus, opStatus)
+			continue
+		}
+		// set owner for user
+		if authzOp.GetResource().GetKind() == string(auth.KindUser) &&
+			authzOp.GetResource().GetTenant() != "" &&
+			authzOp.GetResource().GetName() != "" {
+			owner := &auth.User{
+				ObjectMeta: api.ObjectMeta{
+					Name:   authzOp.GetResource().GetName(),
+					Tenant: authzOp.GetResource().GetTenant(),
+				},
+			}
+			authzOp.GetResource().SetOwner(owner)
+		}
+		ok, err := a.authorizer.IsAuthorized(user, authzOp)
+		if err != nil {
+			opStatus.Message = err.Error()
+		}
+		opStatus.Allowed = ok
+		user.Status.OperationsStatus = append(user.Status.OperationsStatus, opStatus)
+	}
+	roles := a.permissionGetter.GetRolesForUser(user)
+	for _, role := range roles {
+		user.Status.Roles = append(user.Status.Roles, role.Name)
+	}
+	return ctx, user, true, nil
+}
+
 func (a *authHooks) registerAddRolesHook(svc apigw.APIGatewayService) error {
 	opers := []apiintf.APIOperType{apiintf.CreateOper, apiintf.UpdateOper, apiintf.DeleteOper, apiintf.GetOper, apiintf.ListOper}
 	for _, oper := range opers {
@@ -346,8 +396,8 @@ func (a *authHooks) registerLdapBindCheckHook(svc apigw.APIGatewayService) error
 }
 
 func (a *authHooks) registerAddOwnerHook(svc apigw.APIGatewayService) error {
-	// user should be able to change or reset his own password
-	methods := []string{"PasswordChange", "PasswordReset"}
+	// user should be able to change or reset his own password, get his authorization information
+	methods := []string{"PasswordChange", "PasswordReset", "IsAuthorized"}
 	for _, method := range methods {
 		prof, err := svc.GetServiceProfile(method)
 		if err != nil {
@@ -383,6 +433,15 @@ func (a *authHooks) registerUserContextHook(svc apigw.APIGatewayService) error {
 	return nil
 }
 
+func (a *authHooks) registerIsAuthorizedPreCallHook(svc apigw.APIGatewayService) error {
+	prof, err := svc.GetServiceProfile("IsAuthorized")
+	if err != nil {
+		return err
+	}
+	prof.AddPreCallHook(a.isAuthorizedPreCallHook)
+	return nil
+}
+
 func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	gw := apigwpkg.MustGetAPIGateway()
 	grpcaddr := globals.APIServer
@@ -390,6 +449,7 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	r := authHooks{
 		authGetter:       manager.GetAuthGetter(globals.APIGw, grpcaddr, gw.GetResolver(), l),
 		permissionGetter: rbac.GetPermissionGetter(globals.APIGw, grpcaddr, gw.GetResolver()),
+		authorizer:       gw.GetAuthorizer(),
 		bootstrapper:     bootstrapper.GetBootstrapper(),
 		ldapChecker:      ldap.NewConnectionChecker(),
 		logger:           l,
@@ -436,7 +496,12 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	}
 
 	// register pre-authz hook to prevent self-deletion of user
-	return r.registerUserDeleteCheckHook(svc)
+	if err := r.registerUserDeleteCheckHook(svc); err != nil {
+		return err
+	}
+
+	// register pre-call hook to implement IsAuthorized action
+	return r.registerIsAuthorizedPreCallHook(svc)
 }
 
 func init() {

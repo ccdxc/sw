@@ -45,6 +45,7 @@ type grpcServerAuthV1 struct {
 	AutoUpdateRoleHdlr                 grpctransport.Handler
 	AutoUpdateRoleBindingHdlr          grpctransport.Handler
 	AutoUpdateUserHdlr                 grpctransport.Handler
+	IsAuthorizedHdlr                   grpctransport.Handler
 	LdapBindCheckHdlr                  grpctransport.Handler
 	LdapConnectionCheckHdlr            grpctransport.Handler
 	PasswordChangeHdlr                 grpctransport.Handler
@@ -197,6 +198,13 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			DecodeGrpcReqUser,
 			EncodeGrpcRespUser,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateUser", logger)))...,
+		),
+
+		IsAuthorizedHdlr: grpctransport.NewServer(
+			endpoints.IsAuthorizedEndpoint,
+			DecodeGrpcReqSubjectAccessReviewRequest,
+			EncodeGrpcRespUser,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("IsAuthorized", logger)))...,
 		),
 
 		LdapBindCheckHdlr: grpctransport.NewServer(
@@ -581,6 +589,24 @@ func (s *grpcServerAuthV1) AutoUpdateUser(ctx oldcontext.Context, req *User) (*U
 }
 
 func decodeHTTPrespAuthV1AutoUpdateUser(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp User
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) IsAuthorized(ctx oldcontext.Context, req *SubjectAccessReviewRequest) (*User, error) {
+	_, resp, err := s.IsAuthorizedHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1IsAuthorized).V
+	return &r, resp.(respAuthV1IsAuthorized).Err
+}
+
+func decodeHTTPrespAuthV1IsAuthorized(_ context.Context, r *http.Response) (interface{}, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}

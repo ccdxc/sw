@@ -70,6 +70,7 @@ type eAuthV1Endpoints struct {
 	fnAutoUpdateRole                 func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateRoleBinding          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateUser                 func(ctx context.Context, t interface{}) (interface{}, error)
+	fnIsAuthorized                   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnLdapBindCheck                  func(ctx context.Context, t interface{}) (interface{}, error)
 	fnLdapConnectionCheck            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnPasswordChange                 func(ctx context.Context, t interface{}) (interface{}, error)
@@ -371,6 +372,15 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 		s.endpointsAuthV1.fnAutoUpdateUser = srv.AddMethod("AutoUpdateUser",
 			apisrvpkg.NewMethod(srv, pkgMessages["auth.User"], pkgMessages["auth.User"], "auth", "AutoUpdateUser")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(auth.User)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsAuthV1.fnIsAuthorized = srv.AddMethod("IsAuthorized",
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.SubjectAccessReviewRequest"], pkgMessages["auth.User"], "auth", "IsAuthorized")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(auth.SubjectAccessReviewRequest)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
 			}
@@ -1034,6 +1044,14 @@ func (e *eAuthV1Endpoints) AutoUpdateRoleBinding(ctx context.Context, t auth.Rol
 }
 func (e *eAuthV1Endpoints) AutoUpdateUser(ctx context.Context, t auth.User) (auth.User, error) {
 	r, err := e.fnAutoUpdateUser(ctx, t)
+	if err == nil {
+		return r.(auth.User), err
+	}
+	return auth.User{}, err
+
+}
+func (e *eAuthV1Endpoints) IsAuthorized(ctx context.Context, t auth.SubjectAccessReviewRequest) (auth.User, error) {
+	r, err := e.fnIsAuthorized(ctx, t)
 	if err == nil {
 		return r.(auth.User), err
 	}

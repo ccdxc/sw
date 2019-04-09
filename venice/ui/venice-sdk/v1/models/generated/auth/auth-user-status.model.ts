@@ -8,6 +8,7 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { AuthUserStatus_authenticators,  AuthUserStatus_authenticators_uihint  } from './enums';
+import { AuthOperationStatus, IAuthOperationStatus } from './auth-operation-status.model';
 
 export interface IAuthUserStatus {
     'roles'?: Array<string>;
@@ -15,6 +16,7 @@ export interface IAuthUserStatus {
     'last-login'?: Date;
     'authenticators': Array<AuthUserStatus_authenticators>;
     'last-password-change'?: Date;
+    'operations-status'?: Array<IAuthOperationStatus>;
 }
 
 
@@ -24,6 +26,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
     'last-login': Date = null;
     'authenticators': Array<AuthUserStatus_authenticators> = null;
     'last-password-change': Date = null;
+    'operations-status': Array<AuthOperationStatus> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'roles': {
             required: false,
@@ -46,6 +49,10 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         'last-password-change': {
             required: false,
             type: 'Date'
+        },
+        'operations-status': {
+            required: false,
+            type: 'object'
         },
     }
 
@@ -74,6 +81,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         this['roles'] = new Array<string>();
         this['user-groups'] = new Array<string>();
         this['authenticators'] = new Array<AuthUserStatus_authenticators>();
+        this['operations-status'] = new Array<AuthOperationStatus>();
         this.setValues(values, setDefaults);
     }
 
@@ -117,6 +125,11 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         } else {
             this['last-password-change'] = null
         }
+        if (values) {
+            this.fillModelArray<AuthOperationStatus>(this, 'operations-status', values['operations-status'], AuthOperationStatus);
+        } else {
+            this['operations-status'] = [];
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -129,6 +142,14 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
                 'last-login': CustomFormControl(new FormControl(this['last-login']), AuthUserStatus.propInfo['last-login']),
                 'authenticators': CustomFormControl(new FormControl(this['authenticators']), AuthUserStatus.propInfo['authenticators']),
                 'last-password-change': CustomFormControl(new FormControl(this['last-password-change']), AuthUserStatus.propInfo['last-password-change']),
+                'operations-status': new FormArray([]),
+            });
+            // generate FormArray control elements
+            this.fillFormArray<AuthOperationStatus>('operations-status', this['operations-status'], AuthOperationStatus);
+            // We force recalculation of controls under a form group
+            Object.keys((this._formGroup.get('operations-status') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('operations-status').get(field);
+                control.updateValueAndValidity();
             });
         }
         return this._formGroup;
@@ -145,6 +166,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
             this._formGroup.controls['last-login'].setValue(this['last-login']);
             this._formGroup.controls['authenticators'].setValue(this['authenticators']);
             this._formGroup.controls['last-password-change'].setValue(this['last-password-change']);
+            this.fillModelArray<AuthOperationStatus>(this, 'operations-status', this['operations-status'], AuthOperationStatus);
         }
     }
 }

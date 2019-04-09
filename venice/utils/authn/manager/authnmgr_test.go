@@ -374,7 +374,7 @@ func TestValidateTokenErrors(t *testing.T) {
 		},
 		{
 			name:     "non existent user",
-			token:    nonExistentUserClaim,
+			token:    NonExistentUserClaim,
 			expected: ErrUserNotFound,
 		},
 	}

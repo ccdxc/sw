@@ -323,6 +323,74 @@ func DecodeGrpcRespLocal(ctx context.Context, response interface{}) (interface{}
 	return response, nil
 }
 
+func encodeHTTPOperation(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPOperation(_ context.Context, r *http.Request) (interface{}, error) {
+	var req Operation
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqOperation encodes GRPC request
+func EncodeGrpcReqOperation(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Operation)
+	return req, nil
+}
+
+// DecodeGrpcReqOperation decodes GRPC request
+func DecodeGrpcReqOperation(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Operation)
+	return req, nil
+}
+
+// EncodeGrpcRespOperation encodes GRC response
+func EncodeGrpcRespOperation(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespOperation decodes GRPC response
+func DecodeGrpcRespOperation(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPOperationStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPOperationStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req OperationStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqOperationStatus encodes GRPC request
+func EncodeGrpcReqOperationStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*OperationStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqOperationStatus decodes GRPC request
+func DecodeGrpcReqOperationStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*OperationStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespOperationStatus encodes GRC response
+func EncodeGrpcRespOperationStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespOperationStatus decodes GRPC response
+func DecodeGrpcRespOperationStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPPasswordChangeRequest(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -561,6 +629,40 @@ func DecodeGrpcRespRadiusServerStatus(ctx context.Context, response interface{})
 	return response, nil
 }
 
+func encodeHTTPResource(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPResource(_ context.Context, r *http.Request) (interface{}, error) {
+	var req Resource
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqResource encodes GRPC request
+func EncodeGrpcReqResource(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Resource)
+	return req, nil
+}
+
+// DecodeGrpcReqResource decodes GRPC request
+func DecodeGrpcReqResource(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Resource)
+	return req, nil
+}
+
+// EncodeGrpcRespResource encodes GRC response
+func EncodeGrpcRespResource(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespResource decodes GRPC response
+func DecodeGrpcRespResource(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPRole(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }
@@ -762,6 +864,40 @@ func EncodeGrpcRespRoleStatus(ctx context.Context, response interface{}) (interf
 
 // DecodeGrpcRespRoleStatus decodes GRPC response
 func DecodeGrpcRespRoleStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPSubjectAccessReviewRequest(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPSubjectAccessReviewRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req SubjectAccessReviewRequest
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqSubjectAccessReviewRequest encodes GRPC request
+func EncodeGrpcReqSubjectAccessReviewRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SubjectAccessReviewRequest)
+	return req, nil
+}
+
+// DecodeGrpcReqSubjectAccessReviewRequest decodes GRPC request
+func DecodeGrpcReqSubjectAccessReviewRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*SubjectAccessReviewRequest)
+	return req, nil
+}
+
+// EncodeGrpcRespSubjectAccessReviewRequest encodes GRC response
+func EncodeGrpcRespSubjectAccessReviewRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespSubjectAccessReviewRequest decodes GRPC response
+func DecodeGrpcRespSubjectAccessReviewRequest(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
 

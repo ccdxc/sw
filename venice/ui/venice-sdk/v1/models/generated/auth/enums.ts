@@ -31,6 +31,16 @@ export enum AuthLdapServerStatus_result {
     'Bind_Failure' = "Bind_Failure",
 }
 
+export enum AuthOperation_action {
+    'AllActions' = "AllActions",
+    'Create' = "Create",
+    'Read' = "Read",
+    'Update' = "Update",
+    'Delete' = "Delete",
+    'Commit' = "Commit",
+    'Clear' = "Clear",
+}
+
 export enum AuthPermission_actions {
     'AllActions' = "AllActions",
     'Create' = "Create",
@@ -78,6 +88,16 @@ export enum ApiListWatchOptions_sort_order_uihint {
 
 export enum AuthAuthenticators_authenticator_order_uihint {
     'LOCAL' = "Local",
+}
+
+export enum AuthOperation_action_uihint {
+    'AllActions' = "All Actions",
+    'Clear' = "Clear Config",
+    'Commit' = "Commit Config",
+    'Create' = "Create",
+    'Delete' = "Delete",
+    'Read' = "Read",
+    'Update' = "Update",
 }
 
 export enum AuthPermission_actions_uihint {
@@ -133,6 +153,7 @@ export class AllEnums {
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
     AuthAuthenticators_authenticator_order = AuthAuthenticators_authenticator_order;
     AuthLdapServerStatus_result = AuthLdapServerStatus_result;
+    AuthOperation_action = AuthOperation_action;
     AuthPermission_actions = AuthPermission_actions;
     AuthRadiusServer_auth_method = AuthRadiusServer_auth_method;
     AuthRadiusServerStatus_result = AuthRadiusServerStatus_result;
@@ -141,6 +162,7 @@ export class AllEnums {
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
     AuthAuthenticators_authenticator_order_uihint = AuthAuthenticators_authenticator_order_uihint;
+    AuthOperation_action_uihint = AuthOperation_action_uihint;
     AuthPermission_actions_uihint = AuthPermission_actions_uihint;
     AuthUserSpec_type_uihint = AuthUserSpec_type_uihint;
     AuthUserStatus_authenticators_uihint = AuthUserStatus_authenticators_uihint;

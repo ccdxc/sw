@@ -529,6 +529,29 @@ func (a adapterAuthV1) AutoUpdateUser(oldctx oldcontext.Context, t *auth.User, o
 	return ret.(*auth.User), err
 }
 
+func (a adapterAuthV1) IsAuthorized(oldctx oldcontext.Context, t *auth.SubjectAccessReviewRequest, options ...grpc.CallOption) (*auth.User, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("IsAuthorized")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "User", t.Tenant, t.Namespace, "auth", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*auth.SubjectAccessReviewRequest)
+		return a.service.IsAuthorized(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*auth.User), err
+}
+
 func (a adapterAuthV1) LdapBindCheck(oldctx oldcontext.Context, t *auth.AuthenticationPolicy, options ...grpc.CallOption) (*auth.AuthenticationPolicy, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -948,6 +971,8 @@ func (e *sAuthV1GwService) setupSvcProfile() {
 	e.svcProf["AutoWatchRoleBinding"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRoleBindingWatchHelper", "auth", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchUser"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgUserWatchHelper", "auth", apiintf.WatchOper)
+
+	e.svcProf["IsAuthorized"] = apigwpkg.NewServiceProfile(e.defSvcProf, "User", "auth", apiintf.CreateOper)
 
 	e.svcProf["LdapBindCheck"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AuthenticationPolicy", "auth", apiintf.CreateOper)
 

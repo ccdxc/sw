@@ -16,6 +16,8 @@ The following Messages are defined.
   LdapServer
   LdapServerStatus
   Local
+  Operation
+  OperationStatus
   PasswordChangeRequest
   PasswordCredential
   PasswordResetRequest
@@ -23,12 +25,14 @@ The following Messages are defined.
   Radius
   RadiusServer
   RadiusServerStatus
+  Resource
   Role
   RoleBinding
   RoleBindingSpec
   RoleBindingStatus
   RoleSpec
   RoleStatus
+  SubjectAccessReviewRequest
   TLSOptions
   User
   UserSpec

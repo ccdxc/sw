@@ -425,6 +425,28 @@ Loop:
 	}
 	a.logger.Infof("cleaned up DoneCh")
 
+	a.authGetter = authnmgr.GetAuthGetter(globals.APIGw, grpcaddr, a.rslver, a.logger)
+	a.permGetter = rbac.GetPermissionGetter(globals.APIGw, grpcaddr, a.rslver)
+	// create authentication manager
+	a.authnMgr, err = authnmgr.WithAuthGetter(a.authGetter)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create authentication manager (%v)", err))
+	}
+	// create authorization manager
+	a.authzMgr = authzmgr.NewAuthorizationManager(globals.APIGw, grpcaddr, a.rslver)
+	// get bootstrapper
+	a.bootstrapper = bootstrapper.GetBootstrapper()
+	if err := a.bootstrapper.CompleteRegistration(globals.APIGw, grpcaddr, a.rslver, a.logger); err != nil {
+		panic(fmt.Sprintf("Failed to complete feature registration in bootstrapper (%v)", err))
+	}
+	// create auditor if it is not already initialized by passed in options
+	if a.auditor == nil {
+		a.auditor = auditmgr.NewAuditManager(a.rslver, a.logger)
+		if err := a.auditor.Run(make(<-chan struct{})); err != nil {
+			panic(fmt.Sprintf("Failed to create auditor (%v)", err))
+		}
+	}
+
 	for name, svc := range a.svcmap {
 		config.Logger.Log("Svc", name, "msg", "RegisterComplete")
 		if isSkipped(config, name) {
@@ -451,28 +473,6 @@ Loop:
 		err := cb(svc, a.logger)
 		if err != nil {
 			a.logger.Fatalf("hooks cb returned error (%s)", err)
-		}
-	}
-
-	a.authGetter = authnmgr.GetAuthGetter(globals.APIGw, grpcaddr, a.rslver, a.logger)
-	a.permGetter = rbac.GetPermissionGetter(globals.APIGw, grpcaddr, a.rslver)
-	// create authentication manager
-	a.authnMgr, err = authnmgr.WithAuthGetter(a.authGetter)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to create authentication manager (%v)", err))
-	}
-	// create authorization manager
-	a.authzMgr = authzmgr.NewAuthorizationManager(globals.APIGw, grpcaddr, a.rslver)
-	// get bootstrapper
-	a.bootstrapper = bootstrapper.GetBootstrapper()
-	if err := a.bootstrapper.CompleteRegistration(globals.APIGw, grpcaddr, a.rslver, a.logger); err != nil {
-		panic(fmt.Sprintf("Failed to complete feature registration in bootstrapper (%v)", err))
-	}
-	// create auditor if it is not already initialized by passed in options
-	if a.auditor == nil {
-		a.auditor = auditmgr.NewAuditManager(a.rslver, a.logger)
-		if err := a.auditor.Run(make(<-chan struct{})); err != nil {
-			panic(fmt.Sprintf("Failed to create auditor (%v)", err))
 		}
 	}
 
@@ -556,6 +556,10 @@ func (a *apiGw) GetResolver() resolver.Interface {
 // GetAuditor gets the configured auditor
 func (a *apiGw) GetAuditor() audit.Auditor {
 	return a.auditor
+}
+
+func (a *apiGw) GetAuthorizer() authz.Authorizer {
+	return a.authzMgr
 }
 
 // GetDevMode returns true if running in dev mode

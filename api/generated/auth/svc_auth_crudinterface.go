@@ -26,6 +26,7 @@ type AuthV1UserInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 	PasswordChange(ctx context.Context, in *PasswordChangeRequest) (*User, error)
 	PasswordReset(ctx context.Context, in *PasswordResetRequest) (*User, error)
+	IsAuthorized(ctx context.Context, in *SubjectAccessReviewRequest) (*User, error)
 }
 
 // AuthV1AuthenticationPolicyInterface exposes the CRUD methods for AuthenticationPolicy

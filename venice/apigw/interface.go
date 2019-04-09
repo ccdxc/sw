@@ -10,6 +10,7 @@ import (
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/audit"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -54,6 +55,8 @@ type APIGateway interface {
 	GetResolver() resolver.Interface
 	// GetAuditor gets the configured auditor
 	GetAuditor() audit.Auditor
+	// GetAuthorizer gets the configured authorizer
+	GetAuthorizer() authz.Authorizer
 }
 
 // Config is all config used to start the API Gateway
