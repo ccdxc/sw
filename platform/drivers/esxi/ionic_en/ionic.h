@@ -60,10 +60,6 @@ extern unsigned int vlan_tx_insert;
 extern unsigned int vlan_rx_strip;
 extern vmk_uint32 log_level;
 
-#ifdef FAKE_ADMINQ
-extern unsigned int use_AQ;
-#endif
-
 struct ionic_admin_ctx;
 
 typedef enum ionic_bar {
@@ -108,16 +104,6 @@ struct ionic {
         unsigned int nintrs;
         vmk_Mutex dev_cmd_lock;
         ionic_bitmap intrs;
-#ifdef FAKE_ADMINQ
-        spinlock_t cmd_lock;
- //       struct list_head cmd_list;
-        vmk_ListLinks cmd_list;
-
-        // TODO: MAKE SURE FREE IT
-        struct ionic_work_queue *cmd_work_queue;
-//     Need to implemnet the struct below
-        struct ionic_work cmd_work;
-#endif
 };
 
 struct ionic_driver {

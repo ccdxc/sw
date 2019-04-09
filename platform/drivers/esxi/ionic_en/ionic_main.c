@@ -45,14 +45,6 @@ VMK_MODPARAM(vlan_rx_strip,
              "0 - Disable, 1 - Enable. Default(Disabled)");
 */
 
-#ifdef FAKE_ADMINQ
-unsigned int use_AQ = 0;
-/*
-VMK_MODPARAM(use_AQ,
-             uint,
-             "Set to non-0 to enable AQ testing, defaults to 0");
-             */
-#endif
 
 static VMK_ReturnStatus
 ionic_validate_module_params()
@@ -255,7 +247,6 @@ ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 }
 
 
-
 VMK_ReturnStatus
 ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
 {
@@ -270,148 +261,6 @@ ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait)
 
         return ionic_dev_cmd_check_error(idev);
 }
-
-
-
-#ifdef FAKE_ADMINQ
-#define XXX_DEVCMD_HALF_PAGE 0x800
-
-// XXX temp func to get side-band data from 2nd half page of dev_cmd reg space.
-static VMK_ReturnStatus
-SBD_get(struct ionic_dev *idev, void *dst, size_t len)
-{
-        u32 __iomem *page32 = (void __iomem *)idev->dev_cmd;
-        u32 *dst32 = dst;
-        unsigned int i, count;
-
-        // check pointer and size alignment
-        if ((unsigned long)dst & 0x3 || len & 0x3)
-                return VMK_FAILURE;
-
-        // check length fits in 2nd half of page
-        if (len > XXX_DEVCMD_HALF_PAGE)
-                return VMK_FAILURE;
-
-        page32 += XXX_DEVCMD_HALF_PAGE / sizeof(*page32);
-        count = len / sizeof(*page32);
-
-        for (i = 0; i < count; ++i)
-//                dst32[i] = ioread32(&page32[i]);
-                dst32[i] = ionic_readl_raw((vmk_VA)&page32[i]);
-        return VMK_OK;
-}
-
-// XXX temp func to put side-band data into 2nd half page of dev_cmd reg space.
-static VMK_ReturnStatus
-SBD_put(struct ionic_dev *idev, void *src, size_t len)
-{
-        u32 __iomem *page32 = (void __iomem *)idev->dev_cmd;
-        u32 *src32 = src;
-        unsigned int i, count;
-
-        // check pointer and size alignment
-        if ((unsigned long)src & 0x3 || len & 0x3)
-                return VMK_FAILURE;
-
-        // check length fits in 2nd half of page
-        if (len > XXX_DEVCMD_HALF_PAGE)
-                return VMK_FAILURE;
-
-        page32 += XXX_DEVCMD_HALF_PAGE / sizeof(*page32);
-        count = len / sizeof(*page32);
-
-        for (i = 0; i < count; ++i)
-                ionic_writel_raw(src32[i],
-                                 (vmk_VA)&page32[i]);
-//                iowrite32(src32[i], &page32[i]);
-
-        return VMK_OK;
-}
-
-
-//static void ionic_dev_cmd_work(struct work_struct *work)
-static void
-ionic_dev_cmd_work(vmk_AddrCookie data)
-{
-        VMK_ReturnStatus status;
-        struct ionic_work *work = data.ptr;
-        struct ionic *ionic = IONIC_CONTAINER_OF(work,
-                                                 struct ionic,
-                                                 cmd_work);
-        struct ionic_admin_ctx *ctx;
-//        unsigned long irqflags;
-//        int err = 0;
-
-//        spin_lock_irqsave(&ionic->cmd_lock, irqflags);
-        vmk_SpinlockLock(ionic->cmd_lock);
-        if (vmk_ListIsEmpty(&ionic->cmd_list)) {
-//                spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
-                vmk_SpinlockUnlock(ionic->cmd_lock);
-                return;
-        }
-
-//        ctx = list_first_entry(&ionic->cmd_list,
-//                               struct ionic_admin_ctx, list);
-        ctx = VMK_LIST_ENTRY(vmk_ListFirst(&ionic->cmd_list),
-                             struct ionic_admin_ctx,
-                             list);
-        vmk_ListRemove(&ctx->list);
-//        spin_unlock_irqrestore(&ionic->cmd_lock, irqflags);
-        vmk_SpinlockUnlock(ionic->cmd_lock);
-
-        ionic_hex_dump("post admin dev command",
-                       &ctx->cmd,
-                       sizeof(ctx->cmd));
-
-        if (ctx->side_data) {
-//                dynamic_hex_dump("data ", DUMP_PREFIX_OFFSET, 16, 1,
-//                                 ctx->side_data, ctx->side_data_len, true);
-
-                status = SBD_put(&ionic->en_dev.idev,
-                                 ctx->side_data,
-                                 ctx->side_data_len);
-                if (status != VMK_OK)
-                        goto err_out;
-        }
-
-        ionic_dev_cmd_go(&ionic->en_dev.idev, (void *)&ctx->cmd);
-
-        status = ionic_dev_cmd_wait_check(&ionic->en_dev.idev,
-                                          HZ * devcmd_timeout);
-        if (status != VMK_OK) {
-                ionic_err("ionic_dev_cmd_wait_check() failed, status: %s",
-                          vmk_StatusToString(status));
-                goto err_out;
-        }
-
-        ionic_dev_cmd_comp(&ionic->en_dev.idev, &ctx->comp);
-
-        if (ctx->side_data) {
-                status = SBD_get(&ionic->en_dev.idev, ctx->side_data, ctx->side_data_len);
-                if (status != VMK_OK)
-                        goto err_out;
-        }
-
-        ionic_hex_dump("comp admin dev command",
-                       &ctx->comp, sizeof(ctx->comp));
-
-err_out:
-        if (IONIC_WARN_ON(status))
-                vmk_Memset(&ctx->comp, 0xAB, sizeof(ctx->comp));
-
-        //complete_all(&ctx->work);
-        ionic_complete(&ctx->work);
-
-        //schedule_work(&ionic->cmd_work);
-        status = ionic_work_queue_submit(ionic->cmd_work_queue,
-                                         &ionic->cmd_work,
-                                         0);
-        if (status != VMK_OK) {
-                ionic_err("ionic_work_queue_submit() failed, status: %s",
-                          vmk_StatusToString(status));
-        }
-}
-#endif
 
 
 static VMK_ReturnStatus
@@ -456,47 +305,7 @@ ionic_setup(struct ionic *ionic)
                 goto lifs_lock_err;
         }                
 
-#ifdef FAKE_ADMINQ
-        status = ionic_spinlock_create("ionic->cmd_lock",
-                                       ionic_driver.module_id,
-                                       ionic_driver.heap_id,
-                                       ionic_driver.lock_domain,
-                                       VMK_SPINLOCK,
-                                       IONIC_LOCK_RANK_NORMAL,
-                                       &ionic->cmd_lock);
-        if (status != VMK_OK) {
-                ionic_err("ionic_spinlock_create() failed, status: %s",
-                          vmk_StatusToString(status));
-                goto cmd_lock_err;
-        }                
-
-        vmk_ListInit(&ionic->cmd_list);
-
-        ionic->cmd_work_queue = ionic_work_queue_create(ionic_driver.heap_id,
-                                                        ionic_driver.module_id,
-                                                        "cmd_work_queue");
-        if (ionic->cmd_work_queue == NULL) {
-                ionic_err("ionic_work_queue_create() failed, status: %s",
-                          vmk_StatusToString(status));
-                status = VMK_NO_MEMORY;
-                goto wq_create_err;
-        }
-
-        ionic_work_init(&ionic->cmd_work,
-                        ionic_dev_cmd_work,
-                        &ionic->cmd_work);
-
         return status;
-
-wq_create_err:
-        ionic_spinlock_destroy(ionic->cmd_lock);
-
-cmd_lock_err:
-        ionic_spinlock_destroy(ionic->lifs_lock);
-
-#else
-        return status;
-#endif
 
 lifs_lock_err:
         ionic_dev_clean(ionic);
@@ -511,10 +320,6 @@ dev_setup_err:
 static inline void
 ionic_clean(struct ionic *ionic)
 {
-#ifndef ADMINQ
-        ionic_work_queue_destroy(ionic->cmd_work_queue);
-        ionic_spinlock_destroy(ionic->cmd_lock);
-#endif
         ionic_spinlock_destroy(ionic->lifs_lock);
         ionic_mutex_destroy(ionic->dev_cmd_lock);
         ionic_dev_clean(ionic);

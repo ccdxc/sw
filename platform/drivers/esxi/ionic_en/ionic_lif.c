@@ -1761,12 +1761,6 @@ ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
                         .opcode = CMD_OPCODE_RSS_INDIR_SET,
                         .addr = lif->rss_ind_tbl_pa,
                 },  
-#ifdef HAPS
-#ifdef FAKE_ADMINQ
-                .side_data = lif->rss_ind_tbl,
-                .side_data_len = RSS_IND_TBL_SIZE,
-#endif
-#endif
         };  
 
         status = ionic_completion_create(ionic_driver.module_id,
