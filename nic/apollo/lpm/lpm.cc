@@ -620,8 +620,7 @@ lpm_tree_create (route_table_t *route_table,
     sdk_ret_t       ret;
     lpm_itable_t    itable;
 
-    if (unlikely((route_table->num_routes == 0) ||
-                 ((route_table->af != IP_AF_IPV4) &&
+    if (unlikely(((route_table->af != IP_AF_IPV4) &&
                   (route_table->af != IP_AF_IPV6)))) {
         return sdk::SDK_RET_INVALID_ARG;
     }
