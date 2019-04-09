@@ -66,3 +66,13 @@ README for captrace_collect.py
     - The script asks for filters to be applied on the decode file after generating captrace.decode
 
     ./captrace_collect.py --host cap-srv11 --rxdma 1
+
+README for rdmactl_parse.py
+===========================
+    - This script can be used to parse the output collected by rdmactl and identify errors from qstate and qstats
+    - A pre-requisite for using this script is a log file with rdmactl output. An example of the command to collect rdmactl output is as follows:
+         for ((i=2; i<100; i++)); do echo "QP: $i" >> /tmp/qstate; ./rdmactl.py --DEVNAME enp96s0 --q_state $i >> /tmp/qstate; done
+         for ((i=2; i<100; i++)); do echo "QP: $i" >> /tmp/qstats; ./rdmactl.py --DEVNAME enp96s0 --q_stats $i >> /tmp/qstats; done
+    - The script currently supports responder cb related options. Support for requester cb related options will be added in a subsequent commit
+
+    /rdmactl_parse.py --file qstats --q_stats 1
