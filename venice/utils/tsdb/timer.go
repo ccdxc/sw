@@ -292,12 +292,17 @@ func createNewMetricPointFromKeysFields(obj *iObj, keys map[string]string, field
 		return
 	}
 
+	tags := make(map[string]string)
+	for k, v := range keys {
+		tags[k] = v
+	}
+
 	obj.Lock()
 	defer obj.Unlock()
 
 	mp := &metric.MetricPoint{
 		Name:   obj.tableName,
-		Tags:   keys,
+		Tags:   tags,
 		Fields: mfs,
 		When: &api.Timestamp{
 			Timestamp: *pbTimestamp,

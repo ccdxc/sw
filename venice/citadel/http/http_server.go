@@ -6,9 +6,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"expvar"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/pprof"
 	"strings"
 	"time"
 
@@ -60,6 +62,20 @@ func NewHTTPServer(listenURL string, broker *broker.Broker, dbg *debug.Debug) (*
 	r.HandleFunc("/kv/list", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.listKvReqHandler))).Methods("GET")
 	r.HandleFunc("/kv/put", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.putKvReqHandler))).Methods("POST")
 	r.HandleFunc("/kv/delete", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.delKvReqHandler))).Methods("POST")
+
+	// pprof
+	r.Methods("GET").Subrouter().Handle("/debug/vars", expvar.Handler())
+	r.Methods("GET").Subrouter().HandleFunc("/debug/pprof/", pprof.Index)
+	r.Methods("GET").Subrouter().HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	r.Methods("GET").Subrouter().HandleFunc("/debug/pprof/profile", pprof.Profile)
+	r.Methods("GET").Subrouter().HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	r.Methods("GET").Subrouter().HandleFunc("/debug/pprof/trace", pprof.Trace)
+	r.Methods("GET").Subrouter().HandleFunc("/debug/pprof/allocs", pprof.Handler("allocs").ServeHTTP)
+	r.Methods("GET").Subrouter().HandleFunc("/debug/pprof/block", pprof.Handler("block").ServeHTTP)
+	r.Methods("GET").Subrouter().HandleFunc("/debug/pprof/heap", pprof.Handler("heap").ServeHTTP)
+	r.Methods("GET").Subrouter().HandleFunc("/debug/pprof/mutex", pprof.Handler("mutex").ServeHTTP)
+	r.Methods("GET").Subrouter().HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
+	r.Methods("GET").Subrouter().HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 
 	// debug api for getting cluster state
 	r.HandleFunc("/info", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.infoReqHandler))).Methods("GET")

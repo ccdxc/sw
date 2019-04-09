@@ -95,7 +95,7 @@ func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
 
 	point := &tsdb.Point{
 		Tags:   map[string]string{"source": ipSrc, "destination": ipDest, "destination-port": dPort, "protocol": ipProt},
-		Fields: map[string]interface{}{"source-port": sPort, "action": action, "direction": dir, "rule-id": ruleID, "session-id": sessionID, "flow_action": ev.GetFlowaction().String()},
+		Fields: map[string]interface{}{"source-port": sPort, "action": action, "direction": dir, "rule-id": ruleID, "session-id": sessionID, "flow_action": int64(ev.GetFlowaction())},
 	}
 
 	// icmp fields

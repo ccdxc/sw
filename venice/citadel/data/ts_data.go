@@ -227,7 +227,7 @@ func (dn *DNode) replicatePoints(ctx context.Context, req *tproto.PointsWriteReq
 		}
 	}
 
-	log.Infof("shard:%d replica:%d replicated points to %v", req.ShardID, req.ReplicaID, secRepl)
+	log.Debugf("shard:%d replica:%d replicated points to %v", req.ShardID, req.ReplicaID, secRepl)
 	return nil
 }
 
