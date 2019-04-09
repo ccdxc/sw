@@ -51,15 +51,11 @@ subnet_create_validate (pds_subnet_spec_t *spec)
         }
     }
     // validate VR IP
-    if (spec->v4_vr_ip == 0) {
-        PDS_TRACE_ERR("Failed to create subnet %u, IPv4 virtual router IP invalid", spec->key.id);
+    if ((spec->v4_vr_ip == 0) && (ip_addr_is_zero(&spec->v6_vr_ip))) {
+        PDS_TRACE_ERR("Failed to create subnet %u, virtual router IP invalid", spec->key.id);
         return SDK_RET_INVALID_ARG;
     }
-    // validate VR IP
-    if (ip_addr_is_zero(&spec->v6_vr_ip)) {
-        PDS_TRACE_ERR("Failed to create subnet %u, IPv6 virtual router IP invalid", spec->key.id);
-        return SDK_RET_INVALID_ARG;
-    }
+
     // validate VR MAC
     if (memcmp(&spec->vr_mac, &zero_mac, sizeof(spec->vr_mac)) == 0) {
         PDS_TRACE_ERR("Failed to create subnet %u, VR MAC invalid", spec->key.id);

@@ -237,6 +237,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
         rv = create_v6_route_tables(num_teps, num_vpcs, num_subnets,
                          num_routes, tep_pfx, route_pfx, v6_route_pfx);
     }
+
     return rv;
 }
 
@@ -251,8 +252,10 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                  uint32_t num_remote_mappings)
 {
     sdk_ret_t rv;
-    pds_mapping_spec_t pds_mapping;
-    pds_mapping_spec_t pds_v6_mapping;
+    pds_local_mapping_spec_t pds_local_mapping;
+    pds_local_mapping_spec_t pds_local_v6_mapping;
+    pds_remote_mapping_spec_t pds_remote_mapping;
+    pds_remote_mapping_spec_t pds_remote_v6_mapping;
     uint16_t vnic_key = 1, ip_base;
     uint32_t ip_offset = 0, remote_slot = 1025;
     uint32_t tep_offset = 0, v6_tep_offset = 0;
@@ -265,76 +268,75 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
-                    memset(&pds_mapping, 0, sizeof(pds_mapping));
-                    pds_mapping.key.vcn.id = i;
-                    pds_mapping.key.ip_addr.af = IP_AF_IPV4;
-                    pds_mapping.key.ip_addr.addr.v4_addr =
+                    memset(&pds_local_mapping, 0, sizeof(pds_local_mapping));
+                    pds_local_mapping.key.vcn.id = i;
+                    pds_local_mapping.key.ip_addr.af = IP_AF_IPV4;
+                    pds_local_mapping.key.ip_addr.addr.v4_addr =
                         (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                         (((k - 1) * num_ip_per_vnic) + l);
-                    pds_mapping.subnet.id = (i - 1) * num_subnets + j;
+                    pds_local_mapping.subnet.id = (i - 1) * num_subnets + j;
                     if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
-                        pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+                        pds_local_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                         //pds_mapping.fabric_encap.val.vnid = VNID_BASE + pds_mapping.subnet.id;
-                        pds_mapping.fabric_encap.val.vnid = vnic_key;
+                        pds_local_mapping.fabric_encap.val.vnid = vnic_key;
                     } else {
-                        pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-                        pds_mapping.fabric_encap.val.mpls_tag = vnic_key;
+                        pds_local_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                        pds_local_mapping.fabric_encap.val.mpls_tag = vnic_key;
                     }
-                    pds_mapping.tep.ip_addr = g_device.device_ip_addr;
-                    MAC_UINT64_TO_ADDR(pds_mapping.overlay_mac,
+                    MAC_UINT64_TO_ADDR(pds_local_mapping.vnic_mac,
                                        (((((uint64_t)i & 0x7FF) << 22) |
                                          ((j & 0x7FF) << 11) | (k & 0x7FF))));
-                    pds_mapping.vnic.id = vnic_key;
+                    pds_local_mapping.vnic.id = vnic_key;
                     if (natpfx) {
-                        pds_mapping.public_ip_valid = true;
-                        pds_mapping.public_ip.addr.v4_addr =
+                        pds_local_mapping.public_ip_valid = true;
+                        pds_local_mapping.public_ip.addr.v4_addr =
                             natpfx->addr.addr.v4_addr + ip_offset++;
                     }
 
 #ifdef TEST_GRPC_APP
-                    rv = create_mapping_grpc(&pds_mapping);
+                    rv = create_local_mapping_grpc(&pds_local_mapping);
                     if (rv != SDK_RET_OK) {
                         SDK_ASSERT(0);
                         return rv;
                     }
 #else
-                    rv = pds_mapping_create(&pds_mapping);
+                    rv = pds_local_mapping_create(&pds_local_mapping);
                     if (rv != SDK_RET_OK) {
                         SDK_ASSERT(0);
                         return rv;
                     }
-                    g_flow_test_obj->add_local_ep(pds_mapping.key.vcn.id,
-                                                  pds_mapping.key.ip_addr);
+                    g_flow_test_obj->add_local_ep(pds_local_mapping.key.vcn.id,
+                                                  pds_local_mapping.key.ip_addr);
 #endif
                     if (g_test_params.dual_stack) {
                         // V6 mapping
-                        pds_v6_mapping = pds_mapping;
-                        pds_v6_mapping.key.ip_addr.af = IP_AF_IPV6;
-                        pds_v6_mapping.key.ip_addr.addr.v6_addr =
+                        pds_local_v6_mapping = pds_local_mapping;
+                        pds_local_v6_mapping.key.ip_addr.af = IP_AF_IPV6;
+                        pds_local_v6_mapping.key.ip_addr.addr.v6_addr =
                                g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
-                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.key.ip_addr.addr.v6_addr,
-                                                        pds_mapping.key.ip_addr.addr.v4_addr);
+                        CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_v6_mapping.key.ip_addr.addr.v6_addr,
+                                                        pds_local_mapping.key.ip_addr.addr.v4_addr);
                         // no need of v6 to v6 NAT
-                        pds_v6_mapping.public_ip_valid = false;
+                        pds_local_v6_mapping.public_ip_valid = false;
                         if (natpfx) {
-                            pds_v6_mapping.public_ip.addr.v6_addr = v6_natpfx->addr.addr.v6_addr;
-                            CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.public_ip.addr.v6_addr,
-                                                            pds_mapping.public_ip.addr.v4_addr);
+                            pds_local_v6_mapping.public_ip.addr.v6_addr = v6_natpfx->addr.addr.v6_addr;
+                            CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_local_v6_mapping.public_ip.addr.v6_addr,
+                                                            pds_local_mapping.public_ip.addr.v4_addr);
                         }
 #ifdef TEST_GRPC_APP
-                        rv = create_mapping_grpc(&pds_v6_mapping);
+                        rv = create_local_mapping_grpc(&pds_local_v6_mapping);
                         if (rv != SDK_RET_OK) {
                             SDK_ASSERT(0);
                             return rv;
                         }
 #else
-                        rv = pds_mapping_create(&pds_v6_mapping);
+                        rv = pds_local_mapping_create(&pds_local_v6_mapping);
                         if (rv != SDK_RET_OK) {
                             SDK_ASSERT(0);
                             return rv;
                         }
-                        g_flow_test_obj->add_local_ep(pds_mapping.key.vcn.id,
-                                                      pds_v6_mapping.key.ip_addr);
+                        g_flow_test_obj->add_local_ep(pds_local_mapping.key.vcn.id,
+                                                      pds_local_v6_mapping.key.ip_addr);
 #endif
                     }
                 }
@@ -344,7 +346,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     }
 #ifdef TEST_GRPC_APP
     // Batching: push leftover objects
-    rv = create_mapping_grpc(NULL);
+    rv = create_local_mapping_grpc(NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;
@@ -359,62 +361,62 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
         for (uint32_t j = 1; j <= num_subnets; j++) {
             ip_base = num_vnics * num_ip_per_vnic + 1;
             for (uint32_t k = 1; k <= num_remote_mappings; k++) {
-                memset(&pds_mapping, 0, sizeof(pds_mapping));
-                pds_mapping.key.vcn.id = i;
-                pds_mapping.key.ip_addr.af = IP_AF_IPV4;
-                pds_mapping.key.ip_addr.addr.v4_addr =
+                memset(&pds_remote_mapping, 0, sizeof(pds_remote_mapping));
+                pds_remote_mapping.key.vcn.id = i;
+                pds_remote_mapping.key.ip_addr.af = IP_AF_IPV4;
+                pds_remote_mapping.key.ip_addr.addr.v4_addr =
                     (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                     ip_base++;
-                pds_mapping.subnet.id = (i - 1) * num_subnets + j;
+                pds_remote_mapping.subnet.id = (i - 1) * num_subnets + j;
                 if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
-                    pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+                    pds_remote_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                     //pds_mapping.fabric_encap.val.vnid = VNID_BASE + pds_mapping.subnet.id;
-                    pds_mapping.fabric_encap.val.vnid = remote_slot++;
+                    pds_remote_mapping.fabric_encap.val.vnid = remote_slot++;
                 } else {
-                    pds_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-                    pds_mapping.fabric_encap.val.mpls_tag = remote_slot++;
+                    pds_remote_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                    pds_remote_mapping.fabric_encap.val.mpls_tag = remote_slot++;
                 }
-                pds_mapping.tep.ip_addr =
+                pds_remote_mapping.tep.ip_addr =
                     teppfx->addr.addr.v4_addr + tep_offset;
                 MAC_UINT64_TO_ADDR(
-                    pds_mapping.overlay_mac,
+                    pds_remote_mapping.vnic_mac,
                     (((((uint64_t)i & 0x7FF) << 22) | ((j & 0x7FF) << 11) |
                       ((num_vnics + k) & 0x7FF))));
 
 #ifdef TEST_GRPC_APP
-                rv = create_mapping_grpc(&pds_mapping);
+                rv = create_remote_mapping_grpc(&pds_remote_mapping);
                 if (rv != SDK_RET_OK) {
                     return rv;
                 }
 #else
-                rv = pds_mapping_create(&pds_mapping);
+                rv = pds_remote_mapping_create(&pds_remote_mapping);
                 if (rv != SDK_RET_OK) {
                     return rv;
                 }
-                g_flow_test_obj->add_remote_ep(pds_mapping.key.vcn.id,
-                                               pds_mapping.key.ip_addr);
+                g_flow_test_obj->add_remote_ep(pds_remote_mapping.key.vcn.id,
+                                               pds_remote_mapping.key.ip_addr);
 #endif
                 if (g_test_params.dual_stack) {
                     // V6 mapping
-                    pds_v6_mapping = pds_mapping;
-                    pds_v6_mapping.key.ip_addr.af = IP_AF_IPV6;
-                    pds_v6_mapping.key.ip_addr.addr.v6_addr =
+                    pds_remote_v6_mapping = pds_remote_mapping;
+                    pds_remote_v6_mapping.key.ip_addr.af = IP_AF_IPV6;
+                    pds_remote_v6_mapping.key.ip_addr.addr.v6_addr =
                           g_test_params.v6_vpc_pfx.addr.addr.v6_addr;
-                    CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_v6_mapping.key.ip_addr.addr.v6_addr,
-                                                    pds_mapping.key.ip_addr.addr.v4_addr);
-                    pds_v6_mapping.tep.ip_addr = teppfx->addr.addr.v4_addr + v6_tep_offset;
+                    CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_remote_v6_mapping.key.ip_addr.addr.v6_addr,
+                                                    pds_remote_mapping.key.ip_addr.addr.v4_addr);
+                    pds_remote_v6_mapping.tep.ip_addr = teppfx->addr.addr.v4_addr + v6_tep_offset;
 #ifdef TEST_GRPC_APP
-                    rv = create_mapping_grpc(&pds_v6_mapping);
+                    rv = create_remote_mapping_grpc(&pds_remote_v6_mapping);
                     if (rv != SDK_RET_OK) {
                         return rv;
                     }
 #else
-                    rv = pds_mapping_create(&pds_v6_mapping);
+                    rv = pds_remote_mapping_create(&pds_remote_v6_mapping);
                     if (rv != SDK_RET_OK) {
                         return rv;
                     }
-                    g_flow_test_obj->add_remote_ep(pds_mapping.key.vcn.id,
-                                                   pds_v6_mapping.key.ip_addr);
+                    g_flow_test_obj->add_remote_ep(pds_remote_mapping.key.vcn.id,
+                                                   pds_remote_v6_mapping.key.ip_addr);
 #endif
                 }
 
@@ -430,7 +432,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     }
 #ifdef TEST_GRPC_APP
     // Batching: push leftover objects
-    rv = create_mapping_grpc(NULL);
+    rv = create_remote_mapping_grpc(NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;

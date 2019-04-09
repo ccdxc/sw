@@ -24,7 +24,8 @@ public:
     subnet_util(pds_subnet_id_t id);
     subnet_util(pds_vcn_id_t vcn_id, pds_subnet_id_t id, std::string cidr_str);
     subnet_util(pds_vcn_id_t vcn_id, pds_subnet_id_t id, std::string cidr_str,
-                uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t);
+                uint32_t, uint32_t, uint32_t ing_v4_policy = 0, uint32_t ing_v6_policy = 0,
+                uint32_t egr_v4_policy = 0, uint32_t egr_v6_policy = 0);
 
     /// \brief destructor
     ~subnet_util();

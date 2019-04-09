@@ -153,7 +153,7 @@ subnet_util_object_stepper (pds_subnet_key_t start_key, pds_vcn_key_t vcn_key,
 
     if (start_key.id == 0) start_key.id = 1;
     v4_route_table = start_key.id;
-    v6_route_table = start_key.id;
+    v6_route_table = start_key.id + 1024; // Unique id, 1-1024 reserved for IPv4 rt table
     ing_v4_policy = start_key.id;
     ing_v6_policy = start_key.id;
     egr_v4_policy = start_key.id;

@@ -49,7 +49,7 @@ create_route_table_grpc (pds_route_table_spec_t *rt)
     ClientContext       context;
     RouteTableResponse  response;
     Status              ret_status;
-    
+
     populate_route_table_request(&g_route_table_req, rt);
     if ((g_route_table_req.request_size() >= APP_GRPC_BATCH_COUNT) || !rt) {
         ret_status = g_route_table_stub_->RouteTableCreate(&context, g_route_table_req, &response);
@@ -64,14 +64,34 @@ create_route_table_grpc (pds_route_table_spec_t *rt)
 }
 
 sdk_ret_t
-create_mapping_grpc (pds_mapping_spec_t *mapping)
+create_local_mapping_grpc (pds_local_mapping_spec_t *local_spec)
 {
     ClientContext   context;
     MappingResponse response;
     Status          ret_status;
 
-    populate_mapping_request(&g_mapping_req, mapping);
-    if ((g_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !mapping) {
+    populate_local_mapping_request(&g_mapping_req, local_spec);
+    if ((g_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !local_spec) {
+        ret_status = g_mapping_stub_->MappingCreate(&context, g_mapping_req, &response);
+        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s: failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_mapping_req.clear_request();
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_remote_mapping_grpc (pds_remote_mapping_spec_t *remote_spec)
+{
+    ClientContext   context;
+    MappingResponse response;
+    Status          ret_status;
+
+    populate_remote_mapping_request(&g_mapping_req, remote_spec);
+    if ((g_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !remote_spec) {
         ret_status = g_mapping_stub_->MappingCreate(&context, g_mapping_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
             printf("%s: failed!\n", __FUNCTION__);
@@ -177,7 +197,7 @@ create_device_grpc (pds_device_spec_t *device)
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
-    
+
     return SDK_RET_OK;
 }
 
@@ -191,18 +211,18 @@ batch_start_grpc (void)
     Status              ret_status;
     pds_batch_params_t  params;
     BatchStatus         status;
-    
+
     g_epoch++;
     params.epoch = g_epoch;
     populate_batch_spec(&spec, &params);
-    
+
     /* Batch start */
     ret_status = g_batch_stub_->BatchStart(&start_context, spec, &status);
     if (!ret_status.ok()) {
         printf("%s: failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
-    
+
     return SDK_RET_OK;
 }
 
@@ -227,20 +247,21 @@ batch_commit_grpc (void)
 sdk_ret_t
 test_app_push_configs (void)
 {
+#if 0
     BatchStatus         status;
     Status              ret_status;
     BatchSpec           spec;
     ClientContext       start_context;
     pds_batch_params_t  params;
-
+#endif
     /* Create objects */
     create_objects();
 
-#if 1
+#if 0
     // TODO: Temp change to push batch start and create flows here
     params.epoch = 0;
     populate_batch_spec(&spec, &params);
-    
+
     /* Batch start */
     ret_status = g_batch_stub_->BatchStart(&start_context, spec, &status);
     if (!ret_status.ok()) {
@@ -269,6 +290,6 @@ test_app_init (void)
     g_tunnel_stub_ = pds::TunnelSvc::NewStub(channel);
     g_device_stub_ = pds::DeviceSvc::NewStub(channel);
     g_batch_stub_ = pds::BatchSvc::NewStub(channel);
-    
+
     return;
 }

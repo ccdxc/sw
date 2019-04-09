@@ -15,7 +15,8 @@
 #include "nic/apollo/api/include/pds_route.hpp"
 
 sdk_ret_t create_route_table_grpc(pds_route_table_spec_t *rt);
-sdk_ret_t create_mapping_grpc(pds_mapping_spec_t *mapping);
+sdk_ret_t create_local_mapping_grpc(pds_local_mapping_spec_t *local_spec);
+sdk_ret_t create_remote_mapping_grpc(pds_remote_mapping_spec_t *remote_spec);
 sdk_ret_t create_vnic_grpc(pds_vnic_spec_t *vnic);
 sdk_ret_t create_subnet_grpc(pds_subnet_spec_t *subnet);
 sdk_ret_t create_vcn_grpc(pds_vcn_spec_t *vcn);

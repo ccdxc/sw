@@ -45,8 +45,9 @@ namespace impl {
                    (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);                 \
         }                                                                    \
     } else {                                                                 \
+        /* key is initialized to zero by the caller */                       \
         memcpy((key)->control_metadata_mapping_lkp_addr,                     \
-               (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);                     \
+               &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
     }                                                                        \
 }
 
@@ -72,8 +73,9 @@ namespace impl {
                    IP6_ADDR8_LEN);                                           \
         }                                                                    \
     } else {                                                                 \
+        /* key is initialized to zero by the caller */                       \
         memcpy((key)->p4e_apollo_i2e_dst,                                    \
-               (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);                     \
+               &(ip)->addr.v4_addr, IP4_ADDR8_LEN);                          \
     }                                                                        \
 }
 
@@ -95,8 +97,9 @@ namespace impl {
         sdk::lib::memrev((data)->nat_action.nat_ip,                          \
                          (ip)->addr.v6_addr.addr8, IP6_ADDR8_LEN);           \
     } else {                                                                 \
-        memcpy((data)->nat_action.nat_ip, (ip)->addr.v6_addr.addr8,          \
-               IP6_ADDR8_LEN);                                               \
+        /* key is initialized to zero by the caller */                       \
+        memcpy((data)->nat_action.nat_ip, &(ip)->addr.v4_addr,               \
+               IP4_ADDR8_LEN);                                               \
     }                                                                        \
 }
 
@@ -128,8 +131,9 @@ mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
     }
     new (impl) mapping_impl();
     device = device_db()->find();
-    if (device->ip_addr() == pds_mapping->tep.ip_addr) {
+    if (pds_mapping->is_local) {
         impl->is_local_ = true;
+        pds_mapping->tep.ip_addr = device->ip_addr();
     } else {
         impl->is_local_ = false;
     }
@@ -307,7 +311,6 @@ mapping_impl::build(pds_mapping_key_t *key) {
     return impl;
 
 error:
-
     if (impl) {
         impl->~mapping_impl();
         SDK_FREE(SDK_MEM_ALLOC_PDS_MAPPING_IMPL, impl);
@@ -890,16 +893,23 @@ mapping_impl::read_local_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec) {
     local_ip_mapping_appdata_t  local_ip_mapping_data = { 0 };
     sdk_table_api_params_t      tparams = { 0 };
 
-    // We can  make sure the entry exist or not
-    // Currently remote tables are not configured on LOCAL_IP_MAPPING
+
+    // First read the remote mapping. It can provide all the info except vnic-id
+    ret = read_remote_mapping_(vcn, spec);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // Read local only if user passes the vnic-id.
+    if (spec->vnic.id == 0) {
+        return SDK_RET_OK;
+    }
+    // We can  make sure the entry exist or not. All the info is filled by remote
     vnic_impl_obj =
         (vnic_impl *)vnic_db()->vnic_find(&spec->vnic)->impl();
-    local_ip_mapping_key.vnic_metadata_local_vnic_tag =
-        vnic_impl_obj->hw_id();
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
                                          vnic_impl_obj->hw_id(),
                                          &spec->key.ip_addr, true);
-
     // prepare the api parameters to read the LOCAL_IP_MAPPING table
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_ip_mapping_key,
                                    &local_ip_mapping_data,
@@ -922,12 +932,12 @@ mapping_impl::read_local_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec) {
 sdk_ret_t
 mapping_impl::read_remote_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
-    remote_vnic_mapping_tx_swkey_t      remote_vnic_mapping_tx_key;
-    remote_vnic_mapping_tx_appdata_t    remote_vnic_mapping_tx_data;
+    remote_vnic_mapping_tx_swkey_t      remote_vnic_mapping_tx_key = { 0 };
+    remote_vnic_mapping_tx_appdata_t    remote_vnic_mapping_tx_data = { 0 };
     nexthop_tx_actiondata_t             nh_tx_data;
     tep_tx_actiondata_t                 tep_tx_data;
-    remote_vnic_mapping_rx_swkey_t      remote_vnic_mapping_rx_key;
-    remote_vnic_mapping_rx_appdata_t    remote_vnic_mapping_rx_data;
+    remote_vnic_mapping_rx_swkey_t      remote_vnic_mapping_rx_key = { 0 };
+    remote_vnic_mapping_rx_appdata_t    remote_vnic_mapping_rx_data = { 0 };
     sdk_table_api_params_t              tparams;
     uint32_t                            nh_index, tep_index;
 
@@ -955,6 +965,10 @@ mapping_impl::read_remote_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec) {
     fill_mapping_spec_(&remote_vnic_mapping_tx_data, &nh_tx_data, &tep_tx_data,
                        spec);
 
+    if (is_local_) {
+        // REMOTE_VNIC_MAPPING_RX tables are not programmed for local
+        return SDK_RET_OK;
+    }
     // The below read requires data from the previous tables
     // It is valid only for mplsoudp encap
     if (spec->fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
@@ -986,7 +1000,7 @@ mapping_impl::read_remote_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec) {
 
 sdk_ret_t
 mapping_impl::read_hw(pds_mapping_key_t *key,
-                      pds_mapping_info_t    *info) {
+                      pds_mapping_info_t *info) {
     sdk_ret_t ret;
     vcn_entry *vcn;
     nat_actiondata_t nat_data = { 0 };

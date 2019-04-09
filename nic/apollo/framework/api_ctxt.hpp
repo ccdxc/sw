@@ -13,6 +13,7 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api.hpp"
+#include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/api/include/pds_vcn.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"

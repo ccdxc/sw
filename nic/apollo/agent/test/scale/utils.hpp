@@ -175,23 +175,42 @@ populate_route_table_request (RouteTableRequest *req,
 }
 
 static void
-populate_mapping_request (MappingRequest *req, pds_mapping_spec_t *mapping)
+populate_local_mapping_request (MappingRequest *req, pds_local_mapping_spec_t *local_spec)
 {
-    if (!mapping || !req)
+    if (!local_spec || !req)
         return;
 
     MappingSpec *spec = req->add_request();
-    spec->mutable_id()->set_vpcid(mapping->key.vcn.id);
+    spec->mutable_id()->set_vpcid(local_spec->key.vcn.id);
     ip_addr_to_spec(spec->mutable_id()->mutable_ipaddr(),
-                    &mapping->key.ip_addr);
-    spec->set_subnetid(mapping->subnet.id);
-    spec->set_tunnelid(mapping->tep.ip_addr);
-    spec->set_macaddr(MAC_TO_UINT64(mapping->overlay_mac));
-    pds_encap_to_proto_encap(spec->mutable_encap(), &mapping->fabric_encap);
-    spec->set_vnicid(mapping->vnic.id);
-    if (mapping->public_ip_valid) {
-        ip_addr_to_spec(spec->mutable_publicip(), &mapping->public_ip);
+                    &local_spec->key.ip_addr);
+    spec->set_subnetid(local_spec->subnet.id);
+    // Set tunnel id 0 for local mapping
+    spec->set_tunnelid(0);
+    spec->set_macaddr(MAC_TO_UINT64(local_spec->vnic_mac));
+    pds_encap_to_proto_encap(spec->mutable_encap(), &local_spec->fabric_encap);
+    spec->set_vnicid(local_spec->vnic.id);
+    if (local_spec->public_ip_valid) {
+        ip_addr_to_spec(spec->mutable_publicip(), &local_spec->public_ip);
     }
+    return;
+}
+
+
+static void
+populate_remote_mapping_request (MappingRequest *req, pds_remote_mapping_spec_t *remote_spec)
+{
+    if (!remote_spec || !req)
+        return;
+
+    MappingSpec *spec = req->add_request();
+    spec->mutable_id()->set_vpcid(remote_spec->key.vcn.id);
+    ip_addr_to_spec(spec->mutable_id()->mutable_ipaddr(),
+                    &remote_spec->key.ip_addr);
+    spec->set_subnetid(remote_spec->subnet.id);
+    spec->set_tunnelid(remote_spec->tep.ip_addr);
+    spec->set_macaddr(MAC_TO_UINT64(remote_spec->vnic_mac));
+    pds_encap_to_proto_encap(spec->mutable_encap(), &remote_spec->fabric_encap);
     return;
 }
 
@@ -202,9 +221,9 @@ populate_vnic_request (VnicRequest *req, pds_vnic_spec_t *vnic)
         return;
 
     VnicSpec *spec = req->add_request();
-    spec->set_vnicid(vnic->vcn.id);
+    spec->set_vpcid(vnic->vcn.id);
     spec->set_subnetid(vnic->subnet.id);
-    spec->set_vpcid(vnic->key.id);
+    spec->set_vnicid(vnic->key.id);
     spec->set_wirevlan(vnic->wire_vlan);
     spec->set_macaddress(MAC_TO_UINT64(vnic->mac_addr));
     spec->set_resourcepoolid(vnic->rsc_pool_id);

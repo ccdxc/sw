@@ -14,6 +14,7 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
+#include "nic/apollo/test/utils/device.hpp"
 #include "nic/apollo/test/utils/vcn.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"

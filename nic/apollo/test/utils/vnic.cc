@@ -16,6 +16,7 @@ namespace api_test {
 
 vnic_util::vnic_util(uint32_t vnic_id, uint16_t vlan_tag,
                      uint32_t mpls_slot, uint64_t mac_u64) {
+    mac_addr_t mac;
     this->vcn_id = 1;
     this->vnic_id = vnic_id;
     this->sub_id = 1;
@@ -24,6 +25,8 @@ vnic_util::vnic_util(uint32_t vnic_id, uint16_t vlan_tag,
     this->mac_u64 = mac_u64;
     this->rsc_pool_id = 0;
     this->src_dst_check = true;;
+    MAC_UINT64_TO_ADDR(mac, this->mac_u64);
+    this->vnic_mac = macaddr2str(mac);
 }
 
 vnic_util::vnic_util() {
@@ -122,7 +125,7 @@ vnic_util_object_stepper(vnic_stepper_seed_t *seed, uint32_t num_vnics,
     pds_vnic_info_t info = {};
     uint32_t vlan_tag = seed->vlan_tag;
     uint32_t mpls_slot = seed->mpls_slot;;
-    uint32_t mac_u64 = seed->mac_u64;
+    uint64_t mac_u64 = seed->mac_u64;
 
     if (seed->id == 0) seed->id = 1;
     for (uint32_t idx = seed->id; idx < seed->id + num_vnics; idx++) {

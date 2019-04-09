@@ -57,7 +57,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
         spec.SubnetId = self.VNIC.SUBNET.SubnetId
         spec.VnicId = self.VNIC.VnicId
-        spec.TunnelId = int(Store.GetDevice().IPAddr)
+        spec.TunnelId = 0
         spec.MACAddr = self.VNIC.MACAddr.getnum()
         utils.GetRpcEncap(self.VNIC.MplsSlot, self.VNIC.Vnid, spec.Encap)
         spec.PublicIP.Af = types_pb2.IP_AF_NONE

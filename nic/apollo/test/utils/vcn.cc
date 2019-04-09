@@ -93,6 +93,7 @@ vcn_util_object_stepper(pds_vcn_key_t start_key, std::string start_pfxstr,
 {
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
     ip_prefix_t ip_pfx;
+    ip_addr_t ipaddr_next;
     uint32_t addr;
     pds_vcn_info_t info = {};
 
@@ -120,7 +121,8 @@ vcn_util_object_stepper(pds_vcn_key_t start_key, std::string start_pfxstr,
         if (rv != expected_result) {
             return rv;
         }
-        addr = api_test::pds_get_next_addr16(addr);
+        ip_prefix_ip_next(&ip_pfx, &ipaddr_next);
+        addr = ipaddr_next.addr.v4_addr;
     }
     return sdk::SDK_RET_OK;
 }

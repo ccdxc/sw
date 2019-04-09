@@ -12,29 +12,42 @@ extern flow_test *g_flow_test_obj;
 
 // Build VPC API spec from protobuf spec
 static inline void
-pds_agent_mapping_api_spec_fill (pds_mapping_spec_t *api_spec,
-                                 const pds::MappingSpec &proto_spec)
+pds_agent_local_mapping_api_spec_fill (pds_local_mapping_spec_t *local_spec,
+                                       const pds::MappingSpec &proto_spec)
 {
     pds::MappingKey key;
 
     key = proto_spec.id();
-    api_spec->key.vcn.id = key.vpcid();
-    ipaddr_proto_spec_to_api_spec(&api_spec->key.ip_addr, key.ipaddr());
-    api_spec->subnet.id = proto_spec.subnetid();
-    api_spec->vnic.id = proto_spec.vnicid();
+    local_spec->key.vcn.id = key.vpcid();
+    ipaddr_proto_spec_to_api_spec(&local_spec->key.ip_addr, key.ipaddr());
+    local_spec->subnet.id = proto_spec.subnetid();
+    local_spec->vnic.id = proto_spec.vnicid();
     if (proto_spec.has_publicip()) {
         if (proto_spec.publicip().af() == types::IP_AF_INET ||
             proto_spec.publicip().af() == types::IP_AF_INET6) {
-            api_spec->public_ip_valid = true;
-            ipaddr_proto_spec_to_api_spec(&api_spec->public_ip,
+            local_spec->public_ip_valid = true;
+            ipaddr_proto_spec_to_api_spec(&local_spec->public_ip,
                                           proto_spec.publicip());
         }
     }
-    MAC_UINT64_TO_ADDR(api_spec->overlay_mac, proto_spec.macaddr());
-    api_spec->tep.ip_addr = proto_spec.tunnelid();
-    api_spec->subnet.id = proto_spec.subnetid();
-    api_spec->vnic.id = proto_spec.vnicid();
-    api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
+    MAC_UINT64_TO_ADDR(local_spec->vnic_mac, proto_spec.macaddr());
+    local_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
+}
+
+static inline void
+pds_agent_remote_mapping_api_spec_fill (pds_remote_mapping_spec_t *remote_spec,
+                                        const pds::MappingSpec &proto_spec)
+{
+    pds::MappingKey key;
+
+    key = proto_spec.id();
+    remote_spec->key.vcn.id = key.vpcid();
+    ipaddr_proto_spec_to_api_spec(&remote_spec->key.ip_addr, key.ipaddr());
+    remote_spec->subnet.id = proto_spec.subnetid();
+    MAC_UINT64_TO_ADDR(remote_spec->vnic_mac, proto_spec.macaddr());
+    remote_spec->tep.ip_addr = proto_spec.tunnelid();
+    remote_spec->subnet.id = proto_spec.subnetid();
+    remote_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
 }
 
 Status
@@ -43,26 +56,36 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
                               pds::MappingResponse *proto_rsp) {
     if (proto_req) {
         for (int i = 0; i < proto_req->request_size(); i++) {
-            pds_mapping_spec_t api_spec = {0};
-            pds_agent_mapping_api_spec_fill(&api_spec, proto_req->request(i));
+            pds_local_mapping_spec_t local_spec = { 0 };
+            pds_remote_mapping_spec_t remote_spec = { 0 };
 
+            if (proto_req->request(i).tunnelid() == 0) {
+                pds_agent_local_mapping_api_spec_fill (&local_spec,
+                                                       proto_req->request(i));
 #ifdef PDS_FLOW_TEST
-            // TODO: Adding this here since there is no proto defs for
-            // flows. This needs to be cleaned up
-            if (api_spec.tep.ip_addr == 0x01000002u) {
-                g_flow_test_obj->add_local_ep(api_spec.key.vcn.id,
-                                              api_spec.key.ip_addr);
-            } else {
-                g_flow_test_obj->add_remote_ep(api_spec.key.vcn.id,
-                                               api_spec.key.ip_addr);
-            }
+                g_flow_test_obj->add_local_ep(local_spec.key.vcn.id,
+                                              local_spec.key.ip_addr);
 #endif
-            
+            } else {
+                pds_agent_remote_mapping_api_spec_fill (&remote_spec,
+                                                        proto_req->request(i));
+#ifdef PDS_FLOW_TEST
+                g_flow_test_obj->add_remote_ep(remote_spec.key.vcn.id,
+                                               remote_spec.key.ip_addr);
+#endif
+            }
+
             if (!core::agent_state::state()->pds_mock_mode()) {
-                if (pds_mapping_create(&api_spec) != sdk::SDK_RET_OK)
-                    return Status::CANCELLED;
+                if (proto_req->request(i).tunnelid() == 0) {
+                    if (pds_local_mapping_create(&local_spec) != sdk:: SDK_RET_OK)
+                        return Status::CANCELLED;
+                } else {
+                    if (pds_remote_mapping_create(&remote_spec) != sdk:: SDK_RET_OK)
+                        return Status::CANCELLED;
+                }
             }
         }
     }
+
     return Status::OK;
 }

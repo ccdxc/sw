@@ -13,6 +13,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
+#include "nic/apollo/api/mapping.hpp"
 #include "nic/apollo/api/vcn.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
@@ -140,11 +141,11 @@ public:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t read_hw(pds_mapping_key_t *key,
-                              pds_mapping_info_t *info) ;
+                      pds_mapping_info_t *info);
 
 private:
     /**< @brief    constructor */
-    mapping_impl() { 
+    mapping_impl() {
         handle_.local_.overlay_ip_to_public_ip_nat_hdl_ = 0;
         handle_.local_.public_ip_to_overlay_ip_nat_hdl_ = 0;
     }

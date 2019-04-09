@@ -21,69 +21,97 @@
 /// \defgroup PDS_MAPPING Mapping API
 /// @{
 
-/// \brief Mapping key
+/// \brief    mapping key
 typedef struct pds_mapping_key_s {
     pds_vcn_key_t vcn;    ///< VCN this IP belongs to
     ip_addr_t ip_addr;    ///< IP address of the mapping
 } __PACK__ pds_mapping_key_t;
 
-/// \brief Mapping specification
-typedef struct pds_mapping_spec_s {
-    pds_mapping_key_t key;            ///< Mapping key
-    pds_subnet_key_t subnet;          ///< Subnet this IP is part of
-    pds_encap_t fabric_encap;         ///< fabric encap for this mapping
-    pds_tep_key_t tep;                ///< TEP address for this mapping
-                                      ///< 1. Device IP for local vnic
-                                      ///< 2. Remote TEP for remote vnic
-    mac_addr_t overlay_mac;           ///< MAC for this IP
+/// \brief    local mapping specification
+typedef struct pds_local_mapping_spec_s {
+    pds_mapping_key_t key;       ///< Mapping key
+    pds_vnic_key_t vnic;         ///< VNIC for given IP
+    pds_subnet_key_t subnet;     ///< Subnet this IP is part of
+    pds_encap_t fabric_encap;    ///< fabric encap for this mapping
+    mac_addr_t vnic_mac;         ///< VNIC MAC
+    bool public_ip_valid;        ///< TRUE if public IP is valid
+    ip_addr_t public_ip;         ///< Public IP address
+} __PACK__ pds_local_mapping_spec_t;
 
-    ///< Information specific to local IP mappings
-    struct {
-        pds_vnic_key_t vnic;          ///< VNIC for local IP
-        bool public_ip_valid;         ///< TRUE if public IP is valid
-        ip_addr_t public_ip;          ///< Public IP address
-    };
-} pds_mapping_spec_t;
+/// \brief    remote mapping specification
+typedef struct pds_remote_mapping_spec_s {
+    pds_mapping_key_t key;       ///< Mapping key
+    pds_subnet_key_t subnet;     ///< Subnet this IP is part of
+    pds_encap_t fabric_encap;    ///< fabric encap for this mapping
+    pds_tep_key_t tep;           ///< Remote TEP address for this mapping
+    mac_addr_t vnic_mac;         ///< VNIC MAC
+} __PACK__ pds_remote_mapping_spec_t;
 
-/// \brief Mapping status
+/// \brief    mapping status
 typedef struct pds_mapping_status_s {
-} pds_mapping_status_t;
+} __PACK__ pds_mapping_status_t;
 
-/// \brief Mapping statistics
+/// \brief    mapping statistics
 typedef struct pds_mapping_stats_s {
-} pds_mapping_stats_t;
+} __PACK__ pds_mapping_stats_t;
 
-/// \brief Mapping information
-typedef struct pds_mapping_info_s {
-    pds_mapping_spec_t spec;        ///< Specification
-    pds_mapping_status_t status;    ///< Status
-    pds_mapping_stats_t stats;      ///< Statistics
-} pds_mapping_info_t;
+/// \brief    local mapping information
+typedef struct pds_local_mapping_info_t {
+    pds_local_mapping_spec_t spec;    ///< Specification
+    pds_mapping_status_t status;      ///< Status
+    pds_mapping_stats_t stats;        ///< Statistics
+} __PACK__ pds_local_mapping_info_t;
 
-/// \brief Create IP mapping
-///
-/// \param[in] spec Specification
+/// \brief    remote mapping information
+typedef struct pds_remote_mapping_info_t {
+    pds_remote_mapping_spec_t spec;    ///< Specification
+    pds_mapping_status_t status;       ///< Status
+    pds_mapping_stats_t stats;         ///< Statistics
+} __PACK__ pds_remote_mapping_info_t;
+
+/// \brief    create local mapping
+/// \param[in] spec    local mapping configuration
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_mapping_create(pds_mapping_spec_t *spec);
+sdk_ret_t pds_local_mapping_create(pds_local_mapping_spec_t *spec);
 
-/// \brief Read IP mapping
-///
-/// \param[in] key Key
-/// \param[out] info Information
+/// \brief    read local mapping
+/// \param[in] key    key to local mapping
+/// \param[out] info    local mapping information
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_mapping_read(pds_mapping_key_t *key, pds_mapping_info_t *info);
+sdk_ret_t pds_local_mapping_read(pds_mapping_key_t *key,
+                                 pds_local_mapping_info_t *info);
 
-/// \brief Update IP mapping
-///
-/// \param[in] spec Specification
+/// \brief    update local mapping
+/// \param[in] spec    local mapping configuration
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_mapping_update(pds_mapping_spec_t *spec);
+sdk_ret_t pds_local_mapping_update(pds_local_mapping_spec_t *spec);
 
-/// \brief Delete IP mapping
-///
-/// \param[in] key Key
+/// \brief    delete local mapping
+/// \param[in] key    key to local mapping
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_mapping_delete(pds_mapping_key_t *key);
+sdk_ret_t pds_local_mapping_delete(pds_mapping_key_t *key);
+
+/// \brief    create remote mapping
+/// \param[in] spec    remote mapping configuration
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_remote_mapping_create(pds_remote_mapping_spec_t *spec);
+
+/// \brief    read remote mapping
+/// \param[in] key    key to remote mapping
+/// \param[out] info    remote mapping information
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_remote_mapping_read(pds_mapping_key_t *key,
+                                  pds_remote_mapping_info_t *info);
+
+/// \brief    update remote mapping
+/// \param[in] spec    remote mapping configuration
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_remote_mapping_update(pds_remote_mapping_spec_t *spec);
+
+/// \brief    delete remote mapping
+/// \param[in] key    key to remote mapping
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_remote_mapping_delete(pds_mapping_key_t *key);
 
 /// @}
 
