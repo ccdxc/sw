@@ -145,5 +145,17 @@
         ],
         "flags": [],
         "timeout": 30.0
+    },
+    {
+    	"name": "pen-techsupport",
+	"command": "/nic/bin/techsupport -config /nic/conf/naples-tsa.json",
+    	"dependencies": [
+		{
+			"kind": "service",
+			"service-name": "delphi"
+		}
+	],
+	"flags": [],
+	"timeout": 30.0
     }
 ]

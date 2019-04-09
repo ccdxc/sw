@@ -1,0 +1,51 @@
+{
+	"Name" : "ExampleConfig",
+	"FilesystemRoot" : "/tmp/techsupport",
+	"RESTUri" : "20000",
+	"PrepActions" : [
+				{
+					"Name" : "Action1",
+					"Method" : 0,
+					"Command" : "ls -l"
+				}
+			],
+
+	"CollectActions" : [
+                                {
+                                        "Name" : "Action1",
+                                        "Method" : 0,
+                                        "Command" : "ps -aefl"
+                                },
+                                {
+                                        "Name" : "Action2",
+                                        "Method" : 0,
+                                        "Command" : "df -k"
+                                },
+                                {
+                                        "Name" : "Action3",
+                                        "Method" : 0,
+                                        "Command" : "cat /proc/cpuinfo"
+                                }
+
+			],
+
+	"ExportActions" : [
+                                {
+                                        "Name" : "Action5",
+                                        "Method" : 0,
+                                        "Command" : "ls -l"
+                                },
+                                {
+                                        "Name" : "Action6",
+                                        "Method" : 0,
+                                        "Command" : "ls -l"
+                                },
+                                {
+                                        "Name" : "Action7",
+                                        "Method" : 0,
+                                        "Command" : "ls -l"
+                                }
+			],
+
+	"RetentionPolicy" : 0
+}				

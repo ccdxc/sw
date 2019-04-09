@@ -10,5 +10,7 @@ COPY fakedelphihub /
 COPY fwgen /
 CMD mkdir -p /nic/tools
 COPY fwupdate /nic/tools
+COPY techsupport /techsupport
+COPY naples-tsa.json /naples-tsa.json
 COPY VERSION /tmp
 CMD /netagent -npm pen-npm -resolver-urls pen-master:9002 -hostif s0 -datapath mock -mode managed -disabletsa"

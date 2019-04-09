@@ -173,9 +173,11 @@ install:
 	@cp -p ${PWD}/bin/cbin/fwgen tools/docker-files/netagent/fwgen
 	@cp -p ${PWD}/bin/cbin/ctctl tools/docker-files/citadel/ctctl
 	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/netagent/nmd
+	@cp -p ${PWD}/bin/cbin/techsupport tools/docker-files/netagent/techsupport
 	@cp -p ${PWD}/bin/cbin/nevtsproxy tools/docker-files/netagent/nevtsproxy
 	@cp -p ${PWD}/bin/cbin/tmagent tools/docker-files/netagent/tmagent
 	@cp -p ${PWD}/nic/tools/fakefwupdate tools/docker-files/netagent/fwupdate
+	@cp -p ${PWD}/nic/conf/naples-tsa.json tools/docker-files/netagent/naples-tsa.json
 	@echo  ${GIT_VERSION} > tools/docker-files/netagent/VERSION
 	@# npm is special - The executable is called pen-npm since it conflicts with node.js npm. Hence copy it explicitly here
 	@cp -p ${PWD}/bin/cbin/pen-npm tools/docker-files/npm/pen-npm
@@ -198,7 +200,7 @@ clean:
 	@$(MAKE) c-stop >/dev/null 2>&1
 	@rm -fr bin/* venice/ui/webapp/node_modules  venice/ui/web-app-framework/node_modules  venice/ui/venice-sdk/node_modules venice/ui/webapp/dist
 	@rm -f nic/sim/naples/venice-sim.tar tools/docker-files/venice/venice-sim.tar test/topos/gs/venice_sim_addons.tar
-	@rm -f tools/docker-files/netagent/nmd tools/docker-files/netagent/nevtsproxy tools/docker-files/netagent/tmagent tools/docker-files/npm/pen-npm tools/docker-files/netagent/fakedelhihub tools/docker-files/netagent/fwgen
+	@rm -f tools/docker-files/netagent/nmd tools/docker-files/netagent/nevtsproxy tools/docker-files/netagent/tmagent tools/docker-files/npm/pen-npm tools/docker-files/netagent/fakedelhihub tools/docker-files/netagent/fwgen tools/docker-files/netagent/techsupport tools/docker-files/netagent/naples-tsa.json
 	@for c in $(TO_DOCKERIZE); do rm -f tools/docker-files/$${c}/$${c};  done
 
 

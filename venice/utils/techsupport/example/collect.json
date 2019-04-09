@@ -1,0 +1,15 @@
+{
+        "spec" : {
+                        "instance-id" : "techsupport101",
+                        "destinations" : [
+                                                {
+                                                        "proto" : 0,
+                                                        "path" : "mydirectory",
+                                                        "destination" : "DestinationDirectory"
+                                                }
+                                        ]
+                },
+        "status" : {
+                        "status" : 0
+                }
+}

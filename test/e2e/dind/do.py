@@ -190,6 +190,7 @@ class NaplesNode(Node):
         self.runCmd("""killall -q tmagent""", ignore_error=True)
         self.runCmd("""killall -q nmd""", ignore_error=True)
         self.runCmd("""killall -q nevtsproxy""", ignore_error=True)
+        self.runCmd("""killall -q techsupport""", ignore_error=True)
         self.runCmd("""rm /tmp/nmd.db""", ignore_error=True)
         self.runCmd("""rm /tmp/naples-netagent.db""", ignore_error=True)
         pass
@@ -213,6 +214,7 @@ class NaplesNode(Node):
         else:
             runCommand("""docker exec -d {} /fakedelphihub  & """.format(self.name))
             time.sleep(3)
+            runCommand("""docker exec -d {} /techsupport -config /naples-tsa.json &""".format(self.name))
             runCommand("""docker exec -d {} /nmd -hostif eth1 -hostname {}-host -mode host -updinterval 2 -standalone=false & """.format(self.name, self.name))
             runCommand("""docker exec -d {} /netagent -datapath mock -disabletsa &""".format(self.name))
             runCommand("""docker exec -d {} /tmagent """.format(self.name))

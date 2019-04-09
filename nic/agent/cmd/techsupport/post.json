@@ -1,0 +1,18 @@
+{
+	"meta" : {
+		"name" : "techsupportmeta"
+	},
+	"spec" : {
+		"instance-id" : "THISISATEST",
+		"destinations" : [
+			{
+				"proto" : 1,
+				"path" : "169.254.0.2",
+				"destination" : "/tmp/techsupport"
+			}
+		]
+	},
+	"status" : {
+
+	}
+}

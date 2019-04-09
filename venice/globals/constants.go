@@ -206,6 +206,14 @@ const (
 
 	// Rollout
 	RolloutRPCPort = "9015"
+
+	// TechSupport
+	TechSupportagent        = "techsupport-agent"
+	TechSupport             = "techsupport"
+	TechSupportRESTPort     = "9017"
+	TechSupportGRPCPort     = "9018"
+	TechSupportNaplesConfig = "/sysconfig/config0/techsupport.cfg"
+	TechSupportVeniceConfig = ""
 )
 
 var (
