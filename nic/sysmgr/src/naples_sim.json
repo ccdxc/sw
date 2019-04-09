@@ -8,10 +8,10 @@
     "name": "hal",
     "command": "/naples/nic/bin/hal -c hal.json",
     "dependencies": [
-	{
-	    "kind": "service",
-	    "service-name": "delphi"
-	}
+        {
+            "kind": "service",
+            "service-name": "delphi"
+        }
     ],
     "flags": [],
     "timeout": 30.0
@@ -19,66 +19,66 @@
     "name": "netagent",
     "command": "/naples/nic/bin/netagent -datapath hal",
     "dependencies": [
-	{
-	    "kind": "service",
-	    "service-name": "delphi"
-	},
-	{
-	    "kind": "service",
-	    "service-name": "hal"
-	}
+        {
+            "kind": "service",
+            "service-name": "delphi"
+        },
+        {
+            "kind": "service",
+            "service-name": "hal"
+        }
     ],
-    "flags": ["restartable"],
+    "flags": ["restartable", "save_stdout_on_crash"],
     "timeout": 30.0
 }, {
     "name": "nmd",
     "command": "/naples/nic/bin/nmd -hostif lo -standalone=false -mode host",
     "dependencies": [
-	{
-	    "kind": "service",
-	    "service-name": "delphi"
-	}
+        {
+            "kind": "service",
+            "service-name": "delphi"
+        }
     ],
-    "flags": ["restartable"],
+    "flags": ["restartable", "save_stdout_on_crash"],
     "timeout": 30.0
 }, {
     "name": "tmagent",
     "command": "/naples/nic/bin/tmagent",
     "dependencies": [
-	{
-	    "kind": "service",
-	    "service-name": "delphi"
-	},
-	{
-	    "kind": "service",
-	    "service-name": "hal"
-	}
+        {
+            "kind": "service",
+            "service-name": "delphi"
+        },
+        {
+            "kind": "service",
+            "service-name": "hal"
+        }
     ],
-    "flags": ["restartable"],
+    "flags": ["restartable", "save_stdout_on_crash"],
     "timeout": 30.0
 }, {
     "name": "nevtsproxy",
     "command": "/naples/nic/bin/nevtsproxy",
     "dependencies": [
-	{
-	    "kind": "service",
-	    "service-name": "delphi"
-	},
-	{
-	    "kind": "service",
-	    "service-name": "hal"
-	}
+        {
+            "kind": "service",
+            "service-name": "delphi"
+        },
+        {
+            "kind": "service",
+            "service-name": "hal"
+        }
     ],
-    "flags": ["restartable"],
+    "flags": ["restartable", "save_stdout_on_crash"],
     "timeout": 30.0
 }, {
     "name": "upgrade",
     "command": "/naples/nic/bin/upgrade",
     "dependencies": [
-	{
-	    "kind": "service",
-	    "service-name": "delphi"
-	}
+        {
+            "kind": "service",
+            "service-name": "delphi"
+        }
     ],
     "flags": [],
     "timeout": 30.0
