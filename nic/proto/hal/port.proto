@@ -441,7 +441,8 @@ message PortInfoSpec {
 
   PortType                  port_type      = 3;    // port type
   uint32                    num_lanes      = 4;    // number of lanes for port
-  repeated PortBreakoutMode breakout_modes = 5;    // breakout modes supported with this port
+  PortAdminState            admin_state    = 5;    // default admin state
+  repeated PortBreakoutMode breakout_modes = 6;    // breakout modes supported with this port
 }
 
 message PortInfoGetResponse {

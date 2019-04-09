@@ -21,7 +21,7 @@ func (hd *Datapath) CreatePort(ports ...*netproto.Port) error {
 					PortId: uint32(p.Status.PortID),
 				},
 			},
-			AdminState:    halproto.PortAdminState_PORT_ADMIN_STATE_UP,
+			AdminState:    halproto.PortAdminState(halproto.PortAdminState_value[p.Spec.AdminStatus]),
 			PortSpeed:     portSpeed,
 			PortType:      portType,
 			NumLanes:      p.Spec.Lanes,

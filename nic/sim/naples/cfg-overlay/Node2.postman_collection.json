@@ -73,7 +73,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"kind\":\"Tunnel\",\"meta\":{\"name\":\"infra_vxlan_tunnel\",\"tenant\":\"default\",\"namespace\":\"infra\"},\"spec\":{\"type\":\"VXLAN\",\"admin-status\":\"UP\",\"source\":\"192.168.10.12\",\"destination\":\"192.168.10.11\"}}"
+					"raw": "{\"kind\":\"Tunnel\",\"meta\":{\"name\":\"infra_vxlan_tunnel\",\"tenant\":\"default\",\"namespace\":\"infra\"},\"spec\":{\"type\":\"VXLAN\",\"admin-status\":\"PORT_ADMIN_STATE_UP\",\"source\":\"192.168.10.12\",\"destination\":\"192.168.10.11\"}}"
 				},
 				"url": {
 					"raw": "{{node2}}/api/tunnels/",

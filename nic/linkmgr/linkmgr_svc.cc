@@ -538,6 +538,9 @@ populate_port_info(uint32_t fp_port, PortInfoGetResponse *response)
     response->mutable_spec()->set_port_type(
             linkmgr::sdk_port_type_to_port_type_spec(port_type_fp(fp_port)));
     response->mutable_spec()->set_num_lanes(num_lanes_fp(fp_port));
+    response->mutable_spec()->set_admin_state(
+            linkmgr::sdk_port_admin_st_to_port_admin_st_spec(
+                                sdk::linkmgr::port_default_admin_state()));
 
     uint32_t breakout_mask = breakout_modes(fp_port);
 

@@ -33,6 +33,12 @@ typedef enum hal_feature_set_s {
     HAL_FEATURE_SET_APOLLO,
 } hal_feature_set_t;
 
+typedef enum hal_feature_profile_s {
+    HAL_FEATURE_PROFILE_NONE,
+    HAL_FEATURE_PROFILE_CLASSIC_DEFAULT,       // default classic mode profile with 2 host devices
+    HAL_FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE  // scaled up classic mode w.r.t devices
+} hal_feature_profile_t;
+
 #define UPLINK_FLOOD_MODES(ENTRY)                                                                   \
      ENTRY(HAL_UPLINK_FLOOD_MODE_NONE,   0, "HAL_UPLINK_FLOOD_MODE_NONE")                           \
      ENTRY(HAL_UPLINK_FLOOD_MODE_RPF,    1, "HAL_UPLINK_FLOOD_MODE_RPF")                            \
@@ -50,6 +56,12 @@ typedef enum hal_feature_set_s {
  DEFINE_ENUM(hal_forwarding_mode_t, FORWARDING_MODES)
  #undef FORWARDING_MODES
 
+typedef struct device_cfg_s {
+    hal_forwarding_mode_t forwarding_mode;
+    hal_feature_profile_t feature_profile;
+    port_admin_state_t admin_state; // default port admin state
+} device_cfg_t;
+
 typedef struct hal_cfg_s {
     void                     *server_builder;    // grpc server builder
     platform_type_t          platform;
@@ -63,6 +75,7 @@ typedef struct hal_cfg_s {
     sdk::lib::catalog        *catalog;
     mpartition               *mempartition;
     std::string              default_config_dir;        // TODO: remove this !!
+    device_cfg_t             device_cfg;                // startup device config
     uint16_t                 num_control_cores;
     uint16_t                 num_data_cores;
     uint64_t                 control_cores_mask;

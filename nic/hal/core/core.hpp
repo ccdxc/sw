@@ -13,6 +13,9 @@
 
 namespace hal {
 
+#define SYSCONFIG_PATH "/sysconfig/config0/"
+#define DEVICE_CFG     "device.conf"
+
 hal_ret_t hal_parse_cfg(const char *cfgfile, hal_cfg_t *hal_cfg);
 hal_ret_t hal_sdk_init(void);
 hal_ret_t hal_cores_validate(uint64_t sys_core,
@@ -38,6 +41,7 @@ sdk::lib::thread *hal_get_thread(uint32_t thread_id);
 hal_ret_t hal_thread_add(sdk::lib::thread *hal_thread);
 hal_ret_t hal_wait(void);
 hal_ret_t hal_thread_destroy(void);
+hal_ret_t hal_device_cfg_init(device_cfg_t *device_cfg);
 
 //------------------------------------------------------------------------------
 // system or infra timers

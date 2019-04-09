@@ -274,7 +274,7 @@ func (hd *Datapath) ListInterfaces() ([]*netproto.Interface, []*netproto.Port, e
 			Spec: netproto.PortSpec{
 				Speed:        speed,
 				BreakoutMode: "BREAKOUT_NONE",
-				AdminStatus:  "UP",
+				AdminStatus:  port.Spec.AdminState.String(),
 				Type:         portType,
 				Lanes:        port.Spec.NumLanes,
 			},

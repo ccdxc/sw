@@ -197,7 +197,6 @@ hal_init (hal_cfg_t *hal_cfg)
         HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
     }
 
-
     // parse and initialize the catalog
     catalog = sdk::lib::catalog::factory(hal_cfg->cfg_path, hal_cfg->catalog_file, hal_cfg->platform);
     SDK_ASSERT_TRACE_RETURN(catalog != NULL, HAL_RET_ERR, "Catalog file error");
@@ -214,6 +213,9 @@ hal_init (hal_cfg_t *hal_cfg)
 
     // initialize random number generator
     srand(time(NULL));
+
+    // read the startup device config
+    hal_device_cfg_init(&hal_cfg->device_cfg);
 
     // instantiate delphi thread
     hal_delphi_thread_init(hal_cfg);

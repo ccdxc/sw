@@ -36,6 +36,7 @@ typedef struct linkmgr_cfg_s {
     xcvr_event_notify_t xcvr_event_cb;
     port_log_fn_t       port_log_fn;
     bool                process_mode;
+    port_admin_state_t  admin_state; // default port admin state
 } __PACK__ linkmgr_cfg_t;
 extern linkmgr_cfg_t g_linkmgr_cfg;
 
@@ -83,6 +84,7 @@ sdk_ret_t port_update_xcvr_event(
 void port_set_leds(uint32_t port_num, port_event_t event);
 sdk_ret_t start_aacs_server(int port);
 void stop_aacs_server(void);
+port_admin_state_t port_default_admin_state(void);
 
 static inline void
 port_args_init (port_args_t *args)

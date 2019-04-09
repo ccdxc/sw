@@ -581,6 +581,7 @@ hal_linkmgr_init (hal_cfg_t *hal_cfg, port_event_notify_t port_event_cb)
         sdk_cfg.cfg_path       = hal_cfg->cfg_path.c_str();
         sdk_cfg.catalog        = hal_cfg->catalog;
         sdk_cfg.server_builder = hal_cfg->server_builder;
+        sdk_cfg.admin_state    = hal_cfg->device_cfg.admin_state;
         sdk_cfg.port_event_cb  = port_event_cb;
 
         ret = linkmgr::linkmgr_init(&sdk_cfg);
@@ -595,6 +596,70 @@ hal_linkmgr_init (hal_cfg_t *hal_cfg, port_event_notify_t port_event_cb)
 #endif
 
     return ret;
+}
+
+static void
+hal_device_cfg_init_defaults (device_cfg_t *device_cfg)
+{
+    device_cfg->forwarding_mode = HAL_FORWARDING_MODE_CLASSIC;
+    device_cfg->feature_profile = HAL_FEATURE_PROFILE_CLASSIC_DEFAULT;
+    device_cfg->admin_state = port_admin_state_t::PORT_ADMIN_STATE_UP;
+}
+
+static inline hal_forwarding_mode_t
+parse_forwarding_mode (std::string forwarding_mode)
+{
+    if (forwarding_mode == "classic") {
+        return HAL_FORWARDING_MODE_CLASSIC;
+    } else if (forwarding_mode == "smart-switch") {
+        return HAL_FORWARDING_MODE_SMART_SWITCH;
+    } else if (forwarding_mode == "smart-host-pinned") {
+        return HAL_FORWARDING_MODE_SMART_HOST_PINNED;
+    }
+    return HAL_FORWARDING_MODE_CLASSIC;
+}
+
+static inline hal_feature_profile_t
+parse_feature_profile (std::string feature_profile)
+{
+    if (feature_profile == "classic-default") {
+        return HAL_FEATURE_PROFILE_CLASSIC_DEFAULT;
+    } else if (feature_profile == "classic-eth-dev-scale") {
+        return HAL_FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE;
+    }
+    return HAL_FEATURE_PROFILE_CLASSIC_DEFAULT;
+}
+
+//------------------------------------------------------------------------------
+// initialize port control operations
+//------------------------------------------------------------------------------
+hal_ret_t
+hal_device_cfg_init (device_cfg_t *device_cfg)
+{
+    ptree prop_tree;
+    std::string forwarding_mode;
+    std::string feature_profile;
+    std::string port_admin_state;
+    std::string device_cfg_fname =
+                        std::string(SYSCONFIG_PATH) + std::string(DEVICE_CFG);
+
+    hal_device_cfg_init_defaults(device_cfg);
+    if (access(device_cfg_fname.c_str(), R_OK) < 0) {
+        HAL_TRACE_DEBUG("Device config: {} not found",
+                        device_cfg_fname.c_str());
+        return HAL_RET_OK;
+    }
+    boost::property_tree::read_json(device_cfg_fname, prop_tree);
+    forwarding_mode = prop_tree.get<std::string>("forwarding-mode", "classic");
+    device_cfg->forwarding_mode = parse_forwarding_mode(forwarding_mode);
+    feature_profile = prop_tree.get<std::string>(
+                                    "feature-profile", "classic-default");
+    device_cfg->feature_profile = parse_feature_profile(feature_profile);
+    port_admin_state = prop_tree.get<std::string>("port-admin-state", "enable");
+    if (port_admin_state == "disable") {
+        device_cfg->admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
+    }
+    return HAL_RET_OK;
 }
 
 }    // namespace hal

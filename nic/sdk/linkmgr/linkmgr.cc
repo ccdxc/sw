@@ -1338,5 +1338,11 @@ stop_aacs_server (void)
     aacs_server_port_num = -1;
 }
 
+port_admin_state_t
+port_default_admin_state (void)
+{
+    return g_linkmgr_cfg.admin_state;
+}
+
 }    // namespace linkmgr
 }    // namespace sdk
