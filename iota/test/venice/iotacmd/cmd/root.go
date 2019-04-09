@@ -127,7 +127,7 @@ func initialize() {
 	if err != nil || setupModel == nil {
 		errorExit("failed to setup model", err)
 	}
-	err = setupModel.SetupDefaultConfig()
+	err = setupModel.SetupDefaultConfig(false, false)
 	if err != nil {
 		errorExit("error setting up default config", err)
 	}

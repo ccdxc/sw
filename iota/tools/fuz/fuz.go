@@ -20,6 +20,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pensando/sw/iota/tools/fuz/fuze"
 	"github.com/pkg/errors"
 )
 
@@ -27,40 +28,6 @@ const (
 	helloString = "HELLO FUZ\n"
 	logfie      = "fuz.log"
 )
-
-type connection struct {
-	ServerIPPort string `json:"ServerIPPort"`
-	Proto        string `json:"proto"`
-}
-
-type connectionData struct {
-	ServerIPPort string        `json:"ServerIPPort"`
-	ClientIPPort string        `json:"ClientIPPort"`
-	Proto        string        `json:"proto"`
-	ErrorMsg     string        `json:"error"`
-	DataSent     int           `json:"dataSent"`
-	DataReceived int           `json:"dataReceived"`
-	ConnDurtion  time.Duration `json:"duration"`
-	IsServer     bool          `json:"isserver"`
-	Success      int32         `json:"success"`
-	Failed       int32         `json:"failed"`
-}
-
-type fuzData struct {
-	ErrorMsg           string            `json:"error"`
-	SuccessConnections int32             `json:"successConnections"`
-	FailedConnections  int32             `json:"failedConnections"`
-	Connections        []*connectionData `json:"connections"`
-}
-
-type fuzInput struct {
-	Connection []*connection `json:"connections"`
-}
-
-func newConnData(serverIP, proto string, timeDuration time.Duration, isserver bool) *connectionData {
-	return &connectionData{ServerIPPort: serverIP, Proto: proto, ConnDurtion: timeDuration,
-		IsServer: isserver}
-}
 
 var jsonOut bool
 
@@ -80,7 +47,7 @@ func main() {
 	var port int
 	var cps int
 	var jsonInput string
-	var input fuzInput
+	var input fuze.Input
 
 	f, err := os.Create(logfie)
 	if err != nil {
@@ -103,7 +70,7 @@ func main() {
 
 	flag.Parse()
 
-	connDatas := []*connectionData{}
+	connDatas := []*fuze.ConnectionData{}
 	duration := (int)(timeDuration.Seconds())
 	if jsonInput != "" {
 
@@ -117,10 +84,12 @@ func main() {
 		defer jsonFile.Close()
 		// read our opened xmlFile as a byte array.
 		byteValue, _ := ioutil.ReadAll(jsonFile)
-		json.Unmarshal(byteValue, &input)
+		if err := json.Unmarshal(byteValue, &input); err != nil {
+			printMsg(err.Error())
+		}
 
-		for _, conn := range input.Connection {
-			connDatas = append(connDatas, newConnData(conn.ServerIPPort, conn.Proto, timeDuration, !talk))
+		for _, conn := range input.Connections {
+			connDatas = append(connDatas, fuze.NewConnData(conn.ServerIPPort, conn.Proto, timeDuration, !talk))
 		}
 
 	} else {
@@ -158,7 +127,7 @@ func main() {
 		printMsg(fmt.Sprintf("IP Ports: %+v\n", ipPorts))
 
 		for _, ipport := range ipPorts {
-			connDatas = append(connDatas, newConnData(ipport, proto, timeDuration, !talk))
+			connDatas = append(connDatas, fuze.NewConnData(ipport, proto, timeDuration, !talk))
 		}
 
 	}
@@ -174,7 +143,7 @@ func main() {
 
 	exitFunc := func() {
 		errMsg := ""
-		fuzD := &fuzData{Connections: connDatas, ErrorMsg: errMsg}
+		fuzD := &fuze.Output{Connections: connDatas, ErrorMsg: errMsg}
 		for _, connData := range connDatas {
 			if connData.ErrorMsg != "" {
 				fuzD.ErrorMsg = connData.ErrorMsg
@@ -261,10 +230,13 @@ func worker(id int, jobs <-chan net.Conn) {
 	}
 }
 
-func runServer(proto string, connDatas []*connectionData,
+func runServer(proto string, connDatas []*fuze.ConnectionData,
 	done chan<- error) {
 	waitCh := make(chan error)
 	workers := runtime.GOMAXPROCS(0) - 2
+	if workers <= 0 {
+		workers = 1
+	}
 	jobs := make(chan net.Conn, 16384)
 	for w := 1; w <= workers; w++ {
 		go worker(w, jobs)
@@ -309,7 +281,7 @@ func runServer(proto string, connDatas []*connectionData,
 
 var mutex sync.Mutex
 
-func runClient(proto string, connDatas []*connectionData, conns, rate, cps, duration int,
+func runClient(proto string, connDatas []*fuze.ConnectionData, conns, rate, cps, duration int,
 	err chan<- error) {
 	waitCh := make(chan error, len(connDatas)*conns)
 	randomBytes := RandomBytes(rate)
@@ -325,7 +297,7 @@ func runClient(proto string, connDatas []*connectionData, conns, rate, cps, dura
 				time.Sleep(time.Second)
 				numConnsSpawned = 0
 			}
-			go func(connData *connectionData) {
+			go func(connData *fuze.ConnectionData) {
 				start := time.Now()
 				var msg error
 				bytesReceived := 0

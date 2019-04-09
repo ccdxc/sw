@@ -63,8 +63,10 @@ func (tr *Trigger) Run() ([]*iota.Command, error) {
 	// Trigger App
 	topoClient := iota.NewTopologyApiClient(tr.iotaClient.Client)
 	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
-	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		return nil, fmt.Errorf("Trigger failed. API Status: %+v | Err: %v", triggerResp.ApiResponse, err)
+	if err != nil {
+		return nil, fmt.Errorf("Trigger failed. API Status: err: %v", err)
+	} else if triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return nil, fmt.Errorf("Trigger failed. API Status: resp: %+v", triggerResp.ApiResponse)
 	}
 
 	log.Debugf("Got Trigger resp: %+v", triggerResp)
@@ -84,8 +86,10 @@ func (tr *Trigger) RunParallel() ([]*iota.Command, error) {
 	// Trigger App
 	topoClient := iota.NewTopologyApiClient(tr.iotaClient.Client)
 	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
-	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		return nil, fmt.Errorf("Trigger failed. API Status: %+v | Err: %v", triggerResp.ApiResponse, err)
+	if err != nil {
+		return nil, fmt.Errorf("Trigger failed. API Status: err: %v", err)
+	} else if triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		return nil, fmt.Errorf("Trigger failed. API Status: resp: %+v", triggerResp.ApiResponse)
 	}
 
 	log.Debugf("Got Trigger resp: %+v", triggerResp)
@@ -239,6 +243,42 @@ func (tb *TestBed) CopyFromVenice(nodeName string, files []string, destDir strin
 	} else if copyResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		log.Errorf("Copy failed: Resp: %v", copyResp)
 		return fmt.Errorf("Copy files failed. API Status: %+v ", copyResp.ApiResponse)
+	}
+
+	log.Debugf("Got Copy resp: %+v", copyResp)
+
+	return nil
+}
+
+// CopyFromWorkload copies files from naples
+func (tb *TestBed) CopyFromWorkload(nodeName, workloadName string, files []string, destDir string) error {
+	return tb.CopyToFromWorkload(iota.CopyDirection_DIR_OUT, nodeName, workloadName, files, destDir)
+}
+
+// CopyToWorkload copies files from naples
+func (tb *TestBed) CopyToWorkload(nodeName, workloadName string, files []string, destDir string) error {
+	return tb.CopyToFromWorkload(iota.CopyDirection_DIR_IN, nodeName, workloadName, files, destDir)
+}
+
+// this is a common routine to copy in/out from workload
+func (tb *TestBed) CopyToFromWorkload(direction iota.CopyDirection, nodeName, workloadName string, files []string, destDir string) error {
+	// copy message
+	copyMsg := iota.EntityCopyMsg{
+		Direction:   direction,
+		NodeName:    nodeName,
+		EntityName:  workloadName,
+		Files:       files,
+		DestDir:     destDir,
+		ApiResponse: &iota.IotaAPIResponse{},
+	}
+
+	// send it to iota
+	topoClient := iota.NewTopologyApiClient(tb.iotaClient.Client)
+	copyResp, err := topoClient.EntityCopy(context.Background(), &copyMsg)
+	if err != nil || copyResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
+		err := fmt.Errorf("Copy %v failed: %v, resp %+v", direction, err, copyResp)
+		log.Errorf("%s", err)
+		return err
 	}
 
 	log.Debugf("Got Copy resp: %+v", copyResp)

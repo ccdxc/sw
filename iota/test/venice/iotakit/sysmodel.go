@@ -164,7 +164,7 @@ func (sm *SysModel) CleanupAllConfig() error {
 }
 
 // SetupDefaultConfig sets up a default config for the system
-func (sm *SysModel) SetupDefaultConfig(scale bool) error {
+func (sm *SysModel) SetupDefaultConfig(scale, scaleData bool) error {
 	var wc WorkloadCollection
 
 	log.Infof("Setting up default config...")
@@ -251,6 +251,7 @@ func (sm *SysModel) SetupDefaultConfig(scale bool) error {
 		}
 
 		if !allFound {
+			log.Infof("not all workloads found")
 			getResp.WorkloadOp = iota.Op_DELETE
 			delResp, err := topoClient.DeleteWorkloads(context.Background(), getResp)
 			log.Debugf("Got get workload resp: %+v, err: %v", delResp, err)

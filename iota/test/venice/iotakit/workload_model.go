@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"strings"
 
 	"github.com/pensando/sw/api"
@@ -255,6 +256,14 @@ func (wc *WorkloadCollection) Bringup() error {
 			if gwrk.WorkloadName == wrk.iotaWorkload.WorkloadName {
 				wrk.iotaWorkload.MgmtIp = gwrk.MgmtIp
 			}
+		}
+	}
+
+	// copy over some binaries after workloads are brought up
+	fuzBinPath := os.Getenv("GOPATH") + "/src/github.com/pensando/sw/iota/bin/fuz"
+	for _, wrk := range wc.workloads {
+		if err := sm.tb.CopyToWorkload(wrk.iotaWorkload.NodeName, wrk.iotaWorkload.WorkloadName, []string{fuzBinPath}, "."); err != nil {
+			log.Errorf("error copying fuz binary to workload: %s", err)
 		}
 	}
 

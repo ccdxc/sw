@@ -18,6 +18,8 @@ import (
 var testbedParams = flag.String("testbed", "/warmd.json", "testbed params file (i.e warmd.json)")
 var topoName = flag.String("topo", "1Venice_1Naples", "topology name")
 var debugFlag = flag.Bool("debug", false, "set log level to debug")
+var scaleFlag = flag.Bool("scale", false, "enable scale configuration")
+var scaleDataFlag = flag.Bool("scale-data", false, "enable datapath scale")
 
 // TestSuite : fwlog test suite
 type TestSuite struct {
@@ -59,7 +61,7 @@ var _ = BeforeSuite(func() {
 
 	model.NewSGPolicy("test-policy").Delete()
 
-	err = model.SetupDefaultConfig(false)
+	err = model.SetupDefaultConfig(*scaleFlag, *scaleDataFlag)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// collect logs at the end of setup, in case setup fails

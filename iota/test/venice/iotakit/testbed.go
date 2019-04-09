@@ -1042,7 +1042,7 @@ func (tb *TestBed) Cleanup() error {
 }
 
 // InitSuite initializes test suite
-func InitSuite(topoName, paramsFile string, scale bool) (*TestBed, *SysModel, error) {
+func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*TestBed, *SysModel, error) {
 	// create testbed
 	tb, err := NewTestBed(topoName, paramsFile)
 	if err != nil {
@@ -1071,7 +1071,7 @@ func InitSuite(topoName, paramsFile string, scale bool) (*TestBed, *SysModel, er
 	}
 
 	// setup default config for the sysmodel
-	err = model.SetupDefaultConfig(scale)
+	err = model.SetupDefaultConfig(scale, scaleData)
 	if err != nil {
 		tb.CollectLogs()
 		return nil, nil, err
