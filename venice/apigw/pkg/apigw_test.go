@@ -654,7 +654,7 @@ func TestAuthzFailures(t *testing.T) {
 				retErr: errors.New("error in pre authz hook"),
 			},
 			authorizer: authzmgr.NewAlwaysAllowAuthorizer(),
-			err:        apierrors.ToGrpcError(errors.New("error in pre authz hook"), []string{"Pre authorization processing failed"}, int32(codes.InvalidArgument), "", nil),
+			err:        apierrors.ToGrpcError("Pre authorization processing failed", []string{"error in pre authz hook"}, int32(codes.InvalidArgument), "", nil),
 		},
 		{
 			name: "no operations in returns context",
@@ -662,7 +662,7 @@ func TestAuthzFailures(t *testing.T) {
 				retAuthzCtx: context.TODO(),
 			},
 			authorizer: authzmgr.NewAlwaysAllowAuthorizer(),
-			err:        apierrors.ToGrpcError(errors.New("not authorized"), []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil),
+			err:        apierrors.ToGrpcError("Authorization failed", []string{"not authorized"}, int32(codes.PermissionDenied), "", nil),
 		},
 		{
 			name: "operation not authorized",
@@ -670,7 +670,7 @@ func TestAuthzFailures(t *testing.T) {
 				retAuthzCtx: NewContextWithOperations(ctx, nil),
 			},
 			authorizer: authzmgr.NewAlwaysDenyAuthorizer(),
-			err:        apierrors.ToGrpcError(errors.New("not authorized"), []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil),
+			err:        apierrors.ToGrpcError("Authorization failed", []string{"not authorized"}, int32(codes.PermissionDenied), "", nil),
 		},
 	}
 	for _, test := range tests {
@@ -1082,7 +1082,7 @@ func TestAudit(t *testing.T) {
 			level:    audit.Level_Response,
 			stage:    audit.Stage_RequestProcessing,
 			outcome:  audit.Outcome_Failure,
-			apierr:   apierrors.ToGrpcError(errors.New("duplicate policy"), []string{"Operation failed to complete"}, int32(codes.Aborted), "", nil),
+			apierr:   apierrors.ToGrpcError("duplicate policy", []string{"Operation failed to complete"}, int32(codes.Aborted), "", nil),
 			eventStr: "duplicate policy",
 			err:      nil,
 		},

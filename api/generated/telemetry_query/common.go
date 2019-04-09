@@ -126,13 +126,13 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 func errorDecoder(r *http.Response) error {
 	var w api.Status
 	if err := json.NewDecoder(r.Body).Decode(&w); err != nil {
-		return apierrors.ToGrpcError(fmt.Errorf("Status:(%v) Reason:(%s)", r.StatusCode, r.Status), []string{err.Error()}, int32(codes.Unknown), "", nil)
+		return apierrors.ToGrpcError(fmt.Sprintf("Status:(%v) Reason:(%s)", r.StatusCode, r.Status), []string{err.Error()}, int32(codes.Unknown), "", nil)
 	}
 	uri := ""
 	if w.Ref != nil {
 		uri = w.Ref.URI
 	}
-	return apierrors.ToGrpcError(fmt.Errorf("Status:(%v) Result:(%v) Reason(%v)", r.StatusCode, w.Result, w.Message), w.Message, w.Code, uri, nil)
+	return apierrors.ToGrpcError(fmt.Sprintf("Status:(%v) Result:(%v) Reason(%v)", r.StatusCode, w.Result, w.Message), w.Message, w.Code, uri, nil)
 }
 
 type errorWrapper struct {

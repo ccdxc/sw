@@ -2,7 +2,6 @@ package query
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -15,7 +14,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/telemetry_query"
-	validators "github.com/pensando/sw/venice/utils/apigen/validators"
+	"github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -45,7 +44,7 @@ func (q *Server) validateMetricsQueryList(ql *telemetry_query.MetricsQueryList) 
 	}
 
 	if len(errorStrings) != 0 {
-		return apierrors.ToGrpcError(errors.New("Validation Failed"), errorStrings, int32(codes.InvalidArgument), "", nil)
+		return apierrors.ToGrpcError("Validation Failed", errorStrings, int32(codes.InvalidArgument), "", nil)
 	}
 	return nil
 }

@@ -3,14 +3,15 @@ package requirement
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/davecgh/go-spew/spew"
-
-	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/api/graph"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 type referenceReq struct {
@@ -67,13 +68,46 @@ func (r *referenceReq) getReferersFromOverlay(ctx context.Context, key string) (
 	stat := r.cache.Stat(ctx, flat)
 	objs = ""
 	count = 0
-	for _, v := range stat {
+	for i, v := range stat {
 		if v.Valid {
-			if count < 5 {
+			if !v.InOverlay {
+				if count < 5 {
+					objs = objs + "[" + v.Key + "]"
+				}
 				count++
-				objs = objs + "[" + v.Key + "]"
 			} else {
-				break
+				key1 := flat[i]
+				sch := runtime.GetDefaultScheme()
+				into, err := sch.New(v.TypeMeta.Kind)
+				if err != nil {
+					panic(fmt.Sprintf("could not get new obj for [%+v]", v.TypeMeta))
+				}
+				err = r.cache.Get(ctx, key1, into)
+				if err != nil {
+					panic(fmt.Sprintf("could not get obj for [%+v](%s)", v.TypeMeta, err))
+				}
+				m := reflect.ValueOf(into).MethodByName("References")
+				if m.IsValid() {
+					objm, err := runtime.GetObjectMeta(into)
+					if err != nil {
+						panic(fmt.Sprintf("could not get objectmeta. Unexpected (%s)", err))
+					}
+					refs1 := make(map[string]apiintf.ReferenceObj)
+					args := []reflect.Value{reflect.ValueOf(objm.Tenant), reflect.ValueOf(""), reflect.ValueOf(refs1)}
+					m.Call(args)
+					for _, v1 := range refs1 {
+						if v1.RefType == apiintf.NamedReference {
+							for _, v2 := range v1.Refs {
+								if v2 == key {
+									if count < 5 {
+										objs = objs + "[" + v.Key + "]"
+									}
+									count++
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -120,7 +154,7 @@ func (r *referenceReq) Apply(ctx context.Context, txn kvstore.Txn, cache apiintf
 	case apiintf.DeleteOper:
 		if !r.store.IsIsolated(r.key) {
 			// it is possible that the referrers are being deleted in the overlay. Check that the object will be
-			//  isplated once the overlay is committed
+			//  isolated once the overlay is committed
 			count, objs := r.getReferersFromOverlay(ctx, r.key)
 			if count > 0 {
 				return fmt.Errorf("Object has references from other objects[ %s]", objs)

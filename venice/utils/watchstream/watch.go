@@ -327,13 +327,13 @@ func (w *watchEventQ) Dequeue(ctx context.Context, fromver uint64, cb apiintf.Ev
 		sendCh := make(chan error)
 		obj := e.Value.(*watchEvent)
 		if obj.version != 0 && obj.version < startVer {
-			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "SendDrop", "type", obj.evType, "path", w.path, "startVer", startVer, "ver", obj.version, "peer", peer)
+			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "SendDrop", "type", obj.evType, "path", w.path, "startVer", startVer, "ResVersion", obj.version, "peer", peer)
 			return
 		}
 
 		histogram.Record("watch.DequeueLatency", time.Since(obj.enqts))
 		go func() {
-			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path, "peer", peer)
+			w.log.InfoLog("oper", "WatchEventQDequeue", "msg", "Send", "type", obj.evType, "path", w.path, "ResVersion", obj.version, "peer", peer)
 			cb(obj.evType, obj.item, obj.prev)
 			close(sendCh)
 		}()

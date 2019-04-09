@@ -69,6 +69,10 @@ func (m *Status) Clone(into interface{}) (interface{}, error) {
 	return out, nil
 }
 
+func (m *Status) Error() string {
+	return fmt.Sprintf("Result: %s Message: %s Code: %d Ref: %+v", m.Result.Str, m.Message, m.Code, m.Ref)
+}
+
 // Defaults applies defaults to the object
 func (m *ListWatchOptions) Defaults(ver string) bool {
 	if m.SortOrder != ListWatchOptions_None.String() {

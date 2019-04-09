@@ -76,7 +76,7 @@ func (e *errorStatus) makeError(i interface{}, msg []string, uri string) error {
 			obj = nil
 		}
 	}
-	return apierrors.ToGrpcError(errors.New(e.err), msg, int32(e.code), uri, obj)
+	return apierrors.ToGrpcError(e.err, msg, int32(e.code), uri, obj)
 }
 
 var (

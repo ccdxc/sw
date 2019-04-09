@@ -1124,7 +1124,8 @@ func (c *overlay) verify(ctx context.Context, server apiserver.Server) (apiintf.
 			}
 			_, err := m.HandleInvocation(updCtx, obj)
 			if err != nil {
-				ret.Failed = append(ret.Failed, apiintf.FailedVerification{Key: apiintf.OverlayKey{Oper: string(v.oper), URI: v.URI}, Errors: []error{err}})
+				apiStatus := apierrors.FromError(err)
+				ret.Failed = append(ret.Failed, apiintf.FailedVerification{Key: apiintf.OverlayKey{Oper: string(v.oper), URI: v.URI}, Errors: []error{&apiStatus}})
 			}
 		}
 	}
@@ -1311,7 +1312,12 @@ func (c *overlay) Commit(ctx context.Context, action []apiintf.OverlayKey) error
 	ret, verVer := c.verify(ctx, c.server)
 	log.Infof("Calling Commit on overlay [%v/%v][%p][%p]", c.tenant, c.id, c, c.reqs)
 	if len(ret.Failed) != 0 {
-		return errors.New("Buffer verification failed")
+		retErr := &api.Status{}
+		retErr.Result.Str = "Buffer verification failed"
+		for _, e := range ret.Failed {
+			retErr.Message = append(retErr.Message, fmt.Sprintf("Key: %v Error: %v", e.Key, e.Errors))
+		}
+		return retErr
 	}
 	// If this is for a subset of items build a commit buffer with subset of overlay and
 	//  related objects.  XXX-TBD(sanjayt): Not supported in this PR.
@@ -1363,8 +1369,10 @@ func (c *overlay) Stat(ctx context.Context, keys []string) []apiintf.ObjectStat 
 		if ovObj != nil {
 			if ret[i].Valid && ovObj.oper == operDelete {
 				ret[i].Valid = false
+				ret[i].InOverlay = true
 			} else if !ret[i].Valid && ovObj.oper == operCreate || ovObj.oper == operUpdate {
 				ret[i].Valid = true
+				ret[i].InOverlay = true
 			}
 		}
 	}

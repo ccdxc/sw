@@ -1,6 +1,8 @@
 package apierrors
 
 import (
+	"fmt"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -39,7 +41,7 @@ func FromError(err error) api.Status {
 // ToGrpcError generates an error to be used as return for gRPC errors on the server. This utility
 //  function encodes an api.Status message to a grpc error which can then be extracted by the
 //  grpc client
-func ToGrpcError(err error, msg []string, code int32, uri string, obj runtime.Object) error {
+func ToGrpcError(in interface{}, msg []string, code int32, uri string, obj runtime.Object) error {
 	ref := &api.ObjectRef{}
 	if obj != nil {
 		ref.Kind = obj.GetObjectKind()
@@ -54,15 +56,15 @@ func ToGrpcError(err error, msg []string, code int32, uri string, obj runtime.Ob
 	apistatus := api.Status{
 		TypeMeta: api.TypeMeta{Kind: "Status"},
 		Code:     code,
-		Result:   api.StatusResult{Str: err.Error()},
+		Result:   api.StatusResult{Str: fmt.Sprintf("%v", in)},
 		Message:  msg,
 		Ref:      ref,
 	}
-	grpcstatus := status.New(codes.Code(code), err.Error())
+	grpcstatus := status.New(codes.Code(code), fmt.Sprintf("%v", in))
 	grpcstatus, e := grpcstatus.WithDetails(&apistatus)
 	if e != nil {
 		log.Errorf("failed to create grpcStatus (%s)", e)
-		return err
+		return fmt.Errorf("%v", in)
 	}
 	return grpcstatus.Err()
 }

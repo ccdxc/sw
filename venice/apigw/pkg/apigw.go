@@ -597,7 +597,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 		skipAuth = skipAuth || skip
 		if err != nil {
 			a.logger.ErrorLog("method", "HandleRequest", "msg", "PreAuthNHook failed", "error", err)
-			return nil, apierrors.ToGrpcError(err, []string{"Authentication failed"}, int32(codes.Unauthenticated), "", nil)
+			return nil, apierrors.ToGrpcError("Authentication failed", []string{err.Error()}, int32(codes.Unauthenticated), "", nil)
 		}
 	}
 
@@ -614,7 +614,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 		var ok bool
 		user, ok = a.isRequestAuthenticated(nctx)
 		if !ok {
-			return nil, apierrors.ToGrpcError(errors.New("Not authenticated"), []string{"Authentication failed"}, int32(codes.Unauthenticated), "", nil)
+			return nil, apierrors.ToGrpcError("Authentication failed", []string{"Not authenticated"}, int32(codes.Unauthenticated), "", nil)
 		}
 		// add user to context
 		nctx = NewContextWithUser(nctx, user)
@@ -624,19 +624,19 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 				nctx, i, err = h(nctx, i)
 				if err != nil {
 					a.logger.ErrorLog("method", "HandleRequest", "msg", "PreAuthZHook failed", "user", user.Name, "tenant", user.Tenant, "error", err)
-					return nil, apierrors.ToGrpcError(err, []string{"Pre authorization processing failed"}, int32(codes.InvalidArgument), "", nil)
+					return nil, apierrors.ToGrpcError("Pre authorization processing failed", []string{err.Error()}, int32(codes.InvalidArgument), "", nil)
 				}
 			}
 			// check authorization
 			operations, ok = OperationsFromContext(nctx)
 			if !ok {
-				return nil, apierrors.ToGrpcError(errors.New("not authorized"), []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil)
+				return nil, apierrors.ToGrpcError("Authorization failed", []string{"not authorized"}, int32(codes.PermissionDenied), "", nil)
 			}
 			a.logger.DebugLog("method", "HandleRequest", "msg", "Authorizing", "operations", login.PrintOperations(operations), "user", user.Name, "tenant", user.Tenant)
 
 			ok, err := a.authzMgr.IsAuthorized(user, operations...)
 			if !ok || err != nil {
-				apierr := apierrors.ToGrpcError(errors.New("not authorized"), []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil)
+				apierr := apierrors.ToGrpcError("Authorization failed", []string{"not authorized"}, int32(codes.PermissionDenied), "", nil)
 				a.audit(auditEventID, user, i, nil, operations, auditapi.Level_RequestResponse, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 				a.logger.ErrorLog("method", "HandleRequest", "msg", "Not authorized", "operations", login.PrintOperations(operations), "user", user.Name, "tenant", user.Tenant)
 				return nil, apierr
@@ -648,7 +648,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 		recorder.Event(auditapi.AuditingFailed,
 			evtsapi.SeverityLevel_CRITICAL,
 			fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) and operations (%s)", auditEventID, user.Tenant, user.Name, login.PrintOperations(operations)), nil)
-		return nil, apierrors.ToGrpcError(err, []string{"Auditing failed, call aborted"}, int32(codes.Unavailable), "", nil)
+		return nil, apierrors.ToGrpcError("Auditing failed, call aborted", []string{err.Error()}, int32(codes.Unavailable), "", nil)
 	}
 	// Call pre Call Hooks
 	skipCall := false
@@ -657,7 +657,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	for _, h := range precall {
 		nctx, i, skip, err = h(nctx, i)
 		if err != nil {
-			apierr := apierrors.ToGrpcError(err, []string{"Pre condition failed"}, int32(codes.Aborted), "", nil)
+			apierr := apierrors.ToGrpcError("Pre condition failed", []string{err.Error()}, int32(codes.Aborted), "", nil)
 			a.audit(auditEventID, user, nil, nil, operations, auditapi.Level_RequestResponse, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 			return nil, apierr
 		}
@@ -675,7 +675,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	for _, h := range postCall {
 		nctx, out, err = h(nctx, out)
 		if err != nil {
-			apierr := apierrors.ToGrpcError(err, []string{"Operation failed to complete"}, int32(codes.Aborted), "", nil)
+			apierr := apierrors.ToGrpcError("Operation failed to complete", []string{err.Error()}, int32(codes.Aborted), "", nil)
 			a.audit(auditEventID, user, nil, out, operations, auditapi.Level_RequestResponse, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 			return nil, apierr
 		}
@@ -686,7 +686,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 		recorder.Event(auditapi.AuditingFailed,
 			evtsapi.SeverityLevel_CRITICAL,
 			fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) and operations (%s)", auditEventID, user.Tenant, user.Name, login.PrintOperations(operations)), nil)
-		return out, apierrors.ToGrpcError(err, []string{"Auditing failed"}, int32(codes.Aborted), "", nil)
+		return out, apierrors.ToGrpcError("Auditing failed", []string{err.Error()}, int32(codes.Aborted), "", nil)
 	}
 	return out, err
 }
@@ -923,7 +923,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			p.apiGw.logger.Debugf("Authorizing Operations (%s) for user (%s|%s)", login.PrintOperations(operations), user.Tenant, user.Name)
 			ok, err := p.apiGw.authzMgr.IsAuthorized(user, operations...)
 			if !ok || err != nil {
-				apierr := apierrors.ToGrpcError(errors.New("not authorized"), []string{"Authorization failed"}, int32(codes.PermissionDenied), "", nil)
+				apierr := apierrors.ToGrpcError("Authorization failed", []string{"not authorized"}, int32(codes.PermissionDenied), "", nil)
 				p.apiGw.audit(auditEventID, user, r, nil, operations, auditapi.Level_Request, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 				p.apiGw.logger.ErrorLog("method", "ServeHTTP", "msg", "not authorized for operations", "user", user.Name, "tenant", user.Tenant, "operation", login.PrintOperations(operations))
 				p.apiGw.HTTPOtherErrorHandler(w, r, "Authorization failed", int(codes.PermissionDenied))
@@ -947,7 +947,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, h := range precall {
 		nctx, _, skip, err = h(nctx, r)
 		if err != nil {
-			apierr := apierrors.ToGrpcError(err, []string{"Pre condition failed"}, int32(codes.Aborted), "", nil)
+			apierr := apierrors.ToGrpcError("Pre condition failed", []string{err.Error()}, int32(codes.Aborted), "", nil)
 			p.apiGw.audit(auditEventID, user, r, nil, operations, auditapi.Level_Request, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 			p.apiGw.logger.ErrorLog("method", "ServeHTTP", "msg", "Precall Hook failed", "error", err)
 			p.apiGw.HTTPOtherErrorHandler(w, r, "Pre condition failed", int(codes.Aborted))
@@ -964,7 +964,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, h := range postCall {
 		nctx, _, err = h(nctx, w)
 		if err != nil {
-			apierr := apierrors.ToGrpcError(err, []string{"Operation failed to complete"}, int32(codes.Aborted), "", nil)
+			apierr := apierrors.ToGrpcError("Operation failed to complete", []string{err.Error()}, int32(codes.Aborted), "", nil)
 			p.apiGw.audit(auditEventID, user, nil, nil, operations, auditapi.Level_Request, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 			p.apiGw.logger.ErrorLog("method", "ServeHTTP", "msg", "Postcall Hook failed", "error", err)
 			p.apiGw.HTTPOtherErrorHandler(w, r, "Operation failed to complete", int(codes.Aborted))

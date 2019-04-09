@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/pensando/sw/api"
@@ -886,7 +887,7 @@ func TestVerify(t *testing.T) {
 	AssertOk(t, err, "expecting verify to pass")
 	Assert(t, len(reslt.Items) == 2, "expecting 2 objects in result, got %d", len(reslt.Items))
 	Assert(t, len(reslt.Failed) == 1, "expecting failures got %d [ %v]", len(reslt.Failed), reslt.Failed)
-	Assert(t, reslt.Failed[0].Errors[0].Error() == "testOBj2 error", "Not expected error")
+	Assert(t, strings.Contains(reslt.Failed[0].Errors[0].Error(), "testOBj2 error"), "Not expected error (%s)", reslt.Failed[0].Errors[0].Error())
 	Assert(t, handleCount == 2, "expecting 2 handle invocations, got %d", handleCount)
 	handleCount = 0
 

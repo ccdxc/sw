@@ -76,7 +76,8 @@ func (h *stagingHooks) updateStatus(ctx context.Context, buf *staging.Buffer) (*
 				},
 			}
 			for j := range status.Failed[it].Errors {
-				item.Errors = append(item.Errors, status.Failed[it].Errors[j].Error())
+				apistatus := apierrors.FromError(status.Failed[it].Errors[j])
+				item.Errors = append(item.Errors, apistatus.Error())
 			}
 			buf.Status.Errors = append(buf.Status.Errors, item)
 		}
@@ -146,7 +147,7 @@ func (h *stagingHooks) commitAction(ctx context.Context, kv kvstore.Interface, t
 	if err != nil {
 		buf.Status.Status = staging.CommitActionStatus_FAILED.String()
 		buf.Status.Reason = err.Error()
-		err = apierrors.ToGrpcError(err, []string{"commit of transaction failed"}, int32(codes.FailedPrecondition), "", nil)
+		err = apierrors.ToGrpcError("commit of transaction failed", []string{err.Error()}, int32(codes.FailedPrecondition), "", nil)
 	} else {
 		buf.Status.Status = staging.CommitActionStatus_SUCCESS.String()
 	}
@@ -179,7 +180,7 @@ func (h *stagingHooks) clearAction(ctx context.Context, kv kvstore.Interface, tx
 	if err != nil {
 		buf.Status.Status = staging.ClearActionStatus_FAILED.String()
 		buf.Status.Reason = err.Error()
-		err = apierrors.ToGrpcError(err, []string{"commit of transaction failed"}, int32(codes.FailedPrecondition), "", nil)
+		err = apierrors.ToGrpcError("commit of transaction failed", []string{err.Error()}, int32(codes.FailedPrecondition), "", nil)
 	} else {
 		buf.Status.Status = staging.ClearActionStatus_SUCCESS.String()
 	}

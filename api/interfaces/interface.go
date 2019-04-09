@@ -37,6 +37,7 @@ type ReferenceType string
 type ObjectStat struct {
 	Key        string
 	Valid      bool
+	InOverlay  bool
 	Revision   uint64
 	LastUpd    time.Time
 	TypeMeta   api.TypeMeta
