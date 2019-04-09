@@ -17,8 +17,10 @@ device_if.h bus_if.h vnode_if.h pci_if.h \
 
 # AdminQ disabled for now till fixed in Naples.
 CFLAGS+= -DHAPS
-# To enable debugging
-#CFLAGS+= -DIONIC_DEBUG -DDIONIC_ENABLE_TRACING -DDIONIC_DEBUG_PKT
+# To enable debugging at init time.
+#CFLAGS+= -DIONIC_DEBUG
+# Enable to print packet level debugging details.
+#CFLAGS+= -DIONIC_ENABLE_TRACING
 
 CFLAGS+= -I${SRCTOP}/sys/ofed/include
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include

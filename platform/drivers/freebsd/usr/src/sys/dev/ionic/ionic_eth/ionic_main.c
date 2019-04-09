@@ -217,7 +217,7 @@ int ionic_port_config(struct ionic *ionic, struct port_config *pc)
         struct ionic_dev *idev = &ionic->idev;
 
         idev = &ionic->idev;
-        IONIC_INFO(ionic->dev, "port_config state=0x%x speed=0x%x mtu=0x%x an_enable=0x%x"
+        IONIC_DEV_INFO(ionic->dev, "port_config state=0x%x speed=0x%x mtu=0x%x an_enable=0x%x"
 		" fec_type=0x%x pause_type=0x%x loopback_mode=0x%x\n",
                 pc->state, pc->speed, pc->mtu, pc->an_enable,
                 pc->fec_type, pc->pause_type, pc->loopback_mode);

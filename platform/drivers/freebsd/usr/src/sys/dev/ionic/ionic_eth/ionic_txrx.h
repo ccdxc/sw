@@ -26,8 +26,6 @@
 #ifndef _IONIC_TXRX_H_
 #define _IONIC_TXRX_H_
 
-#define NON_TSO_MAX_DESC	16
-
 int ionic_setup_rx_intr(struct rxque* rxq);
 int ionic_setup_tx_intr(struct txque* txq);
 int ionic_setup_legacy_intr(struct lif* lif);
@@ -47,7 +45,6 @@ void ionic_lif_rss_teardown(struct lif *lif);
 
 int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len);
 void ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf);
-void ionic_rx_destroy_map(struct rxque *rxq, struct ionic_rx_buf *rxbuf);
 
 /* sysctl variables. */
 extern int ionic_use_adminq;

@@ -43,7 +43,6 @@
 #include <net/ethernet.h>
 #include <sys/buf_ring.h>
 
-
 #include <sys/sockio.h>
 #include <sys/kdb.h>
 
@@ -59,8 +58,6 @@
 #endif
 
 #define QUEUE_NAME_LEN 32
-
- #define IONIC_NET_IP_ALIGN 2
 
 MALLOC_DEFINE(M_IONIC, "ionic", "Pensando IONIC Ethernet adapter");
 static int ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data);
@@ -168,7 +165,8 @@ ionic_is_rx_ipv6(uint8_t pkt_type)
 		(pkt_type == PKT_TYPE_IPV6_UDP));
 }
 
-static void ionic_dump_mbuf(struct mbuf* m)
+static void
+ionic_dump_mbuf(struct mbuf* m)
 {
 	IONIC_INFO("len %u\n", m->m_len);
 
@@ -186,7 +184,9 @@ static void ionic_dump_mbuf(struct mbuf* m)
 		  m->m_data[m->m_len - 2], m->m_data[m->m_len - 1]);
 }
 
-/* Update mbuf with correct checksum etc. */
+/*
+ * Set mbuf checksum flag based on hardware.
+ */
 static void ionic_rx_checksum(struct ifnet *ifp, struct mbuf *m,
 	struct rxq_comp *comp, struct rx_stats *stats)
 {
@@ -307,7 +307,11 @@ ionic_rx_rss(struct mbuf *m, struct rxq_comp *comp, int qnum,
 #endif
 }
 
-void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
+/*
+ * Called for every packet received, forward to stack if its valid packet.
+ */
+void
+ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 	struct rxq_comp *comp, 	struct rxq_desc *desc)
 {
 	struct mbuf *mb, *m = rxbuf->m;
@@ -317,15 +321,6 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 
 	KASSERT(IONIC_RX_LOCK_OWNED(rxq), ("%s is not locked", rxq->name));
 
-	/*
-	 * No-op case.
-	 */
-	if (m == NULL) {
-		stats->mem_err++;
-		return;
-	}
-
-	IONIC_RX_TRACE(rxq, "input called for @%d\n", comp->comp_index);
 	if (comp->status) {
 		IONIC_QUE_INFO(rxq, "RX Status %d\n", comp->status);
 		stats->comp_err++;
@@ -396,35 +391,20 @@ void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 			if ((error = tcp_lro_rx(&rxq->lro, m, 0)) == 0) {
 				rxbuf->m = NULL;
 				return;
-			} else 
-				IONIC_RX_TRACE(rxq, "lro failed, error: %d\n", error);
+			}
 		}
 	}
 
-#ifdef IONIC_DEBUG_PKT
-	IONIC_QUE_INFO(rxq, "len %u\n", m->m_len);
-
-	IONIC_QUE_INFO(rxq,
-		  "data %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx\n",
-		  m->m_data[0], m->m_data[1],
-		  m->m_data[2], m->m_data[3],
-		  m->m_data[4], m->m_data[5],
-		  m->m_data[6], m->m_data[7]);
-	IONIC_QUE_INFO(rxq,
-		  "data end %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx %02hhx\n",
-		  m->m_data[m->m_len - 8], m->m_data[m->m_len - 7],
-		  m->m_data[m->m_len - 6], m->m_data[m->m_len - 5],
-		  m->m_data[m->m_len - 4], m->m_data[m->m_len - 3],
-		  m->m_data[m->m_len - 2], m->m_data[m->m_len - 1]);
-#endif
-
 	/* Send the packet to stack. */
 	rxbuf->m = NULL;
-	IONIC_RX_TRACE(rxq, "input done for @%d\n", comp->comp_index);
 	rxq->lif->netdev->if_input(rxq->lif->netdev, m);
 }
 
-int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
+/*
+ * Allocat mbuf for receive path.
+ */
+int
+ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 {
 	bus_dma_segment_t *pseg, seg[IONIC_RX_MAX_SG_ELEMS + 1];
 	struct ionic_rx_buf *rxbuf;
@@ -457,7 +437,7 @@ int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 	 */
 	m->m_pkthdr.len = m->m_len = size;
 	/*
-	 * Set the size of reste of mbuf for non-SG path.
+	 * Set the size of rest of mbuf for SGL path.
 	 */
 	if (ionic_rx_sg_size) {
 		rxbuf->sg_buf_len = ionic_rx_sg_size;
@@ -474,8 +454,6 @@ int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 			m->m_pkthdr.len += size;
 		}
 	}
-
-	IONIC_RX_TRACE(rxq, "m(%p) len: %d/%d flags: 0x%x\n", m, m->m_len, len, m->m_flags);
 
 	error = bus_dmamap_load_mbuf_sg(rxq->buf_tag, rxbuf->dma_map, m, seg, &nsegs, BUS_DMA_NOWAIT);
 	if (error) {
@@ -510,13 +488,18 @@ int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
 	return (0);
 }
 
-void ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf)
+/*
+ * Free receive path mbuf.
+ */
+void
+ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf)
 {
-	//KASSERT(rxbuf->m == NULL, ("rxbuf already empty"));
 
 	rxq->stats.mbuf_free++;
 	bus_dmamap_sync(rxq->buf_tag, rxbuf->dma_map, BUS_DMASYNC_POSTREAD);
 	bus_dmamap_unload(rxq->buf_tag, rxbuf->dma_map);
+	bus_dmamap_destroy(rxq->buf_tag, rxbuf->dma_map);
+	rxbuf->dma_map = NULL;
 
 	if (rxbuf->m)
 		m_freem(rxbuf->m);
@@ -524,13 +507,11 @@ void ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf)
 	rxbuf->m = NULL;
 }
 
-void ionic_rx_destroy_map(struct rxque *rxq, struct ionic_rx_buf *rxbuf)
-{
-	bus_dmamap_destroy(rxq->buf_tag, rxbuf->dma_map);
-	rxbuf->dma_map = NULL;
-}
-
-static irqreturn_t ionic_rx_isr(int irq, void *data)
+/*
+ * PerQ interrupt handler.
+ */
+static irqreturn_t
+ionic_queue_isr(int irq, void *data)
 {
 	struct rxque* rxq = data;
 	struct txque* txq = rxq->lif->txqs[rxq->index];
@@ -543,16 +524,12 @@ static irqreturn_t ionic_rx_isr(int irq, void *data)
 
 	ionic_intr_mask(&rxq->intr, true);
 	IONIC_RX_LOCK(rxq);
-
 	IONIC_RX_TRACE(rxq, "[%ld]comp index: %d head: %d tail: %d\n",
 		rxstats->isr_count, rxq->comp_index, rxq->head_index, rxq->tail_index);
-	
 	rxstats->isr_count++;
-
 	work_done = ionic_rx_clean(rxq, ionic_rx_clean_limit);
 	IONIC_RX_TRACE(rxq, "processed: %d packets, h/w credits: %d\n",
 		work_done, ionic_intr_credits(&rxq->intr));
-
 	IONIC_RX_UNLOCK(rxq);
 
 	IONIC_TX_LOCK(txq);
@@ -567,9 +544,11 @@ static irqreturn_t ionic_rx_isr(int irq, void *data)
 	return (IRQ_HANDLED);
 }
 
-
+/*
+ * Interrupt task handler.
+ */
 static void
-ionic_rx_task_handler(void *arg, int pendindg)
+ionic_queue_task_handler(void *arg, int pendindg)
 {
 	struct rxque* rxq = arg;
 	struct txque* txq = rxq->lif->txqs[rxq->index];
@@ -599,10 +578,14 @@ ionic_rx_task_handler(void *arg, int pendindg)
 	ionic_intr_return_credits(&rxq->intr, work_done + tx_work, true, true);
 }
 
-int ionic_setup_rx_intr(struct rxque* rxq)
+/*
+ * Setup queue interrupt handler.
+ */
+int
+ionic_setup_rx_intr(struct rxque* rxq)
 {
 	int err, bind_cpu;
-	struct lif* lif = rxq->lif;
+	struct lif *lif = rxq->lif;
 	char namebuf[16];
 #ifdef RSS
 	cpuset_t        cpu_mask;
@@ -613,7 +596,7 @@ int ionic_setup_rx_intr(struct rxque* rxq)
 	bind_cpu = rxq->index;
 #endif
 
-	TASK_INIT(&rxq->task, 0, ionic_rx_task_handler, rxq);
+	TASK_INIT(&rxq->task, 0, ionic_queue_task_handler, rxq);
 	snprintf(namebuf, sizeof(namebuf), "task-%s", rxq->name);
 	rxq->taskq = taskqueue_create(namebuf, M_NOWAIT,
 		taskqueue_thread_enqueue, &rxq->taskq);
@@ -637,7 +620,7 @@ int ionic_setup_rx_intr(struct rxque* rxq)
 	if (ionic_enable_msix == 0)
 		return (0);
 
-	err = request_irq(rxq->intr.vector, ionic_rx_isr, 0, rxq->intr.name, rxq);
+	err = request_irq(rxq->intr.vector, ionic_queue_isr, 0, rxq->intr.name, rxq);
 	if (err) {
 		IONIC_QUE_ERROR(rxq, "request_irq failed, error: %d\n", err);
 		taskqueue_free(rxq->taskq);
@@ -654,7 +637,8 @@ int ionic_setup_rx_intr(struct rxque* rxq)
 }
 
 /**************************** Tx handling **********************/
-static bool ionic_tx_avail(struct txque *txq, int want)
+static bool
+ionic_tx_avail(struct txque *txq, int want)
 {	
 	int avail;
 
@@ -663,9 +647,13 @@ static bool ionic_tx_avail(struct txque *txq, int want)
 	return (avail > want);
 }
 
-static irqreturn_t ionic_legacy_isr(int irq, void *data)
+/*
+ * Legacy interrupt handler for device.
+ */
+static irqreturn_t
+ionic_legacy_isr(int irq, void *data)
 {
-	struct lif* lif = data;
+	struct lif *lif = data;
 	struct ifnet *ifp;
 	struct adminq* adminq;
 	struct notifyq* notifyq;
@@ -744,7 +732,7 @@ static irqreturn_t ionic_legacy_isr(int irq, void *data)
 /*
  * Setup legacy interrupt.
  */
-int ionic_setup_legacy_intr(struct lif* lif)
+int ionic_setup_legacy_intr(struct lif *lif)
 {
 	int error = 0;
 
@@ -837,8 +825,7 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 	int i, error, index, nsegs;
 	bus_dma_segment_t  seg[IONIC_MAX_TSO_SG_ENTRIES + 1]; /* Extra for the first segment. */
 
-	IONIC_TX_TRACE(txq, "Enter head: %d tail: %d\n",
-		 txq->head_index, txq->tail_index);
+	IONIC_TX_TRACE(txq, "Enter head: %d tail: %d\n", txq->head_index, txq->tail_index);
 
 	index = txq->head_index;
 	desc = &txq->cmd_ring[index];
@@ -846,6 +833,7 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 	sg = &txq->sg_ring[index];
 
 	bzero(desc, sizeof(*desc));
+	bzero(sg, sizeof(*sg));
 
 	error = bus_dmamap_load_mbuf_sg(txq->buf_tag, txbuf->dma_map, *m_headp,
 		seg, &nsegs, BUS_DMA_NOWAIT);
@@ -890,8 +878,6 @@ static int ionic_tx_setup(struct txque *txq, struct mbuf **m_headp)
 	txbuf->pa_addr = seg[0].ds_addr;
 	txbuf->m = m;
 	txbuf->timestamp = rdtsc();
-	IONIC_TX_TRACE(txq, "VA: %p DMA addr: 0x%lx nsegs: %d length: 0x%lx\n",
-		m, txbuf->pa_addr, nsegs, seg[0].ds_len);
 
 	if (m->m_pkthdr.csum_flags & CSUM_IP) {
 		desc->l3_csum = 1;
@@ -985,7 +971,8 @@ static void ionic_tx_tso_dump(struct txque *txq, struct mbuf *m,
 }
 #endif
 
-static int ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
+static int
+ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 {
 	struct mbuf *m;
 	uint32_t mss;
@@ -1160,7 +1147,8 @@ static int ionic_tx_tso_setup(struct txque *txq, struct mbuf **m_headp)
 }
 
 
-static int ionic_xmit(struct ifnet* ifp, struct txque* txq, struct mbuf **m)
+static int
+ionic_xmit(struct ifnet* ifp, struct txque* txq, struct mbuf **m)
 {
 	struct tx_stats *stats;
 	int err;
@@ -1252,14 +1240,17 @@ ionic_start_xmit(struct net_device *netdev, struct mbuf *m)
 	return (0);
 }
 
+/*
+ * Provide various statistics to stack.
+ */
 static uint64_t
 ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 {
-	struct lif* lif = if_getsoftc(ifp);
+	struct lif *lif = if_getsoftc(ifp);
 	struct ionic_lif_stats *hwstat;
 
 	hwstat = lif->lif_stats;
-	/* Stats has not initialized. */
+	/* Stats is not initialized. */
 	if (hwstat == NULL) {
 		return 0;
 	}
@@ -1324,7 +1315,7 @@ ionic_get_counter(struct ifnet *ifp, ift_counter cnt)
 static void 
 ionic_tx_qflush(struct ifnet *ifp)
 {
-	struct lif* lif = if_getsoftc(ifp);
+	struct lif *lif = if_getsoftc(ifp);
 	struct txque *txq;
 	struct mbuf *m;
 	unsigned int i;
@@ -1351,7 +1342,7 @@ ionic_if_init(void *arg)
 }
 
 int
-ionic_lif_netdev_alloc(struct lif* lif, int ndescs)
+ionic_lif_netdev_alloc(struct lif *lif, int ndescs)
 {
 	struct ifnet* ifp;
 
@@ -1390,14 +1381,16 @@ ionic_lif_netdev_alloc(struct lif* lif, int ndescs)
 	return (0);
 }
 
+/*
+ * Sysctl to control interrupt coalescing timer.
+ */
 static int
 ionic_intr_coal_handler(SYSCTL_HANDLER_ARGS)
 {
-	struct lif* lif = oidp->oid_arg1;
+	struct lif *lif = oidp->oid_arg1;
 	union identity *ident = lif->ionic->ident;
-	u32 tx_coal, rx_coal, coalesce_usecs;
-	unsigned int i;
-	int error;
+	u32 rx_coal, coalesce_usecs;
+	int i, error;
 
 	coalesce_usecs = lif->rx_coalesce_usecs;
 
@@ -1413,12 +1406,10 @@ ionic_intr_coal_handler(SYSCTL_HANDLER_ARGS)
 		return (EINVAL);
 	}
 
-	tx_coal = coalesce_usecs * ident->dev.intr_coal_mult /
-		  ident->dev.intr_coal_div;
 	rx_coal = coalesce_usecs * ident->dev.intr_coal_mult /
 		  ident->dev.intr_coal_div;
 
-	if (tx_coal > INTR_CTRL_COAL_MAX || rx_coal > INTR_CTRL_COAL_MAX)
+	if (rx_coal > INTR_CTRL_COAL_MAX)
 		return (ERANGE);
 
 	if (coalesce_usecs != lif->rx_coalesce_usecs) {
@@ -1432,10 +1423,13 @@ ionic_intr_coal_handler(SYSCTL_HANDLER_ARGS)
 	return (0);
 }
 
+/*
+ * Dump MAC filter list.
+ */
 static int
 ionic_filter_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	struct lif* lif;
+	struct lif *lif;
 	struct sbuf *sb;
 	struct ionic_mc_addr *mc;
 	struct rx_filter *f;
@@ -1464,10 +1458,13 @@ ionic_filter_sysctl(SYSCTL_HANDLER_ARGS)
         return (err);
 }
 
+/*
+ * Dump perQ intetrrupt status.
+ */
 static int
 ionic_intr_sysctl(SYSCTL_HANDLER_ARGS)
 {
-	struct lif* lif;
+	struct lif *lif;
 	struct rxque *rxq;
 	struct adminq *adminq;
 	struct notifyq* notifyq;
@@ -2003,9 +2000,9 @@ ionic_setup_device_stats(struct lif *lif)
 void
 ionic_setup_sysctls(struct lif *lif)
 {
-    device_t dev = lif->ionic->dev;
-    struct ifnet *ifp = lif->netdev;
-    char buf[16];
+	device_t dev = lif->ionic->dev;
+	struct ifnet *ifp = lif->netdev;
+	char buf[16];
 
 	/* ifnet sysctl tree */
 	sysctl_ctx_init(&lif->sysctl_ctx);
