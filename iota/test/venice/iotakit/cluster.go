@@ -48,6 +48,20 @@ func (tb *TestBed) getVeniceHostNames() []string {
 	return hostNames
 }
 
+// getVeniceIPAddrs returns list of Venic enode IP addresses
+func (tb *TestBed) getVeniceIPAddrs() []string {
+	var veniceIPs []string
+
+	// walk all venice nodes
+	for _, node := range tb.Nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE {
+			veniceIPs = append(veniceIPs, node.NodeMgmtIP)
+		}
+	}
+
+	return veniceIPs
+}
+
 // CheckIotaClusterHealth checks iota cluster health
 func (tb *TestBed) CheckIotaClusterHealth() error {
 	// check cluster health
@@ -91,7 +105,7 @@ func (tb *TestBed) MakeVeniceCluster() error {
 		},
 		Spec: cluster.ClusterSpec{
 			AutoAdmitNICs: true,
-			QuorumNodes:   tb.getVeniceHostNames(),
+			QuorumNodes:   tb.getVeniceIPAddrs(),
 		},
 	}
 
@@ -142,7 +156,7 @@ func (tb *TestBed) SetupVeniceNodes() error {
 				/pensando/iota/bin/kubectl config use-context e2e;
 				/pensando/iota/bin/kubectl config set-credentials admin --client-certificate=/pensando/iota/k8s/apiserver-client/cert.pem --client-key=/pensando/iota/k8s/apiserver-client/key.pem;
 				' > /pensando/iota/setup_kubectl.sh
-				`, node.NodeName), entity, node.NodeName)
+				`, node.NodeMgmtIP), entity, node.NodeName)
 			trig.AddCommand(fmt.Sprintf("chmod +x /pensando/iota/setup_kubectl.sh"), entity, node.NodeName)
 			trig.AddCommand(fmt.Sprintf("/pensando/iota/setup_kubectl.sh"), entity, node.NodeName)
 			trig.AddCommand(fmt.Sprintf(`echo 'docker run --rm --name kibana --network host \
@@ -215,7 +229,7 @@ func (tb *TestBed) CheckVeniceServiceStatus(leaderNode string) (string, error) {
 
 	// check all pods on leader node
 	for _, node := range tb.Nodes {
-		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE && node.NodeName == leaderNode {
+		if node.Personality == iota.PersonalityType_PERSONALITY_VENICE && node.NodeMgmtIP == leaderNode {
 			trig = tb.NewTrigger()
 			entity := node.NodeName + "_venice"
 			trig.AddCommand(fmt.Sprintf("/pensando/iota/bin/kubectl get pods -owide --no-headers"), entity, node.NodeName)

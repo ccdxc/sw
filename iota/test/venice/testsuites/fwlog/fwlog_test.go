@@ -54,380 +54,378 @@ var _ = Describe("fwlog tests", func() {
 		}).Should(Succeed())
 	})
 
-	Describe("on traffic", func() {
-		Context("verify fwlog ", func() {
-			It("should log ICMP allow in fwlog", func() {
-				if ts.tb.HasNaplesSim() {
-					Skip("Disabling on naples sim till shm flag is enabled")
+	Context("verify fwlog on traffic ", func() {
+		It("should log ICMP allow in fwlog", func() {
+			if ts.tb.HasNaplesSim() {
+				Skip("Disabling on naples sim till shm flag is enabled")
+			}
+
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
+
+			Eventually(func() error {
+				return ts.model.Action().PingPairs(workloadPairs)
+			}).Should(Succeed())
+
+			log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
+
+			// ping is done during init, don't set time in query
+			Eventually(func() error {
+				res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+					Queries: []*telemetry_query.FwlogsQuerySpec{
+						{
+							Protocols: []string{"ICMP"},
+							Actions:   []string{telemetry_query.FwlogActions_allow.String()},
+						},
+					},
+				})
+				if err != nil {
+					return err
 				}
 
-				workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-
-				Eventually(func() error {
-					return ts.model.Action().PingPairs(workloadPairs)
-				}).Should(Succeed())
-
-				log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
-
-				// ping is done during init, don't set time in query
-				Eventually(func() error {
-					res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
-						Tenant:    globals.DefaultTenant,
-						Namespace: globals.DefaultNamespace,
-						Queries: []*telemetry_query.FwlogsQuerySpec{
-							{
-								Protocols: []string{"ICMP"},
-								Actions:   []string{telemetry_query.FwlogActions_allow.String()},
-							},
-						},
-					})
-					if err != nil {
-						return err
-					}
-
-					for i, r := range res.Results {
-						log.Infof("[%-3d] %v ", i+1, r.String())
-					}
-
-					for _, ips := range workloadPairs.ListIPAddr() {
-						if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
-							err := fmt.Errorf("did not find %v in fwlog", ips)
-							log.Errorf("%v", err)
-							return err
-						}
-					}
-					return nil
-				}).Should(Succeed())
-			})
-
-			It("should log TCP/8000 allow in fwlog", func() {
-				if ts.tb.HasNaplesSim() {
-					Skip("Disabling on naples sim till shm flag is enabled")
+				for i, r := range res.Results {
+					log.Infof("[%-3d] %v ", i+1, r.String())
 				}
 
-				workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-				stime := &api.Timestamp{}
-				stime.Parse(time.Now().String())
-
-				Eventually(func() error {
-					return ts.model.Action().TCPSession(workloadPairs, 8000)
-				}).Should(Succeed())
-
-				log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
-
-				// check fwlog
-				Eventually(func() error {
-					res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
-						Tenant:    globals.DefaultTenant,
-						Namespace: globals.DefaultNamespace,
-						Queries: []*telemetry_query.FwlogsQuerySpec{
-							{
-								DestPorts: []uint32{8000},
-								Protocols: []string{"TCP"},
-								Actions:   []string{telemetry_query.FwlogActions_allow.String()},
-								StartTime: stime,
-							},
-						},
-					})
-					if err != nil {
+				for _, ips := range workloadPairs.ListIPAddr() {
+					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
+						err := fmt.Errorf("did not find %v in fwlog", ips)
+						log.Errorf("%v", err)
 						return err
 					}
+				}
+				return nil
+			}).Should(Succeed())
+		})
 
-					for i, r := range res.Results {
-						log.Infof("[%-3d] %v ", i+1, r.String())
-					}
+		It("should log TCP/8000 allow in fwlog", func() {
+			if ts.tb.HasNaplesSim() {
+				Skip("Disabling on naples sim till shm flag is enabled")
+			}
 
-					for _, ips := range workloadPairs.ListIPAddr() {
-						if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
-							err := fmt.Errorf("did not find %+v in fwlog", ips)
-							log.Errorf("%v", err)
-							return err
-						}
-					}
-					return nil
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
+			stime := &api.Timestamp{}
+			stime.Parse(time.Now().String())
 
-				}).Should(Succeed())
-			})
+			Eventually(func() error {
+				return ts.model.Action().TCPSession(workloadPairs, 8000)
+			}).Should(Succeed())
 
-			It("should log UDP/9000 allow in fwlog", func() {
-				if ts.tb.HasNaplesSim() {
-					Skip("Disabling on naples sim till shm flag is enabled")
+			log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
+
+			// check fwlog
+			Eventually(func() error {
+				res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+					Queries: []*telemetry_query.FwlogsQuerySpec{
+						{
+							DestPorts: []uint32{8000},
+							Protocols: []string{"TCP"},
+							Actions:   []string{telemetry_query.FwlogActions_allow.String()},
+							StartTime: stime,
+						},
+					},
+				})
+				if err != nil {
+					return err
 				}
 
-				workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-				stime := &api.Timestamp{}
-				stime.Parse(time.Now().String())
-
-				log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
-
-				Eventually(func() error {
-					return ts.model.Action().UDPSession(workloadPairs, 9000)
-				}).Should(Succeed())
-
-				// check fwlog
-				Eventually(func() error {
-					res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
-						Tenant:    globals.DefaultTenant,
-						Namespace: globals.DefaultNamespace,
-						Queries: []*telemetry_query.FwlogsQuerySpec{
-							{
-								DestPorts: []uint32{9000},
-								Protocols: []string{"UDP"},
-								Actions:   []string{telemetry_query.FwlogActions_allow.String()},
-								StartTime: stime,
-							},
-						},
-					})
-					if err != nil {
-						return err
-					}
-
-					for i, r := range res.Results {
-						log.Infof("[%-3d] %v ", i+1, r.String())
-					}
-
-					for _, ips := range workloadPairs.ListIPAddr() {
-						if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
-							err := fmt.Errorf("did not find %+v in fwlog", ips)
-							log.Errorf("%v", err)
-							return err
-						}
-					}
-					return nil
-				}).Should(Succeed())
-			})
-
-			It("should log ICMP deny in fwlog", func() {
-				if ts.tb.HasNaplesSim() {
-					Skip("Disabling on naples sim till shm flag is enabled")
+				for i, r := range res.Results {
+					log.Infof("[%-3d] %v ", i+1, r.String())
 				}
 
-				Expect(ts.model.SGPolicy("default-policy").Delete()).Should(Succeed())
-				stime := &api.Timestamp{}
-				stime.Parse(time.Now().String())
-
-				// deny policy
-				denyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "icmp", "DENY")
-				denyPolicy.AddRule("any", "any", "", "PERMIT")
-				Expect(denyPolicy.Commit()).ShouldNot(HaveOccurred())
-
-				// verify policy was propagated correctly
-				Eventually(func() error {
-					return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("default-policy"))
-				}).Should(Succeed())
-
-				workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-				log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
-
-				Eventually(func() error {
-					return ts.model.Action().PingFails(workloadPairs)
-				}).Should(Succeed())
-
-				// check fwlog
-				Eventually(func() error {
-					res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
-						Tenant:    globals.DefaultTenant,
-						Namespace: globals.DefaultNamespace,
-						Queries: []*telemetry_query.FwlogsQuerySpec{
-							{
-								Protocols: []string{"ICMP"},
-								Actions:   []string{telemetry_query.FwlogActions_deny.String()},
-								StartTime: stime,
-							},
-						},
-					})
-					if err != nil {
+				for _, ips := range workloadPairs.ListIPAddr() {
+					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
+						err := fmt.Errorf("did not find %+v in fwlog", ips)
+						log.Errorf("%v", err)
 						return err
 					}
+				}
+				return nil
 
-					for i, r := range res.Results {
-						log.Infof("[%-3d] %v ", i+1, r.String())
-					}
+			}).Should(Succeed())
+		})
 
-					for _, ips := range workloadPairs.ListIPAddr() {
-						if tclient.CheckIPAddrInFwlog([]string{ips[1], ips[0]}, res.Results) != true {
-							err := fmt.Errorf("did not find %+v in fwlog", ips)
-							log.Errorf("%v", err)
-							return err
-						}
-					}
-					return nil
+		It("should log UDP/9000 allow in fwlog", func() {
+			if ts.tb.HasNaplesSim() {
+				Skip("Disabling on naples sim till shm flag is enabled")
+			}
 
-				}).Should(Succeed())
-			})
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
+			stime := &api.Timestamp{}
+			stime.Parse(time.Now().String())
 
-			It("should log ICMP reject in fwlog", func() {
-				Skip("+++skip ")
-				if ts.tb.HasNaplesSim() {
-					Skip("Disabling on naples sim till shm flag is enabled")
+			log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
+
+			Eventually(func() error {
+				return ts.model.Action().UDPSession(workloadPairs, 9000)
+			}).Should(Succeed())
+
+			// check fwlog
+			Eventually(func() error {
+				res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+					Queries: []*telemetry_query.FwlogsQuerySpec{
+						{
+							DestPorts: []uint32{9000},
+							Protocols: []string{"UDP"},
+							Actions:   []string{telemetry_query.FwlogActions_allow.String()},
+							StartTime: stime,
+						},
+					},
+				})
+				if err != nil {
+					return err
 				}
 
-				Expect(ts.model.SGPolicy("default-policy").Delete()).Should(Succeed())
-				stime := &api.Timestamp{}
-				stime.Parse(time.Now().String())
-
-				// reject policy
-				debyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "icmp", "REJECT")
-				debyPolicy.AddRule("any", "any", "", "PERMIT")
-				Expect(debyPolicy.Commit()).ShouldNot(HaveOccurred())
-
-				// verify policy was propagated correctly
-				Eventually(func() error {
-					return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("default-policy"))
-				}).Should(Succeed())
-
-				workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-				Eventually(func() error {
-					return ts.model.Action().PingFails(workloadPairs)
-				}).Should(Succeed())
-
-				// check fwlog
-				Eventually(func() error {
-					res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
-						Tenant:    globals.DefaultTenant,
-						Namespace: globals.DefaultNamespace,
-						Queries: []*telemetry_query.FwlogsQuerySpec{
-							{
-								Protocols: []string{"ICMP"},
-								Actions:   []string{telemetry_query.FwlogActions_reject.String()},
-								StartTime: stime,
-							},
-						},
-					})
-					if err != nil {
-						return err
-					}
-
-					for i, r := range res.Results {
-						log.Infof("[%-3d] %v ", i+1, r.String())
-					}
-
-					for _, ips := range workloadPairs.ListIPAddr() {
-						if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
-							err := fmt.Errorf("did not find %+v in fwlog", ips)
-							log.Errorf("%v", err)
-							return err
-						}
-					}
-					return nil
-				}).Should(Succeed())
-			})
-
-			It("should log TCP/8100 deny in fwlog", func() {
-				if ts.tb.HasNaplesSim() {
-					Skip("Disabling on naples sim till shm flag is enabled")
+				for i, r := range res.Results {
+					log.Infof("[%-3d] %v ", i+1, r.String())
 				}
 
-				Expect(ts.model.SGPolicy("default-policy").Delete()).Should(Succeed())
-				stime := &api.Timestamp{}
-				stime.Parse(time.Now().String())
-
-				// deny policy
-				debyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "tcp/0-65535", "DENY")
-				debyPolicy.AddRule("any", "any", "", "PERMIT")
-				Expect(debyPolicy.Commit()).ShouldNot(HaveOccurred())
-
-				// verify policy was propagated correctly
-				Eventually(func() error {
-					return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("default-policy"))
-				}).Should(Succeed())
-
-				workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-				log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
-
-				Eventually(func() error {
-					return ts.model.Action().TCPSessionFails(workloadPairs, 8100)
-				}).Should(Succeed())
-
-				// check fwlog
-				Eventually(func() error {
-					res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
-						Tenant:    globals.DefaultTenant,
-						Namespace: globals.DefaultNamespace,
-						Queries: []*telemetry_query.FwlogsQuerySpec{
-							{
-								DestPorts: []uint32{8100},
-								Protocols: []string{"TCP"},
-								Actions:   []string{telemetry_query.FwlogActions_deny.String()},
-								StartTime: stime,
-							},
-						},
-					})
-					if err != nil {
+				for _, ips := range workloadPairs.ListIPAddr() {
+					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
+						err := fmt.Errorf("did not find %+v in fwlog", ips)
+						log.Errorf("%v", err)
 						return err
 					}
+				}
+				return nil
+			}).Should(Succeed())
+		})
 
-					for i, r := range res.Results {
-						log.Infof("[%-3d] %v ", i+1, r.String())
-					}
+		It("should log ICMP deny in fwlog", func() {
+			if ts.tb.HasNaplesSim() {
+				Skip("Disabling on naples sim till shm flag is enabled")
+			}
 
-					for _, ips := range workloadPairs.ListIPAddr() {
-						if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
-							err := fmt.Errorf("did not find %+v in fwlog", ips)
-							log.Errorf("%v", err)
-							return err
-						}
-					}
-					return nil
-				}).Should(Succeed())
-			})
+			Expect(ts.model.SGPolicy("default-policy").Delete()).Should(Succeed())
+			stime := &api.Timestamp{}
+			stime.Parse(time.Now().String())
 
-			It("should log UDP/9100 deny in fwlog", func() {
-				if ts.tb.HasNaplesSim() {
-					Skip("Disabling on naples sim till shm flag is enabled")
+			// deny policy
+			denyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "icmp", "DENY")
+			denyPolicy.AddRule("any", "any", "", "PERMIT")
+			Expect(denyPolicy.Commit()).ShouldNot(HaveOccurred())
+
+			// verify policy was propagated correctly
+			Eventually(func() error {
+				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("default-policy"))
+			}).Should(Succeed())
+
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
+			log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
+
+			Eventually(func() error {
+				return ts.model.Action().PingFails(workloadPairs)
+			}).Should(Succeed())
+
+			// check fwlog
+			Eventually(func() error {
+				res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+					Queries: []*telemetry_query.FwlogsQuerySpec{
+						{
+							Protocols: []string{"ICMP"},
+							Actions:   []string{telemetry_query.FwlogActions_deny.String()},
+							StartTime: stime,
+						},
+					},
+				})
+				if err != nil {
+					return err
 				}
 
-				// deny policy
-				debyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "udp/0-65535", "DENY")
-				debyPolicy.AddRule("any", "any", "", "PERMIT")
-				Expect(debyPolicy.Commit()).ShouldNot(HaveOccurred())
+				for i, r := range res.Results {
+					log.Infof("[%-3d] %v ", i+1, r.String())
+				}
 
-				// verify policy was propagated correctly
-				Eventually(func() error {
-					return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("default-policy"))
-				}).Should(Succeed())
-
-				workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-				stime := &api.Timestamp{}
-				stime.Parse(time.Now().String())
-				log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
-
-				Eventually(func() error {
-					return ts.model.Action().UDPSessionFails(workloadPairs, 9100)
-				}).Should(Succeed())
-
-				// check fwlog
-				Eventually(func() error {
-					res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
-						Tenant:    globals.DefaultTenant,
-						Namespace: globals.DefaultNamespace,
-						Queries: []*telemetry_query.FwlogsQuerySpec{
-							{
-								DestPorts: []uint32{9100},
-								Protocols: []string{"UDP"},
-								Actions:   []string{telemetry_query.FwlogActions_deny.String()},
-								StartTime: stime,
-							},
-						},
-					})
-					if err != nil {
+				for _, ips := range workloadPairs.ListIPAddr() {
+					if tclient.CheckIPAddrInFwlog([]string{ips[1], ips[0]}, res.Results) != true {
+						err := fmt.Errorf("did not find %+v in fwlog", ips)
+						log.Errorf("%v", err)
 						return err
 					}
+				}
+				return nil
 
-					for i, r := range res.Results {
-						log.Infof("[%-3d] %v ", i+1, r.String())
-					}
+			}).Should(Succeed())
+		})
 
-					for _, ips := range workloadPairs.ListIPAddr() {
-						if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
-							err := fmt.Errorf("did not find %+v in fwlog", ips)
-							log.Errorf("%v", err)
-							return err
-						}
+		It("should log ICMP reject in fwlog", func() {
+			Skip("+++skip ")
+			if ts.tb.HasNaplesSim() {
+				Skip("Disabling on naples sim till shm flag is enabled")
+			}
+
+			Expect(ts.model.SGPolicy("default-policy").Delete()).Should(Succeed())
+			stime := &api.Timestamp{}
+			stime.Parse(time.Now().String())
+
+			// reject policy
+			debyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "icmp", "REJECT")
+			debyPolicy.AddRule("any", "any", "", "PERMIT")
+			Expect(debyPolicy.Commit()).ShouldNot(HaveOccurred())
+
+			// verify policy was propagated correctly
+			Eventually(func() error {
+				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("default-policy"))
+			}).Should(Succeed())
+
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
+			Eventually(func() error {
+				return ts.model.Action().PingFails(workloadPairs)
+			}).Should(Succeed())
+
+			// check fwlog
+			Eventually(func() error {
+				res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+					Queries: []*telemetry_query.FwlogsQuerySpec{
+						{
+							Protocols: []string{"ICMP"},
+							Actions:   []string{telemetry_query.FwlogActions_reject.String()},
+							StartTime: stime,
+						},
+					},
+				})
+				if err != nil {
+					return err
+				}
+
+				for i, r := range res.Results {
+					log.Infof("[%-3d] %v ", i+1, r.String())
+				}
+
+				for _, ips := range workloadPairs.ListIPAddr() {
+					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
+						err := fmt.Errorf("did not find %+v in fwlog", ips)
+						log.Errorf("%v", err)
+						return err
 					}
-					return nil
-				}).Should(Succeed())
-			})
+				}
+				return nil
+			}).Should(Succeed())
+		})
+
+		It("should log TCP/8100 deny in fwlog", func() {
+			if ts.tb.HasNaplesSim() {
+				Skip("Disabling on naples sim till shm flag is enabled")
+			}
+
+			Expect(ts.model.SGPolicy("default-policy").Delete()).Should(Succeed())
+			stime := &api.Timestamp{}
+			stime.Parse(time.Now().String())
+
+			// deny policy
+			debyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "tcp/0-65535", "DENY")
+			debyPolicy.AddRule("any", "any", "", "PERMIT")
+			Expect(debyPolicy.Commit()).ShouldNot(HaveOccurred())
+
+			// verify policy was propagated correctly
+			Eventually(func() error {
+				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("default-policy"))
+			}).Should(Succeed())
+
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
+			log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
+
+			Eventually(func() error {
+				return ts.model.Action().TCPSessionFails(workloadPairs, 8100)
+			}).Should(Succeed())
+
+			// check fwlog
+			Eventually(func() error {
+				res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+					Queries: []*telemetry_query.FwlogsQuerySpec{
+						{
+							DestPorts: []uint32{8100},
+							Protocols: []string{"TCP"},
+							Actions:   []string{telemetry_query.FwlogActions_deny.String()},
+							StartTime: stime,
+						},
+					},
+				})
+				if err != nil {
+					return err
+				}
+
+				for i, r := range res.Results {
+					log.Infof("[%-3d] %v ", i+1, r.String())
+				}
+
+				for _, ips := range workloadPairs.ListIPAddr() {
+					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
+						err := fmt.Errorf("did not find %+v in fwlog", ips)
+						log.Errorf("%v", err)
+						return err
+					}
+				}
+				return nil
+			}).Should(Succeed())
+		})
+
+		It("should log UDP/9100 deny in fwlog", func() {
+			if ts.tb.HasNaplesSim() {
+				Skip("Disabling on naples sim till shm flag is enabled")
+			}
+
+			// deny policy
+			debyPolicy := ts.model.NewSGPolicy("default-policy").AddRule("any", "any", "udp/0-65535", "DENY")
+			debyPolicy.AddRule("any", "any", "", "PERMIT")
+			Expect(debyPolicy.Commit()).ShouldNot(HaveOccurred())
+
+			// verify policy was propagated correctly
+			Eventually(func() error {
+				return ts.model.Action().VerifyPolicyStatus(ts.model.SGPolicy("default-policy"))
+			}).Should(Succeed())
+
+			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
+			stime := &api.Timestamp{}
+			stime.Parse(time.Now().String())
+			log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
+
+			Eventually(func() error {
+				return ts.model.Action().UDPSessionFails(workloadPairs, 9100)
+			}).Should(Succeed())
+
+			// check fwlog
+			Eventually(func() error {
+				res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+					Queries: []*telemetry_query.FwlogsQuerySpec{
+						{
+							DestPorts: []uint32{9100},
+							Protocols: []string{"UDP"},
+							Actions:   []string{telemetry_query.FwlogActions_deny.String()},
+							StartTime: stime,
+						},
+					},
+				})
+				if err != nil {
+					return err
+				}
+
+				for i, r := range res.Results {
+					log.Infof("[%-3d] %v ", i+1, r.String())
+				}
+
+				for _, ips := range workloadPairs.ListIPAddr() {
+					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
+						err := fmt.Errorf("did not find %+v in fwlog", ips)
+						log.Errorf("%v", err)
+						return err
+					}
+				}
+				return nil
+			}).Should(Succeed())
 		})
 	})
 })

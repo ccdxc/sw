@@ -52,7 +52,7 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 
 	foundLeader := false
 	for _, vn := range act.model.veniceNodes {
-		if vn.iotaNode.Name == cl.Status.Leader {
+		if vn.iotaNode.IpAddress == cl.Status.Leader {
 			foundLeader = true
 		}
 	}
@@ -64,8 +64,9 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 
 	// verify each venice node status
 	for _, node := range act.model.veniceNodes {
-		vn, err := act.model.tb.GetVeniceNode(node.iotaNode.Name)
+		vn, err := act.model.tb.GetVeniceNode(node.iotaNode.IpAddress)
 		if err != nil {
+			log.Errorf("Error getting venice node %s. Err: %v", node.iotaNode.IpAddress, err)
 			return err
 		}
 
@@ -111,7 +112,6 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 			log.Errorf("Invalid Naples status: %+v", snic)
 			return fmt.Errorf("Invalid admin phase for naples %v. Status: %+v", np.iotaNode.Name, snic.Status)
 		}
-		/* FIXME: there seem to be a bug in CMD health check. disabling this check for now
 		if len(snic.Status.Conditions) < 1 {
 			log.Errorf("Invalid Naples status: %+v", snic)
 			return fmt.Errorf("No naples status reported for naples %v", np.iotaNode.Name)
@@ -124,7 +124,6 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 			log.Errorf("Invalid Naples status: %+v", snic)
 			return fmt.Errorf("Invalid status %v for naples %v", snic.Status.Conditions[0].Status, np.iotaNode.Name)
 		}
-		*/
 	}
 
 	// check venice service status
