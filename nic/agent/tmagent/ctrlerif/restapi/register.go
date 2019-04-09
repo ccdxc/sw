@@ -8,6 +8,7 @@ package restapi
 func (s *RestServer) registerAPIRoutes() {
 	s.prefixRoutes = map[string]routeAddFunc{
 		"/telemetry/v1/metrics/accelhwringmetrics/":                 addAccelHwRingMetricsAPIRoutes,
+		"/telemetry/v1/metrics/accelseqqueueinfometrics/":           addAccelSeqQueueInfoMetricsAPIRoutes,
 		"/telemetry/v1/metrics/accelseqqueuemetrics/":               addAccelSeqQueueMetricsAPIRoutes,
 		"/telemetry/v1/metrics/asicpowermetrics/":                   addAsicPowerMetricsAPIRoutes,
 		"/telemetry/v1/metrics/asictemperaturemetrics/":             addAsicTemperatureMetricsAPIRoutes,
@@ -54,6 +55,7 @@ func (s *RestServer) registerAPIRoutes() {
 func (s *RestServer) registerListMetrics() {
 	s.getPointsFuncList = map[string]getPointsFunc{
 		"AccelHwRingMetrics":                 s.getAccelHwRingMetricsPoints,
+		"AccelSeqQueueInfoMetrics":           s.getAccelSeqQueueInfoMetricsPoints,
 		"AccelSeqQueueMetrics":               s.getAccelSeqQueueMetricsPoints,
 		"AsicPowerMetrics":                   s.getAsicPowerMetricsPoints,
 		"AsicTemperatureMetrics":             s.getAsicTemperatureMetricsPoints,

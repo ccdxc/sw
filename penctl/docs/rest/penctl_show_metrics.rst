@@ -42,8 +42,6 @@ SEE ALSO
 ~~~~~~~~
 
 * `penctl show <penctl_show.rst>`_ 	 - Show Object and Information
-* `penctl show metrics accelhwring <penctl_show_metrics_accelhwring.rst>`_ 	 - Show AccelHwRingMetrics from Naples
-* `penctl show metrics accelseqqueue <penctl_show_metrics_accelseqqueue.rst>`_ 	 - Show AccelSeqQueueMetrics from Naples
 * `penctl show metrics asicpower <penctl_show_metrics_asicpower.rst>`_ 	 - Show AsicPowerMetrics from Naples
 * `penctl show metrics asictemperature <penctl_show_metrics_asictemperature.rst>`_ 	 - Show AsicTemperatureMetrics from Naples
 * `penctl show metrics dbwaintdb <penctl_show_metrics_dbwaintdb.rst>`_ 	 - Show DbwaintdbMetrics from Naples
@@ -85,6 +83,7 @@ SEE ALSO
 * `penctl show metrics sgempuintinfo <penctl_show_metrics_sgempuintinfo.rst>`_ 	 - Show SgempuintinfoMetrics from Naples
 * `penctl show metrics sgeteinterr <penctl_show_metrics_sgeteinterr.rst>`_ 	 - Show SgeteinterrMetrics from Naples
 * `penctl show metrics sgeteintinfo <penctl_show_metrics_sgeteintinfo.rst>`_ 	 - Show SgeteintinfoMetrics from Naples
+* `penctl show metrics sonic <penctl_show_metrics_sonic.rst>`_ 	 - Metrics for Storage Offload NIC
 * `penctl show metrics ssepicsintbadaddr <penctl_show_metrics_ssepicsintbadaddr.rst>`_ 	 - Show SsepicsintbadaddrMetrics from Naples
 * `penctl show metrics ssepicsintbg <penctl_show_metrics_ssepicsintbg.rst>`_ 	 - Show SsepicsintbgMetrics from Naples
 * `penctl show metrics ssepicsintpics <penctl_show_metrics_ssepicsintpics.rst>`_ 	 - Show SsepicsintpicsMetrics from Naples
