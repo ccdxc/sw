@@ -932,3 +932,109 @@ func TestInvalidSGPolicyWithAppAndProtoPort(t *testing.T) {
 	err = ag.CreateSGPolicy(&sgPolicy)
 	Assert(t, err != nil, "SGPolicy referring to both ALG and match criteria in the same rule must fail")
 }
+
+func TestConsistentRuleHashes(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	sgPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
+					},
+				},
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"any"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"any"},
+					},
+				},
+			},
+		},
+	}
+
+	err := ag.CreateSGPolicy(&sgPolicy)
+	AssertOk(t, err, "SgPolicy Create failed")
+	actualSGPolicy, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	AssertOk(t, err, "SG Policy not found")
+
+	rule1HashOnCreate := actualSGPolicy.Spec.Rules[0].ID
+	rule2HashOnCreate := actualSGPolicy.Spec.Rules[1].ID
+
+	// Update SG Policy, with updates going only to rule 2
+	updSGPolicy := netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+						AppConfigs: []*netproto.AppConfig{
+							{
+								Port:     "80",
+								Protocol: "tcp",
+							},
+						},
+					},
+				},
+				{
+					Action: "DENY",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"any"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"any"},
+					},
+				},
+			},
+		},
+	}
+
+	err = ag.UpdateSGPolicy(&updSGPolicy)
+	AssertOk(t, err, "SgPolicy Update failed")
+	updatedSGPolicy, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	AssertOk(t, err, "SG Policy not found")
+
+	rule1HashOnUpdate := updatedSGPolicy.Spec.Rules[0].ID
+	rule2HashOnUpdate := updatedSGPolicy.Spec.Rules[1].ID
+
+	// Ensure rule 1 hash on create and on update are the same
+	Assert(t, rule1HashOnCreate == rule1HashOnUpdate, "Hashes got changed on a rule that was not updated")
+
+	// Ensure rule 2 hash on create and on update are not the same
+	Assert(t, rule2HashOnCreate != rule2HashOnUpdate, "Hashes did not change on a rule that was updated")
+}

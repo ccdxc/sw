@@ -72,9 +72,13 @@ func (na *Nagent) CreateSGPolicy(sgp *netproto.SGPolicy) error {
 	}
 
 	for i, r := range sgp.Spec.Rules {
-		key := na.Solver.ObjectKey(sgp.ObjectMeta, sgp.TypeMeta)
-		ruleHash := generateRuleHash(&r, key)
-		sgp.Spec.Rules[i].ID = ruleHash
+		ruleHash := sgp.Spec.Rules[i].ID
+		// Calculate the hash only if npm has not set it. Else use whatever is already set
+		if ruleHash == 0 {
+			ruleHash = generateRuleHash(&r, sgp.GetKey())
+			sgp.Spec.Rules[i].ID = ruleHash
+		}
+
 		if len(r.AppName) > 0 {
 			meta := api.ObjectMeta{
 				Tenant:    sgp.Tenant,
@@ -211,8 +215,13 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 
 	// Recompute hash
 	for i, r := range sgp.Spec.Rules {
-		ruleHash := generateRuleHash(&r, sgp.GetKey())
-		sgp.Spec.Rules[i].ID = ruleHash
+		ruleHash := sgp.Spec.Rules[i].ID
+		// Calculate the hash only if npm has not set it. Else use whatever is already set
+		if ruleHash == 0 {
+			ruleHash = generateRuleHash(&r, sgp.GetKey())
+			sgp.Spec.Rules[i].ID = ruleHash
+		}
+
 		if len(r.AppName) > 0 {
 			meta := api.ObjectMeta{
 				Tenant:    sgp.Tenant,
