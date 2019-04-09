@@ -9,7 +9,7 @@ testcases:
     # Init spec = 8
     #=======================================
     -   name    : Insmod_Rdma_Spec
-        testcase: testcases.rdma.insmod_rdma_spec
+        testcase: testcases.rdma.insmod_rdma
         args    :
             type: remote_only
             spec: '8'
@@ -157,7 +157,7 @@ testcases:
     # Init spec = 16
     #=======================================
     -   name    : Insmod_Rdma_Spec
-        testcase: testcases.rdma.insmod_rdma_spec
+        testcase: testcases.rdma.insmod_rdma
         args    :
             type: remote_only
             spec: '16'
