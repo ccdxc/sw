@@ -38,7 +38,7 @@ def TestCaseStepVerify(tc, step):
     
         ############     RQ VALIDATIONS #################
         # verify that e_psn is incremented by 4
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 4):
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'e_psn', 16):
             return False
     
         # verify that proxy_cindex is incremented by 1
@@ -46,11 +46,11 @@ def TestCaseStepVerify(tc, step):
             return False
     
         # verify that token_id is incremented by 4
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 4):
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'token_id', 16):
             return False
     
         # verify that nxt_to_go_token_id is incremented by 4
-        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 4):
+        if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 16):
             return False
     
         ############     CQ VALIDATIONS #################

@@ -41,6 +41,13 @@ resp_rx_rqsge_process:
     add.!c1     SGE_P, r0, (RQWQE_OPT_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
     add.c1      SGE_P, r0, (RQWQE_OPT_LAST_SGE_OFFSET_BITS - (1 << LOG_SIZEOF_SGE_T_BITS))
 
+    // initialize the scratch area with minimal
+    // instructions. Whichever fields are always populated are not initialized, but
+    // important fields such as flags are initialized.
+    tblwr.l     d.rsvd[63:0], 0
+    //tblwr.l     d.rsvd[127:64], 0
+    //tblwr.l     d.rsvd[171:128], 0
+
     add         r7, r0, offsetof(struct rqwqe_base_t, rsvd)
     add         REM_PYLD_BYTES, r0, K_REM_PYLD_BYTES
 
