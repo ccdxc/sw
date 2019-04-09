@@ -24,24 +24,24 @@
 
 #define PDS_MAX_POLICY        PDS_MAX_SECURITY_POLICY
 
-/// \brief Rule direction
+/// \brief    rule direction
 typedef enum rule_dir_e {
     RULE_DIR_INGRESS =  0,    ///< Ingress direction
     RULE_DIR_EGRESS  =  1,    ///< Egress direction
 } rule_dir_t;
 
-/// \brief Policy key
+/// \brief    policy key
 typedef struct pds_policy_key_s {
     pds_policy_id_t    id;    ///< Unique ID for the policy
 } __PACK__ pds_policy_key_t;
 
-/// \brief Rule L3 match criteria
+/// \brief    rule L3 match criteria
 typedef struct rule_l3_match_s {
     uint8_t        ip_proto;    ///< IP protocol
     ip_prefix_t    ip_pfx;      ///< IP prefix
 } __PACK__ rule_l3_match_t;
 
-/// \brief Rule L4 match criteria
+/// \brief    rule L4 match criteria
 typedef struct rule_l4_match_s {
     union {
         struct {
@@ -55,41 +55,41 @@ typedef struct rule_l4_match_s {
     };
 } __PACK__ rule_l4_match_t;
 
-/// \brief Rule match
+/// \brief    rule match
 typedef struct rule_match_s {
     rule_l3_match_t    l3_match;    ///< Layer 3 match criteria
     rule_l4_match_t    l4_match;    ///< Layer 4 match criteria
 } __PACK__ rule_match_t;
 
-/// \brief Security rule action
+/// \brief    security rule action
 typedef enum fw_action_e {
     SECURITY_RULE_ACTION_ALLOW = 0,    ///< Allow the packet
 } fw_action_t;
 
-/// \brief Security rule specific action data
+/// \brief    security rule specific action data
 typedef struct fw_action_data_s {
     fw_action_t    action;    ///< Firewall action
 } fw_action_data_t;
 
-/// \brief Generic rule action data
+/// \brief    generic rule action data
 typedef union rule_action_data_s {
     fw_action_data_t    fw_action;    ///< Firewall action data
 } rule_action_data_t;
 
-/// \brief Generic rule
+/// \brief    generic rule
 typedef struct rule_s {
     bool                  stateful;       ///< true, if rule is stateful
     rule_match_t          match;          ///< rule match
     rule_action_data_t    action_data;    ///< action and related information
 } __PACK__ rule_t;
 
-/// \brief Policy type
+/// \brief    policy type
 typedef enum policy_type_s {
     POLICY_TYPE_NONE     = 0,
     POLICY_TYPE_FIREWALL = 1,
 } policy_type_t;
 
-/// \brief Generic policy
+/// \brief    generic policy
 typedef struct pds_policy_spec_s    pds_policy_spec_t;
 struct pds_policy_spec_s {
     pds_policy_key_t    key;            ///< policy key
@@ -102,6 +102,7 @@ struct pds_policy_spec_s {
     pds_policy_spec_s() { rules = NULL; }
     ~pds_policy_spec_s() {
         if (rules) {
+            printf("%s:%d free\n", __func__, __LINE__);
             SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rules);
         }
     }
@@ -121,20 +122,40 @@ struct pds_policy_spec_s {
         rules =
             (rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
                                  num_rules * sizeof(rule_t));
+        printf("%s:%d rules:%p %p\n", __func__, __LINE__, rules, policy.rules);
         memcpy(rules, policy.rules, num_rules * sizeof(rule_t));
         return *this;
     }
 } __PACK__;
 
-/// \brief create policy
+typedef struct pds_policy_status_s {
+    // TODO : Only base address of the tree stored in HBM is read
+} pds_policy_status_t;
+
+typedef struct pds_policy_stats_s {
+
+} pds_policy_stats_t;
+
+typedef struct pds_policy_info_s {
+    pds_policy_spec_t spec;         ///< Specification
+    pds_policy_status_t status;     ///< Status
+    pds_policy_stats_t stats;       ///< Statistics
+} pds_policy_info_t;
+
+/// \brief    create policy
 /// \param[in] policy    policy information
-/// \return #SDK_RET_OK on success, failure status code on error
+/// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_create(pds_policy_spec_t *policy);
 
-/// \brief delete policy
+/// \brief    read policy, base address of the tree stored in HBM is read
 /// \param[in] key    policy key
-/// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_policy_delete(_In_ pds_policy_key_t *key);
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_policy_read(pds_policy_key_t *key, pds_policy_info_t *info);
+
+/// \brief    delete policy
+/// \param[in] key    policy key
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_policy_delete(pds_policy_key_t *key);
 
 /// \@}
 

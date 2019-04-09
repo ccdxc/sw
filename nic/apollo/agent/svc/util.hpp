@@ -6,8 +6,9 @@
 #define __AGENT_SVC_UTIL_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/agent/trace.hpp"
 #include "gen/proto/types.pb.h"
 
 //----------------------------------------------------------------------------
@@ -58,7 +59,7 @@ ipv4pfx_proto_spec_to_api_spec (ipv4_prefix_t *ip_pfx,
              (ip_pfx->len > 32)) {
         return sdk::SDK_RET_INVALID_ARG;
     } else {
-        ip_pfx->v4_addr = in_ippfx.addr().v4addr(); 
+        ip_pfx->v4_addr = in_ippfx.addr().v4addr();
     }
     return sdk::SDK_RET_OK;
 }
@@ -194,6 +195,17 @@ sdk_ret_to_api_status (sdk_ret_t ret)
     default:
         return types::ApiStatus::API_STATUS_ERR;
     }
+}
+
+static inline void
+pds_af_proto_spec_to_api_spec (const types::IPAF &addrfamily, uint8_t *af)
+{
+    if (addrfamily == types::IP_AF_INET)
+        *af = IP_AF_IPV4;
+    else if (addrfamily == types::IP_AF_INET6)
+        *af = IP_AF_IPV6;
+    else
+        PDS_TRACE_ERR("IP_AF_NONE passed in proto");
 }
 
 #endif    // __AGENT_SVC_UTIL_HPP__

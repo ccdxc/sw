@@ -86,9 +86,15 @@ struct pds_route_table_spec_s {
     }
 } __PACK__;
 
+/// \brief route table status
+typedef struct pds_route_table_status_s {
+    // TODO : Only base address of the tree stored in HBM is read
+} pds_route_table_status_t;
+
 /// \brief route table information
 typedef struct pds_route_table_info_s {
-    pds_route_table_spec_t spec;        ///< Specification
+    pds_route_table_spec_t spec;            ///< Specification
+    pds_route_table_status_t status;        ///< Status
 } __PACK__ pds_route_table_info_t;
 
 /// \brief create route table

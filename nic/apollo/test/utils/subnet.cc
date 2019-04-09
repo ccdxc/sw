@@ -16,7 +16,7 @@
 using namespace std;
 namespace api_test {
 
-subnet_util::subnet_util(pds_subnet_id_t subnet_id) {
+subnet_util::subnet_util(pds_subnet_id_t id) {
     __init();
     this->id = id;
 }
