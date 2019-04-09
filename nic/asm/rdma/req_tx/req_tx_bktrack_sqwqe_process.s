@@ -180,9 +180,8 @@ sge_bktrack:
     
     CAPRI_RESET_TABLE_0_ARG()
 
-    // sge_addr = wqe_addr + TXWQE_SGE_OFFSET + (sizeof(sge_t) * current_sge_id)
-    add          r3,  CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr), K_CURRENT_SGE_ID, LOG_SIZEOF_SGE_T
-    add          r3, r3, TXWQE_SGE_OFFSET
+    // sge_addr = wqe_addr + TXWQE_SGE_OFFSET
+    add          r3,  CAPRI_KEY_FIELD(IN_TO_S_P, wqe_addr), TXWQE_SGE_OFFSET
 
     phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, tx_psn), r1, CAPRI_PHV_FIELD(SQ_BKTRACK_P, ssn), r6
     phvwrpair CAPRI_PHV_FIELD(SQ_BKTRACK_P, sq_c_index), K_SQ_C_INDEX, CAPRI_PHV_FIELD(SQ_BKTRACK_P, in_progress), CAPRI_KEY_FIELD(IN_P, in_progress)
