@@ -40,6 +40,8 @@ func NewTstoreWithConfig(dbPath string, cfg tsdb.Config) (*Tstore, error) {
 
 	// set the custom config, use tsdb.NewConfig() for deaults
 	ts.EngineOptions.Config = cfg
+	// switch to tsi1
+	ts.EngineOptions.Config.Index = "tsi1"
 
 	// open the tsdb store
 	err := ts.Open()
@@ -57,7 +59,8 @@ func NewTstore(dbPath string) (*Tstore, error) {
 
 	// set the WAL directory
 	ts.EngineOptions.Config.WALDir = filepath.Join(dbPath, "wal")
-	// todo: switch to tsi1, ts.EngineOptions.Config.Index = "tsi1"
+	// switch to tsi1
+	ts.EngineOptions.Config.Index = "tsi1"
 
 	// update tag/series limits, TODO: check mem. utilization
 	ts.EngineOptions.Config.MaxSeriesPerDatabase = 5 * tsdb.DefaultMaxSeriesPerDatabase
