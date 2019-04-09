@@ -400,6 +400,7 @@ struct session_s {
 } __PACK__;
 
 typedef struct session_stats_ {
+    uint64_t    total_active_sessions;
     uint64_t    l2_sessions;
     uint64_t    tcp_sessions;
     uint64_t    udp_sessions;

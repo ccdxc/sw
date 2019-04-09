@@ -296,15 +296,16 @@ message FTEFeatureStats {
 message FTEStatsInfo {
   uint64                   conn_per_second   = 1;
   uint64                   flow_miss_pkts    = 2;
-  uint64                   redir_pkts        = 3;
-  uint64                   cflow_pkts        = 4;
-  uint64                   tcp_close_pkts    = 5;
-  uint64                   tls_proxy_pkts    = 6;
-  uint64                   softq_reqs        = 7;
-  uint64                   queued_tx_pkts    = 8;
-  uint64                   max_conn_per_sec  = 9;
-  repeated FTEError        fte_errors        = 10;
-  repeated FTEFeatureStats feature_stats     = 11;
+  uint64                   retransmit_pkts   = 3;
+  uint64                   redir_pkts        = 4;
+  uint64                   cflow_pkts        = 5;
+  uint64                   tcp_close_pkts    = 6;
+  uint64                   tls_proxy_pkts    = 7;
+  uint64                   softq_reqs        = 8;
+  uint64                   queued_tx_pkts    = 9;
+  uint64                   max_conn_per_sec  = 10;
+  repeated FTEError        fte_errors        = 11;
+  repeated FTEFeatureStats feature_stats     = 12;
 }
 
 // FTE Global Stats
@@ -315,16 +316,19 @@ message FTEStats {
 
 // Session Summary Stats
 message SessionSummaryStats {
-  uint64      l2_sessions   = 1;
-  uint64      tcp_sessions  = 2;
-  uint64      udp_sessions  = 3;
-  uint64      icmp_sessions = 4;
-  uint64      drop_sessions = 5;
-  uint64      aged_sessions = 6;
-  uint64      num_tcp_reset_sent = 7;              // Number of TCP resets sent as part of SFW reject
-  uint64      num_icmp_error_sent = 8;             // Number of ICMP errors sent as part of SFW reject
-  uint64      num_connection_timeout_sessions = 9; // Number of TCP sessions that timedout before going to established state
-  uint64      num_session_create_errors = 10;       // # of session create errors
+  uint64      total_active_sessions    = 1;
+  uint64      l2_sessions              = 2;
+  uint64      tcp_sessions             = 3;
+  uint64      tcp_established_sessions = 4;
+  uint64      tcp_closed_sessions      = 5;
+  uint64      udp_sessions             = 6;
+  uint64      icmp_sessions            = 7;
+  uint64      drop_sessions            = 8;
+  uint64      aged_sessions            = 9;
+  uint64      num_tcp_reset_sent       = 10;        // Number of TCP resets sent as part of SFW reject
+  uint64      num_icmp_error_sent      = 11;       // Number of ICMP errors sent as part of SFW reject
+  uint64      num_connection_timeout_sessions = 12;// Number of TCP sessions that timedout before going to established state
+  uint64      num_session_create_errors = 13;       // # of session create errors
 }
 
 message QCtr {

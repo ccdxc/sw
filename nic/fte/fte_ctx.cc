@@ -157,6 +157,9 @@ ctx_t::init_flows(flow_t iflow[], flow_t rflow[])
         } else {
             ret = HAL_RET_OK;
         }
+    } else if (flow_miss()) {
+        // Flow miss + existing session
+        incr_fte_retransmit_packets();
     }
 
     return ret;

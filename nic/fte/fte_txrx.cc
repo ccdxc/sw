@@ -25,6 +25,7 @@
 
 #define FTE_EXPORT_STATS_SIZE     7
 #define FTE_LIFQ_METRICS_OFFSET   16
+#define FTE_MAX_SOFTQ_BATCH_SZ    128
 
 namespace fte {
 
@@ -52,6 +53,7 @@ public:
     ipc_logger *get_ipc_logger() const { return logger_; }
     void incr_feature_stats (uint16_t feature_id, hal_ret_t rc, bool set_rc);
     void incr_fte_error (hal_ret_t rc);
+    void incr_fte_retransmit_packets(void);
     fte_stats_t      get_stats(bool clear_on_read);
     fte_txrx_stats_t get_txrx_stats(bool clear_on_read);
     void update_rx_stats(cpu_rxhdr_t *rxhdr, size_t pkt_len);
@@ -414,14 +416,16 @@ void inst_t::process_softq()
 {
     void       *op;
     void       *data;
+    uint32_t    npkt=0;
 
-    if (softq_->dequeue(&op, &data)) {
+    while (softq_->dequeue(&op, &data) && npkt < FTE_MAX_SOFTQ_BATCH_SZ) {
         //Increment stats
         stats_.fte_hbm_stats->qstats.softq_req++;
         compute_cps();
 
         //HAL_TRACE_DEBUG("fte: softq dequeue fn={:p} data={:p} softq_req={}", op, data, stats_.softq_req);
         (*(softq_fn_t)op)(data);
+        npkt++;
     }
 }
 
@@ -504,6 +508,26 @@ void incr_inst_fte_rx_stats(cpu_rxhdr_t *cpu_rxhdr, size_t pkt_len)
 void inst_t::incr_fte_error(hal_ret_t rc)
 {
     stats_.fte_errors[rc]++;
+}
+
+//----------------------------------------------------------------------------
+// Increment fte error counters
+//----------------------------------------------------------------------------
+void inst_t::incr_fte_retransmit_packets(void)
+{
+    stats_.fte_hbm_stats->qstats.flow_retransmit_pkts++;
+}
+
+//----------------------------------------------------------------------------
+// Increment fte existing session counters
+//----------------------------------------------------------------------------
+void incr_fte_retransmit_packets(void)
+{
+    if (fte_disabled_ || t_inst == NULL) {
+        return;
+    }
+
+    t_inst->incr_fte_retransmit_packets();
 }
 
 //-----------------------------------------------------------------------------
@@ -645,6 +669,7 @@ void inst_t::process_arq()
     uint8_t *pkt = NULL;
     size_t pkt_len;
     bool   copied_pkt = true;
+    auto app_ctx = hal::app_redir::app_redir_ctx(*ctx_, false);
 
     // read the packet
     ret = fte::impl::cpupkt_poll_receive(arm_ctx_, &cpu_rxhdr, &pkt, &pkt_len, &copied_pkt);
@@ -709,6 +734,9 @@ void inst_t::process_arq()
             if (ret == HAL_RET_FTE_SPAN) {
                 HAL_TRACE_DEBUG("fte: done processing span packet");
                 continue;
+            } else if (ret == HAL_RET_RETRANSMISSION) {
+                HAL_TRACE_DEBUG("fte: retransmission packet");
+                goto send; 
             } else {
                 HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
                 break;
@@ -716,7 +744,6 @@ void inst_t::process_arq()
         }
 
         // process the packet and update flow table
-        auto app_ctx = hal::app_redir::app_redir_ctx(*ctx_, false);
         if (app_ctx) {
             app_ctx->set_arm_ctx(arm_ctx_);
         }
@@ -731,6 +758,7 @@ void inst_t::process_arq()
 	    ctx_->set_drop();
         }
 
+send:
         // write the packets
         ret = ctx_->send_queued_pkts(arm_ctx_);
         if (ret != HAL_RET_OK) {

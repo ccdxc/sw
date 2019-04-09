@@ -162,6 +162,8 @@ type FteLifQMetrics struct {
 
 	FlowMissPackets metrics.Counter
 
+	FlowRetransmitPackets metrics.Counter
+
 	L4RedirectPackets metrics.Counter
 
 	AlgControlFlowPackets metrics.Counter
@@ -190,6 +192,8 @@ func (mtr *FteLifQMetrics) Size() int {
 
 	sz += mtr.FlowMissPackets.Size()
 
+	sz += mtr.FlowRetransmitPackets.Size()
+
 	sz += mtr.L4RedirectPackets.Size()
 
 	sz += mtr.AlgControlFlowPackets.Size()
@@ -215,6 +219,9 @@ func (mtr *FteLifQMetrics) Unmarshal() error {
 
 	mtr.FlowMissPackets = mtr.metrics.GetCounter(offset)
 	offset += mtr.FlowMissPackets.Size()
+
+	mtr.FlowRetransmitPackets = mtr.metrics.GetCounter(offset)
+	offset += mtr.FlowRetransmitPackets.Size()
 
 	mtr.L4RedirectPackets = mtr.metrics.GetCounter(offset)
 	offset += mtr.L4RedirectPackets.Size()
@@ -248,6 +255,11 @@ func (mtr *FteLifQMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.FlowMissPackets.Size()
+
+	if fldName == "FlowRetransmitPackets" {
+		return offset
+	}
+	offset += mtr.FlowRetransmitPackets.Size()
 
 	if fldName == "L4RedirectPackets" {
 		return offset
@@ -290,6 +302,12 @@ func (mtr *FteLifQMetrics) getOffset(fldName string) int {
 // SetFlowMissPackets sets cunter in shared memory
 func (mtr *FteLifQMetrics) SetFlowMissPackets(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("FlowMissPackets"))
+	return nil
+}
+
+// SetFlowRetransmitPackets sets cunter in shared memory
+func (mtr *FteLifQMetrics) SetFlowRetransmitPackets(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("FlowRetransmitPackets"))
 	return nil
 }
 
@@ -415,6 +433,8 @@ type SessionSummaryMetrics struct {
 
 	key uint64
 
+	TotalActiveSessions metrics.Counter
+
 	NumL2Sessions metrics.Counter
 
 	NumTcpSessions metrics.Counter
@@ -447,6 +467,8 @@ func (mtr *SessionSummaryMetrics) GetKey() uint64 {
 func (mtr *SessionSummaryMetrics) Size() int {
 	sz := 0
 
+	sz += mtr.TotalActiveSessions.Size()
+
 	sz += mtr.NumL2Sessions.Size()
 
 	sz += mtr.NumTcpSessions.Size()
@@ -475,6 +497,9 @@ func (mtr *SessionSummaryMetrics) Unmarshal() error {
 	var offset int
 
 	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.TotalActiveSessions = mtr.metrics.GetCounter(offset)
+	offset += mtr.TotalActiveSessions.Size()
 
 	mtr.NumL2Sessions = mtr.metrics.GetCounter(offset)
 	offset += mtr.NumL2Sessions.Size()
@@ -512,6 +537,11 @@ func (mtr *SessionSummaryMetrics) Unmarshal() error {
 // getOffset returns the offset for raw counters in shared memory
 func (mtr *SessionSummaryMetrics) getOffset(fldName string) int {
 	var offset int
+
+	if fldName == "TotalActiveSessions" {
+		return offset
+	}
+	offset += mtr.TotalActiveSessions.Size()
 
 	if fldName == "NumL2Sessions" {
 		return offset
@@ -564,6 +594,12 @@ func (mtr *SessionSummaryMetrics) getOffset(fldName string) int {
 	offset += mtr.NumSessionCreateErrors.Size()
 
 	return offset
+}
+
+// SetTotalActiveSessions sets cunter in shared memory
+func (mtr *SessionSummaryMetrics) SetTotalActiveSessions(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("TotalActiveSessions"))
+	return nil
 }
 
 // SetNumL2Sessions sets cunter in shared memory

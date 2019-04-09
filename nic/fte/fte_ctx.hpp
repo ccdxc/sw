@@ -444,6 +444,8 @@ void incr_inst_feature_stats (uint16_t feature_id, hal_ret_t rc=HAL_RET_OK,
 void incr_inst_fte_rx_stats (cpu_rxhdr_t *rxhdr, size_t pkt_len);
 void incr_inst_fte_tx_stats (size_t pkt_len);
 void incr_inst_fte_tx_stats_batch(uint16_t pktcount);
+void incr_fte_retransmit_packets(void);
+
 typedef struct fte_feature_stats_s {
     uint64_t        drop_pkts;                 // Number of packets dropped by the feature
     uint64_t        drop_reason[HAL_RET_ERR];  // Number of drops seen per drop reason code
@@ -474,6 +476,7 @@ typedef struct fte_hbm_stats_ {
     } __PACK__ cpsstats;
     struct {
         uint64_t          flow_miss_pkts;              // Number of flow miss packets processed by this FTE
+        uint64_t          flow_retransmit_pkts;        // Number of flow retransmit packets processed by this FTE
         uint64_t          redirect_pkts;               // Number of NACL redirect packets processed by this FTE
         uint64_t          cflow_pkts;                  // Number of ALG control flow packets processed by this FTE
         uint64_t          tcp_close_pkts;              // Number of TCP close packets processed by this FTE

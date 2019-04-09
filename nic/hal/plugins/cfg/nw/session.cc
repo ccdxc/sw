@@ -1266,6 +1266,8 @@ update_global_session_stats (session_t *session, bool decr=false)
             HAL_SESSION_STATS_PTR(session->fte_id)->icmp_sessions += (decr)?(-1):1;
         }
     }
+
+    HAL_SESSION_STATS_PTR(session->fte_id)->total_active_sessions += (decr)?(-1):1;
 }
 
 hal_ret_t
@@ -1777,7 +1779,9 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     HAL_TRACE_DEBUG("session_age_cb: last pkt ts: {} ctime_ns: {} session_timeout: {}",
                     session_state.iflow_state.last_pkt_ts, ctime_ns, session_timeout);
 #endif
-    if (TIME_DIFF(ctime_ns, session_state.iflow_state.last_pkt_ts) >= session_timeout) {
+    if ((TIME_DIFF(ctime_ns, session_state.iflow_state.last_pkt_ts) >= session_timeout) ||
+        (tcp_session && session_state.iflow_state.state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD &&
+         session_state.iflow_state.state != session->iflow->state)) {
         // session hasn't aged yet, move on
         retval = SESSION_AGED_IFLOW;
     }
@@ -1785,7 +1789,9 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     if (session->rflow) {
         //check responder flow. Check for session state as we dont want to age half-closed
         //connections if half-closed timeout is disabled.
-        if (TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout) {
+        if ((TIME_DIFF(ctime_ns, session_state.rflow_state.last_pkt_ts) >= session_timeout) ||
+            (tcp_session && session_state.rflow_state.state >= session::FLOW_TCP_STATE_BIDIR_FIN_RCVD &&
+             session_state.rflow_state.state != session->rflow->state)) {
             // responder flow seems to be active still
             if (retval == SESSION_AGED_IFLOW)
                 retval = SESSION_AGED_BOTH;
@@ -2782,6 +2788,7 @@ system_fte_stats_get(SystemResponse *rsp)
         fte_stats->set_conn_per_second(per_fte_stats.fte_hbm_stats->cpsstats.cps);
         fte_stats->set_max_conn_per_sec(per_fte_stats.fte_hbm_stats->cpsstats.cps_hwm);
         fte_stats->set_flow_miss_pkts(per_fte_stats.fte_hbm_stats->qstats.flow_miss_pkts);
+        fte_stats->set_retransmit_pkts(per_fte_stats.fte_hbm_stats->qstats.flow_retransmit_pkts);
         fte_stats->set_redir_pkts(per_fte_stats.fte_hbm_stats->qstats.redirect_pkts);
         fte_stats->set_cflow_pkts(per_fte_stats.fte_hbm_stats->qstats.cflow_pkts);
         fte_stats->set_tcp_close_pkts(per_fte_stats.fte_hbm_stats->qstats.tcp_close_pkts);
@@ -2824,6 +2831,7 @@ system_session_summary_get(SystemResponse *rsp)
     SessionSummaryStats *session_stats = NULL;
 
     for (uint32_t fte = 0; fte < hal::g_hal_cfg.num_data_cores; fte++) {
+        session_summary.total_active_sessions += HAL_SESSION_STATS_PTR(fte)->total_active_sessions;
         session_summary.l2_sessions += HAL_SESSION_STATS_PTR(fte)->l2_sessions;
         session_summary.tcp_sessions += HAL_SESSION_STATS_PTR(fte)->tcp_sessions;
         session_summary.udp_sessions += HAL_SESSION_STATS_PTR(fte)->udp_sessions;
@@ -2837,6 +2845,7 @@ system_session_summary_get(SystemResponse *rsp)
     }
 
     session_stats = rsp->mutable_stats()->mutable_session_stats();
+    session_stats->set_total_active_sessions(session_summary.total_active_sessions);
     session_stats->set_l2_sessions(session_summary.l2_sessions);
     session_stats->set_tcp_sessions(session_summary.tcp_sessions);
     session_stats->set_udp_sessions(session_summary.udp_sessions);
