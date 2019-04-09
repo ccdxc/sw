@@ -200,6 +200,9 @@ func (na *Nagent) FindApp(meta api.ObjectMeta) (*netproto.App, error) {
 
 // UpdateApp updates a app.
 func (na *Nagent) UpdateApp(app *netproto.App) error {
+	var linkedSGPolicies []*netproto.SGPolicy
+	var algMapper int
+
 	// find the corresponding namespace
 	_, err := na.FindNamespace(app.Tenant, app.Namespace)
 	if err != nil {
@@ -220,11 +223,136 @@ func (na *Nagent) UpdateApp(app *netproto.App) error {
 	// Set the app ID from the existing app
 	app.Status.AppID = existingApp.Status.AppID
 
+	// Validate App Idle Timeout is parseable.
+	if len(app.Spec.AppIdleTimeout) > 0 {
+		err = validateTimeout(app.Spec.AppIdleTimeout)
+		if err != nil {
+			log.Errorf("invalid AppIdleTimeout duration %s", app.Spec.AppIdleTimeout)
+			return fmt.Errorf("invalid AppIdleTimeout duration %s", app.Spec.AppIdleTimeout)
+		}
+	}
+	// Validate only one ALG is specified
+	alg := app.Spec.ALG
+
+	if alg != nil {
+		if alg.DNS != nil {
+			if len(alg.DNS.QueryResponseTimeout) > 0 {
+				if err := validateTimeout(alg.DNS.QueryResponseTimeout); err != nil {
+					log.Errorf("invalid QueryResponseTimeout format in SIP App. %v", alg.DNS.QueryResponseTimeout)
+					return err
+				}
+			}
+			algMapper = setBit(algMapper, 0)
+		}
+		if alg.ICMP != nil {
+			// TODO Validate ICMP Code and Type Ranges here
+			for _, protoPort := range app.Spec.ProtoPorts {
+				if components := strings.Split(strings.TrimSpace(protoPort), "/"); len(components) != 1 || components[0] != "icmp" {
+					log.Errorf("icmp app must specify only the protocol and it must be icmp. Found: %v", app.Spec.ProtoPorts)
+					return fmt.Errorf("icmp app must specify only the protocol and it must be icmp. Found: %v", app.Spec.ProtoPorts)
+				}
+			}
+
+			algMapper = setBit(algMapper, 1)
+		}
+		if alg.FTP != nil {
+			algMapper = setBit(algMapper, 2)
+		}
+		if alg.MSRPC != nil {
+			for _, r := range alg.MSRPC {
+				if err := validateTimeout(r.ProgramIDTimeout); err != nil {
+					log.Errorf("invalid program ID timeout %v. Err: %v", r.ProgramIDTimeout, err)
+					return err
+				}
+			}
+			algMapper = setBit(algMapper, 3)
+		}
+		if alg.RTSP != nil {
+			algMapper = setBit(algMapper, 4)
+		}
+		if alg.SIP != nil {
+			if len(alg.SIP.CTimeout) > 0 {
+				if err := validateTimeout(alg.SIP.CTimeout); err != nil {
+					log.Errorf("invalid cTimeout format in SIP App. %v", alg.SIP.CTimeout)
+					return err
+				}
+			}
+
+			if len(alg.SIP.MaxCallDuration) > 0 {
+				if err := validateTimeout(alg.SIP.MaxCallDuration); err != nil {
+					log.Errorf("invalid MaxCallDuration format in SIP App. %v", alg.SIP.MaxCallDuration)
+					return err
+				}
+			}
+
+			if len(alg.SIP.MediaInactivityTimeout) > 0 {
+				if err := validateTimeout(alg.SIP.MediaInactivityTimeout); err != nil {
+					log.Errorf("invalid MediaInactivityTimeout format in SIP App. %v", alg.SIP.MediaInactivityTimeout)
+					return err
+				}
+			}
+
+			if len(alg.SIP.T1Timeout) > 0 {
+				if err := validateTimeout(alg.SIP.T1Timeout); err != nil {
+					log.Errorf("invalid T1Timeout format in SIP App. %v", alg.SIP.T1Timeout)
+					return err
+				}
+			}
+
+			if len(alg.SIP.T4Timeout) > 0 {
+				if err := validateTimeout(alg.SIP.T4Timeout); err != nil {
+					log.Errorf("invalid T4Timeout format in SIP App. %v", alg.SIP.T4Timeout)
+					return err
+				}
+			}
+			algMapper = setBit(algMapper, 5)
+		}
+
+		if alg.SUNRPC != nil {
+			for _, r := range alg.SUNRPC {
+				if err := validateTimeout(r.ProgramIDTimeout); err != nil {
+					log.Errorf("invalid program ID timeout %v. Err: %v", r.ProgramIDTimeout, err)
+					return err
+				}
+			}
+			algMapper = setBit(algMapper, 6)
+		}
+		if alg.TFTP != nil {
+			algMapper = setBit(algMapper, 7)
+		}
+	}
+
+	// Only one of the bits in algMapper should be 1 if there is more than one field set, then we reject the config, as
+	// don't support multiple ALG configurations in the same object
+
+	if (algMapper & -algMapper) != algMapper {
+		log.Errorf("Multiple ALG configurations specified in a single app object. %v", app)
+		return fmt.Errorf("multiple ALG configurations specified in a single app object. %v", app)
+	}
+
 	key := na.Solver.ObjectKey(app.ObjectMeta, app.TypeMeta)
 	na.Lock()
 	na.AppDB[key] = app
 	na.Unlock()
 	err = na.Store.Write(app)
+
+	// Find the sg policies that are currently referring to this App and trigger an SGPolicy Update
+	for _, sgp := range na.ListSGPolicy() {
+		for _, r := range sgp.Spec.Rules {
+			if r.AppName == app.Name {
+				linkedSGPolicies = append(linkedSGPolicies, sgp)
+				continue
+			}
+		}
+	}
+
+	for _, sgp := range linkedSGPolicies {
+		if err := na.UpdateSGPolicy(sgp); err != nil {
+			log.Errorf("Failed to update the corresponding SG Policy. Err: %v", err)
+			return err
+		}
+	}
+
 	return err
 }
 

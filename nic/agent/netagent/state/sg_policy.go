@@ -198,11 +198,6 @@ func (na *Nagent) UpdateSGPolicy(sgp *netproto.SGPolicy) error {
 		return err
 	}
 
-	if proto.Equal(sgp, existingSgp) {
-		log.Infof("Nothing to update.")
-		return nil
-	}
-
 	// find the corresponding vrf for the sg policy
 	vrf, err := na.ValidateVrf(existingSgp.Tenant, existingSgp.Namespace, existingSgp.Spec.VrfName)
 	if err != nil {

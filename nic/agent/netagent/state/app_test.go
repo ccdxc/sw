@@ -2,6 +2,7 @@ package state
 
 import (
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
@@ -196,6 +197,106 @@ func TestAppUpdate(t *testing.T) {
 	err = ag.UpdateApp(&app)
 	AssertOk(t, err, "Error updating app")
 
+}
+
+func TestAppUpdateLinkedSGPolicyUpdate(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// app
+	app := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "dns",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts: []string{"udp/53"},
+			ALG: &netproto.ALG{
+				DNS: &netproto.DNS{
+					DropLargeDomainPackets: true,
+					DropMultiZonePackets:   true,
+					QueryResponseTimeout:   "30s",
+				},
+			},
+		},
+	}
+
+	// app
+	updApp := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "dns",
+		},
+		Spec: netproto.AppSpec{
+			ProtoPorts: []string{"udp/53"},
+			ALG: &netproto.ALG{
+				DNS: &netproto.DNS{
+					DropLargeDomainPackets: true,
+					DropMultiZonePackets:   true,
+					QueryResponseTimeout:   "1m",
+				},
+			},
+		},
+	}
+
+	// create app
+	err := ag.CreateApp(&app)
+	AssertOk(t, err, "Error creating app")
+	p, err := ag.FindApp(app.ObjectMeta)
+	AssertOk(t, err, "App not found in DB")
+	Assert(t, p.Name == "dns", "App names did not match", app)
+
+	// create an SGPolicy referring to the App
+	// sg policy
+	sgPolicy := &netproto.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testSGPolicy",
+		},
+		Spec: netproto.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []netproto.PolicyRule{
+				{
+					Action: "PERMIT",
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+					},
+					AppName: "dns",
+				},
+			},
+		},
+	}
+
+	err = ag.CreateSGPolicy(sgPolicy)
+	AssertOk(t, err, "Failed to create a linked SG Policy")
+
+	actualSGPolicy, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	AssertOk(t, err, "Failed to find find sg policy")
+
+	err = ag.UpdateApp(&updApp)
+	AssertOk(t, err, "Error updating app")
+	// Ensure the updated app has correct fields.
+	actualApp, err := ag.FindApp(updApp.ObjectMeta)
+	AssertOk(t, err, "Failed to find the update app")
+	Assert(t, actualApp.Spec.ALG.DNS.QueryResponseTimeout == updApp.Spec.ALG.DNS.QueryResponseTimeout, "Updated app didn't have expected fields updated")
+
+	time.Sleep(time.Second * 3)
+	updateSGPolicy, err := ag.FindSGPolicy(sgPolicy.ObjectMeta)
+	AssertOk(t, err, "Failed to find find sg policy")
+
+	// Ensure the rule ids have changed
+	Assert(t, updateSGPolicy.Spec.Rules[0].ID == actualSGPolicy.Spec.Rules[0].ID, "Rule IDs must change on an update")
 }
 
 //--------------------- Corner Case Tests ---------------------//
