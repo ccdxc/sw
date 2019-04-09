@@ -55,6 +55,10 @@ type k8sService struct {
 	observers        []types.K8sPodEventObserver
 	config           K8sServiceConfig
 	getContainerInfo func() map[string]utils.ContainerInfo
+	// The purpose of this mutex is to serialize start/stop calls and make them atomic
+	// We cannot use the general struct-wide mutex for that because the main loop may
+	// not be able to terminate if Stop() cancels while holding the lock.
+	startStopMutex sync.Mutex
 }
 
 // K8sServiceConfig gives ability to tweak k8s service behavior
@@ -71,7 +75,6 @@ func newK8sService(config *K8sServiceConfig) *k8sService {
 
 	log.Infof("k8sConfig %#v", config)
 	return &k8sService{
-		modCh:            make(chan protos.Module, maxModules),
 		observers:        make([]types.K8sPodEventObserver, 0),
 		config:           *config,
 		getContainerInfo: utils.GetContainerInfo,
@@ -85,14 +88,21 @@ func NewK8sService(config *K8sServiceConfig) types.K8sService {
 
 // Start starts the kubernetes service.
 func (k *k8sService) Start(client k8sclient.Interface, isLeader bool) {
+	// prevent other Start/Stop operations until we are done
+	k.startStopMutex.Lock()
+	defer k.startStopMutex.Unlock()
+
+	// Protect state access from other go-routines
 	k.Lock()
 	defer k.Unlock()
+
 	if k.running {
 		return
 	}
+
+	k.modCh = make(chan protos.Module, maxModules)
 	k.running = true
 	log.Infof("Starting k8s service")
-	k.Add(1)
 	k.client = client
 	k.isLeader = isLeader
 	k.ctx, k.cancel = context.WithCancel(context.Background())
@@ -130,6 +140,7 @@ func (k *k8sService) Start(client k8sclient.Interface, isLeader bool) {
 			k.modCh <- mod
 		}
 	}
+	k.Add(1)
 	go k.waitForAPIServerOrCancel()
 }
 
@@ -142,6 +153,7 @@ func (k *k8sService) waitForAPIServerOrCancel() {
 		select {
 		case <-k.ctx.Done():
 			k.Done()
+			log.Infof("k8sService waitForAPIServerOrCancel canceled")
 			return
 		case <-time.After(waitTime):
 			if _, err = k.client.Extensions().DaemonSets(defaultNS).List(metav1.ListOptions{}); err == nil {
@@ -172,6 +184,7 @@ func (k *k8sService) runUntilCancel() {
 		select {
 		case <-k.ctx.Done():
 			k.Done()
+			log.Infof("k8sService main loop runUntilCancel canceled")
 			return
 		case <-time.After(time.Second):
 			watcher, err = k.client.CoreV1().Pods(defaultNS).Watch(metav1.ListOptions{})
@@ -184,6 +197,7 @@ func (k *k8sService) runUntilCancel() {
 	for {
 		select {
 		case <-k.ctx.Done():
+			log.Infof("k8sService main loop runUntilCancel canceled")
 			watcher.Stop()
 			k.Done()
 			return
@@ -193,6 +207,7 @@ func (k *k8sService) runUntilCancel() {
 		case event, ok := <-watcher.ResultChan():
 			if !ok {
 				// restart this routine.
+				log.Infof("k8sService error receiving on K8s Apiserver watch channel, restarting main loop")
 				go k.runUntilCancel()
 				return
 			}
@@ -215,6 +230,7 @@ func (k *k8sService) runUntilCancel() {
 			if k.isLeader {
 				foundModules, err := getModules(k.client)
 				if err != nil {
+					log.Errorf("k8sService error getting modules from K8s ApiServer: %v", err)
 					break
 				}
 				modulesToDeploy := make(map[string]protos.Module)
@@ -500,16 +516,32 @@ func (k *k8sService) deleteDeployment(name string) error {
 
 // Stop stops the kubernetes service.
 func (k *k8sService) Stop() {
+	// prevent other Start/Stop operations until we are done
+	k.startStopMutex.Lock()
+	defer k.startStopMutex.Unlock()
+
+	// Protect state access from other go-routines
 	k.Lock()
-	defer k.Unlock()
+	if !k.running {
+		k.Unlock()
+		return
+	}
 	log.Infof("Stopping k8s service")
+
+	k.running = false
+	k.isLeader = false
+	if k.modCh != nil {
+		close(k.modCh)
+		k.modCh = nil
+	}
 	if k.cancel != nil {
 		k.cancel()
 		k.cancel = nil
 	}
-	k.running = false
-	k.isLeader = false
-	// Wait for go routine to terminate
+	// release lock so that goroutines can make progress and terminate cleanly
+	k.Unlock()
+
+	// Wait for goroutines to terminate
 	k.Wait()
 }
 
