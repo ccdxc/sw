@@ -10,3 +10,5 @@ UPGRADE_ROOT_DIR = 'upgrade_bin'
 
 UPGRADE_NAPLES_PKG = "naples_fw.tar"
 UPGRADE_NAPLES_PKG_COMPAT_CHECK = "naples_upg_fw.tar"
+
+UPGRADE_TEST_APP = "testupgapp"
