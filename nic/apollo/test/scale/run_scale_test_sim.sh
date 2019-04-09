@@ -4,6 +4,7 @@ set -e
 export NICDIR=`pwd`
 export HAL_LOG_DIR=${NICDIR}
 export ZMQ_SOC_DIR=${NICDIR}
+export CONFIG_PATH=${NICDIR}/conf/
 #export CAPRI_MOCK_MODE=1
 #export CAPRI_MOCK_MEMORY_MODE=1
 #export SKIP_VERIFY=1

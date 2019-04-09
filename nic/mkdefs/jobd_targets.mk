@@ -160,6 +160,14 @@ jobd/dol/apollo/msft/networking: ${JOBD_PREREQS}
 jobd/dol/apollo/lpm: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo oci --feature lpm
 
+.PHONY: jobd/apollo/scale_test_mock
+jobd/apollo/scale_test_mock: ${JOBD_PREREQS}
+	${NICDIR}/apollo/test/scale/run_scale_test_mock.sh
+
+.PHONY: jobd/apollo/agent/testapp
+jobd/apollo/agent/testapp: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/runtestapp.sh
+
 .PHONY: jobd/mbt/base
 jobd/mbt/base: ${JOBD_PREREQS}
 	DISABLE_AGING=1 ${NICDIR}/run.py ${COVERAGE_OPTS} --mbt --mbtrandomseed 6003702

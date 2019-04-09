@@ -79,8 +79,10 @@ typedef struct test_params_s {
         uint32_t num_tcp;
         uint32_t num_udp;
         uint32_t num_icmp;
-        uint16_t sport_base;
-        uint16_t dport_base;
+        uint16_t sport_lo;
+        uint16_t sport_hi;
+        uint16_t dport_lo;
+        uint16_t dport_hi;
     };
 } test_params_t;
 test_params_t g_test_params = { 0 };
@@ -700,39 +702,6 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
     return SDK_RET_OK;
 }
 
-static sdk_ret_t
-create_flows (uint32_t num_tcp, uint32_t num_udp, uint32_t num_icmp,
-              uint16_t sport_base, uint16_t dport_base, bool ipv6)
-{
-#ifndef TEST_GRPC_APP
-    sdk_ret_t ret = SDK_RET_OK;
-
-    if (num_tcp) {
-        ret = g_flow_test_obj->create_flows(num_tcp, 6, sport_base,
-                                            dport_base, ipv6);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-    }
-
-    if (num_udp) {
-        ret = g_flow_test_obj->create_flows(num_udp, 17, sport_base,
-                                            dport_base, ipv6);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-    }
-
-    if (num_icmp) {
-        ret = g_flow_test_obj->create_flows(num_icmp, 1, 0, 0, ipv6);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-    }
-#endif
-    return SDK_RET_OK;
-}
-
 sdk_ret_t
 create_objects (void)
 {
@@ -831,8 +800,10 @@ create_objects (void)
                 g_test_params.num_tcp = std::stol(obj.second.get<std::string>("num_tcp"));
                 g_test_params.num_udp = std::stol(obj.second.get<std::string>("num_udp"));
                 g_test_params.num_icmp = std::stol(obj.second.get<std::string>("num_icmp"));
-                g_test_params.sport_base = std::stol(obj.second.get<std::string>("sport_base"));
-                g_test_params.dport_base = std::stol(obj.second.get<std::string>("dport_base"));
+                g_test_params.sport_lo = std::stol(obj.second.get<std::string>("sport_lo"));
+                g_test_params.sport_hi = std::stol(obj.second.get<std::string>("sport_hi"));
+                g_test_params.dport_lo = std::stol(obj.second.get<std::string>("dport_lo"));
+                g_test_params.dport_hi = std::stol(obj.second.get<std::string>("dport_hi"));
             }
         }
     } catch (std::exception const &e) {
@@ -914,23 +885,20 @@ create_objects (void)
         return ret;
     }
 
-    if (g_test_params.dual_stack) {
-        // create V6 flows
-        ret = create_flows(g_test_params.num_tcp, g_test_params.num_udp,
-                           g_test_params.num_icmp, g_test_params.sport_base,
-                           g_test_params.dport_base, true);
-        if (ret != SDK_RET_OK) {
-            return ret;
-        }
-    }
-
-    // create V4 flows
-    ret = create_flows(g_test_params.num_tcp, g_test_params.num_udp,
-                       g_test_params.num_icmp, g_test_params.sport_base,
-                       g_test_params.dport_base, false);
+#ifndef TEST_GRPC_APP
+    g_flow_test_obj->set_cfg_params(g_test_params.dual_stack,
+                                    g_test_params.num_tcp,
+                                    g_test_params.num_udp,
+                                    g_test_params.num_icmp,
+                                    g_test_params.sport_lo,
+                                    g_test_params.sport_hi,
+                                    g_test_params.dport_lo,
+                                    g_test_params.dport_hi);
+    ret = g_flow_test_obj->create_flows();
     if (ret != SDK_RET_OK) {
         return ret;
     }
+#endif
 
 #ifdef TEST_GRPC_APP
     /* BATCH COMMIT */

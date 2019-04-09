@@ -17,14 +17,14 @@ targets:
 
   apollo/dol/oci/networking:
     commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/oci/networking"]
-    owners: ["email:vikasd@pensando.io", "email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
     area:
     sub-area:
     feature:
 
   apollo/dol/msft/networking:
     commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/msft/networking"]
-    owners: ["email:vikasd@pensando.io", "email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
     area:
     sub-area:
     feature:
@@ -35,6 +35,20 @@ targets:
     area:
     sub-area:
     feature:
+
+  apollo/scale_test_mock:
+    commands: ["make", "PIPELINE=apollo", "jobd/apollo/scale_test_mock"]
+    owners: ["email:saratk@pensando.io", "email:vijasrin@pensando.io" ]
+    area:
+    sub-area:
+    feature:
+
+  #apollo/agent/testapp:
+    #commands: ["make", "PIPELINE=apollo", "jobd/apollo/agent/testapp"]
+    #owners: ["email:saratk@pensando.io", "email:vijasrin@pensando.io" ]
+    #area:
+    #sub-area:
+    #feature:
 
 cache:
   name: "sw"

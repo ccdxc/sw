@@ -53,35 +53,12 @@ protected:
     }
 };
 
-static sdk_ret_t
-create_flows (uint32_t num_tcp, uint32_t num_udp, uint32_t num_icmp, bool ipv6)
-{
-    sdk_ret_t ret = SDK_RET_OK;
-
-    ret = g_flow_test_obj->create_flows(num_tcp, 6, 0, 0, ipv6);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    ret = g_flow_test_obj->create_flows(num_udp, 17, 0, 0, ipv6);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    ret = g_flow_test_obj->create_flows(num_icmp, 1, 0, 0, ipv6);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-    return SDK_RET_OK;
-}
-
 #define PERF_TEST_SCALE 10*1024
 
 TEST_F(flow_gtest, flows_create) {
     g_flow_test_obj = new flow_test();
     g_flow_test_obj->generate_dummy_epdb();
-    create_flows(PERF_TEST_SCALE, 0, 0, false);
-    create_flows(PERF_TEST_SCALE, 0, 0, true);
+    g_flow_test_obj->create_flows();
     delete g_flow_test_obj;
 }
 
@@ -195,7 +172,7 @@ TEST_F(flow_gtest, DISABLED_p4pd_actiondata_appdata_get) {
 
 static void
 flow_test_time_profile_print() {
-    printf("TABLE_LIB_MEMHASH_INSERT        = %09ld\n", 
+    printf("TABLE_LIB_MEMHASH_INSERT        = %09ld\n",
            time_profile_total(sdk::utils::time_profile::TABLE_LIB_MEMHASH_INSERT) -
            time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_READ) -
            time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_INSTALL) -
@@ -205,7 +182,7 @@ flow_test_time_profile_print() {
     printf("P4PD_HWKEY_HWMASK_BUILD         = %09ld\n",
            time_profile_total(sdk::utils::time_profile::P4PD_HWKEY_HWMASK_BUILD));
     printf("P4PD_ENTRY_READ                 = %09ld\n",
-           time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_READ) - 
+           time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_READ) -
            time_profile_total(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_READ));
     printf("ASICPD_HBM_TABLE_ENTRY_READ     = %09ld\n",
            time_profile_total(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_READ) -
@@ -216,7 +193,7 @@ flow_test_time_profile_print() {
     printf("PAL_MEM_RD                      = %09ld\n",
            time_profile_total(sdk::utils::time_profile::PAL_MEM_RD));
     printf("P4PD_ENTRY_INSTALL              = %09ld\n",
-           time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_INSTALL) - 
+           time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_INSTALL) -
            time_profile_total(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_WRITE));
     printf("ASICPD_HBM_TABLE_ENTRY_WRITE    = %09ld\n",
            time_profile_total(sdk::utils::time_profile::ASICPD_HBM_TABLE_ENTRY_WRITE) -
