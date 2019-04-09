@@ -208,8 +208,9 @@ testcases:
 
     #===================================================================
     # Goal is to trigger backtrack by keeping higer txdepth than rxdepth
+    # and also disable spec (with 16sges on spec =8 config)
     #===================================================================
-    -   name    : RC_TCPCM_1KQPs_BackTrack
+    -   name    : RC_TCPCM_1KQPs_Send_BackTrack_wSpec
         testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
@@ -218,9 +219,45 @@ testcases:
             threads  : [8]
             bidir    : ['yes']
             rxdepth  : [10]
-            txdepth  : [50]
+            txdepth  : [64]
             size     : [65536, 1048576]
-            command  : ['ib_send_bw', 'ib_read_bw', 'ib_write_bw']
+            command  : ['ib_send_bw']
+
+    -   name    : RC_TCPCM_1KQPs_Send_BackTrack_woSpec
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [125]
+            threads  : [8]
+            bidir    : ['yes']
+            rxdepth  : [10]
+            txdepth  : [64]
+            size     : [65536, 1048576]
+            numsges  : [16]
+            command  : ['ib_send_bw']
+
+    -   name    : RC_TCPCM_1KQPs_Read_Write_BackTrack
+        testcase: testcases.rdma.rdma_perftest
+        stress  : True
+        iterators :
+            type     : nested
+            num_qp   : [125]
+            threads  : [8]
+            bidir    : ['yes']
+            rxdepth  : [1]
+            txdepth  : [64]
+            size     : [65536, 1048576]
+            numsges  : [16]
+            command  : ['ib_read_bw', 'ib_write_bw']
+
+    #===================================================================
+    #TODO: Disable Pause and Test with Mellanox for Back Track coverage
+    #====================================================================
+
+    #===================================================================
+    #TODO: Disable spec (spec=0) and run the regular tests
+    #====================================================================
 
     #=======================================
     # RPing
