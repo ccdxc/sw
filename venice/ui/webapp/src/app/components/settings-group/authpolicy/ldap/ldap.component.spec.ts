@@ -312,7 +312,7 @@ describe('LdapComponent', () => {
 
     let values = fixture.debugElement.queryAll(By.css('.ldap-input'));
     expect(values[0].nativeElement.innerText).toContain('binddn');
-    expect(values[1].nativeElement.innerText).toContain('bindpass');
+    expect(values[1].nativeElement.innerText).toContain('**********');
     expect(values[2].nativeElement.innerText).toContain('basedn');
     expect(values[3].nativeElement.innerText).toContain('user-obj');
     expect(values[4].nativeElement.innerText).toContain('group-obj-class');
@@ -379,7 +379,7 @@ describe('LdapComponent', () => {
 
     values = fixture.debugElement.queryAll(By.css('.ldap-input'));
     expect(values[0].nativeElement.innerText).toContain('binddn');
-    expect(values[1].nativeElement.innerText).toContain('bindpass');
+    expect(values[1].nativeElement.innerText).toContain('**********');
     expect(values[2].nativeElement.innerText).toContain('basedn-change');
     expect(values[3].nativeElement.innerText).toContain('user-obj-change');
     expect(values[4].nativeElement.innerText).toContain('group-obj');

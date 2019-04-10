@@ -145,7 +145,7 @@ describe('AuthpolicyComponent', () => {
         expect(toggle.length).toBe(1);
         const values = groups[0].queryAll(By.css('.ldap-input'));
         expect(values[0].nativeElement.innerHTML).toContain('binddn');
-        expect(values[1].nativeElement.innerHTML).toContain('bindpass');
+        expect(values[1].nativeElement.innerHTML).toContain('**********'); // VS-214 use password input
         expect(values[2].nativeElement.innerHTML).toContain('basedn');
         expect(values[3].nativeElement.innerHTML).toContain('user-obj');
         expect(values[4].nativeElement.innerHTML).toContain('group-obj-class');

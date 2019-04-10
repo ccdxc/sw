@@ -117,6 +117,16 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
     return this.constructor.name;
   }
 
+  getLDAPTestError(ldapCheckType: LDAPCheckType): any {
+    const error = {
+      statusCode: 200,
+      body: {
+        message: (ldapCheckType === LDAPCheckType.CONNECTION ) ? 'LDAP Connection Test Failed' : 'LDAP Bind Test Failed.'
+      }
+    };
+    return error;
+  }
+
   onCheckLDAPServerConnect(ldap: AuthLdap) {
     this.authPolicy.spec.authenticators.ldap = ldap;
     this._authService.LdapConnectionCheck(this.authPolicy.getFormGroupValues()).subscribe(
@@ -126,7 +136,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
         const connCheckResponseError = AuthPolicyUtil.processLDAPCheckResponse(ldapCheckResponse);
         if (connCheckResponseError.errors.length > 0) {
           this._ldapConnCheckResponse = ldapCheckResponse;
-          this.handleLDAPServerCheckFailure(LDAPCheckType.CONNECTION);
+          this.handleLDAPServerCheckFailure(LDAPCheckType.CONNECTION, this.getLDAPTestError(LDAPCheckType.CONNECTION));
         } else {
           this.handleLDAPServerCheckSuccess(LDAPCheckType.CONNECTION);
         }
@@ -136,11 +146,11 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
   }
 
   handleLDAPServerCheckSuccess(type: LDAPCheckType) {
-    this._controllerService.invokeSuccessToaster('Test LDAP ' + type + ' pass', '');
+    this._controllerService.invokeSuccessToaster('Test LDAP ' + type + ' passed', '');
   }
 
-  handleLDAPServerCheckFailure(type: LDAPCheckType) {
-    this._controllerService.invokeRESTErrorToaster('Test LDAP ' + type + ' fails', '');
+  handleLDAPServerCheckFailure(type: LDAPCheckType, error: any) {
+    this._controllerService.invokeRESTErrorToaster('Test LDAP ' + type + ' failed', error);
   }
 
   onCheckLDAPBindConnect(ldap: AuthLdap) {
@@ -152,7 +162,7 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
         const ldapBindCheckResponseError = AuthPolicyUtil.processLDAPCheckResponse(ldapCheckResponse);
         if (ldapBindCheckResponseError.errors.length > 0) {
           this._ldapBindCheckResponse = ldapCheckResponse;
-          this.handleLDAPServerCheckFailure(LDAPCheckType.BIND);
+          this.handleLDAPServerCheckFailure(LDAPCheckType.BIND, this.getLDAPTestError(LDAPCheckType.BIND));
         } else {
           this.handleLDAPServerCheckSuccess(LDAPCheckType.BIND);
         }

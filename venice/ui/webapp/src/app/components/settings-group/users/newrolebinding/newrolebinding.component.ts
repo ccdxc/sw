@@ -83,13 +83,13 @@ export class NewrolebindingComponent extends UsersComponent implements OnInit, O
       ]);
 
       this.onUsersAvailable();
-      this.onRolesAvailable();
     }
+    this.onRolesAvailable();
   }
 
   isRolebindingnameValid(authRolebindings: AuthRoleBinding[]): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      if (this.isRoleBindingAlreadyExist(control.value, authRolebindings)) {
+      if (  Utility.isEmpty(control.value) || this.isRoleBindingAlreadyExist(control.value, authRolebindings)) {
         return {
           'rolebinding-name': {
             required: true,
@@ -184,7 +184,12 @@ export class NewrolebindingComponent extends UsersComponent implements OnInit, O
       if (this.isEditMode()) {
         this.updateRolebinding();
       } else {
-        this.addRoleBinding();
+        if (this.newAuthRolebinding.getFormGroupValues().spec.role === null) {
+          // Make sure user select a role
+          this._controllerService.invokeErrorToaster('Invalid Input', 'Please specify role');
+        } else {
+          this.addRoleBinding();
+        }
       }
     }
   }

@@ -256,3 +256,8 @@ $sidenavWidth: 200px;
 
 
 /*-------- Seach --------*/
+
+/** VS-219 --*/
+.hidden-sm-down.mat-icon-button {
+   width: min-content !important;
+}

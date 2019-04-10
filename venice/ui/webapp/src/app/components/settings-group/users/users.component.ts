@@ -65,8 +65,9 @@ export interface AuthPolicyObject {
 })
 export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
 
-  public static PASSWORD_REGEX: string = '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*([^a-zA-Z\d\s])).{9,}$';
+  public static PASSWORD_REGEX: string = '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{9,}$';
   public static PASSWORD_MESSAGE: string = 'Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character';
+
 
   public static UI_PANEL_USER = 'user';
   public static UI_PANEL_ROLE = 'role';
@@ -916,6 +917,9 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
     this.selectedAuthUser = user;
     this.userEditAction = UsersComponent.USER_ACTION_CHANGEPWD;
     this.authPasswordChangeRequest = new AuthPasswordChangeRequest();
+    this.authPasswordChangeRequest.$formGroup.get(['old-password']).setValidators([required]);
+    this.authPasswordChangeRequest.$formGroup.get(['new-password']).setValidators([required, patternValidator(UsersComponent.PASSWORD_REGEX, UsersComponent.PASSWORD_MESSAGE )]);
+
     const selectedUserData = this.selectedAuthUser.getFormGroupValues();
     this.authPasswordChangeRequest.setValues(selectedUserData); // this will populate data.
 

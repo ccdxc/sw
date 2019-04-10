@@ -132,8 +132,8 @@
               </mat-icon>
             </div>
             <div fxFlex="30px" fxLayout="row" class="ldap-value">
-              <input fxFlex="nogrow" formControlName="bind-password" appErrorTooltip
-                     class="ldap-input" spellcheck="false" type="text" pInputText placeholder="">
+              <input fxFlex="nogrow" formControlName="bind-password"
+                     class="ldap-input" spellcheck="false" type="text" pInputText placeholder="password"  type="password"  appErrorTooltip >
             </div>
           </div>
           <!-- Field Values - view mode -->
@@ -144,7 +144,7 @@
             </div>
             <div fxFlex="30px" fxLayout="row" class="ldap-fieldtitle ldap-input"
                  fxLayoutAlign="start center">
-              {{ LDAPObject["bind-password"] }}
+                  ********** <!-- per VS-214 {{ LDAPObject["bind-password"] }} -->
             </div>
           </div>
 
@@ -349,7 +349,7 @@
           <!-- Field Title -->
           <div fxFlex="nogrow" fxLayout="column">
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>Server/Port:</span>
+              <span>Server:Port</span>
             </div>
             <!-- <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
                 <span>ServerName:</span>
@@ -379,7 +379,7 @@
                               (change)="toggleSkipVerification(server, index, $event)" fxFlex='30px'
                               class="ldap-toggle ldap-fieldtitle"></mat-slide-toggle>
             <div class="ldap-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-              <span>Server Name:</span>
+              <span>Server Name</span>
             </div>
           </div>
           <!-- Field Values -->
