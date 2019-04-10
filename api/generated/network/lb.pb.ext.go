@@ -7,6 +7,7 @@ Input file: lb.proto
 package network
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -167,6 +168,10 @@ func (m *LbPolicy) References(tenant string, path string, resp map[string]apiint
 
 func (m *LbPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for LbPolicy"))
+	}
 
 	{
 		dlmtr := "."

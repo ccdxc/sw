@@ -69,7 +69,8 @@ func TestMain(m *testing.M) {
 			Type:  store.KVStoreTypeMemkv,
 			Codec: runtime.NewJSONCodec(s),
 		},
-		KVPoolSize: 1,
+		KVPoolSize:       1,
+		AllowMultiTenant: true,
 	}
 	singletonAPISrv.config = config
 

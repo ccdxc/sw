@@ -30,7 +30,7 @@ var (
 	// Tenants for testing
 	Tenants = [...]string{"tesla", "audi"}
 	// Namespaces for testing
-	Namespaces = [...]string{"staging", "production"}
+	Namespaces = [...]string{globals.DefaultNamespace}
 
 	healthy = cluster.SmartNICCondition{
 		Type:   cluster.SmartNICCondition_HEALTHY.String(),
@@ -254,7 +254,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 
 		// Create Network object
 		netObj := createNetwork(Tenants[i%2],
-			Namespaces[i%2],
+			Namespaces[0],
 			fmt.Sprintf("net%02x", i),
 			fmt.Sprintf("12.%x.%x.0/24", i/256, i%256),
 			fmt.Sprintf("12.%x.%x.254", i/256, i%256))
@@ -265,7 +265,7 @@ func PolicyGenerator(ctx context.Context, apiClient apiclient.Services, objCount
 
 		// Create Security group object
 		sg := createSg(Tenants[i%2],
-			Namespaces[i%2],
+			Namespaces[0],
 			fmt.Sprintf("sg%02x", i),
 			labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 		log.Infof("\nCreating Security-Group uuid: %s name: %s", sg.ObjectMeta.UUID, sg.Name)
@@ -435,7 +435,7 @@ func DefaultTenantPolicyGenerator(ctx context.Context, apiClient apiclient.Servi
 			}
 		case 1:
 			netObj := createNetwork(globals.DefaultTenant,
-				Namespaces[i%2],
+				Namespaces[0],
 				fmt.Sprintf("net%02x", i),
 				fmt.Sprintf("12.%x.%x.0/24", i/256, i%256),
 				fmt.Sprintf("12.%x.%x.254", i/256, i%256))
@@ -446,7 +446,7 @@ func DefaultTenantPolicyGenerator(ctx context.Context, apiClient apiclient.Servi
 		case 2:
 			// Create Security group object
 			sg := createSg(globals.DefaultTenant,
-				Namespaces[i%2],
+				Namespaces[0],
 				fmt.Sprintf("sg%02x", i),
 				labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 			log.Infof("Creating Security-Group uuid: %s name: %s", sg.ObjectMeta.UUID, sg.Name)
@@ -481,7 +481,7 @@ func DeleteDefaultTenantPolicyGenerator(ctx context.Context, apiClient apiclient
 			}
 		case 1:
 			netObj := createNetwork(globals.DefaultTenant,
-				Namespaces[i%2],
+				Namespaces[0],
 				fmt.Sprintf("net%02x", i),
 				fmt.Sprintf("12.%x.%x.0/24", i/256, i%256),
 				fmt.Sprintf("12.%x.%x.254", i/256, i%256))
@@ -492,7 +492,7 @@ func DeleteDefaultTenantPolicyGenerator(ctx context.Context, apiClient apiclient
 		case 2:
 			// Create Security group object
 			sg := createSg(globals.DefaultTenant,
-				Namespaces[i%2],
+				Namespaces[0],
 				fmt.Sprintf("sg%02x", i),
 				labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 			log.Infof("Deleting Security-Group uuid: %s name: %s", sg.ObjectMeta.UUID, sg.Name)

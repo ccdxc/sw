@@ -22,8 +22,9 @@ func CreateExternalUser(username, tenant, fullname, email string, groups []strin
 	}
 	// Create external user
 	objMeta := &api.ObjectMeta{
-		Name:   username,
-		Tenant: strings.ToLower(tenant),
+		Name:      username,
+		Tenant:    strings.ToLower(tenant),
+		Namespace: globals.DefaultNamespace,
 	}
 
 	// user object

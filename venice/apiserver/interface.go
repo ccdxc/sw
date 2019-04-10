@@ -87,6 +87,8 @@ type Server interface {
 	GetVersion() string
 	// GetGraphDB returns the graph DB in use by the Server
 	GetGraphDB() graph.Interface
+	// RuntimeFlags returns runtime flags in use by the Server
+	RuntimeFlags() Flags
 }
 
 // Config holds config for the API Server.
@@ -115,9 +117,17 @@ type Config struct {
 	// BypassCache being set causes the API server to access the KV store directly bypassing
 	//  the cache layer
 	BypassCache bool
+	// AllowMultiTenant enables support for multi-tenant operation
+	AllowMultiTenant bool
 	// FunctionVectors are common utility functions
 	GetOverlay func(tenant, id string) (apiintf.OverlayInterface, error)
 	IsDryRun   func(ctx context.Context) bool
+}
+
+// Flags are runtime flags in use by the Server
+type Flags struct {
+	// Allow support for multi-tenant operation
+	AllowMultiTenant bool
 }
 
 // TransformFunc is a function that tranforms a message from "from" version to the "to" version.

@@ -47,7 +47,7 @@ message ObjectMeta {
   // Namespace of the object, for scoped objects.
   // Should start and end in an alphanumeric character and can contain alphanumeric or ._- characters
   // maximum length is 64 characters
-  string Namespace            = 3 [(gogoproto.jsontag) = "namespace,omitempty"];
+  string Namespace            = 3 [(gogoproto.jsontag) = "namespace,omitempty", (venice.check) = "EmptyOrRegExp(name)", (venice.check) = "EmptyOrStrLen(2,64)"];
   // GenerationID is the generation Id for the object. This is incremented anytime there
   //  is an update to the user intent, including Spec update and any update to ObjectMeta.
   //  System generated and updated, not updatable by user.

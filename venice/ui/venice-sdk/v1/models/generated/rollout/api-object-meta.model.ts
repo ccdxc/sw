@@ -27,6 +27,7 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
     'name': string = null;
     /** must be alpha-numericslength of string should be between 1 and 48 */
     'tenant': string = null;
+    /** must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64 */
     'namespace': string = null;
     /** GenerationID is the generation Id for the object. This is incremented anytime there
      is an update to the user intent, including Spec update and any update to ObjectMeta.
@@ -63,6 +64,7 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
             type: 'string'
         },
         'namespace': {
+            description:  'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
             required: false,
             type: 'string'
         },
@@ -212,7 +214,7 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
             this._formGroup = new FormGroup({
                 'name': CustomFormControl(new FormControl(this['name'], [required, minLengthValidator(2), maxLengthValidator(64), patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64'), ]), ApiObjectMeta.propInfo['name']),
                 'tenant': CustomFormControl(new FormControl(this['tenant'], [minLengthValidator(1), maxLengthValidator(48), patternValidator('^[a-zA-Z0-9]+$', 'must be alpha-numericslength of string should be between 1 and 48'), ]), ApiObjectMeta.propInfo['tenant']),
-                'namespace': CustomFormControl(new FormControl(this['namespace']), ApiObjectMeta.propInfo['namespace']),
+                'namespace': CustomFormControl(new FormControl(this['namespace'], [minLengthValidator(2), maxLengthValidator(64), patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64'), ]), ApiObjectMeta.propInfo['namespace']),
                 'generation-id': CustomFormControl(new FormControl(this['generation-id']), ApiObjectMeta.propInfo['generation-id']),
                 'resource-version': CustomFormControl(new FormControl(this['resource-version']), ApiObjectMeta.propInfo['resource-version']),
                 'uuid': CustomFormControl(new FormControl(this['uuid']), ApiObjectMeta.propInfo['uuid']),

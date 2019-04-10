@@ -7,6 +7,7 @@ Input file: staging.proto
 package staging
 
 import (
+	"errors"
 	fmt "fmt"
 	"strings"
 
@@ -406,6 +407,10 @@ func (m *Buffer) References(tenant string, path string, resp map[string]apiintf.
 func (m *Buffer) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for Buffer"))
+	}
+
 	{
 		dlmtr := "."
 		if path == "" {
@@ -509,6 +514,10 @@ func (m *ClearAction) References(tenant string, path string, resp map[string]api
 func (m *ClearAction) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for ClearAction"))
+	}
+
 	{
 		dlmtr := "."
 		if path == "" {
@@ -611,6 +620,10 @@ func (m *CommitAction) References(tenant string, path string, resp map[string]ap
 
 func (m *CommitAction) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for CommitAction"))
+	}
 
 	{
 		dlmtr := "."

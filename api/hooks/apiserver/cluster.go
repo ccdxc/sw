@@ -218,6 +218,20 @@ func (cl *clusterHooks) deleteDefaultVirtualRouter(ctx context.Context, kv kvsto
 	return r, true, nil
 }
 
+// Validate the tenant object
+func (cl *clusterHooks) validateTenant(i interface{}, ver string, ignStatus bool) []error {
+	r, ok := i.(cluster.Tenant)
+	if !ok {
+		return []error{errors.New("invalid intput type")}
+	}
+	apiSrv := apisrvpkg.MustGetAPIServer()
+	flags := apiSrv.RuntimeFlags()
+	if !flags.AllowMultiTenant && r.Name != globals.DefaultTenant {
+		return []error{errors.New("only tenant default allowed")}
+	}
+	return nil
+}
+
 // createDefaultRoles is a pre-commit hook for tenant create operation that creates default roles when a tenant is created
 func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(cluster.Tenant)
@@ -490,6 +504,8 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	// hook to implement update TLS Config action
 	svc.GetMethod("UpdateTLSConfig").WithPreCommitHook(r.setTLSConfig)
 	svc.GetMethod("UpdateTLSConfig").WithResponseWriter(r.getClusterObject)
+	// Only allow default tenant in this release
+	svc.GetCrudService("Tenant", apiintf.CreateOper).GetRequestType().WithValidate(r.validateTenant)
 	// register hook to create default roles
 	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultRoles)
 	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createFirewallProfile)

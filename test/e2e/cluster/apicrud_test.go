@@ -64,7 +64,7 @@ func testAPICRUDOps() func() {
 			}()
 			opts := api.ListWatchOptions{}
 			opts.FieldChangeSelector = []string{"."}
-			opts.Name = "e2etenant"
+			opts.Name = globals.DefaultTenant
 			var tWatcher, nWatcher kvstore.Watcher
 			var err error
 			Eventually(func() error {
@@ -72,7 +72,7 @@ func testAPICRUDOps() func() {
 				return err
 			}, 30, 1).Should(BeNil(), "Watch should be successful")
 			opts = api.ListWatchOptions{}
-			opts.Tenant = "e2etenant"
+			opts.Tenant = globals.DefaultTenant
 			Eventually(func() error {
 				nWatcher, err = grpcClient.NetworkV1().Network().Watch(wctx, &opts)
 				return err
@@ -114,16 +114,16 @@ func testAPICRUDOps() func() {
 					APIVersion: "v1",
 				},
 				ObjectMeta: api.ObjectMeta{
-					Name: "e2etenant",
+					Name: globals.DefaultTenant,
 				},
 				Spec: cluster.TenantSpec{
 					AdminUser: "admin",
 				},
 			}
-			_, err := grpcClient.ClusterV1().Tenant().Get(lctx, &tenant.ObjectMeta)
+			retten, err := grpcClient.ClusterV1().Tenant().Get(lctx, &tenant.ObjectMeta)
 			if err == nil {
 				// Delete all networks
-				netws, err := grpcClient.NetworkV1().Network().List(lctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "e2etenant"}})
+				netws, err := grpcClient.NetworkV1().Network().List(lctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
 				By(fmt.Sprintf("got networks [%+v]", netws))
 				Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%s)", err))
 				for _, n := range netws {
@@ -135,16 +135,13 @@ func testAPICRUDOps() func() {
 				for _, n := range netws {
 					expNEvents = addToWatchList(expNEvents, n, kvstore.Deleted)
 				}
-				ret, err := grpcClient.ClusterV1().Tenant().Delete(lctx, &tenant.ObjectMeta)
-				Expect(err).To(BeNil(), fmt.Sprintf("got error [%v]", apierrors.FromError(err)))
-				// We would have also seen the existing tenant object as a Create
+				expTEvents = addToWatchList(expTEvents, retten, kvstore.Created)
+			} else {
+				ret, err := grpcClient.ClusterV1().Tenant().Create(lctx, &tenant)
+				Expect(err).To(BeNil())
+				Expect(reflect.DeepEqual(ret.Spec, tenant.Spec)).To(Equal(true))
 				expTEvents = addToWatchList(expTEvents, ret, kvstore.Created)
-				expTEvents = addToWatchList(expTEvents, ret, kvstore.Deleted)
 			}
-			ret, err := grpcClient.ClusterV1().Tenant().Create(lctx, &tenant)
-			Expect(err).To(BeNil())
-			Expect(reflect.DeepEqual(ret.Spec, tenant.Spec)).To(Equal(true))
-			expTEvents = addToWatchList(expTEvents, ret, kvstore.Created)
 		}
 
 		{ // gRPC Crud operations
@@ -154,8 +151,9 @@ func testAPICRUDOps() func() {
 					APIVersion: "v1",
 				},
 				ObjectMeta: api.ObjectMeta{
-					Tenant: "e2etenant",
-					Name:   "e2eNetwork1",
+					Tenant:    globals.DefaultTenant,
+					Name:      "e2eNetwork1",
+					Namespace: globals.DefaultNamespace,
 				},
 				Spec: network.NetworkSpec{
 					Type:        "vlan",
@@ -231,8 +229,9 @@ func testAPICRUDOps() func() {
 					APIVersion: "v1",
 				},
 				ObjectMeta: api.ObjectMeta{
-					Tenant: "e2etenant",
-					Name:   "e2eNetwork2",
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+					Name:      "e2eNetwork2",
 				},
 				Spec: network.NetworkSpec{
 					Type:        "vlan",
@@ -394,8 +393,9 @@ var _ = Describe("API Crud tests", func() {
 				APIVersion: "v1",
 			},
 			ObjectMeta: api.ObjectMeta{
-				Tenant: "e2etenant",
-				Name:   "e2eSaveNetwork1",
+				Tenant:    globals.DefaultTenant,
+				Namespace: globals.DefaultNamespace,
+				Name:      "e2eSaveNetwork1",
 			},
 			Spec: network.NetworkSpec{
 				Type:        "vlan",
@@ -406,7 +406,7 @@ var _ = Describe("API Crud tests", func() {
 		_, err := grpcClient.NetworkV1().Network().Create(context.Background(), &netw)
 		netw.Name = "e2eSaveNetwork2"
 		_, err = grpcClient.NetworkV1().Network().Create(context.Background(), &netw)
-		cfg.networks, err = grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "e2etenant"}})
+		cfg.networks, err = grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
 		Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%s)", err))
 		cfg.tenants, err = grpcClient.ClusterV1().Tenant().List(context.Background(), &api.ListWatchOptions{})
 		Expect(err).Should(BeNil(), fmt.Sprintf("got error listing tenants (%s)", err))
@@ -424,7 +424,7 @@ var _ = Describe("API Crud tests", func() {
 		return func() {
 			grpcClient := ts.tu.APIClient
 			Expect(grpcClient).ShouldNot(BeNil())
-			netws, err := grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "e2etenant"}})
+			netws, err := grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
 			Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%s)", err))
 			tens, err := grpcClient.ClusterV1().Tenant().List(context.Background(), &api.ListWatchOptions{})
 			Expect(err).Should(BeNil(), fmt.Sprintf("got error listing tenants (%s)", err))

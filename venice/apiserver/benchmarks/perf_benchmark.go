@@ -286,9 +286,10 @@ func setupAPIServer(kvtype string, cluster []string, pool int) {
 			Codec:   runtime.NewJSONCodec(tinfo.scheme),
 			Servers: cluster,
 		},
-		KVPoolSize: pool,
-		GetOverlay: cache.GetOverlay,
-		IsDryRun:   cache.IsDryRun,
+		KVPoolSize:       pool,
+		GetOverlay:       cache.GetOverlay,
+		IsDryRun:         cache.IsDryRun,
+		AllowMultiTenant: true,
 	}
 	if !tinfo.useCache {
 		srvconfig.BypassCache = true

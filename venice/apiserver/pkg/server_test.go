@@ -168,7 +168,8 @@ func TestRunApiSrv(t *testing.T) {
 			Type:  store.KVStoreTypeMemkv,
 			Codec: runtime.NewJSONCodec(runtime.NewScheme()),
 		},
-		KVPoolSize: 1,
+		KVPoolSize:       1,
+		AllowMultiTenant: true,
 	}
 
 	_ = MustGetAPIServer()
@@ -219,6 +220,11 @@ func TestRunApiSrv(t *testing.T) {
 	if ver != "v1" {
 		t.Errorf("returned wrong version [%v]", ver)
 	}
+
+	flags := a.RuntimeFlags()
+	if !flags.AllowMultiTenant {
+		t.Errorf("Expecting AllowMultiTenant to be set")
+	}
 	// Check we are able to create overlays
 	_, err = a.CreateOverlay("default", "notused", "/test/")
 	if err != nil {
@@ -258,6 +264,14 @@ func TestRunApiSrv(t *testing.T) {
 	for i := 0; i < singletonAPISrv.config.KVPoolSize; i++ {
 		singletonAPISrv.addKvConnToPool()
 	}
+	config.AllowMultiTenant = false
+	go a.Run(config)
+	a.WaitRunning()
+	flags = a.RuntimeFlags()
+	if flags.AllowMultiTenant {
+		t.Errorf("Expecting AllowMultiTenant to be false")
+	}
+	a.Stop()
 }
 
 func TestStartStop(t *testing.T) {
@@ -273,7 +287,8 @@ func TestStartStop(t *testing.T) {
 			Type:  store.KVStoreTypeMemkv,
 			Codec: runtime.NewJSONCodec(runtime.NewScheme()),
 		},
-		KVPoolSize: 1,
+		KVPoolSize:       1,
+		AllowMultiTenant: true,
 	}
 
 	_ = MustGetAPIServer()

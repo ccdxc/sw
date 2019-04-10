@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/pensando/sw/venice/globals"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
@@ -66,8 +68,9 @@ func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, b
 	defer apicl.Close()
 	// fetch user
 	objMeta := &api.ObjectMeta{
-		Name:   passwdcred.Username,
-		Tenant: passwdcred.Tenant,
+		Name:      passwdcred.Username,
+		Tenant:    passwdcred.Tenant,
+		Namespace: globals.DefaultNamespace,
 	}
 	user, err := apicl.AuthV1().User().Get(context.Background(), objMeta)
 	if err != nil {

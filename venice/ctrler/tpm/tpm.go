@@ -317,8 +317,9 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 		// create stats policy
 		statsPolicy := &telemetry.StatsPolicy{
 			ObjectMeta: api.ObjectMeta{
-				Name:   tenant.GetName(),
-				Tenant: tenant.GetName(),
+				Name:      tenant.GetName(),
+				Tenant:    tenant.GetName(),
+				Namespace: globals.DefaultNamespace,
 			},
 			Spec: GetDefaultStatsSpec(),
 		}

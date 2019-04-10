@@ -7,6 +7,7 @@ Input file: vrf.proto
 package network
 
 import (
+	"errors"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -133,6 +134,10 @@ func (m *VirtualRouter) References(tenant string, path string, resp map[string]a
 
 func (m *VirtualRouter) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for VirtualRouter"))
+	}
 
 	{
 		dlmtr := "."

@@ -7,6 +7,7 @@ Input file: mirror.proto
 package monitoring
 
 import (
+	"errors"
 	fmt "fmt"
 	"strings"
 
@@ -453,6 +454,10 @@ func (m *MirrorSession) References(tenant string, path string, resp map[string]a
 
 func (m *MirrorSession) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for MirrorSession"))
+	}
 
 	{
 		dlmtr := "."

@@ -1512,6 +1512,10 @@ func (m *Role) References(tenant string, path string, resp map[string]apiintf.Re
 func (m *Role) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for Role"))
+	}
+
 	{
 		dlmtr := "."
 		if path == "" {
@@ -1583,6 +1587,10 @@ func (m *RoleBinding) References(tenant string, path string, resp map[string]api
 
 func (m *RoleBinding) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for RoleBinding"))
+	}
 
 	{
 		dlmtr := "."
@@ -1786,6 +1794,10 @@ func (m *User) References(tenant string, path string, resp map[string]apiintf.Re
 
 func (m *User) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for User"))
+	}
 
 	{
 		dlmtr := "."

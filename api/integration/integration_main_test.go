@@ -156,8 +156,9 @@ func TestMain(m *testing.M) {
 			Codec:   runtime.NewJSONCodec(scheme),
 			Servers: []string{"test-cluster"},
 		},
-		GetOverlay: cache.GetOverlay,
-		IsDryRun:   cache.IsDryRun,
+		GetOverlay:       cache.GetOverlay,
+		IsDryRun:         cache.IsDryRun,
+		AllowMultiTenant: true,
 	}
 
 	// Start spyglass server

@@ -75,6 +75,11 @@ func (f *FakeServer) GetGraphDB() graph.Interface {
 	return nil
 }
 
+// RuntimeFlags returns runtime flags in use by the Server
+func (f *FakeServer) RuntimeFlags() apisrv.Flags {
+	return apisrv.Flags{}
+}
+
 // NewFakeServer returns a new FakeServer
 func NewFakeServer() *FakeServer {
 	return &FakeServer{SvcMap: make(map[string]*FakeService)}

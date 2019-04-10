@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/venice/globals"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
@@ -83,8 +85,9 @@ func TestWatcher(t *testing.T) {
 	role := auth.Role{
 		TypeMeta: api.TypeMeta{Kind: "Role"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testtenant",
-			Name:   "testRole",
+			Tenant:    "testtenant",
+			Name:      "testRole",
+			Namespace: globals.DefaultNamespace,
 		},
 		Spec: auth.RoleSpec{
 			Permissions: []auth.Permission{
@@ -111,8 +114,9 @@ func TestWatcher(t *testing.T) {
 	roleBinding := auth.RoleBinding{
 		TypeMeta: api.TypeMeta{Kind: "RoleBinding"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testtenant",
-			Name:   "testRoleBinding",
+			Tenant:    "testtenant",
+			Name:      "testRoleBinding",
+			Namespace: globals.DefaultNamespace,
 		},
 		Spec: auth.RoleBindingSpec{
 			Users:      []string{},
@@ -169,8 +173,9 @@ func TestWatcherWithApiServerDown(t *testing.T) {
 	role := &auth.Role{
 		TypeMeta: api.TypeMeta{Kind: "Role"},
 		ObjectMeta: api.ObjectMeta{
-			Tenant: "testTenant",
-			Name:   "testRole",
+			Tenant:    "testTenant",
+			Name:      "testRole",
+			Namespace: globals.DefaultNamespace,
 		},
 		Spec: auth.RoleSpec{
 			Permissions: []auth.Permission{

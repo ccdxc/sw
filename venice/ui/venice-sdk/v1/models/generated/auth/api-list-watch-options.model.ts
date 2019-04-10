@@ -34,6 +34,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     'name': string = null;
     /** must be alpha-numericslength of string should be between 1 and 48 */
     'tenant': string = null;
+    /** must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64 */
     'namespace': string = null;
     'generation-id': string = null;
     'resource-version': string = null;
@@ -64,6 +65,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             type: 'string'
         },
         'namespace': {
+            description:  'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64',
             required: false,
             type: 'string'
         },
@@ -279,7 +281,7 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             this._formGroup = new FormGroup({
                 'name': CustomFormControl(new FormControl(this['name'], [minLengthValidator(2), maxLengthValidator(64), patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64'), ]), ApiListWatchOptions.propInfo['name']),
                 'tenant': CustomFormControl(new FormControl(this['tenant'], [minLengthValidator(1), maxLengthValidator(48), patternValidator('^[a-zA-Z0-9]+$', 'must be alpha-numericslength of string should be between 1 and 48'), ]), ApiListWatchOptions.propInfo['tenant']),
-                'namespace': CustomFormControl(new FormControl(this['namespace']), ApiListWatchOptions.propInfo['namespace']),
+                'namespace': CustomFormControl(new FormControl(this['namespace'], [minLengthValidator(2), maxLengthValidator(64), patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64'), ]), ApiListWatchOptions.propInfo['namespace']),
                 'generation-id': CustomFormControl(new FormControl(this['generation-id']), ApiListWatchOptions.propInfo['generation-id']),
                 'resource-version': CustomFormControl(new FormControl(this['resource-version']), ApiListWatchOptions.propInfo['resource-version']),
                 'uuid': CustomFormControl(new FormControl(this['uuid']), ApiListWatchOptions.propInfo['uuid']),

@@ -7,6 +7,7 @@ Input file: x509.proto
 package security
 
 import (
+	"errors"
 	fmt "fmt"
 	"strings"
 
@@ -177,6 +178,10 @@ func (m *Certificate) References(tenant string, path string, resp map[string]api
 
 func (m *Certificate) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for Certificate"))
+	}
 
 	{
 		dlmtr := "."

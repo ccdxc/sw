@@ -7,6 +7,7 @@ Input file: service.proto
 package network
 
 import (
+	"errors"
 	fmt "fmt"
 	"strings"
 
@@ -202,6 +203,10 @@ func (m *Service) References(tenant string, path string, resp map[string]apiintf
 
 func (m *Service) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for Service"))
+	}
 
 	{
 		dlmtr := "."

@@ -62,6 +62,8 @@ type apiSrv struct {
 	}
 	// config is the passed in config at Run.
 	config apiserver.Config
+	// flags are runtime flags in use
+	flags apiserver.Flags
 	// apiChace is cache used by the server
 	apiCache apiintf.CacheInterface
 	// objGraph maintains a graph of all relations between objects
@@ -112,6 +114,7 @@ func initAPIServer() {
 	singletonAPISrv.runstate.cond = &sync.Cond{L: &sync.Mutex{}}
 	singletonAPISrv.activeWatches = safelist.New()
 	singletonAPISrv.newLocalOverlayFunc = cache.NewLocalOverlay
+	singletonAPISrv.flags = apiserver.Flags{}
 }
 
 // MustGetAPIServer returns the singleton instance. If it is not already
@@ -239,6 +242,7 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	a.Logger = config.Logger
 	a.version = config.Version
 	a.config = config
+	a.flags.AllowMultiTenant = a.config.AllowMultiTenant
 
 	a.doneCh = make(chan error)
 	if config.DebugMode {
@@ -435,4 +439,9 @@ func (a *apiSrv) getRunState() bool {
 	a.runstate.cond.L.Lock()
 	defer a.runstate.cond.L.Unlock()
 	return a.runstate.running
+}
+
+// RuntimeFlags returns runtime flags in use by the Server
+func (a *apiSrv) RuntimeFlags() apiserver.Flags {
+	return a.flags
 }

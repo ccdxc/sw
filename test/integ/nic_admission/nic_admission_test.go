@@ -754,8 +754,9 @@ func Setup(m *testing.M) {
 			Servers: strings.Split(cluster.ClientURL(), ","),
 			Codec:   runtime.NewJSONCodec(scheme),
 		},
-		GetOverlay: api_cache.GetOverlay,
-		IsDryRun:   api_cache.IsDryRun,
+		GetOverlay:       api_cache.GetOverlay,
+		IsDryRun:         api_cache.IsDryRun,
+		AllowMultiTenant: true,
 	}
 	tInfo.apiServer = apiserverpkg.MustGetAPIServer()
 	go tInfo.apiServer.Run(srvConfig)

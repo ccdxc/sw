@@ -7,6 +7,7 @@ Input file: telemetry.proto
 package monitoring
 
 import (
+	"errors"
 	fmt "fmt"
 	"strings"
 
@@ -344,6 +345,10 @@ func (m *FlowExportPolicy) References(tenant string, path string, resp map[strin
 func (m *FlowExportPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for FlowExportPolicy"))
+	}
+
 	{
 		dlmtr := "."
 		if path == "" {
@@ -476,6 +481,10 @@ func (m *FwlogPolicy) References(tenant string, path string, resp map[string]api
 
 func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for FwlogPolicy"))
+	}
 
 	{
 		dlmtr := "."
@@ -614,6 +623,10 @@ func (m *StatsPolicy) References(tenant string, path string, resp map[string]api
 
 func (m *StatsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for StatsPolicy"))
+	}
 
 	{
 		dlmtr := "."

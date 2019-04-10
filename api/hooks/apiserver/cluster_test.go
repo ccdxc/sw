@@ -7,6 +7,10 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+
 	"github.com/pensando/sw/api/cache/mocks"
 
 	"github.com/pensando/sw/api"
@@ -16,6 +20,7 @@ import (
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
+	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
@@ -1068,4 +1073,63 @@ func TestDefaultVirtualRouter(t *testing.T) {
 	Assert(t, kvn, "unexpected kvwrite returned")
 	Assert(t, len(txn.Ops) == 1, "unexpected number of entries in transaction (%v)", len(txn.Ops))
 	Assert(t, txn.Ops[0].Op == "delete", "unexpected operation in txn (%s)", txn.Ops[0].Op)
+}
+
+func TestValidateTenant(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+	a := apisrvpkg.MustGetAPIServer()
+	config := apiserver.Config{
+		GrpcServerPort: ":0",
+		DebugMode:      true,
+		Logger:         l,
+		Version:        "v1",
+		Scheme:         runtime.NewScheme(),
+		Kvstore: store.Config{
+			Type:  store.KVStoreTypeMemkv,
+			Codec: runtime.NewJSONCodec(runtime.NewScheme()),
+		},
+		KVPoolSize:       1,
+		AllowMultiTenant: true,
+	}
+	_ = recorder.Override(mockevtsrecorder.NewRecorder("apigw_test", l))
+	go a.Run(config)
+	a.WaitRunning()
+
+	tenant1 := cluster.Tenant{
+		TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
+		ObjectMeta: api.ObjectMeta{
+			Name: "testtenant",
+		},
+	}
+	tenant2 := cluster.Tenant{
+		TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
+		ObjectMeta: api.ObjectMeta{
+			Name: "default",
+		},
+	}
+	errs := clusterHooks.validateTenant(tenant1, "v1", false)
+	if errs != nil {
+		t.Errorf("Expecting validate to succeed (%s)", errs)
+	}
+	errs = clusterHooks.validateTenant(tenant2, "v1", false)
+	if errs != nil {
+		t.Errorf("Expecting validate to succeed (%s)", errs)
+	}
+	a.Stop()
+	config.AllowMultiTenant = false
+	go a.Run(config)
+	a.WaitRunning()
+	errs = clusterHooks.validateTenant(tenant1, "v1", false)
+	if errs == nil || len(errs) == 0 {
+		t.Errorf("Expecting validate to fail")
+	}
+	errs = clusterHooks.validateTenant(tenant2, "v1", false)
+	if errs != nil {
+		t.Errorf("Expecting validate to succeed (%s)", errs)
+	}
+	a.Stop()
 }

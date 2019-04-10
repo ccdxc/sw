@@ -406,8 +406,9 @@ func Setup(m *testing.M) {
 			Type:  store.KVStoreTypeMemkv,
 			Codec: runtime.NewJSONCodec(scheme),
 		},
-		GetOverlay: apisrvCache.GetOverlay,
-		IsDryRun:   apisrvCache.IsDryRun,
+		GetOverlay:       apisrvCache.GetOverlay,
+		IsDryRun:         apisrvCache.IsDryRun,
+		AllowMultiTenant: true,
 	}
 	tInfo.apiServer = apiserverpkg.MustGetAPIServer()
 	go tInfo.apiServer.Run(srvConfig)

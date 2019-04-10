@@ -268,11 +268,12 @@ func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*
 		status := apierrors.FromError(err)
 		//  Create user if it is external and not found
 		if user.Spec.Type == auth.UserSpec_External.String() && status.Code == http.StatusNotFound {
-			user, err = apicl.AuthV1().User().Create(context.Background(), user)
+			user1, err := apicl.AuthV1().User().Create(context.Background(), user)
 			if err != nil {
 				s.logger.Errorf("Error creating external user [%s|%s], Err: %v", user.Tenant, user.Name, err)
 				return nil, err
 			}
+			user = user1
 			s.logger.Infof("External user [%s|%s] created.", user.Tenant, user.Name)
 		} else {
 			s.logger.Errorf("Error fetching user [%s|%s] of type [%s]): %v", user.Tenant, user.Name, user.Spec.Type, err)

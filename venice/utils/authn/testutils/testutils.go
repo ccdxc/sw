@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/login"
 	loginCtx "github.com/pensando/sw/api/login/context"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/testutils"
 )
@@ -132,6 +133,7 @@ func CreateTestUser(ctx context.Context, apicl apiclient.Services, username, pas
 	user.Defaults("all")
 	user.Name = username
 	user.Tenant = tenant
+	user.Namespace = "default"
 	user.Spec.Password = password
 	user.Spec.Fullname = "Test User"
 	user.Spec.Email = "testuser@pensandio.io"
@@ -367,8 +369,9 @@ func CreateRoleBinding(ctx context.Context, apicl apiclient.Services, name, tena
 	roleBinding := &auth.RoleBinding{
 		TypeMeta: api.TypeMeta{Kind: string(auth.KindRoleBinding)},
 		ObjectMeta: api.ObjectMeta{
-			Name:   name,
-			Tenant: tenant,
+			Name:      name,
+			Tenant:    tenant,
+			Namespace: globals.DefaultNamespace,
 		},
 		Spec: auth.RoleBindingSpec{
 			Users:      users,

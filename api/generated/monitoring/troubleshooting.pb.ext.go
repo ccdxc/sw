@@ -7,6 +7,7 @@ Input file: troubleshooting.proto
 package monitoring
 
 import (
+	"errors"
 	fmt "fmt"
 	"strings"
 
@@ -461,6 +462,10 @@ func (m *TroubleshootingSession) References(tenant string, path string, resp map
 
 func (m *TroubleshootingSession) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for TroubleshootingSession"))
+	}
 
 	{
 		dlmtr := "."

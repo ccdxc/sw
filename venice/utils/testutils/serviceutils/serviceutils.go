@@ -43,8 +43,9 @@ func StartAPIServer(serverAddr, clusterName string, logger log.Logger) (apiserve
 			Codec:   runtime.NewJSONCodec(runtime.GetDefaultScheme()),
 			Servers: []string{clusterName},
 		},
-		GetOverlay: cache.GetOverlay,
-		IsDryRun:   cache.IsDryRun,
+		GetOverlay:       cache.GetOverlay,
+		IsDryRun:         cache.IsDryRun,
+		AllowMultiTenant: true,
 	}
 
 	// create api server

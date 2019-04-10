@@ -181,7 +181,10 @@ func (m *{{$msgname}}) References(tenant string, path string, resp map[string]ap
 
 func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error {{if isSpecStatusMessage $msg}}
-	{{if isTenanted $msg}}{{else}}
+	{{if isTenanted $msg}}{{if isNamespaced $msg}}{{else}}
+	if m.Namespace != "default" {
+    	ret = append(ret, errors.New("Only Namespace default is allowed for {{$msgname}}"))
+	}{{end}}{{else}}
 	if m.Tenant != "" {
 		ret = append(ret, errors.New("Tenant not allowed for {{$msgname}}"))
 	}{{if isNamespaced $msg}}{{else}}

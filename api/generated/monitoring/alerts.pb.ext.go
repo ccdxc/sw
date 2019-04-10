@@ -7,6 +7,7 @@ Input file: alerts.proto
 package monitoring
 
 import (
+	"errors"
 	fmt "fmt"
 	"strings"
 
@@ -500,6 +501,10 @@ func (m *Alert) References(tenant string, path string, resp map[string]apiintf.R
 func (m *Alert) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
 
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for Alert"))
+	}
+
 	{
 		dlmtr := "."
 		if path == "" {
@@ -574,6 +579,10 @@ func (m *AlertDestination) References(tenant string, path string, resp map[strin
 
 func (m *AlertDestination) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for AlertDestination"))
+	}
 
 	{
 		dlmtr := "."
@@ -720,6 +729,10 @@ func (m *AlertPolicy) References(tenant string, path string, resp map[string]api
 
 func (m *AlertPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+
+	if m.Namespace != "default" {
+		ret = append(ret, errors.New("Only Namespace default is allowed for AlertPolicy"))
+	}
 
 	{
 		dlmtr := "."
