@@ -126,7 +126,7 @@ export class EventalertpolicyComponent extends TablevieweditAbstract<IMonitoring
     return 'Are you sure you want to delete policy ' + object.meta.name;
   }
 
-  generateDeleteSucessMsg(object: IMonitoringAlertPolicy) {
+  generateDeleteSuccessMsg(object: IMonitoringAlertPolicy) {
     return 'Deleted policy ' + object.meta.name;
   }
 

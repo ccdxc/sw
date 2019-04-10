@@ -1,0 +1,60 @@
+<app-pagebody [icon]="bodyicon" header="Hosts Overview">
+  <div fxFlex class="hosts-table-container">
+    <ng-container *ngTemplateOutlet="DataTable"></ng-container>
+  </div>
+</app-pagebody>
+<ng-template #DataTable>
+  <app-tableviewedit fxLayout="column" style="height: 100%;"
+                     [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand"
+                     [data]="dataObjects"
+                     [cols]="cols"
+                     [expandedRowData]="expandedRowData"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+  </app-tableviewedit>
+</ng-template>
+
+<!-- TABLE HEADER -->
+<ng-template #captionTemplate let-count="count">
+  <app-tableheader title="Hosts" [total]="dataObjects.length" [icon]="headerIcon" width="250px">
+  </app-tableheader>
+</ng-template>
+
+<!-- TABLE BODY -->
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.mod-time'">
+      {{rowData.meta['mod-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchCase="'meta.creation-time'">
+      {{rowData.meta['creation-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchCase="'spec.smart-nics'">
+      <div *ngFor="let v of rowData['processedSmartNics']">
+        <a *ngIf="v.mac != ''" routerLink="/cluster/naples/{{v.mac}}">{{v.text}}</a>
+        <a *ngIf="v.mac == ''">{{v.text}}</a>
+        <mat-icon class="admitted_icon" [inline]="true" *ngIf="v.admitted"
+                  [matTooltip]="'Admitted'">check_circle</mat-icon>
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      {{displayColumn(rowData, col)}}
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<!-- TABLE ACTION -->
+<ng-template #actionTemplate let-rowData>
+
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+
+    <mat-icon matTooltip="Edit host" class="global-table-action-icon"
+              (click)="expandRowRequest($event, rowData)">edit
+    </mat-icon>
+    <mat-icon matTooltip="Delete host" class="global-table-action-icon"
+              (click)="onDeleteRecord($event, rowData)">delete
+    </mat-icon>
+  </div>
+</ng-template>

@@ -85,7 +85,7 @@ export class DestinationpolicyComponent extends TablevieweditAbstract<IMonitorin
     return 'Are you sure you want to delete destination ' + object.meta.name;
   }
 
-  generateDeleteSucessMsg(object: IMonitoringAlertDestination): string {
+  generateDeleteSuccessMsg(object: IMonitoringAlertDestination): string {
     return 'Deleted destination ' + object.meta.name;
   }
 

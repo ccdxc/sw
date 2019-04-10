@@ -27,6 +27,15 @@ const routes: Routes = [
       }
     ]
   },
+  {
+    path: 'hosts',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/cluster-group/hosts/hosts.module#HostsModule'
+      }
+    ]
+  },
 ];
 
 @NgModule({

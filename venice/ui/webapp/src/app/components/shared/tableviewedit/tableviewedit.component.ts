@@ -271,7 +271,7 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
 
   abstract deleteRecord(object: T): Observable<{ body: I | IApiStatus | Error, statusCode: number }>;
   abstract generateDeleteConfirmMsg(object: T): string;
-  abstract generateDeleteSucessMsg(object: T): string;
+  abstract generateDeleteSuccessMsg(object: T): string;
 
   createNewObject() {
     // If a row is expanded, we shouldnt be able to open a create new policy form
@@ -316,7 +316,7 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
       accept: () => {
         const sub = this.deleteRecord(object).subscribe(
           (response) => {
-            this.controllerService.invokeSuccessToaster(Utility.DELETE_SUCCESS_SUMMARY, this.generateDeleteSucessMsg(object));
+            this.controllerService.invokeSuccessToaster(Utility.DELETE_SUCCESS_SUMMARY, this.generateDeleteSuccessMsg(object));
           },
           (error) => {
             if (error.body instanceof Error) {

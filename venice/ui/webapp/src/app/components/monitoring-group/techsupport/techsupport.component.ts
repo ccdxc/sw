@@ -160,7 +160,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     return 'Are you sure to delete tech-support-request: ' + object.meta.name;
   }
 
-  generateDeleteSucessMsg(object: IMonitoringTechSupportRequest) {
+  generateDeleteSuccessMsg(object: IMonitoringTechSupportRequest) {
     return 'Deleted tech-support-request ' + object.meta.name;
   }
 

@@ -129,7 +129,7 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
     return 'Are you sure you want to delete policy ' + object.meta.name;
   }
 
-  generateDeleteSucessMsg(object: IMonitoringFlowExportPolicy) {
+  generateDeleteSuccessMsg(object: IMonitoringFlowExportPolicy) {
     return 'Deleted policy ' + object.meta.name;
   }
 

@@ -791,6 +791,8 @@ export class Utility {
         return cat + '/cluster';
       case 'SmartNIC':
         return cat + '/naples';
+      case 'Host':
+        return cat + '/hosts';
       case 'Workload':
       case 'Endpoint':
         return kind;

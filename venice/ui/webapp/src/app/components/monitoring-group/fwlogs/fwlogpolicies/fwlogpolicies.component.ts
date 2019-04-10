@@ -113,7 +113,7 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
     return 'Are you sure to delete firewall log policy : ' + object.meta.name;
   }
 
-  generateDeleteSucessMsg(object: MonitoringFwlogPolicy) {
+  generateDeleteSuccessMsg(object: MonitoringFwlogPolicy) {
     return 'Deleted firewall log policy ' + object.meta.name;
   }
 

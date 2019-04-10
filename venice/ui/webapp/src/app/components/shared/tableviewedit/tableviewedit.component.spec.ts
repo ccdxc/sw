@@ -109,7 +109,7 @@ class DummyComponent extends TablevieweditAbstract<IDummyObj, DummyObj> {
     return 'confirm msg ' + object.name;
   }
 
-  generateDeleteSucessMsg(object) {
+  generateDeleteSuccessMsg(object) {
     return 'delete msg ' + object.name;
   }
 }
@@ -302,7 +302,7 @@ describe('TablevieweditComponent', () => {
     // Triggering accept
     confirmArgs[0].accept();
 
-    expect(toasterSpy).toHaveBeenCalledWith('Delete Successful', component.generateDeleteSucessMsg(newItems[0]));
+    expect(toasterSpy).toHaveBeenCalledWith('Delete Successful', component.generateDeleteSuccessMsg(newItems[0]));
     discardPeriodicTasks();
     tick(2000);
 

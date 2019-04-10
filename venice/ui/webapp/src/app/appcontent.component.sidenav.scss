@@ -150,6 +150,12 @@ a[aria-expanded="true"]::before {
   background: url("/assets/images/icons/cluster/ico-cluster.svg") center center no-repeat;
 }
 
+.app-l-side-nav-cluster-hosts {
+  background-color: white;
+  -webkit-mask-image: url("/assets/images/icons/cluster/ico-hosts.svg");
+  mask-image: url("/assets/images/icons/cluster/ico-hosts.svg");
+}
+
 .app-l-side-nav-cluster-nodes {
   background: url("/assets/images/icons/cluster/node/ico-nodes.svg") center center no-repeat;
 }
