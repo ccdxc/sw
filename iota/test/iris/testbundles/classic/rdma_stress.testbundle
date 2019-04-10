@@ -28,7 +28,7 @@ testcases:
     # Multi Sge: 8x4 WQE format
     #=======================================
     -   name    : Rc_Fml_2Sge
-        testcase: testcases.rdma.multi_sge
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
@@ -41,7 +41,7 @@ testcases:
             command  : ['ib_send_bw']
 
     -   name    : Rc_Fml_3Sge
-        testcase: testcases.rdma.multi_sge
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
@@ -54,7 +54,7 @@ testcases:
             command  : ['ib_send_bw']
 
     -   name    : Rc_Fml_4Sge
-        testcase: testcases.rdma.multi_sge
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
@@ -67,7 +67,7 @@ testcases:
             command  : ['ib_send_bw']
 
     -   name    : Rc_Fml_5Sge
-        testcase: testcases.rdma.multi_sge
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
@@ -80,7 +80,7 @@ testcases:
             command  : ['ib_send_bw']
 
     -   name    : Rc_Fml_6Sge
-        testcase: testcases.rdma.multi_sge
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
@@ -93,7 +93,7 @@ testcases:
             command  : ['ib_send_bw']
 
     -   name    : Rc_Fml_7Sge
-        testcase: testcases.rdma.multi_sge
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
@@ -106,7 +106,7 @@ testcases:
             command  : ['ib_send_bw']
 
     -   name    : Rc_Fml_8Sge
-        testcase: testcases.rdma.multi_sge
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
@@ -120,7 +120,7 @@ testcases:
             command  : ['ib_send_bw']
 
     -   name    : Rc_Only_2Sge_4Sge
-        testcase: testcases.rdma.multi_sge
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
@@ -133,7 +133,7 @@ testcases:
             command  : ['ib_send_bw']
 
     -   name    : Rc_Only_3Sge
-        testcase: testcases.rdma.multi_sge
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
@@ -176,7 +176,7 @@ testcases:
     # Multi Sge: 16x2 WQE format
     #=======================================
     -   name    : Rc_Fml_9Sge_Server
-        testcase: testcases.rdma.multi_sge
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
@@ -189,7 +189,7 @@ testcases:
             command  : ['ib_send_bw']
 
     -   name    : Rc_Fml_16Sge_Server
-        testcase: testcases.rdma.multi_sge
+        testcase: testcases.rdma.rdma_perftest
         stress  : True
         iterators :
             type     : nested
