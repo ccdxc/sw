@@ -205,7 +205,9 @@ testcases:
     #=======================================
     # Teardown
     #=======================================
-    -   name    : Rmmod_Rdma
+    -   name    : Rmmod_Rdma_Spec
         testcase: testcases.rdma.rmmod_rdma
         args    :
             type: remote_only
+            spec: '16'
+
