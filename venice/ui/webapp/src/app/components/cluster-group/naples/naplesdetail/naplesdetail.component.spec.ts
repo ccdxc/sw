@@ -26,7 +26,7 @@ import { NaplesdetailComponent } from './naplesdetail.component';
 import { Utility } from '@app/common/Utility';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { By } from '@angular/platform-browser';
-import { IClusterSmartNIC, ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { IClusterSmartNIC, ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
 
 class MockActivatedRoute extends ActivatedRoute {
   id = '44:44:44:44:00:02';
@@ -55,6 +55,7 @@ describe('NaplesdetailComponent', () => {
   let naplesObserver;
   let naples1;
   let naples2;
+  let naples3;
 
   function verifyMeta(naples: IClusterSmartNIC) {
     const fields = fixture.debugElement.queryAll(By.css('.naplesdetail-node-value'));
@@ -75,7 +76,18 @@ describe('NaplesdetailComponent', () => {
       expect(fields[2].nativeElement.textContent.trim()).toBe('');
     }
     if (naples.status['admission-phase'] != null) {
-      expect(fields[3].nativeElement.textContent).toContain(naples.status['admission-phase']);
+      expect(fields[3].nativeElement.textContent).toContain(ClusterSmartNICStatus_admission_phase_uihint[naples.status['admission-phase']]);
+      const icon = fields[3].query(By.css('.naplesdetail-phase-icon'));
+      if (naples.status['admission-phase'] !== 'ADMITTED') {
+        expect(icon).toBeTruthy();
+        if (naples.status['admission-phase'] === 'PENDING') {
+          expect(icon.nativeElement.textContent).toContain('notifications');
+        } else if (naples.status['admission-phase'] !== 'REJECTED') {
+          expect(icon.nativeElement.textContent).toContain('error');
+        }
+      } else {
+        expect(icon).toBeNull();
+      }
     } else {
       expect(fields[3].nativeElement.textContent.trim()).toBe('');
     }
@@ -201,6 +213,25 @@ describe('NaplesdetailComponent', () => {
       },
       'spec': {},
       'status': {
+        'admission-phase': 'PENDING'
+      }
+    });
+
+    naples3 = new ClusterSmartNIC({
+      'kind': 'SmartNIC',
+      'api-version': 'v1',
+      'meta': {
+        'name': '33:33:33:33:00:03',
+        'generation-id': '1',
+        'resource-version': '34507',
+        'uuid': '11b1912f-c513-4f19-8183-5e17e60f024f',
+        'creation-time': '2018-12-12T20:03:01.157939359Z',
+        'mod-time': '2018-12-13T01:21:16.38343108Z',
+        'self-link': '/configs/cluster/v1/smartnics/44:44:44:44:00:02'
+      },
+      'spec': {},
+      'status': {
+        'admission-phase': 'REJECTED'
       }
     });
 
@@ -317,6 +348,25 @@ describe('NaplesdetailComponent', () => {
 
     // change param id
     let mockActivatedRoute: MockActivatedRoute = TestBed.get(ActivatedRoute);
+    naplesWatchSpy.and.returnValue(
+      new BehaviorSubject({
+        events: [
+          {
+            type: 'Created',
+            object: naples3
+          }
+        ]
+      })
+    );
+    mockActivatedRoute.setId('33:33:33:33:00:03');
+
+
+    // View should now be of naples3
+    fixture.detectChanges();
+    verifyMeta(naples3);
+    verifyServiceCalls('33:33:33:33:00:03');
+
+    // change param id
     naplesWatchSpy.and.returnValue(
       new BehaviorSubject({
         events: [

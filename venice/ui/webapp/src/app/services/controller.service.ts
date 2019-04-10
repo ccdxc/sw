@@ -421,6 +421,16 @@ export class ControllerService {
     });
   }
 
+  createSignOutButton() {
+    return {
+      text: 'Sign out',
+      callback: () => {
+        this.publish(Eventtypes.LOGOUT, { 'reason': 'User logged out' });
+      },
+      cssClass: 'global-button-primary'
+    };
+  }
+
   invokeRESTErrorToaster(summary: string, error: any, removeSameSummary: boolean = true) {
     if (error == null) {
       return;
@@ -433,13 +443,7 @@ export class ControllerService {
       this.removeToaster(summary);
     }
     const buttons: ToolbarButton[] = [
-      {
-        text: 'Sign out',
-        callback: () => {
-          this.publish(Eventtypes.LOGOUT, { 'reason': 'User logged out' });
-        },
-        cssClass: 'global-button-primary'
-      }
+      this.createSignOutButton()
     ];
     if (error.statusCode === 401) {
       this.invokeErrorToaster(Utility.VENICE_CONNECT_FAILURE_SUMMARY, 'Your credentials have expired. Please sign in again.', buttons);

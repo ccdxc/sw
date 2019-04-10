@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { BaseComponent } from '@app/components/base/base.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
-import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { MetricsUtility } from '@app/common/MetricsUtility';
@@ -64,6 +64,8 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   memChartData: HeroCardOptions = MetricsUtility.detailLevelMemHeroCard(this.cardColor, this.cardIcon);
 
   diskChartData: HeroCardOptions = MetricsUtility.detailLevelDiskHeroCard(this.cardColor, this.cardIcon);
+
+  admissionPhaseEnum = ClusterSmartNICStatus_admission_phase_uihint;
 
   heroCards = [
     this.cpuChartData,

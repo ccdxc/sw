@@ -17,7 +17,7 @@ import { MatIconRegistry } from '@angular/material';
 import { BehaviorSubject } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
-import { ClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
 import { MessageService } from '@app/services/message.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 
@@ -47,7 +47,7 @@ describe('NaplesComponent', () => {
         'ip-address': '0.0.0.0/0'
       },
       'primary-mac': '00ae.cd00.1142',
-      'admission-phase': 'ADMITTED',
+      'admission-phase': 'PENDING',
     }
   };
 
@@ -69,6 +69,27 @@ describe('NaplesComponent', () => {
       },
       'primary-mac': '00ae.cd00.1143',
       'admission-phase': 'ADMITTED',
+    }
+  };
+
+  const naples3 = {
+    'meta': {
+      'name': 'naples2',
+      'labels': {
+        'Location': 'us-east-A'
+      },
+      'mod-time': '2018-08-23T17:15:08.534909931Z',
+      'creation-time': '2018-08-23T17:20:08.534909931Z'
+    },
+    'spec': {
+      'hostname': 'naples2-host'
+    },
+    'status': {
+      'ip-config': {
+        'ip-address': '0.0.0.10'
+      },
+      'primary-mac': '00ae.cd00.1143',
+      'admission-phase': 'REJECTED',
     }
   };
 
@@ -119,6 +140,10 @@ describe('NaplesComponent', () => {
           {
             type: 'Created',
             object: naples2
+          },
+          {
+            type: 'Created',
+            object: naples3
           }
         ]
       })
@@ -126,10 +151,25 @@ describe('NaplesComponent', () => {
     fixture.detectChanges();
     // check table header
     const title = fixture.debugElement.query(By.css('.tableheader-title'));
-    expect(title.nativeElement.textContent).toContain('Naples (2)');
+    expect(title.nativeElement.textContent).toContain('Naples (3)');
     // check table contents
     const tableBody = fixture.debugElement.query(By.css('.ui-table-scrollable-body tbody'));
     expect(tableBody).toBeTruthy();
-    TestingUtility.verifyTable([new ClusterSmartNIC(naples1), new ClusterSmartNIC(naples2)], component.cols, tableBody);
+    const caseMap = {
+      'status.admission-phase': (field, rowData, rowIndex) => {
+        expect(field.nativeElement.textContent).toContain(ClusterSmartNICStatus_admission_phase_uihint[rowData.status['admission-phase']]);
+
+        if (rowData.status['admission-phase'] === 'REJECTED' || rowData.status['admission-phase'] === 'PENDING' ) {
+          expect(field.children.length).toBe(2);
+          if (rowData.status['admission-phase'] === 'REJECTED') {
+            expect(field.children[1].nativeElement.textContent).toContain('error');
+          }
+          if (rowData.status['admission-phase'] === 'PENDING') {
+            expect(field.children[1].nativeElement.textContent).toContain('notifications');
+          }
+        }
+      },
+    };
+    TestingUtility.verifyTable([new ClusterSmartNIC(naples1), new ClusterSmartNIC(naples2), new ClusterSmartNIC(naples3)], component.cols, tableBody);
   });
 });

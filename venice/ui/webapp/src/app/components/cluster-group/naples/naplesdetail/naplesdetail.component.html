@@ -96,8 +96,16 @@
           </div>
           <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
                class="naplesdetail-node-value">
-            <div class="naplesdetail-details-panel-last-leader-transition-time">
-              {{ selectedObj?.status['admission-phase'] }}
+            <div *ngIf="selectedObj" class="naplesdetail-details-panel-last-leader-transition-time"
+                 [matTooltip]="selectedObj.status['admission-phase'] === 'REJECTED' || selectedObj.status['admission-phase'] === 'PENDING' ? selectedObj.status['adm-phase-reason'] : ''">
+              {{ selectedObj ? admissionPhaseEnum[selectedObj.status['admission-phase']] : '' }}
+              <mat-icon *ngIf="selectedObj.status['admission-phase'] === 'REJECTED'" fxFlex="nogrow"
+                        [inline]="true"
+                        class="global-alert-warning-icon naplesdetail-phase-icon">error</mat-icon>
+              <mat-icon *ngIf="selectedObj.status['admission-phase'] === 'PENDING'" fxFlex="nogrow"
+                        [inline]="true"
+                        class="global-alert-info-icon naplesdetail-phase-icon">notifications
+              </mat-icon>
             </div>
           </div>
           <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"

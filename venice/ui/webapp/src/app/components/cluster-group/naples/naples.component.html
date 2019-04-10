@@ -58,6 +58,16 @@
             <div *ngSwitchCase="'meta.creation-time'">
               {{rowData.meta['creation-time'] | PrettyDate }}
             </div>
+            <div *ngSwitchCase="'status.admission-phase'"
+                 [matTooltip]="rowData.status['admission-phase'] === 'REJECTED' || rowData.status['admission-phase'] === 'PENDING' ?  rowData.status['adm-phase-reason'] : ''">
+              {{displayColumn(rowData, col)}}
+              <mat-icon *ngIf="rowData.status['admission-phase'] === 'REJECTED'" fxFlex="nogrow"
+                        [inline]="true"
+                        class="global-alert-warning-icon naples-row-icon">error</mat-icon>
+              <mat-icon *ngIf="rowData.status['admission-phase'] === 'PENDING'" fxFlex="nogrow"
+                        [inline]="true"
+                        class="global-alert-info-icon naples-row-icon">notifications</mat-icon>
+            </div>
             <ng-container *ngSwitchDefault>
               {{displayColumn(rowData, col)}}
             </ng-container>
