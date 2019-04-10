@@ -517,6 +517,13 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			smartNICObjExists = true
 		}
 
+		// If SmartNIC object does not exist, we initialize Spec.Admit using the value of cluster.Spec.AutoAdmitNICs
+		// If it exists, we honor the value that is currently there
+		// Note that even if Spec.Admit = true, the SmartNIC can end up in rejected state if it fails subsequent checks.
+		if !smartNICObjExists {
+			nicObj.Spec.Admit = clusterObj.Spec.AutoAdmitNICs
+		}
+
 		// If hostname supplied by NAPLES is not unique, reject but still create SmartNIC object
 		if !hostnameUnique {
 			nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_REJECTED.String()
@@ -527,21 +534,18 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			nicObj.Status = naplesNIC.Status
 			// clear out host pairing so that it will be recomputed
 			nicObj.Status.Host = ""
-			// if smartNIC exists, honor the value of the "Admit" flag as set by user,
-			// otherwise apply cluster-wide auto-admit policy
-			if (smartNICObjExists && nicObj.Spec.Admit == true) ||
-				(!smartNICObjExists && clusterObj.Spec.AutoAdmitNICs == true) {
+			// mark as admitted or pending based on current value of Spec.Admit
+			if nicObj.Spec.Admit == true {
 				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
 				// If the NIC is admitted, override all spec parameters with the new supplied values,
 				// except those that are owned by Venice.
-				// Right now "Admit" is the only parameter owned by Venice.
 				nicObj.Spec = naplesNIC.Spec
+				// Right now "Admit" is the only parameter owned by Venice.
 				nicObj.Spec.Admit = true
 			} else {
 				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
 				nicObj.Status.AdmissionPhaseReason = "SmartNIC waiting for manual admission"
 				nicObj.Status.Conditions = []cluster.SmartNICCondition{}
-				nicObj.Spec.Admit = false
 			}
 		}
 

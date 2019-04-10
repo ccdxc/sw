@@ -303,9 +303,12 @@ func getDBPath(index int) string {
 }
 
 func verifySmartNICObj(t *testing.T, name string, exists bool, phase, host string) {
+	var nicObj *cmd.SmartNIC
+	var err error
 	ometa := api.ObjectMeta{Name: name}
+
 	f := func() (bool, interface{}) {
-		nicObj, err := tInfo.smartNICServer.GetSmartNIC(ometa)
+		nicObj, err = tInfo.smartNICServer.GetSmartNIC(ometa)
 		if exists {
 			if err != nil {
 				log.Errorf("Error getting NIC object: %s", name)
@@ -330,6 +333,33 @@ func verifySmartNICObj(t *testing.T, name string, exists bool, phase, host strin
 		}
 	}
 	AssertEventually(t, f, fmt.Sprintf("Failed to verify smartNIC object, name: %v, presence: %v, phase: %v", name, exists, phase), "50ms", "20s")
+
+	// Cross-check the local (cached) copy
+	var nicState *cache.SmartNICState
+	g := func() (bool, interface{}) {
+		nicState, err = cmdenv.StateMgr.FindSmartNIC("", name)
+		if nicObj != nil {
+			if nicState == nil {
+				log.Infof("Did not find cached object for nic %s: %+v", name, nicObj)
+				return false, nil
+			}
+			nicObj, err = tInfo.smartNICServer.GetSmartNIC(ometa)
+			AssertOk(t, err, "Error reading ApiServer object")
+			eq := reflect.DeepEqual(nicObj, nicState.SmartNIC)
+			if !eq {
+				log.Infof("ApiServer object does not match local cached object. ApiServer: %+v, Cache: %+v", nicObj, nicState.SmartNIC)
+				return false, nil
+			}
+			return true, nil
+		} else {
+			if nicState != nil {
+				log.Infof("Found stale cached object for nic %s: %+v", name, nicState)
+				return false, nil
+			}
+			return true, nil
+		}
+	}
+	AssertEventually(t, g, fmt.Sprintf("ApiServer/StateMgr mismatch:\n%+v\n%+v\n", nicObj, nicState), "50ms", "20s")
 }
 
 func verifyHostObj(t *testing.T, hostName, nicName string) {
@@ -1336,6 +1366,75 @@ func TestManualAdmission(t *testing.T) {
 		"Unexpected number of REJECT events. Have: %d, want: %d, events:%+v", numRejectEvents, numExpectedRejectEvents, mr.GetEvents())
 
 	err = tInfo.smartNICServer.DeleteSmartNIC(*nicObjMeta)
+	AssertOk(t, err, "Error deleting smartnic object")
+	err = tInfo.smartNICServer.DeleteSmartNIC(*nicObjMeta2)
+	AssertOk(t, err, "Error deleting smartnic object")
+}
+
+// Test that a NIC that was previously rejected is automatically admitted when
+// the reason for the rejection is addressed and AutoAdmitNICs = true
+func TestAutoAdmitRejectedNICs(t *testing.T) {
+	testSetup()
+	defer testTeardown()
+
+	smartNICRegistrationRPCClient := grpc.NewSmartNICRegistrationClient(tInfo.rpcClient.ClientConn)
+	setClusterAutoAdmitNICs(t, true)
+
+	// Crete and admit first NIC
+	hostName := "esx000"
+	mac := "4444.4444.0001"
+	nicObjMeta := &api.ObjectMeta{
+		Name: mac,
+	}
+
+	r := doRegisterNIC(t, smartNICRegistrationRPCClient, mac, hostName)
+	Assert(t, r.Phase == cmd.SmartNICStatus_ADMITTED.String(),
+		fmt.Sprintf("Error in registration response. Expected phase: %s, got: %s", cmd.SmartNICStatus_ADMITTED.String(), r))
+	verifySmartNICObj(t, mac, true, cmd.SmartNICStatus_ADMITTED.String(), hostName)
+
+	mr.ClearEvents()
+	numExpectedRejectEvents := 0
+
+	// Create second NIC and try to register with conflicting hostname
+	mac2 := "4444.4444.0002"
+	hostName2 := "esx001"
+	nicObjMeta2 := &api.ObjectMeta{
+		Name: mac2,
+	}
+
+	r = doRegisterNIC(t, smartNICRegistrationRPCClient, mac2, hostName)
+	Assert(t, r.Phase == cmd.SmartNICStatus_REJECTED.String(),
+		fmt.Sprintf("Error in registration response. Expected phase: %s, got: %s", cmd.SmartNICStatus_REJECTED.String(), r))
+	verifySmartNICObj(t, mac2, true, cmd.SmartNICStatus_REJECTED.String(), "")
+	numExpectedRejectEvents++
+
+	// Register again. This time with different hostname
+	r = doRegisterNIC(t, smartNICRegistrationRPCClient, mac2, hostName2)
+	Assert(t, r.Phase == cmd.SmartNICStatus_ADMITTED.String(),
+		fmt.Sprintf("Error in registration response. Expected phase: %s, got: %s", cmd.SmartNICStatus_ADMITTED.String(), r))
+	verifySmartNICObj(t, mac2, true, cmd.SmartNICStatus_ADMITTED.String(), "")
+
+	// De-admit NIC
+	setSmartNICAdmit(t, nicObjMeta2, false)
+
+	// Register again. This time we should go to PENDING because Admit=false.
+	r = doRegisterNIC(t, smartNICRegistrationRPCClient, mac2, hostName2)
+	Assert(t, r.Phase == cmd.SmartNICStatus_PENDING.String(),
+		fmt.Sprintf("Error in registration response. Expected phase: %s, got: %s", cmd.SmartNICStatus_PENDING.String(), r))
+	verifySmartNICObj(t, mac2, true, cmd.SmartNICStatus_PENDING.String(), "")
+
+	numRejectEvents := 0
+	for _, ev := range mr.GetEvents() {
+		if ev.EventType == cmd.NICRejected && strings.Contains(ev.Message, mac2) {
+			numRejectEvents++
+		}
+	}
+	Assert(t, numRejectEvents == numExpectedRejectEvents,
+		"Unexpected number of REJECT events. Have: %d, want: %d, events:%+v", numRejectEvents, numExpectedRejectEvents, mr.GetEvents())
+
+	// Clean up
+	err := tInfo.smartNICServer.DeleteSmartNIC(*nicObjMeta)
+	AssertOk(t, err, "Error deleting smartnic object")
 	err = tInfo.smartNICServer.DeleteSmartNIC(*nicObjMeta2)
 	AssertOk(t, err, "Error deleting smartnic object")
 }
