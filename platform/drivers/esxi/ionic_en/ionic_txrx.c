@@ -329,9 +329,9 @@ void ionic_rx_flush(struct cq *cq)
 {
         unsigned int work_done;
 
-        work_done = ionic_cq_service(cq, -1, ionic_rx_service, NULL);
+        work_done = ionic_cq_service(cq, cq->num_descs, ionic_rx_service, NULL);
 
-        if (work_done > 0)
+        if (work_done)
                 ionic_intr_return_credits(cq->bound_intr, work_done, 0, VMK_TRUE);
 }
 
@@ -466,6 +466,17 @@ ionic_tx_service(struct cq *cq,
 }
 
 
+void ionic_tx_flush(struct cq *cq)
+{
+        unsigned int work_done;
+
+        work_done = ionic_cq_service(cq, cq->num_descs, ionic_tx_service, NULL);
+
+        if (work_done)
+                ionic_intr_return_credits(cq->bound_intr, work_done, 0, VMK_TRUE);
+}
+        
+        
 vmk_Bool
 ionic_tx_netpoll(vmk_AddrCookie priv,
                  vmk_uint32 budget)
@@ -495,7 +506,6 @@ ionic_rx_netpoll(vmk_AddrCookie priv,
         struct cq *cq = &((struct qcq *)qcq)->cq;
 
 //        ionic_err("ionic_rx_netpoll(), ring_idx: %d", ((struct qcq*)qcq)->ring_idx);
-
         polled = ionic_netpoll(budget, ionic_rx_service, qcq);
 
         if (polled != budget) {
