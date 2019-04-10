@@ -1367,17 +1367,17 @@ func (a *restObjSecurityV1Certificate) Watch(ctx context.Context, options *api.L
 func (a *restObjSecurityV1Certificate) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
 	case apiintf.CreateOper:
-		return true
+		return false
 	case apiintf.UpdateOper:
-		return true
+		return false
 	case apiintf.GetOper:
-		return true
+		return false
 	case apiintf.DeleteOper:
-		return true
+		return false
 	case apiintf.ListOper:
-		return true
+		return false
 	case apiintf.WatchOper:
-		return true
+		return false
 	default:
 		return false
 	}
@@ -1545,17 +1545,17 @@ func (a *restObjSecurityV1TrafficEncryptionPolicy) Watch(ctx context.Context, op
 func (a *restObjSecurityV1TrafficEncryptionPolicy) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
 	case apiintf.CreateOper:
-		return true
+		return false
 	case apiintf.UpdateOper:
-		return true
+		return false
 	case apiintf.GetOper:
-		return true
+		return false
 	case apiintf.DeleteOper:
-		return true
+		return false
 	case apiintf.ListOper:
 		return false
 	case apiintf.WatchOper:
-		return true
+		return false
 	default:
 		return false
 	}

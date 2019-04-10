@@ -462,8 +462,6 @@ func (e *sWorkloadV1GwService) setupSvcProfile() {
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiintf.CreateOper)
-
 	e.svcProf["AutoAddWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.CreateOper)
 
 	e.svcProf["AutoDeleteWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.DeleteOper)
@@ -475,8 +473,6 @@ func (e *sWorkloadV1GwService) setupSvcProfile() {
 	e.svcProf["AutoListEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "EndpointList", "workload", apiintf.ListOper)
 
 	e.svcProf["AutoListWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "WorkloadList", "workload", apiintf.ListOper)
-
-	e.svcProf["AutoUpdateEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Endpoint", "workload", apiintf.UpdateOper)
 
 	e.svcProf["AutoUpdateWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.UpdateOper)
 

@@ -814,41 +814,11 @@ func (e *sNetworkV1GwService) setupSvcProfile() {
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddLbPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "LbPolicy", "network", apiintf.CreateOper)
-
-	e.svcProf["AutoAddNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Network", "network", apiintf.CreateOper)
-
-	e.svcProf["AutoAddService"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Service", "network", apiintf.CreateOper)
-
-	e.svcProf["AutoDeleteLbPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "LbPolicy", "network", apiintf.DeleteOper)
-
-	e.svcProf["AutoDeleteNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Network", "network", apiintf.DeleteOper)
-
-	e.svcProf["AutoDeleteService"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Service", "network", apiintf.DeleteOper)
-
-	e.svcProf["AutoGetLbPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "LbPolicy", "network", apiintf.GetOper)
-
 	e.svcProf["AutoGetNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Network", "network", apiintf.GetOper)
-
-	e.svcProf["AutoGetService"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Service", "network", apiintf.GetOper)
-
-	e.svcProf["AutoListLbPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "LbPolicyList", "network", apiintf.ListOper)
 
 	e.svcProf["AutoListNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NetworkList", "network", apiintf.ListOper)
 
-	e.svcProf["AutoListService"] = apigwpkg.NewServiceProfile(e.defSvcProf, "ServiceList", "network", apiintf.ListOper)
-
-	e.svcProf["AutoUpdateLbPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "LbPolicy", "network", apiintf.UpdateOper)
-
-	e.svcProf["AutoUpdateNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Network", "network", apiintf.UpdateOper)
-
-	e.svcProf["AutoUpdateService"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Service", "network", apiintf.UpdateOper)
-
-	e.svcProf["AutoWatchLbPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgLbPolicyWatchHelper", "network", apiintf.WatchOper)
-
 	e.svcProf["AutoWatchNetwork"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgNetworkWatchHelper", "network", apiintf.WatchOper)
-
-	e.svcProf["AutoWatchService"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgServiceWatchHelper", "network", apiintf.WatchOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

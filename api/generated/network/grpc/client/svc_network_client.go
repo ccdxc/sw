@@ -505,13 +505,13 @@ func (a *restObjNetworkV1Network) Watch(ctx context.Context, options *api.ListWa
 func (a *restObjNetworkV1Network) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
 	case apiintf.CreateOper:
-		return true
+		return false
 	case apiintf.UpdateOper:
-		return true
+		return false
 	case apiintf.GetOper:
 		return true
 	case apiintf.DeleteOper:
-		return true
+		return false
 	case apiintf.ListOper:
 		return true
 	case apiintf.WatchOper:
@@ -683,17 +683,17 @@ func (a *restObjNetworkV1Service) Watch(ctx context.Context, options *api.ListWa
 func (a *restObjNetworkV1Service) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
 	case apiintf.CreateOper:
-		return true
+		return false
 	case apiintf.UpdateOper:
-		return true
+		return false
 	case apiintf.GetOper:
-		return true
+		return false
 	case apiintf.DeleteOper:
-		return true
+		return false
 	case apiintf.ListOper:
-		return true
+		return false
 	case apiintf.WatchOper:
-		return true
+		return false
 	default:
 		return false
 	}
@@ -861,17 +861,17 @@ func (a *restObjNetworkV1LbPolicy) Watch(ctx context.Context, options *api.ListW
 func (a *restObjNetworkV1LbPolicy) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
 	case apiintf.CreateOper:
-		return true
+		return false
 	case apiintf.UpdateOper:
-		return true
+		return false
 	case apiintf.GetOper:
-		return true
+		return false
 	case apiintf.DeleteOper:
-		return true
+		return false
 	case apiintf.ListOper:
-		return true
+		return false
 	case apiintf.WatchOper:
-		return true
+		return false
 	default:
 		return false
 	}

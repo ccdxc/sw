@@ -355,9 +355,9 @@ func (a *restObjWorkloadV1Endpoint) Watch(ctx context.Context, options *api.List
 func (a *restObjWorkloadV1Endpoint) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
 	case apiintf.CreateOper:
-		return true
+		return false
 	case apiintf.UpdateOper:
-		return true
+		return false
 	case apiintf.GetOper:
 		return true
 	case apiintf.DeleteOper:

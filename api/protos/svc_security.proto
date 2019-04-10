@@ -51,14 +51,5 @@ service SecurityV1 {
    Object: "FirewallProfile"
    Method: ["get", "put", "list", "watch" ]
  };
-
- option (venice.apiRestService) = {
-     Object: "Certificate"
-     Method: [ "get", "put", "delete", "post", "list", "watch" ]
- };
-
- option (venice.apiRestService) = {
-     Object: "TrafficEncryptionPolicy"
-     Method: [ "get", "put", "delete", "post", "watch" ]
- };
+ 
 }

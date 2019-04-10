@@ -1685,17 +1685,20 @@ func (r *EndpointsNetworkV1RestClient) getHTTPRequest(ctx context.Context, in in
 
 //
 func makeURINetworkV1AutoAddLbPolicyCreateOper(in *LbPolicy) string {
-	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy")
+	return ""
+
 }
 
 //
 func makeURINetworkV1AutoAddNetworkCreateOper(in *Network) string {
-	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks")
+	return ""
+
 }
 
 //
 func makeURINetworkV1AutoAddServiceCreateOper(in *Service) string {
-	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services")
+	return ""
+
 }
 
 //
@@ -1706,17 +1709,20 @@ func makeURINetworkV1AutoAddVirtualRouterCreateOper(in *VirtualRouter) string {
 
 //
 func makeURINetworkV1AutoDeleteLbPolicyDeleteOper(in *LbPolicy) string {
-	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy/", in.Name)
+	return ""
+
 }
 
 //
 func makeURINetworkV1AutoDeleteNetworkDeleteOper(in *Network) string {
-	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks/", in.Name)
+	return ""
+
 }
 
 //
 func makeURINetworkV1AutoDeleteServiceDeleteOper(in *Service) string {
-	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services/", in.Name)
+	return ""
+
 }
 
 //
@@ -1727,7 +1733,8 @@ func makeURINetworkV1AutoDeleteVirtualRouterDeleteOper(in *VirtualRouter) string
 
 //
 func makeURINetworkV1AutoGetLbPolicyGetOper(in *LbPolicy) string {
-	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy/", in.Name)
+	return ""
+
 }
 
 //
@@ -1737,7 +1744,8 @@ func makeURINetworkV1AutoGetNetworkGetOper(in *Network) string {
 
 //
 func makeURINetworkV1AutoGetServiceGetOper(in *Service) string {
-	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services/", in.Name)
+	return ""
+
 }
 
 //
@@ -1748,7 +1756,8 @@ func makeURINetworkV1AutoGetVirtualRouterGetOper(in *VirtualRouter) string {
 
 //
 func makeURINetworkV1AutoListLbPolicyListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy")
+	return ""
+
 }
 
 //
@@ -1758,7 +1767,8 @@ func makeURINetworkV1AutoListNetworkListOper(in *api.ListWatchOptions) string {
 
 //
 func makeURINetworkV1AutoListServiceListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services")
+	return ""
+
 }
 
 //
@@ -1769,17 +1779,20 @@ func makeURINetworkV1AutoListVirtualRouterListOper(in *api.ListWatchOptions) str
 
 //
 func makeURINetworkV1AutoUpdateLbPolicyUpdateOper(in *LbPolicy) string {
-	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/lb-policy/", in.Name)
+	return ""
+
 }
 
 //
 func makeURINetworkV1AutoUpdateNetworkUpdateOper(in *Network) string {
-	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/networks/", in.Name)
+	return ""
+
 }
 
 //
 func makeURINetworkV1AutoUpdateServiceUpdateOper(in *Service) string {
-	return fmt.Sprint("/configs/network/v1", "/tenant/", in.Tenant, "/services/", in.Name)
+	return ""
+
 }
 
 //
@@ -1790,7 +1803,8 @@ func makeURINetworkV1AutoUpdateVirtualRouterUpdateOper(in *VirtualRouter) string
 
 //
 func makeURINetworkV1AutoWatchLbPolicyWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/network/v1", "/watch/tenant/", in.Tenant, "/lb-policy")
+	return ""
+
 }
 
 //
@@ -1800,7 +1814,8 @@ func makeURINetworkV1AutoWatchNetworkWatchOper(in *api.ListWatchOptions) string 
 
 //
 func makeURINetworkV1AutoWatchServiceWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/network/v1", "/watch/tenant/", in.Tenant, "/services")
+	return ""
+
 }
 
 //
@@ -1817,46 +1832,12 @@ func makeURINetworkV1AutoWatchVirtualRouterWatchOper(in *api.ListWatchOptions) s
 
 // AutoAddNetwork CRUD method for Network
 func (r *EndpointsNetworkV1RestClient) AutoAddNetwork(ctx context.Context, in *Network) (*Network, error) {
-	path := makeURINetworkV1AutoAddNetworkCreateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer httpresp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoAddNetwork(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Network), nil
+	return nil, errors.New("not allowed")
 }
 
 // AutoUpdateNetwork CRUD method for Network
 func (r *EndpointsNetworkV1RestClient) AutoUpdateNetwork(ctx context.Context, in *Network) (*Network, error) {
-	path := makeURINetworkV1AutoUpdateNetworkUpdateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoUpdateNetwork(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Network), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetNetwork CRUD method for Network
@@ -1883,24 +1864,7 @@ func (r *EndpointsNetworkV1RestClient) AutoGetNetwork(ctx context.Context, in *N
 
 // AutoDeleteNetwork CRUD method for Network
 func (r *EndpointsNetworkV1RestClient) AutoDeleteNetwork(ctx context.Context, in *Network) (*Network, error) {
-	path := makeURINetworkV1AutoDeleteNetworkDeleteOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoDeleteNetwork(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Network), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoListNetwork CRUD method for Network
@@ -1975,112 +1939,27 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchNetwork(ctx context.Context, opt
 
 // AutoAddService CRUD method for Service
 func (r *EndpointsNetworkV1RestClient) AutoAddService(ctx context.Context, in *Service) (*Service, error) {
-	path := makeURINetworkV1AutoAddServiceCreateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer httpresp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoAddService(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Service), nil
+	return nil, errors.New("not allowed")
 }
 
 // AutoUpdateService CRUD method for Service
 func (r *EndpointsNetworkV1RestClient) AutoUpdateService(ctx context.Context, in *Service) (*Service, error) {
-	path := makeURINetworkV1AutoUpdateServiceUpdateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoUpdateService(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Service), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetService CRUD method for Service
 func (r *EndpointsNetworkV1RestClient) AutoGetService(ctx context.Context, in *Service) (*Service, error) {
-	path := makeURINetworkV1AutoGetServiceGetOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoGetService(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Service), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoDeleteService CRUD method for Service
 func (r *EndpointsNetworkV1RestClient) AutoDeleteService(ctx context.Context, in *Service) (*Service, error) {
-	path := makeURINetworkV1AutoDeleteServiceDeleteOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoDeleteService(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Service), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoListService CRUD method for Service
 func (r *EndpointsNetworkV1RestClient) AutoListService(ctx context.Context, options *api.ListWatchOptions) (*ServiceList, error) {
-	path := makeURINetworkV1AutoListServiceListOper(options)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, options, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoListService(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*ServiceList), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoWatchService CRUD method for Service
@@ -2133,112 +2012,27 @@ func (r *EndpointsNetworkV1RestClient) AutoWatchService(ctx context.Context, opt
 
 // AutoAddLbPolicy CRUD method for LbPolicy
 func (r *EndpointsNetworkV1RestClient) AutoAddLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	path := makeURINetworkV1AutoAddLbPolicyCreateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer httpresp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoAddLbPolicy(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*LbPolicy), nil
+	return nil, errors.New("not allowed")
 }
 
 // AutoUpdateLbPolicy CRUD method for LbPolicy
 func (r *EndpointsNetworkV1RestClient) AutoUpdateLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	path := makeURINetworkV1AutoUpdateLbPolicyUpdateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoUpdateLbPolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*LbPolicy), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetLbPolicy CRUD method for LbPolicy
 func (r *EndpointsNetworkV1RestClient) AutoGetLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	path := makeURINetworkV1AutoGetLbPolicyGetOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoGetLbPolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*LbPolicy), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoDeleteLbPolicy CRUD method for LbPolicy
 func (r *EndpointsNetworkV1RestClient) AutoDeleteLbPolicy(ctx context.Context, in *LbPolicy) (*LbPolicy, error) {
-	path := makeURINetworkV1AutoDeleteLbPolicyDeleteOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoDeleteLbPolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*LbPolicy), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoListLbPolicy CRUD method for LbPolicy
 func (r *EndpointsNetworkV1RestClient) AutoListLbPolicy(ctx context.Context, options *api.ListWatchOptions) (*LbPolicyList, error) {
-	path := makeURINetworkV1AutoListLbPolicyListOper(options)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, options, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespNetworkV1AutoListLbPolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*LbPolicyList), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoWatchLbPolicy CRUD method for LbPolicy

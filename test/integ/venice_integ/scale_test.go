@@ -47,7 +47,7 @@ func (it *veniceIntegSuite) TestScale(c *C) {
 func (it *veniceIntegSuite) createScaleConfig(loginCtx context.Context, c *C, cfg *cfgen.Cfgen) {
 	// create configuration: networks, hosts, workloads, firewal profile, apps, and sgpolifies
 	for _, n := range cfg.Networks {
-		_, err := it.restClient.NetworkV1().Network().Create(loginCtx, n)
+		_, err := it.apisrvClient.NetworkV1().Network().Create(loginCtx, n)
 		AssertOk(c, err, fmt.Sprintf("Error creating network %+v", *n))
 	}
 
@@ -209,7 +209,7 @@ func (it *veniceIntegSuite) deleteScaleConfig(loginCtx context.Context, c *C, cf
 	}
 
 	for _, n := range cfg.Networks {
-		_, err := it.restClient.NetworkV1().Network().Delete(loginCtx, &n.ObjectMeta)
+		_, err := it.apisrvClient.NetworkV1().Network().Delete(loginCtx, &n.ObjectMeta)
 		AssertOk(c, err, fmt.Sprintf("Error deleting network %+v", &n.ObjectMeta), "1s", it.pollTimeout())
 	}
 

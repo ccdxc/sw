@@ -2143,6 +2143,17 @@ func init() {
 	validatorMapAuth["UserSpec"] = make(map[string][]func(string, interface{}) error)
 	validatorMapAuth["UserSpec"]["all"] = append(validatorMapAuth["UserSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*UserSpec)
+		args := make([]string, 0)
+		args = append(args, "email")
+
+		if err := validators.EmptyOr(validators.RegExp, m.Email, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Email", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapAuth["UserSpec"]["all"] = append(validatorMapAuth["UserSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*UserSpec)
 
 		if _, ok := UserSpec_UserType_value[m.Type]; !ok {
 			vals := []string{}

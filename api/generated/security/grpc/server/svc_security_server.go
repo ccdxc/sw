@@ -280,11 +280,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoAddCertificate = srv.AddMethod("AutoAddCertificate",
 			apisrvpkg.NewMethod(srv, pkgMessages["security.Certificate"], pkgMessages["security.Certificate"], "security", "AutoAddCertificate")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.Certificate)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/certificates/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoAddFirewallProfile = srv.AddMethod("AutoAddFirewallProfile",
@@ -312,11 +308,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoAddTrafficEncryptionPolicy = srv.AddMethod("AutoAddTrafficEncryptionPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["security.TrafficEncryptionPolicy"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoAddTrafficEncryptionPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.TrafficEncryptionPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteApp = srv.AddMethod("AutoDeleteApp",
@@ -330,11 +322,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoDeleteCertificate = srv.AddMethod("AutoDeleteCertificate",
 			apisrvpkg.NewMethod(srv, pkgMessages["security.Certificate"], pkgMessages["security.Certificate"], "security", "AutoDeleteCertificate")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.Certificate)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/certificates/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoDeleteFirewallProfile = srv.AddMethod("AutoDeleteFirewallProfile",
@@ -362,11 +350,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoDeleteTrafficEncryptionPolicy = srv.AddMethod("AutoDeleteTrafficEncryptionPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["security.TrafficEncryptionPolicy"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoDeleteTrafficEncryptionPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.TrafficEncryptionPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetApp = srv.AddMethod("AutoGetApp",
@@ -380,11 +364,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoGetCertificate = srv.AddMethod("AutoGetCertificate",
 			apisrvpkg.NewMethod(srv, pkgMessages["security.Certificate"], pkgMessages["security.Certificate"], "security", "AutoGetCertificate")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.Certificate)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/certificates/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoGetFirewallProfile = srv.AddMethod("AutoGetFirewallProfile",
@@ -416,11 +396,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoGetTrafficEncryptionPolicy = srv.AddMethod("AutoGetTrafficEncryptionPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["security.TrafficEncryptionPolicy"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoGetTrafficEncryptionPolicy")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.TrafficEncryptionPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListApp = srv.AddMethod("AutoListApp",
@@ -434,11 +410,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoListCertificate = srv.AddMethod("AutoListCertificate",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["security.CertificateList"], "security", "AutoListCertificate")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(api.ListWatchOptions)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/certificates/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoListFirewallProfile = srv.AddMethod("AutoListFirewallProfile",
@@ -484,11 +456,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoUpdateCertificate = srv.AddMethod("AutoUpdateCertificate",
 			apisrvpkg.NewMethod(srv, pkgMessages["security.Certificate"], pkgMessages["security.Certificate"], "security", "AutoUpdateCertificate")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.Certificate)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/certificates/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoUpdateFirewallProfile = srv.AddMethod("AutoUpdateFirewallProfile",
@@ -520,11 +488,7 @@ func (s *ssecuritySvc_securityBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsSecurityV1.fnAutoUpdateTrafficEncryptionPolicy = srv.AddMethod("AutoUpdateTrafficEncryptionPolicy",
 			apisrvpkg.NewMethod(srv, pkgMessages["security.TrafficEncryptionPolicy"], pkgMessages["security.TrafficEncryptionPolicy"], "security", "AutoUpdateTrafficEncryptionPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(security.TrafficEncryptionPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "security/v1/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsSecurityV1.fnAutoWatchSecurityGroup = pkgMessages["security.SecurityGroup"].WatchFromKv

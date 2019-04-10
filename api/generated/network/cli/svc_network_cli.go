@@ -47,241 +47,47 @@ func restGetNetwork(hostname, tenant, token string, obj interface{}) error {
 }
 
 func restDeleteNetwork(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*network.Network); ok {
-		nv, err := restcl.NetworkV1().Network().Delete(loginCtx, &v.ObjectMeta)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("delete operation not supported for Network object")
 }
 
 func restPostNetwork(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*network.Network); ok {
-		nv, err := restcl.NetworkV1().Network().Create(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("create operation not supported for Network object")
 }
 
 func restPutNetwork(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*network.Network); ok {
-		nv, err := restcl.NetworkV1().Network().Update(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("put operation not supported for Network object")
 }
 
 func restGetService(hostname, tenant, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*network.Service); ok {
-		nv, err := restcl.NetworkV1().Service().Get(loginCtx, &v.ObjectMeta)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-
-	if v, ok := obj.(*network.ServiceList); ok {
-		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
-		nv, err := restcl.NetworkV1().Service().List(loginCtx, &opts)
-		if err != nil {
-			return err
-		}
-		v.Items = nv
-	}
-	return nil
-
+	return fmt.Errorf("get operation not supported for Service object")
 }
 
 func restDeleteService(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*network.Service); ok {
-		nv, err := restcl.NetworkV1().Service().Delete(loginCtx, &v.ObjectMeta)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("delete operation not supported for Service object")
 }
 
 func restPostService(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*network.Service); ok {
-		nv, err := restcl.NetworkV1().Service().Create(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("create operation not supported for Service object")
 }
 
 func restPutService(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*network.Service); ok {
-		nv, err := restcl.NetworkV1().Service().Update(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("put operation not supported for Service object")
 }
 
 func restGetLbPolicy(hostname, tenant, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*network.LbPolicy); ok {
-		nv, err := restcl.NetworkV1().LbPolicy().Get(loginCtx, &v.ObjectMeta)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-
-	if v, ok := obj.(*network.LbPolicyList); ok {
-		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
-		nv, err := restcl.NetworkV1().LbPolicy().List(loginCtx, &opts)
-		if err != nil {
-			return err
-		}
-		v.Items = nv
-	}
-	return nil
-
+	return fmt.Errorf("get operation not supported for LbPolicy object")
 }
 
 func restDeleteLbPolicy(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*network.LbPolicy); ok {
-		nv, err := restcl.NetworkV1().LbPolicy().Delete(loginCtx, &v.ObjectMeta)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("delete operation not supported for LbPolicy object")
 }
 
 func restPostLbPolicy(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*network.LbPolicy); ok {
-		nv, err := restcl.NetworkV1().LbPolicy().Create(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("create operation not supported for LbPolicy object")
 }
 
 func restPutLbPolicy(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*network.LbPolicy); ok {
-		nv, err := restcl.NetworkV1().LbPolicy().Update(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("put operation not supported for LbPolicy object")
 }
 
 func restGetVirtualRouter(hostname, tenant, token string, obj interface{}) error {
@@ -306,19 +112,6 @@ func init() {
 		return
 	}
 
-	cl.AddRestPostFunc("network.Network", "v1", restPostNetwork)
-	cl.AddRestDeleteFunc("network.Network", "v1", restDeleteNetwork)
-	cl.AddRestPutFunc("network.Network", "v1", restPutNetwork)
 	cl.AddRestGetFunc("network.Network", "v1", restGetNetwork)
-
-	cl.AddRestPostFunc("network.Service", "v1", restPostService)
-	cl.AddRestDeleteFunc("network.Service", "v1", restDeleteService)
-	cl.AddRestPutFunc("network.Service", "v1", restPutService)
-	cl.AddRestGetFunc("network.Service", "v1", restGetService)
-
-	cl.AddRestPostFunc("network.LbPolicy", "v1", restPostLbPolicy)
-	cl.AddRestDeleteFunc("network.LbPolicy", "v1", restDeleteLbPolicy)
-	cl.AddRestPutFunc("network.LbPolicy", "v1", restPutLbPolicy)
-	cl.AddRestGetFunc("network.LbPolicy", "v1", restGetLbPolicy)
 
 }

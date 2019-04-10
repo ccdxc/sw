@@ -931,7 +931,8 @@ func (r *EndpointsWorkloadV1RestClient) getHTTPRequest(ctx context.Context, in i
 
 //
 func makeURIWorkloadV1AutoAddEndpointCreateOper(in *Endpoint) string {
-	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/endpoints")
+	return ""
+
 }
 
 //
@@ -972,7 +973,8 @@ func makeURIWorkloadV1AutoListWorkloadListOper(in *api.ListWatchOptions) string 
 
 //
 func makeURIWorkloadV1AutoUpdateEndpointUpdateOper(in *Endpoint) string {
-	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/endpoints/", in.Name)
+	return ""
+
 }
 
 //
@@ -998,46 +1000,12 @@ func makeURIWorkloadV1AutoWatchWorkloadWatchOper(in *api.ListWatchOptions) strin
 
 // AutoAddEndpoint CRUD method for Endpoint
 func (r *EndpointsWorkloadV1RestClient) AutoAddEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
-	path := makeURIWorkloadV1AutoAddEndpointCreateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer httpresp.Body.Close()
-	ret, err := decodeHTTPrespWorkloadV1AutoAddEndpoint(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Endpoint), nil
+	return nil, errors.New("not allowed")
 }
 
 // AutoUpdateEndpoint CRUD method for Endpoint
 func (r *EndpointsWorkloadV1RestClient) AutoUpdateEndpoint(ctx context.Context, in *Endpoint) (*Endpoint, error) {
-	path := makeURIWorkloadV1AutoUpdateEndpointUpdateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespWorkloadV1AutoUpdateEndpoint(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Endpoint), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetEndpoint CRUD method for Endpoint

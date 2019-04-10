@@ -492,6 +492,7 @@ func TestEmptyOr(t *testing.T) {
 		{exp: "email", val: "notAnEmail", errMsg: emailErrMsg},
 		{exp: "email", val: "", errMsg: ""},
 		{exp: "email", val: "test@pensando.io", errMsg: ""},
+		{exp: "email", val: "test+email@bbc.co.uk", errMsg: ""},
 	}
 	for i, c := range casesRegex {
 		err := EmptyOr(RegExp, c.val, []string{c.exp})
@@ -534,6 +535,7 @@ func TestRegExp(t *testing.T) {
 		{exp: "email", val: "notAnEmail", errMsg: emailErrMsg},
 		{exp: "email", val: "", errMsg: emailErrMsg},
 		{exp: "email", val: "test@pensando.io", errMsg: ""},
+		{exp: "email", val: "test+email@bbc.co.uk", errMsg: ""},
 	}
 	for i, c := range cases {
 		err := RegExp(c.val, []string{c.exp})

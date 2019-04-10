@@ -56,8 +56,8 @@ var RegexpList = map[string]regexpEntry{
 		HelpStr: "must be only numerics",
 	},
 	"email": {
-		Str:     `^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$`,
-		Regexp:  regexp.MustCompile(`^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$`), // http://regexlib.com/Search.aspx?k=email
+		Str:     `^[a-zA-Z0-9_\+\-\.]+@([a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,4}$`,
+		Regexp:  regexp.MustCompile(`^[a-zA-Z0-9_\+\-\.]+@([a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,4}$`), // http://regexlib.com/Search.aspx?k=email
 		HelpStr: "must be a valid email",
 	},
 }

@@ -51,43 +51,11 @@ func restDeleteEndpoint(hostname, token string, obj interface{}) error {
 }
 
 func restPostEndpoint(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*workload.Endpoint); ok {
-		nv, err := restcl.WorkloadV1().Endpoint().Create(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("create operation not supported for Endpoint object")
 }
 
 func restPutEndpoint(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*workload.Endpoint); ok {
-		nv, err := restcl.WorkloadV1().Endpoint().Update(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("put operation not supported for Endpoint object")
 }
 
 func restGetWorkload(hostname, tenant, token string, obj interface{}) error {
@@ -185,9 +153,6 @@ func init() {
 		return
 	}
 
-	cl.AddRestPostFunc("workload.Endpoint", "v1", restPostEndpoint)
-
-	cl.AddRestPutFunc("workload.Endpoint", "v1", restPutEndpoint)
 	cl.AddRestGetFunc("workload.Endpoint", "v1", restGetEndpoint)
 
 	cl.AddRestPostFunc("workload.Workload", "v1", restPostWorkload)

@@ -28,15 +28,6 @@ export class Workloadv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, 'ListEndpoint_1') as Observable<{body: IWorkloadEndpointList | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Create Endpoint object */
-  public AddEndpoint_1(body: IWorkloadEndpoint, stagingID: string = ""):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/workload/v1/endpoints';
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-    }
-    return this.invokeAJAXPostCall(url, body, 'AddEndpoint_1') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
-  }
-  
   /** Get Endpoint object */
   public GetEndpoint_1(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/endpoints/{O.Name}';
@@ -45,16 +36,6 @@ export class Workloadv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXGetCall(url, queryParam, 'GetEndpoint_1') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Update Endpoint object */
-  public UpdateEndpoint_1(O_Name, body: IWorkloadEndpoint, stagingID: string = ""):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/workload/v1/endpoints/{O.Name}';
-    url = url.replace('{O.Name}', O_Name);
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-    }
-    return this.invokeAJAXPutCall(url, body, 'UpdateEndpoint_1') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Endpoint objects */
@@ -67,16 +48,6 @@ export class Workloadv1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, 'ListEndpoint') as Observable<{body: IWorkloadEndpointList | IApiStatus | Error, statusCode: number}>;
   }
   
-  /** Create Endpoint object */
-  public AddEndpoint(body: IWorkloadEndpoint, stagingID: string = ""):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/endpoints';
-    url = url.replace('{O.Tenant}', this['O_Tenant']);
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-    }
-    return this.invokeAJAXPostCall(url, body, 'AddEndpoint') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
-  }
-  
   /** Get Endpoint object */
   public GetEndpoint(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/endpoints/{O.Name}';
@@ -86,17 +57,6 @@ export class Workloadv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXGetCall(url, queryParam, 'GetEndpoint') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
-  }
-  
-  /** Update Endpoint object */
-  public UpdateEndpoint(O_Name, body: IWorkloadEndpoint, stagingID: string = ""):Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/configs/workload/v1/tenant/{O.Tenant}/endpoints/{O.Name}';
-    url = url.replace('{O.Tenant}', this['O_Tenant']);
-    url = url.replace('{O.Name}', O_Name);
-    if (stagingID != null && stagingID.length != 0) {
-      url = url.replace('configs', 'staging/' + stagingID);
-    }
-    return this.invokeAJAXPutCall(url, body, 'UpdateEndpoint') as Observable<{body: IWorkloadEndpoint | IApiStatus | Error, statusCode: number}>;
   }
   
   /** List Workload objects */

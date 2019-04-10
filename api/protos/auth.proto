@@ -23,7 +23,7 @@ message UserSpec {
     }
 
     string Fullname = 1 [(gogoproto.jsontag) = "fullname,omitempty"];
-    string Email    = 2 [(gogoproto.jsontag) = "email,omitempty"];
+    string Email    = 2 [(gogoproto.jsontag) = "email,omitempty", (venice.check) = "EmptyOr(RegExp(email))"];
     // Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character from "~!@#$%^&*()_+`-={}|[]\\:\"<>?,./"
     string Password = 3 [(venice.storageTransformer) = "Secret()", (gogoproto.jsontag) = "password,omitempty"];
     string Type     = 4 [(venice.mutable) = false, (venice.check) = "StrEnum(UserSpec.UserType)", (gogoproto.jsontag) = "type,omitempty"];

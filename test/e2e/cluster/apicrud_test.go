@@ -239,11 +239,11 @@ func testAPICRUDOps() func() {
 					IPv4Gateway: "11.1.1.1",
 				},
 			}
-			{ // Create network via REST
+			{ // Create network via GRPC
 				var ret *network.Network
 				var err error
 				Eventually(func() error {
-					ret, err = restClient.NetworkV1().Network().Create(lctx, &netw)
+					ret, err = grpcClient.NetworkV1().Network().Create(lctx, &netw)
 					return err
 				}, 30, 1).Should(BeNil(), "should be able to create Network")
 				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
@@ -251,7 +251,7 @@ func testAPICRUDOps() func() {
 			}
 			{ // Update network operation
 				netw.Spec.IPv4Gateway = "11.1.1.254"
-				ret, err := restClient.NetworkV1().Network().Update(lctx, &netw)
+				ret, err := grpcClient.NetworkV1().Network().Update(lctx, &netw)
 				Expect(err).To(BeNil())
 				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
 				expNEvents = addToWatchList(expNEvents, ret, kvstore.Updated)
@@ -262,7 +262,7 @@ func testAPICRUDOps() func() {
 				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
 			}
 			{ // Delete operation
-				ret, err := restClient.NetworkV1().Network().Delete(lctx, &netw.ObjectMeta)
+				ret, err := grpcClient.NetworkV1().Network().Delete(lctx, &netw.ObjectMeta)
 				Expect(err).To(BeNil())
 				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
 				expNEvents = addToWatchList(expNEvents, ret, kvstore.Deleted)

@@ -2906,6 +2906,7 @@
           },
           {
             "name": "spec.email",
+            "description": "must be a valid email",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3698,6 +3699,7 @@
           },
           {
             "name": "spec.email",
+            "description": "must be a valid email",
             "in": "query",
             "required": false,
             "type": "string"
@@ -6365,7 +6367,9 @@
           "type": "string"
         },
         "email": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\+\\-\\.]+@([a-zA-Z0-9\\-]+\\.)+[a-zA-Z]{2,4}$",
+          "description": "must be a valid email"
         },
         "password": {
           "type": "string",

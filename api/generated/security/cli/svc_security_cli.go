@@ -342,181 +342,35 @@ func restPutFirewallProfile(hostname, token string, obj interface{}) error {
 }
 
 func restGetCertificate(hostname, tenant, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*security.Certificate); ok {
-		nv, err := restcl.SecurityV1().Certificate().Get(loginCtx, &v.ObjectMeta)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-
-	if v, ok := obj.(*security.CertificateList); ok {
-		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
-		nv, err := restcl.SecurityV1().Certificate().List(loginCtx, &opts)
-		if err != nil {
-			return err
-		}
-		v.Items = nv
-	}
-	return nil
-
+	return fmt.Errorf("get operation not supported for Certificate object")
 }
 
 func restDeleteCertificate(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*security.Certificate); ok {
-		nv, err := restcl.SecurityV1().Certificate().Delete(loginCtx, &v.ObjectMeta)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("delete operation not supported for Certificate object")
 }
 
 func restPostCertificate(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*security.Certificate); ok {
-		nv, err := restcl.SecurityV1().Certificate().Create(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("create operation not supported for Certificate object")
 }
 
 func restPutCertificate(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*security.Certificate); ok {
-		nv, err := restcl.SecurityV1().Certificate().Update(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("put operation not supported for Certificate object")
 }
 
 func restGetTrafficEncryptionPolicy(hostname, tenant, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*security.TrafficEncryptionPolicy); ok {
-		nv, err := restcl.SecurityV1().TrafficEncryptionPolicy().Get(loginCtx, &v.ObjectMeta)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-
-	if v, ok := obj.(*security.TrafficEncryptionPolicyList); ok {
-		objMeta := api.ObjectMeta{}
-		nv, err := restcl.SecurityV1().TrafficEncryptionPolicy().Get(loginCtx, &objMeta)
-		if err != nil {
-			return err
-		}
-		v.Items = append(v.Items, nv)
-	}
-	return nil
-
+	return fmt.Errorf("get operation not supported for TrafficEncryptionPolicy object")
 }
 
 func restDeleteTrafficEncryptionPolicy(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*security.TrafficEncryptionPolicy); ok {
-		nv, err := restcl.SecurityV1().TrafficEncryptionPolicy().Delete(loginCtx, &v.ObjectMeta)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("delete operation not supported for TrafficEncryptionPolicy object")
 }
 
 func restPostTrafficEncryptionPolicy(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*security.TrafficEncryptionPolicy); ok {
-		nv, err := restcl.SecurityV1().TrafficEncryptionPolicy().Create(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("create operation not supported for TrafficEncryptionPolicy object")
 }
 
 func restPutTrafficEncryptionPolicy(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*security.TrafficEncryptionPolicy); ok {
-		nv, err := restcl.SecurityV1().TrafficEncryptionPolicy().Update(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+	return fmt.Errorf("put operation not supported for TrafficEncryptionPolicy object")
 }
 
 func init() {
@@ -542,15 +396,5 @@ func init() {
 
 	cl.AddRestPutFunc("security.FirewallProfile", "v1", restPutFirewallProfile)
 	cl.AddRestGetFunc("security.FirewallProfile", "v1", restGetFirewallProfile)
-
-	cl.AddRestPostFunc("security.Certificate", "v1", restPostCertificate)
-	cl.AddRestDeleteFunc("security.Certificate", "v1", restDeleteCertificate)
-	cl.AddRestPutFunc("security.Certificate", "v1", restPutCertificate)
-	cl.AddRestGetFunc("security.Certificate", "v1", restGetCertificate)
-
-	cl.AddRestPostFunc("security.TrafficEncryptionPolicy", "v1", restPostTrafficEncryptionPolicy)
-	cl.AddRestDeleteFunc("security.TrafficEncryptionPolicy", "v1", restDeleteTrafficEncryptionPolicy)
-	cl.AddRestPutFunc("security.TrafficEncryptionPolicy", "v1", restPutTrafficEncryptionPolicy)
-	cl.AddRestGetFunc("security.TrafficEncryptionPolicy", "v1", restGetTrafficEncryptionPolicy)
 
 }

@@ -76,7 +76,7 @@ func (it *veniceIntegSuite) createNetwork(tenant, namespace, net, subnet, gw str
 		return nil, err
 	}
 	// create it
-	return it.restClient.NetworkV1().Network().Create(ctx, &nw)
+	return it.apisrvClient.NetworkV1().Network().Create(ctx, &nw)
 }
 
 // deleteNetwork deletes a network using REST api
@@ -92,7 +92,7 @@ func (it *veniceIntegSuite) deleteNetwork(tenant, net string) (*network.Network,
 		return nil, err
 	}
 	// delete it
-	return it.restClient.NetworkV1().Network().Delete(ctx, &ometa)
+	return it.apisrvClient.NetworkV1().Network().Delete(ctx, &ometa)
 }
 
 // getStatsPolicy gets a stats policy

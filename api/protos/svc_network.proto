@@ -18,28 +18,18 @@ import "vrf.proto";
 
 // Network REST API
 service NetworkV1 {
-     // Prefix for all resources served by this service.
-     option (venice.apiPrefix) = "network";
-     // API Version.
-     option (venice.apiVersion) = "v1";
+    // Prefix for all resources served by this service.
+    option (venice.apiPrefix) = "network";
+    // API Version.
+    option (venice.apiVersion) = "v1";
 
-     option (venice.apiGrpcCrudService) = "Network";
-     option (venice.apiGrpcCrudService) = "Service";
-     option (venice.apiGrpcCrudService) = "LbPolicy";
-     option (venice.apiGrpcCrudService) = "VirtualRouter";
+    option (venice.apiGrpcCrudService) = "Network";
+    option (venice.apiGrpcCrudService) = "Service";
+    option (venice.apiGrpcCrudService) = "LbPolicy";
+    option (venice.apiGrpcCrudService) = "VirtualRouter";
 
-     option (venice.apiRestService) = {
+    option (venice.apiRestService) = {
          Object: "Network"
-         Method: [ "get", "put", "delete", "post", "list", "watch" ]
+         Method: [ "get", "list", "watch" ]
      };
-
-     option (venice.apiRestService) = {
-         Object: "Service"
-         Method: [ "get", "put", "delete", "post", "list", "watch" ]
-     };
-
-     option (venice.apiRestService) = {
-         Object: "LbPolicy"
-         Method: [ "get", "put", "delete", "post", "list", "watch" ]
-     };
- }
+}

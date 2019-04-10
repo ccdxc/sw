@@ -156,8 +156,7 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	for i := 0; i < it.config.NumHosts; i++ {
 		AssertOk(c, <-waitCh, "Endpoint delete error")
 	}
-
-	// delete the network
-	_, err = it.deleteNetwork("default", "Network-Vlan-1")
-	AssertOk(c, err, "Error deleting network")
+	// TODO: add when delete of network is supported
+	//_, err = it.deleteNetwork("default", "Network-Vlan-1")
+	//AssertOk(c, err, "Error deleting network")
 }

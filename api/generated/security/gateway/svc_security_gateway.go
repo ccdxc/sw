@@ -1168,27 +1168,17 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoAddApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "App", "security", apiintf.CreateOper)
 
-	e.svcProf["AutoAddCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiintf.CreateOper)
-
 	e.svcProf["AutoAddSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicy", "security", apiintf.CreateOper)
 
 	e.svcProf["AutoAddSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroup", "security", apiintf.CreateOper)
 
-	e.svcProf["AutoAddTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TrafficEncryptionPolicy", "security", apiintf.CreateOper)
-
 	e.svcProf["AutoDeleteApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "App", "security", apiintf.DeleteOper)
-
-	e.svcProf["AutoDeleteCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiintf.DeleteOper)
 
 	e.svcProf["AutoDeleteSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicy", "security", apiintf.DeleteOper)
 
 	e.svcProf["AutoDeleteSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroup", "security", apiintf.DeleteOper)
 
-	e.svcProf["AutoDeleteTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TrafficEncryptionPolicy", "security", apiintf.DeleteOper)
-
 	e.svcProf["AutoGetApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "App", "security", apiintf.GetOper)
-
-	e.svcProf["AutoGetCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiintf.GetOper)
 
 	e.svcProf["AutoGetFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FirewallProfile", "security", apiintf.GetOper)
 
@@ -1196,11 +1186,7 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroup", "security", apiintf.GetOper)
 
-	e.svcProf["AutoGetTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TrafficEncryptionPolicy", "security", apiintf.GetOper)
-
 	e.svcProf["AutoListApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AppList", "security", apiintf.ListOper)
-
-	e.svcProf["AutoListCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "CertificateList", "security", apiintf.ListOper)
 
 	e.svcProf["AutoListFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FirewallProfileList", "security", apiintf.ListOper)
 
@@ -1210,27 +1196,19 @@ func (e *sSecurityV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoUpdateApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "App", "security", apiintf.UpdateOper)
 
-	e.svcProf["AutoUpdateCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Certificate", "security", apiintf.UpdateOper)
-
 	e.svcProf["AutoUpdateFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "FirewallProfile", "security", apiintf.UpdateOper)
 
 	e.svcProf["AutoUpdateSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SGPolicy", "security", apiintf.UpdateOper)
 
 	e.svcProf["AutoUpdateSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "SecurityGroup", "security", apiintf.UpdateOper)
 
-	e.svcProf["AutoUpdateTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "TrafficEncryptionPolicy", "security", apiintf.UpdateOper)
-
 	e.svcProf["AutoWatchApp"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgAppWatchHelper", "security", apiintf.WatchOper)
-
-	e.svcProf["AutoWatchCertificate"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgCertificateWatchHelper", "security", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchFirewallProfile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgFirewallProfileWatchHelper", "security", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchSGPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgSGPolicyWatchHelper", "security", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchSecurityGroup"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgSecurityGroupWatchHelper", "security", apiintf.WatchOper)
-
-	e.svcProf["AutoWatchTrafficEncryptionPolicy"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgTrafficEncryptionPolicyWatchHelper", "security", apiintf.WatchOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

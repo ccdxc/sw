@@ -2444,7 +2444,8 @@ func makeURISecurityV1AutoAddAppCreateOper(in *App) string {
 
 //
 func makeURISecurityV1AutoAddCertificateCreateOper(in *Certificate) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/certificates")
+	return ""
+
 }
 
 //
@@ -2465,7 +2466,8 @@ func makeURISecurityV1AutoAddSecurityGroupCreateOper(in *SecurityGroup) string {
 
 //
 func makeURISecurityV1AutoAddTrafficEncryptionPolicyCreateOper(in *TrafficEncryptionPolicy) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/trafficEncryptionPolicy")
+	return ""
+
 }
 
 //
@@ -2475,7 +2477,8 @@ func makeURISecurityV1AutoDeleteAppDeleteOper(in *App) string {
 
 //
 func makeURISecurityV1AutoDeleteCertificateDeleteOper(in *Certificate) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/certificates/", in.Name)
+	return ""
+
 }
 
 //
@@ -2496,7 +2499,8 @@ func makeURISecurityV1AutoDeleteSecurityGroupDeleteOper(in *SecurityGroup) strin
 
 //
 func makeURISecurityV1AutoDeleteTrafficEncryptionPolicyDeleteOper(in *TrafficEncryptionPolicy) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name)
+	return ""
+
 }
 
 //
@@ -2506,7 +2510,8 @@ func makeURISecurityV1AutoGetAppGetOper(in *App) string {
 
 //
 func makeURISecurityV1AutoGetCertificateGetOper(in *Certificate) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/certificates/", in.Name)
+	return ""
+
 }
 
 //
@@ -2526,7 +2531,8 @@ func makeURISecurityV1AutoGetSecurityGroupGetOper(in *SecurityGroup) string {
 
 //
 func makeURISecurityV1AutoGetTrafficEncryptionPolicyGetOper(in *TrafficEncryptionPolicy) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name)
+	return ""
+
 }
 
 //
@@ -2536,7 +2542,8 @@ func makeURISecurityV1AutoListAppListOper(in *api.ListWatchOptions) string {
 
 //
 func makeURISecurityV1AutoListCertificateListOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/certificates")
+	return ""
+
 }
 
 //
@@ -2567,7 +2574,8 @@ func makeURISecurityV1AutoUpdateAppUpdateOper(in *App) string {
 
 //
 func makeURISecurityV1AutoUpdateCertificateUpdateOper(in *Certificate) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/certificates/", in.Name)
+	return ""
+
 }
 
 //
@@ -2587,7 +2595,8 @@ func makeURISecurityV1AutoUpdateSecurityGroupUpdateOper(in *SecurityGroup) strin
 
 //
 func makeURISecurityV1AutoUpdateTrafficEncryptionPolicyUpdateOper(in *TrafficEncryptionPolicy) string {
-	return fmt.Sprint("/configs/security/v1", "/tenant/", in.Tenant, "/trafficEncryptionPolicy/", in.Name)
+	return ""
+
 }
 
 //
@@ -2597,7 +2606,8 @@ func makeURISecurityV1AutoWatchAppWatchOper(in *api.ListWatchOptions) string {
 
 //
 func makeURISecurityV1AutoWatchCertificateWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/security/v1", "/watch/tenant/", in.Tenant, "/certificates")
+	return ""
+
 }
 
 //
@@ -2623,7 +2633,8 @@ func makeURISecurityV1AutoWatchSvcSecurityV1WatchOper(in *api.ListWatchOptions) 
 
 //
 func makeURISecurityV1AutoWatchTrafficEncryptionPolicyWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/security/v1", "/watch/tenant/", in.Tenant, "/trafficEncryptionPolicy")
+	return ""
+
 }
 
 // AutoAddSecurityGroup CRUD method for SecurityGroup
@@ -3226,112 +3237,27 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchFirewallProfile(ctx context.Con
 
 // AutoAddCertificate CRUD method for Certificate
 func (r *EndpointsSecurityV1RestClient) AutoAddCertificate(ctx context.Context, in *Certificate) (*Certificate, error) {
-	path := makeURISecurityV1AutoAddCertificateCreateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer httpresp.Body.Close()
-	ret, err := decodeHTTPrespSecurityV1AutoAddCertificate(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Certificate), nil
+	return nil, errors.New("not allowed")
 }
 
 // AutoUpdateCertificate CRUD method for Certificate
 func (r *EndpointsSecurityV1RestClient) AutoUpdateCertificate(ctx context.Context, in *Certificate) (*Certificate, error) {
-	path := makeURISecurityV1AutoUpdateCertificateUpdateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespSecurityV1AutoUpdateCertificate(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Certificate), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetCertificate CRUD method for Certificate
 func (r *EndpointsSecurityV1RestClient) AutoGetCertificate(ctx context.Context, in *Certificate) (*Certificate, error) {
-	path := makeURISecurityV1AutoGetCertificateGetOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespSecurityV1AutoGetCertificate(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Certificate), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoDeleteCertificate CRUD method for Certificate
 func (r *EndpointsSecurityV1RestClient) AutoDeleteCertificate(ctx context.Context, in *Certificate) (*Certificate, error) {
-	path := makeURISecurityV1AutoDeleteCertificateDeleteOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespSecurityV1AutoDeleteCertificate(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Certificate), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoListCertificate CRUD method for Certificate
 func (r *EndpointsSecurityV1RestClient) AutoListCertificate(ctx context.Context, options *api.ListWatchOptions) (*CertificateList, error) {
-	path := makeURISecurityV1AutoListCertificateListOper(options)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, options, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespSecurityV1AutoListCertificate(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*CertificateList), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoWatchCertificate CRUD method for Certificate
@@ -3384,90 +3310,22 @@ func (r *EndpointsSecurityV1RestClient) AutoWatchCertificate(ctx context.Context
 
 // AutoAddTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy
 func (r *EndpointsSecurityV1RestClient) AutoAddTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error) {
-	path := makeURISecurityV1AutoAddTrafficEncryptionPolicyCreateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer httpresp.Body.Close()
-	ret, err := decodeHTTPrespSecurityV1AutoAddTrafficEncryptionPolicy(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*TrafficEncryptionPolicy), nil
+	return nil, errors.New("not allowed")
 }
 
 // AutoUpdateTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy
 func (r *EndpointsSecurityV1RestClient) AutoUpdateTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error) {
-	path := makeURISecurityV1AutoUpdateTrafficEncryptionPolicyUpdateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespSecurityV1AutoUpdateTrafficEncryptionPolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*TrafficEncryptionPolicy), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy
 func (r *EndpointsSecurityV1RestClient) AutoGetTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error) {
-	path := makeURISecurityV1AutoGetTrafficEncryptionPolicyGetOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespSecurityV1AutoGetTrafficEncryptionPolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*TrafficEncryptionPolicy), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoDeleteTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy
 func (r *EndpointsSecurityV1RestClient) AutoDeleteTrafficEncryptionPolicy(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error) {
-	path := makeURISecurityV1AutoDeleteTrafficEncryptionPolicyDeleteOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespSecurityV1AutoDeleteTrafficEncryptionPolicy(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*TrafficEncryptionPolicy), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoListTrafficEncryptionPolicy CRUD method for TrafficEncryptionPolicy
