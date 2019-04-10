@@ -147,8 +147,8 @@ header_type egress_service_header_t {
 
 header_type predicate_header_t {
     fields {
-        txdma_drop_event        : 1;
         pad0                    : 4;
+        txdma_drop_event        : 1;
         redirect_to_arm         : 1;
         lpm_bypass              : 1;
         direction               : 1;
@@ -226,15 +226,6 @@ header_type p4_to_txdma_header_t {
     }
 }
 
-header_type txdma_to_p4i_header_t {
-    fields {
-        p4plus_app_id   : 4;
-        pad0            : 4;
-        udp_first_pkt   : 1;
-        bypass_rxdma    : 1;
-    }
-}
-
 header_type txdma_to_p4e_header_t {
     fields {
         p4plus_app_id   : 4;
@@ -243,12 +234,6 @@ header_type txdma_to_p4e_header_t {
         nexthop_index   : 10;
         pad2            : 6;
         vcn_id          : 10;
-    }
-}
-
-header_type arm_to_txdma_header_t {
-    fields {
-        udp_first_pkt : 1;
     }
 }
 

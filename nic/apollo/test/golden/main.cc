@@ -346,7 +346,6 @@ init_service_lif ()
     push_qstate_to_capri(&qstate, 0);
 
     lifqstate_t lif_qstate = {0};
-    // lif_qstate.pc = pgm_offset;
     lif_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
     lif_qstate.ring0_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
     lif_qstate.total_rings = 1;
@@ -354,7 +353,6 @@ init_service_lif ()
                  sizeof(lif_qstate));
 
     txdma_qstate_t txdma_qstate = {0};
-    // txdma_qstate.pc = pgm_offset;
     txdma_qstate.rxdma_cindex_addr =
         qstate.hbm_address + offsetof(lifqstate_t, sw_cindex);
     txdma_qstate.ring_base = get_mem_addr(JPKTBUFFER);
@@ -925,7 +923,35 @@ sacl_init (void)
 }
 
 static void
-vxlan_mappings_init (void) {
+nacl_init ()
+{
+    nacl_swkey_t key;
+    nacl_swkey_mask_t mask;
+    nacl_actiondata_t data;
+    uint32_t tbl_id = P4TBL_ID_NACL;
+    uint32_t index;
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    index = 0;
+    key.predicate_header_redirect_to_arm = 1;
+    mask.predicate_header_redirect_to_arm_mask = 1;
+    data.action_id = NACL_NACL_REDIRECT_ID;
+    data.action_u.nacl_nacl_redirect.app_id = P4PLUS_APPTYPE_CPU;
+    data.action_u.nacl_nacl_redirect.oport = TM_PORT_DMA;
+    data.action_u.nacl_nacl_redirect.lif = 0x64;
+    data.action_u.nacl_nacl_redirect.qtype = 0;
+    data.action_u.nacl_nacl_redirect.qid = 0;
+    data.action_u.nacl_nacl_redirect.vlan_strip = 0;
+
+    entry_write(tbl_id, index, &key, &mask, &data, false, 0);
+}
+
+static void
+vxlan_mappings_init (void)
+{
     remote_vnic_mapping_tx_swkey_t key;
     remote_vnic_mapping_tx_actiondata_t data;
     remote_vnic_mapping_tx_remote_vnic_mapping_tx_info_t *mapping_info =
@@ -945,12 +971,14 @@ vxlan_mappings_init (void) {
 }
 
 static void
-vxlan_init (void) {
+vxlan_init (void)
+{
     vxlan_mappings_init();
 }
 
 static void
-inter_pipe_init (void) {
+inter_pipe_init (void)
+{
     ingress_to_rxdma_actiondata_t data;
     uint32_t tbl_id = P4TBL_ID_INGRESS_TO_RXDMA;
 
@@ -1154,6 +1182,7 @@ TEST_F(apollo_test, test1)
     rewrite_init();
     route_init();
     sacl_init();
+    nacl_init();
 
     vxlan_init();
     inter_pipe_init();

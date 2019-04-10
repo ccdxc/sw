@@ -18,12 +18,23 @@ ingress_to_rxdma:
                         (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
                          CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
                          APOLLO_P4_TO_RXDMA_HDR_SZ + APOLLO_PREDICATE_HDR_SZ)
-    phvwr           p.capri_p4_intrinsic_valid, TRUE
-    phvwr           p.capri_rxdma_intrinsic_valid, TRUE
-    phvwr           p.p4_to_rxdma_header_valid, TRUE
-    phvwr           p.predicate_header_valid, TRUE
-    phvwr           p.p4_to_txdma_header_valid, TRUE
+    /*
     phvwr           p.p4i_apollo_i2e_valid, TRUE
+    phvwr           p.p4_to_txdma_header_valid, TRUE
+    phvwr           p.predicate_header_valid, TRUE
+    phvwr           p.p4_to_rxdma_header_valid, TRUE
+    phvwr           p.capri_rxdma_intrinsic_valid, TRUE
+    phvwr           p.capri_p4_intrinsic_valid, TRUE
+    */
+    phvwrmi         p.{p4i_apollo_i2e_valid, \
+                       p4_to_txdma_header_valid, \
+                       p4_to_arm_valid, \
+                       p4_to_p4plus_classic_nic_ip_valid, \
+                       p4_to_p4plus_classic_nic_valid, \
+                       predicate_header_valid, \
+                       p4_to_rxdma_header_valid, \
+                       capri_rxdma_intrinsic_valid, \
+                       capri_p4_intrinsic_valid}, 0x1FF, 0x18F
     add             r1, k.capri_p4_intrinsic_packet_len, APOLLO_I2E_HDR_SZ
     phvwr           p.p4_to_rxdma_header_table3_valid, TRUE
     phvwr           p.p4_to_rxdma_header_direction, k.control_metadata_direction
@@ -51,10 +62,10 @@ classic_nic_to_uplink:
 classic_nic_to_rxdma:
     // r1 : packet_len
     add             r1, r0, k.capri_p4_intrinsic_packet_len
-classic_nic_to_rxdma_common:
     phvwr           p.{p4_to_p4plus_classic_nic_ip_valid, \
                         p4_to_p4plus_classic_nic_valid}, 3
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
+classic_nic_to_rxdma_common:
     seq             c1, k.ctag_1_valid, TRUE
     seq             c2, k.control_metadata_vlan_strip, TRUE
     bcf             ![c1&c2], classic_nic_to_rxdma_post_vlan_strip
@@ -101,8 +112,25 @@ classic_nic_to_rxdma_ipv4:
 
 .align
 redirect_to_arm:
-    phvwr           p.capri_p4_intrinsic_valid, TRUE
+    /*
+    phvwr           p.capri_txdma_intrinsic, FALSE
     phvwr           p.p4_to_arm_valid, TRUE
+    phvwr           p4_to_p4plus_classic_nic_ip_valid, TRUE
+    phvwr           p4_to_p4plus_classic_nic_valid, TRUE
+    phvwr           p.predicate_header_valid, FALSE
+    phvwr           capri_rxdma_intrinsic_valid,TRUE
+    phvwr           p.capri_p4_intrinsic_valid, TRUE
+    */
+    phvwrmi         p.{capri_txdma_intrinsic_valid,\
+                       p4i_apollo_i2e_valid, \
+                       p4_to_txdma_header_valid, \
+                       p4_to_arm_valid, \
+                       p4_to_p4plus_classic_nic_ip_valid, \
+                       p4_to_p4plus_classic_nic_valid, \
+                       predicate_header_valid, \
+                       p4_to_rxdma_header_valid, \
+                       capri_rxdma_intrinsic_valid, \
+                       capri_p4_intrinsic_valid}, 0x073, 0x27B
     phvwr           p.p4_to_arm_packet_len, k.capri_p4_intrinsic_packet_len
     phvwr           p.p4_to_arm_flow_hash, k.p4i_apollo_i2e_entropy_hash
     phvwr           p.p4_to_arm_payload_offset, k.offset_metadata_payload_offset

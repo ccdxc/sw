@@ -21,17 +21,18 @@ action nacl_redirect(app_id, oport, lif, qtype, qid, vlan_strip) {
 @pragma stage 2
 table nacl {
     reads {
-        control_metadata.direction      : ternary;
-        vnic_metadata.local_vnic_tag    : ternary;
-        key_metadata.ktype              : ternary;
-        key_metadata.dst                : ternary;
-        key_metadata.src                : ternary;
-        key_metadata.proto              : ternary;
-        key_metadata.sport              : ternary;
-        key_metadata.dport              : ternary;
-        capri_intrinsic.lif             : ternary;
-        ctag_1.valid                    : ternary;
-        ctag_1.vid                      : ternary;
+        control_metadata.direction          : ternary;
+        vnic_metadata.local_vnic_tag        : ternary;
+        key_metadata.ktype                  : ternary;
+        key_metadata.dst                    : ternary;
+        key_metadata.src                    : ternary;
+        key_metadata.proto                  : ternary;
+        key_metadata.sport                  : ternary;
+        key_metadata.dport                  : ternary;
+        capri_intrinsic.lif                 : ternary;
+        ctag_1.valid                        : ternary;
+        ctag_1.vid                          : ternary;
+        predicate_header.redirect_to_arm    : ternary;
     }
     actions {
         nacl_permit;

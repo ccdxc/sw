@@ -28,8 +28,8 @@ native_ipv6_packet:
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV6
     phvwr           p.key_metadata_src, \
                         k.{ipv6_1_srcAddr_sbit0_ebit31...ipv6_1_srcAddr_sbit64_ebit127}
-    phvwr           p.key_metadata_dst[127:16], k.ipv6_1_dstAddr_sbit0_ebit111
-    phvwr           p.key_metadata_dst[15:0], k.ipv6_1_dstAddr_sbit112_ebit127
+    phvwr           p.key_metadata_dst[127:8], k.ipv6_1_dstAddr_sbit0_ebit119
+    phvwr           p.key_metadata_dst[7:0], k.ipv6_1_dstAddr_sbit120_ebit127
     seq             c1, k.udp_1_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_1_srcPort
     phvwr.c1        p.key_metadata_dport, k.udp_1_dstPort

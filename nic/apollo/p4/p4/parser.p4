@@ -54,7 +54,6 @@ header p4_to_arm_header_t p4_to_arm;
 @pragma pa_field_union ingress p4_to_txdma_header.vcn_id            vnic_metadata.vcn_id
 header p4_to_txdma_header_t p4_to_txdma_header;
 
-header txdma_to_p4i_header_t txdma_to_p4i_header;
 header txdma_to_p4e_header_t txdma_to_p4e_header;
 
 // layer 0
@@ -163,8 +162,22 @@ parser parse_txdma_app {
 @pragma xgress ingress
 parser parse_txdma_ingress {
     extract(predicate_header);
-    extract(txdma_to_p4e_header);
-    extract(txdma_to_p4i_header);
+    return select(predicate_header.direction) {
+        RX_FROM_SWITCH : parse_ingress_predicate_header_rx;
+        TX_FROM_HOST : parse_ingress_predicate_header_tx;
+        default : ingress;
+    }
+}
+
+@pragma xgress ingress
+parser parse_ingress_predicate_header_rx {
+    set_metadata(control_metadata.direction, RX_FROM_SWITCH);
+    return parse_packet;
+}
+
+@pragma xgress inress
+parser parse_ingress_predicate_header_tx {
+    set_metadata(control_metadata.direction, TX_FROM_HOST);
     return parse_packet;
 }
 
@@ -412,15 +425,15 @@ parser parse_egress {
     extract(capri_txdma_intrinsic);
     extract(predicate_header);
     return select(predicate_header.direction) {
-        RX_FROM_SWITCH : parse_predicate_header_rx;
-        TX_FROM_HOST : parse_predicate_header_tx;
+        RX_FROM_SWITCH : parse_egress_predicate_header_rx;
+        TX_FROM_HOST : parse_egress_predicate_header_tx;
         default : ingress;
     }
 }
 
 @pragma xgress egress
 @pragma allow_set_meta control_metadata.direction
-parser parse_predicate_header_rx {
+parser parse_egress_predicate_header_rx {
     set_metadata(control_metadata.direction, RX_FROM_SWITCH);
     extract(txdma_to_p4e_header);
     return parse_i2e_metadata;
@@ -428,7 +441,7 @@ parser parse_predicate_header_rx {
 
 @pragma xgress egress
 @pragma allow_set_meta control_metadata.direction
-parser parse_predicate_header_tx {
+parser parse_egress_predicate_header_tx {
     set_metadata(control_metadata.direction, TX_FROM_HOST);
     extract(txdma_to_p4e_header);
     return parse_i2e_metadata;

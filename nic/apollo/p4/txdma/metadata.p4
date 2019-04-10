@@ -40,18 +40,13 @@ header_type txdma_qstate_t {
 
 // PHV instantiation
 @pragma dont_trim
-metadata arm_to_txdma_header_t arm_to_txdma_header;
-@pragma dont_trim
 metadata predicate_header_t predicate_header;
 @pragma dont_trim
 metadata p4_to_txdma_header_t p4_to_txdma_header;
 @pragma dont_trim
-metadata txdma_to_p4e_header_t txdma_to_p4e_header;
-@pragma dont_trim
-metadata txdma_to_p4i_header_t txdma_to_p4i_header;
-
-@pragma dont_trim
 metadata txdma_control_metadata_t txdma_control;
+@pragma dont_trim
+metadata txdma_to_p4e_header_t txdma_to_p4e_header;
 
 @pragma dont_trim
 metadata doorbell_data_t    doorbell_data;
@@ -65,7 +60,6 @@ metadata dma_cmd_mem2pkt_t payload_dma;         // dma cmd 2
 metadata dma_cmd_phv2mem_t rxdma_ci_update;     // dma cmd 3
 @pragma dont_trim
 metadata dma_cmd_phv2mem_t doorbell_ci_update;  // dma cmd 4
-
 
 // Scratch metadata
 @pragma dont_trim

@@ -99,6 +99,7 @@ action classic_nic_to_rxdma() {
 
 action classic_nic_to_uplink() {
     add_header(capri_p4_intrinsic);
+    remove_header(capri_txdma_intrinsic);
     remove_header(p4plus_to_p4);
     remove_header(p4plus_to_p4_vlan);
 }
@@ -117,6 +118,8 @@ action add_p4_to_arm_header() {
 }
 
 action redirect_to_arm() {
+    remove_header(capri_txdma_intrinsic);
+    remove_header(predicate_header);
     add_p4_to_arm_header();
     classic_nic_to_rxdma();
     modify_field(p4_to_p4plus_classic_nic.packet_len,
