@@ -277,7 +277,7 @@ func startEventReader(shmName string, evtsDispatcher events.Dispatcher, logger l
 }
 
 // helper function to start the writer
-// - create shared memory with the given name and size
+// - create shared memory with the given hostname and size
 // - start recording events to shared memory
 // - stop upon receiving signal from stopCh
 func startEventWriter(shmName string, size int, stopCh chan struct{}, fakeErrors int) uint64 {

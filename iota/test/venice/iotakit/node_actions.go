@@ -189,7 +189,7 @@ func (act *ActionCtx) RunNaplesCommand(npc *NaplesCollection, cmd string) ([]str
 func (act *ActionCtx) PortFlap(npc *NaplesCollection) error {
 	for _, naples := range npc.nodes {
 		naplesName := naples.iotaNode.Name
-		cmd := "/naples/nic/bin/halctl show port status"
+		cmd := "/nic/bin/halctl show port status"
 		out, err := act.runCommandOnGivenNaples(naples, cmd)
 		if err != nil {
 			log.Errorf("command(%v) failed on naples: %v, Err: %v", cmd, naplesName, err)
@@ -206,13 +206,13 @@ func (act *ActionCtx) PortFlap(npc *NaplesCollection) error {
 		log.Infof("flapping port {%s} on naples {%v}", portNum, naplesName)
 
 		// flap port
-		cmd = fmt.Sprintf("/naples/nic/bin/halctl debug port --port %s --admin-state down", portNum)
+		cmd = fmt.Sprintf("/nic/bin/halctl debug port --port %s --admin-state down", portNum)
 		_, err = act.runCommandOnGivenNaples(naples, cmd)
 		if err != nil {
 			log.Errorf("command(%v) failed on naples: %v, Err: %v", cmd, naplesName, err)
 			return err
 		}
-		cmd = fmt.Sprintf("/naples/nic/bin/halctl debug port --port %s --admin-state up", portNum)
+		cmd = fmt.Sprintf("/nic/bin/halctl debug port --port %s --admin-state up", portNum)
 		_, err = act.runCommandOnGivenNaples(naples, cmd)
 		if err != nil {
 			log.Errorf("command(%v) failed on naples: %v, Err: %v", cmd, naplesName, err)

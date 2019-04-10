@@ -37,7 +37,7 @@ type EvtReader struct {
 	evtsDispatcher events.Dispatcher
 	translator     *ntranslate.Translator
 	logger         log.Logger
-	name           string // smart nic name
+	hostname       string // user friendly identifier for logs/events
 }
 
 // WithEventsDispatcher passes a custom events dispatcher to dispatch events
@@ -48,9 +48,9 @@ func WithEventsDispatcher(evtsDispatcher events.Dispatcher) Option {
 }
 
 // NewEventReader creates a new events reader
-// - Open shared memory identified by the given name (path) and get the IPC instance from shared memory.
+// - Open shared memory identified by the given hostname (path) and get the IPC instance from shared memory.
 // - Use events dispatcher to dispatch events if given.
-func NewEventReader(smartNicName string, path string, pollDelay time.Duration,
+func NewEventReader(hostname string, path string, pollDelay time.Duration,
 	logger log.Logger, opts ...Option) (*EvtReader, error) {
 
 	sm, err := shm.OpenSharedMem(path)
@@ -67,7 +67,7 @@ func NewEventReader(smartNicName string, path string, pollDelay time.Duration,
 		ipcR:       shm.NewIPCReader(ipc, pollDelay),
 		translator: ntranslate.MustGetTranslator(),
 		logger:     logger,
-		name:       smartNicName,
+		hostname:   hostname,
 	}
 
 	for _, opt := range opts {
@@ -113,14 +113,12 @@ func (r *EvtReader) NumPendingEvents() int {
 
 // message handler to be used by the readers to handle received messages
 func (r *EvtReader) handler(nEvt *halproto.Event) error {
-	name := ""
-	if r.name != "" {
-		name = r.name
-	} else {
-		name = utils.GetHostname()
+	hostname := r.hostname
+	if utils.IsEmpty(hostname) {
+		hostname = utils.GetHostname()
 	}
 	// convert received halproto.Event to venice event
-	vEvt := convertToVeniceEvent(nEvt, name)
+	vEvt := convertToVeniceEvent(nEvt, hostname)
 
 	// convert nEvt.ObjectKey to api.ObjectMeta
 	if nEvt.ObjectKey != nil {
@@ -159,13 +157,8 @@ func (r *EvtReader) handler(nEvt *halproto.Event) error {
 	return nil
 }
 
-// SetSmartNicName set the name to be send to Venice
-func (r *EvtReader) SetSmartNicName(name string) {
-	r.name = name
-}
-
 // helper function to convert halproto.Event to venice event
-func convertToVeniceEvent(nEvt *halproto.Event, name string) *evtsapi.Event {
+func convertToVeniceEvent(nEvt *halproto.Event, hostname string) *evtsapi.Event {
 	uuid := uuid.NewV4().String()
 	t := time.Unix(0, int64(nEvt.GetTime())).UTC() // get time from nsecs
 	ts, _ := types.TimestampProto(t)
@@ -190,7 +183,7 @@ func convertToVeniceEvent(nEvt *halproto.Event, name string) *evtsapi.Event {
 			Type:     nEvt.GetType(),
 			Severity: halproto.Severity_name[int32(nEvt.GetSeverity())],
 			Message:  nEvt.GetMessage(),
-			Source:   &evtsapi.EventSource{Component: nEvt.GetComponent(), NodeName: name},
+			Source:   &evtsapi.EventSource{Component: nEvt.GetComponent(), NodeName: hostname},
 			Count:    1,
 		},
 	}

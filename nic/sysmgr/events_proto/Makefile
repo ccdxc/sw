@@ -1,7 +1,7 @@
 
 sysmgr_events.pb.go: sysmgr_events.proto
 	protoc ./sysmgr_events.proto \
-           --go_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto:. \
+           --gogofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:. \
            -I . \
            -I ../ \
            -I ../../../ \

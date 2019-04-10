@@ -62,6 +62,7 @@ type evtServices struct {
 	cancelCtx                context.CancelFunc     // to stop shm reader routine
 	logger                   log.Logger             // logger
 	veniceExporterRegistered bool                   // whether events exporter to Venice is registered
+	hostname                 string                 // user friendly identifier for logs/events
 }
 
 // NAPLES Clients for all the south bound connections
@@ -130,7 +131,7 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		if n.evtServices.running {
 			n.logger.Infof("changing mode to {%s}", networkMode)
 			n.evtServices.startNetworkModeServices()
-			n.evtServices.setSmartNicName(obj.SmartNicName)
+			n.evtServices.hostname = obj.GetHostname()
 			return
 		}
 		n.evtServices.start(networkMode)
@@ -139,7 +140,7 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			n.logger.Infof("changing mode to {%s}", hostMode)
 			n.evtServices.stopNetworkModeServices()
 			n.evtServices.resolverClient.UpdateServers([]string{})
-			n.evtServices.setSmartNicName(obj.SmartNicName)
+			n.evtServices.hostname = obj.GetHostname()
 			return
 		}
 		n.evtServices.start(hostMode)
@@ -305,7 +306,7 @@ func (e *evtServices) start(mode string) {
 	e.eps.StartDispatch()
 
 	// create shared memory events reader
-	e.shmReader = reader.NewReader(shm.GetSharedMemoryDirectory(), 50*time.Millisecond, e.eps.GetEventsDispatcher(), e.logger)
+	e.shmReader = reader.NewReader(e.hostname, shm.GetSharedMemoryDirectory(), 50*time.Millisecond, e.eps.GetEventsDispatcher(), e.logger)
 	e.wg.Add(1)
 	go func() {
 		e.wg.Done()
@@ -364,8 +365,4 @@ func (e *evtServices) stop() {
 		e.agentStore = nil
 	}
 	e.running = false
-}
-
-func (e *evtServices) setSmartNicName(name string) {
-	e.shmReader.SetSmartNicName(name)
 }

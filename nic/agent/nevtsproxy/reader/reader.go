@@ -33,13 +33,14 @@ type Reader struct {
 	stop           sync.Once             // to stop the reader
 	logger         log.Logger            // logger
 	wg             sync.WaitGroup        // for the file watchers
-	name           string                // smart nic name
+	hostname       string                // user friendly identifier for logs/events
 }
 
 // NewReader creates a new shm events reader
 // - it creates a file watcher on the given dir to watch file(shm) create events/
-func NewReader(dir string, pollDelay time.Duration, evtsDispatcher events.Dispatcher, logger log.Logger) *Reader {
+func NewReader(hostname, dir string, pollDelay time.Duration, evtsDispatcher events.Dispatcher, logger log.Logger) *Reader {
 	rdr := &Reader{
+		hostname:       hostname,
 		dir:            dir,
 		pollDelay:      pollDelay,
 		evtReaders:     map[string]*EvtReader{},
@@ -165,7 +166,7 @@ func (r *Reader) startEvtsReader(shmPath string) {
 		existingRdr.Stop()
 	}
 
-	eRdr, err := NewEventReader(r.name, shmPath, r.pollDelay, r.logger,
+	eRdr, err := NewEventReader(r.hostname, shmPath, r.pollDelay, r.logger,
 		WithEventsDispatcher(r.evtsDispatcher))
 	if err != nil {
 		r.logger.Errorf("failed to create reader for shm: %s, err: %v", shmPath, err)
@@ -182,17 +183,9 @@ func (r *Reader) startEvtsReader(shmPath string) {
 func (r *Reader) isEventsFile(filename string) bool {
 	ok, err := regexp.MatchString("^*\\.events$", filename)
 	if err != nil {
-		r.logger.Errorf("failed to match the file name with pattern {^*\\.events$}, err: %v", err)
+		r.logger.Errorf("failed to match the file hostname with pattern {^*\\.events$}, err: %v", err)
 		return false
 	}
 
 	return ok
-}
-
-// SetSmartNicName sets the name of the smart nic for sending it to venice
-func (r *Reader) SetSmartNicName(name string) {
-	r.name = name
-	for _, evrdr := range r.evtReaders {
-		evrdr.SetSmartNicName(name)
-	}
 }
