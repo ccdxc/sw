@@ -112,7 +112,7 @@ public:
      /*
       * Handle upgrade failed
       */
-    virtual void FailedHandler(UpgCtx& upgCtx);
+    virtual HdlrResp FailedHandler(UpgCtx& upgCtx);
     /*
      * Handle upgrade aborted
      */

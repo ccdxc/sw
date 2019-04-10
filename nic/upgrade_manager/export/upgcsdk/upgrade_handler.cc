@@ -63,9 +63,10 @@ void UpgHandler::SuccessHandler(UpgCtx& upgCtx) {
     return;
 }
 
-void UpgHandler::FailedHandler(UpgCtx& upgCtx) {
+HdlrResp UpgHandler::FailedHandler(UpgCtx& upgCtx) {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     UPG_LOG_DEBUG("UpgHandler Failed not implemented by service");
-    return;
+    return resp;
 }
 
 void UpgHandler::AbortHandler(UpgCtx& upgCtx) {

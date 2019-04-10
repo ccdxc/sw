@@ -92,9 +92,10 @@ public:
         return;
     }
 
-    void FailedHandler(UpgCtx& upgCtx) {
+    HdlrResp FailedHandler(UpgCtx& upgCtx) {
+        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
         UPG_LOG_DEBUG("UpgHandler Failed called for the SVC!");
-        return;
+        return resp;
     }
 };
 

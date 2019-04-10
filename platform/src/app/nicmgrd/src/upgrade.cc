@@ -72,9 +72,11 @@ nicmgr_upg_hndlr::SuccessHandler(UpgCtx& upgCtx)
 }
 
 // Handle upgrade failure
-void
+HdlrResp
 nicmgr_upg_hndlr::FailedHandler(UpgCtx& upgCtx)
 {
+    HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+    return resp;
 }
 
 // Handle upgrade abort

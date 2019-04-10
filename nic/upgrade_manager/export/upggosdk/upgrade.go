@@ -114,7 +114,7 @@ type UpgAppHandlers interface {
 	SaveStateHandler(upgCtx *UpgCtx) HdlrResp
 	PostLinkUpHandler(upgCtx *UpgCtx) HdlrResp
 	SuccessHandler(upgCtx *UpgCtx)
-	FailedHandler(upgCtx *UpgCtx)
+	FailedHandler(upgCtx *UpgCtx) HdlrResp
 	AbortHandler(upgCtx *UpgCtx)
 }
 

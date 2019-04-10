@@ -80,8 +80,11 @@ void UpgStateReqReact::InvokeAppHdlr(UpgReqStateType type, HdlrResp &hdlrResp) {
             break;
         case UpgStateFailed:
             //UPG_LOG_DEBUG("Upgrade: Failed");
-            hdlrResp = resp;
-            upgHdlrPtr_->FailedHandler(ctx);
+            hdlrResp = upgHdlrPtr_->FailedHandler(ctx);
+            if ((hdlrResp.resp) == FAIL) {
+                hdlrResp.resp = SUCCESS;
+                hdlrResp.errStr = "";
+            }
             break;
         case UpgStateAbort:
             //UPG_LOG_DEBUG("Upgrade: Abort");

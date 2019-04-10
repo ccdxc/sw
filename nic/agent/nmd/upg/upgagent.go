@@ -174,9 +174,12 @@ func (u *NaplesUpgClient) SuccessHandler(upgCtx *upggosdk.UpgCtx) {
 }
 
 // FailedHandler is called after upgrade is declared failure
-func (u *NaplesUpgClient) FailedHandler(upgCtx *upggosdk.UpgCtx) {
+func (u *NaplesUpgClient) FailedHandler(upgCtx *upggosdk.UpgCtx) upggosdk.HdlrResp {
+	var hdlrResp upggosdk.HdlrResp
+	hdlrResp.Resp = upggosdk.Success
+	hdlrResp.ErrStr = ""
 	log.Infof("HandleStateUpgFailed called")
-	return
+	return hdlrResp
 }
 
 // AbortHandler is called when upgrade is aborted

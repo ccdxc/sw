@@ -31,7 +31,7 @@ public:
     HdlrResp LinkUpHandler(UpgCtx& upgCtx);
     HdlrResp PostLinkUpHandler(UpgCtx& upgCtx);
     void SuccessHandler(UpgCtx& upgCtx);
-    void FailedHandler(UpgCtx& upgCtx);
+    HdlrResp FailedHandler(UpgCtx& upgCtx);
     void AbortHandler(UpgCtx& upgCtx);
 };
 

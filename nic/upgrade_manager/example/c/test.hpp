@@ -180,8 +180,9 @@ public:
         return;
     }
 
-    void FailedHandler(UpgCtx& upgCtx) {
-        return;
+    HdlrResp FailedHandler(UpgCtx& upgCtx) {
+        HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+        return resp;
     }
 };
 

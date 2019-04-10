@@ -69,9 +69,11 @@ func (ctx *upgstatereqctx) invokeAppHdlr(reqType upgrade.UpgReqStateType, hdlrRe
 		ctx.appHdlrs.SuccessHandler(&upgCtx)
 	case upgrade.UpgReqStateType_UpgStateFailed:
 		log.Infof("Upgrade: Failed")
-		hdlrResp.Resp = Success
-		hdlrResp.ErrStr = ""
-		ctx.appHdlrs.FailedHandler(&upgCtx)
+		*hdlrResp = ctx.appHdlrs.FailedHandler(&upgCtx)
+		if hdlrResp.Resp == Fail {
+			hdlrResp.Resp = Success
+			hdlrResp.ErrStr = ""
+		}
 	case upgrade.UpgReqStateType_UpgStateAbort:
 		log.Infof("Upgrade: Aborted")
 		hdlrResp.Resp = Success
