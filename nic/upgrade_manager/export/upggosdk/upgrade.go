@@ -2,6 +2,7 @@ package upggosdk
 
 import (
 	"errors"
+	"os"
 
 	"github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
@@ -210,6 +211,13 @@ func (u *upgSdk) StartNonDisruptiveUpgrade(firmwarePkgName string) error {
 }
 
 func (u *upgSdk) startUpgrade(upgType upgrade.UpgType, firmwarePkgName string) error {
+	_, err := os.Stat("/nic/tools/fwupdate")
+	if err == nil {
+		_, err = os.Stat("/update/" + firmwarePkgName)
+		if err != nil {
+			return err
+		}
+	}
 	if u.svcRole != AgentRole {
 		return errors.New("Svc not of role Agent")
 	}
@@ -233,6 +241,14 @@ func (u *upgSdk) CanPerformNonDisruptiveUpgrade(firmwarePkgName string) error {
 }
 
 func (u *upgSdk) canPerformUpgrade(upgType upgrade.UpgType, firmwarePkgName string) error {
+	_, err := os.Stat("/nic/tools/fwupdate")
+	if err == nil {
+		_, err = os.Stat("/update/" + firmwarePkgName)
+		if err != nil {
+			return err
+		}
+	}
+
 	if u.svcRole != AgentRole {
 		return errors.New("Svc not of role Agent")
 	}

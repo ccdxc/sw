@@ -37,20 +37,20 @@ class UpgSdk {
     delphi::error IsRoleAgent (SvcRole role, const char* errStr);
     delphi::objects::UpgReqPtr FindUpgReqSpec(void);
     delphi::objects::UpgReqPtr CreateUpgReqSpec(void);
-    delphi::error UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqType type);
-    delphi::error UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqType type, UpgType upgType);
-    delphi::error StartUpgrade(UpgType upgType);
-    delphi::error CanPerformUpgrade(UpgType upgType);
+    delphi::error UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqType type, string firmwarePkgName);
+    delphi::error UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqType type, UpgType upgType, string firmwarePkgName);
+    delphi::error StartUpgrade(UpgType upgType, string firmwarePkgName);
+    delphi::error CanPerformUpgrade(UpgType upgType, string firmwarePkgName);
 
 public:
     UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleAgent, UpgAgentHandlerPtr uah);
     void SendAppRespSuccess(void);
     void SendAppRespFail(string str);
 
-    delphi::error CanPerformDisruptiveUpgrade(void);
-    delphi::error CanPerformNonDisruptiveUpgrade(void);
-    delphi::error StartNonDisruptiveUpgrade(void);
-    delphi::error StartDisruptiveUpgrade(void);
+    delphi::error CanPerformDisruptiveUpgrade(string firmwarePkgName);
+    delphi::error CanPerformNonDisruptiveUpgrade(string firmwarePkgName);
+    delphi::error StartNonDisruptiveUpgrade(string firmwarePkgName);
+    delphi::error StartDisruptiveUpgrade(string firmwarePkgName);
     delphi::error AbortUpgrade(void);
     delphi::error GetUpgradeStatus(vector<string>& retStr);
 

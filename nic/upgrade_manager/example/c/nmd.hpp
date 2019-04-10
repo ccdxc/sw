@@ -65,7 +65,7 @@ public:
     void UpgPossible(UpgCtx &ctx) {
         UPG_LOG_DEBUG("Upgrade possible to do!! Lets do it!");
         //myvar->upgsdk_->StartNonDisruptiveUpgrade();
-        myvar->upgsdk_->StartDisruptiveUpgrade();
+        myvar->upgsdk_->StartDisruptiveUpgrade("");
     }
     void UpgNotPossible(UpgCtx &ctx, vector<string> &errStrList) {
         UPG_LOG_DEBUG("Upgrade not possible :(");

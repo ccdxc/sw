@@ -13,6 +13,11 @@ using namespace delphi::objects;
 
 extern UpgCtx ctx;
 
+inline bool exists(const std::string& name) {
+  struct stat buffer;
+  return (stat (name.c_str(), &buffer) == 0);
+}
+
 void UpgSdk::SendAppRespSuccess(void) {
     //UPG_LOG_DEBUG("Application returning success via UpgSdk");
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
@@ -59,32 +64,39 @@ delphi::objects::UpgReqPtr UpgSdk::CreateUpgReqSpec(void) {
     return req;
 }
 
-delphi::error UpgSdk::UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqType type) {
+delphi::error UpgSdk::UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqType type, string firmwarePkgName) {
     req->set_upgreqcmd(type);
+    req->set_upgpkgname(firmwarePkgName);
 
     // add it to database
     sdk_->SetObject(req);
     return delphi::error::OK();
 }
 
-delphi::error UpgSdk::UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqType type, UpgType upgType) {
+delphi::error UpgSdk::UpdateUpgReqSpec(delphi::objects::UpgReqPtr req, UpgReqType type, UpgType upgType, string firmwarePkgName) {
     req->set_upgreqcmd(type);
     req->set_upgreqtype(upgType);
+    req->set_upgpkgname(firmwarePkgName);
 
     // add it to database
     sdk_->SetObject(req);
     return delphi::error::OK();
 }
 
-delphi::error UpgSdk::CanPerformDisruptiveUpgrade() {
-    return CanPerformUpgrade(UpgTypeDisruptive);
+delphi::error UpgSdk::CanPerformDisruptiveUpgrade(string firmwarePkgName) {
+    return CanPerformUpgrade(UpgTypeDisruptive, firmwarePkgName);
 }
 
-delphi::error UpgSdk::CanPerformNonDisruptiveUpgrade() {
-    return CanPerformUpgrade(UpgTypeNonDisruptive);
+delphi::error UpgSdk::CanPerformNonDisruptiveUpgrade(string firmwarePkgName) {
+    return CanPerformUpgrade(UpgTypeNonDisruptive, firmwarePkgName);
 }
 
-delphi::error UpgSdk::CanPerformUpgrade(UpgType upgType) {
+delphi::error UpgSdk::CanPerformUpgrade(UpgType upgType, string firmwarePkgName) {
+    if (exists("/nic/tools/fwupdate")) {
+        if (!exists("/update/" + firmwarePkgName)) {
+            return delphi::error("Firmware Package not found");
+        }
+    }
     delphi::error err = delphi::error::OK();
     //UPG_LOG_DEBUG("UpgSdk::CanPerformUpgrade");
     RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Service is not of role AGENT."));
@@ -95,20 +107,25 @@ delphi::error UpgSdk::CanPerformUpgrade(UpgType upgType) {
         req = CreateUpgReqSpec();
     }
     //UPG_LOG_DEBUG("UpgReq set to IsUpgPossible.");
-    UpdateUpgReqSpec(req, IsUpgPossible, upgType);
+    UpdateUpgReqSpec(req, IsUpgPossible, upgType, firmwarePkgName);
 
     return err;
 }
 
-delphi::error UpgSdk::StartDisruptiveUpgrade(void) {
-    return StartUpgrade(UpgTypeDisruptive);
+delphi::error UpgSdk::StartDisruptiveUpgrade(string firmwarePkgName) {
+    return StartUpgrade(UpgTypeDisruptive, firmwarePkgName);
 }
 
-delphi::error UpgSdk::StartNonDisruptiveUpgrade(void) {
-    return StartUpgrade(UpgTypeNonDisruptive);
+delphi::error UpgSdk::StartNonDisruptiveUpgrade(string firmwarePkgName) {
+    return StartUpgrade(UpgTypeNonDisruptive, firmwarePkgName);
 }
 
-delphi::error UpgSdk::StartUpgrade(UpgType upgType) {
+delphi::error UpgSdk::StartUpgrade(UpgType upgType, string firmwarePkgName) {
+    if (exists("/nic/tools/fwupdate")) {
+        if (!exists("/update/" + firmwarePkgName)) {
+            return delphi::error("Firmware Package not found");
+        }
+    }
     delphi::error err = delphi::error::OK();
     //UPG_LOG_DEBUG("UpgSdk::StartUpgrade");
     RETURN_IF_FAILED(IsRoleAgent(svcRole_, "Upgrade not initiated. Service is not of role AGENT."));
@@ -117,7 +134,7 @@ delphi::error UpgSdk::StartUpgrade(UpgType upgType) {
     if (req == NULL) {
         req = CreateUpgReqSpec();
     }
-    UpdateUpgReqSpec(req, UpgStart, upgType);
+    UpdateUpgReqSpec(req, UpgStart, upgType, firmwarePkgName);
     
     return err; 
 }
@@ -131,7 +148,7 @@ delphi::error UpgSdk::AbortUpgrade(void) {
     if (req == NULL) {
         return delphi::error("No upgrade in progress. Nothing to abort.");
     }
-    UpdateUpgReqSpec(req, UpgAbort);
+    UpdateUpgReqSpec(req, UpgAbort, "");
 
     return err;
 }
