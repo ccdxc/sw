@@ -2,6 +2,7 @@ package techsupport
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -307,16 +308,19 @@ func (ag *TSMClient) pre(work *tsproto.TechSupportRequest) error {
 
 func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 	log.Info("Actual Work")
-	var instanceID string
+	var instanceID, instanceName string
 	if work.Spec.InstanceID == "" {
 		instanceID = string(time.Now().Unix())
 		instanceID = strings.Replace(instanceID, " ", "-", -1)
+		instanceName = "techsupport"
 	} else {
 		instanceID = work.Spec.InstanceID
+		instanceName = work.ObjectMeta.Name
 	}
 	action.CollectTechSupport(ag.State.Cfg, instanceID)
 	export.GenerateTechsupportZip(instanceID, ag.State.Cfg.FileSystemRoot+"/"+instanceID)
 	tarballFile := ag.State.Cfg.FileSystemRoot + "/" + instanceID + "/" + instanceID + ".tgz"
+	targetID := ag.generateTargetID(instanceID, instanceName)
 
 	for _, destination := range work.Spec.Destinations {
 		log.Infof("Destination : %v", destination)
@@ -327,7 +331,7 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 			log.Info("SCP file")
 			export.ScpFile(tarballFile, destination.Destination, "root", "docker", destination.Path)
 		case "Venice":
-			export.SendToVenice(ag.resolverClient, tarballFile, instanceID)
+			export.SendToVenice(ag.resolverClient, tarballFile, targetID)
 		case "HTTPS":
 			log.Info("Transfer file using HTTPs")
 			export.SendToHTTP(tarballFile, destination.Path, "", "")
@@ -345,4 +349,8 @@ func (ag *TSMClient) post(work *tsproto.TechSupportRequest) error {
 // ListTechSupportRequests List of all techsupport request - complete/incomplete presented
 func (ag *TSMClient) ListTechSupportRequests() []*tsproto.TechSupportRequestEvent {
 	return ag.notifications
+}
+
+func (ag *TSMClient) generateTargetID(instanceID, instanceName string) string {
+	return fmt.Sprintf("%s-%s-%s-%s", instanceName, instanceID, ag.kind, ag.name)
 }
