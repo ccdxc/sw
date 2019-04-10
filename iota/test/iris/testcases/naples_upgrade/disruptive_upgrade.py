@@ -21,7 +21,7 @@ def Trigger(tc):
     for n in tc.Nodes:
         api.Trigger_AddHostCommand(req, n, cmd)
     tc.resp = api.Trigger(req)
-    time.sleep(120)
+    time.sleep(tc.args.sleep)
 
     return api.types.status.SUCCESS
 
