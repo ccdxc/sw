@@ -7,6 +7,8 @@ targets:
     area:
     sub-area:
     feature:
+    build-dependencies:
+    - build-apollo-x86
 
   apollo/aarch64build:
     commands: ["make", "PIPELINE=apollo", "ARCH=aarch64", "PLATFORM=hw"]
@@ -21,6 +23,8 @@ targets:
     area:
     sub-area:
     feature:
+    build-dependencies:
+    - build-apollo-x86
 
   apollo/dol/msft/networking:
     commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/msft/networking"]
@@ -28,6 +32,8 @@ targets:
     area:
     sub-area:
     feature:
+    build-dependencies:
+    - build-apollo-x86
 
   apollo/dol/lpm:
     commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/lpm"]
@@ -35,6 +41,8 @@ targets:
     area:
     sub-area:
     feature:
+    build-dependencies:
+    - build-apollo-x86
 
   apollo/scale_test_mock:
     commands: ["make", "PIPELINE=apollo", "jobd/apollo/scale_test_mock"]
@@ -42,6 +50,8 @@ targets:
     area:
     sub-area:
     feature:
+    build-dependencies:
+    - build-apollo-x86
 
   #apollo/agent/testapp:
     #commands: ["make", "PIPELINE=apollo", "jobd/apollo/agent/testapp"]
