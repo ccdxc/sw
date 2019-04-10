@@ -3,7 +3,16 @@
 jobd/runner/core_count_check:
 	${NICDIR}/tools/core_count_check.sh
 
-JOBD_PREREQS:= jobd/runner/core_count_check | package
+JOBD_PREREQS:= jobd/runner/core_count_check | jobd/package
+
+# jobd uses pre-build package
+.PHONY: jobd/package
+jobd/package:
+	@if [ "x${JOB_ID}" = "x" ]; then \
+		make package; \
+	else \
+	  tar -zxf /sw/build_$(PIPELINE)_x86.tar.gz -C /; \
+	fi
 
 .PHONY: ${JOBD_PREREQS}
 jobd/codesync: all
@@ -110,7 +119,7 @@ jobd/dol/classicl2mc: ${JOBD_PREREQS}
 
 .PHONY: jobd/dol/parser
 jobd/dol/parser: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --topo parser --feature parser
+	${NICDIR}/run.py ${COVERAGE_OPTS} --topo parser --feature parser --modellogs
 
 .PHONY: jobd/dol/telemetry
 jobd/dol/telemetry: ${JOBD_PREREQS}
@@ -245,6 +254,7 @@ jobd/dol/e2e/l7: ${JOBD_PREREQS}
 
 .PHONY: jobd/e2e/naples-sim
 jobd/e2e/naples-sim: ${JOBD_PREREQS}
+	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline iris --target sim --no-strip
 	${NICDIR}/tools/release.sh
 	${SUDO_OPT} ${NICDIR}/tools/validate-naples-docker.sh
 
@@ -267,9 +277,9 @@ jobd/make/nic:
 
 .PHONY: jobd/agent
 jobd/agent: ${JOBD_PREREQS}
-	${MAKE} -C ${GOPATH}/src/github.com/pensando/sw ws-tools
 	${MAKE} -C ${GOPATH}/src/github.com/pensando/sw checks
-	${MAKE} release
+	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline iris --target sim --no-strip
+	${NICDIR}/tools/release.sh
 	go install github.com/pensando/sw/nic/agent/cmd/netagent
 	bash agent/netagent/scripts/sanity.sh
 	bash agent/netagent/scripts/sanity.sh single-threaded
@@ -314,10 +324,6 @@ jobd/nicmgr/gtest: ${JOBD_PREREQS}
 .PHONY: jobd/nicmgr/gtest_classic
 jobd/nicmgr/gtest_classic: ${JOBD_PREREQS}
 	./run.py --nicmgr_gtest --classic
-
-.PHONY: jobd/naples-sim
-jobd/naples-sim: ${JOBD_PREREQS}
-	${MAKE} release
 
 .PHONY: jobd/firmware
 jobd/firmware:

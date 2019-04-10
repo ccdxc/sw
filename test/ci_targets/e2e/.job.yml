@@ -9,11 +9,13 @@ rebase: true
 warmd:
   #  TODO This needs to be ported to IOTA
   target:
-    commands: [ "go", "run", "e2e.go" ]
+    commands: [ "sh", "-c", "go run ../upload/main.go /sw/bin/venice.tgz /import/src/github.com/pensando/sw/bin/venice.tgz  && go run e2e.go" ]
     owners: ["email:sudhiaithal@pensando.io"]
     area:
     sub-area:
     feature:
+    build-dependencies:
+      - build-venice-image
   repo_dir: "/import/src/github.com/pensando/sw"
   create:
     image: build-30

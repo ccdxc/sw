@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/pensando/test-infra/public"
@@ -148,4 +149,39 @@ func copyLogsWithSSHClient(sshC *ssh.Client, logs []string, destFolder string) e
 	}
 
 	return nil
+}
+
+//UploadFile uploads one file through sftp
+func UploadFile(localName, remoteName string) error {
+	lf, err := os.Open(localName)
+	if err != nil {
+		return err
+	}
+	defer lf.Close()
+
+	ip := getVMIP()
+
+	sclient, err := getSSHClient(ip)
+	if err != nil {
+		return err
+	}
+	defer sclient.Close()
+	sftpC, err := sftp.NewClient(sclient)
+	if err != nil {
+		return err
+	}
+	defer sftpC.Close()
+
+	if err := sftpC.MkdirAll(path.Dir(remoteName)); err != nil {
+		return err
+	}
+
+	rf, err := sftpC.Create(remoteName)
+	if err != nil {
+		return err
+	}
+	defer rf.Close()
+
+	_, err = io.Copy(rf, lf)
+	return err
 }
