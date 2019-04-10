@@ -55,6 +55,7 @@ def Trigger(tc):
     if (timeout != timetoseconds(tc.iterators.timeout)):
         tc.config_update_fail = 1
     timeout += GRACE_TIME
+    api.Logger.info("Hal timeout %s" % (timeout))
 
     cmd_cookie = "iperf -s"
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
@@ -83,6 +84,7 @@ def Trigger(tc):
     term_resp = api.Trigger_TerminateAllCommands(trig_resp)
 
     tc.resp = api.Trigger_AggregateCommandsResponse(trig_resp, term_resp)
+
     return api.types.status.SUCCESS
 
 def Verify(tc):

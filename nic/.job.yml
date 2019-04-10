@@ -128,14 +128,6 @@ targets:
     feature:
     build-dependencies:
     - build-iris-x86
-  dol/alg:
-    commands: ["make", "jobd/dol/alg"]
-    owners: ["email:pavramas@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-iris-x86
   dol/norm:
     commands: ["make", "jobd/dol/norm"]
     owners: ["email:bharat@pensando.io"]

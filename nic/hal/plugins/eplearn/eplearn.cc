@@ -179,7 +179,8 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
     hal_ret_t ret;
     fte::flow_update_t flowupd = {type : fte::FLOWUPD_ACTION};
 
-    if (ctx.pkt() == nullptr || ctx.role() == hal::FLOW_ROLE_RESPONDER) {
+    if (ctx.pkt() == nullptr || ctx.role() == hal::FLOW_ROLE_RESPONDER || 
+        (ctx.existing_session() && ctx.is_flow_swapped())) {
         return fte::PIPELINE_CONTINUE;
     }
 

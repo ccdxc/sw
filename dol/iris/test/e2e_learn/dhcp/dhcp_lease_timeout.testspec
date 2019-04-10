@@ -95,7 +95,7 @@ session:
                     endpoint    : ref://testcase/config/dst_endpoints/0
                     cmd         : sleep
                     args        :
-                        - arg   : "140"     
+                        - arg   : "200"     
                 - command:
                     endpoint    : ref://testcase/config/dst_endpoints/0
                     cmd         : pkill 

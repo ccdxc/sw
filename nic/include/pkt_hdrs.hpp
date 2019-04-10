@@ -116,6 +116,9 @@ typedef struct udp_header_s {
 #define DHCP_CLIENT_PORT               67
 #define DHCP_SERVER_PORT               68
 
+#define ICMP_TYPE_ECHO_REQUEST         8
+#define ICMP_TYPE_ECHO_RESPONSE        0
+
 typedef struct icmp_header_s {
     uint8_t          type;
     uint8_t          code;

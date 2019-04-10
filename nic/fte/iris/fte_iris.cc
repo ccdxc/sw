@@ -138,7 +138,9 @@ ctx_t::extract_flow_key()
             icmphdr = (icmp_header_t*)(pkt_ + cpu_rxhdr_->l4_offset);
             key_.icmp_type =  icmphdr->type;
             key_.icmp_code = icmphdr->code;
-            key_.icmp_id = ntohs(icmphdr->echo.id);
+            if (icmphdr->type == ICMP_TYPE_ECHO_REQUEST ||
+                icmphdr->code == ICMP_TYPE_ECHO_RESPONSE)
+                key_.icmp_id = ntohs(icmphdr->echo.id);
             break;
 
         case IPPROTO_ESP:

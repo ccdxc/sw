@@ -120,5 +120,5 @@ session:
                     endpoint    : ref://testcase/config/dst_endpoints/0
                     cmd         : sleep
                     args        :
-                        - arg   : "140" #Setting high timeout to make sure FTE process it.                                                
+                        - arg   : "200" #Setting high timeout to make sure FTE process it.                                                
         expect:                       

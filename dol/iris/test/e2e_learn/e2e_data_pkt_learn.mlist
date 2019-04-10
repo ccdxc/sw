@@ -6,7 +6,7 @@ feature:
     module   : data_pkt_learn
     runorder : 1
     enable   : True
-    ignore   : False
+    ignore   : True 
     rtl      : False
     args     :
 
