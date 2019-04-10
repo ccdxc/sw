@@ -19,7 +19,10 @@
 #include "ionic_fw.h"
 #include "ionic_queue.h"
 #include "res.h"
-#include "table.h"
+
+#ifdef HAVE_XARRAY
+#include <linux/xarray.h>
+#endif
 
 #define IONIC_MIN_RDMA_VERSION 0
 #define IONIC_MAX_RDMA_VERSION 1
@@ -93,10 +96,8 @@ struct ionic_ibdev {
 	u8			rrq_stride;
 	u8			rsq_stride;
 
-	struct mutex		tbl_lock; /* for modify cq_tbl, qp_tbl */
-
-	struct tbl_root		qp_tbl;
-	struct tbl_root		cq_tbl;
+	struct xarray		qp_tbl;
+	struct xarray		cq_tbl;
 
 	struct mutex		inuse_lock; /* for id reservation */
 	spinlock_t		inuse_splock; /* for ahid reservation */

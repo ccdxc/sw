@@ -2438,6 +2438,8 @@ static struct ib_mw *ionic_alloc_mw(struct ib_pd *ibpd, enum ib_mw_type type,
 	if (rc)
 		goto err_cmd;
 
+	ionic_dbgfs_add_mr(dev, mr);
+
 	return &mr->ibmw;
 
 err_cmd:
@@ -2457,6 +2459,8 @@ static int ionic_dealloc_mw(struct ib_mw *ibmw)
 	rc = ionic_destroy_mr_cmd(dev, mr->mrid);
 	if (rc)
 		return rc;
+
+	ionic_dbgfs_rm_mr(mr);
 
 	ionic_put_mrid(dev, mr->mrid);
 
@@ -2650,15 +2654,17 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_resp;
 
-	ionic_dbgfs_add_cq(dev, cq);
+	rc = xa_err(xa_store(&dev->cq_tbl, cq->cqid, cq, GFP_KERNEL));
+	if (rc)
+		goto err_xa;
 
-	mutex_lock(&dev->tbl_lock);
-	tbl_alloc_node(&dev->cq_tbl);
-	tbl_insert(&dev->cq_tbl, cq, cq->cqid);
-	mutex_unlock(&dev->tbl_lock);
+	ionic_dbgfs_add_cq(dev, cq);
 
 	return cq;
 
+err_xa:
+	ionic_pgtbl_unbuf(dev, buf);
+	ionic_put_res(dev, &cq->res);
 err_resp:
 	if (cq->umem)
 		ib_umem_release(cq->umem);
@@ -2676,10 +2682,7 @@ static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 {
 	unsigned long irqflags;
 
-	mutex_lock(&dev->tbl_lock);
-	tbl_free_node(&dev->cq_tbl);
-	tbl_delete(&dev->cq_tbl, cq->cqid);
-	mutex_unlock(&dev->tbl_lock);
+	xa_erase(&dev->cq_tbl, cq->cqid);
 
 	ionic_dbgfs_rm_cq(cq);
 
@@ -3248,8 +3251,7 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 		qid = ionic_v1_cqe_qtf_qid(qtf);
 		type = ionic_v1_cqe_qtf_type(qtf);
 
-		qp = tbl_lookup(&dev->qp_tbl, qid);
-
+		qp = xa_load(&dev->qp_tbl, qid);
 		if (unlikely(!qp)) {
 			dev_dbg(&dev->ibdev.dev, "missing qp for qid %u\n", qid);
 			goto cq_next;
@@ -3784,6 +3786,11 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 	INIT_LIST_HEAD(&qp->sq_cmb_mmap.ctx_ent);
 
 	if (!qp->has_sq) {
+		if (buf) {
+			buf->tbl_buf = NULL;
+			buf->tbl_limit = 0;
+			buf->tbl_pages = 0;
+		}
 		if (ctx)
 			rc = ionic_validate_qdesc_zero(sq);
 
@@ -3990,6 +3997,11 @@ static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 	INIT_LIST_HEAD(&qp->rq_cmb_mmap.ctx_ent);
 
 	if (!qp->has_rq) {
+		if (buf) {
+			buf->tbl_buf = NULL;
+			buf->tbl_limit = 0;
+			buf->tbl_pages = 0;
+		}
 		if (ctx)
 			rc = ionic_validate_qdesc_zero(rq);
 
@@ -4239,10 +4251,9 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 
 	qp->ibqp.qp_num = qp->qpid;
 
-	mutex_lock(&dev->tbl_lock);
-	tbl_alloc_node(&dev->qp_tbl);
-	tbl_insert(&dev->qp_tbl, qp, qp->qpid);
-	mutex_unlock(&dev->tbl_lock);
+	rc = xa_err(xa_store(&dev->qp_tbl, qp->qpid, qp, GFP_KERNEL));
+	if (rc)
+		goto err_resp;
 
 	if (qp->has_sq) {
 		cq = to_ionic_cq(attr->send_cq);
@@ -4668,10 +4679,7 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 
 	ionic_dbgfs_rm_qp(qp);
 
-	mutex_lock(&dev->tbl_lock);
-	tbl_free_node(&dev->qp_tbl);
-	tbl_delete(&dev->qp_tbl, qp->qpid);
-	mutex_unlock(&dev->tbl_lock);
+	xa_erase(&dev->qp_tbl, qp->qpid);
 
 	if (qp->ibqp.send_cq) {
 		cq = to_ionic_cq(qp->ibqp.send_cq);
@@ -5533,22 +5541,21 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	if (qp->ibsrq.srq_type == IB_SRQT_XRC) {
 		qp->ibsrq.ext.xrc.srq_num = qp->qpid;
 
-		mutex_lock(&dev->tbl_lock);
-		tbl_alloc_node(&dev->qp_tbl);
-		tbl_insert(&dev->qp_tbl, qp, qp->qpid);
-		mutex_unlock(&dev->tbl_lock);
+		rc = xa_err(xa_store(&dev->qp_tbl, qp->qpid, qp, GFP_KERNEL));
+		if (rc)
+			goto err_resp;
 
 		cq = to_ionic_cq(attr->ext.xrc.cq);
 		spin_lock_irqsave(&cq->lock, irqflags);
 		spin_unlock_irqrestore(&cq->lock, irqflags);
 	}
 
-	ionic_dbgfs_add_qp(dev, qp);
-
 	attr->attr.max_wr = qp->rq.mask;
 	attr->attr.max_sge =
 		ionic_v1_recv_wqe_max_sge(qp->rq.stride_log2,
 					  qp->rq_spec);
+
+	ionic_dbgfs_add_qp(dev, qp);
 
 	return &qp->ibsrq;
 
@@ -5593,10 +5600,7 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 	ionic_dbgfs_rm_qp(qp);
 
 	if (qp->ibsrq.srq_type == IB_SRQT_XRC) {
-		mutex_lock(&dev->tbl_lock);
-		tbl_free_node(&dev->qp_tbl);
-		tbl_delete(&dev->qp_tbl, qp->qpid);
-		mutex_unlock(&dev->tbl_lock);
+		xa_erase(&dev->qp_tbl, qp->qpid);
 
 		cq = to_ionic_cq(qp->ibsrq.ext.xrc.cq);
 		spin_lock_irqsave(&cq->lock, irqflags);
@@ -5669,7 +5673,7 @@ static void ionic_cq_event(struct ionic_ibdev *dev, u32 cqid, u8 code)
 
 	read_lock_irqsave(&dev->tbl_rcu, irqflags);
 
-	cq = tbl_lookup(&dev->cq_tbl, cqid);
+	cq = xa_load(&dev->cq_tbl, cqid);
 	if (!cq) {
 		dev_dbg(&dev->ibdev.dev, "missing cqid %#x code %u\n",
 			cqid, code);
@@ -5710,7 +5714,7 @@ static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 
 	read_lock_irqsave(&dev->tbl_rcu, irqflags);
 
-	qp = tbl_lookup(&dev->qp_tbl, qpid);
+	qp = xa_load(&dev->qp_tbl, qpid);
 	if (!qp) {
 		dev_dbg(&dev->ibdev.dev, "missing qpid %#x code %u\n",
 			qpid, code);
@@ -6358,14 +6362,15 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 	kfree(dev->stats_hdrs);
 
 	ionic_dbgfs_rm_dev(dev);
+
 	resid_destroy(&dev->inuse_qpid);
 	resid_destroy(&dev->inuse_cqid);
 	resid_destroy(&dev->inuse_mrid);
 	resid_destroy(&dev->inuse_ahid);
 	resid_destroy(&dev->inuse_pdid);
 	buddy_destroy(&dev->inuse_restbl);
-	tbl_destroy(&dev->qp_tbl);
-	tbl_destroy(&dev->cq_tbl);
+	xa_destroy(&dev->qp_tbl);
+	xa_destroy(&dev->cq_tbl);
 
 	ib_dealloc_device(&dev->ibdev);
 
@@ -6486,11 +6491,10 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->rrq_stride = ident->dev.rdma_rrq_stride;
 	dev->rsq_stride = ident->dev.rdma_rsq_stride;
 
-	mutex_init(&dev->tbl_lock);
 	rwlock_init(&dev->tbl_rcu);
 
-	tbl_init(&dev->qp_tbl);
-	tbl_init(&dev->cq_tbl);
+	xa_init(&dev->qp_tbl);
+	xa_init(&dev->cq_tbl);
 
 	mutex_init(&dev->inuse_lock);
 	spin_lock_init(&dev->inuse_splock);
@@ -6780,8 +6784,8 @@ err_ahid:
 err_pdid:
 	buddy_destroy(&dev->inuse_restbl);
 err_restbl:
-	tbl_destroy(&dev->qp_tbl);
-	tbl_destroy(&dev->cq_tbl);
+	xa_destroy(&dev->qp_tbl);
+	xa_destroy(&dev->cq_tbl);
 	ib_dealloc_device(ibdev);
 err_dev:
 	dev_put(ndev);

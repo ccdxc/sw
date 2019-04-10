@@ -419,6 +419,62 @@ static inline void ib_set_device_ops(struct ib_device *dev,
 #define HAVE_CREATE_AH_FLAGS
 #endif
 
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,20, /* RHEL */ 99,99, /* OFA */ support)
+
+#include <linux/radix-tree.h>
+
+struct xarray {
+	spinlock_t x_lock;
+	struct radix_tree_root x_tree;
+};
+
+static inline void xa_init(struct xarray *xa)
+{
+	spin_lock_init(&xa->x_lock);
+	INIT_RADIX_TREE(&xa->x_tree, GFP_KERNEL);
+}
+
+static inline void *xa_load(struct xarray *xa, unsigned long idx)
+{
+	return radix_tree_lookup(&xa->x_tree, idx);
+}
+
+static inline void *xa_store(struct xarray *xa, unsigned long idx, void *item,
+			     gfp_t unused)
+{
+	unsigned long flags;
+	int ret;
+
+	spin_lock_irqsave(&xa->x_lock, flags);
+	ret = radix_tree_insert(&xa->x_tree, idx, item);
+	spin_unlock_irqrestore(&xa->x_lock, flags);
+
+	return (ret ? ERR_PTR(ret) : item);
+}
+
+static inline int xa_err(void *item)
+{
+	return (IS_ERR(item) ? PTR_ERR(item) : 0);
+}
+
+static inline void xa_erase(struct xarray *xa, unsigned long idx)
+{
+	unsigned long flags;
+
+	spin_lock_irqsave(&xa->x_lock, flags);
+	radix_tree_delete(&xa->x_tree, idx);
+	spin_unlock_irqrestore(&xa->x_lock, flags);
+}
+
+static inline void xa_destroy(struct xarray *xa)
+{
+	/* No equivalent for radix-tree */
+}
+
+#else /* 4.20.0 and later */
+#define HAVE_XARRAY
+#endif
+
 /* other compat for not yet upstream changes */
 
 /**
@@ -431,4 +487,4 @@ static inline void ib_set_device_ops(struct ib_device *dev,
  */
 int roce_ud_header_unpack(void *buf, struct ib_ud_header *header);
 
-#endif
+#endif /* IONIC_KCOMPAT */
