@@ -126,23 +126,26 @@ func copyLogsWithSSHClient(sshC *ssh.Client, logs []string, destFolder string) e
 			continue
 		}
 
-		dest, err := os.Create(filepath.Join(destFolder, filepath.Base(log)))
+		path := filepath.Join(destFolder, filepath.Base(log))
+		logrus.Infof("Downloading %s to %s", log, path)
+		dest, err := os.Create(path)
 		if err != nil {
 			return err
 		}
 
-		_, err = io.Copy(dest, src)
+		size, err := io.Copy(dest, src)
 		if err != nil {
 			return err
 		}
 		src.Close()
 		dest.Close()
-		path := filepath.Join(destFolder, filepath.Base(log))
 
 		statInfo, err := os.Stat(path)
-		var size int64
 		if err != nil {
-			size = statInfo.Size()
+			return err
+		}
+		if size != statInfo.Size() {
+			return fmt.Errorf("Downloaded size %d is not equal to file size %d", size, statInfo.Size())
 		}
 
 		logrus.Infof("Wrote %s to %s (size %d)", log, path, size)

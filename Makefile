@@ -438,11 +438,17 @@ ui-autogen:
 
 VENICE_RELEASE_TAG := v0.3
 venice-image:
+	printf "\n+++++++++++++++++ start container-compile $$(date) +++++++++++++++++\n"
 	$(MAKE) container-compile
+	printf "\n+++++++++++++++++ start fixture $$(date) +++++++++++++++++\n"
 	$(MAKE) fixtures
+	printf "\n+++++++++++++++++ start install $$(date) +++++++++++++++++\n"
 	$(MAKE) install
+	printf "\n+++++++++++++++++ start tar $$(date) +++++++++++++++++\n"
 	#todo compress later in the release cycle with better compression level. As of now compression takes too much time for development
 	cd bin && tar -cvf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz
+	printf "\n+++++++++++++++++ complete venice-image $$(date) +++++++++++++++++\n"
+
 venice-release: venice-image
 	docker pull ${REGISTRY_URL}/${DIND_CONTAINER}
 	docker save -o bin/pen-dind.tar ${REGISTRY_URL}/${DIND_CONTAINER}

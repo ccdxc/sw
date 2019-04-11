@@ -18,7 +18,7 @@ warmd:
       - build-venice-image
   repo_dir: "/import/src/github.com/pensando/sw"
   create:
-    image: build-30
+    image: build-150
     count: 1
     resources:
       cpus: 16

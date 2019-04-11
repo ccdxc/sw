@@ -17,10 +17,23 @@ builds:
     artifacts:
       - /sw/build_gft_x86.tar.gz
   build-venice-image:
-    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make venice-image"]
+    commands: ["sh", "-c", "mkdir -p /sw/bin; cd /usr/src/github.com/pensando/sw/test/ci_targets/e2e-venice-image; go run make-venice-image.go"]
     owners: ["email:sw-team@pensando.io"]
     artifacts:
       - /sw/bin/venice.tgz
+    repo_dir: "/import/src/github.com/pensando/sw"
+    create:
+      image: build-150
+      count: 1
+      resources:
+        cpus: 16
+        memory: 32
+    provision:
+      username: vm
+      password: vm
+      # additional vars to pass to ansible.
+      vars:
+
 targets:
   submodules:
     commands: ["sh", "-c", "TOP=/sw ./scripts/check-submodules.sh"]
