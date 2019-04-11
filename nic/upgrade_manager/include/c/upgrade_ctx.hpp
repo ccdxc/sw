@@ -25,6 +25,8 @@ typedef struct UpgCtx_ {
     UpgType                    upgType;
     sysmgr::ClientPtr          sysMgr;
     string                     firmwarePkgName;
+    bool                       postRestart;
+    bool                       upgFailed;
 } UpgCtx;
 
 typedef enum {

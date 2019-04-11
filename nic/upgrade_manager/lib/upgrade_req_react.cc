@@ -20,7 +20,12 @@ UpgStateMachine *StateMachine;
 void UpgReqReact::SetStateMachine(delphi::objects::UpgReqPtr req) {
     ctx.upgType = req->upgreqtype();
     ctx.firmwarePkgName = req->upgpkgname();
+    ctx.postRestart = false;
+    ctx.upgFailed = false;
     ctx.sysMgr = sysMgr_;
+    if (GetState() == UpgStatePostRestart) {
+        ctx.postRestart = true;
+    }
     if (!GetUpgCtxFromMeta(ctx)) {
 	UPG_LOG_INFO("GetUpgCtxFromMeta failed");
     }
@@ -48,6 +53,10 @@ void UpgReqReact::RegNewApp(string name) {
     } else {
         UPG_LOG_DEBUG("App {} already registered.", name);
     }
+}
+
+UpgReqStateType UpgReqReact::GetState(void) {
+    return findUpgStateReq()->upgreqstate();
 }
 
 UpgReqStateType UpgReqReact::GetNextState(void) {
@@ -223,6 +232,7 @@ delphi::error UpgReqReact::MoveStateMachine(UpgReqStateType type) {
             if (GetAppRespFail()) {
                 respType = UpgRespFail;
                 upgMetric_->FailedUpg()->Incr();
+                ctx.upgFailed = true;
             }
             if (upgPassed_ && !upgAborted_) {
                 respType = UpgRespPass;
@@ -251,6 +261,8 @@ delphi::error UpgReqReact::OnUpgReqCreate(delphi::objects::UpgReqPtr req) {
     CreateUpgradeMetrics();
     ctx.upgType = req->upgreqtype();
     ctx.firmwarePkgName = req->upgpkgname();
+    ctx.postRestart = false;
+    ctx.upgFailed = false;
     ctx.sysMgr = sysMgr_;
     if (!GetUpgCtxFromMeta(ctx)) {
         return delphi::error("GetUpgCtxFromMeta failed");
@@ -358,6 +370,8 @@ delphi::error UpgReqReact::AbortUpgrade() {
 delphi::error UpgReqReact::OnUpgReqCmd(delphi::objects::UpgReqPtr req) {
     ctx.upgType = req->upgreqtype();
     ctx.firmwarePkgName = req->upgpkgname();
+    ctx.postRestart = false;
+    ctx.upgFailed = false;
     ctx.sysMgr = sysMgr_;
     // start or abort?
     if (!GetUpgCtxFromMeta(ctx)) {

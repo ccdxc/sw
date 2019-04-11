@@ -62,6 +62,7 @@ public:
     void SetStateMachine(delphi::objects::UpgReqPtr req);
 
     UpgReqStateType GetNextState(void);
+    UpgReqStateType GetState(void);
     bool IsRespTypeFail(UpgStateRespType type);
 
     string UpgReqStateTypeToStr(UpgReqStateType type);

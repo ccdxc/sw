@@ -13,6 +13,11 @@ namespace upgrade {
 
 using namespace std;
 
+inline bool exists(const std::string& name) {
+  struct stat buffer;
+  return (stat (name.c_str(), &buffer) == 0);
+}
+
 // OnUpgAppRespCreate gets called when UpgAppResp object is created
 delphi::error UpgAppRespReact::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr resp) {
     UPG_LOG_DEBUG("UpgAppResp got created for {}/{}", resp, resp->meta().ShortDebugString());
@@ -39,6 +44,7 @@ delphi::error UpgAppRespReact::OnUpgAppRespCreate(delphi::objects::UpgAppRespPtr
     return delphi::error::OK();
 }
 
+extern UpgCtx ctx;
 
 delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr resp) {
     UPG_LOG_DEBUG("UpgAppResp got deleted for {}/{}", resp, resp->meta().ShortDebugString());
@@ -46,12 +52,17 @@ delphi::error UpgAppRespReact::OnUpgAppRespDelete(delphi::objects::UpgAppRespPtr
     if (upgAppResplist.empty()) {
         UPG_LOG_DEBUG("All UpgAppResp objects got deleted");
         upgMgr_->DeleteUpgMgrResp();
+        if (ctx.postRestart && ctx.upgFailed) {
+            UPG_LOG_DEBUG("Upgrade failed last time. So going to switch back to old code.");
+            if (exists("/nic/tools/fwupdate")) {
+                ctx.sysMgr->restart_system();
+            }
+        }
     }
 
     return delphi::error::OK();
 }
 
-extern UpgCtx ctx;
 
 string UpgAppRespReact::UpgStateRespTypeToStr(UpgStateRespType type) {
     return GetAppRespStrUtil(type, ctx.upgType);
