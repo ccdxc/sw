@@ -161,6 +161,14 @@ message RuleMatch {
   RuleL4Match L4Match = 2;
 }
 
+// QinQ vlan tag
+message QinQTag {
+  // Customer VLAN tag
+  uint32 cTag = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // Service VLAN tag
+  uint32 sTag = 2 [(gogoproto.moretags) = "meta:mandatory"];
+}
+
 // encap types in the network
 enum EncapType {
   ENCAP_TYPE_NONE     = 0;
@@ -178,9 +186,10 @@ enum EncapType {
 message EncapVal {
   oneof Val {
     // MPLS tag corresponding to the VNIC or mapping
-    uint32 VlanId  = 1;    // VLAN tag
-    uint32 MPLSTag = 2;    // MPLS tag/slot
-    uint32 Vnid    = 3;    // VxLAN vnid
+    uint32  VlanId   = 1;    // VLAN tag
+    uint32  MPLSTag  = 2;    // MPLS tag/slot
+    uint32  Vnid     = 3;    // VxLAN vnid
+    QinQTag QinQTag  = 4;    // QinQ tag
   }
 }
 

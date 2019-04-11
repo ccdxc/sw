@@ -893,13 +893,13 @@ mapping_impl::read_local_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec) {
     local_ip_mapping_appdata_t  local_ip_mapping_data = { 0 };
     sdk_table_api_params_t      tparams = { 0 };
 
-
     // First read the remote mapping. It can provide all the info except vnic-id
     ret = read_remote_mapping_(vcn, spec);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
+    // TODO: Change this logic to read vnic_hw_id from hw table
     // Read local only if user passes the vnic-id.
     if (spec->vnic.id == 0) {
         return SDK_RET_OK;
