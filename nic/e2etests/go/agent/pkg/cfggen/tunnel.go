@@ -32,8 +32,8 @@ func (c *CfgGen) GenerateTunnels() error {
 
 	remoteEPs := []string{}
 
-	for _, v := range c.EpCache { 
-    		remoteEPs = append(remoteEPs, v...)
+	for _, v := range c.EpCache {
+		remoteEPs = append(remoteEPs, v...)
 	}
 	remoteEPs = remoteEPs[:tunnelManifest.Count]
 	for i := 0; i < tunnelManifest.Count; i++ {

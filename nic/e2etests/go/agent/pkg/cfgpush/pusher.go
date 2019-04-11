@@ -8,6 +8,8 @@ import (
 	"os"
 	"path"
 
+	"github.com/pensando/sw/nic/e2etests/go/agent/pkg/libs"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pensando/sw/api/generated/monitoring"
@@ -110,108 +112,108 @@ func (p *CfgPush) ReadJSON() error {
 	var ok bool
 	// Read Namespace
 	objs, err := readJSON("Namespace", path.Join(p.GenDir, "namespaces.json"))
-	if err != nil {
+	if err != nil && err != libs.ErrHeimdallSkip {
 		log.Errorf("Failed to read JSON. Err: %v", err)
 		return err
 	}
 	p.Namespaces, ok = objs.([]*netproto.Namespace)
-	if !ok {
+	if err != libs.ErrHeimdallSkip && !ok {
 		log.Errorf("Failed to cast JSON data onto []*netproto.Namespace")
 		return errors.New("failed to cast JSON data onto []*netproto.Namespace")
 	}
 
 	// Read Network
 	objs, err = readJSON("Network", path.Join(p.GenDir, "networks.json"))
-	if err != nil {
+	if err != nil && err != libs.ErrHeimdallSkip {
 		log.Errorf("Failed to read JSON. Err: %v", err)
 		return err
 	}
 	p.Networks, ok = objs.([]*netproto.Network)
-	if !ok {
+	if err != libs.ErrHeimdallSkip && !ok {
 		log.Errorf("Failed to cast JSON data onto []*netproto.Network")
 		return errors.New("failed to cast JSON data onto []*netproto.Network")
 	}
 
 	// Read Endpoint
 	objs, err = readJSON("Endpoint", path.Join(p.GenDir, "endpoints.json"))
-	if err != nil {
+	if err != nil && err != libs.ErrHeimdallSkip {
 		log.Errorf("Failed to read JSON. Err: %v", err)
 		return err
 	}
 	p.Endpoints, ok = objs.([]*netproto.Endpoint)
-	if !ok {
+	if err != libs.ErrHeimdallSkip && !ok {
 		log.Errorf("Failed to cast JSON data onto []*netproto.Endpoint")
 		return errors.New("failed to cast JSON data onto []*netproto.Endpoint")
 	}
 
 	// Read App
 	objs, err = readJSON("App", path.Join(p.GenDir, "apps.json"))
-	if err != nil {
+	if err != nil && err != libs.ErrHeimdallSkip {
 		log.Errorf("Failed to read JSON. Err: %v", err)
 		return err
 	}
 	p.Apps, ok = objs.([]*netproto.App)
-	if !ok {
+	if err != libs.ErrHeimdallSkip && !ok {
 		log.Errorf("Failed to cast JSON data onto []*netproto.App")
 		return errors.New("failed to cast JSON data onto []*netproto.App")
 	}
 
 	// Read SGPolicy
 	objs, err = readJSON("SGPolicy", path.Join(p.GenDir, "sgpolicies.json"))
-	if err != nil {
+	if err != nil && err != libs.ErrHeimdallSkip {
 		log.Errorf("Failed to read JSON. Err: %v", err)
 		return err
 	}
 	p.SGPolicies, ok = objs.([]*netproto.SGPolicy)
-	if !ok {
+	if err != libs.ErrHeimdallSkip && !ok {
 		log.Errorf("Failed to cast JSON data onto []*netproto.SGPolicy")
 		return errors.New("failed to cast JSON data onto []*netproto.SGPolicy")
 	}
 
 	// Read SecurityProfile
 	objs, err = readJSON("SecurityProfile", path.Join(p.GenDir, "secprofiles.json"))
-	if err != nil {
+	if err != nil && err != libs.ErrHeimdallSkip {
 		log.Errorf("Failed to read JSON. Err: %v", err)
 		return err
 	}
 	p.SecurityProfiles, ok = objs.([]*netproto.SecurityProfile)
-	if !ok {
+	if err != libs.ErrHeimdallSkip && !ok {
 		log.Errorf("Failed to cast JSON data onto []*netproto.SecurityProfile")
 		return errors.New("failed to cast JSON data onto []*netproto.SecurityProfile")
 	}
 
 	// Read FlowExportPolicy
 	objs, err = readJSON("FlowExportPolicy", path.Join(p.GenDir, "fepolicies.json"))
-	if err != nil {
+	if err != nil && err != libs.ErrHeimdallSkip {
 		log.Errorf("Failed to read JSON. Err: %v", err)
 		return err
 	}
 	p.FlowExportPolicies, ok = objs.([]*monitoring.FlowExportPolicy)
-	if !ok {
+	if err != libs.ErrHeimdallSkip && !ok {
 		log.Errorf("Failed to cast JSON data onto []*netproto.FlowExportPolicy")
 		return errors.New("failed to cast JSON data onto []*netproto.FlowExportPolicy")
 	}
 
 	// Read Tunnel
 	objs, err = readJSON("Tunnel", path.Join(p.GenDir, "tunnels.json"))
-	if err != nil {
+	if err != nil && err != libs.ErrHeimdallSkip {
 		log.Errorf("Failed to read JSON. Err: %v", err)
 		return err
 	}
 	p.Tunnels, ok = objs.([]*netproto.Tunnel)
-	if !ok {
+	if err != libs.ErrHeimdallSkip && !ok {
 		log.Errorf("Failed to cast JSON data onto []*netproto.Tunnel")
 		return errors.New("failed to cast JSON data onto []*netproto.Tunnel")
 	}
 
 	// Read MirrorSession
 	objs, err = readJSON("MirrorSession", path.Join(p.GenDir, "mirrors.json"))
-	if err != nil {
+	if err != nil && err != libs.ErrHeimdallSkip {
 		log.Errorf("Failed to read JSON. Err: %v", err)
 		return err
 	}
 	p.MirrorSessions, ok = objs.([]*tsproto.MirrorSession)
-	if !ok {
+	if err != libs.ErrHeimdallSkip && !ok {
 		log.Errorf("Failed to cast JSON data onto []*netproto.MirrorSession")
 		return errors.New("failed to cast JSON data onto []*netproto.MirrorSession")
 	}
@@ -225,7 +227,7 @@ func readJSON(kind, filePath string) (interface{}, error) {
 	_, statErr := os.Stat(filePath)
 	if statErr != nil {
 		log.Infof("File doesn't exist. Ignoring..")
-		return cfg, nil
+		return cfg, libs.ErrHeimdallSkip
 	}
 
 	//
