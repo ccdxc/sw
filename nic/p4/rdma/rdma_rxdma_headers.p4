@@ -363,10 +363,10 @@ header_type rdma_aq_completion_feedback_header_create_qp_t {
 header_type rdma_aq_completion_feedback_header_modify_qp_t {
     fields {
         common_roce_bits      :  48;
-        q_key                 :  32;
-        q_key_valid           :   1;
+        rq_psn                :  24;
+        rq_psn_valid          :   1;
         rq_id                 :  24;
-        rsvd                  :  55;
+        rsvd                  :  63;
         aq_comp_common_bits   :  56;
         ah_len                :   8;
         ah_addr               :  32;
@@ -384,18 +384,21 @@ header_type rdma_aq_completion_feedback_header_modify_qp_t {
         tx_psn                :  24;
         rnr_retry_count       :   3;
         rnr_retry_valid       :   1;
-        rsq_base_addr         :  32;
+        q_key_rsq_base_addr   :  32;
+        q_key_valid           :   1;
         rsq_depth_log2        :   5;
         rsq_valid             :   1;
         sqd_async_notify_en   :   1;
         access_flags_valid    :   1;
         access_flags          :   3;
-        rsvd2                 :  11;
+        cur_state             :   3;
+        cur_state_valid       :   1;
+        rsvd2                 :   6;
     }
 }
 
 //248
-header_type rdma_aq_completion_feedback_header_query_qp_t {
+header_type rdma_aq_completion_feedback_header_query_destroy_qp_t {
     fields {
         common_roce_bits      :  48;
         rsvd                  :  112;

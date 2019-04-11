@@ -320,30 +320,6 @@ create_ah:
     b           prepare_feedback
     nop
 
-// TODO: This is just a hack for destroy qp.
-destroy_qp:
-
-    add         r2, r0, d.{id_ver}.wx
-    SQCB_ADDR_GET(r1, r2[23:0], K_SQCB_BASE_ADDR_HI)
-    // service is nearest byte aligned field to state
-    add         r3, r1, FIELD_OFFSET(sqcb0_t, service)
-    memwr.b     r3, 0x0
-
-    add         r1, r1, CB_UNIT_SIZE_BYTES
-    add         r3, r1, FIELD_OFFSET(sqcb1_t, state)
-    memwr.b     r3, 0x0
-
-    RQCB_ADDR_GET(r1, r2[23:0], K_RQCB_BASE_ADDR_HI)
-    add         r3, r1, FIELD_OFFSET(rqcb0_t, state)
-    memwr.b     r3, 0x0
-
-    add         r1, r1, CB_UNIT_SIZE_BYTES
-    add         r3, r1, FIELD_OFFSET(rqcb1_t, state)
-    memwr.b     r3, 0x0
-
-    b           prepare_feedback
-    nop
-
 create_qp:
 
     // SQCB0:
@@ -685,6 +661,12 @@ eq_dump:
     b           prepare_feedback
     nop
 
+destroy_qp:
+    add         r3, r0, d.{id_ver}.wx
+
+    b           prepare_feedback
+    phvwr       p.rdma_feedback.query_destroy_qp.rq_id, r3  // BD Slot
+
 query_qp:
     add         r3, r0, d.{id_ver}.wx
     SQCB_ADDR_GET(r1, r3[23:0], K_SQCB_BASE_ADDR_HI)
@@ -692,7 +674,7 @@ query_qp:
 
     phvwr       p.rdma_feedback.aq_completion.op, AQ_OP_TYPE_QUERY_QP
     add         r4, r0, d.{query.rq_dma_addr}.dx
-    phvwrpair   p.rdma_feedback.query_qp.rq_id, r3, p.rdma_feedback.query_qp.dma_addr, r4
+    phvwrpair   p.rdma_feedback.query_destroy_qp.rq_id, r3, p.rdma_feedback.query_destroy_qp.dma_addr, r4
 
     // sqcb2 address
     add         r1, r1, (CB_UNIT_SIZE_BYTES * 2)
@@ -740,43 +722,18 @@ modify_qp:
 dst_qp:
     // MASK = BIT(20)
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_DEST_QPN], 1, e_psn
+    add         r4, d.{mod_qp.qkey_dest_qpn}.wx, r0		// BD Slot
 
-    // Invoke sqcb2 for QP
-    add         r4, r1, (CB_UNIT_SIZE_BYTES * 2) //BD Slot
-    add         r4, r4, FIELD_OFFSET(sqcb2_t, dst_qp)
-    add         r5, d.{mod_qp.qkey_dest_qpn}.wx, r0
-
-    
-    // byte based memwr are safer as it wont cause alignment issues
-    // when field changes its offset in future
-    memwr.b     r4, r5[23:16]
-    add         r4, r4, 1
-    memwr.b     r4, r5[15:8]
-    add         r4, r4, 1
-    memwr.b     r4, r5[7:0]
-
-    add         r5, r2, r0
-    add         r5, r5, FIELD_OFFSET(rqcb0_t, dst_qp)
-    add         r4, d.{mod_qp.qkey_dest_qpn}.wx, r0
-    memwr.b     r5, r4[23:16]
-    add         r5, r5, 1
-    memwr.b     r5, r4[15:8]
-    add         r5, r5, 1
-    memwr.b     r5, r4[7:0]
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_INFO_P, dst_qp), r4
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_INFO_P, dst_qp_valid), 1
 
 e_psn:
     // MASK = BIT(12)
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_RQ_PSN], 1, q_key
+    add         r4, d.{mod_qp.rq_psn}.wx, r0    // BD Slot
 
-    // Invoke rqcb1
-    add         r5, r2, (CB_UNIT_SIZE_BYTES) //BD Slot
-    add         r5, r5, FIELD_OFFSET(rqcb1_t, e_psn)
-    add         r4, d.{mod_qp.rq_psn}.wx, r0
-    memwr.b     r5, r4[23:16]
-    add         r5, r5, 1
-    memwr.b     r5, r4[15:8]
-    add         r5, r5, 1
-    memwr.b     r5, r4[7:0]
+    //For RQCB1 in Rx side
+    phvwrpair   p.p4_to_p4plus.modify_qp_ext.rq_psn, r4, p.p4_to_p4plus.modify_qp_ext.rq_psn_valid, 1
 
 q_key:
     // MASK = BIT(6)
@@ -790,7 +747,7 @@ q_key:
     phvwr       CAPRI_PHV_FIELD(TO_RQCB0_INFO_P, q_key_valid), 1
 
     //For RQCB1 in Rx side
-    phvwrpair p.p4_to_p4plus.modify_qp_ext.q_key, r4, p.p4_to_p4plus.modify_qp_ext.q_key_valid, 1
+    phvwrpair p.rdma_feedback.modify_qp.q_key_rsq_base_addr, r4, p.rdma_feedback.modify_qp.q_key_valid, 1
 
 mod_qp_done:
     

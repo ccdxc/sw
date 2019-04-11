@@ -1293,10 +1293,10 @@ struct rdma_aq_feedback_create_qp_ext_t {
 };
 
 struct rdma_aq_feedback_modify_qp_ext_t {
-    q_key                            :   32;
-    q_key_valid                      :    1;
+    rq_psn                           :   24;
+    rq_psn_valid                     :    1;
     rq_id                            :   24;
-    rsvd                             :   55;
+    rsvd                             :   63;
 };
 
 struct aq_p4_to_p4plus_roce_header_t {
@@ -1460,20 +1460,23 @@ struct rdma_aq_feedback_t {
             tx_psn                   : 24;
             rnr_retry_count          :  3;
             rnr_retry_valid          :  1;
-            rsq_base_addr            : 32;
+            q_key_rsq_base_addr      : 32;
+            q_key_valid              :  1;
             rsq_depth_log2           :  5;
             rsq_valid                :  1;
             sqd_async_notify_en      :  1;
             access_flags_valid       :  1;
             access_flags             :  3;
-            rsvd                     : 11;
+            cur_state                :  3;
+            cur_state_valid          :  1;
+            rsvd                     :  6;
         } modify_qp;
         struct {
             rq_id                    : 24;
             pad                      : 16;
             dma_addr                 : 64;
             rsvd                     : 72;
-        } query_qp;
+        } query_destroy_qp;
         pad: 176;
     };
 };

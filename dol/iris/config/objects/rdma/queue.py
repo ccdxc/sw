@@ -116,7 +116,7 @@ class RdmaRQstate(Packet):
         XByteField("phy_base_addr_8", 0),
         XIntField("pt_base_addr/rq_hbm_base_addr/phy_base_addr_32", 0),
         
-        XIntField("rsq_base_addr", 0),
+        XIntField("rsq_base_addr/rqcb0_q_key", 0),
     
         X3BytesField("spec_read_rsp_psn", 0),
         BitField("spec_color", 0, 1),
@@ -357,7 +357,7 @@ class RdmaSQstate(Packet):
 
         XByteField("phy_base_addr_8", 0),
         XIntField("pt_base_addr/sq_hbm_base_addr/phy_base_addr_32", 0),
-        XIntField("sqcb0_header_template_addr", 0),
+        XIntField("sqcb0_header_template_addr/q_key", 0),
         IntField("pd", 0),
 
         BitField("poll_in_progress", 0, 1),

@@ -51,6 +51,54 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_AQ_TX_MODIFY_QP_RC
+        enable  : True
+        package : test.rdma
+        module  : aq_tx_modify_qp_rc
+        spec    : aq_tx_modify_qp_rc.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_AQ_TX_MODIFY_QP_RC_CUR_STATE
+        enable  : True
+        package : test.rdma
+        module  : aq_tx_modify_qp_rc_cur_state
+        spec    : aq_tx_modify_qp_rc_cur_state.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_AQ_TX_MODIFY_QP_UD_CUR_STATE
+        enable  : True
+        package : test.rdma
+        module  : aq_tx_modify_qp_ud_cur_state
+        spec    : aq_tx_modify_qp_ud_cur_state.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_AQ_TX_MODIFY_QP_UD
+        enable  : True
+        package : test.rdma
+        module  : aq_tx_modify_qp_ud
+        spec    : aq_tx_modify_qp_ud.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_AQ_TX_DESTROY_QP
+        enable  : True
+        package : test.rdma
+        module  : aq_tx_destroy_qp
+        spec    : aq_tx_destroy_qp.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_AQ_TX_DESTROY_UD_QP
+        enable  : True
+        package : test.rdma
+        module  : aq_tx_destroy_qp_ud
+        spec    : aq_tx_destroy_qp_ud.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_SEND_ONLY
         enable  : True
         package : test.rdma

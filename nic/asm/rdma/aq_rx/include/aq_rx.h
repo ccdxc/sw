@@ -16,26 +16,35 @@
 #define AQ_RX_DMA_CMD_PYLD_BASE             2
 #define AQ_RX_DMA_CMD_START                 0
 
-#define AQ_RX_DMA_CMD_CQ                    (AQ_RX_MAX_DMA_CMDS - 4)
-#define AQ_RX_DMA_CMD_AQ_ERR_DIS            (AQ_RX_MAX_DMA_CMDS - 4)
+#define AQ_RX_DMA_CMD_CQ                    (AQ_RX_MAX_DMA_CMDS - 3)
+#define AQ_RX_DMA_CMD_AQ_ERR_DIS            (AQ_RX_MAX_DMA_CMDS - 3)
 
 /* DMA Cmds for EQ, Async EQ, Wakeup Dpath (Mutually Exclusive) */
-#define AQ_RX_DMA_CMD_EQ                    (AQ_RX_MAX_DMA_CMDS - 3)
+#define AQ_RX_DMA_CMD_EQ                    (AQ_RX_MAX_DMA_CMDS - 2)
 #define AQ_RX_DMA_CMD_ASYNC_EQ              AQ_RX_DMA_CMD_EQ
 #define AQ_RX_DMA_CMD_WAKEUP_DPATH          AQ_RX_DMA_CMD_EQ
 #define AQ_RX_DMA_CMD_EQ_INT                (AQ_RX_MAX_DMA_CMDS - 1)
 #define AQ_RX_DMA_CMD_ASYNC_EQ_INT          AQ_RX_DMA_CMD_EQ_INT
 
 /* DMA Cmds for Create QP */
-#define AQ_RX_DMA_CMD_CREATE_QP_CB          (AQ_RX_MAX_DMA_CMDS - 5)
-#define AQ_RX_DMA_CMD_CREATE_QP_RQPT_DST    (AQ_RX_MAX_DMA_CMDS - 6)
-#define AQ_RX_DMA_CMD_CREATE_QP_RQPT_SRC    (AQ_RX_MAX_DMA_CMDS - 7)
+#define AQ_RX_DMA_CMD_CREATE_QP_CB          (AQ_RX_MAX_DMA_CMDS - 4)
+#define AQ_RX_DMA_CMD_CREATE_QP_RQPT_DST    (AQ_RX_MAX_DMA_CMDS - 5)
+#define AQ_RX_DMA_CMD_CREATE_QP_RQPT_SRC    (AQ_RX_MAX_DMA_CMDS - 6)
 
 /* DMA Cmds for Query QP */
-#define AQ_RX_DMA_CMD_QUERY_QP_RQ           (AQ_RX_MAX_DMA_CMDS - 5)
+#define AQ_RX_DMA_CMD_QUERY_QP_RQ           (AQ_RX_MAX_DMA_CMDS - 4)
 
-//following cmds are for modify qp
-#define AQ_RX_DMA_CMD_CLEAR_STATS_CB        (AQ_RX_MAX_DMA_CMDS - 5)
+/* DMA Cmds for Modify QP */
+//UD restore DMA cmds are used in case we bail out of modify_qp
+#define AQ_RX_DMA_CMD_CLEAR_STATS_CB        (AQ_RX_MAX_DMA_CMDS - 4)
+#define AQ_RX_DMA_CMD_MODIFY_QP_SQCB0_STATE (AQ_RX_MAX_DMA_CMDS - 5)
+#define AQ_RX_DMA_CMD_MODIFY_QP_UD_RESTORE1 (AQ_RX_MAX_DMA_CMDS - 5)
+#define AQ_RX_DMA_CMD_MODIFY_QP_RQCB0_STATE (AQ_RX_MAX_DMA_CMDS - 6)
+#define AQ_RX_DMA_CMD_MODIFY_QP_UD_RESTORE2 (AQ_RX_MAX_DMA_CMDS - 6)
+
+/* DMA Cmds for Destroy QP */
+#define AQ_RX_DMA_CMD_DESTROY_QP_SQCB0_STATE (AQ_RX_MAX_DMA_CMDS - 4)
+#define AQ_RX_DMA_CMD_DESTROY_QP_RQCB0_STATE (AQ_RX_MAX_DMA_CMDS - 5)
 
 #define AQ_RX_CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi) \
     CQCB_ADDR_GET(_r, _cqid, _cqcb_base_addr_hi);
@@ -50,6 +59,14 @@ struct aq_rx_dma_cmds_flit_t {
     dma_cmd3 : 128;
 };
 
+struct aq_mod_qp_state_update_t {
+    service             :   4;
+    flush_rq            :   1;
+    state               :   3;
+    rq_state            :   3;
+    log_rsq_size        :   5;
+    q_key               :  32;
+};
 
 // phv 
 struct aq_rx_phv_t {
@@ -63,21 +80,29 @@ struct aq_rx_phv_t {
     /* flit 9 */
     union {
         struct aq_rx_dma_cmds_flit_t flit_9;
+        /* Create QP */
         struct rqcb2_t rqcb2;
+        /* Query QP */
         struct aq_query_qp_rq_buf query_rq;
+        /* Modify QP */
+        struct aq_mod_qp_state_update_t mod_qp;
     };
      
     /* flit 8 */
     union {
         struct aq_rx_dma_cmds_flit_t flit_8;
+        /* Create QP */
         struct rqcb1_t rqcb1;
+        /* Modify QP */
         struct rqcb4_t rqcb5;
     };
      
     /* flit 7 */
     union {
         struct aq_rx_dma_cmds_flit_t flit_7;
+        /* Create QP */
         struct rqcb0_t rqcb0;
+        /* Modify QP */
         struct rqcb3_t rqcb4;
     };
 

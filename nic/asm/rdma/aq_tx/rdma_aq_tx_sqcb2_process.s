@@ -13,15 +13,16 @@ struct aq_tx_s5_t2_k k;
 #define IN_P t2_s2s_wqe2_to_sqcb2_info
 #define IN_TO_S_P to_s5_info
     
-#define K_TX_PSN CAPRI_KEY_RANGE(IN_TO_S_P, tx_psn_sbit0_ebit4, tx_psn_sbit21_ebit23)
+#define K_TX_PSN CAPRI_KEY_RANGE(IN_TO_S_P, tx_psn_sbit0_ebit3, tx_psn_sbit20_ebit23)
 #define K_TX_PSN_VALID CAPRI_KEY_FIELD(IN_TO_S_P, tx_psn_valid)
 #define K_ERR_RETRY_COUNT CAPRI_KEY_FIELD(IN_TO_S_P, err_retry_count)
 #define K_ERR_RETRY_COUNT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, err_retry_count_valid)
-#define K_LOCAL_ACK_TIMEOUT CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout)
+#define K_LOCAL_ACK_TIMEOUT CAPRI_KEY_RANGE(IN_TO_S_P, local_ack_timeout_sbit0_ebit3, local_ack_timeout_sbit4_ebit4)
 #define K_LOCAL_ACK_TIMEOUT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout_valid)
 #define K_RNR_RETRY_COUNT CAPRI_KEY_RANGE(IN_P, rnr_retry_count_sbit0_ebit1, rnr_retry_count_sbit2_ebit2) 
 #define K_RNR_RETRY_VALID CAPRI_KEY_FIELD(IN_P, rnr_retry_valid) 
-    
+#define K_DST_QP  CAPRI_KEY_RANGE(IN_TO_S_P, dst_qp_sbit0_ebit5, dst_qp_sbit22_ebit23)
+
 %%
 
     .param      rdma_aq_tx_sqcb0_process
@@ -35,11 +36,17 @@ rdma_aq_tx_sqcb2_process:
     nop
     
 hdr_update:
-    bbne        CAPRI_KEY_FIELD(IN_P, av_valid), 1, rrq_base
+    bbne        CAPRI_KEY_FIELD(IN_P, av_valid), 1, dst_qp
     nop
     
     tblwr     d.header_template_addr, CAPRI_KEY_FIELD(IN_P, ah_addr)
     tblwr     d.header_template_size, CAPRI_KEY_FIELD(IN_P, ah_len)
+
+dst_qp:
+    bbne        CAPRI_KEY_FIELD(IN_TO_S_P, dst_qp_valid), 1, rrq_base
+    nop
+
+    tblwr       d.dst_qp, K_DST_QP
 
 rrq_base:
     bbne        CAPRI_KEY_FIELD(IN_P, rrq_valid), 1, tx_psn

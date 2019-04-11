@@ -123,7 +123,8 @@ header_type aq_tx_to_stage_wqe2_info_t {
 header_type aq_tx_to_stage_sqcb_info_t {
     fields {
         cb_addr                          :   34;
-        rqcb_base_addr_hi                :   24;
+        dst_qp                           :   24;
+        dst_qp_valid                     :    1;
         tx_psn_valid                     :    1;
         tx_psn                           :   24;
         local_ack_timeout                :    5;
@@ -132,7 +133,7 @@ header_type aq_tx_to_stage_sqcb_info_t {
         err_retry_count_valid            :    1;
         q_key                            :   32;
         q_key_valid                      :    1;
-        pad                              :    2;
+        pad                              :    1;
     }
 }
 
@@ -172,17 +173,15 @@ header_type aq_tx_aqcb_to_sqcb_t {
         ah_addr             : 32;
         rrq_base_addr       : 32;
         rrq_depth_log2      :  5;
-        state               :  3;
         pmtu_log2           :  5;
         av_valid            :  1;
         rrq_valid           :  1;
-        state_valid         :  1;
         pmtu_valid          :  1;
         rnr_min_timer       :  5;
         rnr_retry_count     :  3;
         rnr_timer_valid     :  1;
         rnr_retry_valid     :  1;
-        pad                 : 61;
+        pad                 : 65;
     }
 }
 
@@ -191,8 +190,6 @@ header_type aq_tx_aqcb_to_rqcb_t {
         ah_len              :  8;
         ah_addr             : 32;
         av_valid            :  1;
-        state               :  3;
-        state_valid         :  1;
         pmtu_log2           :  5;
         pmtu_valid          :  1;
         rsq_base_addr       : 32;
@@ -200,7 +197,7 @@ header_type aq_tx_aqcb_to_rqcb_t {
         rsq_valid           :  1;
         rnr_min_timer       :  5;
         rnr_timer_valid     :  1;
-        pad                 : 65;
+        pad                 : 69;
     }
 }
 
@@ -372,7 +369,8 @@ action aq_tx_sqcb2_process () {
 
     // to stage
     modify_field(to_s5_info_scr.cb_addr, to_s5_info.cb_addr);
-    modify_field(to_s5_info_scr.rqcb_base_addr_hi, to_s5_info.rqcb_base_addr_hi);
+    modify_field(to_s5_info_scr.dst_qp, to_s5_info.dst_qp);
+    modify_field(to_s5_info_scr.dst_qp_valid, to_s5_info.dst_qp_valid);
     modify_field(to_s5_info_scr.tx_psn, to_s5_info.tx_psn);
     modify_field(to_s5_info_scr.tx_psn_valid, to_s5_info.tx_psn_valid);
     modify_field(to_s5_info_scr.local_ack_timeout_valid, to_s5_info.local_ack_timeout_valid);
@@ -384,14 +382,11 @@ action aq_tx_sqcb2_process () {
     modify_field(to_s5_info_scr.pad, to_s5_info.pad);
     
     // stage to stage
-    modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.state, t2_s2s_wqe2_to_sqcb2_info.state);
     modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.pmtu_log2, t2_s2s_wqe2_to_sqcb2_info.pmtu_log2);
     modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.ah_len, t2_s2s_wqe2_to_sqcb2_info.ah_len);
     modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.ah_addr, t2_s2s_wqe2_to_sqcb2_info.ah_addr);
     modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.rrq_depth_log2, t2_s2s_wqe2_to_sqcb2_info.rrq_depth_log2);
     modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.rrq_base_addr, t2_s2s_wqe2_to_sqcb2_info.rrq_base_addr);
-    modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.state_valid, t2_s2s_wqe2_to_sqcb2_info.state_valid);
-    modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.state_valid, t2_s2s_wqe2_to_sqcb2_info.state_valid);
     modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.av_valid, t2_s2s_wqe2_to_sqcb2_info.av_valid);
     modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.rrq_valid, t2_s2s_wqe2_to_sqcb2_info.rrq_valid);
     modify_field(t2_s2s_wqe2_to_sqcb2_info_scr.pmtu_valid, t2_s2s_wqe2_to_sqcb2_info.pmtu_valid);
@@ -410,7 +405,8 @@ action aq_tx_sqcb0_process () {
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s6_info_scr.rqcb_base_addr_hi, to_s6_info.rqcb_base_addr_hi);
+    modify_field(to_s6_info_scr.dst_qp, to_s6_info.dst_qp);
+    modify_field(to_s6_info_scr.dst_qp_valid, to_s6_info.dst_qp_valid);
     modify_field(to_s6_info_scr.tx_psn, to_s6_info.tx_psn);
     modify_field(to_s6_info_scr.tx_psn_valid, to_s6_info.tx_psn_valid);
     modify_field(to_s6_info_scr.local_ack_timeout_valid, to_s6_info.local_ack_timeout_valid);
@@ -420,8 +416,6 @@ action aq_tx_sqcb0_process () {
     modify_field(to_s6_info_scr.pad, to_s6_info.pad);
     
     // stage to stage
-    modify_field(t2_s2s_sqcb2_to_sqcb0_info_scr.state, t2_s2s_sqcb2_to_sqcb0_info.state);
-    modify_field(t2_s2s_sqcb2_to_sqcb0_info_scr.state_valid, t2_s2s_sqcb2_to_sqcb0_info.state_valid);
     modify_field(t2_s2s_sqcb2_to_sqcb0_info_scr.pmtu_log2, t2_s2s_sqcb2_to_sqcb0_info.pmtu_log2);
     modify_field(t2_s2s_sqcb2_to_sqcb0_info_scr.pmtu_valid, t2_s2s_sqcb2_to_sqcb0_info.pmtu_valid);
     modify_field(t2_s2s_sqcb2_to_sqcb0_info_scr.ah_len, t2_s2s_sqcb2_to_sqcb0_info.ah_len);
@@ -448,18 +442,18 @@ action aq_tx_rqcb0_process () {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s5_info_scr.dst_qp, to_s5_info.dst_qp);
+    modify_field(to_s5_info_scr.dst_qp_valid, to_s5_info.dst_qp_valid);
     modify_field(to_s5_info_scr.q_key, to_s5_info.q_key);
     modify_field(to_s5_info_scr.q_key_valid, to_s5_info.q_key_valid);
     modify_field(to_s5_info_scr.pad, to_s5_info.pad);
     
     // stage to stage
-    modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.state, t1_s2s_wqe2_to_rqcb0_info.state);
     modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.pmtu_log2, t1_s2s_wqe2_to_rqcb0_info.pmtu_log2);
     modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.ah_len, t1_s2s_wqe2_to_rqcb0_info.ah_len);
     modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.ah_addr, t1_s2s_wqe2_to_rqcb0_info.ah_addr);
     modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.rsq_depth_log2, t1_s2s_wqe2_to_rqcb0_info.rsq_depth_log2);
     modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.rsq_base_addr, t1_s2s_wqe2_to_rqcb0_info.rsq_base_addr);
-    modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.state_valid, t1_s2s_wqe2_to_rqcb0_info.state_valid);
     modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.pmtu_valid, t1_s2s_wqe2_to_rqcb0_info.pmtu_valid);
     modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.av_valid, t1_s2s_wqe2_to_rqcb0_info.av_valid);
     modify_field(t1_s2s_wqe2_to_rqcb0_info_scr.rsq_valid, t1_s2s_wqe2_to_rqcb0_info.rsq_valid);

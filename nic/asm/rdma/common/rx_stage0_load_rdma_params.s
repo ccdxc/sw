@@ -91,6 +91,7 @@ aq:
     CAPRI_SET_FIELD(r2, AQ_RX_TO_S3_T, sqcb_base_addr_hi, d.u.rx_stage0_load_rdma_params_d.sqcb_base_addr_hi)
     // copy to stage 4
     add r2, r0, offsetof(struct phv_, to_stage_4_to_stage_data)    
+    CAPRI_SET_FIELD(r2, AQ_RX_TO_S4_T, sqcb_base_addr_hi, d.u.rx_stage0_load_rdma_params_d.sqcb_base_addr_hi)
     CAPRI_SET_FIELD(r2, AQ_RX_TO_S4_T, rqcb_base_addr_hi, d.u.rx_stage0_load_rdma_params_d.rqcb_base_addr_hi)
     // copy to stage 6
     add r2, r0, offsetof(struct phv_, to_stage_6_to_stage_data)

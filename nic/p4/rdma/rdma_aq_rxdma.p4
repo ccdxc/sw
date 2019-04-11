@@ -121,7 +121,10 @@ header_type aq_rx_aqcb_to_sqcb1_info_t {
         sqd_async_notify_en      :   1;
         access_flags_valid       :   1;
         access_flags             :   3;
-        pad                      :  80;
+        cur_state                :   3;
+        cur_state_valid          :   1;
+        sqcb_addr                :  32;
+        pad                      :  44;
     }
 }
 
@@ -172,12 +175,13 @@ header_type aq_rx_to_stage_rqcb1_t {
     fields {
         cqcb_base_addr_hi        :    24;
         cq_id                    :    24;
-        rsq_base_addr            :    32;
+        q_key_rsq_base_addr      :    32;
+        q_key_valid              :     1;
         rsq_depth_log2           :     5;
         rsq_valid                :     1;
-        q_key                    :    32;
-        q_key_valid              :     1;
-        pad                      :     9;
+        rq_psn                   :    24;
+        rq_psn_valid             :     1;
+        pad                      :    16;
     }
 }
 
@@ -195,7 +199,7 @@ header_type aq_rx_to_stage_cqcb_t {
     }
 }
 
-@pragma pa_header_union ingress app_header rdma_aq_feedback rdma_bth rdma_aq_feedback_cqp rdma_aq_feedback_mqp rdma_aq_feedback_qqp
+@pragma pa_header_union ingress app_header rdma_aq_feedback rdma_bth rdma_aq_feedback_cqp rdma_aq_feedback_mqp rdma_aq_feedback_qdqp
 
 metadata p4_to_p4plus_roce_bth_header_t rdma_bth;
 @pragma scratch_metadata
@@ -213,9 +217,9 @@ metadata rdma_aq_completion_feedback_header_modify_qp_t rdma_aq_feedback_mqp;
 @pragma scratch_metadata
 metadata rdma_aq_completion_feedback_header_modify_qp_t rdma_aq_feedback_mqp_scr;
 
-metadata rdma_aq_completion_feedback_header_query_qp_t rdma_aq_feedback_qqp;
+metadata rdma_aq_completion_feedback_header_query_destroy_qp_t rdma_aq_feedback_qdqp;
 @pragma scratch_metadata
-metadata rdma_aq_completion_feedback_header_query_qp_t rdma_aq_feedback_qqp_scr;
+metadata rdma_aq_completion_feedback_header_query_destroy_qp_t rdma_aq_feedback_qdqp_scr;
 
 /**** header unions and scratch ****/
 
@@ -414,15 +418,16 @@ action rdma_stage0_aq_feedback_action3 () {
     // aq_feedback_header bits
     modify_field(rdma_aq_feedback_mqp_scr.aq_comp_common_bits, rdma_aq_feedback_mqp.aq_comp_common_bits);
 
-    modify_field(rdma_aq_feedback_mqp_scr.q_key, rdma_aq_feedback_mqp.q_key);
-    modify_field(rdma_aq_feedback_mqp_scr.q_key_valid, rdma_aq_feedback_mqp.q_key_valid);
+    modify_field(rdma_aq_feedback_mqp_scr.rq_psn, rdma_aq_feedback_mqp.rq_psn);
+    modify_field(rdma_aq_feedback_mqp_scr.rq_psn_valid, rdma_aq_feedback_mqp.rq_psn_valid);
 
     modify_field(rdma_aq_feedback_mqp_scr.rq_id, rdma_aq_feedback_mqp.rq_id);
     modify_field(rdma_aq_feedback_mqp_scr.ah_len, rdma_aq_feedback_mqp.ah_len);
     modify_field(rdma_aq_feedback_mqp_scr.ah_addr, rdma_aq_feedback_mqp.ah_addr);
     modify_field(rdma_aq_feedback_mqp_scr.rrq_base_addr, rdma_aq_feedback_mqp.rrq_base_addr);
     modify_field(rdma_aq_feedback_mqp_scr.rrq_depth_log2, rdma_aq_feedback_mqp.rrq_depth_log2);
-    modify_field(rdma_aq_feedback_mqp_scr.rsq_base_addr, rdma_aq_feedback_mqp.rsq_base_addr);
+    modify_field(rdma_aq_feedback_mqp_scr.q_key_rsq_base_addr, rdma_aq_feedback_mqp.q_key_rsq_base_addr);
+    modify_field(rdma_aq_feedback_mqp_scr.q_key_valid, rdma_aq_feedback_mqp.q_key_valid);
     modify_field(rdma_aq_feedback_mqp_scr.rsq_depth_log2, rdma_aq_feedback_mqp.rsq_depth_log2);
     modify_field(rdma_aq_feedback_mqp_scr.av_valid, rdma_aq_feedback_mqp.av_valid);
     modify_field(rdma_aq_feedback_mqp_scr.rsq_valid, rdma_aq_feedback_mqp.rsq_valid);
@@ -441,6 +446,8 @@ action rdma_stage0_aq_feedback_action3 () {
     modify_field(rdma_aq_feedback_mqp_scr.sqd_async_notify_en, rdma_aq_feedback_mqp.sqd_async_notify_en);
     modify_field(rdma_aq_feedback_mqp_scr.access_flags_valid, rdma_aq_feedback_mqp.access_flags_valid);
     modify_field(rdma_aq_feedback_mqp_scr.access_flags, rdma_aq_feedback_mqp.access_flags);
+    modify_field(rdma_aq_feedback_mqp_scr.cur_state, rdma_aq_feedback_mqp.cur_state);
+    modify_field(rdma_aq_feedback_mqp_scr.cur_state_valid, rdma_aq_feedback_mqp.cur_state_valid);
 }
 
 action rdma_stage0_aq_feedback_action4 () {
@@ -473,13 +480,13 @@ action rdma_stage0_aq_feedback_action4 () {
 
 
     // from app header
-    modify_field(rdma_aq_feedback_qqp_scr.common_roce_bits, rdma_aq_feedback_qqp.common_roce_bits);
+    modify_field(rdma_aq_feedback_qdqp_scr.common_roce_bits, rdma_aq_feedback_qdqp.common_roce_bits);
 
     // aq_feedback_header bits
-    modify_field(rdma_aq_feedback_qqp_scr.aq_comp_common_bits, rdma_aq_feedback_qqp.aq_comp_common_bits);
+    modify_field(rdma_aq_feedback_qdqp_scr.aq_comp_common_bits, rdma_aq_feedback_qdqp.aq_comp_common_bits);
 
-    modify_field(rdma_aq_feedback_qqp_scr.rq_id, rdma_aq_feedback_qqp.rq_id);
-    modify_field(rdma_aq_feedback_qqp_scr.dma_addr, rdma_aq_feedback_qqp.dma_addr);
+    modify_field(rdma_aq_feedback_qdqp_scr.rq_id, rdma_aq_feedback_qdqp.rq_id);
+    modify_field(rdma_aq_feedback_qdqp_scr.dma_addr, rdma_aq_feedback_qdqp.dma_addr);
 }
 
 /*
@@ -593,6 +600,8 @@ action rdma_aq_rx_sqcb1_process () {
     modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.sqd_async_notify_en, t2_s2s_aqcb_to_sqcb1_info.sqd_async_notify_en);
     modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.access_flags_valid, t2_s2s_aqcb_to_sqcb1_info.access_flags_valid);
     modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.access_flags, t2_s2s_aqcb_to_sqcb1_info.access_flags);
+    modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.cur_state, t2_s2s_aqcb_to_sqcb1_info.cur_state);    
+    modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.cur_state_valid, t2_s2s_aqcb_to_sqcb1_info.cur_state_valid);    
     modify_field(t2_s2s_aqcb_to_sqcb1_info_scr.pad, t2_s2s_aqcb_to_sqcb1_info.pad);    
 }
 
@@ -601,11 +610,12 @@ action rdma_aq_rx_rqcb1_process () {
     GENERATE_GLOBAL_K
 
     //to stage
-    modify_field(to_s5_info_scr.rsq_base_addr, to_s5_info.rsq_base_addr);
+    modify_field(to_s5_info_scr.q_key_rsq_base_addr, to_s5_info.q_key_rsq_base_addr);
+    modify_field(to_s5_info_scr.q_key_valid, to_s5_info.q_key_valid);
     modify_field(to_s5_info_scr.rsq_depth_log2, to_s5_info.rsq_depth_log2);
     modify_field(to_s5_info_scr.rsq_valid, to_s5_info.rsq_valid);
-    modify_field(to_s5_info_scr.q_key, to_s5_info.q_key);
-    modify_field(to_s5_info_scr.q_key_valid, to_s5_info.q_key_valid);
+    modify_field(to_s5_info_scr.rq_psn, to_s5_info.rq_psn);
+    modify_field(to_s5_info_scr.rq_psn_valid, to_s5_info.rq_psn_valid);
     modify_field(to_s5_info_scr.pad, to_s5_info.pad);    
 
     //stage to stage
@@ -616,7 +626,10 @@ action rdma_aq_rx_rqcb1_process () {
     modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.state_valid, t2_s2s_sqcb1_to_rqcb1_info.state_valid);    
     modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.pmtu_log2, t2_s2s_sqcb1_to_rqcb1_info.pmtu_log2);    
     modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.pmtu_valid, t2_s2s_sqcb1_to_rqcb1_info.pmtu_valid);    
-    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.pad, t2_s2s_sqcb1_to_rqcb1_info.pad);    
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.cur_state, t2_s2s_sqcb1_to_rqcb1_info.cur_state);
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.cur_state_valid, t2_s2s_sqcb1_to_rqcb1_info.cur_state_valid);
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.sqcb_addr, t2_s2s_sqcb1_to_rqcb1_info.sqcb_addr);
+    modify_field(t2_s2s_sqcb1_to_rqcb1_info_scr.pad, t2_s2s_sqcb1_to_rqcb1_info.pad);
 }
 
 action rdma_aq_rx_cqcb_process () {

@@ -13,14 +13,13 @@ struct aq_tx_s6_t1_k k;
 #define IN_P t1_s2s_rqcb0_to_rqcb2_info
 #define IN_TO_S_P to_s6_info
 
-#define K_MIN_RNR_TIMER CAPRI_KEY_FIELD(IN_P, rnr_min_timer)
+#define K_MIN_RNR_TIMER CAPRI_KEY_RANGE(IN_P, rnr_min_timer_sbit0_ebit2, rnr_min_timer_sbit3_ebit4)
     
 %%
 
 .align
 rdma_aq_tx_rqcb2_process:
 
-min_rnr_timer:
     bbne        CAPRI_KEY_FIELD(IN_P, rnr_timer_valid), 1, exit
     nop
     

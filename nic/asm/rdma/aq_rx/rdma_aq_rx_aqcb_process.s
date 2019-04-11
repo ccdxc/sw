@@ -45,6 +45,8 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define K_MQP_RSQ_VALID k.{rdma_aq_feedback_mqp_rsq_valid}
 #define K_MQP_STATE k.{rdma_aq_feedback_mqp_state}
 #define K_MQP_STATE_VALID k.{rdma_aq_feedback_mqp_state_valid}
+#define K_MQP_CUR_STATE k.{rdma_aq_feedback_mqp_cur_state}
+#define K_MQP_CUR_STATE_VALID k.{rdma_aq_feedback_mqp_cur_state_valid}
 #define K_MQP_ERR_RETRY_CNT k.{rdma_aq_feedback_mqp_err_retry_count}
 #define K_MQP_ERR_RETRY_CNT_VALID k.{rdma_aq_feedback_mqp_err_retry_count_valid}
 #define K_MQP_TX_PSN k.{rdma_aq_feedback_mqp_tx_psn_sbit0_ebit1...rdma_aq_feedback_mqp_tx_psn_sbit18_ebit23}    
@@ -52,19 +54,24 @@ struct common_p4plus_stage0_app_header_table_k k;
 #define K_MQP_PMTU_LOG2 k.{rdma_aq_feedback_mqp_pmtu_log2_sbit0_ebit1...rdma_aq_feedback_mqp_pmtu_log2_sbit2_ebit4}    
 #define K_MQP_PMTU_VALID k.{rdma_aq_feedback_mqp_pmtu_valid}
 #define K_MQP_RQ_ID k.{rdma_aq_feedback_mqp_rq_id_sbit0_ebit6...rdma_aq_feedback_mqp_rq_id_sbit23_ebit23}
+#define K_MQP_RQ_PSN k.{rdma_aq_feedback_mqp_rq_psn_sbit0_ebit15...rdma_aq_feedback_mqp_rq_psn_sbit16_ebit23}
 #define K_SQD_ASYNC_NOTIFY_EN k.{rdma_aq_feedback_mqp_sqd_async_notify_en}
 #define K_ACCESS_FLAGS_VALID k.{rdma_aq_feedback_mqp_access_flags_valid}
 #define K_ACCESS_FLAGS k.{rdma_aq_feedback_mqp_access_flags}
 
 //query_qp params
-#define K_QQP_DMA_ADDR k.{rdma_aq_feedback_qqp_dma_addr_sbit0_ebit7...rdma_aq_feedback_qqp_dma_addr_sbit56_ebit63}
-#define K_QQP_RQ_ID k.{rdma_aq_feedback_qqp_rq_id_sbit0_ebit7...rdma_aq_feedback_qqp_rq_id_sbit16_ebit23}
+#define K_QQP_DMA_ADDR k.{rdma_aq_feedback_qdqp_dma_addr_sbit0_ebit7...rdma_aq_feedback_qdqp_dma_addr_sbit56_ebit63}
+#define K_QQP_RQ_ID k.{rdma_aq_feedback_qdqp_rq_id_sbit0_ebit7...rdma_aq_feedback_qdqp_rq_id_sbit16_ebit23}
+
+//destroy_qp params
+#define K_DQP_RQ_ID K_QQP_RQ_ID
 
 %%
 
     .param      rdma_aq_rx_cqcb_mpu_only_process
     .param      rdma_aq_rx_sqcb1_process
     .param      rdma_aq_rx_query_sqcb1_process
+    .param      rdma_aq_rx_destroy_sqcb1_process
     .param      rdma_aq_rx_wqe_process
     .param      rdma_resp_rx_stage0
     .param      rx_dummy
@@ -94,6 +101,10 @@ process_feedback:
 
     seq         c1, K_OP, AQ_OP_TYPE_QUERY_QP
     bcf         [c1], query_qp
+    nop
+
+    seq         c1, K_OP, AQ_OP_TYPE_DESTROY_QP
+    bcf         [c1], destroy_qp
     nop
     
 aq_feedback:
@@ -134,8 +145,6 @@ create_qp:
 
     phvwr       p.{rqcb0.intrinsic.total_rings, rqcb0.intrinsic.host_rings}, (MAX_RQ_RINGS<<4|MAX_RQ_HOST_RINGS)
 
-    //          TODO: For now setting it to RTS, but later change it to INIT
-    // state. modify_qp is supposed to set it to RTR and RTS.
     phvwr       p.rqcb0.state, QP_STATE_RESET
 
         //TODO: RQ in HBM still need to be implemented
@@ -156,9 +165,6 @@ create_qp:
     
     phvwrpair   p.rqcb2.rnr_timeout, 0xb, p.rqcb2.pd, K_CQP_PD
 
-    //          TODO: Move RSQ/RRQ allocation to modify_qp frm create_qp
-    //          TODO: Move pmtu setup to modify_qp
-    
     //populate the PC in RQCB0, RQCB1
     addi        r4, r0, rdma_resp_rx_stage0[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
     addi        r3, r0, rx_dummy[33:CAPRI_RAW_TABLE_PC_SHIFT] ;
@@ -192,10 +198,10 @@ modify_qp:
     CAPRI_RESET_TABLE_2_ARG() 
     phvwr       CAPRI_PHV_RANGE(AQCB_TO_SQCB_P, ah_len, pmtu_valid), k.{rdma_aq_feedback_mqp_ah_len...rdma_aq_feedback_mqp_pmtu_valid}
     phvwrpair   CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, rq_id), K_MQP_RQ_ID, CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, sqd_async_notify_en), K_SQD_ASYNC_NOTIFY_EN
-    phvwrpair   CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, access_flags_valid), K_ACCESS_FLAGS_VALID, CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, access_flags), K_ACCESS_FLAGS
+    phvwr       CAPRI_PHV_RANGE(AQCB_TO_SQCB_P, access_flags_valid, cur_state_valid), k.{rdma_aq_feedback_mqp_access_flags_valid...rdma_aq_feedback_mqp_cur_state_valid}
     phvwr       CAPRI_PHV_RANGE(TO_S4_INFO, rrq_base_addr, rnr_retry_count_valid), k.{rdma_aq_feedback_mqp_rrq_base_addr_sbit0_ebit4...rdma_aq_feedback_mqp_rnr_retry_valid}
-    phvwr       CAPRI_PHV_RANGE(TO_S5_INFO, rsq_base_addr, rsq_valid), k.{rdma_aq_feedback_mqp_rsq_base_addr_sbit0_ebit5...rdma_aq_feedback_mqp_rsq_valid}
-    phvwr       CAPRI_PHV_RANGE(TO_S5_INFO, q_key, q_key_valid), k.{rdma_aq_feedback_mqp_q_key_sbit0_ebit15...rdma_aq_feedback_mqp_q_key_valid}
+    phvwr       CAPRI_PHV_RANGE(TO_S5_INFO, q_key_rsq_base_addr, rsq_valid), k.{rdma_aq_feedback_mqp_q_key_rsq_base_addr_sbit0_ebit5...rdma_aq_feedback_mqp_rsq_valid}
+    phvwrpair   CAPRI_PHV_FIELD(TO_S5_INFO, rq_psn), K_MQP_RQ_PSN, CAPRI_PHV_FIELD(TO_S5_INFO, rq_psn_valid), k.{rdma_aq_feedback_mqp_rq_psn_valid}
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_rx_sqcb1_process, r0) 
 
     b           aq_feedback
@@ -203,12 +209,20 @@ modify_qp:
 
 query_qp:
 
-	CAPRI_RESET_TABLE_2_ARG()
-	phvwr		CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, rq_id), K_QQP_RQ_ID
+    CAPRI_RESET_TABLE_2_ARG()
+    phvwr       CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, rq_id), K_QQP_RQ_ID
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_rx_query_sqcb1_process, r0)
 
-	DMA_CMD_STATIC_BASE_GET(r1, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_QUERY_QP_RQ)
-	DMA_PHV2MEM_SETUP2(r1, c0, query_rq, query_rq, K_QQP_DMA_ADDR)
+    DMA_CMD_STATIC_BASE_GET(r1, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_QUERY_QP_RQ)
+    DMA_PHV2MEM_SETUP2(r1, c0, query_rq, query_rq, K_QQP_DMA_ADDR)
 
-	b			aq_feedback
-	nop
+    b           aq_feedback
+    nop
+
+destroy_qp:
+    CAPRI_RESET_TABLE_2_ARG()
+    phvwr       CAPRI_PHV_FIELD(AQCB_TO_SQCB_P, rq_id), K_DQP_RQ_ID
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_rx_destroy_sqcb1_process, r0)
+
+    b           aq_feedback
+    nop

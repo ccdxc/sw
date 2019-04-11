@@ -909,8 +909,8 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
         Creates a Descriptor at "self.address"
         :return:
         """
-        if hasattr(self.spec.fields, 'nop'):
-           logger.info("Reading Admin NOOP")
+        if hasattr(self.spec.fields, 'nop') or hasattr(self.spec.fields, 'destroy_qp'):
+           logger.info("Reading Admin NOOP/Destroy QP")
            nop = RdmaAqDescriptorNOP()
            desc = self.desc/nop
            self.__set_desc(desc)
@@ -1025,11 +1025,11 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
             # TODO: Read values from spec as and when relevant adminQ ModQP tests are added.
             attr_mask = self.spec.fields.modify_qp.attr_mask if hasattr(self.spec.fields.modify_qp, 'attr_mask') else 0
             access_flags = self.spec.fields.modify_qp.access_flags if hasattr(self.spec.fields.modify_qp, 'access_flags') else 0
-            rq_psn = 0
-            sq_psn = 0
-            qkey_dest_qpn = 0
+            rq_psn = self.spec.fields.modify_qp.rq_psn if hasattr(self.spec.fields.modify_qp, 'rq_psn') else 0
+            sq_psn = self.spec.fields.modify_qp.sq_psn if hasattr(self.spec.fields.modify_qp, 'sq_psn') else 0
+            qkey_dest_qpn = self.spec.fields.modify_qp.qkey_dest_qpn if hasattr(self.spec.fields.modify_qp, 'qkey_dest_qpn') else 0
             rate_limit_kbps = 0
-            pmtu = 0
+            pmtu = self.spec.fields.modify_qp.pmtu if hasattr(self.spec.fields.modify_qp, 'pmtu') else 0
             retry = 0
             rnr_timer = 0
             retry_timeout = 0
