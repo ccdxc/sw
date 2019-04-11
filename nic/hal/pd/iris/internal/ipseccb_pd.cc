@@ -106,32 +106,18 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipseccb_encrypt_t* ipseccb_pd, bool del
         data.u.ipsec_encap_rxdma_initial_table_d.key_index = htons(key_index);
         HAL_TRACE_DEBUG("key_index = {}\n", ipseccb_pd->ipseccb->key_index);
 
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_IPSECCBQ,
-                                     ipseccb_pd->ipseccb->cb_id,
-                                     &ipsec_cb_ring_addr);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("CB Ring Addr {:#x}", ipsec_cb_ring_addr);
-            return ret;
-        }
+        ipsec_cb_ring_addr = get_mem_addr(CAPRI_HBM_REG_IPSECCB) + ((ipseccb_pd->ipseccb->cb_id) * DEFAULT_WRING_SLOT_SIZE * IPSEC_PER_CB_RING_SIZE);
         HAL_TRACE_DEBUG("CB Ring Addr {:#x}", ipsec_cb_ring_addr);
-
 #if 0
         ipsec_cb_ring_base = get_mem_addr(CAPRI_HBM_REG_IPSECCB);
         ipsec_cb_ring_addr = (ipsec_cb_ring_base+(ipseccb_pd->ipseccb->cb_id * IPSEC_CB_RING_ENTRY_SIZE));
         //ipsec_cb_ring_addr = htonll(ipsec_cb_ring_addr);
 #endif
-
         data.u.ipsec_encap_rxdma_initial_table_d.cb_ring_base_addr = htonl((uint32_t)(ipsec_cb_ring_addr & 0xFFFFFFFF));
         data.u.ipsec_encap_rxdma_initial_table_d.cb_cindex = 0;
         data.u.ipsec_encap_rxdma_initial_table_d.cb_pindex = 0;
 
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_IPSECCBQ_BARCO,
-                                     ipseccb_pd->ipseccb->cb_id,
-                                     &ipsec_barco_ring_addr);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("Barco Ring Addr {:#x}", ipsec_barco_ring_addr);
-            return ret;
-        }
+        ipsec_barco_ring_addr = get_mem_addr(CAPRI_HBM_REG_IPSECCB_BARCO) + ((ipseccb_pd->ipseccb->cb_id) * IPSEC_PER_CB_BARCO_SLOT_ELEM_SIZE * IPSEC_PER_CB_BARCO_RING_SIZE);
         HAL_TRACE_DEBUG("Barco Ring Addr {:#x}", ipsec_barco_ring_addr);
 #if 0
 

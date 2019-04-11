@@ -25,7 +25,7 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_encap_txdma2_initial_table:
 
     phvwr p.ipsec_to_stage2_barco_sw_cindex, d.{barco_ring_cindex}.hx
 
-    sll r1, r1, BRQ_RING_ENTRY_SIZE_SHIFT 
+    sll r1, r1, IPSEC_BARCO_RING_ENTRY_SHIFT_SIZE 
     add r1, r1, d.barco_ring_base_addr 
     phvwr  p.ipsec_to_stage1_barco_desc_addr, r1
     phvwr p.ipsec_to_stage3_ipsec_cb_addr, k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}

@@ -41,10 +41,7 @@ esp_v4_tunnel_n2h_txdma1_load_head_desc_int_header:
 
     add r5, r0, k.txdma1_global_ipsec_cb_addr
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_v4_tunnel_n2h_write_barco_req, r5, TABLE_SIZE_512_BITS)
-    add r2, d.in_desc, 96
-    add r3, d.out_desc, 96
-    phvwr p.brq_in_desc_zero_dma_cmd_addr, r2 
-    phvwr.e p.brq_out_desc_zero_dma_cmd_addr, r3 
+    nop.e
     nop
 
 esp_ipv4_tunnel_n2h_txdma1_bad_barco_in_desc:

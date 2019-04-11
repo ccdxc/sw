@@ -26,10 +26,6 @@ esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex:
     addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
     addi        r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_allocate_barco_req_pindex, r5, TABLE_SIZE_512_BITS)
-
-    phvwri p.{brq_in_desc_zero_dma_cmd_phv_end_addr...brq_in_desc_zero_dma_cmd_type}, ((IPSEC_DESC_ZERO_CONTENT_END << 18) | (IPSEC_DESC_ZERO_CONTENT_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
-    phvwri p.{brq_out_desc_zero_dma_cmd_phv_end_addr...brq_out_desc_zero_dma_cmd_type}, ((IPSEC_DESC_ZERO_CONTENT_END << 18) | (IPSEC_DESC_ZERO_CONTENT_START << 8) | IPSEC_PHV2MEM_CACHE_ENABLE | CAPRI_DMA_COMMAND_PHV_TO_MEM)
-
     nop.e
     nop
 

@@ -122,9 +122,6 @@ p4pd_add_or_del_ipsec_rx_stage0_entry(pd_ipsec_t* ipsec_sa_pd, bool del)
         data.u.ipsec_encap_rxdma_initial_table_d.cb_cindex = 0;
         data.u.ipsec_encap_rxdma_initial_table_d.cb_pindex = 0;
 
-        ret = wring_pd_get_base_addr(types::WRING_TYPE_IPSECCBQ_BARCO,
-                                     ipsec_sa_pd->ipsec_sa->sa_id,
-                                     &ipsec_barco_ring_addr);
         ipsec_barco_ring_addr = get_mem_addr(CAPRI_HBM_REG_IPSECCB_BARCO) + ((ipsec_sa_pd->ipsec_sa->sa_id) * IPSEC_PER_CB_BARCO_SLOT_ELEM_SIZE * IPSEC_PER_CB_BARCO_RING_SIZE);
         HAL_TRACE_DEBUG("Barco Ring Addr {:#x}", ipsec_barco_ring_addr);
 
@@ -600,11 +597,11 @@ pd_ipsec_encrypt_delete (pd_func_args_t *pd_func_args)
     ipsec_sa_t*                ipsec_sa = args->ipsec_sa;
     pd_ipsec_t*        ipsec_sa_pd = (pd_ipsec_t*)ipsec_sa->pd;
 
-    HAL_TRACE_DEBUG("IPSECCB pd delete");
-
     if (ipsec_sa_pd == NULL) {
        return HAL_RET_INVALID_ARG;
     }
+
+    HAL_TRACE_DEBUG("pd delete for id {}", ipsec_sa->sa_id);
 
     free_key_args.key_idx = ipsec_sa->key_index;
     pd_func_args1.pd_crypto_free_key = &free_key_args;

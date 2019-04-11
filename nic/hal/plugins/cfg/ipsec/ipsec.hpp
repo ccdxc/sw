@@ -302,7 +302,7 @@ typedef struct ipsec_global_stats_cb_s {
 #define HAL_MAX_IPSEC_SUPP_SA                     32
 #define IPSEC_PER_CB_RING_SIZE                    256 
 #define IPSEC_PER_CB_BARCO_RING_SIZE              512 
-#define IPSEC_PER_CB_BARCO_SLOT_ELEM_SIZE         128 
+#define IPSEC_PER_CB_BARCO_SLOT_ELEM_SIZE         16
 #define IPSEC_BARCO_ENCRYPT_AES_GCM_256           0x30000000
 #define IPSEC_BARCO_DECRYPT_AES_GCM_256           0x30100000
 
