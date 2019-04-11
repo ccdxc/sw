@@ -111,6 +111,9 @@ skip_mr_cookie_check:
     //     (hbm_addr_get(PHV_GLOBAL_PT_BASE_ADDR_GET()) +
     //         (lkey_p->pt_base * sizeof(u64)));
 
+    seq         c4, d.is_phy_addr, 1  
+    bcf         [c4], contig_mr
+
     PT_BASE_ADDR_GET2(r2)
     add         MY_PT_BASE_ADDR, r2, d.pt_base, CAPRI_LOG_SIZEOF_U64
     // now r2 has my_pt_base_addr
@@ -257,3 +260,19 @@ error_completion:
     phvwr       p.aeth.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_ACC_ERR)
     b           dcqcn_mpu_only
     CAPRI_SET_FIELD2(TO_S5_P, ack_nak_process, 1) // BD Slot
+
+contig_mr:
+    
+    bbeq        CAPRI_KEY_FIELD(IN_P, skip_rkey), 1, add_headers
+    CAPRI_SET_TABLE_0_VALID(0) // BD Slot
+
+    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, r3, RESP_TX_DMA_CMD_START_FLIT_ID, RESP_TX_DMA_CMD_PYLD_BASE)
+    // r1 has DMA_CMD_BASE
+
+    sub         r2, K_XFER_VA, d.base_va
+    add         r2, r2, d.phy_base_addr
+
+    DMA_MEM2PKT_SETUP(DMA_CMD_BASE, c0, K_XFER_BYTES, r2)
+
+    b           add_headers
+    nop

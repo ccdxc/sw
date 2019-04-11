@@ -111,6 +111,9 @@ skip_mr_cookie_check:
     //     (hbm_addr_get(PHV_GLOBAL_PT_BASE_ADDR_GET()) +
     //         (lkey_p->pt_base * sizeof(u64)));
 
+    seq         c4, d.is_phy_addr, 1  
+    bcf         [c4], contig_mr
+    
     PT_BASE_ADDR_GET2(r2) //BD Slot
     add         MY_PT_BASE_ADDR, r2, d.pt_base, CAPRI_LOG_SIZEOF_U64
     // now r2 has my_pt_base_addr
@@ -249,3 +252,28 @@ error_completion:
 
     b       write_back
     CAPRI_SET_TABLE_1_VALID(0)  //BD Slot
+
+contig_mr:
+
+    DMA_CMD_I_BASE_GET(DMA_CMD_BASE, r3, RESP_RX_DMA_CMD_START_FLIT_ID, CAPRI_KEY_FIELD(IN_P, dma_cmd_start_index))
+    // r1 has DMA_CMD_BASE
+
+    sub         r2, K_VA, d.base_va
+    add         r2, r2, d.phy_base_addr
+    
+    //STORAGE_USE_CASE
+    crestore            [c1], d.{override_lif_vld}, 0x1
+    //Always assume resvered lkey based address to be of host_addr
+    DMA_PKT2MEM_SETUP_OVERRIDE_LIF(DMA_CMD_BASE, c0, K_LEN, r2, c1, d.override_lif)
+    
+    add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS 
+
+    bbne        CAPRI_KEY_FIELD(IN_P, dma_cmdeop), 1, load_write_back
+    IS_ANY_FLAG_SET(c2, GLOBAL_FLAGS, RESP_RX_FLAG_COMPLETION) // BD Slot
+
+    DMA_SET_END_OF_CMDS_C(struct capri_dma_cmd_pkt2mem_t, DMA_CMD_BASE, !c2)
+    
+load_write_back:
+    CAPRI_SET_TABLE_1_VALID(0)
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)
+    

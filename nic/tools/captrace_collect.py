@@ -73,13 +73,17 @@ def collect(ch, args):
         op = sendCmd(ch, 'rm /captrace.cfg', '#')
     op = sendCmd(ch, 'touch /captrace.cfg', '#')
 
-    if (args.rxdma == '1'):
-        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/rxdma-all.json /captrace.cfg', '[Pp]assword.*')
+    if (args.rxdma == '1') and (args.txdma == '1'):
+        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/dma-all.json /captrace.cfg', '[Pp]assword.*')
         sendCmd(ch, 'docker', '#')
+    else:
+        if (args.rxdma == '1'):
+            sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/dma-all.json /captrace.cfg', '[Pp]assword.*')
+            sendCmd(ch, 'docker', '#')
 
-    if (args.txdma == '1'):
-        sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/txdma-all.json /captrace.cfg', '[Pp]assword.*')
-        sendCmd(ch, 'docker', '#')
+        if (args.txdma == '1'):
+            sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/txdma-all.json /captrace.cfg', '[Pp]assword.*')
+            sendCmd(ch, 'docker', '#')
 
     if (args.p4ig == '1'):
         sendCmd(ch, 'scp -o StrictHostKeyChecking=no root@169.254.0.2:/tmp/p4ig-all.json /captrace.cfg', '[Pp]assword.*')

@@ -53,6 +53,10 @@ proceed_rrqlkey_process:
      sslt         c2, r3, K_SGE_VA, K_SGE_BYTES
      bcf          [c1|c2], access_violation_len
 
+     seq          c4, d.is_phy_addr, 1  // Branch delay slot
+
+     bcf          [c4], contig_mr
+    
      // my_pt_base_addr = (void *)(hbm_addr_get(PHV_GLOBAL_PT_BASE_ADDR_GET()) +
      //                            (lkey_p->pt_base * sizeof(u64))
      PT_BASE_ADDR_GET2(r4) // Branch Delay Slot
@@ -164,3 +168,25 @@ error_completion:
 
     phvwr.e        CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1
     phvwr          CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1
+
+contig_mr:
+    
+    // get DMA cmd entry based on dma_cmd_index
+    DMA_CMD_I_BASE_GET(r7, r6, REQ_RX_DMA_CMD_START_FLIT_ID, K_DMA_CMD_START_INDEX)
+
+    sub         r2, K_SGE_VA, d.base_va
+    add         r2, r2, d.phy_base_addr
+    
+    DMA_HOST_PKT2MEM_SETUP(r7, K_SGE_BYTES, r2)
+
+    // set cmdeop in the last pkt dma cmd 
+    seq        c1, CAPRI_KEY_FIELD(IN_P, dma_cmd_eop), 1
+    DMA_SET_END_OF_CMDS_C(DMA_CMD_PKT2MEM_T, r7, c1)
+
+    DMA_CMD_STATIC_BASE_GET(r7, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_LSN_OR_REXMIT_PSN)
+    DMA_UNSET_END_OF_CMDS_C(DMA_CMD_PHV2MEM_T, r7, c1)
+
+    seq         c2, K_SGE_INDEX, 0
+    CAPRI_SET_TABLE_0_VALID_CE(c2, 0)
+    CAPRI_SET_TABLE_1_VALID_C(!c2, 0)
+

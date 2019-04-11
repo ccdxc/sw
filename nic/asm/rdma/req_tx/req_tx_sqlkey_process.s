@@ -54,10 +54,12 @@ req_tx_sqlkey_process:
      add          r3, d.len, d.base_va
      sslt         c2, r3, r1, K_SGE_BYTES
      bcf          [c1|c2], access_violation
+     seq          c4, d.is_phy_addr, 1  // Branch delay slot
 
+     bcf          [c4], contig_mr
      // my_pt_base_addr = (void *)(hbm_addr_get(PHV_GLOBAL_PT_BASE_ADDR_GET()) +
      //                            (lkey_p->pt_base * sizeof(u64))
-     PT_BASE_ADDR_GET2(r4) // Branch Delay Slot
+     PT_BASE_ADDR_GET2(r4) // Branch delay slot
      add          r3, r4, d.pt_base, CAPRI_LOG_SIZEOF_U64
 
      // pt_seg_size = HBM_NUM_PT_ENTRIES_PER_CACHE_LINE * lkey_info_p->page_size
@@ -164,3 +166,19 @@ error_completion:
 
     phvwr.e        CAPRI_PHV_FIELD(phv_global_common, _error_disable_qp),  1
     nop
+
+contig_mr:
+    
+    // get DMA cmd entry based on dma_cmd_index
+    DMA_CMD_I_BASE_GET(r3, r6, REQ_TX_DMA_CMD_START_FLIT_ID, K_SGE_DMA_CMD_START_INDEX)
+
+    sub         r2, K_SGE_VA, d.base_va
+    add         r2, r2, d.phy_base_addr
+    // setup mem2pkt cmd to transfer data from host memory to pkt payload
+    // it is assumed to be host_addr all the time
+    DMA_MEM2PKT_SETUP(r3, c0, K_SGE_BYTES, r2)
+
+    seq         c2, K_SGE_INDEX, 0 
+    CAPRI_SET_TABLE_0_VALID_CE(c2, 0)
+    CAPRI_SET_TABLE_1_VALID_C(!c2, 0)
+    

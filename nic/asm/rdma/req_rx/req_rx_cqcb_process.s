@@ -80,7 +80,9 @@ req_rx_cqcb_process:
 
     //if (wakeup_dpath == 1) or ((arm == 0) && (sarm == 0)), do not fire_eqcb
     seq             c4, d.wakeup_dpath, 1
-    seq.!c4         c4, d.{arm...sarm}, 0x0
+    seq         c5, d.is_phy_addr, 1
+    bcf         [c5], phy_cq
+    seq.!c4         c4, d.{arm...sarm}, 0x0 //BD Slot
 
     /* get the page index corresponding to p_index */
     sub             NUM_LOG_WQE, d.log_cq_page_size, d.log_wqe_size
@@ -163,6 +165,24 @@ do_dma:
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
 
     seq         c1, d.host_addr, 1
+    DMA_PHV2MEM_SETUP2(DMA_CMD_BASE, c1, cqe, cqe, CQE_P)
+
+    b           cq_done
+    nop
+
+phy_cq:
+
+    // page_offset = p_index << log_wqe_size
+    add             r6, R_CQ_PROXY_PINDEX, r0
+    sll             PAGE_OFFSET, r6, d.log_wqe_size
+
+    // CQE_P = (cqe_t *)(*page_addr_p + cqcb_to_pt_info_p->page_offset);
+    add             CQE_P, d.{pt_pa}.dx, PAGE_OFFSET
+
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_CQ)
+
+    seq         c1, d.host_addr, 1
+
     DMA_PHV2MEM_SETUP2(DMA_CMD_BASE, c1, cqe, cqe, CQE_P)
     
 cq_done:

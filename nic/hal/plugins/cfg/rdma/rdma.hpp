@@ -154,12 +154,19 @@ typedef struct key_entry_s {
     uint32_t         mr_l_key;
     uint32_t         qp: 24; //qp which bound the MW ?
     uint8_t          flags;
-    uint32_t         rsvd1: 18;
+    uint32_t         rsvd1: 17;
+    uint32_t         is_phy_address:1;
     uint32_t         override_lif: 12;
     uint32_t         override_lif_vld: 1;
     uint32_t         host_addr: 1;
     uint32_t         pd;
-    uint32_t         pt_base;
+    union {
+        struct {
+            uint32_t         pt_base_32;
+            uint32_t         pt_base;
+        };
+        uint64_t     phy_base_addr;
+    };
     uint64_t         base_va;
     uint32_t         len;
     uint8_t          log_page_size;
@@ -287,7 +294,8 @@ typedef struct cqcb_s {
     uint64_t  pt_next_pa;
     uint64_t  pt_pa;
 
-    uint16_t  pad:15;
+    uint16_t  pad:14;
+    uint16_t  is_phy_addr:1;
     uint16_t  host_addr:1;
     uint16_t  pt_next_pg_index;
     uint16_t  pt_pg_index;

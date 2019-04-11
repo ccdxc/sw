@@ -52,9 +52,6 @@ MODULE_LICENSE("Dual BSD/GPL");
 #define ionic_clear_ecn(tos) ((tos) & ~3u)
 
 /* XXX remove this section for release */
-static bool ionic_xxx_pgtbl = true;
-module_param_named(xxx_pgtbl, ionic_xxx_pgtbl, bool, 0644);
-MODULE_PARM_DESC(xxx_pgtbl, "XXX Allocate pgtbl even for contiguous buffers that don't need it.");
 static bool ionic_xxx_pgidx = true;
 module_param_named(xxx_pgidx, ionic_xxx_pgidx, bool, 0444);
 MODULE_PARM_DESC(xxx_pgidx, "XXX Tell device idx in eight byte blocks instead of cache line size blocks.");
@@ -461,6 +458,17 @@ static int ionic_pgtbl_umem(struct ionic_tbl_buf *buf, struct ib_umem *umem)
 
 	buf->page_size_log2 = page_shift;
 
+	/* treat single page as contiguous, no page size or offset */
+	if (buf->tbl_pages == 1) {
+		buf->page_size_log2 = 0;
+		page_dma = ib_umem_offset(umem);
+
+		if (buf->tbl_buf)
+			buf->tbl_buf[buf->tbl_pages] += page_dma;
+		else
+			buf->tbl_dma += page_dma;
+	}
+
 out:
 	return rc;
 }
@@ -488,7 +496,7 @@ static int ionic_pgtbl_init(struct ionic_ibdev *dev, struct ionic_tbl_res *res,
 	buf->page_size_log2 = 0;
 
 	/* skip pgtbl if contiguous / direct translation */
-	if (ionic_xxx_pgtbl || limit > 1) {
+	if (limit > 1) {
 		/* A reservation will be made for page table resources.
 		 *
 		 * The page table reservation must be large enough to account
@@ -551,10 +559,7 @@ static int ionic_pgtbl_init(struct ionic_ibdev *dev, struct ionic_tbl_res *res,
 		if (rc)
 			goto err_umem;
 
-		/* XXX want to use page_size=zero for phys-contiguous,
-		 * until hal supports it, only up to 8MB contiguous */
-		if (ionic_xxx_pgtbl)
-			buf->page_size_log2 = 23;
+		buf->page_size_log2 = 0;
 	}
 
 	return 0;
@@ -2425,6 +2430,7 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibmr->device);
 	struct ionic_mr *mr = to_ionic_mr(ibmr);
+	unsigned int page_off = 0;
 	int rc;
 
 	/* mr must be allocated using ib_alloc_mr() */
@@ -2437,8 +2443,23 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 		dma_sync_single_for_cpu(dev->hwdev, mr->buf.tbl_dma,
 					mr->buf.tbl_size, DMA_TO_DEVICE);
 
-	dev_dbg(&dev->ibdev.dev, "sg %p nent %d\n", sg, sg_nents);
+    if (sg_offset)
+        page_off = *sg_offset;
+
+    dev_dbg(&dev->ibdev.dev, "sg %p nent %d\n", sg, sg_nents);
 	rc = ib_sg_to_pages(ibmr, sg, sg_nents, sg_offset, ionic_map_mr_page);
+
+	mr->buf.page_size_log2 = order_base_2(ibmr->page_size);
+
+	/* treat single page as contiguous, no page size or offset */
+	if (mr->buf.tbl_pages == 1) {
+		mr->buf.page_size_log2 = 0;
+
+		if (mr->buf.tbl_buf)
+			mr->buf.tbl_buf[mr->buf.tbl_pages] += page_off;
+		else
+			mr->buf.tbl_dma += page_off;
+	}
 
 	if (mr->buf.tbl_buf)
 		dma_sync_single_for_device(dev->hwdev, mr->buf.tbl_dma,
@@ -6204,7 +6225,7 @@ static struct ionic_cq *ionic_create_rdma_admincq(struct ionic_ibdev *dev,
 		goto err_cmd;
 
 	cq->ibcq.device = &dev->ibdev;
-	cq->ibcq.uobject = NULL;
+	cq->ibcq.uobject = NULL;                   
 	cq->ibcq.comp_handler = ionic_rdma_admincq_comp;
 	cq->ibcq.event_handler = ionic_rdma_admincq_event;
 	cq->ibcq.cq_context = NULL;

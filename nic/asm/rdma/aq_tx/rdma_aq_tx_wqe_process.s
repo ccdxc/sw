@@ -141,7 +141,7 @@ skip_mw:
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MR_KT_UPDATE)
     DMA_PHV2MEM_SETUP(r6, c2, key, key, r4)
 
-    add         r6, r0, d.{mr.map_count}.wx, CAPRI_LOG_SIZEOF_U64
+    add         r6, r0, d.{mr.map_count}.wx 
     beq         r6, r0, alloc_lkey
     phvwrpair   p.key.mr_l_key, 0, p.key.mr_cookie, 0   // BD slot
 
@@ -157,21 +157,22 @@ create_mr:
     sub         r4, r4, 1
     // pt_seg_offset = lkey->base_va % pt_seg_size
     and         r4, d.{mr.va}.dx, r4
-    //start_page_id = pt_seg_offset >> lkey->hostmem_page_size
-    srl         r4, r4, d.mr.page_size_log2
 
+    // r6 holds the map_count
+    beqi        r6, 1, mr_skip_dma_pt
+    //start_page_id = pt_seg_offset >> lkey->hostmem_page_size
+    srl         r4, r4, d.mr.page_size_log2    //BD slot
+    
     // hbm_add = (start_page_id + lkey->pt_base) * 8 + (pt_base_addr)
     PT_BASE_ADDR_GET2(r2)
     add         r4, r4, d.{mr.tbl_index}.wx
     add         r4, r4, K_MAP_COUNT_COMPLETED
-    
-    // r6 holds the map_count
-    beqi        r6, 1<<CAPRI_LOG_SIZEOF_U64, mr_skip_dma_pt
-    add         r5, r2, r4, CAPRI_LOG_SIZEOF_U64    // BD Slot
 
+    add         r5, r2, r4, CAPRI_LOG_SIZEOF_U64    
     add         r2, d.{mr.dma_addr}.dx, K_MAP_COUNT_COMPLETED, CAPRI_LOG_SIZEOF_U64
 
-    sub         r6, r6, K_MAP_COUNT_COMPLETED, CAPRI_LOG_SIZEOF_U64
+    sub         r6, r6, K_MAP_COUNT_COMPLETED
+    add         r6, r0, r6, CAPRI_LOG_SIZEOF_U64
     sle         c2, r6, DMA_DATA_SIZE
     add.!c2     r6, r0, DMA_DATA_SIZE
     
@@ -191,8 +192,12 @@ mr_skip_dma_pt:
 
     //copy      the phy address of a single page directly.
     //TODO: how     do we ensure this memwr is completed by the time we generate CQ for admin cmd.
+
+    add         r2, r0, d.{mr.dma_addr}.dx
+    or          r2, r2, 1, 63
+    or          r2, r2, K_GLOBAL_LIF, 52
     b           mr_no_skip_dma_pt
-    memwr.d    r5, d.mr.dma_addr // BD slot
+    phvwrpair   p.key.phy_base_addr, r2, p.key.is_phy_addr, 1
 
 alloc_lkey:
     # num_pt_entries_rsvd (max) = kt_base_page_id - pt_base
@@ -242,30 +247,30 @@ create_cq:
     AQ_TX_CQCB_ADDR_GET(r1, r2[23:0], K_CQCB_BASE_ADDR_HI)
 
     DMA_PHV2MEM_SETUP(r6, c1, cqcb, cqcb, r1)
+
+    phvwrpair   p.cqcb.log_wqe_size, d.cq.stride_log2[4:0], p.cqcb.log_num_wqes, d.cq.depth_log2[4:0]
+    add         r2, r0, d.{cq.eq_id}.wx  //TODO: Need to optimize
+    phvwr       p.cqcb.eq_id, r2[23:0]
+
     
-    // r3 will have the pt_base_address where pt translations
+    add         r2, r0, d.{cq.map_count}.wx
+    beqi        r2, 1, cq_skip_dma_pt
+    phvwr       p.cqcb.host_addr, 1
+    
+    //          r3 will have the pt_base_address where pt translations
     // should be copied to
     PT_BASE_ADDR_GET2(r4) 
     add         r3, r4, d.{cq.tbl_index}.wx, CAPRI_LOG_SIZEOF_U64
     srl         r5, r3, CAPRI_LOG_SIZEOF_U64
     phvwrpair   p.cqcb.pt_base_addr, r5, p.cqcb.log_cq_page_size, d.cq.page_size_log2[4:0]
-    phvwrpair   p.cqcb.log_wqe_size, d.cq.stride_log2[4:0], p.cqcb.log_num_wqes, d.cq.depth_log2[4:0]
-    add         r2, r0, d.{cq.eq_id}.wx  //TODO: Need to optimize
-    phvwr       p.cqcb.eq_id, r2[23:0]
-
-//TODO:  host_addr should come from driver
-    phvwr       p.cqcb.host_addr, 1
     
-    add         r4, r0, d.{cq.map_count}.wx, CAPRI_LOG_SIZEOF_U64
-    beqi        r4, 1<<CAPRI_LOG_SIZEOF_U64, cq_skip_dma_pt
-    nop
-    
+    add         r2, r0, r2, CAPRI_LOG_SIZEOF_U64
     //Setup DMA to copy PT translations from host to HBM
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQ_PT_SRC)    
 
-    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r4, d.{cq.dma_addr}.dx)
+    DMA_HOST_MEM2MEM_SRC_SETUP(r6, r2, d.{cq.dma_addr}.dx)
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CREATE_CQ_PT_DST)        
-    DMA_HBM_MEM2MEM_DST_SETUP(r6, r4, r3)
+    DMA_HBM_MEM2MEM_DST_SETUP(r6, r2, r3)
 
     //TODO: There   is a race condition here. DMA of CQCB and DMA of cqcb->pt_pa
     //Setup     DMA for first two translations in cqcb for optimized lookup
@@ -286,9 +291,7 @@ cq_skip_dma_pt:
 
     //copy      the phy address of a single page directly.
     //TODO: how     do we ensure this memwr is completed by the time we generate CQ for admin cmd.
-    memwr.d    r3, d.cq.dma_addr //BD slot
-    phvwr       p.cqcb.pt_pa, d.cq.dma_addr
-    phvwrpair   p.cqcb.pt_pg_index, 0, p.cqcb.pt_next_pg_index, 0x1ff
+    phvwrpair       p.cqcb.is_phy_addr, 1, p.cqcb.pt_pa, d.cq.dma_addr
     
 cq_no_skip_dma_pt: 
 

@@ -18,18 +18,19 @@ class RdmaKeyTableEntry(Packet):
         ByteField("log_page_size", 0),
         LongField("len", 0),
         LongField("base_va", 0),
-        IntField("pt_base", 0),
+        LongField("pt_base", 0),
         IntField("pd", 0),
         BitField("host_addr", 0, 1),
         BitField("override_lif_vld", 0, 1),
         BitField("override_lif", 0, 12),
-        BitField("rsvd1", 0, 18),
+        BitField("is_phy_addr", 0, 1),
+        BitField("rsvd1", 0, 17),
         XByteField("flags", 0),
         X3BytesField("qp", 0),
         IntField("mr_l_key", 0),
         IntField("mr_cookie", 0),
         IntField("num_pt_entries_rsvd", 0),
-        BitField("rsvd2", 0, 128)
+        BitField("rsvd2", 0, 96)
     ]
 
 class RdmaKeyTableEntryObject(object):

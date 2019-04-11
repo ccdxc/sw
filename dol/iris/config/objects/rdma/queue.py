@@ -648,7 +648,8 @@ class RdmaCQstate(Packet):
         ShortField("pt_pg_index", 0),
         ShortField("pt_next_pg_index", 0),
         BitField("host_addr", 0, 1),
-        BitField("pad", 0, 15),
+        BitField("is_phy_addr", 0, 1),        
+        BitField("pad", 0, 14),
 
         XLongField("pt_pa", 0),
         XLongField("pt_next_pa", 0),
