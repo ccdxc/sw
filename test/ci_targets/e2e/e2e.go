@@ -13,8 +13,8 @@ var clusterLogs = []string{
 }
 
 func main() {
-	// pass the make target, as in "make e2e"
-	err := infra.RunSingle("e2e")
+	// pass the make target, as in "make e2e-ci"
+	err := infra.RunSingle("e2e-ci")
 	if err != nil {
 		// copy logs
 		err = infra.CopyLogs(clusterLogs, ".")
