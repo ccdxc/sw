@@ -1336,6 +1336,13 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
 	if(ret != HAL_RET_OK) {
 	   rxq->qinst_info[0]->ctr.rx_descr_to_hdr_err++;
 	   HAL_TRACE_ERR2("Failed to convert descr to headers");
+	   if (cpu_rx_descrs[npkt] && is_cpu_zero_copy_enabled()) {
+	       ret = pd_cpupkt_free_rx_descr(rxq_descr_addrs[npkt]);
+	       if (ret != HAL_RET_OK) {
+		   rxq->qinst_info[0]->ctr.tx_descr_free_err++;
+		   HAL_TRACE_ERR2("Failed to free rx descr: {}", ret);
+	       }
+	   }
 	} else {
 
 	   (*app_pkt_count)++;

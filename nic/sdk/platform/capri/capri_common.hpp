@@ -382,7 +382,6 @@ namespace capri {
 
 #define CAPRI_HBM_CPU_TX_DR_RING_SIZE          128
 #define CAPRI_HBM_CPU_TX_PR_RING_SIZE          128
-#define CAPRI_HBM_CPU_RX_DPR_RING_SIZE         1024
 
 // TLS Semaphores
 #define CAPRI_SEM_TLS_RNMDR_IDX_INC_ADDR    \

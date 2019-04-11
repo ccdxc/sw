@@ -157,7 +157,7 @@ wring_pd_meta_init() {
 
     g_meta[types::WRING_TYPE_CPU_RX_DPR] =
         (pd_wring_meta_t) {true, CAPRI_HBM_REG_CPU_RX_DPR,
-                           CAPRI_HBM_CPU_RX_DPR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
+                           CAPRI_CPU_RX_DPR_RING_SIZE, DEFAULT_WRING_SLOT_SIZE,
                            CAPRI_HBM_REG_CPU_RX_DESC_PAGE, CAPRI_CPU_RX_DPR_OBJ_TOTAL_SIZE,
 			   CAPRI_SEM_CPU_RX_DPR_ALLOC_RAW_ADDR, NULL, NULL, false, 0, 0, 1};
 
