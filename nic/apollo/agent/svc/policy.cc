@@ -93,6 +93,9 @@ SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
                 }
             }
         }
+    } else  {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
     }
     return Status::OK;
 }

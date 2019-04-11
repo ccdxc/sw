@@ -25,21 +25,23 @@ using std::string;
 
 extern std::string  g_svc_endpoint_;
 
-std::unique_ptr<pds::RouteSvc::Stub>     g_route_table_stub_;
-std::unique_ptr<pds::MappingSvc::Stub>   g_mapping_stub_;
-std::unique_ptr<pds::VnicSvc::Stub>      g_vnic_stub_;
-std::unique_ptr<pds::SubnetSvc::Stub>    g_subnet_stub_;
-std::unique_ptr<pds::VPCSvc::Stub>       g_vpc_stub_;
-std::unique_ptr<pds::TunnelSvc::Stub>    g_tunnel_stub_;
-std::unique_ptr<pds::DeviceSvc::Stub>    g_device_stub_;
-std::unique_ptr<pds::BatchSvc::Stub>     g_batch_stub_;
+std::unique_ptr<pds::RouteSvc::Stub>             g_route_table_stub_;
+std::unique_ptr<pds::MappingSvc::Stub>           g_mapping_stub_;
+std::unique_ptr<pds::VnicSvc::Stub>              g_vnic_stub_;
+std::unique_ptr<pds::SubnetSvc::Stub>            g_subnet_stub_;
+std::unique_ptr<pds::VPCSvc::Stub>               g_vpc_stub_;
+std::unique_ptr<pds::TunnelSvc::Stub>            g_tunnel_stub_;
+std::unique_ptr<pds::DeviceSvc::Stub>            g_device_stub_;
+std::unique_ptr<pds::BatchSvc::Stub>             g_batch_stub_;
+std::unique_ptr<pds::SecurityPolicySvc::Stub>    g_policy_stub_;
 
-RouteTableRequest   g_route_table_req;
-MappingRequest      g_mapping_req;
-VnicRequest         g_vnic_req;
-SubnetRequest       g_subnet_req;
-VPCRequest          g_vpc_req;
-TunnelRequest       g_tunnel_req;
+RouteTableRequest        g_route_table_req;
+SecurityPolicyRequest    g_policy_req;
+MappingRequest           g_mapping_req;
+VnicRequest              g_vnic_req;
+SubnetRequest            g_subnet_req;
+VPCRequest               g_vpc_req;
+TunnelRequest            g_tunnel_req;
 
 #define APP_GRPC_BATCH_COUNT    5000
 
@@ -54,7 +56,7 @@ create_route_table_grpc (pds_route_table_spec_t *rt)
     if ((g_route_table_req.request_size() >= APP_GRPC_BATCH_COUNT) || !rt) {
         ret_status = g_route_table_stub_->RouteTableCreate(&context, g_route_table_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-            printf("%s: failed!\n", __FUNCTION__);
+            printf("%s failed!\n", __FUNCTION__);
             return SDK_RET_ERR;
         }
         g_route_table_req.clear_request();
@@ -63,6 +65,27 @@ create_route_table_grpc (pds_route_table_spec_t *rt)
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+create_policy_grpc (pds_policy_spec_t *policy)
+{
+    ClientContext             context;
+    SecurityPolicyResponse    response;
+    Status                    ret_status;
+
+    populate_policy_request(&g_policy_req, policy);
+    if ((g_policy_req.request_size() >= APP_GRPC_BATCH_COUNT) || !policy) {
+        ret_status = g_policy_stub_->SecurityPolicyCreate(&context,
+                                                          g_policy_req,
+                                                          &response);
+        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_policy_req.clear_request();
+    }
+
+    return SDK_RET_OK;
+}
 sdk_ret_t
 create_local_mapping_grpc (pds_local_mapping_spec_t *local_spec)
 {
@@ -74,7 +97,7 @@ create_local_mapping_grpc (pds_local_mapping_spec_t *local_spec)
     if ((g_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !local_spec) {
         ret_status = g_mapping_stub_->MappingCreate(&context, g_mapping_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-            printf("%s: failed!\n", __FUNCTION__);
+            printf("%s failed!\n", __FUNCTION__);
             return SDK_RET_ERR;
         }
         g_mapping_req.clear_request();
@@ -94,7 +117,7 @@ create_remote_mapping_grpc (pds_remote_mapping_spec_t *remote_spec)
     if ((g_mapping_req.request_size() >= APP_GRPC_BATCH_COUNT) || !remote_spec) {
         ret_status = g_mapping_stub_->MappingCreate(&context, g_mapping_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-            printf("%s: failed!\n", __FUNCTION__);
+            printf("%s failed!\n", __FUNCTION__);
             return SDK_RET_ERR;
         }
         g_mapping_req.clear_request();
@@ -114,7 +137,7 @@ create_vnic_grpc (pds_vnic_spec_t *vnic)
     if ((g_vnic_req.request_size() >= APP_GRPC_BATCH_COUNT) || !vnic) {
         ret_status = g_vnic_stub_->VnicCreate(&context, g_vnic_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-            printf("%s: failed!\n", __FUNCTION__);
+            printf("%s failed!\n", __FUNCTION__);
             return SDK_RET_ERR;
         }
         g_vnic_req.clear_request();
@@ -134,7 +157,7 @@ create_subnet_grpc (pds_subnet_spec_t *subnet)
     if ((g_subnet_req.request_size() >= APP_GRPC_BATCH_COUNT) || !subnet) {
         ret_status = g_subnet_stub_->SubnetCreate(&context, g_subnet_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-            printf("%s: failed!\n", __FUNCTION__);
+            printf("%s failed!\n", __FUNCTION__);
             return SDK_RET_ERR;
         }
         g_subnet_req.clear_request();
@@ -154,7 +177,7 @@ create_vcn_grpc (pds_vcn_spec_t *vcn)
     if ((g_vpc_req.request_size() >= APP_GRPC_BATCH_COUNT) || !vcn) {
         ret_status = g_vpc_stub_->VPCCreate(&context, g_vpc_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-            printf("%s: failed!\n", __FUNCTION__);
+            printf("%s failed!\n", __FUNCTION__);
             return SDK_RET_ERR;
         }
         g_vpc_req.clear_request();
@@ -174,7 +197,7 @@ create_tunnel_grpc (uint32_t id, pds_tep_spec_t *tep)
     if ((g_tunnel_req.request_size() >= APP_GRPC_BATCH_COUNT) || !tep) {
         ret_status = g_tunnel_stub_->TunnelCreate(&context, g_tunnel_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-            printf("%s: failed!\n", __FUNCTION__);
+            printf("%s failed!\n", __FUNCTION__);
             return SDK_RET_ERR;
         }
         g_tunnel_req.clear_request();
@@ -194,7 +217,7 @@ create_device_grpc (pds_device_spec_t *device)
     populate_device_request(&request, device);
     ret_status = g_device_stub_->DeviceCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s: failed!\n", __FUNCTION__);
+        printf("%s failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
 
@@ -219,7 +242,7 @@ batch_start_grpc (void)
     /* Batch start */
     ret_status = g_batch_stub_->BatchStart(&start_context, spec, &status);
     if (!ret_status.ok()) {
-        printf("%s: failed!\n", __FUNCTION__);
+        printf("%s failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
 
@@ -265,7 +288,7 @@ test_app_push_configs (void)
     /* Batch start */
     ret_status = g_batch_stub_->BatchStart(&start_context, spec, &status);
     if (!ret_status.ok()) {
-        printf("%s: failed!\n", __FUNCTION__);
+        printf("%s failed!\n", __FUNCTION__);
         return SDK_RET_ERR;
     }
 #endif
@@ -283,6 +306,7 @@ test_app_init (void)
     std::shared_ptr<Channel> channel = grpc::CreateChannel(g_svc_endpoint_,
                                grpc::InsecureChannelCredentials());
     g_route_table_stub_ = pds::RouteSvc::NewStub(channel);
+    g_policy_stub_ = pds::SecurityPolicySvc::NewStub(channel);
     g_mapping_stub_ = pds::MappingSvc::NewStub(channel);
     g_vnic_stub_ = pds::VnicSvc::NewStub(channel);
     g_subnet_stub_ = pds::SubnetSvc::NewStub(channel);

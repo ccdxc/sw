@@ -3,9 +3,9 @@
     "objects" : [
         {
             "kind" : "device",
-            "ip-addr" : "1.0.0.1",
+            "gw-ip-addr": "1.0.0.1",
+            "ip-addr" : "1.0.0.2",
             "mac-addr" : "0x000201000001",
-            "gw-ip-addr": "1.0.0.2",
             "dual-stack": "true",
             "_comment_" : "encap is either vxlan or mplsoudp",
             "encap": "vxlan"
@@ -54,8 +54,10 @@
             "num_tcp": "0",
             "num_udp": "32768",
             "num_icmp": "0",
-            "sport_base": "0",
-            "dport_base": "0"
+            "sport_lo": "100",
+            "sport_hi": "100",
+            "dport_lo": "1024",
+            "dport_hi": "1055"
         }
     ]
 }

@@ -12,6 +12,7 @@
 #include "nic/apollo/agent/svc/subnet.hpp"
 #include "nic/apollo/agent/svc/tunnel.hpp"
 #include "nic/apollo/agent/svc/route.hpp"
+#include "nic/apollo/agent/svc/policy.hpp"
 #include "nic/apollo/agent/svc/vnic.hpp"
 #include "nic/apollo/agent/svc/mapping.hpp"
 #include "nic/apollo/agent/svc/port.hpp"
@@ -32,17 +33,18 @@ std::string g_grpc_server_addr;
 static void
 svc_reg (void)
 {
-    ServerBuilder     *server_builder;
-    BatchSvcImpl      batch_svc;
-    DeviceSvcImpl     device_svc;
-    VPCSvcImpl        vpc_svc;
-    SubnetSvcImpl     subnet_svc;
-    TunnelSvcImpl     tunnel_svc;
-    RouteSvcImpl      route_svc;
-    VnicSvcImpl       vnic_svc;
-    MappingSvcImpl    mapping_svc;
-    DebugSvcImpl      debug_svc;
-    PortSvcImpl       port_svc;
+    ServerBuilder            *server_builder;
+    BatchSvcImpl             batch_svc;
+    DeviceSvcImpl            device_svc;
+    VPCSvcImpl               vpc_svc;
+    SubnetSvcImpl            subnet_svc;
+    TunnelSvcImpl            tunnel_svc;
+    RouteSvcImpl             route_svc;
+    SecurityPolicySvcImpl    policy_svc;
+    VnicSvcImpl              vnic_svc;
+    MappingSvcImpl           mapping_svc;
+    DebugSvcImpl             debug_svc;
+    PortSvcImpl              port_svc;
 
     // do gRPC initialization
     grpc_init();
@@ -61,6 +63,7 @@ svc_reg (void)
     server_builder->RegisterService(&subnet_svc);
     server_builder->RegisterService(&tunnel_svc);
     server_builder->RegisterService(&route_svc);
+    server_builder->RegisterService(&policy_svc);
     server_builder->RegisterService(&vnic_svc);
     server_builder->RegisterService(&mapping_svc);
     server_builder->RegisterService(&port_svc);

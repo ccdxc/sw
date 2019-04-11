@@ -121,7 +121,6 @@ struct pds_policy_spec_s {
         rules =
             (rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
                                  num_rules * sizeof(rule_t));
-        printf("%s:%d rules:%p %p\n", __func__, __LINE__, rules, policy.rules);
         memcpy(rules, policy.rules, num_rules * sizeof(rule_t));
         return *this;
     }

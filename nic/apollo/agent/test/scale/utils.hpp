@@ -11,6 +11,7 @@
 #include "gen/proto/mapping.grpc.pb.h"
 #include "gen/proto/vpc.grpc.pb.h"
 #include "gen/proto/route.grpc.pb.h"
+#include "gen/proto/policy.grpc.pb.h"
 #include "gen/proto/subnet.grpc.pb.h"
 #include "gen/proto/device.grpc.pb.h"
 #include "gen/proto/tunnel.grpc.pb.h"
@@ -63,6 +64,11 @@ using pds::VnicRequest;
 using pds::VnicSpec;
 using pds::VnicResponse;
 using pds::Vnic;
+using pds::SecurityPolicyRequest;
+using pds::SecurityPolicySpec;
+using pds::SecurityPolicyResponse;
+using pds::SecurityPolicy;
+using pds::SecurityRule;
 
 //----------------------------------------------------------------------------
 // convert HAL IP address to spec
@@ -169,6 +175,46 @@ populate_route_table_request (RouteTableRequest *req,
         } else if (rt->routes[i].nh_type == PDS_NH_TYPE_TEP) {
             ip_addr_to_spec(route->mutable_nexthop(), &rt->routes[i].nh_ip);
         }
+    }
+
+    return;
+}
+
+static void
+populate_policy_request (SecurityPolicyRequest *req, pds_policy_spec_t *policy)
+{
+    if (!policy || !req) {
+        return;
+    }
+
+    SecurityPolicySpec *spec = req->add_request();
+    spec->set_id(policy->key.id);
+    if (policy->af == IP_AF_IPV4) {
+        spec->set_addrfamily(types::IP_AF_INET);
+    } else if (policy->af == IP_AF_IPV6) {
+        spec->set_addrfamily(types::IP_AF_INET6);
+    }
+    if (policy->direction == RULE_DIR_INGRESS) {
+        spec->set_direction(types::RULE_DIR_INGRESS);
+    } else if (policy->direction == RULE_DIR_EGRESS) {
+        spec->set_direction(types::RULE_DIR_EGRESS);
+    }
+
+    for (uint32_t i = 0; i < policy->num_rules; i++) {
+        SecurityRule *rule = spec->add_rules();
+        if (policy->rules[i].stateful) {
+            rule->set_stateful(true);
+        }
+        if (policy->rules[i].match.l3_match.ip_proto) {
+            rule->mutable_match()->mutable_l3match()->set_protocol(policy->rules[i].match.l3_match.ip_proto);
+        }
+        ip_pfx_to_spec(
+            rule->mutable_match()->mutable_l3match()->mutable_prefix(),
+            &policy->rules[i].match.l3_match.ip_pfx);
+        rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_srcportrange()->set_portlow(policy->rules[i].match.l4_match.sport_range.port_lo);
+        rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_srcportrange()->set_porthigh(policy->rules[i].match.l4_match.sport_range.port_hi);
+        rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_portlow(policy->rules[i].match.l4_match.dport_range.port_lo);
+        rule->mutable_match()->mutable_l4match()->mutable_ports()->mutable_dstportrange()->set_porthigh(policy->rules[i].match.l4_match.dport_range.port_hi);
     }
 
     return;

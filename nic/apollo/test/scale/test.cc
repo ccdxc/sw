@@ -656,7 +656,6 @@ sdk_ret_t
 create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                         uint32_t num_rules, uint32_t ip_af, bool ingress)
 {
-#ifndef TEST_GRPC_APP
     sdk_ret_t            rv;
     pds_policy_spec_t    policy;
     uint32_t             policy_id = 1;
@@ -691,15 +690,28 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                 rule->match.l4_match.dport_range.port_hi = 20000;
                 rule->action_data.fw_action.action = SECURITY_RULE_ACTION_ALLOW;
             }
+#ifdef TEST_GRPC_APP
+            rv = create_policy_grpc(&policy);
+            if (rv != SDK_RET_OK) {
+                printf("Failed to create security policy, vpc %u, subnet %u, "
+                       "err %u\n", i, j, rv);
+                return rv;
+            }
+            // push leftover objects
+            rv = create_policy_grpc(NULL);
+            if (rv != SDK_RET_OK) {
+                return rv;
+            }
+#else
             rv = pds_policy_create(&policy);
             if (rv != SDK_RET_OK) {
                 printf("Failed to create security policy, vpc %u, subnet %u, "
                        "err %u\n", i, j, rv);
                 return rv;
             }
+#endif
         }
     }
-#endif
     return SDK_RET_OK;
 }
 
