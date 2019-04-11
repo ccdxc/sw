@@ -1807,6 +1807,9 @@ pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif,
     mask.p4plus_to_p4_insert_vlan_tag_mask  = 0;
     memset(mask.ethernet_srcAddr_mask, ~0, sizeof(mask.ethernet_srcAddr_mask));
 
+    key.control_metadata_uplink = 0;
+    mask.control_metadata_uplink_mask = ~(mask.control_metadata_uplink_mask & 0);
+
     // form data
     pd_enicif_inp_prop_form_data(pd_enicif, lif, ENICIF_UPD_FLAGS_NONE, NULL, args, lif_args,
                                  data, true);
