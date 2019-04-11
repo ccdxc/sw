@@ -670,7 +670,8 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
     policy.af = ip_af;
     policy.direction = ingress ? RULE_DIR_INGRESS : RULE_DIR_EGRESS;
     policy.num_rules = num_rules;
-    policy.rules = (rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_POLICY_RULES, num_rules * sizeof(rule_t));
+    policy.rules = (rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_POLICY_RULES,
+                                        num_rules * sizeof(rule_t));
     for (uint32_t i = 1; i <= num_vpcs; i++) {
         for (uint32_t j = 1; j <= num_subnets; j++) {
             memset(policy.rules, 0, num_rules * sizeof(rule_t));

@@ -96,7 +96,7 @@ static inline sdk_ret_t
 ipv4pfx_api_spec_to_proto_spec (types::IPPrefix *out_ippfx,
                                 const ipv4_prefix_t *in_ippfx)
 {
-    auto out_addr = out_ippfx->mutable_addr(); 
+    auto out_addr = out_ippfx->mutable_addr();
     out_ippfx->set_len(in_ippfx->len);
     out_addr->set_af(types::IP_AF_INET);
     out_addr->set_v4addr(in_ippfx->v4_addr);
@@ -198,14 +198,14 @@ sdk_ret_to_api_status (sdk_ret_t ret)
 }
 
 static inline void
-pds_af_proto_spec_to_api_spec (const types::IPAF &addrfamily, uint8_t *af)
+pds_af_proto_spec_to_api_spec (uint8_t *af, const types::IPAF &addrfamily)
 {
-    if (addrfamily == types::IP_AF_INET)
+    if (addrfamily == types::IP_AF_INET) {
         *af = IP_AF_IPV4;
-    else if (addrfamily == types::IP_AF_INET6)
+    } else if (addrfamily == types::IP_AF_INET6) {
         *af = IP_AF_IPV6;
-    else
-        PDS_TRACE_ERR("IP_AF_NONE passed in proto");
+    }
+    PDS_TRACE_ERR("IP_AF_NONE passed in proto");
 }
 
 #endif    // __AGENT_SVC_UTIL_HPP__

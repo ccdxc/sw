@@ -172,7 +172,7 @@ slab::alloc_block_(void)
     slab_emeta_t    *emeta;
     uint8_t         *ptr;
 
-#ifdef SDK_DEBUG
+#if SDK_DEBUG
     SDK_TRACE_DEBUG("Allocating block from slab %s, id %u", name_, slab_id_);
 #endif
 
@@ -328,7 +328,7 @@ slab::free_(void *elem)
                 SDK_FREE(SDK_MEM_ALLOC_LIB_SLAB, block);
             }
             this->num_blocks_--;
-#ifdef SDK_DEBUG
+#if SDK_DEBUG
             SDK_TRACE_DEBUG("Free block to slab %s, id %u", name_, slab_id_);
 #endif
         }

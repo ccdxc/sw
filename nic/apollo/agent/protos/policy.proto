@@ -64,7 +64,7 @@ message SecurityPolicyRequest {
 
 // security policy create and update response
 message SecurityPolicyResponse {
-  types.ApiStatus               ApiStatus = 1;
+  types.ApiStatus ApiStatus = 1;
   repeated SecurityPolicyStatus Response  = 2;
 }
 

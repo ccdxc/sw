@@ -26,8 +26,8 @@
 
 /// \brief    rule direction
 typedef enum rule_dir_e {
-    RULE_DIR_INGRESS =  0,    ///< Ingress direction
-    RULE_DIR_EGRESS  =  1,    ///< Egress direction
+    RULE_DIR_INGRESS = 0,    ///< Ingress direction
+    RULE_DIR_EGRESS  = 1,    ///< Egress direction
 } rule_dir_t;
 
 /// \brief    policy key
@@ -102,7 +102,6 @@ struct pds_policy_spec_s {
     pds_policy_spec_s() { rules = NULL; }
     ~pds_policy_spec_s() {
         if (rules) {
-            printf("%s:%d free\n", __func__, __LINE__);
             SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, rules);
         }
     }
