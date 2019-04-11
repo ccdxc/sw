@@ -115,6 +115,7 @@ update_src_if(fte::ctx_t&ctx)
                     ctx.cpu_rxhdr()->src_lif != args.hw_lif_id) {
         HAL_TRACE_DEBUG("Dropping for srclif mismatch.. {} {}", args.hw_lif_id, ctx.cpu_rxhdr()->src_lif);
         ctx.set_drop();
+        return HAL_RET_FTE_SRC_LIF_MISMATCH;
     }
 
     // set the expected sif for both iflow & rflow

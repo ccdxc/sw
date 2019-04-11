@@ -20,7 +20,7 @@ struct cpu_tx_write_pkt_d d;
 #define r_len               r2
 #define r_temp              r3
 
-#define ASCQ_FREE_REQ_OFFSET 52 
+#define ASCQ_FREE_REQ_OFFSET 56 
         
 %%
     .align
