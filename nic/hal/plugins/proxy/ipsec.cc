@@ -514,7 +514,7 @@ ipsec_exec_pkt(fte::ctx_t&ctx)
         } // Encrypted ESP packet from Uplink 
         // Decrypted packeted from Barco
         if ((ctx.get_key().proto != IP_PROTO_IPSEC_ESP) &&
-            ((ctx.cpu_rxhdr()->flags & CPU_FLAGS_FROM_IPSEC_APP) == CPU_FLAGS_FROM_IPSEC_APP) &&
+            (ctx.cpu_rxhdr()->src_app_id ==  P4PLUS_APPTYPE_IPSEC) &&
             (ctx.cpu_rxhdr()->src_lif == IPSEC_ARM_LIF)) {
             return ipsec_process_post_decrypt_flow(ctx);
         } // Post Encrypted ESP packet from Barco

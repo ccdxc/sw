@@ -118,7 +118,7 @@ header_type control_metadata_t {
         rdma_ud                        : 1;
         i2e_pad0                       : 16;
         i2e_pad1                       : 16;
-        i2e_pad2                       : 8;
+        src_app_id                     : 8;
         record_route_dst_ip            : 32;
         record_route_inner_dst_ip      : 32;
     }

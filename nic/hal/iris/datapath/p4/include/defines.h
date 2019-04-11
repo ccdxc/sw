@@ -55,8 +55,6 @@
                                                   * 001Xb (X denotes don't care
                                                   */
 #define FLOW_KEY_LOOKUP_TYPE_IPV6              3
-#define FLOW_KEY_LOOKUP_TYPE_FROM_VM_BOUNCE    4
-#define FLOW_KEY_LOOKUP_TYPE_TO_VM_BOUNCE      5
 #define FLOW_KEY_LOOKUP_TYPE_IP_MASK           0x02
 
 /*****************************************************************************/
@@ -344,4 +342,3 @@
 #define P4_I2E_FLAGS_TUNNEL_ORIGINATE   2
 #define P4_I2E_FLAGS_UPLINK             3
 #define P4_I2E_FLAGS_NIC_MODE           4
-#define P4_I2E_FLAGS_FROM_IPSEC_APP     5

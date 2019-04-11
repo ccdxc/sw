@@ -18,15 +18,15 @@ typedef struct p4_to_p4plus_cpu_pkt_s {
     uint16_t  lkp_vrf;
 
 #if __BYTE_ORDER == __BIG_ENDIAN
-    uint8_t   pad      : 2;
-    uint8_t   lkp_dir  : 1;
-    uint8_t   lkp_inst : 1;
-    uint8_t   lkp_type : 4;
+    uint8_t   src_app_id : 4;
+    uint8_t   lkp_dir    : 1;
+    uint8_t   lkp_inst   : 1;
+    uint8_t   lkp_type   : 2;
 #elif __BYTE_ORDER == __LITTLE_ENDIAN
-    uint8_t   lkp_type : 4;
-    uint8_t   lkp_inst : 1;
-    uint8_t   lkp_dir  : 1;
-    uint8_t   pad      : 2;
+    uint8_t   lkp_type   : 2;
+    uint8_t   lkp_inst   : 1;
+    uint8_t   lkp_dir    : 1;
+    uint8_t   src_app_id : 4;
 #else
 #error "architecture unknown"
 #endif

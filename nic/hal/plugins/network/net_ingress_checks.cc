@@ -84,7 +84,7 @@ update_src_if(fte::ctx_t&ctx)
     }
 
     if (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
-        ((ctx.cpu_rxhdr()->flags & CPU_FLAGS_FROM_IPSEC_APP) == CPU_FLAGS_FROM_IPSEC_APP)) {
+        (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_IPSEC)) {
         HAL_TRACE_DEBUG("Pkt from IPSec app, do not enforce ingress-checks");
         return HAL_RET_OK;
     }

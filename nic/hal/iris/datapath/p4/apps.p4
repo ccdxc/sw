@@ -409,11 +409,7 @@ action f_p4plus_cpu_pkt(offset) {
         add_to_field(scratch_metadata.offset, 12);
     }
 
-    if ((control_metadata.i2e_flags & P4_I2E_FLAGS_FROM_IPSEC_APP) != 0) {
-        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
-               CPU_FLAGS_FROM_IPSEC_APP);
-    }
-
+    modify_field(p4_to_p4plus_cpu_pkt.src_app_id, control_metadata.src_app_id);
     modify_field(p4_to_p4plus_cpu_pkt.payload_offset, scratch_metadata.offset);
     modify_field(p4_to_p4plus_cpu_pkt.flags, scratch_metadata.cpu_flags);
     modify_field(p4_to_p4plus_cpu_tcp_pkt.tcp_options, scratch_metadata.cpu_tcp_options);
@@ -684,12 +680,8 @@ action f_p4plus_to_p4_1() {
         modify_field(control_metadata.from_cpu, TRUE);
     }
 
-    // update from ipsec flag
-    if (p4plus_to_p4.p4plus_app_id == P4PLUS_APPTYPE_IPSEC) {
-        modify_field(control_metadata.i2e_flags,
-                     (1 << P4_I2E_FLAGS_FROM_IPSEC_APP),
-                     (1 << P4_I2E_FLAGS_FROM_IPSEC_APP));
-    }
+    // save app id
+    modify_field(control_metadata.src_app_id, p4plus_to_p4.p4plus_app_id);
 
     if (p4plus_to_p4.flow_index_valid == 1) {
         modify_field(flow_info_metadata.flow_index, p4plus_to_p4.flow_index);

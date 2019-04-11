@@ -51,6 +51,7 @@ ipfix_export_dma_packet:
     phvwr       p.p4_intr_global_tm_iport, TM_PORT_DMA
     phvwr       p.p4_intr_global_tm_oport, TM_PORT_INGRESS
     phvwr       p.p4_intr_global_lif, LIF_CPU
+    phvwr       p.ipfix_app_header_p4plus_app_id, P4PLUS_APPTYPE_TELEMETRY
     phvwri      p.ipfix_app_header_flags, \
                     (P4PLUS_TO_P4_FLAGS_UPDATE_IP_LEN | \
                      P4PLUS_TO_P4_FLAGS_UPDATE_UDP_LEN)

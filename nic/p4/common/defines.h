@@ -146,7 +146,6 @@
 #define CPU_FLAGS_IPV6_VALID           0x04
 #define CPU_FLAGS_IP_OPTIONS_PRESENT   0x08
 #define CPU_FLAGS_TCP_OPTIONS_PRESENT  0x10
-#define CPU_FLAGS_FROM_IPSEC_APP       0x20
 
 /*****************************************************************************/
 /* CPU header packet types                                                   */
@@ -159,8 +158,8 @@
 /* CPU LKP Flags                                                             */
 /*****************************************************************************/
 #define CPU_LKP_FLAGS_LKP_TYPE_POS     0
-#define CPU_LKP_FLAGS_LKP_INST         4
-#define CPU_LKP_FLAGS_LKP_DIR          5
+#define CPU_LKP_FLAGS_LKP_INST         2
+#define CPU_LKP_FLAGS_LKP_DIR          3
 
 /*****************************************************************************/
 /* P4 to P4+ header size constants (in bytes)                                */

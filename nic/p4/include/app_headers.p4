@@ -163,10 +163,10 @@ header_type p4_to_p4plus_cpu_pkt_t {
 
         lkp_vrf             : 16;
 
-        pad                 : 2;
+        src_app_id          : 4;
         lkp_dir             : 1;
         lkp_inst            : 1;
-        lkp_type            : 4;
+        lkp_type            : 2;
 
         flags               : 8;
 

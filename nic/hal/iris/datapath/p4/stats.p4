@@ -176,7 +176,6 @@ action drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
 
     modify_field(control_metadata.i2e_pad0, 0);
     modify_field(control_metadata.i2e_pad1, 0);
-    modify_field(control_metadata.i2e_pad2, 0);
 }
 
 @pragma stage 5
@@ -222,7 +221,6 @@ action egress_drop_stats(mirror_en, mirror_session_id, pad, drop_pkts) {
 
     modify_field(control_metadata.i2e_pad0, 0);
     modify_field(control_metadata.i2e_pad1, 0);
-    modify_field(control_metadata.i2e_pad2, 0);
 }
 
 @pragma stage 5

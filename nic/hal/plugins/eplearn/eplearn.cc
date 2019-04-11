@@ -89,7 +89,7 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
         return ret;
     }
 
-   if (((cpu_hdr->flags & CPU_FLAGS_FROM_IPSEC_APP) == CPU_FLAGS_FROM_IPSEC_APP)  && 
+   if ((cpu_hdr->src_app_id == P4PLUS_APPTYPE_IPSEC) &&
        (cpu_hdr->src_lif == HAL_LIF_CPU)) {
        HAL_TRACE_DEBUG("No EP lif update necessary for pkts coming from CPU lif");
        return ret;

@@ -284,6 +284,7 @@ p4plus_app_mirror:
 // input r6 : packet start offset
 // do not use c7 in this function
 f_p4plus_cpu_pkt:
+  phvwr       p.p4_to_p4plus_cpu_pkt_src_app_id, k.control_metadata_src_app_id
   phvwr       p.{p4_to_p4plus_cpu_tcp_pkt_valid,p4_to_p4plus_cpu_pkt_valid}, 0x3
   phvwr       p.p4_to_p4plus_cpu_pkt_src_lif, k.{control_metadata_src_lif}.hx
   or          r1, k.capri_intrinsic_lif_sbit3_ebit10, k.capri_intrinsic_lif_sbit0_ebit2, 8
@@ -292,7 +293,7 @@ f_p4plus_cpu_pkt:
   phvwr       p.p4_to_p4plus_cpu_pkt_qtype, k.control_metadata_qtype
   phvwr       p.p4_to_p4plus_cpu_pkt_lkp_vrf, k.{flow_lkp_metadata_lkp_vrf}.hx
   phvwr       p.{p4_to_p4plus_cpu_pkt_lkp_dir...p4_to_p4plus_cpu_pkt_lkp_type}, \
-                  k.control_metadata_lkp_flags_egress[5:0]
+                  k.control_metadata_lkp_flags_egress[3:0]
   phvwr       p.p4_to_p4plus_cpu_pkt_flow_hash, k.{rewrite_metadata_entropy_hash}.wx
   seq         c1, k.control_metadata_lkp_flags_egress[CPU_LKP_FLAGS_LKP_DIR], FLOW_DIR_FROM_DMA
   phvwr.c1    p.p4_to_p4plus_cpu_pkt_src_tm_iq[4:0], k.control_metadata_src_tm_iq
@@ -319,8 +320,6 @@ f_p4plus_cpu_pkt:
   seq         c2, k.ipv4_ihl, 5
   setcf       c1, [c1 & !c2]
   or.c1       r2, r2, CPU_FLAGS_IP_OPTIONS_PRESENT
-  seq         c1, k.control_metadata_i2e_flags[P4_I2E_FLAGS_FROM_IPSEC_APP], 1
-  or.c1       r2, r2, CPU_FLAGS_FROM_IPSEC_APP
   seq         c1, k.tcp_valid, TRUE
   b.c1        lb_cpu_pkt_tcp
   or          r6, k.udp_valid, k.esp_valid

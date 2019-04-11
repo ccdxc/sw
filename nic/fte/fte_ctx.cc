@@ -201,10 +201,10 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pk
     HAL_TRACE_DEBUG("fte: rxpkt len={} pkt={}", pkt_len, hex_str(pkt, (pkt_len >=128)?128:pkt_len));
 
     HAL_TRACE_DEBUG("fte: rxpkt slif={} lif={} qtype={} qid={} vrf={} "
-                    "pad={} lkp_dir={} lkp_inst={} lkp_type={} flags={} "
+                    "src_app_id={} lkp_dir={} lkp_inst={} lkp_type={} flags={} "
                     "l2={} l3={} l4={} payload={}",
                     cpu_rxhdr->src_lif, cpu_rxhdr->lif, cpu_rxhdr->qtype,
-                    cpu_rxhdr->qid, cpu_rxhdr->lkp_vrf, cpu_rxhdr->pad,
+                    cpu_rxhdr->qid, cpu_rxhdr->lkp_vrf, cpu_rxhdr->src_app_id,
                     cpu_rxhdr->lkp_dir, cpu_rxhdr->lkp_inst, cpu_rxhdr->lkp_type,
                     cpu_rxhdr->flags, cpu_rxhdr->l2_offset, cpu_rxhdr->l3_offset,
                     cpu_rxhdr->l4_offset, cpu_rxhdr->payload_offset);
