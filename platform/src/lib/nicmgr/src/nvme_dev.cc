@@ -1,0 +1,366 @@
+/*
+ * Copyright (c) 2018-2019, Pensando Systems Inc.
+ */
+
+#include <cstdio>
+#include <iostream>
+#include <iomanip>
+#include <algorithm>
+#include <cmath>
+#include <endian.h>
+#include <sstream>
+#include <string>
+#include <sys/time.h>
+
+#include "cap_top_csr_defines.h"
+#include "cap_pics_c_hdr.h"
+#include "cap_wa_c_hdr.h"
+#include "cap_ms_c_hdr.h"
+
+#include "nic/include/base.hpp"
+#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+
+#include "nic/sdk/platform/misc/include/misc.h"
+#include "nic/sdk/platform/intrutils/include/intrutils.h"
+#include "nic/sdk/platform/fru/fru.hpp"
+#include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+
+#ifdef __aarch64__
+#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
+#endif
+#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
+#include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
+
+
+#include "logger.hpp"
+#include "nvme_if.h"
+#include "nvme_dev.hpp"
+#include "nvme_lif.hpp"
+#include "pd_client.hpp"
+#include "adminq.hpp"
+
+using namespace std;
+
+extern class pciemgr *pciemgr;
+
+NvmeDev::NvmeDev(devapi *dapi,
+                 void *dev_spec,
+                 PdClient *pd_client) :
+    spec((nvme_devspec_t *)dev_spec),
+    pd(pd_client),
+    dev_api(dapi),
+    pdev(nullptr)
+{
+    nvme_lif_res_t      lif_res;
+    sdk_ret_t           ret = SDK_RET_OK;
+
+    // Allocate lifs
+    // lif_base = pd->lm_->LIFRangeAlloc(-1, spec->lif_count);
+    ret = pd->lm_->alloc_id(&lif_base, spec->lif_count);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: Failed to allocate lifs. ret: {}", DevNameGet(), ret);
+        throw;
+    }
+    NIC_LOG_DEBUG("{}: lif_base {} lif_count {}",
+                  DevNameGet(), lif_base, spec->lif_count);
+
+    // Allocate interrupts
+    intr_base = pd->intr_alloc(spec->intr_count);
+    if (intr_base < 0) {
+        NIC_LOG_ERR("{}: Failed to allocate interrupts", DevNameGet());
+        throw;
+    }
+    NIC_LOG_DEBUG("{}: intr_base {} intr_count {}",
+                  DevNameGet(), intr_base, spec->intr_count);
+
+    // Allocate & Init Devcmd Region
+    devcmd_mem_addr = pd->devcmd_mem_alloc(NVME_DEV_PAGE_SIZE);
+    MEM_SET(devcmd_mem_addr, 0, NVME_DEV_PAGE_SIZE, 0);
+    // TODO: mmap instead of calloc after porting to real pal
+    devcmd = (nvme_dev_cmd_regs_t *)calloc(1, sizeof(nvme_dev_cmd_regs_t));
+    if (devcmd == NULL) {
+        NIC_LOG_ERR("{}: Failed to map devcmd region", DevNameGet());
+        throw;
+    }
+
+    devcmddb_mem_addr = pd->devcmd_mem_alloc(NVME_DEV_PAGE_SIZE);
+    MEM_SET(devcmddb_mem_addr, 0, NVME_DEV_PAGE_SIZE, 0);
+
+    NvmeRegsInit();
+    
+    WRITE_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(*devcmd), 0);
+
+    NIC_LOG_DEBUG("{}: devcmd_addr {:#x} devcmddb_addr {:#x}",
+                  DevNameGet(), devcmd_mem_addr, devcmddb_mem_addr);
+
+    //Init cmb
+    cmb_mem_addr = 0;
+    cmb_mem_size = 0;
+
+    cc_en = false;
+    memset(&curr_db, 0, sizeof(curr_db));
+
+    // Create the device
+    if (spec->pcie_port == 0xff) {
+        NIC_LOG_DEBUG("{}: Skipped creating PCI device", DevNameGet());
+    } else {
+        if (!_CreateHostDevice()) {
+            NIC_LOG_ERR("{}: Failed to create device", DevNameGet());
+            throw;
+        }
+    }
+
+    // Create LIF
+    lif_res.lif_id = lif_base;
+    lif_res.intr_base = intr_base;
+    lif_res.cmb_mem_addr = cmb_mem_addr;
+    lif_res.cmb_mem_size = cmb_mem_size;
+
+    lif = new NvmeLif(*this, lif_res);
+    if (!lif) {
+        NIC_LOG_ERR("{}: failed to create NvmeLif {}",
+                    DevNameGet(), lif_res.lif_id);
+        throw;
+    }
+
+    evutil_timer_start(&devcmd_timer, &NvmeDev::_DevcmdPoll, this, 0.0, 0.01);
+}
+
+NvmeDev::~NvmeDev()
+{
+    /*
+     * Most HBM related allocs don't have corresponding free API so
+     * we'll leave them alone. Same with intr_alloc().
+     */
+    evutil_timer_stop(&devcmd_timer);
+
+    delete lif;
+
+    _DestroyHostDevice();
+    pd->lm_->free_id(lif_base, spec->lif_count);
+}
+
+void
+NvmeDev::NvmeRegsInit()
+{
+    nvme_reg_cap_t  cap;
+    nvme_reg_vs_t   vs;
+
+    NIC_HEADER_TRACE("Preparing Nvme Register Set");
+
+    // cap 
+    cap.mpsmax = cap.mpsmin = 0;    //4K page
+    cap.css = 0x01;                 //NVMe command set
+    cap.nssrs = 0;
+    cap.dstrd = 0;
+    cap.to = 10;                    //5sec
+    cap.ams = 0;                    //only RR
+    cap.cqr = 1;                    //need physically contiguous queues
+    cap.mqes = 4095;                //0-based 4096
+
+    //vs = 1.2
+    vs.mjr = 1;
+    vs.mnr = 2;                     
+
+    devcmd->cap.num64 = (cap.num64);
+    devcmd->vs.num32 = (vs.num32);
+
+    NIC_LOG_DEBUG("NvmeRegsInit: cap {:#x} vs {:#x}", 
+                  devcmd->cap.num64, devcmd->vs.num32);
+    return;
+}
+
+void
+NvmeDev::HalEventHandler(bool status)
+{
+    assert(lif != nullptr);
+    if (lif) {
+        lif->HalEventHandler(status);
+    }
+    return;
+}
+
+void
+NvmeDev::SetHalClient(devapi *dapi)
+{
+    dev_api = dapi;
+
+    assert(lif != nullptr);
+    if (lif) {
+        lif->SetHalClient(dapi);
+    }
+    return;
+}
+
+struct nvme_devspec *
+NvmeDev::ParseConfig(boost::property_tree::ptree::value_type node)
+{
+    nvme_devspec* nvme_spec;
+    auto val = node.second;
+
+    NIC_HEADER_TRACE("Parsing NVME Config");
+
+    nvme_spec = new struct nvme_devspec;
+    memset(nvme_spec, 0, sizeof(*nvme_spec));
+
+    nvme_spec->enable = val.get<uint8_t>("enable");
+    nvme_spec->name = val.get<string>("name");
+    nvme_spec->lif_count = val.get<uint64_t>("lif_count");
+    nvme_spec->adminq_count = val.get<uint32_t>("adminq_count");
+    nvme_spec->sq_count = val.get<uint32_t>("sq_count");
+    nvme_spec->cq_count = val.get<uint32_t>("cq_count");
+    nvme_spec->intr_count = val.get<uint32_t>("intr_count");
+
+    nvme_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
+
+    NIC_LOG_DEBUG("enable: {} name: {} lif_count: {} adminq_count: {} sq_count: {} cq count: {} intr_count: {}", 
+                  nvme_spec->enable, nvme_spec->name, nvme_spec->lif_count, nvme_spec->adminq_count, 
+                  nvme_spec->sq_count, nvme_spec->cq_count, nvme_spec->intr_count);
+
+    return nvme_spec;
+}
+
+bool
+NvmeDev::_CreateHostDevice(void)
+{
+    pciehdevice_resources_t pci_resources = {0};
+
+    pci_resources.port = spec->pcie_port;
+    pci_resources.lifb = lif_base;
+    pci_resources.lifc = spec->lif_count;
+    pci_resources.intrb = intr_base;
+    pci_resources.intrc = spec->intr_count;
+    pci_resources.npids = 1;
+    //pci_resources.devcmdpa = devcmd_mem_addr;
+    pci_resources.devcmddbpa = devcmddb_mem_addr;
+    pci_resources.nvmeregspa = devcmd_mem_addr;
+    pci_resources.cmbpa = cmb_mem_addr;
+    pci_resources.cmbsz = cmb_mem_size;
+
+    // Create PCI device
+    NIC_LOG_DEBUG("{}: Creating PCI device", DevNameGet());
+    pdev = pciehdev_nvme_new(DevNameGet().c_str(), &pci_resources);
+    if (pdev == NULL) {
+        NIC_LOG_ERR("{}: Failed to create PCI device", DevNameGet());
+        return false;
+    }
+
+    // Add device to PCI topology
+    if (pciemgr) {
+        int ret = pciemgr->add_device(pdev);
+        if (ret != 0) {
+            NIC_LOG_ERR("{}: Failed to add PCI device to topology",
+                        DevNameGet());
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void
+NvmeDev::_DestroyHostDevice(void)
+{
+    if (pdev) {
+        pciehdev_delete(pdev);
+        pdev = nullptr;
+    }
+}
+
+void
+NvmeDev::_DevcmdPoll(void *obj)
+{
+    NvmeDev        *dev = (NvmeDev *)obj;
+
+    dev->DevcmdHandler();
+}
+
+void
+NvmeDev::DevcmdHandler()
+{
+    nvme_status_code_t  status = NVME_RC_ERROR;
+    nvme_qp_db_t   db = {0};
+
+    READ_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(*devcmd), 0);
+
+    if ((cc_en == false) && (devcmd->cc.en == 1)) {
+        // controller getting enabled
+
+        NIC_LOG_DEBUG("!!! controller is getting enabled.. !!!");
+        NIC_LOG_DEBUG("cc: {:#x}  iocqes: {} iosqes: {} ams: {} "
+                      "mps: {} css: {} en: {}",
+                      devcmd->cc.num32, devcmd->cc.iocqes, 
+                      devcmd->cc.iosqes, devcmd->cc.ams, 
+                      devcmd->cc.mps, devcmd->cc.css, 
+                      devcmd->cc.en);
+
+        if (lif != nullptr) {
+            status = lif->Enable(devcmd);
+        }
+
+        if (status == NVME_RC_SUCCESS) {
+            cc_en = true;
+            memset(&curr_db, 0, sizeof(curr_db));
+            devcmd->csts.rdy = true;
+            WRITE_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(*devcmd), 0);
+        }
+        IntrClear();
+        IntrReset(); //XXX
+
+    } else if ((cc_en == true) && (devcmd->cc.en == 0)) {
+        NIC_LOG_DEBUG("!!! controller is getting disabled.. !!!");
+
+        // cleanup 
+        if (lif != nullptr) {
+            status = lif->Disable(devcmd);
+        }
+
+        if (status == NVME_RC_SUCCESS) {
+            cc_en = false;
+            devcmd->csts.rdy = false;
+            WRITE_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(*devcmd), 0);
+        }
+
+        IntrClear();
+
+    } else if (cc_en == true) {
+        READ_MEM(devcmddb_mem_addr, (uint8_t *)&db, sizeof(db), 0);
+        if (curr_db.sq != db.sq) {
+            NIC_LOG_DEBUG("NvmeDevcmd doorbell curr_sq: {} curr_cq:{} asq: {} acq: {}", 
+                          curr_db.sq, curr_db.cq, db.sq, db.cq);
+            lif->RingDoorbell(db.sq);
+            //ring doorbell
+            curr_db = db;
+        }
+    }
+
+
+    return;
+}
+
+
+void
+NvmeDev::IntrReset(void)
+{
+    for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
+        intr_drvcfg_mask(intr_base + intr, 0); //XXX
+    }
+}
+
+void
+NvmeDev::IntrClear(void)
+{
+    for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
+        intr_pba_clear(intr_base + intr);
+        intr_drvcfg(intr_base + intr);
+    }
+}
+
+NvmeLif *
+NvmeDev::_LifFind(uint64_t lif_id)
+{
+    if (lif_base == lif_id) {
+        return lif;
+    }
+    return nullptr;
+}

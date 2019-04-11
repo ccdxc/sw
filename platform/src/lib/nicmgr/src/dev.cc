@@ -28,6 +28,8 @@
 #include "dev.hpp"
 #include "eth_dev.hpp"
 #include "nicmgr_init.hpp"
+#include "accel_dev.hpp"
+#include "nvme_dev.hpp"
 
 using namespace std;
 
@@ -264,6 +266,22 @@ DeviceManager::LoadConfig(string path)
             AddDevice(ACCEL, (void *)accel_spec);
         }
     }
+
+    NIC_HEADER_TRACE("Loading NVME devices");
+    // Create NVME devices
+    if (spec.get_child_optional("nvme_dev")) {
+        struct nvme_devspec *nvme_spec;
+
+        for (const auto &node : spec.get_child("nvme_dev")) {
+
+            nvme_spec = NvmeDev::ParseConfig(node);
+
+            if (nvme_spec->enable) {
+                AddDevice(NVME, (void *)nvme_spec);
+            }
+        }
+    }
+
 #endif //IRIS
 
     return 0;
@@ -276,6 +294,7 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 
 #ifdef IRIS
     AccelDev *accel_dev;
+    NvmeDev *nvme_dev;
 #endif //IRIS
 
     switch (type) {
@@ -298,10 +317,12 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         accel_dev->SetType(type);
         devices[accel_dev->GetName()] = accel_dev;
         return (Device *)accel_dev;
-#endif //IRIS
     case NVME:
-        NIC_LOG_ERR("Unsupported Device Type NVME");
-        return NULL;
+        nvme_dev = new NvmeDev(dev_api, dev_spec, pd);
+        nvme_dev->SetType(type);
+        devices[nvme_dev->GetName()] = nvme_dev;
+        return (Device *)nvme_dev;
+#endif //IRIS
     case VIRTIO:
         NIC_LOG_ERR("Unsupported Device Type VIRTIO");
         return NULL;
@@ -342,6 +363,10 @@ DeviceManager::SetHalClient(devapi *dev_api)
         if (dev->GetType() == ACCEL) {
             AccelDev *accel_dev = (AccelDev *)dev;
             accel_dev->SetHalClient(dev_api);
+        }
+        if (dev->GetType() == NVME) {
+            NvmeDev *nvme_dev = (NvmeDev *)dev;
+            nvme_dev->SetHalClient(dev_api);
         }
 #endif //IRIS
 
@@ -399,6 +424,10 @@ DeviceManager::HalEventHandler(bool status)
         if (dev->GetType() == ACCEL) {
             AccelDev *accel_dev = (AccelDev *)dev;
             accel_dev->HalEventHandler(status);
+        }
+        if (dev->GetType() == NVME) {
+            NvmeDev *nvme_dev = (NvmeDev *)dev;
+            nvme_dev->HalEventHandler(status);
         }
 #endif //IRIS
     }

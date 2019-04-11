@@ -12,7 +12,7 @@ AdminQ::AdminQ(
     uint16_t lif,
     uint8_t req_qtype, uint32_t req_qid, uint16_t req_ring_size,
     uint8_t resp_qtype, uint32_t resp_qid, uint16_t resp_ring_size,
-    adminq_cb_t handler, void *handler_obj
+    adminq_cb_t handler, void *handler_obj, bool response_enabled
 ) :
     name(name),
     pd(pd),
@@ -20,8 +20,19 @@ AdminQ::AdminQ(
     req_qtype(req_qtype), resp_qtype(resp_qtype),
     req_qid(req_qid), resp_qid(resp_qid),
     req_ring_size(req_ring_size), resp_ring_size(resp_ring_size),
-    handler(handler), handler_obj(handler_obj)
+    handler(handler), handler_obj(handler_obj),
+    response_enabled(response_enabled)
 {
+    if (req_ring_size & (req_ring_size - 1)) {
+        NIC_LOG_ERR("{}: Request ring size has to be power of 2", name);
+        throw;
+    }
+        
+    if (resp_ring_size & (resp_ring_size - 1)) {
+        NIC_LOG_ERR("{}: Response ring size has to be power of 2", name);
+        throw;
+    }
+        
     /* alloc request queue resources */
     req_ring_base = pd->nicmgr_mem_alloc(sizeof(struct nicmgr_req_desc) * req_ring_size);
     if (req_ring_base == 0) {
@@ -261,11 +272,11 @@ AdminQ::PollRequest(struct nicmgr_req_desc *req_desc)
         READ_MEM(req_desc_addr, (uint8_t *)req_desc, sizeof(*req_desc), 0);
 
         NIC_LOG_DEBUG("{}: request lif {} qtype {} qid {} comp_index {}"
-            " adminq_qstate_addr {:#x} desc_addr {:#x}",
+            " adminq_qstate_addr {:#x} desc_addr {:#x} req_head: {:#x} req_tail: {:#x}",
             name,
             req_desc->lif, req_desc->qtype, req_desc->qid,
             req_desc->comp_index, req_desc->adminq_qstate_addr,
-            req_desc_addr);
+            req_desc_addr, req_head, req_tail);
 
         req_head = (req_head + 1) & (req_ring_size - 1);
         req_tail = (req_tail + 1) & (req_ring_size - 1);
@@ -299,11 +310,11 @@ AdminQ::PostResponse(struct nicmgr_resp_desc *resp_desc)
     WRITE_MEM(resp_desc_addr, (uint8_t *)resp_desc, sizeof(*resp_desc), 0);
 
     NIC_LOG_DEBUG("{}: response lif {} qtype {} qid {} comp_index {}"
-        " adminq_qstate_addr {:#x} desc_addr {:#x}",
+        " adminq_qstate_addr {:#x} desc_addr {:#x} resp_tail: {:#x}",
         name,
         resp_desc->lif, resp_desc->qtype, resp_desc->qid,
         resp_desc->comp_index, resp_desc->adminq_qstate_addr,
-        resp_desc_addr);
+        resp_desc_addr, resp_tail);
 
     resp_tail = (resp_tail + 1) & (resp_ring_size - 1);
 
@@ -352,6 +363,8 @@ AdminQ::Poll(void *obj)
 
         NIC_HEADER_TRACE("AdminCmd End");
 
-        adminq->PostResponse(&resp_desc);
+        if (adminq->response_enabled) {
+            adminq->PostResponse(&resp_desc);
+        }
     }
 }

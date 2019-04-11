@@ -13,6 +13,12 @@ extern "C" {
 #endif
 
 void
+add_msix_region(pciehbars_t *pbars,
+                pciehbar_t *pbar,
+                const pciehdevice_resources_t *pres,
+                const u_int32_t msixtbloff,
+                const u_int32_t msixpbaoff);
+void
 add_common_resource_bar(pciehbars_t *pbars,
                         const pciehdevice_resources_t *pres);
 void

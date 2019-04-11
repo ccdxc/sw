@@ -80,6 +80,38 @@
         "if2":           "ionic2"
     },
     {
+        "host":          "tb73-host1",
+        "console":       "chamber-ts8",
+        "port":          "7",
+        "if0":           "enp96s0",
+        "if1":           "enp97s0",
+        "if2":           "enp98s0"
+    },
+    {
+        "host":          "tb73-host2",
+        "console":       "chamber-ts8",
+        "port":          "8",
+        "if0":           "enp96s0",
+        "if1":           "enp97s0",
+        "if2":           "enp98s0"
+    },
+    {
+        "host":          "tb74-host1",
+        "console":       "chamber-ts8",
+        "port":          "9",
+        "if0":           "enp96s0",
+        "if1":           "enp97s0",
+        "if2":           "enp98s0"
+    },
+    {
+        "host":          "tb74-host2",
+        "console":       "chamber-ts8",
+        "port":          "10",
+        "if0":           "enp96s0",
+        "if1":           "enp97s0",
+        "if2":           "enp98s0"
+    },
+    {
         "host":          "cap-rdma",
         "console":       "192.168.74.208",
         "port":          "15",

@@ -17,11 +17,89 @@
 #include "pciehdevices_impl.h"
 
 void
+add_msix_region(pciehbars_t *pbars,
+                pciehbar_t *pbar,
+                const pciehdevice_resources_t *pres,
+                const u_int32_t msixtbloff,
+                const u_int32_t msixpbaoff)
+{
+    const u_int32_t msixtbl_stride = roundup_power2(intr_msixcfg_size(1));
+    u_int32_t intrs_to_map, intrb;
+    u_int64_t baroff;
+    pciehbarreg_t preg;
+    prt_t prt;
+
+    /*****************
+     * MSI-X Interrupt Table */
+    intrs_to_map = pres->intrc;
+    intrb = pres->intrb;
+    baroff = msixtbloff;
+    while (intrs_to_map > 0) {
+        /*
+         * Each page can map 256 msi-x intr control regs.
+         * 0x1000 / msixtbl_stride = 256.
+         */
+        const int msixtbl_per_page = 0x1000 / msixtbl_stride;
+        const u_int32_t intrc = MIN(intrs_to_map, msixtbl_per_page);
+        const u_int64_t pmtsize = roundup_power2(intr_msixcfg_size(intrc));
+        const int vfbitb = ffs(intr_msixcfg_size(1)) - 1;
+        const int vfbitc = (ffs(pmtsize) - 1) - vfbitb;
+
+        memset(&preg, 0, sizeof(preg));
+        preg.baroff = baroff;
+        pmt_bar_enc(&preg.pmt,
+                    pres->port,
+                    PMT_TYPE_MEM,
+                    pmtsize,
+                    msixtbl_stride, /* prtsize */
+                    PMTF_RW);
+        pmt_bar_set_vfparams(&preg.pmt, vfbitb, vfbitc, 0, intrc);
+        prt_res_enc(&prt,
+                    intr_msixcfg_addr(intrb),
+                    intr_msixcfg_size(intrc),
+                    PRT_RESF_NONE);
+        prt_res_set_vfstride(&prt, msixtbl_stride);
+        pciehbarreg_add_prt(&preg, &prt);
+        pciehbar_add_reg(pbar, &preg);
+
+        intrs_to_map -= intrc;
+        intrb += intrc;
+        baroff += 0x1000;
+    }
+
+    /*****************
+     * MSI-X Interrupt PBA */
+    if (pres->intrc) {
+        memset(&preg, 0, sizeof(preg));
+        preg.baroff = msixpbaoff;
+        pmt_bar_enc(&preg.pmt,
+                    pres->port,
+                    PMT_TYPE_MEM,
+                    0x8,    /* pmtsize */
+                    0x8,    /* prtsize */
+                    PMTF_RD);
+        prt_res_enc(&prt,
+                    intr_pba_addr(pres->lifb),
+                    intr_pba_size(pres->intrc),
+                    PRT_RESF_NONE);
+        pciehbarreg_add_prt(&preg, &prt);
+        pciehbar_add_reg(pbar, &preg);
+    }
+
+    /* set msix cap info */
+    if (pres->intrc) {
+        const int baridx = pbar->cfgidx;
+        pciehbars_set_msix_tbl(pbars, baridx, msixtbloff);
+        pciehbars_set_msix_pba(pbars, baridx, msixpbaoff);
+    }
+}
+
+void
 add_common_resource_bar(pciehbars_t *pbars,
                         const pciehdevice_resources_t *pres)
 {
-    const u_int32_t intrctrl_stride = roundup_power2(intr_drvcfg_size(1));
     const u_int32_t msixtbl_stride = roundup_power2(intr_msixcfg_size(1));
+    const u_int32_t intrctrl_stride = roundup_power2(intr_drvcfg_size(1));
     u_int64_t intrctrlsz, msixtblsz, total_barsz, baroff;
     u_int32_t msixtbloff, msixpbaoff, intrs_to_map, intrb;
     pciehbarreg_t preg;
@@ -180,78 +258,15 @@ add_common_resource_bar(pciehbars_t *pbars,
      * For common bar sizes (intrs 1-128) these next pages are reserved.
      * +0x4000 <reserved>
      * +0x5000 <reserved>
-     * For larger bars with more intrs, these regions contain more
-     *
+     * For larger bars with more intrs, these regions contain more intrs.
      */
 
-    /*****************
-     * MSI-X Interrupt Table */
-    intrs_to_map = pres->intrc;
-    intrb = pres->intrb;
-    baroff = msixtbloff;
-    while (intrs_to_map > 0) {
-        /*
-         * Each page can map 256 msi-x intr control regs.
-         * 0x1000 / msixtbl_stride = 256.
-         */
-        const int msixtbl_per_page = 0x1000 / msixtbl_stride;
-        const u_int32_t intrc = MIN(intrs_to_map, msixtbl_per_page);
-        const u_int64_t pmtsize = roundup_power2(intr_msixcfg_size(intrc));
-        const int vfbitb = ffs(intr_msixcfg_size(1)) - 1;
-        const int vfbitc = (ffs(pmtsize) - 1) - vfbitb;
-
-        memset(&preg, 0, sizeof(preg));
-        preg.baroff = baroff;
-        pmt_bar_enc(&preg.pmt,
-                    pres->port,
-                    PMT_TYPE_MEM,
-                    pmtsize,
-                    msixtbl_stride, /* prtsize */
-                    PMTF_RW);
-        pmt_bar_set_vfparams(&preg.pmt, vfbitb, vfbitc, 0, intrc);
-        prt_res_enc(&prt,
-                    intr_msixcfg_addr(intrb),
-                    intr_msixcfg_size(intrc),
-                    PRT_RESF_NONE);
-        prt_res_set_vfstride(&prt, msixtbl_stride);
-        pciehbarreg_add_prt(&preg, &prt);
-        pciehbar_add_reg(&pbar, &preg);
-
-        intrs_to_map -= intrc;
-        intrb += intrc;
-        baroff += 0x1000;
-    }
-
-    /*****************
-     * MSI-X Interrupt PBA */
-    if (pres->intrc) {
-        memset(&preg, 0, sizeof(preg));
-        preg.baroff = msixpbaoff;
-        pmt_bar_enc(&preg.pmt,
-                    pres->port,
-                    PMT_TYPE_MEM,
-                    0x8,    /* pmtsize */
-                    0x8,    /* prtsize */
-                    PMTF_RD);
-        prt_res_enc(&prt,
-                    intr_pba_addr(pres->lifb),
-                    intr_pba_size(pres->intrc),
-                    PRT_RESF_NONE);
-        pciehbarreg_add_prt(&preg, &prt);
-        pciehbar_add_reg(&pbar, &preg);
-    }
+    add_msix_region(pbars, &pbar, pres, msixtbloff, msixpbaoff);
 
     /*
      * add this bar to our bars
      */
     pciehbars_add_bar(pbars, &pbar);
-
-    /* set msix cap info */
-    if (pres->intrc) {
-        const int baridx = pbar.cfgidx;
-        pciehbars_set_msix_tbl(pbars, baridx, msixtbloff);
-        pciehbars_set_msix_pba(pbars, baridx, msixpbaoff);
-    }
 }
 
 void

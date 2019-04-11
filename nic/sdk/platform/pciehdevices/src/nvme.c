@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -11,10 +11,20 @@
 #include "platform/intrutils/include/intrutils.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
 #include "pciehdevices.h"
+#include "pciehdevices_impl.h"
 
+/*
+ * NVMe Resource bar is
+ *
+ *     +0x0000 device registers
+ *     +0x1000 sq,cq doorbells
+ *     +0x2000 MSIX Interrupt Table
+ *     +0x3000 MSIX Interrupt PBA
+ */
 static void
 initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
 {
+    u_int32_t msixtbloff, msixpbaoff;
     pciehbarreg_t preg;
     pciehbar_t pbar;
     prt_t prt;
@@ -27,22 +37,37 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
     pbar.size = 0x4000;
     pbar.cfgidx = 0;
 
+    /*****************
+     * +0x0000 device registers */
     memset(&preg, 0, sizeof(preg));
     pmt_bar_enc(&preg.pmt,
                 pres->port,
                 PMT_TYPE_MEM,
-                pbar.size,
-                pbar.size,      /* prtsize */
+                0x2000,         /* pmtsize */
+                0x1000,         /* prtsize */
                 PMTF_RW);
+    pmt_bar_setr_prt(&preg.pmt, 12, 1);
 
-    /* XXX */
-    prt_res_enc(&prt, /* pa */0, /* sz */0, PRT_RESF_NONE);
+    prt_res_enc(&prt, pres->nvmeregspa, 0x1000, PRT_RESF_NONE);
     pciehbarreg_add_prt(&preg, &prt);
+
+    /* +0x1000 Device Cmd Doorbell */
+    prt_res_enc(&prt, pres->devcmddbpa, 0x4, (PRT_RESF_NOTIFY |
+                                              PRT_RESF_PMVDIS));
+    pciehbarreg_add_prt(&preg, &prt);
+
     pciehbar_add_reg(&pbar, &preg);
 
-    /* XXX */
-    pciehbars_set_msix_tbl(pbars, 0, 0x2000);
-    pciehbars_set_msix_pba(pbars, 0, 0x3000);
+    /*****************
+     * +0x1000 doorbells */
+
+    /*****************
+     * +0x2000 MSIX Interrupt Table
+     * +0x3000 MSIX Interrupt PBA */
+    assert(pres->intrc <= 256); /* 256 intrs per page (XXX grow bar) */
+    msixtbloff = 0x2000;
+    msixpbaoff = 0x3000;
+    add_msix_region(pbars, &pbar, pres, msixtbloff, msixpbaoff);
 
     pciehbars_add_bar(pbars, &pbar);
 }
@@ -53,7 +78,7 @@ initialize_cfg(pciehcfg_t *pcfg, pciehbars_t *pbars,
 {
     pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_NVME);
     pciehcfg_setconf_classcode(pcfg, 0x010802);
-    pciehcfg_setconf_classcode(pcfg, 0x088000); // XXX
+    //pciehcfg_setconf_classcode(pcfg, 0x088000); // XXX
     pciehcfg_setconf_nintrs(pcfg, pres->intrc);
     pciehcfg_setconf_msix_tblbir(pcfg, pciehbars_get_msix_tblbir(pbars));
     pciehcfg_setconf_msix_tbloff(pcfg, pciehbars_get_msix_tbloff(pbars));

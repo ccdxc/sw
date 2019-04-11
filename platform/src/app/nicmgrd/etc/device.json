@@ -164,5 +164,21 @@
                 "port" : 0
             }
         }
+    ],
+
+    "nvme_dev" : [
+        {
+            "enable" : 0,
+            "name" : "nvme",
+            "lif_count" : 1,
+            "adminq_count" : 1,
+            "sq_count" : 16,
+            "cq_count" : 16,
+            "intr_count" : 16,
+            "pcie" : {
+                "port" : 0
+            }
+        }
     ]
+
 }
