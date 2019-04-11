@@ -1088,9 +1088,6 @@ port::port_link_sm_process(void)
                 SDK_PORT_SM_DEBUG(this, "Wait MAC faults clear");
 
                 mac_faults = port_mac_faults_get();
-                mac_faults = port_mac_faults_get();
-                mac_faults = port_mac_faults_get();
-
                 if (mac_faults == true) {
                     set_mac_faults(this->mac_faults() + 1);
                 } else {
