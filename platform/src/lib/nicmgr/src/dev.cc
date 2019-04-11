@@ -28,7 +28,6 @@
 #include "dev.hpp"
 #include "eth_dev.hpp"
 #include "nicmgr_init.hpp"
-#include "accel_dev.hpp"
 #include "nvme_dev.hpp"
 
 using namespace std;

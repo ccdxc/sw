@@ -16,7 +16,6 @@
 #define NVME_DEV_CMD_ENUMERATE  1
 
 #include "nic/include/base.hpp"
-#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"

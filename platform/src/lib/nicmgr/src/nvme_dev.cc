@@ -18,7 +18,6 @@
 #include "cap_ms_c_hdr.h"
 
 #include "nic/include/base.hpp"
-#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
