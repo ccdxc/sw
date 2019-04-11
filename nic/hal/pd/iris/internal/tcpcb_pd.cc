@@ -470,6 +470,18 @@ uint64_t tcpcb_pd_serq_prod_ci_addr_get(uint32_t qid)
     return addr;
 }
 
+uint64_t tcpcb_pd_ooo_rx2tx_prod_ci_addr_get(uint32_t qid)
+{
+    uint64_t addr;
+
+    addr = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_TCP_PROXY, 0,
+            qid) + (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_OOO_QADDR_OFFSET) +
+            TCP_TCB_OOO_QADDR_CI_OFFSET;
+
+    return addr;
+}
+
+
 hal_ret_t
 p4pd_get_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd)
 {
@@ -913,6 +925,9 @@ p4pd_add_or_del_tcp_ooo_rx2tx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         uint64_t mem_addr = (uint64_t)get_mem_addr(
                 CAPRI_HBM_REG_TLS_PROXY_PAD_TABLE) + CAPRI_GC_GLOBAL_OOQ_TX2RX_FP_PI;
         data.u.load_stage0_d.ooo_rx2tx_free_pi_addr = htonll(mem_addr);
+
+        data.u.load_stage0_d.ooo_rx2tx_producer_ci_addr =
+                htonll(tcpcb_pd_ooo_rx2tx_prod_ci_addr_get(tcpcb_pd->tcpcb->cb_id));
     }
     if (!p4plus_hbm_write(hwid,  (uint8_t *)&data, P4PD_TCPCB_STAGE_ENTRY_OFFSET,
             P4PLUS_CACHE_INVALIDATE_BOTH)) {

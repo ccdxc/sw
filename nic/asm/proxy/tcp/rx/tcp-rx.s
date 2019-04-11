@@ -92,7 +92,7 @@ tcp_store_ts_recent:
     seq             c1, k.s1_s2s_payload_len, 0
     b.c1            flow_rx_process_done
 
-    tblwr.!c1.l     d.u.tcp_rx_d.alloc_descr, 1
+    tblwr.!c1.l     d.u.tcp_rx_d.alloc_descr_L, 1
 
 tcp_rx_fast_path_queue_serq:
     tblor.l         d.u.tcp_rx_d.flag, FLAG_DATA
@@ -138,7 +138,7 @@ tcp_schedule_del_ack:
                         TCP_SCHED_RING_DEL_ACK, d.u.tcp_rx_d.del_ack_pi)
     memwr.dx        r4, r3
     
-    seq             c1, d.u.tcp_rx_d.dont_send_ack, 0
+    seq             c1, d.u.tcp_rx_d.dont_send_ack_L, 0
     b               tcp_ack_snd_check_end
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_DEL_ACK, \
                         TCP_PENDING_TXDMA_DEL_ACK
@@ -147,7 +147,7 @@ tcp_schedule_ack:
     // cancel del_ack timer and schedule immediate ack
     add             r1, k.common_phv_qstate_addr, TCP_TCB_RX2TX_ATO_OFFSET
     memwr.h         r1, 0
-    seq             c1, d.u.tcp_rx_d.dont_send_ack, 0
+    seq             c1, d.u.tcp_rx_d.dont_send_ack_L, 0
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
 tcp_ack_snd_check_end:
@@ -174,9 +174,9 @@ table_launch_tcp_ack:
 
 table_launch_RNMDR_ALLOC_IDX:
     /*
-     * Allocate page and descriptor if alloc_descr is 1.
+     * Allocate page and descriptor if alloc_descr_L is 1.
      */
-    seq             c3, d.u.tcp_rx_d.alloc_descr, 1
+    seq             c3, d.u.tcp_rx_d.alloc_descr_L, 1
     bcf             [!c3], tcp_rx_end
     CAPRI_NEXT_TABLE_READ_i(1, TABLE_LOCK_DIS, tcp_rx_read_rnmdr_start,
                         RNMDPR_ALLOC_IDX, TABLE_SIZE_64_BITS)
@@ -189,11 +189,11 @@ tcp_rx_slow_path:
     tbladd          d.{u.tcp_rx_d.slow_path_cnt}.hx, 1
     seq             c1, k.s1_s2s_payload_len, r0
     tblor.!c1.l     d.u.tcp_rx_d.flag, FLAG_DATA
-    tblwr.c1.l      d.u.tcp_rx_d.alloc_descr, 0
+    tblwr.c1.l      d.u.tcp_rx_d.alloc_descr_L, 0
     phvwri.c1       p.common_phv_write_serq, 0
 
     smeqb           c1, k.common_phv_flags, TCPHDR_SYN, TCPHDR_SYN
-    tblwr.c1.l      d.u.tcp_rx_d.alloc_descr, 1
+    tblwr.c1.l      d.u.tcp_rx_d.alloc_descr_L, 1
 
     smeqb           c1, k.common_phv_flags, TCPHDR_ECE, TCPHDR_ECE
     tblor.c1.l      d.u.tcp_rx_d.flag, (FLAG_ECE | FLAG_SLOWPATH)
@@ -213,7 +213,7 @@ tcp_rx_slow_path:
                             TCP_PARSED_STATE_HANDLE_IN_CPU, \
                             TCP_PARSED_STATE_HANDLE_IN_CPU
     phvwri.c1       p.common_phv_write_arq, 1
-    tblwr.c1.l      d.u.tcp_rx_d.alloc_descr, 1
+    tblwr.c1.l      d.u.tcp_rx_d.alloc_descr_L, 1
 
     seq             c2, d.u.tcp_rx_d.state, TCP_LISTEN
     phvwri.c2       p.common_phv_write_tcp_app_hdr,1
@@ -236,10 +236,14 @@ tcp_rx_slow_path:
     seq             c3, k.common_phv_ooq_tx2rx_pkt, 1
     b.c3            tcp_rx_ooo_skip_dup_ack
     nop
+    b.!c1           tcp_rx_ooo_skip_dup_ack
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
     phvwr.c1        p.rx2tx_extra_pending_dup_ack_send, 1
+    phvwr.c1        p.rx2tx_extra_dup_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
+    phvwr.c1        p.common_phv_is_dupack, 1
     phvwr.c1        p.to_s5_serq_pidx, d.u.tcp_rx_d.serq_pidx
+    phvwr.c1        p.to_s5_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
 tcp_rx_ooo_skip_dup_ack:
     sne             c2, k.s1_s2s_payload_len, 0
     setcf           c3, [c1 & c2]
@@ -320,12 +324,15 @@ tcp_rx_ooo_check_done:
     setcf           c1, [c1 | c2 | c3]
     b.!c1           tcp_rx_slow_path_post_fin_handling
     tbladd.c1       d.u.tcp_rx_d.rcv_nxt, 1
-    tblwr.c1.l      d.u.tcp_rx_d.alloc_descr, 1
+    tblwr.c1.l      d.u.tcp_rx_d.alloc_descr_L, 1
     phvwri.c1       p.common_phv_write_serq, 1
     phvwr.c1        p.to_s6_serq_pidx, d.u.tcp_rx_d.serq_pidx
     tblmincri.c1    d.u.tcp_rx_d.serq_pidx, d.u.tcp_rx_d.consumer_ring_shift, 1
     phvwr.c1        p.to_s5_serq_pidx, d.u.tcp_rx_d.serq_pidx
+    phvwr.c1        p.to_s5_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     phvwr.c1        p.rx2tx_extra_pending_dup_ack_send, 1
+    phvwr.c1        p.rx2tx_extra_dup_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
+    phvwr.c1        p.common_phv_is_dupack, 1
     phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
 
@@ -341,9 +348,12 @@ tcp_rx_slow_path_post_fin_handling:
 tcp_rx_slow_path_handle_data:
     // if this is a tx2rx ooq packet, don't allocate descriptors
     seq             c2, k.common_phv_ooq_tx2rx_pkt, 1
-    tblwr.c2.l      d.u.tcp_rx_d.alloc_descr, 0
+    tblwr.c2.l      d.u.tcp_rx_d.alloc_descr_L, 0
     // For OOQ feedback packets, dont send ack
-    tblwr.c2.l      d.u.tcp_rx_d.dont_send_ack, 1
+    tblwr.c2.l      d.u.tcp_rx_d.dont_send_ack_L, 1
+    // We don't want to advance ack_seq no until ooq packets are all dequeued
+    phvwr.c2        p.rx2tx_extra_pending_dup_ack_send, 1
+    phvwr.c2        p.rx2tx_extra_dup_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     b.c2            tcp_rx_fast_path_queue_serq
 
     /*
@@ -364,7 +374,10 @@ tcp_rx_slow_path_launch_ooo:
     phvwr           p.t2_s2s_payload_len, k.s1_s2s_payload_len
     // Don't ack this packet. The last in-order packet from the OOQ
     // should generate the extended ack
-    tblwr.l         d.u.tcp_rx_d.dont_send_ack, 1
+    tblwr.l         d.u.tcp_rx_d.dont_send_ack_L, 1
+    // We don't want to advance ack_seq no until ooq packets are all dequeued
+    phvwr           p.rx2tx_extra_pending_dup_ack_send, 1
+    phvwr           p.rx2tx_extra_dup_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_EN, tcp_ooo_book_keeping_in_order,
                         k.common_phv_qstate_addr, TCP_TCB_OOO_BOOK_KEEPING_OFFSET0,
                         TABLE_SIZE_512_BITS)
@@ -390,7 +403,7 @@ tcp_rx_rst_handling:
     tbladd.!c4      d.u.tcp_rx_d.rx_drop_cnt, 1
 
     // We need to pass RST flag to other flow
-    tblwr.l         d.u.tcp_rx_d.alloc_descr, 1
+    tblwr.l         d.u.tcp_rx_d.alloc_descr_L, 1
 
     // Change state so Tx pipeline cleans up retx queue
     tblwr           d.u.tcp_rx_d.state, TCP_RST
@@ -428,7 +441,7 @@ tcp_rx_ooo_rcv:
     phvwr           p.t2_s2s_payload_len, k.s1_s2s_payload_len
     phvwr           p.common_phv_ooo_rcv, 1
     // we need to allocate a descriptor
-    tblwr.l         d.u.tcp_rx_d.alloc_descr, 1
+    tblwr.l         d.u.tcp_rx_d.alloc_descr_L, 1
     b               flow_rx_process_done
     // when ooq_not_empty moves from 0 --> 1, use wrfence so this write is
     // guaranteed before writes in other stages (this field is reset to 0 by

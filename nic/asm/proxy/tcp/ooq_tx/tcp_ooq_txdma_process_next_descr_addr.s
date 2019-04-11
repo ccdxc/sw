@@ -52,7 +52,7 @@ tcp_ooq_txdma_win_upd_dma:
     CAPRI_DMA_CMD_MEM2PKT_SETUP(tcp_app_header2_dma_cmd, r1, \
                         P4PLUS_TCP_PROXY_BASE_HDR_SZ)
 
-    phvwr           p.feedback_type_entry, TCP_TX2RX_FEEDBACK_WIN_UPD
+    phvwr           p.feedback_type_entry, TCP_TX2RX_FEEDBACK_LAST_OOO_PKT
     CAPRI_DMA_CMD_PHV2PKT_SETUP_STOP(feedback_dma_cmd, feedback_type_entry, feedback_type_entry)
     nop.e
     nop

@@ -104,7 +104,7 @@ packets:
                 dport   : ref://testcase/config/flow/sport
                 seq     : callback://tcpcb/tcpcb/GetAckPktSeqNum
                 ack     : callback://tcpcb/tcpcb/GetAckPktAckNum
-                window  : 65535
+                window  : 1000
                 flags   : ack
                 options : callback://tcpcb/tcpcb/GetPktAckOutTcpOptions
     # PKT1_ACK_NFLOW = ACK for PKT1_NFLOW_FIN_OUT sent into nflow
@@ -190,7 +190,7 @@ packets:
                 dport   : ref://testcase/config/flow/dport
                 seq     : callback://tcpcb/tcpcb/GetNxtPktOutSeqNum
                 ack     : callback://tcpcb/tcpcb/GetPktOutAckNum
-                window  : 65535
+                window  : 1000
                 flags   : ack
                 options : callback://tcpcb/tcpcb/GetPktOutTcpOptions
             payload:
@@ -221,7 +221,7 @@ packets:
                 dport   : ref://testcase/config/flow/sport
                 seq     : callback://tcpcb/tcpcb/GetAckPktSeqNum
                 ack     : callback://tcpcb/tcpcb/GetAckPktAckNum
-                window  : 65535
+                window  : 1000
                 flags   : fin,ack
                 options : callback://tcpcb/tcpcb/GetPktOutTcpOptions
 

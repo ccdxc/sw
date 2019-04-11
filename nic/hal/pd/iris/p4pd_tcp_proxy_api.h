@@ -38,6 +38,11 @@ typedef enum tcpcb_hwid_order_ {
     P4PD_HWID_TCP_RX_OOO_QADDR_OFFSET = 15
 } tcpcb_hwid_order_t;
 
+// needs to match offset in tcp-table.h
+// TODO : Unify this definition so it can be used in 
+// both asm and C
+#define TCP_TCB_OOO_QADDR_CI_OFFSET 0
+
 typedef struct __attribute__((__packed__)) __tcp_rx_read_tx2rx_actiondata_d {
     uint64_t pc :8;
     uint64_t rsvd: 8;

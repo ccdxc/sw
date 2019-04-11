@@ -17,6 +17,7 @@ struct s5_t2_tcp_rx_ooo_qbase_cb_load_d d;
 
 %%
     .param          tcp_rx_write_ooq_stage_start
+    .param          TCP_PROXY_STATS
     .align
 
 tcp_ooo_qbase_cb_load:
@@ -83,7 +84,7 @@ tcp_ooo_qbase_cb_load_in_order:
     tblwr.c1        d.ooo_qbase_addr0, 0
     or.c1           r3, r3, k.s3_t2_s2s_ooo_rx2tx_ready_len0, 14
     phvwrp.c1       r1, 0, 64, r3
-    add.c1          r1, r1, 64
+    sub.c1          r1, r1, 64
     add.c1          r2, r2, 1
 
     sne             c1, k.s3_t2_s2s_ooo_rx2tx_ready_len1, 0
@@ -91,7 +92,7 @@ tcp_ooo_qbase_cb_load_in_order:
     tblwr.c1        d.ooo_qbase_addr1, 0
     or.c1           r3, r3, k.s3_t2_s2s_ooo_rx2tx_ready_len1, 14
     phvwrp.c1       r1, 0, 64, r3
-    add.c1          r1, r1, 64
+    sub.c1          r1, r1, 64
     add.c1          r2, r2, 1
 
     sne             c1, k.s3_t2_s2s_ooo_rx2tx_ready_len2, 0
@@ -99,7 +100,7 @@ tcp_ooo_qbase_cb_load_in_order:
     tblwr.c1        d.ooo_qbase_addr2, 0
     or.c1           r3, r3, k.s3_t2_s2s_ooo_rx2tx_ready_len2, 14
     phvwrp.c1       r1, 0, 64, r3
-    add.c1          r1, r1, 64
+    sub.c1          r1, r1, 64
     add.c1          r2, r2, 1
 
     sne             c1, k.s3_t2_s2s_ooo_rx2tx_ready_len3, 0
@@ -107,11 +108,21 @@ tcp_ooo_qbase_cb_load_in_order:
     tblwr.c1        d.ooo_qbase_addr3, 0
     or.c1           r3, r3, k.s3_t2_s2s_ooo_rx2tx_ready_len3, 14
     phvwrp.c1       r1, 0, 64, r3
-    add.c1          r1, r1, 64
+    sub.c1          r1, r1, 64
     add.c1          r2, r2, 1
 
     seq             c1, r2, 0
     b.c1            tcp_ooo_qbase_cb_load_end       // ERROR
+
+    /*
+     * Check if we have space available in rx2tx queue
+     * ( r2 <= (ci - (pi + 1)) )
+     */
+    add             r6, d.ooo_rx2tx_qbase_pi, 1
+    sub             r6, d.ooo_rx2tx_ci, r6
+    add             r6, r0, r6[CAPRI_OOO_RX2TX_RING_SLOTS_SHIFT-1:0]
+    sle             c1, r2, r6
+    b.!c1           tcp_ooo_qbase_rx2tx_full        // ERROR
 
     /*
      * Setup DMA commands for rx2tx
@@ -135,5 +146,13 @@ tcp_ooo_qbase_cb_load_in_order:
 
     
 tcp_ooo_qbase_cb_load_end:
+    nop.e
+    nop
+
+tcp_ooo_qbase_rx2tx_full:
+    phvwri          p.p4_intr_global_drop, 1
+    addui           r2, r0, hiword(TCP_PROXY_STATS)
+    addi            r2, r2, loword(TCP_PROXY_STATS)
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_OOQ_RX2TX_FULL, 1)
     nop.e
     nop

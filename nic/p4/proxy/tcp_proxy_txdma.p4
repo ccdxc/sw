@@ -614,7 +614,7 @@ action read_rx2tx(RX2TX_PARAMS) {
  * Stage 1 table 0 action
  */
 action read_rx2tx_extra(
-       snd_cwnd, rcv_nxt, snd_wnd, rcv_wnd, rto, snd_una, rcv_tsval,
+       snd_cwnd, rcv_nxt, dup_rcv_nxt, snd_wnd, rcv_wnd, rto, snd_una, rcv_tsval,
        cc_flags, t_flags, limited_transmit, state,
        pending_dup_ack_send, pending_challenge_ack_send) {
 
@@ -630,6 +630,7 @@ action read_rx2tx_extra(
     // d for stage 1
     modify_field(rx2tx_extra_d.snd_cwnd, snd_cwnd);
     modify_field(rx2tx_extra_d.rcv_nxt, rcv_nxt);
+    modify_field(rx2tx_extra_d.dup_rcv_nxt, dup_rcv_nxt);
     modify_field(rx2tx_extra_d.snd_wnd, snd_wnd);
     modify_field(rx2tx_extra_d.rcv_wnd, rcv_wnd);
     modify_field(rx2tx_extra_d.rto, rto);

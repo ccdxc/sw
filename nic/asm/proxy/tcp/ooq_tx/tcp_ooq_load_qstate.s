@@ -44,6 +44,10 @@ tcp_ooq_load_qstate_process_next_pkt_descr:
     tblwr           d.ooq_work_in_progress, 0
     tblmincri.f     d.{ci_0}.hx, CAPRI_OOO_RX2TX_RING_SLOTS_SHIFT, 1
 
+    // Inform producer of CI
+    add             r1, r0, d.ooo_rx2tx_producer_ci_addr
+    memwr.h         r1, d.{ci_0}.hx
+
     // launch table to free queue
     phvwr           p.to_s1_qbase_addr, d.curr_ooo_qbase
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, tcp_ooq_free_queue, d.ooo_rx2tx_free_pi_addr, TABLE_SIZE_32_BITS)

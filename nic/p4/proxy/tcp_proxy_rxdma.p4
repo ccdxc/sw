@@ -95,6 +95,7 @@
     modify_field(common_global_scratch.ooo_alloc_fail, common_phv.ooo_alloc_fail); \
     modify_field(common_global_scratch.ooq_tx2rx_pkt, common_phv.ooq_tx2rx_pkt); \
     modify_field(common_global_scratch.ooq_tx2rx_win_upd, common_phv.ooq_tx2rx_win_upd); \
+    modify_field(common_global_scratch.ooq_tx2rx_last_ooo_pkt, common_phv.ooq_tx2rx_last_ooo_pkt); \
 
 #define GENERATE_S1_S2S_K \
     modify_field(s1_s2s_scratch.payload_len, s1_s2s.payload_len); \
@@ -188,11 +189,11 @@ header_type tcp_rx_d_t {
         state                   : 8;
         parsed_state            : 8;
         rcv_wscale              : 8;
+        alloc_descr_L           : 1;    // used with .l not written back
+        dont_send_ack_L         : 1;    // used with .l not written back
+        unused_flags_L          : 6;    // used to pad .l fields to 1 byte
         limited_transmit        : 2;    // tcp_ack stage
         pending                 : 3;
-        write_serq              : 1;
-        alloc_descr             : 1;    // used with .l not written back
-        dont_send_ack           : 1;    // used with .l not written back
     }
 }
 
@@ -404,9 +405,11 @@ header_type tcp_fc_d_t {
     }
 }
 
+// offset 0 (TCP_TCB_OOO_QADDR_CI_OFFSET)
 // d for stage 5 table 2 - ooo qbase addr
 header_type ooo_qbase_addr_t {
     fields {
+        ooo_rx2tx_ci       : 16; // TCP_TCB_OOO_QADDR_CI_OFFSET
         ooo_qbase_addr0    : 64;
         ooo_qbase_addr1    : 64;
         ooo_qbase_addr2    : 64;
@@ -537,6 +540,7 @@ header_type common_global_phv_t {
         ooo_alloc_fail          : 1;
         ooq_tx2rx_pkt           : 1;
         ooq_tx2rx_win_upd       : 1;
+        ooq_tx2rx_last_ooo_pkt  : 1;
     }
 }
 
@@ -713,29 +717,12 @@ metadata s3_t2_s2s_phv_t s3_t2_s2s;
  *****************************************************************************/
 @pragma dont_trim
 metadata rx2tx_extra_t rx2tx_extra;
-@pragma dont_trim
-metadata doorbell_data_t db_data;
-@pragma dont_trim
-metadata doorbell_data_t db_data2;
-@pragma dont_trim
-metadata doorbell_data_t db_data3;
-@pragma dont_trim
-metadata doorbell_data_t rx2tx_ooq_ready_db_data;
 
 header_type ooq_rx2tx_queue_entry_opaque_t {
     fields {
         entry : 64;
     }
 }
-
-/*
- * ring_entry and aol have to be contiguous in phv
- */
-@pragma dont_trim
-metadata hbm_al_ring_entry_t ring_entry;
-@pragma dont_trim
-metadata pkt_descr_aol_t aol;
-
 /*
  * Upto 4 OOO queues can become in-order and DMAed to rx2tx program
  */
@@ -749,6 +736,24 @@ metadata ooq_rx2tx_queue_entry_opaque_t ooq_rx2tx_queue_entry3;
 metadata ooq_rx2tx_queue_entry_opaque_t ooq_rx2tx_queue_entry4;
 @pragma dont_trim
 metadata ooq_rx2tx_queue_entry_opaque_t dummy_to_get_around_ncc_bug;
+
+
+@pragma dont_trim
+metadata doorbell_data_t db_data;
+@pragma dont_trim
+metadata doorbell_data_t db_data2;
+@pragma dont_trim
+metadata doorbell_data_t db_data3;
+@pragma dont_trim
+metadata doorbell_data_t rx2tx_ooq_ready_db_data;
+
+/*
+ * ring_entry and aol have to be contiguous in phv
+ */
+@pragma dont_trim
+metadata hbm_al_ring_entry_t ring_entry;
+@pragma dont_trim
+metadata pkt_descr_aol_t aol;
 
 
 
@@ -871,8 +876,9 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
         rcv_nxt, rx_drop_cnt, ts_recent, lrcv_time, \
         snd_una, snd_wl1, pred_flags, snd_recover, bytes_rcvd, \
         snd_wnd, serq_pidx, num_dup_acks, cc_flags, quick, \
-        flag, rto, state, parsed_state, rcv_wscale, limited_transmit, pending, \
-        write_serq, alloc_descr, dont_send_ack
+        flag, rto, state, parsed_state, rcv_wscale, \
+        alloc_descr_L, dont_send_ack_L, unused_flags_L, \
+        limited_transmit, pending
 
 #define TCP_RX_CB_D \
     modify_field(tcp_rx_d.ooq_not_empty, ooq_not_empty); \
@@ -903,11 +909,11 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(tcp_rx_d.state, state); \
     modify_field(tcp_rx_d.parsed_state, parsed_state); \
     modify_field(tcp_rx_d.rcv_wscale, rcv_wscale); \
+    modify_field(tcp_rx_d.alloc_descr_L, alloc_descr_L); \
+    modify_field(tcp_rx_d.dont_send_ack_L, dont_send_ack_L);\
+    modify_field(tcp_rx_d.unused_flags_L, unused_flags_L);\
     modify_field(tcp_rx_d.limited_transmit, limited_transmit); \
-    modify_field(tcp_rx_d.pending, pending); \
-    modify_field(tcp_rx_d.write_serq, write_serq); \
-    modify_field(tcp_rx_d.alloc_descr, alloc_descr);\
-    modify_field(tcp_rx_d.dont_send_ack, dont_send_ack);
+    modify_field(tcp_rx_d.pending, pending);
 
 /*
  * Stage 1 table 0 action
@@ -917,7 +923,7 @@ action tcp_rx(TCP_RX_CB_PARAMS) {
     GENERATE_GLOBAL_K
 
     // k + i for stage 1
-    if (write_serq == 0) {
+    if (rcv_wscale == 0) {
         modify_field(to_s1_scratch.data_ofs_rsvd, to_s1.data_ofs_rsvd);
         modify_field(to_s1_scratch.rcv_wup, to_s1.rcv_wup);
         modify_field(to_s1_scratch.seq, to_s1.seq);
@@ -926,7 +932,7 @@ action tcp_rx(TCP_RX_CB_PARAMS) {
         modify_field(to_s1_scratch.ip_dsfield, to_s1.ip_dsfield);
     }
 
-    if (write_serq == 1) {
+    if (rcv_wscale == 1) {
         modify_field(to_cpu1_scratch.src_lif, cpu_hdr1.src_lif);
         modify_field(to_cpu1_scratch.lif, cpu_hdr1.lif);
         modify_field(to_cpu1_scratch.qtype, cpu_hdr1.qtype);
@@ -956,7 +962,7 @@ action tcp_ack(TCP_RX_CB_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
-    if (write_serq == 0) {
+    if (rcv_wscale == 0) {
         modify_field(to_cpu2_scratch.l3_offset_2, cpu_hdr2.l3_offset_2);
         modify_field(to_cpu2_scratch.l4_offset, cpu_hdr2.l4_offset);
         modify_field(to_cpu2_scratch.payload_offset, cpu_hdr2.payload_offset);
@@ -965,7 +971,7 @@ action tcp_ack(TCP_RX_CB_PARAMS) {
         modify_field(to_cpu2_scratch.tcp_AckNo_1, cpu_hdr2.tcp_AckNo_1);
     }
     // from to_stage 2
-    if (write_serq == 1) {
+    if (rcv_wscale == 1) {
         modify_field(to_s2_scratch.flag, to_s2.flag);
         modify_field(to_s2_scratch.window, to_s2.window);
     }
@@ -1186,7 +1192,8 @@ action tcp_fc(
 /*
  * Stage 5 table 2 action
  */
-action ooo_qbase_cb_load(ooo_qbase_addr0, ooo_qbase_addr1,
+action ooo_qbase_cb_load(ooo_rx2tx_ci, 
+                         ooo_qbase_addr0, ooo_qbase_addr1,
                          ooo_qbase_addr2, ooo_qbase_addr3,
                          ooo_rx2tx_qbase, ooo_rx2tx_qbase_pi)
 {
@@ -1199,6 +1206,7 @@ action ooo_qbase_cb_load(ooo_qbase_addr0, ooo_qbase_addr1,
         GENERATE_S3_T2_S2S_K
     }
 
+    modify_field(ooo_qbase_addr.ooo_rx2tx_ci, ooo_rx2tx_ci);
     modify_field(ooo_qbase_addr.ooo_qbase_addr0, ooo_qbase_addr0);
     modify_field(ooo_qbase_addr.ooo_qbase_addr1, ooo_qbase_addr1);
     modify_field(ooo_qbase_addr.ooo_qbase_addr2, ooo_qbase_addr2);

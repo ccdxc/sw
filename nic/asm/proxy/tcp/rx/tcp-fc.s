@@ -35,7 +35,8 @@ flow_fc_process:
     and         r1, k.common_phv_pending_txdma, \
                     TCP_PENDING_TXDMA_ACK_SEND | TCP_PENDING_TXDMA_DEL_ACK
     seq         c2, r1, 0
-    bcf         [c2], flow_fc_process_done
+    seq         c3, k.common_phv_is_dupack, 1
+    bcf         [c2 | c3], flow_fc_process_done
     nop
 
     bbeq        k.common_phv_write_serq, 0, start_window_calc
@@ -51,22 +52,22 @@ flow_fc_process:
     tblwr       d.cum_pkt_size, 0
 
     sle         c1, r7, 128
-    tblwr.c1    d.avg_pkt_size_shift, 4
-    b.c1        start_window_calc
-    sle         c1, r7, 256
     tblwr.c1    d.avg_pkt_size_shift, 5
     b.c1        start_window_calc
-    sle         c1, r7, 512
+    sle         c1, r7, 256
     tblwr.c1    d.avg_pkt_size_shift, 6
     b.c1        start_window_calc
-    sle         c1, r7, 768
+    sle         c1, r7, 512
     tblwr.c1    d.avg_pkt_size_shift, 7
     b.c1        start_window_calc
-    sle         c1, r7, 1024
+    sle         c1, r7, 768
     tblwr.c1    d.avg_pkt_size_shift, 8
     b.c1        start_window_calc
+    sle         c1, r7, 1024
+    tblwr.c1    d.avg_pkt_size_shift, 9
+    b.c1        start_window_calc
 
-    tblwr.!c1   d.avg_pkt_size_shift, 10
+    tblwr.!c1   d.avg_pkt_size_shift, 11
 
 start_window_calc:
     /* Figure out how many entries are free in serq */
@@ -153,6 +154,7 @@ flow_fc_process_done:
 
     seq         c1, k.common_phv_ooo_rcv, 1
     seq         c2, k.common_phv_ooq_tx2rx_win_upd, 1
+    seq.!c2     c2, k.common_phv_ooq_tx2rx_last_ooo_pkt, 1
     phvwri.c2   p.p4_rxdma_intr_dma_cmd_ptr, (CAPRI_PHV_START_OFFSET(rx2tx_extra_dma_dma_cmd_type) / 16)
     bcf         [c1 | c2], flow_fc_skip_serq
     CAPRI_NEXT_TABLE_READ_OFFSET(0, TABLE_LOCK_EN,

@@ -248,7 +248,7 @@ proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
     spec.set_snd_ssthresh(8000 * 10);
     spec.set_ato(TCP_ATO_USEC);
     spec.set_delay_ack(true);
-    //spec.set_ooo_queue(true);
+    spec.set_ooo_queue(true);
     spec.set_abc_l_var(2);
     // pred_flags
     //   header len = 8 (32 bytes with timestamp)
@@ -396,6 +396,8 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
         spec->set_snd_wscale(hal::pd::lkl_get_tcpcb_snd_wscale(tcpcb));
         spec->set_snd_ssthresh(hal::pd::lkl_get_tcpcb_snd_ssthresh(tcpcb));
         spec->set_smss(hal::pd::lkl_get_tcpcb_smss(tcpcb));
+        // Use rcv_mss same as smss for now
+        spec->set_rcv_mss(hal::pd::lkl_get_tcpcb_smss(tcpcb));
         smss = hal::pd::lkl_get_tcpcb_smss(tcpcb);
         HAL_TRACE_DEBUG("smss={}", smss);
         init_cwnd_segments = hal::pd::lkl_get_tcpcb_snd_cwnd(tcpcb);
@@ -421,7 +423,7 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_sesq_ci(get_rsp.mutable_spec()->sesq_ci());
     spec->set_snd_wnd(get_rsp.mutable_spec()->snd_wnd());
     spec->set_rcv_wnd(get_rsp.mutable_spec()->rcv_wnd());
-    spec->set_rcv_mss(get_rsp.mutable_spec()->rcv_mss());
+    //spec->set_rcv_mss(get_rsp.mutable_spec()->rcv_mss());
     spec->set_rcv_wscale(get_rsp.mutable_spec()->rcv_wscale());
     spec->set_source_port(get_rsp.mutable_spec()->source_port());
     spec->set_dest_port(get_rsp.mutable_spec()->dest_port());
@@ -432,7 +434,7 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_cpu_id(get_rsp.mutable_spec()->cpu_id());
     spec->set_delay_ack(get_rsp.mutable_spec()->delay_ack());
     spec->set_ato(get_rsp.mutable_spec()->ato());
-    //spec->set_ooo_queue(get_rsp.mutable_spec()->ooo_queue());
+    spec->set_ooo_queue(get_rsp.mutable_spec()->ooo_queue());
 
     memcpy(data,
            get_rsp.mutable_spec()->header_template().c_str(),

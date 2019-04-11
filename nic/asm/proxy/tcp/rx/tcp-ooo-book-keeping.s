@@ -46,17 +46,17 @@ tcp_ooo_book_keeping:
 
     seq             c1, k.t2_s2s_seq, d.end_seq1
     sne             c2, d.tail_index1, 0
-    sne             c2, d.tail_index1, TCP_OOO_QUEUE_NUM_ENTRIES
+    sne             c3, d.tail_index1, TCP_OOO_QUEUE_NUM_ENTRIES
     bcf             [c1 & c2 & c3], tcp_ooo_book_keeping_enqueue_tail_of_queue1
 
     seq             c1, k.t2_s2s_seq, d.end_seq2
     sne             c2, d.tail_index2, 0
-    sne             c2, d.tail_index2, TCP_OOO_QUEUE_NUM_ENTRIES
+    sne             c3, d.tail_index2, TCP_OOO_QUEUE_NUM_ENTRIES
     bcf             [c1 & c2 & c3], tcp_ooo_book_keeping_enqueue_tail_of_queue2
 
     seq             c1, k.t2_s2s_seq, d.end_seq3
     sne             c2, d.tail_index3, 0
-    sne             c2, d.tail_index3, TCP_OOO_QUEUE_NUM_ENTRIES
+    sne             c3, d.tail_index3, TCP_OOO_QUEUE_NUM_ENTRIES
     bcf             [c1 & c2 & c3], tcp_ooo_book_keeping_enqueue_tail_of_queue3
 
     /*
@@ -165,6 +165,7 @@ tcp_ooo_book_keeping_in_order:
      * r2 = bitmask of queues that become in-order
      */
     add             r1, k.t2_s2s_seq, k.t2_s2s_payload_len
+    add             r1, r0, r1[31:0]
     add             r2, r0, r0
 
 /*
@@ -228,14 +229,13 @@ tcp_ooo_book_keeping_in_order_check_queue3:
 
 tcp_ooo_book_keeping_done:
     /*
-     * No queue became in-order
+     * No queue became in-order, send acks if necessary as we would have
+     * suppressed sending acks when OOQ is not empty.
      */
+    phvwr           p.rx2tx_extra_pending_dup_ack_send, 0
+    phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
+                        TCP_PENDING_TXDMA_ACK_SEND
 
-    /*
-     * TODO : Send an ack here as we would have suppressed
-     * sending of ack in tcp-rx for the new packet that came
-     * in-order
-     */
     CAPRI_CLEAR_TABLE_VALID(2)
     nop.e
     nop

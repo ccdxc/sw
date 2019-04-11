@@ -127,6 +127,7 @@
 // Feedback packet rx2tx
 #define TCP_TX2RX_FEEDBACK_OOO_PKT          1
 #define TCP_TX2RX_FEEDBACK_WIN_UPD          2
+#define TCP_TX2RX_FEEDBACK_LAST_OOO_PKT     3
 
 
 // Global stats
@@ -141,15 +142,17 @@
 #define TCP_PROXY_STATS_INVALID_NMDR_DESCR      (8 << 3)
 #define TCP_PROXY_STATS_RCVD_CE_PKTS            (9 << 3)
 #define TCP_PROXY_STATS_RETX_PKTS               (10 << 3)
-#define TCP_PROXY_STATS_DEBUG1                  (11 << 3)
-#define TCP_PROXY_STATS_DEBUG2                  (12 << 3)
-#define TCP_PROXY_STATS_DEBUG3                  (13 << 3)
-#define TCP_PROXY_STATS_DEBUG4                  (14 << 3)
-#define TCP_PROXY_STATS_DEBUG5                  (15 << 3)
-#define TCP_PROXY_STATS_DEBUG6                  (16 << 3)
-#define TCP_PROXY_STATS_DEBUG7                  (17 << 3)
-#define TCP_PROXY_STATS_DEBUG8                  (18 << 3)
-#define TCP_PROXY_STATS_DEBUG9                  (19 << 3)
-#define TCP_PROXY_STATS_DEBUG10                 (20 << 3)
+#define TCP_PROXY_STATS_OOQ_RX2TX_FULL          (11 << 3)
+
+#define TCP_PROXY_STATS_DEBUG1                  (12 << 3)
+#define TCP_PROXY_STATS_DEBUG2                  (13 << 3)
+#define TCP_PROXY_STATS_DEBUG3                  (14 << 3)
+#define TCP_PROXY_STATS_DEBUG4                  (15 << 3)
+#define TCP_PROXY_STATS_DEBUG5                  (16 << 3)
+#define TCP_PROXY_STATS_DEBUG6                  (17 << 3)
+#define TCP_PROXY_STATS_DEBUG7                  (18 << 3)
+#define TCP_PROXY_STATS_DEBUG8                  (19 << 3)
+#define TCP_PROXY_STATS_DEBUG9                  (20 << 3)
+#define TCP_PROXY_STATS_DEBUG10                 (21 << 3)
 
 #endif /* #ifndef __TCP_COMMON_H__ */

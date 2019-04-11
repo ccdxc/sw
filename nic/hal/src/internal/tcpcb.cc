@@ -638,6 +638,8 @@ tcp_proxy_global_stats_get(tcp_proxy::TcpProxyGlobalStatsGetRequest& req,
                   pd_tcp_global_stats_get_args.rcvd_ce_pkts);
     rsp->mutable_global_stats()->set_retx_pkts(
                   pd_tcp_global_stats_get_args.retx_pkts);
+    rsp->mutable_global_stats()->set_ooq_rx2tx_full(
+                  pd_tcp_global_stats_get_args.ooq_rx2tx_full);
     rsp->mutable_global_stats()->set_tcp_debug1(
                   pd_tcp_global_stats_get_args.tcp_debug1);
     rsp->mutable_global_stats()->set_tcp_debug2(

@@ -41,4 +41,7 @@
 #define TCP_TCB_RX_STATS_OFFSET               768
 #define TCP_TCB_TX_STATS_OFFSET               832
 #define TCP_TCB_OOO_BOOK_KEEPING_OFFSET0      896
+
 #define TCP_TCB_OOO_QADDR_OFFSET              960
+// needs to match offset in p4pd_tcp_proxy_api.h
+#define TCP_TCB_OOO_QADDR_CI_OFFSET           (TCP_TCB_OOO_QADDR_OFFSET + 0)

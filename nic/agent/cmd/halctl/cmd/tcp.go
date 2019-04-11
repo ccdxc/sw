@@ -168,6 +168,7 @@ func doTCPProxyGlobalStatsShowCmd(cmd *cobra.Command, args []string) {
 		fmt.Printf("%-30s : %-6d\n", "InvalidNmdrDescr", respMsg.GlobalStats.InvalidNmdrDescr)
 		fmt.Printf("%-30s : %-6d\n", "RcvdCePkts", respMsg.GlobalStats.RcvdCePkts)
 		fmt.Printf("%-30s : %-6d\n", "RetxPkts", respMsg.GlobalStats.RetxPkts)
+		fmt.Printf("%-30s : %-6d\n", "OoqRx2TxFull", respMsg.GlobalStats.OoqRx2TxFull)
 		fmt.Printf("%-30s : %-6d\n", "debug1", respMsg.GlobalStats.TcpDebug1)
 		fmt.Printf("%-30s : %-6d\n", "debug2", respMsg.GlobalStats.TcpDebug2)
 		fmt.Printf("%-30s : %-6d\n", "debug3", respMsg.GlobalStats.TcpDebug3)

@@ -46,6 +46,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 #define RX2TX_SHARED_EXTRA_STATE \
         snd_cwnd                        : 32                    ;\
         rcv_nxt                         : SEQ_NUMBER_WIDTH      ;\
+        dup_rcv_nxt                     : SEQ_NUMBER_WIDTH      ;\
         snd_wnd                         : 16                    ;\
         rcv_wnd                         : 16                    ;\
         rto                             : 16                    ;\
@@ -58,7 +59,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         pending_dup_ack_send            : 1                     ;\
         pending_challenge_ack_send      : 1                     ;\
         rx2tx_end_marker                : 22                    ;\
-        pad_rx2tx_extra                 : 272                   ;\
+        pad_rx2tx_extra                 : 240                   ;\
 
 #define TCB_RETX_SHARED_STATE \
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\

@@ -38,8 +38,11 @@ tcp_rx_read_shared_stage0_start:
     // location for now. This is prone to error, but hopefully if something
     // breaks, we have DOL test cases to catch it.  (refer to
     // iris/gen/p4gen/tcp_proxy_rxdma/asm_out/INGRESS_p.h)
-    seq.c1          c1, k._tcp_app_header_end_pad_88[15:8], TCP_TX2RX_FEEDBACK_WIN_UPD
-    b.c1            tcp_rx_tx2rx_win_upd
+    seq             c2, k._tcp_app_header_end_pad_88[15:8], TCP_TX2RX_FEEDBACK_WIN_UPD
+    bcf             [c1 & c2], tcp_rx_tx2rx_win_upd
+
+    seq             c2, k._tcp_app_header_end_pad_88[15:8], TCP_TX2RX_FEEDBACK_LAST_OOO_PKT
+    bcf             [c1 & c2], tcp_rx_tx2rx_last_ooo_pkt
 
     tblwr           d.rx_ts, r4
 
@@ -120,6 +123,14 @@ flow_terminate:
 tcp_rx_tx2rx_win_upd:
     phvwr           p.common_phv_ooq_tx2rx_pkt, 1
     phvwr           p.common_phv_ooq_tx2rx_win_upd, 1
+    CAPRI_NEXT_TABLE_READ_OFFSET_e(0, TABLE_LOCK_EN,
+                tcp_rx_win_upd_process_start, k.p4_rxdma_intr_qstate_addr,
+                TCP_TCB_RX_OFFSET, TABLE_SIZE_512_BITS)
+    nop
+
+tcp_rx_tx2rx_last_ooo_pkt:
+    phvwr           p.common_phv_ooq_tx2rx_pkt, 1
+    phvwr           p.common_phv_ooq_tx2rx_last_ooo_pkt, 1
     CAPRI_NEXT_TABLE_READ_OFFSET_e(0, TABLE_LOCK_EN,
                 tcp_rx_win_upd_process_start, k.p4_rxdma_intr_qstate_addr,
                 TCP_TCB_RX_OFFSET, TABLE_SIZE_512_BITS)

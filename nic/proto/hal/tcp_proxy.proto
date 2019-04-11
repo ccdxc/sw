@@ -369,16 +369,17 @@ message TcpProxyGlobalStats {
   uint64 invalid_nmdr_descr = 9;
   uint64 rcvd_ce_pkts = 10;
   uint64 retx_pkts = 11;
-  uint64 tcp_debug1 = 12;
-  uint64 tcp_debug2 = 13;
-  uint64 tcp_debug3 = 14;
-  uint64 tcp_debug4 = 15;
-  uint64 tcp_debug5 = 16;
-  uint64 tcp_debug6 = 17;
-  uint64 tcp_debug7 = 18;
-  uint64 tcp_debug8 = 19;
-  uint64 tcp_debug9 = 20;
-  uint64 tcp_debug10 = 21;
+  uint64 ooq_rx2tx_full = 12;
+  uint64 tcp_debug1 = 1002;
+  uint64 tcp_debug2 = 1003;
+  uint64 tcp_debug3 = 1004;
+  uint64 tcp_debug4 = 1005;
+  uint64 tcp_debug5 = 1006;
+  uint64 tcp_debug6 = 1007;
+  uint64 tcp_debug7 = 1008;
+  uint64 tcp_debug8 = 1009;
+  uint64 tcp_debug9 = 1010;
+  uint64 tcp_debug10 = 1011;
 }
 
 // TcpProxyGlobalCfg captures global TCP configuration

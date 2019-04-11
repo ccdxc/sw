@@ -81,6 +81,7 @@ header_type ooq_tcp_txdma_qstate_d_t {
         ooo_rx2tx_qbase             : 64;
         ooo_rx2tx_free_pi_addr      : 64;
         curr_ooo_qbase              : 64;
+        ooo_rx2tx_producer_ci_addr  : 64;
         curr_ooq_num_entries        : 16;
         curr_ooq_trim               : 16;
         curr_index                  : 16;
@@ -251,7 +252,7 @@ metadata dma_cmd_phv2pkt_t feedback;        // dma cmd 7
 #define STAGE0_PARAMS \
     rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, \
     ooq_work_in_progress, ooo_rx2tx_qbase, ooo_rx2tx_free_pi_addr, \
-    curr_ooo_qbase, curr_ooq_num_entries, \
+    curr_ooo_qbase, ooo_rx2tx_producer_ci_addr, curr_ooq_num_entries, \
     curr_ooq_trim, curr_index
 
 #define GENERATE_STAGE0_D \
@@ -271,6 +272,7 @@ metadata dma_cmd_phv2pkt_t feedback;        // dma cmd 7
     modify_field(ooq_tcp_txdma_qstate_d.ooo_rx2tx_qbase, ooo_rx2tx_qbase); \
     modify_field(ooq_tcp_txdma_qstate_d.ooo_rx2tx_free_pi_addr, ooo_rx2tx_free_pi_addr); \
     modify_field(ooq_tcp_txdma_qstate_d.curr_ooo_qbase, curr_ooo_qbase); \
+    modify_field(ooq_tcp_txdma_qstate_d.ooo_rx2tx_producer_ci_addr, ooo_rx2tx_producer_ci_addr); \
     modify_field(ooq_tcp_txdma_qstate_d.curr_ooq_num_entries, curr_ooq_num_entries); \
     modify_field(ooq_tcp_txdma_qstate_d.curr_ooq_trim, curr_ooq_trim); \
     modify_field(ooq_tcp_txdma_qstate_d.curr_index, curr_index); \
