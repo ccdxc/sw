@@ -3,6 +3,8 @@
 #ifndef __TEST_H__
 #define __TEST_H__
 
+#include <iostream>
+
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/upgrade_manager/export/upgcsdk/upgrade.hpp"
 #include "nic/upgrade_manager/utils/upgrade_log.hpp"
@@ -177,11 +179,17 @@ public:
     }
 
     void SuccessHandler(UpgCtx& upgCtx) {
+        FILE *fp = fopen("/run/testupgapp.success", "w+");
+        fprintf(fp, "success\n");
+        fclose(fp);
         return;
     }
 
     HdlrResp FailedHandler(UpgCtx& upgCtx) {
         HdlrResp resp = {.resp=SUCCESS, .errStr=""};
+        FILE *fp = fopen("/run/testupgapp.fail", "w+");
+        fprintf(fp, "fail\n");
+        fclose(fp);
         return resp;
     }
 };

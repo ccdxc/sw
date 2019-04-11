@@ -32,8 +32,11 @@ bool test::LinkUpPause;
 bool test::PostLinkUpPause;
 
 int main(int argc, char **argv) {
-    FILE *fp;
 
+    remove("/run/testupgapp.success");
+    remove("/run/testupgapp.fail");
+
+    FILE *fp;
     fp = fopen("/run/testupgapp.pid", "w+");
     fprintf(fp, "%d\n", getpid());
     fclose(fp);
