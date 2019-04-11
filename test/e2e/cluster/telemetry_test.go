@@ -17,7 +17,6 @@ import (
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/tmagent/state/fwgen/fwevent"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/telemetryclient"
 )
 
@@ -42,11 +41,11 @@ func testQueryingMetrics(kind string) {
 		ctx := ts.tu.NewLoggedInContext(context.Background())
 		res, err := tc.Metrics(ctx, nodeQuery)
 		if err != nil {
-			log.Infof("Query for %s returned err: %s", kind, err)
+			By(fmt.Sprintf("Query for %s returned err: %s", kind, err))
 			return false
 		}
 		if len(res.Results) == 0 || len(res.Results[0].Series) == 0 {
-			log.Infof("Query for %s returned empty data", kind)
+			By(fmt.Sprintf("Query for %s returned empty data", kind))
 			return false
 		}
 		series := res.Results[0].Series[0]
@@ -163,30 +162,30 @@ func testQueryingFwlogs() {
 		Eventually(func() bool {
 			resp, err := tc.Fwlogs(ctx, query)
 			if err != nil {
-				log.Errorf("Fwlog query returned err %v", err)
+				By(fmt.Sprintf("Fwlog query returned err %v", err))
 				return false
 			}
 			// Even if citadel isn't ready, it should return 5 results
 			Expect(len(resp.Results)).To(Equal(5))
 			// Since each query may go to a different replica, we check all the result lengths
 			if len(resp.Results[0].Logs) != 20 {
-				log.Errorf("Fwlog query only returned %d records for the first query", len(resp.Results[0].Logs))
+				By(fmt.Sprintf("Fwlog query only returned %d records for the first query", len(resp.Results[0].Logs)))
 				return false
 			}
 			if len(resp.Results[1].Logs) != 20 {
-				log.Errorf("Fwlog query only returned %d records for the first query", len(resp.Results[1].Logs))
+				By(fmt.Sprintf("Fwlog query only returned %d records for the first query", len(resp.Results[1].Logs)))
 				return false
 			}
 			if len(resp.Results[2].Logs) != 12 {
-				log.Errorf("Fwlog query only returned %d records for the first query", len(resp.Results[2].Logs))
+				By(fmt.Sprintf("Fwlog query only returned %d records for the first query", len(resp.Results[2].Logs)))
 				return false
 			}
 			if len(resp.Results[3].Logs) != 2 {
-				log.Errorf("Fwlog query only returned %d records for the first query", len(resp.Results[3].Logs))
+				By(fmt.Sprintf("Fwlog query only returned %d records for the first query", len(resp.Results[3].Logs)))
 				return false
 			}
 			if len(resp.Results[4].Logs) != 0 {
-				log.Errorf("Fwlog query only returned %d records for the first query", len(resp.Results[4].Logs))
+				By(fmt.Sprintf("Fwlog query only returned %d records for the first query", len(resp.Results[4].Logs)))
 				return false
 			}
 			return true
@@ -195,7 +194,7 @@ func testQueryingFwlogs() {
 		Eventually(func() bool {
 			resp, err := tc.Fwlogs(ctx, query)
 			if err != nil {
-				log.Errorf("Fwlog query returned err %v", err)
+				By(fmt.Sprintf("Fwlog query returned err %v", err))
 				return false
 			}
 
@@ -203,11 +202,11 @@ func testQueryingFwlogs() {
 			Expect(resp.Tenant).To(Equal(globals.DefaultTenant))
 			Expect(len(resp.Results)).To(Equal(5))
 
-			log.Infof("++++++[0] %+v", resp.Results[0].Logs)
+			By(fmt.Sprintf("query[0] %+v", resp.Results[0].Logs))
 			Expect(resp.Results[0].StatementID).To(Equal(int32(0)))
 
 			if len(resp.Results[0].Logs) != 20 {
-				log.Errorf("mismatch in query results, expected 20, got %d", len(resp.Results[0].Logs))
+				By(fmt.Sprintf("mismatch in query results, expected 20, got %d", len(resp.Results[0].Logs)))
 				return false
 			}
 
@@ -215,42 +214,44 @@ func testQueryingFwlogs() {
 			reverse(resLog)
 			Expect(logs).Should(Equal(resLog))
 
-			log.Infof("++++++[1] %+v", resp.Results[1].Logs)
+			By(fmt.Sprintf("query[1] %+v", resp.Results[1].Logs))
 			Expect(resp.Results[1].StatementID).To(Equal(int32(1)))
 			if len(resp.Results[1].Logs) != 20 {
-				log.Errorf("mismatch in query results, expected 20, got %d", len(resp.Results[1].Logs))
+				By(fmt.Sprintf("mismatch in query results, expected 20, got %d", len(resp.Results[1].Logs)))
 				return false
 			}
 			Expect(logs).Should(Equal(resp.Results[1].Logs))
 
-			log.Infof("++++++[2] %+v", resp.Results[2].Logs)
+			By(fmt.Sprintf("query[2] %+v", resp.Results[2].Logs))
 			Expect(resp.Results[2].StatementID).To(Equal(int32(2)))
 			if len(resp.Results[2].Logs) != 12 {
-				log.Errorf("mismatch in query results, expected 12, got %d", len(resp.Results[2].Logs))
+				By(fmt.Sprintf("mismatch in query results, expected 12, got %d", len(resp.Results[2].Logs)))
 				return false
 			}
 
-			log.Infof("++++++[3] %+v", resp.Results[3].Logs)
+			By(fmt.Sprintf("query[3] %+v", resp.Results[3].Logs))
 			Expect(resp.Results[3].StatementID).To(Equal(int32(3)))
 			if len(resp.Results[3].Logs) != 2 {
-				log.Errorf("mismatch in query results, expected 2, got %d", len(resp.Results[3].Logs))
+				By(fmt.Sprintf("mismatch in query results, expected 2, got %d", len(resp.Results[3].Logs)))
 				return false
 			}
 
-			log.Infof("++++++[4] %+v", resp.Results[4].Logs)
+			By(fmt.Sprintf("query[4] %+v", resp.Results[4].Logs))
 			Expect(resp.Results[4].StatementID).To(Equal(int32(4)))
 			if len(resp.Results[4].Logs) != 0 {
-				log.Errorf("mismatch in query results, expected 0, got %d", len(resp.Results[3].Logs))
+				By(fmt.Sprintf("mismatch in query results, expected 0, got %d", len(resp.Results[3].Logs)))
 				return false
 			}
 
 			return true
 		}, 180, 2).Should(BeTrue(), "Citadel failed to return expected amount of results")
 	}
+
+	By("check fwlogs before the test")
 	verifyLogs()
 
 	// Restart Citadel - logs should be persisted
-	log.Info("Restarting citadel...")
+	By("Restarting citadel...")
 	_, err = ts.tu.KillContainer(globals.Citadel)
 	Expect(err).To(BeNil())
 
@@ -374,6 +375,8 @@ var _ = Describe("telemetry tests", func() {
 					res, err := tc.Fwlogs(ctx, fwQuery)
 					if err != nil {
 						By(fmt.Sprintf("failed to get fwlog, %s", err))
+						// print cluster
+						GetCitadelState()
 						return false
 					}
 
@@ -523,7 +526,7 @@ func GetCitadelState() {
 	nodeIP := ts.tu.NameToIPMap[node]
 	url := fmt.Sprintf("http://%s:%s", globals.Localhost, globals.CitadelHTTPPort)
 	res := ts.tu.CommandOutput(nodeIP, fmt.Sprintf(`curl %s/info`, url))
-	log.Info(res)
+	By(res)
 }
 
 // writePoints writes points to citadel using inflxdb client
@@ -539,7 +542,7 @@ func writePoints(url string, bp client.BatchPoints) {
 	}
 	Eventually(func() bool {
 		res := ts.tu.CommandOutput(nodeIP, fmt.Sprintf(`curl -s -o /dev/null -w "%%{http_code}" -XPOST "%s/write?db=%s" --data-binary '%s'`, url, bp.Database(), strings.Join(pointsStr, "\n")))
-		log.Infof("writing points returned code %s", res)
+		By(fmt.Sprintf("writing points returned code %s", res))
 		if strings.HasPrefix(res, "20") {
 			return true
 		}
