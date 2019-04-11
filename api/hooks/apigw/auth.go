@@ -20,6 +20,11 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+var (
+	// errSuperAdminRoleBindingNoSubject is returned when there is no user and group in AdminRoleBinding in default tenant
+	errSuperAdminRoleBindingNoSubject = fmt.Errorf("%s in %s tenant should have at least one user or group", globals.AdminRoleBinding, globals.DefaultTenant)
+)
+
 type serviceID struct {
 	kind   string
 	action apiintf.APIOperType
@@ -292,6 +297,23 @@ func (a *authHooks) isAuthorizedPreCallHook(ctx context.Context, in interface{})
 	return ctx, user, true, nil
 }
 
+func (a *authHooks) adminRoleBindingPreCallHook(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+	a.logger.DebugLog("method", "adminRoleBindingPreCallHook", "msg", "Pre-call hook called for AdminRoleBinding update")
+	obj, ok := in.(*auth.RoleBinding)
+	if !ok {
+		return ctx, nil, true, errors.New("invalid input type")
+	}
+	if obj.Name == globals.AdminRoleBinding {
+		// super admin role binding should have at least one user or group
+		if obj.Tenant == globals.DefaultTenant {
+			if len(obj.Spec.Users) == 0 && len(obj.Spec.UserGroups) == 0 {
+				return ctx, in, true, errSuperAdminRoleBindingNoSubject
+			}
+		}
+	}
+	return ctx, in, false, nil
+}
+
 func (a *authHooks) registerAddRolesHook(svc apigw.APIGatewayService) error {
 	opers := []apiintf.APIOperType{apiintf.CreateOper, apiintf.UpdateOper, apiintf.DeleteOper, apiintf.GetOper, apiintf.ListOper}
 	for _, oper := range opers {
@@ -442,6 +464,20 @@ func (a *authHooks) registerIsAuthorizedPreCallHook(svc apigw.APIGatewayService)
 	return nil
 }
 
+func (a *authHooks) registerAdminRoleBindingPreCallHook(svc apigw.APIGatewayService) error {
+	ids := []serviceID{
+		{"RoleBinding", apiintf.UpdateOper},
+	}
+	for _, id := range ids {
+		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
+		if err != nil {
+			return err
+		}
+		prof.AddPreCallHook(a.adminRoleBindingPreCallHook)
+	}
+	return nil
+}
+
 func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	gw := apigwpkg.MustGetAPIGateway()
 	grpcaddr := globals.APIServer
@@ -501,7 +537,12 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	}
 
 	// register pre-call hook to implement IsAuthorized action
-	return r.registerIsAuthorizedPreCallHook(svc)
+	if err := r.registerIsAuthorizedPreCallHook(svc); err != nil {
+		return err
+	}
+
+	// register pre-call hook to prevent removing all users and groups from superadmin role binding
+	return r.registerAdminRoleBindingPreCallHook(svc)
 }
 
 func init() {

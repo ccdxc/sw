@@ -1272,3 +1272,88 @@ func TestIsAuthorizedPreCallHookRegistration(t *testing.T) {
 	err = r.registerIsAuthorizedPreCallHook(svc)
 	Assert(t, err != nil, "expected error in isAuthorizedPreCallHook hook registration")
 }
+
+func TestAdminRoleBindingPreCallHook(t *testing.T) {
+	noSubjectAdminRoleBinding := login.NewClusterRoleBinding(globals.AdminRoleBinding, globals.AdminRole, "", "")
+	withUserAdminRoleBinding := login.NewClusterRoleBinding(globals.AdminRoleBinding, globals.AdminRole, "testuser", "")
+	withGroupAdminRoleBinding := login.NewClusterRoleBinding(globals.AdminRoleBinding, globals.AdminRole, "", "testgroup")
+	tenantAdminRoleBinding := login.NewRoleBinding(globals.AdminRoleBinding, "testtenant", globals.AdminRole, "", "testgroup")
+	tests := []struct {
+		name     string
+		in       interface{}
+		out      interface{}
+		skipCall bool
+		err      error
+	}{
+		{
+			name:     "removing all subjects from superadmin rolebinding",
+			in:       noSubjectAdminRoleBinding,
+			out:      noSubjectAdminRoleBinding,
+			skipCall: true,
+			err:      errSuperAdminRoleBindingNoSubject,
+		},
+		{
+			name:     "with user in superadmin rolebinding",
+			in:       withUserAdminRoleBinding,
+			out:      withUserAdminRoleBinding,
+			skipCall: false,
+			err:      nil,
+		},
+		{
+			name:     "with group in superadmin rolebinding",
+			in:       withGroupAdminRoleBinding,
+			out:      withGroupAdminRoleBinding,
+			skipCall: false,
+			err:      nil,
+		},
+		{
+			name:     "tenant admin rolebinding",
+			in:       tenantAdminRoleBinding,
+			out:      tenantAdminRoleBinding,
+			skipCall: false,
+			err:      nil,
+		},
+		{
+			name:     "invalid object",
+			in:       &struct{ name string }{name: "invalid object type"},
+			out:      nil,
+			skipCall: true,
+			err:      errors.New("invalid input type"),
+		},
+	}
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &authHooks{}
+	r.logger = l
+	for _, test := range tests {
+		ctx := context.TODO()
+		_, out, ok, err := r.adminRoleBindingPreCallHook(ctx, test.in)
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
+		Assert(t, reflect.DeepEqual(test.out, out),
+			fmt.Sprintf("[%s] test failed, expected object [%v], got [%v]", test.name, test.out, out))
+		Assert(t, test.skipCall == ok, fmt.Sprintf("[%s] test failed, expected skipcall [%v], got [%v]", test.name, test.skipCall, ok))
+	}
+}
+
+func TestAdminRoleBindingPreCallHookRegistration(t *testing.T) {
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	svc := mocks.NewFakeAPIGwService(l, false)
+	r := &authHooks{}
+	r.logger = l
+	err := r.registerAdminRoleBindingPreCallHook(svc)
+	AssertOk(t, err, "adminRoleBindingPreCallHook hook registration failed")
+
+	ids := []serviceID{
+		{"RoleBinding", apiintf.UpdateOper},
+	}
+	for _, id := range ids {
+		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
+		AssertOk(t, err, "error getting service profile for [%s] [%s]", id.kind, id.action)
+		Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre-call hooks [%d] for [%s] [%s] profile", len(prof.PreCallHooks()), id.kind, id.action))
+	}
+	// test err
+	svc = mocks.NewFakeAPIGwService(l, true)
+	err = r.registerAdminRoleBindingPreCallHook(svc)
+	Assert(t, err != nil, "expected error in adminRoleBindingPreCallHook hook registration")
+}

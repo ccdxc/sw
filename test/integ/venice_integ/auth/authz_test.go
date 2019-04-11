@@ -152,6 +152,16 @@ func TestAdminRoleBinding(t *testing.T) {
 	// Deleting admin role binding should fail
 	_, err = tinfo.restcl.AuthV1().RoleBinding().Delete(superAdminCtx, &api.ObjectMeta{Name: globals.AdminRoleBinding, Tenant: globals.DefaultTenant})
 	Assert(t, err != nil, "expected error while deleting admin role binding")
+	// updating super admin role binding to not have any users and groups should fail
+	var superAdminRoleBinding *auth.RoleBinding
+	AssertEventually(t, func() (bool, interface{}) {
+		superAdminRoleBinding, err = tinfo.restcl.AuthV1().RoleBinding().Get(superAdminCtx, &api.ObjectMeta{Name: globals.AdminRoleBinding, Tenant: globals.DefaultTenant})
+		return err == nil, err
+	}, "error fetching super admin role binding")
+	superAdminRoleBinding.Spec.Users = []string{}
+	_, err = tinfo.restcl.AuthV1().RoleBinding().Update(superAdminCtx, superAdminRoleBinding)
+	Assert(t, err != nil && strings.Contains(err.Error(), "AdminRoleBinding in default tenant should have at least one user or group"),
+		"expected updating super admin role binding with no subject to fail")
 	// test admin role binding creation and deletion
 	currTime := time.Now()
 	MustCreateTenant(tinfo.apicl, testTenant)
@@ -181,10 +191,27 @@ func TestAdminRoleBinding(t *testing.T) {
 			auth.Permission_AllActions.String()))
 	adminRoleBinding.Spec.Role = "NetworkAdminRole"
 	_, err = tinfo.restcl.AuthV1().RoleBinding().Update(superAdminCtx, adminRoleBinding)
-	// cleanup objs in tenant before deleting
+	// remove NetworkAdminRole
 	MustDeleteRole(tinfo.apicl, "NetworkAdminRole", testTenant)
 	Assert(t, err != nil, "expected error while updating AdminRoleBinding to have non-admin role")
 	Assert(t, strings.Contains(err.Error(), "AdminRoleBinding can bind to only AdminRole"), fmt.Sprintf("unexpected error: %v", err))
+	// test if admin role binding for a non default tenant can have no users and groups
+	MustCreateTestUser(tinfo.apicl, testUser, testPassword, testTenant)
+	adminRoleBinding.Spec.Role = globals.AdminRole
+	adminRoleBinding.Spec.Users = []string{testUser}
+	var updatedAdminRoleBinding *auth.RoleBinding
+	AssertEventually(t, func() (bool, interface{}) {
+		updatedAdminRoleBinding, err = tinfo.restcl.AuthV1().RoleBinding().Update(superAdminCtx, adminRoleBinding)
+		return err == nil, err
+	}, "error updating admin role binding with user")
+	Assert(t, updatedAdminRoleBinding.Spec.Users[0] == testUser, fmt.Sprintf("admin role binding not updated with user: %#v", updatedAdminRoleBinding))
+	adminRoleBinding.Spec.Users = []string{}
+	AssertEventually(t, func() (bool, interface{}) {
+		updatedAdminRoleBinding, err = tinfo.restcl.AuthV1().RoleBinding().Update(superAdminCtx, adminRoleBinding)
+		return err == nil, err
+	}, "error removing user from admin role binding")
+	Assert(t, len(updatedAdminRoleBinding.Spec.Users) == 0, fmt.Sprintf("users not cleared from admin role binding: %#v", updatedAdminRoleBinding))
+	MustDeleteUser(tinfo.apicl, testUser, testTenant)
 	// deleting tenant should delete AdminRoleBinding
 	MustDeleteTenant(tinfo.apicl, testTenant)
 	AssertEventually(t, func() (bool, interface{}) {
