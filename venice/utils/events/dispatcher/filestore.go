@@ -95,7 +95,7 @@ func newPersistentStore(config *events.StoreConfig, logger log.Logger) (events.P
 
 	// open/create events file
 	filename := fi.getExistingOrNewFilename()
-	handler, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, fileMode)
+	handler, err := fi.createFile(filename, os.O_RDWR|os.O_CREATE|os.O_APPEND)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open/create events file")
 	}
@@ -302,9 +302,10 @@ func (f *fileImpl) listEventFilesFromStoreInOrder() []string {
 		f.logger.Errorf("failed to list event files from store {%s}, err: %v", f.storePath, err)
 	}
 	for _, file := range files {
-		if file.IsDir() {
+		if file.IsDir() || (file.Mode()&os.ModeSymlink != 0) { // ignore directories and symlinks
 			continue
 		}
+
 		eventFiles = append(eventFiles, path.Join(f.storePath, file.Name()))
 	}
 
@@ -334,7 +335,7 @@ func (f *fileImpl) rotate() error {
 
 	// create a new file
 	filename := f.filename()
-	handler, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, fileMode)
+	handler, err := f.createFile(filename, os.O_RDWR|os.O_CREATE)
 	if err != nil {
 		return err
 	}
@@ -349,6 +350,28 @@ func (f *fileImpl) rotate() error {
 	f.eventFiles.Unlock()
 
 	return nil
+}
+
+// createFile creates a file with the given filename and flag. It also creates a symlink for /var/lib/pensando/events/events which
+// is needed for penctl to show events.
+func (f *fileImpl) createFile(filename string, flag int) (*os.File, error) {
+	handler, err := os.OpenFile(filename, flag, fileMode)
+	if err != nil {
+		return nil, err
+	}
+
+	// create a symlink with file named `events`, this is needed for penctl to show events
+	symlinkPath := path.Join(f.storePath, "events")
+	if _, err := os.Lstat(symlinkPath); err == nil {
+		if err := os.Remove(symlinkPath); err != nil {
+			return nil, err
+		}
+	}
+	if err := os.Symlink(filename, symlinkPath); err != nil {
+		return nil, err
+	}
+
+	return handler, nil
 }
 
 // prunes old event files from f.eventFiles.list
