@@ -59,6 +59,7 @@ req_tx_sqwqe_process:
     //color check
     seq            c1, CAPRI_KEY_FIELD(IN_P, color), d.base.color  // BD-slot
     bcf            [!c1], clear_poll_in_progress
+    nop // BD Slot
 
 skip_color_check:
     bbeq           CAPRI_KEY_FIELD(IN_P, fence_done), 1, skip_fence_check

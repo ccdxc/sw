@@ -34,6 +34,7 @@ resp_tx_stats_process:
     mfspr            r1, spr_mpuid
     seq              c1, r1[4:2], STAGE_7
     bcf              [!c1], bubble_to_next_stage
+    nop // BD Slot
 
     // if already error disabled, do not update the stats anymore
     bbeq             d.qp_err_disabled, 1, exit
