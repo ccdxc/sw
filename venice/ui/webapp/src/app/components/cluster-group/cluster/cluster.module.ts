@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
 import { PrimengModule } from '@lib/primeng.module';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
@@ -13,6 +13,7 @@ import { ClusterComponent } from './cluster.component';
 import { ClusterRoutingModule } from './cluster.route';
 import { SharedModule } from '@app/components/shared//shared.module';
 import { NodedetailComponent } from './nodedetail/nodedetail.component';
+import { CertificateComponent } from './certificate/certificate.component';
 
 @NgModule({
   imports: [
@@ -22,10 +23,12 @@ import { NodedetailComponent } from './nodedetail/nodedetail.component';
     PrimengModule,
     FlexLayoutModule,
     MaterialdesignModule,
+    ReactiveFormsModule,
+    FormsModule,
 
     ClusterRoutingModule,
     SharedModule
   ],
-  declarations: [ClusterComponent, NodedetailComponent]
+  declarations: [ClusterComponent, NodedetailComponent, CertificateComponent]
 })
 export class ClusterModule { }

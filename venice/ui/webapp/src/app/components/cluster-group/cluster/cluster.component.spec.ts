@@ -31,6 +31,8 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from '@app/services/message.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { TestingUtility } from '@app/common/TestingUtility';
+import {CertificateComponent} from '@components/cluster-group/cluster/certificate/certificate.component';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
 @Component({
   template: ''
@@ -45,12 +47,15 @@ describe('ClusterComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         ClusterComponent,
-        DummyComponent
+        DummyComponent,
+        CertificateComponent
       ],
       imports: [
         RouterTestingModule.withRoutes([
           { path: 'login', component: DummyComponent }
         ]),
+        FormsModule,
+        ReactiveFormsModule,
         HttpClientTestingModule,
         NoopAnimationsModule,
         SharedModule,

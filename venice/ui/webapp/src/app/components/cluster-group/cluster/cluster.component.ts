@@ -13,15 +13,17 @@ import { Telemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/teleme
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { Subscription } from 'rxjs';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
+import {Animations} from '@app/animations';
 
 @Component({
   selector: 'app-cluster',
   encapsulation: ViewEncapsulation.None,
   templateUrl: './cluster.component.html',
+  animations: [Animations],
   styleUrls: ['./cluster.component.scss']
 })
 export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy {
-
+  certMode = false;
   bodyicon: any = {
     margin: {
       top: '9px',
@@ -87,7 +89,11 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     this.getMetrics();
 
     this._controllerService.setToolbarData({
-      buttons: [],
+      buttons: [{
+        cssClass: 'global-button-primary cluster-toolbar-button',
+        text: 'UPDATE TLS',
+        callback: () => { this.certMode =  !this.certMode; },
+      }],
       breadcrumb: [{ label: 'Cluster', url: Utility.getBaseUIUrl() + 'cluster/cluster' }]
     });
   }
@@ -276,6 +282,9 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     }
   }
 
+  onCertificateCancel(event) {
+    this.certMode = false;
+  }
   ngOnDestroy() {
     this.subscriptions.forEach(subscription => {
       subscription.unsubscribe();
