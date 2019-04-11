@@ -1199,9 +1199,10 @@ struct xcvr_status {
  */
 struct port_config {
 #define IONIC_SPEED_100G	100000	/* 100G in Mbps */
-#define IONIC_SPEED_40G		40000 	/* 40G in Mbps */
-#define IONIC_SPEED_25G		25000 	/* 25G in Mbps */
-#define IONIC_SPEED_10G		10000 	/* 10G in Mbps */
+#define IONIC_SPEED_50G		 50000	/*  50G in Mbps */
+#define IONIC_SPEED_40G		 40000 	/*  40G in Mbps */
+#define IONIC_SPEED_25G		 25000 	/*  25G in Mbps */
+#define IONIC_SPEED_10G		 10000 	/*  10G in Mbps */
 	uint32_t    speed;
 	uint32_t    mtu;
 	uint8_t     state;
