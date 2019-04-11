@@ -28,6 +28,9 @@ var _ = Describe("events tests", func() {
 		})
 
 		It("Link flap should trigger an event from hal/linkmgr", func() {
+			if ts.tb.HasNaplesSim() {
+				Skip("link flap cannot be run on NAPLES sim")
+			}
 			startTime := time.Now()
 			startTime = startTime.Add(-2 * time.Minute) // TODO: remove this; there is ~2 minute delay between naples sim and rund VM
 
