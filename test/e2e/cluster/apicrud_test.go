@@ -257,8 +257,12 @@ func testAPICRUDOps() func() {
 				expNEvents = addToWatchList(expNEvents, ret, kvstore.Updated)
 			}
 			{ // Get operation
-				ret, err := restClient.NetworkV1().Network().Get(lctx, &netw.ObjectMeta)
-				Expect(err).To(BeNil())
+				var ret *network.Network
+				var err error
+				Eventually(func() error {
+					ret, err = restClient.NetworkV1().Network().Get(lctx, &netw.ObjectMeta)
+					return err
+				}, 30, 1).Should(BeNil(), "should be able to get Network")
 				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
 			}
 			{ // Delete operation
