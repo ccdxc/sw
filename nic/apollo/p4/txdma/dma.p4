@@ -13,7 +13,6 @@ action pkt_dma_setup() {
                      p4_to_txdma_header.payload_len - APOLLO_I2E_HDR_SZ);
     } else {
         modify_field(capri_intr.tm_oport, TM_PORT_EGRESS);
-        modify_field(txdma_to_p4e_header.vcn_id, p4_to_txdma_header.vcn_id);
     }
 }
 

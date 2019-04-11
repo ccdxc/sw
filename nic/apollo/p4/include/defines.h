@@ -65,8 +65,15 @@
 /*****************************************************************************/
 /* flow role                                                                 */
 /*****************************************************************************/
-#define TCP_FLOW_INITIATOR             0
-#define TCP_FLOW_RESPONDER             1
+#define TCP_FLOW_INITIATOR              0
+#define TCP_FLOW_RESPONDER              1
+
+/*****************************************************************************/
+/* route result type and bit position                                        */
+/*****************************************************************************/
+#define ROUTE_RESULT_TYPE_NEXTHOP       0
+#define ROUTE_RESULT_TYPE_VCN           1
+#define ROUTE_RESULT_BIT_POS            15
 
 /*****************************************************************************/
 /* number of hints in various HBM hash tables                                */

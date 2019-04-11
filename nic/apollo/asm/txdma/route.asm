@@ -40,7 +40,4 @@ struct route_d             d;
 %%
 
 #include "../include/lpm.h"
-
-res_handler:
-    phvwr.e         p.txdma_to_p4e_header_nexthop_index, res_reg
-    phvwr           p.app_header_table0_valid, FALSE       // LPM bypass
+#include "route_result.h"

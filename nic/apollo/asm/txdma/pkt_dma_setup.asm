@@ -21,7 +21,7 @@ pkt_dma_setup:
     phvwr       p.capri_intr_tm_iport, TM_PORT_DMA
 pkt_dma_to_egress_setup:
     phvwr.e     p.capri_intr_tm_oport, TM_PORT_EGRESS
-    phvwr       p.txdma_to_p4e_header_vcn_id, k.p4_to_txdma_header_vcn_id
+    nop
 
 pkt_dma_to_ingress_setup:
     phvwr       p.capri_intr_tm_oport, TM_PORT_INGRESS

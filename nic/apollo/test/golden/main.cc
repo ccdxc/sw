@@ -267,11 +267,13 @@ uint64_t g_layer1_dmac = 0x000102030405ULL;
 uint32_t g_layer1_sip = 0x0B0B0101;
 uint32_t g_layer1_dip = 0x0A0A0101;
 uint32_t g_layer1_dip2 = 0x0A0A0102;
-uint8_t g_layer1_proto = 0x6;
+uint8_t  g_layer1_proto = 0x6;
 uint16_t g_layer1_sport = 0x1234;
 uint16_t g_layer1_dport = 0x5678;
 
 uint16_t g_ctag1_vid = 100;
+uint16_t g_vcn_id1 = 0x2D1;
+uint16_t g_vcn_id2 = 0x2D2;
 uint16_t g_local_vnic_tag = 100;
 uint32_t g_local_slot_id = 0x12345;
 uint32_t g_flow_index = 0x31;
@@ -530,6 +532,7 @@ vnic_tx_init ()
     memset(&data, 0, sizeof(data));
     index = g_ctag1_vid;
     data.action_id = LOCAL_VNIC_BY_VLAN_TX_LOCAL_VNIC_INFO_TX_ID;
+    local_vnic_info->vcn_id = g_vcn_id1;
     local_vnic_info->epoch1_valid = true;
     local_vnic_info->epoch1 = EPOCH;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
@@ -563,6 +566,7 @@ vnic_rx_init ()
     memset(&data, 0, sizeof(data));
     key.mpls_dst_label = g_local_slot_id;
     data.action_id = LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
+    local_vnic_info->vcn_id = g_vcn_id1;
     local_vnic_info->epoch1_valid = true;
     local_vnic_info->epoch1 = EPOCH;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
@@ -580,6 +584,7 @@ vnic_rx_init ()
     memset(&data, 0, sizeof(data));
     key.vxlan_1_vni = g_local_slot_id;
     data.action_id = LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
+    local_vnic_info->vcn_id = g_vcn_id1;
     local_vnic_info->epoch1_valid = true;
     local_vnic_info->epoch1 = EPOCH;
     local_vnic_info->local_vnic_tag = g_local_vnic_tag;
@@ -841,9 +846,9 @@ route_init (void)
 
     /* Program stage 2*/
     sw_entry.action_u.route_search_ipv4_retrieve.key0 =
-            (g_layer1_dip & 0xFFFF0000);
-    sw_entry.action_u.route_search_ipv4_retrieve.data0 =
-            g_nexthop_index;
+            (g_layer1_dip2 & 0xFFFFFFFF);
+    sw_entry.action_u.route_search_ipv4_retrieve.data_ = g_nexthop_index;
+    sw_entry.action_u.route_search_ipv4_retrieve.data0 = (0x8000 | g_vcn_id2);
 
     p4pd_apollo_txdma_raw_table_hwentry_query(P4_APOLLO_TXDMA_TBL_ID_ROUTE,
                                               ROUTE_SEARCH_IPV4_RETRIEVE_ID,
@@ -961,13 +966,15 @@ vxlan_mappings_init (void)
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
     memcpy(key.p4e_apollo_i2e_dst, &g_layer1_dip2, 4);
+    key.txdma_to_p4e_header_vcn_id = g_vcn_id2;
     data.action_id = REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID;
     mapping_info->entry_valid = true;
     mapping_info->nexthop_index = g_nexthop_index2;
     mapping_info->dst_slot_id_valid = true;
     mapping_info->dst_slot_id = g_gw_slot_id2;
 
-    entry_write(tbl_id, 0, &key, NULL, &data, true, VNIC_IP_MAPPING_TABLE_SIZE);
+    entry_write(tbl_id, 0, &key, NULL, &data, true,
+                REMOTE_VNIC_MAPPING_TX_TABLE_SIZE);
 }
 
 static void

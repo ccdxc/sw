@@ -129,8 +129,14 @@
 #undef action_data64b
 
 action res_handler() {
-    // Set NHID in the PHV from the LPM result
-    modify_field(txdma_to_p4e_header.nexthop_index, lpm_result);
+    if ((lpm_result >> ROUTE_RESULT_BIT_POS) == ROUTE_RESULT_TYPE_VCN) {
+        // Set VCNID in PHV from LPM result
+        modify_field(txdma_to_p4e_header.vcn_id, lpm_result & 0x7FFF);
+    } else {
+        // Set NHID in PHV from LPM result
+        modify_field(txdma_to_p4e_header.nexthop_index, lpm_result);
+        modify_field(txdma_to_p4e_header.vcn_id, p4_to_txdma_header.vcn_id);
+    }
     // Disable further LPM stages.
     modify_field(app_header.table0_valid, FALSE);
 }
