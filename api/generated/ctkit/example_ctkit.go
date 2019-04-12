@@ -48,7 +48,13 @@ func (obj *Order) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.BookstoreV1().Order().Update(context.Background(), &obj.Order)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.BookstoreV1().Order().Update(context.Background(), &obj.Order)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.BookstoreV1().Order().Create(context.Background(), &obj.Order)
@@ -431,7 +437,13 @@ func (obj *Book) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.BookstoreV1().Book().Update(context.Background(), &obj.Book)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.BookstoreV1().Book().Update(context.Background(), &obj.Book)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.BookstoreV1().Book().Create(context.Background(), &obj.Book)
@@ -814,7 +826,13 @@ func (obj *Publisher) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.BookstoreV1().Publisher().Update(context.Background(), &obj.Publisher)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.BookstoreV1().Publisher().Update(context.Background(), &obj.Publisher)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.BookstoreV1().Publisher().Create(context.Background(), &obj.Publisher)
@@ -1197,7 +1215,13 @@ func (obj *Store) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.BookstoreV1().Store().Update(context.Background(), &obj.Store)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.BookstoreV1().Store().Update(context.Background(), &obj.Store)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.BookstoreV1().Store().Create(context.Background(), &obj.Store)
@@ -1580,7 +1604,13 @@ func (obj *Coupon) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.BookstoreV1().Coupon().Update(context.Background(), &obj.Coupon)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.BookstoreV1().Coupon().Update(context.Background(), &obj.Coupon)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.BookstoreV1().Coupon().Create(context.Background(), &obj.Coupon)
@@ -1963,7 +1993,13 @@ func (obj *Customer) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.BookstoreV1().Customer().Update(context.Background(), &obj.Customer)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.BookstoreV1().Customer().Update(context.Background(), &obj.Customer)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.BookstoreV1().Customer().Create(context.Background(), &obj.Customer)

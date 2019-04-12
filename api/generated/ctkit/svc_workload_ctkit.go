@@ -48,7 +48,13 @@ func (obj *Endpoint) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.WorkloadV1().Endpoint().Update(context.Background(), &obj.Endpoint)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.WorkloadV1().Endpoint().Update(context.Background(), &obj.Endpoint)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.WorkloadV1().Endpoint().Create(context.Background(), &obj.Endpoint)
@@ -431,7 +437,13 @@ func (obj *Workload) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.WorkloadV1().Workload().Update(context.Background(), &obj.Workload)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.WorkloadV1().Workload().Update(context.Background(), &obj.Workload)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.WorkloadV1().Workload().Create(context.Background(), &obj.Workload)

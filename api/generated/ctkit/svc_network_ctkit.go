@@ -48,7 +48,13 @@ func (obj *Network) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.NetworkV1().Network().Update(context.Background(), &obj.Network)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.NetworkV1().Network().Update(context.Background(), &obj.Network)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.NetworkV1().Network().Create(context.Background(), &obj.Network)
@@ -431,7 +437,13 @@ func (obj *Service) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.NetworkV1().Service().Update(context.Background(), &obj.Service)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.NetworkV1().Service().Update(context.Background(), &obj.Service)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.NetworkV1().Service().Create(context.Background(), &obj.Service)
@@ -814,7 +826,13 @@ func (obj *LbPolicy) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.NetworkV1().LbPolicy().Update(context.Background(), &obj.LbPolicy)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.NetworkV1().LbPolicy().Update(context.Background(), &obj.LbPolicy)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.NetworkV1().LbPolicy().Create(context.Background(), &obj.LbPolicy)
@@ -1197,7 +1215,13 @@ func (obj *VirtualRouter) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.NetworkV1().VirtualRouter().Update(context.Background(), &obj.VirtualRouter)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.NetworkV1().VirtualRouter().Update(context.Background(), &obj.VirtualRouter)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.NetworkV1().VirtualRouter().Create(context.Background(), &obj.VirtualRouter)

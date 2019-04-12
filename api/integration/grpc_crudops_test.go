@@ -340,6 +340,33 @@ func TestCrudOps(t *testing.T) {
 		}
 	}
 
+	{ // test update with resource version specified
+		pubupd, err := apicl.BookstoreV1().Publisher().Get(ctx, &pub.ObjectMeta)
+		if err != nil {
+			t.Fatalf("failed to get object to update 9%s)", err)
+		}
+		resVer := pubupd.ResourceVersion
+		if pubupd.ResourceVersion != "10012" {
+			pubupd.ResourceVersion = "10012"
+		} else {
+			pubupd.ResourceVersion = "1021"
+		}
+		_, err = apicl.BookstoreV1().Publisher().Update(ctx, pubupd)
+		if err == nil {
+			t.Fatalf("should have failed update with wrong resource version")
+		}
+		// Update with good resource version
+		pubupd.ResourceVersion = resVer
+		if ret, err := apicl.BookstoreV1().Publisher().Update(ctx, &pub); err != nil {
+			t.Fatalf("failed to create publisher(%s)", err)
+		} else {
+			if !validateObjectSpec(&pub, ret) {
+				t.Fatalf("updated object [Add] does not match \n\t[%+v]\n\t[%+v]", pub, ret)
+			}
+			evp := pub
+			pExpectWatchEvents = recordWatchEvent(&pExpectWatchEvents, &evp, kvstore.Updated)
+		}
+	}
 	{ // --- Update resource via gRPC ---//
 		pub.Spec.Address = "#22 hilane, timbuktoo"
 		if ret, err := apicl.BookstoreV1().Publisher().Update(ctx, &pub); err != nil {
@@ -630,6 +657,7 @@ func TestCrudOps(t *testing.T) {
 
 	{ // update via gRPC with invalid SpecGeneration ID
 		order2mod.GenerationID = "invalidId"
+		order2mod.ResourceVersion = ""
 		order2mod.Status.Status = "PROCESSING"
 		retorder, err := apicl.BookstoreV1().Order().Update(ctx, &order2mod)
 		if err != nil {

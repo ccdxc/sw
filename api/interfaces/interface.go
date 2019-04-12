@@ -93,7 +93,7 @@ type ReferenceObj struct {
 type OverlayInterface interface {
 	CacheInterface
 	CreatePrimary(ctx context.Context, service, method, uri, key string, orig, obj runtime.Object) error
-	UpdatePrimary(ctx context.Context, service, method, uri, key string, orig, obj runtime.Object, updateFn kvstore.UpdateFunc) error
+	UpdatePrimary(ctx context.Context, service, method, uri, key string, resVer string, orig, obj runtime.Object, updateFn kvstore.UpdateFunc) error
 	DeletePrimary(ctx context.Context, service, method, uri, key string, orig, into runtime.Object) error
 	Commit(ctx context.Context, items []OverlayKey) error
 	ClearBuffer(ctx context.Context, items []OverlayKey) error
@@ -145,9 +145,10 @@ type Requirement interface {
 
 // ConstUpdateItem is an item for the consistent update requirement
 type ConstUpdateItem struct {
-	Key  string
-	Func kvstore.UpdateFunc
-	Into runtime.Object
+	Key             string
+	Func            kvstore.UpdateFunc
+	Into            runtime.Object
+	ResourceVersion string
 }
 
 // Store is the interface for the Local Object Store

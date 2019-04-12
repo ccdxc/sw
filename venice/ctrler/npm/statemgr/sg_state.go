@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -211,6 +212,13 @@ func (sm *Statemgr) OnSecurityGroupCreate(sg *ctkit.SecurityGroup) error {
 
 // OnSecurityGroupUpdate handles sg updates
 func (sm *Statemgr) OnSecurityGroupUpdate(sg *ctkit.SecurityGroup, nsg *security.SecurityGroup) error {
+	// see if anything changed
+	sg.ObjectMeta = nsg.ObjectMeta
+	_, ok := ref.ObjDiff(sg.Spec, nsg.Spec)
+	if (nsg.GenerationID == sg.GenerationID) && !ok {
+		return nil
+	}
+	sg.Spec = nsg.Spec
 	return nil
 }
 

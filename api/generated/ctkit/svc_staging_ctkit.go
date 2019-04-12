@@ -48,7 +48,13 @@ func (obj *Buffer) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.StagingV1().Buffer().Update(context.Background(), &obj.Buffer)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.StagingV1().Buffer().Update(context.Background(), &obj.Buffer)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.StagingV1().Buffer().Create(context.Background(), &obj.Buffer)

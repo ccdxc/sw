@@ -260,17 +260,18 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 			if err != nil {
 				err = errKVStoreOperation.makeError(i, []string{errors.Wrap(err, "Unable to update object").Error()}, "")
 			} else {
-				err = kv.UpdatePrimary(ctx, svcName, methName, uri, key, origObj, nobj, updateFn(ctx, obj))
+				err = kv.UpdatePrimary(ctx, svcName, methName, uri, key, "", origObj, nobj, updateFn(ctx, obj))
 			}
 			obj = nobj
 		} else {
 			updateFn := m.requestType.GetUpdateMetaFunc()
+			ometa := obj.(runtime.ObjectMetaAccessor).GetObjectMeta()
 			var nobj runtime.Object
 			nobj, err = updateFn(ctx, i, false)(obj)
 			if err != nil {
 				err = errKVStoreOperation.makeError(i, []string{errors.Wrap(err, "Unable to update object meta").Error()}, "")
 			} else {
-				err = kv.UpdatePrimary(ctx, svcName, methName, uri, key, origObj, nobj, updateFn(ctx, obj, false))
+				err = kv.UpdatePrimary(ctx, svcName, methName, uri, key, ometa.ResourceVersion, origObj, nobj, updateFn(ctx, obj, false))
 			}
 			obj = nobj
 		}

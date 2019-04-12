@@ -48,7 +48,13 @@ func (obj *User) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.AuthV1().User().Update(context.Background(), &obj.User)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.AuthV1().User().Update(context.Background(), &obj.User)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.AuthV1().User().Create(context.Background(), &obj.User)
@@ -431,7 +437,13 @@ func (obj *AuthenticationPolicy) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), &obj.AuthenticationPolicy)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.AuthV1().AuthenticationPolicy().Update(context.Background(), &obj.AuthenticationPolicy)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), &obj.AuthenticationPolicy)
@@ -814,7 +826,13 @@ func (obj *Role) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.AuthV1().Role().Update(context.Background(), &obj.Role)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.AuthV1().Role().Update(context.Background(), &obj.Role)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.AuthV1().Role().Create(context.Background(), &obj.Role)
@@ -1197,7 +1215,13 @@ func (obj *RoleBinding) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.AuthV1().RoleBinding().Update(context.Background(), &obj.RoleBinding)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.AuthV1().RoleBinding().Update(context.Background(), &obj.RoleBinding)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.AuthV1().RoleBinding().Create(context.Background(), &obj.RoleBinding)

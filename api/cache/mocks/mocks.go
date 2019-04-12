@@ -395,7 +395,7 @@ func (f *FakeOverlay) CreatePrimary(ctx context.Context, service, method, uri, k
 }
 
 // UpdatePrimary is a mock implementation
-func (f *FakeOverlay) UpdatePrimary(ctx context.Context, service, method, uri, key string, orig, obj runtime.Object, updateFn kvstore.UpdateFunc) error {
+func (f *FakeOverlay) UpdatePrimary(ctx context.Context, service, method, uri, key, resVer string, orig, obj runtime.Object, updateFn kvstore.UpdateFunc) error {
 	f.UpdatePrimaries++
 	return nil
 }

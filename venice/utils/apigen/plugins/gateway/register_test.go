@@ -1389,7 +1389,7 @@ func TestGetSvcManifest(t *testing.T) {
 				output_type: '.example.testmsg'
 				options:<[venice.methodOper]:"create">
 			>
-			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest1">
+			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest1", [venice.apiAction]:{Object:"Nest1", Action: "TestAction"}>
 		>
 		service <
 			name: 'hybrid_crudservice'
@@ -1447,10 +1447,25 @@ func TestGetSvcManifest(t *testing.T) {
 	pkg.Svcs["hybrid_crudservice"] = serviceDef{
 		Version:  "v1",
 		Messages: []string{"Nest1", "testmsg"},
+		Properties: map[string]messageDef{
+			"Nest1": {
+				Scopes:      []string{"cluster"},
+				RestMethods: []string{"put", "post"},
+			},
+			"testmsg": {
+				Scopes: []string{"cluster"},
+			},
+		},
 	}
 	pkg.Svcs["full_crudservice"] = serviceDef{
 		Version:  "v1",
 		Messages: []string{"Nest1"},
+		Properties: map[string]messageDef{
+			"Nest1": {
+				Scopes:  []string{"cluster"},
+				Actions: []string{"TestAction"},
+			},
+		},
 	}
 	expected["example"] = pkg
 

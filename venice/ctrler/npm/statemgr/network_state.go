@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+
 	"net"
 	"sync"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -346,6 +348,13 @@ func (sm *Statemgr) OnNetworkCreate(nw *ctkit.Network) error {
 
 // OnNetworkUpdate handles network update
 func (sm *Statemgr) OnNetworkUpdate(nw *ctkit.Network, nnw *network.Network) error {
+	// see if anything changed
+	nw.ObjectMeta = nnw.ObjectMeta
+	_, ok := ref.ObjDiff(nw.Spec, nnw.Spec)
+	if (nnw.GenerationID == nw.GenerationID) && !ok {
+		return nil
+	}
+	nw.Spec = nnw.Spec
 	return nil
 }
 

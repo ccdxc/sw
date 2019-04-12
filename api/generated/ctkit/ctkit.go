@@ -20,6 +20,8 @@ import (
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
+const maxApisrvWriteRetry = 5
+
 // db of objects for a kind
 type kindStore struct {
 	objects map[string]runtime.Object

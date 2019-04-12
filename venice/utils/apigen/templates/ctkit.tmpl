@@ -51,7 +51,13 @@ func (obj *{{.}}) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.{{$srvname}}().{{.}}().Update(context.Background(), &obj.{{.}})
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.{{$srvname}}().{{.}}().Update(context.Background(), &obj.{{.}})
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.{{$srvname}}().{{.}}().Create(context.Background(), &obj.{{.}})

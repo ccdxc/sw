@@ -120,6 +120,7 @@ type overlayObj struct {
 	//  - when object is finalized in a Commit() operation
 	val      runtime.Object
 	updateFn kvstore.UpdateFunc
+	resVer   string
 }
 
 type overlay struct {
@@ -589,11 +590,11 @@ func (c *overlay) Create(ctx context.Context, key string, obj runtime.Object) er
 //  - update with existing create in overlay -> create
 //  - update with exiting update in overlay -> update
 //  - update with existing delete in overlay -> fail if no cache entry exists, update operation if cache entry exists
-func (c *overlay) update(ctx context.Context, service, method, uri, key string, orig, obj runtime.Object, updateFn kvstore.UpdateFunc, dryRun int64, primary bool) error {
+func (c *overlay) update(ctx context.Context, service, method, uri, key string, orig, obj runtime.Object, updateFn kvstore.UpdateFunc, resVer string, dryRun int64, primary bool) error {
 	if obj == nil {
 		return errors.New("invalid parameters")
 	}
-
+	log.InfoLog("msg", "updating overlay object", "primary", primary, "service", service, "method", method, "key", key, "uri", uri, "dryrun", dryRun, "ResVersion", resVer)
 	var cacheObj runtime.Object
 	ovObj, err := c.findObjects(ctx, key, cacheObj)
 
@@ -653,6 +654,7 @@ func (c *overlay) update(ctx context.Context, service, method, uri, key string, 
 			key:      key,
 			val:      cacheObj,
 			updateFn: updateFn,
+			resVer:   resVer,
 		}
 	}
 
@@ -676,6 +678,7 @@ func (c *overlay) update(ctx context.Context, service, method, uri, key string, 
 	if !pcApply {
 		// If this is coming from an apply then retain the updateFn, else overwrite.
 		ovObj.updateFn = updateFn
+		ovObj.resVer = resVer
 	}
 	ovObj.val = cacheObj
 	ovObj.URI = uri
@@ -727,7 +730,7 @@ func (c *overlay) Update(ctx context.Context, key string, obj runtime.Object, cs
 		verVer = dm.verVer
 	}
 	// Cmps are not used in API path, so ignore.
-	return c.update(ctx, "", "", "", key, nil, obj, nil, verVer, false)
+	return c.update(ctx, "", "", "", key, nil, obj, nil, "", verVer, false)
 }
 
 // delete an object from the cache - rules
@@ -855,7 +858,7 @@ func (c *overlay) ConsistentUpdate(ctx context.Context, key string, into runtime
 	if updateFunc != nil {
 		c.reqs.NewConsUpdateRequirement([]apiintf.ConstUpdateItem{{Key: key, Func: updateFunc, Into: into}})
 	}
-	return c.update(ctx, "", "", "", key, nil, into, updateFunc, verVer, false)
+	return c.update(ctx, "", "", "", key, nil, into, updateFunc, "", verVer, false)
 }
 
 // Get retrieves object from the cache if it exists.
@@ -1035,7 +1038,7 @@ func (c *overlay) CreatePrimary(ctx context.Context, service, method, uri, key s
 	}
 	return c.create(ctx, service, method, uri, key, orig, obj, verVer, true)
 }
-func (c *overlay) UpdatePrimary(ctx context.Context, service, method, uri, key string, orig, obj runtime.Object, updateFn kvstore.UpdateFunc) error {
+func (c *overlay) UpdatePrimary(ctx context.Context, service, method, uri, key, resVer string, orig, obj runtime.Object, updateFn kvstore.UpdateFunc) error {
 	var verVer int64
 	dm := getDryRun(ctx)
 	if dm == nil {
@@ -1052,9 +1055,9 @@ func (c *overlay) UpdatePrimary(ctx context.Context, service, method, uri, key s
 		panic("primary with no service or method")
 	}
 	if updateFn != nil {
-		c.reqs.NewConsUpdateRequirement([]apiintf.ConstUpdateItem{{Key: key, Func: updateFn, Into: obj}})
+		c.reqs.NewConsUpdateRequirement([]apiintf.ConstUpdateItem{{Key: key, Func: updateFn, ResourceVersion: resVer, Into: obj}})
 	}
-	return c.update(ctx, service, method, uri, key, orig, obj, updateFn, verVer, true)
+	return c.update(ctx, service, method, uri, key, orig, obj, updateFn, resVer, verVer, true)
 }
 
 func (c *overlay) DeletePrimary(ctx context.Context, service, method, uri, key string, orig, into runtime.Object) error {
@@ -1221,9 +1224,9 @@ retryLoop:
 					ctxn.Touch(k)
 					continue
 				}
-				if v.updateFn != nil {
+				if v.updateFn != nil && v.resVer == "" {
 					// txn is already updated, no action needed
-					log.Infof("Consistent updated obj skipped [%v][%+v]", v.key, v.val)
+					log.Infof("Consistent updated obj skipped [%v][%v][%+v]", v.resVer, v.key, v.val)
 					retry = true
 				}
 				err = ctxn.Update(k, v.val)
@@ -1235,6 +1238,8 @@ retryLoop:
 				if err != nil {
 					return kvstore.TxnResponse{}, errors.Wrap(err, "failed to add delete action to txn")
 				}
+				// operation could fail to delete because the underlying object changed between check and commmit. Retry
+				retry = true
 			}
 			// Delete the persisted key
 			if v.primary && !c.ephemeral {
@@ -1250,15 +1255,26 @@ retryLoop:
 					continue
 				}
 			}
+			log.Infof("adding comparator [%+v]", cp)
 			ctxn.AddComparator(cp)
 		}
-
+		for _, cp := range c.preCommitComps {
+			// Filter comparators before ading them
+			//  - comparator for version > 0 and overlay is creating the object.
+			if ovobj, ok := c.overlay[cp.Key]; ok {
+				if ovobj.oper == operCreate && cp.Target == kvstore.Version && cp.Operator == ">" && cp.Version == int64(0) {
+					continue
+				}
+			}
+			log.Infof("adding comparator [%+v]", cp)
+			ctxn.AddComparator(cp)
+		}
 		if ctxn.IsEmpty() {
 			resp.Succeeded = true
 		} else {
 			resp, err = ctxn.Commit(ctx)
 			if err != nil {
-				if retry {
+				if kvstore.IsVersionConflictError(err) && retry {
 					log.Infof("[%v]Retrying failed transaction - retry %d (%s)", c.id, retries, err)
 					continue retryLoop
 				}
@@ -1429,7 +1445,7 @@ func (t *overlayTxn) Update(key string, obj runtime.Object, cs ...kvstore.Cmp) e
 		verVer = dm.verVer
 	}
 	// XXX-TBD(sanjayt): How do we get to know if this is a dry run??
-	err := t.ov.update(t.context, "", "", "", key, nil, obj, nil, verVer, false)
+	err := t.ov.update(t.context, "", "", "", key, nil, obj, nil, "", verVer, false)
 	if err != nil {
 		return err
 	}

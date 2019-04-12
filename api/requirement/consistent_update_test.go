@@ -23,7 +23,7 @@ func TestConsUpdateReq(t *testing.T) {
 	defer c.Close()
 	kvs := &mocks.FakeOverlay{}
 	reqs := NewRequirementSet(c, kvs, nil).(*apiRequirements)
-	var CallID, callID1, callID2, func1, func2 int
+	var CallID, callID1, callID2, callID3, func1, func2, func3 int
 	obj := &apitest.TestObj{}
 	obj.ResourceVersion = "10"
 	creqs := []apiintf.ConstUpdateItem{
@@ -37,6 +37,12 @@ func TestConsUpdateReq(t *testing.T) {
 			callID2 = CallID
 			CallID++
 			func2++
+			return in, nil
+		}, Into: obj},
+		{Key: "/abc3", ResourceVersion: "12", Func: func(in runtime.Object) (runtime.Object, error) {
+			callID3 = CallID
+			CallID++
+			func3++
 			return in, nil
 		}, Into: obj},
 	}
@@ -71,6 +77,12 @@ func TestConsUpdateReq(t *testing.T) {
 	Assert(t, errs == nil, "not expecting errors")
 	Assert(t, callID1 == 0, "unexpected callid for func1")
 	Assert(t, callID2 == 1, "unexpected callid for func2")
+	Assert(t, callID3 == 2, "unexpected callid for func3")
 	Assert(t, func1 == 1, "unexpected number of calls for func1")
 	Assert(t, func2 == 1, "unexpected number of calls for func2")
+	Assert(t, func3 == 1, "unexpected number of calls for func3")
+	Assert(t, len(txn.Cmps) == 3, "unexpected number of ops in txn (%v)", len(txn.Ops))
+	Assert(t, txn.Cmps[0].Version == 10, "Unexpected resource version comparator [%v]", txn.Cmps[0].Version)
+	Assert(t, txn.Cmps[1].Version == 10, "Unexpected resource version comparator [%v]", txn.Cmps[1].Version)
+	Assert(t, txn.Cmps[2].Version == 12, "Unexpected resource version comparator [%v]", txn.Cmps[2].Version)
 }

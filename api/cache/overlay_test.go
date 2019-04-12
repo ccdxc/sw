@@ -204,7 +204,7 @@ func TestOverlayUpdate(t *testing.T) {
 	Assert(t, err != nil, "expecting update on empty to fail")
 
 	// primary Update on (no cache, no overlay)
-	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, nil)
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, "", orig, obj, nil)
 	Assert(t, err != nil, "expecting update on empty to fail")
 
 	// update secondary (in cache, no overlay)
@@ -224,7 +224,7 @@ func TestOverlayUpdate(t *testing.T) {
 
 	// update primary (in cache, no overlay)
 	delete(ov.overlay, key)
-	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, nil)
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, "", orig, obj, nil)
 	AssertOk(t, err, "expecting update to succeed, got (%s)", err)
 
 	err = ov.Get(ctx, key, retObj)
@@ -245,7 +245,7 @@ func TestOverlayUpdate(t *testing.T) {
 	updatefn := func(oldObj runtime.Object) (newObj runtime.Object, err error) {
 		return oldObj, nil
 	}
-	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, updatefn)
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, "", orig, obj, updatefn)
 	AssertOk(t, err, "expecting update to succeed, got (%s)", err)
 
 	err = ov.Get(ctx, key, retObj)
@@ -311,7 +311,7 @@ func TestOverlayUpdate(t *testing.T) {
 	err = ov.Update(ctx, key, obj)
 	Assert(t, err != nil, "expecting update with existing update to fail")
 
-	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, nil)
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, "", orig, obj, nil)
 	AssertOk(t, err, "expecting to pass")
 
 	err = ov.Get(ctx, key, retObj)
@@ -331,7 +331,7 @@ func TestOverlayUpdate(t *testing.T) {
 	getObj = true
 	cobj = ov.overlay[key]
 	cobj.oper = operUpdate
-	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, nil)
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, "", orig, obj, nil)
 	AssertOk(t, err, "expecting to pass")
 
 	err = ov.Get(ctx, key, retObj)
@@ -352,7 +352,7 @@ func TestOverlayUpdate(t *testing.T) {
 	cobj = ov.overlay[key]
 	cobj.oper = operDelete
 
-	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, nil)
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, "", orig, obj, nil)
 	AssertOk(t, err, "expecting to pass")
 
 	err = ov.Get(ctx, key, retObj)
@@ -372,7 +372,7 @@ func TestOverlayUpdate(t *testing.T) {
 	getObj = false
 	cobj = ov.overlay[key]
 	cobj.oper = operDelete
-	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, orig, obj, nil)
+	err = ov.UpdatePrimary(ctx, serviceName, methodName, URI, key, "", orig, obj, nil)
 	Assert(t, err != nil, "expecting update to fail")
 
 	// Consistent update test without cache or overlay objects

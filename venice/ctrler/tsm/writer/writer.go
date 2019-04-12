@@ -4,6 +4,7 @@ package writer
 
 import (
 	"context"
+	"time"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
@@ -76,7 +77,14 @@ func (wr *APISrvWriter) WriteMirrorSession(ms *monitoring.MirrorSession) error {
 	// is done
 	// ms.ObjectMeta.ResourceVersion = ""
 
-	_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), ms)
+	for i := 0; i < 5; i++ {
+		_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), ms)
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
+
 	return err
 }
 

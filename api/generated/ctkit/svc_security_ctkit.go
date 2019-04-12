@@ -48,7 +48,13 @@ func (obj *SecurityGroup) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), &obj.SecurityGroup)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.SecurityV1().SecurityGroup().Update(context.Background(), &obj.SecurityGroup)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.SecurityV1().SecurityGroup().Create(context.Background(), &obj.SecurityGroup)
@@ -431,7 +437,13 @@ func (obj *SGPolicy) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), &obj.SGPolicy)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.SecurityV1().SGPolicy().Update(context.Background(), &obj.SGPolicy)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.SecurityV1().SGPolicy().Create(context.Background(), &obj.SGPolicy)
@@ -814,7 +826,13 @@ func (obj *App) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.SecurityV1().App().Update(context.Background(), &obj.App)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.SecurityV1().App().Update(context.Background(), &obj.App)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.SecurityV1().App().Create(context.Background(), &obj.App)
@@ -1197,7 +1215,13 @@ func (obj *FirewallProfile) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.SecurityV1().FirewallProfile().Update(context.Background(), &obj.FirewallProfile)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.SecurityV1().FirewallProfile().Update(context.Background(), &obj.FirewallProfile)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.SecurityV1().FirewallProfile().Create(context.Background(), &obj.FirewallProfile)
@@ -1580,7 +1604,13 @@ func (obj *Certificate) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.SecurityV1().Certificate().Update(context.Background(), &obj.Certificate)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.SecurityV1().Certificate().Update(context.Background(), &obj.Certificate)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.SecurityV1().Certificate().Create(context.Background(), &obj.Certificate)
@@ -1963,7 +1993,13 @@ func (obj *TrafficEncryptionPolicy) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), &obj.TrafficEncryptionPolicy)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Update(context.Background(), &obj.TrafficEncryptionPolicy)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.SecurityV1().TrafficEncryptionPolicy().Create(context.Background(), &obj.TrafficEncryptionPolicy)

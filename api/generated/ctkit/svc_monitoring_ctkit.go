@@ -48,7 +48,13 @@ func (obj *EventPolicy) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.MonitoringV1().EventPolicy().Update(context.Background(), &obj.EventPolicy)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.MonitoringV1().EventPolicy().Update(context.Background(), &obj.EventPolicy)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().EventPolicy().Create(context.Background(), &obj.EventPolicy)
@@ -431,7 +437,13 @@ func (obj *StatsPolicy) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.MonitoringV1().StatsPolicy().Update(context.Background(), &obj.StatsPolicy)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.MonitoringV1().StatsPolicy().Update(context.Background(), &obj.StatsPolicy)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().StatsPolicy().Create(context.Background(), &obj.StatsPolicy)
@@ -814,7 +826,13 @@ func (obj *FwlogPolicy) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), &obj.FwlogPolicy)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.MonitoringV1().FwlogPolicy().Update(context.Background(), &obj.FwlogPolicy)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().FwlogPolicy().Create(context.Background(), &obj.FwlogPolicy)
@@ -1197,7 +1215,13 @@ func (obj *FlowExportPolicy) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), &obj.FlowExportPolicy)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.MonitoringV1().FlowExportPolicy().Update(context.Background(), &obj.FlowExportPolicy)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().FlowExportPolicy().Create(context.Background(), &obj.FlowExportPolicy)
@@ -1580,7 +1604,13 @@ func (obj *Alert) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.MonitoringV1().Alert().Update(context.Background(), &obj.Alert)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.MonitoringV1().Alert().Update(context.Background(), &obj.Alert)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().Alert().Create(context.Background(), &obj.Alert)
@@ -1963,7 +1993,13 @@ func (obj *AlertPolicy) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), &obj.AlertPolicy)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.MonitoringV1().AlertPolicy().Update(context.Background(), &obj.AlertPolicy)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().AlertPolicy().Create(context.Background(), &obj.AlertPolicy)
@@ -2346,7 +2382,13 @@ func (obj *AlertDestination) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.MonitoringV1().AlertDestination().Update(context.Background(), &obj.AlertDestination)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.MonitoringV1().AlertDestination().Update(context.Background(), &obj.AlertDestination)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().AlertDestination().Create(context.Background(), &obj.AlertDestination)
@@ -2729,7 +2771,13 @@ func (obj *MirrorSession) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), &obj.MirrorSession)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), &obj.MirrorSession)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().MirrorSession().Create(context.Background(), &obj.MirrorSession)
@@ -3112,7 +3160,13 @@ func (obj *TroubleshootingSession) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), &obj.TroubleshootingSession)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.MonitoringV1().TroubleshootingSession().Update(context.Background(), &obj.TroubleshootingSession)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().TroubleshootingSession().Create(context.Background(), &obj.TroubleshootingSession)
@@ -3495,7 +3549,13 @@ func (obj *TechSupportRequest) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), &obj.TechSupportRequest)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.MonitoringV1().TechSupportRequest().Update(context.Background(), &obj.TechSupportRequest)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.MonitoringV1().TechSupportRequest().Create(context.Background(), &obj.TechSupportRequest)

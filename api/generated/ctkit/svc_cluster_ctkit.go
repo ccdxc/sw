@@ -48,7 +48,13 @@ func (obj *Cluster) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.ClusterV1().Cluster().Update(context.Background(), &obj.Cluster)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.ClusterV1().Cluster().Update(context.Background(), &obj.Cluster)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().Cluster().Create(context.Background(), &obj.Cluster)
@@ -431,7 +437,13 @@ func (obj *Node) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.ClusterV1().Node().Update(context.Background(), &obj.Node)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.ClusterV1().Node().Update(context.Background(), &obj.Node)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().Node().Create(context.Background(), &obj.Node)
@@ -814,7 +826,13 @@ func (obj *Host) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.ClusterV1().Host().Update(context.Background(), &obj.Host)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.ClusterV1().Host().Update(context.Background(), &obj.Host)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().Host().Create(context.Background(), &obj.Host)
@@ -1197,7 +1215,13 @@ func (obj *SmartNIC) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.ClusterV1().SmartNIC().Update(context.Background(), &obj.SmartNIC)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.ClusterV1().SmartNIC().Update(context.Background(), &obj.SmartNIC)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().SmartNIC().Create(context.Background(), &obj.SmartNIC)
@@ -1580,7 +1604,13 @@ func (obj *Tenant) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.ClusterV1().Tenant().Update(context.Background(), &obj.Tenant)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.ClusterV1().Tenant().Update(context.Background(), &obj.Tenant)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.ClusterV1().Tenant().Create(context.Background(), &obj.Tenant)

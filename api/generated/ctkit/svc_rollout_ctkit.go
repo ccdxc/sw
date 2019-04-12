@@ -48,7 +48,13 @@ func (obj *Rollout) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.RolloutV1().Rollout().Update(context.Background(), &obj.Rollout)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.RolloutV1().Rollout().Update(context.Background(), &obj.Rollout)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.RolloutV1().Rollout().Create(context.Background(), &obj.Rollout)

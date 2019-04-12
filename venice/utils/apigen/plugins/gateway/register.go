@@ -652,8 +652,15 @@ type packageDef struct {
 }
 
 type serviceDef struct {
-	Version  string
-	Messages []string
+	Version    string
+	Messages   []string
+	Properties map[string]messageDef `json:",omitempty"`
+}
+
+type messageDef struct {
+	Scopes      []string `json:",omitempty"`
+	RestMethods []string `json:",omitempty"`
+	Actions     []string `json:",omitempty"`
 }
 
 // getServiceManifest retrieves the manifest from file specified in arg
@@ -698,7 +705,8 @@ func genServiceManifest(filenm string, file *descriptor.File) (string, error) {
 			continue
 		}
 		svcdef := serviceDef{
-			Version: ver.(string),
+			Version:    ver.(string),
+			Properties: make(map[string]messageDef),
 		}
 		crudsvc, err := reg.GetExtension("venice.apiGrpcCrudService", svc)
 		if err != nil {
@@ -707,7 +715,55 @@ func genServiceManifest(filenm string, file *descriptor.File) (string, error) {
 			glog.V(1).Infof("Found crudsvcs %v", crudsvc.([]string))
 			svcdef.Messages = crudsvc.([]string)
 		}
+		restSvc := make(map[string][]string)
+		rOps, err := reg.GetExtension("venice.apiRestService", svc)
+		if err == nil {
+			r := rOps.([]*venice.RestEndpoint)
+			for _, v := range r {
+				restSvc[v.Object] = v.Method
+			}
+		}
+		actSvc := make(map[string][]string)
+		aOps, err := reg.GetExtension("venice.apiAction", svc)
+		if err == nil {
+			r := aOps.([]*venice.ActionEndpoint)
+			for _, v := range r {
+				t := v.GetObject()
+				if t == "" {
+					t = v.GetCollection()
+				}
+				if t != "" {
+					l := actSvc[t]
+					l = append(l, v.Action)
+					actSvc[t] = l
+				}
+			}
+		}
 		if len(svcdef.Messages) > 0 {
+			for _, m := range svcdef.Messages {
+				mname := fmt.Sprintf(".%s.%s", file.GoPkg.Name, m)
+				if msg, err := file.Reg.LookupMsg("", mname); err != nil {
+					glog.V(1).Infof("Failed to retrieve message %v for svc manifest", mname)
+					continue
+				} else {
+					msgdef := messageDef{}
+					if y, _ := isTenanted(msg); y {
+						msgdef.Scopes = append(msgdef.Scopes, "tenant")
+					} else {
+						msgdef.Scopes = append(msgdef.Scopes, "cluster")
+					}
+					if y, _ := isNamespaced(msg); y {
+						msgdef.Scopes = append(msgdef.Scopes, "namespace")
+					}
+					if r, ok := restSvc[m]; ok {
+						msgdef.RestMethods = r
+					}
+					if a, ok := actSvc[m]; ok {
+						msgdef.Actions = a
+					}
+					svcdef.Properties[m] = msgdef
+				}
+			}
 			pkgdef.Svcs[*svc.Name] = svcdef
 		}
 	}

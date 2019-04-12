@@ -239,7 +239,6 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 				watchErrors.Add(1)
 				establishWatcher()
 			} else {
-				p.parent.logger.InfoLog("func", "kvwatcher", "path", p.path, "msg", "received event", "key", ev.Key, "oper", ev.Type)
 				evtype = ev.Type
 				if evtype == kvstore.WatcherError {
 					p.parent.logger.ErrorLog("func", "kvwatcher", "path", p.path, "msg", "received error event", "key", ev.Key, "error", ev.Object)
@@ -253,6 +252,7 @@ func (p *prefixWatcher) worker(ctx context.Context, wg *sync.WaitGroup, startCh 
 					continue
 				}
 				meta, ver := apiutils.MustGetObjectMetaVersion(ev.Object)
+				p.parent.logger.InfoLog("func", "kvwatcher", "path", p.path, "msg", "received event", "key", ev.Key, "oper", ev.Type, "ver", ver)
 				upd, err := meta.ModTime.Time()
 				if err == nil {
 					if watchStart.Before(upd) {

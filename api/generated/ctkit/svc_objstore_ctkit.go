@@ -48,7 +48,13 @@ func (obj *Bucket) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.ObjstoreV1().Bucket().Update(context.Background(), &obj.Bucket)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.ObjstoreV1().Bucket().Update(context.Background(), &obj.Bucket)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.ObjstoreV1().Bucket().Create(context.Background(), &obj.Bucket)
@@ -431,7 +437,13 @@ func (obj *Object) Write() error {
 	// write to api server
 	if obj.ObjectMeta.ResourceVersion != "" {
 		// update it
-		_, err = apicl.ObjstoreV1().Object().Update(context.Background(), &obj.Object)
+		for i := 0; i < maxApisrvWriteRetry; i++ {
+			_, err = apicl.ObjstoreV1().Object().Update(context.Background(), &obj.Object)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Millisecond * 100)
+		}
 	} else {
 		//  create
 		_, err = apicl.ObjstoreV1().Object().Create(context.Background(), &obj.Object)

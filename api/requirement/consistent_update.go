@@ -64,8 +64,14 @@ func (r *constUpdateReq) Apply(ctx context.Context, txn kvstore.Txn, cache apiin
 			return errors.Wrap(err, "consistent update failed")
 		}
 		err = txn.Update(v.Key, o)
-		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(v.Key), "=", meta.ResourceVersion))
-		log.Infof("updated object is [%+v]", o)
+		rVer := meta.ResourceVersion
+		if v.ResourceVersion != "" {
+			log.Infof("Overriding resVer [%v]", v.ResourceVersion)
+			rVer = v.ResourceVersion
+		}
+		// XXX-TODO(sanjayt): remove dumping of object
+		log.Infof("updated object is ver[%v][%+v]", rVer, o)
+		txn.AddComparator(kvstore.Compare(kvstore.WithVersion(v.Key), "=", rVer))
 	}
 	return nil
 }
@@ -80,7 +86,7 @@ func (r *constUpdateReq) Finalize(ctx context.Context) error {
 func (r *constUpdateReq) String() string {
 	ret := "\n Consistent Update Requirement: \n"
 	for _, v := range r.items {
-		ret = ret + fmt.Sprintf("     Key : [%v]\n", v.Key)
+		ret = ret + fmt.Sprintf("     Key : [%v] Version [%v]\n", v.Key, v.ResourceVersion)
 	}
 	return ret
 }

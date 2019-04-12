@@ -8,7 +8,68 @@
           "AuthenticationPolicy",
           "Role",
           "RoleBinding"
-        ]
+        ],
+        "Properties": {
+          "AuthenticationPolicy": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "post",
+              "watch"
+            ],
+            "Actions": [
+              "LdapConnectionCheck",
+              "LdapBindCheck"
+            ]
+          },
+          "Role": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "RoleBinding": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "User": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ],
+            "Actions": [
+              "PasswordChange",
+              "PasswordReset",
+              "IsAuthorized"
+            ]
+          }
+        }
       }
     },
     "Files": [
@@ -26,7 +87,75 @@
           "Store",
           "Coupon",
           "Customer"
-        ]
+        ],
+        "Properties": {
+          "Book": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "list"
+            ],
+            "Actions": [
+              "Restock"
+            ]
+          },
+          "Coupon": {
+            "Scopes": [
+              "cluster"
+            ]
+          },
+          "Customer": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "put",
+              "get",
+              "delete",
+              "post",
+              "list"
+            ]
+          },
+          "Order": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "put",
+              "get",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ],
+            "Actions": [
+              "applydiscount",
+              "cleardiscount"
+            ]
+          },
+          "Publisher": {
+            "Scopes": [
+              "cluster"
+            ]
+          },
+          "Store": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "put",
+              "get",
+              "post",
+              "delete"
+            ],
+            "Actions": [
+              "AddOutage"
+            ]
+          }
+        }
       }
     },
     "Files": [
@@ -43,7 +172,74 @@
           "Host",
           "SmartNIC",
           "Tenant"
-        ]
+        ],
+        "Properties": {
+          "Cluster": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "put",
+              "get",
+              "watch"
+            ],
+            "Actions": [
+              "AuthBootstrapComplete",
+              "UpdateTLSConfig"
+            ]
+          },
+          "Host": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "put",
+              "get",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "Node": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "put",
+              "get",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "SmartNIC": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "put",
+              "get",
+              "delete",
+              "list",
+              "watch"
+            ]
+          },
+          "Tenant": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          }
+        }
       }
     },
     "Files": [
@@ -66,7 +262,133 @@
           "MirrorSession",
           "TroubleshootingSession",
           "TechSupportRequest"
-        ]
+        ],
+        "Properties": {
+          "Alert": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "list",
+              "put",
+              "get",
+              "watch"
+            ]
+          },
+          "AlertDestination": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "AlertPolicy": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "EventPolicy": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "FlowExportPolicy": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "FwlogPolicy": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "MirrorSession": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "StatsPolicy": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "list",
+              "watch"
+            ]
+          },
+          "TechSupportRequest": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "get",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "TroubleshootingSession": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list"
+            ]
+          }
+        }
       }
     },
     "Files": [
@@ -85,7 +407,34 @@
           "Service",
           "LbPolicy",
           "VirtualRouter"
-        ]
+        ],
+        "Properties": {
+          "LbPolicy": {
+            "Scopes": [
+              "tenant"
+            ]
+          },
+          "Network": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "list",
+              "watch"
+            ]
+          },
+          "Service": {
+            "Scopes": [
+              "tenant"
+            ]
+          },
+          "VirtualRouter": {
+            "Scopes": [
+              "tenant"
+            ]
+          }
+        }
       }
     },
     "Files": [
@@ -100,7 +449,26 @@
         "Messages": [
           "Bucket",
           "Object"
-        ]
+        ],
+        "Properties": {
+          "Bucket": {
+            "Scopes": [
+              "cluster"
+            ]
+          },
+          "Object": {
+            "Scopes": [
+              "tenant",
+              "namespace"
+            ],
+            "RestMethods": [
+              "get",
+              "list",
+              "delete",
+              "watch"
+            ]
+          }
+        }
       }
     },
     "Files": [
@@ -113,7 +481,22 @@
         "Version": "v1",
         "Messages": [
           "Rollout"
-        ]
+        ],
+        "Properties": {
+          "Rollout": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "put",
+              "get",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          }
+        }
       }
     },
     "Files": [
@@ -131,7 +514,69 @@
           "FirewallProfile",
           "Certificate",
           "TrafficEncryptionPolicy"
-        ]
+        ],
+        "Properties": {
+          "App": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "Certificate": {
+            "Scopes": [
+              "tenant"
+            ]
+          },
+          "FirewallProfile": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "list",
+              "watch"
+            ]
+          },
+          "SGPolicy": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "SecurityGroup": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          },
+          "TrafficEncryptionPolicy": {
+            "Scopes": [
+              "tenant"
+            ]
+          }
+        }
       }
     },
     "Files": [
@@ -145,7 +590,24 @@
         "Version": "v1",
         "Messages": [
           "Buffer"
-        ]
+        ],
+        "Properties": {
+          "Buffer": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "post",
+              "list",
+              "get",
+              "delete"
+            ],
+            "Actions": [
+              "commit",
+              "clear"
+            ]
+          }
+        }
       }
     },
     "Files": [
@@ -159,7 +621,32 @@
         "Messages": [
           "Endpoint",
           "Workload"
-        ]
+        ],
+        "Properties": {
+          "Endpoint": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "list",
+              "watch"
+            ]
+          },
+          "Workload": {
+            "Scopes": [
+              "tenant"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "delete",
+              "post",
+              "list",
+              "watch"
+            ]
+          }
+        }
       }
     },
     "Files": [
