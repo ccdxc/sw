@@ -15,7 +15,7 @@ UPGRADE_TEST_APP = "testupgapp"
 
 def startTestUpgApp(node, param):
     req = api.Trigger_CreateExecuteCommandsRequest()
-    api.Trigger_AddNaplesCommand(req, node, "LD_LIBRARY_PATH=/platform/lib:/nic/lib /nic/bin/{} {}".format(UPGRADE_TEST_APP, param), background = True)
+    api.Trigger_AddNaplesCommand(req, node, "LD_LIBRARY_PATH=/platform/lib:/nic/lib /nic/bin/{} {}".format(UPGRADE_TEST_APP + ".bin", param), background = True)
     resp = api.Trigger(req)
     for cmd_resp in resp.commands:
         api.PrintCommandResults(cmd_resp)

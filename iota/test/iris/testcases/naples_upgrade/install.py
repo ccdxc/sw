@@ -75,10 +75,10 @@ def Main(step):
                 return ret
 
     for naplesHost in naplesHosts:
-        ret = __installBinary(naplesHost, "build/aarch64/iris/bin/" + common.UPGRADE_TEST_APP)
+        ret = __installBinary(naplesHost, "build/aarch64/iris/out/" + common.UPGRADE_TEST_APP + "_bin/" + common.UPGRADE_TEST_APP + ".bin")
         if ret != api.types.status.SUCCESS:
             return ret
-        ret = __copyNaplesFwImage(naplesHost, common.UPGRADE_TEST_APP, "/nic/bin/")
+        ret = __copyNaplesFwImage(naplesHost, common.UPGRADE_TEST_APP + ".bin", "/nic/bin/")
         if ret != api.types.status.SUCCESS:
             return ret
 
