@@ -1063,7 +1063,7 @@ p4pd_mirror_table_init (void)
     hal_ret_t                    ret;
     sdk_ret_t                    sdk_ret;
     directmap                    *dm;
-    mirror_actiondata_t            data = { 0 };
+    mirror_actiondata_t          data = { 0 };
 
     dm = g_hal_state_pd->dm_table(P4TBL_ID_MIRROR);
     SDK_ASSERT(dm != NULL);
@@ -1085,7 +1085,7 @@ p4pd_mirror_table_init (void)
     data.action_u.mirror_local_span.dst_lport = CPU_LPORT;
     data.action_u.mirror_local_span.qid_en = 1;
     data.action_u.mirror_local_span.qid = types::CPUCB_ID_FTE_SPAN;
-    sdk_ret = dm->insert_withid(&data, 7);
+    sdk_ret = dm->insert_withid(&data, MIRROR_FTE_SPAN_IDX);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("mirror table initialization failed for idx : {}, err : {}",

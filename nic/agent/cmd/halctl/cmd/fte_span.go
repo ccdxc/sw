@@ -21,6 +21,7 @@ import (
 var (
 	srcLport        uint32
 	dstLport        uint32
+	spanLport       uint32
 	dropReason      uint32
 	flowLookupDir   uint32
 	flowLookupType  uint32
@@ -34,6 +35,7 @@ var (
 	fromCPU         bool
 	isEgress        bool
 	isDisable       bool
+	matchAny        bool
 )
 
 var fteSpanDebugCmd = &cobra.Command{
@@ -64,6 +66,7 @@ func init() {
 
 	fteSpanDebugCmd.Flags().Uint32Var(&srcLport, "slport", 0, "Specify src_lport")
 	fteSpanDebugCmd.Flags().Uint32Var(&dstLport, "dlport", 0, "Specify dst_lport")
+	fteSpanDebugCmd.Flags().Uint32Var(&spanLport, "span-dlport", 0, "Specify span destination lport. Default: CPU")
 	fteSpanDebugCmd.Flags().Uint32Var(&dropReason, "drop", 0, "Specify P4 drop bitmap. Matches exact drops. Not one of")
 	fteSpanDebugCmd.Flags().Uint32Var(&flowLookupDir, "dir", 0, "Specify flow lookup dir. 0: From Host, 1: From Uplink")
 	fteSpanDebugCmd.Flags().Uint32Var(&flowLookupType, "type", 0, "Specify flow type. 0: None, 1: Mac, 2: v4, 3: v6, 4: From VM Bounce, 5: To VM Bounce")
@@ -76,6 +79,7 @@ func init() {
 	fteSpanDebugCmd.Flags().Uint64Var(&ethDmac, "dmac", 0, "Specify ethernet dmac")
 	fteSpanDebugCmd.Flags().BoolVar(&fromCPU, "from-cpu", false, "Specify from cpu flag")
 	fteSpanDebugCmd.Flags().BoolVar(&isEgress, "is-egress", false, "Enable egress span")
+	fteSpanDebugCmd.Flags().BoolVar(&matchAny, "match-any", false, "Span every packet")
 }
 
 func fteSpanShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -226,11 +230,15 @@ func fteSpanDebugCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("from-cpu") {
 		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_FROM_CPU))
 	}
+	if cmd.Flags().Changed("match-any") {
+		sel |= (1 << (uint)(halproto.FTESpanMatchSelector_MATCH_ANY))
+	}
 
 	req := &halproto.FteSpanRequest{
 		Selector:      sel,
 		SrcLport:      srcLport,
 		DstLport:      dstLport,
+		SpanLport:     spanLport,
 		DropReason:    dropReason,
 		FlowLkupDir:   flowLookupDir,
 		FlowLkupType:  flowLookupType,

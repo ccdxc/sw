@@ -62,6 +62,8 @@ typedef struct fte_span_s {
     bool                        from_cpu;
     bool                        is_egress;
 
+    uint32_t                    span_lport;
+
     void                        *pd;
 
     hal_handle_t                hal_handle;

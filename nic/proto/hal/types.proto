@@ -445,6 +445,7 @@ enum FTESpanMatchSelector {
   FLOW_LKUP_DPORT       = 10;
   ETH_DMAC              = 11;
   FROM_CPU              = 12;
+  MATCH_ANY             = 13;
 }
 
 // flow direction

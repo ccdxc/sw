@@ -33,6 +33,9 @@
 #define REPL_LIST_INDEX_RST_COPY        P4_NW_MCAST_INDEX_RST_COPY
 #define REPL_LIST_INDEX_FLOW_REL_COPY   P4_NW_MCAST_INDEX_FLOW_REL_COPY
 
+// Mirror table
+#define MIRROR_FTE_SPAN_IDX 7
+
 
 #endif    // __P4PD_HPP__
 

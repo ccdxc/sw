@@ -6,6 +6,7 @@
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 #include "nic/hal/src/debug/debug.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
+#include "nic/hal/pd/iris/p4pd_defaults.hpp"
 
 namespace hal {
 namespace pd {
@@ -175,16 +176,22 @@ fte_span_pd_alloc_res (pd_fte_span_t *fte_span_pd)
 hal_ret_t
 fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
 {
+    sdk_ret_t           sdk_ret = SDK_RET_OK;
     hal_ret_t           ret = HAL_RET_OK;
     nacl_swkey_t        key;
     nacl_swkey_mask_t   mask;
-    nacl_actiondata_t     data;
+    nacl_actiondata_t   data;
     fte_span_t          *fte_span = fte_span_pd->fte_span;
     acl_tcam            *acl_tbl = NULL;
     uint64_t            drop_reason_mask = ~0;
+    mirror_actiondata_t mirr_data = { 0 };
+    directmap           *mirr_dm;
 
     acl_tbl = g_hal_state_pd->acl_table();
     SDK_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
+
+    mirr_dm = g_hal_state_pd->dm_table(P4TBL_ID_MIRROR);
+    SDK_ASSERT(mirr_dm != NULL);
 
     memset(&key, 0, sizeof(key));
     memset(&mask, 0, sizeof(mask));
@@ -195,6 +202,14 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
         // Nothing to match. Eff. disable the entry
         key.entry_inactive_nacl = 1;
         mask.entry_inactive_nacl_mask = 0x1;
+
+        // Go back to original mirror session
+        mirr_data.action_id = MIRROR_LOCAL_SPAN_ID;
+        mirr_data.action_u.mirror_local_span.dst_lport = CPU_LPORT;
+        mirr_data.action_u.mirror_local_span.qid_en = 1;
+        mirr_data.action_u.mirror_local_span.qid = types::CPUCB_ID_FTE_SPAN;
+
+
         // Only for Testing, uncomment so that every packet is spanned to FTE
 #if 0
         key.entry_inactive_nacl = 0;
@@ -208,86 +223,89 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
         key.entry_inactive_nacl = 0;
         mask.entry_inactive_nacl_mask = 0x1;
 
-        if (fte_span->sel & (1 << types::SRC_LPORT)) {
-            key.control_metadata_src_lport = fte_span->src_lport;
-            mask.control_metadata_src_lport_mask =
-                ~(mask.control_metadata_src_lport_mask & 0);
-        }
+        // If MATCH_ANY, dont set anything in the mask
+        if (!(fte_span->sel & (1 << types::MATCH_ANY))) {
+            if (fte_span->sel & (1 << types::SRC_LPORT)) {
+                key.control_metadata_src_lport = fte_span->src_lport;
+                mask.control_metadata_src_lport_mask =
+                    ~(mask.control_metadata_src_lport_mask & 0);
+            }
 
-        if (fte_span->sel & (1 << types::DST_LPORT)) {
-            key.control_metadata_dst_lport = fte_span->dst_lport;
-            mask.control_metadata_dst_lport_mask =
-                ~(mask.control_metadata_dst_lport_mask & 0);
-        }
+            if (fte_span->sel & (1 << types::DST_LPORT)) {
+                key.control_metadata_dst_lport = fte_span->dst_lport;
+                mask.control_metadata_dst_lport_mask =
+                    ~(mask.control_metadata_dst_lport_mask & 0);
+            }
 
-        if (fte_span->sel & (1 << types::DROP_REASON)) {
-            memcpy(key.control_metadata_drop_reason, &fte_span->drop_reason,
-                   sizeof(key.control_metadata_drop_reason));
-            memcpy(mask.control_metadata_drop_reason_mask, &drop_reason_mask,
-                   sizeof(mask.control_metadata_drop_reason_mask));
-        }
+            if (fte_span->sel & (1 << types::DROP_REASON)) {
+                memcpy(key.control_metadata_drop_reason, &fte_span->drop_reason,
+                       sizeof(key.control_metadata_drop_reason));
+                memcpy(mask.control_metadata_drop_reason_mask, &drop_reason_mask,
+                       sizeof(mask.control_metadata_drop_reason_mask));
+            }
 
-        if (fte_span->sel & (1 << types::FLOW_LKUP_DIR)) {
-            key.flow_lkp_metadata_lkp_dir = fte_span->flow_lkup_dir;
-            mask.flow_lkp_metadata_lkp_dir_mask =
-                ~(mask.flow_lkp_metadata_lkp_dir_mask & 0);
-        }
+            if (fte_span->sel & (1 << types::FLOW_LKUP_DIR)) {
+                key.flow_lkp_metadata_lkp_dir = fte_span->flow_lkup_dir;
+                mask.flow_lkp_metadata_lkp_dir_mask =
+                    ~(mask.flow_lkp_metadata_lkp_dir_mask & 0);
+            }
 
-        if (fte_span->sel & (1 << types::FLOW_LKUP_TYPE)) {
-            key.flow_lkp_metadata_lkp_type = fte_span->flow_lkup_type;
-            mask.flow_lkp_metadata_lkp_type_mask =
-                ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
-        }
+            if (fte_span->sel & (1 << types::FLOW_LKUP_TYPE)) {
+                key.flow_lkp_metadata_lkp_type = fte_span->flow_lkup_type;
+                mask.flow_lkp_metadata_lkp_type_mask =
+                    ~(mask.flow_lkp_metadata_lkp_type_mask & 0);
+            }
 
-        if (fte_span->sel & (1 << types::FLOW_LKUP_VRF)) {
-            key.flow_lkp_metadata_lkp_vrf = fte_span->flow_lkup_vrf;
-            mask.flow_lkp_metadata_lkp_vrf_mask =
-                ~(mask.flow_lkp_metadata_lkp_vrf_mask & 0);
-        }
+            if (fte_span->sel & (1 << types::FLOW_LKUP_VRF)) {
+                key.flow_lkp_metadata_lkp_vrf = fte_span->flow_lkup_vrf;
+                mask.flow_lkp_metadata_lkp_vrf_mask =
+                    ~(mask.flow_lkp_metadata_lkp_vrf_mask & 0);
+            }
 
-        // TODO: Fix for Ipv6. Check acl_pd.cc. Also check session_pd.cc p4pd_add_flow_hash_table_entry
-        if (fte_span->sel & (1 << types::FLOW_LKUP_SRC)) {
-            memcpy(key.flow_lkp_metadata_lkp_src, fte_span->flow_lkup_src.v6_addr.addr8,
-                   IP6_ADDR8_LEN);
-            memset(mask.flow_lkp_metadata_lkp_src_mask, 0xFF, IP6_ADDR8_LEN);
-        }
+            // TODO: Fix for Ipv6. Check acl_pd.cc. Also check session_pd.cc p4pd_add_flow_hash_table_entry
+            if (fte_span->sel & (1 << types::FLOW_LKUP_SRC)) {
+                memcpy(key.flow_lkp_metadata_lkp_src, fte_span->flow_lkup_src.v6_addr.addr8,
+                       IP6_ADDR8_LEN);
+                memset(mask.flow_lkp_metadata_lkp_src_mask, 0xFF, IP6_ADDR8_LEN);
+            }
 
-        // TODO: Fix for Ipv6. Check acl_pd.cc. Also check session_pd.cc p4pd_add_flow_hash_table_entry
-        if (fte_span->sel & (1 << types::FLOW_LKUP_DST)) {
-            memcpy(key.flow_lkp_metadata_lkp_dst, fte_span->flow_lkup_dst.v6_addr.addr8,
-                   IP6_ADDR8_LEN);
-            memset(mask.flow_lkp_metadata_lkp_dst_mask, 0xFF, IP6_ADDR8_LEN);
-        }
+            // TODO: Fix for Ipv6. Check acl_pd.cc. Also check session_pd.cc p4pd_add_flow_hash_table_entry
+            if (fte_span->sel & (1 << types::FLOW_LKUP_DST)) {
+                memcpy(key.flow_lkp_metadata_lkp_dst, fte_span->flow_lkup_dst.v6_addr.addr8,
+                       IP6_ADDR8_LEN);
+                memset(mask.flow_lkp_metadata_lkp_dst_mask, 0xFF, IP6_ADDR8_LEN);
+            }
 
-        if (fte_span->sel & (1 << types::FLOW_LKUP_PROTO)) {
-            key.flow_lkp_metadata_lkp_proto = fte_span->flow_lkup_proto;
-            mask.flow_lkp_metadata_lkp_proto_mask =
-                ~(mask.flow_lkp_metadata_lkp_proto_mask & 0);
-        }
+            if (fte_span->sel & (1 << types::FLOW_LKUP_PROTO)) {
+                key.flow_lkp_metadata_lkp_proto = fte_span->flow_lkup_proto;
+                mask.flow_lkp_metadata_lkp_proto_mask =
+                    ~(mask.flow_lkp_metadata_lkp_proto_mask & 0);
+            }
 
-        if (fte_span->sel & (1 << types::FLOW_LKUP_SPORT)) {
-            key.flow_lkp_metadata_lkp_sport = fte_span->flow_lkup_sport;
-            mask.flow_lkp_metadata_lkp_sport_mask =
-                ~(mask.flow_lkp_metadata_lkp_sport_mask & 0);
-        }
+            if (fte_span->sel & (1 << types::FLOW_LKUP_SPORT)) {
+                key.flow_lkp_metadata_lkp_sport = fte_span->flow_lkup_sport;
+                mask.flow_lkp_metadata_lkp_sport_mask =
+                    ~(mask.flow_lkp_metadata_lkp_sport_mask & 0);
+            }
 
-        if (fte_span->sel & (1 << types::FLOW_LKUP_DPORT)) {
-            key.flow_lkp_metadata_lkp_dport = fte_span->flow_lkup_dport;
-            mask.flow_lkp_metadata_lkp_dport_mask =
-                ~(mask.flow_lkp_metadata_lkp_dport_mask & 0);
-        }
+            if (fte_span->sel & (1 << types::FLOW_LKUP_DPORT)) {
+                key.flow_lkp_metadata_lkp_dport = fte_span->flow_lkup_dport;
+                mask.flow_lkp_metadata_lkp_dport_mask =
+                    ~(mask.flow_lkp_metadata_lkp_dport_mask & 0);
+            }
 
-        if (fte_span->sel & (1 << types::ETH_DMAC)) {
-            memcpy(key.ethernet_dstAddr,
-                   &fte_span->eth_dmac, sizeof(mac_addr_t));
-            memcpy(mask.ethernet_dstAddr_mask, &drop_reason_mask,
-                   sizeof(mask.ethernet_dstAddr_mask));
-        }
+            if (fte_span->sel & (1 << types::ETH_DMAC)) {
+                memcpy(key.ethernet_dstAddr,
+                       &fte_span->eth_dmac, sizeof(mac_addr_t));
+                memcpy(mask.ethernet_dstAddr_mask, &drop_reason_mask,
+                       sizeof(mask.ethernet_dstAddr_mask));
+            }
 
-        if (fte_span->sel & (1 << types::FROM_CPU)) {
-            key.control_metadata_from_cpu = fte_span->from_cpu;
-            mask.control_metadata_from_cpu_mask =
-                ~(mask.control_metadata_from_cpu_mask & 0);
+            if (fte_span->sel & (1 << types::FROM_CPU)) {
+                key.control_metadata_from_cpu = fte_span->from_cpu;
+                mask.control_metadata_from_cpu_mask =
+                    ~(mask.control_metadata_from_cpu_mask & 0);
+            }
         }
 
         data.action_id = NACL_NACL_PERMIT_ID;
@@ -298,6 +316,27 @@ fte_span_pd_program_hw (pd_fte_span_t *fte_span_pd, table_oper_t oper)
             data.action_u.nacl_nacl_permit.ingress_mirror_en = 1;
             data.action_u.nacl_nacl_permit.ingress_mirror_session_id = 0x1 << 7;
         }
+
+        if (fte_span->span_lport) {
+            mirr_data.action_id = MIRROR_LOCAL_SPAN_ID;
+            mirr_data.action_u.mirror_local_span.dst_lport = fte_span->span_lport;
+            mirr_data.action_u.mirror_local_span.qid_en = 0;
+            mirr_data.action_u.mirror_local_span.qid = 0;
+        } else {
+            mirr_data.action_id = MIRROR_LOCAL_SPAN_ID;
+            mirr_data.action_u.mirror_local_span.dst_lport = CPU_LPORT;
+            mirr_data.action_u.mirror_local_span.qid_en = 1;
+            mirr_data.action_u.mirror_local_span.qid = types::CPUCB_ID_FTE_SPAN;
+        }
+    }
+
+    // Programming mirror session
+    sdk_ret = mirr_dm->update(MIRROR_FTE_SPAN_IDX, &mirr_data);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("mirror table initialization failed for idx : {}, err : {}",
+                      MIRROR_FTE_SPAN_IDX, ret);
+        return ret;
     }
 
     if (oper == TABLE_OPER_INSERT) {

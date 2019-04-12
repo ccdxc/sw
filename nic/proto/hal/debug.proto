@@ -81,6 +81,7 @@ message FteSpanRequest {
   bool                          from_cpu         = 14;   // From CPU
   bool                          is_egress        = 15;   // Enable egress span
   kh.InterfaceKeyHandle         egress_if        = 16;   // Egress span on this interface
+  uint32                        span_lport       = 17;   // Span Destination Lport
 }
 
 message FteSpanRequestMsg {
@@ -423,7 +424,7 @@ enum TraceLevel {
   TRACE_LEVEL_NONE    = 0;    // no tracing at all
   TRACE_LEVEL_ERROR   = 1;    // enable tracing only for error messages
   TRACE_LEVEL_DEBUG   = 2;    // enable tracing only for debug messages
-  TRACE_LEVEL_VERBOSE = 3;    // enable tracing for verbose messages  
+  TRACE_LEVEL_VERBOSE = 3;    // enable tracing for verbose messages
 }
 
 message TraceSpec {
@@ -552,8 +553,8 @@ message HbmBwGetRequestMsg {
 message HbmBwGetResponse {
   CapriBlock type     = 1;
   Bandwidth  average  = 2;
-  Bandwidth  maximum  = 3; 
-  uint64     clk_diff = 4; 
+  Bandwidth  maximum  = 3;
+  uint64     clk_diff = 4;
 }
 
 message HbmBwGetResponseMsg {

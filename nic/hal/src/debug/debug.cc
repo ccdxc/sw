@@ -278,7 +278,7 @@ trace_update (TraceSpec& spec, TraceResponse *rsp)
     } else if (spec.trace_level() == debug::TRACE_LEVEL_DEBUG) {
         utils::g_trace_logger->set_trace_level(::utils::trace_debug);
         rsp->set_trace_level(debug::TRACE_LEVEL_DEBUG);
-    } else if (spec.trace_level() == debug::TRACE_LEVEL_VERBOSE) { 
+    } else if (spec.trace_level() == debug::TRACE_LEVEL_VERBOSE) {
         utils::g_trace_logger->set_trace_level(::utils::trace_verbose);
         rsp->set_trace_level(debug::TRACE_LEVEL_VERBOSE);
     } else {
@@ -477,6 +477,7 @@ fte_span_init_from_spec (fte_span_t *fte_span, FteSpanRequest* req)
     fte_span->eth_dmac = req->eth_dmac();
     fte_span->from_cpu = req->from_cpu();
     fte_span->is_egress = req->is_egress();
+    fte_span->span_lport = req->span_lport();
 
     return HAL_RET_OK;
 }
@@ -487,6 +488,7 @@ fte_span_to_spec (FteSpanRequest* req, fte_span_t *fte_span)
     req->set_selector(fte_span->sel);
     req->set_src_lport(fte_span->src_lport);
     req->set_dst_lport(fte_span->dst_lport);
+    req->set_span_lport(fte_span->span_lport);
     req->set_drop_reason(fte_span->drop_reason);
     req->set_flow_lkup_dir(fte_span->flow_lkup_dir);
     req->set_flow_lkup_type(fte_span->flow_lkup_type);
@@ -914,7 +916,7 @@ llc_get(LlcGetResponse *rsp)
             }
         }
     }
- 
+
     for (int i = 0; i < 16; i ++) {
         rsp->add_count(llc_args.data[i]);
     }
