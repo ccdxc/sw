@@ -85,6 +85,7 @@ acl_deref(const acl_ctx_t *ctx)
 void
 acl_delete(const acl_ctx_t *ctx)
 {
+    print_ref_count(ctx);
     // remove from global list and deref
     SDK_ASSERT(SDK_SPINLOCK_LOCK(&g_ctx_lock) == 0);
     const acl_ctx_t *gctx = (const acl_ctx_t *)g_ctx_ht->remove((void *)ctx->name());
@@ -92,6 +93,7 @@ acl_delete(const acl_ctx_t *ctx)
         gctx->deref();
     }
     SDK_ASSERT(SDK_SPINLOCK_UNLOCK(&g_ctx_lock) == 0);
+
 
     // deref the user pointer
     ctx->deref();
@@ -111,6 +113,7 @@ acl_commit(const acl_ctx_t *ctx, acl_update_cb_t cb)
 
     old = (const acl_ctx_t *)g_ctx_ht->remove((void *)ctx->name());
     if (old) {
+        print_ref_count(old);
         old->deref();
     }
 
