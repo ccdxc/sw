@@ -2343,11 +2343,11 @@ func TestEventsExportWithSlowExporter(t *testing.T) {
 		ti.recorders.Unlock()
 
 		for {
-			count++
 			select {
 			case <-stopEvtsRecorder:
 				return
 			case <-time.After(10 * time.Millisecond):
+				count++
 				evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, fmt.Sprintf("message-%d", count), nil)
 			}
 		}
