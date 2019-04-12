@@ -25,7 +25,6 @@ import (
 	"github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/events"
@@ -45,7 +44,7 @@ var (
 
 	// create mock events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "events_integ_test"},
+		Component:     "events_integ_test",
 		EvtTypes:      append(evtsapi.GetEventTypes(), append(auth.GetEventTypes(), cluster.GetEventTypes()...)...),
 		BackupDir:     "/tmp",
 		SkipEvtsProxy: true}, log.GetNewLogger(log.GetDefaultConfig("events_integ_test")))
@@ -147,7 +146,7 @@ func (t *tInfo) setup(tst *testing.T) error {
 	t.updateResolver(globals.EvtsMgr, evtsMgrURL)
 
 	// start events proxy
-	evtProxyServices, evtsProxyURL, storeConfig, err := testutils.StartEvtsProxy(testURL, t.mockResolver, t.logger, t.dedupInterval, t.batchInterval, t.storeConfig)
+	evtProxyServices, evtsProxyURL, storeConfig, err := testutils.StartEvtsProxy(tst.Name(), testURL, t.mockResolver, t.logger, t.dedupInterval, t.batchInterval, t.storeConfig)
 	if err != nil {
 		t.logger.Errorf("failed to start events proxy, err: %v", err)
 		return err

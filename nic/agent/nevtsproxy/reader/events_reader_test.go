@@ -31,7 +31,7 @@ func TestEventsReaderBasic(t *testing.T) {
 	shmName := fmt.Sprintf("/tmp/%s", uuid.NewV4().String())
 	defer os.Remove(shmName)
 
-	sm, err := shm.CreateSharedMem(shmName, 512)
+	sm, err := shm.CreateSharedMem(shmName, 1024)
 	AssertOk(t, err, "failed to create shared memory, err: %v", err)
 	defer sm.Close()
 
@@ -97,7 +97,7 @@ func TestEventsReaderWithCorruptedMessage(t *testing.T) {
 	shmName := fmt.Sprintf("/tmp/%s", uuid.NewV4().String())
 	defer os.Remove(shmName)
 
-	sm, err := shm.CreateSharedMem(shmName, 512)
+	sm, err := shm.CreateSharedMem(shmName, 1024)
 	AssertOk(t, err, "failed to create shared memory, err: %v", err)
 	defer sm.Close()
 
@@ -157,7 +157,7 @@ func TestEventsReaderWithDispatcher(t *testing.T) {
 	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
 
 	// create dispatcher
-	evtsD, err := dispatcher.NewDispatcher(60*time.Second, 100*time.Millisecond, &events.StoreConfig{Dir: dir}, logger)
+	evtsD, err := dispatcher.NewDispatcher(t.Name(), 60*time.Second, 100*time.Millisecond, &events.StoreConfig{Dir: dir}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	evtsD.Start()
 	defer evtsD.Shutdown()
@@ -209,7 +209,7 @@ func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher, logger log
 	go func() {
 		// writer creates the shared memory and starts sending events until it is stopped.
 		defer wg.Done()
-		totalEventsSent = startEventWriter(shmName, 1024, stopWriter, wantedErrors)
+		totalEventsSent = startEventWriter(shmName, 2048, stopWriter, wantedErrors)
 	}()
 
 	go func() {
@@ -259,7 +259,7 @@ func startEventReader(shmName string, evtsDispatcher events.Dispatcher, logger l
 	var err error
 
 	for i := 0; i < 10; i++ {
-		if evtsReader, err = NewEventReader("", shmName, 50*time.Millisecond, logger, WithEventsDispatcher(evtsDispatcher)); err == nil {
+		if evtsReader, err = NewEventReader(shmName, 50*time.Millisecond, logger, WithEventsDispatcher(evtsDispatcher)); err == nil {
 			break
 		}
 		log.Errorf("failed to open shared memory, retrying..")
@@ -277,7 +277,7 @@ func startEventReader(shmName string, evtsDispatcher events.Dispatcher, logger l
 }
 
 // helper function to start the writer
-// - create shared memory with the given hostname and size
+// - create shared memory with the given name and size
 // - start recording events to shared memory
 // - stop upon receiving signal from stopCh
 func startEventWriter(shmName string, size int, stopCh chan struct{}, fakeErrors int) uint64 {

@@ -17,15 +17,15 @@ EventLoggerPtr EventLogger::getInstance()
 	instance = std::make_shared<EventLogger>();
 
 	instance->recorder = events_recorder::init(
-	    "sysmgr.events", 32768, 256, "sysmgr",
+	    "sysmgr.events", 32768, "sysmgr",
 	    sysmgr_events::Event_descriptor(), logger->get_spd());
     }
 
     return instance;
 }
 
-void EventLogger::LogServiceEvent(std::string name, sysmgr_events::Event event,
-    std::string description)
+void EventLogger::LogServiceEvent(sysmgr_events::Event event, std::string description,
+    std::string name)
 {
     sysmgr_events::EventKey key;
 
@@ -33,7 +33,7 @@ void EventLogger::LogServiceEvent(std::string name, sysmgr_events::Event event,
 
     logger->debug("Logging {} server event {}", name, description);
     this->recorder->event(events::INFO, event, "SysmgrProcessStatus", key,
-	description.c_str());
+	description.c_str(), name.c_str());
 }
 
 

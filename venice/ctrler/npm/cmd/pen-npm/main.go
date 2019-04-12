@@ -54,8 +54,8 @@ func main() {
 
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.Npm},
-		EvtTypes: evtsapi.GetEventTypes()}, logger)
+		Component: globals.Npm,
+		EvtTypes:  evtsapi.GetEventTypes()}, logger)
 	if err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}

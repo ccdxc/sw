@@ -18,7 +18,6 @@ import (
 	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
 	cmdutils "github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -74,7 +73,7 @@ func main() {
 	// update the event source.
 	if env.Recorder, err = recorder.NewRecorder(&recorder.Config{
 		SkipEvtsProxy: true,
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.Cmd},
+		Component:     globals.Cmd,
 		EvtTypes:      append(cmd.GetEventTypes(), evtsapi.GetEventTypes()...)}, env.Logger); err != nil {
 		fmt.Printf("failed to create events recorder, err: %v", err)
 	}

@@ -14,7 +14,6 @@ import (
 	"time"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
@@ -25,7 +24,6 @@ import (
 	"github.com/pensando/sw/nic/delphi/proto/delphi"
 	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -94,14 +92,14 @@ func main() {
 
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.Nmd},
-		EvtTypes: cmd.GetEventTypes()}, logger)
+		Component: globals.Nmd,
+		EvtTypes:  cmd.GetEventTypes()}, logger)
 	if err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}
 	defer evtsRecorder.Close()
 
-	// create a dummy channel to wait forver
+	// create a dummy channel to wait forever
 	waitCh := make(chan bool)
 
 	var macAddr net.HardwareAddr

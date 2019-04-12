@@ -37,7 +37,7 @@ void DelphiService::OnMountComplete()
     ServiceLoop::getInstance()->queue_event(
 	ServiceEvent::create("delphi", SERVICE_EVENT_START));
     EventLogger::getInstance()->LogSystemEvent(
-	sysmgr_events::EVENT_SYSTEM_COLDBOOT, "System booted");
+	sysmgr_events::SYSTEM_COLDBOOT, "System booted");
 }
 
 std::string DelphiService::Name()

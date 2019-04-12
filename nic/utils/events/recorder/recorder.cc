@@ -24,15 +24,6 @@ events_recorder* events_recorder::init(const char* shm_name, int shm_size,
     const ::google::protobuf::EnumDescriptor* event_types_descriptor,
     Logger logger)
 {
-    return init(shm_name, shm_size, SHM_BUF_SIZE, component,
-	event_types_descriptor, logger);
-}
-
-events_recorder* events_recorder::init(const char* shm_name, int shm_size,
-    int seg_size, const char *component,
-    const ::google::protobuf::EnumDescriptor* event_types_descriptor,
-    Logger logger)
-{
     if (logger == nullptr) {
         return nullptr;
     }
@@ -56,7 +47,7 @@ events_recorder* events_recorder::init(const char* shm_name, int shm_size,
 
     // create events queue
     events_queue *evts_queue = events_queue::init(abs_shm_name.c_str(),
-	shm_size, seg_size, logger);
+	shm_size, SHM_BUF_SIZE, logger);
     if (!evts_queue) {
         logger->error("{}: failed to create events queue", abs_shm_name);
         return nullptr;

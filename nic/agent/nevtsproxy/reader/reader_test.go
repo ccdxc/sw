@@ -41,7 +41,7 @@ func TestReader(t *testing.T) {
 	go func() {
 		defer wg.Done()
 
-		rdr = NewReader(t.Name(), dir, 10*time.Millisecond, nil, tLogger)
+		rdr = NewReader(dir, 10*time.Millisecond, nil, tLogger)
 		err := rdr.Start()
 		AssertOk(t, err, "failed start file watcher, err: %v", err)
 	}()
@@ -139,7 +139,7 @@ func TestReader(t *testing.T) {
 // TestReaderInstantiation tests reader instantiation
 func TestReaderInstantiation(t *testing.T) {
 	tLogger := rdrLogger.WithContext("t_name", t.Name())
-	rdr := NewReader(t.Name(), "/invalid", time.Second, nil, tLogger)
+	rdr := NewReader("/invalid", time.Second, nil, tLogger)
 	err := rdr.Start()
 	Assert(t, strings.Contains(err.Error(), "no such file or directory"), "expected failure, init succeeded")
 
@@ -150,7 +150,7 @@ func TestReaderInstantiation(t *testing.T) {
 	AssertOk(t, err, "failed to create temp file")
 	f.Close()
 
-	rdr = NewReader(t.Name(), dir, time.Second, nil, tLogger)
+	rdr = NewReader(dir, time.Second, nil, tLogger)
 	err = rdr.Start()
 	AssertOk(t, err, "failed to start file watcher, err: %v", err)
 

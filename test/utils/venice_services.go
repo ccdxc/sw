@@ -266,7 +266,7 @@ func StartEvtsMgr(serverAddr string, mr resolver.Interface, logger log.Logger, e
 }
 
 // StartEvtsProxy helper function to start events proxy
-func StartEvtsProxy(serverAddr string, mr resolver.Interface, logger log.Logger, dedupInterval,
+func StartEvtsProxy(hostname, serverAddr string, mr resolver.Interface, logger log.Logger, dedupInterval,
 	batchInterval time.Duration, storeConfig *events.StoreConfig) (*EvtProxyServices, string, *events.StoreConfig, error) {
 	log.Infof("starting events proxy")
 	var err error
@@ -282,7 +282,7 @@ func StartEvtsProxy(serverAddr string, mr resolver.Interface, logger log.Logger,
 		}
 	}
 
-	evtsProxy, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, serverAddr,
+	evtsProxy, err := evtsproxy.NewEventsProxy(hostname, globals.EvtsProxy, serverAddr,
 		nil, dedupInterval, batchInterval, storeConfig, logger)
 	if err != nil {
 		return nil, "", nil, fmt.Errorf("failed start events proxy, err: %v", err)

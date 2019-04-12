@@ -41,7 +41,7 @@ func setup(t *testing.T) (*evtsproxy.EventsProxy, *policy.Manager, types.CtrlerI
 	eventsDir, err := ioutil.TempDir("", "")
 	AssertOk(t, err, "failed to create temp directory, err: %v", err)
 
-	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, ":0",
+	eps, err := evtsproxy.NewEventsProxy(t.Name(), globals.EvtsProxy, ":0",
 		nil, 100*time.Second, 500*time.Millisecond, &events.StoreConfig{Dir: eventsDir}, logger)
 	AssertOk(t, err, "failed to start events proxy, err: %v", err)
 	eps.StartDispatch()
@@ -402,9 +402,8 @@ func TestEventPolicy(t *testing.T) {
 	go func() {
 		defer wg.Done()
 
-		testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: fmt.Sprintf("%s-%s", t.Name(), uuid.NewV4().String())}
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Source:       testEventSource,
+			Component:    fmt.Sprintf("%s-%s", t.Name(), uuid.NewV4().String()),
 			EvtTypes:     []string{"EVT1", "EVT2"},
 			EvtsProxyURL: eps.RPCServer.GetListenURL(),
 			BackupDir:    eventsDir}, logger)

@@ -54,7 +54,7 @@ var (
 func createEventsProxy(t *testing.T, proxyURL, eventsStorePath string) (*epgrpc.RPCServer,
 	events.Dispatcher, *rpckit.RPCClient, *exporters.MockExporter) {
 	// create events dispatcher
-	evtsDispatcher, err := dispatcher.NewDispatcher(testDedupInterval, testSendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	evtsDispatcher, err := dispatcher.NewDispatcher(t.Name(), testDedupInterval, testSendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 
 	// create mock writer
@@ -97,7 +97,7 @@ func TestEventsRecorder(t *testing.T) {
 
 	// create recorder
 	evtsRecorder, err := NewRecorder(&Config{
-		Source:       &evtsapi.EventSource{NodeName: "test-node", Component: "test-component" + t.Name()},
+		Component:    "test-component" + t.Name(),
 		EvtTypes:     testEventTypes,
 		EvtsProxyURL: rpcServer.GetListenURL(),
 		BackupDir:    recorderEventsDir}, logger)
@@ -164,7 +164,7 @@ func TestInvalidEventInputs(t *testing.T) {
 
 	// create recorder
 	evtsRecorder, err := NewRecorder(&Config{
-		Source:       &evtsapi.EventSource{NodeName: "test-node", Component: "test-component-" + t.Name()},
+		Component:    "test-component-" + t.Name(),
 		EvtTypes:     testEventTypes,
 		EvtsProxyURL: rpcServer.GetListenURL(),
 		BackupDir:    recorderEventsDir}, logger)
@@ -202,19 +202,19 @@ func TestInvalidEventInputs(t *testing.T) {
 
 // TestEventRecorderInstantiation tests event recorder instantiation cases
 func TestEventRecorderInstantiation(t *testing.T) {
-	// missing event source
+	// missing component name
 	_, err := NewRecorder(&Config{EvtTypes: testEventTypes, EvtsProxyURL: testServerURL}, logger)
 	Assert(t, err != nil, "expected failure, event recorder instantiation succeeded")
 
 	// empty event types
-	_, err = NewRecorder(&Config{Source: &evtsapi.EventSource{}, EvtsProxyURL: testServerURL}, logger)
+	_, err = NewRecorder(&Config{Component: t.Name(), EvtsProxyURL: testServerURL}, logger)
 	Assert(t, err != nil, "expected failure, event recorder instantiation succeeded")
 
 	// skip evts proxy
-	r, err := NewRecorder(&Config{Source: &evtsapi.EventSource{}, EvtTypes: []string{"DUMMY"},
+	r, err := NewRecorder(&Config{Component: t.Name(), EvtTypes: []string{"DUMMY"},
 		EvtsProxyURL: testServerURL, BackupDir: "/tmp", SkipEvtsProxy: true}, logger)
-	r.StartExport()
 	AssertOk(t, err, "expected success, event recorder instantiation failed")
+	r.StartExport()
 	r.Close()
 }
 
@@ -241,9 +241,8 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 		defer wg.Done()
 		var evtsRecorder events.Recorder
 
-		testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: t.Name()}
 		evtsRecorder, err = NewRecorder(&Config{
-			Source:       testEventSource,
+			Component:    t.Name(),
 			EvtTypes:     testEventTypes,
 			EvtsProxyURL: proxyRPCServer.GetListenURL(),
 			BackupDir:    recorderEventsDir}, logger)
@@ -288,7 +287,7 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 	os.RemoveAll(eventsStorePath)
 
 	// create events dispatcher
-	evtsDispatcher, err = dispatcher.NewDispatcher(testDedupInterval, testSendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	evtsDispatcher, err = dispatcher.NewDispatcher(t.Name(), testDedupInterval, testSendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	if err != nil {
 		log.Errorf("failed to create events dispatcher, err: %v", err)
 		return
@@ -321,9 +320,8 @@ func TestRecorderFileBackup(t *testing.T) {
 	AssertOk(t, err, "failed to create recorder events directory")
 	defer os.RemoveAll(recorderEventsDir)
 
-	testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: t.Name()}
 	evtsRecorder, err := NewRecorder(&Config{
-		Source:    testEventSource,
+		Component: t.Name(),
 		EvtTypes:  testEventTypes,
 		BackupDir: recorderEventsDir}, logger)
 	AssertOk(t, err, "failed to create recorder")
@@ -395,9 +393,8 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 	wg := new(sync.WaitGroup)
 	wg.Add(2)
 
-	testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: t.Name()}
 	evtsRecorder, err := NewRecorder(&Config{
-		Source:       testEventSource,
+		Component:    t.Name(),
 		EvtTypes:     testEventTypes,
 		EvtsProxyURL: proxyRPCServer.GetListenURL(),
 		BackupDir:    recorderEventsDir}, logger)

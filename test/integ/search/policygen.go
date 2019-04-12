@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
-	api "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
@@ -17,7 +17,6 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/testutils"
@@ -186,7 +185,7 @@ func createSg(tenant, namespace, name string, selectors *labels.Selector) *secur
 func recordEvents(proxyURL, eventsDir string, eventCount int64, logger log.Logger) {
 	// create recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Source:       &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "search_integ_test"},
+		Component:    "search_integ_test",
 		EvtTypes:     evtsapi.GetEventTypes(),
 		EvtsProxyURL: proxyURL,
 		BackupDir:    eventsDir}, logger)

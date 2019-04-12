@@ -17,7 +17,6 @@ import (
 	apisrv "github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -75,8 +74,8 @@ func main() {
 	}
 
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.APIServer},
-		EvtTypes: evtsapi.GetEventTypes(), SkipEvtsProxy: *disableEvents}, pl)
+		Component: globals.APIServer,
+		EvtTypes:  evtsapi.GetEventTypes(), SkipEvtsProxy: *disableEvents}, pl)
 	if err != nil {
 		pl.Fatalf("failed to create events recorder, err: %v", err)
 	}

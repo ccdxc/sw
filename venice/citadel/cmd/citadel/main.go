@@ -24,7 +24,6 @@ import (
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/query"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/debug"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -73,8 +72,8 @@ func main() {
 
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Source:   &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: globals.Citadel},
-		EvtTypes: evtsapi.GetEventTypes()}, logger)
+		Component: globals.Citadel,
+		EvtTypes:  evtsapi.GetEventTypes()}, logger)
 	if err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}

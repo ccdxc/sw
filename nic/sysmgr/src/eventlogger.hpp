@@ -12,8 +12,8 @@ class EventLogger {
 public:
     static std::shared_ptr<EventLogger> getInstance();
     void LogSystemEvent(sysmgr_events::Event event, std::string description);
-    void LogServiceEvent(std::string name, sysmgr_events::Event event,
-	std::string description);
+    void LogServiceEvent(sysmgr_events::Event event, std::string description,
+       std::string name);
 };
 typedef std::shared_ptr<EventLogger> EventLoggerPtr;
 

@@ -51,14 +51,18 @@ type EventsProxy struct {
 }
 
 // NewEventsProxy creates and returns a events proxy instance
-func NewEventsProxy(serverName, serverURL string, resolverClient resolver.Interface, dedupInterval, batchInterval time.Duration,
+func NewEventsProxy(nodeName, serverName, serverURL string, resolverClient resolver.Interface, dedupInterval, batchInterval time.Duration,
 	storeConfig *events.StoreConfig, logger log.Logger) (*EventsProxy, error) {
 	if utils.IsEmpty(serverName) || utils.IsEmpty(serverURL) || logger == nil {
 		return nil, errors.New("serverName, serverURL and logger is required")
 	}
 
+	if utils.IsEmpty(nodeName) {
+		nodeName = utils.GetHostname()
+	}
+
 	// create the events dispatcher
-	evtsDispatcher, err := dispatcher.NewDispatcher(dedupInterval, batchInterval, storeConfig, logger)
+	evtsDispatcher, err := dispatcher.NewDispatcher(nodeName, dedupInterval, batchInterval, storeConfig, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "error instantiating events proxy RPC server")
 	}

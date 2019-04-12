@@ -71,7 +71,6 @@ import (
 	pcache "github.com/pensando/sw/venice/spyglass/cache"
 	"github.com/pensando/sw/venice/spyglass/finder"
 	"github.com/pensando/sw/venice/spyglass/indexer"
-	"github.com/pensando/sw/venice/utils"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/certmgr"
@@ -126,7 +125,7 @@ var (
 	evtType = append(evtsapi.GetEventTypes(), append(pencluster.GetEventTypes(), auth.GetEventTypes()...)...)
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
-		Source:        &evtsapi.EventSource{NodeName: utils.GetHostname(), Component: "venice_integ_test"},
+		Component:     "venice_integ_test",
 		EvtTypes:      evtType,
 		BackupDir:     "/tmp",
 		SkipEvtsProxy: true}, logger)
@@ -953,7 +952,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	l := log.GetNewLogger(log.GetDefaultConfig("evts-prxy"))
 
 	it.epsDir = tmpDir
-	eps, err := evtsproxy.NewEventsProxy("venice_integ_evtsprxy", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), it.resolverClient,
+	eps, err := evtsproxy.NewEventsProxy(c.TestName(), "venice_integ_evtsprxy", fmt.Sprintf(":%s", globals.EvtsProxyRPCPort), it.resolverClient,
 		5*time.Second, time.Second, &events.StoreConfig{Dir: it.epsDir}, l)
 	eps.StartDispatch()
 	c.Assert(err, check.IsNil)

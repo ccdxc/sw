@@ -104,7 +104,7 @@ ServicePtr Service::create(ServiceSpecPtr spec)
 	spec->name, svc);
 
     EventLogger::getInstance()->LogServiceEvent(
-	spec->name, sysmgr_events::EVENT_SERVICE_PENDING, "Service pending");
+	sysmgr_events::SERVICE_PENDING, "Service %s pending", spec->name);
     
     return svc;
 }
@@ -115,7 +115,7 @@ void Service::on_service_start(std::string name)
     {
 	logger->info("Service {} started", name);
 	EventLogger::getInstance()->LogServiceEvent(
-	    spec->name, sysmgr_events::EVENT_SERVICE_UP, "Service started");
+	    sysmgr_events::SERVICE_UP, "Service %s started", spec->name);
 	return;
     }
 
@@ -165,8 +165,7 @@ void Service::on_child(pid_t pid)
 
     delphi_sdk->QueueUpdate(obj);
      
-    EventLogger::getInstance()->LogServiceEvent(
-	this->spec->name, sysmgr_events::EVENT_SERVICE_DOWN, "Service stopped");
+    EventLogger::getInstance()->LogServiceEvent(sysmgr_events::SERVICE_DOWN, "Service %s stopped", this->spec->name);
 }
 
 void Service::on_timer()

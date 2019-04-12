@@ -81,6 +81,15 @@ func (mr *Recorder) Event(eventType string, severity evtsapi.SeverityLevel, mess
 // StartExport mock impl
 func (mr *Recorder) StartExport() {}
 
+// SetSourceNodeName sets/updates the node name on source
+func (mr *Recorder) SetSourceNodeName(name string) {
+}
+
+// GetSource returns the events source of the recorder
+func (mr *Recorder) GetSource() *evtsapi.EventSource {
+	return nil
+}
+
 // Close mock impl
 func (mr *Recorder) Close() {}
 

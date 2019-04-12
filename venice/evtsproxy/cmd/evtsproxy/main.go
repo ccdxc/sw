@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pensando/sw/venice/utils"
+
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events"
@@ -94,7 +96,7 @@ func createEvtsProxy(listenURL string, resolverClient resolver.Interface, dedupI
 	*evtsproxy.EventsProxy, *policy.Manager, *policy.Watcher) {
 
 	// create events proxy
-	eps, err := evtsproxy.NewEventsProxy(globals.EvtsProxy, listenURL, resolverClient, dedupInterval,
+	eps, err := evtsproxy.NewEventsProxy(utils.GetHostname(), globals.EvtsProxy, listenURL, resolverClient, dedupInterval,
 		batchInterval, &events.StoreConfig{Dir: evtsStoreDir}, logger)
 	if err != nil {
 		logger.Fatalf("error creating events proxy instance: %v", err)

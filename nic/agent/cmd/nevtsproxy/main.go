@@ -62,7 +62,7 @@ type evtServices struct {
 	cancelCtx                context.CancelFunc     // to stop shm reader routine
 	logger                   log.Logger             // logger
 	veniceExporterRegistered bool                   // whether events exporter to Venice is registered
-	hostname                 string                 // user friendly identifier for logs/events
+	nodeName                 string                 // NAPLES host/node name
 }
 
 // NAPLES Clients for all the south bound connections
@@ -120,6 +120,7 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 	n.evtServices.Lock()
 	defer n.evtServices.Unlock()
 
+	n.evtServices.nodeName = obj.GetHostname()
 	if obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB {
 		var controllers []string
 
@@ -131,7 +132,6 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		if n.evtServices.running {
 			n.logger.Infof("changing mode to {%s}", networkMode)
 			n.evtServices.startNetworkModeServices()
-			n.evtServices.hostname = obj.GetHostname()
 			return
 		}
 		n.evtServices.start(networkMode)
@@ -140,7 +140,6 @@ func (n *nClient) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			n.logger.Infof("changing mode to {%s}", hostMode)
 			n.evtServices.stopNetworkModeServices()
 			n.evtServices.resolverClient.UpdateServers([]string{})
-			n.evtServices.hostname = obj.GetHostname()
 			return
 		}
 		n.evtServices.start(hostMode)
@@ -282,7 +281,7 @@ func (e *evtServices) start(mode string) {
 	}
 
 	// create events proxy
-	if e.eps, err = evtsproxy.NewEventsProxy(globals.EvtsProxy, e.config.grpcListenURL, e.resolverClient,
+	if e.eps, err = evtsproxy.NewEventsProxy(e.nodeName, globals.EvtsProxy, e.config.grpcListenURL, e.resolverClient,
 		e.config.dedupInterval, e.config.batchInterval, &events.StoreConfig{Dir: e.config.evtsStoreDir}, e.logger); err != nil {
 		e.logger.Fatalf("error creating events proxy instance: %v", err)
 	}
@@ -306,7 +305,7 @@ func (e *evtServices) start(mode string) {
 	e.eps.StartDispatch()
 
 	// create shared memory events reader
-	e.shmReader = reader.NewReader(e.hostname, shm.GetSharedMemoryDirectory(), 50*time.Millisecond, e.eps.GetEventsDispatcher(), e.logger)
+	e.shmReader = reader.NewReader(shm.GetSharedMemoryDirectory(), 50*time.Millisecond, e.eps.GetEventsDispatcher(), e.logger)
 	e.wg.Add(1)
 	go func() {
 		e.wg.Done()

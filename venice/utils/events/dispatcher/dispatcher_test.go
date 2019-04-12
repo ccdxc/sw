@@ -64,7 +64,7 @@ func TestEventsDispatcher(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	dispatcher, err := NewDispatcher(t.Name(), dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	dispatcher.Start() // start the dispatcher again; NO-OP
@@ -164,7 +164,7 @@ func TestEventsDispatcherShutdown(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	dispatcher, err := NewDispatcher(t.Name(), dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -206,7 +206,7 @@ func TestEventsDispatcherFlush(t *testing.T) {
 	// it is possible that events could be flushed before hitting the batch interval if there is a file rotation.
 	interval := 5 * time.Second
 
-	dispatcher, err := NewDispatcher(10*time.Second, interval, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	dispatcher, err := NewDispatcher(t.Name(), 10*time.Second, interval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -276,7 +276,7 @@ func TestEventsDispatcherRegisterExporter(t *testing.T) {
 	eventsStorePath := filepath.Join(eventsDir, t.Name())
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	dispatcher, err := NewDispatcher(t.Name(), dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -353,7 +353,7 @@ func TestEventsDispatcherWithMultipleSourceAndExporters(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	dispatcher, err := NewDispatcher(t.Name(), dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -404,7 +404,7 @@ func TestEventsDispatcherWithMultipleSourceAndExporters(t *testing.T) {
 				case <-ticker.C:
 					for s := 0; s < numSources; s++ {
 						src := &evtsapi.EventSource{
-							NodeName:  fmt.Sprintf("node-name%v", s),
+							NodeName:  t.Name(),
 							Component: fmt.Sprintf("component%v", s),
 						}
 						sourceKey := fmt.Sprintf("%v-%v", src.GetNodeName(), src.GetComponent())
@@ -433,7 +433,6 @@ func TestEventsDispatcherWithMultipleSourceAndExporters(t *testing.T) {
 		for i := 0; i < numSources; i++ {
 			go func(source int) {
 				src := &evtsapi.EventSource{
-					NodeName:  fmt.Sprintf("node-name%v", source),
 					Component: fmt.Sprintf("component%v", source),
 				}
 
@@ -493,7 +492,7 @@ func TestEventsDispatcherWithMultipleSourceAndExporters(t *testing.T) {
 // number of sources.
 func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePath string, logger log.Logger) {
 	// create dispatcher
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	dispatcher, err := NewDispatcher(t.Name(), dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -520,7 +519,6 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePa
 		for s := 0; s < numSources; s++ {
 			go func(s int) {
 				src := &evtsapi.EventSource{
-					NodeName:  fmt.Sprintf("node-name%v", s),
 					Component: fmt.Sprintf("component%v", s),
 				}
 
@@ -563,7 +561,7 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePa
 	// ensure the exporter received all the events that're sent from each source
 	for s := 0; s < numSources; s++ {
 		src := &evtsapi.EventSource{
-			NodeName:  fmt.Sprintf("node-name%v", s),
+			NodeName:  t.Name(),
 			Component: fmt.Sprintf("component%v", s),
 		}
 
@@ -588,7 +586,7 @@ func testEventsDispatcherWithSources(t *testing.T, numSources int, eventsStorePa
 // number of exporters.
 func testEventDispatcherWithExporters(t *testing.T, numExporters int, eventsStorePath string, logger log.Logger) {
 	// dispatcher sends events to all the registered exporter
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	dispatcher, err := NewDispatcher(t.Name(), dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -704,7 +702,7 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher
-	dispatcher, err := NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	dispatcher, err := NewDispatcher(t.Name(), dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -746,7 +744,7 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	// let us assume proxy restarted at this point
 
 	// create new dispatcher after a restart
-	dispatcher, err = NewDispatcher(dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	dispatcher, err = NewDispatcher(t.Name(), dedupInterval, sendInterval, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -839,7 +837,7 @@ func TestEventsDispatcherExpiry(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher; all the events should be expired after a second
-	dispatcher, err := NewDispatcher(1*time.Second, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	dispatcher, err := NewDispatcher(t.Name(), 1*time.Second, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -924,7 +922,7 @@ func TestDispatcherWithDynamicExporterAndRestart(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher; all the events should be expired after a second
-	dispatcher, err := NewDispatcher(1*time.Second, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	dispatcher, err := NewDispatcher(t.Name(), 1*time.Second, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -1022,7 +1020,7 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher; all the events should be expired after a second
-	dispatcher, err := NewDispatcher(500*time.Millisecond, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	dispatcher, err := NewDispatcher(t.Name(), 500*time.Millisecond, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -1128,7 +1126,7 @@ func TestEventsDispatcherWithSlowExporter(t *testing.T) {
 	var wg sync.WaitGroup
 
 	// create dispatcher; all the events should be expired after a second
-	dispatcher, err := NewDispatcher(10*time.Second, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath, MaxFileSize: 100 * 1000, MaxNumFiles: 50}, logger)
+	dispatcher, err := NewDispatcher(t.Name(), 10*time.Second, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath, MaxFileSize: 100 * 1000, MaxNumFiles: 50}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()
@@ -1197,7 +1195,7 @@ func TestEventsDispatcherDeleteExporter(t *testing.T) {
 	defer os.RemoveAll(eventsStorePath) // cleanup
 
 	// create dispatcher; all the events should be expired after a second
-	dispatcher, err := NewDispatcher(500*time.Millisecond, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, logger)
+	dispatcher, err := NewDispatcher(t.Name(), 500*time.Millisecond, 10*time.Millisecond, &events.StoreConfig{Dir: eventsStorePath}, logger)
 	AssertOk(t, err, "failed to create dispatcher")
 	dispatcher.Start()
 	defer dispatcher.Shutdown()

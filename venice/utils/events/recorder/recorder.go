@@ -68,7 +68,7 @@ func Event(eventType string, severity evtsapi.SeverityLevel, message string, obj
 // messsage, etc. Events are sent to the proxy for further processing (dedup, cache, etc.)
 type recorderImpl struct {
 	id                    string                 // id (unique key) of the recorder
-	eventSource           *evtsapi.EventSource   // all the events generated using this recorder will carry this source
+	component             string                 // all the events generated using this recorder will carry this component in the source
 	eventTypes            map[string]struct{}    // eventTypes provide a function to validate the given event type
 	skipEvtsProxy         bool                   // use local store for events; skip sending events to evtsproxy
 	eventsProxy           *eventsProxy           // event proxy
@@ -78,6 +78,12 @@ type recorderImpl struct {
 	close                 sync.Once              // to close the recorder
 	shutdown              chan struct{}          // to send shutdown signal to the daemon go routines (i.e. event distribution)
 	wg                    sync.WaitGroup         // used to wait for the graceful shutdown of daemon go routines
+}
+
+// eventSource that will be used on all the events recorded using this recorder
+type eventSource struct {
+	sync.RWMutex
+	*evtsapi.EventSource
 }
 
 // eventsProxy encapsulates all the proxy details including connection string
@@ -100,19 +106,19 @@ type failedEventsForwarder struct {
 
 // Config represents the recorder configuration
 type Config struct {
-	Source        *evtsapi.EventSource // event source for all the events
-	EvtTypes      []string             // list of event types supported by the recorder
-	EvtsProxyURL  string               // proxy URL to connect to
-	BackupDir     string               // store events in a file, if proxy connection becomes unavailable
-	SkipEvtsProxy bool                 // use local store for events; skip connecting to proxy
+	Component     string   // name of the component recording events
+	EvtTypes      []string // list of event types supported by the recorder
+	EvtsProxyURL  string   // proxy URL to connect to
+	BackupDir     string   // store events in a file, if proxy connection becomes unavailable
+	SkipEvtsProxy bool     // use local store for events; skip connecting to proxy
 }
 
 // NewRecorder creates and returns a recorder instance and instantiates the singleton object.
 // if `evtsproxyURL` is empty, it will it use local events proxy RPC port.
 // First recorder instance created in the process is same as the singleton recorder.
 func NewRecorder(config *Config, logger log.Logger) (events.Recorder, error) {
-	if config.Source == nil {
-		return nil, fmt.Errorf("missing event source")
+	if utils.IsEmpty(config.Component) {
+		return nil, fmt.Errorf("missing component name")
 	}
 
 	if len(config.EvtTypes) == 0 {
@@ -127,15 +133,15 @@ func NewRecorder(config *Config, logger log.Logger) (events.Recorder, error) {
 		config.BackupDir = filepath.Join(globals.EventsDir, "recorder")
 	}
 
-	eventsFile, err := newFile(config.BackupDir, events.GetSourceKey(config.Source))
+	eventsFile, err := newFile(config.BackupDir, config.Component)
 	if err != nil {
 		return nil, err
 	}
 
 	recorder := &recorderImpl{
-		id:          fmt.Sprintf("recorder-{%s:%s}", config.Source.GetNodeName(), config.Source.GetComponent()),
-		eventSource: config.Source,
-		eventTypes:  constructEventTypesMap(config.EvtTypes),
+		id:         fmt.Sprintf("recorder-%s", config.Component),
+		component:  config.Component,
+		eventTypes: constructEventTypesMap(config.EvtTypes),
 		eventsProxy: &eventsProxy{
 			url: config.EvtsProxyURL,
 			ctx: context.Background(), // context for all the proxy calls
@@ -239,7 +245,7 @@ func (r *recorderImpl) Event(eventType string, severity evtsapi.SeverityLevel, m
 			Type:     eventType,
 			Severity: evtsapi.SeverityLevel_name[int32(severity)],
 			Message:  message,
-			Source:   r.eventSource,
+			Source:   &evtsapi.EventSource{Component: r.component},
 			Count:    1,
 		},
 	}

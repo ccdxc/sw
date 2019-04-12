@@ -32,6 +32,7 @@ const (
 // dispatching events to all the registered exporters.
 type dispatcherImpl struct {
 	sync.Mutex                  // for protecting the dispatcher object
+	nodeName      string        // node name
 	sendInterval  time.Duration // i.e, batch interval; events are sent to the exporters in this interval
 	dedupInterval time.Duration // events are de-duped for the given interval
 	logger        log.Logger    // logger
@@ -67,7 +68,11 @@ type evtsExporter struct {
 }
 
 // NewDispatcher creates a new dispatcher instance with the given send interval.
-func NewDispatcher(dedupInterval, sendInterval time.Duration, storeConfig *events.StoreConfig, logger log.Logger) (events.Dispatcher, error) {
+func NewDispatcher(nodeName string, dedupInterval, sendInterval time.Duration, storeConfig *events.StoreConfig, logger log.Logger) (events.Dispatcher, error) {
+	if utils.IsEmpty(nodeName) {
+		return nil, fmt.Errorf("empty node name")
+	}
+
 	if dedupInterval <= 0 {
 		dedupInterval = defaultDedupInterval
 	}
@@ -88,6 +93,7 @@ func NewDispatcher(dedupInterval, sendInterval time.Duration, storeConfig *event
 	}
 
 	dispatcher := &dispatcherImpl{
+		nodeName:      nodeName,
 		dedupInterval: dedupInterval,
 		sendInterval:  sendInterval,
 		logger:        logger.WithContext("submodule", "events_dispatcher"),
@@ -129,6 +135,11 @@ func (d *dispatcherImpl) addEvent(event *evtsapi.Event) error {
 		d.logger.Errorf("dispatcher stopped, cannot process event: {%s}", event.GetSelfLink())
 		return fmt.Errorf("dispatcher stopped, cannot process events")
 	}
+
+	if event.EventAttributes.Source == nil {
+		event.EventAttributes.Source = &evtsapi.EventSource{}
+	}
+	event.EventAttributes.Source.NodeName = d.nodeName // set node name on the event
 
 	if err := events.ValidateEvent(event); err != nil {
 		d.logger.Errorf("event {%s} validation failed, err: %v", event.GetUUID(), err)

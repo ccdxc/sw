@@ -78,7 +78,6 @@ func TestEvents(t *testing.T) {
 
 	// uuid to make each source unique
 	componentID := uuid.NewV4().String()
-	testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: componentID}
 
 	// create recorder events directory
 	recorderEventsDir, err := ioutil.TempDir("", "")
@@ -87,7 +86,7 @@ func TestEvents(t *testing.T) {
 
 	// create recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Source:       testEventSource,
+		Component:    componentID,
 		EvtTypes:     testEventTypes,
 		EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
 		BackupDir:    recorderEventsDir}, ti.logger)
@@ -174,9 +173,8 @@ func TestEventsProxyRestart(t *testing.T) {
 
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
-			testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: fmt.Sprintf("%v-%v", componentID, i)}
 			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-				Source:       testEventSource,
+				Component:    fmt.Sprintf("%v-%v", componentID, i),
 				EvtTypes:     testEventTypes,
 				EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
 				BackupDir:    recorderEventsDir}, ti.logger)
@@ -222,7 +220,7 @@ func TestEventsProxyRestart(t *testing.T) {
 
 			// proxy won't be able to accept any events for 2s
 			time.Sleep(1 * time.Second)
-			evtProxyServices, evtsProxyURL, storeConfig, err := testutils.StartEvtsProxy(proxyURL, ti.mockResolver, ti.logger, ti.dedupInterval, ti.batchInterval, ti.storeConfig)
+			evtProxyServices, evtsProxyURL, storeConfig, err := testutils.StartEvtsProxy(t.Name(), proxyURL, ti.mockResolver, ti.logger, ti.dedupInterval, ti.batchInterval, ti.storeConfig)
 			if err != nil {
 				log.Errorf("failed to start events proxy, err: %v", err)
 				continue
@@ -286,9 +284,8 @@ func TestEventsMgrRestart(t *testing.T) {
 
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
-			testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: fmt.Sprintf("%v-%v", componentID, i)}
 			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-				Source:       testEventSource,
+				Component:    fmt.Sprintf("%v-%v", componentID, i),
 				EvtTypes:     testEventTypes,
 				EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
 				BackupDir:    recorderEventsDir}, ti.logger)
@@ -449,9 +446,8 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	go func() {
 		defer wg.Done()
 
-		testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: uuid.NewV4().String()}
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Source:       testEventSource,
+			Component:    uuid.NewV4().String(),
 			EvtTypes:     testEventTypes,
 			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
 			BackupDir:    recorderEventsDir}, ti.logger)
@@ -595,11 +591,11 @@ func TestEventsRESTEndpoints(t *testing.T) {
 					}},
 			},
 		},
-		{ // GET events with severity = "CRITICAL" and source.node-name="test-node"; should match 3 events
-			name:          "GET events in default tenant with severity = 'CRITICAL' and source.node-name='test-node'; should match 3 events",
+		{ // GET events with severity = "CRITICAL" and source.node-name="TestEventsRESTEndpoints"; should match 3 events
+			name:          "GET events in default tenant with severity = 'CRITICAL' and source.node-name='TestEventsRESTEndpoints'; should match 3 events",
 			authzHdr:      authzHeader,
 			requestURI:    "events",
-			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,source.node-name=%s", evtsapi.SeverityLevel_CRITICAL, "test-node"), MaxResults: 100},
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,source.node-name=%s", evtsapi.SeverityLevel_CRITICAL, t.Name()), MaxResults: 100},
 			expStatusCode: http.StatusOK,
 			expResponse: &expectedResponse{
 				numEvents: 3,
@@ -771,11 +767,11 @@ func TestEventsRESTEndpoints(t *testing.T) {
 				events:    map[string]*evtsapi.Event{},
 			},
 		},
-		{ // Get events with type in (EVENT-TYPE1,EVENT-TYPE2),source.node-name notin (test-node); should match none
-			name:          "Get events with type in (EVENT-TYPE1,EVENT-TYPE2),source.node-name notin (test-node); should match none",
+		{ // Get events with type in (EVENT-TYPE1,EVENT-TYPE2),source.node-name notin (TestEventsRESTEndpoints); should match none
+			name:          "Get events with type in (EVENT-TYPE1,EVENT-TYPE2),source.node-name notin (TestEventsRESTEndpoints); should match none",
 			authzHdr:      authzHeader,
 			requestURI:    "events",
-			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("type in (%s,%s),source.node-name notin (%s)", eventType1, eventType2, "test-node"), MaxResults: 100},
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("type in (%s,%s),source.node-name notin (%s)", eventType1, eventType2, t.Name()), MaxResults: 100},
 			expStatusCode: http.StatusOK,
 			expResponse: &expectedResponse{
 				numEvents: 0,
@@ -994,7 +990,7 @@ func TestEventsAlertEngine(t *testing.T) {
 		[]*fields.Requirement{
 			{Key: "type", Operator: "in", Values: []string{eventType1, eventType2, eventType3}},
 			{Key: "count", Operator: "gte", Values: []string{"15"}},
-			{Key: "source.node-name", Operator: "equals", Values: []string{"test-node"}},
+			{Key: "source.node-name", Operator: "equals", Values: []string{t.Name()}},
 		}, []string{})
 
 	alertPolicy1, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
@@ -1060,12 +1056,11 @@ func TestEventsAlertEngine(t *testing.T) {
 	recorderEventsDir, err := ioutil.TempDir("", "")
 	AssertOk(t, err, "failed to create recorder events directory")
 	defer os.RemoveAll(recorderEventsDir)
-	testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: uuid.NewV4().String()}
 	go func() {
 		defer wg.Done()
 
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Source:       testEventSource,
+			Component:    uuid.NewV4().String(),
 			EvtTypes:     testEventTypes,
 			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
 			BackupDir:    recorderEventsDir}, ti.logger)
@@ -1661,12 +1656,11 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, messages map[chan string]
 	recorderEventsDir, err := ioutil.TempDir("", t.Name())
 	AssertOk(t, err, "failed to create recorder events directory")
 	defer os.RemoveAll(recorderEventsDir)
-	testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: uuid.NewV4().String()}
 	go func() {
 		defer wg.Done()
 
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Source:       testEventSource,
+			Component:    uuid.NewV4().String(),
 			EvtTypes:     testEventTypes,
 			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
 			BackupDir:    recorderEventsDir}, ti.logger)
@@ -2218,9 +2212,8 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 		AssertOk(t, err, "failed to create recorder events directory")
 		defer os.RemoveAll(recorderEventsDir)
 
-		testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: uuid.NewV4().String()}
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Source:       testEventSource,
+			Component:    uuid.NewV4().String(),
 			EvtTypes:     testEventTypes,
 			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
 			BackupDir:    recorderEventsDir}, ti.logger)
@@ -2328,9 +2321,8 @@ func TestEventsExportWithSlowExporter(t *testing.T) {
 		AssertOk(t, err, "failed to create recorder events directory")
 		defer os.RemoveAll(recorderEventsDir)
 
-		testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: uuid.NewV4().String()}
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Source:       testEventSource,
+			Component:    uuid.NewV4().String(),
 			EvtTypes:     testEventTypes,
 			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
 			BackupDir:    recorderEventsDir}, ti.logger)
@@ -2387,7 +2379,7 @@ func TestEventsExportWithSlowExporter(t *testing.T) {
 
 		// proxy won't be able to accept any events for 2s
 		time.Sleep(1 * time.Second)
-		evtProxyServices, evtsProxyURL, storeConfig, err := testutils.StartEvtsProxy(proxyURL, ti.mockResolver, ti.logger, ti.dedupInterval, ti.batchInterval, ti.storeConfig)
+		evtProxyServices, evtsProxyURL, storeConfig, err := testutils.StartEvtsProxy(t.Name(), proxyURL, ti.mockResolver, ti.logger, ti.dedupInterval, ti.batchInterval, ti.storeConfig)
 		if err != nil {
 			log.Fatalf("failed to start events proxy, err: %v", err)
 		}
@@ -2437,9 +2429,8 @@ func TestEventsMgrWithElasticRestart(t *testing.T) {
 	defer os.RemoveAll(recorderEventsDir)
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
-			testEventSource := &evtsapi.EventSource{NodeName: "test-node", Component: fmt.Sprintf("%v-%v", componentID, i)}
 			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-				Source:       testEventSource,
+				Component:    fmt.Sprintf("%v-%v", componentID, i),
 				EvtTypes:     testEventTypes,
 				EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
 				BackupDir:    recorderEventsDir}, ti.logger)

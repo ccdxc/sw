@@ -75,7 +75,7 @@ TEST_F(events_recorder_test, test_basic) {
 TEST_F(events_recorder_test, test_verify_rw) {
     const char* component  = ::testing::UnitTest::GetInstance()->current_test_info()->name();
     const char* shm_name   = "/events_recorder_test_verify_rw.events";
-    int shm_size           = 512; // 512 bytes
+    int shm_size           = 576; // 576 bytes
 
     // initialize events recorder
     events_recorder* recorder = events_recorder::init(shm_name, shm_size, component, example_event_types::EventTypes_descriptor(), logger);

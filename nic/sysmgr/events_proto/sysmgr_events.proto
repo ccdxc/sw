@@ -7,12 +7,12 @@ import public "gogo.proto";
 enum Event {
     option (gogoproto.goproto_enum_stringer) = false;
     option (gogoproto.enum_stringer) = true;
-    EVENT_SERVICE_PENDING = 0;
-    EVENT_SERVICE_UP      = 1;
-    EVENT_SERVICE_DOWN    = 2;
-    EVENT_SYSTEM_COLDBOOT = 3;
-    EVENT_SYSTEM_UPGRADE  = 4;
-    EVENT_SYSTEM_FAULT    = 5;
+    SERVICE_PENDING = 0;
+    SERVICE_UP      = 1;
+    SERVICE_DOWN    = 2;
+    SYSTEM_COLDBOOT = 3;
+    SYSTEM_UPGRADE  = 4;
+    SYSTEM_FAULT    = 5;
 }
 
 message EventKey {
