@@ -74,6 +74,9 @@ bool GetUpgCtxTablesFromMeta(string metafile,
                 } else if (!strcmp(sysimg.first.c_str(), "kernel_compat_version")) {
                     meta.kernelVersion = sysimg.second.get_value<string>();
                     UPG_LOG_DEBUG("running kernel version: {}", meta.kernelVersion);
+                } else if (!strcmp(sysimg.first.c_str(), "pcie_compat_version")) {
+                    meta.pcieVersion = sysimg.second.get_value<string>();
+                    UPG_LOG_DEBUG("running pcie version: {}", meta.pcieVersion);
                 }
             }
         } catch (exception const& e) {
@@ -90,6 +93,9 @@ bool GetUpgCtxTablesFromMeta(string metafile,
                 } else if (!strcmp(item.first.c_str(), "kernel_compat_version")) {
                     meta.kernelVersion = item.second.get_value<string>();;
                     UPG_LOG_DEBUG("upgrade kernel version: {}", meta.kernelVersion);
+                } else if (!strcmp(item.first.c_str(), "pcie_compat_version")) {
+                    meta.pcieVersion = item.second.get_value<string>();;
+                    UPG_LOG_DEBUG("upgrade pcie version: {}", meta.pcieVersion);
                 }
             }
         } catch (exception const& e) {

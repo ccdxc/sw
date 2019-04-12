@@ -17,6 +17,7 @@ type preUpgImgMeta struct {
 			SoftwareVersion string `json:"software_version"`
 			NicmgrVersion   string `json:"nicmgr_compat_version"`
 			KernelVersion   string `json:"kernel_compat_version"`
+			PcieVersion     string `json:"pcie_compat_version"`
 		} `json:"image"`
 	} `json:"uboot"`
 	Mainfwa struct {
@@ -27,6 +28,7 @@ type preUpgImgMeta struct {
 			SoftwareVersion string `json:"software_version"`
 			NicmgrVersion   string `json:"nicmgr_compat_version"`
 			KernelVersion   string `json:"kernel_compat_version"`
+			PcieVersion     string `json:"pcie_compat_version"`
 		} `json:"kernel_fit"`
 		SystemImage struct {
 			BuildDate       string `json:"build_date"`
@@ -35,6 +37,7 @@ type preUpgImgMeta struct {
 			SoftwareVersion string `json:"software_version"`
 			NicmgrVersion   string `json:"nicmgr_compat_version"`
 			KernelVersion   string `json:"kernel_compat_version"`
+			PcieVersion     string `json:"pcie_compat_version"`
 		} `json:"system_image"`
 	} `json:"mainfwa"`
 }
@@ -47,6 +50,7 @@ type postUpgImgMeta struct {
 	SoftwareVersion string `json:"software_version"`
 	NicmgrVersion   string `json:"nicmgr_compat_version"`
 	KernelVersion   string `json:"kernel_compat_version"`
+	PcieVersion     string `json:"pcie_compat_version"`
 	Firmware        struct {
 		Boot struct {
 			Type  string `json:"type"`
@@ -100,6 +104,7 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 		}
 		upgCtx.PreUpgMeta.NicmgrVersion = preImgMeta.Uboot.Image.NicmgrVersion
 		upgCtx.PreUpgMeta.KernelVersion = preImgMeta.Uboot.Image.KernelVersion
+		upgCtx.PreUpgMeta.PcieVersion = preImgMeta.Uboot.Image.PcieVersion
 	} else {
 		postUpgJSONFile, err := os.Open("/sw/nic/upgrade_manager/meta/MANIFEST.json")
 		if err != nil {
@@ -117,6 +122,7 @@ func getUpgCtxFromImgMeta(upgCtx *UpgCtx, isPreUpg bool) error {
 		}
 		upgCtx.PostUpgMeta.NicmgrVersion = postImgMeta.NicmgrVersion
 		upgCtx.PostUpgMeta.KernelVersion = postImgMeta.KernelVersion
+		upgCtx.PostUpgMeta.PcieVersion = postImgMeta.PcieVersion
 	}
 	return nil
 }

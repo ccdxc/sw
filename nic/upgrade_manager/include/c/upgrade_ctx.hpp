@@ -17,6 +17,7 @@ typedef struct ImageInfo_ {
    string softwareVersion; 
    string nicmgrVersion; 
    string kernelVersion; 
+   string pcieVersion; 
 } ImageInfo;
 
 typedef struct UpgCtx_ {
@@ -31,7 +32,8 @@ typedef struct UpgCtx_ {
 
 typedef enum {
     NICMGRVER,
-    KERNELVER
+    KERNELVER,
+    PCIEVER
 } UpgMeta;
 
 }
