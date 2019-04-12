@@ -13,6 +13,7 @@
 #include "osal_logger.h"
 #include "osal_time.h"
 #include "osal_sys.h"
+#include "sonic.h"
 #include "sonic_dev.h"
 #include "sonic_lif.h"
 #include "sonic_interrupt.h"

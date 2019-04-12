@@ -1,0 +1,17 @@
+---
+version: 2.0
+targets:
+  linux-versions-build-test:
+    commands: [ "sh", "-c", "/sw/storage/offload/linux-build-test/drivers-linux-build-test.sh" ]
+    owners: ["email:tuyenq@pensando.io"]
+    area:
+    sub-area:
+    feature:
+cache:
+  name: "sw"
+  mount_dir: "/root/.cache"
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/storage/offload"
+rebase: true
+

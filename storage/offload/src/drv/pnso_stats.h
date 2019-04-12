@@ -29,9 +29,9 @@ extern "C" {
 	atomic64_inc_return(&pcr->api_stats.s)
 #define PNSO_STAT_ADD(pcr, s, count) \
 	atomic64_add(count, &pcr->api_stats.s)
-#define PNSO_STAT_READ(stats, s) atomic64_read(&(stats)->s)
+#define PNSO_STAT_READ(stats, s) (uint64_t)atomic64_read(&(stats)->s)
 #define PNSO_STAT_READ_BY_ID(stats, id) \
-	atomic64_read(&((atomic64_t*)(stats))[id])
+	(uint64_t)atomic64_read(&((atomic64_t*)(stats))[id])
 #endif
 
 #define PNSO_ENUM_STAT(s) pas_ ## s,

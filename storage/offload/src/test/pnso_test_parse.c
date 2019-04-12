@@ -4,7 +4,9 @@
  *
  */
 
+#ifndef __KERNEL__
 #include <ctype.h>
+#endif
 #include "osal.h"
 
 #include "yaml.h"

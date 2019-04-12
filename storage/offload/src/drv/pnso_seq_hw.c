@@ -3,14 +3,6 @@
  * All rights reserved.
  *
  */
-#ifdef __FreeBSD__
-#include <linux/netdevice.h>
-#else
-#include <netdevice.h>
-#include <net.h>
-#include <kernel.h>
-#endif
-
 #include "sonic_dev.h"
 #include "sonic_lif.h"
 #include "sonic_api_int.h"

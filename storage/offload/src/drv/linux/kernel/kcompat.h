@@ -4,10 +4,12 @@
 #ifndef _KCOMPAT_H_
 #define _KCOMPAT_H_
 
+#ifndef __FreeBSD__
 #ifndef LINUX_VERSION_CODE
 #include <linux/version.h>
 #else
 #define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
+#endif
 #endif
 #include <linux/init.h>
 #include <linux/types.h>
@@ -3917,6 +3919,12 @@ pci_device_to_OF_node(struct pci_dev __maybe_unused *pdev)
 #endif /* < 3.1.0 */
 
 /*****************************************************************************/
+#if ( LINUX_VERSION_CODE >= KERNEL_VERSION(5,0,0) )
+/* dma_alloc_coherent in 5.0 now also zeroes out memory */
+#ifndef dma_zalloc_coherent
+#define dma_zalloc_coherent(d, s, h, f) dma_alloc_coherent(d, s, h, f)
+#endif
+#endif
 #if ( LINUX_VERSION_CODE < KERNEL_VERSION(3,2,0) )
 #ifndef dma_zalloc_coherent
 #define dma_zalloc_coherent(d, s, h, f) _kc_dma_zalloc_coherent(d, s, h, f)

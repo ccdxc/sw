@@ -15,9 +15,11 @@
 extern "C" {
 #endif
 
-//#include <stdlib.h>
-//#include <stdio.h>
+#if defined(__FreeBSD__) || !defined(__KERNEL__)
 #include <string.h>
+#else
+#include <kcompat.h>
+#endif
 #include "osal_stdtypes.h"
 typedef struct {
     int dummy;

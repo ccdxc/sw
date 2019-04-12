@@ -4,8 +4,12 @@
  *
  */
 
+#if defined(__FreeBSD__) || !defined(__KERNEL__)
 #include <string.h>
 #include <ctype.h>
+#else
+#include <kcompat.h>
+#endif
 #include "osal_stdtypes.h"
 #include "osal_random.h"
 #include "osal_assert.h"

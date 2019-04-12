@@ -7,7 +7,11 @@
 #if 0
 #include <stdint.h>
 #endif
+#if defined(__FreeBSD__) || !defined(__KERNEL__)
 #include <string.h>
+#else
+#include <kcompat.h>
+#endif
 
 #include "osal_stdtypes.h"
 
