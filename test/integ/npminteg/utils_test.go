@@ -357,6 +357,12 @@ func (it *integTestSuite) CreateHost(name, macAddr string) error {
 		Status: cluster.SmartNICStatus{
 			AdmissionPhase: "ADMITTED",
 			PrimaryMAC:     macAddr,
+			Conditions: []cluster.SmartNICCondition{
+				{
+					Type:   "HEALTHY",
+					Status: "TRUE",
+				},
+			},
 		},
 	}
 

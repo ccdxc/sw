@@ -64,11 +64,24 @@ func (sm *Statemgr) OnSmartNICCreate(smartNic *ctkit.SmartNIC) error {
 		return err
 	}
 
+	// see if snic is healthy
+	isHealthy := false
+	if len(smartNic.Status.Conditions) > 0 {
+		for _, cond := range smartNic.Status.Conditions {
+			if cond.Type == "HEALTHY" && cond.Status == "TRUE" {
+				isHealthy = true
+			}
+		}
+	}
+
 	// Update SGPolicies
-	policies, _ := sm.ListSgpolicies()
-	for _, policy := range policies {
-		if _, ok := policy.NodeVersions[smartNic.SmartNIC.Name]; ok == false {
-			policy.NodeVersions[smartNic.SmartNIC.Name] = ""
+	if isHealthy {
+		policies, _ := sm.ListSgpolicies()
+		for _, policy := range policies {
+			if _, ok := policy.NodeVersions[smartNic.SmartNIC.Name]; ok == false {
+				policy.NodeVersions[smartNic.SmartNIC.Name] = ""
+				sm.PeriodicUpdaterPush(policy)
+			}
 		}
 	}
 
@@ -109,9 +122,36 @@ func (sm *Statemgr) OnSmartNICCreate(smartNic *ctkit.SmartNIC) error {
 // OnSmartNICUpdate handles update event on smartnic
 func (sm *Statemgr) OnSmartNICUpdate(smartNic *ctkit.SmartNIC, nsnic *cluster.SmartNIC) error {
 	// see if we already have the smartNic
-	hs, err := sm.FindSmartNIC(smartNic.Tenant, smartNic.Name)
-	if err == nil {
-		hs.SmartNIC.SmartNIC = *nsnic
+	hs, err := SmartNICStateFromObj(smartNic)
+	if err != nil {
+		log.Errorf("Error finding smartnic. Err: %v", err)
+		return err
+	}
+
+	hs.SmartNIC.SmartNIC = *nsnic
+
+	// see if snic is healthy
+	isHealthy := false
+	if len(nsnic.Status.Conditions) > 0 {
+		for _, cond := range nsnic.Status.Conditions {
+			if cond.Type == "HEALTHY" && cond.Status == "TRUE" {
+				isHealthy = true
+			}
+		}
+	}
+
+	// Update SGPolicies
+	policies, _ := sm.ListSgpolicies()
+	for _, policy := range policies {
+		if isHealthy {
+			if _, ok := policy.NodeVersions[smartNic.SmartNIC.Name]; ok == false {
+				policy.NodeVersions[smartNic.SmartNIC.Name] = ""
+				sm.PeriodicUpdaterPush(policy)
+			}
+		} else {
+			delete(policy.NodeVersions, smartNic.SmartNIC.Name)
+			sm.PeriodicUpdaterPush(policy)
+		}
 	}
 
 	return nil
@@ -120,7 +160,7 @@ func (sm *Statemgr) OnSmartNICUpdate(smartNic *ctkit.SmartNIC, nsnic *cluster.Sm
 // OnSmartNICDelete handles smartNic deletion
 func (sm *Statemgr) OnSmartNICDelete(smartNic *ctkit.SmartNIC) error {
 	// see if we have the smartNic
-	hs, err := sm.FindSmartNIC(smartNic.Tenant, smartNic.Name)
+	hs, err := SmartNICStateFromObj(smartNic)
 	if err != nil {
 		log.Errorf("Could not find the smartNic %v. Err: %v", smartNic, err)
 		return err
@@ -132,6 +172,7 @@ func (sm *Statemgr) OnSmartNICDelete(smartNic *ctkit.SmartNIC) error {
 	policies, _ := sm.ListSgpolicies()
 	for _, policy := range policies {
 		delete(policy.NodeVersions, hs.SmartNIC.Name)
+		sm.PeriodicUpdaterPush(policy)
 	}
 
 	// walk all hosts and see if they need to be dis-associated to this snic

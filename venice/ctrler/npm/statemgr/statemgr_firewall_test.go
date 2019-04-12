@@ -171,7 +171,7 @@ func createPolicy(s *Statemgr, name, version string) error {
 	return s.ctrler.SGPolicy().Create(&sgp)
 }
 
-func createSmartNic(s *Statemgr, name string) error {
+func createSmartNic(s *Statemgr, name string) (*cluster.SmartNIC, error) {
 	snic := cluster.SmartNIC{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
@@ -180,9 +180,17 @@ func createSmartNic(s *Statemgr, name string) error {
 			Tenant:    "default",
 		},
 		Spec: cluster.SmartNICSpec{},
+		Status: cluster.SmartNICStatus{
+			Conditions: []cluster.SmartNICCondition{
+				{
+					Type:   "HEALTHY",
+					Status: "TRUE",
+				},
+			},
+		},
 	}
 
-	return s.ctrler.SmartNIC().Create(&snic)
+	return &snic, s.ctrler.SmartNIC().Create(&snic)
 }
 
 func getPolicyVersionForNode(s *Statemgr, policyname, nodename string) (string, error) {
@@ -239,6 +247,167 @@ func TestSmartPolicyNodeVersions(t *testing.T) {
 	AssertEquals(t, "1", prop.GenerationID, "Incorrect 'generation id' propagation status")
 	AssertEquals(t, "", prop.MinVersion, "Incorrect 'min version' propagation status")
 
+}
+
+func TestSGPolicySmartNICEvents(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	createPolicy(stateMgr, "testPolicy1", "1")
+	snic1, err := createSmartNic(stateMgr, "testSmartnic1")
+	version, err := getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic1")
+	AssertOk(t, err, "Couldn't get policy version for node")
+	AssertEquals(t, version, "", "Policy version not correct for node")
+
+	stateMgr.UpdateSgpolicyStatus("testSmartnic1", "default", "testPolicy1", "1")
+
+	version, err = getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic1")
+	AssertOk(t, err, "Couldn't get policy version for node")
+	AssertEquals(t, version, "1", "Policy version not correct for node")
+
+	snic2, err := createSmartNic(stateMgr, "testSmartnic2")
+	version, err = getPolicyVersionForNode(stateMgr, "testPolicy1", "testSmartnic2")
+	AssertOk(t, err, "Couldn't get policy version for node")
+	AssertEquals(t, version, "", "Policy version not correct for node")
+
+	// verify propagation status
+	AssertEventually(t, func() (bool, interface{}) {
+		sgp, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+		if err != nil {
+			return false, err
+		}
+		prop := &sgp.SGPolicy.Status.PropagationStatus
+		log.Infof("Got propagation status: %#v", prop)
+		if prop.Updated != 1 || prop.Pending != 1 || prop.GenerationID != "1" || prop.MinVersion != "" {
+			return false, sgp
+		}
+
+		return true, nil
+	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+
+	// mark the smartnic as unhealthy
+	snic2.Status.Conditions[0].Status = "UNKNOWN"
+	stateMgr.ctrler.SmartNIC().Update(snic2)
+
+	// verify propagation status
+	AssertEventually(t, func() (bool, interface{}) {
+		sgp, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+		if err != nil {
+			return false, err
+		}
+		prop := &sgp.SGPolicy.Status.PropagationStatus
+		log.Infof("Got propagation status: %#v", prop)
+		if prop.Updated != 1 || prop.Pending != 0 || prop.GenerationID != "1" {
+			return false, sgp
+		}
+
+		return true, nil
+	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+
+	// mark the smartnic as healthy
+	snic2.Status.Conditions[0].Status = "TRUE"
+	stateMgr.ctrler.SmartNIC().Update(snic2)
+
+	// verify propagation status
+	AssertEventually(t, func() (bool, interface{}) {
+		sgp, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+		if err != nil {
+			return false, err
+		}
+		prop := &sgp.SGPolicy.Status.PropagationStatus
+		log.Infof("Got propagation status: %#v", prop)
+		if prop.Updated != 1 || prop.Pending != 1 || prop.GenerationID != "1" || prop.MinVersion != "" {
+			return false, sgp
+		}
+
+		return true, nil
+	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+
+	// send response from new nic
+	stateMgr.UpdateSgpolicyStatus("testSmartnic2", "default", "testPolicy1", "1")
+
+	// verify propagation status
+	AssertEventually(t, func() (bool, interface{}) {
+		sgp, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+		if err != nil {
+			return false, err
+		}
+		prop := &sgp.SGPolicy.Status.PropagationStatus
+		log.Infof("Got propagation status: %#v", prop)
+		if prop.Updated != 2 || prop.Pending != 0 || prop.GenerationID != "1" || prop.MinVersion != "" {
+			return false, sgp
+		}
+
+		return true, nil
+	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+
+	// update the policy
+	sgp, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+	AssertOk(t, err, "Couldn't find policy")
+	nsgp := sgp.SGPolicy.SGPolicy
+	nsgp.ObjectMeta.GenerationID = "2"
+	err = stateMgr.ctrler.SGPolicy().Update(&nsgp)
+	AssertOk(t, err, "Couldn't update policy")
+	stateMgr.UpdateSgpolicyStatus("testSmartnic1", "default", "testPolicy1", "2")
+	stateMgr.UpdateSgpolicyStatus("testSmartnic2", "default", "testPolicy1", "2")
+
+	// verify propagation status after policy update
+	AssertEventually(t, func() (bool, interface{}) {
+		sgp, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+		if err != nil {
+			return false, err
+		}
+		prop := &sgp.SGPolicy.Status.PropagationStatus
+		log.Infof("Got propagation status: %#v", prop)
+		if prop.Updated != 2 || prop.Pending != 0 || prop.GenerationID != "2" || prop.MinVersion != "" {
+			return false, sgp
+		}
+
+		return true, nil
+	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+
+	// mark the smartnic as unhealthy
+	snic2.Status.Conditions[0].Status = "UNKNOWN"
+	err = stateMgr.ctrler.SmartNIC().Update(snic2)
+	AssertOk(t, err, "Couldn't update smartnic")
+
+	// verify propagation status
+	AssertEventually(t, func() (bool, interface{}) {
+		sgp, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+		if err != nil {
+			return false, err
+		}
+		prop := &sgp.SGPolicy.Status.PropagationStatus
+		log.Infof("Got propagation status: %#v", prop)
+		if prop.Updated != 1 || prop.Pending != 0 || prop.GenerationID != "2" || prop.MinVersion != "" {
+			return false, sgp
+		}
+
+		return true, nil
+	}, "SGPolicy propagation state incorrect", "300ms", "10s")
+
+	// delete smartnic
+	err = stateMgr.ctrler.SmartNIC().Delete(snic1)
+	AssertOk(t, err, "Couldn't delete smartnic")
+
+	// verify propagation status
+	AssertEventually(t, func() (bool, interface{}) {
+		sgp, err := stateMgr.FindSgpolicy("default", "testPolicy1")
+		if err != nil {
+			return false, err
+		}
+		prop := &sgp.SGPolicy.Status.PropagationStatus
+		log.Infof("Got propagation status: %#v", prop)
+		if prop.Updated != 0 || prop.Pending != 0 || prop.GenerationID != "2" || prop.MinVersion != "" {
+			return false, sgp
+		}
+
+		return true, nil
+	}, "SGPolicy propagation state incorrect", "300ms", "10s")
 }
 
 func TestFirewallProfile(t *testing.T) {

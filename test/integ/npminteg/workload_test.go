@@ -426,3 +426,116 @@ func (it *integTestSuite) TestNpmHostUpdate(c *C) {
 		AssertOk(c, <-waitCh, "Endpoint delete error")
 	}
 }
+
+// TestNpmWorkloadCreateDeleteWithMultiIntf tests workload create/delete with multiple interfaces on it
+func (it *integTestSuite) TestNpmWorkloadCreateDeleteWithMultiIntf(c *C) {
+	const numWorkloads = 10
+	const numIntf = 10
+	const numIter = 10
+	// if not present create the default tenant
+	it.CreateTenant("default")
+	// create a wait channel
+	waitCh := make(chan error, it.numAgents*2)
+
+	for iter := 0; iter < numIter; iter++ {
+		// create number of workload on first host
+		for i := 0; i < numWorkloads; i++ {
+			// build workload object
+			wr := workload.Workload{
+				TypeMeta: api.TypeMeta{Kind: "Workload"},
+				ObjectMeta: api.ObjectMeta{
+					Name:      fmt.Sprintf("testWorkload-%d", i),
+					Namespace: "default",
+					Tenant:    "default",
+				},
+				Spec: workload.WorkloadSpec{
+					HostName:   "testHost-0",
+					Interfaces: []workload.WorkloadIntfSpec{},
+				},
+			}
+
+			// each workload has multiple interfaces
+			for j := 0; j < numIntf; j++ {
+				macAddr := fmt.Sprintf("00:02:00:00:%02x:%02x", i, j)
+				wintf := workload.WorkloadIntfSpec{
+					MACAddress:   macAddr,
+					MicroSegVlan: uint32(i*numIntf + j + 1),
+					ExternalVlan: uint32(j + 1),
+				}
+				wr.Spec.Interfaces = append(wr.Spec.Interfaces, wintf)
+			}
+			_, err := it.apisrvClient.WorkloadV1().Workload().Create(context.Background(), &wr)
+			AssertOk(c, err, "Error creating workload")
+		}
+
+		// wait for all endpoints to be propagated to other agents
+		for _, ag := range it.agents {
+			go func(ag *Dpagent) {
+				found := CheckEventually(func() (bool, interface{}) {
+					return len(ag.nagent.NetworkAgent.ListEndpoint()) == numWorkloads*numIntf, nil
+				}, "10ms", it.pollTimeout())
+				if !found {
+					waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
+					return
+				}
+				waitCh <- nil
+			}(ag)
+		}
+
+		// wait for all goroutines to complete
+		for i := 0; i < it.numAgents; i++ {
+			AssertOk(c, <-waitCh, "Endpoint info incorrect in datapath")
+
+		}
+
+		// now delete the workloads
+		for i := 0; i < numWorkloads; i++ {
+			// build workload object
+			wmeta := api.ObjectMeta{
+				Name:      fmt.Sprintf("testWorkload-%d", i),
+				Namespace: "default",
+				Tenant:    "default",
+			}
+			_, err := it.apisrvClient.WorkloadV1().Workload().Delete(context.Background(), &wmeta)
+			AssertOk(c, err, "Error deleting workload")
+		}
+
+		// verify endpoints are gone from apiserver
+		AssertEventually(c, func() (bool, interface{}) {
+			var listopt api.ListWatchOptions
+			eplist, lerr := it.apisrvClient.WorkloadV1().Endpoint().List(context.Background(), &listopt)
+			if lerr == nil && len(eplist) == 0 {
+				return true, nil
+			}
+			return false, eplist
+		}, "Endpoints still found in apiserver")
+
+		// verify endpoints are gone from agents
+		for _, ag := range it.agents {
+			go func(ag *Dpagent) {
+				if !CheckEventually(func() (bool, interface{}) {
+					return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
+				}, "10ms", it.pollTimeout()) {
+					waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
+					return
+				}
+
+				waitCh <- nil
+			}(ag)
+		}
+
+		// wait for all goroutines to complete
+		for i := 0; i < it.numAgents; i++ {
+			AssertOk(c, <-waitCh, "Endpoint delete error")
+		}
+	}
+	// delete the networks
+	for j := 0; j < numIntf; j++ {
+		err := it.DeleteNetwork("default", fmt.Sprintf("Network-Vlan-%d", j+1))
+		c.Assert(err, IsNil)
+		AssertEventually(c, func() (bool, interface{}) {
+			_, nerr := it.ctrler.StateMgr.FindNetwork("default", fmt.Sprintf("Network-Vlan-%d", j+1))
+			return (nerr != nil), nil
+		}, "Network still found in NPM")
+	}
+}

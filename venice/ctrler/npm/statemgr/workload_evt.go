@@ -330,32 +330,31 @@ func (ws *WorkloadState) deleteEndpoints() error {
 		nw, err := ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
 		if err != nil {
 			log.Errorf("Error finding the network %v. Err: %v", netName, err)
-			return err
-		}
+		} else {
 
-		// check if we created an endpoint for this workload interface
-		name, _ := strconv.ParseMacAddr(ws.Workload.Spec.Interfaces[ii].MACAddress)
-		epName := ws.Workload.Name + "-" + name
-		_, ok := nw.FindEndpoint(epName)
-		if !ok {
-			log.Errorf("Could not find endpoint %v", epName)
-			return fmt.Errorf("Endpoint not found")
-		}
+			// check if we created an endpoint for this workload interface
+			name, _ := strconv.ParseMacAddr(ws.Workload.Spec.Interfaces[ii].MACAddress)
+			epName := ws.Workload.Name + "-" + name
+			_, ok := nw.FindEndpoint(epName)
+			if !ok {
+				log.Errorf("Could not find endpoint %v", epName)
+			} else {
 
-		epInfo := workload.Endpoint{
-			TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-			ObjectMeta: api.ObjectMeta{
-				Name:      epName,
-				Tenant:    ws.Workload.Tenant,
-				Namespace: ws.Workload.Namespace,
-			},
-		}
+				epInfo := workload.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+					ObjectMeta: api.ObjectMeta{
+						Name:      epName,
+						Tenant:    ws.Workload.Tenant,
+						Namespace: ws.Workload.Namespace,
+					},
+				}
 
-		// delete the endpoint in api server
-		err = ws.stateMgr.ctrler.Endpoint().Delete(&epInfo)
-		if err != nil {
-			log.Errorf("Error deleting the endpoint. Err: %v", err)
-			return err
+				// delete the endpoint in api server
+				err = ws.stateMgr.ctrler.Endpoint().Delete(&epInfo)
+				if err != nil {
+					log.Errorf("Error deleting the endpoint. Err: %v", err)
+				}
+			}
 		}
 	}
 

@@ -313,10 +313,100 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 		return true, nil
 	}, "SgPolicy status was not updated after adding new smartnic", "100ms", it.pollTimeout())
 
+	// mark the smartnic as unhealthy
+	snic, err := it.apisrvClient.ClusterV1().SmartNIC().Get(context.Background(), &api.ObjectMeta{Name: fmt.Sprintf("testHost-%d", agNum)})
+	AssertOk(c, err, "Error finding new snic")
+	snic.Status.Conditions[0].Status = "UNKNOWN"
+	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(context.Background(), snic)
+	AssertOk(c, err, "Error updating new snic")
+	agent.nagent.Stop()
+
+	// verify policy status reflects unhealthy snic
+	AssertEventually(c, func() (bool, interface{}) {
+		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		if gerr != nil {
+			return false, gerr
+		}
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 0) ||
+			(tsgp.Status.PropagationStatus.MinVersion != "") {
+			return false, tsgp
+		}
+		return true, nil
+	}, "SgPolicy status was not updated after smartnic was unhealthy", "100ms", it.pollTimeout())
+
+	// mark the smartnic as healthy
+	snic, err = it.apisrvClient.ClusterV1().SmartNIC().Get(context.Background(), &api.ObjectMeta{Name: fmt.Sprintf("testHost-%d", agNum)})
+	AssertOk(c, err, "Error finding new snic")
+	snic.Status.Conditions[0].Status = "TRUE"
+	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(context.Background(), snic)
+	AssertOk(c, err, "Error updating new snic")
+	agent, err = CreateAgent(it.datapathKind, globals.Npm, fmt.Sprintf("testHost-%d", agNum), it.resolverClient)
+	c.Assert(err, IsNil)
+
+	// verify policy status reflects snic being healthy
+	AssertEventually(c, func() (bool, interface{}) {
+		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		if gerr != nil {
+			return false, gerr
+		}
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents+1)) || (tsgp.Status.PropagationStatus.Pending != 0) ||
+			(tsgp.Status.PropagationStatus.MinVersion != "") {
+			return false, tsgp
+		}
+		return true, nil
+	}, "SgPolicy status was not updated after smartnic became healthy", "100ms", it.pollTimeout())
+
 	// stop the new agent
 	agent.nagent.Stop()
 	err = it.DeleteHost(fmt.Sprintf("testHost-%d", agNum))
 	AssertOk(c, err, "Error deleting new host")
+
+	// verify policy status reflects agent going away
+	AssertEventually(c, func() (bool, interface{}) {
+		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		if gerr != nil {
+			return false, gerr
+		}
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 0) {
+			return false, tsgp
+		}
+		return true, nil
+	}, "SgPolicy status was not updated after adding new smartnic", "100ms", it.pollTimeout())
+
+	// create a smartNIC and host without an agent
+	err = it.CreateHost(fmt.Sprintf("testHost-%d", agNum), fmt.Sprintf("00:01:%02x:00:00:00", agNum))
+	AssertOk(c, err, "Error creating new host")
+
+	// verify policy shows pending
+	AssertEventually(c, func() (bool, interface{}) {
+		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		if gerr != nil {
+			return false, gerr
+		}
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 1) {
+			return false, tsgp
+		}
+		return true, nil
+	}, "SgPolicy status was not in pending after adding new smartnic without agent", "100ms", it.pollTimeout())
+
+	// mark the smartnic as unhealthy
+	snic, err = it.apisrvClient.ClusterV1().SmartNIC().Get(context.Background(), &api.ObjectMeta{Name: fmt.Sprintf("testHost-%d", agNum)})
+	AssertOk(c, err, "Error finding new snic")
+	snic.Status.Conditions[0].Status = "UNKNOWN"
+	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(context.Background(), snic)
+	AssertOk(c, err, "Error updating new snic")
+
+	// verify policy is not pending anymore
+	AssertEventually(c, func() (bool, interface{}) {
+		tsgp, gerr := it.apisrvClient.SecurityV1().SGPolicy().Get(context.Background(), &sgp.ObjectMeta)
+		if gerr != nil {
+			return false, gerr
+		}
+		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 0) {
+			return false, tsgp
+		}
+		return true, nil
+	}, "SgPolicy status was not updated after making new smartnic unhealthy", "100ms", it.pollTimeout())
 
 	// finally, delete sg policy
 	_, err = it.apisrvClient.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)

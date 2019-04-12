@@ -16,6 +16,9 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
+// maxUpdateChannelSize is the size of the update pending channel
+const maxUpdateChannelSize = 1000
+
 // updatable is an interface all updatable objects have to implement
 type updatable interface {
 	Write() error
@@ -195,7 +198,7 @@ func runPeriodicUpdater(queue chan updatable) {
 
 // NewPeriodicUpdater creates a new periodic updater
 func newPeriodicUpdater() chan updatable {
-	updateChan := make(chan updatable)
+	updateChan := make(chan updatable, maxUpdateChannelSize)
 	go runPeriodicUpdater(updateChan)
 	return updateChan
 }
