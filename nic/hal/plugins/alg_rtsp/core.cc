@@ -466,6 +466,7 @@ process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len)
 static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
     alg_utils::l4_alg_status_t *l4_sess = alg_utils::alg_status(ctx.feature_session_state());
     SDK_ASSERT(l4_sess);
+    uint32_t   payload_offset = ctx.cpu_rxhdr()->payload_offset;
 
     // cleanup the session if it is an abort
     if (status == false) {
@@ -489,7 +490,7 @@ static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
              * would lead to opening up pinholes for RTSP data sessions.
              */
             uint8_t buff = ctx.is_flow_swapped()?1:0;
-            if (l4_sess->tcpbuf[buff])
+            if ((ctx.pkt_len() > payload_offset) && l4_sess->tcpbuf[buff])
                 l4_sess->tcpbuf[buff]->insert_segment(ctx, process_control_message); 
         } else {
             /*

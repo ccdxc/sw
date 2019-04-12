@@ -146,9 +146,9 @@ process_tcp_close(fte::ctx_t& ctx)
     // Start a timer to cleanup session if this is the first FIN/RST received
     // Timer is started in order to wait for either side to close the TCP
     // connection
-    if ((ctx.session()->iflow->state <= session::FLOW_TCP_STATE_ESTABLISHED &&
+    if (ctx.session()->iflow->state <= session::FLOW_TCP_STATE_ESTABLISHED &&
          (!ctx.session()->rflow || (ctx.session()->rflow &&
-          ctx.session()->rflow->state <= session::FLOW_TCP_STATE_ESTABLISHED)))) {
+          ctx.session()->rflow->state <= session::FLOW_TCP_STATE_ESTABLISHED))) {
         if (tcp_flags & TCP_FLAG_FIN) {
             state = session::FLOW_TCP_STATE_FIN_RCVD;
             hal::schedule_tcp_half_closed_timer(ctx.session());

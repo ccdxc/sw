@@ -2102,9 +2102,13 @@ session_age_cb (void *entry, void *ctxt)
                 return true;
         } else {
             /* 
-             * Dont delete flows if one flow ages and other remains
+             * Dont delete UDP sessions if one flow ages and other remains
+             * For TCP, the only reason why we get here is because we want to
+             * cleanup for cases where we could have missed TCP Close in FTE
+             * so let it cleanup
              */
-            if (session->rflow != NULL && retval != SESSION_AGED_BOTH) {
+            if ((session->iflow->config.key.proto == IPPROTO_UDP) &&
+                session->rflow != NULL && retval != SESSION_AGED_BOTH) {
                 return false;
             }
 #if SESSION_AGE_DEBUG

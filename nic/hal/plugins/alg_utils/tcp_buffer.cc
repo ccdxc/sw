@@ -139,9 +139,16 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
             buff_ = new_buff;
             buff_size_ = new_buff_sz;
         } else {
-            HAL_TRACE_ERR("alg_utils::payload execeeds the max buffer size - truncating");
-            end = buff_size_ - cur_seq_;
-            payload_len = end - seq;
+            uint32_t seq_diff = (seq - cur_seq_);
+            // Check if we are seeing a packet in the future and
+            // we have enough to hold some of the payload atleast
+            if (seq_diff < free_buff_size_) {
+                HAL_TRACE_ERR("alg_utils::payload execeeds the max buffer size - truncating");
+                end = seq + (free_buff_size_ - seq_diff);
+                payload_len = (end - seq);     
+            } else {
+                HAL_TRACE_ERR("alg_utils::payload execeeds the max buffer size - bailing");
+            }
         }
     }
 
