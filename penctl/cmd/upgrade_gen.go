@@ -15,14 +15,14 @@ import (
 //cmd - stats
 //rootCmd = upgrade
 //helpStr = Upgrade Stats
-var statsShowCmd = &cobra.Command{
+var statsupgradeShowCmd = &cobra.Command{
 	Use:   "stats",
 	Short: "Upgrade Stats",
 	Long:  "\n---------------------------------\n Upgrade Stats\n---------------------------------\n",
-	RunE:  statsShowCmdHandler,
+	RunE:  statsupgradeShowCmdHandler,
 }
 
-func statsShowCmdHandler(cmd *cobra.Command, args []string) error {
+func statsupgradeShowCmdHandler(cmd *cobra.Command, args []string) error {
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/upgrademetrics/")
 	if err != nil {
@@ -46,7 +46,7 @@ var upgradeShowCmd = &cobra.Command{
 
 func init() {
 
-	upgradeShowCmd.AddCommand(statsShowCmd)
+	upgradeShowCmd.AddCommand(statsupgradeShowCmd)
 
 	//cmd - upgrade
 	//rootCmd =

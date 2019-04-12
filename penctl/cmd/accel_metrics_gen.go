@@ -15,14 +15,14 @@ import (
 //cmd - hw_ring
 //rootCmd = sonic
 //helpStr = Metrics for hardware rings\n Key indices - RId: ring ID, SubRId: sub-ring ID\n\n\nRing ID:\n\n  cp     : compression\n  cp_hot : compression (priority)\n  dc     : decompression\n  dc_hot : decompression (priority)\n  xts_enc: XTS encryption\n  xts_dec: XTS decryption\n  gcm_enc: GCM encryption\n  gcm_dec: GCM decryption\n\n\nValue Description:\n\nPIndex     : ring producer index\nCIndex     : ring consumer index\nInputBytes : total input bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nOutputBytes: total output bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nSoftResets : number of soft resets executed
-var hw_ringShowCmd = &cobra.Command{
+var hw_ringsonicShowCmd = &cobra.Command{
 	Use:   "hw_ring",
 	Short: "Metrics for hardware rings\n Key indices - RId: ring ID, SubRId: sub-ring ID\n\n\nRing ID:\n\n  cp     : compression\n  cp_hot : compression (priority)\n  dc     : decompression\n  dc_hot : decompression (priority)\n  xts_enc: XTS encryption\n  xts_dec: XTS decryption\n  gcm_enc: GCM encryption\n  gcm_dec: GCM decryption\n\n\nValue Description:\n\nPIndex     : ring producer index\nCIndex     : ring consumer index\nInputBytes : total input bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nOutputBytes: total output bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nSoftResets : number of soft resets executed",
 	Long:  "\n---------------------------------\n Metrics for hardware rings\n Key indices - RId: ring ID, SubRId: sub-ring ID\n\n\nRing ID:\n\n  cp     : compression\n  cp_hot : compression (priority)\n  dc     : decompression\n  dc_hot : decompression (priority)\n  xts_enc: XTS encryption\n  xts_dec: XTS decryption\n  gcm_enc: GCM encryption\n  gcm_dec: GCM decryption\n\n\nValue Description:\n\nPIndex     : ring producer index\nCIndex     : ring consumer index\nInputBytes : total input bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nOutputBytes: total output bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)\nSoftResets : number of soft resets executed\n---------------------------------\n",
-	RunE:  hw_ringShowCmdHandler,
+	RunE:  hw_ringsonicShowCmdHandler,
 }
 
-func hw_ringShowCmdHandler(cmd *cobra.Command, args []string) error {
+func hw_ringsonicShowCmdHandler(cmd *cobra.Command, args []string) error {
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/accelhwringmetrics/")
 	if err != nil {
@@ -47,14 +47,14 @@ var sonicShowCmd = &cobra.Command{
 //cmd - sequencer_info
 //rootCmd = sonic
 //helpStr = Sequencer queues information:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\nQStateAddr: queue state memory address\nQGroup    : queue group\n            0 - compress/decompress\n            1 - compress/decompress status\n            2 - crypto\n            3 - crypto status\nCoreId    : CPU core ID (not available currently)
-var sequencer_infoShowCmd = &cobra.Command{
+var sequencer_infosonicShowCmd = &cobra.Command{
 	Use:   "sequencer_info",
 	Short: "Sequencer queues information:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\nQStateAddr: queue state memory address\nQGroup    : queue group\n            0 - compress/decompress\n            1 - compress/decompress status\n            2 - crypto\n            3 - crypto status\nCoreId    : CPU core ID (not available currently)",
 	Long:  "\n---------------------------------\n Sequencer queues information:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\nQStateAddr: queue state memory address\nQGroup    : queue group\n            0 - compress/decompress\n            1 - compress/decompress status\n            2 - crypto\n            3 - crypto status\nCoreId    : CPU core ID (not available currently)\n---------------------------------\n",
-	RunE:  sequencer_infoShowCmdHandler,
+	RunE:  sequencer_infosonicShowCmdHandler,
 }
 
-func sequencer_infoShowCmdHandler(cmd *cobra.Command, args []string) error {
+func sequencer_infosonicShowCmdHandler(cmd *cobra.Command, args []string) error {
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/accelseqqueueinfometrics/")
 	if err != nil {
@@ -70,14 +70,14 @@ func sequencer_infoShowCmdHandler(cmd *cobra.Command, args []string) error {
 //cmd - sequencer_metrics
 //rootCmd = sonic
 //helpStr = Metrics for sequencer queues:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\nInterruptsRaised : CPU interrupts raised\nNextDBsRung      : chaining doorbells rung\nSeqDescsProcessed: sequencer descriptors processed\nSeqDescsAborted  : sequencer descriptors aborted (due to reset)\nStatusPdmaXfers  : status descriptors copied\nHwDescXfers      : descriptors transferred to hardware\nHwBatchErrors    : hardware batch (length) errors\nHwOpErrors       : hardware operation errors\nAolUpdateReqs    : AOL list updates requested\nSglUpdateReqs    : scatter/gather list updates requested\nSglPdmaXfers     : payload DMA transfers executed\nSglPdmaErrors    : payload DMA errors encountered\nSglPadOnlyXfers  : pad-data-only DMA transfers executed\nSglPadOnlyErrors : pad-data-only DMA errors encountered\nAltDescsTaken    : alternate (bypass-onfail) descriptors executed\nAltBufsTaken     : alternate buffers taken\nLenUpdateReqs    : length updates requested\nCpHeaderUpdates  : compression header updates requested\nSeqHwBytes       : bytes processed
-var sequencer_metricsShowCmd = &cobra.Command{
+var sequencer_metricssonicShowCmd = &cobra.Command{
 	Use:   "sequencer_metrics",
 	Short: "Metrics for sequencer queues:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\nInterruptsRaised : CPU interrupts raised\nNextDBsRung      : chaining doorbells rung\nSeqDescsProcessed: sequencer descriptors processed\nSeqDescsAborted  : sequencer descriptors aborted (due to reset)\nStatusPdmaXfers  : status descriptors copied\nHwDescXfers      : descriptors transferred to hardware\nHwBatchErrors    : hardware batch (length) errors\nHwOpErrors       : hardware operation errors\nAolUpdateReqs    : AOL list updates requested\nSglUpdateReqs    : scatter/gather list updates requested\nSglPdmaXfers     : payload DMA transfers executed\nSglPdmaErrors    : payload DMA errors encountered\nSglPadOnlyXfers  : pad-data-only DMA transfers executed\nSglPadOnlyErrors : pad-data-only DMA errors encountered\nAltDescsTaken    : alternate (bypass-onfail) descriptors executed\nAltBufsTaken     : alternate buffers taken\nLenUpdateReqs    : length updates requested\nCpHeaderUpdates  : compression header updates requested\nSeqHwBytes       : bytes processed",
 	Long:  "\n---------------------------------\n Metrics for sequencer queues:\n Key indices - LifId: logical interface ID, QId: queue ID\n\n\nValue Description:\n\nInterruptsRaised : CPU interrupts raised\nNextDBsRung      : chaining doorbells rung\nSeqDescsProcessed: sequencer descriptors processed\nSeqDescsAborted  : sequencer descriptors aborted (due to reset)\nStatusPdmaXfers  : status descriptors copied\nHwDescXfers      : descriptors transferred to hardware\nHwBatchErrors    : hardware batch (length) errors\nHwOpErrors       : hardware operation errors\nAolUpdateReqs    : AOL list updates requested\nSglUpdateReqs    : scatter/gather list updates requested\nSglPdmaXfers     : payload DMA transfers executed\nSglPdmaErrors    : payload DMA errors encountered\nSglPadOnlyXfers  : pad-data-only DMA transfers executed\nSglPadOnlyErrors : pad-data-only DMA errors encountered\nAltDescsTaken    : alternate (bypass-onfail) descriptors executed\nAltBufsTaken     : alternate buffers taken\nLenUpdateReqs    : length updates requested\nCpHeaderUpdates  : compression header updates requested\nSeqHwBytes       : bytes processed\n---------------------------------\n",
-	RunE:  sequencer_metricsShowCmdHandler,
+	RunE:  sequencer_metricssonicShowCmdHandler,
 }
 
-func sequencer_metricsShowCmdHandler(cmd *cobra.Command, args []string) error {
+func sequencer_metricssonicShowCmdHandler(cmd *cobra.Command, args []string) error {
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/accelseqqueuemetrics/")
 	if err != nil {
@@ -92,7 +92,7 @@ func sequencer_metricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 func init() {
 
-	sonicShowCmd.AddCommand(hw_ringShowCmd)
+	sonicShowCmd.AddCommand(hw_ringsonicShowCmd)
 
 	//cmd - sonic
 	//rootCmd =
@@ -100,8 +100,8 @@ func init() {
 
 	metricsShowCmd.AddCommand(sonicShowCmd)
 
-	sonicShowCmd.AddCommand(sequencer_infoShowCmd)
+	sonicShowCmd.AddCommand(sequencer_infosonicShowCmd)
 
-	sonicShowCmd.AddCommand(sequencer_metricsShowCmd)
+	sonicShowCmd.AddCommand(sequencer_metricssonicShowCmd)
 
 }

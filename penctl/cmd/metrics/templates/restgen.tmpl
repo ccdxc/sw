@@ -40,14 +40,14 @@ import (
 //cmd - {{$cmd}}
 //rootCmd = {{$rootCmd}}
 //helpStr = {{$helpStr}}
-        var {{ToLower $cmd}}ShowCmd = &cobra.Command{
+        var {{ToLower $cmd}}{{$rootCmd}}ShowCmd = &cobra.Command{
                 Use:   "{{ToLower $cmd}}",
                 Short: "{{$helpStr}}",
                 Long:  "\n---------------------------------\n {{$helpStr}}\n---------------------------------\n",
-                RunE:  {{ToLower $cmd}}ShowCmdHandler,
+                RunE:  {{ToLower $cmd}}{{$rootCmd}}ShowCmdHandler,
         }
 
-        func {{ToLower $cmd}}ShowCmdHandler(cmd *cobra.Command, args []string) error {
+        func {{ToLower $cmd}}{{$rootCmd}}ShowCmdHandler(cmd *cobra.Command, args []string) error {
                 jsonFormat = true
                 bodyBytes, err := restGet("telemetry/v1/metrics/{{ToLower .GetName}}/")
                 if err != nil {
@@ -109,7 +109,7 @@ import (
         {{$cmd := $param.Cmd}}
         {{$rootCmd := $param.RootCmd}}
         {{$helpStr:= $param.HelpStr}}
-        {{ToLower $rootCmd}}ShowCmd.AddCommand({{ToLower $cmd}}ShowCmd)
+        {{ToLower $rootCmd}}ShowCmd.AddCommand({{ToLower $cmd}}{{$rootCmd}}ShowCmd)
        {{else}}
                 metricsShowCmd.AddCommand({{ToLower .GetName}}ShowCmd)
        {{end}}
