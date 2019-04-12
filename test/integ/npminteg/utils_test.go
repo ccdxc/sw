@@ -405,18 +405,29 @@ func (it *integTestSuite) DeleteHost(name string) error {
 	snic := cluster.SmartNIC{
 		TypeMeta: api.TypeMeta{Kind: "SmartNIC"},
 		ObjectMeta: api.ObjectMeta{
-			Name:      name,
-			Namespace: "",
-			Tenant:    "default",
+			Name: name,
+		},
+		Spec: cluster.SmartNICSpec{
+			Admit:       false,
+			MgmtMode:    cluster.SmartNICSpec_NETWORK.String(),
+			NetworkMode: cluster.SmartNICSpec_OOB.String(),
+		},
+		Status: cluster.SmartNICStatus{
+			AdmissionPhase: cluster.SmartNICStatus_PENDING.String(),
 		},
 	}
 
+	// need to de-admit before deleting
+	_, err = it.apisrvClient.ClusterV1().SmartNIC().Update(context.Background(), &snic)
+	if err != nil {
+		return err
+	}
 	_, err = it.apisrvClient.ClusterV1().SmartNIC().Delete(context.Background(), &snic.ObjectMeta)
 
 	return err
 }
 
-// DeleteHost deletes a workload
+// CreateTenant creates a Tenant
 func (it *integTestSuite) CreateTenant(name string) error {
 	tenant := &cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},

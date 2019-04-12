@@ -53,16 +53,18 @@ var SmartNICSpec_NetworkModes_normal = map[string]string{
 
 // SmartNICStatus_Phase_normal is a map of normalized values for the enum
 var SmartNICStatus_Phase_normal = map[string]string{
-	"ADMITTED":    "ADMITTED",
-	"PENDING":     "PENDING",
-	"REGISTERING": "REGISTERING",
-	"REJECTED":    "REJECTED",
-	"UNKNOWN":     "UNKNOWN",
-	"admitted":    "ADMITTED",
-	"pending":     "PENDING",
-	"registering": "REGISTERING",
-	"rejected":    "REJECTED",
-	"unknown":     "UNKNOWN",
+	"ADMITTED":       "ADMITTED",
+	"DECOMMISSIONED": "DECOMMISSIONED",
+	"PENDING":        "PENDING",
+	"REGISTERING":    "REGISTERING",
+	"REJECTED":       "REJECTED",
+	"UNKNOWN":        "UNKNOWN",
+	"admitted":       "ADMITTED",
+	"decommissioned": "DECOMMISSIONED",
+	"pending":        "PENDING",
+	"registering":    "REGISTERING",
+	"rejected":       "REJECTED",
+	"unknown":        "UNKNOWN",
 }
 
 var _ validators.DummyVar

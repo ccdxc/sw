@@ -481,6 +481,11 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			return intErrResp, errors.Wrap(err, "Error signing certificate request")
 		}
 
+		// NAPLES must be in network-managed mode
+		if naplesNIC.Spec.MgmtMode != cluster.SmartNICSpec_NETWORK.String() {
+			return intErrResp, fmt.Errorf("Cannot admit SmartNIC because it is not in network-managed mode")
+		}
+
 		log.Infof("Validated NIC: %s", name)
 
 		// If we make it to this point, we know the NAPLES is authentic.
@@ -537,10 +542,10 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			// mark as admitted or pending based on current value of Spec.Admit
 			if nicObj.Spec.Admit == true {
 				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
+				nicObj.Status.AdmissionPhaseReason = ""
 				// If the NIC is admitted, override all spec parameters with the new supplied values,
 				// except those that are owned by Venice.
 				nicObj.Spec = naplesNIC.Spec
-				// Right now "Admit" is the only parameter owned by Venice.
 				nicObj.Spec.Admit = true
 			} else {
 				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
@@ -548,6 +553,9 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 				nicObj.Status.Conditions = []cluster.SmartNICCondition{}
 			}
 		}
+
+		// If NIC was decommissioned from Venice, override previous Spec.MgmtMode
+		nicObj.Spec.MgmtMode = cluster.SmartNICSpec_NETWORK.String()
 
 		// Create or update SmartNIC object in ApiServer
 		if smartNICObjExists {

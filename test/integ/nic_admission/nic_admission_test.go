@@ -500,6 +500,65 @@ func TestCreateNMDs(t *testing.T) {
 	}
 }
 
+// setNICAdmitState sets the value for the SmartNIC.Spec.Admit field in ApiServer
+func setNICAdmitState(t *testing.T, meta *api.ObjectMeta, admit bool) {
+	nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), meta)
+	AssertOk(t, err, "Error getting NIC from ApiServer")
+	nicObj.Spec.Admit = admit
+	nicObj, err = tInfo.apiClient.ClusterV1().SmartNIC().Update(context.Background(), nicObj)
+	AssertOk(t, err, "Error updating NIC in ApiServer")
+}
+
+// setNICMgmtMode sets the value for the SmartNIC.Spec.MgmtMode field in ApiServer
+func setNICMgmtMode(t *testing.T, meta *api.ObjectMeta, mode string) {
+	nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), meta)
+	AssertOk(t, err, "Error getting NIC from ApiServer")
+	nicObj.Spec.MgmtMode = mode
+	nicObj, err = tInfo.apiClient.ClusterV1().SmartNIC().Update(context.Background(), nicObj)
+	AssertOk(t, err, "Error updating NIC in ApiServer")
+}
+
+// setNAPLESConfigMode sets the value for the NaplesConfig.Spec.Mgmt in NAPLES
+func setNAPLESConfigMode(t *testing.T, nmdURL, mode string) {
+	var err error
+	f := func() (bool, interface{}) {
+		var naplesCfg proto.Naples
+		err = netutils.HTTPGet(nmdURL+"/", &naplesCfg)
+		if err != nil {
+			log.Errorf("Failed to get naples config via REST, err:%+v", err)
+			return false, nil
+		}
+		naplesCfg.Spec.Mode = mode
+		var resp nmdstate.NaplesConfigResp
+		err = netutils.HTTPPost(nmdURL, &naplesCfg, &resp)
+		if err != nil {
+			log.Errorf("Failed to post naples config, err:%+v resp:%+v", err, resp)
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f, fmt.Sprintf("Failed to set mode %s on NAPLES %s", mode, nmdURL), "50ms", "20s")
+}
+
+// checkNAPLESConfigMode checks the value for the NaplesConfig.Spec.Mgmt in NAPLES
+func checkNAPLESConfigMode(t *testing.T, nmdURL, mode string) {
+	var err error
+	f := func() (bool, interface{}) {
+		var naplesCfg proto.Naples
+		err = netutils.HTTPGet(nmdURL+"/", &naplesCfg)
+		if err != nil {
+			log.Errorf("Failed to get naples config via REST, err:%+v", err)
+			return false, nil
+		}
+		if naplesCfg.Spec.Mode != mode {
+			log.Errorf("Unexpected MgmtMode in NAPLES %s. Have: %s, want: %s", nmdURL, naplesCfg.Spec.Mode, mode)
+			return false, nil
+		}
+		return true, nil
+	}
+	AssertEventually(t, f, fmt.Sprintf("Failed to check mgmt mode config %s on NAPLES %s", mode, nmdURL), "50ms", "20s")
+}
+
 func checkHealthStatus(t *testing.T, meta *api.ObjectMeta, admPhase string) {
 	f := func() (bool, interface{}) {
 		apiSrvObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), meta)
@@ -543,6 +602,8 @@ func checkE2EState(t *testing.T, nmd *nmdstate.NMD, admPhase string) {
 		expRegStatus, expUpdStatus, expUpdWatchStatus, expRoWatchStatus = false, true, true, true
 	case pencluster.SmartNICStatus_PENDING.String():
 		expRegStatus, expUpdStatus, expUpdWatchStatus, expRoWatchStatus = true, false, false, false
+	case pencluster.SmartNICStatus_DECOMMISSIONED.String():
+		expRegStatus, expUpdStatus, expUpdWatchStatus, expRoWatchStatus = false, false, false, false
 	default:
 		panic(fmt.Sprintf("Unexpected admission phase %s, NMD: %+v", admPhase, nmd))
 	}
@@ -550,11 +611,18 @@ func checkE2EState(t *testing.T, nmd *nmdstate.NMD, admPhase string) {
 	f := func() (bool, interface{}) {
 		// Check object state on NMD, CMD and ApiServer
 		nmdObj, err := nmd.GetSmartNIC()
-		AssertOk(t, err, "NIC not found in NMD nicDB")
-		cmdObj, err := cmdenv.StateMgr.FindSmartNIC(nmdObj.GetObjectMeta().Tenant, nmdObj.GetObjectMeta().Name)
-		AssertOk(t, err, "NIC not found in CMD local state")
+		name := nmdObj.GetObjectMeta().Name
+		if err != nil {
+			return false, fmt.Errorf("NIC %s not found in NMD nicDB, phase: %s", name, admPhase)
+		}
+		cmdObj, err := cmdenv.StateMgr.FindSmartNIC(nmdObj.GetObjectMeta().Tenant, name)
+		if err != nil {
+			return false, fmt.Errorf("NIC %s not found in CMD local state, phase: %s", name, admPhase)
+		}
 		apiSrvObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), nmdObj.GetObjectMeta())
-		AssertOk(t, err, "NIC not found in ApiServer")
+		if err != nil {
+			return false, fmt.Sprintf("NIC %s not found in ApiServer, phase: %s", name, admPhase)
+		}
 
 		for i, nicObj := range []*pencluster.SmartNIC{nmdObj, cmdObj.SmartNIC, apiSrvObj} {
 			if nmdObj.Status.AdmissionPhase != admPhase {
@@ -606,6 +674,7 @@ func TestNICReadmit(t *testing.T) {
 	// Create Host
 	_, err := tInfo.apiClient.ClusterV1().Host().Create(context.Background(), host)
 	AssertOk(t, err, fmt.Sprintf("Error creating host: %v", host.Name))
+	defer tInfo.apiClient.ClusterV1().Host().Delete(context.Background(), &host.ObjectMeta)
 
 	// Cleanup any prior DB files
 	os.Remove(dbPath)
@@ -618,35 +687,9 @@ func TestNICReadmit(t *testing.T) {
 	nmd := nmdInst.agent.GetNMD()
 
 	// Validate Managed Mode
-	f1 := func() (bool, interface{}) {
-		// validate the mode is managed
-		cfg := nmd.GetNaplesConfig()
-		log.Infof("NaplesConfig: %v", cfg)
-		if cfg.Spec.Mode != proto.MgmtMode_NETWORK.String() {
-			log.Errorf("Failed to switch to managed mode")
-			return false, nil
-		}
-		return true, nil
-	}
-	AssertEventually(t, f1, "Failed to verify mode is in Managed Mode", "500ms", "10s")
+	checkNAPLESConfigMode(t, nmd.GetNMDUrl(), proto.MgmtMode_NETWORK.String())
 
 	// Validate SmartNIC object is created in ApiServer and CMD local state
-	f2 := func() (bool, interface{}) {
-		apiSrvObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
-		if err != nil || apiSrvObj == nil {
-			log.Errorf("Failed to GET SmartNIC object from ApiServer, mac:%s, %v", priMac, err)
-			return false, nil
-		}
-		cmdObj, err := cmdenv.StateMgr.FindSmartNIC(meta.Tenant, meta.Name)
-		if err != nil || cmdObj == nil {
-			log.Errorf("Failed to GET SmartNIC object from CMD local state, mac:%s, %v", priMac, err)
-			return false, nil
-		}
-		return true, nil
-	}
-	AssertEventually(t, f2, "Failed to verify creation of SmartNIC object", "500ms", "30s")
-
-	// check NIC is admitted in NMD
 	checkE2EState(t, nmd, pencluster.SmartNICStatus_ADMITTED.String())
 
 	// Turn off auto-admit
@@ -655,15 +698,6 @@ func TestNICReadmit(t *testing.T) {
 	clusterObj.Spec.AutoAdmitNICs = false
 	_, err = tInfo.apiClient.ClusterV1().Cluster().Update(context.Background(), clusterObj)
 	AssertOk(t, err, "Error updating cluster object")
-
-	// The setNICAdmitState function sets the NIC state in ApiServer
-	setNICAdmitState := func(admit bool) {
-		nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
-		AssertOk(t, err, "Error getting NIC from ApiServer")
-		nicObj.Spec.Admit = admit
-		nicObj, err = tInfo.apiClient.ClusterV1().SmartNIC().Update(context.Background(), nicObj)
-		AssertOk(t, err, "Error updating NIC in ApiServer")
-	}
 
 	// Verify that Status info (except phase, host and conditions) does not change in apiServer as NIC gets admitted/de-admitted
 	validateStatus := func(refObj *pencluster.SmartNIC) {
@@ -678,7 +712,7 @@ func TestNICReadmit(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		// De-admit NIC. NMD is supposed to receive a notification and go back to "pending" state.
-		setNICAdmitState(false)
+		setNICAdmitState(t, &meta, false)
 
 		// Verify that NMD responds to de-admission (stop watchers, stop sending updates, restart registration loop)
 		checkE2EState(t, nmd, pencluster.SmartNICStatus_PENDING.String())
@@ -691,7 +725,7 @@ func TestNICReadmit(t *testing.T) {
 		validateStatus(refObj)
 
 		// Re-admit NIC. NMD should get admitted the next registration attempt
-		setNICAdmitState(true)
+		setNICAdmitState(t, &meta, true)
 
 		// Verify that NIC gets readmitted, NMD exits registration loop and starts sending updates again
 		checkE2EState(t, nmd, pencluster.SmartNICStatus_ADMITTED.String())
@@ -701,6 +735,90 @@ func TestNICReadmit(t *testing.T) {
 
 		// Verify that status information was preserved
 		validateStatus(refObj)
+	}
+}
+
+// TestNICDecommissionFlow tests the sequence in which a NIC is first admitted in the cluster, then decommissioned
+// from Venice (switched to host-managed mode) and then re-commissioned (switched to network-managed mode again)
+func TestNICDecommissionFlow(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	tsdb.Init(ctx, &tsdb.Opts{ClientName: t.Name(), ResolverClient: &rmock.ResolverClient{}})
+	defer cancel()
+
+	i := 11
+	priMac := getSmartNICMAC(i)
+	dbPath := getDBPath(i)
+	restURL := getRESTUrl(i)
+
+	meta := api.ObjectMeta{
+		Name: priMac,
+	}
+
+	// Turn off auto-admit
+	clusterObj, err := tInfo.apiClient.ClusterV1().Cluster().Get(context.Background(), &api.ObjectMeta{Name: "testCluster"})
+	AssertOk(t, err, "Error getting cluster object")
+	clusterObj.Spec.AutoAdmitNICs = false
+	_, err = tInfo.apiClient.ClusterV1().Cluster().Update(context.Background(), clusterObj)
+	AssertOk(t, err, "Error updating cluster object")
+
+	// Cleanup any prior DB files
+	os.Remove(dbPath)
+
+	// create Agent and NMD
+	nmdInst, err := createNMD(t, dbPath, priMac, restURL, "network")
+	defer stopNMD(t, nmdInst)
+	Assert(t, (err == nil && nmdInst.agent != nil), "Failed to create agent", err)
+
+	nmd := nmdInst.agent.GetNMD()
+	nmdURL := nmd.GetNMDUrl()
+
+	// Validate network-managed mode
+	checkNAPLESConfigMode(t, nmdURL, proto.MgmtMode_NETWORK.String())
+
+	// Validate SmartNIC object is created in ApiServer and CMD local state
+	checkE2EState(t, nmd, pencluster.SmartNICStatus_PENDING.String())
+
+	for i := 0; i < 10; i++ {
+		setNICAdmitState(t, &meta, true)
+		// check NIC is admitted in NMD
+		checkE2EState(t, nmd, pencluster.SmartNICStatus_ADMITTED.String())
+
+		// check that NIC cannot be deleted in this state
+		_, err = tInfo.apiClient.ClusterV1().SmartNIC().Delete(context.Background(), &meta)
+		Assert(t, err != nil, "Did not get expected error deleting SmartNIC object in ADMITTED phase")
+
+		// Switch to host-managed mode
+		setNICMgmtMode(t, &meta, pencluster.SmartNICSpec_HOST.String())
+		checkE2EState(t, nmd, pencluster.SmartNICStatus_DECOMMISSIONED.String())
+		checkNAPLESConfigMode(t, nmdURL, proto.MgmtMode_HOST.String())
+
+		// Switch to network-managed mode
+		setNAPLESConfigMode(t, nmdURL, proto.MgmtMode_NETWORK.String())
+		// We should go to ADMITTED, because the SmartNIC.Spec.Admit = true
+		checkE2EState(t, nmd, pencluster.SmartNICStatus_ADMITTED.String())
+		checkNAPLESConfigMode(t, nmdURL, proto.MgmtMode_NETWORK.String())
+
+		// Decommission again
+		setNICMgmtMode(t, &meta, pencluster.SmartNICSpec_HOST.String())
+		checkE2EState(t, nmd, pencluster.SmartNICStatus_DECOMMISSIONED.String())
+		checkNAPLESConfigMode(t, nmdURL, proto.MgmtMode_HOST.String())
+
+		// Delete SmartNIC object
+		_, err = tInfo.apiClient.ClusterV1().SmartNIC().Delete(context.Background(), &meta)
+		AssertOk(t, err, "Error deleting SmartNIC object")
+
+		// Switch again to network-managed mode
+		setNAPLESConfigMode(t, nmdURL, proto.MgmtMode_NETWORK.String())
+		// We should go to PENDING, because the Cluster.Spec.AutoAdmitNICs = false
+		checkE2EState(t, nmd, pencluster.SmartNICStatus_PENDING.String())
+		checkNAPLESConfigMode(t, nmdURL, proto.MgmtMode_NETWORK.String())
+
+		// Try to swtch to host-managed mode. It should fail because NIC is not admitted
+		n, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
+		AssertOk(t, err, "Error getting NIC from ApiServer")
+		n.Spec.MgmtMode = pencluster.SmartNICSpec_HOST.String()
+		n, err = tInfo.apiClient.ClusterV1().SmartNIC().Update(context.Background(), n)
+		Assert(t, err != nil, "Did not get expected error changing mode form SmartNIC object in PENDING phase")
 	}
 }
 

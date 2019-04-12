@@ -563,7 +563,8 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.
 
 	case kvstore.Updated:
 
-		if isLeader && (nic.Spec.Admit == false && nic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String()) {
+		if isLeader && nic.Spec.MgmtMode == cmd.SmartNICSpec_NETWORK.String() &&
+			nic.Spec.Admit == false && nic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() {
 			log.Infof("De-admitting NIC: %+v", nic)
 			// NIC has been de-admitted by user.
 			// Set admission phase to PENDING and reset condtions, as the card is no longer part
@@ -596,6 +597,26 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.
 		} else {
 			oldNIC = &(*oldNICState.SmartNIC) // make a copy before updating
 		}
+
+		// If user has switched mode from network-managed to host-managed, we need to decommission
+		// and trigger the mode change on NAPLES
+		if isLeader && oldNIC.Spec.MgmtMode == cmd.SmartNICSpec_NETWORK.String() && nic.Spec.MgmtMode == cmd.SmartNICSpec_HOST.String() {
+			log.Infof("Decommissioning NIC: %s", nic.Name)
+			// reset status
+			nic.Status = cmd.SmartNICStatus{
+				AdmissionPhase:       cmd.SmartNICStatus_DECOMMISSIONED.String(),
+				AdmissionPhaseReason: "SmartNIC management mode changed to HOST",
+			}
+			// A decommissioned NIC is equivalent to a deleted NIC from Host pairing point of view
+			nicUpdates, hostUpdates, err := env.StateMgr.UpdateHostPairingStatus(kvstore.Deleted, nic, nil)
+			if err != nil {
+				log.Errorf("Error updating NIC - Host pairing: %v", err)
+			}
+			// Add the NIC to nicUpdates to make sure that the Status update propagates back to ApiServer
+			nicUpdates = append(nicUpdates, nic)
+			m.sendNICHostUpdates(nicUpdates, hostUpdates)
+		}
+
 		err = env.StateMgr.UpdateSmartNIC(nic)
 		if err != nil {
 			log.Errorf("Error updating smartnic {%+v}. Err: %v", nic, err)
@@ -603,7 +624,8 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, nic *cmd.
 
 		// Initiate NIC registration only in cases where Phase is unknown or empty
 		// For Naples initiated case, the phase will be set to REGISTERING initially
-		if isLeader && (nic.Status.AdmissionPhase == cmd.SmartNICStatus_UNKNOWN.String() || nic.Status.AdmissionPhase == "") {
+		if isLeader && nic.Spec.MgmtMode == cmd.SmartNICSpec_NETWORK.String() &&
+			(nic.Status.AdmissionPhase == cmd.SmartNICStatus_UNKNOWN.String() || nic.Status.AdmissionPhase == "") {
 			go env.NICService.InitiateNICRegistration(nic)
 		}
 

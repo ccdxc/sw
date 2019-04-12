@@ -116,15 +116,17 @@ message SmartNICStatus {
     // Various phases in lifecycle of a SmartNIC
     enum Phase {
         // ui-hint: Unknown
-        UNKNOWN      = 0; // Unknown status, initial state.
+        UNKNOWN        = 0; // Unknown status, initial state.
         // ui-hint: Registering
-        REGISTERING  = 1; // NIC registration is in progress, set when Naples initiated registration
+        REGISTERING    = 1; // NIC registration is in progress, set when Naples initiated registration
         // ui-hint: Rejected
-        REJECTED     = 2; // NIC is rejected, due to invalid cert
+        REJECTED       = 2; // NIC is rejected, due to invalid credentials or misconfiguration
         // ui-hint: Pending
-        PENDING      = 3; // NIC is validated but waiting for manual approval
+        PENDING        = 3; // NIC is validated but waiting for manual approval
         // ui-hint: Admitted
-        ADMITTED     = 4; // NIC is validated and admitted
+        ADMITTED       = 4; // NIC is validated and admitted
+        // ui-hint: Decommissioned
+        DECOMMISSIONED = 5; // NIC has been removed from the cluster
     }
     
     // Current admission phase of the SmartNIC.

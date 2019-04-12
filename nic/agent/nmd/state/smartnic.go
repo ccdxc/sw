@@ -8,6 +8,7 @@ import (
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
@@ -72,7 +73,7 @@ func (n *NMD) CreateSmartNIC(nic *cmd.SmartNIC) error {
 // Only meant to be called when receiving events from SmartNIC watcher
 func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 
-	log.Infof("SmartNIC update, mac: %s, new phase: %s", nic.ObjectMeta.Name, nic.Status.AdmissionPhase)
+	log.Infof("SmartNIC update, mac: %s, phase: %s, mgmt mode: %s", nic.ObjectMeta.Name, nic.Status.AdmissionPhase, nic.Spec.MgmtMode)
 
 	// get current state from db
 	oldNic, err := n.GetSmartNIC()
@@ -87,29 +88,53 @@ func (n *NMD) UpdateSmartNIC(nic *cmd.SmartNIC) error {
 		log.Errorf("Error updating NMD state %+v: %v", nic, err)
 	}
 
-	// We need to check the old phase because we may receive multiple notifications
-	// from CMD with phase = pending before we actually shut down the updates channel
-	// and we don't want to do a stop/start for each of them.
-	if oldNic != nil && oldNic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() &&
-		nic.Status.AdmissionPhase == cmd.SmartNICStatus_PENDING.String() {
-		log.Infof("SmartNIC %s has been de-admitted from cluster", nic.ObjectMeta.Name)
-		// NIC has been de-admitted by user. Stop and restart managed mode.
-		// This will stop health updates and start registration attempts.
-		go func() {
-			// this will spawn a goroutine that will wait for cleanup to finish and then restart managaed mode
-			// it has to be done in a separate goroutine because this code is executing in the context of the
-			// watcher and the watcher has to terminate for the cleanup to be complete
-			err = n.StopManagedMode()
-			if err != nil {
-				log.Errorf("Error stopping NIC managed mode: %v", err)
-			}
-			n.Add(1)
-			defer n.Done()
-			err = n.StartManagedMode()
-			if err != nil {
-				log.Errorf("Error starting NIC managed mode: %v", err)
-			}
-		}()
+	// Handle de-admission and decommission
+
+	// We need to check the old spec and status values because we may receive multiple
+	// notifications from CMD before we actually shut down the updates channel and we
+	// don't want to do react to each of them.
+	if oldNic != nil {
+		decommission := oldNic.Spec.MgmtMode == cmd.SmartNICSpec_NETWORK.String() &&
+			nic.Spec.MgmtMode == cmd.SmartNICSpec_HOST.String()
+
+		deAdmission := oldNic.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() &&
+			nic.Status.AdmissionPhase == cmd.SmartNICStatus_PENDING.String()
+
+		if decommission || deAdmission {
+			// Spawn a goroutine that will wait for cleanup to finish and then restart managed or classic mode.
+			// This has to be done in a separate goroutine because this function is executing in the context of
+			// the watcher and the watcher has to terminate for the cleanup to be complete
+			go func() {
+				err = n.StopManagedMode()
+				if err != nil {
+					log.Errorf("Error stopping NIC managed mode: %v", err)
+				}
+				n.Add(1)
+				defer n.Done()
+
+				if decommission {
+					// NIC has been decommissioned by user. Go back to classic mode.
+					log.Infof("SmartNIC %s has been decommissioned, triggering change to HOST managed mode", nic.ObjectMeta.Name)
+					// Update config status to reflect the mode change
+					n.config.Spec.Mode = nmd.MgmtMode_HOST.String()
+					n.config.Status.Mode = nmd.MgmtMode_HOST.String()
+					n.config.Status.AdmissionPhase = cmd.SmartNICStatus_DECOMMISSIONED.String()
+					n.config.Status.AdmissionPhaseReason = "SmartNIC management mode changed to HOST"
+					err = n.StartClassicMode()
+					if err != nil {
+						log.Errorf("Error starting NIC managed mode: %v", err)
+					}
+				} else {
+					// NIC has been de-admitted by user. Cleanup and restart managed mode.
+					// This will stop health updates and start registration attempts.
+					log.Infof("SmartNIC %s has been de-admitted from cluster", nic.ObjectMeta.Name)
+					err = n.StartManagedMode()
+					if err != nil {
+						log.Errorf("Error starting NIC managed mode: %v", err)
+					}
+				}
+			}()
+		}
 	}
 
 	return err

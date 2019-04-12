@@ -4520,11 +4520,13 @@
             "REGISTERING",
             "REJECTED",
             "PENDING",
-            "ADMITTED"
+            "ADMITTED",
+            "DECOMMISSIONED"
           ],
           "default": "UNKNOWN",
           "x-ui-hints": {
             "ADMITTED": "Admitted",
+            "DECOMMISSIONED": "Decommissioned",
             "PENDING": "Pending",
             "REGISTERING": "Registering",
             "REJECTED": "Rejected",

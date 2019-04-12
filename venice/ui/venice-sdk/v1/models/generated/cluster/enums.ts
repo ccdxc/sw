@@ -68,6 +68,7 @@ export enum ClusterSmartNICStatus_admission_phase {
     'REJECTED' = "REJECTED",
     'PENDING' = "PENDING",
     'ADMITTED' = "ADMITTED",
+    'DECOMMISSIONED' = "DECOMMISSIONED",
 }
 
 
@@ -123,6 +124,7 @@ export enum ClusterSmartNICSpec_network_mode_uihint {
 
 export enum ClusterSmartNICStatus_admission_phase_uihint {
     'ADMITTED' = "Admitted",
+    'DECOMMISSIONED' = "Decommissioned",
     'PENDING' = "Pending",
     'REGISTERING' = "Registering",
     'REJECTED' = "Rejected",
