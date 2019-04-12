@@ -62,12 +62,14 @@ func TestBrowserPreCallHooks(t *testing.T) {
 	AssertOk(t, err, "expecting to succeed got(%s)", err)
 	Assert(t, ret.URI == "/testgrp/testobj/testname", fmt.Sprintf("got wrong URI[%v]", ret.URI), nil)
 
-	nctx, reti, err := h.addOperations(ctx, req)
+	nctx, _, err := h.addOperations(ctx, req)
+	AssertOk(t, err, "expecting to succeed got(%s)", err)
 	ops, ok := apigwpkg.OperationsFromContext(nctx)
 	Assert(t, ok, "expecting to pass")
 	Assert(t, len(ops) == 1, "expecting 1 op got [%v]", len(ops))
 
-	nctx, reti, err = h.addOperations(nctx, req)
+	nctx, _, err = h.addOperations(nctx, req)
+	AssertOk(t, err, "expecting to succeed got(%s)", err)
 	ops, ok = apigwpkg.OperationsFromContext(nctx)
 	Assert(t, ok, "expecting to pass")
 	Assert(t, len(ops) == 2, "expecting 2 ops got [%v]", len(ops))

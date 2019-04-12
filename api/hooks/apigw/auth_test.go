@@ -433,6 +433,42 @@ func TestUserCreateCheck(t *testing.T) {
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("expected err [%v], got [%v], %s] test failed", test.err, err, test.name))
 	}
 }
+func TestUserUpdateCheck(t *testing.T) {
+	tests := []struct {
+		name     string
+		in       interface{}
+		skipCall bool
+		err      error
+	}{
+		{
+			name: "update user with password",
+			in: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testuser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_External.String(),
+				},
+			},
+			skipCall: true,
+			err:      errors.New("user update with non-empty password not allowed"),
+		},
+	}
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &authHooks{}
+	r.logger = l
+	for _, test := range tests {
+		_, _, skipCall, err := r.userUpdateCheck(context.TODO(), test.in)
+		Assert(t, skipCall == test.skipCall, fmt.Sprintf("expected skipCall [%v], got [%v], [%s] test failed", test.skipCall, skipCall, test.name))
+		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("expected err [%v], got [%v], %s] test failed", test.err, err, test.name))
+	}
+}
 
 func TestUserCreateCheckHookRegistration(t *testing.T) {
 	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
@@ -985,7 +1021,7 @@ func TestAuthUserContext(t *testing.T) {
 	r.permissionGetter = rbac.NewMockPermissionGetter([]*auth.Role{testNetworkAdminRole}, []*auth.RoleBinding{testNetworkAdminRoleBinding}, nil, nil)
 	for _, test := range tests {
 		nctx := apigwpkg.NewContextWithUser(context.TODO(), test.user)
-		nctx, out, skipCall, err := r.userContext(nctx, test.in)
+		_, out, skipCall, err := r.userContext(nctx, test.in)
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		Assert(t, skipCall == test.skipCall, fmt.Sprintf("[%s] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out),

@@ -84,7 +84,7 @@ func TestStagingUserContext(t *testing.T) {
 	r.permissionGetter = rbac.NewMockPermissionGetter([]*auth.Role{testNetworkAdminRole}, []*auth.RoleBinding{testNetworkAdminRoleBinding}, nil, nil)
 	for _, test := range tests {
 		nctx := apigwpkg.NewContextWithUser(context.TODO(), test.user)
-		nctx, out, skipCall, err := r.userContext(nctx, test.in)
+		_, out, skipCall, err := r.userContext(nctx, test.in)
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		Assert(t, skipCall == test.skipCall, fmt.Sprintf("[%s] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out),

@@ -181,6 +181,19 @@ func (a *authHooks) userCreateCheck(ctx context.Context, in interface{}) (contex
 	return ctx, in, false, nil
 }
 
+// userUpdateCheck pre-call hook fails is password is specified in update operation
+func (a *authHooks) userUpdateCheck(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+	a.logger.DebugLog("msg", "APIGw userUpdateCheck hook called")
+	obj, ok := in.(*auth.User)
+	if !ok {
+		return ctx, in, true, errors.New("invalid input type")
+	}
+	if obj.Spec.Password != "" {
+		return ctx, in, true, errors.New("user update with non-empty password not allowed")
+	}
+	return ctx, in, false, nil
+}
+
 // ldapConnectionCheck pre-call hook checks if connection succeeds to LDAP
 func (a *authHooks) ldapConnectionCheck(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
 	a.logger.DebugLog("msg", "APIGw ldapConnectionCheck hook called")
@@ -399,6 +412,20 @@ func (a *authHooks) registerUserCreateCheckHook(svc apigw.APIGatewayService) err
 	return nil
 }
 
+func (a *authHooks) registerUserUpdateCheckHook(svc apigw.APIGatewayService) error {
+	ids := []serviceID{
+		{"User", apiintf.UpdateOper},
+	}
+	for _, id := range ids {
+		prof, err := svc.GetCrudServiceProfile(id.kind, id.action)
+		if err != nil {
+			return err
+		}
+		prof.AddPreCallHook(a.userUpdateCheck)
+	}
+	return nil
+}
+
 func (a *authHooks) registerLdapConnectionCheckHook(svc apigw.APIGatewayService) error {
 	prof, err := svc.GetServiceProfile("LdapConnectionCheck")
 	if err != nil {
@@ -508,6 +535,11 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 
 	// register hook for preventing user creation if local auth is disabled
 	if err := r.registerUserCreateCheckHook(svc); err != nil {
+		return err
+	}
+
+	// register hook for preventing user update if password is specified
+	if err := r.registerUserUpdateCheckHook(svc); err != nil {
 		return err
 	}
 
