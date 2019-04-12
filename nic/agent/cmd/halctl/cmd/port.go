@@ -85,6 +85,15 @@ var portDebugAacsStopCmd = &cobra.Command{
 	Run:   portDebugAacsStopCmdHandler,
 }
 
+// ValidateMtu returns true if the MTU is within 64-9216
+func ValidateMtu(mtu uint32) bool {
+	if mtu < 64 || mtu > 9216 {
+		fmt.Printf("Invalid MTU. MTU must be in the range 64-9216")
+		return false
+	}
+	return true
+}
+
 func init() {
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatusShowCmd)
@@ -707,6 +716,9 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if cmd.Flags().Changed("mtu") == true {
+		if ValidateMtu(portMtu) == false {
+			return
+		}
 		mtu = portMtu
 	}
 

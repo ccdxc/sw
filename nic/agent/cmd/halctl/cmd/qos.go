@@ -249,8 +249,7 @@ func qosClassCmdCheck(cmd *cobra.Command, isCreate bool) bool {
 	}
 
 	if cmd.Flags().Changed("mtu") == true {
-		if qosMtu < 64 || qosMtu > 9216 {
-			fmt.Printf("Invalid MTU. MTU must be in the range 64-9216")
+		if ValidateMtu(qosMtu) == false {
 			return false
 		}
 	}
