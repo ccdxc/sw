@@ -149,7 +149,7 @@ sge_loop:
     //if (REQ_RX_FLAG_IS_SET(last) || (REQ_RX_FLAG_ONLY(only)))
     add             r7, r0, K_GLOBAL_FLAGS
 
-    bcf             [!c2 & !c1], recirc
+    bcf             [!c2], recirc
     IS_ANY_FLAG_SET(c5, r7, REQ_RX_FLAG_LAST|REQ_RX_FLAG_ONLY)
 
     bcf            [!c5], set_arg
@@ -179,7 +179,8 @@ recirc:
 
     phvwrpair CAPRI_PHV_FIELD(TO_S1_RECIRC_P, cur_sge_offset), r2, \
               CAPRI_PHV_FIELD(TO_S1_RECIRC_P, cur_sge_id), r1
-    phvwrpair CAPRI_PHV_FIELD(TO_S1_RECIRC_P, num_valid_sges), K_NUM_VALID_SGES, \
+    sub       r5, K_NUM_VALID_SGES, 2
+    phvwrpair CAPRI_PHV_FIELD(TO_S1_RECIRC_P, num_valid_sges), r5, \
               CAPRI_PHV_FIELD(TO_S1_RECIRC_P, remaining_payload_bytes), r3
     phvwr     CAPRI_PHV_FIELD(TO_S1_RECIRC_P, dma_cmd_eop), CAPRI_KEY_FIELD(IN_P, dma_cmd_eop)
 
