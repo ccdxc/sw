@@ -70,6 +70,7 @@ public:
                        uint64_t mem_bar_addr, uint32_t mem_bar_size);
     uint64_t rdma_mem_bar_alloc(uint32_t size);
     uint64_t rdma_get_pt_base_addr (uint32_t lif);
+    uint64_t rdma_get_kt_base_addr (uint32_t lif);
 
 protected:
     rdmamgr_iris() {}

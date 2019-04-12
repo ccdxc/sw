@@ -189,8 +189,8 @@ public:
     int32_t intr_alloc(uint32_t count);
 
     uint64_t rdma_get_pt_base_addr(uint32_t lif);
-#if 0
     uint64_t rdma_get_kt_base_addr(uint32_t lif);
+#if 0
     uint64_t rdma_get_ah_base_addr(uint32_t lif);
 #endif
 

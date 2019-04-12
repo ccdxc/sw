@@ -461,6 +461,38 @@ rdmamgr_iris::rdma_get_pt_base_addr(uint32_t lif)
     return(pt_table_base_addr);
 }
 
+uint64_t
+rdmamgr_iris::rdma_get_kt_base_addr(uint32_t lif)
+{
+    uint64_t            pt_table_base_addr;
+    uint64_t            key_table_base_addr;
+    uint32_t            log_num_pt_entries;
+    int                 rc;
+    rx_stage0_load_rdma_params_actiondata_t data = {0};
+
+    rc = p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get_(lif, &data);
+    if (rc) {
+        NIC_LOG_ERR("stage0 rdma LIF table entry get failure for "
+                    "rxdma, idx : {}, err : {}",
+                    lif, rc);
+        return rc;
+    }
+
+    pt_table_base_addr = data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.pt_base_addr_page_id;
+    log_num_pt_entries = data.action_u.rx_stage0_load_rdma_params_rx_stage0_load_rdma_params.log_num_pt_entries;
+
+    key_table_base_addr = (pt_table_base_addr << HBM_PAGE_SIZE_SHIFT) +
+        (sizeof(uint64_t) << log_num_pt_entries);
+
+    NIC_FUNC_DEBUG("lif-{}: Rx LIF params - pt_base_addr_page_id {} "
+                    "log_num_pt_entries {} key_table_base_addr {}",
+                    lif,
+                    pt_table_base_addr, log_num_pt_entries,
+                    key_table_base_addr);
+
+    return key_table_base_addr;
+}
+
 uint32_t
 rdmamgr_iris::roundup_to_pow_2_(uint32_t x)
 {

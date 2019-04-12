@@ -175,6 +175,7 @@ private:
     status_code_t _CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data);
 
+    status_code_t _CmdRDMAResetLIF(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data);

@@ -819,7 +819,7 @@ EthLif::CmdHandler(void *req, void *req_data,
         break;
 
     case CMD_OPCODE_RDMA_RESET_LIF:
-        status = IONIC_RC_SUCCESS;
+        status = _CmdRDMAResetLIF(req, req_data, resp, resp_data);
         break;
 
     case CMD_OPCODE_RDMA_CREATE_EQ:
@@ -1973,6 +1973,70 @@ EthLif::_CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data)
 /*
  * RDMA Commands
  */
+status_code_t
+EthLif::_CmdRDMAResetLIF(void *req, void *req_data, void *resp, void *resp_data)
+{
+    uint64_t addr;
+    struct rdma_queue_cmd *cmd = (struct rdma_queue_cmd *) req;
+    uint64_t               lif_id = hal_lif_info_.lif_id + cmd->lif_index;
+
+    NIC_LOG_DEBUG("{}: CMD_OPCODE_RDMA_RESET_LIF ", hal_lif_info_.name);
+
+    // Clear PC and state of all SQ
+    for (uint64_t qid = 0; qid < spec->rdma_sq_count; qid++) {
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_QTYPE_SQ, qid);
+        if (addr < 0) {
+            NIC_LOG_ERR("{}: Failed to get qstate address for RDMA SQ qid {}",
+                hal_lif_info_.name, qid);
+            return (IONIC_RC_ERROR);
+        }
+        MEM_SET(addr, 0, 1, 0);
+        PAL_barrier();
+        p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+
+        addr += sizeof(cqcb_t);
+        MEM_SET(addr, 0, 1, 0);
+        PAL_barrier();
+        p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+    }
+
+    for (uint64_t qid = 0; qid < spec->rdma_rq_count; qid++) {
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_QTYPE_RQ, qid);
+        if (addr < 0) {
+            NIC_LOG_ERR("{}: Failed to get qstate address for RDMA RQ qid {}",
+                hal_lif_info_.name, qid);
+            return (IONIC_RC_ERROR);
+        }
+        MEM_SET(addr, 0, 1, 0);
+        PAL_barrier();
+        p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+
+        addr += sizeof(cqcb_t);
+        MEM_SET(addr, 0, 1, 0);
+        PAL_barrier();
+        p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+    }
+
+    for (uint64_t qid = 0; qid < spec->rdma_cq_count; qid++) {
+        addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_QTYPE_CQ, qid);
+        if (addr < 0) {
+            NIC_LOG_ERR("{}: Failed to get qstate address for RDMA CQ qid {}",
+                hal_lif_info_.name, qid);
+            return (IONIC_RC_ERROR);
+        }
+        MEM_SET(addr, 0, 1, 0);
+        PAL_barrier();
+        p4plus_invalidate_cache(addr, sizeof(cqcb_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+    }
+
+    addr = pd->rdma_get_kt_base_addr(lif_id);
+    MEM_SET(addr, 0, spec->key_count * sizeof(key_entry_t), 0);
+    PAL_barrier();
+    p4plus_invalidate_cache(addr, spec->key_count * sizeof(key_entry_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+
+    return (IONIC_RC_SUCCESS);
+}
+
 status_code_t
 EthLif::_CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data)
 {

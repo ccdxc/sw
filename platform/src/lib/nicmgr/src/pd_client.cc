@@ -1070,10 +1070,11 @@ PdClient::rdma_get_pt_base_addr (uint32_t lif)
 #endif
 }
 
-#if 0
 uint64_t
 PdClient::rdma_get_kt_base_addr (uint32_t lif)
 {
+    return rdma_mgr_->rdma_get_kt_base_addr(lif);
+#if 0
     uint64_t            pt_table_base_addr;
     uint64_t            key_table_base_addr;
     uint32_t            log_num_pt_entries;
@@ -1101,8 +1102,10 @@ PdClient::rdma_get_kt_base_addr (uint32_t lif)
                     key_table_base_addr);
 
     return key_table_base_addr;
+#endif
 }
 
+#if 0
 uint64_t
 PdClient::rdma_get_ah_base_addr (uint32_t lif)
 {

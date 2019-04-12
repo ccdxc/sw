@@ -60,6 +60,12 @@ rdmamgr_apollo::rdma_get_pt_base_addr(uint32_t lif)
 }
 
 uint64_t
+rdmamgr_apollo::rdma_get_kt_base_addr(uint32_t lif)
+{
+    return 0;
+}
+
+uint64_t
 rdmamgr_apollo::rdma_mem_bar_alloc(uint32_t size)
 {
     return 0;
