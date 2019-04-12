@@ -5,5 +5,6 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = memhash_test.gtest
 MODULE_SOLIBS   = memhash memhashp4pd_mock logger
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS}
-MODULE_ARCH     = x86_64
+MODULE_FLAGS    = -O3
+MODULE_ARCH   = x86_64
 include ${MKDEFS}/post.mk

@@ -4,9 +4,14 @@
 #ifndef __MEM_HASH_UTILS_HPP__
 #define __MEM_HASH_UTILS_HPP__
 
-#define MEMHASH_TRACES_ENABLED
+#ifndef PERF
+#define MEMHASH_P4PD_STATS_ENABLE
+#define MEMHASH_TRACES_ENABLE
+#else
+#define MEMHASH_PERF_ENABLE
+#endif
 
-#ifdef MEMHASH_TRACES_ENABLED
+#ifdef MEMHASH_TRACES_ENABLE
 #define MEMHASH_TRACE_VERBOSE(_msg, _args...) SDK_TRACE_VERBOSE(_msg, ##_args)
 #define MEMHASH_TRACE_DEBUG(_msg, _args...) SDK_TRACE_DEBUG(_msg, ##_args)
 #else

@@ -9,12 +9,15 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string>
 
 #define SDK_TABLE_BITS_TO_BYTES(_b) (((_b) >> 3) + (((_b) & 0x7) ? 1 : 0))
 #define SDK_TABLE_ALIGN_TO_64B(_s) \
         (((_s)*8) <= 512) ? (_s) : (((_s)%64) ? ((_s)+(64-((_s)%64))) : (_s))
 
 #define SDK_TABLE_HANDLE_INVALID    0
+
+using namespace std;
 
 namespace sdk {
 namespace table {
@@ -56,6 +59,11 @@ public:
         snprintf(buff, len, "%d.%d.%d.%d", pvalid_, pindex_, svalid_, sindex_);
         return buff;
     }
+    char *tostr() {
+        static char hdlstr[SDK_TABLE_HANDLE_STR_LEN];
+        sprintf(hdlstr, "%d.%d.%d.%d", pvalid_, pindex_, svalid_, sindex_);
+        return hdlstr;
+    }
     uint64_t tou64() { return value_; }
     void clear() { value_ = 0; }
 
@@ -71,8 +79,8 @@ private:
     } __attribute__((__packed__));
 };
 
-#define SDK_TABLE_MAX_SW_KEY_LEN 128
-#define SDK_TABLE_MAX_SW_DATA_LEN 128
+#define SDK_TABLE_MAX_SW_KEY_LEN 64
+#define SDK_TABLE_MAX_SW_DATA_LEN 96
 #define SDK_TABLE_MAX_HW_KEY_LEN 64
 #define SDK_TABLE_MAX_HW_DATA_LEN 64
 
@@ -184,6 +192,40 @@ typedef struct sdk_table_stats_ {
     uint32_t entries;
     uint32_t collisions;
 } sdk_table_stats_t;
+
+typedef struct properties_ {
+    std::string name;
+    // Primary table id
+    uint32_t ptable_id;
+    // Primary table size
+    uint32_t ptable_size;
+    // Secondary table id
+    uint32_t stable_id;
+    // Secondary table size
+    uint32_t stable_size;
+    // Number of hints to the secondary table
+    uint32_t num_hints;
+    // Software key length
+    uint32_t swkey_len;
+    // Software data length
+    uint32_t swdata_len;
+    // Software appdata length
+    uint32_t swappdata_len;
+    // Hardware key length
+    uint32_t hwkey_len;
+    // Hardware data length
+    uint32_t hwdata_len;
+    // Maximum number of recircs allowed
+    uint32_t max_recircs;
+    // Hash polynomial used by this table
+    uint32_t hash_poly;
+    // Entry tracing enabled
+    bool entry_trace_en;
+    // Key to string method
+    bytes2str_t key2str;
+    // Data to string method
+    bytes2str_t data2str;
+} properties_t;
 
 } // namespace table
 } // namespace sdk

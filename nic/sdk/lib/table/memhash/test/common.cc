@@ -38,22 +38,34 @@ h5_genkey ()
     static uint32_t dst = 1;
     static uint8_t proto = 1;
     static uint16_t tag = 1;
-    char srcstr[64];
-    char dststr[64];
 
+    key.type = 1;
     key.tag = tag++;
     key.proto = proto++;
     key.sport = sport++;
     key.dport = dport++;
     src++;
+    dst++;
+#ifdef PERF
+    key.src[12] = src >> 24 & 0xFF;
+    key.src[13] = src >> 16 & 0xFF;
+    key.src[14] = src >> 8 & 0xFF;
+    key.src[15] = src & 0xFF;
+
+    key.dst[12] = dst >> 24 & 0xFF;
+    key.dst[13] = dst >> 16 & 0xFF;
+    key.dst[14] = dst >> 8 & 0xFF;
+    key.dst[15] = dst & 0xFF;
+#else
+    char srcstr[64];
+    char dststr[64];
+
     sprintf(srcstr, "2000::%04d:%04d", (src >> 16) & 0xFFFF, src & 0xFFFF);
     inet_pton(AF_INET6, srcstr, key.src);
 
-    dst++;
     sprintf(dststr, "3000::%04d:%04d", (dst >> 16) & 0xFFFF, dst & 0xFFFF);
     inet_pton(AF_INET6, dststr, key.dst);
-    
-    key.type = 1;
+#endif
 
     return (void *)&key;
 }

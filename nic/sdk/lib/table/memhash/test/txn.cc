@@ -7,6 +7,7 @@
 class txn: public MemHashGtestBase {
 };
 
+#ifndef PERF
 TEST_F(txn, start_end)
 {
     sdk_ret_t rs;
@@ -92,3 +93,4 @@ TEST_F(txn, incomplete_end)
     rs = TxnEnd();
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
+#endif

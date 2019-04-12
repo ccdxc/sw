@@ -18,7 +18,7 @@ using sdk::table::memhash::mem_hash_api_context;
 // Factory method to instantiate the mem_hash_main_table class
 //---------------------------------------------------------------------------
 mem_hash_main_table *
-mem_hash_main_table::factory(mem_hash_properties_t *props) {
+mem_hash_main_table::factory(sdk::table::properties_t *props) {
     void *mem = NULL;
     mem_hash_main_table *table = NULL;
     sdk_ret_t ret = SDK_RET_OK;
@@ -44,11 +44,11 @@ mem_hash_main_table::factory(mem_hash_properties_t *props) {
 // mem_hash_main_table init_()
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash_main_table::init_(mem_hash_properties_t *props) {
+mem_hash_main_table::init_(sdk::table::properties_t *props) {
     sdk_ret_t ret = SDK_RET_OK;
 
-    ret = mem_hash_base_table::init_(props->main_table_id,
-                                     props->main_table_size);
+    ret = mem_hash_base_table::init_(props->ptable_id,
+                                     props->ptable_size);
 
     num_hash_bits_ = 32 - num_table_index_bits_;
     MEMHASH_TRACE_VERBOSE("MainTable: Created mem_hash_main_table "
@@ -76,13 +76,13 @@ mem_hash_main_table::destroy_(mem_hash_main_table *table) {
 sdk_ret_t
 mem_hash_main_table::initctx_(mem_hash_api_context *ctx) {
     // By now, we should have a valid hash value.
-    SDK_ASSERT(ctx->in_hash_valid);
+    SDK_ASSERT(ctx->params->hash_valid);
 
     ctx->table_id = table_id_;
 
     // Derive the table_index
-    ctx->table_index = ctx->in_hash_32b % table_size_;
-    ctx->hash_msbits = (ctx->in_hash_32b >> num_table_index_bits_) & MASK(num_hash_bits_);
+    ctx->table_index = ctx->params->hash_32b % table_size_;
+    ctx->hash_msbits = (ctx->params->hash_32b >> num_table_index_bits_) & MASK(num_hash_bits_);
     ctx->bucket = &buckets_[ctx->table_index];
     SDK_ASSERT(ctx->bucket);
 
@@ -261,6 +261,7 @@ mem_hash_main_table::find_(mem_hash_api_context *ctx,
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_main_table::update_(mem_hash_api_context *ctx) {
+__label__ done;
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *match_ctx = NULL;
 
@@ -268,17 +269,16 @@ mem_hash_main_table::update_(mem_hash_api_context *ctx) {
 
     ret = find_(ctx, &match_ctx);
     if (ret != SDK_RET_OK) {
-        goto update_return;
+        goto done;
     }
 
     ret = static_cast<mem_hash_table_bucket*>(match_ctx->bucket)->update_(match_ctx);
     if (ret != SDK_RET_OK) {
-        goto update_return;
+        goto done;
     }
 
-update_return:
+done:
     if (match_ctx && match_ctx != ctx) {
-        mem_hash_api_context::destroy(match_ctx);
     }
 
     return ret;
@@ -301,17 +301,16 @@ __label__ done;
     }
 
     // Set the Handle
-    if (match_ctx->is_main()) {
+    if (MEMHASH_API_CONTEXT_IS_MAIN(match_ctx)) {
         match_ctx->handle->pindex(match_ctx->table_index);
     } else {
         match_ctx->handle->sindex(match_ctx->table_index);
     }
 
-    memcpy(ctx->in_appdata, ctx->sw_appdata, ctx->sw_appdata_len);
+    memcpy(ctx->params->appdata, ctx->sw_appdata, ctx->props->swappdata_len);
 
 done:
     if (match_ctx && match_ctx != ctx) {
-        mem_hash_api_context::destroy(match_ctx);
     }
 
     return ret;

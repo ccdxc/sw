@@ -52,7 +52,11 @@ protected:
         params.max_recircs = MAX_RECIRCS;
         params.key2str = h5_key2str;
         params.appdata2str = h5_appdata2str;
+#ifdef PERF
+        params.entry_trace_en = false;
+#else
         params.entry_trace_en = true;
+#endif
 
         table = mem_hash::factory(&params);
         assert(table);
@@ -122,6 +126,10 @@ private:
 
         for (i = 0; i < count; i++) {
             entry = h5_gen_cache_entry(NULL, &params, false);
+#ifdef PERF
+            params.hash_32b = count % (1024*256);
+            params.hash_valid = true;
+#endif
             rs = insert ? insert_(&params) : reserve_(&params);
             MHTEST_CHECK_RETURN(rs == expret, rs);
             
@@ -167,7 +175,6 @@ private:
         return SDK_RET_OK;
     }
 
-
 protected:
     sdk_ret_t Insert(uint32_t count, sdk_ret_t expret) {
         return InsertOrReserve_(true, count, expret);
@@ -203,7 +210,6 @@ protected:
         return InsertOrReserveWithHash_(false, more_levels,
                                         max_hints, max_recircs);
     }
-
 
     sdk_ret_t InsertAllCached(sdk_ret_t expret, bool with_handle) {
         sdk_ret_t rs;
@@ -287,8 +293,8 @@ protected:
         return SDK_RET_OK;
     }
 
-
     void PrintStats() {
+#ifndef PERF
         mtable_count = mem_hash_mock_get_valid_count(MEM_HASH_P4TBL_ID_H5);
         htable_count = mem_hash_mock_get_valid_count(MEM_HASH_P4TBL_ID_H5_OHASH);
 
@@ -299,13 +305,16 @@ protected:
                 table_stats.entries, table_stats.collisions);
         
         SDK_TRACE_VERBOSE("Test  API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
-                num_insert, num_update, num_get, num_remove, num_reserve, num_release);
+                          num_insert, num_update, num_get, num_remove, num_reserve, num_release);
         SDK_TRACE_VERBOSE("Table API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
-                api_stats.insert, api_stats.update, api_stats.get, api_stats.remove, api_stats.reserve, api_stats.release);
+                          api_stats.insert, api_stats.update, api_stats.get,
+                          api_stats.remove, api_stats.reserve, api_stats.release);
+#endif
         return;    
     }
 
     sdk_ret_t ValidateStats() {
+#ifndef PERF
         PrintStats();
         EXPECT_TRUE(api_stats.insert >= api_stats.remove);
         EXPECT_EQ(mtable_count + htable_count, table_stats.entries);
@@ -316,6 +325,7 @@ protected:
         EXPECT_EQ(num_get, api_stats.get + api_stats.get_fail);
         EXPECT_EQ(num_reserve, api_stats.reserve + api_stats.reserve_fail);
         EXPECT_EQ(num_release, api_stats.release + api_stats.release_fail);
+#endif
         return sdk::SDK_RET_OK;
     }
 

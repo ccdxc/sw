@@ -6,6 +6,7 @@
 class scale: public MemHashGtestBase {
 };
 
+#ifndef PERF
 TEST_F(scale, num1K) {
     sdk_ret_t rs;
     rs = Insert(1024, sdk::SDK_RET_OK);
@@ -44,10 +45,10 @@ TEST_F(scale, DISABLED_num256K) {
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
-TEST_F(scale, DISABLED_num1M) {
+#else
+TEST_F(scale, insert1M) {
     sdk_ret_t rs;
     rs = Insert(1024*1024, sdk::SDK_RET_OK);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
-    rs = RemoveAllCached(sdk::SDK_RET_OK, false);
-    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
+#endif

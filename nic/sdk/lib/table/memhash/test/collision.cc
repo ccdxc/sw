@@ -6,6 +6,7 @@
 class collision: public MemHashGtestBase {
 };
 
+#ifndef PERF
 TEST_F(collision, insert_full_mesh) {
     sdk_ret_t rs;
     rs = InsertWithHash(1, H5_MAX_HINTS, MAX_RECIRCS);
@@ -80,3 +81,4 @@ TEST_F(collision, max_recirc) {
     rs = InsertWithHash(1, 1, MAX_RECIRCS + 1);
     ASSERT_TRUE(rs == sdk::SDK_RET_MAX_RECIRC_EXCEED);
 }
+#endif

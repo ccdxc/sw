@@ -2,4 +2,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = libmemhash.so
 MODULE_SOLIBS = utils indexer
+MODULE_FLAGS  = -O3
 include ${MKDEFS}/post.mk

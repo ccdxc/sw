@@ -12,8 +12,9 @@ if [[ "$1" ==  --coveragerun ]]; then
     CMD_OPTS="COVFILE\=${COVFILE}"
 fi
 
-#MEMHASH_PRELOADS=${BUILD_DIR}/lib/libmemhashp4pd_mock.so
 set -e
 # PI gtests
 export PATH=${PATH}:${BLDDIR}/bin
-LD_PRELOAD=${MEMHASH_PRELOADS} $ARGS memhash_test $*
+$ARGS memhash_test $*
+#perf record --call-graph fp memhash_test --gtest_filter="scale.insert1M"
+#gdb --args memhash_test --gtest_filter="scale.insert1M"

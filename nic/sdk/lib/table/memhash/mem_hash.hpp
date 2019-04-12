@@ -15,6 +15,7 @@
 
 #include "mem_hash_stats.hpp"
 #include "mem_hash_txn.hpp"
+#include "mem_hash_api_context.hpp"
 
 using namespace std;
 
@@ -25,42 +26,24 @@ using sdk::utils::crcFast;
 using sdk::table::memhash::mem_hash_api_stats;
 using sdk::table::memhash::mem_hash_table_stats;
 using sdk::table::memhash::mem_hash_txn;
-
-typedef struct mem_hash_properties_ {
-    std::string name;
-    uint32_t main_table_id;
-    uint32_t main_table_size;
-    uint32_t hint_table_id;
-    uint32_t hint_table_size;
-    uint32_t num_hints;
-    uint32_t key_len;
-    uint32_t data_len;
-    uint32_t hw_key_len;
-    uint32_t hw_data_len;
-    uint32_t max_recircs;
-    uint32_t hash_poly;
-    bool entry_trace_en;
-    //table_health_monitor_func_t health_monitor_func;
-    bytes2str_t key2str;
-    bytes2str_t appdata2str;
-} mem_hash_properties_t;
+using sdk::table::memhash::mem_hash_api_context;
 
 class mem_hash {
 private:
-    mem_hash_properties_t *props_;
+    sdk::table::properties_t *props_;
     void *main_table_;
     crcFast *crc32gen_;
     mem_hash_api_stats api_stats_;
     mem_hash_table_stats table_stats_;
     mem_hash_txn txn_;
     sdk_spinlock_t slock_;
+    mem_hash_api_context apictx_;
 
 private:
     sdk_ret_t init_(sdk_table_factory_params_t *params);
     sdk_ret_t genhash_(sdk_table_api_params_t *params);
-    sdk_ret_t create_api_context_(sdk_table_api_op_t op,
-                                  sdk_table_api_params_t *params,
-                                  void **retctx);
+    sdk_ret_t ctxinit_(sdk_table_api_op_t op,
+                       sdk_table_api_params_t *params);
 
 public:
     static mem_hash *factory(sdk_table_factory_params_t *params);

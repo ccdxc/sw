@@ -4303,12 +4303,12 @@ ${api_prefix}_actiondata_hwfield_set(uint32_t   tableid,
                         if (argument_slotid >= ${argc}) {
                             return (P4PD_FAIL);
                         }
-                        uint32_t argument_offsets[] = {
+                        static uint32_t argument_offsets[] = {
 //::                            for fieldname, _   in hwfieldlist:
                             offsetof(${table}_${actionname}_t, ${fieldname}),
 //::                            #endfor
                         };
-                        uint32_t argument_byte_width[] = {
+                        static uint32_t argument_byte_width[] = {
 //::                            for fieldname, fieldwidth  in hwfieldlist:
 //::                                if (fieldwidth <= 8):
                             sizeof(uint8_t),
@@ -4371,12 +4371,12 @@ ${api_prefix}_actiondata_hwfield_get(uint32_t   tableid,
                         if (argument_slotid >= ${argc}) {
                             return (P4PD_FAIL);
                         }
-                        uint32_t argument_offsets[] = {
+                        static uint32_t argument_offsets[] = {
 //::                            for fieldname, _  in hwfieldlist:
                             offsetof(${table}_${actionname}_t, ${fieldname}),
 //::                            #endfor
                         };
-                        uint32_t argument_byte_width[] = {
+                        static uint32_t argument_byte_width[] = {
 //::                            for fieldname, fieldwidth  in hwfieldlist:
 //::                                if (fieldwidth <= 8):
                             sizeof(uint8_t),

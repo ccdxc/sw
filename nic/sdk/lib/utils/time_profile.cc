@@ -8,7 +8,7 @@
 
 #include "time_profile.hpp"
 
-#ifdef PERF
+#ifdef TIME_PROFILE_ENABLE
 namespace sdk {
 namespace utils {
 namespace time_profile {

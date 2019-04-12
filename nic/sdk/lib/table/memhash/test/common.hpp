@@ -15,7 +15,7 @@ using sdk::table::sdk_table_api_params_t;
 #define MAX_MORE_LEVELS (MAX_RECIRCS - 1)
 
 #define H5_MAX_HINTS 5
-#define H5_MAX_ENTRIES 16*1024*1024
+#define H5_MAX_ENTRIES 2*1024*1024
 #define H5_NUM_INDEX_BITS 24
 #define H5_NUM_HASH_BITS 8
 

@@ -11,7 +11,8 @@ namespace sdk {
 namespace utils {
 namespace time_profile {
 
-#ifdef PERF
+//#define TIME_PROFILE_ENABLE
+#ifdef TIME_PROFILE_ENABLE
 
 class time_profile_info {
 private:

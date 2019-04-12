@@ -118,6 +118,7 @@ private:
     flow_appdata_t swappdata;
     vcn_ep_pair_t ep_pairs[MAX_EP_PAIRS_PER_VCN];
     cfg_params_t cfg_params;
+    bool with_hash;
 
 private:
 
@@ -193,8 +194,10 @@ private:
         memset(&params, 0, sizeof(params));
         params.key = key;
         params.appdata = appdata;
-        //params.hash_valid = true;
-        //params.hash_32b = hash++;
+        if (with_hash) {
+            params.hash_valid = true;
+            params.hash_32b = hash++;
+        }
         return table->insert(&params);
     }
 
@@ -266,7 +269,7 @@ private:
 
 
 public:
-    flow_test() {
+    flow_test(bool w = false) {
         memset(&factory_params, 0, sizeof(factory_params));
 
         factory_params.table_id = P4TBL_ID_FLOW;
@@ -281,6 +284,7 @@ public:
         memset(&cfg_params, 0, sizeof(cfg_params_t));
         flow_index = 0;
         hash = 0;
+        with_hash = w;
 
     }
 

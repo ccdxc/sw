@@ -7,6 +7,7 @@
 class basic: public MemHashGtestBase {
 };
 
+#ifndef PERF
 TEST_F(basic, insert)
 {
     sdk_ret_t rs;
@@ -98,3 +99,4 @@ TEST_F(basic, iterate)
     rs = Iterate();
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
+#endif

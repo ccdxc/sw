@@ -18,15 +18,6 @@ using sdk::table::memhash::mem_hash_api_context;
 #define FOREACH_HINT(_n) for (uint32_t i = 1; i <= (_n); i++)
 #define FOREACH_HINT_REVERSE(_n) for (uint32_t i = (_n); i > 0; i--)
 
-#define PRINT_SW_ALL(_ctx) {\
-    MEMHASH_TRACE_VERBOSE("- K:[%s] D:[%s] I:[%s]",\
-            (_ctx)->key2str ? (_ctx)->key2str((_ctx)->sw_key) \
-                            : mem_hash_utils_rawstr((_ctx)->sw_key, (_ctx)->sw_key_len),\
-            (_ctx)->appdata2str ? (_ctx)->appdata2str((_ctx)->sw_appdata) : \
-                    mem_hash_utils_rawstr((_ctx)->sw_appdata, (_ctx)->sw_appdata_len),\
-            (_ctx)->sw_data2str()); \
-}
-
 //---------------------------------------------------------------------------
 // mem_hash_table_bucket read_ : Read entry from the hardware
 //---------------------------------------------------------------------------
@@ -39,7 +30,7 @@ mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {
     }
 
     SDK_ASSERT(ctx->table_id);
-    if (!ctx->is_main()) {
+    if (!MEMHASH_API_CONTEXT_IS_MAIN(ctx)) {
         SDK_ASSERT(ctx->table_index);
     }
 
@@ -55,7 +46,7 @@ mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {
     ctx->sw_valid = true;
 
     if (v) {
-        PRINT_SW_ALL(ctx);
+        MEMHASH_API_CONTEXT_PRINT_SW_FIELDS(ctx);
         if (valid_ != v) {
             MEMHASH_TRACE_ERR("SW and HW data are out of sync !!");
             SDK_ASSERT_RETURN(0, SDK_RET_HW_READ_ERR);
@@ -71,14 +62,13 @@ mem_hash_table_bucket::read_(mem_hash_api_context *ctx) {
 sdk_ret_t
 mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
     p4pd_error_t p4pdret = 0;
-    static char buff[4096];
 
     if (ctx->write_pending == false) {
         return SDK_RET_OK;
     }
 
     SDK_ASSERT(ctx->sw_valid && ctx->table_id);
-    if (!ctx->is_main()) {
+    if (!MEMHASH_API_CONTEXT_IS_MAIN(ctx)) {
         SDK_ASSERT(ctx->table_index);
     }
 
@@ -95,19 +85,9 @@ mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
     }
 
     if (ctx->props->entry_trace_en) {
-        MEMHASH_TRACE_DEBUG("memhash %s: TID:%d Idx:%d", ctx->idstr(),
-                            ctx->table_id, ctx->table_index);
-        p4pd_global_table_ds_decoded_string_get(ctx->table_id, ctx->table_index,
-                                                ctx->sw_key, NULL,
-                                                ctx->sw_data, buff, sizeof(buff));
-        MEMHASH_TRACE_DEBUG("TID:%d, Idx:%u\n%s",
-                              ctx->table_id, ctx->table_index, buff);
-    } else {
-        MEMHASH_TRACE_VERBOSE("memhash %s: TID:%d Idx:%d", ctx->idstr(),
-                              ctx->table_id, ctx->table_index);
-        PRINT_SW_ALL(ctx);
-    }
-
+        MEMHASH_API_CONTEXT_PRINT_SW_FIELDS(ctx);
+    } 
+    
     p4pdret = mem_hash_p4pd_entry_install(ctx->table_id, ctx->table_index,
                                           ctx->sw_key, NULL, ctx->sw_data);
     if (p4pdret != P4PD_SUCCESS) {
@@ -128,7 +108,7 @@ mem_hash_table_bucket::write_(mem_hash_api_context *ctx) {
 sdk_ret_t
 mem_hash_table_bucket::set_sw_key_(mem_hash_api_context *ctx, void *key) {
     ctx->write_pending = true;
-    memcpy(ctx->sw_key, key ? key : ctx->in_key, ctx->sw_key_len);
+    memcpy(ctx->sw_key, key ? key : ctx->params->key, ctx->props->swkey_len);
     return SDK_RET_OK;
 }
 
@@ -138,7 +118,7 @@ mem_hash_table_bucket::set_sw_key_(mem_hash_api_context *ctx, void *key) {
 sdk_ret_t
 mem_hash_table_bucket::clear_sw_key_(mem_hash_api_context *ctx) {
     ctx->write_pending = true;
-    memset(ctx->sw_key, 0, ctx->sw_key_len);
+    memset(ctx->sw_key, 0, ctx->props->swkey_len);
     return SDK_RET_OK;
 }
 
@@ -157,7 +137,7 @@ mem_hash_table_bucket::get_sw_data_appdata_(mem_hash_api_context *ctx) {
 sdk_ret_t
 mem_hash_table_bucket::set_sw_data_appdata_(mem_hash_api_context *ctx, void *appdata) {
     ctx->write_pending = true;
-    memcpy(ctx->sw_appdata, appdata, ctx->sw_appdata_len);
+    memcpy(ctx->sw_appdata, appdata, ctx->props->swappdata_len);
     mem_hash_p4pd_appdata_set(ctx, appdata);
     return SDK_RET_OK;
 }
@@ -167,7 +147,7 @@ mem_hash_table_bucket::set_sw_data_appdata_(mem_hash_api_context *ctx, void *app
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_table_bucket::clear_sw_data_appdata_(mem_hash_api_context *ctx) {
-    uint32_t zero_appdata[ctx->sw_appdata_len] = { 0 };
+    uint32_t zero_appdata[ctx->props->swappdata_len] = { 0 };
     ctx->write_pending = true;
     mem_hash_p4pd_appdata_set(ctx, zero_appdata);
     return SDK_RET_OK;
@@ -206,31 +186,31 @@ mem_hash_table_bucket::create_(mem_hash_api_context *ctx) {
 
     MEMHASH_TRACE_VERBOSE("%s: Meta: [%s]", ctx->idstr(), ctx->metastr());
 
-    if (ctx->is_reserve() == false) {
+    if (ctx->op != SDK_TABLE_API_RESERVE) {
         // This is a new entry, key is present with the entry.
-        ret = set_sw_key_(ctx, ctx->in_key);
+        ret = set_sw_key_(ctx, ctx->params->key);
         SDK_ASSERT(ret == SDK_RET_OK);
 
         // Fill common data
-        ret = set_sw_data_appdata_(ctx, ctx->in_appdata);
+        ret = set_sw_data_appdata_(ctx, ctx->params->appdata);
         SDK_ASSERT(ret == SDK_RET_OK);
         
         if (!reserved_) {
             // update stats only If we are inserting a new entry 
             // reserved entries are counted already during 
             // reserve api
-            ctx->table_stats->insert(!ctx->is_main());
+            ctx->table_stats->insert(!MEMHASH_API_CONTEXT_IS_MAIN(ctx));
         } else {
             reserved_ = false;
             ctx->txn->release();
         }
     } else {
-        ctx->table_stats->insert(!ctx->is_main());
+        ctx->table_stats->insert(!MEMHASH_API_CONTEXT_IS_MAIN(ctx));
         reserved_ = true;
     }
     
     // Set the Handle
-    if (ctx->is_main()) {
+    if (MEMHASH_API_CONTEXT_IS_MAIN(ctx)) {
         ctx->handle->pindex(ctx->table_index);
     } else {
         ctx->handle->sindex(ctx->table_index);
@@ -257,7 +237,7 @@ mem_hash_table_bucket::compare_(mem_hash_api_context *ctx) {
     // 3) All 'hash' slots are full, we have to continue to 'more_hints'
 
     // Find a free hint slot in the bucket entry
-    FOREACH_HINT(ctx->num_hints) {
+    FOREACH_HINT(ctx->props->num_hints) {
         hashX = mem_hash_p4pd_get_hash(ctx, i);
         hintX = mem_hash_p4pd_get_hint(ctx, i);
         if (hashX == ctx->hash_msbits && HINT_IS_VALID(hintX)) {
@@ -367,7 +347,7 @@ mem_hash_table_bucket::update_(mem_hash_api_context *ctx) {
     SDK_ASSERT(valid_);
 
     // Update app data
-    ret = set_sw_data_appdata_(ctx, ctx->in_appdata);
+    ret = set_sw_data_appdata_(ctx, ctx->params->appdata);
     SDK_ASSERT(ret == SDK_RET_OK);
 
     // New entry, write required.
@@ -385,7 +365,7 @@ mem_hash_table_bucket::find_first_free_hint_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
     uint32_t hintX = 0;
 
-    FOREACH_HINT(ctx->num_hints) {
+    FOREACH_HINT(ctx->props->num_hints) {
         hintX = mem_hash_p4pd_get_hint(ctx, i);
         if (!HINT_IS_VALID(hintX)) {
             ctx->hint_slot = i;
@@ -428,7 +408,7 @@ mem_hash_table_bucket::find_last_hint_(mem_hash_api_context *ctx) {
         ctx->hint = mem_hash_p4pd_get_more_hints(ctx);
         HINT_SLOT_SET_MORE(ctx->hint_slot);
     } else {
-        FOREACH_HINT_REVERSE(ctx->num_hints) {
+        FOREACH_HINT_REVERSE(ctx->props->num_hints) {
             hintX = mem_hash_p4pd_get_hint(ctx, i);
             hashX = mem_hash_p4pd_get_hash(ctx, i);
             if (HINT_IS_VALID(hintX)) {
@@ -462,7 +442,7 @@ mem_hash_table_bucket::find_hint_(mem_hash_api_context *ctx) {
     uint32_t hintX = 0;
 
     // Find a free hint slot in the bucket entry
-    FOREACH_HINT(ctx->num_hints) {
+    FOREACH_HINT(ctx->props->num_hints) {
         hashX = mem_hash_p4pd_get_hash(ctx, i);
         hintX = mem_hash_p4pd_get_hint(ctx, i);
         if (hashX == ctx->hash_msbits && HINT_IS_VALID(hintX)) {
@@ -499,7 +479,7 @@ mem_hash_table_bucket::find_(mem_hash_api_context *ctx) {
 
     // Compare the Key portion, if it matches, then we have to re-align
     // the entries.
-    match = !memcmp(ctx->sw_key, ctx->in_key, ctx->sw_key_len);
+    match = !memcmp(ctx->sw_key, ctx->params->key, ctx->props->swkey_len);
     if (match) {
         ctx->set_exact_match();
         return SDK_RET_OK;
@@ -722,7 +702,7 @@ mem_hash_table_bucket::defragment_(mem_hash_api_context *ectx,
         // when we remove an entry from main table, we decrement the stats using
         // the main table level (0), however after defragmentation, we will move
         // some hint to this entry, but we never account that stats.
-        tctx->table_stats->remove(!tctx->is_main());
+        tctx->table_stats->remove(!MEMHASH_API_CONTEXT_IS_MAIN(tctx));
         MEMHASH_TRACE_VERBOSE("decrementing table_stats for %s", tctx->idstr());
     }
     return SDK_RET_OK;
@@ -736,8 +716,8 @@ mem_hash_table_bucket::iterate_(mem_hash_api_context *ctx) {
         read_(ctx);
         params.key = ctx->sw_key;
         params.appdata = ctx->sw_appdata;
-        params.cbdata = ctx->cbdata;
-        ctx->itercb(&params);
+        params.cbdata = ctx->params->cbdata;
+        ctx->params->itercb(&params);
     }
     return SDK_RET_OK;
 }

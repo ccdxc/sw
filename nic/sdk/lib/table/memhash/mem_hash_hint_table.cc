@@ -8,7 +8,6 @@
 #include "mem_hash_table_bucket.hpp"
 #include "mem_hash_utils.hpp"
 
-using sdk::table::mem_hash_properties_t;
 using sdk::table::memhash::mem_hash_base_table;
 using sdk::table::memhash::mem_hash_hint_table;
 using sdk::table::memhash::mem_hash_api_context;
@@ -19,7 +18,7 @@ using sdk::table::memhash::mem_hash_table_bucket;
 // Factory method to instantiate the mem_hash_main_table class
 //---------------------------------------------------------------------------
 mem_hash_hint_table *
-mem_hash_hint_table::factory(mem_hash_properties_t *props) {
+mem_hash_hint_table::factory(sdk::table::properties_t *props) {
     void *mem = NULL;
     mem_hash_hint_table *table = NULL;
     sdk_ret_t ret = SDK_RET_OK;
@@ -45,11 +44,11 @@ mem_hash_hint_table::factory(mem_hash_properties_t *props) {
 // mem_hash_hint_table init()
 //---------------------------------------------------------------------------
 sdk_ret_t
-mem_hash_hint_table::init_(mem_hash_properties_t *props) {
+mem_hash_hint_table::init_(sdk::table::properties_t *props) {
     sdk_ret_t ret = SDK_RET_OK;
 
-    ret = mem_hash_base_table::init_(props->hint_table_id,
-                                     props->hint_table_size);
+    ret = mem_hash_base_table::init_(props->stable_id,
+                                     props->stable_size);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -80,6 +79,11 @@ mem_hash_hint_table::destroy_(mem_hash_hint_table *table)
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_hint_table::alloc_(mem_hash_api_context *ctx) {
+#ifdef PERF
+    static uint32_t hint_index = 1;
+    ctx->hint = hint_index++;
+    return SDK_RET_OK;
+#endif
     indexer::status irs = indexer_->alloc(&(ctx->hint));
     if (irs != indexer::SUCCESS) {
         MEMHASH_TRACE_ERR("HintTable: capacity reached: %d",
@@ -147,7 +151,7 @@ mem_hash_hint_table::insert_(mem_hash_api_context *pctx) {
     sdk_ret_t ret = SDK_RET_COLLISION;
     mem_hash_api_context *hctx = NULL;
 
-    if ((pctx->level + 1) >= pctx->max_recircs) {
+    if ((pctx->level + 1) >= pctx->props->max_recircs) {
         MEMHASH_TRACE_ERR("Max Recirc levels reached.");
         return SDK_RET_MAX_RECIRC_EXCEED;
     }
@@ -162,7 +166,7 @@ mem_hash_hint_table::insert_(mem_hash_api_context *pctx) {
     }
 
     // Create a new context for this entry from parent context
-    hctx = mem_hash_api_context::factory(pctx);
+    hctx = ctxnew_(pctx);
     if (hctx == NULL) {
         MEMHASH_TRACE_ERR("failed to create api context");
         return SDK_RET_OOM;
@@ -188,8 +192,6 @@ mem_hash_hint_table::insert_(mem_hash_api_context *pctx) {
         }
     }
 
-    mem_hash_api_context::destroy(hctx);
-
     return ret;
 }
 
@@ -209,7 +211,7 @@ mem_hash_hint_table::tail_(mem_hash_api_context *ctx,
         return SDK_RET_OK;
     }
 
-    tctx = mem_hash_api_context::factory(ctx);
+    tctx = ctxnew_(ctx);
     if (tctx == NULL) {
         MEMHASH_TRACE_ERR("failed to create api context");
         return SDK_RET_OOM;
@@ -243,7 +245,6 @@ mem_hash_hint_table::tail_(mem_hash_api_context *ctx,
         *retctx = NULL;
         MEMHASH_TRACE_ERR("%s: find_last_hint_ failed ret:%d", tctx->idstr(), ret);
         // failure case: destroy the context
-        mem_hash_api_context::destroy(tctx);
     }
 
     return ret;
@@ -297,7 +298,6 @@ mem_hash_hint_table::defragment_(mem_hash_api_context *ectx) {
         // the recursive stack unwinds.
         tempctx = tctx->pctx;
         while (tctx && tctx != ectx) {
-            mem_hash_api_context::destroy(tctx);
             tctx = tempctx;
             tempctx = tctx->pctx;
         }
@@ -314,7 +314,7 @@ mem_hash_hint_table::remove_(mem_hash_api_context *ctx) {
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *hctx = NULL;
 
-    hctx = mem_hash_api_context::factory(ctx);
+    hctx = ctxnew_(ctx);
     if (hctx == NULL) {
         MEMHASH_TRACE_ERR("failed to create api context");
         return SDK_RET_OOM;
@@ -330,7 +330,6 @@ mem_hash_hint_table::remove_(mem_hash_api_context *ctx) {
         ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->remove_(hctx);
         if (ret != SDK_RET_OK) {
             MEMHASH_TRACE_ERR("remove_ failed. ret:%d", ret);
-            mem_hash_api_context::destroy(hctx);
             return ret;
         }
 
@@ -344,7 +343,6 @@ mem_hash_hint_table::remove_(mem_hash_api_context *ctx) {
         }
     }
 
-    mem_hash_api_context::destroy(hctx);
     return ret;
 }
 
@@ -357,7 +355,7 @@ mem_hash_hint_table::find_(mem_hash_api_context *ctx,
     sdk_ret_t ret = SDK_RET_OK;
     mem_hash_api_context *hctx = NULL;
 
-    hctx = mem_hash_api_context::factory(ctx);
+    hctx = ctxnew_(ctx);
     if (hctx == NULL) {
         MEMHASH_TRACE_ERR("failed to create api context");
         return SDK_RET_OOM;
@@ -370,7 +368,6 @@ mem_hash_hint_table::find_(mem_hash_api_context *ctx,
     ret = static_cast<mem_hash_table_bucket*>(hctx->bucket)->find_(hctx);
     if (ret != SDK_RET_OK) {
         MEMHASH_TRACE_ERR("find_ failed. ret:%d", ret);
-        mem_hash_api_context::destroy(hctx);
         return ret;
     }
 
@@ -384,6 +381,5 @@ mem_hash_hint_table::find_(mem_hash_api_context *ctx,
     }
 
     SDK_ASSERT(*match_ctx != hctx);
-    mem_hash_api_context::destroy(hctx);
     return ret;
 }
