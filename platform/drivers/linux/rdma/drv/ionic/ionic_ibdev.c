@@ -76,14 +76,39 @@ MODULE_PARM_DESC(xxx_qid_skip, "XXX Skip every N'th qid");
 static bool ionic_xxx_fake_stats = false;
 module_param_named(xxx_fake_stats, ionic_xxx_fake_stats, bool, 0444);
 MODULE_PARM_DESC(xxx_fake_stats, "XXX Present fake hardware stats");
+static bool ionic_xxx_nosupport = false;
+module_param_named(xxx_nosupport, ionic_xxx_nosupport, bool, 0644);
+MODULE_PARM_DESC(xxx_nosupport, "XXX Enable unsupported features");
 /* XXX remove above section for release */
 
 static bool ionic_dbgfs_enable = true; /* XXX false for release */
 module_param_named(dbgfs, ionic_dbgfs_enable, bool, 0444);
 MODULE_PARM_DESC(dbgfs, "Enable debugfs for this driver.");
 
+static int ionic_set_spec(const char *val, const struct kernel_param *kp)
+{
+	int rc, tmp;
+
+	rc = kstrtoint(val, 0, &tmp);
+	if (rc)
+		return rc;
+
+	if (tmp != 8 && tmp != 16 && !ionic_xxx_nosupport) {
+		pr_info("ionic_rdma: invalid spec %d, using 8 instead\n", tmp);
+		pr_info("ionic_rdma: valid spec values are 8 and 16\n");
+		tmp = 8;
+	}
+
+	*(int *)kp->arg = tmp;
+
+	return 0;
+}
+static const struct kernel_param_ops ionic_spec_ops = {
+	.set = ionic_set_spec,
+	.get = param_get_int,
+};
 static int ionic_spec = 8;
-module_param_named(spec, ionic_spec, int, 0644);
+module_param_cb(spec, &ionic_spec_ops, &ionic_spec, 0644);
 MODULE_PARM_DESC(spec, "Max SGEs for speculation.");
 
 static u16 ionic_aq_depth = 0x3f;
@@ -186,14 +211,6 @@ static int ionic_validate_qdesc_zero(struct ionic_qdesc *q)
 		return -EINVAL;
 
 	return 0;
-}
-
-static int ionic_validate_spec(int spec)
-{
-	if (spec < 0 || spec > 16)
-		return 0;
-
-	return spec;
 }
 
 static int ionic_verbs_status_to_rc(u32 status)
@@ -1433,7 +1450,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	resp.cq_qtype = dev->cq_qtype;
 	resp.admin_qtype = dev->aq_qtype;
 	resp.max_stride = dev->max_stride;
-	resp.max_spec = ionic_validate_spec(ionic_spec);
+	resp.max_spec = ionic_spec;
 
 	rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
 	if (rc)
@@ -4197,8 +4214,8 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	int rc;
 
 	if (!ctx) {
-		req.sq_spec = ionic_validate_spec(ionic_spec);
-		req.rq_spec = ionic_validate_spec(ionic_spec);
+		req.sq_spec = ionic_spec;
+		req.rq_spec = ionic_spec;
 		rc = ionic_validate_udata(udata, 0, 0);
 	} else {
 		rc = ionic_validate_udata(udata, sizeof(req), sizeof(resp));
@@ -5584,7 +5601,7 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	int rc;
 
 	if (!ctx) {
-		req.rq_spec = ionic_validate_spec(ionic_spec);
+		req.rq_spec = ionic_spec;
 		rc = ionic_validate_udata(udata, 0, 0);
 	} else {
 		rc = ionic_validate_udata(udata, sizeof(req), sizeof(resp));

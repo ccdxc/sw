@@ -100,6 +100,9 @@ MODULE_PARM_DESC(ionic_rdma_xxx_qid_skip, "XXX Skip every N'th qid");
 static bool ionic_xxx_fake_stats = false;
 module_param_named(ionic_rdma_xxx_fake_stats, ionic_xxx_fake_stats, bool, 0444);
 MODULE_PARM_DESC(ionic_rdma_xxx_fake_stats, "XXX Present fake hardware stats");
+static bool ionic_xxx_nosupport = false;
+module_param_named(ionic_rdma_xxx_nosupport, ionic_xxx_nosupport, bool, 0644);
+MODULE_PARM_DESC(ionic_rdma_xxx_nosupport, "XXX Enable unsupported features");
 /* XXX remove above section for release */
 
 bool ionic_dyndbg_enable;
@@ -113,6 +116,18 @@ MODULE_PARM_DESC(ionic_rdma_dbgfs_enable, "Expose resource info in debugfs.");
 static int ionic_spec = 8;
 module_param_named(ionic_rdma_spec, ionic_spec, int, 0644);
 MODULE_PARM_DESC(ionic_rdma_spec, "Max SGEs for speculation.");
+
+/* XXX linuxkpi doesn't have module_param_cb.
+ *
+ * Instead, validate ionic_spec just prior to use.
+ */
+static void ionic_validate_spec(void) {
+	if (ionic_spec != 8 && ionic_spec != 16 && !ionic_xxx_nosupport) {
+		pr_info("ionic_rdma: invalid spec %d, using 8 instead\n", ionic_spec);
+		pr_info("ionic_rdma: valid spec values are 8 and 16\n");
+		ionic_spec = 8;
+	}
+}
 
 static u16 ionic_aq_depth = 0x3f;
 module_param_named(ionic_rdma_aq_depth, ionic_aq_depth, ushort, 0444);
@@ -228,14 +243,6 @@ static int ionic_validate_qdesc_zero(struct ionic_qdesc *q)
 		return -EINVAL;
 
 	return 0;
-}
-
-static int ionic_validate_spec(int spec)
-{
-	if (spec < 0 || spec > 16)
-		return 0;
-
-	return spec;
 }
 
 static int ionic_verbs_status_to_rc(u32 status)
@@ -1480,7 +1487,8 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	resp.cq_qtype = dev->cq_qtype;
 	resp.admin_qtype = dev->aq_qtype;
 	resp.max_stride = dev->max_stride;
-	resp.max_spec = ionic_validate_spec(ionic_spec);
+	ionic_validate_spec();
+	resp.max_spec = ionic_spec;
 
 	rc = ib_copy_to_udata(udata, &resp, sizeof(resp));
 	if (rc)
@@ -4150,9 +4158,10 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	unsigned long irqflags;
 	int rc;
 
+	ionic_validate_spec();
 	if (!ctx) {
-		req.sq_spec = ionic_validate_spec(ionic_spec);
-		req.rq_spec = ionic_validate_spec(ionic_spec);
+		req.sq_spec = ionic_spec;
+		req.rq_spec = ionic_spec;
 		rc = ionic_validate_udata(udata, 0, 0);
 	} else {
 		rc = ionic_validate_udata(udata, sizeof(req), sizeof(resp));
@@ -5508,8 +5517,9 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	unsigned long irqflags;
 	int rc;
 
+	ionic_validate_spec();
 	if (!ctx) {
-		req.rq_spec = ionic_validate_spec(ionic_spec);
+		req.rq_spec = ionic_spec;
 		rc = ionic_validate_udata(udata, 0, 0);
 	} else {
 		rc = ionic_validate_udata(udata, sizeof(req), sizeof(resp));
@@ -6978,6 +6988,8 @@ static int __init ionic_mod_init(void)
 	int rc;
 
 	pr_info("%s v%s : %s\n", DRIVER_NAME, DRIVER_VERSION, DRIVER_DESCRIPTION);
+
+	ionic_validate_spec();
 
 	ionic_dev_workq = create_singlethread_workqueue(DRIVER_NAME "-dev");
 	if (!ionic_dev_workq) {
