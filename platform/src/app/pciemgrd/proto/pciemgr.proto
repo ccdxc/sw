@@ -4,6 +4,14 @@ syntax = "proto3";
 package pciemgr;
 
 import "delphi.proto";
+import "penctl.proto";
+
+message PciemgrPenctlRootCmd {
+    option (venice.penctlParentCmd) = {
+        Cmd:     "pcie",
+        HelpStr: "Metrics for pciemgr"
+    };
+}
 
 // PciePortOperStatus reflects the current status of the port
 enum PciePortOperStatus {
@@ -25,6 +33,33 @@ message PciePortStatus {
 }
 
 message PciePortMetrics {
+    option (venice.penctlCmd) = {
+        Cmd:     "port",
+        HelpStr: "Pcie Port Metrics information:\\n"
+            "\\n\\nValue Description:\\n\\n"
+            "intr_total : total port intrs.\\n"
+            "intr_ltssmst_early : link train before linkup.\\n"
+            "intr_ltssmst : link train after  linkup.\\n"
+            "intr_linkup2dn : link down.\\n"
+            "intr_linkdn2up : link up.\\n"
+            "intr_rstup2dn : mac up.\\n"
+            "intr_rstdn2up : mac down.\\n"
+            "intr_secbus : secondary bus set.\\n"
+            "linkup : link is up.\\n"
+            "hostup : host is up (secbus).\\n"
+            "phypolllast : phy poll count (last).\\n"
+            "phypollmax : phy poll count (max).\\n"
+            "phypollperstn : phy poll lost perstn.\\n"
+            "phypollfail : phy poll failed.\\n"
+            "gatepolllast : gate poll count (last).\\n"
+            "gatepollmax : gate poll count (max).\\n"
+            "markerpolllast : marker poll count (last).\\n"
+            "markerpollmax : marker poll count (max).\\n"
+            "axipendpolllast : axipend poll count (last).\\n"
+            "axipendpollmax : axipend poll count (max).\\n"
+            "faults : link faults.\\n",
+        RootCmd: "pcie"
+    };
     uint32 Key = 1;				// key is port number 0-7
 
     delphi.Counter intr_total = 2;		// total port intrs
@@ -54,6 +89,49 @@ message PciePortMetrics {
 }
 
 message PcieMgrMetrics {
+    option (venice.penctlCmd) = {
+        Cmd:     "pciemgr",
+        HelpStr: "Pcie Mgr Metrics information:\\n"
+            "not_intr : notify total intrs.\\n"
+            "not_spurious : notify spurious intrs.\\n"
+            "not_cnt : notify total txns.\\n"
+            "not_max : notify max txns per intr.\\n"
+            "not_cfgrd : notify config reads.\\n"
+            "not_cfgwr : notify config writes.\\n"
+            "not_memrd : notify memory reads.\\n"
+            "not_memwr : notify memory writes.\\n"
+            "not_iord : notify io reads.\\n"
+            "not_iowr : notify io writes.\\n"
+            "not_unknown : notify unknown type.\\n"
+            "not_rsrv0 : notify rsrv0.\\n"
+            "not_rsrv1 : notify rsrv1.\\n"
+            "not_msg : notify pcie message.\\n"
+            "not_unsupported : notify unsupported.\\n"
+            "not_pmv : notify pgm model violation.\\n"
+            "not_dbpmv : notify doorbell pmv.\\n"
+            "not_atomic : notify atomic trans.\\n"
+            "not_pmtmiss : notify PMT miss.\\n"
+            "not_pmrmiss : notify PMR miss.\\n"
+            "not_prtmiss : notify PRT miss.\\n"
+            "not_bdf2vfidmiss : notify bdf2vfid table miss.\\n"
+            "not_prtoor : notify PRT out-of-range.\\n"
+            "not_vfidoor : notify vfid out-of-range.\\n"
+            "not_bdfoor : notify bdf out-of-range.\\n"
+            "not_pmrind : notify PMR force indirect.\\n"
+            "not_prtind : notify PRT force indirect.\\n"
+            "not_pmrecc : notify PMR ECC error.\\n"
+            "not_prtecc : notify PRT ECC error.\\n"
+            "ind_intr : indirect total intrs.\\n"
+            "ind_spurious : indirect spurious intrs.\\n"
+            "ind_cfgrd : indirect config reads.\\n"
+            "ind_cfgwr : indirect config writes.\\n"
+            "ind_memrd : indirect memory reads.\\n"
+            "ind_memwr : indirect memory writes.\\n"
+            "ind_iord : indirect io reads.\\n"
+            "ind_iowr : indirect io writes.\\n"
+            "ind_unknown : indirect unknown type.\\n"
+        RootCmd: "pcie"
+    };
     uint32 Key = 1;				// key is port number 0-7
 
     delphi.Counter not_intr = 2;		// notify total intrs

@@ -46,7 +46,7 @@ changefrequency(uint64_t hbmtemperature) {
 static void
 checktemperature(void)
 {
-    uint8_t key = 0;
+    uint64_t key = 0;
     int ret;
     sdk::platform::sensor::system_temperature_t temperature;
 

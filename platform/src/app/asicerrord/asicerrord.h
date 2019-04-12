@@ -190,7 +190,7 @@ enum etype {
 void poll_capri_intr();
 const char* errortostring(etype errortype);
 
-#define CAPRI_INTR_KIND_BEGIN(kind, len, classkind) static inline void clear_##kind##metrics(uint32_t key, uint32_t addr) { \
+#define CAPRI_INTR_KIND_BEGIN(kind, len, classkind) static inline void clear_##kind##metrics(uint64_t key, uint32_t addr) { \
     uint32_t size = 0; \
     uint32_t data = 0; \
     if (len % 32 == 0) { \
@@ -210,10 +210,10 @@ const char* errortostring(etype errortype);
     memset(&kind##metrics[key], 0, sizeof(delphi::objects::kind##metrics_t)); \
     delphi::objects::classkind::Publish(key, &kind##metrics[key]); \
 } \
-static inline void poll_##kind##metrics(uint32_t key, uint32_t addr) { \
+static inline void poll_##kind##metrics(uint64_t key, uint32_t addr) { \
     uint32_t size = 0; \
     uint32_t data = 0; \
-    uint32_t regkey = key; \
+    uint64_t regkey = key; \
     uint32_t regaddr = addr; \
     delphi::objects::kind##metrics_t *reg = &kind##metrics[key]; \
     char regname[50] = #kind; \

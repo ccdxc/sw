@@ -2,8 +2,26 @@ syntax = "proto3";
 package sysmond;
 
 import "delphi.proto";
+import "penctl.proto";
+
+message SysmondPenctlRootCmd {
+    option (venice.penctlParentCmd) = {
+        Cmd:     "system",
+        HelpStr: "Metrics for system monitors"
+    };
+}
 
 message AsicTemperatureMetrics {
+    option (venice.penctlCmd) = {
+        Cmd:     "temp",
+        HelpStr: "System temperature information:\\n"
+                 "\\n\\nValue Description:\\n\\n"
+                 "local_temperature: Temperature of the board.\\n"
+                 "die_temperature: Temperature of the die.\\n"
+                 "hbm_temperature: Temperature of the hbm.\\n"
+                 "The temperature is degree Celcius\\n",
+        RootCmd: "system"
+    };
     fixed64 Key = 1;
 
     delphi.Counter local_temperature           = 2;
@@ -13,6 +31,16 @@ message AsicTemperatureMetrics {
 }
 
 message AsicPowerMetrics {
+    option (venice.penctlCmd) = {
+        Cmd:     "power",
+        HelpStr: "System power information:\\n"
+                 "\\n\\nValue Description:\\n\\n"
+                 "pin: Input power to the system.\\n"
+                 "pout1: Core output power.\\n"
+                 "pout2: Arm output power.\\n"
+                "The power is milli Watt\\n",
+        RootCmd: "system"
+    };
     fixed64 Key = 1;
 
     delphi.Counter pin           = 2;

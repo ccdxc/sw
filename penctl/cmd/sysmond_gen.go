@@ -12,15 +12,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var asicpowermetricsShowCmd = &cobra.Command{
-
-	Use:   "asicpower",
-	Short: "Show AsicPowerMetrics from Naples",
-	Long:  "\n---------------------------------\n Show AsicPowerMetrics From Naples \n---------------------------------\n",
-	RunE:  asicpowermetricsShowCmdHandler,
+//cmd - power
+//rootCmd = system
+//helpStr = System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n
+var powersystemShowCmd = &cobra.Command{
+	Use:   "power",
+	Short: "System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n",
+	Long:  "\n---------------------------------\n System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n\n---------------------------------\n",
+	RunE:  powersystemShowCmdHandler,
 }
 
-func asicpowermetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
+func powersystemShowCmdHandler(cmd *cobra.Command, args []string) error {
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/asicpowermetrics/")
 	if err != nil {
@@ -28,20 +30,22 @@ func asicpowermetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if bodyBytes == nil {
-		fmt.Println("No asicpower object(s) found")
+		fmt.Println("No asicpowermetrics object(s) found")
 	}
 	return nil
 }
 
-var asictemperaturemetricsShowCmd = &cobra.Command{
-
-	Use:   "asictemperature",
-	Short: "Show AsicTemperatureMetrics from Naples",
-	Long:  "\n---------------------------------\n Show AsicTemperatureMetrics From Naples \n---------------------------------\n",
-	RunE:  asictemperaturemetricsShowCmdHandler,
+//cmd - temp
+//rootCmd = system
+//helpStr = System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n
+var tempsystemShowCmd = &cobra.Command{
+	Use:   "temp",
+	Short: "System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n",
+	Long:  "\n---------------------------------\n System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n\n---------------------------------\n",
+	RunE:  tempsystemShowCmdHandler,
 }
 
-func asictemperaturemetricsShowCmdHandler(cmd *cobra.Command, args []string) error {
+func tempsystemShowCmdHandler(cmd *cobra.Command, args []string) error {
 	jsonFormat = true
 	bodyBytes, err := restGet("telemetry/v1/metrics/asictemperaturemetrics/")
 	if err != nil {
@@ -49,15 +53,30 @@ func asictemperaturemetricsShowCmdHandler(cmd *cobra.Command, args []string) err
 		return err
 	}
 	if bodyBytes == nil {
-		fmt.Println("No asictemperature object(s) found")
+		fmt.Println("No asictemperaturemetrics object(s) found")
 	}
 	return nil
 }
 
+//cmd - system
+//rootCmd =
+//helpStr = Metrics for system monitors
+var systemShowCmd = &cobra.Command{
+	Use:   "system",
+	Short: "Metrics for system monitors",
+	Long:  "\n---------------------------------\n Metrics for system monitors\n---------------------------------\n",
+}
+
 func init() {
 
-	metricsShowCmd.AddCommand(asicpowermetricsShowCmd)
+	systemShowCmd.AddCommand(powersystemShowCmd)
 
-	metricsShowCmd.AddCommand(asictemperaturemetricsShowCmd)
+	systemShowCmd.AddCommand(tempsystemShowCmd)
+
+	//cmd - system
+	//rootCmd =
+	//helpStr = Metrics for system monitors
+
+	metricsShowCmd.AddCommand(systemShowCmd)
 
 }

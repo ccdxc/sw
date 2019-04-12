@@ -1,9 +1,9 @@
-# {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+# {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET       = asicerrord.proto
 MODULE_PIPELINE     = iris gft
-MODULE_GEN_TYPES    = CC PY DELPHI GOMETRICS PENMETRICS
+MODULE_GEN_TYPES    = CC DELPHI GOMETRICS
 MODULE_INCS         = ${MODULE_DIR} \
                       ${TOPDIR}/nic \
                       ${TOPDIR}/nic/hal/third-party/google/include \
