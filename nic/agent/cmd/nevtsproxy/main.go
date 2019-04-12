@@ -227,25 +227,63 @@ func main() {
 // startNetworkModeServices helper function to start network mode services
 func (e *evtServices) startNetworkModeServices() {
 	e.logger.Infof("starting network mode services")
-	var err error
 
+	// starting watching policies from venice
 	if e.policyWatcher == nil {
-		// start events policy watcher to watch events from events manager
-		if e.policyWatcher, err = policy.NewWatcher(e.policyMgr, e.logger,
-			policy.WithResolverClient(e.resolverClient)); err != nil {
-			e.logger.Fatalf("failed to create events policy watcher, err: %v", err)
-		}
-		e.logger.Infof("running policy watcher")
+		e.wg.Add(1)
+		go e.startPolicyWatcher()
 	}
 
+	// to start exporting events to venice
 	if !e.veniceExporterRegistered {
-		// register venice exporter (exports events to evtsmgr -> elastic)
-		// it will fail if it is already registered
-		if _, err := e.eps.RegisterEventsExporter(exporters.Venice, nil); err != nil {
-			e.logger.Fatalf("failed to register venice events exporter with events proxy, err: %v", err)
+		e.wg.Add(1)
+		go e.registerVeniceExporter()
+	}
+}
+
+// Network mode functionality; start a watcher to watch events from venice(evtsmgr)
+func (e *evtServices) startPolicyWatcher() {
+	var err error
+	defer e.wg.Done()
+
+	for {
+		select {
+		case <-e.ctx.Done():
+			return
+		default:
+			// start events policy watcher to watch events from events manager
+			if e.policyWatcher, err = policy.NewWatcher(e.policyMgr, e.logger,
+				policy.WithResolverClient(e.resolverClient)); err != nil {
+				e.logger.Errorf("failed to create events policy watcher, err: %v, retrying...", err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			e.logger.Infof("running policy watcher")
+			return
 		}
-		e.logger.Infof("registered venice exporter")
-		e.veniceExporterRegistered = true
+	}
+}
+
+// Network mode functionality; register venice exporter, to export events to elastic
+func (e *evtServices) registerVeniceExporter() {
+	defer e.wg.Done()
+
+	for {
+		select {
+		case <-e.ctx.Done():
+			return
+		default:
+			// register venice exporter (exports events to evtsmgr -> elastic)
+			// it will fail if it is already registered
+			if _, err := e.eps.RegisterEventsExporter(exporters.Venice, nil); err != nil {
+				e.logger.Errorf("failed to register venice events exporter with events proxy, err: %v, retrying...", err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			e.logger.Infof("registered venice exporter")
+			e.veniceExporterRegistered = true
+			return
+		}
 	}
 }
 
