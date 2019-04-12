@@ -10,12 +10,15 @@ queue_name: builder
 e2e-targets:
   # baremetal + vm test case
  e2e-venice-2naples:
-   commands: ["make", "-C", "iota/test/venice/hwtest/hwregression"]
+   commands: ["make", "-C", "iota/test/venice/hwtest/hwregression", "jobd"]
    owners: ["email:sw-team@pensando.io"]
    area:
    sub-area:
    feature:
    max-duration: 8h
+   build-dependencies:
+     - build-iris-arm
+     - build-venice-image
    clusters:
      - image: build-115
        count: 3

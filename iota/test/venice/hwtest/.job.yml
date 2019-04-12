@@ -10,12 +10,15 @@ queue_name: builder
 e2e-targets:
   # baremetal + vm test case
  e2e-venice-2naples:
-   commands: ["make", "-C", "iota/test/venice/hwtest"]
+   commands: ["make", "-C", "iota/test/venice/hwtest", "jobd"]
    # commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:venice-dev@pensando.io"]
    area:
    sub-area:
    feature:
+   build-dependencies:
+     - build-iris-arm
+     - build-venice-image
    clusters:
      - image: build-115
        count: 3
