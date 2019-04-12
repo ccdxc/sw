@@ -16,8 +16,8 @@ pds_agent_vnic_api_spec_fill (const pds::VnicSpec &proto_spec,
     api_spec->vcn.id = proto_spec.vpcid();
     api_spec->subnet.id = proto_spec.subnetid();
     api_spec->key.id = proto_spec.vnicid();
-    api_spec->wire_vlan = proto_spec.wirevlan();
-    api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.encap());
+    api_spec->host_encap = proto_encap_to_pds_encap(proto_spec.hostencap());
+    api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     MAC_UINT64_TO_ADDR(api_spec->mac_addr, proto_spec.macaddress());
     api_spec->rsc_pool_id = proto_spec.resourcepoolid();
     api_spec->src_dst_check = proto_spec.sourceguardenable();
@@ -82,9 +82,10 @@ vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
     proto_spec->set_vnicid(api_spec->key.id);
     proto_spec->set_vpcid(api_spec->vcn.id);
     proto_spec->set_subnetid(api_spec->subnet.id);
-    proto_spec->set_wirevlan(api_spec->wire_vlan);
+    pds_encap_to_proto_encap(proto_spec->mutable_hostencap(),
+                             &api_spec->host_encap);
     proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac_addr));
-    pds_encap_to_proto_encap(proto_spec->mutable_encap(),
+    pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
                              &api_spec->fabric_encap);
     proto_spec->set_resourcepoolid(api_spec->rsc_pool_id);
     proto_spec->set_sourceguardenable(api_spec->src_dst_check);
@@ -93,7 +94,7 @@ vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
 // Populate proto buf status from vnic API status
 static inline void
 vnic_api_status_to_proto_status (const pds_vnic_status_t *api_status,
-                                 pds::VnicStatus *proto_status) 
+                                 pds::VnicStatus *proto_status)
 {
 }
 
@@ -148,6 +149,6 @@ VnicSvcImpl::VnicGet(ServerContext *context,
         // get all
         ret = core::vnic_get_all(vnic_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
-    }   
+    }
     return Status::OK;
 }

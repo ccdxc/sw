@@ -14,14 +14,14 @@
 
 namespace api_test {
 
-vnic_util::vnic_util(uint32_t vnic_id, uint16_t vlan_tag,
-                     uint32_t mpls_slot, uint64_t mac_u64) {
+vnic_util::vnic_util(uint32_t vnic_id, pds_encap_t host_encap,
+                     pds_encap_t fabric_encap, uint64_t mac_u64) {
     mac_addr_t mac;
     this->vcn_id = 1;
     this->vnic_id = vnic_id;
     this->sub_id = 1;
-    this->vlan_tag = vlan_tag;
-    this->mpls_slot = mpls_slot;
+    this->host_encap = host_encap;
+    this->fabric_encap = fabric_encap;
     this->mac_u64 = mac_u64;
     this->rsc_pool_id = 0;
     this->src_dst_check = true;;
@@ -33,8 +33,10 @@ vnic_util::vnic_util() {
     this->vcn_id = PDS_MAX_VCN + 1;
     this->sub_id = PDS_MAX_SUBNET + 1;
     this->vnic_id = PDS_MAX_VNIC + 1;
-    this->vlan_tag = -1;
-    this->mpls_slot = -1;
+    this->host_encap.type = PDS_ENCAP_TYPE_DOT1Q;
+    this->host_encap.val.value = -1;
+    this->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+    this->fabric_encap.val.value = -1;
     this->rsc_pool_id = 0;
     this->src_dst_check = true;
 }
@@ -58,9 +60,8 @@ vnic_util::create(void) {
     spec.vcn.id = vcn_id;
     spec.subnet.id = sub_id;
     spec.key.id = vnic_id;
-    spec.wire_vlan = vlan_tag;
-    spec.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-    spec.fabric_encap.val.mpls_tag = mpls_slot;
+    spec.host_encap = host_encap;
+    spec.fabric_encap = fabric_encap;
     if (mac_u64 != 0) {
         MAC_UINT64_TO_ADDR(spec.mac_addr, mac_u64);
     } else if (!vnic_mac.empty()) {
@@ -87,9 +88,18 @@ vnic_util::read(pds_vnic_info_t *info, bool compare_spec) {
         SDK_ASSERT(vnic_id == info->spec.key.id);
         //SDK_ASSERT(vcn_id == info->spec.vcn.id);  //This is hw_id during read
         //SDK_ASSERT(sub_id == info->spec.subnet.id); //This is hw_id during read
-        SDK_ASSERT(vlan_tag == info->spec.wire_vlan);
-        SDK_ASSERT(PDS_ENCAP_TYPE_MPLSoUDP == info->spec.fabric_encap.type);
-        SDK_ASSERT(mpls_slot == info->spec.fabric_encap.val.mpls_tag);
+        SDK_ASSERT(this->host_encap.type == info->spec.host_encap.type);
+        SDK_ASSERT(this->fabric_encap.type == info->spec.fabric_encap.type);
+        if (this->host_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
+            SDK_ASSERT(this->host_encap.val.vlan_tag ==
+                       info->spec.host_encap.val.vlan_tag);
+        } else if (this->host_encap.type == PDS_ENCAP_TYPE_QINQ) {
+            SDK_ASSERT(this->host_encap.val.qinq_tag.c_tag ==
+                       info->spec.host_encap.val.qinq_tag.c_tag);
+            SDK_ASSERT(this->host_encap.val.qinq_tag.s_tag ==
+                       info->spec.host_encap.val.qinq_tag.s_tag);
+        }
+        SDK_ASSERT(this->fabric_encap.val.mpls_tag == info->spec.fabric_encap.val.mpls_tag);
         if (mac_u64 != 0) {
             MAC_UINT64_TO_ADDR(mac, mac_u64);
         } else if (!vnic_mac.empty()) {
@@ -123,13 +133,13 @@ vnic_util_object_stepper(vnic_stepper_seed_t *seed, uint32_t num_vnics,
 {
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
     pds_vnic_info_t info = {};
-    uint32_t vlan_tag = seed->vlan_tag;
-    uint32_t mpls_slot = seed->mpls_slot;;
+    pds_encap_t host_encap = seed->host_encap;
+    pds_encap_t fabric_encap = seed->fabric_encap;
     uint64_t mac_u64 = seed->mac_u64;
 
     if (seed->id == 0) seed->id = 1;
     for (uint32_t idx = seed->id; idx < seed->id + num_vnics; idx++) {
-        vnic_util vnic_obj(idx, vlan_tag, mpls_slot, mac_u64);
+        vnic_util vnic_obj(idx, host_encap, fabric_encap, mac_u64);
         switch (op) {
         case OP_MANY_CREATE:
             rv = vnic_obj.create();
@@ -146,8 +156,13 @@ vnic_util_object_stepper(vnic_stepper_seed_t *seed, uint32_t num_vnics,
         if (rv != expected_result) {
             return rv;
         }
-        vlan_tag++;
-        mpls_slot++;
+        if (host_encap.type == PDS_ENCAP_TYPE_DOT1Q)
+            host_encap.val.vlan_tag++;
+        else if (host_encap.type == PDS_ENCAP_TYPE_QINQ) {
+            host_encap.val.qinq_tag.c_tag++;
+            host_encap.val.qinq_tag.s_tag++;
+        }
+        fabric_encap.val.mpls_tag++;
         mac_u64++;
     }
     return sdk::SDK_RET_OK;

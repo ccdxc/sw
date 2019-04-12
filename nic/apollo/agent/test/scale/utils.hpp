@@ -134,6 +134,10 @@ pds_encap_to_proto_encap (types::Encap *encap_spec, pds_encap_t *encap)
 
     case PDS_ENCAP_TYPE_QINQ:
         encap_spec->set_type(types::ENCAP_TYPE_QINQ);
+        encap_spec->mutable_value()->mutable_qinqtag()->
+            set_ctag(encap->val.qinq_tag.c_tag);
+        encap_spec->mutable_value()->mutable_qinqtag()->
+            set_stag(encap->val.qinq_tag.s_tag);
         break;
 
     case PDS_ENCAP_TYPE_MPLSoUDP:
@@ -221,7 +225,8 @@ populate_policy_request (SecurityPolicyRequest *req, pds_policy_spec_t *policy)
 }
 
 static void
-populate_local_mapping_request (MappingRequest *req, pds_local_mapping_spec_t *local_spec)
+populate_local_mapping_request (MappingRequest *req,
+                                pds_local_mapping_spec_t *local_spec)
 {
     if (!local_spec || !req)
         return;
@@ -244,7 +249,8 @@ populate_local_mapping_request (MappingRequest *req, pds_local_mapping_spec_t *l
 
 
 static void
-populate_remote_mapping_request (MappingRequest *req, pds_remote_mapping_spec_t *remote_spec)
+populate_remote_mapping_request (MappingRequest *req,
+                                 pds_remote_mapping_spec_t *remote_spec)
 {
     if (!remote_spec || !req)
         return;
@@ -270,11 +276,11 @@ populate_vnic_request (VnicRequest *req, pds_vnic_spec_t *vnic)
     spec->set_vpcid(vnic->vcn.id);
     spec->set_subnetid(vnic->subnet.id);
     spec->set_vnicid(vnic->key.id);
-    spec->set_wirevlan(vnic->wire_vlan);
+    pds_encap_to_proto_encap(spec->mutable_hostencap(), &vnic->host_encap);
     spec->set_macaddress(MAC_TO_UINT64(vnic->mac_addr));
     spec->set_resourcepoolid(vnic->rsc_pool_id);
     spec->set_sourceguardenable(vnic->src_dst_check);
-    pds_encap_to_proto_encap(spec->mutable_encap(), &vnic->fabric_encap);
+    pds_encap_to_proto_encap(spec->mutable_fabricencap(), &vnic->fabric_encap);
     return;
 }
 

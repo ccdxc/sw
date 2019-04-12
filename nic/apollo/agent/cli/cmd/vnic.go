@@ -95,27 +95,30 @@ func printVnicHeader() {
 	hdrLine := strings.Repeat("-", 97)
 	fmt.Println(hdrLine)
 	fmt.Printf("%-7s%-6s%-9s%-6s%-20s%-10s%-10s%-14s%-15s\n",
-		"VnicID", "VpcID", "SubnetID", "Vlan", "MAC",
-		"RscPoolID", "SrcGuard", "Encap", "MirrorPolicyID")
+		"VnicID", "VpcID", "SubnetID", "HostEncap", "MAC",
+		"RscPoolID", "SrcGuard", "FabricEncap", "MirrorPolicyID")
 	fmt.Println(hdrLine)
 }
 
 func printVnic(vnic *pds.Vnic) {
-	spec := vnic.GetSpec()
-	encapType := spec.GetEncap().GetType()
-	encapStr := strings.Replace(encapType.String(), "ENCAP_TYPE_", "", -1)
-	switch encapType {
-	case pds.EncapType_ENCAP_TYPE_DOT1Q:
-		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetVlanId())
-	case pds.EncapType_ENCAP_TYPE_MPLSoUDP:
-		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetMPLSTag())
-	case pds.EncapType_ENCAP_TYPE_VXLAN:
-		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetVnid())
-	default:
-	}
-	fmt.Printf("%-7d%-6d%-9d%-6d%-20s%-10d%-10t%-14s%-15d\n",
-		spec.GetVnicId(), spec.GetVPCId(), spec.GetSubnetId(),
-		spec.GetWireVLAN(), utils.MactoStr(spec.GetMACAddress()),
-		spec.GetResourcePoolId(), spec.GetSourceGuardEnable(), encapStr,
-		spec.GetMirrorPolicyId())
+    spec := vnic.GetSpec()
+    encapType := spec.GetFabricEncap().GetType()
+    encapStr := strings.Replace(encapType.String(), "ENCAP_TYPE_", "", -1)
+    switch encapType {
+    case pds.EncapType_ENCAP_TYPE_DOT1Q:
+        encapStr += fmt.Sprintf("/%d",
+            spec.GetFabricEncap().GetValue().GetVlanId())
+    case pds.EncapType_ENCAP_TYPE_MPLSoUDP:
+        encapStr += fmt.Sprintf("/%d",
+            spec.GetFabricEncap().GetValue().GetMPLSTag())
+    case pds.EncapType_ENCAP_TYPE_VXLAN:
+        encapStr += fmt.Sprintf("/%d",
+            spec.GetFabricEncap().GetValue().GetVnid())
+    default:
+    }
+    fmt.Printf("%-7d%-6d%-9d%-6d%-20s%-10d%-10t%-14s%-15d\n",
+        spec.GetVnicId(), spec.GetVPCId(), spec.GetSubnetId(),
+        spec.GetHostEncap().GetValue(), utils.MactoStr(spec.GetMACAddress()),
+        spec.GetResourcePoolId(), spec.GetSourceGuardEnable(), encapStr,
+        spec.GetMirrorPolicyId())
 }

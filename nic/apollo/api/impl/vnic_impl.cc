@@ -61,7 +61,10 @@ vnic_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     hw_id_ = idx;
 
     // reserve an entry in LOCAL_VNIC_BY_VLAN_TX table
-    ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->reserve_index(spec->wire_vlan);
+    SDK_ASSERT(spec->host_encap.type == PDS_ENCAP_TYPE_DOT1Q);
+    ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->
+        reserve_index(spec->host_encap.val.vlan_tag);
+
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in LOCAL_VNIC_BY_VLAN_TX "
                       "table for vnic %u, err %u", spec->key.id, ret);
@@ -157,8 +160,12 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                      subnet->vr_mac(), ETH_ADDR_LEN);
     sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_action.overlay_mac,
                      spec->mac_addr, ETH_ADDR_LEN);
+
+    // assert to support only dot1q encap for now
+    SDK_ASSERT(spec->host_encap.type == PDS_ENCAP_TYPE_DOT1Q);
     egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id =
-        spec->wire_vlan;
+        spec->host_encap.val.vlan_tag;
+
     egress_vnic_data.egress_local_vnic_info_action.subnet_id =
         subnet->hw_id();
     if (spec->fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
@@ -273,8 +280,12 @@ vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch2_valid = false;
     sdk::lib::memrev(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.overlay_mac1,
                      spec->mac_addr, ETH_ADDR_LEN);
-    ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->insert_atid(&vnic_by_vlan_data,
-                                                                   spec->wire_vlan);
+
+    // assert to support only dot1q encap for host
+    SDK_ASSERT(spec->host_encap.type == PDS_ENCAP_TYPE_DOT1Q);
+    ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->
+        insert_atid(&vnic_by_vlan_data, spec->host_encap.val.vlan_tag);
+
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Programming of LOCAL_VNIC_BY_VLAN_TX table failed, "
                       "epoch %u, vnic %s , err %u", epoch,
@@ -539,7 +550,8 @@ vnic_impl::fill_vnic_spec_(
         spec->mac_addr,
         egress_vnic_data->egress_local_vnic_info_action.overlay_mac,
         ETH_ADDR_LEN);
-    spec->wire_vlan =
+    spec->host_encap.type = PDS_ENCAP_TYPE_DOT1Q;
+    spec->host_encap.val.vlan_tag =
         egress_vnic_data->egress_local_vnic_info_action.overlay_vlan_id;
     spec->subnet.id =
         egress_vnic_data->egress_local_vnic_info_action.subnet_id;
@@ -621,7 +633,7 @@ vnic_impl::read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info) {
 
     PDS_TRACE_DEBUG("vnic %u, subnet %u, vcn %u, wire vlan %u, overlay mac %s ",
                     key->id, info->spec.subnet.id, info->spec.vcn.id,
-                    info->spec.wire_vlan, macaddr2str(info->spec.mac_addr));
+                    info->spec.host_encap.val.value, macaddr2str(info->spec.mac_addr));
     return SDK_RET_OK;
 }
 

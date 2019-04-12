@@ -463,7 +463,8 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                 pds_vnic.vcn.id = i;
                 pds_vnic.subnet.id = (i - 1) * num_subnets + j;
                 pds_vnic.key.id = vnic_key;
-                pds_vnic.wire_vlan = vlan_start + vnic_key - 1;
+                pds_vnic.host_encap.type = PDS_ENCAP_TYPE_DOT1Q;
+                pds_vnic.host_encap.val.vlan_tag = vlan_start + vnic_key - 1;
                 if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
                     pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                     //pds_vnic.fabric_encap.val.vnid = VNID_BASE + pds_vnic.subnet.id;

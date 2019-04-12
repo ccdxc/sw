@@ -19,8 +19,8 @@ namespace api_test {
 // VNIC object seed used as base seed in many_* operations
 typedef struct vnic_stepper_seed_s {
     uint32_t id;
-    uint16_t vlan_tag;
-    uint32_t mpls_slot;
+    pds_encap_t host_encap;
+    pds_encap_t fabric_encap;
     uint64_t mac_u64;
 } vnic_stepper_seed_t;
 
@@ -30,8 +30,8 @@ public:
     pds_vcn_id_t vcn_id;           ///< VCN id
     pds_subnet_id_t sub_id;        ///< Subnet id
     pds_vnic_id_t vnic_id;         ///< VNIC id
-    uint16_t vlan_tag;             ///< VLAN tag
-    pds_slot_id_t mpls_slot;       ///< MPLS slot
+    pds_encap_t host_encap;        ///< VLAN tag
+    pds_encap_t fabric_encap;      ///< MPLS slot
     std::string vnic_mac;          ///< VNIC mac
     mac_addr_t mac_addr;
     uint64_t mac_u64;
@@ -42,7 +42,7 @@ public:
     vnic_util();
 
     /// \brief Parameterized constructor
-    vnic_util(uint32_t vnic_id, uint16_t vlan_tag, uint32_t mpls_slot,
+    vnic_util(uint32_t vnic_id, pds_encap_t host_encap, pds_encap_t fabric_encap,
               uint64_t mac_u64);
     /// \brief Parameterized constructor
     vnic_util(pds_vcn_id_t vcn_id, pds_vnic_id_t vnic_id,
