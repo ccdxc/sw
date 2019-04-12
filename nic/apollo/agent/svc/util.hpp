@@ -197,15 +197,18 @@ sdk_ret_to_api_status (sdk_ret_t ret)
     }
 }
 
-static inline void
+static inline sdk_ret_t
 pds_af_proto_spec_to_api_spec (uint8_t *af, const types::IPAF &addrfamily)
 {
     if (addrfamily == types::IP_AF_INET) {
         *af = IP_AF_IPV4;
     } else if (addrfamily == types::IP_AF_INET6) {
         *af = IP_AF_IPV6;
+    } else {
+        PDS_TRACE_ERR("IP_AF_NONE passed in proto");
+        return SDK_RET_INVALID_ARG;
     }
-    PDS_TRACE_ERR("IP_AF_NONE passed in proto");
+    return SDK_RET_OK;
 }
 
 #endif    // __AGENT_SVC_UTIL_HPP__

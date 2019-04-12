@@ -13,18 +13,23 @@
 extern flow_test *g_flow_test_obj;
 #endif
 
-static inline void
+static inline sdk_ret_t
 pds_policy_dir_proto_to_api_spec (rule_dir_t *dir,
-                            const pds::SecurityPolicySpec &proto_spec)
+                                  const pds::SecurityPolicySpec &proto_spec)
 {
     if (proto_spec.direction() == types::RULE_DIR_INGRESS) {
         *dir = RULE_DIR_INGRESS;
     } else if (proto_spec.direction() == types::RULE_DIR_EGRESS) {
         *dir = RULE_DIR_EGRESS;
+    } else {
+        PDS_TRACE_ERR("Invalid direction %u in policy spec %u",
+                      proto_spec.direction(), proto_spec.id());
+        return SDK_RET_INVALID_ARG;
     }
+    return SDK_RET_OK;
 }
 
-static inline void
+static inline sdk_ret_t
 pds_policy_rule_match_proto_to_api_spec (rule_match_t *match,
                                          const pds::SecurityRule &proto_rule)
 {
@@ -51,42 +56,73 @@ pds_policy_rule_match_proto_to_api_spec (rule_match_t *match,
     } else {
         PDS_TRACE_ERR("Invalid L4 rule match type");
     }
+    return SDK_RET_OK;
 }
 
 // Build policy API spec from protobuf spec
-static inline void
+static inline sdk_ret_t
 pds_policy_proto_to_api_spec (const pds::SecurityPolicySpec &proto_spec,
                               pds_policy_spec_t *api_spec)
 {
     uint32_t num_rules = 0;
+    sdk_ret_t ret;
 
     api_spec->key.id = proto_spec.id();
     api_spec->policy_type = POLICY_TYPE_FIREWALL;
-    pds_af_proto_spec_to_api_spec(&api_spec->af, proto_spec.addrfamily());
-    pds_policy_dir_proto_to_api_spec(&api_spec->direction, proto_spec);
+    ret = pds_af_proto_spec_to_api_spec(&api_spec->af, proto_spec.addrfamily());
+    if (unlikely(ret != SDK_RET_OK)) {
+        return ret;
+    }
+    ret = pds_policy_dir_proto_to_api_spec(&api_spec->direction, proto_spec);
+    if (unlikely(ret != SDK_RET_OK)) {
+        return ret;
+    }
     num_rules = proto_spec.rules_size();
+    if (unlikely(num_rules == 0)) {
+        PDS_TRACE_ERR("Rejecting empty security policy %u",
+                      api_spec->key.id);
+        return SDK_RET_INVALID_ARG;
+    }
     api_spec->num_rules = num_rules;
     api_spec->rules = (rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
                                            sizeof(rule_t) * num_rules);
+    if (unlikely(api_spec->rules == NULL)) {
+        PDS_TRACE_ERR("Failed to allocate memory for security policy %u",
+                      api_spec->key.id);
+        return SDK_RET_OOM;
+    }
     for (uint32_t i = 0; i < num_rules; i++) {
         const pds::SecurityRule &proto_rule = proto_spec.rules(i);
         api_spec->rules[i].stateful = proto_rule.stateful();
         api_spec->rules[i].action_data.fw_action.action =
                                                  SECURITY_RULE_ACTION_ALLOW;
-        pds_policy_rule_match_proto_to_api_spec(&api_spec->rules[i].match,
-                                                proto_rule);
+        ret = pds_policy_rule_match_proto_to_api_spec(&api_spec->rules[i].match,
+                                                      proto_rule);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed converting policy %u spec, err %u",
+                          api_spec->key.id, ret);
+            goto error;
+        }
     }
+
+error:
+    return ret;
 }
 
 Status
 SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
                                             const pds::SecurityPolicyRequest *proto_req,
                                             pds::SecurityPolicyResponse *proto_rsp) {
+    sdk_ret_t ret;
     pds_policy_spec_t api_spec;
 
     if (proto_req) {
         for (int i = 0; i < proto_req->request_size(); i ++) {
-            pds_policy_proto_to_api_spec(proto_req->request(i), &api_spec);
+            ret = pds_policy_proto_to_api_spec(proto_req->request(i),
+                                               &api_spec);
+            if (unlikely(ret != SDK_RET_OK)) {
+                return Status::CANCELLED;
+            }
             if (!core::agent_state::state()->pds_mock_mode()) {
                 if (pds_policy_create(&api_spec) != sdk::SDK_RET_OK) {
                     return Status::CANCELLED;
