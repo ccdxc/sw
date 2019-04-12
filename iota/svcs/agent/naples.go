@@ -703,7 +703,7 @@ func (dnode *dataNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 		return nil
 	}
 
-	if in.GetTriggerMode() == iota.TriggerMode_TRIGGER_NODE_PARALLEL {
+	if in.GetTriggerOp() == iota.TriggerOp_TERMINATE_ALL_CMDS || in.GetTriggerMode() == iota.TriggerMode_TRIGGER_NODE_PARALLEL {
 		maxParallelThreads := 128
 		currThreads := 0
 		scheduleCmds := []*iota.Command{}
@@ -1253,7 +1253,7 @@ func (node *commandNode) Trigger(in *iota.TriggerMsg) (*iota.TriggerMsg, error) 
 		return nil
 	}
 
-	if in.GetTriggerMode() == iota.TriggerMode_TRIGGER_NODE_PARALLEL {
+	if in.GetTriggerOp() == iota.TriggerOp_TERMINATE_ALL_CMDS || in.GetTriggerMode() == iota.TriggerMode_TRIGGER_NODE_PARALLEL {
 		maxParallelThreads := 8
 		currThreads := 0
 		scheduleCmds := []*iota.Command{}
