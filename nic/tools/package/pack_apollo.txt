@@ -104,6 +104,7 @@ nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_with
 # memory monitoring scripts
 nic/tools/sysupdate.sh                                            /nic/tools/
 nic/apollo/tools/sysinit.sh                                       /nic/tools/
+nic/apollo/tools/bringup_mgmt_ifs.sh                              /nic/tools/
 nic/tools/sysreset.sh                                             /nic/tools/
 nic/tools/fwupdate                                                /nic/tools/
 
