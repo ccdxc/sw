@@ -83,6 +83,23 @@
 #define P4_REMOTE_VNIC_MAPPING_TX_NUM_HINTS_PER_ENTRY    8
 
 /*****************************************************************************/
+/* cpu flags and bit positions                                               */
+/*****************************************************************************/
+#define APOLLO_CPU_FLAGS_VLAN_VALID_BIT_POS     1
+#define APOLLO_CPU_FLAGS_IPV4_1_VALID_BIT_POS   2
+#define APOLLO_CPU_FLAGS_IPV6_1_VALID_BIT_POS   3
+#define APOLLO_CPU_FLAGS_ETH_2_VALID_BIT_POS    4
+#define APOLLO_CPU_FLAGS_IPV4_2_VALID_BIT_POS   5
+#define APOLLO_CPU_FLAGS_IPV6_2_VALID_BIT_POS   6
+
+#define APOLLO_CPU_FLAGS_VLAN_VALID     (1 << APOLLO_CPU_FLAGS_VLAN_VALID_BIT_POS)
+#define APOLLO_CPU_FLAGS_IPV4_1_VALID   (1 << APOLLO_CPU_FLAGS_IPV4_1_VALID_BIT_POS)
+#define APOLLO_CPU_FLAGS_IPV6_1_VALID   (1 << APOLLO_CPU_FLAGS_IPV6_1_VALID_BIT_POS)
+#define APOLLO_CPU_FLAGS_ETH_2_VALID    (1 << APOLLO_CPU_FLAGS_ETH_2_VALID_BIT_POS)
+#define APOLLO_CPU_FLAGS_IPV4_2_VALID   (1 << APOLLO_CPU_FLAGS_IPV4_2_VALID_BIT_POS)
+#define APOLLO_CPU_FLAGS_IPV6_2_VALID   (1 << APOLLO_CPU_FLAGS_IPV6_2_VALID_BIT_POS)
+
+/*****************************************************************************/
 /* Header sizes                                                              */
 /*****************************************************************************/
 #define APOLLO_PREDICATE_HDR_SZ         1

@@ -110,6 +110,7 @@ header_type scratch_metadata_t {
         tcp_flags           : 8;
         flow_stats_addr     : 34;
         hint_valid          : 1;
+        cpu_flags           : 16;
 
         subnet_id           : 16;
         snat                : 1;

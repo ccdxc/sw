@@ -131,6 +131,17 @@ redirect_to_arm:
                        p4_to_rxdma_header_valid, \
                        capri_rxdma_intrinsic_valid, \
                        capri_p4_intrinsic_valid}, 0x073, 0x27B
+    or              r1, k.ctag_1_valid, k.ipv4_1_valid, \
+                        APOLLO_CPU_FLAGS_IPV4_1_VALID_BIT_POS
+    or              r1, r1, k.ipv6_1_valid, \
+                        APOLLO_CPU_FLAGS_IPV6_1_VALID_BIT_POS
+    or              r1, r1, k.ethernet_2_valid, \
+                        APOLLO_CPU_FLAGS_ETH_2_VALID_BIT_POS
+    or              r1, r1, k.ipv4_2_valid, \
+                        APOLLO_CPU_FLAGS_IPV4_2_VALID_BIT_POS
+    or              r1, r1, k.ipv6_2_valid, \
+                        APOLLO_CPU_FLAGS_IPV6_2_VALID_BIT_POS
+    phvwr           p.p4_to_arm_flags, r1
     phvwr           p.p4_to_arm_packet_len, k.capri_p4_intrinsic_packet_len
     phvwr           p.p4_to_arm_flow_hash, k.p4i_apollo_i2e_entropy_hash
     phvwr           p.p4_to_arm_payload_offset, k.offset_metadata_payload_offset

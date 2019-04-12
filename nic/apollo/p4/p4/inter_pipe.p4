@@ -115,6 +115,35 @@ action add_p4_to_arm_header() {
     modify_field(offset_metadata.l4_1, offset_metadata.l4_1);
     modify_field(offset_metadata.l4_2, offset_metadata.l4_2);
     modify_field(p4_to_arm.payload_offset, offset_metadata.payload_offset);
+
+    modify_field(scratch_metadata.cpu_flags, 0);
+    if (ctag_1.valid == TRUE) {
+        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+               APOLLO_CPU_FLAGS_VLAN_VALID);
+    }
+    if (ipv4_1.valid == TRUE) {
+        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+               APOLLO_CPU_FLAGS_IPV4_1_VALID);
+    } else {
+        if (ipv6_1.valid == TRUE) {
+            bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+                   APOLLO_CPU_FLAGS_IPV6_1_VALID);
+        }
+    }
+    if (ethernet_2.valid == TRUE) {
+        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+               APOLLO_CPU_FLAGS_ETH_2_VALID);
+    }
+    if (ipv4_2.valid == TRUE) {
+        bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+               APOLLO_CPU_FLAGS_IPV4_2_VALID);
+    } else {
+        if (ipv6_2.valid == TRUE) {
+            bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+                   APOLLO_CPU_FLAGS_IPV6_2_VALID);
+        }
+    }
+    modify_field(p4_to_arm.flags, scratch_metadata.cpu_flags);
 }
 
 action redirect_to_arm() {
