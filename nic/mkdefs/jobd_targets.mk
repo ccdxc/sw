@@ -157,17 +157,17 @@ jobd/dol/gft/rdma_l2l: ${JOBD_PREREQS}
 #jobd/dol/agent/up2up: ${JOBD_PREREQS}
 #	${NICDIR}/run.py ${COVERAGE_OPTS} --topo agentup2up --feature agentup2up
 
-.PHONY: jobd/dol/apollo/oci/networking
-jobd/dol/apollo/oci/networking: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo oci --feature networking
+.PHONY: jobd/dol/apollo/mplsoudp
+jobd/dol/apollo/mplsoudp: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mplsoudp --feature networking
 
-.PHONY: jobd/dol/apollo/msft/networking
-jobd/dol/apollo/msft/networking: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo msft --feature networking
+.PHONY: jobd/dol/apollo/vxlan
+jobd/dol/apollo/vxlan: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo vxlan --feature networking
 
 .PHONY: jobd/dol/apollo/lpm
 jobd/dol/apollo/lpm: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo oci --feature lpm
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mplsoudp --feature lpm
 
 .PHONY: jobd/apollo/scale_test_mock
 jobd/apollo/scale_test_mock: ${JOBD_PREREQS}
