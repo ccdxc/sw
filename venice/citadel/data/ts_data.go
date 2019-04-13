@@ -209,7 +209,7 @@ func (dn *DNode) replicatePoints(ctx context.Context, req *tproto.PointsWriteReq
 			// if replica is not yet marked unreachable and we fail to replicate to it, keep it in a pending queue.
 			// when it comes back up, we should send the points in pending queue to the replica
 			_, err = dnclient.PointsReplicate(ctx, &newReq)
-			if err != nil && strings.Contains(err.Error(), "the connection is unavailable") {
+			if err != nil && strings.Contains(err.Error(), "connection error") {
 				// try reconnecting if this was a connection error
 				dnclient, err = dn.reconnectDnclient(meta.ClusterTypeTstore, se.NodeUUID)
 				if err == nil { // try again
