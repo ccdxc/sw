@@ -49,6 +49,7 @@ targets:
 image:
   bind_dir: "/sw"
   work_dir: "/sw"
+queue_name: builder
 references:
   - nic
   - penctl
