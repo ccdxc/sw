@@ -296,13 +296,16 @@ bar_pmt_get(const int pmti, pmt_t *pmt, prt_t *prt)
 }
 
 static void
-bar_show_prt(const int pmti, const int prti, const u_int64_t baraddr)
+bar_show_prt(const int pmti,
+             const int prti,
+             const int prtsize,
+             const u_int64_t baraddr)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
     pciehw_spmt_t *spmt = &pshmem->spmt[pmti];
     pciehw_sprt_t *sprt = &pshmem->sprt[prti];
     prt_t lprt, *prt;
-    char vfstr[80];
+    char vfstr[16];
 
     /*
      * If loaded, grab hardware copy,
@@ -315,57 +318,70 @@ bar_show_prt(const int pmti, const int prti, const u_int64_t baraddr)
         prt = &sprt->prt;
     }
 
-    switch (prt->cmn.type) {
+    if (prt->cmn.vfstride >= 2) {
+        snprintf(vfstr, sizeof(vfstr), "%d", 1 << prt->cmn.vfstride);
+    } else {
+        vfstr[0] = '\0';
+    }
+
+    switch (prt_type(prt)) {
     case PRT_TYPE_RES: {
         prt_res_t *r = &prt->res;
 
-        if (prt->res.vfstride >= 2) {
-            snprintf(vfstr, sizeof(vfstr),
-                     "             %d", 1 << prt->res.vfstride);
-        } else {
-            vfstr[0] = '\0';
-        }
-
         pciesys_loginfo("    %-4d %-5s %c%c%c%c  %-5s 0x%013" PRIx64 " "
-                        "0x%09" PRIx64 "%s\n",
+                        "0x%09" PRIx64 "%s%s\n",
                         prti,
                         prt_type_str(r->type),
                         r->indirect ? 'i' : '-',
-                        r->notify ? 'n' : '-',
-                        r->pmvdis ? 'p' : '-',
-                        r->aspace ? 'h' : '-',
+                        r->notify   ? 'n' : '-',
+                        r->pmvdis   ? 'p' : '-',
+                        r->aspace   ? 'h' : '-',
                         human_readable(prt_size_decode(r->sizedw)),
                         baraddr,
                         (u_int64_t)r->addrdw << 2,
+                        vfstr[0] ? "             " : "",
+                        vfstr);
+        break;
+    }
+    case PRT_TYPE_DB16:
+    case PRT_TYPE_DB32: {
+        prt_db_t *db = &prt->db;
+        const int prtsz = prtsize;
+
+        pciesys_loginfo("    %-4d %-5s %c%c    %-5s 0x%013" PRIx64 " "
+                        "LIF=%d idx=%2d:%-2d qid=%2d:%-2d%s%s\n",
+                        prti,
+                        prt_type_str(db->type),
+                        db->indirect ? 'i' : '-',
+                        db->notify   ? 'n' : '-',
+                        human_readable(prtsz),
+                        baraddr,
+                        db->lif,
+                        db->idxshift * 8,
+                        db->idxwidth ? db->idxshift * 8 + db->idxwidth - 1 : 0,
+                        db->qidshift * 8,
+                        db->qidwidth ? db->qidshift * 8 + db->qidwidth - 1 : 0,
+                        vfstr[0] ? " " : "",
                         vfstr);
         break;
     }
     case PRT_TYPE_DB64: {
         prt_db_t *db = &prt->db;
-
-        if (prt->res.vfstride >= 2) {
-            snprintf(vfstr, sizeof(vfstr),
-                     "            %-8d", 1 << prt->res.vfstride);
-        } else {
-            vfstr[0] = '\0';
-        }
+        const int prtsz = 64;
 
         pciesys_loginfo("    %-4d %-5s %c%c    %-5s 0x%013" PRIx64 " "
-                        "LIF=%-7d%s\n",
+                        "LIF=%d%s%s\n",
                         prti,
                         prt_type_str(db->type),
                         db->indirect ? 'i' : '-',
-                        db->notify ? 'n' : '-',
-                        human_readable(64),
+                        db->notify   ? 'n' : '-',
+                        human_readable(prtsz),
                         baraddr,
                         db->lif,
+                        vfstr[0] ? "             " : "",
                         vfstr);
         break;
     }
-    case PRT_TYPE_DB32:
-        break;
-    case PRT_TYPE_DB16:
-        break;
     default:
         break;
     }
@@ -383,7 +399,7 @@ bar_show_prts(const int pmti, const pmt_t *pmt, const u_int32_t flags)
 
     for (prti = prtb, i = 0; i < prtc; i++, prti++) {
         const u_int64_t baroff = (const u_int64_t)i * prtsize;
-        bar_show_prt(pmti, prti, baraddr + baroff);
+        bar_show_prt(pmti, prti, prtsize, baraddr + baroff);
     }
 }
 
@@ -480,7 +496,7 @@ bar_address_format_db(const pmt_t *pmt, const prt_t *prt, char *line,
 /*
  * ....vvvvllllpppp......ttt...
  *    ^---^---^---^      --^
- *    | | | | | | |       |+------ PMR.qtype_start: lsb of qtype (qtype_mask)
+ *    | | | | | | |       |+------ PMR.qtype_start: lsb of qtype (qtypemask)
  *    | | | | | | |       +--| (t)
  *    | | | | | | +--------------- PMR.pagesize: lsb of pid
  *    | | | | | +------------| (p)
@@ -490,7 +506,7 @@ bar_address_format_db(const pmt_t *pmt, const prt_t *prt, char *line,
  *    | +--------------------| (v)
  *    +--------------------------- PMR.vfend: msb+1 of vf
  *
- * (t) qtype (with qtype_mask)
+ * (t) qtype (with qtypemask)
  * (p) pid
  * (l) lif
  * (v) VF index beyond vfbase (with vfstride)
@@ -511,28 +527,38 @@ bar_address_format_db64(const pmt_t *pmt, const prt_t *prt, char *line)
  * PRT.qidsel, PRT.qidshift and PRT.qidwidth are *only*
  * used by db16/db32.
  *
- * ....vvvv............qqqq....
- *    ^---^           ^---^
- *    | | |           | | |
- *    | | |           | | +------- PRT.qidshift (if qidsel=1)
- *    | | |           | +----| (q)
- *    | | |           +----------- PRT.qidshift + PRT.qidwidth
- *    | | +----------------------- PMR.vfstart: lsb of vf
- *    | +--------------------| (v)
- *    +--------------------------- PMR.vfend: msb+1 of vf
+ * ....vvvv.........qqqq...tt.
+ *    ^---^        ^---^   -^
+ *    | | |        | | |   ||
+ *    | | |        | | |   |+------ PMR.qtypestart (qtypemask)
+ *    | | |        | | |   +--| (t)
+ *    | | |        | | +----------- PRT.qidshift (if qidsel=1)
+ *    | | |        | +--------| (q)
+ *    | | |        +--------------- PRT.qidshift + PRT.qidwidth
+ *    | | +------------------------ PMR.vfstart: lsb of vf
+ *    | +---------------------| (v)
+ *    +---------------------------- PMR.vfend: msb+1 of vf
  *
+ * (t) qtype (with qtypemask)
  * (q) qid in addr (if qidsel=1) else qid is in data
  * (v) VF index beyond vfbase (with vfstride)
  */
 static void
 bar_address_format_dbsm(const pmt_t *pmt, const prt_t *prt, char *line)
 {
-    const u_int32_t qtyb = 0; /* qtype unused for 32b/16b db */
-    const u_int32_t qtym = 0;
-    const u_int32_t qidb = prt->db.qidshift;
-    /* if qidsel=1, then qid is in addr at qidshift/qidwidth */
-    const u_int32_t qidc = prt->db.qidsel ? prt->db.qidwidth : 0;
+    const u_int32_t qtyb = pmt->pmre.bar.qtypestart;
+    const u_int32_t qtym = pmt->pmre.bar.qtypemask;
+    u_int32_t qidb, qidc;
 
+    if (prt->db.qidsel) {
+        /* these address bits are used as qid */
+        qidb = pmt->pmre.bar.qidstart;
+        qidc = pmt->pmre.bar.qidend - qidb;
+    } else {
+        /* qid is encoded in data */
+        qidb = 0;
+        qidc = 0;
+    }
     bar_address_format_db(pmt, prt, line, qtyb, qtym, qidb, qidc);
 }
 
@@ -554,7 +580,7 @@ bar_address_format(const pmt_t *pmt)
     pciesys_loginfo("|32109876543210987654321098765432"
                     "10987654321098765432109876543210|\n");
 
-    switch (prt->cmn.type) {
+    switch (prt_type(prt)) {
     case PRT_TYPE_RES:
         bar_address_format_res(pmt, prt, linele);
         break;
@@ -605,7 +631,7 @@ bar_show_pmt(const char *label,
                         pmr->vfstart,
                         pmr->prtsize ,
                         ffs(pmt_bar_get_pagesize(pmt)) - 1,
-                        pmr->qidstart + pmr->qidend,
+                        pmr->qidend,
                         pmr->qidstart);
     }
 

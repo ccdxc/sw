@@ -154,14 +154,14 @@ prt_db_enc(prt_t *prt,
            const u_int32_t lif,
            const u_int8_t upd[8],
            const u_int8_t stridesel,
-           const u_int8_t idxshift,
-           const u_int8_t idxwidth,
-           const u_int8_t qidshift,
-           const u_int8_t qidwidth,
            const u_int8_t qidsel)
 {
     prt_db_t *db = &prt->db;
     u_int64_t updvec = prt_updvec_enc(upd);
+    const u_int8_t idxshift  = 0;
+    const u_int8_t idxwidth  = 0;
+    const u_int8_t qidshift  = 0;
+    const u_int8_t qidwidth  = 0;
 
     memset(prt, 0, sizeof(*prt));
 
@@ -187,15 +187,9 @@ prt_db64_enc(prt_t *prt,
 {
     const u_int8_t dbtype    = PRT_TYPE_DB64;
     const u_int8_t stridesel = 0x1;
-    /* these are unused for 64-bit doorbells */
-    const u_int8_t idxshift  = 0;
-    const u_int8_t idxwidth  = 0;
-    const u_int8_t qidshift  = 0;
-    const u_int8_t qidwidth  = 0;
-    const u_int8_t qidsel    = 0;
+    const u_int8_t qidsel    = 0; /* unused for db64 */
 
-    prt_db_enc(prt, dbtype, lif, upd, stridesel,
-               idxshift, idxwidth, qidshift, qidwidth, qidsel);
+    prt_db_enc(prt, dbtype, lif, upd, stridesel, qidsel);
 }
 
 void
@@ -204,16 +198,10 @@ prt_db32_enc(prt_t *prt,
              const u_int8_t upd[8])
 {
     const u_int8_t dbtype    = PRT_TYPE_DB32;
-    const u_int8_t stridesel = 0x1;
+    const u_int8_t stridesel = 0x0;
+    const u_int8_t qidsel    = 1; /* qid in address */
 
-    const u_int8_t idxshift  = 0;
-    const u_int8_t idxwidth  = 0;
-    const u_int8_t qidshift  = 0;
-    const u_int8_t qidwidth  = 0;
-    const u_int8_t qidsel    = 0;
-
-    prt_db_enc(prt, dbtype, lif, upd, stridesel,
-               idxshift, idxwidth, qidshift, qidwidth, qidsel);
+    prt_db_enc(prt, dbtype, lif, upd, stridesel, qidsel);
 }
 
 void
@@ -222,19 +210,32 @@ prt_db16_enc(prt_t *prt,
              const u_int8_t upd[8])
 {
     const u_int8_t dbtype    = PRT_TYPE_DB16;
-    const u_int8_t stridesel = 0x1;
+    const u_int8_t stridesel = 0x0;
+    const u_int8_t qidsel    = 1; /* qid in address by default */
 
-    const u_int8_t idxshift  = 0;
-    const u_int8_t idxwidth  = 0;
-    const u_int8_t qidshift  = 0;
-    const u_int8_t qidwidth  = 0;
-    const u_int8_t qidsel    = 0;
+    prt_db_enc(prt, dbtype, lif, upd, stridesel, qidsel);
+}
 
-    /* XXX this is just a placeholder copy of db32_enc above */
-    assert(0);
+void
+prt_db_idxparams(prt_t *prt,
+                 const u_int8_t idxwidth, const u_int8_t idxshift)
+{
+    prt_db_t *db = &prt->db;
 
-    prt_db_enc(prt, dbtype, lif, upd, stridesel,
-               idxshift, idxwidth, qidshift, qidwidth, qidsel);
+    db->idxwidth = idxwidth;
+    db->idxshift = idxshift >> 8; /* encoded as "byte" shift 0-3 */
+}
+
+void
+prt_db_qidparams(prt_t *prt,
+                 const u_int8_t qidwidth,
+                 const u_int8_t qidshift)
+{
+    prt_db_t *db = &prt->db;
+
+    db->qidsel   = 0; /* setting prt qid params implies qid in data */
+    db->qidwidth = qidwidth;
+    db->qidshift = qidshift >> 8; /* encoded as "byte" shift 0-3 */
 }
 
 static void

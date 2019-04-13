@@ -209,6 +209,8 @@ cmd_add(int argc, char *argv[])
     r.intrc = 4;
     r.devcmdpa = 0x13e000000;   /* XXX */
     r.devcmddbpa = r.devcmdpa + 0x1000; /* XXX */
+    r.nvmeregspa = 0x13e000000; /* XXX */
+    r.nvmeqidc = 64;
     name = NULL;
     bi = 0;
 

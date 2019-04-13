@@ -34,6 +34,7 @@ typedef struct pciehdevice_resources_s {
     u_int32_t romsz;            /* option rom region size */
     u_int64_t rompa;            /* option rom memory buffer physical address */
     u_int64_t nvmeregspa;       /* nvme 4k register region */
+    u_int32_t nvmeqidc;         /* nvme qid count */
     u_int64_t dsn;              /* device serial number */
     struct {
         u_int64_t barpa;        /* bar physical address */

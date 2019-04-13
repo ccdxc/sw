@@ -464,18 +464,22 @@ pmt_show_cfg_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
 static void
 pmt_show_bar_entry_hdr(void)
 {
-    pciesys_loginfo("%-4s %-2s %-3s %-2s %-9s %-10s %-4s "
-                    "%-5s %-5s %-5s %-5s %-5s "
-                    "%-4s\n",
+    pciesys_loginfo("%-4s %-2s %-3s %-2s %-9s %-10s %-4s %-4s\n",
                     "idx", "id", "typ", "rw", "p:bb:dd.f", "baraddr",
-                    "size", " vf  ", " lif ", " prt ", " pid ", "qtype",
-                    "prts");
+                    "size", "prts");
 }
 
 static int
 bitspan(const int bits, const int bite)
 {
     return bite > bits ? bite - bits : 0;
+}
+
+static int
+qtypemask_to_count(const int qtypemask)
+{
+    static int maskmap[8] = { 0, 1, 2, 2, 3, 3, 3, 3 };
+    return maskmap[qtypemask & 0x7];
 }
 
 static void
@@ -487,14 +491,15 @@ pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
     /* const pmt_bar_format_t *m = &dm->mask.bar; */
     const pmr_bar_entry_t *pmr = &pmt->pmre.bar;
     prt_t lprt, *prt = &lprt;
-    int pidb, pidc, qtyb, qtyc;
+    int pidb, pidc, qtyb, qtyc, qidb, qidc;
     int vfb, vfc, lifb, lifc, resb, resc;
-    char qtys[8] = { '\0' };
-    char ress[8] = { '\0' };
-    char pids[8] = { '\0' };
-    char lifs[8] = { '\0' };
-    char vfs [8] = { '\0' };
-    char prts[8] = { '\0' };
+    char qtys[16] = { '\0' };
+    char ress[16] = { '\0' };
+    char pids[16] = { '\0' };
+    char lifs[16] = { '\0' };
+    char vfs [16] = { '\0' };
+    char qids[16] = { '\0' };
+    char prts[16] = { '\0' };
 
     if (last_hdr_displayed != PMTT_BAR) {
         pmt_show_bar_entry_hdr();
@@ -513,8 +518,9 @@ pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
     pidb = pidc = 0;
     lifb = lifc = 0;
     vfb  = vfc  = 0;
+    qidb = qidc = 0;
 
-    switch (prt->cmn.type) {
+    switch (prt_type(prt)) {
     case PRT_TYPE_RES:
         resb = pmr->prtsize;
         resc = bitspan(resb, pmr->vfstart);
@@ -531,7 +537,7 @@ pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
         break;
     case PRT_TYPE_DB64:
         qtyb = pmr->qtypestart;
-        qtyc = 3;
+        qtyc = qtypemask_to_count(pmr->qtypemask);
 
         resb = pmr->prtsize;
         resc = bitspan(resb, pmr->vfstart);
@@ -549,17 +555,38 @@ pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
         break;
     case PRT_TYPE_DB32:
     case PRT_TYPE_DB16:
-        /* XXX add these */
+        qtyb = pmr->qtypestart;
+        qtyc = qtypemask_to_count(pmr->qtypemask);
+
+        resb = pmr->prtsize;
+        resc = bitspan(resb, pmr->vfstart);
+
+        pidb = ffs(pmt_bar_get_pagesize(pmt)) - 1;
+        pidc = bitspan(pidb, pmr->prtsize);
+
+        lifb = pmr->prtsize;
+        lifc = bitspan(lifb, pmr->vfstart);
+
+        vfb = pmr->vfstart;
+        vfc = bitspan(vfb, pmr->vfend);
+
+        if (prt->db.qidsel) {
+            /* if qidsel, then qid encoded in address */
+            qidb = pmt->pmre.bar.qidstart;
+            qidc = pmt->pmre.bar.qidend - qidb;
+        }
+
+        snprintf(prts, sizeof(prts), "%d", pmr->prtb);
         break;
     }
 
 #define S(x) \
-    if (x##c) snprintf(x##s, sizeof(x##s), "%2d:%-2d", x##b + x##c - 1, x##b);
-    S(qty); S(res); S(pid); S(lif); S(vf);
+    if (x##c) \
+        snprintf(x##s, sizeof(x##s), " %s=%d:%d", #x, x##b + x##c - 1, x##b)
+    S(qty); S(res); S(pid); S(lif); S(vf); S(qid);
 
-    pciesys_loginfo("%-4d %2d %-3s %c%c %1d:%-7s 0x%08" PRIx64 " %-4s "
-                    "%5s %5s %5s %5s %5s "
-                    "%-4s\n",
+    pciesys_loginfo("%-4d %-2d %-3s %c%c %1d:%-7s 0x%08" PRIx64 " %-4s %-4s"
+                    "%s%s%s%s%s%s\n",
                     pmti, d->tblid,
                     d->type == pmr->type ? pmt_type_str(d->type) : "BAD",
                     pmt_allows_rd(pmt) ? 'r' : '-',
@@ -567,7 +594,8 @@ pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
                     d->port, bdf_to_str(pmr->bdf),
                     (u_int64_t)d->addrdw << 2,
                     human_readable(pmt_bar_getsize(pmt)),
-                    vfs, lifs, ress, pids, qtys, prts);
+                    prts,
+                    vfs, lifs, ress, pids, qids, qtys);
 }
 
 static void

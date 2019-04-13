@@ -75,9 +75,9 @@ typedef struct {
     /* u_int64_t [1] idxshift_lo:1 */
     u_int64_t idxshift  :2;     /* db16/32: index location in data */
     u_int64_t idxwidth  :4;     /* db16/32: index width    in data */
-    u_int64_t qidshift  :2;     /* db16/32: qid   location in data/addr */
-    u_int64_t qidwidth  :4;     /* db16/32: qid   width    in data/addr */
-    u_int64_t qidsel    :1;     /* db16/32: qid select, 0=data 1=addr */
+    u_int64_t qidshift  :2;     /* db16/32: qid   location in data */
+    u_int64_t qidwidth  :4;     /* db16/32: qid   width    in data */
+    u_int64_t qidsel    :1;     /* db16/32: qid source select, 0=data 1=addr */
     u_int64_t rsrv      :52;    /* unimplemented bits */
 } __attribute__((packed)) prt_db_t;
 
@@ -120,6 +120,16 @@ void
 prt_db16_enc(prt_t *prt,
              const u_int32_t lif,
              const u_int8_t upd[8]);
+
+void
+prt_db_idxparams(prt_t *prt,
+                 const u_int8_t idxwidth,
+                 const u_int8_t idxshift);
+
+void
+prt_db_qidparams(prt_t *prt,
+                 const u_int8_t qidwidth,
+                 const u_int8_t qidshift);
 
 void
 prt_res_set_vfstride(prt_t *prt, const u_int8_t vfstride);

@@ -246,7 +246,7 @@ pmt_bar_setr_vf(pmt_t *pmt, const int bitb, const int bitc)
 void
 pmt_bar_setr_qtype(pmt_t *pmt, const int bitb, const int bitc)
 {
-    const u_int8_t qtmask = (1 << (bitc + 1)) - 1;
+    const u_int8_t qtmask = (1 << bitc) - 1;
     pmt_bar_set_qtype(pmt, bitb, qtmask);
 }
 
@@ -255,7 +255,7 @@ pmt_bar_setr_qid(pmt_t *pmt, const int bitb, const int bitc)
 {
     pmr_bar_entry_t *pmr = &pmt->pmre.bar;
     pmr->qidstart = bitb;
-    pmr->qidend   = bitc;
+    pmr->qidend   = bitb + bitc;
 }
 
 void

@@ -35,9 +35,9 @@ vfe(V4) 4 vfs(V3) 7 prt_size(V2) 5 pagesz(V1) 12 qide(V7) 0 qids(V6) 0
     7    res   i---  32    0x3ffffffffffc0 0x13f000000
     8    res   ----  0     0x3ffffffffffe0 0x000000000
 
-idx  id typ rw p:bb:dd.f baraddr    size  vf    lif   prt   pid  qtype prts
-33    0 mem rw 0:02:00.0 0xfffffffffc000 16K              13:12             1-4 
-34    0 io  rw 0:02:00.0 0xfffffffffff80 128               6:5              5-8 
+idx  id typ rw p:bb:dd.f baraddr    size prts
+33   0  mem rw 0:02:00.0 0xfffffffffc000 16K  1-4  res=13:12
+34   0  io  rw 0:02:00.0 0xfffffffffff80 128  5-8  res=6:5
 idx  x                y                pmr
 33   0fffffffffc00009 00000000000001f0 00000000 00004000 00c39800 80020003
 34   0fffffffffff8029 00000000000001d0 00000000 00004000 0051ca00 800a000b

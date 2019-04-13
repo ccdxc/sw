@@ -195,7 +195,7 @@ prt_show_res_entry(const int prti, prt_t *prt)
 {
     const prt_res_t *r = &prt->res;
 
-    pciesys_loginfo("%-4d %-4s %4d 0x%09"PRIx64" %-4s %c%c%c%c\n",
+    pciesys_loginfo("%-4d %-4s %-4d 0x%09"PRIx64" %-4s %c%c%c%c\n",
                     prti,
                     prt_type_str(r->type),
                     r->vfstride,
@@ -260,19 +260,21 @@ prt_show_db_entry_hdr(void)
 static void
 prt_show_db_entry(const int prti, prt_t *prt, const int raw)
 {
-    const prt_db_t *r = &prt->db;
+    const prt_db_t *db = &prt->db;
 
-    pciesys_loginfo("%-4d %-4s %4d %4d %1d:%-2d %1d:%-2d %c%c%c   %-31s\n",
+    pciesys_loginfo("%-4d %-4s %-4d %-4d %1d:%-2d %1d:%-2d %c%c%c   %-31s\n",
                     prti,
-                    prt_type_str(r->type),
-                    r->vfstride,
-                    r->lif,
-                    r->idxshift, r->idxwidth,
-                    r->qidshift, r->qidwidth,
-                    r->indirect ? 'i' : '-',
-                    r->notify   ? 'n' : '-',
-                    r->qidsel   ? 'a' : 'd',
-                    updvec_str(r->updvec, raw));
+                    prt_type_str(db->type),
+                    db->vfstride,
+                    db->lif,
+                    db->idxshift * 8,
+                    db->idxwidth ? db->idxshift * 8 + db->idxwidth - 1 : 0,
+                    db->qidshift * 8,
+                    db->qidwidth ? db->qidshift * 8 + db->qidwidth - 1 : 0,
+                    db->indirect ? 'i' : '-',
+                    db->notify   ? 'n' : '-',
+                    db->qidsel   ? 'a' : 'd',
+                    updvec_str(db->updvec, raw));
 }
 
 static int last_hdr_displayed = -1;
