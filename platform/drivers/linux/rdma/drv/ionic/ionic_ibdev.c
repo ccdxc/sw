@@ -70,6 +70,9 @@ MODULE_PARM_DESC(xxx_noop, "XXX Adminq noop after probing device.");
 static bool ionic_xxx_aq_dbell = true;
 module_param_named(xxx_aq_dbell, ionic_xxx_aq_dbell, bool, 0644);
 MODULE_PARM_DESC(xxx_aq_dbell, "XXX Enable ringing aq doorbell (to test handling of aq failure).");
+static bool ionic_xxx_qp_dbell = true;
+module_param_named(xxx_qp_dbell, ionic_xxx_qp_dbell, bool, 0644);
+MODULE_PARM_DESC(xxx_qp_dbell, "XXX Enable ringing qp doorbell (to test handling of dev failure).");
 static int ionic_xxx_qid_skip = 512;
 module_param_named(xxx_qid_skip, ionic_xxx_qid_skip, int, 0444);
 MODULE_PARM_DESC(xxx_qid_skip, "XXX Skip every N'th qid");
@@ -2654,6 +2657,7 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	struct ionic_cq_req req;
 	struct ionic_cq_resp resp;
 	int rc, eq_idx;
+	unsigned long irqflags;
 
 	if (!ctx) {
 		rc = ionic_validate_udata(udata, 0, 0);
@@ -2735,6 +2739,10 @@ static struct ionic_cq *__ionic_create_cq(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_xa;
 
+	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	list_add_tail(&cq->cq_list_ent, &dev->cq_list);
+	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+
 	ionic_dbgfs_add_cq(dev, cq);
 
 	return cq;
@@ -2757,6 +2765,12 @@ err_cq:
 
 static void __ionic_destroy_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 {
+	unsigned long irqflags;
+
+	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	list_del(&cq->cq_list_ent);
+	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+
 	xa_erase(&dev->cq_tbl, cq->cqid);
 
 	synchronize_rcu();
@@ -4363,6 +4377,10 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 						  qp->rq_spec);
 	}
 
+	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	list_add_tail(&qp->qp_list_ent, &dev->qp_list);
+	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+
 	ionic_dbgfs_add_qp(dev, qp);
 
 	return &qp->ibqp;
@@ -4769,6 +4787,10 @@ static int ionic_destroy_qp(struct ib_qp *ibqp)
 		return rc;
 
 	ionic_dbgfs_rm_qp(qp);
+
+	spin_lock_irqsave(&dev->admin_lock, irqflags);
+	list_del(&qp->qp_list_ent);
+	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
 
 	xa_erase(&dev->qp_tbl, qp->qpid);
 
@@ -5268,8 +5290,9 @@ static void ionic_post_send_cmb(struct ionic_ibdev *dev, struct ionic_qp *qp)
 
 		pos = ionic_queue_next(&qp->sq, pos);
 
-		ionic_dbell_ring(&dev->dbpage[dev->sq_qtype],
-				 qp->sq.dbell | pos);
+		if (ionic_xxx_qp_dbell)
+			ionic_dbell_ring(&dev->dbpage[dev->sq_qtype],
+					 qp->sq.dbell | pos);
 	}
 
 	qp->sq_cmb_prod = end;
@@ -5443,7 +5466,7 @@ out:
 
 		if (qp->sq_cmb_ptr)
 			ionic_post_send_cmb(dev, qp);
-		else
+		else if (ionic_xxx_qp_dbell)
 			ionic_dbell_ring(&dev->dbpage[dev->sq_qtype],
 					 ionic_queue_dbell_val(&qp->sq));
 	}
@@ -5936,7 +5959,6 @@ static void ionic_qp_event(struct ionic_ibdev *dev, u32 qpid, u8 code)
 			qp->ibqp.event_handler(&ibev, qp->ibqp.qp_context);
 	}
 
-
 out:
 	rcu_read_unlock();
 }
@@ -6339,20 +6361,82 @@ err_aq:
 	return ERR_PTR(rc);
 }
 
-static void ionic_kill_ibdev(void *dev_ptr)
+static void ionic_kill_ibdev(struct ionic_ibdev *dev, bool fatal_path)
+{
+	struct ionic_qp *qp;
+	struct ionic_cq *cq;
+	bool send_fatal = fatal_path;
+	unsigned long irqflags;
+
+	/* Hold the admin spinlock to make sure no QPs or CQs can be destroyed */
+	spin_lock_irqsave(&dev->admin_lock, irqflags);
+
+	/* Flush at most once */
+	if (dev->admin_state == IONIC_ADMIN_KILLED) {
+		/* Send the fatal event at most once */
+		send_fatal = false;
+		goto skip_flush;
+	}
+
+	/* Mark the admin queue */
+	dev->admin_state = IONIC_ADMIN_KILLED;
+	ionic_admin_poll_locked(dev);
+
+	/* Mark each QP to flush all WR to unclog clients */
+	list_for_each_entry(qp, &dev->qp_list, qp_list_ent) {
+		if (qp->ibqp.send_cq) {
+			cq = to_ionic_cq(qp->ibqp.send_cq);
+
+			/* Hold the CQ lock and QP sq_lock while setting up flush */
+			spin_lock(&cq->lock);
+			spin_lock(&qp->sq_lock);
+			qp->sq_flush = true;
+			if (!ionic_queue_empty(&qp->sq)) {
+				cq->flush = true;
+				list_move_tail(&qp->cq_flush_sq, &cq->flush_sq);
+			}
+			spin_unlock(&qp->sq_lock);
+			spin_unlock(&cq->lock);
+		}
+		if (qp->ibqp.recv_cq) {
+			cq = to_ionic_cq(qp->ibqp.recv_cq);
+
+			/* Hold the CQ lock and QP rq_lock while setting up flush */
+			spin_lock(&cq->lock);
+			spin_lock(&qp->rq_lock);
+			qp->rq_flush = true;
+			if (!ionic_queue_empty(&qp->rq)) {
+				cq->flush = true;
+				list_move_tail(&qp->cq_flush_rq, &cq->flush_rq);
+			}
+			spin_unlock(&qp->rq_lock);
+			spin_unlock(&cq->lock);
+		}
+	}
+
+	/* Notify each affected CQ */
+	list_for_each_entry(cq, &dev->cq_list, cq_list_ent)
+		if (cq && cq->flush && cq->ibcq.comp_handler)
+			cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
+
+skip_flush:
+	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+
+	/* Post a fatal event if requested */
+	if (send_fatal)
+		ionic_port_event(dev, IB_EVENT_DEVICE_FATAL);
+}
+
+static void ionic_kill_ibdev_cb(void *dev_ptr)
 {
 	struct ionic_ibdev *dev = dev_ptr;
-	unsigned long irqflags;
 
 	dev_warn(&dev->ibdev.dev, "reset has been indicated\n");
 
-	spin_lock_irqsave(&dev->admin_lock, irqflags);
-	dev->admin_state = IONIC_ADMIN_KILLED;
-	ionic_admin_poll_locked(dev);
-	spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+	ionic_kill_ibdev(dev, true);
 }
 
-static void ionic_kill_rdma_admin(struct ionic_ibdev *dev)
+static void ionic_kill_rdma_admin(struct ionic_ibdev *dev, bool fatal_path)
 {
 	unsigned long irqflags;
 	int rc;
@@ -6373,12 +6457,12 @@ static void ionic_kill_rdma_admin(struct ionic_ibdev *dev)
 	 * queue in the killed state.  Commands will not be issued to the
 	 * device, but will complete locally with status IONIC_ADMIN_KILLED.
 	 * Handling completion will ensure that creating or modifying resources
-	 * fails, but destroying resources succeds.
+	 * fails, but destroying resources succeeds.
 	 *
 	 * If there was a failure resetting the device using this strategy,
 	 * then the state of the device is unknown.  The rdma admin queue is
 	 * left here in the paused state.  No new commands are issued to the
-	 * device, nor are completed locally.  The eth driver will use a
+	 * device, nor are any completed locally.  The eth driver will use a
 	 * different strategy to reset the device.  A callback from the eth
 	 * driver will indicate that the reset is done and it is safe to
 	 * continue.  Then, the rdma admin queue will be transitioned to the
@@ -6390,10 +6474,7 @@ static void ionic_kill_rdma_admin(struct ionic_ibdev *dev)
 		dev_err(&dev->ibdev.dev, "failed to reset rdma %d\n", rc);
 		ionic_api_request_reset(dev->lif);
 	} else {
-		spin_lock_irqsave(&dev->admin_lock, irqflags);
-		dev->admin_state = IONIC_ADMIN_KILLED;
-		ionic_admin_poll_locked(dev);
-		spin_unlock_irqrestore(&dev->admin_lock, irqflags);
+		ionic_kill_ibdev(dev, fatal_path);
 	}
 }
 
@@ -6402,7 +6483,7 @@ static void ionic_reset_work(struct work_struct *ws)
 	struct ionic_ibdev *dev =
 		container_of(ws, struct ionic_ibdev, reset_work);
 
-	ionic_kill_rdma_admin(dev);
+	ionic_kill_rdma_admin(dev, true);
 }
 
 static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
@@ -6421,6 +6502,9 @@ static int ionic_create_rdma_admin(struct ionic_ibdev *dev)
 	dev->adminq = NULL;
 	dev->admin_armed = false;
 	dev->admin_state = IONIC_ADMIN_ACTIVE;
+
+	INIT_LIST_HEAD(&dev->qp_list);
+	INIT_LIST_HEAD(&dev->cq_list);
 
 	/* need at least one eq */
 	if (!dev->eq_count) {
@@ -6504,7 +6588,7 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	list_del(&dev->driver_ent);
 
-	ionic_kill_rdma_admin(dev);
+	ionic_kill_rdma_admin(dev, false);
 
 	ionic_dcqcn_destroy(dev);
 
@@ -6950,7 +7034,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	return dev;
 
 err_register:
-	ionic_kill_rdma_admin(dev);
+	ionic_kill_rdma_admin(dev, false);
 	ionic_destroy_rdma_admin(dev);
 	kfree(dev->stats_buf);
 	kfree(dev->stats_hdrs);
@@ -7009,7 +7093,7 @@ static void ionic_netdev_work(struct work_struct *ws)
 			break;
 		}
 
-		rc = ionic_api_set_private(work->lif, dev, ionic_kill_ibdev,
+		rc = ionic_api_set_private(work->lif, dev, ionic_kill_ibdev_cb,
 					   IONIC_PRSN_RDMA);
 		if (rc) {
 			netdev_dbg(ndev, "error set private %d\n", rc);

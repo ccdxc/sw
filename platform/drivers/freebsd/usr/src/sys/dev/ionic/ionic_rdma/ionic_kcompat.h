@@ -192,4 +192,22 @@ static inline void xa_destroy(struct xarray *xa)
 	/* No equivalent for radix-tree */
 }
 
+/* RCU cruft */
+#undef  rcu_read_lock
+#define rcu_read_lock()							\
+	unsigned long _rcuflags;					\
+	read_lock_irqsave(&dev->rcu_lock, _rcuflags)
+
+#undef  rcu_read_unlock
+#define rcu_read_unlock()						\
+	read_unlock_irqrestore(&dev->rcu_lock, _rcuflags)
+
+#undef  synchronize_rcu
+#define synchronize_rcu()						\
+	do {								\
+		unsigned long _rcuflags;				\
+		write_lock_irqsave(&dev->rcu_lock, _rcuflags);		\
+		write_unlock_irqrestore(&dev->rcu_lock, _rcuflags);	\
+	} while (0)
+
 #endif /* IONIC_KCOMPAT */
