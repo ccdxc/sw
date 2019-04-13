@@ -1132,6 +1132,9 @@ port_led_blink (uint32_t key, port_args_t *port_args) {
         } else {
             sdk::lib::pal_qsfp_set_led(phy_port, blink, pal_led_frequency_t::LED_FREQUENCY_2HZ);
         }
+
+        // release memory
+        delphi::objects::MacMetrics::Release(mac_metrics_old);
     }
 }
 
