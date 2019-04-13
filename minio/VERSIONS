@@ -2,7 +2,7 @@
 third_party_libs 1.1.105
 lkl_libs 1.1.10
 openssl_libs 1.1.0
-platform_libs 0.0.28
+platform_libs 0.0.29
 storage_libs 0.0.1
 asic_libs ed6c542ea21569243fa800a5ee4db95fc403deef
 ncc_tools ed6c542ea21569243fa800a5ee4db95fc403deef
