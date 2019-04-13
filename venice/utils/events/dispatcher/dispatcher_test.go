@@ -779,6 +779,7 @@ func TestEventsDispatcherRestart(t *testing.T) {
 	dispatcher.UnregisterExporter(mockExporter.Name())
 	mockExporter = exporters.NewMockExporter(fmt.Sprintf("mock.%s", t.Name()), exporterChLen, logger)
 	exporterEventCh, offsetTracker, err = dispatcher.RegisterExporter(mockExporter)
+	AssertOk(t, err, "failed to Register Exporter")
 	mockExporter.Start(exporterEventCh, offsetTracker)
 
 	AssertEventually(t, func() (bool, interface{}) {
