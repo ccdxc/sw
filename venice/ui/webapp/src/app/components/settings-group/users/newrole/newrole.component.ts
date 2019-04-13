@@ -47,6 +47,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   static RESOURCE_TENANT = null;
   static ACTIONOPTIONS_ALL = 'AllActions';
   static _ALL_ = '_All_';
+  static NONE_GROUP = '';
 
   newAuthRole: AuthRole;
 
@@ -75,8 +76,11 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
 
   ngOnInit() {
     // VS-209. add "ALL" option for group.
-    this.groupOptions = this.addAllGroupOrKindItem(this.groupOptions );
+    this.groupOptions = this.addAllGroupOrKindItem(this.groupOptions);
+    this.groupOptions = this.addEmptyGroupItem(this.groupOptions);
   }
+
+
 
   setupData() {
     if (this.isEditMode()) {
@@ -96,7 +100,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
 
   isRolenameValid(authRoles: AuthRole[]): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      if (this.isRoleAlreadyExist(control.value, authRoles)) {
+      if (this.isRoleAlreadyExist(control.value, authRoles) || Utility.isEmpty(control.value)) {
         return {
           'role-name': {
             required: true,
@@ -328,8 +332,10 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     }
     permission[NewroleComponent.KINDOPTIONS].length = 0;
     // for VS-209, when group is "ALL", kind option must be "ALL"
-    if ($event.value === 'ALL') {
+    if ($event.value === NewroleComponent._ALL_) {
       permission[NewroleComponent.KINDOPTIONS] = [{ label: 'All', value: NewroleComponent._ALL_ }];
+    } else if ($event.value === NewroleComponent.NONE_GROUP) {
+      permission[NewroleComponent.KINDOPTIONS] = this.buildNoneGroupKindOption();
     } else {
       permission[NewroleComponent.KINDOPTIONS] = this.getKindOptions(permission);
     }
@@ -337,7 +343,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     this.setPermissionInputOnGroupChange($event.value, permission);
   }
 
-  setPermissionInputOnGroupChange(value: string , permission: FormControl) {
+  setPermissionInputOnGroupChange(value: string, permission: FormControl) {
     if (this.isPermissionGroupNotOfTenantScope(value)) {
       // If it is not tenant scope, we set permission['resource-tenant'] to blank and disable data input;
       permission[NewroleComponent.RESOURCE_TENANT] = permission.get('resource-tenant').value;
@@ -345,7 +351,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
       permission.get('resource-tenant').disable();
     } else {
       permission.get('resource-tenant').enable();  // enable data input.
-      if ( !Utility.isEmpty(permission[NewroleComponent.RESOURCE_TENANT])) {
+      if (!Utility.isEmpty(permission[NewroleComponent.RESOURCE_TENANT])) {
         permission['controls']['resource-tenant'].setValue(permission[NewroleComponent.RESOURCE_TENANT]);
       }
     }
@@ -358,7 +364,13 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    */
   isPermissionGroupNotOfTenantScope(groupValue: string, kindValue: string = null): boolean {
     // TODO: wait for code-gen code. This is hard coded.
-    return (groupValue === 'cluster') ;
+    return (groupValue === 'cluster');
+  }
+
+  buildNoneGroupKindOption() {
+    const kinds = Utility.KINDS_WITHOUT_GROUP;
+    const kindsItems = Utility.stringArrayToSelectItem(kinds, false);
+    return kindsItems;
   }
 
   /**
@@ -367,10 +379,15 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    */
   getKindOptions(permission: AbstractControl): SelectItem[] {
     const groupValue = permission.get('resource-group').value;
-    const selectedGroup = Utility.makeFirstLetterUppercase(groupValue);
-    const kinds = Utility.getKindsByCategory(selectedGroup);
-    const kindsItems = Utility.stringArrayToSelectItem(kinds, false);
-    return this.addAllGroupOrKindItem(kindsItems);
+    if (Utility.isEmpty(groupValue)) {  // when kind is ['AuditEvent', 'Fwlog', 'Metric', 'Event'] , there is no group
+      return this.buildNoneGroupKindOption();
+    } else {
+      const selectedGroup = Utility.makeFirstLetterUppercase(groupValue);
+      let kinds = Utility.getKindsByCategory(selectedGroup);
+      kinds = Utility.getLodash().difference(kinds, Utility.KINDS_WITHOUT_GROUP); // CategoryMapping has [AuditEvent, Event] under Monitoring group. We have to clean up for RBAC role.
+      const kindsItems = Utility.stringArrayToSelectItem(kinds, false);
+      return this.addAllGroupOrKindItem(kindsItems);
+    }
   }
 
   /**
@@ -378,9 +395,16 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
    * We don’t want (group:all, kind:all), but we allow (group: Auth, kind:“_All_“).  Thus, add a "_All_"
    * @param selectItems
    */
-  private addAllGroupOrKindItem(selectItems: SelectItem[]): SelectItem[] {
+  addAllGroupOrKindItem(selectItems: SelectItem[]): SelectItem[] {
     let newSelectItems: SelectItem[] = [];
     newSelectItems.push({ label: 'All', value: NewroleComponent._ALL_ });  // note: '_All_' is special in server.Auth
+    newSelectItems = newSelectItems.concat(selectItems);
+    return newSelectItems;
+  }
+
+  addEmptyGroupItem(selectItems: SelectItem[]): SelectItem[] {
+    let newSelectItems: SelectItem[] = [];
+    newSelectItems.push({ label: 'None', value: NewroleComponent.NONE_GROUP });  // note: ['AuditEvent', 'Fwlog', 'Metric', 'Event'] has no group, user can only set kind
     newSelectItems = newSelectItems.concat(selectItems);
     return newSelectItems;
   }
@@ -408,7 +432,7 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
   }
 
 
-  private getAllActionIndex(values: any): number {
+  getAllActionIndex(values: any): number {
     return values.findIndex((value: SelectItem) => value.value === NewroleComponent.ACTIONOPTIONS_ALL);
   }
 }
