@@ -49,3 +49,23 @@ patch -f -p1 < ../perftest-freebsd.patch
 ./configure || exit
 make -j12 || exit
 cd -
+
+# Script for building qperf on FreeBSD
+#
+# Necessary infra steps on host:
+# 1. portsnap fetch
+# 2. portsnap extract
+# 3. cd /usr/ports/ports-mgmt/portmaster
+# 4. make install
+# 5. cd /usr/ports
+# 6. portmaster devel/autotools
+#
+if [ -e /usr/local/bin/aclocal ]; then
+    cd qperf
+    patch -f -p1 < ../qperf-freebsd.patch
+    ./autogen.sh || exit
+    ./configure || exit
+    make || exit
+    make install || exit
+    cd -
+fi

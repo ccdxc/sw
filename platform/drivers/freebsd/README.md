@@ -14,7 +14,7 @@ cd platform/drivers/freebsd/usr/src
 env OS_DIR=/path/to/freebsd_src ./build.sh
 ```
 
-### Preqisite Configuration of the FreeBSD System (for RDMA)
+### Prerequisite Configuration of the FreeBSD System (for RDMA)
 
 Edit in `/etc/src.conf`:
 

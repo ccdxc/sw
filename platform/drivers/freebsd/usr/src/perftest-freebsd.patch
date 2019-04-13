@@ -1,6 +1,6 @@
-diff -ur perftest-orig/src/perftest_communication.h perftest/src/perftest_communication.h
---- perftest-orig/src/perftest_communication.h	2018-11-15 02:26:28.000000000 +0000
-+++ perftest/src/perftest_communication.h	2018-11-16 18:57:50.817237000 +0000
+diff -ur a/src/perftest_communication.h b/src/perftest_communication.h
+--- a/src/perftest_communication.h
++++ b/src/perftest_communication.h
 @@ -43,6 +43,7 @@
  #include <infiniband/verbs.h>
  #include <rdma/rdma_cma.h>
@@ -9,9 +9,9 @@ diff -ur perftest-orig/src/perftest_communication.h perftest/src/perftest_commun
 
  /* Macro for 64 bit variables to switch to/from net */
  #if __BYTE_ORDER == __BIG_ENDIAN || __BYTE_ORDER == __LITTLE_ENDIAN
-diff -ur perftest-orig/src/perftest_resources.c perftest/src/perftest_resources.c
---- perftest-orig/src/perftest_resources.c	2018-11-07 06:57:14.131424000 -0800
-+++ perftest/src/perftest_resources.c	2018-11-07 06:59:55.928922000 -0800
+diff -ur a/src/perftest_resources.c b/src/perftest_resources.c
+--- a/src/perftest_resources.c
++++ b/src/perftest_resources.c
 @@ -2642,7 +2642,7 @@
  				ctx->exp_wr[i*user_param->post_list + j].exp_opcode = exp_opcode_imm_array[user_param->imm_type];
 
@@ -30,3 +30,36 @@ diff -ur perftest-orig/src/perftest_resources.c perftest/src/perftest_resources.
  				else
  					ctx->wr[i*user_param->post_list + j].imm_data = htobe32(user_param->imm_data);
  			}
+@@ -3067,6 +3067,7 @@
+ 		if (sne > 0) {
+ 			for (i = 0; i < sne; i++) {
+ 				if (swc[i].status != IBV_WC_SUCCESS) {
++					swc_id = (int)swc[i].wr_id;
+ 					fprintf(stderr, "Poll send CQ error status=%u qp %d\n",
+ 							swc[i].status,swc_id);
+ 					return_value = FAILURE;
+diff -ur3 a/src/multicast_resources.c b/src/multicast_resources.c
+--- a/src/multicast_resources.c
++++ b/src/multicast_resources.c
+@@ -62,9 +62,9 @@
+ 	ptr[0]                     = 0x01;					/* BaseVersion */
+ 	ptr[1]                     = MANAGMENT_CLASS_SUBN_ADM;			/* MgmtClass */
+ 	ptr[2]                     = 0x02; 					/* ClassVersion */
+-	ptr[3]                     = INSERTF(ptr[3], 0, method, 0, 7); 		/* Method */
+-	(*(uint64_t *)(ptr + 8))   = htonll((uint64_t)DEF_TRANS_ID);             /* TransactionID */
+-	(*(uint16_t *)(ptr + 16))  = htons(SUBN_ADM_ATTR_MC_MEMBER_RECORD);      /* AttributeID */
++	ptr[3]                     = INSERTF(ptr[3], 0, method, 0, 7);		/* Method */
++	(*(uint64_t *)(ptr + 8))   = htobe64((uint64_t)DEF_TRANS_ID);		/* TransactionID */
++	(*(uint16_t *)(ptr + 16))  = htons(SUBN_ADM_ATTR_MC_MEMBER_RECORD);	/* AttributeID */
+ 
+ 	ptr = samad_packet->SubnetAdminData;
+ 
+@@ -84,7 +84,7 @@
+ 		SUBN_ADM_COMPMASK_P_KEY | SUBN_ADM_COMPMASK_TCLASS | SUBN_ADM_COMPMASK_SL |
+ 		SUBN_ADM_COMPMASK_FLOW_LABEL | SUBN_ADM_COMPMASK_JOIN_STATE;
+ 
+-	samad_packet->ComponentMask = htonll(comp_mask);
++	samad_packet->ComponentMask = htobe64(comp_mask);
+ }
+ 
+ /******************************************************************************

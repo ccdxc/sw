@@ -8,6 +8,7 @@ RDMA="$TOP/platform/src/third-party/rdma"
 : ${COMMON_SRC:="$TOP/platform/drivers/common"}
 : ${SONIC_DRIVERS_SRC:="$TOP/storage/offload"}
 : ${PERFTEST_SRC:="$RDMA/perftest"}
+: ${QPERF_SRC:="$RDMA/qperf"}
 
 # Products generated
 : ${GEN_DIR:="$TOP/platform/gen/drivers-freebsd"}
@@ -62,7 +63,7 @@ rsync -r  \
   --exclude=".tmp_versions/" \
   "$COMMON_SRC/" "$COMMON_GEN_DIR/"
 
-# Copy sonic driver 
+# Copy sonic driver
 rsync -r --delete --delete-excluded --copy-links \
   --exclude=".git/" \
   --exclude=".cache.mk" \
@@ -104,6 +105,32 @@ rsync -r --delete --delete-excluded \
   --exclude="m4/" \
   "$PERFTEST_SRC/" "$GEN_DIR/perftest"
 
+# Copy qperf sources to gen dir
+report_version "$QPERF_SRC" > "$GEN_DIR/version.qperf"
+rsync -r --delete --delete-excluded \
+  --exclude=".git/" \
+  --exclude="ChangeLog" \
+  --exclude="Makefile" \
+  --exclude="Makefile.in" \
+  --exclude="NEWS" \
+  --exclude="aclocal.m4" \
+  --exclude="autom4te.cache/" \
+  --exclude="compile" \
+  --exclude="config.log" \
+  --exclude="config.status" \
+  --exclude="configure" \
+  --exclude="depcomp" \
+  --exclude="install-sh" \
+  --exclude="missing" \
+  --exclude="src/.deps/" \
+  --exclude="src/Makefile" \
+  --exclude="src/Makefile.in" \
+  --exclude="src/help.c" \
+  --exclude="*.o" \
+  --exclude="src/qperf" \
+  --exclude="src/qperf.1" \
+  "$QPERF_SRC/" "$GEN_DIR/qperf"
+
 # Set version string
 if [ -n "$SW_VERSION" ] ; then
 	VER=$SW_VERSION
@@ -120,7 +147,6 @@ cd "$GEN_DIR/.."
 tar -cJ --exclude=.git -f "$GEN_PKG" "$(basename "$GEN_DIR")"
 #TODO: Freebsd ETH driver should just have ethernet sources
 mkdir -p "$GEN_ETH_DIR"
-cp -r $GEN_DIR/* "$GEN_ETH_DIR" 
+cp -r $GEN_DIR/* "$GEN_ETH_DIR"
 cd "$GEN_ETH_DIR/.."
 tar -cJ --exclude=.git -f "$GEN_ETH_PKG" "$(basename "$GEN_ETH_DIR")"
-
