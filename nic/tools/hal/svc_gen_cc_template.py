@@ -132,6 +132,7 @@
 //::     pkg = fileModule.DESCRIPTOR.package.lower()
 //::
 using grpc::ServerContext;
+using grpc::ServerWriter;
 using grpc::Status;
 using ${pkg}::${service[0]};
 //::
@@ -159,10 +160,17 @@ using ${pkg}::${service[0]};
 //::             op = 'CFG_OP_WRITE'
 //::         #endif
 //::
+//::         if file_name_prefix in session_file and 'Get' in method[0]:
+Status
+${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
+                                       const ${input_name} *req,
+                                       ServerWriter<${output_name}> *writer)
+//::         else:
 Status
 ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
                                        const ${input_name} *req,
                                        ${output_name} *rsp)
+//::         #endif
 {
     uint32_t    i, nreqs = req->request_size();
 
@@ -170,7 +178,7 @@ ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
 //::             if file_name_prefix in session_file and 'Get' in method[0]:
     if (nreqs == 0) {
         //HAL_TRACE_DEBUG("Rcvd Session Get All Request");
-        hal::session_get_all(rsp);
+        hal::session_get_all_stream(writer);
         return Status::OK;
     }
 //::             elif file_name_prefix in session_file and 'Delete' in method[0]:
@@ -202,7 +210,11 @@ ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
 //::                #endif
 //::             else:
 //::
+//::                if file_name_prefix in session_file and 'Get' in method[0]:
+        hal::session_get_stream(request, writer);
+//::                else:
         hal::${hal_name}(request, rsp);
+//::                #endif
 //::             #endif
 //::
     }

@@ -15,7 +15,7 @@ option go_package="halproto";
 service Session {
   rpc SessionCreate (SessionRequestMsg) returns (SessionResponseMsg) {}
   rpc SessionDelete (SessionDeleteRequestMsg) returns (SessionDeleteResponseMsg) {}
-  rpc SessionGet (SessionGetRequestMsg) returns (SessionGetResponseMsg) {}
+  rpc SessionGet (SessionGetRequestMsg) returns (stream SessionGetResponseMsg) {}
 }
 
 // Key for L2 flows (i.e, non-IP flows)

@@ -1119,46 +1119,6 @@ public:
         return -1;
     }
 
-    int session_get (uint64_t session_handle,
-                     SessionGetResponseMsg *rsp_msg) {
-        SessionGetRequestMsg req_msg;
-        // SessionGetRequest    *req;
-        ClientContext        context;
-        Status               status;
-
-        // empty request
-        req_msg.add_request();
-
-        status = session_stub_->SessionGet(&context, req_msg, rsp_msg);
-        if (status.ok()) {
-            assert(rsp_msg->response(0).api_status() == types::API_STATUS_OK);
-            std::cout << "Session get succeeded, handle = "
-                      << session_handle
-                      << std::endl;
-
-            return 0;
-        }
-        std::cout << "Session get failed, error = "
-                  << rsp_msg->response(0).api_status()
-                  << std::endl;
-        return -1;
-    }
-
-    int session_get_and_delete (uint64_t session_handle) {
-        int ret = 0;
-        SessionGetResponseMsg rsp_msg;
-
-        ret = session_get (session_handle, &rsp_msg);
-
-        if (ret == 0) {
-            for (int i = 0; i < rsp_msg.response_size(); ++i) {
-                session_delete(rsp_msg.response(i).status().session_handle());
-            }
-        }
-
-        return ret;
-    }
-
     int flow_key_populate(uint64_t vrf_id, uint32_t sip, uint32_t dip,
                          ::types::IPProtocol proto, uint16_t sport, uint16_t dport,
                          session::FlowKey *flow_key) {

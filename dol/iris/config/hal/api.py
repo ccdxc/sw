@@ -104,14 +104,22 @@ def __hal_api_handler(objs, reqmsg_class, api, reqcb, respcb):
         count += 1
         if count >= HAL_MAX_BATCH_SIZE:
             resp_msg = __invoke_api(api, req_msg)
-            __process_response(resp_msg, req_msg, req_objs, respcb)
+            if req_msg and req_msg.DESCRIPTOR.name == "SessionGetRequestMsg":
+                for resp in resp_msg:
+                    __process_response(resp, req_msg, req_objs, respcb)
+            else:
+                __process_response(resp_msg, req_msg, req_objs, respcb)
             req_msg = reqmsg_class()
             req_objs = []
             count = 0
 
     if count != 0:
         resp_msg = __invoke_api(api, req_msg)
-        __process_response(resp_msg, req_msg, req_objs, respcb)
+        if req_msg and req_msg.DESCRIPTOR.name == "SessionGetRequestMsg":
+            for resp in resp_msg:
+                __process_response(resp, req_msg, req_objs, respcb)
+        else:
+            __process_response(resp_msg, req_msg, req_objs, respcb)
     return
 
 def __config(objs, reqmsg_class, config_method):

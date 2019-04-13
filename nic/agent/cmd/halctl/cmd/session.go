@@ -7,6 +7,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"reflect"
 	"strconv"
@@ -211,23 +212,33 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	// Print Header
+	sessionShowHeader(cmd, args)
+
 	// HAL call
-	respMsg, err := client.SessionGet(context.Background(), sessionGetReqMsg)
+	stream, err := client.SessionGet(context.Background(), sessionGetReqMsg)
 	if err != nil {
 		fmt.Printf("Getting Session failed. %v\n", err)
 		return
 	}
 
-	// Print Header
-	sessionShowHeader(cmd, args)
-
-	// Print Sessions
-	for _, resp := range respMsg.Response {
-		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
-			continue
+	for {
+		respMsg, err := stream.Recv()
+		if err == io.EOF {
+			break
 		}
-		sessionShowOneResp(resp)
+		if err != nil {
+			fmt.Printf("Getting session stream failure. %v\n", err)
+		}
+
+		// Print Sessions
+		for _, resp := range respMsg.Response {
+			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+				continue
+			}
+			sessionShowOneResp(resp)
+		}
 	}
 }
 
@@ -347,28 +358,37 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 	}
 
 	// HAL call
-	respMsg, err := client.SessionGet(context.Background(), sessionGetReqMsg)
+	stream, err := client.SessionGet(context.Background(), sessionGetReqMsg)
 	if err != nil {
 		fmt.Printf("Getting Session failed. %v\n", err)
 		return
 	}
-
-	// Print Sessions
-	for _, resp := range respMsg.Response {
-		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
-			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
-			continue
+	for {
+		respMsg, err := stream.Recv()
+		if err == io.EOF {
+			break
 		}
-		respType := reflect.ValueOf(resp)
-		b, _ := yaml.Marshal(respType.Interface())
-		if ofile != nil {
-			if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
-				fmt.Printf("Failed to write to file %s, err : %v\n",
-					ofile.Name(), err)
+		if err != nil {
+			fmt.Printf("Getting session stream failure. %v\n", err)
+		}
+
+		// Print Sessions
+		for _, resp := range respMsg.Response {
+			if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+				continue
 			}
-		} else {
-			fmt.Println(string(b) + "\n")
-			fmt.Println("---")
+			respType := reflect.ValueOf(resp)
+			b, _ := yaml.Marshal(respType.Interface())
+			if ofile != nil {
+				if _, err := ofile.WriteString(string(b) + "\n"); err != nil {
+					fmt.Printf("Failed to write to file %s, err : %v\n",
+						ofile.Name(), err)
+				}
+			} else {
+				fmt.Println(string(b) + "\n")
+				fmt.Println("---")
+			}
 		}
 	}
 }

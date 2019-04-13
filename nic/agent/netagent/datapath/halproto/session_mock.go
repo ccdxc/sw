@@ -10,6 +10,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
+	metadata "google.golang.org/grpc/metadata"
 )
 
 // MockisFlowKeyV4_L4Fields is a mock of isFlowKeyV4_L4Fields interface
@@ -420,13 +421,13 @@ func (mr *MockSessionClientMockRecorder) SessionDelete(ctx, in interface{}, opts
 }
 
 // SessionGet mocks base method
-func (m *MockSessionClient) SessionGet(ctx context.Context, in *SessionGetRequestMsg, opts ...grpc.CallOption) (*SessionGetResponseMsg, error) {
+func (m *MockSessionClient) SessionGet(ctx context.Context, in *SessionGetRequestMsg, opts ...grpc.CallOption) (Session_SessionGetClient, error) {
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "SessionGet", varargs...)
-	ret0, _ := ret[0].(*SessionGetResponseMsg)
+	ret0, _ := ret[0].(Session_SessionGetClient)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -435,6 +436,115 @@ func (m *MockSessionClient) SessionGet(ctx context.Context, in *SessionGetReques
 func (mr *MockSessionClientMockRecorder) SessionGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
 	varargs := append([]interface{}{ctx, in}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SessionGet", reflect.TypeOf((*MockSessionClient)(nil).SessionGet), varargs...)
+}
+
+// MockSession_SessionGetClient is a mock of Session_SessionGetClient interface
+type MockSession_SessionGetClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockSession_SessionGetClientMockRecorder
+}
+
+// MockSession_SessionGetClientMockRecorder is the mock recorder for MockSession_SessionGetClient
+type MockSession_SessionGetClientMockRecorder struct {
+	mock *MockSession_SessionGetClient
+}
+
+// NewMockSession_SessionGetClient creates a new mock instance
+func NewMockSession_SessionGetClient(ctrl *gomock.Controller) *MockSession_SessionGetClient {
+	mock := &MockSession_SessionGetClient{ctrl: ctrl}
+	mock.recorder = &MockSession_SessionGetClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockSession_SessionGetClient) EXPECT() *MockSession_SessionGetClientMockRecorder {
+	return m.recorder
+}
+
+// Recv mocks base method
+func (m *MockSession_SessionGetClient) Recv() (*SessionGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "Recv")
+	ret0, _ := ret[0].(*SessionGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Recv indicates an expected call of Recv
+func (mr *MockSession_SessionGetClientMockRecorder) Recv() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Recv", reflect.TypeOf((*MockSession_SessionGetClient)(nil).Recv))
+}
+
+// Header mocks base method
+func (m *MockSession_SessionGetClient) Header() (metadata.MD, error) {
+	ret := m.ctrl.Call(m, "Header")
+	ret0, _ := ret[0].(metadata.MD)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Header indicates an expected call of Header
+func (mr *MockSession_SessionGetClientMockRecorder) Header() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Header", reflect.TypeOf((*MockSession_SessionGetClient)(nil).Header))
+}
+
+// Trailer mocks base method
+func (m *MockSession_SessionGetClient) Trailer() metadata.MD {
+	ret := m.ctrl.Call(m, "Trailer")
+	ret0, _ := ret[0].(metadata.MD)
+	return ret0
+}
+
+// Trailer indicates an expected call of Trailer
+func (mr *MockSession_SessionGetClientMockRecorder) Trailer() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Trailer", reflect.TypeOf((*MockSession_SessionGetClient)(nil).Trailer))
+}
+
+// CloseSend mocks base method
+func (m *MockSession_SessionGetClient) CloseSend() error {
+	ret := m.ctrl.Call(m, "CloseSend")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CloseSend indicates an expected call of CloseSend
+func (mr *MockSession_SessionGetClientMockRecorder) CloseSend() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloseSend", reflect.TypeOf((*MockSession_SessionGetClient)(nil).CloseSend))
+}
+
+// Context mocks base method
+func (m *MockSession_SessionGetClient) Context() context.Context {
+	ret := m.ctrl.Call(m, "Context")
+	ret0, _ := ret[0].(context.Context)
+	return ret0
+}
+
+// Context indicates an expected call of Context
+func (mr *MockSession_SessionGetClientMockRecorder) Context() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Context", reflect.TypeOf((*MockSession_SessionGetClient)(nil).Context))
+}
+
+// SendMsg mocks base method
+func (m_2 *MockSession_SessionGetClient) SendMsg(m interface{}) error {
+	ret := m_2.ctrl.Call(m_2, "SendMsg", m)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendMsg indicates an expected call of SendMsg
+func (mr *MockSession_SessionGetClientMockRecorder) SendMsg(m interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMsg", reflect.TypeOf((*MockSession_SessionGetClient)(nil).SendMsg), m)
+}
+
+// RecvMsg mocks base method
+func (m_2 *MockSession_SessionGetClient) RecvMsg(m interface{}) error {
+	ret := m_2.ctrl.Call(m_2, "RecvMsg", m)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RecvMsg indicates an expected call of RecvMsg
+func (mr *MockSession_SessionGetClientMockRecorder) RecvMsg(m interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecvMsg", reflect.TypeOf((*MockSession_SessionGetClient)(nil).RecvMsg), m)
 }
 
 // MockSessionServer is a mock of SessionServer interface
@@ -487,14 +597,118 @@ func (mr *MockSessionServerMockRecorder) SessionDelete(arg0, arg1 interface{}) *
 }
 
 // SessionGet mocks base method
-func (m *MockSessionServer) SessionGet(arg0 context.Context, arg1 *SessionGetRequestMsg) (*SessionGetResponseMsg, error) {
+func (m *MockSessionServer) SessionGet(arg0 *SessionGetRequestMsg, arg1 Session_SessionGetServer) error {
 	ret := m.ctrl.Call(m, "SessionGet", arg0, arg1)
-	ret0, _ := ret[0].(*SessionGetResponseMsg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SessionGet indicates an expected call of SessionGet
 func (mr *MockSessionServerMockRecorder) SessionGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SessionGet", reflect.TypeOf((*MockSessionServer)(nil).SessionGet), arg0, arg1)
+}
+
+// MockSession_SessionGetServer is a mock of Session_SessionGetServer interface
+type MockSession_SessionGetServer struct {
+	ctrl     *gomock.Controller
+	recorder *MockSession_SessionGetServerMockRecorder
+}
+
+// MockSession_SessionGetServerMockRecorder is the mock recorder for MockSession_SessionGetServer
+type MockSession_SessionGetServerMockRecorder struct {
+	mock *MockSession_SessionGetServer
+}
+
+// NewMockSession_SessionGetServer creates a new mock instance
+func NewMockSession_SessionGetServer(ctrl *gomock.Controller) *MockSession_SessionGetServer {
+	mock := &MockSession_SessionGetServer{ctrl: ctrl}
+	mock.recorder = &MockSession_SessionGetServerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockSession_SessionGetServer) EXPECT() *MockSession_SessionGetServerMockRecorder {
+	return m.recorder
+}
+
+// Send mocks base method
+func (m *MockSession_SessionGetServer) Send(arg0 *SessionGetResponseMsg) error {
+	ret := m.ctrl.Call(m, "Send", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Send indicates an expected call of Send
+func (mr *MockSession_SessionGetServerMockRecorder) Send(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockSession_SessionGetServer)(nil).Send), arg0)
+}
+
+// SetHeader mocks base method
+func (m *MockSession_SessionGetServer) SetHeader(arg0 metadata.MD) error {
+	ret := m.ctrl.Call(m, "SetHeader", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetHeader indicates an expected call of SetHeader
+func (mr *MockSession_SessionGetServerMockRecorder) SetHeader(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetHeader", reflect.TypeOf((*MockSession_SessionGetServer)(nil).SetHeader), arg0)
+}
+
+// SendHeader mocks base method
+func (m *MockSession_SessionGetServer) SendHeader(arg0 metadata.MD) error {
+	ret := m.ctrl.Call(m, "SendHeader", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendHeader indicates an expected call of SendHeader
+func (mr *MockSession_SessionGetServerMockRecorder) SendHeader(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendHeader", reflect.TypeOf((*MockSession_SessionGetServer)(nil).SendHeader), arg0)
+}
+
+// SetTrailer mocks base method
+func (m *MockSession_SessionGetServer) SetTrailer(arg0 metadata.MD) {
+	m.ctrl.Call(m, "SetTrailer", arg0)
+}
+
+// SetTrailer indicates an expected call of SetTrailer
+func (mr *MockSession_SessionGetServerMockRecorder) SetTrailer(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTrailer", reflect.TypeOf((*MockSession_SessionGetServer)(nil).SetTrailer), arg0)
+}
+
+// Context mocks base method
+func (m *MockSession_SessionGetServer) Context() context.Context {
+	ret := m.ctrl.Call(m, "Context")
+	ret0, _ := ret[0].(context.Context)
+	return ret0
+}
+
+// Context indicates an expected call of Context
+func (mr *MockSession_SessionGetServerMockRecorder) Context() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Context", reflect.TypeOf((*MockSession_SessionGetServer)(nil).Context))
+}
+
+// SendMsg mocks base method
+func (m_2 *MockSession_SessionGetServer) SendMsg(m interface{}) error {
+	ret := m_2.ctrl.Call(m_2, "SendMsg", m)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendMsg indicates an expected call of SendMsg
+func (mr *MockSession_SessionGetServerMockRecorder) SendMsg(m interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendMsg", reflect.TypeOf((*MockSession_SessionGetServer)(nil).SendMsg), m)
+}
+
+// RecvMsg mocks base method
+func (m_2 *MockSession_SessionGetServer) RecvMsg(m interface{}) error {
+	ret := m_2.ctrl.Call(m_2, "RecvMsg", m)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RecvMsg indicates an expected call of RecvMsg
+func (mr *MockSession_SessionGetServerMockRecorder) RecvMsg(m interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecvMsg", reflect.TypeOf((*MockSession_SessionGetServer)(nil).RecvMsg), m)
 }

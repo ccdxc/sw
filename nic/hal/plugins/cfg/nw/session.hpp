@@ -17,6 +17,7 @@
 #include "nic/include/pd.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
 #include "gen/proto/system.pb.h"
+#include "gen/proto/session.grpc.pb.h"
 #include "nic/p4/common/defines.h"
 
 #define HAL_MAX_INACTIVTY_TIMEOUT    0xFFFFFFFF
@@ -413,6 +414,19 @@ typedef struct session_stats_ {
     uint64_t    num_session_create_err;    // no. of session create errors
 } __PACK__ session_stats_t;
 
+typedef struct session_get_ {
+    grpc::ServerWriter<session::SessionGetResponseMsg> *writer;
+    session::SessionGetResponseMsg msg;
+    uint32_t count;
+} session_get_t;
+
+typedef struct session_get_stream_filter_ {
+    SessionFilter                                      *filter;
+    SessionGetResponseMsg                               msg;
+    grpc::ServerWriter<session::SessionGetResponseMsg> *writer;
+    uint32_t                                            count;
+} session_get_stream_filter_t;
+
 // max. number of session supported  (TODO: we can take this from cfg file)
 #define HAL_MAX_SESSIONS                             524288
 #define HAL_MAX_FLOWS                                (HAL_MAX_SESSIONS << 1)
@@ -452,11 +466,14 @@ hal_ret_t session_delete (const session_args_t *args, session_t *session);
 hal::session_t *session_lookup (flow_key_t key, flow_role_t *role);
 hal_ret_t session_get (session::SessionGetRequest& spec,
                       session::SessionGetResponseMsg *rsp);
+hal_ret_t session_get_stream (session::SessionGetRequest& spec,
+                              grpc::ServerWriter<session::SessionGetResponseMsg> *writer);
 hal_ret_t schedule_tcp_close_timer (session_t *session);
 hal_ret_t schedule_tcp_half_closed_timer (session_t *session);
 hal_ret_t schedule_tcp_cxnsetup_timer (session_t *session);
 void session_set_tcp_state (session_t *session, hal::flow_role_t role,
                            FlowTCPState tcp_state);
+hal_ret_t session_get_all_stream(grpc::ServerWriter<session::SessionGetResponseMsg> *writer);
 hal_ret_t session_get_all (session::SessionGetResponseMsg *rsp);
 hal_ret_t session_delete_list (dllist_ctxt_t *session_list, bool async=false);
 hal_ret_t session_delete_all (session::SessionDeleteResponseMsg *rsp);

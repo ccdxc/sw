@@ -78,6 +78,7 @@ session_stats_t  *g_session_stats;
 #define HAL_MAX_ERRORS                              255
 #define HAL_SESSION_STATS_SHIFT                     7
 #define HAL_SESSION_STATS_PTR(fte)                 (g_session_stats + (fte << HAL_SESSION_STATS_SHIFT))
+#define SESSION_GET_STREAM_COUNT                   (250)
 
 void *
 session_get_handle_key_func (void *entry)
@@ -883,7 +884,7 @@ session_is_alg_enabled(hal::session_t *session, nwsec::ALGName alg)
 }
 
 static inline bool
-session_matches_filter (hal::session_t *session, SessionFilter *filter)
+flow_matches_filter (hal::flow_t *flow, SessionFilter *filter)
 {
     ip_addr_t ip_addr, check_addr;
     hal_ret_t ret;
@@ -891,29 +892,22 @@ session_matches_filter (hal::session_t *session, SessionFilter *filter)
     check_addr.af = IP_AF_IPV4;
 
     if (filter->vrf_id()) {
-        if ((session->iflow->config.key.svrf_id != filter->vrf_id()) &&
-            (session->iflow->config.key.dvrf_id != filter->vrf_id())) {
+        if ((flow->config.key.svrf_id != filter->vrf_id()) &&
+            (flow->config.key.dvrf_id != filter->vrf_id())) {
             return false;
         }
     }
 
     if (filter->l2_segment_id()) {
-        if (session->iflow->config.key.flow_type != FLOW_TYPE_L2) {
+        if (flow->config.key.flow_type != FLOW_TYPE_L2) {
             return false;
         }
-        if (session->iflow->config.key.l2seg_id != filter->l2_segment_id()) {
-            if (!session->rflow ||
-                session->rflow->config.key.l2seg_id != filter->l2_segment_id()) {
-                return false;
-            }
+        if (flow->config.key.l2seg_id != filter->l2_segment_id()) {
+            return false;
         }
     }
 
-    if (session->iflow->config.key.flow_type != FLOW_TYPE_V4) {
-        return false;
-    }
-
-    if (session->rflow && session->rflow->config.key.flow_type != FLOW_TYPE_V4) {
+    if (flow->config.key.flow_type != FLOW_TYPE_V4) {
         return false;
     }
 
@@ -923,70 +917,64 @@ session_matches_filter (hal::session_t *session, SessionFilter *filter)
             return false;
         }
 
-        memcpy(&check_addr.addr, &session->iflow->config.key.sip, sizeof(check_addr.addr));
+        memcpy(&check_addr.addr, &flow->config.key.sip, sizeof(check_addr.addr));
         if (!ip_addr_check_equal(&check_addr, &ip_addr)) {
-            if (!session->rflow) {
-                return false;
-            } else {
-                memcpy(&check_addr.addr, &session->rflow->config.key.sip, sizeof(check_addr.addr));
-                if (!ip_addr_check_equal(&check_addr, &ip_addr)) {
-                    return false;
-                }
-            }
+            return false;
         }
     }
 
     if (filter->has_dst_ip()) {
-	HAL_TRACE_DEBUG("Checking for dest ip");
+	    HAL_TRACE_DEBUG("Checking for dest ip");
         ret = ip_addr_spec_to_ip_addr(&ip_addr, filter->dst_ip());
         if (ret != HAL_RET_OK) {
             return false;
         }
 
-        memcpy(&check_addr.addr, &session->iflow->config.key.dip, sizeof(check_addr.addr));
+        memcpy(&check_addr.addr, &flow->config.key.dip, sizeof(check_addr.addr));
         if (!ip_addr_check_equal(&check_addr, &ip_addr)) {
-            if (!session->rflow) {
-                return false;
-            } else {
-                memcpy(&check_addr.addr, &session->rflow->config.key.dip, sizeof(check_addr.addr));
-                if (!ip_addr_check_equal(&check_addr, &ip_addr)) {
-                    return false;
-                }
-            }
-        }
-    }
-
-    if (filter->src_port()) {
-        if (session->iflow->config.key.sport != filter->src_port()) {
-            if (!session->rflow ||
-                session->rflow->config.key.sport != filter->src_port()) {
-                return false;
-            }
-        }
-    }
-
-    if (filter->dst_port()) {
-        if (session->iflow->config.key.dport != filter->dst_port()) {
-            if (!session->rflow ||
-                session->rflow->config.key.dport != filter->dst_port()) {
-                return false;
-            }
-        }
-    }
-
-    if (filter->ip_proto()) {
-        if (session->iflow->config.key.proto != filter->ip_proto()) {
             return false;
         }
     }
 
+    if (filter->src_port()) {
+        if (flow->config.key.sport != filter->src_port()) {
+            return false;
+        }
+    }
+
+    if (filter->dst_port()) {
+        if (flow->config.key.dport != filter->dst_port()) {
+            return false;
+        }
+    }
+
+    if (filter->ip_proto()) {
+        if (flow->config.key.proto != filter->ip_proto()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static inline bool
+session_matches_filter (hal::session_t *session, SessionFilter *filter)
+{
     if (filter->alg()) {
         if (!session_is_alg_enabled(session, filter->alg())) {
             return false;
         }
     }
 
-    return true;
+    if (flow_matches_filter(session->iflow, filter)) {
+        return true;
+    }
+
+    if (session->rflow && flow_matches_filter(session->rflow, filter)) {
+        return true;
+    }
+
+    return false;
 }
 
 hal_ret_t
@@ -1092,6 +1080,105 @@ session_delete (SessionDeleteRequest& req, SessionDeleteResponseMsg *response)
     } else {
         return session_delete_all(response);
     }
+}
+
+hal_ret_t
+session_get_stream (SessionGetRequest& req, grpc::ServerWriter<session::SessionGetResponseMsg> *writer)
+{
+    session_t *session;
+
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC) {
+        SessionGetResponseMsg msg;
+        msg.Clear();
+        SessionGetResponse *rsp = msg.add_response();
+        rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+        writer->Write(msg);
+        msg.Clear();
+        return HAL_RET_SESSION_NOT_FOUND;
+    }
+
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t *session = (session_t *)entry;
+        session_get_stream_filter_t *sget = (session_get_stream_filter_t *)ctxt;
+        SessionFilter *filter = (SessionFilter *)(sget->filter);
+
+        if (session_matches_filter(session, filter)) {
+            system_get_fill_rsp(session, sget->msg.add_response());
+            sget->count++;
+            if (sget->count == SESSION_GET_STREAM_COUNT) {
+                sget->writer->Write(sget->msg);
+                sget->msg.Clear();
+                sget->count = 0;
+            }
+        }
+        return false;
+    }; 
+
+    if (req.has_session_filter()) {
+        session_get_stream_filter_t ctxt = {0};
+        ctxt.writer = writer;
+        ctxt.msg.Clear();
+        ctxt.filter = req.mutable_session_filter();
+
+        g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &ctxt);
+        if (ctxt.count) {
+            ctxt.writer->Write(ctxt.msg);
+            ctxt.msg.Clear();
+            ctxt.count = 0;
+        }
+
+        return HAL_RET_OK;
+    } else if (req.session_handle()) {
+        SessionGetResponseMsg msg;
+        msg.Clear();
+        SessionGetResponse *rsp = msg.add_response();
+        session = find_session_by_handle(req.session_handle());
+        if (session == NULL) {
+            rsp->set_api_status(types::API_STATUS_NOT_FOUND);
+            writer->Write(msg);
+            msg.Clear();
+            return HAL_RET_SESSION_NOT_FOUND;
+        }
+        system_get_fill_rsp(session, rsp);
+        writer->Write(msg);
+        msg.Clear();
+
+        return HAL_RET_OK;
+    } else {
+        return session_get_all_stream(writer);
+    }
+}
+
+hal_ret_t
+session_get_all_stream(grpc::ServerWriter<session::SessionGetResponseMsg> *writer)
+{
+    session_get_t sget;
+
+    sget.writer = writer;
+    sget.msg.Clear();
+    sget.count = 0;
+
+    auto walk_func = [](void *entry, void *ctxt) {
+        hal::session_t  *session = (session_t *)entry;
+        session_get_t *sget = (session_get_t *)ctxt;
+        system_get_fill_rsp(session, sget->msg.add_response());
+        sget->count++;
+        if (sget->count == SESSION_GET_STREAM_COUNT) {
+            sget->writer->Write(sget->msg);
+            sget->msg.Clear();
+            sget->count = 0;
+        }
+        return false;
+    };
+
+    sdk_ret_t ret = g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &sget);
+    if (sget.count) {
+        sget.writer->Write(sget.msg);
+        sget.msg.Clear();
+        sget.count = 0;
+    }
+    
+    return hal_sdk_ret_to_hal_ret(ret);
 }
 
 hal_ret_t

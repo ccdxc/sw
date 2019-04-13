@@ -34,12 +34,21 @@ using ${pkg}::${service[0]};
 class ${service[0]}ServiceImpl final : public ${service[0]}::Service {
 public:
 //::     for method in service[1].methods_by_name.items():
-//::         input_name = pkg+'::'+method[1].input_type.name
-//::         output_name = pkg+'::'+method[1].output_type.name
+//::         if 'session' in includeFileName and 'SessionGet' in method[1].name:
+//::             input_name = pkg+'::'+method[1].input_type.name
+//::             output_name = 'grpc::ServerWriter<'+pkg+'::'+method[1].output_type.name+'>'
+    Status ${method[0]}(ServerContext *context,
+                        const ${input_name} *req,
+                        ${output_name} *writer) override;
+
+//::         else:
+//::             input_name = pkg+'::'+method[1].input_type.name
+//::             output_name = pkg+'::'+method[1].output_type.name
     Status ${method[0]}(ServerContext *context,
                         const ${input_name} *req,
                         ${output_name} *rsp) override;
 
+//::         #endif
 //::     #endfor
 };
 
