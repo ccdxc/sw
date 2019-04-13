@@ -55,7 +55,9 @@ filebeat.prospectors:
   symlinks: true
   json.keys_under_root: true
   json.add_error_key: true
-  json.message_key: log
+  json.message_key: msg
+  processors:
+   - drop_event.when.regexp.level: '^info$' # drop info logs
 #================================ General =====================================
 fields:
     category: "venice"
@@ -69,13 +71,9 @@ output.elasticsearch:
   # Array of hosts to connect to.
   hosts: [{{.ElasticEndpoints}}]
   loadbalance: true
-  template.name: filebeat
-  template.path: filebeat.template.json
 
   # Optional protocol and basic auth credentials.
   protocol: "https"
-  #username: "elastic"
-  #password: "changeme"
   ssl.enabled: true
   ssl.certificate_authorities: 
     - {{.TLSCABundlePath}}
@@ -196,12 +194,6 @@ const loggingFields = `
       required: false
       description: >
         Log stream when reading container logs, can be 'stdout' or 'stderr'
-
-    - name: prospector.type
-      required: true
-      description: >
-        The input type from which the event was generated. This field is set to the value specified
-        for the "type" option in the input section of the Filebeat config file. (DEPRECATED: see "input.type")
 
     - name: input.type
       required: true

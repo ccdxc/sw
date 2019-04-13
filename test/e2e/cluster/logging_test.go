@@ -40,17 +40,14 @@ var _ = Describe("Logging tests", func() {
 		})
 
 		It("Logs should be exported to elastic from services running on all venice nodes", func() {
-
 			for service, info := range ts.tu.VeniceModules {
 				Eventually(func() error {
-					str := fmt.Sprintf("%s is running", service)
 					if info.DaemonSet == true {
-						// validate log from each node - for Daemon set
+						// validate log from all the nodes
 						for n := 1; n <= len(ts.tu.QuorumNodes); n++ {
-
 							// verify for each venice node
 							nodeName := fmt.Sprintf("node%d", n)
-							query := es.NewBoolQuery().Must(es.NewMatchPhraseQuery("msg", str)).Must(es.NewTermQuery("beat.hostname", nodeName))
+							query := es.NewBoolQuery().Must(es.NewMatchPhraseQuery("module", service)).Must(es.NewTermQuery("beat.hostname", nodeName))
 							result, err := esClient.Search(context.Background(),
 								indexName,
 								indexType,
@@ -64,16 +61,16 @@ var _ = Describe("Logging tests", func() {
 								return err
 							}
 							if result.TotalHits() == 0 {
-								err = fmt.Errorf("No logs found for service %s on node %s", service, nodeName)
+								err = fmt.Errorf("no logs found for service %s on node %s", service, nodeName)
 								return err
 							}
 							By(fmt.Sprintf("ts:%s Logs verified for Service: %s on Node: %s", time.Now().String(), service, nodeName))
+							return nil
 						}
 					} else {
-
 						// Singleton service, use wildcard node suffix
 						nodePattern := fmt.Sprintf("node.*")
-						query := es.NewBoolQuery().Must(es.NewMatchPhraseQuery("msg", str)).Must(es.NewRegexpQuery("beat.hostname", nodePattern))
+						query := es.NewBoolQuery().Must(es.NewMatchPhraseQuery("module", service)).Must(es.NewRegexpQuery("beat.hostname", nodePattern))
 						result, err := esClient.Search(context.Background(),
 							indexName,
 							indexType,
@@ -87,7 +84,7 @@ var _ = Describe("Logging tests", func() {
 							return err
 						}
 						if result.TotalHits() == 0 {
-							err = fmt.Errorf("No logs found for singleton service %s", service)
+							err = fmt.Errorf("no logs found for singleton service %s", service)
 							return err
 						}
 						By(fmt.Sprintf("ts:%s Logs verified for Service: %s", time.Now().String(), service))
