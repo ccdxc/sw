@@ -8,7 +8,7 @@ JOBD_PREREQS:= jobd/runner/core_count_check | jobd/package
 # jobd uses pre-build package
 .PHONY: jobd/package
 jobd/package:
-	@if [ "x${JOB_ID}" = "x" ]; then \
+	@if [ "x${JOB_ID}" = "x" ] || [ "x${IGNORE_BUILD_PIPELINE}" != "x" ]; then \
 		make package; \
 	else \
 	  tar -zxf /sw/build_$(PIPELINE)_x86.tar.gz -C /; \
