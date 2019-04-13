@@ -31,7 +31,7 @@ func testQueryingMetrics(kind string) {
 			Tenant:    globals.DefaultTenant,
 			Namespace: globals.DefaultNamespace,
 			Queries: []*telemetry_query.MetricsQuerySpec{
-				&telemetry_query.MetricsQuerySpec{
+				{
 					TypeMeta: api.TypeMeta{
 						Kind: kind,
 					},
@@ -335,7 +335,7 @@ var _ = Describe("telemetry tests", func() {
 					return false
 				}
 				for i, s := range snic {
-					smartnics[s.Name] = i
+					smartnics[s.Spec.Hostname] = i
 				}
 				return true
 			}, 120, 2).Should(BeTrue())

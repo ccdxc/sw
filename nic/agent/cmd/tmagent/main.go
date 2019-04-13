@@ -80,6 +80,8 @@ func (s *service) OnNaplesStatusDelete(obj *delphiProto.NaplesStatus) {
 func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 	log.Infof("Tmagent reactor called with %v", obj)
 	s.tmagent.mode = obj.NaplesMode.String()
+	s.tmagent.nodeUUID = obj.GetHostname()
+	log.Infof("tmagent uuid: %s", s.tmagent.nodeUUID)
 	if obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB {
 		var controllers []string
 		var err error
@@ -97,9 +99,6 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 		log.Infof("Populating Venice Co-ordinates with %v", controllers)
 
 		s.tmagent.resolverClient = resolver.New(&resolver.Config{Name: globals.Tmagent, Servers: controllers})
-
-		s.tmagent.nodeUUID = obj.SmartNicName
-		log.Infof("tmagent uuid: %s", s.tmagent.nodeUUID)
 
 		// Init the TSDB
 		if err := s.tmagent.tpState.TsdbInit(s.tmagent.nodeUUID, s.tmagent.resolverClient); err != nil {
