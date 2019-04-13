@@ -53,6 +53,8 @@ aq:
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, sqcb_base_addr_hi, d.u.tx_stage0_lif_rdma_params_d.sqcb_base_addr_hi)
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, rqcb_base_addr_hi, d.u.tx_stage0_lif_rdma_params_d.rqcb_base_addr_hi)
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, log_num_cq_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_cq_entries)
+    CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, log_num_kt_entries, d.u.tx_stage0_lif_rdma_params_d.log_num_kt_entries)
+    CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, log_num_dcqcn_profiles, d.u.tx_stage0_lif_rdma_params_d.log_num_dcqcn_profiles)
     CAPRI_SET_FIELD(r2, AQ_TX_TO_S1_T, ah_base_addr_page_id, d.u.tx_stage0_lif_rdma_params_d.ah_base_addr_page_id)    
     CAPRI_SET_FIELD_RANGE(r2, AQ_TX_TO_S1_T, barmap_base, barmap_size, d.{u.tx_stage0_lif_rdma_params_d.barmap_base_addr...u.tx_stage0_lif_rdma_params_d.barmap_size})
     

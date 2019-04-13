@@ -614,6 +614,8 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     rsp->dev.rdma_pte_stride = 3;
     rsp->dev.rdma_rrq_stride = 6;
     rsp->dev.rdma_rsq_stride = 5;
+    // TODO: num dcqcn profiles param from json
+    rsp->dev.rdma_dcqcn_profiles = 1;
 
     rsp->dev.tx_qtype.qtype = 0;
     rsp->dev.tx_qtype.qid_count = spec->txq_count;

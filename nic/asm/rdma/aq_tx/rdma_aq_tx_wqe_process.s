@@ -15,13 +15,16 @@ struct aq_tx_s1_t0_k k;
 #define PHV_GLOBAL_COMMON_P phv_global_common
     
 #define K_CQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, cqcb_base_addr_hi)
-#define K_SQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, sqcb_base_addr_hi) 
+#define K_SQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, sqcb_base_addr_hi)
 #define K_RQCB_BASE_ADDR_HI CAPRI_KEY_FIELD(IN_TO_S_P, rqcb_base_addr_hi)
-#define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)    
-#define K_BARMAP_BASE CAPRI_KEY_RANGE(IN_TO_S_P, barmap_base_sbit0_ebit5, barmap_base_sbit6_ebit9)
-#define K_BARMAP_SIZE CAPRI_KEY_RANGE(IN_TO_S_P, barmap_size_sbit0_ebit3, barmap_size_sbit4_ebit7)
+#define K_LOG_NUM_CQ_ENTRIES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_cq_entries)
+#define K_LOG_NUM_KT_ENTRIES CAPRI_KEY_RANGE(IN_TO_S_P, log_num_kt_entries_sbit0_ebit3, log_num_kt_entries_sbit4_ebit4)
+#define K_LOG_NUM_DCQCN_PROFILES CAPRI_KEY_FIELD(IN_TO_S_P, log_num_dcqcn_profiles)
+#define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit1, ah_base_addr_page_id_sbit18_ebit21)
+#define K_BARMAP_BASE CAPRI_KEY_RANGE(IN_TO_S_P, barmap_base_sbit0_ebit3, barmap_base_sbit4_ebit9)
+#define K_BARMAP_SIZE CAPRI_KEY_RANGE(IN_TO_S_P, barmap_size_sbit0_ebit1, barmap_size_sbit2_ebit7)
+
 #define K_CB_ADDR CAPRI_KEY_RANGE(IN_S2S_P, cb_addr_sbit0_ebit31, cb_addr_sbit32_ebit33)
-#define K_AH_BASE_ADDR_PAGE_ID CAPRI_KEY_RANGE(IN_TO_S_P, ah_base_addr_page_id_sbit0_ebit3, ah_base_addr_page_id_sbit20_ebit21)
 #define K_MAP_COUNT_COMPLETED CAPRI_KEY_RANGE(IN_S2S_P, map_count_completed_sbit0_ebit5, map_count_completed_sbit30_ebit31)
     
 #define TO_SQCB2_INFO_P      to_s5_info
@@ -30,6 +33,11 @@ struct aq_tx_s1_t0_k k;
 #define TO_S7_STATS_P       to_s7_fb_stats_info
 
 #define WQE_SIZE_2_SGES 6 
+
+#define AQ_TX_DCQCN_CONFIG_BASE_ADDR_GET2(_r, _tmp_r)   \
+    KT_BASE_ADDR_GET2(_r, _tmp_r);                      \
+    sllv   _tmp_r, 1, K_LOG_NUM_KT_ENTRIES;             \
+    add    _r, _r, _tmp_r, LOG_SIZEOF_KEY_ENTRY_T
 
 %%
 
@@ -96,9 +104,9 @@ rdma_aq_tx_wqe_process:
     .brcase     AQ_OP_TYPE_QUERY_AH
         b           query_ah
         nop
-    .brcase     15
-        b           exit
-        nop
+    .brcase     AQ_OP_TYPE_MODIFY_DCQCN
+        b           modify_dcqcn
+        phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, modify_dcqcn), 1 //BD Slot
 
     .brend
 
@@ -534,7 +542,9 @@ stats_dump:
     .brcase     AQ_CAPTRACE_DISABLE
         b           aq_captrace_disable
         nop
-    .brcase     9
+    .brcase     AQ_STATS_DUMP_TYPE_DCQCN_CONFIG
+        b           dcqcn_config_dump
+        nop
     .brcase     10
     .brcase     11
     .brcase     12
@@ -618,6 +628,25 @@ kt_dump:
     b           prepare_feedback
     nop
 
+dcqcn_config_dump:
+    // validate profile (id - 1) in [0..(num_profiles - 1)]
+    sub         r3, d.{id_ver}.wx, 1
+    sll         r4, 1, K_LOG_NUM_DCQCN_PROFILES
+    ble         r4, r3, report_bad_idx
+
+    // get addr of dcqcn config cb for profile (id - 1)
+    AQ_TX_DCQCN_CONFIG_BASE_ADDR_GET2(r2, r4) // BD slot
+    add         r2, r2, r3, LOG_SIZEOF_DCQCN_CONFIG_T
+
+    // write dcqcn profile to host buf
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
+    DMA_HBM_MEM2MEM_SRC_SETUP(r6, DCQCN_CONFIG_SIZE_BYTES, r2)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, DCQCN_CONFIG_SIZE_BYTES, d.{stats.dma_addr}.dx)
+
+    b           prepare_feedback
+    nop
+
 qp_dump:
 
     add         r3, r0, d.{id_ver}.wx  //TODO: Need to optimize 
@@ -669,6 +698,24 @@ destroy_qp:
 
     b           prepare_feedback
     phvwr       p.rdma_feedback.query_destroy_qp.rq_id, r3  // BD Slot
+
+modify_dcqcn:
+    // validate profile (id - 1) in [0..(num_profiles - 1)]
+    sub         r3, d.{id_ver}.wx, 1
+    sll         r4, 1, K_LOG_NUM_DCQCN_PROFILES
+    ble         r4, r3, report_bad_idx
+
+    // get addr of dcqcn config cb for profile (id - 1)
+    AQ_TX_DCQCN_CONFIG_BASE_ADDR_GET2(r2, r4) // BD slot
+    add         r2, r2, r3, LOG_SIZEOF_DCQCN_CONFIG_T
+
+    // setup dma from phv to dcqcn config cb
+    DMA_CMD_STATIC_BASE_GET(r1, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MODIFY_DCQCN_CONFIG_CB)
+    DMA_HBM_PHV2MEM_SETUP(r1, dcqcn, dcqcn, r2)
+
+    // init dcqcn config cb in phv
+    b           prepare_feedback
+    phvwr   p.dcqcn, d.mod_dcqcn // BD slot
 
 query_qp:
     add         r3, r0, d.{id_ver}.wx

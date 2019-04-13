@@ -318,7 +318,8 @@ union identity {
 		u8 rdma_pte_stride;
 		u8 rdma_rrq_stride;
 		u8 rdma_rsq_stride;
-		u8 rsvd_dimensions[11];
+		u8 rdma_dcqcn_profiles;
+		u8 rsvd_dimensions[10];
 		struct lif_logical_qtype tx_qtype;
 		struct lif_logical_qtype rx_qtype;
 		struct lif_logical_qtype admin_qtype;

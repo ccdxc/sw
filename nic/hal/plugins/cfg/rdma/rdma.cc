@@ -108,10 +108,15 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     rx_args.rdma_en_qtype_mask = entry_p->rdma_en_qtype_mask;
     rx_args.pt_base_addr_page_id = entry_p->pt_base_addr_page_id;
     rx_args.log_num_pt_entries = entry_p->log_num_pt_entries;
+    rx_args.log_num_kt_entries = entry_p->log_num_kt_entries;
+    rx_args.log_num_dcqcn_profiles = entry_p->log_num_dcqcn_profiles;
+    rx_args.log_num_ah_entries = entry_p->log_num_ah_entries;
     rx_args.cqcb_base_addr_hi = entry_p->cqcb_base_addr_hi;
     rx_args.sqcb_base_addr_hi = entry_p->sqcb_base_addr_hi;
     rx_args.rqcb_base_addr_hi = entry_p->rqcb_base_addr_hi;
     rx_args.log_num_cq_entries = entry_p->log_num_cq_entries;
+    rx_args.log_num_sq_entries = entry_p->log_num_sq_entries;
+    rx_args.log_num_rq_entries = entry_p->log_num_rq_entries;
     rx_args.prefetch_pool_base_addr_page_id = entry_p->prefetch_pool_base_addr_page_id;
     rx_args.log_num_prefetch_pool_entries = entry_p->log_num_prefetch_pool_entries;
     rx_args.sq_qtype = entry_p->sq_qtype;
@@ -133,10 +138,15 @@ rdma_sram_lif_init (uint16_t lif, sram_lif_entry_t *entry_p)
     tx_args.pt_base_addr_page_id = entry_p->pt_base_addr_page_id;
     tx_args.ah_base_addr_page_id = entry_p->ah_base_addr_page_id;
     tx_args.log_num_pt_entries = entry_p->log_num_pt_entries;
+    tx_args.log_num_kt_entries = entry_p->log_num_kt_entries;
+    tx_args.log_num_dcqcn_profiles = entry_p->log_num_dcqcn_profiles;
+    tx_args.log_num_ah_entries = entry_p->log_num_ah_entries;
     tx_args.cqcb_base_addr_hi = entry_p->cqcb_base_addr_hi;
     tx_args.sqcb_base_addr_hi = entry_p->sqcb_base_addr_hi;
     tx_args.rqcb_base_addr_hi = entry_p->rqcb_base_addr_hi;
     tx_args.log_num_cq_entries = entry_p->log_num_cq_entries;
+    tx_args.log_num_sq_entries = entry_p->log_num_sq_entries;
+    tx_args.log_num_rq_entries = entry_p->log_num_rq_entries;
     tx_args.prefetch_pool_base_addr_page_id = entry_p->prefetch_pool_base_addr_page_id;
     tx_args.log_num_prefetch_pool_entries = entry_p->log_num_prefetch_pool_entries;
     tx_args.sq_qtype = entry_p->sq_qtype;
@@ -178,81 +188,128 @@ rdma_tx_sram_lif_entry_get (uint16_t lif, sram_lif_entry_t *entry_p)
 uint64_t rdma_lif_pt_base_addr(uint32_t lif)
 {
     sram_lif_entry_t    sram_lif_entry = {0};
-    uint64_t            pt_table_base_addr;
+    uint64_t            base_addr;
     hal_ret_t           rc;
 
     rc = rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
     SDK_ASSERT(rc == HAL_RET_OK);
+
+    // from pt_base_addr_page_id, first table
+
+    base_addr = sram_lif_entry.pt_base_addr_page_id;
+    base_addr <<= HBM_PAGE_SIZE_SHIFT;
+
     HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
-                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n",
+                    "log_num_pt_entries {} rdma_en_qtype_mask {} base_addr {}\n",
                     __FUNCTION__, __LINE__, lif,
                     sram_lif_entry.pt_base_addr_page_id,
                     sram_lif_entry.log_num_pt_entries,
-                    sram_lif_entry.rdma_en_qtype_mask);
+                    sram_lif_entry.rdma_en_qtype_mask, base_addr);
 
-    pt_table_base_addr = sram_lif_entry.pt_base_addr_page_id;
-    pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
-    return(pt_table_base_addr);
+    return(base_addr);
 }
 
 uint64_t rdma_lif_kt_base_addr(uint32_t lif)
 {
     sram_lif_entry_t    sram_lif_entry = {0};
-    uint64_t            pt_table_base_addr;
-    uint64_t            key_table_base_addr;
+    uint64_t            base_addr;
     hal_ret_t           rc;
 
     rc = rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
     SDK_ASSERT(rc == HAL_RET_OK);
+
+    // from pt_base_addr_page_id, after pt
+
+    base_addr = sram_lif_entry.pt_base_addr_page_id;
+    base_addr <<= HBM_PAGE_SIZE_SHIFT;
+
+    base_addr += sizeof(uint64_t) << sram_lif_entry.log_num_pt_entries;
+
     HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
-                    "log_num_pt_entries {} rdma_en_qtype_mask {}\n",
+                    "log_num_pt_entries {} size_pt_entry{} "
+                    "rdma_en_qtype_mask {} base_addr {}\n",
                     __FUNCTION__, __LINE__, lif,
                     sram_lif_entry.pt_base_addr_page_id,
-                    sram_lif_entry.log_num_pt_entries,
-                    sram_lif_entry.rdma_en_qtype_mask);
+                    sram_lif_entry.log_num_pt_entries, sizeof(uint64_t),
+                    sram_lif_entry.rdma_en_qtype_mask, base_addr);
 
-    pt_table_base_addr = sram_lif_entry.pt_base_addr_page_id;
-    pt_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
-    key_table_base_addr = pt_table_base_addr + (sizeof(uint64_t) << sram_lif_entry.log_num_pt_entries);
-    return(key_table_base_addr);
+    return(base_addr);
+}
+
+uint64_t rdma_lif_dcqcn_profile_base_addr(uint32_t lif)
+{
+    sram_lif_entry_t    sram_lif_entry = {0};
+    uint64_t            base_addr;
+    hal_ret_t           rc;
+
+    rc = rdma_rx_sram_lif_entry_get(lif, &sram_lif_entry);
+    SDK_ASSERT(rc == HAL_RET_OK);
+
+    // from pt_base_addr_page_id, after pt and kt
+
+    base_addr = sram_lif_entry.pt_base_addr_page_id;
+    base_addr <<= HBM_PAGE_SIZE_SHIFT;
+
+    base_addr += sizeof(uint64_t) << sram_lif_entry.log_num_pt_entries;
+    base_addr += sizeof(key_entry_t) << sram_lif_entry.log_num_kt_entries;
+
+    HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - pt_base_addr_page_id {} "
+                    "log_num_pt_entries {} size_pt_entry {} "
+                    "log_num_kt_entries {} size_kt_entry {} "
+                    "rdma_en_qtype_mask {} base_addr {}\n",
+                    __FUNCTION__, __LINE__, lif,
+                    sram_lif_entry.pt_base_addr_page_id,
+                    sram_lif_entry.log_num_pt_entries, sizeof(uint64_t),
+                    sram_lif_entry.log_num_kt_entries, sizeof(key_entry_t),
+                    sram_lif_entry.rdma_en_qtype_mask, base_addr);
+
+    return(base_addr);
 }
 
 uint64_t rdma_lif_at_base_addr(uint32_t lif)
 {
     sram_lif_entry_t    sram_lif_entry = {0};
-    uint64_t            ah_table_base_addr;
+    uint64_t            base_addr;
     hal_ret_t           rc;
 
     rc = rdma_tx_sram_lif_entry_get(lif, &sram_lif_entry);
     SDK_ASSERT(rc == HAL_RET_OK);
+
+    // from ah_base_addr_page_id, first table
+
+    base_addr = sram_lif_entry.ah_base_addr_page_id;
+    base_addr <<= HBM_PAGE_SIZE_SHIFT;
+
     HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - ah_base_addr_page_id {} "
-                    "rdma_en_qtype_mask {}\n",
+                    "rdma_en_qtype_mask {} base_addr {}\n",
                     __FUNCTION__, __LINE__, lif,
                     sram_lif_entry.ah_base_addr_page_id,
-                    sram_lif_entry.rdma_en_qtype_mask);
+                    sram_lif_entry.rdma_en_qtype_mask, base_addr);
 
-    ah_table_base_addr = sram_lif_entry.ah_base_addr_page_id;
-    ah_table_base_addr <<= HBM_PAGE_SIZE_SHIFT;
-    return(ah_table_base_addr);
+    return(base_addr);
 }
 
 uint64_t rdma_lif_barmap_base_addr(uint32_t lif)
 {
     sram_lif_entry_t    sram_lif_entry = {0};
-    uint64_t            barmap_base_addr;
+    uint64_t            base_addr;
     hal_ret_t           rc;
 
     rc = rdma_tx_sram_lif_entry_get(lif, &sram_lif_entry);
     SDK_ASSERT(rc == HAL_RET_OK);
+
+    // from barmap_base_addr, first table
+
+    base_addr = sram_lif_entry.barmap_base_addr;
+    base_addr <<= HBM_BARMAP_BASE_SHIFT;
+
     HAL_TRACE_DEBUG("({},{}): Lif: {}: Rx LIF params - barmap_base_addr_id {} "
-                    "rdma_en_qtype_mask {}\n",
+                    "rdma_en_qtype_mask {} base_addr {}\n",
                     __FUNCTION__, __LINE__, lif,
                     sram_lif_entry.barmap_base_addr,
-                    sram_lif_entry.rdma_en_qtype_mask);
+                    sram_lif_entry.rdma_en_qtype_mask, base_addr);
 
-    barmap_base_addr = sram_lif_entry.barmap_base_addr;
-    barmap_base_addr <<= HBM_BARMAP_BASE_SHIFT;
-    return(barmap_base_addr);
+    return(base_addr);
 }
 
 hal_ret_t
@@ -265,7 +322,9 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     uint64_t            size;
     uint32_t            max_pt_entries;
     uint32_t            max_keys, max_ahs;
-    uint32_t            max_cqs, max_eqs;
+    uint32_t            max_cqs, max_eqs, max_sqs, max_rqs;
+    // TODO: num dcqcn profiles param from json
+    uint32_t            num_dcqcn_profiles = 1;
     uint64_t            cq_base_addr; //address in HBM memory
     uint64_t            sq_base_addr; //address in HBM memory
     uint64_t            rq_base_addr; //address in HBM memory
@@ -279,6 +338,8 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
 
     max_cqs  = qstate->type[Q_TYPE_RDMA_CQ].num_queues;
     max_eqs  = qstate->type[Q_TYPE_RDMA_EQ].num_queues;
+    max_sqs  = qstate->type[Q_TYPE_RDMA_SQ].num_queues;
+    max_rqs  = qstate->type[Q_TYPE_RDMA_RQ].num_queues;
     max_keys = spec.rdma_max_keys();
     max_ahs  = spec.rdma_max_ahs();
     max_pt_entries  = spec.rdma_max_pt_entries();
@@ -308,6 +369,7 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
                     __FUNCTION__, __LINE__, lif, sq_base_addr);
     SDK_ASSERT((sq_base_addr & ((1 << SQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.sqcb_base_addr_hi = sq_base_addr >> SQCB_ADDR_HI_SHIFT;
+    sram_lif_entry.log_num_sq_entries = log2(roundup_to_pow_2(max_sqs));
 
     // Fill the RQ info in sram_lif_entry
     // rq_base_addr = lif_manager()->GetLIFQStateBaseAddr(lif, Q_TYPE_RDMA_RQ);
@@ -316,37 +378,28 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
                     __FUNCTION__, __LINE__, lif, rq_base_addr);
     SDK_ASSERT((rq_base_addr & ((1 << RQCB_SIZE_SHIFT) - 1)) == 0);
     sram_lif_entry.rqcb_base_addr_hi = rq_base_addr >> RQCB_ADDR_HI_SHIFT;
+    sram_lif_entry.log_num_rq_entries = log2(roundup_to_pow_2(max_rqs));
 
     // Setup page table and key table entries
     max_pt_entries = roundup_to_pow_2(max_pt_entries);
 
     pt_size = sizeof(uint64_t) * max_pt_entries;
-    //adjust to page boundary
-    if (pt_size & (HBM_PAGE_SIZE - 1)) {
-        pt_size = ((pt_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
-    }
+    pt_size = HBM_PAGE_ALIGN(pt_size);
 
     max_keys = roundup_to_pow_2(max_keys);
 
     key_table_size = sizeof(key_entry_t) * max_keys;
-    //adjust to page boundary
-    if (key_table_size & (HBM_PAGE_SIZE - 1)) {
-        key_table_size = ((key_table_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
-    }
+    key_table_size += sizeof(dcqcn_config_cb_t) * num_dcqcn_profiles;
+    key_table_size = HBM_PAGE_ALIGN(key_table_size);
 
     max_ahs = roundup_to_pow_2(max_ahs);
 
     // TODO: Resize ah table after dcqcn related structures are moved to separate table
     pad_size = sizeof(ah_entry_t) + sizeof(dcqcn_cb_t);
-    if (pad_size & ((1 << HDR_TEMP_ADDR_SHIFT) - 1)) {
-        pad_size = ((pad_size >> HDR_TEMP_ADDR_SHIFT) + 1) << HDR_TEMP_ADDR_SHIFT;
-    }
+    pad_size = HBM_PAGE_ALIGN(pad_size);
 
     ah_table_size = pad_size * max_ahs;
-    //adjust to page boundary
-    if (ah_table_size & (HBM_PAGE_SIZE - 1)) {
-        ah_table_size = ((ah_table_size >> HBM_PAGE_SIZE_SHIFT) + 1) << HBM_PAGE_SIZE_SHIFT;
-    }
+    ah_table_size = HBM_PAGE_ALIGN(ah_table_size);
 
     // For DOL, hardcode 8MB space as a makeshift barmap
     hbm_bar_size = 8 * 1024 * 1024;
@@ -363,6 +416,9 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     size += pt_size + key_table_size;
     sram_lif_entry.ah_base_addr_page_id = size >> HBM_PAGE_SIZE_SHIFT;
     sram_lif_entry.log_num_pt_entries = log2(max_pt_entries);
+    sram_lif_entry.log_num_kt_entries = log2(max_keys);
+    sram_lif_entry.log_num_dcqcn_profiles = log2(num_dcqcn_profiles);
+    sram_lif_entry.log_num_ah_entries = log2(max_ahs);
     size += ah_table_size;
     sram_lif_entry.barmap_base_addr = size >> HBM_BARMAP_BASE_SHIFT;
     size += hbm_bar_size;
@@ -376,11 +432,13 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     sram_lif_entry.rq_qtype = Q_TYPE_RDMA_RQ;
     sram_lif_entry.aq_qtype = Q_TYPE_ADMINQ;
 
-    HAL_TRACE_DEBUG("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}, ah_base_addr_page_id: {}, "
+    HAL_TRACE_DEBUG("({},{}): pt_base_addr_page_id: {}, log_num_pt: {}, log_num_kt: {}, log_num_dcqcn: {}, ah_base_addr_page_id: {}, "
                     "barmap_base: {} rdma_en_qtype_mask: {} sq_qtype: {} rq_qtype: {} aq_qtype: {}\n",
            __FUNCTION__, __LINE__,
            sram_lif_entry.pt_base_addr_page_id,
            sram_lif_entry.log_num_pt_entries,
+           sram_lif_entry.log_num_kt_entries,
+           sram_lif_entry.log_num_dcqcn_profiles,
            sram_lif_entry.ah_base_addr_page_id,
            sram_lif_entry.barmap_base_addr,
            sram_lif_entry.rdma_en_qtype_mask,

@@ -119,7 +119,7 @@ class DolVerifEngineObject(VerifEngineObject):
 
     def __get_buffer(self, descr, tc):
         if descr is not None:
-            return utils.SafeFnCall(None, tc, descr.GetBuffer)
+            return utils.SafeFnCall(None, logger, descr.GetBuffer)
 
         if GlobalOptions.dryrun is False:
             logger.error("Trying to GetBuffer() on a None descriptor.")

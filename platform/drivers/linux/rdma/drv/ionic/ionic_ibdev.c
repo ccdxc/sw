@@ -7026,8 +7026,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	if (rc)
 		goto err_register;
 
-	/* XXX: prof_count from device */
-	ionic_dcqcn_init(dev, 4);
+	ionic_dcqcn_init(dev, ident->dev.rdma_dcqcn_profiles);
 
 	list_add(&dev->driver_ent, &ionic_ibdev_list);
 

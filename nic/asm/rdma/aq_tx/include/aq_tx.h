@@ -53,6 +53,9 @@
 #define AQ_TX_DMA_CMD_CREATE_AH_SRC    (AQ_TX_MAX_DMA_CMDS - 4)
 #define AQ_TX_DMA_CMD_CREATE_AH_SIZE   (AQ_TX_MAX_DMA_CMDS - 5)
 
+/* DMA Cmds for Modify DCQCN Profile */
+#define AQ_TX_DMA_CMD_MODIFY_DCQCN_CONFIG_CB    (AQ_TX_MAX_DMA_CMDS - 3)
+
 /* DMA Cmds for AQ Stats Dump */
 #define AQ_TX_DMA_CMD_STATS_DUMP_4 (AQ_TX_MAX_DMA_CMDS - 3)
 #define AQ_TX_DMA_CMD_STATS_DUMP_3 (AQ_TX_MAX_DMA_CMDS - 4)
@@ -167,6 +170,7 @@ struct aq_tx_phv_t {
         /* flit 6 */
     union {
         struct aq_tx_dma_cmds_flit_t flit_6; 
+        struct dcqcn_config_cb_t dcqcn;
         struct key_entry_t key;
         struct sqcb0_t sqcb0;
         struct cqcb_t  cqcb;

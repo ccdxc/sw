@@ -37,6 +37,7 @@ namespace hal {
 extern hal_ret_t rdma_lif_init(intf::LifSpec& spec, uint32_t lif_id);
 extern uint64_t rdma_lif_pt_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_kt_base_addr(uint32_t lif_id);
+extern uint64_t rdma_lif_dcqcn_profile_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_at_base_addr(uint32_t lif_id);
 extern uint64_t rdma_lif_barmap_base_addr(uint32_t lif_id);
 
@@ -72,6 +73,9 @@ extern RDMAManager *rdma_manager();
 
 #define HBM_PAGE_SIZE 4096
 #define HBM_PAGE_SIZE_SHIFT 12
+#define HBM_PAGE_ALIGN(x) (((x) + (HBM_PAGE_SIZE - 1)) & \
+                           ~(uint64_t)(HBM_PAGE_SIZE - 1))
+
 #define HBM_BARMAP_BASE_SHIFT 23
 #define HBM_BARMAP_SIZE_SHIFT 23
 
@@ -94,13 +98,17 @@ typedef struct sram_lif_entry_s {
     uint32_t rdma_en_qtype_mask:8;
     uint32_t pt_base_addr_page_id:22;
     uint32_t ah_base_addr_page_id:22;
-    uint32_t log_num_pt_entries:7;
+    uint32_t log_num_pt_entries:5;
+    uint32_t log_num_kt_entries:5;
+    uint32_t log_num_dcqcn_profiles:4;
+    uint32_t log_num_ah_entries:4;
 
     uint32_t cqcb_base_addr_hi:24;
     uint32_t sqcb_base_addr_hi:24;
-    uint32_t rqcb_base_addr_hi:24;    
-    
+    uint32_t rqcb_base_addr_hi:24;
     uint32_t log_num_cq_entries:5;
+    uint32_t log_num_sq_entries:5;
+    uint32_t log_num_rq_entries:5;
 
     uint32_t prefetch_pool_base_addr_page_id:22;
     uint32_t log_num_prefetch_pool_entries:5;
@@ -148,7 +156,7 @@ typedef struct p4_to_p4plus_rdma_hdr_s {
 } p4_to_p4plus_rdma_hdr_t;
 
 typedef struct key_entry_s {
-    uint8_t          rsvd2[20];
+    uint8_t          rsvd2[16];
     uint32_t         num_pt_entries_rsvd;
     uint32_t         mr_cookie;
     uint32_t         mr_l_key;
@@ -281,6 +289,28 @@ typedef struct dcqcn_cb_s {
     uint32_t            byte_counter_thr;
     uint64_t            last_cnp_timestamp: 48;
 } PACKED dcqcn_cb_t;
+
+//dcqcn_config_cb_t to store dcqcn profile initial values
+typedef struct dcqcn_config_cb_s {
+    uint8_t		np_incp_802p_prio;
+    uint8_t		np_cnp_dscp;
+    uint8_t		np_rsvd[2];
+    uint16_t		rp_initial_alpha_value;
+    uint16_t		rp_dce_tcp_g;
+    uint32_t		rp_dce_tcp_rtt;
+    uint32_t		rp_rate_reduce_monitor_period;
+    uint32_t		rp_rate_to_set_on_first_cnp;
+    uint32_t		rp_min_rate;
+    uint8_t		rp_gd;
+    uint8_t		rp_min_dec_fac;
+    uint8_t		rp_clamp_flags;
+    uint8_t		rp_threshold;
+    uint32_t		rp_time_reset;
+    uint32_t		rp_byte_reset;
+    uint32_t		rp_ai_rate;
+    uint32_t		rp_hai_rate;
+    uint8_t		rp_rsvd[4];
+} PACKED dcqcn_config_cb_t;
 
 #define CQ_RING_ID      RING_ID_0
 #define CQ_ARM_RING_ID  RING_ID_1

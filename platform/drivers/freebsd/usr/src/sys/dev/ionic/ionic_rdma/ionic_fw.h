@@ -735,7 +735,32 @@ struct ionic_v1_admin_wqe {
 			__le64		sq_dma_addr;
 			__le64		rq_dma_addr;
 		} query_qp;
+		struct {
+			__u8		np_incp_802p_prio;
+			__u8		np_cnp_dscp;
+			__u8		np_rsvd[6];
+			__be16		rp_initial_alpha_value;
+			__be16		rp_dce_tcp_g;
+			__be32		rp_dce_tcp_rtt;
+			__be32		rp_rate_reduce_monitor_period;
+			__be32		rp_rate_to_set_on_first_cnp;
+			__be32		rp_min_rate;
+			__u8		rp_gd;
+			__u8		rp_min_dec_fac;
+			__u8		rp_clamp_flags;
+			__u8		rp_threshold;
+			__be32		rp_time_reset;
+			__be32		rp_byte_reset;
+			__be32		rp_ai_rate;
+			__be32		rp_hai_rate;
+			__u8		rp_rsvd[8];
+		} mod_dcqcn;
 	};
+};
+
+enum ionic_v1_dcqcn_flags {
+	IONIC_RPF_CLAMP_TGT_RATE	= BIT(0),
+	IONIC_RPF_CLAMP_TGT_RATE_ATI	= BIT(1),
 };
 
 /* side data for modify qp if resize */
@@ -793,6 +818,8 @@ enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_DESTROY_QP,
 	IONIC_V1_ADMIN_DEBUG,
 	IONIC_V1_ADMIN_CREATE_AH,
+	IONIC_v1_ADMIN_RSVD_14,
+	IONIC_V1_ADMIN_MODIFY_DCQCN,
 
 	/* TODO: move ops up as they are assigned opcode numbers in fw */
 	IONIC_V1_ADMIN_IMPL_BY_DRIVER = 50,

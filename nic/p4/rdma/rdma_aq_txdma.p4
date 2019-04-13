@@ -94,7 +94,7 @@ header_type phv_global_common_t {
         cb_addr                          :   25;
         pt_base_addr_page_id             :   22;
         log_num_pt_entries               :    5;
-        pad                              :   24;
+        pad                              :   38;
     }
 }
 
@@ -104,10 +104,12 @@ header_type aq_tx_to_stage_wqe_info_t {
         sqcb_base_addr_hi                :   24;
         rqcb_base_addr_hi                :   24;
         log_num_cq_entries               :    4;
+        log_num_kt_entries               :    5;
+        log_num_dcqcn_profiles           :    5;
         ah_base_addr_page_id             :   22;        
         barmap_base                      :   10;
         barmap_size                      :    8;
-        pad                              :   12;
+        pad                              :    2;
     }
 }
 
@@ -163,7 +165,8 @@ header_type aq_tx_to_stage_fb_stats_info_t {
         destroy_qp                       :    1;
         stats_dump                       :    1;
         aq_cmd_done                      :    1;
-        pad                              :   64;
+        modify_dcqcn                     :    1;
+        pad                              :   63;
     }
 }
 
@@ -330,6 +333,8 @@ action aq_tx_aqwqe_process () {
     modify_field(to_s1_info_scr.sqcb_base_addr_hi, to_s1_info.sqcb_base_addr_hi);
     modify_field(to_s1_info_scr.rqcb_base_addr_hi, to_s1_info.rqcb_base_addr_hi);
     modify_field(to_s1_info_scr.log_num_cq_entries, to_s1_info.log_num_cq_entries);
+    modify_field(to_s1_info_scr.log_num_kt_entries, to_s1_info.log_num_kt_entries);
+    modify_field(to_s1_info_scr.log_num_dcqcn_profiles, to_s1_info.log_num_dcqcn_profiles);
     modify_field(to_s1_info_scr.ah_base_addr_page_id, to_s1_info.ah_base_addr_page_id);
     modify_field(to_s1_info_scr.barmap_base, to_s1_info.barmap_base);
     modify_field(to_s1_info_scr.barmap_size, to_s1_info.barmap_size);

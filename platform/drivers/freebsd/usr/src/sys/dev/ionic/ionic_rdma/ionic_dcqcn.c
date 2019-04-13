@@ -143,10 +143,95 @@ static void dcqcn_set_profile(struct dcqcn_profile *prof)
 {
 	struct ionic_ibdev *dev = prof->dev;
 	int prof_i = prof - dev->dcqcn->profiles;
+	struct ionic_admin_wr wr = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(wr.work),
+		.wqe = {
+			.op = IONIC_V1_ADMIN_MODIFY_DCQCN,
+			.id_ver = cpu_to_le32(prof_i + 1),
+		}
+	};
+	long timeout;
+	int rc;
 
-	/* TODO: modify profile i+1 on device */
-	dev_dbg(&dev->ibdev.dev, "dcqcn profile not set on device %d\n",
-		1 + prof_i);
+	wr.wqe.mod_dcqcn.np_incp_802p_prio =
+		prof->vals.v[NP_ICNP_802P_PRIO];
+
+	wr.wqe.mod_dcqcn.np_cnp_dscp =
+		prof->vals.v[NP_CNP_DSCP];
+
+	wr.wqe.mod_dcqcn.rp_initial_alpha_value =
+		cpu_to_be16(prof->vals.v[RP_INITIAL_ALPHA_VALUE]);
+
+	wr.wqe.mod_dcqcn.rp_dce_tcp_g =
+		cpu_to_be16(prof->vals.v[RP_DCE_TCP_G]);
+
+	wr.wqe.mod_dcqcn.rp_dce_tcp_rtt =
+		cpu_to_be32(prof->vals.v[RP_DCE_TCP_RTT]);
+
+	wr.wqe.mod_dcqcn.rp_rate_reduce_monitor_period =
+		cpu_to_be32(prof->vals.v[RP_RATE_REDUCE_MONITOR_PERIOD]);
+
+	wr.wqe.mod_dcqcn.rp_rate_to_set_on_first_cnp =
+		cpu_to_be32(prof->vals.v[RP_RATE_TO_SET_ON_FIRST_CNP]);
+
+	wr.wqe.mod_dcqcn.rp_min_rate =
+		cpu_to_be32(prof->vals.v[RP_MIN_RATE]);
+
+	wr.wqe.mod_dcqcn.rp_gd =
+		prof->vals.v[RP_GD];
+
+	wr.wqe.mod_dcqcn.rp_min_dec_fac =
+		prof->vals.v[RP_MIN_DEC_FAC];
+
+	if (prof->vals.v[RP_CLAMP_TGT_RATE])
+		wr.wqe.mod_dcqcn.rp_clamp_flags |= IONIC_RPF_CLAMP_TGT_RATE;
+
+	if (prof->vals.v[RP_CLAMP_TGT_RATE_ATI])
+		wr.wqe.mod_dcqcn.rp_clamp_flags |= IONIC_RPF_CLAMP_TGT_RATE_ATI;
+
+	wr.wqe.mod_dcqcn.rp_threshold =
+		prof->vals.v[RP_THRESHOLD];
+
+	wr.wqe.mod_dcqcn.rp_time_reset =
+		cpu_to_be32(prof->vals.v[RP_TIME_RESET]);
+
+	wr.wqe.mod_dcqcn.rp_byte_reset =
+		cpu_to_be32(prof->vals.v[RP_BYTE_RESET]);
+
+	wr.wqe.mod_dcqcn.rp_ai_rate =
+		cpu_to_be32(prof->vals.v[RP_AI_RATE]);
+
+	wr.wqe.mod_dcqcn.rp_hai_rate =
+		cpu_to_be32(prof->vals.v[RP_HAI_RATE]);
+
+	ionic_admin_post(dev, &wr);
+
+	timeout = wait_for_completion_interruptible_timeout(&wr.work, HZ);
+	if (timeout > 0)
+		rc = 0;
+	else if (timeout == 0)
+		rc = -ETIMEDOUT;
+	else
+		rc = timeout;
+
+	if (rc) {
+		dev_warn(&dev->ibdev.dev, "wait %d\n", rc);
+		ionic_admin_cancel(dev, &wr);
+	} else if (wr.status == IONIC_ADMIN_KILLED) {
+		dev_dbg(&dev->ibdev.dev, "killed\n");
+		rc = -ENODEV;
+	} else if (ionic_v1_cqe_error(&wr.cqe)) {
+		dev_warn(&dev->ibdev.dev, "cqe error %u\n",
+			 be32_to_cpu(wr.cqe.status_length));
+		rc = -EINVAL;
+	} else {
+		rc = 0;
+	}
+
+	if (rc) {
+		pr_warn("ionic_rdma: dcqcn profile not set on device %d\n",
+			1 + prof_i);
+	}
 }
 
 static ssize_t dcqcn_show_int(struct kobject *kobj,
@@ -443,10 +528,10 @@ static int dcqcn_parse_rules(const char *buf, size_t count,
 		 *
 		 * eg: gid 5 3 -> for gid index 5, use profile 3.
 		 *
-		 * If name eq "prof":
-		 * then condition is a bitmask of profile ids.
+		 * If name eq "prio":
+		 * then condition is a bitmask of 802.1p priorities.
 		 *
-		 * eg: prof 0xc 1 -> for 802.1p prio 2 or 3, use profile 1.
+		 * eg: prio 0xc 1 -> for 802.1p priority 2 or 3, use profile 1.
 		 */
 
 		rc = sscanf(buf, "%*s%n%i%i%n", &cmd, &cond, &prof, &end);

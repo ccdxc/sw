@@ -82,6 +82,7 @@ class LifObject(base.ConfigObjectBase):
             self.hostmem_pg_size = 0
         self.rdma_pt_base_addr = 0
         self.rdma_kt_base_addr = 0
+        self.rdma_dcqcn_profile_base_addr = 0
         self.rdma_at_base_addr = 0
 
         self.vlan_strip_en = False
@@ -327,10 +328,16 @@ class LifObject(base.ConfigObjectBase):
            if resp_spec.rdma_data_valid:
                self.rdma_pt_base_addr = resp_spec.rdma_data.pt_base_addr
                self.rdma_kt_base_addr = resp_spec.rdma_data.kt_base_addr
+               self.rdma_dcqcn_profile_base_addr = resp_spec.rdma_data.dcqcn_profile_base_addr
                self.rdma_at_base_addr = resp_spec.rdma_data.at_base_addr
                self.hbm_barmap_base = resp_spec.rdma_data.barmap_base_addr
-           logger.info("- RDMA-DATA: LIF %s =  HW_LIF_ID = %s PT-Base-Addr = 0x%x KT-Base-Addr= 0x%x AT-Base-Addr= 0x%x BARMAP-Base-Addr= 0x%x)" %
-                          (self.GID(), self.hw_lif_id, self.rdma_pt_base_addr, self.rdma_kt_base_addr, self.rdma_at_base_addr, self.hbm_barmap_base))
+           logger.info("- RDMA-DATA: LIF %s =  HW_LIF_ID = %s %s= 0x%x %s= 0x%x %s= 0x%x %s= 0x%x %s= 0x%x" %
+                   (self.GID(), self.hw_lif_id,
+                       'PT-Base-Addr', self.rdma_pt_base_addr,
+                       'KT-Base-Addr', self.rdma_kt_base_addr,
+                       'DCQCN-Prof-Base-Addr', self.rdma_dcqcn_profile_base_addr,
+                       'AT-Base-Addr', self.rdma_at_base_addr,
+                       'BARMAP-Base-Addr', self.hbm_barmap_base))
 
     def PrepareHALGetRequestSpec(self, req_spec):
         req_spec.key_or_handle.lif_id = self.id

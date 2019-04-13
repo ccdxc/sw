@@ -34,6 +34,7 @@ DUMP_TYPE_AQ=5
 DUMP_TYPE_LIF=6
 AQ_DEBUG_ENABLE=7
 AQ_DEBUG_DISABLE=8
+DUMP_TYPE_DCQCN_PROFILE=9
 
 DBG_WR_CTRL='dbg_wr_ctrl'
 DBG_WR_DATA='dbg_wr_data'
@@ -801,6 +802,30 @@ class RdmaRespRxStats(Packet):
         BitField("pad", 0, 75),
     ]
 
+class RdmaDcqcnProfile(Packet):
+    name = "RdmaDcqcnProfile"
+    fields_desc = [
+        BitField("pad", 0, 64),
+        ByteField("np_incp_802p_prio", 0),
+        ByteField("np_cnp_dscp", 0),
+        BitField("np_rsvd", 0, 48),
+        ShortField("rp_initial_alpha_value", 0),
+        ShortField("rp_dce_tcp_g", 0),
+        IntField("rp_dce_tcp_rtt", 0),
+        IntField("rp_rate_reduce_monitor_period", 0),
+        IntField("rp_rate_to_set_on_first_cnp", 0),
+        IntField("rp_min_rate", 0),
+        ByteField("rp_gd", 0),
+        ByteField("rp_min_dec_fac", 0),
+        BitField("rp_clamp_flags", 0, 8),
+        ByteField("rp_threshold", 0),
+        IntField("rp_time_reset", 0),
+        IntField("rp_byte_reset", 0),
+        IntField("rp_ai_rate", 0),
+        IntField("rp_hai_rate", 0),
+        BitField("rp_rsvd", 0, 64),
+    ]
+
 class RdmaKeyTableEntry(Packet):
     name = "RdmaKeyTableEntry"
     fields_desc = [
@@ -896,7 +921,7 @@ class LifStats(Packet):
 class RdmaAQWqeBase(Packet):
     name = "RdmaAQWqeBase"
     fields_desc = [
-        ByteEnumField("op", 0, {0:'NOP', 1:'Create CQ', 2:'Create QP', 3:'Reg MR', 6:'Dereg MR', 9:'Modify QP', 11:'Destroy QP', 12:'Stats Dump'}),
+        ByteEnumField("op", 0, {0:'NOP', 1:'Create CQ', 2:'Create QP', 3:'Reg MR', 6:'Dereg MR', 9:'Modify QP', 11:'Destroy QP', 12:'Stats Dump', 15:'Modify DCQCN'}),
         ByteField("type_state", 0),
         XLEShortField("dbid_flags", 0),
         IntField("id_ver", 0),
@@ -997,13 +1022,37 @@ class RdmaAQWqeQuery(Packet):
         XLELongField("dma_addr", 0),       
     ]
 
-bind_layers(RdmaAQWqeBase, RdmaAQWqeStats, op=12)
-bind_layers(RdmaAQWqeBase, RdmaAQWqeAH, op=13)
-bind_layers(RdmaAQWqeBase, RdmaAQWqeMR, op=3)
+class RdmaAQWqeModDcqcn(Packet):
+    name = "RdmaAQWqeModDcqcn"
+    fields_desc = [
+        ByteField("np_incp_802p_prio", 0),
+        ByteField("np_cnp_dscp", 0),
+        BitField("np_rsvd", 0, 48),
+        ShortField("rp_initial_alpha_value", 0),
+        ShortField("rp_dce_tcp_g", 0),
+        IntField("rp_dce_tcp_rtt", 0),
+        IntField("rp_rate_reduce_monitor_period", 0),
+        IntField("rp_rate_to_set_on_first_cnp", 0),
+        IntField("rp_min_rate", 0),
+        ByteField("rp_gd", 0),
+        ByteField("rp_min_dec_fac", 0),
+        BitField("rp_clamp_flags", 0, 8),
+        ByteField("rp_threshold", 0),
+        IntField("rp_time_reset", 0),
+        IntField("rp_byte_reset", 0),
+        IntField("rp_ai_rate", 0),
+        IntField("rp_hai_rate", 0),
+        BitField("rp_rsvd", 0, 64),
+    ]
+
 bind_layers(RdmaAQWqeBase, RdmaAQWqeCQ, op=1)
 bind_layers(RdmaAQWqeBase, RdmaAQWqeCQP, op=2)
+bind_layers(RdmaAQWqeBase, RdmaAQWqeMR, op=3)
 bind_layers(RdmaAQWqeBase, RdmaAQWqeMQP, op=9)
 bind_layers(RdmaAQWqeBase, RdmaAQWqeQuery, op=10)
+bind_layers(RdmaAQWqeBase, RdmaAQWqeStats, op=12)
+bind_layers(RdmaAQWqeBase, RdmaAQWqeAH, op=13)
+bind_layers(RdmaAQWqeBase, RdmaAQWqeModDcqcn, op=15)
 
 class RdmaAqCqe(Packet):
     name = "RdmaAqCqe"
@@ -1139,7 +1188,8 @@ def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
             tbl = tbl_type, idx = tbl_index)
 
     #print cmd_str
-    os.system(cmd_str)
+    if os.system(cmd_str):
+        return '\0'*num_bytes
 
     #time.sleep(1)
 
@@ -1148,7 +1198,8 @@ def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
             out = DUMP_DATA)
 
     #print cmd2_str
-    os.system(cmd2_str)
+    if os.system(cmd2_str):
+        return '\0'*num_bytes
     
     with open(DUMP_DATA, "rb") as data_file:
         bin_str = data_file.read()
@@ -1306,6 +1357,7 @@ grp.add_argument('--req_tx_stats', help='prints req_tx stats given qid', type=in
 grp.add_argument('--req_rx_stats', help='prints req_rx stats given qid', type=int, metavar='qid')
 grp.add_argument('--resp_tx_stats', help='prints resp_tx stats given qid', type=int, metavar='qid')
 grp.add_argument('--resp_rx_stats', help='prints resp_rx stats given qid', type=int, metavar='qid')
+grp.add_argument('--dcqcn_profile', help='prints dcqcn config for profile number', type=int, metavar='profile')
 grp.add_argument('--kt_entry', help='prints key table entry given key id', type=int, metavar='key_id')
 grp.add_argument('--pt_entry', help='print page table entry given pt offset', type=int, metavar='pt_offset')
 grp.add_argument('--lif_stats', help='prints rdma LIF statistics', action='store_true', default=False)
@@ -1344,6 +1396,7 @@ if args.host is not None and \
        args.eqcb is not None or \
        args.aqcb0 is not None or \
        args.aqcb1 is not None or \
+       args.dcqcn_profile is not None or \
        args.kt_entry is not None or \
        args.pt_entry is not None or \
        args.lif_stats is True:
@@ -1755,6 +1808,10 @@ elif args.resp_rx_stats is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.resp_rx_stats, 512+320, 64)
     resp_rx_stats = RdmaRespRxStats(bin_str)
     resp_rx_stats.show()
+elif args.dcqcn_profile is not None:
+    bin_str = exec_dump_cmd(DUMP_TYPE_DCQCN_PROFILE, args.dcqcn_profile, 0, 64)
+    dcqcn_profile = RdmaDcqcnProfile(bin_str)
+    dcqcn_profile.show()
 elif args.kt_entry is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_KT, args.kt_entry, 0, 64)
     kt_entry = RdmaKeyTableEntry(bin_str)

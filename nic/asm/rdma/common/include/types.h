@@ -1008,6 +1008,9 @@ struct rsqwqe_t {
     };
 };
 
+#define LOG_SIZEOF_DCQCN_CONFIG_T  6   // 2^6 = 64 bytes
+#define DCQCN_CONFIG_SIZE_BYTES    64
+
 #define ACC_CTRL_LOCAL_WRITE        0x1
 #define ACC_CTRL_REMOTE_WRITE       0x2
 #define ACC_CTRL_REMOTE_READ        0x4
@@ -1336,6 +1339,29 @@ struct aq_p4_to_p4plus_roce_header_t {
     };
 };
 
+//Common DCQCN CB for configurable params.
+struct dcqcn_config_cb_t {
+            pad:64;
+            np_incp_802p_prio:8;
+            np_cnp_dscp:8;
+            np_rsvd:48;
+            rp_initial_alpha_value:16;
+            rp_dce_tcp_g:16;
+            rp_dce_tcp_rtt:32;
+            rp_rate_reduce_monitor_period:32;
+            rp_rate_to_set_on_first_cnp:32;
+            rp_min_rate:32;
+            rp_gd:8;
+            rp_min_dec_fac:8;
+            rp_clamp_flags:8;
+            rp_threshold:8;
+            rp_time_reset:32;
+            rp_byte_reset:32;
+            rp_ai_rate:32;
+            rp_hai_rate:32;
+            rp_rsvd:64;
+};
+
 //Common DCQCN CB for both req and resp paths.
 struct dcqcn_cb_t {
     // CNP generation params.
@@ -1583,6 +1609,7 @@ struct resp_rx_send_fml_t {
 #define AQ_OP_TYPE_STATS_DUMP   12
 #define AQ_OP_TYPE_CREATE_AH    13
 #define AQ_OP_TYPE_QUERY_AH     14
+#define AQ_OP_TYPE_MODIFY_DCQCN 15
 
 //Define all stat types requested by the driver
 #define AQ_STATS_DUMP_TYPE_QP   0
@@ -1594,6 +1621,7 @@ struct resp_rx_send_fml_t {
 #define AQ_STATS_DUMP_TYPE_LIF  6
 #define AQ_CAPTRACE_ENABLE      7
 #define AQ_CAPTRACE_DISABLE     8
+#define AQ_STATS_DUMP_TYPE_DCQCN_CONFIG 9
 
 #define AQ_QPF_LOCAL_WRITE      0x00000001
 #define AQ_QPF_REMOTE_WRITE     0x00000002
@@ -1726,6 +1754,26 @@ struct aqwqe_t {
             sq_dma_addr: 64;
             rq_dma_addr: 64;
         } query;
+        struct {
+            np_incp_802p_prio:8;
+            np_cnp_dscp:8;
+            np_rsvd:48;
+            rp_initial_alpha_value:16;
+            rp_dce_tcp_g:16;
+            rp_dce_tcp_rtt:32;
+            rp_rate_reduce_monitor_period:32;
+            rp_rate_to_set_on_first_cnp:32;
+            rp_min_rate:32;
+            rp_gd:8;
+            rp_min_dec_fac:8;
+            rp_clamp_flags:8;
+            rp_threshold:8;
+            rp_time_reset:32;
+            rp_byte_reset:32;
+            rp_ai_rate:32;
+            rp_hai_rate:32;
+            rp_rsvd:64;
+        } mod_dcqcn;
     };
 };
 

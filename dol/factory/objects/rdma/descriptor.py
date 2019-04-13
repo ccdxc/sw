@@ -341,6 +341,28 @@ class RdmaAqDescriptorQueryAH(Packet):
 		BitField("rsvd", 0, 384),
 	]
 
+class RdmaAqDescriptorModifyDcqcn(Packet):
+    fields_desc = [
+        ByteField("np_incp_802p_prio", 0),
+        ByteField("np_cnp_dscp", 0),
+        BitField("np_rsvd", 0, 48),
+        ShortField("rp_initial_alpha_value", 0),
+        ShortField("rp_dce_tcp_g", 0),
+        IntField("rp_dce_tcp_rtt", 0),
+        IntField("rp_rate_reduce_monitor_period", 0),
+        IntField("rp_rate_to_set_on_first_cnp", 0),
+        IntField("rp_min_rate", 0),
+        ByteField("rp_gd", 0),
+        ByteField("rp_min_dec_fac", 0),
+        BitField("rp_clamp_flags", 0, 8),
+        ByteField("rp_threshold", 0),
+        IntField("rp_time_reset", 0),
+        IntField("rp_byte_reset", 0),
+        IntField("rp_ai_rate", 0),
+        IntField("rp_hai_rate", 0),
+        BitField("rp_rsvd", 0, 64),
+    ]
+
 class RdmaSqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
         super().__init__()
@@ -990,6 +1012,35 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
         desc = self.desc/mod_qp
         self.__set_desc(desc)
 
+    def InitModDcqcn(self, wqe):
+        self.wqe = wqe
+        self.op = wqe.op
+        self.type_state = wqe.type_state
+        self.dbid_flags = wqe.dbid_flags
+        self.id_ver = wqe.id_ver
+        self.__create_desc()
+
+        logger.info("Reading Admin DCQCN Modify")
+        mod_dcqcn = RdmaAqDescriptorModifyDcqcn(
+                            np_incp_802p_prio = wqe.np_incp_802p_prio,
+                            np_cnp_dscp = wqe.np_cnp_dscp,
+                            rp_initial_alpha_value = wqe.rp_initial_alpha_value,
+                            rp_dce_tcp_g = wqe.rp_dce_tcp_g,
+                            rp_dce_tcp_rtt = wqe.rp_dce_tcp_rtt,
+                            rp_rate_reduce_monitor_period = wqe.rp_rate_reduce_monitor_period,
+                            rp_rate_to_set_on_first_cnp = wqe.rp_rate_to_set_on_first_cnp,
+                            rp_min_rate = wqe.rp_min_rate,
+                            rp_gd = wqe.rp_gd,
+                            rp_min_dec_fac = wqe.rp_min_dec_fac,
+                            rp_clamp_flags = wqe.rp_clamp_flags,
+                            rp_threshold = wqe.rp_threshold,
+                            rp_time_reset = wqe.rp_time_reset,
+                            rp_byte_reset = wqe.rp_byte_reset,
+                            rp_ai_rate = wqe.rp_ai_rate,
+                            rp_hai_rate = wqe.rp_hai_rate)
+        desc = self.desc/mod_dcqcn
+        self.__set_desc(desc)
+
     def __create_desc(self):
         self.desc = RdmaAqDescriptorBase(
             op=self.op,
@@ -1050,6 +1101,61 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
             desc = self.desc/mod_qp
             self.__set_desc(desc)
             logger.ShowScapyObject(mod_qp)
+
+        if self.spec != None and hasattr(self.spec.fields, 'modify_dcqcn'):
+            logger.info("Reading Admin Modify DCQCN")
+            np_incp_802p_prio = self.spec.fields.modify_dcqcn.np_incp_802p_prio \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'np_incp_802p_prio') else 0
+            np_cnp_dscp = self.spec.fields.modify_dcqcn.np_cnp_dscp \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'np_cnp_dscp') else 0
+            rp_initial_alpha_value = self.spec.fields.modify_dcqcn.rp_initial_alpha_value \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_initial_alpha_value') else 0
+            rp_dce_tcp_g = self.spec.fields.modify_dcqcn.rp_dce_tcp_g \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_dce_tcp_g') else 0
+            rp_dce_tcp_rtt = self.spec.fields.modify_dcqcn.rp_dce_tcp_rtt \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_dce_tcp_rtt') else 0
+            rp_rate_reduce_monitor_period = self.spec.fields.modify_dcqcn.rp_rate_reduce_monitor_period \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_rate_reduce_monitor_period') else 0
+            rp_rate_to_set_on_first_cnp = self.spec.fields.modify_dcqcn.rp_rate_to_set_on_first_cnp \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_rate_to_set_on_first_cnp') else 0
+            rp_min_rate = self.spec.fields.modify_dcqcn.rp_min_rate \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_min_rate') else 0
+            rp_gd = self.spec.fields.modify_dcqcn.rp_gd \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_gd') else 0
+            rp_min_dec_fac = self.spec.fields.modify_dcqcn.rp_min_dec_fac \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_min_dec_fac') else 0
+            rp_clamp_flags = self.spec.fields.modify_dcqcn.rp_clamp_flags \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_clamp_flags') else 0
+            rp_threshold = self.spec.fields.modify_dcqcn.rp_threshold \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_threshold') else 0
+            rp_time_reset = self.spec.fields.modify_dcqcn.rp_time_reset \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_time_reset') else 0
+            rp_byte_reset = self.spec.fields.modify_dcqcn.rp_byte_reset \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_byte_reset') else 0
+            rp_ai_rate = self.spec.fields.modify_dcqcn.rp_ai_rate \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_ai_rate') else 0
+            rp_hai_rate = self.spec.fields.modify_dcqcn.rp_hai_rate \
+                    if hasattr(self.spec.fields.modify_dcqcn, 'rp_hai_rate') else 0
+            mod_dcqcn = RdmaAqDescriptorModifyDcqcn(
+                            np_incp_802p_prio = np_incp_802p_prio,
+                            np_cnp_dscp = np_cnp_dscp,
+                            rp_initial_alpha_value = rp_initial_alpha_value,
+                            rp_dce_tcp_g = rp_dce_tcp_g,
+                            rp_dce_tcp_rtt = rp_dce_tcp_rtt,
+                            rp_rate_reduce_monitor_period = rp_rate_reduce_monitor_period,
+                            rp_rate_to_set_on_first_cnp = rp_rate_to_set_on_first_cnp,
+                            rp_min_rate = rp_min_rate,
+                            rp_gd = rp_gd,
+                            rp_min_dec_fac = rp_min_dec_fac,
+                            rp_clamp_flags = rp_clamp_flags,
+                            rp_threshold = rp_threshold,
+                            rp_time_reset = rp_time_reset,
+                            rp_byte_reset = rp_byte_reset,
+                            rp_ai_rate = rp_ai_rate,
+                            rp_hai_rate = rp_hai_rate)
+            desc = self.desc/mod_dcqcn
+            self.__set_desc(desc)
+            logger.ShowScapyObject(mod_dcqcn)
 
         if debug is True:
             logger.info("Writing AQ Desciptor @0x%x = op: %d type_state: %d dbid_flags: 0x%x id_ver: %d len: %d" %
@@ -1126,6 +1232,8 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
         logger.info("GetBuffer() operator invoked on AQ descriptor")
 
         if not hasattr(self, 'address'):
+            if not hasattr(self.spec.fields, 'buff'):
+                return None
             logger.info("Reading from buff")
             return self.spec.fields.buff
 

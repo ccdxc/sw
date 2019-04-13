@@ -286,7 +286,10 @@ header_type tx_rdma_scratch_metadata_t {
         //number of PT entries are in power of 2s.
         pt_base_addr_page_id: 22;
         ah_base_addr_page_id: 22;
-        log_num_pt_entries: 7;
+        log_num_pt_entries: 5;
+        log_num_kt_entries: 5;
+        log_num_dcqcn_profiles: 4;
+        log_num_ah_entries: 4;
 
         //Per LIF CQCB and EQCB tables
         //are allocated adjacent to each other in HBM in that order.
@@ -295,6 +298,8 @@ header_type tx_rdma_scratch_metadata_t {
         sqcb_base_addr_hi: 24;
         rqcb_base_addr_hi: 24;        
         log_num_cq_entries: 5;
+        log_num_sq_entries: 5;
+        log_num_rq_entries: 5;
 
         //RQCB prefetch uses per LIF global ring
         //This is the base address of that ring
@@ -309,8 +314,7 @@ header_type tx_rdma_scratch_metadata_t {
         //barmap size in 8MB units
         //need 8 bits to present 2GB per LIF
         barmap_size: 8;
-        reserved: 58;
-
+        reserved: 37;
     }
 }
 
@@ -334,7 +338,10 @@ header_type rx_rdma_scratch_metadata_t {
         //number of PT entries are in power of 2s.
         pt_base_addr_page_id: 22;
         ah_base_addr_page_id: 22;
-        log_num_pt_entries: 7;
+        log_num_pt_entries: 5;
+        log_num_kt_entries: 5;
+        log_num_dcqcn_profiles: 4;
+        log_num_ah_entries: 4;
 
         //Per LIF CQCB and EQCB tables
         //are allocated adjacent to each other in HBM in that order.
@@ -343,6 +350,8 @@ header_type rx_rdma_scratch_metadata_t {
         sqcb_base_addr_hi: 24;
         rqcb_base_addr_hi: 24;        
         log_num_cq_entries: 5;
+        log_num_sq_entries: 5;
+        log_num_rq_entries: 5;
 
         //RQCB prefetch uses per LIF global ring
         //This is the base address of that ring
@@ -351,8 +360,7 @@ header_type rx_rdma_scratch_metadata_t {
         sq_qtype: 3;
         rq_qtype: 3;
         aq_qtype: 3;
-        reserved: 76;
-
+        reserved: 55;
     }
 }
 header_type tcp_header_t {
