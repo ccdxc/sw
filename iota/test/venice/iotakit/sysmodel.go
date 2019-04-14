@@ -152,13 +152,6 @@ func (sm *SysModel) CleanupAllConfig() error {
 			return err
 		}
 	}
-	for _, obj := range veniceNetworks {
-		if err := sm.tb.DeleteNetwork(obj); err != nil {
-			err = fmt.Errorf("Error deleting obj %+v. Err: %s", obj, err)
-			log.Errorf("%s", err)
-			return err
-		}
-	}
 
 	return nil
 }
