@@ -233,6 +233,7 @@ class EntityManagement:
             self.ssh_host = "%s@%s" % (username, ipaddr)
             self.scp_pfx = "sshpass -p %s scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % password
             self.ssh_pfx = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % password
+        self.host = None
         return
 
     def SendlineExpect(self, line, expect, hdl = None,
@@ -325,6 +326,13 @@ class NaplesManagement(EntityManagement):
         except:
             raise Exception("Clear line failed ")
 
+    def __run_dhclient(self):
+        try:
+            self.SendlineExpect("dhclient " + NAPLES_OOB_NIC, "#", timeout = 10)
+        except:
+            #Send Ctrl-c as we did not get IP
+            self.SendlineExpect('\003', "#")
+
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Failed to login to naples")
     def __login(self):
         midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
@@ -344,12 +352,12 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("reboot", "capri-gold login:")
         self.__login()
         time.sleep(60)
-        try:
-            self.SendlineExpect("dhclient " + NAPLES_OOB_NIC, "#", timeout = 10)
-        except:
-            #Send Ctrl-c as we did not get IP
-            self.SendlineExpect('\003', "#")
+        self.__run_dhclient()
         self.WaitForSsh()
+
+    def Reboot(self):
+        self.SendlineExpect("reboot", ["capri login:", "capri-gold login:"], timeout = 120)
+        self.__login()
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Main Firmware Install failed")
     def InstallMainFirmware(self, copy_fw = True):
@@ -358,17 +366,11 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.image), "#")
         self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#")
 
-    @_exceptionWrapper(_errCodes.NAPLES_REBOOT_FAILED, "Naples Reboot failed")
-    def Reboot(self):
-        self.SendlineExpect("reboot", ["capri login:", "capri-gold login:"], timeout = 120)
-        self.__login()
-
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Gold Firmware Install failed")
     def InstallGoldFirmware(self):
         self.CopyIN(GlobalOptions.gold_fw_img, entity_dir = NAPLES_TMP_DIR)
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.gold_fw_img), "#", timeout = 300)
         self.SendlineExpect("/nic/tools/fwupdate -l", "#")
-
 
     @_exceptionWrapper(_errCodes.NAPLES_TELNET_FAILED, "Telnet Failed")
     def Connect(self):
@@ -391,20 +393,12 @@ class NaplesManagement(EntityManagement):
             print(msg)
             raise Exception(msg)
 
-        midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
-                                   hdl = self.hdl, timeout = 120)
-        if midx != 0:
-            # Got capri login prompt, send username/password.
-            self.SendlineExpect(GlobalOptions.username, "Password:")
-            ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
-            if ret == 1: self.SendlineExpect("", "#")
-        try:
-            self.SendlineExpect("dhclient " + NAPLES_OOB_NIC, "#", timeout = 10)
-        except:
-            #Send Ctrl-c as we did not get IP
-            self.SendlineExpect('\003', "#")
+        self.Login()
 
-
+    @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Login Failed")
+    def Login(self):
+        self.__login()
+        self.__run_dhclient()
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_UNKNOWN, "Gold FW unknown")
     def ReadGoldFwVersion(self):
@@ -455,7 +449,10 @@ class NaplesManagement(EntityManagement):
 class HostManagement(EntityManagement):
     def __init__(self, ipaddr):
         super().__init__(ipaddr, GlobalOptions.host_username, GlobalOptions.host_password)
-        return
+        self.naples = None
+
+    def SetNaples(self, naples):
+        self.naples = naples
 
     @_exceptionWrapper(_errCodes.HOST_INIT_FAILED, "Host Init Failed")
     def Init(self, driver_pkg = None, cleanup = True):
@@ -586,6 +583,9 @@ class EsxHostManagement(HostManagement):
 
     @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_INIT_FAILED, "Ctrl VM init failed")
     def __esx_host_init(self):
+        if self.naples.IsSSHUP():
+            print ("Naples OOB is up, skipping ctrl vm initialization.")
+            return
         outFile = "/tmp/esx_" +  GlobalOptions.host_ip + ".json"
         self.WaitForSsh(port=443)
         time.sleep(30)
@@ -606,6 +606,9 @@ class EsxHostManagement(HostManagement):
             self.__esx_ctrl_vm_ip = data["ctrlVMIP"]
             self.__esx_ctrl_vm_username = data["ctrlVMUsername"]
             self.__esx_ctrl_vm_password = data["ctrlVMPassword"]
+        self.__ctr_vm_ssh_host = "%s@%s" % (self.__esx_ctrl_vm_username, self.__esx_ctrl_vm_ip)
+        self.__ctr_vm_scp_pfx = "sshpass -p %s scp -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
+        self.__ctr_vm_ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
 
     @_exceptionWrapper(_errCodes.HOST_ESX_INIT_FAILED, "Host init failed")
     def Init(self, driver_pkg = None, cleanup = True):
@@ -613,9 +616,6 @@ class EsxHostManagement(HostManagement):
         os.system("date")
         self.__check_naples_deivce()
         self.__esx_host_init()
-        self.__ctr_vm_ssh_host = "%s@%s" % (self.__esx_ctrl_vm_username, self.__esx_ctrl_vm_ip)
-        self.__ctr_vm_scp_pfx = "sshpass -p %s scp -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
-        self.__ctr_vm_ssh_pfx = "sshpass -p %s ssh -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
 
     @_exceptionWrapper(_errCodes.HOST_DRIVER_INSTALL_FAILED, "ESX Driver install failed")
     def __install_drivers(self, pkg):
@@ -741,6 +741,7 @@ def Main():
     else:
         host = HostManagement(GlobalOptions.host_ip)
 
+    host.SetNaples(naples)
     # Reset the setup:
     # If the previous run left it in bad state, we may not get ssh or console.
     if GlobalOptions.only_mode_change == False and GlobalOptions.only_init == False:
@@ -785,16 +786,15 @@ def Main():
         naples.Close()
     else:
         # Case 1: Main firmware upgrade.
+        naples.InitForUpgrade(goldfw = True)
         if naples.IsSSHUP():
             #OOb is present and up install right away,
             naples.RebootGoldFw()
             naples.InstallMainFirmware()
-            #TDOD Update gold fw to latest i not matching.
             if not IsNaplesGoldFWLatest():
                 naples.InstallGoldFirmware()
             naples.Reboot()
         else:
-            naples.InitForUpgrade(goldfw = True)
             host.InitForUpgrade()
             host.Reboot()
             naples.Close()
@@ -812,13 +812,17 @@ def Main():
     #Reboot is common for both mode change and upgrade
     # Reboot host again, this will reboot naples also
     host.Reboot()
+
+    #Naples would have rebooted to, login again.
+    naples.Connect()
+
     # Common to Case 2 and Case 1.
     # Initialize the Node, this is needed in all cases.
     host.Init(driver_pkg = GlobalOptions.drivers_pkg, cleanup = False)
 
     if naples.IsSSHUP():
         # Connect to serial console too
-        naples.Connect()
+        #naples.Connect()
         naples.InstallMainFirmware()
     else:
         # Update MainFwB also to same image - TEMP CHANGE
