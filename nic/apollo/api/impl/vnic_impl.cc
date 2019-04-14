@@ -176,7 +176,7 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             spec->fabric_encap.val.vnid;
     }
     ret = vnic_impl_db()->egress_local_vnic_info_tbl()->insert_atid(&egress_vnic_data,
-                                                                       hw_id_);
+                                                                    hw_id_);
     if (ret != SDK_RET_OK) {
         return ret;
     }

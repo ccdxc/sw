@@ -163,7 +163,7 @@ main (int argc, char **argv)
     }
 
     g_flow_test_obj = new flow_test();
-    
+
     // register for all gRPC services
     svc_reg();
 

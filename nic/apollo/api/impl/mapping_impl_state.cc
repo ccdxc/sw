@@ -63,7 +63,7 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     nat_tbl_ = directmap::factory(tinfo.tablename, P4TBL_ID_NAT,
                                   tinfo.tabledepth,
                                   tinfo.actiondata_struct_size,
-                                  false, true, NULL);
+                                  false, false, NULL);
     SDK_ASSERT(nat_tbl_ != NULL);
     // reserve 0th entry for no xlation
     nat_tbl_->reserve_index(NAT_TX_TBL_RSVD_ENTRY_IDX);

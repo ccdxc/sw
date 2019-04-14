@@ -248,7 +248,6 @@ pal_sim_init_rwvectors (void)
     gl_pal_info.rwvecs.reg_write = pal_sim_reg_write;
     gl_pal_info.rwvecs.mem_read = pal_sim_mem_read;
     gl_pal_info.rwvecs.mem_write = pal_sim_mem_write;
-    gl_pal_info.rwvecs.mem_set = pal_sim_mem_set;
     gl_pal_info.rwvecs.ring_db16 = pal_sim_ring_db16;
     gl_pal_info.rwvecs.ring_db32 = pal_sim_ring_db32;
     gl_pal_info.rwvecs.ring_db64 = pal_sim_ring_db64;
@@ -257,10 +256,11 @@ pal_sim_init_rwvectors (void)
                         pal_sim_physical_addr_to_virtual_addr;
     gl_pal_info.rwvecs.virtual_addr_to_physical_addr =
                         pal_sim_virtual_addr_to_physical_addr;
-    gl_pal_info.rwvecs.qsfp_read = pal_sim_qsfp_read;
-    gl_pal_info.rwvecs.qsfp_write = pal_sim_qsfp_write;
+    gl_pal_info.rwvecs.mem_set = pal_sim_mem_set;
     gl_pal_info.rwvecs.is_qsfp_port_present =
                             pal_sim_is_qsfp_port_present;
+    gl_pal_info.rwvecs.qsfp_read = pal_sim_qsfp_read;
+    gl_pal_info.rwvecs.qsfp_write = pal_sim_qsfp_write;
     pal_init_sim_vectors();
 
     return PAL_RET_OK;

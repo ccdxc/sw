@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------
 
 #include <iostream>
+#include <math.h>
 #include "nic/apollo/test/scale/test.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vcn.hpp"
@@ -659,8 +660,11 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
 {
     sdk_ret_t            rv;
     pds_policy_spec_t    policy;
-    uint32_t             policy_id = 1;
+    static uint32_t      policy_id = 1, num_pfx;
     rule_t               *rule;
+    uint32_t             num_sub_rules = 10;
+    uint16_t             step = 4;
+    bool                 done;
 
     if (num_rules == 0) {
         return SDK_RET_OK;
@@ -672,24 +676,42 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
     policy.num_rules = num_rules;
     policy.rules = (rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_POLICY_RULES,
                                         num_rules * sizeof(rule_t));
+    if (num_rules < num_sub_rules) {
+        num_sub_rules = 1;
+    }
+    num_pfx = (uint32_t)ceilf((float)num_rules/(float)num_sub_rules);
     for (uint32_t i = 1; i <= num_vpcs; i++) {
-        for (uint32_t j = 1; j <= num_subnets; j++) {
+        for (uint32_t j = 1, idx = 0; j <= num_subnets; j++) {
             memset(policy.rules, 0, num_rules * sizeof(rule_t));
             policy.key.id = policy_id++;
-            for (uint32_t k = 0; k < num_rules; k++) {
-                rule = &policy.rules[k];
-                rule->stateful = false;
-                rule->match.l3_match.ip_proto = 17;    // UDP
-                rule->match.l3_match.ip_pfx = g_test_params.vpc_pfx;
-                rule->match.l3_match.ip_pfx.addr.addr.v4_addr =
-                    rule->match.l3_match.ip_pfx.addr.addr.v4_addr |
-                    ((j - 1) << 14) | (k << 4);
-                rule->match.l3_match.ip_pfx.len = 28;
-                rule->match.l4_match.sport_range.port_lo = 0;
-                rule->match.l4_match.sport_range.port_hi = 65535;
-                rule->match.l4_match.dport_range.port_lo = 10000;
-                rule->match.l4_match.dport_range.port_hi = 20000;
-                rule->action_data.fw_action.action = SECURITY_RULE_ACTION_ALLOW;
+            done = false;
+            for (uint32_t k = 0; k < num_pfx; k++) {
+                uint16_t dport_base = 1024;
+                for (uint32_t l = 0; l < num_sub_rules; l++) {
+                    if (idx == num_rules) {
+                        done = true;
+                        break;
+                    }
+                    rule = &policy.rules[idx];
+                    rule->stateful = false;
+                    rule->match.l3_match.ip_proto = 17;    // UDP
+                    rule->match.l3_match.ip_pfx = g_test_params.vpc_pfx;
+                    rule->match.l3_match.ip_pfx.addr.addr.v4_addr =
+                        rule->match.l3_match.ip_pfx.addr.addr.v4_addr |
+                        ((j - 1) << 14) | ((k + 2) << 4);
+                    rule->match.l3_match.ip_pfx.len = 28;
+                    rule->match.l4_match.sport_range.port_lo = 100;
+                    rule->match.l4_match.sport_range.port_hi = 1000;
+                    rule->match.l4_match.dport_range.port_lo = dport_base;
+                    rule->match.l4_match.dport_range.port_hi =
+                        dport_base + step - 1;
+                    dport_base += step;
+                    rule->action_data.fw_action.action = SECURITY_RULE_ACTION_ALLOW;
+                    idx++;
+                }
+                if (done) {
+                    break;
+                }
             }
 #ifdef TEST_GRPC_APP
             rv = create_policy_grpc(&policy);
@@ -848,30 +870,35 @@ create_objects (void)
     }
     // create route tables
     ret = create_route_tables(g_test_params.num_teps, g_test_params.num_vpcs,
-                              g_test_params.num_subnets, g_test_params.num_routes,
+                              g_test_params.num_subnets,
+                              g_test_params.num_routes,
                               &g_test_params.tep_pfx, &g_test_params.route_pfx,
                               &g_test_params.v6_route_pfx);
     if (ret != SDK_RET_OK) {
         return ret;
     }
     // create security policies
-    ret = create_security_policy(g_test_params.num_vpcs, g_test_params.num_subnets,
+    ret = create_security_policy(g_test_params.num_vpcs,
+                                 g_test_params.num_subnets,
                                  g_test_params.num_rules, IP_AF_IPV4, false);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 #if 0
-    ret = create_security_policy(g_test_params.num_vpcs, g_test_params.num_subnets,
+    ret = create_security_policy(g_test_params.num_vpcs,
+                                 g_test_params.num_subnets,
                                  g_test_params.num_rules, IP_AF_IPV4, true);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    ret = create_security_policy(g_test_params.num_vpcs, g_test_params.num_subnets,
+    ret = create_security_policy(g_test_params.num_vpcs,
+                                 g_test_params.num_subnets,
                                  g_test_params.num_rules, IP_AF_IPV6, false);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    ret = create_security_policy(g_test_params.num_vpcs, g_test_params.num_subnets,
+    ret = create_security_policy(g_test_params.num_vpcs,
+                                 g_test_params.num_subnets,
                                  g_test_params.num_rules, IP_AF_IPV6, true);
     if (ret != SDK_RET_OK) {
         return ret;
