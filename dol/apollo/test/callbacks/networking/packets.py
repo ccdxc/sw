@@ -52,11 +52,9 @@ def __get_host_from_route_impl(obj):
             sys.exit(1)
             return None
     total_hosts = route.num_addresses
+    host = route.network_address
     if total_hosts > 1:
-        host = next(route.hosts())
         host += random.randint(0, total_hosts-1)
-    else:
-        host = route.network_address
     return str(host)
 
 def GetUsableHostFromRoute(testcase, packet, args=None):
