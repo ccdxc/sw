@@ -60,16 +60,21 @@ security_policy_impl::destroy(security_policy_impl *impl) {
 sdk_ret_t
 security_policy_impl::reserve_resources(api_base *orig_obj,
                                         obj_ctxt_t *obj_ctxt) {
-    uint32_t    policy_block_id;
+    uint32_t             policy_block_id;
+    pds_policy_spec_t    *spec;
 
+    spec = &obj_ctxt->api_params->policy_spec;
     /**< allocate available block for this security policy */
-    if (security_policy_impl_db()->security_policy_idxr()->alloc(&policy_block_id) !=
+    if (security_policy_impl_db()->security_policy_idxr(spec->af,
+                                                        spec->direction)->alloc(&policy_block_id) !=
             sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
     security_policy_root_addr_ =
-        security_policy_impl_db()->security_policy_region_addr() +
-            (security_policy_impl_db()->security_policy_table_size() *
+        security_policy_impl_db()->security_policy_region_addr(spec->af,
+                                                               spec->direction) +
+            (security_policy_impl_db()->security_policy_table_size(spec->af,
+                                                                   spec->direction) *
                  policy_block_id);
     return SDK_RET_OK;
 }
@@ -80,8 +85,10 @@ security_policy_impl::reserve_resources(api_base *orig_obj,
  */
 sdk_ret_t
 security_policy_impl::release_resources(api_base *api_obj) {
+#if 0
     uint32_t    policy_block_id;
 
+    // TODO: need to release to right table
     if (security_policy_root_addr_ != 0xFFFFFFFFFFFFFFFFUL) {
         policy_block_id =
             (security_policy_root_addr_ -
@@ -89,6 +96,7 @@ security_policy_impl::release_resources(api_base *api_obj) {
                 security_policy_impl_db()->security_policy_table_size();
         security_policy_impl_db()->security_policy_idxr()->free(policy_block_id);
     }
+#endif
     return SDK_RET_OK;
 }
 
@@ -117,7 +125,8 @@ security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Processing security policy %u",
                     spec->key.id);
     ret = rfc_policy_create(&policy, security_policy_root_addr_,
-              security_policy_impl_db()->security_policy_table_size());
+              security_policy_impl_db()->security_policy_table_size(spec->af,
+                                                                    spec->direction));
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build RFC policy table, err : %u", ret);
     }

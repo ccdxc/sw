@@ -28,20 +28,44 @@ security_policy_impl_state::security_policy_impl_state(pds_state *state) {
      * routing table (with the assumption that more than one routing table
      * is not updated in any given batch
      */
-    v4_idxr_ =
+    egr_v4_idxr_ =
         indexer::factory(PDS_MAX_RULES_PER_SECURITY_POLICY + 1);
-    SDK_ASSERT(v4_idxr_ != NULL);
-    v4_region_addr_ =
-        state->mempartition()->start_addr("sacl_v4");
-    v4_table_size_ =
-        state->mempartition()->block_size("sacl_v4");
+    SDK_ASSERT(egr_v4_idxr_ != NULL);
+    egr_v4_region_addr_ =
+        state->mempartition()->start_addr("sacl_egress_v4");
+    egr_v4_table_size_ =
+        state->mempartition()->block_size("sacl_egress_v4");
+    ing_v4_idxr_ =
+        indexer::factory(PDS_MAX_RULES_PER_SECURITY_POLICY + 1);
+    SDK_ASSERT(ing_v4_idxr_ != NULL);
+    ing_v4_region_addr_ =
+        state->mempartition()->start_addr("sacl_ingress_v4");
+    ing_v4_table_size_ =
+        state->mempartition()->block_size("sacl_ingress_v4");
+    egr_v6_idxr_ =
+        indexer::factory(PDS_MAX_RULES_PER_SECURITY_POLICY + 1);
+    SDK_ASSERT(egr_v6_idxr_ != NULL);
+    egr_v6_region_addr_ =
+        state->mempartition()->start_addr("sacl_egress_v6");
+    egr_v6_table_size_ =
+        state->mempartition()->block_size("sacl_egress_v6");
+    ing_v6_idxr_ =
+        indexer::factory(PDS_MAX_RULES_PER_SECURITY_POLICY + 1);
+    SDK_ASSERT(ing_v6_idxr_ != NULL);
+    ing_v6_region_addr_ =
+        state->mempartition()->start_addr("sacl_ingress_v6");
+    ing_v6_table_size_ =
+        state->mempartition()->block_size("sacl_ingress_v6");
 }
 
 /**
  * @brief    destructor
  */
 security_policy_impl_state::~security_policy_impl_state() {
-    indexer::destroy(v4_idxr_);
+    indexer::destroy(egr_v4_idxr_);
+    indexer::destroy(ing_v4_idxr_);
+    indexer::destroy(egr_v6_idxr_);
+    indexer::destroy(ing_v6_idxr_);
 }
 
 /**
@@ -51,8 +75,10 @@ security_policy_impl_state::~security_policy_impl_state() {
  */
 sdk_ret_t
 security_policy_impl_state::table_transaction_begin(void) {
-    //v4_idxr_->txn_start();
-    //v6_idxr_->txn_start();
+    //egr_v4_idxr_->txn_start();
+    //ing_v4_idxr_->txn_start();
+    //egr_v6_idxr_->txn_start();
+    //ing_v6_idxr_->txn_start();
     return SDK_RET_OK;
 }
 
@@ -63,8 +89,10 @@ security_policy_impl_state::table_transaction_begin(void) {
  */
 sdk_ret_t
 security_policy_impl_state::table_transaction_end(void) {
-    //v4_idxr_->txn_end();
-    //v6_idxr_->txn_end();
+    //egr_v4_idxr_->txn_end();
+    //ing_v4_idxr_->txn_end();
+    //egr_v6_idxr_->txn_end();
+    //ing_v6_idxr_->txn_end();
     return SDK_RET_OK;
 }
 

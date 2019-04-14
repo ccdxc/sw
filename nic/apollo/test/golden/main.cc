@@ -50,7 +50,7 @@ using namespace sdk::platform::capri;
 #define JTXDMA_PRGM "txdma_program"
 #define JLIFQSTATE "lif2qstate_map"
 #define JPKTBUFFER "rxdma_to_txdma_buf"
-#define JSACLV4BASE "sacl_v4"
+#define JSACLV4BASE "sacl_egress_v4"
 #define JLPMV4BASE "lpm_v4"
 #define JFLOWSTATSBASE "flow_stats"
 #define JP4_PRGM        "p4_program"
