@@ -269,6 +269,8 @@ fixtures:
 	@if [ -z ${BYPASS_DOCS} ]; then \
 		echo "++ generating documentation"; \
 		tools/scripts/gendocs.sh "${REGISTRY_URL}/${UI_BUILD_CONTAINER}" ;\
+		cp -r api/docs tools/docker-files/apigw; \
+		cp -r docs/examples tools/docker-files/apigw/docs; \
 	fi
 
 shell:

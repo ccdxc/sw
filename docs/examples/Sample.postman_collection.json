@@ -1,0 +1,1084 @@
+{
+	"info": {
+		"_postman_id": "3fd02264-ca08-40f9-a873-add971e63ead",
+		"name": "Demo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Bootstrap",
+			"item": [
+				{
+					"name": "clusterCreate",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"kind\": \"Cluster\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"testCluster\"\n    },\n    \"spec\": {\n        \"auto-admit-nics\": true,\n        \"ntp-servers\": [\n            \"0.us.pool.ntp.org\",\n            \"1.us.pool.ntp.org\"\n        ],\n        \"quorum-nodes\": [\n            \"{{veniceNode}}\"\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "http://{{veniceNode}}:{{bootstrapPort}}/api/v1/cluster",
+							"protocol": "http",
+							"host": [
+								"{{veniceNode}}"
+							],
+							"port": "{{bootstrapPort}}",
+							"path": [
+								"api",
+								"v1",
+								"cluster"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tenant-create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n            \"kind\": \"Tenant\",\n            \"meta\": {\n                \"name\": \"default\"\n            }\n}"
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/cluster/v1/tenants",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"cluster",
+								"v1",
+								"tenants"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "auth-policy-create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n            \"Kind\": \"AuthenticationPolicy\",\n            \"APIVersion\": \"v1\",\n            \"meta\": {\n                \"Name\": \"AuthenticationPolicy\"\n            },\n            \"spec\": {\n            \t\"authenticators\": {\n            \t\t\"ldap\": {\n            \t\t\t\"enabled\": false\n            \t\t},\n            \t\t\"local\":{\n            \t\t\t\"enabled\": true\n            \t\t},\n            \t\t\"authenticator-order\":[\"LOCAL\"]\n            \t}\n           }\n}"
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/auth/v1/authn-policy",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"auth",
+								"v1",
+								"authn-policy"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AdminuserCreate",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n \"kind\": \"User\",\n \"api-version\": \"v1\",\n \"meta\": {\n   \"name\": \"admin\"\n },\n \"spec\": {\n   \"fullname\" : \"Admin User\",\n   \"password\" : \"Str0ngPas$\",\n   \"type\": \"Local\",\n   \"email\": \"myemail@mydomain.io\"\n }\n}"
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/auth/v1/tenant/default/users",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"auth",
+								"v1",
+								"tenant",
+								"default",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "AdminRoleBinding create",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"kind\": \"RoleBinding\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"AdminRoleBinding\",\n        \"tenant\": \"default\"\n    },\n    \"spec\": {\n        \"users\": [\"admin\"],\n        \"role\": \"AdminRole\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/auth/v1/tenant/default/role-bindings/AdminRoleBinding",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"auth",
+								"v1",
+								"tenant",
+								"default",
+								"role-bindings",
+								"AdminRoleBinding"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "authBootstrapComplete",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n \n}"
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/cluster/v1/cluster/AuthBootstrapComplete",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"cluster",
+								"v1",
+								"cluster",
+								"AuthBootstrapComplete"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Host_Workload_CRUDs",
+			"item": [
+				{
+					"name": "Create Host1",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "abb9744e-dd31-4743-abf2-30ba38ba0ad1",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"host1\"\n    },\n    \"spec\": {\n        \"smart-nics\": [\n            {\n                \"mac-address\": \"00ae.cd00.1938\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/cluster/v1/hosts",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"cluster",
+								"v1",
+								"hosts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "LIST hosts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/cluster/v1/hosts",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"cluster",
+								"v1",
+								"hosts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Host1",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/cluster/v1/hosts/host1",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"cluster",
+								"v1",
+								"hosts",
+								"host1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Workload",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "31003a8a-d8e8-4491-a600-d404e8a7a9b4",
+								"exec": [
+									"wlNum=1;",
+									"",
+									"pm.environment.set(\"wlName\", \"vm-\" + wlNum);",
+									"pm.environment.set(\"host\", pm.environment.get(\"wl\" + wlNum + \"host\"));",
+									"pm.environment.set(\"mac\", pm.environment.get(\"wl\" + wlNum + \"mac\"));",
+									"pm.environment.set(\"usegVlan\", pm.environment.get(\"wl\" + wlNum + \"usegVlan\"));",
+									"pm.environment.set(\"ExtVlan\", pm.environment.get(\"wl\" + wlNum + \"ExtVlan\"));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"workload1\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"host-name\": \"host1\",\n        \"interfaces\": [\n            {\n                \"mac-address\": \"d4c9.3c00.1938\",\n                \"micro-seg-vlan\": 100,\n                \"external-vlan\": 1,\n                \"ip-addresses\": [\n                    \"10.100.0.10\"\n                ]\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/workload/v1/workloads",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"workload",
+								"v1",
+								"workloads"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "LIST workloads",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/workload/v1/workloads",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"workload",
+								"v1",
+								"workloads"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "LIST networks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/network/v1/networks",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"network",
+								"v1",
+								"networks"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Workload",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "136501bc-deb2-48ed-a84f-80de08fad6aa",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/workload/v1/workloads/workload1",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"workload",
+								"v1",
+								"workloads",
+								"workload1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Show",
+			"item": [
+				{
+					"name": "Auth",
+					"item": [
+						{
+							"name": "getAuthPolicy",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{apigwurl}}/configs/auth/v1/authn-policy",
+									"host": [
+										"{{apigwurl}}"
+									],
+									"path": [
+										"configs",
+										"auth",
+										"v1",
+										"authn-policy"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getRoleBindings",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{apigwurl}}/configs/auth/v1/role-bindings",
+									"host": [
+										"{{apigwurl}}"
+									],
+									"path": [
+										"configs",
+										"auth",
+										"v1",
+										"role-bindings"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getRoles",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{apigwurl}}/configs/auth/v1/roles",
+									"host": [
+										"{{apigwurl}}"
+									],
+									"path": [
+										"configs",
+										"auth",
+										"v1",
+										"roles"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getUsers",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{apigwurl}}/configs/auth/v1/users",
+									"host": [
+										"{{apigwurl}}"
+									],
+									"path": [
+										"configs",
+										"auth",
+										"v1",
+										"users"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Cluster",
+					"item": [
+						{
+							"name": "getCluster",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{apigwurl}}/configs/cluster/v1/cluster",
+									"host": [
+										"{{apigwurl}}"
+									],
+									"path": [
+										"configs",
+										"cluster",
+										"v1",
+										"cluster"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getNodes",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{apigwurl}}/configs/cluster/v1/nodes",
+									"host": [
+										"{{apigwurl}}"
+									],
+									"path": [
+										"configs",
+										"cluster",
+										"v1",
+										"nodes"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Monitoring",
+					"item": [
+						{
+							"name": "getAlertPolicy",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "abb9744e-dd31-4743-abf2-30ba38ba0ad1",
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"kind\": \"AlertPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"alertPolicy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"resource\": \"Event\",\n        \"severity\": \"INFO\",\n        \"message\": \"a smartNIC got admitted\",\n        \"requirements\": [{\n            \"key\": \"type\",\n            \"operator\": \"equals\",\n            \"values\": [\"NICAdmitted\"]\n        }],\n        \"enable\": true\n    }\n}"
+								},
+								"url": {
+									"raw": "{{apigwurl}}/configs/monitoring/v1/tenant/default/alertPolicies",
+									"host": [
+										"{{apigwurl}}"
+									],
+									"path": [
+										"configs",
+										"monitoring",
+										"v1",
+										"tenant",
+										"default",
+										"alertPolicies"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getAlerts",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "abb9744e-dd31-4743-abf2-30ba38ba0ad1",
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"kind\": \"AlertPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"alertPolicy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"resource\": \"Event\",\n        \"severity\": \"INFO\",\n        \"message\": \"a smartNIC got admitted\",\n        \"requirements\": [{\n            \"key\": \"type\",\n            \"operator\": \"equals\",\n            \"values\": [\"NICAdmitted\"]\n        }],\n        \"enable\": true\n    }\n}"
+								},
+								"url": {
+									"raw": "{{apigwurl}}/configs/monitoring/v1/alerts",
+									"host": [
+										"{{apigwurl}}"
+									],
+									"path": [
+										"configs",
+										"monitoring",
+										"v1",
+										"alerts"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getEvents",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "abb9744e-dd31-4743-abf2-30ba38ba0ad1",
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": null,\n    \"tenant\": null,\n    \"namespace\": null,\n    \"generation-id\": null,\n    \"resource-version\": null,\n    \"uuid\": null,\n    \"labels\": null,\n    \"self-link\": null,\n    \"label-selector\": null,\n    \"field-change-selector\": [],\n    \"field-selector\": \"meta.mod-time>2019-01-01T03:14:29.53167127Z\",\n    \"from\": null,\n    \"max-results\": 4,\n    \"sort-order\": \"None\"\n}"
+								},
+								"url": {
+									"raw": "{{apigwurl}}/events/v1/events",
+									"host": [
+										"{{apigwurl}}"
+									],
+									"path": [
+										"events",
+										"v1",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "getAuditEvents",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "abb9744e-dd31-4743-abf2-30ba38ba0ad1",
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"from\": 0,\n    \"max-results\": 8000,\n    \"sort-by\": \"meta.mod-time\",\n    \"sort-order\": \"Descending\",\n    \"mode\": null,\n    \"query\": {\n        \"kinds\": [\n            \"AuditEvent\"\n        ]\n    }\n}"
+								},
+								"url": {
+									"raw": "{{apigwurl}}/events/v1/events",
+									"host": [
+										"{{apigwurl}}"
+									],
+									"path": [
+										"events",
+										"v1",
+										"events"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "smartnics-get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/cluster/v1/smartnics",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"cluster",
+								"v1",
+								"smartnics"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "SecurityGroupPolicy_CRUDs",
+			"item": [
+				{
+					"name": "createApp",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"kind\": \"App\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"ftpApp\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"proto-ports\": [\n            {\n                \"protocol\": \"tcp\",\n                \"ports\": \"21\"\n            }\n        ],\n        \"alg\": {\n            \"type\": \"FTP\"\n        }\n    }\n}"
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/security/v1/apps",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"security",
+								"v1",
+								"apps"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "createSGPolicy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"kind\": \"SGPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"policy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"attach-tenant\": true,\n        \"rules\": [\n            {\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"10.0.0.1\"\n                ],\n                \"to-ip-addresses\": [\n                    \"10.0.0.2\",\n                    \"10.0.0.4\"\n                ],\n                \"apps\": [\n                    \"ftpApp\"\n                ]\n            },\n            {\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"10.0.0.2\"\n                ],\n                \"to-ip-addresses\": [\n                    \"10.0.0.1\",\n                    \"11.0.0.0/24\"\n                ],\n                \"proto-ports\": [\n                    {\n                        \"protocol\": \"tcp\",\n                        \"ports\": \"100-200\"\n                    }\n                ]\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/security/v1/sgpolicies",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"security",
+								"v1",
+								"sgpolicies"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_sg_policy_after_create",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/security/v1/sgpolicies",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"security",
+								"v1",
+								"sgpolicies"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "LIST apps",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/security/v1/apps",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"security",
+								"v1",
+								"apps"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update_sg_policy",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"kind\": \"SGPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"policy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"attach-tenant\": true,\n        \"rules\": [\n            {\n                \"apps\": [\n                    \"ftpApp\"\n                ],\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"10.0.0.1/23\"\n                ],\n                \"to-ip-addresses\": [\n                    \"10.0.0.0/24\",\n                    \"11.0.0.0/24\"\n                ]\n            },\n            {\n                \"proto-ports\": [\n                    {\n                        \"protocol\": \"tcp\",\n                        \"ports\": \"100-200\"\n                    }\n                ],\n                \"action\": \"PERMIT\",\n                \"from-ip-addresses\": [\n                    \"10.0.0.2\"\n                ],\n                \"to-ip-addresses\": [\n                    \"10.0.0.1\",\n                    \"11.0.0.0/24\"\n                ]\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/security/v1/sgpolicies/policy1",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"security",
+								"v1",
+								"sgpolicies",
+								"policy1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete_sg_policy",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/security/v1/sgpolicies/policy1",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"security",
+								"v1",
+								"sgpolicies",
+								"policy1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "deleteApp",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/security/v1/sgpolicies/policy1",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"security",
+								"v1",
+								"sgpolicies",
+								"policy1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "AlertPolicy",
+			"item": [
+				{
+					"name": "CreateAlertPolicy",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "abb9744e-dd31-4743-abf2-30ba38ba0ad1",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"kind\": \"AlertPolicy\",\n    \"api-version\": \"v1\",\n    \"meta\": {\n        \"name\": \"alertPolicy1\",\n        \"tenant\": \"default\",\n        \"namespace\": \"default\"\n    },\n    \"spec\": {\n        \"resource\": \"Event\",\n        \"severity\": \"INFO\",\n        \"message\": \"a smartNIC got admitted\",\n        \"requirements\": [{\n            \"key\": \"type\",\n            \"operator\": \"equals\",\n            \"values\": [\"NICAdmitted\"]\n        }],\n        \"enable\": true\n    }\n}"
+						},
+						"url": {
+							"raw": "{{apigwurl}}/configs/monitoring/v1/tenant/default/alertPolicies",
+							"host": [
+								"{{apigwurl}}"
+							],
+							"path": [
+								"configs",
+								"monitoring",
+								"v1",
+								"tenant",
+								"default",
+								"alertPolicies"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "admin-user-login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\": \"admin\",\n\t\"password\": \"Str0ngPas$\",\n\t\"tenant\": \"default\"\n}"
+				},
+				"url": {
+					"raw": "{{apigwurl}}/v1/login",
+					"host": [
+						"{{apigwurl}}"
+					],
+					"path": [
+						"v1",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "adminPasswordChange",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"new-password\": \"MyStr0ngPensando0$\",\n\t\"old-password\": \"Str0ngPas$\"\n}"
+				},
+				"url": {
+					"raw": "{{apigwurl}}/configs/auth/v1/tenant/default/users/admin/PasswordChange",
+					"host": [
+						"{{apigwurl}}"
+					],
+					"path": [
+						"configs",
+						"auth",
+						"v1",
+						"tenant",
+						"default",
+						"users",
+						"admin",
+						"PasswordChange"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
