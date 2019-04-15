@@ -222,10 +222,8 @@
          *ngIf="isUserEditMode(user) && userEditAction==='changepassword'"
          [formGroup]="authPasswordChangeRequest.$formGroup">
       <div fxLayout="row wrap" fxLayoutAlign="start" class="usertemplate-rolegroup-header-edit-row">
-        <div
-             class="usertemplate-rolegroup-header-edit-label usertemplate-rolegroup-header-edit-label-oldpassword">
-          Old
-          Password:</div>
+        <div class="usertemplate-rolegroup-header-edit-label usertemplate-rolegroup-header-edit-label-oldpassword">
+          Old Password:</div>
         <div class="usertemplate-rolegroup-header-add-property-value">
           <input fxFlex="200px" formControlName="old-password"
                  class="user-edit-input-item user-edit-Password"
@@ -234,10 +232,8 @@
         </div>
       </div>
       <div fxLayout="row" class="usertemplate-rolegroup-header-edit-row">
-        <div
-             class="usertemplate-rolegroup-header-edit-label usertemplate-rolegroup-header-edit-label-newpassword">
-          New
-          Password:</div>
+        <div class="usertemplate-rolegroup-header-edit-label usertemplate-rolegroup-header-edit-label-newpassword">
+          New Password:</div>
         <div class="usertemplate-rolegroup-header-add-property-value">
           <input fxFlex="200px" formControlName="new-password"
                  class="user-edit-input-item user-edit-Password"

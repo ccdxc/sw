@@ -1,0 +1,69 @@
+<app-pagebody [icon]="bodyicon" header="Rollouts Overview">
+  <app-tableviewedit fxLayout="column" style="height: 100%"
+                     [creatingMode]="creatingMode"
+                     [showRowExpand]="showRowExpand"
+                     [data]="dataObjects"
+                     [cols]="cols"
+                     [expandedRowData]="expandedRowData"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate"
+                     [expandTemplate]="expandTemplate"
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+  </app-tableviewedit>
+</app-pagebody>
+
+
+<!-- TABLE HEADER -->
+<ng-template #captionTemplate let-count="count">
+  <app-tableheader title="Rollouts" [total]="dataObjects.length" [icon]="" width="250px">
+  </app-tableheader>
+</ng-template>
+
+<!-- TABLE BODY -->
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <div (click)="onRowClick($event, rowData)" style="cursor: pointer;">
+    <ng-container [ngSwitch]="col.field">
+      <ng-container *ngSwitchCase="'meta.name'">
+        {{rowData.meta['name'] }}
+      </ng-container>
+      <ng-container *ngSwitchCase="'meta.mod-time'">
+        {{rowData.meta['mod-time'] | PrettyDate }}
+      </ng-container>
+      <ng-container *ngSwitchCase="'meta.creation-time'">
+        {{rowData.meta['creation-time'] | PrettyDate }}
+      </ng-container>
+      <ng-container *ngSwitchCase="'spec.scheduled-start-time'">
+        {{rowData.spec['scheduled-start-time'] | PrettyDate }}
+      </ng-container>
+      <ng-container *ngSwitchDefault>
+        {{displayColumn(rowData, col)}}
+      </ng-container>
+    </ng-container>
+  </div>
+</ng-template>
+
+<!-- TABLE ACTION -->
+<ng-template #actionTemplate let-rowData>
+
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+
+    <mat-icon matTooltip="Edit rollout" class="global-table-action-icon"
+              (click)="expandRowRequest($event, rowData)">edit
+    </mat-icon>
+    <mat-icon matTooltip="Delete rollout" class="global-table-action-icon"
+              (click)="onDeleteRecord($event, rowData)">delete
+    </mat-icon>
+  </div>
+</ng-template>
+
+<ng-template #expandTemplate let-rowData let-columns="columns">
+  <div [style.width]="'100%'" fxLayout="column">
+    <div fxFlex="auto" fxLayout="row" fxLayoutAlign="center start" class="rollouts-container">
+      <div class="rollouts-detail-div">
+        <pre>{{displayRollOut()}}</pre>
+      </div>
+    </div>
+
+
+  </div>
+</ng-template>

@@ -3,7 +3,12 @@
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
-.systemupgrade {
+.imageupload {
   @include primary-font();
 
+}
+
+.imageupload-fileupload-info-div {
+  margin-left: 10px;
+  font-size: 20px;
 }

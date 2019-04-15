@@ -14,15 +14,15 @@ import { ConfirmationService } from 'primeng/primeng';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { MessageService } from '@app/services/message.service';
 
-import { SystemupgradeComponent } from './systemupgrade.component';
+import { ImageuploadComponent } from './imageupload.component';
 
-describe('SystemupgradeComponent', () => {
-  let component: SystemupgradeComponent;
-  let fixture: ComponentFixture<SystemupgradeComponent>;
+describe('ImageuploadComponent', () => {
+  let component: ImageuploadComponent;
+  let fixture: ComponentFixture<ImageuploadComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SystemupgradeComponent ],
+      declarations: [ ImageuploadComponent ],
       imports: [
         MaterialdesignModule,
         RouterTestingModule,
@@ -46,7 +46,7 @@ describe('SystemupgradeComponent', () => {
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SystemupgradeComponent);
+    fixture = TestBed.createComponent(ImageuploadComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

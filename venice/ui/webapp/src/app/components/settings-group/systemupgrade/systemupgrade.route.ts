@@ -6,8 +6,27 @@ import { SystemupgradeComponent } from '@app/components/settings-group/systemupg
 const routes: Routes = [
   {
     path: '',
-    component: SystemupgradeComponent
+    redirectTo: 'rollouts',
+    pathMatch: 'full'
   },
+  {
+    path: 'imageuload',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/settings-group/systemupgrade/imageupload/imageupload.module#ImageuploadModule'
+      }
+    ]
+  },
+  {
+    path: 'rollouts',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/settings-group/systemupgrade/rollouts/rollouts.module#RolloutsModule'
+      }
+    ]
+  }
 ];
 
 @NgModule({

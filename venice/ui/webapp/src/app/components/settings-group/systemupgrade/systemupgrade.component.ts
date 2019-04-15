@@ -1,8 +1,7 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnDestroy, OnInit , ViewEncapsulation} from '@angular/core';
 import { Animations } from '@app/animations';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { ControllerService } from '@app/services/controller.service';
-import { BaseComponent } from '@app/components/base/base.component';
-import { Icon } from '@app/models/frontend/shared/icon.interface';
 
 @Component({
   selector: 'app-systemupgrade',
@@ -11,60 +10,17 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class SystemupgradeComponent extends BaseComponent implements OnInit {
+export class SystemupgradeComponent implements OnInit, OnDestroy {
 
-  uploadedFiles: any[] = [];
-
-  bodyIcon: Icon = {
-    margin: {
-      top: '8px',
-      left: '10px',
-    },
-    matIcon: 'cloud_upload'
-  };
-
-  constructor(protected _controllerService: ControllerService
-  ) {
-    super(_controllerService);
-  }
-
-  ngOnInit() {
-    this.setToolbarItems();
-  }
-
-  protected setToolbarItems() {
-    this._controllerService.setToolbarData({
-      buttons: [
-      ],
-      breadcrumb: [{ label: 'System Upgrade', url: '' }, { label: 'File Upload', url: '' }]
-    });
-  }
-
-  /**
-   * This API serves html template
-   */
-  onUpload(event) {
-    const files = event.files;
-    const filenames = this.getFilesNames(files);
-    this._controllerService.invokeInfoToaster('Upload succeeded', 'Uploaded files: ' + filenames.join(',') + '. System will validate uploaded files.');
-  }
-
-   /**
-   * This API serves html template
-   */
-  onError(event) {
-    const files = event.files;
-    const filenames = this.getFilesNames(files);
-    this._controllerService.invokeErrorToaster('Upload failed', 'Involved files: ' + filenames.join(','));
-  }
-
-  getFilesNames(files: any[]): string[] {
-    const filenames: string [] = [];
-    for (const  file of files) {
-      this.uploadedFiles.push(file);
-      filenames.push(file.name);
+  constructor(protected _controllerService: ControllerService ) {    }
+    ngOnInit() {
     }
-    return filenames;
-  }
 
+    /**
+     * Component is about to exit
+     */
+    ngOnDestroy() {
+      // publish event that AppComponent is about to exist
+      this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'SystemupgradeComponent', 'state': Eventtypes.COMPONENT_DESTROY });
+    }
 }

@@ -35,8 +35,8 @@
       <div *ngFor="let v of rowData['processedSmartNics']">
         <a *ngIf="v.mac != ''" routerLink="/cluster/naples/{{v.mac}}">{{v.text}}</a>
         <a *ngIf="v.mac == ''">{{v.text}}</a>
-        <mat-icon class="admitted_icon" [inline]="true" *ngIf="v.admitted"
-                  [matTooltip]="'Admitted'">check_circle</mat-icon>
+        <mat-icon class="not_admitted_icon" [inline]="true" *ngIf="!v.admitted"
+                  [matTooltip]="'Not Admitted'">announcement</mat-icon>
       </div>
     </ng-container>
     <ng-container *ngSwitchDefault>

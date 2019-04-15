@@ -822,6 +822,8 @@ export class Utility {
       case 'Role':
       case 'RoleBinding':
         return 'settings/users';
+      case 'Rollout':
+        return 'settings/upgrade/rollouts';
       default:
         return (!isToUseDefault) ? null : cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
     }
