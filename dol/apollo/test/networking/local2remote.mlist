@@ -9,6 +9,18 @@ feature:
 
 modules:
     - module:
+        name    : IPV4_VPC_PEERING
+        spec    : local2remote_vpc_peering.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=VPC_PEER,Label=NETWORKING
+
+    - module:
+        name    : IPV6_VPC_PEERING
+        spec    : local2remote_vpc_peering.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=VPC_PEER,Label=NETWORKING
+
+    - module:
         name    : L2_IPV4_TCP_QTAG
         spec    : local2remote.testspec
         iterate :

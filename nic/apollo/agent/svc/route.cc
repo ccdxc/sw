@@ -32,9 +32,19 @@ pds_agent_route_table_api_spec_fill (pds_route_table_spec_t *api_spec,
     for (int i = 0; i < proto_spec.routes_size(); i++) {
         const pds::Route &proto_route = proto_spec.routes(i);
         ippfx_proto_spec_to_api_spec(&api_spec->routes[i].prefix, proto_route.prefix());
-        ipaddr_proto_spec_to_api_spec(&api_spec->routes[i].nh_ip, proto_route.nexthop());
-        // TODO: hardcoded for now
-        api_spec->routes[i].nh_type = PDS_NH_TYPE_TEP;
+        switch (proto_route.Nh_case()) {
+        case pds::Route::kNextHop:
+            ipaddr_proto_spec_to_api_spec(&api_spec->routes[i].nh_ip, proto_route.nexthop());
+            api_spec->routes[i].nh_type = PDS_NH_TYPE_TEP;
+            break;
+        case pds::Route::kVPCId:
+            api_spec->routes[i].vcn.id = proto_route.vpcid();
+            api_spec->routes[i].nh_type = PDS_NH_TYPE_PEER_VCN;
+            break;
+        default:
+            api_spec->routes[i].nh_type = PDS_NH_TYPE_BLACKHOLE;
+            break;
+        }
     }
 }
 

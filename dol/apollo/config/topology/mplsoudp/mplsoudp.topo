@@ -32,10 +32,10 @@ device:
 vpc:
     # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
     - stack  : dual # dual, ipv4 , ipv6
-      count : 1
+      count : 2
       type  : tenant
       subnet:
-        - count     : 36
+        - count     : 37
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
@@ -304,5 +304,16 @@ vpc:
                    - '1234:5678:4321:8765:1111::\80'
                    - '1234:5678:4321:8765:1111:3333::\96'
                    - '1234:5678:4321:8765:1111:3333:4444::\112'
+                   - '0::\0'
+
+             - type: specific # vpc peering
+               routetype: vpc_peer_with_default
+               v4routes:
+                   - '10.10.0.0\16'
+                   - '11.11.0.0\16'
+                   - '0.0.0.0\0'
+               v6routes:
+                   - '1234:5678:4321:8765:1111::\80'
+                   - '1234:5678:4321:8765:1111:3333::\96'
                    - '0::\0'
 

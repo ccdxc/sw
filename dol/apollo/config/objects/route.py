@@ -14,7 +14,7 @@ from infra.common.logging import logger
 from apollo.config.store import Store
 
 class RouteObject(base.ConfigObjectBase):
-    def __init__(self, parent, af, routes, routetype, tunobj):
+    def __init__(self, parent, af, routes, routetype, tunobj, vpcpeerid):
         super().__init__()
         ################# PUBLIC ATTRIBUTES OF ROUTE TABLE OBJECT #####################
         if af == utils.IP_VERSION_6:
@@ -31,18 +31,17 @@ class RouteObject(base.ConfigObjectBase):
         self.VPCId = parent.VPCId
         self.Label = 'NETWORKING'
         self.RouteType = routetype # used for lpm route cases
-        if 'default' in routetype:
-            self.HasDefaultRoute = True
-        else:
-            self.HasDefaultRoute = False
+        self.HasDefaultRoute = True if 'default' in routetype else False
+        self.PeerVPCId = vpcpeerid
+        self.VPCPeeringEnabled = True if 'vpc_peer' in routetype else False
         ##########################################################################
         self.Show()
         return
 
     def __repr__(self):
-        return "RouteTblID:%d|VPCId:%d|NumRoutes:%d|HasDefaultRoute:%d|AddrFamily:%s|RouteType:%s|NextHop:%s" %\
+        return "RouteTblID:%d|VPCId:%d|NumRoutes:%d|HasDefaultRoute:%d|AddrFamily:%s|RouteType:%s|NextHop:%s|VPCPeering:%s ID:%d" %\
                (self.RouteTblId, self.VPCId, len(self.routes), self.HasDefaultRoute,
-                self.AddrFamily, self.RouteType, str(self.TunIPAddr))
+                self.AddrFamily, self.RouteType, str(self.TunIPAddr), self.VPCPeeringEnabled, self.PeerVPCId)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = route_pb2.RouteTableRequest()
@@ -52,8 +51,11 @@ class RouteObject(base.ConfigObjectBase):
         for route in self.routes:
             rtspec = spec.Routes.add()
             utils.GetRpcIPPrefix(route, rtspec.Prefix)
-            rtspec.NextHop.Af = types_pb2.IP_AF_INET
-            rtspec.NextHop.V4Addr = int(self.TunIPAddr)
+            if self.VPCPeeringEnabled:
+                rtspec.VPCId = self.PeerVPCId
+            else:
+                rtspec.NextHop.Af = types_pb2.IP_AF_INET
+                rtspec.NextHop.V4Addr = int(self.TunIPAddr)
         return grpcmsg
 
     def Show(self):
@@ -114,6 +116,7 @@ class RouteObjectClient:
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         vpcid = parent.VPCId
+        vpccount = vpc_spec_obj.count
         stack = parent.Stack
         self.__v4objs[vpcid] = []
         self.__v6objs[vpcid] = []
@@ -125,6 +128,12 @@ class RouteObjectClient:
             return
 
         tunobj = self.__internet_tunnel_get(False)
+
+        def __get_vpc_peerid():
+            peerid = vpcid + 1
+            if (peerid > vpccount):
+                peerid %= vpccount
+            return peerid
 
         def __get_next_subnet(ip):
             if ip.version == 4:
@@ -163,12 +172,14 @@ class RouteObjectClient:
             return False
 
         def __add_v4routetable(v4routes, routetype):
-            obj = RouteObject(parent, utils.IP_VERSION_4, v4routes, routetype, tunobj)
+            vpcpeerid = __get_vpc_peerid()
+            obj = RouteObject(parent, utils.IP_VERSION_4, v4routes, routetype, tunobj, vpcpeerid)
             self.__v4objs[vpcid].append(obj)
             self.__objs.append(obj)
 
         def __add_v6routetable(v6routes, routetype):
-            obj = RouteObject(parent, utils.IP_VERSION_6, v6routes, routetype, tunobj)
+            vpcpeerid = __get_vpc_peerid()
+            obj = RouteObject(parent, utils.IP_VERSION_6, v6routes, routetype, tunobj, vpcpeerid)
             self.__v6objs[vpcid].append(obj)
             self.__objs.append(obj)
 

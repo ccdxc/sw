@@ -50,22 +50,40 @@ class FlowMapObject(base.ConfigObjectBase):
         return "FlowMapId:%d" %(self.FlowMapId)
 
     def Show(self):
-        logger.info("FlowMap Object: %s" % self)
-        logger.info("Local Id:%d|IPAddr:%s|SubnetId:%d|VPCId:%d|VnicId:%d"\
-             %(self.__lobj.MappingId, self.__lobj.IPAddr, self.__lobj.VNIC.SUBNET.SubnetId,\
-              self.__lobj.VNIC.SUBNET.VPC.VPCId, self.__lobj.VNIC.VnicId))
-        if self.__robj is None:
-            logger.info("No Remote mapping object")
-            self.__routeTblObj.Show()
+        def __show_flow_object(obj):
+            if obj is not None:
+                obj.Show()
             return
-        logger.info("Remote Id:%d|IPAddr:%s|SubnetId:%d|VPCId:%d"\
-             %(self.__robj.MappingId, self.__robj.IPAddr,\
-             self.__robj.SUBNET.SubnetId, self.__robj.SUBNET.VPC.VPCId))
+
+        logger.info("FlowMap Object: %s" % self)
+        __show_flow_object(self.__lobj)
+        __show_flow_object(self.__robj)
+        __show_flow_object(self.__routeTblObj)
+        __show_flow_object(self.__tunobj)
         return
 
 class FlowMapObjectHelper:
     def __init__(self):
         return
+
+    def __is_lmapping_valid(self, lobj):
+        routetblobj = None
+        if lobj.AddrFamily == 'IPV4':
+            routetblobj = lobj.VNIC.SUBNET.V4RouteTable
+        elif lobj.AddrFamily == 'IPV6':
+            routetblobj = lobj.VNIC.SUBNET.V6RouteTable
+        else:
+            return False
+        """
+            For local2remote, reject if route table has any of the following
+            # VPC Peering enabled
+            # Has default route
+            # empty routes
+        """
+        if routetblobj.VPCPeeringEnabled or routetblobj.HasDefaultRoute or\
+           (0 == len(routetblobj.routes)):
+           return False
+        return True
 
     def __is_lmapping_match(self, routetblobj, lobj):
         if lobj.AddrFamily == 'IPV4':
@@ -74,6 +92,16 @@ class FlowMapObjectHelper:
         if lobj.AddrFamily == 'IPV6':
             return lobj.AddrFamily == routetblobj.AddrFamily and\
                lobj.VNIC.SUBNET.V6RouteTableId == routetblobj.RouteTblId
+
+    def __is_rmapping_match(self, routetblobj, robj):
+        # match remote mapping VPC id with route table's peer VPC for VPC Peering
+        if robj.AddrFamily == 'IPV4':
+            return robj.AddrFamily == routetblobj.AddrFamily and\
+               robj.SUBNET.VPC.VPCId == routetblobj.PeerVPCId
+        if robj.AddrFamily == 'IPV6':
+            return robj.AddrFamily == routetblobj.AddrFamily and\
+               robj.SUBNET.VPC.VPCId == routetblobj.PeerVPCId
+        return False
 
     def GetMatchingConfigObjects(self, selectors):
         objs = []
@@ -96,9 +124,22 @@ class FlowMapObjectHelper:
         if value != None:
             rmapsel.flow.filters.remove((key, value))
 
-        assert (fwdmode == 'L2' or fwdmode == 'L3' or fwdmode == 'IGW' or fwdmode == 'IGW_NAT') == True
+        assert (fwdmode == 'L2' or fwdmode == 'L3' or fwdmode == 'IGW' or fwdmode == 'IGW_NAT' or fwdmode == 'VPC_PEER') == True
 
-        if fwdmode == 'IGW':
+        if fwdmode == 'VPC_PEER':
+            rmappings = rmapping.GetMatchingObjects(mapsel)
+            lmappings = lmapping.GetMatchingObjects(mapsel)
+            for routetblobj in routetable.GetAllMatchingObjects(mapsel):
+                if IsNatEnabled(routetblobj) is True:
+                    # Skip IGWs with nat flag set to True
+                    continue
+                lmappingobjs = filter(lambda x: self.__is_lmapping_match(routetblobj, x), lmappings)
+                rmappingobjs = filter(lambda x: self.__is_rmapping_match(routetblobj, x), rmappings)
+                for robj in rmappingobjs:
+                    for lobj in lmappingobjs:
+                        obj = FlowMapObject(lobj, robj, fwdmode, routetblobj, robj.TunObj)
+                        objs.append(obj)
+        elif fwdmode == 'IGW':
             for lobj in lmapping.GetMatchingObjects(mapsel):
                 for routetblobj in routetable.GetAllMatchingObjects(mapsel):
                     if not self.__is_lmapping_match(routetblobj, lobj):
@@ -122,7 +163,11 @@ class FlowMapObjectHelper:
                     objs.append(obj)
         else:
             for lobj in lmapping.GetMatchingObjects(mapsel):
+                if not self.__is_lmapping_valid(lobj):
+                    continue
                 for robj in rmapping.GetMatchingObjects(rmapsel):
+                    if lobj.VNIC.SUBNET.VPC.VPCId != robj.SUBNET.VPC.VPCId:
+                        continue
                     # Select mappings from the same subnet if L2 is set
                     if fwdmode == 'L2':
                         if lobj.VNIC.SUBNET.SubnetId != robj.SUBNET.SubnetId:
