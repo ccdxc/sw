@@ -531,7 +531,9 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
         pds_subnet.v6_route_table.id =
             route_table_id + (num_subnets * num_vpcs);
         pds_subnet.v4_route_table.id = route_table_id++;
-        pds_subnet.egr_v4_policy.id = id++;
+        pds_subnet.egr_v4_policy.id = id;
+        pds_subnet.ing_v4_policy.id = id + (num_subnets * num_vpcs);
+        id++;
 #ifdef TEST_GRPC_APP
         rv = create_subnet_grpc(&pds_subnet);
         if (rv != SDK_RET_OK) {
@@ -884,13 +886,13 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
-#if 0
     ret = create_security_policy(g_test_params.num_vpcs,
                                  g_test_params.num_subnets,
                                  g_test_params.num_rules, IP_AF_IPV4, true);
     if (ret != SDK_RET_OK) {
         return ret;
     }
+#if 0
     ret = create_security_policy(g_test_params.num_vpcs,
                                  g_test_params.num_subnets,
                                  g_test_params.num_rules, IP_AF_IPV6, false);

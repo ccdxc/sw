@@ -155,7 +155,7 @@ logger_init (void)
     logdir = std::getenv("LOG_DIR");
     if (!logdir) {
         // log in the current dir
-        logfile = std::string("./pen-agent.log");
+        logfile = std::string("./pds-agent.log");
     } else {
         // check if this log dir exists
         if (stat(logdir, &st) == -1) {
@@ -176,7 +176,7 @@ logger_init (void)
                 return SDK_RET_ERR;
             }
         }
-        logfile = logdir + std::string("/pen-agent.log");
+        logfile = logdir + std::string("/pds-agent.log");
     }
 
     // initialize the logger
