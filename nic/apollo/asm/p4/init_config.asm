@@ -26,6 +26,9 @@ service_header_done:
                                capri_p4_intrinsic_frame_size_sbit6_ebit13}
     seq             c1, k.capri_intrinsic_tm_iport, TM_PORT_DMA
     sub.!c1         r1, r1, CAPRI_GLOBAL_INTRINSIC_HDR_SZ
+    sub.c1          r1, r1, (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
+                             CAPRI_TXDMA_INTRINSIC_HDR_SZ + \
+                             APOLLO_PREDICATE_HDR_SZ)
     phvwr.e         p.capri_p4_intrinsic_packet_len, r1
     phvwr           p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
 

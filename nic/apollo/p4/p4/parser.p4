@@ -17,6 +17,8 @@ header egress_service_header_t egress_service_header;
 
 // Inter-pipeline headers
 header predicate_header_t predicate_header;
+@pragma pa_header_union ingress predicate_header
+header predicate_header_t predicate_header2;
 
 @pragma synthetic_header
 @pragma pa_field_union ingress p4_to_rxdma_header.flow_src          key_metadata.src
@@ -175,7 +177,7 @@ parser parse_ingress_predicate_header_rx {
     return parse_packet;
 }
 
-@pragma xgress inress
+@pragma xgress ingress
 parser parse_ingress_predicate_header_tx {
     set_metadata(control_metadata.direction, TX_FROM_HOST);
     return parse_packet;
@@ -471,12 +473,14 @@ parser deparse_ingress {
 
     extract(p4_to_rxdma_header);
     extract(predicate_header);
+    // splitter offset here for pipeline extension
+    extract(predicate_header2);
 
     extract(p4_to_p4plus_classic_nic);
     extract(p4_to_p4plus_classic_nic_ip);
+    // splitter offset here for classic nic app
     extract(p4_to_arm);
 
-    // set the splitter offset to here
     extract(p4_to_txdma_header);
     extract(p4i_apollo_i2e);
 

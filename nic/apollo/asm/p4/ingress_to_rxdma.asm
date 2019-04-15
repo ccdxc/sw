@@ -21,6 +21,7 @@ ingress_to_rxdma:
     /*
     phvwr           p.p4i_apollo_i2e_valid, TRUE
     phvwr           p.p4_to_txdma_header_valid, TRUE
+    phvwr           p.predicate_header2_valid, TRUE
     phvwr           p.predicate_header_valid, TRUE
     phvwr           p.p4_to_rxdma_header_valid, TRUE
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
@@ -31,10 +32,11 @@ ingress_to_rxdma:
                        p4_to_arm_valid, \
                        p4_to_p4plus_classic_nic_ip_valid, \
                        p4_to_p4plus_classic_nic_valid, \
+                       predicate_header2_valid, \
                        predicate_header_valid, \
                        p4_to_rxdma_header_valid, \
                        capri_rxdma_intrinsic_valid, \
-                       capri_p4_intrinsic_valid}, 0x1FF, 0x18F
+                       capri_p4_intrinsic_valid}, 0x3FF, 0x31F
     add             r1, k.capri_p4_intrinsic_packet_len, APOLLO_I2E_HDR_SZ
     phvwr           p.p4_to_rxdma_header_table3_valid, TRUE
     phvwr           p.p4_to_rxdma_header_direction, k.control_metadata_direction
@@ -117,6 +119,7 @@ redirect_to_arm:
     phvwr           p.p4_to_arm_valid, TRUE
     phvwr           p4_to_p4plus_classic_nic_ip_valid, TRUE
     phvwr           p4_to_p4plus_classic_nic_valid, TRUE
+    phvwr           p.predicate_header2_valid, FALSE
     phvwr           p.predicate_header_valid, FALSE
     phvwr           capri_rxdma_intrinsic_valid,TRUE
     phvwr           p.capri_p4_intrinsic_valid, TRUE
@@ -127,10 +130,11 @@ redirect_to_arm:
                        p4_to_arm_valid, \
                        p4_to_p4plus_classic_nic_ip_valid, \
                        p4_to_p4plus_classic_nic_valid, \
+                       predicate_header2_valid, \
                        predicate_header_valid, \
                        p4_to_rxdma_header_valid, \
                        capri_rxdma_intrinsic_valid, \
-                       capri_p4_intrinsic_valid}, 0x073, 0x27B
+                       capri_p4_intrinsic_valid}, 0x0E3, 0x4FB
     or              r1, k.ctag_1_valid, k.ipv4_1_valid, \
                         APOLLO_CPU_FLAGS_IPV4_1_VALID_BIT_POS
     or              r1, r1, k.ipv6_1_valid, \
