@@ -419,6 +419,19 @@ p4pd_init (p4pd_cfg_t *p4pd_cfg)
     return P4PD_SUCCESS;
 }
 
+//----------------------------------------------------------------------------
+// set hbm address and mapped address
+//----------------------------------------------------------------------------
+void
+p4pd_hbm_table_address_set (uint32_t tableid, mem_addr_t pa, mem_addr_t va)
+{
+    p4pd_table_properties_t *tbl;
+
+    tbl = _p4tbls + tableid;
+    tbl->base_mem_pa = pa;
+    tbl->base_mem_va = va;
+}
+
 //-----------------------------------------------------------------------------
 // P4PD API that uses tableID to return table properties that app
 // layer can use to construct, initialize P4 tables in local memory.

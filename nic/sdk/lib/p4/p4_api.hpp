@@ -35,6 +35,7 @@
  */
 
 #include "p4_utils.hpp"
+#include "include/sdk/types.hpp"
 
 #ifndef __P4_API_H__
 #define __P4_API_H__
@@ -117,6 +118,8 @@ typedef struct p4pd_table_properties_ {
     p4pd_table_mem_layout_t sram_layout;
     p4pd_table_mem_layout_t tcam_layout; /* Will be not used in case of hash / index table. */
     p4pd_table_mem_layout_t hbm_layout; /* Only if HBM table.. */
+    mem_addr_t              base_mem_pa; /* physical addres in memory */
+    mem_addr_t              base_mem_va; /* virtual  address in memory */
     uint8_t                 table_thread_count; /* Number of table execution threads. Min 1 */
     uint8_t                 thread_table_id[P4PD_TABLE_MAX_CONCURRENCY];
 } p4pd_table_properties_t;
@@ -824,6 +827,7 @@ p4pd_actiondata_appdata_set(uint32_t   tableid,
 uint32_t
 p4pd_actiondata_appdata_size_get(uint32_t   tableid,
                                  uint8_t    actionid);
-
+void
+p4pd_hbm_table_address_set(uint32_t tableid, mem_addr_t pa, mem_addr_t va);
 
 #endif    // __P4_API_H__

@@ -22,8 +22,10 @@ nic/hal/third-party/snort3/export/aarch64/*
 
 nic/sdk/third-party/libev/*
 
-nic/hal/third-party/tins/*
-nic/hal/third-party/pcap/*
+nic/hal/third-party/tins/x86_64/*
+nic/hal/third-party/tins/aarch64/*
+nic/hal/third-party/pcap/x86_64/*
+nic/hal/third-party/pcap/aarch64/*
 nic/sdk/third-party/sknobs/*
 nic/hal/third-party/judy/*
 

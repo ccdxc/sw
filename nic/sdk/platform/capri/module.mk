@@ -3,4 +3,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_DEFS     = ${NIC_CSR_DEFINES}
 MODULE_TARGET   = libsdkcapri.so
+MODULE_FLAGS    = -O3
 include ${MKDEFS}/post.mk

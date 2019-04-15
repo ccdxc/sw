@@ -8,4 +8,5 @@ MODULE_SRC_DIR  = ${BLD_P4GEN_DIR}/apollo/src/
 MODULE_SOLIBS   = utils
 MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*p4pd.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/*table_range.cc)
+MODULE_FLAGS    = -O3
 include ${MKDEFS}/post.mk

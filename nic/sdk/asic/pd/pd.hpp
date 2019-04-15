@@ -29,6 +29,8 @@ typedef struct p4_table_mem_layout_ {
     uint8_t     btm_right_block;
     uint8_t     num_buckets;
     uint32_t    tabledepth;
+    mem_addr_t  base_mem_pa; /* Physical addres in  memory */
+    mem_addr_t  base_mem_va; /* Virtual  address in  memory */
     char        *tablename;
 } p4_table_mem_layout_t;
 

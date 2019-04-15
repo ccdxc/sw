@@ -328,14 +328,14 @@ validate_nwsec_group_delete(nwsec::SecurityGroupDeleteRequest& req,
 }
 
 hal_ret_t
-nwsec_group_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt) 
+nwsec_group_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
 
 }
 
 hal_ret_t
-nwsec_group_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt) 
+nwsec_group_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     hal_ret_t       ret = HAL_RET_OK;
     dllist_ctxt_t   *lnode = NULL;
@@ -358,7 +358,7 @@ nwsec_group_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_DEBUG("delete commit cb failed for sg_id {}", nwsec_grp->sg_id);
         return ret;
-    } 
+    }
     // free the security group
     hal_handle_free(hal_handle);
 
@@ -367,14 +367,14 @@ end:
 }
 
 hal_ret_t
-nwsec_group_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt) 
+nwsec_group_delete_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
 
 }
 
 hal_ret_t
-nwsec_group_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt) 
+nwsec_group_delete_cleanup_cb (cfg_op_ctxt_t *cfg_ctxt)
 {
     return HAL_RET_OK;
 
@@ -386,8 +386,8 @@ securitygroup_delete(nwsec::SecurityGroupDeleteRequest& req,
 {
     hal_ret_t                     ret;
     nwsec_group_t                 *nwsec_grp = NULL;
-    //nwsec_group_create_app_ctxt_t *app_ctxt = NULL; 
-    SecurityGroupKeyHandle         kh = req.key_or_handle(); 
+    //nwsec_group_create_app_ctxt_t *app_ctxt = NULL;
+    SecurityGroupKeyHandle         kh = req.key_or_handle();
 
 
     dhl_entry_t                   dhl_entry = { 0 };
@@ -628,10 +628,10 @@ nwsec_rule_init (nwsec_rule_t *rule)
     ref_init(&rule->ref_count, [] (const ref_t * ref) {
         nwsec_rule_t * rule = container_of(ref, nwsec_rule_t, ref_count);
         HAL_TRACE_DEBUG("Calling rule free");
-        if (rule->fw_rule_action.alg == nwsec::APP_SVC_SUN_RPC || 
+        if (rule->fw_rule_action.alg == nwsec::APP_SVC_SUN_RPC ||
             rule->fw_rule_action.alg == nwsec::APP_SVC_MSFT_RPC) {
             union hal::alg_options::opt_ *opt = &rule->fw_rule_action.app_options.opt;
-           
+
             if (opt->sunrpc_opts.program_ids != NULL) {
                 HAL_FREE(HAL_MEM_ALLOC_SFW, opt->sunrpc_opts.program_ids);
                 opt->sunrpc_opts.program_ids = NULL;
@@ -667,7 +667,7 @@ add_nwsec_rule_to_db (nwsec_policy_t *policy, nwsec_rule_t *rule, int rule_index
 
     // find the rule list. if not found allocate one.
 
-    nwsec_rulelist_t *rulelist = nwsec_rulelist_lookup_by_key(policy, rule->rule_id); 
+    nwsec_rulelist_t *rulelist = nwsec_rulelist_lookup_by_key(policy, rule->rule_id);
     if (rulelist == NULL) {
         HAL_TRACE_VERBOSE("Create rule list:{}", rule->rule_id);
         rulelist = nwsec_rulelist_alloc_init();
@@ -742,7 +742,7 @@ nwsec_rulelist_init (nwsec_rulelist_t *rule)
         nwsec_rulelist_t * rule = container_of(ref, nwsec_rulelist_t, ref_count);
         HAL_TRACE_DEBUG("Calling rulelist free");
         g_hal_state->nwsec_rulelist_slab()->free(rule);
-    
+
     });
     dllist_reset(&rule->head);
     return rule;
@@ -838,12 +838,11 @@ nwsec_policy_rules_free(nwsec_policy_t *policy)
         dllist_ctxt_t  *curr = NULL, *next = NULL;
         nwsec_rulelist_t *rulelist = (nwsec_rulelist_t *) data;
         if (rulelist == NULL) {
-            
+
             return true;
         }
         dllist_for_each_safe(curr, next, &rulelist->head) {
             nwsec_rule_t *rule = dllist_entry(curr, nwsec_rule_t, dlentry);
-            HAL_TRACE_DEBUG("for each rule reduce");
             ref_dec(&rule->ref_count);
         }
         ref_dec(&rulelist->ref_count);
@@ -990,9 +989,9 @@ nwsec_policy_compute_hash_func (void *key, uint32_t ht_size)
 //API to convert MSRPC UUID String to uint8_t array
 //
 static inline void __str_to_uuid(char *uuid_str, uint8_t *uuid_arr) {
-    // Define the UUID Struct 
+    // Define the UUID Struct
     // to read it right
-    typedef struct  uuid_ { 
+    typedef struct  uuid_ {
          uint32_t time_lo;
          uint16_t time_mid;
          uint16_t time_hi_vers;
@@ -1045,14 +1044,14 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
         // Parse APPs (set alg name only for now)
         rule->fw_rule_action.alg = nwsec::APP_SVC_NONE;
         rule->fw_rule_action.idle_timeout = SESSION_MAX_INACTIVITY_TIMEOUT;
-        if (spec.action().has_app_data()) { 
+        if (spec.action().has_app_data()) {
             auto app = spec.action().app_data();
             rule->fw_rule_action.alg = app.alg();
             rule->fw_rule_action.idle_timeout = app.idle_timeout();
             union hal::alg_options::opt_ *opt = &rule->fw_rule_action.app_options.opt;
             HAL_TRACE_VERBOSE("Policy_rules::rule_id {} has_app_data: {} idle timeout: {}", rule->rule_id, spec.action().has_app_data(), rule->fw_rule_action.idle_timeout);
             if (app.AppOptions_case() == AppData::kFtpOptionInfo) {
-                opt->ftp_opts.allow_mismatch_ip_address = app.ftp_option_info().allow_mismatch_ip_address(); 
+                opt->ftp_opts.allow_mismatch_ip_address = app.ftp_option_info().allow_mismatch_ip_address();
             } else if (app.AppOptions_case() == AppData::kDnsOptionInfo) {
                 opt->dns_opts.drop_multi_question_packets = app.dns_option_info().drop_multi_question_packets();
                 opt->dns_opts.drop_large_domain_name_packets = app.dns_option_info().drop_large_domain_name_packets();
@@ -1067,7 +1066,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
                     SDK_ASSERT(opt->msrpc_opts.uuids != NULL);
                     opt->msrpc_opts.uuid_sz = app.msrpc_option_info().data_size();
                     for (int idx=0; idx<app.msrpc_option_info().data_size(); idx++) {
-                        __str_to_uuid((char *)app.msrpc_option_info().data(idx).program_id().c_str(), 
+                        __str_to_uuid((char *)app.msrpc_option_info().data(idx).program_id().c_str(),
                                       opt->msrpc_opts.uuids[idx].uuid);
                         opt->msrpc_opts.uuids[idx].timeout = app.msrpc_option_info().data(idx).idle_timeout();
                         HAL_TRACE_VERBOSE("timeout: {}",  opt->msrpc_opts.uuids[idx].timeout);
@@ -1083,7 +1082,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
                          opt->sunrpc_opts.program_ids[idx].program_id = strtoul(\
                                        app.sun_rpc_option_info().data(idx).program_id().c_str(), NULL, 10);
                          opt->sunrpc_opts.program_ids[idx].timeout = app.sun_rpc_option_info().data(idx).idle_timeout();
-                         HAL_TRACE_VERBOSE("Program id: {} timeout: {}", opt->sunrpc_opts.program_ids[idx].program_id, 
+                         HAL_TRACE_VERBOSE("Program id: {} timeout: {}", opt->sunrpc_opts.program_ids[idx].program_id,
                                                                         opt->sunrpc_opts.program_ids[idx].timeout);
                     }
                 }
@@ -1124,7 +1123,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
                   appid);
         // TODO: Handle resource cleanup before returning
         if(HAL_RET_OK != ret) {
-            HAL_TRACE_ERR("unknown app {}", 
+            HAL_TRACE_ERR("unknown app {}",
                           spec.appid(apps_cnt));
             return ret;
         }
@@ -1137,7 +1136,7 @@ extract_nwsec_rule_from_spec(nwsec::SecurityRule spec, nwsec_rule_t *rule)
     return ret;
 }
 
-void 
+void
 nwsec_rule_free(void *rule)
 {
     ref_dec(&((nwsec_rule_t *)rule)->ref_count);
@@ -1160,7 +1159,7 @@ security_policy_add_to_ruledb( nwsec_policy_t *policy, const acl_ctx_t **acl_ctx
             if (rulelist == NULL) {
                 fn_ctx->ret = HAL_RET_ERR;
                 return true;
-            }    
+            }
             HAL_TRACE_VERBOSE("rule id is {}", rulelist->rule_id);
             dllist_for_each_safe(curr, next, &rulelist->head) {
                 nwsec_rule_t *rule = dllist_entry(curr, nwsec_rule_t, dlentry);
@@ -1446,12 +1445,12 @@ end:
         match.match_fields |= SESSION_MATCH_SVRF;
         match.match_fields |= SESSION_MATCH_V4_FLOW;
         match.key.svrf_id = nwsec_policy->key.vrf_id;
-        session_eval_matching_session(&match); 
+        session_eval_matching_session(&match);
     } else {
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_CREATE_FAIL);
     }
     nwsec_policy_prepare_rsp(res, ret, nwsec_policy ? nwsec_policy->hal_handle : HAL_HANDLE_INVALID);
-    HAL_TRACE_DEBUG("------------------------ API End -----------------------------"); 
+    HAL_TRACE_DEBUG("------------------------ API End -----------------------------");
     return HAL_RET_OK;
 }
 
@@ -1507,7 +1506,7 @@ nwsec_policy_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     hal_handle = dhl_entry->handle;
 
     HAL_TRACE_DEBUG("policy handle {}", hal_handle);
-    
+
     ret = acl::acl_commit(app_ctx->acl_ctx_clone);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Policy commit failed with ret: {}", ret);
@@ -1521,7 +1520,7 @@ nwsec_policy_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         //acl::acl_delete(app_ctx->acl_ctx);
     }
     acl::print_ref_count(app_ctx->acl_ctx_clone);
-    
+
     acl::acl_dump(app_ctx->acl_ctx_clone, 0x01, [] (acl_rule_t *rule) { PRINT_RULE_FIELDS(rule); });
 
     // free the rules in the config db
@@ -1586,7 +1585,7 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
 
     ctx_name = nwsec_acl_ctx_name(policy_clone->key.vrf_id);
     HAL_TRACE_DEBUG("Creating acl ctx {}", ctx_name);
-    
+
     app_ctx.acl_ctx_clone = acl::acl_create(ctx_name, &nwsec_rule_config_glbl);
     app_ctx.acl_ctx = acl::acl_get(ctx_name);
     ret = security_policy_add_to_ruledb(policy_clone, &app_ctx.acl_ctx_clone);
@@ -1615,7 +1614,7 @@ end:
         match.match_fields |= SESSION_MATCH_SVRF;
         match.match_fields |= SESSION_MATCH_V4_FLOW;
         match.key.svrf_id = policy_clone->key.vrf_id;
-        session_eval_matching_session(&match); 
+        session_eval_matching_session(&match);
     } else {
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_UPDATE_FAIL);
     }
@@ -1734,9 +1733,9 @@ end:
         // On success, delete the flows
         session_match_t match = {};
         match.match_fields |= SESSION_MATCH_SVRF;
-        match.match_fields |= SESSION_MATCH_V4_FLOW; 
+        match.match_fields |= SESSION_MATCH_V4_FLOW;
         match.key.svrf_id = policy->key.vrf_id;
-        session_eval_matching_session(&match); 
+        session_eval_matching_session(&match);
     } else {
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_DELETE_FAIL);
     }
@@ -1787,7 +1786,7 @@ security_policy_rule_spec_build (nwsec_rule_t                          *rule,
     } else if (rule->fw_rule_action.alg == nwsec::APP_SVC_SUN_RPC) {
         for (uint8_t idx = 0; idx < rule->fw_rule_action.app_options.opt.sunrpc_opts.programid_sz; idx++) {
             nwsec::AppData_RPCData* data = spec->mutable_action()->mutable_app_data()->mutable_sun_rpc_option_info()->add_data();
- 
+
             data->set_program_id(std::to_string(rule->fw_rule_action.app_options.opt.sunrpc_opts.program_ids[idx].program_id));
             data->set_idle_timeout(rule->fw_rule_action.app_options.opt.sunrpc_opts.program_ids[idx].timeout);
         }
@@ -1795,7 +1794,7 @@ security_policy_rule_spec_build (nwsec_rule_t                          *rule,
         for (uint8_t idx = 0; idx < rule->fw_rule_action.app_options.opt.msrpc_opts.uuid_sz; idx++) {
             nwsec::AppData_RPCData* data = spec->mutable_action()->mutable_app_data()->mutable_msrpc_option_info()->add_data();
             uint8_t *uuid = rule->fw_rule_action.app_options.opt.msrpc_opts.uuids[idx].uuid;
-            std::string str(uuid, uuid+MAX_UUID_SZ); 
+            std::string str(uuid, uuid+MAX_UUID_SZ);
 
             data->set_program_id(str);
             data->set_idle_timeout(rule->fw_rule_action.app_options.opt.msrpc_opts.uuids[idx].timeout);
@@ -1820,8 +1819,8 @@ security_policy_spec_build (nwsec_policy_t               *policy,
     rule_cfg_t *rcfg = rule_cfg_get(ctx_name);
     struct fn_ctx_t {
         nwsec::SecurityPolicySpec   *spec;
-        nwsec::SecurityPolicyStats  *stats; 
-        nwsec::SecurityPolicyStatus *status; 
+        nwsec::SecurityPolicyStats  *stats;
+        nwsec::SecurityPolicyStatus *status;
         hal_ret_t                     ret;
         rule_cfg_t                   *rcfg;
     } fn_ctx = { spec, stats, status, HAL_RET_OK, rcfg };
@@ -1835,7 +1834,7 @@ security_policy_spec_build (nwsec_policy_t               *policy,
         dllist_ctxt_t             *curr, *next;
         nwsec::SecurityRule       *spec_rule;
         nwsec::SecurityRuleStats  *rule_stats;
-        nwsec::SecurityRuleStatus *rule_status;  
+        nwsec::SecurityRuleStatus *rule_status;
         fn_ctx_t *fn_ctx = (fn_ctx_t *)ctxt;
         nwsec_rulelist_t *rulelist = (nwsec_rulelist_t *)data;
         if (rulelist == NULL) {
@@ -1851,7 +1850,7 @@ security_policy_spec_build (nwsec_policy_t               *policy,
             rule_stats->set_num_tcp_hits(ctr->tcp_hits);
             rule_stats->set_num_udp_hits(ctr->udp_hits);
             rule_stats->set_num_icmp_hits(ctr->icmp_hits);
-        } 
+        }
 
         dllist_for_each_safe(curr, next, &rulelist->head) {
             nwsec_rule_t *rule = dllist_entry(curr, nwsec_rule_t, dlentry);
@@ -1892,7 +1891,7 @@ security_policy_get_ht_cb (void *ht_entry, void *ctxt)
     hal_ret_t ret = HAL_RET_OK;
 
     policy = (nwsec_policy_t *)hal_handle_get_obj(entry->handle_id);
-    
+
     ret = security_policy_spec_build(policy, response->mutable_spec(), response->mutable_pol_stats(), response->mutable_status());
     if (ret == HAL_RET_OK) {
         HAL_TRACE_DEBUG("Policy HT get ok");
@@ -1975,13 +1974,13 @@ securitypolicy_is_allow (vrf_id_t svrf_id, hal::ipv4_tuple *acl_key, session::Fl
                 return true;
             }
         }
-    } 
+    }
     if (acl_ctx) {
         acl_deref(acl_ctx);
     }
     return default_policy;
 }
- 
+
 hal_ret_t
 securitygrouppolicy_create(nwsec::SecurityGroupPolicySpec&    spec,
                            nwsec::SecurityGroupPolicyResponse *rsp)

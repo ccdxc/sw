@@ -6,4 +6,5 @@ MODULE_PIPELINE = iris
 MODULE_SRC_DIR  = ${BLD_P4GEN_DIR}/p4/src/
 MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*p4pd.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/*table_range.cc)
+MODULE_FLAGS    = -O3
 include ${MKDEFS}/post.mk

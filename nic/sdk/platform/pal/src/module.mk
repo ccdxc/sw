@@ -3,5 +3,5 @@ include ${MKDEFS}/pre.mk
 MODULE_ARCH     := aarch64
 MODULE_TARGET   := libpal.so
 MODULE_INCS     := ${MODULE_SRC_DIR}/../include/
-MODULE_FLAGS    := -fno-tree-loop-distribute-patterns
+MODULE_FLAGS    := -fno-tree-loop-distribute-patterns -O3
 include ${MKDEFS}/post.mk
