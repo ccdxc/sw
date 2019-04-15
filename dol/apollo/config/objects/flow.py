@@ -21,7 +21,7 @@ def IsNatEnabled(routetblobj):
 
 # Flow based on Local and Remote mapping
 class FlowMapObject(base.ConfigObjectBase):
-    def __init__(self, lobj, robj, fwdmode, routetblobj = None, tunobj = None):
+    def __init__(self, lobj, robj, fwdmode, routetblobj = None, tunobj = None, policyobj = None):
         super().__init__()
         self.Clone(Store.templates.Get('FLOW'))
         self.FlowMapId = next(resmgr.FlowIdAllocator)
@@ -31,6 +31,7 @@ class FlowMapObject(base.ConfigObjectBase):
         self.__robj = robj
         self.__routeTblObj = routetblobj
         self.__tunobj = tunobj
+        self.__policyobj = policyobj
         self.__dev = Store.GetDevice()
         self.Show()
         return
@@ -124,7 +125,9 @@ class FlowMapObjectHelper:
         if value != None:
             rmapsel.flow.filters.remove((key, value))
 
-        assert (fwdmode == 'L2' or fwdmode == 'L3' or fwdmode == 'IGW' or fwdmode == 'IGW_NAT' or fwdmode == 'VPC_PEER') == True
+        assert (fwdmode == 'L2' or fwdmode == 'L3' or fwdmode == 'IGW' or \
+                fwdmode == 'IGW_NAT' or fwdmode == 'VPC_PEER' or \
+                fwdmode == 'POLICY') == True
 
         if fwdmode == 'VPC_PEER':
             rmappings = rmapping.GetMatchingObjects(mapsel)
@@ -158,6 +161,13 @@ class FlowMapObjectHelper:
                         continue
                     if IsNatEnabled(routetblobj) is False:
                     # Skip IGWs without nat flag set to True
+                        continue
+                    obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.Tunnel)
+                    objs.append(obj)
+        elif fwdmode == 'POLICY':
+            for lobj in lmapping.GetMatchingObjects(mapsel):
+                for routetblobj in routetable.GetAllMatchingObjects(mapsel):
+                    if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.Tunnel)
                     objs.append(obj)

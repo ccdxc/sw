@@ -23,7 +23,7 @@ from infra.asic.model import ModelConnector
 from apollo.config.store import Store
 from infra.common.glopts import GlobalOptions
 
-def __generate(topospec):
+def __generate(topospec, feature):
     # Generate Batch Object
     batch.client.GenerateObjects(topospec)
 
@@ -33,8 +33,14 @@ def __generate(topospec):
     # Generate VPC configuration
     vpc.client.GenerateObjects(topospec)
 
-    # Generate Policy configuration . TODO
-    # policy.client.GenerateObjects(topospec)
+    if 'rfc' in feature:
+        # Generate Policy configuration
+        policy.client.GenerateObjects(topospec)
+    else:
+        # Generate wildcard policy configuration for all other cases
+        policy.client.GenerateWildcardObjects(topospec)
+
+    #policy.client.GenerateObjects(topospec)
     return
 
 def __create():
@@ -47,21 +53,21 @@ def __create():
     # Create VPC Objects
     vpc.client.CreateObjects()
 
-    # Create Policy Objects . TODO
-    # policy.client.CreateObjects()
+    # Create Policy Objects
+    policy.client.CreateObjects()
 
     # Commit the Batch
     batch.client.Commit()
     return
 
-def Main():
+def Main(feature):
     timeprofiler.ConfigTimeProfiler.Start()
     agentapi.Init()
 
     logger.info("Generating Configuration for Topology = %s" % GlobalOptions.topology)
     topospec = parser.ParseFile('apollo/config/topology/%s/'% GlobalOptions.topology,
                                 '%s.topo' % GlobalOptions.topology)
-    __generate(topospec)
+    __generate(topospec, feature)
 
     logger.info("Creating objects in Agent")
     __create()

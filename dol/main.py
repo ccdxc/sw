@@ -58,8 +58,9 @@ def Main():
 
     timeprofiler.InitTimeProfiler.Stop()
 
-    pipeline.GenerateConfig()
-   
+    feature = glopts.GlobalOptions.feature
+    pipeline.GenerateConfig(feature)
+
     if glopts.GlobalOptions.e2e:
         #Start E2E 
         cfg_file = ws_top + '/nic/' + glopts.GlobalOptions.cfgjson

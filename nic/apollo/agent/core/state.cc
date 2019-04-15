@@ -73,6 +73,12 @@ cfg_db::init(void) {
     }
     route_table_map_ = new(mem) route_table_db_t();
 
+    mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(policy_db_t));
+    if (mem == NULL) {
+        return false;
+    }
+    policy_map_ = new(mem) policy_db_t();
+
     slabs_[SLAB_ID_VPC] =
         slab::factory("vpc", SLAB_ID_VPC, sizeof(pds_vcn_spec_t),
                       16, true, true, true);
@@ -89,6 +95,9 @@ cfg_db::init(void) {
         slab::factory("route_table", SLAB_ID_SUBNET,
                       sizeof(pds_route_table_spec_t),
                       16, true, true, true);
+    slabs_[SLAB_ID_POLICY] =
+        slab::factory("policy", SLAB_ID_POLICY, sizeof(pds_policy_spec_t),
+                      16, true, true, true);
     return true;
 }
 
@@ -101,6 +110,7 @@ cfg_db::cfg_db() {
     subnet_map_ = NULL;
     vnic_map_ = NULL;
     route_table_map_ = NULL;
+    policy_map_ = NULL;
     memset(&device_, 0, sizeof(pds_device_spec_t));
     memset(slabs_, 0, sizeof(slabs_));
 }
@@ -137,6 +147,7 @@ cfg_db::~cfg_db() {
     FREE(MEM_ALLOC_ID_INFRA, subnet_map_);
     FREE(MEM_ALLOC_ID_INFRA, vnic_map_);
     FREE(MEM_ALLOC_ID_INFRA, route_table_map_);
+    FREE(MEM_ALLOC_ID_INFRA, policy_map_);
     for (i = SLAB_ID_MIN; i < SLAB_ID_MAX; i++) {
         if (slabs_[i]) {
             slab::destroy(slabs_[i]);
@@ -312,6 +323,35 @@ agent_state::find_in_route_table_db(pds_route_table_key_t *key) {
 bool
 agent_state::del_from_route_table_db(pds_route_table_key_t *key) {
     DEL_FROM_DB(route_table, key);
+}
+
+sdk_ret_t
+agent_state::add_to_policy_db(pds_policy_key_t *key, pds_policy_spec_t *spec) {
+    ADD_TO_DB(policy, key, spec);
+}
+
+pds_policy_spec_t *
+agent_state::find_in_policy_db(pds_policy_key_t *key) {
+    FIND_IN_DB(policy, key);
+}
+
+#if 0
+sdk_ret_t
+agent_state::policy_db_walk(policy_walk_cb_t cb, void *ctxt) {
+    auto it_begin = DB_BEGIN(policy);
+    auto it_end = DB_END(policy);
+
+    for (auto it = it_begin; it != it_end; it ++) {
+        cb(it->second, ctxt);
+    }
+
+    return SDK_RET_OK;
+}
+#endif
+
+bool
+agent_state::del_from_policy_db(pds_policy_key_t *key) {
+    DEL_FROM_DB(policy, key);
 }
 
 class agent_state *

@@ -12,3 +12,6 @@ def Setup(infra, module):
         if 'route' in iterelem.__dict__:
             logger.info("Extending route selector to : %s" % iterelem.route)
             module.testspec.selectors.route.Extend(iterelem.route)
+        if 'policy' in iterelem.__dict__:
+            logger.info("Extending policy selector to : %s" % iterelem.policy)
+            module.testspec.selectors.policy.Extend(iterelem.policy)

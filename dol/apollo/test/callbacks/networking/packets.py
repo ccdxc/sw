@@ -21,6 +21,9 @@ def __get_packet_template_impl(obj, args):
 def GetPacketTemplateFromMapping(testcase, packet, args=None):
     return __get_packet_template_impl(testcase.config.localmapping, args)
 
+def GetPacketTemplateFromPolicy(testcase, packet, args=None):
+    return __get_packet_template_impl(testcase.config.policy, args)
+
 def __get_non_default_random_route(routes):
     numroutes = len(routes)
     if numroutes == 0:

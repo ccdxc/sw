@@ -1,0 +1,15 @@
+# Feature RFC Modules List
+feature:
+    id          : rfc
+    sub         : ipv6
+    package     : test.rfc
+    module      : rfc
+    enable      : False
+    ignore      : True
+
+modules:
+    - module:
+        name    : IPV6_EMTPY_POLICY
+        spec    : rfc.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV6,PolicyType=empty

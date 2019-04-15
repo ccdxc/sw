@@ -1,0 +1,15 @@
+# Feature RFC Modules List
+feature:
+    id          : rfc
+    sub         : negative
+    package     : test.rfc
+    module      : rfc
+    enable      : False
+    ignore      : True
+
+modules:
+    - module:
+        name    : IPV4_EMTPY_POLICY
+        spec    : rfc.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty

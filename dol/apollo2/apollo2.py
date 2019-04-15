@@ -31,7 +31,7 @@ def InitEngine():
     engine.Init(APOLLO2_TEST_PATH);
     return
 
-def GenerateConfig():
+def GenerateConfig(feature =None):
     logger.info("Initializing Topology.")
     topo = GlobalOptions.topology
     topofile = '%s/%s.topo' % (topo, topo)

@@ -1,5 +1,5 @@
 #! /usr/bin/python3
-# Networking Module
+# RFC Module
 import pdb
 import apollo.test.callbacks.common.modcbs as modcbs
 import apollo.config.objects.policy as policy
@@ -11,6 +11,7 @@ def Setup(infra, module):
 def TestCaseSetup(tc):
     tc.AddIgnorePacketField('UDP', 'sport')
     tc.AddIgnorePacketField('UDP', 'chksum')
+    tc.AddIgnorePacketField('TCP', 'chksum')
     tc.AddIgnorePacketField('IP', 'chksum') #Needed to pass NAT testcase
     return True
 
@@ -18,6 +19,7 @@ def TestCaseTeardown(tc):
     return True
 
 def TestCasePreTrigger(tc):
+    print('pretrigger')
     return True
 
 def TestCaseStepSetup(tc, step):

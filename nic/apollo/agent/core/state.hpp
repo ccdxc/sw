@@ -13,6 +13,7 @@
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
+#include "nic/apollo/api/include/pds_policy.hpp"
 
 using std::unordered_map;
 using std::make_pair;
@@ -34,6 +35,7 @@ typedef enum slab_id_e {
     SLAB_ID_TEP,
     SLAB_ID_VNIC,
     SLAB_ID_ROUTE,
+    SLAB_ID_POLICY,
     SLAB_ID_MAX
 } slab_id_t;
 
@@ -42,6 +44,7 @@ typedef unordered_map<uint32_t, pds_subnet_spec_t *> subnet_db_t;
 typedef unordered_map<uint32_t, pds_tep_spec_t *> tep_db_t;
 typedef unordered_map<uint32_t, pds_vnic_spec_t *> vnic_db_t;
 typedef unordered_map<uint32_t, pds_route_table_spec_t *> route_table_db_t;
+typedef unordered_map<uint32_t, pds_policy_spec_t*> policy_db_t;
 
 typedef vpc_db_t::const_iterator vpc_it_t;
 typedef vnic_db_t::const_iterator vnic_it_t;
@@ -57,6 +60,7 @@ public:
     subnet_db_t *subnet_map(void) { return subnet_map_; }
     vnic_db_t *vnic_map(void) { return vnic_map_; }
     route_table_db_t *route_table_map(void) { return route_table_map_; }
+    policy_db_t *policy_map(void) { return policy_map_; }
     pds_vcn_id_t substrate_vpc_id(void) { return substrate_vpc_id_; }
     void substrate_vpc_id_set(pds_vcn_id_t id) { substrate_vpc_id_ = id; }
 
@@ -70,10 +74,13 @@ public:
         return slabs_[SLAB_ID_SUBNET];
     }
     slab_ptr_t vnic_slab(void) const {
-        return slabs_[SLAB_ID_SUBNET];
+        return slabs_[SLAB_ID_VNIC];
     }
     slab_ptr_t route_table_slab(void) const {
-        return slabs_[SLAB_ID_SUBNET];
+        return slabs_[SLAB_ID_ROUTE];
+    }
+    slab_ptr_t policy_slab(void) const {
+        return slabs_[SLAB_ID_POLICY];
     }
 
 private:
@@ -88,6 +95,7 @@ private:
     subnet_db_t *subnet_map_;
     vnic_db_t *vnic_map_;
     route_table_db_t *route_table_map_;
+    policy_db_t *policy_map_;
     pds_device_spec_t device_;
     slab_ptr_t slabs_[SLAB_ID_MAX - SLAB_ID_MIN + 1];
 };
@@ -135,10 +143,17 @@ public:
     bool del_from_route_table_db(pds_route_table_key_t *key);
     slab_ptr_t route_table_slab(void) const { return cfg_db_->route_table_slab(); }
 
+    sdk_ret_t add_to_policy_db(pds_policy_key_t *key,
+                               pds_policy_spec_t *spec);
+    pds_policy_spec_t *find_in_policy_db(pds_policy_key_t *key);
+    bool del_from_policy_db(pds_policy_key_t *key);
+    //sdk_ret_t policy_db_walk(policy_walk_cb_t cb, void *ctxt);
+    slab_ptr_t policy_slab(void) const { return cfg_db_->policy_slab(); }
+
     pds_vcn_id_t substrate_vpc_id(void) { return cfg_db_->substrate_vpc_id(); }
     void substrate_vpc_id_set(pds_vcn_id_t id) { return cfg_db_->substrate_vpc_id_set(id); }
     void substrate_vpc_id_reset(void) { return cfg_db_->substrate_vpc_id_set(PDS_VCN_ID_INVALID); }
-    
+
     bool pds_mock_mode(void) const { return pds_mock_mode_;  }
     void pds_mock_mode_set(bool val) { pds_mock_mode_ = val; }
 
@@ -149,6 +164,7 @@ private:
     subnet_db_t *subnet_map(void) const { return cfg_db_->subnet_map();  }
     vnic_db_t *vnic_map(void) const { return cfg_db_->vnic_map();  }
     route_table_db_t *route_table_map(void) const { return cfg_db_->route_table_map();  }
+    policy_db_t *policy_map(void) const { return cfg_db_->policy_map();  }
 
 private:
     cfg_db  *cfg_db_;

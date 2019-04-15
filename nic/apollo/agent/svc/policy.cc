@@ -166,7 +166,7 @@ pds_policy_proto_to_api_spec (const pds::SecurityPolicySpec &proto_spec,
     if (unlikely(api_spec->rules == NULL)) {
         PDS_TRACE_ERR("Failed to allocate memory for security policy %u",
                       api_spec->key.id);
-        return SDK_RET_OOM;
+        return sdk::SDK_RET_OOM;
     }
     for (uint32_t i = 0; i < num_rules; i++) {
         const pds::SecurityRule &proto_rule = proto_spec.rules(i);
