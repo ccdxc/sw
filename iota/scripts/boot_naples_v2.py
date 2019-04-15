@@ -345,9 +345,6 @@ class NaplesManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_REBOOT_FAILED, "Failed to login to naples")
     def RebootGoldFw(self):
-        self.SendlineExpect("fwupdate -s mainfwa", "#")
-        self.SendlineExpect("reboot", "capri login:")
-        self.__login()
         self.InitForUpgrade(goldfw = True)
         self.SendlineExpect("reboot", "capri-gold login:")
         self.__login()
