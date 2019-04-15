@@ -301,7 +301,7 @@ func (c *IPClient) updateDelphiNaplesObject() error {
 	}
 
 	// Update corresponding delphi object and write to delphi db
-	if c.delphiClient != nil && c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() {
+	if c.delphiClient != nil && (c.nmdState.config.Status.AdmissionPhase == cluster.SmartNICStatus_ADMITTED.String() || naplesMode == delphiProto.NaplesStatus_HOST_MANAGED) {
 		if err := c.delphiClient.SetObject(&naplesStatus); err != nil {
 			log.Errorf("Error writing the naples status object. Err: %v", err)
 			return err
