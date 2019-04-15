@@ -7,6 +7,7 @@
 #include <map>
 #include "platform/capri/capri_common.hpp"
 #include "lib/p4/p4_api.hpp"
+#include "lib/pal/pal.hpp"
 #include "lib/utils/time_profile.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "platform/capri/capri_hbm_rw.hpp"
@@ -208,10 +209,11 @@ capri_program_table_mpu_pc (int tableid, bool ingress, int stage,
 }
 
 void
-capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
+capri_program_hbm_table_base_addr (int tableid, int stage_tableid, char *tablename,
                                    int stage, int pipe)
 {
-    mem_addr_t start_offset;
+    mem_addr_t va, start_offset;
+    uint64_t size;
 
     if (strcmp(tablename, MEM_REGION_RSS_INDIR_TABLE_NAME) == 0) {
         // TODO: Work with Neel to clean capri_toeplitz_init
@@ -225,6 +227,14 @@ capri_program_hbm_table_base_addr (int stage_tableid, char *tablename,
                     tablename, stage, stage_tableid, start_offset);
     if (start_offset == INVALID_MEM_ADDRESS) {
         return;
+    }
+    size = get_mem_size_kb(tablename) << 10;
+    // save the info in the table for future use
+    if (tableid >= 0) {
+        va = (mem_addr_t)sdk::lib::pal_mem_map(start_offset, size);
+        SDK_TRACE_DEBUG("Table %s, pa 0x%llx, va 0x%lx, sz %llu",
+                        tablename, start_offset, va, size);
+        p4pd_hbm_table_address_set(tableid, start_offset, va);
     }
 
     /* Program table base address into capri TE */
@@ -1498,12 +1508,22 @@ capri_hbm_table_entry_write (uint32_t tableid,
                              uint16_t entry_size,
                              p4_table_mem_layout_t &tbl_info)
 {
+    mem_addr_t entry_start_addr, addr;
+
     time_profile_begin(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_WRITE);
     assert((entry_size >> 3) <= tbl_info.entry_width);
     assert(index < tbl_info.tabledepth);
-    uint64_t entry_start_addr = (index * tbl_info.entry_width);
-    sdk::asic::asic_mem_write(get_mem_addr(tbl_info.tablename) + entry_start_addr,
-                              hwentry, (entry_size >> 3));
+    entry_start_addr = (index * tbl_info.entry_width);
+
+    if (tbl_info.base_mem_va) {
+        addr = tbl_info.base_mem_va + entry_start_addr;
+        sdk::asic::asic_vmem_write(addr, hwentry, (entry_size >> 3));
+    } else if (tbl_info.base_mem_pa) {
+        addr  = tbl_info.base_mem_pa + entry_start_addr;
+        sdk::asic::asic_mem_write(addr, hwentry, (entry_size >> 3));
+    } else {
+        SDK_ASSERT(0);
+    }
     time_profile_end(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_WRITE);
     return CAPRI_OK;
 }
@@ -1539,10 +1559,20 @@ capri_hbm_table_entry_read (uint32_t tableid,
                             uint16_t *entry_size,
                             p4_table_mem_layout_t &tbl_info)
 {
+    mem_addr_t entry_start_addr, addr;
+
     assert(index < tbl_info.tabledepth);
-    uint64_t entry_start_addr = (index * tbl_info.entry_width);
-    sdk::asic::asic_mem_read(get_mem_addr(tbl_info.tablename) + entry_start_addr,
-                             hwentry, tbl_info.entry_width);
+    entry_start_addr = (index * tbl_info.entry_width);
+
+    if (tbl_info.base_mem_va) {
+        addr = tbl_info.base_mem_va + entry_start_addr;
+        sdk::asic::asic_vmem_read(addr, hwentry, tbl_info.entry_width);
+    } else if (tbl_info.base_mem_pa) {
+        addr  = tbl_info.base_mem_pa + entry_start_addr;
+        sdk::asic::asic_mem_read(addr, hwentry, tbl_info.entry_width);
+    } else {
+        SDK_ASSERT(0);
+    }
     *entry_size = tbl_info.entry_width;
     return CAPRI_OK;
 }

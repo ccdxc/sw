@@ -47,5 +47,8 @@ typedef enum uuid_e {
     PCIEMGR     =       2
 } uuid_t;
 
+#define PAL_ADDR_TYPE_VIRTUAL         0x1
+#define PAL_IS_ADDR_VIRTUAL(flags)    ((flags) & PAL_ADDR_TYPE_VIRTUAL)
+
 #endif
 

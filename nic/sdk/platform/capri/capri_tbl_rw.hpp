@@ -151,7 +151,7 @@ int capri_p4plus_table_init(platform_type_t platform_type,
 
 void capri_deparser_init(int tm_port_ingress, int tm_port_egress);
 
-void capri_program_hbm_table_base_addr(int stage_tableid, char *tablename,
+void capri_program_hbm_table_base_addr(int tableid, int stage_tableid, char *tablename,
                                        int stage, int pipe);
 
 void capri_p4plus_recirc_init();

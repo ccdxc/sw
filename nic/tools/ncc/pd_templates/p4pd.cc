@@ -462,7 +462,7 @@ ${table}_hwkey_hwmask_build(uint32_t tableid,
 {
     uint8_t trit_x, trit_y, k, m;
     uint32_t key_len = 0;
-    time_profile_begin(sdk::utils::time_profile::P4PD_HWKEY_HWMASK_BUILD); 
+    time_profile_begin(sdk::utils::time_profile::P4PD_HWKEY_HWMASK_BUILD);
 //::                # Do not include Action-PC in hwkey. action-pc will be
 //::                # prepended when combining key, action-data
     /*
@@ -3192,7 +3192,7 @@ ${api_prefix}_entry_install(uint32_t tableid,
 {
     uint8_t  hwkey[P4PD_MAX_PHV_LEN] = {0};
     uint8_t  hwkey_mask[P4PD_MAX_PHV_LEN] = {0};
-    p4pd_error_t ret = P4PD_SUCCESS;
+    p4pd_error_t ret;
 
     time_profile_begin(sdk::utils::time_profile::P4PD_ENTRY_INSTALL);
     ${api_prefix}_hwkey_hwmask_build(tableid, swkey, swkey_mask, hwkey, hwkey_mask);

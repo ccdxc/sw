@@ -56,6 +56,8 @@ asicpd_copy_capri_table_info (p4_table_mem_layout_t *out,
     out->btm_right_block = in->btm_right_block;
     out->num_buckets = in->num_buckets;
     out->tabledepth = tbl_ctx->tabledepth;
+    out->base_mem_pa = tbl_ctx->base_mem_pa;
+    out->base_mem_va = tbl_ctx->base_mem_va;
     out->tablename = tbl_ctx->tablename;
     return;
 }
@@ -277,12 +279,12 @@ asicpd_program_hbm_table_base_addr (void)
         } else {
             pipe = P4_PIPELINE_EGRESS;
         }
-        capri_program_hbm_table_base_addr(tbl_ctx.stage_tableid,
+        capri_program_hbm_table_base_addr(i, tbl_ctx.stage_tableid,
                                           tbl_ctx.tablename,
                                           tbl_ctx.stage, pipe);
         if (tbl_ctx.table_thread_count > 1) {
             for (int j = 1; j < tbl_ctx.table_thread_count; j++) {
-                capri_program_hbm_table_base_addr(tbl_ctx.thread_table_id[j],
+                capri_program_hbm_table_base_addr(-1, tbl_ctx.thread_table_id[j],
                                                   tbl_ctx.tablename,
                                                   tbl_ctx.stage, pipe);
             }
@@ -295,7 +297,7 @@ asicpd_program_hbm_table_base_addr (void)
         if (tbl_ctx.table_location != P4_TBL_LOCATION_HBM) {
             continue;
         }
-        capri_program_hbm_table_base_addr(tbl_ctx.stage_tableid,
+        capri_program_hbm_table_base_addr(i, tbl_ctx.stage_tableid,
                                           tbl_ctx.tablename,
                                           tbl_ctx.stage, P4_PIPELINE_RXDMA);
     }
@@ -306,7 +308,7 @@ asicpd_program_hbm_table_base_addr (void)
         if (tbl_ctx.table_location != P4_TBL_LOCATION_HBM) {
             continue;
         }
-        capri_program_hbm_table_base_addr(tbl_ctx.stage_tableid,
+        capri_program_hbm_table_base_addr(i, tbl_ctx.stage_tableid,
                                           tbl_ctx.tablename,
                                           tbl_ctx.stage, P4_PIPELINE_TXDMA);
     }
