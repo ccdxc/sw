@@ -85,18 +85,20 @@ security_policy_impl::reserve_resources(api_base *orig_obj,
  */
 sdk_ret_t
 security_policy_impl::release_resources(api_base *api_obj) {
-#if 0
     uint32_t    policy_block_id;
+    policy      *security_policy;
 
-    // TODO: need to release to right table
+    security_policy = (policy *)api_obj;
     if (security_policy_root_addr_ != 0xFFFFFFFFFFFFFFFFUL) {
         policy_block_id =
             (security_policy_root_addr_ -
-                 security_policy_impl_db()->security_policy_region_addr())/
-                security_policy_impl_db()->security_policy_table_size();
-        security_policy_impl_db()->security_policy_idxr()->free(policy_block_id);
+                 security_policy_impl_db()->security_policy_region_addr(security_policy->af(),
+                                                                        security_policy->dir()))/
+                security_policy_impl_db()->security_policy_table_size(security_policy->af(),
+                                                                      security_policy->dir());
+        security_policy_impl_db()->security_policy_idxr(security_policy->af(),
+                                                        security_policy->dir())->free(policy_block_id);
     }
-#endif
     return SDK_RET_OK;
 }
 

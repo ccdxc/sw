@@ -21,7 +21,7 @@ namespace api {
  */
 
 /**
- * @brief   security policy 
+ * @brief   security policy
  */
 class policy : public api_base {
 public:
@@ -176,6 +176,18 @@ public:
      */
     impl_base *impl(void) { return impl_; }
 
+    /**
+     * @brief     return IP address family for this policy
+     * @return    IP_AF_IPV4 or IP_AF_IPV6 or IP_AF_NONE
+     */
+    uint8_t af(void) const { return af_; }
+
+    /**
+     * @brief     return the policy enforcement direction
+     * @return    RULE_DIR_INGRESS or RULE_DIR_EGRESS
+     */
+    rule_dir_t dir(void) const { return dir_; }
+
 private:
     /**< @brief    constructor */
     policy();
@@ -191,6 +203,8 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
+    uint8_t             af_;         /**< IP address family of this policy */
+    rule_dir_t          dir_;        /**< traffic direction in which this policy is applied on */
     pds_policy_key_t    key_;        /**< security policy key */
     ht_ctxt_t           ht_ctxt_;    /**< hash table context */
     impl_base           *impl_;      /**< impl object instance */
