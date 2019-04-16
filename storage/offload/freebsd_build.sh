@@ -10,8 +10,8 @@ then
 fi
 
 
-make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys -f Makefile.bsd clean cleandepend
-make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys -f Makefile.bsd
+make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys DEBUG_FLAGS=-g -f Makefile.bsd clean cleandepend
+make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys DEBUG_FLAGS=-g -f Makefile.bsd
 
 if [ ! -f sonic.ko ]
 then
@@ -19,8 +19,8 @@ then
 	exit 1
 fi
 
-make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys -f Makefile-pencake.bsd clean cleandepend
-make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys -f Makefile-pencake.bsd
+make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys DEBUG_FLAGS=-g -f Makefile-pencake.bsd clean cleandepend
+make -m $OS_DIR/share/mk SYSDIR=$OS_DIR/sys DEBUG_FLAGS=-g -f Makefile-pencake.bsd
 
 if [ ! -f pencake.ko ]
 then

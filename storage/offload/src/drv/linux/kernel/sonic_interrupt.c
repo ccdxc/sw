@@ -244,6 +244,10 @@ static void sonic_ev_work_handler(struct work_struct *work)
 
 	cancel_delayed_work(&evl->idle_work);
 
+#ifndef TEMP_DEBUG_TO_BE_REMOVED
+	OSAL_ASSERT(sonic_intr_is_masked(&evl->pc_res->intr));
+#endif
+
 	for (i = 0; i < swd->ev_count; i++) {
 		evd = &swd->ev_data[i];
 		if (!evd->data)

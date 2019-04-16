@@ -324,6 +324,10 @@ mpool_create(enum mem_pool_type mpool_type, uint32_t num_objects,
 			       mpool->mp_config.mpc_vec_elem_size,
 			       mpool->mp_config.mpc_pad_size, align_size);
 
+#ifndef TEMP_DEBUG_TO_BE_REMOVED
+		if (!mpool_type_is_rmem(mpool_type))
+			memset(obj, 0, mpool->mp_config.mpc_vec_elem_size);
+#endif
 		obj += mpool->mp_config.mpc_vec_elem_size;
 	}
 	mpool->mp_stack.mps_top = mpool->mp_config.mpc_num_objects;

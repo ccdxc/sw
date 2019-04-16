@@ -123,6 +123,10 @@ struct chain_context {
 	struct buffer_context *inputs;
 };
 
+#ifndef TEMP_DEBUG_TO_BE_REMOVED
+#define REQ_CTX_MAGIC   0x12345678
+#endif
+
 struct request_context {
 	struct batch_context *batch_ctx;
 	const struct test_svc_chain *svc_chain;
@@ -148,6 +152,9 @@ struct request_context {
 
 	/* Initial values inherited from parent */
 	uint32_t vars[TEST_VAR_MAX];
+#ifndef TEMP_DEBUG_TO_BE_REMOVED
+	uint32_t magic;
+#endif
 
 	pnso_error_t req_rc;
 };

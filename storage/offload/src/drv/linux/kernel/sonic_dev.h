@@ -394,6 +394,9 @@ void sonic_intr_mask_on_assertion(struct intr *intr);
 void sonic_intr_return_credits(struct intr *intr, unsigned int credits,
 			       bool unmask, bool reset_timer);
 void sonic_intr_mask(struct intr *intr, bool mask);
+#ifndef TEMP_DEBUG_TO_BE_REMOVED
+bool sonic_intr_is_masked(struct intr *intr);
+#endif
 void sonic_intr_coal_set(struct intr *intr, u32 coal_usecs);
 int sonic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 		  unsigned int num_descs, size_t desc_size);

@@ -55,6 +55,11 @@ pprint_batch_info(struct batch_info *batch_info)
 	OSAL_LOG_DEBUG("%30s: %d", "bi_polled_idx", batch_info->bi_polled_idx);
 	OSAL_LOG_DEBUG("%30s: %d", "bi_num_entries",
 			batch_info->bi_num_entries);
+#ifndef TEMP_DEBUG_TO_BE_REMOVED
+	OSAL_LOG_DEBUG("%30s: %d", "core_id", batch_info->core_id);
+	OSAL_LOG_DEBUG("%30s: %d", "color_out", batch_info->color.color_out);
+	OSAL_LOG_DEBUG("%30s: %d", "color_in", batch_info->color.color_in);
+#endif
 
 	for (i = 0; i < batch_info->bi_num_entries;  i++) {
 		batch_page = GET_PAGE(batch_info, i);
@@ -338,7 +343,12 @@ init_batch_info(struct pnso_service_request *req)
 	if (!batch_info)
 		goto out;
 
+#ifndef TEMP_DEBUG_TO_BE_REMOVED
+	memset(batch_info, 0, offsetof(struct batch_info, color));
+	batch_info->color.color_out ^= 1;
+#else
 	memset(batch_info, 0, sizeof(struct batch_info));
+#endif
 
 	batch_info->bi_svc_type = req->svc[0].svc_type;
 	batch_info->bi_mpool_type = mpool_type;
@@ -401,6 +411,9 @@ deinit_batch(struct batch_info *batch_info)
 				(uint64_t) pcr, (uint64_t) batch_page, idx);
 	}
 
+#ifndef TEMP_DEBUG_TO_BE_REMOVED
+	batch_info->color.color_in = batch_info->color.color_out;
+#endif
 	put_mpool_batch_object(pcr, MPOOL_TYPE_BATCH_INFO, batch_info);
 }
 
@@ -481,6 +494,14 @@ bat_poller(void *poll_ctx)
 		goto out;
 	}
 	PPRINT_BATCH_INFO(batch_info);
+
+#ifndef TEMP_DEBUG_TO_BE_REMOVED
+	if ((batch_info->color.color_in ^ batch_info->color.color_out) == 0) {
+		g_osal_log_level = OSAL_LOG_LEVEL_DEBUG;
+		pprint_batch_info(batch_info);
+		OSAL_ASSERT(batch_info->color.color_in ^ batch_info->color.color_out);
+	}
+#endif
 
 	err = poll_all_chains(batch_info);
 	if (err) {
@@ -639,6 +660,9 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 					err);
 			goto out;
 		}
+#ifndef TEMP_DEBUG_TO_BE_REMOVED
+		batch_info->core_id = pcr->core_id;
+#endif
 		new_batch = true;
 	}
 

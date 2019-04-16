@@ -1496,6 +1496,9 @@ static void calculate_completion_stats(struct batch_context *batch_ctx)
 				goto error;
 			}
 		}
+#ifndef TEMP_DEBUG_TO_BE_REMOVED
+		req_ctx->magic = 0;
+#endif
 	}
 	return;
 
@@ -2096,6 +2099,10 @@ static void init_req_context(struct request_context *req_ctx,
 			     struct buffer_context *input,
 			     uint64_t req_id)
 {
+#ifndef TEMP_DEBUG_TO_BE_REMOVED
+	OSAL_ASSERT(req_ctx->magic == 0);
+	req_ctx->magic = REQ_CTX_MAGIC;
+#endif
 	req_ctx->batch_ctx = batch_ctx;
 	req_ctx->svc_chain = svc_chain;
 	req_ctx->input = input;
