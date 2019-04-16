@@ -73,9 +73,9 @@ struct rx_stats {
 	u64 mbuf_alloc;
 	u64 mbuf_free;
 	u64 isr_count; 	// Not required.
-	u64 task;		/* Number of time task was invoked. */
+	u64 task;	/* Number of time task was invoked. */
 	u64 comp_err;
-	u64 mem_err;	/* Completions w/o associated mbuf. */
+	u64 length_err;
 
 	u64 rss_ip4;
 	u64 rss_tcp_ip4;

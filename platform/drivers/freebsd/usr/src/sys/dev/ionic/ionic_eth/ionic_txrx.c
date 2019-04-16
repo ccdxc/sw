@@ -332,14 +332,14 @@ ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 #ifdef HAPS
 	if (comp->len > ETHER_MAX_FRAME(rxq->lif->netdev, ETHERTYPE_VLAN, 1)) {
 		IONIC_QUE_INFO(rxq, "RX PKT TOO LARGE!  comp->len %d\n", comp->len);
-		stats->comp_err++;
+		stats->length_err++;
 		m_freem(m);
 		rxbuf->m = NULL;
 		return;
 	}
 	if (comp->len < ETHER_HDR_LEN + ETHER_CRC_LEN) {
 		IONIC_QUE_INFO(rxq, "Malformed ethernet packet!  comp->len %d\n", comp->len);
-		stats->comp_err++;
+		stats->length_err++;
 		m_freem(m);
 		rxbuf->m = NULL;
 		return;
@@ -1613,9 +1613,10 @@ ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 	case XCVR_PID_QSFP_40GBASE_LR4:
 	case XCVR_PID_QSFP_40GBASE_AOC:
 		qsfp = (struct qsfp_sprom_data *)xcvr->sprom;
-
-		sbuf_printf(sb, "    QSFP vendor: %s P/N: %s S/N: %s\n",
-			qsfp->vendor_name, qsfp->vendor_pn, qsfp->vendor_sn);
+		sbuf_printf(sb, "    QSFP Vendor: %-.*s P/N: %-.*s S/N: %-.*s\n",
+			(int)sizeof(qsfp->vendor_name), qsfp->vendor_name,
+			(int)sizeof(qsfp->vendor_pn), qsfp->vendor_pn,
+			(int)sizeof(qsfp->vendor_sn), qsfp->vendor_sn);
 		break;
 
 	case XCVR_PID_SFP_25GBASE_CR_S:
@@ -1632,8 +1633,10 @@ ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 	case XCVR_PID_SFP_10GBASE_AOC:
 	case XCVR_PID_SFP_10GBASE_CU:
 		sfp = (struct sfp_sprom_data *)xcvr->sprom;
-		sbuf_printf(sb, "    SFP vendor: %s P/N: %s S/N: %s\n",
-			sfp->vendor_name, sfp->vendor_pn, sfp->vendor_sn);
+		sbuf_printf(sb, "    SFP Vendor: %-.*s P/N: %-.*s S/N: %-.*s\n",
+			(int)sizeof(sfp->vendor_name), sfp->vendor_name,
+			(int)sizeof(sfp->vendor_pn), sfp->vendor_pn,
+			(int)sizeof(sfp->vendor_sn), sfp->vendor_sn);
 		break;
 
 	default:
@@ -1655,69 +1658,69 @@ ionic_lif_add_rxtstat(struct rxque *rxq, struct sysctl_ctx_list *ctx,
 	struct rx_stats *rxstat = &rxq->stats;
 
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "head", CTLFLAG_RD,
-					&rxq->head_index, 0, "Head index");
+			&rxq->head_index, 0, "Head index");
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "tail", CTLFLAG_RD,
-					&rxq->tail_index, 0, "Tail index");
+			&rxq->tail_index, 0, "Tail index");
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "comp_index", CTLFLAG_RD,
-					&rxq->comp_index, 0, "Completion index");
+			&rxq->comp_index, 0, "Completion index");
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "num_descs", CTLFLAG_RD,
-					&rxq->num_descs, 0, "Number of descriptors");
+			&rxq->num_descs, 0, "Number of descriptors");
 
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "dma_setup_error", CTLFLAG_RD,
-					 &rxstat->dma_map_err, "DMA map setup error");
+			 &rxstat->dma_map_err, "DMA map setup error");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "alloc_error", CTLFLAG_RD,
-					 &rxstat->alloc_err, "Buffer allocation error");
+			 &rxstat->alloc_err, "Buffer allocation error");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "comp_err", CTLFLAG_RD,
-					 &rxstat->comp_err, "Completion with error");
-	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "mem_err", CTLFLAG_RD,
-					 &rxstat->mem_err, "Completion without mbufs");
+			 &rxstat->comp_err, "Completion with error");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "length_err", CTLFLAG_RD,
+			 &rxstat->length_err, "Too short or too long packets");
 
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "pkts", CTLFLAG_RD,
-					 &rxstat->pkts, "Rx Packets");
+			 &rxstat->pkts, "Rx Packets");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "bytes", CTLFLAG_RD,
-					 &rxstat->bytes, "Rx bytes");
+			 &rxstat->bytes, "Rx bytes");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "csum_ip_ok", CTLFLAG_RD,
-					 &rxstat->csum_ip_ok, "IP checksum OK");
+			 &rxstat->csum_ip_ok, "IP checksum OK");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "csum_ip_bad", CTLFLAG_RD,
-					 &rxstat->csum_ip_bad, "IP checksum bad");
+			 &rxstat->csum_ip_bad, "IP checksum bad");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "csum_l4_ok", CTLFLAG_RD,
-					 &rxstat->csum_l4_ok, "L4 checksum OK");
+			 &rxstat->csum_l4_ok, "L4 checksum OK");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "csum_l4_bad", CTLFLAG_RD,
-					 &rxstat->csum_l4_bad, "L4 checksum bad");
+			 &rxstat->csum_l4_bad, "L4 checksum bad");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "isr_count", CTLFLAG_RD,
-					 &rxstat->isr_count, "ISR count");
+			 &rxstat->isr_count, "ISR count");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "clean_count", CTLFLAG_RD,
-					 &rxstat->task, "Rx clean count");
+			 &rxstat->task, "Rx clean count");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "mbuf_alloc", CTLFLAG_RD,
-					&rxstat->mbuf_alloc, "Number of mbufs allocated");
+			&rxstat->mbuf_alloc, "Number of mbufs allocated");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "mbuf_free", CTLFLAG_RD,
-					&rxstat->mbuf_free, "Number of mbufs free");
+			&rxstat->mbuf_free, "Number of mbufs free");
 
 	/* LRO related. */
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "lro_queued", CTLFLAG_RD,
-					 &lro->lro_queued, "LRO packets queued");
+			 &lro->lro_queued, "LRO packets queued");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "lro_flushed", CTLFLAG_RD,
-					 &lro->lro_flushed, "LRO packets flushed");
+			 &lro->lro_flushed, "LRO packets flushed");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "lro_bad_csum", CTLFLAG_RD,
-					 &lro->lro_bad_csum, "LRO" );
+			 &lro->lro_bad_csum, "LRO" );
 
 	/* RSS related. */
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_ip4", CTLFLAG_RD,
-					 &rxstat->rss_ip4, "RSS IPv4 packets");
+			 &rxstat->rss_ip4, "RSS IPv4 packets");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_tcp_ip4", CTLFLAG_RD,
-					 &rxstat->rss_tcp_ip4, "RSS TCP/IPv4 packets");
+			 &rxstat->rss_tcp_ip4, "RSS TCP/IPv4 packets");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_udp_ip4", CTLFLAG_RD,
-					 &rxstat->rss_udp_ip4, "RSS UDP/IPv4 packets");
+			 &rxstat->rss_udp_ip4, "RSS UDP/IPv4 packets");
 
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_ip6", CTLFLAG_RD,
-					 &rxstat->rss_ip6, "RSS IPv6 packets");
+			 &rxstat->rss_ip6, "RSS IPv6 packets");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_tcp_ip6", CTLFLAG_RD,
-					 &rxstat->rss_tcp_ip6, "RSS TCP/IPv6 packets");
+			 &rxstat->rss_tcp_ip6, "RSS TCP/IPv6 packets");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_udp_ip6", CTLFLAG_RD,
-					 &rxstat->rss_udp_ip6, "RSS UDP/IPv6 packets");
+			 &rxstat->rss_udp_ip6, "RSS UDP/IPv6 packets");
 
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rss_unknown", CTLFLAG_RD,
-					 &rxstat->rss_unknown, "RSS for unknown packets");
+			 &rxstat->rss_unknown, "RSS for unknown packets");
 }
 
 static void
@@ -1727,48 +1730,47 @@ ionic_lif_add_txtstat(struct txque *txq, struct sysctl_ctx_list *ctx,
 	struct tx_stats *txstat = &txq->stats;
 
 	SYSCTL_ADD_UINT(ctx, list, OID_AUTO, "head", CTLFLAG_RD,
-					&txq->head_index, 0, "Head index");
+			&txq->head_index, 0, "Head index");
 	SYSCTL_ADD_UINT(ctx, list, OID_AUTO, "tail", CTLFLAG_RD,
-					&txq->tail_index, 0, "Tail index");
+			&txq->tail_index, 0, "Tail index");
 	SYSCTL_ADD_UINT(ctx, list, OID_AUTO, "comp_index", CTLFLAG_RD,
-					&txq->comp_index, 0, "Completion index");
+			&txq->comp_index, 0, "Completion index");
 	SYSCTL_ADD_UINT(ctx, list, OID_AUTO, "num_descs", CTLFLAG_RD,
-					&txq->num_descs, 0, "Number of descriptors");
+			&txq->num_descs, 0, "Number of descriptors");
 
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "dma_map_error", CTLFLAG_RD,
-					 &txstat->dma_map_err, "DMA mapping error");
+			 &txstat->dma_map_err, "DMA mapping error");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "comp_err", CTLFLAG_RD,
-					 &txstat->comp_err, "Completion with error");
+			 &txstat->comp_err, "Completion with error");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tx_clean", CTLFLAG_RD,
-					 &txstat->clean, "Tx clean");
+			 &txstat->clean, "Tx clean");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tx_requeued", CTLFLAG_RD,
-					 &txstat->re_queue, "Packets were requeued");
+			 &txstat->re_queue, "Packets were requeued");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "no_descs", CTLFLAG_RD,
-					 &txstat->no_descs, "Descriptors not available");
+			 &txstat->no_descs, "Descriptors not available");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "mbuf_defrag", CTLFLAG_RD,
-					 &txstat->mbuf_defrag, "Linearize  mbuf");
+			 &txstat->mbuf_defrag, "Linearize  mbuf");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "mbuf_defrag_err", CTLFLAG_RD,
-					 &txstat->mbuf_defrag_err, "Linearize  mbuf failed");
+			 &txstat->mbuf_defrag_err, "Linearize  mbuf failed");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "bad_ethtype", CTLFLAG_RD,
-					 &txstat->bad_ethtype, "Tx malformed Ethernet");
+			 &txstat->bad_ethtype, "Tx malformed Ethernet");
 
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "pkts", CTLFLAG_RD,
-					 &txstat->pkts, "Tx Packets");
+			 &txstat->pkts, "Tx Packets");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "bytes", CTLFLAG_RD,
-					 &txstat->bytes, "Tx Bytes");
+			 &txstat->bytes, "Tx Bytes");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "csum_offload", CTLFLAG_RD,
-					 &txstat->csum_offload, "Tx h/w checksum");
+			 &txstat->csum_offload, "Tx h/w checksum");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "no_csum_offload", CTLFLAG_RD,
-					 &txstat->no_csum_offload, "Tx checksum");
+			 &txstat->no_csum_offload, "Tx checksum");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tso_ipv4", CTLFLAG_RD,
-					 &txstat->tso_ipv4, "TSO for IPv4");
+			 &txstat->tso_ipv4, "TSO for IPv4");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tso_ipv6", CTLFLAG_RD,
-					 &txstat->tso_ipv6, "TSO for IPv6");
+			 &txstat->tso_ipv6, "TSO for IPv6");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tso_max_size", CTLFLAG_RD,
-					 &txstat->tso_max_size, "TSO maximum packet size");
-	/* XXX: remove me . */
+			 &txstat->tso_max_size, "TSO maximum packet size");
 	SYSCTL_ADD_ULONG(ctx, list, OID_AUTO, "tso_max_sg", CTLFLAG_RD,
-					 &txstat->tso_max_sg, "TSO maximum number of sg");
+			 &txstat->tso_max_sg, "TSO maximum number of sg");
 }
 
 static void
@@ -1781,107 +1783,107 @@ ionic_setup_hw_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 		return;
 
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast_bytes", CTLFLAG_RD,
-		&stat->rx_ucast_bytes, "");
+			&stat->rx_ucast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast_packets", CTLFLAG_RD,
-		&stat->rx_ucast_packets, "");
+			&stat->rx_ucast_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_mcast_bytes", CTLFLAG_RD,
-		&stat->rx_mcast_bytes, "");
+			&stat->rx_mcast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_mcast_packets", CTLFLAG_RD,
-		&stat->rx_mcast_packets, "");
+			&stat->rx_mcast_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_bcast_bytes", CTLFLAG_RD,
-		&stat->rx_bcast_bytes, "");
+			&stat->rx_bcast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_bcast_packets", CTLFLAG_RD,
-		&stat->rx_bcast_packets, "");
+			&stat->rx_bcast_packets, "");
 
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast_drop_bytes", CTLFLAG_RD,
-		&stat->rx_ucast_drop_bytes, "");
+			&stat->rx_ucast_drop_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast_drop_packets", CTLFLAG_RD,
-		&stat->rx_ucast_drop_packets, "");
+			&stat->rx_ucast_drop_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_mcast_drop_bytes", CTLFLAG_RD,
-		&stat->rx_mcast_drop_bytes, "");
+			&stat->rx_mcast_drop_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_mcast_drop_packets", CTLFLAG_RD,
-		&stat->rx_mcast_drop_packets, "");
+			&stat->rx_mcast_drop_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_bcast_drop_bytes", CTLFLAG_RD,
-		&stat->rx_bcast_drop_bytes, "");
+			&stat->rx_bcast_drop_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_bcast_drop_packets", CTLFLAG_RD,
-		&stat->rx_bcast_drop_packets, "");
+			&stat->rx_bcast_drop_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_dma_error", CTLFLAG_RD,
-		&stat->rx_dma_error, "");
+			&stat->rx_dma_error, "");
 
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_ucast_bytes", CTLFLAG_RD,
-		&stat->tx_ucast_bytes, "");
+			&stat->tx_ucast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_ucast_packets", CTLFLAG_RD,
-		&stat->tx_ucast_packets, "");
+			&stat->tx_ucast_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_mcast_bytes", CTLFLAG_RD,
-		&stat->tx_mcast_bytes, "");
+			&stat->tx_mcast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_mcast_packets", CTLFLAG_RD,
-		&stat->tx_mcast_packets, "");
+			&stat->tx_mcast_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_bcast_bytes", CTLFLAG_RD,
-		&stat->tx_bcast_bytes, "");
+			&stat->tx_bcast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_bcast_packets", CTLFLAG_RD,
-		&stat->tx_bcast_packets, "");
+			&stat->tx_bcast_packets, "");
 
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_ucast_drop_bytes", CTLFLAG_RD,
-		&stat->tx_ucast_drop_bytes, "");
+			&stat->tx_ucast_drop_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_ucast_drop_packets", CTLFLAG_RD,
-		&stat->tx_ucast_drop_packets, "");
+			&stat->tx_ucast_drop_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_mcast_drop_bytes", CTLFLAG_RD,
-		&stat->tx_mcast_drop_bytes, "");
+			&stat->tx_mcast_drop_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_mcast_drop_packets", CTLFLAG_RD,
-		&stat->tx_mcast_drop_packets, "");
+			&stat->tx_mcast_drop_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_bcast_drop_bytes", CTLFLAG_RD,
-		&stat->tx_bcast_drop_bytes, "");
+			&stat->tx_bcast_drop_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_bcast_drop_packets", CTLFLAG_RD,
-		&stat->tx_bcast_drop_packets, "");
+			&stat->tx_bcast_drop_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_dma_error", CTLFLAG_RD,
-		&stat->tx_dma_error, "");
+			&stat->tx_dma_error, "");
 
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_disabled", CTLFLAG_RD,
-		&stat->rx_queue_disabled, "");
+			&stat->rx_queue_disabled, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_empty", CTLFLAG_RD,
-		&stat->rx_queue_empty, "");
+			&stat->rx_queue_empty, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_error", CTLFLAG_RD,
-		&stat->rx_queue_error, "");
+			&stat->rx_queue_error, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_desc_fetch_error", CTLFLAG_RD,
-		&stat->rx_desc_fetch_error, "");
+			&stat->rx_desc_fetch_error, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_desc_data_error", CTLFLAG_RD,
-		&stat->rx_desc_data_error, "");
+			&stat->rx_desc_data_error, "");
 
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_queue_disabled", CTLFLAG_RD,
-		&stat->tx_queue_disabled, "");
+			&stat->tx_queue_disabled, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_queue_error", CTLFLAG_RD,
-		&stat->tx_queue_error, "");
+			&stat->tx_queue_error, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_desc_fetch_error", CTLFLAG_RD,
-		&stat->tx_desc_fetch_error, "");
+			&stat->tx_desc_fetch_error, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_desc_data_error", CTLFLAG_RD,
-		&stat->tx_desc_data_error, "");
+			&stat->tx_desc_data_error, "");
 
 	/* H/w stats for RoCE devices. */
 	if (lif->api_private == NULL)
 		return;
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_ucast_bytes", CTLFLAG_RD,
-		&stat->tx_rdma_ucast_bytes, "");
+			&stat->tx_rdma_ucast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_ucast_packets", CTLFLAG_RD,
-		&stat->tx_rdma_ucast_packets, "");
+			&stat->tx_rdma_ucast_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_mcast_bytes", CTLFLAG_RD,
-		&stat->tx_rdma_mcast_bytes, "");
+			&stat->tx_rdma_mcast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_mcast_packets", CTLFLAG_RD,
-		&stat->tx_rdma_mcast_packets, "");
+			&stat->tx_rdma_mcast_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_cnp_packets", CTLFLAG_RD,
-		&stat->tx_rdma_cnp_packets, "");
+			&stat->tx_rdma_cnp_packets, "");
 
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_ucast_bytes", CTLFLAG_RD,
-		&stat->rx_rdma_ucast_bytes, "");
+			&stat->rx_rdma_ucast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_ucast_packets", CTLFLAG_RD,
-		&stat->rx_rdma_ucast_packets, "");
+			&stat->rx_rdma_ucast_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_mcast_bytes", CTLFLAG_RD,
-		&stat->rx_rdma_mcast_bytes, "");
+			&stat->rx_rdma_mcast_bytes, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_mcast_packets", CTLFLAG_RD,
-		&stat->rx_rdma_mcast_packets, "");
+			&stat->rx_rdma_mcast_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_cnp_packets", CTLFLAG_RD,
-		&stat->rx_rdma_cnp_packets, "");
+			&stat->rx_rdma_cnp_packets, "");
 	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_ecn_packets", CTLFLAG_RD,
-		&stat->rx_rdma_ecn_packets, "");
+			&stat->rx_rdma_ecn_packets, "");
 }
 
 static void
@@ -1930,15 +1932,15 @@ ionic_adminq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
 	queue_list = SYSCTL_CHILDREN(queue_node);
 
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "num_descs", CTLFLAG_RD,
-	&adminq->num_descs, 0, "Number of descriptors");
+			&adminq->num_descs, 0, "Number of descriptors");
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "head", CTLFLAG_RD,
-	&adminq->head_index, 0, "Head index");
+			&adminq->head_index, 0, "Head index");
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "tail", CTLFLAG_RD,
-	&adminq->tail_index, 0, "Tail index");
+			&adminq->tail_index, 0, "Tail index");
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "comp_index", CTLFLAG_RD,
-	&adminq->comp_index, 0, "Completion index");
+			&adminq->comp_index, 0, "Completion index");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "comp_err", CTLFLAG_RD,
-	&adminq->stats.comp_err, "Completions with error");
+			&adminq->stats.comp_err, "Completions with error");
 }
 
 static void
@@ -1960,6 +1962,8 @@ ionic_setup_device_stats(struct lif *lif)
 			&lif->num_dev_cmds, "dev commands used");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "mac_filter_count", CTLFLAG_RD,
 			&lif->num_mc_addrs, 0, "Number of MAC filters");
+	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "rx_mbuf_sz", CTLFLAG_RD,
+			&lif->rx_mbuf_size, 0, "Size of receive buffers");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "coal_usecs", CTLTYPE_UINT | CTLFLAG_RW, lif, 0,
 			ionic_intr_coal_handler, "IU", "Interrupt coalescing timeout in usecs");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "filters",
