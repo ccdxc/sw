@@ -2277,7 +2277,11 @@ EthLif::LinkEventHandler(port_status_t *evd)
     notify_block->link_status = evd->status;
     notify_block->link_speed =  evd->speed;
 
-    memcpy(&notify_block->port_status, evd, sizeof (*evd));
+    //Copy the link specific event data to notifyblock
+    notify_block->port_status.speed = evd->speed;
+    notify_block->port_status.id = evd->id;
+    notify_block->port_status.status = evd->status;
+
     memcpy(&notify_block->port_config, &port_config, sizeof (port_config));
 
     ++notify_block->eid;
@@ -2343,10 +2347,9 @@ EthLif::XcvrEventHandler(port_status_t *evd)
     if (state != LIF_STATE_INIT &&
         state != LIF_STATE_UP &&
         state != LIF_STATE_DOWN) {
-        NIC_LOG_INFO("{}: {} + {} => {}",
+        NIC_LOG_INFO("{}: {} => {}",
             hal_lif_info_.name,
             lif_state_to_str(state),
-            (evd->status == 1) ? "LINK_UP" : "LINK_DN",
             lif_state_to_str(state));
         return;
     }
@@ -2357,7 +2360,8 @@ EthLif::XcvrEventHandler(port_status_t *evd)
     notify_block->link_status = evd->status;
     notify_block->link_speed =  evd->speed;
 
-    memcpy(&notify_block->port_status, evd, sizeof (*evd));
+    //Copy the xcvr specific event data to notifyblock
+    memcpy(&notify_block->port_status.xcvr, &evd->xcvr, sizeof (evd->xcvr));
     memcpy(&notify_block->port_config, &port_config, sizeof (port_config));
 
     ++notify_block->eid;
