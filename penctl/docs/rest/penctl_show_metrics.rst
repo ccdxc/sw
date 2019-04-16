@@ -57,8 +57,6 @@ SEE ALSO
 * `penctl show metrics dprintreg1 <penctl_show_metrics_dprintreg1.rst>`_ 	 - Show Dprintreg1Metrics from Naples
 * `penctl show metrics dprintreg2 <penctl_show_metrics_dprintreg2.rst>`_ 	 - Show Dprintreg2Metrics from Naples
 * `penctl show metrics dprintsramsecc <penctl_show_metrics_dprintsramsecc.rst>`_ 	 - Show DprintsramseccMetrics from Naples
-* `penctl show metrics ftecps <penctl_show_metrics_ftecps.rst>`_ 	 - Show FteCPSMetrics from Naples
-* `penctl show metrics ftelifq <penctl_show_metrics_ftelifq.rst>`_ 	 - Show FteLifQMetrics from Naples
 * `penctl show metrics inteccdesc <penctl_show_metrics_inteccdesc.rst>`_ 	 - Show InteccdescMetrics from Naples
 * `penctl show metrics intspare <penctl_show_metrics_intspare.rst>`_ 	 - Show IntspareMetrics from Naples
 * `penctl show metrics lif <penctl_show_metrics_lif.rst>`_ 	 - Show LifMetrics from Naples
@@ -78,7 +76,6 @@ SEE ALSO
 * `penctl show metrics pbpbcintwrite <penctl_show_metrics_pbpbcintwrite.rst>`_ 	 - Show PbpbcintwriteMetrics from Naples
 * `penctl show metrics pciemgr <penctl_show_metrics_pciemgr.rst>`_ 	 - Show PcieMgrMetrics from Naples
 * `penctl show metrics pcieport <penctl_show_metrics_pcieport.rst>`_ 	 - Show PciePortMetrics from Naples
-* `penctl show metrics sessionsummary <penctl_show_metrics_sessionsummary.rst>`_ 	 - Show SessionSummaryMetrics from Naples
 * `penctl show metrics sgempuinterr <penctl_show_metrics_sgempuinterr.rst>`_ 	 - Show SgempuinterrMetrics from Naples
 * `penctl show metrics sgempuintinfo <penctl_show_metrics_sgempuintinfo.rst>`_ 	 - Show SgempuintinfoMetrics from Naples
 * `penctl show metrics sgeteinterr <penctl_show_metrics_sgeteinterr.rst>`_ 	 - Show SgeteinterrMetrics from Naples

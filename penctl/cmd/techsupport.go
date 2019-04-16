@@ -156,21 +156,23 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	retSlice = nil
 
 	fmt.Printf("Fetching events")
-	//Copy out events from /var/lib/pensando/events/events file
+	//Copy out all event files from /var/lib/pensando/events/ dir
 	eventsDestDir := destDir + "/events/"
 	createDestDir(eventsDestDir)
-	evresp, _ := restGet("monitoring/v1/naples/events/events")
-	file = eventsDestDir + "/" + "events"
-	out, err := os.Create(file)
+	evresp, _ := restGetResp("monitoring/v1/naples/events/")
+	retS, err = parseFiles(evresp)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
-	defer out.Close()
-	w := bufio.NewWriter(out)
-	w.WriteString(string(evresp))
-	w.Flush()
+	fmt.Println(retS)
+	for _, file = range retS {
+		if file == "events" || strings.HasSuffix(file, "/") {
+			continue
+		}
+		copyFileToDest(eventsDestDir, "monitoring/v1/naples/events/", file)
+	}
 	fmt.Printf("\nEvents fetched\n")
+	retSlice = nil
 
 	fmt.Printf("Fetching logs")
 	err = getLogs("logs", "monitoring/v1/naples/logs/")
@@ -227,12 +229,12 @@ func showTechCmdHandler(cmd *cobra.Command, args []string) error {
 	fmt.Printf("\nCommands executed\n")
 
 	file = destDir + "/penctl.ver"
-	out, err = os.Create(file)
+	out, err := os.Create(file)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer out.Close()
-	w = bufio.NewWriter(out)
+	w := bufio.NewWriter(out)
 	w.WriteString(getPenctlVer())
 	w.Flush()
 

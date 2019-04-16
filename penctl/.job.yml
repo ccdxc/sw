@@ -8,6 +8,20 @@ targets:
     sub-area:
     feature:
 
+  linux:
+    commands: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw/penctl && make && file ../nic/build/x86_64/iris/bin/penctl.linux | grep statically | grep linked | grep not | grep stripped ; exit $ret" ]
+    owners: ["email:arathore@pensando.io"]
+    area:
+    sub-area:
+    feature:
+
+  freebsd:
+    commands: ["sh", "-c", "cd $GOPATH/src/github.com/pensando/sw/penctl && make && file ../nic/build/x86_64/iris/bin/penctl.freebsd | grep statically | grep linked | grep not | grep stripped ; exit $ret" ]
+    owners: ["email:arathore@pensando.io"]
+    area:
+    sub-area:
+    feature:
+
 cache:
   name: "sw"
   mount_dir: "/root/.cache"
