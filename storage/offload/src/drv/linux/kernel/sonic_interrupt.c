@@ -21,7 +21,7 @@
 
 #define evid_to_db_pa(evl, id) (evl->db_base_pa + (sizeof(struct sonic_db_data) * (id)))
 #define db_pa_to_evid(evl, addr) (((dma_addr_t)(addr) - evl->db_base_pa) / sizeof(struct sonic_db_data))
-#define evid_to_db_va(evl, id) (struct sonic_db_data *)(evl->db_base + (sizeof(struct sonic_db_data) * (id)))
+#define evid_to_db_va(evl, id) (volatile struct sonic_db_data *)(evl->db_base + (sizeof(struct sonic_db_data) * (id)))
 #define db_va_to_evid(evl, addr) (((void *)(addr) - evl->db_base) / sizeof(struct sonic_db_data))
 
 static int sonic_get_evid(struct sonic_event_list *evl, u32 *evid)
@@ -68,19 +68,19 @@ static void sonic_put_evid(struct sonic_event_list *evl, u32 evid)
 	spin_unlock_irqrestore(&evl->inuse_lock, irqflags);
 }
 
-static inline struct sonic_db_data *
+static inline volatile struct sonic_db_data *
 sonic_intr_db_primed_usr_data_get(struct sonic_event_list *evl,
 				  uint32_t id,
 				  uint64_t *usr_data)
 {
-	struct sonic_db_data *db_data = evid_to_db_va(evl, id);
+	volatile struct sonic_db_data *db_data = evid_to_db_va(evl, id);
 	*usr_data = db_data->primed == sonic_intr_get_fire_data32() ?
 		    db_data->usr_data : 0;
 	return db_data;
 }
 
 static inline void
-sonic_intr_db_primed_usr_data_put(struct sonic_db_data *db_data)
+sonic_intr_db_primed_usr_data_put(volatile struct sonic_db_data *db_data)
 {
 	db_data->usr_data = 0;
 }
@@ -90,7 +90,7 @@ sonic_intr_db_fired_chk(struct sonic_event_list *evl,
 			uint32_t id,
 			uint32_t *fired_val)
 {
-	struct sonic_db_data *db_data = evid_to_db_va(evl, id);
+	volatile struct sonic_db_data *db_data = evid_to_db_va(evl, id);
 	*fired_val = db_data->fired;
 	return db_data->fired == sonic_intr_get_fire_data32();
 }
@@ -99,7 +99,7 @@ static inline void
 sonic_intr_db_fired_clr(struct sonic_event_list *evl,
 			uint32_t id)
 {
-	struct sonic_db_data *db_data = evid_to_db_va(evl, id);
+	volatile struct sonic_db_data *db_data = evid_to_db_va(evl, id);
 
 	db_data->fired = 0;
 	db_data->primed = 0;
@@ -121,7 +121,7 @@ static int
 sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
 		   struct sonic_work_data *work, int *used_count)
 {
-	struct sonic_db_data *db_data;
+	volatile struct sonic_db_data *db_data;
 	uint32_t id, first_id, next_id, wrap_size;
 	uint32_t loop_count = 0;
 	uint32_t fired;
@@ -386,7 +386,7 @@ uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res,
 		uint64_t usr_data)
 {
 	struct sonic_event_list *evl = pc_res->evl;
-	struct sonic_db_data *db_data;
+	volatile struct sonic_db_data *db_data;
 	uint32_t evid;
 
 	if (!evl || !evl->db_base) {
