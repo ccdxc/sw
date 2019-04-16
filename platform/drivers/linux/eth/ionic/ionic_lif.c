@@ -1091,6 +1091,7 @@ static void ionic_dfwd_del_station(struct net_device *lower_dev, void *priv)
 		while (master_lif->txqcqs[max-1].qcq == NULL)
 			max--;
 		netif_set_real_num_tx_queues(lower_dev, max);
+		qdisc_reset_all_tx(lower_dev);
 	}
 
 #ifndef HAVE_MACVLAN_SB_DEV

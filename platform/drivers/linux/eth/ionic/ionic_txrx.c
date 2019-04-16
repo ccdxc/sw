@@ -790,23 +790,10 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 	int ndescs;
 	int err;
 
-	/* When supporting multi-lif for macvlan offload, the
-	 * queue array can posisbly be sparse, so we have to
-	 * watch out for the stack selecting a tx queue that
-	 * doesn't actually exist.  This shouldn't happen often
-	 * and we may need to rework our representation to
-	 * not have a sparse array.  This is a quick hack to
-	 * watch for issues.
-	 * TODO: rework to not let this case happen
-	 */
-	q = NULL;
-	if (lif->txqcqs[queue_index].qcq)
+	if (likely(lif_to_txqcq(lif, queue_index)))
 		q = lif_to_txq(lif, queue_index);
-	if (!q) {
-		netdev_info(skb->dev, "%s: bad queue_index=%d\n",
-			    __func__, queue_index);
-		return NETDEV_TX_BUSY;
-	}
+	else
+		q = lif_to_txq(lif, 0);
 
 	ndescs = ionic_tx_descs_needed(q, skb);
 	if (ndescs < 0)
