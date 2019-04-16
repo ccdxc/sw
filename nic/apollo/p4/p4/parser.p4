@@ -114,13 +114,15 @@ parser start {
     extract(capri_intrinsic);
     return select(capri_intrinsic.tm_iport) {
         TM_PORT_INGRESS : parse_service_header;
-        TM_PORT_DMA : parse_txdma;
+        TM_PORT_DMA : parse_txdma_to_ingress;
+        TM_PORT_EGRESS : parse_egress_to_ingress;
         default : parse_uplink;
         0x1 mask 0 : deparse_ingress;
         0x2 mask 0 : egress_start;
     }
 }
 
+@pragma xgress ingress
 parser parse_uplink {
     return select(capri_intrinsic.tm_iport) {
         TM_PORT_UPLINK_0 : parse_packet_from_host;
@@ -129,16 +131,7 @@ parser parse_uplink {
     }
 }
 
-parser parse_packet_from_host {
-    set_metadata(control_metadata.direction, TX_FROM_HOST);
-    return parse_packet;
-}
-
-parser parse_packet_from_switch {
-    set_metadata(control_metadata.direction, RX_FROM_SWITCH);
-    return parse_packet;
-}
-
+@pragma xgress ingress
 parser parse_service_header {
     extract(capri_p4_intrinsic);
     extract(service_header);
@@ -146,10 +139,16 @@ parser parse_service_header {
 }
 
 @pragma xgress ingress
-parser parse_txdma {
+parser parse_egress_to_ingress {
+    extract(capri_p4_intrinsic);
+    return parse_ingress_pass2;
+}
+
+@pragma xgress ingress
+parser parse_txdma_to_ingress {
     extract(capri_txdma_intrinsic);
     return select(current(72, 4)) {
-        0 : parse_txdma_ingress;
+        0 : parse_ingress_pass2;
         default : parse_txdma_app;
     }
 }
@@ -162,24 +161,24 @@ parser parse_txdma_app {
 }
 
 @pragma xgress ingress
-parser parse_txdma_ingress {
+parser parse_ingress_pass2 {
     extract(predicate_header);
     return select(predicate_header.direction) {
-        RX_FROM_SWITCH : parse_ingress_predicate_header_rx;
-        TX_FROM_HOST : parse_ingress_predicate_header_tx;
+        RX_FROM_SWITCH : parse_packet_from_switch;
+        TX_FROM_HOST : parse_packet_from_host;
         default : ingress;
     }
 }
 
 @pragma xgress ingress
-parser parse_ingress_predicate_header_rx {
-    set_metadata(control_metadata.direction, RX_FROM_SWITCH);
+parser parse_packet_from_host {
+    set_metadata(control_metadata.direction, TX_FROM_HOST);
     return parse_packet;
 }
 
 @pragma xgress ingress
-parser parse_ingress_predicate_header_tx {
-    set_metadata(control_metadata.direction, TX_FROM_HOST);
+parser parse_packet_from_switch {
+    set_metadata(control_metadata.direction, RX_FROM_SWITCH);
     return parse_packet;
 }
 

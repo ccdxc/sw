@@ -262,16 +262,54 @@ uint8_t g_rcv_pkt4[] = {
     0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
 };
 
+uint8_t g_snd_pkt5[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xC1,
+    0xC2, 0xC3, 0xC4, 0xC5, 0x81, 0x00, 0x00, 0x64,
+    0x08, 0x00, 0x45, 0x00, 0x00, 0x5C, 0x00, 0x01,
+    0x00, 0x00, 0x40, 0x06, 0x61, 0x83, 0x0B, 0x0B,
+    0x01, 0x01, 0x0B, 0x0B, 0x02, 0x02, 0x12, 0x34,
+    0x56, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xF0, 0xB2,
+    0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66,
+    0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E,
+    0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
+    0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64,
+    0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B,
+    0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
+    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
+};
+
+uint8_t g_rcv_pkt5[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x00, 0xC1,
+    0xC2, 0xC3, 0xC4, 0xC6, 0x81, 0x00, 0x00, 0x65,
+    0x08, 0x00, 0x45, 0x00, 0x00, 0x5C, 0x00, 0x01,
+    0x00, 0x00, 0x40, 0x06, 0x61, 0x83, 0x0B, 0x0B,
+    0x01, 0x01, 0x0B, 0x0B, 0x02, 0x02, 0x12, 0x34,
+    0x56, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x50, 0x02, 0x20, 0x00, 0xF0, 0xB2,
+    0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66,
+    0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E,
+    0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
+    0x77, 0x7A, 0x78, 0x79, 0x61, 0x62, 0x63, 0x64,
+    0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6C, 0x6B,
+    0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74,
+    0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
+};
+
+uint64_t mytep_ip = 0x64656667;
+uint64_t mytep_mac = 0x00AABBCCDDEEULL;
+
 uint64_t g_layer1_smac = 0x00C1C2C3C4C5ULL;
 uint64_t g_layer1_dmac = 0x000102030405ULL;
 uint32_t g_layer1_sip = 0x0B0B0101;
 uint32_t g_layer1_dip = 0x0A0A0101;
 uint32_t g_layer1_dip2 = 0x0A0A0102;
+uint32_t g_layer1_dip3 = 0x0B0B0202;
 uint8_t  g_layer1_proto = 0x6;
 uint16_t g_layer1_sport = 0x1234;
 uint16_t g_layer1_dport = 0x5678;
 
-uint16_t g_ctag1_vid = 100;
+uint16_t g_ctag_vid1 = 100;
 uint16_t g_vcn_id1 = 0x2D1;
 uint16_t g_vcn_id2 = 0x2D2;
 uint16_t g_local_vnic_tag = 100;
@@ -286,6 +324,13 @@ uint32_t g_gw_slot_id = 200;
 uint32_t g_gw_slot_id2 = 0xABCDEF;
 uint32_t g_gw_dip = 0x0C0C0101;
 uint64_t g_gw_dmac = 0x001234567890;
+
+uint64_t g_vr_mac3 = 0x00C1C2C3C4C6ULL;
+uint16_t g_nexthop_index3 = 0x363;
+uint16_t g_tep_index3 = 300;
+uint16_t g_ctag_vid3 = 101;
+uint16_t g_local_vnic_tag3 = 101;
+uint32_t g_local_slot_id3 = 0x12346;
 
 uint16_t g_sacl_ip_class_id = 0x355;
 uint16_t g_sacl_sport_class_id = 0x59;
@@ -530,7 +575,7 @@ vnic_tx_init ()
     uint32_t index;
 
     memset(&data, 0, sizeof(data));
-    index = g_ctag1_vid;
+    index = g_ctag_vid1;
     data.action_id = LOCAL_VNIC_BY_VLAN_TX_LOCAL_VNIC_INFO_TX_ID;
     local_vnic_info->vcn_id = g_vcn_id1;
     local_vnic_info->epoch1_valid = true;
@@ -576,7 +621,6 @@ vnic_rx_init ()
            sizeof(local_vnic_info->sacl_v4addr1));
     memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
            sizeof(local_vnic_info->sacl_v4addr2));
-
     entry_write(tbl_id, 0, &key, NULL, &data, true,
                 LOCAL_VNIC_BY_SLOT_TABLE_SIZE);
 
@@ -594,7 +638,23 @@ vnic_rx_init ()
            sizeof(local_vnic_info->sacl_v4addr1));
     memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
            sizeof(local_vnic_info->sacl_v4addr2));
+    entry_write(tbl_id, 0, &key, NULL, &data, true,
+                LOCAL_VNIC_BY_SLOT_TABLE_SIZE);
 
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.vxlan_1_vni = g_local_slot_id3;
+    data.action_id = LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
+    local_vnic_info->vcn_id = g_vcn_id1;
+    local_vnic_info->epoch1_valid = true;
+    local_vnic_info->epoch1 = EPOCH;
+    local_vnic_info->local_vnic_tag = g_local_vnic_tag3;
+    local_vnic_info->skip_src_dst_check1 = true;
+    sacl_hbm_addr = get_mem_addr(JSACLV4BASE);
+    memcpy(local_vnic_info->sacl_v4addr1, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr1));
+    memcpy(local_vnic_info->sacl_v4addr2, &sacl_hbm_addr,
+           sizeof(local_vnic_info->sacl_v4addr2));
     entry_write(tbl_id, 0, &key, NULL, &data, true,
                 LOCAL_VNIC_BY_SLOT_TABLE_SIZE);
 }
@@ -611,10 +671,16 @@ egress_vnic_info_init ()
     memset(&data, 0, sizeof(data));
     index = g_local_vnic_tag;
     data.action_id = EGRESS_LOCAL_VNIC_INFO_EGRESS_LOCAL_VNIC_INFO_ID;
-    local_vnic_info->overlay_vlan_id = g_ctag1_vid;
+    local_vnic_info->overlay_vlan_id = g_ctag_vid1;
     memcpy(local_vnic_info->vr_mac, &g_layer1_dmac, 6);
     memcpy(local_vnic_info->overlay_mac, &g_layer1_smac, 6);
+    entry_write(tbl_id, index, NULL, NULL, &data, false, 0);
 
+    memset(&data, 0, sizeof(data));
+    index = g_local_vnic_tag3;
+    data.action_id = EGRESS_LOCAL_VNIC_INFO_EGRESS_LOCAL_VNIC_INFO_ID;
+    local_vnic_info->overlay_vlan_id = g_ctag_vid3;
+    memcpy(local_vnic_info->vr_mac, &g_vr_mac3, 6);
     entry_write(tbl_id, index, NULL, NULL, &data, false, 0);
 }
 
@@ -763,7 +829,8 @@ nexthop_tx_init (uint16_t nexthop_index, uint16_t tep_index, uint32_t slot_id)
 }
 
 static void
-tep_tx_init (uint16_t tep_index, uint8_t tunnel_type)
+tep_tx_init (uint16_t tep_index, uint8_t tunnel_type, uint32_t dip,
+             uint64_t dmac)
 {
     tep_tx_actiondata_t data;
     tep_tx_gre_tep_tx_t *tep_info = &data.action_u.tep_tx_gre_tep_tx;
@@ -773,17 +840,14 @@ tep_tx_init (uint16_t tep_index, uint8_t tunnel_type)
     memset(&data, 0, sizeof(data));
     index = tep_index;
     data.action_id = tunnel_type;
-    tep_info->dipo = g_gw_dip;
-    memcpy(tep_info->dmac, &g_gw_dmac, 6);
+    tep_info->dipo = dip;
+    memcpy(tep_info->dmac, &dmac, 6);
     entry_write(tbl_id, index, NULL, NULL, &data, false, 0);
 }
 
 static void
 rewrite_init (void)
 {
-    uint64_t mytep_ip = 0x64656667; // 100.101.102.103
-    uint64_t mytep_mac = 0x00AABBCCDDEE;
-
     // program the table constants
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
                                                  mytep_ip);
@@ -791,10 +855,13 @@ rewrite_init (void)
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX, mytep_mac);
 
     nexthop_tx_init(g_nexthop_index, g_tep_index, g_gw_slot_id);
-    tep_tx_init(g_tep_index, TEP_TX_MPLS_UDP_TEP_TX_ID);
+    tep_tx_init(g_tep_index, TEP_TX_MPLS_UDP_TEP_TX_ID, g_gw_dip, g_gw_dmac);
 
     nexthop_tx_init(g_nexthop_index2, g_tep_index2, g_gw_slot_id2);
-    tep_tx_init(g_tep_index2, TEP_TX_VXLAN_TEP_TX_ID);
+    tep_tx_init(g_tep_index2, TEP_TX_VXLAN_TEP_TX_ID, g_gw_dip, g_gw_dmac);
+
+    nexthop_tx_init(g_nexthop_index3, g_tep_index3, g_local_slot_id3);
+    tep_tx_init(g_tep_index3, TEP_TX_VXLAN_TEP_TX_ID, mytep_ip, mytep_mac);
 }
 
 static void
@@ -972,7 +1039,18 @@ vxlan_mappings_init (void)
     mapping_info->nexthop_index = g_nexthop_index2;
     mapping_info->dst_slot_id_valid = true;
     mapping_info->dst_slot_id = g_gw_slot_id2;
+    entry_write(tbl_id, 0, &key, NULL, &data, true,
+                REMOTE_VNIC_MAPPING_TX_TABLE_SIZE);
 
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    memcpy(key.p4e_apollo_i2e_dst, &g_layer1_dip3, 4);
+    key.txdma_to_p4e_header_vcn_id = g_vcn_id2;
+    data.action_id = REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID;
+    mapping_info->entry_valid = true;
+    mapping_info->nexthop_index = g_nexthop_index3;
+    mapping_info->dst_slot_id_valid = true;
+    mapping_info->dst_slot_id = g_local_slot_id3;
     entry_write(tbl_id, 0, &key, NULL, &data, true,
                 REMOTE_VNIC_MAPPING_TX_TABLE_SIZE);
 }
@@ -1280,6 +1358,25 @@ TEST_F(apollo_test, test1)
         for (i = 0; i < tcscale; i++) {
             testcase_begin(tcid, i + 1);
             step_network_pkt(ipkt, TM_PORT_UPLINK_1);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_0);
+            }
+            testcase_end(tcid, i + 1);
+        }
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt5));
+        memcpy(ipkt.data(), g_snd_pkt5, sizeof(g_snd_pkt5));
+        epkt.resize(sizeof(g_rcv_pkt5));
+        memcpy(epkt.data(), g_rcv_pkt5, sizeof(g_rcv_pkt5));
+        std::cout << "Testing Host to Host (VxLAN)" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i + 1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(opkt == epkt);

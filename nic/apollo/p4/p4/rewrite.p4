@@ -74,6 +74,10 @@ action gre_tep_tx(dipo, dmac) {
     } else {
         modify_field(mpls_dst_0.bos, 1);
     }
+
+    if (rewrite_metadata.mytep_ip == dipo) {
+        modify_field(control_metadata.local_switching, 1);
+    }
 }
 
 action mpls_udp_tep_tx(dipo, dmac) {
@@ -126,6 +130,10 @@ action mpls_udp_tep_tx(dipo, dmac) {
     } else {
         modify_field(mpls_dst_0.bos, 1);
     }
+
+    if (rewrite_metadata.mytep_ip == dipo) {
+        modify_field(control_metadata.local_switching, 1);
+    }
 }
 
 action vxlan_tep_tx(dipo, dmac) {
@@ -168,6 +176,10 @@ action vxlan_tep_tx(dipo, dmac) {
     modify_field(vxlan_0.vni, rewrite_metadata.dst_slot_id);
     modify_field(vxlan_0.reserved, 0);
     modify_field(vxlan_0.reserved2, 0);
+
+    if (rewrite_metadata.mytep_ip == dipo) {
+        modify_field(control_metadata.local_switching, 1);
+    }
 }
 
 @pragma stage 3

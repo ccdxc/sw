@@ -48,6 +48,7 @@ header_type control_metadata_t {
         lpm_v6addr                          : 40;
         p4plus_app_id                       : 8;
         vlan_strip                          : 1;
+        local_switching                     : 1;
     }
 }
 

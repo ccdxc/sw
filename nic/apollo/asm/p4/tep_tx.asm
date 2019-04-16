@@ -9,13 +9,16 @@ struct phv_         p;
 %%
 
 mpls_udp_tep_tx:
+    seq         c1, k.rewrite_metadata_mytep_ip, d.u.mpls_udp_tep_tx_d.dipo
+    phvwr.c1    p.control_metadata_local_switching, TRUE
     phvwr       p.{ctag_1_valid,ethernet_1_valid}, 0
     phvwr       p.{ipv4_0_valid,ipv4_0_udp_csum,ipv4_0_tcp_csum,ipv4_0_csum, \
                     ctag_0_valid,ethernet_0_valid}, 0x25
     phvwr       p.capri_deparser_len_ipv4_0_hdr_len, 20
     phvwrpair   p.mpls_dst_0_valid, 1, p.udp_0_valid, 1
     phvwr       p.ethernet_0_dstAddr, d.u.mpls_udp_tep_tx_d.dmac
-    phvwr       p.ethernet_0_srcAddr, r5
+    or          r5, ETHERTYPE_IPV4, r5, 16
+    phvwr       p.{ethernet_0_srcAddr,ethernet_0_etherType}, r5
     phvwr       p.ethernet_0_etherType, ETHERTYPE_IPV4
     add         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                        capri_p4_intrinsic_packet_len_sbit6_ebit13}, 18
@@ -39,14 +42,16 @@ mpls_udp_tep_tx:
 
 .align
 vxlan_tep_tx:
+    seq         c1, k.rewrite_metadata_mytep_ip, d.u.mpls_udp_tep_tx_d.dipo
+    phvwr.c1    p.control_metadata_local_switching, TRUE
     phvwr       p.ctag_1_valid, 0
     phvwr       p.{ipv4_0_valid,ipv4_0_udp_csum,ipv4_0_tcp_csum,ipv4_0_csum, \
                     ctag_0_valid,ethernet_0_valid}, 0x25
     phvwr       p.capri_deparser_len_ipv4_0_hdr_len, 20
-    phvwrpair   p.vxlan_0_valid, 1, p.udp_0_valid, 1
+    phvwr       p.{vxlan_0_valid,udp_0_valid}, 0x3
     phvwr       p.ethernet_0_dstAddr, d.u.vxlan_tep_tx_d.dmac
-    phvwr       p.ethernet_0_srcAddr, r5
-    phvwr       p.ethernet_0_etherType, ETHERTYPE_IPV4
+    or          r5, ETHERTYPE_IPV4, r5, 16
+    phvwr       p.{ethernet_0_srcAddr,ethernet_0_etherType}, r5
     add         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                        capri_p4_intrinsic_packet_len_sbit6_ebit13}, 36
     seq         c1, k.ctag_1_valid, TRUE
@@ -68,14 +73,16 @@ vxlan_tep_tx:
 
 .align
 gre_tep_tx:
+    seq         c1, k.rewrite_metadata_mytep_ip, d.u.mpls_udp_tep_tx_d.dipo
+    phvwr.c1    p.control_metadata_local_switching, TRUE
     phvwr       p.{ctag_1_valid,ethernet_1_valid}, 0
     phvwr       p.{ipv4_0_valid,ipv4_0_udp_csum,ipv4_0_tcp_csum,ipv4_0_csum, \
                     ctag_0_valid,ethernet_0_valid}, 0x25
     phvwr       p.capri_deparser_len_ipv4_0_hdr_len, 20
     phvwrpair   p.mpls_dst_0_valid, 1, p.gre_0_valid, 1
     phvwr       p.ethernet_0_dstAddr, d.u.gre_tep_tx_d.dmac
-    phvwr       p.ethernet_0_srcAddr, r5
-    phvwr       p.ethernet_0_etherType, ETHERTYPE_IPV4
+    or          r5, ETHERTYPE_IPV4, r5, 16
+    phvwr       p.{ethernet_0_srcAddr,ethernet_0_etherType}, r5
     add         r1, k.{capri_p4_intrinsic_packet_len_sbit0_ebit5, \
                        capri_p4_intrinsic_packet_len_sbit6_ebit13}, 14
     seq         c1, k.ctag_1_valid, TRUE

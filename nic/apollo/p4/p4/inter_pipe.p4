@@ -175,17 +175,24 @@ control ingress_to_rxdma {
 }
 
 /*****************************************************************************/
-/* Egress pipeline to uplink                                                 */
+/* Egress pipeline to uplink/ingress                                         */
 /*****************************************************************************/
 action egress_to_uplink() {
-    if (control_metadata.direction == RX_FROM_SWITCH) {
-        modify_field(capri_intrinsic.tm_oport, TM_PORT_UPLINK_0);
-    } else {
-        modify_field(capri_intrinsic.tm_oport, TM_PORT_UPLINK_1);
-    }
     modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
+    if (control_metadata.local_switching == TRUE) {
+        modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
+        remove_header(predicate_header);
+        add_header(predicate_header);
+        bit_xor(predicate_header.direction, control_metadata.direction, 1);
+    } else {
+        if (control_metadata.direction == RX_FROM_SWITCH) {
+            modify_field(capri_intrinsic.tm_oport, TM_PORT_UPLINK_0);
+        } else {
+            modify_field(capri_intrinsic.tm_oport, TM_PORT_UPLINK_1);
+        }
+        remove_header(predicate_header);
+    }
     remove_header(capri_txdma_intrinsic);
-    remove_header(predicate_header);
     remove_header(txdma_to_p4e_header);
     remove_header(p4e_apollo_i2e);
 }

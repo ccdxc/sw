@@ -1,8 +1,9 @@
 #include "apollo.h"
 #include "ingress.h"
 #include "INGRESS_p.h"
+#include "INGRESS_init_config_k.h"
 
-struct init_config_k k;
+struct init_config_k_ k;
 struct phv_ p;
 
 %%
@@ -22,12 +23,13 @@ service_header_done:
     phvwr.c1        p.p4_to_txdma_header_lpm_addr, k.control_metadata_lpm_v6addr
     phvwr.c1        p.p4_to_rxdma_header_sacl_base_addr, \
                         k.control_metadata_sacl_v6addr
-    add             r1, r0, k.{capri_p4_intrinsic_frame_size_sbit0_ebit5,\
-                               capri_p4_intrinsic_frame_size_sbit6_ebit13}
+    sub             r1, k.capri_p4_intrinsic_frame_size, \
+                        CAPRI_GLOBAL_INTRINSIC_HDR_SZ
     seq             c1, k.capri_intrinsic_tm_iport, TM_PORT_DMA
-    sub.!c1         r1, r1, CAPRI_GLOBAL_INTRINSIC_HDR_SZ
-    sub.c1          r1, r1, (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + \
-                             CAPRI_TXDMA_INTRINSIC_HDR_SZ + \
+    sub.c1          r1, r1, (CAPRI_TXDMA_INTRINSIC_HDR_SZ + \
+                             APOLLO_PREDICATE_HDR_SZ)
+    seq             c1, k.capri_intrinsic_tm_iport, TM_PORT_EGRESS
+    sub.c1          r1, r1, (CAPRI_P4_INTRINSIC_HDR_SZ + \
                              APOLLO_PREDICATE_HDR_SZ)
     phvwr.e         p.capri_p4_intrinsic_packet_len, r1
     phvwr           p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
