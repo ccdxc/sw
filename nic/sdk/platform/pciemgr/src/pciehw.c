@@ -591,11 +591,19 @@ pciehwdev_search_bdf(pciehwdevh_t phwdevh, const u_int16_t bdf)
         pciehwdev_t *parent_hwdev = pciehwdev_get(phwdev->parenth);
         u_int32_t hdrt, sec_bus;
 
+        /*
+         * If our parent is a bridge, then our bus is the
+         * bridge's secondary bus.
+         *
+         * If not a bridge, we are a VF and our bus is
+         * our parent's bus.
+         */
         if (pciehwdev_cfgrd(parent_hwdev, 0xe, 1, &hdrt) == 0 &&
-            pciehwdev_cfgrd(parent_hwdev, 0x19, 1, &sec_bus) == 0) {
-            if ((hdrt & 0x7f) == 1) {
-                bus = sec_bus;
-            }
+            (hdrt & 0x7f) == 1) {
+            pciehwdev_cfgrd(parent_hwdev, 0x19, 1, &sec_bus);
+            bus = sec_bus;
+        } else {
+            bus = bdf_to_bus(parent_hwdev->bdf);
         }
     } else {
         bus = 0;
@@ -650,6 +658,9 @@ pciehw_finalize_dev(pciehdev_t *pdev)
     pciehdev_t *parent, *peer, *child;
 
     phwdev->pdev = pdev;
+    phwdev->pf = pciehdev_is_pf(pdev);
+    phwdev->vf = pciehdev_is_vf(pdev);
+    phwdev->totalvfs = pciehdev_get_totalvfs(pdev);
     phwdev->bdf = pciehdev_get_bdf(pdev);
     phwdev->port = pciehdev_get_port(pdev);
     phwdev->lifb = pciehdev_get_lifb(pdev);
@@ -708,6 +719,10 @@ fake_bios_scan(const u_int8_t port, int bus, int *nextbus)
 
         /* read vendor/device id to be sure a device exists at bdf */
         if (pciehw_cfgrd(port, bdf, 0, 4, &val) < 0) {
+            continue;
+        }
+        /* VF has vendor/devicid 0xffffffff */
+        if (val == 0xffffffff) {
             continue;
         }
         /* read header type register */
@@ -771,7 +786,8 @@ dev_show1(const pciehwdev_t *phwdev, const int flags)
                     pciehwdev_get_name(phwdev),
                     phwdev->port,
                     bdf_to_str(pciehwdev_get_bdf(phwdev)),
-                    phwdev->intrc ? "ABCD"[phwdev->intpin] : ' ',
+                    !phwdev->vf && phwdev->intrc ?
+                        "ABCD"[phwdev->intpin] : ' ',
                     intrsstr);
 }
 

@@ -19,7 +19,7 @@
 void
 add_msix_region(pciehbars_t *pbars,
                 pciehbar_t *pbar,
-                const pciehdevice_resources_t *pres,
+                const pciehdev_res_t *res,
                 const u_int32_t msixtbloff,
                 const u_int32_t msixpbaoff)
 {
@@ -31,8 +31,8 @@ add_msix_region(pciehbars_t *pbars,
 
     /*****************
      * MSI-X Interrupt Table */
-    intrs_to_map = pres->intrc;
-    intrb = pres->intrb;
+    intrs_to_map = res->intrc;
+    intrb = res->intrb;
     baroff = msixtbloff;
     while (intrs_to_map > 0) {
         /*
@@ -48,7 +48,7 @@ add_msix_region(pciehbars_t *pbars,
         memset(&preg, 0, sizeof(preg));
         preg.baroff = baroff;
         pmt_bar_enc(&preg.pmt,
-                    pres->port,
+                    res->port,
                     PMT_TYPE_MEM,
                     pmtsize,
                     msixtbl_stride, /* prtsize */
@@ -69,25 +69,25 @@ add_msix_region(pciehbars_t *pbars,
 
     /*****************
      * MSI-X Interrupt PBA */
-    if (pres->intrc) {
+    if (res->intrc) {
         memset(&preg, 0, sizeof(preg));
         preg.baroff = msixpbaoff;
         pmt_bar_enc(&preg.pmt,
-                    pres->port,
+                    res->port,
                     PMT_TYPE_MEM,
                     0x8,    /* pmtsize */
                     0x8,    /* prtsize */
                     PMTF_RD);
         prt_res_enc(&prt,
-                    intr_pba_addr(pres->lifb),
-                    intr_pba_size(pres->intrc),
+                    intr_pba_addr(res->lifb),
+                    intr_pba_size(res->intrc),
                     PRT_RESF_NONE);
         pciehbarreg_add_prt(&preg, &prt);
         pciehbar_add_reg(pbar, &preg);
     }
 
     /* set msix cap info */
-    if (pres->intrc) {
+    if (res->intrc) {
         const int baridx = pbar->cfgidx;
         pciehbars_set_msix_tbl(pbars, baridx, msixtbloff);
         pciehbars_set_msix_pba(pbars, baridx, msixpbaoff);
@@ -96,7 +96,7 @@ add_msix_region(pciehbars_t *pbars,
 
 void
 add_common_resource_bar(pciehbars_t *pbars,
-                        const pciehdevice_resources_t *pres)
+                        const pciehdev_res_t *res)
 {
     const u_int32_t msixtbl_stride = roundup_power2(intr_msixcfg_size(1));
     const u_int32_t intrctrl_stride = roundup_power2(intr_drvcfg_size(1));
@@ -114,7 +114,7 @@ add_common_resource_bar(pciehbars_t *pbars,
      *     Intr Status Regs (+0x2000) (unused)
      *     Intr Ctrl Regs (+0x3000) (unused)
      *
-     * If this device has interrupts (pres->intrc > 0)
+     * If this device has interrupts (res->intrc > 0)
      * then we have these regions:
      *     Devcmd Regs (+0x0000)
      *     Devcmd Doorbell (+0x1000)
@@ -129,14 +129,14 @@ add_common_resource_bar(pciehbars_t *pbars,
      */
 
     /* Max MSIX Interrupt Table entries is 2048 per PCIe spec. */
-    assert(pres->intrc <= 2048);
+    assert(res->intrc <= 2048);
 
     /*
      * PCIe spec recommends putting these on page boundaries,
      * alone without any other resources in those pages.
      */
-    intrctrlsz = roundup(intrctrl_stride * pres->intrc, 0x1000);
-    msixtblsz  = roundup(msixtbl_stride  * pres->intrc, 0x1000);
+    intrctrlsz = roundup(intrctrl_stride * res->intrc, 0x1000);
+    msixtblsz  = roundup(msixtbl_stride  * res->intrc, 0x1000);
 
     /*
      * Total bar size must be a power-of-2 per PCIe spec.
@@ -166,13 +166,13 @@ add_common_resource_bar(pciehbars_t *pbars,
      * +0x0000 Device Cmd Regs 4-byte signature read-only */
     memset(&preg, 0, sizeof(preg));
     pmt_bar_enc(&preg.pmt,
-                pres->port,
+                res->port,
                 PMT_TYPE_MEM,
                 0x4,    /* pmtsize */
                 0x4,    /* prtsize */
                 PMTF_WR);
     /* 0-size res mapping claims writes but discards them */
-    prt_res_enc(&prt, pres->devcmdpa, 0, PRT_RESF_PMVDIS);
+    prt_res_enc(&prt, res->devcmdpa, 0, PRT_RESF_PMVDIS);
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
 
@@ -182,7 +182,7 @@ add_common_resource_bar(pciehbars_t *pbars,
      */
     memset(&preg, 0, sizeof(preg));
     pmt_bar_enc(&preg.pmt,
-                pres->port,
+                res->port,
                 PMT_TYPE_MEM,
                 0x2000, /* pmtsize */
                 0x1000, /* prtsize */
@@ -190,11 +190,11 @@ add_common_resource_bar(pciehbars_t *pbars,
     pmt_bar_setr_prt(&preg.pmt, 12, 1);
 
     /* +0x0000 Device Cmd Regs */
-    prt_res_enc(&prt, pres->devcmdpa, 0x1000, PRT_RESF_PMVDIS);
+    prt_res_enc(&prt, res->devcmdpa, 0x1000, PRT_RESF_PMVDIS);
     pciehbarreg_add_prt(&preg, &prt);
 
     /* +0x1000 Device Cmd Doorbell */
-    prt_res_enc(&prt, pres->devcmddbpa, 0x4, (PRT_RESF_NOTIFY |
+    prt_res_enc(&prt, res->devcmddbpa, 0x4, (PRT_RESF_NOTIFY |
                                               PRT_RESF_PMVDIS));
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
@@ -204,22 +204,22 @@ add_common_resource_bar(pciehbars_t *pbars,
     memset(&preg, 0, sizeof(preg));
     preg.baroff = 0x2000;
     pmt_bar_enc(&preg.pmt,
-                pres->port,
+                res->port,
                 PMT_TYPE_MEM,
                 0x8,    /* pmtsize */
                 0x8,    /* prtsize */
                 PMTF_RD);
     prt_res_enc(&prt,
-                intr_pba_addr(pres->lifb),
-                intr_pba_size(pres->intrc),
+                intr_pba_addr(res->lifb),
+                intr_pba_size(res->intrc),
                 PRT_RESF_NONE);
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
 
     /*****************
      * +0x3000 Interrupt Control regs */
-    intrs_to_map = pres->intrc;
-    intrb = pres->intrb;
+    intrs_to_map = res->intrc;
+    intrb = res->intrb;
     baroff = 0x3000;
     while (intrs_to_map > 0) {
         /*
@@ -235,7 +235,7 @@ add_common_resource_bar(pciehbars_t *pbars,
         memset(&preg, 0, sizeof(preg));
         preg.baroff = baroff;
         pmt_bar_enc(&preg.pmt,
-                    pres->port,
+                    res->port,
                     PMT_TYPE_MEM,
                     pmtsize,
                     intrctrl_stride, /* prtsize */
@@ -261,7 +261,7 @@ add_common_resource_bar(pciehbars_t *pbars,
      * For larger bars with more intrs, these regions contain more intrs.
      */
 
-    add_msix_region(pbars, &pbar, pres, msixtbloff, msixpbaoff);
+    add_msix_region(pbars, &pbar, res, msixtbloff, msixpbaoff);
 
     /*
      * add this bar to our bars
@@ -271,7 +271,7 @@ add_common_resource_bar(pciehbars_t *pbars,
 
 void
 add_common_doorbell_bar(pciehbars_t *pbars,
-                        const pciehdevice_resources_t *pres,
+                        const pciehdev_res_t *res,
                         const u_int8_t upd[8])
 {
     pciehbarreg_t preg;
@@ -292,7 +292,7 @@ add_common_doorbell_bar(pciehbars_t *pbars,
      * If nlifs is not an even power-of-2 then we'll cap to
      * nlifs in the vf_params fields below.
      */
-    nlifs = MAX(pres->lifc, 1);
+    nlifs = MAX(res->lifc, 1);
     nlifs2 = roundup_power2(nlifs);
 
     /*
@@ -305,7 +305,7 @@ add_common_doorbell_bar(pciehbars_t *pbars,
      * unconfigured pids because the driver will never give
      * permission to access from the unused pids.
      */
-    npids = MAX(pres->npids, 1);
+    npids = MAX(res->npids, 1);
     npids2 = roundup_power2(npids);
 
     pbar.type = PCIEHBARTYPE_MEM64;
@@ -314,7 +314,7 @@ add_common_doorbell_bar(pciehbars_t *pbars,
 
     memset(&preg, 0, sizeof(preg));
     pmt_bar_enc(&preg.pmt,
-                pres->port,
+                res->port,
                 PMT_TYPE_MEM,
                 pbar.size,       /* pmtsize */
                 npids2 * 0x1000, /* prtsize */
@@ -329,10 +329,10 @@ add_common_doorbell_bar(pciehbars_t *pbars,
     if (nlifs > 1) {
         bitb = 12 + ffs(npids2) - 1;
         bitc = ffs(nlifs2) - 1;
-        pmt_bar_set_vfparams(&preg.pmt, bitb, bitc, pres->lifb, nlifs);
+        pmt_bar_set_vfparams(&preg.pmt, bitb, bitc, res->lifb, nlifs);
     }
 
-    prt_db64_enc(&prt, pres->lifb, upd);
+    prt_db64_enc(&prt, res->lifb, upd);
     if (nlifs > 1) {
         /* if multiple lifs, set stride between lif db's */
         prt_db_set_vfstride(&prt, 1 << 6);
@@ -344,8 +344,7 @@ add_common_doorbell_bar(pciehbars_t *pbars,
 }
 
 void
-add_common_cmb_bar(pciehbars_t *pbars,
-                   const pciehdevice_resources_t *pres)
+add_common_cmb_bar(pciehbars_t *pbars, const pciehdev_res_t *res)
 {
     pciehbarreg_t preg;
     pciehbar_t pbar;
@@ -354,22 +353,22 @@ add_common_cmb_bar(pciehbars_t *pbars,
     /*****************
      * optional cmb bar
      */
-    if (pres->cmbsz) {
+    if (res->cmbsz) {
         memset(&pbar, 0, sizeof(pbar));
         pbar.type = PCIEHBARTYPE_MEM64;
-        pbar.size = roundup_power2(pres->cmbsz);
+        pbar.size = roundup_power2(res->cmbsz);
         pbar.cfgidx = 4;
-        pbar.prefetch = pres->cmbprefetch;
+        pbar.prefetch = res->cmbprefetch;
 
         memset(&preg, 0, sizeof(preg));
         pmt_bar_enc(&preg.pmt,
-                    pres->port,
+                    res->port,
                     PMT_TYPE_MEM,
                     pbar.size,  /* pmtsize */
                     pbar.size,  /* prtsize */
                     PMTF_RW);
 
-        prt_res_enc(&prt, pres->cmbpa, pres->cmbsz, PRT_RESF_PMVDIS);
+        prt_res_enc(&prt, res->cmbpa, res->cmbsz, PRT_RESF_PMVDIS);
         pciehbarreg_add_prt(&preg, &prt);
         pciehbar_add_reg(&pbar, &preg);
         pciehbars_add_bar(pbars, &pbar);
@@ -377,8 +376,7 @@ add_common_cmb_bar(pciehbars_t *pbars,
 }
 
 void
-add_common_rom_bar(pciehbars_t *pbars,
-                   const pciehdevice_resources_t *pres)
+add_common_rom_bar(pciehbars_t *pbars, const pciehdev_res_t *res)
 {
     pciehbarreg_t preg;
     pciehbar_t pbar;
@@ -387,20 +385,20 @@ add_common_rom_bar(pciehbars_t *pbars,
     /*****************
      * optional oprom bar
      */
-    if (pres->romsz) {
+    if (res->romsz) {
         memset(&pbar, 0, sizeof(pbar));
         pbar.type = PCIEHBARTYPE_MEM;
-        pbar.size = roundup_power2(pres->romsz);
+        pbar.size = roundup_power2(res->romsz);
 
         memset(&preg, 0, sizeof(preg));
         pmt_bar_enc(&preg.pmt,
-                    pres->port,
+                    res->port,
                     PMT_TYPE_MEM,
                     pbar.size,  /* pmtsize */
                     pbar.size,  /* prtsize */
                     PMTF_RD);
 
-        prt_res_enc(&prt, pres->rompa, pres->romsz, PRT_RESF_PMVDIS);
+        prt_res_enc(&prt, res->rompa, res->romsz, PRT_RESF_PMVDIS);
         pciehbarreg_add_prt(&preg, &prt);
         pciehbar_add_reg(&pbar, &preg);
         pciehbars_add_rombar(pbars, &pbar);

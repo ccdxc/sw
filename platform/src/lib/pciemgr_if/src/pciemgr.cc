@@ -72,101 +72,112 @@ pciemgr::finalize(const int port)
     return pciemgrc_msgsend(&m);
 }
 
+static void
+msg_copy(pmmsg_t *m, char **mpp, void *buf, size_t len)
+{
+    if (m) {
+        memcpy(*mpp, buf, len);
+    }
+    *mpp += len;
+}
+
+static void
+msgwrite_reg(pmmsg_t *m, char **mpp, pciehbarreg_t *preg)
+{
+    msg_copy(m, mpp, preg, sizeof(pciehbarreg_t));
+    msg_copy(m, mpp, preg->prts, sizeof(prt_t) * preg->nprts);
+}
+
+static void
+msgwrite_bar(pmmsg_t *m, char **mpp, pciehbar_t *pbar)
+{
+    pciehbarreg_t *preg = pbar->regs;
+
+    for (int r = 0; r < pbar->nregs; r++, preg++) {
+        msgwrite_reg(m, mpp, preg);
+    }
+}
+
+static void
+msgwrite_bars(pmmsg_t *m, char **mpp, pciehbars_t *pbars)
+{
+    pciehbar_t *pbar;
+
+    // copy our bars header structure
+    msg_copy(m, mpp, pbars, sizeof(pciehbars_t));
+
+    // copy each bar
+    for (pbar = pciehbars_get_first(pbars);
+         pbar != NULL;
+         pbar = pciehbars_get_next(pbars, pbar)) {
+        msgwrite_bar(m, mpp, pbar);
+    }
+    // rom bar
+    pbar = pciehbars_get_rombar(pbars);
+    if (pbar) {
+        msgwrite_bar(m, mpp, pbar);
+    }
+}
+
+static void
+msgwrite_cfg(pmmsg_t *m, char **mpp, pciehcfg_t *pcfg)
+{
+    msg_copy(m, mpp, pcfg, sizeof(pciehcfg_t));
+    msg_copy(m, mpp, pcfg->cur, PCIEHCFGSZ);
+    msg_copy(m, mpp, pcfg->msk, PCIEHCFGSZ);
+}
+
+static void
+msgwrite_dev(pmmsg_t *m, char **mpp, pciehdev_t *pdev)
+{
+    msg_copy(m, mpp, pdev, sizeof(pciehdev_t));
+}
+
+static void
+msgwrite_dev_structs(pmmsg_t *m, char **mpp, pciehdev_t *pdev)
+{
+    msgwrite_dev(m, mpp, pdev);
+
+    pciehcfg_t *pcfg = pciehdev_get_cfg(pdev);
+    msgwrite_cfg(m, mpp, pcfg);
+
+    pciehbars_t *pbars = pciehdev_get_bars(pdev);
+    msgwrite_bars(m, mpp, pbars);
+}
+
 int
 pciemgr::add_device(pciehdev_t *pdev)
 {
     pmmsg_t *m;
     char *mp;
 
-    pciehbars_t *pbars = pciehdev_get_bars(pdev);
-    pciehbar_t *pbar;
-    pciehbarreg_t *preg;
-    int nregs, nprts;
-
-    nprts = 0;
-    nregs = 0;
-    for (pbar = pciehbars_get_first(pbars);
-         pbar != NULL;
-         pbar = pciehbars_get_next(pbars, pbar)) {
-
-        nregs += pbar->nregs;
-
-        preg = pbar->regs;
-        for (int r = 0; r < pbar->nregs; r++, preg++) {
-            nprts += preg->nprts;
-        }
-    }
-    pbar = &pbars->rombar;
-    if (pbar->size) {
-        nregs += pbar->nregs;
-
-        preg = pbar->regs;
-        for (int r = 0; r < pbar->nregs; r++, preg++) {
-            nprts += preg->nprts;
-        }
+    //
+    // Determine the total size of our msg payload.
+    // NULL msg here indicates just count bytes in mp.
+    //
+    mp = NULL;
+    msgwrite_dev_structs(NULL, &mp, pdev);
+    if (pdev->pf) {
+        pciehdev_t *vfdev = pdev->child;
+        msgwrite_dev_structs(NULL, &mp, vfdev);
     }
 
-    size_t msglen = (sizeof(pmmsg_dev_add_t) +
-                     sizeof(pciehdev_t) +
-                     sizeof(pciehcfg_t) +
-                     PCIEHCFGSZ * 2 +
-                     sizeof(pciehbars_t) +
-                     sizeof(pciehbarreg_t) * nregs +
-                     sizeof(prt_t) * nprts);
+    //
+    // Alloc a msg of the determined size.
+    //
+    const size_t msglen = sizeof(pmmsg_dev_add_t) + (size_t)mp;
     pciemgrc_msgalloc(&m, msglen);
-
     // msg header
     m->hdr.msgtype = PMMSG_DEV_ADD;
-
     mp = (char *)&m->dev_add + sizeof(pmmsg_dev_add_t);
 
-    // pciehdev_t
-    memcpy(mp, pdev, sizeof(pciehdev_t));
-    mp += sizeof(pciehdev_t);
-
-    // pciehcfg_t
-    pciehcfg_t *pcfg = pciehdev_get_cfg(pdev);
-    memcpy(mp, pcfg, sizeof(pciehcfg_t));
-    mp += sizeof(pciehcfg_t);
-
-    // config space
-    memcpy(mp, pcfg->cur, PCIEHCFGSZ);
-    mp += PCIEHCFGSZ;
-    memcpy(mp, pcfg->msk, PCIEHCFGSZ);
-    mp += PCIEHCFGSZ;
-
-    // bars
-    memcpy(mp, pbars, sizeof(pciehbars_t));
-    mp += sizeof(pciehbars_t);
-
-    for (pbar = pciehbars_get_first(pbars);
-         pbar != NULL;
-         pbar = pciehbars_get_next(pbars, pbar)) {
-
-        // bar
-        preg = pbar->regs;
-        for (int r = 0; r < pbar->nregs; r++, preg++) {
-            // region
-            memcpy(mp, preg, sizeof(*preg));
-            mp += sizeof(*preg);
-            // prts
-            memcpy(mp, preg->prts, sizeof(prt_t) * preg->nprts);
-            mp += sizeof(prt_t) * preg->nprts;
-        }
-    }
-
-    // rom bar
-    pbar = pciehbars_get_rombar(pbars);
-    if (pbar) {
-        preg = pbar->regs;
-        for (int r = 0; r < pbar->nregs; r++, preg++) {
-            // region
-            memcpy(mp, preg, sizeof(*preg));
-            mp += sizeof(*preg);
-            // prts
-            memcpy(mp, preg->prts, sizeof(prt_t) * preg->nprts);
-            mp += sizeof(prt_t) * preg->nprts;
-        }
+    //
+    // Now copy our data to the msg.
+    //
+    msgwrite_dev_structs(m, &mp, pdev);
+    if (pdev->pf) {
+        pciehdev_t *vfdev = pdev->child;
+        msgwrite_dev_structs(m, &mp, vfdev);
     }
 
     // msg complete - send it
@@ -211,6 +222,10 @@ pciemgr::handle_event(const pciehdev_eventdata_t *evd)
         break;
     case PCIEHDEV_EV_MEMWR_NOTIFY:
         evhandlercb.memwr(evd->port, evd->lif, &evd->memrw_notify);
+        break;
+    case PCIEHDEV_EV_SRIOV_NUMVFS:
+        evhandlercb.sriov_numvfs(evd->port, evd->lif,
+                                 evd->sriov_numvfs.numvfs);
         break;
     default:
         break;

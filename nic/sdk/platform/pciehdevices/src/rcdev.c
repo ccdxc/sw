@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -10,17 +10,21 @@
 #include "platform/pciehdevices/include/pci_ids.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
 #include "pciehdevices.h"
+#include "pciehdevices_impl.h"
 
 #define PCI_DEVICE_ID_PENSANDO_RCDEV 0x8888
 
-static void
-init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
+static int
+rcdev_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
 {
-    pciehbarreg_t preg;
+    pciehbars_t *pbars;
     pciehbar_t pbar;
+    pciehbarreg_t preg;
     prt_t prt;
     const u_int64_t sz = 0x00100000; /* 1MB */
     const u_int64_t pa = 0; /* pa will come later from bar addr */
+
+    pbars = pciehbars_new();
 
     /* bar mem64 */
     memset(&pbar, 0, sizeof(pbar));
@@ -30,7 +34,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
 
     memset(&preg, 0, sizeof(preg));
     pmt_bar_enc(&preg.pmt,
-                pres->port,
+                res->port,
                 PMT_TYPE_MEM,
                 pbar.size,
                 pbar.size, /* prtsize */
@@ -40,43 +44,28 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
     pciehbars_add_bar(pbars, &pbar);
-}
 
-static void
-init_cfg(pciehcfg_t *pcfg, pciehbars_t *pbars,
-         const pciehdevice_resources_t *pres)
-{
-    pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_RCDEV);
-    pciehcfg_setconf_classcode(pcfg, 0xff0000); /* unclassified device */
-
-    pciehcfg_sethdr_type0(pcfg, pbars);
-}
-
-static void
-initialize_bars(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
-{
-    pciehbars_t *pbars;
-
-    pbars = pciehbars_new();
-    init_bars(pbars, pres);
     pciehdev_set_bars(pdev, pbars);
+    return 0;
 }
 
-static void
-initialize_cfg(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
+static int
+rcdev_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
 {
     pciehcfg_t *pcfg = pciehcfg_new();
     pciehbars_t *pbars = pciehdev_get_bars(pdev);
 
-    init_cfg(pcfg, pbars, pres);
+    pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_RCDEV);
+    pciehcfg_setconf_classcode(pcfg, 0xff0000); /* unclassified device */
+
+    pciehcfg_sethdr_type0(pcfg, pbars);
     pciehdev_set_cfg(pdev, pcfg);
+    return 0;
 }
 
-pciehdev_t *
-pciehdev_rcdev_new(const char *name, const pciehdevice_resources_t *pres)
-{
-    pciehdev_t *pdev = pciehdev_new(name, pres);
-    initialize_bars(pdev, pres);
-    initialize_cfg(pdev, pres);
-    return pdev;
-}
+static pciehdevice_t rcdev_device = {
+    .name = "rcdev",
+    .init_bars = rcdev_bars,
+    .init_cfg  = rcdev_cfg,
+};
+PCIEHDEVICE_REGISTER(rcdev_device);

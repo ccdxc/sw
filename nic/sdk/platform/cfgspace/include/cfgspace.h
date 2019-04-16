@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Pensando Systems Inc.
+ * Copyright (c) 2017-2019, Pensando Systems Inc.
  */
 
 #ifndef __CFGSPACE_H__
@@ -135,6 +135,8 @@ typedef struct cfgspace_capparams_s {
     u_int32_t exttag:1;         /* extended tag capable */
     u_int32_t exttag_en:1;      /* extended tag enabled by default */
     u_int32_t fnn:1;            /* multi-function device, not function 0 */
+    u_int32_t totalvfs;         /* PF sriov provides totalvfs */
+    u_int16_t vfdeviceid;       /* VF device id */
     u_int16_t subvendorid;      /* default subvendorid */
     u_int16_t subdeviceid;      /* default subdeviceid */
     u_int16_t nintrs;           /* number of MSI/-X interrupts */
@@ -145,6 +147,8 @@ typedef struct cfgspace_capparams_s {
     u_int32_t msix_tbloff;      /* msix table offset */
     u_int32_t msix_pbaoff;      /* msix pending bit array offset */
     u_int64_t dsn;              /* device serial number */
+    u_int8_t nvfbars;           /* number of valid bars in vfbars[] */
+    cfgspace_bar_t vfbars[6];   /* sriov vf bar properties */
 } cfgspace_capparams_t;
 
 static inline int

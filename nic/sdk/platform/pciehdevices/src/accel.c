@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -15,8 +15,8 @@
 #include "pciehdevices.h"
 #include "pciehdevices_impl.h"
 
-static void
-initialize_bars(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
+static int
+accel_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
 {
     const u_int8_t upd[8] = {
         [STORAGE_SEQ_QTYPE_SQ] =
@@ -28,41 +28,40 @@ initialize_bars(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
 
     pbars = pciehbars_new();
 
-    add_common_resource_bar(pbars, pres);
-    add_common_doorbell_bar(pbars, pres, upd);
-    add_common_cmb_bar(pbars, pres);
-    add_common_rom_bar(pbars, pres);
+    add_common_resource_bar(pbars, res);
+    add_common_doorbell_bar(pbars, res, upd);
+    add_common_cmb_bar(pbars, res);
+    add_common_rom_bar(pbars, res);
 
     pciehdev_set_bars(pdev, pbars);
+    return 0;
 }
 
-static void
-initialize_cfg(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
+static int
+accel_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
 {
     pciehcfg_t *pcfg = pciehcfg_new();
     pciehbars_t *pbars = pciehdev_get_bars(pdev);
 
     pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_ACCEL);
     pciehcfg_setconf_classcode(pcfg, 0x120000); /* processing accelerator */
-    pciehcfg_setconf_nintrs(pcfg, pres->intrc);
+    pciehcfg_setconf_nintrs(pcfg, res->intrc);
     pciehcfg_setconf_msix_tblbir(pcfg, pciehbars_get_msix_tblbir(pbars));
     pciehcfg_setconf_msix_tbloff(pcfg, pciehbars_get_msix_tbloff(pbars));
     pciehcfg_setconf_msix_pbabir(pcfg, pciehbars_get_msix_pbabir(pbars));
     pciehcfg_setconf_msix_pbaoff(pcfg, pciehbars_get_msix_pbaoff(pbars));
-    pciehcfg_setconf_dsn(pcfg, pres->dsn);
-    pciehcfg_setconf_fnn(pcfg, pres->fnn);
+    pciehcfg_setconf_dsn(pcfg, res->dsn);
 
     pciehcfg_sethdr_type0(pcfg, pbars);
     pciehcfg_add_standard_caps(pcfg);
 
     pciehdev_set_cfg(pdev, pcfg);
+    return 0;
 }
 
-pciehdev_t *
-pciehdev_accel_new(const char *name, const pciehdevice_resources_t *pres)
-{
-    pciehdev_t *pdev = pciehdev_new(name, pres);
-    initialize_bars(pdev, pres);
-    initialize_cfg(pdev, pres);
-    return pdev;
-}
+static pciehdevice_t accel_device = {
+    .name = "accel",
+    .init_bars = accel_bars,
+    .init_cfg  = accel_cfg,
+};
+PCIEHDEVICE_REGISTER(accel_device);

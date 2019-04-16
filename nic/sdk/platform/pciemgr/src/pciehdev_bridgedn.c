@@ -87,9 +87,10 @@ pciehdev_bridgedn_new(const int port, const int memtun_en)
 {
     static int instance;
     char name[32];
+    pciehdev_t *pdev = pciehdev_new();
 
     snprintf(name, sizeof (name), "bridgedn%d", instance++);
-    pciehdev_t *pdev = pciehdev_new(name, NULL);
+    pciehdev_set_name(pdev, name);
     bridgedn_initialize_bars(pdev, port, memtun_en);
     bridgedn_initialize_cfg(pdev);
     return pdev;

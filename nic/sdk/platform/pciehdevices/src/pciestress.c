@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -15,14 +15,17 @@
 
 #define PCI_DEVICE_ID_PENSANDO_PCIESTRESS 0x8001
 
-static void
-init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
+static int
+pciestress_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
 {
-    pciehbarreg_t preg;
+    pciehbars_t *pbars;
     pciehbar_t pbar;
+    pciehbarreg_t preg;
     u_int64_t sz = 0x1000;
-    u_int64_t pa = 0x13f000000 + (sz * pres->port);
+    u_int64_t pa = 0x13f000000 + (sz * res->port);
     prt_t prt;
+
+    pbars = pciehbars_new();
 
     /* mem64 bar */
     memset(&pbar, 0, sizeof(pbar));
@@ -32,7 +35,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
 
     memset(&preg, 0, sizeof(preg));
     pmt_bar_enc(&preg.pmt,
-                pres->port,
+                res->port,
                 PMT_TYPE_MEM,
                 pbar.size,
                 sz,     /* prtsize */
@@ -63,7 +66,7 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
 
     memset(&preg, 0, sizeof(preg));
     pmt_bar_enc(&preg.pmt,
-                pres->port,
+                res->port,
                 PMT_TYPE_IO,
                 pbar.size,
                 0x20, /* prtsize */
@@ -86,47 +89,29 @@ init_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
     pciehbar_add_reg(&pbar, &preg);
     pciehbars_add_bar(pbars, &pbar);
 
-    /* just in case we want to test rom bar on this device */
-    add_common_rom_bar(pbars, pres);
-}
-
-static void
-init_cfg(pciehcfg_t *pcfg, pciehbars_t *pbars,
-         const pciehdevice_resources_t *pres)
-{
-    pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_PCIESTRESS);
-    pciehcfg_setconf_classcode(pcfg, 0xff0000); /* unclassified device */
-    pciehcfg_setconf_dsn(pcfg, pres->dsn);
-
-    pciehcfg_sethdr_type0(pcfg, pbars);
-    pciehcfg_add_standard_caps(pcfg);
-}
-
-static void
-initialize_bars(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
-{
-    pciehbars_t *pbars;
-
-    pbars = pciehbars_new();
-    init_bars(pbars, pres);
     pciehdev_set_bars(pdev, pbars);
+    return 0;
 }
 
-static void
-initialize_cfg(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
+static int
+pciestress_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
 {
     pciehcfg_t *pcfg = pciehcfg_new();
     pciehbars_t *pbars = pciehdev_get_bars(pdev);
 
-    init_cfg(pcfg, pbars, pres);
+    pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_PCIESTRESS);
+    pciehcfg_setconf_classcode(pcfg, 0xff0000); /* unclassified device */
+    pciehcfg_setconf_dsn(pcfg, res->dsn);
+
+    pciehcfg_sethdr_type0(pcfg, pbars);
+    pciehcfg_add_standard_caps(pcfg);
     pciehdev_set_cfg(pdev, pcfg);
+    return 0;
 }
 
-pciehdev_t *
-pciehdev_pciestress_new(const char *name, const pciehdevice_resources_t *pres)
-{
-    pciehdev_t *pdev = pciehdev_new(name, pres);
-    initialize_bars(pdev, pres);
-    initialize_cfg(pdev, pres);
-    return pdev;
-}
+static pciehdevice_t pciestress_device = {
+    .name = "pciestress",
+    .init_bars = pciestress_bars,
+    .init_cfg  = pciestress_cfg,
+};
+PCIEHDEVICE_REGISTER(pciestress_device);

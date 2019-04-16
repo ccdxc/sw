@@ -29,7 +29,7 @@
  * Pretty much right-out-of Stevens UNIX Network Programming,
  * but don't block/unblock signals, just retry on EINTR.
  */
-ssize_t
+static ssize_t
 pmreadn(int fd, void *bufarg, const size_t n)
 {
     char *buf = (char *)bufarg;
@@ -66,7 +66,7 @@ pmreadn(int fd, void *bufarg, const size_t n)
  * Returns < 0 if error, otherwise
  * returns the number of bytes read.
  */
-ssize_t
+static ssize_t
 pmwriten(int fd, const void *bufarg, const size_t n)
 {
     const char *buf = (const char *)bufarg;

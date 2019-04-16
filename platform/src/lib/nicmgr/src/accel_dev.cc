@@ -299,23 +299,23 @@ AccelDev::ParseConfig(boost::property_tree::ptree::value_type node)
 bool
 AccelDev::_CreateHostDevice(void)
 {
-    pciehdevice_resources_t pci_resources = {0};
+    pciehdevice_resources_t pres = {0};
 
-    pci_resources.port = spec->pcie_port;
-    pci_resources.lifb = lif_base;
-    pci_resources.lifc = spec->lif_count;
-    pci_resources.intrb = intr_base;
-    pci_resources.intrc = spec->intr_count;
-    pci_resources.npids = 1;
-    pci_resources.devcmdpa = devcmd_mem_addr;
-    pci_resources.devcmddbpa = devcmddb_mem_addr;
-    pci_resources.cmbpa = cmb_mem_addr;
-    pci_resources.cmbsz = cmb_mem_size;
-    pci_resources.cmbprefetch = true;
+    pres.pfres.port = spec->pcie_port;
+    pres.pfres.lifb = lif_base;
+    pres.pfres.lifc = spec->lif_count;
+    pres.pfres.intrb = intr_base;
+    pres.pfres.intrc = spec->intr_count;
+    pres.pfres.npids = 1;
+    pres.pfres.devcmdpa = devcmd_mem_addr;
+    pres.pfres.devcmddbpa = devcmddb_mem_addr;
+    pres.pfres.cmbpa = cmb_mem_addr;
+    pres.pfres.cmbsz = cmb_mem_size;
+    pres.pfres.cmbprefetch = true;
 
     // Create PCI device
     NIC_LOG_DEBUG("{}: Creating PCI device", DevNameGet());
-    pdev = pciehdev_accel_new(DevNameGet().c_str(), &pci_resources);
+    pdev = pciehdevice_new("accel", DevNameGet().c_str(), &pres);
     if (pdev == NULL) {
         NIC_LOG_ERR("{}: Failed to create PCI device", DevNameGet());
         return false;

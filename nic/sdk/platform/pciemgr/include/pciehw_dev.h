@@ -18,13 +18,12 @@ struct pciehcfg_s;
 typedef struct pciehcfg_s pciehcfg_t;
 struct pciehbars_s;
 typedef struct pciehbars_s pciehbars_t;
-struct pciehdevice_resources_s;
-typedef struct pciehdevice_resources_s pciehdevice_resources_t;
 
 typedef enum pciehdev_event_e {
     PCIEHDEV_EV_NONE,
     PCIEHDEV_EV_MEMRD_NOTIFY,
     PCIEHDEV_EV_MEMWR_NOTIFY,
+    PCIEHDEV_EV_SRIOV_NUMVFS,
 } pciehdev_event_t;
 
 typedef struct pciehdev_memrw_notify_s {
@@ -36,12 +35,17 @@ typedef struct pciehdev_memrw_notify_s {
     u_int64_t data;             /* data, if write */
 } pciehdev_memrw_notify_t;
 
+typedef struct pciehdev_sriov_numvfs_s {
+    u_int16_t numvfs;           /* number of vfs enabled */
+} pciehdev_sriov_numvfs_t;
+
 typedef struct pciehdev_eventdata_s {
     pciehdev_event_t evtype;    /* PCIEHDEV_EV_* */
     u_int8_t port;              /* PCIe port */
     u_int32_t lif;              /* lif if event for a lif */
     union {
         pciehdev_memrw_notify_t memrw_notify;   /* EV_MEMRD/WR_NOTIFY */
+        pciehdev_sriov_numvfs_t sriov_numvfs;   /* EV_SRIOV_NUMVFS */
     };
 } pciehdev_eventdata_t;
 
@@ -61,10 +65,7 @@ pciehbars_t *pciehdev_get_bars(pciehdev_t *pdev);
 
 int pciehdev_add(pciehdev_t *pdev);
 int pciehdev_addfn(pciehdev_t *pdev, pciehdev_t *pfn, const int fnc);
-int pciehdev_addvf(pciehdev_t *pdev, pciehdev_t *pvf);
 int pciehdev_addchild(pciehdev_t *pdev, pciehdev_t *pchild);
-int pciehdev_make_fn0(pciehdev_t *pdev);
-int pciehdev_make_fnn(pciehdev_t *pdev, const int fnc);
 
 pciehdev_t *pciehdev_get_root(const u_int8_t port);
 pciehdev_t *pciehdev_get_parent(pciehdev_t *pdev);

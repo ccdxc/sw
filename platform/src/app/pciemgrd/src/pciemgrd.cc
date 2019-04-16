@@ -238,6 +238,7 @@ intr_init(void)
         pciehw_indirect_poll_init();
         need_poll_timer = 1;
     } else {
+#ifdef __aarch64__
         uint64_t msgaddr;
         uint32_t msgdata;
 
@@ -256,6 +257,10 @@ intr_init(void)
                          "msgaddr 0x%" PRIx64 " msgdata 0x%" PRIx32 "\n",
                          msgaddr, msgdata);
         pciehw_indirect_intr_init(0, msgaddr, msgdata);
+#else
+        if (0) notify_intr(NULL);
+        if (0) indirect_intr(NULL);
+#endif
     }
     if (need_poll_timer) {
         static evutil_timer timer;

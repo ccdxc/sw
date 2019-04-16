@@ -23,8 +23,8 @@
  *     +0x2000 MSIX Interrupt Table
  *     +0x3000 MSIX Interrupt PBA
  */
-static void
-initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
+static int
+nvme_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
 {
     const u_int8_t upd[8] = {
         /* make this table a bit more compact */
@@ -34,10 +34,13 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
 #undef UPD
     };
     u_int32_t msixtbloff, msixpbaoff;
-    pciehbarreg_t preg;
+    pciehbars_t *pbars;
     pciehbar_t pbar;
+    pciehbarreg_t preg;
     prt_t prt;
     u_int32_t nqids;
+
+    pbars = pciehbars_new();
 
     /*****************
      * resource bar
@@ -51,12 +54,12 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
      * +0x0000 device registers */
     memset(&preg, 0, sizeof(preg));
     pmt_bar_enc(&preg.pmt,
-                pres->port,
+                res->port,
                 PMT_TYPE_MEM,
                 0x1000,         /* pmtsize */
                 0x1000,         /* prtsize */
                 PMTF_RW);
-    prt_res_enc(&prt, pres->nvmeregspa, 0x1000, PRT_RESF_NONE);
+    prt_res_enc(&prt, res->nvmeregspa, 0x1000, PRT_RESF_NONE);
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
 
@@ -76,11 +79,11 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
      * So we can support up to 512 q's per 4k page.
      * (XXX For now, limit to 512 q's.  Grow bar for more doorbells.)
      */
-    nqids = MIN(pres->nvmeqidc, 0x10000);
+    nqids = MIN(res->nvmeqidc, 0x10000);
     nqids = MIN(nqids, 512); /* XXX limit to 512 q's */
 
     pmt_bar_enc(&preg.pmt,
-                pres->port,
+                res->port,
                 PMT_TYPE_MEM,
                 0x1000,         /* pmtsize */
                 0x1000,         /* prtsize */
@@ -90,7 +93,7 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
     /* bit3: qid start */
     pmt_bar_setr_qid(&preg.pmt, 3, 9);
 
-    prt_db32_enc(&prt, pres->lifb, upd);
+    prt_db32_enc(&prt, res->lifb, upd);
     /* want 16 bits, but Capri errata allows only 15 */
     prt_db_idxparams(&prt, 15, 0);
     pciehbarreg_add_prt(&preg, &prt);
@@ -99,58 +102,42 @@ initialize_bars(pciehbars_t *pbars, const pciehdevice_resources_t *pres)
     /*****************
      * +0x2000 MSIX Interrupt Table
      * +0x3000 MSIX Interrupt PBA */
-    assert(pres->intrc <= 256); /* 256 intrs per page (XXX grow bar) */
+    assert(res->intrc <= 256); /* 256 intrs per page (XXX grow bar) */
     msixtbloff = 0x2000;
     msixpbaoff = 0x3000;
-    add_msix_region(pbars, &pbar, pres, msixtbloff, msixpbaoff);
+    add_msix_region(pbars, &pbar, res, msixtbloff, msixpbaoff);
 
     pciehbars_add_bar(pbars, &pbar);
-}
 
-static void
-initialize_cfg(pciehcfg_t *pcfg, pciehbars_t *pbars,
-               const pciehdevice_resources_t *pres)
-{
-    pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_NVME);
-    pciehcfg_setconf_classcode(pcfg, 0x010802);
-    //pciehcfg_setconf_classcode(pcfg, 0x088000); // XXX
-    pciehcfg_setconf_nintrs(pcfg, pres->intrc);
-    pciehcfg_setconf_msix_tblbir(pcfg, pciehbars_get_msix_tblbir(pbars));
-    pciehcfg_setconf_msix_tbloff(pcfg, pciehbars_get_msix_tbloff(pbars));
-    pciehcfg_setconf_msix_pbabir(pcfg, pciehbars_get_msix_pbabir(pbars));
-    pciehcfg_setconf_msix_pbaoff(pcfg, pciehbars_get_msix_pbaoff(pbars));
-    pciehcfg_setconf_dsn(pcfg, pres->dsn);
-    pciehcfg_setconf_fnn(pcfg, pres->fnn);
-
-    pciehcfg_sethdr_type0(pcfg, pbars);
-    pciehcfg_add_standard_caps(pcfg);
-}
-
-static void
-nvme_initialize_bars(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
-{
-    pciehbars_t *pbars;
-
-    pbars = pciehbars_new();
-    initialize_bars(pbars, pres);
     pciehdev_set_bars(pdev, pbars);
+    return 0;
 }
 
-static void
-nvme_initialize_cfg(pciehdev_t *pdev, const pciehdevice_resources_t *pres)
+static int
+nvme_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
 {
     pciehcfg_t *pcfg = pciehcfg_new();
     pciehbars_t *pbars = pciehdev_get_bars(pdev);
 
-    initialize_cfg(pcfg, pbars, pres);
+    pciehcfg_setconf_deviceid(pcfg, PCI_DEVICE_ID_PENSANDO_NVME);
+    pciehcfg_setconf_classcode(pcfg, 0x010802);
+    //pciehcfg_setconf_classcode(pcfg, 0x088000); // XXX
+    pciehcfg_setconf_nintrs(pcfg, res->intrc);
+    pciehcfg_setconf_msix_tblbir(pcfg, pciehbars_get_msix_tblbir(pbars));
+    pciehcfg_setconf_msix_tbloff(pcfg, pciehbars_get_msix_tbloff(pbars));
+    pciehcfg_setconf_msix_pbabir(pcfg, pciehbars_get_msix_pbabir(pbars));
+    pciehcfg_setconf_msix_pbaoff(pcfg, pciehbars_get_msix_pbaoff(pbars));
+    pciehcfg_setconf_dsn(pcfg, res->dsn);
+
+    pciehcfg_sethdr_type0(pcfg, pbars);
+    pciehcfg_add_standard_caps(pcfg);
     pciehdev_set_cfg(pdev, pcfg);
+    return 0;
 }
 
-pciehdev_t *
-pciehdev_nvme_new(const char *name, const pciehdevice_resources_t *pres)
-{
-    pciehdev_t *pdev = pciehdev_new(name, pres);
-    nvme_initialize_bars(pdev, pres);
-    nvme_initialize_cfg(pdev, pres);
-    return pdev;
-}
+static pciehdevice_t nvme_device = {
+    .name = "nvme",
+    .init_bars = nvme_bars,
+    .init_cfg  = nvme_cfg,
+};
+PCIEHDEVICE_REGISTER(nvme_device);

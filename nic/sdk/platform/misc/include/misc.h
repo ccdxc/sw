@@ -34,8 +34,8 @@ char *human_readable(u_int64_t n);
 char * human_readable_buf(char *buf, size_t bufsz, u_int64_t n);
 
 void *mapfile(const char *file, const size_t sz, const int oflags);
-void *mapfile_region(const char *file, 
-                     const off_t offset, 
+void *mapfile_region(const char *file,
+                     const off_t offset,
                      const size_t sz,
                      const int oflags);
 void unmapfile(void *va, const size_t sz);

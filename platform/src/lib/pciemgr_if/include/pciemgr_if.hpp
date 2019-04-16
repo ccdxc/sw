@@ -31,6 +31,9 @@ public:
                            const pciehdev_memrw_notify_t *n) {};
         virtual void hostup(const int port) {};
         virtual void hostdn(const int port) {};
+        virtual void sriov_numvfs(const int port,
+                                  const uint32_t lif,
+                                  const uint16_t numvfs) {};
     };
 
     pciemgr(const char *name);

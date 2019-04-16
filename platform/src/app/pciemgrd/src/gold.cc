@@ -57,8 +57,8 @@ gold_loop(void)
         if (pme->enabled_ports & (1 << port)) {
             pciehdev_initialize(port);
             memset(pres, 0, sizeof(*pres));
-            pres->port = port;
-            pdev = pciehdev_debug_new("debug-gold", pres);
+            pres->pfres.port = port;
+            pdev = pciehdevice_new("debug", "debug-gold", pres);
             pciehdev_add(pdev);
             pciehdev_finalize(port);
             pcieport_crs_off(port);

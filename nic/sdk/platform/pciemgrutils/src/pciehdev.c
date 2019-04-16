@@ -20,26 +20,11 @@
 
 /******************************************************************/
 
-static void
-pciehdev_setconf_defaults(pciehdev_t *pdev)
-{
-}
-
 pciehdev_t *
-pciehdev_new(const char *name, const pciehdevice_resources_t *pres)
+pciehdev_new(void)
 {
     pciehdev_t *pdev = pciesys_zalloc(sizeof(pciehdev_t));
     assert(pdev != NULL);
-
-    pciehdev_setconf_defaults(pdev);
-    if (pres) {
-        pdev->lifb = pres->lifb;
-        pdev->lifc = pres->lifc;
-        pdev->intrb = pres->intrb;
-        pdev->intrc = pres->intrc;
-        pdev->port = pres->port;
-    }
-    strncpy0(pdev->name, name, sizeof(pdev->name));
     return pdev;
 }
 
@@ -87,6 +72,44 @@ pciehdev_get_bars(pciehdev_t *pdev)
 }
 
 int
+pciehdev_linkvf(pciehdev_t *pfdev, pciehdev_t *vfdev, const u_int16_t totalvfs)
+{
+    assert(pfdev->child == NULL);
+    assert(vfdev->parent == NULL);
+
+    pfdev->pf = 1;
+    pfdev->totalvfs = totalvfs;
+    pfdev->child = vfdev;
+    vfdev->vf = 1;
+    vfdev->parent = pfdev;
+    return 0;
+}
+
+pciehbars_t *
+pciehdev_get_vfbars(pciehdev_t *pfdev)
+{
+    return pciehdev_get_bars(pfdev->child);
+}
+
+u_int16_t
+pciehdev_get_totalvfs(pciehdev_t *pdev)
+{
+    return pdev->totalvfs;
+}
+
+int
+pciehdev_is_pf(pciehdev_t *pdev)
+{
+    return pdev->pf;
+}
+
+int
+pciehdev_is_vf(pciehdev_t *pdev)
+{
+    return pdev->vf;
+}
+
+int
 pciehdev_make_fn0(pciehdev_t *pdev)
 {
     if (!pdev->fn0) {
@@ -110,10 +133,22 @@ pciehdev_get_port(pciehdev_t *pdev)
     return pdev->port;
 }
 
+void
+pciehdev_set_port(pciehdev_t *pdev, const u_int8_t port)
+{
+    pdev->port = port;
+}
+
 u_int32_t
 pciehdev_get_lifb(pciehdev_t *pdev)
 {
     return pdev->lifb;
+}
+
+void
+pciehdev_set_lifb(pciehdev_t *pdev, const u_int32_t lifb)
+{
+    pdev->lifb = lifb;
 }
 
 u_int32_t
@@ -122,10 +157,22 @@ pciehdev_get_lifc(pciehdev_t *pdev)
     return pdev->lifc;
 }
 
+void
+pciehdev_set_lifc(pciehdev_t *pdev, const u_int32_t lifc)
+{
+    pdev->lifc = lifc;
+}
+
 u_int32_t
 pciehdev_get_intrb(pciehdev_t *pdev)
 {
     return pdev->intrb;
+}
+
+void
+pciehdev_set_intrb(pciehdev_t *pdev, const u_int32_t intrb)
+{
+    pdev->intrb = intrb;
 }
 
 u_int32_t
@@ -134,8 +181,20 @@ pciehdev_get_intrc(pciehdev_t *pdev)
     return pdev->intrc;
 }
 
+void
+pciehdev_set_intrc(pciehdev_t *pdev, const u_int32_t intrc)
+{
+    pdev->intrc = intrc;
+}
+
 char *
 pciehdev_get_name(pciehdev_t *pdev)
 {
     return pdev->name;
+}
+
+void
+pciehdev_set_name(pciehdev_t *pdev, const char *name)
+{
+    strncpy0(pdev->name, name, sizeof(pdev->name));
 }

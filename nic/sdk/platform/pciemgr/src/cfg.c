@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Pensando Systems Inc.
+ * Copyright (c) 2017-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <sys/param.h>
 #include <linux/pci_regs.h>
 
 #include "platform/misc/include/bdf.h"
@@ -38,38 +39,50 @@ pciehw_set_cfghnd(pciehwdev_t *phwdev,
     phwdev->cfghnd[regdw] = hnd;
 }
 
+static int
+set_bars_handlers(pciehwdev_t *phwdev, const int cfgbase,
+                  const pciehw_cfghnd_t cfghnd)
+{
+    pciehwbar_t *phwbar;
+    int i, nbars_valid = 0;
+
+    for (phwbar = phwdev->bar, i = 0; i < PCIEHW_NBAR; i++, phwbar++) {
+        if (phwbar->valid) {
+            const int cfgoff = cfgbase + phwbar->cfgidx * 4;
+            const int barlen = phwbar->type == PCIEHWBARTYPE_MEM64 ? 8 : 4;
+            pciehw_set_cfghnd(phwdev, cfgoff,
+                              PMTF_WR | PMTF_INDIRECT,
+                              cfghnd);
+            if (barlen == 8) {
+                pciehw_set_cfghnd(phwdev, cfgoff + 4,
+                                  PMTF_WR | PMTF_INDIRECT,
+                                  cfghnd);
+            }
+            nbars_valid++;
+        }
+    }
+    return nbars_valid;
+}
+
 static void
 pciehw_cfg_set_handlers(pciehwdev_t *phwdev)
 {
     cfgspace_t cs;
-    pciehwbar_t *phwbar;
-    int i, msixcap, cfgoff;
+    int msixcap, sriovcap;
     int nbars_valid = 0;
 
-    /* Bars */
-    cfgoff = 0x10;
-    for (phwbar = phwdev->bar, i = 0; i < PCIEHW_NBAR; i++, phwbar++) {
-        if (phwbar->valid) {
-            const int barlen = phwbar->type == PCIEHWBARTYPE_MEM64 ? 8 : 4;
-            pciehw_set_cfghnd(phwdev, cfgoff,
+    if (!phwdev->vf) {
+        /* Bars */
+        const int cfgbase = 0x10;
+        nbars_valid += set_bars_handlers(phwdev, cfgbase,
+                                         PCIEHW_CFGHND_DEV_BARS);
+        if (phwdev->rombar.valid) {
+            /* Oprom Bar */
+            pciehw_set_cfghnd(phwdev, PCI_ROM_ADDRESS,
                               PMTF_WR | PMTF_INDIRECT,
-                              PCIEHW_CFGHND_BARS);
-            if (barlen == 8) {
-                pciehw_set_cfghnd(phwdev, cfgoff + 4,
-                                  PMTF_WR | PMTF_INDIRECT,
-                                  PCIEHW_CFGHND_BARS);
-            }
-            cfgoff += barlen;
+                              PCIEHW_CFGHND_ROM_BAR);
             nbars_valid++;
         }
-    }
-
-    if (phwdev->rombar.valid) {
-        /* Oprom Bar */
-        pciehw_set_cfghnd(phwdev, PCI_ROM_ADDRESS,
-                          PMTF_WR | PMTF_INDIRECT,
-                          PCIEHW_CFGHND_ROMBAR);
-        nbars_valid++;
     }
 
     pciehwdev_get_cfgspace(phwdev, &cs);
@@ -80,11 +93,26 @@ pciehw_cfg_set_handlers(pciehwdev_t *phwdev)
                           PMTF_WR | PMTF_INDIRECT, PCIEHW_CFGHND_MSIX);
     }
 
-    /* only need to capture writes to Command if we have bars or intrs */
-    if (nbars_valid > 0 || phwdev->intrc > 0) {
+    /*
+     * Only capture writes to Command if we have bars, intrs, or lifs.
+     *
+     * If we have bars,  then CMD.{mem,io}_enable needs attention.
+     * If we have intrs, then CMD.interrupt_disable needs attention.
+     * If we have lifs,  then CMD.bus_master_enable needs attention.
+     */
+    if (nbars_valid > 0 || phwdev->intrc > 0 || phwdev->lifc > 0) {
         /* Command/Status register */
         pciehw_set_cfghnd(phwdev, 0x4,
                           PMTF_WR | PMTF_INDIRECT, PCIEHW_CFGHND_CMD);
+    }
+
+    sriovcap = cfgspace_findextcap(&cs, PCI_EXT_CAP_ID_SRIOV);
+    if (sriovcap) {
+        /* SRIOV Control */
+        const int cfgbase = sriovcap + 0x24;
+        pciehw_set_cfghnd(phwdev, sriovcap + 0x8,
+                          PMTF_WR | PMTF_INDIRECT, PCIEHW_CFGHND_SRIOV_CTRL);
+        set_bars_handlers(phwdev, cfgbase, PCIEHW_CFGHND_SRIOV_BARS);
     }
 }
 
@@ -283,6 +311,19 @@ pciehw_cfg_rombar_enable(pciehwbar_t *phwbar, cfgspace_t *cs)
 }
 
 static void
+pciehw_cfg_busmaster_enable(pciehwdev_t *phwdev, const int on)
+{
+    /* XXX enable this? */
+#if 0
+    if (on) {
+        pciehw_hdrt_load(phwdev->lifb, phwdev->lifc);
+    } else {
+        pciehw_hdrt_unload(phwdev->lifb, phwdev->lifc);
+    }
+#endif
+}
+
+static void
 pciehw_cfgwr_cmd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 {
     cfgspace_t cs;
@@ -290,47 +331,50 @@ pciehw_cfgwr_cmd(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 
     pciehwdev_get_cfgspace(phwdev, &cs);
     cmd = cfgspace_readw(&cs, PCI_COMMAND);
-    msixcap = cfgspace_findcap(&cs, PCI_CAP_ID_MSIX);
-    if (msixcap) {
-        msixctl = cfgspace_readw(&cs, msixcap + PCI_MSIX_FLAGS);
-    } else {
-        msixctl = 0;
+
+    /*
+     * PF check cmd reg for bar enables.
+     * VF bar enables come from PF sriov capability (see cfgwr_sriov()).
+     */
+    if (!phwdev->vf) {
+        /* bar control */
+        pciehw_cfg_bars_enable(phwdev, cmd);
+        /* cmd.mem_enable might have enabled rombar */
+        pciehw_cfg_rombar_enable(&phwdev->rombar, &cs);
+
+        msixcap = cfgspace_findcap(&cs, PCI_CAP_ID_MSIX);
+        if (msixcap) {
+            msixctl = cfgspace_readw(&cs, msixcap + PCI_MSIX_FLAGS);
+        } else {
+            msixctl = 0;
+        }
+
+        /* intx_disable */
+        if ((msixctl & PCI_MSIX_FLAGS_ENABLE) == 0) {
+            const int legacy = 1;
+            const int fmask = (cmd & PCI_COMMAND_INTX_DISABLE) != 0;
+            pciehw_intr_config(phwdev, legacy, fmask);
+        }
     }
 
-    /* bar control */
-    pciehw_cfg_bars_enable(phwdev, cmd);
-
-    /* cmd.mem_enable might have enabled rombar */
-    pciehw_cfg_rombar_enable(&phwdev->rombar, &cs);
-
-    /* intx_disable */
-    if ((msixctl & PCI_MSIX_FLAGS_ENABLE) == 0) {
-        const int legacy = 1;
-        const int fmask = (cmd & PCI_COMMAND_INTX_DISABLE) != 0;
-        pciehw_intr_config(phwdev, legacy, fmask);
-    }
-
-#if 0
-    /* XXX */
     pciehw_cfg_busmaster_enable(phwdev, (cmd & 0x4) != 0);
-#endif
 }
 
 static void
-pciehw_cfgwr_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
+pciehw_cfgwr_bars(pciehwdev_t *phwdev,
+                  const pcie_stlp_t *stlp,
+                  cfgspace_t *cs,
+                  const int cfgbase)
 {
     pciehwbar_t *phwbar;
-    cfgspace_t cs;
-    int i, cfgoff;
+    int i;
 
-    pciehwdev_get_cfgspace(phwdev, &cs);
-
-    cfgoff = 0x10;
     for (phwbar = phwdev->bar, i = 0; i < PCIEHW_NBAR; i++, phwbar++) {
         if (phwbar->valid) {
+            const int cfgoff = cfgbase + phwbar->cfgidx * 4;
             const int barlen = phwbar->type == PCIEHWBARTYPE_MEM64 ? 8 : 4;
             if (stlp_overlap(stlp, cfgoff, barlen)) {
-                u_int64_t baraddr = cfg_baraddr(&cs, cfgoff, barlen);
+                u_int64_t baraddr = cfg_baraddr(cs, cfgoff, barlen);
                 if (phwbar->type == PCIEHWBARTYPE_IO) {
                     baraddr &= ~0x3ULL;
                 } else {
@@ -338,13 +382,22 @@ pciehw_cfgwr_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
                 }
                 pciehw_bar_setaddr(phwbar, baraddr);
             }
-            cfgoff += barlen;
         }
     }
 }
 
 static void
-pciehw_cfgwr_rombar(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
+pciehw_cfgwr_dev_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
+{
+    const int cfgbase = 0x10;
+    cfgspace_t cs;
+
+    pciehwdev_get_cfgspace(phwdev, &cs);
+    pciehw_cfgwr_bars(phwdev, stlp, &cs, cfgbase);
+}
+
+static void
+pciehw_cfgwr_rom_bar(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 {
     pciehwbar_t *phwbar;
     cfgspace_t cs;
@@ -378,14 +431,74 @@ pciehw_cfgwr_msix(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
         /* msix mode */
         legacy = 0;
         fmask = msix_mask;
+    } else if (phwdev->vf) {
+        /* sriov vf disabled */
+        legacy = 0;
+        fmask = 1;
     } else {
         /* intx mode */
         legacy = 1;
         cmd = cfgspace_readw(&cs, PCI_COMMAND);
-        fmask = (cmd & PCI_COMMAND_INTX_DISABLE) != 0;
+        fmask = phwdev->vf || (cmd & PCI_COMMAND_INTX_DISABLE) != 0;
     }
 
     pciehw_intr_config(phwdev, legacy, fmask);
+}
+
+static void
+pciehw_sriov_numvfs(pciehwdev_t *phwdev, const u_int16_t numvfs)
+{
+    pciehdev_eventdata_t evd;
+    pciehdev_sriov_numvfs_t *sriov_numvfs;
+
+    memset(&evd, 0, sizeof(evd));
+    evd.evtype = PCIEHDEV_EV_SRIOV_NUMVFS;
+    evd.port = phwdev->port;
+    evd.lif = phwdev->lifb;
+    sriov_numvfs = &evd.sriov_numvfs;
+    sriov_numvfs->numvfs = numvfs;
+    pciehw_event(phwdev, &evd);
+}
+
+static void
+pciehw_cfgwr_sriov_ctrl(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
+{
+    cfgspace_t cs;
+    u_int16_t sriovcap, sriovctrl, numvfs, cmd;
+    pciehwdev_t *vfhwdev = pciehwdev_get(phwdev->childh);
+    int cfg_en, bar_en;
+
+    pciehwdev_get_cfgspace(phwdev, &cs);
+    cmd = cfgspace_readw(&cs, PCI_COMMAND);
+    sriovcap = cfgspace_findextcap(&cs, PCI_EXT_CAP_ID_SRIOV);
+    sriovctrl = cfgspace_readw(&cs, sriovcap + PCI_SRIOV_CTRL);
+    numvfs = cfgspace_readw(&cs, sriovcap + PCI_SRIOV_NUM_VF);
+    numvfs = MIN(numvfs, phwdev->totalvfs);
+
+    cfg_en = (sriovctrl & PCI_SRIOV_CTRL_VFE) != 0;
+    bar_en = cfg_en && (sriovctrl & PCI_SRIOV_CTRL_MSE) != 0;
+
+    pciesys_loginfo("sriov_ctrl: "
+                    "ctrl 0x%04x (cfg_en %d bar_en %d) numvfs %d\n",
+                    sriovctrl, cfg_en, bar_en, numvfs);
+
+    cmd = bar_en ? PCI_COMMAND_MEMORY : 0;
+    pciehw_cfg_bars_enable(vfhwdev, cmd);
+
+    pciehw_sriov_numvfs(phwdev, cfg_en ? numvfs : 0);
+}
+
+static void
+pciehw_cfgwr_sriov_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
+{
+    pciehwdev_t *vfhwdev;
+    cfgspace_t cs;
+    int sriovcap;
+
+    pciehwdev_get_cfgspace(phwdev, &cs);
+    sriovcap = cfgspace_findextcap(&cs, PCI_EXT_CAP_ID_SRIOV);
+    vfhwdev = pciehwdev_get(phwdev->childh);
+    pciehw_cfgwr_bars(vfhwdev, stlp, &cs, sriovcap + 0x24);
 }
 
 void
@@ -407,14 +520,20 @@ pciehw_cfgwr_notify(pciehwdev_t *phwdev,
     case PCIEHW_CFGHND_CMD:
         pciehw_cfgwr_cmd(phwdev, stlp);
         break;
-    case PCIEHW_CFGHND_BARS:
-        pciehw_cfgwr_bars(phwdev, stlp);
+    case PCIEHW_CFGHND_DEV_BARS:
+        pciehw_cfgwr_dev_bars(phwdev, stlp);
         break;
-    case PCIEHW_CFGHND_ROMBAR:
-        pciehw_cfgwr_rombar(phwdev, stlp);
+    case PCIEHW_CFGHND_ROM_BAR:
+        pciehw_cfgwr_rom_bar(phwdev, stlp);
         break;
     case PCIEHW_CFGHND_MSIX:
         pciehw_cfgwr_msix(phwdev, stlp);
+        break;
+    case PCIEHW_CFGHND_SRIOV_CTRL:
+        pciehw_cfgwr_sriov_ctrl(phwdev, stlp);
+        break;
+    case PCIEHW_CFGHND_SRIOV_BARS:
+        pciehw_cfgwr_sriov_bars(phwdev, stlp);
         break;
     }
 }

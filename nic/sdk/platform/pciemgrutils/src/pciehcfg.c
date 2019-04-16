@@ -156,9 +156,31 @@ pciehcfg_setconf_fnn(pciehcfg_t *pcfg, const int on)
 }
 
 void
+pciehcfg_setconf_pf(pciehcfg_t *pcfg, const int on)
+{
+    pcfg->pf = on;
+}
+
+void
 pciehcfg_setconf_vf(pciehcfg_t *pcfg, const int on)
 {
     pcfg->vf = on;
+}
+
+void
+pciehcfg_setconf_totalvfs(pciehcfg_t *pcfg, const u_int16_t totalvfs)
+{
+    assert(pcfg->pf);
+    assert(!pcfg->vf);
+    pcfg->totalvfs = totalvfs;
+}
+
+void
+pciehcfg_setconf_vfdeviceid(pciehcfg_t *pcfg, const u_int16_t vfdeviceid)
+{
+    assert(pcfg->pf);
+    assert(!pcfg->vf);
+    pcfg->vfdeviceid = vfdeviceid;
 }
 
 static int
@@ -269,12 +291,32 @@ bartype_to_cfgbartype(pciehbartype_t bt)
     return cfgbt;
 }
 
+static int
+bars_to_cfgbars(pciehbars_t *pbars, cfgspace_bar_t *cfgbars)
+{
+    cfgspace_bar_t *cpb;
+    pciehbar_t *b;
+    int nbars;
+
+    nbars = 0;
+    cpb = cfgbars;
+    for (b = pciehbars_get_first(pbars);
+         b;
+         b = pciehbars_get_next(pbars, b), cpb++) {
+        nbars++;
+        cpb->type = bartype_to_cfgbartype(b->type);
+        cpb->prefetch = b->prefetch;
+        cpb->size = b->size;
+        cpb->cfgidx = b->cfgidx;
+    }
+    return nbars;
+}
+
 static void
 pciehcfg_get_cfgspace_header_params(pciehcfg_t *pcfg,
                                     pciehbars_t *pbars,
                                     cfgspace_header_params_t *cp)
 {
-    cfgspace_bar_t *cpb;
     pciehbar_t *b;
 
     memset(cp, 0, sizeof(*cp));
@@ -288,16 +330,7 @@ pciehcfg_get_cfgspace_header_params(pciehcfg_t *pcfg,
     cp->intpin = pcfg->intpin ? pcfg->intpin : pcfg->nintrs ? 1 : 0;
     cp->vf = pcfg->vf;
 
-    cpb = cp->bars;
-    for (b = pciehbars_get_first(pbars);
-         b;
-         b = pciehbars_get_next(pbars, b), cpb++) {
-        cp->nbars++;
-        cpb->type = bartype_to_cfgbartype(b->type);
-        cpb->prefetch = b->prefetch;
-        cpb->size = b->size;
-        cpb->cfgidx = b->cfgidx;
-    }
+    cp->nbars = bars_to_cfgbars(pbars, cp->bars);
     b = pciehbars_get_rombar(pbars);
     if (b != NULL) {
         cp->rombar.type = bartype_to_cfgbartype(b->type);
@@ -306,7 +339,9 @@ pciehcfg_get_cfgspace_header_params(pciehcfg_t *pcfg,
 }
 
 static void
-pciehcfg_get_cfgspace_capparams(pciehcfg_t *pcfg, cfgspace_capparams_t *cp)
+pciehcfg_get_cfgspace_capparams(pciehcfg_t *pcfg,
+                                pciehbars_t *vfbars,
+                                cfgspace_capparams_t *cp)
 {
     memset(cp, 0, sizeof(*cp));
     cp->bridgeup = pcfg->bridgeup;
@@ -318,6 +353,8 @@ pciehcfg_get_cfgspace_capparams(pciehcfg_t *pcfg, cfgspace_capparams_t *cp)
     cp->subvendorid = pcfg->subvendorid;
     cp->subdeviceid = pcfg->subdeviceid;
     cp->nintrs = pcfg->nintrs;
+    cp->vfdeviceid = pcfg->vfdeviceid;
+    cp->totalvfs = pcfg->totalvfs;
     cp->cap_gen = pcfg->cap_gen;
     cp->cap_width = pcfg->cap_width;
     cp->msix_tblbir = pcfg->msix_tblbir;
@@ -325,6 +362,7 @@ pciehcfg_get_cfgspace_capparams(pciehcfg_t *pcfg, cfgspace_capparams_t *cp)
     cp->msix_pbabir = pcfg->msix_pbabir;
     cp->msix_pbaoff = pcfg->msix_pbaoff;
     cp->dsn = pcfg->dsn;
+    cp->nvfbars = bars_to_cfgbars(vfbars, cp->vfbars);
 }
 
 void
@@ -390,7 +428,7 @@ pciehcfg_addcap(pciehcfg_t *pcfg, const char *capname)
     cfgspace_capparams_t capparams, *cp = &capparams;
 
     pciehcfg_get_cfgspace(pcfg, cs);
-    pciehcfg_get_cfgspace_capparams(pcfg, cp);
+    pciehcfg_get_cfgspace_capparams(pcfg, NULL, cp);
     addcap(pcfg, cs, cp, capname);
 }
 
@@ -401,18 +439,18 @@ pciehcfg_addextcap(pciehcfg_t *pcfg, const char *capname)
     cfgspace_capparams_t capparams, *cp = &capparams;
 
     pciehcfg_get_cfgspace(pcfg, cs);
-    pciehcfg_get_cfgspace_capparams(pcfg, cp);
+    pciehcfg_get_cfgspace_capparams(pcfg, NULL, cp);
     addextcap(pcfg, cs, cp, capname);
 }
 
 void
-pciehcfg_add_standard_caps(pciehcfg_t *pcfg)
+pciehcfg_add_standard_pfcaps(pciehcfg_t *pcfg, pciehbars_t *vfbars)
 {
     cfgspace_t cfgspace, *cs = &cfgspace;
     cfgspace_capparams_t capparams, *cp = &capparams;
 
     pciehcfg_get_cfgspace(pcfg, cs);
-    pciehcfg_get_cfgspace_capparams(pcfg, cp);
+    pciehcfg_get_cfgspace_capparams(pcfg, vfbars, cp);
 
     /*****************
      * Capabilities.
@@ -435,6 +473,9 @@ pciehcfg_add_standard_caps(pciehcfg_t *pcfg)
      * Extended capabilities.
      */
     addextcap(pcfg, cs, cp, "aer");
+    if (pcfg->pf) {
+        addextcap(pcfg, cs, cp, "sriov");
+    }
     if (!cfgspace_is_bridge(cp)) {
         /* only endpoints need ARI */
         addextcap(pcfg, cs, cp, "ari");
@@ -465,6 +506,12 @@ pciehcfg_add_standard_caps(pciehcfg_t *pcfg)
             addextcap(pcfg, cs, cp, "lanemargin");
         }
     }
+}
+
+void
+pciehcfg_add_standard_caps(pciehcfg_t *pcfg)
+{
+    pciehcfg_add_standard_pfcaps(pcfg, NULL);
 }
 
 void

@@ -1,4 +1,4 @@
-add accel -L 4
+add accel -L 4 -c 1m -C 0x12340000
 finalize
 dbg pciehw pmt -c
 exit

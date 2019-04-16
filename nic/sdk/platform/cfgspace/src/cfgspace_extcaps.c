@@ -8,6 +8,7 @@
 #include <sys/types.h>
 
 #include "platform/cfgspace/include/cfgspace.h"
+#include "cfgspace_bars.h"
 
 static u_int16_t
 extcap_get_id(u_int32_t caphdr)
@@ -361,6 +362,173 @@ cfgspace_setextcap_pasid(cfgspace_t *cs,
 }
 
 /*
+ * Physical Layer (not Phy Slayer :-).
+ */
+static int
+cfgspace_setextcap_physlayer(cfgspace_t *cs,
+                             const cfgspace_capparams_t *cp,
+                             const u_int16_t capaddr)
+{
+    const u_int16_t caplen = 0xa0;
+    u_int32_t v, m;
+    int i;
+
+    /* required only for Gen4 speeds, and only function 0 */
+    if (cp->cap_gen < 4 || cp->fnn) return 0;
+
+    assert(capaddr + caplen < cfgspace_size(cs));
+
+    v = (0x26 | (0x1 << 16));   /* physical layer 16 GT/s cap id, version 1 */
+    cfgspace_setd(cs, capaddr, v);
+
+    /*****************
+     * 16 GT/s Lane Equalization Control
+     */
+    v = 0;
+    if (cfgspace_is_bridgedn(cp)) {
+        v |= (0xf << 0);        /* downstream port 16 GT/s tx preset */
+    }
+    v |= (0xf << 4);            /* upstream port 16 GT/s tx preset */
+    m = 0;
+    for (i = 0; i < cp->cap_width; i++) {
+        cfgspace_setbm(cs, capaddr + 0x20 + i, v, m);
+    }
+
+    cfgspace_linkextcap(cs, capaddr);
+    return caplen;
+}
+
+/*
+ * SRIOV
+ */
+static int
+cfgspace_setextcap_sriov(cfgspace_t *cs,
+                         const cfgspace_capparams_t *cp,
+                         const u_int16_t capaddr)
+{
+    const u_int16_t caplen = 0x40;
+    u_int32_t v, m;
+
+    assert(capaddr + caplen < cfgspace_size(cs));
+
+    v = (0x10 | (0x1 << 16));   /* sriov cap id, version 1 */
+    cfgspace_setd(cs, capaddr, v);
+
+    /*****************
+     * SR-IOV Capabilities
+     */
+    v = 0;
+    if (cp->cap_gen >= 4 && cp->exttag) {
+        v |= (0x1 << 2);        /* VF 10-bit Requester Tag Sup */
+    }
+    cfgspace_setd(cs, capaddr + 0x4, v);
+
+    /*****************
+     * SR-IOV Control
+     */
+    v = 0;
+    m = 0;
+    m |= ((1 << 0) |            /* VF Enable */
+          (1 << 3));            /* VF Mem Space Enable */
+    /* only function 0 */
+    if (!cp->fnn) {
+        m |= (1 << 4);          /* ARI Capable Heirarchy */
+    }
+    if (cp->cap_gen >= 4 && cp->exttag) {
+        m |= (1 << 5);          /* VF 10-bit Requester Tag Enable */
+    }
+    cfgspace_setwm(cs, capaddr + 0x8, v, m);
+
+    /*****************
+     * SR-IOV Status
+     */
+    v = 0;
+    m = 0;
+    cfgspace_setwm(cs, capaddr + 0xa, v, m);
+
+    /*****************
+     * InitialVFs
+     */
+    /* for SRIOV, InitialVFs should match TotalVFs */
+    v = cp->totalvfs;
+    m = 0;
+    cfgspace_setwm(cs, capaddr + 0xc, v, m);
+
+    /*****************
+     * TotalVFs
+     */
+    v = cp->totalvfs;
+    m = 0;
+    cfgspace_setwm(cs, capaddr + 0xe, v, m);
+
+    /*****************
+     * NumVFs
+     */
+    v = 0;
+    m = 0xffff;
+    cfgspace_setwm(cs, capaddr + 0x10, v, m);
+
+    /*****************
+     * Function Dependency Link
+     */
+    v = 0; /* XXX should be cp->fnc, "usually" 0 */
+    cfgspace_setb(cs, capaddr + 0x12, v);
+
+    /*****************
+     * First VF Offset
+     */
+    /* place VFs at next device number on our bus */
+    v = 1;
+    cfgspace_setw(cs, capaddr + 0x14, v);
+
+    /*****************
+     * VF Stride
+     */
+    /* subsequence VFs increment by 1 */
+    v = 1;
+    cfgspace_setw(cs, capaddr + 0x16, v);
+
+    /*****************
+     * VF Device ID
+     */
+    v = cp->vfdeviceid;
+    cfgspace_setw(cs, capaddr + 0x1a, v);
+
+    /*****************
+     * Support Page Sizes
+     */
+    /* "required" page sizes */
+    v = ((1 << 0) |             /* 4k */
+         (1 << 1) |             /* 8k */
+         (1 << 4) |             /* 64k */
+         (1 << 6) |             /* 256k */
+         (1 << 8) |             /* 1m */
+         (1 << 10));            /* 4m */
+    cfgspace_setd(cs, capaddr + 0x1c, v);
+
+    /*****************
+     * System Page Size
+     */
+    v = (1 << 0);               /* 4k */
+    m = 0xffffffff;
+    cfgspace_setdm(cs, capaddr + 0x20, v, m);
+
+    /*****************
+     * VF BARs
+     */
+    cfgspace_set_sriov_bars(cs, capaddr + 0x24, cp->vfbars, cp->nvfbars);
+
+    /*****************
+     * VF Migration State Array Offset
+     */
+    v = 0;
+    cfgspace_setd(cs, capaddr + 0x3c, v);
+
+    cfgspace_linkextcap(cs, capaddr);
+    return caplen;
+}
+
+/*
  * Secondary PCIe.
  */
 static int
@@ -416,43 +584,6 @@ cfgspace_setextcap_spcie(cfgspace_t *cs,
     return caplen;
 }
 
-/*
- * Physical Layer (not Phy Slayer :-).
- */
-static int
-cfgspace_setextcap_physlayer(cfgspace_t *cs,
-                             const cfgspace_capparams_t *cp,
-                             const u_int16_t capaddr)
-{
-    const u_int16_t caplen = 0xa0;
-    u_int32_t v, m;
-    int i;
-
-    /* required only for Gen4 speeds, and only function 0 */
-    if (cp->cap_gen < 4 || cp->fnn) return 0;
-
-    assert(capaddr + caplen < cfgspace_size(cs));
-
-    v = (0x26 | (0x1 << 16));   /* physical layer 16 GT/s cap id, version 1 */
-    cfgspace_setd(cs, capaddr, v);
-
-    /*****************
-     * 16 GT/s Lane Equalization Control
-     */
-    v = 0;
-    if (cfgspace_is_bridgedn(cp)) {
-        v |= (0xf << 0);        /* downstream port 16 GT/s tx preset */
-    }
-    v |= (0xf << 4);            /* upstream port 16 GT/s tx preset */
-    m = 0;
-    for (i = 0; i < cp->cap_width; i++) {
-        cfgspace_setbm(cs, capaddr + 0x20 + i, v, m);
-    }
-
-    cfgspace_linkextcap(cs, capaddr);
-    return caplen;
-}
-
 static int
 cfgspace_setextcap_tph(cfgspace_t *cs,
                        const cfgspace_capparams_t *cp,
@@ -499,6 +630,7 @@ static extcapent_t extcaptab[] = {
     EXTCAPENT(pasid),
     EXTCAPENT(physlayer),
     EXTCAPENT(spcie),
+    EXTCAPENT(sriov),
     EXTCAPENT(tph),
     { NULL, NULL }
 };

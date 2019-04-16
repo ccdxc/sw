@@ -7,8 +7,6 @@
 
 #include "pmmsg.h"
 
-ssize_t pm_readn(int fd, void *bufarg, size_t n);
-ssize_t pm_writen(int fd, const void *bufarg, size_t n);
 int pciemgr_msgsend(int fd, pmmsg_t *m);
 int pciemgr_msgrecv(int fd, pmmsg_t **m);
 

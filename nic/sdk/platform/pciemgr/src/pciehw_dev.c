@@ -102,7 +102,7 @@ pciehdev_finalize_dev(pciehdev_t *pdev, u_int16_t bdf, u_int8_t *nextbus)
          */
         if (pdev->child) {
             int childbdf;
-            if (pdev->fn0) {
+            if (pdev->pf || pdev->fn0) {
                 childbdf = bdf_make(bdf_to_bus(bdf),
                                     bdf_to_dev(bdf),
                                     1);
@@ -114,7 +114,7 @@ pciehdev_finalize_dev(pciehdev_t *pdev, u_int16_t bdf, u_int8_t *nextbus)
 
         if (pdev->peer) {
             int peerbdf;
-            if (pdev->peer->fnn) {
+            if (pdev->peer->vf || pdev->peer->fnn) {
                 peerbdf = bdf_make(bdf_to_bus(bdf),
                                    bdf_to_dev(bdf),
                                    bdf_to_fnc(bdf) + 1);
@@ -183,6 +183,35 @@ pciehdev_addchild(pciehdev_t *pdev, pciehdev_t *pchild)
     return 0;
 }
 
+static int
+pciehdev_add_sriov(pciehdev_t *pbrdn, pciehdev_t *pdev)
+{
+    assert(pdev->pf);
+    assert(!pdev->vf);
+    assert(pdev->totalvfs);
+    assert(pdev->child);
+    assert(!pdev->child->pf);
+    assert(pdev->child->vf);
+
+    pciehdev_addchild(pbrdn, pdev);
+    //pciehdev_addchild(pdev, pdev->child);
+    return 0;
+}
+
+static int
+pciehdev_add_multifunc(pciehdev_t *pbrdn, pciehdev_t *pdev)
+{
+    /* XXX unimplemented */
+    assert(0);
+    return 0;
+}
+
+static int
+pciehdev_add_dev(pciehdev_t *pbrdn, pciehdev_t *pdev)
+{
+    return pciehdev_addchild(pbrdn, pdev);
+}
+
 int
 pciehdev_add(pciehdev_t *pdev)
 {
@@ -191,9 +220,13 @@ pciehdev_add(pciehdev_t *pdev)
     pciehdev_portinfo_t *pi = &pdevdata->portinfo[port];
     pciehdev_t *pbrdn;
     int memtun_en = 0;
+    int r = 0;
 
     if (pdev->port >= NPORTS) {
         return -EINVAL;
+    }
+    if (pdev->name[0] == '\0') {
+        return -ENXIO;
     }
     if (!pi->initialized) {
         return -EBADF;
@@ -201,6 +234,10 @@ pciehdev_add(pciehdev_t *pdev)
     if (pi->finalized) {
         return -EBUSY;
     }
+
+    /*
+     * Make sure we have a downstream port to connect this device.
+     */
     if (pi->root == NULL) {
         pi->root = pciehdev_bridgeup_new();
         pi->root->port = port;
@@ -210,7 +247,18 @@ pciehdev_add(pciehdev_t *pdev)
     pbrdn->port = port;
     pciehdev_addchild(pi->root, pbrdn);
     if (memtun_en) pi->memtun_br = 1;
-    return pciehdev_addchild(pbrdn, pdev);
+
+    /*
+     * Now connect dev to bridge.
+     */
+    if (pdev->pf) {
+        r = pciehdev_add_sriov(pbrdn, pdev);
+    } else if (pdev->fn0) {
+        r = pciehdev_add_multifunc(pbrdn, pdev);
+    } else {
+        r = pciehdev_add_dev(pbrdn, pdev);
+    }
+    return r;
 }
 
 int
@@ -220,6 +268,9 @@ pciehdev_addfn(pciehdev_t *pdev, pciehdev_t *pfn, const int fnc)
     const u_int8_t port = pdev->port;
     pciehdev_portinfo_t *pi = &pdevdata->portinfo[port];
 
+    if (pdev->name[0] == '\0') {
+        return -ENXIO;
+    }
     if (pi->finalized) {
         return -EBUSY;
     }

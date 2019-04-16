@@ -1,4 +1,4 @@
-mgmt0
+mgmteth0
 idx  id typ rw p:bb:dd.f cfgreg vfid p:bdflim  vfst romsk address     flags
 1     0 cfg -w 0:01:00.0 0x0004    0 0:01:00.0    0     0 0x0c4801800 vi---
 2     0 cfg rw 0:01:00.0 0x000c    0 0:01:00.0    0     2 0x0c4801800 v----

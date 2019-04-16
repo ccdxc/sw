@@ -13,9 +13,10 @@ A pciehdev object represents a pcie bus host-facing device,
 and consists of two sub objects: pciehbars for the device bar
 resources, and pciehcfg for the device pcie config space.
 
-    #include "pciehost.h"
+    #include "pciemgr.h"
+    #include "pciemgrutils.h"
 
-    pciehdev_t *pdev = pciehdev_new(name, resources);
+    pciehdev_t *pdev = pciehdev_new();
     pciehbars_t *pbars = pciehbars_new();
     pciehcfg_t *pcfg = pciehcfg_new();
 

@@ -43,9 +43,11 @@ typedef struct pciemgr_params_s pciemgr_params_t;
 enum pciehw_cfghnd_e {
     PCIEHW_CFGHND_NONE,
     PCIEHW_CFGHND_CMD,
-    PCIEHW_CFGHND_BARS,
-    PCIEHW_CFGHND_ROMBAR,
+    PCIEHW_CFGHND_DEV_BARS,
+    PCIEHW_CFGHND_ROM_BAR,
     PCIEHW_CFGHND_MSIX,
+    PCIEHW_CFGHND_SRIOV_CTRL,
+    PCIEHW_CFGHND_SRIOV_BARS,
 };
 typedef enum pciehw_cfghnd_e pciehw_cfghnd_t;
 
@@ -61,6 +63,7 @@ typedef enum pciehwbartype_e {
 typedef struct pciehwbar_s {
     u_int32_t valid:1;                  /* valid bar for this dev */
     pciehwbartype_t type;               /* PCIEHWBARTYPE_* */
+    u_int8_t cfgidx;                    /* config bars index (0-5) */
     u_int32_t pmtb;                     /* pmt base  for bar */
     u_int32_t pmtc;                     /* pmt count for bar */
 } pciehwbar_t;
@@ -69,6 +72,9 @@ typedef struct pciehwdev_s {
     char name[32];                      /* device name */
     int port;                           /* pcie port */
     void *pdev;                         /* pciehdev */
+    u_int16_t pf:1;                     /* is pf */
+    u_int16_t vf:1;                     /* is vf */
+    u_int16_t totalvfs;                 /* totalvfs */
     u_int16_t bdf;                      /* bdf of this dev */
     u_int32_t lifb;                     /* lif base  for this dev */
     u_int32_t lifc;                     /* lif count for this dev */

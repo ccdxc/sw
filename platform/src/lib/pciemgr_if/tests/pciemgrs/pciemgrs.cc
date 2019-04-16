@@ -89,7 +89,7 @@ msgdata_left(pmmsg_t *m, char *mp)
 static void
 do_dev_add(pmmsg_t *m)
 {
-    pciehdev_t *pdev = pciehdev_new("", NULL);
+    pciehdev_t *pdev = pciehdev_new();
     pciehcfg_t *pcfg = pciehcfg_new();
     pciehbars_t *pbars = pciehbars_new();
     pciehbar_t *pbar = NULL;

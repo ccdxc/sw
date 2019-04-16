@@ -80,6 +80,7 @@ bar_finalize(const pciehwdev_t *phwdev,
     assert(pmtb >= 0);
 
     phwbar->type = bar_type_to_hwbar_type(bar->type);
+    phwbar->cfgidx = bar->cfgidx;
     phwbar->pmtb = pmtb;
     phwbar->pmtc = pmtc;
     phwbar->valid = 1;

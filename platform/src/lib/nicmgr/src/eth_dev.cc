@@ -382,7 +382,7 @@ Eth::LoadOprom()
 bool
 Eth::CreateHostDevice()
 {
-    pciehdevice_resources_t pci_resources = {0};
+    pciehdevice_resources_t pres = {0};
 
     if (!LoadOprom()) {
         NIC_LOG_ERR("{}: Failed to load oprom", spec->name);
@@ -390,26 +390,26 @@ Eth::CreateHostDevice()
         // return false;
     }
 
-    pci_resources.port = spec->pcie_port;
-    pci_resources.lifb = lif_base;
-    pci_resources.lifc = spec->lif_count;
-    pci_resources.intrb = intr_base;
-    pci_resources.intrc = spec->intr_count;
-    pci_resources.npids = spec->rdma_pid_count;
-    pci_resources.devcmdpa = devcmd_mem_addr;
-    pci_resources.devcmddbpa = devcmddb_mem_addr;
-    pci_resources.cmbpa = cmb_mem_addr;
-    pci_resources.cmbsz = cmb_mem_size;
-    pci_resources.rompa = rom_mem_addr;
-    pci_resources.romsz = rom_mem_size;
+    pres.pfres.port = spec->pcie_port;
+    pres.pfres.lifb = lif_base;
+    pres.pfres.lifc = spec->lif_count;
+    pres.pfres.intrb = intr_base;
+    pres.pfres.intrc = spec->intr_count;
+    pres.pfres.npids = spec->rdma_pid_count;
+    pres.pfres.devcmdpa = devcmd_mem_addr;
+    pres.pfres.devcmddbpa = devcmddb_mem_addr;
+    pres.pfres.cmbpa = cmb_mem_addr;
+    pres.pfres.cmbsz = cmb_mem_size;
+    pres.pfres.rompa = rom_mem_addr;
+    pres.pfres.romsz = rom_mem_size;
 
     // Create PCI device
     if (spec->eth_type == ETH_HOST) {
         NIC_LOG_DEBUG("{}: Creating Host device", spec->name);
-        pdev = pciehdev_eth_new(spec->name.c_str(), &pci_resources);
+        pdev = pciehdevice_new("eth", spec->name.c_str(), &pres);
     } else if (spec->eth_type == ETH_HOST_MGMT) {
         NIC_LOG_DEBUG("{}: Creating Host Management device", spec->name);
-        pdev = pciehdev_mgmteth_new(spec->name.c_str(), &pci_resources);
+        pdev = pciehdevice_new("mgmteth", spec->name.c_str(), &pres);
     } else {
         assert(0); // NOT REACHABLE
     }

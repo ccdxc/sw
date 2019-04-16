@@ -27,127 +27,6 @@
 
 #include "pciemgrd_impl.hpp"
 
-static pciehdev_t *
-construct(char *namearg, const char *type, pciehdevice_resources_t *pres)
-{
-    char lname[32], *name;
-    pciehdev_t *pdev;
-
-    if (strcmp(type, "eth") == 0) {
-        if (namearg == NULL) {
-            static int eth_instance;
-            snprintf(lname, sizeof(lname), "eth%d", eth_instance++);
-            name = lname;
-        } else {
-            name = namearg;
-        }
-        pdev = pciehdev_eth_new(name, pres);
-        if (pdev == NULL) {
-            printf("pciehdev_eth_new failed\n");
-            return NULL;
-        }
-    } else if (strcmp(type, "mgmt") == 0) {
-        if (namearg == NULL) {
-            static int mgmt_instance;
-            snprintf(lname, sizeof(lname), "mgmt%d", mgmt_instance++);
-            name = lname;
-        } else {
-            name = namearg;
-        }
-        pdev = pciehdev_mgmteth_new(name, pres);
-        if (pdev == NULL) {
-            printf("pciehdev_mgmteth_new failed\n");
-            return NULL;
-        }
-    } else if (strcmp(type, "ethvf") == 0) {
-        pdev = NULL; // XXX
-    } else if (strcmp(type, "nvme") == 0) {
-        if (namearg == NULL) {
-            static int nvme_instance;
-            snprintf(lname, sizeof(lname), "nvme%d", nvme_instance++);
-            name = lname;
-        } else {
-            name = namearg;
-        }
-        pdev = pciehdev_nvme_new(name, pres);
-        if (pdev == NULL) {
-            printf("pciehdev_nvme_new failed\n");
-            return NULL;
-        }
-    } else if (strcmp(type, "accel") == 0) {
-        if (namearg == NULL) {
-            static int accel_instance;
-            snprintf(lname, sizeof(lname), "accel%d", accel_instance++);
-            name = lname;
-        } else {
-            name = namearg;
-        }
-        pdev = pciehdev_accel_new(name, pres);
-        if (pdev == NULL) {
-            printf("pciehdev_accel_new failed\n");
-            return NULL;
-        }
-    } else if (strcmp(type, "virtio") == 0) {
-        if (namearg == NULL) {
-            static int virtio_instance;
-            snprintf(lname, sizeof(lname), "virtio%d", virtio_instance++);
-            name = lname;
-        } else {
-            name = namearg;
-        }
-        pdev = pciehdev_virtio_new(name, pres);
-        if (pdev == NULL) {
-            printf("pciehdev_virtio_new failed\n");
-            return NULL;
-        }
-    } else if (strcmp(type, "pciestress") == 0) {
-        if (namearg == NULL) {
-            static int pciestress_instance;
-            snprintf(lname, sizeof(lname), "pciestress%d",
-                     pciestress_instance++);
-            name = lname;
-        } else {
-            name = namearg;
-        }
-        pdev = pciehdev_pciestress_new(name, pres);
-        if (pdev == NULL) {
-            printf("pciehdev_pciestress_new failed\n");
-            return NULL;
-        }
-    } else if (strcmp(type, "rcdev") == 0) {
-        if (namearg == NULL) {
-            static int rcdev_instance;
-            snprintf(lname, sizeof(lname), "rcdev%d", rcdev_instance++);
-            name = lname;
-        } else {
-            name = namearg;
-        }
-        pdev = pciehdev_rcdev_new(name, pres);
-        if (pdev == NULL) {
-            printf("pciehdev_rcdev_new failed\n");
-            return NULL;
-        }
-    } else if (strcmp(type, "debug") == 0) {
-        if (namearg == NULL) {
-            static int debug_instance;
-            snprintf(lname, sizeof(lname), "debug%d", debug_instance++);
-            name = lname;
-        } else {
-            name = namearg;
-        }
-        pdev = pciehdev_debug_new(name, pres);
-        if (pdev == NULL) {
-            printf("pciehdev_debug_new failed\n");
-            return NULL;
-        }
-    } else {
-        printf("%s: unknown dev type\n", type);
-        return NULL;
-    }
-
-    return pdev;
-}
-
 /******************************************************************/
 
 static void
@@ -186,99 +65,449 @@ cmd_finalize(int argc, char *argv[])
     }
 }
 
-static void
-cmd_commit(int argc, char *argv[])
+static int
+parse_common_pres_opt(int opt, pciehdevice_resources_t *pres)
 {
+    pciehdev_res_t *pfres = &pres->pfres;
+
+    switch (opt) {
+    case 'c':
+        pfres->cmbsz = strtoull_ext(optarg);
+        break;
+    case 'C':
+        pfres->cmbpa = strtoull(optarg, NULL, 0);
+        break;
+    case 'd':
+        pfres->devcmdpa = strtoull(optarg, NULL, 0);
+        break;
+    case 'D':
+        pfres->devcmddbpa = strtoull(optarg, NULL, 0);
+        break;
+    case 'i':
+        pfres->intrc = strtoul(optarg, NULL, 0);
+        break;
+    case 'I':
+        pfres->intrb = strtoul(optarg, NULL, 0);
+        break;
+    case 'l':
+        pfres->lifc = strtoul(optarg, NULL, 0);
+        break;
+    case 'L':
+        pfres->lifb = strtoul(optarg, NULL, 0);
+        if (pfres->lifc == 0) pfres->lifc = 1;
+        break;
+    case 'p':
+        pfres->port = strtoul(optarg, NULL, 0);
+        break;
+    case 'P':
+        pfres->npids = strtoul(optarg, NULL, 0);
+        break;
+    case 'r':
+        pfres->romsz = strtoull(optarg, NULL, 0);
+        break;
+    case 'R':
+        pfres->rompa = strtoull(optarg, NULL, 0);
+        break;
+    case 'v':
+        pfres->totalvfs = strtoull(optarg, NULL, 0);
+        if (pfres->totalvfs > 0) {
+            pciehdev_res_t *vfres = &pres->vfres;
+            vfres->is_vf = 1;
+            /* XXX just some sample values */
+            if (pfres->lifc) {
+                vfres->lifb = pfres->lifb + pfres->lifc;
+                vfres->lifc = pfres->totalvfs;
+            }
+            if (pfres->intrc) {
+                vfres->intrb = pfres->intrb + pfres->intrc;
+                vfres->intrc = pfres->intrc;
+            }
+            vfres->devcmdpa = pfres->devcmddbpa + 0x1000;
+            vfres->devcmd_stride = 0x1000;
+            vfres->devcmddbpa = vfres->devcmdpa + (0x1000 * pfres->totalvfs);
+            vfres->devcmddb_stride = 0x1000;
+        }
+        break;
+    default:
+        return - 1;
+    }
+    return 0;
 }
 
 static void
-cmd_add(int argc, char *argv[])
+add_accel(int argc, char *argv[])
 {
-    pciehdev_t *pdev;
-    pciehdevice_resources_t r;
-    int opt, bi;
-    char *type, *name;
+    pciehdevice_resources_t pres;
+    char lname[32], *name;
+    int opt;
 
-    if (argc < 2) {
-        printf("usage: add <type> [<args>]\n");
+    memset(&pres, 0, sizeof(pres));
+    pres.pfres.intrc = 4;
+    pres.pfres.devcmdpa = 0x13e000000;   /* XXX */
+    pres.pfres.devcmddbpa = pres.pfres.devcmdpa + 0x1000; /* XXX */
+    pres.pfres.nvmeregspa = 0x13e000000; /* XXX */
+    pres.pfres.nvmeqidc = 64;
+    pres.pfres.cmbprefetch = 1;
+    name = NULL;
+
+    getopt_reset(4, 2);
+    while ((opt = getopt(argc, argv, "c:C:i:I:l:L:N:p:r:R:")) != -1) {
+        switch (opt) {
+        case 'N':
+            name = optarg;
+            break;
+        default:
+            if (parse_common_pres_opt(opt, &pres) < 0) {
+                fprintf(stderr, "bad argument: %c\n", opt);
+                return;
+            }
+        }
+    }
+
+    if (name == NULL) {
+        static int instance;
+
+        snprintf(lname, sizeof(lname), "accel%d", instance++);
+        name = lname;
+    }
+
+    pciehdev_t *pdev = pciehdevice_new("accel", name, &pres);
+    if (pdev == NULL) {
+        fprintf(stderr, "pciehdevice_new failed\n");
         return;
     }
-    type = argv[1];
+    pciehdev_add(pdev);
+    printf("%s\n", pciehdev_get_name(pdev));
+}
 
-    memset(&r, 0, sizeof(r));
-    r.intrc = 4;
-    r.devcmdpa = 0x13e000000;   /* XXX */
-    r.devcmddbpa = r.devcmdpa + 0x1000; /* XXX */
-    r.nvmeregspa = 0x13e000000; /* XXX */
-    r.nvmeqidc = 64;
+static void
+add_debug(int argc, char *argv[])
+{
+    pciehdevice_resources_t pres;
+    char lname[32], *name;
+    int opt, bi;
+
+    memset(&pres, 0, sizeof(pres));
+    pres.pfres.intrc = 4;
     name = NULL;
     bi = 0;
 
     getopt_reset(4, 2);
-    while ((opt = getopt(argc, argv,
-                         "b:B:c:C:d:D:fI:i:l:L:n:p:P:r:R:")) != -1) {
+    while ((opt = getopt(argc, argv, "b:B:fI:i:l:L:N:p:r:R:V:D:C:")) != -1) {
         switch (opt) {
         case 'b':
-            r.debugbar[bi].barpa = strtoull_ext(optarg);
+            pres.pfres.debug.bar[bi].barpa = strtoull_ext(optarg);
             break;
         case 'B':
-            r.debugbar[bi].barsz = strtoull_ext(optarg);
+            pres.pfres.debug.bar[bi].barsz = strtoull_ext(optarg);
             bi++;       /* -B barsz comes last per bar */
             break;
-        case 'c':
-            r.cmbsz = strtoull(optarg, NULL, 0);
-            break;
-        case 'C':
-            r.cmbpa = strtoull(optarg, NULL, 0);
-            break;
-        case 'd':
-            r.devcmdpa = strtoull(optarg, NULL, 0);
-            break;
-        case 'D':
-            r.devcmddbpa = strtoull(optarg, NULL, 0);
-            break;
         case 'f':
-            r.debugbar[bi].prefetch = 1;
-            break;
-        case 'i':
-            r.intrc = strtoul(optarg, NULL, 0);
-            break;
-        case 'I':
-            r.intrb = strtoul(optarg, NULL, 0);
-            break;
-        case 'l':
-            r.lifc = strtoul(optarg, NULL, 0);
-            break;
-        case 'L':
-            r.lifb = strtoul(optarg, NULL, 0);
-            if (r.lifc == 0) r.lifc = 1;
+            pres.pfres.debug.bar[bi].prefetch = 1;
             break;
         case 'N':
             name = optarg;
             break;
-        case 'p':
-            r.port = strtoul(optarg, NULL, 0);
+        case 'V':
+            pres.pfres.debug.vendorid = strtoul(optarg, NULL, 0);
             break;
-        case 'P':
-            r.npids = strtoul(optarg, NULL, 0);
+        case 'D':
+            pres.pfres.debug.deviceid = strtoul(optarg, NULL, 0);
             break;
-        case 'r':
-            r.romsz = strtoull(optarg, NULL, 0);
-            break;
-        case 'R':
-            r.rompa = strtoull(optarg, NULL, 0);
+        case 'C':
+            pres.pfres.debug.classcode = strtoul(optarg, NULL, 0);
             break;
         default:
-            printf("bad argument: %c\n", opt);
-            return;
+            if (parse_common_pres_opt(opt, &pres) < 0) {
+                fprintf(stderr, "bad argument: %c\n", opt);
+                return;
+            }
         }
     }
-    pdev = construct(name, type, &r);
+
+    if (name == NULL) {
+        static int instance;
+
+        snprintf(lname, sizeof(lname), "debug%d", instance++);
+        name = lname;
+    }
+
+    pciehdev_t *pdev = pciehdevice_new("debug", name, &pres);
+    if (pdev == NULL) {
+        fprintf(stderr, "pciehdevice_new failed\n");
+        return;
+    }
+    pciehdev_add(pdev);
+    printf("%s\n", pciehdev_get_name(pdev));
+}
+
+static void
+add_eth_class(const char *type, int argc, char *argv[])
+{
+    pciehdev_t *pdev;
+    pciehdevice_resources_t pres;
+    int opt;
+    char lname[32], *name;
+
+    memset(&pres, 0, sizeof(pres));
+    pres.pfres.intrc = 4;
+    pres.pfres.devcmdpa = 0x13e000000;   /* XXX */
+    pres.pfres.devcmddbpa = pres.pfres.devcmdpa + 0x1000; /* XXX */
+    name = NULL;
+
+    getopt_reset(4, 2);
+    while ((opt = getopt(argc, argv, "c:C:d:D:I:i:l:L:N:p:P:r:R:v:")) != -1) {
+        switch (opt) {
+        case 'N':
+            name = optarg;
+            break;
+        default:
+            if (parse_common_pres_opt(opt, &pres) < 0) {
+                fprintf(stderr, "bad argument: %c\n", opt);
+                return;
+            }
+        }
+    }
+
+    if (name == NULL) {
+        static int instance;
+
+        snprintf(lname, sizeof(lname), "%s%d", type, instance++);
+        name = lname;
+    }
+
+    pdev = pciehdevice_new(type, name, &pres);
     if (pdev == NULL) {
         return;
     }
     pciehdev_add(pdev);
     printf("%s\n", pciehdev_get_name(pdev));
+}
+
+static void
+add_eth(int argc, char *argv[])
+{
+    add_eth_class("eth", argc, argv);
+}
+
+static void
+add_mgmteth(int argc, char *argv[])
+{
+    add_eth_class("mgmteth", argc, argv);
+}
+
+static void
+add_nvme(int argc, char *argv[])
+{
+    pciehdevice_resources_t pres;
+    char lname[32], *name;
+    int opt;
+
+    memset(&pres, 0, sizeof(pres));
+    pres.pfres.intrc = 4;
+    name = NULL;
+
+    getopt_reset(4, 2);
+    while ((opt = getopt(argc, argv, "i:I:l:L:N:p:r:R:")) != -1) {
+        switch (opt) {
+        case 'N':
+            name = optarg;
+            break;
+        default:
+            if (parse_common_pres_opt(opt, &pres) < 0) {
+                fprintf(stderr, "bad argument: %c\n", opt);
+                return;
+            }
+        }
+    }
+
+    if (name == NULL) {
+        static int instance;
+
+        snprintf(lname, sizeof(lname), "nvme%d", instance++);
+        name = lname;
+    }
+
+    pciehdev_t *pdev = pciehdevice_new("nvme", name, &pres);
+    if (pdev == NULL) {
+        fprintf(stderr, "pciehdevice_new failed\n");
+        return;
+    }
+    pciehdev_add(pdev);
+    printf("%s\n", pciehdev_get_name(pdev));
+}
+
+static void
+add_pciestress(int argc, char *argv[])
+{
+    pciehdevice_resources_t pres;
+    char lname[32], *name;
+    int opt;
+
+    memset(&pres, 0, sizeof(pres));
+    pres.pfres.intrc = 4;
+    name = NULL;
+
+    getopt_reset(4, 2);
+    while ((opt = getopt(argc, argv, "b:B:fI:i:l:L:N:p:r:R:")) != -1) {
+        switch (opt) {
+        case 'N':
+            name = optarg;
+            break;
+        default:
+            if (parse_common_pres_opt(opt, &pres) < 0) {
+                fprintf(stderr, "bad argument: %c\n", opt);
+                return;
+            }
+        }
+    }
+
+    if (name == NULL) {
+        static int instance;
+
+        snprintf(lname, sizeof(lname), "pciestress%d", instance++);
+        name = lname;
+    }
+
+    pciehdev_t *pdev = pciehdevice_new("pciestress", name, &pres);
+    if (pdev == NULL) {
+        fprintf(stderr, "pciehdevice_new failed\n");
+        return;
+    }
+    pciehdev_add(pdev);
+    printf("%s\n", pciehdev_get_name(pdev));
+}
+
+static void
+add_rcdev(int argc, char *argv[])
+{
+    pciehdevice_resources_t pres;
+    char lname[32], *name;
+    int opt;
+
+    memset(&pres, 0, sizeof(pres));
+    pres.pfres.intrc = 4;
+    name = NULL;
+
+    getopt_reset(4, 2);
+    while ((opt = getopt(argc, argv, "b:B:fI:i:l:L:N:p:r:R:")) != -1) {
+        switch (opt) {
+        case 'N':
+            name = optarg;
+            break;
+        default:
+            if (parse_common_pres_opt(opt, &pres) < 0) {
+                fprintf(stderr, "bad argument: %c\n", opt);
+                return;
+            }
+        }
+    }
+
+    if (name == NULL) {
+        static int instance;
+
+        snprintf(lname, sizeof(lname), "rcdev%d", instance++);
+        name = lname;
+    }
+
+    pciehdev_t *pdev = pciehdevice_new("rcdev", name, &pres);
+    if (pdev == NULL) {
+        fprintf(stderr, "pciehdevice_new failed\n");
+        return;
+    }
+    pciehdev_add(pdev);
+    printf("%s\n", pciehdev_get_name(pdev));
+}
+
+static void
+add_virtio(int argc, char *argv[])
+{
+    pciehdevice_resources_t pres;
+    char lname[32], *name;
+    int opt;
+
+    memset(&pres, 0, sizeof(pres));
+    pres.pfres.intrc = 4;
+    name = NULL;
+
+    getopt_reset(4, 2);
+    while ((opt = getopt(argc, argv, "i:I:l:L:N:p:r:R:")) != -1) {
+        switch (opt) {
+        case 'N':
+            name = optarg;
+            break;
+        default:
+            if (parse_common_pres_opt(opt, &pres) < 0) {
+                fprintf(stderr, "bad argument: %c\n", opt);
+                return;
+            }
+        }
+    }
+
+    if (name == NULL) {
+        static int instance;
+
+        snprintf(lname, sizeof(lname), "virtio%d", instance++);
+        name = lname;
+    }
+
+    pciehdev_t *pdev = pciehdevice_new("virtio", name, &pres);
+    if (pdev == NULL) {
+        fprintf(stderr, "pciehdevice_new failed\n");
+        return;
+    }
+    pciehdev_add(pdev);
+    printf("%s\n", pciehdev_get_name(pdev));
+}
+
+typedef struct addent_s {
+    const char *name;
+    void (*addfn)(int argc, char *argv[]);
+} addent_t;
+
+static addent_t addtab[] = {
+#define ADDENT(name) \
+    { #name, add_##name }
+    ADDENT(accel),
+    ADDENT(debug),
+    ADDENT(eth),
+    ADDENT(mgmteth),
+    ADDENT(nvme),
+    ADDENT(pciestress),
+    ADDENT(rcdev),
+    ADDENT(virtio),
+    { NULL, NULL }
+};
+
+static addent_t *
+add_lookup(const char *name)
+{
+    addent_t *e;
+
+    for (e = addtab; e->name; e++) {
+        if (strcmp(e->name, name) == 0) {
+            return e;
+        }
+    }
+    return NULL;
+}
+
+static void
+cmd_add(int argc, char *argv[])
+{
+    if (argc < 2) {
+        fprintf(stderr, "usage: add <type> [<args>]\n");
+        return;
+    }
+    const char *type = argv[1];
+    addent_t *addent = add_lookup(type);
+    if (addent == NULL) {
+        fprintf(stderr, "type %s not found\n", type);
+        return;
+    }
+    argc--;
+    argv++;
+    addent->addfn(argc, argv);
 }
 
 static void
@@ -297,21 +526,21 @@ cmd_addfn(int argc, char *argv[])
     type = argv[2];
 
     memset(&r, 0, sizeof(r));
-    r.intrc = 4;
-    r.fnn = 1;
+    r.pfres.intrc = 4;
+    /* r.pfres.fnn = 1; */
     nfn = 1;
 
     getopt_reset(3, 1);
     while ((opt = getopt(argc, argv, "i:n:")) != -1) {
         switch (opt) {
         case 'i':
-            r.intrc = strtoul(optarg, NULL, 0);
+            r.pfres.intrc = strtoul(optarg, NULL, 0);
             break;
         case 'n':
             nfn = strtoul(optarg, NULL, 0);
             break;
         default:
-            printf("bad argument: %c\n", opt);
+            fprintf(stderr, "bad argument: %c\n", opt);
             return;
         }
     }
@@ -326,7 +555,7 @@ cmd_addfn(int argc, char *argv[])
 
         snprintf(name, sizeof(name),
                  "%s.%d", pciehdev_get_name(pdev), fnc + 1);
-        pfn = construct(name, type, &r);
+        pfn = pciehdevice_new(type, name, &r);
         if (pfn == NULL) {
             return;
         }
@@ -413,7 +642,7 @@ cmd_cfg(int argc, char *argv[])
             mask = 1;
             break;
         default:
-            printf("bad argument: %c\n", opt);
+            fprintf(stderr, "bad argument: %c\n", opt);
             return;
         }
     }
@@ -581,7 +810,6 @@ static cmd_t cmdtab[] = {
            "<vdev> <type> [<args>]"),
     CMDENT(help, "display command help", "[cmd]"),
     CMDENT(finalize, "finalize device tree (load in hw)", ""),
-    CMDENT(commit, "commit topology (release host)", ""),
     CMDENT(show, "show device info", ""),
     CMDENT(cfg, "show cfg info for device", "[-m] <vdev> ..."),
     CMDENT(poll, "poll for intrs", ""),

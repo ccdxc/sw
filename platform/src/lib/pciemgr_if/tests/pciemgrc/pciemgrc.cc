@@ -80,21 +80,54 @@ main(int argc, char *argv[])
     const char *myname = "pciemgr";
     myevhandler myevh;
     pciemgr = new class pciemgr(myname, myevh);
+    int opt, totalvfs = 0;
+
+    while ((opt = getopt(argc, argv, "v:")) != -1) {
+        switch (opt) {
+        case 'v':
+            totalvfs = strtoul(optarg, NULL, 0);
+            break;
+        default:
+            exit(1);
+        }
+    }
 
     pciemgr->initialize();
 
-    pciehdevice_resources_t p;
-    memset(&p, 0, sizeof(p));
-    p.lifb = 5;
-    p.lifc = 1;
-    p.intrb = 0;
-    p.intrc = 4;
-    p.devcmdpa = 0x13f000000;
-    p.devcmddbpa = 0x13f001000;
-    p.romsz = 4096;
-    p.rompa = 0x13f000000;
-    pciehdev_t *pdev = pciehdev_eth_new("eth", &p);
-    printf("adding pdev %p lif %u\n", pdev, p.lifb);
+    pciehdevice_resources_t pres;
+    pciehdev_res_t *pfres = &pres.pfres;
+    pciehdev_res_t *vfres = &pres.vfres;
+    memset(&pres, 0, sizeof(pres));
+    pfres->lifb = 5;
+    pfres->lifc = 1;
+    pfres->intrb = 0;
+    pfres->intrc = 4;
+    pfres->devcmdpa = 0x13f000000;
+    pfres->devcmddbpa = 0x13f001000;
+    pfres->romsz = 4096;
+    pfres->rompa = 0x13f000000;
+
+    /* sriov pf with totalvfs */
+    if (totalvfs) {
+        pfres->totalvfs = totalvfs;
+        vfres->is_vf = 1;
+        if (pfres->lifc) {
+            vfres->lifb = pfres->lifb + pfres->lifc;
+            vfres->lifc = pfres->totalvfs;
+        }
+        if (pfres->intrc) {
+            vfres->intrb = pfres->intrb + pfres->intrc;
+            vfres->intrc = pfres->intrc;
+        }
+        vfres->devcmdpa = pfres->devcmddbpa + 0x1000;
+        vfres->devcmd_stride = 0x1000;
+        vfres->devcmddbpa = vfres->devcmdpa + (0x1000 * pfres->totalvfs);
+        vfres->devcmddb_stride = 0x1000;
+    }
+
+    pciehdev_t *pdev = pciehdevice_new("eth", "eth", &pres);
+    printf("adding pdev %p lif %u totalvfs %d\n",
+           pdev, pfres->lifb, pfres->totalvfs);
     pciemgr->add_device(pdev);
 
     pciemgr->finalize();

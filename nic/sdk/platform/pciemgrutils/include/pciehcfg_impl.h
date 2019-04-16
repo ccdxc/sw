@@ -30,8 +30,11 @@ typedef struct pciehcfg_s {
     u_int32_t msixcap:1;        /* msix cap (if intrs) */
     u_int32_t bridgeup:1;       /* bridge upstream port */
     u_int32_t bridgedn:1;       /* bridge downstream port */
-    u_int32_t fnn:1;            /* multi-function device, not function 0 */
+    u_int32_t pf:1;             /* sriov pf */
     u_int32_t vf:1;             /* sriov vf */
+    u_int32_t fnn:1;            /* multi-function device, not function 0 */
+    u_int16_t totalvfs;         /* if pf, sriov total vfs */
+    u_int16_t vfdeviceid;       /* if pf, sriov vf deviceid  */
     u_int8_t cap_cursor;        /* current capabilities position */
     u_int16_t extcap_cursor;    /* current extended capabilities position */
     u_int8_t *cur;              /* config space contents */

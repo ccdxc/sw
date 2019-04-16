@@ -50,7 +50,10 @@ void pciehcfg_setconf_msixcap(pciehcfg_t *pcfg, const int on);
 void pciehcfg_setconf_bridgeup(pciehcfg_t *pcfg, const int on);
 void pciehcfg_setconf_bridgedn(pciehcfg_t *pcfg, const int on);
 void pciehcfg_setconf_fnn(pciehcfg_t *pcfg, const int on);
+void pciehcfg_setconf_pf(pciehcfg_t *pcfg, const int on);
 void pciehcfg_setconf_vf(pciehcfg_t *pcfg, const int on);
+void pciehcfg_setconf_totalvfs(pciehcfg_t *pcfg, u_int16_t totalvfs);
+void pciehcfg_setconf_vfdeviceid(pciehcfg_t *pcfg, u_int16_t vfdeviceid);
 
 /******************************************************************/
 
@@ -66,6 +69,7 @@ void pciehcfg_sethdr_type1(pciehcfg_t *pcfg, pciehbars_t *pbars);
 void pciehcfg_addcap(pciehcfg_t *pcfg, const char *capname);
 void pciehcfg_addextcap(pciehcfg_t *pcfg, const char *capname);
 void pciehcfg_add_standard_caps(pciehcfg_t *pcfg);
+void pciehcfg_add_standard_pfcaps(pciehcfg_t *pcfg, pciehbars_t *vfbars);
 
 void pciehcfg_make_fn0(pciehcfg_t *pcfg);
 void pciehcfg_make_fnn(pciehcfg_t *pcfg, const int fnn);
