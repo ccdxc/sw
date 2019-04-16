@@ -100,11 +100,10 @@ var _ = Describe("firewall whitelist tests", func() {
 		})
 
 		It("Ping should work with specific permit rules", func() {
-			Skip("Disabling ICMP test till we figure out ICMP proto/port issue in netagent")
-
 			// add permit rules for workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			spc := ts.model.NewSGPolicy("test-policy").AddRulesForWorkloadPairs(workloadPairs, "icmp", "PERMIT")
+			spc.AddRulesForWorkloadPairs(workloadPairs.ReversePairs(), "icmp", "PERMIT")
 			Expect(spc.Commit()).Should(Succeed())
 
 			// verify policy was propagated correctly

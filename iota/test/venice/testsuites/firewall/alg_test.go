@@ -92,7 +92,6 @@ var _ = Describe("firewall ALG tests", func() {
 			}).Should(Succeed())
 		})
 		It("Should be able to verify ICMP ALG", func() {
-			Skip("Disabling ICMP ALG test till traffic issue is debugged")
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 
 			// verify ping fails

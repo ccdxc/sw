@@ -16,6 +16,10 @@ import (
 
 // ReloadHosts reloads a host
 func (act *ActionCtx) ReloadHosts(hc *HostCollection) error {
+	if hc.err != nil {
+		return hc.err
+	}
+
 	var hostNames string
 	reloadMsg := &iota.NodeMsg{
 		ApiResponse: &iota.IotaAPIResponse{},
@@ -45,6 +49,10 @@ func (act *ActionCtx) ReloadHosts(hc *HostCollection) error {
 
 // ReloadVeniceNodes reloads a venice node
 func (act *ActionCtx) ReloadVeniceNodes(vnc *VeniceNodeCollection) error {
+	if vnc.err != nil {
+		return vnc.err
+	}
+
 	reloadMsg := &iota.NodeMsg{
 		ApiResponse: &iota.IotaAPIResponse{},
 		Nodes:       []*iota.Node{},
@@ -72,6 +80,10 @@ func (act *ActionCtx) ReloadVeniceNodes(vnc *VeniceNodeCollection) error {
 
 // ReloadNaples reloads naples nodes
 func (act *ActionCtx) ReloadNaples(npc *NaplesCollection) error {
+	if npc.err != nil {
+		return npc.err
+	}
+
 	var hostNames string
 	reloadMsg := &iota.NodeMsg{
 		ApiResponse: &iota.IotaAPIResponse{},
@@ -101,6 +113,10 @@ func (act *ActionCtx) ReloadNaples(npc *NaplesCollection) error {
 
 // DisconnectNaples disconnects naples by bringing down its control interface
 func (act *ActionCtx) DisconnectNaples(npc *NaplesCollection) error {
+	if npc.err != nil {
+		return npc.err
+	}
+
 	trig := act.model.tb.NewTrigger()
 
 	// ifconfig down command
@@ -130,6 +146,10 @@ func (act *ActionCtx) DisconnectNaples(npc *NaplesCollection) error {
 
 // ConnectNaples connects naples back to venice by bringing up control interface
 func (act *ActionCtx) ConnectNaples(npc *NaplesCollection) error {
+	if npc.err != nil {
+		return npc.err
+	}
+
 	trig := act.model.tb.NewTrigger()
 
 	// ifconfig up command
@@ -159,6 +179,10 @@ func (act *ActionCtx) ConnectNaples(npc *NaplesCollection) error {
 
 // RunNaplesCommand runs the given naples command on the collection, returns []stdout
 func (act *ActionCtx) RunNaplesCommand(npc *NaplesCollection, cmd string) ([]string, error) {
+	if npc.err != nil {
+		return nil, npc.err
+	}
+
 	var stdout []string
 	trig := act.model.tb.NewTrigger()
 
@@ -187,6 +211,10 @@ func (act *ActionCtx) RunNaplesCommand(npc *NaplesCollection, cmd string) ([]str
 
 // PortFlap flaps the one of the port from each naples on the collection
 func (act *ActionCtx) PortFlap(npc *NaplesCollection) error {
+	if npc.err != nil {
+		return npc.err
+	}
+
 	for _, naples := range npc.nodes {
 		naplesName := naples.iotaNode.Name
 		cmd := "/nic/bin/halctl show port status"
@@ -295,6 +323,10 @@ func (act *ActionCtx) runCommandOnGivenNaples(np *Naples, cmd string) (string, e
 
 // VeniceNodeLoggedInCtx creates logged in context by connecting to a specified venice node
 func (act *ActionCtx) VeniceNodeLoggedInCtx(vnc *VeniceNodeCollection) error {
+	if vnc.err != nil {
+		return vnc.err
+	}
+
 	nodeURL := fmt.Sprintf("%s:%s", vnc.nodes[0].iotaNode.IpAddress, globals.APIGwRESTPort)
 	_, err := act.model.tb.VeniceNodeLoggedInCtx(nodeURL)
 	if err != nil {
@@ -306,6 +338,10 @@ func (act *ActionCtx) VeniceNodeLoggedInCtx(vnc *VeniceNodeCollection) error {
 
 // VeniceNodeGetCluster gets cluster obj by connecting to a specified venice node
 func (act *ActionCtx) VeniceNodeGetCluster(vnc *VeniceNodeCollection) error {
+	if vnc.err != nil {
+		return vnc.err
+	}
+
 	nodeURL := fmt.Sprintf("%s:%s", vnc.nodes[0].iotaNode.IpAddress, globals.APIGwRESTPort)
 	restcl, err := act.model.tb.VeniceNodeRestClient(nodeURL)
 	if err != nil {

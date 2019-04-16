@@ -48,7 +48,7 @@ func TestSetupTestbed(t *testing.T) {
 	model, err := NewSysModel(tb)
 	AssertOk(t, err, "Error creating sysmodel")
 
-	err = model.SetupDefaultConfig(false)
+	err = model.SetupDefaultConfig(false, false)
 	AssertOk(t, err, "Error setting up default config")
 }
 

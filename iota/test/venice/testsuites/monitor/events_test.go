@@ -15,6 +15,9 @@ var _ = Describe("events tests", func() {
 			return ts.model.Action().VerifyClusterStatus()
 		}).Should(Succeed())
 	})
+	AfterEach(func() {
+		ts.tb.AfterTestCommon()
+	})
 
 	Context("Basic events tests", func() {
 		It("nevtsproxy should be running all the naples nodes", func() {

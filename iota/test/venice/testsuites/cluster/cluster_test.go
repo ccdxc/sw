@@ -16,6 +16,9 @@ var _ = Describe("venice cluster tests", func() {
 			return ts.model.Action().VerifyClusterStatus()
 		}).Should(Succeed())
 	})
+	AfterEach(func() {
+		ts.tb.AfterTestCommon()
+	})
 
 	Context("Basic cluster tests", func() {
 		It("Should be able reload venice nodes and cluster should come back to normal state", func() {

@@ -414,7 +414,6 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 }
 
 func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
-	c.Skip("skipping this out till we debug consistent update issue")
 	// sg policy
 	sgp := security.SGPolicy{
 		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},

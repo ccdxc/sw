@@ -302,6 +302,11 @@ func (vnc *VeniceNodeCollection) Leader() *VeniceNodeCollection {
 				nodes: []*VeniceNode{node},
 				sm:    vnc.sm,
 			}
+		} else if cl.Status.Leader == node.iotaNode.IpAddress {
+			return &VeniceNodeCollection{
+				nodes: []*VeniceNode{node},
+				sm:    vnc.sm,
+			}
 		}
 	}
 

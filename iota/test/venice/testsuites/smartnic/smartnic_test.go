@@ -17,9 +17,12 @@ var _ = Describe("smartnic tests", func() {
 			return ts.model.Action().VerifyClusterStatus()
 		}).Should(Succeed())
 	})
+	AfterEach(func() {
+		ts.tb.AfterTestCommon()
+	})
 
 	Context("Basic smartnic tests", func() {
-		It("Should be able reload hosts and smartnic should come back up", func() {
+		It("Should be able to reload hosts and smartnic should come back up", func() {
 			if ts.tb.HasNaplesSim() {
 				Skip("Disable on Sim setups till we debug Naples sim issues with reload")
 			}
@@ -44,7 +47,7 @@ var _ = Describe("smartnic tests", func() {
 			}
 		})
 
-		It("Should be able disconnect and connect smartnics", func() {
+		It("Should be able to disconnect and connect smartnics", func() {
 			if ts.tb.HasNaplesHW() {
 				Skip("Skipping connect/disconnect tests on HW setups till inband mgmt is enabled")
 			}

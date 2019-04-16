@@ -16,11 +16,13 @@ var _ = Describe("smartnic tests with venice cluster triggers", func() {
 			return ts.model.Action().VerifyClusterStatus()
 		}).Should(Succeed())
 	})
+	AfterEach(func() {
+		ts.tb.AfterTestCommon()
+	})
 
 	Context("Venice node reload tests", func() {
-		It("Should be able reload venice nodes and cluster should come back to normal state", func() {
+		It("Should be able to reload venice nodes and cluster should come back to normal state", func() {
 			Skip("Skipping till we debug Venice node reload issues")
-
 			// reload each host
 			ts.model.ForEachVeniceNode(func(vnc *iotakit.VeniceNodeCollection) error {
 				Expect(ts.model.Action().ReloadVeniceNodes(vnc)).Should(Succeed())
@@ -39,7 +41,7 @@ var _ = Describe("smartnic tests with venice cluster triggers", func() {
 			})
 		})
 
-		It("Should be able reload venice leader node and cluster should come back to normal state", func() {
+		It("Should be able to reload venice leader node and cluster should come back to normal state", func() {
 			Skip("Skipping till we debug Venice node reload issues")
 
 			// reload the leader node
@@ -56,6 +58,28 @@ var _ = Describe("smartnic tests with venice cluster triggers", func() {
 					return ts.model.Action().PingPairs(ts.model.WorkloadPairs().WithinNetwork().Any(4))
 				}).Should(Succeed())
 
+			}
+		})
+		It("Should be able to reload all venice nodes and cluster should come back up", func() {
+			Skip("Skipping reload all node test till we debug the issues")
+
+			// run 3 iterations
+			for i := 0; i < 3; i++ {
+				// reload all venice nodes
+				ts.model.ForEachVeniceNode(func(vnc *iotakit.VeniceNodeCollection) error {
+					Expect(ts.model.Action().ReloadVeniceNodes(vnc)).Should(Succeed())
+					return nil
+				})
+
+				// wait for cluster to be back in good state
+				Eventually(func() error {
+					return ts.model.Action().VerifyClusterStatus()
+				}).Should(Succeed())
+
+				// verify ping between all workloads
+				Eventually(func() error {
+					return ts.model.Action().PingPairs(ts.model.WorkloadPairs().WithinNetwork().Any(4))
+				}).Should(Succeed())
 			}
 		})
 	})

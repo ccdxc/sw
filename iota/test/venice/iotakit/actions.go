@@ -155,6 +155,10 @@ func (act *ActionCtx) GetVeniceServices() (string, error) {
 
 // VerifyPolicyStatus verifies SG policy status
 func (act *ActionCtx) VerifyPolicyStatus(spc *SGPolicyCollection) error {
+	if spc.err != nil {
+		return spc.err
+	}
+
 	for _, pol := range spc.policies {
 		pstat, err := act.model.tb.GetSGPolicy(&pol.venicePolicy.ObjectMeta)
 		if err != nil {

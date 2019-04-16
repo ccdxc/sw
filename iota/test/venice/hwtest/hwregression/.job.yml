@@ -15,7 +15,7 @@ e2e-targets:
    area:
    sub-area:
    feature:
-   max-duration: 8h
+   max-duration: 10h
    build-dependencies:
      - build-iris-arm
      - build-venice-image
