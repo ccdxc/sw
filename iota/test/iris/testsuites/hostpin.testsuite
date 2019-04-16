@@ -21,6 +21,7 @@ setup:
         - step : config.netagent.hw_push_config
         - step : testcases.drivers.install_iperf
         - step : testcases.penctl.install
+        - step : testcases.naples_upgrade.install
 
 common:
     verifs:
@@ -47,6 +48,7 @@ testbundles:
         - mnic/mnic_hostpin_naples_only.testbundle
         - cruds/cruds.testbundle
         - penctl/penctl_hostpin.testbundle
+        - naples_upgrade/naples_upgrade_hostpin.testbundle
         - post_diag/post_diag.testbundle
         - tcp_proxy/tcp_proxy.testbundle
         - ipsec/ipsec.testbundle
