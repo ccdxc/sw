@@ -134,7 +134,7 @@ var _ = Describe("events test", func() {
 				return err
 			}
 
-			if ts.tu.NumNaplesHosts < int(res.TotalHits()) {
+			if ts.tu.NumNaplesHosts > int(res.TotalHits()) {
 				return fmt.Errorf("got only %d `NICAdmitted` events while expecting atleast %d events", int(res.TotalHits()), ts.tu.NumNaplesHosts)
 			}
 			return nil
