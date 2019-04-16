@@ -167,7 +167,7 @@ state:
 
         // Clear stats when QP moves to INIT state (Do not clear at QP destroy time for debuggingpurposes)
         DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_CLEAR_STATS_CB)
-        add         r5, r1, CB3_OFFSET_BYTES
+        add         r5, r1, CB4_OFFSET_BYTES
         DMA_PHV2MEM_SETUP(r6, c1, sqcb4, sqcb5, r5)
 
         b           tx_psn

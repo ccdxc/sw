@@ -74,7 +74,7 @@ state:
     tblwr       d.state, CAPRI_KEY_FIELD(IN_P, state)  //BD slot
 
     DMA_CMD_STATIC_BASE_GET(r6, AQ_RX_DMA_CMD_START_FLIT_ID, AQ_RX_DMA_CMD_CLEAR_STATS_CB)
-    add         r3, R_RQCB_ADDR, CB2_OFFSET_BYTES
+    add         r3, R_RQCB_ADDR, CB3_OFFSET_BYTES
 
     DMA_HBM_PHV2MEM_SETUP(r6, rqcb4, rqcb5, r3)
     

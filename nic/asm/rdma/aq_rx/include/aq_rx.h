@@ -94,7 +94,7 @@ struct aq_rx_phv_t {
         /* Create QP */
         struct rqcb1_t rqcb1;
         /* Modify QP */
-        struct rqcb4_t rqcb5;
+        struct rqcb5_t rqcb5;
     };
      
     /* flit 7 */
@@ -103,7 +103,7 @@ struct aq_rx_phv_t {
         /* Create QP */
         struct rqcb0_t rqcb0;
         /* Modify QP */
-        struct rqcb3_t rqcb4;
+        struct rqcb4_t rqcb4;
     };
 
     /* flit 6 */
