@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "gen/proto/events.pb.h"
 #include "gen/proto/sysmgr_events.pb.h"
 #include "nic/utils/events/recorder/recorder.hpp"
 
@@ -13,7 +14,7 @@ public:
     static std::shared_ptr<EventLogger> getInstance();
     void LogSystemEvent(sysmgr_events::Event event, std::string description);
     void LogServiceEvent(sysmgr_events::Event event, std::string description,
-       std::string name);
+        std::string name, events::Severity severity = events::INFO);
 };
 typedef std::shared_ptr<EventLogger> EventLoggerPtr;
 
