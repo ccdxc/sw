@@ -159,7 +159,7 @@ def RunAll(collector_w, verif_json, tc, feature):
     api.Logger.info("VERIF = {}".format(verif))
     count = 0
     if feature == 'flowmon':
-        time.sleep(30)
+        time.sleep(6)
     for i in range(0, len(verif)):
         protocol = verif[i]['protocol'] 
         src_w = GetSourceWorkload(verif[i], tc)

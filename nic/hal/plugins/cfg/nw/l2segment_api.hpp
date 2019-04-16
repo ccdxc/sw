@@ -12,6 +12,7 @@ l2seg_id_t l2seg_get_l2seg_id(l2seg_t *seg);
 types::encapType l2seg_get_tunnel_encap_type(l2seg_t *seg);
 uint32_t l2seg_get_tunnel_encap_val(l2seg_t *seg);
 types::encapType l2seg_get_wire_encap_type(l2seg_t *seg);
+encap_t l2seg_get_wire_encap(l2seg_t *seg);
 uint32_t l2seg_get_wire_encap_val(l2seg_t *seg);
 void *l2seg_get_pi_nwsec(l2seg_t *l2seg);
 l2seg_t *l2seg_get_infra_l2seg();

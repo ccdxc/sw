@@ -294,17 +294,19 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     }
     cfg.protocol = spec.protocol();
     cfg.dport = spec.dest_port();
-    auto encap = spec.encap();
-    if (encap.encap_type() == types::ENCAP_TYPE_DOT1Q) {
-        cfg.vlan = encap.encap_value();
-    } else {
-        HAL_TRACE_ERR("PI-Collector: Unsupport Encap {}", encap.encap_type());
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
     cfg.l2seg = l2seg_lookup_key_or_handle(spec.l2seg_key_handle());
     if (cfg.l2seg == NULL) {
         HAL_TRACE_ERR("PI-Collector: Could not retrieve L2 segment");
+        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
+        return HAL_RET_INVALID_ARG;
+    }
+    /* Encap comes from the l2seg */
+    auto encap = l2seg_get_wire_encap(cfg.l2seg);
+    if (encap.type == types::ENCAP_TYPE_DOT1Q) {
+        cfg.vlan = encap.val;
+        HAL_TRACE_DEBUG("PI-Collector: Encap vlan {}", cfg.vlan);
+    } else {
+        HAL_TRACE_ERR("PI-Collector: Unsupport Encap {}", encap.type);
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }

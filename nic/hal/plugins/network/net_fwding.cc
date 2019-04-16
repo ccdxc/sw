@@ -87,7 +87,7 @@ update_rewrite_info(fte::ctx_t&ctx)
     }
 
     // VLAN rewrite
-    if (ctx.dif()->if_type != intf::IF_TYPE_TUNNEL) {
+    if (ctx.dif() && ctx.dif()->if_type != intf::IF_TYPE_TUNNEL) {
         if_l2seg_get_encap(ctx.dif(), ctx.dl2seg(), &vlan_valid, &vlan_id);
         if (vlan_valid == 1) {
             HEADER_SET_FLD(flowupd.header_rewrite, ether, vlan_id, vlan_id);
@@ -151,9 +151,9 @@ static inline hal_ret_t
 update_fwding_info(fte::ctx_t&ctx)
 {
     hal_ret_t ret;
-    fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
     hal::if_t *dif = ctx.dif();
-	hal::if_t *pinned_if;
+    hal::if_t *pinned_if;
+    fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
 
     if (dif && dif->if_type == intf::IF_TYPE_ENIC) {
         hal::lif_t *lif = if_get_lif(dif);
@@ -174,6 +174,22 @@ update_fwding_info(fte::ctx_t&ctx)
                 flowupd.fwding.dif = dif;
                 flowupd.fwding.dl2seg = ctx.sl2seg();
              }
+        }
+    }
+    
+    /* Get dest-if based on the l2seg information for IPFIX pkts */
+    if (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
+        (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY)) {
+        if (dif == NULL) {
+            if (ctx.sl2seg() == NULL) {
+                HAL_TRACE_INFO("net_fwding: sl2seg is NULL!");
+            } else {
+                dif = find_if_by_handle(ctx.sl2seg()->pinned_uplink);
+                if (dif == NULL) {
+                    HAL_TRACE_INFO("net_fwding: HALIF lookup by l2seg"
+                                   "pinned uplink failed!");
+                }
+            }
         }
     }
 

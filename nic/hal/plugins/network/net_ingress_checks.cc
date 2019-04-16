@@ -66,6 +66,13 @@ update_src_if(fte::ctx_t&ctx)
         return HAL_RET_OK;
     }
 
+    // Ignore ingress-checks for IPFIX pkts
+    if (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
+        (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY)) {
+        HAL_TRACE_DEBUG("IPFIX pkt, do not enforce ingress-checks");
+        return HAL_RET_OK;
+    }
+
     // Drop Multicast packets 
     // for smart switch mode
     if (mcast_dmac) {
