@@ -2868,24 +2868,26 @@ system_fte_stats_get(SystemResponse *rsp)
 {
     FTEStats          *fte_global_stats = NULL;
     FTEStatsInfo      *fte_stats = NULL;
-    fte::fte_stats_t   per_fte_stats;
+    fte::fte_stats_t   per_fte_stats = {0};
 
     HAL_TRACE_DEBUG("Gathering fte stats ");
     fte_global_stats = rsp->mutable_stats()->mutable_fte_stats();
     for (uint32_t i = 0; i < hal::g_hal_cfg.num_data_cores; i++) {
         per_fte_stats = fte::fte_stats_get(i);
         fte_stats = fte_global_stats->add_fte_stats_info();
-
-        fte_stats->set_conn_per_second(per_fte_stats.fte_hbm_stats->cpsstats.cps);
-        fte_stats->set_max_conn_per_sec(per_fte_stats.fte_hbm_stats->cpsstats.cps_hwm);
-        fte_stats->set_flow_miss_pkts(per_fte_stats.fte_hbm_stats->qstats.flow_miss_pkts);
-        fte_stats->set_retransmit_pkts(per_fte_stats.fte_hbm_stats->qstats.flow_retransmit_pkts);
-        fte_stats->set_redir_pkts(per_fte_stats.fte_hbm_stats->qstats.redirect_pkts);
-        fte_stats->set_cflow_pkts(per_fte_stats.fte_hbm_stats->qstats.cflow_pkts);
-        fte_stats->set_tcp_close_pkts(per_fte_stats.fte_hbm_stats->qstats.tcp_close_pkts);
-        fte_stats->set_tls_proxy_pkts(per_fte_stats.fte_hbm_stats->qstats.tls_proxy_pkts);
-        fte_stats->set_softq_reqs(per_fte_stats.fte_hbm_stats->qstats.softq_req);
-        fte_stats->set_queued_tx_pkts(per_fte_stats.fte_hbm_stats->qstats.queued_tx_pkts);
+ 
+        if (per_fte_stats.fte_hbm_stats) {
+            fte_stats->set_conn_per_second(per_fte_stats.fte_hbm_stats->cpsstats.cps);
+            fte_stats->set_max_conn_per_sec(per_fte_stats.fte_hbm_stats->cpsstats.cps_hwm);
+            fte_stats->set_flow_miss_pkts(per_fte_stats.fte_hbm_stats->qstats.flow_miss_pkts);
+            fte_stats->set_retransmit_pkts(per_fte_stats.fte_hbm_stats->qstats.flow_retransmit_pkts);
+            fte_stats->set_redir_pkts(per_fte_stats.fte_hbm_stats->qstats.redirect_pkts);
+            fte_stats->set_cflow_pkts(per_fte_stats.fte_hbm_stats->qstats.cflow_pkts);
+            fte_stats->set_tcp_close_pkts(per_fte_stats.fte_hbm_stats->qstats.tcp_close_pkts);
+            fte_stats->set_tls_proxy_pkts(per_fte_stats.fte_hbm_stats->qstats.tls_proxy_pkts);
+            fte_stats->set_softq_reqs(per_fte_stats.fte_hbm_stats->qstats.softq_req);
+            fte_stats->set_queued_tx_pkts(per_fte_stats.fte_hbm_stats->qstats.queued_tx_pkts);
+        }
 
         for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
             if (std::strcmp(HAL_RET_ENTRIES_str((hal_ret_t)idx), "unknown")) {
