@@ -49,8 +49,9 @@ func convertRules(veniceRules []security.SGRule, sgPolicyKey string) (agentRules
 						AppConfigs:     convertAppConfig(v.Apps, v.ProtoPorts),
 					},
 					AppName: app,
-					ID:      generateRuleHash(v, sgPolicyKey),
 				}
+				a.ID = generateRuleHash(a, sgPolicyKey)
+
 				agentRules = append(agentRules, a)
 			}
 		} else {
@@ -65,8 +66,8 @@ func convertRules(veniceRules []security.SGRule, sgPolicyKey string) (agentRules
 					Addresses:      v.ToIPAddresses,
 					AppConfigs:     convertAppConfig(v.Apps, v.ProtoPorts),
 				},
-				ID: generateRuleHash(v, sgPolicyKey),
 			}
+			a.ID = generateRuleHash(a, sgPolicyKey)
 			agentRules = append(agentRules, a)
 		}
 	}
@@ -91,9 +92,13 @@ func convertAppConfig(apps []string, protoPorts []security.ProtoPort) (agentAppC
 }
 
 // generateRuleHash generates the hash of the rule
-func generateRuleHash(r security.SGRule, key string) uint64 {
+func generateRuleHash(r netproto.PolicyRule, key string) uint64 {
 	h := fnv.New64()
-	rule, _ := r.Marshal()
+	rule, err := r.Marshal()
+	if err != nil {
+		log.Errorf("Error marshalling rule: %#v. Err: %v", r, err)
+	}
+
 	rule = append(rule, []byte(key)...)
 	h.Write(rule)
 	return h.Sum64()

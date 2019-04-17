@@ -547,3 +547,106 @@ func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
 	}
 }
+
+func (it *integTestSuite) TestNpmSgPolicyMultiApp(c *C) {
+	// app
+	ftpApp := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "ftpApp",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "21",
+				},
+			},
+			Timeout: "5m",
+			ALG: &security.ALG{
+				Type: "FTP",
+				Ftp: &security.Ftp{
+					AllowMismatchIPAddress: true,
+				},
+			},
+		},
+	}
+	_, err := it.apisrvClient.SecurityV1().App().Create(context.Background(), &ftpApp)
+	AssertOk(c, err, "error creating app")
+
+	// ICMP app
+	icmpApp := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "icmpApp",
+			Namespace: "default",
+			Tenant:    "default",
+		},
+		Spec: security.AppSpec{
+			Timeout: "5m",
+			ALG: &security.ALG{
+				Type: "ICMP",
+				Icmp: &security.Icmp{
+					Type: "1",
+					Code: "2",
+				},
+			},
+		},
+	}
+	_, err = it.apisrvClient.SecurityV1().App().Create(context.Background(), &icmpApp)
+	AssertOk(c, err, "error creating app")
+
+	// create a policy using this alg
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "test-sgpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []security.SGRule{
+				{
+					FromIPAddresses: []string{"2.101.0.0/22"},
+					ToIPAddresses:   []string{"2.101.0.0/24"},
+					Apps:            []string{"ftpApp", "icmpApp"},
+					Action:          "PERMIT",
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	_, err = it.apisrvClient.SecurityV1().SGPolicy().Create(context.Background(), &sgp)
+	AssertOk(c, err, "error creating sg policy")
+
+	// verify agent state has the policy and has seperate rules for each app and their rule-ids dont match
+	for _, ag := range it.agents {
+		AssertEventually(c, func() (bool, interface{}) {
+			gsgp, gerr := ag.nagent.NetworkAgent.FindSGPolicy(sgp.ObjectMeta)
+			if gerr != nil {
+				return false, nil
+			}
+			if len(gsgp.Spec.Rules) != 2 {
+				return false, gsgp.Spec.Rules
+			}
+			if gsgp.Spec.Rules[0].ID == gsgp.Spec.Rules[1].ID {
+				return false, gsgp.Spec.Rules
+			}
+			return true, nil
+		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListSGPolicy()), "10ms", it.pollTimeout())
+	}
+
+	// finally, delete sg policy
+	_, err = it.apisrvClient.SecurityV1().SGPolicy().Delete(context.Background(), &sgp.ObjectMeta)
+	AssertOk(c, err, "Error deleting sgpolicy ")
+
+	// delete apps
+	_, err = it.apisrvClient.SecurityV1().App().Delete(context.Background(), &icmpApp.ObjectMeta)
+	AssertOk(c, err, "error deleting app")
+	_, err = it.apisrvClient.SecurityV1().App().Delete(context.Background(), &ftpApp.ObjectMeta)
+	AssertOk(c, err, "error deleting app")
+}

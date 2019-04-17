@@ -557,3 +557,95 @@ func TestAlgPolicy(t *testing.T) {
 	_, err = stateMgr.FindApp("testTenant", "ftpApp")
 	Assert(t, (err != nil), "App still found after deleting")
 }
+
+func TestSGPolicyMultiApp(t *testing.T) {
+	// create network state manager
+	stateMgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	// app
+	ftpApp := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "ftpApp",
+			Namespace: "default",
+			Tenant:    "testTenant",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{
+				{
+					Protocol: "tcp",
+					Ports:    "21",
+				},
+			},
+			Timeout: "5m",
+			ALG: &security.ALG{
+				Type: "FTP",
+				Ftp: &security.Ftp{
+					AllowMismatchIPAddress: true,
+				},
+			},
+		},
+	}
+
+	// create the app
+	err = stateMgr.ctrler.App().Create(&ftpApp)
+	AssertOk(t, err, "Error creating the app")
+
+	// ICMP app
+	icmpApp := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "icmpApp",
+			Namespace: "default",
+			Tenant:    "testTenant",
+		},
+		Spec: security.AppSpec{
+			Timeout: "5m",
+			ALG: &security.ALG{
+				Type: "ICMP",
+				Icmp: &security.Icmp{
+					Type: "1",
+					Code: "2",
+				},
+			},
+		},
+	}
+	err = stateMgr.ctrler.App().Create(&icmpApp)
+	AssertOk(t, err, "Error creating the app")
+
+	// create a policy using this alg
+	sgp := security.SGPolicy{
+		TypeMeta: api.TypeMeta{Kind: "SGPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "testTenant",
+			Namespace: "default",
+			Name:      "test-sgpolicy",
+		},
+		Spec: security.SGPolicySpec{
+			AttachTenant: true,
+			Rules: []security.SGRule{
+				{
+					FromIPAddresses: []string{"2.101.0.0/22"},
+					ToIPAddresses:   []string{"2.101.0.0/24"},
+					Apps:            []string{"ftpApp", "icmpApp"},
+					Action:          "PERMIT",
+				},
+			},
+		},
+	}
+
+	// create sg policy
+	err = stateMgr.ctrler.SGPolicy().Create(&sgp)
+	AssertOk(t, err, "Error creating the sg policy")
+
+	// find sgp in mbus
+	nsgp, err := stateMgr.mbus.FindSGPolicy(&sgp.ObjectMeta)
+	AssertOk(t, err, "Error finding endpoint in mbus")
+	Assert(t, len(nsgp.Spec.Rules) == 2, "Invalid number of rules in mbus")
+	Assert(t, (nsgp.Spec.Rules[0].ID != nsgp.Spec.Rules[1].ID), "Invalid rule ids in mbus")
+
+}
