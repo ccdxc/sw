@@ -7,15 +7,14 @@ meta:
 testcases:
     -   name    : UplinkIntf_TX_RING_SIZE
         testcase: testcases.drivers.features
-        enable  : False
+        enable  : True
         iterators :
             type               : nested
-            tx_ring_size       : [ 1024 ]
+            tx_ring_size       : [ 64, 128, 256, 1024, 2048, 4096, 8192, 16384, 32768, 65536 ]
             mtu                : [ '1500']
             pktsize            : [ 1024]
             proto              : [ 'udp', 'tcp']
             ipproto            : [ 'v4']
-            vlantag            : ['on', 'off']
         args    :
             test-type         : host
             iperf_threads      : 1
@@ -23,15 +22,14 @@ testcases:
 
     -   name    : UplinkIntf_RX_RING_SIZE
         testcase: testcases.drivers.features
-        enable  : False
+        enable  : True
         iterators :
             type               : nested
-            rx_ring_size       : [ 1024 ]
+            rx_ring_size       : [ 64, 128, 256, 1024, 2048, 4096, 8192, 16384, 32768, 65536 ]
             mtu                : [ '1500']
             pktsize            : [ 1024 ]
             proto              : [ 'udp', 'tcp']
             ipproto            : [ 'v4']
-            vlantag            : ['on', 'off']
         args    :
             test-type    : host
             iperf_threads     :  1
@@ -39,7 +37,7 @@ testcases:
 
     -   name    : UplinkIntf_TX_QUEUE_SIZE
         testcase: testcases.drivers.features
-        disable : True
+        enable  : False
         iterators :
             type               : nested
             tx_queue_size      : [ 4 ]
@@ -55,7 +53,7 @@ testcases:
 
     -   name    : UplinkIntf_RX_QUEUE_SIZE
         testcase: testcases.drivers.features
-        disable : True
+        enable  : False
         iterators :
             type               : nested
             rx_queue_size      : [ 4]

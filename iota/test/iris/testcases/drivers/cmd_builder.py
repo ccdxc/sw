@@ -10,29 +10,7 @@ def ethtool_feature_cmd(node, intf,feature, on_off):
     return " ".join(["ethtool", "-K", intf, feature,  on_off])
 
 def ethtool_ring_size_cmd(node, intf,ring_type, size):
-    args = { }
-    if ring_type == "tx":
-        args['ntxq_descs'] = size
-    else:
-        args['nrxq_descs'] = size
-    if api.IsNaplesNode(node):
-        cmds = naples.RemoveIonicDriverCommands(os_type = naples.OS_TYPE_LINUX)
-        cmds.extend(naples.InsertIonicDriverCommands(os_type = naples.OS_TYPE_LINUX, **args))
-        return cmds
     return " ".join(["ethtool", "-G", intf, ring_type,  str(size)])
-
-def ethtool_queue_size_cmd(node, intf,queue_type, size):
-    #return "ls"
-    args = { }
-    if queue_type == "tx":
-        args['ntxqs'] = size
-    else:
-        args['nrxqs'] = size
-    if api.IsNaplesNode(node):
-        cmds = naples.RemoveIonicDriverCommands(os_type = naples.OS_TYPE_LINUX)
-        cmds.extend(naples.InsertIonicDriverCommands(os_type = naples.OS_TYPE_LINUX, **args))
-        return cmds
-    return " ".join(["ethtool", "-L",  intf, queue_type,  str(size)])
 
 def ip_link_pkt_filter_cmd(node, intf,pkt_filter, on_off):
     return " ".join(["ip", "link", "set", "dev", intf,pkt_filter, on_off])
@@ -55,11 +33,8 @@ def ethtool_rx_ring_size(node, intf,size):
 def ethtool_rx_sg_size(node, intf,size):
     return "echo rx SGL not suported in Linux"
 
-def ethtool_tx_queue_size(node, intf,size):
-    return ethtool_queue_size_cmd(node, intf,"tx", size)
-
-def ethtool_rx_queue_size(node, intf,size):
-    return ethtool_queue_size_cmd(node, intf,"rx", size)
+def ethtool_queue_size(node, intf,size):
+    return " ".join(["ethtool", "-L",  intf, "combined", str(size)])
 
 def ethtool_tx_checksum(node, intf,op):
     return ethtool_checksum_cmd(node, intf,"tx", op)

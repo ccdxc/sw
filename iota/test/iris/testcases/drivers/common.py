@@ -11,22 +11,22 @@ import iota.test.iris.config.netagent.hw_push_config as hw_config
 feature_cmd_map = {
     "tx_ring_size"       :
         {
-            "linux"    : { "cmd" : cmd_builder.ethtool_tx_ring_size,     "reloadCmd" : True },
+            "linux"    : { "cmd" : cmd_builder.ethtool_tx_ring_size },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_tx_ring_size, "reloadCmd" : True },
         },
     "rx_ring_size"       :
         {
-            "linux"    : { "cmd" : cmd_builder.ethtool_rx_ring_size,     "reloadCmd" : True },
+            "linux"    : { "cmd" : cmd_builder.ethtool_rx_ring_size },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rx_ring_size, "reloadCmd" : True },
         },
     "tx_queue_size"      :
         {
-            "linux"    : { "cmd" : cmd_builder.ethtool_tx_queue_size,     "reloadCmd" : True },
+            "linux"    : { "cmd" : cmd_builder.ethtool_queue_size },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_tx_queue_size, "reloadCmd" : True },
         },
     "rx_queue_size"      :
         {
-            "linux"    : { "cmd" : cmd_builder.ethtool_rx_queue_size,     "reloadCmd" : True },
+            "linux"    : { "cmd" : cmd_builder.ethtool_queue_size },
             "freebsd"  : { "cmd" : cmd_builder.bsd_ethtool_rx_queue_size, "reloadCmd" : True },
         },
     "rx_sg_size"      :
@@ -145,8 +145,11 @@ def setup_features(tc):
         if cmd.exit_code != 0:
             api.Logger.error("Error running cmd : %s " % cmd.command)
             api.Logger.error("Std Output : %s " % cmd.stdout)
-            api.Logger.error("Std Err :  %s "% cmd.stdout)
+            api.Logger.error("Std Err :  %s "% cmd.stderr)
             if api.IsNaplesNode(cmd.node_name):
+                if "parameters changed" in cmd.stderr:
+                    api.Logger.info("Ignoring 'no change' error")
+                    return api.types.status.SUCCESS
                 return api.types.status.FAILURE
             else:
                 api.Logger.info("Ignoring cmd error its non-naples node : %s" % cmd.command)
