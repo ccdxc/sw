@@ -17,25 +17,23 @@ update_flow_for_rdma (fte::ctx_t& ctx)
     //hal_ret_t ret = HAL_RET_OK;
     flow_key_t flow_key = ctx.get_key();
 
-    HAL_TRACE_DEBUG("net-rdma: flow {}", flow_key);
-
     if ((flow_key.flow_type != hal::FLOW_TYPE_V4) &&
         (flow_key.flow_type != hal::FLOW_TYPE_V6)) {
-        HAL_TRACE_DEBUG("net-rdma: flow type {} is not v4/v6. ignoring", flow_key.flow_type);
+        HAL_TRACE_VERBOSE("flow type {} is not v4/v6. ignoring", flow_key.flow_type);
         return HAL_RET_OK;
     }
-        
+
     if (flow_key.proto != types::IPPROTO_UDP) {
-        HAL_TRACE_DEBUG("net-rdma: flow proto is not UDP. ignoring");
+        HAL_TRACE_VERBOSE("flow proto is not UDP. ignoring");
         return HAL_RET_OK;
     }
 
     if (flow_key.dport != UDP_PORT_ROCE_V2) {
-        HAL_TRACE_DEBUG("net-rdma: dport {} is not that of ROCEV2. ignoring", flow_key.sport);
+        HAL_TRACE_VERBOSE("dport {} is not that of ROCEV2. ignoring", flow_key.sport);
         return HAL_RET_OK;
     }
 
-#if 0 
+#if 0
     //P4 datapath cannot determine dst_lif->rdma_enabled before preparing the key for flow lookup
     //Hence, the sport masking is happening just based on udp_dport == UDP_PORT_ROCE_V2
     //Ideally, we wan't to have this check, but not practical and hence disabling.
@@ -56,7 +54,7 @@ update_flow_for_rdma (fte::ctx_t& ctx)
     }
 
     if (rdma_enabled == FALSE) {
-        HAL_TRACE_DEBUG("net-rdma: RDMA is not enabled on ENIC. ignoring");
+        HAL_TRACE_DEBUG("RDMA is not enabled on ENIC. ignoring");
         return HAL_RET_OK;
     }
 #endif

@@ -15,6 +15,10 @@ update_flow_from_nat_spec(fte::ctx_t& ctx, const session::FlowInfo& flow_info)
     ipv6_addr_t addr;
 
     auto nat_type = flow_info.nat_type();
+    if (likely(nat_type == session::NAT_TYPE_NONE)) {
+        return HAL_RET_OK;
+    }
+
     if (nat_type == session::NAT_TYPE_SNAT || nat_type == session::NAT_TYPE_TWICE_NAT) {
         if (flow_info.has_nat_sip()) {
             if (flow_info.nat_sip().ip_af() == types::IP_AF_INET) {
@@ -122,12 +126,11 @@ rewrite_vmac(fte::ctx_t& ctx, hal::ep_t *odep)
 fte::pipeline_action_t
 lb_exec(fte::ctx_t& ctx)
 {
-    hal_ret_t ret;
-
+    hal_ret_t ret = HAL_RET_OK;
     hal::ep_t *dep = ctx.dep();
 
-    if (ctx.protobuf_request()) {
-        if (ctx.role() == hal::FLOW_ROLE_INITIATOR){
+    if (unlikely(ctx.protobuf_request())) {
+        if (ctx.role() == hal::FLOW_ROLE_INITIATOR) {
             ret = update_flow_from_nat_spec(ctx,
                      ctx.sess_spec()->initiator_flow().flow_data().flow_info());
         } else {
@@ -138,11 +141,10 @@ lb_exec(fte::ctx_t& ctx)
             ctx.set_feature_status(ret);
             return fte::PIPELINE_END;
         }
+        ret = rewrite_vmac(ctx, dep);
     } else {
         // TOTO(goli) pick a pip from l4lb service
     }
-
-    ret = rewrite_vmac(ctx, dep);
 
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);

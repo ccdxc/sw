@@ -139,7 +139,7 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
     } else {
         HAL_TRACE_DEBUG("sg count {}", dep->sgs.sg_id_cnt);
     }
-        
+
 
     if (((!sep) || (!dep)) || (sep && dep && sep->sgs.sg_id_cnt == 0 && dep->sgs.sg_id_cnt == 0)) {
         HAL_TRACE_DEBUG("Classify the packet");
@@ -176,11 +176,11 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
         nwsec_rule = (hal::nwsec_rule_t *) RULE_MATCH_USER_DATA(user_ref, nwsec_rule_t, ref_count);
 
         rule_ctr_t *rule_ctr = get_rule_ctr((acl_rule_t *)rule);
-        rule_ctr->total_hits++; 
+        rule_ctr->total_hits++;
         switch (acl_key.proto) {
         case types::IPPROTO_ICMP:
         case types::IPPROTO_ICMPV6:
-            rule_ctr->icmp_hits++; 
+            rule_ctr->icmp_hits++;
             break;
         case types::IPPROTO_ESP:
             rule_ctr->esp_hits++;
@@ -195,7 +195,7 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
             HAL_TRACE_DEBUG("Stats: Any proto:{}", ctx.key().proto);
             rule_ctr->other_hits++;
         }
-        
+
         if (!dllist_empty(&nwsec_rule->appid_list_head)) {
             net_sfw_match_app_redir(ctx, nwsec_rule, match_rslt);
         } else {
@@ -306,7 +306,7 @@ net_sfw_generate_reject_pkt(ctx_t& ctx, bool status)
         hal::incr_global_session_tcp_rst_stats(fte::fte_id());
     } else if (ctx.key().proto == IP_PROTO_UDP) {
         hal::incr_global_session_icmp_error_stats(fte::fte_id());
-    } 
+    }
 }
 
 pipeline_action_t
@@ -319,8 +319,6 @@ sfw_exec(ctx_t& ctx)
     // security policy action
     flow_update_t flowupd = {type: FLOWUPD_ACTION};
     match_rslt.idle_timeout = HAL_MAX_INACTIVTY_TIMEOUT;
-    HAL_TRACE_DEBUG("In sfw_exec....");
-
 
     if (ctx.drop_flow()) {
         flowupd.action = session::FLOW_ACTION_DROP;
@@ -328,16 +326,16 @@ sfw_exec(ctx_t& ctx)
         goto install_flow;
     }
 
-    // only ipv4 is handled in data path. 
-    if (!ctx.protobuf_request()  && 
+    // only ipv4 is handled in data path.
+    if (!ctx.protobuf_request()  &&
          (ctx.key().flow_type == hal::FLOW_TYPE_V6 || ctx.key().flow_type == hal::FLOW_TYPE_L2)) {
-        HAL_TRACE_DEBUG("flow type is non-ipv4:{}", ctx.key().flow_type);
+        HAL_TRACE_VERBOSE("flow type is non-ipv4:{}", ctx.key().flow_type);
         sfw_info->sfw_done = true;
         goto install_flow;
-    
+
     }
 
-    if ((!ctx.protobuf_request() && ctx.existing_session()) || 
+    if ((!ctx.protobuf_request() && ctx.existing_session()) ||
         (ctx.role() == hal::FLOW_ROLE_INITIATOR &&
          (sfw_info->skip_sfw || sfw_info->sfw_done))) {
         HAL_TRACE_DEBUG("Existing session.. skipping lookups");
@@ -346,7 +344,6 @@ sfw_exec(ctx_t& ctx)
 
     // ALG Wild card entry table lookup.
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR && !ctx.existing_session()) {
-        HAL_TRACE_DEBUG("Looking up expected flow...");
         expected_flow_t *expected_flow = lookup_expected_flow(ctx.key());
         if (expected_flow) {
             HAL_TRACE_DEBUG("Found expected alg flow - invoking handler...");
@@ -399,7 +396,7 @@ sfw_exec(ctx_t& ctx)
         ctx.flow_log()->alg = match_rslt.alg;
         ctx.flow_log()->rule_id = match_rslt.rule_id;
     } else {
-        sfw_info->sfw_done = true; 
+        sfw_info->sfw_done = true;
         //Responder Role: Not checking explicitly
         if (ctx.drop_flow()) {
             flowupd.action = session::FLOW_ACTION_DROP;
