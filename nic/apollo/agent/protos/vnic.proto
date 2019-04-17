@@ -27,8 +27,8 @@ message VnicSpec {
   uint32      SubnetId             = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // id of the VPC this vnic belongs to
   uint32      VPCId                = 3 [(gogoproto.moretags) = "meta:mandatory"];
-  // vlan to be used while sending packets to this vnic
-  types.Encap HostEncap            = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  // vnic encap information to be used while sending packets to this vnic
+  types.Encap VnicEncap            = 4 [(gogoproto.moretags) = "meta:mandatory"];
   // overlay MAC of this VNIC
   uint64      MACAddress           = 5 [(gogoproto.moretags) = "meta:mandatory"];
   // resource pool to be used to enforce resource limits

@@ -64,8 +64,8 @@ static inline void
 vnic_stepper_seed_init (int seed_base, vnic_stepper_seed_t *seed)
 {
     seed->id = seed_base;
-    seed->host_encap.type = PDS_ENCAP_TYPE_DOT1Q;
-    seed->host_encap.val.vlan_tag = seed_base;
+    seed->vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
+    seed->vnic_encap.val.vlan_tag = seed_base;
     seed->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
     seed->fabric_encap.val.mpls_tag = seed_base;
     seed->mac_u64 = 0xa010101000000000;
@@ -76,12 +76,12 @@ vnic_stepper_seed_init (int seed_base, pds_encap_type_t vlan_type,
                         vnic_stepper_seed_t *seed)
 {
     seed->id = seed_base;
-    seed->host_encap.type = vlan_type;
+    seed->vnic_encap.type = vlan_type;
     if (vlan_type == PDS_ENCAP_TYPE_DOT1Q)
-        seed->host_encap.val.vlan_tag = seed_base;
+        seed->vnic_encap.val.vlan_tag = seed_base;
     else if (vlan_type == PDS_ENCAP_TYPE_QINQ) {
-        seed->host_encap.val.qinq_tag.c_tag = seed_base;
-        seed->host_encap.val.qinq_tag.s_tag = seed_base + 4096;
+        seed->vnic_encap.val.qinq_tag.c_tag = seed_base;
+        seed->vnic_encap.val.qinq_tag.s_tag = seed_base + 4096;
     }
     seed->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
     seed->fabric_encap.val.mpls_tag = seed_base;

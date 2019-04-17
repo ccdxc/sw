@@ -80,9 +80,9 @@ vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t    *spec = &obj_ctxt->api_params->vnic_spec;
 
     PDS_TRACE_DEBUG("Programming vnic %u, vcn %u, subnet %u, mac %s, "
-                    "host encap %s, fabric encap %s", key_.id, spec->vcn.id,
+                    "vnic encap %s, fabric encap %s", key_.id, spec->vcn.id,
                     spec->subnet.id, macaddr2str(spec->mac_addr),
-                    pdsencap2str(spec->host_encap),
+                    pdsencap2str(spec->vnic_encap),
                     pdsencap2str(spec->fabric_encap));
     return impl_->program_hw(this, obj_ctxt);
 }

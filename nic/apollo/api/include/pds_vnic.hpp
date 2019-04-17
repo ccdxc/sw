@@ -31,7 +31,7 @@ typedef struct pds_vnic_spec_s {
     pds_vnic_key_t key;               ///< VNIC's Key
     pds_vcn_key_t vcn;                ///< VCN of this vnic
     pds_subnet_key_t subnet;          ///< Subnet of this vnic
-    pds_encap_t host_encap;           ///< host encap for this vnic
+    pds_encap_t vnic_encap;           ///< vnic encap for this vnic
     pds_encap_t fabric_encap;         ///< fabric encap for this vnic
     mac_addr_t mac_addr;              ///< VNIC's overlay mac mac address
     pds_rsc_pool_id_t rsc_pool_id;    ///< Resource pool

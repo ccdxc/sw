@@ -276,7 +276,7 @@ populate_vnic_request (VnicRequest *req, pds_vnic_spec_t *vnic)
     spec->set_vpcid(vnic->vcn.id);
     spec->set_subnetid(vnic->subnet.id);
     spec->set_vnicid(vnic->key.id);
-    pds_encap_to_proto_encap(spec->mutable_hostencap(), &vnic->host_encap);
+    pds_encap_to_proto_encap(spec->mutable_vnicencap(), &vnic->vnic_encap);
     spec->set_macaddress(MAC_TO_UINT64(vnic->mac_addr));
     spec->set_resourcepoolid(vnic->rsc_pool_id);
     spec->set_sourceguardenable(vnic->src_dst_check);

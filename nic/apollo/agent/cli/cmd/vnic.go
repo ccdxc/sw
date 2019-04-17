@@ -118,7 +118,7 @@ func printVnic(vnic *pds.Vnic) {
     }
     fmt.Printf("%-7d%-6d%-9d%-6d%-20s%-10d%-10t%-14s%-15d%-15d\n",
         spec.GetVnicId(), spec.GetVPCId(), spec.GetSubnetId(),
-        spec.GetHostEncap().GetValue(), utils.MactoStr(spec.GetMACAddress()),
+        spec.GetVnicEncap().GetValue(), utils.MactoStr(spec.GetMACAddress()),
         spec.GetResourcePoolId(), spec.GetSourceGuardEnable(), encapStr,
         spec.GetTxMirrorPolicyId(), spec.GetRxMirrorPolicyId())
 }

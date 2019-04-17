@@ -245,8 +245,8 @@ vnic_stepper_seed_init (int seed_base, uint64_t seed_mac,
                         vnic_stepper_seed_t *seed)
 {
     seed->id = seed_base;
-    seed->host_encap.type = PDS_ENCAP_TYPE_DOT1Q;
-    seed->host_encap.val.vlan_tag = seed_base;
+    seed->vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
+    seed->vnic_encap.val.vlan_tag = seed_base;
     seed->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
     seed->fabric_encap.val.mpls_tag = seed_base;
     seed->mac_u64 = seed_mac;

@@ -48,8 +48,8 @@ class VnicObject(base.ConfigObjectBase):
         spec.VnicId = self.VnicId
         spec.SubnetId = self.SUBNET.SubnetId
         spec.VPCId = self.SUBNET.VPC.VPCId
-        spec.HostEncap.type = types_pb2.ENCAP_TYPE_DOT1Q
-        spec.HostEncap.value.VlanId = self.VlanId
+        spec.VnicEncap.type = types_pb2.ENCAP_TYPE_DOT1Q
+        spec.VnicEncap.value.VlanId = self.VlanId
         spec.MACAddress = self.MACAddr.getnum()
         spec.ResourcePoolId = 0 # TODO, Need to allocate and use
         spec.SourceGuardEnable = self.SourceGuard

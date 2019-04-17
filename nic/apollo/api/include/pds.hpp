@@ -67,7 +67,7 @@ typedef struct pds_encap_s {
 
 /// \@}
 
-static inline char*
+static inline char *
 pdsencap2str (pds_encap_t encap)
 {
     static thread_local char buf_pool[4][32];

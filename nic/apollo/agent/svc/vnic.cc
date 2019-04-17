@@ -16,7 +16,7 @@ pds_agent_vnic_api_spec_fill (const pds::VnicSpec &proto_spec,
     api_spec->vcn.id = proto_spec.vpcid();
     api_spec->subnet.id = proto_spec.subnetid();
     api_spec->key.id = proto_spec.vnicid();
-    api_spec->host_encap = proto_encap_to_pds_encap(proto_spec.hostencap());
+    api_spec->vnic_encap = proto_encap_to_pds_encap(proto_spec.vnicencap());
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     MAC_UINT64_TO_ADDR(api_spec->mac_addr, proto_spec.macaddress());
     api_spec->rsc_pool_id = proto_spec.resourcepoolid();
@@ -82,8 +82,8 @@ vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
     proto_spec->set_vnicid(api_spec->key.id);
     proto_spec->set_vpcid(api_spec->vcn.id);
     proto_spec->set_subnetid(api_spec->subnet.id);
-    pds_encap_to_proto_encap(proto_spec->mutable_hostencap(),
-                             &api_spec->host_encap);
+    pds_encap_to_proto_encap(proto_spec->mutable_vnicencap(),
+                             &api_spec->vnic_encap);
     proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac_addr));
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
                              &api_spec->fabric_encap);
