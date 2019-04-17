@@ -173,40 +173,19 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
   }
 
   timeSeriesQuery(): MetricsPollingQuery {
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.timeSeriesQuery(this.telemetryKind);
-    const pollOptions: MetricsPollingOptions = {
-      timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
-      mergeFunction: MetricsUtility.timeSeriesQueryMerge
-    };
-    return { query: query, pollingOptions: pollOptions };
+    return MetricsUtility.timeSeriesQueryPolling(this.telemetryKind);
   }
 
   avgQuery(): MetricsPollingQuery {
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind);
-    const pollOptions: MetricsPollingOptions = {
-      timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
-    };
-
-    return { query: query, pollingOptions: pollOptions };
+    return MetricsUtility.pastFiveMinAverageQueryPolling(this.telemetryKind);
   }
 
   avgDayQuery(): MetricsPollingQuery {
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind);
-    const pollOptions: MetricsPollingOptions = {
-      timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
-    };
-
-    return { query: query, pollingOptions: pollOptions };
+    return MetricsUtility.pastDayAverageQueryPolling(this.telemetryKind);
   }
 
   maxNodeQuery(): MetricsPollingQuery {
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.maxObjQuery(this.telemetryKind);
-    const pollOptions: MetricsPollingOptions = {
-      timeUpdater: MetricsUtility.maxObjQueryUpdate,
-      mergeFunction: MetricsUtility.maxObjQueryMerge
-    };
-
-    return { query: query, pollingOptions: pollOptions };
+    return MetricsUtility.maxObjQueryPolling(this.telemetryKind);
   }
 
   private tryGenCharts() {

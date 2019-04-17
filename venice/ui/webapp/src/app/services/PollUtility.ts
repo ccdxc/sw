@@ -12,6 +12,7 @@ import { Utility } from '@app/common/Utility';
 export interface PollingInstance {
   pollingTimerSource: Observable<number>;
   pollingTimerSubscription: Subscription;
+  pollingHandlerSubscription: Subscription;
   handler: BehaviorSubject<any>;
   body: any;
   // Used to determine whether the results from the query should
@@ -42,7 +43,8 @@ export class PollUtility {
     if (this.pollingHandlerMap[key] == null) {
       return false;
     }
-    return this.pollingHandlerMap[key].handler.observers.length !== 0;
+    // This utility should also be subscribed, so if no one is watching we will have 1.
+    return this.pollingHandlerMap[key].handler.observers.length !== 1;
   }
 
   /**
@@ -78,10 +80,19 @@ export class PollUtility {
       const pollingTimerSubscription =
         pollingTimerSource.subscribe(this.genOnPollTimer(key, useRealData));
 
+      const handler = new BehaviorSubject<any>(defaultValue);
+      const sub = handler.subscribe(() => {}, (error) => {
+        // We push it to the end of the event queue 
+        // so that other subscribers get the error event
+        // before we destroy the handler
+        setTimeout(() => {this.terminatePolling(key)}, 0);
+      });
+
       this.pollingHandlerMap[key] = {
         pollingTimerSource: pollingTimerSource,
         pollingTimerSubscription: pollingTimerSubscription,
-        handler: new BehaviorSubject<any>(defaultValue),
+        pollingHandlerSubscription: sub,
+        handler:  handler,
         body: body,
         isFirstPoll: true
       };
@@ -108,7 +119,7 @@ export class PollUtility {
   /**
    * terminates the polling timer
    */
-  protected terminatePolling(key, terminateHandler = true) {
+  public terminatePolling(key, terminateHandler = true) {
     const poll = this.pollingHandlerMap[key];
     if (poll != null && poll.pollingTimerSubscription != null) {
       poll.pollingTimerSubscription.unsubscribe();
@@ -117,8 +128,10 @@ export class PollUtility {
       poll.body = null;
       poll.isFirstPoll = true;
       if (terminateHandler) {
+        poll.pollingHandlerSubscription.unsubscribe();
         poll.handler.complete();
         poll.handler = null;
+        delete this.pollingHandlerMap[key]
       }
     }
   }

@@ -1,6 +1,6 @@
-import { TestBed, inject } from '@angular/core/testing';
+import { TestBed, inject, ComponentFixture, fakeAsync, tick } from '@angular/core/testing';
 
-import { MetricsqueryService } from './metricsquery.service';
+import { MetricsqueryService, TelemetryPollingMetricQueries } from './metricsquery.service';
 import { ControllerService } from './controller.service';
 import { LogService } from './logging/log.service';
 import { LogPublishersService } from './logging/log-publishers.service';
@@ -9,10 +9,50 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfirmationService } from 'primeng/primeng';
 import { MessageService } from './message.service';
+import { Component } from '@angular/core';
+import { MetricsUtility } from '@app/common/MetricsUtility';
+import { throwError, BehaviorSubject, Subscription } from 'rxjs';
+
+@Component({
+  template: ''
+})
+class DummyComponent { 
+  metricStatus:string =  'init';
+  metricSub: Subscription;
+  metricsqueryService;
+
+  constructor(metricsqueryService: MetricsqueryService) {
+    this.metricsqueryService = metricsqueryService;
+  }
+
+  startQuery() {
+    const queryList: TelemetryPollingMetricQueries = {
+      queries: [ MetricsUtility.timeSeriesQueryPolling('SmartNIC')],
+      tenant: 'default'
+    };
+    this.metricSub = this.metricsqueryService.pollMetrics('test', queryList).subscribe(
+      (data) => {
+        this.metricStatus = 'ready'
+      },
+      (err) => {
+        this.metricStatus = 'failed'
+      }
+    )
+  }
+
+  stopQuery() {
+    this.metricSub.unsubscribe();
+  }
+}
 
 describe('MetricsqueryService', () => {
+  let component: DummyComponent;
+  let fixture: ComponentFixture<DummyComponent>;
   beforeEach(() => {
     TestBed.configureTestingModule({
+      declarations: [
+        DummyComponent
+      ],
       providers: [
         MetricsqueryService,
         ControllerService,
@@ -26,10 +66,34 @@ describe('MetricsqueryService', () => {
         HttpClientTestingModule,
         RouterTestingModule
       ]
-    });
+    }).compileComponents();
   });
 
-  it('should be created', inject([MetricsqueryService], (service: MetricsqueryService) => {
+  it('should be created', inject([MetricsqueryService], fakeAsync(inject([MetricsqueryService], (service: MetricsqueryService) => {
     expect(service).toBeTruthy();
-  }));
+    fixture = TestBed.createComponent(DummyComponent);
+    component = fixture.componentInstance;
+    const spy = spyOn(service, 'PostMetrics').and.returnValue(new BehaviorSubject({
+      results: []
+    }));
+    component.startQuery();
+    expect(component.metricStatus = 'ready')
+
+    spy.and.returnValue(throwError({statusCode: 401}));
+    tick()
+    expect(component.metricStatus = 'failed')
+    spy.and.returnValue(new BehaviorSubject({
+      results: []
+    }));
+    tick(200)
+
+    component.stopQuery();
+    expect(component.metricStatus).toBe('failed')
+    component.startQuery();
+    expect(component.metricStatus).toBe('ready')
+
+    component.stopQuery();
+    tick();
+
+  }))));
 });

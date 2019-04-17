@@ -5,6 +5,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
 import { IClusterSmartNIC } from '@sdk/v1/models/generated/cluster';
+import { MetricsPollingOptions, MetricsPollingQuery } from '@app/services/metricsquery.service';
 
 /**
  * serverData is in the following form:
@@ -130,6 +131,14 @@ export class MetricsUtility {
     return new Telemetry_queryMetricsQuerySpec(timeSeriesQuery);
   }
 
+  public static timeSeriesQueryPolling(kind: string, selector: ILabelsSelector = null): MetricsPollingQuery {
+    const pollOptions: MetricsPollingOptions = {
+      timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
+      mergeFunction: MetricsUtility.timeSeriesQueryMerge
+    };
+    return { query: MetricsUtility.timeSeriesQuery(kind, selector), pollingOptions: pollOptions };
+  }
+
   // Since we are averaging over 5 min buckets, we always query from the last 5 min window increment
   public static timeSeriesQueryUpdate(queryBody: ITelemetry_queryMetricsQuerySpec) {
     queryBody['start-time'] = queryBody['end-time'];
@@ -182,6 +191,13 @@ export class MetricsUtility {
     return new Telemetry_queryMetricsQuerySpec(avgQuery);
   }
 
+  public static pastFiveMinAverageQueryPolling(kind: string, selector: ILabelsSelector = null): MetricsPollingQuery {
+    const pollOptions: MetricsPollingOptions = {
+      timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
+    };
+    return { query: MetricsUtility.pastFiveMinAverageQuery(kind, selector), pollingOptions: pollOptions };
+  }
+
   public static pastFiveMinQueryUpdate(queryBody: ITelemetry_queryMetricsQuerySpec) {
     queryBody['start-time'] = 'now() - 5m' as any;
     queryBody['end-time'] = 'now()' as any;
@@ -231,6 +247,15 @@ export class MetricsUtility {
     return new Telemetry_queryMetricsQuerySpec(avgQuery);
   }
 
+  public static pastDayAverageQueryPolling(kind: string, selector: ILabelsSelector = null): MetricsPollingQuery {
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery(kind, selector);
+    const pollOptions: MetricsPollingOptions = {
+      timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
+    };
+
+    return { query: query, pollingOptions: pollOptions };
+  }
+
   public static pastDayAverageQueryUpdate(queryBody: ITelemetry_queryMetricsQuerySpec) {
     queryBody['start-time'] = 'now() - 24h' as any;
     queryBody['end-time'] = 'now()' as any;
@@ -254,6 +279,16 @@ export class MetricsUtility {
       'end-time': Utility.roundDownTime(5).toISOString() as any
     };
     return new Telemetry_queryMetricsQuerySpec(maxNodeQuery);
+  }
+
+  public static maxObjQueryPolling(kind: string, selector: ILabelsSelector = null): MetricsPollingQuery {
+    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.maxObjQuery(kind, selector);
+    const pollOptions: MetricsPollingOptions = {
+      timeUpdater: MetricsUtility.maxObjQueryUpdate,
+      mergeFunction: MetricsUtility.maxObjQueryMerge
+    };
+
+    return { query: query, pollingOptions: pollOptions };
   }
 
   public static maxObjQueryUpdate(queryBody: ITelemetry_queryMetricsQuerySpec) {

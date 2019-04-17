@@ -231,14 +231,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     if (this.selectedObj != null) {
       name = MetricsUtility.generateNaplesReporterId(this.selectedObj);
     }
-    const query: Telemetry_queryMetricsQuerySpec =
-      MetricsUtility.timeSeriesQuery(this.telemetryKind, MetricsUtility.createNameSelector(name));
-    const pollOptions: MetricsPollingOptions = {
-      timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
-      mergeFunction: MetricsUtility.timeSeriesQueryMerge
-    };
-
-    return { query: query, pollingOptions: pollOptions };
+    return MetricsUtility.timeSeriesQueryPolling(this.telemetryKind, MetricsUtility.createNameSelector(name));
   }
 
   avgQuery(): MetricsPollingQuery {
@@ -246,12 +239,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     if (this.selectedObj != null) {
       name = MetricsUtility.generateNaplesReporterId(this.selectedObj);
     }
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind, MetricsUtility.createNameSelector(name));
-    const pollOptions: MetricsPollingOptions = {
-      timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
-    };
-
-    return { query: query, pollingOptions: pollOptions };
+    return MetricsUtility.pastFiveMinAverageQueryPolling(this.telemetryKind, MetricsUtility.createNameSelector(name));
   }
 
   avgDayQuery(): MetricsPollingQuery {
@@ -259,12 +247,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     if (this.selectedObj != null) {
       name = MetricsUtility.generateNaplesReporterId(this.selectedObj);
     }
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind, MetricsUtility.createNameSelector(name));
-    const pollOptions: MetricsPollingOptions = {
-      timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
-    };
-
-    return { query: query, pollingOptions: pollOptions };
+    return MetricsUtility.pastDayAverageQueryPolling(this.telemetryKind, MetricsUtility.createNameSelector(name));
   }
 
   clusterAvgQuery(): MetricsPollingQuery {

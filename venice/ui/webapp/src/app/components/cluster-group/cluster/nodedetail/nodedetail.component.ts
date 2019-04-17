@@ -231,32 +231,15 @@ export class NodedetailComponent extends BaseComponent implements OnInit, OnDest
   }
 
   timeSeriesQuery(): MetricsPollingQuery {
-    const query: Telemetry_queryMetricsQuerySpec =
-      MetricsUtility.timeSeriesQuery(this.telemetryKind, MetricsUtility.createNameSelector(this.selectedId));
-    const pollOptions: MetricsPollingOptions = {
-      timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
-      mergeFunction: MetricsUtility.timeSeriesQueryMerge
-    };
-
-    return { query: query, pollingOptions: pollOptions };
+    return MetricsUtility.timeSeriesQueryPolling(this.telemetryKind, MetricsUtility.createNameSelector(this.selectedId));
   }
 
   avgQuery(): MetricsPollingQuery {
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastFiveMinAverageQuery(this.telemetryKind, MetricsUtility.createNameSelector(this.selectedId));
-    const pollOptions: MetricsPollingOptions = {
-      timeUpdater: MetricsUtility.pastFiveMinQueryUpdate,
-    };
-
-    return { query: query, pollingOptions: pollOptions };
+    return MetricsUtility.pastFiveMinAverageQueryPolling(this.telemetryKind, MetricsUtility.createNameSelector(this.selectedId));
   }
 
   avgDayQuery(): MetricsPollingQuery {
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.pastDayAverageQuery(this.telemetryKind, MetricsUtility.createNameSelector(this.selectedId));
-    const pollOptions: MetricsPollingOptions = {
-      timeUpdater: MetricsUtility.pastDayAverageQueryUpdate,
-    };
-
-    return { query: query, pollingOptions: pollOptions };
+    return MetricsUtility.pastDayAverageQueryPolling(this.telemetryKind, MetricsUtility.createNameSelector(this.selectedId));
   }
 
   clusterAvgQuery(): MetricsPollingQuery {
