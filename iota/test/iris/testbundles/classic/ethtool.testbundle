@@ -1,0 +1,19 @@
+meta:
+    name    : ethtool
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 25
+
+testcases:
+    -   name    : info 
+        testcase: testcases.drivers.ethtool.info
+        enable  : True
+        args    :
+            type         : remote_only
+
+    -   name    : transciever 
+        testcase: testcases.drivers.ethtool.transciever
+        enable  : True
+        args    :
+            type         : remote_only
+
