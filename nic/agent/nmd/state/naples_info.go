@@ -29,11 +29,11 @@ func getRunningFirmwareName() (string, error) {
 		// The platformAgent allows for easy mocking of this API
 		// Tracker Jira : PS-1172
 
-		return "mainfwa\n", nil
+		return "mainfwa", nil
 	}
 
 	log.Infof("Got running software version : %v", string(out))
-	return string(out), err
+	return strings.TrimSuffix(string(out), "\n"), err
 }
 
 func getStartupFirmwareName() (string, error) {
@@ -45,11 +45,11 @@ func getStartupFirmwareName() (string, error) {
 		// The platformAgent allows for easy mocking of this API
 		// Tracker Jira : PS-1172
 
-		return "mainfwa\n", nil
+		return "mainfwa", nil
 	}
 
 	log.Infof("Got startup software version : %v", string(out))
-	return string(out), err
+	return strings.TrimSuffix(string(out), "\n"), err
 }
 
 func getInstalledSoftware() (*nmd.NaplesInstalledSoftware, error) {
@@ -123,9 +123,9 @@ func getRunningFirwmwareVersion(naplesVersion *nmd.NaplesRunningSoftware) (strin
 	}
 
 	switch currentFw {
-	case "mainfwa\n":
+	case "mainfwa":
 		return naplesVersion.MainFwA.SystemImage.SoftwareVersion, nil
-	case "mainfwb\n":
+	case "mainfwb":
 		return naplesVersion.MainFwB.SystemImage.SoftwareVersion, nil
 	default:
 		return "", errors.New("unknown firmware version")
@@ -139,9 +139,9 @@ func getStartupFirmwareVersion(naplesVersion *nmd.NaplesInstalledSoftware) (stri
 	}
 
 	switch startupFw {
-	case "mainfwa\n":
+	case "mainfwa":
 		return naplesVersion.MainFwA.SystemImage.SoftwareVersion, nil
-	case "mainfwb\n":
+	case "mainfwb":
 		return naplesVersion.MainFwB.SystemImage.SoftwareVersion, nil
 	default:
 		return "", errors.New("unknown firmware version")
