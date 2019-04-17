@@ -87,8 +87,36 @@ rpkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C6') / \
         Dot1Q(vlan=101) / \
         IP(dst='11.11.2.2', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload
+mpkt = Ether(dst='00:0E:0E:0E:0E:0E', src='00:E1:E2:E3:E4:E5') / \
+        Dot1Q(vlan=0xEEE) / \
+        IP(dst='200.1.1.2', src='200.1.1.1', id=0, ttl=64) / \
+        GRE() / \
+        ERSPAN(vlan=101, sessionid=6, d=1, gra=3) / \
+        rpkt
 dump_pkt(spkt)
 dump_pkt(rpkt)
+dump_pkt(mpkt)
+
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+spkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        Dot1Q(vlan=505) / \
+        IP(dst='10.10.1.2', src='11.11.1.1') / \
+        TCP(sport=0x1234, dport=0x5678) / payload
+rpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0xC9A8, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
+        Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        IP(dst='10.10.1.2', src='11.11.1.1') / \
+        TCP(sport=0x1234, dport=0x5678) / payload
+mpkt = Ether(dst='00:0E:0E:0E:0E:0E', src='00:E1:E2:E3:E4:E5') / \
+        Dot1Q(vlan=0xEEE) / \
+        IP(dst='200.1.1.2', src='200.1.1.1', id=0, ttl=64) / \
+        GRE() / \
+        ERSPAN(vlan=505, sessionid=6, d=0, gra=3) / \
+        spkt
+dump_pkt(spkt)
+dump_pkt(rpkt)
+dump_pkt(mpkt)
 
 ###############################################################################
 # end golden/main.cc

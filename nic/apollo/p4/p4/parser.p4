@@ -6,6 +6,9 @@ header cap_phv_intr_p4_t capri_p4_intrinsic;
 header cap_phv_intr_rxdma_t capri_rxdma_intrinsic;
 header cap_phv_intr_txdma_t capri_txdma_intrinsic;
 
+/******************************************************************************
+ * Headers
+ *****************************************************************************/
 @pragma synthetic_header
 @pragma pa_field_union ingress p4i_apollo_i2e.dst                   key_metadata.dst
 @pragma pa_field_union ingress p4i_apollo_i2e.local_vnic_tag        vnic_metadata.local_vnic_tag
@@ -14,6 +17,8 @@ header apollo_i2e_metadata_t p4e_apollo_i2e;
 
 header service_header_t service_header;
 header egress_service_header_t egress_service_header;
+@pragma hdr_len parser_metadata.mirror_blob_len
+header mirror_blob_t mirror_blob;
 
 // Inter-pipeline headers
 header predicate_header_t predicate_header;
@@ -70,7 +75,7 @@ header vxlan_t vxlan_0;
 header gre_t gre_0;
 header mpls_t mpls_src_0;
 header mpls_t mpls_dst_0;
-header erspan_header_t3_t erspan_0;
+header erspan_header_t3_t erspan;
 
 // layer 1
 header ethernet_t ethernet_1;
@@ -106,6 +111,17 @@ header_type parser_ohi_t {
 }
 @pragma parser_write_only
 metadata parser_ohi_t ohi;
+
+/******************************************************************************
+ * Parser metadata
+ *****************************************************************************/
+header_type parser_metadata_t {
+    fields {
+        mirror_blob_len : 8;
+    }
+}
+@pragma pa_parser_local
+metadata parser_metadata_t parser_metadata;
 
 /******************************************************************************
  * Parser start
@@ -408,14 +424,22 @@ parser egress_start {
 
 @pragma xgress egress
 parser parse_egress_to_egress {
+    return select(capri_intrinsic.tm_instance_type) {
+        TM_INSTANCE_TYPE_SPAN : parse_egress_span_copy;
+        default : parse_egress_service_header;
+    }
+}
+
+@pragma xgress egress
+parser parse_egress_service_header {
     extract(egress_service_header);
-    return parse_egress_common;
+    return parse_egress;
 }
 
 @pragma xgress egress
 parser parse_egress_common {
     return select(capri_intrinsic.tm_instance_type) {
-        TM_INSTANCE_TYPE_SPAN : parse_span_copy;
+        TM_INSTANCE_TYPE_SPAN : parse_ingress_span_copy;
         default : parse_egress;
     }
 }
@@ -450,10 +474,44 @@ parser parse_egress_predicate_header_tx {
 
 @pragma xgress egress
 @pragma allow_set_meta control_metadata.span_copy
-parser parse_span_copy {
+parser parse_egress_span_copy {
     set_metadata(control_metadata.span_copy, 1);
-    // TODO: Should this go into parse_egress ?
-    return parse_i2e_metadata;
+    return parse_ethernet_span_copy;
+}
+
+@pragma xgress egress
+@pragma allow_set_meta control_metadata.span_copy
+parser parse_ingress_span_copy {
+    set_metadata(control_metadata.span_copy, 1);
+    set_metadata(parser_metadata.mirror_blob_len, APOLLO_INGRESS_MIRROR_BLOB_SZ);
+    return parse_span_copy_blob;
+}
+
+@pragma xgress egress
+parser parse_span_copy_blob {
+    set_metadata(parser_metadata.mirror_blob_len,
+                 parser_metadata.mirror_blob_len + 0);
+    extract(mirror_blob);
+    return parse_ethernet_span_copy;
+}
+
+@pragma xgress egress
+@pragma capture_payload_offset
+@pragma allow_set_meta offset_metadata.l2_1
+parser parse_ethernet_span_copy {
+    extract(ethernet_1);
+    set_metadata(offset_metadata.l2_1, current + 0);
+    return select(latest.etherType) {
+        ETHERTYPE_VLAN : parse_ctag_span_copy;
+        default : ingress;
+    }
+}
+
+@pragma xgress egress
+@pragma dont_capture_payload_offset
+parser parse_ctag_span_copy {
+    extract(ctag_1);
+    return ingress;
 }
 
 @pragma xgress egress
@@ -507,7 +565,7 @@ parser deparse_egress {
     extract(udp_0);
     extract(vxlan_0);
     extract(gre_0);
-    extract(erspan_0);
+    extract(erspan);
     extract(mpls_src_0);
     extract(mpls_dst_0);
 

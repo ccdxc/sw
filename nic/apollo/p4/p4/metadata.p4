@@ -49,6 +49,7 @@ header_type control_metadata_t {
         p4plus_app_id                       : 8;
         vlan_strip                          : 1;
         local_switching                     : 1;
+        mirror_session                      : 8;
     }
 }
 
@@ -65,14 +66,14 @@ header_type rewrite_metadata_t {
 
 header_type policer_metadata_t {
     fields {
-        resource_group                  : 10;
-        traffic_class                   : 3;
-        agg_policer_index               : 10;
-        agg_policer_color               : 1;
-        agg_packet_len                  : 16;
-        classified_policer_index        : 10;
-        classified_policer_color        : 1;
-        classified_packet_len           : 16;
+        resource_group              : 10;
+        traffic_class               : 3;
+        agg_policer_index           : 10;
+        agg_policer_color           : 1;
+        agg_packet_len              : 16;
+        classified_policer_index    : 10;
+        classified_policer_color    : 1;
+        classified_packet_len       : 16;
     }
 }
 

@@ -16,6 +16,8 @@ local_vnic_info_tx:
     phvwr.c1        p.control_metadata_p4i_drop_reason[P4I_DROP_SRC_MAC_ZERO], 1
     phvwr           p.vnic_metadata_local_vnic_tag, DATA.local_vnic_tag
     phvwr           p.vnic_metadata_vcn_id, DATA.vcn_id
+    seq             c1, DATA.mirror_en, TRUE
+    phvwr.c1        p.control_metadata_mirror_session, DATA.mirror_session
 
     /* c2 will be set if using epoch1, else will be reset */
     seq             c1, k.service_header_valid, TRUE

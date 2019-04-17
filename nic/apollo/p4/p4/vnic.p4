@@ -72,12 +72,18 @@ action local_vnic_info_tx(local_vnic_tag, vcn_id,
                           resource_group1, overlay_mac1,
                           epoch2_valid, epoch2, skip_src_dst_check2,
                           lpm_v4addr2, lpm_v6addr2, sacl_v4addr2, sacl_v6addr2,
-                          resource_group2, overlay_mac2) {
+                          resource_group2, overlay_mac2,
+                          mirror_en, mirror_session) {
     // validate source mac
     if (ethernet_1.srcAddr == 0) {
         modify_field(control_metadata.p4i_drop_reason,
                      1 << P4I_DROP_SRC_MAC_ZERO);
         drop_packet();
+    }
+
+    modify_field(scratch_metadata.flag, mirror_en);
+    if (scratch_metadata.flag == TRUE) {
+        modify_field(control_metadata.mirror_session, mirror_session);
     }
 
     local_vnic_info_common(TX_FROM_HOST, ethernet_1.srcAddr, local_vnic_tag,
@@ -164,11 +170,16 @@ control ingress_vnic_info {
     }
 }
 
-action egress_local_vnic_info(vr_mac, overlay_mac, overlay_vlan_id,
-                              subnet_id, src_slot_id) {
+action egress_local_vnic_info(vr_mac, overlay_mac, overlay_vlan_id, subnet_id,
+                              src_slot_id, mirror_en, mirror_session) {
     if (control_metadata.direction == TX_FROM_HOST) {
         modify_field(rewrite_metadata.src_slot_id, src_slot_id);
     } else {
+        modify_field(scratch_metadata.flag, mirror_en);
+        if (scratch_metadata.flag == TRUE) {
+            modify_field(control_metadata.mirror_session, mirror_session);
+        }
+
         // add header towards host
         if (ethernet_2.valid == 1) {
             copy_header(ethernet_0, ethernet_2);

@@ -13,6 +13,9 @@ egress_local_vnic_info:
     bcf         [c1], egress_local_vnic_info_tx
     nop
 egress_local_vnic_info_rx:
+    seq         c1, d.egress_local_vnic_info_d.mirror_en, TRUE
+    phvwr.c1    p.control_metadata_mirror_session, \
+                    d.egress_local_vnic_info_d.mirror_session
     .assert(offsetof(p, ethernet_2_valid) - offsetof(p, ethernet_1_valid) == 12)
     phvwr       p.{ethernet_2_valid...ethernet_1_valid}, 0
     seq         c1, k.ethernet_2_valid, 1

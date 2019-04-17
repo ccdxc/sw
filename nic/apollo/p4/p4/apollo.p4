@@ -58,11 +58,14 @@ control ingress {
 /* Egress pipeline                                                           */
 /*****************************************************************************/
 control egress {
-    remote_vnic_mapping_tx();
-    egress_vnic_info();
-    mirror();
-    rewrite();
-    egress_resource_pool();
-    egress_stats();
-    egress_to_uplink();
+    if (control_metadata.span_copy == TRUE) {
+        mirror();
+    } else {
+        remote_vnic_mapping_tx();
+        egress_vnic_info();
+        rewrite();
+        egress_resource_pool();
+        egress_stats();
+        egress_to_uplink();
+    }
 }

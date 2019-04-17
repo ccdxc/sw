@@ -13,6 +13,9 @@ egress_to_uplink:
     phvwr       p.txdma_to_p4e_header_valid, FALSE
     bbeq        k.control_metadata_local_switching, TRUE, egress_to_ingress
     phvwr       p.p4e_apollo_i2e_valid, FALSE
+egress_to_uplink2:
+    phvwr       p.capri_intrinsic_tm_span_session, \
+                    k.control_metadata_mirror_session
     seq         c1, k.control_metadata_direction, RX_FROM_SWITCH
     phvwr.c1    p.capri_intrinsic_tm_oport, TM_PORT_UPLINK_0
     phvwr.e     p.predicate_header_valid, FALSE

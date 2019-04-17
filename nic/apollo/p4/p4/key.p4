@@ -107,22 +107,8 @@ action service_header_info() {
 
 action init_config() {
     service_header_info();
-    if (capri_intrinsic.tm_iport == TM_PORT_DMA) {
-        subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
-                 (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_TXDMA_INTRINSIC_HDR_SZ +
-                  APOLLO_PREDICATE_HDR_SZ));
-    } else {
-        if (capri_intrinsic.tm_iport == TM_PORT_EGRESS) {
-            subtract(capri_p4_intrinsic.packet_len,
-                     capri_p4_intrinsic.frame_size,
-                     (CAPRI_GLOBAL_INTRINSIC_HDR_SZ +
-                      CAPRI_P4_INTRINSIC_HDR_SZ + APOLLO_PREDICATE_HDR_SZ));
-        } else {
-            subtract(capri_p4_intrinsic.packet_len,
-                     capri_p4_intrinsic.frame_size,
-                     CAPRI_GLOBAL_INTRINSIC_HDR_SZ);
-        }
-    }
+    subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
+             offset_metadata.l2_1);
     modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
     if (key_metadata.ktype == KEY_TYPE_IPV6) {
         modify_field(p4_to_rxdma_header.sacl_base_addr,

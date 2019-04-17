@@ -24,13 +24,7 @@ service_header_done:
     phvwr.c1        p.p4_to_rxdma_header_sacl_base_addr, \
                         k.control_metadata_sacl_v6addr
     sub             r1, k.capri_p4_intrinsic_frame_size, \
-                        CAPRI_GLOBAL_INTRINSIC_HDR_SZ
-    seq             c1, k.capri_intrinsic_tm_iport, TM_PORT_DMA
-    sub.c1          r1, r1, (CAPRI_TXDMA_INTRINSIC_HDR_SZ + \
-                             APOLLO_PREDICATE_HDR_SZ)
-    seq             c1, k.capri_intrinsic_tm_iport, TM_PORT_EGRESS
-    sub.c1          r1, r1, (CAPRI_P4_INTRINSIC_HDR_SZ + \
-                             APOLLO_PREDICATE_HDR_SZ)
+                        k.offset_metadata_l2_1
     phvwr.e         p.capri_p4_intrinsic_packet_len, r1
     phvwr           p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
 

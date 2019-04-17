@@ -8,6 +8,8 @@ action ingress_to_rxdma() {
         add_header(service_header);
         modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
     } else {
+        modify_field(capri_intrinsic.tm_span_session,
+                     control_metadata.mirror_session);
         modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
         modify_field(capri_intrinsic.lif, APOLLO_SERVICE_LIF);
         add_header(capri_p4_intrinsic);
@@ -185,6 +187,8 @@ action egress_to_uplink() {
         add_header(predicate_header);
         bit_xor(predicate_header.direction, control_metadata.direction, 1);
     } else {
+        modify_field(capri_intrinsic.tm_span_session,
+                     control_metadata.mirror_session);
         if (control_metadata.direction == RX_FROM_SWITCH) {
             modify_field(capri_intrinsic.tm_oport, TM_PORT_UPLINK_0);
         } else {
