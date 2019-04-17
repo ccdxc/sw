@@ -205,3 +205,15 @@ testcases:
             type: host
             iperf_threads     :  1
             #capture_pcap : true
+
+    -   name    : MACVLAN_OFFLOAD
+        testcase: testcases.macvlan.macvlan_offload
+        enable  : True
+        ignore  : True
+        iterators :
+            type               : nested
+            proto              : [ 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            type: host
+            #capture_pcap : true

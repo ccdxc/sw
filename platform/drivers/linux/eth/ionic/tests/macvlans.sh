@@ -129,7 +129,7 @@ ip link del mv1
 
 # can we enable the offload?
 ethtool -K $DEV l2-fwd-offload on
-ethtool -k $DEV | grep -q "l2-fwd-offload: on"
+ethtool -k $DEV | grep "l2-fwd-offload: on"
 if [ $? -ne 0 ] ; then
 	echo "Error: macvlan offload can't be enabled"
 	EXIT_VAL=`expr $EXIT_VAL + 1`
@@ -138,6 +138,7 @@ fi
 
 
 # check that a new macvlan is offloaded
+echo "Testing single offloaded macvlan..."
 ip link add mv1 link $DEV type macvlan
 ifconfig mv1 $DEV_IP
 num_queues=`get_queue_count`
@@ -157,7 +158,7 @@ ip link del mv1
 
 # can we create max offloads?
 
-# parse the log line to find numner of lifs
+# parse the log line to find number of lifs
 #  [  201.466167] ionic 0000:b5:00.0: nxqs=1 nslaves=126 nqueues=127
 pci=`ethtool -i $DEV | grep bus-info | cut "-d " -f2`
 line=`dmesg | grep "$pci: nxqs=" | tail -1 | cut -d: -f4`
