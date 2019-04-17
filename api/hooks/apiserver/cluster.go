@@ -367,6 +367,12 @@ func (cl *clusterHooks) setAuthBootstrapFlag(ctx context.Context, kv kvstore.Int
 			return oldObj, errors.New("invalid input type")
 		}
 		clusterObj.Status.AuthBootstrapped = true
+		genID, err := strconv.ParseInt(clusterObj.GenerationID, 10, 64)
+		if err != nil {
+			cl.logger.ErrorLog("method", "setAuthBootstrapFlag", "msg", "error parsing generation ID", "error", err)
+			return clusterObj, err
+		}
+		clusterObj.GenerationID = fmt.Sprintf("%d", genID+1)
 		return clusterObj, nil
 	}); err != nil {
 		cl.logger.Errorf("Error setting bootstrap flag: %v", err)

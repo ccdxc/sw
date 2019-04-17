@@ -653,7 +653,8 @@ func TestSetAuthBootstrapFlag(t *testing.T) {
 			existing: &cluster.Cluster{
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
-					Name: "testCluster",
+					Name:         "testCluster",
+					GenerationID: "1",
 				},
 				Status: cluster.ClusterStatus{
 					AuthBootstrapped: false,
@@ -663,6 +664,7 @@ func TestSetAuthBootstrapFlag(t *testing.T) {
 				TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 				ObjectMeta: api.ObjectMeta{
 					Name:            "testCluster",
+					GenerationID:    "2",
 					ResourceVersion: "2",
 				},
 				Status: cluster.ClusterStatus{

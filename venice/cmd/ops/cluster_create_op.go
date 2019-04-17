@@ -61,6 +61,7 @@ func (o *clusterCreateOp) populateClusterDefaults() {
 	o.cluster.APIVersion = "v1"
 	o.cluster.UUID = uuid.NewV4().String()
 	o.cluster.SelfLink = o.cluster.MakeKey("cluster")
+	o.cluster.GenerationID = "1"
 	o.cluster.Status.BuildVersion = env.GitVersion
 	o.cluster.Status.VCSCommit = env.GitCommit
 	o.cluster.Status.BuildDate = env.BuildDate
