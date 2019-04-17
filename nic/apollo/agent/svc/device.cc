@@ -60,7 +60,7 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
                             const pds::DeviceRequest *proto_req,
                             pds::DeviceResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_device_spec_t *api_spec;
+    pds_device_spec_t *api_spec = NULL;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -84,7 +84,7 @@ DeviceSvcImpl::DeviceDelete(ServerContext *context,
                             const types::Empty *empty,
                             pds::DeviceDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_device_spec_t *api_spec;
+    pds_device_spec_t *api_spec = NULL;
 
     api_spec = core::agent_state::state()->device();
     if (api_spec == NULL) {
@@ -104,7 +104,7 @@ DeviceSvcImpl::DeviceGet(ServerContext *context,
                          const types::Empty *empty,
                          pds::DeviceGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_device_spec_t *api_spec;
+    pds_device_spec_t *api_spec = NULL;
     pds_device_info_t info;
 
     api_spec = core::agent_state::state()->device();

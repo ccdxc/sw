@@ -4,7 +4,7 @@ feature:
     sub         : ipv4
     package     : test.rfc
     module      : rfc
-    enable      : True
+    enable      : False
     ignore      : True
 
 modules:

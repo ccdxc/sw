@@ -1,0 +1,147 @@
+# Feature RFC Modules List
+feature:
+    id          : rfc
+    sub         : ipv4
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : False
+
+modules:
+    #- module:
+    #    name    : IPV4_EMTPY_POLICY
+    #    spec    : rfc.testspec
+    #    iterate :
+    #        - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=POLICY
+
+    - module:
+        name    : IPV4_UDP_QTAG
+        spec    : local2igw.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW
+
+    - module:
+        name    : IPV6_UDP_QTAG
+        spec    : local2igw.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW
+
+    - module:
+        name    : IPV4_UDP_ENCAP
+        spec    : igw2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW
+
+    - module:
+        name    : IPV6_UDP_ENCAP
+        spec    : igw2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW
+
+    - module:
+        name    : IPV4_VPC_PEERING
+        spec    : local2remote_vpc_peering.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=VPC_PEER,Label=NETWORKING
+
+    - module:
+        name    : IPV6_VPC_PEERING
+        spec    : local2remote_vpc_peering.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=VPC_PEER,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV4_TCP_QTAG
+        spec    : local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV6_TCP_QTAG
+        spec    : local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L3_IPV4_TCP_QTAG
+        spec    : local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : L3_IPV6_TCP_QTAG
+        spec    : local2remote.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV4_TCP_QTAG_SRCGUARD_TRUE
+        spec    : local2remote_srcguard_fail.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV4_TCP_QTAG_SRCGUARD_FALSE
+        spec    : local2remote_srcguard_pass.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV6_TCP_QTAG_SRCGUARD_TRUE
+        spec    : local2remote_srcguard_fail.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV6_TCP_QTAG_SRCGUARD_FALSE
+        spec    : local2remote_srcguard_pass.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV4_TCP_ENCAP
+        spec    : remote2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV6_TCP_ENCAP
+        spec    : remote2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L3_IPV4_TCP_ENCAP
+        spec    : remote2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : L3_IPV6_TCP_ENCAP
+        spec    : remote2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV4_TCP_ENCAP_SRCGUARD_TRUE
+        spec    : remote2local_srcguard_fail.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV4_TCP_ENCAP_SRCGUARD_FALSE
+        spec    : remote2local_srcguard_pass.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV6_TCP_ENCAP_SRCGUARD_TRUE
+        spec    : remote2local_srcguard_fail.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : L2_IPV6_TCP_ENCAP_SRCGUARD_FALSE
+        spec    : remote2local_srcguard_pass.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING

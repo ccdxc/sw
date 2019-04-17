@@ -58,8 +58,7 @@ def Main():
 
     timeprofiler.InitTimeProfiler.Stop()
 
-    feature = glopts.GlobalOptions.feature
-    pipeline.GenerateConfig(feature)
+    pipeline.GenerateConfig()
 
     if glopts.GlobalOptions.e2e:
         #Start E2E 

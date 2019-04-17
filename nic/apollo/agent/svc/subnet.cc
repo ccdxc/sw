@@ -87,8 +87,8 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
                             const pds::SubnetRequest *proto_req,
                             pds::SubnetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_subnet_key_t key;
-    pds_subnet_spec_t *api_spec;
+    pds_subnet_key_t key = {0};
+    pds_subnet_spec_t *api_spec = NULL;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -102,7 +102,6 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
             break;
         }
         auto request = proto_req->request(i);
-        memset(&key, 0, sizeof(pds_subnet_key_t));
         key.id = request.id();
         subnet_proto_spec_to_api_spec(api_spec, request);
         ret = core::subnet_create(&key, api_spec);
@@ -119,14 +118,13 @@ SubnetSvcImpl::SubnetDelete(ServerContext *context,
                             const pds::SubnetDeleteRequest *proto_req,
                             pds::SubnetDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_subnet_key_t key;
+    pds_subnet_key_t key = {0};
 
     if (proto_req == NULL) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
-        memset(&key, 0, sizeof(pds_subnet_key_t));
         key.id = proto_req->id(i);
         ret = core::subnet_delete(&key);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
@@ -139,8 +137,8 @@ SubnetSvcImpl::SubnetGet(ServerContext *context,
                          const pds::SubnetGetRequest *proto_req,
                          pds::SubnetGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_subnet_key_t key;
-    pds_subnet_info_t info;
+    pds_subnet_key_t key = {0};
+    pds_subnet_info_t info = {0};
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -152,7 +150,6 @@ SubnetSvcImpl::SubnetGet(ServerContext *context,
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
-        memset(&key, 0, sizeof(pds_subnet_key_t));
         key.id = proto_req->id(i);
         ret = core::subnet_get(&key, &info);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));

@@ -28,8 +28,8 @@ def InitEngine():
     engine.Init(APOLLO_TEST_PATH);
     return
 
-def GenerateConfig(feature):
-    generator.Main(feature)
+def GenerateConfig():
+    generator.Main()
     return
 
 def Init():

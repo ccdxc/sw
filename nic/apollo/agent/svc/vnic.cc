@@ -27,8 +27,8 @@ Status
 VnicSvcImpl::VnicCreate(ServerContext *context, const pds::VnicRequest *proto_req,
                         pds::VnicResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vnic_key_t key;
-    pds_vnic_spec_t *api_spec;
+    pds_vnic_key_t key = {0};
+    pds_vnic_spec_t *api_spec = NULL;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -42,7 +42,6 @@ VnicSvcImpl::VnicCreate(ServerContext *context, const pds::VnicRequest *proto_re
             break;
         }
         auto request = proto_req->request(i);
-        memset(&key, 0, sizeof(pds_vnic_key_t));
         key.id = request.vnicid();
         pds_agent_vnic_api_spec_fill(request, api_spec);
         ret = core::vnic_create(&key, api_spec);
@@ -59,14 +58,13 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
                         const pds::VnicDeleteRequest *proto_req,
                         pds::VnicDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vnic_key_t key;
+    pds_vnic_key_t key = {0};
 
     if (proto_req == NULL) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
     for (int i = 0; i < proto_req->vnicid_size(); i++) {
-        memset(&key, 0, sizeof(pds_vnic_key_t));
         key.id = proto_req->vnicid(i);
         ret = core::vnic_delete(&key);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
@@ -125,7 +123,7 @@ VnicSvcImpl::VnicGet(ServerContext *context,
                         const pds::VnicGetRequest *proto_req,
                         pds::VnicGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vnic_key_t key;
+    pds_vnic_key_t key = {0};
     pds_vnic_info_t info = {0};
 
     if (proto_req == NULL) {
@@ -134,7 +132,6 @@ VnicSvcImpl::VnicGet(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->vnicid_size(); i++) {
-        memset(&key, 0, sizeof(pds_vnic_key_t));
         key.id = proto_req->vnicid(i);
         ret = core::vnic_get(&key, &info);
         if (ret != SDK_RET_OK) {

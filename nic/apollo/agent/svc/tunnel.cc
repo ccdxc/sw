@@ -70,6 +70,7 @@ tep_proto_spec_to_api_spec (pds_tep_spec_t *api_spec,
                             const pds::TunnelSpec &proto_spec)
 {
     types::IPAddress remoteip = proto_spec.remoteip();
+
     memset(api_spec, 0, sizeof(pds_tep_spec_t));
     switch (proto_spec.type()) {
     case pds::TUNNEL_TYPE_IGW:
@@ -106,7 +107,7 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
                             const pds::TunnelRequest *proto_req,
                             pds::TunnelResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_tep_spec_t *api_spec;
+    pds_tep_spec_t *api_spec = NULL;
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -152,7 +153,7 @@ TunnelSvcImpl::TunnelGet(ServerContext *context,
                          const pds::TunnelGetRequest *proto_req,
                          pds::TunnelGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_tep_info_t info;
+    pds_tep_info_t info = {0};
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);

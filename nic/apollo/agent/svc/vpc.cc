@@ -32,8 +32,8 @@ VPCSvcImpl::VPCCreate(ServerContext *context,
                       const pds::VPCRequest *proto_req,
                       pds::VPCResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vcn_key_t key;
-    pds_vcn_spec_t *api_spec;
+    pds_vcn_key_t key = {0};
+    pds_vcn_spec_t *api_spec = {0};
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -47,7 +47,6 @@ VPCSvcImpl::VPCCreate(ServerContext *context,
             break;
         }
         auto proto_spec = proto_req->request(i);
-        memset(&key, 0, sizeof(pds_vcn_key_t));
         key.id = proto_spec.id();
         pds_agent_vpc_api_spec_fill(api_spec, proto_spec);
         ret = core::vpc_create(&key, api_spec);
@@ -64,7 +63,7 @@ VPCSvcImpl::VPCDelete(ServerContext *context,
                       const pds::VPCDeleteRequest *proto_req,
                       pds::VPCDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vcn_key_t key;
+    pds_vcn_key_t key = {0};
 
     if (proto_req == NULL) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -72,7 +71,6 @@ VPCSvcImpl::VPCDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        memset(&key, 0, sizeof(pds_vcn_key_t));
         key.id = proto_req->id(i);
         ret = core::vpc_delete(&key);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
@@ -129,7 +127,7 @@ VPCSvcImpl::VPCGet(ServerContext *context,
                    const pds::VPCGetRequest *proto_req,
                    pds::VPCGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vcn_key_t key;
+    pds_vcn_key_t key = {0};
     pds_vcn_info_t info = {0};
 
     PDS_TRACE_VERBOSE("VPC Get Received")
@@ -140,7 +138,6 @@ VPCSvcImpl::VPCGet(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i ++) {
-        memset(&key, 0, sizeof(pds_vcn_key_t));
         key.id = proto_req->id(i);
         ret = core::vpc_get(&key, &info);
         if (ret != SDK_RET_OK) {
