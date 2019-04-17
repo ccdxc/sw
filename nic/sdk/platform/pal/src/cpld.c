@@ -345,10 +345,6 @@ static int
 pal_change_qsfp_frequency(uint8_t mask, uint8_t frequency) {
     uint8_t frequency_orig;
 
-    if (frequency < 0 || frequency >= 4) {
-        return CPLD_FAIL;
-    }
-
     frequency_orig = cpld_reg_rd(CPLD_REGISTER_QSFP_LED_FREQUENCY);
     frequency_orig = frequency_orig & mask;
     frequency_orig = frequency_orig | frequency;
