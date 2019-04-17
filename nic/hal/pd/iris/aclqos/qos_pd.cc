@@ -5,11 +5,17 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos_api.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
+#include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/iris/internal/p4plus_pd_api.h"
 
 using qos::QosClassStatusEpd;
 
 namespace hal {
 namespace pd {
+
+//TODO: Move this to HAL slabs.
+pd_qos_dscp_cos_map_t dscp_cos_txdma_iq_map[64];
 
 typedef struct pd_qos_iq_s {
     bool valid;
@@ -117,7 +123,7 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
     indexer::status         rs = indexer::SUCCESS;
     qos_class_t             *qos_class = pd_qos_class->pi_qos_class;
     qos_group_t             qos_group;
-    uint32_t                p4_q_idx = 0;
+    uint32_t                p4_q_idx = 0, i = 0;
 
     // Figure out the number of queues needed for class
     ret = pd_qos_get_alloc_q_count(qos_class, &q_alloc_params);
@@ -181,6 +187,30 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
             pd_qos_class->p4_eg_q[p4_q_idx] = pd_qos_class->txdma[i].iq;
         }
     }
+ 
+    // Update dscp/pcp to tx-iq map for user-defined classes.
+    if (qos_is_user_defined_class(qos_group)) {
+       if (qos_class->cmap.type == QOS_CMAP_TYPE_DSCP) {
+           for (i = 0; i < HAL_MAX_IP_DSCP_VALS; i++) {
+               if (qos_class->cmap.ip_dscp[i]) {
+                   dscp_cos_txdma_iq_map[0].is_dscp = true; // use default-cos dscp as global dscp/pcp config
+                   dscp_cos_txdma_iq_map[i].is_dscp = true;
+                   dscp_cos_txdma_iq_map[i].txdma_iq = pd_qos_class->txdma[0].iq;
+                   dscp_cos_txdma_iq_map[i].no_drop  = qos_class->no_drop;
+
+               }
+           }
+       } else {
+           for (i = 0; i < HAL_MAX_DOT1Q_PCP_VALS; i++) {
+               if (i == qos_class->cmap.dot1q_pcp) {
+                   dscp_cos_txdma_iq_map[0].is_dscp = false;
+                   dscp_cos_txdma_iq_map[i].is_dscp = false;
+                   dscp_cos_txdma_iq_map[i].txdma_iq = pd_qos_class->txdma[0].iq; // use first queue for now.
+                   dscp_cos_txdma_iq_map[i].no_drop  = qos_class->no_drop;
+               }
+           }
+       }
+    }
 
     // Allocate oqs
     if (q_alloc_params.cnt_oq) {
@@ -211,6 +241,28 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
 }
 
 // ----------------------------------------------------------------------------
+// Program HBM table for DSCP/PCP to txdma-iq mapping
+// ----------------------------------------------------------------------------
+
+static hal_ret_t
+qos_class_pd_program_dscp_cos_map_table ()
+{
+    hal_ret_t      ret = HAL_RET_OK;
+        
+    uint64_t       dscp_cos_map_hbm_base_addr;
+    dscp_cos_map_hbm_base_addr =  (uint64_t)get_mem_addr(CAPRI_HBM_REG_QOS_DSCP_COS_MAP);
+        
+    HAL_TRACE_DEBUG("Programming DSCP-PCP to TxDMA IQ mapping "
+                    "dscp_cos_map_hbm_base_addr is {} and size of dscp-cos-map-table is {}", 
+                        dscp_cos_map_hbm_base_addr, sizeof(dscp_cos_txdma_iq_map));
+    
+    p4plus_hbm_write(dscp_cos_map_hbm_base_addr, (uint8_t *)&dscp_cos_txdma_iq_map, sizeof(dscp_cos_txdma_iq_map),
+            P4PLUS_CACHE_INVALIDATE_BOTH);
+
+    return ret;
+}           
+
+// ----------------------------------------------------------------------------
 // Allocate resources for PD Qos-class
 // ----------------------------------------------------------------------------
 static hal_ret_t
@@ -236,6 +288,39 @@ qos_class_pd_alloc_res (pd_qos_class_t *pd_qos_class)
 static hal_ret_t
 qos_class_pd_dealloc_res (pd_qos_class_t *pd_qos_class)
 {
+    qos_group_t             qos_group;
+    qos_class_t             *qos_class = pd_qos_class->pi_qos_class;
+    uint32_t                i;
+    hal_ret_t               ret = HAL_RET_OK;
+    
+    qos_group = qos_class_get_qos_group(qos_class);
+
+    // Reset dscp/pcp to tx-iq map for user-defined classes.
+    if (qos_is_user_defined_class(qos_group)) {
+       if (qos_class->cmap.type == QOS_CMAP_TYPE_DSCP) {
+           for (i = 0; i < HAL_MAX_IP_DSCP_VALS; i++) {
+               if (qos_class->cmap.ip_dscp[i]) {
+                   memset(&dscp_cos_txdma_iq_map[i], 0, sizeof(pd_qos_dscp_cos_map_t));
+               }
+           }
+       } else {
+           for (i = 0; i < HAL_MAX_DOT1Q_PCP_VALS; i++) {
+               if (i == qos_class->cmap.dot1q_pcp) {
+                   memset(&dscp_cos_txdma_iq_map[i], 0, sizeof(pd_qos_dscp_cos_map_t));
+               }
+           }
+       }
+    }
+
+    // Update HBM state about reset.
+    ret = qos_class_pd_program_dscp_cos_map_table();
+    if (ret != HAL_RET_OK) {
+        // TODO: What to do in case of hw programming error ?
+        HAL_TRACE_ERR("Error programming DSCP COS MAP table for "
+                      "Qos-class {} ret {}",
+                      qos_class->key, ret);
+        return ret;
+    }                
 
     if (capri_tm_q_valid(pd_qos_class->uplink.iq)) {
         g_hal_state_pd->qos_uplink_iq_idxr()->free(pd_qos_class->uplink.iq);
@@ -811,7 +896,15 @@ qos_class_pd_program_hw (pd_qos_class_t *pd_qos_class)
                       qos_class->key, ret);
         return ret;
     }
+    ret = qos_class_pd_program_dscp_cos_map_table();
 
+    if (ret != HAL_RET_OK) {
+        // TODO: What to do in case of hw programming error ?
+        HAL_TRACE_ERR("Error programming DSCP COS MAP table for "
+                      "Qos-class {} ret {}",
+                      qos_class->key, ret);
+        return ret;
+    }
     return HAL_RET_OK;
 }
 

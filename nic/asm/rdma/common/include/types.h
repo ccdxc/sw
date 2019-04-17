@@ -1733,7 +1733,9 @@ struct aqwqe_t {
             rrq_depth:8;
             pkey_id:16;
             ah_id_len:32;
-            rsvd:32;
+            en_pcp:8;
+            ip_dscp:8;
+            rsvd:16;
             rrq_index:32;
             rsq_index:32;
             dma_addr:64;
@@ -1803,6 +1805,10 @@ struct aq_query_qp_rq_buf {
     pad4:8;
     sq_psn:24;
     ah_id_len:32;
+};
+
+struct aq_dscp_cos_map {
+    dscp_pcp_tx_iq_map:512;
 };
 
 #define AQ_WQE_T_LOG_SIZE_BYTES 6

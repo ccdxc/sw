@@ -2,7 +2,7 @@
 #include "aq_tx.h"
 #include "aqcb.h"
 #include "common_phv.h"
-#include "p4/common/defines.h"
+#include "nic/p4/common/defines.h"
 #include "types.h"
 
 struct aq_tx_phv_t p;
@@ -30,7 +30,8 @@ struct aq_tx_s1_t0_k k;
 #define TO_SQCB2_INFO_P      to_s5_info
 #define TO_RQCB0_INFO_P      to_s5_info
 #define TO_SQCB0_INFO_P      to_s6_info    
-#define TO_S7_STATS_P       to_s7_fb_stats_info
+#define TO_S7_STATS_P        to_s7_fb_stats_info
+#define TO_S2_INFO           to_s2_info
 
 #define WQE_SIZE_2_SGES 6 
 
@@ -48,6 +49,7 @@ struct aq_tx_s1_t0_k k;
     .param      rdma_aq_tx_feedback_process
     .param      rdma_aq_tx_modify_qp_2_process
     .param      rdma_aq_tx_query_sqcb2_process
+    .param      rdma_aq_tx_fetch_tx_iq_process
 
 .align
 rdma_aq_tx_wqe_process:
@@ -791,9 +793,9 @@ q_key:
 
     add         r4, d.{mod_qp.qkey_dest_qpn}.wx, r0
 
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, q_key), r4
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, q_key_or_tm_iq), r4
     phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, q_key_valid), 1
-    phvwr       CAPRI_PHV_FIELD(TO_RQCB0_INFO_P, q_key), r4
+    phvwr       CAPRI_PHV_FIELD(TO_RQCB0_INFO_P, q_key_or_tm_iq), r4
     phvwr       CAPRI_PHV_FIELD(TO_RQCB0_INFO_P, q_key_valid), 1
 
     //For RQCB1 in Rx side

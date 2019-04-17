@@ -880,7 +880,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
 
     HAL_TRACE_DEBUG("cosA: {}, cosB: {}, control_cos: {}", cosA, cosB, control_cos);
 
-    lif->qos_info.cos_bmp =  ((1 << cosA) | (1 << cosB) | (1 << control_cos));
+    lif->qos_info.cos_bmp =  0xffff; //Burn scheduler bit for all coses for each (lif,queue).
     lif->qos_info.coses   =  (cosA & 0x0f) | ((cosB << 4) & 0xf0);
 
     if (spec.has_rx_qos_class()) {

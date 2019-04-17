@@ -8,6 +8,8 @@
 #include "nic/include/pd_api.hpp"
 #include "platform/capri/capri_tm_rw.hpp"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
+#include <memory>
+#include <map>
 
 using namespace sdk::platform::capri;
 
@@ -69,6 +71,14 @@ struct pd_qos_class_s {
     qos_class_t        *pi_qos_class;
 } __PACK__;
 
+typedef struct pd_qos_dscp_cos_map_s {
+    bool        is_dscp : 1 ;
+    uint8_t     no_drop : 1;
+    uint8_t     txdma_iq : 4;
+    uint8_t     rsvd: 2;
+} __PACK__ pd_qos_dscp_cos_map_t;
+
+
 inline std::ostream& operator<<(std::ostream& os, const struct pd_qos_class_s& s) 
 {
     os << fmt::format("{{");
@@ -98,6 +108,7 @@ qos_class_pd_alloc (void)
     if (qos_class == NULL) {
         return NULL;
     }
+
 
     return qos_class;
 }
@@ -203,6 +214,15 @@ qos_class_pd_port_to_packet_buffer_port (tm_port_t port, qos::PacketBufferPort *
     } else {
         SDK_ASSERT(0);
     }
+}
+
+static inline bool 
+qos_is_user_defined_class (qos_group_t qos_group) {
+    
+    if ((qos_group > QOS_GROUP_DEFAULT) && (qos_group <= QOS_GROUP_USER_DEFINED_6)) {
+        return true;
+    }
+    return false;
 }
 
 hal_ret_t

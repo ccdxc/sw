@@ -13,6 +13,7 @@ struct aq_tx_s2_t1_k k;
 
 #define TO_SQCB2_RQCB0_INFO_P to_s5_info
 #define TO_SQCB0_INFO_P to_s6_info    
+#define TO_S3_INFO to_s3_info
 
 #define DMA_CMD_BASE r6
     
@@ -29,6 +30,9 @@ struct aq_tx_s2_t1_k k;
 
     .param      rdma_aq_tx_rqcb0_process
     .param      rdma_aq_tx_sqcb2_process
+    .param      qos_dscp_cos_map_addr
+    .param      rdma_aq_tx_fetch_tx_iq_process
+
 .align
 rdma_aq_tx_modify_qp_2_process:
 
@@ -73,7 +77,16 @@ hdr_update:
     DMA_HOST_MEM2MEM_SRC_SETUP(DMA_CMD_BASE, r4, d.{mod_qp.dma_addr}.dx)
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_MOD_QP_AH_DST)
     DMA_HBM_MEM2MEM_DST_SETUP(DMA_CMD_BASE, r4, r5)
-    
+
+    // fetch tm-iq (cosB) for QP looking up dscp-pcp-tm-iq map table
+    phvwr       CAPRI_PHV_FIELD(TO_S3_INFO, err_retry_count_or_pcp), d.mod_qp.en_pcp
+    phvwr       CAPRI_PHV_FIELD(TO_S3_INFO, local_ack_timeout_or_dscp), d.mod_qp.ip_dscp
+    addui       r7, r0, hiword(qos_dscp_cos_map_addr)
+    addi        r7, r7, loword(qos_dscp_cos_map_addr)
+
+    CAPRI_RESET_TABLE_3_ARG()
+    CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, rdma_aq_tx_fetch_tx_iq_process, r7)
+ 
 rrq_base:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_MAX_QP_RD_ATOMIC], 1, rsq_base
 
@@ -211,16 +224,16 @@ timeout:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_TIMEOUT], 1, retry_cnt
 
     add         r4, d.mod_qp.retry_timeout, r0
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, local_ack_timeout), r4[4:0]
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, local_ack_timeout_or_dscp), r4[4:0]
     phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, local_ack_timeout_valid), 1
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, local_ack_timeout), r4[4:0]
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, local_ack_timeout_or_dscp), r4[4:0]
     phvwr       CAPRI_PHV_FIELD(TO_SQCB0_INFO_P, local_ack_timeout_valid), 1
 
 retry_cnt:
     bbne        d.mod_qp.attr_mask[RDMA_UPDATE_QP_OPER_SET_RETRY_CNT], 1, rnr_min_timer
 
     add         r4, d.mod_qp.retry, r0
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, err_retry_count), r4[2:0]
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, err_retry_count_or_pcp), r4[2:0]
     phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, err_retry_count_valid), 1
 
     phvwr       p.rdma_feedback.modify_qp.err_retry_count, r4[2:0]

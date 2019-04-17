@@ -14,7 +14,7 @@ namespace pd {
 
 #define IPSEC_N2H_GLOBAL_STATS_OFFSET 512 
 
-#define P4PLUS_SYMBOLS_MAX 58
+#define P4PLUS_SYMBOLS_MAX 59
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -254,6 +254,10 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
 
     symbols[i].name = NUM_CLOCK_TICKS_PER_US;
     symbols[i].val = capri_coreclk_freq;
+    i++;
+
+    symbols[i].name = QOS_DSCP_COS_MAP_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_QOS_DSCP_COS_MAP);
     i++;
 
     symbols[i].name = CAPRI_CPU_HASH_MASK;

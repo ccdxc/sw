@@ -15,9 +15,9 @@ struct aq_tx_s5_t2_k k;
     
 #define K_TX_PSN CAPRI_KEY_RANGE(IN_TO_S_P, tx_psn_sbit0_ebit3, tx_psn_sbit20_ebit23)
 #define K_TX_PSN_VALID CAPRI_KEY_FIELD(IN_TO_S_P, tx_psn_valid)
-#define K_ERR_RETRY_COUNT CAPRI_KEY_FIELD(IN_TO_S_P, err_retry_count)
+#define K_ERR_RETRY_COUNT CAPRI_KEY_FIELD(IN_TO_S_P, err_retry_count_or_pcp)
 #define K_ERR_RETRY_COUNT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, err_retry_count_valid)
-#define K_LOCAL_ACK_TIMEOUT CAPRI_KEY_RANGE(IN_TO_S_P, local_ack_timeout_sbit0_ebit3, local_ack_timeout_sbit4_ebit4)
+#define K_LOCAL_ACK_TIMEOUT CAPRI_KEY_RANGE(IN_TO_S_P, local_ack_timeout_or_dscp_sbit0_ebit3, local_ack_timeout_or_dscp_sbit4_ebit4)
 #define K_LOCAL_ACK_TIMEOUT_VALID CAPRI_KEY_FIELD(IN_TO_S_P, local_ack_timeout_valid)
 #define K_RNR_RETRY_COUNT CAPRI_KEY_RANGE(IN_P, rnr_retry_count_sbit0_ebit1, rnr_retry_count_sbit2_ebit2) 
 #define K_RNR_RETRY_VALID CAPRI_KEY_FIELD(IN_P, rnr_retry_valid) 

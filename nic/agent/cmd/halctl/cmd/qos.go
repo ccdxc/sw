@@ -319,7 +319,7 @@ func qosClassCreateCmdHandler(cmd *cobra.Command, args []string) {
 		pfc = true
 	} else if cmd.Flags().Changed("pfc-enable") {
 		pfc = true
-		qosXon = 0x4B88000
+		qosXon = 0x4B8800
 		qosXoff = 0x4C8200
 		fmt.Printf("Xon default threshold: %d, Xoff default threshold: %d\n", qosXon, qosXoff)
 	}

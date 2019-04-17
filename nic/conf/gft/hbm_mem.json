@@ -179,6 +179,11 @@
         {
             "name": "devcmd",
             "size": "32768K"
+        },
+        {
+            "name": "qos-dscp-cos-map",
+            "size": "64B",
+            "reset": true
         }
     ]
 }

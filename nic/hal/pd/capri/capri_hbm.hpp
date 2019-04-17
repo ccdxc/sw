@@ -107,6 +107,7 @@
 #define CAPRI_HBM_REG_PER_FTE_STATS         "fte-stats"
 #define CAPRI_HBM_REG_SESSION_SUMMARY_STATS "session-summary-stats"
 #define CAPRI_HBM_REG_P4_HWERR_STATS        "p4_hwerr_stats"
+#define CAPRI_HBM_REG_QOS_DSCP_COS_MAP     "qos-dscp-cos-map"
 
 #define CAPRI_NUM_SEMAPHORES            512
 
@@ -188,4 +189,5 @@
 
 #define LIF_STATS_BASE                  "lif_stats_base"
 
+#define QOS_DSCP_COS_MAP_BASE           "qos_dscp_cos_map_addr"
 #endif    // __CAPRI_HBM_HPP__

@@ -54,6 +54,7 @@
 #define tx_table_s3_t0_action aq_tx_feedback_process_s3
 #define tx_table_s3_t1_action aq_tx_rqcb0_process_s3
 #define tx_table_s3_t2_action aq_tx_sqcb2_process_s3
+#define tx_table_s3_t3_action aq_tx_dscp_cos_map_process
 
 #define tx_table_s4_t0_action aq_tx_feedback_process_s4
 #define tx_table_s4_t1_action aq_tx_rqcb0_process_s4
@@ -129,11 +130,11 @@ header_type aq_tx_to_stage_sqcb_info_t {
         dst_qp_valid                     :    1;
         tx_psn_valid                     :    1;
         tx_psn                           :   24;
-        local_ack_timeout                :    5;
+        local_ack_timeout_or_dscp        :    5;
         local_ack_timeout_valid          :    1;
-        err_retry_count                  :    3;
+        err_retry_count_or_pcp           :    3;
         err_retry_count_valid            :    1;
-        q_key                            :   32;
+        q_key_or_tm_iq                   :   32;
         q_key_valid                      :    1;
         pad                              :    1;
     }
@@ -358,6 +359,17 @@ action aq_tx_modify_qp_2_process () {
     // stage to stage
 }
 
+action aq_tx_dscp_cos_map_process () {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // to stage
+    modify_field(to_s3_info_scr.local_ack_timeout_or_dscp, to_s3_info.local_ack_timeout_or_dscp);
+    modify_field(to_s3_info_scr.err_retry_count_or_pcp, to_s3_info.err_retry_count_or_pcp);
+
+    // stage to stage
+}
+
 action aq_tx_sqcb2_process_s3 () {
     // from ki global
     GENERATE_GLOBAL_K
@@ -379,10 +391,10 @@ action aq_tx_sqcb2_process () {
     modify_field(to_s5_info_scr.tx_psn, to_s5_info.tx_psn);
     modify_field(to_s5_info_scr.tx_psn_valid, to_s5_info.tx_psn_valid);
     modify_field(to_s5_info_scr.local_ack_timeout_valid, to_s5_info.local_ack_timeout_valid);
-    modify_field(to_s5_info_scr.local_ack_timeout, to_s5_info.local_ack_timeout);
-    modify_field(to_s5_info_scr.err_retry_count, to_s5_info.err_retry_count);
+    modify_field(to_s5_info_scr.local_ack_timeout_or_dscp, to_s5_info.local_ack_timeout_or_dscp);
+    modify_field(to_s5_info_scr.err_retry_count_or_pcp, to_s5_info.err_retry_count_or_pcp);
     modify_field(to_s5_info_scr.err_retry_count_valid, to_s5_info.err_retry_count_valid);
-    modify_field(to_s5_info_scr.q_key, to_s5_info.q_key);
+    modify_field(to_s5_info_scr.q_key_or_tm_iq, to_s5_info.q_key_or_tm_iq);
     modify_field(to_s5_info_scr.q_key_valid, to_s5_info.q_key_valid);
     modify_field(to_s5_info_scr.pad, to_s5_info.pad);
     
@@ -415,8 +427,8 @@ action aq_tx_sqcb0_process () {
     modify_field(to_s6_info_scr.tx_psn, to_s6_info.tx_psn);
     modify_field(to_s6_info_scr.tx_psn_valid, to_s6_info.tx_psn_valid);
     modify_field(to_s6_info_scr.local_ack_timeout_valid, to_s6_info.local_ack_timeout_valid);
-    modify_field(to_s6_info_scr.local_ack_timeout, to_s6_info.local_ack_timeout);
-    modify_field(to_s6_info_scr.q_key, to_s6_info.q_key);
+    modify_field(to_s6_info_scr.local_ack_timeout_or_dscp, to_s6_info.local_ack_timeout_or_dscp);
+    modify_field(to_s6_info_scr.q_key_or_tm_iq, to_s6_info.q_key_or_tm_iq);
     modify_field(to_s6_info_scr.q_key_valid, to_s6_info.q_key_valid);
     modify_field(to_s6_info_scr.pad, to_s6_info.pad);
     
@@ -449,7 +461,7 @@ action aq_tx_rqcb0_process () {
     // to stage
     modify_field(to_s5_info_scr.dst_qp, to_s5_info.dst_qp);
     modify_field(to_s5_info_scr.dst_qp_valid, to_s5_info.dst_qp_valid);
-    modify_field(to_s5_info_scr.q_key, to_s5_info.q_key);
+    modify_field(to_s5_info_scr.q_key_or_tm_iq, to_s5_info.q_key_or_tm_iq);
     modify_field(to_s5_info_scr.q_key_valid, to_s5_info.q_key_valid);
     modify_field(to_s5_info_scr.pad, to_s5_info.pad);
     
