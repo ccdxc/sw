@@ -689,7 +689,7 @@ func (tb *TestBed) ListEndpoints(tenant string) (eps []*workload.Endpoint, err e
 	return eps, err
 }
 
-// CreateFirewallProfile creates firewall profile
+// UpdateFirewallProfile updates firewall profile
 func (tb *TestBed) UpdateFirewallProfile(fwp *security.FirewallProfile) error {
 	ctx, err := tb.VeniceLoggedInCtx()
 	if err != nil {

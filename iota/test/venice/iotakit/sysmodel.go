@@ -326,44 +326,48 @@ func (sm *SysModel) populateScaleConfig() error {
 	}
 
 	for _, o := range cfg.Networks {
-		if j, err := json.MarshalIndent(o, "", "  "); err != nil {
+		j, err := json.MarshalIndent(o, "", "  ")
+		if err != nil {
 			return err
-		} else {
-			ofile.Write(j)
-			ofile.WriteString("\n")
 		}
+		ofile.Write(j)
+		ofile.WriteString("\n")
+
 		sm.fakeSubnets[o.ObjectMeta.Name] = &Network{veniceNetwork: o}
 		if err := sm.tb.CreateNetwork(o); err != nil {
 			return fmt.Errorf("error creating network: %s", err)
 		}
 	}
 	for _, o := range cfg.Hosts {
-		if j, err := json.MarshalIndent(o, "", "  "); err != nil {
+		j, err := json.MarshalIndent(o, "", "  ")
+		if err != nil {
 			return err
-		} else {
-			ofile.Write(j)
-			ofile.WriteString("\n")
 		}
+		ofile.Write(j)
+		ofile.WriteString("\n")
+
 		sm.fakeHosts[o.ObjectMeta.Name] = &Host{veniceHost: o}
 		// TBD: push the workloads and host when we simulate Naples
 	}
 	for _, o := range cfg.Workloads {
-		if j, err := json.MarshalIndent(o, "", "  "); err != nil {
+		j, err := json.MarshalIndent(o, "", "  ")
+		if err != nil {
 			return err
-		} else {
-			ofile.Write(j)
-			ofile.WriteString("\n")
 		}
+		ofile.Write(j)
+		ofile.WriteString("\n")
+
 		sm.fakeWorkloads[o.ObjectMeta.Name] = &Workload{veniceWorkload: o}
 		// TBD: push the workloads and host when we simulate Naples
 	}
 	for _, o := range cfg.Apps {
-		if j, err := json.MarshalIndent(o, "", "  "); err != nil {
+		j, err := json.MarshalIndent(o, "", "  ")
+		if err != nil {
 			return err
-		} else {
-			ofile.Write(j)
-			ofile.WriteString("\n")
 		}
+		ofile.Write(j)
+		ofile.WriteString("\n")
+
 		sm.fakeApps[o.ObjectMeta.Name] = &App{veniceApp: o}
 		if err := sm.tb.CreateApp(o); err != nil {
 			return fmt.Errorf("error creating app: %s", err)
@@ -375,12 +379,13 @@ func (sm *SysModel) populateScaleConfig() error {
 	}
 
 	for _, o := range cfg.SGPolicies {
-		if j, err := json.MarshalIndent(o, "", "  "); err != nil {
+		j, err := json.MarshalIndent(o, "", "  ")
+		if err != nil {
 			return err
-		} else {
-			ofile.Write(j)
-			ofile.WriteString("\n")
 		}
+		ofile.Write(j)
+		ofile.WriteString("\n")
+
 		sm.fakeSGPolicies[o.ObjectMeta.Name] = &SGPolicy{venicePolicy: o}
 		if err := sm.tb.CreateSGPolicy(o); err != nil {
 			return fmt.Errorf("error creating sgpolicy: %s", err)

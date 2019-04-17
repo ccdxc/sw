@@ -2,7 +2,7 @@
 version: 2.0
 targets:
   mock-iota:
-    commands: ["make ws-tools && make pull-assets && make fixtures && make palazzo && make -C iota && JOB_ID=1 MOCK_IOTA=1 go test ./iota/test/venice/testsuites/firewall/ -count 1 -p 1 -testbed /go/src/github.com/pensando/sw/iota/test/venice/example/warmd.json -v -ginkgo.v -timeout 60m"]
+    commands: ["make ws-tools && make pull-assets && make fixtures && make palazzo && make -C iota && JOB_ID=1 VENICE_DEV=1 MOCK_IOTA=1 go test ./iota/test/venice/testsuites/firewall/ -count 1 -p 1 -testbed /go/src/github.com/pensando/sw/iota/test/venice/example/warmd.json -topo 3Venice_2Naples -v -ginkgo.v -timeout 60m"]
     owners: ["email:shaleman@pensando.io"]
     area:
     sub-area:

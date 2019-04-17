@@ -15,12 +15,12 @@ $ palazzo
 
 This will start the palazzo emulator, within this binary all venice services run as go-routines just like in venice integ environment. If `GOPATH` environment variable is set, palazzo will find the directory where UI files are built and start serving UI files.
 
-After this, you can point your browser to `http://192.168.30.11:9090` (or `http://localhost:9090` if you started it on mac) and you should see the Venice UI. you can point postman to this URL as well and it will work.
+After this, you can point your browser to `http://192.168.30.11:9443` (or `http://localhost:9443` if you started it on mac) and you should see the Venice UI. you can point postman to this URL as well and it will work.
 
 you can use Venice CLI to access this cluster too..
 
 ```
-$ PENSERVER=localhost:9090 venice ls host
+$ VENICE_URL=localhost:9443 venice ls host
 name   mac-address        type       
 ----   -----------        ----       
 host0  06:ca:c8:31:89:f3  BAREMETAL  

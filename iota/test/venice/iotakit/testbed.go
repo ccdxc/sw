@@ -246,6 +246,20 @@ func (tb *TestBed) HasNaplesHW() bool {
 	return tb.hasNaplesHW
 }
 
+// numNaples returns number of naples nodes in the topology
+func (tb *TestBed) numNaples() int {
+	numNaples := 0
+	for _, node := range tb.Nodes {
+		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			numNaples++
+		} else if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_SIM {
+			numNaples++
+		}
+	}
+
+	return numNaples
+}
+
 // IsMockMode returns true if test is running in mock mode
 func (tb *TestBed) IsMockMode() bool {
 	return tb.mockMode
@@ -963,6 +977,9 @@ func (tb *TestBed) PrintResult() {
 
 // CollectLogs collects all logs files from the testbed
 func (tb *TestBed) CollectLogs() error {
+	if tb.mockMode {
+		return nil
+	}
 	trig := tb.NewTrigger()
 	for _, node := range tb.Nodes {
 		switch node.Personality {

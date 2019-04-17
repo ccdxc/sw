@@ -7,7 +7,7 @@ import uuid "github.com/satori/go.uuid"
 // GetDefaultSuiteConfig returns default test suite config
 func GetDefaultSuiteConfig() SuiteConfig {
 	return SuiteConfig{
-		APIGatewayPort:       "9090",
+		APIGatewayPort:       "9443",
 		APIGatewaySkipAuth:   false,
 		StartEventsAndSearch: true,
 		ElasticSearchName:    uuid.NewV4().String(),

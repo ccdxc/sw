@@ -15,7 +15,7 @@ import (
 )
 
 // mockVeniceURL is the venice URL when we are in mock mode
-const mockVeniceURL = "localhost:443"
+const mockVeniceURL = "localhost:9443"
 
 type mockIotaServer struct {
 	listenURL string
@@ -56,11 +56,12 @@ func (ms *mockIotaServer) startPalazzo() {
 				// kill old instance of palazzo if its running
 				exec.Command("pkill", "palazzo").CombinedOutput()
 
-				log.Infof("Starting palazzo (venice emulator)")
+				palazzoCmd := fmt.Sprintf("%s/bin/palazzo -hosts %d > /tmp/palazzo.log", gopath, ms.tb.numNaples())
+				log.Infof("Starting palazzo (venice emulator): %s", palazzoCmd)
 				time.Sleep(time.Second * 5)
 
 				// run new palazzo instance
-				cmd := exec.Command("bash", "-c", gopath+"/bin/palazzo -apiport 443 > /tmp/palazzo.log")
+				cmd := exec.Command("bash", "-c", palazzoCmd)
 				out, err := cmd.CombinedOutput()
 				if err != nil {
 					fmt.Printf("palazzo out:\n%s\n", string(out))

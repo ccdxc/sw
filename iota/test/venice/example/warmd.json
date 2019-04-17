@@ -1,1 +1,191 @@
-{"ID":"test-533","Instances":[{"Name":"test-2-test-533","Type":"vm","NodeMgmtIP":"10.8.100.135","NicMgmtIP":"","ServerType":"","NicType":"","PvtNetworks":[{"Name":"control","VlanID":523}],"DataNetworks":[{"Name":"data-1","SwitchIP":"10.6.4.40","SwitchPort":21,"SwitchUsername":"iota","SwitchPassword":"Pen_123!"},{"Name":"data-2","SwitchIP":"10.6.4.40","SwitchPort":21,"SwitchUsername":"iota","SwitchPassword":"Pen_123!"}]},{"Name":"test-3-test-533","Type":"vm","NodeMgmtIP":"10.8.100.138","NicMgmtIP":"","ServerType":"","NicType":"","PvtNetworks":[{"Name":"control","VlanID":523}],"DataNetworks":[{"Name":"data-1","SwitchIP":"10.6.4.40","SwitchPort":21,"SwitchUsername":"iota","SwitchPassword":"Pen_123!"},{"Name":"data-2","SwitchIP":"10.6.4.40","SwitchPort":21,"SwitchUsername":"iota","SwitchPassword":"Pen_123!"}]},{"Name":"test-4-test-533","Type":"vm","NodeMgmtIP":"10.8.100.139","NicMgmtIP":"","ServerType":"","NicType":"","PvtNetworks":[{"Name":"control","VlanID":523}],"DataNetworks":[{"Name":"data-1","SwitchIP":"10.6.4.40","SwitchPort":21,"SwitchUsername":"iota","SwitchPassword":"Pen_123!"},{"Name":"data-2","SwitchIP":"10.6.4.40","SwitchPort":21,"SwitchUsername":"iota","SwitchPassword":"Pen_123!"}]},{"Name":"test-5-test-533","Type":"vm","NodeMgmtIP":"10.8.100.136","NicMgmtIP":"","ServerType":"","NicType":"","PvtNetworks":[{"Name":"control","VlanID":523}],"DataNetworks":[{"Name":"data-1","SwitchIP":"10.6.4.40","SwitchPort":21,"SwitchUsername":"iota","SwitchPassword":"Pen_123!"},{"Name":"data-2","SwitchIP":"10.6.4.40","SwitchPort":21,"SwitchUsername":"iota","SwitchPassword":"Pen_123!"}]},{"Name":"test-0-test-533","Type":"vm","NodeMgmtIP":"10.8.100.134","NicMgmtIP":"","ServerType":"","NicType":"","PvtNetworks":[{"Name":"control","VlanID":523}],"DataNetworks":[{"Name":"data-1","SwitchIP":"10.6.4.40","SwitchPort":21,"SwitchUsername":"iota","SwitchPassword":"Pen_123!"},{"Name":"data-2","SwitchIP":"10.6.4.40","SwitchPort":21,"SwitchUsername":"iota","SwitchPassword":"Pen_123!"}]},{"Name":"test-1-test-533","Type":"vm","NodeMgmtIP":"10.8.100.137","NicMgmtIP":"","ServerType":"","NicType":"","PvtNetworks":[{"Name":"control","VlanID":523}],"DataNetworks":[{"Name":"data-1","SwitchIP":"10.6.4.40","SwitchPort":21,"SwitchUsername":"iota","SwitchPassword":"Pen_123!"},{"Name":"data-2","SwitchIP":"10.6.4.40","SwitchPort":21,"SwitchUsername":"iota","SwitchPassword":"Pen_123!"}]}],"Provision":{"Username":"vm","Password":"vm","PrivateKeyFile":""}}
+{
+  "ID": "test-751",
+  "Instances": [
+    {
+      "ID": 0,
+      "Name": "test-1-test-751",
+      "Type": "vm",
+      "NodeMgmtIP": "127.8.104.71",
+      "NodeCimcIP": "",
+      "NodeCimcUsername": "",
+      "NodeCimcPassword": "",
+      "NicMgmtIP": "",
+      "NicConsoleIP": "",
+      "NicConsolePort": "",
+      "NicConsolePassword": "",
+      "Resource": {
+        "ServerType": "",
+        "NICType": "",
+        "NICUuid": ""
+      },
+      "PvtNetworks": [
+        {
+          "Name": "control-1",
+          "VlanID": 529
+        },
+        {
+          "Name": "control-2",
+          "VlanID": 512
+        }
+      ],
+      "DataNetworks": null
+    },
+    {
+      "ID": 0,
+      "Name": "test-2-test-751",
+      "Type": "vm",
+      "NodeMgmtIP": "127.8.104.66",
+      "NodeCimcIP": "",
+      "NodeCimcUsername": "",
+      "NodeCimcPassword": "",
+      "NicMgmtIP": "",
+      "NicConsoleIP": "",
+      "NicConsolePort": "",
+      "NicConsolePassword": "",
+      "Resource": {
+        "ServerType": "",
+        "NICType": "",
+        "NICUuid": ""
+      },
+      "PvtNetworks": [
+        {
+          "Name": "control-1",
+          "VlanID": 529
+        },
+        {
+          "Name": "control-2",
+          "VlanID": 512
+        }
+      ],
+      "DataNetworks": null
+    },
+    {
+      "ID": 69,
+      "Name": "127.8.6.53",
+      "Type": "bm",
+      "NodeMgmtIP": "127.8.103.6",
+      "NodeCimcIP": "127.8.6.53",
+      "NodeCimcUsername": "",
+      "NodeCimcPassword": "",
+      "NicMgmtIP": "127.8.101.163",
+      "NicConsoleIP": "127.6.5.47",
+      "NicConsolePort": "2007",
+      "NicConsolePassword": "",
+      "Resource": {
+        "ServerType": "server-a",
+        "NICType": "naples",
+        "NICUuid": "00:AE:CD:00:1A:9F"
+      },
+      "PvtNetworks": [
+        {
+          "Name": "control-1",
+          "VlanID": 529
+        },
+        {
+          "Name": "control-2",
+          "VlanID": 512
+        }
+      ],
+      "DataNetworks": [
+        {
+          "Name": "e1/5",
+          "SwitchIP": "127.6.5.46",
+          "SwitchPort": 5,
+          "SwitchUsername": "iota",
+          "SwitchPassword": "Pen_123"
+        },
+        {
+          "Name": "e1/6",
+          "SwitchIP": "127.6.5.46",
+          "SwitchPort": 6,
+          "SwitchUsername": "iota",
+          "SwitchPassword": "Pen_123"
+        }
+      ]
+    },
+    {
+      "ID": 56,
+      "Name": "127.8.6.54",
+      "Type": "bm",
+      "NodeMgmtIP": "127.8.100.194",
+      "NodeCimcIP": "127.8.6.54",
+      "NodeCimcUsername": "",
+      "NodeCimcPassword": "",
+      "NicMgmtIP": "127.8.102.160",
+      "NicConsoleIP": "127.6.5.47",
+      "NicConsolePort": "2008",
+      "NicConsolePassword": "",
+      "Resource": {
+        "ServerType": "server-a",
+        "NICType": "naples",
+        "NICUuid": "00:AE:CD:00:19:4F"
+      },
+      "PvtNetworks": [
+        {
+          "Name": "control-1",
+          "VlanID": 529
+        },
+        {
+          "Name": "control-2",
+          "VlanID": 512
+        }
+      ],
+      "DataNetworks": [
+        {
+          "Name": "e1/7",
+          "SwitchIP": "127.6.5.46",
+          "SwitchPort": 7,
+          "SwitchUsername": "iota",
+          "SwitchPassword": "Pen_123"
+        },
+        {
+          "Name": "e1/8",
+          "SwitchIP": "127.6.5.46",
+          "SwitchPort": 8,
+          "SwitchUsername": "iota",
+          "SwitchPassword": "Pen_123"
+        }
+      ]
+    },
+    {
+      "ID": 0,
+      "Name": "test-0-test-751",
+      "Type": "vm",
+      "NodeMgmtIP": "127.8.104.68",
+      "NodeCimcIP": "",
+      "NodeCimcUsername": "",
+      "NodeCimcPassword": "",
+      "NicMgmtIP": "",
+      "NicConsoleIP": "",
+      "NicConsolePort": "",
+      "NicConsolePassword": "",
+      "Resource": {
+        "ServerType": "",
+        "NICType": "",
+        "NICUuid": ""
+      },
+      "PvtNetworks": [
+        {
+          "Name": "control-1",
+          "VlanID": 529
+        },
+        {
+          "Name": "control-2",
+          "VlanID": 512
+        }
+      ],
+      "DataNetworks": null
+    }
+  ],
+  "Provision": {
+    "Username": "vm",
+    "Password": "vm",
+    "PrivateKeyFile": "",
+    "Vars": {
+      "BmOs": "esx",
+      "EsxPassword": "Pen0trl!",
+      "EsxUsername": "root",
+      "VmOs": "linux"
+    }
+  }
+}

@@ -29,7 +29,7 @@ type evaluator func() error
 // checkEventually checks if a condition is met repeatedly
 func checkEventually(eval evaluator) error {
 	pollInterval := time.Second
-	timeoutInterval := time.Second * 10
+	timeoutInterval := time.Second * 30
 
 	timer := time.Now()
 	timeout := time.After(timeoutInterval)
@@ -64,7 +64,7 @@ func testWhitelistPolicy(fromIP, toIP, proto, port string) error {
 
 	// add allow all rule for workload followed by deny all rule
 	spc = spc.AddRuleForWorkloadCombo(workloadPairs, fromIP, toIP, proto, port, "PERMIT")
-	spc = spc.AddRule("any", "any", "0-65535", "DENY")
+	spc = spc.AddRule("any", "any", "any", "DENY")
 	err := spc.Commit()
 	if err != nil {
 		return err
@@ -159,7 +159,7 @@ func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
 
 	// add deny rule for workload followed by allow all rule
 	spc = spc.AddRuleForWorkloadCombo(workloadPairs, fromIP, toIP, proto, port, "DENY")
-	spc = spc.AddRule("any", "any", "0-65535", "PERMIT")
+	spc = spc.AddRule("any", "any", "any", "PERMIT")
 	err := spc.Commit()
 	if err != nil {
 		return err
@@ -276,6 +276,7 @@ var _ = Describe("firewall policy model tests", func() {
 
 			// whitelist tests
 			whitelistResult := make(map[string]error)
+			failed := false
 			for _, fromIP := range fromIPcomb {
 				for _, toIP := range toIPcomb {
 					for _, proto := range protocomb {
@@ -283,6 +284,7 @@ var _ = Describe("firewall policy model tests", func() {
 							for _, port := range portcomp {
 								err := testWhitelistPolicy(fromIP, toIP, proto, port)
 								if err != nil {
+									failed = true
 									log.Errorf("Error during whitelist policy test for %s. Err: %v", fmt.Sprintf("%s\t%s\t%s\t%s", fromIP, toIP, proto, port), err)
 									if os.Getenv("STOP_ON_ERROR") != "" {
 										log.Errorf("Whitelist Test failed for: %s\t%s\t%s\t%s. Err: %v", fromIP, toIP, proto, port, err)
@@ -295,6 +297,7 @@ var _ = Describe("firewall policy model tests", func() {
 						} else {
 							err := testWhitelistPolicy(fromIP, toIP, proto, "")
 							if err != nil {
+								failed = true
 								log.Errorf("Error during whitelist policy test for %s. Err: %v", fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto), err)
 								if os.Getenv("STOP_ON_ERROR") != "" {
 									log.Errorf("Whitelist Test failed for: %s\t%s\t%s. Err: %v", fromIP, toIP, proto, err)
@@ -325,6 +328,7 @@ var _ = Describe("firewall policy model tests", func() {
 				}
 			}
 			w.Flush()
+			Expect(failed).Should(Equal(false))
 
 		})
 
@@ -336,6 +340,7 @@ var _ = Describe("firewall policy model tests", func() {
 
 			// blacklist tests
 			blacklistResult := make(map[string]error)
+			failed := false
 			for _, fromIP := range fromIPcomb {
 				for _, toIP := range toIPcomb {
 					for _, proto := range protocomb {
@@ -343,8 +348,8 @@ var _ = Describe("firewall policy model tests", func() {
 							for _, port := range portcomp {
 								err := testBlacklistPolicy(fromIP, toIP, proto, port)
 								if err != nil {
+									failed = true
 									log.Errorf("Error during blacklist policy test for %s. Err: %v", fmt.Sprintf("%s\t%s\t%s\t%s", fromIP, toIP, proto, port), err)
-
 									if os.Getenv("STOP_ON_ERROR") != "" {
 										log.Errorf("Blacklist Test failed for: %s\t%s\t%s\t%s. Err: %v", fromIP, toIP, proto, port, err)
 										os.Exit(1)
@@ -356,6 +361,7 @@ var _ = Describe("firewall policy model tests", func() {
 						} else {
 							err := testBlacklistPolicy(fromIP, toIP, proto, "")
 							if err != nil {
+								failed = true
 								log.Errorf("Error during blacklist policy test for %s. Err: %v", fmt.Sprintf("%s\t%s\t%s\t", fromIP, toIP, proto), err)
 
 								if os.Getenv("STOP_ON_ERROR") != "" {
@@ -386,7 +392,7 @@ var _ = Describe("firewall policy model tests", func() {
 				}
 			}
 			w.Flush()
-
+			Expect(failed).Should(Equal(false))
 		})
 	})
 })

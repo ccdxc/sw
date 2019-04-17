@@ -280,6 +280,7 @@ func (spc *SGPolicyCollection) AddRuleForWorkloadCombo(wpc *WorkloadPairCollecti
 		// determine protocol
 		switch proto {
 		case "any":
+			fallthrough
 		case "icmp":
 			rule.ProtoPorts = append(rule.ProtoPorts, security.ProtoPort{Protocol: proto})
 		default:
@@ -292,7 +293,7 @@ func (spc *SGPolicyCollection) AddRuleForWorkloadCombo(wpc *WorkloadPairCollecti
 				}
 				rule.ProtoPorts = append(rule.ProtoPorts, pp)
 			} else {
-				rule.ProtoPorts = append(rule.ProtoPorts, security.ProtoPort{Protocol: proto})
+				rule.ProtoPorts = append(rule.ProtoPorts, security.ProtoPort{Protocol: proto, Ports: "0-65535"})
 			}
 
 		}

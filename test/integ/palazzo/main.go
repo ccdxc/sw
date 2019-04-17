@@ -39,7 +39,7 @@ func main() {
 	var numHosts = flagSet.Int("hosts", 3, "Number of hosts / agents")
 	var datapathKind = flagSet.String("datapath", "mock", "Specify the datapath type. mock | hal | delphi")
 	var skipAuth = flagSet.Bool("skipauth", false, "Skip Authorization")
-	var apigwPort = flagSet.String("apiport", "", "API Gateway port (default 9090)")
+	var apigwPort = flagSet.String("apiport", "", "API Gateway port (default 9443)")
 	var startElastic = flagSet.Bool("elastic", true, "Start Elasticsearch")
 	flagSet.Parse(os.Args[1:])
 
@@ -66,7 +66,7 @@ func main() {
 	veniceInteg.SetUpSuite(&check.C{})
 
 	time.Sleep(time.Second)
-	fmt.Printf("\n\n\n\n=============== Venice Emulator is ready, ui https://localhost:9090 ==============================\n\n\n\n")
+	fmt.Printf("\n\n\n\n=============== Venice Emulator is ready, ui https://localhost:9443 ==============================\n\n\n\n")
 
 	// wait for signal
 	sigs := make(chan os.Signal, 1)
