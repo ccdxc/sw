@@ -5,14 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"google.golang.org/grpc"
-
 	"golang.org/x/net/context"
-
-	"github.com/pensando/sw/venice/utils/resolver/mock"
+	"google.golang.org/grpc"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver/mock"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -146,7 +145,7 @@ WaitLoop:
 			if len(addrs) == 2 {
 				break WaitLoop
 			}
-			t.Fatalf("Timed out waiting for resolver notification")
+			t.Fatalf("Timed out waiting for resolver notification [%v]", addrs)
 		}
 	}
 
@@ -156,4 +155,148 @@ WaitLoop:
 	AssertEquals(t, "node1:8888", addrs[1][0].Addr, fmt.Sprintf("Expected node1:8888, got %v", addrs[1][0].Addr))
 	b.Close()
 	b1.Close()
+}
+
+func TestMonitor(t *testing.T) {
+	rc := mock.New()
+	b := New(rc).(*balancer)
+	b.running = true
+	b.service = "testService"
+	b.notifyCh = make(chan []grpc.Address, 128)
+	b.resetTime = time.Now()
+	b.monitorJitter = time.Millisecond * 10
+	b.monitorOfset = time.Millisecond * 100
+	b.Add(1)
+	go b.monitor()
+	// With no up connections notify monitorr and expect notification with 0 nodes, and periodically
+	var ts time.Time
+	var d time.Duration
+	got := false
+	select {
+	case <-b.notifyCh:
+		got = true
+	case <-time.After(200 * time.Millisecond):
+	}
+	Assert(t, got == false, "should not have seen any notification")
+
+	b.wakeUpMonitor(nil)
+	time.Sleep(250 * time.Millisecond)
+	Assert(t, len(b.notifyCh) > 2, "should have seen atleast 2 notifications")
+
+	// Wakeup of the monitor does not reset the timer
+	b.Lock()
+	time.Sleep(time.Millisecond * 200)
+loop0:
+	for {
+		select {
+		case <-b.notifyCh:
+		default:
+			break loop0
+		}
+	}
+	b.resetTime = time.Now()
+	b.Unlock()
+	go func() {
+		for i := 0; i < 5; i++ {
+			time.Sleep(20 * time.Millisecond)
+			b.wakeUpMonitor(nil)
+		}
+	}()
+	set := false
+
+	tick := time.Tick(time.Millisecond * 300)
+loop1:
+	for {
+		select {
+		case <-b.notifyCh:
+			if !set {
+				ts = time.Now()
+				set = true
+				break
+			}
+			d = time.Since(ts)
+			Assert(t, d > time.Millisecond*100, "too little time between notifications [%v]", d)
+		case <-tick:
+			break loop1
+		}
+	}
+
+	// With no up connections but with resolver returning some node, expect notification
+	si := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "inst1",
+		},
+		Service: "testService",
+		Node:    "node1",
+		URL:     url,
+	}
+	rc.AddServiceInstance(&si)
+	b.wakeUpMonitor(nil)
+loop2:
+	for {
+		select {
+		case <-time.After(100 * time.Millisecond):
+			t.Fatalf("Timed out receiving event")
+		case n := <-b.notifyCh:
+			if len(n) == 1 && n[0].Addr == url {
+				break loop2
+			}
+		}
+	}
+
+	// Make sure we are giving atleast ofset time for grpc to establish connection.
+loop3:
+	for {
+		select {
+		case n := <-b.notifyCh:
+			if len(n) == 0 && set {
+				ts = time.Now()
+				break loop3
+			}
+			if len(n) > 0 && !set {
+				d = time.Since(ts)
+				set = true
+			}
+		case <-time.After(200 * time.Millisecond):
+			t.Fatal("timeout waiting for notification")
+		}
+	}
+	Assert(t, d > time.Millisecond*100, "did not give enough time to grpc to establish connection [%v]", d)
+
+	// UP connection and ensure that we do not see any notifications from monitor
+	//  -- drain all notifications and hold lock to make sure no new timers fire.
+	b.Lock()
+	tick = time.Tick(time.Millisecond * 200)
+loop4:
+	for {
+		select {
+		case e := <-b.notifyCh:
+			log.Printf("got [%v]", e)
+		case <-tick:
+			break loop4
+		}
+	}
+	b.upConns = []grpc.Address{grpc.Address{Addr: url}}
+	b.wakeUpMonitor(nil)
+	b.Unlock()
+
+	count := 0
+loop5:
+	for {
+		select {
+		case <-b.notifyCh:
+			count++
+			time.Sleep(time.Second)
+		case <-time.After(200 * time.Millisecond):
+			break loop5
+		}
+	}
+	Assert(t, count < 2, "should not have seen more than 1 notification [%d]", count)
+
+	// close and ensure monitor exits
+	b.wakeUpMonitor(fmt.Errorf("test end"))
+	b.Wait()
 }
