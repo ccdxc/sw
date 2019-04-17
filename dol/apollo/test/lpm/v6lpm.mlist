@@ -15,6 +15,12 @@ modules:
             - route : filter://AddrFamily=IPV6,RouteType=only_default
 
     - module:
+        name    : IPV6_HOST_ROUTE
+        spec    : lpm.testspec
+        iterate :
+            - route : filter://AddrFamily=IPV6,RouteType=only_host
+
+    - module:
         name    : IPV6_ADJACENT_ROUTE
         spec    : lpm.testspec
         iterate :

@@ -31,10 +31,12 @@ class rrobiniter:
 
 def GetFilteredObjects(objs, maxlimits, random=True):
     if maxlimits is None or maxlimits is 0 or maxlimits >= len(objs):
-        return objs
+        num = len(objs)
+    else:
+        num = maxlimits
     if random:
-        return sample(objs, k = maxlimits)
-    return objs[0:maxlimits]
+        return sample(objs, k=num)
+    return objs[0:num]
 
 def GetTunnelType(e):
     if e == 'internet-gateway':

@@ -1,7 +1,7 @@
-# Test Spec
+# Test Spec for positive LPM cases
 selectors:
     root: ref://store/templates/id=ROUTE
-    maxlimit: None
+    maxlimits: 5
     flow: filter://any
     route: filter://any
 
