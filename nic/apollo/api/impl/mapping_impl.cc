@@ -361,9 +361,10 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
     }
     handle_.local_.overlay_ip_remote_vnic_tx_hdl_ = tparams.handle;
 
-    PDS_TRACE_DEBUG("Reserved overlay_ip_hdl %lu, "
-                    "overlay_ip_remote_vnic_tx_hdl %lu",
-                    handle_.local_.overlay_ip_hdl_, handle_.local_.overlay_ip_remote_vnic_tx_hdl_);
+    PDS_TRACE_DEBUG("Rsvd overlay_ip_hdl 0x%lx, "
+                    "overlay_ip_remote_vnic_tx_hdl 0x%lx",
+                    handle_.local_.overlay_ip_hdl_,
+                    handle_.local_.overlay_ip_remote_vnic_tx_hdl_);
 
     // check if this mapping has public IP
     if (!spec->public_ip_valid) {
@@ -401,9 +402,10 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
     }
     handle_.local_.public_ip_remote_vnic_tx_hdl_ = tparams.handle;
 
-    PDS_TRACE_DEBUG("Reserved public_ip_hdl %lu, "
-                    "public_ip_remote_vnic_tx_hdl %u",
-                    handle_.local_.public_ip_hdl_, handle_.local_.public_ip_remote_vnic_tx_hdl_);
+    PDS_TRACE_DEBUG("Rsvd public_ip_hdl 0x%lx, "
+                    "public_ip_remote_vnic_tx_hdl 0x%x",
+                    handle_.local_.public_ip_hdl_,
+                    handle_.local_.public_ip_remote_vnic_tx_hdl_);
 
     // reserve an entry for overaly IP to public IP xlation in NAT_TX table
     // TODO: typecasting to uint32_t should be removed once DM APIs are
@@ -422,8 +424,8 @@ mapping_impl::reserve_local_ip_mapping_resources_(api_base *api_obj,
                       "err %u", api_obj->key2str().c_str(), ret);
         goto error;
     }
-    PDS_TRACE_DEBUG("Reserved overlay_ip_to_public_ip_nat_hdl %u, "
-                    "public_ip_to_overlay_ip_nat_hdl_ %u",
+    PDS_TRACE_DEBUG("Rsvd overlay_ip_to_public_ip_nat_hdl 0x%lx, "
+                    "public_ip_to_overlay_ip_nat_hdl_ 0x%lx",
                     handle_.local_.overlay_ip_to_public_ip_nat_hdl_,
                     handle_.local_.public_ip_to_overlay_ip_nat_hdl_);
 

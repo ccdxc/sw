@@ -81,7 +81,8 @@ send_packet (const uint8_t *tx_pkt, uint32_t tx_pkt_len, uint32_t tx_port,
 #endif
 }
 
-uint32_t pds_get_next_addr16(uint32_t addr)
+uint32_t
+pds_get_next_addr16 (uint32_t addr)
 {
     uint16_t base;
 

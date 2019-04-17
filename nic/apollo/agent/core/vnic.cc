@@ -14,14 +14,14 @@ vnic_create_validate (pds_vnic_spec_t *spec)
 {
     // check if vnic exists
     if (agent_state::state()->find_in_vpc_db(&spec->vcn) == NULL) {
-        PDS_TRACE_ERR("Failed to create vnic %u, vpc %u not found",
+        PDS_TRACE_ERR("Failed to create vnic {}, vpc {} not found",
                       spec->key.id, spec->key.id);
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
 
     // check if subnet exists
     if (agent_state::state()->find_in_subnet_db(&spec->subnet) == NULL) {
-        PDS_TRACE_ERR("Failed to create vnic %u, subnet %u not found",
+        PDS_TRACE_ERR("Failed to create vnic {}, subnet {} not found",
                       spec->key.id, spec->subnet.id);
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
@@ -34,27 +34,27 @@ vnic_create (pds_vnic_key_t *key, pds_vnic_spec_t *spec)
     sdk_ret_t ret;
 
     if (agent_state::state()->find_in_vnic_db(key) != NULL) {
-        PDS_TRACE_ERR("Failed to create vnic %u, vnic exists already",
+        PDS_TRACE_ERR("Failed to create vnic {}, vnic exists already",
                       spec->key.id);
         return sdk::SDK_RET_ENTRY_EXISTS;
     }
 
     if ((ret = vnic_create_validate(spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("vnic %u validation failure, err %u",
+        PDS_TRACE_ERR("vnic {} validation failure, err {}",
                       spec->key.id, ret);
         return ret;
     }
-    
+
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_vnic_create(spec)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to create vnic %u, err %u",
+            PDS_TRACE_ERR("Failed to create vnic {}, err {}",
                           spec->key.id, ret);
             return ret;
         }
     }
 
     if ((ret = agent_state::state()->add_to_vnic_db(key, spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to add vnic %u to db, err %u",
+        PDS_TRACE_ERR("Failed to add vnic {} to db, err {}",
                       spec->key.id, ret);
         return ret;
     }
@@ -67,19 +67,19 @@ vnic_delete (pds_vnic_key_t *key)
     sdk_ret_t ret;
 
     if (agent_state::state()->find_in_vnic_db(key) == NULL) {
-        PDS_TRACE_ERR("Failed to delete vnic %u, vnic not found", key->id);
+        PDS_TRACE_ERR("Failed to delete vnic {}, vnic not found", key->id);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_vnic_delete(key)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to delete vnic %u, err %u", key->id, ret);
+            PDS_TRACE_ERR("Failed to delete vnic {}, err {}", key->id, ret);
             return ret;
         }
     }
 
     if (agent_state::state()->del_from_vnic_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete vnic %u from vnic db", key->id);
+        PDS_TRACE_ERR("Failed to delete vnic {} from vnic db", key->id);
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;

@@ -24,35 +24,43 @@ static int
 trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
 {
     va_list args;
+    const char *pfx;
+    struct timespec tp_;
 
+    if (trace_level == sdk::lib::SDK_TRACE_LEVEL_NONE) {
+        return 0;
+    }
+
+    switch (trace_level) {
+    case sdk::lib::SDK_TRACE_LEVEL_ERR:
+        pfx = "[E]";
+        break;
+
+    case sdk::lib::SDK_TRACE_LEVEL_WARN:
+        pfx = "[W]";
+        break;
+
+    case sdk::lib::SDK_TRACE_LEVEL_INFO:
+        pfx = "[I]";
+        break;
+
+    case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
+        pfx = "[D]";
+        break;
+
+    case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
+    default:
+        // pfx = "[V]";
+        // fprintf(stdout, "[V] %s\n", logbuf);
+        return 0;
+    }
+
+    clock_gettime(CLOCK_MONOTONIC, &tp_);
     va_start(args, format);
     vsnprintf(logbuf, sizeof(logbuf), format, args);
     va_end(args);
-
-    switch (trace_level) {
-    case sdk::lib::SDK_TRACE_LEVEL_NONE:
-        return 0;
-        break;
-    case sdk::lib::SDK_TRACE_LEVEL_ERR:
-        fprintf(stderr, "[E] %s\n", logbuf);
-        break;
-    case sdk::lib::SDK_TRACE_LEVEL_WARN:
-        fprintf(stderr, "[W] %s\n", logbuf);
-        break;
-    case sdk::lib::SDK_TRACE_LEVEL_INFO:
-        fprintf(stdout, "[I] %s\n", logbuf);
-        break;
-    case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
-        fprintf(stdout, "[D] %s\n", logbuf);
-        break;
-    case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
-        // fprintf(stdout, "[V] %s\n", logbuf);
-        break;
-    default:
-        break;
-    }
+    fprintf(stdout, "%s [%lu.%9lu] %s\n", pfx, tp_.tv_sec, tp_.tv_nsec, logbuf);
     fflush(stdout);
-    fflush(stderr);
     return 0;
 }
 

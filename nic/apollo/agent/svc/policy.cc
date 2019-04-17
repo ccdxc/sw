@@ -23,7 +23,7 @@ pds_policy_dir_proto_to_api_spec (rule_dir_t *dir,
     } else if (proto_spec.direction() == types::RULE_DIR_EGRESS) {
         *dir = RULE_DIR_EGRESS;
     } else {
-        PDS_TRACE_ERR("Invalid direction %u in policy spec %u",
+        PDS_TRACE_ERR("Invalid direction {} in policy spec {}",
                       proto_spec.direction(), proto_spec.id());
         return SDK_RET_INVALID_ARG;
     }
@@ -36,14 +36,14 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
                                          const pds::SecurityRule &proto_rule)
 {
     if (unlikely(proto_rule.has_match() == false)) {
-        PDS_TRACE_ERR("Security policy %u, rule %u has no match condition, "
+        PDS_TRACE_ERR("Security policy {}, rule {} has no match condition, "
                       "IP protocol is a mandatory match condition",
                       policy_id, rule_id);
         return SDK_RET_INVALID_ARG;
     }
 
     if (unlikely(proto_rule.match().has_l3match() == false)) {
-        PDS_TRACE_ERR("Security policy %u, rule %u has no L3 match condition, "
+        PDS_TRACE_ERR("Security policy {}, rule {} has no L3 match condition, "
                       "IP protocol is a mandatory match condition",
                       policy_id, rule_id);
         return SDK_RET_INVALID_ARG;
@@ -56,8 +56,8 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
         (match->l3_match.ip_proto != IP_PROTO_TCP) &&
         (match->l3_match.ip_proto != IP_PROTO_ICMP) &&
         (match->l3_match.ip_proto != IP_PROTO_ICMPV6)) {
-        PDS_TRACE_ERR("Security policy %u, rule %u with unsupported IP "
-                      "protocol %u", policy_id, rule_id,
+        PDS_TRACE_ERR("Security policy {}, rule {} with unsupported IP "
+                      "protocol {}", policy_id, rule_id,
                       match->l3_match.ip_proto);
         return SDK_RET_INVALID_ARG;
     }
@@ -76,8 +76,8 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
         if (proto_l4_match.has_ports()) {
             if ((match->l3_match.ip_proto != IP_PROTO_UDP) &&
                 (match->l3_match.ip_proto != IP_PROTO_TCP)) {
-                PDS_TRACE_ERR("Invalid port config in security policy %u, "
-                              "rule %u", policy_id, rule_id);
+                PDS_TRACE_ERR("Invalid port config in security policy {}, "
+                              "rule {}", policy_id, rule_id);
                 return SDK_RET_INVALID_ARG;
             }
             if (proto_l4_match.ports().has_srcportrange()) {
@@ -88,7 +88,7 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
                 if (unlikely(match->l4_match.sport_range.port_lo >
                              match->l4_match.sport_range.port_hi)) {
                     PDS_TRACE_ERR("Invalid src port range in security "
-                                  "policy %u, rule %u", policy_id, rule_id);
+                                  "policy {}, rule {}", policy_id, rule_id);
                     return SDK_RET_INVALID_ARG;
                 }
             } else {
@@ -103,7 +103,7 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
                 if (unlikely(match->l4_match.dport_range.port_lo >
                              match->l4_match.dport_range.port_hi)) {
                     PDS_TRACE_ERR("Invalid dst port range in security "
-                                  "policy %u, rule %u", policy_id, rule_id);
+                                  "policy {}, rule {}", policy_id, rule_id);
                     return SDK_RET_INVALID_ARG;
                 }
             } else {
@@ -113,8 +113,8 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
         } else if (proto_l4_match.has_typecode()) {
             if ((match->l3_match.ip_proto != IP_PROTO_ICMP) &&
                 (match->l3_match.ip_proto != IP_PROTO_ICMPV6)) {
-                PDS_TRACE_ERR("Invalid ICMP config in security policy %u, "
-                              "rule %u", policy_id, rule_id);
+                PDS_TRACE_ERR("Invalid ICMP config in security policy {}, "
+                              "rule {}", policy_id, rule_id);
                 return SDK_RET_INVALID_ARG;
             }
             const types::ICMPMatch& typecode = proto_l4_match.typecode();
@@ -157,7 +157,7 @@ pds_policy_proto_to_api_spec (const pds::SecurityPolicySpec &proto_spec,
     }
     num_rules = proto_spec.rules_size();
     if (unlikely(num_rules == 0)) {
-        PDS_TRACE_ERR("Rejecting empty security policy %u",
+        PDS_TRACE_ERR("Rejecting empty security policy {}",
                       api_spec->key.id);
         return SDK_RET_INVALID_ARG;
     }
@@ -165,7 +165,7 @@ pds_policy_proto_to_api_spec (const pds::SecurityPolicySpec &proto_spec,
     api_spec->rules = (rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
                                            sizeof(rule_t) * num_rules);
     if (unlikely(api_spec->rules == NULL)) {
-        PDS_TRACE_ERR("Failed to allocate memory for security policy %u",
+        PDS_TRACE_ERR("Failed to allocate memory for security policy {}",
                       api_spec->key.id);
         return sdk::SDK_RET_OOM;
     }
@@ -179,7 +179,7 @@ pds_policy_proto_to_api_spec (const pds::SecurityPolicySpec &proto_spec,
                                                       &api_spec->rules[i].match,
                                                       proto_rule);
         if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failed converting policy %u spec, err %u",
+            PDS_TRACE_ERR("Failed converting policy {} spec, err {}",
                           api_spec->key.id, ret);
             goto cleanup;
         }

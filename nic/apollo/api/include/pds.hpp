@@ -37,6 +37,7 @@ typedef uint32_t pds_route_table_id_t;
 typedef uint32_t pds_policy_id_t;
 typedef uint16_t pds_lif_key_t;
 typedef uint32_t pds_ifindex_t;
+typedef uint32_t pds_mirror_session_id_t;
 
 /// \brief Encapsulation type
 typedef enum pds_encap_type_e {

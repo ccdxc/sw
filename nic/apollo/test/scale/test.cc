@@ -88,20 +88,24 @@ typedef struct test_params_s {
 } test_params_t;
 test_params_t g_test_params = { 0 };
 
-#define CONVERT_TO_V4_MAPPED_V6_ADDRESS(_v6pfx, _v4addr) {\
-    _v6pfx.addr8[12] = (_v4addr >> 24) & 0xFF;\
-    _v6pfx.addr8[13] = (_v4addr >> 16) & 0xFF;\
-    _v6pfx.addr8[14] = (_v4addr >> 8) & 0xFF;\
-    _v6pfx.addr8[15] = (_v4addr) & 0xFF;\
+#define CONVERT_TO_V4_MAPPED_V6_ADDRESS(_v6pfx, _v4addr) {         \
+    _v6pfx.addr8[12] = (_v4addr >> 24) & 0xFF;                     \
+    _v6pfx.addr8[13] = (_v4addr >> 16) & 0xFF;                     \
+    _v6pfx.addr8[14] = (_v4addr >> 8) & 0xFF;                      \
+    _v6pfx.addr8[15] = (_v4addr) & 0xFF;                           \
 }
+
+#define PDS_SUBNET_ID(vpc_num, num_subnets_per_vpc, subnet_num)    \
+            (((vpc_num) * (num_subnets_per_vpc)) + subnet_num)
 
 //----------------------------------------------------------------------------
 // create route tables
 //------------------------------------------------------------------------------
 sdk_ret_t
-create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
-                     uint32_t num_routes, ip_prefix_t *tep_pfx,
-                     ip_prefix_t *route_pfx, ip_prefix_t *v6_route_pfx)
+create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
+                        uint32_t num_subnets, uint32_t num_routes,
+                        ip_prefix_t *tep_pfx, ip_prefix_t *route_pfx,
+                        ip_prefix_t *v6_route_pfx)
 {
     uint32_t ntables = num_vpcs * num_subnets;
     uint32_t tep_offset = 3;
@@ -112,18 +116,18 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subne
     tep_offset = 3;
     v6route_table.af = IP_AF_IPV6;
     v6route_table.routes =
-            (pds_route_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE, (num_routes * sizeof(pds_route_t)));
+            (pds_route_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                      (num_routes * sizeof(pds_route_t)));
     v6route_table.num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {
         v6route_table.key.id = ntables + i;
         for (uint32_t j = 0; j < num_routes; j++) {
             v6route_table.routes[j].prefix = *v6_route_pfx;
             v6route_table.routes[j].prefix.addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-2] =
-                    htonl(0xF1D0D1D0);
+                htonl(0xF1D0D1D0);
             v6route_table.routes[j].prefix.addr.addr.v6_addr.addr32[IP6_ADDR32_LEN-1] =
-                    htonl((0xC << 28) | (v6rtnum++ << 8));
+                htonl((0xC << 28) | (v6rtnum++ << 8));
             v6route_table.routes[j].prefix.len = 120;
-
             v6route_table.routes[j].nh_ip.af = IP_AF_IPV4;
             v6route_table.routes[j].nh_ip.addr.v4_addr =
                     tep_pfx->addr.addr.v4_addr + tep_offset++;
@@ -188,7 +192,8 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
 
     route_table.af = IP_AF_IPV4;
     route_table.routes =
-        (pds_route_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE, (num_routes * sizeof(pds_route_t)));
+        (pds_route_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
+                                  (num_routes * sizeof(pds_route_t)));
     route_table.num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {
         route_table.key.id = i;
@@ -237,10 +242,9 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     }
 
     if (g_test_params.dual_stack) {
-        rv = create_v6_route_tables(num_teps, num_vpcs, num_subnets,
-                         num_routes, tep_pfx, route_pfx, v6_route_pfx);
+        rv = create_v6_route_tables(num_teps, num_vpcs, num_subnets, num_routes,
+                                    tep_pfx, route_pfx, v6_route_pfx);
     }
-
     return rv;
 }
 
@@ -251,7 +255,8 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
 sdk_ret_t
 create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                  uint32_t num_vnics, uint32_t num_ip_per_vnic,
-                 ip_prefix_t *teppfx, ip_prefix_t *natpfx, ip_prefix_t *v6_natpfx,
+                 ip_prefix_t *teppfx, ip_prefix_t *natpfx,
+                 ip_prefix_t *v6_natpfx,
                  uint32_t num_remote_mappings)
 {
     sdk_ret_t rv;
@@ -277,13 +282,17 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_local_mapping.key.ip_addr.addr.v4_addr =
                         (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                         (((k - 1) * num_ip_per_vnic) + l);
-                    pds_local_mapping.subnet.id = (i - 1) * num_subnets + j;
-                    if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
-                        pds_local_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+                    pds_local_mapping.subnet.id =
+                        PDS_SUBNET_ID((i - 1), num_subnets, j);
+                    if (g_test_params.fabric_encap.type ==
+                            PDS_ENCAP_TYPE_VXLAN) {
+                        pds_local_mapping.fabric_encap.type =
+                            PDS_ENCAP_TYPE_VXLAN;
                         //pds_mapping.fabric_encap.val.vnid = VNID_BASE + pds_mapping.subnet.id;
                         pds_local_mapping.fabric_encap.val.vnid = vnic_key;
                     } else {
-                        pds_local_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
+                        pds_local_mapping.fabric_encap.type =
+                            PDS_ENCAP_TYPE_MPLSoUDP;
                         pds_local_mapping.fabric_encap.val.mpls_tag = vnic_key;
                     }
                     MAC_UINT64_TO_ADDR(pds_local_mapping.vnic_mac,
@@ -370,14 +379,18 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 pds_remote_mapping.key.ip_addr.addr.v4_addr =
                     (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                     ip_base++;
-                pds_remote_mapping.subnet.id = (i - 1) * num_subnets + j;
+                pds_remote_mapping.subnet.id =
+                    PDS_SUBNET_ID((i - 1), num_subnets, j);
                 if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
                     pds_remote_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-                    //pds_mapping.fabric_encap.val.vnid = VNID_BASE + pds_mapping.subnet.id;
+                    //pds_mapping.fabric_encap.val.vnid =
+                        //VNID_BASE + pds_mapping.subnet.id;
                     pds_remote_mapping.fabric_encap.val.vnid = remote_slot++;
                 } else {
-                    pds_remote_mapping.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-                    pds_remote_mapping.fabric_encap.val.mpls_tag = remote_slot++;
+                    pds_remote_mapping.fabric_encap.type =
+                        PDS_ENCAP_TYPE_MPLSoUDP;
+                    pds_remote_mapping.fabric_encap.val.mpls_tag =
+                        remote_slot++;
                 }
                 pds_remote_mapping.tep.ip_addr =
                     teppfx->addr.addr.v4_addr + tep_offset;
@@ -462,13 +475,14 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 memset(&pds_vnic, 0, sizeof(pds_vnic));
                 pds_vnic.vcn.id = i;
-                pds_vnic.subnet.id = (i - 1) * num_subnets + j;
+                pds_vnic.subnet.id = PDS_SUBNET_ID((i - 1), num_subnets, j);
                 pds_vnic.key.id = vnic_key;
                 pds_vnic.vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
                 pds_vnic.vnic_encap.val.vlan_tag = vlan_start + vnic_key - 1;
                 if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
                     pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-                    //pds_vnic.fabric_encap.val.vnid = VNID_BASE + pds_vnic.subnet.id;
+                    //pds_vnic.fabric_encap.val.vnid =
+                        //VNID_BASE + pds_vnic.subnet.id;
                     pds_vnic.fabric_encap.val.vnid = vnic_key;
                 } else {
                     pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
@@ -515,11 +529,11 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
     sdk_ret_t rv;
     pds_subnet_spec_t pds_subnet;
     static uint32_t route_table_id = 1;
-    static uint32_t id = 1;
+    static uint32_t policy_id = 1;
 
     for (uint32_t i = 1; i <= num_subnets; i++) {
         memset(&pds_subnet, 0, sizeof(pds_subnet));
-        pds_subnet.key.id = (vpc_id - 1) * num_subnets + i;
+        pds_subnet.key.id = PDS_SUBNET_ID((vpc_id - 1), num_subnets, i);
         pds_subnet.vcn.id = vpc_id;
         pds_subnet.v4_pfx = *vpc_pfx;
         pds_subnet.v4_pfx.v4_addr =
@@ -531,9 +545,9 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
         pds_subnet.v6_route_table.id =
             route_table_id + (num_subnets * num_vpcs);
         pds_subnet.v4_route_table.id = route_table_id++;
-        pds_subnet.egr_v4_policy.id = id;
-        pds_subnet.ing_v4_policy.id = id + (num_subnets * num_vpcs);
-        id++;
+        pds_subnet.egr_v4_policy.id = policy_id;
+        pds_subnet.ing_v4_policy.id = policy_id + (num_subnets * num_vpcs);
+        policy_id++;
 #ifdef TEST_GRPC_APP
         rv = create_subnet_grpc(&pds_subnet);
         if (rv != SDK_RET_OK) {
@@ -573,11 +587,9 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ip_pfx, uint32_t num_subnets)
             return rv;
         }
 #endif
-        for (uint32_t j = 1; j <= num_subnets; j++) {
-            rv = create_subnets(i, num_vpcs, j, &pds_vcn.v4_pfx);
-            if (rv != SDK_RET_OK) {
-                return rv;
-            }
+        rv = create_subnets(i, num_vpcs, num_subnets, &pds_vcn.v4_pfx);
+        if (rv != SDK_RET_OK) {
+            return rv;
         }
     }
 #ifdef TEST_GRPC_APP
@@ -683,7 +695,7 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
     }
     num_pfx = (uint32_t)ceilf((float)num_rules/(float)num_sub_rules);
     for (uint32_t i = 1; i <= num_vpcs; i++) {
-        for (uint32_t j = 1, idx = 0; j <= num_subnets; j++) {
+        for (uint32_t j = 1, idx = 0; j <= num_subnets; idx = 0, j++) {
             memset(policy.rules, 0, num_rules * sizeof(rule_t));
             policy.key.id = policy_id++;
             done = false;

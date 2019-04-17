@@ -89,10 +89,10 @@ cfg_db::init(void) {
         slab::factory("tep", SLAB_ID_TEP, sizeof(pds_tep_spec_t),
                       16, true, true, true);
     slabs_[SLAB_ID_VNIC] =
-        slab::factory("vnic", SLAB_ID_SUBNET, sizeof(pds_vnic_spec_t),
+        slab::factory("vnic", SLAB_ID_VNIC, sizeof(pds_vnic_spec_t),
                       16, true, true, true);
     slabs_[SLAB_ID_ROUTE] =
-        slab::factory("route_table", SLAB_ID_SUBNET,
+        slab::factory("route_table", SLAB_ID_ROUTE,
                       sizeof(pds_route_table_spec_t),
                       16, true, true, true);
     slabs_[SLAB_ID_POLICY] =

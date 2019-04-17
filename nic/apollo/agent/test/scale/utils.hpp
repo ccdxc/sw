@@ -159,8 +159,9 @@ static void
 populate_route_table_request (RouteTableRequest *req,
                               pds_route_table_spec_t *rt)
 {
-    if (!rt || !req)
+    if (!rt || !req) {
         return;
+    }
 
     RouteTableSpec *spec = req->add_request();
 
@@ -210,6 +211,7 @@ populate_policy_request (SecurityPolicyRequest *req, pds_policy_spec_t *policy)
             rule->set_stateful(true);
         }
         if (policy->rules[i].match.l3_match.ip_proto) {
+
             rule->mutable_match()->mutable_l3match()->set_protocol(policy->rules[i].match.l3_match.ip_proto);
         }
         ip_pfx_to_spec(
@@ -228,8 +230,9 @@ static void
 populate_local_mapping_request (MappingRequest *req,
                                 pds_local_mapping_spec_t *local_spec)
 {
-    if (!local_spec || !req)
+    if (!local_spec || !req) {
         return;
+    }
 
     MappingSpec *spec = req->add_request();
     spec->mutable_id()->set_vpcid(local_spec->key.vcn.id);
@@ -311,8 +314,9 @@ populate_subnet_request (SubnetRequest *req, pds_subnet_spec_t *subnet)
 static void
 populate_vpc_request (VPCRequest *req, pds_vcn_spec_t *vcn)
 {
-    if (!vcn || !req)
+    if (!vcn || !req) {
         return;
+    }
 
     VPCSpec *spec = req->add_request();
     ipv4_pfx_to_spec(spec->mutable_v4prefix(), &vcn->v4_pfx);
