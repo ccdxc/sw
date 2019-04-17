@@ -86,7 +86,7 @@ func (w *Watcher) Stop() error {
 // runWatcherLoop run watcher loop till stopped
 func (w *Watcher) runWatcherLoop(ctx context.Context, cfg *ClusterConfig) {
 	for {
-		w.kvsConfig.Servers = getMetastoreURLs(cfg)
+		w.kvsConfig.Servers = GetMetastoreURLs(cfg)
 		w.runWatcher(ctx)
 
 		// check if watcher is stopped

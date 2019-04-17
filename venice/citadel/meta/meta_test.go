@@ -453,3 +453,8 @@ func TestMetaNodeRestartSlow(t *testing.T) {
 	meta.DestroyClusterState(cfg, meta.ClusterTypeTstore)
 	meta.DestroyClusterState(cfg, meta.ClusterTypeKstore)
 }
+
+func TestGetMetastoreURLs(t *testing.T) {
+	s := meta.GetMetastoreURLs(&meta.ClusterConfig{})
+	Assert(t, s == nil, "invalid store type didn't fail")
+}

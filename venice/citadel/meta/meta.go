@@ -495,7 +495,7 @@ func GetClusterState(cfg *ClusterConfig, clusterType string) (*TscaleCluster, er
 	// connect to kvstore
 	config := store.Config{
 		Type:        cfg.MetastoreType,
-		Servers:     getMetastoreURLs(cfg),
+		Servers:     GetMetastoreURLs(cfg),
 		Credentials: cfg.MetaStoreTLSConfig,
 		Codec:       runtime.NewJSONCodec(runtime.NewScheme()),
 	}
@@ -520,7 +520,7 @@ func GetClusterState(cfg *ClusterConfig, clusterType string) (*TscaleCluster, er
 func DestroyClusterState(cfg *ClusterConfig, clusterType string) error {
 	config := store.Config{
 		Type:        cfg.MetastoreType,
-		Servers:     getMetastoreURLs(cfg),
+		Servers:     GetMetastoreURLs(cfg),
 		Credentials: cfg.MetaStoreTLSConfig,
 		Codec:       runtime.NewJSONCodec(runtime.NewScheme()),
 	}
@@ -535,9 +535,11 @@ func DestroyClusterState(cfg *ClusterConfig, clusterType string) error {
 
 const apiServerRetry = 300
 
-func getMetastoreURLs(cfg *ClusterConfig) []string {
+// GetMetastoreURLs retrieves kv store URL from cluster config
+func GetMetastoreURLs(cfg *ClusterConfig) []string {
 	if cfg.MetastoreType != store.KVStoreTypeEtcd {
-		return []string{""}
+		log.Errorf("invalid meta store type %v", cfg.MetastoreType)
+		return nil
 	}
 
 	for i := 0; i < apiServerRetry; i++ {
