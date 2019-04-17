@@ -458,6 +458,12 @@ func (c *ConfigService) generateConfigs() ([]*iota.ConfigObject, error) {
 			AttachTenant: true,
 			Rules: []security.SGRule{
 				{
+					ProtoPorts: []security.ProtoPort{
+						{
+							Protocol: "any",
+							Ports:    "0-65535",
+						},
+					},
 					Action:          "PERMIT",
 					FromIPAddresses: []string{"any"},
 					ToIPAddresses:   []string{"any"},
