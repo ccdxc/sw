@@ -50,20 +50,53 @@ type eRolloutV1Endpoints struct {
 	Svc                     srolloutSvc_rolloutBackend
 	fnAutoWatchSvcRolloutV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
-	fnAutoAddRollout    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteRollout func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetRollout    func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListRollout   func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateRollout func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddRollout          func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoAddRolloutAction    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteRollout       func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoDeleteRolloutAction func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetRollout          func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoGetRolloutAction    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListRollout         func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoListRolloutAction   func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateRollout       func(ctx context.Context, t interface{}) (interface{}, error)
+	fnAutoUpdateRolloutAction func(ctx context.Context, t interface{}) (interface{}, error)
+	fnDoRollout               func(ctx context.Context, t interface{}) (interface{}, error)
 
-	fnAutoWatchRollout func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchRollout       func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
+	fnAutoWatchRolloutAction func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 }
 
 func (s *srolloutSvc_rolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 	l.Infof("registering message for srolloutSvc_rolloutBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"rollout.AutoMsgRolloutWatchHelper": apisrvpkg.NewMessage("rollout.AutoMsgRolloutWatchHelper"),
+		"rollout.AutoMsgRolloutActionWatchHelper": apisrvpkg.NewMessage("rollout.AutoMsgRolloutActionWatchHelper"),
+		"rollout.AutoMsgRolloutWatchHelper":       apisrvpkg.NewMessage("rollout.AutoMsgRolloutWatchHelper"),
+		"rollout.RolloutActionList": apisrvpkg.NewMessage("rollout.RolloutActionList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
+
+			into := rollout.RolloutActionList{}
+			into.Kind = "RolloutActionList"
+			r := rollout.RolloutAction{}
+			r.ObjectMeta = options.ObjectMeta
+			key := r.MakeKey(prefix)
+			ctx = apiutils.SetVar(ctx, "ObjKind", "rollout.RolloutAction")
+			err := kvs.ListFiltered(ctx, key, &into, *options)
+			if err != nil {
+				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "error", err)
+				return nil, err
+			}
+			return into, nil
+		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
+			r := i.(rollout.RolloutActionList)
+			r.APIVersion = ver
+			for i := range r.Items {
+				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
+			}
+			return r, nil
+		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
+			r := i.(rollout.RolloutActionList)
+			return &r
+		}),
 		"rollout.RolloutList": apisrvpkg.NewMessage("rollout.RolloutList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
 
 			into := rollout.RolloutList{}
@@ -111,11 +144,12 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsRolloutV1.fnAutoAddRollout = srv.AddMethod("AutoAddRollout",
 			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "AutoAddRollout")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(rollout.Rollout)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "rollout/v1/rollout/", in.Name), nil
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsRolloutV1.fnAutoAddRolloutAction = srv.AddMethod("AutoAddRolloutAction",
+			apisrvpkg.NewMethod(srv, pkgMessages["rollout.RolloutAction"], pkgMessages["rollout.RolloutAction"], "rollout", "AutoAddRolloutAction")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsRolloutV1.fnAutoDeleteRollout = srv.AddMethod("AutoDeleteRollout",
@@ -127,6 +161,11 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "rollout/v1/rollout/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsRolloutV1.fnAutoDeleteRolloutAction = srv.AddMethod("AutoDeleteRolloutAction",
+			apisrvpkg.NewMethod(srv, pkgMessages["rollout.RolloutAction"], pkgMessages["rollout.RolloutAction"], "rollout", "AutoDeleteRolloutAction")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "rollout/v1/rolloutAction"), nil
+		}).HandleInvocation
+
 		s.endpointsRolloutV1.fnAutoGetRollout = srv.AddMethod("AutoGetRollout",
 			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "AutoGetRollout")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(rollout.Rollout)
@@ -134,6 +173,11 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "rollout/v1/rollout/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsRolloutV1.fnAutoGetRolloutAction = srv.AddMethod("AutoGetRolloutAction",
+			apisrvpkg.NewMethod(srv, pkgMessages["rollout.RolloutAction"], pkgMessages["rollout.RolloutAction"], "rollout", "AutoGetRolloutAction")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "rollout/v1/rolloutAction"), nil
 		}).HandleInvocation
 
 		s.endpointsRolloutV1.fnAutoListRollout = srv.AddMethod("AutoListRollout",
@@ -145,8 +189,23 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "rollout/v1/rollout/", in.Name), nil
 		}).HandleInvocation
 
+		s.endpointsRolloutV1.fnAutoListRolloutAction = srv.AddMethod("AutoListRolloutAction",
+			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["rollout.RolloutActionList"], "rollout", "AutoListRolloutAction")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
 		s.endpointsRolloutV1.fnAutoUpdateRollout = srv.AddMethod("AutoUpdateRollout",
 			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "AutoUpdateRollout")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsRolloutV1.fnAutoUpdateRolloutAction = srv.AddMethod("AutoUpdateRolloutAction",
+			apisrvpkg.NewMethod(srv, pkgMessages["rollout.RolloutAction"], pkgMessages["rollout.RolloutAction"], "rollout", "AutoUpdateRolloutAction")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return "", fmt.Errorf("not rest endpoint")
+		}).HandleInvocation
+
+		s.endpointsRolloutV1.fnDoRollout = srv.AddMethod("DoRollout",
+			apisrvpkg.NewMethod(srv, pkgMessages["rollout.Rollout"], pkgMessages["rollout.Rollout"], "rollout", "DoRollout")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(rollout.Rollout)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -156,6 +215,8 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsRolloutV1.fnAutoWatchRollout = pkgMessages["rollout.Rollout"].WatchFromKv
 
+		s.endpointsRolloutV1.fnAutoWatchRolloutAction = pkgMessages["rollout.RolloutAction"].WatchFromKv
+
 		s.Services = map[string]apiserver.Service{
 			"rollout.RolloutV1": srv,
 		}
@@ -163,7 +224,7 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 		endpoints := rollout.MakeRolloutV1ServerEndpoints(s.endpointsRolloutV1, logger)
 		server := rollout.MakeGRPCServerRolloutV1(ctx, endpoints, logger)
 		rollout.RegisterRolloutV1Server(grpcserver.GrpcServer, server)
-		svcObjs := []string{"Rollout"}
+		svcObjs := []string{"Rollout", "RolloutAction"}
 		fieldhooks.RegisterImmutableFieldsServiceHooks("rollout", "RolloutV1", svcObjs)
 	}
 }
@@ -290,6 +351,106 @@ func (s *srolloutSvc_rolloutBackend) regWatchersFunc(ctx context.Context, logger
 			}
 		})
 
+		pkgMessages["rollout.RolloutAction"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
+			o := rollout.RolloutAction{}
+			key := o.MakeKey(svcprefix)
+			if strings.HasSuffix(key, "//") {
+				key = strings.TrimSuffix(key, "/")
+			}
+			wstream := stream.(rollout.RolloutV1_AutoWatchRolloutActionServer)
+			nctx, cancel := context.WithCancel(wstream.Context())
+			defer cancel()
+			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
+
+			nctx = ctxutils.SetContextID(nctx, id)
+			if kvs == nil {
+				return fmt.Errorf("Nil KVS")
+			}
+			nctx = apiutils.SetVar(nctx, "ObjKind", "rollout.RolloutAction")
+			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "rollout.RolloutAction")
+			watcher, err := kvs.WatchFiltered(nctx, key, *options)
+			if err != nil {
+				l.ErrorLog("msg", "error starting Watch on KV", "error", err, "WatcherID", id, "bbject", "rollout.RolloutAction")
+				return err
+			}
+			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
+			if !timer.Stop() {
+				<-timer.C
+			}
+			running := false
+			events := &rollout.AutoMsgRolloutActionWatchHelper{}
+			sendToStream := func() error {
+				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
+				if err := wstream.Send(events); err != nil {
+					l.ErrorLog("msg", "Stream send error'ed for Order", "error", err, "WatcherID", id, "bbject", "rollout.RolloutAction")
+					return err
+				}
+				events = &rollout.AutoMsgRolloutActionWatchHelper{}
+				return nil
+			}
+			defer l.InfoLog("msg", "exiting watcher", "service", "rollout.RolloutAction")
+			for {
+				select {
+				case ev, ok := <-watcher.EventChan():
+					if !ok {
+						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "rollout.RolloutAction")
+						return nil
+					}
+					evin, ok := ev.Object.(*rollout.RolloutAction)
+					if !ok {
+						status, ok := ev.Object.(*api.Status)
+						if !ok {
+							return errors.New("unknown error")
+						}
+						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
+					}
+					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
+					cin, err := evin.Clone(nil)
+					if err != nil {
+						return fmt.Errorf("unable to clone object (%s)", err)
+					}
+					in := cin.(*rollout.RolloutAction)
+					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "rollout")
+
+					strEvent := &rollout.AutoMsgRolloutActionWatchHelper_WatchEvent{
+						Type:   string(ev.Type),
+						Object: in,
+					}
+					l.DebugLog("msg", "received RolloutAction watch event from KV", "type", ev.Type)
+					if version != in.APIVersion {
+						i, err := txfn(in.APIVersion, version, in)
+						if err != nil {
+							l.ErrorLog("msg", "Failed to transform message", "type", "RolloutAction", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "rollout.RolloutAction")
+							break
+						}
+						strEvent.Object = i.(*rollout.RolloutAction)
+					}
+					events.Events = append(events.Events, strEvent)
+					if !running {
+						running = true
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
+						if err = sendToStream(); err != nil {
+							return err
+						}
+						if !timer.Stop() {
+							<-timer.C
+						}
+						timer.Reset(apiserver.DefaultWatchHoldInterval)
+					}
+				case <-timer.C:
+					running = false
+					if err = sendToStream(); err != nil {
+						return err
+					}
+				case <-nctx.Done():
+					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "rollout.RolloutAction")
+					return wstream.Context().Err()
+				}
+			}
+		})
+
 	}
 
 }
@@ -317,12 +478,28 @@ func (e *eRolloutV1Endpoints) AutoAddRollout(ctx context.Context, t rollout.Roll
 	return rollout.Rollout{}, err
 
 }
+func (e *eRolloutV1Endpoints) AutoAddRolloutAction(ctx context.Context, t rollout.RolloutAction) (rollout.RolloutAction, error) {
+	r, err := e.fnAutoAddRolloutAction(ctx, t)
+	if err == nil {
+		return r.(rollout.RolloutAction), err
+	}
+	return rollout.RolloutAction{}, err
+
+}
 func (e *eRolloutV1Endpoints) AutoDeleteRollout(ctx context.Context, t rollout.Rollout) (rollout.Rollout, error) {
 	r, err := e.fnAutoDeleteRollout(ctx, t)
 	if err == nil {
 		return r.(rollout.Rollout), err
 	}
 	return rollout.Rollout{}, err
+
+}
+func (e *eRolloutV1Endpoints) AutoDeleteRolloutAction(ctx context.Context, t rollout.RolloutAction) (rollout.RolloutAction, error) {
+	r, err := e.fnAutoDeleteRolloutAction(ctx, t)
+	if err == nil {
+		return r.(rollout.RolloutAction), err
+	}
+	return rollout.RolloutAction{}, err
 
 }
 func (e *eRolloutV1Endpoints) AutoGetRollout(ctx context.Context, t rollout.Rollout) (rollout.Rollout, error) {
@@ -333,12 +510,28 @@ func (e *eRolloutV1Endpoints) AutoGetRollout(ctx context.Context, t rollout.Roll
 	return rollout.Rollout{}, err
 
 }
+func (e *eRolloutV1Endpoints) AutoGetRolloutAction(ctx context.Context, t rollout.RolloutAction) (rollout.RolloutAction, error) {
+	r, err := e.fnAutoGetRolloutAction(ctx, t)
+	if err == nil {
+		return r.(rollout.RolloutAction), err
+	}
+	return rollout.RolloutAction{}, err
+
+}
 func (e *eRolloutV1Endpoints) AutoListRollout(ctx context.Context, t api.ListWatchOptions) (rollout.RolloutList, error) {
 	r, err := e.fnAutoListRollout(ctx, t)
 	if err == nil {
 		return r.(rollout.RolloutList), err
 	}
 	return rollout.RolloutList{}, err
+
+}
+func (e *eRolloutV1Endpoints) AutoListRolloutAction(ctx context.Context, t api.ListWatchOptions) (rollout.RolloutActionList, error) {
+	r, err := e.fnAutoListRolloutAction(ctx, t)
+	if err == nil {
+		return r.(rollout.RolloutActionList), err
+	}
+	return rollout.RolloutActionList{}, err
 
 }
 func (e *eRolloutV1Endpoints) AutoUpdateRollout(ctx context.Context, t rollout.Rollout) (rollout.Rollout, error) {
@@ -349,9 +542,28 @@ func (e *eRolloutV1Endpoints) AutoUpdateRollout(ctx context.Context, t rollout.R
 	return rollout.Rollout{}, err
 
 }
+func (e *eRolloutV1Endpoints) AutoUpdateRolloutAction(ctx context.Context, t rollout.RolloutAction) (rollout.RolloutAction, error) {
+	r, err := e.fnAutoUpdateRolloutAction(ctx, t)
+	if err == nil {
+		return r.(rollout.RolloutAction), err
+	}
+	return rollout.RolloutAction{}, err
+
+}
+func (e *eRolloutV1Endpoints) DoRollout(ctx context.Context, t rollout.Rollout) (rollout.Rollout, error) {
+	r, err := e.fnDoRollout(ctx, t)
+	if err == nil {
+		return r.(rollout.Rollout), err
+	}
+	return rollout.Rollout{}, err
+
+}
 
 func (e *eRolloutV1Endpoints) AutoWatchRollout(in *api.ListWatchOptions, stream rollout.RolloutV1_AutoWatchRolloutServer) error {
 	return e.fnAutoWatchRollout(in, stream, "rollout")
+}
+func (e *eRolloutV1Endpoints) AutoWatchRolloutAction(in *api.ListWatchOptions, stream rollout.RolloutV1_AutoWatchRolloutActionServer) error {
+	return e.fnAutoWatchRolloutAction(in, stream, "rollout")
 }
 func (e *eRolloutV1Endpoints) AutoWatchSvcRolloutV1(in *api.ListWatchOptions, stream rollout.RolloutV1_AutoWatchSvcRolloutV1Server) error {
 	return e.fnAutoWatchSvcRolloutV1(in, stream, "")

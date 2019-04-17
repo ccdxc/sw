@@ -90,10 +90,91 @@ func removeRolloutOper(obj interface{}) error {
 	return nil
 }
 
+// CreateRolloutActionFlags specifies flags for RolloutAction create operation
+var CreateRolloutActionFlags = []gen.CliFlag{
+	{
+		ID:     "duration",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "max-nic-failures-before-abort",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "max-parallel",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "smartnic-must-match-constraint",
+		Type:   "Bool",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "smartnics-only",
+		Type:   "Bool",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "strategy",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "suspend",
+		Type:   "Bool",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "upgrade-type",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "version",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+}
+
+func removeRolloutActionOper(obj interface{}) error {
+	if v, ok := obj.(*rollout.RolloutAction); ok {
+		v.UUID = ""
+		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
+		v.Status = rollout.RolloutActionStatus{}
+	}
+	return nil
+}
+
 func init() {
 	cl := gen.GetInfo()
 
 	cl.AddCliInfo("rollout.Rollout", "create", CreateRolloutFlags)
 	cl.AddRemoveObjOperFunc("rollout.Rollout", removeRolloutOper)
+
+	cl.AddCliInfo("rollout.RolloutAction", "create", CreateRolloutActionFlags)
+	cl.AddRemoveObjOperFunc("rollout.RolloutAction", removeRolloutActionOper)
 
 }

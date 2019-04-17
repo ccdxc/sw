@@ -20,6 +20,55 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// AutoMsgRolloutActionWatchHelper is a wrapper object for watch events for RolloutAction objects
+type AutoMsgRolloutActionWatchHelper struct {
+	Events []*AutoMsgRolloutActionWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events,json=events" json:"events"`
+}
+
+func (m *AutoMsgRolloutActionWatchHelper) Reset()         { *m = AutoMsgRolloutActionWatchHelper{} }
+func (m *AutoMsgRolloutActionWatchHelper) String() string { return proto.CompactTextString(m) }
+func (*AutoMsgRolloutActionWatchHelper) ProtoMessage()    {}
+func (*AutoMsgRolloutActionWatchHelper) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcRollout, []int{0}
+}
+
+func (m *AutoMsgRolloutActionWatchHelper) GetEvents() []*AutoMsgRolloutActionWatchHelper_WatchEvent {
+	if m != nil {
+		return m.Events
+	}
+	return nil
+}
+
+type AutoMsgRolloutActionWatchHelper_WatchEvent struct {
+	Type   string         `protobuf:"bytes,1,opt,name=Type,proto3" json:"type,omitempty"`
+	Object *RolloutAction `protobuf:"bytes,2,opt,name=Object" json:"object,omitempty"`
+}
+
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) Reset() {
+	*m = AutoMsgRolloutActionWatchHelper_WatchEvent{}
+}
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) String() string {
+	return proto.CompactTextString(m)
+}
+func (*AutoMsgRolloutActionWatchHelper_WatchEvent) ProtoMessage() {}
+func (*AutoMsgRolloutActionWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptorSvcRollout, []int{0, 0}
+}
+
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) GetObject() *RolloutAction {
+	if m != nil {
+		return m.Object
+	}
+	return nil
+}
+
 // AutoMsgRolloutWatchHelper is a wrapper object for watch events for Rollout objects
 type AutoMsgRolloutWatchHelper struct {
 	Events []*AutoMsgRolloutWatchHelper_WatchEvent `protobuf:"bytes,1,rep,name=Events,json=events" json:"events"`
@@ -29,7 +78,7 @@ func (m *AutoMsgRolloutWatchHelper) Reset()         { *m = AutoMsgRolloutWatchHe
 func (m *AutoMsgRolloutWatchHelper) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgRolloutWatchHelper) ProtoMessage()    {}
 func (*AutoMsgRolloutWatchHelper) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcRollout, []int{0}
+	return fileDescriptorSvcRollout, []int{1}
 }
 
 func (m *AutoMsgRolloutWatchHelper) GetEvents() []*AutoMsgRolloutWatchHelper_WatchEvent {
@@ -48,7 +97,7 @@ func (m *AutoMsgRolloutWatchHelper_WatchEvent) Reset()         { *m = AutoMsgRol
 func (m *AutoMsgRolloutWatchHelper_WatchEvent) String() string { return proto.CompactTextString(m) }
 func (*AutoMsgRolloutWatchHelper_WatchEvent) ProtoMessage()    {}
 func (*AutoMsgRolloutWatchHelper_WatchEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptorSvcRollout, []int{0, 0}
+	return fileDescriptorSvcRollout, []int{1, 0}
 }
 
 func (m *AutoMsgRolloutWatchHelper_WatchEvent) GetType() string {
@@ -65,6 +114,26 @@ func (m *AutoMsgRolloutWatchHelper_WatchEvent) GetObject() *Rollout {
 	return nil
 }
 
+// RolloutActionList is a container object for list of RolloutAction objects
+type RolloutActionList struct {
+	api.TypeMeta `protobuf:"bytes,2,opt,name=T,json=,inline,embedded=T" json:",inline"`
+	api.ListMeta `protobuf:"bytes,3,opt,name=ListMeta,json=list-meta,inline,embedded=ListMeta" json:"list-meta,inline"`
+	// List of RolloutAction objects
+	Items []*RolloutAction `protobuf:"bytes,4,rep,name=Items,json=items" json:"items"`
+}
+
+func (m *RolloutActionList) Reset()                    { *m = RolloutActionList{} }
+func (m *RolloutActionList) String() string            { return proto.CompactTextString(m) }
+func (*RolloutActionList) ProtoMessage()               {}
+func (*RolloutActionList) Descriptor() ([]byte, []int) { return fileDescriptorSvcRollout, []int{2} }
+
+func (m *RolloutActionList) GetItems() []*RolloutAction {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
 // RolloutList is a container object for list of Rollout objects
 type RolloutList struct {
 	api.TypeMeta `protobuf:"bytes,2,opt,name=T,json=,inline,embedded=T" json:",inline"`
@@ -76,7 +145,7 @@ type RolloutList struct {
 func (m *RolloutList) Reset()                    { *m = RolloutList{} }
 func (m *RolloutList) String() string            { return proto.CompactTextString(m) }
 func (*RolloutList) ProtoMessage()               {}
-func (*RolloutList) Descriptor() ([]byte, []int) { return fileDescriptorSvcRollout, []int{1} }
+func (*RolloutList) Descriptor() ([]byte, []int) { return fileDescriptorSvcRollout, []int{3} }
 
 func (m *RolloutList) GetItems() []*Rollout {
 	if m != nil {
@@ -86,8 +155,11 @@ func (m *RolloutList) GetItems() []*Rollout {
 }
 
 func init() {
+	proto.RegisterType((*AutoMsgRolloutActionWatchHelper)(nil), "rollout.AutoMsgRolloutActionWatchHelper")
+	proto.RegisterType((*AutoMsgRolloutActionWatchHelper_WatchEvent)(nil), "rollout.AutoMsgRolloutActionWatchHelper.WatchEvent")
 	proto.RegisterType((*AutoMsgRolloutWatchHelper)(nil), "rollout.AutoMsgRolloutWatchHelper")
 	proto.RegisterType((*AutoMsgRolloutWatchHelper_WatchEvent)(nil), "rollout.AutoMsgRolloutWatchHelper.WatchEvent")
+	proto.RegisterType((*RolloutActionList)(nil), "rollout.RolloutActionList")
 	proto.RegisterType((*RolloutList)(nil), "rollout.RolloutList")
 }
 
@@ -104,17 +176,30 @@ const _ = grpc.SupportPackageIsVersion4
 type RolloutV1Client interface {
 	// Create Rollout object
 	AutoAddRollout(ctx context.Context, in *Rollout, opts ...grpc.CallOption) (*Rollout, error)
+	// Create RolloutAction object
+	AutoAddRolloutAction(ctx context.Context, in *RolloutAction, opts ...grpc.CallOption) (*RolloutAction, error)
 	// Delete Rollout object
 	AutoDeleteRollout(ctx context.Context, in *Rollout, opts ...grpc.CallOption) (*Rollout, error)
+	// Delete RolloutAction object
+	AutoDeleteRolloutAction(ctx context.Context, in *RolloutAction, opts ...grpc.CallOption) (*RolloutAction, error)
 	// Get Rollout object
 	AutoGetRollout(ctx context.Context, in *Rollout, opts ...grpc.CallOption) (*Rollout, error)
+	// Get RolloutAction object
+	AutoGetRolloutAction(ctx context.Context, in *RolloutAction, opts ...grpc.CallOption) (*RolloutAction, error)
 	// List Rollout objects
 	AutoListRollout(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*RolloutList, error)
+	// List RolloutAction objects
+	AutoListRolloutAction(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*RolloutActionList, error)
 	// Update Rollout object
 	AutoUpdateRollout(ctx context.Context, in *Rollout, opts ...grpc.CallOption) (*Rollout, error)
+	// Update RolloutAction object
+	AutoUpdateRolloutAction(ctx context.Context, in *RolloutAction, opts ...grpc.CallOption) (*RolloutAction, error)
 	// Watch Rollout objects. Supports WebSockets or HTTP long poll
 	AutoWatchRollout(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (RolloutV1_AutoWatchRolloutClient, error)
+	// Watch RolloutAction objects. Supports WebSockets or HTTP long poll
+	AutoWatchRolloutAction(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (RolloutV1_AutoWatchRolloutActionClient, error)
 	AutoWatchSvcRolloutV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (RolloutV1_AutoWatchSvcRolloutV1Client, error)
+	DoRollout(ctx context.Context, in *Rollout, opts ...grpc.CallOption) (*Rollout, error)
 }
 
 type rolloutV1Client struct {
@@ -134,9 +219,27 @@ func (c *rolloutV1Client) AutoAddRollout(ctx context.Context, in *Rollout, opts 
 	return out, nil
 }
 
+func (c *rolloutV1Client) AutoAddRolloutAction(ctx context.Context, in *RolloutAction, opts ...grpc.CallOption) (*RolloutAction, error) {
+	out := new(RolloutAction)
+	err := grpc.Invoke(ctx, "/rollout.RolloutV1/AutoAddRolloutAction", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *rolloutV1Client) AutoDeleteRollout(ctx context.Context, in *Rollout, opts ...grpc.CallOption) (*Rollout, error) {
 	out := new(Rollout)
 	err := grpc.Invoke(ctx, "/rollout.RolloutV1/AutoDeleteRollout", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rolloutV1Client) AutoDeleteRolloutAction(ctx context.Context, in *RolloutAction, opts ...grpc.CallOption) (*RolloutAction, error) {
+	out := new(RolloutAction)
+	err := grpc.Invoke(ctx, "/rollout.RolloutV1/AutoDeleteRolloutAction", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -152,6 +255,15 @@ func (c *rolloutV1Client) AutoGetRollout(ctx context.Context, in *Rollout, opts 
 	return out, nil
 }
 
+func (c *rolloutV1Client) AutoGetRolloutAction(ctx context.Context, in *RolloutAction, opts ...grpc.CallOption) (*RolloutAction, error) {
+	out := new(RolloutAction)
+	err := grpc.Invoke(ctx, "/rollout.RolloutV1/AutoGetRolloutAction", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *rolloutV1Client) AutoListRollout(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*RolloutList, error) {
 	out := new(RolloutList)
 	err := grpc.Invoke(ctx, "/rollout.RolloutV1/AutoListRollout", in, out, c.cc, opts...)
@@ -161,9 +273,27 @@ func (c *rolloutV1Client) AutoListRollout(ctx context.Context, in *api.ListWatch
 	return out, nil
 }
 
+func (c *rolloutV1Client) AutoListRolloutAction(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (*RolloutActionList, error) {
+	out := new(RolloutActionList)
+	err := grpc.Invoke(ctx, "/rollout.RolloutV1/AutoListRolloutAction", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *rolloutV1Client) AutoUpdateRollout(ctx context.Context, in *Rollout, opts ...grpc.CallOption) (*Rollout, error) {
 	out := new(Rollout)
 	err := grpc.Invoke(ctx, "/rollout.RolloutV1/AutoUpdateRollout", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rolloutV1Client) AutoUpdateRolloutAction(ctx context.Context, in *RolloutAction, opts ...grpc.CallOption) (*RolloutAction, error) {
+	out := new(RolloutAction)
+	err := grpc.Invoke(ctx, "/rollout.RolloutV1/AutoUpdateRolloutAction", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -202,8 +332,40 @@ func (x *rolloutV1AutoWatchRolloutClient) Recv() (*AutoMsgRolloutWatchHelper, er
 	return m, nil
 }
 
+func (c *rolloutV1Client) AutoWatchRolloutAction(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (RolloutV1_AutoWatchRolloutActionClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_RolloutV1_serviceDesc.Streams[1], c.cc, "/rollout.RolloutV1/AutoWatchRolloutAction", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &rolloutV1AutoWatchRolloutActionClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type RolloutV1_AutoWatchRolloutActionClient interface {
+	Recv() (*AutoMsgRolloutActionWatchHelper, error)
+	grpc.ClientStream
+}
+
+type rolloutV1AutoWatchRolloutActionClient struct {
+	grpc.ClientStream
+}
+
+func (x *rolloutV1AutoWatchRolloutActionClient) Recv() (*AutoMsgRolloutActionWatchHelper, error) {
+	m := new(AutoMsgRolloutActionWatchHelper)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *rolloutV1Client) AutoWatchSvcRolloutV1(ctx context.Context, in *api.ListWatchOptions, opts ...grpc.CallOption) (RolloutV1_AutoWatchSvcRolloutV1Client, error) {
-	stream, err := grpc.NewClientStream(ctx, &_RolloutV1_serviceDesc.Streams[1], c.cc, "/rollout.RolloutV1/AutoWatchSvcRolloutV1", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_RolloutV1_serviceDesc.Streams[2], c.cc, "/rollout.RolloutV1/AutoWatchSvcRolloutV1", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -234,22 +396,44 @@ func (x *rolloutV1AutoWatchSvcRolloutV1Client) Recv() (*api.WatchEventList, erro
 	return m, nil
 }
 
+func (c *rolloutV1Client) DoRollout(ctx context.Context, in *Rollout, opts ...grpc.CallOption) (*Rollout, error) {
+	out := new(Rollout)
+	err := grpc.Invoke(ctx, "/rollout.RolloutV1/DoRollout", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for RolloutV1 service
 
 type RolloutV1Server interface {
 	// Create Rollout object
 	AutoAddRollout(context.Context, *Rollout) (*Rollout, error)
+	// Create RolloutAction object
+	AutoAddRolloutAction(context.Context, *RolloutAction) (*RolloutAction, error)
 	// Delete Rollout object
 	AutoDeleteRollout(context.Context, *Rollout) (*Rollout, error)
+	// Delete RolloutAction object
+	AutoDeleteRolloutAction(context.Context, *RolloutAction) (*RolloutAction, error)
 	// Get Rollout object
 	AutoGetRollout(context.Context, *Rollout) (*Rollout, error)
+	// Get RolloutAction object
+	AutoGetRolloutAction(context.Context, *RolloutAction) (*RolloutAction, error)
 	// List Rollout objects
 	AutoListRollout(context.Context, *api.ListWatchOptions) (*RolloutList, error)
+	// List RolloutAction objects
+	AutoListRolloutAction(context.Context, *api.ListWatchOptions) (*RolloutActionList, error)
 	// Update Rollout object
 	AutoUpdateRollout(context.Context, *Rollout) (*Rollout, error)
+	// Update RolloutAction object
+	AutoUpdateRolloutAction(context.Context, *RolloutAction) (*RolloutAction, error)
 	// Watch Rollout objects. Supports WebSockets or HTTP long poll
 	AutoWatchRollout(*api.ListWatchOptions, RolloutV1_AutoWatchRolloutServer) error
+	// Watch RolloutAction objects. Supports WebSockets or HTTP long poll
+	AutoWatchRolloutAction(*api.ListWatchOptions, RolloutV1_AutoWatchRolloutActionServer) error
 	AutoWatchSvcRolloutV1(*api.ListWatchOptions, RolloutV1_AutoWatchSvcRolloutV1Server) error
+	DoRollout(context.Context, *Rollout) (*Rollout, error)
 }
 
 func RegisterRolloutV1Server(s *grpc.Server, srv RolloutV1Server) {
@@ -274,6 +458,24 @@ func _RolloutV1_AutoAddRollout_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RolloutV1_AutoAddRolloutAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RolloutAction)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RolloutV1Server).AutoAddRolloutAction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rollout.RolloutV1/AutoAddRolloutAction",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RolloutV1Server).AutoAddRolloutAction(ctx, req.(*RolloutAction))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RolloutV1_AutoDeleteRollout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Rollout)
 	if err := dec(in); err != nil {
@@ -288,6 +490,24 @@ func _RolloutV1_AutoDeleteRollout_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RolloutV1Server).AutoDeleteRollout(ctx, req.(*Rollout))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RolloutV1_AutoDeleteRolloutAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RolloutAction)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RolloutV1Server).AutoDeleteRolloutAction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rollout.RolloutV1/AutoDeleteRolloutAction",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RolloutV1Server).AutoDeleteRolloutAction(ctx, req.(*RolloutAction))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -310,6 +530,24 @@ func _RolloutV1_AutoGetRollout_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RolloutV1_AutoGetRolloutAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RolloutAction)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RolloutV1Server).AutoGetRolloutAction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rollout.RolloutV1/AutoGetRolloutAction",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RolloutV1Server).AutoGetRolloutAction(ctx, req.(*RolloutAction))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RolloutV1_AutoListRollout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(api.ListWatchOptions)
 	if err := dec(in); err != nil {
@@ -328,6 +566,24 @@ func _RolloutV1_AutoListRollout_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RolloutV1_AutoListRolloutAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(api.ListWatchOptions)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RolloutV1Server).AutoListRolloutAction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rollout.RolloutV1/AutoListRolloutAction",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RolloutV1Server).AutoListRolloutAction(ctx, req.(*api.ListWatchOptions))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RolloutV1_AutoUpdateRollout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Rollout)
 	if err := dec(in); err != nil {
@@ -342,6 +598,24 @@ func _RolloutV1_AutoUpdateRollout_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RolloutV1Server).AutoUpdateRollout(ctx, req.(*Rollout))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RolloutV1_AutoUpdateRolloutAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RolloutAction)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RolloutV1Server).AutoUpdateRolloutAction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rollout.RolloutV1/AutoUpdateRolloutAction",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RolloutV1Server).AutoUpdateRolloutAction(ctx, req.(*RolloutAction))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -367,6 +641,27 @@ func (x *rolloutV1AutoWatchRolloutServer) Send(m *AutoMsgRolloutWatchHelper) err
 	return x.ServerStream.SendMsg(m)
 }
 
+func _RolloutV1_AutoWatchRolloutAction_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(api.ListWatchOptions)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(RolloutV1Server).AutoWatchRolloutAction(m, &rolloutV1AutoWatchRolloutActionServer{stream})
+}
+
+type RolloutV1_AutoWatchRolloutActionServer interface {
+	Send(*AutoMsgRolloutActionWatchHelper) error
+	grpc.ServerStream
+}
+
+type rolloutV1AutoWatchRolloutActionServer struct {
+	grpc.ServerStream
+}
+
+func (x *rolloutV1AutoWatchRolloutActionServer) Send(m *AutoMsgRolloutActionWatchHelper) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 func _RolloutV1_AutoWatchSvcRolloutV1_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(api.ListWatchOptions)
 	if err := stream.RecvMsg(m); err != nil {
@@ -388,6 +683,24 @@ func (x *rolloutV1AutoWatchSvcRolloutV1Server) Send(m *api.WatchEventList) error
 	return x.ServerStream.SendMsg(m)
 }
 
+func _RolloutV1_DoRollout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Rollout)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RolloutV1Server).DoRollout(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rollout.RolloutV1/DoRollout",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RolloutV1Server).DoRollout(ctx, req.(*Rollout))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _RolloutV1_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "rollout.RolloutV1",
 	HandlerType: (*RolloutV1Server)(nil),
@@ -397,20 +710,44 @@ var _RolloutV1_serviceDesc = grpc.ServiceDesc{
 			Handler:    _RolloutV1_AutoAddRollout_Handler,
 		},
 		{
+			MethodName: "AutoAddRolloutAction",
+			Handler:    _RolloutV1_AutoAddRolloutAction_Handler,
+		},
+		{
 			MethodName: "AutoDeleteRollout",
 			Handler:    _RolloutV1_AutoDeleteRollout_Handler,
+		},
+		{
+			MethodName: "AutoDeleteRolloutAction",
+			Handler:    _RolloutV1_AutoDeleteRolloutAction_Handler,
 		},
 		{
 			MethodName: "AutoGetRollout",
 			Handler:    _RolloutV1_AutoGetRollout_Handler,
 		},
 		{
+			MethodName: "AutoGetRolloutAction",
+			Handler:    _RolloutV1_AutoGetRolloutAction_Handler,
+		},
+		{
 			MethodName: "AutoListRollout",
 			Handler:    _RolloutV1_AutoListRollout_Handler,
 		},
 		{
+			MethodName: "AutoListRolloutAction",
+			Handler:    _RolloutV1_AutoListRolloutAction_Handler,
+		},
+		{
 			MethodName: "AutoUpdateRollout",
 			Handler:    _RolloutV1_AutoUpdateRollout_Handler,
+		},
+		{
+			MethodName: "AutoUpdateRolloutAction",
+			Handler:    _RolloutV1_AutoUpdateRolloutAction_Handler,
+		},
+		{
+			MethodName: "DoRollout",
+			Handler:    _RolloutV1_DoRollout_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
@@ -420,12 +757,81 @@ var _RolloutV1_serviceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 		{
+			StreamName:    "AutoWatchRolloutAction",
+			Handler:       _RolloutV1_AutoWatchRolloutAction_Handler,
+			ServerStreams: true,
+		},
+		{
 			StreamName:    "AutoWatchSvcRolloutV1",
 			Handler:       _RolloutV1_AutoWatchSvcRolloutV1_Handler,
 			ServerStreams: true,
 		},
 	},
 	Metadata: "svc_rollout.proto",
+}
+
+func (m *AutoMsgRolloutActionWatchHelper) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgRolloutActionWatchHelper) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, msg := range m.Events {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintSvcRollout(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintSvcRollout(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
+	}
+	if m.Object != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintSvcRollout(dAtA, i, uint64(m.Object.Size()))
+		n1, err := m.Object.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	return i, nil
 }
 
 func (m *AutoMsgRolloutWatchHelper) Marshal() (dAtA []byte, err error) {
@@ -483,11 +889,57 @@ func (m *AutoMsgRolloutWatchHelper_WatchEvent) MarshalTo(dAtA []byte) (int, erro
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintSvcRollout(dAtA, i, uint64(m.Object.Size()))
-		n1, err := m.Object.MarshalTo(dAtA[i:])
+		n2, err := m.Object.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n1
+		i += n2
+	}
+	return i, nil
+}
+
+func (m *RolloutActionList) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RolloutActionList) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintSvcRollout(dAtA, i, uint64(m.TypeMeta.Size()))
+	n3, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n3
+	dAtA[i] = 0x1a
+	i++
+	i = encodeVarintSvcRollout(dAtA, i, uint64(m.ListMeta.Size()))
+	n4, err := m.ListMeta.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n4
+	if len(m.Items) > 0 {
+		for _, msg := range m.Items {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintSvcRollout(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
 	}
 	return i, nil
 }
@@ -510,19 +962,19 @@ func (m *RolloutList) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintSvcRollout(dAtA, i, uint64(m.TypeMeta.Size()))
-	n2, err := m.TypeMeta.MarshalTo(dAtA[i:])
+	n5, err := m.TypeMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n2
+	i += n5
 	dAtA[i] = 0x1a
 	i++
 	i = encodeVarintSvcRollout(dAtA, i, uint64(m.ListMeta.Size()))
-	n3, err := m.ListMeta.MarshalTo(dAtA[i:])
+	n6, err := m.ListMeta.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n3
+	i += n6
 	if len(m.Items) > 0 {
 		for _, msg := range m.Items {
 			dAtA[i] = 0x22
@@ -547,6 +999,32 @@ func encodeVarintSvcRollout(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
+func (m *AutoMsgRolloutActionWatchHelper) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, e := range m.Events {
+			l = e.Size()
+			n += 1 + l + sovSvcRollout(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovSvcRollout(uint64(l))
+	}
+	if m.Object != nil {
+		l = m.Object.Size()
+		n += 1 + l + sovSvcRollout(uint64(l))
+	}
+	return n
+}
+
 func (m *AutoMsgRolloutWatchHelper) Size() (n int) {
 	var l int
 	_ = l
@@ -569,6 +1047,22 @@ func (m *AutoMsgRolloutWatchHelper_WatchEvent) Size() (n int) {
 	if m.Object != nil {
 		l = m.Object.Size()
 		n += 1 + l + sovSvcRollout(uint64(l))
+	}
+	return n
+}
+
+func (m *RolloutActionList) Size() (n int) {
+	var l int
+	_ = l
+	l = m.TypeMeta.Size()
+	n += 1 + l + sovSvcRollout(uint64(l))
+	l = m.ListMeta.Size()
+	n += 1 + l + sovSvcRollout(uint64(l))
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
+			l = e.Size()
+			n += 1 + l + sovSvcRollout(uint64(l))
+		}
 	}
 	return n
 }
@@ -601,6 +1095,199 @@ func sovSvcRollout(x uint64) (n int) {
 }
 func sozSvcRollout(x uint64) (n int) {
 	return sovSvcRollout(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *AutoMsgRolloutActionWatchHelper) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcRollout
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutoMsgRolloutActionWatchHelper: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutoMsgRolloutActionWatchHelper: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Events", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcRollout
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcRollout
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Events = append(m.Events, &AutoMsgRolloutActionWatchHelper_WatchEvent{})
+			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcRollout(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcRollout
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcRollout
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: WatchEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: WatchEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcRollout
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSvcRollout
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Object", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcRollout
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcRollout
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Object == nil {
+				m.Object = &RolloutAction{}
+			}
+			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcRollout(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcRollout
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *AutoMsgRolloutWatchHelper) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -771,6 +1458,147 @@ func (m *AutoMsgRolloutWatchHelper_WatchEvent) Unmarshal(dAtA []byte) error {
 				m.Object = &Rollout{}
 			}
 			if err := m.Object.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSvcRollout(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSvcRollout
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RolloutActionList) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSvcRollout
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RolloutActionList: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RolloutActionList: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TypeMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcRollout
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcRollout
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TypeMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListMeta", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcRollout
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcRollout
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ListMeta.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSvcRollout
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSvcRollout
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Items = append(m.Items, &RolloutAction{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1044,47 +1872,60 @@ var (
 func init() { proto.RegisterFile("svc_rollout.proto", fileDescriptorSvcRollout) }
 
 var fileDescriptorSvcRollout = []byte{
-	// 670 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0xcd, 0x4f, 0x13, 0x4f,
-	0x18, 0xc7, 0x3b, 0xb4, 0x14, 0x98, 0xfe, 0x28, 0xed, 0x00, 0xf9, 0x75, 0x36, 0x86, 0x6d, 0x36,
-	0x1a, 0x09, 0xc2, 0x2e, 0x60, 0xc2, 0xa1, 0x37, 0x1a, 0x8d, 0x9a, 0x08, 0x8d, 0x15, 0x5f, 0x2e,
-	0xc6, 0x6c, 0xdb, 0xb1, 0x5d, 0xb3, 0x2f, 0x93, 0xee, 0xb4, 0x84, 0xa8, 0x17, 0xbb, 0xfc, 0x03,
-	0x7a, 0xf3, 0xe8, 0xd1, 0x9b, 0x3d, 0x79, 0xf4, 0xc8, 0x91, 0xc4, 0x93, 0x1c, 0x36, 0x86, 0x98,
-	0x98, 0xf4, 0xaf, 0x30, 0x33, 0xbb, 0x4b, 0xa9, 0x0b, 0x21, 0xbd, 0x74, 0x67, 0x9e, 0x3e, 0xdf,
-	0xe7, 0xf3, 0xbc, 0xcc, 0x0c, 0xcc, 0xbb, 0xdd, 0xfa, 0xcb, 0xb6, 0x63, 0x9a, 0x4e, 0x87, 0xa9,
-	0xb4, 0xed, 0x30, 0x07, 0x4d, 0x85, 0x5b, 0x69, 0x76, 0xc4, 0x2e, 0xdd, 0x68, 0x1a, 0xac, 0xd5,
-	0xa9, 0xa9, 0x75, 0xc7, 0xd2, 0x28, 0xb1, 0x5d, 0xdd, 0x6e, 0x38, 0x9a, 0xbb, 0xaf, 0xe9, 0xd4,
-	0xd0, 0x2c, 0xc2, 0xf4, 0xc0, 0x4d, 0xf9, 0x03, 0x20, 0xde, 0xee, 0x30, 0x67, 0xc7, 0x6d, 0x56,
-	0x03, 0xfd, 0x33, 0x9d, 0xd5, 0x5b, 0xf7, 0x89, 0x49, 0x49, 0x1b, 0x3d, 0x82, 0xe9, 0xbb, 0x5d,
-	0x62, 0x33, 0xb7, 0x00, 0x8a, 0xc9, 0xe5, 0xcc, 0xe6, 0x9a, 0x1a, 0x41, 0x2e, 0xd5, 0xa8, 0x62,
-	0x2d, 0x54, 0x65, 0x38, 0xf0, 0xe5, 0x34, 0x11, 0x01, 0xaa, 0xe1, 0x57, 0x7a, 0x05, 0xe1, 0xd0,
-	0x03, 0x15, 0x61, 0x6a, 0xef, 0x80, 0x92, 0x02, 0x28, 0x82, 0xe5, 0x99, 0x32, 0x1a, 0xf8, 0x72,
-	0x96, 0x1d, 0x50, 0xb2, 0xea, 0x58, 0x06, 0x23, 0x16, 0x65, 0x07, 0x68, 0x0b, 0xa6, 0x2b, 0xb5,
-	0xd7, 0xa4, 0xce, 0x0a, 0x13, 0x45, 0xb0, 0x9c, 0xd9, 0xcc, 0x9d, 0xa5, 0x10, 0xb2, 0xcb, 0x0b,
-	0x03, 0x5f, 0xce, 0x39, 0xc2, 0x67, 0xa8, 0x2b, 0xcd, 0x9d, 0x1c, 0xe2, 0xcc, 0x3e, 0x27, 0xb5,
-	0x44, 0x5e, 0xca, 0x4f, 0x00, 0x33, 0xa1, 0xe4, 0xa1, 0xe1, 0x32, 0xb4, 0x05, 0xc1, 0x5e, 0x18,
-	0x73, 0x56, 0xd5, 0xa9, 0xa1, 0xf2, 0x44, 0x76, 0x08, 0xd3, 0xcb, 0xf3, 0x47, 0xbe, 0x9c, 0x38,
-	0xf6, 0x65, 0x30, 0xf0, 0xe5, 0xa9, 0x55, 0xc3, 0x36, 0x0d, 0x9b, 0x54, 0xa3, 0x05, 0xaa, 0xc0,
-	0x69, 0xae, 0xe7, 0x9e, 0x85, 0xe4, 0x39, 0x79, 0x64, 0x2c, 0x5f, 0x3b, 0x27, 0xcf, 0x99, 0x86,
-	0xcb, 0xd6, 0x78, 0xbf, 0xa3, 0x38, 0x31, 0x0b, 0xda, 0x80, 0x93, 0x0f, 0x18, 0xb1, 0xdc, 0x42,
-	0x4a, 0xf4, 0x38, 0x5e, 0xe0, 0xcc, 0xc0, 0x97, 0x27, 0x79, 0x5d, 0x6e, 0x35, 0xf8, 0x94, 0xb2,
-	0x27, 0x87, 0x18, 0xf2, 0x40, 0x41, 0x6d, 0x9b, 0x5f, 0xd3, 0x70, 0x26, 0xf4, 0x7e, 0xba, 0x81,
-	0x5e, 0xc0, 0x2c, 0x1f, 0xcf, 0x76, 0xa3, 0x11, 0xda, 0x50, 0x2c, 0xa6, 0x14, 0xb3, 0x28, 0x37,
-	0xfb, 0x1e, 0x4e, 0xd7, 0xdb, 0x44, 0x67, 0xe4, 0x9b, 0x87, 0xc1, 0x77, 0x0f, 0x27, 0xde, 0xff,
-	0xf8, 0xfd, 0x71, 0x62, 0x0e, 0x26, 0x4a, 0x60, 0x45, 0x99, 0xd6, 0x42, 0x01, 0x6a, 0xc1, 0x3c,
-	0x0f, 0x7f, 0x87, 0x98, 0x84, 0x91, 0x71, 0x08, 0x1a, 0x27, 0x34, 0x84, 0x6c, 0x84, 0xf0, 0x3f,
-	0x4c, 0x94, 0x12, 0x2b, 0xf9, 0x08, 0xa0, 0xbd, 0xa9, 0xa8, 0xbb, 0xba, 0x45, 0xde, 0xa1, 0x5a,
-	0x50, 0xc8, 0x3d, 0xc2, 0xc6, 0xc1, 0xac, 0xf6, 0x3d, 0x9c, 0x6c, 0x12, 0x16, 0x67, 0xa0, 0x0b,
-	0x18, 0x0d, 0x38, 0xc7, 0x19, 0x7c, 0x7a, 0x11, 0x64, 0xf1, 0x6c, 0x9e, 0xe2, 0xa4, 0x56, 0x28,
-	0x33, 0x1c, 0xdb, 0x95, 0x16, 0xfe, 0x25, 0x71, 0x0f, 0xe5, 0x7a, 0xdf, 0xc3, 0x29, 0x3e, 0x8a,
-	0x11, 0x5c, 0x56, 0xe0, 0x86, 0x3d, 0x33, 0x82, 0x9e, 0x3d, 0xa1, 0x0d, 0x7d, 0xbc, 0x9e, 0xad,
-	0xf3, 0x9e, 0x75, 0x84, 0x6c, 0x04, 0x50, 0x10, 0x53, 0x91, 0x2e, 0x28, 0xe8, 0x2d, 0xcc, 0x71,
-	0x94, 0x48, 0xfd, 0x8a, 0x8a, 0x94, 0xab, 0xaf, 0xb3, 0x72, 0xab, 0xef, 0xe1, 0x49, 0x71, 0x8f,
-	0x46, 0xf8, 0x0b, 0xa2, 0xc0, 0xac, 0x26, 0xfe, 0x89, 0x92, 0x58, 0x07, 0xe8, 0x39, 0x5c, 0x3c,
-	0xa3, 0x3f, 0xee, 0xd6, 0x87, 0x87, 0xf2, 0x92, 0x14, 0xe6, 0x85, 0x79, 0xf8, 0x22, 0x88, 0x9e,
-	0xe6, 0x63, 0xcc, 0x75, 0x20, 0xed, 0x7e, 0xe8, 0xe1, 0x89, 0xee, 0xc6, 0xa7, 0x1e, 0x8e, 0x9e,
-	0xbc, 0xcf, 0x3d, 0x3c, 0x15, 0x02, 0xbe, 0xf4, 0xb0, 0x0a, 0xa3, 0x0d, 0x4a, 0x52, 0xfe, 0xd3,
-	0x24, 0x0c, 0x85, 0xc7, 0x0d, 0xa5, 0xa8, 0xe3, 0x32, 0x24, 0xe6, 0x84, 0x82, 0xc8, 0xe5, 0xff,
-	0x8e, 0x4e, 0x97, 0xc0, 0xf1, 0xe9, 0x12, 0xf8, 0x75, 0xba, 0x04, 0x6a, 0x69, 0xf1, 0x1c, 0xde,
-	0xfe, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x43, 0x49, 0x71, 0x8a, 0x62, 0x05, 0x00, 0x00,
+	// 869 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0xcf, 0x6f, 0x12, 0x5b,
+	0x14, 0xe6, 0xf6, 0x07, 0x2d, 0x97, 0x96, 0xc2, 0x2d, 0x6d, 0x99, 0xc9, 0x4b, 0x87, 0xcc, 0xfb,
+	0x11, 0x5e, 0x5f, 0x0b, 0xa5, 0x4d, 0xfa, 0x12, 0xd2, 0x4d, 0x49, 0x5f, 0x5e, 0x5f, 0x9e, 0x95,
+	0x88, 0xd5, 0x1a, 0xa3, 0x31, 0x03, 0x5c, 0xcb, 0x18, 0x60, 0x46, 0xe6, 0x42, 0xd3, 0xa8, 0x1b,
+	0xa1, 0x5b, 0x17, 0xba, 0x73, 0xd9, 0xc4, 0x8d, 0xcb, 0xae, 0x8c, 0x2b, 0x97, 0x8d, 0xab, 0x26,
+	0xae, 0xac, 0x09, 0x31, 0x8d, 0xc6, 0x84, 0xff, 0xc0, 0x9d, 0xb9, 0x77, 0x66, 0xa0, 0x33, 0x03,
+	0x52, 0xea, 0xc6, 0x15, 0xc3, 0x99, 0xf3, 0x7d, 0xdf, 0xf9, 0xee, 0x39, 0xf7, 0xce, 0x85, 0x01,
+	0xad, 0x9a, 0xbd, 0x53, 0x56, 0x0a, 0x05, 0xa5, 0x42, 0xa2, 0x6a, 0x59, 0x21, 0x0a, 0x1a, 0x31,
+	0xfe, 0xf2, 0xe3, 0x96, 0x38, 0xff, 0xfb, 0x8e, 0x4c, 0xf2, 0x95, 0x4c, 0x34, 0xab, 0x14, 0x63,
+	0x2a, 0x2e, 0x69, 0x52, 0x29, 0xa7, 0xc4, 0xb4, 0xdd, 0x98, 0xa4, 0xca, 0xb1, 0x22, 0x26, 0x92,
+	0x9e, 0x26, 0x7e, 0x05, 0x50, 0x58, 0xab, 0x10, 0x65, 0x53, 0xdb, 0x49, 0xeb, 0xf8, 0xb5, 0x2c,
+	0x91, 0x95, 0xd2, 0xb6, 0x44, 0xb2, 0xf9, 0x0d, 0x5c, 0x50, 0x71, 0x19, 0x6d, 0x43, 0xf7, 0x3f,
+	0x55, 0x5c, 0x22, 0x5a, 0x08, 0x84, 0x07, 0x23, 0xde, 0xa5, 0xe5, 0xa8, 0x29, 0xd5, 0x03, 0x19,
+	0x65, 0xcf, 0x0c, 0x9b, 0x84, 0xcd, 0x86, 0xe0, 0xc6, 0x8c, 0x26, 0x6d, 0xfc, 0xf2, 0x05, 0x08,
+	0xdb, 0x19, 0x28, 0x0c, 0x87, 0xb6, 0xf6, 0x54, 0x1c, 0x02, 0x61, 0x10, 0xf1, 0x24, 0x51, 0xb3,
+	0x21, 0xf8, 0xc8, 0x9e, 0x8a, 0xe7, 0x95, 0xa2, 0x4c, 0x70, 0x51, 0x25, 0x7b, 0x68, 0x15, 0xba,
+	0x53, 0x99, 0x7b, 0x38, 0x4b, 0x42, 0x03, 0x61, 0x10, 0xf1, 0x2e, 0x4d, 0xb7, 0x0a, 0xb1, 0x54,
+	0x90, 0x0c, 0x36, 0x1b, 0x82, 0x5f, 0x61, 0x99, 0x6d, 0x74, 0x62, 0xe2, 0x64, 0x9f, 0xf3, 0xee,
+	0x52, 0xbd, 0x3c, 0xab, 0x4e, 0xfc, 0x02, 0x20, 0x67, 0x75, 0x70, 0xd6, 0xf5, 0x15, 0x9b, 0xeb,
+	0x85, 0x2e, 0xae, 0xfb, 0xf0, 0x7b, 0xb7, 0x4f, 0xbf, 0x2b, 0x36, 0xbf, 0x7e, 0xbb, 0xdf, 0xf3,
+	0x3a, 0xfd, 0x0c, 0x60, 0xc0, 0xb2, 0x44, 0x97, 0x64, 0x8d, 0xa0, 0x15, 0x08, 0xb6, 0x0c, 0xe6,
+	0xf1, 0xa8, 0xa4, 0xca, 0x51, 0x5a, 0xce, 0x26, 0x26, 0x52, 0x72, 0xf2, 0xa8, 0x21, 0xb8, 0x8e,
+	0x1b, 0x02, 0x68, 0x36, 0x84, 0x91, 0x79, 0xb9, 0x54, 0x90, 0x4b, 0x38, 0x6d, 0x3e, 0xa0, 0x14,
+	0x1c, 0xa5, 0x78, 0x9a, 0x19, 0x1a, 0x3c, 0x03, 0x37, 0x83, 0xc9, 0x5f, 0xce, 0xc0, 0xfd, 0x05,
+	0x59, 0x23, 0x0b, 0x74, 0xe2, 0x4c, 0x1e, 0x47, 0x04, 0xfd, 0x0d, 0x87, 0xff, 0x23, 0xb8, 0xa8,
+	0x85, 0x86, 0xd8, 0x4a, 0x77, 0x6b, 0xab, 0xa7, 0xd9, 0x10, 0x86, 0xa9, 0x47, 0x2d, 0xad, 0xff,
+	0x24, 0x7c, 0x27, 0xfb, 0x1c, 0xa4, 0x74, 0x86, 0xcf, 0xf7, 0x00, 0x7a, 0x0d, 0xcc, 0xcf, 0xe5,
+	0x30, 0x6e, 0x75, 0xe8, 0x6c, 0x64, 0x4f, 0x6f, 0x4b, 0x1f, 0xc6, 0xa0, 0xc7, 0xc8, 0xbe, 0x1e,
+	0x47, 0x1b, 0xd0, 0x47, 0xc7, 0x70, 0x2d, 0x97, 0x33, 0x62, 0xc8, 0xc1, 0xc9, 0x3b, 0x22, 0x22,
+	0x3a, 0xac, 0x73, 0xee, 0x6c, 0x19, 0x4b, 0x04, 0xbf, 0xaa, 0x73, 0xe0, 0x4d, 0x9d, 0x73, 0xa1,
+	0x9b, 0x30, 0x68, 0x65, 0xd2, 0x57, 0x1b, 0x75, 0xe9, 0x02, 0xdf, 0x25, 0xde, 0x91, 0x3b, 0x0f,
+	0x03, 0x94, 0x7b, 0x1d, 0x17, 0x30, 0xc1, 0xfd, 0x14, 0x1a, 0xa3, 0x64, 0x39, 0x06, 0x33, 0xc9,
+	0x1e, 0xbf, 0xfb, 0xf4, 0x6c, 0x60, 0x06, 0xba, 0x12, 0xae, 0xb9, 0x40, 0xcc, 0xc8, 0x8f, 0x3d,
+	0x48, 0x45, 0x2f, 0x4b, 0x45, 0xfc, 0x08, 0xed, 0xc2, 0x19, 0x87, 0xd2, 0x05, 0x8d, 0xcc, 0x77,
+	0xd1, 0x0e, 0x32, 0x6d, 0x9f, 0xa9, 0x6d, 0xb0, 0x67, 0xf4, 0x46, 0xfc, 0x8b, 0x49, 0x3f, 0xfe,
+	0xa8, 0xc6, 0xe0, 0x0e, 0x26, 0x4e, 0x73, 0xa8, 0x83, 0xb9, 0xfb, 0x7a, 0x8b, 0xda, 0x1a, 0x17,
+	0x74, 0xf6, 0x67, 0x27, 0x55, 0x66, 0x0b, 0xd9, 0x6d, 0xe5, 0xe0, 0x04, 0x95, 0xa4, 0x03, 0x6f,
+	0xfa, 0x9a, 0x6a, 0x6d, 0x01, 0x76, 0x88, 0xa5, 0x54, 0x9a, 0xa8, 0xf1, 0x41, 0xbb, 0x18, 0xcd,
+	0x10, 0x7f, 0x3b, 0xac, 0x73, 0x43, 0x74, 0x7a, 0x2d, 0x5a, 0x3e, 0xa6, 0x35, 0x6a, 0x6a, 0xa1,
+	0x5b, 0x70, 0xca, 0xa6, 0x62, 0xc8, 0x77, 0xd1, 0xe2, 0x3b, 0x1b, 0x63, 0x8a, 0x7e, 0xbb, 0x22,
+	0xfa, 0x5f, 0x9f, 0xbe, 0x6b, 0x6a, 0x4e, 0xea, 0x6f, 0xfa, 0xd8, 0x28, 0x57, 0x18, 0xac, 0x45,
+	0x76, 0x5b, 0x1f, 0x30, 0x0b, 0xd9, 0x8f, 0xec, 0x14, 0x1b, 0xfd, 0x43, 0xe8, 0xa7, 0xf4, 0xcc,
+	0x6d, 0x8f, 0x05, 0x17, 0x7b, 0x7f, 0x88, 0xc4, 0xbf, 0x0e, 0xeb, 0xdc, 0x30, 0xfb, 0x02, 0x74,
+	0xec, 0x35, 0x7b, 0x63, 0x76, 0x61, 0x11, 0xa0, 0x27, 0x00, 0x4e, 0xdb, 0xe5, 0xbf, 0xdf, 0x89,
+	0xc8, 0x79, 0xef, 0x00, 0x62, 0xbc, 0x73, 0x29, 0x3c, 0x2b, 0x25, 0x68, 0x2d, 0x45, 0x47, 0x2f,
+	0x02, 0x74, 0x43, 0x1f, 0x0c, 0xc6, 0x73, 0xb5, 0x9a, 0x6d, 0x9f, 0x7b, 0x5d, 0xca, 0x99, 0x64,
+	0xe1, 0xf6, 0xc7, 0x95, 0x4d, 0x44, 0xc0, 0xa1, 0xbc, 0x08, 0x50, 0x11, 0x7a, 0xd6, 0x95, 0x7e,
+	0x86, 0x61, 0xd5, 0x79, 0xae, 0xbd, 0xad, 0x73, 0x23, 0xc6, 0x6b, 0xe6, 0x85, 0x83, 0xae, 0x04,
+	0x98, 0x13, 0x51, 0x6b, 0xe7, 0xb6, 0x14, 0xf8, 0x17, 0xe0, 0x69, 0x8d, 0x1b, 0xa8, 0xc6, 0x9f,
+	0xd7, 0x38, 0xf3, 0xa6, 0x76, 0x50, 0x6b, 0xa1, 0x0f, 0x6a, 0xdc, 0xb8, 0x65, 0xe1, 0x5e, 0xd6,
+	0xb8, 0x5f, 0xa1, 0xf9, 0x16, 0xd1, 0xbd, 0x8a, 0x8c, 0xa3, 0x08, 0xb1, 0xd9, 0x46, 0xba, 0x1f,
+	0x96, 0x66, 0x45, 0x5a, 0x93, 0xf5, 0xb4, 0xd7, 0x35, 0xee, 0x8f, 0x16, 0x1b, 0xdf, 0xf6, 0x2d,
+	0x9a, 0xb1, 0x39, 0xf3, 0x21, 0x39, 0x76, 0x74, 0x3a, 0x0b, 0x8e, 0x4f, 0x67, 0xc1, 0xc7, 0xd3,
+	0x59, 0x90, 0x71, 0xb3, 0xcb, 0xe1, 0xf2, 0xb7, 0x00, 0x00, 0x00, 0xff, 0xff, 0x07, 0x10, 0xa0,
+	0x7e, 0x70, 0x0a, 0x00, 0x00,
 }

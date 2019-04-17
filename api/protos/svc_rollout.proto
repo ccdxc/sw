@@ -12,11 +12,24 @@ service RolloutV1 {
     option (venice.apiPrefix)           = "rollout";
     option (venice.apiVersion)          = "v1";
     option (venice.apiGrpcCrudService)  = "Rollout";
+    option (venice.apiGrpcCrudService)  = "RolloutAction";
 
     // Rollout Service
     option (venice.apiRestService) = {
         Object: "Rollout"
-        Method: ["put", "get", "delete", "post", "list", "watch"]
+        Method: [ "get", "delete", "list", "watch"]
     };
 
+    // Rollout Service
+    option (venice.apiRestService) = {
+        Object: "RolloutAction"
+        Method: [ "get", "delete", "watch"]
+    };
+    // Action to start/stop/abort rollout.
+    option (venice.apiAction) = {
+     Collection: "Rollout"
+     Action: "DoRollout"
+     Request: "Rollout"
+     Response: "Rollout"
+    };
 }

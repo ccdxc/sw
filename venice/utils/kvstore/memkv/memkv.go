@@ -17,6 +17,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/log"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/helper"
@@ -489,7 +491,8 @@ func (f *MemKv) List(ctx context.Context, prefix string, into runtime.Object) er
 		if strings.HasPrefix(key, prefix) {
 			obj, err := f.codec.Decode([]byte(v.value), nil)
 			if err != nil {
-				return err
+				log.ErrorLog("msg", "unable to decode", "error", err, "key", key)
+				continue
 			}
 			f.objVersioner.SetVersion(obj, uint64(v.revision))
 			if ptr {

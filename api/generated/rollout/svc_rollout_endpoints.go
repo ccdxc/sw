@@ -9,6 +9,7 @@ package rollout
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -42,11 +43,17 @@ type EndpointsRolloutV1Client struct {
 	Client                        RolloutV1Client
 	AutoWatchSvcRolloutV1Endpoint endpoint.Endpoint
 
-	AutoAddRolloutEndpoint    endpoint.Endpoint
-	AutoDeleteRolloutEndpoint endpoint.Endpoint
-	AutoGetRolloutEndpoint    endpoint.Endpoint
-	AutoListRolloutEndpoint   endpoint.Endpoint
-	AutoUpdateRolloutEndpoint endpoint.Endpoint
+	AutoAddRolloutEndpoint          endpoint.Endpoint
+	AutoAddRolloutActionEndpoint    endpoint.Endpoint
+	AutoDeleteRolloutEndpoint       endpoint.Endpoint
+	AutoDeleteRolloutActionEndpoint endpoint.Endpoint
+	AutoGetRolloutEndpoint          endpoint.Endpoint
+	AutoGetRolloutActionEndpoint    endpoint.Endpoint
+	AutoListRolloutEndpoint         endpoint.Endpoint
+	AutoListRolloutActionEndpoint   endpoint.Endpoint
+	AutoUpdateRolloutEndpoint       endpoint.Endpoint
+	AutoUpdateRolloutActionEndpoint endpoint.Endpoint
+	DoRolloutEndpoint               endpoint.Endpoint
 }
 
 // EndpointsRolloutV1RestClient is the REST client
@@ -56,13 +63,20 @@ type EndpointsRolloutV1RestClient struct {
 	instance string
 	bufferId string
 
-	AutoAddRolloutEndpoint        endpoint.Endpoint
-	AutoDeleteRolloutEndpoint     endpoint.Endpoint
-	AutoGetRolloutEndpoint        endpoint.Endpoint
-	AutoListRolloutEndpoint       endpoint.Endpoint
-	AutoUpdateRolloutEndpoint     endpoint.Endpoint
-	AutoWatchRolloutEndpoint      endpoint.Endpoint
-	AutoWatchSvcRolloutV1Endpoint endpoint.Endpoint
+	AutoAddRolloutEndpoint          endpoint.Endpoint
+	AutoAddRolloutActionEndpoint    endpoint.Endpoint
+	AutoDeleteRolloutEndpoint       endpoint.Endpoint
+	AutoDeleteRolloutActionEndpoint endpoint.Endpoint
+	AutoGetRolloutEndpoint          endpoint.Endpoint
+	AutoGetRolloutActionEndpoint    endpoint.Endpoint
+	AutoListRolloutEndpoint         endpoint.Endpoint
+	AutoListRolloutActionEndpoint   endpoint.Endpoint
+	AutoUpdateRolloutEndpoint       endpoint.Endpoint
+	AutoUpdateRolloutActionEndpoint endpoint.Endpoint
+	AutoWatchRolloutEndpoint        endpoint.Endpoint
+	AutoWatchRolloutActionEndpoint  endpoint.Endpoint
+	AutoWatchSvcRolloutV1Endpoint   endpoint.Endpoint
+	DoRolloutEndpoint               endpoint.Endpoint
 }
 
 // MiddlewareRolloutV1Server adds middle ware to the server
@@ -72,13 +86,20 @@ type MiddlewareRolloutV1Server func(ServiceRolloutV1Server) ServiceRolloutV1Serv
 type EndpointsRolloutV1Server struct {
 	svcWatchHandlerRolloutV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 
-	AutoAddRolloutEndpoint    endpoint.Endpoint
-	AutoDeleteRolloutEndpoint endpoint.Endpoint
-	AutoGetRolloutEndpoint    endpoint.Endpoint
-	AutoListRolloutEndpoint   endpoint.Endpoint
-	AutoUpdateRolloutEndpoint endpoint.Endpoint
+	AutoAddRolloutEndpoint          endpoint.Endpoint
+	AutoAddRolloutActionEndpoint    endpoint.Endpoint
+	AutoDeleteRolloutEndpoint       endpoint.Endpoint
+	AutoDeleteRolloutActionEndpoint endpoint.Endpoint
+	AutoGetRolloutEndpoint          endpoint.Endpoint
+	AutoGetRolloutActionEndpoint    endpoint.Endpoint
+	AutoListRolloutEndpoint         endpoint.Endpoint
+	AutoListRolloutActionEndpoint   endpoint.Endpoint
+	AutoUpdateRolloutEndpoint       endpoint.Endpoint
+	AutoUpdateRolloutActionEndpoint endpoint.Endpoint
+	DoRolloutEndpoint               endpoint.Endpoint
 
-	watchHandlerRollout func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerRollout       func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerRolloutAction func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
 // AutoAddRollout is endpoint for AutoAddRollout
@@ -92,6 +113,20 @@ func (e EndpointsRolloutV1Client) AutoAddRollout(ctx context.Context, in *Rollou
 
 type respRolloutV1AutoAddRollout struct {
 	V   Rollout
+	Err error
+}
+
+// AutoAddRolloutAction is endpoint for AutoAddRolloutAction
+func (e EndpointsRolloutV1Client) AutoAddRolloutAction(ctx context.Context, in *RolloutAction) (*RolloutAction, error) {
+	resp, err := e.AutoAddRolloutActionEndpoint(ctx, in)
+	if err != nil {
+		return &RolloutAction{}, err
+	}
+	return resp.(*RolloutAction), nil
+}
+
+type respRolloutV1AutoAddRolloutAction struct {
+	V   RolloutAction
 	Err error
 }
 
@@ -109,6 +144,20 @@ type respRolloutV1AutoDeleteRollout struct {
 	Err error
 }
 
+// AutoDeleteRolloutAction is endpoint for AutoDeleteRolloutAction
+func (e EndpointsRolloutV1Client) AutoDeleteRolloutAction(ctx context.Context, in *RolloutAction) (*RolloutAction, error) {
+	resp, err := e.AutoDeleteRolloutActionEndpoint(ctx, in)
+	if err != nil {
+		return &RolloutAction{}, err
+	}
+	return resp.(*RolloutAction), nil
+}
+
+type respRolloutV1AutoDeleteRolloutAction struct {
+	V   RolloutAction
+	Err error
+}
+
 // AutoGetRollout is endpoint for AutoGetRollout
 func (e EndpointsRolloutV1Client) AutoGetRollout(ctx context.Context, in *Rollout) (*Rollout, error) {
 	resp, err := e.AutoGetRolloutEndpoint(ctx, in)
@@ -120,6 +169,20 @@ func (e EndpointsRolloutV1Client) AutoGetRollout(ctx context.Context, in *Rollou
 
 type respRolloutV1AutoGetRollout struct {
 	V   Rollout
+	Err error
+}
+
+// AutoGetRolloutAction is endpoint for AutoGetRolloutAction
+func (e EndpointsRolloutV1Client) AutoGetRolloutAction(ctx context.Context, in *RolloutAction) (*RolloutAction, error) {
+	resp, err := e.AutoGetRolloutActionEndpoint(ctx, in)
+	if err != nil {
+		return &RolloutAction{}, err
+	}
+	return resp.(*RolloutAction), nil
+}
+
+type respRolloutV1AutoGetRolloutAction struct {
+	V   RolloutAction
 	Err error
 }
 
@@ -137,6 +200,20 @@ type respRolloutV1AutoListRollout struct {
 	Err error
 }
 
+// AutoListRolloutAction is endpoint for AutoListRolloutAction
+func (e EndpointsRolloutV1Client) AutoListRolloutAction(ctx context.Context, in *api.ListWatchOptions) (*RolloutActionList, error) {
+	resp, err := e.AutoListRolloutActionEndpoint(ctx, in)
+	if err != nil {
+		return &RolloutActionList{}, err
+	}
+	return resp.(*RolloutActionList), nil
+}
+
+type respRolloutV1AutoListRolloutAction struct {
+	V   RolloutActionList
+	Err error
+}
+
 // AutoUpdateRollout is endpoint for AutoUpdateRollout
 func (e EndpointsRolloutV1Client) AutoUpdateRollout(ctx context.Context, in *Rollout) (*Rollout, error) {
 	resp, err := e.AutoUpdateRolloutEndpoint(ctx, in)
@@ -151,6 +228,34 @@ type respRolloutV1AutoUpdateRollout struct {
 	Err error
 }
 
+// AutoUpdateRolloutAction is endpoint for AutoUpdateRolloutAction
+func (e EndpointsRolloutV1Client) AutoUpdateRolloutAction(ctx context.Context, in *RolloutAction) (*RolloutAction, error) {
+	resp, err := e.AutoUpdateRolloutActionEndpoint(ctx, in)
+	if err != nil {
+		return &RolloutAction{}, err
+	}
+	return resp.(*RolloutAction), nil
+}
+
+type respRolloutV1AutoUpdateRolloutAction struct {
+	V   RolloutAction
+	Err error
+}
+
+// DoRollout is endpoint for DoRollout
+func (e EndpointsRolloutV1Client) DoRollout(ctx context.Context, in *Rollout) (*Rollout, error) {
+	resp, err := e.DoRolloutEndpoint(ctx, in)
+	if err != nil {
+		return &Rollout{}, err
+	}
+	return resp.(*Rollout), nil
+}
+
+type respRolloutV1DoRollout struct {
+	V   Rollout
+	Err error
+}
+
 func (e EndpointsRolloutV1Client) AutoWatchSvcRolloutV1(ctx context.Context, in *api.ListWatchOptions) (RolloutV1_AutoWatchSvcRolloutV1Client, error) {
 	return e.Client.AutoWatchSvcRolloutV1(ctx, in)
 }
@@ -158,6 +263,11 @@ func (e EndpointsRolloutV1Client) AutoWatchSvcRolloutV1(ctx context.Context, in 
 // AutoWatchRollout performs Watch for Rollout
 func (e EndpointsRolloutV1Client) AutoWatchRollout(ctx context.Context, in *api.ListWatchOptions) (RolloutV1_AutoWatchRolloutClient, error) {
 	return e.Client.AutoWatchRollout(ctx, in)
+}
+
+// AutoWatchRolloutAction performs Watch for RolloutAction
+func (e EndpointsRolloutV1Client) AutoWatchRolloutAction(ctx context.Context, in *api.ListWatchOptions) (RolloutV1_AutoWatchRolloutActionClient, error) {
+	return e.Client.AutoWatchRolloutAction(ctx, in)
 }
 
 // AutoAddRollout implementation on server Endpoint
@@ -182,6 +292,28 @@ func MakeRolloutV1AutoAddRolloutEndpoint(s ServiceRolloutV1Server, logger log.Lo
 	return trace.ServerEndpoint("RolloutV1:AutoAddRollout")(f)
 }
 
+// AutoAddRolloutAction implementation on server Endpoint
+func (e EndpointsRolloutV1Server) AutoAddRolloutAction(ctx context.Context, in RolloutAction) (RolloutAction, error) {
+	resp, err := e.AutoAddRolloutActionEndpoint(ctx, in)
+	if err != nil {
+		return RolloutAction{}, err
+	}
+	return *resp.(*RolloutAction), nil
+}
+
+// MakeRolloutV1AutoAddRolloutActionEndpoint creates  AutoAddRolloutAction endpoints for the service
+func MakeRolloutV1AutoAddRolloutActionEndpoint(s ServiceRolloutV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RolloutAction)
+		v, err := s.AutoAddRolloutAction(ctx, *req)
+		return respRolloutV1AutoAddRolloutAction{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("RolloutV1:AutoAddRolloutAction")(f)
+}
+
 // AutoDeleteRollout implementation on server Endpoint
 func (e EndpointsRolloutV1Server) AutoDeleteRollout(ctx context.Context, in Rollout) (Rollout, error) {
 	resp, err := e.AutoDeleteRolloutEndpoint(ctx, in)
@@ -202,6 +334,28 @@ func MakeRolloutV1AutoDeleteRolloutEndpoint(s ServiceRolloutV1Server, logger log
 		}, nil
 	}
 	return trace.ServerEndpoint("RolloutV1:AutoDeleteRollout")(f)
+}
+
+// AutoDeleteRolloutAction implementation on server Endpoint
+func (e EndpointsRolloutV1Server) AutoDeleteRolloutAction(ctx context.Context, in RolloutAction) (RolloutAction, error) {
+	resp, err := e.AutoDeleteRolloutActionEndpoint(ctx, in)
+	if err != nil {
+		return RolloutAction{}, err
+	}
+	return *resp.(*RolloutAction), nil
+}
+
+// MakeRolloutV1AutoDeleteRolloutActionEndpoint creates  AutoDeleteRolloutAction endpoints for the service
+func MakeRolloutV1AutoDeleteRolloutActionEndpoint(s ServiceRolloutV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RolloutAction)
+		v, err := s.AutoDeleteRolloutAction(ctx, *req)
+		return respRolloutV1AutoDeleteRolloutAction{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("RolloutV1:AutoDeleteRolloutAction")(f)
 }
 
 // AutoGetRollout implementation on server Endpoint
@@ -226,6 +380,28 @@ func MakeRolloutV1AutoGetRolloutEndpoint(s ServiceRolloutV1Server, logger log.Lo
 	return trace.ServerEndpoint("RolloutV1:AutoGetRollout")(f)
 }
 
+// AutoGetRolloutAction implementation on server Endpoint
+func (e EndpointsRolloutV1Server) AutoGetRolloutAction(ctx context.Context, in RolloutAction) (RolloutAction, error) {
+	resp, err := e.AutoGetRolloutActionEndpoint(ctx, in)
+	if err != nil {
+		return RolloutAction{}, err
+	}
+	return *resp.(*RolloutAction), nil
+}
+
+// MakeRolloutV1AutoGetRolloutActionEndpoint creates  AutoGetRolloutAction endpoints for the service
+func MakeRolloutV1AutoGetRolloutActionEndpoint(s ServiceRolloutV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RolloutAction)
+		v, err := s.AutoGetRolloutAction(ctx, *req)
+		return respRolloutV1AutoGetRolloutAction{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("RolloutV1:AutoGetRolloutAction")(f)
+}
+
 // AutoListRollout implementation on server Endpoint
 func (e EndpointsRolloutV1Server) AutoListRollout(ctx context.Context, in api.ListWatchOptions) (RolloutList, error) {
 	resp, err := e.AutoListRolloutEndpoint(ctx, in)
@@ -248,6 +424,28 @@ func MakeRolloutV1AutoListRolloutEndpoint(s ServiceRolloutV1Server, logger log.L
 	return trace.ServerEndpoint("RolloutV1:AutoListRollout")(f)
 }
 
+// AutoListRolloutAction implementation on server Endpoint
+func (e EndpointsRolloutV1Server) AutoListRolloutAction(ctx context.Context, in api.ListWatchOptions) (RolloutActionList, error) {
+	resp, err := e.AutoListRolloutActionEndpoint(ctx, in)
+	if err != nil {
+		return RolloutActionList{}, err
+	}
+	return *resp.(*RolloutActionList), nil
+}
+
+// MakeRolloutV1AutoListRolloutActionEndpoint creates  AutoListRolloutAction endpoints for the service
+func MakeRolloutV1AutoListRolloutActionEndpoint(s ServiceRolloutV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListRolloutAction(ctx, *req)
+		return respRolloutV1AutoListRolloutAction{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("RolloutV1:AutoListRolloutAction")(f)
+}
+
 // AutoUpdateRollout implementation on server Endpoint
 func (e EndpointsRolloutV1Server) AutoUpdateRollout(ctx context.Context, in Rollout) (Rollout, error) {
 	resp, err := e.AutoUpdateRolloutEndpoint(ctx, in)
@@ -268,6 +466,50 @@ func MakeRolloutV1AutoUpdateRolloutEndpoint(s ServiceRolloutV1Server, logger log
 		}, nil
 	}
 	return trace.ServerEndpoint("RolloutV1:AutoUpdateRollout")(f)
+}
+
+// AutoUpdateRolloutAction implementation on server Endpoint
+func (e EndpointsRolloutV1Server) AutoUpdateRolloutAction(ctx context.Context, in RolloutAction) (RolloutAction, error) {
+	resp, err := e.AutoUpdateRolloutActionEndpoint(ctx, in)
+	if err != nil {
+		return RolloutAction{}, err
+	}
+	return *resp.(*RolloutAction), nil
+}
+
+// MakeRolloutV1AutoUpdateRolloutActionEndpoint creates  AutoUpdateRolloutAction endpoints for the service
+func MakeRolloutV1AutoUpdateRolloutActionEndpoint(s ServiceRolloutV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*RolloutAction)
+		v, err := s.AutoUpdateRolloutAction(ctx, *req)
+		return respRolloutV1AutoUpdateRolloutAction{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("RolloutV1:AutoUpdateRolloutAction")(f)
+}
+
+// DoRollout implementation on server Endpoint
+func (e EndpointsRolloutV1Server) DoRollout(ctx context.Context, in Rollout) (Rollout, error) {
+	resp, err := e.DoRolloutEndpoint(ctx, in)
+	if err != nil {
+		return Rollout{}, err
+	}
+	return *resp.(*Rollout), nil
+}
+
+// MakeRolloutV1DoRolloutEndpoint creates  DoRollout endpoints for the service
+func MakeRolloutV1DoRolloutEndpoint(s ServiceRolloutV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Rollout)
+		v, err := s.DoRollout(ctx, *req)
+		return respRolloutV1DoRollout{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("RolloutV1:DoRollout")(f)
 }
 
 func (e EndpointsRolloutV1Server) AutoWatchSvcRolloutV1(in *api.ListWatchOptions, stream RolloutV1_AutoWatchSvcRolloutV1Server) error {
@@ -295,18 +537,38 @@ func MakeAutoWatchRolloutEndpoint(s ServiceRolloutV1Server, logger log.Logger) f
 	}
 }
 
+// AutoWatchRolloutAction is the watch handler for RolloutAction on the server side.
+func (e EndpointsRolloutV1Server) AutoWatchRolloutAction(in *api.ListWatchOptions, stream RolloutV1_AutoWatchRolloutActionServer) error {
+	return e.watchHandlerRolloutAction(in, stream)
+}
+
+// MakeAutoWatchRolloutActionEndpoint creates the Watch endpoint
+func MakeAutoWatchRolloutActionEndpoint(s ServiceRolloutV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(RolloutV1_AutoWatchRolloutActionServer)
+		return s.AutoWatchRolloutAction(options, wstream)
+	}
+}
+
 // MakeRolloutV1ServerEndpoints creates server endpoints
 func MakeRolloutV1ServerEndpoints(s ServiceRolloutV1Server, logger log.Logger) EndpointsRolloutV1Server {
 	return EndpointsRolloutV1Server{
 		svcWatchHandlerRolloutV1: MakeAutoWatchSvcRolloutV1Endpoint(s, logger),
 
-		AutoAddRolloutEndpoint:    MakeRolloutV1AutoAddRolloutEndpoint(s, logger),
-		AutoDeleteRolloutEndpoint: MakeRolloutV1AutoDeleteRolloutEndpoint(s, logger),
-		AutoGetRolloutEndpoint:    MakeRolloutV1AutoGetRolloutEndpoint(s, logger),
-		AutoListRolloutEndpoint:   MakeRolloutV1AutoListRolloutEndpoint(s, logger),
-		AutoUpdateRolloutEndpoint: MakeRolloutV1AutoUpdateRolloutEndpoint(s, logger),
+		AutoAddRolloutEndpoint:          MakeRolloutV1AutoAddRolloutEndpoint(s, logger),
+		AutoAddRolloutActionEndpoint:    MakeRolloutV1AutoAddRolloutActionEndpoint(s, logger),
+		AutoDeleteRolloutEndpoint:       MakeRolloutV1AutoDeleteRolloutEndpoint(s, logger),
+		AutoDeleteRolloutActionEndpoint: MakeRolloutV1AutoDeleteRolloutActionEndpoint(s, logger),
+		AutoGetRolloutEndpoint:          MakeRolloutV1AutoGetRolloutEndpoint(s, logger),
+		AutoGetRolloutActionEndpoint:    MakeRolloutV1AutoGetRolloutActionEndpoint(s, logger),
+		AutoListRolloutEndpoint:         MakeRolloutV1AutoListRolloutEndpoint(s, logger),
+		AutoListRolloutActionEndpoint:   MakeRolloutV1AutoListRolloutActionEndpoint(s, logger),
+		AutoUpdateRolloutEndpoint:       MakeRolloutV1AutoUpdateRolloutEndpoint(s, logger),
+		AutoUpdateRolloutActionEndpoint: MakeRolloutV1AutoUpdateRolloutActionEndpoint(s, logger),
+		DoRolloutEndpoint:               MakeRolloutV1DoRolloutEndpoint(s, logger),
 
-		watchHandlerRollout: MakeAutoWatchRolloutEndpoint(s, logger),
+		watchHandlerRollout:       MakeAutoWatchRolloutEndpoint(s, logger),
+		watchHandlerRolloutAction: MakeAutoWatchRolloutActionEndpoint(s, logger),
 	}
 }
 
@@ -353,6 +615,19 @@ func (m loggingRolloutV1MiddlewareClient) AutoAddRollout(ctx context.Context, in
 	resp, err = m.next.AutoAddRollout(ctx, in)
 	return
 }
+func (m loggingRolloutV1MiddlewareClient) AutoAddRolloutAction(ctx context.Context, in *RolloutAction) (resp *RolloutAction, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoAddRolloutAction", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoAddRolloutAction(ctx, in)
+	return
+}
 func (m loggingRolloutV1MiddlewareClient) AutoDeleteRollout(ctx context.Context, in *Rollout) (resp *Rollout, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -364,6 +639,19 @@ func (m loggingRolloutV1MiddlewareClient) AutoDeleteRollout(ctx context.Context,
 		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoDeleteRollout", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteRollout(ctx, in)
+	return
+}
+func (m loggingRolloutV1MiddlewareClient) AutoDeleteRolloutAction(ctx context.Context, in *RolloutAction) (resp *RolloutAction, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoDeleteRolloutAction", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoDeleteRolloutAction(ctx, in)
 	return
 }
 func (m loggingRolloutV1MiddlewareClient) AutoGetRollout(ctx context.Context, in *Rollout) (resp *Rollout, err error) {
@@ -379,6 +667,19 @@ func (m loggingRolloutV1MiddlewareClient) AutoGetRollout(ctx context.Context, in
 	resp, err = m.next.AutoGetRollout(ctx, in)
 	return
 }
+func (m loggingRolloutV1MiddlewareClient) AutoGetRolloutAction(ctx context.Context, in *RolloutAction) (resp *RolloutAction, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoGetRolloutAction", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoGetRolloutAction(ctx, in)
+	return
+}
 func (m loggingRolloutV1MiddlewareClient) AutoListRollout(ctx context.Context, in *api.ListWatchOptions) (resp *RolloutList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -392,6 +693,19 @@ func (m loggingRolloutV1MiddlewareClient) AutoListRollout(ctx context.Context, i
 	resp, err = m.next.AutoListRollout(ctx, in)
 	return
 }
+func (m loggingRolloutV1MiddlewareClient) AutoListRolloutAction(ctx context.Context, in *api.ListWatchOptions) (resp *RolloutActionList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoListRolloutAction", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoListRolloutAction(ctx, in)
+	return
+}
 func (m loggingRolloutV1MiddlewareClient) AutoUpdateRollout(ctx context.Context, in *Rollout) (resp *Rollout, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -403,6 +717,32 @@ func (m loggingRolloutV1MiddlewareClient) AutoUpdateRollout(ctx context.Context,
 		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoUpdateRollout", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateRollout(ctx, in)
+	return
+}
+func (m loggingRolloutV1MiddlewareClient) AutoUpdateRolloutAction(ctx context.Context, in *RolloutAction) (resp *RolloutAction, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoUpdateRolloutAction", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoUpdateRolloutAction(ctx, in)
+	return
+}
+func (m loggingRolloutV1MiddlewareClient) DoRollout(ctx context.Context, in *Rollout) (resp *Rollout, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "DoRollout", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.DoRollout(ctx, in)
 	return
 }
 
@@ -433,6 +773,19 @@ func (m loggingRolloutV1MiddlewareClient) AutoWatchRollout(ctx context.Context, 
 	resp, err = m.next.AutoWatchRollout(ctx, in)
 	return
 }
+func (m loggingRolloutV1MiddlewareClient) AutoWatchRolloutAction(ctx context.Context, in *api.ListWatchOptions) (resp RolloutV1_AutoWatchRolloutActionClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoWatchRolloutAction", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchRolloutAction(ctx, in)
+	return
+}
 
 func (m loggingRolloutV1MiddlewareServer) AutoAddRollout(ctx context.Context, in Rollout) (resp Rollout, err error) {
 	defer func(begin time.Time) {
@@ -445,6 +798,19 @@ func (m loggingRolloutV1MiddlewareServer) AutoAddRollout(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoAddRollout", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoAddRollout(ctx, in)
+	return
+}
+func (m loggingRolloutV1MiddlewareServer) AutoAddRolloutAction(ctx context.Context, in RolloutAction) (resp RolloutAction, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoAddRolloutAction", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddRolloutAction(ctx, in)
 	return
 }
 func (m loggingRolloutV1MiddlewareServer) AutoDeleteRollout(ctx context.Context, in Rollout) (resp Rollout, err error) {
@@ -460,6 +826,19 @@ func (m loggingRolloutV1MiddlewareServer) AutoDeleteRollout(ctx context.Context,
 	resp, err = m.next.AutoDeleteRollout(ctx, in)
 	return
 }
+func (m loggingRolloutV1MiddlewareServer) AutoDeleteRolloutAction(ctx context.Context, in RolloutAction) (resp RolloutAction, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoDeleteRolloutAction", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteRolloutAction(ctx, in)
+	return
+}
 func (m loggingRolloutV1MiddlewareServer) AutoGetRollout(ctx context.Context, in Rollout) (resp Rollout, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -471,6 +850,19 @@ func (m loggingRolloutV1MiddlewareServer) AutoGetRollout(ctx context.Context, in
 		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoGetRollout", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoGetRollout(ctx, in)
+	return
+}
+func (m loggingRolloutV1MiddlewareServer) AutoGetRolloutAction(ctx context.Context, in RolloutAction) (resp RolloutAction, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoGetRolloutAction", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetRolloutAction(ctx, in)
 	return
 }
 func (m loggingRolloutV1MiddlewareServer) AutoListRollout(ctx context.Context, in api.ListWatchOptions) (resp RolloutList, err error) {
@@ -486,6 +878,19 @@ func (m loggingRolloutV1MiddlewareServer) AutoListRollout(ctx context.Context, i
 	resp, err = m.next.AutoListRollout(ctx, in)
 	return
 }
+func (m loggingRolloutV1MiddlewareServer) AutoListRolloutAction(ctx context.Context, in api.ListWatchOptions) (resp RolloutActionList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoListRolloutAction", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListRolloutAction(ctx, in)
+	return
+}
 func (m loggingRolloutV1MiddlewareServer) AutoUpdateRollout(ctx context.Context, in Rollout) (resp Rollout, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -497,6 +902,32 @@ func (m loggingRolloutV1MiddlewareServer) AutoUpdateRollout(ctx context.Context,
 		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoUpdateRollout", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateRollout(ctx, in)
+	return
+}
+func (m loggingRolloutV1MiddlewareServer) AutoUpdateRolloutAction(ctx context.Context, in RolloutAction) (resp RolloutAction, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "AutoUpdateRolloutAction", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateRolloutAction(ctx, in)
+	return
+}
+func (m loggingRolloutV1MiddlewareServer) DoRollout(ctx context.Context, in Rollout) (resp Rollout, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "RolloutV1", "method", "DoRollout", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.DoRollout(ctx, in)
 	return
 }
 
@@ -527,6 +958,19 @@ func (m loggingRolloutV1MiddlewareServer) AutoWatchRollout(in *api.ListWatchOpti
 	err = m.next.AutoWatchRollout(in, stream)
 	return
 }
+func (m loggingRolloutV1MiddlewareServer) AutoWatchRolloutAction(in *api.ListWatchOptions, stream RolloutV1_AutoWatchRolloutActionServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "RolloutV1", "method", "AutoWatchRolloutAction", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchRolloutAction(in, stream)
+	return
+}
 
 func (r *EndpointsRolloutV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
 	val, ok := loginctx.AuthzHeaderFromContext(ctx)
@@ -553,7 +997,14 @@ func (r *EndpointsRolloutV1RestClient) getHTTPRequest(ctx context.Context, in in
 
 //
 func makeURIRolloutV1AutoAddRolloutCreateOper(in *Rollout) string {
-	return fmt.Sprint("/configs/rollout/v1", "/rollout")
+	return ""
+
+}
+
+//
+func makeURIRolloutV1AutoAddRolloutActionCreateOper(in *RolloutAction) string {
+	return ""
+
 }
 
 //
@@ -562,8 +1013,18 @@ func makeURIRolloutV1AutoDeleteRolloutDeleteOper(in *Rollout) string {
 }
 
 //
+func makeURIRolloutV1AutoDeleteRolloutActionDeleteOper(in *RolloutAction) string {
+	return fmt.Sprint("/configs/rollout/v1", "/rolloutAction")
+}
+
+//
 func makeURIRolloutV1AutoGetRolloutGetOper(in *Rollout) string {
 	return fmt.Sprint("/configs/rollout/v1", "/rollout/", in.Name)
+}
+
+//
+func makeURIRolloutV1AutoGetRolloutActionGetOper(in *RolloutAction) string {
+	return fmt.Sprint("/configs/rollout/v1", "/rolloutAction")
 }
 
 //
@@ -572,8 +1033,21 @@ func makeURIRolloutV1AutoListRolloutListOper(in *api.ListWatchOptions) string {
 }
 
 //
+func makeURIRolloutV1AutoListRolloutActionListOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
 func makeURIRolloutV1AutoUpdateRolloutUpdateOper(in *Rollout) string {
-	return fmt.Sprint("/configs/rollout/v1", "/rollout/", in.Name)
+	return ""
+
+}
+
+//
+func makeURIRolloutV1AutoUpdateRolloutActionUpdateOper(in *RolloutAction) string {
+	return ""
+
 }
 
 //
@@ -582,53 +1056,29 @@ func makeURIRolloutV1AutoWatchRolloutWatchOper(in *api.ListWatchOptions) string 
 }
 
 //
+func makeURIRolloutV1AutoWatchRolloutActionWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/rollout/v1", "/watch/rolloutAction")
+}
+
+//
 func makeURIRolloutV1AutoWatchSvcRolloutV1WatchOper(in *api.ListWatchOptions) string {
 	return ""
 
 }
 
+//
+func makeURIRolloutV1DoRolloutCreateOper(in *Rollout) string {
+	return fmt.Sprint("/configs/rollout/v1", "/rollout/DoRollout")
+}
+
 // AutoAddRollout CRUD method for Rollout
 func (r *EndpointsRolloutV1RestClient) AutoAddRollout(ctx context.Context, in *Rollout) (*Rollout, error) {
-	path := makeURIRolloutV1AutoAddRolloutCreateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "POST", path)
-	if err != nil {
-		return nil, err
-	}
-	httpresp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer httpresp.Body.Close()
-	ret, err := decodeHTTPrespRolloutV1AutoAddRollout(ctx, httpresp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Rollout), nil
+	return nil, errors.New("not allowed")
 }
 
 // AutoUpdateRollout CRUD method for Rollout
 func (r *EndpointsRolloutV1RestClient) AutoUpdateRollout(ctx context.Context, in *Rollout) (*Rollout, error) {
-	path := makeURIRolloutV1AutoUpdateRolloutUpdateOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "PUT", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespRolloutV1AutoUpdateRollout(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*Rollout), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoGetRollout CRUD method for Rollout
@@ -717,6 +1167,134 @@ func (r *EndpointsRolloutV1RestClient) AutoWatchRollout(ctx context.Context, opt
 	bridgefn := func(lw *listerwatcher.WatcherClient) {
 		for {
 			in := &AutoMsgRolloutWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
+	return lw, nil
+}
+
+func (r *EndpointsRolloutV1RestClient) DoRolloutRollout(ctx context.Context, in *Rollout) (*Rollout, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIRolloutV1DoRolloutCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespRolloutV1DoRollout(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Rollout), err
+}
+
+// AutoAddRolloutAction CRUD method for RolloutAction
+func (r *EndpointsRolloutV1RestClient) AutoAddRolloutAction(ctx context.Context, in *RolloutAction) (*RolloutAction, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoUpdateRolloutAction CRUD method for RolloutAction
+func (r *EndpointsRolloutV1RestClient) AutoUpdateRolloutAction(ctx context.Context, in *RolloutAction) (*RolloutAction, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoGetRolloutAction CRUD method for RolloutAction
+func (r *EndpointsRolloutV1RestClient) AutoGetRolloutAction(ctx context.Context, in *RolloutAction) (*RolloutAction, error) {
+	path := makeURIRolloutV1AutoGetRolloutActionGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespRolloutV1AutoGetRolloutAction(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RolloutAction), err
+}
+
+// AutoDeleteRolloutAction CRUD method for RolloutAction
+func (r *EndpointsRolloutV1RestClient) AutoDeleteRolloutAction(ctx context.Context, in *RolloutAction) (*RolloutAction, error) {
+	path := makeURIRolloutV1AutoDeleteRolloutActionDeleteOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespRolloutV1AutoDeleteRolloutAction(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*RolloutAction), err
+}
+
+// AutoListRolloutAction CRUD method for RolloutAction
+func (r *EndpointsRolloutV1RestClient) AutoListRolloutAction(ctx context.Context, options *api.ListWatchOptions) (*RolloutActionList, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoWatchRolloutAction CRUD method for RolloutAction
+func (r *EndpointsRolloutV1RestClient) AutoWatchRolloutAction(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIRolloutV1AutoWatchRolloutActionWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgRolloutActionWatchHelper{}
 			err := conn.ReadJSON(in)
 			if err != nil {
 				return

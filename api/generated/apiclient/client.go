@@ -63,7 +63,7 @@ type Services interface {
 	NetworkV1() network.NetworkV1Interface
 	// Package is objstore and len of messages is 2
 	ObjstoreV1() objstore.ObjstoreV1Interface
-	// Package is rollout and len of messages is 1
+	// Package is rollout and len of messages is 2
 	RolloutV1() rollout.RolloutV1Interface
 	// Package is security and len of messages is 6
 	SecurityV1() security.SecurityV1Interface

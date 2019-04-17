@@ -102,6 +102,7 @@ func (ros *RolloutState) getVenicePendingPreCheckIssue() []string {
 			pendingVenice = append(pendingVenice, n.ObjectMeta.Name)
 		}
 	}
+	log.Infof("Rollout on pendingVenices %+v and issuedVenices %+v", pendingVenice, issuedVenices)
 	return pendingVenice
 }
 

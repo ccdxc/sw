@@ -43,6 +43,20 @@ func NewRolloutV1(conn *grpc.ClientConn, logger log.Logger) rollout.ServiceRollo
 		).Endpoint()
 		lAutoAddRolloutEndpoint = trace.ClientEndPoint("RolloutV1:AutoAddRollout")(lAutoAddRolloutEndpoint)
 	}
+	var lAutoAddRolloutActionEndpoint endpoint.Endpoint
+	{
+		lAutoAddRolloutActionEndpoint = grpctransport.NewClient(
+			conn,
+			"rollout.RolloutV1",
+			"AutoAddRolloutAction",
+			rollout.EncodeGrpcReqRolloutAction,
+			rollout.DecodeGrpcRespRolloutAction,
+			&rollout.RolloutAction{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddRolloutActionEndpoint = trace.ClientEndPoint("RolloutV1:AutoAddRolloutAction")(lAutoAddRolloutActionEndpoint)
+	}
 	var lAutoDeleteRolloutEndpoint endpoint.Endpoint
 	{
 		lAutoDeleteRolloutEndpoint = grpctransport.NewClient(
@@ -56,6 +70,20 @@ func NewRolloutV1(conn *grpc.ClientConn, logger log.Logger) rollout.ServiceRollo
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteRolloutEndpoint = trace.ClientEndPoint("RolloutV1:AutoDeleteRollout")(lAutoDeleteRolloutEndpoint)
+	}
+	var lAutoDeleteRolloutActionEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteRolloutActionEndpoint = grpctransport.NewClient(
+			conn,
+			"rollout.RolloutV1",
+			"AutoDeleteRolloutAction",
+			rollout.EncodeGrpcReqRolloutAction,
+			rollout.DecodeGrpcRespRolloutAction,
+			&rollout.RolloutAction{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteRolloutActionEndpoint = trace.ClientEndPoint("RolloutV1:AutoDeleteRolloutAction")(lAutoDeleteRolloutActionEndpoint)
 	}
 	var lAutoGetRolloutEndpoint endpoint.Endpoint
 	{
@@ -71,6 +99,20 @@ func NewRolloutV1(conn *grpc.ClientConn, logger log.Logger) rollout.ServiceRollo
 		).Endpoint()
 		lAutoGetRolloutEndpoint = trace.ClientEndPoint("RolloutV1:AutoGetRollout")(lAutoGetRolloutEndpoint)
 	}
+	var lAutoGetRolloutActionEndpoint endpoint.Endpoint
+	{
+		lAutoGetRolloutActionEndpoint = grpctransport.NewClient(
+			conn,
+			"rollout.RolloutV1",
+			"AutoGetRolloutAction",
+			rollout.EncodeGrpcReqRolloutAction,
+			rollout.DecodeGrpcRespRolloutAction,
+			&rollout.RolloutAction{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetRolloutActionEndpoint = trace.ClientEndPoint("RolloutV1:AutoGetRolloutAction")(lAutoGetRolloutActionEndpoint)
+	}
 	var lAutoListRolloutEndpoint endpoint.Endpoint
 	{
 		lAutoListRolloutEndpoint = grpctransport.NewClient(
@@ -84,6 +126,20 @@ func NewRolloutV1(conn *grpc.ClientConn, logger log.Logger) rollout.ServiceRollo
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListRolloutEndpoint = trace.ClientEndPoint("RolloutV1:AutoListRollout")(lAutoListRolloutEndpoint)
+	}
+	var lAutoListRolloutActionEndpoint endpoint.Endpoint
+	{
+		lAutoListRolloutActionEndpoint = grpctransport.NewClient(
+			conn,
+			"rollout.RolloutV1",
+			"AutoListRolloutAction",
+			rollout.EncodeGrpcReqListWatchOptions,
+			rollout.DecodeGrpcRespRolloutActionList,
+			&rollout.RolloutActionList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListRolloutActionEndpoint = trace.ClientEndPoint("RolloutV1:AutoListRolloutAction")(lAutoListRolloutActionEndpoint)
 	}
 	var lAutoUpdateRolloutEndpoint endpoint.Endpoint
 	{
@@ -99,14 +155,48 @@ func NewRolloutV1(conn *grpc.ClientConn, logger log.Logger) rollout.ServiceRollo
 		).Endpoint()
 		lAutoUpdateRolloutEndpoint = trace.ClientEndPoint("RolloutV1:AutoUpdateRollout")(lAutoUpdateRolloutEndpoint)
 	}
+	var lAutoUpdateRolloutActionEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateRolloutActionEndpoint = grpctransport.NewClient(
+			conn,
+			"rollout.RolloutV1",
+			"AutoUpdateRolloutAction",
+			rollout.EncodeGrpcReqRolloutAction,
+			rollout.DecodeGrpcRespRolloutAction,
+			&rollout.RolloutAction{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateRolloutActionEndpoint = trace.ClientEndPoint("RolloutV1:AutoUpdateRolloutAction")(lAutoUpdateRolloutActionEndpoint)
+	}
+	var lDoRolloutEndpoint endpoint.Endpoint
+	{
+		lDoRolloutEndpoint = grpctransport.NewClient(
+			conn,
+			"rollout.RolloutV1",
+			"DoRollout",
+			rollout.EncodeGrpcReqRollout,
+			rollout.DecodeGrpcRespRollout,
+			&rollout.Rollout{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lDoRolloutEndpoint = trace.ClientEndPoint("RolloutV1:DoRollout")(lDoRolloutEndpoint)
+	}
 	return rollout.EndpointsRolloutV1Client{
 		Client: rollout.NewRolloutV1Client(conn),
 
-		AutoAddRolloutEndpoint:    lAutoAddRolloutEndpoint,
-		AutoDeleteRolloutEndpoint: lAutoDeleteRolloutEndpoint,
-		AutoGetRolloutEndpoint:    lAutoGetRolloutEndpoint,
-		AutoListRolloutEndpoint:   lAutoListRolloutEndpoint,
-		AutoUpdateRolloutEndpoint: lAutoUpdateRolloutEndpoint,
+		AutoAddRolloutEndpoint:          lAutoAddRolloutEndpoint,
+		AutoAddRolloutActionEndpoint:    lAutoAddRolloutActionEndpoint,
+		AutoDeleteRolloutEndpoint:       lAutoDeleteRolloutEndpoint,
+		AutoDeleteRolloutActionEndpoint: lAutoDeleteRolloutActionEndpoint,
+		AutoGetRolloutEndpoint:          lAutoGetRolloutEndpoint,
+		AutoGetRolloutActionEndpoint:    lAutoGetRolloutActionEndpoint,
+		AutoListRolloutEndpoint:         lAutoListRolloutEndpoint,
+		AutoListRolloutActionEndpoint:   lAutoListRolloutActionEndpoint,
+		AutoUpdateRolloutEndpoint:       lAutoUpdateRolloutEndpoint,
+		AutoUpdateRolloutActionEndpoint: lAutoUpdateRolloutActionEndpoint,
+		DoRolloutEndpoint:               lDoRolloutEndpoint,
 	}
 }
 
@@ -213,6 +303,15 @@ func (a *grpcObjRolloutV1Rollout) Watch(ctx context.Context, options *api.ListWa
 	return lw, nil
 }
 
+func (a *grpcObjRolloutV1Rollout) DoRollout(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{DoRollout Rollout Rollout}", "oper", "DoRollout")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.DoRollout(nctx, in)
+}
+
 func (a *grpcObjRolloutV1Rollout) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
@@ -276,9 +375,9 @@ func (a *restObjRolloutV1Rollout) Watch(ctx context.Context, options *api.ListWa
 func (a *restObjRolloutV1Rollout) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
 	case apiintf.CreateOper:
-		return true
+		return false
 	case apiintf.UpdateOper:
-		return true
+		return false
 	case apiintf.GetOper:
 		return true
 	case apiintf.DeleteOper:
@@ -292,11 +391,194 @@ func (a *restObjRolloutV1Rollout) Allowed(oper apiintf.APIOperType) bool {
 	}
 }
 
+func (a *restObjRolloutV1Rollout) DoRollout(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.DoRolloutRollout(ctx, in)
+}
+
+type grpcObjRolloutV1RolloutAction struct {
+	logger log.Logger
+	client rollout.ServiceRolloutV1Client
+}
+
+func (a *grpcObjRolloutV1RolloutAction) Create(ctx context.Context, in *rollout.RolloutAction) (*rollout.RolloutAction, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RolloutAction", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddRolloutAction(nctx, in)
+}
+
+func (a *grpcObjRolloutV1RolloutAction) Update(ctx context.Context, in *rollout.RolloutAction) (*rollout.RolloutAction, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RolloutAction", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateRolloutAction(nctx, in)
+}
+
+func (a *grpcObjRolloutV1RolloutAction) Get(ctx context.Context, objMeta *api.ObjectMeta) (*rollout.RolloutAction, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RolloutAction", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := rollout.RolloutAction{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetRolloutAction(nctx, &in)
+}
+
+func (a *grpcObjRolloutV1RolloutAction) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*rollout.RolloutAction, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RolloutAction", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := rollout.RolloutAction{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteRolloutAction(nctx, &in)
+}
+
+func (a *grpcObjRolloutV1RolloutAction) List(ctx context.Context, options *api.ListWatchOptions) ([]*rollout.RolloutAction, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RolloutAction", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListRolloutAction(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjRolloutV1RolloutAction) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RolloutAction", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchRolloutAction(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(rollout.RolloutV1_AutoWatchRolloutActionClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjRolloutV1RolloutAction) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjRolloutV1RolloutAction struct {
+	endpoints rollout.EndpointsRolloutV1RestClient
+	instance  string
+}
+
+func (a *restObjRolloutV1RolloutAction) Create(ctx context.Context, in *rollout.RolloutAction) (*rollout.RolloutAction, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddRolloutAction(ctx, in)
+}
+
+func (a *restObjRolloutV1RolloutAction) Update(ctx context.Context, in *rollout.RolloutAction) (*rollout.RolloutAction, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateRolloutAction(ctx, in)
+}
+
+func (a *restObjRolloutV1RolloutAction) Get(ctx context.Context, objMeta *api.ObjectMeta) (*rollout.RolloutAction, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := rollout.RolloutAction{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetRolloutAction(ctx, &in)
+}
+
+func (a *restObjRolloutV1RolloutAction) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*rollout.RolloutAction, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := rollout.RolloutAction{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteRolloutAction(ctx, &in)
+}
+
+func (a *restObjRolloutV1RolloutAction) List(ctx context.Context, options *api.ListWatchOptions) ([]*rollout.RolloutAction, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	r, err := a.endpoints.AutoListRolloutAction(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjRolloutV1RolloutAction) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchRolloutAction(ctx, options)
+}
+
+func (a *restObjRolloutV1RolloutAction) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return false
+	case apiintf.UpdateOper:
+		return false
+	case apiintf.GetOper:
+		return true
+	case apiintf.DeleteOper:
+		return true
+	case apiintf.ListOper:
+		return false
+	case apiintf.WatchOper:
+		return true
+	default:
+		return false
+	}
+}
+
 type crudClientRolloutV1 struct {
 	logger log.Logger
 	client rollout.ServiceRolloutV1Client
 
-	grpcRollout rollout.RolloutV1RolloutInterface
+	grpcRollout       rollout.RolloutV1RolloutInterface
+	grpcRolloutAction rollout.RolloutV1RolloutActionInterface
 }
 
 // NewGrpcCrudClientRolloutV1 creates a GRPC client for the service
@@ -306,12 +588,17 @@ func NewGrpcCrudClientRolloutV1(conn *grpc.ClientConn, logger log.Logger) rollou
 		logger: logger,
 		client: client,
 
-		grpcRollout: &grpcObjRolloutV1Rollout{client: client, logger: logger},
+		grpcRollout:       &grpcObjRolloutV1Rollout{client: client, logger: logger},
+		grpcRolloutAction: &grpcObjRolloutV1RolloutAction{client: client, logger: logger},
 	}
 }
 
 func (a *crudClientRolloutV1) Rollout() rollout.RolloutV1RolloutInterface {
 	return a.grpcRollout
+}
+
+func (a *crudClientRolloutV1) RolloutAction() rollout.RolloutV1RolloutActionInterface {
+	return a.grpcRolloutAction
 }
 
 func (a *crudClientRolloutV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
@@ -357,7 +644,8 @@ func (a *crudClientRolloutV1) Watch(ctx context.Context, options *api.ListWatchO
 }
 
 type crudRestClientRolloutV1 struct {
-	restRollout rollout.RolloutV1RolloutInterface
+	restRollout       rollout.RolloutV1RolloutInterface
+	restRolloutAction rollout.RolloutV1RolloutActionInterface
 }
 
 // NewRestCrudClientRolloutV1 creates a REST client for the service.
@@ -368,7 +656,8 @@ func NewRestCrudClientRolloutV1(url string, httpClient *http.Client) rollout.Rol
 	}
 	return &crudRestClientRolloutV1{
 
-		restRollout: &restObjRolloutV1Rollout{endpoints: endpoints, instance: url},
+		restRollout:       &restObjRolloutV1Rollout{endpoints: endpoints, instance: url},
+		restRolloutAction: &restObjRolloutV1RolloutAction{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -380,12 +669,17 @@ func NewStagedRestCrudClientRolloutV1(url string, id string, httpClient *http.Cl
 	}
 	return &crudRestClientRolloutV1{
 
-		restRollout: &restObjRolloutV1Rollout{endpoints: endpoints, instance: url},
+		restRollout:       &restObjRolloutV1Rollout{endpoints: endpoints, instance: url},
+		restRolloutAction: &restObjRolloutV1RolloutAction{endpoints: endpoints, instance: url},
 	}
 }
 
 func (a *crudRestClientRolloutV1) Rollout() rollout.RolloutV1RolloutInterface {
 	return a.restRollout
+}
+
+func (a *crudRestClientRolloutV1) RolloutAction() rollout.RolloutV1RolloutActionInterface {
+	return a.restRolloutAction
 }
 
 func (a *crudRestClientRolloutV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {

@@ -82,6 +82,7 @@ type Controller interface {
 	Bucket() BucketAPI                                   // return Bucket API interface
 	Object() ObjectAPI                                   // return Object API interface
 	Rollout() RolloutAPI                                 // return Rollout API interface
+	RolloutAction() RolloutActionAPI                     // return RolloutAction API interface
 	SecurityGroup() SecurityGroupAPI                     // return SecurityGroup API interface
 	SGPolicy() SGPolicyAPI                               // return SGPolicy API interface
 	App() AppAPI                                         // return App API interface

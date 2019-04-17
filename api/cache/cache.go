@@ -544,6 +544,8 @@ func (c *cache) Restore() error {
 			c.logger.Infof("restoring object [%v] from backend while restoring cache(%v)", meta.SelfLink, err)
 		}
 		c.Unlock()
+	} else {
+		log.ErrorLog("list backend returned error (%s)", err)
 	}
 	// restore any persisted overlays
 	err := restoreOverlays(context.Background(), globals.StagingBasePath, c, c.config.APIServer)

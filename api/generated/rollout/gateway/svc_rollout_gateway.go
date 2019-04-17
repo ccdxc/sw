@@ -74,6 +74,29 @@ func (a adapterRolloutV1) AutoAddRollout(oldctx oldcontext.Context, t *rollout.R
 	return ret.(*rollout.Rollout), err
 }
 
+func (a adapterRolloutV1) AutoAddRolloutAction(oldctx oldcontext.Context, t *rollout.RolloutAction, options ...grpc.CallOption) (*rollout.RolloutAction, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddRolloutAction")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*rollout.RolloutAction)
+		return a.service.AutoAddRolloutAction(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*rollout.RolloutAction), err
+}
+
 func (a adapterRolloutV1) AutoDeleteRollout(oldctx oldcontext.Context, t *rollout.Rollout, options ...grpc.CallOption) (*rollout.Rollout, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -97,6 +120,29 @@ func (a adapterRolloutV1) AutoDeleteRollout(oldctx oldcontext.Context, t *rollou
 	return ret.(*rollout.Rollout), err
 }
 
+func (a adapterRolloutV1) AutoDeleteRolloutAction(oldctx oldcontext.Context, t *rollout.RolloutAction, options ...grpc.CallOption) (*rollout.RolloutAction, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteRolloutAction")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*rollout.RolloutAction)
+		return a.service.AutoDeleteRolloutAction(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*rollout.RolloutAction), err
+}
+
 func (a adapterRolloutV1) AutoGetRollout(oldctx oldcontext.Context, t *rollout.Rollout, options ...grpc.CallOption) (*rollout.Rollout, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -118,6 +164,29 @@ func (a adapterRolloutV1) AutoGetRollout(oldctx oldcontext.Context, t *rollout.R
 		return nil, err
 	}
 	return ret.(*rollout.Rollout), err
+}
+
+func (a adapterRolloutV1) AutoGetRolloutAction(oldctx oldcontext.Context, t *rollout.RolloutAction, options ...grpc.CallOption) (*rollout.RolloutAction, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetRolloutAction")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*rollout.RolloutAction)
+		return a.service.AutoGetRolloutAction(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*rollout.RolloutAction), err
 }
 
 func (a adapterRolloutV1) AutoListRollout(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*rollout.RolloutList, error) {
@@ -146,6 +215,32 @@ func (a adapterRolloutV1) AutoListRollout(oldctx oldcontext.Context, t *api.List
 	return ret.(*rollout.RolloutList), err
 }
 
+func (a adapterRolloutV1) AutoListRolloutAction(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*rollout.RolloutActionList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListRolloutAction")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	t.Tenant = ""
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListRolloutAction(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*rollout.RolloutActionList), err
+}
+
 func (a adapterRolloutV1) AutoUpdateRollout(oldctx oldcontext.Context, t *rollout.Rollout, options ...grpc.CallOption) (*rollout.Rollout, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -161,6 +256,52 @@ func (a adapterRolloutV1) AutoUpdateRollout(oldctx oldcontext.Context, t *rollou
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
 		in := i.(*rollout.Rollout)
 		return a.service.AutoUpdateRollout(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*rollout.Rollout), err
+}
+
+func (a adapterRolloutV1) AutoUpdateRolloutAction(oldctx oldcontext.Context, t *rollout.RolloutAction, options ...grpc.CallOption) (*rollout.RolloutAction, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateRolloutAction")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "RolloutAction", t.Tenant, t.Namespace, "rollout", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*rollout.RolloutAction)
+		return a.service.AutoUpdateRolloutAction(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*rollout.RolloutAction), err
+}
+
+func (a adapterRolloutV1) DoRollout(oldctx oldcontext.Context, t *rollout.Rollout, options ...grpc.CallOption) (*rollout.Rollout, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("DoRollout")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Rollout", t.Tenant, t.Namespace, "rollout", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*rollout.Rollout)
+		return a.service.DoRollout(ctx, in)
 	}
 	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
 	if ret == nil {
@@ -280,22 +421,83 @@ func (a adapterRolloutV1) AutoWatchRollout(oldctx oldcontext.Context, in *api.Li
 	return ret.(rollout.RolloutV1_AutoWatchRolloutClient), err
 }
 
+func (a adapterRolloutV1) AutoWatchRolloutAction(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (rollout.RolloutV1_AutoWatchRolloutActionClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchRolloutAction")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	in.Tenant = ""
+	in.Namespace = ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "RolloutAction", in.Tenant, in.Namespace, "rollout"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchRolloutAction] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchRolloutAction(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(rollout.RolloutV1_AutoWatchRolloutActionClient), err
+}
+
 func (e *sRolloutV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "rollout", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
-	e.svcProf["AutoAddRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Rollout", "rollout", apiintf.CreateOper)
-
 	e.svcProf["AutoDeleteRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Rollout", "rollout", apiintf.DeleteOper)
+
+	e.svcProf["AutoDeleteRolloutAction"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RolloutAction", "rollout", apiintf.DeleteOper)
 
 	e.svcProf["AutoGetRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Rollout", "rollout", apiintf.GetOper)
 
+	e.svcProf["AutoGetRolloutAction"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RolloutAction", "rollout", apiintf.GetOper)
+
 	e.svcProf["AutoListRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RolloutList", "rollout", apiintf.ListOper)
 
-	e.svcProf["AutoUpdateRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Rollout", "rollout", apiintf.UpdateOper)
-
 	e.svcProf["AutoWatchRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRolloutWatchHelper", "rollout", apiintf.WatchOper)
+
+	e.svcProf["AutoWatchRolloutAction"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRolloutActionWatchHelper", "rollout", apiintf.WatchOper)
+
+	e.svcProf["DoRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Rollout", "rollout", apiintf.CreateOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

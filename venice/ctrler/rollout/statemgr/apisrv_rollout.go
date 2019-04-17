@@ -133,7 +133,11 @@ func (ros *RolloutState) saveStatus() {
 		ros.writer.WriteRollout(ros.Rollout)
 	}
 }
-
+func (ros *RolloutState) updateRolloutAction() {
+	if ros != nil && ros.writer != nil {
+		ros.writer.WriteRolloutAction(ros.Rollout)
+	}
+}
 func (ros *RolloutState) setPreviousVersion(v string) {
 	if ros.Status.PreviousVersion == "" {
 		ros.Status.PreviousVersion = v

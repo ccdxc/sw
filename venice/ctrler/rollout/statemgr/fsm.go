@@ -342,13 +342,19 @@ func fsmAcRolloutSmartNICs(ros *RolloutState) {
 }
 func fsmAcRolloutSuccess(ros *RolloutState) {
 	ros.setEndTime()
+	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUCCESS)]
 	ros.saveStatus()
+	ros.updateRolloutAction()
 }
 func fsmAcRolloutFail(ros *RolloutState) {
 	ros.setEndTime()
+	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_FAILURE)]
 	ros.saveStatus()
+	ros.updateRolloutAction()
 }
 func fsmAcRolloutSuspend(ros *RolloutState) {
 	ros.setEndTime()
+	ros.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
 	ros.saveStatus()
+	ros.updateRolloutAction()
 }

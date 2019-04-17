@@ -480,7 +480,8 @@
       "RolloutV1": {
         "Version": "v1",
         "Messages": [
-          "Rollout"
+          "Rollout",
+          "RolloutAction"
         ],
         "Properties": {
           "Rollout": {
@@ -488,11 +489,22 @@
               "cluster"
             ],
             "RestMethods": [
-              "put",
               "get",
               "delete",
-              "post",
               "list",
+              "watch"
+            ],
+            "Actions": [
+              "DoRollout"
+            ]
+          },
+          "RolloutAction": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "get",
+              "delete",
               "watch"
             ]
           }

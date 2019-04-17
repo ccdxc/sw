@@ -51,6 +51,74 @@ func DecodeGrpcRespRollout(ctx context.Context, response interface{}) (interface
 	return response, nil
 }
 
+func encodeHTTPRolloutAction(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRolloutAction(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RolloutAction
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRolloutAction encodes GRPC request
+func EncodeGrpcReqRolloutAction(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RolloutAction)
+	return req, nil
+}
+
+// DecodeGrpcReqRolloutAction decodes GRPC request
+func DecodeGrpcReqRolloutAction(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RolloutAction)
+	return req, nil
+}
+
+// EncodeGrpcRespRolloutAction encodes GRC response
+func EncodeGrpcRespRolloutAction(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRolloutAction decodes GRPC response
+func DecodeGrpcRespRolloutAction(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPRolloutActionStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRolloutActionStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RolloutActionStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRolloutActionStatus encodes GRPC request
+func EncodeGrpcReqRolloutActionStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RolloutActionStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqRolloutActionStatus decodes GRPC request
+func DecodeGrpcReqRolloutActionStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RolloutActionStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespRolloutActionStatus encodes GRC response
+func EncodeGrpcRespRolloutActionStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRolloutActionStatus decodes GRPC response
+func DecodeGrpcRespRolloutActionStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPRolloutPhase(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

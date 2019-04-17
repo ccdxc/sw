@@ -4,24 +4,65 @@ package cluster
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
+	"os"
 	"time"
+
+	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/gogo/protobuf/types"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	api "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api"
 
-	rollout "github.com/pensando/sw/api/generated/rollout"
+	"github.com/pensando/sw/api/generated/rollout"
 )
 
 const (
 	rolloutName        = "e2e_rollout"
 	rolloutSuspendName = "e2e_rollout_suspend"
 )
+
+var version string
+
+type ImageConfig struct {
+	ImageMap                map[string]string   `json:"imageMap,omitempty"`
+	UpgradeOrder            []string            `json:"upgradeOrder,omitempty"`
+	SupportedNaplesVersions map[string][]string `json:"supportedNaplesVersions,omitempty"`
+	GitVersion              map[string]string   `json:"cmdVersionMap,omitempty"`
+}
+
+func readImageConfigFile(imageConfig *ImageConfig) error {
+	confFile := "/import/src/github.com/pensando/sw/bin/venice.json"
+	if _, err := os.Stat(confFile); err != nil {
+		// Stat error is treated as not part of cluster.
+		log.Errorf("unable to find confFile %s error: %v", confFile, err)
+		return err
+	}
+	var in []byte
+	var err error
+	if in, err = ioutil.ReadFile(confFile); err != nil {
+		log.Errorf("unable to read confFile %s error: %v", confFile, err)
+		return err
+	}
+	if err := json.Unmarshal(in, imageConfig); err != nil {
+		log.Errorf("unable to understand confFile %s error: %v", confFile, err)
+		return err
+	}
+	return nil
+}
+
+// GetGitVersion reads config file and returns a map of ContainerInfo indexed by name
+func GetGitVersion() map[string]string {
+	var imageConfig ImageConfig
+	readImageConfigFile(&imageConfig)
+	return imageConfig.GitVersion
+}
 
 // run the tests
 var _ = Describe("Rollout object tests", func() {
@@ -31,18 +72,32 @@ var _ = Describe("Rollout object tests", func() {
 		// setup
 		It("Rollout setup: upload image should succeed", func() {
 			Skip(fmt.Sprintf("Skipping upload venice image test"))
-			//TODO integrate image pickup with the hourly build
-			upgImageName := "/import/src/github.com/pensando/sw/bin/venice.tgz"
+			node := ts.tu.QuorumNodes[rand.Intn(len(ts.tu.QuorumNodes))]
+			nodeIP := ts.tu.NameToIPMap[node]
+			url := fmt.Sprintf("http://pxe.pensando.io/builds/hourly/0.9.0_last-built/src/github.com/pensando/sw/bin/venice.tgz --output /import/src/github.com/pensando/sw/bin/venice.upg.tgz")
+			res := ts.tu.CommandOutput(nodeIP, fmt.Sprintf(`curl %s`, url))
+			By(fmt.Sprintf("ts:%s CURL file upload [%s]", time.Now().String(), res))
 
-			// location of the objstore.
-			err := ts.tu.SetupObjstoreClient()
-			filename := "venice.tgz"
+			url = fmt.Sprintf("http://pxe.pensando.io/builds/hourly/0.9.0_last-built/src/github.com/pensando/sw/tools/docker-files/install/target/etc/pensando/shared/common/venice.json --output /import/src/github.com/pensando/sw/bin/venice.json")
+			res = ts.tu.CommandOutput(nodeIP, fmt.Sprintf(`curl %s`, url))
+			By(fmt.Sprintf("ts:%s CURL file upload [%s]", time.Now().String(), res))
+
+			upgImageName := "/import/src/github.com/pensando/sw/bin/venice.1.tgz"
+
+			cmdVersion := GetGitVersion()
+			for version = range cmdVersion {
+				break
+			}
 			metadata := map[string]string{
-				"Version":     "v1.3.2",
+				"Version":     version,
 				"Environment": "production",
 				"Description": "E2E test Image upload",
 				"Releasedate": "May2018",
 			}
+			// location of the objstore.
+			err := ts.tu.SetupObjstoreClient()
+			filename := "venice.tgz"
+
 			buf, _ := ioutil.ReadFile(upgImageName)
 			ctx := ts.tu.NewLoggedInContext(context.Background())
 			_, err = uploadFile(ctx, filename, metadata, buf)
@@ -64,11 +119,10 @@ var _ = Describe("Rollout object tests", func() {
 					Kind: "Rollout",
 				},
 				ObjectMeta: api.ObjectMeta{
-					Name:      rolloutName,
-					Namespace: "default",
+					Name: rolloutName,
 				},
 				Spec: rollout.RolloutSpec{
-					Version:                     "2.8",
+					Version:                     version,
 					ScheduledStartTime:          scheduledStartTime,
 					Duration:                    "",
 					Strategy:                    "LINEAR",
@@ -85,7 +139,7 @@ var _ = Describe("Rollout object tests", func() {
 			// Verify creation for rollout object
 			Eventually(func() bool {
 
-				r1, err := ts.restSvc.RolloutV1().Rollout().Create(ts.loggedInCtx, &rollout)
+				r1, err := ts.restSvc.RolloutV1().Rollout().DoRollout(ts.loggedInCtx, &rollout)
 				if err != nil || r1.Name != rolloutName {
 					By(fmt.Sprintf("ts:%s Rollout CREATE failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutName, err, r1))
 					return false
@@ -205,11 +259,10 @@ var _ = Describe("Rollout object tests", func() {
 					Kind: "Rollout",
 				},
 				ObjectMeta: api.ObjectMeta{
-					Name:      rolloutSuspendName,
-					Namespace: "default",
+					Name: rolloutSuspendName,
 				},
 				Spec: rollout.RolloutSpec{
-					Version:                     "2.8",
+					Version:                     version,
 					ScheduledStartTime:          nil,
 					Duration:                    "",
 					Strategy:                    "LINEAR",
@@ -225,7 +278,7 @@ var _ = Describe("Rollout object tests", func() {
 
 			// Verify creation for rollout object
 			Eventually(func() bool {
-				r1, err := ts.restSvc.RolloutV1().Rollout().Create(ts.loggedInCtx, &rollout)
+				r1, err := ts.restSvc.RolloutV1().Rollout().DoRollout(ts.loggedInCtx, &rollout)
 				if err != nil || r1.Name != rolloutSuspendName {
 					By(fmt.Sprintf("ts:%s Rollout CREATE failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutSuspendName, err, r1))
 					return false
@@ -252,7 +305,7 @@ var _ = Describe("Rollout object tests", func() {
 				time.Sleep(20 * time.Second)
 				//Now Suspend rollout
 				rollout.Spec.Suspend = true
-				r1, err := ts.restSvc.RolloutV1().Rollout().Update(ts.loggedInCtx, &rollout)
+				r1, err := ts.restSvc.RolloutV1().Rollout().DoRollout(ts.loggedInCtx, &rollout)
 				if err != nil || r1.Name != rolloutSuspendName {
 					By(fmt.Sprintf("ts:%s Rollout Update failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutSuspendName, err, r1))
 					return false

@@ -8,6 +8,8 @@ Input file: rollout.proto
 The following Messages are defined.
 
   Rollout
+  RolloutAction
+  RolloutActionStatus
   RolloutPhase
   RolloutSpec
   RolloutStatus

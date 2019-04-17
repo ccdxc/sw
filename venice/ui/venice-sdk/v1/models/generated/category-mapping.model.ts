@@ -25,6 +25,7 @@ import { NetworkVirtualRouter } from './network';
 import { ObjstoreBucket } from './objstore';
 import { ObjstoreObject } from './objstore';
 import { RolloutRollout } from './rollout';
+import { RolloutRolloutAction } from './rollout';
 import { SecuritySecurityGroup } from './security';
 import { SecuritySGPolicy } from './security';
 import { SecurityApp } from './security';
@@ -73,6 +74,7 @@ export const CategoryMapping  = {
   },
   "Rollout" : {
     "Rollout" : new RolloutRollout(),
+    "RolloutAction" : new RolloutRolloutAction(),
   },
   "Security" : {
     "SecurityGroup" : new SecuritySecurityGroup(),

@@ -6,6 +6,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/venice/globals"
@@ -18,6 +19,7 @@ import (
 // Writer is the api provided by writer object
 type Writer interface {
 	WriteRollout(ro *rollout.Rollout) error
+	WriteRolloutAction(ro *rollout.Rollout) error
 	Close() error
 }
 
@@ -89,6 +91,28 @@ func (wr *APISrvWriter) WriteRollout(ro *rollout.Rollout) error {
 		log.Infof("Rollout Update successful %+v", k)
 		break
 	}
+	return err
+}
+
+// WriteRolloutAction updates Rollout object
+func (wr *APISrvWriter) WriteRolloutAction(ro *rollout.Rollout) error {
+	// if we have no URL, we are done
+	if wr.apisrvURL == "" {
+		return nil
+	}
+
+	// get the api client
+	apicl, err := wr.getAPIClient()
+	if err != nil {
+		return err
+	}
+
+	// write it
+	log.Infof("Updating RolloutAction %v Status %v OperationalState %v", ro.Name, ro.Status, ro.Status.OperationalState)
+	obj := api.ObjectMeta{}
+	roa, err := apicl.RolloutV1().RolloutAction().Get(context.Background(), &obj)
+	roa.Status.OperationalState = ro.Status.OperationalState
+	_, err = apicl.RolloutV1().RolloutAction().Update(context.Background(), roa)
 	return err
 }
 

@@ -24,10 +24,23 @@ type RolloutV1RolloutInterface interface {
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Rollout, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiintf.APIOperType) bool
+	DoRollout(ctx context.Context, in *Rollout) (*Rollout, error)
+}
+
+// RolloutV1RolloutActionInterface exposes the CRUD methods for RolloutAction
+type RolloutV1RolloutActionInterface interface {
+	Create(ctx context.Context, in *RolloutAction) (*RolloutAction, error)
+	Update(ctx context.Context, in *RolloutAction) (*RolloutAction, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*RolloutAction, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*RolloutAction, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*RolloutAction, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
 }
 
 // RolloutV1Interface exposes objects with CRUD operations allowed by the service
 type RolloutV1Interface interface {
 	Rollout() RolloutV1RolloutInterface
+	RolloutAction() RolloutV1RolloutActionInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

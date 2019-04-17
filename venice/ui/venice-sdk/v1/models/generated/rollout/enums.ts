@@ -25,6 +25,16 @@ export enum LabelsRequirement_operator {
     'notIn' = "notIn",
 }
 
+export enum RolloutRolloutActionStatus_state {
+    'PROGRESSING' = "PROGRESSING",
+    'FAILURE' = "FAILURE",
+    'SUCCESS' = "SUCCESS",
+    'SCHEDULED' = "SCHEDULED",
+    'SUSPENDED' = "SUSPENDED",
+    'SUSPEND_IN_PROGRESS' = "SUSPEND_IN_PROGRESS",
+    'DEADLINE_EXCEEDED' = "DEADLINE_EXCEEDED",
+}
+
 export enum RolloutRolloutPhase_phase {
     'PRE_CHECK' = "PRE_CHECK",
     'DEPENDENCIES_CHECK' = "DEPENDENCIES_CHECK",
@@ -124,6 +134,7 @@ export class AllEnums {
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
     LabelsRequirement_operator = LabelsRequirement_operator;
+    RolloutRolloutActionStatus_state = RolloutRolloutActionStatus_state;
     RolloutRolloutPhase_phase = RolloutRolloutPhase_phase;
     RolloutRolloutSpec_strategy = RolloutRolloutSpec_strategy;
     RolloutRolloutSpec_upgrade_type = RolloutRolloutSpec_upgrade_type;

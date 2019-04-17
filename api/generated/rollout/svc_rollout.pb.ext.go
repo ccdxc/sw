@@ -24,6 +24,16 @@ var _ log.Logger
 var _ listerwatcher.WatcherClient
 
 // MakeKey generates a KV store key for the object
+func (m *RolloutActionList) MakeKey(prefix string) string {
+	obj := RolloutAction{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *RolloutActionList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *RolloutList) MakeKey(prefix string) string {
 	obj := Rollout{}
 	return obj.MakeKey(prefix)
@@ -34,9 +44,57 @@ func (m *RolloutList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *AutoMsgRolloutActionWatchHelper) MakeKey(prefix string) string {
+	obj := RolloutAction{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *AutoMsgRolloutWatchHelper) MakeKey(prefix string) string {
 	obj := Rollout{}
 	return obj.MakeKey(prefix)
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgRolloutActionWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgRolloutActionWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgRolloutActionWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgRolloutActionWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgRolloutActionWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgRolloutActionWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgRolloutActionWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgRolloutActionWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -82,6 +140,27 @@ func (m *AutoMsgRolloutWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *RolloutActionList) Clone(into interface{}) (interface{}, error) {
+	var out *RolloutActionList
+	var ok bool
+	if into == nil {
+		out = &RolloutActionList{}
+	} else {
+		out, ok = into.(*RolloutActionList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *m
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *RolloutActionList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *RolloutList) Clone(into interface{}) (interface{}, error) {
 	var out *RolloutList
 	var ok bool
@@ -103,6 +182,64 @@ func (m *RolloutList) Defaults(ver string) bool {
 }
 
 // Validators and Requirements
+
+func (m *AutoMsgRolloutActionWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgRolloutActionWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgRolloutActionWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
 
 func (m *AutoMsgRolloutWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
@@ -158,6 +295,35 @@ func (m *AutoMsgRolloutWatchHelper_WatchEvent) Normalize() {
 
 	if m.Object != nil {
 		m.Object.Normalize()
+	}
+
+}
+
+func (m *RolloutActionList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *RolloutActionList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *RolloutActionList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
 	}
 
 }

@@ -25,11 +25,17 @@ var _ api.ObjectMeta
 type grpcServerRolloutV1 struct {
 	Endpoints EndpointsRolloutV1Server
 
-	AutoAddRolloutHdlr    grpctransport.Handler
-	AutoDeleteRolloutHdlr grpctransport.Handler
-	AutoGetRolloutHdlr    grpctransport.Handler
-	AutoListRolloutHdlr   grpctransport.Handler
-	AutoUpdateRolloutHdlr grpctransport.Handler
+	AutoAddRolloutHdlr          grpctransport.Handler
+	AutoAddRolloutActionHdlr    grpctransport.Handler
+	AutoDeleteRolloutHdlr       grpctransport.Handler
+	AutoDeleteRolloutActionHdlr grpctransport.Handler
+	AutoGetRolloutHdlr          grpctransport.Handler
+	AutoGetRolloutActionHdlr    grpctransport.Handler
+	AutoListRolloutHdlr         grpctransport.Handler
+	AutoListRolloutActionHdlr   grpctransport.Handler
+	AutoUpdateRolloutHdlr       grpctransport.Handler
+	AutoUpdateRolloutActionHdlr grpctransport.Handler
+	DoRolloutHdlr               grpctransport.Handler
 }
 
 // MakeGRPCServerRolloutV1 creates a GRPC server for RolloutV1 service
@@ -47,11 +53,25 @@ func MakeGRPCServerRolloutV1(ctx context.Context, endpoints EndpointsRolloutV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRollout", logger)))...,
 		),
 
+		AutoAddRolloutActionHdlr: grpctransport.NewServer(
+			endpoints.AutoAddRolloutActionEndpoint,
+			DecodeGrpcReqRolloutAction,
+			EncodeGrpcRespRolloutAction,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddRolloutAction", logger)))...,
+		),
+
 		AutoDeleteRolloutHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteRolloutEndpoint,
 			DecodeGrpcReqRollout,
 			EncodeGrpcRespRollout,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRollout", logger)))...,
+		),
+
+		AutoDeleteRolloutActionHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteRolloutActionEndpoint,
+			DecodeGrpcReqRolloutAction,
+			EncodeGrpcRespRolloutAction,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteRolloutAction", logger)))...,
 		),
 
 		AutoGetRolloutHdlr: grpctransport.NewServer(
@@ -61,6 +81,13 @@ func MakeGRPCServerRolloutV1(ctx context.Context, endpoints EndpointsRolloutV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRollout", logger)))...,
 		),
 
+		AutoGetRolloutActionHdlr: grpctransport.NewServer(
+			endpoints.AutoGetRolloutActionEndpoint,
+			DecodeGrpcReqRolloutAction,
+			EncodeGrpcRespRolloutAction,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetRolloutAction", logger)))...,
+		),
+
 		AutoListRolloutHdlr: grpctransport.NewServer(
 			endpoints.AutoListRolloutEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -68,11 +95,32 @@ func MakeGRPCServerRolloutV1(ctx context.Context, endpoints EndpointsRolloutV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRollout", logger)))...,
 		),
 
+		AutoListRolloutActionHdlr: grpctransport.NewServer(
+			endpoints.AutoListRolloutActionEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespRolloutActionList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListRolloutAction", logger)))...,
+		),
+
 		AutoUpdateRolloutHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateRolloutEndpoint,
 			DecodeGrpcReqRollout,
 			EncodeGrpcRespRollout,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRollout", logger)))...,
+		),
+
+		AutoUpdateRolloutActionHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateRolloutActionEndpoint,
+			DecodeGrpcReqRolloutAction,
+			EncodeGrpcRespRolloutAction,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateRolloutAction", logger)))...,
+		),
+
+		DoRolloutHdlr: grpctransport.NewServer(
+			endpoints.DoRolloutEndpoint,
+			DecodeGrpcReqRollout,
+			EncodeGrpcRespRollout,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("DoRollout", logger)))...,
 		),
 	}
 }
@@ -95,6 +143,24 @@ func decodeHTTPrespRolloutV1AutoAddRollout(_ context.Context, r *http.Response) 
 	return &resp, err
 }
 
+func (s *grpcServerRolloutV1) AutoAddRolloutAction(ctx oldcontext.Context, req *RolloutAction) (*RolloutAction, error) {
+	_, resp, err := s.AutoAddRolloutActionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respRolloutV1AutoAddRolloutAction).V
+	return &r, resp.(respRolloutV1AutoAddRolloutAction).Err
+}
+
+func decodeHTTPrespRolloutV1AutoAddRolloutAction(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RolloutAction
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerRolloutV1) AutoDeleteRollout(ctx oldcontext.Context, req *Rollout) (*Rollout, error) {
 	_, resp, err := s.AutoDeleteRolloutHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -109,6 +175,24 @@ func decodeHTTPrespRolloutV1AutoDeleteRollout(_ context.Context, r *http.Respons
 		return nil, errorDecoder(r)
 	}
 	var resp Rollout
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerRolloutV1) AutoDeleteRolloutAction(ctx oldcontext.Context, req *RolloutAction) (*RolloutAction, error) {
+	_, resp, err := s.AutoDeleteRolloutActionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respRolloutV1AutoDeleteRolloutAction).V
+	return &r, resp.(respRolloutV1AutoDeleteRolloutAction).Err
+}
+
+func decodeHTTPrespRolloutV1AutoDeleteRolloutAction(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RolloutAction
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -131,6 +215,24 @@ func decodeHTTPrespRolloutV1AutoGetRollout(_ context.Context, r *http.Response) 
 	return &resp, err
 }
 
+func (s *grpcServerRolloutV1) AutoGetRolloutAction(ctx oldcontext.Context, req *RolloutAction) (*RolloutAction, error) {
+	_, resp, err := s.AutoGetRolloutActionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respRolloutV1AutoGetRolloutAction).V
+	return &r, resp.(respRolloutV1AutoGetRolloutAction).Err
+}
+
+func decodeHTTPrespRolloutV1AutoGetRolloutAction(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RolloutAction
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerRolloutV1) AutoListRollout(ctx oldcontext.Context, req *api.ListWatchOptions) (*RolloutList, error) {
 	_, resp, err := s.AutoListRolloutHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -145,6 +247,24 @@ func decodeHTTPrespRolloutV1AutoListRollout(_ context.Context, r *http.Response)
 		return nil, errorDecoder(r)
 	}
 	var resp RolloutList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerRolloutV1) AutoListRolloutAction(ctx oldcontext.Context, req *api.ListWatchOptions) (*RolloutActionList, error) {
+	_, resp, err := s.AutoListRolloutActionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respRolloutV1AutoListRolloutAction).V
+	return &r, resp.(respRolloutV1AutoListRolloutAction).Err
+}
+
+func decodeHTTPrespRolloutV1AutoListRolloutAction(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RolloutActionList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -167,12 +287,86 @@ func decodeHTTPrespRolloutV1AutoUpdateRollout(_ context.Context, r *http.Respons
 	return &resp, err
 }
 
+func (s *grpcServerRolloutV1) AutoUpdateRolloutAction(ctx oldcontext.Context, req *RolloutAction) (*RolloutAction, error) {
+	_, resp, err := s.AutoUpdateRolloutActionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respRolloutV1AutoUpdateRolloutAction).V
+	return &r, resp.(respRolloutV1AutoUpdateRolloutAction).Err
+}
+
+func decodeHTTPrespRolloutV1AutoUpdateRolloutAction(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp RolloutAction
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerRolloutV1) DoRollout(ctx oldcontext.Context, req *Rollout) (*Rollout, error) {
+	_, resp, err := s.DoRolloutHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respRolloutV1DoRollout).V
+	return &r, resp.(respRolloutV1DoRollout).Err
+}
+
+func decodeHTTPrespRolloutV1DoRollout(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Rollout
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerRolloutV1) AutoWatchSvcRolloutV1(in *api.ListWatchOptions, stream RolloutV1_AutoWatchSvcRolloutV1Server) error {
 	return s.Endpoints.AutoWatchSvcRolloutV1(in, stream)
 }
 
 func (s *grpcServerRolloutV1) AutoWatchRollout(in *api.ListWatchOptions, stream RolloutV1_AutoWatchRolloutServer) error {
 	return s.Endpoints.AutoWatchRollout(in, stream)
+}
+
+func (s *grpcServerRolloutV1) AutoWatchRolloutAction(in *api.ListWatchOptions, stream RolloutV1_AutoWatchRolloutActionServer) error {
+	return s.Endpoints.AutoWatchRolloutAction(in, stream)
+}
+
+func encodeHTTPRolloutActionList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPRolloutActionList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req RolloutActionList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqRolloutActionList encodes GRPC request
+func EncodeGrpcReqRolloutActionList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RolloutActionList)
+	return req, nil
+}
+
+// DecodeGrpcReqRolloutActionList decodes GRPC request
+func DecodeGrpcReqRolloutActionList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*RolloutActionList)
+	return req, nil
+}
+
+// EncodeGrpcRespRolloutActionList endodes the GRPC response
+func EncodeGrpcRespRolloutActionList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespRolloutActionList decodes the GRPC response
+func DecodeGrpcRespRolloutActionList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
 }
 
 func encodeHTTPRolloutList(ctx context.Context, req *http.Request, request interface{}) error {

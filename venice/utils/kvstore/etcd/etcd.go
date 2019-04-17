@@ -399,7 +399,8 @@ func (e *etcdStore) List(ctx context.Context, prefix string, into runtime.Object
 	for _, kv := range resp.Kvs {
 		obj, err := e.codec.Decode(kv.Value, nil)
 		if err != nil {
-			return err
+			log.ErrorLog("msg", "unable to decode", "error", err, "key", string(kv.Key))
+			continue
 		}
 		e.objVersioner.SetVersion(obj, uint64(kv.ModRevision))
 		if ptr {

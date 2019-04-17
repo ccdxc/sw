@@ -20,12 +20,19 @@ type ServiceRolloutV1Client interface {
 	AutoWatchSvcRolloutV1(ctx context.Context, in *api.ListWatchOptions) (RolloutV1_AutoWatchSvcRolloutV1Client, error)
 
 	AutoAddRollout(ctx context.Context, t *Rollout) (*Rollout, error)
+	AutoAddRolloutAction(ctx context.Context, t *RolloutAction) (*RolloutAction, error)
 	AutoDeleteRollout(ctx context.Context, t *Rollout) (*Rollout, error)
+	AutoDeleteRolloutAction(ctx context.Context, t *RolloutAction) (*RolloutAction, error)
 	AutoGetRollout(ctx context.Context, t *Rollout) (*Rollout, error)
+	AutoGetRolloutAction(ctx context.Context, t *RolloutAction) (*RolloutAction, error)
 	AutoListRollout(ctx context.Context, t *api.ListWatchOptions) (*RolloutList, error)
+	AutoListRolloutAction(ctx context.Context, t *api.ListWatchOptions) (*RolloutActionList, error)
 	AutoUpdateRollout(ctx context.Context, t *Rollout) (*Rollout, error)
+	AutoUpdateRolloutAction(ctx context.Context, t *RolloutAction) (*RolloutAction, error)
+	DoRollout(ctx context.Context, t *Rollout) (*Rollout, error)
 
 	AutoWatchRollout(ctx context.Context, in *api.ListWatchOptions) (RolloutV1_AutoWatchRolloutClient, error)
+	AutoWatchRolloutAction(ctx context.Context, in *api.ListWatchOptions) (RolloutV1_AutoWatchRolloutActionClient, error)
 }
 
 // ServiceRolloutV1Server is the server interface for the service.
@@ -33,10 +40,17 @@ type ServiceRolloutV1Server interface {
 	AutoWatchSvcRolloutV1(in *api.ListWatchOptions, stream RolloutV1_AutoWatchSvcRolloutV1Server) error
 
 	AutoAddRollout(ctx context.Context, t Rollout) (Rollout, error)
+	AutoAddRolloutAction(ctx context.Context, t RolloutAction) (RolloutAction, error)
 	AutoDeleteRollout(ctx context.Context, t Rollout) (Rollout, error)
+	AutoDeleteRolloutAction(ctx context.Context, t RolloutAction) (RolloutAction, error)
 	AutoGetRollout(ctx context.Context, t Rollout) (Rollout, error)
+	AutoGetRolloutAction(ctx context.Context, t RolloutAction) (RolloutAction, error)
 	AutoListRollout(ctx context.Context, t api.ListWatchOptions) (RolloutList, error)
+	AutoListRolloutAction(ctx context.Context, t api.ListWatchOptions) (RolloutActionList, error)
 	AutoUpdateRollout(ctx context.Context, t Rollout) (Rollout, error)
+	AutoUpdateRolloutAction(ctx context.Context, t RolloutAction) (RolloutAction, error)
+	DoRollout(ctx context.Context, t Rollout) (Rollout, error)
 
 	AutoWatchRollout(in *api.ListWatchOptions, stream RolloutV1_AutoWatchRolloutServer) error
+	AutoWatchRolloutAction(in *api.ListWatchOptions, stream RolloutV1_AutoWatchRolloutActionServer) error
 }

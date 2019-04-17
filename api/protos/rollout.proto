@@ -176,6 +176,26 @@ message RolloutStatus {
     string PreviousVersion                                = 8 [(gogoproto.jsontag) = "prev-version,omitempty"];
 }
 
+// RolloutAction Status gives the status of the rollout at the top level as well as details of
+//  individual components
+message RolloutActionStatus {
+
+    string OperationalState                               = 1 [(venice.check) = "StrEnum(RolloutStatus.RolloutOperationalState)",
+                                                              (gogoproto.jsontag) = "state,omitempty"];
+
+    // Heuristic value of percentage completion of the rollout
+    uint32 CompletionPercentage                           = 2 [(gogoproto.jsontag) = "completion-percent,omitempty"];
+
+    // Start time of Rollout
+    api.Timestamp StartTime                               = 3 [(gogoproto.jsontag) = "start-time,omitempty"];
+
+    // End time of Rollout
+    api.Timestamp EndTime                                 = 4 [(gogoproto.jsontag) = "end-time,omitempty"];
+
+    // Version of the cluster before the start of rollout
+    string PreviousVersion                                = 5 [(gogoproto.jsontag) = "prev-version,omitempty"];
+}
+
 // Rollout object captures the admin's intent and status of the software version running on the cluster
 //  It is incorrect to have two different Rollouts active at the same time
 message Rollout {
@@ -190,4 +210,20 @@ message Rollout {
                                        (gogoproto.jsontag) = "spec,omitempty"];
     RolloutStatus Status          = 4 [(gogoproto.nullable) = false,
                                        (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// RolloutAction object acts as a lock to make sure only one outstanding rollout
+// is in progress in the cluster
+message RolloutAction {
+    option (venice.objectPrefix)  = {Singleton: "rolloutAction"};
+    api.TypeMeta T                = 1 [(gogoproto.embed) = true,
+                                      (gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = ",inline"];
+    api.ObjectMeta O              = 2 [(gogoproto.embed) = true,
+                                      (gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = "meta,omitempty"];
+    RolloutSpec Spec              = 3 [(gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = "spec,omitempty"];
+    RolloutActionStatus Status          = 4 [(gogoproto.nullable) = false,
+                                      (gogoproto.jsontag) = "status,omitempty"];
 }

@@ -100,7 +100,7 @@ func (w *watcher) startWatching(wc clientv3.WatchChan, resp *clientv3.GetRespons
 				evType = kvstore.Created
 			}
 
-			w.sendEvent(evType, string(kv.Key), kv.Value, kv.ModRevision)
+			w.sendEvent(evType, string(kv.Key), kv.Value, kv.ModRevision, true)
 		}
 	}
 
@@ -125,7 +125,7 @@ func (w *watcher) startWatching(wc clientv3.WatchChan, resp *clientv3.GetRespons
 				}
 			}
 
-			w.sendEvent(evType, key, value, e.Kv.ModRevision)
+			w.sendEvent(evType, key, value, e.Kv.ModRevision, false)
 		}
 	}
 	// Stop() was called.
@@ -133,11 +133,13 @@ func (w *watcher) startWatching(wc clientv3.WatchChan, resp *clientv3.GetRespons
 }
 
 // sendEvent sends out the event unless the watch is stopped.
-func (w *watcher) sendEvent(evType kvstore.WatchEventType, key string, value []byte, version int64) {
+func (w *watcher) sendEvent(evType kvstore.WatchEventType, key string, value []byte, version int64, ignError bool) {
 	obj, err := w.watchCtx.codec.Decode(value, nil)
 	if err != nil {
 		log.Errorf("Failed to decode %v with error %v", string(value), err)
-		w.sendError(err)
+		if !ignError {
+			w.sendError(err)
+		}
 		return
 	}
 

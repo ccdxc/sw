@@ -67,6 +67,14 @@ func restDeleteRollout(hostname, token string, obj interface{}) error {
 }
 
 func restPostRollout(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("create operation not supported for Rollout object")
+}
+
+func restPutRollout(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("put operation not supported for Rollout object")
+}
+
+func restGetRolloutAction(hostname, tenant, token string, obj interface{}) error {
 
 	restcl, err := apiclient.NewRestAPIClient(hostname)
 	if err != nil {
@@ -75,8 +83,37 @@ func restPostRollout(hostname, token string, obj interface{}) error {
 	defer restcl.Close()
 	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
 
-	if v, ok := obj.(*rollout.Rollout); ok {
-		nv, err := restcl.RolloutV1().Rollout().Create(loginCtx, v)
+	if v, ok := obj.(*rollout.RolloutAction); ok {
+		nv, err := restcl.RolloutV1().RolloutAction().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*rollout.RolloutActionList); ok {
+		objMeta := api.ObjectMeta{}
+		nv, err := restcl.RolloutV1().RolloutAction().Get(loginCtx, &objMeta)
+		if err != nil {
+			return err
+		}
+		v.Items = append(v.Items, nv)
+	}
+	return nil
+
+}
+
+func restDeleteRolloutAction(hostname, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*rollout.RolloutAction); ok {
+		nv, err := restcl.RolloutV1().RolloutAction().Delete(loginCtx, &v.ObjectMeta)
 		if err != nil {
 			return err
 		}
@@ -86,24 +123,12 @@ func restPostRollout(hostname, token string, obj interface{}) error {
 
 }
 
-func restPutRollout(hostname, token string, obj interface{}) error {
+func restPostRolloutAction(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("create operation not supported for RolloutAction object")
+}
 
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*rollout.Rollout); ok {
-		nv, err := restcl.RolloutV1().Rollout().Update(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
+func restPutRolloutAction(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("put operation not supported for RolloutAction object")
 }
 
 func init() {
@@ -112,9 +137,12 @@ func init() {
 		return
 	}
 
-	cl.AddRestPostFunc("rollout.Rollout", "v1", restPostRollout)
 	cl.AddRestDeleteFunc("rollout.Rollout", "v1", restDeleteRollout)
-	cl.AddRestPutFunc("rollout.Rollout", "v1", restPutRollout)
+
 	cl.AddRestGetFunc("rollout.Rollout", "v1", restGetRollout)
+
+	cl.AddRestDeleteFunc("rollout.RolloutAction", "v1", restDeleteRolloutAction)
+
+	cl.AddRestGetFunc("rollout.RolloutAction", "v1", restGetRolloutAction)
 
 }

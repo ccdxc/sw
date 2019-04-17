@@ -15,3 +15,4 @@ var _ api.ObjectMeta
 var _ kvstore.Interface
 
 const KindRollout ObjKind = "Rollout"
+const KindRolloutAction ObjKind = "RolloutAction"
