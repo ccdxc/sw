@@ -126,9 +126,13 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 		}
 	}
 
-	if (ctx->comp.comp.status || timeout) {
-		IONIC_NETDEV_ERROR(netdev, "(%d) %s failed: %s %s\n", ctx->cmd.cmd.opcode,
-			name, ionic_error_to_str(ctx->comp.comp.status), timeout ? "(timeout)" : "");
+	if (timeout) {
+		IONIC_NETDEV_ERROR(netdev, "(%d) %s timedout\n", ctx->cmd.cmd.opcode, name);
+		return ETIMEDOUT;
+	}
+	if (ctx->comp.comp.status) {
+		IONIC_NETDEV_ERROR(netdev, "(%d) %s failed: %s\n", ctx->cmd.cmd.opcode,
+			name, ionic_error_to_str(ctx->comp.comp.status));
 		return ctx->comp.comp.status;
 	}
 
