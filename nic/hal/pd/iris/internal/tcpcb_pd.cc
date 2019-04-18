@@ -286,7 +286,7 @@ p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         } else {
             num_slots = CAPRI_SERQ_RING_SLOTS;
         }
-        data.u.tcp_fc_d.consumer_ring_slots = htons(num_slots);
+        data.u.tcp_fc_d.consumer_ring_slots = htons(num_slots - 1);
         data.u.tcp_fc_d.consumer_ring_slots_mask = htons(num_slots - 1);
         data.u.tcp_fc_d.high_thresh1 = (uint16_t)htons(num_slots * .75);
         data.u.tcp_fc_d.high_thresh2 = (uint16_t)htons(num_slots * .50);

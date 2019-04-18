@@ -35,7 +35,10 @@ flow_fc_process:
     and         r1, k.common_phv_pending_txdma, \
                     TCP_PENDING_TXDMA_ACK_SEND | TCP_PENDING_TXDMA_DEL_ACK
     seq         c2, r1, 0
+
+    // for dupack, do not recalc window, unless rcv_wnd is 0
     seq         c3, k.common_phv_is_dupack, 1
+    sne.c3      c3, d.rcv_wnd, 0
     bcf         [c2 | c3], flow_fc_process_done
     nop
 
