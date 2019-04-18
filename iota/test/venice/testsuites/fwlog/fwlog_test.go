@@ -13,7 +13,6 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/telemetry_query"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/telemetryclient"
 )
 
@@ -61,14 +60,15 @@ var _ = Describe("fwlog tests", func() {
 			}
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
+			stime := &api.Timestamp{}
+			stime.Parse(time.Now().String())
 
 			Eventually(func() error {
 				return ts.model.Action().PingPairs(workloadPairs)
 			}).Should(Succeed())
 
-			log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
+			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
-			// ping is done during init, don't set time in query
 			Eventually(func() error {
 				res, err := tclient.Fwlogs(loggedInCtx, &telemetry_query.FwlogsQueryList{
 					Tenant:    globals.DefaultTenant,
@@ -77,6 +77,7 @@ var _ = Describe("fwlog tests", func() {
 						{
 							Protocols: []string{"ICMP"},
 							Actions:   []string{telemetry_query.FwlogActions_allow.String()},
+							StartTime: stime,
 						},
 					},
 				})
@@ -84,14 +85,16 @@ var _ = Describe("fwlog tests", func() {
 					return err
 				}
 
-				for i, r := range res.Results {
-					log.Infof("[%-3d] %v ", i+1, r.String())
+				for _, r := range res.Results {
+					for i, l := range r.Logs {
+						By(fmt.Sprintf("[%-3d] %v ", i+1, l.String()))
+					}
 				}
 
 				for _, ips := range workloadPairs.ListIPAddr() {
-					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
+					if tclient.CheckIPAddrInFwlog([]string{ips[1], ips[0]}, res.Results) != true {
 						err := fmt.Errorf("did not find %v in fwlog", ips)
-						log.Errorf("%v", err)
+						By(fmt.Sprintf("fwlog query failed, %v", err))
 						return err
 					}
 				}
@@ -112,7 +115,7 @@ var _ = Describe("fwlog tests", func() {
 				return ts.model.Action().TCPSession(workloadPairs, 8000)
 			}).Should(Succeed())
 
-			log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
+			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			// check fwlog
 			Eventually(func() error {
@@ -132,14 +135,16 @@ var _ = Describe("fwlog tests", func() {
 					return err
 				}
 
-				for i, r := range res.Results {
-					log.Infof("[%-3d] %v ", i+1, r.String())
+				for _, r := range res.Results {
+					for i, l := range r.Logs {
+						By(fmt.Sprintf("[%-3d] %v ", i+1, l.String()))
+					}
 				}
 
 				for _, ips := range workloadPairs.ListIPAddr() {
 					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
-						log.Errorf("%v", err)
+						By(fmt.Sprintf("fwlog query failed, %v", err))
 						return err
 					}
 				}
@@ -157,7 +162,7 @@ var _ = Describe("fwlog tests", func() {
 			stime := &api.Timestamp{}
 			stime.Parse(time.Now().String())
 
-			log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
+			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {
 				return ts.model.Action().UDPSession(workloadPairs, 9000)
@@ -181,14 +186,16 @@ var _ = Describe("fwlog tests", func() {
 					return err
 				}
 
-				for i, r := range res.Results {
-					log.Infof("[%-3d] %v ", i+1, r.String())
+				for _, r := range res.Results {
+					for i, l := range r.Logs {
+						By(fmt.Sprintf("[%-3d] %v ", i+1, l.String()))
+					}
 				}
 
 				for _, ips := range workloadPairs.ListIPAddr() {
 					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
-						log.Errorf("%v", err)
+						By(fmt.Sprintf("fwlog query failed, %v", err))
 						return err
 					}
 				}
@@ -216,7 +223,7 @@ var _ = Describe("fwlog tests", func() {
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
+			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {
 				return ts.model.Action().PingFails(workloadPairs)
@@ -239,14 +246,16 @@ var _ = Describe("fwlog tests", func() {
 					return err
 				}
 
-				for i, r := range res.Results {
-					log.Infof("[%-3d] %v ", i+1, r.String())
+				for _, r := range res.Results {
+					for i, l := range r.Logs {
+						By(fmt.Sprintf("[%-3d] %v ", i+1, l.String()))
+					}
 				}
 
 				for _, ips := range workloadPairs.ListIPAddr() {
 					if tclient.CheckIPAddrInFwlog([]string{ips[1], ips[0]}, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
-						log.Errorf("%v", err)
+						By(fmt.Sprintf("fwlog query failed, %v", err))
 						return err
 					}
 				}
@@ -297,14 +306,16 @@ var _ = Describe("fwlog tests", func() {
 					return err
 				}
 
-				for i, r := range res.Results {
-					log.Infof("[%-3d] %v ", i+1, r.String())
+				for _, r := range res.Results {
+					for i, l := range r.Logs {
+						By(fmt.Sprintf("[%-3d] %v ", i+1, l.String()))
+					}
 				}
 
 				for _, ips := range workloadPairs.ListIPAddr() {
 					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
-						log.Errorf("%v", err)
+						By(fmt.Sprintf("fwlog query failed, %v", err))
 						return err
 					}
 				}
@@ -332,7 +343,7 @@ var _ = Describe("fwlog tests", func() {
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
-			log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
+			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {
 				return ts.model.Action().TCPSessionFails(workloadPairs, 8100)
@@ -356,14 +367,16 @@ var _ = Describe("fwlog tests", func() {
 					return err
 				}
 
-				for i, r := range res.Results {
-					log.Infof("[%-3d] %v ", i+1, r.String())
+				for _, r := range res.Results {
+					for i, l := range r.Logs {
+						By(fmt.Sprintf("[%-3d] %v ", i+1, l.String()))
+					}
 				}
 
 				for _, ips := range workloadPairs.ListIPAddr() {
 					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
-						log.Errorf("%v", err)
+						By(fmt.Sprintf("fwlog query failed, %v", err))
 						return err
 					}
 				}
@@ -389,7 +402,7 @@ var _ = Describe("fwlog tests", func() {
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			stime := &api.Timestamp{}
 			stime.Parse(time.Now().String())
-			log.Infof("workload ip address %+v", workloadPairs.ListIPAddr())
+			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {
 				return ts.model.Action().UDPSessionFails(workloadPairs, 9100)
@@ -413,14 +426,16 @@ var _ = Describe("fwlog tests", func() {
 					return err
 				}
 
-				for i, r := range res.Results {
-					log.Infof("[%-3d] %v ", i+1, r.String())
+				for _, r := range res.Results {
+					for i, l := range r.Logs {
+						By(fmt.Sprintf("[%-3d] %v ", i+1, l.String()))
+					}
 				}
 
 				for _, ips := range workloadPairs.ListIPAddr() {
 					if tclient.CheckIPAddrInFwlog(ips, res.Results) != true {
 						err := fmt.Errorf("did not find %+v in fwlog", ips)
-						log.Errorf("%v", err)
+						By(fmt.Sprintf("%fwlog query failed, v", err))
 						return err
 					}
 				}
