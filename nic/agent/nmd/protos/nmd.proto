@@ -20,7 +20,7 @@ message NaplesFru {
     string BoardId           = 6[(gogoproto.jsontag) = "board-id,omitempty"];
     string EngChangeLevel    = 7[(gogoproto.jsontag) = "change-level,omitempty"];
     string NumMacAddr        = 8[(gogoproto.jsontag) = "number-mac-addresses,omitempty"];
-    string MacStr            = 9[(gogoproto.jsontag) = "mac-string,omitempty"];
+    string MacStr            = 9[(gogoproto.jsontag) = "mac-string,omitempty", (venice.check) = "EmptyOr(MacAddr())"];
 }
 
 // Naples config object

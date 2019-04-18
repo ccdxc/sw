@@ -189,7 +189,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 
 	// create a host for each agent
 	for i := 0; i < it.numAgents; i++ {
-		err = it.CreateHost(fmt.Sprintf("testHost-%d", i), fmt.Sprintf("00:01:%02x:00:00:00", i))
+		err = it.CreateHost(fmt.Sprintf("testHost-%d", i), fmt.Sprintf("0001.%02x00.0000", i))
 		AssertOk(c, err, "Error creating host")
 	}
 
@@ -299,7 +299,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 			hostName := fmt.Sprintf("testHost-%d", i)
 
 			// make the call
-			cerr := it.CreateEndpoint("default", "default", "testNetwork", epname, epname, "01:01:01:01:01:01", hostName, "20.1.1.1", map[string]string{"env": "production", "app": "procurement"}, 2)
+			cerr := it.CreateEndpoint("default", "default", "testNetwork", epname, epname, "0101.0101.0101", hostName, "20.1.1.1", map[string]string{"env": "production", "app": "procurement"}, 2)
 			if cerr != nil {
 				waitCh <- fmt.Errorf("endpoint create failed: %v", cerr)
 				return

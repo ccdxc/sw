@@ -148,7 +148,7 @@ message SmartNICStatus {
     string SerialNum                        = 3 [(gogoproto.jsontag) = "serial-num,omitempty"];
 
     // PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC
-    string PrimaryMAC                       = 4 [(gogoproto.jsontag) = "primary-mac,omitempty"];
+    string PrimaryMAC                       = 4 [(gogoproto.jsontag) = "primary-mac,omitempty", (venice.check) = "EmptyOr(MacAddr())"];
 
     // IPConfig is the ip address related configuration obtained from DHCP
     IPConfig IPConfig                       = 5 [(gogoproto.jsontag) = "ip-config,omitempty"];
@@ -203,9 +203,9 @@ message SmartNICCondition {
 
 // MAC address Range
 message MacRange {
-    string Start    = 1 [(venice.check) = "MacAddr()",
+    string Start    = 1 [(venice.check) = "EmptyOr(MacAddr())",
                         (gogoproto.jsontag) = "mac-start,omitempty"];
-    string End      = 2 [(venice.check) = "MacAddr()",
+    string End      = 2 [(venice.check) = "EmptyOr(MacAddr())",
                         (gogoproto.jsontag) = "mac-end,omitempty"];
 }
 

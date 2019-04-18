@@ -19,6 +19,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/nmd/protos"
 	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
+	"github.com/pensando/sw/venice/utils/strconv"
 )
 
 var naplesCmd = &cobra.Command{
@@ -294,9 +295,12 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 			return
 		}
 
-		if len(priMac) != 0 && vldtor.MacAddr(priMac) != nil {
-			err = fmt.Errorf("invalid MAC Address %v specified", priMac)
-			return
+		if len(priMac) != 0 {
+			priMac, err = strconv.ParseMacAddr(priMac)
+			if err != nil {
+				err = fmt.Errorf("invalid MAC Address %v specified. Conversion failed. Err : %v", priMac, err)
+				return
+			}
 		}
 
 		if len(naplesProfile) != 0 && naplesProfile != "default" {

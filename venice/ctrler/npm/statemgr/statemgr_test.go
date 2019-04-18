@@ -815,7 +815,7 @@ func TestWorkloadUpdate(t *testing.T) {
 		},
 		Spec: cluster.SmartNICSpec{},
 		Status: cluster.SmartNICStatus{
-			PrimaryMAC: "00:01:02:03:04:05",
+			PrimaryMAC: "0001.0203.0405",
 		},
 	}
 
@@ -832,7 +832,7 @@ func TestWorkloadUpdate(t *testing.T) {
 		Spec: cluster.HostSpec{
 			SmartNICs: []cluster.SmartNICID{
 				{
-					MACAddress: "00:01:02:03:04:05",
+					MACAddress: "0001.0203.0405",
 				},
 			},
 		},
@@ -854,7 +854,7 @@ func TestWorkloadUpdate(t *testing.T) {
 			HostName: "testHost",
 			Interfaces: []workload.WorkloadIntfSpec{
 				{
-					MACAddress:   "00:01:02:03:04:05",
+					MACAddress:   "0001.0203.0405",
 					MicroSegVlan: 100,
 					ExternalVlan: 1,
 				},
@@ -887,15 +887,15 @@ func TestWorkloadUpdate(t *testing.T) {
 
 	// change mac address of the workload
 	nwr = ref.DeepCopy(nwr).(workload.Workload)
-	nwr.Spec.Interfaces[0].MACAddress = "00:01:02:01:02:03"
+	nwr.Spec.Interfaces[0].MACAddress = "0001.0201.0203"
 	err = stateMgr.ctrler.Workload().Update(&nwr)
 	AssertOk(t, err, "Could not update the workload")
 
 	// verify old endpoint is deleted
 	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0203.0405")
 	Assert(t, (err != nil), "found endpoint with old mac address", foundEp)
-	_, ok = nw.FindEndpoint("testWorkload-00:01:02:03:04:05")
-	Assert(t, (ok == false), "old endpoint still found in network db", "testWorkload-00:01:02:03:04:05")
+	_, ok = nw.FindEndpoint("testWorkload-0001.0203.0405")
+	Assert(t, (ok == false), "old endpoint still found in network db", "testWorkload-0001.0203.0405")
 
 	// verify new endpoint is created
 	foundEp, err = stateMgr.FindEndpoint("default", "testWorkload-0001.0201.0203")
@@ -914,7 +914,7 @@ func TestWorkloadUpdate(t *testing.T) {
 
 	// add new interface to workload
 	newIntf := workload.WorkloadIntfSpec{
-		MACAddress:   "00:02:04:06:08:00",
+		MACAddress:   "0002.0406.0800",
 		MicroSegVlan: 200,
 		ExternalVlan: 1,
 	}
@@ -1005,7 +1005,7 @@ func TestHostUpdates(t *testing.T) {
 		Spec: cluster.HostSpec{
 			SmartNICs: []cluster.SmartNICID{
 				{
-					MACAddress: "00:01:02:03:04:05",
+					MACAddress: "0001.0203.0405",
 				},
 			},
 		},
@@ -1031,7 +1031,7 @@ func TestHostUpdates(t *testing.T) {
 			HostName: "testHost",
 			Interfaces: []workload.WorkloadIntfSpec{
 				{
-					MACAddress:   "00:01:02:03:04:05",
+					MACAddress:   "0001.0203.0405",
 					MicroSegVlan: 100,
 					ExternalVlan: 1,
 				},
@@ -1057,7 +1057,7 @@ func TestHostUpdates(t *testing.T) {
 			Hostname: "test-snic",
 		},
 		Status: cluster.SmartNICStatus{
-			PrimaryMAC: "00:01:02:03:04:05",
+			PrimaryMAC: "0001.0203.0405",
 		},
 	}
 
@@ -1071,7 +1071,7 @@ func TestHostUpdates(t *testing.T) {
 
 	// change host's mac address
 	nhst := ref.DeepCopy(host).(cluster.Host)
-	nhst.Spec.SmartNICs[0].MACAddress = "00:02:04:06:08:00"
+	nhst.Spec.SmartNICs[0].MACAddress = "0002.0406.0800"
 	err = stateMgr.ctrler.Host().Update(&nhst)
 	AssertOk(t, err, "Error updating the host")
 

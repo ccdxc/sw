@@ -1808,7 +1808,7 @@
           },
           {
             "name": "status.primary-mac",
-            "description": "PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC.",
+            "description": "PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC. should be a valid MAC address",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4388,7 +4388,7 @@
         },
         "mac-address": {
           "type": "string",
-          "example": "aa:bb:cc:dd:00:00, aabb.ccdd.0000, aa-bb-cc-dd-00-00",
+          "example": "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000",
           "description": "should be a valid MAC address",
           "title": "MACAddress contains the primary MAC address of a SmartNIC"
         }
@@ -4547,6 +4547,8 @@
         },
         "primary-mac": {
           "type": "string",
+          "example": "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000",
+          "description": "should be a valid MAC address",
           "title": "PrimaryMAC is the MAC address of the primary PF exposed by SmartNIC"
         },
         "ip-config": {

@@ -556,7 +556,7 @@ func init() {
 
 	validatorMapSmartnic["MacRange"]["all"] = append(validatorMapSmartnic["MacRange"]["all"], func(path string, i interface{}) error {
 		m := i.(*MacRange)
-		if err := validators.MacAddr(m.End); err != nil {
+		if err := validators.EmptyOr(validators.MacAddr, m.End, nil); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"End", err.Error())
 		}
 		return nil
@@ -564,7 +564,7 @@ func init() {
 
 	validatorMapSmartnic["MacRange"]["all"] = append(validatorMapSmartnic["MacRange"]["all"], func(path string, i interface{}) error {
 		m := i.(*MacRange)
-		if err := validators.MacAddr(m.Start); err != nil {
+		if err := validators.EmptyOr(validators.MacAddr, m.Start, nil); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"Start", err.Error())
 		}
 		return nil
@@ -646,6 +646,14 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"AdmissionPhase", vals)
+		}
+		return nil
+	})
+
+	validatorMapSmartnic["SmartNICStatus"]["all"] = append(validatorMapSmartnic["SmartNICStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*SmartNICStatus)
+		if err := validators.EmptyOr(validators.MacAddr, m.PrimaryMAC, nil); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"PrimaryMAC", err.Error())
 		}
 		return nil
 	})

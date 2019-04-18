@@ -239,13 +239,13 @@ func TestMacAddr(t *testing.T) {
 		s      string
 		errMsg string
 	}{
-		{s: "aa:BB:cc:DD:00:00", errMsg: ""},
+		{s: "aa:bb:cc:dd:00:00", errMsg: "Value must be a valid MAC address"},
 		{s: "aaBB.ccDD.0000", errMsg: ""},
-		{s: "aa-BB-cc-DD-00-00", errMsg: ""},
+		{s: "aa-BB-cc-DD-00-00", errMsg: "Value must be a valid MAC address"},
 		{s: "aaBB.ccDD.0000", errMsg: ""},
 		{s: "aa.BB.cc.DD.00.00", errMsg: "Value must be a valid MAC address"},
 		{s: "aaBB.ccDD.00.00", errMsg: "Value must be a valid MAC address"},
-		{s: "aa:BB:cc:DD:00:00", errMsg: ""},
+		{s: "aa:BB:cc:DD:00:00", errMsg: "Value must be a valid MAC address"},
 		{s: "aaXY.ccDD.0000", errMsg: "Value must be a valid MAC address"},
 	}
 	for i, c := range cases {

@@ -353,7 +353,7 @@ message InterfaceInfo {
     string LinkSpeed        = 4 [(gogoproto.jsontag) = "link-speed,omitempty"];
 
     // MAC address
-    string MacAddr          = 5 [(gogoproto.jsontag) = "mac-addr,omitempty"];
+    string MacAddr          = 5 [(gogoproto.jsontag) = "mac-addr,omitempty", (venice.check) = "EmptyOr(MacAddr())"];
 
     // List of Ip addresses
     repeated string IpAddrs = 6 [(gogoproto.jsontag) = "ip-addrs,omitempty"];

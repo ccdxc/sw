@@ -29,9 +29,9 @@ import { By } from '@angular/platform-browser';
 import { IClusterSmartNIC, ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
 
 class MockActivatedRoute extends ActivatedRoute {
-  id = '44:44:44:44:00:02';
+  id = '4444.4444.0002';
   paramObserver = new BehaviorSubject<any>({ id: this.id });
-  snapshot: any = { url: ['cluster', 'naples', '44:44:44:44:00:02'] };
+  snapshot: any = { url: ['cluster', 'naples', '4444.4444.0002'] };
 
   constructor() {
     super();
@@ -172,13 +172,13 @@ describe('NaplesdetailComponent', () => {
       'kind': 'SmartNIC',
       'api-version': 'v1',
       'meta': {
-        'name': '44:44:44:44:00:02',
+        'name': '4444.4444.0002',
         'generation-id': '1',
         'resource-version': '34507',
         'uuid': '11b1912f-c513-4f19-8183-5e17e60f024f',
         'creation-time': '2018-12-12T20:03:01.157939359Z',
         'mod-time': '2018-12-13T01:21:16.38343108Z',
-        'self-link': '/configs/cluster/v1/smartnics/44:44:44:44:00:02'
+        'self-link': '/configs/cluster/v1/smartnics/4444.4444.0002'
       },
       'spec': {
         'admit': true,
@@ -195,7 +195,7 @@ describe('NaplesdetailComponent', () => {
           }
         ],
         'serial-num': '0x0123456789ABCDEFghijk',
-        'primary-mac': '44:44:44:44:00:02'
+        'primary-mac': '4444.4444.0002'
       }
     };
 
@@ -203,13 +203,13 @@ describe('NaplesdetailComponent', () => {
       'kind': 'SmartNIC',
       'api-version': 'v1',
       'meta': {
-        'name': '33:33:33:33:00:02',
+        'name': '3333.3333.0002',
         'generation-id': '1',
         'resource-version': '34507',
         'uuid': '11b1912f-c513-4f19-8183-5e17e60f024f',
         'creation-time': '2018-12-12T20:03:01.157939359Z',
         'mod-time': '2018-12-13T01:21:16.38343108Z',
-        'self-link': '/configs/cluster/v1/smartnics/44:44:44:44:00:02'
+        'self-link': '/configs/cluster/v1/smartnics/4444.4444.0002'
       },
       'spec': {},
       'status': {
@@ -221,13 +221,13 @@ describe('NaplesdetailComponent', () => {
       'kind': 'SmartNIC',
       'api-version': 'v1',
       'meta': {
-        'name': '33:33:33:33:00:03',
+        'name': '3333.3333.0003',
         'generation-id': '1',
         'resource-version': '34507',
         'uuid': '11b1912f-c513-4f19-8183-5e17e60f024f',
         'creation-time': '2018-12-12T20:03:01.157939359Z',
         'mod-time': '2018-12-13T01:21:16.38343108Z',
-        'self-link': '/configs/cluster/v1/smartnics/44:44:44:44:00:02'
+        'self-link': '/configs/cluster/v1/smartnics/4444.4444.0002'
       },
       'spec': {},
       'status': {
@@ -260,7 +260,7 @@ describe('NaplesdetailComponent', () => {
   it('should display missing policy overlay and deleted policy overlay', () => {
     // change param id
     const mockActivatedRoute: MockActivatedRoute = TestBed.get(ActivatedRoute);
-    mockActivatedRoute.setId('33:33:33:33:00:02');
+    mockActivatedRoute.setId('3333.3333.0002');
     const policyWatchObserver = new ReplaySubject();
     const policyGetObserver = new Observable((observable) => {
       observable.error({ body: null, statusCode: 400 });
@@ -273,12 +273,12 @@ describe('NaplesdetailComponent', () => {
     );
 
     fixture.detectChanges();
-    verifyServiceCalls('33:33:33:33:00:02');
+    verifyServiceCalls('3333.3333.0002');
 
     // View should now be of missing overlay, and data should be cleared
     expect(getOverlay()).toBeTruthy();
     expect(getMissingPolicyIcon()).toBeTruthy();
-    expect(getOverlayText().nativeElement.textContent).toContain('33:33:33:33:00:02 does not exist');
+    expect(getOverlayText().nativeElement.textContent).toContain('3333.3333.0002 does not exist');
     let buttons = getOverlayButtons();
     expect(buttons.length).toBe(2);
     expect(buttons[0].nativeElement.textContent).toContain('NAPLES OVERVIEW');
@@ -313,7 +313,7 @@ describe('NaplesdetailComponent', () => {
 
     expect(getOverlay()).toBeTruthy();
     expect(getDeletedPolicyIcon()).toBeTruthy();
-    expect(getOverlayText().nativeElement.textContent).toContain('33:33:33:33:00:02 has been deleted');
+    expect(getOverlayText().nativeElement.textContent).toContain('3333.3333.0002 has been deleted');
     buttons = getOverlayButtons();
     expect(buttons.length).toBe(2);
     expect(buttons[0].nativeElement.textContent).toContain('NAPLES OVERVIEW');
@@ -344,7 +344,7 @@ describe('NaplesdetailComponent', () => {
   it('should rerender when user navigates to same page with different id and use field selectors', () => {
     fixture.detectChanges();
     verifyMeta(naples1);
-    verifyServiceCalls('44:44:44:44:00:02');
+    verifyServiceCalls('4444.4444.0002');
 
     // change param id
     let mockActivatedRoute: MockActivatedRoute = TestBed.get(ActivatedRoute);
@@ -358,13 +358,13 @@ describe('NaplesdetailComponent', () => {
         ]
       })
     );
-    mockActivatedRoute.setId('33:33:33:33:00:03');
+    mockActivatedRoute.setId('3333.3333.0003');
 
 
     // View should now be of naples3
     fixture.detectChanges();
     verifyMeta(naples3);
-    verifyServiceCalls('33:33:33:33:00:03');
+    verifyServiceCalls('3333.3333.0003');
 
     // change param id
     naplesWatchSpy.and.returnValue(
@@ -377,13 +377,13 @@ describe('NaplesdetailComponent', () => {
         ]
       })
     );
-    mockActivatedRoute.setId('33:33:33:33:00:02');
+    mockActivatedRoute.setId('3333.3333.0002');
 
 
     // View should now be of naples2
     fixture.detectChanges();
     verifyMeta(naples2);
-    verifyServiceCalls('33:33:33:33:00:02');
+    verifyServiceCalls('3333.3333.0002');
 
     // change param id
     const policyWatchObserver = new ReplaySubject();

@@ -285,7 +285,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	agNum := len(it.agents)
 	agent, err := CreateAgent(it.datapathKind, globals.Npm, fmt.Sprintf("testHost-%d", agNum), it.resolverClient)
 	c.Assert(err, IsNil)
-	err = it.CreateHost(fmt.Sprintf("testHost-%d", agNum), fmt.Sprintf("00:01:%02x:00:00:00", agNum))
+	err = it.CreateHost(fmt.Sprintf("testHost-%d", agNum), fmt.Sprintf("0001.%02x00.0000", agNum))
 	AssertOk(c, err, "Error creating new host")
 
 	// verify new agent got the sgpolicy
@@ -374,7 +374,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	}, "SgPolicy status was not updated after adding new smartnic", "100ms", it.pollTimeout())
 
 	// create a smartNIC and host without an agent
-	err = it.CreateHost(fmt.Sprintf("testHost-%d", agNum), fmt.Sprintf("00:01:%02x:00:00:00", agNum))
+	err = it.CreateHost(fmt.Sprintf("testHost-%d", agNum), fmt.Sprintf("0001.%02x00.0000", agNum))
 	AssertOk(c, err, "Error creating new host")
 
 	// verify policy shows pending

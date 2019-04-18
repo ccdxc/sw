@@ -374,7 +374,7 @@ func init() {
 
 	validatorMapWorkload["WorkloadIntfSpec"]["all"] = append(validatorMapWorkload["WorkloadIntfSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*WorkloadIntfSpec)
-		if err := validators.MacAddr(m.MACAddress); err != nil {
+		if err := validators.EmptyOr(validators.MacAddr, m.MACAddress, nil); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"MACAddress", err.Error())
 		}
 		return nil

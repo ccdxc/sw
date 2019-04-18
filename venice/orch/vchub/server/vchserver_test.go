@@ -42,11 +42,11 @@ import (
 const (
 	vchTestPort  = "19003"
 	serverAddr   = "127.0.0.1:" + vchTestPort
-	testNic1Mac  = "6a:00:02:e7:a8:40"
-	testNic2Mac  = "6a:00:02:e7:aa:54"
-	testIf1Mac   = "6e:00:02:e7:dd:40"
-	testIf2Mac   = "6e:00:02:e7:dc:54"
-	testIf3Mac   = "6e:00:02:e7:ee:64"
+	testNic1Mac  = "6a00.02e7.a840"
+	testNic2Mac  = "6a00.02e7.aa54"
+	testIf1Mac   = "6e00.02e7.dd40"
+	testIf2Mac   = "6e00.02e7.dc54"
+	testIf3Mac   = "6e00.02e7.ee64"
 	testPG       = "dvportgroup-30"
 	testIf1ID    = "52fd7958-f4da-78bb-1590-856861348cee:4001"
 	testIf2ID    = "53256758-eecc-79bb-1590-899861348cfd:4004"
@@ -937,8 +937,8 @@ func TestVCPSnic(t *testing.T) {
 	verifyVCPSnics(t, "50ms", "5s")
 
 	hosts := esx.GetHostList()
-	simulator.AddPnicToHost(hosts[0], "vmnic2", "0c:c4:7a:70:68:68")
-	simulator.AddPnicToHost(hosts[1], "vmnic3", "0c:c4:7a:70:86:86")
+	simulator.AddPnicToHost(hosts[0], "vmnic2", "0cc4.7a70.6868")
+	simulator.AddPnicToHost(hosts[1], "vmnic3", "0cc4.7a70.8686")
 	verifyVCPSnics(t, "50ms", "10s")
 
 	simulator.DelPnicFromHost(hosts[1], "vmnic3")

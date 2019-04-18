@@ -18,6 +18,7 @@ export interface IMonitoringMatchSelector {
 export class MonitoringMatchSelector extends BaseModel implements IMonitoringMatchSelector {
     'endpoints': Array<string> = null;
     'ip-addresses': Array<string> = null;
+    /** should be a valid MAC address */
     'mac-addresses': Array<string> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'endpoints': {
@@ -29,6 +30,8 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
             type: 'Array<string>'
         },
         'mac-addresses': {
+            description:  'should be a valid MAC address',
+            hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'Array<string>'
         },

@@ -25,7 +25,7 @@ export class ClusterSmartNICID extends BaseModel implements IClusterSmartNICID {
         },
         'mac-address': {
             description:  'should be a valid MAC address',
-            hint:  'aa:bb:cc:dd:00:00, aabb.ccdd.0000, aa-bb-cc-dd-00-00',
+            hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'string'
         },

@@ -103,6 +103,7 @@ func createNIC(mac, phase, host string, condition *cluster.SmartNICCondition) *c
 		},
 		Status: cluster.SmartNICStatus{
 			AdmissionPhase: phase,
+			PrimaryMAC:     mac,
 			Conditions: []cluster.SmartNICCondition{
 				*condition,
 			},

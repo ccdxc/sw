@@ -413,7 +413,7 @@ func hostAddrProfile(field *descriptor.Field, reg *descriptor.Registry, ver stri
 }
 
 func macAddrProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
-	str := "aa:bb:cc:dd:00:00, aabb.ccdd.0000, aa-bb-cc-dd-00-00"
+	str := "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000"
 	prof.Example[ver] = prof.Example[ver] + str
 	prof.DocString[ver] = prof.DocString[ver] + "should be a valid MAC address"
 	prof.Required[ver] = true

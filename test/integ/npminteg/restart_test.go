@@ -240,14 +240,14 @@ func (it *integTestSuite) TestRestartWithWorkload(c *C) {
 
 	// create a host for each agent if it doesnt exist
 	for idx := range it.agents {
-		macAddr := fmt.Sprintf("00:02:00:00:%02x:00", idx)
+		macAddr := fmt.Sprintf("0002.0000.%02x00", idx)
 		it.CreateHost(fmt.Sprintf("testHost-%d", idx), macAddr)
 	}
 
 	// create 100 workloads on each host
 	for i := range it.agents {
 		for j := 0; j < numWorkloadPerHost; j++ {
-			macAddr := fmt.Sprintf("00:01:02:03:%02x:%02x", i, j)
+			macAddr := fmt.Sprintf("0001.0203.%02x%02x", i, j)
 			err := it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%d-%d", i, j), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+j), 1)
 			AssertOk(c, err, "Error creating workload")
 		}
@@ -293,7 +293,7 @@ func (it *integTestSuite) TestRestartWithWorkload(c *C) {
 
 	// create one more workload on each host
 	for i := range it.agents {
-		macAddr := fmt.Sprintf("00:01:02:03:%02x:%02x", i, numWorkloadPerHost)
+		macAddr := fmt.Sprintf("0001.0203.%02x%02x", i, numWorkloadPerHost)
 		err := it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%d-%d", i, numWorkloadPerHost), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+numWorkloadPerHost), 1)
 		AssertOk(c, err, "Error creating n+1 workload")
 	}

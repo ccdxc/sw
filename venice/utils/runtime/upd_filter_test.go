@@ -117,7 +117,7 @@ func TestUpdateFilterBaseCases(t *testing.T) {
 
 func TestUpdateFilterWithObjects(t *testing.T) {
 
-	nicJSON := []byte(`{"kind":"SmartNIC","api-version":"v1","meta":{"name":"44:44:44:44:00:02","generation-id":"10","resource-version":"114790","uuid":"ec38f54d-c4d5-4709-9860-26f6fe24dfb1","creation-time":"2018-12-19T23:56:41.743152915Z","mod-time":"2018-12-20T17:59:19.218143088Z","self-link":"/configs/cluster/v1/smartnics/44:44:44:44:00:02"},"spec":{"admit":true,"hostname":"naples1-host-new","mgmt-mode":"NETWORK"},"status":{"admission-phase":"ADMITTED","conditions":[{"type":"HEALTHY","status":"TRUE","last-transition-time":"2018-12-20T17:59:18Z"}],"serial-num":"0x0123456789ABCDEFghijk","primary-mac":"44:44:44:44:00:02"}}`)
+	nicJSON := []byte(`{"kind":"SmartNIC","api-version":"v1","meta":{"name":"4444.4444.0002","generation-id":"10","resource-version":"114790","uuid":"ec38f54d-c4d5-4709-9860-26f6fe24dfb1","creation-time":"2018-12-19T23:56:41.743152915Z","mod-time":"2018-12-20T17:59:19.218143088Z","self-link":"/configs/cluster/v1/smartnics/4444.4444.0002"},"spec":{"admit":true,"hostname":"naples1-host-new","mgmt-mode":"NETWORK"},"status":{"admission-phase":"ADMITTED","conditions":[{"type":"HEALTHY","status":"TRUE","last-transition-time":"2018-12-20T17:59:18Z"}],"serial-num":"0x0123456789ABCDEFghijk","primary-mac":"4444.4444.0002"}}`)
 
 	// create identical but independent instances of the NIC object to start from
 	var nicObj, nicObjCopy, updateObj, unhealthyNICObj cluster.SmartNIC

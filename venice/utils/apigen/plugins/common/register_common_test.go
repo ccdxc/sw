@@ -733,7 +733,7 @@ func TestFieldProfiles(t *testing.T) {
 		},
 		"str_field6": FieldProfile{
 			DocString: map[string]string{"all": "MAC address"},
-			Example:   map[string]string{"all": "00:00"},
+			Example:   map[string]string{"all": "0000"},
 			Required:  map[string]bool{"all": true},
 		},
 		"str_field7": FieldProfile{

@@ -938,7 +938,7 @@
           },
           {
             "name": "source.mac-addresses",
-            "description": "List of MacAddresses - \"aa:bb:cc:dd:ee:ff\", \"00:01:02:03:04:05\".",
+            "description": "List of MacAddresses - \"aabb.ccdd.eeff\", \"0001.0203.0405\". should be a valid MAC address",
             "in": "query",
             "required": false,
             "type": "array",
@@ -968,7 +968,7 @@
           },
           {
             "name": "destination.mac-addresses",
-            "description": "List of MacAddresses - \"aa:bb:cc:dd:ee:ff\", \"00:01:02:03:04:05\".",
+            "description": "List of MacAddresses - \"aabb.ccdd.eeff\", \"0001.0203.0405\". should be a valid MAC address",
             "in": "query",
             "required": false,
             "type": "array",
@@ -6052,7 +6052,7 @@
           },
           {
             "name": "source.mac-addresses",
-            "description": "List of MacAddresses - \"aa:bb:cc:dd:ee:ff\", \"00:01:02:03:04:05\".",
+            "description": "List of MacAddresses - \"aabb.ccdd.eeff\", \"0001.0203.0405\". should be a valid MAC address",
             "in": "query",
             "required": false,
             "type": "array",
@@ -6082,7 +6082,7 @@
           },
           {
             "name": "destination.mac-addresses",
-            "description": "List of MacAddresses - \"aa:bb:cc:dd:ee:ff\", \"00:01:02:03:04:05\".",
+            "description": "List of MacAddresses - \"aabb.ccdd.eeff\", \"0001.0203.0405\". should be a valid MAC address",
             "in": "query",
             "required": false,
             "type": "array",
@@ -14185,7 +14185,9 @@
           "items": {
             "type": "string"
           },
-          "title": "List of MacAddresses - \"aa:bb:cc:dd:ee:ff\", \"00:01:02:03:04:05\""
+          "example": "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000",
+          "description": "should be a valid MAC address",
+          "title": "List of MacAddresses - \"aabb.ccdd.eeff\", \"0001.0203.0405\""
         }
       },
       "title": "Traffic Selection Rules\nTraffic can be matched using EP names or IPv4/v6 addresses/ranges/prefixes or MAC addresses"

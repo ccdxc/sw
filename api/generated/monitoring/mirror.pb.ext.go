@@ -118,6 +118,12 @@ func (m *MatchRule) Defaults(ver string) bool {
 	if m.AppProtoSel != nil {
 		ret = m.AppProtoSel.Defaults(ver) || ret
 	}
+	if m.Dst != nil {
+		ret = m.Dst.Defaults(ver) || ret
+	}
+	if m.Src != nil {
+		ret = m.Src.Defaults(ver) || ret
+	}
 	return ret
 }
 
@@ -139,7 +145,8 @@ func (m *MatchSelector) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *MatchSelector) Defaults(ver string) bool {
-	return false
+	var ret bool
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -357,6 +364,30 @@ func (m *MatchRule) Validate(ver, path string, ignoreStatus bool) []error {
 			}
 		}
 	}
+	if m.Dst != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Dst"
+			if errs := m.Dst.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	if m.Src != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Src"
+			if errs := m.Src.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
 	return ret
 }
 
@@ -364,6 +395,14 @@ func (m *MatchRule) Normalize() {
 
 	if m.AppProtoSel != nil {
 		m.AppProtoSel.Normalize()
+	}
+
+	if m.Dst != nil {
+		m.Dst.Normalize()
+	}
+
+	if m.Src != nil {
+		m.Src.Normalize()
 	}
 
 }
@@ -374,6 +413,19 @@ func (m *MatchSelector) References(tenant string, path string, resp map[string]a
 
 func (m *MatchSelector) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if vs, ok := validatorMapMirror["MatchSelector"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapMirror["MatchSelector"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -661,6 +713,19 @@ func init() {
 		for k, v := range m.ProtoPorts {
 			if err := validators.EmptyOr(validators.ProtoPort, v, nil); err != nil {
 				return fmt.Errorf("%v[%v] failed validation: %s", path+"."+"ProtoPorts", k, err.Error())
+			}
+		}
+
+		return nil
+	})
+
+	validatorMapMirror["MatchSelector"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapMirror["MatchSelector"]["all"] = append(validatorMapMirror["MatchSelector"]["all"], func(path string, i interface{}) error {
+		m := i.(*MatchSelector)
+		for k, v := range m.MACAddresses {
+			if err := validators.EmptyOr(validators.MacAddr, v, nil); err != nil {
+				return fmt.Errorf("%v[%v] failed validation: %s", path+"."+"MACAddresses", k, err.Error())
 			}
 		}
 

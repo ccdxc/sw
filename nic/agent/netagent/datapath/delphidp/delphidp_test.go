@@ -369,7 +369,7 @@ func (ds *delphidpTestSuite) TestDelphiNetwork(t *C) {
 		Spec: netproto.NetworkSpec{
 			IPv4Subnet:  "10.1.1.0/24",
 			IPv4Gateway: "10.1.1.254",
-			RouterMAC:   "00:01:02:03:04:05",
+			RouterMAC:   "0001.0203.0405",
 		},
 		Status: netproto.NetworkStatus{
 			NetworkID: 100,

@@ -322,7 +322,7 @@ func init() {
 
 	validatorMapNetworkinterface["NetworkInterfaceStatus"]["all"] = append(validatorMapNetworkinterface["NetworkInterfaceStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*NetworkInterfaceStatus)
-		if err := validators.MacAddr(m.PrimaryMac); err != nil {
+		if err := validators.EmptyOr(validators.MacAddr, m.PrimaryMac, nil); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"PrimaryMac", err.Error())
 		}
 		return nil

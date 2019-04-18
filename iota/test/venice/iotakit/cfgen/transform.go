@@ -212,7 +212,7 @@ func (ctx *iterContext) macSub(inp string) string {
 	}
 
 	ctx.macs[macName] = macCtx
-	macAddr := fmt.Sprintf("%s:%s:%s:%02x:%02x:%02x", ouiBytes[0], ouiBytes[1], ouiBytes[2], bytes[0], bytes[1], bytes[2])
+	macAddr := fmt.Sprintf("%s%s.%s%02x.%02x%02x", ouiBytes[0], ouiBytes[1], ouiBytes[2], bytes[0], bytes[1], bytes[2])
 	return macAddr
 }
 

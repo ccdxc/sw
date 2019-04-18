@@ -561,7 +561,7 @@ func (br *Broker) ExecuteShowCmd(ctx context.Context, database string, qry strin
 			return nil, err
 		}
 
-		// show series: {Name: Tags:map[] Columns:[key] Values:[[SmartNIC,Kind=SmartNIC,Name=f6:0b:59:5f:ec:a3,reporterID=Node-venice]] Partial:false}
+		// show series: {Name: Tags:map[] Columns:[key] Values:[[SmartNIC,Kind=SmartNIC,Name=f60b.595f.eca3,reporterID=Node-venice]] Partial:false}
 		// show measurements {Name:measurements Tags:map[] Columns:[name] Values:[[SmartNIC]] Partial:false}
 		// show field keys {Name:SmartNIC Tags:map[] Columns:[fieldKey fieldType] Values:[[CPUUsedPercent float] [DiskFree float] [DiskTotal float] [DiskUsed float] [DiskUsedPercent float] [InterfaceName string] [InterfaceRxBytes float] [InterfaceTxBytes float] [MemAvailable float] [MemFree float] [MemTotal float] [MemUsed float] [MemUsedPercent float]] Partial:false}
 		// show tag keys {Name:Node Tags:map[] Columns:[tagKey] Values:[[Kind] [Name] [reporterID]] Partial:false}

@@ -22,12 +22,12 @@ import (
 )
 
 const (
-	testNic1Mac = "6a:00:02:e7:a8:40"
-	testNic2Mac = "6a:00:02:e7:aa:54"
-	testNic3Mac = "6a:00:02:e7:a9:64"
-	testNic4Mac = "6a:00:02:e7:ba:94"
-	testIf1Mac  = "6e:00:02:e7:dd:40"
-	testIf2Mac  = "6e:00:02:e7:dc:54"
+	testNic1Mac = "6a00.02e7.a840"
+	testNic2Mac = "6a00.02e7.aa54"
+	testNic3Mac = "6a00.02e7.a964"
+	testNic4Mac = "6a00.02e7.ba94"
+	testIf1Mac  = "6e00.02e7.dd40"
+	testIf2Mac  = "6e00.02e7.dc54"
 	testIf1ID   = "52fd7958-f4da-78bb-1590-856861348cee:4001"
 	testIf2ID   = "53256758-eecc-79bb-1590-899861348cfd:4004"
 	waitTO      = 2 * time.Second

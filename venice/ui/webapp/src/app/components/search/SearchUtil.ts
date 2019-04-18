@@ -193,7 +193,7 @@ export class SearchUtil {
 
   /**
    * ':' is reserved character is search. We want to encode the search to make back-end-search work in MAC string
-   *  //inputstr.replace(':', '\:');   // 02:42:c0:a8:1c:02 to 02\:42\:c0\:a8\:1c\:02
+   *  //inputstr.replace(':', '\:');   // 0242.c0a8.1c02 to 02\:42\:c0\:a8\:1c\:02
    * @param value
    */
   public static searchEncodeText(value: string): string {
@@ -264,10 +264,10 @@ export class SearchUtil {
           searchSpec[strs[0]] = (searchSpec[strs[0]] === undefined) ? strs[1] : searchSpec[strs[0]] + ',' + strs[1];
         } else {
           if (this.hasOperatorInString(listStr)) {
-            // case like  is:SmartNIC has:meta.name=~44:44:44:44:00:02
+            // case like  is:SmartNIC has:meta.name=~4444.4444.0002
             searchGrammarItem.type = strs[0];
             const idx = listStr.indexOf(':'); // has: <- ":"
-            const strs2 = listStr.substr(idx + 1); // get meta.name=~44:44:44:44:00:02
+            const strs2 = listStr.substr(idx + 1); // get meta.name=~4444.4444.0002
             outputArray.push(searchGrammarItem);
             searchSpec[strs[0]] = (searchSpec[strs[0]] === undefined) ? strs2 : searchSpec[strs[0]] + ',' + strs2;
           } else {

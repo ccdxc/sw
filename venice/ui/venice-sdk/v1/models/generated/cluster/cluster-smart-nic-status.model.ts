@@ -39,6 +39,7 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
     'admission-phase': ClusterSmartNICStatus_admission_phase = null;
     'conditions': Array<ClusterSmartNICCondition> = null;
     'serial-num': string = null;
+    /** should be a valid MAC address */
     'primary-mac': string = null;
     'ip-config': ClusterIPConfig = null;
     'system-info': ClusterSmartNICInfo = null;
@@ -64,6 +65,8 @@ export class ClusterSmartNICStatus extends BaseModel implements IClusterSmartNIC
             type: 'string'
         },
         'primary-mac': {
+            description:  'should be a valid MAC address',
+            hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'string'
         },

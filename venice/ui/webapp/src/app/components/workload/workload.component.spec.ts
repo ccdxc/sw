@@ -63,11 +63,11 @@ describe('WorkloadComponent', () => {
     'spec': {
       'host-name': 'esx-host1.local',
       'interfaces': {
-        '00:50:56:00:00:03': {
+        '0050.5600.0003': {
           'micro-seg-vlan': 103,
           'external-vlan': 1003
         },
-        '00:50:56:00:00:04': {
+        '0050.5600.0004': {
           'micro-seg-vlan': 103,
           'external-vlan': 1003
         }
@@ -75,7 +75,7 @@ describe('WorkloadComponent', () => {
     },
     'status': {
       'interfaces': {
-        '00:50:56:00:00:03': {
+        '0050.5600.0003': {
           'ip-addresses': [
             '10.1.1.1, 11.1.1.1'
           ]
@@ -96,11 +96,11 @@ describe('WorkloadComponent', () => {
     'spec': {
       'host-name': 'esx-host1.local',
       'interfaces': {
-        '00:50:56:00:00:05': {
+        '0050.5600.0005': {
           'micro-seg-vlan': 104,
           'external-vlan': 1004
         },
-        '00:50:56:00:00:06': {
+        '0050.5600.0006': {
           'micro-seg-vlan': 104,
           'external-vlan': 1004
         }
@@ -108,12 +108,12 @@ describe('WorkloadComponent', () => {
     },
     'status': {
       'interfaces': {
-        '00:50:56:00:00:05': {
+        '0050.5600.0005': {
           'ip-addresses': [
             '10.1.1.1'
           ]
         },
-        '00:50:56:00:00:06': {
+        '0050.5600.0006': {
           'ip-addresses': [
             '10.1.1.1', '11.1.1.1'
           ]
@@ -131,11 +131,11 @@ describe('WorkloadComponent', () => {
     'spec': {
       'host-name': 'esx-host1.local',
       'interfaces': {
-        '00:50:56:00:00:05': {
+        '0050.5600.0005': {
           'micro-seg-vlan': 104,
           'external-vlan': 1004
         },
-        '00:50:56:00:00:06': {
+        '0050.5600.0006': {
           'micro-seg-vlan': 104,
           'external-vlan': 1004
         }
@@ -143,9 +143,9 @@ describe('WorkloadComponent', () => {
     },
     'status': {
       'interfaces': {
-        '00:50:56:00:00:05': {
+        '0050.5600.0005': {
         },
-        '00:50:56:00:00:06': {
+        '0050.5600.0006': {
         }
       }
     }

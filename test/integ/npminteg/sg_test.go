@@ -111,7 +111,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	}, "Sg not found in statemgr")
 
 	// create endpoint
-	err = it.CreateEndpoint("default", "default", "testNetwork", "testEndpoint1", "testVm1", "01:01:01:01:01:01", "host1", "20.1.1.1", map[string]string{"env": "production", "app": "procurement"}, 2)
+	err = it.CreateEndpoint("default", "default", "testNetwork", "testEndpoint1", "testVm1", "0101.0101.0101", "host1", "20.1.1.1", map[string]string{"env": "production", "app": "procurement"}, 2)
 	c.Assert(err, IsNil)
 
 	// verify endpoint is present in all agents
@@ -129,7 +129,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	}
 
 	// create second endpoint
-	err = it.CreateEndpoint("default", "default", "testNetwork", "testEndpoint2", "testVm2", "02:02:02:02:02:02", "host2", "20.2.2.2", map[string]string{"env": "production", "app": "procurement"}, 3)
+	err = it.CreateEndpoint("default", "default", "testNetwork", "testEndpoint2", "testVm2", "0202.0202.0202", "host2", "20.2.2.2", map[string]string{"env": "production", "app": "procurement"}, 3)
 	c.Assert(err, IsNil)
 
 	// verify new endpoint is present in all agents

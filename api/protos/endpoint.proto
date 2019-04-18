@@ -39,7 +39,7 @@ message EndpointStatus {
     // IPv6 gateway
     string IPv6Gateway    = 8 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "ipv6-gateway,omitempty"];
     // Mac address of the endpoint
-    string MacAddress     = 9 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "mac-address,omitempty"];
+    string MacAddress     = 9 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "mac-address,omitempty", (venice.check) = "EmptyOr(MacAddr())"];
     // homing host's UUID
     string NodeUUID       = 10 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "node-uuid,omitempty"];
     // endpoint FSM state

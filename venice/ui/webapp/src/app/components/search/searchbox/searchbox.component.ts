@@ -336,7 +336,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
    * @param searched
    */
   protected buildTextSearchPayload(searched: string) {
-    // encode special characters like MAC string 02:42:c0:a8:1c:02
+    // encode special characters like MAC string 0242.c0a8.1c02
     const texts = (typeof searched === 'string') ? [SearchUtil.searchEncodeText(searched)] : SearchUtil.searchEncodeText(searched);
     return {
       'max-results': 50,
@@ -405,7 +405,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
   /**
    * Generate text search criteria
    * @param obj
-   * encode special characters like MAC string 02:42:c0:a8:1c:02
+   * encode special characters like MAC string 0242.c0a8.1c02
    */
   private generateSearchTexts(obj: SearchGrammarItem): any {
     // obj.value is "node1,default"

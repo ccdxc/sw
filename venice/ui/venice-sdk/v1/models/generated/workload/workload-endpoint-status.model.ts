@@ -35,6 +35,7 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
     'ipv4-gateway': string = null;
     'ipv6-address': string = null;
     'ipv6-gateway': string = null;
+    /** should be a valid MAC address */
     'mac-address': string = null;
     'node-uuid': string = null;
     'EndpointState': string = null;
@@ -75,6 +76,8 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
             type: 'string'
         },
         'mac-address': {
+            description:  'should be a valid MAC address',
+            hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'string'
         },

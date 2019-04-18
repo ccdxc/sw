@@ -64,7 +64,7 @@ message NetworkInterfaceStatus {
                                                    (gogoproto.jsontag) = "type,omitempty"];
     string OperStatus                           = 3 [(venice.check) = "StrEnum(NetworkInterfaceStatus.IFStatus)",
                                                    (gogoproto.jsontag) = "oper-status,omitempty"];
-    string PrimaryMac                           = 4 [(venice.check) = "MacAddr()",
+    string PrimaryMac                           = 4 [(venice.check) = "EmptyOr(MacAddr())",
                                                    (gogoproto.jsontag) = "primary-mac,omitempty"];
     NetworkInterfaceHostStatus IFHostStatus     = 5 [(gogoproto.jsontag) = "if-host-status,omitempty"]; 
     NetworkInterfaceUplinkStatus IFUplinkStatus = 6 [(gogoproto.jsontag) = "if-uplink-status,omitempty"];

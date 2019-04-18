@@ -50,7 +50,7 @@ func TestLogin(t *testing.T) {
 func TestCreate(t *testing.T) {
 	veniceLogin()
 
-	veniceCLI("create host dc12_rack3_bm4  --mac-address 00:01:02:03:04:05")
+	veniceCLI("create host dc12_rack3_bm4  --mac-address 0001.0203.0405")
 	out := veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00f0.0df0.0dd0 --external-vlan 66 --micro-seg-vlan 3333 TestCreateVm")
 	obj := &workload.Workload{}
 	out = veniceCLI("read workload -j TestCreateVm")
@@ -75,8 +75,8 @@ func TestCreate(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	veniceLogin()
 
-	veniceCLI("create host dc12_rack3_bm4 --mac-address 00:01:02:03:04:05")
-	veniceCLI("create host dc12_rack4_bm4 --mac-address 00:01:02:03:05:05")
+	veniceCLI("create host dc12_rack3_bm4 --mac-address 0001.0203.0405")
+	veniceCLI("create host dc12_rack4_bm4 --mac-address 0001.0203.0505")
 	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00f0.0df0.0dd0 --external-vlan 66  --micro-seg-vlan 3333 TestUpdateVm")
 	out := veniceCLI("update workload --host-name dc12_rack4_bm4 --mac-address 00de.edde.edd0 --external-vlan 44 --micro-seg-vlan 1111 --mac-address 00f0.0df0.0dd0 --external-vlan 22  --micro-seg-vlan 2222 TestUpdateVm")
 
@@ -102,7 +102,7 @@ func TestUpdate(t *testing.T) {
 func TestPatch(t *testing.T) {
 	veniceLogin()
 
-	veniceCLI("create host dc12_rack3_bm4 --mac-address 00:01:02:03:04:05")
+	veniceCLI("create host dc12_rack3_bm4 --mac-address 0001.0203.0405")
 	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00f0.0df0.0dd0 --external-vlan 66  --micro-seg-vlan 3333 TestPatchVm")
 
 	out := veniceCLI("read workload -j TestPatchVm")
@@ -148,7 +148,7 @@ func TestPatch(t *testing.T) {
 func TestRead(t *testing.T) {
 	veniceLogin()
 
-	veniceCLI("create host dc12_rack3_bm4 --mac-address 00:01:02:03:04:05")
+	veniceCLI("create host dc12_rack3_bm4 --mac-address 0001.0203.0405")
 	veniceCLI("create workload --host-name dc12_rack3_bm4 --label key1=val1 --label key2=val2 --mac-address 00de.edde.edd0 -external-vlan 55 --micro-seg-vlan 2222 --mac-address 00f0.0df0.0dd0 --external-vlan 66  --micro-seg-vlan 3333 TestReadVm1")
 	veniceCLI("create workload --host-name dc12_rack3_bm4 --label key2=val2 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2223 TestReadVm2")
 	veniceCLI("create workload --host-name dc12_rack3_bm4 --label key1=val1 --label key3=val3 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2224 TestReadVm3")
@@ -177,7 +177,7 @@ func TestRead(t *testing.T) {
 func TestDelete(t *testing.T) {
 	veniceLogin()
 
-	veniceCLI("create host dc12_rack3_bm4 --mac-address 00:01:02:03:04:05")
+	veniceCLI("create host dc12_rack3_bm4 --mac-address 0001.0203.0405")
 	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2223 TestDeleteVm1")
 	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 77 --micro-seg-vlan 2224 TestDeleteVm2")
 	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 88 --micro-seg-vlan 2225 TestDeleteVm3")
@@ -200,7 +200,7 @@ func TestDelete(t *testing.T) {
 func TestEdit(t *testing.T) {
 	veniceLogin()
 
-	veniceCLI("create host dc12_rack3_bm4 --mac-address 00:01:02:03:04:05")
+	veniceCLI("create host dc12_rack3_bm4 --mac-address 0001.0203.0405")
 	veniceCLI("create workload --label key1=val1 --label key2=val2 --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2223 TestEditVm")
 	// change the editor to cat and replace
 	oldEditor := os.Getenv("VENICE_EDITOR")
@@ -257,7 +257,7 @@ func TestUpdateFromFile(t *testing.T) {
 	}
 	ioutil.WriteFile("tmp-3772.json", b, 0644)
 	defer os.RemoveAll("tmp-3772.json")
-	veniceCLI("create host node021 --mac-address 00:01:02:03:06:05")
+	veniceCLI("create host node021 --mac-address 0001.0203.0605")
 	veniceCLI("create workload -f tmp-3772.json")
 
 	// read back the object to confirm if all matches our expectation
@@ -286,7 +286,7 @@ func TestUpdateFromFile(t *testing.T) {
 func TestLabel(t *testing.T) {
 	veniceLogin()
 
-	veniceCLI("create host r2d2 --mac-address 00:01:02:03:07:05")
+	veniceCLI("create host r2d2 --mac-address 0001.0203.0705")
 	veniceCLI("create workload --label key1=val1 --host-name r2d2 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2223 TestLabelVm")
 
 	out := veniceCLI("label workload --update-label key1=val2 TestLabelVm")
@@ -352,7 +352,7 @@ func TestSnapshot(t *testing.T) {
 func TestBashCompletion(t *testing.T) {
 	veniceLogin()
 
-	veniceCLI("create host dc12_rack3_bm4 --mac-address 00:01:02:03:08:05")
+	veniceCLI("create host dc12_rack3_bm4 --mac-address 0001.0203.0805")
 	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2222 --mac-address 00f0.0df0.0dd0 --external-vlan 66  --micro-seg-vlan 3333 TestBashCompletionVm1")
 	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2223 TestBashCompletionVm2")
 	veniceCLI("create workload --host-name dc12_rack3_bm4 --mac-address 00de.edde.edd0 --external-vlan 55 --micro-seg-vlan 2224 TestBashCompletionContainer3")
@@ -538,7 +538,7 @@ spec:
 	ioutil.WriteFile(fileName, []byte(ymlBytes), 0644)
 	defer os.Remove(fileName)
 
-	veniceCLI("create host bm576 --mac-address 00:01:02:03:09:05")
+	veniceCLI("create host bm576 --mac-address 0001.0203.0905")
 	out := veniceCLI("create workload -f /tmp/tmp3343.yml")
 
 	// read back the object to confirm if all matches our expectation

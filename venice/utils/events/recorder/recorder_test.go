@@ -123,7 +123,7 @@ func TestEventsRecorder(t *testing.T) {
 				evtsRecorder.Event(TestNICConnected, evtsapi.SeverityLevel_INFO, message, nil)
 
 				// create test NIC object
-				testNIC := policygen.CreateSmartNIC("00-14-22-01-23-45",
+				testNIC := policygen.CreateSmartNIC("0014.2201.2345",
 					cluster.SmartNICStatus_ADMITTED.String(),
 					"esx-1",
 					&cluster.SmartNICCondition{

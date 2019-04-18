@@ -212,12 +212,14 @@ func HostAddr(in string) error {
 	return fmt.Errorf("Value must be a valid IP or valid DNS name")
 }
 
-// MacAddr verifies it is a valid MAC address in one of the supported notations
+// MacAddr verifies it is a valid MAC address is in dot format - aaaa.bbbb.cccc
 //   see tests for valid formats
 func MacAddr(in string) error {
-	if govldtr.IsMAC(in) {
+	r := regexp.MustCompile("([0-9a-fA-F]{4}[.]){2}([0-9a-fA-F]{4})")
+	if r.MatchString(in) {
 		return nil
 	}
+
 	return fmt.Errorf("Value must be a valid MAC address")
 }
 

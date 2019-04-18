@@ -343,7 +343,8 @@ func (m *InterfaceInfo) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *InterfaceInfo) Defaults(ver string) bool {
-	return false
+	var ret bool
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -391,7 +392,12 @@ func (m *NetworkInfo) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *NetworkInfo) Defaults(ver string) bool {
-	return false
+	var ret bool
+	for k := range m.Interfaces {
+		i := m.Interfaces[k]
+		ret = i.Defaults(ver) || ret
+	}
+	return ret
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -471,6 +477,9 @@ func (m *NodeInfo) Defaults(ver string) bool {
 	var ret bool
 	if m.MemoryInfo != nil {
 		ret = m.MemoryInfo.Defaults(ver) || ret
+	}
+	if m.NetworkInfo != nil {
+		ret = m.NetworkInfo.Defaults(ver) || ret
 	}
 	return ret
 }
@@ -828,6 +837,19 @@ func (m *InterfaceInfo) References(tenant string, path string, resp map[string]a
 
 func (m *InterfaceInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if vs, ok := validatorMapCluster["InterfaceInfo"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapCluster["InterfaceInfo"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -869,10 +891,25 @@ func (m *NetworkInfo) References(tenant string, path string, resp map[string]api
 
 func (m *NetworkInfo) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	for k, v := range m.Interfaces {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sInterfaces[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
 func (m *NetworkInfo) Normalize() {
+
+	for _, v := range m.Interfaces {
+		v.Normalize()
+
+	}
 
 }
 
@@ -970,6 +1007,18 @@ func (m *NodeInfo) Validate(ver, path string, ignoreStatus bool) []error {
 			}
 		}
 	}
+	if m.NetworkInfo != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "NetworkInfo"
+			if errs := m.NetworkInfo.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
 	return ret
 }
 
@@ -977,6 +1026,10 @@ func (m *NodeInfo) Normalize() {
 
 	if m.MemoryInfo != nil {
 		m.MemoryInfo.Normalize()
+	}
+
+	if m.NetworkInfo != nil {
+		m.NetworkInfo.Normalize()
 	}
 
 }
@@ -1170,6 +1223,16 @@ func init() {
 	)
 
 	validatorMapCluster = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapCluster["InterfaceInfo"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapCluster["InterfaceInfo"]["all"] = append(validatorMapCluster["InterfaceInfo"]["all"], func(path string, i interface{}) error {
+		m := i.(*InterfaceInfo)
+		if err := validators.EmptyOr(validators.MacAddr, m.MacAddr, nil); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"MacAddr", err.Error())
+		}
+		return nil
+	})
 
 	validatorMapCluster["MemInfo"] = make(map[string][]func(string, interface{}) error)
 	validatorMapCluster["MemInfo"]["all"] = append(validatorMapCluster["MemInfo"]["all"], func(path string, i interface{}) error {

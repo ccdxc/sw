@@ -25,7 +25,7 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 
 	// create a workload on each host
 	for i := range it.agents {
-		macAddr := fmt.Sprintf("00:02:00:00:%02x:00", i)
+		macAddr := fmt.Sprintf("0002.0000.%02x00", i)
 		err := it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%d", i), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+i), 1)
 		AssertOk(c, err, "Error creating workload")
 	}
@@ -48,7 +48,7 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 			}
 			foundLocal := false
 			for idx, ag := range it.agents {
-				macAddr := fmt.Sprintf("00:02:00:00:%02x:00", idx)
+				macAddr := fmt.Sprintf("0002.0000.%02x00", idx)
 				name, _ := strconv.ParseMacAddr(macAddr)
 				epname := fmt.Sprintf("testWorkload-%d-%s", idx, name)
 				epmeta := api.ObjectMeta{
@@ -116,13 +116,13 @@ func (it *integTestSuite) TestNpmWorkloadValidators(c *C) {
 	// if not present create the default tenant
 	it.CreateTenant("default")
 
-	macAddr := fmt.Sprintf("00:02:00:00:00:00")
+	macAddr := fmt.Sprintf("0002.0000.0000")
 	wpname, _ := strconv.ParseMacAddr(macAddr)
 	err := it.CreateWorkload("default", "default", "testWorkload-validator", "invalidHost", macAddr, 101, 1)
 	Assert(c, err != nil, "was able to create workload without a host")
 
 	// create a host
-	err = it.CreateHost("testHost", "00:01:02:03:04:05")
+	err = it.CreateHost("testHost", "0001.0203.0405")
 	AssertOk(c, err, "Error creating host")
 
 	// create workload for the new host
@@ -186,7 +186,7 @@ func (it *integTestSuite) TestNpmWorkloadUpdate(c *C) {
 
 	// create a workload on each host
 	for i := range it.agents {
-		macAddr := fmt.Sprintf("00:02:00:00:%02x:00", i)
+		macAddr := fmt.Sprintf("0002.0000.%02x00", i)
 		err := it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%d", i), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+i), 1)
 		AssertOk(c, err, "Error creating workload")
 	}
@@ -216,7 +216,7 @@ func (it *integTestSuite) TestNpmWorkloadUpdate(c *C) {
 	for iter := 0; iter < numIter; iter++ {
 		for chidx := 0; chidx < numChange; chidx++ {
 			for i := range it.agents {
-				macAddr := fmt.Sprintf("00:02:00:%02x:%02x:%02x", iter, i, chidx)
+				macAddr := fmt.Sprintf("0002.00%02x.%02x%02x", iter, i, chidx)
 				err := it.UpdateWorkload("default", "default", fmt.Sprintf("testWorkload-%d", i), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+i), 1)
 				AssertOk(c, err, "Error creating workload")
 			}
@@ -231,7 +231,7 @@ func (it *integTestSuite) TestNpmWorkloadUpdate(c *C) {
 					}
 
 					for idx, ag := range it.agents {
-						macAddr := fmt.Sprintf("00:02:00:%02x:%02x:%02x", iter, idx, numChange-1)
+						macAddr := fmt.Sprintf("0002.00%02x.%02x%02x", iter, idx, numChange-1)
 						name, _ := strconv.ParseMacAddr(macAddr)
 						epname := fmt.Sprintf("testWorkload-%d-%s", idx, name)
 						epmeta := api.ObjectMeta{
@@ -296,7 +296,7 @@ func (it *integTestSuite) TestNpmHostUpdate(c *C) {
 
 	// create a workload on each host
 	for i := range it.agents {
-		macAddr := fmt.Sprintf("00:02:00:00:%02x:00", i)
+		macAddr := fmt.Sprintf("0002.0000.%02x00", i)
 		err := it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%d", i), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+i), 1)
 		AssertOk(c, err, "Error creating workload")
 	}
@@ -323,7 +323,7 @@ func (it *integTestSuite) TestNpmHostUpdate(c *C) {
 	// update host and point it to invalid smartnic
 	for i := range it.agents {
 		hostName := fmt.Sprintf("testHost-%d", i)
-		invSnicMac := fmt.Sprintf("00:05:%02x:00:00:00", i)
+		invSnicMac := fmt.Sprintf("0005.%02x00.0000", i)
 
 		host := cluster.Host{
 			TypeMeta: api.TypeMeta{Kind: "Host"},
@@ -364,7 +364,7 @@ func (it *integTestSuite) TestNpmHostUpdate(c *C) {
 	// update host and point it to correct smartnic
 	for i := range it.agents {
 		hostName := fmt.Sprintf("testHost-%d", i)
-		snicMac := fmt.Sprintf("00:01:%02x:00:00:00", i)
+		snicMac := fmt.Sprintf("0001.%02x00.0000", i)
 
 		host := cluster.Host{
 			TypeMeta: api.TypeMeta{Kind: "Host"},
@@ -456,7 +456,7 @@ func (it *integTestSuite) TestNpmWorkloadCreateDeleteWithMultiIntf(c *C) {
 
 			// each workload has multiple interfaces
 			for j := 0; j < numIntf; j++ {
-				macAddr := fmt.Sprintf("00:02:00:00:%02x:%02x", i, j)
+				macAddr := fmt.Sprintf("0002.0000.%02x%02x", i, j)
 				wintf := workload.WorkloadIntfSpec{
 					MACAddress:   macAddr,
 					MicroSegVlan: uint32(i*numIntf + j + 1),

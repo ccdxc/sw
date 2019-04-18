@@ -41,7 +41,7 @@ describe('HostsComponent', () => {
     'spec': {
       'smart-nics': [
         {
-          'mac-address': '02:42:c0:a8:1c:02'
+          'mac-address': '0242.c0a8.1c02'
         }
       ]
     },
@@ -266,7 +266,7 @@ describe('HostsComponent', () => {
     expect(routerLinks.length).toBe(2, 'Should have 2 routerLinks');
 
     expect(routerLinks[0].linkParams).toBe('/cluster/naples/00ae.cd00.1142');
-    expect(routerLinks[1].linkParams).toBe('/cluster/naples/02:42:c0:a8:1c:02');
+    expect(routerLinks[1].linkParams).toBe('/cluster/naples/0242.c0a8.1c02');
   });
 
 });

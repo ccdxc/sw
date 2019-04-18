@@ -14,6 +14,8 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
+
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -23,6 +25,9 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
+
+var _ validators.DummyVar
+var validatorMapEndpoint = make(map[string]map[string][]func(string, interface{}) error)
 
 // MakeKey generates a KV store key for the object
 func (m *Endpoint) MakeKey(prefix string) string {
@@ -58,6 +63,7 @@ func (m *Endpoint) Defaults(ver string) bool {
 	if ret {
 		m.Tenant, m.Namespace = "default", "default"
 	}
+	ret = m.Status.Defaults(ver) || ret
 	return ret
 }
 
@@ -100,7 +106,8 @@ func (m *EndpointStatus) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *EndpointStatus) Defaults(ver string) bool {
-	return false
+	var ret bool
+	return ret
 }
 
 // Validators and Requirements
@@ -149,12 +156,25 @@ func (m *Endpoint) Validate(ver, path string, ignoreStatus bool) []error {
 			ret = append(ret, errs...)
 		}
 	}
+	if !ignoreStatus {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Status"
+		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 	return ret
 }
 
 func (m *Endpoint) Normalize() {
 
 	m.ObjectMeta.Normalize()
+
+	m.Status.Normalize()
 
 }
 
@@ -177,6 +197,19 @@ func (m *EndpointStatus) References(tenant string, path string, resp map[string]
 
 func (m *EndpointStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
+	if vs, ok := validatorMapEndpoint["EndpointStatus"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapEndpoint["EndpointStatus"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -191,5 +224,17 @@ func init() {
 	scheme.AddKnownTypes(
 		&Endpoint{},
 	)
+
+	validatorMapEndpoint = make(map[string]map[string][]func(string, interface{}) error)
+
+	validatorMapEndpoint["EndpointStatus"] = make(map[string][]func(string, interface{}) error)
+
+	validatorMapEndpoint["EndpointStatus"]["all"] = append(validatorMapEndpoint["EndpointStatus"]["all"], func(path string, i interface{}) error {
+		m := i.(*EndpointStatus)
+		if err := validators.EmptyOr(validators.MacAddr, m.MacAddress, nil); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"MacAddress", err.Error())
+		}
+		return nil
+	})
 
 }

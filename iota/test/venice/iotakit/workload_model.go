@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/strconv"
 )
 
 // Workload represents a VM/container/Baremetal workload (endpoints are associated with the workload)
@@ -51,6 +52,11 @@ func (sm *SysModel) createWorkload(wtype iota.WorkloadType, wimage, name string,
 		return nil, err
 	}
 
+	priMac, err := strconv.ParseMacAddr(mac)
+	if err != nil {
+		return nil, err
+	}
+
 	// allocate useg vlan
 	usegVlan, err := host.allocUsegVlan()
 	if err != nil {
@@ -77,7 +83,7 @@ func (sm *SysModel) createWorkload(wtype iota.WorkloadType, wimage, name string,
 				workload.WorkloadIntfSpec{
 					ExternalVlan: subnet.vlan,
 					MicroSegVlan: usegVlan,
-					MACAddress:   mac,
+					MACAddress:   priMac,
 					IpAddresses:  []string{ipAddr},
 				},
 			},

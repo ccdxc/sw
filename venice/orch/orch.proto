@@ -7,6 +7,7 @@ syntax = "proto3";
 
 package orch; 
 import "github.com/pensando/sw/api/meta.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 
 // The Orchestrator API service definition.
 service OrchApi {
@@ -72,7 +73,7 @@ message SmartNIC {
   
   message Status {
     string hostIP = 1;
-    string macAddress = 2;
+    string macAddress = 2 [(venice.check) = "EmptyOr(MacAddr())"];
     string switch = 3;
   }
   Status status = 4;
@@ -106,7 +107,7 @@ message NwIF {
   }
   Config config = 4;
   message Status {
-    string macAddress = 1;
+    string macAddress = 1 [(venice.check) = "EmptyOr(MacAddr())"];
     string portGroup = 2;
     string switch = 3;
     string smartNIC_ID = 4;

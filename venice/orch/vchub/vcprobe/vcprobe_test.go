@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	testNic1Mac = "6a:00:02:e7:a8:40"
+	testNic1Mac = "6a00.02e7.a840"
 )
 
 func TestSOAP(t *testing.T) {

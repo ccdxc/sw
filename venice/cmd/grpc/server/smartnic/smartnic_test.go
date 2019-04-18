@@ -986,6 +986,7 @@ func TestUpdateSmartNIC(t *testing.T) {
 			NetworkMode: cmd.SmartNICSpec_OOB.String(),
 		},
 		Status: cmd.SmartNICStatus{
+			PrimaryMAC:     "2222.2222.2222",
 			AdmissionPhase: "UNKNOWN",
 		},
 	}
@@ -1086,6 +1087,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 		},
 		Status: cmd.SmartNICStatus{
 			AdmissionPhase: "UNKNOWN",
+			PrimaryMAC:     testMac,
 		},
 	}
 
@@ -1214,6 +1216,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 			NetworkMode: cmd.SmartNICSpec_OOB.String(),
 		},
 		Status: cmd.SmartNICStatus{
+			PrimaryMAC:     hostID,
 			AdmissionPhase: "UNKNOWN",
 		},
 	}

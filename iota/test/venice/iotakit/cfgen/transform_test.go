@@ -23,10 +23,10 @@ func TestStringSub(t *testing.T) {
 		{input: "{{ipv4-srcip:11.2.x.x}}", expected: "11.2.0.1"},
 		{input: "{{ipv4-srcip:11.2.x.x}}", expected: "11.2.0.2"},
 		{input: "{{ipv4-dstip:11.2.x.x}}", expected: "11.2.0.1"},
-		{input: "{{mac}}", expected: "00:ae:dd:00:00:01"},
-		{input: "{{mac-primary}}", expected: "00:ae:dd:00:00:01"},
-		{input: "{{mac-primary}}", expected: "00:ae:dd:00:00:02"},
-		{input: "{{mac-newoui:00.44.55}}", expected: "00:44:55:00:00:01"},
+		{input: "{{mac}}", expected: "00ae.dd00.0001"},
+		{input: "{{mac-primary}}", expected: "00ae.dd00.0001"},
+		{input: "{{mac-primary}}", expected: "00ae.dd00.0002"},
+		{input: "{{mac-newoui:00.44.55}}", expected: "0044.5500.0001"},
 	}
 	iterCtx := NewIterContext()
 	for idx, testSample := range testSamples {

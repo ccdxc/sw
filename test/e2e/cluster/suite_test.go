@@ -101,7 +101,7 @@ var _ = BeforeSuite(func() {
 				Spec: cluster.HostSpec{
 					SmartNICs: []cluster.SmartNICID{
 						{
-							MACAddress: naples.Spec.PrimaryMAC,
+							MACAddress: naples.Status.Fru.MacStr,
 						},
 					},
 				},

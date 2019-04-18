@@ -413,10 +413,10 @@ func (it *veniceIntegSuite) TestTechSupportLabelBasedSelection(c *C) {
 	AssertOk(c, err, "Error creating logged in context")
 
 	smartNICNodes := map[string]*cluster.SmartNIC{
-		"smartnic-1": newSmartNICNode("smartnic-1", map[string]string{"group": "red", "type": "prod"}),
-		"smartnic-2": newSmartNICNode("smartnic-2", map[string]string{"group": "blue", "type": "prod"}),
-		"smartnic-3": newSmartNICNode("smartnic-3", map[string]string{"group": "blue", "type": "dev"}),
-		"smartnic-4": newSmartNICNode("smartnic-4", map[string]string{"star": "yes"}),
+		"00ae.cd01.0011": newSmartNICNode("00ae.cd01.0011", map[string]string{"group": "red", "type": "prod"}),
+		"00ae.cd01.0012": newSmartNICNode("00ae.cd01.0012", map[string]string{"group": "blue", "type": "prod"}),
+		"00ae.cd01.0013": newSmartNICNode("00ae.cd01.0013", map[string]string{"group": "blue", "type": "dev"}),
+		"00ae.cd01.0014": newSmartNICNode("00ae.cd01.0014", map[string]string{"star": "yes"}),
 	}
 
 	tsrs := map[string]*monitoring.TechSupportRequest{
@@ -426,15 +426,15 @@ func (it *veniceIntegSuite) TestTechSupportLabelBasedSelection(c *C) {
 		"LblStar": newTechSupportRequest("LblStar", []string{},
 			newLabelSelector([]*labels.Requirement{labels.MustGetRequirement("star", labels.Operator_equals, []string{"no"})})),
 
-		"NIC1OrBlue": newTechSupportRequest("NIC1OrBlue", []string{"smartnic-1"},
+		"NIC1OrBlue": newTechSupportRequest("NIC1OrBlue", []string{"00ae.cd01.0011"},
 			newLabelSelector([]*labels.Requirement{labels.MustGetRequirement("group", labels.Operator_in, []string{"blue", "green"})})),
 	}
 
 	agents := map[string]*techSupportAgent{
-		"smartnic-1": newTechSupportAgent("smartnic-1", kindSmartNICNode, []*monitoring.TechSupportRequest{tsrs["LblProd"], tsrs["NIC1OrBlue"]}),
-		"smartnic-2": newTechSupportAgent("smartnic-2", kindSmartNICNode, []*monitoring.TechSupportRequest{tsrs["LblProd"], tsrs["NIC1OrBlue"]}),
-		"smartnic-3": newTechSupportAgent("smartnic-3", kindSmartNICNode, []*monitoring.TechSupportRequest{tsrs["NIC1OrBlue"]}),
-		"smartnic-4": newTechSupportAgent("smartnic-4", kindSmartNICNode, []*monitoring.TechSupportRequest{}),
+		"00ae.cd01.0011": newTechSupportAgent("00ae.cd01.0011", kindSmartNICNode, []*monitoring.TechSupportRequest{tsrs["LblProd"], tsrs["NIC1OrBlue"]}),
+		"00ae.cd01.0012": newTechSupportAgent("00ae.cd01.0012", kindSmartNICNode, []*monitoring.TechSupportRequest{tsrs["LblProd"], tsrs["NIC1OrBlue"]}),
+		"00ae.cd01.0013": newTechSupportAgent("00ae.cd01.0013", kindSmartNICNode, []*monitoring.TechSupportRequest{tsrs["NIC1OrBlue"]}),
+		"00ae.cd01.0014": newTechSupportAgent("00ae.cd01.0014", kindSmartNICNode, []*monitoring.TechSupportRequest{}),
 	}
 
 	for _, n := range smartNICNodes {
@@ -463,22 +463,22 @@ func (it *veniceIntegSuite) TestTechSupportLabelBasedSelection(c *C) {
 	checkAgentNotifications(c, agents, 2)
 
 	// Update labels on nodes and check that they are honored
-	smartNIC2 := smartNICNodes["smartnic-2"]
+	smartNIC2 := smartNICNodes["00ae.cd01.0012"]
 	delete(smartNIC2.ObjectMeta.Labels, "group")
 	smartNIC2.ObjectMeta.ResourceVersion = ""
 	smartNIC2Ref, err := it.apisrvClient.ClusterV1().SmartNIC().Update(ctx, smartNIC2)
-	AssertOk(c, err, "Error updating labels for node smartnic-2")
+	AssertOk(c, err, "Error updating labels for node 00ae.cd01.0012")
 	it.waitForTechSupportControllerUpdate(c, smartNIC2Ref)
-	agent2 := agents["smartnic-2"]
+	agent2 := agents["00ae.cd01.0012"]
 	delete(agent2.matchingRequests, "NIC1OrBlue")
 
-	smartNIC4 := smartNICNodes["smartnic-4"]
+	smartNIC4 := smartNICNodes["00ae.cd01.0014"]
 	smartNIC4.ObjectMeta.Labels = map[string]string{"star": "no"}
 	smartNIC4.ObjectMeta.ResourceVersion = ""
 	smartNIC4Ref, err := it.apisrvClient.ClusterV1().SmartNIC().Update(ctx, smartNIC4)
-	AssertOk(c, err, "Error updating labels for node smartnic-4")
+	AssertOk(c, err, "Error updating labels for node 00ae.cd01.0014")
 	it.waitForTechSupportControllerUpdate(c, smartNIC4Ref)
-	agent4 := agents["smartnic-4"]
+	agent4 := agents["00ae.cd01.0014"]
 	agent4.matchingRequests["LblStar"] = tsrs["LblStar"]
 
 	clearNotifications(c, agents)
@@ -573,7 +573,7 @@ func (it *veniceIntegSuite) TestTechSupportControllerRestart(c *C) {
 	numRequests := 5 + rand.Intn(20)
 	requests := []*monitoring.TechSupportRequest{}
 	for i := 0; i < numRequests; i++ {
-		r := newTechSupportRequest(fmt.Sprintf("Restart-TSR-%d", i), []string{"Restart-Node-0"}, nil)
+		r := newTechSupportRequest(fmt.Sprintf("00ae.cd00.000%d", i), []string{"00ae.cd00.0000"}, nil)
 		err := it.createTechSupportRequest(ctx, r)
 		AssertOk(c, err, fmt.Sprintf("Error creating TechSupportRequest %+v", r))
 		requests = append(requests, r)
@@ -584,7 +584,7 @@ func (it *veniceIntegSuite) TestTechSupportControllerRestart(c *C) {
 	numNodes := 1 + rand.Intn(20)
 	nodes := []*cluster.SmartNIC{}
 	for i := 0; i < numNodes; i++ {
-		n := newSmartNICNode(fmt.Sprintf("Restart-Node-%d", i), nil)
+		n := newSmartNICNode(fmt.Sprintf("00ae.cd00.000%d", i), nil)
 		err := it.createSmartNICNode(ctx, n)
 		AssertOk(c, err, fmt.Sprintf("Error creating SmartNIC node %+v", n))
 		nodes = append(nodes, n)
@@ -617,12 +617,12 @@ func (it *veniceIntegSuite) TestTechSupportControllerRestart(c *C) {
 		len(sm.ListTechSupportObjectState(kindSmartNICNode)), numNodes+numOldNodes), "1s", "15s")
 
 	tsmAPIAddr := tsCtrler.RPCServer.GetListenURL()
-	agent := newTechSupportAgent("Restart-Node-0", kindSmartNICNode, requests)
+	agent := newTechSupportAgent("00ae.cd00.0000", kindSmartNICNode, requests)
 	agent.tsmAPIAddr = tsmAPIAddr
 	go agent.watch(ctx, c)
 	defer agent.stop()
 
-	agentMap := map[string]*techSupportAgent{"Restart-Node-0": agent}
+	agentMap := map[string]*techSupportAgent{"00ae.cd00.0000": agent}
 	checkAgentWatches(c, agentMap)
 	checkAgentNotifications(c, agentMap, 1)
 }
