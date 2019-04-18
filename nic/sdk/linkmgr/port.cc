@@ -1350,8 +1350,6 @@ port::port_init(linkmgr_cfg_t *cfg)
                         sdk::linkmgr::serdes_fns.serdes_spico_crc(sbus_addr));
     }
 
-    sdk::lib::pal_program_marvell(0, 0x8140);
-
     return rc;
 }
 

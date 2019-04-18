@@ -55,6 +55,13 @@
         "sbm_clk_div"    : "6"
     },
 
+    "num_logical_oob_ports" : "2",
+    "logical_oob_ports" :
+    [
+        { "port_num" : "1", "phy_id" : "0xc", "hw_port" : "0x10", "speed" : "1G", "auto_neg_enable" : "false" },
+        { "port_num" : "2", "phy_id" : "0x3", "hw_port" : "0x12", "speed" : "1G", "auto_neg_enable" : "true"  }
+    ],
+
     "num_fp_ports": "3",
     "fp_ports" :
     [

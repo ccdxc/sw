@@ -92,6 +92,15 @@ catalog::populate_asics(ptree &prop_tree)
     return SDK_RET_OK;
 }
 
+bool
+catalog::catalog_str_to_bool(std::string val)
+{
+    if (val == "true") {
+        return true; 
+    }
+    return false;
+}
+
 port_speed_t
 catalog::catalog_speed_to_port_speed(std::string speed)
 {
@@ -204,6 +213,43 @@ catalog::populate_logical_ports(ptree &prop_tree)
         populate_logical_port(logical_port, logical_port_p);
     }
 
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+catalog::populate_logical_oob_port(
+                            ptree::value_type &logical_oob_port,
+                            catalog_logical_oob_port_t *logical_oob_port_p)
+{
+    std::string val;
+
+    val = logical_oob_port.second.get<std::string>("phy_id", "0");
+    logical_oob_port_p->phy_id = strtoul(val.c_str(), NULL, 16);
+    val = logical_oob_port.second.get<std::string>("hw_port", "0");
+    logical_oob_port_p->hw_port = strtoul(val.c_str(), NULL, 16);
+    val = logical_oob_port.second.get<std::string>("speed", "1G");
+    logical_oob_port_p->speed = catalog_speed_to_port_speed(val);
+    val = logical_oob_port.second.get<std::string>("auto_neg_enable", "false");
+    logical_oob_port_p->auto_neg_enable = catalog_str_to_bool(val);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+catalog::populate_logical_oob_ports(ptree &prop_tree)
+{
+    boost::optional<ptree&> child =
+                    prop_tree.get_child_optional("logical_oob_ports");
+
+    if (!child) {
+        return SDK_RET_OK;
+    }
+    for (ptree::value_type &logical_oob_port :
+                            prop_tree.get_child("logical_oob_ports")) {
+        catalog_logical_oob_port_t *logical_oob_port_p =
+                    &catalog_db_.logical_oob_ports[
+                    logical_oob_port.second.get<uint32_t>("port_num", 0) - 1];
+        populate_logical_oob_port(logical_oob_port, logical_oob_port_p);
+    }
     return SDK_RET_OK;
 }
 
@@ -558,7 +604,8 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
     catalog_db_.num_asics = prop_tree.get<uint32_t>("num_asics", 0);
     catalog_db_.num_logical_ports =
                             prop_tree.get<uint32_t>("num_logical_ports", 0);
-
+    catalog_db_.num_logical_oob_ports =
+                        prop_tree.get<uint32_t>("num_logical_oob_ports", 0);
     catalog_db_.num_fp_ports = prop_tree.get<uint32_t>("num_fp_ports", 0);
 
     populate_voltages(prop_tree);
@@ -568,6 +615,7 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
     populate_fp_ports(prop_tree);
 
     populate_logical_ports(prop_tree);
+    populate_logical_oob_ports(prop_tree);
 
     populate_mgmt_mac_profiles(prop_tree);
 
@@ -743,9 +791,15 @@ catalog::destroy(catalog *clog)
 }
 
 catalog_logical_port_t *
-catalog::logical_port(uint32_t logical_port)
+catalog::logical_port_internal(uint32_t logical_port)
 {
     return &catalog_db_.logical_ports[logical_port - 1];
+}
+
+catalog_logical_oob_port_t *
+catalog::logical_oob_port_internal(uint32_t logical_oob_port)
+{
+    return &catalog_db_.logical_oob_ports[logical_oob_port - 1];
 }
 
 port_type_t
@@ -782,7 +836,8 @@ void
 catalog::logical_port_to_asic_port(uint32_t logicalport,
                                    uint32_t *asic, uint32_t *asic_port)
 {
-    catalog_logical_port_t *catalog_logical_port_p = logical_port(logicalport);
+    catalog_logical_port_t *catalog_logical_port_p =
+                                logical_port_internal(logicalport);
     *asic = catalog_logical_port_p->asic;
     *asic_port = catalog_logical_port_p->asic_port;
 }
@@ -822,6 +877,34 @@ catalog::sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane)
 {
     return catalog_db_.asics[asic_num].
                        ports[asic_port + lane].sbus_addr;
+}
+
+uint32_t
+catalog::oob_phy_id(uint32_t logical_oob_port) {
+    catalog_logical_oob_port_t *catalog_logical_oob_port =
+                                logical_oob_port_internal(logical_oob_port);
+    return catalog_logical_oob_port->phy_id;
+}
+
+uint32_t
+catalog::oob_hw_port(uint32_t logical_oob_port) {
+    catalog_logical_oob_port_t *catalog_logical_oob_port =
+                                logical_oob_port_internal(logical_oob_port);
+    return catalog_logical_oob_port->hw_port;
+}
+
+port_speed_t
+catalog::oob_speed(uint32_t logical_oob_port) {
+    catalog_logical_oob_port_t *catalog_logical_oob_port =
+                                logical_oob_port_internal(logical_oob_port);
+    return catalog_logical_oob_port->speed;
+}
+
+bool
+catalog::oob_auto_neg_enable(uint32_t logical_oob_port) {
+    catalog_logical_oob_port_t *catalog_logical_oob_port =
+                                logical_oob_port_internal(logical_oob_port);
+    return catalog_logical_oob_port->auto_neg_enable;
 }
 
 serdes_info_t*

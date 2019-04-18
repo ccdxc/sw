@@ -74,6 +74,13 @@ typedef struct catalog_logical_port_s {
     uint32_t          asic_port;
 } catalog_logical_port_t;
 
+typedef struct catalog_logical_oob_port_s {
+    uint32_t          phy_id;
+    uint32_t          hw_port;
+    port_speed_t      speed;
+    bool              auto_neg_enable;
+} catalog_logical_oob_port_t;
+
 typedef struct catalog_fp_port_s {
     uint32_t    breakout_modes;   // bitmap of breakout modes
     port_type_t type;             // port type
@@ -106,44 +113,46 @@ typedef struct aacs_info_s {
 } aacs_info_t;
 
 typedef struct catalog_s {
-    std::string              catalog_file;                      // catalog file name with absolute path
-    card_id_t                card_id;                           // card id for the board
-    uint32_t                 max_mpu_per_stage;                 // max MPU per pipeline stage
-    uint32_t                 mpu_trace_size;                    // MPU trace size
-    uint64_t                 cores_mask;                        // mask of all control/data cores
-    std::string              form_factor;                       // Form factor of the card
-    uint32_t                 cpld_id;                           // CPLD ID on this card
-    uint32_t                 emmc_size;                         // eMMC size on card
-    uint32_t                 memory_size;                       // Total Memory on card
-    uint32_t                 num_asics;                         // number of asics on the board
-    uint32_t                 num_logical_ports;                 // number of logical port in the board
-    uint32_t                 num_fp_ports;                      // number of front panel ports in the board
-    platform_type_t          platform_type;                     // platform type
-    bool                     access_mock_mode;                  // do not access HW, dump only reads/writes
-    catalog_asic_t           asics[MAX_ASICS];                  // per asic information
-    catalog_logical_port_t   logical_ports[MAX_LOGICAL_PORTS];  // per port information
-    catalog_fp_port_t        fp_ports[MAX_FP_PORTS];            // per port information
-    mac_profile_t            mac_profiles[MAC_MODE_MAX];        // MAC profiles
-    mac_profile_t            mgmt_mac_profiles[MAC_MODE_MAX];   // MGMT MAC profiles
-    catalog_voltage_t        voltages;                          // Voltage parameters for the board.
+    std::string                catalog_file;                          // catalog file name with absolute path
+    card_id_t                  card_id;                               // card id for the board
+    uint32_t                   max_mpu_per_stage;                     // max MPU per pipeline stage
+    uint32_t                   mpu_trace_size;                        // MPU trace size
+    uint64_t                   cores_mask;                            // mask of all control/data cores
+    std::string                form_factor;                           // Form factor of the card
+    uint32_t                   cpld_id;                               // CPLD ID on this card
+    uint32_t                   emmc_size;                             // eMMC size on card
+    uint32_t                   memory_size;                           // Total Memory on card
+    uint32_t                   num_asics;                             // number of asics on the board
+    uint32_t                   num_logical_ports;                     // number of logical port in the board
+    uint32_t                   num_logical_oob_ports;                 // number of logical oob port in the board
+    uint32_t                   num_fp_ports;                          // number of front panel ports in the board
+    platform_type_t            platform_type;                         // platform type
+    bool                       access_mock_mode;                      // do not access HW, dump only reads/writes
+    catalog_asic_t             asics[MAX_ASICS];                      // per asic information
+    catalog_logical_port_t     logical_ports[MAX_LOGICAL_PORTS];      // per port information
+    catalog_logical_oob_port_t logical_oob_ports[MAX_LOGICAL_PORTS];  // per oob port information
+    catalog_fp_port_t          fp_ports[MAX_FP_PORTS];                // per port information
+    mac_profile_t              mac_profiles[MAC_MODE_MAX];            // MAC profiles
+    mac_profile_t              mgmt_mac_profiles[MAC_MODE_MAX];       // MGMT MAC profiles
+    catalog_voltage_t          voltages;                              // Voltage parameters for the board.
 
     // pcie parameters
-    uint8_t                  pcie_hostport_mask;                // host ports enabled
-    uint8_t                  pcie_gen;                          // pcie speed gen 1-4
-    uint8_t                  pcie_width;                        // pcie lane width 1-16
-    uint16_t                 pcie_subdeviceid;                  // pcie subdevice id
+    uint8_t                    pcie_hostport_mask;                    // host ports enabled
+    uint8_t                    pcie_gen;                              // pcie speed gen 1-4
+    uint8_t                    pcie_width;                            // pcie lane width 1-16
+    uint16_t                   pcie_subdeviceid;                      // pcie subdevice id
 
     // serdes parameters
-    aacs_info_t              aacs_info;                         // avago aacs info
-    uint32_t                 serdes_jtag_id;                    // jtag for serdes
-    uint8_t                  num_sbus_rings;                    // number of sbus rings on chip
-    uint8_t                  sbm_clk_div;                       // SBUS master clock divider
-    uint32_t                 serdes_build_id;                   // serdes FW build ID
-    uint32_t                 serdes_rev_id;                     // serdes FW rev ID
-    std::string              serdes_fw_file;                    // serdes FW file
-    serdes_info_t            serdes[MAX_SERDES]
-                                   [MAX_PORT_SPEEDS]
-                                   [sdk::types::CABLE_TYPE_MAX];
+    aacs_info_t                aacs_info;                             // avago aacs info
+    uint32_t                   serdes_jtag_id;                        // jtag for serdes
+    uint8_t                    num_sbus_rings;                        // number of sbus rings on chip
+    uint8_t                    sbm_clk_div;                           // SBUS master clock divider
+    uint32_t                   serdes_build_id;                       // serdes FW build ID
+    uint32_t                   serdes_rev_id;                         // serdes FW rev ID
+    std::string                serdes_fw_file;                        // serdes FW file
+    serdes_info_t              serdes[MAX_SERDES]
+                                     [MAX_PORT_SPEEDS]
+                                     [sdk::types::CABLE_TYPE_MAX];
 } catalog_t;
 
 class catalog {
@@ -164,6 +173,8 @@ public:
     static port_fec_type_t catalog_fec_type_to_port_fec_type(std::string type);
     static platform_type_t catalog_platform_type_to_platform_type(
                                             std::string platform_type);
+    static bool catalog_str_to_bool(std::string val);
+
     // copp policer config
     sdk_ret_t get_child_str(std::string path, std::string& child_str);
 
@@ -195,6 +206,15 @@ public:
     uint32_t sbus_addr(uint32_t asic_num, uint32_t asic_port, uint32_t lane);
     uint32_t asic_port_to_mac_id(uint32_t asic, uint32_t asic_port);
     uint32_t asic_port_to_mac_ch(uint32_t asic, uint32_t asic_port);
+
+    // lookups based on logical oob ports
+    uint32_t num_logical_oob_ports(void) const {
+        return catalog_db_.num_logical_oob_ports;
+    }
+    uint32_t oob_phy_id(uint32_t logical_oob_port);
+    uint32_t oob_hw_port(uint32_t logical_oob_port);
+    port_speed_t oob_speed(uint32_t logical_oob_port);
+    bool oob_auto_neg_enable(uint32_t logical_oob_port);
 
     // lookups based on logical port
     uint32_t num_logical_ports(void) const { return catalog_db_.num_logical_ports; }
@@ -278,6 +298,14 @@ private:
     // populate config for all logical ports
     sdk_ret_t populate_logical_ports(ptree &prop_tree);
 
+    // populate logical oob port level config
+    sdk_ret_t populate_logical_oob_port(
+                            ptree::value_type &logical_oob_port,
+                            catalog_logical_oob_port_t *logical_oob_port_p);
+
+    // populate config for all logical oob ports
+    sdk_ret_t populate_logical_oob_ports(ptree &prop_tree);
+
     // populate fp port level config
     sdk_ret_t populate_fp_port(ptree::value_type &fp_port,
                                catalog_fp_port_t *fp_port_p);
@@ -306,7 +334,8 @@ private:
     sdk_ret_t parse_serdes_file(std::string& serdes_file);
     sdk_ret_t parse_serdes(ptree &prop_tree);
 
-    catalog_logical_port_t *logical_port(uint32_t port);
+    catalog_logical_port_t *logical_port_internal(uint32_t port);
+    catalog_logical_oob_port_t *logical_oob_port_internal(uint32_t port);
     uint32_t  serdes_index_get(uint32_t sbus_addr);
     uint8_t   cable_type_get(std::string cable_type_str);
     card_id_t catalog_card_id_to_sdk_card_id(uint32_t card_id);

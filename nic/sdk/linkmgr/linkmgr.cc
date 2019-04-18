@@ -543,6 +543,17 @@ xcvr_poll_init (linkmgr_cfg_t *cfg)
     return SDK_RET_OK;
 }
 
+static sdk_ret_t
+linkmgr_oob_init (linkmgr_cfg_t *cfg)
+{
+    for (uint32_t port = 0;
+         port < cfg->catalog->num_logical_oob_ports(); ++port) {
+        // pal_program_oob(port);
+    }
+    sdk::lib::pal_program_marvell(0, 0x8140);
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 linkmgr_init (linkmgr_cfg_t *cfg)
 {
@@ -565,6 +576,9 @@ linkmgr_init (linkmgr_cfg_t *cfg)
 
     // initialize the port mac and serdes functions
     port::port_init(cfg);
+
+    // bringup the oob ports
+    linkmgr_oob_init(cfg);
 
     // initialize xcvr polling
     xcvr_poll_init(cfg);
