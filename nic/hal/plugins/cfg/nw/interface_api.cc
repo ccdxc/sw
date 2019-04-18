@@ -505,9 +505,9 @@ if_l2seg_get_encap (if_t *pi_if, l2seg_t *pi_l2seg, uint8_t *vlan_v,
         SDK_ASSERT(0);
     }
 
-    HAL_TRACE_DEBUG("{}, L2seg: {}, vlan_v: {}, vlan_id: {}",
-                    pi_if->if_id, pi_l2seg->seg_id,
-                    *vlan_v, *vlan_id);
+    HAL_TRACE_VERBOSE("{}, L2seg: {}, vlan_v: {}, vlan_id: {}",
+                      pi_if->if_id, pi_l2seg->seg_id,
+                      *vlan_v, *vlan_id);
 
     return HAL_RET_OK;
 }

@@ -923,10 +923,14 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                                        tinfo.actiondata_struct_size, true,
                                        ENTRY_TRACE_EN, table_health_monitor);
             } else {
+                bool trace_en = true;
+                if (tid == P4TBL_ID_FLOW_STATS) {
+                    trace_en = false;
+                }
                 dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
                     directmap::factory(tinfo.tablename, tid, tinfo.tabledepth,
                                        tinfo.actiondata_struct_size, false,
-                                       ENTRY_TRACE_EN, table_health_monitor);
+                                       trace_en, table_health_monitor);
             }
             SDK_ASSERT(dm_tables_[tid - P4TBL_ID_INDEX_MIN] != NULL);
             break;

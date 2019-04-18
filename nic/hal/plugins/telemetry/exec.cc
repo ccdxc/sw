@@ -24,16 +24,16 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
     const hal::flow_monitor_rule_t      *frule = NULL;
     const hal::ipv4_rule_t              *rule = NULL;
     const acl::acl_ctx_t                *acl_ctx = NULL;
-    
-    memset(&mirror_flowupd, 0, sizeof(fte::flow_update_t));
-    memset(&export_flowupd, 0, sizeof(fte::flow_update_t));
+
+    //memset(&mirror_flowupd, 0, sizeof(fte::flow_update_t));
+    //memset(&export_flowupd, 0, sizeof(fte::flow_update_t));
     mirror_flowupd.mirror_info.mirror_en = 0;
     export_flowupd.export_info.export_en = 0;
     const char *ctx_name = flowmon_acl_ctx_name(ctx.get_key().svrf_id, mirror_action);
     acl_ctx = acl::acl_get(ctx_name);
-    HAL_TRACE_DEBUG("ctx_name: {} acl_ctx: {:#x}", ctx_name, (uint64_t) acl_ctx);
+    HAL_TRACE_VERBOSE("ctx_name: {} acl_ctx: {:#x}", ctx_name, (uint64_t) acl_ctx);
     if (acl_ctx == NULL) {
-        HAL_TRACE_DEBUG("telemetry::No telemetry acl_ctx for vrf {} id {} mirror_action {}",
+        HAL_TRACE_DEBUG("No telemetry policy for vrf {} id {} mirror_action {}",
                          ctx_name, ctx.get_key().svrf_id, mirror_action);
         ret = HAL_RET_OK;
         goto end;
@@ -51,7 +51,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
             acl_key.mac_dst |= ctx.get_key().dmac[i] << (i * 8);
         }
     } else {
-        HAL_TRACE_DEBUG("telemetry::Invalid flow type {}", ctx.get_key().flow_type);
+        HAL_TRACE_DEBUG("Invalid flow type {}", ctx.get_key().flow_type);
         ret = HAL_RET_OK;
         goto end;
     }
@@ -80,7 +80,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
 
     ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("telemetry::rule lookup failed ret={}", ret);
+        HAL_TRACE_DEBUG("telemetry policy didn't match ret={}", ret);
         goto end;
     }
 
@@ -134,11 +134,12 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
     } else {
         HAL_TRACE_DEBUG("Flow did not match any telemetry rules!");
     }
+
 end:
+
     if (acl_ctx) {
         acl::acl_deref(acl_ctx);
     }
-    HAL_TRACE_DEBUG("continue to process telemetry");
     return ret;
 }
 
@@ -150,7 +151,7 @@ fte::pipeline_action_t
 telemetry_exec (fte::ctx_t &ctx)
 {
     hal_ret_t ret;
-    
+
     /* Iflow and Rflow are independently evaluated */
     /* Update mirror rules */
     ret = update_flow_from_telemetry_rules(ctx, true);

@@ -62,7 +62,7 @@ fte::pipeline_action_t alg_rpc_session_get_cb(fte::ctx_t &ctx) {
             sess_resp->mutable_status()->mutable_rpc_info()->\
                     set_maxpkt_size_exceeded(info->maxpkt_sz_exceeded);
             sess_resp->mutable_status()->mutable_rpc_info()->\
-                                 set_num_exp_flows(info->num_exp_flows); 
+                                 set_num_exp_flows(info->num_exp_flows);
         }
         sess_resp->mutable_status()->mutable_rpc_info()->\
                                 set_iscontrol(true);
@@ -120,7 +120,7 @@ fte::pipeline_action_t alg_rpc_session_delete_cb(fte::ctx_t &ctx) {
              */
             g_rpc_state->cleanup_app_session(l4_sess->app_session);
             return fte::PIPELINE_CONTINUE;
-        } else if ((ctx.key().proto==IP_PROTO_UDP) || 
+        } else if ((ctx.key().proto==IP_PROTO_UDP) ||
                    (ctx.session()->iflow->state >= session::FLOW_TCP_STATE_FIN_RCVD) ||
                    (ctx.session()->rflow &&
                     (ctx.session()->rflow->state >= session::FLOW_TCP_STATE_FIN_RCVD))) {
@@ -203,7 +203,7 @@ void copy_sfw_info(sfw_info_t *sfw_info, l4_alg_status_t *l4_sess) {
         pgmid_list_sz = (sizeof(hal::rpc_programid_t)*\
                           sfw_info->alg_opts.opt.sunrpc_opts.programid_sz);
         rpc_info->pgm_ids = (hal::rpc_programid_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, pgmid_list_sz);
-        rpc = (hal::rpc_programid_t *)rpc_info->pgm_ids; 
+        rpc = (hal::rpc_programid_t *)rpc_info->pgm_ids;
         for (uint8_t idx=0; idx<sfw_info->alg_opts.opt.sunrpc_opts.programid_sz; idx++) {
              rpc[idx].program_id = sfw_info->alg_opts.opt.sunrpc_opts.program_ids[idx].program_id;
              rpc[idx].timeout = sfw_info->alg_opts.opt.sunrpc_opts.program_ids[idx].timeout;
@@ -217,7 +217,7 @@ void copy_sfw_info(sfw_info_t *sfw_info, l4_alg_status_t *l4_sess) {
         rpc_info->pgm_ids = (rpc_uuid_t *)HAL_CALLOC(hal::HAL_MEM_ALLOC_ALG, pgmid_list_sz);
         rpc = (hal::rpc_uuid_t *)rpc_info->pgm_ids;
         for (uint8_t idx=0; idx<sfw_info->alg_opts.opt.msrpc_opts.uuid_sz; idx++) {
-             memcpy(rpc[idx].uuid, sfw_info->alg_opts.opt.msrpc_opts.uuids[idx].uuid, UUID_SZ); 
+             memcpy(rpc[idx].uuid, sfw_info->alg_opts.opt.msrpc_opts.uuids[idx].uuid, UUID_SZ);
              rpc[idx].timeout = sfw_info->alg_opts.opt.msrpc_opts.uuids[idx].timeout;
         }
     }
@@ -290,7 +290,7 @@ void insert_rpc_expflow(fte::ctx_t& ctx, l4_alg_status_t *l4_sess, rpc_cb_t cb,
         exp_flow_info->callback = cb;
         incr_num_exp_flows(rpc_info);
     }
-    
+
     // Need to add the entry with a timer
     HAL_TRACE_DEBUG("Inserting RPC entry with key: {}", key);
 }
@@ -307,10 +307,10 @@ void rpcinfo_cleanup_hdlr(l4_alg_status_t *l4_sess) {
          */
         if (rpc_info->pkt_len && rpc_info->pkt)
             HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pkt);
-    
+
         if (rpc_info->pgmid_sz && rpc_info->pgm_ids)
             HAL_FREE(hal::HAL_MEM_ALLOC_ALG, rpc_info->pgm_ids);
-       
+
         g_rpc_state->alg_info_slab()->free((rpc_info_t *)l4_sess->info);
     }
 
@@ -327,7 +327,6 @@ fte::pipeline_action_t alg_rpc_exec(fte::ctx_t &ctx) {
     sfw_info_t                   *sfw_info = sfw::sfw_feature_state(ctx);
     l4_alg_status_t              *l4_sess = NULL;
 
-    HAL_TRACE_DEBUG("ALG proto: {}", (uint32_t)sfw_info->alg_proto);
     if (ctx.protobuf_request()) {
         return fte::PIPELINE_CONTINUE;
     }
@@ -336,7 +335,6 @@ fte::pipeline_action_t alg_rpc_exec(fte::ctx_t &ctx) {
     if (alg_state != NULL)
         l4_sess = (l4_alg_status_t *)alg_status(alg_state);
 
-    HAL_TRACE_DEBUG("ALG proto: {}", (uint32_t)sfw_info->alg_proto);
     if (sfw_info->alg_proto == nwsec::APP_SVC_MSFT_RPC ||
         (l4_sess && l4_sess->alg == nwsec::APP_SVC_MSFT_RPC)) {
         ret = alg_msrpc_exec(ctx, sfw_info, l4_sess);

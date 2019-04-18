@@ -135,10 +135,10 @@ void feature_state_init(feature_state_t *feature_state, uint16_t num_features)
             } else {
                 bzero(feature_state[id].ctx_state, feature->state_size);
             }
-            HAL_TRACE_DEBUG("name={} id={}, size={}, offset={} ctx={:p}",
-                            feature->name, feature->id,
-                            feature->state_size, feature->state_offset,
-                            feature_state[id].ctx_state);
+            //HAL_TRACE_DEBUG("name={} id={}, size={}, offset={} ctx={:p}",
+                              //feature->name, feature->id,
+                              //feature->state_size, feature->state_offset,
+                              //feature_state[id].ctx_state);
         }
     }
 }

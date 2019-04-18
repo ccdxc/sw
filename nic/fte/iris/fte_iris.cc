@@ -188,7 +188,7 @@ ctx_t::lookup_flow_objs()
             key_.dir = (sep_->ep_flags & EP_FLAGS_LOCAL) ? hal::FLOW_DIR_FROM_DMA :
                 hal::FLOW_DIR_FROM_UPLINK;
         }
-        if ((sl2seg_ == NULL) || 
+        if ((sl2seg_ == NULL) ||
             (sl2seg_ != NULL && sl2seg_->hal_handle != sep_->l2seg_handle)) {
             sl2seg_ = hal::l2seg_lookup_by_handle(sep_->l2seg_handle);
             SDK_ASSERT_RETURN(sl2seg_, HAL_RET_L2SEG_NOT_FOUND);
@@ -203,12 +203,14 @@ ctx_t::lookup_flow_objs()
             // Try to find sep by looking at L2.
             ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
             sep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->smac);
-            HAL_TRACE_INFO("fte: src ep found by L2 lookup seg_id:{} smac:{}", sl2seg_->seg_id, macaddr2str(ethhdr->smac));
+            HAL_TRACE_VERBOSE("fte: src ep found by L2 lookup seg_id:{} smac:{}",
+                              sl2seg_->seg_id, macaddr2str(ethhdr->smac));
         } else if (existing_session()) {
-            sep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id, session_->iflow->config.l2_info.smac);
-            HAL_TRACE_INFO("fte: src ep found by L2 lookup seg_id:{} smac:{}", 
-                            session_->iflow->config.l2_info.l2seg_id, 
-                            macaddr2str(session_->iflow->config.l2_info.smac));
+            sep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
+                                          session_->iflow->config.l2_info.smac);
+            HAL_TRACE_VERBOSE("fte: src ep found by L2 lookup seg_id:{} smac:{}",
+                              session_->iflow->config.l2_info.l2seg_id,
+                              macaddr2str(session_->iflow->config.l2_info.smac));
         }
         if (sep_) {
             sep_handle_ = sep_->hal_handle;
@@ -228,19 +230,21 @@ ctx_t::lookup_flow_objs()
             SDK_ASSERT_RETURN(dl2seg_, HAL_RET_L2SEG_NOT_FOUND);
         }
     } else {
-        HAL_TRACE_INFO("fte: dest ep unknown");
         if (sl2seg_ != NULL && cpu_rxhdr_ != NULL) {
             ethhdr = (ether_header_t *)(pkt_ + cpu_rxhdr_->l2_offset);
             dep_ = hal::find_ep_by_l2_key(sl2seg_->seg_id, ethhdr->dmac);
-            HAL_TRACE_INFO("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}", sl2seg_->seg_id, macaddr2str(ethhdr->dmac));
+            HAL_TRACE_VERBOSE("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}",
+                              sl2seg_->seg_id, macaddr2str(ethhdr->dmac));
         } else if (existing_session()) {
             dep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id, session_->iflow->config.l2_info.dmac);
-            HAL_TRACE_INFO("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}", 
-                            session_->iflow->config.l2_info.l2seg_id, 
-                            macaddr2str(session_->iflow->config.l2_info.dmac));
+            HAL_TRACE_VERBOSE("fte: dst ep found by L2 lookup, seg_id:{} dmac:{}",
+                              session_->iflow->config.l2_info.l2seg_id,
+                              macaddr2str(session_->iflow->config.l2_info.dmac));
         }
         if (dep_) {
             dl2seg_ = hal::l2seg_lookup_by_handle(dep_->l2seg_handle);
+        } else {
+            HAL_TRACE_DEBUG("fte: dest ep unknown");
         }
     }
 
@@ -252,7 +256,7 @@ ctx_t::lookup_flow_objs()
              hal::lif_t *dlif = if_get_lif(dif_);
              if (dlif == NULL) {
                  /* Ignore the lookup as we don't know the lif yet */
-                 HAL_TRACE_INFO("fte: ignoring dep lookup as lif not found or discovered yet.");
+                 HAL_TRACE_DEBUG("fte: ignoring dep lookup as lif not found or discovered yet.");
                  dif_ = NULL;
                  dep_ = NULL;
              }
@@ -466,7 +470,7 @@ ctx_t::add_flow_logging (hal::flow_key_t key, hal_handle_t sess_hdl,
     t_fwlg.set_dest_vrf(key.dvrf_id);
     t_fwlg.set_sipv4(key.sip.v4_addr);
     t_fwlg.set_dipv4(key.dip.v4_addr);
-    
+
     t_fwlg.set_ipprot(key.proto);
     if (key.proto == IP_PROTO_TCP || key.proto == IP_PROTO_UDP) {
         t_fwlg.set_sport(key.sport);
@@ -656,7 +660,7 @@ ctx_t::update_flow_table()
                         session_cfg.conn_track_en, session_cfg.idle_timeout,
                         ether_ntoa((struct ether_addr*)&iflow_cfg.l2_info.smac),
                         ether_ntoa((struct ether_addr*)&iflow_cfg.l2_info.dmac),
-                        iflow_cfg.l2_info.l2seg_id); 
+                        iflow_cfg.l2_info.l2seg_id);
     }
 
     for (uint8_t stage = 0; valid_rflow_ && !hal_cleanup() && stage <= rstage_; stage++) {
@@ -735,7 +739,7 @@ ctx_t::update_flow_table()
                         rflow_cfg.ing_mirror_session, rflow_cfg.eg_mirror_session,
                         rflow_attrs.qos_class_en, rflow_attrs.qos_class_id,
                         rflow_attrs.export_en, rflow_attrs.export_id1,
-                        rflow_attrs.export_id2, rflow_attrs.export_id3, rflow_attrs.export_id4, 
+                        rflow_attrs.export_id2, rflow_attrs.export_id3, rflow_attrs.export_id4,
                         ether_ntoa((struct ether_addr*)&rflow_cfg.l2_info.smac),
                         ether_ntoa((struct ether_addr*)&rflow_cfg.l2_info.dmac),
                         rflow_cfg.l2_info.l2seg_id);
@@ -766,7 +770,7 @@ ctx_t::update_flow_table()
         }
     } else if (session_) {
         if (update_session_) {
-            HAL_TRACE_DEBUG("Updating Session");
+            //HAL_TRACE_DEBUG("Updating Session");
             update_type = "update";
             // Update session if it already exists
             ret = hal::session_update(&session_args, session_);
@@ -790,7 +794,7 @@ ctx_t::update_flow_table()
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Session {} failed, ret = {}", update_type, ret);
     } else {
-        HAL_TRACE_DEBUG("Session {} of session {} successful", update_type, session_handle);
+        //HAL_TRACE_DEBUG("Session {} of session {} successful", update_type, session_handle);
     }
 
     if (protobuf_request()) {
@@ -991,7 +995,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
                 if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FRCPU_VLANID,
                                          &pd_func_args) == HAL_RET_OK) {
                     pkt_info->cpu_header.flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
-                }   
+                }
             } else {
                 hal::pd::pd_l2seg_get_fromcpu_vlanid_args_t args;
                 args.l2seg = sl2seg_;
@@ -1001,7 +1005,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
                 if (hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_L2SEG_GET_FRCPU_VLANID,
                                          &pd_func_args) == HAL_RET_OK) {
                     pkt_info->cpu_header.flags |= CPU_TO_P4PLUS_FLAGS_UPD_VLAN;
-                }   
+                }
             }
         }
     }
@@ -1047,8 +1051,8 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 	    // queue rx pkt if tx_queue is empty, it is a flow miss and firwall action is not drop
 	    // This needs to be moved to plugin code
             //!hal::app_redir::app_redir_pkt_tx_ownership(*this)) {
-	    queue_txpkt(pkt_, pkt_len_, NULL, NULL, HAL_LIF_CPU, 
-                        CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ, 
+	    queue_txpkt(pkt_, pkt_len_, NULL, NULL, HAL_LIF_CPU,
+                        CPU_ASQ_QTYPE, CPU_ASQ_QID, CPU_SCHED_RING_ASQ,
                         types::WRING_TYPE_ASQ, copied_pkt_ ? free_flow_miss_pkt : NULL);
 	} else {
 
@@ -1069,7 +1073,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
                  args.ctxt = arm_ctx;
                  args.pkt = (pkt_ - sizeof(cpu_rxhdr_t));
                  pd_func_args.pd_cpupkt_free_pkt_resources = &args;
-		 
+
                  hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_CPU_FREE_PKT_RES, &pd_func_args);
 	     }
          }
@@ -1123,7 +1127,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 	    HAL_TRACE_DEBUG(" packet buffer/cpu_rx header {:#x} {:#x}", (long)cpu_rxhdr_, (long)pkt_);
             pkt_info->cb(pkt_info->pkt);
         }
-    } 
+    }
     txpkt_cnt_ = 0;
 
     return HAL_RET_OK;

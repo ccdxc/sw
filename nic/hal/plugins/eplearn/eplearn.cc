@@ -128,7 +128,7 @@ do_learning_ep_lif_update(fte::ctx_t &ctx) {
         /* get the current lif ID if found */
         cur_lif_id = hal::lif_hw_lif_id_get(lif);
     }
-    
+
     /* Update lif nothing set or LIF id changed */
     if (cur_lif_id == 0 || cur_lif_id != cpu_hdr->src_lif) {
 
@@ -179,12 +179,10 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
     hal_ret_t ret;
     fte::flow_update_t flowupd = {type : fte::FLOWUPD_ACTION};
 
-    if (ctx.pkt() == nullptr || ctx.role() == hal::FLOW_ROLE_RESPONDER || 
+    if (ctx.pkt() == nullptr || ctx.role() == hal::FLOW_ROLE_RESPONDER ||
         (ctx.existing_session() && ctx.is_flow_swapped())) {
         return fte::PIPELINE_CONTINUE;
     }
-
-    HAL_TRACE_DEBUG("Invoking EP learning feature");
 
     ret = do_learning_ep_lif_update(ctx);
     if (ret != HAL_RET_OK) {

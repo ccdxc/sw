@@ -856,8 +856,8 @@ ep_get_pinned_uplink(ep_t *ep)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("EP Pinning to UplinkId:{}",
-                    uplink_if->if_id);
+    //HAL_TRACE_DEBUG("EP Pinning to UplinkId:{}",
+                      //uplink_if->if_id);
 end:
     return uplink_if;
 }
@@ -1166,7 +1166,7 @@ ep_update_session_walk_cb(void *timer, uint32_t timer_id, void *ctxt)
     }
     return;
 }
-    
+
 hal_ret_t
 ep_handle_if_change (ep_t *ep, hal_handle_t new_if_handle)
 {
@@ -1174,10 +1174,10 @@ ep_handle_if_change (ep_t *ep, hal_handle_t new_if_handle)
     void                            *ep_timer = NULL;
 
     HAL_TRACE_DEBUG("Received IF change notification for ep: {}", ep->hal_handle);
-    ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_UPD, 
-                                 EP_UPDATE_SESSION_TIMER, 
+    ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_UPD,
+                                 EP_UPDATE_SESSION_TIMER,
                                  (void *) ep->hal_handle,
-                                 ep_update_session_walk_cb, false); 
+                                 ep_update_session_walk_cb, false);
     if (!ep_timer) {
         HAL_TRACE_ERR("Failed to schedule the timer for the ep");
         return HAL_RET_ERR;
@@ -1208,7 +1208,7 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     ep = (ep_t *)dhl_entry->obj;
 
     HAL_TRACE_DEBUG("EP update cb");
-    if (app_ctxt->iplist_change) { 
+    if (app_ctxt->iplist_change) {
         pd::pd_ep_update_args_init(&pd_ep_args);
         pd_ep_args.ep            = ep;
         pd_ep_args.iplist_change = app_ctxt->iplist_change;
@@ -1297,7 +1297,7 @@ ep_copy_session_list (ep_t *dst_ep, ep_t *src_ep)
         sdk::lib::dllist_add(&dst_ep->session_list_head, &entry->dllist_ctxt);
     }
     HAL_TRACE_VERBOSE("ep_clone no of sessions: {}", sdk::lib::dllist_count(&dst_ep->session_list_head));
-    
+
 
     return HAL_RET_OK;
 }
