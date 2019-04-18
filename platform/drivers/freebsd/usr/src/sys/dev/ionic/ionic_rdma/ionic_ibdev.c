@@ -6972,6 +6972,8 @@ static void ionic_netdev_work(struct work_struct *ws)
 		if (rc) {
 			netdev_dbg(ndev, "error set private %d\n", rc);
 			ionic_destroy_ibdev(dev);
+		} else {
+			dev_info(&dev->ibdev.dev, "registered\n");
 		}
 
 		break;
@@ -7039,30 +7041,24 @@ static void ionic_netdev_work(struct work_struct *ws)
 	kfree(work);
 }
 
-static int ionic_netdev_event(struct notifier_block *notifier,
-			      unsigned long event, void *ptr)
+static int ionic_netdev_event_post(struct net_device *ndev,
+				   unsigned long event)
 {
 	struct ionic_netdev_work *work;
-	struct net_device *ndev;
 	struct lif *lif;
-	int rc;
-
-	ndev = netdev_notifier_info_to_dev(ptr);
 
 	lif = get_netdev_ionic_lif(ndev, IONIC_API_VERSION, IONIC_PRSN_RDMA);
 	if (!lif) {
 		pr_devel("unrecognized netdev: %s\n", netdev_name(ndev));
-		goto out;
+		return 0;
 	}
 
 	pr_devel("ionic netdev: %s\n", netdev_name(ndev));
 	netdev_dbg(ndev, "event %lu\n", event);
 
 	work = kmalloc(sizeof(*work), GFP_ATOMIC);
-	if (WARN_ON_ONCE(!work)) {
-		rc = -ENOMEM;
-		goto err_work;
-	}
+	if (WARN_ON_ONCE(!work))
+		return -ENOMEM;
 
 	dev_hold(ndev);
 
@@ -7073,11 +7069,20 @@ static int ionic_netdev_event(struct notifier_block *notifier,
 
 	queue_work(ionic_dev_workq, &work->ws);
 
-out:
-	return NOTIFY_DONE;
+	return 0;
+}
 
-err_work:
-	return notifier_from_errno(rc);
+static int ionic_netdev_event(struct notifier_block *notifier,
+			      unsigned long event, void *ptr)
+{
+	struct net_device *ndev;
+	int rc;
+
+	ndev = netdev_notifier_info_to_dev(ptr);
+
+	rc = ionic_netdev_event_post(ndev, event);
+
+	return rc ? notifier_from_errno(rc) : NOTIFY_DONE;
 }
 
 static struct notifier_block ionic_netdev_notifier = {
@@ -7092,6 +7097,23 @@ static void ionic_netdev_discover(void)
 	TAILQ_FOREACH(ndev, &ifnet, if_link)
 		ionic_netdev_event(&ionic_netdev_notifier, NETDEV_REGISTER, ndev);
 	IFNET_RUNLOCK();
+}
+
+void ionic_ibdev_reset(struct ionic_ibdev *dev)
+{
+	int rc;
+
+	rc = ionic_netdev_event_post(dev->ndev, NETDEV_UNREGISTER);
+	if (rc) {
+		dev_warn(&dev->ibdev.dev,
+			 "failed to post unregister event: %d\n", rc);
+		return;
+	}
+
+	rc = ionic_netdev_event_post(dev->ndev, NETDEV_REGISTER);
+	if (rc)
+		dev_warn(&dev->ibdev.dev,
+			 "failed to post register event: %d\n", rc);
 }
 
 static int __init ionic_mod_init(void)

@@ -530,4 +530,6 @@ void ionic_dcqcn_destroy(struct ionic_ibdev *dev);
 int ionic_dcqcn_select_profile(struct ionic_ibdev *dev,
 			       struct rdma_ah_attr *attr);
 
+void ionic_ibdev_reset(struct ionic_ibdev *dev);
+
 #endif /* IONIC_IBDEV_H */

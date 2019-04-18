@@ -343,6 +343,22 @@ void ionic_dbgfs_add_dev(struct ionic_ibdev *dev,
 	dev->debug_qp = ionic_node(ctx, parent, "qp", "QP/SRQ Info");
 }
 
+static int ionic_dev_reset_write(void *context, const char *buf, size_t count)
+{
+	struct ionic_ibdev *dev = context;
+	bool reset_enable = false;
+
+	if (kstrtobool(buf, &reset_enable))
+		return -EINVAL;
+
+	if (reset_enable) {
+		dev_warn(&dev->ibdev.dev, "resetting...\n");
+		ionic_ibdev_reset(dev);
+	}
+
+	return 0;
+}
+
 void ionic_dbgfs_add_dev_info(struct ionic_ibdev *dev)
 {
 	struct sysctl_ctx_list *ctx;
@@ -358,6 +374,9 @@ void ionic_dbgfs_add_dev_info(struct ionic_ibdev *dev)
 	parent = SYSCTL_CHILDREN(oidp);
 
 	ctx = &dev->debug_ctx;
+
+	ionic_ctrl(ctx, parent, dev, ionic_dev_reset_write,
+		   "reset", "Device Reset (write)");
 
 	oidp = ionic_node(ctx, parent, "info", "Rdma Device Info");
 	if (!oidp)

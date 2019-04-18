@@ -194,6 +194,37 @@ static const struct file_operations ionic_dev_info_fops = {
 	.release = seq_release,
 };
 
+static ssize_t ionic_dev_reset_write(struct file *fp, const char __user *ubuf,
+				     size_t count, loff_t *ppos)
+{
+	struct ionic_ibdev *dev = fp->private_data;
+	char buf[16] = {};
+	bool reset_enable = false;
+	int rc = 0;
+
+	if (count > sizeof(buf))
+		return -EINVAL;
+
+	rc = copy_from_user(buf, ubuf, count);
+	if (rc)
+		return rc;
+
+	if (kstrtobool(buf, &reset_enable))
+		return -EINVAL;
+
+	if (reset_enable) {
+		dev_warn(&dev->ibdev.dev, "resetting...\n");
+		ionic_ibdev_reset(dev);
+	}
+
+	return count;
+}
+
+static const struct file_operations ionic_dev_reset_fops = {
+	.open = simple_open,
+	.write = ionic_dev_reset_write,
+};
+
 void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 {
 	dev->debug = NULL;
@@ -218,6 +249,8 @@ void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 
 	debugfs_create_file("info", 0220, dev->debug, dev,
 			    &ionic_dev_info_fops);
+	debugfs_create_file("reset", 0220, dev->debug, dev,
+			    &ionic_dev_reset_fops);
 
 	dev->debug_ah = debugfs_create_dir("ah", dev->debug);
 	if (IS_ERR(dev->debug_ah))
