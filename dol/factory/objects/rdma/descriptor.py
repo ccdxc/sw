@@ -251,6 +251,13 @@ class RdmaAqDescriptorNOP(Packet):
         BitField("pad", 0, 448),
     ]
 
+class RdmaAqDescriptorStats(Packet):
+    fields_desc = [
+        LELongField("dma_addr", 0),
+        LEIntField("length", 0),
+        BitField("rsvd", 0, 352),
+    ]
+
 class RdmaAqDescriptorCQ(Packet):
     fields_desc = [
         LEIntField("eq_id", 0),
@@ -1052,6 +1059,15 @@ class RdmaAqDescriptorObject(base.FactoryObjectBase):
         self.desc = desc
 
     def Write(self, debug = True):
+        if self.spec != None and hasattr(self.spec.fields, 'stats'):
+           logger.info("Reading Admin Stats")
+           dma_addr = self.spec.fields.stats.dma_addr if hasattr(self.spec.fields.stats, 'dma_addr') else 0
+           length = self.spec.fields.stats.length if hasattr(self.spec.fields.stats, 'length') else 0
+           stats = RdmaAqDescriptorStats(dma_addr=dma_addr, length=length)
+           desc = self.desc/stats
+           self.__set_desc(desc)
+           logger.ShowScapyObject(stats)
+
         if self.spec != None and hasattr(self.spec.fields, 'query_qp'):
            logger.info("Reading Admin Query QP")
            sq_dma_addr = self.spec.fields.query_qp.sq_dma_addr if hasattr(self.spec.fields.query_qp, 'sq_dma_addr') else 0

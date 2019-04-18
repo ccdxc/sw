@@ -5,6 +5,7 @@
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/p4/common/defines.h"
 #include "platform/capri/capri_pxb_pcie.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
 #include "platform/capri/capri_common.hpp"
@@ -12,9 +13,9 @@
 namespace hal {
 namespace pd {
 
-#define IPSEC_N2H_GLOBAL_STATS_OFFSET 512 
+#define IPSEC_N2H_GLOBAL_STATS_OFFSET 512
 
-#define P4PLUS_SYMBOLS_MAX 59
+#define P4PLUS_SYMBOLS_MAX 60
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -218,6 +219,10 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
 
     symbols[i].name = RDMA_PCIE_ATOMIC_BASE_ADDR;
     symbols[i].val = CAPRI_PCIE_ATOMIC_BASE_ADDR;
+    i++;
+
+    symbols[i].name = RDMA_STATS_HDRS_ADDR;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_RDMA_STATS_HDRS);
     i++;
 
     symbols[i].name = P4PT_TCB_BASE;

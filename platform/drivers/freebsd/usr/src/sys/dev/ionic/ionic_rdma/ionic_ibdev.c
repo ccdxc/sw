@@ -100,9 +100,6 @@ MODULE_PARM_DESC(ionic_rdma_xxx_qp_dbell, "XXX Enable ringing qp doorbell (to te
 static int ionic_xxx_qid_skip = 512;
 module_param_named(ionic_rdma_xxx_qid_skip, ionic_xxx_qid_skip, int, 0444);
 MODULE_PARM_DESC(ionic_rdma_xxx_qid_skip, "XXX Skip every N'th qid");
-static bool ionic_xxx_fake_stats = false;
-module_param_named(ionic_rdma_xxx_fake_stats, ionic_xxx_fake_stats, bool, 0444);
-MODULE_PARM_DESC(ionic_rdma_xxx_fake_stats, "XXX Present fake hardware stats");
 static bool ionic_xxx_nosupport = false;
 module_param_named(ionic_rdma_xxx_nosupport, ionic_xxx_nosupport, bool, 0644);
 MODULE_PARM_DESC(ionic_rdma_xxx_nosupport, "XXX Enable unsupported features");
@@ -182,6 +179,10 @@ static void *contig_kmalloc(size_t size, gfp_t gfp)
 {
 	return contigmalloc(size, M_KMALLOC, linux_check_m_flags(gfp),
 			    0, ~0ull, PAGE_SIZE, 0);
+}
+static void *contig_kzalloc(size_t size, gfp_t gfp)
+{
+	return contig_kmalloc(size, gfp | __GFP_ZERO);
 }
 
 /* XXX use this to free bufs allocated above. */
@@ -1051,6 +1052,56 @@ static int ionic_noop_cmd(struct ionic_ibdev *dev)
 	}
 }
 
+static bool ionic_v1_stat_normalize(struct ionic_v1_stat *stat)
+{
+	stat->type_off = be32_to_cpu(stat->be_type_off);
+	stat->name[sizeof(stat->name) - 1] = 0;
+
+	return ionic_v1_stat_type(stat) != IONIC_V1_STAT_TYPE_NONE;
+}
+
+static u64 ionic_v1_stat_val(struct ionic_v1_stat *stat,
+			     void *vals_buf, size_t vals_len)
+{
+	int type = ionic_v1_stat_type(stat);
+	unsigned off = ionic_v1_stat_off(stat);
+
+#define __ionic_v1_stat_validate(__type) do { \
+		if (off + sizeof(__type) > vals_len)	\
+			goto err;			\
+		if (!IS_ALIGNED(off, sizeof(__type)))	\
+			goto err;			\
+	} while (0)
+
+	switch (type) {
+	case IONIC_V1_STAT_TYPE_8:
+		__ionic_v1_stat_validate(u8);
+		return *(u8 *)(vals_buf + off);
+	case IONIC_V1_STAT_TYPE_LE16:
+		__ionic_v1_stat_validate(__le16);
+		return le16_to_cpu(*(__le16 *)(vals_buf + off));
+	case IONIC_V1_STAT_TYPE_LE32:
+		__ionic_v1_stat_validate(__le32);
+		return le32_to_cpu(*(__le32 *)(vals_buf + off));
+	case IONIC_V1_STAT_TYPE_LE64:
+		__ionic_v1_stat_validate(__le64);
+		return le64_to_cpu(*(__le64 *)(vals_buf + off));
+	case IONIC_V1_STAT_TYPE_BE16:
+		__ionic_v1_stat_validate(__be16);
+		return be16_to_cpu(*(__be16 *)(vals_buf + off));
+	case IONIC_V1_STAT_TYPE_BE32:
+		__ionic_v1_stat_validate(__be32);
+		return be32_to_cpu(*(__be32 *)(vals_buf + off));
+	case IONIC_V1_STAT_TYPE_BE64:
+		__ionic_v1_stat_validate(__be64);
+		return be64_to_cpu(*(__be64 *)(vals_buf + off));
+	}
+
+err:
+	return ~0ull;
+#undef __ionic_v1_stat_validate
+}
+
 static int ionic_v1_stats_cmd(struct ionic_ibdev *dev,
 			      dma_addr_t dma, size_t len, int op)
 {
@@ -1086,50 +1137,29 @@ static int ionic_v1_stats_cmd(struct ionic_ibdev *dev,
 	return rc;
 }
 
-/* XXX makeshift will be removed */
-static const char xxx_fake_hdrs[] =
-	"xxx_a\0xxx_bc\0xxx_def\0xxx_g\0xxx_h\0xxx_ijkl\0xxx_m\0xxx_n";
-
 static int ionic_stats_hdrs_cmd(struct ionic_ibdev *dev,
-				dma_addr_t dma, size_t len,
-				char *xxx_buf)
+				dma_addr_t dma, size_t len)
 {
 	switch (dev->rdma_version) {
 	case 1:
 		if (dev->admin_opcodes > IONIC_V1_ADMIN_STATS_HDRS)
 			return ionic_v1_stats_cmd(dev, dma, len,
 						  IONIC_V1_ADMIN_STATS_HDRS);
-		if (!ionic_xxx_fake_stats)
-			return -ENOSYS;
-		/* XXX makeshift will be removed */
-		dma_sync_single_for_cpu(dev->hwdev, dma, len, DMA_FROM_DEVICE);
-		memcpy(xxx_buf, xxx_fake_hdrs, min(len, sizeof(xxx_fake_hdrs)));
-		dma_sync_single_for_device(dev->hwdev, dma, len, DMA_FROM_DEVICE);
-		return 0;
+		return -ENOSYS;
 	default:
 		return -ENOSYS;
 	}
 }
 
 static int ionic_stats_vals_cmd(struct ionic_ibdev *dev,
-				dma_addr_t dma, size_t len,
-				__be64 *xxx_buf)
+				dma_addr_t dma, size_t len)
 {
-	int stat_i, stat_count = min_t(int, dev->stats_count, len / sizeof(*xxx_buf));
-
 	switch (dev->rdma_version) {
 	case 1:
 		if (dev->admin_opcodes > IONIC_V1_ADMIN_STATS_VALS)
 			return ionic_v1_stats_cmd(dev, dma, len,
 						  IONIC_V1_ADMIN_STATS_VALS);
-		if (!ionic_xxx_fake_stats)
-			return -ENOSYS;
-		/* XXX makeshift will be removed */
-		dma_sync_single_for_cpu(dev->hwdev, dma, len, DMA_FROM_DEVICE);
-		for (stat_i = 0; stat_i < stat_count; ++stat_i)
-			xxx_buf[stat_i] = cpu_to_be64(stat_i + 1234);
-		dma_sync_single_for_device(dev->hwdev, dma, len, DMA_FROM_DEVICE);
-		return 0;
+		return -ENOSYS;
 	default:
 		return -ENOSYS;
 	}
@@ -1138,74 +1168,86 @@ static int ionic_stats_vals_cmd(struct ionic_ibdev *dev,
 static int ionic_init_hw_stats(struct ionic_ibdev *dev)
 {
 	dma_addr_t stats_dma;
-	int rc, hdr_i, buf_i = 0;
+	struct ionic_v1_stat *stat;
+	int rc, stat_i, stats_count;
 
 	if (dev->stats_hdrs)
 		return 0;
 
-	/* XXX get count and buf size from device */
-	dev->stats_count = 8;
-	dev->stats_size = sizeof(xxx_fake_hdrs);
+	dev->stats_count = 0;
 
-	dev->stats_hdrs = kmalloc_array(dev->stats_count,
-					sizeof(*dev->stats_hdrs), GFP_KERNEL);
-	if (!dev->stats_hdrs) {
-		rc = -ENOMEM;
-		goto err_hdrs;
-	}
-
-	dev->stats_buf = contig_kmalloc(dev->stats_size, GFP_KERNEL);
+	/* buffer for current values from the device */
+	dev->stats_buf = contig_kzalloc(PAGE_SIZE, GFP_KERNEL);
 	if (!dev->stats_buf) {
 		rc = -ENOMEM;
 		goto err_buf;
 	}
 
-	stats_dma = dma_map_single(dev->hwdev, dev->stats_buf,
-				   dev->stats_size, DMA_FROM_DEVICE);
+	/* buffer for names, sizes, offsets of values */
+	dev->stats = contig_kzalloc(PAGE_SIZE, GFP_KERNEL);
+	if (!dev->stats) {
+		rc = -ENOMEM;
+		goto err_stats;
+	}
+
+	/* request the names, sizes, offsets */
+	stats_dma = dma_map_single(dev->hwdev, dev->stats,
+				   PAGE_SIZE, DMA_FROM_DEVICE);
 	rc = dma_mapping_error(dev->hwdev, stats_dma);
 	if (rc)
 		goto err_dma;
 
-	rc = ionic_stats_hdrs_cmd(dev, stats_dma, dev->stats_size,
-				  dev->stats_buf);
+	rc = ionic_stats_hdrs_cmd(dev, stats_dma, PAGE_SIZE);
 	if (rc)
 		goto err_cmd;
 
-	dma_unmap_single(dev->hwdev, stats_dma, dev->stats_size,
-			 DMA_FROM_DEVICE);
+	dma_unmap_single(dev->hwdev, stats_dma, PAGE_SIZE, DMA_FROM_DEVICE);
 
 	rc = -EINVAL;
 
-	for (hdr_i = 0; hdr_i < dev->stats_count; ++hdr_i, ++buf_i) {
-		dev->stats_hdrs[hdr_i] = &dev->stats_buf[buf_i];
+	/* normalize and count the number of stats */
+	stats_count = PAGE_SIZE / sizeof(*dev->stats);
+	for (stat_i = 0; stat_i < stats_count; ++stat_i) {
+		stat = &dev->stats[stat_i];
 
-		buf_i += strnlen(&dev->stats_buf[buf_i],
-				 dev->stats_size - buf_i);
-
-		if (buf_i == dev->stats_size)
-			goto err_dma;
+		if (!ionic_v1_stat_normalize(stat))
+			break;
 	}
 
-	if (hdr_i != dev->stats_count)
+	if (!stat_i) {
+		rc = -ENOSYS;
 		goto err_dma;
+	}
 
-	if (buf_i != dev->stats_size)
+	stats_count = stat_i;
+	dev->stats_count = stat_i;
+
+	/* alloc and init array of names, for alloc_hw_stats */
+	dev->stats_hdrs = kmalloc_array(stats_count, sizeof(*dev->stats_hdrs),
+					GFP_KERNEL);
+	if (!dev->stats_hdrs) {
+		rc = -ENOMEM;
 		goto err_dma;
+	}
+
+	for (stat_i = 0; stat_i < stats_count; ++stat_i) {
+		stat = &dev->stats[stat_i];
+		dev->stats_hdrs[stat_i] = stat->name;
+	}
 
 	return 0;
 
 err_cmd:
-	dma_unmap_single(dev->hwdev, stats_dma, dev->stats_size,
-			 DMA_FROM_DEVICE);
+	dma_unmap_single(dev->hwdev, stats_dma, PAGE_SIZE, DMA_FROM_DEVICE);
 err_dma:
-	contig_kfree(dev->stats_buf, dev->stats_size);
-	dev->stats_buf = NULL;
+	contig_kfree(dev->stats, PAGE_SIZE);
+err_stats:
+	contig_kfree(dev->stats_buf, PAGE_SIZE);
 err_buf:
-	kfree(dev->stats_hdrs);
-	dev->stats_hdrs = NULL;
-err_hdrs:
 	dev->stats_count = 0;
-	dev->stats_size = 0;
+	dev->stats = NULL;
+	dev->stats_buf = NULL;
+	dev->stats_hdrs = NULL;
 	return rc;
 }
 
@@ -1231,47 +1273,36 @@ static int ionic_get_hw_stats(struct ib_device *ibdev,
 			      u8 port, int index)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
-	size_t stats_vec_size;
-	__be64 *stats_vec;
 	dma_addr_t stats_dma;
 	int rc, stat_i;
 
 	if (port != 1)
 		return -EINVAL;
 
-	stats_vec_size = dev->stats_count * sizeof(*stats_vec);
-	stats_vec = contig_kmalloc(stats_vec_size, GFP_KERNEL);
-	if (!stats_vec) {
-		rc = -ENOMEM;
-		goto err_vec;
-	}
-
-	stats_dma = dma_map_single(dev->hwdev, stats_vec, stats_vec_size,
-				   DMA_FROM_DEVICE);
+	stats_dma = dma_map_single(dev->hwdev, dev->stats_buf,
+				   PAGE_SIZE, DMA_FROM_DEVICE);
 	rc = dma_mapping_error(dev->hwdev, stats_dma);
 	if (rc)
 		goto err_dma;
 
-	rc = ionic_stats_vals_cmd(dev, stats_dma, stats_vec_size, stats_vec);
+	rc = ionic_stats_vals_cmd(dev, stats_dma, PAGE_SIZE);
 	if (rc)
 		goto err_cmd;
 
-	dma_unmap_single(dev->hwdev, stats_dma, dev->stats_size,
-			 DMA_FROM_DEVICE);
+	dma_unmap_single(dev->hwdev, stats_dma,
+			 PAGE_SIZE, DMA_FROM_DEVICE);
 
 	for (stat_i = 0; stat_i < dev->stats_count; ++stat_i)
-		stats->value[stat_i] = be64_to_cpu(stats_vec[stat_i]);
-
-	contig_kfree(stats_vec, stats_vec_size);
+		stats->value[stat_i] =
+			ionic_v1_stat_val(&dev->stats[stat_i],
+					  dev->stats_buf, PAGE_SIZE);
 
 	return stat_i;
 
 err_cmd:
-	dma_unmap_single(dev->hwdev, stats_dma, dev->stats_size,
-			 DMA_FROM_DEVICE);
+	dma_unmap_single(dev->hwdev, stats_dma,
+			 PAGE_SIZE, DMA_FROM_DEVICE);
 err_dma:
-	kfree(stats_vec);
-err_vec:
 	return rc;
 }
 
@@ -6468,7 +6499,8 @@ static void ionic_destroy_ibdev(struct ionic_ibdev *dev)
 
 	ionic_destroy_rdma_admin(dev);
 
-	contig_kfree(dev->stats_buf, dev->stats_size);
+	contig_kfree(dev->stats, PAGE_SIZE);
+	contig_kfree(dev->stats_buf, PAGE_SIZE);
 	kfree(dev->stats_hdrs);
 
 	ionic_dbgfs_rm_dev(dev);
@@ -6877,7 +6909,8 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 err_register:
 	ionic_kill_rdma_admin(dev, false);
 	ionic_destroy_rdma_admin(dev);
-	contig_kfree(dev->stats_buf, dev->stats_size);
+	contig_kfree(dev->stats, PAGE_SIZE);
+	contig_kfree(dev->stats_buf, PAGE_SIZE);
 	kfree(dev->stats_hdrs);
 err_reset:
 	ionic_dbgfs_rm_dev(dev);

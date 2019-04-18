@@ -808,8 +808,8 @@ enum ionic_v1_admin_op {
 	IONIC_V1_ADMIN_CREATE_CQ,
 	IONIC_V1_ADMIN_CREATE_QP,
 	IONIC_V1_ADMIN_CREATE_MR,
-	IONIC_v1_ADMIN_RSVD_4,
-	IONIC_v1_ADMIN_RSVD_5,
+	IONIC_V1_ADMIN_STATS_HDRS,
+	IONIC_V1_ADMIN_STATS_VALS,
 	IONIC_V1_ADMIN_DESTROY_MR,
 	IONIC_v1_ADMIN_RSVD_7,
 	IONIC_v1_ADMIN_RSVD_8,
@@ -823,8 +823,6 @@ enum ionic_v1_admin_op {
 
 	/* TODO: move ops up as they are assigned opcode numbers in fw */
 	IONIC_V1_ADMIN_IMPL_BY_DRIVER = 50,
-	IONIC_V1_ADMIN_STATS_HDRS,
-	IONIC_V1_ADMIN_STATS_VALS,
 	IONIC_V1_ADMIN_DESTROY_CQ,
 	IONIC_V1_ADMIN_QUERY_AH,
 	IONIC_V1_ADMIN_DESTROY_AH,
@@ -901,6 +899,37 @@ static inline u8 ionic_v1_eqe_evt_code(u32 evt)
 static inline u32 ionic_v1_eqe_evt_qid(u32 evt)
 {
 	return evt >> IONIC_V1_EQE_QID_SHIFT;
+}
+
+enum ionic_v1_stat_bits {
+	IONIC_V1_STAT_TYPE_SHIFT	= 28,
+	IONIC_V1_STAT_TYPE_NONE		= 0,
+	IONIC_V1_STAT_TYPE_8		= 1,
+	IONIC_V1_STAT_TYPE_LE16		= 2,
+	IONIC_V1_STAT_TYPE_LE32		= 3,
+	IONIC_V1_STAT_TYPE_LE64		= 4,
+	IONIC_V1_STAT_TYPE_BE16		= 5,
+	IONIC_V1_STAT_TYPE_BE32		= 6,
+	IONIC_V1_STAT_TYPE_BE64		= 7,
+	IONIC_V1_STAT_OFF_MASK		= BIT(IONIC_V1_STAT_TYPE_SHIFT) - 1,
+};
+
+struct ionic_v1_stat {
+	union {
+		__be32		be_type_off;
+		u32		type_off;
+	};
+	char			name[28];
+};
+
+static inline int ionic_v1_stat_type(struct ionic_v1_stat *hdr)
+{
+	return hdr->type_off >> IONIC_V1_STAT_TYPE_SHIFT;
+}
+
+static inline unsigned ionic_v1_stat_off(struct ionic_v1_stat *hdr)
+{
+	return hdr->type_off & IONIC_V1_STAT_OFF_MASK;
 }
 
 #endif

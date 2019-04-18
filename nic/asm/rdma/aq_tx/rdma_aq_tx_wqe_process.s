@@ -44,6 +44,7 @@ struct aq_tx_s1_t0_k k;
 
     .param      tx_dummy
     .param      lif_stats_base
+    .param      rdma_stats_hdrs_addr
     .param      rdma_cq_tx_stage0
     .param      rdma_req_tx_stage0    
     .param      rdma_aq_tx_feedback_process
@@ -73,10 +74,10 @@ rdma_aq_tx_wqe_process:
         b           reg_mr
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, reg_mr), 1 //BD Slot
     .brcase     AQ_OP_TYPE_STATS_HDRS
-        b           report_bad_cmd
+        b           stats_hdrs
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, stats_hdrs), 1 //BD Slot
     .brcase     AQ_OP_TYPE_STATS_VALS
-        b           report_bad_cmd
+        b           stats_vals
         phvwr       CAPRI_PHV_FIELD(TO_S7_STATS_P, stats_vals), 1 //BD Slot
     .brcase     AQ_OP_TYPE_DEREG_MR
         b           dereg_mr
@@ -509,6 +510,48 @@ qp_no_skip_dma_pt:
     b           prepare_feedback
     nop
     
+stats_hdrs:
+    // r3: size of transfer = min(stats hdrs size, wqe.stats.length), not zero
+    add     r4, r0, d.{stats.length}.wx
+    beq     r4, r0, prepare_feedback
+    addi    r3, r0, RDMA_STATS_HDRS_SIZE // BD slot
+    slt     c1, r4, r3
+    add.c1  r3, r0, r4
+
+    // r2: addr of shared rdma stats hdrs in hbm
+    addui   r2, r0, rdma_stats_hdrs_addr[63:32] // BD slot
+    addi    r2, r2, rdma_stats_hdrs_addr[31:0]
+
+    // dma stats hdrs in hbm to host buf
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
+    DMA_HBM_MEM2MEM_SRC_SETUP(r6, r3, r2)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, r3, d.{stats.dma_addr}.dx)
+
+    b           prepare_feedback
+    nop
+
+stats_vals:
+    // r3: size of transfer = min(lif stats size, wqe.stats.length), not zero
+    add     r4, r0, d.{stats.length}.wx
+    beq     r4, r0, prepare_feedback
+    addi    r3, r0, (1 << LIF_STATS_SIZE_SHIFT) // BD slot
+    slt     c1, r4, r3
+    add.c1  r3, r0, r4
+
+    // r2: addr of this lif stats in hbm
+    addi    r2, r0, lif_stats_base[31:0] // BD slot
+    add     r2, r2, K_GLOBAL_LIF, LIF_STATS_SIZE_SHIFT
+
+    // dma stats in hbm to host buf
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
+    DMA_HBM_MEM2MEM_SRC_SETUP(r6, r3, r2)
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, r3, d.{stats.dma_addr}.dx)
+
+    b           prepare_feedback
+    nop
+
 stats_dump:
     DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_1)
 

@@ -166,8 +166,8 @@ struct ionic_ibdev {
 	int			eq_count;
 
 	int			stats_count;
-	size_t			stats_size;
-	char			*stats_buf;
+	struct ionic_v1_stat	*stats;
+	void			*stats_buf;
 	const char		**stats_hdrs;
 
 	struct dcqcn_root	*dcqcn;

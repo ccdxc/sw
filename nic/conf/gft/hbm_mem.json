@@ -71,6 +71,11 @@
             "size": "147456K"
         },
         {
+            "name": "lif_stats",
+            "size": "1024K",
+            "reset": true
+        },
+        {
             "name": "p4_program",
             "size": "131072K"
         },
@@ -91,6 +96,11 @@
         {
             "name": "rdma-eq-intr-table",
             "size": "32K"
+        },
+        {
+            "name": "rdma-stats-hdrs",
+            "size": "2K",
+            "reset": true
         },
         {
             "_comment": "hash depth = 1024",

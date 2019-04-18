@@ -2,6 +2,14 @@ import math
 import copy
 from infra.common.logging import logger as logger
 from infra.common.logging import logger as logger
+
+def VerifyEqual(tc, name, val, exp_val):
+    logger.info("%s actual: %s expected: %s" \
+             %(name, repr(val), repr(exp_val)))
+    cmp = val == exp_val
+    logger.info('    Match: %s ' %cmp)
+    return cmp
+
 def VerifyFieldModify(tc, pre_state, post_state, field_name, incr):
     pre_val = getattr(pre_state, field_name)
     post_val = getattr(post_state, field_name)

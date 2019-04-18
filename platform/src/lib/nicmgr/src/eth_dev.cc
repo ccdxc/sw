@@ -604,8 +604,8 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
     rsp->dev.intr_coal_div = 10;
 
     rsp->dev.rdma_version = 1;
-    rsp->dev.rdma_qp_opcodes = 27;
-    rsp->dev.rdma_admin_opcodes = 50;
+    rsp->dev.rdma_qp_opcodes = 11;
+    rsp->dev.rdma_admin_opcodes = 16;
     rsp->dev.nrdma_pts_per_lif = spec->pte_count;
     rsp->dev.nrdma_mrs_per_lif = spec->key_count;
     rsp->dev.nrdma_ahs_per_lif = spec->ah_count;

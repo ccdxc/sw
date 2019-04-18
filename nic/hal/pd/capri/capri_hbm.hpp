@@ -83,6 +83,7 @@
 #define CAPRI_HBM_REG_APP_REDIR_PROXYC   "app-redir-proxyc"
 #define CAPRI_HBM_REG_RDMA_EQ_INTR_TABLE   "rdma-eq-intr-table"
 #define CAPRI_HBM_REG_RDMA_ATOMIC_RESOURCE_ADDR "rdma-atomic-resource-addr"
+#define CAPRI_HBM_REG_RDMA_STATS_HDRS    "rdma-stats-hdrs"
 #define CAPRI_HBM_REG_P4PT_TCB_MEM       "p4pt-tcb"
 #define CAPRI_HBM_REG_P4PT_TCB_ISCSI_REC_MEM "p4pt-tcb-iscsi-rec"
 #define CAPRI_HBM_REG_P4PT_TCB_ISCSI_STATS_MEM "p4pt-tcb-iscsi-stats"
@@ -178,6 +179,7 @@
 
 #define RDMA_ATOMIC_RESOURCE_ADDR   "rdma_atomic_resource_addr"
 #define RDMA_PCIE_ATOMIC_BASE_ADDR  "rdma_pcie_atomic_base_addr"
+#define RDMA_STATS_HDRS_ADDR        "rdma_stats_hdrs_addr"
 
 #define P4PT_TCB_BASE 					"p4pt_tcb_base"
 #define P4PT_TCB_ISCSI_REC_BASE 			"p4pt_tcb_iscsi_rec_base"

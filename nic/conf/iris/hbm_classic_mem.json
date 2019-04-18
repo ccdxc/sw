@@ -381,6 +381,11 @@
             "reset": true
         },
         {
+            "name": "rdma-stats-hdrs",
+            "size": "2K",
+            "reset": true
+        },
+        {
             "name": "ipfix",
             "size": "32K"
         },
