@@ -362,7 +362,7 @@ NvmeLif::CmdHandler(void *req,
             nvme_ns_list_t ns_list = { 0 };
 
             for (int i = 0; i < NUM_NS_SUPPORTED; i++) {
-                ns_list.ns_list[i] = i;
+                ns_list.ns_list[i] = i + 1;
             }
 
             xfer_size = sizeof(nvme_ns_list_t);
@@ -378,6 +378,14 @@ NvmeLif::CmdHandler(void *req,
             ns_data.ncap = cmd_p->nsid * 1024;
             ns_data.nuse = cmd_p->nsid * 1024;
             ns_data.nlbaf = 1;
+
+            ns_data.lbaf[0].ms = 0;
+            ns_data.lbaf[0].lbads = 9; //512B
+            ns_data.lbaf[0].rp = 3;
+            
+            ns_data.lbaf[1].ms = 0;
+            ns_data.lbaf[1].lbads = 12; //4K
+            ns_data.lbaf[1].rp = 0;
             
             xfer_size = sizeof(nvme_ns_data_t);
             src_addr = edma_buf_base;
@@ -584,23 +592,6 @@ NvmeLif::Disable(nvme_dev_cmd_regs_t *regs_p)
 {
     fsm_ctx.devcmd.status = NVME_RC_SUCCESS;
     return fsm_ctx.devcmd.status;
-}
-
-void
-NvmeLif::RingDoorbell(uint32_t sq_pindex)
-{
-     uint64_t db_addr, db_data;
-
-     db_addr = NVME_LIF_LOCAL_DBADDR_SET(LifIdGet(), NVME_QTYPE_SQ);
-     db_data = NVME_LIF_LOCAL_DBDATA_SET(NVME_ASQ_QID, 0 /*ring*/, sq_pindex);
-
-     NIC_LOG_DEBUG("db lif: {} qtype: {} qid: {} ring: {} pindex: {}",
-                   LifIdGet(), NVME_QTYPE_SQ, NVME_ASQ_QID, 0, sq_pindex);
-     NIC_LOG_DEBUG("db_addr: {:#x} db_data: {:#x}", db_addr, db_data);
-
-     PAL_barrier();
-     WRITE_DB64(db_addr, db_data);
-     return;
 }
 
 /*

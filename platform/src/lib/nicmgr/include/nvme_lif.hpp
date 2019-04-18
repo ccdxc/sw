@@ -190,9 +190,6 @@ public:
     nvme_status_code_t
     Disable(nvme_dev_cmd_regs_t *regs_p);
 
-    void
-    RingDoorbell(uint32_t sq_pindex);
-
     void SetHalClient(devapi *dapi);
     void HalEventHandler(bool status);
 

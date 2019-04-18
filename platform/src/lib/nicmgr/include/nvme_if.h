@@ -101,11 +101,6 @@ typedef union nvme_reg_acq_s {
     uint64_t        num64;
 } nvme_reg_acq_t;
 
-typedef struct nvme_qp_db_s {
-     uint32_t               sq;
-     uint32_t               cq;
-} nvme_qp_db_t;
-
 enum nvme_sgl_descriptor_type {
     NVME_SGL_TYPE_DATA_BLOCK       = 0x0,
     NVME_SGL_TYPE_BIT_BUCKET       = 0x1,

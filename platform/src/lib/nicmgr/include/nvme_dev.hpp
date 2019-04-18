@@ -90,7 +90,6 @@ private:
     uint32_t                    cmb_mem_size;
 
     bool                        cc_en;
-    nvme_qp_db_t                curr_db;
 
     bool _CreateHostDevice(void);
     void _DestroyHostDevice(void);

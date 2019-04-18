@@ -97,7 +97,6 @@ NvmeDev::NvmeDev(devapi *dapi,
     cmb_mem_size = 0;
 
     cc_en = false;
-    memset(&curr_db, 0, sizeof(curr_db));
 
     // Create the device
     if (spec->pcie_port == 0xff) {
@@ -278,7 +277,6 @@ void
 NvmeDev::DevcmdHandler()
 {
     nvme_status_code_t  status = NVME_RC_ERROR;
-    nvme_qp_db_t   db = {0};
 
     READ_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(*devcmd), 0);
 
@@ -299,7 +297,6 @@ NvmeDev::DevcmdHandler()
 
         if (status == NVME_RC_SUCCESS) {
             cc_en = true;
-            memset(&curr_db, 0, sizeof(curr_db));
             devcmd->csts.rdy = true;
             WRITE_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(*devcmd), 0);
         }
@@ -321,18 +318,7 @@ NvmeDev::DevcmdHandler()
         }
 
         IntrClear();
-
-    } else if (cc_en == true) {
-        READ_MEM(devcmddb_mem_addr, (uint8_t *)&db, sizeof(db), 0);
-        if (curr_db.sq != db.sq) {
-            NIC_LOG_DEBUG("NvmeDevcmd doorbell curr_sq: {} curr_cq:{} asq: {} acq: {}", 
-                          curr_db.sq, curr_db.cq, db.sq, db.cq);
-            lif->RingDoorbell(db.sq);
-            //ring doorbell
-            curr_db = db;
-        }
     }
-
 
     return;
 }
