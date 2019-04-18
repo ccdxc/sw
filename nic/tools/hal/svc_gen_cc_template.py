@@ -12,6 +12,7 @@
 //::  plugin_files = ["session", "ipsec", "gft", "l2segment", "vrf", "qos", "endpoint", "nat", "telemetry", "multicast","nw", "acl", "dos", "l4lb", "tcp_proxy", "tls_proxy_cb2", "rdma"]
 //::  new_plugin_files = {"nwsec":"sfw"}
 //::  session_file = {"session"}
+//::  nwsec_file = {"nwsec"}
 //::
 #include "gen/hal/svc/${hdr_file}"
 //::
@@ -196,8 +197,13 @@ ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
 //::    enumC = enumC + 3
 
     HAL_API_STATS_ADD(hal::HAL_API_${hal_name_upper}, nreqs);
+//::    if not file_name_prefix in nwsec_file:
     hal::hal_cfg_db_open(hal::${op});
+//::    #endif
     for (i = 0; i < nreqs; i++) {
+//::    if file_name_prefix in nwsec_file:
+        hal::hal_cfg_db_open(hal::${op});
+//::    #endif
         auto request = req->request(i);
 //::
 //::             if repeated_field == True and not (file_name_prefix in session_file and 'Delete' in method[0]):
@@ -217,8 +223,13 @@ ${service[0]}ServiceImpl::${method[0]}(ServerContext *context,
 //::                #endif
 //::             #endif
 //::
+//:: if file_name_prefix in nwsec_file:
+        hal::hal_cfg_db_close();
+//:: #endif
     }
+//:: if not file_name_prefix in nwsec_file:
     hal::hal_cfg_db_close();
+//:: #endif
     return Status::OK;
 }
 //::

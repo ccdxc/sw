@@ -441,17 +441,7 @@ static inline void
 del_session_from_db (ep_t *sep, ep_t *dep, session_t *session)
 {
     HAL_TRACE_DEBUG("Entering DEL session from DB:{}", session->hal_handle);
-    g_hal_state->session_hal_handle_ht()->remove_entry(session,
-                                                 &session->hal_handle_ht_ctxt);
-
-    g_hal_state->session_hal_iflow_ht()->remove_entry(session,
-                                                &session->hal_iflow_ht_ctxt);
-
-    if (session->rflow) {
-        g_hal_state->session_hal_rflow_ht()->remove_entry(session,
-                                                    &session->hal_rflow_ht_ctxt);
-    }
-
+ 
     if (sep == NULL) {
        sep = find_ep_by_handle(session->sep_handle);
     }
@@ -465,6 +455,17 @@ del_session_from_db (ep_t *sep, ep_t *dep, session_t *session)
 
     if (dep)
         ep_del_session(dep, session);
+
+    g_hal_state->session_hal_handle_ht()->remove_entry(session,
+                                                 &session->hal_handle_ht_ctxt);
+
+    g_hal_state->session_hal_iflow_ht()->remove_entry(session,
+                                                &session->hal_iflow_ht_ctxt);
+
+    if (session->rflow) {
+        g_hal_state->session_hal_rflow_ht()->remove_entry(session,
+                                                    &session->hal_rflow_ht_ctxt);
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -2766,6 +2767,9 @@ extract_acl_key_from_flow_key(hal::ipv4_tuple &acl_key, hal::flow_key_t *key)
 hal_ret_t
 session_eval_matching_session (session_match_t  *match)
 {
+    // Close the config db to avoid any deadlocks with FTE
+    hal::hal_cfg_db_close();
+    
     auto walk_func = [](void *entry, void *ctxt) {
         hal::session_t  *session = (session_t *)entry;
         session_match_t *match = (session_match_t *) ctxt;

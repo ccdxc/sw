@@ -418,7 +418,8 @@ void inst_t::process_softq()
     void       *data;
     uint32_t    npkt=0;
 
-    while (softq_->dequeue(&op, &data) && npkt < FTE_MAX_SOFTQ_BATCH_SZ) {
+    // Dequeue if we havent processed FTE_MAX_SOFTQ_BATCH_SZ requests yet
+    while (npkt < FTE_MAX_SOFTQ_BATCH_SZ && softq_->dequeue(&op, &data)) {
         //Increment stats
         stats_.fte_hbm_stats->qstats.softq_req++;
         compute_cps();

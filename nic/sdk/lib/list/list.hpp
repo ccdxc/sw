@@ -59,7 +59,7 @@ struct dllist_ctxt_s {
 #define dllist_for_each_safe(pos, n, head)                              \
     for (pos = head ? (head)->next : NULL, n = pos ? pos->next : NULL;  \
             pos != (head) && pos != NULL;                              \
-         pos = n, n = pos->next)
+         pos = n, n = (pos)?pos->next:NULL)
 
 // reset the link information
 extern void
