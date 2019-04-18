@@ -692,6 +692,7 @@ ionic_legacy_isr(int irq, void *data)
 
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
+		txq = lif->txqs[i];
 
 		KASSERT((rxq->intr.index != INTR_INDEX_NOT_ASSIGNED),
 			("%s has no interrupt resource", rxq->name));
@@ -704,26 +705,13 @@ ionic_legacy_isr(int irq, void *data)
 		IONIC_RX_LOCK(rxq);
 		ionic_intr_mask(&rxq->intr, true);
 		work_done = ionic_rx_clean(rxq, rxq->num_descs);
-		ionic_intr_return_credits(&rxq->intr, work_done, true, true);
 		IONIC_RX_UNLOCK(rxq);
-	}
-
-	for (i = 0; i < lif->ntxqs ; i++) {
-		txq = lif->txqs[i];
 		
-		KASSERT((txq->intr.index != INTR_INDEX_NOT_ASSIGNED),
-			("%s has no interrupt resource", txq->name));
-		IONIC_QUE_INFO(txq, "Interrupt source index: %d credits: %d\n",
-			txq->intr.index, ionic_intr_credits(&txq->intr));
-		
-		if ((status & (1 << txq->intr.index)) == 0)
-			continue;
-
 		IONIC_TX_LOCK(txq);
-		ionic_intr_mask(&txq->intr, true);
-		work_done = ionic_tx_clean(txq, txq->num_descs);
-		ionic_intr_return_credits(&txq->intr, work_done, true, true);
+		work_done += ionic_tx_clean(txq, txq->num_descs);
 		IONIC_TX_UNLOCK(txq);
+
+		ionic_intr_return_credits(&rxq->intr, work_done, true, true);
 	}
 
 	return (IRQ_HANDLED);

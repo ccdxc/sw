@@ -48,6 +48,9 @@ static void ionic_rx_refill(struct rxque *rxq);
 static int ionic_addr_add(struct net_device *netdev, const u8 *addr);
 static int ionic_addr_del(struct net_device *netdev, const u8 *addr);
 
+static void ionic_notifyq_task_handler(void *arg, int pendindg);
+static irqreturn_t ionic_notifyq_isr(int irq, void *data);
+
 struct lif_addr_work {
 	struct work_struct work;
 	struct lif *lif;
@@ -1009,6 +1012,7 @@ ionic_adminq_alloc(struct lif *lif, unsigned int qnum,
 	}
 
 	snprintf(adminq->name, sizeof(adminq->name) - 1, "aq%d", qnum);
+	snprintf(adminq->intr.name, sizeof(adminq->intr.name), "%s", adminq->name);
 	snprintf(adminq->mtx_name, sizeof(adminq->mtx_name) - 1, "aq%d_mtx", qnum);
 	adminq->lif = lif;
 	adminq->index = qnum;
@@ -1028,7 +1032,7 @@ ionic_adminq_alloc(struct lif *lif, unsigned int qnum,
 
 	if ((error = ionic_dma_alloc(adminq->lif->ionic, total_size, &adminq->cmd_dma, BUS_DMA_NOWAIT))) {
 		IONIC_QUE_ERROR(adminq, "failed to allocated DMA cmd ring, err: %d\n", error);
-		goto failed_alloc;
+		goto error_out;
 	}
 
 	adminq->cmd_ring_pa = adminq->cmd_dma.dma_paddr;
@@ -1043,16 +1047,25 @@ ionic_adminq_alloc(struct lif *lif, unsigned int qnum,
 	IONIC_QUE_INFO(adminq, "cmd base pa: 0x%lx size: 0x%x comp size: 0x%x total size: 0x%x\n",
 		adminq->cmd_ring_pa, cmd_ring_size, comp_ring_size, total_size);
 
-	error = ionic_setup_intr(lif, &adminq->intr);
-	if (error) {
-		IONIC_QUE_ERROR(adminq, "no available interrupt, error: %d\n", error);
-		goto failed_alloc;
+	if (ionic_enable_msix) {
+		error = ionic_setup_intr(lif, &adminq->intr);
+		if (error) {
+			IONIC_QUE_ERROR(adminq, "no available interrupt, error: %d\n", error);
+			goto error_out;
+		}
+		error = request_irq(adminq->intr.vector, ionic_adminq_isr, 0, adminq->intr.name, adminq);
+		if (error) {
+			IONIC_QUE_ERROR(adminq, "no available interrupt, error: %d\n", error);
+			goto error_out;
+		}
 	}
 
 	*padminq = adminq;
 	return 0;
 
-failed_alloc:
+error_out:
+	ionic_dev_intr_unreserve(lif, &adminq->intr);
+	
 	if (adminq->cmd_ring) {
 		ionic_dma_free(adminq->lif->ionic, &adminq->cmd_dma);
 		adminq->cmd_ring = NULL;
@@ -1071,18 +1084,20 @@ ionic_notifyq_alloc(struct lif *lif, unsigned int qnum,
 	unsigned int num_descs, unsigned int pid, struct notifyq **pnotifyq)
 {
 	struct notifyq *notifyq;
-	int error = ENOMEM;
 	uint32_t cmd_ring_size, comp_ring_size, total_size;
+	int error;
+	char namebuf[16];
 
 	*pnotifyq = NULL;
 
 	notifyq = malloc(sizeof(*notifyq), M_IONIC, M_NOWAIT | M_ZERO);
 	if(notifyq == NULL) {
 		IONIC_NETDEV_ERROR(lif->netdev, "failed to allocate notifyq%d\n", qnum);
-		return (error);
+		return (ENOMEM);
 	}
 
 	snprintf(notifyq->name, sizeof(notifyq->name) - 1, "nq%d", qnum);
+	snprintf(notifyq->intr.name, sizeof(notifyq->intr.name), "%s", notifyq->name);
 	snprintf(notifyq->mtx_name, sizeof(notifyq->mtx_name) - 1, "nq%d_mtx", qnum);
 	notifyq->lif = lif;
 	notifyq->index = qnum;
@@ -1096,9 +1111,10 @@ ionic_notifyq_alloc(struct lif *lif, unsigned int qnum,
 	comp_ring_size = sizeof(*notifyq->comp_ring) * num_descs;
 	total_size = ALIGN(cmd_ring_size, PAGE_SIZE) + ALIGN(cmd_ring_size, PAGE_SIZE);
 
-	if ((error = ionic_dma_alloc(notifyq->lif->ionic, total_size, &notifyq->cmd_dma, BUS_DMA_NOWAIT))) {
+	error = ionic_dma_alloc(notifyq->lif->ionic, total_size, &notifyq->cmd_dma, BUS_DMA_NOWAIT);
+	if (error) {
 		IONIC_QUE_ERROR(notifyq, "failed to allocated DMA cmd ring, err: %d\n", error);
-		goto failed_alloc;
+		goto error_out;
 	}
 
 	notifyq->cmd_ring_pa = notifyq->cmd_dma.dma_paddr;
@@ -1110,16 +1126,38 @@ ionic_notifyq_alloc(struct lif *lif, unsigned int qnum,
 	 */
 	notifyq->comp_ring = (union notifyq_comp *)(notifyq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE));
 
-	error = ionic_setup_intr(lif, &notifyq->intr);
-	if (error) {
-		IONIC_QUE_ERROR(notifyq, "no available interrupt, error: %d\n", error);
-		goto failed_alloc;
+	/*
+	 * Create notifyQ task to process notifyQ events - link flap, log
+	 */
+	TASK_INIT(&notifyq->task, 0, ionic_notifyq_task_handler, notifyq);
+	snprintf(namebuf, sizeof(namebuf), "task-%s", notifyq->name);
+	notifyq->taskq = taskqueue_create(namebuf, M_NOWAIT,
+		taskqueue_thread_enqueue, &notifyq->taskq);
+
+	taskqueue_start_threads(&notifyq->taskq, 1, PI_NET, "%s (que %s)",
+		device_get_nameunit(lif->ionic->dev), notifyq->name);
+
+	/* Legacy interrupt allocation is done once. */
+	if (ionic_enable_msix) {
+		error = ionic_setup_intr(lif, &notifyq->intr);
+		if (error) {
+			IONIC_QUE_ERROR(notifyq, "no available interrupt, error: %d\n", error);
+			goto error_out;
+		}
+		error = request_irq(notifyq->intr.vector, ionic_notifyq_isr, 0,
+					notifyq->intr.name, notifyq);
+		if (error) {
+			IONIC_QUE_ERROR(notifyq, "request_irq failed, error: %d\n", error);
+			goto error_out;
+		}
 	}
 
 	*pnotifyq = notifyq;
 	return 0;
 
-failed_alloc:
+error_out:
+	ionic_dev_intr_unreserve(lif, &notifyq->intr);
+	
 	if (notifyq->cmd_ring) {
 		ionic_dma_free(notifyq->lif->ionic, &notifyq->cmd_dma);
 		notifyq->cmd_ring = NULL;
@@ -1139,6 +1177,7 @@ ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 {
 	struct rxque *rxq;
 	struct ionic_rx_buf *rxbuf;
+	struct lro_ctrl *lro;
 	int i, error = ENOMEM;
 	uint32_t cmd_ring_size, comp_ring_size, sg_ring_size, total_size;
 
@@ -1151,6 +1190,8 @@ ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 	}
 
 	snprintf(rxq->name, sizeof(rxq->name) - 1, "rxq%d", qnum);
+	/* Interrupt is shared between tx and rx. */
+	snprintf(rxq->intr.name, sizeof(rxq->intr.name), "rxtx%d", rxq->index);
 	snprintf(rxq->mtx_name, sizeof(rxq->mtx_name) - 1, "rxq%d_mtx", qnum);
 	rxq->lif = lif;
 	rxq->index = qnum;
@@ -1165,7 +1206,7 @@ ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 	rxq->rxbuf = malloc(sizeof(*rxq->rxbuf) * num_descs, M_IONIC, M_NOWAIT | M_ZERO);
 	if (rxq->rxbuf == NULL) {
 		IONIC_QUE_ERROR(rxq, "Couldn't allocate rx buffer descriptors\n");
-		goto failed_alloc;
+		goto error_out;
 	}
 
 	/* Allocate DMA for command and completion rings. They must be consecutive. */
@@ -1177,7 +1218,7 @@ ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 
 	if ((error = ionic_dma_alloc(rxq->lif->ionic, total_size, &rxq->cmd_dma, BUS_DMA_NOWAIT))) {
 		IONIC_QUE_ERROR(rxq, "failed to allocated DMA cmd ring, err: %d\n", error);
-		goto failed_alloc;
+		goto error_out;
 	}
 
 	rxq->cmd_ring_pa = rxq->cmd_dma.dma_paddr;
@@ -1195,7 +1236,7 @@ ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 	error = ionic_setup_intr(lif, &rxq->intr);
 	if (error) {
 		IONIC_QUE_ERROR(rxq, "no available interrupt, error: %d\n", error);
-		goto failed_alloc;
+		goto error_out;
 	}
 
 	/*
@@ -1219,22 +1260,39 @@ ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 
 	if (error) {
 		IONIC_QUE_ERROR(rxq, "failed to create DMA tag, err: %d\n", error);
-		goto failed_alloc;
+		goto error_out;
 	}
 
-	for ( rxbuf = rxq->rxbuf, i = 0 ; rxbuf != NULL && i < num_descs; i++, rxbuf++ ) {
+	for (rxbuf = rxq->rxbuf, i = 0 ; rxbuf != NULL && i < num_descs; i++, rxbuf++) {
 		error = bus_dmamap_create(rxq->buf_tag, 0, &rxbuf->dma_map);
 		if (error) {
 			IONIC_QUE_ERROR(rxq, "failed to create map for entry%d, err: %d\n", i, error);
 			bus_dma_tag_destroy(rxq->buf_tag);
-			goto failed_alloc;
+			goto error_out;
 		}
+	}
+
+	lro = &rxq->lro;
+	error = tcp_lro_init(lro);
+	if (error) {
+		IONIC_QUE_WARN(rxq, "LRO setup failed, error: %d\n", error);
+		goto error_out;
+	}
+	lro->ifp = lif->netdev;
+
+	/* Setup interrupt for rx and tx queue pairs. */
+	error = ionic_setup_rx_intr(rxq);
+	if (error) {
+		IONIC_QUE_WARN(rxq, "interrupt setup failed, error: %d\n", error);
+		goto error_out;
 	}
 
 	*prxq = rxq;
 	return 0;
 
-failed_alloc:
+error_out:
+	ionic_dev_intr_unreserve(lif, &rxq->intr);
+
 	if (rxq->cmd_ring) {
 		ionic_dma_free(rxq->lif->ionic, &rxq->cmd_dma);
 		rxq->cmd_ring = NULL;
@@ -1278,7 +1336,6 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	txq->num_descs = num_descs;
 	txq->pid = pid;
 	txq->done_color = 1;
-	txq->intr.index = INTR_INDEX_NOT_ASSIGNED;
 
 	IONIC_TX_LOCK_INIT(txq);
 
@@ -1339,7 +1396,7 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 
 	if (error) {
 		IONIC_QUE_ERROR(txq, "failed to create DMA tag, err: %d\n", error);
-		goto free_intr;
+		goto failed_alloc;
 	}
 
 	for ( txbuf = txq->txbuf, i = 0 ; txbuf != NULL && i < num_descs; i++, txbuf++ ) {
@@ -1347,15 +1404,12 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 		if (error) {
 			IONIC_QUE_ERROR(txq, "failed to create map for entry%d, err: %d\n", i, error);
 			bus_dma_tag_destroy(txq->buf_tag);
-			goto free_intr;
+			goto failed_alloc;
 		}
 	}
 
 	*ptxq = txq;
 	return 0;
-
-free_intr:
-	ionic_dev_intr_unreserve(lif, &txq->intr);
 
 failed_alloc:
 	if (txq->br) {
@@ -1385,6 +1439,7 @@ ionic_rxq_free(struct lif *lif, struct rxque *rxq)
 {
 
 	IONIC_RX_LOCK(rxq);
+	ionic_dev_intr_unreserve(lif, &rxq->intr);
 
 	tcp_lro_free(&rxq->lro);
 	free(rxq->rxbuf, M_IONIC);
@@ -1396,11 +1451,17 @@ ionic_rxq_free(struct lif *lif, struct rxque *rxq)
 		rxq->comp_ring = NULL;
 	}
 
-	ionic_dev_intr_unreserve(lif, &rxq->intr);
-
 	IONIC_RX_UNLOCK(rxq);
 	IONIC_RX_LOCK_DESTROY(rxq);
-
+	/*
+	 * free_irq() need to be outside since it uses sleepable lock.
+	 */
+	if (rxq->intr.vector)
+		free_irq(rxq->intr.vector, rxq);
+	if (rxq->taskq) {
+		taskqueue_free(rxq->taskq);
+		rxq->taskq = NULL;
+	}
 	free(rxq, M_IONIC);
 }
 
@@ -1431,8 +1492,9 @@ ionic_txq_free(struct lif *lif, struct txque *txq)
 static void
 ionic_adminq_free(struct lif *lif, struct adminq *adminq)
 {
-
 	IONIC_ADMIN_LOCK(adminq);
+	ionic_dev_intr_unreserve(lif, &adminq->intr);
+	
 	if (adminq->cmd_ring) {
 		/* completion ring is part of command ring allocation. */
 		ionic_dma_free(adminq->lif->ionic, &adminq->cmd_dma);
@@ -1440,28 +1502,37 @@ ionic_adminq_free(struct lif *lif, struct adminq *adminq)
 		adminq->comp_ring = NULL;
 	}
 
-	ionic_dev_intr_unreserve(lif, &adminq->intr);
-
-	IONIC_ADMIN_UNLOCK(adminq);
-	IONIC_ADMIN_LOCK_DESTROY(adminq);
-
 	if (adminq->ctx_ring)
 		free(adminq->ctx_ring, M_IONIC);
+	IONIC_ADMIN_UNLOCK(adminq);
+	IONIC_ADMIN_LOCK_DESTROY(adminq);
+	/*
+	 * free_irq() need to be outside since it uses sleepable lock.
+	 */
+	if (adminq->intr.vector)
+		free_irq(adminq->intr.vector, adminq);
+
 	free(adminq, M_IONIC);
 }
 
 static void
 ionic_notifyq_free(struct lif *lif, struct notifyq *notifyq)
 {
+	if (notifyq->taskq) {
+		taskqueue_free(notifyq->taskq);
+		notifyq->taskq = NULL;
+	}
 
+	if (notifyq->intr.vector)
+		free_irq(notifyq->intr.vector, notifyq);
+	ionic_dev_intr_unreserve(lif, &notifyq->intr);
+	
 	if (notifyq->cmd_ring) {
 		/* completion ring is part of command ring allocation. */
 		ionic_dma_free(notifyq->lif->ionic, &notifyq->cmd_dma);
 		notifyq->cmd_ring = NULL;
 		notifyq->comp_ring = NULL;
 	}
-
-	ionic_dev_intr_unreserve(lif, &notifyq->intr);
 
 	free(notifyq, M_IONIC);
 }
@@ -1838,10 +1909,8 @@ ionic_lif_adminq_deinit(struct lif *lif)
 	if (adminq->intr.index == INTR_INDEX_NOT_ASSIGNED)
 		return;
 
+	/* Only mask adminQ interrupt, don't disable it. */
 	ionic_intr_mask(&adminq->intr, true);
-	if (adminq->intr.vector)
-		free_irq(adminq->intr.vector, adminq);
-
 }
 
 static void
@@ -1858,13 +1927,7 @@ ionic_lif_notifyq_deinit(struct lif *lif)
 
 	if (notifyq->taskq) {
 		taskqueue_drain(notifyq->taskq, &notifyq->task);
-		taskqueue_free(notifyq->taskq);
-		notifyq->taskq = NULL;
 	}
-
-	if (notifyq->intr.vector)
-		free_irq(notifyq->intr.vector, notifyq);
-
 }
 
 static void
@@ -1875,7 +1938,6 @@ ionic_lif_txqs_deinit(struct lif *lif)
 
 	for (i = 0; i < lif->nrxqs; i++) {
 		txq = lif->txqs[i];
-
 		ionic_txq_disable(txq);
 	}
 }
@@ -1892,14 +1954,8 @@ ionic_lif_rxqs_deinit(struct lif *lif)
 		ionic_intr_mask(&rxq->intr, true);
 		ionic_rxq_disable(rxq);
 
-		if (rxq->intr.vector) {
-			free_irq(rxq->intr.vector, rxq);
-		}
-
-		if (rxq->taskq) {
+		if (rxq->taskq)
 			taskqueue_drain(rxq->taskq, &rxq->task);
-			taskqueue_free(rxq->taskq);
-		}
 	}
 }
 
@@ -1994,12 +2050,6 @@ ionic_lif_adminq_init(struct lif *lif)
 	adminq->qid = comp.qid;
 	adminq->qtype = comp.qtype;
 
-	snprintf(adminq->intr.name, sizeof(adminq->intr.name), "%s", adminq->name);
-
-	if (ionic_enable_msix == 0)
-		return (0);
-
-	err = request_irq(adminq->intr.vector, ionic_adminq_isr, 0, adminq->intr.name, adminq);
 
 	return (err);
 }
@@ -2157,7 +2207,6 @@ static int
 ionic_lif_notifyq_init(struct lif *lif, struct notifyq *notifyq)
 {
 	int err;
-	char namebuf[16];
 
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
@@ -2193,32 +2242,9 @@ ionic_lif_notifyq_init(struct lif *lif, struct notifyq *notifyq)
 	notifyq->qid = ctx.comp.rxq_init.qid;
 	notifyq->qtype = ctx.comp.rxq_init.qtype;
 
-	/*
-	 * Create notifyQ task to process notifyQ events - link flap, log
-	 */
-	TASK_INIT(&notifyq->task, 0, ionic_notifyq_task_handler, notifyq);
-	snprintf(namebuf, sizeof(namebuf), "task-%s", notifyq->name);
-	notifyq->taskq = taskqueue_create(namebuf, M_NOWAIT,
-		taskqueue_thread_enqueue, &notifyq->taskq);
-
-	taskqueue_start_threads(&notifyq->taskq, 1, PI_NET, "%s (que %s)",
-		device_get_nameunit(lif->ionic->dev), notifyq->name);
-
-	/* Legacy interrupt allocation is done once. */
-	if (ionic_enable_msix == 0)
-		return (0);
-
-	snprintf(notifyq->intr.name, sizeof(notifyq->intr.name), "%s", notifyq->name);
-	err = request_irq(notifyq->intr.vector, ionic_notifyq_isr, 0,
-					notifyq->intr.name, notifyq);
-	if (err) {
-		IONIC_QUE_ERROR(notifyq, "request_irq failed, error: %d\n", err);
-		return (err);
-	}
-
 	ionic_intr_mask(&notifyq->intr, false);
-
 	ionic_read_notify_block(lif);
+	
 	return 0;
 
 free_notify_block:
@@ -2313,8 +2339,6 @@ ionic_lif_txq_init(struct lif *lif, struct txque *txq)
 
 	txq->qid = ctx.comp.txq_init.qid;
 	txq->qtype = ctx.comp.txq_init.qtype;
-
-	snprintf(txq->intr.name, sizeof(txq->intr.name), "%s", txq->name);
 
 	return (0);
 }
@@ -2501,7 +2525,6 @@ static int
 ionic_lif_rxq_init(struct lif *lif, struct rxque *rxq)
 {
 	int err;
-	struct lro_ctrl *lro = &rxq->lro;
 
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
@@ -2528,16 +2551,6 @@ ionic_lif_rxq_init(struct lif *lif, struct rxque *rxq)
 
 	rxq->qid = ctx.comp.rxq_init.qid;
 	rxq->qtype = ctx.comp.rxq_init.qtype;
-
-	snprintf(rxq->intr.name, sizeof(rxq->intr.name), "rxtx%d", rxq->index);
-
-	err = tcp_lro_init(lro);
-	if (err) {
-		IONIC_QUE_WARN(rxq, "LRO setup failed, error: %d\n", err);
-	}
-
-	lro->ifp = lif->netdev;
-	err = ionic_setup_rx_intr(rxq);
 
 	return err;
 }

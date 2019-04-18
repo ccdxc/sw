@@ -202,6 +202,10 @@ struct rxque {
 	struct rxq_sg_desc *sg_ring;	/* SG descriptors. */
 };
 
+/*
+ * Transmit queue.
+ * XXX: Interrupt resource for Tx is part of Rx.
+ */
 struct txque {
 	char name[QUEUE_NAME_MAX_SZ];
 
@@ -220,14 +224,12 @@ struct txque {
 
 	struct mtx tx_mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
-	int head_index;					/* Index for buffer and command descriptors. */
+	int head_index;				/* Index for buffer and command descriptors. */
 	int tail_index;
-	int comp_index;					/* Index for completion descriptors. */
-	int done_color; 				/* Expected comletion color status. */
+	int comp_index;				/* Index for completion descriptors. */
+	int done_color;				/* Expected comletion color status. */
 	
 	struct tx_stats stats;
-	struct intr intr;
-
 	struct buf_ring	*br;
 
 	/*
