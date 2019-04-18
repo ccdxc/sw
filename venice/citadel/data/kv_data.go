@@ -4,9 +4,8 @@ package data
 
 import (
 	"errors"
-	"strings"
 
-	context "golang.org/x/net/context"
+	"golang.org/x/net/context"
 
 	"fmt"
 
@@ -164,7 +163,7 @@ func (dn *DNode) replicateWrite(ctx context.Context, req *tproto.KeyValueMsg, sh
 			// if replica is not yet marked unreachable and we fail to replicate to it, keep it in a pending queue.
 			// when it comes back up, we should send the kv-pairs in pending queue to the replica
 			_, err = dnclient.WriteReplicate(ctx, &newReq)
-			if err != nil && strings.Contains(err.Error(), "the connection is unavailable") {
+			if err != nil && dn.isGrpcConnectErr(err) {
 				// try reconnecting if this was a connection error
 				dnclient, err = dn.reconnectDnclient(meta.ClusterTypeKstore, se.NodeUUID)
 				if err == nil {
@@ -207,7 +206,7 @@ func (dn *DNode) replicateFailedWrite(sb *syncBufferState) error {
 			return false
 		}
 		_, err = dnclient.WriteReplicate(sb.ctx, req)
-		if err != nil && strings.Contains(err.Error(), "the connection is unavailable") {
+		if err != nil && dn.isGrpcConnectErr(err) {
 			// try reconnecting if this was a connection error
 			dnclient, err = dn.reconnectDnclient(meta.ClusterTypeTstore, sb.nodeUUID)
 			if err != nil {
@@ -326,7 +325,7 @@ func (dn *DNode) replicateDelete(ctx context.Context, req *tproto.KeyMsg, shard 
 				// FIXME: if replica is not yet marked unreachable and we fail to replicate to it, keep it in a pending queue.
 				// when it comes back up, we should send the keys in pending delete request to the replica
 				_, err = dnclient.DelReplicate(ctx, &newReq)
-				if err != nil && strings.Contains(err.Error(), "the connection is unavailable") {
+				if err != nil && dn.isGrpcConnectErr(err) {
 					// try reconnecting if this was a connection error
 					dnclient, err = dn.reconnectDnclient(meta.ClusterTypeKstore, se.NodeUUID)
 					if err != nil {

@@ -1791,3 +1791,41 @@ func TestAggQuery(t *testing.T) {
 	meta.DestroyClusterState(cfg, meta.ClusterTypeKstore)
 
 }
+
+func TestIsGrpcConnectErr(t *testing.T) {
+	testData := []struct {
+		err    error
+		result bool
+	}{
+		{err: fmt.Errorf("connection error"), result: true},
+		{err: fmt.Errorf("the connection is unavailable"), result: true},
+		{err: fmt.Errorf("invalid node"), result: false},
+		{err: nil, result: false},
+	}
+
+	// metadata config
+	cfg := meta.DefaultClusterConfig()
+	cfg.EnableKstoreMeta = false
+	cfg.DeadInterval = time.Millisecond * 100
+	cfg.NodeTTL = 5
+	cfg.RebalanceDelay = time.Millisecond * 100
+	cfg.RebalanceInterval = time.Millisecond * 10
+
+	// create a temp dir
+	path, err := ioutil.TempDir("", "tstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
+	qpath, err := ioutil.TempDir("", "qstore-")
+	AssertOk(t, err, "Error creating tmp dir")
+	defer os.RemoveAll(path)
+
+	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
+	dn, err := NewDataNode(cfg, "node-"+t.Name(), "localhost:7300", path+t.Name(), qpath+t.Name(), logger)
+	AssertOk(t, err, "Error creating nodes")
+
+	for _, tc := range testData {
+		s := dn.isGrpcConnectErr(tc.err)
+		Assert(t, s == tc.result, fmt.Sprintf("expected %v, got %v (%+v)", tc.result, s, tc))
+	}
+}
