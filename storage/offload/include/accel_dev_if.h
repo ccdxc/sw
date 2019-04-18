@@ -203,7 +203,7 @@ typedef struct reset_cpl {
 typedef struct identify_cmd {
 	uint16_t    opcode;
 	uint16_t    ver;
-	dma_addr_t  addr;
+	uint64_t    addr;
 	uint32_t    rsvd2[13];
 } identify_cmd_t;
 
@@ -381,7 +381,7 @@ typedef struct adminq_init_cmd {
 	uint16_t    intr_index;
 	uint32_t    lif_index   :24,
 	            ring_size   :8;
-	dma_addr_t  ring_base;
+	uint64_t    ring_base;
 	uint32_t    rsvd2[11];
 } adminq_init_cmd_t;
 
@@ -434,9 +434,10 @@ typedef struct seq_queue_init_cmd {
 	uint8_t                 host_wrings;
 	uint8_t                 entry_size;
 	uint8_t                 wring_size;
-	dma_addr_t              wring_base;
+	uint64_t                wring_base;
 	uint16_t                core_id;
 	uint8_t                 dol_req_devcmd_done;
+	uint8_t                 rsvd[40];
 } seq_queue_init_cmd_t;
 
 /**
@@ -482,8 +483,9 @@ typedef struct seq_queue_batch_init_cmd {
 	uint8_t                 host_wrings;
 	uint8_t                 entry_size;
 	uint8_t                 wring_size;
-	dma_addr_t              wring_base;
+	uint64_t                wring_base;
 	uint8_t                 dol_req_devcmd_done;
+	uint8_t                 rsvd[36];
 } seq_queue_batch_init_cmd_t;
 
 /**
@@ -681,6 +683,7 @@ typedef union adminq_cmd {
 	seq_queue_batch_control_cmd_t seq_queue_batch_control;
 	seq_queue_init_complete_cmd_t seq_queue_init_complete;
 	crypto_key_update_cmd_t crypto_key_update;
+	hang_notify_cmd_t       hang_notify;
 } adminq_cmd_t;
 
 typedef union adminq_cpl {
@@ -689,9 +692,13 @@ typedef union adminq_cpl {
 	lif_init_cpl_t          lif_init;
 	lif_reset_cpl_t         lif_reset;
 	seq_queue_init_cpl_t    seq_queue_init;
+	seq_queue_control_cpl_t seq_queue_control;
 	seq_queue_dump_cpl_t    seq_queue_dump;
+	seq_queue_batch_init_cpl_t seq_queue_batch_init;
+	seq_queue_batch_control_cpl_t seq_queue_batch_control;
 	seq_queue_init_complete_cpl_t seq_queue_init_complete;
 	crypto_key_update_cpl_t crypto_key_update;
+	hang_notify_cpl_t       hang_notify;
 } adminq_cpl_t;
 
 #endif /* _ACCEL_DEV_IF_H_ */

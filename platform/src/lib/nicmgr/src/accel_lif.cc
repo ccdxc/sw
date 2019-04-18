@@ -151,6 +151,11 @@ static accel_lif_state_event_t  lif_wait_hal_ev_table[] = {
         ACCEL_LIF_ST_SAME,
     },
     {
+        ACCEL_LIF_EV_HANG_NOTIFY,
+        &AccelLif::accel_lif_null_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_NULL
     },
 };
@@ -182,6 +187,11 @@ static accel_lif_state_event_t  lif_pre_init_ev_table[] = {
         ACCEL_LIF_ST_SAME,
     },
     {
+        ACCEL_LIF_EV_HANG_NOTIFY,
+        &AccelLif::accel_lif_null_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_NULL
     },
 };
@@ -205,6 +215,11 @@ static accel_lif_state_event_t  lif_post_init_ev_table[] = {
     {
         ACCEL_LIF_EV_DESTROY,
         &AccelLif::accel_lif_destroy_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_HANG_NOTIFY,
+        &AccelLif::accel_lif_null_action,
         ACCEL_LIF_ST_SAME,
     },
     {
@@ -249,6 +264,11 @@ static accel_lif_state_event_t  lif_seq_reset_ev_table[] = {
         ACCEL_LIF_ST_RGROUP_RESET,
     },
     {
+        ACCEL_LIF_EV_HANG_NOTIFY,
+        &AccelLif::accel_lif_null_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_NULL
     },
 };
@@ -278,6 +298,11 @@ static accel_lif_state_event_t  lif_rgroup_quiesce_ev_table[] = {
         ACCEL_LIF_EV_RGROUP_RESET,
         &AccelLif::accel_lif_rgroup_reset_action,
         ACCEL_LIF_ST_RGROUP_RESET,
+    },
+    {
+        ACCEL_LIF_EV_HANG_NOTIFY,
+        &AccelLif::accel_lif_null_action,
+        ACCEL_LIF_ST_SAME,
     },
     {
         ACCEL_LIF_EV_NULL
@@ -314,6 +339,11 @@ static accel_lif_state_event_t  lif_rgroup_reset_ev_table[] = {
         ACCEL_LIF_EV_PRE_INIT,
         &AccelLif::accel_lif_null_action,
         ACCEL_LIF_ST_PRE_INIT,
+    },
+    {
+        ACCEL_LIF_EV_HANG_NOTIFY,
+        &AccelLif::accel_lif_null_action,
+        ACCEL_LIF_ST_SAME,
     },
     {
         ACCEL_LIF_EV_NULL
@@ -367,6 +397,11 @@ static accel_lif_state_event_t  lif_seq_pre_init_ev_table[] = {
         ACCEL_LIF_ST_SAME,
     },
     {
+        ACCEL_LIF_EV_HANG_NOTIFY,
+        &AccelLif::accel_lif_null_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_NULL
     },
 };
@@ -391,6 +426,11 @@ static accel_lif_state_event_t  lif_post_init_post_reset_ev_table[] = {
         ACCEL_LIF_EV_DESTROY,
         &AccelLif::accel_lif_destroy_action,
         ACCEL_LIF_ST_POST_INIT,
+    },
+    {
+        ACCEL_LIF_EV_HANG_NOTIFY,
+        &AccelLif::accel_lif_hang_notify_action,
+        ACCEL_LIF_ST_SAME,
     },
     {
         ACCEL_LIF_EV_NULL
@@ -459,6 +499,11 @@ static accel_lif_state_event_t  lif_seq_init_ev_table[] = {
         ACCEL_LIF_ST_SAME,
     },
     {
+        ACCEL_LIF_EV_HANG_NOTIFY,
+        &AccelLif::accel_lif_hang_notify_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_NULL
     },
 };
@@ -510,6 +555,11 @@ static accel_lif_state_event_t  lif_idle_ev_table[] = {
         ACCEL_LIF_ST_SAME,
     },
     {
+        ACCEL_LIF_EV_HANG_NOTIFY,
+        &AccelLif::accel_lif_hang_notify_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_NULL
     },
 };
@@ -555,7 +605,7 @@ static const opcode2event_map_t opcode2event_map = {
     {CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE, ACCEL_LIF_EV_SEQ_QUEUE_INIT_COMPLETE},
     {CMD_OPCODE_SEQ_QUEUE_DUMP,          ACCEL_LIF_EV_NULL},
     {CMD_OPCODE_CRYPTO_KEY_UPDATE,       ACCEL_LIF_EV_CRYPTO_KEY_UPDATE},
-    {CMD_OPCODE_HANG_NOTIFY,             ACCEL_LIF_EV_NULL},
+    {CMD_OPCODE_HANG_NOTIFY,             ACCEL_LIF_EV_HANG_NOTIFY},
 };
 
 #define ACCEL_LIF_FSM_LOG()                                                     \
@@ -961,7 +1011,7 @@ AccelLif::accel_lif_reset_action(accel_lif_event_t event)
         qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(),
                                                    STORAGE_SEQ_QTYPE_ADMIN, qid);
         if (qstate_addr < 0) {
-            NIC_LOG_ERR("{}: Failed to get qstate address for SEQ qid {}",
+            NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
                         LifNameGet(), qid);
             continue;
         }
@@ -1340,6 +1390,66 @@ AccelLif::accel_lif_seq_queue_batch_control_action(accel_lif_event_t event)
         }
         cmd.qid++;
     }
+    return ACCEL_LIF_EV_NULL;
+}
+
+accel_lif_event_t
+AccelLif::accel_lif_hang_notify_action(accel_lif_event_t event)
+{
+    int64_t                 qstate_addr;
+    storage_seq_qstate_t    seq_qstate;
+    admin_qstate_t          admin_qstate;
+    uint32_t                qid;
+
+    ACCEL_LIF_FSM_LOG();
+
+    /*
+     * Dump everything about HW rings to log, to be collected by show-tech-support
+     */
+    fsm_ctx.info_dump = true;
+    accel_rgroup_rindices_get();
+    accel_rgroup_rmisc_get();
+    accel_rgroup_rmetrics_get();
+    fsm_ctx.info_dump = false;
+
+    /*
+     * Dump sequencer queue states
+     */
+    NIC_LOG_DEBUG("{}: seq_created_count {}", LifNameGet(), seq_created_count);
+    for (qid = 0; qid < seq_created_count; qid++) {
+        qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(),
+                                                   STORAGE_SEQ_QTYPE_SQ, qid);
+        if (qstate_addr < 0) {
+            NIC_LOG_ERR("{}: Failed to get qstate address for SEQ qid {}",
+                        LifNameGet(), qid);
+            continue;
+        }
+        READ_MEM(qstate_addr, (uint8_t *)&seq_qstate, sizeof(seq_qstate), 0);
+
+        NIC_LOG_DEBUG("    seq_queue {}: pndx {} c_ndx {} enable {} abort {}",
+                      qid, seq_qstate.p_ndx, seq_qstate.c_ndx,
+                      seq_qstate.enable, seq_qstate.abort);
+    }
+
+    /*
+     * Dump admin queue states
+     */
+    NIC_LOG_DEBUG("{}: adminq_count {}", LifNameGet(), spec->adminq_count);
+    for (qid = 0; qid < spec->adminq_count; qid++) {
+        qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(),
+                                                   STORAGE_SEQ_QTYPE_ADMIN, qid);
+        if (qstate_addr < 0) {
+            NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
+                        LifNameGet(), qid);
+            continue;
+        }
+        READ_MEM(qstate_addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate), 0);
+
+        NIC_LOG_DEBUG("    admin_queue {}: pndx {} c_ndx {} comp {} intr {}",
+                      qid, admin_qstate.p_index0, admin_qstate.c_index0,
+                      admin_qstate.comp_index, admin_qstate.intr_assert_index);
+    }
+
     return ACCEL_LIF_EV_NULL;
 }
 
@@ -1877,6 +1987,12 @@ accel_rgroup_rindices_rsp_cb(void *user_ctx,
     accel_rgroup_ring_t& rgroup_ring =
             lif->accel_rgroup_find_create(indices.ring_handle, indices.sub_ring);
     rgroup_ring.indices = indices;
+
+    if (lif->fsm_ctx.info_dump) {
+        NIC_LOG_DEBUG("{}: ring {} sub_ring {}", lif->LifNameGet(),
+                accel_ring_id2name_get(indices.ring_handle), indices.sub_ring);
+        NIC_LOG_DEBUG("    pndx {} cndx {}", indices.pndx, indices.cndx);
+    }
 }
 
 /*
@@ -1911,6 +2027,14 @@ accel_rgroup_rmetrics_rsp_cb(void *user_ctx,
     accel_rgroup_ring_t& rgroup_ring =
             lif->accel_rgroup_find_create(metrics.ring_handle, metrics.sub_ring);
     rgroup_ring.metrics = metrics;
+
+    if (lif->fsm_ctx.info_dump) {
+        NIC_LOG_DEBUG("{}: ring {} sub_ring {}", lif->LifNameGet(),
+                accel_ring_id2name_get(metrics.ring_handle), metrics.sub_ring);
+        NIC_LOG_DEBUG("    input_bytes {} output_bytes {} soft_resets {}",
+                      metrics.input_bytes, metrics.output_bytes,
+                      metrics.soft_resets);
+    }
 }
 
 /*
@@ -1929,6 +2053,49 @@ AccelLif::accel_rgroup_rmetrics_get(void)
     ret_val = dev_api->accel_rgroup_metrics_get(LifNameGet(), ACCEL_SUB_RING_ALL,
                              accel_rgroup_rmetrics_rsp_cb, this, &num_rings);
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "metrics");
+    return ret_val;
+}
+
+/*
+ * Accelerator ring group misc info response callback handler
+ */
+void
+accel_rgroup_rmisc_rsp_cb(void *user_ctx,
+                          const accel_rgroup_rmisc_rsp_t& misc)
+{
+    AccelLif    *lif = (AccelLif *)user_ctx;
+    uint32_t    num_reg_vals;
+
+    ACCEL_RGROUP_GET_CB_HANDLE_CHECK(misc.ring_handle);
+    if (lif->fsm_ctx.info_dump) {
+        NIC_LOG_DEBUG("{}: ring {} sub_ring {} num_reg_vals {}",
+                      lif->LifNameGet(), accel_ring_id2name_get(misc.ring_handle),
+                      misc.sub_ring, misc.num_reg_vals);
+        num_reg_vals = std::min(misc.num_reg_vals,
+                                (uint32_t)ACCEL_RING_NUM_REGS_MAX);
+        for (uint32_t i = 0; i < num_reg_vals; i++) {
+            NIC_LOG_DEBUG("    {} {:#x} ({})", misc.reg_val[i].name,
+                          misc.reg_val[i].val, misc.reg_val[i].val);
+        }
+    }
+}
+
+/*
+ * Get ring group misc info
+ */
+int
+AccelLif::accel_rgroup_rmisc_get(void)
+{
+    uint32_t    num_rings;
+    int         ret_val;
+
+    if (!dev_api) {
+        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
+        return -1;
+    }
+    ret_val = dev_api->accel_rgroup_misc_get(LifNameGet(), ACCEL_SUB_RING_ALL,
+                             accel_rgroup_rmisc_rsp_cb, this, &num_rings);
+    ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "misc");
     return ret_val;
 }
 

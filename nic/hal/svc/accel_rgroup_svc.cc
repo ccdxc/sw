@@ -173,3 +173,19 @@ AccelRGroupServiceImpl::AccelRGroupMetricsGet(ServerContext *context,
     return Status::OK;
 }
 
+Status
+AccelRGroupServiceImpl::AccelRGroupMiscGet(ServerContext *context,
+                                           const AccelRGroupMiscGetRequestMsg *request,
+                                           AccelRGroupMiscGetResponseMsg *response)
+{
+    uint32_t    nreqs = request->request_size();
+    uint32_t    i;
+
+    for (i = 0; i < nreqs; i++) {
+        auto rsp = response->add_response();
+        auto req = request->request(i);
+        hal::accel_rgroup_misc_get(req, rsp);
+    }
+    return Status::OK;
+}
+

@@ -215,6 +215,24 @@ func (mr *MockAccelRGroupClientMockRecorder) AccelRGroupMetricsGet(ctx, in inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccelRGroupMetricsGet", reflect.TypeOf((*MockAccelRGroupClient)(nil).AccelRGroupMetricsGet), varargs...)
 }
 
+// AccelRGroupMiscGet mocks base method
+func (m *MockAccelRGroupClient) AccelRGroupMiscGet(ctx context.Context, in *AccelRGroupMiscGetRequestMsg, opts ...grpc.CallOption) (*AccelRGroupMiscGetResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AccelRGroupMiscGet", varargs...)
+	ret0, _ := ret[0].(*AccelRGroupMiscGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AccelRGroupMiscGet indicates an expected call of AccelRGroupMiscGet
+func (mr *MockAccelRGroupClientMockRecorder) AccelRGroupMiscGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccelRGroupMiscGet", reflect.TypeOf((*MockAccelRGroupClient)(nil).AccelRGroupMiscGet), varargs...)
+}
+
 // MockAccelRGroupServer is a mock of AccelRGroupServer interface
 type MockAccelRGroupServer struct {
 	ctrl     *gomock.Controller
@@ -366,4 +384,17 @@ func (m *MockAccelRGroupServer) AccelRGroupMetricsGet(arg0 context.Context, arg1
 // AccelRGroupMetricsGet indicates an expected call of AccelRGroupMetricsGet
 func (mr *MockAccelRGroupServerMockRecorder) AccelRGroupMetricsGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccelRGroupMetricsGet", reflect.TypeOf((*MockAccelRGroupServer)(nil).AccelRGroupMetricsGet), arg0, arg1)
+}
+
+// AccelRGroupMiscGet mocks base method
+func (m *MockAccelRGroupServer) AccelRGroupMiscGet(arg0 context.Context, arg1 *AccelRGroupMiscGetRequestMsg) (*AccelRGroupMiscGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "AccelRGroupMiscGet", arg0, arg1)
+	ret0, _ := ret[0].(*AccelRGroupMiscGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AccelRGroupMiscGet indicates an expected call of AccelRGroupMiscGet
+func (mr *MockAccelRGroupServerMockRecorder) AccelRGroupMiscGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccelRGroupMiscGet", reflect.TypeOf((*MockAccelRGroupServer)(nil).AccelRGroupMiscGet), arg0, arg1)
 }

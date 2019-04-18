@@ -36,6 +36,16 @@ namespace pd {
     } while (false)
 
 
+#define ACCEL_CFG_NAMED_READ32(cfg, reg_val)                                \
+    do {                                                                    \
+        cap_hens_csr_dhs_crypto_ctl_t&  ctl = accel_ctl();                  \
+        ctl.cfg.read();                                                     \
+        reg_val.val = ctl.cfg.fld().convert_to<uint32_t>();                 \
+        strncpy(reg_val.name, #cfg, sizeof(reg_val.name));                  \
+        reg_val.name[sizeof(reg_val.name)-1] = '\0';                        \
+    } while (false)
+
+
 /*
  * Read a config 64-bit register
  */
@@ -525,6 +535,27 @@ accel_rgroup_metrics_get(const char *rgroup_name,
 }
 
 /*
+ * Retrieve miscellaneous config/status for all rings in a group.
+ */
+hal_ret_t 
+accel_rgroup_misc_get(const char *rgroup_name,
+                      uint32_t sub_ring,
+                      accel_rgroup_ring_misc_cb_t cb_func,
+                      void *user_ctx)
+{
+    accel_rgroup_t  *rgroup;
+    hal_ret_t       ret_val = HAL_RET_ENTRY_NOT_FOUND;
+
+    ACCEL_RGROUP_LOCK();
+    rgroup = accel_rgroup_find(rgroup_name);
+    if (rgroup) {
+        ret_val = rgroup->misc_get(sub_ring, cb_func, user_ctx);
+    }
+    ACCEL_RGROUP_UNLOCK();
+    return ret_val;
+}
+
+/*
  * Add a ring by name to a ring group. The ring must have 
  * supported ring_ops.
  */
@@ -662,6 +693,20 @@ accel_rgroup_t::metrics_get(uint32_t sub_ring,
 }
 
 /*
+ * Retrieve  miscellaneous config/status on all rings in a group.
+ */
+hal_ret_t 
+accel_rgroup_t::misc_get(uint32_t sub_ring,
+                         accel_rgroup_ring_misc_cb_t cb_func,
+                         void *user_ctx)
+{
+    hal_ret_t   ret_val = HAL_RET_OK;
+    FOR_EACH_RGROUP_RING_INVOKE(misc_get, sub_ring, ret_val,
+                                cb_func, user_ctx);
+    return ret_val;
+}
+
+/*
  * All supported ring_ops methods begin here
  */
 hal_ret_t 
@@ -780,6 +825,56 @@ accel_ring_cp_t::metrics_get(uint32_t ring_handle,
 }
 
 hal_ret_t 
+accel_ring_cp_t::misc_get(uint32_t ring_handle,
+                          uint32_t sub_ring,
+                          accel_rgroup_ring_misc_cb_t cb_func,
+                          void *usr_ctx)
+{
+    accel_rgroup_ring_misc_t misc = {0};
+
+    misc.ring_handle = ring_handle;
+    misc.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    ACCEL_CFG_NAMED_READ32(cp_cfg_glb,             misc.reg_val[0]);
+    ACCEL_CFG_NAMED_READ32(cp_cfg_dist,            misc.reg_val[1]);
+    ACCEL_CFG_NAMED_READ32(cp_cfg_host,            misc.reg_val[2]);
+    ACCEL_CFG_NAMED_READ32(cp_cfg_limit,           misc.reg_val[3]);
+    ACCEL_CFG_NAMED_READ32(cp_cfg_q_base_adr_w0,   misc.reg_val[4]);
+    ACCEL_CFG_NAMED_READ32(cp_cfg_q_base_adr_w1,   misc.reg_val[5]);
+    ACCEL_CFG_NAMED_READ32(cp_cfg_ueng_w0,         misc.reg_val[6]);
+    ACCEL_CFG_NAMED_READ32(cp_cfg_ueng_w1,         misc.reg_val[7]);
+    ACCEL_CFG_NAMED_READ32(cp_int,                 misc.reg_val[8]);
+    ACCEL_CFG_NAMED_READ32(cp_int_mask,            misc.reg_val[9]);
+    ACCEL_CFG_NAMED_READ32(cp_cfg_axi_settings_w0, misc.reg_val[10]);
+    ACCEL_CFG_NAMED_READ32(cp_cfg_axi_settings_w1, misc.reg_val[11]);
+    ACCEL_CFG_NAMED_READ32(cp_cfg_axi_timeout,     misc.reg_val[12]);
+
+    ACCEL_CFG_NAMED_READ32(cp_sta_q_cp_idx_early,  misc.reg_val[13]);
+    ACCEL_CFG_NAMED_READ32(cp_int_ecc_error,       misc.reg_val[14]);
+    ACCEL_CFG_NAMED_READ32(cp_int_axi_error_w0,    misc.reg_val[15]);
+    ACCEL_CFG_NAMED_READ32(cp_int_axi_error_w1,    misc.reg_val[16]);
+    ACCEL_CFG_NAMED_READ32(cp_int_ueng_error_w0,   misc.reg_val[17]);
+    ACCEL_CFG_NAMED_READ32(cp_int_ueng_error_w1,   misc.reg_val[18]);
+    ACCEL_CFG_NAMED_READ32(cp_sta_ecc_error,       misc.reg_val[19]);
+    ACCEL_CFG_NAMED_READ32(cp_sta_bist_done_pass,  misc.reg_val[20]);
+    ACCEL_CFG_NAMED_READ32(cp_sta_bist_done_fail,  misc.reg_val[21]);
+
+    ACCEL_CFG_NAMED_READ32(cp_sta_debug_w0,        misc.reg_val[22]);
+    ACCEL_CFG_NAMED_READ32(cp_sta_debug_w1,        misc.reg_val[23]);
+    ACCEL_CFG_NAMED_READ32(cp_sta_debug_w2,        misc.reg_val[24]);
+    ACCEL_CFG_NAMED_READ32(cp_sta_debug_w3,        misc.reg_val[25]);
+    ACCEL_CFG_NAMED_READ32(cp_sta_debug_w4,        misc.reg_val[26]);
+    ACCEL_CFG_NAMED_READ32(cp_sta_debug_w5,        misc.reg_val[27]);
+    ACCEL_CFG_NAMED_READ32(cp_sta_debug_w6,        misc.reg_val[28]);
+    ACCEL_CFG_NAMED_READ32(cp_sta_debug_w7,        misc.reg_val[29]);
+    misc.num_reg_vals = 30;
+
+    (*cb_func)(usr_ctx, misc);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
 accel_ring_cp_hot_t::reset_set(uint32_t ring_handle,
                                uint32_t sub_ring,
                                uint32_t *last_ring_handle,
@@ -889,6 +984,27 @@ accel_ring_cp_hot_t::metrics_get(uint32_t ring_handle,
 
     metrics.soft_resets = soft_resets;
     (*cb_func)(usr_ctx, metrics);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+accel_ring_cp_hot_t::misc_get(uint32_t ring_handle,
+                              uint32_t sub_ring,
+                              accel_rgroup_ring_misc_cb_t cb_func,
+                              void *usr_ctx)
+{
+    accel_rgroup_ring_misc_t misc = {0};
+
+    misc.ring_handle = ring_handle;
+    misc.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    ACCEL_CFG_NAMED_READ32(cp_cfg_hotq_base_adr_w0,  misc.reg_val[0]);
+    ACCEL_CFG_NAMED_READ32(cp_cfg_hotq_base_adr_w1,  misc.reg_val[1]);
+    ACCEL_CFG_NAMED_READ32(cp_sta_hotq_cp_idx_early, misc.reg_val[2]);
+    misc.num_reg_vals = 3;
+
+    (*cb_func)(usr_ctx, misc);
     return HAL_RET_OK;
 }
 
@@ -1008,6 +1124,56 @@ accel_ring_dc_t::metrics_get(uint32_t ring_handle,
 }
 
 hal_ret_t 
+accel_ring_dc_t::misc_get(uint32_t ring_handle,
+                          uint32_t sub_ring,
+                          accel_rgroup_ring_misc_cb_t cb_func,
+                          void *usr_ctx)
+{
+    accel_rgroup_ring_misc_t misc = {0};
+
+    misc.ring_handle = ring_handle;
+    misc.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    ACCEL_CFG_NAMED_READ32(dc_cfg_glb,             misc.reg_val[0]);
+    ACCEL_CFG_NAMED_READ32(dc_cfg_dist,            misc.reg_val[1]);
+    ACCEL_CFG_NAMED_READ32(dc_cfg_host,            misc.reg_val[2]);
+    ACCEL_CFG_NAMED_READ32(dc_cfg_limit,           misc.reg_val[3]);
+    ACCEL_CFG_NAMED_READ32(dc_cfg_q_base_adr_w0,   misc.reg_val[4]);
+    ACCEL_CFG_NAMED_READ32(dc_cfg_q_base_adr_w1,   misc.reg_val[5]);
+    ACCEL_CFG_NAMED_READ32(dc_cfg_ueng_w0,         misc.reg_val[6]);
+    ACCEL_CFG_NAMED_READ32(dc_cfg_ueng_w1,         misc.reg_val[7]);
+    ACCEL_CFG_NAMED_READ32(dc_int,                 misc.reg_val[8]);
+    ACCEL_CFG_NAMED_READ32(dc_int_mask,            misc.reg_val[9]);
+    ACCEL_CFG_NAMED_READ32(dc_cfg_axi_settings_w0, misc.reg_val[10]);
+    ACCEL_CFG_NAMED_READ32(dc_cfg_axi_settings_w1, misc.reg_val[11]);
+    ACCEL_CFG_NAMED_READ32(dc_cfg_axi_timeout,     misc.reg_val[12]);
+
+    ACCEL_CFG_NAMED_READ32(dc_sta_q_cp_idx_early,  misc.reg_val[13]);
+    ACCEL_CFG_NAMED_READ32(dc_int_ecc_error,       misc.reg_val[14]);
+    ACCEL_CFG_NAMED_READ32(dc_int_axi_error_w0,    misc.reg_val[15]);
+    ACCEL_CFG_NAMED_READ32(dc_int_axi_error_w1,    misc.reg_val[16]);
+    ACCEL_CFG_NAMED_READ32(dc_int_ueng_error_w0,   misc.reg_val[17]);
+    ACCEL_CFG_NAMED_READ32(dc_int_ueng_error_w1,   misc.reg_val[18]);
+    ACCEL_CFG_NAMED_READ32(dc_sta_ecc_error,       misc.reg_val[19]);
+    ACCEL_CFG_NAMED_READ32(dc_sta_bist_done_pass,  misc.reg_val[20]);
+    ACCEL_CFG_NAMED_READ32(dc_sta_bist_done_fail,  misc.reg_val[21]);
+
+    ACCEL_CFG_NAMED_READ32(dc_sta_debug_w0,        misc.reg_val[22]);
+    ACCEL_CFG_NAMED_READ32(dc_sta_debug_w1,        misc.reg_val[23]);
+    ACCEL_CFG_NAMED_READ32(dc_sta_debug_w2,        misc.reg_val[24]);
+    ACCEL_CFG_NAMED_READ32(dc_sta_debug_w3,        misc.reg_val[25]);
+    ACCEL_CFG_NAMED_READ32(dc_sta_debug_w4,        misc.reg_val[26]);
+    ACCEL_CFG_NAMED_READ32(dc_sta_debug_w5,        misc.reg_val[27]);
+    ACCEL_CFG_NAMED_READ32(dc_sta_debug_w6,        misc.reg_val[28]);
+    ACCEL_CFG_NAMED_READ32(dc_sta_debug_w7,        misc.reg_val[29]);
+    misc.num_reg_vals = 30;
+
+    (*cb_func)(usr_ctx, misc);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
 accel_ring_dc_hot_t::reset_set(uint32_t ring_handle,
                                uint32_t sub_ring,
                                uint32_t *last_ring_handle,
@@ -1117,6 +1283,27 @@ accel_ring_dc_hot_t::metrics_get(uint32_t ring_handle,
 
     metrics.soft_resets = soft_resets;
     (*cb_func)(usr_ctx, metrics);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+accel_ring_dc_hot_t::misc_get(uint32_t ring_handle,
+                              uint32_t sub_ring,
+                              accel_rgroup_ring_misc_cb_t cb_func,
+                              void *usr_ctx)
+{
+    accel_rgroup_ring_misc_t misc = {0};
+
+    misc.ring_handle = ring_handle;
+    misc.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    ACCEL_CFG_NAMED_READ32(dc_cfg_hotq_base_adr_w0,  misc.reg_val[0]);
+    ACCEL_CFG_NAMED_READ32(dc_cfg_hotq_base_adr_w1,  misc.reg_val[1]);
+    ACCEL_CFG_NAMED_READ32(dc_sta_hotq_cp_idx_early, misc.reg_val[2]);
+    misc.num_reg_vals = 3;
+
+    (*cb_func)(usr_ctx, misc);
     return HAL_RET_OK;
 }
 
@@ -1235,6 +1422,31 @@ accel_ring_xts0_t::metrics_get(uint32_t ring_handle,
 }
 
 hal_ret_t 
+accel_ring_xts0_t::misc_get(uint32_t ring_handle,
+                            uint32_t sub_ring,
+                            accel_rgroup_ring_misc_cb_t cb_func,
+                            void *usr_ctx)
+{
+    accel_rgroup_ring_misc_t misc = {0};
+
+    misc.ring_handle = ring_handle;
+    misc.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    ACCEL_CFG_NAMED_READ32(xts_enc_ring_base_w0, misc.reg_val[0]);
+    ACCEL_CFG_NAMED_READ32(xts_enc_ring_base_w1, misc.reg_val[1]);
+    ACCEL_CFG_NAMED_READ32(xts_enc_ring_size,    misc.reg_val[2]);
+    ACCEL_CFG_NAMED_READ32(xts_enc_ci_addr_w0,   misc.reg_val[3]);
+    ACCEL_CFG_NAMED_READ32(xts_enc_ci_addr_w1,   misc.reg_val[4]);
+    ACCEL_CFG_NAMED_READ32(xts_enc_status,       misc.reg_val[5]);
+    ACCEL_CFG_NAMED_READ32(xts_enc_error_idx,    misc.reg_val[6]);
+    misc.num_reg_vals = 7;
+
+    (*cb_func)(usr_ctx, misc);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
 accel_ring_xts1_t::reset_set(uint32_t ring_handle,
                              uint32_t sub_ring,
                              uint32_t *last_ring_handle,
@@ -1345,6 +1557,31 @@ accel_ring_xts1_t::metrics_get(uint32_t ring_handle,
 
     metrics.soft_resets = soft_resets;
     (*cb_func)(usr_ctx, metrics);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+accel_ring_xts1_t::misc_get(uint32_t ring_handle,
+                            uint32_t sub_ring,
+                            accel_rgroup_ring_misc_cb_t cb_func,
+                            void *usr_ctx)
+{
+    accel_rgroup_ring_misc_t misc = {0};
+
+    misc.ring_handle = ring_handle;
+    misc.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    ACCEL_CFG_NAMED_READ32(xts_ring_base_w0, misc.reg_val[0]);
+    ACCEL_CFG_NAMED_READ32(xts_ring_base_w1, misc.reg_val[1]);
+    ACCEL_CFG_NAMED_READ32(xts_ring_size,    misc.reg_val[2]);
+    ACCEL_CFG_NAMED_READ32(xts_ci_addr_w0,   misc.reg_val[3]);
+    ACCEL_CFG_NAMED_READ32(xts_ci_addr_w1,   misc.reg_val[4]);
+    ACCEL_CFG_NAMED_READ32(xts_status,       misc.reg_val[5]);
+    ACCEL_CFG_NAMED_READ32(xts_error_idx,    misc.reg_val[6]);
+    misc.num_reg_vals = 7;
+
+    (*cb_func)(usr_ctx, misc);
     return HAL_RET_OK;
 }
 
@@ -1463,6 +1700,31 @@ accel_ring_gcm0_t::indices_get(uint32_t ring_handle,
 }
 
 hal_ret_t 
+accel_ring_gcm0_t::misc_get(uint32_t ring_handle,
+                            uint32_t sub_ring,
+                            accel_rgroup_ring_misc_cb_t cb_func,
+                            void *usr_ctx)
+{
+    accel_rgroup_ring_misc_t misc = {0};
+
+    misc.ring_handle = ring_handle;
+    misc.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    ACCEL_CFG_NAMED_READ32(gcm0_ring_base_w0, misc.reg_val[0]);
+    ACCEL_CFG_NAMED_READ32(gcm0_ring_base_w1, misc.reg_val[1]);
+    ACCEL_CFG_NAMED_READ32(gcm0_ring_size,    misc.reg_val[2]);
+    ACCEL_CFG_NAMED_READ32(gcm0_ci_addr_w0,   misc.reg_val[3]);
+    ACCEL_CFG_NAMED_READ32(gcm0_ci_addr_w1,   misc.reg_val[4]);
+    ACCEL_CFG_NAMED_READ32(gcm0_status,       misc.reg_val[5]);
+    ACCEL_CFG_NAMED_READ32(gcm0_error_idx,    misc.reg_val[6]);
+    misc.num_reg_vals = 7;
+
+    (*cb_func)(usr_ctx, misc);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
 accel_ring_gcm1_t::reset_set(uint32_t ring_handle,
                              uint32_t sub_ring,
                              uint32_t *last_ring_handle,
@@ -1573,6 +1835,31 @@ accel_ring_gcm1_t::metrics_get(uint32_t ring_handle,
 
     metrics.soft_resets = soft_resets;
     (*cb_func)(usr_ctx, metrics);
+    return HAL_RET_OK;
+}
+
+hal_ret_t 
+accel_ring_gcm1_t::misc_get(uint32_t ring_handle,
+                            uint32_t sub_ring,
+                            accel_rgroup_ring_misc_cb_t cb_func,
+                            void *usr_ctx)
+{
+    accel_rgroup_ring_misc_t misc = {0};
+
+    misc.ring_handle = ring_handle;
+    misc.sub_ring = ACCEL_SUB_RING0;
+    SUB_RING_VALIDATE_RETURN(sub_ring);
+
+    ACCEL_CFG_NAMED_READ32(gcm1_ring_base_w0, misc.reg_val[0]);
+    ACCEL_CFG_NAMED_READ32(gcm1_ring_base_w1, misc.reg_val[1]);
+    ACCEL_CFG_NAMED_READ32(gcm1_ring_size,    misc.reg_val[2]);
+    ACCEL_CFG_NAMED_READ32(gcm1_ci_addr_w0,   misc.reg_val[3]);
+    ACCEL_CFG_NAMED_READ32(gcm1_ci_addr_w1,   misc.reg_val[4]);
+    ACCEL_CFG_NAMED_READ32(gcm1_status,       misc.reg_val[5]);
+    ACCEL_CFG_NAMED_READ32(gcm1_error_idx,    misc.reg_val[6]);
+    misc.num_reg_vals = 7;
+
+    (*cb_func)(usr_ctx, misc);
     return HAL_RET_OK;
 }
 

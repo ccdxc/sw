@@ -104,6 +104,12 @@ public:
                                                uint32_t *ret_num_entries) {
         return SDK_RET_INVALID_OP;
     }
+    virtual sdk_ret_t accel_rgroup_misc_get(string name, uint32_t sub_ring,
+                                            accel_rgroup_rmisc_rsp_cb_t rsp_cb_func,
+                                            void *user_ctx,
+                                            uint32_t *ret_num_entries) {
+        return SDK_RET_INVALID_OP;
+    }
     virtual sdk_ret_t crypto_key_index_upd(uint32_t key_index,
                                            crypto_key_type_t type,
                                            void *key, uint32_t key_size) {

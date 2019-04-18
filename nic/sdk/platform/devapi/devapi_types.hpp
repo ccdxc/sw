@@ -5,6 +5,7 @@
 #define __DEVAPI_TYPES_HPP__
 
 #include "include/sdk/base.hpp"
+#include "nic/include/accel_ring.h"
 
 namespace sdk {
 namespace platform {
@@ -142,6 +143,16 @@ typedef void (*accel_rgroup_rindices_rsp_cb_t)(void *user_ctx,
 typedef void (*accel_rgroup_rmetrics_rsp_cb_t)(void *user_ctx,
                                                const accel_rgroup_rmetrics_rsp_t& indices);
 
+ typedef struct {
+     uint32_t    ring_handle;
+     uint32_t    sub_ring;
+     uint32_t    num_reg_vals;
+     accel_ring_reg_val_t reg_val[ACCEL_RING_NUM_REGS_MAX];
+ } accel_rgroup_rmisc_rsp_t;
+
+typedef void (*accel_rgroup_rmisc_rsp_cb_t)(void *user_ctx,
+                                            const accel_rgroup_rmisc_rsp_t& indices);
+
 typedef enum crypto_key_type_e {
     CRYPTO_KEY_TYPE_AES128,
     CRYPTO_KEY_TYPE_AES192,
@@ -167,10 +178,12 @@ using sdk::platform::xcvr_status_t;
 using sdk::platform::accel_rgroup_rinfo_rsp_t;
 using sdk::platform::accel_rgroup_rindices_rsp_t;
 using sdk::platform::accel_rgroup_rmetrics_rsp_t;
-using sdk::platform::crypto_key_type_t;
+using sdk::platform::accel_rgroup_rmisc_rsp_t;
 using sdk::platform::accel_rgroup_rinfo_rsp_cb_t;
 using sdk::platform::accel_rgroup_rindices_rsp_cb_t;
 using sdk::platform::accel_rgroup_rmetrics_rsp_cb_t;
+using sdk::platform::accel_rgroup_rmisc_rsp_cb_t;
+using sdk::platform::crypto_key_type_t;
 using sdk::platform::lif_qpurpose_t;
 
 #endif    // __DEVAPI_TYPES_HPP__

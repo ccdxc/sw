@@ -2853,6 +2853,13 @@ typedef struct pd_accel_rgroup_metrics_get_args_s {
     void *usr_ctx;
 } __PACK__ pd_accel_rgroup_metrics_get_args_t;
 
+typedef struct pd_accel_rgroup_misc_get_args_s {
+    const char *rgroup_name;
+    uint32_t sub_ring;
+    accel_rgroup_ring_misc_cb_t cb_func;
+    void *usr_ctx;
+} __PACK__ pd_accel_rgroup_misc_get_args_t;
+
 // gft
 typedef struct pd_gft_exact_match_profile_args_s {
     gft_exact_match_profile_t       *exact_match_profile;
@@ -3328,7 +3335,8 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET, 298, "PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET") \
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_INIT,        299, "PD_FUNC_ID_ACCEL_RGROUP_INIT")\
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_FINI,        300, "PD_FUNC_ID_ACCEL_RGROUP_FINI")\
-    ENTRY(PD_FUNC_ID_MAX,                      301, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_ACCEL_RGROUP_MISC_GET,    301, "PD_FUNC_ID_ACCEL_RGROUP_MISC_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      302, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3741,6 +3749,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_accel_rgroup_info_get);
         PD_UNION_ARGS_FIELD(pd_accel_rgroup_indices_get);
         PD_UNION_ARGS_FIELD(pd_accel_rgroup_metrics_get);
+        PD_UNION_ARGS_FIELD(pd_accel_rgroup_misc_get);
 
         // fte_span pd calls
         PD_UNION_ARGS_FIELD(pd_fte_span_create);
@@ -4194,6 +4203,7 @@ PD_FUNCP_TYPEDEF(pd_accel_rgroup_pndx_set);
 PD_FUNCP_TYPEDEF(pd_accel_rgroup_info_get);
 PD_FUNCP_TYPEDEF(pd_accel_rgroup_indices_get);
 PD_FUNCP_TYPEDEF(pd_accel_rgroup_metrics_get);
+PD_FUNCP_TYPEDEF(pd_accel_rgroup_misc_get);
 
 // fte_span pd calls
 PD_FUNCP_TYPEDEF(pd_fte_span_create);

@@ -586,6 +586,27 @@ end:
 }
 
 sdk_ret_t
+devapi_iris::accel_rgroup_misc_get(string name, uint32_t sub_ring,
+                                   accel_rgroup_rmisc_rsp_cb_t rsp_cb_func,
+                                   void *user_ctx, uint32_t *ret_num_entries)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_accel *accel = NULL;
+
+    accel = devapi_accel::find_or_create();
+    if (!accel) {
+        NIC_LOG_ERR("Failed to find/create accel");
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    ret = accel->accel_rgroup_misc_get(name, sub_ring, rsp_cb_func,
+                                       user_ctx, ret_num_entries);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
 devapi_iris::crypto_key_index_upd(uint32_t key_index, crypto_key_type_t type,
                                   void *key, uint32_t key_size)
 {

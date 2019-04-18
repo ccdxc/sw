@@ -457,6 +457,56 @@ devapi_accel::accel_rgroup_metrics_get(string name, uint32_t sub_ring,
 }
 
 sdk_ret_t
+devapi_accel::accel_rgroup_misc_get(string name, uint32_t sub_ring,
+                                    accel_rgroup_rmisc_rsp_cb_t rsp_cb_func,
+                                    void *user_ctx, uint32_t *ret_num_entries)
+{
+    sdk_ret_t                           ret = SDK_RET_OK;
+    AccelRGroupMiscGetRequestMsg        req_msg;
+    AccelRGroupMiscGetResponseMsg       rsp_msg;
+    grpc::Status                        status;
+
+    auto req = req_msg.add_request();
+    req->set_rgroup_name(name);
+    req->set_sub_ring(sub_ring);
+    VERIFY_HAL_RETURN();
+    status = hal->accel_rgroup_misc_get(req_msg, rsp_msg);
+    if (!status.ok()) {
+        NIC_FUNC_ERR("GRPC status {} {}", status.error_code(),
+                     status.error_message());
+        ret = SDK_RET_ERR;
+        return ret;
+    }
+    auto rsp = rsp_msg.response(0);
+    if (rsp.api_status() != types::API_STATUS_OK) {
+        NIC_FUNC_ERR("API status {} rgroup_name {}",
+                     rsp.api_status(), name);
+        ret = SDK_RET_ERR;
+        return ret;
+    }
+
+    *ret_num_entries = (uint32_t)rsp.ring_misc_spec_size();
+    for (int i = 0; i < (int)*ret_num_entries; i++) {
+        accel_rgroup_rmisc_rsp_t rmisc = {0};
+        auto spec = rsp.ring_misc_spec(i);
+
+        rmisc.ring_handle = spec.ring_handle();
+        rmisc.sub_ring = spec.sub_ring();
+        rmisc.num_reg_vals = std::min(spec.num_reg_vals(),
+                                      (uint32_t)ACCEL_RING_NUM_REGS_MAX);
+        for (uint32_t j = 0; j < rmisc.num_reg_vals; j++) {
+             auto reg_val = spec.reg_val(j);
+             strncpy(rmisc.reg_val[j].name, reg_val.name().c_str(),
+                     sizeof(rmisc.reg_val[j].name));
+             rmisc.reg_val[j].name[sizeof(rmisc.reg_val[j].name)-1] = '\0';
+             rmisc.reg_val[j].val = reg_val.val();
+        }
+        (*rsp_cb_func)(user_ctx, rmisc);
+    }
+    return ret;
+}
+
+sdk_ret_t
 devapi_accel::crypto_key_index_upd(uint32_t key_index,
                                    crypto_key_type_t key_type,
                                    void *key, uint32_t key_size)

@@ -6,6 +6,7 @@
 #define __ACCEL_RGROUP_HPP__
 
 #include "nic/include/base.hpp"
+#include "nic/include/accel_ring.h"
 #include "gen/proto/accel_rgroup.pb.h"
 #include "nic/include/pd.hpp"
 
@@ -29,6 +30,8 @@ using accelRGroup::AccelRGroupIndicesGetRequest;
 using accelRGroup::AccelRGroupIndicesGetResponse;
 using accelRGroup::AccelRGroupMetricsGetRequest;
 using accelRGroup::AccelRGroupMetricsGetResponse;
+using accelRGroup::AccelRGroupMiscGetRequest;
+using accelRGroup::AccelRGroupMiscGetResponse;
 
 namespace hal {
 
@@ -78,6 +81,18 @@ typedef struct {
 
 typedef void (*accel_rgroup_ring_metrics_cb_t)(void *user_ctx,
                                                const accel_rgroup_ring_metrics_t& metrics);
+/*
+ * Ring miscellaneous info, identified by resource name
+ */
+typedef struct {
+    uint32_t    ring_handle;
+    uint32_t    sub_ring;
+    uint32_t    num_reg_vals;
+    accel_ring_reg_val_t reg_val[ACCEL_RING_NUM_REGS_MAX];
+} accel_rgroup_ring_misc_t;
+
+typedef void (*accel_rgroup_ring_misc_cb_t)(void *user_ctx,
+                                            const accel_rgroup_ring_misc_t& misc);
 
 
 hal_ret_t accel_rgroup_init(int tid);
@@ -102,6 +117,8 @@ hal_ret_t accel_rgroup_indices_get(const AccelRGroupIndicesGetRequest& request,
                                    AccelRGroupIndicesGetResponse *response);
 hal_ret_t accel_rgroup_metrics_get(const AccelRGroupMetricsGetRequest& request,
                                    AccelRGroupMetricsGetResponse *response);
+hal_ret_t accel_rgroup_misc_get(const AccelRGroupMiscGetRequest& request,
+                                AccelRGroupMiscGetResponse *response);
 }    // namespace hal
 
 #endif // __ACCEL_RGROUP_HPP__

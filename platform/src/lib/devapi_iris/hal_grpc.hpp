@@ -118,6 +118,8 @@ using accelRGroup::AccelRGroupIndicesGetRequestMsg;
 using accelRGroup::AccelRGroupIndicesGetResponseMsg;
 using accelRGroup::AccelRGroupMetricsGetRequestMsg;
 using accelRGroup::AccelRGroupMetricsGetResponseMsg;
+using accelRGroup::AccelRGroupMiscGetRequestMsg;
+using accelRGroup::AccelRGroupMiscGetResponseMsg;
 using internal::CryptoKeyCreateWithIdRequestMsg;
 using internal::CryptoKeyCreateWithIdResponseMsg;
 using internal::CryptoKeyUpdateRequestMsg;
@@ -248,6 +250,8 @@ public:
                                     AccelRGroupIndicesGetResponseMsg& rsp_msg);
     Status accel_rgroup_metrics_get(AccelRGroupMetricsGetRequestMsg& req_msg,
                                     AccelRGroupMetricsGetResponseMsg& rsp_msg);
+    Status accel_rgroup_misc_get(AccelRGroupMiscGetRequestMsg& req_msg,
+                                 AccelRGroupMiscGetResponseMsg& rsp_msg);
     Status crypto_create(CryptoKeyCreateWithIdRequestMsg& req_msg,
                          CryptoKeyCreateWithIdResponseMsg& rsp_msg);
     Status crypto_update(CryptoKeyUpdateRequestMsg& req_msg,

@@ -84,4 +84,15 @@ typedef struct {
     uint64_t    soft_resets;
 } __attribute__((packed)) accel_ring_metrics_t;
 
+/**
+ * Ring miscellaneous register info, identified by register name
+ */
+#define ACCEL_RING_REG_NAME_MAX         32
+#define ACCEL_RING_NUM_REGS_MAX         32
+
+typedef struct {
+    char        name[ACCEL_RING_REG_NAME_MAX];
+    uint32_t    val;
+} accel_ring_reg_val_t;
+
 #endif /* _ACCEL_RING_H_ */

@@ -205,6 +205,20 @@ static inline void sonic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(union identity) != 4096);
 	BUILD_BUG_ON(sizeof(struct lif_init_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct lif_init_cpl) != 16);
+	BUILD_BUG_ON(sizeof(struct lif_reset_cmd) != 64);
+	BUILD_BUG_ON(sizeof(lif_reset_cpl_t) != 16);
+	BUILD_BUG_ON(sizeof(struct seq_queue_init_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct seq_queue_init_cpl) != 16);
+	BUILD_BUG_ON(sizeof(struct seq_queue_control_cmd) != 64);
+	BUILD_BUG_ON(sizeof(seq_queue_control_cpl_t) != 16);
+	BUILD_BUG_ON(sizeof(struct seq_queue_batch_init_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct seq_queue_batch_init_cpl) != 16);
+	BUILD_BUG_ON(sizeof(struct seq_queue_batch_control_cmd) != 64);
+	BUILD_BUG_ON(sizeof(seq_queue_batch_control_cpl_t) != 16);
+	BUILD_BUG_ON(sizeof(struct seq_queue_init_complete_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct seq_queue_init_complete_cpl) != 16);
+	BUILD_BUG_ON(sizeof(struct crypto_key_update_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct crypto_key_update_cpl) != 16);
 	BUILD_BUG_ON(sizeof(struct adminq_init_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct adminq_init_cpl) != 16);
 	BUILD_BUG_ON(sizeof(union adminq_cmd) != 64);
@@ -373,7 +387,6 @@ u8 sonic_dev_cmd_status(struct sonic_dev *idev);
 bool sonic_dev_cmd_done(struct sonic_dev *idev);
 void sonic_dev_cmd_comp(struct sonic_dev *idev, void *mem);
 void sonic_dev_cmd_reset(struct sonic_dev *idev);
-void sonic_dev_cmd_hang_notify(struct sonic_dev *idev);
 void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver, dma_addr_t addr);
 void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 index);
 void sonic_dev_cmd_lif_reset(struct sonic_dev *idev, u32 index);
@@ -394,9 +407,6 @@ void sonic_intr_mask_on_assertion(struct intr *intr);
 void sonic_intr_return_credits(struct intr *intr, unsigned int credits,
 			       bool unmask, bool reset_timer);
 void sonic_intr_mask(struct intr *intr, bool mask);
-#ifndef TEMP_DEBUG_TO_BE_REMOVED
-bool sonic_intr_is_masked(struct intr *intr);
-#endif
 void sonic_intr_coal_set(struct intr *intr, u32 coal_usecs);
 int sonic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 		  unsigned int num_descs, size_t desc_size);

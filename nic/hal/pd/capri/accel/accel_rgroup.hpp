@@ -12,6 +12,10 @@
 #include "nic/include/accel_ring.h"
 #include "nic/hal/plugins/cfg/accel/accel_rgroup.hpp"
 
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(arr)         (sizeof(arr) / sizeof(arr[0]))
+#endif
+
 namespace hal {
 namespace pd {
 
@@ -47,6 +51,10 @@ namespace pd {
                                   uint32_t sub_ring,                        \
                                   accel_rgroup_ring_metrics_cb_t cb_func,   \
                                   void *usr_ctx) SUPPORT;                   \
+    virtual hal_ret_t misc_get(uint32_t ring_handle,                        \
+                               uint32_t sub_ring,                           \
+                               accel_rgroup_ring_misc_cb_t cb_func,         \
+                               void *usr_ctx) SUPPORT;                      \
 
 /*
  * Ring operations base class
@@ -183,6 +191,9 @@ public:
     hal_ret_t metrics_get(uint32_t sub_ring,
                           accel_rgroup_ring_metrics_cb_t cb_func,
                           void *user_ctx);
+    hal_ret_t misc_get(uint32_t sub_ring,
+                       accel_rgroup_ring_misc_cb_t cb_func,
+                       void *user_ctx);
 
     uint64_t  metrics_addr_get(void) { return metrics_mem_addr; }
     uint64_t  metrics_size_get(void) { return metrics_mem_size; }
@@ -240,6 +251,10 @@ hal_ret_t accel_rgroup_metrics_get(const char *rgroup_name,
                                    uint32_t sub_ring,
                                    accel_rgroup_ring_metrics_cb_t cb_func,
                                    void *user_ctx);
+hal_ret_t accel_rgroup_misc_get(const char *rgroup_name,
+                                uint32_t sub_ring,
+                                accel_rgroup_ring_misc_cb_t cb_func,
+                                void *user_ctx);
 
 }    // namespace pd
 }    // namespace hal

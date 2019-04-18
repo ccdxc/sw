@@ -420,6 +420,20 @@ hal_grpc::accel_rgroup_metrics_get(AccelRGroupMetricsGetRequestMsg& req_msg,
 }
 
 Status
+hal_grpc::accel_rgroup_misc_get(AccelRGroupMiscGetRequestMsg& req_msg,
+                                AccelRGroupMiscGetResponseMsg& rsp_msg)
+{
+    grpc::ClientContext context;
+    grpc::Status        status;
+
+    SET_TIMEOUT();
+    status = accel_rgroup_stub_->AccelRGroupMiscGet(&context,
+                                                    req_msg, &rsp_msg);
+
+    return status;
+}
+
+Status
 hal_grpc::crypto_create(CryptoKeyCreateWithIdRequestMsg& req_msg,
                         CryptoKeyCreateWithIdResponseMsg& rsp_msg)
 {

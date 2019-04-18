@@ -62,7 +62,6 @@ typedef struct {
     accel_rgroup_rinfo_rsp_t    info;
     accel_rgroup_rindices_rsp_t indices;
     accel_rgroup_rmetrics_rsp_t metrics;
-    uint64_t                    soft_resets;
 } accel_rgroup_ring_t;
 
 /*
@@ -162,6 +161,7 @@ typedef enum {
     ACCEL_LIF_EV_SEQ_QUEUE_BATCH_ENABLE,
     ACCEL_LIF_EV_SEQ_QUEUE_BATCH_DISABLE,
     ACCEL_LIF_EV_CRYPTO_KEY_UPDATE,
+    ACCEL_LIF_EV_HANG_NOTIFY,
 
     ACCEL_LIF_EV_MAX
 } accel_lif_event_t;
@@ -189,6 +189,7 @@ typedef enum {
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_SEQ_QUEUE_BATCH_ENABLE),   \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_SEQ_QUEUE_BATCH_DISABLE),  \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_CRYPTO_KEY_UPDATE),        \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_HANG_NOTIFY),              \
 
 typedef accel_lif_event_t (AccelLif::*accel_lif_action_t)(accel_lif_event_t event);
 
@@ -224,7 +225,8 @@ typedef struct {
     accel_lif_devcmd_ctx_t  devcmd;
     accel_timestamp_t       ts;
     uint32_t                quiesce_qid;
-    bool                    reset_destroy;
+    uint32_t                reset_destroy : 1,
+                            info_dump     : 1;
 } accel_lif_fsm_ctx_t;
 
 /**
@@ -269,6 +271,8 @@ public:
                              const accel_rgroup_rindices_rsp_t& indices);
     friend void accel_rgroup_rmetrics_rsp_cb(void *user_ctx,
                              const accel_rgroup_rmetrics_rsp_t& metrics);
+    friend void accel_rgroup_rmisc_rsp_cb(void *user_ctx,
+                             const accel_rgroup_rmisc_rsp_t& misc);
 
     accel_lif_event_t accel_lif_null_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_eagain_action(accel_lif_event_t event);
@@ -288,6 +292,7 @@ public:
     accel_lif_event_t accel_lif_seq_queue_batch_init_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_seq_queue_batch_control_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_crypto_key_update_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_hang_notify_action(accel_lif_event_t event);
 
 private:
     std::string                 lif_name;
@@ -345,6 +350,7 @@ private:
     int accel_rgroup_rinfo_get(void);
     int accel_rgroup_rindices_get(void);
     int accel_rgroup_rmetrics_get(void);
+    int accel_rgroup_rmisc_get(void);
     uint32_t accel_ring_num_pendings_get(const accel_rgroup_ring_t& rgroup_ring);
     int accel_ring_max_pendings_get(uint32_t& max_pendings);
     int qmetrics_init(void);

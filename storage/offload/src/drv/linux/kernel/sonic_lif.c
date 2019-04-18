@@ -2057,8 +2057,7 @@ sonic_lif_seq_q_init_complete(struct lif *lif)
 	return err;
 }
 
-#if 0
-static int
+int
 sonic_lif_hang_notify(struct lif *lif)
 {
 	struct sonic_admin_ctx ctx = {
@@ -2083,4 +2082,3 @@ sonic_lif_hang_notify(struct lif *lif)
 
 	return err;
 }
-#endif

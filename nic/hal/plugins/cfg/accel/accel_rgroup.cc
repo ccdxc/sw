@@ -314,4 +314,57 @@ accel_rgroup_metrics_get(const AccelRGroupMetricsGetRequest& request,
     return ret;
 }
 
+typedef struct {
+    AccelRGroupMiscGetResponse      *response;
+    uint32_t                        rsp_count;
+} rgroup_misc_get_ctx_t;
+
+static void
+rgroup_misc_get_cb(void *user_ctx,
+                   const accel_rgroup_ring_misc_t& misc)
+{
+    rgroup_misc_get_ctx_t        *ctx = (rgroup_misc_get_ctx_t *)user_ctx;
+    AccelRGroupMiscGetResponse   *response = ctx->response;
+    uint32_t                     num_reg_vals;
+
+    response->add_ring_misc_spec();
+    response->mutable_ring_misc_spec(ctx->rsp_count)->set_ring_handle(misc.ring_handle);
+    response->mutable_ring_misc_spec(ctx->rsp_count)->set_sub_ring(misc.sub_ring);
+    num_reg_vals = std::min(misc.num_reg_vals, (uint32_t)ACCEL_RING_NUM_REGS_MAX);
+    response->mutable_ring_misc_spec(ctx->rsp_count)->set_num_reg_vals(num_reg_vals);
+    for (uint32_t i = 0; i < num_reg_vals; i++) {
+        response->mutable_ring_misc_spec(ctx->rsp_count)->add_reg_val();
+        response->mutable_ring_misc_spec(ctx->rsp_count)->mutable_reg_val(i)->set_name(misc.reg_val[i].name);
+        response->mutable_ring_misc_spec(ctx->rsp_count)->mutable_reg_val(i)->set_val(misc.reg_val[i].val);
+    }
+    ctx->rsp_count++;
+}
+
+hal_ret_t
+accel_rgroup_misc_get(const AccelRGroupMiscGetRequest& request,
+                      AccelRGroupMiscGetResponse *response)
+{
+    pd::pd_accel_rgroup_misc_get_args_t  args = {0};
+    pd::pd_func_args_t                   pd_func_args = {0};
+    rgroup_misc_get_ctx_t                ctx = {0};
+    hal_ret_t                            ret;
+
+    args.rgroup_name = request.rgroup_name().c_str();
+    args.sub_ring = request.sub_ring();
+    ctx.response = response;
+    args.cb_func = &rgroup_misc_get_cb;
+    args.usr_ctx = &ctx;
+    pd_func_args.pd_accel_rgroup_misc_get = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_ACCEL_RGROUP_MISC_GET, &pd_func_args);
+    if (ret == HAL_RET_OK) {
+        response->set_api_status(types::API_STATUS_OK);
+        return ret;
+    }
+
+    HAL_TRACE_ERR("{} rgroup_name {} error {}", __FUNCTION__,
+                  args.rgroup_name, ret);
+    response->set_api_status(types::API_STATUS_ERR);
+    return ret;
+}
+
 }    // namespace hal

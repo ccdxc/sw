@@ -223,14 +223,6 @@ void sonic_intr_mask(struct intr *intr, bool mask)
 	(void)ioread32(intr_to_mask(intr->ctrl)); /* flush write */
 }
 
-#ifndef TEMP_DEBUG_TO_BE_REMOVED
-bool sonic_intr_is_masked(struct intr *intr)
-{
-	uint32_t val = ioread32(intr_to_mask(intr->ctrl));
-	return val & 1;
-}
-#endif
-
 void sonic_intr_coal_set(struct intr *intr, u32 intr_coal)
 {
 	struct intr_ctrl ctrl = {

@@ -22,6 +22,7 @@ hal_ret_t pd_accel_rgroup_pndx_set (pd_func_args_t *pd_func_args);
 hal_ret_t pd_accel_rgroup_info_get (pd_func_args_t *pd_func_args);
 hal_ret_t pd_accel_rgroup_indices_get (pd_func_args_t *pd_func_args);
 hal_ret_t pd_accel_rgroup_metrics_get (pd_func_args_t *pd_func_args);
+hal_ret_t pd_accel_rgroup_misc_get (pd_func_args_t *pd_func_args);
 
 } // namespace pd
 } // namespace hal

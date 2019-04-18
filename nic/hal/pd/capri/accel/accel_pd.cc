@@ -102,5 +102,13 @@ pd_accel_rgroup_metrics_get (pd_func_args_t *pd_func_args)
                                     args->cb_func, args->usr_ctx);
 }
 
+hal_ret_t
+pd_accel_rgroup_misc_get (pd_func_args_t *pd_func_args)
+{
+    pd_accel_rgroup_misc_get_args_t *args = pd_func_args->pd_accel_rgroup_misc_get;
+    return accel_rgroup_misc_get(args->rgroup_name, args->sub_ring,
+                                 args->cb_func, args->usr_ctx);
+}
+
 } // namespace pd
 } // namespace hal

@@ -21,6 +21,7 @@ service AccelRGroup {
     rpc AccelRGroupInfoGet (AccelRGroupInfoGetRequestMsg) returns (AccelRGroupInfoGetResponseMsg) {}
     rpc AccelRGroupIndicesGet (AccelRGroupIndicesGetRequestMsg) returns (AccelRGroupIndicesGetResponseMsg) {}
     rpc AccelRGroupMetricsGet (AccelRGroupMetricsGetRequestMsg) returns (AccelRGroupMetricsGetResponseMsg) {}
+    rpc AccelRGroupMiscGet (AccelRGroupMiscGetRequestMsg) returns (AccelRGroupMiscGetResponseMsg) {}
 }
 
 message AccelRGroupAddRequest {
@@ -235,5 +236,35 @@ message AccelRGroupMetricsGetResponse {
 
 message AccelRGroupMetricsGetResponseMsg {
     repeated AccelRGroupMetricsGetResponse response = 1;
+}
+
+message AccelRGroupMiscGetRequest {
+    string rgroup_name = 1;
+    uint32 sub_ring = 2;
+}
+
+message AccelRGroupMiscGetRequestMsg {
+    repeated AccelRGroupMiscGetRequest request = 1;
+}
+
+message AccelRGroupMiscRegVal {
+    string name = 1;
+    uint32 val = 2;
+}
+
+message AccelRGroupRingMiscSpec {
+    uint32 ring_handle = 1;
+    uint32 sub_ring = 2;
+    uint32 num_reg_vals = 3;
+    repeated AccelRGroupMiscRegVal reg_val = 4;
+}
+
+message AccelRGroupMiscGetResponse {
+    types.ApiStatus api_status = 1;
+    repeated AccelRGroupRingMiscSpec ring_misc_spec = 2;
+}
+
+message AccelRGroupMiscGetResponseMsg {
+    repeated AccelRGroupMiscGetResponse response = 1;
 }
 
