@@ -88,14 +88,14 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   // All columns are set as not sortable as it isn't currently supported
   // TODO: Support sorting columns
   eventCols: any[] = [
-    { field: 'meta.mod-time', header: 'Modification Time', class: 'alertsevents-column-date', sortable: true },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'alertsevents-column-date', sortable: true },
     { field: 'severity', header: 'Severity', class: 'alertsevents-column-severity', sortable: false },
     { field: 'type', header: 'Type', class: 'alertsevents-column-event', sortable: true },
     { field: 'message', header: 'Message', class: 'alertsevents-column-message-event', sortable: false },
     { field: 'object-ref.name', header: 'Object Ref', class: 'alertsevents-column-obj-ref', sortable: false },
     { field: 'count', header: 'Count', class: 'alertsevents-column-count', sortable: false },
     { field: 'source', header: 'Source Node & Component', class: 'alertsevents-column-source', sortable: false },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'alertsevents-column-date', sortable: true },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'alertsevents-column-date', sortable: true },
   ];
 
   // Will hold mapping from severity types to counts
