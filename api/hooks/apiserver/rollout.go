@@ -7,16 +7,16 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 
 	"github.com/gogo/protobuf/types"
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/rollout"
 
 	"github.com/pkg/errors"
 
-	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
-	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -27,18 +27,65 @@ type rolloutHooks struct {
 	svc apiserver.Service
 }
 
-func suspendRolloutActionObj(ctx context.Context, kv kvstore.Interface, key string, cur *rollout.Rollout) error {
+func updateRolloutObj(ctx context.Context, kv kvstore.Interface, key string, cur *rollout.Rollout) error {
 
+	if !cur.Spec.Suspend {
+		return errors.New("Updating existing rollout other than to suspend/cancel is not allowed")
+	}
 	err := kv.ConsistentUpdate(ctx, key, cur, func(oldObj runtime.Object) (runtime.Object, error) {
 		rObj, ok := oldObj.(*rollout.Rollout)
 		if !ok {
 			return oldObj, errors.New("invalid input type")
 		}
-		rObj.Spec.Suspend = true
-		rObj.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
+		rObj.Spec.Suspend = cur.Spec.Suspend
+		rObj.Spec.Version = cur.Spec.Version
+		rObj.Spec.ScheduledStartTime = cur.Spec.ScheduledStartTime
+		rObj.Spec.Duration = cur.Spec.Duration
+		rObj.Spec.MaxNICFailuresBeforeAbort = cur.Spec.MaxNICFailuresBeforeAbort
+		rObj.Spec.MaxParallel = cur.Spec.MaxParallel
+		rObj.Spec.OrderConstraints = cur.Spec.OrderConstraints
+		rObj.Spec.SmartNICMustMatchConstraint = cur.Spec.SmartNICMustMatchConstraint
+		rObj.Spec.SmartNICsOnly = cur.Spec.SmartNICsOnly
+		rObj.Spec.Strategy = cur.Spec.Strategy
+		rObj.Spec.UpgradeType = cur.Spec.UpgradeType
+		if cur.Spec.Suspend {
+			rObj.Status.OperationalState = rollout.RolloutStatus_SUSPENDED.String()
+		}
 		return rObj, nil
 	})
 	return err
+}
+
+func updateRolloutActionObj(rolloutActionObj *rollout.RolloutAction, buf *rollout.Rollout, txn kvstore.Txn) (bool, error) {
+
+	rolloutActionObjKey := rolloutActionObj.MakeKey(string(apiclient.GroupRollout))
+	rolloutActionObj.Name = buf.Name
+	rolloutActionObj.Spec.Suspend = buf.Spec.Suspend
+	rolloutActionObj.Spec.Version = buf.Spec.Version
+	rolloutActionObj.Spec.ScheduledStartTime = buf.Spec.ScheduledStartTime
+	rolloutActionObj.Spec.Duration = buf.Spec.Duration
+	rolloutActionObj.Spec.MaxNICFailuresBeforeAbort = buf.Spec.MaxNICFailuresBeforeAbort
+	rolloutActionObj.Spec.MaxParallel = buf.Spec.MaxParallel
+	rolloutActionObj.Spec.OrderConstraints = buf.Spec.OrderConstraints
+	rolloutActionObj.Spec.SmartNICMustMatchConstraint = buf.Spec.SmartNICMustMatchConstraint
+	rolloutActionObj.Spec.SmartNICsOnly = buf.Spec.SmartNICsOnly
+	rolloutActionObj.Spec.Strategy = buf.Spec.Strategy
+	rolloutActionObj.Spec.UpgradeType = buf.Spec.UpgradeType
+	ts, err := types.TimestampProto(time.Now())
+	if err != nil {
+		return false, errors.New("RolloutAction update operation failed to get timestamp")
+	}
+	rolloutActionObj.ModTime = api.Timestamp{Timestamp: *ts}
+	if buf.Spec.Suspend {
+		rolloutActionObj.Status.OperationalState = rollout.RolloutStatus_SUSPENDED.String()
+	} else {
+		rolloutActionObj.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
+	}
+	err = txn.Update(rolloutActionObjKey, rolloutActionObj)
+	if err != nil {
+		return false, errors.New("RolloutAction update operation to transaction failed")
+	}
+	return true, nil
 }
 
 func createRolloutActionObj(buf rollout.Rollout, rolloutActionObj *rollout.RolloutAction) error {
@@ -52,12 +99,24 @@ func createRolloutActionObj(buf rollout.Rollout, rolloutActionObj *rollout.Rollo
 	rolloutActionObj.UUID = uuid.NewV4().String()
 	ts, err := types.TimestampProto(time.Now())
 	if err != nil {
-		return err
+		return errors.New("RolloutAction create operation failed to get timestamp")
 	}
 	rolloutActionObj.CreationTime, rolloutActionObj.ModTime = api.Timestamp{Timestamp: *ts}, api.Timestamp{Timestamp: *ts}
-	rolloutActionObj.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_PROGRESSING)]
+	rolloutActionObj.Status.OperationalState = rollout.RolloutStatus_PROGRESSING.String()
 	return nil
 }
+
+func checkRolloutInProgress(rolloutActionObj rollout.RolloutAction) bool {
+
+	opState := rolloutActionObj.Status.GetOperationalState()
+	if opState == rollout.RolloutStatus_PROGRESSING.String() ||
+		opState == rollout.RolloutStatus_SCHEDULED.String() ||
+		opState == rollout.RolloutStatus_SUSPEND_IN_PROGRESS.String() {
+		return true
+	}
+	return false
+}
+
 func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	h.l.InfoLog("msg", "received commitAction preCommit Hook for RolloutAction  key %s", key)
 	var err error
@@ -67,85 +126,62 @@ func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface
 		h.l.ErrorLog("Invalid object in pre commit hook for rolloutAction")
 		return nil, false, errors.New("invalid object")
 	}
+
+	if kv == nil || txn == nil {
+		h.l.ErrorLog("Invalid kvstore and txn objects for rolloutAction")
+		return nil, false, errors.New("invalid kvstore and txn objects")
+	}
+
 	rolloutObj := rollout.Rollout{}
 	rolloutObjKey := buf.MakeKey(string(apiclient.GroupRollout))
-	if kv != nil {
-		err = kv.Get(ctx, rolloutObjKey, &rolloutObj)
-		// You can suspend a rollout Operation once its scheduled or started
-		if err == nil && buf.Spec.Suspend != true {
-			h.l.InfoLog("msg", "rollout Object %v already exists", buf.Name)
-			return buf, false, err
-		}
-	}
 
 	rolloutActionObj := &rollout.RolloutAction{}
 	rolloutActionObjKey := rolloutActionObj.MakeKey(string(apiclient.GroupRollout))
 
-	if kv != nil {
-		err = kv.Get(ctx, rolloutActionObjKey, rolloutActionObj)
-	}
-	h.l.InfoLog("msg", "GET rolloutAction %v rolloutActionStatus %v", rolloutActionObj, rolloutActionObj.Status)
-	if err != nil {
+	if err = kv.Get(ctx, rolloutActionObjKey, rolloutActionObj); err != nil {
 		//create rolloutActionObj
-		h.l.InfoLog("msg", "Creating RolloutAction")
+		h.l.InfoLog("msg", "Creating RolloutAction & Creating Rollout")
 		err := createRolloutActionObj(buf, rolloutActionObj)
 		if err != nil {
-			return i, false, err
+			return buf, false, errors.New("RolloutAction create failed")
 		}
 		err = txn.Create(rolloutActionObjKey, rolloutActionObj)
 		if err != nil {
 			return buf, false, errors.New("RolloutAction create operation to transaction failed")
 		}
+		return buf, true, nil
+	}
 
-	} else {
-		//update rolloutAction
-		h.l.InfoLog("msg", "Updating RolloutAction")
-		opState := rolloutActionObj.Status.GetOperationalState()
-		cur := &rollout.Rollout{}
-		//verify suspend rollout
-		if buf.Name == rolloutActionObj.Name &&
-			buf.Spec.Suspend == true {
-			h.l.InfoLog("msg", "Request to suspend Rollout Operation %s", buf.Name)
-			if err := suspendRolloutActionObj(ctx, kv, key, cur); err != nil {
-				h.l.Errorf("Error setting suspend flag: %v", err)
-				return nil, false, err
-			}
-			h.l.Infof("Rollout suspend flag is set and locked down")
-			rolloutActionObj.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPENDED)]
-			if txn != nil {
-				err = txn.Update(rolloutActionObjKey, rolloutActionObj)
-				if err != nil {
-					return buf, false, errors.New("RolloutAction update operation to transaction failed")
-				}
-			}
-			return buf, false, nil
-		}
+	txn.AddComparator(kvstore.Compare(kvstore.WithVersion(rolloutActionObjKey), "=", rolloutActionObj.ResourceVersion))
 
-		if opState == rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_PROGRESSING)] ||
-			opState == rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SCHEDULED)] ||
-			opState == rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_SUSPEND_IN_PROGRESS)] {
+	if err = kv.Get(ctx, rolloutObjKey, &rolloutObj); err != nil {
+		//update rolloutAction && create rollout
+		h.l.InfoLog("msg", "Updating RolloutAction & Create Rollout")
+		if inProgress := checkRolloutInProgress(*rolloutActionObj); inProgress {
 			h.l.InfoLog("msg", "Rollout in progress %#v", rolloutActionObj.Status)
 			return buf, false, errors.New("Rollout in progress")
 		}
-		if txn != nil {
-			txn.AddComparator(kvstore.Compare(kvstore.WithVersion(rolloutActionObjKey), "=", rolloutActionObj.ResourceVersion))
+
+		if _, err := updateRolloutActionObj(rolloutActionObj, &buf, txn); err != nil {
+			h.l.InfoLog("msg", "Update RolloutAction Failed %s", err)
+			return buf, false, err
 		}
-		rolloutActionObj.Name = buf.Name
-		ts, err := types.TimestampProto(time.Now())
-		if err != nil {
-			return i, false, err
-		}
-		rolloutActionObj.ModTime = api.Timestamp{Timestamp: *ts}
-		rolloutActionObj.Status.OperationalState = rollout.RolloutStatus_RolloutOperationalState_name[int32(rollout.RolloutStatus_PROGRESSING)]
-		if txn != nil {
-			err = txn.Update(rolloutActionObjKey, rolloutActionObj)
-			if err != nil {
-				return buf, false, errors.New("RolloutAction update operation to transaction failed")
-			}
-		}
+		return buf, true, nil
 	}
+	h.l.InfoLog("msg", "Updating RolloutAction & Update Rollout")
+
+	if err := updateRolloutObj(ctx, kv, key, &buf); err != nil {
+		h.l.Errorf("Error updating rollout: %v", err)
+		return nil, false, err
+	}
+
+	if _, err := updateRolloutActionObj(rolloutActionObj, &buf, txn); err != nil {
+		h.l.InfoLog("msg", "Update RolloutAction Failed %s", err)
+		return buf, false, err
+	}
+
 	h.l.InfoLog("msg", "RolloutAction Prehook Completed %v", rolloutActionObj)
-	return buf, true, nil
+	return buf, false, nil
 }
 
 func (h *rolloutHooks) getRolloutObject(ctx context.Context, kv kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {

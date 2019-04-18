@@ -1014,7 +1014,8 @@ func makeURIRolloutV1AutoDeleteRolloutDeleteOper(in *Rollout) string {
 
 //
 func makeURIRolloutV1AutoDeleteRolloutActionDeleteOper(in *RolloutAction) string {
-	return fmt.Sprint("/configs/rollout/v1", "/rolloutAction")
+	return ""
+
 }
 
 //
@@ -1024,7 +1025,8 @@ func makeURIRolloutV1AutoGetRolloutGetOper(in *Rollout) string {
 
 //
 func makeURIRolloutV1AutoGetRolloutActionGetOper(in *RolloutAction) string {
-	return fmt.Sprint("/configs/rollout/v1", "/rolloutAction")
+	return ""
+
 }
 
 //
@@ -1057,7 +1059,8 @@ func makeURIRolloutV1AutoWatchRolloutWatchOper(in *api.ListWatchOptions) string 
 
 //
 func makeURIRolloutV1AutoWatchRolloutActionWatchOper(in *api.ListWatchOptions) string {
-	return fmt.Sprint("/configs/rollout/v1", "/watch/rolloutAction")
+	return ""
+
 }
 
 //
@@ -1228,46 +1231,12 @@ func (r *EndpointsRolloutV1RestClient) AutoUpdateRolloutAction(ctx context.Conte
 
 // AutoGetRolloutAction CRUD method for RolloutAction
 func (r *EndpointsRolloutV1RestClient) AutoGetRolloutAction(ctx context.Context, in *RolloutAction) (*RolloutAction, error) {
-	path := makeURIRolloutV1AutoGetRolloutActionGetOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "GET", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespRolloutV1AutoGetRolloutAction(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*RolloutAction), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoDeleteRolloutAction CRUD method for RolloutAction
 func (r *EndpointsRolloutV1RestClient) AutoDeleteRolloutAction(ctx context.Context, in *RolloutAction) (*RolloutAction, error) {
-	path := makeURIRolloutV1AutoDeleteRolloutActionDeleteOper(in)
-	if r.bufferId != "" {
-		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
-	}
-	req, err := r.getHTTPRequest(ctx, in, "DELETE", path)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := r.client.Do(req.WithContext(ctx))
-	if err != nil {
-		return nil, fmt.Errorf("request failed (%s)", err)
-	}
-	defer resp.Body.Close()
-	ret, err := decodeHTTPrespRolloutV1AutoDeleteRolloutAction(ctx, resp)
-	if err != nil {
-		return nil, err
-	}
-	return ret.(*RolloutAction), err
+	return nil, errors.New("not allowed")
 }
 
 // AutoListRolloutAction CRUD method for RolloutAction

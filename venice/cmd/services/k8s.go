@@ -37,7 +37,7 @@ const (
 	daemonSet            = "DaemonSet"
 	deployment           = "Deployment"
 	defaultNS            = "default"
-	maxIters             = 24
+	maxIters             = 3
 	sleepBetweenItersSec = 5
 )
 
@@ -613,6 +613,7 @@ func upgradeDaemonSet(client k8sclient.Interface, module *protos.Module) error {
 					time.Sleep(sleepBetweenItersSec * time.Second)
 					continue
 				}
+				log.Infof("DaemonSet (%+v) Update Status %+v", cd.Name, cd.Status)
 				restartSuccessful = true
 				break
 			}
@@ -647,6 +648,7 @@ func upgradeDeployment(client k8sclient.Interface, module *protos.Module) error 
 					time.Sleep(sleepBetweenItersSec * time.Second)
 					continue
 				}
+				log.Infof("Deployment (%+v) Update Status %+v", cd.Name, cd.Status)
 				restartSuccessful = true
 				break
 			}

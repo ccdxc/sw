@@ -485,17 +485,11 @@ func (e *sRolloutV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoDeleteRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Rollout", "rollout", apiintf.DeleteOper)
 
-	e.svcProf["AutoDeleteRolloutAction"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RolloutAction", "rollout", apiintf.DeleteOper)
-
 	e.svcProf["AutoGetRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Rollout", "rollout", apiintf.GetOper)
-
-	e.svcProf["AutoGetRolloutAction"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RolloutAction", "rollout", apiintf.GetOper)
 
 	e.svcProf["AutoListRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "RolloutList", "rollout", apiintf.ListOper)
 
 	e.svcProf["AutoWatchRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRolloutWatchHelper", "rollout", apiintf.WatchOper)
-
-	e.svcProf["AutoWatchRolloutAction"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgRolloutActionWatchHelper", "rollout", apiintf.WatchOper)
 
 	e.svcProf["DoRollout"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Rollout", "rollout", apiintf.CreateOper)
 }

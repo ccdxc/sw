@@ -561,13 +561,13 @@ func (a *restObjRolloutV1RolloutAction) Allowed(oper apiintf.APIOperType) bool {
 	case apiintf.UpdateOper:
 		return false
 	case apiintf.GetOper:
-		return true
+		return false
 	case apiintf.DeleteOper:
-		return true
+		return false
 	case apiintf.ListOper:
 		return false
 	case apiintf.WatchOper:
-		return true
+		return false
 	default:
 		return false
 	}

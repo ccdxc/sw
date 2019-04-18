@@ -163,7 +163,7 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsRolloutV1.fnAutoDeleteRolloutAction = srv.AddMethod("AutoDeleteRolloutAction",
 			apisrvpkg.NewMethod(srv, pkgMessages["rollout.RolloutAction"], pkgMessages["rollout.RolloutAction"], "rollout", "AutoDeleteRolloutAction")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "rollout/v1/rolloutAction"), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsRolloutV1.fnAutoGetRollout = srv.AddMethod("AutoGetRollout",
@@ -177,7 +177,7 @@ func (s *srolloutSvc_rolloutBackend) regSvcsFunc(ctx context.Context, logger log
 
 		s.endpointsRolloutV1.fnAutoGetRolloutAction = srv.AddMethod("AutoGetRolloutAction",
 			apisrvpkg.NewMethod(srv, pkgMessages["rollout.RolloutAction"], pkgMessages["rollout.RolloutAction"], "rollout", "AutoGetRolloutAction")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "rollout/v1/rolloutAction"), nil
+			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsRolloutV1.fnAutoListRollout = srv.AddMethod("AutoListRollout",

@@ -501,11 +501,6 @@
           "RolloutAction": {
             "Scopes": [
               "cluster"
-            ],
-            "RestMethods": [
-              "get",
-              "delete",
-              "watch"
             ]
           }
         }
