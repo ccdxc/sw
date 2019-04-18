@@ -27,29 +27,29 @@ func isNICHostPair(nic *cluster.SmartNIC, host *cluster.Host) bool {
 	return false
 }
 
-// UpdateHostPairingStatus is called when a NIC is created/updated/deleted to recompute pairing with existing Host objects
-// newNIC is the notification object and is always present, oldNIC is a snapshot of the object before the update and
+// UpdateHostPairingStatus is called when a NIC is created/updated/deleted to recompute pairing with existing Host objects.
+// newNIC is the updated object and is always present, oldNIC is a snapshot of the object before the update and
 // is non-nil only if event type == update
-func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, oldNIC *cluster.SmartNIC) ([]*cluster.SmartNIC, []*cluster.Host, error) {
-	var hostUpdates []*cluster.Host
-	var nicUpdates []*cluster.SmartNIC
-
+// Caller is responsible for acquiring the lock on newNIC before invocation and releasing it afterwards.
+// Function updates local cache and sends notifications for Host and SmartNIC objects to ApiServer.
+func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, oldNIC *cluster.SmartNIC) error {
 	hosts, err := sm.ListHosts()
 	if err != nil {
-		return nil, nil, fmt.Errorf("Error getting list of Host objects")
+		return fmt.Errorf("Error getting list of Host objects")
 	}
 
 	handleCreate := func(nic *cluster.SmartNIC) {
 		// Go through all hosts, check SmartNIC IDs, add nic to status if there's a match
 		// If there's more than 1 match, report conflict
-		for _, host := range hosts {
-			host.Lock()
-			if isNICHostPair(nic, host.Host) {
+		for _, hostState := range hosts {
+			hostState.Lock()
+			host := hostState.Host
+			if isNICHostPair(nic, host) {
 				if nic.Status.Host == "" {
 					host.Status.AdmittedSmartNICs = utils.AppendStringIfNotPresent(nic.Name, host.Status.AdmittedSmartNICs)
-					hostUpdates = append(hostUpdates, host.Host)
+					sm.UpdateHost(host, true)
 					nic.Status.Host = host.Name
-					nicUpdates = append(nicUpdates, nic)
+					sm.UpdateSmartNIC(nic, true)
 					log.Infof("NIC %s(%s) paired with host %s", nic.Name, nic.Spec.Hostname, host.Name)
 				} else if nic.Status.Host != host.Name {
 					errMsg := fmt.Sprintf("NIC %s(%s) matches Spec IDs of host %s but is already associated with host %s", nic.Name, nic.Spec.Hostname, host.Name, nic.Status.Host)
@@ -57,23 +57,24 @@ func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, o
 					log.Errorf(errMsg)
 				}
 			}
-			host.Unlock()
+			hostState.Unlock()
 		}
 	}
 
 	handleDelete := func(nic *cluster.SmartNIC) {
 		// go through all hosts, check SmartNIC IDs, remove reference if present
-		for _, host := range hosts {
-			host.Lock()
+		for _, hostState := range hosts {
+			hostState.Lock()
+			host := hostState.Host
 			for ii, hostNIC := range host.Status.AdmittedSmartNICs {
 				if hostNIC == nic.Name {
 					host.Status.AdmittedSmartNICs = append(host.Status.AdmittedSmartNICs[:ii], host.Status.AdmittedSmartNICs[ii+1:]...)
-					hostUpdates = append(hostUpdates, host.Host)
+					sm.UpdateHost(host, true)
 					log.Infof("Removed pairing between NIC %s(%s) and host %s", nic.Name, nic.Spec.Hostname, host.Name)
 					break
 				}
 			}
-			host.Unlock()
+			hostState.Unlock()
 		}
 	}
 
@@ -91,7 +92,7 @@ func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, o
 			if oldNIC != nil && oldNIC.Spec.Hostname != newNIC.Spec.Hostname {
 				handleDelete(oldNIC)
 				newNIC.Status.Host = ""
-				nicUpdates = append(nicUpdates, newNIC)
+				sm.UpdateSmartNIC(newNIC, true)
 			}
 			if newNIC.Status.Host == "" {
 				handleCreate(newNIC)
@@ -99,19 +100,18 @@ func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, o
 		}
 	}
 
-	return nicUpdates, hostUpdates, nil
+	return nil
 }
 
-// UpdateNICPairingStatus is called when a Host is created/updated/deleted to recompute pairing with existing NIC objects
-// newHost is the notification object and is always present, oldHost is a snapshot of the object before the update and
+// UpdateNICPairingStatus is called when a Host is created/updated/deleted to recompute pairing with existing NIC objects.
+// newHost is the updated object and is always present, oldHost is a snapshot of the object before the update and
 // is non-nil only if event type == update
-func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, oldHost *cluster.Host) ([]*cluster.SmartNIC, []*cluster.Host, error) {
-	var nicUpdates []*cluster.SmartNIC
-	var hostUpdates []*cluster.Host
-
+// Caller is responsible for acquiring the lock on newHost before invocation and releasing it afterwards.
+// Function updates local cache and sends notifications for Host and SmartNIC objects to ApiServer.
+func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, oldHost *cluster.Host) error {
 	nics, err := sm.ListSmartNICs()
 	if err != nil {
-		return nil, nil, fmt.Errorf("Error getting list of Host objects")
+		return fmt.Errorf("Error getting list of Host objects")
 	}
 
 	handleCreate := func(host *cluster.Host) {
@@ -122,9 +122,9 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 			if isNICHostPair(nic.SmartNIC, host) {
 				if nic.Status.Host == "" {
 					host.Status.AdmittedSmartNICs = utils.AppendStringIfNotPresent(nic.Name, host.Status.AdmittedSmartNICs)
-					hostUpdates = append(hostUpdates, host)
+					sm.UpdateHost(host, true)
 					nic.Status.Host = host.Name
-					nicUpdates = append(nicUpdates, nic.SmartNIC)
+					sm.UpdateSmartNIC(nic.SmartNIC, true)
 					log.Infof("NIC %s(%s) paired with host %s", nic.Name, nic.Spec.Hostname, host.Name)
 				} else if nic.Status.Host != host.Name {
 					errMsg := fmt.Sprintf("NIC %s(%s) matches Spec IDs of host %s but is already associated with host %s", nic.Name, nic.Spec.Hostname, host.Name, nic.Status.Host)
@@ -139,15 +139,20 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 	handleDelete := func(host *cluster.Host) {
 		// go through all NICs paired with this host and mark them as free
 		for _, nicName := range host.Status.AdmittedSmartNICs {
-			nic, err := sm.FindSmartNIC("", nicName)
+			nic, err := sm.FindSmartNIC(nicName)
 			if err != nil {
 				log.Errorf("Error getting SmartNIC %s. Err: %v", nicName, err)
 				continue
 			}
 			nic.Lock()
 			nic.Status.Host = ""
-			nicUpdates = append(nicUpdates, nic.SmartNIC)
 			log.Infof("Removed pairing between NIC %s(%s) and host %s", nic.Name, nic.Spec.Hostname, host.Name)
+			// See if they can be paired with another host
+			err = sm.UpdateHostPairingStatus(kvstore.Created, nic.SmartNIC, nil)
+			if err != nil {
+				log.Errorf("Error updating NIC - Host pairing: %v", err)
+			}
+			sm.UpdateSmartNIC(nic.SmartNIC, true)
 			nic.Unlock()
 		}
 	}
@@ -163,10 +168,10 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 		if oldHost != nil && !reflect.DeepEqual(newHost.Spec.SmartNICs, oldHost.Spec.SmartNICs) {
 			handleDelete(oldHost)
 			newHost.Status.AdmittedSmartNICs = []string{}
-			hostUpdates = append(hostUpdates, newHost)
 			handleCreate(newHost)
+			sm.UpdateHost(newHost, true)
 		}
 	}
 
-	return nicUpdates, hostUpdates, nil
+	return nil
 }

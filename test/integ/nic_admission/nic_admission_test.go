@@ -95,6 +95,7 @@ type testInfo struct {
 	updRPCServer   *rpckit.RPCServer
 	smartNICServer *smartnic.RPCServer
 	resolverServer *rpckit.RPCServer
+	stateMgr       *cache.Statemgr
 }
 
 type nmdInfo struct {
@@ -155,10 +156,11 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 		return nil, nil, fmt.Errorf("Error creating CertMgr instance: %v", err)
 	}
 	cmdenv.UnauthRPCServer = regRPCServer
-	cmdenv.StateMgr = cache.NewStatemgr()
+	tInfo.stateMgr = cache.NewStatemgr(tInfo)
+	cmdenv.StateMgr = tInfo.stateMgr
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer, err = smartnic.NewRPCServer(tInfo,
+	tInfo.smartNICServer, err = smartnic.NewRPCServer(
 		smartnic.HealthWatchInterval,
 		nicDeadIntvl,
 		globals.NmdRESTPort,
@@ -217,7 +219,7 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 	l.LeaderID = "testMaster"
 	cmdenv.LeaderService = l
 	s := cmdsvc.NewSystemdService(cmdsvc.WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
-	cw := cmdapi.NewCfgWatcherService(tInfo.l, "localhost:"+tInfo.apiServerPort, cmdenv.StateMgr)
+	cw := cmdapi.NewCfgWatcherService(tInfo.l, "localhost:"+tInfo.apiServerPort)
 	cmdenv.MasterService = cmdsvc.NewMasterService(
 		cmdsvc.WithLeaderSvcMasterOption(l),
 		cmdsvc.WithSystemdSvcMasterOption(s),
@@ -564,7 +566,7 @@ func checkHealthStatus(t *testing.T, meta *api.ObjectMeta, admPhase string) {
 		apiSrvObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), meta)
 		AssertOk(t, err, "Failed to retrieve NIC from ApiServer")
 
-		cmdObj, err := cmdenv.StateMgr.FindSmartNIC(meta.Tenant, meta.Name)
+		cmdObj, err := cmdenv.StateMgr.FindSmartNIC(meta.Name)
 		AssertOk(t, err, "Failed to retrieve NIC from local cache")
 
 		for index, nicObj := range []*pencluster.SmartNIC{apiSrvObj, cmdObj.SmartNIC} {
@@ -615,7 +617,7 @@ func checkE2EState(t *testing.T, nmd *nmdstate.NMD, admPhase string) {
 		if err != nil {
 			return false, fmt.Errorf("NIC %s not found in NMD nicDB, phase: %s", name, admPhase)
 		}
-		cmdObj, err := cmdenv.StateMgr.FindSmartNIC(nmdObj.GetObjectMeta().Tenant, name)
+		cmdObj, err := cmdenv.StateMgr.FindSmartNIC(name)
 		if err != nil {
 			return false, fmt.Errorf("NIC %s not found in CMD local state, phase: %s", name, admPhase)
 		}
@@ -906,7 +908,7 @@ func Setup(m *testing.M) {
 	}
 
 	// Check if no cluster exists to start with - negative test
-	_, err = tInfo.smartNICServer.GetCluster()
+	_, err = tInfo.stateMgr.GetCluster()
 	if err == nil {
 		fmt.Printf("Unexpected cluster object found, err: %s", err)
 		os.Exit(-1)

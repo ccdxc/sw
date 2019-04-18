@@ -3,20 +3,28 @@
 package cache
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
+)
+
+const (
+	maxAPIServerWriteRetries = 10
+	apiServerRetryInterval   = 250 * time.Millisecond
+	apiServerRPCTimeout      = 4 * time.Second
 )
 
 // SmartNICState security policy state
 type SmartNICState struct {
 	*sync.Mutex
-	*cluster.SmartNIC           // smartnic policy object
-	stateMgr          *Statemgr // pointer to state manager
+	*cluster.SmartNIC // smartnic policy object
 }
 
 // SmartNICStateFromObj converts from memdb object to SmartNIC state
@@ -31,11 +39,10 @@ func SmartNICStateFromObj(obj memdb.Object) (*SmartNICState, error) {
 }
 
 // NewSmartNICState creates a new security policy state object
-func NewSmartNICState(sn *cluster.SmartNIC, stateMgr *Statemgr) (*SmartNICState, error) {
+func NewSmartNICState(sn *cluster.SmartNIC) (*SmartNICState, error) {
 	// create smartnic state object
 	sns := SmartNICState{
 		SmartNIC: sn,
-		stateMgr: stateMgr,
 		Mutex:    new(sync.Mutex),
 	}
 
@@ -43,9 +50,9 @@ func NewSmartNICState(sn *cluster.SmartNIC, stateMgr *Statemgr) (*SmartNICState,
 }
 
 // FindSmartNIC finds smartNIC object by name
-func (sm *Statemgr) FindSmartNIC(tenant, name string) (*SmartNICState, error) {
+func (sm *Statemgr) FindSmartNIC(name string) (*SmartNICState, error) {
 	// find the object
-	obj, err := sm.FindObject("SmartNIC", tenant, name)
+	obj, err := sm.FindObject("SmartNIC", "", name)
 	if err != nil {
 		return nil, err
 	}
@@ -71,51 +78,64 @@ func (sm *Statemgr) ListSmartNICs() ([]*SmartNICState, error) {
 }
 
 // CreateSmartNIC creates a smartNIC object
-func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC) error {
+func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC, writeback bool) (*SmartNICState, error) {
 	// see if we already have it
-	esn, err := sm.FindObject("SmartNIC", sn.ObjectMeta.Tenant, sn.ObjectMeta.Name)
+	esn, err := sm.FindSmartNIC(sn.ObjectMeta.Name)
 	if err == nil {
 		// Object exists in cache, but we got a watcher event with event-type:Created
 		// and this can happen if there is a watcher error/reset and we need to update
 		// the cache to handle it gracefully as an Update.
+		esn.Lock()
+		defer esn.Unlock()
 		log.Infof("Objects exists, updating smartNIC OldState: {%+v}. New state: {%+v}", esn, sn)
-		return sm.UpdateSmartNIC(sn)
+		return esn, sm.UpdateSmartNIC(sn, writeback)
 	}
 
 	// create new smartnic state
-	sns, err := NewSmartNICState(sn, sm)
+	sns, err := NewSmartNICState(sn)
 	if err != nil {
 		log.Errorf("Error creating new smartnic state. Err: %v", err)
-		return err
+		return nil, err
 	}
+
+	sns.Lock()
+	defer sns.Unlock()
 
 	// store it in local DB
 	err = sm.memDB.AddObject(sns)
 	if err != nil {
 		log.Errorf("Error storing the smartnic in memdb. Err: %v", err)
-		return err
+		return nil, err
 	}
 
-	log.Infof("Created SmartNIC state {%+v}", sns)
-	return nil
+	if writeback {
+		f := func() (interface{}, error) {
+			return sm.APIClient().SmartNIC().Create(context.Background(), sn)
+		}
+		_, err := utils.ExecuteWithRetry(f, apiServerRetryInterval, maxAPIServerWriteRetries)
+		if err != nil {
+			log.Errorf("Error creating SmartNIC object %+v: %v", sn.ObjectMeta, err)
+		}
+	}
+
+	log.Infof("Created SmartNIC state {%+v}, writeback: %v", sns, writeback)
+	return sns, nil
 }
 
 // UpdateSmartNIC updates a smartNIC object
-func (sm *Statemgr) UpdateSmartNIC(sn *cluster.SmartNIC) error {
-
-	// see if we already have it
-	obj, err := sm.FindObject("SmartNIC", sn.ObjectMeta.Tenant, sn.ObjectMeta.Name)
+// Caller is responsible for acquiring the lock before invocation and releasing it afterwards
+func (sm *Statemgr) UpdateSmartNIC(sn *cluster.SmartNIC, writeback bool) error {
+	obj, err := sm.FindObject("SmartNIC", "", sn.ObjectMeta.Name)
 	if err != nil {
-		log.Errorf("Can not find the smartnic %s|%s err: %v", sn.ObjectMeta.Tenant, sn.ObjectMeta.Name, err)
+		log.Errorf("Can not find the smartnic %s err: %v", sn.ObjectMeta.Name, err)
 		return fmt.Errorf("SmartNIC not found")
 	}
 
 	sns, err := SmartNICStateFromObj(obj)
 	if err != nil {
 		log.Errorf("Wrong object type in memdb! Expected SmartNIC, got %T", obj)
+		return err
 	}
-	sns.Lock()
-	defer sns.Unlock()
 	sns.SmartNIC = sn
 
 	// store it in local DB
@@ -125,30 +145,46 @@ func (sm *Statemgr) UpdateSmartNIC(sn *cluster.SmartNIC) error {
 		return err
 	}
 
+	if writeback {
+		nicObj := sn
+		ok := false
+		for i := 0; i < maxAPIServerWriteRetries; i++ {
+			ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
+			defer cancel()
+			_, err = sm.APIClient().SmartNIC().Update(ctx, nicObj)
+			if err == nil {
+				ok = true
+				log.Infof("Updated SmartNIC object in ApiServer: %+v", nicObj)
+				break
+			}
+			log.Errorf("Error updating SmartNIC object %+v: %v", nicObj.ObjectMeta, err)
+			// Write error -- fetch updated Spec + Meta and retry
+			updObj, err := sm.APIClient().SmartNIC().Get(ctx, &nicObj.ObjectMeta)
+			if err == nil {
+				updObj.Status = nicObj.Status
+				nicObj = updObj
+				// retain Status as that's what we are trying to update
+			}
+		}
+		if !ok {
+			log.Errorf("Error updating SmartNIC object %+v in ApiServer, retries exhausted", nicObj.ObjectMeta)
+		}
+	}
+
 	log.Debugf("Updated SmartNIC state {%+v}", sns)
 	return nil
 }
 
 // DeleteSmartNIC deletes a smartNIC state
-func (sm *Statemgr) DeleteSmartNIC(tenant, name string) error {
-
-	// see if we already have it
-	sn, err := sm.FindObject("SmartNIC", tenant, name)
+func (sm *Statemgr) DeleteSmartNIC(sn *cluster.SmartNIC) error {
+	// delete it from the DB
+	err := sm.memDB.DeleteObject(sn)
 	if err != nil {
-		log.Errorf("Can not find the smartnic %s|%s", tenant, name)
-		return fmt.Errorf("SmartNIC not found")
-	}
-
-	// convert it to smartNIC state
-	sn, err = SmartNICStateFromObj(sn)
-	if err != nil {
+		log.Errorf("Error deleting SmartNIC state %+v: %v", sn.ObjectMeta, err)
 		return err
 	}
 
-	meta := sn.GetObjectMeta()
-	if meta != nil {
-		log.Infof("Deleting SmartNIC state {%+v}", meta)
-	}
-	// delete it from the DB
-	return sm.memDB.DeleteObject(sn)
+	// Deletes are never written back to ApiServer
+	log.Infof("Deleted SmartNIC state {%+v}", sn.ObjectMeta)
+	return nil
 }

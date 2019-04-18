@@ -416,7 +416,7 @@ func RegisterSmartNICRegistrationServer(smgr *cache.Statemgr) {
 	for i := 0; i < maxIters; i++ {
 
 		// create new smartNIC server
-		nicServer, err := smartnic.NewRPCServer(env.CfgWatcherService,
+		nicServer, err := smartnic.NewRPCServer(
 			smartnic.HealthWatchInterval,
 			smartnic.DeadInterval,
 			globals.NmdRESTPort,

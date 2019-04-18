@@ -114,7 +114,7 @@ func launchCMDServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 	cmdenv.UnauthRPCServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer, err = smartnic.NewRPCServer(tInfo,
+	tInfo.smartNICServer, err = smartnic.NewRPCServer(
 		healthInterval,
 		deadtimeInterval,
 		getRESTPort(1),
@@ -138,7 +138,7 @@ func createCMD(m *testing.M) (*rpckit.RPCServer, error) {
 	// set cmd logger & quorum nodes
 	cmdenv.Logger = tInfo.l
 	cmdenv.QuorumNodes = []string{"localhost"}
-	cmdenv.StateMgr = cache.NewStatemgr()
+	cmdenv.StateMgr = cache.NewStatemgr(tInfo)
 	cmdenv.CertMgr, err = certmgr.NewTestCertificateMgr("nic_config_test")
 	if err != nil {
 		return nil, fmt.Errorf("Error instantiating CertMgr: %v", err)
@@ -147,7 +147,7 @@ func createCMD(m *testing.M) (*rpckit.RPCServer, error) {
 	// Start CMD config watcher
 	l := mock.NewLeaderService("testMaster")
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
-	cw := cmdapi.NewCfgWatcherService(tInfo.l, tInfo.apiServerAddr, cmdenv.StateMgr)
+	cw := cmdapi.NewCfgWatcherService(tInfo.l, tInfo.apiServerAddr)
 	cmdenv.MasterService = NewMasterService(
 		WithLeaderSvcMasterOption(l),
 		WithSystemdSvcMasterOption(s),
@@ -436,7 +436,7 @@ func Setup(m *testing.M) {
 	}
 
 	// Check if no cluster exists to start with - negative test
-	_, err = tInfo.smartNICServer.GetCluster()
+	_, err = cmdenv.StateMgr.GetCluster()
 	if err == nil {
 		fmt.Printf("Unexpected cluster object found, err: %s", err)
 		os.Exit(-1)

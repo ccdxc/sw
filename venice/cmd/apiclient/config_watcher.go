@@ -10,14 +10,12 @@ import (
 	"github.com/pensando/sw/api"
 	svcsclient "github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/venice/cmd/cache"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
@@ -32,9 +30,6 @@ const (
 type CfgWatcherService struct {
 	sync.Mutex
 	sync.WaitGroup
-
-	// In memory DB of APIserver objects
-	cache *cache.Statemgr
 
 	// Logger
 	logger log.Logger
@@ -102,28 +97,11 @@ func (k *CfgWatcherService) apiClient() (svcsclient.Services, error) {
 }
 
 // NewCfgWatcherService creates a new Config Watcher service.
-func NewCfgWatcherService(logger log.Logger, apiServerAddr string, cache *cache.Statemgr) *CfgWatcherService {
+func NewCfgWatcherService(logger log.Logger, apiServerAddr string) *CfgWatcherService {
 	return &CfgWatcherService{
 		logger:        logger.WithContext("submodule", "cfgWatcher"),
 		apiServerAddr: apiServerAddr,
-		cache:         cache,
 	}
-}
-
-// FindObject looks up an object in local cache
-func (k *CfgWatcherService) FindObject(kind, tenant, name string) (memdb.Object, error) {
-	return k.cache.FindObject(kind, tenant, name)
-}
-
-// ListObjects list all objects of a kind
-func (k *CfgWatcherService) ListObjects(kind string) []memdb.Object {
-	return k.cache.ListObjects(kind)
-}
-
-// WatchObjects watches object state for changes
-// TODO: Add support for watch with resource version
-func (k *CfgWatcherService) WatchObjects(kind string, watchChan chan memdb.Event) error {
-	return k.cache.WatchObjects(kind, watchChan)
 }
 
 // APIClient returns an interface to APIClient for cmdV1

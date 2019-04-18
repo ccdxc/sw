@@ -285,9 +285,11 @@ func (it *veniceIntegSuite) launchCMDServer() {
 	}
 	cmdenv.UnauthRPCServer = rpcServer
 
-	cmdenv.StateMgr = cache.NewStatemgr()
+	cw := cmdapi.NewCfgWatcherService(it.logger, it.apiSrvAddr)
+	cmdenv.StateMgr = cache.NewStatemgr(cw)
+
 	// create and register the RPC handler for SmartNIC service
-	it.smartNICServer, err = smartnic.NewRPCServer(it,
+	it.smartNICServer, err = smartnic.NewRPCServer(
 		smartnic.HealthWatchInterval,
 		smartnic.DeadInterval,
 		globals.NmdRESTPort,
@@ -319,7 +321,6 @@ func (it *veniceIntegSuite) launchCMDServer() {
 	l.LeaderID = "testMaster"
 	cmdenv.LeaderService = l
 	s := cmdsvc.NewSystemdService(cmdsvc.WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
-	cw := cmdapi.NewCfgWatcherService(it.logger, it.apiSrvAddr, cmdenv.StateMgr)
 	cmdenv.MasterService = cmdsvc.NewMasterService(
 		cmdsvc.WithLeaderSvcMasterOption(l),
 		cmdsvc.WithSystemdSvcMasterOption(s),

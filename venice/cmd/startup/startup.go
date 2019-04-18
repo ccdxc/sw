@@ -309,8 +309,8 @@ func OnStart() {
 
 	// These must be instantiated regardless of whether node is part of a cluster or not,
 	// as they are needed  by the gRPC server that listens for cluster events
-	env.StateMgr = cache.NewStatemgr()
-	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer, env.StateMgr)
+	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer)
+	env.StateMgr = cache.NewStatemgr(env.CfgWatcherService)
 
 	var cluster *utils.Cluster
 	var err error

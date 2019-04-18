@@ -76,6 +76,7 @@ type testInfo struct {
 	rpcServer      *rpckit.RPCServer
 	rpcClient      *rpckit.RPCClient
 	smartNICServer *RPCServer
+	stateMgr       *cache.Statemgr
 }
 
 func (t testInfo) APIClient() cmd.ClusterV1Interface {
@@ -104,7 +105,8 @@ func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, 
 	// set cmd logger, statemgr, certmgr & quorum nodes
 	cmdenv.Logger = tInfo.l
 	cmdenv.QuorumNodes = []string{"localhost"}
-	cmdenv.StateMgr = cache.NewStatemgr()
+	tInfo.stateMgr = cache.NewStatemgr(tInfo)
+	cmdenv.StateMgr = tInfo.stateMgr
 	cmdenv.CertMgr, err = certmgr.NewTestCertificateMgr("smartnic-test")
 	if err != nil {
 		return nil, fmt.Errorf("Error creating CertMgr instance: %v", err)
@@ -116,7 +118,7 @@ func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, 
 
 	// Start CMD config watcher
 	s := cmdsvc.NewSystemdService(cmdsvc.WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
-	cw := cmdapi.NewCfgWatcherService(tInfo.l, tInfo.apiServerAddr, cmdenv.StateMgr)
+	cw := cmdapi.NewCfgWatcherService(tInfo.l, tInfo.apiServerAddr)
 	cmdenv.MasterService = cmdsvc.NewMasterService(
 		cmdsvc.WithLeaderSvcMasterOption(l),
 		cmdsvc.WithSystemdSvcMasterOption(s),
@@ -135,7 +137,7 @@ func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, 
 	cmdenv.UnauthRPCServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
-	tInfo.smartNICServer, err = NewRPCServer(tInfo, healthInterval, deadtimeInterval, getRESTPort(1), cmdenv.StateMgr, tInfo)
+	tInfo.smartNICServer, err = NewRPCServer(healthInterval, deadtimeInterval, getRESTPort(1), cmdenv.StateMgr, tInfo)
 	if err != nil {
 		fmt.Printf("Error creating SmartNIC RPC server: %v", err)
 		return nil, err
@@ -197,6 +199,27 @@ func getHost(om api.ObjectMeta) (*cmd.Host, error) {
 	}
 
 	return hostObj, nil
+}
+
+// getSmartNIC fetches the SmartNIC object based on object meta
+func getSmartNIC(om api.ObjectMeta) (*cmd.SmartNIC, error) {
+	nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &om)
+	if err != nil || nicObj == nil {
+		return nil, perror.NewNotFound("SmartNIC", om.Name)
+	}
+
+	return nicObj, nil
+}
+
+// deleteSmartNIC deletes the SmartNIC object based on object meta name
+func deleteSmartNIC(om api.ObjectMeta) error {
+	_, err := tInfo.apiClient.ClusterV1().SmartNIC().Delete(context.Background(), &om)
+	if err != nil {
+		log.Errorf("Error deleting smartNIC object name:%s err: %v", om.Name, err)
+		return err
+	}
+
+	return nil
 }
 
 // createRPCServerClient creates rpc client and server for SmartNIC service
@@ -308,7 +331,7 @@ func verifySmartNICObj(t *testing.T, name string, exists bool, phase, host strin
 	ometa := api.ObjectMeta{Name: name}
 
 	f := func() (bool, interface{}) {
-		nicObj, err = tInfo.smartNICServer.GetSmartNIC(ometa)
+		nicObj, err = getSmartNIC(ometa)
 		if exists {
 			if err != nil {
 				log.Errorf("Error getting NIC object: %s", name)
@@ -337,13 +360,13 @@ func verifySmartNICObj(t *testing.T, name string, exists bool, phase, host strin
 	// Cross-check the local (cached) copy
 	var nicState *cache.SmartNICState
 	g := func() (bool, interface{}) {
-		nicState, err = cmdenv.StateMgr.FindSmartNIC("", name)
+		nicState, err = cmdenv.StateMgr.FindSmartNIC(name)
 		if nicObj != nil {
 			if nicState == nil {
 				log.Infof("Did not find cached object for nic %s: %+v", name, nicObj)
 				return false, nil
 			}
-			nicObj, err = tInfo.smartNICServer.GetSmartNIC(ometa)
+			nicObj, err = getSmartNIC(ometa)
 			AssertOk(t, err, "Error reading ApiServer object")
 			eq := reflect.DeepEqual(nicObj, nicState.SmartNIC)
 			if !eq {
@@ -409,7 +432,7 @@ func validateNICSpecConflictEvent(events *[]mockevtsrecorder.Event, nic, host1, 
 
 // Set cluster admission policy to auto-admit or manual
 func setClusterAutoAdmitNICs(t *testing.T, autoAdmit bool) {
-	refObj, err := tInfo.smartNICServer.GetCluster()
+	refObj, err := tInfo.stateMgr.GetCluster()
 	AssertOk(t, err, "Error getting Cluster object")
 
 	clRef := cmd.Cluster{
@@ -695,8 +718,6 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 
 			t.Logf("Testcase: %s MAC: %s expected: %v obtained: %v err: %v", tc.name, tc.mac, tc.expected, admResp, err)
 
-			AssertOk(t, err, "Error registering NIC")
-
 			// verify smartNIC is created
 			verifySmartNICObj(t, tc.mac, true, tc.expected, testCases[ii].hostName)
 
@@ -735,7 +756,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 					return false, nil
 				}
 
-				nicObj, err := tInfo.smartNICServer.GetSmartNIC(ometa)
+				nicObj, err := getSmartNIC(ometa)
 				AssertOk(t, err, fmt.Sprintf("Error getting NIC object for mac:%s", tc.mac))
 
 				if nicObj.Status.Conditions[0].Type != tc.condition.Type || nicObj.Status.Conditions[0].Status != tc.condition.Status {
@@ -749,7 +770,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 
 			// Verify NIC health status goes to UNKNOWN after deadtimeInterval
 			f4 := func() (bool, interface{}) {
-				nicObj, err := tInfo.smartNICServer.GetSmartNIC(ometa)
+				nicObj, err := getSmartNIC(ometa)
 				AssertOk(t, err, fmt.Sprintf("Error getting NIC object for mac:%s", tc.mac))
 				Assert(t, nicObj.ObjectMeta.Name == tc.mac,
 					fmt.Sprintf("Got incorrect smartNIC object, expected: %s obtained: %s", nicObj.ObjectMeta.Name, tc.mac))
@@ -768,7 +789,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			// Verify Deletion of SmartNIC object
 			f5 := func() (bool, interface{}) {
 				ometa = api.ObjectMeta{Name: tc.mac}
-				err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
+				err = deleteSmartNIC(ometa)
 				if err != nil {
 					return false, nil
 				}
@@ -850,7 +871,7 @@ func TestRegisterSmartNICTimeouts(t *testing.T) {
 		// verify smartNIC is created
 		verifySmartNICObj(t, mac, true, cmd.SmartNICStatus_ADMITTED.String(), hostName)
 
-		err = tInfo.smartNICServer.DeleteSmartNIC(api.ObjectMeta{Name: mac})
+		err = deleteSmartNIC(api.ObjectMeta{Name: mac})
 		AssertOk(t, err, "Error deleting NIC")
 	}
 }
@@ -975,9 +996,10 @@ func TestUpdateSmartNIC(t *testing.T) {
 	defer testTeardown()
 
 	// Verify create nic
+	nicName := "2222.2222.2222"
 	nic := cmd.SmartNIC{
 		TypeMeta:   api.TypeMeta{Kind: "SmartNIC"},
-		ObjectMeta: api.ObjectMeta{Name: "2222.2222.2222"},
+		ObjectMeta: api.ObjectMeta{Name: nicName},
 		Spec: cmd.SmartNICSpec{
 			IPConfig: &cmd.IPConfig{
 				IPAddress: "10.1.1.1/24",
@@ -991,7 +1013,8 @@ func TestUpdateSmartNIC(t *testing.T) {
 		},
 	}
 	nicObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Create(context.Background(), &nic)
-	AssertOk(t, err, "Failed to create nic object, 2222.2222.222")
+	AssertOk(t, err, "Failed to create nic object %s", nicName)
+	verifySmartNICObj(t, nicName, true, "UNKNOWN", "")
 
 	// Verify update nic
 	nic = cmd.SmartNIC{
@@ -1008,11 +1031,11 @@ func TestUpdateSmartNIC(t *testing.T) {
 		},
 	}
 	nicObj, err = tInfo.smartNICServer.UpdateSmartNIC(&nic)
-	AssertOk(t, err, "Failed to update nic object, 2222.2222.222")
+	AssertOk(t, err, "Failed to update nic object %s", nicName)
 
 	// delete nic
-	err = tInfo.smartNICServer.DeleteSmartNIC(nic.ObjectMeta)
-	AssertOk(t, err, "Failed to delete nic object, 2222.2222.222")
+	err = deleteSmartNIC(nic.ObjectMeta)
+	AssertOk(t, err, "Failed to delete nic object %s", nicName)
 }
 
 func TestDeleteSmartNIC(t *testing.T) {
@@ -1022,7 +1045,7 @@ func TestDeleteSmartNIC(t *testing.T) {
 
 	// Verify Delete SmartNIC object
 	ometa := api.ObjectMeta{Name: "1111.1111.1111"}
-	err := tInfo.smartNICServer.DeleteSmartNIC(ometa)
+	err := deleteSmartNIC(ometa)
 	Assert(t, err != nil, "SmartNIC object - 1111.1111.1111 - should not exist")
 }
 
@@ -1138,7 +1161,7 @@ func TestSmartNICConfigByUser(t *testing.T) {
 	// Verify Deletion of SmartNIC object
 	f7 := func() (bool, interface{}) {
 		ometa := api.ObjectMeta{Name: testMac}
-		err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
+		err = deleteSmartNIC(ometa)
 		if err != nil {
 			return false, nil
 		}
@@ -1249,7 +1272,7 @@ func TestSmartNICConfigByUserErrorCases(t *testing.T) {
 	// Verify Deletion of SmartNIC object
 	f3 := func() (bool, interface{}) {
 		ometa := api.ObjectMeta{Name: hostID}
-		err = tInfo.smartNICServer.DeleteSmartNIC(ometa)
+		err = deleteSmartNIC(ometa)
 		if err != nil {
 			return false, nil
 		}
@@ -1319,7 +1342,7 @@ func TestManualAdmission(t *testing.T) {
 	verifySmartNICObj(t, mac, true, cmd.SmartNICStatus_PENDING.String(), "")
 
 	// Delete NIC object
-	err = tInfo.smartNICServer.DeleteSmartNIC(*nicObjMeta)
+	err = deleteSmartNIC(*nicObjMeta)
 	AssertOk(t, err, "Error deleting smartnic object")
 	verifySmartNICObj(t, mac, false, "", "")
 
@@ -1368,9 +1391,9 @@ func TestManualAdmission(t *testing.T) {
 	Assert(t, numRejectEvents == numExpectedRejectEvents,
 		"Unexpected number of REJECT events. Have: %d, want: %d, events:%+v", numRejectEvents, numExpectedRejectEvents, mr.GetEvents())
 
-	err = tInfo.smartNICServer.DeleteSmartNIC(*nicObjMeta)
+	err = deleteSmartNIC(*nicObjMeta)
 	AssertOk(t, err, "Error deleting smartnic object")
-	err = tInfo.smartNICServer.DeleteSmartNIC(*nicObjMeta2)
+	err = deleteSmartNIC(*nicObjMeta2)
 	AssertOk(t, err, "Error deleting smartnic object")
 }
 
@@ -1436,9 +1459,9 @@ func TestAutoAdmitRejectedNICs(t *testing.T) {
 		"Unexpected number of REJECT events. Have: %d, want: %d, events:%+v", numRejectEvents, numExpectedRejectEvents, mr.GetEvents())
 
 	// Clean up
-	err := tInfo.smartNICServer.DeleteSmartNIC(*nicObjMeta)
+	err := deleteSmartNIC(*nicObjMeta)
 	AssertOk(t, err, "Error deleting smartnic object")
-	err = tInfo.smartNICServer.DeleteSmartNIC(*nicObjMeta2)
+	err = deleteSmartNIC(*nicObjMeta2)
 	AssertOk(t, err, "Error deleting smartnic object")
 }
 
@@ -1583,7 +1606,7 @@ func TestHostNICPairing(t *testing.T) {
 	for i := 0; i < numHostsAndNICs; i++ {
 		verifySmartNICObj(t, nicMAC(i), true, cmd.SmartNICStatus_PENDING.String(), "")
 		verifyHostObj(t, hostName(i), "")
-		defer tInfo.smartNICServer.DeleteSmartNIC(api.ObjectMeta{Name: nicMAC(i)})
+		defer deleteSmartNIC(api.ObjectMeta{Name: nicMAC(i)})
 	}
 
 	// Admit NICs
@@ -1667,7 +1690,7 @@ func TestHostNICPairing(t *testing.T) {
 
 	// Delete the NIC objects
 	for i := 0; i < numHostsAndNICs; i++ {
-		err := tInfo.smartNICServer.DeleteSmartNIC(api.ObjectMeta{Name: nicMAC(i)})
+		err := deleteSmartNIC(api.ObjectMeta{Name: nicMAC(i)})
 		AssertOk(t, err, "Error deleting smartnic object")
 	}
 	// Verify pairings are cleared
@@ -1786,7 +1809,7 @@ func testSetup() {
 	}
 
 	// Check if no cluster exists to start with - negative test
-	_, err = tInfo.smartNICServer.GetCluster()
+	_, err = tInfo.stateMgr.GetCluster()
 	if err == nil {
 		fmt.Printf("Unexpected cluster object found, err: %s", err)
 		os.Exit(-1)

@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"fmt"
 	"net"
-	"strings"
 	"sync"
 	"time"
 
@@ -27,7 +26,6 @@ import (
 	cmdcertutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
-	perror "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -76,9 +74,6 @@ func getNICCondition(nic *cluster.SmartNIC, condType cluster.SmartNICCondition_C
 type RPCServer struct {
 	sync.Mutex
 
-	// ClientGetter is an interface to get the API client.
-	ClientGetter APIClientGetter
-
 	// HealthWatchIntvl is the health watch interval
 	HealthWatchIntvl time.Duration
 
@@ -99,23 +94,14 @@ type RPCServer struct {
 	versionChecker NICAdmissionVersionChecker // checks version of NIC for admission
 }
 
-// APIClientGetter is an interface that returns an API Client.
-type APIClientGetter interface {
-	APIClient() cluster.ClusterV1Interface
-}
-
 // NICAdmissionVersionChecker is an interface that checks whether the nicVersion for the given SKU is allowed for admission
 type NICAdmissionVersionChecker interface {
 	CheckNICVersionForAdmission(nicSku string, nicVersion string) (string, string)
 }
 
 // NewRPCServer returns a SmartNIC RPC server object
-func NewRPCServer(clientGetter APIClientGetter, healthInvl, deadInvl time.Duration, restPort string, stateMgr *cache.Statemgr, nicVersionChecker NICAdmissionVersionChecker) (*RPCServer, error) {
-	if clientGetter == nil {
-		return nil, fmt.Errorf("Client getter is nil")
-	}
+func NewRPCServer(healthInvl, deadInvl time.Duration, restPort string, stateMgr *cache.Statemgr, nicVersionChecker NICAdmissionVersionChecker) (*RPCServer, error) {
 	return &RPCServer{
-		ClientGetter:     clientGetter,
 		HealthWatchIntvl: healthInvl,
 		DeadIntvl:        deadInvl,
 		RestPort:         restPort,
@@ -211,37 +197,6 @@ func validateNICPlatformCert(cert *x509.Certificate, nic *cluster.SmartNIC) erro
 	return nil
 }
 
-// GetCluster fetches the Cluster object based on object meta
-func (s *RPCServer) GetCluster() (*cluster.Cluster, error) {
-	cl := s.ClientGetter.APIClient()
-	if cl == nil {
-		return nil, errAPIServerDown
-	}
-	opts := api.ListWatchOptions{}
-	clusterObjs, err := cl.Cluster().List(context.Background(), &opts)
-	if err != nil || len(clusterObjs) == 0 {
-		return nil, perror.NewNotFound("Cluster", "")
-	}
-
-	// There should be only one Cluster object
-	return clusterObjs[0], nil
-}
-
-// GetSmartNIC fetches the SmartNIC object based on object meta
-func (s *RPCServer) GetSmartNIC(om api.ObjectMeta) (*cluster.SmartNIC, error) {
-	cl := s.ClientGetter.APIClient()
-	if cl == nil {
-		return nil, errAPIServerDown
-	}
-
-	nicObj, err := cl.SmartNIC().Get(context.Background(), &om)
-	if err != nil || nicObj == nil {
-		return nil, perror.NewNotFound("SmartNIC", om.Name)
-	}
-
-	return nicObj, nil
-}
-
 // UpdateSmartNIC creates or updates the smartNIC object
 func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC, error) {
 	var err error
@@ -251,21 +206,12 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 	// Check if object exists.
 	// If it doesn't exist, do not create it, as it might have been deleted by user.
 	// NIC object creation (for example during NIC registration) should always be explicit.
-
-	// check local cache first
-	cachedNICState, err := s.stateMgr.FindSmartNIC(updObj.GetTenant(), updObj.GetName())
-	if cachedNICState != nil && err == nil {
-		// make a copy so that we don't need to worry about locking/unlocking
-		cachedNICState.Lock()
-		temp := *cachedNICState.SmartNIC
-		cachedNICState.Unlock()
-		refObj = &temp
+	nicState, err := s.stateMgr.FindSmartNIC(updObj.GetName())
+	if nicState != nil && err == nil {
+		nicState.Lock()
+		defer nicState.Unlock()
+		refObj = nicState.SmartNIC
 	} else {
-		// object not found in cache, try to get it from ApiServer
-		refObj, err = s.GetSmartNIC(updObj.ObjectMeta)
-	}
-
-	if err != nil || refObj == nil {
 		return nil, fmt.Errorf("Error retrieving reference object for NIC update. Err: %v, update: %+v", err, updObj)
 	}
 
@@ -313,42 +259,13 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 
 	// Store the update in local cache
 	refObj.Status.Conditions = updObj.Status.Conditions
-	err = s.stateMgr.UpdateSmartNIC(refObj)
+	err = s.stateMgr.UpdateSmartNIC(refObj, updateAPIServer)
 	if err != nil {
 		log.Errorf("Error updating statemgr state for NIC %s: %v", nicName, err)
 	}
 
-	// Update ApiServer if needed
-	if updateAPIServer {
-		cl := s.ClientGetter.APIClient()
-		if cl == nil {
-			log.Infof("Error getting APIServer client while preparing update for NIC %s", nicName)
-			return nil, errAPIServerDown
-		}
-		retObj, err = cl.SmartNIC().Update(context.Background(), refObj)
-		log.Infof("Sent NIC status updated to ApiServer: %+v, err: %v", refObj, err)
-	} else {
-		retObj = refObj
-	}
-
 	log.Debugf("UpdateSmartNIC nic: %+v", retObj)
-	return retObj, err
-}
-
-// DeleteSmartNIC deletes the SmartNIC object based on object meta name
-func (s *RPCServer) DeleteSmartNIC(om api.ObjectMeta) error {
-	cl := s.ClientGetter.APIClient()
-	if cl == nil {
-		return errAPIServerDown
-	}
-
-	_, err := cl.SmartNIC().Delete(context.Background(), &om)
-	if err != nil {
-		log.Errorf("Error deleting smartNIC object name:%s err: %v", om.Name, err)
-		return err
-	}
-
-	return nil
+	return refObj, err
 }
 
 func (s *RPCServer) isHostnameUnique(subj *cluster.SmartNIC) (bool, error) {
@@ -406,11 +323,6 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		msg, err := stream.Recv()
 		if err != nil {
 			return nil, errors.Wrapf(err, "Error receiving admission request")
-		}
-
-		cl := s.ClientGetter.APIClient()
-		if cl == nil {
-			return intErrResp, errAPIServerDown
 		}
 
 		if msg.AdmissionRequest == nil {
@@ -494,7 +406,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		// if something went wrong and can take action.
 
 		// Get the Cluster object
-		clusterObj, err := s.GetCluster()
+		clusterObj, err := s.stateMgr.GetCluster()
 		if err != nil {
 			return intErrResp, errors.Wrapf(err, "Error getting Cluster object")
 		}
@@ -504,21 +416,20 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			return intErrResp, errors.Wrapf(err, "Error getting SmartNIC list")
 		}
 
-		nc := s.ClientGetter.APIClient()
-		if nc == nil {
-			return intErrResp, fmt.Errorf("Unable to get API client")
-		}
-
+		var nicObj *cluster.SmartNIC
 		var smartNICObjExists bool // does the SmartNIC object already exist ?
-		nicObj, err := cl.SmartNIC().Get(context.Background(), &api.ObjectMeta{Name: name})
+		nicObjState, err := s.stateMgr.FindSmartNIC(name)
 		if err != nil {
-			if !strings.Contains(err.Error(), "NotFound") {
+			if err != memdb.ErrObjectNotFound {
 				return intErrResp, errors.Wrapf(err, "Error reading NIC object")
 			}
 			// NIC object is not present. Create the NIC object based on the template provided by NAPLES and update it accordingly.
 			smartNICObjExists = false
 			nicObj = &naplesNIC
 		} else {
+			nicObjState.Lock()
+			defer nicObjState.Unlock()
+			nicObj = nicObjState.SmartNIC
 			smartNICObjExists = true
 		}
 
@@ -533,7 +444,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		if !hostnameUnique {
 			nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_REJECTED.String()
 			nicObj.Status.AdmissionPhaseReason = "Hostname is not unique"
-			nicObj.Status.Conditions = []cluster.SmartNICCondition{}
+			nicObj.Status.Conditions = nil
 		} else {
 			// Re-initialize status as it might have changed
 			nicObj.Status = naplesNIC.Status
@@ -550,7 +461,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			} else {
 				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
 				nicObj.Status.AdmissionPhaseReason = "SmartNIC waiting for manual admission"
-				nicObj.Status.Conditions = []cluster.SmartNICCondition{}
+				nicObj.Status.Conditions = nil
 			}
 		}
 
@@ -559,9 +470,12 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 
 		// Create or update SmartNIC object in ApiServer
 		if smartNICObjExists {
-			nicObj, err = cl.SmartNIC().Update(context.Background(), nicObj)
+			err = s.stateMgr.UpdateSmartNIC(nicObj, true)
 		} else {
-			nicObj, err = cl.SmartNIC().Create(context.Background(), nicObj)
+			var sns *cache.SmartNICState
+			sns, err = s.stateMgr.CreateSmartNIC(nicObj, true)
+			sns.Lock()
+			defer sns.Unlock()
 		}
 		if err != nil {
 			status := apierrors.FromError(err)
@@ -631,13 +545,8 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 	return err
 }
 
-// UpdateNIC handles the update to smartNIC object
+// UpdateNIC is the handler for the UpdateNIC() RPC invoked by NMD
 func (s *RPCServer) UpdateNIC(ctx context.Context, req *grpc.UpdateNICRequest) (*grpc.UpdateNICResponse, error) {
-	cl := s.ClientGetter.APIClient()
-	if cl == nil {
-		return nil, errAPIServerDown
-	}
-
 	// Update smartNIC object with CAS semantics
 	obj := req.GetNic()
 	nicObj, err := s.UpdateSmartNIC(&obj)
@@ -784,12 +693,6 @@ func (s *RPCServer) MonitorHealth() {
 
 			log.Infof("Health watch timer callback, #nics: %d ", len(nicStates))
 
-			cl := s.ClientGetter.APIClient()
-			if cl == nil {
-				log.Errorf("Failed to get API client")
-				continue
-			}
-
 			// Iterate on smartNIC objects
 			for _, nicState := range nicStates {
 				nicState.Lock()
@@ -815,7 +718,7 @@ func (s *RPCServer) MonitorHealth() {
 								nic.Status.Conditions[i].LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
 								nic.Status.Conditions[i].Reason = fmt.Sprintf("NIC health update not received since %s", lastUpdateTime)
 								// push the update back to ApiServer
-								_, err := cl.SmartNIC().Update(context.Background(), nic)
+								err := s.stateMgr.UpdateSmartNIC(nic, true)
 								if err != nil {
 									log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
 								}

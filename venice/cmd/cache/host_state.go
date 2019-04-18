@@ -3,6 +3,7 @@
 package cache
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -15,8 +16,7 @@ import (
 // HostState security policy state
 type HostState struct {
 	*sync.Mutex
-	*cluster.Host           // host object
-	stateMgr      *Statemgr // pointer to state manager
+	*cluster.Host // host object
 }
 
 // HostStateFromObj converts from memdb object to Host state
@@ -32,20 +32,19 @@ func HostStateFromObj(obj memdb.Object) (*HostState, error) {
 }
 
 // NewHostState creates a new security policy state object
-func NewHostState(sn *cluster.Host, stateMgr *Statemgr) (*HostState, error) {
+func NewHostState(sn *cluster.Host) (*HostState, error) {
 	// create host state object
 	sns := HostState{
-		Host:     sn,
-		stateMgr: stateMgr,
-		Mutex:    new(sync.Mutex),
+		Host:  sn,
+		Mutex: new(sync.Mutex),
 	}
 	return &sns, nil
 }
 
 // FindHost finds Host object by name
-func (sm *Statemgr) FindHost(tenant, name string) (*HostState, error) {
+func (sm *Statemgr) FindHost(name string) (*HostState, error) {
 	// find the object
-	obj, err := sm.FindObject("Host", tenant, name)
+	obj, err := sm.FindObject("Host", "", name)
 	if err != nil {
 		return nil, err
 	}
@@ -68,82 +67,101 @@ func (sm *Statemgr) ListHosts() ([]*HostState, error) {
 }
 
 // CreateHost creates a Host object
-func (sm *Statemgr) CreateHost(sn *cluster.Host) error {
+func (sm *Statemgr) CreateHost(host *cluster.Host) (*HostState, error) {
 	// see if we already have it
-	esn, err := sm.FindObject("Host", sn.ObjectMeta.Tenant, sn.ObjectMeta.Name)
+	ehs, err := sm.FindHost(host.ObjectMeta.Name)
 	if err == nil {
 		// Object exists in cache, but we got a watcher event with event-type:Created
 		// and this can happen if there is a watcher error/reset and we need to update
 		// the cache to handle it gracefully as an Update.
-		log.Infof("Objects exists, updating Host OldState: {%+v}. New state: {%+v}", esn, sn)
-		return sm.UpdateHost(sn)
+		log.Infof("Objects exists, updating Host OldState: {%+v}. New state: {%+v}", ehs, host)
+		ehs.Lock()
+		defer ehs.Unlock()
+		return ehs, sm.UpdateHost(host, false)
 	}
 
 	// create new Host state
-	sns, err := NewHostState(sn, sm)
+	hostState, err := NewHostState(host)
 	if err != nil {
 		log.Errorf("Error creating new Host state. Err: %v", err)
-		return err
+		return nil, err
 	}
 
 	// store it in local DB
-	err = sm.memDB.AddObject(sns)
+	err = sm.memDB.AddObject(hostState)
 	if err != nil {
 		log.Errorf("Error storing the Host state in memdb. Err: %v", err)
-		return err
+		return nil, err
 	}
 
-	log.Infof("Created Host state {%+v}", sns)
-	return nil
+	// Host creates are never written back to ApiServer
+	log.Infof("Created Host state {%+v}", host.ObjectMeta)
+	return hostState, nil
 }
 
 // UpdateHost updates a Host object
-func (sm *Statemgr) UpdateHost(sn *cluster.Host) error {
-	// see if we already have it
-	obj, err := sm.FindObject("Host", sn.ObjectMeta.Tenant, sn.ObjectMeta.Name)
+// Caller is responsible for acquiring the lock before invocation and releasing it afterwards
+func (sm *Statemgr) UpdateHost(host *cluster.Host, writeback bool) error {
+	obj, err := sm.FindObject("Host", "", host.ObjectMeta.Name)
 	if err != nil {
-		log.Errorf("Can not find the Host %s|%s err: %v", sn.ObjectMeta.Tenant, sn.ObjectMeta.Name, err)
+		log.Errorf("Can not find the Host %s err: %v", host.ObjectMeta.Name, err)
 		return fmt.Errorf("Host not found")
 	}
 
-	sns, err := HostStateFromObj(obj)
+	hostState, err := HostStateFromObj(obj)
 	if err != nil {
 		log.Errorf("Wrong object type in memdb! Expected Host, got %T", obj)
+		return err
 	}
-	sns.Lock()
-	defer sns.Unlock()
-	sns.Host = sn
+	hostState.Host = host
 
 	// store it in local DB
-	err = sm.memDB.UpdateObject(sns)
+	err = sm.memDB.UpdateObject(hostState)
 	if err != nil {
 		log.Errorf("Error storing Host in memdb. Err: %v", err)
 		return err
 	}
 
-	log.Debugf("Updated Host state {%+v}", sns)
+	if writeback {
+		hostObj := host
+		ok := false
+		for i := 0; i < maxAPIServerWriteRetries; i++ {
+			ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
+			defer cancel()
+			_, err = sm.APIClient().Host().Update(ctx, hostObj)
+			if err == nil {
+				ok = true
+				log.Infof("Updated Host object in ApiServer: %+v", hostObj)
+				break
+			}
+			log.Errorf("Error updating Host object %+v: %v", hostObj.ObjectMeta, err)
+			// Write error -- fetch updated Spec + Meta and retry
+			updObj, err := sm.APIClient().Host().Get(ctx, &hostObj.ObjectMeta)
+			if err == nil {
+				// retain Status as that's what we are trying to update
+				updObj.Status = hostObj.Status
+				hostObj = updObj
+			}
+		}
+		if !ok {
+			log.Errorf("Error updating Host object %+v in ApiServer, retries exhausted", hostObj.ObjectMeta)
+		}
+	}
+
+	log.Debugf("Updated Host state {%+v}", host)
 	return nil
 }
 
 // DeleteHost deletes a Host state
-func (sm *Statemgr) DeleteHost(tenant, name string) error {
-	// see if we already have it
-	sn, err := sm.FindObject("Host", tenant, name)
+func (sm *Statemgr) DeleteHost(host *cluster.Host) error {
+	// delete it from the DB
+	err := sm.memDB.DeleteObject(host)
 	if err != nil {
-		log.Errorf("Can not find the Host %s|%s", tenant, name)
-		return fmt.Errorf("Host not found")
-	}
-
-	// convert it to Host state
-	sn, err = HostStateFromObj(sn)
-	if err != nil {
+		log.Errorf("Error deleting Host state %+v: %v", host.ObjectMeta, err)
 		return err
 	}
 
-	meta := sn.GetObjectMeta()
-	if meta != nil {
-		log.Infof("Deleting Host state {%+v}", meta)
-	}
-	// delete it from the DB
-	return sm.memDB.DeleteObject(sn)
+	// Host deletes are never written back to ApiServer
+	log.Infof("Deleted Host state {%+v}", host.ObjectMeta)
+	return nil
 }

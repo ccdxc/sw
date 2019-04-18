@@ -4,12 +4,21 @@ package cache
 
 import (
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/memdb"
 )
+
+// APIClientGetter is an interface that returns an API Client.
+type APIClientGetter interface {
+	APIClient() cluster.ClusterV1Interface
+}
 
 // Statemgr is the object state manager
 type Statemgr struct {
 	memDB *memdb.Memdb // database of all objects
+
+	// Implement APIClientGetter interface for ApiServer access
+	clientGetter APIClientGetter
 }
 
 // FindObject looks up an object in local db
@@ -42,12 +51,18 @@ func (sm *Statemgr) StopWatchObjects(kind string, watchChan chan memdb.Event) er
 	return sm.memDB.StopWatchObjects(kind, watchChan)
 }
 
+// APIClient returns an APIServer client for the Cluster group
+func (sm *Statemgr) APIClient() cluster.ClusterV1Interface {
+	return sm.clientGetter.APIClient()
+}
+
 // NewStatemgr creates a new state manager object
-func NewStatemgr() *Statemgr {
+func NewStatemgr(clientGetter APIClientGetter) *Statemgr {
 
 	// create new statemgr instance
 	statemgr := &Statemgr{
-		memDB: memdb.NewMemdb(),
+		memDB:        memdb.NewMemdb(),
+		clientGetter: clientGetter,
 	}
 
 	return statemgr
