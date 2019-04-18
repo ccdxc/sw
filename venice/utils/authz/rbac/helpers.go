@@ -2,7 +2,6 @@ package rbac
 
 import (
 	"github.com/pensando/sw/api/generated/auth"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -51,10 +50,6 @@ func resourceTenantMatches(permission auth.Permission, requestedResourceTenant s
 	if allowedTenant == authz.ResourceTenantAll {
 		return true
 	}
-	// only default tenant roles can have cluster scoped object perms
-	if requestedResourceTenant == "" && allowedTenant == globals.DefaultTenant {
-		return true
-	}
 	return allowedTenant == requestedResourceTenant
 }
 
@@ -91,6 +86,9 @@ func resourceKindMatches(permission auth.Permission, requestedResourceKind strin
 }
 
 func resourceGroupContains(resourceGroup string, requestedResourceKind string) bool {
+	if resourceGroup == authz.ResourceGroupAll {
+		return true
+	}
 	s := runtime.GetDefaultScheme()
 	return resourceGroup == s.Kind2APIGroup(requestedResourceKind)
 }

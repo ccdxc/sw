@@ -8,6 +8,7 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/authz"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -38,6 +39,20 @@ func TestPermissionAllows(t *testing.T) {
 			permission: auth.Permission{
 				ResourceTenant:    "default",
 				ResourceGroup:     string(apiclient.GroupAuth),
+				ResourceKind:      "",
+				ResourceNamespace: ResourceNamespaceAll,
+				Actions:           []string{auth.Permission_AllActions.String()},
+			},
+			operation: NewOperation(
+				NewResource("default", string(apiclient.GroupAuth), string(auth.KindUser), "abc", "def"),
+				auth.Permission_Read.String()),
+			expected: true,
+		},
+		{
+			name: "matching resource for all api groups for all namespaces",
+			permission: auth.Permission{
+				ResourceTenant:    "default",
+				ResourceGroup:     ResourceGroupAll,
 				ResourceKind:      "",
 				ResourceNamespace: ResourceNamespaceAll,
 				Actions:           []string{auth.Permission_AllActions.String()},
@@ -137,7 +152,7 @@ func TestPermissionAllows(t *testing.T) {
 		{
 			name: "matching cluster scoped resource kind",
 			permission: auth.Permission{
-				ResourceTenant:    "default",
+				ResourceTenant:    "",
 				ResourceGroup:     string(apiclient.GroupAuth),
 				ResourceKind:      "",
 				ResourceNamespace: ResourceNamespaceAll,
@@ -161,6 +176,34 @@ func TestPermissionAllows(t *testing.T) {
 				NewResource("", string(apiclient.GroupAuth), string(auth.KindAuthenticationPolicy), "", "def"),
 				auth.Permission_Read.String()),
 			expected: false,
+		},
+		{
+			name: "shouldn't match tenant scoped resource kind",
+			permission: auth.Permission{
+				ResourceTenant:    "",
+				ResourceGroup:     ResourceGroupAll,
+				ResourceKind:      "",
+				ResourceNamespace: ResourceNamespaceAll,
+				Actions:           []string{auth.Permission_AllActions.String()},
+			},
+			operation: NewOperation(
+				NewResource(globals.DefaultTenant, string(apiclient.GroupAuth), string(auth.KindRole), globals.DefaultNamespace, "def"),
+				auth.Permission_Read.String()),
+			expected: false,
+		},
+		{
+			name: "using kind all with group all giving tenant scoped permissions",
+			permission: auth.Permission{
+				ResourceTenant:    globals.DefaultTenant,
+				ResourceGroup:     ResourceGroupAll,
+				ResourceKind:      ResourceKindAll,
+				ResourceNamespace: ResourceNamespaceAll,
+				Actions:           []string{auth.Permission_AllActions.String()},
+			},
+			operation: NewOperation(
+				NewResource(globals.DefaultTenant, string(apiclient.GroupAuth), string(auth.KindRole), globals.DefaultNamespace, "def"),
+				auth.Permission_Read.String()),
+			expected: true,
 		},
 	}
 	for _, test := range tests {

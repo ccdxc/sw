@@ -416,6 +416,23 @@ func TestAPIGroupAuthorization(t *testing.T) {
 		_, err := tinfo.restcl.ClusterV1().Tenant().Get(ctx, &api.ObjectMeta{Name: globals.DefaultTenant})
 		return err != nil, nil
 	}, "authorization error expected while retrieving tenant", "100ms", "1s")
+	MustCreateRole(tinfo.apicl, "ClusterScopedAllAPIGroupsRole", globals.DefaultTenant,
+		login.NewPermission(
+			"",
+			authz.ResourceGroupAll,
+			"",
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_AllActions.String()))
+	defer MustDeleteRole(tinfo.apicl, "ClusterScopedAllAPIGroupsRole", globals.DefaultTenant)
+	MustCreateRoleBinding(tinfo.apicl, "ClusterScopedAllAPIGroupsRoleBinding", globals.DefaultTenant, "ClusterScopedAllAPIGroupsRole", []string{"testUser2"}, nil)
+	defer MustDeleteRoleBinding(tinfo.apicl, "ClusterScopedAllAPIGroupsRoleBinding", globals.DefaultTenant)
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.ClusterV1().Cluster().Get(ctx, &api.ObjectMeta{})
+		return err == nil, err
+	}, "expected Cluster object retrieval to succeed")
+	_, err = tinfo.restcl.SecurityV1().SGPolicy().List(ctx, &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+	Assert(t, err != nil, "authorization error expected while listing SGPolicy")
 }
 
 func TestUserSelfOperations(t *testing.T) {
@@ -708,4 +725,91 @@ func TestClusterScopedAuthz(t *testing.T) {
 	AssertOk(t, err, "error creating logged in context for admin user")
 	_, err = tinfo.restcl.AuthV1().Role().Create(ctx, role)
 	Assert(t, err != nil, "roles in non-default tenant cannot have permissions for cluster scoped resource kind")
+}
+
+func TestValidatePerms(t *testing.T) {
+	// create default tenant
+	adminCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create default tenant and global admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, adminCred, tinfo.l)
+	ctx, err := NewLoggedInContext(context.Background(), tinfo.apiGwAddr, adminCred)
+	AssertOk(t, err, "error creating logged in context")
+	tests := []struct {
+		name   string
+		perm   auth.Permission
+		valid  bool
+		errmsg string
+	}{
+		{
+			name:   "empty kind, tenant and group",
+			perm:   login.NewPermission("", "", "", "", "", auth.Permission_AllActions.String()),
+			valid:  false,
+			errmsg: "invalid API group [\"\"]",
+		},
+		{
+			name:   "empty kind, tenant and invalid group",
+			perm:   login.NewPermission("", "zzz", "", "", "", auth.Permission_AllActions.String()),
+			valid:  false,
+			errmsg: "invalid API group [\"zzz\"]",
+		},
+		{
+			name:   "empty kind, tenant and valid group",
+			perm:   login.NewPermission("", string(apiclient.GroupAuth), "", "", "", auth.Permission_AllActions.String()),
+			valid:  true,
+			errmsg: "",
+		},
+		{
+			name:   "non matching kind and group",
+			perm:   login.NewPermission(globals.DefaultTenant, string(apiclient.GroupAuth), string(network.KindNetwork), "", "", auth.Permission_AllActions.String()),
+			valid:  false,
+			errmsg: fmt.Sprintf("invalid resource kind [%q] and API group [%q]", string(network.KindNetwork), string(apiclient.GroupAuth)),
+		},
+		{
+			name:   "empty tenant and tenant scoped kind",
+			perm:   login.NewPermission("", string(apiclient.GroupAuth), string(auth.KindRole), "", "", auth.Permission_AllActions.String()),
+			valid:  false,
+			errmsg: fmt.Sprintf("tenant should not be empty for tenant scoped resource kind [%q]", string(auth.KindRole)),
+		},
+		{
+			name:   "non empty tenant and cluster scoped kind",
+			perm:   login.NewPermission(globals.DefaultTenant, string(apiclient.GroupAuth), string(auth.KindAuthenticationPolicy), "", "", auth.Permission_AllActions.String()),
+			valid:  false,
+			errmsg: fmt.Sprintf("tenant should be empty for cluster scoped resource kind [%q]", string(auth.KindAuthenticationPolicy)),
+		},
+		{
+			name:   "empty kind, and all API groups giving permissions to cluster scoped objects only",
+			perm:   login.NewPermission("", authz.ResourceGroupAll, "", "", "", auth.Permission_AllActions.String()),
+			valid:  true,
+			errmsg: "",
+		},
+		{
+			name:   "all kinds, and all API groups giving permissions to cluster scoped objects only",
+			perm:   login.NewPermission("", authz.ResourceGroupAll, authz.ResourceKindAll, "", "", auth.Permission_AllActions.String()),
+			valid:  true,
+			errmsg: "",
+		},
+		{
+			name:   "all kinds, and all API groups giving permissions to tenant scoped objects",
+			perm:   login.NewPermission(globals.DefaultTenant, authz.ResourceGroupAll, authz.ResourceKindAll, "", "", auth.Permission_AllActions.String()),
+			valid:  true,
+			errmsg: "",
+		},
+	}
+	for i, test := range tests {
+		role, err := tinfo.restcl.AuthV1().Role().Create(ctx, login.NewRole(fmt.Sprintf("testrole_%d", i), globals.DefaultTenant, test.perm))
+		if role != nil {
+			MustDeleteRole(tinfo.apicl, role.Name, role.Tenant)
+		}
+		Assert(t, test.valid == (err == nil), fmt.Sprintf("[%s] test failed, expected perm validity to be [%v], got [%v], err [%v]", test.name, test.valid, err == nil, err))
+		if !test.valid && err != nil {
+			Assert(t, strings.Contains(err.Error(), test.errmsg), fmt.Sprintf("[%s] test failed, expected error to be [%v], got [%v]]", test.name, test.errmsg, err.Error()))
+		}
+	}
 }
