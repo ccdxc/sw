@@ -67,7 +67,7 @@ func NewNodeWatcher(ctx context.Context, obj runtime.Object, resolver resolver.I
 	}
 
 	opts := &tsdb.Opts{
-		ClientName:              fmt.Sprintf("%v-%v", obj.GetObjectKind(), meta.Name),
+		ClientName:              meta.Name,
 		ResolverClient:          resolver,
 		Collector:               globals.Collector,
 		DBName:                  "default",
