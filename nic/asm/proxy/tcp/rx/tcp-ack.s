@@ -39,8 +39,9 @@ tcp_ack_start:
      *      ack_seq == snd_una &&
      *      not in recovery
      */
-    and             r1, k.to_s2_flag, FLAG_DATA
-    seq             c1, r1, FLAG_DATA
+    smeqb           c1, k.to_s2_flag, FLAG_DATA, FLAG_DATA
+    // and             r1, k.to_s2_flag, FLAG_DATA
+    // seq             c1, r1, FLAG_DATA
     seq             c3, d.snd_una, k.s1_s2s_ack_seq
     seq             c4, d.cc_flags, 0
     seq             c_est, d.state, TCP_ESTABLISHED
@@ -56,15 +57,30 @@ tcp_ack_start:
      *      ack_seq <= snd_nxt &&
      *      ack_seq > snd_una
      */
-    smeqb           c1, k.to_s2_flag, FLAG_SLOWPATH, FLAG_SLOWPATH
+    smeqb           c5, k.to_s2_flag, FLAG_SLOWPATH, FLAG_SLOWPATH
     scwlt           c2, k.s1_s2s_snd_nxt, k.s1_s2s_ack_seq
+    /* 
+     * Note: tcp_ack_slow assumes c2 will hve indication of ACK for sent data
+     * So dont change it without corresponding change in tcp_ack_slow
+     */
     scwle           c3, k.s1_s2s_ack_seq, d.snd_una
     sne             c4, d.cc_flags, 0
-    setcf           c7, [c1 | c2 | c3 | c4 | !c_est]
+    setcf           c7, [c5 | c2 | c3 | c4 | !c_est]
     j.c7            tcp_ack_slow
     nop
 
 tcp_ack_fast:
+    /* At this point we know that ACK has incremented beyond snd_una
+    /* If Data is not present (Note: c1 still holds this flag),
+     * then it is valid Pure ACK
+     */ 
+    bcf             [c1], proc_tcp_ack_fast
+    nop
+pure_acks_rcvd_stats_update_start:
+    CAPRI_STATS_INC(pure_acks_rcvd, 1, d.pure_acks_rcvd, p.to_s7_pure_acks_rcvd)
+pure_acks_rcvd_stats_update_end:
+
+proc_tcp_ack_fast: 
     phvwri          p.common_phv_process_ack_flag, 1
     phvwrpair       p.to_s4_cc_ack_signal, TCP_CC_ACK_SIGNAL, \
                         p.to_s4_cc_flags, d.cc_flags

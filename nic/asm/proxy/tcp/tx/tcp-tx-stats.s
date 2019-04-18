@@ -15,8 +15,9 @@ struct phv_ p;
 struct s6_t0_tcp_tx_k_ k;
 	
 %%
+    .param          TCP_PROXY_STATS
 	.align	
-tcp_tx_stats_stage5_start:
+tcp_tx_stats_start:
         CAPRI_CLEAR_TABLE_VALID(0)
 
 // TODO: Move to multi stats update
@@ -33,7 +34,33 @@ pkts_sent_atomic_stats_update_start:
                 TCP_TCB_TX_STATS_OFFSET + 1 * 8, k.to_s6_pkts_sent)
 pkts_sent_atomic_stats_update_done:
 
-tcp_rx_stats_stage7_done:
+pure_acks_sent_atomic_stats_update_start:
+        CAPRI_ATOMIC_STATS_INCR1(pure_acks_sent, k.common_phv_qstate_addr,
+                TCP_TCB_TX_STATS_OFFSET + 2 * 8, k.to_s6_pure_acks_sent)
+pure_acks_sent_atomic_stats_update_done:
+
+    seq             c1, k.common_phv_fin, 1
+    balcf           r7, [c1], tcp_tx_update_fin_stats
+    nop
+    
+    seq             c1, k.common_phv_rst, 1
+    balcf           r7, [c1], tcp_tx_update_rst_stats
+    nop
+
+tcp_rx_stats_done:
 	nop.e
 	nop
 
+tcp_tx_update_fin_stats:
+    addui           r2, r0, hiword(TCP_PROXY_STATS)
+    addi            r2, r2, loword(TCP_PROXY_STATS)
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_FIN_SENT, 1)
+    jr              r7
+    nop 
+
+tcp_tx_update_rst_stats:
+    addui           r2, r0, hiword(TCP_PROXY_STATS)
+    addi            r2, r2, loword(TCP_PROXY_STATS)
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RST_SENT, 1)
+    jr              r7
+    nop 

@@ -356,7 +356,11 @@ message TcpProxyGlobalStatsGetResponseMsg {
   TcpProxyGlobalStats global_stats = 2;
 }
 
-// TcpProxyGlobalStats captures global TCP statistics 
+/*
+ * TcpProxyGlobalStats captures global TCP statistics
+ * The offsets of fields here MUST match the offsets of fields defined as 
+ * TCP_PROXY_STATS_XX in tcp_common.h
+ */  
 message TcpProxyGlobalStats {
   uint64 rnmdr_full = 1;
   uint64 invalid_sesq_descr = 2;
@@ -368,8 +372,12 @@ message TcpProxyGlobalStats {
   uint64 ooq_full = 8;
   uint64 invalid_nmdr_descr = 9;
   uint64 rcvd_ce_pkts = 10;
-  uint64 retx_pkts = 11;
-  uint64 ooq_rx2tx_full = 12;
+  uint64 ecn_reduced_congestion= 11;
+  uint64 retx_pkts = 12;
+  uint64 ooq_rx2tx_full = 13;
+  uint64 rx_ack_for_unsent_data = 14;
+  uint64 fin_sent_cnt = 15;
+  uint64 rst_sent_cnt = 16;
   uint64 tcp_debug1 = 1002;
   uint64 tcp_debug2 = 1003;
   uint64 tcp_debug3 = 1004;

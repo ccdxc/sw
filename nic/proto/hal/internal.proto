@@ -489,14 +489,17 @@ message TcpCbStats {
   uint64                bytes_rcvd                 = 1;
   uint64                pkts_rcvd                  = 2;
   uint64                bytes_acked                = 3;
-  uint64                slow_path_cnt              = 4;
-  uint64                serq_full_cnt              = 5;
-  uint64                ooo_cnt                    = 6;
-  uint64                rx_drop_cnt                = 7;
+  uint64                pure_acks_rcvd             = 4;
+  uint64                dup_acks_rcvd              = 5;
+  uint64                slow_path_cnt              = 6;
+  uint64                serq_full_cnt              = 7;
+  uint64                ooo_cnt                    = 8;
+  uint64                rx_drop_cnt                = 9;
 
   // tx stats
   uint64                bytes_sent                 = 10001;
   uint64                pkts_sent                  = 10002;
+  uint64                pure_acks_sent             = 10003;
   uint32                sesq_pi                    = 10005;
   uint32                sesq_ci                    = 10006;
   uint32                send_ack_pi                = 10007;

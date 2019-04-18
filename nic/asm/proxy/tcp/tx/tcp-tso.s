@@ -19,14 +19,13 @@ struct s5_t0_tcp_tx_tso_d d    ;
 
 %%
     .align
-    .param          tcp_tx_stats_stage5_start
+    .param          tcp_tx_stats_start
 
 tcp_tso_process_start:
     /* check SESQ for pending data to be transmitted */
     sne             c6, k.common_phv_debug_dol_dont_tx, r0
     bcf             [c6], flow_tso_process_drop
-    or              r1, k.to_s5_pending_tso_data, k.to_s5_pending_tso_retx
-    or              r1, r1, k.common_phv_pending_ack_send
+    or              r1, k.to_s5_pending_tso_data, k.common_phv_pending_ack_send
     sne             c1, r1, r0
     bal.c1          r7, tcp_write_xmit
     nop
@@ -113,9 +112,15 @@ dma_cmd_data:
      * Check for pure ack
      */
     seq             c1, k.t0_s2s_addr, 0
-    b.c1            dma_cmd_write_tx2rx_shared
-    phvwri.c1       p.tcp_header_dma_dma_pkt_eop, 1
+    // Increment Pure ACK stats here based on c1
+    bcf             [!c1], flow_tso_process
+pure_acks_sent_stats_update_start:
+    CAPRI_STATS_INC(pure_acks_sent, 1, d.pure_acks_sent, p.to_s6_pure_acks_sent)
+pure_acks_sent_stats_update_end:
+    b               dma_cmd_write_tx2rx_shared
+    phvwri          p.tcp_header_dma_dma_pkt_eop, 1
 
+flow_tso_process:
     /*
      * This catches FIN/RST etc.
      */
@@ -154,14 +159,14 @@ tcp_retx:
 tcp_retx_done:
 
 flow_tso_process_done:
-    CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_tx_stats_stage5_start)
+    CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_tx_stats_start)
     nop.e
     nop
 
 flow_tso_process_drop:
     // TODO: Stats
     phvwri          p.p4_intr_global_drop, 1
-    CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_tx_stats_stage5_start)
+    CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_tx_stats_start)
     nop.e
     nop
 

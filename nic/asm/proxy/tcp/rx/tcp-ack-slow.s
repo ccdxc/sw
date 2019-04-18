@@ -18,6 +18,7 @@ struct s2_t0_tcp_rx_tcp_ack_d d;
 %%
     .align
     .param          tcp_rx_rtt_start
+    .param          TCP_PROXY_STATS
 
 #define c_est c6
 #define c_snd_una_advanced c4
@@ -35,9 +36,19 @@ tcp_ack_slow:
     bal.c1          r7, tcp_ack_rto_event
     nop
 
+    // ASSUMPTION: Caller has set c2 if ACK is for unsent data
+    bcf             [!c2], check_dup_ack
+    nop
+    
+    // Incr global stats
+    addui           r2, r0, hiword(TCP_PROXY_STATS)
+    addi            r2, r2, loword(TCP_PROXY_STATS)
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RCVD_ACK_FOR_UNSENT, 1)
+
     /*
      * check for dupack
      */
+check_dup_ack:
     sne             c_snd_una_advanced, k.s1_s2s_ack_seq, d.snd_una
     smneb           c2, k.to_s2_flag, FLAG_DATA, FLAG_DATA
     seq             c5, d.snd_wnd, k.to_s2_window
@@ -45,7 +56,6 @@ tcp_ack_slow:
      * RFC 5681: consider it as a dup_ack only if window
      * has not changed
      */
-
     bcf             [c_est & c5 & !c_snd_una_advanced & c2], tcp_dup_ack
     nop
 
@@ -183,6 +193,11 @@ tcp_ack_slow_launch_next_stage:
 
 tcp_dup_ack:
     tbladd          d.num_dup_acks, 1
+    
+    // Incr dup acks received stats
+dup_acks_rcvd_stats_update_start:
+    CAPRI_STATS_INC(dup_acks_rcvd, 1, d.dup_acks_rcvd, p.to_s7_dup_acks_rcvd)
+dup_acks_rcvd_stats_update_end:
 
     slt             c1, d.num_dup_acks, TCP_FASTRETRANS_THRESH
     b.c1            tcp_dup_ack_limited_transmit
@@ -229,6 +244,11 @@ tcp_ack_ece:
     smeqb           c1, d.cc_flags, TCP_CCF_CONG_RECOVERY, TCP_CCF_CONG_RECOVERY
     jr.c1           r7
     nop
+    
+    // Incr global stats for ECN reduced congestion
+    addui           r2, r0, hiword(TCP_PROXY_STATS)
+    addi            r2, r2, loword(TCP_PROXY_STATS)
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_ECN_REDUCED_CONG, 1)
 
     tblor           d.cc_flags, TCP_CCF_CONG_RECOVERY
     tblwr           d.snd_recover, k.s1_s2s_snd_nxt

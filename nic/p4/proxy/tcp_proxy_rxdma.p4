@@ -166,7 +166,7 @@ header_type tcp_rx_d_t {
         bytes_acked             : 16;   // tcp_ack stage
         slow_path_cnt           : 16;
         serq_full_cnt           : 16;
-        ooo_cnt                 : 16;
+        ooo_cnt                 : 8;
         ato                     : 16;
         del_ack_pi              : 16;
         cfg_flags               : 8;
@@ -181,7 +181,9 @@ header_type tcp_rx_d_t {
         bytes_rcvd              : 16;
         snd_wnd                 : 16;   // tcp_ack stage
         serq_pidx               : 16;
-        num_dup_acks            : 16;   // tcp_ack_stage
+        num_dup_acks            : 4;   // tcp_ack_stage
+        dup_acks_rcvd           : 4;
+        pure_acks_rcvd          : 8;    // tcp_ack_stage
         cc_flags                : 8;    // tcp_ack stage
         quick                   : 8;
         flag                    : 8;    // used with .l not written back
@@ -513,6 +515,9 @@ header_type to_stage_7_phv_t {
         bytes_rcvd              : 16;
         pkts_rcvd               : 8;
         bytes_acked             : 16;
+        pure_acks_rcvd          : 8;
+        dup_acks_rcvd           : 4;
+        ooo_cnt                 : 8;
     }
 }
 
@@ -875,7 +880,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
         ato, del_ack_pi, cfg_flags, \
         rcv_nxt, rx_drop_cnt, ts_recent, lrcv_time, \
         snd_una, snd_wl1, pred_flags, snd_recover, bytes_rcvd, \
-        snd_wnd, serq_pidx, num_dup_acks, cc_flags, quick, \
+        snd_wnd, serq_pidx, num_dup_acks, dup_acks_rcvd, pure_acks_rcvd, cc_flags, quick, \
         flag, rto, state, parsed_state, rcv_wscale, \
         alloc_descr_L, dont_send_ack_L, unused_flags_L, \
         limited_transmit, pending
@@ -902,6 +907,8 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(tcp_rx_d.snd_wnd, snd_wnd); \
     modify_field(tcp_rx_d.serq_pidx, serq_pidx); \
     modify_field(tcp_rx_d.num_dup_acks, num_dup_acks); \
+    modify_field(tcp_rx_d.dup_acks_rcvd, dup_acks_rcvd); \
+    modify_field(tcp_rx_d.pure_acks_rcvd, pure_acks_rcvd); \
     modify_field(tcp_rx_d.cc_flags, cc_flags); \
     modify_field(tcp_rx_d.quick, quick); \
     modify_field(tcp_rx_d.flag, flag); \
@@ -1308,6 +1315,9 @@ action stats() {
     modify_field(to_s7_scratch.bytes_rcvd, to_s7.bytes_rcvd);
     modify_field(to_s7_scratch.pkts_rcvd, to_s7.pkts_rcvd);
     modify_field(to_s7_scratch.bytes_acked, to_s7.bytes_acked);
+    modify_field(to_s7_scratch.pure_acks_rcvd, to_s7.pure_acks_rcvd);
+    modify_field(to_s7_scratch.dup_acks_rcvd, to_s7.dup_acks_rcvd);
+    modify_field(to_s7_scratch.ooo_cnt, to_s7.ooo_cnt);
 
     // from ki global
     GENERATE_GLOBAL_K

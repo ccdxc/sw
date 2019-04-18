@@ -3007,8 +3007,12 @@ typedef struct pd_tcp_global_stats_get_args_s {
     uint64_t ooq_full;
     uint64_t invalid_nmdr_descr;
     uint64_t rcvd_ce_pkts;
+    uint64_t ecn_reduced_congestion;
     uint64_t retx_pkts;
     uint64_t ooq_rx2tx_full;
+    uint64_t rx_ack_for_unsent_data;
+    uint64_t fin_sent_cnt;
+    uint64_t rst_sent_cnt;
 
     uint64_t tcp_debug1;
     uint64_t tcp_debug2;

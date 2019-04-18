@@ -114,8 +114,9 @@ typedef struct tcpcb_s {
     // rx stats
     uint64_t              bytes_rcvd;
     uint64_t              pkts_rcvd;
-
     uint64_t              bytes_acked;
+    uint64_t              pure_acks_rcvd;
+    uint64_t              dup_acks_rcvd;
     uint64_t              slow_path_cnt;
     uint64_t              serq_full_cnt;
     uint64_t              ooo_cnt;
@@ -126,6 +127,7 @@ typedef struct tcpcb_s {
     // tx stats
     uint64_t              bytes_sent;
     uint64_t              pkts_sent;
+    uint64_t              pure_acks_sent;
 
     uint32_t              sesq_pi;
     uint32_t              sesq_ci;

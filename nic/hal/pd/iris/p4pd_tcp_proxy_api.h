@@ -65,9 +65,9 @@ typedef struct __attribute__((__packed__)) __tcp_rx_stats_t {
     uint64_t bytes_rcvd;
     uint64_t pkts_rcvd;
     uint64_t bytes_acked;
-    uint64_t stats3;
-    uint64_t stats4;
-    uint64_t stats5;
+    uint64_t pure_acks_rcvd;
+    uint64_t dup_acks_rcvd;
+    uint64_t ooo_cnt;
     uint64_t stats6;
     uint64_t stats7;
 } tcp_rx_stats_t;
@@ -76,7 +76,7 @@ typedef struct __attribute__((__packed__)) __tcp_rx_stats_t {
 typedef struct __attribute__((__packed__)) __tcp_tx_stats_t {
     uint64_t bytes_sent;
     uint64_t pkts_sent;
-    uint64_t stats2;
+    uint64_t pure_acks_sent;
     uint64_t stats3;
     uint64_t stats4;
     uint64_t stats5;

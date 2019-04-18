@@ -738,8 +738,13 @@ p4pd_get_tcpcb_rxdma_stats(pd_tcpcb_t* tcpcb_pd)
 
     tcpcb_pd->tcpcb->bytes_rcvd = ntohs(tcp_rx_d.u.tcp_rx_d.bytes_rcvd) +
                                     stats.bytes_rcvd;
-    tcpcb_pd->tcpcb->bytes_acked = ntohs(tcp_rx_d.u.tcp_rx_d.bytes_rcvd) +
-                                    stats.bytes_rcvd;
+    tcpcb_pd->tcpcb->bytes_acked = ntohs(tcp_rx_d.u.tcp_rx_d.bytes_acked) +
+                                    stats.bytes_acked;
+    tcpcb_pd->tcpcb->pure_acks_rcvd = tcp_rx_d.u.tcp_rx_d.pure_acks_rcvd +
+                                    stats.pure_acks_rcvd;
+    tcpcb_pd->tcpcb->dup_acks_rcvd = tcp_rx_d.u.tcp_rx_d.dup_acks_rcvd +
+                                    stats.dup_acks_rcvd;
+    tcpcb_pd->tcpcb->ooo_cnt = tcp_rx_d.u.tcp_rx_d.ooo_cnt + stats.ooo_cnt;
     tcpcb_pd->tcpcb->pkts_rcvd = rx_dma_d.pkts_rcvd + stats.pkts_rcvd;
 
     HAL_TRACE_DEBUG("bytes_rcvd {} pkts_rcvd {}",
@@ -749,7 +754,6 @@ p4pd_get_tcpcb_rxdma_stats(pd_tcpcb_t* tcpcb_pd)
     // These stats don't have overflow implemented in stats region
     tcpcb_pd->tcpcb->slow_path_cnt = tcp_rx_d.u.tcp_rx_d.slow_path_cnt;
     tcpcb_pd->tcpcb->serq_full_cnt = tcp_rx_d.u.tcp_rx_d.serq_full_cnt;
-    tcpcb_pd->tcpcb->ooo_cnt = tcp_rx_d.u.tcp_rx_d.ooo_cnt;
     tcpcb_pd->tcpcb->rx_drop_cnt = tcp_rx_d.u.tcp_rx_d.rx_drop_cnt;
 
     return HAL_RET_OK;
@@ -788,6 +792,7 @@ p4pd_get_tcpcb_txdma_stats(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->bytes_sent = ntohs(tso_d.bytes_sent) +
                                     stats.bytes_sent;
     tcpcb_pd->tcpcb->pkts_sent = tso_d.pkts_sent + stats.pkts_sent;
+    tcpcb_pd->tcpcb->pure_acks_sent = tso_d.pure_acks_sent + stats.pure_acks_sent;
     tcpcb_pd->tcpcb->send_ack_pi = rx2tx_d.u.read_rx2tx_d.pi_1;
     tcpcb_pd->tcpcb->send_ack_ci = rx2tx_d.u.read_rx2tx_d.ci_1;
     tcpcb_pd->tcpcb->fast_timer_pi = rx2tx_d.u.read_rx2tx_d.pi_2;

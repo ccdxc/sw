@@ -433,7 +433,11 @@ tcp_rx_ooo_rcv:
 
     seq             c5, d.u.tcp_rx_d.ooq_not_empty, 0
     tblwr.c5        d.u.tcp_rx_d.ooq_not_empty, 1
-    tbladd.f        d.{u.tcp_rx_d.ooo_cnt}.hx, 1
+//    tbladd.f        d.{u.tcp_rx_d.ooo_cnt}.hx, 1
+ooo_cnt_stats_update_start:
+    CAPRI_STATS_INC(ooo_cnt, 1, d.u.tcp_rx_d.ooo_cnt, p.to_s7_ooo_cnt)
+ooo_cnt_stats_update_end:
+
     CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_EN, tcp_ooo_book_keeping,
                         k.common_phv_qstate_addr, TCP_TCB_OOO_BOOK_KEEPING_OFFSET0,
                         TABLE_SIZE_512_BITS)

@@ -323,6 +323,7 @@ header_type to_stage_6_phv_t {
     fields {
         bytes_sent              : 16;
         pkts_sent               : 8;
+        pure_acks_sent          : 8;
     }
 }
 /******************************************************************************
@@ -845,7 +846,7 @@ action tso(TSO_PARAMS) {
     // from stage to stage
     GENERATE_T0_S2S
 
-    // d for stage 4 table 0
+    // d for stage 5 table 0
     GENERATE_TSO_SHARED_D
 }
 
@@ -859,6 +860,7 @@ action stats() {
     // from to_stage 6
     modify_field(to_s6_scratch.bytes_sent, to_s6.bytes_sent);
     modify_field(to_s6_scratch.pkts_sent, to_s6.pkts_sent);
+    modify_field(to_s6_scratch.pure_acks_sent, to_s6.pure_acks_sent);
 
     // d for stage 6 table 0
 }
