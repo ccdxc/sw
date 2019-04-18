@@ -348,12 +348,17 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     this.idle.setTimeout(10);
     this.idle.setInterrupts(DEFAULT_INTERRUPTSOURCES);
     this.idle.onIdleEnd.subscribe(() => {
+      if (this.idleDialogRef) {
+        this.idleDialogRef.close();
+      }
       this.showIdleWarning = false;
-      this.idleDialogRef.close();
       this.idleDialogRef = null;
     });
     this.idle.onTimeout.subscribe(() => {
-      this.idleDialogRef.close();
+      if (this.idleDialogRef) {
+        this.idleDialogRef.close();
+      }
+      this.showIdleWarning = false;
       this.idleDialogRef = null;
       this._controllerService.publish(Eventtypes.LOGOUT, { 'reason': 'Idle timeout' });
     });

@@ -453,9 +453,9 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
    * Delete a row.  Say deleting roleA, we will also delete roleA-rolebinding
    *
    * delete a role (say roleA)
-	 *	 create buffer
-   *       delete roleA
-   *        delete the roleA-rolebinding
+   *	 create buffer
+           delete the roleA-rolebinding
+   *                delete roleA
 	 *			if (success) {
    *            commit buffer
    *       else
@@ -480,12 +480,30 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
             }
           });
           // Delete role after delete role-bindings.
-          observables.push(this._authService.DeleteRole(deletedRole.meta.name, buffername));
           if (observables.length > 0) {
-            return this.invokeForkJoin(observables, buffername); // (B-C)
+            return forkJoin(observables)// (B-C)
+                  .pipe (
+                    switchMap(results => {
+                      const isAllOK = Utility.isForkjoinResultAllOK(results);
+                      if (isAllOK) {
+                        return this._authService.DeleteRole(deletedRole.meta.name, buffername).pipe(  // (C) delete role
+                          switchMap(() => {
+                            return this.commitStagingBuffer(buffername);  // (D) commit buffer
+                          })
+                        );
+                      } else {
+                        const error = Utility.joinErrors(results);
+                        return throwError(error);
+                      }
+                    })
+                  );
           } else {
-            // it is possible that user delete role-binding manually first, observables[] is empty
-            return this.commitStagingBuffer(buffername);
+            // It is possible that client delete role-bindings manually first, observables[] is empty
+            return this._authService.DeleteRole(deletedRole.meta.name, buffername).pipe(  // (C) delete role
+                    switchMap(() => {
+                      return this.commitStagingBuffer(buffername);  // (D) commit buffer
+                    })
+            );
           }
         })
       )
@@ -502,6 +520,7 @@ export class UsersComponent extends BaseComponent implements OnInit, OnDestroy {
         }
       );
   }
+
 
   invokeForkJoin(observables: Observable<any>[], buffername: any) {
     return forkJoin(observables) // (B)
