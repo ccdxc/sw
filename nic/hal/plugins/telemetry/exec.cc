@@ -25,8 +25,6 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
     const hal::ipv4_rule_t              *rule = NULL;
     const acl::acl_ctx_t                *acl_ctx = NULL;
 
-    //memset(&mirror_flowupd, 0, sizeof(fte::flow_update_t));
-    //memset(&export_flowupd, 0, sizeof(fte::flow_update_t));
     mirror_flowupd.mirror_info.mirror_en = 0;
     export_flowupd.export_info.export_en = 0;
     const char *ctx_name = flowmon_acl_ctx_name(ctx.get_key().svrf_id, mirror_action);
@@ -89,6 +87,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
         rc = get_rule_data((acl_rule_t *)rule);
         frule = (const hal::flow_monitor_rule_t *) RULE_MATCH_USER_DATA(rc, hal::flow_monitor_rule_t, ref_count);
         if (frule->action.num_mirror_dest > 0) {
+            memset(&mirror_flowupd, 0, sizeof(fte::flow_update_t));
             mirror_flowupd.type = fte::FLOWUPD_MIRROR_INFO;
             mirror_flowupd.mirror_info.mirror_en = true;
             mirror_flowupd.mirror_info.ing_mirror_session = 0;
@@ -97,6 +96,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
             }
         }
         if (frule->action.num_collector > 0) {
+            memset(&export_flowupd, 0, sizeof(fte::flow_update_t));
             export_flowupd.type = fte::FLOWUPD_EXPORT_INFO;
             int n = frule->action.num_collector;
             export_flowupd.export_info.export_en = 0;
