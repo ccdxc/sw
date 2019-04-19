@@ -295,7 +295,8 @@ header_type to_stage_3_phv_t {
 header_type to_stage_4_phv_t {
     fields {
         snd_cwnd                : 32;
-        rto                     : 16;
+        rto                     : 32;
+        rtt_seq_req             : 8;
         sesq_tx_ci              : 16;
         rcv_mss_shft            : 4;
         quick                   : 4;
@@ -616,7 +617,7 @@ action read_rx2tx(RX2TX_PARAMS) {
  */
 action read_rx2tx_extra(
        snd_cwnd, rcv_nxt, dup_rcv_nxt, snd_wnd, rcv_wnd, rto, snd_una, rcv_tsval,
-       cc_flags, t_flags, limited_transmit, state,
+       cc_flags, rtt_seq_req_, t_flags, limited_transmit, state,
        pending_dup_ack_send, pending_challenge_ack_send) {
 
     // from ki global
@@ -638,6 +639,7 @@ action read_rx2tx_extra(
     modify_field(rx2tx_extra_d.snd_una, snd_una);
     modify_field(rx2tx_extra_d.rcv_tsval, rcv_tsval);
     modify_field(rx2tx_extra_d.cc_flags, cc_flags);
+    modify_field(rx2tx_extra_d.rtt_seq_req_, rtt_seq_req_);
     modify_field(rx2tx_extra_d.t_flags, t_flags);
     modify_field(rx2tx_extra_d.limited_transmit, limited_transmit);
     modify_field(rx2tx_extra_d.state, state);
@@ -798,12 +800,12 @@ action xmit(XMIT_SHARED_PARAMS) {
     // from to_stage 4
     modify_field(to_s4_scratch.snd_cwnd, to_s4.snd_cwnd);
     modify_field(to_s4_scratch.rto, to_s4.rto);
+    modify_field(to_s4_scratch.rtt_seq_req, to_s4.rtt_seq_req);  
     modify_field(to_s4_scratch.sesq_tx_ci, to_s4.sesq_tx_ci);
     modify_field(to_s4_scratch.rcv_mss_shft, to_s4.rcv_mss_shft);
     modify_field(to_s4_scratch.quick, to_s4.quick);
     modify_field(to_s4_scratch.pingpong, to_s4.pingpong);
     modify_field(to_s4_scratch.window_open, to_s4.window_open);
-
     // from stage to stage
     GENERATE_T0_S2S
 

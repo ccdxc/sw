@@ -484,6 +484,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_sesq_tx_ci(rtcpcb.sesq_tx_ci);
     rsp->mutable_spec()->set_retx_snd_una(rtcpcb.retx_snd_una);
     rsp->mutable_spec()->set_rto(rtcpcb.rto);
+    rsp->mutable_spec()->set_srtt_us(rtcpcb.srtt_us);
 
     rsp->mutable_spec()->set_state(rtcpcb.state);
     rsp->mutable_spec()->set_source_lif(rtcpcb.source_lif);

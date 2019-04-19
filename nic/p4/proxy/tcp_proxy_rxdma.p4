@@ -187,7 +187,6 @@ header_type tcp_rx_d_t {
         cc_flags                : 8;    // tcp_ack stage
         quick                   : 8;
         flag                    : 8;    // used with .l not written back
-        rto                     : 8;
         state                   : 8;
         parsed_state            : 8;
         rcv_wscale              : 8;
@@ -211,15 +210,11 @@ header_type read_rnmdr_d_t {
 header_type tcp_rtt_d_t {
     fields {
         srtt_us                 : 32;
-        seq_rtt_us              : 32;
-        ca_rtt_us               : 32;
         curr_ts                 : 32;
-        rtt_min                 : 32;
         rttvar_us               : 32;
-        mdev_us                 : 32;
-        mdev_max_us             : 32;
+        rto                     : 32;
         rtt_seq                 : 32;
-        rto                     : 16;
+        rtt_time                : 32;
         ts_ganularity_us        : 16;
         rtt_updated             : 32;
         ts_shift                : 8;
@@ -228,23 +223,19 @@ header_type tcp_rtt_d_t {
 }
 
 #define RTT_D_PARAMS                                            \
-    srtt_us, seq_rtt_us, ca_rtt_us, curr_ts, rtt_min, rttvar_us,\
-    mdev_us, mdev_max_us, rtt_seq, rto, ts_ganularity_us,       \
+    srtt_us, curr_ts, rttvar_us,\
+    rto, rtt_seq, rtt_time, ts_ganularity_us,       \
     rtt_updated, ts_shift, backoff
 
 #define GENERATE_RTT_D                                          \
     modify_field(tcp_rtt_d.srtt_us, srtt_us);                   \
-    modify_field(tcp_rtt_d.seq_rtt_us, seq_rtt_us);             \
-    modify_field(tcp_rtt_d.ca_rtt_us, ca_rtt_us);               \
     modify_field(tcp_rtt_d.curr_ts, curr_ts);                   \
-    modify_field(tcp_rtt_d.rtt_min, rtt_min);                   \
     modify_field(tcp_rtt_d.rttvar_us, rttvar_us);               \
-    modify_field(tcp_rtt_d.mdev_us, mdev_us);                   \
-    modify_field(tcp_rtt_d.mdev_max_us, mdev_max_us);           \
-    modify_field(tcp_rtt_d.rtt_seq, rtt_seq);                   \
     modify_field(tcp_rtt_d.rto, rto);                           \
+    modify_field(tcp_rtt_d.rtt_seq, rtt_seq);                   \
+    modify_field(tcp_rtt_d.rtt_time, rtt_time);                 \
     modify_field(tcp_rtt_d.ts_ganularity_us, ts_ganularity_us); \
-    modify_field(tcp_rtt_d.rtt_updated, rtt_updated); \
+    modify_field(tcp_rtt_d.rtt_updated, rtt_updated);           \
     modify_field(tcp_rtt_d.ts_shift, ts_shift);                 \
     modify_field(tcp_rtt_d.backoff, backoff);                   \
 
@@ -473,8 +464,9 @@ header_type to_stage_3_phv_t {
     // tcp-rtt, read-rnmdr, read-rnmpr
     fields {
         snd_nxt                 : 32;
-        rcv_tsval               : 32;
         rcv_tsecr               : 32;
+        rtt_time                : 32;
+        rtt_seq                 : 32;
     }
 }
 
@@ -815,7 +807,7 @@ metadata dma_cmd_phv2mem_t tls_doorbell;            // dma cmd 10
  */
 action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
                   serq_ring_size, l7_proxy_type, debug_dol, quick_acks_decr_old,
-                  pad2, serq_cidx, pad1, snd_nxt, rcv_wup, rcv_wnd_adv,
+                  pad2, serq_cidx, pad1, snd_nxt, rtt_seq, rtt_time, rcv_wup, rcv_wnd_adv,
                   quick_acks_decr, fin_sent, rst_sent, rto_event,
                   pad1_tx2rx) {
     // k + i for stage 0
@@ -865,6 +857,8 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(read_tx2rxd.serq_cidx, serq_cidx);
     modify_field(read_tx2rxd.pad1, pad1);
     modify_field(read_tx2rxd.snd_nxt, snd_nxt);
+    modify_field(read_tx2rxd.rtt_seq, rtt_seq);
+    modify_field(read_tx2rxd.rtt_time, rtt_time);
     modify_field(read_tx2rxd.rcv_wup, rcv_wup);
     modify_field(read_tx2rxd.rcv_wnd_adv, rcv_wnd_adv);
     modify_field(read_tx2rxd.quick_acks_decr, quick_acks_decr);
@@ -881,7 +875,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
         rcv_nxt, rx_drop_cnt, ts_recent, lrcv_time, \
         snd_una, snd_wl1, pred_flags, snd_recover, bytes_rcvd, \
         snd_wnd, serq_pidx, num_dup_acks, dup_acks_rcvd, pure_acks_rcvd, cc_flags, quick, \
-        flag, rto, state, parsed_state, rcv_wscale, \
+        flag, state, parsed_state, rcv_wscale, \
         alloc_descr_L, dont_send_ack_L, unused_flags_L, \
         limited_transmit, pending
 
@@ -912,7 +906,6 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
     modify_field(tcp_rx_d.cc_flags, cc_flags); \
     modify_field(tcp_rx_d.quick, quick); \
     modify_field(tcp_rx_d.flag, flag); \
-    modify_field(tcp_rx_d.rto, rto); \
     modify_field(tcp_rx_d.state, state); \
     modify_field(tcp_rx_d.parsed_state, parsed_state); \
     modify_field(tcp_rx_d.rcv_wscale, rcv_wscale); \
@@ -1040,8 +1033,11 @@ action tcp_rtt(RTT_D_PARAMS) {
     // from to_stage 3
     if (backoff == 0) {
         modify_field(to_s3_scratch.snd_nxt, to_s3.snd_nxt);
-        modify_field(to_s3_scratch.rcv_tsval, to_s3.rcv_tsval);
+        //modify_field(to_s3_scratch.rcv_tsval, to_s3.rcv_tsval);
         modify_field(to_s3_scratch.rcv_tsecr, to_s3.rcv_tsecr);
+        modify_field(to_s3_scratch.rtt_time, to_s3.rtt_time);
+        modify_field(to_s3_scratch.rtt_seq, to_s3.rtt_seq);
+        
     }
     if (backoff == 1) {
         modify_field(to_cpu3_scratch.tcp_AckNo_2, cpu_hdr3.tcp_AckNo_2);

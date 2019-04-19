@@ -29,8 +29,8 @@ tcp_tx_read_rx2tx_shared_extra_clean_retx_stage1_start:
                         p.t0_s2s_clean_retx_state, d.state
 
 #ifdef HW
-    phvwrpair       p.to_s4_snd_cwnd, d.snd_cwnd, \
-                        p.to_s4_rto, TCP_RTO_MIN_TICK
+    phvwr       p.to_s4_snd_cwnd, d.snd_cwnd
+    phvwr       p.to_s4_rto, TCP_RTO_MIN_TICK
 #else
     // Set it to 1 tick in simulation so timer immediately expires
     // on stepping it

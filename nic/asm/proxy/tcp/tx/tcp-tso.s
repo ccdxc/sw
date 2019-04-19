@@ -90,8 +90,8 @@ dma_cmd_hdr:
 dma_cmd_tcp_header:
     phvwr           p.{tcp_header_source_port...tcp_header_dest_port}, \
                         d.{source_port...dest_port}
-    phvwrpair       p.tcp_header_seq_no, k.t0_s2s_snd_nxt, \
-                        p.tcp_header_ack_no, k.t0_s2s_rcv_nxt
+    phvwr           p.tcp_header_seq_no, k.t0_s2s_snd_nxt
+    phvwr           p.tcp_header_ack_no, k.t0_s2s_rcv_nxt
     phvwrpair       p.tx2rx_rcv_wup, k.t0_s2s_rcv_nxt, \
                         p.tx2rx_rcv_wnd_adv, k.to_s5_rcv_wnd
     seq             c2, k.to_s5_rcv_wnd, r0

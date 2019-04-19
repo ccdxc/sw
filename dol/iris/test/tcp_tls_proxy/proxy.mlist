@@ -420,6 +420,17 @@ modules:
             pkt_free : 1
 
     - module:
+        name    : UL_TO_UL_BYPASS_BARCO_TEST_SRTT
+        spec    : uplink_to_uplink_test_srtt.testspec
+        module  : pkt_to_p4
+        args    :
+            num_pkts : 2
+            bypass_barco : 1
+            maxflows : 1
+            pkt_alloc : 2
+            pkt_free : 2
+
+    - module:
         name    : UL_TO_UL_BYPASS_BARCO_CLEAN_RETX_PARTIAL_SEND_ACK
         spec    : uplink_to_uplink_clean_retx_partial_send_ack.testspec
         module  : pkt_to_p4

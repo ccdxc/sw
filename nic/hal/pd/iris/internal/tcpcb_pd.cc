@@ -201,16 +201,17 @@ p4pd_add_or_del_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_RTT);
 
     if(!del) {
-        data.u.tcp_rtt_d.rto = 100;
-        data.u.tcp_rtt_d.srtt_us = 0x80;
-        data.u.tcp_rtt_d.seq_rtt_us = 0x10;
-        data.u.tcp_rtt_d.ca_rtt_us = 0x10;
-        data.u.tcp_rtt_d.curr_ts = 0xf0;
-        data.u.tcp_rtt_d.rtt_min = 0x1;
-        data.u.tcp_rtt_d.rttvar_us = 0x20;
-        data.u.tcp_rtt_d.mdev_us = 0x20;
-        data.u.tcp_rtt_d.mdev_max_us = 0;
-        data.u.tcp_rtt_d.rtt_seq = 0x20;
+#define OLD_RTO 1
+#ifdef OLD_RTO
+        data.u.tcp_rtt_d.rto = htonl(100);
+        data.u.tcp_rtt_d.srtt_us = htonl(0x80);
+#else
+        data.u.tcp_rtt_d.rto = htonl(100000);
+        data.u.tcp_rtt_d.srtt_us = 0;
+#endif
+        data.u.tcp_rtt_d.curr_ts = htonl(0xf0);
+        data.u.tcp_rtt_d.rttvar_us = 0;
+        data.u.tcp_rtt_d.rtt_updated = 0;
     }
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
@@ -218,6 +219,8 @@ p4pd_add_or_del_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         HAL_TRACE_ERR("Failed to create rx: tcp_rtt entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
     }
+    
+    HAL_TRACE_DEBUG("Set RTO to {}", ntohl(data.u.tcp_rtt_d.rto));
     return ret;
 }
 
@@ -506,7 +509,6 @@ p4pd_get_tcp_rx_read_tx2rx_entry(pd_tcpcb_t* tcpcb_pd)
     return HAL_RET_OK;
 }
 
-
 hal_ret_t
 p4pd_get_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd)
 {
@@ -547,6 +549,31 @@ p4pd_get_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd)
     HAL_TRACE_DEBUG("Received pred_flags: {:#x}", tcpcb_pd->tcpcb->pred_flags);
     HAL_TRACE_DEBUG("Received snd_recover: {:#x}", tcpcb_pd->tcpcb->snd_recover);
     HAL_TRACE_DEBUG("Received cfg_flags: {:#x}", data.u.tcp_rx_d.cfg_flags);
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+p4pd_get_tcp_rx_tcp_rtt_entry(pd_tcpcb_t* tcpcb_pd)
+{
+    //s3_t0_tcp_rx_tcp_rtt_d data = {0};
+    s3_t0_tcp_rx_d data = {0};
+
+    // hardware index for this entry
+    tcpcb_hw_id_t hwid = tcpcb_pd->hw_id +
+        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_RTT);
+
+    if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&data, sizeof(data))){
+        HAL_TRACE_ERR("Failed to get rx: tcp-rtt entry for TCP CB");
+        return HAL_RET_HW_FAIL;
+    }
+    tcpcb_pd->tcpcb->rto = ntohl(data.u.tcp_rtt_d.rto);
+    tcpcb_pd->tcpcb->srtt_us = ntohl(data.u.tcp_rtt_d.srtt_us);
+    //tcpcb_pd->tcpcb->curr_ts = ntohl(data.u.tcp_rtt_d.curr_ts);
+    //tcpcb_pd->tcpcb->rttvar_us = ntohl(data.u.tcp_rtt_d.rttvar_us);
+    //tcpcb_pd->tcpcb->rtt_updated = ntohl(data.u.tcp_rtt_d.rtt_updated);
+
+    HAL_TRACE_DEBUG("Received rto: {:#x}", tcpcb_pd->tcpcb->rto);
 
     return HAL_RET_OK;
 }
@@ -674,6 +701,12 @@ p4pd_get_tcpcb_rxdma_entry(pd_tcpcb_t* tcpcb_pd)
     ret = p4pd_get_tcp_rx_tcp_rx_entry(tcpcb_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get tcp_rx entry");
+        goto cleanup;
+    }
+
+    ret = p4pd_get_tcp_rx_tcp_rtt_entry(tcpcb_pd);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get tcp_rtt entry");
         goto cleanup;
     }
 
@@ -1042,7 +1075,7 @@ p4pd_add_or_del_tcp_tx_read_rx2tx_extra_entry(pd_tcpcb_t* tcpcb_pd, bool del)
                                                   tcpcb_pd->tcpcb->rcv_wscale);
         data.u.read_rx2tx_extra_d.rcv_nxt = htonl(tcpcb_pd->tcpcb->rcv_nxt);
         // TODO : fix this hardcoding
-        data.u.read_rx2tx_extra_d.rto = htons(100);
+        data.u.read_rx2tx_extra_d.rto = htonl(100);
         data.u.read_rx2tx_extra_d.state = (uint8_t)tcpcb_pd->tcpcb->state;
 
     }
@@ -1123,6 +1156,7 @@ p4pd_add_or_del_tcp_tx_xmit_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.rto_backoff = (uint8_t)htonl(tcpcb_pd->tcpcb->rto_backoff);
         data.smss = htons(tcpcb_pd->tcpcb->smss);
         data.initial_window = htonl(tcpcb_pd->tcpcb->initial_window);
+        data.rtt_seq_req = 1;
     }
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
@@ -1130,6 +1164,7 @@ p4pd_add_or_del_tcp_tx_xmit_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         HAL_TRACE_ERR("Failed to create rx: tcp_cc entry for TCP CB");
         ret = HAL_RET_HW_FAIL;
     }
+    HAL_TRACE_DEBUG("Set RTT seq req in XMIT to  {:#x}", data.rtt_seq_req);
     return ret;
 }
 

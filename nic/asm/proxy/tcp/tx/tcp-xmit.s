@@ -39,7 +39,11 @@ tcp_xmit_process_start:
     seq             c1, k.t0_s2s_state, TCP_RST
     bcf             [c1 & !c_snd_una], tcp_tx_end_program_and_drop
     nop
-
+    seq             c1, k.to_s4_rtt_seq_req, 1
+    sne             c2, d.rtt_seq_req, 1
+    setcf           c1, [c1 & c2]
+    tblwr.c1        d.rtt_seq_req, 1
+               
     bcf             [c_snd_una], tcp_tx_xmit_snd_una_update
     nop
 
@@ -87,6 +91,22 @@ flow_read_xmit_cursor_start:
     add             r1, k.t0_s2s_len, r0
 
     tbladd          d.snd_nxt, r1
+    seq             c2, d.rtt_seq_req, 1 
+    phvwr.c2        p.tx2rx_rtt_seq, d.snd_nxt
+    tblwr.c2        d.rtt_seq, d.snd_nxt
+    phvwr.!c2       p.tx2rx_rtt_seq, d.rtt_seq
+#ifdef HW
+    srl.c2          r3, r4, 13
+#else
+    addi.c2          r3, r0, 0xFEEDFED0
+    srl.c2          r3, r3, 13
+#endif
+    andi.c2         r3, r3, 0x1FFFFFFF
+    phvwr.c2        p.tx2rx_rtt_time, r3
+    tblwr.c2        d.rtt_time, r3
+    phvwr.!c2       p.tx2rx_rtt_time, d.rtt_time
+    tblwr.c2        d.rtt_seq_req, r0           
+    phvwr           p.tx2rx_snd_nxt, d.snd_nxt
 
 rearm_rto:
 #ifndef HW

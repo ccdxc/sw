@@ -82,6 +82,7 @@ typedef struct tcpcb_s {
     uint32_t              retx_snd_una;            // for testing, check in DOL
     uint32_t              sesq_tx_ci;              // for testing, check in DOL
     uint32_t              rto;
+    uint32_t              srtt_us;
     uint32_t              snd_cwnd_cnt;
     uint32_t              serq_pi;
     uint32_t              serq_ci;

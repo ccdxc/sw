@@ -20,10 +20,8 @@ struct s1_t0_tcp_tx_read_rx2tx_extra_d d;
     .param      tcp_tx_s2_bubble_start
 
 tcp_tx_read_rx2tx_shared_extra_idle_start:
-    // HACK: Force a timer of 100 ticks
 #ifdef HW
-    phvwrpair       p.to_s4_snd_cwnd, d.snd_cwnd, \
-                        p.to_s4_rto, TCP_RTO_MIN_TICK
+    phvwr       p.to_s4_snd_cwnd, d.snd_cwnd
 #else
     // Set it to 1 tick in simulation so timer immediately expires
     // on stepping it

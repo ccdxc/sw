@@ -102,18 +102,35 @@
 
 #define TCP_QUICKACKS                       2
 
-// Timeout values
-#define TCP_TIMER_TICK                      10 // 10 us
+//#define NEW_TIMER 1
 
+#ifdef NEW_TIMER
+// Timeout values
+#define TCP_TIMER_TICK                      1000 // 1 ms 1000 us
+
+#define TCP_ATO_USEC                        4000  // 4 ms
+#define TCP_ATO_MIN                         4000  // 4 ms
+#define TCP_ATO_TICKS                       (TCP_ATO_USEC / TCP_TIMER_TICK)
+
+#define TCP_TICK_US                         10           
+#define TCP_RTO_MAX                         600000  //60 s    
+#define TCP_RTO_MIN                         40000     //
+#define TCP_RTO_MAX_TICK                    (TCP_RTO_MAX / TCP_TICK_US)
+#define TCP_RTO_MIN_TICK                    (TCP_RTO_MIN / TCP_TICK_US)
+
+#else
+
+#define TCP_TIMER_TICK                      10 // 10 us
+ 
 #define TCP_ATO_USEC                        100 // 100 us
 #define TCP_ATO_MIN                         100 // 100 us
 #define TCP_ATO_TICKS                       (TCP_ATO_USEC / TCP_TIMER_TICK)
-
+ 
 #define TCP_RTO_MAX                         40000
 #define TCP_RTO_MIN                         4000
 #define TCP_RTO_MAX_TICK                    (TCP_RTO_MAX / TCP_TIMER_TICK)
 #define TCP_RTO_MIN_TICK                    (TCP_RTO_MIN / TCP_TIMER_TICK)
-
+#endif
 /*
  * CC related
  */

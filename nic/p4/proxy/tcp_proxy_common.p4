@@ -34,6 +34,8 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
 
 #define TX2RX_SHARED_STATE \
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
+        rtt_seq                         : SEQ_NUMBER_WIDTH      ;\
+        rtt_time                        : 32                    ;\
         rcv_wup                         : 32                    ;\
         rcv_wnd_adv                     : 16                    ;\
         quick_acks_decr                 : 4                     ;\
@@ -49,17 +51,18 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         dup_rcv_nxt                     : SEQ_NUMBER_WIDTH      ;\
         snd_wnd                         : 16                    ;\
         rcv_wnd                         : 16                    ;\
-        rto                             : 16                    ;\
+        rto                             : 32                    ;\
         snd_una                         : SEQ_NUMBER_WIDTH      ;\
         rcv_tsval                       : TS_WIDTH              ;\
         cc_flags                        : 16                    ;\
+        rtt_seq_req_                    : 8                     ;\
         t_flags                         : 8                     ;\
         limited_transmit                : 8                     ;\
         state                           : 8                     ;\
         pending_dup_ack_send            : 1                     ;\
         pending_challenge_ack_send      : 1                     ;\
         rx2tx_end_marker                : 22                    ;\
-        pad_rx2tx_extra                 : 240                   ;\
+        pad_rx2tx_extra                 : 216                   ;\
 
 #define TCB_RETX_SHARED_STATE \
         retx_snd_una                    : SEQ_NUMBER_WIDTH      ;\
@@ -76,6 +79,8 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         retx_cnt                        : 32                    ;\
         snd_nxt                         : SEQ_NUMBER_WIDTH      ;\
         initial_window                  : 32                    ;\
+        rtt_seq                         : 32                    ;\
+        rtt_time                        : 32                    ;\
         snd_wscale                      : 8                     ;\
         xmit_cursor_addr                : 40                    ;\
         sesq_tx_ci                      : 16                    ;\
@@ -86,6 +91,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         retrans_out                     : 16                    ;\
         lost_out                        : 16                    ;\
         smss                            : 16                    ;\
+        rtt_seq_req                     : 8                     ;\
         limited_transmit                : 8                     ;\
         is_cwnd_limited                 : 8                     ;\
         rto_backoff                     : 8                     ;\
@@ -115,11 +121,12 @@ last_snd_wnd,\
 tx_rst_sent
 
 #define XMIT_SHARED_PARAMS \
-window_full_cnt, retx_cnt, snd_nxt, initial_window, snd_wscale,\
+window_full_cnt, retx_cnt, snd_nxt, initial_window, rtt_seq, rtt_time, snd_wscale,\
 xmit_cursor_addr, sesq_tx_ci,\
 xmit_offset, xmit_len,\
 packets_out, sacked_out, retrans_out, lost_out,\
-smss, is_cwnd_limited, limited_transmit, rto_backoff, no_window
+smss, is_cwnd_limited, rtt_seq_req, limited_transmit, rto_backoff, no_window
+
 
 #define TSO_PARAMS                                                        \
 ip_id, source_lif, source_port, dest_port, header_len,\
@@ -140,6 +147,8 @@ bytes_sent, smss, pkts_sent, pure_acks_sent, zero_window_sent
     modify_field(xmit_d.retx_cnt, retx_cnt); \
     modify_field(xmit_d.snd_nxt, snd_nxt); \
     modify_field(xmit_d.initial_window, initial_window); \
+    modify_field(xmit_d.rtt_seq, rtt_seq); \
+    modify_field(xmit_d.rtt_time, rtt_time); \
     modify_field(xmit_d.snd_wscale, snd_wscale); \
     modify_field(xmit_d.xmit_cursor_addr, xmit_cursor_addr); \
     modify_field(xmit_d.sesq_tx_ci, sesq_tx_ci); \
@@ -151,6 +160,7 @@ bytes_sent, smss, pkts_sent, pure_acks_sent, zero_window_sent
     modify_field(xmit_d.lost_out, lost_out); \
     modify_field(xmit_d.smss, smss); \
     modify_field(xmit_d.is_cwnd_limited, is_cwnd_limited); \
+    modify_field(xmit_d.rtt_seq_req, rtt_seq_req); \
     modify_field(xmit_d.limited_transmit, limited_transmit); \
     modify_field(xmit_d.rto_backoff, rto_backoff); \
     modify_field(xmit_d.no_window, no_window); \

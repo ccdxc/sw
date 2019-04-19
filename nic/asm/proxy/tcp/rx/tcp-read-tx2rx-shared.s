@@ -80,6 +80,9 @@ table_read_RX:
     phvwrpair       p.s1_s2s_rcv_tsval[31:8], k.tcp_app_header_ts_s0_e23, \
                         p.s1_s2s_rcv_tsval[7:0], k.tcp_app_header_ts_s24_e31
     phvwr           p.to_s3_rcv_tsecr, k.tcp_app_header_prev_echo_ts
+    phvwrpair       p.to_s3_rtt_time, d.rtt_time, \
+                    p.to_s3_rtt_seq, d.rtt_seq
+    phvwr           p.s1_s2s_snd_nxt, d.snd_nxt
 
     add             r1, r0, d.debug_dol
     smeqh           c1, r1, TCP_DDOL_TSOPT_SUPPORT, TCP_DDOL_TSOPT_SUPPORT
