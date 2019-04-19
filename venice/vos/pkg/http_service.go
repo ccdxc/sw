@@ -13,13 +13,11 @@ import (
 	"github.com/go-martini/martini"
 	"github.com/minio/minio-go"
 
-	"github.com/pensando/sw/venice/vos"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/objstore"
-
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/vos"
 )
 
 const (
@@ -105,6 +103,10 @@ func (h *httpHandler) uploadHandler(w http.ResponseWriter, req *http.Request) {
 				meta[k] = v[0]
 			}
 		}
+
+		// Request should be authorized again at the backend because this is a proxied call.
+		// XXX-TBD(sanjayt): add once the ueer permission are added to the HTTP request by the API Gateway
+
 		log.Infof("got meta in form  as [%+v]", meta)
 		// Check if we have the object
 		stat, err := h.client.StatObject("default.images", header.Filename, minio.StatObjectOptions{})

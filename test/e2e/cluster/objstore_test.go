@@ -16,6 +16,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api/generated/objstore"
+	loginctx "github.com/pensando/sw/api/login/context"
 	penctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/utils/netutils"
 
@@ -47,6 +48,11 @@ func uploadFile(ctx context.Context, filename string, metadata map[string]string
 	if err != nil {
 		return 0, errors.Wrap(err, "http.newRequest failed")
 	}
+	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if !ok {
+		return 0, fmt.Errorf("no authorizaton header in context")
+	}
+	req.Header.Set("Authorization", authzHeader)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	client := &http.Client{Transport: transport}

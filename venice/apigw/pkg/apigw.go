@@ -486,7 +486,8 @@ Loop:
 				srv.Close()
 			}
 		}()
-		srv.Serve(ln)
+		err := srv.Serve(ln)
+		log.InfoLog("msg", "HTTP Server exited", "error", err)
 	}(ctx)
 	wg.Wait()
 
@@ -876,6 +877,13 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	nctx := r.Context()
 
 	p.apiGw.logger.Infof("Handling HTTP proxy request")
+	nctx, err = gwruntime.AnnotateContext(nctx, r)
+	if err != nil {
+		p.apiGw.logger.ErrorLog("method", "ServeHTTP", "msg", "annotating context failed", "error", err)
+		p.apiGw.HTTPOtherErrorHandler(w, r, "Anotating context failed", int(codes.Internal))
+		return
+	}
+
 	// Call all PreAuthZHooks, if any of them return err then abort
 	pnHooks := p.svcProfile.PreAuthNHooks()
 	skipAuth := p.apiGw.skipAuth
@@ -1010,7 +1018,7 @@ func NewRProxyHandler(path, trim, prefix, destination string, svcProf apigw.Serv
 	if err != nil {
 		return nil, errors.Wrap(err, "GetDefaultTLSProvider")
 	}
-	log.Infof("tlsp is [%v]/[%p]", destination, tlsp)
+
 	if ret.useResolver {
 		ret.proxy.Director = ret.director
 	}

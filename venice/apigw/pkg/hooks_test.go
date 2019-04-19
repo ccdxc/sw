@@ -10,6 +10,8 @@ import (
 type testHooks struct {
 	preAuthNCnt, preAuthZCnt int
 	preCallCnt, postCallCnt  int
+	useRetAuthnCtx           bool
+	retAuthnCtx              context.Context
 	retAuthzCtx              context.Context
 	retObj                   interface{}
 	retErr                   error
@@ -22,6 +24,9 @@ func (t *testHooks) preAuthNHook(ctx context.Context, in interface{}) (context.C
 	skip := false
 	if t.skipAuthFn != nil {
 		skip = t.skipAuthFn()
+	}
+	if t.useRetAuthnCtx {
+		return t.retAuthnCtx, t.retObj, skip, t.retErr
 	}
 	return ctx, t.retObj, skip, t.retErr
 }

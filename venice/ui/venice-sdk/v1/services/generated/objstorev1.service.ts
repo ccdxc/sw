@@ -27,6 +27,13 @@ export class Objstorev1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, 'GetDownloadFile') as Observable<{body: IObjstoreStreamChunk | Error, statusCode: number}>;
   }
   
+  public GetDownloadFile_1(O_Namespace,O_Name, queryParam: any = null):Observable<{body: IObjstoreStreamChunk | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/objstore/v1/downloads/{O.Namespace}/{O.Name}';
+    url = url.replace('{O.Namespace}', O_Namespace);
+    url = url.replace('{O.Name}', O_Name);
+    return this.invokeAJAXGetCall(url, queryParam, 'GetDownloadFile_1') as Observable<{body: IObjstoreStreamChunk | Error, statusCode: number}>;
+  }
+  
   /** List Object objects */
   public ListObject(O_Namespace, queryParam: any = null):Observable<{body: IObjstoreObjectList | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/objstore/v1/tenant/{O.Tenant}/{O.Namespace}/objects';

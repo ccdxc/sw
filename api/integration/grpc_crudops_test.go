@@ -3239,9 +3239,6 @@ func TestConsistentUpdate(t *testing.T) {
 		// create new client so as to truly create in parallel.
 		defer wg.Done()
 		updcl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
-		if err != nil {
-			t.Fatalf("cannot create REST client")
-		}
 		AssertOk(t, err, "failed to create client [%v] (%s)", id, err)
 		b1 := b
 		for i := 0; i < count; i++ {

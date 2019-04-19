@@ -828,6 +828,8 @@ func TestHandleProxyRequest(t *testing.T) {
 		"req-method", "GET"))
 	// context with authz operations
 	mock.retAuthzCtx = NewContextWithOperations(ctx, nil)
+	mock.useRetAuthnCtx = true
+	mock.retAuthnCtx = mock.retAuthzCtx
 	p, err := NewRProxyHandler("/test/path", "", "", "dummyserver", prof)
 	if err != nil {
 		t.Fatalf("unable to get proxy handler (%s)", err)

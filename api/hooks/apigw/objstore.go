@@ -3,53 +3,102 @@ package impl
 import (
 	"context"
 
+	"github.com/pkg/errors"
+
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/objstore"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authz"
+
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 type objstoreHooks struct {
-	logger log.Logger
+	permissionGetter rbac.PermissionGetter
+	logger           log.Logger
 }
 
-func (b *objstoreHooks) skipAuthN(ctx context.Context, in interface{}) (retCtx context.Context, retIn interface{}, skipAuth bool, err error) {
-	return ctx, in, true, nil
+func (b *objstoreHooks) addObjUploadOps(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
+	user, ok := apigwpkg.UserFromContext(ctx)
+	if !ok || user == nil {
+		b.logger.Errorf("no user present in context passed to addObjUploadOps authz hook")
+		return ctx, in, apigwpkg.ErrNoUserInContext
+	}
+
+	// Uploads are allowed only for the default tenat now.
+	resource := authz.NewResource(globals.DefaultTenant, string(apiclient.GroupObjstore), string(objstore.KindObject), string(objstore.Buckets_images), "")
+	// get existing operations from context
+	operations, _ := apigwpkg.OperationsFromContext(ctx)
+	// append requested operation
+	operations = append(operations, authz.NewOperation(resource, auth.Permission_Create.String()))
+
+	nctx := apigwpkg.NewContextWithOperations(ctx, operations...)
+	return nctx, in, nil
+}
+
+func (b *objstoreHooks) addObjDownloadOps(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
+	user, ok := apigwpkg.UserFromContext(ctx)
+	if !ok || user == nil {
+		b.logger.Errorf("no user present in context passed to addObjDownloadOps authz hook")
+		return ctx, in, apigwpkg.ErrNoUserInContext
+	}
+	obj, ok := in.(*objstore.Object)
+	if !ok {
+		return ctx, in, errors.New("invalid input type")
+	}
+	resource := authz.NewResource(obj.Tenant, string(apiclient.GroupObjstore), string(objstore.KindObject), obj.Namespace, obj.Name)
+	// get existing operations from context
+	operations, _ := apigwpkg.OperationsFromContext(ctx)
+	// append requested operation
+	operations = append(operations, authz.NewOperation(resource, auth.Permission_Read.String()))
+
+	nctx := apigwpkg.NewContextWithOperations(ctx, operations...)
+	return nctx, in, nil
+}
+
+// userContext is a pre-call hook to set user and permissions in grpc metadata in outgoing context
+func (b *objstoreHooks) userContext(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+	b.logger.DebugLog("msg", "APIGw userContext pre-call hook called for Objstore userContext")
+	nctx, err := newContextWithUserPerms(ctx, b.permissionGetter, b.logger)
+	if err != nil {
+		return ctx, in, true, err
+	}
+	return nctx, in, false, nil
 }
 
 func registerObjstoreHooks(svc apigw.APIGatewayService, l log.Logger) error {
-	r := objstoreHooks{logger: l}
+	gw := apigwpkg.MustGetAPIGateway()
+	grpcaddr := globals.APIServer
+	grpcaddr = gw.GetAPIServerAddr(grpcaddr)
+	r := objstoreHooks{logger: l, permissionGetter: rbac.GetPermissionGetter(globals.APIGw, grpcaddr, gw.GetResolver())}
 
 	prof, err := svc.GetProxyServiceProfile("/uploads/images")
 	if err != nil {
 		return err
 	}
-	prof.AddPreAuthNHook(r.skipAuthN)
+	prof.AddPreAuthZHook(r.addObjUploadOps)
+	prof.AddPreCallHook(r.userContext)
 	prof, err = svc.GetServiceProfile("DownloadFile")
 	if err != nil {
 		return err
 	}
-	prof.AddPreAuthNHook(r.skipAuthN)
+	prof.AddPreAuthZHook(r.addObjDownloadOps)
 	prof, err = svc.GetCrudServiceProfile("Object", apiintf.ListOper)
 	if err != nil {
 		return err
 	}
-	prof.AddPreAuthNHook(r.skipAuthN)
-	prof, err = svc.GetCrudServiceProfile("Object", apiintf.DeleteOper)
-	if err != nil {
-		return err
-	}
-	prof.AddPreAuthNHook(r.skipAuthN)
-	prof, err = svc.GetCrudServiceProfile("Object", apiintf.GetOper)
-	if err != nil {
-		return err
-	}
-	prof.AddPreAuthNHook(r.skipAuthN)
+	prof.AddPreCallHook(r.userContext)
+
 	prof, err = svc.GetCrudServiceProfile("Object", apiintf.WatchOper)
 	if err != nil {
 		return err
 	}
-	prof.AddPreAuthNHook(r.skipAuthN)
+	prof.AddPreCallHook(r.userContext)
 	return nil
 }
 

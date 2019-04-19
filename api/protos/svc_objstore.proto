@@ -34,6 +34,10 @@ service ObjstoreV1 {
     rpc DownloadFile(Object) returns (stream StreamChunk) {
         option (google.api.http) = {
             get: "/downloads/tenant/{O.Tenant}/{O.Namespace}/{O.Name}"
+            additional_bindings {
+                // path for default tenant
+                get: "/downloads/{O.Namespace}/{O.Name}"
+            }
         };
         option (venice.methodSrvBinaryStream) = true;
     }

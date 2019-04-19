@@ -690,6 +690,83 @@ func request_ObjstoreV1_DownloadFile_0(ctx context.Context, marshaler runtime.Ma
 
 }
 
+var (
+	filter_ObjstoreV1_DownloadFile_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Namespace": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
+)
+
+func request_ObjstoreV1_DownloadFile_1(ctx context.Context, marshaler runtime.Marshaler, client ObjstoreV1Client, req *http.Request, pathParams map[string]string) (ObjstoreV1_DownloadFileClient, runtime.ServerMetadata, error) {
+	protoReq := &Object{}
+	var smetadata runtime.ServerMetadata
+
+	ver := req.Header.Get("Grpc-Metadata-Req-Version")
+	if ver == "" {
+		ver = "all"
+	}
+	if req.ContentLength != 0 {
+		var buf bytes.Buffer
+		tee := io.TeeReader(req.Body, &buf)
+		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
+			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		changed := protoReq.Defaults(ver)
+		if changed {
+			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
+				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+			}
+		}
+	} else {
+		protoReq.Defaults(ver)
+	}
+
+	var (
+		val   string
+		ok    bool
+		err   error
+		_                       = err
+		kvMap map[string]string = make(map[string]string)
+	)
+
+	val, ok = pathParams["O.Namespace"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Namespace")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Namespace", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	val, ok = pathParams["O.Name"]
+	if !ok {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
+	}
+
+	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
+
+	if err != nil {
+		return nil, smetadata, err
+	}
+
+	ctx = runtime.PopulateContextKV(ctx, kvMap)
+
+	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_ObjstoreV1_DownloadFile_1); err != nil {
+		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.DownloadFile(ctx, protoReq)
+	if err != nil {
+		return nil, smetadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, smetadata, err
+	}
+	smetadata.HeaderMD = header
+	return stream, smetadata, nil
+
+}
+
 // RegisterObjstoreV1HandlerFromEndpoint is same as RegisterObjstoreV1Handler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
 func RegisterObjstoreV1HandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
@@ -1059,6 +1136,61 @@ func RegisterObjstoreV1HandlerWithClient(ctx context.Context, mux *runtime.Serve
 
 	})
 
+	mux.Handle("GET", pattern_ObjstoreV1_DownloadFile_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, req)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+		}
+		ws := false
+		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
+		if websocket.IsWebSocketUpgrade(req) {
+			ws = true
+			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
+			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
+		}
+		resp, md, err := request_ObjstoreV1_DownloadFile_1(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
+			return
+		}
+
+		if ws {
+			ic, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwWebSocketConn)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
+				return
+			}
+			conn := ic.(*websocket.Conn)
+			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+		} else {
+			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
+			if !ok {
+				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
+				return
+			}
+			if bs.(bool) {
+				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			} else {
+				forward_ObjstoreV1_DownloadFile_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+			}
+		}
+
+	})
+
 	return nil
 }
 
@@ -1080,6 +1212,8 @@ var (
 	pattern_ObjstoreV1_AutoWatchObject_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"watch", "O.Namespace", "objects"}, ""))
 
 	pattern_ObjstoreV1_DownloadFile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"downloads", "tenant", "O.Tenant", "O.Namespace", "O.Name"}, ""))
+
+	pattern_ObjstoreV1_DownloadFile_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 1, 0, 4, 1, 5, 2}, []string{"downloads", "O.Namespace", "O.Name"}, ""))
 )
 
 var (
@@ -1100,4 +1234,6 @@ var (
 	forward_ObjstoreV1_AutoWatchObject_1 = runtime.ForwardResponseStream
 
 	forward_ObjstoreV1_DownloadFile_0 = runtime.ForwardResponseStream
+
+	forward_ObjstoreV1_DownloadFile_1 = runtime.ForwardResponseStream
 )
