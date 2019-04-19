@@ -184,8 +184,14 @@ process_send_write_fml:
      
 /****** Fast path: WRITE FIRST/MIDDLE/LAST ******/
 process_write:
+#if 0
+    // check QP level access permissions
+    and         r5, d.access_flags, QP_ACCESS_REMOTE_WRITE
+    beqi        r5, 0, inv_req_nak_access_err
+#endif
+
     // check expected op type and pkt type for write packets 
-    seq.c1      c7, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_ANY << 1)|NEXT_PKT_TYPE_FIRST_ONLY
+    seq.c1      c7, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_ANY << 1)|NEXT_PKT_TYPE_FIRST_ONLY // BD Slot
     seq.!c1     c7, d.{next_op_type...next_pkt_type}, (NEXT_OP_TYPE_WRITE << 1)|NEXT_PKT_TYPE_MID_LAST
     bcf         [!c7], inv_req_nak_opcode_err
 
@@ -442,9 +448,15 @@ send_only_skip_immdt_as_dbell:
 
 /******  Logic for WRITE_ONLY packets ******/
 process_write_only:
+#if 0
+    // check QP level access permissions
+    and         r5, d.access_flags, QP_ACCESS_REMOTE_WRITE
+    beqi        r5, 0, inv_req_nak_access_err
+#endif
+
     // c7 is initialized just before process_rd_only_atomic.
     // pls do not touch
-    tblwr.!c7.f d.busy, d.busy
+    tblwr.!c7.f d.busy, d.busy // BD Slot
 
     // is it zero length write request ?
     seq         c5, CAPRI_RXDMA_RETH_DMA_LEN, 0
@@ -531,8 +543,15 @@ wr_only_zero_len_no_imm_data:
 
 /****** Logic for READ/ATOMIC packets ******/
 process_read_atomic:
+#if 0
+    // check QP level access permissions
+    and.c3      r5, d.access_flags, QP_ACCESS_REMOTE_READ
+    and.!c3     r5, d.access_flags, QP_ACCESS_REMOTE_ATOMIC
+    beqi        r5, 0, inv_req_nak_access_err
+#endif
+
     // for read and atomic, start DMA commands from flit 9 instead of 8
-    RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, 0)
+    RXDMA_DMA_CMD_PTR_SET(RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, 0) // BD Slot
 
     // turn off ACK req bit for read/atomic
     // so that ACK doorbell is not rung
@@ -797,6 +816,11 @@ inv_req_nak_atomic_va_err:
     b           inv_req_nak
     phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
                 CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_unaligned_atomic_va_err), 1 // BD Slot
+
+inv_req_nak_access_err:
+    b           inv_req_nak
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_access_err), 1 // BD Slot
 
 wr_only_zero_len_inv_req_nak:
     //revert the e_psn

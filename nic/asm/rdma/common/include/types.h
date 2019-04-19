@@ -1823,4 +1823,9 @@ struct aq_dscp_cos_map {
 #define NEXT_PKT_TYPE_FIRST_ONLY    0x0
 #define NEXT_PKT_TYPE_MID_LAST      0x1
 
+// 3-bit flag to indicate QP level access permissions
+#define QP_ACCESS_REMOTE_WRITE      0x1
+#define QP_ACCESS_REMOTE_READ       0x2
+#define QP_ACCESS_REMOTE_ATOMIC     0x4
+
 #endif //__TYPES_H

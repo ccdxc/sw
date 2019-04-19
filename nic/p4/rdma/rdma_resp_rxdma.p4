@@ -416,6 +416,7 @@ header_type resp_rx_to_stage_stats_info_t {
         qp_err_dis_last_pkt_len_err      :    1;
         qp_err_dis_pmtu_err              :    1;
         qp_err_dis_opcode_err            :    1;
+        qp_err_dis_access_err            :    1;
         qp_err_dis_wr_only_zero_len_err  :    1;
         qp_err_dis_unaligned_atomic_va_err  :    1;
         qp_err_dis_insuff_sge_err        :    1;
@@ -437,7 +438,7 @@ header_type resp_rx_to_stage_stats_info_t {
         qp_err_dis_table_error           :    1;
         qp_err_dis_phv_intrinsic_error   :    1;
         qp_err_dis_table_resp_error      :    1;
-        qp_err_dis_rsvd                  :    5;
+        qp_err_dis_rsvd                  :    4;
         max_recirc_cnt_err               :    1;
         lif_cqe_error_id_vld             :    1;
         lif_error_id_vld                 :    1;
@@ -1669,6 +1670,7 @@ action resp_rx_stats_process () {
     modify_field(to_s7_stats_info_scr.qp_err_dis_last_pkt_len_err, to_s7_stats_info.qp_err_dis_last_pkt_len_err);
     modify_field(to_s7_stats_info_scr.qp_err_dis_pmtu_err, to_s7_stats_info.qp_err_dis_pmtu_err);
     modify_field(to_s7_stats_info_scr.qp_err_dis_opcode_err, to_s7_stats_info.qp_err_dis_opcode_err);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_access_err, to_s7_stats_info.qp_err_dis_access_err);
     modify_field(to_s7_stats_info_scr.qp_err_dis_wr_only_zero_len_err, to_s7_stats_info.qp_err_dis_wr_only_zero_len_err);
     modify_field(to_s7_stats_info_scr.qp_err_dis_unaligned_atomic_va_err, to_s7_stats_info.qp_err_dis_unaligned_atomic_va_err);
     modify_field(to_s7_stats_info_scr.qp_err_dis_insuff_sge_err, to_s7_stats_info.qp_err_dis_insuff_sge_err);

@@ -160,7 +160,7 @@ struct rqcb1_t {
 
     busy: 1; // set to 1 by S0, to 0 by S3
     rsvd1: 7;
-    in_progress: 1;         // wirtten by S4, read by S0
+    in_progress: 1;         // written by S4, read by S0
     rsvd2: 7;
     spec_cindex: 16;  // cindex used for speculation
                       // rw by S0
@@ -169,7 +169,8 @@ struct rqcb1_t {
     next_op_type: 2;  //rw by S0
     next_pkt_type: 1; //rw by S0
     spec_en: 1; //rw by S0
-    rsvd3: 4;
+    access_flags: 3; // rw by S0
+    rsvd3: 1;
 
     msn:24;                 //rw by S0 ?
     header_template_size: 8;    //Ronly
@@ -305,6 +306,7 @@ struct rqcb5_t {
     qp_err_dis_last_pkt_len_err         :    1;
     qp_err_dis_pmtu_err                 :    1;
     qp_err_dis_opcode_err               :    1;
+    qp_err_dis_access_err               :    1;
     qp_err_dis_wr_only_zero_len_err     :    1;
     qp_err_dis_unaligned_atomic_va_err  :    1;
     // rqwqe errors
@@ -332,7 +334,7 @@ struct rqcb5_t {
     qp_err_dis_table_error              :    1;
     qp_err_dis_phv_intrinsic_error      :    1;
     qp_err_dis_table_resp_error         :    1;
-    qp_err_dis_rsvd                     :    5;
+    qp_err_dis_rsvd                     :    4;
     //a packet which went thru too many recirculations had to be terminated and qp had to 
     //be put into error disabled state. The recirc reason, opcode, the psn of the packet etc.
     //are remembered for further debugging.
