@@ -115,10 +115,10 @@ struct adminq {
 
 	struct mtx mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
-	int head_index;						/* Index for buffer and command descriptors. */
-	int tail_index;
-	int comp_index;						/* Index for completion descriptors. */
-	int done_color; 					/* Expected comletion color. */
+	unsigned int head_index;		/* Index for buffer and command descriptors. */
+	unsigned int tail_index;
+	unsigned int comp_index;		/* Index for completion descriptors. */
+	int done_color; 			/* Expected comletion color. */
 
 	struct adminq_stats stats;
 	struct intr intr;
@@ -181,9 +181,9 @@ struct rxque {
 	struct mtx rx_mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
 
-	int head_index;
-	int tail_index;
-	int comp_index;				/* Completion index. */
+	unsigned int head_index;
+	unsigned int tail_index;
+	unsigned int comp_index;		/* Completion index. */
 	int done_color; 			/* Expected completion color - 0/1. */
 
 	struct rx_stats stats;
@@ -224,9 +224,9 @@ struct txque {
 
 	struct mtx tx_mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
-	int head_index;				/* Index for buffer and command descriptors. */
-	int tail_index;
-	int comp_index;				/* Index for completion descriptors. */
+	unsigned int head_index;		/* Index for buffer and command descriptors. */
+	unsigned int tail_index;
+	unsigned int comp_index;		/* Index for completion descriptors. */
 	int done_color;				/* Expected comletion color status. */
 	
 	struct tx_stats stats;
@@ -289,6 +289,7 @@ struct lif {
 	u8 rss_hash_key[RSS_HASH_KEY_SIZE];
 	u8 *rss_ind_tbl;
 	dma_addr_t rss_ind_tbl_pa;
+	struct ionic_dma_info rss_dma;
 
 	u32 tx_coalesce_usecs;
 	u32 rx_coalesce_usecs;
@@ -386,9 +387,6 @@ struct lif *ionic_netdev_lif(struct net_device *netdev);
 
 int ionic_set_hw_features(struct lif *lif, uint32_t features);
 
-int ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir);
-int ionic_rss_hash_key_set(struct lif *lif, const u8 *key, uint16_t rss_types);
-
 int ionic_rx_clean(struct rxque* rxq , int rx_limit);
 void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *buf,
 			   struct rxq_comp *comp, 	struct rxq_desc *desc);
@@ -406,13 +404,13 @@ int ionic_set_mac(struct net_device *netdev);
 extern int ionic_devcmd_timeout;
 extern int ionic_rx_stride;
 extern int ionic_tx_stride;
-extern u32 ionic_rx_sg_size;
+extern int ionic_rx_sg_size;
 extern int ionic_tx_descs;
 extern int ionic_rx_descs;
 extern int adminq_descs;
 extern int ionic_notifyq_descs;
 extern int ionic_rx_fill_threshold;
 extern int ionic_rx_process_limit;
-extern u32 ionic_tx_coalesce_usecs;
-extern u32 ionic_rx_coalesce_usecs;
+extern int ionic_tx_coalesce_usecs;
+extern int ionic_rx_coalesce_usecs;
 #endif /* _IONIC_LIF_H_ */

@@ -26,7 +26,6 @@
 #include <linux/kernel.h>
 #include <linux/interrupt.h>
 #include <linux/if_vlan.h>
-#include <linux/dma-mapping.h>
 
 #include "opt_inet.h"
 #include "opt_inet6.h"
@@ -132,18 +131,18 @@ TUNABLE_INT("hw.ionic.rx_clean_limit", &ionic_rx_clean_limit);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_clean_limit, CTLFLAG_RWTUN,
     &ionic_rx_clean_limit, 0, "Rx can process maximum number of descriptors.");
 
-u32 ionic_tx_coalesce_usecs = 64;
+int ionic_tx_coalesce_usecs = 64;
 TUNABLE_INT("hw.ionic.tx_coalesce_usecs", &ionic_tx_coalesce_usecs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, tx_coalesce_usecs, CTLFLAG_RWTUN,
     &ionic_tx_coalesce_usecs, 0, "Tx coal in usescs.");
 
-u32 ionic_rx_coalesce_usecs = 64;
+int ionic_rx_coalesce_usecs = 64;
 TUNABLE_INT("hw.ionic.rx_coalesce_usecs", &ionic_rx_coalesce_usecs);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_coalesce_usecs, CTLFLAG_RWTUN,
     &ionic_rx_coalesce_usecs, 0, "Rx coal in usescs.");
 
 /* Size of Rx scatter gather buffers, disabled by default. */
-u32 ionic_rx_sg_size = 0;
+int ionic_rx_sg_size = 0;
 TUNABLE_INT("hw.ionic.rx_sg_size", &ionic_rx_sg_size);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_sg_size, CTLFLAG_RDTUN,
     &ionic_rx_sg_size, 0, "Rx scatter-gather buffer size, disabled by default.");
@@ -2273,7 +2272,7 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 	return (error);
 }
 
-static uint16_t
+uint16_t
 ionic_set_rss_type(void)
 {
 #ifdef RSS
@@ -2306,72 +2305,3 @@ ionic_set_rss_type(void)
 	return (rss_types);
 }
 
-int
-ionic_lif_rss_setup(struct lif *lif)
-{
-	struct device *dev = lif->ionic->dev;
-	size_t tbl_size = sizeof(*lif->rss_ind_tbl) * RSS_IND_TBL_SIZE;
-	unsigned int i;
-	int err;
-
-#ifdef	RSS
-	u8 toeplitz_symmetric_key[40];
-	rss_getkey((uint8_t *) &toeplitz_symmetric_key);
-#else
-	static const u8 toeplitz_symmetric_key[] = {
-		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
-		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
-		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
-		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
-		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
-	};
-#endif
-
-	lif->rss_ind_tbl = dma_zalloc_coherent(dev, tbl_size, &lif->rss_ind_tbl_pa,
-					      GFP_KERNEL);
-
-	if (!lif->rss_ind_tbl) {
-		IONIC_NETDEV_ERROR(lif->netdev, "failed to allocate RSS table\n");
-		return -ENOMEM;
-	}
-
-	/* Fill indirection table with 'default' values */
-
-	for (i = 0; i < RSS_IND_TBL_SIZE; i++) {
-#ifdef RSS
-		lif->rss_ind_tbl[i] = rss_get_indirection_to_bucket(i) % lif->nrxqs;
-#else
-		lif->rss_ind_tbl[i] = i % lif->nrxqs;
-#endif
-	}
-
-	err = ionic_rss_ind_tbl_set(lif, NULL);
-	if (err)
-		goto err_out_free;
-
-	lif->rss_hash_cfg =  ionic_set_rss_type();
-	err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key, lif->rss_hash_cfg);
-	if (err)
-		goto err_out_free;
-
-	return 0;
-
-err_out_free:
-	dma_free_coherent(dev, tbl_size, lif->rss_ind_tbl,
-			  lif->rss_ind_tbl_pa);
-	return err;
-}
-
-void ionic_lif_rss_teardown(struct lif *lif)
-{
-	struct device *dev = lif->ionic->dev;
-	size_t tbl_size = sizeof(*lif->rss_ind_tbl) * RSS_IND_TBL_SIZE;
-
-	if (!lif->rss_ind_tbl)
-		return;
-
-	dma_free_coherent(dev, tbl_size, lif->rss_ind_tbl,
-			  lif->rss_ind_tbl_pa);
-
-	lif->rss_ind_tbl = NULL;
-}

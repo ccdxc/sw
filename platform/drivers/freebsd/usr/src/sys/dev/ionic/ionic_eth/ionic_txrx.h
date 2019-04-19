@@ -39,9 +39,9 @@ void ionic_lif_netdev_free(struct lif* lifs);
 int ionic_set_os_features(struct ifnet* ifp, uint32_t hw_features);
 int ionic_enable_os_features(struct ifnet* ifp);
 
+uint16_t ionic_set_rss_type(void);
+
 void ionic_setup_sysctls(struct lif *lif);
-int ionic_lif_rss_setup(struct lif *lif);
-void ionic_lif_rss_teardown(struct lif *lif);
 
 int ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len);
 void ionic_rx_mbuf_free(struct rxque *rxq, struct ionic_rx_buf *rxbuf);

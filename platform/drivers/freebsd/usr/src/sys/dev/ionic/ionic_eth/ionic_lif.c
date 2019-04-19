@@ -51,6 +51,12 @@ static int ionic_addr_del(struct net_device *netdev, const u8 *addr);
 static void ionic_notifyq_task_handler(void *arg, int pendindg);
 static irqreturn_t ionic_notifyq_isr(int irq, void *data);
 
+static int ionic_lif_stats_alloc(struct lif *lif);
+static void ionic_lif_stats_free(struct lif *lif);
+
+static int ionic_lif_rss_alloc(struct lif *lif);
+static void ionic_lif_rss_free(struct lif *lif);
+
 struct lif_addr_work {
 	struct work_struct work;
 	struct lif *lif;
@@ -1030,7 +1036,7 @@ ionic_adminq_alloc(struct lif *lif, unsigned int qnum,
 	comp_ring_size = sizeof(*adminq->comp_ring) * num_descs;
 	total_size = ALIGN(cmd_ring_size, PAGE_SIZE) + ALIGN(comp_ring_size, PAGE_SIZE);
 
-	if ((error = ionic_dma_alloc(adminq->lif->ionic, total_size, &adminq->cmd_dma, BUS_DMA_NOWAIT))) {
+	if ((error = ionic_dma_alloc(adminq->lif->ionic, total_size, &adminq->cmd_dma, 0))) {
 		IONIC_QUE_ERROR(adminq, "failed to allocated DMA cmd ring, err: %d\n", error);
 		goto error_out;
 	}
@@ -1111,7 +1117,7 @@ ionic_notifyq_alloc(struct lif *lif, unsigned int qnum,
 	comp_ring_size = sizeof(*notifyq->comp_ring) * num_descs;
 	total_size = ALIGN(cmd_ring_size, PAGE_SIZE) + ALIGN(cmd_ring_size, PAGE_SIZE);
 
-	error = ionic_dma_alloc(notifyq->lif->ionic, total_size, &notifyq->cmd_dma, BUS_DMA_NOWAIT);
+	error = ionic_dma_alloc(notifyq->lif->ionic, total_size, &notifyq->cmd_dma, 0);
 	if (error) {
 		IONIC_QUE_ERROR(notifyq, "failed to allocated DMA cmd ring, err: %d\n", error);
 		goto error_out;
@@ -1216,7 +1222,7 @@ ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 	total_size = ALIGN(cmd_ring_size, PAGE_SIZE) + ALIGN(cmd_ring_size, PAGE_SIZE) +
 			ALIGN(sg_ring_size, PAGE_SIZE);
 
-	if ((error = ionic_dma_alloc(rxq->lif->ionic, total_size, &rxq->cmd_dma, BUS_DMA_NOWAIT))) {
+	if ((error = ionic_dma_alloc(rxq->lif->ionic, total_size, &rxq->cmd_dma, 0))) {
 		IONIC_QUE_ERROR(rxq, "failed to allocated DMA cmd ring, err: %d\n", error);
 		goto error_out;
 	}
@@ -1352,7 +1358,7 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	sg_ring_size = sizeof(*txq->sg_ring) * num_descs;
 	total_size = ALIGN(cmd_ring_size, PAGE_SIZE) + ALIGN(cmd_ring_size, PAGE_SIZE) + ALIGN(sg_ring_size, PAGE_SIZE);
 
-	if ((error = ionic_dma_alloc(txq->lif->ionic, total_size, &txq->cmd_dma, BUS_DMA_NOWAIT))) {
+	if ((error = ionic_dma_alloc(txq->lif->ionic, total_size, &txq->cmd_dma, 0))) {
 		IONIC_QUE_ERROR(txq, "failed to allocated DMA cmd ring, err: %d\n", error);
 		goto failed_alloc;
 	}
@@ -1715,6 +1721,13 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	if (err)
 		goto err_out_unmap_dbell;
 
+	err = ionic_lif_stats_alloc(lif);
+	if (err)
+		goto err_out_lif_stats;
+	
+	err = ionic_lif_rss_alloc(lif);
+	if (err)
+		goto err_out_lif_rss;
 	/* Setup tunables. */
 	lif->tx_coalesce_usecs = ionic_tx_coalesce_usecs;
 	lif->rx_coalesce_usecs = ionic_rx_coalesce_usecs;
@@ -1725,6 +1738,10 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 
 	return 0;
 
+err_out_lif_rss:
+	ionic_lif_rss_free(lif);
+err_out_lif_stats:
+	ionic_lif_stats_free(lif);
 err_out_unmap_dbell:
 	ionic_bus_unmap_dbpage(ionic, lif->kern_dbpage);
 err_out_free_dbid:
@@ -1765,6 +1782,7 @@ ionic_lifs_free(struct ionic *ionic)
 		flush_workqueue(lif->adminq_wq);
 		destroy_workqueue(lif->adminq_wq);
 		ionic_qcqs_free(lif);
+		ionic_lif_stats_free(lif);
 		ionic_lif_netdev_free(lif);
 
 		if (lif->notifyblock) {
@@ -1781,9 +1799,26 @@ ionic_lifs_free(struct ionic *ionic)
 }
 
 static int
-ionic_lif_stats_start(struct lif *lif, unsigned int ver)
+ionic_lif_stats_alloc(struct lif *lif)
 {
 	struct net_device *netdev = lif->netdev;
+	int error;
+
+	error = ionic_dma_alloc(lif->ionic, sizeof(struct ionic_lif_stats), &lif->stats_dma, 0);
+	if (error) {
+		IONIC_NETDEV_ERROR(netdev, "no buffer for stats, err: %d\n", error);
+		return error;
+	}
+
+	lif->lif_stats = (struct ionic_lif_stats *)lif->stats_dma.dma_vaddr;
+	lif->lif_stats_pa = lif->stats_dma.dma_paddr;
+
+	return error;
+}
+
+static int
+ionic_lif_stats_start(struct lif *lif, unsigned int ver)
+{
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.lif_stats = {
@@ -1793,36 +1828,12 @@ ionic_lif_stats_start(struct lif *lif, unsigned int ver)
 	};
 	int error;
 
-	if ((error = ionic_dma_alloc(lif->ionic, sizeof(struct ionic_lif_stats),
-				&lif->stats_dma, BUS_DMA_ZERO))) {
-		IONIC_NETDEV_ERROR(netdev, "no buffer for stats, err: %d\n", error);
-		return error;
-	}
-
-	lif->lif_stats_pa = lif->stats_dma.dma_paddr;
-	lif->lif_stats = (struct ionic_lif_stats *)lif->stats_dma.dma_vaddr;
-
-	if (lif->lif_stats == NULL) {
-		IONIC_NETDEV_ERROR(netdev, "failed to allocate stats buffer\n");
-		goto err_out_free;
-	}
 	ctx.cmd.lif_stats.addr = lif->lif_stats_pa;
 
 	IONIC_NETDEV_INFO(netdev, "lif_stats START ver %d addr %p(0x%lx)\n", ver,
 		    lif->lif_stats, lif->lif_stats_pa);
 
 	error = ionic_adminq_post_wait(lif, &ctx);
-	if (error)
-		goto err_out_free;
-
-	return 0;
-
-err_out_free:
-	if (lif->lif_stats) {
-		ionic_dma_free(lif->ionic, &lif->stats_dma);
-		lif->lif_stats = NULL;
-		lif->lif_stats_pa = 0;
-	}
 
 	return error;
 }
@@ -1849,13 +1860,21 @@ ionic_lif_stats_stop(struct lif *lif)
 		IONIC_NETDEV_ERROR(netdev, "lif_stats cmd failed %d\n", err);
 		return;
 	}
+}
+
+static void
+ionic_lif_stats_free(struct lif *lif)
+{
+
+	if (lif->lif_stats == NULL)
+		return;
 
 	ionic_dma_free(lif->ionic, &lif->stats_dma);
 	lif->lif_stats = NULL;
 	lif->lif_stats_pa = 0;
 }
 
-int
+static int
 ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
 {
 	struct ionic_admin_ctx ctx = {
@@ -1880,7 +1899,7 @@ ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
 	return ionic_adminq_post_wait(lif, &ctx);
 }
 
-int
+static int
 ionic_rss_hash_key_set(struct lif *lif, const u8 *key, uint16_t rss_types)
 {
 	struct ionic_admin_ctx ctx = {
@@ -1899,6 +1918,79 @@ ionic_rss_hash_key_set(struct lif *lif, const u8 *key, uint16_t rss_types)
 	IONIC_NETDEV_INFO(lif->netdev, "rss_hash_key_set\n");
 
 	return ionic_adminq_post_wait(lif, &ctx);
+}
+
+static int
+ionic_lif_rss_alloc(struct lif *lif)
+{
+	size_t tbl_size = sizeof(*lif->rss_ind_tbl) * RSS_IND_TBL_SIZE;
+	int i, error;
+
+	if ((error = ionic_dma_alloc(lif->ionic, tbl_size, &lif->rss_dma, 0))) {
+		IONIC_NETDEV_ERROR(lif->netdev, "failed to allocate RSS dma, err: %d\n", error);
+		return ENOMEM;
+	}
+
+	lif->rss_ind_tbl = (uint8_t *)lif->stats_dma.dma_vaddr;
+	lif->rss_ind_tbl_pa = lif->rss_dma.dma_paddr;
+
+	for (i = 0; i < RSS_IND_TBL_SIZE; i++) {
+#ifdef RSS
+		lif->rss_ind_tbl[i] = rss_get_indirection_to_bucket(i) % lif->nrxqs;
+#else
+		lif->rss_ind_tbl[i] = i % lif->nrxqs;
+#endif
+	}
+
+	lif->rss_hash_cfg =  ionic_set_rss_type();
+	
+	return 0;
+}
+
+static int
+ionic_lif_rss_setup(struct lif *lif)
+{
+	int err;
+
+#ifdef	RSS
+	u8 toeplitz_symmetric_key[40];
+	rss_getkey(toeplitz_symmetric_key);
+#else
+	static const u8 toeplitz_symmetric_key[] = {
+		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+		0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A, 0x6D, 0x5A,
+	};
+#endif
+
+	err = ionic_rss_ind_tbl_set(lif, NULL);
+	if (err)
+		goto err_out_free;
+
+	err = ionic_rss_hash_key_set(lif, toeplitz_symmetric_key, lif->rss_hash_cfg);
+	if (err)
+		goto err_out_free;
+
+	return 0;
+
+err_out_free:
+	ionic_lif_rss_free(lif);
+	
+	return err;
+}
+
+static void
+ionic_lif_rss_free(struct lif *lif)
+{
+	
+	if (!lif->rss_ind_tbl)
+		return;
+
+	ionic_dma_free(lif->ionic, &lif->rss_dma);
+
+	lif->rss_ind_tbl = NULL;
 }
 
 static void
@@ -1974,7 +2066,7 @@ ionic_lif_deinit(struct lif *lif)
 
 	ionic_lif_stats_stop(lif);
 	ionic_rx_filters_deinit(lif);
-	ionic_lif_rss_teardown(lif);
+	ionic_lif_rss_free(lif);
 
 	/* Unregister VLAN events */
 	if (lif->vlan_attach != NULL)
@@ -2183,17 +2275,12 @@ ionic_lif_notifyq_block_init(struct lif *lif)
 
 	lif->notifyblock_sz = ALIGN(sizeof(*lif->notifyblock), PAGE_SIZE);
 
-	if ((error = ionic_dma_alloc(lif->ionic, lif->notifyblock_sz, &lif->notify_dma, BUS_DMA_ZERO))) {
+	if ((error = ionic_dma_alloc(lif->ionic, lif->notifyblock_sz, &lif->notify_dma, 0))) {
 		IONIC_NETDEV_ERROR(netdev, "failed to allocated notifyq block, err: %d\n", error);
 		return error;
 	}
 
 	lif->notifyblock = (struct notify_block *)lif->notify_dma.dma_vaddr;
-	if (!lif->notifyblock) {
-		IONIC_NETDEV_ERROR(netdev, "failed to allocate notify block\n");
-		return ENOMEM;
-	}
-
 	lif->notifyblock_pa = lif->notify_dma.dma_paddr;
 
 	IONIC_NETDEV_INFO(netdev, "notify addr %p(0x%lx)\n",
@@ -2849,7 +2936,7 @@ ionic_set_mac(struct net_device *netdev)
 	}
 
 	/* add filter for new mac addr */
-	err = ionic_addr_add(lif->netdev, IF_LLADDR(netdev));
+	err = ionic_addr_add(lif->netdev, (u8 *)IF_LLADDR(netdev));
 	if (err) {
 		IONIC_NETDEV_ERROR(lif->netdev, "Failed to add new MAC %6D, err: %d\n",
 			lif->dev_addr, ":", err);
@@ -2954,7 +3041,7 @@ ionic_lif_init(struct lif *lif)
 	return 0;
 
 err_out_rss_teardown:
-	ionic_lif_rss_teardown(lif);
+	ionic_lif_rss_free(lif);
 err_out_rxqs_deinit:
 	ionic_lif_rxqs_deinit(lif);
 err_out_txqs_deinit:
