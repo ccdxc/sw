@@ -702,26 +702,30 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
             for (uint32_t k = 0; k < num_pfx; k++) {
                 uint16_t dport_base = 1024;
                 for (uint32_t l = 0; l < num_sub_rules; l++) {
-                    if (idx == num_rules) {
+                    rule = &policy.rules[idx];
+                    rule->action_data.fw_action.action =
+                        SECURITY_RULE_ACTION_ALLOW;
+                    rule->stateful = false;
+                    rule->match.l3_match.ip_proto = 17;    // UDP
+                    rule->match.l4_match.sport_range.port_lo = 100;
+                    rule->match.l4_match.sport_range.port_hi = 1000;
+                    rule->match.l3_match.ip_pfx = g_test_params.vpc_pfx;
+                    if (idx < num_rules - 1) {
+                        rule->match.l3_match.ip_pfx.addr.addr.v4_addr =
+                            rule->match.l3_match.ip_pfx.addr.addr.v4_addr |
+                            ((j - 1) << 14) | ((k + 2) << 4);
+                        rule->match.l3_match.ip_pfx.len = 28;
+                        rule->match.l4_match.dport_range.port_lo = dport_base;
+                        rule->match.l4_match.dport_range.port_hi =
+                            dport_base + step - 1;
+                        dport_base += step;
+                        idx++;
+                    } else {
+                        rule->match.l4_match.dport_range.port_lo = 1000;
+                        rule->match.l4_match.dport_range.port_hi = 20000;
                         done = true;
                         break;
                     }
-                    rule = &policy.rules[idx];
-                    rule->stateful = false;
-                    rule->match.l3_match.ip_proto = 17;    // UDP
-                    rule->match.l3_match.ip_pfx = g_test_params.vpc_pfx;
-                    rule->match.l3_match.ip_pfx.addr.addr.v4_addr =
-                        rule->match.l3_match.ip_pfx.addr.addr.v4_addr |
-                        ((j - 1) << 14) | ((k + 2) << 4);
-                    rule->match.l3_match.ip_pfx.len = 28;
-                    rule->match.l4_match.sport_range.port_lo = 100;
-                    rule->match.l4_match.sport_range.port_hi = 1000;
-                    rule->match.l4_match.dport_range.port_lo = dport_base;
-                    rule->match.l4_match.dport_range.port_hi =
-                        dport_base + step - 1;
-                    dport_base += step;
-                    rule->action_data.fw_action.action = SECURITY_RULE_ACTION_ALLOW;
-                    idx++;
                 }
                 if (done) {
                     break;
