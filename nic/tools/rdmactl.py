@@ -17,13 +17,8 @@ lif_id=0
 CMD_FMT='tbl {tbl} idx {idx} post'
 CTRL_FMT=None
 DATA_FMT=None
-
-if sys.platform.startswith('freebsd'):
-    CTRL_FMT='sysctl dev.ionic.{lif}.rdma_dbg.aq.1.dbg_wr_ctrl=\'' + CMD_FMT + '\' > /dev/null'
-    DATA_FMT='sysctl -bn dev.ionic.{lif}.rdma_dbg.aq.1.dbg_wr_data > {out}'
-else:
-    CTRL_FMT='echo -n \'' + CMD_FMT + '\' > /sys/kernel/debug/ionic/{pci}/lif{lif}/rdma/aq/1/dbg_wr_ctrl'
-    DATA_FMT='xxd -r /sys/kernel/debug/ionic/{pci}/lif{lif}/rdma/aq/1/dbg_wr_data > {out}'
+HOST_OS= ''
+REMOTE_CMD_FMT='{cmd} -q -o StrictHostKeyChecking=no -o BatchMode=yes {options}'
 
 DUMP_TYPE_QP=0
 DUMP_TYPE_CQ=1
@@ -41,6 +36,10 @@ DBG_WR_DATA='dbg_wr_data'
 DUMP_DATA='/tmp/hexdump_data'
 
 DMESG_FILE='/tmp/dmesg.txt'
+
+HOST=''
+USER=''
+CMD_PREFIX=''
 
 def getPwd():
     pwd = os.path.dirname(sys.argv[0])
@@ -95,6 +94,31 @@ def telnetToConsole(console, port):
     op = tn.expect(['#'], timeout=5)
     logging.info(op[2])
     return tn
+
+def setHostOS():
+
+    global HOST_OS
+
+    if HOST != '':
+        options = USER + '@' + HOST + ' -t uname'
+        cmd_str = REMOTE_CMD_FMT.format(
+                  cmd = 'ssh', options = options)
+
+        op = os.popen3(cmd_str)
+        out = op[1].read()
+
+        if ("Linux" in out):
+            HOST_OS = 'Linux'
+        elif ("FreeBSD" in out):
+            HOST_OS = 'FreeBSD'
+        else:
+            print "ERROR: Failed to login to " + HOST + " as " + USER + ". Please setup passwordless login and try again." 
+            exit()
+    else:
+        if sys.platform.startswith('freebsd'):
+            HOST_OS = 'FreeBSD'
+        else:
+            HOST_OS = 'Linux'
 
 class RdmaAQCB0state(Packet):
     name = "RdmaAQCB0state"
@@ -1138,7 +1162,7 @@ def parse_dmesg():
                 for i in range(4):
                     line = fp.readline().rstrip('\n')
                     print line
-                    if sys.platform.startswith('freebsd'):
+                    if HOST_OS == 'FreeBSD':
                         m = re.match(r"(.*wqe\W+\[.*?\])([ A-Fa-f0-9]+).*", line)
                     else:
                         m = re.match(r"(.*wqe.*:)([ A-Fa-f0-9]+).*", line)
@@ -1164,7 +1188,7 @@ def parse_dmesg():
                 i = 0
                 for i in range(2):
                     print line
-                    if sys.platform.startswith('freebsd'):
+                    if HOST_OS == 'FreeBSD':
                         m = re.match(r"(.*cqe\W+\[.*?\])([ A-Fa-f0-9]+).*", line)
                     else:
                         m = re.match(r"(.*cqe.*:)([ A-Fa-f0-9]+).*", line)
@@ -1182,9 +1206,18 @@ def parse_dmesg():
                 line = fp.readline()
 
 def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
-    cmd_str = CTRL_FMT.format(
+    if HOST != '':
+        options = USER + '@' + HOST + ' " '
+        prefix = REMOTE_CMD_FMT.format(
+                 cmd = 'ssh', options = options)
+        suffix = ' " '
+    else:
+        prefix = ''
+        suffix = ''
+
+    cmd_str = prefix + CTRL_FMT.format(
             lif = lif_id, pci = pcie_id,
-            tbl = tbl_type, idx = tbl_index)
+            tbl = tbl_type, idx = tbl_index) + suffix
 
     #print cmd_str
     if os.system(cmd_str):
@@ -1192,14 +1225,24 @@ def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
 
     #time.sleep(1)
 
-    cmd2_str = DATA_FMT.format(
+    cmd2_str = prefix + DATA_FMT.format(
             lif = lif_id, pci = pcie_id,
-            out = DUMP_DATA)
+            out = DUMP_DATA) + suffix
 
     #print cmd2_str
     if os.system(cmd2_str):
         return '\0'*num_bytes
-    
+
+    # if running from an external server, copy DUMP_DATA
+    if HOST != '':
+        options = USER + '@' + HOST + ':' + DUMP_DATA + ' ' + DUMP_DATA
+        cmd_str = REMOTE_CMD_FMT.format(
+                  cmd = 'scp', options = options)
+        ret = os.system(cmd_str)
+        if (ret != 0):
+            print("ERROR: Failed to copy DUMP_DATA from {0}".format(HOST))
+            exit()
+
     with open(DUMP_DATA, "rb") as data_file:
         bin_str = data_file.read()
 
@@ -1337,6 +1380,7 @@ parser.add_argument('--dmesg', help='parse dmesg and parse rdma adminq wqes/cqes
 parser.add_argument('--dmesg_file', help='parse dmesg from file and parse rdma adminq wqes/cqes')
 parser.add_argument('--DEVNAME', help='prints info for given rdma device')
 parser.add_argument('--offline', help='prints rdma per queue state through the console when the host is not accessible', action='store_true', default=False)
+parser.add_argument('--user', help='username to login to the host, root is the default', type=str, default='root')
 parser.add_argument('--host', help='name of the host where Naples is present', type=str)
 parser.add_argument('--num_qps', help='number of QPs', type=int)
 grp = parser.add_mutually_exclusive_group()
@@ -1369,14 +1413,20 @@ grp.add_argument('--aq_debug_disable', help='Disable AQ captrace', type=int, met
 
 args = parser.parse_args()
 
-# Error checks
+USER = args.user
 if args.host is not None:
-    if args.offline is False or \
-       args.DEVNAME is None:
+    HOST = args.host
 
-        print("ERROR: Offline mode mandatory options: --host, --offline, --DEVNAME")
-        exit()
+setHostOS()
 
+if HOST_OS == 'FreeBSD':
+    CTRL_FMT='sysctl dev.ionic.{lif}.rdma_dbg.aq.1.dbg_wr_ctrl=\'' + CMD_FMT + '\' > /dev/null'
+    DATA_FMT='sysctl -bn dev.ionic.{lif}.rdma_dbg.aq.1.dbg_wr_data > {out}'
+else:
+    CTRL_FMT='echo -n \'' + CMD_FMT + '\' > /sys/kernel/debug/ionic/{pci}/lif{lif}/rdma/aq/1/dbg_wr_ctrl'
+    DATA_FMT='xxd -r /sys/kernel/debug/ionic/{pci}/lif{lif}/rdma/aq/1/dbg_wr_data > {out}'
+
+# Error checks
 
 if args.offline is True:
     if args.host is None or \
@@ -1384,6 +1434,13 @@ if args.offline is True:
 
         print("ERROR: Offline mode mandatory options: --host, --offline, --DEVNAME")
         exit()
+
+else:
+    if args.host is not None:
+        if args.DEVNAME is None:
+
+            print("ERROR: External mode mandatory options: --host, --DEVNAME")
+            exit()
 
 # offline debug
 if args.host is not None and \
@@ -1713,20 +1770,28 @@ if args.host is not None and \
 
     exit()
 
+# dump rdmactl from an external server
+if args.host is not None and \
+   args.DEVNAME is not None:
+
+    options = USER + '@' + HOST + ' -t '
+    CMD_PREFIX = REMOTE_CMD_FMT.format(
+                 cmd = 'ssh', options = options)
+
 #print args
 if args.dmesg is False and args.dmesg_file is None :
     if args.DEVNAME is None:
         print 'device not specified'
     else:
-        if sys.platform.startswith('freebsd'):
-            cmd = "ifconfig " + args.DEVNAME
+        if HOST_OS == 'FreeBSD':
+            cmd = CMD_PREFIX + "ifconfig " + args.DEVNAME
             if os.system(cmd + "> /dev/null 2>&1") is not 0:
                 print "invalid device " + args.DEVNAME + " specified. please check and try again"
                 exit()
             tmp, lif_id = args.DEVNAME.split("ionic")
             #print "derived " + lif_id + " as device id for device" + args.DEVNAME
         else:
-            cmd = "ethtool -i " + args.DEVNAME + " | grep bus-info"
+            cmd = CMD_PREFIX + "ethtool -i " + args.DEVNAME + " | grep bus-info"
             if os.system(cmd + "> /dev/null 2>&1") is not 0:
                 print "invalid device " + args.DEVNAME + " specified. please check and try again"
                 exit()
@@ -1735,6 +1800,7 @@ if args.dmesg is False and args.dmesg_file is None :
                 print "invalid device " + args.DEVNAME + " specified. please check and try again"
             tmp, pcie_id = bus_info.split(": ")
             pcie_id, tmp = pcie_id.split(pcie_id[-1])
+            pcie_id = pcie_id.rstrip()
             #print "derived " + pcie_id + " as pcie id for device " + args.DEVNAME
         
 if args.cqcb is not None:
