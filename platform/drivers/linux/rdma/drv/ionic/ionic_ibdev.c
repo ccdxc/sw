@@ -4435,6 +4435,7 @@ static void ionic_reset_qp(struct ionic_qp *qp)
 {
 	struct ionic_cq *cq;
 	unsigned long irqflags;
+	int i;
 
 	if (qp->ibqp.send_cq) {
 		cq = to_ionic_cq(qp->ibqp.send_cq);
@@ -4469,6 +4470,10 @@ static void ionic_reset_qp(struct ionic_qp *qp)
 		qp->rq_cmb_prod = 0;
 		qp->rq.prod = 0;
 		qp->rq.cons = 0;
+		for (i = 0; i < qp->rq.mask; ++i)
+			qp->rq_meta[i].next = &qp->rq_meta[i + 1];
+		qp->rq_meta[i].next = IONIC_META_LAST;
+		qp->rq_meta_head = &qp->rq_meta[0];
 		spin_unlock_irqrestore(&qp->rq_lock, irqflags);
 	}
 }
