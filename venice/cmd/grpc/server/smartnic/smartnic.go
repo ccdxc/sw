@@ -26,6 +26,7 @@ import (
 	cmdcertutils "github.com/pensando/sw/venice/cmd/grpc/server/certificates/utils"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -292,33 +293,40 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 	var req *grpc.NICAdmissionRequest
 	var name string
 
+	// Canned responses in case of error
+	authErrResp := &grpc.RegisterNICResponse{
+		AdmissionResponse: &grpc.NICAdmissionResponse{
+			Phase:  cluster.SmartNICStatus_REJECTED.String(),
+			Reason: string("Authentication error"),
+		},
+	}
+
+	intErrResp := &grpc.RegisterNICResponse{
+		AdmissionResponse: &grpc.NICAdmissionResponse{
+			Phase:  cluster.SmartNICStatus_UNKNOWN.String(),
+			Reason: string("Internal error"),
+		},
+	}
+
+	noClusterErrResp := &grpc.RegisterNICResponse{
+		AdmissionResponse: &grpc.NICAdmissionResponse{
+			Phase:  cluster.SmartNICStatus_UNKNOWN.String(),
+			Reason: string("Controller node is not part of a cluster"),
+		},
+	}
+
+	protoErrResp := &grpc.RegisterNICResponse{
+		AdmissionResponse: &grpc.NICAdmissionResponse{
+			Phase:  cluster.SmartNICStatus_UNKNOWN.String(),
+			Reason: string("Internal error"),
+		},
+	}
+
 	// There is no way to specify timeouts for individual Send/Recv calls in Golang gRPC,
 	// so we execute the entire registration sequence under a single timeout.
 	// https://github.com/grpc/grpc-go/issues/445
 	// https://github.com/grpc/grpc-go/issues/1229
 	procRequest := func() (interface{}, error) {
-
-		// Canned responses in case of error
-		authErrResp := &grpc.RegisterNICResponse{
-			AdmissionResponse: &grpc.NICAdmissionResponse{
-				Phase:  cluster.SmartNICStatus_REJECTED.String(),
-				Reason: string("Authentication error"),
-			},
-		}
-
-		intErrResp := &grpc.RegisterNICResponse{
-			AdmissionResponse: &grpc.NICAdmissionResponse{
-				Phase:  cluster.SmartNICStatus_UNKNOWN.String(),
-				Reason: string("Internal error"),
-			},
-		}
-
-		protoErrResp := &grpc.RegisterNICResponse{
-			AdmissionResponse: &grpc.NICAdmissionResponse{
-				Phase:  cluster.SmartNICStatus_UNKNOWN.String(),
-				Reason: string("Internal error"),
-			},
-		}
 
 		msg, err := stream.Recv()
 		if err != nil {
@@ -522,6 +530,15 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			*/
 		}
 		return okResp, nil
+	}
+
+	// if we are not part of a cluster yet we cannot process admission requests
+	clusterObj, err := s.stateMgr.GetCluster()
+	if err != nil || clusterObj == nil {
+		retErr := fmt.Errorf("Rejecting RegisterNIC request from %s, cluster not formed yet, err: %v", ctxutils.GetPeerAddress(stream.Context()), err)
+		log.Errorf("%v", retErr)
+		stream.Send(noClusterErrResp)
+		return retErr
 	}
 
 	ctx, cancel := context.WithTimeout(stream.Context(), nicRegTimeout)

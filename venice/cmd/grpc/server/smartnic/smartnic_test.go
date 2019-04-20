@@ -597,8 +597,7 @@ func doRegisterNIC(t *testing.T, client grpc.SmartNICRegistrationClient, mac, ni
 	return admResp.AdmissionResponse
 }
 
-// TestRegisterSmartNICByNaples tests RegisterNIC
-// functionality initiated by User
+// TestRegisterSmartNICByNaples tests RegisterNIC functionality initiated by NAPLES
 func TestRegisterSmartNICByNaples(t *testing.T) {
 
 	// Init required components
@@ -1395,6 +1394,28 @@ func TestManualAdmission(t *testing.T) {
 	AssertOk(t, err, "Error deleting smartnic object")
 	err = deleteSmartNIC(*nicObjMeta2)
 	AssertOk(t, err, "Error deleting smartnic object")
+
+	// Negative test case
+	// Simulate the case in which CMD is not part of a cluster by deleting cluster object
+	clusterObj, err := tInfo.stateMgr.GetCluster()
+	AssertOk(t, err, "Error getting Cluster object")
+	_, err = tInfo.apiClient.ClusterV1().Cluster().Delete(context.Background(), &clusterObj.ObjectMeta)
+	AssertOk(t, err, "Error deleting Cluster object")
+
+	stream, err := smartNICRegistrationRPCClient.RegisterNIC(context.Background())
+	AssertOk(t, err, "Error creating stream")
+	admReq := &grpc.RegisterNICRequest{}
+	err = stream.Send(admReq)
+	AssertOk(t, err, "Error sending request")
+	resp, err := stream.Recv()
+	AssertOk(t, err, "Error receiving response")
+	Assert(t,
+		resp.AdmissionResponse.Phase == cmd.SmartNICStatus_UNKNOWN.String() && strings.Contains(resp.AdmissionResponse.Reason, "not part of a cluster"),
+		fmt.Sprintf("Unexpected registration response %v", resp))
+
+	// Now re-create cluster object, otherwise teardown flags an error
+	_, _ = tInfo.apiClient.ClusterV1().Cluster().Create(context.Background(), clusterObj)
+	AssertOk(t, err, "Error creating Cluster object")
 }
 
 // Test that a NIC that was previously rejected is automatically admitted when
@@ -1842,8 +1863,7 @@ func testTeardown() {
 	}
 	_, err := tInfo.apiClient.ClusterV1().Cluster().Delete(context.Background(), &clRef.ObjectMeta)
 	if err != nil {
-		fmt.Printf("Error deleting Cluster object, %v", err)
-		os.Exit(-1)
+		log.Fatalf("Error deleting Cluster object, %v", err)
 	}
 
 	// stop the rpc client and server

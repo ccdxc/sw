@@ -351,7 +351,7 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.Regist
 	}
 
 	if msg.AuthenticationRequest == nil {
-		return makeErrorResp(nil, "Protocol error: no AuthenticationRequest in message", nic)
+		return *msg, fmt.Errorf("Protocol error: no AuthenticationRequest in message %+v", msg)
 	}
 
 	claimantRandom, challengeResp, err := client.nmd.GenChallengeResponse(nic, msg.AuthenticationRequest.Challenge)
@@ -373,7 +373,7 @@ func (client *CmdClient) RegisterSmartNICReq(nic *cluster.SmartNIC) (grpc.Regist
 	}
 
 	if msg.AdmissionResponse == nil {
-		return makeErrorResp(nil, "Protocol error: no AdmissionResponse in message", nic)
+		return *msg, fmt.Errorf("Protocol error: no AdmissionResponse in message %+v", msg)
 	}
 
 	return *msg, nil
