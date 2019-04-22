@@ -11,9 +11,9 @@ import "meta/meta.proto";
 import "types.proto";
 
 service MirrorSvc {
-  rpc MirrorPolicyCreate (MirrorPolicyRequest) returns (MirrorPolicyResponse) {}
-  rpc MirrorPolicyGet (MirrorPolicyGetRequest) returns (MirrorPolicyGetResponse) {}
-  rpc MirrorPolicyDelete (MirrorPolicyDeleteRequest) returns (MirrorPolicyDeleteResponse) {}
+  rpc MirrorSessionCreate (MirrorSessionRequest) returns (MirrorSessionResponse) {}
+  rpc MirrorSessionGet (MirrorSessionGetRequest) returns (MirrorSessionGetResponse) {}
+  rpc MirrorSessionDelete (MirrorSessionDeleteRequest) returns (MirrorSessionDeleteResponse) {}
 }
 
 // RspanSpec is the configuration specification for RSPAN
@@ -38,8 +38,8 @@ message ERSpanSpec {
   uint32          SpanId = 5;
 }
 
-// MirrorPolicySpec captures configuration of Mirror session
-message MirrorPolicySpec {
+// MirrorSessionSpec captures configuration of Mirror session
+message MirrorSessionSpec {
   // unique identifier of mirror policy
   uint32 Id               = 1 [(gogoproto.moretags) = "meta:mandatory,range:1-7"];
   // maximum  bytes of packet to mirror
@@ -53,49 +53,49 @@ message MirrorPolicySpec {
 }
 
 // operational status of Mirror policy, if any
-message MirrorPolicyStatus {
+message MirrorSessionStatus {
 }
 
 // stats of Mirror policy, if any
-message MirrorPolicyStats {
+message MirrorSessionStats {
 }
 // Mirror policy object
-message MirrorPolicy {
-  meta.TypeMeta      TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
-  meta.ObjMeta       ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
-  MirrorPolicySpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
-  MirrorPolicyStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
-  MirrorPolicyStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+message MirrorSession {
+  meta.TypeMeta       TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta        ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  MirrorSessionSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  MirrorSessionStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  MirrorSessionStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
 
 // Mirror policy create and update request
-message MirrorPolicyRequest {
-  repeated MirrorPolicySpec Request = 1;
+message MirrorSessionRequest {
+  repeated MirrorSessionSpec Request = 1;
 }
 
 // Mirror policy create and update response
-message MirrorPolicyResponse {
-  types.ApiStatus             ApiStatus = 1;
-  repeated MirrorPolicyStatus Response  = 2;
+message MirrorSessionResponse {
+  types.ApiStatus ApiStatus = 1;
+  repeated MirrorSessionStatus Response  = 2;
 }
 
 // Mirror policy get request
-message MirrorPolicyGetRequest {
+message MirrorSessionGetRequest {
   repeated uint32 Id = 1;
 }
 
 // Mirror policy get response
-message MirrorPolicyGetResponse {
-  types.ApiStatus       ApiStatus = 1;
-  repeated MirrorPolicy Response  = 2;
+message MirrorSessionGetResponse {
+  types.ApiStatus        ApiStatus = 1;
+  repeated MirrorSession Response  = 2;
 }
 
 // Mirror policy delete request
-message MirrorPolicyDeleteRequest {
+message MirrorSessionDeleteRequest {
   repeated uint32 Id = 1;
 }
 
 // Mirror policy delete response
-message MirrorPolicyDeleteResponse {
+message MirrorSessionDeleteResponse {
   repeated types.ApiStatus ApiStatus = 1;
 }

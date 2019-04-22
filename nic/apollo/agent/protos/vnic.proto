@@ -22,26 +22,26 @@ service VnicSvc {
 //       unique across VPCs
 message VnicSpec {
   // unique vnic id
-  uint32      VnicId               = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32      VnicId                = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // id of the subnet this vnic belongs to
-  uint32      SubnetId             = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32      SubnetId              = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // id of the VPC this vnic belongs to
-  uint32      VPCId                = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32      VPCId                 = 3 [(gogoproto.moretags) = "meta:mandatory"];
   // vnic encap information to be used while sending packets to this vnic
-  types.Encap VnicEncap            = 4 [(gogoproto.moretags) = "meta:mandatory"];
+  types.Encap VnicEncap             = 4 [(gogoproto.moretags) = "meta:mandatory"];
   // overlay MAC of this VNIC
-  uint64      MACAddress           = 5 [(gogoproto.moretags) = "meta:mandatory"];
+  uint64      MACAddress            = 5 [(gogoproto.moretags) = "meta:mandatory"];
   // resource pool to be used to enforce resource limits
-  uint32      ResourcePoolId       = 6;
+  uint32      ResourcePoolId        = 6;
   // enable or disable reverse path checks while sending traffic to this vnic
   // or while receiving traffic from this vnic
-  bool        SourceGuardEnable    = 7;
+  bool        SourceGuardEnable     = 7;
   // fabric encap information to be used for traffic originated from this vnic
-  types.Encap FabricEncap          = 8;
-  // Tx/egress mirror policy id, if any
-  repeated uint32 TxMirrorPolicyId = 9;
-  // Rx/ingress mirror policy id, if any
-  repeated uint32 RxMirrorPolicyId = 10;
+  types.Encap FabricEncap           = 8;
+  // Tx/egress mirror session id list, if any
+  repeated uint32 TxMirrorSessionId = 9;
+  // Rx/ingress mirror session id list, if any
+  repeated uint32 RxMirrorSessionId = 10;
 }
 
 // operational status of Vnic, if any

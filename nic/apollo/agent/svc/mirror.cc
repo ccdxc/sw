@@ -10,7 +10,7 @@
 
 // populate proto buf spec from mirror session API spec
 static inline sdk_ret_t
-mirror_session_api_to_proto_spec (pds::MirrorPolicySpec *proto_spec,
+mirror_session_api_to_proto_spec (pds::MirrorSessionSpec *proto_spec,
                                   const pds_mirror_session_spec_t *api_spec)
 {
     proto_spec->set_id(api_spec->key.id);
@@ -49,14 +49,14 @@ mirror_session_api_to_proto_spec (pds::MirrorPolicySpec *proto_spec,
 
 // populate proto buf status from mirror session API status
 static inline void
-mirror_session_api_status_to_proto_status (pds::MirrorPolicyStatus *proto_status,
+mirror_session_api_status_to_proto_status (pds::MirrorSessionStatus *proto_status,
                                            const pds_mirror_session_status_t *api_status)
 {
 }
 
 // populate proto buf stats from mirror session API stats
 static inline void
-mirror_session_api_stats_to_proto_stats (pds::MirrorPolicyStats *proto_stats,
+mirror_session_api_stats_to_proto_stats (pds::MirrorSessionStats *proto_stats,
                                          const pds_mirror_session_stats_t *api_stats)
 {
 }
@@ -66,12 +66,12 @@ static inline void
 mirror_session_api_info_to_proto (const pds_mirror_session_info_t *api_info,
                                   void *ctxt)
 {
-    pds::MirrorPolicyGetResponse *proto_rsp =
-        (pds::MirrorPolicyGetResponse *)ctxt;
+    pds::MirrorSessionGetResponse *proto_rsp =
+        (pds::MirrorSessionGetResponse *)ctxt;
     auto mirror_session = proto_rsp->add_response();
-    pds::MirrorPolicySpec *proto_spec = mirror_session->mutable_spec();
-    pds::MirrorPolicyStatus *proto_status = mirror_session->mutable_status();
-    pds::MirrorPolicyStats *proto_stats = mirror_session->mutable_stats();
+    pds::MirrorSessionSpec *proto_spec = mirror_session->mutable_spec();
+    pds::MirrorSessionStatus *proto_status = mirror_session->mutable_status();
+    pds::MirrorSessionStats *proto_stats = mirror_session->mutable_stats();
 
     mirror_session_api_to_proto_spec(proto_spec, &api_info->spec);
     mirror_session_api_status_to_proto_status(proto_status, &api_info->status);
@@ -81,7 +81,7 @@ mirror_session_api_info_to_proto (const pds_mirror_session_info_t *api_info,
 // build mirror session API spec from protobuf spec
 static inline sdk_ret_t
 mirror_session_proto_to_api_spec (pds_mirror_session_spec_t *api_spec,
-                                  const pds::MirrorPolicySpec &proto_spec)
+                                  const pds::MirrorSessionSpec &proto_spec)
 {
     api_spec->key.id = proto_spec.id();
     api_spec->snap_len = proto_spec.snaplen();
@@ -115,9 +115,9 @@ mirror_session_proto_to_api_spec (pds_mirror_session_spec_t *api_spec,
 
 // create mirror session object
 Status
-MirrorSvcImpl::MirrorPolicyCreate(ServerContext *context,
-                                  const pds::MirrorPolicyRequest *proto_req,
-                                  pds::MirrorPolicyResponse *proto_rsp) {
+MirrorSvcImpl::MirrorSessionCreate(ServerContext *context,
+                                   const pds::MirrorSessionRequest *proto_req,
+                                   pds::MirrorSessionResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_mirror_session_key_t key;
     pds_mirror_session_spec_t *api_spec;
@@ -150,9 +150,9 @@ MirrorSvcImpl::MirrorPolicyCreate(ServerContext *context,
 }
 
 Status
-MirrorSvcImpl::MirrorPolicyDelete(ServerContext *context,
-                                  const pds::MirrorPolicyDeleteRequest *proto_req,
-                                  pds::MirrorPolicyDeleteResponse *proto_rsp) {
+MirrorSvcImpl::MirrorSessionDelete(ServerContext *context,
+                                   const pds::MirrorSessionDeleteRequest *proto_req,
+                                   pds::MirrorSessionDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_mirror_session_key_t key;
 
@@ -169,9 +169,9 @@ MirrorSvcImpl::MirrorPolicyDelete(ServerContext *context,
 }
 
 Status
-MirrorSvcImpl::MirrorPolicyGet(ServerContext *context,
-                               const pds::MirrorPolicyGetRequest *proto_req,
-                               pds::MirrorPolicyGetResponse *proto_rsp) {
+MirrorSvcImpl::MirrorSessionGet(ServerContext *context,
+                                const pds::MirrorSessionGetRequest *proto_req,
+                                pds::MirrorSessionGetResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_mirror_session_key_t key;
     pds_mirror_session_info_t info;
