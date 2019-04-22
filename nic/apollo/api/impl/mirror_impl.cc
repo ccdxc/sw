@@ -30,6 +30,7 @@ mirror_impl::factory(pds_mirror_session_spec_t *spec) {
     mirror_impl *impl;
 
     // TODO: move to slab later
+    // impl = mirror_impl_db()->alloc();
     impl = (mirror_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_MIRROR_IMPL,
                                      sizeof(mirror_impl));
     new (impl) mirror_impl();
@@ -37,30 +38,42 @@ mirror_impl::factory(pds_mirror_session_spec_t *spec) {
 }
 
 void
-mirror_impl::destroy(mirror_impl *impl) {
+mirror_impl::soft_delete(mirror_impl *impl) {
     impl->~mirror_impl();
+    //mirror_impl_db()->free(impl);
     SDK_FREE(SDK_MEM_ALLOC_PDS_MIRROR_IMPL, impl);
+}
+
+mirror_impl *
+mirror_impl::build(pds_mirror_session_key_t *key) {
+    // TODO: later !!
+    return NULL;
+}
+
+void
+mirror_impl::destroy(mirror_impl *impl) {
+    mirror_impl::soft_delete(impl);
 }
 
 sdk_ret_t
 mirror_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t ret;
-    uint32_t idx;
-    pds_mirror_session_spec_t *spec = &obj_ctxt->api_params->mirror_session_spec;
-
     // allocate hw id for this session
+    return mirror_impl_db()->alloc_hw_id(&hw_id_);
+}
+
+sdk_ret_t
+mirror_impl::nuke_resources(api_base *api_obj) {
+    if (hw_id_ != 0xFFFF) {
+        return mirror_impl_db()->free_hw_id(hw_id_);
+    }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 mirror_impl::release_resources(api_base *api_obj) {
     if (hw_id_ != 0xFFFF) {
+        return mirror_impl_db()->free_hw_id(hw_id_);
     }
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-mirror_impl::nuke_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 

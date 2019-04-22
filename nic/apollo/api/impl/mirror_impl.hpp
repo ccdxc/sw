@@ -46,6 +46,23 @@ public:
     static void destroy(mirror_impl *impl);
 
     /**
+     * @brief    instantiate a mirror session impl object based on current state
+     *           (sw and/or hw) given its key
+     * @param[in] key    mirror session entry's key
+     * @return    new instance of mirror session implementation object or NULL
+     */
+    static mirror_impl *build(pds_mirror_session_key_t *key);
+
+    /**
+     * @brief    free a stateless entry's temporary s/w only resources like
+     *           memory etc., for a stateless entry calling destroy() will
+     *           remove resources from h/w, which can't be done during ADD/UPD
+     *           etc. operations esp. when object is constructed on the fly
+     *  @param[in] impl    mirror session to be freed
+     */
+    static void soft_delete(mirror_impl *impl);
+
+    /**
      * @brief    allocate/reserve h/w resources for this object
      * @param[in] orig_obj    old version of the unmodified object
      * @param[in] obj_ctxt    transient state associated with this API

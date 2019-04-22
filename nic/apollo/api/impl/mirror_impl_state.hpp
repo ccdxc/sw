@@ -41,6 +41,17 @@ public:
     /// \param[in]  impl    pointer to the allocated impl instance
     void free(mirror_impl *impl);
 
+    /// \brief      allocate a free entry in the mirror table and return its
+    ///             index
+    /// \param[out]  hw_id    pointer where allocated h/w id needs to be stored
+    /// \return SDK_RET_OK on success, failure status code on error
+    sdk_ret_t alloc_hw_id(uint16_t *hw_id);
+
+    /// \brief      free h/w mirror table entry given its index
+    /// \param[in]  hw_id    h/w entry index
+    /// \return SDK_RET_OK on success, failure status code on error
+    sdk_ret_t free_hw_id(uint16_t hw_id);
+
     /// \brief     API to initiate transaction over all the table manamgement
     ///            library instances
     /// \return    SDK_RET_OK on success, failure status code on error

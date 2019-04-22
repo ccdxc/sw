@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
@@ -40,6 +41,30 @@ mirror_impl_state::alloc(void) {
 void
 mirror_impl_state::free(mirror_impl *impl) {
     mirror_impl_slab_->free(impl);
+}
+
+sdk_ret_t
+mirror_impl_state::alloc_hw_id(uint16_t *hw_id) {
+    uint32_t cnt;
+
+    cnt = __builtin_ctz(session_bmap_);
+    if (cnt) {
+        session_bmap_ |= 1 << SDK_MAX(PDS_MAX_MIRROR_SESSION - 1, cnt - 1);
+        *hw_id = cnt - 1;
+        PDS_TRACE_DEBUG("Allocated mirror session hw id %u", *hw_id);
+        return SDK_RET_OK;
+    }
+    return sdk::SDK_RET_NO_RESOURCE;
+}
+
+sdk_ret_t
+mirror_impl_state::free_hw_id(uint16_t hw_id) {
+    if (hw_id > (PDS_MAX_MIRROR_SESSION - 1)) {
+        return SDK_RET_INVALID_ARG;
+    }
+    session_bmap_ &= ~(1 << hw_id);
+    PDS_TRACE_DEBUG("Freed mirror session hw id %u", hw_id);
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

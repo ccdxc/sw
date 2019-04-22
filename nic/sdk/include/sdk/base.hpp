@@ -38,6 +38,12 @@ namespace sdk {
 #define __CACHE_ALIGN__     __ALIGN__(CACHE_LINE_SIZE)
 #define __ASSERT__(x)       assert(x)
 
+#define SDK_MAX(a, b)                                      \
+    ({ __typeof__ (a) _a = (a);                            \
+       __typeof__ (b) _b = (b);                            \
+       _a > _b ? _a : _b;                                  \
+     })
+
 #define SDK_ASSERT_RETURN(cond, rv)                        \
 do {                                                       \
     if (unlikely(!(cond))) {                               \
