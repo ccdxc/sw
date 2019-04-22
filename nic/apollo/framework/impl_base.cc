@@ -17,6 +17,7 @@
 #include "nic/apollo/api/impl/vnic_impl.hpp"
 #include "nic/apollo/api/impl/mapping_impl.hpp"
 #include "nic/apollo/api/impl/route_impl.hpp"
+#include "nic/apollo/api/impl/mirror_impl.hpp"
 #include "nic/apollo/api/impl/security_policy_impl.hpp"
 
 namespace api {
@@ -78,6 +79,9 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
     case IMPL_OBJ_ID_SECURITY_POLICY:
         return security_policy_impl::factory((pds_policy_spec_t *)args);
 
+    case IMPL_OBJ_ID_MIRROR_SESSION:
+        return mirror_impl::factory((pds_mirror_session_spec_t *)args);
+
     default:
         break;
     }
@@ -90,6 +94,9 @@ impl_base::build(impl_obj_id_t obj_id, void *args) {
     case IMPL_OBJ_ID_MAPPING:
         return mapping_impl::build((pds_mapping_key_t *)args);
 
+    case IMPL_OBJ_ID_MIRROR_SESSION:
+        return mirror_impl::build((pds_mirror_session_key_t *)args);
+
     default:
         break;
     }
@@ -101,6 +108,10 @@ impl_base::soft_delete(impl_obj_id_t obj_id, impl_base *impl) {
     switch(obj_id) {
     case IMPL_OBJ_ID_MAPPING:
         mapping_impl::soft_delete((mapping_impl *)impl);
+        break;
+
+    case IMPL_OBJ_ID_MIRROR_SESSION:
+        mirror_impl::soft_delete((mirror_impl *)impl);
         break;
 
     default:
@@ -129,6 +140,9 @@ impl_base::destroy(impl_obj_id_t obj_id, impl_base *impl) {
 
     case IMPL_OBJ_ID_SECURITY_POLICY:
         return security_policy_impl::destroy((security_policy_impl *)impl);
+
+    case IMPL_OBJ_ID_MIRROR_SESSION:
+        return mirror_impl::destroy((mirror_impl *)impl);
 
     default:
         break;

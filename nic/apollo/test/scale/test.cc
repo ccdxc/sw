@@ -981,6 +981,11 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
+   // create mirror sessions
+   ret = create_mirror_sessions();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
 
 #ifndef TEST_GRPC_APP
     g_flow_test_obj->set_cfg_params(g_test_params.dual_stack,

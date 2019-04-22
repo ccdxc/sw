@@ -44,6 +44,12 @@ namespace sdk {
        _a > _b ? _a : _b;                                  \
      })
 
+#define SDK_MIN(a, b)                                      \
+    ({ __typeof__ (a) _a = (a);                            \
+       __typeof__ (b) _b = (b);                            \
+       _a < _b ? _a : _b;                                  \
+     })
+
 #define SDK_ASSERT_RETURN(cond, rv)                        \
 do {                                                       \
     if (unlikely(!(cond))) {                               \

@@ -49,8 +49,8 @@ mirror_impl_state::alloc_hw_id(uint16_t *hw_id) {
 
     cnt = __builtin_ctz(session_bmap_);
     if (cnt) {
-        session_bmap_ |= 1 << SDK_MAX(PDS_MAX_MIRROR_SESSION - 1, cnt - 1);
-        *hw_id = cnt - 1;
+        *hw_id = SDK_MIN(PDS_MAX_MIRROR_SESSION - 1, cnt - 1);
+        session_bmap_ |= (1 << *hw_id);
         PDS_TRACE_DEBUG("Allocated mirror session hw id %u", *hw_id);
         return SDK_RET_OK;
     }

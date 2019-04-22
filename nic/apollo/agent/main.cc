@@ -17,6 +17,7 @@
 #include "nic/apollo/agent/svc/mapping.hpp"
 #include "nic/apollo/agent/svc/port.hpp"
 #include "nic/apollo/agent/svc/policy.hpp"
+#include "nic/apollo/agent/svc/mirror.hpp"
 #include "nic/apollo/agent/svc/debug.hpp"
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"
@@ -34,18 +35,19 @@ std::string g_grpc_server_addr;
 static void
 svc_reg (void)
 {
-    ServerBuilder     *server_builder;
-    BatchSvcImpl      batch_svc;
-    DeviceSvcImpl     device_svc;
-    VPCSvcImpl        vpc_svc;
-    SubnetSvcImpl     subnet_svc;
-    TunnelSvcImpl     tunnel_svc;
-    RouteSvcImpl      route_svc;
-    VnicSvcImpl       vnic_svc;
-    MappingSvcImpl    mapping_svc;
-    DebugSvcImpl      debug_svc;
-    PortSvcImpl       port_svc;
+    ServerBuilder         *server_builder;
+    BatchSvcImpl          batch_svc;
+    DeviceSvcImpl         device_svc;
+    VPCSvcImpl            vpc_svc;
+    SubnetSvcImpl         subnet_svc;
+    TunnelSvcImpl         tunnel_svc;
+    RouteSvcImpl          route_svc;
+    VnicSvcImpl           vnic_svc;
+    MappingSvcImpl        mapping_svc;
+    DebugSvcImpl          debug_svc;
+    PortSvcImpl           port_svc;
     SecurityPolicySvcImpl policy_svc;
+    MirrorSvcImpl         mirror_svc;
 
     // do gRPC initialization
     grpc_init();
@@ -68,6 +70,7 @@ svc_reg (void)
     server_builder->RegisterService(&vnic_svc);
     server_builder->RegisterService(&mapping_svc);
     server_builder->RegisterService(&port_svc);
+    server_builder->RegisterService(&mirror_svc);
     server_builder->RegisterService(&debug_svc);
 
     PDS_TRACE_INFO("gRPC server listening on ... {}",
