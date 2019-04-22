@@ -7,13 +7,26 @@ import (
 	"testing"
 	"time"
 
-	context "golang.org/x/net/context"
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/cluster"
 
+	"golang.org/x/net/context"
+
+	"github.com/pensando/sw/api"
+	evtsapi "github.com/pensando/sw/api/generated/events"
+	_ "github.com/pensando/sw/api/generated/exports/apiserver"
+	_ "github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
+	"github.com/pensando/sw/venice/cmd/types/protos"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
+	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 )
 
 // fake data node rpc server
@@ -455,6 +468,104 @@ func TestMetaNodeRestartSlow(t *testing.T) {
 }
 
 func TestGetMetastoreURLs(t *testing.T) {
-	s := meta.GetMetastoreURLs(&meta.ClusterConfig{})
-	Assert(t, s == nil, "invalid store type didn't fail")
+	// create events recorder
+	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+		Component: globals.Citadel,
+		BackupDir: "/tmp/" + t.Name(),
+		EvtTypes:  evtsapi.GetEventTypes()}, log.WithContext("test", t.Name()))
+	if err != nil {
+		log.Fatalf("failed to create events recorder, err: %v", err)
+	}
+	defer evtsRecorder.Close()
+
+	srv, addr, err := serviceutils.StartAPIServer("localhost:0", t.Name(), log.WithContext("test", t.Name()))
+	AssertOk(t, err, "failed to create API server, err: %v", err)
+	defer srv.Stop()
+
+	// Memkv
+	s := meta.GetMetastoreURLs(context.Background(), &meta.ClusterConfig{MetastoreType: store.KVStoreTypeMemkv})
+	Assert(t, s == nil, "memkv store type didnt work", s)
+
+	// invalid API server
+	r := mock.New()
+	err = r.AddServiceInstance(&types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.APIServer,
+		},
+		Service: globals.APIServer,
+		URL:     "localhost:1234",
+	})
+	AssertOk(t, err, "failed to add service "+globals.APIServer)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		time.AfterFunc(5*time.Second, cancel)
+	}()
+
+	s = meta.GetMetastoreURLs(ctx, &meta.ClusterConfig{MetastoreType: store.KVStoreTypeEtcd, MetaStoreRetry: 2, ResolverClient: r})
+	Assert(t, s == nil, "didn't fail with connect error to "+globals.APIServer, s)
+
+	// no cluster info
+	err = r.AddServiceInstance(&types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.APIServer,
+		},
+		Service: globals.APIServer,
+		URL:     addr,
+	})
+	AssertOk(t, err, "failed to add "+globals.APIServer)
+
+	ctx, cancel = context.WithCancel(context.Background())
+	go func() {
+		time.AfterFunc(5*time.Second, cancel)
+	}()
+
+	s = meta.GetMetastoreURLs(ctx, &meta.ClusterConfig{MetastoreType: store.KVStoreTypeEtcd, MetaStoreRetry: 2, ResolverClient: r})
+	Assert(t, s == nil, "didn't fail with cluster error", s)
+
+	// return kvstore URL
+	apicl, err := apiclient.NewGrpcAPIClient(t.Name(), addr, log.WithContext("test", t.Name()))
+	AssertOk(t, err, "failed to create API client, err: %v", err)
+	defer apicl.Close()
+
+	metaAddr := []string{
+		"node1",
+		"node2",
+	}
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = apicl.ClusterV1().Cluster().Create(context.Background(), &cluster.Cluster{
+			TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
+			ObjectMeta: api.ObjectMeta{
+				Name: "Cluster-1",
+			},
+			Spec: cluster.ClusterSpec{
+				QuorumNodes: metaAddr,
+			},
+		})
+
+		return err == nil, err
+	}, "failed to create cluster object", "2s", "180s")
+
+	ctx, cancel = context.WithCancel(context.Background())
+	go func() {
+		time.AfterFunc(10*time.Second, cancel)
+	}()
+
+	_, err = apicl.ClusterV1().Cluster().List(ctx, &api.ListWatchOptions{})
+	AssertOk(t, err, "failed to find cluster")
+
+	s = meta.GetMetastoreURLs(ctx, &meta.ClusterConfig{MetastoreType: store.KVStoreTypeEtcd, MetaStoreRetry: 2, ResolverClient: r})
+	Assert(t, len(s) == 2, "invalid number of cluster", s)
+	for i := range metaAddr {
+		Assert(t, s[i] == metaAddr[i]+":"+globals.KVStoreClientPort, "expected %s, got %s at %d", metaAddr[i]+":"+globals.KVStoreClientPort, s[i], i)
+
+	}
 }

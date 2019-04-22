@@ -4,23 +4,23 @@ package meta
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"sync"
 	"time"
 
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/balancer"
-	"github.com/pensando/sw/venice/utils/rpckit"
-
-	"github.com/pensando/sw/venice/utils/resolver"
-
-	"crypto/tls"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -131,6 +131,7 @@ type ClusterConfig struct {
 	EnableTstoreMeta    bool               // enable tstore metadata mgr (used for testing purposes)
 	MetastoreType       string             // metadata store type
 	MetaStoreTLSConfig  *tls.Config        // tls config for kv store
+	MetaStoreRetry      int                // number of retries before generating event
 	NumShards           uint32             // number of shards in shardmap
 	DesiredReplicas     uint32             // desired number of replicas
 	NodeTTL             uint64             // TTL for the node keepalives
@@ -163,6 +164,7 @@ const (
 	DefaultNodeTTL             = 30
 	DefaultRetentionPeriod     = 7 * 24 * time.Hour
 	DefaultRetentionPolicyName = "default"
+	DefaultMetaStoreRetry      = 180
 )
 
 // DefaultClusterConfig returns default cluster config params
@@ -180,6 +182,7 @@ func DefaultClusterConfig() *ClusterConfig {
 		EnableTstoreMeta:    true,
 		MetastoreType:       store.KVStoreTypeMemkv,
 		MetaStoreTLSConfig:  metaStoreTLSConfig,
+		MetaStoreRetry:      DefaultMetaStoreRetry,
 		NumShards:           DefaultShardCount,
 		DesiredReplicas:     DefaultReplicaCount,
 		NodeTTL:             DefaultNodeTTL,
@@ -495,7 +498,7 @@ func GetClusterState(cfg *ClusterConfig, clusterType string) (*TscaleCluster, er
 	// connect to kvstore
 	config := store.Config{
 		Type:        cfg.MetastoreType,
-		Servers:     GetMetastoreURLs(cfg),
+		Servers:     GetMetastoreURLs(context.Background(), cfg),
 		Credentials: cfg.MetaStoreTLSConfig,
 		Codec:       runtime.NewJSONCodec(runtime.NewScheme()),
 	}
@@ -520,7 +523,7 @@ func GetClusterState(cfg *ClusterConfig, clusterType string) (*TscaleCluster, er
 func DestroyClusterState(cfg *ClusterConfig, clusterType string) error {
 	config := store.Config{
 		Type:        cfg.MetastoreType,
-		Servers:     GetMetastoreURLs(cfg),
+		Servers:     GetMetastoreURLs(context.Background(), cfg),
 		Credentials: cfg.MetaStoreTLSConfig,
 		Codec:       runtime.NewJSONCodec(runtime.NewScheme()),
 	}
@@ -533,40 +536,44 @@ func DestroyClusterState(cfg *ClusterConfig, clusterType string) error {
 	return kvs.Delete(context.Background(), ClusterMetastoreURL+clusterType, nil)
 }
 
-const apiServerRetry = 300
-
 // GetMetastoreURLs retrieves kv store URL from cluster config
-func GetMetastoreURLs(cfg *ClusterConfig) []string {
-	if cfg.MetastoreType != store.KVStoreTypeEtcd {
-		log.Errorf("invalid meta store type %v", cfg.MetastoreType)
+func GetMetastoreURLs(ctx context.Context, cfg *ClusterConfig) []string {
+	if cfg.MetastoreType != store.KVStoreTypeEtcd { // for tests
+		log.Infof("get URL for meta store type %v", cfg.MetastoreType)
 		return nil
 	}
 
-	for i := 0; i < apiServerRetry; i++ {
-		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(globals.Citadel, globals.APIServer, log.WithContext("pkg", globals.Citadel+"-grpc"), rpckit.WithBalancer(balancer.New(cfg.ResolverClient)))
-		if err == nil {
-			defer apicl.Close()
-			log.Infof("connected to %s", globals.APIServer)
-			cluster, err := apicl.ClusterV1().Cluster().List(context.Background(), &api.ListWatchOptions{})
-			if err == nil {
-				// pick the first entry, singleton object
-				for _, c := range cluster {
-					var kvstore []string
-					for _, q := range c.Spec.QuorumNodes {
-						kvstore = append(kvstore, q+":"+globals.KVStoreClientPort)
-					}
-					log.Infof("kvstore : %+v", kvstore)
-					return kvstore
-				}
+	for ctx.Err() == nil {
+		for i := 0; i < cfg.MetaStoreRetry && ctx.Err() == nil; i++ {
+			// create a grpc client
+			apicl, err := apiclient.NewGrpcAPIClient(globals.Citadel, globals.APIServer, log.WithContext("pkg", globals.Citadel+"-grpc"), rpckit.WithBalancer(balancer.New(cfg.ResolverClient)))
+			if err != nil {
+				log.Errorf("failed to connect to %s, %s", globals.APIServer, err)
+				time.Sleep(time.Second)
+				continue
 			}
-			log.Errorf("failed to get cluster info %s", err)
-		} else {
-			log.Errorf("failed to connect to %s, %s", globals.APIServer, err)
-		}
-		time.Sleep(time.Second)
-	}
-	log.Fatalf("failed to connect to %v", globals.APIServer)
+			log.Infof("connected to %s", globals.APIServer)
 
+			cluster, err := apicl.ClusterV1().Cluster().List(context.Background(), &api.ListWatchOptions{})
+			if err != nil {
+				log.Errorf("failed to get cluster info %s", err)
+				time.Sleep(time.Second)
+				continue
+			}
+
+			// pick the first entry, singleton object
+			for _, c := range cluster {
+				var kvstore []string
+				for _, q := range c.Spec.QuorumNodes {
+					kvstore = append(kvstore, q+":"+globals.KVStoreClientPort)
+				}
+				log.Infof("kvstore : %+v", kvstore)
+				return kvstore
+			}
+			time.Sleep(time.Second)
+		}
+		// log event
+		recorder.Event(events.ServiceUnresponsive, events.SeverityLevel_WARNING, globals.Citadel+" service failed to connect to "+globals.APIServer, nil)
+	}
 	return nil
 }

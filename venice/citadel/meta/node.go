@@ -190,7 +190,7 @@ func (l *Node) runElectionLoop(ctx context.Context) {
 	defer l.waitGrp.Done()
 	// run election loop forever
 	for {
-		l.kvsConfig.Servers = GetMetastoreURLs(l.clusterCfg)
+		l.kvsConfig.Servers = GetMetastoreURLs(ctx, l.clusterCfg)
 		l.runElection(ctx)
 
 		// check if we are stopped
