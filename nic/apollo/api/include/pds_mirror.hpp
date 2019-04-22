@@ -29,8 +29,8 @@ typedef struct pds_mirror_session_key_s {
 
 ///< \brief    RSPAN configuration
 typedef struct pds_rspan_spec_s {
-  pds_ifindex_t interface;    ///< outgoing interface
-  pds_encap_t encap;          ///< encap details
+    pds_ifindex_t interface;    ///< outgoing interface
+    pds_encap_t encap;          ///< encap details
 } __PACK__ pds_rspan_spec_t;
 
 ///< \brief    ERSPAN configuration

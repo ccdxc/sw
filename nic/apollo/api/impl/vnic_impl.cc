@@ -175,6 +175,11 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         egress_vnic_data.egress_local_vnic_info_action.src_slot_id =
             spec->fabric_encap.val.vnid;
     }
+    if (spec->rx_mirror_session_bmap) {
+        egress_vnic_data.egress_local_vnic_info_action.mirror_en = TRUE;
+        egress_vnic_data.egress_local_vnic_info_action.mirror_session =
+            spec->rx_mirror_session_bmap;
+    }
     ret = vnic_impl_db()->egress_local_vnic_info_tbl()->insert_atid(&egress_vnic_data,
                                                                     hw_id_);
     if (ret != SDK_RET_OK) {

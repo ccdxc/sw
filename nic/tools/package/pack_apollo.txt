@@ -104,6 +104,7 @@ nic/apollo/test/scale/scale_cfg.json                              /nic/conf/
 nic/apollo/test/scale/scale_cfg_v4_only.json                      /nic/conf/
 nic/apollo/test/scale/scale_cfg_p1.json                           /nic/conf/
 nic/apollo/test/scale/scale_cfg_1vpc.json                         /nic/conf/
+nic/apollo/test/scale/scale_cfg_l2l.json                          /nic/conf/
 nic/apollo/test/scale/run_scale_test_hw.sh                        /nic/tools/
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_flow_test                 /nic/bin/
 nic/build/$ARCH/$PIPELINE/lib/libpdstestutils.so                  /nic/lib/

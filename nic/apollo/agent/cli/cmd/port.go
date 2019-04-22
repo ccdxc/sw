@@ -198,8 +198,8 @@ func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 func printPortStatusHeader() {
 	hdrLine := strings.Repeat("-", 46)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-12s%-10s%-14s\n",
-		"PortNum", "AdminState", "OperState", "Transceiver")
+	fmt.Printf("%-10s%-10s%-12s%-10s%-14s\n",
+		"Port", "Interface Id", "AdminState", "OperState", "Transceiver")
 	fmt.Println(hdrLine)
 }
 
@@ -229,8 +229,9 @@ func printPortStatus(resp *pds.Port) {
 		xcvrStr = xcvrStateStr
 	}
 
-	fmt.Printf("%-10s%-12s%-10s%-14s\n",
+	fmt.Printf("%-10s%-10s%-12s%-10s%-14s\n",
 		ifIndexToPortIdStr(resp.GetSpec().GetPortId()),
+		resp.GetSpec().GetPortId(),
 		adminStateStr, operStatusStr,
 		xcvrStr)
 }
