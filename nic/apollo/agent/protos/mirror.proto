@@ -26,20 +26,22 @@ message RSpanSpec {
 
 // ERSpanSpec is the configuration specification for ERSPAN
 message ERSpanSpec {
+  // VPC id
+  uint32          VPCId  = 1;
   // IP address of the ERSPAN destination
-  types.IPAddress DstIP  = 1;
+  types.IPAddress DstIP  = 2;
   // Source IP address to be used for ERSPAN
-  types.IPAddress SrcIP  = 2;
+  types.IPAddress SrcIP  = 3;
   // DSCP value to use in the packet
-  uint32          Dscp   = 3;
+  uint32          Dscp   = 4;
   // Span ID to use in the packet
-  uint32          SpanId = 4;
+  uint32          SpanId = 5;
 }
 
 // MirrorPolicySpec captures configuration of Mirror session
 message MirrorPolicySpec {
   // unique identifier of mirror policy
-  uint32 Id               = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32 Id               = 1 [(gogoproto.moretags) = "meta:mandatory,range:1-7"];
   // maximum  bytes of packet to mirror
   uint32 SnapLen          = 2;
   oneof MirrorDst {

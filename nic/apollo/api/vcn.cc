@@ -20,6 +20,7 @@ namespace api {
 
 vcn_entry::vcn_entry() {
     // SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+    type_ = PDS_VCN_TYPE_NONE;
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
 }
@@ -55,15 +56,19 @@ vcn_entry::init_config(api_ctxt_t *api_ctxt) {
                     spec->key.id, spec->type, ipv4pfx2str(&spec->v4_pfx),
                     ippfx2str(&spec->v6_pfx));
     memcpy(&this->key_, &spec->key, sizeof(pds_vcn_key_t));
+    this->type_ = spec->type;
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 vcn_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
-    if (vcn_db()->vcn_idxr()->alloc((uint32_t *)&this->hw_id_) !=
+    uint32_t idx;
+
+    if (vcn_db()->vcn_idxr()->alloc((uint32_t *)&idx) !=
         sdk::lib::indexer::SUCCESS) {
         return sdk::SDK_RET_NO_RESOURCE;
     }
+    hw_id_ = idx & 0xFFFF;
     return SDK_RET_OK;
 }
 

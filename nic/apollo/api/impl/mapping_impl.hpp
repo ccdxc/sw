@@ -143,6 +143,18 @@ public:
     sdk_ret_t read_hw(pds_mapping_key_t *key,
                       pds_mapping_info_t *info);
 
+    /**
+     * @brief return true if mapping is local, false otherwise
+     * @return   true or false
+     */
+    bool is_local(void) const { return is_local_; }
+
+    /**
+     * @brief return the TEP_TX table index for a given mapping
+     * @return   TEP hw index or PDS_TEP_IMPL_INVALID_INDEX
+     */
+    static uint16_t tep_idx(pds_mapping_key_t *key);
+
 private:
     /**< @brief    constructor */
     mapping_impl() {

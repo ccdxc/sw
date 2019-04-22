@@ -8,7 +8,6 @@
 #include "lib/mmgr/mmgr.hpp"
 #include "lib/slab/slab.hpp"
 
-
 #define SDK_DEBUG 0
 
 namespace sdk {
@@ -86,9 +85,8 @@ slab::factory(const char *name, slab_id_t slab_id, uint32_t elem_sz,
 
 #if SDK_DEBUG
     SDK_TRACE_DEBUG("slab name %s, slab id %u, elem sz %u, "
-                    "elems per block %u, size %u",
-                    name, slab_id, elem_sz, elems_per_block,
-                    sizeof(slab));
+                    "elems per block %u", name, slab_id, elem_sz,
+                    elems_per_block);
 #endif
 
     if (mmgr) {
@@ -173,7 +171,7 @@ slab::alloc_block_(void)
     uint8_t         *ptr;
 
 #if SDK_DEBUG
-    SDK_TRACE_DEBUG("Allocating block from slab %s, id %u", name_, slab_id_);
+    SDK_TRACE_DEBUG("Allocating block for slab %s", name_);
 #endif
 
     if (mmgr_) {
@@ -183,7 +181,7 @@ slab::alloc_block_(void)
                                            raw_block_sz_);
     }
     if (block == NULL) {
-        SDK_TRACE_ERR("Failed to allocate block for slab %s, id %u",
+        SDK_TRACE_ERR("Failed to allocate block for slab %s",
                       name_, slab_id_);
         return NULL;
     }
@@ -217,6 +215,8 @@ slab::alloc(void)
     void            *elem = NULL;
     slab_block_t    *block;
     slab_emeta_t    *emeta;
+
+    //return calloc(1, this->elem_sz_);
 
     if (thread_safe_) {
         SDK_SPINLOCK_LOCK(&slock_);
@@ -262,8 +262,8 @@ slab::alloc(void)
     }
 
 #if SDK_DEBUG
-    SDK_TRACE_DEBUG("Alloc called for slab %s, id %u ret elem 0x%x "
-                    "block 0x%x", name_, slab_id_, elem, block);
+    SDK_TRACE_DEBUG("Alloc called for slab %s, ret elem 0x%x, "
+                    "block 0x%x", name_, elem, block);
 #endif
     return elem;
 
@@ -300,11 +300,6 @@ slab::free_(void *elem)
         block = block->next_;
     }
 
-#if SDK_DEBUG
-    SDK_TRACE_DEBUG("Free called for slab %s, id %u elem 0x%x block 0x%x",
-                    name_, slab_id_, elem, block);
-#endif
-
     if (block) {
         *(void **)elem = block->free_head_;
         block->free_head_ = emeta;
@@ -329,7 +324,7 @@ slab::free_(void *elem)
             }
             this->num_blocks_--;
 #if SDK_DEBUG
-            SDK_TRACE_DEBUG("Free block to slab %s, id %u", name_, slab_id_);
+            SDK_TRACE_DEBUG("Free block to slab %s", name_);
 #endif
         }
     } else {
@@ -344,6 +339,12 @@ slab::free_(void *elem)
 void
 slab::free(void *elem)
 {
+#if SDK_DEBUG
+    SDK_TRACE_DEBUG("Free called for slab %s, elem 0x%x", name_, elem);
+#endif
+
+    //return ::free(elem);
+
     if (thread_safe_) {
         SDK_SPINLOCK_LOCK(&slock_);
     }

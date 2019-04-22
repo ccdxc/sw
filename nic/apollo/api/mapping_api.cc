@@ -141,7 +141,7 @@ pds_remote_mapping_create (pds_remote_mapping_spec_t *remote_spec)
 }
 
 //----------------------------------------------------------------------------
-// Mapping read routines
+// mapping read routines
 //----------------------------------------------------------------------------
 
 sdk_ret_t
@@ -176,11 +176,13 @@ pds_remote_mapping_read (pds_mapping_key_t *key,
     api::impl::mapping_impl *impl;
     sdk_ret_t rv = SDK_RET_OK;
 
-    if (key == NULL || remote_info == NULL)
+    if (key == NULL || remote_info == NULL) {
         return SDK_RET_INVALID_ARG;
+    }
 
-    if ((entry = pds_mapping_entry_find(key)) == NULL)
+    if ((entry = pds_mapping_entry_find(key)) == NULL) {
         return SDK_RET_ENTRY_NOT_FOUND;
+    }
 
     info.spec.key = *key;
     impl = dynamic_cast<api::impl::mapping_impl*>(entry->impl());

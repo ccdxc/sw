@@ -895,18 +895,17 @@ mapping_impl::read_local_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec) {
     local_ip_mapping_appdata_t  local_ip_mapping_data = { 0 };
     sdk_table_api_params_t      tparams = { 0 };
 
-    // First read the remote mapping. It can provide all the info except vnic-id
+    // first read the remote mapping, it can provide all the info except vnic id
     ret = read_remote_mapping_(vcn, spec);
     if (ret != SDK_RET_OK) {
         return ret;
     }
 
-    // TODO: Change this logic to read vnic_hw_id from hw table
-    // Read local only if user passes the vnic-id.
+    // TODO: change this logic to read vnic_hw_id from hw table
+    // read local only if user passes the vnic-id.
     if (spec->vnic.id == 0) {
         return SDK_RET_OK;
     }
-    // We can  make sure the entry exist or not. All the info is filled by remote
     vnic_impl_obj =
         (vnic_impl *)vnic_db()->vnic_find(&spec->vnic)->impl();
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
@@ -1027,6 +1026,42 @@ mapping_impl::read_hw(pds_mapping_key_t *key,
         }
     }
     return ret;
+}
+uint16_t
+mapping_impl::tep_idx(pds_mapping_key_t *key) {
+    sdk_ret_t ret;
+    vcn_entry *vcn;
+    sdk_table_api_params_t api_params;
+    nexthop_tx_actiondata_t nh_tx_data;
+    remote_vnic_mapping_tx_swkey_t remote_vnic_mapping_tx_key;
+    remote_vnic_mapping_tx_appdata_t remote_vnic_mapping_tx_data;
+
+    vcn = vcn_db()->find(&key->vcn);
+    if (unlikely(vcn == NULL)) {
+        return PDS_TEP_IMPL_INVALID_INDEX;
+    }
+    PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_SWKEY(&remote_vnic_mapping_tx_key,
+                                               vcn->hw_id(), &key->ip_addr,
+                                               true);
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &remote_vnic_mapping_tx_key,
+                                   &remote_vnic_mapping_tx_data,
+                                   REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID,
+                                   sdk::table::handle_t::null());
+    ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->get(&api_params);
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to find mapping (%u, %s) in "
+                      "REMOTE_VNIC_MAPPING_TX table, err %u",
+                      key->vcn.id, ipaddr2str(&key->ip_addr), ret);
+        return PDS_TEP_IMPL_INVALID_INDEX;
+    }
+    ret = tep_impl_db()->nh_tx_tbl()->retrieve(
+              remote_vnic_mapping_tx_data.nexthop_index, &nh_tx_data);
+    if (unlikely(ret != SDK_RET_OK)) {
+        PDS_TRACE_ERR("Failed to read NH_TX table at index %u, err %u",
+                      remote_vnic_mapping_tx_data.nexthop_index, ret);
+        return PDS_TEP_IMPL_INVALID_INDEX;
+    }
+    return nh_tx_data.action_u.nexthop_tx_nexthop_info.tep_index;
 }
 
 /// \@}    // end of PDS_MAPPING_IMPL

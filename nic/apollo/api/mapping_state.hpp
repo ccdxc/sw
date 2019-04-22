@@ -50,10 +50,11 @@ public:
 #if 0
     /**
      * @brief     lookup a mapping in database given the key
-     * @param[in] mapping_key mapping key
+     * @param[in] key    mapping key
      */
-    mapping_entry *mapping_find(pds_mapping_key_t *mapping_key) const;
+    mapping_entry *find(pds_mapping_key_t *key) const;
 #endif
+
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:

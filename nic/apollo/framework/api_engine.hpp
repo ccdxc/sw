@@ -198,9 +198,11 @@ private:
     /// we are here
     ///
     /// \param[in] api_obj API object being processed
-    /// \param[in] obj_ctxt Transient information maintained to process the API
+    /// \param[in] it    iterator position of api obj to be deleted
+    /// \param[in] obj_ctxt    transient information maintained to process API
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
+    sdk_ret_t rollback_config_(dirty_obj_list_t::iterator it,
+                               api_base *api_obj, obj_ctxt_t *obj_ctxt);
 
     /// \brief Pre-process all API calls in a given batch
     /// Form a dirty list of effected obejcts as a result

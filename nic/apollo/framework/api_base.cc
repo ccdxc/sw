@@ -22,6 +22,7 @@ api_base::factory(api_ctxt_t *api_ctxt) {
         return device_entry::factory(&api_ctxt->api_params->device_spec);
 
     case OBJ_ID_VCN:
+        PDS_TRACE_DEBUG("allocating from vcn slab");
         return vcn_entry::factory(&api_ctxt->api_params->vcn_spec);
 
     case OBJ_ID_SUBNET:
@@ -42,6 +43,9 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_POLICY:
         return policy::factory(&api_ctxt->api_params->policy_spec);
 
+    case OBJ_ID_MIRROR_SESSION:
+        return mirror_session::factory(&api_ctxt->api_params->mirror_session_spec);
+
     default:
         break;
     }
@@ -59,6 +63,14 @@ api_base::build(api_ctxt_t *api_ctxt) {
         }
         return mapping_entry::build(&api_ctxt->api_params->mapping_spec.key);
 
+    case OBJ_ID_MIRROR_SESSION:
+        // mirror is a stateless object, so we need to construct the object
+        // from the datapath tables
+        if (api_ctxt->api_op == API_OP_DELETE) {
+            return mirror_session::build(&api_ctxt->api_params->mirror_session_key);
+        }
+        return  mirror_session::build(&api_ctxt->api_params->mirror_session_spec.key);
+
     default:
         break;
     }
@@ -70,6 +82,10 @@ api_base::soft_delete(obj_id_t obj_id, api_base *api_obj) {
     switch(obj_id) {
     case OBJ_ID_MAPPING:
         mapping_entry::soft_delete((mapping_entry *)api_obj);
+        break;
+
+    case OBJ_ID_MIRROR_SESSION:
+        mirror_session::soft_delete((mirror_session *)api_obj);
         break;
 
     default:
@@ -108,9 +124,6 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         }
         return vnic_db()->vnic_find(&api_ctxt->api_params->vnic_spec.key);
 
-    case OBJ_ID_MAPPING:
-        return NULL;
-
     case OBJ_ID_ROUTE_TABLE:
         if (api_ctxt->api_op == API_OP_DELETE) {
             return route_table_db()->find(&api_ctxt->api_params->route_table_key);
@@ -123,6 +136,10 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
         }
         return policy_db()->policy_find(&api_ctxt->api_params->policy_spec.key);
 
+    case OBJ_ID_MAPPING:
+    case OBJ_ID_MIRROR_SESSION:
+        return NULL;
+
     default:
         break;
     }
@@ -133,6 +150,7 @@ bool
 api_base::stateless(obj_id_t obj_id) {
     switch (obj_id) {
     case OBJ_ID_MAPPING:
+    case OBJ_ID_MIRROR_SESSION:
         return true;
 
     default:

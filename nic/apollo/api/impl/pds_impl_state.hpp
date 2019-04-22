@@ -7,7 +7,7 @@
  *          impl layer
  */
 
-#if !defined (__PDS_IMPL_STATE_HPP__)
+#ifndef __PDS_IMPL_STATE_HPP__
 #define __PDS_IMPL_STATE_HPP__
 
 #include "nic/sdk/lib/slab/slab.hpp"
@@ -19,6 +19,7 @@
 #include "nic/apollo/api/impl/route_impl_state.hpp"
 #include "nic/apollo/api/impl/security_policy_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
+#include "nic/apollo/api/impl/mirror_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -26,6 +27,7 @@ namespace impl {
 enum {
     PDS_SLAB_ID_IMPL_MIN = 8192,
     PDS_SLAB_ID_MAPPING_IMPL,
+    PDS_SLAB_ID_MIRROR_IMPL,
 };
 
 /**
@@ -49,6 +51,9 @@ public:
     security_policy_impl_state *security_policy_impl_db(void) {
         return security_policy_impl_db_;
     }
+    mirror_impl_state *mirror_impl_db(void) {
+        return mirror_impl_db_;
+    }
 
 private:
     apollo_impl_state             *apollo_impl_db_;
@@ -58,6 +63,7 @@ private:
     mapping_impl_state            *mapping_impl_db_;
     route_table_impl_state        *route_table_impl_db_;
     security_policy_impl_state    *security_policy_impl_db_;
+    mirror_impl_state             *mirror_impl_db_;
 };
 extern pds_impl_state g_pds_impl_state;
 
@@ -98,9 +104,15 @@ route_table_impl_db (void)
 }
 
 static inline security_policy_impl_state *
-security_policy_impl_db(void)
+security_policy_impl_db (void)
 {
     return g_pds_impl_state.security_policy_impl_db();
+}
+
+static inline mirror_impl_state *
+mirror_impl_db (void)
+{
+    return g_pds_impl_state.mirror_impl_db();
 }
 
 /** * @} */    // end of PDS_IMPL_STATE

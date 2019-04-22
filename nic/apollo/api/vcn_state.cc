@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/vcn_state.hpp"
 
 namespace api {

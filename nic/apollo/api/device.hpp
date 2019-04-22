@@ -152,13 +152,27 @@ public:
     }
 
     /**
-     * @brief     return impl instance of this tep object
+     * @brief     return impl instance of this device object
      * @return    impl instance of the tep object
      */
     impl_base *impl(void) { return impl_; }
 
+    /**
+     * @brief     return the device's IP address
+     * @return    IP address of the device
+     */
     ipv4_addr_t ip_addr(void) const { return ip_addr_; }
-    mac_addr_t& mac_addr(void) { return mac_addr_; }
+
+    /**
+     * @brief     return the device's MAC addresss
+     * @return    MAC address of the device
+     */
+    mac_addr_t& mac(void) { return mac_addr_; }
+
+    /**
+     * @brief     return the device's gateway IP address
+     * @return    gateway IP address of the device
+     */
     ipv4_addr_t gw_ip_addr(void) const { return gw_ip_addr_; }
 
 private:

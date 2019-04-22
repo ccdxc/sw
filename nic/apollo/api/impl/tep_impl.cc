@@ -24,8 +24,6 @@ namespace impl {
 #define tep_tx_mpls_udp_action    action_u.tep_tx_mpls_udp_tep_tx
 #define tep_tx_vxlan_action       action_u.tep_tx_vxlan_tep_tx
 #define nh_tx_action              action_u.nexthop_tx_nexthop_info
-// TODO: fix this when fte plugin is available
-#define PDS_REMOTE_TEP_MAC        0x0E0D0A0B0200
 
 tep_impl *
 tep_impl::factory(pds_tep_spec_t *pds_tep) {
@@ -107,16 +105,15 @@ tep_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     case PDS_ENCAP_TYPE_MPLSoUDP:
         tep_tx_data.action_id = TEP_TX_MPLS_UDP_TEP_TX_ID;
         tep_tx_data.tep_tx_mpls_udp_action.dipo = tep_spec->key.ip_addr;
-        MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_mpls_udp_action.dmac,
-                           PDS_REMOTE_TEP_MAC);
+        memcpy(tep_tx_data.tep_tx_mpls_udp_action.dmac, mac_, ETH_ADDR_LEN);
         break;
 
     case PDS_ENCAP_TYPE_VXLAN:
         tep_tx_data.action_id = TEP_TX_VXLAN_TEP_TX_ID;
         tep_tx_data.tep_tx_vxlan_action.dipo = tep_spec->key.ip_addr;
-        MAC_UINT64_TO_ADDR(tep_tx_data.tep_tx_vxlan_action.dmac,
-                           PDS_REMOTE_TEP_MAC);
+        memcpy(tep_tx_data.tep_tx_vxlan_action.dmac, mac_, ETH_ADDR_LEN);
         break;
+
     default:
         ret = SDK_RET_INVALID_ARG;
         break;

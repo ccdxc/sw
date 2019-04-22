@@ -25,7 +25,7 @@ mapping_entry::mapping_entry() {
 }
 
 mapping_entry *
-mapping_entry::factory(pds_mapping_spec_t *pds_mapping) {
+mapping_entry::factory(pds_mapping_spec_t *spec) {
     mapping_entry *mapping;
 
     // create mapping entry with defaults, if any
@@ -33,7 +33,7 @@ mapping_entry::factory(pds_mapping_spec_t *pds_mapping) {
     if (mapping) {
         new (mapping) mapping_entry();
         mapping->impl_ =
-            impl_base::factory(impl::IMPL_OBJ_ID_MAPPING, pds_mapping);
+            impl_base::factory(impl::IMPL_OBJ_ID_MAPPING, spec);
         if (mapping->impl_ == NULL) {
             mapping_entry::destroy(mapping);
             return NULL;

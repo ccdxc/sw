@@ -1,45 +1,63 @@
-//
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// vcn entry handling
-///
+/// This file handles mirror session
+
 //----------------------------------------------------------------------------
 
-#ifndef __API_VCN_HPP__
-#define __API_VCN_HPP__
+#ifndef __API_MIRROR_HPP__
+#define __API_MIRROR_HPP__
 
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
-#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/framework/impl_base.hpp"
+#include "nic/apollo/api/include/pds_mirror.hpp"
 
 namespace api {
 
 // forward declaration
-class vcn_state;
+// class mirror_state;
 
-/// \defgroup PDS_VCN_ENTRY - vcn entry functionality
-/// \ingroup PDS_VCN
+/// \defgroup PDS_MIRROR_SESSION - mirror session functionality
 /// @{
 
-/// \brief    vcn entry
-class vcn_entry : public api_base {
+/// \brief    mirror session
+class mirror_session : public api_base {
 public:
-    /// \brief          factory method to allocate and initialize a vcn entry
-    /// \param[in]      pds_vcn    vcn information
-    /// \return         new instance of vcn or NULL, in case of error
-    static vcn_entry *factory(pds_vcn_spec_t *pds_vcn);
+    /// \brief          factory method to allocate and initialize a mirror
+    ///                 session entry
+    /// \param[in]      spec    mirror session information
+    /// \return         new instance of mirror or NULL, in case of error
+    static mirror_session *factory(pds_mirror_session_spec_t *spec);
 
-    /// \brief          release all the s/w state associate with the given vcn,
-    ///                 if any, and free the memory
-    /// \param[in]      vcn     vcn to be freed
+    /// \brief          release all the s/w state associate with the given
+    ///                 mirror session, if any, and free the memory
+    /// \param[in]      ms    mirror session to be freed
     /// \NOTE: h/w entries should have been cleaned up (by calling
     ///        impl->cleanup_hw() before calling this
-    static void destroy(vcn_entry *vcn);
+    static void destroy(mirror_session *ms);
 
-    /// \brief          initialize vcn entry with the given config
+    ///
+    /// \brief    build object given its key from the (sw and/or hw state we
+    ///           have) and return an instance of the object (this is useful for
+    ///           stateless objects to be operated on by framework during DELETE
+    ///           or UPDATE operations)
+    /// \param[in] key    key of object instance of interest
+    static mirror_session *build(pds_mirror_session_key_t *key);
+
+    ///
+    /// \brief    free a stateless entry's temporary s/w only resources like
+    ///           memory etc., for a stateless entry calling destroy() will
+    ///           remove resources from h/w, which can't be done during ADD/UPD
+    ///           etc. operations esp. when object is constructed on the fly
+    /// \param[in] ms    mirror session
+    ///
+    static void soft_delete(mirror_session *ms);
+
+    /// \brief          initialize mirror session with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
@@ -51,28 +69,22 @@ public:
     virtual sdk_ret_t reserve_resources(api_base *orig_obj,
                                         obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief          free h/w resources used by this object, if any
-    /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t release_resources(void) override;
-
     /// \brief          program all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override {
-        // no programming is done for this object, hence this is a no-op
-        return SDK_RET_OK;
-    }
+    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief          free h/w resources used by this object, if any
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t release_resources(void) override;
 
     /// \brief          cleanup all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
     ///                 with latest epoch#
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
-        // no programming is done for this object, hence this is a no-op
-        return SDK_RET_OK;
-    }
+    virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          update all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
@@ -87,17 +99,16 @@ public:
     ///                 stage 0 tables, if any
     /// \param[in]      epoch       epoch being activated
     /// \param[in]      api_op      api operation
-    /// \param          obj_ctxt    transient state associated with this API
+    /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief          add given vcn to the database
+    /// \brief          add given mirror session to the database
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_to_db(void) override;
 
-    /// \brief          delete given vcn from the database
-    ///
+    /// \brief          delete given mirror session from the database
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t del_from_db(void) override;
 
@@ -114,72 +125,67 @@ public:
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "vcn-" + std::to_string(key_.id);
+        return "ms-" + std::to_string(key_.id);
     }
 
-    /// \brief          helper function to get key given vcn entry
-    /// \param          entry    pointer to vcn instance
-    /// \return         pointer to the vcn instance's key
-    static void *vcn_key_func_get(void *entry) {
-        vcn_entry *vcn = (vcn_entry *)entry;
-        return (void *)&(vcn->key_);
+    /// \brief          helper function to get key given mirror session entry
+    /// \param[in]      entry    pointer to mirror session instance
+    /// \return         pointer to the mirror session instance's key
+    static void *mirror_session_key_func_get(void *entry) {
+        mirror_session *mirror_session_entry = (mirror_session *)entry;
+        return (void *)&(mirror_session_entry->key_);
     }
 
-    /// \brief          helper function to compute hash value for given vcn id
-    /// \param[in]      key        vcn's key
+    /// \brief          helper function to compute hash value for given
+    ///                 mirror session key
+    /// \param[in]      key        mirror session's key
     /// \param[in]      ht_size    hash table size
     /// \return         hash value
-    static uint32_t vcn_hash_func_compute(void *key, uint32_t ht_size) {
-        return hash_algo::fnv_hash(key, sizeof(pds_vcn_key_t)) % ht_size;
+    static uint32_t mirror_session_hash_func_compute(void *key,
+                                                     uint32_t ht_size) {
+        return hash_algo::fnv_hash(key,
+                                   sizeof(pds_mirror_session_key_t)) % ht_size;
     }
 
-    /// \brief          helper function to compare two vcn keys
-    /// \param[in]      key1        pointer to vcn's key
-    /// \param[in]      key2        pointer to vcn's key
+    /// \brief          helper function to compare two mirror session keys
+    /// \param[in]      key1        pointer to mirror session's key
+    /// \param[in]      key2        pointer to mirror sessions's key
     /// \return         0 if keys are same or else non-zero value
-    static bool vcn_key_func_compare(void *key1, void *key2) {
+    static bool mirror_session_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(pds_vcn_key_t))) {
+        if (!memcmp(key1, key2, sizeof(pds_mirror_session_key_t))) {
             return true;
         }
+
         return false;
     }
 
-    /// \brief          return the type of VCN
-    /// \return         PDS_VCN_TYPE_SUBSTRATE or PDS_VCN_TYPE_TENANT
-    pds_vcn_type_t type(void) const { return type_; }
-
-    /// \brief          return h/w index for this vcn
-    /// \return         h/w table index for this vcn
-    uint16_t hw_id(void) { return hw_id_; }
-
+    pds_mirror_session_key_t key(void) const { return key_; }
 private:
     /// \brief constructor
-    vcn_entry();
+    mirror_session();
 
     /// \brief destructor
-    ~vcn_entry();
+    ~mirror_session();
 
     /// \brief    free h/w resources used by this object, if any
     ///           (this API is invoked during object deletes)
-    /// \return   SDK_RET_OK on success, failure status code on error
+    /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_vcn_key_t key_;        ///< vcn key
-    pds_vcn_type_t type_;      ///< vcn type
-    ht_ctxt_t ht_ctxt_;        ///< hash table context
+    pds_mirror_session_key_t    key_;        ///< mirror session key
+    ht_ctxt_t                   ht_ctxt_;    ///< hash table context
+    impl_base                   *impl_;      ///< impl object instance
 
-    // P4 datapath specific state
-    uint16_t hw_id_;           ///< hardware id
-
-    friend class vcn_state;    ///< vcn_state is friend of vcn_entry
+    ///< mirror_session_state is friend of mirror_session
+    friend class mirror_session_state;
 } __PACK__;
 
-/// \@}    // end of PDS_VCN_ENTRY
+/// \@}    // end of MIRROR_SESSION_ENTRY
 
 }    // namespace api
 
-using api::vcn_entry;
+using api::mirror_session;
 
-#endif    // __API_VCN_HPP__
+#endif    // __API_MIRROR_HPP__

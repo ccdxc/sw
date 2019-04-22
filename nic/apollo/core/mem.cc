@@ -68,6 +68,10 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
         policy::destroy((policy *)elem);
         break;
 
+    case PDS_SLAB_ID_MIRROR_SESSION:
+        mirror_session::destroy((mirror_session *)elem);
+        break;
+
     default:
         PDS_TRACE_ERR("Unknown slab id {}", slab_id);
         SDK_ASSERT(false);
@@ -93,7 +97,6 @@ delay_delete_to_slab (uint32_t slab_id, void *elem)
 {
     void    *timer_ctxt;
 
-    PDS_TRACE_VERBOSE("slab %u, elem %p", slab_id, elem);
     if (slab_id >= PDS_SLAB_ID_MAX) {
         PDS_TRACE_ERR("Unexpected slab id {}", slab_id);
         return sdk::SDK_RET_INVALID_ARG;

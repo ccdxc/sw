@@ -1,55 +1,49 @@
 /**
- * Copyright (c) 2018 Pensando Systems, Inc.
+ * Copyright (c) 2019 Pensando Systems, Inc.
  *
- * @file    tep_impl.hpp
+ * @file
  *
- * @brief   TEP implementation in the p4/hw
+ * @brief   mirror feature implementation in the p4/hw
  */
-#ifndef __TEP_IMPL_HPP__
-#define __TEP_IMPL_HPP__
+#ifndef __MIRROR_IMPL_HPP__
+#define __MIRROR_IMPL_HPP__
 
-#include "nic/sdk/include/sdk/eth.hpp"
-#include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
-#include "nic/apollo/api/include/pds_tep.hpp"
-#include "nic/apollo/p4/include/defines.h"
+#include "nic/apollo/api/include/pds_mirror.hpp"
+#include "nic/apollo/api/mirror.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
-
-// TODO: fix this when fte plugin is available
-#define PDS_REMOTE_TEP_MAC            0x0E0D0A0B0200
-#define PDS_TEP_IMPL_INVALID_INDEX    0xFFFF
 
 namespace api {
 namespace impl {
 
 /**
- * @defgroup PDS_TEP_IMPL - tep functionality
- * @ingroup PDS_TEP
+ * @defgroup PDS_MIRROR_IMPL - mirror functionality
+ * @ingroup PDS_MIRROR
  * @{
  */
 
 /**
- * @brief    TEP implementation
+ * @brief    mirror implementation
  */
-class tep_impl : public impl_base {
+class mirror_impl : public impl_base {
 public:
     /**
-     * @brief    factory method to allocate & initialize tep impl instance
-     * @param[in] pds_tep    tep information
-     * @return    new instance of tep or NULL, in case of error
+     * @brief    factory method to allocate & initialize mirror impl instance
+     * @param[in] spec    mirror session information
+     * @return    new instance of miror session or NULL, in case of error
      */
-    static tep_impl *factory(pds_tep_spec_t *pds_tep);
+    static mirror_impl *factory(pds_mirror_session_spec_t *spec);
 
     /**
-     * @brief    release all the s/w state associated with the given tep,
-     *           if any, and free the memory
-     * @param[in] tep     tep to be freed
+     * @brief    release all the s/w state associated with the given mirror
+     *           session, if any, and free the memory
+     * @param[in] impl     mirror session impl instance to be freed
      * NOTE: h/w entries should have been cleaned up (by calling
      *       impl->cleanup_hw() before calling this
      */
-    static void destroy(tep_impl *impl);
+    static void destroy(mirror_impl *impl);
 
     /**
      * @brief    allocate/reserve h/w resources for this object
@@ -73,13 +67,6 @@ public:
      * @return    SDK_RET_OK on success, failure status code on error
      */
     virtual sdk_ret_t nuke_resources(api_base *api_obj) override;
-
-    /**
-     * @brief read spec, statistics and status from hw tables
-     * @param[out] info pointer to tep info
-     * @return   SDK_RET_OK on success, failure status code on error
-     */
-    sdk_ret_t read_hw(pds_tep_info_t *info);
 
     /**
      * @brief    program all h/w tables relevant to this object except stage 0
@@ -110,61 +97,46 @@ public:
                                 obj_ctxt_t *obj_ctxt) override;
 
     /**
-     * @brief     return the MAC address corresponding to this TEP
-     * @return    ethernet MAC address of this TEP (configured/learnt)
+     * @brief    activate the epoch in the dataplane by programming stage 0
+     *           tables, if any
+     * @param[in] epoch       epoch being activated
+     * @param[in] api_op      api operation
+     * @param[in] obj_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
      */
-    mac_addr_t& mac(void) { return mac_; }
+    virtual sdk_ret_t activate_hw(api_base *api_obj,
+                                  pds_epoch_t epoch,
+                                  api_op_t api_op,
+                                  obj_ctxt_t *obj_ctxt) override;
 
     /**
-     * @brief     return h/w index for this TEP
-     * @return    h/w table index for this TEP
+     * @brief read spec, statistics and status from hw tables
+     * @param[in]  key     pointer to mirror session key
+     * @param[out] info    pointer to mirror session info
+     * @return   SDK_RET_OK on success, failure status code on error
      */
-    uint16_t hw_id(void) const { return hw_id_; }
+    sdk_ret_t read_hw(pds_mirror_session_key_t *key,
+                      pds_mirror_session_info_t *info);
 
-    /**
-     * @brief     return nexthop index for this TEP
-     * @return    nexthop index for this TEP
-     */
-    uint16_t nh_id(void) const { return nh_id_; }
+    uint16_t hw_id(void) { return hw_id_; }
 
 private:
     /**< @brief    constructor */
-    tep_impl() {
+    mirror_impl() {
         hw_id_ = 0xFFFF;
-        nh_id_ = 0xFFFF;
-        MAC_UINT64_TO_ADDR(mac_, PDS_REMOTE_TEP_MAC);
     }
 
     /**< @brief    destructor */
-    ~tep_impl() {}
-
-    /**
-     * @brief Populate specification with hardware information
-     * @param[in] nh_tx_data Nexthop table data
-     * @param[in] tep_tx_data TEP table data
-     * @param[out] spec Specification
-     */
-    void fill_spec_(nexthop_tx_actiondata_t *nh_tx_data,
-                    tep_tx_actiondata_t *tep_tx_data, pds_tep_spec_t *spec);
-
-    /**
-     * @brief Populate status with hardware information
-     * @param[in] tep_tx_data TEP table data
-     * @param[out] status Status
-     */
-    void fill_status_(tep_tx_actiondata_t *tep_tx_data,
-                      pds_tep_status_t *status);
+    ~mirror_impl() {}
 
 private:
     /**< P4 datapath specific state */
-    uint16_t      hw_id_;    /**< hardware id for this tep */
-    uint16_t      nh_id_;    /**< nexthop index for this tep */
-    mac_addr_t    mac_;      /**< (learnt) MAC address of this TEP */
+    uint16_t    hw_id_;      /**< hardware id */
 } __PACK__;
 
-/** @} */    // end of PDS_TEP_IMPL
+/** @} */    // end of PDS_MIRROR_IMPL
 
 }    // namespace impl
 }    // namespace api
 
-#endif    /** __TEP_IMPL_HPP__ */
+#endif    /** __MIRROR_IMPL_HPP__ */

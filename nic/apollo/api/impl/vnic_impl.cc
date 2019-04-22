@@ -533,12 +533,11 @@ vnic_impl::fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
 }
 
 void
-vnic_impl::fill_vnic_spec_(
-                egress_local_vnic_info_actiondata_t    *egress_vnic_data,
-                local_vnic_by_vlan_tx_actiondata_t     *vnic_by_vlan_data,
-                local_vnic_by_slot_rx_swkey_t          *vnic_by_slot_key,
-                local_vnic_by_slot_rx_actiondata_t     *vnic_by_slot_data,
-                pds_vnic_spec_t *spec) {
+vnic_impl::fill_vnic_spec_(egress_local_vnic_info_actiondata_t *egress_vnic_data,
+                           local_vnic_by_vlan_tx_actiondata_t  *vnic_by_vlan_data,
+                           local_vnic_by_slot_rx_swkey_t       *vnic_by_slot_key,
+                           local_vnic_by_slot_rx_actiondata_t  *vnic_by_slot_data,
+                           pds_vnic_spec_t *spec) {
     // from EGRESS_LOCAL_VNIC_INFO table
     sdk::lib::memrev(
         spec->mac_addr,

@@ -27,8 +27,9 @@ typedef struct pds_vcn_key_s {
 
 /// \brief VCN type
 typedef enum pds_vcn_type_e {
-    PDS_VCN_TYPE_SUBSTRATE = 0,    ///< Substrate VCN
-    PDS_VCN_TYPE_TENANT = 1,       ///< Tenant/Customer VCN
+    PDS_VCN_TYPE_NONE      = 0,
+    PDS_VCN_TYPE_SUBSTRATE = 1,    ///< Substrate VCN
+    PDS_VCN_TYPE_TENANT    = 2,    ///< Tenant/Customer VCN
 } pds_vcn_type_t;
 
 /// \brief VCN specification

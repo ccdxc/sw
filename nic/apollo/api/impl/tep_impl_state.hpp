@@ -26,7 +26,7 @@ namespace impl {
 /// \ingroup PDS_TEP
 /// \@{
 
- /**< forward declaration */
+// forward declaration
 class tep_impl;
 class mapping_impl;
 

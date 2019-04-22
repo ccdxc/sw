@@ -24,7 +24,8 @@ pds_agent_vnic_api_spec_fill (const pds::VnicSpec &proto_spec,
 }
 
 Status
-VnicSvcImpl::VnicCreate(ServerContext *context, const pds::VnicRequest *proto_req,
+VnicSvcImpl::VnicCreate(ServerContext *context,
+                        const pds::VnicRequest *proto_req,
                         pds::VnicResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_vnic_key_t key = {0};
@@ -120,8 +121,8 @@ vnic_api_info_to_proto (const pds_vnic_info_t *api_info, void *ctxt)
 
 Status
 VnicSvcImpl::VnicGet(ServerContext *context,
-                        const pds::VnicGetRequest *proto_req,
-                        pds::VnicGetResponse *proto_rsp) {
+                     const pds::VnicGetRequest *proto_req,
+                     pds::VnicGetResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_vnic_key_t key = {0};
     pds_vnic_info_t info = {0};

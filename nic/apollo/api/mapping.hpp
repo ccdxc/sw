@@ -6,16 +6,14 @@
  * @brief   mapping entry handling
  */
 
-#if !defined (__MAPPING_HPP__)
+#ifndef __MAPPING_HPP__
 #define __MAPPING_HPP__
 
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 
-//---------------Impl specifications --------------------//
-
-// Mapping internal specification
+// mapping internal specification
 typedef struct pds_mapping_spec_s {
     pds_mapping_key_t key;            // Mapping key
     pds_subnet_key_t subnet;          // Subnet this IP is part of
@@ -25,7 +23,7 @@ typedef struct pds_mapping_spec_s {
                                       // 2. Remote TEP for remote vnic
     mac_addr_t overlay_mac;           // MAC for this IP
 
-    // Information specific to local IP mappings
+    // information specific to local IP mappings
     bool is_local;
     struct {
         pds_vnic_key_t vnic;          // VNIC for local IP
@@ -35,10 +33,10 @@ typedef struct pds_mapping_spec_s {
 } __PACK__ pds_mapping_spec_t;
 
 /// \brief internal mapping information
-typedef struct pds_mapping_info_t {
-    pds_mapping_spec_t spec;          ///< Specification
-    pds_mapping_status_t status;      ///< Status
-    pds_mapping_stats_t stats;        ///< Statistics
+typedef struct pds_mapping_info_s {
+    pds_mapping_spec_t spec;        ///< Specification
+    pds_mapping_status_t status;    ///< Status
+    pds_mapping_stats_t stats;      ///< Statistics
 } __PACK__ pds_mapping_info_t;
 
 namespace api {

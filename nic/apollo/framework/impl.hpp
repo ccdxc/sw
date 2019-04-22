@@ -25,6 +25,7 @@ typedef enum impl_obj_id_e {
     IMPL_OBJ_ID_ROUTE_TABLE,
     IMPL_OBJ_ID_SECURITY_POLICY,
     IMPL_OBJ_ID_MAPPING,
+    IMPL_OBJ_ID_MIRROR_SESSION,
     IMPL_OBJ_ID_MAX,
 } impl_obj_id_t;
 

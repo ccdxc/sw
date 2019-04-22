@@ -39,6 +39,7 @@ typedef enum obj_id_e {
     OBJ_ID_MAPPING,        ///< Mapping
     OBJ_ID_ROUTE_TABLE,    ///< Route table
     OBJ_ID_POLICY,         ///< Policy
+    OBJ_ID_MIRROR_SESSION, ///< Mirror Session
     OBJ_ID_MAX,
 } obj_id_t;
 

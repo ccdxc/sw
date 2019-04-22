@@ -23,6 +23,7 @@
 #include "nic/apollo/api/route_state.hpp"
 #include "nic/apollo/api/policy_state.hpp"
 #include "nic/apollo/api/if_state.hpp"
+#include "nic/apollo/api/mirror_state.hpp"
 
 using std::string;
 //using sdk::platform::capri::LIFManager;
@@ -79,28 +80,30 @@ public:
     route_table_state *route_table_db(void) { return &route_table_db_; }
     policy_state *policy_db(void) { return &poicy_db_; }
     if_state *if_db(void) { return &if_db_; }
+    mirror_session_state *mirror_session_db(void) { return &mirror_session_db_; }
 
 private:
-    string                 cfg_path_;
-    catalog                *catalog_;
-    mpartition             *mpartition_;
-    platform_type_t        platform_type_;
-    pds_scale_profile_t    scale_profile_;
-    //program_info         *pginfo_;
-    //LIFManager           *lm_;
-    uint64_t               control_cores_mask_;
-    uint16_t               num_control_cores_;
-    uint64_t               data_cores_mask_;
-    uint16_t               num_data_cores_;
-    device_state           device_db_;
-    tep_state              tep_db_;
-    vcn_state              vcn_db_;
-    subnet_state           subnet_db_;
-    vnic_state             vnic_db_;
-    mapping_state          mapping_db_;
-    route_table_state      route_table_db_;
-    policy_state           poicy_db_;
-    if_state               if_db_;
+    string                  cfg_path_;
+    catalog                 *catalog_;
+    mpartition              *mpartition_;
+    platform_type_t         platform_type_;
+    pds_scale_profile_t     scale_profile_;
+    //program_info          *pginfo_;
+    //LIFManager            *lm_;
+    uint64_t                control_cores_mask_;
+    uint16_t                num_control_cores_;
+    uint64_t                data_cores_mask_;
+    uint16_t                num_data_cores_;
+    device_state            device_db_;
+    tep_state               tep_db_;
+    vcn_state               vcn_db_;
+    subnet_state            subnet_db_;
+    vnic_state              vnic_db_;
+    mapping_state           mapping_db_;
+    route_table_state       route_table_db_;
+    policy_state            poicy_db_;
+    if_state                if_db_;
+    mirror_session_state    mirror_session_db_;
 };
 extern pds_state g_pds_state;
 
@@ -162,6 +165,12 @@ static inline if_state *
 if_db (void)
 {
     return api::g_pds_state.if_db();
+}
+
+static inline mirror_session_state *
+mirror_session_db (void)
+{
+    return api::g_pds_state.mirror_session_db();
 }
 
 #endif    /** __PDS_STATE_HPP__ */

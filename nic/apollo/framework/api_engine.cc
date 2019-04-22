@@ -201,7 +201,6 @@ api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
 sdk_ret_t
 api_engine::pre_process_api_(api_ctxt_t *api_ctxt) {
     sdk_ret_t     ret = SDK_RET_OK;
-    obj_ctxt_t    obj_ctxt;
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
                       sdk::SDK_RET_INVALID_OP);
@@ -491,7 +490,8 @@ api_engine::activate_config_stage_(void) {
 }
 
 sdk_ret_t
-api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
+                             obj_ctxt_t *obj_ctxt) {
     sdk_ret_t    ret = SDK_RET_OK;
 
     switch (obj_ctxt->api_op) {
@@ -502,6 +502,7 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // db(s) and delay delete the slab object
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
         api_obj->del_from_db();
+        del_from_dirty_list_(it, api_obj);
         api_obj->delay_delete();
         break;
 
@@ -519,6 +520,7 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             obj_ctxt->hw_dirty = 0;
         }
         api_obj->del_from_db();
+        del_from_dirty_list_(it, api_obj);
         api_obj->delay_delete();
         break;
 
@@ -536,6 +538,7 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         if (obj_ctxt->cloned_obj) {
             obj_ctxt->cloned_obj->delay_delete();
         }
+        del_from_dirty_list_(it, api_obj);
         break;
 
     case API_OP_UPDATE:
@@ -552,6 +555,7 @@ api_engine::rollback_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             obj_ctxt->hw_dirty = 0;
         }
         obj_ctxt->cloned_obj->delay_delete();
+        del_from_dirty_list_(it, api_obj);
         break;
 
     default:
@@ -663,8 +667,8 @@ api_engine::batch_commit(void) {
 sdk_ret_t
 api_engine::batch_abort(void) {
     sdk_ret_t                     ret;
-    api_base                      *api_obj;
     dirty_obj_list_t::iterator    next_it;
+    obj_ctxt_t                    octxt;
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_ABORT),
                       sdk::SDK_RET_INVALID_ARG);
@@ -673,10 +677,9 @@ api_engine::batch_abort(void) {
     for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
          it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
         next_it++;
-        ret = rollback_config_(it->first,
-                               &batch_ctxt_.dirty_obj_map[it->first]);
+        octxt = batch_ctxt_.dirty_obj_map[it->first];
+        ret = rollback_config_(it, it->first, &octxt);
         SDK_ASSERT(ret == SDK_RET_OK);
-        del_from_dirty_list_(it, it->first);
     }
     PDS_TRACE_INFO("Finished rollback config stage");
 
@@ -695,6 +698,9 @@ api_engine::batch_abort(void) {
 
     // walk dirty object map/list & release all stateless object memory
     PDS_TRACE_INFO("Clearing dirty object map/list ...");
+#if 0
+    // TODO: handle stateless case inside rollback_config_() itself
+    //       (similar to activate_config_())
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
          it != batch_ctxt_.dirty_obj_list.end(); ) {
         api_obj = it->first;
@@ -704,6 +710,7 @@ api_engine::batch_abort(void) {
         }
         batch_ctxt_.dirty_obj_list.erase(it++);
     }
+#endif
     batch_ctxt_.dirty_obj_map.clear();
     batch_ctxt_.dirty_obj_list.clear();
     PDS_TRACE_INFO("Finished clearing dirty object map/list ...");

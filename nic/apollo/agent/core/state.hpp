@@ -14,6 +14,7 @@
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/include/pds_mirror.hpp"
 
 using std::unordered_map;
 using std::make_pair;
@@ -25,6 +26,8 @@ typedef sdk::sdk_ret_t (*vpc_walk_cb_t)(pds_vcn_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*subnet_walk_cb_t)(pds_subnet_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*vnic_walk_cb_t)(pds_vnic_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*tep_walk_cb_t)(pds_tep_spec_t *spec, void *ctxt);
+typedef sdk::sdk_ret_t (*mirror_session_walk_cb_t)(pds_mirror_session_spec_t *spec,
+                                                   void *ctxt);
 
 typedef slab *slab_ptr_t;
 
@@ -36,6 +39,7 @@ typedef enum slab_id_e {
     SLAB_ID_VNIC,
     SLAB_ID_ROUTE,
     SLAB_ID_POLICY,
+    SLAB_ID_MIRROR,
     SLAB_ID_MAX
 } slab_id_t;
 
@@ -45,6 +49,7 @@ typedef unordered_map<uint32_t, pds_tep_spec_t *> tep_db_t;
 typedef unordered_map<uint32_t, pds_vnic_spec_t *> vnic_db_t;
 typedef unordered_map<uint32_t, pds_route_table_spec_t *> route_table_db_t;
 typedef unordered_map<uint32_t, pds_policy_spec_t*> policy_db_t;
+typedef unordered_map<uint32_t, pds_mirror_session_spec_t *> mirror_session_db_t;
 
 typedef vpc_db_t::const_iterator vpc_it_t;
 typedef vnic_db_t::const_iterator vnic_it_t;
@@ -63,6 +68,9 @@ public:
     policy_db_t *policy_map(void) { return policy_map_; }
     pds_vcn_id_t substrate_vpc_id(void) { return substrate_vpc_id_; }
     void substrate_vpc_id_set(pds_vcn_id_t id) { substrate_vpc_id_ = id; }
+    mirror_session_db_t *mirror_session_map(void) {
+        return mirror_session_map_;
+    }
 
     slab_ptr_t tep_slab(void) const {
         return slabs_[SLAB_ID_TEP];
@@ -82,6 +90,9 @@ public:
     slab_ptr_t policy_slab(void) const {
         return slabs_[SLAB_ID_POLICY];
     }
+    slab_ptr_t mirror_session_slab(void) const {
+        return slabs_[SLAB_ID_MIRROR];
+    }
 
 private:
     cfg_db();
@@ -97,6 +108,7 @@ private:
     route_table_db_t *route_table_map_;
     policy_db_t *policy_map_;
     pds_device_spec_t device_;
+    mirror_session_db_t *mirror_session_map_;
     slab_ptr_t slabs_[SLAB_ID_MAX - SLAB_ID_MIN + 1];
 };
 
@@ -141,7 +153,9 @@ public:
     sdk_ret_t add_to_route_table_db(pds_route_table_key_t *key,
                                     pds_route_table_spec_t *spec);
     bool del_from_route_table_db(pds_route_table_key_t *key);
-    slab_ptr_t route_table_slab(void) const { return cfg_db_->route_table_slab(); }
+    slab_ptr_t route_table_slab(void) const {
+        return cfg_db_->route_table_slab();
+    }
 
     sdk_ret_t add_to_policy_db(pds_policy_key_t *key,
                                pds_policy_spec_t *spec);
@@ -151,8 +165,21 @@ public:
     slab_ptr_t policy_slab(void) const { return cfg_db_->policy_slab(); }
 
     pds_vcn_id_t substrate_vpc_id(void) { return cfg_db_->substrate_vpc_id(); }
-    void substrate_vpc_id_set(pds_vcn_id_t id) { return cfg_db_->substrate_vpc_id_set(id); }
-    void substrate_vpc_id_reset(void) { return cfg_db_->substrate_vpc_id_set(PDS_VCN_ID_INVALID); }
+    void substrate_vpc_id_set(pds_vcn_id_t id) {
+        return cfg_db_->substrate_vpc_id_set(id);
+    }
+    void substrate_vpc_id_reset(void) {
+        return cfg_db_->substrate_vpc_id_set(PDS_VCN_ID_INVALID);
+    }
+
+    pds_mirror_session_spec_t *find_in_mirror_session_db(pds_mirror_session_key_t *key);
+    sdk_ret_t add_to_mirror_session_db(pds_mirror_session_key_t *key,
+                                       pds_mirror_session_spec_t *spec);
+    sdk_ret_t mirror_session_db_walk(mirror_session_walk_cb_t cb, void *ctxt);
+    bool del_from_mirror_session_db(pds_mirror_session_key_t *key);
+    slab_ptr_t mirror_session_slab(void) const {
+        return cfg_db_->mirror_session_slab();
+    }
 
     bool pds_mock_mode(void) const { return pds_mock_mode_;  }
     void pds_mock_mode_set(bool val) { pds_mock_mode_ = val; }
@@ -163,8 +190,13 @@ private:
     vpc_db_t *vpc_map(void) const { return cfg_db_->vpc_map();  }
     subnet_db_t *subnet_map(void) const { return cfg_db_->subnet_map();  }
     vnic_db_t *vnic_map(void) const { return cfg_db_->vnic_map();  }
-    route_table_db_t *route_table_map(void) const { return cfg_db_->route_table_map();  }
+    route_table_db_t *route_table_map(void) const { return
+        cfg_db_->route_table_map();
+    }
     policy_db_t *policy_map(void) const { return cfg_db_->policy_map();  }
+    mirror_session_db_t *mirror_session_map(void) const {
+        return cfg_db_->mirror_session_map();
+    }
 
 private:
     cfg_db  *cfg_db_;

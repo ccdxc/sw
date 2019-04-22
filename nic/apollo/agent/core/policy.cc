@@ -21,7 +21,8 @@ policy_create (pds_policy_key_t *key, pds_policy_spec_t *spec)
     sdk_ret_t ret;
 
     if (agent_state::state()->find_in_policy_db(key) != NULL) {
-        PDS_TRACE_ERR("Failed to create policy {}, policy exists already", spec->key.id);
+        PDS_TRACE_ERR("Failed to create policy {}, policy exists already",
+                      spec->key.id);
         return SDK_RET_ENTRY_EXISTS;
     }
     if ((ret = policy_create_validate(spec)) != SDK_RET_OK) {
@@ -30,7 +31,8 @@ policy_create (pds_policy_key_t *key, pds_policy_spec_t *spec)
     }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_policy_create(spec)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to create policy {}, err {}", spec->key.id, ret);
+            PDS_TRACE_ERR("Failed to create policy {}, err {}",
+                          spec->key.id, ret);
             return ret;
         }
     }
@@ -38,7 +40,6 @@ policy_create (pds_policy_key_t *key, pds_policy_spec_t *spec)
         PDS_TRACE_ERR("Failed to add policy {} to db, err {}", spec->key.id, ret);
         return ret;
     }
-
     return SDK_RET_OK;
 }
 

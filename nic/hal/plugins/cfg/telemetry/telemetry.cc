@@ -59,12 +59,6 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
     // treated as an incremental update.
     session.id = spec.key_or_handle().mirrorsession_id();
     session.truncate_len = spec.snaplen();
-    if (spec.has_local_span_if()) {
-    }
-    if (spec.has_rspan_spec()) {
-    }
-    if (spec.has_erspan_spec()) {
-    }
     rsp->set_api_status(types::API_STATUS_OK);
     rsp->mutable_status()->set_active_flows(0);
     switch (spec.destination_case()) {
@@ -352,7 +346,7 @@ collector_delete (CollectorDeleteRequest &req, CollectorDeleteResponse *rsp)
             req.key_or_handle().collector_id());
     args.cfg = &cfg;
     pd_func_args.pd_collector_delete = &args;
-    
+
     args.cfg->collector_id = req.key_or_handle().collector_id();
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_DELETE, &pd_func_args);
     if (ret == HAL_RET_OK) {
@@ -398,7 +392,7 @@ collector_get (CollectorGetRequest &req, CollectorGetResponseMsg *rsp)
     hal_ret_t                   ret = HAL_RET_OK;
     collector_config_t          cfg;
     pd::pd_collector_get_args_t args;
-    
+
     args.cfg = &cfg;
     if (!req.has_key_or_handle()) {
         /* Iterate over all collectors */
@@ -551,7 +545,7 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
         /* Create a new acl context */
         flowmon_acl_ctx = hal::rule_lib_init(flowmon_acl_ctx_name(rule->vrf_id, mirror_action),
                                              &flowmon_rule_config_glbl);
-        HAL_TRACE_DEBUG("Creating new ACL ctx for vrf {} id {} ctx_ptr {:#x}", 
+        HAL_TRACE_DEBUG("Creating new ACL ctx for vrf {} id {} ctx_ptr {:#x}",
                          flowmon_acl_ctx_name(rule->vrf_id, mirror_action),
                          rule->vrf_id, (uint64_t) flowmon_acl_ctx);
     }
@@ -568,7 +562,7 @@ flow_monitor_rule_create (FlowMonitorRuleSpec &spec, FlowMonitorRuleResponse *rs
         goto end;
     }
     rsp->set_api_status(types::API_STATUS_OK);
-    
+
 end:
     if (flowmon_acl_ctx && (ret == HAL_RET_OK)) {
         ret = acl::acl_commit(flowmon_acl_ctx);

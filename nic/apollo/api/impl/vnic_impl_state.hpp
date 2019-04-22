@@ -5,6 +5,7 @@
  *
  * @brief   vnic implementation state
  */
+
 #if !defined (__VNIC_IMPL_STATE_HPP__)
 #define __VNIC_IMPL_STATEHPP__
 
