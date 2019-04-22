@@ -38,6 +38,17 @@ namespace capri {
 #define CAPRI_CALLOC  calloc
 #define CAPRI_FREE    free
 
+/* Cache invalidate register address and memory mapped addresses */
+#define CSR_CACHE_INVAL_INGRESS_REG_ADDR 0x25002ec
+#define CSR_CACHE_INVAL_EGRESS_REG_ADDR  0x2d002ec
+#define CSR_CACHE_INVAL_TXDMA_REG_ADDR   0x45002ec
+#define CSR_CACHE_INVAL_RXDMA_REG_ADDR   0x4d002ec
+
+static uint32_t *csr_cache_inval_ingress_va;
+static uint32_t *csr_cache_inval_egress_va;
+static uint32_t *csr_cache_inval_txdma_va;
+static uint32_t *csr_cache_inval_rxdma_va;
+
 typedef int capri_error_t;
 
 /*  Design decisions + Table Update Flow:
@@ -589,20 +600,23 @@ static inline bool
 p4plus_invalidate_cache_aligned(uint64_t addr, uint32_t size_in_bytes,
         p4plus_cache_action_t action)
 {
-    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
-
     assert ((addr & ~CACHE_LINE_SIZE_MASK) == addr);
 
     while ((int)size_in_bytes > 0) {
+        uint32_t claddr = (addr >> CACHE_LINE_SIZE_SHIFT) << 1;
         if (action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_RXDMA) {
-            cap_pics_csr_t & pics_csr = cap0.rpc.pics;
-            pics_csr.picc.dhs_cache_invalidate.entry.addr(addr >> CACHE_LINE_SIZE_SHIFT);
-            pics_csr.picc.dhs_cache_invalidate.entry.write();
+            if (csr_cache_inval_rxdma_va) {
+                *csr_cache_inval_rxdma_va = claddr;
+            } else {
+                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_RXDMA_REG_ADDR, &claddr, 1);
+            }
         }
         if (action & p4plus_cache_action_t::P4PLUS_CACHE_INVALIDATE_TXDMA) {
-            cap_pics_csr_t & pics_csr = cap0.tpc.pics;
-            pics_csr.picc.dhs_cache_invalidate.entry.addr(addr >> CACHE_LINE_SIZE_SHIFT);
-            pics_csr.picc.dhs_cache_invalidate.entry.write();
+            if (csr_cache_inval_txdma_va) {
+                *csr_cache_inval_txdma_va = claddr;
+            } else {
+                sdk::lib::pal_reg_write(CSR_CACHE_INVAL_TXDMA_REG_ADDR, &claddr, 1);
+            }
         }
         size_in_bytes -= CACHE_LINE_SIZE;
         addr += CACHE_LINE_SIZE;
@@ -773,6 +787,24 @@ capri_p4plus_shadow_init (void)
     return CAPRI_OK;
 }
 
+static void
+capri_table_csr_cache_inval_init(void)
+{
+    csr_cache_inval_ingress_va =
+        (uint32_t *)sdk::lib::pal_mem_map(CSR_CACHE_INVAL_INGRESS_REG_ADDR, 0x4);
+    csr_cache_inval_egress_va =
+        (uint32_t *)sdk::lib::pal_mem_map(CSR_CACHE_INVAL_EGRESS_REG_ADDR, 0x4);
+    csr_cache_inval_txdma_va =
+        (uint32_t *)sdk::lib::pal_mem_map(CSR_CACHE_INVAL_TXDMA_REG_ADDR, 0x4);
+    csr_cache_inval_rxdma_va =
+        (uint32_t *)sdk::lib::pal_mem_map(CSR_CACHE_INVAL_RXDMA_REG_ADDR, 0x4);
+    SDK_TRACE_DEBUG("CSR cache inval ing 0x%llx, egr 0x%llx, txdma 0x%llx, rxdma 0x%llx",
+                    (mem_addr_t)csr_cache_inval_ingress_va,
+                    (mem_addr_t)csr_cache_inval_egress_va,
+                    (mem_addr_t)csr_cache_inval_txdma_va,
+                    (mem_addr_t)csr_cache_inval_rxdma_va);
+}
+
 int
 capri_table_rw_init (capri_cfg_t *capri_cfg)
 {
@@ -806,6 +838,8 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
     /* Initialize sram memories */
     capri_sram_memory_init(capri_cfg);
 
+    /* Initialize the CSR cache invalidate memories */
+    capri_table_csr_cache_inval_init();
     return (CAPRI_OK);
 }
 
@@ -1534,18 +1568,19 @@ capri_hbm_table_entry_cache_invalidate (bool ingress,
                                         p4_table_mem_layout_t &tbl_info)
 {
     time_profile_begin(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE);
-    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
-
+    uint32_t claddr = ((tbl_info.base_mem_pa + entry_addr) >> CACHE_LINE_SIZE_SHIFT) << 1;
     if (ingress) {
-        cap_pics_csr_t & pics_csr = cap0.ssi.pics;
-        // write upper 28b of 34b hbm addr.
-        pics_csr.picc.dhs_cache_invalidate.entry.addr((get_mem_addr(tbl_info.tablename) + entry_addr) >> 6);
-        pics_csr.picc.dhs_cache_invalidate.entry.write();
+        if (csr_cache_inval_ingress_va) {
+            *csr_cache_inval_ingress_va = claddr;
+        } else {
+            sdk::lib::pal_reg_write(CSR_CACHE_INVAL_INGRESS_REG_ADDR, &claddr, 1);
+        }
     } else {
-        cap_pics_csr_t & pics_csr = cap0.sse.pics;
-        // write upper 28b of 34b hbm addr.
-        pics_csr.picc.dhs_cache_invalidate.entry.addr((get_mem_addr(tbl_info.tablename) + entry_addr) >> 6);
-        pics_csr.picc.dhs_cache_invalidate.entry.write();
+        if (csr_cache_inval_egress_va) {
+            *csr_cache_inval_egress_va = claddr;
+        } else {
+            sdk::lib::pal_reg_write(CSR_CACHE_INVAL_EGRESS_REG_ADDR, &claddr, 1);
+        }
     }
     time_profile_end(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE);
     return CAPRI_OK;

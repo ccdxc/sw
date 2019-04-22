@@ -55,10 +55,6 @@ pal_mem_rd(const u_int64_t addr, void *buf, const size_t sz, uint32_t flags)
 {
     void *va;
 
-    if (PAL_IS_ADDR_VIRTUAL(flags)) {
-        return pal_memcpy(buf, (const void *)addr, sz);
-    }
-
     pal_mem_trace("mem_rd 0x%08"PRIx64" sz %ld\n", addr, sz);
     va = pr_ptov(addr, sz, FREEACCESS);
     if (va == NULL && pal_pa_access_allowed(addr, sz)) {
@@ -78,9 +74,6 @@ pal_mem_wr(const u_int64_t addr, const void *buf, const size_t sz, uint32_t flag
 
     void *va;
 
-    if (PAL_IS_ADDR_VIRTUAL(flags)) {
-        return pal_memcpy((void *)addr, buf, sz);
-    }
     pal_mem_trace("mem_wr 0x%08"PRIx64" sz %ld\n", addr, sz);
     va = pr_ptov(addr, sz, FREEACCESS);
     if (va == NULL && pal_pa_access_allowed(addr, sz)) {

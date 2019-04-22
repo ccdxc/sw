@@ -139,9 +139,8 @@ asic_reg_read (uint64_t addr, uint32_t *data, uint32_t num_words,
 //------------------------------------------------------------------------------
 // public API for memory read operations
 //------------------------------------------------------------------------------
-static inline sdk_ret_t
-mem_read (uint64_t addr, uint8_t *data, uint32_t len, uint8_t opn,
-          uint32_t flags, bool read_thru)
+sdk_ret_t
+asic_mem_read (uint64_t addr, uint8_t *data, uint32_t len, bool read_thru)
 {
     sdk_ret_t    rc = SDK_RET_OK;
     thread       *curr_thread = sdk::lib::thread::current_thread();
@@ -152,12 +151,12 @@ mem_read (uint64_t addr, uint8_t *data, uint32_t len, uint8_t opn,
         (curr_thread == NULL)) {
         // bypass asicrw thread
         time_profile_begin(sdk::utils::time_profile::PAL_MEM_RD);
-        pal_ret_t prc = sdk::lib::pal_mem_read(addr, data, len, flags);
+        pal_ret_t prc = sdk::lib::pal_mem_read(addr, data, len);
         time_profile_end(sdk::utils::time_profile::PAL_MEM_RD);
         rc = IS_PAL_API_SUCCESS(prc) ? SDK_RET_OK : SDK_RET_ERR;
     } else {
         // go thru asicrw thread
-        rc = asic_do_read(curr_thread, opn, addr, data, len);
+        rc = asic_do_read(curr_thread, ASICRW_OP_MEM_READ, addr, data, len);
     }
 
     if (rc != SDK_RET_OK) {
@@ -169,16 +168,30 @@ mem_read (uint64_t addr, uint8_t *data, uint32_t len, uint8_t opn,
 }
 
 sdk_ret_t
-asic_mem_read (uint64_t addr, uint8_t *data, uint32_t len, bool read_thru)
-{
-    return mem_read(addr, data, len, ASICRW_OP_MEM_READ, 0, read_thru);
-}
-
-sdk_ret_t
 asic_vmem_read (mem_addr_t addr, uint8_t *data, uint32_t len, bool read_thru)
 {
-    return mem_read(addr, data, len, ASICRW_OP_VMEM_READ,
-                    PAL_ADDR_TYPE_VIRTUAL, read_thru);
+    sdk_ret_t    rc = SDK_RET_OK;
+    thread       *curr_thread = sdk::lib::thread::current_thread();
+
+    time_profile_begin(sdk::utils::time_profile::ASIC_MEM_READ);
+
+    if ((read_thru == true) || (g_asicrw_ready_ == false) ||
+        (curr_thread == NULL)) {
+        // bypass asicrw thread
+        time_profile_begin(sdk::utils::time_profile::PAL_MEM_RD);
+        memcpy(data, (void *)addr, len);
+        time_profile_end(sdk::utils::time_profile::PAL_MEM_RD);
+    } else {
+        // go thru asicrw thread
+        rc = asic_do_read(curr_thread, ASICRW_OP_VMEM_READ, addr, data, len);
+    }
+
+    if (rc != SDK_RET_OK) {
+        SDK_TRACE_ERR("Error reading mem addr 0x%llx data %p", addr, data);
+    }
+
+    time_profile_end(sdk::utils::time_profile::ASIC_MEM_READ);
+    return rc;
 }
 
 //------------------------------------------------------------------------------
@@ -265,9 +278,9 @@ asic_reg_write (uint64_t addr, uint32_t *data, uint32_t num_words,
 //------------------------------------------------------------------------------
 // public API for memory write operations
 //------------------------------------------------------------------------------
-static inline sdk_ret_t
-mem_write (uint64_t addr, uint8_t *data, uint32_t len, uint8_t opn,
-           uint32_t flags, asic_write_mode_t mode)
+sdk_ret_t
+asic_mem_write (uint64_t addr, uint8_t *data, uint32_t len,
+                asic_write_mode_t mode)
 {
     sdk_ret_t    rc = SDK_RET_OK;
     thread       *curr_thread = sdk::lib::thread::current_thread();
@@ -279,12 +292,12 @@ mem_write (uint64_t addr, uint8_t *data, uint32_t len, uint8_t opn,
         (curr_thread == NULL)) {
         // bypass asicrw thread
         time_profile_begin(sdk::utils::time_profile::PAL_MEM_WR);
-        pal_ret_t prc = sdk::lib::pal_mem_write(addr, data, len, flags);
+        pal_ret_t prc = sdk::lib::pal_mem_write(addr, data, len);
         time_profile_end(sdk::utils::time_profile::PAL_MEM_WR);
         rc = IS_PAL_API_SUCCESS(prc) ? SDK_RET_OK : SDK_RET_ERR;
     } else {
         // go thru asicrw thread
-        rc = asic_do_write(curr_thread, opn,
+        rc = asic_do_write(curr_thread, ASICRW_OP_MEM_WRITE,
                            addr, data, len, mode);
     }
     if (rc != SDK_RET_OK) {
@@ -297,18 +310,33 @@ mem_write (uint64_t addr, uint8_t *data, uint32_t len, uint8_t opn,
 }
 
 sdk_ret_t
-asic_mem_write (uint64_t addr, uint8_t *data, uint32_t len,
-                asic_write_mode_t mode)
-{
-    return mem_write(addr, data, len, ASICRW_OP_MEM_WRITE, 0, mode);
-}
-
-sdk_ret_t
 asic_vmem_write (uint64_t addr, uint8_t *data, uint32_t len,
                  asic_write_mode_t mode)
 {
-    return mem_write(addr, data, len, ASICRW_OP_VMEM_WRITE,
-                     PAL_ADDR_TYPE_VIRTUAL, mode);
+    sdk_ret_t    rc = SDK_RET_OK;
+    thread       *curr_thread = sdk::lib::thread::current_thread();
+
+    time_profile_begin(sdk::utils::time_profile::ASIC_MEM_WRITE);
+    //SDK_TRACE_DEBUG("addr 0x%llx, data %p, len %u, mode %u",
+                    //addr, data, len, mode);
+    if ((mode == ASIC_WRITE_MODE_WRITE_THRU) || (g_asicrw_ready_ == false) ||
+        (curr_thread == NULL)) {
+        // bypass asicrw thread
+        time_profile_begin(sdk::utils::time_profile::PAL_MEM_WR);
+        memcpy((void *)addr, data, len);
+        time_profile_end(sdk::utils::time_profile::PAL_MEM_WR);
+    } else {
+        // go thru asicrw thread
+        rc = asic_do_write(curr_thread, ASICRW_OP_VMEM_WRITE,
+                           addr, data, len, mode);
+    }
+    if (rc != SDK_RET_OK) {
+        SDK_TRACE_ERR("Error writing mem addr 0x%llx, data %p", addr, data);
+        SDK_ASSERT(0);
+    }
+    time_profile_end(sdk::utils::time_profile::ASIC_MEM_WRITE);
+
+    return rc;
 }
 
 //------------------------------------------------------------------------------
@@ -374,10 +402,9 @@ asicrw_loop (void *ctxt)
                 break;
 
            case ASICRW_OP_VMEM_READ:
+                rv = PAL_RET_OK;
                 time_profile_begin(sdk::utils::time_profile::PAL_MEM_RD);
-                rv = sdk::lib::pal_mem_read(rw_entry->addr, rw_entry->data,
-                                            rw_entry->len,
-                                            PAL_ADDR_TYPE_VIRTUAL);
+                memcpy(rw_entry->data, (void *)rw_entry->addr, rw_entry->len);
                 time_profile_end(sdk::utils::time_profile::PAL_MEM_RD);
                 break;
 
@@ -389,10 +416,9 @@ asicrw_loop (void *ctxt)
                 break;
 
             case ASICRW_OP_VMEM_WRITE:
+                rv = PAL_RET_OK;
                 time_profile_begin(sdk::utils::time_profile::PAL_MEM_WR);
-                rv = sdk::lib::pal_mem_write(rw_entry->addr, rw_entry->data,
-                                             rw_entry->len,
-                                             PAL_ADDR_TYPE_VIRTUAL);
+                memcpy((void *)rw_entry->addr, rw_entry->data, rw_entry->len);
                 time_profile_end(sdk::utils::time_profile::PAL_MEM_WR);
                 break;
 
