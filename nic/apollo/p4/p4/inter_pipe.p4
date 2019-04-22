@@ -2,9 +2,14 @@
 /* Ingress pipeline to RxDMA pipeline                                        */
 /*****************************************************************************/
 action ingress_to_rxdma() {
+    add_header(capri_p4_intrinsic);
+    remove_header(capri_txdma_intrinsic);
+    remove_header(p4plus_to_p4);
+    remove_header(p4plus_to_p4_vlan);
     if ((service_header.local_ip_mapping_done == FALSE) or
         (service_header.flow_done == FALSE) or
         (service_header.remote_vnic_mapping_rx_done == FALSE)) {
+        remove_header(predicate_header);
         add_header(service_header);
         modify_field(capri_intrinsic.tm_oport, TM_PORT_INGRESS);
     } else {
@@ -12,7 +17,6 @@ action ingress_to_rxdma() {
                      control_metadata.mirror_session);
         modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
         modify_field(capri_intrinsic.lif, APOLLO_SERVICE_LIF);
-        add_header(capri_p4_intrinsic);
         add_header(capri_rxdma_intrinsic);
         add_header(p4_to_rxdma_header);
         add_header(predicate_header);
@@ -120,6 +124,8 @@ action add_p4_to_arm_header() {
     modify_field(p4_to_arm.payload_offset, offset_metadata.payload_offset);
 
     modify_field(scratch_metadata.cpu_flags, 0);
+    bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
+           (control_metadata.direction << APOLLO_CPU_FLAGS_DIRECTION_BIT_POS));
     if (ctag_1.valid == TRUE) {
         bit_or(scratch_metadata.cpu_flags, scratch_metadata.cpu_flags,
                APOLLO_CPU_FLAGS_VLAN_VALID);

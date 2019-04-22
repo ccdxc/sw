@@ -173,7 +173,15 @@ parser parse_txdma_to_ingress {
 parser parse_txdma_app {
     extract(p4plus_to_p4);
     extract(p4plus_to_p4_vlan);
-    return parse_packet;
+    return select(p4plus_to_p4.p4plus_app_id) {
+        P4PLUS_APPTYPE_CPU : parse_cpu_packet;
+        default : parse_packet;
+    }
+}
+
+@pragma xgress ingress
+parser parse_cpu_packet {
+    return parse_ingress_pass2;
 }
 
 @pragma xgress ingress
