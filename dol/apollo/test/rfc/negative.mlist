@@ -10,6 +10,6 @@ feature:
 modules:
     - module:
         name    : IPV4_EMTPY_POLICY
-        spec    : rfc.testspec
+        spec    : rfc_egress_negative.testspec
         iterate :
             - policy : filter://AddrFamily=IPV4,PolicyType=empty

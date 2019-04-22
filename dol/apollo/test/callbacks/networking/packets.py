@@ -39,19 +39,18 @@ def __get_non_default_random_route(routes):
             break
     return route
 
-def __get_host_from_route_impl(obj):
+def __get_host_from_route_impl(route, af):
     """
-        returns a random usable host from random non-default route
-        if only default route exists, returns IPV4_HOST / IPV6_HOST
+        returns a random usable host from non-default route
+        if no route / only default route exists, returns IPV4_HOST / IPV6_HOST
     """
-    route = __get_non_default_random_route(obj.routes)
-    if route is None:
-        if obj.AddrFamily == "IPV4":
+    if route is None or utils.isDefaultRoute(route):
+        if af == "IPV4":
             return str(IPV4_HOST)
-        elif obj.AddrFamily == "IPV6":
+        elif af == "IPV6":
             return str(IPV6_HOST)
         else:
-            logger.error("ERROR: invalid AddrFamily ", obj.AddrFamily)
+            logger.error("ERROR: invalid AddrFamily ", af)
             sys.exit(1)
             return None
     total_hosts = route.num_addresses
@@ -61,7 +60,27 @@ def __get_host_from_route_impl(obj):
     return str(host)
 
 def GetUsableHostFromRoute(testcase, packet, args=None):
-    return __get_host_from_route_impl(testcase.config.route)
+    route = __get_non_default_random_route(testcase.config.route.routes)
+    return __get_host_from_route_impl(route, testcase.config.route.AddrFamily)
+
+def __get_non_default_random_route_from_rule(rules):
+    numrules = len(rules)
+    if numrules == 0:
+        return None
+    elif numrules == 1:
+        route = None
+        if not utils.isDefaultRoute(rules[0].Prefix):
+            route = rules[0].Prefix
+        return route
+    while True:
+        route = random.choice(rules).Prefix
+        if not utils.isDefaultRoute(route):
+            break
+    return route
+
+def GetUsableHostFromPolicy(testcase, packet, args=None):
+    route = __get_non_default_random_route_from_rule(testcase.config.policy.rules)
+    return __get_host_from_route_impl(route, testcase.config.policy.AddrFamily)
 
 def GetInvalidMPLSTag(testcase, packet, args=None):
     return next(resmgr.InvalidMplsSlotIdAllocator)

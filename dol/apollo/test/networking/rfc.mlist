@@ -1,10 +1,10 @@
-# Feature RFC Modules List
+# RFC Modules List
 feature:
-    id          : rfc
-    sub         : ipv4
+    id          : networking
+    sub         : rfc
     package     : test.networking
     module      : networking
-    enable      : True
+    enable      : False
     ignore      : False
 
 modules:

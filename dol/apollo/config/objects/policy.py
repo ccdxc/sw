@@ -1,129 +1,54 @@
 #! /usr/bin/python3
 import pdb
+import ipaddress
+import socket
 
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
-import apollo.config.objects.subnet as subnet
 import types_pb2 as types_pb2
 import policy_pb2 as policy_pb2
+import apollo.config.objects.lmapping as lmapping
 import apollo.config.utils as utils
-import ipaddress as ipaddress
 
 from infra.common.logging import logger
 from apollo.config.store import Store
 
-PROTO_TCP = 6
-PROTO_UDP = 17
-
-protos = {PROTO_TCP, PROTO_UDP}
-
-class rule_obj:
-    def __init__(self, af, stateful, l3match, prefix, proto, l4match):
-        self.af = af
+class RuleObject:
+    def __init__(self, stateful, l3match, proto, prefix, l4match, sportlow, sporthigh, dportlow, dporthigh):
         self.Stateful = stateful
         self.L3Match = l3match
-        self.Prefix = prefix
         self.Proto = proto
+        self.Prefix = prefix
         self.L4Match = l4match
-        self.L4SportLow = 0
-        self.L4SportHigh = 65535
-        self.L4DportLow = 0
-        self.L4DportHigh = 65535
+        self.L4SportLow = sportlow
+        self.L4SportHigh = sporthigh
+        self.L4DportLow = dportlow
+        self.L4DportHigh = dporthigh
 
 class PolicyObject(base.ConfigObjectBase):
-    def __init__(self, topospec):
+    def __init__(self, parent, af, direction, rules, policytype):
         super().__init__()
-        ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
-        self.PolicyId = next(resmgr.SecurityPolicyIdAllocator)
+        ################# PUBLIC ATTRIBUTES OF POLICY OBJECT #####################
+        self.VPCId = parent.VPCId
+        self.Direction = direction
+        if af == utils.IP_VERSION_6:
+            self.PolicyId = next(resmgr.V6SecurityPolicyIdAllocator)
+            self.AddrFamily = 'IPV6'
+        else:
+            self.PolicyId = next(resmgr.V4SecurityPolicyIdAllocator)
+            self.AddrFamily = 'IPV4'
         self.GID('Policy%d'%self.PolicyId)
-
-        ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
+        ################# PRIVATE ATTRIBUTES OF POLICY OBJECT #####################
+        self.PolicyType = policytype
+        self.rules = rules
+        self.Show()
         return
 
     def __repr__(self):
         return "PolicyID:%d" % (self.PolicyId)
 
-    def GetPrefix(self, subnet_obj, af, wildcard):
-        if af is 'IPV4':
-            if wildcard is True:
-                return ipaddress.ip_network('0.0.0.0/0')
-            else:
-                return subnet_obj.IPPrefix[1]
-        elif af is 'IPV6':
-            if wildcard is True:
-                return ipaddress.ip_network('0::0/0')
-            else:
-                return subnet_obj.IPPrefix[0]
-        else:
-            return None
-
-    def GetRule(self, subnet_obj, proto, af, wildcard):
-        prefix = self.GetPrefix(subnet_obj, af, wildcard)
-        rule = rule_obj(af, False, True, prefix, proto, True)
-        return rule
-
-    def GetRules(self, subnet_obj, af, wildcard):
-        rules = []
-        for proto in protos:
-            rules.append(self.GetRule(subnet_obj, proto, af, wildcard))
-        return rules
-
-    def GetWildcardPolicyId(self, direction, af):
-        if af is 'IPV4':
-            if direction is types_pb2.RULE_DIR_INGRESS:
-                return IngV4SecurityPolicyId
-            elif direction is types_pb2.RULE_DIR_EGRESS:
-                return EgV4SecurityPolicyId
-            else:
-                return None
-        elif af is 'IPV6':
-            if direction is types_pb2.RULE_DIR_INGRESS:
-                return IngV6SecurityPolicyId
-            elif direction is types_pb2.RULE_DIR_EGRESS:
-                return EgV6SecurityPolicyId
-            else:
-                return None
-        else:
-            return None
-
-    def GetGeneralPolicyId(self, sobj, direction, af):
-        if af is 'IPV4':
-            if direction == types_pb2.RULE_DIR_INGRESS:
-                return sobj.IngV4SecurityPolicyId
-            elif direction == types_pb2.RULE_DIR_EGRESS:
-                return sobj.EgV4SecurityPolicyId
-            else:
-                return None
-        elif af == 'IPV6':
-            if direction == types_pb2.RULE_DIR_INGRESS:
-                return sobj.IngV6SecurityPolicyId
-            elif direction == types_pb2.RULE_DIR_EGRESS:
-                return sobj.EgV6SecurityPolicyId
-            else:
-                return None
-        else:
-            return None
-
-    def GetPolicyId(self, sobj, direction, af, wildcard):
-        if wildcard is True:
-            return self.GetWildcardPolicyId(direction, af)
-        else:
-            return self.GetGeneralPolicyId(sobj, direction, af)
-
-    def ConfigRulesAndIds(self, sobj, direction, af, wildcard):
-        self.__subnetobj = sobj
-        self.PolicyId = self.GetPolicyId(sobj, direction, af, False)
-        self.af = af
-        self.rules = self.GetRules(sobj, af, wildcard)
-        self.num_rules = len(self.rules)
-        self.Direction = direction
-        #TODO: add support for multiple rules per policy
-        self.Stateful = False
-        self.GID('Policy%d'%self.PolicyId)
-        self.Show()
-
-    def FillRule(self, spec, rule):
+    def FillRuleSpec(self, spec, rule):
         specrule = spec.Rules.add()
         specrule.Stateful = rule.Stateful
         if rule.L4Match:
@@ -139,73 +64,197 @@ class PolicyObject(base.ConfigObjectBase):
         grpcmsg = policy_pb2.SecurityPolicyRequest()
         spec = grpcmsg.Request.add()
         spec.Id = self.PolicyId
-        if self.af == 'IPV6':
-            spec.AddrFamily = types_pb2.IP_AF_INET6
-        else:
-            spec.AddrFamily = types_pb2.IP_AF_INET
+        spec.Direction = types_pb2.RULE_DIR_INGRESS if self.Direction == "ingress" else types_pb2.RULE_DIR_EGRESS
+        spec.AddrFamily = types_pb2.IP_AF_INET6 if self.AddrFamily == 'IPV6' else types_pb2.IP_AF_INET
         for rule in self.rules:
-            self.FillRule(spec, rule)
-        spec.Direction = self.Direction
+            self.FillRuleSpec(spec, rule)
         return grpcmsg
 
     def Show(self):
         logger.info("Policy Object:", self)
         logger.info("- %s" % repr(self))
-        logger.info("- Dir:%d" % self.Direction)
+        logger.info("- Direction:%s" % self.Direction)
+        logger.info("- PolicyType:%s" % self.PolicyType)
         logger.info("- Number of rules:%d" % len(self.rules))
         for rule in self.rules:
             if rule.L3Match:
                 logger.info("- Prefix:%s Proto:%d" %(rule.Prefix, rule.Proto))
+            else:
+                logger.info("- No L3Match")
             if rule.L4Match:
                 logger.info("- SrcPortRange:%d - %d DstPortRange:%d - %d" %(rule.L4SportLow, rule.L4SportHigh, rule.L4DportLow, rule.L4DportHigh))
+            else:
+                logger.info("- No L4Match")
         return
 
+    def IsFilterMatch(self, selectors):
+        return super().IsFilterMatch(selectors.policy.filters)
+
     def SetupTestcaseConfig(self, obj):
-        obj.subnet = self.__subnetobj
+        obj.localmapping = self.l_obj
+        obj.policy = self
+        obj.route = self.l_obj.VNIC.SUBNET.V6RouteTable if self.AddrFamily == 'IPV6' else self.l_obj.VNIC.SUBNET.V4RouteTable
         obj.hostport = 1
         obj.switchport = 2
+        obj.devicecfg = Store.GetDevice()
         return
 
 class PolicyObjectClient:
     def __init__(self):
         self.__objs = []
+        self.__v4ingressobjs = {}
+        self.__v6ingressobjs = {}
+        self.__v4egressobjs = {}
+        self.__v6egressobjs = {}
+        self.__v4ipolicyiter = {}
+        self.__v6ipolicyiter = {}
+        self.__v4epolicyiter = {}
+        self.__v6epolicyiter = {}
         return
 
     def Objects(self):
         return self.__objs
 
-    def GenerateObjects(self, topospec):
-        sobjs = subnet.client.Objects()
-        for sobj in sobjs:
-            obj = PolicyObject(topospec)
-            obj.ConfigRulesAndIds(sobj, types_pb2.RULE_DIR_INGRESS, 'IPV4', False)
-            self.__objs.append(obj)
-            #obj = PolicyObject(topospec)
-            #obj.ConfigRulesAndIds(sobj, types_pb2.RULE_DIR_INGRESS, 'IPV6', False)
-            #self.__objs.append(obj)
-            obj = PolicyObject(topospec)
-            obj.ConfigRulesAndIds(sobj, types_pb2.RULE_DIR_EGRESS, 'IPV4', False)
-            self.__objs.append(obj)
-            #obj = PolicyObject(topospec)
-            #obj.ConfigRulesAndIds(sobj, types_pb2.RULE_DIR_EGRESS, 'IPV6', False)
-            #self.__objs.append(obj)
-        return
+    def GetIngV4SecurityPolicyId(self, vpcid):
+        if len(self.__v4ingressobjs[vpcid]) == 0:
+            return 0
+        return self.__v4ipolicyiter[vpcid].rrnext().PolicyId
 
-    def GenerateWildcardObjects(self, topospec):
-        sobjs = subnet.client.Objects()
-        for sobj in sobjs:
-            obj = PolicyObject(topospec)
-            obj.ConfigRulesAndIds(sobj, types_pb2.RULE_DIR_INGRESS, 'IPV4', True)
+    def GetIngV6SecurityPolicyId(self, vpcid):
+        if len(self.__v6ingressobjs[vpcid]) == 0:
+            return 0
+        return self.__v6ipolicyiter[vpcid].rrnext().PolicyId
+
+    def GetEgV4SecurityPolicyId(self, vpcid):
+        if len(self.__v4egressobjs[vpcid]) == 0:
+            return 0
+        return self.__v4epolicyiter[vpcid].rrnext().PolicyId
+
+    def GetEgV6SecurityPolicyId(self, vpcid):
+        if len(self.__v6egressobjs[vpcid]) == 0:
+            return 0
+        return self.__v6epolicyiter[vpcid].rrnext().PolicyId
+
+    def GenerateObjects(self, parent, vpc_spec_obj):
+        vpcid = parent.VPCId
+        stack = parent.Stack
+        self.__objs = []
+        self.__v4ingressobjs[vpcid] = []
+        self.__v6ingressobjs[vpcid] = []
+        self.__v4egressobjs[vpcid] = []
+        self.__v6egressobjs[vpcid] = []
+        self.__v4ipolicyiter[vpcid] = None
+        self.__v6ipolicyiter[vpcid] = None
+        self.__v4epolicyiter[vpcid] = None
+        self.__v6epolicyiter[vpcid] = None
+
+        def __is_v4stack():
+            if stack == "dual" or stack == 'ipv4':
+                return True
+            return False
+
+        def __is_v6stack():
+            return False #v6 policy not supported in HAL yet
+            if stack == "dual" or stack == 'ipv6':
+                return True
+            return False
+
+        def __get_l4_rule(af, rulespec):
+            sportlow = rulespec.sportlow if hasattr(rulespec, 'sportlow') else 0
+            dportlow = rulespec.dportlow if hasattr(rulespec, 'dportlow') else 0
+            sporthigh = rulespec.sporthigh if hasattr(rulespec, 'sporthigh') else 65535
+            dporthigh = rulespec.dporthigh if hasattr(rulespec, 'dporthigh') else 65535
+            if hasattr(rulespec, 'sportlow') or hasattr(rulespec, 'dportlow'):
+                # set l4match if topo has any of l4 port info
+                l4match = True
+            else:
+                l4match = False
+            return l4match, sportlow, sporthigh, dportlow, dporthigh
+
+        def __get_l3_proto_from_rule(rulespec):
+            proto = 0
+            if hasattr(rulespec, 'protocol'):
+                protocol = rulespec.protocol
+                proto = socket.getprotobyname(protocol)
+            return proto
+
+        def __get_l3_pfx_from_rule(af, rulespec):
+            prefix = None
+            if af == utils.IP_VERSION_4:
+                if hasattr(rulespec, 'v4pfx'):
+                    prefix = rulespec.v4pfx
+            else:
+                if hasattr(rulespec, 'v6pfx'):
+                    prefix = rulespec.v6pfx
+            if prefix is not None:
+                prefix = ipaddress.ip_network(prefix.replace('\\', '/'))
+            return prefix
+
+        def __get_l3_rule(af, rulespec):
+            proto = __get_l3_proto_from_rule(rulespec)
+            prefix = __get_l3_pfx_from_rule(af, rulespec)
+            l3match = False if prefix is None else True
+            return l3match, proto, prefix
+
+        def __get_rules(af, policyspec):
+            rules = []
+            for rulespec in policyspec.rule:
+                stateful = rulespec.stateful
+                l4match, sportlow, sporthigh, dportlow, dporthigh = __get_l4_rule(af, rulespec)
+                l3match, proto, prefix = __get_l3_rule(af, rulespec)
+                rule = RuleObject(stateful, l3match, proto, prefix, l4match, sportlow, sporthigh, dportlow, dporthigh)
+                rules.append(rule)
+            return rules
+
+        def __add_v4policy(direction, v4rules, policytype):
+            obj = PolicyObject(parent, utils.IP_VERSION_4, direction, v4rules, policytype)
+            if direction == 'ingress':
+                self.__v4ingressobjs[vpcid].append(obj)
+            else:
+                self.__v4egressobjs[vpcid].append(obj)
             self.__objs.append(obj)
-            #obj = PolicyObject(topospec)
-            #obj.ConfigRulesAndIds(sobj, types_pb2.RULE_DIR_INGRESS, 'IPV6', True)
-            #self.__objs.append(obj)
-            obj = PolicyObject(topospec)
-            obj.ConfigRulesAndIds(sobj, types_pb2.RULE_DIR_EGRESS, 'IPV4', True)
+
+        def __add_v6policy(direction, v6rules, policytype):
+            obj = PolicyObject(parent, utils.IP_VERSION_6, direction, v6rules, policytype)
+            if direction == 'ingress':
+                self.__v6ingressobjs[vpcid].append(obj)
+            else:
+                self.__v6egressobjs[vpcid].append(obj)
             self.__objs.append(obj)
-            #obj = PolicyObject(topospec)
-            #obj.ConfigRulesAndIds(sobj, types_pb2.RULE_DIR_EGRESS, 'IPV6', True)
-            #self.__objs.append(obj)
+
+        def __add_user_specified_policy(policyspec, policytype):
+            direction = policyspec.direction
+            if __is_v4stack():
+                v4rules = __get_rules(utils.IP_VERSION_4, policyspec)
+                policyobj = __add_v4policy(direction, v4rules, policytype)
+
+            if __is_v6stack():
+                v6rules = __get_rules(utils.IP_VERSION_6, policyspec)
+                policyobj = __add_v6policy(direction, v6rules, policytype)
+
+        if not hasattr(vpc_spec_obj, 'policy'):
+            #TODO: Need to install wildcard policies for other topo
+            return
+
+        for policy_spec_obj in vpc_spec_obj.policy:
+            policy_spec_type = policy_spec_obj.type
+            policytype = policy_spec_obj.policytype
+            if policy_spec_type == "specific":
+                __add_user_specified_policy(policy_spec_obj, policytype)
+                continue
+
+        if len(self.__v4ingressobjs[vpcid]) != 0:
+            self.__v4ipolicyiter[vpcid] = utils.rrobiniter(self.__v4ingressobjs[vpcid])
+
+        if len(self.__v6ingressobjs[vpcid]) != 0:
+            self.__v6ipolicyiter[vpcid] = utils.rrobiniter(self.__v6ingressobjs[vpcid])
+
+        if len(self.__v4egressobjs[vpcid]) != 0:
+            self.__v4epolicyiter[vpcid] = utils.rrobiniter(self.__v4egressobjs[vpcid])
+
+        if len(self.__v6egressobjs[vpcid]) != 0:
+            self.__v6epolicyiter[vpcid] = utils.rrobiniter(self.__v6egressobjs[vpcid])
+
         return
 
     def CreateObjects(self):
@@ -215,5 +264,35 @@ class PolicyObjectClient:
 
 client = PolicyObjectClient()
 
+class PolicyObjectHelper:
+    def __init__(self):
+        return
+
+    def __get_policyID_from_subnet(self, subnet, af, direction):
+        if af == 'IPV6':
+            return subnet.IngV6SecurityPolicyId if direction == 'ingress' else subnet.EgV6SecurityPolicyId
+        else:
+            return subnet.IngV4SecurityPolicyId if direction == 'ingress' else subnet.EgV4SecurityPolicyId
+
+    def __is_lmapping_match(self, policyobj, lobj):
+        if lobj.VNIC.SUBNET.VPC.VPCId != policyobj.VPCId:
+            return False
+        if lobj.AddrFamily == policyobj.AddrFamily:
+            return (policyobj.PolicyId == self.__get_policyID_from_subnet(lobj.VNIC.SUBNET, policyobj.AddrFamily, policyobj.Direction))
+        return False
+
+    def GetMatchingConfigObjects(self, selectors):
+        objs = []
+        policyobjs = filter(lambda x: x.IsFilterMatch(selectors), client.Objects())
+        for policyObj in policyobjs:
+            for lobj in lmapping.client.Objects():
+                if self.__is_lmapping_match(policyObj, lobj):
+                    policyObj.l_obj = lobj
+                    objs.append(policyObj)
+                    break
+        return utils.GetFilteredObjects(objs, selectors.maxlimits)
+
+PolicyHelper = PolicyObjectHelper()
+
 def GetMatchingObjects(selectors):
-    return client.Objects()
+    return PolicyHelper.GetMatchingConfigObjects(selectors)

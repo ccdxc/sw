@@ -1,15 +1,21 @@
-# Feature RFC Modules List
+# Feature RFC IPV4 Modules List
 feature:
     id          : rfc
     sub         : ipv4
     package     : test.rfc
     module      : rfc
-    enable      : False
+    enable      : True
     ignore      : True
 
 modules:
     - module:
-        name    : IPV4_EMTPY_POLICY
-        spec    : rfc.testspec
+        name    : IPV4_EGRESS_ALLOW_TCP
+        spec    : rfc_egress.testspec
         iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=POLICY
+            - policy : filter://AddrFamily=IPV4,PolicyType=allow_tcp
+
+    - module:
+        name    : IPV4_EGRESS_DISJOINT_PFX
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint_pfx

@@ -1,0 +1,9 @@
+# POLICY Object Template
+meta:
+    id      : POLICY
+    package : config.objects
+    module  : policy
+    feature_set:
+        - apollo
+
+Id: None

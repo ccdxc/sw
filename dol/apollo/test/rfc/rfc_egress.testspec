@@ -1,16 +1,13 @@
-# Test Spec
+# RFC Test Spec
 selectors:
-    root: ref://store/templates/id=FLOW
-    maxlimit: 5
-    flow: filter://any
-    route: filter://any
-    policy: filter://any
+    root: ref://store/templates/id=POLICY
+    maxlimits: 5
+    policy: filter://Direction=egress
 
 packets:
     - packet:
         id          : IN_PKT # Input packet
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
-        #template    : ETH_IPV4_TCP
         template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
@@ -22,13 +19,11 @@ packets:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
                 src     : ref://testcase/config/localmapping/IP
-                #dst     : ref://testcase/config/remotemapping/IP
-                dst     : callback://networking/packets/GetUsableHostFromRoute
+                dst     : callback://networking/packets/GetUsableHostFromPolicy
                 ttl     : 64
             ipv6:
                 src     : ref://testcase/config/localmapping/IP
-                #dst     : ref://testcase/config/remotemapping/IP
-                dst     : callback://networking/packets/GetUsableHostFromRoute
+                dst     : callback://networking/packets/GetUsableHostFromPolicy
                 hlim    : 64
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
@@ -36,8 +31,8 @@ packets:
     - packet:
         id          : EXP_SWITCH_PKT # Expected packet
         clone       : ref://testcase/packets/id=IN_PKT
-        encaps      : callback://networking/packets/GetPacketEncapFromMapping
-        #encaps      : ENCAP_MPLS
+        encaps      :
+            - ref://factory/packets/id=ENCAP_MPLS
         headers     :
             outereth:
                 src     : ref://testcase/config/devicecfg/MACAddr

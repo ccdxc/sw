@@ -16,7 +16,6 @@ import apollo.config.agent.api as agentapi
 import apollo.config.objects.batch as batch
 import apollo.config.objects.device as device
 import apollo.config.objects.vpc as vpc
-import apollo.config.objects.policy as policy
 
 from infra.common.logging import logger as logger
 from infra.asic.model import ModelConnector
@@ -33,14 +32,6 @@ def __generate(topospec):
     # Generate VPC configuration
     vpc.client.GenerateObjects(topospec)
 
-    if 'rfc' in GlobalOptions.feature:
-        # Generate Policy configuration for rfc feature
-        policy.client.GenerateObjects(topospec)
-    else:
-        # Generate wildcard policy configuration for all other features
-        policy.client.GenerateWildcardObjects(topospec)
-
-    #policy.client.GenerateObjects(topospec)
     return
 
 def __create():
@@ -52,9 +43,6 @@ def __create():
 
     # Create VPC Objects
     vpc.client.CreateObjects()
-
-    # Create Policy Objects
-    policy.client.CreateObjects()
 
     # Commit the Batch
     batch.client.Commit()

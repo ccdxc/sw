@@ -4,8 +4,9 @@ import pdb
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
-import apollo.config.objects.subnet as subnet
+import apollo.config.objects.policy as policy
 import apollo.config.objects.route as route
+import apollo.config.objects.subnet as subnet
 import apollo.config.utils as utils
 
 import vpc_pb2 as vpc_pb2
@@ -43,10 +44,13 @@ class VpcObject(base.ConfigObjectBase):
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
-        # Generate Route configuration. This should be before subnet
+        # Generate Policy configuration.
+        policy.client.GenerateObjects(self, spec)
+
+        # Generate Route configuration.
         route.client.GenerateObjects(self, spec)
 
-        # Generate Subnet configuration
+        # Generate Subnet configuration post policy & route
         subnet.client.GenerateObjects(self, spec)
         return
 
@@ -98,10 +102,13 @@ class VpcObjectClient:
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
         api.client.Create(api.ObjectTypes.VPC, msgs)
 
-        # Create Route object. This should be before subnet
+        # Create Policy object.
+        policy.client.CreateObjects()
+
+        # Create Route object.
         route.client.CreateObjects()
 
-        # Create Subnet Objects
+        # Create Subnet Objects after policy & route
         subnet.client.CreateObjects()
         return
 

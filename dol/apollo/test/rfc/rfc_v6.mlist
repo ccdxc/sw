@@ -4,12 +4,12 @@ feature:
     sub         : ipv6
     package     : test.rfc
     module      : rfc
-    enable      : False
+    enable      : False #v6 policy not supported
     ignore      : True
 
 modules:
     - module:
-        name    : IPV6_EMTPY_POLICY
-        spec    : rfc.testspec
+        name    : IPV6_EGRESS_ALLOW_TCP
+        spec    : rfc_egress.testspec
         iterate :
-            - policy : filter://AddrFamily=IPV6,PolicyType=empty
+            - policy : filter://AddrFamily=IPV6,PolicyType=allow_tcp

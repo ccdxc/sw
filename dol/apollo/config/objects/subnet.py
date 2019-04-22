@@ -6,6 +6,7 @@ import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.objects.vnic as vnic
 import apollo.config.objects.rmapping as rmapping
+import apollo.config.objects.policy as policy
 import apollo.config.objects.route as route
 import apollo.config.utils as utils
 import subnet_pb2 as subnet_pb2
@@ -29,10 +30,10 @@ class SubnetObject(base.ConfigObjectBase):
         self.VirtualRouterMacAddr = None
         self.V4RouteTableId = route.client.GetRouteV4TableId(parent.VPCId)
         self.V6RouteTableId = route.client.GetRouteV6TableId(parent.VPCId)
-        self.IngV4SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
-        self.IngV6SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
-        self.EgV4SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
-        self.EgV6SecurityPolicyId = next(resmgr.SecurityPolicyIdAllocator)
+        self.IngV4SecurityPolicyId = policy.client.GetIngV4SecurityPolicyId(parent.VPCId)
+        self.IngV6SecurityPolicyId = policy.client.GetIngV6SecurityPolicyId(parent.VPCId)
+        self.EgV4SecurityPolicyId = policy.client.GetEgV4SecurityPolicyId(parent.VPCId)
+        self.EgV6SecurityPolicyId = policy.client.GetEgV6SecurityPolicyId(parent.VPCId)
         self.V4RouteTable = route.client.GetRouteV4Table(parent.VPCId, self.V4RouteTableId)
         self.V6RouteTable = route.client.GetRouteV6Table(parent.VPCId, self.V6RouteTableId)
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
