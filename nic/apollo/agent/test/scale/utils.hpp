@@ -16,6 +16,7 @@
 #include "gen/proto/device.grpc.pb.h"
 #include "gen/proto/tunnel.grpc.pb.h"
 #include "gen/proto/vnic.grpc.pb.h"
+#include "gen/proto/mirror.grpc.pb.h"
 #include "gen/proto/types.grpc.pb.h"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vcn.hpp"
@@ -25,6 +26,7 @@
 #include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
+#include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 
 using grpc::Channel;
@@ -69,6 +71,10 @@ using pds::SecurityPolicySpec;
 using pds::SecurityPolicyResponse;
 using pds::SecurityPolicy;
 using pds::SecurityRule;
+using pds::MirrorSession;
+using pds::MirrorSessionRequest;
+using pds::MirrorSessionResponse;
+using pds::MirrorSessionSpec;
 
 //----------------------------------------------------------------------------
 // convert HAL IP address to spec
@@ -389,6 +395,26 @@ populate_device_request (DeviceRequest *req, pds_device_spec_t *device)
     ipv4_addr_to_spec(spec->mutable_gatewayip(), &device->gateway_ip_addr);
     spec->set_macaddr(MAC_TO_UINT64(device->device_mac_addr));
     return;
+}
+
+static void
+populate_mirror_session_request (MirrorSessionRequest *req,
+                                 pds_mirror_session_spec_t *ms)
+{
+    MirrorSessionSpec *spec;
+
+    if (!req || !ms) {
+        return;
+    }
+    spec = req->add_request();
+    spec->set_id(ms->key.id);
+    spec->set_snaplen(ms->snap_len);
+    if (ms->type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
+        spec->mutable_rspanspec()->set_frontpanelportid(ms->rspan_spec.interface);
+        pds_encap_to_proto_encap(spec->mutable_rspanspec()->mutable_encap(),
+                                 &ms->rspan_spec.encap);
+    } else {
+    }
 }
 
 static void

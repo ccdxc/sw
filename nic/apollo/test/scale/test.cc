@@ -757,6 +757,44 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
 }
 
 sdk_ret_t
+create_mirror_sessions (void)
+{
+    sdk_ret_t rv;
+    static uint32_t msid = 1, i;
+
+    pds_mirror_session_spec_t    ms;
+    for (i = 0; i < 4; i++) {
+        ms.key.id = msid++;
+        ms.type = PDS_MIRROR_SESSION_TYPE_RSPAN;
+        ms.snap_len = 128;
+        ms.rspan_spec.interface = 0x11010001;  // eth 1/1
+        ms.rspan_spec.encap.type = PDS_ENCAP_TYPE_DOT1Q;
+        ms.rspan_spec.encap.val.vlan_tag = 4094;
+#ifdef TEST_GRPC_APP
+        rv = create_mirror_session_grpc(&ms);
+        if (rv != SDK_RET_OK) {
+            printf("Failed to create mirror session %u, err %u\n",
+                   ms.key.id, rv);
+            return rv;
+        }
+        // push leftover objects
+        rv = create_mirror_session_grpc(NULL);
+        if (rv != SDK_RET_OK) {
+            return rv;
+        }
+#else
+        rv = pds_mirror_session_create(&ms);
+        if (rv != SDK_RET_OK) {
+            printf("Failed to create mirror session %u, err %u\n",
+                   ms.key.id, rv);
+            return rv;
+        }
+#endif
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 create_objects (void)
 {
     pt::ptree json_pt;

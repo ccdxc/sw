@@ -13,6 +13,7 @@
 #include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
+#include "nic/apollo/api/include/pds_mirror.hpp"
 
 sdk_ret_t create_route_table_grpc(pds_route_table_spec_t *rt);
 sdk_ret_t create_policy_grpc(pds_policy_spec_t *policy);
@@ -23,6 +24,7 @@ sdk_ret_t create_subnet_grpc(pds_subnet_spec_t *subnet);
 sdk_ret_t create_vcn_grpc(pds_vcn_spec_t *vcn);
 sdk_ret_t create_tunnel_grpc(uint32_t tep_id, pds_tep_spec_t *tep);
 sdk_ret_t create_device_grpc(pds_device_spec_t *device);
+sdk_ret_t create_mirror_session_grpc(pds_mirror_session_spec_t *spec);
 sdk_ret_t batch_start_grpc(void);
 sdk_ret_t batch_commit_grpc(void);
 void test_app_init(void);

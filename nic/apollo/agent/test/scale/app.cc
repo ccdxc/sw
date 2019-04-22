@@ -34,6 +34,7 @@ std::unique_ptr<pds::TunnelSvc::Stub>            g_tunnel_stub_;
 std::unique_ptr<pds::DeviceSvc::Stub>            g_device_stub_;
 std::unique_ptr<pds::BatchSvc::Stub>             g_batch_stub_;
 std::unique_ptr<pds::SecurityPolicySvc::Stub>    g_policy_stub_;
+std::unique_ptr<pds::MirrorSvc::Stub>            g_mirror_stub_;
 
 RouteTableRequest        g_route_table_req;
 SecurityPolicyRequest    g_policy_req;
@@ -42,6 +43,7 @@ VnicRequest              g_vnic_req;
 SubnetRequest            g_subnet_req;
 VPCRequest               g_vpc_req;
 TunnelRequest            g_tunnel_req;
+MirrorSessionRequest     g_mirror_session_req;
 
 #define APP_GRPC_BATCH_COUNT    5000
 
@@ -224,6 +226,28 @@ create_device_grpc (pds_device_spec_t *device)
     return SDK_RET_OK;
 }
 
+sdk_ret_t
+create_mirror_session_grpc (pds_mirror_session_spec_t *ms)
+{
+    ClientContext            context;
+    MirrorSessionResponse    response;
+    Status                   status;
+
+    populate_mirror_session_request(&g_mirror_session_req, ms);
+    if ((g_mirror_session_req.request_size() >= APP_GRPC_BATCH_COUNT) || !ms) {
+        status = g_mirror_stub_->MirrorSessionCreate(&context,
+                                                     g_mirror_session_req,
+                                                     &response);
+        if (!status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_mirror_session_req.clear_request();
+    }
+
+    return SDK_RET_OK;
+}
+
 int g_epoch = 0;
 
 sdk_ret_t
@@ -314,6 +338,7 @@ test_app_init (void)
     g_tunnel_stub_ = pds::TunnelSvc::NewStub(channel);
     g_device_stub_ = pds::DeviceSvc::NewStub(channel);
     g_batch_stub_ = pds::BatchSvc::NewStub(channel);
+    g_mirror_stub_ = pds::MirrorSvc::NewStub(channel);
 
     return;
 }
