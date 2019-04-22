@@ -128,7 +128,7 @@ rdma_stats_hdrs_init()
     args.size = sizeof(rdma_stats_hdrs);
 
     if (args.size > RDMA_STATS_HDRS_SIZE) {
-        HAL_TRACE_WARN("{}: Limiting rdma stats headers");
+        HAL_TRACE_WARN("Limiting rdma stats headers");
         args.size = RDMA_STATS_HDRS_SIZE;
     }
 
