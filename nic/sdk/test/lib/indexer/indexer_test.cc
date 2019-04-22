@@ -53,6 +53,19 @@ TEST_F(indexer_test, test1) {
     ASSERT_TRUE(rs == indexer::SUCCESS);
 }
 
+TEST_F(indexer_test, scale_test1M) {
+    uint32_t i;
+
+    // Instantiate the indexer
+    indexer  *ind = indexer::factory(1024*1024);
+
+    for (auto c = 0; c < 1024*1024; c++) {
+        // Allocate index
+        indexer::status rs  = ind->alloc(&i);
+        ASSERT_TRUE(rs == indexer::SUCCESS);
+    }
+}
+
 //----------------------------------------------------------------------------
 // Test 2:
 //

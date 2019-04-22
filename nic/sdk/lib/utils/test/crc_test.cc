@@ -6,11 +6,11 @@
 
 int main()
 {
-    unsigned char buf[40];
+    unsigned char buf[64];
     unsigned int crc = 0;
     sdk::utils::crcFast *crcgen;
 
-    memset(buf, 1, sizeof(buf));
+    memset(buf, 0xFF, sizeof(buf));
     crcgen = sdk::utils::crcFast::factory(0);
     for (int i = 0; i < 1024*1024; i++) {
         crc = crcgen->compute_crc(buf, sizeof(buf), 0);

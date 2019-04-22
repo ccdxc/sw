@@ -29,6 +29,8 @@ ifeq ($(PERF),1)
     COMMON_GXX_FLAGS        += -DPERF
 endif
 
+COMMON_GXX_FLAGS		+= -DPIPELINE=${PIPELINE}
+
 COMMON_GPP_FLAGS        := ${COMMON_GXX_FLAGS} --std=c++11
 COMMON_AR_FLAGS         := rcs
 COMMON_ARLIB_FLAGS      :=

@@ -18,7 +18,8 @@ ARCH_GXX_FLAGS      := $(addprefix -isystem ,${ARCH_SYS_PATHS}) \
                        -no-canonical-prefixes \
                        -nostdinc \
                        -ffunction-sections \
-                       -fdata-sections
+                       -fdata-sections \
+					   -march=armv8-a+crc+crypto
 
 ARCH_LINKER_FLAGS   := -Wl,--dynamic-linker=/lib/ld-linux-aarch64.so.1 \
                        --sysroot=${TOOLCHAIN_DIR}/aarch64-linux-gnu/libc  \

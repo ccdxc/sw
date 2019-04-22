@@ -43,6 +43,20 @@ using sdk::table::memhash::mem_hash_txn;
         SDK_SPINLOCK_UNLOCK(&slock_);\
 }
 
+#ifndef SIM
+#define CRC32X(crc, value) __asm__("crc32x %w[c], %w[c], %x[v]":[c]"+r"(crc):[v]"r"(value))
+#define RBIT(value) __asm__("rbit %w0, %w1": "=r"(value) : "r"(value))
+uint32_t
+crc32_aarch64(const uint64_t *p, uint32_t len) {
+    uint32_t crc = 0;
+    for (auto i = 0; i < 8; i++) {
+        CRC32X(crc, *p);
+    }
+    RBIT(crc);
+    return crc;
+}
+#endif
+
 //---------------------------------------------------------------------------
 // Factory method to instantiate the class
 //---------------------------------------------------------------------------
@@ -198,8 +212,12 @@ mem_hash::genhash_(sdk_table_api_params_t *params) {
                                                params->key, NULL,
                                                hwkey, NULL);
     SDK_ASSERT(p4pdret == P4PD_SUCCESS);
+//#ifdef SIM
     hash_32b = crc32gen_->compute_crc(hwkey, props_->hwkey_len,
                                       props_->hash_poly);
+//#else
+//    hash_32b = crc32_aarch64((uint64_t *)hwkey, props_->hwkey_len);
+//#endif
     params->hash_32b = hash_32b;
     params->hash_valid = true;
     MEMHASH_TRACE_VERBOSE("[%s] => H:%#x",

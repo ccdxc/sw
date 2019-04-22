@@ -1,9 +1,8 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = crc_test
-MODULE_PIPELINE = iris gft
-MODULE_LDLIBS   = pthread
+MODULE_TARGET   = libftlp4pd_mock.so
 MODULE_ARCH     = x86_64
-MODULE_SRCS     = ${MODULE_SRC_DIR}/crc_test.cc
+MODULE_FLAGS    = -fno-permissive
+MODULE_FLAGS    = -O3
+MODULE_PIPELINE = apollo iris
 include ${MKDEFS}/post.mk

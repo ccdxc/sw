@@ -146,8 +146,12 @@ typedef struct sdk_table_factory_params_ {
 } sdk_table_factory_params_t;
 
 typedef struct sdk_table_api_params_ {
-    // [Input] Key of the entry
-    void *key;
+    union {
+        // [Input] Key of the entry
+        void *key;
+        // [Input] Entry (Key + Data)
+        void *entry;
+    };
     // [Input] Key mask of the entry
     void *mask;
     // [Input] Data of the entry
@@ -225,6 +229,14 @@ typedef struct properties_ {
     bytes2str_t key2str;
     // Data to string method
     bytes2str_t data2str;
+    // Primary Table Base Physical Address
+    uint64_t ptable_base_mem_pa;
+    // Primary Base Virtual Address
+    uint64_t ptable_base_mem_va;
+    // Secondary Table Base Physical Address
+    uint64_t stable_base_mem_pa;
+    // Secondary Base Virtual Address
+    uint64_t stable_base_mem_va;
 } properties_t;
 
 } // namespace table

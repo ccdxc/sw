@@ -44,7 +44,8 @@ nic/build/$ARCH/$PIPELINE/lib/libcatalog.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkplatformutils.so              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgr.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgrcsr.so                 /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libmemhash.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmemhash*.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libftl*.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libbm_allocator.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libbitmap.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmtrack.so                        /nic/lib/
@@ -97,6 +98,8 @@ nic/build/$ARCH/$PIPELINE/lib/libnuma.so						 /nic/lib
 # test binaries and libraries
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_test                      /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_scale_test                /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/memhash_test                        /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/ftl_test                            /nic/bin/
 nic/apollo/test/scale/scale_cfg.json                              /nic/conf/
 nic/apollo/test/scale/scale_cfg_v4_only.json                      /nic/conf/
 nic/apollo/test/scale/scale_cfg_p1.json                           /nic/conf/
