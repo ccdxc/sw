@@ -2,6 +2,7 @@ ifneq ($(KERNELRELEASE),)
 obj-$(CONFIG_IONIC) += eth/ionic/
 obj-$(CONFIG_IONIC_MNIC) += eth/ionic/
 obj-$(CONFIG_MNET) += mnet/
+obj-$(CONFIG_MNET_UIO_PDRV_GENIRQ) += mnet_uio_pdrv_genirq/
 obj-$(CONFIG_INFINIBAND_IONIC_RDMA) += rdma/drv/ionic/
 else
 
@@ -37,7 +38,10 @@ include ${MKINFRA}/config_${ARCH}.mk
 KSRC ?= $(AARCH64_LINUX_HEADERS)
 ETH_KOPT += CONFIG_IONIC_MNIC=m
 ETH_KOPT += CONFIG_MNET=m
+ETH_KOPT += CONFIG_MNET_UIO_PDRV_GENIRQ=m
 ETH_KOPT += CROSS_COMPILE=aarch64-linux-gnu-
+ALL += mnet
+ALL += mnet_uio_pdrv_genirq
 export PATH := $(PATH):$(TOOLCHAIN_DIR)/bin
 
 else
@@ -83,6 +87,15 @@ endif
 all: $(ALL)
 
 KBUILD_RULE = $(MAKE) -C $(KSRC) $(KOPT) M=$(CURDIR)
+mnet: eth mnet_uio_pdrv_genirq
+mnet: KOPT+=$(ETH_KOPT)
+mnet:
+	$(KBUILD_RULE)
+
+mnet_uio_pdrv_genirq: KOPT+=$(ETH_KOPT)
+mnet_uio_pdrv_genirq:
+	$(KBUILD_RULE)
+
 
 eth: KOPT+=$(ETH_KOPT)
 eth:

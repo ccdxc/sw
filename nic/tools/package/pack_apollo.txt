@@ -91,6 +91,9 @@ nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE/p4pd/capri_p4_table_map.json      
 nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_rxdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_rxdma_table_map.json
 nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_txdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_txdma_table_map.json
 
+# DPDK/VPP/Deps binaries/libraries
+nic/build/$ARCH/$PIPELINE/lib/libnuma.so						 /nic/lib
+
 # test binaries and libraries
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_test                      /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_scale_test                /nic/bin/

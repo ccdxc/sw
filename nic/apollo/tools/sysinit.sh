@@ -13,6 +13,10 @@ ifconfig lo up
 # load kernel modules for mnics
 insmod /nic/bin/ionic_mnic.ko &> /var/log/pensando/ionic_mnic_load.log
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - Unable to load mnic driver!" && exit 1
+
+insmod /nic/bin/mnet_uio_pdrv_genirq.ko &> /var/log/pensando/mnet_uio_pdrv_genirq_load.log
+[[ $? -ne 0 ]] && echo "Aborting Sysinit - Unable to load mnet_uio_pdrv_genirq driver!" && exit 1
+
 insmod /nic/bin/mnet.ko &> /var/log/pensando/mnet_load.log
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - Unable to load mnet driver!" && exit 1
 

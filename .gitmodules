@@ -16,3 +16,6 @@
 [submodule "nic/buildroot"]
 	path = nic/buildroot
 	url = git@github.com:/pensando/buildroot
+[submodule "nic/sdk/dpdk"]
+	path = nic/sdk/dpdk
+	url = https://github.com/pensando/dpdk

@@ -38,7 +38,8 @@ typedef enum lif_type_e {
     LIF_TYPE_HOST_MANAGEMENT,
     LIF_TYPE_MNIC_OOB_MANAGEMENT,
     LIF_TYPE_MNIC_INTERNAL_MANAGEMENT,
-    LIF_TYPE_MNIC_INBAND_MANAGEMENT
+    LIF_TYPE_MNIC_INBAND_MANAGEMENT,
+    LIF_TYPE_MNIC_CPU
 } lif_type_t;
 
 typedef struct lif_queue_info_s {

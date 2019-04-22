@@ -34,7 +34,9 @@ struct device *mnet_device;
 static unsigned int mnet_major;
 static struct cdev mnet_cdev;
 extern int ionic_probe(struct platform_device *pfdev);
+extern int mnet_uio_pdrv_genirq_probe(struct platform_device *pfdev);
 extern int ionic_remove(struct platform_device *pfdev);
+extern int mnet_uio_pdrv_genirq_remove(struct platform_device *pfdev);
 
 static int mnet_open(struct inode *inode, struct file *filep)
 {
@@ -111,7 +113,7 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {
 	int ret = 0;
 	struct mnet_dev_t *mnet;
-	uint8_t found_dev_node = 0;
+	uint8_t found_dev_node = 0, cpu_mnic_dev = 0;
 	struct mnet_dev_create_req_t req;
 	char iface_name[MNIC_NAME_LEN] = {0};
 	void __user *argp = (void __user *)arg;
@@ -120,6 +122,7 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 	case MNET_CREATE_DEV:
 
+		dev_err(mnet_device, "Create Dev called\n");
 		list_for_each_entry(mnet, &mnet_list, node) {
 			/* find the first free mnet instance to create mnic device */
 			if (!mnet->busy) {
@@ -128,11 +131,15 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 			}
 		}
 
-		if (!found_dev_node)
+		if (!found_dev_node) {
+			dev_err(mnet_device, "Dev node not found \n");
 			return -EDQUOT;
+		}
 
-		if (copy_from_user(&req, argp, sizeof(req)))
+		if (copy_from_user(&req, argp, sizeof(req))) {
+			dev_err(mnet_device, "copy from user failed\n");
 			return -EFAULT;
+		}
 
 		mnet->mnic_pdev = mnet_get_platform_device(mnet, &req);
 
@@ -142,8 +149,20 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 			break;
 		}
 
+		/*
+		 * No probe for device names of cpu_mnic, better way to do this
+		 * would be pass on a flag called no-probe in mnet_dev_create_req_t struct
+		 */
+		if (!strncmp(req.iface_name, "cpu_mnic", 8))
+			cpu_mnic_dev = 1;
+		dev_info(mnet_device, "MNET_CREATE_DEV called iface name %s (is cpu mnic: %d)\n", req.iface_name, cpu_mnic_dev);
+
 		/* call probe with this platform_device */
-		ret = ionic_probe(mnet->mnic_pdev);
+		if (cpu_mnic_dev) {
+			ret = mnet_uio_pdrv_genirq_probe(mnet->mnic_pdev);
+		} else {
+			ret = ionic_probe(mnet->mnic_pdev);
+		}
 		if (ret) {
 			dev_err(mnet_device, "mnic probe for %s failed with err: %d\n",
 					mnet->mnic_pdev->name, ret);
@@ -171,6 +190,9 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 			/* find the mnet device which is bound to this interface */
 			if (!strcmp(mnet->mnic_pdev->name, iface_name)) {
 				found_dev_node = 1;
+				/* For CPU MNIC devices, call a different remove */
+				if (!strncmp(iface_name, "cpu_mnic", 8))
+					cpu_mnic_dev = 1;
 				break;
 			}
 		}
@@ -179,7 +201,10 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 			return -EDQUOT;
 
 		if (mnet->busy) {
-			ret = ionic_remove(mnet->mnic_pdev);
+			if (cpu_mnic_dev)
+				ret = mnet_uio_pdrv_genirq_probe(mnet->mnic_pdev);
+			else
+				ret = ionic_remove(mnet->mnic_pdev);
 			if (ret) {
 				dev_dbg(mnet_device, "ionic_remove failed to remove %s "
 						"interface\n", mnet->mnic_pdev->name);

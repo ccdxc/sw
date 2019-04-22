@@ -47,32 +47,41 @@ fi
 
 # check for all the binaries
 if [[ ! -f $NIC_DIR/bin/hal ]]; then
-    echo "HAL binary not found"
+    echo "Aborting Sysinit - HAL binary not found"
     exit 1
 fi
 
 if [[ ! -f $NIC_DIR/bin/netagent ]]; then
-    echo "netagent binary not found"
+    echo "Aborting Sysinit - netagent binary not found"
     exit 1
 fi
 
 if [[ ! -f $PLATFORM_DIR/bin/nicmgrd ]]; then
-    echo "nicmgr binary not found"
+    echo "Aborting Sysinit - nicmgr binary not found"
     exit 1
 fi
 
 if [[ ! -f $PLATFORM_DIR/drivers/ionic_mnic.ko ]]; then
-    echo "mnic driver not found"
+    echo "Aborting Sysinit - mnic driver not found"
     exit 1
 fi
 
 if [[ ! -f $PLATFORM_DIR/drivers/mnet.ko ]]; then
-    echo "mnet driver not found"
+    echo "Aborting Sysinit - mnet driver not found"
+    exit 1
+fi
+
+if [[ ! -f $PLATFORM_DIR/drivers/mnet_uio_pdrv_genirq.ko ]]; then
+    echo "Aborting Sysinit - mnet_uio_pdrv_genirq driver not found"
     exit 1
 fi
 
 insmod $PLATFORM_DIR/drivers/ionic_mnic.ko &> /var/log/pensando/ionic_mnic_load.log
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - Unable to load mnic driver!" && exit 1
+
+insmod $PLATFORM_DIR/drivers/mnet_uio_pdrv_genirq.ko &> /var/log/pensando/mnet_uio_pdrv_genirq_load.log
+[[ $? -ne 0 ]] && echo "Aborting Sysinit - Unable to load mnet_uio_pdrv_genirq driver!" && exit 1
+
 
 insmod $PLATFORM_DIR/drivers/mnet.ko &> /var/log/pensando/mnet_load.log
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - Unable to load mnet driver!" && exit 1

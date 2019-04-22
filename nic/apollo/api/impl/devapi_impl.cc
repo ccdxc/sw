@@ -63,7 +63,6 @@ devapi_impl::lif_create(lif_info_t *info) {
         // currently adding support only for MNIC oob
         lif->program_filters(info);
     }
-    PDS_TRACE_DEBUG("Programmed filter for lif %u", info->lif_id);
     return SDK_RET_OK;
 }
 

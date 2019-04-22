@@ -91,6 +91,7 @@ public:
     ///< \param[in] lif_params    lif configuration parameters
     sdk_ret_t program_filters(lif_info_t *lif_params);
 
+
 private:
     ///< constructor
     lif_impl(pds_lif_spec_t *spec);
