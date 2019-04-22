@@ -91,6 +91,9 @@ public:
     ///< \param[in] lif_params    lif configuration parameters
     sdk_ret_t program_filters(lif_info_t *lif_params);
 
+    ///< \brief    program filter entries for inband lifs
+    ///< \param[in] lif_params    lif configuration parameters
+    sdk_ret_t program_inband_filters(lif_info_t *lif_params);
 
 private:
     ///< constructor

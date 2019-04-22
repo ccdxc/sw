@@ -165,7 +165,7 @@ public:
     static uint32_t ifindex_to_logical_port(uint32_t ifindex);
     static uint32_t ifindex_to_phy_port(uint32_t ifindex);
     static uint32_t logical_port_to_ifindex(uint32_t logical_port);
-    uint32_t ifindex_to_tm_port(uint32_t ifindex);
+    static uint8_t slot(void) { return 1; }
 
     // catalog to sdk conversion
     static port_speed_t catalog_speed_to_port_speed(std::string speed);
@@ -196,6 +196,9 @@ public:
     uint32_t startup_vdd (void) const { return catalog_db_.voltages.startup_vdd; }
     uint32_t startup_arm (void) const { return catalog_db_.voltages.startup_arm; }
 
+    // lookups based on ifindex
+    uint32_t ifindex_to_tm_port(uint32_t ifindex);
+
     // lookups based on asic, asic_port
     uint32_t num_asic_ports(uint32_t asic) {
         return catalog_db_.asics[asic].max_ports;
@@ -224,7 +227,6 @@ public:
     uint32_t logical_port_to_tm_port(uint32_t logical_port);
 
     // return number of physical ports (fp_ports == phy_ports)
-    uint8_t slot(void) { return 1; }
     uint32_t num_fp_ports(void) const { return catalog_db_.num_fp_ports; }
     port_type_t  port_type_fp(uint32_t fp_port);
     uint32_t     num_lanes_fp(uint32_t fp_port);

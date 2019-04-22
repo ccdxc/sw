@@ -62,6 +62,8 @@ devapi_impl::lif_create(lif_info_t *info) {
     if (info->type == sdk::platform::LIF_TYPE_MNIC_OOB_MANAGEMENT) {
         // currently adding support only for MNIC oob
         lif->program_filters(info);
+    } else if (info->type == sdk::platform::LIF_TYPE_MNIC_INBAND_MANAGEMENT) {
+        lif->program_inband_filters(info);
     }
     return SDK_RET_OK;
 }

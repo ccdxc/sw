@@ -127,6 +127,53 @@ lif_impl::program_filters(lif_info_t *lif_params) {
     return ret;
 }
 
+sdk_ret_t
+lif_impl::program_inband_filters(lif_info_t *lif_params) {
+    sdk_ret_t ret;
+    nacl_swkey_t key = { 0 };
+    nacl_swkey_mask_t mask = { 0 };
+    nacl_actiondata_t data =  { 0 };
+    uint32_t idx;
+
+    // ARM -> uplink (untag packets)
+    key.capri_intrinsic_lif = key_;
+    mask.capri_intrinsic_lif_mask = 0xFFFF;
+    key.ctag_1_valid = 0;
+    mask.ctag_1_valid_mask = 0xF;
+    data.action_id = NACL_NACL_REDIRECT_ID;
+    data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
+    data.nacl_redirect_action.oport =
+        g_pds_state.catalogue()->ifindex_to_tm_port(pinned_if_idx_);;
+    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry for mnic lif %u -> "
+                      "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
+        return ret;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    memset(&data, 0, sizeof(data));
+
+    // uplink -> ARM (untag packets)
+    key.capri_intrinsic_lif =
+        sdk::lib::catalog::ifindex_to_logical_port(pinned_if_idx_);
+    mask.capri_intrinsic_lif_mask = 0xFFFF;
+    key.ctag_1_valid = 0;
+    mask.ctag_1_valid_mask = 0xF;
+    data.action_id = NACL_NACL_REDIRECT_ID;
+    data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
+    data.nacl_redirect_action.oport = TM_PORT_DMA;
+    data.nacl_redirect_action.lif = key_;
+    data.nacl_redirect_action.vlan_strip = lif_params->vlan_strip_en;
+    ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry for uplink %u -> mnic "
+                      "lif %u, err %u", pinned_if_idx_, key_, ret);
+    }
+    return ret;
+}
+
 /// \@}
 
 }    // namespace impl

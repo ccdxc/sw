@@ -96,7 +96,7 @@ bool
 catalog::catalog_str_to_bool(std::string val)
 {
     if (val == "true") {
-        return true; 
+        return true;
     }
     return false;
 }
@@ -964,7 +964,7 @@ catalog::logical_port_to_ifindex(uint32_t logical_port)
 {
     uint32_t parent = ((logical_port - 1)/MAX_PORT_LANES) + 1;
     uint32_t child = ((logical_port - 1) % MAX_PORT_LANES) + 1;
-    return ETH_IFINDEX(0, parent, child);
+    return ETH_IFINDEX(slot(), parent, child);
 }
 
 uint32_t
