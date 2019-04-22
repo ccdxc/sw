@@ -280,6 +280,11 @@ vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch2_valid = false;
     sdk::lib::memrev(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.overlay_mac1,
                      spec->mac_addr, ETH_ADDR_LEN);
+    if (spec->tx_mirror_session_bmap) {
+        vnic_by_vlan_data.local_vnic_by_vlan_tx_info.mirror_en = TRUE;
+        vnic_by_vlan_data.local_vnic_by_vlan_tx_info.mirror_session =
+            spec->tx_mirror_session_bmap;
+    }
 
     // assert to support only dot1q encap for host
     SDK_ASSERT(spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q);
