@@ -23,6 +23,7 @@ typedef struct pciehdev_s {
     u_int32_t lifc;
     u_int32_t intrb;
     u_int32_t intrc;
+    u_int32_t intrdmask:1;
     pciehcfg_t *pcfg;
     pciehbars_t *pbars;
     void *phwdev;

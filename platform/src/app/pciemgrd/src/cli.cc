@@ -121,6 +121,7 @@ parse_common_pres_opt(int opt, pciehdevice_resources_t *pres)
             if (pfres->intrc) {
                 vfres->intrb = pfres->intrb + pfres->intrc;
                 vfres->intrc = pfres->intrc;
+                vfres->intrdmask = pfres->intrdmask;
             }
             vfres->devcmdpa = pfres->devcmddbpa + 0x1000;
             vfres->devcmd_stride = 0x1000;
@@ -143,6 +144,7 @@ add_accel(int argc, char *argv[])
 
     memset(&pres, 0, sizeof(pres));
     pres.pfres.intrc = 4;
+    pres.pfres.intrdmask = 1;
     pres.pfres.devcmdpa = 0x13e000000;   /* XXX */
     pres.pfres.devcmddbpa = pres.pfres.devcmdpa + 0x1000; /* XXX */
     pres.pfres.nvmeregspa = 0x13e000000; /* XXX */
@@ -189,6 +191,7 @@ add_debug(int argc, char *argv[])
 
     memset(&pres, 0, sizeof(pres));
     pres.pfres.intrc = 4;
+    pres.pfres.intrdmask = 1;
     name = NULL;
     bi = 0;
 
@@ -251,6 +254,7 @@ add_eth_class(const char *type, int argc, char *argv[])
 
     memset(&pres, 0, sizeof(pres));
     pres.pfres.intrc = 4;
+    pres.pfres.intrdmask = 1;
     pres.pfres.devcmdpa = 0x13e000000;   /* XXX */
     pres.pfres.devcmddbpa = pres.pfres.devcmdpa + 0x1000; /* XXX */
     name = NULL;
@@ -305,6 +309,7 @@ add_nvme(int argc, char *argv[])
 
     memset(&pres, 0, sizeof(pres));
     pres.pfres.intrc = 4;
+    pres.pfres.intrdmask = 0;
     name = NULL;
 
     getopt_reset(4, 2);
@@ -346,6 +351,7 @@ add_pciestress(int argc, char *argv[])
 
     memset(&pres, 0, sizeof(pres));
     pres.pfres.intrc = 4;
+    pres.pfres.intrdmask = 1;
     name = NULL;
 
     getopt_reset(4, 2);
@@ -387,6 +393,7 @@ add_rcdev(int argc, char *argv[])
 
     memset(&pres, 0, sizeof(pres));
     pres.pfres.intrc = 4;
+    pres.pfres.intrdmask = 0;
     name = NULL;
 
     getopt_reset(4, 2);
@@ -428,6 +435,7 @@ add_virtio(int argc, char *argv[])
 
     memset(&pres, 0, sizeof(pres));
     pres.pfres.intrc = 4;
+    pres.pfres.intrdmask = 0;
     name = NULL;
 
     getopt_reset(4, 2);

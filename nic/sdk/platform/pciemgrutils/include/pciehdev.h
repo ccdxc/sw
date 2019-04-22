@@ -52,6 +52,8 @@ u_int32_t pciehdev_get_intrb(pciehdev_t *pdev);
 void pciehdev_set_intrb(pciehdev_t *pdev, const u_int32_t intrb);
 u_int32_t pciehdev_get_intrc(pciehdev_t *pdev);
 void pciehdev_set_intrc(pciehdev_t *pdev, const u_int32_t intrc);
+int pciehdev_get_intrm(pciehdev_t *pdev);
+void pciehdev_set_intrm(pciehdev_t *pdev, const int intrm);
 char *pciehdev_get_name(pciehdev_t *pdev);
 void pciehdev_set_name(pciehdev_t *pdev, const char *name);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2019, Pensando Systems Inc.
  */
 
 #ifndef __INTRUTILS_H__
@@ -58,6 +58,9 @@ typedef union intr_state_s {
     u_int32_t w[4];
 } intr_state_t;
 
+/*
+ * Simple resource address accessors.
+ */
 u_int64_t intr_msixcfg_addr(const int intr);
 u_int64_t intr_fwcfg_addr(const int intr);
 u_int64_t intr_drvcfg_addr(const int intr);
@@ -75,10 +78,14 @@ u_int32_t intr_pba_size(const int intrc);
 u_int64_t intr_pba_cfg_addr(const int lif);
 u_int64_t intr_state_addr(const int intr);
 
-void intr_drvcfg(const int intr);
+/*
+ * Interrupt resource configuration/initialization.
+ */
+void
+intr_drvcfg(const int intr,
+            const int mask, const int coal_init, const int mask_on_assert);
 int intr_drvcfg_mask(const int intr, const int on);
 void intr_pba_cfg(const int lif, const int intrb, const size_t intrc);
-void intr_pba_clear(const int intr);
 void intr_msixcfg(const int intr,
                   const u_int64_t msgaddr,
                   const u_int32_t msgdata,
@@ -95,8 +102,40 @@ void intr_fwcfg_legacy(const int intr,
 int intr_fwcfg_function_mask(const int intr, const int on);
 void intr_fwcfg_mode(const int intr, const int legacy, const int fmask);
 void intr_fwcfg_local(const int intr, const int on);
-int intr_config_local_msi(const int intr, u_int64_t msgaddr, u_int32_t msgdata);
-void intr_state(const int intr, intr_state_t *v);
+int intr_config_local_msi(const int intr,
+                          u_int64_t msgaddr, u_int32_t msgdata);
+
+/* Interrupt state accessor. */
+void intr_state_get(const int intr, intr_state_t *st);
+void intr_state_set(const int intr, intr_state_t *st);
+
+/*
+ * Reset functions.  These functions have a "dmask" parameter for the
+ *     reset value of the drvcfg.mask register.  If the device has
+ *     interrupt resources mapped to the host and the interrupt
+ *     resource is managed by the host driver then call with dmask=1
+ *     so the interrupt is masked at reset.  The driver will unmask
+ *     it through its bar when initialization is complete.  If the
+ *     device is using interrupt resources but the host driver does
+ *     *not* directly manage the interrupt resource then set dmask=0
+ *     so the interrupts reset to "unmasked" and can be fired when
+ *     the local fw is ready to send.
+ *
+ * intr_reset_all() - reset all register groups to default values,
+ *                    use for resource initialization at device creation.
+ * intr_reset_dev() - device requested interrupt reset, reset all driver
+ *                    owned registers.
+ * intr_reset_flr() - function level reset, reset driver visible registers,
+ *                    msix registers.
+ * intr_reset_bus() - bus reset, reset driver visible registers,
+ *                    msix registers.
+ */
+void intr_reset_all(const int intrb, const int intrc, const int dmask);
+void intr_reset_dev(const int intrb, const int intrc, const int dmask);
+void intr_reset_flr(const int intrb, const int intrc, const int dmask);
+void intr_reset_bus(const int intrb, const int intrc, const int dmask);
+
+void intr_reset_pba(const int intrb, const int intrc);
 
 void intr_hwinit(void);
 

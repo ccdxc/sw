@@ -223,8 +223,8 @@ pciehw_hostup(pciehwdev_t *phwdev, void *arg)
 static void
 pciehw_hostdn(pciehwdev_t *phwdev, void *arg)
 {
-    pciehw_intr_reset(phwdev);
     pciehw_hdrt_unload(phwdev->lifb, phwdev->lifc);
+    pciehw_reset_hostdn(phwdev);
     /* XXX reset cfg/bars */
 }
 
@@ -667,6 +667,7 @@ pciehw_finalize_dev(pciehdev_t *pdev)
     phwdev->lifc = pciehdev_get_lifc(pdev);
     phwdev->intrb = pciehdev_get_intrb(pdev);
     phwdev->intrc = pciehdev_get_intrc(pdev);
+    phwdev->intrdmask = pciehdev_get_intrm(pdev);
 
     parent = pciehdev_get_parent(pdev);
     phwdev->parenth = parent ? pciehwdev_geth(pciehdev_get_hwdev(parent)) : 0;
@@ -850,7 +851,7 @@ devintr_show1(const pciehwdev_t *phwdev, const int flags)
     hwintr = phwdev->intrb;
     for (devidx = 0; devidx < phwdev->intrc; devidx++, hwintr++) {
 
-        intr_state(hwintr, &intrst);
+        intr_state_get(hwintr, &intrst);
         snprintf(intx, sizeof(intx), "int%c", "ABCD"[intrst.fwcfg_legacy_pin]);
         pciesys_loginfo("%-16s %-6d %-6d %c%c%c%c %-5s "
                         "0x%08" PRIx64 " 0x%-5x %d\n",

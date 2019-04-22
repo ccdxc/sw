@@ -187,6 +187,18 @@ pciehdev_set_intrc(pciehdev_t *pdev, const u_int32_t intrc)
     pdev->intrc = intrc;
 }
 
+int
+pciehdev_get_intrm(pciehdev_t *pdev)
+{
+    return pdev->intrdmask;
+}
+
+void
+pciehdev_set_intrm(pciehdev_t *pdev, const int intrm)
+{
+    pdev->intrdmask = intrm;
+}
+
 char *
 pciehdev_get_name(pciehdev_t *pdev)
 {

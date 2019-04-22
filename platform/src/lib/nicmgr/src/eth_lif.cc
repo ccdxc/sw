@@ -910,7 +910,7 @@ EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
-        intr_state(res->intr_base + intr, &intr_st);
+        intr_state_get(res->intr_base + intr, &intr_st);
         NIC_LOG_DEBUG("{}: intr{}: fwcfg_lif {} fwcfg_function_mask {}"
             " drvcfg_mask {} drvcfg_int_credits {} drvcfg_mask_on_assert {}",
             hal_lif_info_.name, res->intr_base + intr,

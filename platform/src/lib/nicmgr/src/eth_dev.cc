@@ -273,10 +273,15 @@ Eth::CreateLocalDevice()
                     mnet_req->drvcfg_pa,
                     mnet_req->msixcfg_pa);
 
+    // pba is unused by mnic, but config anyway
+    intr_pba_cfg(lif_base, intr_base, spec->intr_count);
     for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
-        intr_fwcfg(intr_base + intr, lif_base, 0, 0, 0, 0);
+        // lif,port params will be unusued in local mode
+        intr_fwcfg_msi(intr_base + intr, 0, 0);
         intr_fwcfg_local(intr_base + intr, 1);
     }
+    // reset device registers to defaults
+    intr_reset_dev(intr_base, spec->intr_count, 1);
 
 #define NICMGRD_THREAD_ID_MNET 0
     sdk::lib::thread *mnet_thread = NULL;
@@ -395,6 +400,7 @@ Eth::CreateHostDevice()
     pres.pfres.lifc = spec->lif_count;
     pres.pfres.intrb = intr_base;
     pres.pfres.intrc = spec->intr_count;
+    pres.pfres.intrdmask = 1;
     pres.pfres.npids = spec->rdma_pid_count;
     pres.pfres.devcmdpa = devcmd_mem_addr;
     pres.pfres.devcmddbpa = devcmddb_mem_addr;
@@ -709,10 +715,7 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_RESET", spec->name);
 
-    for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
-        intr_pba_clear(intr_base + intr);
-        intr_drvcfg(intr_base + intr);
-    }
+    intr_reset_dev(intr_base, spec->intr_count, 1);
 
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         eth_lif = it->second;

@@ -228,6 +228,7 @@ NvmeDev::_CreateHostDevice(void)
     pres.pfres.lifc = spec->lif_count;
     pres.pfres.intrb = intr_base;
     pres.pfres.intrc = spec->intr_count;
+    pres.pfres.intrdmask = 0;
     pres.pfres.npids = 1;
     //pres.pfres.devcmdpa = devcmd_mem_addr;
     pres.pfres.devcmddbpa = devcmddb_mem_addr;
@@ -300,8 +301,7 @@ NvmeDev::DevcmdHandler()
             devcmd->csts.rdy = true;
             WRITE_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(*devcmd), 0);
         }
-        IntrClear();
-        IntrReset(); //XXX
+        IntrReset();
 
     } else if ((cc_en == true) && (devcmd->cc.en == 0)) {
         NIC_LOG_DEBUG("!!! controller is getting disabled.. !!!");
@@ -317,7 +317,7 @@ NvmeDev::DevcmdHandler()
             WRITE_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(*devcmd), 0);
         }
 
-        IntrClear();
+        IntrReset();
     }
 
     return;
@@ -327,18 +327,7 @@ NvmeDev::DevcmdHandler()
 void
 NvmeDev::IntrReset(void)
 {
-    for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
-        intr_drvcfg_mask(intr_base + intr, 0); //XXX
-    }
-}
-
-void
-NvmeDev::IntrClear(void)
-{
-    for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
-        intr_pba_clear(intr_base + intr);
-        intr_drvcfg(intr_base + intr);
-    }
+    intr_reset_dev(intr_base, spec->intr_count, 0);
 }
 
 NvmeLif *

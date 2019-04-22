@@ -306,6 +306,7 @@ AccelDev::_CreateHostDevice(void)
     pres.pfres.lifc = spec->lif_count;
     pres.pfres.intrb = intr_base;
     pres.pfres.intrc = spec->intr_count;
+    pres.pfres.intrdmask = 1;
     pres.pfres.npids = 1;
     pres.pfres.devcmdpa = devcmd_mem_addr;
     pres.pfres.devcmddbpa = devcmddb_mem_addr;
@@ -498,10 +499,7 @@ AccelDev::CmdHandler(void *req, void *req_data,
 void
 AccelDev::IntrClear(void)
 {
-    for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
-        intr_pba_clear(intr_base + intr);
-        intr_drvcfg(intr_base + intr);
-    }
+    intr_reset_dev(intr_base, spec->intr_count, 1);
 }
 
 accel_status_code_t

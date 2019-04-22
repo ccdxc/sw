@@ -41,6 +41,7 @@ typedef struct pciehdev_res_s {
     u_int32_t lifc;             /* lif id count */
     u_int32_t intrb;            /* interrupt base */
     u_int32_t intrc;            /* interrupt count */
+    u_int32_t intrdmask:1;      /* reset val for drvcfg.mask */
     u_int32_t npids;            /* number of rdma pids */
     u_int64_t devcmdpa;         /* devcmd region physical address */
     u_int32_t devcmd_stride;    /* VF: stride between devcmdpa regions */

@@ -80,6 +80,7 @@ typedef struct pciehwdev_s {
     u_int32_t lifc;                     /* lif count for this dev */
     u_int32_t intrb;                    /* intr resource base */
     u_int32_t intrc;                    /* intr resource count */
+    u_int32_t intrdmask:1;              /* reset val for drvcfg.mask */
     pciehwdevh_t parenth;               /* handle to parent */
     pciehwdevh_t childh;                /* handle to child */
     pciehwdevh_t peerh;                 /* handle to peer */

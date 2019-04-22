@@ -17,67 +17,6 @@
 #include "pciehw_impl.h"
 #include "intr.h"
 
-static void
-init_intr_pba_cfg(pciehwdev_t *phwdev)
-{
-    const u_int32_t lif = phwdev->lifb;
-    const u_int32_t intrb = phwdev->intrb;
-    const u_int32_t intrc = phwdev->intrc;
-
-    intr_pba_cfg(lif, intrb, intrc);
-}
-
-static void
-init_intr_fwcfg(pciehwdev_t *phwdev)
-{
-    const u_int32_t lif = phwdev->lifb;
-    const int port = phwdev->port;
-    const u_int8_t intpin = phwdev->intpin;
-    const u_int32_t intrb = phwdev->intrb;
-    const u_int32_t intrc = phwdev->intrc;
-    u_int32_t intr;
-
-    for (intr = intrb; intr < intrb + intrc; intr++) {
-        intr_fwcfg_legacy(intr, lif, port, intpin);
-    }
-}
-
-static void
-init_intr_pba(pciehwdev_t *phwdev)
-{
-    const u_int32_t intrb = phwdev->intrb;
-    const u_int32_t intrc = phwdev->intrc;
-    u_int32_t intr;
-
-    for (intr = intrb; intr < intrb + intrc; intr++) {
-        intr_pba_clear(intr);
-    }
-}
-
-static void
-init_intr_drvcfg(pciehwdev_t *phwdev)
-{
-    const u_int32_t intrb = phwdev->intrb;
-    const u_int32_t intrc = phwdev->intrc;
-    u_int32_t intr;
-
-    for (intr = intrb; intr < intrb + intrc; intr++) {
-        intr_drvcfg(intr);
-    }
-}
-
-static void
-init_intr_msixcfg(pciehwdev_t *phwdev)
-{
-    const u_int32_t intrb = phwdev->intrb;
-    const u_int32_t intrc = phwdev->intrc;
-    u_int32_t intr;
-
-    for (intr = intrb; intr < intrb + intrc; intr++) {
-        intr_msixcfg(intr, 0, 0, 1);
-    }
-}
-
 void
 pciehw_intr_config(pciehwdev_t *phwdev, const int legacy, const int fmask)
 {
@@ -111,32 +50,34 @@ swizzle_intx_pin(pciehwdev_t *phwdev)
     return (swizzle_intx_pin(parent_hwdev) + d) % 4;
 }
 
-/*
- * Reset intrs to default state.
- *
- *     clear any pending intrs/pba
- *     reset to legacy intr
- *     set driver mask, clear mask_on_assert
- *     msix config is reset
- */
-void
-pciehw_intr_reset(pciehwdev_t *phwdev)
-{
-    init_intr_pba(phwdev);
-    init_intr_fwcfg(phwdev);
-    init_intr_drvcfg(phwdev);
-    init_intr_msixcfg(phwdev);
-}
-
 void
 pciehw_intr_init(pciehwdev_t *phwdev)
 {
-    /* setup/config */
+    const int port = phwdev->port;
+    const u_int32_t lif = phwdev->lifb;
+    const u_int32_t intrb = phwdev->intrb;
+    const u_int32_t intrc = phwdev->intrc;
+    u_int8_t intpin;
+    u_int32_t intr;
+
+    /*
+     * Initialize all device interrupts.
+     */
+
+    /* intpin */
     phwdev->intpin = swizzle_intx_pin(phwdev);
-    init_intr_pba_cfg(phwdev);
+
+    /* configure pba */
+    intr_pba_cfg(lif, intrb, intrc);
+
+    /* intr in legacy mode (for now) */
+    intpin = phwdev->intpin;
+    for (intr = intrb; intr < intrb + intrc; intr++) {
+        intr_fwcfg_legacy(intr, lif, port, intpin);
+    }
 
     /* return intr resources to default reset state */
-    pciehw_intr_reset(phwdev);
+    intr_reset_all(intrb, intrc, phwdev->intrdmask);
 }
 
 void

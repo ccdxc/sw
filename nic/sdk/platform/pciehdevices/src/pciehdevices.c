@@ -90,6 +90,7 @@ pciehdevice_new(const char *type,
     pciehdev_set_lifc(pfdev, pfres->lifc);
     pciehdev_set_intrb(pfdev, pfres->intrb);
     pciehdev_set_intrc(pfdev, pfres->intrc);
+    pciehdev_set_intrm(pfdev, pfres->intrdmask);
 
     /*
      * Init VF first, so PF init can derive some info from VF
@@ -107,6 +108,7 @@ pciehdevice_new(const char *type,
         pciehdev_set_lifc(vfdev, vfres->lifc);
         pciehdev_set_intrb(vfdev, vfres->intrb);
         pciehdev_set_intrc(vfdev, vfres->intrc);
+        pciehdev_set_intrm(vfdev, vfres->intrdmask);
 
         if (pdevice->init_vfbars) pdevice->init_vfbars(vfdev, vfres);
         if (pdevice->init_vfcfg)  pdevice->init_vfcfg (vfdev, vfres);

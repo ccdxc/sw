@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018, Pensando Systems Inc.
+ * Copyright (c) 2017-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -46,7 +46,7 @@
 #define INTR_ASSERT_OFFSET      CAP_INTR_CSR_DHS_INTR_ASSERT_BYTE_OFFSET
 #define INTR_ASSERT_BASE        (INTR_BASE + INTR_ASSERT_OFFSET)
 #define INTR_ASSERT_STRIDE      0x4
-#define INTR_ASSERT_DATA        0x00000001 // in little-endian
+#define INTR_ASSERT_DATA        0x00000001 /* in little-endian */
 
 #define INTR_COALESCE_OFFSET    CAP_INTR_CSR_DHS_INTR_COALESCE_BYTE_OFFSET
 #define INTR_COALESCE_BASE      (INTR_BASE + INTR_COALESCE_OFFSET)
@@ -149,14 +149,16 @@ intr_pba_cfg(const int lif, const int intrb, const size_t intrc)
 }
 
 void
-intr_drvcfg(const int intr)
+intr_drvcfg(const int intr,
+            const int mask, const int coal_init, const int mask_on_assert)
 {
     u_int64_t pa = intr_drvcfg_addr(intr);
 
     pal_reg_wr32(pa + offsetof(intr_drvcfg_t, mask), 1);
-    pal_reg_wr32(pa + offsetof(intr_drvcfg_t, coal_init), 0);
-    pal_reg_wr32(pa + offsetof(intr_drvcfg_t, mask_on_assert), 0);
+    pal_reg_wr32(pa + offsetof(intr_drvcfg_t, coal_init), coal_init);
+    pal_reg_wr32(pa + offsetof(intr_drvcfg_t, mask_on_assert), mask_on_assert);
     pal_reg_wr32(pa + offsetof(intr_drvcfg_t, coal_curr), 0);
+    pal_reg_wr32(pa + offsetof(intr_drvcfg_t, mask), mask);
 }
 
 /*
@@ -180,13 +182,12 @@ intr_pba_clear(const int intr)
     const u_int64_t pa = intr_drvcfg_addr(intr);
     u_int32_t omask, credits;
 
-    omask = pal_reg_rd32(pa + offsetof(intr_drvcfg_t, mask));
-    pal_reg_wr32(pa + offsetof(intr_drvcfg_t, mask), 1);
+    omask = intr_fwcfg_function_mask(intr, 1);
     {
         credits = pal_reg_rd32(pa + offsetof(intr_drvcfg_t, int_credits));
         pal_reg_wr32(pa + offsetof(intr_drvcfg_t, int_credits), credits);
     }
-    pal_reg_wr32(pa + offsetof(intr_drvcfg_t, mask), omask);
+    intr_fwcfg_function_mask(intr, omask);
 }
 
 void
@@ -227,7 +228,7 @@ intr_fwcfg(const int intr,
         .legacy = legacy,
         .int_pin = intpin,
     };
-    
+
     /* mask via function_mask while making changes */
     intr_fwcfg_function_mask(intr, 1);
     {
@@ -288,7 +289,7 @@ intr_fwcfg_local(const int intr, const int on)
     const u_int64_t pa = intr_fwcfg_addr(intr);
     intr_fwcfg_t v;
     int omask;
-    
+
     /* mask via function_mask while making changes */
     omask = intr_fwcfg_function_mask(intr, 1);
     {
@@ -301,13 +302,19 @@ intr_fwcfg_local(const int intr, const int on)
 
 /*
  * Change the mode of the interrupt between legacy and msi mode.
+ *
+ * Note:  We are careful to make config changes to fwcfg only with
+ * the function_mask set.  Masking the interrupt will deassert the
+ * interrupt if asserted in legacy mode, then we change any config,
+ * then re-enable with the new config.  If necessary the interrupt
+ * will re-assert with the new config.
  */
 void
 intr_fwcfg_mode(const int intr, const int legacy, const int fmask)
 {
     const u_int64_t pa = intr_fwcfg_addr(intr);
     intr_fwcfg_t v;
-    
+
     /* mask via function_mask while making changes */
     intr_fwcfg_function_mask(intr, 1);
     {
@@ -327,20 +334,195 @@ intr_config_local_msi(const int intr, u_int64_t msgaddr, u_int32_t msgdata)
     intr_fwcfg_local(intr, 1);
     /* set msgaddr/data, unmask at msixcfg */
     intr_msixcfg(intr, msgaddr, msgdata, 0);
-    /* default drvcfg settings */
-    intr_drvcfg(intr);
-    /* unmask at drvcfg */
-    intr_drvcfg_mask(intr, 0);
+    /* default drvcfg settings, unmasked */
+    intr_drvcfg(intr, 0, 0, 0);
 
     return 0;
 }
 
 void
-intr_state(const int intr, intr_state_t *v)
+intr_state_get(const int intr, intr_state_t *st)
 {
     const u_int64_t pa = intr_state_addr(intr);
 
-    pal_reg_rd32w(pa, v->w, NWORDS(v->w));
+    pal_reg_rd32w(pa, st->w, NWORDS(st->w));
+}
+
+void
+intr_state_set(const int intr, intr_state_t *st)
+{
+    const u_int64_t pa = intr_state_addr(intr);
+
+    pal_reg_wr32w(pa, st->w, NWORDS(st->w));
+}
+
+/*****************************************************************
+ * Reset section
+ */
+
+/*****************
+ * pba
+ */
+
+/*
+ * Reset this interrupt's contribution to the interrupt status
+ * Pending Bit Array (PBA).  We clear the PBA bit for this interrupt
+ * resource by returning all the "credits" for the interrupt.
+ *
+ * The driver interface to return credits is drvcfg.int_credits,
+ * but that register has special semantics where the value written
+ * to this register is atomically subtracted from the current value.
+ * We could use this interface to read the value X then write X back
+ * to the register to X - X = 0.  This works even for negative values
+ * since (-X) - (-X) = 0.
+ *
+ * The "intr_state" alias of int_credits intr_state.drvcfg_int_credits
+ * does not have the special "subtract" semantics.  The value written to
+ * intr_state.drvcfg_int_credits replaces the current value.  We just
+ * set intr_state.drvcfg_int_credits = 0 here to reset int_credits
+ * and clear any PBA bit for this interrupt.
+ *
+ * We mask via function_mask while adjusting credits.
+ * This is probably overly conservative for this case.
+ */
+static void
+reset_pba(const int intr)
+{
+    intr_state_t st;
+    u_int32_t omask;
+
+    /* mask via function_mask while making changes */
+    omask = intr_fwcfg_function_mask(intr, 1);
+    {
+        intr_state_get(intr, &st);
+        st.drvcfg_int_credits = 0;
+        intr_state_set(intr, &st);
+    }
+    intr_fwcfg_function_mask(intr, omask);
+}
+
+void
+intr_reset_pba(const int intrb, const int intrc)
+{
+    int intr;
+
+    for (intr = intrb; intr < intrb + intrc; intr++) {
+        reset_pba(intr);
+    }
+}
+
+/*****************
+ * drvcfg
+ */
+
+/*
+ * Reset the drvcfg register group.  This register group is often
+ * mapped to the host through the bar (e.g. eth, accel) so the driver
+ * can manage the settings.  For that case we'll leave the interrupt
+ * drvcfg.mask set so the resource won't send an interrupt until
+ * the driver has initialized and is ready clearing the mask.
+ *
+ * For some host devices (e.g. nvme) the interrupt resource is *not*
+ * mapped through the bar.  When we reset interrupts for this case
+ * we want to leave drvcfg.mask clear so we can send the interrupt
+ * to the device when we're ready to do so.
+ */
+static void
+reset_drvcfg(const int intr, const int mask)
+{
+    intr_drvcfg(intr, mask, 0, 0);
+}
+
+static void
+intr_reset_drvcfg(const int intrb, const int intrc, const int dmask)
+{
+    int intr;
+
+    for (intr = intrb; intr < intrb + intrc; intr++) {
+        reset_drvcfg(intr, dmask);
+    }
+}
+
+/*****************
+ * msixcfg
+ */
+
+/*
+ * Reset the msix control register group.  This group is usually
+ * owned by the host OS and the behavior, including these reset values,
+ * are specified by the PCIe spec.
+ */
+static void
+reset_msixcfg(const int intr)
+{
+    /* clear msg addr/data, vector_ctrl mask=1 */
+    intr_msixcfg(intr, 0, 0, 1);
+}
+
+static void
+intr_reset_msixcfg(const int intrb, const int intrc)
+{
+    int intr;
+
+    for (intr = intrb; intr < intrb + intrc; intr++) {
+        reset_msixcfg(intr);
+    }
+}
+
+/*****************
+ * intr mode
+ */
+
+/*
+ * Reset the interrupt "mode" to "legacy".
+ */
+static void
+reset_mode(const int intr)
+{
+    /* reset to legacy mode, no fmask (CMD.int_disable == 0) */
+    intr_fwcfg_mode(intr, 1, 0);
+}
+
+static void
+intr_reset_mode(const int intrb, const int intrc)
+{
+    int intr;
+
+    for (intr = intrb; intr < intrb + intrc; intr++) {
+        reset_mode(intr);
+    }
+}
+
+/*****************
+ * external reset apis
+ */
+
+void
+intr_reset_all(const int intrb, const int intrc, const int dmask)
+{
+    intr_reset_drvcfg(intrb, intrc, dmask);
+    intr_reset_msixcfg(intrb, intrc);
+    intr_reset_pba(intrb, intrc);
+    intr_reset_mode(intrb, intrc);
+}
+
+void
+intr_reset_dev(const int intrb, const int intrc, const int dmask)
+{
+    intr_reset_drvcfg(intrb, intrc, dmask);
+    intr_reset_pba(intrb, intrc);
+}
+
+void
+intr_reset_flr(const int intrb, const int intrc, const int dmask)
+{
+    intr_reset_all(intrb, intrc, dmask);
+}
+
+void
+intr_reset_bus(const int intrb, const int intrc, const int dmask)
+{
+    intr_reset_all(intrb, intrc, dmask);
 }
 
 /*

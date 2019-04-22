@@ -52,7 +52,6 @@ public:
     void HalEventHandler(bool status);
     void SetHalClient(devapi *dapi);
 
-    void IntrClear(void);
     void IntrReset(void);
 
     std::string GetName() { return spec->name; }

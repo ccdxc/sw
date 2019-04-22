@@ -5,6 +5,6 @@
 #ifndef __RESET_H__
 #define __RESET_H__
 
-void pciehw_reset_dev(pciehwdev_t *phwdev);
+void pciehw_reset_hostdn(pciehwdev_t *phwdev);
 
 #endif /* __RESET_H__ */
