@@ -6436,7 +6436,7 @@
           "format": "date-time",
           "title": "Last password change time for local user"
         },
-        "operations-status": {
+        "access-review": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/authOperationStatus"

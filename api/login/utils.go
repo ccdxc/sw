@@ -6,21 +6,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"reflect"
 	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/satori/go.uuid"
-	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 
 	"github.com/pensando/sw/api/generated/auth"
 	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/authz"
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
-	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 const (
@@ -168,154 +163,4 @@ func NewClusterRole(name string, permissions ...auth.Permission) *auth.Role {
 // NewClusterRoleBinding is a helper to create a role binding in default tenant
 func NewClusterRoleBinding(name, roleName, users, groups string) *auth.RoleBinding {
 	return NewRoleBinding(name, globals.DefaultTenant, roleName, users, groups)
-}
-
-// GetOperationsFromPermissions constructs authz.Operation from auth.Permission
-func GetOperationsFromPermissions(permissions []auth.Permission) []authz.Operation {
-	var operations []authz.Operation
-	for _, permission := range permissions {
-		// if actions are defined at a kind, group or namespace level
-		if len(permission.ResourceNames) == 0 {
-			for _, action := range permission.Actions {
-				resource := authz.NewResource(permission.ResourceTenant, permission.ResourceGroup, permission.ResourceKind, permission.ResourceNamespace, "")
-				operations = append(operations, authz.NewOperation(resource, action))
-			}
-			return operations
-		}
-		for _, resourceName := range permission.ResourceNames {
-			for _, action := range permission.Actions {
-				resource := authz.NewResource(permission.ResourceTenant, permission.ResourceGroup, permission.ResourceKind, permission.ResourceNamespace, resourceName)
-				operations = append(operations, authz.NewOperation(resource, action))
-			}
-		}
-	}
-	return operations
-}
-
-// ValidatePerm validates that resource kind and group is valid in permission
-func ValidatePerm(permission auth.Permission) error {
-	s := runtime.GetDefaultScheme()
-	switch permission.ResourceKind {
-	case "", authz.ResourceKindAll:
-		if permission.ResourceGroup != authz.ResourceGroupAll {
-			if _, ok := s.Kinds()[permission.ResourceGroup]; !ok {
-				return fmt.Errorf("invalid API group [%q]", permission.ResourceGroup)
-			}
-		}
-	case auth.Permission_APIEndpoint.String():
-		if permission.ResourceGroup != "" {
-			return fmt.Errorf("invalid API group, should be empty instead of [%q]", permission.ResourceGroup)
-		}
-		if len(permission.ResourceNames) == 0 {
-			return fmt.Errorf("missing API endpoint resource name")
-		}
-		var errs []error
-		for _, resourceName := range permission.ResourceNames {
-			err := ValidateResource(permission.ResourceTenant, permission.ResourceGroup, permission.ResourceKind, resourceName)
-			if err != nil {
-				errs = append(errs, err)
-			}
-		}
-		if err := k8serrors.NewAggregate(errs); err != nil {
-			return err
-		}
-	default:
-		return ValidateResource(permission.ResourceTenant, permission.ResourceGroup, permission.ResourceKind, "")
-	}
-	return nil
-}
-
-// ValidatePerms validates that resource kind and group is valid in permissions
-func ValidatePerms(permissions []auth.Permission) error {
-	var errs []error
-	for _, perm := range permissions {
-		if err := ValidatePerm(perm); err != nil {
-			errs = append(errs, err)
-		}
-	}
-	return k8serrors.NewAggregate(errs)
-}
-
-// ValidateOperation validates operation
-func ValidateOperation(op *auth.Operation) (authz.Operation, error) {
-	// make sure interface type and value are not nil
-	if op == nil || reflect.ValueOf(op).IsNil() {
-		return nil, fmt.Errorf("operation not specified")
-	}
-	res := op.GetResource()
-	if res == nil || reflect.ValueOf(res).IsNil() {
-		return nil, fmt.Errorf("resource not specified")
-	}
-	if err := k8serrors.NewAggregate(op.Validate("all", "", true)); err != nil {
-		return nil, err
-	}
-	if err := ValidateResource(res.Tenant, res.Group, res.Kind, res.Name); err != nil {
-		return nil, err
-	}
-	return authz.NewOperation(authz.NewResource(res.Tenant, res.Group, res.Kind, res.Namespace, res.Name), op.Action), nil
-}
-
-// ValidateResource validates resource information
-func ValidateResource(tenant, group, kind, name string) error {
-	s := runtime.GetDefaultScheme()
-	switch kind {
-	case auth.Permission_Event.String(), auth.Permission_Search.String(), auth.Permission_MetricsQuery.String(), auth.Permission_FwlogsQuery.String(), auth.Permission_AuditEvent.String():
-		if group != "" {
-			return fmt.Errorf("invalid API group, should be empty instead of [%q]", group)
-		}
-	case auth.Permission_APIEndpoint.String():
-		if group != "" {
-			return fmt.Errorf("invalid API group, should be empty instead of [%q]", group)
-		}
-		if name == "" {
-			return fmt.Errorf("missing API endpoint resource name")
-		}
-	default:
-		if s.Kind2APIGroup(kind) != group {
-			return fmt.Errorf("invalid resource kind [%q] and API group [%q]", kind, group)
-		}
-		ok, err := s.IsClusterScoped(kind)
-		if err != nil {
-			log.Infof("unknown resource kind [%q], err: %v", kind, err)
-		}
-		if ok && tenant != "" {
-			return fmt.Errorf("tenant should be empty for cluster scoped resource kind [%q]", kind)
-		}
-		ok, err = s.IsTenantScoped(kind)
-		if err != nil {
-			log.Infof("unknown resource kind [%q], err: %v", kind, err)
-		}
-		if ok && tenant == "" {
-			return fmt.Errorf("tenant should not be empty for tenant scoped resource kind [%q]", kind)
-		}
-	}
-	return nil
-}
-
-// PrintOperations creates a string out of operations for logging
-func PrintOperations(operations []authz.Operation) string {
-	var message string
-	for _, oper := range operations {
-		if oper != nil {
-			res := oper.GetResource()
-			if res != nil {
-				owner := res.GetOwner()
-				var ownerTenant, ownerName string
-				if owner != nil {
-					ownerTenant = owner.Tenant
-					ownerName = owner.Name
-				}
-				message = message + fmt.Sprintf("resource(tenant: %v, group: %v, kind: %v, namespace: %v, name: %v, owner: %v|%v), action: %v; ",
-					res.GetTenant(),
-					res.GetGroup(),
-					res.GetKind(),
-					res.GetNamespace(),
-					res.GetName(),
-					ownerTenant,
-					ownerName,
-					oper.GetAction())
-			}
-		}
-	}
-	return message
 }

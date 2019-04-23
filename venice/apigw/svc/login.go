@@ -36,6 +36,7 @@ import (
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/audit"
 	"github.com/pensando/sw/venice/utils/authn/manager"
+	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/balancer"
 	vErrors "github.com/pensando/sw/venice/utils/errors"
@@ -316,6 +317,9 @@ func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*
 	for _, role := range roles {
 		user.Status.Roles = append(user.Status.Roles, role.Name)
 	}
+	// get authorized operations for user and update status
+	user.Status.AccessReview = []*auth.OperationStatus{}
+	user.Status.AccessReview = append(user.Status.AccessReview, authz.AuthorizedOperations(user, apigwpkg.MustGetAPIGateway().GetAuthorizer())...)
 	return user, nil
 }
 

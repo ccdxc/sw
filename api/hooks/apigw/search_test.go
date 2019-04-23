@@ -166,7 +166,7 @@ func TestSearchOperationsHook(t *testing.T) {
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		operations, _ := apigwpkg.OperationsFromContext(nctx)
 		Assert(t, areOperationsEqual(test.expectedOperations, operations),
-			fmt.Sprintf("[%s] test failed, expected operations [%s], got [%s]", test.name, login.PrintOperations(test.expectedOperations), login.PrintOperations(operations)))
+			fmt.Sprintf("[%s] test failed, expected operations [%s], got [%s]", test.name, authz.PrintOperations(test.expectedOperations), authz.PrintOperations(operations)))
 		Assert(t, reflect.DeepEqual(test.out, out),
 			fmt.Sprintf("[%s] test failed, expected returned object [%v], got [%v]", test.name, test.out, out))
 	}

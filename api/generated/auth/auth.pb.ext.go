@@ -938,9 +938,9 @@ func (m *UserStatus) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *UserStatus) Defaults(ver string) bool {
 	var ret bool
-	for k := range m.OperationsStatus {
-		if m.OperationsStatus[k] != nil {
-			i := m.OperationsStatus[k]
+	for k := range m.AccessReview {
+		if m.AccessReview[k] != nil {
+			i := m.AccessReview[k]
 			ret = i.Defaults(ver) || ret
 		}
 	}
@@ -1878,12 +1878,12 @@ func (m *UserStatus) References(tenant string, path string, resp map[string]apii
 
 func (m *UserStatus) Validate(ver, path string, ignoreStatus bool) []error {
 	var ret []error
-	for k, v := range m.OperationsStatus {
+	for k, v := range m.AccessReview {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
-		npath := fmt.Sprintf("%s%sOperationsStatus[%v]", path, dlmtr, k)
+		npath := fmt.Sprintf("%s%sAccessReview[%v]", path, dlmtr, k)
 		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
 			ret = append(ret, errs...)
 		}
@@ -1906,14 +1906,14 @@ func (m *UserStatus) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *UserStatus) Normalize() {
 
-	for k, v := range m.Authenticators {
-		m.Authenticators[k] = Authenticators_AuthenticatorType_normal[strings.ToLower(v)]
-	}
-
-	for _, v := range m.OperationsStatus {
+	for _, v := range m.AccessReview {
 		if v != nil {
 			v.Normalize()
 		}
+	}
+
+	for k, v := range m.Authenticators {
+		m.Authenticators[k] = Authenticators_AuthenticatorType_normal[strings.ToLower(v)]
 	}
 
 }

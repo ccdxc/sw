@@ -11,7 +11,6 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/telemetry_query"
-	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apigw/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/authz"
@@ -213,8 +212,8 @@ func TestTelemetryOperationsHook(t *testing.T) {
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		operations, _ := apigwpkg.OperationsFromContext(nctx)
 		Assert(t, areOperationsEqual(test.expectedOperations, operations),
-			fmt.Sprintf("unexpected operations, [%s] test failed, expected opertaions:%+v, got:%+v", test.name, login.PrintOperations(test.expectedOperations),
-				login.PrintOperations(operations)))
+			fmt.Sprintf("unexpected operations, [%s] test failed, expected opertaions:%+v, got:%+v", test.name, authz.PrintOperations(test.expectedOperations),
+				authz.PrintOperations(operations)))
 		Assert(t, reflect.DeepEqual(test.out, out),
 			fmt.Sprintf("expected returned object [%v], got [%v], [%s] test failed", test.out, out, test.name))
 	}

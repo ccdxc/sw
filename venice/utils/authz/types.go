@@ -1,11 +1,14 @@
 package authz
 
 import (
-	"reflect"
+	"fmt"
 
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/bookstore"
+	"github.com/pensando/sw/api/generated/staging"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -81,19 +84,6 @@ func NewAuditOperation(resource Resource, action, auditAction string) Operation 
 	}
 }
 
-// IsValidOperationValue validates operation interface value as it is an input coming from authz hooks in API Gateway
-func IsValidOperationValue(operation Operation) bool {
-	// make sure interface type and value are not nil
-	if operation == nil || reflect.ValueOf(operation).IsNil() {
-		return false
-	}
-	resource := operation.GetResource()
-	if resource == nil || reflect.ValueOf(resource).IsNil() {
-		return false
-	}
-	return true
-}
-
 // resource implements Resource interface
 type resource struct {
 	auth.Resource
@@ -133,89 +123,125 @@ type AbstractAuthorizer struct {
 	Authorizer
 }
 
-// AllowedTenantKinds returns kinds in a tenant and namespace for which user has authorization for give action type.
-// If tenant is empty it assumes user tenant. If namespace is empty it assumes "default"
-func (a *AbstractAuthorizer) AllowedTenantKinds(user *auth.User, tenant, namespace string, actionType auth.Permission_ActionType) ([]auth.ObjKind, error) {
-	// pick user tenant if no tenant is specified
+// AuthorizedOperations returns authorized operations for a user for various kinds and given actions
+func (a *AbstractAuthorizer) AuthorizedOperations(user *auth.User, tenant, namespace string, actionTypes ...auth.Permission_ActionType) []Operation {
+	// assume cluster scoped kinds for empty tenant
 	if tenant == "" {
-		tenant = user.Tenant
+		if user.Tenant != globals.DefaultTenant {
+			// only user in default tenant can have authorization to search across tenants
+			return nil
+		}
+		namespace = ""
 	}
 	// TODO: default or _All_ if no namespace specified?
-	if namespace == "" {
+	if tenant != "" && namespace == "" {
 		namespace = globals.DefaultNamespace
 	}
-	var allowedKinds []auth.ObjKind
+	var allowedOperations []Operation
 	scheme := runtime.GetDefaultScheme()
 	group2kinds := scheme.Kinds()
 	for group, kinds := range group2kinds {
 		for _, kind := range kinds {
-			ok, err := scheme.IsTenantScoped(kind)
-			if err != nil {
-				return nil, err
+			switch kind {
+			case string(bookstore.KindBook), string(bookstore.KindCustomer), string(bookstore.KindOrder), string(bookstore.KindPublisher), string(bookstore.KindStore), "Coupon":
+				// skip example kinds
+			case string(staging.KindClearAction), string(staging.KindCommitAction):
+				// skip these as we have commit and clear action for staging buffer
+			default:
+				if tenant != "" {
+					ok, err := scheme.IsTenantScoped(kind)
+					if err != nil {
+						// this should not occur
+						panic(fmt.Sprintf("unexpected error in determining scope of known kind: %v", err))
+					}
+					if !ok {
+						// not a tenant scoped kind
+						continue
+					}
+				} else {
+					ok, err := scheme.IsClusterScoped(kind)
+					if err != nil {
+						// this should not occur
+						panic(fmt.Sprintf("unexpected error in determining scope of known kind: %v", err))
+					}
+					if !ok {
+						// not a cluster scoped kind
+						continue
+					}
+				}
+				resource := NewResource(tenant, group, kind, namespace, "")
+				// check authorization for all action if present
+				ok, op := a.checkAllAction(user, resource, actionTypes...)
+				// if all actions for a kind are allowed then don't need to check other actions
+				if ok {
+					allowedOperations = append(allowedOperations, op)
+					continue
+				}
+				ops := a.getAllowedOperations(user, resource, actionTypes...)
+				allowedOperations = append(allowedOperations, ops...)
 			}
-			if !ok {
-				continue
-			}
-			resource := NewResource(tenant, group, kind, namespace, "")
-			operation := NewOperation(resource, actionType.String())
-			ok, err = a.IsAuthorized(user, operation)
-			if err != nil {
-				return nil, err
-			}
-			if !ok {
-				continue
-			}
-			allowedKinds = append(allowedKinds, auth.ObjKind(kind))
 		}
 	}
-	// add non-api server kinds like events
-	kinds := []string{auth.Permission_Event.String(), auth.Permission_AuditEvent.String()}
-	for _, kind := range kinds {
-		resource := NewResource(tenant, "", kind, namespace, "")
-		operation := NewOperation(resource, actionType.String())
-		ok, err := a.IsAuthorized(user, operation)
-		if err != nil {
-			return nil, err
+	// add non-api server kinds like events etc
+	if tenant != "" {
+		kinds := []string{auth.Permission_AuditEvent.String(),
+			auth.Permission_MetricsQuery.String(),
+			auth.Permission_FwlogsQuery.String(),
+			auth.Permission_Event.String(),
+			auth.Permission_Search.String(),
+			auth.Permission_APIEndpoint.String()}
+		for _, kind := range kinds {
+			resource := NewResource(tenant, "", kind, namespace, "")
+			ok, op := a.checkAllAction(user, resource, actionTypes...)
+			// if all actions for a kind are allowed then don't need to check other actions
+			if ok {
+				allowedOperations = append(allowedOperations, op)
+				continue
+			}
+			ops := a.getAllowedOperations(user, resource, actionTypes...)
+			allowedOperations = append(allowedOperations, ops...)
 		}
-		if !ok {
-			continue
-		}
-		allowedKinds = append(allowedKinds, auth.ObjKind(kind))
 	}
-	return allowedKinds, nil
+	return allowedOperations
 }
 
-// AllowedClusterKinds returns kinds in cluster scope for which user has authorization for give action type.
-func (a *AbstractAuthorizer) AllowedClusterKinds(user *auth.User, actionType auth.Permission_ActionType) ([]auth.ObjKind, error) {
-	if user.Tenant != globals.DefaultTenant {
-		// only user in default tenant can have authorization to search across tenants
-		return nil, nil
-	}
-	var allowedKinds []auth.ObjKind
-	scheme := runtime.GetDefaultScheme()
-	group2kinds := scheme.Kinds()
-	for group, kinds := range group2kinds {
-		for _, kind := range kinds {
-			ok, err := scheme.IsClusterScoped(kind)
+func (a *AbstractAuthorizer) checkAllAction(user *auth.User, resource Resource, actionTypes ...auth.Permission_ActionType) (bool, Operation) {
+	for _, action := range actionTypes {
+		if action == auth.Permission_AllActions {
+			op := NewOperation(resource, auth.Permission_AllActions.String())
+			ok, err := a.IsAuthorized(user, op)
 			if err != nil {
-				return nil, err
+				log.ErrorLog("method", "checkAllAction", "msg", fmt.Sprintf("error authorizing operation %v", PrintOperations([]Operation{op})), "error", err)
+				break
 			}
-			if !ok {
-				// not a cluster scoped kind
-				continue
+			if ok {
+				return ok, op
 			}
-			resource := NewResource("", group, kind, "", "")
-			operation := NewOperation(resource, actionType.String())
-			ok, err = a.IsAuthorized(user, operation)
-			if err != nil {
-				return nil, err
-			}
-			if !ok {
-				// no authorization for this kind
-				continue
-			}
-			allowedKinds = append(allowedKinds, auth.ObjKind(kind))
+			break
 		}
 	}
-	return allowedKinds, nil
+	return false, nil
+}
+
+func (a *AbstractAuthorizer) getAllowedOperations(user *auth.User, resource Resource, actionTypes ...auth.Permission_ActionType) []Operation {
+	var allowedOperations []Operation
+	for _, action := range actionTypes {
+		if action != auth.Permission_AllActions {
+			// check if action is valid for a kind
+			if err := ValidateAction(resource.GetGroup(), resource.GetKind(), action.String()); err != nil {
+				continue
+			}
+			op := NewOperation(resource, action.String())
+			ok, err := a.IsAuthorized(user, op)
+			if err != nil {
+				log.ErrorLog("method", "getAllowedOperations", "msg", fmt.Sprintf("error authorizing operation %v", PrintOperations([]Operation{op})), "error", err)
+				continue
+			}
+			if !ok {
+				continue
+			}
+			allowedOperations = append(allowedOperations, op)
+		}
+	}
+	return allowedOperations
 }

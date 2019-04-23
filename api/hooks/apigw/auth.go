@@ -8,7 +8,6 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -113,9 +112,9 @@ func (a *authHooks) userDeleteCheck(ctx context.Context, in interface{}) (contex
 	return ctx, in, nil
 }
 
-// addRoles is a post-call hook to populate roles in user status
-func (a *authHooks) addRoles(ctx context.Context, out interface{}) (context.Context, interface{}, error) {
-	a.logger.DebugLog("msg", "APIGw addRoles hook called")
+// addAuthzInfo is a post-call hook to populate roles and authorized operations in user status
+func (a *authHooks) addAuthzInfo(ctx context.Context, out interface{}) (context.Context, interface{}, error) {
+	a.logger.DebugLog("msg", "APIGw addAuthzInfo hook called")
 	switch obj := out.(type) {
 	case *auth.User:
 		obj.Status.Roles = []string{}
@@ -123,6 +122,9 @@ func (a *authHooks) addRoles(ctx context.Context, out interface{}) (context.Cont
 		for _, role := range roles {
 			obj.Status.Roles = append(obj.Status.Roles, role.Name)
 		}
+		// get authorized operations for user and update status
+		obj.Status.AccessReview = []*auth.OperationStatus{}
+		obj.Status.AccessReview = append(obj.Status.AccessReview, authz.AuthorizedOperations(obj, a.authorizer)...)
 		return ctx, obj, nil
 	case *auth.UserList:
 		for _, user := range obj.GetItems() {
@@ -146,10 +148,10 @@ func (a *authHooks) privilegeEscalationCheck(ctx context.Context, in interface{}
 	operations, _ := apigwpkg.OperationsFromContext(ctx)
 	switch obj := in.(type) {
 	case *auth.Role:
-		if err := login.ValidatePerms(obj.Spec.Permissions); err != nil {
+		if err := authz.ValidatePerms(obj.Spec.Permissions); err != nil {
 			return ctx, in, err
 		}
-		operations = append(operations, login.GetOperationsFromPermissions(obj.Spec.Permissions)...)
+		operations = append(operations, authz.GetOperationsFromPermissions(obj.Spec.Permissions)...)
 	default:
 		return ctx, in, errors.New("invalid input type")
 	}
@@ -272,16 +274,16 @@ func (a *authHooks) isAuthorizedPreCallHook(ctx context.Context, in interface{})
 	if !ok {
 		return ctx, nil, true, errors.New("user not found")
 	}
-	user.Status.OperationsStatus = []*auth.OperationStatus{}
+	user.Status.AccessReview = []*auth.OperationStatus{}
 	user.Status.Roles = []string{}
 	for _, op := range obj.Operations {
 		opStatus := &auth.OperationStatus{
 			Operation: op,
 		}
-		authzOp, err := login.ValidateOperation(op)
+		authzOp, err := authz.ValidateOperation(op)
 		if err != nil {
 			opStatus.Message = err.Error()
-			user.Status.OperationsStatus = append(user.Status.OperationsStatus, opStatus)
+			user.Status.AccessReview = append(user.Status.AccessReview, opStatus)
 			continue
 		}
 		// set owner for user
@@ -301,7 +303,7 @@ func (a *authHooks) isAuthorizedPreCallHook(ctx context.Context, in interface{})
 			opStatus.Message = err.Error()
 		}
 		opStatus.Allowed = ok
-		user.Status.OperationsStatus = append(user.Status.OperationsStatus, opStatus)
+		user.Status.AccessReview = append(user.Status.AccessReview, opStatus)
 	}
 	roles := a.permissionGetter.GetRolesForUser(user)
 	for _, role := range roles {
@@ -327,14 +329,14 @@ func (a *authHooks) adminRoleBindingPreCallHook(ctx context.Context, in interfac
 	return ctx, in, false, nil
 }
 
-func (a *authHooks) registerAddRolesHook(svc apigw.APIGatewayService) error {
+func (a *authHooks) registerAddAuthzInfoHook(svc apigw.APIGatewayService) error {
 	opers := []apiintf.APIOperType{apiintf.CreateOper, apiintf.UpdateOper, apiintf.DeleteOper, apiintf.GetOper, apiintf.ListOper}
 	for _, oper := range opers {
 		prof, err := svc.GetCrudServiceProfile("User", oper)
 		if err != nil {
 			return err
 		}
-		prof.AddPostCallHook(a.addRoles)
+		prof.AddPostCallHook(a.addAuthzInfo)
 	}
 	return nil
 }
@@ -524,7 +526,7 @@ func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	}
 
 	// register post call hook to add roles to user status
-	if err := r.registerAddRolesHook(svc); err != nil {
+	if err := r.registerAddAuthzInfoHook(svc); err != nil {
 		return err
 	}
 

@@ -546,17 +546,17 @@ var typesMapAuth = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"action":           api.CLIInfo{Path: "Status.OperationsStatus[].Operation.Action", Skip: false, Insert: "", Help: ""},
-			"allowed":          api.CLIInfo{Path: "Status.OperationsStatus[].Allowed", Skip: false, Insert: "", Help: ""},
+			"action":           api.CLIInfo{Path: "Status.AccessReview[].Operation.Action", Skip: false, Insert: "", Help: ""},
+			"allowed":          api.CLIInfo{Path: "Status.AccessReview[].Allowed", Skip: false, Insert: "", Help: ""},
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"authenticators":   api.CLIInfo{Path: "Status.Authenticators", Skip: false, Insert: "", Help: ""},
 			"email":            api.CLIInfo{Path: "Spec.Email", Skip: false, Insert: "", Help: ""},
 			"fullname":         api.CLIInfo{Path: "Spec.Fullname", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
-			"group":            api.CLIInfo{Path: "Status.OperationsStatus[].Operation.Resource.Group", Skip: false, Insert: "", Help: ""},
+			"group":            api.CLIInfo{Path: "Status.AccessReview[].Operation.Resource.Group", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
-			"message":          api.CLIInfo{Path: "Status.OperationsStatus[].Message", Skip: false, Insert: "", Help: ""},
+			"message":          api.CLIInfo{Path: "Status.AccessReview[].Message", Skip: false, Insert: "", Help: ""},
 			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"password":         api.CLIInfo{Path: "Spec.Password", Skip: false, Insert: "", Help: ""},
@@ -594,7 +594,7 @@ var typesMapAuth = map[string]*api.Struct{
 
 			"LastPasswordChange": api.Field{Name: "LastPasswordChange", CLITag: api.CLIInfo{ID: "last-password-change", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "last-password-change", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 
-			"OperationsStatus": api.Field{Name: "OperationsStatus", CLITag: api.CLIInfo{ID: "operations-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "operations-status", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "auth.OperationStatus"},
+			"AccessReview": api.Field{Name: "AccessReview", CLITag: api.CLIInfo{ID: "access-review", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "access-review", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "auth.OperationStatus"},
 		},
 	},
 }

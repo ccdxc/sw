@@ -924,17 +924,15 @@ func (fdr *Finder) authzQuery(ctx context.Context, tenants []string) (es.Query, 
 		if !ok {
 			continue
 		}
-		allowedTenantScopedKinds, err := authorizer.AllowedTenantKinds(user, tenant, authz.ResourceNamespaceAll, auth.Permission_Read)
-		if err != nil {
-			fdr.logger.Errorf("error determining allowed kinds for user [%s|%s] in tenant [%s] in search: %v", user.Tenant, user.Name, tenant, err)
-			return nil, err
-		}
-		if len(allowedTenantScopedKinds) > 0 {
+		allowedTenantScopedOps := authorizer.AuthorizedOperations(user, tenant, authz.ResourceNamespaceAll, auth.Permission_Read)
+		if len(allowedTenantScopedOps) > 0 {
+			var allowedTenantScopedKinds []string
 			kquery := es.NewBoolQuery().QueryName("AllowedKindsForTenant")
 			kquery = kquery.Must(es.NewMatchPhraseQuery("meta.tenant", tenant))
 			kindReq := es.NewBoolQuery().QueryName("AllowedKinds")
-			for _, kind := range allowedTenantScopedKinds {
-				kindReq = kindReq.Should(es.NewTermQuery("kind.keyword", kind)).MinimumNumberShouldMatch(1)
+			for _, op := range allowedTenantScopedOps {
+				kindReq = kindReq.Should(es.NewTermQuery("kind.keyword", op.GetResource().GetKind())).MinimumNumberShouldMatch(1)
+				allowedTenantScopedKinds = append(allowedTenantScopedKinds, op.GetResource().GetKind())
 			}
 			kquery = kquery.Must(kindReq)
 			query = query.Should(kquery).MinimumNumberShouldMatch(1)
@@ -942,14 +940,12 @@ func (fdr *Finder) authzQuery(ctx context.Context, tenants []string) (es.Query, 
 			fdr.logger.Infof("user [%s|%s] allowed to search kinds [%#v] in tenant [%s]", user.Tenant, user.Name, allowedTenantScopedKinds, tenant)
 		}
 	}
-	allowedClusterScopedKinds, err := authorizer.AllowedClusterKinds(user, auth.Permission_Read)
-	if err != nil {
-		fdr.logger.Errorf("error determining allowed cluster kinds for user [%s|%s] in search: %v", user.Tenant, user.Name, err)
-		return nil, err
-	}
+	allowedClusterScopedOps := authorizer.AuthorizedOperations(user, "", "", auth.Permission_Read)
 	kindReq := es.NewBoolQuery().QueryName("AllowedClusterKinds")
-	for _, kind := range allowedClusterScopedKinds {
-		kindReq = kindReq.Should(es.NewTermQuery("kind.keyword", kind)).MinimumNumberShouldMatch(1)
+	var allowedClusterScopedKinds []string
+	for _, op := range allowedClusterScopedOps {
+		kindReq = kindReq.Should(es.NewTermQuery("kind.keyword", op.GetResource().GetKind())).MinimumNumberShouldMatch(1)
+		allowedClusterScopedKinds = append(allowedClusterScopedKinds, op.GetResource().GetKind())
 		authorizedClusterKindsFound = true
 	}
 	if authorizedClusterKindsFound {

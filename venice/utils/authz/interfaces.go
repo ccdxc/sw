@@ -11,12 +11,8 @@ type Authorizer interface {
 	// Returns true if user is authorized
 	IsAuthorized(user *auth.User, operations ...Operation) (bool, error)
 
-	// AllowedTenantKinds returns kinds in a tenant and namespace for which user has authorization for give action type.
-	// If tenant is empty it assumes user tenant. If namespace is empty it assumes "default"
-	AllowedTenantKinds(user *auth.User, tenant, namespace string, actionType auth.Permission_ActionType) ([]auth.ObjKind, error)
-
-	// AllowedClusterKinds returns kinds in cluster scope for which user has authorization for give action type.
-	AllowedClusterKinds(user *auth.User, actionType auth.Permission_ActionType) ([]auth.ObjKind, error)
+	// AuthorizedOperations returns authorized operations for a user for various kinds and given actions
+	AuthorizedOperations(user *auth.User, tenant, namespace string, actionTypes ...auth.Permission_ActionType) []Operation
 
 	// Stop stops the authorizer
 	Stop()

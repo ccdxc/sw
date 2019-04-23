@@ -209,7 +209,7 @@ func TestAuthnRegistration(t *testing.T) {
 	Assert(t, err != nil, "expected error in authBootstrap hook registration")
 }
 
-func TestAddRoles(t *testing.T) {
+func TestAddAuthzInfo(t *testing.T) {
 	tests := []struct {
 		name string
 		in   interface{}
@@ -264,29 +264,32 @@ func TestAddRoles(t *testing.T) {
 	r := &authHooks{}
 	r.logger = l
 	r.permissionGetter = rbac.NewMockPermissionGetter([]*auth.Role{testNetworkAdminRole}, []*auth.RoleBinding{testNetworkAdminRoleBinding}, nil, nil)
+	r.authorizer = authzmgr.NewAlwaysAllowAuthorizer()
 	for _, test := range tests {
-		_, out, err := r.addRoles(context.TODO(), test.in)
+		_, out, err := r.addAuthzInfo(context.TODO(), test.in)
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		switch obj := out.(type) {
 		case *auth.User:
 			Assert(t, len(obj.Status.Roles) == 1 && obj.Status.Roles[0] == "NetworkAdmin", "user should have network admin role")
+			Assert(t, len(obj.Status.AccessReview) > 0, "user should have authorized operations")
 		case *auth.UserList:
 			for _, user := range obj.GetItems() {
 				Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == "NetworkAdmin", "user should have network admin role")
+				Assert(t, len(user.Status.AccessReview) == 0, "user list shouldn't include authorized operations")
 			}
 		}
 
 	}
 }
 
-func TestAddRolesHookRegistration(t *testing.T) {
+func TestAddAuthzInfoHookRegistration(t *testing.T) {
 	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
 	l := log.GetNewLogger(logConfig)
 	svc := mocks.NewFakeAPIGwService(l, false)
 	r := &authHooks{}
 	r.logger = l
-	err := r.registerAddRolesHook(svc)
-	AssertOk(t, err, "addRoles hook registration failed")
+	err := r.registerAddAuthzInfoHook(svc)
+	AssertOk(t, err, "addAuthzInfo hook registration failed")
 
 	opers := []apiintf.APIOperType{apiintf.CreateOper, apiintf.UpdateOper, apiintf.DeleteOper, apiintf.GetOper, apiintf.ListOper}
 	for _, oper := range opers {
@@ -296,8 +299,8 @@ func TestAddRolesHookRegistration(t *testing.T) {
 	}
 	// test err
 	svc = mocks.NewFakeAPIGwService(l, true)
-	err = r.registerAddRolesHook(svc)
-	Assert(t, err != nil, "expected error in addRoles hook registration")
+	err = r.registerAddAuthzInfoHook(svc)
+	Assert(t, err != nil, "expected error in addAuthzInfo hook registration")
 }
 
 func TestUserCreateCheck(t *testing.T) {
@@ -1183,7 +1186,7 @@ func TestIsAuthorizedPreCallHook(t *testing.T) {
 	userfn := func(name, tenant string, ops []*auth.Operation, allowed bool, validationMsg string) *auth.User {
 		user, _ := authGetter.GetUser(name, tenant)
 		for _, op := range ops {
-			user.Status.OperationsStatus = append(user.Status.OperationsStatus, &auth.OperationStatus{Operation: op, Allowed: allowed, Message: validationMsg})
+			user.Status.AccessReview = append(user.Status.AccessReview, &auth.OperationStatus{Operation: op, Allowed: allowed, Message: validationMsg})
 		}
 		roles := permGetter.GetRolesForUser(user)
 		for _, role := range roles {

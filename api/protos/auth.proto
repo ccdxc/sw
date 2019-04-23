@@ -42,7 +42,7 @@ message UserStatus {
     // Last password change time for local user
     api.Timestamp LastPasswordChange           = 5 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-password-change,omitempty"];
     // Authorization information about requested operations
-    repeated OperationStatus OperationsStatus  = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "operations-status,omitempty"];
+    repeated OperationStatus AccessReview  = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "access-review,omitempty"];
 }
 
 // User could be local or external
@@ -378,7 +378,7 @@ message OperationStatus {
     // Allowed indicates if Operation is authorized
     bool Allowed        = 2 [(gogoproto.jsontag) = "allowed"];
     // Message reports error validating Operation
-    string Message      = 3 [(gogoproto.jsontag) = "message"];
+    string Message      = 3 [(gogoproto.jsontag) = "message,omitempty"];
 }
 
 // SubjectAccessReviewRequest checks whether user can perform requested operations

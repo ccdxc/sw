@@ -140,8 +140,8 @@ func TestSubjectAccessReviewValidationFailures(t *testing.T) {
 			})
 			return err == nil, err
 		}, "IsAuthorized call failed")
-		Assert(t, len(user.Status.OperationsStatus) == 1, fmt.Sprintf("[%s] test failed, unexpected number of operations in status [%v]", test.name, len(user.Status.OperationsStatus)))
-		opStatus := user.Status.OperationsStatus[0]
+		Assert(t, len(user.Status.AccessReview) == 1, fmt.Sprintf("[%s] test failed, unexpected number of operations in status [%v]", test.name, len(user.Status.AccessReview)))
+		opStatus := user.Status.AccessReview[0]
 		Assert(t, strings.HasPrefix(opStatus.Message, test.opStatus.Message), fmt.Sprintf("[%s] test failed, expected op status message[%s], got [%s]", test.name, test.opStatus.Message, opStatus.Message))
 		Assert(t, opStatus.Allowed == test.opStatus.Allowed, fmt.Sprintf("[%s] test failed, expected op status [%v], got [%v]", test.name, test.opStatus.Allowed, opStatus.Allowed))
 	}
@@ -288,8 +288,8 @@ func TestSelfSubjectAccessReview(t *testing.T) {
 			})
 			return err == nil, err
 		}, "IsAuthorized action failed")
-		Assert(t, len(user.Status.OperationsStatus) == 1, fmt.Sprintf("[%s] test failed, unexpected number of operations in status [%v]", test.name, len(user.Status.OperationsStatus)))
-		opStatus := user.Status.OperationsStatus[0]
+		Assert(t, len(user.Status.AccessReview) == 1, fmt.Sprintf("[%s] test failed, unexpected number of operations in status [%v]", test.name, len(user.Status.AccessReview)))
+		opStatus := user.Status.AccessReview[0]
 		Assert(t, reflect.DeepEqual(test.opStatus.Operation, opStatus.Operation),
 			fmt.Sprintf("[%s] test failed, expected status for operation [%#v], got [%#v]", test.name, test.opStatus.Operation, opStatus.Operation))
 		Assert(t, opStatus.Message == test.opStatus.Message, fmt.Sprintf("[%s] test failed, expected op status message to be [%s], got [%s]", test.name, test.opStatus.Message, opStatus.Message))
@@ -448,8 +448,8 @@ func TestSubjectAccessReview(t *testing.T) {
 			})
 			return err == nil, err
 		}, "IsAuthorized call failed")
-		Assert(t, len(user.Status.OperationsStatus) == 1, fmt.Sprintf("[%s] test failed, unexpected number of operations in status [%v]", test.name, len(user.Status.OperationsStatus)))
-		opStatus := user.Status.OperationsStatus[0]
+		Assert(t, len(user.Status.AccessReview) == 1, fmt.Sprintf("[%s] test failed, unexpected number of operations in status [%v]", test.name, len(user.Status.AccessReview)))
+		opStatus := user.Status.AccessReview[0]
 		Assert(t, reflect.DeepEqual(test.opStatus.Operation, opStatus.Operation),
 			fmt.Sprintf("[%s] test failed, expected status for operation [%#v], got [%#v]", test.name, test.opStatus.Operation, opStatus.Operation))
 		Assert(t, strings.HasPrefix(opStatus.Message, test.opStatus.Message), fmt.Sprintf("[%s] test failed, expected op status message[%s], got [%s]", test.name, test.opStatus.Message, opStatus.Message))

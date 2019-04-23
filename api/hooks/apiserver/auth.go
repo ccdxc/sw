@@ -16,12 +16,12 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn"
 	"github.com/pensando/sw/venice/utils/authn/password"
+	"github.com/pensando/sw/venice/utils/authz"
 	authzgrpc "github.com/pensando/sw/venice/utils/authz/grpc"
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
 	"github.com/pensando/sw/venice/utils/ctxutils"
@@ -328,7 +328,7 @@ func (s *authHooks) validateRolePerms(i interface{}, ver string, ignStatus bool)
 			errs = append(errs, errInvalidRolePermissions)
 		}
 		// validate resource kind and group
-		if err := login.ValidatePerm(perm); err != nil {
+		if err := authz.ValidatePerm(perm); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -374,7 +374,7 @@ func (s *authHooks) privilegeEscalationCheck(ctx context.Context, kv kvstore.Int
 			s.logger.ErrorLog("method", "privilegeEscalationCheck", "msg", "error creating grpc authorizer", "error", err)
 			return i, true, status.Error(codes.Internal, err.Error())
 		}
-		ops := login.GetOperationsFromPermissions(role.Spec.Permissions)
+		ops := authz.GetOperationsFromPermissions(role.Spec.Permissions)
 		ok, _ = authorizer.IsAuthorized(user, ops...)
 		if !ok {
 			return i, true, status.Error(codes.PermissionDenied, fmt.Sprintf("unauthorized to create role binding (%s|%s)", r.GetTenant(), r.GetName()))

@@ -16,7 +16,7 @@ export interface IAuthUserStatus {
     'last-login'?: Date;
     'authenticators': Array<AuthUserStatus_authenticators>;
     'last-password-change'?: Date;
-    'operations-status'?: Array<IAuthOperationStatus>;
+    'access-review'?: Array<IAuthOperationStatus>;
 }
 
 
@@ -26,7 +26,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
     'last-login': Date = null;
     'authenticators': Array<AuthUserStatus_authenticators> = null;
     'last-password-change': Date = null;
-    'operations-status': Array<AuthOperationStatus> = null;
+    'access-review': Array<AuthOperationStatus> = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'roles': {
             required: false,
@@ -50,7 +50,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
             required: false,
             type: 'Date'
         },
-        'operations-status': {
+        'access-review': {
             required: false,
             type: 'object'
         },
@@ -81,7 +81,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
         this['roles'] = new Array<string>();
         this['user-groups'] = new Array<string>();
         this['authenticators'] = new Array<AuthUserStatus_authenticators>();
-        this['operations-status'] = new Array<AuthOperationStatus>();
+        this['access-review'] = new Array<AuthOperationStatus>();
         this.setValues(values, setDefaults);
     }
 
@@ -126,9 +126,9 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
             this['last-password-change'] = null
         }
         if (values) {
-            this.fillModelArray<AuthOperationStatus>(this, 'operations-status', values['operations-status'], AuthOperationStatus);
+            this.fillModelArray<AuthOperationStatus>(this, 'access-review', values['access-review'], AuthOperationStatus);
         } else {
-            this['operations-status'] = [];
+            this['access-review'] = [];
         }
         this.setFormGroupValuesToBeModelValues();
     }
@@ -142,13 +142,13 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
                 'last-login': CustomFormControl(new FormControl(this['last-login']), AuthUserStatus.propInfo['last-login']),
                 'authenticators': CustomFormControl(new FormControl(this['authenticators']), AuthUserStatus.propInfo['authenticators']),
                 'last-password-change': CustomFormControl(new FormControl(this['last-password-change']), AuthUserStatus.propInfo['last-password-change']),
-                'operations-status': new FormArray([]),
+                'access-review': new FormArray([]),
             });
             // generate FormArray control elements
-            this.fillFormArray<AuthOperationStatus>('operations-status', this['operations-status'], AuthOperationStatus);
+            this.fillFormArray<AuthOperationStatus>('access-review', this['access-review'], AuthOperationStatus);
             // We force recalculation of controls under a form group
-            Object.keys((this._formGroup.get('operations-status') as FormGroup).controls).forEach(field => {
-                const control = this._formGroup.get('operations-status').get(field);
+            Object.keys((this._formGroup.get('access-review') as FormGroup).controls).forEach(field => {
+                const control = this._formGroup.get('access-review').get(field);
                 control.updateValueAndValidity();
             });
         }
@@ -166,7 +166,7 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
             this._formGroup.controls['last-login'].setValue(this['last-login']);
             this._formGroup.controls['authenticators'].setValue(this['authenticators']);
             this._formGroup.controls['last-password-change'].setValue(this['last-password-change']);
-            this.fillModelArray<AuthOperationStatus>(this, 'operations-status', this['operations-status'], AuthOperationStatus);
+            this.fillModelArray<AuthOperationStatus>(this, 'access-review', this['access-review'], AuthOperationStatus);
         }
     }
 }

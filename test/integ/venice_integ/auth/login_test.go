@@ -69,6 +69,7 @@ func TestLogin(t *testing.T) {
 		fmt.Sprintf("expected authenticator [%s], got [%s]", auth.Authenticators_LOCAL.String(), user.Status.Authenticators[0]))
 	// check CSRF token header is present
 	Assert(t, resp.Header.Get(apigw.GrpcMDCsrfHeader) != "", "CSRF token not present")
+	Assert(t, len(user.Status.AccessReview) > 0, "user status should have authorized operations")
 }
 
 func TestLoginFailures(t *testing.T) {
@@ -351,6 +352,7 @@ func TestUserStatus(t *testing.T) {
 		return err == nil, nil
 	}, "unable to fetch user")
 	Assert(t, len(user.Status.Roles) == 1 && user.Status.Roles[0] == globals.AdminRole, "user should have admin role")
+	Assert(t, len(user.Status.AccessReview) > 0, "user status should have authorized operations")
 	logintime, err := user.Status.LastLogin.Time()
 	AssertOk(t, err, "error getting successful login time")
 	Assert(t, logintime.After(currtime), fmt.Sprintf("login time [%v] not after current time [%v]", logintime.Local(), currtime.Local()))

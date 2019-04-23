@@ -24,12 +24,8 @@ func (a *authorizer) IsAuthorized(user *auth.User, operations ...authz.Operation
 
 func (a *authorizer) Stop() {}
 
-func (a *authorizer) AllowedTenantKinds(user *auth.User, tenant, namespace string, actionType auth.Permission_ActionType) ([]auth.ObjKind, error) {
-	return a.authorizer.AllowedTenantKinds(user, tenant, namespace, actionType)
-}
-
-func (a *authorizer) AllowedClusterKinds(user *auth.User, actionType auth.Permission_ActionType) ([]auth.ObjKind, error) {
-	return a.authorizer.AllowedClusterKinds(user, actionType)
+func (a *authorizer) AuthorizedOperations(user *auth.User, tenant, namespace string, actionTypes ...auth.Permission_ActionType) []authz.Operation {
+	return a.authorizer.AuthorizedOperations(user, tenant, namespace, actionTypes...)
 }
 
 // NewAuthorizer returns an authorizer to be used by grpc backend to check authorization based on permissions passed in grpc metadata

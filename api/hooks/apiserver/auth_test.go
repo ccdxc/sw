@@ -558,7 +558,7 @@ func TestValidateRolePerms(t *testing.T) {
 					auth.Permission_Search.String(),
 					"",
 					"",
-					auth.Permission_AllActions.String())),
+					auth.Permission_Read.String())),
 			err: nil,
 		},
 		{
@@ -570,7 +570,7 @@ func TestValidateRolePerms(t *testing.T) {
 					auth.Permission_Search.String(),
 					"",
 					"",
-					auth.Permission_AllActions.String())),
+					auth.Permission_Read.String())),
 			err: []error{fmt.Errorf("invalid API group, should be empty instead of [%q]", authz.ResourceGroupAll)},
 		},
 		{
@@ -582,7 +582,7 @@ func TestValidateRolePerms(t *testing.T) {
 					auth.Permission_Event.String(),
 					"",
 					"",
-					auth.Permission_AllActions.String())),
+					auth.Permission_Read.String())),
 			err: nil,
 		},
 		{
@@ -594,7 +594,7 @@ func TestValidateRolePerms(t *testing.T) {
 					auth.Permission_Event.String(),
 					"",
 					"",
-					auth.Permission_AllActions.String())),
+					auth.Permission_Read.String())),
 			err: []error{fmt.Errorf("invalid API group, should be empty instead of [%q]", string(apiclient.GroupMonitoring))},
 		},
 		{
