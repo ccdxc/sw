@@ -32,6 +32,9 @@ var (
 
 func auditEventResultCheck(resp interface{}, tc queryTestCase) error {
 	aResp := resp.(*testutils.AuditSearchResponse)
+	if tc.expNumEntries != aResp.ActualHits {
+		return fmt.Errorf("Expected %d entries, actual was %d. ", tc.expNumEntries, aResp.ActualHits)
+	}
 	for _, ele := range aResp.Entries {
 		if ele.Object.RequestObject != "" || ele.Object.ResponseObject != "" {
 			return errors.New("Checking audit event's response and request should be empty string. ")
@@ -41,6 +44,10 @@ func auditEventResultCheck(resp interface{}, tc queryTestCase) error {
 }
 
 func defaultResultCheck(resp interface{}, tc queryTestCase) error {
+	dResp := resp.(*search.SearchResponse)
+	if tc.expNumEntries != dResp.ActualHits {
+		return fmt.Errorf("Expected %d entries, actual was %d. ", tc.expNumEntries, dResp.ActualHits)
+	}
 	return nil
 }
 
@@ -150,26 +157,6 @@ func testQueries(testCases []*queryTestCase) {
 			if err != tc.expErr {
 				log.Errorf("Test Case %d: Expected err %v, actual err was %d", i, tc.expErr, err)
 				return false
-			}
-			switch resp.(type) {
-			case *search.SearchResponse:
-				respParsed, ok := resp.(*search.SearchResponse)
-				if !ok {
-					log.Fatalf("Type casting failed")
-				}
-				if tc.expNumEntries != respParsed.ActualHits {
-					log.Errorf("Test Case %d: Expected %d entries, actual was %d", i, tc.expNumEntries, respParsed.ActualHits)
-					return false
-				}
-			case *testutils.AuditSearchResponse:
-				respParsed, ok := resp.(*testutils.AuditSearchResponse)
-				if !ok {
-					log.Fatalf("Type casting failed")
-				}
-				if tc.expNumEntries != respParsed.ActualHits {
-					log.Errorf("Test Case %d: Expected %d entries, actual was %d", i, tc.expNumEntries, respParsed.ActualHits)
-					return false
-				}
 			}
 
 			if err := tc.resultCheck(resp, *tc); err != nil {
