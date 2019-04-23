@@ -58,7 +58,7 @@ GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
 BUILD_CONTAINER ?= pens-bld:v0.13
-UI_BUILD_CONTAINER ?= pens-ui-bld:v0.19
+UI_BUILD_CONTAINER ?= pens-ui-bld:v0.20
 DIND_CONTAINER ?= pens-dind:v0.3
 E2E_CONTAINER ?= pens-e2e:v0.4
 TARGETS ?= ws-tools pull-assets gen build
@@ -434,12 +434,12 @@ ui-framework:
 	cd venice/ui/web-app-framework && npm run replaceShrinkwrap && npm run pack
 
 ui-venice-sdk:
-	cd venice/ui/venice-sdk && npm install --prefer-cache pensando-swagger-ts-generator-1.1.29.tgz && npm run replaceShrinkwrap
+	cd venice/ui/venice-sdk && npm install --prefer-offline true --prefer-cache pensando-swagger-ts-generator-1.1.29.tgz && npm run replaceShrinkwrap
 	cd venice/ui/venice-sdk && node swaggerGen.js
 
 ui:
 	npm version;
-	cd venice/ui/webapp && npm install --prefer-cache ../web-app-framework/dist/web-app-framework-0.0.0.tgz && npm run replaceShrinkwrap;
+	cd venice/ui/webapp && npm install --prefer-offline true --prefer-cache ../web-app-framework/dist/web-app-framework-0.0.0.tgz && npm run replaceShrinkwrap;
 	$(MAKE) ui-venice-sdk
 	cd venice/ui/webapp && npm run build-prod && ./gzipDist.sh
 

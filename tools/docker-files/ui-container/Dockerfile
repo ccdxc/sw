@@ -1,4 +1,4 @@
-FROM node:9.11.1
+FROM node:10.15.3-stretch
 MAINTAINER "Ravi Gadde" <ravi@pensando.io>
 
 #RUN curl -SsLO https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 && chmod +x jq-linux64 && mv jq-linux64 /usr/local/bin ;
@@ -34,7 +34,7 @@ RUN ng -v
 USER root
 RUN chmod -R 777 /root
 
-FROM node:9.11.1
+FROM node:10.15.3-stretch
 ENV PATH=/home/node/.npm-global/bin:$PATH
 ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
 
