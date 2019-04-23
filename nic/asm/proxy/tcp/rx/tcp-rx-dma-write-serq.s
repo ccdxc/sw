@@ -26,6 +26,7 @@ struct s6_t0_tcp_rx_dma_d d;
      * c7 drop packet and don't send to arm
      */
 tcp_rx_dma_serq_stage_start:
+    phvwr       p.s7_s2s_rx_stats_base, d.rx_stats_base
     CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_rx_stats_stage_start)
 
     seq         c1, k.common_phv_write_arq, 1
@@ -43,7 +44,7 @@ dma_cmd_data:
     /* Set the DMA_WRITE CMD for data */
     add         r3, k.to_s6_page, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
 
-    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.s6_s2s_payload_len)
+    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.s1_s2s_payload_len)
 
 dma_cmd_descr:
     /* Set the DMA_WRITE CMD for descr */

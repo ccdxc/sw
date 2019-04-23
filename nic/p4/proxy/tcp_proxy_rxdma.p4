@@ -416,6 +416,7 @@ header_type ooo_qbase_addr_t {
 // d for stage 6 table 0
 header_type tcp_rx_dma_d_t {
     fields {
+        rx_stats_base           : 64;
         serq_base               : 64;
         nde_shift               : 8;
         nde_offset              : 8;
@@ -559,9 +560,9 @@ header_type s1_s2s_phv_t {
     }
 }
 
-header_type s6_s2s_phv_t {
+header_type s7_s2s_phv_t {
     fields {
-        payload_len             : 16;
+        rx_stats_base           : 64;
     }
 }
 
@@ -687,7 +688,7 @@ metadata to_stage_7_phv_t to_s7_scratch;
 @pragma scratch_metadata
 metadata s1_s2s_phv_t s1_s2s_scratch;
 @pragma scratch_metadata
-metadata s6_s2s_phv_t s6_s2s_scratch;
+metadata s7_s2s_phv_t s7_s2s_scratch;
 @pragma scratch_metadata
 metadata s6_t1_s2s_phv_t s6_t1_s2s_scratch;
 @pragma scratch_metadata
@@ -697,10 +698,10 @@ metadata s3_t2_s2s_phv_t s3_t2_s2s_scratch;
 @pragma scratch_metadata
 metadata common_global_phv_t common_global_scratch;
 
-@pragma pa_header_union ingress common_t0_s2s s6_s2s
+@pragma pa_header_union ingress common_t0_s2s s7_s2s
 metadata s1_s2s_phv_t s1_s2s;
 //metadata s4_s2s_phv_t s4_s2s;
-metadata s6_s2s_phv_t s6_s2s;
+metadata s7_s2s_phv_t s7_s2s;
 
 @pragma pa_header_union ingress common_t1_s2s s6_t1_s2s
 metadata s6_t1_s2s_phv_t s6_t1_s2s;
@@ -1220,14 +1221,32 @@ action ooo_qbase_cb_load(ooo_rx2tx_ci,
 
 }
 
+#define RX_DMA_D_PARAMS \
+        rx_stats_base, serq_base, nde_shift, nde_offset, nde_len, \
+        consumer_lif, consumer_ring, consumer_num_slots_mask, \
+        pkts_rcvd, rx2tx_send_ack_pi, \
+        rx2tx_clean_retx_pi, rx2tx_fast_retx_pi, consumer_qid \
+
+#define RX_DMA_D_FIELDS \
+    modify_field(tcp_rx_dma_d.rx_stats_base, rx_stats_base); \
+    modify_field(tcp_rx_dma_d.serq_base, serq_base); \
+    modify_field(tcp_rx_dma_d.nde_shift, nde_shift); \
+    modify_field(tcp_rx_dma_d.nde_offset, nde_offset); \
+    modify_field(tcp_rx_dma_d.nde_len, nde_len); \
+    modify_field(tcp_rx_dma_d.consumer_lif, consumer_lif); \
+    modify_field(tcp_rx_dma_d.consumer_ring, consumer_ring); \
+    modify_field(tcp_rx_dma_d.consumer_num_slots_mask, consumer_num_slots_mask); \
+    modify_field(tcp_rx_dma_d.pkts_rcvd, pkts_rcvd); \
+    modify_field(tcp_rx_dma_d.rx2tx_send_ack_pi, rx2tx_send_ack_pi); \
+    modify_field(tcp_rx_dma_d.rx2tx_clean_retx_pi, rx2tx_clean_retx_pi); \
+    modify_field(tcp_rx_dma_d.rx2tx_fast_retx_pi, rx2tx_fast_retx_pi); \
+    modify_field(tcp_rx_dma_d.consumer_qid, consumer_qid);
+
 
 /*
  * Stage 6 table 0 action
  */
-action dma(serq_base, nde_shift, nde_offset, nde_len,
-        consumer_lif, consumer_ring, consumer_num_slots_mask,
-        pkts_rcvd, rx2tx_send_ack_pi,
-        rx2tx_clean_retx_pi, rx2tx_fast_retx_pi, consumer_qid) {
+action dma(RX_DMA_D_PARAMS) {
     // k + i for stage 6
 
     // from to_stage 6
@@ -1239,22 +1258,10 @@ action dma(serq_base, nde_shift, nde_offset, nde_len,
     // from ki global
     GENERATE_GLOBAL_K
 
-    // from stage to stage
-    modify_field(s6_s2s_scratch.payload_len, s6_s2s.payload_len);
+    GENERATE_S1_S2S_K
 
-    // d for stage 5 table 0
-    modify_field(tcp_rx_dma_d.serq_base, serq_base);
-    modify_field(tcp_rx_dma_d.nde_shift, nde_shift);
-    modify_field(tcp_rx_dma_d.nde_offset, nde_offset);
-    modify_field(tcp_rx_dma_d.nde_len, nde_len);
-    modify_field(tcp_rx_dma_d.consumer_lif, consumer_lif);
-    modify_field(tcp_rx_dma_d.consumer_ring, consumer_ring);
-    modify_field(tcp_rx_dma_d.consumer_num_slots_mask, consumer_num_slots_mask);
-    modify_field(tcp_rx_dma_d.pkts_rcvd, pkts_rcvd);
-    modify_field(tcp_rx_dma_d.rx2tx_send_ack_pi, rx2tx_send_ack_pi);
-    modify_field(tcp_rx_dma_d.rx2tx_clean_retx_pi, rx2tx_clean_retx_pi);
-    modify_field(tcp_rx_dma_d.rx2tx_fast_retx_pi, rx2tx_fast_retx_pi);
-    modify_field(tcp_rx_dma_d.consumer_qid, consumer_qid);
+    // d for stage 6 table 0
+    RX_DMA_D_FIELDS
 }
 
 /*
@@ -1286,7 +1293,7 @@ action write_arq(ARQ_PI_PARAMS) {
 /*
  * Stage 6 table 2 action
  */
-action write_ooq() {
+action write_ooq(RX_DMA_D_PARAMS) {
     // k + i for stage 6
 
     // from to_stage 6
@@ -1299,6 +1306,9 @@ action write_ooq() {
     GENERATE_GLOBAL_K
 
     GENERATE_T2_S2S_K
+
+    // d for stage 6 table 2
+    RX_DMA_D_FIELDS
 }
 
 /*
@@ -1317,6 +1327,9 @@ action stats() {
 
     // from ki global
     GENERATE_GLOBAL_K
+
+    // from stage to stage
+    modify_field(s7_s2s_scratch.rx_stats_base, s7_s2s.rx_stats_base);
 
     // from stage to stage
 

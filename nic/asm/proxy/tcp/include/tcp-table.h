@@ -38,8 +38,8 @@
 #define TCP_TCB_XMIT_OFFSET                   576
 #define TCP_TCB_TSO_OFFSET                    640
 #define TCP_TCB_HEADER_TEMPLATE_OFFSET        704
-#define TCP_TCB_RX_STATS_OFFSET               768
-#define TCP_TCB_TX_STATS_OFFSET               832
+#define TCP_TCB_UNUSED1                       768
+#define TCP_TCB_UNUSED2                       832
 #define TCP_TCB_OOO_BOOK_KEEPING_OFFSET0      896
 
 #define TCP_TCB_OOO_QADDR_OFFSET              960

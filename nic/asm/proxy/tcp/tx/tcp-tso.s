@@ -159,6 +159,7 @@ tcp_retx:
 tcp_retx_done:
 
 flow_tso_process_done:
+    phvwr           p.t0_s6_s2s_tx_stats_base, d.tx_stats_base
     CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_tx_stats_start)
     nop.e
     nop
@@ -166,6 +167,7 @@ flow_tso_process_done:
 flow_tso_process_drop:
     // TODO: Stats
     phvwri          p.p4_intr_global_drop, 1
+    phvwr           p.t0_s6_s2s_tx_stats_base, d.tx_stats_base
     CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_tx_stats_start)
     nop.e
     nop

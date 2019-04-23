@@ -370,6 +370,13 @@ header_type common_t1_s2s_phv_t {
     }
 }
 
+// Table 0 s2s starting stage 6
+header_type common_t0_s6_s2s_phv_t {
+    fields {
+        tx_stats_base           : 64;
+    }
+}
+
 /******************************************************************************
  * scratch for d-vector
  *****************************************************************************/
@@ -420,9 +427,10 @@ metadata to_stage_5_phv_t to_s5;
 @pragma pa_header_union ingress to_stage_6
 metadata to_stage_6_phv_t to_s6;
 
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_clean_retx
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_clean_retx t0_s6_s2s
 metadata common_t0_s2s_phv_t t0_s2s;
 metadata common_t0_s2s_clean_retx_phv_t t0_s2s_clean_retx;
+metadata common_t0_s6_s2s_phv_t t0_s6_s2s;
 @pragma pa_header_union ingress common_t1_s2s
 metadata common_t1_s2s_phv_t t1_s2s;
 
@@ -447,6 +455,8 @@ metadata to_stage_6_phv_t to_s6_scratch;
 metadata common_t0_s2s_phv_t t0_s2s_scratch;
 @pragma scratch_metadata
 metadata common_t0_s2s_clean_retx_phv_t t0_s2s_clean_retx_scratch;
+@pragma scratch_metadata
+metadata common_t0_s6_s2s_phv_t t0_s6_s2s_scratch;
 @pragma scratch_metadata
 metadata common_t1_s2s_phv_t t1_s2s_scratch;
 
@@ -863,6 +873,9 @@ action stats() {
     modify_field(to_s6_scratch.bytes_sent, to_s6.bytes_sent);
     modify_field(to_s6_scratch.pkts_sent, to_s6.pkts_sent);
     modify_field(to_s6_scratch.pure_acks_sent, to_s6.pure_acks_sent);
+
+    // s2s
+    modify_field(t0_s6_s2s_scratch.tx_stats_base, t0_s6_s2s.tx_stats_base);
 
     // d for stage 6 table 0
 }

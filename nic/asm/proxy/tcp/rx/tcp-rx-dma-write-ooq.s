@@ -15,6 +15,7 @@
 
 struct phv_ p;
 struct s6_t2_tcp_rx_k_ k;
+struct s6_t2_tcp_rx_write_ooq_d d;
 
 %%
     .param          tcp_rx_stats_stage_start
@@ -77,6 +78,7 @@ dma_cmd_set_eop:
 
 dma_cmd_ooq_next_table:
     CAPRI_CLEAR_TABLE_VALID(2)
+    phvwr       p.s7_s2s_rx_stats_base, d.rx_stats_base
     CAPRI_NEXT_TABLE0_READ_NO_TABLE_LKUP(tcp_rx_stats_stage_start)
     nop.e
     nop

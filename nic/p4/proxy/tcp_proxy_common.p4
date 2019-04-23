@@ -98,6 +98,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         no_window                       : 1                     ;\
 
 #define TCB_TSO_STATE \
+        tx_stats_base                   : 64                    ;\
         ip_id                           : 32                    ;\
         source_lif                      : 16                    ;\
         source_port                     : 16                    ;\
@@ -128,8 +129,9 @@ packets_out, sacked_out, retrans_out, lost_out,\
 smss, is_cwnd_limited, rtt_seq_req, limited_transmit, rto_backoff, no_window
 
 
-#define TSO_PARAMS                                                        \
-ip_id, source_lif, source_port, dest_port, header_len,\
+#define TSO_PARAMS \
+tx_stats_base, \
+ip_id, source_lif, source_port, dest_port, header_len, \
 bytes_sent, smss, pkts_sent, pure_acks_sent, zero_window_sent 
 
 #define GENERATE_RETX_SHARED_D \
@@ -166,6 +168,7 @@ bytes_sent, smss, pkts_sent, pure_acks_sent, zero_window_sent
     modify_field(xmit_d.no_window, no_window); \
 
 #define GENERATE_TSO_SHARED_D \
+    modify_field(tso_d.tx_stats_base, tx_stats_base); \
     modify_field(tso_d.ip_id, ip_id); \
     modify_field(tso_d.source_lif, source_lif); \
     modify_field(tso_d.source_port, source_port); \

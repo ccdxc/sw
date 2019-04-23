@@ -52,7 +52,7 @@ dma_slow_cmd_data:
     /* Set the DMA_WRITE CMD for data */
     add         r3, k.to_s6_page, (NIC_PAGE_HDR_SIZE + NIC_PAGE_HEADROOM)
 
-    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.s6_s2s_payload_len)
+    CAPRI_DMA_CMD_PKT2MEM_SETUP(pkt_dma_dma_cmd, r3, k.s1_s2s_payload_len)
     b           dma_slow_cmd_descr
     nop
 

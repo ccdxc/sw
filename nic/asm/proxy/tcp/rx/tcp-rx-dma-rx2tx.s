@@ -17,7 +17,6 @@ struct s6_t1_tcp_rx_k_ k;
 struct s6_t0_tcp_rx_dma_d d;
 
 %%
-    .param          tcp_rx_stats_stage_start
     .align
 
     /*

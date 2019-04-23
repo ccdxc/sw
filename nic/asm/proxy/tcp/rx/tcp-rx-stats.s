@@ -34,33 +34,33 @@ tcp_rx_stats_stage_start:
 // **NOTE: Offsets need to match definition in __tcp_rx_stats_t in 
 // p4pd_tcp_proxy_api.h
 bytes_rcvd_atomic_stats_update_start:
-    CAPRI_ATOMIC_STATS_INCR1(bytes_rcvd, k.common_phv_qstate_addr,
-                TCP_TCB_RX_STATS_OFFSET + 0 * 8, k.to_s7_bytes_rcvd)
+    CAPRI_ATOMIC_STATS_INCR1(bytes_rcvd, k.s7_s2s_rx_stats_base,
+                0 * 8, k.to_s7_bytes_rcvd)
 bytes_rcvd_atomic_stats_update_done:
 
 pkts_rcvd_atomic_stats_update_start:
-    CAPRI_ATOMIC_STATS_INCR1(pkts_rcvd, k.common_phv_qstate_addr,
-                TCP_TCB_RX_STATS_OFFSET + 1 * 8, k.to_s7_pkts_rcvd)
+    CAPRI_ATOMIC_STATS_INCR1(pkts_rcvd, k.s7_s2s_rx_stats_base,
+                1 * 8, k.to_s7_pkts_rcvd)
 pkts_rcvd_atomic_stats_update_done:
 
 bytes_acked_atomic_stats_update_start:
-    CAPRI_ATOMIC_STATS_INCR1(bytes_acked, k.common_phv_qstate_addr,
-                TCP_TCB_RX_STATS_OFFSET + 2 * 8, k.to_s7_bytes_acked)
+    CAPRI_ATOMIC_STATS_INCR1(bytes_acked, k.s7_s2s_rx_stats_base,
+                2 * 8, k.to_s7_bytes_acked)
 bytes_acked_atomic_stats_update_done:
 
 pure_acks_rcvd_atomic_stats_update_start:
-    CAPRI_ATOMIC_STATS_INCR1(pure_acks_rcvd, k.common_phv_qstate_addr,
-                TCP_TCB_RX_STATS_OFFSET + 3 * 8, k.to_s7_pure_acks_rcvd)
+    CAPRI_ATOMIC_STATS_INCR1(pure_acks_rcvd, k.s7_s2s_rx_stats_base,
+                3 * 8, k.to_s7_pure_acks_rcvd)
 pure_acks_rcvd_atomic_stats_update_done:
 
 dup_acks_rcvd_atomic_stats_update_start:
-    CAPRI_ATOMIC_STATS_INCR1(dup_acks_rcvd, k.common_phv_qstate_addr,
-                TCP_TCB_RX_STATS_OFFSET + 4 * 8, k.to_s7_dup_acks_rcvd)
+    CAPRI_ATOMIC_STATS_INCR1(dup_acks_rcvd, k.s7_s2s_rx_stats_base,
+                4 * 8, k.to_s7_dup_acks_rcvd)
 dup_acks_rcvd_atomic_stats_update_done:
 
 ooo_cnt_atomic_stats_update_start:
-    CAPRI_ATOMIC_STATS_INCR1(ooo_cnt, k.common_phv_qstate_addr,
-                TCP_TCB_RX_STATS_OFFSET + 5 * 8, k.to_s7_ooo_cnt)
+    CAPRI_ATOMIC_STATS_INCR1(ooo_cnt, k.s7_s2s_rx_stats_base,
+                5 * 8, k.to_s7_ooo_cnt)
 ooo_cnt_atomic_stats_update_done:
 
 

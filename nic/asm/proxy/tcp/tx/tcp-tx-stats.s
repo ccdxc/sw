@@ -25,18 +25,18 @@ tcp_tx_stats_start:
 // **NOTE: Offsets need to match definition in __tcp_tx_stats_t in 
 // p4pd_tcp_proxy_api.h
 bytes_sent_atomic_stats_update_start:
-        CAPRI_ATOMIC_STATS_INCR1(bytes_sent, k.common_phv_qstate_addr,
-                TCP_TCB_TX_STATS_OFFSET + 0 * 8, k.to_s6_bytes_sent)
+        CAPRI_ATOMIC_STATS_INCR1(bytes_sent, k.t0_s6_s2s_tx_stats_base,
+                0 * 8, k.to_s6_bytes_sent)
 bytes_sent_atomic_stats_update_done:
 
 pkts_sent_atomic_stats_update_start:
-        CAPRI_ATOMIC_STATS_INCR1(pkts_sent, k.common_phv_qstate_addr,
-                TCP_TCB_TX_STATS_OFFSET + 1 * 8, k.to_s6_pkts_sent)
+        CAPRI_ATOMIC_STATS_INCR1(pkts_sent, k.t0_s6_s2s_tx_stats_base,
+                1 * 8, k.to_s6_pkts_sent)
 pkts_sent_atomic_stats_update_done:
 
 pure_acks_sent_atomic_stats_update_start:
-        CAPRI_ATOMIC_STATS_INCR1(pure_acks_sent, k.common_phv_qstate_addr,
-                TCP_TCB_TX_STATS_OFFSET + 2 * 8, k.to_s6_pure_acks_sent)
+        CAPRI_ATOMIC_STATS_INCR1(pure_acks_sent, k.t0_s6_s2s_tx_stats_base,
+                2 * 8, k.to_s6_pure_acks_sent)
 pure_acks_sent_atomic_stats_update_done:
 
     seq             c1, k.common_phv_fin, 1

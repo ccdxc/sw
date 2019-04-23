@@ -322,6 +322,16 @@ p4pd_add_or_del_tcpcb_rx_dma(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_DMA);
 
     if(!del) {
+        uint64_t stats_base = get_mem_addr(
+                CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS);
+        SDK_ASSERT(stats_base + tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
+                TCP_PER_FLOW_STATS_SIZE <= stats_base +
+                get_mem_size_kb(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) * 1024);
+        rx_dma_d.rx_stats_base = htonll(stats_base + 
+                tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
+                TCP_RX_PER_FLOW_STATS_OFFSET);
+        HAL_TRACE_DEBUG("tcp qid {}, rx stats base: {:#x}",
+                        tcpcb_pd->tcpcb->cb_id, ntohll(rx_dma_d.rx_stats_base));
         if (tcpcb_pd->tcpcb->bypass_tls) {
             // Get SESQ address of the other TCP flow
             wring_hw_id_t  sesq_base;
@@ -762,8 +772,9 @@ p4pd_get_tcpcb_rxdma_stats(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
     }
 
-    hwid = tcpcb_pd->hw_id +
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_STATS);
+    hwid = get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
+                tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
+                TCP_RX_PER_FLOW_STATS_OFFSET;
     if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats, sizeof(stats))) {
         HAL_TRACE_ERR("Failed to get rx: stats entry for TCP CB");
         return HAL_RET_HW_FAIL;
@@ -814,8 +825,9 @@ p4pd_get_tcpcb_txdma_stats(pd_tcpcb_t* tcpcb_pd)
         return HAL_RET_HW_FAIL;
      }
 
-    hwid = tcpcb_pd->hw_id +
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_STATS);
+    hwid = get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
+                tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
+                TCP_TX_PER_FLOW_STATS_OFFSET;
     if(sdk::asic::asic_mem_read(hwid,  (uint8_t *)&stats, sizeof(stats))) {
         HAL_TRACE_ERR("Failed to get rx: stats entry for TCP CB");
         return HAL_RET_HW_FAIL;
@@ -1179,6 +1191,17 @@ p4pd_add_or_del_tcp_tx_tso_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_TSO);
 
     if(!del) {
+        uint64_t stats_base = get_mem_addr(
+                CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS);
+        SDK_ASSERT(stats_base + tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
+                TCP_PER_FLOW_STATS_SIZE <= stats_base +
+                get_mem_size_kb(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) * 1024);
+        data.tx_stats_base = htonll(stats_base +
+                tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
+                TCP_TX_PER_FLOW_STATS_OFFSET);
+        HAL_TRACE_DEBUG("tcp qid {}, tx stats base: {:#x}",
+                        tcpcb_pd->tcpcb->cb_id, ntohll(data.tx_stats_base));
+
         data.source_lif = htons(tcpcb_pd->tcpcb->source_lif);
         data.source_port = htons(tcpcb_pd->tcpcb->source_port);
         data.dest_port = htons(tcpcb_pd->tcpcb->dest_port);
@@ -1553,18 +1576,20 @@ p4pd_init_tcpcb_stats(pd_tcpcb_t* tcpcb_pd)
     tcp_rx_stats_t rx_stats = { 0 };
     tcp_tx_stats_t tx_stats = { 0 };
 
-    hwid = tcpcb_pd->hw_id +
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_RX_STATS);
+    hwid = get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
+                tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
+                TCP_RX_PER_FLOW_STATS_OFFSET;
     if (!p4plus_hbm_write(hwid, (uint8_t *)&rx_stats, sizeof(rx_stats),
-                P4PLUS_CACHE_INVALIDATE_BOTH)) {
+                P4PLUS_CACHE_ACTION_NONE)) {
         HAL_TRACE_ERR("Failed to init rx_stats");
         return HAL_RET_HW_FAIL;
     }
 
-    hwid = tcpcb_pd->hw_id +
-        (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_STATS);
+    hwid = get_mem_addr(CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS) +
+                tcpcb_pd->tcpcb->cb_id * TCP_PER_FLOW_STATS_SIZE +
+                TCP_TX_PER_FLOW_STATS_OFFSET;
     if (!p4plus_hbm_write(hwid, (uint8_t *)&tx_stats, sizeof(tx_stats),
-                P4PLUS_CACHE_INVALIDATE_BOTH)) {
+                P4PLUS_CACHE_ACTION_NONE)) {
         HAL_TRACE_ERR("Failed to init tx_stats");
         return HAL_RET_HW_FAIL;
     }

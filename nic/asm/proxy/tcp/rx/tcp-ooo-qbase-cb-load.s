@@ -51,7 +51,9 @@ tcp_ooo_qbase_cb_load:
         nop
     .brend
 tcp_ooo_launch_dma:
-    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(2, tcp_rx_write_ooq_stage_start)
+    CAPRI_NEXT_TABLE_READ_OFFSET(2, TABLE_LOCK_DIS,
+                tcp_rx_write_ooq_stage_start, k.common_phv_qstate_addr,
+                TCP_TCB_RX_DMA_OFFSET, TABLE_SIZE_512_BITS)
     nop.e
     nop
 

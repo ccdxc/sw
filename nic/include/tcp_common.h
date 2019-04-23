@@ -20,6 +20,13 @@
 
 #define TCP_MAX_OOQ_DESCR_MASK 255
 
+#define TCP_RX_PER_FLOW_STATS_SIZE       64
+#define TCP_TX_PER_FLOW_STATS_SIZE       64
+#define TCP_PER_FLOW_STATS_SIZE          (TCP_RX_PER_FLOW_STATS_SIZE + \
+                                          TCP_TX_PER_FLOW_STATS_SIZE)
+#define TCP_RX_PER_FLOW_STATS_OFFSET     0
+#define TCP_TX_PER_FLOW_STATS_OFFSET     64
+
 #define TCP_ESTABLISHED   1
 #define TCP_SYN_SENT      2
 #define TCP_SYN_RECV      3
