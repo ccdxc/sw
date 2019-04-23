@@ -66,5 +66,6 @@ nic/build/aarch64/iris/bin/ionic.efirom                                         
 # Drivers
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                                  /platform/drivers/
 platform/drivers/linux/mnet/mnet.ko                                             /platform/drivers/
+platform/drivers/linux/mnet_uio_pdrv_genirq/mnet_uio_pdrv_genirq.ko             /platform/drivers/
 
 

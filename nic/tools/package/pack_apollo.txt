@@ -174,3 +174,4 @@ nic/build/$ARCH/$PIPELINE/bin/testapp                             /nic/bin/
 # Drivers
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                    /nic/bin/
 platform/drivers/linux/mnet/mnet.ko                               /nic/bin/
+platform/drivers/linux/mnet_uio_pdrv_genirq/mnet_uio_pdrv_genirq.ko /nic/bin/
