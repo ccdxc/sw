@@ -11994,6 +11994,11 @@
         "yallist": "^2.1.2"
       }
     },
+    "lru_map": {
+      "version": "0.3.3",
+      "resolved": "https://registry.npmjs.org/lru_map/-/lru_map-0.3.3.tgz",
+      "integrity": "sha1-tcg1G5Rky9dQM1p5ZQoOwOVhGN0="
+    },
     "magic-string": {
       "version": "0.25.2",
       "resolved": "https://registry.npmjs.org/magic-string/-/magic-string-0.25.2.tgz",

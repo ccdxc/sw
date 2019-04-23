@@ -71,6 +71,7 @@ import { ConfirmationService, DomHandler } from 'primeng/primeng';
 import { ToasterComponent, ToasterItemComponent } from './widgets/toaster/toaster.component';
 import { MissingpageComponent } from './widgets/missingpage/missingpage.component';
 import { MessageService } from './services/message.service';
+import {AuditService} from "@app/services/generated/audit.service";
 
 
 /**
@@ -150,6 +151,7 @@ import { MessageService } from './services/message.service';
     StagingService,
     TelemetryqueryServiceGen,
     MetricsqueryService,
+    AuditService,
 
     // Route Guards
     AuthGuard,

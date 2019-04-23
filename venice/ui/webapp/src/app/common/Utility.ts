@@ -46,6 +46,10 @@ export class Utility {
 
   private constructor() { }
 
+  public static getAuditEventCacheSize():number {
+    return 10; // For future code refactoring, we are planning to use user-preferences and env.variable
+  }
+
   /**
    * get REST API server URL
    * In production enviornment, UI is hosted along with API-Gateway. Thus, UI url is that same as API-GW url.

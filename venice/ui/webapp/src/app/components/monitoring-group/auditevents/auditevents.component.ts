@@ -9,8 +9,10 @@ import { FieldselectorComponent } from '@app/components/shared/fieldselector/fie
 import { RowClickEvent, TableCol, TableviewAbstract, TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
-import { AuditEvent, IAuditEvent } from '@sdk/v1/models/generated/audit';
-import { SearchSearchQuery_kinds, SearchSearchRequest, SearchSearchRequest_sort_order, SearchSearchResponse } from '@sdk/v1/models/generated/search';
+import {AuditService} from '@app/services/generated/audit.service';
+import {LRUMap} from 'lru_map';
+import {AuditEvent, IAuditEvent} from '@sdk/v1/models/generated/audit';
+import {SearchSearchQuery_kinds, SearchSearchRequest, SearchSearchRequest_sort_order, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { LazyLoadEvent } from 'primeng/primeng';
 import { Subscription } from 'rxjs';
 
@@ -46,6 +48,9 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
   startingSortOrder: number = -1;
 
   loading: boolean = false;
+  auditEventDetail:AuditEvent;
+
+  cache = new LRUMap<String, AuditEvent>(Utility.getAuditEventCacheSize());  // cache with limit 10
 
   lastUpdateTime: string = '';
 
@@ -77,6 +82,7 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
     protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef,
     protected searchService: SearchService,
+    protected auditService: AuditService,
   ) {
     super(controllerService, cdr);
   }
@@ -214,8 +220,8 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
   /**
    * This API serves html template
    */
-  displayAuditEvent(auditEvent: AuditEvent): string {
-    return JSON.stringify(auditEvent, null, 1);
+  displayAuditEvent(): string {
+    return JSON.stringify(this.auditEventDetail, null, 1);
   }
 
   onAuditeventsTableRowClick(event: RowClickEvent) {
@@ -227,6 +233,18 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
     } else {
       this.showRowExpand = true;
       this.expandedRowData = event.rowData;
+
+      // fetch detail audit event data
+      const auditEvent = event.rowData;
+      this.auditEventDetail = this.cache.get(auditEvent.meta.uuid);  // cache hit
+      if(!this.auditEventDetail){
+        // cache miss
+        this.auditService.GetGetEvent(auditEvent.meta.uuid).subscribe(resp => {
+          this.auditEventDetail = resp.body as AuditEvent;  // fetching actual data
+          this.cache.set(auditEvent.meta.uuid, this.auditEventDetail);
+        }, this.controllerService.restErrorHandler("Failed to get Audit Event"));
+      }
+
       this.expandRowRequest(event.event, event.rowData);
     }
   }

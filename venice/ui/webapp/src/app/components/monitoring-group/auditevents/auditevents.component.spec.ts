@@ -26,6 +26,7 @@ import { MessageService } from '@app/services/message.service';
 import { Table } from 'primeng/table';
 
 import { AuditeventsComponent } from './auditevents.component';
+import {AuditService} from "@app/services/generated/audit.service";
 
 describe('AuditeventsComponent', () => {
   let component: AuditeventsComponent;
@@ -54,7 +55,8 @@ describe('AuditeventsComponent', () => {
         EventsService,
         SearchService,
         MonitoringService,
-        MessageService
+        MessageService,
+        AuditService
       ]
     })
       .compileComponents();
