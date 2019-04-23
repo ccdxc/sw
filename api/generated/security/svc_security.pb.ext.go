@@ -12,6 +12,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
@@ -131,7 +132,7 @@ func (m *AppList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AppList))
 	return out, nil
 }
 
@@ -152,7 +153,7 @@ func (m *AutoMsgAppWatchHelper) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgAppWatchHelper))
 	return out, nil
 }
 
@@ -173,7 +174,7 @@ func (m *AutoMsgAppWatchHelper_WatchEvent) Clone(into interface{}) (interface{},
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgAppWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -194,7 +195,7 @@ func (m *AutoMsgCertificateWatchHelper) Clone(into interface{}) (interface{}, er
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgCertificateWatchHelper))
 	return out, nil
 }
 
@@ -215,7 +216,7 @@ func (m *AutoMsgCertificateWatchHelper_WatchEvent) Clone(into interface{}) (inte
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgCertificateWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -236,7 +237,7 @@ func (m *AutoMsgFirewallProfileWatchHelper) Clone(into interface{}) (interface{}
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgFirewallProfileWatchHelper))
 	return out, nil
 }
 
@@ -257,7 +258,7 @@ func (m *AutoMsgFirewallProfileWatchHelper_WatchEvent) Clone(into interface{}) (
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgFirewallProfileWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -278,7 +279,7 @@ func (m *AutoMsgSGPolicyWatchHelper) Clone(into interface{}) (interface{}, error
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgSGPolicyWatchHelper))
 	return out, nil
 }
 
@@ -299,7 +300,7 @@ func (m *AutoMsgSGPolicyWatchHelper_WatchEvent) Clone(into interface{}) (interfa
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgSGPolicyWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -320,7 +321,7 @@ func (m *AutoMsgSecurityGroupWatchHelper) Clone(into interface{}) (interface{}, 
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgSecurityGroupWatchHelper))
 	return out, nil
 }
 
@@ -341,7 +342,7 @@ func (m *AutoMsgSecurityGroupWatchHelper_WatchEvent) Clone(into interface{}) (in
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgSecurityGroupWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -362,7 +363,7 @@ func (m *AutoMsgTrafficEncryptionPolicyWatchHelper) Clone(into interface{}) (int
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgTrafficEncryptionPolicyWatchHelper))
 	return out, nil
 }
 
@@ -383,7 +384,7 @@ func (m *AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent) Clone(into interf
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgTrafficEncryptionPolicyWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -404,7 +405,7 @@ func (m *CertificateList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*CertificateList))
 	return out, nil
 }
 
@@ -425,7 +426,7 @@ func (m *FirewallProfileList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*FirewallProfileList))
 	return out, nil
 }
 
@@ -446,7 +447,7 @@ func (m *SGPolicyList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SGPolicyList))
 	return out, nil
 }
 
@@ -467,7 +468,7 @@ func (m *SecurityGroupList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SecurityGroupList))
 	return out, nil
 }
 
@@ -488,7 +489,7 @@ func (m *TrafficEncryptionPolicyList) Clone(into interface{}) (interface{}, erro
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TrafficEncryptionPolicyList))
 	return out, nil
 }
 

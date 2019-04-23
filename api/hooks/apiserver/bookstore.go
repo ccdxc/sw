@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"sync"
 
+	"google.golang.org/grpc/codes"
+
+	"github.com/pensando/sw/api"
+
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -84,6 +88,16 @@ func (s *bookstoreHooks) processDelBook(ctx context.Context, oper apiintf.APIOpe
 func (s *bookstoreHooks) processApplyDiscountAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.InfoLog("msg", "action routine called")
 	// This hook could act on the KV store (get/store) or make gRPC call etc.
+	cpn := i.(bookstore.ApplyDiscountReq)
+	if cpn.Coupon == "TESTFAIL" {
+		// This is used for testing to failure
+		ret := &api.Status{}
+		ret.Code = int32(codes.ResourceExhausted)
+		ret.Result.Str = "test failure"
+		ret.Message = []string{"test message"}
+		return bookstore.Order{}, false, ret
+	}
+
 	obj, err := s.svc.GetCrudService("Order", apiintf.UpdateOper).GetRequestType().GetFromKv(ctx, kv, key)
 	if err != nil {
 		return bookstore.Order{}, false, errors.Wrap(err, "invalid order update")

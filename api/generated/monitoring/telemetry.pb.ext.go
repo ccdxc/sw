@@ -14,6 +14,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -92,7 +93,7 @@ func (m *FlowExportPolicy) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*FlowExportPolicy))
 	return out, nil
 }
 
@@ -120,7 +121,7 @@ func (m *FlowExportPolicySpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*FlowExportPolicySpec))
 	return out, nil
 }
 
@@ -148,7 +149,7 @@ func (m *FlowExportPolicyStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*FlowExportPolicyStatus))
 	return out, nil
 }
 
@@ -169,7 +170,7 @@ func (m *FwlogPolicy) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*FwlogPolicy))
 	return out, nil
 }
 
@@ -197,7 +198,7 @@ func (m *FwlogPolicySpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*FwlogPolicySpec))
 	return out, nil
 }
 
@@ -227,7 +228,7 @@ func (m *FwlogPolicyStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*FwlogPolicyStatus))
 	return out, nil
 }
 
@@ -248,7 +249,7 @@ func (m *StatsPolicy) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*StatsPolicy))
 	return out, nil
 }
 
@@ -276,7 +277,7 @@ func (m *StatsPolicySpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*StatsPolicySpec))
 	return out, nil
 }
 
@@ -304,7 +305,7 @@ func (m *StatsPolicyStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*StatsPolicyStatus))
 	return out, nil
 }
 

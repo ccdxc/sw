@@ -207,7 +207,7 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 	uri, err := m.MakeURI(i)
 	if err != nil {
 		uri = key
-		l.ErrorLog("msg", "unable to construct URI for staging call", "error", err)
+		l.DebugLog("msg", "unable to construct URI for staging call", "error", err)
 	}
 	switch oper {
 	case apiintf.CreateOper:
@@ -572,9 +572,17 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		// XXX-TODO(sanjayt): move to using requirements instead of txn
 		i, kvwrite, err = v(ctx, kv, txn, key, oper, dryRun, i)
 		// Precommit errors are allowed in staged requests but not in dryRun calls or non-staged requests
+		s, sok := err.(*api.Status)
 		if err != nil && (bufid == "" || localBuffer || dryRun) {
 			l.ErrorLog("msg", "precommit hook failed", "error", err, "URI", URI)
+			if sok {
+				return nil, apierrors.AddDetails(s)
+			}
 			return nil, errPreOpChecksFailed.makeError(i, []string{err.Error()}, "")
+		}
+		// Even on a staging buffer do not allow non-temp errors
+		if sok && !s.IsTemporary {
+			return nil, apierrors.AddDetails(s)
 		}
 		kvwrite = kvwrite && kvold
 	}
@@ -656,7 +664,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	if localBuffer {
 		tresp, err := txn.Commit(ctx)
 		if err != nil {
-			return nil, err
+			return nil, errTransactionFailed.makeError(nil, []string{err.Error()}, "")
 		}
 		if !tresp.Succeeded {
 			l.ErrorLog("msg", "transaction failed")
@@ -699,6 +707,9 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		resp, err = m.responseWriter(ctx, kv, m.svcPrefix, i, old, resp, oper)
 		if err != nil {
 			l.ErrorLog("msg", "response writer returned", "error", err, "URI", URI)
+			if s, ok := err.(*api.Status); ok {
+				return nil, apierrors.AddDetails(s)
+			}
 			return nil, errResponseWriter.makeError(i, []string{err.Error()}, "")
 		}
 	}

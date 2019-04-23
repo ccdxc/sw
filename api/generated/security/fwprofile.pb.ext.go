@@ -13,6 +13,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -51,7 +52,7 @@ func (m *FirewallProfile) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*FirewallProfile))
 	return out, nil
 }
 
@@ -79,7 +80,7 @@ func (m *FirewallProfileSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*FirewallProfileSpec))
 	return out, nil
 }
 
@@ -116,7 +117,7 @@ func (m *FirewallProfileStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*FirewallProfileStatus))
 	return out, nil
 }
 

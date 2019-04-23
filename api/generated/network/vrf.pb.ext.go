@@ -13,6 +13,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
@@ -46,7 +47,7 @@ func (m *VirtualRouter) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*VirtualRouter))
 	return out, nil
 }
 
@@ -73,7 +74,7 @@ func (m *VirtualRouterSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*VirtualRouterSpec))
 	return out, nil
 }
 
@@ -94,7 +95,7 @@ func (m *VirtualRouterStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*VirtualRouterStatus))
 	return out, nil
 }
 

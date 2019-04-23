@@ -14,6 +14,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -60,7 +61,7 @@ func (m *EventPolicy) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*EventPolicy))
 	return out, nil
 }
 
@@ -88,7 +89,7 @@ func (m *EventPolicySpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*EventPolicySpec))
 	return out, nil
 }
 
@@ -115,7 +116,7 @@ func (m *EventPolicyStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*EventPolicyStatus))
 	return out, nil
 }
 

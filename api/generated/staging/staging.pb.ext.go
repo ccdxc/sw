@@ -14,6 +14,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -96,7 +97,7 @@ func (m *Buffer) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Buffer))
 	return out, nil
 }
 
@@ -124,7 +125,7 @@ func (m *BufferSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*BufferSpec))
 	return out, nil
 }
 
@@ -145,7 +146,7 @@ func (m *BufferStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*BufferStatus))
 	return out, nil
 }
 
@@ -172,7 +173,7 @@ func (m *ClearAction) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ClearAction))
 	return out, nil
 }
 
@@ -200,7 +201,7 @@ func (m *ClearActionSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ClearActionSpec))
 	return out, nil
 }
 
@@ -221,7 +222,7 @@ func (m *ClearActionStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ClearActionStatus))
 	return out, nil
 }
 
@@ -248,7 +249,7 @@ func (m *CommitAction) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*CommitAction))
 	return out, nil
 }
 
@@ -276,7 +277,7 @@ func (m *CommitActionSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*CommitActionSpec))
 	return out, nil
 }
 
@@ -297,7 +298,7 @@ func (m *CommitActionStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*CommitActionStatus))
 	return out, nil
 }
 
@@ -324,7 +325,7 @@ func (m *Item) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Item))
 	return out, nil
 }
 
@@ -345,7 +346,7 @@ func (m *ItemId) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ItemId))
 	return out, nil
 }
 
@@ -366,7 +367,7 @@ func (m *ValidationError) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ValidationError))
 	return out, nil
 }
 

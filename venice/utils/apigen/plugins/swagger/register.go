@@ -404,7 +404,12 @@ func methFinalizer(obj *genswagger.SwaggerPathItemObject, path *string, method *
 func messageFinalizer(obj *genswagger.SwaggerSchemaObject, message *descriptor.Message, reg *descriptor.Registry) error {
 	// Adding the required field
 	req := []string{}
+	del := []int{}
 	for _, f := range message.Fields {
+		// ignore any fields that are to be ignored by json
+		if common.GetJSONTag(f) == "-" {
+			continue
+		}
 		profile, err := generateVeniceCheckFieldProfile(f, reg)
 		if err == nil && profile != nil {
 			// TODO: Use swagger version instead of all
@@ -412,6 +417,24 @@ func messageFinalizer(obj *genswagger.SwaggerSchemaObject, message *descriptor.M
 				tag := common.GetJSONTag(f)
 				req = append(req, tag)
 			}
+		}
+	}
+	for i, o := range obj.Properties {
+		// remove any fields that are to be ignored by json
+		if o.Key == "-" {
+			del = append(del, i)
+		}
+	}
+	if len(del) > 0 {
+		props := obj.Properties
+		obj.Properties = nil
+		index := 0
+		for i, f := range props {
+			if i == del[index] {
+				index++
+				continue
+			}
+			obj.Properties = append(obj.Properties, f)
 		}
 	}
 	if len(req) != 0 {

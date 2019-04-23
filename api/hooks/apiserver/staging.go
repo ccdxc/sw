@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
@@ -54,7 +55,22 @@ func (h *stagingHooks) updateStatus(ctx context.Context, buf *staging.Buffer) (*
 			buf.Status.ValidationResult = staging.BufferStatus_FAILED.String()
 		}
 		for it := range status.Items {
-			p, err := types.MarshalAny(status.Items[it].Object.(proto.Message))
+			// Transform the object from Storage if needed.
+			obj, err := status.Items[it].Object.Clone(nil)
+			if err != nil {
+				h.l.ErrorLog("msg", "could not clone object", "error", err)
+				return buf, err
+			}
+			m := reflect.ValueOf(obj).MethodByName("ApplyStorageTransformer")
+			if m.IsValid() {
+				args := []reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(false)}
+				ev := m.Call(args)
+				if !ev[0].IsNil() {
+					err := ev[0].Interface().(error)
+					h.l.ErrorLog("msg", "failed to tranform from storage", "error", err, "key", status.Items[it].Key)
+				}
+			}
+			p, err := types.MarshalAny(obj.(proto.Message))
 			if err != nil {
 				h.l.ErrorLog("msg", "failed to marshalAny", "tenant", buf.Tenant, "buffer", buf.Name, "error", err)
 			}
@@ -147,7 +163,6 @@ func (h *stagingHooks) commitAction(ctx context.Context, kv kvstore.Interface, t
 	if err != nil {
 		buf.Status.Status = staging.CommitActionStatus_FAILED.String()
 		buf.Status.Reason = err.Error()
-		err = apierrors.ToGrpcError("commit of transaction failed", []string{err.Error()}, int32(codes.FailedPrecondition), "", nil)
 	} else {
 		buf.Status.Status = staging.CommitActionStatus_SUCCESS.String()
 	}

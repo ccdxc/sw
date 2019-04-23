@@ -1,10 +1,12 @@
-package ref
+package ref_test
 
 import (
 	"fmt"
 	"sort"
 	"strconv"
 	"testing"
+
+	"github.com/pensando/sw/venice/utils/ref"
 )
 
 func TestWalkStructJson(t *testing.T) {
@@ -96,17 +98,17 @@ func TestWalkStructJson(t *testing.T) {
   }
 }
 `
-	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
-	outStr := WalkStruct(User{}, refCtx)
+	refCtx := &ref.RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]ref.CustomParser{"*ref_test.CustomObj": &testCustomParser{}}}
+	outStr := ref.WalkStruct(User{}, refCtx)
 	if outStr != expectedStr {
 		t.Fatalf("Out:\n--%s--\nExpected:\n--%s--\n", outStr, expectedStr)
 	}
 }
 
 func TestEmptyGetJson(t *testing.T) {
-	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
-	kvs := make(map[string]FInfo)
-	GetKvs(User{}, refCtx, kvs)
+	refCtx := &ref.RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]ref.CustomParser{"*ref_test.CustomObj": &testCustomParser{}}}
+	kvs := make(map[string]ref.FInfo)
+	ref.GetKvs(User{}, refCtx, kvs)
 	total := 0
 
 	if _, ok := kvs["apiVersion"]; !ok {
@@ -434,9 +436,9 @@ func TestGetJson(t *testing.T) {
 			},
 		},
 	}
-	kvs := make(map[string]FInfo)
-	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
-	GetKvs(u, refCtx, kvs)
+	kvs := make(map[string]ref.FInfo)
+	refCtx := &ref.RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]ref.CustomParser{"*ref_test.CustomObj": &testCustomParser{}}}
+	ref.GetKvs(u, refCtx, kvs)
 
 	if fi, ok := kvs["name"]; ok {
 		if !fi.Key || fi.ValueStr[0] != "joe" {
@@ -885,33 +887,33 @@ func TestUpdateJson(t *testing.T) {
 			},
 		},
 	}
-	kvs := make(map[string]FInfo)
-	kvs["name"] = NewFInfo([]string{"joe"})
-	kvs["roles"] = NewFInfo([]string{"blah-blah"})
-	kvs["toGroup"] = NewFInfo([]string{"key1:new-to-key1", "key3:to-key3"})
-	kvs["fromGroup"] = NewFInfo([]string{"key1:new-from-key1", "key3:from-key3"})
-	kvs["sipAddress"] = NewFInfo([]string{"10.1.1.2"})
-	kvs["macAddrs"] = NewFInfo([]string{"00.11.22.33.44.55", "00.22.33.44.55.66"})
-	kvs["ip_ver"] = NewFInfo([]string{"ipv4", "ipv6"})
-	kvs["ip_proto"] = NewFInfo([]string{"udper", "tcper"})
-	kvs["outr_port"] = NewFInfo([]string{"tcp/4411", "tcp/2121"})
-	kvs["outr_action"] = NewFInfo([]string{"permit", "permit"})
-	kvs["outr_peer_group"] = NewFInfo([]string{"g5", "g6"})
-	kvs["fix_port"] = NewFInfo([]string{"tcp/5555", "icmp/echo"})
-	kvs["fix_action"] = NewFInfo([]string{"action-one", "action-two"})
-	kvs["fix_peer_group"] = NewFInfo([]string{"group-foo", "group-bar"})
-	kvs["nodeRoles"] = NewFInfo([]string{"455", "544", "5544"})
-	kvs["status"] = NewFInfo([]string{"3", "4"})
-	kvs["type"] = NewFInfo([]string{"9", "9"})
-	kvs["reason"] = NewFInfo([]string{"new reason", "another new reason"})
-	kvs["message"] = NewFInfo([]string{"one", "two"})
-	kvs["lastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
-	kvs["boolFlag"] = NewFInfo([]string{"true"})
-	kvs["floatVal"] = NewFInfo([]string{"901.019"})
-	kvs["custom-obj"] = NewFInfo([]string{"k1=x1,k2=x2"})
+	kvs := make(map[string]ref.FInfo)
+	kvs["name"] = ref.NewFInfo([]string{"joe"})
+	kvs["roles"] = ref.NewFInfo([]string{"blah-blah"})
+	kvs["toGroup"] = ref.NewFInfo([]string{"key1:new-to-key1", "key3:to-key3"})
+	kvs["fromGroup"] = ref.NewFInfo([]string{"key1:new-from-key1", "key3:from-key3"})
+	kvs["sipAddress"] = ref.NewFInfo([]string{"10.1.1.2"})
+	kvs["macAddrs"] = ref.NewFInfo([]string{"00.11.22.33.44.55", "00.22.33.44.55.66"})
+	kvs["ip_ver"] = ref.NewFInfo([]string{"ipv4", "ipv6"})
+	kvs["ip_proto"] = ref.NewFInfo([]string{"udper", "tcper"})
+	kvs["outr_port"] = ref.NewFInfo([]string{"tcp/4411", "tcp/2121"})
+	kvs["outr_action"] = ref.NewFInfo([]string{"permit", "permit"})
+	kvs["outr_peer_group"] = ref.NewFInfo([]string{"g5", "g6"})
+	kvs["fix_port"] = ref.NewFInfo([]string{"tcp/5555", "icmp/echo"})
+	kvs["fix_action"] = ref.NewFInfo([]string{"action-one", "action-two"})
+	kvs["fix_peer_group"] = ref.NewFInfo([]string{"group-foo", "group-bar"})
+	kvs["nodeRoles"] = ref.NewFInfo([]string{"455", "544", "5544"})
+	kvs["status"] = ref.NewFInfo([]string{"3", "4"})
+	kvs["type"] = ref.NewFInfo([]string{"9", "9"})
+	kvs["reason"] = ref.NewFInfo([]string{"new reason", "another new reason"})
+	kvs["message"] = ref.NewFInfo([]string{"one", "two"})
+	kvs["lastTransitionTime"] = ref.NewFInfo([]string{"666666", "7777777"})
+	kvs["boolFlag"] = ref.NewFInfo([]string{"true"})
+	kvs["floatVal"] = ref.NewFInfo([]string{"901.019"})
+	kvs["custom-obj"] = ref.NewFInfo([]string{"k1=x1,k2=x2"})
 
-	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
-	newObj := WriteKvs(u, refCtx, kvs)
+	refCtx := &ref.RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]ref.CustomParser{"*ref_test.CustomObj": &testCustomParser{}}}
+	newObj := ref.WriteKvs(u, refCtx, kvs)
 	newUser := newObj.(User)
 
 	if newUser.ObjectMeta.Name != "joe" {
@@ -1052,48 +1054,48 @@ func TestUpdateJson(t *testing.T) {
 }
 
 func TestNewWriteJson(t *testing.T) {
-	kvs := make(map[string]FInfo)
-	kvs["name"] = NewFInfo([]string{"joe"})
-	kvs["labels"] = NewFInfo([]string{"dept:eng", "level:mts"})
-	kvs["roles"] = NewFInfo([]string{"storage-admin", "security-admin"})
-	kvs["aliases"] = NewFInfo([]string{"jhonny"})
-	kvs["matchLabels"] = NewFInfo([]string{"io.pensando.area:network", "color:purple"})
-	kvs["interval"] = NewFInfo([]string{"4554"})
-	kvs["in_port"] = NewFInfo([]string{"tcp/80,tcp/443", "tcp/6379"})
-	kvs["out_port"] = NewFInfo([]string{"tcp/8181"})
-	kvs["in_action"] = NewFInfo([]string{"permit,log", "permit,log"})
-	kvs["in_peer_group"] = NewFInfo([]string{"web-sg", "db-sg"})
-	kvs["junk"] = NewFInfo([]string{"web-sg", "db-sg"})
-	kvs["toObj"] = NewFInfo([]string{"sgpolicy"})
-	kvs["rwx"] = NewFInfo([]string{"rw"})
-	kvs["userHandle"] = NewFInfo([]string{"0x45544422"})
-	kvs["uint32Field"] = NewFInfo([]string{"9823"})
-	kvs["int32Field"] = NewFInfo([]string{"7473"})
-	kvs["sipAddress"] = NewFInfo([]string{"10.1.1.2"})
-	kvs["macAddrs"] = NewFInfo([]string{"00.11.22.33.44.55", "00.22.33.44.55.66"})
-	kvs["ip_ver"] = NewFInfo([]string{"ipv4", "ipv6"})
-	kvs["ip_proto"] = NewFInfo([]string{"udper", "tcper"})
-	kvs["inr_port"] = NewFInfo([]string{"tcp/221", "tcp/222"})
-	kvs["inr_action"] = NewFInfo([]string{"permittt", "permittt"})
-	kvs["inr_peer_group"] = NewFInfo([]string{"g2", "g1"})
-	kvs["outr_port"] = NewFInfo([]string{"tcp/4411", "tcp/2121"})
-	kvs["outr_action"] = NewFInfo([]string{"permit", "permit"})
-	kvs["outr_peer_group"] = NewFInfo([]string{"g5", "g6"})
-	kvs["fix_port"] = NewFInfo([]string{"tcp/5555", "icmp/echo"})
-	kvs["fix_action"] = NewFInfo([]string{"action-one", "action-two"})
-	kvs["fix_peer_group"] = NewFInfo([]string{"group-foo", "group-bar"})
-	kvs["nodeRoles"] = NewFInfo([]string{"455", "544", "5544"})
-	kvs["status"] = NewFInfo([]string{"3", "4"})
-	kvs["type"] = NewFInfo([]string{"9", "9"})
-	kvs["reason"] = NewFInfo([]string{"new reason", "another new reason"})
-	kvs["message"] = NewFInfo([]string{"one", "two"})
-	kvs["lastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
-	kvs["boolFlag"] = NewFInfo([]string{"true"})
-	kvs["floatVal"] = NewFInfo([]string{"901.109"})
-	kvs["custom-obj"] = NewFInfo([]string{"k1=v1,k2=v2"})
+	kvs := make(map[string]ref.FInfo)
+	kvs["name"] = ref.NewFInfo([]string{"joe"})
+	kvs["labels"] = ref.NewFInfo([]string{"dept:eng", "level:mts"})
+	kvs["roles"] = ref.NewFInfo([]string{"storage-admin", "security-admin"})
+	kvs["aliases"] = ref.NewFInfo([]string{"jhonny"})
+	kvs["matchLabels"] = ref.NewFInfo([]string{"io.pensando.area:network", "color:purple"})
+	kvs["interval"] = ref.NewFInfo([]string{"4554"})
+	kvs["in_port"] = ref.NewFInfo([]string{"tcp/80,tcp/443", "tcp/6379"})
+	kvs["out_port"] = ref.NewFInfo([]string{"tcp/8181"})
+	kvs["in_action"] = ref.NewFInfo([]string{"permit,log", "permit,log"})
+	kvs["in_peer_group"] = ref.NewFInfo([]string{"web-sg", "db-sg"})
+	kvs["junk"] = ref.NewFInfo([]string{"web-sg", "db-sg"})
+	kvs["toObj"] = ref.NewFInfo([]string{"sgpolicy"})
+	kvs["rwx"] = ref.NewFInfo([]string{"rw"})
+	kvs["userHandle"] = ref.NewFInfo([]string{"0x45544422"})
+	kvs["uint32Field"] = ref.NewFInfo([]string{"9823"})
+	kvs["int32Field"] = ref.NewFInfo([]string{"7473"})
+	kvs["sipAddress"] = ref.NewFInfo([]string{"10.1.1.2"})
+	kvs["macAddrs"] = ref.NewFInfo([]string{"00.11.22.33.44.55", "00.22.33.44.55.66"})
+	kvs["ip_ver"] = ref.NewFInfo([]string{"ipv4", "ipv6"})
+	kvs["ip_proto"] = ref.NewFInfo([]string{"udper", "tcper"})
+	kvs["inr_port"] = ref.NewFInfo([]string{"tcp/221", "tcp/222"})
+	kvs["inr_action"] = ref.NewFInfo([]string{"permittt", "permittt"})
+	kvs["inr_peer_group"] = ref.NewFInfo([]string{"g2", "g1"})
+	kvs["outr_port"] = ref.NewFInfo([]string{"tcp/4411", "tcp/2121"})
+	kvs["outr_action"] = ref.NewFInfo([]string{"permit", "permit"})
+	kvs["outr_peer_group"] = ref.NewFInfo([]string{"g5", "g6"})
+	kvs["fix_port"] = ref.NewFInfo([]string{"tcp/5555", "icmp/echo"})
+	kvs["fix_action"] = ref.NewFInfo([]string{"action-one", "action-two"})
+	kvs["fix_peer_group"] = ref.NewFInfo([]string{"group-foo", "group-bar"})
+	kvs["nodeRoles"] = ref.NewFInfo([]string{"455", "544", "5544"})
+	kvs["status"] = ref.NewFInfo([]string{"3", "4"})
+	kvs["type"] = ref.NewFInfo([]string{"9", "9"})
+	kvs["reason"] = ref.NewFInfo([]string{"new reason", "another new reason"})
+	kvs["message"] = ref.NewFInfo([]string{"one", "two"})
+	kvs["lastTransitionTime"] = ref.NewFInfo([]string{"666666", "7777777"})
+	kvs["boolFlag"] = ref.NewFInfo([]string{"true"})
+	kvs["floatVal"] = ref.NewFInfo([]string{"901.109"})
+	kvs["custom-obj"] = ref.NewFInfo([]string{"k1=v1,k2=v2"})
 
-	refCtx := &RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
-	newObj := WriteKvs(User{}, refCtx, kvs)
+	refCtx := &ref.RfCtx{GetSubObj: subObj, UseJSONTag: true, CustomParsers: map[string]ref.CustomParser{"*ref_test.CustomObj": &testCustomParser{}}}
+	newObj := ref.WriteKvs(User{}, refCtx, kvs)
 	newUser := newObj.(User)
 
 	if newUser.ObjectMeta.Name != "joe" {

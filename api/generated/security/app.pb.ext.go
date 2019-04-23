@@ -14,6 +14,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -70,7 +71,7 @@ func (m *ALG) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ALG))
 	return out, nil
 }
 
@@ -109,7 +110,7 @@ func (m *App) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*App))
 	return out, nil
 }
 
@@ -137,7 +138,7 @@ func (m *AppSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AppSpec))
 	return out, nil
 }
 
@@ -162,7 +163,7 @@ func (m *AppStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AppStatus))
 	return out, nil
 }
 
@@ -183,7 +184,7 @@ func (m *Dns) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Dns))
 	return out, nil
 }
 
@@ -204,7 +205,7 @@ func (m *Ftp) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Ftp))
 	return out, nil
 }
 
@@ -225,7 +226,7 @@ func (m *Icmp) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Icmp))
 	return out, nil
 }
 
@@ -246,7 +247,7 @@ func (m *Msrpc) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Msrpc))
 	return out, nil
 }
 
@@ -268,7 +269,7 @@ func (m *Sunrpc) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Sunrpc))
 	return out, nil
 }
 

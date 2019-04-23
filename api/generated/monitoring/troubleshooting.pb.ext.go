@@ -14,6 +14,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -62,7 +63,7 @@ func (m *PingPktStats) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*PingPktStats))
 	return out, nil
 }
 
@@ -83,7 +84,7 @@ func (m *PingStats) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*PingStats))
 	return out, nil
 }
 
@@ -104,7 +105,7 @@ func (m *TimeWindow) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TimeWindow))
 	return out, nil
 }
 
@@ -125,7 +126,7 @@ func (m *TraceRouteInfo) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TraceRouteInfo))
 	return out, nil
 }
 
@@ -146,7 +147,7 @@ func (m *TroubleshootingSession) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TroubleshootingSession))
 	return out, nil
 }
 
@@ -174,7 +175,7 @@ func (m *TroubleshootingSessionSpec) Clone(into interface{}) (interface{}, error
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TroubleshootingSessionSpec))
 	return out, nil
 }
 
@@ -195,7 +196,7 @@ func (m *TroubleshootingSessionStatus) Clone(into interface{}) (interface{}, err
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TroubleshootingSessionStatus))
 	return out, nil
 }
 
@@ -222,7 +223,7 @@ func (m *TsAuditTrail) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TsAuditTrail))
 	return out, nil
 }
 
@@ -243,7 +244,7 @@ func (m *TsFlowCounters) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TsFlowCounters))
 	return out, nil
 }
 
@@ -264,7 +265,7 @@ func (m *TsFlowLogs) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TsFlowLogs))
 	return out, nil
 }
 
@@ -285,7 +286,7 @@ func (m *TsPolicy) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TsPolicy))
 	return out, nil
 }
 
@@ -319,7 +320,7 @@ func (m *TsReport) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TsReport))
 	return out, nil
 }
 
@@ -349,7 +350,7 @@ func (m *TsResult) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TsResult))
 	return out, nil
 }
 
@@ -370,7 +371,7 @@ func (m *TsStats) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TsStats))
 	return out, nil
 }
 

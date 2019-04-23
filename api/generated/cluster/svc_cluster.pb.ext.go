@@ -13,6 +13,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
@@ -152,7 +153,7 @@ func (m *AutoMsgClusterWatchHelper) Clone(into interface{}) (interface{}, error)
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgClusterWatchHelper))
 	return out, nil
 }
 
@@ -173,7 +174,7 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) Clone(into interface{}) (interfac
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgClusterWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -194,7 +195,7 @@ func (m *AutoMsgHostWatchHelper) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgHostWatchHelper))
 	return out, nil
 }
 
@@ -215,7 +216,7 @@ func (m *AutoMsgHostWatchHelper_WatchEvent) Clone(into interface{}) (interface{}
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgHostWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -236,7 +237,7 @@ func (m *AutoMsgNodeWatchHelper) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgNodeWatchHelper))
 	return out, nil
 }
 
@@ -257,7 +258,7 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) Clone(into interface{}) (interface{}
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgNodeWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -278,7 +279,7 @@ func (m *AutoMsgSmartNICWatchHelper) Clone(into interface{}) (interface{}, error
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgSmartNICWatchHelper))
 	return out, nil
 }
 
@@ -299,7 +300,7 @@ func (m *AutoMsgSmartNICWatchHelper_WatchEvent) Clone(into interface{}) (interfa
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgSmartNICWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -320,7 +321,7 @@ func (m *AutoMsgTenantWatchHelper) Clone(into interface{}) (interface{}, error) 
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgTenantWatchHelper))
 	return out, nil
 }
 
@@ -341,7 +342,7 @@ func (m *AutoMsgTenantWatchHelper_WatchEvent) Clone(into interface{}) (interface
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgTenantWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -362,7 +363,7 @@ func (m *ClusterList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ClusterList))
 	return out, nil
 }
 
@@ -383,7 +384,7 @@ func (m *HostList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*HostList))
 	return out, nil
 }
 
@@ -404,7 +405,7 @@ func (m *NodeList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*NodeList))
 	return out, nil
 }
 
@@ -425,7 +426,7 @@ func (m *SmartNICList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SmartNICList))
 	return out, nil
 }
 
@@ -446,7 +447,7 @@ func (m *TenantList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TenantList))
 	return out, nil
 }
 

@@ -154,6 +154,8 @@ message Status {
   int32 Code          = 4 [(gogoproto.jsontag) = "code,omitempty"];
   // Reference to the object (optional) for which this status is being sent.
   ObjectRef Ref       = 5 [(gogoproto.jsontag) = "object-ref,omitempty"];
+  // IsTemporary flag is used to distinguish between recoverable and unrecoverable errors
+  bool IsTemporary    = 6 [(gogoproto.jsontag) = "-"];
 }
 
 // Watch event types

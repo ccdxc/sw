@@ -14,6 +14,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -64,7 +65,7 @@ func (m *TechSupportNodeResult) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TechSupportNodeResult))
 	return out, nil
 }
 
@@ -91,7 +92,7 @@ func (m *TechSupportRequest) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TechSupportRequest))
 	return out, nil
 }
 
@@ -119,7 +120,7 @@ func (m *TechSupportRequestSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TechSupportRequestSpec))
 	return out, nil
 }
 
@@ -140,7 +141,7 @@ func (m *TechSupportRequestSpec_NodeSelectorSpec) Clone(into interface{}) (inter
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TechSupportRequestSpec_NodeSelectorSpec))
 	return out, nil
 }
 
@@ -161,7 +162,7 @@ func (m *TechSupportRequestStatus) Clone(into interface{}) (interface{}, error) 
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TechSupportRequestStatus))
 	return out, nil
 }
 

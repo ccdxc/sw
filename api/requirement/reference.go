@@ -197,7 +197,10 @@ func (r *referenceReq) Finalize(ctx context.Context) error {
 		}
 		return r.store.UpdateNode(&node)
 	case apiintf.DeleteOper:
-		return r.store.DeleteNode(r.key)
+		err := r.store.DeleteNode(r.key)
+		// Errors are expected during delete when node does not exist.
+		log.DebugLog("msg", "Finalize failed", "error", err)
+		return nil
 	}
 	return nil
 }

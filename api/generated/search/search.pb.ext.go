@@ -13,6 +13,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -156,7 +157,7 @@ func (m *Category) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Category))
 	return out, nil
 }
 
@@ -177,7 +178,7 @@ func (m *CategoryAggregation) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*CategoryAggregation))
 	return out, nil
 }
 
@@ -198,7 +199,7 @@ func (m *CategoryPreview) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*CategoryPreview))
 	return out, nil
 }
 
@@ -219,7 +220,7 @@ func (m *ConfigEntry) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ConfigEntry))
 	return out, nil
 }
 
@@ -240,7 +241,7 @@ func (m *Entry) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Entry))
 	return out, nil
 }
 
@@ -261,7 +262,7 @@ func (m *EntryList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*EntryList))
 	return out, nil
 }
 
@@ -282,7 +283,7 @@ func (m *Error) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Error))
 	return out, nil
 }
 
@@ -303,7 +304,7 @@ func (m *Kind) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Kind))
 	return out, nil
 }
 
@@ -324,7 +325,7 @@ func (m *KindAggregation) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*KindAggregation))
 	return out, nil
 }
 
@@ -345,7 +346,7 @@ func (m *KindPreview) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*KindPreview))
 	return out, nil
 }
 
@@ -366,7 +367,7 @@ func (m *PolicyMatchEntry) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*PolicyMatchEntry))
 	return out, nil
 }
 
@@ -391,7 +392,7 @@ func (m *PolicySearchRequest) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*PolicySearchRequest))
 	return out, nil
 }
 
@@ -419,7 +420,7 @@ func (m *PolicySearchResponse) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*PolicySearchResponse))
 	return out, nil
 }
 
@@ -452,7 +453,7 @@ func (m *SearchQuery) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SearchQuery))
 	return out, nil
 }
 
@@ -490,7 +491,7 @@ func (m *SearchRequest) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SearchRequest))
 	return out, nil
 }
 
@@ -522,7 +523,7 @@ func (m *SearchResponse) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SearchResponse))
 	return out, nil
 }
 
@@ -543,7 +544,7 @@ func (m *TenantAggregation) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TenantAggregation))
 	return out, nil
 }
 
@@ -564,7 +565,7 @@ func (m *TenantPreview) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TenantPreview))
 	return out, nil
 }
 
@@ -585,7 +586,7 @@ func (m *TextRequirement) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TextRequirement))
 	return out, nil
 }
 

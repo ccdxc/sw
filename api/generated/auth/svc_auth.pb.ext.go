@@ -13,6 +13,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
@@ -106,7 +107,7 @@ func (m *AuthenticationPolicyList) Clone(into interface{}) (interface{}, error) 
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AuthenticationPolicyList))
 	return out, nil
 }
 
@@ -127,7 +128,7 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper) Clone(into interface{}) (interf
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgAuthenticationPolicyWatchHelper))
 	return out, nil
 }
 
@@ -148,7 +149,7 @@ func (m *AutoMsgAuthenticationPolicyWatchHelper_WatchEvent) Clone(into interface
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgAuthenticationPolicyWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -169,7 +170,7 @@ func (m *AutoMsgRoleBindingWatchHelper) Clone(into interface{}) (interface{}, er
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgRoleBindingWatchHelper))
 	return out, nil
 }
 
@@ -190,7 +191,7 @@ func (m *AutoMsgRoleBindingWatchHelper_WatchEvent) Clone(into interface{}) (inte
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgRoleBindingWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -211,7 +212,7 @@ func (m *AutoMsgRoleWatchHelper) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgRoleWatchHelper))
 	return out, nil
 }
 
@@ -232,7 +233,7 @@ func (m *AutoMsgRoleWatchHelper_WatchEvent) Clone(into interface{}) (interface{}
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgRoleWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -253,7 +254,7 @@ func (m *AutoMsgUserWatchHelper) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgUserWatchHelper))
 	return out, nil
 }
 
@@ -274,7 +275,7 @@ func (m *AutoMsgUserWatchHelper_WatchEvent) Clone(into interface{}) (interface{}
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgUserWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -295,7 +296,7 @@ func (m *RoleBindingList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*RoleBindingList))
 	return out, nil
 }
 
@@ -316,7 +317,7 @@ func (m *RoleList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*RoleList))
 	return out, nil
 }
 
@@ -337,7 +338,7 @@ func (m *UserList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*UserList))
 	return out, nil
 }
 

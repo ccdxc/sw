@@ -14,6 +14,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -72,7 +73,7 @@ func (m *NetworkInterface) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*NetworkInterface))
 	return out, nil
 }
 
@@ -100,7 +101,7 @@ func (m *NetworkInterfaceHostStatus) Clone(into interface{}) (interface{}, error
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*NetworkInterfaceHostStatus))
 	return out, nil
 }
 
@@ -121,7 +122,7 @@ func (m *NetworkInterfaceSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*NetworkInterfaceSpec))
 	return out, nil
 }
 
@@ -142,7 +143,7 @@ func (m *NetworkInterfaceStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*NetworkInterfaceStatus))
 	return out, nil
 }
 
@@ -170,7 +171,7 @@ func (m *NetworkInterfaceUplinkStatus) Clone(into interface{}) (interface{}, err
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*NetworkInterfaceUplinkStatus))
 	return out, nil
 }
 

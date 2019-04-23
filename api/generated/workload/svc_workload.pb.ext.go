@@ -12,6 +12,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
@@ -67,7 +68,7 @@ func (m *AutoMsgEndpointWatchHelper) Clone(into interface{}) (interface{}, error
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgEndpointWatchHelper))
 	return out, nil
 }
 
@@ -88,7 +89,7 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) Clone(into interface{}) (interfa
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgEndpointWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -109,7 +110,7 @@ func (m *AutoMsgWorkloadWatchHelper) Clone(into interface{}) (interface{}, error
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgWorkloadWatchHelper))
 	return out, nil
 }
 
@@ -130,7 +131,7 @@ func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Clone(into interface{}) (interfa
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgWorkloadWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -151,7 +152,7 @@ func (m *EndpointList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*EndpointList))
 	return out, nil
 }
 
@@ -172,7 +173,7 @@ func (m *WorkloadList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*WorkloadList))
 	return out, nil
 }
 

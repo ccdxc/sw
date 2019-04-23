@@ -13,6 +13,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
@@ -46,7 +47,7 @@ func (m *IPsecProtocolSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*IPsecProtocolSpec))
 	return out, nil
 }
 
@@ -67,7 +68,7 @@ func (m *TLSProtocolSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TLSProtocolSpec))
 	return out, nil
 }
 
@@ -88,7 +89,7 @@ func (m *TrafficEncryptionPolicy) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TrafficEncryptionPolicy))
 	return out, nil
 }
 
@@ -115,7 +116,7 @@ func (m *TrafficEncryptionPolicySpec) Clone(into interface{}) (interface{}, erro
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TrafficEncryptionPolicySpec))
 	return out, nil
 }
 
@@ -136,7 +137,7 @@ func (m *TrafficEncryptionPolicyStatus) Clone(into interface{}) (interface{}, er
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TrafficEncryptionPolicyStatus))
 	return out, nil
 }
 

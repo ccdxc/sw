@@ -15,6 +15,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
@@ -130,7 +131,7 @@ func (m *CPUInfo) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*CPUInfo))
 	return out, nil
 }
 
@@ -151,7 +152,7 @@ func (m *Cluster) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Cluster))
 	return out, nil
 }
 
@@ -178,7 +179,7 @@ func (m *ClusterAuthBootstrapRequest) Clone(into interface{}) (interface{}, erro
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ClusterAuthBootstrapRequest))
 	return out, nil
 }
 
@@ -199,7 +200,7 @@ func (m *ClusterSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ClusterSpec))
 	return out, nil
 }
 
@@ -220,7 +221,7 @@ func (m *ClusterStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ClusterStatus))
 	return out, nil
 }
 
@@ -241,7 +242,7 @@ func (m *DockerInfo) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*DockerInfo))
 	return out, nil
 }
 
@@ -262,7 +263,7 @@ func (m *Host) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Host))
 	return out, nil
 }
 
@@ -290,7 +291,7 @@ func (m *HostSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*HostSpec))
 	return out, nil
 }
 
@@ -316,7 +317,7 @@ func (m *HostStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*HostStatus))
 	return out, nil
 }
 
@@ -337,7 +338,7 @@ func (m *InterfaceInfo) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*InterfaceInfo))
 	return out, nil
 }
 
@@ -359,7 +360,7 @@ func (m *MemInfo) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*MemInfo))
 	return out, nil
 }
 
@@ -386,7 +387,7 @@ func (m *NetworkInfo) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*NetworkInfo))
 	return out, nil
 }
 
@@ -412,7 +413,7 @@ func (m *Node) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Node))
 	return out, nil
 }
 
@@ -440,7 +441,7 @@ func (m *NodeCondition) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*NodeCondition))
 	return out, nil
 }
 
@@ -468,7 +469,7 @@ func (m *NodeInfo) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*NodeInfo))
 	return out, nil
 }
 
@@ -496,7 +497,7 @@ func (m *NodeSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*NodeSpec))
 	return out, nil
 }
 
@@ -517,7 +518,7 @@ func (m *NodeStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*NodeStatus))
 	return out, nil
 }
 
@@ -548,7 +549,7 @@ func (m *OsInfo) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*OsInfo))
 	return out, nil
 }
 
@@ -569,7 +570,7 @@ func (m *SmartNICID) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SmartNICID))
 	return out, nil
 }
 
@@ -591,7 +592,7 @@ func (m *StorageDeviceInfo) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*StorageDeviceInfo))
 	return out, nil
 }
 
@@ -612,7 +613,7 @@ func (m *StorageInfo) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*StorageInfo))
 	return out, nil
 }
 
@@ -633,7 +634,7 @@ func (m *UpdateTLSConfigRequest) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*UpdateTLSConfigRequest))
 	return out, nil
 }
 

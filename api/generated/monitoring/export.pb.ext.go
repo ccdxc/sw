@@ -13,6 +13,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -120,7 +121,7 @@ func (m *AuthConfig) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AuthConfig))
 	return out, nil
 }
 
@@ -147,7 +148,7 @@ func (m *ExportConfig) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ExportConfig))
 	return out, nil
 }
 
@@ -172,7 +173,7 @@ func (m *ExternalCred) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ExternalCred))
 	return out, nil
 }
 
@@ -199,7 +200,7 @@ func (m *PrivacyConfig) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*PrivacyConfig))
 	return out, nil
 }
 
@@ -226,7 +227,7 @@ func (m *SNMPTrapServer) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SNMPTrapServer))
 	return out, nil
 }
 
@@ -260,7 +261,7 @@ func (m *SyslogExportConfig) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SyslogExportConfig))
 	return out, nil
 }
 

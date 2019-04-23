@@ -15,6 +15,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
@@ -268,7 +269,7 @@ func (m *ApplyDiscountReq) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ApplyDiscountReq))
 	return out, nil
 }
 
@@ -289,7 +290,7 @@ func (m *AutoMsgBookWatchHelper) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgBookWatchHelper))
 	return out, nil
 }
 
@@ -317,7 +318,7 @@ func (m *AutoMsgBookWatchHelper_WatchEvent) Clone(into interface{}) (interface{}
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgBookWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -338,7 +339,7 @@ func (m *AutoMsgCouponWatchHelper) Clone(into interface{}) (interface{}, error) 
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgCouponWatchHelper))
 	return out, nil
 }
 
@@ -359,7 +360,7 @@ func (m *AutoMsgCouponWatchHelper_WatchEvent) Clone(into interface{}) (interface
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgCouponWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -380,7 +381,7 @@ func (m *AutoMsgCustomerWatchHelper) Clone(into interface{}) (interface{}, error
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgCustomerWatchHelper))
 	return out, nil
 }
 
@@ -408,7 +409,7 @@ func (m *AutoMsgCustomerWatchHelper_WatchEvent) Clone(into interface{}) (interfa
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgCustomerWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -429,7 +430,7 @@ func (m *AutoMsgOrderWatchHelper) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgOrderWatchHelper))
 	return out, nil
 }
 
@@ -457,7 +458,7 @@ func (m *AutoMsgOrderWatchHelper_WatchEvent) Clone(into interface{}) (interface{
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgOrderWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -478,7 +479,7 @@ func (m *AutoMsgPublisherWatchHelper) Clone(into interface{}) (interface{}, erro
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgPublisherWatchHelper))
 	return out, nil
 }
 
@@ -506,7 +507,7 @@ func (m *AutoMsgPublisherWatchHelper_WatchEvent) Clone(into interface{}) (interf
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgPublisherWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -527,7 +528,7 @@ func (m *AutoMsgStoreWatchHelper) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgStoreWatchHelper))
 	return out, nil
 }
 
@@ -548,7 +549,7 @@ func (m *AutoMsgStoreWatchHelper_WatchEvent) Clone(into interface{}) (interface{
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgStoreWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -569,7 +570,7 @@ func (m *Book) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Book))
 	return out, nil
 }
 
@@ -597,7 +598,7 @@ func (m *BookEdition) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*BookEdition))
 	return out, nil
 }
 
@@ -624,7 +625,7 @@ func (m *BookList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*BookList))
 	return out, nil
 }
 
@@ -652,7 +653,7 @@ func (m *BookReview) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*BookReview))
 	return out, nil
 }
 
@@ -673,7 +674,7 @@ func (m *BookSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*BookSpec))
 	return out, nil
 }
 
@@ -710,7 +711,7 @@ func (m *BookStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*BookStatus))
 	return out, nil
 }
 
@@ -731,7 +732,7 @@ func (m *Coupon) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Coupon))
 	return out, nil
 }
 
@@ -752,7 +753,7 @@ func (m *CouponList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*CouponList))
 	return out, nil
 }
 
@@ -773,7 +774,7 @@ func (m *CouponSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*CouponSpec))
 	return out, nil
 }
 
@@ -794,7 +795,7 @@ func (m *Customer) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Customer))
 	return out, nil
 }
 
@@ -822,7 +823,7 @@ func (m *CustomerList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*CustomerList))
 	return out, nil
 }
 
@@ -850,7 +851,7 @@ func (m *CustomerPersonalInfo) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*CustomerPersonalInfo))
 	return out, nil
 }
 
@@ -871,7 +872,7 @@ func (m *CustomerSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*CustomerSpec))
 	return out, nil
 }
 
@@ -893,7 +894,7 @@ func (m *CustomerStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*CustomerStatus))
 	return out, nil
 }
 
@@ -914,7 +915,7 @@ func (m *Order) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Order))
 	return out, nil
 }
 
@@ -943,7 +944,7 @@ func (m *OrderItem) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*OrderItem))
 	return out, nil
 }
 
@@ -965,7 +966,7 @@ func (m *OrderList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*OrderList))
 	return out, nil
 }
 
@@ -993,7 +994,7 @@ func (m *OrderSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*OrderSpec))
 	return out, nil
 }
 
@@ -1026,7 +1027,7 @@ func (m *OrderStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*OrderStatus))
 	return out, nil
 }
 
@@ -1059,7 +1060,7 @@ func (m *OutageRequest) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*OutageRequest))
 	return out, nil
 }
 
@@ -1080,7 +1081,7 @@ func (m *Publisher) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Publisher))
 	return out, nil
 }
 
@@ -1108,7 +1109,7 @@ func (m *PublisherList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*PublisherList))
 	return out, nil
 }
 
@@ -1136,7 +1137,7 @@ func (m *PublisherSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*PublisherSpec))
 	return out, nil
 }
 
@@ -1158,7 +1159,7 @@ func (m *PublisherStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*PublisherStatus))
 	return out, nil
 }
 
@@ -1179,7 +1180,7 @@ func (m *RestockRequest) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*RestockRequest))
 	return out, nil
 }
 
@@ -1200,7 +1201,7 @@ func (m *RestockResponse) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*RestockResponse))
 	return out, nil
 }
 
@@ -1221,7 +1222,7 @@ func (m *Store) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Store))
 	return out, nil
 }
 
@@ -1248,7 +1249,7 @@ func (m *StoreList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*StoreList))
 	return out, nil
 }
 
@@ -1269,7 +1270,7 @@ func (m *StoreSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*StoreSpec))
 	return out, nil
 }
 
@@ -1290,7 +1291,7 @@ func (m *StoreStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*StoreStatus))
 	return out, nil
 }
 
@@ -1311,7 +1312,7 @@ func (m *UnusedMessage) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*UnusedMessage))
 	return out, nil
 }
 

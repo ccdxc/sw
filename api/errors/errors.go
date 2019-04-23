@@ -68,3 +68,14 @@ func ToGrpcError(in interface{}, msg []string, code int32, uri string, obj runti
 	}
 	return grpcstatus.Err()
 }
+
+// AddDetails creates a grpc error given an api.Status
+func AddDetails(s *api.Status) error {
+	grpcstatus := status.New(codes.Code(s.Code), s.Result.Str)
+	grpcstatus, err := grpcstatus.WithDetails(s)
+	if err != nil {
+		log.Errorf("failed to create grpcStatus (%s)", err)
+		return s
+	}
+	return grpcstatus.Err()
+}

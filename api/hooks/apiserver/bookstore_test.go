@@ -165,13 +165,19 @@ func TestActionFunction(t *testing.T) {
 	if err != nil {
 		t.Errorf("object creation should succeed in KV (%s)", err)
 	}
-
-	_, ok, err := s.processApplyDiscountAction(ctx, kvs, txn, order.MakeKey(""), apiintf.CreateOper, false, order)
+	actreq := bookstore.ApplyDiscountReq{}
+	_, ok, err := s.processApplyDiscountAction(ctx, kvs, txn, order.MakeKey(""), apiintf.CreateOper, false, actreq)
 	if err != nil || ok {
 		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
 	}
+	actreq.Coupon = "TESTFAIL"
+	_, ok, err = s.processApplyDiscountAction(ctx, kvs, txn, order.MakeKey(""), apiintf.CreateOper, false, actreq)
+	if err == nil || ok {
+		t.Errorf("expecing error and kvwrite to be false, got [ %s/%v]", err, ok)
+	}
+	actreq.Coupon = ""
 
-	_, ok, err = s.processClearDiscountAction(ctx, kvs, txn, order.MakeKey(""), apiintf.CreateOper, false, order)
+	_, ok, err = s.processClearDiscountAction(ctx, kvs, txn, order.MakeKey(""), apiintf.CreateOper, false, actreq)
 	if err != nil || ok {
 		t.Errorf("expecing no error and kvwrite to be false, got [ %s/%v]", err, ok)
 	}

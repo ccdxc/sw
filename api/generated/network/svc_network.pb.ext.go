@@ -12,6 +12,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
@@ -99,7 +100,7 @@ func (m *AutoMsgLbPolicyWatchHelper) Clone(into interface{}) (interface{}, error
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgLbPolicyWatchHelper))
 	return out, nil
 }
 
@@ -120,7 +121,7 @@ func (m *AutoMsgLbPolicyWatchHelper_WatchEvent) Clone(into interface{}) (interfa
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgLbPolicyWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -141,7 +142,7 @@ func (m *AutoMsgNetworkWatchHelper) Clone(into interface{}) (interface{}, error)
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgNetworkWatchHelper))
 	return out, nil
 }
 
@@ -162,7 +163,7 @@ func (m *AutoMsgNetworkWatchHelper_WatchEvent) Clone(into interface{}) (interfac
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgNetworkWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -183,7 +184,7 @@ func (m *AutoMsgServiceWatchHelper) Clone(into interface{}) (interface{}, error)
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgServiceWatchHelper))
 	return out, nil
 }
 
@@ -204,7 +205,7 @@ func (m *AutoMsgServiceWatchHelper_WatchEvent) Clone(into interface{}) (interfac
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgServiceWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -225,7 +226,7 @@ func (m *AutoMsgVirtualRouterWatchHelper) Clone(into interface{}) (interface{}, 
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgVirtualRouterWatchHelper))
 	return out, nil
 }
 
@@ -246,7 +247,7 @@ func (m *AutoMsgVirtualRouterWatchHelper_WatchEvent) Clone(into interface{}) (in
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AutoMsgVirtualRouterWatchHelper_WatchEvent))
 	return out, nil
 }
 
@@ -267,7 +268,7 @@ func (m *LbPolicyList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*LbPolicyList))
 	return out, nil
 }
 
@@ -288,7 +289,7 @@ func (m *NetworkList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*NetworkList))
 	return out, nil
 }
 
@@ -309,7 +310,7 @@ func (m *ServiceList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ServiceList))
 	return out, nil
 }
 
@@ -330,7 +331,7 @@ func (m *VirtualRouterList) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*VirtualRouterList))
 	return out, nil
 }
 

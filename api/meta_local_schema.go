@@ -142,6 +142,8 @@ var typesMapMeta = map[string]*Struct{
 
 			"Ref": Field{Name: "Ref", CLITag: CLIInfo{ID: "object-ref", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object-ref", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectRef"},
 
+			"IsTemporary": Field{Name: "IsTemporary", CLITag: CLIInfo{ID: "-", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "-", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
+
 			"Kind": Field{Name: "Kind", CLITag: CLIInfo{ID: "kind", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "kind", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
 			"APIVersion": Field{Name: "APIVersion", CLITag: CLIInfo{ID: "api-version", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "api-version", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},

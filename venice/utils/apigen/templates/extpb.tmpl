@@ -82,7 +82,7 @@ func (m *{{getStr 0}}) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*{{getStr 0}}))
 	return out, nil
 }
 

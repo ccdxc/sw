@@ -1,4 +1,4 @@
-package ref
+package ref_test
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/pensando/sw/venice/utils/ref"
 
 	_ "github.com/pensando/sw/api/generated/bookstore"
 	_ "github.com/pensando/sw/api/generated/cluster"
@@ -241,17 +243,17 @@ func TestWalkStruct(t *testing.T) {
   }
 }
 `
-	refCtx := &RfCtx{GetSubObj: subObj, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
-	outStr := WalkStruct(User{}, refCtx)
+	refCtx := &ref.RfCtx{GetSubObj: subObj, CustomParsers: map[string]ref.CustomParser{"*ref_test.CustomObj": &testCustomParser{}}}
+	outStr := ref.WalkStruct(User{}, refCtx)
 	if outStr != expectedStr {
 		t.Fatalf("Out:\n--%s--\nExpected:\n--%s--\n", outStr, expectedStr)
 	}
 }
 
 func TestEmptyGet(t *testing.T) {
-	refCtx := &RfCtx{GetSubObj: subObj, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
-	kvs := make(map[string]FInfo)
-	GetKvs(User{}, refCtx, kvs)
+	refCtx := &ref.RfCtx{GetSubObj: subObj, CustomParsers: map[string]ref.CustomParser{"*ref_test.CustomObj": &testCustomParser{}}}
+	kvs := make(map[string]ref.FInfo)
+	ref.GetKvs(User{}, refCtx, kvs)
 	total := 0
 
 	if _, ok := kvs["APIVersion"]; !ok {
@@ -579,9 +581,9 @@ func TestGet(t *testing.T) {
 			},
 		},
 	}
-	kvs := make(map[string]FInfo)
-	refCtx := &RfCtx{GetSubObj: subObj, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
-	GetKvs(u, refCtx, kvs)
+	kvs := make(map[string]ref.FInfo)
+	refCtx := &ref.RfCtx{GetSubObj: subObj, CustomParsers: map[string]ref.CustomParser{"*ref_test.CustomObj": &testCustomParser{}}}
+	ref.GetKvs(u, refCtx, kvs)
 
 	if fi, ok := kvs["Name"]; ok {
 		if !fi.Key || fi.ValueStr[0] != "joe" {
@@ -1030,33 +1032,33 @@ func TestUpdate(t *testing.T) {
 			},
 		},
 	}
-	kvs := make(map[string]FInfo)
-	kvs["Name"] = NewFInfo([]string{"joe"})
-	kvs["Roles"] = NewFInfo([]string{"blah-blah"})
-	kvs["ToGroup"] = NewFInfo([]string{"key1:new-to-key1", "key3:to-key3"})
-	kvs["FromGroup"] = NewFInfo([]string{"key1:new-from-key1", "key3:from-key3"})
-	kvs["SIPAddress"] = NewFInfo([]string{"10.1.1.2"})
-	kvs["MacAddrs"] = NewFInfo([]string{"00.11.22.33.44.55", "00.22.33.44.55.66"})
-	kvs["ip_ver"] = NewFInfo([]string{"ipv4", "ipv6"})
-	kvs["ip_proto"] = NewFInfo([]string{"udper", "tcper"})
-	kvs["outr_port"] = NewFInfo([]string{"tcp/4411", "tcp/2121"})
-	kvs["outr_Action"] = NewFInfo([]string{"permit", "permit"})
-	kvs["outr_peer_group"] = NewFInfo([]string{"g5", "g6"})
-	kvs["fix_port"] = NewFInfo([]string{"tcp/5555", "icmp/echo"})
-	kvs["fix_Action"] = NewFInfo([]string{"action-one", "action-two"})
-	kvs["fix_peer_group"] = NewFInfo([]string{"group-foo", "group-bar"})
-	kvs["NodeRoles"] = NewFInfo([]string{"455", "544", "5544"})
-	kvs["Status"] = NewFInfo([]string{"3", "4"})
-	kvs["Type"] = NewFInfo([]string{"9", "9"})
-	kvs["Reason"] = NewFInfo([]string{"new reason", "another new reason"})
-	kvs["Message"] = NewFInfo([]string{"one", "two"})
-	kvs["LastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
-	kvs["BoolFlag"] = NewFInfo([]string{"true"})
-	kvs["FloatVal"] = NewFInfo([]string{"901.019"})
-	kvs["CustomObj"] = NewFInfo([]string{"k1=x1,k2=x2"})
+	kvs := make(map[string]ref.FInfo)
+	kvs["Name"] = ref.NewFInfo([]string{"joe"})
+	kvs["Roles"] = ref.NewFInfo([]string{"blah-blah"})
+	kvs["ToGroup"] = ref.NewFInfo([]string{"key1:new-to-key1", "key3:to-key3"})
+	kvs["FromGroup"] = ref.NewFInfo([]string{"key1:new-from-key1", "key3:from-key3"})
+	kvs["SIPAddress"] = ref.NewFInfo([]string{"10.1.1.2"})
+	kvs["MacAddrs"] = ref.NewFInfo([]string{"00.11.22.33.44.55", "00.22.33.44.55.66"})
+	kvs["ip_ver"] = ref.NewFInfo([]string{"ipv4", "ipv6"})
+	kvs["ip_proto"] = ref.NewFInfo([]string{"udper", "tcper"})
+	kvs["outr_port"] = ref.NewFInfo([]string{"tcp/4411", "tcp/2121"})
+	kvs["outr_Action"] = ref.NewFInfo([]string{"permit", "permit"})
+	kvs["outr_peer_group"] = ref.NewFInfo([]string{"g5", "g6"})
+	kvs["fix_port"] = ref.NewFInfo([]string{"tcp/5555", "icmp/echo"})
+	kvs["fix_Action"] = ref.NewFInfo([]string{"action-one", "action-two"})
+	kvs["fix_peer_group"] = ref.NewFInfo([]string{"group-foo", "group-bar"})
+	kvs["NodeRoles"] = ref.NewFInfo([]string{"455", "544", "5544"})
+	kvs["Status"] = ref.NewFInfo([]string{"3", "4"})
+	kvs["Type"] = ref.NewFInfo([]string{"9", "9"})
+	kvs["Reason"] = ref.NewFInfo([]string{"new reason", "another new reason"})
+	kvs["Message"] = ref.NewFInfo([]string{"one", "two"})
+	kvs["LastTransitionTime"] = ref.NewFInfo([]string{"666666", "7777777"})
+	kvs["BoolFlag"] = ref.NewFInfo([]string{"true"})
+	kvs["FloatVal"] = ref.NewFInfo([]string{"901.019"})
+	kvs["CustomObj"] = ref.NewFInfo([]string{"k1=x1,k2=x2"})
 
-	refCtx := &RfCtx{GetSubObj: subObj, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
-	newObj := WriteKvs(u, refCtx, kvs)
+	refCtx := &ref.RfCtx{GetSubObj: subObj, CustomParsers: map[string]ref.CustomParser{"*ref_test.CustomObj": &testCustomParser{}}}
+	newObj := ref.WriteKvs(u, refCtx, kvs)
 	newUser := newObj.(User)
 
 	if newUser.ObjectMeta.Name != "joe" {
@@ -1206,50 +1208,50 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestNewWrite(t *testing.T) {
-	kvs := make(map[string]FInfo)
-	kvs["Name"] = NewFInfo([]string{"joe"})
-	kvs["Labels"] = NewFInfo([]string{"dept:eng", "level:mts"})
-	kvs["Roles"] = NewFInfo([]string{"storage-admin", "security-admin"})
-	kvs["Aliases"] = NewFInfo([]string{"jhonny"})
-	kvs["MatchLabels"] = NewFInfo([]string{"io.pensando.area:network", "color:purple"})
-	kvs["Interval"] = NewFInfo([]string{"4554"})
-	kvs["in_port"] = NewFInfo([]string{"tcp/80,tcp/443", "tcp/6379"})
-	kvs["out_port"] = NewFInfo([]string{"tcp/8181"})
-	kvs["in_Action"] = NewFInfo([]string{"permit,log", "permit,log"})
-	kvs["in_peer_group"] = NewFInfo([]string{"web-sg", "db-sg"})
-	kvs["ToGroup"] = NewFInfo([]string{"key1:to-key1", "key2:to-key2"})
-	kvs["FromGroup"] = NewFInfo([]string{"key1:from-key1", "key2:from-key2"})
-	kvs["junk"] = NewFInfo([]string{"web-sg", "db-sg"})
-	kvs["ToObj"] = NewFInfo([]string{"sgpolicy"})
-	kvs["RWX"] = NewFInfo([]string{"rw"})
-	kvs["UserHandle"] = NewFInfo([]string{"0x45544422"})
-	kvs["Uint32Field"] = NewFInfo([]string{"9823"})
-	kvs["Int32Field"] = NewFInfo([]string{"7473"})
-	kvs["SIPAddress"] = NewFInfo([]string{"10.1.1.2"})
-	kvs["MacAddrs"] = NewFInfo([]string{"00.11.22.33.44.55", "00.22.33.44.55.66"})
-	kvs["ip_ver"] = NewFInfo([]string{"ipv4", "ipv6"})
-	kvs["ip_proto"] = NewFInfo([]string{"udper", "tcper"})
-	kvs["inr_port"] = NewFInfo([]string{"tcp/221", "tcp/222"})
-	kvs["inr_Action"] = NewFInfo([]string{"permittt", "permittt"})
-	kvs["inr_peer_group"] = NewFInfo([]string{"g2", "g1"})
-	kvs["outr_port"] = NewFInfo([]string{"tcp/4411", "tcp/2121"})
-	kvs["outr_Action"] = NewFInfo([]string{"permit", "permit"})
-	kvs["outr_peer_group"] = NewFInfo([]string{"g5", "g6"})
-	kvs["fix_port"] = NewFInfo([]string{"tcp/5555", "icmp/echo"})
-	kvs["fix_Action"] = NewFInfo([]string{"action-one", "action-two"})
-	kvs["fix_peer_group"] = NewFInfo([]string{"group-foo", "group-bar"})
-	kvs["NodeRoles"] = NewFInfo([]string{"455", "544", "5544"})
-	kvs["Status"] = NewFInfo([]string{"3", "4"})
-	kvs["Type"] = NewFInfo([]string{"9", "9"})
-	kvs["Reason"] = NewFInfo([]string{"new reason", "another new reason"})
-	kvs["Message"] = NewFInfo([]string{"one", "two"})
-	kvs["LastTransitionTime"] = NewFInfo([]string{"666666", "7777777"})
-	kvs["BoolFlag"] = NewFInfo([]string{"true"})
-	kvs["FloatVal"] = NewFInfo([]string{"901.109"})
-	kvs["CustomObj"] = NewFInfo([]string{"k1=v1,k2=v2"})
+	kvs := make(map[string]ref.FInfo)
+	kvs["Name"] = ref.NewFInfo([]string{"joe"})
+	kvs["Labels"] = ref.NewFInfo([]string{"dept:eng", "level:mts"})
+	kvs["Roles"] = ref.NewFInfo([]string{"storage-admin", "security-admin"})
+	kvs["Aliases"] = ref.NewFInfo([]string{"jhonny"})
+	kvs["MatchLabels"] = ref.NewFInfo([]string{"io.pensando.area:network", "color:purple"})
+	kvs["Interval"] = ref.NewFInfo([]string{"4554"})
+	kvs["in_port"] = ref.NewFInfo([]string{"tcp/80,tcp/443", "tcp/6379"})
+	kvs["out_port"] = ref.NewFInfo([]string{"tcp/8181"})
+	kvs["in_Action"] = ref.NewFInfo([]string{"permit,log", "permit,log"})
+	kvs["in_peer_group"] = ref.NewFInfo([]string{"web-sg", "db-sg"})
+	kvs["ToGroup"] = ref.NewFInfo([]string{"key1:to-key1", "key2:to-key2"})
+	kvs["FromGroup"] = ref.NewFInfo([]string{"key1:from-key1", "key2:from-key2"})
+	kvs["junk"] = ref.NewFInfo([]string{"web-sg", "db-sg"})
+	kvs["ToObj"] = ref.NewFInfo([]string{"sgpolicy"})
+	kvs["RWX"] = ref.NewFInfo([]string{"rw"})
+	kvs["UserHandle"] = ref.NewFInfo([]string{"0x45544422"})
+	kvs["Uint32Field"] = ref.NewFInfo([]string{"9823"})
+	kvs["Int32Field"] = ref.NewFInfo([]string{"7473"})
+	kvs["SIPAddress"] = ref.NewFInfo([]string{"10.1.1.2"})
+	kvs["MacAddrs"] = ref.NewFInfo([]string{"00.11.22.33.44.55", "00.22.33.44.55.66"})
+	kvs["ip_ver"] = ref.NewFInfo([]string{"ipv4", "ipv6"})
+	kvs["ip_proto"] = ref.NewFInfo([]string{"udper", "tcper"})
+	kvs["inr_port"] = ref.NewFInfo([]string{"tcp/221", "tcp/222"})
+	kvs["inr_Action"] = ref.NewFInfo([]string{"permittt", "permittt"})
+	kvs["inr_peer_group"] = ref.NewFInfo([]string{"g2", "g1"})
+	kvs["outr_port"] = ref.NewFInfo([]string{"tcp/4411", "tcp/2121"})
+	kvs["outr_Action"] = ref.NewFInfo([]string{"permit", "permit"})
+	kvs["outr_peer_group"] = ref.NewFInfo([]string{"g5", "g6"})
+	kvs["fix_port"] = ref.NewFInfo([]string{"tcp/5555", "icmp/echo"})
+	kvs["fix_Action"] = ref.NewFInfo([]string{"action-one", "action-two"})
+	kvs["fix_peer_group"] = ref.NewFInfo([]string{"group-foo", "group-bar"})
+	kvs["NodeRoles"] = ref.NewFInfo([]string{"455", "544", "5544"})
+	kvs["Status"] = ref.NewFInfo([]string{"3", "4"})
+	kvs["Type"] = ref.NewFInfo([]string{"9", "9"})
+	kvs["Reason"] = ref.NewFInfo([]string{"new reason", "another new reason"})
+	kvs["Message"] = ref.NewFInfo([]string{"one", "two"})
+	kvs["LastTransitionTime"] = ref.NewFInfo([]string{"666666", "7777777"})
+	kvs["BoolFlag"] = ref.NewFInfo([]string{"true"})
+	kvs["FloatVal"] = ref.NewFInfo([]string{"901.109"})
+	kvs["CustomObj"] = ref.NewFInfo([]string{"k1=v1,k2=v2"})
 
-	refCtx := &RfCtx{GetSubObj: subObj, CustomParsers: map[string]CustomParser{"*ref.CustomObj": &testCustomParser{}}}
-	newObj := WriteKvs(User{}, refCtx, kvs)
+	refCtx := &ref.RfCtx{GetSubObj: subObj, CustomParsers: map[string]ref.CustomParser{"*ref_test.CustomObj": &testCustomParser{}}}
+	newObj := ref.WriteKvs(User{}, refCtx, kvs)
 	newUser := newObj.(User)
 
 	if newUser.ObjectMeta.Name != "joe" {
@@ -1461,22 +1463,22 @@ func TestFieldByName(t *testing.T) {
 	meta := reflect.ValueOf(u.ObjectMeta)
 	spec := reflect.ValueOf(u.Spec)
 
-	name := FieldByName(meta, "Name")
+	name := ref.FieldByName(meta, "Name")
 	if len(name) != 1 || name[0] != "joe" {
 		t.Fatalf("Invalid name returned '%s'", name)
 	}
 
-	roles := FieldByName(spec, "Roles")
+	roles := ref.FieldByName(spec, "Roles")
 	if len(roles) != 2 || roles[0] != "storage-admin" || roles[1] != "security-admin" {
 		t.Fatalf("Invalid roles returned '%s'", roles)
 	}
 
-	ports := FieldByName(user, "Spec.OutRules.Ports")
+	ports := ref.FieldByName(user, "Spec.OutRules.Ports")
 	if len(ports) != 2 || ports[0] != "tcp/6379" || ports[1] != "tcp/5505" {
 		t.Fatalf("Invalid roles returned '%s'", ports)
 	}
 
-	matchLabels := FieldByName(user, "Spec.MatchLabels")
+	matchLabels := ref.FieldByName(user, "Spec.MatchLabels")
 	if len(matchLabels) != 2 ||
 		(matchLabels[0] != "io.pensando.area:network" ||
 			matchLabels[1] != "io.pensando.network.priority:critical") &&
@@ -1485,68 +1487,68 @@ func TestFieldByName(t *testing.T) {
 		t.Fatalf("Invalid matchLabels: %s", matchLabels)
 	}
 
-	ghosts := FieldByName(user, "Spec.OutRules.Ghosts")
+	ghosts := ref.FieldByName(user, "Spec.OutRules.Ghosts")
 	if len(ghosts) != 0 {
 		t.Fatalf("Invalid ghosts returned '%s'", ghosts)
 	}
 
-	perms := FieldByName(user, "Spec.Perms.ToObj")
+	perms := ref.FieldByName(user, "Spec.Perms.ToObj")
 	if len(perms) != 1 || perms[0] != "network" {
 		t.Fatalf("Invalid perms returned '%s'", perms)
 	}
 
-	sip := FieldByName(user, "Spec.SIPAddress")
+	sip := ref.FieldByName(user, "Spec.SIPAddress")
 	if len(sip) != 1 || sip[0] != ip1 {
 		t.Fatalf("Invalid sip returned '%s'", sip)
 	}
 
-	macAddrs := FieldByName(user, "Spec.MacAddrs")
+	macAddrs := ref.FieldByName(user, "Spec.MacAddrs")
 	if len(macAddrs) != 2 || macAddrs[0] != mac1 || macAddrs[1] != mac2 {
 		t.Fatalf("Invalid macAddrs returned '%s'", macAddrs)
 	}
 
-	ipOptsProto := FieldByName(user, "Spec.IPOpts.Protocol")
+	ipOptsProto := ref.FieldByName(user, "Spec.IPOpts.Protocol")
 	if len(ipOptsProto) != 2 || ipOptsProto[0] != "tcp" || ipOptsProto[1] != "udp" {
 		t.Fatalf("Invalid ipOptsProto returned '%s'", ipOptsProto)
 	}
 
-	inrPorts := FieldByName(user, "Spec.InRulesR.Ports")
+	inrPorts := ref.FieldByName(user, "Spec.InRulesR.Ports")
 	if len(inrPorts) != 2 || inrPorts[0] != "tcp/221" || inrPorts[1] != "tcp/222" {
 		t.Fatalf("Invalid inrPorts %s \n", inrPorts)
 	}
 
-	fixPgs := FieldByName(user, "Spec.FixedRules.PeerGroup")
+	fixPgs := ref.FieldByName(user, "Spec.FixedRules.PeerGroup")
 	if len(fixPgs) != 2 || fixPgs[0] != "fix-sg1" || fixPgs[1] != "fix-sg2" {
 		t.Fatalf("Invalid fixPgs %s \n", fixPgs)
 	}
 
-	nodeRoles := FieldByName(user, "Spec.NodeRoles")
+	nodeRoles := ref.FieldByName(user, "Spec.NodeRoles")
 	if len(nodeRoles) != 2 || nodeRoles[0] != "997" || nodeRoles[1] != "799" {
 		t.Fatalf("Invalid fixPgs %s \n", fixPgs)
 	}
 
-	condReasons := FieldByName(user, "Spec.Conditions.Reason")
+	condReasons := ref.FieldByName(user, "Spec.Conditions.Reason")
 	if len(condReasons) != 2 || condReasons[0] != "some reason" || condReasons[1] != "some other reason" {
 		t.Fatalf("Invalid condReasons %s \n", condReasons)
 	}
 
-	transitionTimes := FieldByName(user, "Spec.Conditions.LastTransitionTime")
+	transitionTimes := ref.FieldByName(user, "Spec.Conditions.LastTransitionTime")
 	if len(transitionTimes) != 2 || transitionTimes[0] != "90001" || transitionTimes[1] != "80001" {
 		t.Fatalf("Invalid transitionTimes %s \n", transitionTimes)
 	}
 
-	boolFlag := FieldByName(user, "Spec.BoolFlag")
+	boolFlag := ref.FieldByName(user, "Spec.BoolFlag")
 	if len(boolFlag) != 1 || boolFlag[0] != "true" {
 		t.Fatalf("Invalid boolFlag fetched %s \n", boolFlag)
 	}
 
-	floatVal := FieldByName(user, "Spec.FloatVal")
+	floatVal := ref.FieldByName(user, "Spec.FloatVal")
 	if len(floatVal) != 1 || floatVal[0] != "782.1" {
 		t.Fatalf("Invalid transitionTimes %s \n", transitionTimes)
 	}
 }
 
-func printKvs(hdr string, kvs map[string]FInfo, onlyKey bool) {
+func printKvs(hdr string, kvs map[string]ref.FInfo, onlyKey bool) {
 	fmt.Printf("%s:\n", hdr)
 	for key, fi := range kvs {
 		if onlyKey {
@@ -1633,7 +1635,7 @@ func TestParseVal(t *testing.T) {
 		{reflect.Complex128, "213312312", false},
 	}
 	for ii := range tests {
-		_, err := ParseVal(tests[ii].kind, tests[ii].value)
+		_, err := ref.ParseVal(tests[ii].kind, tests[ii].value)
 		if tests[ii].expSuccess && err != nil {
 			t.Fatalf("Expected to succeed but failed, kind %v, value %v, err: %v", tests[ii].kind, tests[ii].value, err)
 		}
@@ -1761,7 +1763,7 @@ func TestFieldValues(t *testing.T) {
 		{"superrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrlooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooongone", false, []string{}}, // Long field
 	}
 	for ii := range tests {
-		values, err := FieldValues(v, tests[ii].key)
+		values, err := ref.FieldValues(v, tests[ii].key)
 		if !tests[ii].expSuccess && err == nil {
 			t.Fatalf("Expected %v to fail, found %v", tests[ii].key, values)
 		}
@@ -1798,7 +1800,7 @@ func TestFieldByJSONTag(t *testing.T) {
 		{"cluster.Host", "spec.smartnics[*].mac-addrs", false, "Spec.SmartNICs[*].MacAddrs"}, // Slice cant be indexed
 	}
 	for ii := range tests {
-		field, err := FieldByJSONTag(tests[ii].kind, tests[ii].jsonTag)
+		field, err := ref.FieldByJSONTag(tests[ii].kind, tests[ii].jsonTag)
 		if !tests[ii].expSuccess && err == nil {
 			t.Fatalf("Expected %v to fail, found %v", tests[ii].jsonTag, field)
 		}
@@ -1831,7 +1833,7 @@ func TestParseableVal(t *testing.T) {
 		{"TYPE_UINT32", "-123123", false},
 	}
 	for ii := range tests {
-		if found := ParseableVal(tests[ii].kind, tests[ii].value); found != tests[ii].expSuccess {
+		if found := ref.ParseableVal(tests[ii].kind, tests[ii].value); found != tests[ii].expSuccess {
 			t.Fatalf("Expected %v for kind %v, val %v, found: %v", tests[ii].expSuccess, tests[ii].kind, tests[ii].value, found)
 		}
 	}
@@ -1855,7 +1857,7 @@ func TestGetFieldType(t *testing.T) {
 	}
 
 	for ii := range tests {
-		ty, _ := GetFieldType(tests[ii].kind, tests[ii].key)
+		ty, _ := ref.GetFieldType(tests[ii].kind, tests[ii].key)
 		if tests[ii].expSuccess && tests[ii].expResp != ty {
 			t.Fatalf("expected: %v for kind %v, key %v, got: %v", tests[ii].expResp, tests[ii].kind, tests[ii].key, ty)
 		}
@@ -1882,7 +1884,7 @@ func TestGetScalarFieldType(t *testing.T) {
 	}
 
 	for ii := range tests {
-		ty, _ := GetScalarFieldType(tests[ii].kind, tests[ii].key)
+		ty, _ := ref.GetScalarFieldType(tests[ii].kind, tests[ii].key)
 		if tests[ii].expSuccess && tests[ii].expResp != ty {
 			t.Fatalf("expected: %v for kind %v, key %v, got: %v", tests[ii].expResp, tests[ii].kind, tests[ii].key, ty)
 		}

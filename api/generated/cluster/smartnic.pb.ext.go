@@ -14,6 +14,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -92,7 +93,7 @@ func (m *BiosInfo) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*BiosInfo))
 	return out, nil
 }
 
@@ -113,7 +114,7 @@ func (m *IPConfig) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*IPConfig))
 	return out, nil
 }
 
@@ -134,7 +135,7 @@ func (m *MacRange) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*MacRange))
 	return out, nil
 }
 
@@ -156,7 +157,7 @@ func (m *SmartNIC) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SmartNIC))
 	return out, nil
 }
 
@@ -185,7 +186,7 @@ func (m *SmartNICCondition) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SmartNICCondition))
 	return out, nil
 }
 
@@ -213,7 +214,7 @@ func (m *SmartNICInfo) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SmartNICInfo))
 	return out, nil
 }
 
@@ -234,7 +235,7 @@ func (m *SmartNICSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SmartNICSpec))
 	return out, nil
 }
 
@@ -262,7 +263,7 @@ func (m *SmartNICStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SmartNICStatus))
 	return out, nil
 }
 

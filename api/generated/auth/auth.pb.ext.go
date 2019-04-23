@@ -15,6 +15,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
@@ -196,7 +197,7 @@ func (m *AuthenticationPolicy) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AuthenticationPolicy))
 	return out, nil
 }
 
@@ -225,7 +226,7 @@ func (m *AuthenticationPolicySpec) Clone(into interface{}) (interface{}, error) 
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AuthenticationPolicySpec))
 	return out, nil
 }
 
@@ -253,7 +254,7 @@ func (m *AuthenticationPolicyStatus) Clone(into interface{}) (interface{}, error
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AuthenticationPolicyStatus))
 	return out, nil
 }
 
@@ -287,7 +288,7 @@ func (m *Authenticators) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Authenticators))
 	return out, nil
 }
 
@@ -319,7 +320,7 @@ func (m *Ldap) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Ldap))
 	return out, nil
 }
 
@@ -340,7 +341,7 @@ func (m *LdapAttributeMapping) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*LdapAttributeMapping))
 	return out, nil
 }
 
@@ -361,7 +362,7 @@ func (m *LdapServer) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*LdapServer))
 	return out, nil
 }
 
@@ -382,7 +383,7 @@ func (m *LdapServerStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*LdapServerStatus))
 	return out, nil
 }
 
@@ -409,7 +410,7 @@ func (m *Local) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Local))
 	return out, nil
 }
 
@@ -430,7 +431,7 @@ func (m *Operation) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Operation))
 	return out, nil
 }
 
@@ -457,7 +458,7 @@ func (m *OperationStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*OperationStatus))
 	return out, nil
 }
 
@@ -482,7 +483,7 @@ func (m *PasswordChangeRequest) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*PasswordChangeRequest))
 	return out, nil
 }
 
@@ -504,7 +505,7 @@ func (m *PasswordCredential) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*PasswordCredential))
 	return out, nil
 }
 
@@ -525,7 +526,7 @@ func (m *PasswordResetRequest) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*PasswordResetRequest))
 	return out, nil
 }
 
@@ -546,7 +547,7 @@ func (m *Permission) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Permission))
 	return out, nil
 }
 
@@ -576,7 +577,7 @@ func (m *Radius) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Radius))
 	return out, nil
 }
 
@@ -604,7 +605,7 @@ func (m *RadiusServer) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*RadiusServer))
 	return out, nil
 }
 
@@ -631,7 +632,7 @@ func (m *RadiusServerStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*RadiusServerStatus))
 	return out, nil
 }
 
@@ -661,7 +662,7 @@ func (m *Resource) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Resource))
 	return out, nil
 }
 
@@ -682,7 +683,7 @@ func (m *Role) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*Role))
 	return out, nil
 }
 
@@ -710,7 +711,7 @@ func (m *RoleBinding) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*RoleBinding))
 	return out, nil
 }
 
@@ -737,7 +738,7 @@ func (m *RoleBindingSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*RoleBindingSpec))
 	return out, nil
 }
 
@@ -758,7 +759,7 @@ func (m *RoleBindingStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*RoleBindingStatus))
 	return out, nil
 }
 
@@ -779,7 +780,7 @@ func (m *RoleSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*RoleSpec))
 	return out, nil
 }
 
@@ -805,7 +806,7 @@ func (m *RoleStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*RoleStatus))
 	return out, nil
 }
 
@@ -826,7 +827,7 @@ func (m *SubjectAccessReviewRequest) Clone(into interface{}) (interface{}, error
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SubjectAccessReviewRequest))
 	return out, nil
 }
 
@@ -854,7 +855,7 @@ func (m *TLSOptions) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*TLSOptions))
 	return out, nil
 }
 
@@ -875,7 +876,7 @@ func (m *User) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*User))
 	return out, nil
 }
 
@@ -904,7 +905,7 @@ func (m *UserSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*UserSpec))
 	return out, nil
 }
 
@@ -931,7 +932,7 @@ func (m *UserStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*UserStatus))
 	return out, nil
 }
 

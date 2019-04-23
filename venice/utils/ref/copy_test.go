@@ -1,8 +1,10 @@
-package ref
+package ref_test
 
 import (
 	"reflect"
 	"testing"
+
+	"github.com/pensando/sw/venice/utils/ref"
 )
 
 type TestCopy struct {
@@ -91,7 +93,7 @@ func TestDeepCopy(t *testing.T) {
 			Bool:           true,
 		},
 	}
-	tc2 := DeepCopy(tc1)
+	tc2 := ref.DeepCopy(tc1)
 	t.Logf("Original version: %+v", tc1)
 	t.Logf("Copied version: %+v", tc2)
 	if !reflect.DeepEqual(tc1, tc2) {

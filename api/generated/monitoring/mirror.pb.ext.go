@@ -14,6 +14,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -86,7 +87,7 @@ func (m *AppProtoSelector) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*AppProtoSelector))
 	return out, nil
 }
 
@@ -108,7 +109,7 @@ func (m *MatchRule) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*MatchRule))
 	return out, nil
 }
 
@@ -139,7 +140,7 @@ func (m *MatchSelector) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*MatchSelector))
 	return out, nil
 }
 
@@ -161,7 +162,7 @@ func (m *MirrorCollector) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*MirrorCollector))
 	return out, nil
 }
 
@@ -188,7 +189,7 @@ func (m *MirrorSession) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*MirrorSession))
 	return out, nil
 }
 
@@ -217,7 +218,7 @@ func (m *MirrorSessionSpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*MirrorSessionSpec))
 	return out, nil
 }
 
@@ -255,7 +256,7 @@ func (m *MirrorSessionStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*MirrorSessionStatus))
 	return out, nil
 }
 
@@ -282,7 +283,7 @@ func (m *MirrorStartConditions) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*MirrorStartConditions))
 	return out, nil
 }
 
@@ -303,7 +304,7 @@ func (m *MirrorStopConditions) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*MirrorStopConditions))
 	return out, nil
 }
 

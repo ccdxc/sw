@@ -18,7 +18,10 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/grpc/codes"
+
 	"github.com/deckarep/golang-set"
+	gwruntime "github.com/pensando/grpc-gateway/runtime"
 
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/browser"
@@ -1097,6 +1100,24 @@ func TestCrudOps(t *testing.T) {
 		t.Errorf("gRPC: hook did not run")
 	}
 
+	// Test failure case to ensure code from hook is passed through.
+	actreq.Coupon = "TESTFAIL"
+	_, err = apicl.BookstoreV1().Order().Applydiscount(ctx, &actreq)
+	if err == nil {
+		t.Errorf("gRPC: apply discount action should have failed")
+	}
+	status := apierrors.FromError(err)
+	if status.Code != int32(gwruntime.HTTPStatusFromCode(codes.ResourceExhausted)) {
+		t.Fatalf("Code does not match [%+v]", status)
+	}
+	if len(status.Message) != 1 || status.Message[0] != "test message" {
+		t.Fatalf("Message does not match [%+v]", status)
+	}
+	if status.Result.Str != "test failure" {
+		t.Fatalf("Result does not match [%+v]", status)
+	}
+	actreq.Coupon = ""
+
 	// Reset the object:
 	ret, err = apicl.BookstoreV1().Order().Cleardiscount(ctx, &actreq)
 	if err != nil {
@@ -1842,6 +1863,8 @@ func TestStaging(t *testing.T) {
 		if obj.Method != "create" || obj.URI != "/configs/bookstore/v1/customers/"+custName {
 			t.Fatalf("object received does not match %+v", obj)
 		}
+		// XXX-TODO(sanjayt): Add a test case to check secrets are zeroed in a Get on the buffer. Needs change to pass a raw api.Any instead
+		// of custom marshalled one when under a flag.
 	}
 	{ // Clear full buffer
 		opts := api.ObjectMeta{

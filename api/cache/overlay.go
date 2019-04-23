@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"google.golang.org/grpc/codes"
+
 	"github.com/deckarep/golang-set"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
@@ -287,6 +289,8 @@ func restoreOverlays(ctx context.Context, base string, c apiintf.CacheInterface,
 			log.Errorf("failed to restore overlay object (%v)", apierrors.FromError(err))
 		}
 	}
+	// XXX-TODO(sanjayt): This will miss any empty Overlays in the kvstore. This should be restored seperately
+	//  for each tenant in the cache.
 	return nil
 }
 
@@ -468,6 +472,15 @@ func (c *overlay) restoreKvObj(ctx context.Context, in *overlaypb.BufferItem) er
 	v, ok := robj.Message.(runtime.Object)
 	if !ok {
 		return fmt.Errorf("unmarshalled object not correct type")
+	}
+	tm := reflect.ValueOf(v).MethodByName("ApplyStorageTransformer")
+	if tm.IsValid() {
+		args := []reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(false)}
+		ev := tm.Call(args)
+		if !ev[0].IsNil() {
+			err := ev[0].Interface().(error)
+			log.ErrorLog("msg", "failed to tranform from storage", "error", err, "key")
+		}
 	}
 	var obj interface{}
 	obj = v
@@ -1329,6 +1342,7 @@ func (c *overlay) Commit(ctx context.Context, action []apiintf.OverlayKey) error
 	log.Infof("Calling Commit on overlay [%v/%v][%p][%p]", c.tenant, c.id, c, c.reqs)
 	if len(ret.Failed) != 0 {
 		retErr := &api.Status{}
+		retErr.Code = int32(codes.FailedPrecondition)
 		retErr.Result.Str = "Buffer verification failed"
 		for _, e := range ret.Failed {
 			retErr.Message = append(retErr.Message, fmt.Sprintf("Key: %v Error: %v", e.Key, e.Errors))

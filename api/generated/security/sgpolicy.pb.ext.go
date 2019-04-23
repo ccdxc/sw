@@ -14,6 +14,7 @@ import (
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -62,7 +63,7 @@ func (m *ProtoPort) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*ProtoPort))
 	return out, nil
 }
 
@@ -83,7 +84,7 @@ func (m *SGPolicy) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SGPolicy))
 	return out, nil
 }
 
@@ -111,7 +112,7 @@ func (m *SGPolicyPropagationStatus) Clone(into interface{}) (interface{}, error)
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SGPolicyPropagationStatus))
 	return out, nil
 }
 
@@ -132,7 +133,7 @@ func (m *SGPolicySpec) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SGPolicySpec))
 	return out, nil
 }
 
@@ -158,7 +159,7 @@ func (m *SGPolicyStatus) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SGPolicyStatus))
 	return out, nil
 }
 
@@ -179,7 +180,7 @@ func (m *SGRule) Clone(into interface{}) (interface{}, error) {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *m
+	*out = *(ref.DeepCopy(m).(*SGRule))
 	return out, nil
 }
 

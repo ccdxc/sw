@@ -1,7 +1,9 @@
-package ref
+package ref_test
 
 import (
 	"testing"
+
+	"github.com/pensando/sw/venice/utils/ref"
 
 	mapset "github.com/deckarep/golang-set"
 )
@@ -417,11 +419,11 @@ func TestDiffer2(t *testing.T) {
 		t1.Init()
 		t2.Init()
 		c.fn(&t1)
-		var opts []Option
+		var opts []ref.Option
 		if c.depth != 0 {
-			opts = append(opts, WithMaxDepth(c.depth))
+			opts = append(opts, ref.WithMaxDepth(c.depth))
 		}
-		diff, ok := ObjDiff(t1, t2, opts...)
+		diff, ok := ref.ObjDiff(t1, t2, opts...)
 		list := diff.List()
 		if c.exp != nil && !ok {
 			t.Fatalf("--%s  : expecting no diff buf found [%v]", c.name, list)
@@ -458,7 +460,7 @@ func TestDifferentTypes(t *testing.T) {
 	t2 := struct {
 		dummy string
 	}{}
-	diff, ok := ObjDiff(t1, t2)
+	diff, ok := ref.ObjDiff(t1, t2)
 	if !ok {
 		t.Fatalf("did not find diff for different types")
 	}
@@ -478,12 +480,12 @@ func TestDifferentTypes(t *testing.T) {
 func TestUninitialized(t *testing.T) {
 	var t1, t2 strct
 	t1.Init()
-	_, ok := ObjDiff(t1, t2)
+	_, ok := ref.ObjDiff(t1, t2)
 	if !ok {
 		t.Fatalf("did not find diff")
 	}
 	var t3 strct
-	_, ok = ObjDiff(t2, t3)
+	_, ok = ref.ObjDiff(t2, t3)
 	if ok {
 		t.Fatalf("found change in uninitialized")
 	}
@@ -494,7 +496,7 @@ func BenchmarkDiffer(b *testing.B) {
 	t1.Init()
 	t2.Init()
 	for i := 0; i < b.N; i++ {
-		ObjDiff(t1, t2)
+		ref.ObjDiff(t1, t2)
 	}
 }
 
@@ -505,7 +507,7 @@ func BenchmarkDifferWithChange(b *testing.B) {
 	t1.Struct.Int = 3321
 	t1.Struct.Struct.String = "nestednow"
 	for i := 0; i < b.N; i++ {
-		ObjDiff(t1, t2)
+		ref.ObjDiff(t1, t2)
 	}
 }
 
@@ -516,6 +518,6 @@ func BenchmarkDifferWithMaxDepth(b *testing.B) {
 	t1.Struct.Int = 3321
 	t1.Struct.Struct.String = "nestednow"
 	for i := 0; i < b.N; i++ {
-		ObjDiff(t1, t2, WithMaxDepth(1))
+		ref.ObjDiff(t1, t2, ref.WithMaxDepth(1))
 	}
 }
