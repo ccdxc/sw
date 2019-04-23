@@ -732,7 +732,7 @@ tcp_exec_cpu_lif(fte::ctx_t& ctx)
     // Check if TCP proxy is enabled for the flow
     if(!tcp_is_proxy_enabled_for_flow(flow_key) &&
             !tcp_is_proxy_policy_enabled_for_flow(ctx)) {
-        HAL_TRACE_DEBUG("tcp-proxy: not enabled for flow: {}", ctx.key());
+        HAL_TRACE_DEBUG("tcp-proxy: not enabled");
         return fte::PIPELINE_CONTINUE;
     }
 

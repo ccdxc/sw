@@ -125,6 +125,7 @@ pid_t launch(const std::string &name, const std::string &command)
     else if (pid == 0)
     {
         redirect_stds(name, getpid());
+        // cpulock();
         exec_command(command);
     }
 
@@ -212,3 +213,22 @@ void save_stdout_stderr(const std::string &name, pid_t pid)
     copy_std(name, pid, "out");
     copy_std(name, pid, "err");
 }
+
+// Lock to CPU 0
+void cpulock()
+{
+    cpu_set_t set;
+    int rc;
+    pid_t pid;
+
+    CPU_ZERO(&set);
+    CPU_SET(0, &set);
+    pid = getpid();
+
+    rc = sched_setaffinity(pid, sizeof(set), &set);
+    if (rc == -1)
+    {
+        logger->error("Failed(%d) to set the affinity for pid {}", errno, pid);
+    }
+}
+

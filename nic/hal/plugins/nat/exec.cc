@@ -13,9 +13,9 @@ using hal::utils::nat::addr_entry_key_t;
 using hal::utils::nat::addr_entry_t;
 
 hal_ret_t
-get_nat_addr_from_pool(nat_pool_t       *nat_pool, 
-                       addr_entry_key_t *key, 
-                       addr_entry_t     *addr_entry) 
+get_nat_addr_from_pool(nat_pool_t       *nat_pool,
+                       addr_entry_key_t *key,
+                       addr_entry_t     *addr_entry)
 
 {
     hal_ret_t ret = HAL_RET_OK;
@@ -74,7 +74,7 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
         return HAL_RET_OK;
     }
 
-    // snat 
+    // snat
     src_addr_key.vrf_id = ctx.get_key().svrf_id;
     src_addr_key.ip_addr.addr = ctx.get_key().sip;
     src_addr_entry = hal::utils::nat::addr_entry_get(&src_addr_key);

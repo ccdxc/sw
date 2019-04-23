@@ -446,28 +446,30 @@ hal_sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
     char       logbuf[1024];
     va_list    args;
 
-    va_start(args, format);
-    vsnprintf(logbuf, sizeof(logbuf), format, args);
-    switch (tracel_level) {
-    case sdk::lib::SDK_TRACE_LEVEL_ERR:
-        HAL_TRACE_ERR_NO_META("{}", logbuf);
-        break;
-    case sdk::lib::SDK_TRACE_LEVEL_WARN:
-        HAL_TRACE_WARN_NO_META("{}", logbuf);
-        break;
-    case sdk::lib::SDK_TRACE_LEVEL_INFO:
-        HAL_TRACE_INFO_NO_META("{}", logbuf);
-        break;
-    case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
-        HAL_TRACE_DEBUG_NO_META("{}", logbuf);
-        break;
-    case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
-        HAL_TRACE_VERBOSE_NO_META("{}", logbuf);
-        break;
-    default:
-        break;
+    if ((int)hal_trace_level() >= (int)tracel_level)  {
+        va_start(args, format);
+        vsnprintf(logbuf, sizeof(logbuf), format, args);
+        switch (tracel_level) {
+        case sdk::lib::SDK_TRACE_LEVEL_ERR:
+            HAL_TRACE_ERR_NO_META("{}", logbuf);
+            break;
+        case sdk::lib::SDK_TRACE_LEVEL_WARN:
+            HAL_TRACE_WARN_NO_META("{}", logbuf);
+            break;
+        case sdk::lib::SDK_TRACE_LEVEL_INFO:
+            HAL_TRACE_INFO_NO_META("{}", logbuf);
+            break;
+        case sdk::lib::SDK_TRACE_LEVEL_DEBUG:
+            HAL_TRACE_DEBUG_NO_META("{}", logbuf);
+            break;
+        case sdk::lib::SDK_TRACE_LEVEL_VERBOSE:
+            HAL_TRACE_VERBOSE_NO_META("{}", logbuf);
+            break;
+        default:
+            break;
+        }
+        va_end(args);
     }
-    va_end(args);
 
     return 0;
 }
@@ -546,11 +548,11 @@ hal_logger_init (hal_cfg_t *hal_cfg)
     }
 
     // initialize the logger
-    hal_cfg->sync_mode_logging = true;
+    hal_cfg->sync_mode_logging = false;
     hal::utils::trace_init("hal", hal_cfg->control_cores_mask,
                            hal_cfg->sync_mode_logging, logfile.c_str(),
-	                   5 << 20, // 50MB
-	                   10,    // 10 files
+                           5 << 20, // 50MB
+                           10,    // 10 files
                            ::utils::trace_debug);
 
     return HAL_RET_OK;

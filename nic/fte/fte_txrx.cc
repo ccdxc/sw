@@ -360,7 +360,7 @@ void inst_t::start(sdk::lib::thread *curr_thread)
 	     * If 'bypass_fte_' is set, this is for PMD perf-mode, we dont want to sleep
 	     * between packets.
              */
-	    if (!bypass_fte_) usleep(1000);
+	    if (!bypass_fte_) usleep(10);
         } else if (hal::is_platform_type_sim()) {
             usleep(1000000/30);
         } else if (hal::is_platform_type_rtl()) {

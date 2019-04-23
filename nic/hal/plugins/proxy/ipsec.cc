@@ -97,7 +97,7 @@ update_esp_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
     }
     HAL_TRACE_DEBUG("IPSec ESP flow forwarding role: {}  direction: {} key {}", ctx.role(), ctx.direction(), ctx.get_key());
     HAL_TRACE_DEBUG("IPv6 SIP: {}", ipv6addr2str(flow_key.sip.v6_addr));
-    if (flow_key.sip.v4_addr == (0x0a010002) || 
+    if (flow_key.sip.v4_addr == (0x0a010002) ||
         (strcmp(ipv6_tunnel_sip, ipv6addr2str(flow_key.sip.v6_addr)) == 0)) {
         fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
         HAL_TRACE_DEBUG("IPSec updating lport = {}", pfi->proxy->meta->lif_info[0].lport_id);
@@ -249,8 +249,8 @@ ipsec_process_initiator_plain_flow(fte::ctx_t&ctx)
                 rule_ctr->other_hits++;
 
         }
-        HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}", 
-            rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle, 
+        HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}",
+            rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle,
             rule_cfg->action.sa_action_dec_handle);
         if (rule_cfg->action.sa_action == ipsec::IpsecSAActionType::IPSEC_SA_ACTION_TYPE_ENCRYPT) {
             HAL_TRACE_DEBUG("Result type Encrypt with qid {}", rule_cfg->action.sa_action_enc_handle);
@@ -343,8 +343,8 @@ ipsec_process_uplink_esp_flow(fte::ctx_t&ctx)
                 rule_ctr->other_hits++;
 
         }
-        HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}", 
-            rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle, 
+        HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}",
+            rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle,
             rule_cfg->action.sa_action_dec_handle);
         ctx.set_l3_tunnel_flow(TRUE);
         if (rule_cfg->action.sa_action == ipsec::IpsecSAActionType::IPSEC_SA_ACTION_TYPE_DECRYPT) {
@@ -352,18 +352,18 @@ ipsec_process_uplink_esp_flow(fte::ctx_t&ctx)
             flowupd.fwding.qid = rule_cfg->action.sa_action_dec_handle;
             flowupd.fwding.qtype = 1;
             flowupd.fwding.qid_en = true;
-            flowupd.fwding.lport = args.lport_id; 
+            flowupd.fwding.lport = args.lport_id;
             update_flow_qos(&flowupd);
             HAL_TRACE_DEBUG("Updating decrypt result qid {}, lport {}", flowupd.fwding.qid, flowupd.fwding.lport);
             ret = ctx.update_flow(flowupd);
             ctx.set_feature_status(ret);
-            ipsec_info->vrf = ctx.key().dvrf_id; 
+            ipsec_info->vrf = ctx.key().dvrf_id;
             ipsec_info->action = IPSEC_PLUGIN_RFLOW_ACTION_DO_NOTHING;
             HAL_TRACE_DEBUG("Reverse Flow params: vrf {} action {}", ipsec_info->vrf, ipsec_info->action);
             return fte::PIPELINE_FINISH;  // Fwding to IPSEC proxy, no other fte featrures needed
         }
     }
-    return fte::PIPELINE_CONTINUE; 
+    return fte::PIPELINE_CONTINUE;
 }
 
 static inline fte::pipeline_action_t
@@ -376,9 +376,9 @@ ipsec_process_post_decrypt_flow(fte::ctx_t&ctx)
     pd::pd_func_args_t                pd_func_args = {0};
 
     ipsec_info = (ipsec_info_t*) ctx.feature_state();
-    ipsec_info->vrf = ctx.get_key().dvrf_id; 
+    ipsec_info->vrf = ctx.get_key().dvrf_id;
     ipsec_info->action = IPSEC_PLUGIN_RFLOW_ACTION_ENCRYPT;
-    vrf_t *vrf = vrf_lookup_by_id(ipsec_info->vrf); 
+    vrf_t *vrf = vrf_lookup_by_id(ipsec_info->vrf);
     vrf_args.vrf = vrf;
     pd_func_args.pd_vrf_get_lookup_id = &vrf_args;
     hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_VRF_GET_FLOW_LKPID, &pd_func_args);
@@ -390,7 +390,7 @@ ipsec_process_post_decrypt_flow(fte::ctx_t&ctx)
     ctx.set_feature_status(ret);
     HAL_TRACE_DEBUG("Reverse Flow params: vrf {} action {}", ipsec_info->vrf, ipsec_info->action);
 
-    return fte::PIPELINE_CONTINUE; 
+    return fte::PIPELINE_CONTINUE;
 }
 
 static inline fte::pipeline_action_t
@@ -414,7 +414,7 @@ ipsec_process_rflow(fte::ctx_t&ctx)
 
     hal::pd::pd_vrf_get_lookup_id_args_t vrf_args;
     ipsec_info = (ipsec_info_t*) ctx.feature_state();
-    vrf_t *vrf = vrf_lookup_by_id(ipsec_info->vrf); 
+    vrf_t *vrf = vrf_lookup_by_id(ipsec_info->vrf);
     HAL_TRACE_DEBUG("Reverse Flow params: vrf {} action {}", ipsec_info->vrf, ipsec_info->action);
 
     if (ipsec_info->action == IPSEC_PLUGIN_RFLOW_ACTION_DO_NOTHING) {
@@ -457,8 +457,8 @@ ipsec_process_rflow(fte::ctx_t&ctx)
 
             }
             flowupd = {type: fte::FLOWUPD_FWDING_INFO};
-            HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}", 
-                rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle, 
+            HAL_TRACE_DEBUG("ipsec: rule update fwding info: type {}, enc_handle {}, dec_handle{}",
+                rule_cfg->action.sa_action, rule_cfg->action.sa_action_enc_handle,
                 rule_cfg->action.sa_action_dec_handle);
             if (rule_cfg->action.sa_action == ipsec::IpsecSAActionType::IPSEC_SA_ACTION_TYPE_DECRYPT) {
                 HAL_TRACE_DEBUG("Result type Decrypt with qid {}", rule_cfg->action.sa_action_dec_handle);
@@ -471,15 +471,15 @@ ipsec_process_rflow(fte::ctx_t&ctx)
             }
             ctx.set_l3_tunnel_flow(TRUE);
             flowupd.fwding.qid_en = true;
-            flowupd.fwding.lport = args.lport_id; 
+            flowupd.fwding.lport = args.lport_id;
             update_flow_qos(&flowupd);
             ret = ctx.update_flow(flowupd);
-            HAL_TRACE_DEBUG("fwding info: qid_en {} qid {} qtype {} lport {}", 
+            HAL_TRACE_DEBUG("fwding info: qid_en {} qid {} qtype {} lport {}",
                             flowupd.fwding.qid_en, flowupd.fwding.qid, flowupd.fwding.qtype, flowupd.fwding.lport);
             ctx.set_feature_status(ret);
             return fte::PIPELINE_FINISH;  // Fwding to IPSEC proxy, no other fte featrures needed
         }
-    } 
+    }
     return fte::PIPELINE_CONTINUE;
 }
 
@@ -487,31 +487,31 @@ fte::pipeline_action_t
 ipsec_exec_pkt(fte::ctx_t&ctx)
 {
     if (!ctx.cpu_rxhdr()) {
-        return fte::PIPELINE_CONTINUE; 
+        return fte::PIPELINE_CONTINUE;
     }
     if ((ctx.cpu_rxhdr()->flags & CPU_FLAGS_IPV6_VALID) == CPU_FLAGS_IPV6_VALID) {
-        return fte::PIPELINE_CONTINUE; 
+        return fte::PIPELINE_CONTINUE;
     }
 
-    HAL_TRACE_DEBUG("IPSec flow forwarding role: {} direction: {} key {} src_lif {}", 
+    HAL_TRACE_DEBUG("IPSec flow forwarding role: {} direction: {} key {} src_lif {}",
         ctx.role(), ctx.direction(), ctx.get_key(), ctx.cpu_rxhdr()->src_lif);
 
     if (ctx.role() ==  hal::FLOW_ROLE_INITIATOR) {
         // Un-Encrypted traffic from uplink or ENIC
-        if ((ctx.get_key().proto != IP_PROTO_IPSEC_ESP) && 
+        if ((ctx.get_key().proto != IP_PROTO_IPSEC_ESP) &&
             (ctx.cpu_rxhdr()->src_lif != IPSEC_ARM_LIF)) {
             return (ipsec_process_initiator_plain_flow(ctx));
-        } // Un-Encrypted traffic from uplink or ENIC 
+        } // Un-Encrypted traffic from uplink or ENIC
         // Post Encrypted ESP packet from Barco
-        if ((ctx.get_key().proto == IP_PROTO_IPSEC_ESP) && 
+        if ((ctx.get_key().proto == IP_PROTO_IPSEC_ESP) &&
             (ctx.cpu_rxhdr()->src_lif == IPSEC_ARM_LIF)) {
             return (ipsec_process_post_encrypt_esp_flow(ctx));
         } // Post Encrypted ESP packet from Barco
         // Encrypted ESP packet from Uplink
-        if ((ctx.get_key().proto == IP_PROTO_IPSEC_ESP) && 
+        if ((ctx.get_key().proto == IP_PROTO_IPSEC_ESP) &&
             (ctx.cpu_rxhdr()->src_lif != IPSEC_ARM_LIF)) {
             return (ipsec_process_uplink_esp_flow(ctx));
-        } // Encrypted ESP packet from Uplink 
+        } // Encrypted ESP packet from Uplink
         // Decrypted packeted from Barco
         if ((ctx.get_key().proto != IP_PROTO_IPSEC_ESP) &&
             (ctx.cpu_rxhdr()->src_app_id ==  P4PLUS_APPTYPE_IPSEC) &&
@@ -521,7 +521,7 @@ ipsec_exec_pkt(fte::ctx_t&ctx)
     } else if (ctx.role() ==  hal::FLOW_ROLE_RESPONDER) {
         return (ipsec_process_rflow(ctx));
     }
-    return fte::PIPELINE_CONTINUE; 
+    return fte::PIPELINE_CONTINUE;
 }
 
 fte::pipeline_action_t

@@ -40,6 +40,7 @@ main(int argc, char *argv[])
         exit(-1);
     }
     redirect_stds("sysmgr", getpid());
+    cpulock();
 
     delphi_sdk->RegisterService(svc);
     logger = penlog::logger_init(delphi_sdk, "sysmgr");

@@ -92,7 +92,7 @@ ServicePtr Service::create(ServiceSpecPtr spec)
         ServiceLoop::getInstance()->register_event_reactor(SERVICE_EVENT_START,
             dep->service_name, svc);
     }
-    
+
     svc->spec = spec;
     svc->check_dep_and_launch();
     svc->child_watcher = nullptr;
@@ -103,9 +103,11 @@ ServicePtr Service::create(ServiceSpecPtr spec)
     ServiceLoop::getInstance()->register_event_reactor(SERVICE_EVENT_HEARTBEAT,
         spec->name, svc);
 
+#if 0
     EventLogger::getInstance()->LogServiceEvent(
         sysmgr_events::SERVICE_PENDING, "Service %s pending", spec->name);
-    
+#endif
+
     return svc;
 }
 
@@ -166,7 +168,7 @@ void Service::on_child(pid_t pid)
     obj->set_exitreason(reason);
 
     delphi_sdk->QueueUpdate(obj);
-     
+
 }
 
 void Service::on_timer()
