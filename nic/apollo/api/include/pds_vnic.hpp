@@ -13,7 +13,7 @@
 
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/apollo/api/include/pds.hpp"
-#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 
 /// \defgroup PDS_VNIC VNIC API
@@ -29,7 +29,7 @@ typedef struct pds_vnic_key_s {
 /// \brief VNIC specification
 typedef struct pds_vnic_spec_s {
     pds_vnic_key_t key;                ///< vnic's key
-    pds_vcn_key_t vcn;                 ///< vcn of this vnic
+    pds_vpc_key_t vpc;                 ///< vpc of this vnic
     pds_subnet_key_t subnet;           ///< subnet of this vnic
     pds_encap_t vnic_encap;            ///< vnic encap for this vnic
     pds_encap_t fabric_encap;          ///< fabric encap for this vnic

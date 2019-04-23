@@ -32,7 +32,7 @@ typedef enum api_op_e {
 typedef enum obj_id_e {
     OBJ_ID_NONE,           ///< None
     OBJ_ID_DEVICE,         ///< Device
-    OBJ_ID_VCN,            ///< VCN
+    OBJ_ID_VPC,            ///< VPC
     OBJ_ID_SUBNET,         ///< Subnet
     OBJ_ID_TEP,            ///< TEP
     OBJ_ID_VNIC,           ///< VNIC

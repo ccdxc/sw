@@ -1,9 +1,9 @@
 /*****************************************************************************/
 /* RVPATH check                                                              */
 /*****************************************************************************/
-@pragma capi appdatafields vcn_id subnet_id overlay_mac
+@pragma capi appdatafields vpc_id subnet_id overlay_mac
 @pragma capi hwfields_access_api
-action remote_vnic_mapping_rx_info(entry_valid, vcn_id, subnet_id, overlay_mac,
+action remote_vnic_mapping_rx_info(entry_valid, vpc_id, subnet_id, overlay_mac,
                                    hash1, hint1, hash2, hint2, hash3,
                                    hint3, hash4, hint4, hash5, hint5,
                                    hash6, hint6, hash7, hint7,
@@ -12,10 +12,10 @@ action remote_vnic_mapping_rx_info(entry_valid, vcn_id, subnet_id, overlay_mac,
     if (entry_valid == TRUE) {
         // if hardware register indicate hit, take the results
         modify_field(service_header.remote_vnic_mapping_rx_done, TRUE);
-        modify_field(scratch_metadata.vcn_id, vcn_id);
-        if (vnic_metadata.vcn_id != scratch_metadata.vcn_id) {
+        modify_field(scratch_metadata.vpc_id, vpc_id);
+        if (vnic_metadata.vpc_id != scratch_metadata.vpc_id) {
             modify_field(control_metadata.p4i_drop_reason,
-                         1 << P4I_DROP_RVPATH_VCN_MISMATCH);
+                         1 << P4I_DROP_RVPATH_VPC_MISMATCH);
             drop_packet();
         } else {
             modify_field(p4i_apollo_i2e.rvpath_subnet_id, subnet_id);

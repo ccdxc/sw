@@ -23,7 +23,7 @@
 #define PDS_POLICY_ID_INVALID         0x0    ///< Invalid policy ID
 
 // Basic PDS data types
-typedef uint32_t pds_vcn_id_t;
+typedef uint32_t pds_vpc_id_t;
 typedef uint32_t pds_subnet_id_t;
 typedef uint16_t pds_vnic_id_t;
 typedef uint32_t pds_rule_id_t;

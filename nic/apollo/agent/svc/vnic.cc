@@ -16,7 +16,7 @@ pds_vnic_proto_spec_to_api_spec (pds_vnic_spec_t *api_spec,
     uint32_t msid;
 
     api_spec->key.id = proto_spec.vnicid();
-    api_spec->vcn.id = proto_spec.vpcid();
+    api_spec->vpc.id = proto_spec.vpcid();
     api_spec->subnet.id = proto_spec.subnetid();
     api_spec->vnic_encap = proto_encap_to_pds_encap(proto_spec.vnicencap());
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
@@ -106,7 +106,7 @@ vnic_api_spec_to_proto_spec (const pds_vnic_spec_t *api_spec,
                              pds::VnicSpec *proto_spec)
 {
     proto_spec->set_vnicid(api_spec->key.id);
-    proto_spec->set_vpcid(api_spec->vcn.id);
+    proto_spec->set_vpcid(api_spec->vpc.id);
     proto_spec->set_subnetid(api_spec->subnet.id);
     pds_encap_to_proto_encap(proto_spec->mutable_vnicencap(),
                              &api_spec->vnic_encap);

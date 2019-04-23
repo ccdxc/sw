@@ -22,10 +22,10 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
               uint32_t num_vnics, uint16_t vlan_start);
 
 sdk_ret_t
-create_subnets (uint32_t vpc_id, uint32_t num_subnets, ip_prefix_t *vcn_pfx);
+create_subnets (uint32_t vpc_id, uint32_t num_subnets, ip_prefix_t *vpc_pfx);
 
 sdk_ret_t
-create_vcns (uint32_t num_vpcs, ip_prefix_t *ip_pfx, uint32_t num_subnets);
+create_vpcs (uint32_t num_vpcs, ip_prefix_t *ip_pfx, uint32_t num_subnets);
 
 sdk_ret_t
 create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx);

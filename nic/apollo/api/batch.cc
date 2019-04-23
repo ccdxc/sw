@@ -10,8 +10,8 @@
 #include "nic/apollo/framework/api_engine.hpp"
 
 /**
- * @defgroup PDS_VCN_API - batch API handling
- * @ingroup PDS_VCN
+ * @defgroup PDS_VPC_API - batch API handling
+ * @ingroup PDS_VPC
  * @{
  */
 
@@ -50,4 +50,4 @@ sdk_ret_t pds_batch_abort (void)
     return api::g_api_engine.batch_abort();
 }
 
-/** @} */    // end of PDS_VCN_API
+/** @} */    // end of PDS_VPC_API

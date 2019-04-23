@@ -27,7 +27,7 @@ typedef struct remote_mapping_stepper_seed_s {
 
 class remote_mapping_util {
 public:
-    pds_vcn_id_t vcn_id;
+    pds_vpc_id_t vpc_id;
     std::string vnic_ip;
     pds_subnet_id_t sub_id;
     std::string tep_ip;
@@ -40,7 +40,7 @@ public:
 
     remote_mapping_util();
 
-    remote_mapping_util(pds_vcn_id_t vcn_id, pds_subnet_id_t sub_id,
+    remote_mapping_util(pds_vpc_id_t vpc_id, pds_subnet_id_t sub_id,
                         std::string vnic_ip, std::string tep_ip,
                         uint64_t vnic_mac,
                         pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
@@ -65,25 +65,25 @@ public:
     /// \returns #SDK_RET_OK on success, failure status code on error
     sdk_ret_t del(void);
 
-    /// \brief Create many remote IP mapping for the given <vcn, subnet>
+    /// \brief Create many remote IP mapping for the given <vpc, subnet>
     /// max num_mappings = num_vnics * num_teps
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t
-    many_create(uint16_t num_vnics, uint16_t num_teps, pds_vcn_id_t vcn_id,
+    many_create(uint16_t num_vnics, uint16_t num_teps, pds_vpc_id_t vpc_id,
                 pds_subnet_id_t sub_id, remote_mapping_stepper_seed_t *seed,
                 pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP);
 
     /// \brief Delete many remote IP mapping for the given VNIC
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_delete(uint16_t num_vnics, uint16_t num_teps,
-                                 pds_vcn_id_t vcn_id,
+                                 pds_vpc_id_t vpc_id,
                                  remote_mapping_stepper_seed_t *seed);
 
-    /// \brief Read many remote IP mapping for the given <vcn, subnet>
+    /// \brief Read many remote IP mapping for the given <vpc, subnet>
     /// max num_mappings = num_vnics * num_teps
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t
-    many_read(uint16_t num_vnics, uint16_t num_teps, pds_vcn_id_t vcn_id,
+    many_read(uint16_t num_vnics, uint16_t num_teps, pds_vpc_id_t vpc_id,
               pds_subnet_id_t sub_id, remote_mapping_stepper_seed_t *seed,
               pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
               sdk::sdk_ret_t expected_result = sdk::SDK_RET_OK);

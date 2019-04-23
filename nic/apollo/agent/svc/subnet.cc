@@ -14,7 +14,7 @@ subnet_api_spec_to_proto_spec (pds::SubnetSpec *proto_spec,
                                const pds_subnet_spec_t *api_spec)
 {
     proto_spec->set_id(api_spec->key.id);
-    proto_spec->set_vpcid(api_spec->vcn.id);
+    proto_spec->set_vpcid(api_spec->vpc.id);
     ipv4pfx_api_spec_to_proto_spec(
                     proto_spec->mutable_v4prefix(), &api_spec->v4_pfx);
     ippfx_api_spec_to_proto_spec(
@@ -66,7 +66,7 @@ subnet_proto_spec_to_api_spec (pds_subnet_spec_t *api_spec,
                                const pds::SubnetSpec &proto_spec)
 {
     api_spec->key.id = proto_spec.id();
-    api_spec->vcn.id = proto_spec.vpcid();
+    api_spec->vpc.id = proto_spec.vpcid();
     ipv4pfx_proto_spec_to_api_spec(&api_spec->v4_pfx, proto_spec.v4prefix());
     ippfx_proto_spec_to_api_spec(&api_spec->v6_pfx, proto_spec.v6prefix());
     api_spec->v4_vr_ip = proto_spec.ipv4virtualrouterip();

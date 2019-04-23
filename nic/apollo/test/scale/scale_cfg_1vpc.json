@@ -29,7 +29,7 @@
             "vpc-prefix" : "2.0.0.0/8"
         },
         {
-            "_comment_" : "All VCNs have same prefix",
+            "_comment_" : "All VPCs have same prefix",
             "kind" : "vpc",
             "count" : "1",
             "prefix" : "2.0.0.0/8",

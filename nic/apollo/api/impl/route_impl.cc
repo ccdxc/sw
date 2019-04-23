@@ -99,11 +99,11 @@ sdk_ret_t
 route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t                 ret;
     pds_route_table_spec_t    *spec;
-    pds_vcn_key_t             vcn_key;
+    pds_vpc_key_t             vpc_key;
     route_table_t             *rtable;
     pds_tep_key_t             tep_key;
     tep_entry                 *tep;
-    vcn_entry                 *vcn;
+    vpc_entry                 *vpc;
 
     spec = &obj_ctxt->api_params->route_table_spec;
     if (spec->num_routes == 0) {
@@ -158,20 +158,18 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                             ippfx2str(&rtable->routes[i].prefix),
                             rtable->routes[i].nhid, tep->key2str().c_str());
             break;
-        case PDS_NH_TYPE_PEER_VCN:
-            // vpc peering case
-            PDS_TRACE_WARN("vpc peering not supported yet in the dataplane !!");
-            vcn = vcn_db()->find(&spec->routes[i].vcn);
-            if (vcn == NULL) {
-                PDS_TRACE_ERR("vcn %u not found while processing route %s in "
-                              "route table %u", spec->routes[i].vcn.id,
+        case PDS_NH_TYPE_PEER_VPC:
+            vpc = vpc_db()->find(&spec->routes[i].vpc);
+            if (vpc == NULL) {
+                PDS_TRACE_ERR("vpc %u not found while processing route %s in "
+                              "route table %u", spec->routes[i].vpc.id,
                               ippfx2str(&spec->routes[i].prefix),
                               spec->key.id);
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
-            rtable->routes[i].nhid = PDS_NH_TYPE_PEER_VCN_MASK | vcn->hw_id();
-            PDS_TRACE_DEBUG("Processing route table %u, route %s -> vcn hw "
+            rtable->routes[i].nhid = PDS_NH_TYPE_PEER_VPC_MASK | vpc->hw_id();
+            PDS_TRACE_DEBUG("Processing route table %u, route %s -> vpc hw "
                             "id %u, ", spec->key.id,
                             ippfx2str(&rtable->routes[i].prefix),
                             rtable->routes[i].nhid);
@@ -217,7 +215,7 @@ route_table_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
          // TODO:
          // need to walk all vnics AND subnets to see which of them are using
          // this routing table and then walk all the vnics that are part of the
-         // vcns and subnets and write new epoch data
+         // vpcs and subnets and write new epoch data
         return SDK_RET_ERR;
         break;
 

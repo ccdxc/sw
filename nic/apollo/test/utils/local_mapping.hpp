@@ -28,7 +28,7 @@ typedef struct local_mapping_stepper_seed_s {
 
 class local_mapping_util {
 public:
-    pds_vcn_id_t vcn_id;
+    pds_vpc_id_t vpc_id;
     std::string vnic_ip;
     pds_subnet_id_t sub_id;
     std::string vnic_mac;
@@ -43,7 +43,7 @@ public:
 
     local_mapping_util();
 
-    local_mapping_util(pds_vcn_id_t vcn_id, pds_subnet_id_t sub_id,
+    local_mapping_util(pds_vpc_id_t vpc_id, pds_subnet_id_t sub_id,
                        std::string vnic_ip, pds_vnic_id_t vnic_id,
                        uint64_t vnic_mac,
                        pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
@@ -69,11 +69,11 @@ public:
     /// \returns #SDK_RET_OK on success, failure status code on error
     sdk_ret_t del(void);
 
-    /// \brief Create many local IP mapping for the given <vcn, subnet>
+    /// \brief Create many local IP mapping for the given <vpc, subnet>
     /// max num_mappings = num_ip_per_vnic * num_vnics
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_create(
-        uint16_t num_ip_per_vnic, uint16_t num_vnics, pds_vcn_id_t vcn_id,
+        uint16_t num_ip_per_vnic, uint16_t num_vnics, pds_vpc_id_t vpc_id,
         pds_subnet_id_t sub_id, local_mapping_stepper_seed_t *seed_info,
         pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
         bool is_public_ip_valid = false, std::string public_ip_cidr_str = "");
@@ -82,14 +82,14 @@ public:
     /// \param num_mapping Number of mappings to be deleted.
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_delete(uint16_t num_ip_per_vnic, uint16_t num_vnics,
-                                 pds_vcn_id_t vcn_id,
+                                 pds_vpc_id_t vpc_id,
                                  local_mapping_stepper_seed_t *seed_info);
 
-    /// \brief Read many local IP mapping for the given <vcn, subnet>
+    /// \brief Read many local IP mapping for the given <vpc, subnet>
     /// max num_mappings = num_ip_per_vnic * num_vnics
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t
-    many_read(uint16_t num_ip_per_vnic, uint16_t num_vnics, pds_vcn_id_t vcn_id,
+    many_read(uint16_t num_ip_per_vnic, uint16_t num_vnics, pds_vpc_id_t vpc_id,
               pds_subnet_id_t sub_id, local_mapping_stepper_seed_t *seed_info,
               pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
               bool is_public_ip_valid = false,

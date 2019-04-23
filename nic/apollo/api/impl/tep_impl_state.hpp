@@ -17,7 +17,7 @@
 
 // default drop/blackhole nexthop (dataplane drops pkts when this nh is hit)
 #define PDS_SYSTEM_DROP_NEXTHOP_HW_ID        0
-#define PDS_NH_TYPE_PEER_VCN_MASK            0x8000
+#define PDS_NH_TYPE_PEER_VPC_MASK            0x8000
 
 namespace api {
 namespace impl {

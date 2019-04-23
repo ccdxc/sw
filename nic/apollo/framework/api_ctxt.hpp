@@ -14,7 +14,7 @@
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/framework/api.hpp"
 #include "nic/apollo/api/mapping.hpp"
-#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
@@ -31,8 +31,8 @@ typedef union api_params_u {
     pds_device_spec_t            device_spec;
     pds_tep_key_t                tep_key;
     pds_tep_spec_t               tep_spec;
-    pds_vcn_key_t                vcn_key;
-    pds_vcn_spec_t               vcn_spec;
+    pds_vpc_key_t                vpc_key;
+    pds_vpc_spec_t               vpc_spec;
     pds_subnet_key_t             subnet_key;
     pds_subnet_spec_t            subnet_spec;
     pds_vnic_key_t               vnic_key;

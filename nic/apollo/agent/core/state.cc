@@ -87,7 +87,7 @@ cfg_db::init(void) {
     mirror_session_map_ = new(mem) mirror_session_db_t();
 
     slabs_[SLAB_ID_VPC] =
-        slab::factory("vpc", SLAB_ID_VPC, sizeof(pds_vcn_spec_t),
+        slab::factory("vpc", SLAB_ID_VPC, sizeof(pds_vpc_spec_t),
                       16, true, true, true);
     slabs_[SLAB_ID_SUBNET] =
         slab::factory("subnet", SLAB_ID_SUBNET, sizeof(pds_subnet_spec_t),
@@ -242,12 +242,12 @@ agent_state::del_from_tep_db(uint32_t key) {
 }
 
 sdk_ret_t
-agent_state::add_to_vpc_db(pds_vcn_key_t *key, pds_vcn_spec_t *spec) {
+agent_state::add_to_vpc_db(pds_vpc_key_t *key, pds_vpc_spec_t *spec) {
     ADD_TO_DB(vpc, key, spec);
 }
 
-pds_vcn_spec_t *
-agent_state::find_in_vpc_db(pds_vcn_key_t *key) {
+pds_vpc_spec_t *
+agent_state::find_in_vpc_db(pds_vpc_key_t *key) {
     FIND_IN_DB(vpc, key);
 }
 
@@ -264,7 +264,7 @@ agent_state::vpc_db_walk(vpc_walk_cb_t cb, void *ctxt) {
 }
 
 bool
-agent_state::del_from_vpc_db(pds_vcn_key_t *key) {
+agent_state::del_from_vpc_db(pds_vpc_key_t *key) {
     DEL_FROM_DB(vpc, key);
 }
 

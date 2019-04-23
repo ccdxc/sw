@@ -38,8 +38,8 @@ pds_agent_route_table_api_spec_fill (pds_route_table_spec_t *api_spec,
             api_spec->routes[i].nh_type = PDS_NH_TYPE_TEP;
             break;
         case pds::Route::kVPCId:
-            api_spec->routes[i].vcn.id = proto_route.vpcid();
-            api_spec->routes[i].nh_type = PDS_NH_TYPE_PEER_VCN;
+            api_spec->routes[i].vpc.id = proto_route.vpcid();
+            api_spec->routes[i].nh_type = PDS_NH_TYPE_PEER_VPC;
             break;
         default:
             api_spec->routes[i].nh_type = PDS_NH_TYPE_BLACKHOLE;

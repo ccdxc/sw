@@ -14,7 +14,7 @@
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds.hpp"
-#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vpc.hpp"
 
 /// \defgroup PDS_MIRROR    mirrir session APIs
 /// @{
@@ -35,7 +35,7 @@ typedef struct pds_rspan_spec_s {
 
 ///< \brief    ERSPAN configuration
 typedef struct pds_erspan_spec_s {
-    pds_vcn_key_t vcn;    ///< vcn of the destination IP
+    pds_vpc_key_t vpc;    ///< vpc of the destination IP
     ip_addr_t dst_ip;     ///< IP address of ERSPAN destination
     ip_addr_t src_ip;     ///< IP address of ERSPAN source
     uint32_t dscp;        ///< DSCP value to use in the packet

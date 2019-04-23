@@ -15,7 +15,7 @@ local_vnic_info_tx:
     bcf             [c1], local_vnic_info_tx_error
     phvwr.c1        p.control_metadata_p4i_drop_reason[P4I_DROP_SRC_MAC_ZERO], 1
     phvwr           p.vnic_metadata_local_vnic_tag, DATA.local_vnic_tag
-    phvwr           p.vnic_metadata_vcn_id, DATA.vcn_id
+    phvwr           p.vnic_metadata_vpc_id, DATA.vpc_id
     seq             c1, DATA.mirror_en, TRUE
     phvwr.c1        p.control_metadata_mirror_session, DATA.mirror_session
 

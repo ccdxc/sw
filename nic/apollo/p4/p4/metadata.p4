@@ -21,7 +21,7 @@ header_type key_metadata_t {
 header_type vnic_metadata_t {
     fields {
         local_vnic_tag      : 16;
-        vcn_id              : 16;
+        vpc_id              : 16;
         skip_src_dst_check  : 1;
         vr_mac              : 48;
         overlay_mac         : 48;
@@ -101,7 +101,7 @@ header_type scratch_metadata_t {
         class_id            : 8;
         addr                : 32;
         local_vnic_tag      : 10;
-        vcn_id              : 10;
+        vpc_id              : 10;
         drop                : 1;
         mytep_ip            : 32;
         mytep_macsa         : 48;

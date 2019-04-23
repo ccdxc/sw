@@ -20,7 +20,7 @@
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
-#include "nic/apollo/api/vcn.hpp"
+#include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
 

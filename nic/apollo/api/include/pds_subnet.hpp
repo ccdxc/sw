@@ -14,7 +14,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds.hpp"
-#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 
@@ -22,10 +22,10 @@
 /// @{
 
 // TODO: we have to confirm this number !!!
-#define PDS_MAX_SUBNET (5 * PDS_MAX_VCN)
+#define PDS_MAX_SUBNET (5 * PDS_MAX_VPC)
 
 /// \brief Subnet key
-/// \remark subnet id is not scoped under a vcn, it is globally unique id
+/// \remark subnet id is not scoped under a vpc, it is globally unique id
 typedef struct pds_subnet_key_s {
     pds_subnet_id_t id;    ///< Subnet ID
 } __PACK__ pds_subnet_key_t;
@@ -33,7 +33,7 @@ typedef struct pds_subnet_key_s {
 /// \brief Subnet specification
 typedef struct pds_subnet_spec_s {
     pds_subnet_key_t key;                    ///< key
-    pds_vcn_key_t vcn;                       ///< VCN key
+    pds_vpc_key_t vpc;                       ///< VPC key
     ipv4_prefix_t v4_pfx;                    ///< IPv4 CIDR block
     ip_prefix_t v6_pfx;                      ///< IPv6 CIDR block
     ipv4_addr_t v4_vr_ip;                    ///< IPv4 virtual router IP
@@ -71,8 +71,8 @@ typedef struct pds_subnet_info_s {
 /// \return #SDK_RET_OK on success, failure status code on error
 ///
 /// \remark
-///  - A valid VCN id should be used
-///  - Subnet prefix passed should be valid as per VCN prefix
+///  - A valid VPC id should be used
+///  - Subnet prefix passed should be valid as per VPC prefix
 ///  - Subnet prefix should not overlap with any other subnet
 ///  - Subnet with same id should not be created again
 ///  - Any other validation that is expected on the subnet should be done

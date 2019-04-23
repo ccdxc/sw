@@ -54,10 +54,10 @@ pds_subnet_status_fill (subnet_entry *entry, pds_subnet_status_t *status)
 static inline sdk::sdk_ret_t
 pds_subnet_spec_fill (subnet_entry *entry, pds_subnet_spec_t *spec)
 {
-    pds_vcn_key_t vcn = {};
+    pds_vpc_key_t vpc = {};
 
-    vcn = entry->vcn();
-    spec->vcn.id = vcn.id;
+    vpc = entry->vpc();
+    spec->vpc.id = vpc.id;
     spec->v4_route_table = entry->v4_route_table();
     spec->v6_route_table = entry->v6_route_table();
     spec->ing_v4_policy = entry->ing_v4_policy();

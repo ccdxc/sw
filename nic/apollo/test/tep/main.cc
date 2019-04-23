@@ -242,7 +242,7 @@ TEST_F(tep_test, tep_workflow5) {
         sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
-/// \brief Create maximum number of VCNs in two batches
+/// \brief Create maximum number of VPCs in two batches
 /// [ Create SetMax ] - [ Create SetMax ] - Read
 TEST_F(tep_test, tep_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};

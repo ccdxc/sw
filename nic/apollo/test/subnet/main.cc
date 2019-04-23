@@ -14,7 +14,7 @@
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"
-#include "nic/apollo/test/utils/vcn.hpp"
+#include "nic/apollo/test/utils/vpc.hpp"
 
 using std::cerr;
 using std::cout;
@@ -44,20 +44,20 @@ protected:
         pds_test_base::SetUpTestCase(params);
 
         pds_batch_params_t batch_params = {0};
-        vcn_util vcn_obj(1, "10.0.0.0/8");
+        vpc_util vpc_obj(1, "10.0.0.0/8");
 
         batch_params.epoch = ++g_batch_epoch;
         ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-        ASSERT_TRUE(vcn_obj.create() == sdk::SDK_RET_OK);
+        ASSERT_TRUE(vpc_obj.create() == sdk::SDK_RET_OK);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
     }
     static void TearDownTestCase() {
         pds_batch_params_t batch_params = {0};
-        vcn_util vcn_obj(1, "10.0.0.0/8");
+        vpc_util vpc_obj(1, "10.0.0.0/8");
 
         batch_params.epoch = ++g_batch_epoch;
         ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-        ASSERT_TRUE(vcn_obj.del() == sdk::SDK_RET_OK);
+        ASSERT_TRUE(vpc_obj.del() == sdk::SDK_RET_OK);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
         pds_test_base::TearDownTestCase();
@@ -79,15 +79,15 @@ TEST_F(subnet, subnet_workflow_1) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     std::string subnet_start_addr = "10.0.0.0/16";
-    pds_vcn_key_t vcn_key = {};
+    pds_vpc_key_t vpc_key = {};
 
     key.id = 1;
-    vcn_key.id = 1;
+    vpc_key.id = 1;
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, subnet_start_addr,
+    ASSERT_TRUE(subnet_util::many_create(key, vpc_key, subnet_start_addr,
                                          k_max_subnet) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key, k_max_subnet) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
@@ -103,19 +103,19 @@ TEST_F(subnet, subnet_workflow_1) {
 TEST_F(subnet, DISABLED_subnet_workflow_2) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
-    pds_vcn_key_t vcn_key = {};
+    pds_vpc_key_t vpc_key = {};
     std::string subnet_start_addr = "10.0.0.0/16";
 
     key.id = 1;
-    vcn_key.id = 1;
+    vpc_key.id = 1;
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, subnet_start_addr,
+    ASSERT_TRUE(subnet_util::many_create(key, vpc_key, subnet_start_addr,
                                          k_max_subnet) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key, k_max_subnet) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, subnet_start_addr,
+    ASSERT_TRUE(subnet_util::many_create(key, vpc_key, subnet_start_addr,
                                          k_max_subnet) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
@@ -143,9 +143,9 @@ TEST_F(subnet, subnet_workflow_3) {
     std::string subnet_start_addr2 = "30.0.0.0/16";
     std::string subnet_start_addr3 = "60.0.0.0/16";
     uint32_t num_subnets = 20;
-    pds_vcn_key_t vcn_key = {};
+    pds_vpc_key_t vpc_key = {};
 
-    vcn_key.id = 1;
+    vpc_key.id = 1;
     key1.id = 10;
     key2.id = 40;
     key3.id = 70;
@@ -153,12 +153,12 @@ TEST_F(subnet, subnet_workflow_3) {
     // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key1, vcn_key, subnet_start_addr1,
+    ASSERT_TRUE(subnet_util::many_create(key1, vpc_key, subnet_start_addr1,
                                          num_subnets) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key2, vcn_key, subnet_start_addr2,
+    ASSERT_TRUE(subnet_util::many_create(key2, vpc_key, subnet_start_addr2,
                                          num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key1, num_subnets) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key3, vcn_key, subnet_start_addr3,
+    ASSERT_TRUE(subnet_util::many_create(key3, vpc_key, subnet_start_addr3,
                                          num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
@@ -183,22 +183,22 @@ TEST_F(subnet, subnet_workflow_3) {
 }
 
 /// \brief Create and delete max subnets in two batches
-/// The hardware should create and delete VCN correctly. Validate using reads
+/// The hardware should create and delete VPC correctly. Validate using reads
 /// at each batch end
 /// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
 TEST_F(subnet, subnet_workflow_4) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     std::string start_addr = "10.0.0.0/16";
-    pds_vcn_key_t vcn_key = {};
+    pds_vpc_key_t vpc_key = {};
 
     key.id = 1;
-    vcn_key.id = 1;
+    vpc_key.id = 1;
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
+    ASSERT_TRUE(subnet_util::many_create(key, vpc_key, start_addr,
                                          k_max_subnet) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
@@ -223,19 +223,19 @@ TEST_F(subnet, subnet_workflow_5) {
     std::string subnet_start_addr2 = "30.0.0.0/16";
     std::string subnet_start_addr3 = "60.0.0.0/16";
     uint32_t num_subnets = 20;
-    pds_vcn_key_t vcn_key = {};
+    pds_vpc_key_t vpc_key = {};
 
     key1.id = 10;
     key2.id = 40;
     key3.id = 70;
-    vcn_key.id = 1;
+    vpc_key.id = 1;
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key1, vcn_key, subnet_start_addr1,
+    ASSERT_TRUE(subnet_util::many_create(key1, vpc_key, subnet_start_addr1,
                                          num_subnets) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key2, vcn_key, subnet_start_addr2,
+    ASSERT_TRUE(subnet_util::many_create(key2, vpc_key, subnet_start_addr2,
                                          num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
@@ -247,7 +247,7 @@ TEST_F(subnet, subnet_workflow_5) {
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_delete(key1, num_subnets) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key3, vcn_key, subnet_start_addr3,
+    ASSERT_TRUE(subnet_util::many_create(key3, vpc_key, subnet_start_addr3,
                                          num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
@@ -271,21 +271,21 @@ TEST_F(subnet, subnet_workflow_5) {
         key3, num_subnets, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
-/// \brief Create maximum number of VCNs in two batches
+/// \brief Create maximum number of VPCs in two batches
 /// [ Create SetMax ] - [ Create SetMax ] - Read
 TEST_F(subnet, subnet_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     std::string start_addr = "10.0.0.0/16";
-    pds_vcn_key_t vcn_key = {};
+    pds_vpc_key_t vpc_key = {};
 
     key.id = 1;
-    vcn_key.id = 1;
+    vpc_key.id = 1;
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
+    ASSERT_TRUE(subnet_util::many_create(key, vpc_key, start_addr,
                                          k_max_subnet) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
@@ -294,7 +294,7 @@ TEST_F(subnet, subnet_workflow_neg_1) {
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key, vcn_key, start_addr,
+    ASSERT_TRUE(subnet_util::many_create(key, vpc_key, start_addr,
                                          k_max_subnet) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
@@ -321,16 +321,16 @@ TEST_F(subnet, subnet_workflow_neg_2) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     std::string start_addr = "10.0.0.0/16";
-    pds_vcn_key_t vcn_key = {};
+    pds_vpc_key_t vpc_key = {};
 
     key.id = 1;
-    vcn_key.id = 1;
+    vpc_key.id = 1;
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(subnet_util::many_create(
-        key, vcn_key, start_addr, k_max_subnet + 1) == sdk::SDK_RET_OK);
+        key, vpc_key, start_addr, k_max_subnet + 1) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
@@ -356,10 +356,10 @@ TEST_F(subnet, subnet_workflow_neg_3b) {
     pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {};
     std::string start_addr = "10.0.0.0/16";
-    pds_vcn_key_t vcn_key = {};
+    pds_vpc_key_t vpc_key = {};
 
     key.id = 1;
-    vcn_key.id = 1;
+    vpc_key.id = 1;
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
@@ -377,16 +377,16 @@ TEST_F(subnet, subnet_workflow_neg_4) {
     std::string subnet_start_addr1 = "10.0.0.0/16";
     std::string subnet_start_addr2 = "40.0.0.0/16";
     uint32_t num_subnets = 20;
-    pds_vcn_key_t vcn_key = {};
+    pds_vpc_key_t vpc_key = {};
 
-    vcn_key.id = 1;
+    vpc_key.id = 1;
     key1.id = 10;
     key2.id = 40;
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(subnet_util::many_create(key1, vcn_key, subnet_start_addr1,
+    ASSERT_TRUE(subnet_util::many_create(key1, vpc_key, subnet_start_addr1,
                                          num_subnets) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 

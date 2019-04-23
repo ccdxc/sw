@@ -29,7 +29,7 @@ pkt_dma_to_egress:
                                  predicate_header_pad0, \
                                  predicate_header_direction, \
                                  txdma_to_p4e_header_p4plus_app_id, \
-                                 txdma_to_p4e_header_vcn_id)
+                                 txdma_to_p4e_header_vpc_id)
 
 pkt_dma_common:
     // mem2pkt has an implicit fence. all subsequent dma is blocked

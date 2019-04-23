@@ -60,7 +60,7 @@ policy_delete (pds_policy_key_t *key)
             return ret;
         }
     }
-    if (spec->type == PDS_VCN_TYPE_SUBSTRATE) {
+    if (spec->type == PDS_VPC_TYPE_SUBSTRATE) {
         agent_state::state()->substrate_policy_id_reset();
     }
     if (agent_state::state()->del_from_policy_db(key) == false) {

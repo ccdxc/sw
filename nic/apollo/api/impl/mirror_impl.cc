@@ -82,7 +82,7 @@ mirror_impl::release_resources(api_base *api_obj) {
 sdk_ret_t
 mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
-    vcn_entry *vcn;
+    vpc_entry *vpc;
     tep_entry *tep;
     mac_addr_t mac;
     pds_tep_key_t tep_key;
@@ -104,10 +104,10 @@ mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     case PDS_MIRROR_SESSION_TYPE_ERSPAN:
         mirror_data.action_id = MIRROR_ERSPAN_ID;
-        vcn = vcn_db()->find(&spec->erspan_spec.vcn);
+        vpc = vpc_db()->find(&spec->erspan_spec.vpc);
 
-        // if the vcn is substrate VCN, dst IP must be a known TEP
-        if (vcn->type() == PDS_VCN_TYPE_SUBSTRATE) {
+        // if the vpc is substrate VPC, dst IP must be a known TEP
+        if (vpc->type() == PDS_VPC_TYPE_SUBSTRATE) {
             tep_key.ip_addr = spec->erspan_spec.dst_ip.addr.v4_addr;
             if ((tep = tep_db()->find(&tep_key)) == NULL) {
                 PDS_TRACE_ERR("Unknown TEP IP %s", ipv4addr2str(tep_key.ip_addr));
@@ -124,12 +124,12 @@ mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             //mirror_data.erspan_action.dip = ;
         } else {
 #if 0
-            mapping_key.vcn = spec->erspan_spec.vcn;
+            mapping_key.vpc = spec->erspan_spec.vpc;
             mapping_key.ip_addr = spec->erspan_spec.dst_ip;
             mapping = mapping_entry::build(&mapping_key);
             if (mapping == NULL) {
                 PDS_TRACE_ERR("Failed to find mapping entry for (%u, %s)",
-                              mapping_key.vcn.id, ipaddr2str(&mapping_key.ip_addr));
+                              mapping_key.vpc.id, ipaddr2str(&mapping_key.ip_addr));
                 return SDK_RET_INVALID_ARG;
             }
 

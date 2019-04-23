@@ -1,6 +1,6 @@
 # Configuration Spec
 meta:
-    id: VCN
+    id: VPC
 
 vnics:
 

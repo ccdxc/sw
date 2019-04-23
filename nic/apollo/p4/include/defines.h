@@ -53,7 +53,7 @@
 #define P4I_DROP_FLOW_HIT               5
 #define P4I_DROP_TEP_RX_DST_IP_MISMATCH 6
 #define P4I_DROP_RVPATH_SRC_IP_MISMATCH 7
-#define P4I_DROP_RVPATH_VCN_MISMATCH    8
+#define P4I_DROP_RVPATH_VPC_MISMATCH    8
 #define P4I_DROP_NACL                   9
 #define P4I_DROP_REASON_MIN             P4I_DROP_SRC_MAC_ZERO
 #define P4I_DROP_REASON_MAX             P4I_DROP_NACL
@@ -72,7 +72,7 @@
 /* route result type and bit position                                        */
 /*****************************************************************************/
 #define ROUTE_RESULT_TYPE_NEXTHOP       0
-#define ROUTE_RESULT_TYPE_VCN           1
+#define ROUTE_RESULT_TYPE_VPC           1
 #define ROUTE_RESULT_BIT_POS            15
 
 /*****************************************************************************/

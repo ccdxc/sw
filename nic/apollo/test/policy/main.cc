@@ -111,7 +111,7 @@ TEST_F(policy, policy_workflow_3) {
 }
 
 /// \brief Create and delete max policies in two batches
-/// The hardware should create and delete VCN correctly. Validate using reads
+/// The hardware should create and delete VPC correctly. Validate using reads
 /// at each batch end
 /// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
 TEST_F(policy, policy_workflow_4) {
@@ -124,7 +124,7 @@ TEST_F(policy, policy_workflow_5) {
 
 }
 
-/// \brief Create maximum number of VCNs in two batches
+/// \brief Create maximum number of VPCs in two batches
 /// [ Create SetMax ] - [ Create SetMax ] - Read
 TEST_F(policy, policy_workflow_neg_1) {
 

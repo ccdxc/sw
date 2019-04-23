@@ -181,7 +181,7 @@ security_policy_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
         /**
          * need to walk all vnics AND subnets to see which of them are using
          * this policy table and then walk all the vnics that are part of the
-         * vcns and subnets and write new epoch data
+         * vpcs and subnets and write new epoch data
          */
         return SDK_RET_ERR;
         break;

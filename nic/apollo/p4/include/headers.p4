@@ -229,7 +229,7 @@ header_type p4_to_txdma_header_t {
         pad2            : 2;
         payload_len     : 14;
         lpm_dst         : 128;
-        vcn_id          : 16;
+        vpc_id          : 16;
     }
 }
 
@@ -240,7 +240,7 @@ header_type txdma_to_p4e_header_t {
         pad1            : 6;
         nexthop_index   : 10;
         pad2            : 6;
-        vcn_id          : 10;
+        vpc_id          : 10;
     }
 }
 

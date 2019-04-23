@@ -169,14 +169,14 @@ create_subnet_grpc (pds_subnet_spec_t *subnet)
 }
 
 sdk_ret_t
-create_vcn_grpc (pds_vcn_spec_t *vcn)
+create_vpc_grpc (pds_vpc_spec_t *vpc)
 {
     ClientContext   context;
     VPCResponse     response;
     Status          ret_status;
 
-    populate_vpc_request(&g_vpc_req, vcn);
-    if ((g_vpc_req.request_size() >= APP_GRPC_BATCH_COUNT) || !vcn) {
+    populate_vpc_request(&g_vpc_req, vpc);
+    if ((g_vpc_req.request_size() >= APP_GRPC_BATCH_COUNT) || !vpc) {
         ret_status = g_vpc_stub_->VPCCreate(&context, g_vpc_req, &response);
         if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
             printf("%s failed!\n", __FUNCTION__);

@@ -19,7 +19,7 @@
 #include "gen/proto/mirror.grpc.pb.h"
 #include "gen/proto/types.grpc.pb.h"
 #include "nic/apollo/api/include/pds_tep.hpp"
-#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
@@ -181,8 +181,8 @@ populate_route_table_request (RouteTableRequest *req,
     for (uint32_t i = 0; i < rt->num_routes; i++) {
         Route *route = spec->add_routes();
         ip_pfx_to_spec(route->mutable_prefix(), &rt->routes[i].prefix);
-        if (rt->routes[i].nh_type == PDS_NH_TYPE_PEER_VCN) {
-            route->set_vpcid(rt->routes[i].vcn.id);
+        if (rt->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
+            route->set_vpcid(rt->routes[i].vpc.id);
         } else if (rt->routes[i].nh_type == PDS_NH_TYPE_TEP) {
             ip_addr_to_spec(route->mutable_nexthop(), &rt->routes[i].nh_ip);
         }
@@ -241,7 +241,7 @@ populate_local_mapping_request (MappingRequest *req,
     }
 
     MappingSpec *spec = req->add_request();
-    spec->mutable_id()->set_vpcid(local_spec->key.vcn.id);
+    spec->mutable_id()->set_vpcid(local_spec->key.vpc.id);
     ip_addr_to_spec(spec->mutable_id()->mutable_ipaddr(),
                     &local_spec->key.ip_addr);
     spec->set_subnetid(local_spec->subnet.id);
@@ -265,7 +265,7 @@ populate_remote_mapping_request (MappingRequest *req,
         return;
 
     MappingSpec *spec = req->add_request();
-    spec->mutable_id()->set_vpcid(remote_spec->key.vcn.id);
+    spec->mutable_id()->set_vpcid(remote_spec->key.vpc.id);
     ip_addr_to_spec(spec->mutable_id()->mutable_ipaddr(),
                     &remote_spec->key.ip_addr);
     spec->set_subnetid(remote_spec->subnet.id);
@@ -282,7 +282,7 @@ populate_vnic_request (VnicRequest *req, pds_vnic_spec_t *vnic)
         return;
 
     VnicSpec *spec = req->add_request();
-    spec->set_vpcid(vnic->vcn.id);
+    spec->set_vpcid(vnic->vpc.id);
     spec->set_subnetid(vnic->subnet.id);
     spec->set_vnicid(vnic->key.id);
     pds_encap_to_proto_encap(spec->mutable_vnicencap(), &vnic->vnic_encap);
@@ -305,7 +305,7 @@ populate_subnet_request (SubnetRequest *req, pds_subnet_spec_t *subnet)
     spec->set_ipv4virtualrouterip(subnet->v4_vr_ip);
     spec->set_ipv6virtualrouterip(subnet->v6_vr_ip.addr.v6_addr.addr8, IP6_ADDR8_LEN);
     spec->set_id(subnet->key.id);
-    spec->set_vpcid(subnet->vcn.id);
+    spec->set_vpcid(subnet->vpc.id);
     spec->set_virtualroutermac(MAC_TO_UINT64(subnet->vr_mac));
     spec->set_v4routetableid(subnet->v4_route_table.id);
     spec->set_v6routetableid(subnet->v6_route_table.id);
@@ -318,19 +318,19 @@ populate_subnet_request (SubnetRequest *req, pds_subnet_spec_t *subnet)
 }
 
 static void
-populate_vpc_request (VPCRequest *req, pds_vcn_spec_t *vcn)
+populate_vpc_request (VPCRequest *req, pds_vpc_spec_t *vpc)
 {
-    if (!vcn || !req) {
+    if (!vpc || !req) {
         return;
     }
 
     VPCSpec *spec = req->add_request();
-    ipv4_pfx_to_spec(spec->mutable_v4prefix(), &vcn->v4_pfx);
-    ip_pfx_to_spec(spec->mutable_v6prefix(), &vcn->v6_pfx);
-    spec->set_id(vcn->key.id);
-    if (vcn->type == PDS_VCN_TYPE_TENANT) {
+    ipv4_pfx_to_spec(spec->mutable_v4prefix(), &vpc->v4_pfx);
+    ip_pfx_to_spec(spec->mutable_v6prefix(), &vpc->v6_pfx);
+    spec->set_id(vpc->key.id);
+    if (vpc->type == PDS_VPC_TYPE_TENANT) {
         spec->set_type(pds::VPC_TYPE_TENANT);
-    } else if (vcn->type == PDS_VCN_TYPE_SUBSTRATE) {
+    } else if (vpc->type == PDS_VPC_TYPE_SUBSTRATE) {
         spec->set_type(pds::VPC_TYPE_SUBSTRATE);
     }
 

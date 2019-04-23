@@ -18,7 +18,7 @@ pds_agent_local_mapping_api_spec_fill (pds_local_mapping_spec_t *local_spec,
     pds::MappingKey key;
 
     key = proto_spec.id();
-    local_spec->key.vcn.id = key.vpcid();
+    local_spec->key.vpc.id = key.vpcid();
     ipaddr_proto_spec_to_api_spec(&local_spec->key.ip_addr, key.ipaddr());
     local_spec->subnet.id = proto_spec.subnetid();
     local_spec->vnic.id = proto_spec.vnicid();
@@ -41,7 +41,7 @@ pds_agent_remote_mapping_api_spec_fill (pds_remote_mapping_spec_t *remote_spec,
     pds::MappingKey key;
 
     key = proto_spec.id();
-    remote_spec->key.vcn.id = key.vpcid();
+    remote_spec->key.vpc.id = key.vpcid();
     ipaddr_proto_spec_to_api_spec(&remote_spec->key.ip_addr, key.ipaddr());
     remote_spec->subnet.id = proto_spec.subnetid();
     MAC_UINT64_TO_ADDR(remote_spec->vnic_mac, proto_spec.macaddr());
@@ -63,14 +63,14 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
                 pds_agent_local_mapping_api_spec_fill (&local_spec,
                                                        proto_req->request(i));
 #ifdef PDS_FLOW_TEST
-                g_flow_test_obj->add_local_ep(local_spec.key.vcn.id,
+                g_flow_test_obj->add_local_ep(local_spec.key.vpc.id,
                                               local_spec.key.ip_addr);
 #endif
             } else {
                 pds_agent_remote_mapping_api_spec_fill (&remote_spec,
                                                         proto_req->request(i));
 #ifdef PDS_FLOW_TEST
-                g_flow_test_obj->add_remote_ep(remote_spec.key.vcn.id,
+                g_flow_test_obj->add_remote_ep(remote_spec.key.vpc.id,
                                                remote_spec.key.ip_addr);
 #endif
             }

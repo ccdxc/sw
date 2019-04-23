@@ -18,7 +18,7 @@ namespace impl {
 typedef enum impl_obj_id_e {
     IMPL_OBJ_ID_NONE,
     IMPL_OBJ_ID_DEVICE,
-    IMPL_OBJ_ID_VCN,
+    IMPL_OBJ_ID_VPC,
     IMPL_OBJ_ID_SUBNET,
     IMPL_OBJ_ID_TEP,
     IMPL_OBJ_ID_VNIC,

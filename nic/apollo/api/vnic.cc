@@ -79,8 +79,8 @@ sdk_ret_t
 vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t    *spec = &obj_ctxt->api_params->vnic_spec;
 
-    PDS_TRACE_DEBUG("Programming vnic %u, vcn %u, subnet %u, mac %s, "
-                    "vnic encap %s, fabric encap %s", key_.id, spec->vcn.id,
+    PDS_TRACE_DEBUG("Programming vnic %u, vpc %u, subnet %u, mac %s, "
+                    "vnic encap %s, fabric encap %s", key_.id, spec->vpc.id,
                     spec->subnet.id, macaddr2str(spec->mac_addr),
                     pdsencap2str(spec->vnic_encap),
                     pdsencap2str(spec->fabric_encap));

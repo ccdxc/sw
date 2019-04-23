@@ -4,42 +4,42 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// vcn entry handling
+/// vpc entry handling
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __API_VCN_HPP__
-#define __API_VCN_HPP__
+#ifndef __API_VPC_HPP__
+#define __API_VPC_HPP__
 
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
-#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vpc.hpp"
 
 namespace api {
 
 // forward declaration
-class vcn_state;
+class vpc_state;
 
-/// \defgroup PDS_VCN_ENTRY - vcn entry functionality
-/// \ingroup PDS_VCN
+/// \defgroup PDS_VPC_ENTRY - vpc entry functionality
+/// \ingroup PDS_VPC
 /// @{
 
-/// \brief    vcn entry
-class vcn_entry : public api_base {
+/// \brief    vpc entry
+class vpc_entry : public api_base {
 public:
-    /// \brief          factory method to allocate and initialize a vcn entry
-    /// \param[in]      pds_vcn    vcn information
-    /// \return         new instance of vcn or NULL, in case of error
-    static vcn_entry *factory(pds_vcn_spec_t *pds_vcn);
+    /// \brief          factory method to allocate and initialize a vpc entry
+    /// \param[in]      pds_vpc    vpc information
+    /// \return         new instance of vpc or NULL, in case of error
+    static vpc_entry *factory(pds_vpc_spec_t *pds_vpc);
 
-    /// \brief          release all the s/w state associate with the given vcn,
+    /// \brief          release all the s/w state associate with the given vpc,
     ///                 if any, and free the memory
-    /// \param[in]      vcn     vcn to be freed
+    /// \param[in]      vpc     vpc to be freed
     /// \NOTE: h/w entries should have been cleaned up (by calling
     ///        impl->cleanup_hw() before calling this
-    static void destroy(vcn_entry *vcn);
+    static void destroy(vpc_entry *vpc);
 
-    /// \brief          initialize vcn entry with the given config
+    /// \brief          initialize vpc entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
@@ -92,11 +92,11 @@ public:
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief          add given vcn to the database
+    /// \brief          add given vpc to the database
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_to_db(void) override;
 
-    /// \brief          delete given vcn from the database
+    /// \brief          delete given vpc from the database
     ///
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t del_from_db(void) override;
@@ -114,51 +114,51 @@ public:
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "vcn-" + std::to_string(key_.id);
+        return "vpc-" + std::to_string(key_.id);
     }
 
-    /// \brief          helper function to get key given vcn entry
-    /// \param          entry    pointer to vcn instance
-    /// \return         pointer to the vcn instance's key
-    static void *vcn_key_func_get(void *entry) {
-        vcn_entry *vcn = (vcn_entry *)entry;
-        return (void *)&(vcn->key_);
+    /// \brief          helper function to get key given vpc entry
+    /// \param          entry    pointer to vpc instance
+    /// \return         pointer to the vpc instance's key
+    static void *vpc_key_func_get(void *entry) {
+        vpc_entry *vpc = (vpc_entry *)entry;
+        return (void *)&(vpc->key_);
     }
 
-    /// \brief          helper function to compute hash value for given vcn id
-    /// \param[in]      key        vcn's key
+    /// \brief          helper function to compute hash value for given vpc id
+    /// \param[in]      key        vpc's key
     /// \param[in]      ht_size    hash table size
     /// \return         hash value
-    static uint32_t vcn_hash_func_compute(void *key, uint32_t ht_size) {
-        return hash_algo::fnv_hash(key, sizeof(pds_vcn_key_t)) % ht_size;
+    static uint32_t vpc_hash_func_compute(void *key, uint32_t ht_size) {
+        return hash_algo::fnv_hash(key, sizeof(pds_vpc_key_t)) % ht_size;
     }
 
-    /// \brief          helper function to compare two vcn keys
-    /// \param[in]      key1        pointer to vcn's key
-    /// \param[in]      key2        pointer to vcn's key
+    /// \brief          helper function to compare two vpc keys
+    /// \param[in]      key1        pointer to vpc's key
+    /// \param[in]      key2        pointer to vpc's key
     /// \return         0 if keys are same or else non-zero value
-    static bool vcn_key_func_compare(void *key1, void *key2) {
+    static bool vpc_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(pds_vcn_key_t))) {
+        if (!memcmp(key1, key2, sizeof(pds_vpc_key_t))) {
             return true;
         }
         return false;
     }
 
-    /// \brief          return the type of VCN
-    /// \return         PDS_VCN_TYPE_SUBSTRATE or PDS_VCN_TYPE_TENANT
-    pds_vcn_type_t type(void) const { return type_; }
+    /// \brief          return the type of VPC
+    /// \return         PDS_VPC_TYPE_SUBSTRATE or PDS_VPC_TYPE_TENANT
+    pds_vpc_type_t type(void) const { return type_; }
 
-    /// \brief          return h/w index for this vcn
-    /// \return         h/w table index for this vcn
+    /// \brief          return h/w index for this vpc
+    /// \return         h/w table index for this vpc
     uint16_t hw_id(void) { return hw_id_; }
 
 private:
     /// \brief constructor
-    vcn_entry();
+    vpc_entry();
 
     /// \brief destructor
-    ~vcn_entry();
+    ~vpc_entry();
 
     /// \brief    free h/w resources used by this object, if any
     ///           (this API is invoked during object deletes)
@@ -166,20 +166,20 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_vcn_key_t key_;        ///< vcn key
-    pds_vcn_type_t type_;      ///< vcn type
+    pds_vpc_key_t key_;        ///< vpc key
+    pds_vpc_type_t type_;      ///< vpc type
     ht_ctxt_t ht_ctxt_;        ///< hash table context
 
     // P4 datapath specific state
     uint16_t hw_id_;           ///< hardware id
 
-    friend class vcn_state;    ///< vcn_state is friend of vcn_entry
+    friend class vpc_state;    ///< vpc_state is friend of vpc_entry
 } __PACK__;
 
-/// \@}    // end of PDS_VCN_ENTRY
+/// \@}    // end of PDS_VPC_ENTRY
 
 }    // namespace api
 
-using api::vcn_entry;
+using api::vpc_entry;
 
-#endif    // __API_VCN_HPP__
+#endif    // __API_VPC_HPP__

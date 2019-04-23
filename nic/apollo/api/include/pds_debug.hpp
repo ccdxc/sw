@@ -17,7 +17,7 @@
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/platform/capri/capri_tm_rw.hpp"
 
-/// \defgroup PDS_VCN VCN API
+/// \defgroup PDS_VPC VPC API
 /// @{
 
 typedef enum pds_clock_freq_e {

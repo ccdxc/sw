@@ -58,7 +58,7 @@ header p4_to_arm_header_t p4_to_arm;
 
 @pragma synthetic_header
 @pragma pa_field_union ingress p4_to_txdma_header.lpm_dst           key_metadata.dst
-@pragma pa_field_union ingress p4_to_txdma_header.vcn_id            vnic_metadata.vcn_id
+@pragma pa_field_union ingress p4_to_txdma_header.vpc_id            vnic_metadata.vpc_id
 header p4_to_txdma_header_t p4_to_txdma_header;
 
 header txdma_to_p4e_header_t txdma_to_p4e_header;

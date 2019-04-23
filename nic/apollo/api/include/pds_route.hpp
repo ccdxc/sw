@@ -14,7 +14,7 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/include/sdk/mem.hpp"
 #include "nic/apollo/api/include/pds.hpp"
-#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vpc.hpp"
 
 /// \defgroup PDS_ROUTE Route API
 /// @{
@@ -28,7 +28,7 @@ typedef enum pds_nh_type_e {
     PDS_NH_TYPE_NONE      = 0,
     PDS_NH_TYPE_BLACKHOLE = 1,    ///< blackhole/drop nexthop
     PDS_NH_TYPE_TEP       = 2,    ///< any of the possible types of TEP
-    PDS_NH_TYPE_PEER_VCN  = 3,    ///< VPC id of the peer VPC
+    PDS_NH_TYPE_PEER_VPC  = 3,    ///< VPC id of the peer VPC
 } pds_nh_type_t;
 
 /// \brief route
@@ -37,14 +37,14 @@ typedef struct pds_route_s {
     pds_nh_type_t        nh_type;    ///< nexthop type
     union {
         ip_addr_t        nh_ip;      ///< nexthop IP address
-        pds_vcn_key_t    vcn;        ///< peer vcn id, in case of vcn peering
+        pds_vpc_key_t    vpc;        ///< peer vpc id, in case of vpc peering
     };
 } __PACK__ pds_route_t;
 
 /// \brief route table key
 /// \remark
-///  - Route table id is not scoped under vcn, it is unique on
-//     the device (across VCNs and IPv4/IPv6 route tables)
+///  - Route table id is not scoped under vpc, it is unique on
+//     the device (across VPCs and IPv4/IPv6 route tables)
 typedef struct pds_route_table_key_s {
     pds_route_table_id_t    id;    ///< route table id
 } __PACK__ pds_route_table_key_t;

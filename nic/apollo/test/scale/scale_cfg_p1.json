@@ -28,7 +28,7 @@
             "count" : "4"
         },
         {
-            "_comment_" : "All VCNs have same prefix",
+            "_comment_" : "All VPCs have same prefix",
             "kind" : "vpc",
             "count" : "128",
             "prefix" : "2.0.0.0/8",

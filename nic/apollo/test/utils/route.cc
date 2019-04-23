@@ -16,7 +16,7 @@ namespace api_test {
 
 route_util::route_util() {
     this->nh_type = PDS_NH_TYPE_BLACKHOLE;
-    this->vcn_id = PDS_VCN_ID_INVALID;
+    this->vpc_id = PDS_VPC_ID_INVALID;
 }
 
 route_util::~route_util() {}
@@ -53,7 +53,7 @@ route_table_util::route_table_util(pds_route_table_id_t id,
     for (uint32_t i = 0; i < this->num_routes; ++i) {
         this->routes[i].ip_pfx = route_pfx;
         this->routes[i].nh_type = PDS_NH_TYPE_TEP;
-        this->routes[i].vcn_id = PDS_VCN_ID_INVALID;
+        this->routes[i].vpc_id = PDS_VPC_ID_INVALID;
         ip_prefix_ip_next(&route_pfx, &route_addr);
         route_pfx.addr = route_addr;
 

@@ -23,7 +23,7 @@ public:
     ip_prefix_t ip_pfx;      ///< route prefix
     ip_addr_t nh_ip;         ///< next hop IP
     pds_nh_type_t nh_type;   ///< nexthop type
-    pds_vcn_id_t vcn_id;     ///< vcn id
+    pds_vpc_id_t vpc_id;     ///< vpc id
 
     /// \brief Constructor
     route_util();

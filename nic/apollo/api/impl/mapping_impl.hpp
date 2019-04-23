@@ -14,7 +14,7 @@
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/mapping.hpp"
-#include "nic/apollo/api/vcn.hpp"
+#include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 
@@ -175,53 +175,53 @@ private:
     /**
      * @brief     reserve necessary entries in local mapping tables
      * @param[in] api_obj    API object being processed
-     * @param[in] vcn        VCN of this IP
+     * @param[in] vpc        VPC of this IP
      * @param[in] spec       IP mapping details
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t reserve_local_ip_mapping_resources_(api_base *api_obj,
-                                                  vcn_entry *vcn,
+                                                  vpc_entry *vpc,
                                                   pds_mapping_spec_t *spec);
 
     /**
      * @brief     add necessary entries to local mapping tables
-     * @param[in] vcn             VCN of this IP
+     * @param[in] vpc             VPC of this IP
      * @param[in] spec            IP mapping details
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t add_local_ip_mapping_entries_(vcn_entry *vcn,
+    sdk_ret_t add_local_ip_mapping_entries_(vpc_entry *vpc,
                                             pds_mapping_spec_t *spec);
 
     /**
      * @brief     reserve necessary entries in remote mapping tables
      * @param[in] api_obj    API object being processed
-     * @param[in] vcn        VCN of this IP
+     * @param[in] vpc        VPC of this IP
      * @param[in] spec       IP mapping details
      * @return    SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t reserve_remote_ip_mapping_resources_(api_base *api_obj,
-                                                   vcn_entry *vcn,
+                                                   vpc_entry *vpc,
                                                    pds_mapping_spec_t *spec);
 
     /**
      * @brief     add necessary entries to remote mapping tables
-     * @param[in] vcn             VCN of this IP
+     * @param[in] vpc             VPC of this IP
      * @param[in] subnet          subnet of this IP
      * @param[in] spec            IP mapping details
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t add_remote_vnic_mapping_rx_entries_(vcn_entry *vcn,
+    sdk_ret_t add_remote_vnic_mapping_rx_entries_(vpc_entry *vpc,
                                                   subnet_entry *subnet,
                                                   pds_mapping_spec_t *spec);
 
     /**
      * @brief     add necessary entries to REMOTE_VNIC_MAPPING_TX table
-     * @param[in] vcn             VCN of this IP
+     * @param[in] vpc             VPC of this IP
      * @param[in] subnet          subnet of this IP
      * @param[in] spec            IP mapping details
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t add_remote_vnic_mapping_tx_entries_(vcn_entry *vcn,
+    sdk_ret_t add_remote_vnic_mapping_tx_entries_(vpc_entry *vpc,
                                                   pds_mapping_spec_t *spec);
 
    /**
@@ -239,19 +239,19 @@ private:
 
    /**
      * @brief     Read the configured values from the local mapping tables
-     * @param[in]     vcn  pointer to the vcn entry
+     * @param[in]     vpc  pointer to the vpc entry
      * @param[in/out] spec pointer to the spec
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t read_local_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec);
+    sdk_ret_t read_local_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec);
 
    /**
      * @brief     Read the configured values from the local mapping tables
-     * @param[in]     vcn  pointer to the vcn entry
+     * @param[in]     vpc  pointer to the vpc entry
      * @param[in/out] spec pointer to the spec
      * @return    SDK_RET_OK on success, failure status code on error
      */
-    sdk_ret_t read_remote_mapping_(vcn_entry *vcn, pds_mapping_spec_t *spec);
+    sdk_ret_t read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec);
 
     /**
      * @brief    release all the resources reserved for local IP mapping

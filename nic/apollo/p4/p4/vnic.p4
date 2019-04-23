@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* VNIC mapping table (by VLAN)                                               */
 /******************************************************************************/
-action local_vnic_info_common(dir, src_mac, local_vnic_tag, vcn_id,
+action local_vnic_info_common(dir, src_mac, local_vnic_tag, vpc_id,
                               epoch1_valid, epoch1, skip_src_dst_check1,
                               lpm_v4addr1, lpm_v6addr1, sacl_v4addr1,
                               sacl_v6addr1, resource_group1, overlay_mac1,
@@ -53,9 +53,9 @@ action local_vnic_info_common(dir, src_mac, local_vnic_tag, vcn_id,
         modify_field(service_header.epoch, epoch2);
     }
     modify_field(scratch_metadata.local_vnic_tag, local_vnic_tag);
-    modify_field(scratch_metadata.vcn_id, vcn_id);
+    modify_field(scratch_metadata.vpc_id, vpc_id);
     modify_field(vnic_metadata.local_vnic_tag, scratch_metadata.local_vnic_tag);
-    modify_field(vnic_metadata.vcn_id, scratch_metadata.vcn_id);
+    modify_field(vnic_metadata.vpc_id, scratch_metadata.vpc_id);
 
     if (dir == TX_FROM_HOST) {
         if (src_mac != scratch_metadata.overlay_mac) {
@@ -66,7 +66,7 @@ action local_vnic_info_common(dir, src_mac, local_vnic_tag, vcn_id,
     }
 }
 
-action local_vnic_info_tx(local_vnic_tag, vcn_id,
+action local_vnic_info_tx(local_vnic_tag, vpc_id,
                           epoch1_valid, epoch1, skip_src_dst_check1,
                           lpm_v4addr1, lpm_v6addr1, sacl_v4addr1, sacl_v6addr1,
                           resource_group1, overlay_mac1,
@@ -87,7 +87,7 @@ action local_vnic_info_tx(local_vnic_tag, vcn_id,
     }
 
     local_vnic_info_common(TX_FROM_HOST, ethernet_1.srcAddr, local_vnic_tag,
-                           vcn_id, epoch1_valid, epoch1, skip_src_dst_check1,
+                           vpc_id, epoch1_valid, epoch1, skip_src_dst_check1,
                            lpm_v4addr1, lpm_v6addr1, sacl_v4addr1, sacl_v6addr1,
                            resource_group1, overlay_mac1,
                            epoch2_valid, epoch2, skip_src_dst_check2,
@@ -95,7 +95,7 @@ action local_vnic_info_tx(local_vnic_tag, vcn_id,
                            resource_group2, overlay_mac2);
 }
 
-action local_vnic_info_rx(local_vnic_tag, vcn_id,
+action local_vnic_info_rx(local_vnic_tag, vpc_id,
                           epoch1_valid, epoch1, skip_src_dst_check1,
                           sacl_v4addr1, sacl_v6addr1, resource_group1,
                           epoch2_valid, epoch2, skip_src_dst_check2,
@@ -114,7 +114,7 @@ action local_vnic_info_rx(local_vnic_tag, vcn_id,
     }
 
     modify_field(vnic_metadata.src_slot_id, mpls_src.label);
-    local_vnic_info_common(RX_FROM_SWITCH, 0, local_vnic_tag, vcn_id,
+    local_vnic_info_common(RX_FROM_SWITCH, 0, local_vnic_tag, vpc_id,
                            epoch1_valid, epoch1, skip_src_dst_check1, 0, 0,
                            sacl_v4addr1, sacl_v6addr1, resource_group1, 0,
                            epoch2_valid, epoch2, skip_src_dst_check2, 0, 0,

@@ -2,7 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // -----------------------------------------------------------------------------
 
-#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/vpc.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
@@ -11,7 +11,7 @@
 
 // Build VPC API spec from protobuf spec
 static inline void
-pds_agent_vpc_api_spec_fill (pds_vcn_spec_t *api_spec,
+pds_agent_vpc_api_spec_fill (pds_vpc_spec_t *api_spec,
                              const pds::VPCSpec &proto_spec)
 {
     pds::VPCType type;
@@ -19,9 +19,9 @@ pds_agent_vpc_api_spec_fill (pds_vcn_spec_t *api_spec,
     api_spec->key.id = proto_spec.id();
     type = proto_spec.type();
     if (type == pds::VPC_TYPE_TENANT) {
-        api_spec->type = PDS_VCN_TYPE_TENANT;
+        api_spec->type = PDS_VPC_TYPE_TENANT;
     } else if (type == pds::VPC_TYPE_SUBSTRATE) {
-        api_spec->type = PDS_VCN_TYPE_SUBSTRATE;
+        api_spec->type = PDS_VPC_TYPE_SUBSTRATE;
     }
     ipv4pfx_proto_spec_to_api_spec(&api_spec->v4_pfx, proto_spec.v4prefix());
     ippfx_proto_spec_to_api_spec(&api_spec->v6_pfx, proto_spec.v6prefix());
@@ -32,15 +32,15 @@ VPCSvcImpl::VPCCreate(ServerContext *context,
                       const pds::VPCRequest *proto_req,
                       pds::VPCResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vcn_key_t key = {0};
-    pds_vcn_spec_t *api_spec = {0};
+    pds_vpc_key_t key = {0};
+    pds_vpc_spec_t *api_spec = {0};
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::OK;
     }
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_vcn_spec_t *)
+        api_spec = (pds_vpc_spec_t *)
                     core::agent_state::state()->vpc_slab()->alloc();
         if (api_spec == NULL) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
@@ -63,7 +63,7 @@ VPCSvcImpl::VPCDelete(ServerContext *context,
                       const pds::VPCDeleteRequest *proto_req,
                       pds::VPCDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vcn_key_t key = {0};
+    pds_vpc_key_t key = {0};
 
     if (proto_req == NULL) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -81,12 +81,12 @@ VPCSvcImpl::VPCDelete(ServerContext *context,
 // Populate proto buf spec from vpc API spec
 static inline void
 vpc_api_spec_to_proto_spec (pds::VPCSpec *proto_spec,
-                            const pds_vcn_spec_t *api_spec)
+                            const pds_vpc_spec_t *api_spec)
 {
     proto_spec->set_id(api_spec->key.id);
-    if (api_spec->type == PDS_VCN_TYPE_TENANT) {
+    if (api_spec->type == PDS_VPC_TYPE_TENANT) {
         proto_spec->set_type(pds::VPC_TYPE_TENANT);
-    } else if (api_spec->type == PDS_VCN_TYPE_SUBSTRATE) {
+    } else if (api_spec->type == PDS_VPC_TYPE_SUBSTRATE) {
         proto_spec->set_type(pds::VPC_TYPE_SUBSTRATE);
     }
     ipv4pfx_api_spec_to_proto_spec(proto_spec->mutable_v4prefix(), &api_spec->v4_pfx);
@@ -96,20 +96,20 @@ vpc_api_spec_to_proto_spec (pds::VPCSpec *proto_spec,
 // Populate proto buf status from vpc API status
 static inline void
 vpc_api_status_to_proto_status (pds::VPCStatus *proto_status,
-                                const pds_vcn_status_t *api_status)
+                                const pds_vpc_status_t *api_status)
 {
 }
 
 // Populate proto buf stats from vpc API stats
 static inline void
 vpc_api_stats_to_proto_stats (pds::VPCStats *proto_stats,
-                              const pds_vcn_stats_t *api_stats)
+                              const pds_vpc_stats_t *api_stats)
 {
 }
 
 // Populate proto buf from vpc API info
 static inline void
-vpc_api_info_to_proto (const pds_vcn_info_t *api_info, void *ctxt)
+vpc_api_info_to_proto (const pds_vpc_info_t *api_info, void *ctxt)
 {
     pds::VPCGetResponse *proto_rsp = (pds::VPCGetResponse *)ctxt;
     auto vpc = proto_rsp->add_response();
@@ -127,8 +127,8 @@ VPCSvcImpl::VPCGet(ServerContext *context,
                    const pds::VPCGetRequest *proto_req,
                    pds::VPCGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vcn_key_t key = {0};
-    pds_vcn_info_t info = {0};
+    pds_vpc_key_t key = {0};
+    pds_vpc_info_t info = {0};
 
     PDS_TRACE_VERBOSE("VPC Get Received")
 

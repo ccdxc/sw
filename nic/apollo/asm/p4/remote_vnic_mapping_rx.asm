@@ -65,8 +65,8 @@ remote_vnic_mapping_rx_miss:
     nop
 
 remote_vnic_mapping_rx_hit:
-    seq         c1, k.vnic_metadata_vcn_id, \
-                    d.remote_vnic_mapping_rx_info_d.vcn_id
+    seq         c1, k.vnic_metadata_vpc_id, \
+                    d.remote_vnic_mapping_rx_info_d.vpc_id
     or          r1, d.remote_vnic_mapping_rx_info_d.overlay_mac_sbit5_ebit47, \
                     d.remote_vnic_mapping_rx_info_d.overlay_mac_sbit0_ebit4, 43
     phvwr.c1.e  p.p4i_apollo_i2e_rvpath_subnet_id, \

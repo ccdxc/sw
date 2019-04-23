@@ -10,7 +10,7 @@
 #include "nic/sdk/lib/periodic/periodic.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/api/vcn.hpp"
+#include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -44,8 +44,8 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
         tep_entry::destroy((tep_entry *)elem);
         break;
 
-    case PDS_SLAB_ID_VCN:
-        vcn_entry::destroy((vcn_entry *)elem);
+    case PDS_SLAB_ID_VPC:
+        vpc_entry::destroy((vpc_entry *)elem);
         break;
 
     case PDS_SLAB_ID_SUBNET:

@@ -18,7 +18,7 @@ apollo
 golden     - Handles basic pipeline tests
 framework  - Handles framework tests
 device     - Handles device tests
-vcn        - Handles VCN tests
+vpc        - Handles VPC tests
 subnet     - Handles subnet tests
 vnic       - Handles VNIC tests
 tep        - Handles TEP tests

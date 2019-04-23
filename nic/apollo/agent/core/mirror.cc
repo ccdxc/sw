@@ -23,10 +23,10 @@ mirror_session_create_validate (pds_mirror_session_spec_t *spec)
     }
     if (spec->type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
         // check if VPC exists, if mirror session type is ERSPAN
-        if (agent_state::state()->find_in_vpc_db(&spec->erspan_spec.vcn) == NULL) {
+        if (agent_state::state()->find_in_vpc_db(&spec->erspan_spec.vpc) == NULL) {
             PDS_TRACE_ERR("Failed to create erspan mirror session {}, "
                           "vpc {} not found", spec->key.id,
-                          spec->erspan_spec.vcn.id);
+                          spec->erspan_spec.vpc.id);
             return sdk::SDK_RET_ENTRY_NOT_FOUND;
         }
     }

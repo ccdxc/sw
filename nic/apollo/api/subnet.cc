@@ -59,11 +59,11 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_subnet_spec_t *spec = &api_ctxt->api_params->subnet_spec;
 
     PDS_TRACE_DEBUG(
-        "Initializing subnet (vcn %u, subnet %u), v4 pfx %s, v6 pfx %s, "
+        "Initializing subnet (vpc %u, subnet %u), v4 pfx %s, v6 pfx %s, "
         "v4_vr_ip %s, v6_vr_ip %s, vr_mac %s, v4 route table %u, v6 route table %u, "
         "ingress v4 policy %u, ingress v6 policy %u, "
         "egress v4 policy %u, egress v6 policy %u",
-        spec->vcn.id, spec->key.id, ipv4pfx2str(&spec->v4_pfx),
+        spec->vpc.id, spec->key.id, ipv4pfx2str(&spec->v4_pfx),
         ippfx2str(&spec->v6_pfx), ipv4addr2str(spec->v4_vr_ip),
         ipaddr2str(&spec->v6_vr_ip), macaddr2str(spec->vr_mac),
         spec->v4_route_table.id, spec->v6_route_table.id,
@@ -71,7 +71,7 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
         spec->egr_v4_policy.id, spec->egr_v6_policy.id);
 
     key_.id = spec->key.id;
-    vcn_ = spec->vcn;
+    vpc_ = spec->vpc;
     v4_route_table_.id = spec->v4_route_table.id;
     v6_route_table_.id = spec->v6_route_table.id;
     ing_v4_policy_.id = spec->ing_v4_policy.id;

@@ -14,7 +14,7 @@ read_control_info:
     phvwr.c1    p.app_header_table0_valid, TRUE
     phvwr.e     p.{predicate_header_redirect_to_arm...predicate_header_direction}, \
                     d.read_control_info_d.data[507:504]
-    phvwr       p.{p4_to_txdma_header_p4plus_app_id...p4_to_txdma_header_vcn_id}, \
+    phvwr       p.{p4_to_txdma_header_p4plus_app_id...p4_to_txdma_header_vpc_id}, \
                     d.read_control_info_d.data[511-(APOLLO_PREDICATE_HDR_SZ<<3): \
                                                511-(APOLLO_PREDICATE_HDR_SZ<<3)+ \
                                                1-(APOLLO_P4_TO_TXDMA_HDR_SZ<<3)]

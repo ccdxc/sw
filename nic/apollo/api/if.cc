@@ -26,7 +26,7 @@ if_entry *
 if_entry::factory(pds_ifindex_t key) {
     if_entry *intf;
 
-    // create vcn entry with defaults, if any
+    // create vpc entry with defaults, if any
     intf = if_db()->alloc();
     if (intf) {
         new (intf) if_entry();

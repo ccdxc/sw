@@ -1,0 +1,77 @@
+//
+// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// vpc state handling
+///
+//----------------------------------------------------------------------------
+
+#ifndef __API_VPC_STATE_HPP__
+#define __API_VPC_STATE_HPP__
+
+#include "nic/sdk/lib/ht/ht.hpp"
+#include "nic/sdk/lib/indexer/indexer.hpp"
+#include "nic/sdk/lib/slab/slab.hpp"
+#include "nic/apollo/api/vpc.hpp"
+
+namespace api {
+
+/// \defgroup PDS_VPC_STATE - vpc state functionality
+/// \ingroup PDS_VPC
+/// @{
+
+/// \brief    state maintained for vpcs
+class vpc_state : public obj_base {
+public:
+    /// \brief constructor
+    vpc_state();
+
+    /// \brief destructor
+    ~vpc_state();
+
+    /// \brief      allocate memory required for a vpc instance
+    /// \return     pointer to the allocated vpc, NULL if no memory
+    vpc_entry *alloc(void);
+
+    /// \brief    insert given vpc instance into the vpc db
+    /// \param[in] vpc    vpc entry to be added to the db
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t insert(vpc_entry *vpc);
+
+    /// \brief     remove the given instance of vpc object from db
+    /// \param[in] vpc    vpc entry to be deleted from the db
+    /// \return    pointer to the removed vpc instance or NULL, if not found
+    vpc_entry *remove(vpc_entry *vpc);
+
+    /// \brief      free vpc instance back to slab
+    /// \param[in]  vpc   pointer to the allocated vpc
+    void free(vpc_entry *vpc);
+
+    /// \brief      lookup a vpc in database given the key
+    /// \param[in]  vpc  key for the VPC object
+    /// \return     pointer to the vpc instance found or NULL
+    vpc_entry *find(pds_vpc_key_t *key) const;
+
+    friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
+
+private:
+    ht *vpc_ht(void) { return vpc_ht_; }
+    indexer *vpc_idxr(void) { return vpc_idxr_; }
+    slab *vpc_slab(void) { return vpc_slab_; }
+    friend class vpc_entry;    ///< vpc_entry class is friend of vpc_state
+
+private:
+    ht *vpc_ht_;           ///< vpc hash table
+    indexer *vpc_idxr_;    ///< indexer to allocate hw vpc id
+    slab *vpc_slab_;       ///< slab for allocating vpc entry
+};
+
+/// \@}
+
+}    // namespace api
+
+using api::vpc_state;
+
+#endif    // __API_VPC_STATE_HPP__

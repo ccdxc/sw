@@ -63,13 +63,13 @@ flow_appdata2str(void *appdata) {
     return str;
 }
 
-#define MAX_VCNS        512
+#define MAX_VPCS        512
 #define MAX_LOCAL_EPS   32
 #define MAX_REMOTE_EPS  1024
-#define MAX_EP_PAIRS_PER_VCN (MAX_LOCAL_EPS*MAX_REMOTE_EPS)
+#define MAX_EP_PAIRS_PER_VPC (MAX_LOCAL_EPS*MAX_REMOTE_EPS)
 
-typedef struct vcn_epdb_s {
-    uint32_t vcn_id;
+typedef struct vpc_epdb_s {
+    uint32_t vpc_id;
     uint32_t valid;
     uint32_t v4_lcount;
     uint32_t v6_lcount;
@@ -79,16 +79,16 @@ typedef struct vcn_epdb_s {
     ipv6_addr_t lip6s[MAX_LOCAL_EPS];
     uint32_t rips[MAX_REMOTE_EPS];
     ipv6_addr_t rip6s[MAX_REMOTE_EPS];
-} vcn_epdb_t;
+} vpc_epdb_t;
 
-typedef struct vcn_ep_pair_s {
-    uint32_t vcn_id;
+typedef struct vpc_ep_pair_s {
+    uint32_t vpc_id;
     uint32_t lip;
     ipv6_addr_t lip6;
     uint32_t rip;
     ipv6_addr_t rip6;
     uint32_t valid;
-} vcn_ep_pair_t;
+} vpc_ep_pair_t;
 
 typedef struct cfg_params_s {
     bool valid;
@@ -105,7 +105,7 @@ typedef struct cfg_params_s {
 class flow_test {
 private:
     mem_hash *table;
-    vcn_epdb_t epdb[MAX_VCNS];
+    vpc_epdb_t epdb[MAX_VPCS];
     uint32_t flow_index;
     uint32_t hash;
     uint16_t sport_base;
@@ -116,7 +116,7 @@ private:
     sdk_table_factory_params_t factory_params;
     flow_swkey_t swkey;
     flow_appdata_t swappdata;
-    vcn_ep_pair_t ep_pairs[MAX_EP_PAIRS_PER_VCN];
+    vpc_ep_pair_t ep_pairs[MAX_EP_PAIRS_PER_VPC];
     cfg_params_t cfg_params;
     bool with_hash;
 
@@ -207,64 +207,64 @@ private:
         return table->remove(&params);
     }
 
-    void add_local_ep_(uint32_t vcn_id, uint32_t ipaddr) {
-        assert(vcn_id);
-        if (vcn_id > MAX_VCNS) {
+    void add_local_ep_(uint32_t vpc_id, uint32_t ipaddr) {
+        assert(vpc_id);
+        if (vpc_id > MAX_VPCS) {
             return;
         }
-        if (epdb[vcn_id].v4_lcount >= MAX_LOCAL_EPS) {
+        if (epdb[vpc_id].v4_lcount >= MAX_LOCAL_EPS) {
             return;
         }
-        epdb[vcn_id].valid = 1;
-        epdb[vcn_id].vcn_id = vcn_id;
-        epdb[vcn_id].lips[epdb[vcn_id].v4_lcount] = ipaddr;
-        epdb[vcn_id].v4_lcount++;
-        //printf("Adding Local EP: Vcn=%d IP=%#x\n", vcn_id, ipaddr);
+        epdb[vpc_id].valid = 1;
+        epdb[vpc_id].vpc_id = vpc_id;
+        epdb[vpc_id].lips[epdb[vpc_id].v4_lcount] = ipaddr;
+        epdb[vpc_id].v4_lcount++;
+        //printf("Adding Local EP: Vcn=%d IP=%#x\n", vpc_id, ipaddr);
     }
 
-    void add_local_ep_(uint32_t vcn_id, ipv6_addr_t ip6addr) {
-        assert(vcn_id);
-        if (vcn_id > MAX_VCNS) {
+    void add_local_ep_(uint32_t vpc_id, ipv6_addr_t ip6addr) {
+        assert(vpc_id);
+        if (vpc_id > MAX_VPCS) {
             return;
         }
-        if (epdb[vcn_id].v6_lcount >= MAX_LOCAL_EPS) {
+        if (epdb[vpc_id].v6_lcount >= MAX_LOCAL_EPS) {
             return;
         }
-        epdb[vcn_id].valid = 1;
-        epdb[vcn_id].vcn_id = vcn_id;
-        epdb[vcn_id].lip6s[epdb[vcn_id].v6_lcount] = ip6addr;
-        epdb[vcn_id].v6_lcount++;
-        //printf("Adding Local EP: Vcn=%d IP=%#x\n", vcn_id, ipaddr);
+        epdb[vpc_id].valid = 1;
+        epdb[vpc_id].vpc_id = vpc_id;
+        epdb[vpc_id].lip6s[epdb[vpc_id].v6_lcount] = ip6addr;
+        epdb[vpc_id].v6_lcount++;
+        //printf("Adding Local EP: Vcn=%d IP=%#x\n", vpc_id, ipaddr);
     }
 
-    void add_remote_ep_(uint32_t vcn_id, uint32_t ipaddr) {
-        assert(vcn_id);
-        if (vcn_id > MAX_VCNS) {
+    void add_remote_ep_(uint32_t vpc_id, uint32_t ipaddr) {
+        assert(vpc_id);
+        if (vpc_id > MAX_VPCS) {
             return;
         }
-        if (epdb[vcn_id].v4_rcount >= MAX_REMOTE_EPS) {
+        if (epdb[vpc_id].v4_rcount >= MAX_REMOTE_EPS) {
             return;
         }
-        epdb[vcn_id].valid = 1;
-        epdb[vcn_id].vcn_id = vcn_id;
-        epdb[vcn_id].rips[epdb[vcn_id].v4_rcount] = ipaddr;
-        epdb[vcn_id].v4_rcount++;
-        //printf("Adding Remote EP: Vcn=%d IP=%#x\n", vcn_id, ipaddr);
+        epdb[vpc_id].valid = 1;
+        epdb[vpc_id].vpc_id = vpc_id;
+        epdb[vpc_id].rips[epdb[vpc_id].v4_rcount] = ipaddr;
+        epdb[vpc_id].v4_rcount++;
+        //printf("Adding Remote EP: Vcn=%d IP=%#x\n", vpc_id, ipaddr);
     }
 
-    void add_remote_ep_(uint32_t vcn_id, ipv6_addr_t ip6addr) {
-        assert(vcn_id);
-        if (vcn_id > MAX_VCNS) {
+    void add_remote_ep_(uint32_t vpc_id, ipv6_addr_t ip6addr) {
+        assert(vpc_id);
+        if (vpc_id > MAX_VPCS) {
             return;
         }
-        if (epdb[vcn_id].v6_rcount >= MAX_REMOTE_EPS) {
+        if (epdb[vpc_id].v6_rcount >= MAX_REMOTE_EPS) {
             return;
         }
-        epdb[vcn_id].valid = 1;
-        epdb[vcn_id].vcn_id = vcn_id;
-        epdb[vcn_id].rip6s[epdb[vcn_id].v6_rcount] = ip6addr;
-        epdb[vcn_id].v6_rcount++;
-        //printf("Adding Remote EP: Vcn=%d IP=%#x\n", vcn_id, ipaddr);
+        epdb[vpc_id].valid = 1;
+        epdb[vpc_id].vpc_id = vpc_id;
+        epdb[vpc_id].rip6s[epdb[vpc_id].v6_rcount] = ip6addr;
+        epdb[vpc_id].v6_rcount++;
+        //printf("Adding Remote EP: Vcn=%d IP=%#x\n", vpc_id, ipaddr);
     }
 
 
@@ -331,52 +331,52 @@ public:
         mem_hash::destroy(table);
     }
 
-    void add_local_ep(uint32_t vcn_id, ip_addr_t ipaddr) {
+    void add_local_ep(uint32_t vpc_id, ip_addr_t ipaddr) {
         if (ipaddr.af == IP_AF_IPV4) {
-            return add_local_ep_(vcn_id, ipaddr.addr.v4_addr);
+            return add_local_ep_(vpc_id, ipaddr.addr.v4_addr);
         } else {
-            return add_local_ep_(vcn_id, ipaddr.addr.v6_addr);
+            return add_local_ep_(vpc_id, ipaddr.addr.v6_addr);
         }
     }
 
-    void add_remote_ep(uint32_t vcn_id, ip_addr_t ipaddr) {
+    void add_remote_ep(uint32_t vpc_id, ip_addr_t ipaddr) {
         if (ipaddr.af == IP_AF_IPV4) {
-            return add_remote_ep_(vcn_id, ipaddr.addr.v4_addr);
+            return add_remote_ep_(vpc_id, ipaddr.addr.v4_addr);
         } else {
-            return add_remote_ep_(vcn_id, ipaddr.addr.v6_addr);
+            return add_remote_ep_(vpc_id, ipaddr.addr.v6_addr);
         }
     }
 
-    void generate_ep_pairs(uint32_t vcn, bool ipv6) {
-        auto lcount = ipv6 ? epdb[vcn].v6_lcount : epdb[vcn].v4_lcount;
-        auto rcount = ipv6 ? epdb[vcn].v6_rcount : epdb[vcn].v4_rcount;
+    void generate_ep_pairs(uint32_t vpc, bool ipv6) {
+        auto lcount = ipv6 ? epdb[vpc].v6_lcount : epdb[vpc].v4_lcount;
+        auto rcount = ipv6 ? epdb[vpc].v6_rcount : epdb[vpc].v4_rcount;
         uint32_t pid = 0;
         memset(ep_pairs, 0, sizeof(ep_pairs));
-        if (epdb[vcn].valid == 0) {
+        if (epdb[vpc].valid == 0) {
             return;
         }
         for (uint32_t lid = 0; lid < lcount; lid++) {
             for (uint32_t rid = 0; rid < rcount; rid++) {
-                ep_pairs[pid].vcn_id = vcn;
-                ep_pairs[pid].lip = epdb[vcn].lips[lid];
-                ep_pairs[pid].lip6 = epdb[vcn].lip6s[lid];
-                ep_pairs[pid].rip = epdb[vcn].rips[rid];
-                ep_pairs[pid].rip6 = epdb[vcn].rip6s[rid];
+                ep_pairs[pid].vpc_id = vpc;
+                ep_pairs[pid].lip = epdb[vpc].lips[lid];
+                ep_pairs[pid].lip6 = epdb[vpc].lip6s[lid];
+                ep_pairs[pid].rip = epdb[vpc].rips[rid];
+                ep_pairs[pid].rip6 = epdb[vpc].rip6s[rid];
                 ep_pairs[pid].valid = 1;
-                //printf("Appending EP pair: Vcn=%d LIP=%#x RIP=%#x\n", vcn,
-                //       epdb[vcn].lips[lid], epdb[vcn].rips[rid]);
+                //printf("Appending EP pair: Vcn=%d LIP=%#x RIP=%#x\n", vpc,
+                //       epdb[vpc].lips[lid], epdb[vpc].rips[rid]);
                 pid++;
             }
         }
     }
 
     void generate_dummy_epdb() {
-        for (uint32_t vcn = 1; vcn < MAX_VCNS; vcn++) {
-            epdb[vcn].vcn_id = vcn;
+        for (uint32_t vpc = 1; vpc < MAX_VPCS; vpc++) {
+            epdb[vpc].vpc_id = vpc;
             for (uint32_t lid = 0; lid < MAX_LOCAL_EPS; lid++) {
-                add_local_ep_(vcn, 0x0a000001 + lid);
+                add_local_ep_(vpc, 0x0a000001 + lid);
                 for (uint32_t rid = 0; rid < MAX_REMOTE_EPS; rid++) {
-                    add_remote_ep_(vcn, 0x1400001 + rid);
+                    add_remote_ep_(vpc, 0x1400001 + rid);
                 }
             }
         }
@@ -399,9 +399,9 @@ public:
             swkey.key_metadata_ktype = 1;
         }
 
-        for (uint32_t vcn = 1; vcn < MAX_VCNS; vcn++) {
-            generate_ep_pairs(vcn, ipv6);
-            for (i = 0; i < MAX_EP_PAIRS_PER_VCN ; i++) {
+        for (uint32_t vpc = 1; vpc < MAX_VPCS; vpc++) {
+            generate_ep_pairs(vpc, ipv6);
+            for (i = 0; i < MAX_EP_PAIRS_PER_VPC ; i++) {
                 for (auto lp = cfg_params.sport_lo; lp <= cfg_params.sport_hi; lp++) {
                     for (auto rp = cfg_params.dport_lo; rp <= cfg_params.dport_hi; rp++) {
                         local_port = lp;
@@ -420,7 +420,7 @@ public:
                         }
 
                         // Local to Remote Flow
-                        swkey.vnic_metadata_local_vnic_tag = vcn - 1;
+                        swkey.vnic_metadata_local_vnic_tag = vpc - 1;
                         swkey.key_metadata_sport = fwd_sport;
                         swkey.key_metadata_dport = fwd_dport;
                         swkey.key_metadata_proto = proto;
@@ -443,7 +443,7 @@ public:
                         }
 #if 0 // Only create local to remote flows for now.
                         // Remote to Local Flow
-                        swkey.vnic_metadata_local_vnic_tag = vcn - 1;
+                        swkey.vnic_metadata_local_vnic_tag = vpc - 1;
                         swkey.key_metadata_sport = rev_sport;
                         swkey.key_metadata_dport = rev_dport;
                         swkey.key_metadata_proto = proto;

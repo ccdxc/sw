@@ -20,7 +20,7 @@
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
 #include "nic/apollo/test/utils/device.hpp"
-#include "nic/apollo/test/utils/vcn.hpp"
+#include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/route.hpp"
@@ -34,13 +34,13 @@ namespace api_test {
 char *g_cfg_file = NULL;
 static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
 
-// Config for VCN 1
-uint32_t g_vcn_id = 1;
+// Config for VPC 1
+uint32_t g_vpc_id = 1;
 uint32_t g_subnet_id = 1;
 uint16_t g_vnic_id = 1;
 uint32_t g_encap_val = 1;
 uint64_t g_base_vnic_mac = 0x000000030b020a01;
-std::string g_vcn_cidr_v4("5.5.0.0/16");
+std::string g_vpc_cidr_v4("5.5.0.0/16");
 std::string g_vnic_cidr_v4("5.5.0.2/16");
 std::string g_subnet_cidr_v4("5.5.0.0/16");
 std::string g_public_ip_v4("192.168.0.2/16");
@@ -74,18 +74,18 @@ protected:
         params.cfg_file = api_test::g_cfg_file;
         params.enable_fte = false;
         pds_test_base::SetUpTestCase(params);
-        uint16_t vcn_id = api_test::g_vcn_id;
-        uint16_t vnic_stepper = api_test::g_vcn_id;
+        uint16_t vpc_id = api_test::g_vpc_id;
+        uint16_t vnic_stepper = api_test::g_vpc_id;
         uint32_t num_vnics = PDS_MAX_VNIC;
         uint32_t rt_id_v4 = api_test::g_subnet_id;
         uint32_t rt_id_v6 = api_test::g_subnet_id + 1024;
         uint32_t num_teps = PDS_MAX_TEP - 1;
         uint64_t vnic_stepper_mac = api_test::g_base_vnic_mac;
-        pds_vcn_key_t vcn_key = {0};
+        pds_vpc_key_t vpc_key = {0};
         pds_subnet_key_t subnet_key = {0};
         pds_vnic_info_t vnic_info = {0};
         pds_device_info_t dev_info = {0};
-        pds_vcn_info_t vcn_info = {0};
+        pds_vpc_info_t vpc_info = {0};
         pds_subnet_info_t sub_info = {0};
         pds_tep_info_t tep_info = {0};
         vnic_stepper_seed_t seed;
@@ -97,7 +97,7 @@ protected:
         ip_prefix_t ip_pfx, rt_pfx, nr_pfx;
         ip_addr_t ipaddr, rt_addr, nr_addr;
 
-        vcn_key.id = api_test::g_vcn_id;
+        vpc_key.id = api_test::g_vpc_id;
         subnet_key.id = api_test::g_subnet_id;
         extract_ip_pfx((char *)subnet_cidr.c_str(), &ip_pfx);
         extract_ip_pfx((char *)api_test::g_rt_cidr_v4.c_str(), &rt_pfx);
@@ -109,8 +109,8 @@ protected:
         batch_params.epoch = ++api_test::g_batch_epoch;
         ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
         ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-        ASSERT_TRUE(vcn_util::many_create(vcn_key, api_test::g_vcn_cidr_v4,
-                                          PDS_MAX_VCN, PDS_VCN_TYPE_TENANT) ==
+        ASSERT_TRUE(vpc_util::many_create(vpc_key, api_test::g_vpc_cidr_v4,
+                                          PDS_MAX_VPC, PDS_VPC_TYPE_TENANT) ==
                     sdk::SDK_RET_OK);
         ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
         ASSERT_TRUE(tep_util::many_create(num_teps, api_test::g_tep_cidr_v4,
@@ -131,13 +131,13 @@ protected:
         }
 
         subnet_key.id = api_test::g_subnet_id;
-        vcn_key.id = api_test::g_vcn_id;
-        for (uint16_t idx = 0; idx < PDS_MAX_VCN; idx++) {
-            ASSERT_TRUE(subnet_util::many_create(subnet_key, vcn_key,
+        vpc_key.id = api_test::g_vpc_id;
+        for (uint16_t idx = 0; idx < PDS_MAX_VPC; idx++) {
+            ASSERT_TRUE(subnet_util::many_create(subnet_key, vpc_key,
                                                  subnet_cidr,
                                                  1) == sdk ::SDK_RET_OK);
             subnet_key.id += 1;
-            vcn_key.id += 1;
+            vpc_key.id += 1;
             ip_prefix_ip_next(&ip_pfx, &ipaddr);
             ip_pfx.addr = ipaddr;
             subnet_cidr = ippfx2str(&ip_pfx);
@@ -148,10 +148,10 @@ protected:
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
         subnet_key.id = api_test::g_subnet_id;
-        vcn_key.id = api_test::g_vcn_id;
-        ASSERT_TRUE(vcn_util::many_read(vcn_key, PDS_MAX_VCN,
+        vpc_key.id = api_test::g_vpc_id;
+        ASSERT_TRUE(vpc_util::many_read(vpc_key, PDS_MAX_VPC,
                                         sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
-        ASSERT_TRUE(subnet_util::many_read(subnet_key, PDS_MAX_VCN,
+        ASSERT_TRUE(subnet_util::many_read(subnet_key, PDS_MAX_VPC,
                                            sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
         ASSERT_TRUE(device_obj.read(&dev_info, false) == sdk::SDK_RET_OK);
         ASSERT_TRUE(tep_obj.read(&tep_info) == sdk::SDK_RET_OK);
@@ -163,8 +163,8 @@ protected:
     }
     static void TearDownTestCase() {
 #if 0
-        uint16_t vcn_id = api_test::g_vcn_id;
-        uint16_t vnic_stepper = api_test::g_vcn_id;
+        uint16_t vpc_id = api_test::g_vpc_id;
+        uint16_t vnic_stepper = api_test::g_vpc_id;
         uint32_t num_vnics = PDS_MAX_VNIC;
         uint32_t rt_id_v4 = api_test::g_subnet_id;
         uint32_t rt_id_v6 = api_test::g_subnet_id + 1024;
@@ -175,13 +175,13 @@ protected:
         std::string nr_cidr = "100.0.0.1/16";
         ip_prefix_t ip_pfx, rt_pfx, nr_pfx;
         ip_addr_t ipaddr, rt_addr, nr_addr;
-        pds_vcn_key_t vcn_key = {0};
+        pds_vpc_key_t vpc_key = {0};
         pds_subnet_key_t subnet_key = {0};
         vnic_stepper_seed_t seed;
         pds_batch_params_t batch_params = {0};
         pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
 
-        vcn_key.id = api_test::g_vcn_id;
+        vpc_key.id = api_test::g_vpc_id;
         subnet_key.id = api_test::g_subnet_id;
         extract_ip_pfx((char *)subnet_cidr.c_str(), &ip_pfx);
         extract_ip_pfx((char *)api_test::g_rt_cidr_v4.c_str(), &rt_pfx);
@@ -212,18 +212,18 @@ protected:
                                           encap) == sdk::SDK_RET_OK);
         ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_OK);
         subnet_key.id = api_test::g_subnet_id;
-        vcn_key.id = api_test::g_vcn_id;
-        for (uint16_t idx = 0; idx < PDS_MAX_VCN; idx++) {
-            subnet_util sub_obj(vcn_key.id, subnet_key.id, subnet_cidr,
+        vpc_key.id = api_test::g_vpc_id;
+        for (uint16_t idx = 0; idx < PDS_MAX_VPC; idx++) {
+            subnet_util sub_obj(vpc_key.id, subnet_key.id, subnet_cidr,
                                 rt_id_v4++, rt_id_v6++);
             ASSERT_TRUE(sub_obj.del() == sdk::SDK_RET_OK);
             subnet_key.id += 1;
-            vcn_key.id += 1;
+            vpc_key.id += 1;
             ip_prefix_ip_next(&ip_pfx, &ipaddr);
             ip_pfx.addr = ipaddr;
             subnet_cidr = ippfx2str(&ip_pfx);
         }
-        ASSERT_TRUE(vcn_util::many_delete(vcn_key, PDS_MAX_VCN) ==
+        ASSERT_TRUE(vpc_util::many_delete(vpc_key, PDS_MAX_VPC) ==
                     sdk::SDK_RET_OK);
         ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
@@ -306,10 +306,10 @@ TEST_F(mapping_test, DISABLED_v4_dummy_mapping_test) {
     pds_remote_mapping_info_t r_info = {0};
 
     // setup
-    local_mapping_util local_obj(api_test::g_vcn_id, api_test::g_subnet_id,
+    local_mapping_util local_obj(api_test::g_vpc_id, api_test::g_subnet_id,
                                  api_test::vnic_test_ip, api_test::g_vnic_id,
                                  api_test::g_base_vnic_mac);
-    remote_mapping_util rem_obj(api_test::g_vcn_id, api_test::g_subnet_id,
+    remote_mapping_util rem_obj(api_test::g_vpc_id, api_test::g_subnet_id,
                                 api_test::remote_test_ip, api_test::tep_test_ip,
                                 api_test::g_remote_vnic_mac);
 
@@ -351,16 +351,16 @@ TEST_F(mapping_test, v4_local_mapping_workflow_1) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
                     api_test::g_subnet_id, &map_seed) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, num_vnics,
-    //                                              api_test::g_vcn_id,
+    //                                              api_test::g_vpc_id,
     //                                              &map_seed) ==
     //                                              sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(local_mapping_util::many_read(
-                    num_ip_per_vnic, num_vnics, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
                     api_test::g_subnet_id, &map_seed, PDS_ENCAP_TYPE_MPLSoUDP,
                     false, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 }
@@ -384,13 +384,13 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_2) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
                     api_test::g_subnet_id, &map_seed) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, num_vnics,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                          &map_seed) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(local_mapping_util::many_create(num_ip_per_vnic, num_vnics,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                            api_test::g_subnet_id,
     //                                            &map_seed) ==
     //                                            sdk::SDK_RET_OK);
@@ -398,7 +398,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_2) {
 
     // Verify using read
     // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic, num_vnics,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                          api_test::g_subnet_id,
     //                                          &map_seed) == sdk::SDK_RET_OK);
 
@@ -406,7 +406,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_2) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, num_vnics,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                            &map_seed) ==
     //                                            sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
@@ -457,31 +457,31 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_3) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
                     api_test::g_subnet_id, &s1_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
                     api_test::g_subnet_id, &s2_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_delete(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
                     &s1_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, 342, api_test::g_vcn_id,
+                    num_ip_per_vnic, 342, api_test::g_vpc_id,
                     api_test::g_subnet_id, &s3_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // set 1 : expected = entry not found
     ASSERT_TRUE(local_mapping_util::many_read(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
                     api_test::g_subnet_id, &s1_seed, PDS_ENCAP_TYPE_MPLSoUDP,
                     false, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 
     // set 2, 3: expected = entries present
     ASSERT_TRUE(local_mapping_util::many_read(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
                     api_test::g_subnet_id, &s2_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_read(
-                    num_ip_per_vnic, 342, api_test::g_vcn_id,
+                    num_ip_per_vnic, 342, api_test::g_vpc_id,
                     api_test::g_subnet_id, &s3_seed) == sdk::SDK_RET_OK);
 
     // cleanup
@@ -489,11 +489,11 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_3) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic,
     // num_vnics_per_set,
-    //                                              api_test::g_vcn_id,
+    //                                              api_test::g_vpc_id,
     //                                              &s2_seed) ==
     //                                              sdk::SDK_RET_OK);
     // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, 342,
-    //                                              api_test::g_vcn_id,
+    //                                              api_test::g_vpc_id,
     //                                              &s3_seed) ==
     //                                              sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
@@ -518,26 +518,26 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_4) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
                     api_test::g_subnet_id, &map_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic, num_vnics,
-    //                                          api_test::g_vcn_id,
+    //                                          api_test::g_vpc_id,
     //                                          api_test::g_subnet_id,
     //                                          &map_seed) == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, num_vnics,
-    //                                              api_test::g_vcn_id,
+    //                                              api_test::g_vpc_id,
     //                                              api_test::g_subnet_id,
     //                                              &map_seed) ==
     //                                              sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic, num_vnics,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                          api_test::g_subnet_id,
     //                                          &map_seed,
     //                                          PDS_ENCAP_TYPE_MPLSoUDP, false,
@@ -588,10 +588,10 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_5) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
                     api_test::g_subnet_id, &s1_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics_per_set, api_test::g_vpc_id,
                     api_test::g_subnet_id, &s2_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
@@ -599,17 +599,17 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_5) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic,
     // num_vnics_per_set,
-    //                                              api_test::g_vcn_id,
+    //                                              api_test::g_vpc_id,
     //                                              &s1_seed) ==
     //                                              sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, 342, api_test::g_vcn_id,
+                    num_ip_per_vnic, 342, api_test::g_vpc_id,
                     api_test::g_subnet_id, &s3_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // set 1 : expected = entry not found
     // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic,
-    // num_vnics_per_set, api_test::g_vcn_id,
+    // num_vnics_per_set, api_test::g_vpc_id,
     //                                          api_test::g_subnet_id, &s1_seed,
     //                                          PDS_ENCAP_TYPE_MPLSoUDP, false,
     //                                           sdk::SDK_RET_ENTRY_NOT_FOUND)
@@ -618,11 +618,11 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_5) {
     // set 2, 3: expected = entries present
     // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic,
     // num_vnics_per_set,
-    //                                          api_test::g_vcn_id,
+    //                                          api_test::g_vpc_id,
     //                                          api_test::g_subnet_id, &s2_seed)
     //                                          == sdk::SDK_RET_OK);
     // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic, 342,
-    //                                          api_test::g_vcn_id,
+    //                                          api_test::g_vpc_id,
     //                                          api_test::g_subnet_id, &s3_seed)
     //                                          == sdk::SDK_RET_OK);
 
@@ -630,12 +630,12 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_5) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, 342,
-    //                                              api_test::g_vcn_id,
+    //                                              api_test::g_vpc_id,
     //                                              &s3_seed) ==
     //                                              sdk::SDK_RET_OK);
     // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic,
     // num_vnics_per_set,
-    //                                              api_test::g_vcn_id,
+    //                                              api_test::g_vpc_id,
     //                                              &s2_seed) ==
     //                                              sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
@@ -658,19 +658,19 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_1) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
                     api_test::g_subnet_id, &map_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic, num_vnics,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                          api_test::g_subnet_id,
     //                                          &map_seed) == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
                     api_test::g_subnet_id, &map_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
@@ -679,7 +679,7 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_1) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(local_mapping_util::many_delete(num_ip_per_vnic, num_vnics,
-    //                                              api_test::g_vcn_id,
+    //                                              api_test::g_vpc_id,
     //                                              &map_seed) ==
     //                                              sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
@@ -702,21 +702,21 @@ TEST_F(mapping_test, DISABLED_v4_local_mapping_workflow_neg_2) {
         api_test::g_base_vnic_mac, api_test::g_vnic_cidr_v4,
         api_test::g_public_ip_v4);
 
-    local_mapping_util mapping_obj(api_test::g_vcn_id, api_test::g_subnet_id,
+    local_mapping_util mapping_obj(api_test::g_vpc_id, api_test::g_subnet_id,
                                    vnic_cidr, vnic_id, vnic_mac);
 
     // trigger
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(local_mapping_util::many_create(
-                    num_ip_per_vnic, num_vnics, api_test::g_vcn_id,
+                    num_ip_per_vnic, num_vnics, api_test::g_vpc_id,
                     api_test::g_subnet_id, &map_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(mapping_obj.create() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     // ASSERT_TRUE(local_mapping_util::many_read(num_ip_per_vnic, num_vnics,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                          api_test::g_subnet_id,
     //                                          &map_seed,
     //                                          PDS_ENCAP_TYPE_MPLSoUDP, false,
@@ -734,7 +734,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_3a) {
     pds_local_mapping_info_t info = {0};
 
     // setup
-    local_mapping_util mapping_obj(api_test::g_vcn_id, api_test::g_subnet_id,
+    local_mapping_util mapping_obj(api_test::g_vpc_id, api_test::g_subnet_id,
                                    vnic_cidr, vnic_id, vnic_mac);
 
     // trigger
@@ -751,7 +751,7 @@ TEST_F(mapping_test, DISABLED_local_mapping_workflow_neg_3b) {
     pds_local_mapping_info_t info = {0};
 
     // setup
-    local_mapping_util mapping_obj(api_test::g_vcn_id, api_test::g_subnet_id,
+    local_mapping_util mapping_obj(api_test::g_vpc_id, api_test::g_subnet_id,
                                    vnic_cidr, vnic_id, vnic_mac);
 
     // trigger
@@ -783,15 +783,15 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_1) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vcn_id,
+                    num_vnics, num_teps, api_test::g_vpc_id,
                     api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-                                                 api_test::g_vcn_id,
+                                                 api_test::g_vpc_id,
                                                  &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(remote_mapping_util::many_read(
-                    num_vnics, num_teps, api_test::g_vcn_id,
+                    num_vnics, num_teps, api_test::g_vpc_id,
                     api_test::g_subnet_id, &seed, PDS_ENCAP_TYPE_MPLSoUDP,
                     sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
@@ -813,25 +813,25 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_2) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vcn_id,
+                    num_vnics, num_teps, api_test::g_vpc_id,
                     api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-                                                 api_test::g_vcn_id,
+                                                 api_test::g_vpc_id,
                                                  &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vcn_id,
+                    num_vnics, num_teps, api_test::g_vpc_id,
                     api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(remote_mapping_util::many_read(
-                    num_vnics, num_teps, api_test::g_vcn_id,
+                    num_vnics, num_teps, api_test::g_vpc_id,
                     api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
 
     // cleanup
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-                                                 api_test::g_vcn_id,
+                                                 api_test::g_vpc_id,
                                                  &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
@@ -875,37 +875,37 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_3) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics_per_set, num_teps_per_set, api_test::g_vcn_id,
+                    num_vnics_per_set, num_teps_per_set, api_test::g_vpc_id,
                     api_test::g_subnet_id, &s1_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_create(
                     num_vnics_per_set, num_teps_per_set,
-                    api_test::g_vcn_id + num_teps_per_set,
+                    api_test::g_vpc_id + num_teps_per_set,
                     api_test::g_subnet_id + num_teps_per_set,
                     &s2_seed) == sdk::SDK_RET_OK);
 #if 0
-    ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics_per_set, num_teps_per_set, api_test::g_vcn_id,
+    ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics_per_set, num_teps_per_set, api_test::g_vpc_id,
                                                  &s1_seed) == sdk::SDK_RET_OK);
 #endif
     ASSERT_TRUE(remote_mapping_util::many_create(
                     num_vnics_per_set, num_teps_per_set,
-                    api_test::g_vcn_id + (num_teps_per_set * 2),
+                    api_test::g_vpc_id + (num_teps_per_set * 2),
                     api_test::g_subnet_id + (num_teps_per_set * 2),
                     &s3_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(remote_mapping_util::many_read(
-                    num_vnics_per_set, num_teps_per_set, api_test::g_vcn_id,
+                    num_vnics_per_set, num_teps_per_set, api_test::g_vpc_id,
                     api_test::g_subnet_id, &s1_seed, PDS_ENCAP_TYPE_MPLSoUDP,
                     sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(
         remote_mapping_util::many_read(num_vnics_per_set, num_teps_per_set,
-                                       api_test::g_vcn_id + num_teps_per_set,
+                                       api_test::g_vpc_id + num_teps_per_set,
                                        api_test::g_subnet_id + num_teps_per_set,
                                        &s2_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_read(
                     num_vnics_per_set, num_teps_per_set,
-                    api_test::g_vcn_id + (num_teps_per_set * 2),
+                    api_test::g_vpc_id + (num_teps_per_set * 2),
                     api_test::g_subnet_id + (num_teps_per_set * 2),
                     &s3_seed) == sdk::SDK_RET_OK);
 
@@ -914,10 +914,10 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_3) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics_per_set, num_teps_per_set,
-                                                 api_test::g_vcn_id + (num_teps_per_set * 2),
+                                                 api_test::g_vpc_id + (num_teps_per_set * 2),
                                                  &s3_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics_per_set, num_teps_per_set,
-                                                 api_test::g_vcn_id + num_teps_per_set,
+                                                 api_test::g_vpc_id + num_teps_per_set,
                                                  &s2_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 #endif
@@ -940,23 +940,23 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_4) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vcn_id,
+                    num_vnics, num_teps, api_test::g_vpc_id,
                     api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(remote_mapping_util::many_read(
-                    num_vnics, num_teps, api_test::g_vcn_id,
+                    num_vnics, num_teps, api_test::g_vpc_id,
                     api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-                                                 api_test::g_vcn_id,
+                                                 api_test::g_vpc_id,
                                                  &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(remote_mapping_util::many_read(
-                    num_vnics, num_teps, api_test::g_vcn_id,
+                    num_vnics, num_teps, api_test::g_vpc_id,
                     api_test::g_subnet_id, &seed, PDS_ENCAP_TYPE_MPLSoUDP,
                     sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
@@ -998,39 +998,39 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_5) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics_per_set, num_teps, api_test::g_vcn_id,
+                    num_vnics_per_set, num_teps, api_test::g_vpc_id,
                     api_test::g_subnet_id, &s1_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics_per_set, num_teps, api_test::g_vcn_id + num_teps,
+                    num_vnics_per_set, num_teps, api_test::g_vpc_id + num_teps,
                     api_test::g_subnet_id, &s2_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // ASSERT_TRUE(remote_mapping_util::many_read(num_vnics_per_set, num_teps,
-    // api_test::g_vcn_id + num_teps,
+    // api_test::g_vpc_id + num_teps,
     //                                          api_test::g_subnet_id, &s2_seed)
     //                                          == sdk::SDK_RET_OK);
     // ASSERT_TRUE(remote_mapping_util::many_read(num_vnics_per_set, num_teps,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                          api_test::g_subnet_id, &s1_seed)
     //                                          == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics_per_set, num_teps,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                            &s1_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_create(
                     num_vnics_per_set, num_teps,
-                    api_test::g_vcn_id + (num_teps * 2), api_test::g_subnet_id,
+                    api_test::g_vpc_id + (num_teps * 2), api_test::g_subnet_id,
                     &s3_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // ASSERT_TRUE(remote_mapping_util::many_read(342, num_teps,
-    // api_test::g_vcn_id + (num_teps * 2),
+    // api_test::g_vpc_id + (num_teps * 2),
     //                                          api_test::g_subnet_id, &s3_seed)
     //                                          == sdk::SDK_RET_OK);
     // ASSERT_TRUE(remote_mapping_util::many_read(num_vnics_per_set, num_teps,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                          api_test::g_subnet_id, &s1_seed,
     //                                          sdk::SDK_RET_ENTRY_FOUND) ==
     //                                          sdk::SDK_RET_OK);
@@ -1039,10 +1039,10 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_5) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(remote_mapping_util::many_delete(342, num_teps,
-    // api_test::g_vcn_id + (num_teps * 2),
+    // api_test::g_vpc_id + (num_teps * 2),
     //                                            &s3_seed) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics_per_set, num_teps,
-    // api_test::g_vcn_id + num_teps,
+    // api_test::g_vpc_id + num_teps,
     //                                            &s2_seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
@@ -1062,20 +1062,20 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_1) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vcn_id,
+                    num_vnics, num_teps, api_test::g_vpc_id,
                     api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vcn_id,
+                    num_vnics, num_teps, api_test::g_vpc_id,
                     api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     // ASSERT_TRUE(remote_mapping_util::many_read(num_vnics, num_teps,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                          api_test::g_subnet_id, &seed) ==
     //                                          sdk::SDK_RET_OK);
 
@@ -1083,7 +1083,7 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_1) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                            &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }
@@ -1103,13 +1103,13 @@ TEST_F(mapping_test, DISABLED_v4_remote_mapping_workflow_neg_2) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vcn_id,
+                    num_vnics, num_teps, api_test::g_vpc_id,
                     api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     // ASSERT_TRUE(remote_mapping_util::many_read(num_vnics, num_teps,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                          api_test::g_subnet_id, &seed,
     //                                          sdk::SDK_RET_ENTRY_NOT_FOUND) ==
     //                                          sdk::SDK_RET_OK);
@@ -1156,7 +1156,7 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_4) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_mapping_util::many_create(
-                    num_vnics, num_teps, api_test::g_vcn_id,
+                    num_vnics, num_teps, api_test::g_vpc_id,
                     api_test::g_subnet_id, &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
@@ -1166,21 +1166,21 @@ TEST_F(mapping_test, DISABLED_remote_mapping_workflow_neg_4) {
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                            &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(remote_obj.del() == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     // ASSERT_TRUE(remote_mapping_util::many_read(num_vnics, num_teps,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                          api_test::g_subnet_id, &seed) ==
     //                                          sdk::SDK_RET_OK);
 
     batch_params.epoch = ++api_test::g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     // ASSERT_TRUE(remote_mapping_util::many_delete(num_vnics, num_teps,
-    // api_test::g_vcn_id,
+    // api_test::g_vpc_id,
     //                                            &seed) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 }

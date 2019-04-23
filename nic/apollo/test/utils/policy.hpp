@@ -12,7 +12,7 @@
 #define __TEST_UTILS_POLICY_HPP__
 
 #include "nic/sdk/include/sdk/base.hpp"
-#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
 
 namespace api_test {
@@ -56,7 +56,7 @@ public:
 
     /// \brief Delete policy
     ///
-    /// \param[in] vcn_id VCN id
+    /// \param[in] vpc_id VPC id
     /// \param[in] policy_id policy id
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t del();
@@ -64,7 +64,7 @@ public:
     /// \brief Create many policies
     ///
     /// \param[in] num_policy number of policies to create
-    /// \param[in] vcn_id VCN id
+    /// \param[in] vpc_id VPC id
     /// \param[in] pfxstr policy prefix (cidr) in string form
     /// \return #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_create(pds_policy_key_t policy,
@@ -79,7 +79,7 @@ public:
     /// \brief Delete multiple policies
     /// Delete "num_policy" policy starting from id
     ///
-    /// \param[in] num_policy number of VCNs to be deleted
+    /// \param[in] num_policy number of VPCs to be deleted
     /// \returns #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_delete(pds_policy_key_t key, uint32_t num_policy);
 

@@ -15,7 +15,7 @@
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
 #include "nic/apollo/test/utils/device.hpp"
-#include "nic/apollo/test/utils/vcn.hpp"
+#include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"
 
@@ -42,12 +42,12 @@ protected:
         pds_test_base::SetUpTestCase(params);
 
         pds_batch_params_t batch_params = {0};
-        vcn_util vcn_obj(1, "10.0.0.0/8");
+        vpc_util vpc_obj(1, "10.0.0.0/8");
         subnet_util subnet_obj(1, 1, "10.1.0.0/16");
 
         batch_params.epoch = ++g_batch_epoch;
         ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-        ASSERT_TRUE(vcn_obj.create() == sdk::SDK_RET_OK);
+        ASSERT_TRUE(vpc_obj.create() == sdk::SDK_RET_OK);
         ASSERT_TRUE(subnet_obj.create() == sdk::SDK_RET_OK);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
     }
@@ -258,7 +258,7 @@ TEST_F(vnic_test, vnic_workflow_5) {
         &seed3, num_vnics, sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
-/// \brief Create maximum number of VCINs in two batches
+/// \brief Create maximum number of VNICs in two batches
 /// [ Create SetMax ] - [ Create SetMax ] - Read
 TEST_F(vnic_test, vnic_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};

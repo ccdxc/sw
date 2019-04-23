@@ -1,10 +1,10 @@
 /******************************************************************************/
 /* Local IP mapping                                                           */
 /******************************************************************************/
-@pragma capi appdatafields vcn_id vcn_id_valid xlate_index ip_type
+@pragma capi appdatafields vpc_id vpc_id_valid xlate_index ip_type
 @pragma capi hwfields_access_api
 action local_ip_mapping_info(entry_valid,
-                             vcn_id, vcn_id_valid, xlate_index, ip_type,
+                             vpc_id, vpc_id_valid, xlate_index, ip_type,
                              hash1, hint1, hash2, hint2, hash3, hint3,
                              hash4, hint4, hash5, hint5, hash6, hint6,
                              hash7, hint7, hash8, hint8, hash9, hint9,
@@ -12,8 +12,8 @@ action local_ip_mapping_info(entry_valid,
 
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
-        if (vcn_id_valid == TRUE) {
-            modify_field(vnic_metadata.vcn_id, vcn_id);
+        if (vpc_id_valid == TRUE) {
+            modify_field(vnic_metadata.vpc_id, vpc_id);
         }
         if (control_metadata.direction == RX_FROM_SWITCH) {
             if ((mpls_dst.valid == TRUE) and (ip_type == IP_TYPE_PUBLIC)) {
@@ -104,7 +104,7 @@ action local_ip_mapping_info(entry_valid,
     }
 
     modify_field(scratch_metadata.flag, ip_type);
-    modify_field(scratch_metadata.flag, vcn_id_valid);
+    modify_field(scratch_metadata.flag, vpc_id_valid);
     modify_field(scratch_metadata.flag, entry_valid);
     modify_field(scratch_metadata.local_ip_hash, hash1);
     modify_field(scratch_metadata.local_ip_hash, hash2);
@@ -246,7 +246,7 @@ action remote_vnic_mapping_tx_info(entry_valid, nexthop_index,
 @pragma hbm_table
 table remote_vnic_mapping_tx {
     reads {
-        txdma_to_p4e_header.vcn_id  : exact;
+        txdma_to_p4e_header.vpc_id  : exact;
         p4e_apollo_i2e.dst          : exact;
     }
     actions {

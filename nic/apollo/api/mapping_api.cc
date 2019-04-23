@@ -67,7 +67,7 @@ pds_local_spec_to_mapping_spec (pds_mapping_spec_t *spec,
                                 pds_local_mapping_spec_t *local_spec)
 {
     memset(spec, 0, sizeof(pds_mapping_spec_t));
-    spec->key.vcn.id = local_spec->key.vcn.id;
+    spec->key.vpc.id = local_spec->key.vpc.id;
     spec->key.ip_addr = local_spec->key.ip_addr;
     spec->subnet.id = local_spec->subnet.id;
     spec->fabric_encap = local_spec->fabric_encap;
@@ -96,7 +96,7 @@ pds_mapping_spec_to_local_spec (pds_local_mapping_spec_t *local_spec,
                                 pds_mapping_spec_t *spec)
 {
     memset(local_spec, 0, sizeof(pds_local_mapping_spec_t));
-    local_spec->key.vcn.id = spec->key.vcn.id;
+    local_spec->key.vpc.id = spec->key.vpc.id;
     local_spec->key.ip_addr = spec->key.ip_addr;
     local_spec->subnet.id = spec->subnet.id;
     local_spec->fabric_encap = spec->fabric_encap;

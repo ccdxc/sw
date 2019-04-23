@@ -12,7 +12,7 @@
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
-#include "nic/apollo/api/vcn.hpp"
+#include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/route.hpp"
@@ -140,7 +140,7 @@ private:
      * @param[in] api_op         api operation
      * @param[in] api_obj        vnic entry object
      * @param[in] epoch          epoch being activated
-     * @param[in] vcn            vcn entry
+     * @param[in] vpc            vpc entry
      * @param[in] subnet         subnet entry
      * @param[in] spec           vnic configuration
      * @param[in] v4_route_table IPv4 routing table entry
@@ -150,7 +150,7 @@ private:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
-                                                     vcn_entry *vcn,
+                                                     vpc_entry *vpc,
                                                      pds_vnic_spec_t *spec,
                                                      vnic_entry *vnic,
                                                      route_table *v4_route_table,
@@ -161,7 +161,7 @@ private:
      * @brief    program LOCAL_VNIC_BY_SLOT_RX table and activate the epoch in
      *           the Rx direction
      * @param[in] epoch          epoch being activated
-     * @param[in] vcn            vcn entry
+     * @param[in] vpc            vpc entry
      * @param[in] spec           vnic configuration
      * @param[in] vnic           vnic obj being programmed
      * @param[in] v4_policy      ingress IPv4 security policy
@@ -169,7 +169,7 @@ private:
      * @return   SDK_RET_OK on success, failure status code on error
      */
     sdk_ret_t activate_vnic_by_slot_rx_table_create_(pds_epoch_t epoch,
-                                                     vcn_entry *vcn,
+                                                     vpc_entry *vpc,
                                                      pds_vnic_spec_t *spec,
                                                      vnic_entry *vnic,
                                                      policy *v4_policy,

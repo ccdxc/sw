@@ -17,7 +17,7 @@ namespace api_test {
 vnic_util::vnic_util(uint32_t vnic_id, pds_encap_t vnic_encap,
                      pds_encap_t fabric_encap, uint64_t mac_u64) {
     mac_addr_t mac;
-    this->vcn_id = 1;
+    this->vpc_id = 1;
     this->vnic_id = vnic_id;
     this->sub_id = 1;
     this->vnic_encap = vnic_encap;
@@ -30,7 +30,7 @@ vnic_util::vnic_util(uint32_t vnic_id, pds_encap_t vnic_encap,
 }
 
 vnic_util::vnic_util() {
-    this->vcn_id = PDS_MAX_VCN + 1;
+    this->vpc_id = PDS_MAX_VPC + 1;
     this->sub_id = PDS_MAX_SUBNET + 1;
     this->vnic_id = PDS_MAX_VNIC + 1;
     this->vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
@@ -41,10 +41,10 @@ vnic_util::vnic_util() {
     this->src_dst_check = true;
 }
 
-vnic_util::vnic_util(pds_vcn_id_t vcn_id, pds_vnic_id_t vnic_id,
+vnic_util::vnic_util(pds_vpc_id_t vpc_id, pds_vnic_id_t vnic_id,
                      pds_subnet_id_t sub_id, std::string vnic_mac,
                      bool src_dst_check) {
-    this->vcn_id = vcn_id;
+    this->vpc_id = vpc_id;
     this->sub_id = sub_id;
     this->vnic_id = vnic_id;
     this->vnic_mac = vnic_mac;
@@ -57,7 +57,7 @@ sdk::sdk_ret_t
 vnic_util::create(void) {
     pds_vnic_spec_t spec = {0};
 
-    spec.vcn.id = vcn_id;
+    spec.vpc.id = vpc_id;
     spec.subnet.id = sub_id;
     spec.key.id = vnic_id;
     spec.vnic_encap = vnic_encap;
@@ -86,7 +86,7 @@ vnic_util::read(pds_vnic_info_t *info, bool compare_spec) {
     if (compare_spec) {
         mac_addr_t mac = {0};
         SDK_ASSERT(vnic_id == info->spec.key.id);
-        //SDK_ASSERT(vcn_id == info->spec.vcn.id);  //This is hw_id during read
+        //SDK_ASSERT(vpc_id == info->spec.vpc.id);  //This is hw_id during read
         //SDK_ASSERT(sub_id == info->spec.subnet.id); //This is hw_id during read
         SDK_ASSERT(this->vnic_encap.type == info->spec.vnic_encap.type);
         SDK_ASSERT(this->fabric_encap.type == info->spec.fabric_encap.type);

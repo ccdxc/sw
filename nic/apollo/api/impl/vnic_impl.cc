@@ -11,7 +11,7 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
-#include "nic/apollo/api/vcn.hpp"
+#include "nic/apollo/api/vpc.hpp"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/impl/route_impl.hpp"
@@ -139,8 +139,8 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->vnic_spec;
     subnet = subnet_db()->find(&spec->subnet);
     if (subnet == NULL) {
-        PDS_TRACE_ERR("Unable to find subnet : %u, vcn : %u",
-                      spec->subnet.id, spec->vcn.id);
+        PDS_TRACE_ERR("Unable to find subnet : %u, vpc : %u",
+                      spec->subnet.id, spec->vpc.id);
         return sdk::SDK_RET_INVALID_ARG;
     }
 
@@ -227,7 +227,7 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
 
 sdk_ret_t
 vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
-                                                  vcn_entry *vcn,
+                                                  vpc_entry *vpc,
                                                   pds_vnic_spec_t *spec,
                                                   vnic_entry *vnic,
                                                   route_table *v4_route_table,
@@ -242,7 +242,7 @@ vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
     vnic_by_vlan_data.action_id =
         LOCAL_VNIC_BY_VLAN_TX_LOCAL_VNIC_INFO_TX_ID;
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.local_vnic_tag = hw_id_;
-    vnic_by_vlan_data.local_vnic_by_vlan_tx_info.vcn_id = vcn->hw_id();
+    vnic_by_vlan_data.local_vnic_by_vlan_tx_info.vpc_id = vpc->hw_id();
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.skip_src_dst_check1 =
         spec->src_dst_check ? false : true;
     vnic_by_vlan_data.local_vnic_by_vlan_tx_info.skip_src_dst_check2 = false;
@@ -306,7 +306,7 @@ vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
 
 sdk_ret_t
 vnic_impl::activate_vnic_by_slot_rx_table_create_(pds_epoch_t epoch,
-                                                  vcn_entry *vcn,
+                                                  vpc_entry *vpc,
                                                   pds_vnic_spec_t *spec,
                                                   vnic_entry *vnic,
                                                   policy *v4_policy,
@@ -324,7 +324,7 @@ vnic_impl::activate_vnic_by_slot_rx_table_create_(pds_epoch_t epoch,
     vnic_by_slot_data.action_id =
         LOCAL_VNIC_BY_SLOT_RX_LOCAL_VNIC_INFO_RX_ID;
     vnic_by_slot_data.local_vnic_by_slot_rx_info.local_vnic_tag = hw_id_;
-    vnic_by_slot_data.local_vnic_by_slot_rx_info.vcn_id = vcn->hw_id();
+    vnic_by_slot_data.local_vnic_by_slot_rx_info.vpc_id = vpc->hw_id();
     vnic_by_slot_data.local_vnic_by_slot_rx_info.skip_src_dst_check1 =
         spec->src_dst_check ? false : true;
     vnic_by_slot_data.local_vnic_by_slot_rx_info.skip_src_dst_check2 = false;
@@ -364,8 +364,8 @@ sdk_ret_t
 vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
                                  pds_vnic_spec_t *spec) {
     sdk_ret_t                ret;
-    pds_vcn_key_t            vcn_key;
-    vcn_entry                *vcn;
+    pds_vpc_key_t            vpc_key;
+    vpc_entry                *vpc;
     pds_subnet_key_t         subnet_key;
     subnet_entry             *subnet;
     pds_route_table_key_t    route_table_key;
@@ -379,9 +379,9 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
     if (unlikely(subnet == NULL)) {
         return sdk::SDK_RET_INVALID_ARG;
     }
-    vcn_key = subnet->vcn();
-    vcn = vcn_db()->find(&vcn_key);
-    if (unlikely(vcn == NULL)) {
+    vpc_key = subnet->vpc();
+    vpc = vpc_db()->find(&vpc_key);
+    if (unlikely(vpc == NULL)) {
         return sdk::SDK_RET_INVALID_ARG;
     }
     route_table_key = subnet->v4_route_table();
@@ -403,12 +403,12 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
     policy_key = subnet->egr_v6_policy();
     egr_v6_policy = policy_db()->policy_find(&policy_key);
     // program local_vnic_by_vlan_tx table entry
-    ret = activate_vnic_by_vlan_tx_table_create_(epoch, vcn, spec, vnic,
+    ret = activate_vnic_by_vlan_tx_table_create_(epoch, vpc, spec, vnic,
                                                  v4_route_table, v6_route_table,
                                                  egr_v4_policy, egr_v6_policy);
     if (ret == SDK_RET_OK) {
         // program local_vnic_by_slot_rx table entry
-        ret = activate_vnic_by_slot_rx_table_create_(epoch, vcn, spec, vnic,
+        ret = activate_vnic_by_slot_rx_table_create_(epoch, vpc, spec, vnic,
                                                      ing_v4_policy,
                                                      ing_v6_policy);
     }
@@ -559,7 +559,7 @@ vnic_impl::fill_vnic_spec_(egress_local_vnic_info_actiondata_t *egress_vnic_data
     spec->subnet.id =
         egress_vnic_data->egress_local_vnic_info_action.subnet_id;
     // from VNIC_BY_VLAN_TX table
-    spec->vcn.id = vnic_by_vlan_data->local_vnic_by_vlan_tx_info.vcn_id;
+    spec->vpc.id = vnic_by_vlan_data->local_vnic_by_vlan_tx_info.vpc_id;
     spec->src_dst_check =
         vnic_by_vlan_data->local_vnic_by_vlan_tx_info.skip_src_dst_check1 == true
             ? false : true;
@@ -634,8 +634,8 @@ vnic_impl::read_hw(pds_vnic_key_t *key, pds_vnic_info_t *info) {
     fill_vnic_spec_(&egress_vnic_data, &vnic_by_vlan_data,
                     &vnic_by_slot_key, &vnic_by_slot_data, &info->spec);
 
-    PDS_TRACE_DEBUG("vnic %u, subnet %u, vcn %u, wire vlan %u, overlay mac %s ",
-                    key->id, info->spec.subnet.id, info->spec.vcn.id,
+    PDS_TRACE_DEBUG("vnic %u, subnet %u, vpc %u, wire vlan %u, overlay mac %s ",
+                    key->id, info->spec.subnet.id, info->spec.vpc.id,
                     info->spec.vnic_encap.val.value, macaddr2str(info->spec.mac_addr));
     return SDK_RET_OK;
 }

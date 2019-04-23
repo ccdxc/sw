@@ -16,7 +16,7 @@
 //#include "nic/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/apollo/api/device_state.hpp"
 #include "nic/apollo/api/tep_state.hpp"
-#include "nic/apollo/api/vcn_state.hpp"
+#include "nic/apollo/api/vpc_state.hpp"
 #include "nic/apollo/api/subnet_state.hpp"
 #include "nic/apollo/api/vnic_state.hpp"
 #include "nic/apollo/api/mapping_state.hpp"
@@ -73,7 +73,7 @@ public:
     uint16_t num_data_cores(void) const { return num_data_cores_; }
     device_state *device_db(void) { return &device_db_; }
     tep_state *tep_db(void) { return &tep_db_; }
-    vcn_state *vcn_db(void) { return &vcn_db_; }
+    vpc_state *vpc_db(void) { return &vpc_db_; }
     subnet_state *subnet_db(void) { return &subnet_db_; }
     vnic_state *vnic_db(void) { return &vnic_db_ ; }
     mapping_state *mapping_db(void) { return &mapping_db_; }
@@ -96,7 +96,7 @@ private:
     uint16_t                num_data_cores_;
     device_state            device_db_;
     tep_state               tep_db_;
-    vcn_state               vcn_db_;
+    vpc_state               vpc_db_;
     subnet_state            subnet_db_;
     vnic_state              vnic_db_;
     mapping_state           mapping_db_;
@@ -125,10 +125,10 @@ tep_db (void)
     return api::g_pds_state.tep_db();
 }
 
-static inline vcn_state *
-vcn_db (void)
+static inline vpc_state *
+vpc_db (void)
 {
-    return api::g_pds_state.vcn_db();
+    return api::g_pds_state.vpc_db();
 }
 
 static inline subnet_state *

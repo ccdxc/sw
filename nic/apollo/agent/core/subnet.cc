@@ -12,14 +12,14 @@ namespace core {
 static inline sdk_ret_t
 subnet_create_validate (pds_subnet_spec_t *spec)
 {
-    pds_vcn_spec_t *vpc_spec;
+    pds_vpc_spec_t *vpc_spec;
     ip_addr_t vpc_ip_hi, vpc_ip_lo;
     ip_addr_t subnet_ip_hi, subnet_ip_lo;
     mac_addr_t zero_mac = {0};
 
-    // verify VCN exists
-    if ((vpc_spec = agent_state::state()->find_in_vpc_db(&spec->vcn)) == NULL) {
-        PDS_TRACE_ERR("Failed to create subnet {}, vpc {} not found", spec->key.id, spec->vcn.id);
+    // verify VPC exists
+    if ((vpc_spec = agent_state::state()->find_in_vpc_db(&spec->vpc)) == NULL) {
+        PDS_TRACE_ERR("Failed to create subnet {}, vpc {} not found", spec->key.id, spec->vpc.id);
         return SDK_RET_INVALID_ARG;
     }
     // IPv4 prefix for subnet must be within VPC prefix

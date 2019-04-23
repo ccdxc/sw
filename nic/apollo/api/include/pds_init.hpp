@@ -28,7 +28,7 @@ typedef enum pds_init_mode_e {
 
 typedef enum pds_scale_profile_e {
     PDS_SCALE_PROFILE_DEFAULT,
-    ///< P1 = 128 VCNs, 128 subnet, 1K vnics, 1M mappings,
+    ///< P1 = 128 VPCs, 128 subnet, 1K vnics, 1M mappings,
     ///<      128 IPv4 route tables, with max. of 256K routers per table
     ///<      128 IPv6 route tables, with max. of 64k routes per table
     ///<      8M flows

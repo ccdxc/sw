@@ -27,7 +27,7 @@ class VpcObject(base.ConfigObjectBase):
         self.IPPrefix[0] = resmgr.GetVpcIPv6Prefix(self.VPCId)
         self.IPPrefix[1] = resmgr.GetVpcIPv4Prefix(self.VPCId)
         self.Stack = spec.stack
-        # As currently vcn can have only type IPV4 or IPV6, we will alternate
+        # As currently vpc can have only type IPV4 or IPV6, we will alternate
         # the configuration
         if self.Stack == 'dual':
             self.PfxSel = index % 2

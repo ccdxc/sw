@@ -21,9 +21,9 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_DEVICE:
         return device_entry::factory(&api_ctxt->api_params->device_spec);
 
-    case OBJ_ID_VCN:
-        PDS_TRACE_DEBUG("allocating from vcn slab");
-        return vcn_entry::factory(&api_ctxt->api_params->vcn_spec);
+    case OBJ_ID_VPC:
+        PDS_TRACE_DEBUG("allocating from vpc slab");
+        return vpc_entry::factory(&api_ctxt->api_params->vpc_spec);
 
     case OBJ_ID_SUBNET:
         return subnet_entry::factory(&api_ctxt->api_params->subnet_spec);
@@ -100,11 +100,11 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
     case OBJ_ID_DEVICE:
         return device_db()->find();
 
-    case OBJ_ID_VCN:
+    case OBJ_ID_VPC:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return vcn_db()->find(&api_ctxt->api_params->vcn_key);
+            return vpc_db()->find(&api_ctxt->api_params->vpc_key);
         }
-        return vcn_db()->find(&api_ctxt->api_params->vcn_spec.key);
+        return vpc_db()->find(&api_ctxt->api_params->vpc_spec.key);
 
     case OBJ_ID_SUBNET:
         if (api_ctxt->api_op == API_OP_DELETE) {

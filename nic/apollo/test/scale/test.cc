@@ -6,7 +6,7 @@
 #include <math.h>
 #include "nic/apollo/test/scale/test.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
-#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
@@ -250,7 +250,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
 
 //----------------------------------------------------------------------------
 // 1. create 1 primary + 32 secondary IP for each of 1K local vnics
-// 2. create 1023 remote mappings per VCN
+// 2. create 1023 remote mappings per VPC
 //------------------------------------------------------------------------------
 sdk_ret_t
 create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
@@ -277,7 +277,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
                     memset(&pds_local_mapping, 0, sizeof(pds_local_mapping));
-                    pds_local_mapping.key.vcn.id = i;
+                    pds_local_mapping.key.vpc.id = i;
                     pds_local_mapping.key.ip_addr.af = IP_AF_IPV4;
                     pds_local_mapping.key.ip_addr.addr.v4_addr =
                         (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
@@ -317,7 +317,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         SDK_ASSERT(0);
                         return rv;
                     }
-                    g_flow_test_obj->add_local_ep(pds_local_mapping.key.vcn.id,
+                    g_flow_test_obj->add_local_ep(pds_local_mapping.key.vpc.id,
                                                   pds_local_mapping.key.ip_addr);
 #endif
                     if (g_test_params.dual_stack) {
@@ -347,7 +347,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                             SDK_ASSERT(0);
                             return rv;
                         }
-                        g_flow_test_obj->add_local_ep(pds_local_mapping.key.vcn.id,
+                        g_flow_test_obj->add_local_ep(pds_local_mapping.key.vpc.id,
                                                       pds_local_v6_mapping.key.ip_addr);
 #endif
                     }
@@ -374,7 +374,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             ip_base = num_vnics * num_ip_per_vnic + 1;
             for (uint32_t k = 1; k <= num_remote_mappings; k++) {
                 memset(&pds_remote_mapping, 0, sizeof(pds_remote_mapping));
-                pds_remote_mapping.key.vcn.id = i;
+                pds_remote_mapping.key.vpc.id = i;
                 pds_remote_mapping.key.ip_addr.af = IP_AF_IPV4;
                 pds_remote_mapping.key.ip_addr.addr.v4_addr =
                     (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
@@ -409,7 +409,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 if (rv != SDK_RET_OK) {
                     return rv;
                 }
-                g_flow_test_obj->add_remote_ep(pds_remote_mapping.key.vcn.id,
+                g_flow_test_obj->add_remote_ep(pds_remote_mapping.key.vpc.id,
                                                pds_remote_mapping.key.ip_addr);
 #endif
                 if (g_test_params.dual_stack) {
@@ -431,7 +431,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     if (rv != SDK_RET_OK) {
                         return rv;
                     }
-                    g_flow_test_obj->add_remote_ep(pds_remote_mapping.key.vcn.id,
+                    g_flow_test_obj->add_remote_ep(pds_remote_mapping.key.vpc.id,
                                                    pds_remote_v6_mapping.key.ip_addr);
 #endif
                 }
@@ -474,7 +474,7 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 memset(&pds_vnic, 0, sizeof(pds_vnic));
-                pds_vnic.vcn.id = i;
+                pds_vnic.vpc.id = i;
                 pds_vnic.subnet.id = PDS_SUBNET_ID((i - 1), num_subnets, j);
                 pds_vnic.key.id = vnic_key;
                 pds_vnic.vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
@@ -520,7 +520,7 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
     return rv;
 }
 
-// VCN prefix is /8, subnet id is encoded in next 10 bits (making it /18 prefix)
+// VPC prefix is /8, subnet id is encoded in next 10 bits (making it /18 prefix)
 // leaving LSB 14 bits for VNIC IPs
 sdk_ret_t
 create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
@@ -534,7 +534,7 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
     for (uint32_t i = 1; i <= num_subnets; i++) {
         memset(&pds_subnet, 0, sizeof(pds_subnet));
         pds_subnet.key.id = PDS_SUBNET_ID((vpc_id - 1), num_subnets, i);
-        pds_subnet.vcn.id = vpc_id;
+        pds_subnet.vpc.id = vpc_id;
         pds_subnet.v4_pfx = *vpc_pfx;
         pds_subnet.v4_pfx.v4_addr =
             (pds_subnet.v4_pfx.v4_addr) | ((i - 1) << 14);
@@ -567,34 +567,34 @@ sdk_ret_t
 create_vpcs (uint32_t num_vpcs, ip_prefix_t *ip_pfx, uint32_t num_subnets)
 {
     sdk_ret_t rv;
-    pds_vcn_spec_t pds_vcn;
+    pds_vpc_spec_t pds_vpc;
 
     SDK_ASSERT(num_vpcs <= 1024);
     for (uint32_t i = 1; i <= num_vpcs; i++) {
-        memset(&pds_vcn, 0, sizeof(pds_vcn));
-        pds_vcn.type = PDS_VCN_TYPE_TENANT;
-        pds_vcn.key.id = i;
-        pds_vcn.v4_pfx.v4_addr = ip_pfx->addr.addr.v4_addr & 0xFF000000;
-        pds_vcn.v4_pfx.len = 8; // fix this to /8
+        memset(&pds_vpc, 0, sizeof(pds_vpc));
+        pds_vpc.type = PDS_VPC_TYPE_TENANT;
+        pds_vpc.key.id = i;
+        pds_vpc.v4_pfx.v4_addr = ip_pfx->addr.addr.v4_addr & 0xFF000000;
+        pds_vpc.v4_pfx.len = 8; // fix this to /8
 #ifdef TEST_GRPC_APP
-        rv = create_vcn_grpc(&pds_vcn);
+        rv = create_vpc_grpc(&pds_vpc);
         if (rv != SDK_RET_OK) {
             return rv;
         }
 #else
-        rv = pds_vcn_create(&pds_vcn);
+        rv = pds_vpc_create(&pds_vpc);
         if (rv != SDK_RET_OK) {
             return rv;
         }
 #endif
-        rv = create_subnets(i, num_vpcs, num_subnets, &pds_vcn.v4_pfx);
+        rv = create_subnets(i, num_vpcs, num_subnets, &pds_vpc.v4_pfx);
         if (rv != SDK_RET_OK) {
             return rv;
         }
     }
 #ifdef TEST_GRPC_APP
-    // Batching: push leftover vcn and subnet objects
-    rv = create_vcn_grpc(NULL);
+    // Batching: push leftover vpc and subnet objects
+    rv = create_vpc_grpc(NULL);
     if (rv != SDK_RET_OK) {
         SDK_ASSERT(0);
         return rv;

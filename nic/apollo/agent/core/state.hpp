@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
-#include "nic/apollo/api/include/pds_vcn.hpp"
+#include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
@@ -22,7 +22,7 @@ using sdk::lib::slab;
 
 namespace core {
 
-typedef sdk::sdk_ret_t (*vpc_walk_cb_t)(pds_vcn_spec_t *spec, void *ctxt);
+typedef sdk::sdk_ret_t (*vpc_walk_cb_t)(pds_vpc_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*subnet_walk_cb_t)(pds_subnet_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*vnic_walk_cb_t)(pds_vnic_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*tep_walk_cb_t)(pds_tep_spec_t *spec, void *ctxt);
@@ -43,7 +43,7 @@ typedef enum slab_id_e {
     SLAB_ID_MAX
 } slab_id_t;
 
-typedef unordered_map<uint32_t, pds_vcn_spec_t *> vpc_db_t;
+typedef unordered_map<uint32_t, pds_vpc_spec_t *> vpc_db_t;
 typedef unordered_map<uint32_t, pds_subnet_spec_t *> subnet_db_t;
 typedef unordered_map<uint32_t, pds_tep_spec_t *> tep_db_t;
 typedef unordered_map<uint32_t, pds_vnic_spec_t *> vnic_db_t;
@@ -66,8 +66,8 @@ public:
     vnic_db_t *vnic_map(void) { return vnic_map_; }
     route_table_db_t *route_table_map(void) { return route_table_map_; }
     policy_db_t *policy_map(void) { return policy_map_; }
-    pds_vcn_id_t substrate_vpc_id(void) { return substrate_vpc_id_; }
-    void substrate_vpc_id_set(pds_vcn_id_t id) { substrate_vpc_id_ = id; }
+    pds_vpc_id_t substrate_vpc_id(void) { return substrate_vpc_id_; }
+    void substrate_vpc_id_set(pds_vpc_id_t id) { substrate_vpc_id_ = id; }
     mirror_session_db_t *mirror_session_map(void) {
         return mirror_session_map_;
     }
@@ -102,7 +102,7 @@ private:
 private:
     tep_db_t *tep_map_;
     vpc_db_t *vpc_map_;
-    pds_vcn_id_t substrate_vpc_id_;
+    pds_vpc_id_t substrate_vpc_id_;
     subnet_db_t *subnet_map_;
     vnic_db_t *vnic_map_;
     route_table_db_t *route_table_map_;
@@ -128,11 +128,11 @@ public:
     bool del_from_tep_db(uint32_t key);
     slab_ptr_t tep_slab(void) const { return cfg_db_->tep_slab(); }
 
-    pds_vcn_spec_t *find_in_vpc_db(pds_vcn_key_t *key);
-    sdk_ret_t add_to_vpc_db(pds_vcn_key_t *key,
-                            pds_vcn_spec_t *spec);
+    pds_vpc_spec_t *find_in_vpc_db(pds_vpc_key_t *key);
+    sdk_ret_t add_to_vpc_db(pds_vpc_key_t *key,
+                            pds_vpc_spec_t *spec);
     sdk_ret_t vpc_db_walk(vpc_walk_cb_t cb, void *ctxt);
-    bool del_from_vpc_db(pds_vcn_key_t *key);
+    bool del_from_vpc_db(pds_vpc_key_t *key);
     slab_ptr_t vpc_slab(void) const { return cfg_db_->vpc_slab(); }
 
     pds_subnet_spec_t *find_in_subnet_db(pds_subnet_key_t *key);
@@ -164,12 +164,12 @@ public:
     //sdk_ret_t policy_db_walk(policy_walk_cb_t cb, void *ctxt);
     slab_ptr_t policy_slab(void) const { return cfg_db_->policy_slab(); }
 
-    pds_vcn_id_t substrate_vpc_id(void) { return cfg_db_->substrate_vpc_id(); }
-    void substrate_vpc_id_set(pds_vcn_id_t id) {
+    pds_vpc_id_t substrate_vpc_id(void) { return cfg_db_->substrate_vpc_id(); }
+    void substrate_vpc_id_set(pds_vpc_id_t id) {
         return cfg_db_->substrate_vpc_id_set(id);
     }
     void substrate_vpc_id_reset(void) {
-        return cfg_db_->substrate_vpc_id_set(PDS_VCN_ID_INVALID);
+        return cfg_db_->substrate_vpc_id_set(PDS_VPC_ID_INVALID);
     }
 
     pds_mirror_session_spec_t *find_in_mirror_session_db(pds_mirror_session_key_t *key);

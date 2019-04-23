@@ -19,11 +19,11 @@ namespace api_test {
 local_mapping_util::local_mapping_util() {}
 
 local_mapping_util::local_mapping_util(
-    pds_vcn_id_t vcn_id_, pds_subnet_id_t sub_id_, std::string vnic_ip_,
+    pds_vpc_id_t vpc_id_, pds_subnet_id_t sub_id_, std::string vnic_ip_,
     pds_vnic_id_t vnic_id_, uint64_t mac_u64, pds_encap_type_t encap_type_,
     uint32_t encap_val_, bool public_ip_valid, std::string pub_ip) {
     mac_addr_t mac;
-    this->vcn_id = vcn_id_;
+    this->vpc_id = vpc_id_;
     this->vnic_ip = vnic_ip_;
     this->sub_id = sub_id_;
     this->is_public_ip_valid = public_ip_valid;
@@ -50,7 +50,7 @@ sdk::sdk_ret_t
 local_mapping_util::create(void) {
     pds_local_mapping_spec_t local_spec = {0};
 
-    local_spec.key.vcn.id = this->vcn_id;
+    local_spec.key.vpc.id = this->vpc_id;
     extract_ip_addr(this->vnic_ip.c_str(), &local_spec.key.ip_addr);
     local_spec.subnet.id = this->sub_id;
 
@@ -86,7 +86,7 @@ local_mapping_util::read(pds_local_mapping_info_t *info, bool compare_spec) {
     // mac_addr_t mac;
 
     // mac_str_to_addr((char *)this->vnic_mac.c_str(), mac);
-    key.vcn.id = this->vcn_id;
+    key.vpc.id = this->vpc_id;
     extract_ip_addr(this->vnic_ip.c_str(), &key.ip_addr);
     rv = pds_local_mapping_read(&key, info);
     if (rv != SDK_RET_OK) {
@@ -94,10 +94,10 @@ local_mapping_util::read(pds_local_mapping_info_t *info, bool compare_spec) {
     }
 
     std::cout << "Mapping info:" << "\n";
-    std::cout << "HW: vcn id: " << info->spec.key.vcn.id
-              << " SW: vcn_id: " << this->vcn_id << "\n";
+    std::cout << "HW: vpc id: " << info->spec.key.vpc.id
+              << " SW: vpc_id: " << this->vpc_id << "\n";
     std::cout << "HW: vnic ip: " << ipaddr2str(&info->spec.key.ip_addr)
-              << " SW: vcn_id: " << this->vnic_ip.c_str() << "\n";
+              << " SW: vpc_id: " << this->vnic_ip.c_str() << "\n";
     if (this->is_public_ip_valid)
         std::cout << "HW: public ip: " << ipaddr2str(&info->spec.public_ip)
                   << " SW: public ip: " << this->public_ip.c_str() << "\n";
@@ -107,7 +107,7 @@ local_mapping_util::read(pds_local_mapping_info_t *info, bool compare_spec) {
     if (compare_spec) {
         // mac1 = MAC_TO_UINT64(mac);
         // mac2 = MAC_TO_UINT64(info->spec.vnic_mac);
-        SDK_ASSERT(this->vcn_id == info->spec.key.vcn.id);
+        SDK_ASSERT(this->vpc_id == info->spec.key.vpc.id);
         // SDK_ASSERT(this->sub_id == info->spec.subnet.id); // not stored in hw
         // table
         SDK_ASSERT(strcmp(this->vnic_ip.c_str(),
@@ -138,20 +138,20 @@ sdk::sdk_ret_t
 local_mapping_util::del(void) {
     pds_mapping_key_t key;
 
-    key.vcn.id = vcn_id;
+    key.vpc.id = vpc_id;
     extract_ip_addr(vnic_ip.c_str(), &key.ip_addr);
     return pds_local_mapping_delete(&key);
 }
 
 /// \brief get <num_vnics> per subnet and <num_ip_per_vnic>
 /// and create/delete/read maximum mappings for
-/// given <vcn_id, sub_id>
-/// vnic_ip derived from vcn_ip
+/// given <vpc_id, sub_id>
+/// vnic_ip derived from vpc_ip
 /// vnic_mac calculated and incremented automatically
 static inline sdk::sdk_ret_t
 mapping_util_object_stepper (
     utils_op_t op, uint32_t num_ip_per_vnic, uint32_t num_vnics,
-    pds_vcn_id_t vcn_id, pds_subnet_id_t sub_id,
+    pds_vpc_id_t vpc_id, pds_subnet_id_t sub_id,
     local_mapping_stepper_seed_t *seed,
     pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
     bool is_public_ip_valid = false,
@@ -203,9 +203,9 @@ mapping_util_object_stepper (
          vnic_indx < (seed->vnic_id_stepper + num_vnics); vnic_indx++) {
         for (uint16_t vip_indx = 0; vip_indx < num_ip_per_vnic; vip_indx++) {
             local_mapping_util mapping_obj(
-                vcn_id, sub_id, vnic_ip, vnic_indx, curr_vnic_mac, encap_type,
+                vpc_id, sub_id, vnic_ip, vnic_indx, curr_vnic_mac, encap_type,
                 curr_encap_val, is_public_ip_valid, public_ip);
-            std::cout << "vcn_id: " << vcn_id << " & vnic_indx:" << vnic_indx
+            std::cout << "vpc_id: " << vpc_id << " & vnic_indx:" << vnic_indx
                       << "\n";
             std::cout << "vnic_ip:" << vnic_ip << "\n";
             // std::cout << "encap_val:" << curr_encap_val << "and" <<
@@ -262,33 +262,33 @@ mapping_util_object_stepper (
 
 sdk::sdk_ret_t
 local_mapping_util::many_create(uint16_t num_ip_per_vnic, uint16_t num_vnics,
-                                pds_vcn_id_t vcn_id, pds_subnet_id_t sub_id,
+                                pds_vpc_id_t vpc_id, pds_subnet_id_t sub_id,
                                 local_mapping_stepper_seed_t *seed,
                                 pds_encap_type_t encap_type,
                                 bool is_public_ip_valid,
                                 std::string public_ip_cidr_str) {
     return (mapping_util_object_stepper(OP_MANY_CREATE, num_ip_per_vnic,
-                                        num_vnics, vcn_id, sub_id, seed,
+                                        num_vnics, vpc_id, sub_id, seed,
                                         encap_type, is_public_ip_valid));
 }
 
 sdk::sdk_ret_t
 local_mapping_util::many_delete(uint16_t num_ip_per_vnic, uint16_t num_vnics,
-                                pds_vcn_id_t vcn_id,
+                                pds_vpc_id_t vpc_id,
                                 local_mapping_stepper_seed_t *seed) {
     return (mapping_util_object_stepper(OP_MANY_DELETE, num_ip_per_vnic,
-                                        num_vnics, vcn_id, 0, seed));
+                                        num_vnics, vpc_id, 0, seed));
 }
 
 sdk::sdk_ret_t
 local_mapping_util::many_read(uint16_t num_ip_per_vnic, uint16_t num_vnics,
-                              pds_vcn_id_t vcn_id, pds_subnet_id_t sub_id,
+                              pds_vpc_id_t vpc_id, pds_subnet_id_t sub_id,
                               local_mapping_stepper_seed_t *seed,
                               pds_encap_type_t encap_type,
                               bool is_public_ip_valid,
                               sdk::sdk_ret_t expected_result) {
     return (mapping_util_object_stepper(
-        OP_MANY_READ, num_ip_per_vnic, num_vnics, vcn_id, sub_id, seed,
+        OP_MANY_READ, num_ip_per_vnic, num_vnics, vpc_id, sub_id, seed,
         encap_type, is_public_ip_valid, expected_result));
 }
 

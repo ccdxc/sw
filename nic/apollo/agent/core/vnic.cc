@@ -13,7 +13,7 @@ static inline sdk_ret_t
 vnic_create_validate (pds_vnic_spec_t *spec)
 {
     // check if VPC exists
-    if (agent_state::state()->find_in_vpc_db(&spec->vcn) == NULL) {
+    if (agent_state::state()->find_in_vpc_db(&spec->vpc) == NULL) {
         PDS_TRACE_ERR("Failed to create vnic {}, vpc {} not found",
                       spec->key.id, spec->key.id);
         return sdk::SDK_RET_ENTRY_NOT_FOUND;
