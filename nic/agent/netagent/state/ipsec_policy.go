@@ -5,6 +5,7 @@ package state
 import (
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"strings"
 
 	"github.com/gogo/protobuf/proto"
@@ -49,8 +50,14 @@ func (na *Nagent) CreateIPSecPolicy(ipSec *netproto.IPSecPolicy) error {
 	}
 
 	// validate SA Policies
-	for _, r := range ipSec.Spec.Rules {
-		r.ID, err = na.Store.GetNextID(types.IPSecRuleID)
+	for i, r := range ipSec.Spec.Rules {
+		ruleHash := ipSec.Spec.Rules[i].ID
+		// Calculate the hash only if npm has not set it. Else use whatever is already set
+		if ruleHash == 0 {
+			ruleHash = generateIPSecRuleHash(&r, ipSec.GetKey())
+			ipSec.Spec.Rules[i].ID = ruleHash
+		}
+
 		switch r.SAType {
 		case "ENCRYPT":
 			// SPI should not be specified for encrypt rules
@@ -379,4 +386,13 @@ func (na *Nagent) findIPSecSADecrypt(policyMeta api.ObjectMeta, saName string) (
 		return nil, fmt.Errorf("ipsec SA decrypt {%v} not found", saName)
 	}
 
+}
+
+// TODO Unify hash generation between SGPolicy and IPSecPolicy
+func generateIPSecRuleHash(r *netproto.IPSecRule, key string) uint64 {
+	h := fnv.New64()
+	rule, _ := r.Marshal()
+	rule = append(rule, []byte(key)...)
+	h.Write(rule)
+	return h.Sum64()
 }
