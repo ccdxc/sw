@@ -81,7 +81,6 @@ mirror_impl::release_resources(api_base *api_obj) {
 #define erspan_action    action_u.mirror_erspan
 sdk_ret_t
 mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t ret;
     vpc_entry *vpc;
     tep_entry *tep;
     mac_addr_t mac;
@@ -161,7 +160,7 @@ mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_MIRROR, hw_id_, NULL, NULL,
                                        &mirror_data);
-    if (ret != P4PD_SUCCESS) {
+    if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to program mirror session %u at idx %u",
                       spec->key.id, hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;

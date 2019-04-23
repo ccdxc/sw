@@ -49,6 +49,12 @@
             "v6-nat-prefix": "2020::/96"
         },
         {
+            "kind" : "mirror",
+            "enable" : "false",
+            "rspan" : "4",
+            "erspan" : "4"
+        },
+        {
             "kind" : "flows",
             "num_tcp": "0",
             "num_udp": "524288",

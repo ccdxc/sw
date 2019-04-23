@@ -217,7 +217,6 @@ populate_policy_request (SecurityPolicyRequest *req, pds_policy_spec_t *policy)
             rule->set_stateful(true);
         }
         if (policy->rules[i].match.l3_match.ip_proto) {
-
             rule->mutable_match()->mutable_l3match()->set_protocol(policy->rules[i].match.l3_match.ip_proto);
         }
         ip_pfx_to_spec(
@@ -261,8 +260,9 @@ static void
 populate_remote_mapping_request (MappingRequest *req,
                                  pds_remote_mapping_spec_t *remote_spec)
 {
-    if (!remote_spec || !req)
+    if (!remote_spec || !req) {
         return;
+    }
 
     MappingSpec *spec = req->add_request();
     spec->mutable_id()->set_vpcid(remote_spec->key.vpc.id);
@@ -278,8 +278,9 @@ populate_remote_mapping_request (MappingRequest *req,
 static void
 populate_vnic_request (VnicRequest *req, pds_vnic_spec_t *vnic)
 {
-    if (!vnic || !req)
+    if (!vnic || !req) {
         return;
+    }
 
     VnicSpec *spec = req->add_request();
     spec->set_vpcid(vnic->vpc.id);
@@ -290,14 +291,29 @@ populate_vnic_request (VnicRequest *req, pds_vnic_spec_t *vnic)
     spec->set_resourcepoolid(vnic->rsc_pool_id);
     spec->set_sourceguardenable(vnic->src_dst_check);
     pds_encap_to_proto_encap(spec->mutable_fabricencap(), &vnic->fabric_encap);
+    if (vnic->tx_mirror_session_bmap) {
+        for (uint8_t i = 0; i < 8; i++) {
+            if (vnic->tx_mirror_session_bmap & (1 << i)) {
+                spec->add_txmirrorsessionid(i + 1);
+            }
+        }
+    }
+    if (vnic->rx_mirror_session_bmap) {
+        for (uint8_t i = 0; i < 8; i++) {
+            if (vnic->rx_mirror_session_bmap & (1 << i)) {
+                spec->add_rxmirrorsessionid(i + 1);
+            }
+        }
+    }
     return;
 }
 
 static void
 populate_subnet_request (SubnetRequest *req, pds_subnet_spec_t *subnet)
 {
-    if (!subnet || !req)
+    if (!subnet || !req) {
         return;
+    }
 
     SubnetSpec *spec = req->add_request();
     ipv4_pfx_to_spec(spec->mutable_v4prefix(), &subnet->v4_pfx);

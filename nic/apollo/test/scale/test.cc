@@ -85,6 +85,14 @@ typedef struct test_params_s {
         uint16_t dport_lo;
         uint16_t dport_hi;
     };
+    // mirror config
+    struct {
+        bool mirror_en;
+        uint32_t num_rspan;
+        uint32_t num_erspan;
+        uint8_t rspan_bmap;
+        uint8_t erspan_bmap;
+    };
 } test_params_t;
 test_params_t g_test_params = { 0 };
 
@@ -493,6 +501,10 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                                      ((j & 0x7FF) << 11) | (k & 0x7FF))));
                 pds_vnic.rsc_pool_id = 1;
                 pds_vnic.src_dst_check = false; //(k & 0x1);
+                pds_vnic.tx_mirror_session_bmap =
+                    g_test_params.rspan_bmap | g_test_params.erspan_bmap;
+                pds_vnic.rx_mirror_session_bmap =
+                    g_test_params.rspan_bmap | g_test_params.erspan_bmap;
 #ifdef TEST_GRPC_APP
                 rv = create_vnic_grpc(&pds_vnic);
                 if (rv != SDK_RET_OK) {
@@ -757,19 +769,20 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
 }
 
 sdk_ret_t
-create_mirror_sessions (void)
+create_rspan_mirror_sessions (uint32_t num_sessions)
 {
     sdk_ret_t rv;
+    static uint16_t rspan_vlan_start = 4094;
     static uint32_t msid = 1, i;
+    pds_mirror_session_spec_t ms;
 
-    pds_mirror_session_spec_t    ms;
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < num_sessions; i++) {
         ms.key.id = msid++;
         ms.type = PDS_MIRROR_SESSION_TYPE_RSPAN;
         ms.snap_len = 128;
         ms.rspan_spec.interface = 0x11010001;  // eth 1/1
         ms.rspan_spec.encap.type = PDS_ENCAP_TYPE_DOT1Q;
-        ms.rspan_spec.encap.val.vlan_tag = 4094;
+        ms.rspan_spec.encap.val.vlan_tag = rspan_vlan_start--;
 #ifdef TEST_GRPC_APP
         rv = create_mirror_session_grpc(&ms);
         if (rv != SDK_RET_OK) {
@@ -800,6 +813,7 @@ create_objects (void)
     pt::ptree json_pt;
     string pfxstr;
     sdk_ret_t ret;
+    uint32_t i;
     char *tep_encap_env;
 
 #ifndef TEST_GRPC_APP
@@ -861,7 +875,6 @@ create_objects (void)
                 assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.tep_pfx) == 0);
             } else if (kind == "route-table") {
                 g_test_params.num_routes = std::stol(obj.second.get<std::string>("count"));
-                g_test_params.num_vpcs = std::stol(obj.second.get<std::string>("num_vpcs", "1"));
                 pfxstr = obj.second.get<std::string>("prefix-start");
                 assert(str2ipv4pfx((char *)pfxstr.c_str(), &g_test_params.route_pfx) == 0);
                 pfxstr = obj.second.get<std::string>("v6-prefix-start");
@@ -896,6 +909,23 @@ create_objects (void)
                 g_test_params.sport_hi = std::stol(obj.second.get<std::string>("sport_hi"));
                 g_test_params.dport_lo = std::stol(obj.second.get<std::string>("dport_lo"));
                 g_test_params.dport_hi = std::stol(obj.second.get<std::string>("dport_hi"));
+            } else if (kind == "mirror") {
+                if (!obj.second.get<std::string>("enable").compare("true")) {
+                    g_test_params.mirror_en = true;
+                    g_test_params.num_rspan = std::stol(obj.second.get<std::string>("rspan"));
+                    g_test_params.num_erspan = std::stol(obj.second.get<std::string>("erspan"));
+                    if ((g_test_params.num_rspan + g_test_params.num_erspan) >
+                            PDS_MAX_MIRROR_SESSION) {
+                        printf("Total no. of mirror sessions can't exceed %u",
+                               PDS_MAX_MIRROR_SESSION);
+                    }
+                    for (i = 0; i < g_test_params.num_rspan; i++) {
+                        g_test_params.rspan_bmap |= (1 << i);
+                    }
+                    for (; i < g_test_params.num_rspan + g_test_params.num_erspan; i++) {
+                        //g_test_params.erspan_bmap |= (1 << i);
+                    }
+                }
             }
         }
     } catch (std::exception const &e) {
@@ -966,6 +996,13 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
+    // create RSPAN mirror sessions
+    if (g_test_params.mirror_en && (g_test_params.num_rspan > 0)) {
+        ret = create_rspan_mirror_sessions(g_test_params.num_rspan);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
     // create vnics
     ret = create_vnics(g_test_params.num_vpcs, g_test_params.num_subnets,
                        g_test_params.num_vnics, g_test_params.vlan_start);
@@ -978,11 +1015,6 @@ create_objects (void)
                           g_test_params.num_ip_per_vnic, &g_test_params.tep_pfx,
                           &g_test_params.nat_pfx, &g_test_params.v6_nat_pfx,
                           g_test_params.num_remote_mappings);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-   // create mirror sessions
-   ret = create_mirror_sessions();
     if (ret != SDK_RET_OK) {
         return ret;
     }
