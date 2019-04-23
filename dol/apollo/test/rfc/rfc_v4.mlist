@@ -19,3 +19,9 @@ modules:
         spec    : rfc_egress.testspec
         iterate :
             - policy : filter://AddrFamily=IPV4,PolicyType=disjoint_pfx
+
+    - module:
+        name    : IPV4_EGRESS_DISJOINT
+        spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint

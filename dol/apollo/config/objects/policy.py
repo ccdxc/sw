@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 import ipaddress
+import random
 import socket
 
 import infra.config.base as base
@@ -90,6 +91,25 @@ class PolicyObject(base.ConfigObjectBase):
     def IsFilterMatch(self, selectors):
         return super().IsFilterMatch(selectors.policy.filters)
 
+    def __get_non_default_random_rule(self):
+        """
+            returns a random rule without default prefix
+        """
+        rules = self.rules
+        numrules = len(rules)
+        if numrules == 0:
+            return None
+        elif numrules == 1:
+            rule = None
+            if not utils.isDefaultRoute(rules[0].Prefix):
+                rule = rules[0]
+            return rule
+        while True:
+            rule = random.choice(rules)
+            if not utils.isDefaultRoute(rule.Prefix):
+                break
+        return rule
+
     def SetupTestcaseConfig(self, obj):
         obj.localmapping = self.l_obj
         obj.policy = self
@@ -97,6 +117,8 @@ class PolicyObject(base.ConfigObjectBase):
         obj.hostport = 1
         obj.switchport = 2
         obj.devicecfg = Store.GetDevice()
+        # select a random rule for this testcase
+        obj.tc_rule = self.__get_non_default_random_rule()
         return
 
 class PolicyObjectClient:
@@ -198,6 +220,8 @@ class PolicyObjectClient:
 
         def __get_rules(af, policyspec):
             rules = []
+            if policyspec.rule is None:
+                return rules
             for rulespec in policyspec.rule:
                 stateful = rulespec.stateful
                 l4match, sportlow, sporthigh, dportlow, dporthigh = __get_l4_rule(af, rulespec)

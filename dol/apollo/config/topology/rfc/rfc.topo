@@ -35,7 +35,7 @@ vpc:
       count : 1
       type  : tenant
       subnet:
-        - count     : 2              # should be same as total routetbl / policy
+        - count     : 4              # should be same as total routetbl / policy
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
@@ -48,7 +48,7 @@ vpc:
       routetbl:
              - type: base
                routetype: fulloverlap_max_with_default
-               count : 2
+               count : 4
                v4base: '66.0.0.0\16'
                v4prefixlen: 24
                nv4routes   : 1021
@@ -60,6 +60,11 @@ vpc:
                v6routes:
                    - '0::\0'
       policy:
+              #- type : specific
+              #  policytype : empty    # empty rules not supported
+              #  direction  : egress
+              #  rule:
+
               - type : specific
                 policytype : allow_tcp
                 direction  : egress
@@ -82,3 +87,38 @@ vpc:
                     stateful: false
                     v4pfx: '11.11.0.0\16'
                     v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+
+              - type : specific
+                policytype : disjoint    # totally disjoint rules
+                direction  : egress
+                rule:
+                  - protocol: udp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 15
+                    dportlow: 20
+                    dporthigh: 25
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '30.30.0.0\16'
+                    v6pfx: '1234:a11:bad:b075:d1e::0\80'
+                    sportlow: 30
+                    sporthigh: 30
+                    dportlow: 30
+                    dporthigh: 30
+
+              - type : specific
+                policytype : disjoint
+                direction  : egress
+                rule:
+                  - protocol: udp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 1
+                    sporthigh: 65534
+                    dportlow: 1
+                    dporthigh: 65534

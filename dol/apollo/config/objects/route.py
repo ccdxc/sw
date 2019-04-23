@@ -135,18 +135,12 @@ class RouteObjectClient:
                 peerid %= vpccount
             return peerid
 
-        def __get_next_subnet(ip):
-            if ip.version == 4:
-                return ipaddress.ip_network(str(ip.network_address + 2 ** (32 - ip.prefixlen )) +'/'+ str(ip.prefixlen))
-            else:
-                return ipaddress.ip_network(str(ip.network_address + 2 ** (128 - ip.prefixlen )) +'/'+ str(ip.prefixlen))
-
         def __get_adjacent_routes(base, count):
             routes = []
             c = 1
             routes.append(ipaddress.ip_network(base))
             while c < count:
-                routes.append(__get_next_subnet(routes[c-1]))
+                routes.append(utils.GetNextSubnet(routes[c-1]))
                 c += 1
             return routes
 
@@ -222,21 +216,21 @@ class RouteObjectClient:
                     if __is_v4stack():
                         routes = user_specified_v4routes + __get_adjacent_routes(v4base, v4routecount)
                         __add_v4routetable(routes, routetype)
-                        v4base = __get_next_subnet(routes[-1])
+                        v4base = utils.GetNextSubnet(routes[-1])
                     if __is_v6stack():
                         routes = user_specified_v6routes + __get_adjacent_routes(v6base, v6routecount)
                         __add_v6routetable(routes, routetype)
-                        v6base = __get_next_subnet(routes[-1])
+                        v6base = utils.GetNextSubnet(routes[-1])
 
                 elif 'overlap' in routetype:
                     if __is_v4stack():
                         routes = user_specified_v4routes + __get_overlap(routetbl_spec_obj.v4base, v4base, v4routecount)
                         __add_v4routetable(routes, routetype)
-                        v4base = __get_next_subnet(routes[-1])
+                        v4base = utils.GetNextSubnet(routes[-1])
                     if __is_v6stack():
                         routes = user_specified_v6routes + __get_overlap(routetbl_spec_obj.v6base, v6base, v6routecount)
                         __add_v6routetable(routes, routetype)
-                        v6base = __get_next_subnet(routes[-1])
+                        v6base = utils.GetNextSubnet(routes[-1])
 
         if len(self.__v6objs[vpcid]) != 0:
             self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])

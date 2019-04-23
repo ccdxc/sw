@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import sys
 import ipaddress
+import socket
 from random import sample
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
@@ -12,6 +13,8 @@ IP_VERSION_4 = 4
 
 IPV4_DEFAULT_ROUTE = ipaddress.ip_network("0.0.0.0/0")
 IPV6_DEFAULT_ROUTE = ipaddress.ip_network("0::/0")
+
+IPPROTO_TO_NAME_TBL = {num:name[8:] for name,num in vars(socket).items() if name.startswith("IPPROTO")}
 
 class rrobiniter:
     def __init__(self, objs):
@@ -37,6 +40,27 @@ def GetFilteredObjects(objs, maxlimits, random=True):
     if random:
         return sample(objs, k=num)
     return objs[0:num]
+
+def GetIPProtoName(proto):
+    """
+        returns IP Protocol name for the given protocol number
+    """
+    return IPPROTO_TO_NAME_TBL[proto]
+
+def __get_subnet(ip, prev=False):
+    """
+        returns next subnet of 'ip' if 'prev' is False else previous subnet
+    """
+    totalhosts = -1 if prev else 1
+    totalhosts *= ip.num_addresses
+    newpfx = str(ip.network_address + totalhosts) + '/' + str(ip.prefixlen)
+    return ipaddress.ip_network(newpfx)
+
+def GetNextSubnet(ip):
+    return __get_subnet(ip)
+
+def GetPreviousSubnet(ip):
+    return __get_subnet(ip, prev=True)
 
 def GetTunnelType(e):
     if e == 'internet-gateway':

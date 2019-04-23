@@ -21,8 +21,16 @@ def __get_packet_template_impl(obj, args):
 def GetPacketTemplateFromMapping(testcase, packet, args=None):
     return __get_packet_template_impl(testcase.config.localmapping, args)
 
+def __get_packet_template_from_policy_impl(rule, policy):
+    template = 'ETH'
+    template += "_%s" % (policy.AddrFamily)
+
+    protocol = utils.GetIPProtoName(rule.Proto) if rule else "TCP"
+    template += "_%s" % (protocol)
+    return infra_api.GetPacketTemplate(template)
+
 def GetPacketTemplateFromPolicy(testcase, packet, args=None):
-    return __get_packet_template_impl(testcase.config.policy, args)
+    return __get_packet_template_from_policy_impl(testcase.config.tc_rule, testcase.config.policy)
 
 def __get_non_default_random_route(routes):
     numroutes = len(routes)
@@ -63,24 +71,60 @@ def GetUsableHostFromRoute(testcase, packet, args=None):
     route = __get_non_default_random_route(testcase.config.route.routes)
     return __get_host_from_route_impl(route, testcase.config.route.AddrFamily)
 
-def __get_non_default_random_route_from_rule(rules):
-    numrules = len(rules)
-    if numrules == 0:
-        return None
-    elif numrules == 1:
-        route = None
-        if not utils.isDefaultRoute(rules[0].Prefix):
-            route = rules[0].Prefix
-        return route
-    while True:
-        route = random.choice(rules).Prefix
-        if not utils.isDefaultRoute(route):
-            break
-    return route
+def __get_module_args_value(modargs, attr):
+    if modargs is not None:
+        for args in modargs:
+            if hasattr(args, attr):
+                pval = getattr(args, attr, None)
+                return pval
+    return None
 
 def GetUsableHostFromPolicy(testcase, packet, args=None):
-    route = __get_non_default_random_route_from_rule(testcase.config.policy.rules)
-    return __get_host_from_route_impl(route, testcase.config.policy.AddrFamily)
+    route = testcase.config.tc_rule.Prefix if testcase.config.tc_rule else None
+    pval = __get_module_args_value(testcase.module.args, 'prefix')
+    if pval == 'right':
+        # get next/right adjacent subnet
+        route = utils.GetNextSubnet(route)
+        host = route.network_address
+    elif pval == 'left':
+        # get previous/left adjacent subnet
+        route = utils.GetPreviousSubnet(route)
+        host = route.network_address
+    else:
+        host = __get_host_from_route_impl(route, testcase.config.policy.AddrFamily)
+    return str(host)
+
+def __get_random_port_in_range(beg=0, end=65535):
+    return random.randint(beg, end)
+
+def __get_port_from_rule(rule, isSource=True):
+    if rule is None:
+        return __get_random_port_in_range()
+    if isSource:
+        beg = rule.L4SportLow
+        end = rule.L4SportHigh
+    else:
+        beg = rule.L4DportLow
+        end = rule.L4DportHigh
+    return __get_random_port_in_range(beg, end)
+
+def GetUsableSPortFromPolicy(testcase, packet, args=None):
+    rule = testcase.config.tc_rule
+    pval = __get_module_args_value(testcase.module.args, 'sport')
+    if pval == 'right':
+        return (rule.L4SportHigh + 1)
+    if pval == 'left':
+        return (rule.L4SportLow - 1)
+    return __get_port_from_rule(rule)
+
+def GetUsableDPortFromPolicy(testcase, packet, args=None):
+    rule = testcase.config.tc_rule
+    pval = __get_module_args_value(testcase.module.args, 'dport')
+    if pval == 'right':
+        return (rule.L4DportHigh + 1)
+    if pval == 'left':
+        return (rule.L4DportLow - 1)
+    return __get_port_from_rule(rule, False)
 
 def GetInvalidMPLSTag(testcase, packet, args=None):
     return next(resmgr.InvalidMplsSlotIdAllocator)
