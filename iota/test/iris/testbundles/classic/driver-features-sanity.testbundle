@@ -10,7 +10,7 @@ testcases:
         enable  : True
         iterators :
             type               : nested
-            tx_ring_size       : [ 64, 128, 256, 1024, 2048, 4096, 8192, 16384, 32768, 65536 ]
+            tx_ring_size       : [ 64, 128, 256, 1024, 2048, 4096, 8192]
             mtu                : [ '1500']
             pktsize            : [ 1024]
             proto              : [ 'udp', 'tcp']
@@ -25,7 +25,7 @@ testcases:
         enable  : True
         iterators :
             type               : nested
-            rx_ring_size       : [ 64, 128, 256, 1024, 2048, 4096, 8192, 16384, 32768, 65536 ]
+            rx_ring_size       : [ 64, 128, 256, 1024, 2048, 4096, 8192]
             mtu                : [ '1500']
             pktsize            : [ 1024 ]
             proto              : [ 'udp', 'tcp']
