@@ -50,7 +50,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./vendor/layeh.com/radius/cmd/radius-dict-gen \
 
 # Lists the binaries to be containerized
-TO_DOCKERIZE := apigw apiserver npm cmd tpm netagent spyglass evtsmgr tsm evtsproxy vos citadel rollout
+TO_DOCKERIZE := apigw apiserver npm cmd tpm netagent spyglass evtsmgr tsm evtsproxy vos citadel rollout vtsa
 
 GOIMPORTS_CMD := goimports -local "github.com/pensando/sw" -l
 SHELL := /bin/bash
@@ -173,12 +173,13 @@ install:
 	@cp -p ${PWD}/bin/cbin/fwgen tools/docker-files/netagent/fwgen
 	@cp -p ${PWD}/bin/cbin/ctctl tools/docker-files/citadel/ctctl
 	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/netagent/nmd
-	@cp -p ${PWD}/bin/cbin/techsupport tools/docker-files/netagent/techsupport
 	@cp -p ${PWD}/bin/cbin/nevtsproxy tools/docker-files/netagent/nevtsproxy
 	@cp -p ${PWD}/bin/cbin/tmagent tools/docker-files/netagent/tmagent
 	@cp -p ${PWD}/nic/tools/fakefwupdate tools/docker-files/netagent/fwupdate
+	@cp -p ${PWD}/bin/cbin/ntsa tools/docker-files/netagent/ntsa
 	@cp -p ${PWD}/nic/conf/naples-tsa.json tools/docker-files/netagent/naples-tsa.json
 	@echo  ${GIT_VERSION} > tools/docker-files/netagent/VERSION
+	@cp -p ${PWD}/venice/vtsa/cmd/vtsa/vtsa.json tools/docker-files/vtsa/vtsa.json
 	@# npm is special - The executable is called pen-npm since it conflicts with node.js npm. Hence copy it explicitly here
 	@cp -p ${PWD}/bin/cbin/pen-npm tools/docker-files/npm/pen-npm
 	@for c in $(TO_DOCKERIZE); do echo "+++ Dockerizing $${c}"; cp -p ${PWD}/bin/cbin/$${c} tools/docker-files/$${c}/$${c}; docker build --label org.label-schema.build-date="${BUILD_DATE}" --label org.label-schema.vendor="Pensando" --label org.label-schema.vcs-ref="${GIT_COMMIT}" --label org.label-schema.version="${GIT_VERSION}" --label org.label-schema.schema-version="1.0"  --rm -t pen-$${c}:latest -f tools/docker-files/$${c}/Dockerfile tools/docker-files/$${c} ; done
@@ -200,7 +201,7 @@ clean:
 	@$(MAKE) c-stop >/dev/null 2>&1
 	@rm -fr bin/* venice/ui/webapp/node_modules  venice/ui/web-app-framework/node_modules  venice/ui/venice-sdk/node_modules venice/ui/webapp/dist
 	@rm -f nic/sim/naples/venice-sim.tar tools/docker-files/venice/venice-sim.tar test/topos/gs/venice_sim_addons.tar
-	@rm -f tools/docker-files/netagent/nmd tools/docker-files/netagent/nevtsproxy tools/docker-files/netagent/tmagent tools/docker-files/npm/pen-npm tools/docker-files/netagent/fakedelhihub tools/docker-files/netagent/fwgen tools/docker-files/netagent/techsupport tools/docker-files/netagent/naples-tsa.json
+	@rm -f tools/docker-files/netagent/nmd tools/docker-files/netagent/nevtsproxy tools/docker-files/netagent/tmagent tools/docker-files/npm/pen-npm tools/docker-files/netagent/fakedelhihub tools/docker-files/netagent/fwgen tools/docker-files/netagent/ntsa tools/docker-files/netagent/naples-tsa.json
 	@for c in $(TO_DOCKERIZE); do rm -f tools/docker-files/$${c}/$${c};  done
 
 

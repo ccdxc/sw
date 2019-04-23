@@ -378,6 +378,36 @@ var k8sModules = map[string]protos.Module{
 			},
 		},
 	},
+	globals.VeniceTechSupport: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.VeniceTechSupport,
+		},
+		Spec: protos.ModuleSpec{
+			Type: protos.ModuleSpec_DaemonSet,
+			Submodules: []protos.ModuleSpec_Submodule{
+				{
+					Name:  globals.VeniceTechSupport,
+					Image: globals.VeniceTechSupport,
+					Services: []protos.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.VeniceTechSupport,
+							Port: 20000,
+						},
+					},
+					Args: []string{
+						"-resolver-urls", "$RESOLVER_URLS", "-config", "/bin/vtsa.json",
+					},
+				},
+			},
+			Volumes: []protos.ModuleSpec_Volume{
+				logVolume,
+				eventsVolume,
+			},
+		},
+	},
 	globals.Tsm: {
 		TypeMeta: api.TypeMeta{
 			Kind: "Module",

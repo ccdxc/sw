@@ -97,7 +97,7 @@ func main() {
 
 	var (
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
-		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.TechSupport)), "Redirect logs to file")
+		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.NaplesTechSupport)), "Redirect logs to file")
 		configFile      = flag.String("config", "", "Config file for Tech Support Agent")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 	)
@@ -105,7 +105,7 @@ func main() {
 
 	// Fill logger config params
 	logConfig := &log.Config{
-		Module:      globals.TechSupport,
+		Module:      globals.NaplesTechSupport,
 		Format:      log.JSONFmt,
 		Filter:      log.AllowInfoFilter,
 		Debug:       *debugflag,

@@ -7,6 +7,7 @@ nic/conf/bullseye/                                                  /nic/conf/bu
 nic/conf/iris/hbm_mem.json                                          /nic/conf/iris/
 nic/conf/iris/hbm_classic_mem.json                                  /nic/conf/iris/
 nic/sysmgr/src/naples.json                                          /nic/conf/sysmgr.json
+nic/conf/naples-tsa.json                                            /nic/conf/	
 nic/build/aarch64/iris/bin/p4asm/                                   /nic/conf/iris/asm_bin/
 nic/build/aarch64/iris/bin/p4pasm/                                  /nic/conf/iris/p4plus_bin/
 nic/build/aarch64/iris/pgm_bin/                                     /nic/conf/iris/pgm_bin/
@@ -29,6 +30,7 @@ nic/build/aarch64/iris/bin/heimdall                                 /nic/bin/
 nic/build/aarch64/iris/bin/nmd                                      /nic/bin/
 nic/build/aarch64/iris/bin/penctl                                   /nic/bin/
 nic/build/aarch64/iris/bin/penlog                                   /nic/bin/
+nic/build/aarch64/iris/bin/ntsa                                     /nic/bin/
 # hal objects CLI
 nic/build/aarch64/iris/bin/halctl                                   /nic/bin/
 nic/build/aarch64/iris/bin/net_fwding_test                          /nic/bin/

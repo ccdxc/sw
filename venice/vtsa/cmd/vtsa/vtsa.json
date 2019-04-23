@@ -1,0 +1,65 @@
+{
+	"Name" : "ExampleConfig",
+	"FilesystemRoot" : "/tmp",
+	"PrepActions" : [
+				{
+					"Name" : "Action1",
+					"Method" : 0,
+					"Command" : "ls -l"
+				}
+			],
+
+	"CollectActions" : [
+                                {
+                                        "Name" : "Action1",
+                                        "Method" : 0,
+                                        "Command" : "ps -aefl"
+                                },
+                                {
+                                        "Name" : "Action2",
+                                        "Method" : 0,
+                                        "Command" : "df -k"
+                                },
+                                {
+                                        "Name" : "Action3",
+                                        "Method" : 0,
+                                        "Command" : "cat /proc/cpuinfo"
+                                },
+                                {
+                                        "Name" : "Action4",
+                                        "Method" : 0,
+					"Command" : "mkdir core && cp /data/core/* core"
+                                },
+				{
+                                        "Name" : "Action5",
+                                        "Method" : 0,
+                                        "Command" : "mkdir logs && cp /var/log/pensando/* logs/"
+                                },
+                                {
+                                        "Name" : "Action6",
+                                        "Method" : 0,
+                                        "Command" : "halctl show platform hbm bandwidth"
+                                },
+                                {
+                                        "Name" : "Action7",
+                                        "Method" : 0,
+                                        "Command" : "halctl show hbm llc-stats"
+                                },
+                                {
+                                        "Name" : "Action8",
+                                        "Method" : 0,
+                                        "Command" : "halctl show lif"
+                                },                                
+				{
+                                        "Name" : "Action9",
+                                        "Method" : 0,
+                                        "Command" : "halctl show table info"
+				}
+
+			],
+
+	"ExportActions" : [
+			],
+
+	"RetentionPolicy" : 0
+}				

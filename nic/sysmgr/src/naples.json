@@ -148,7 +148,7 @@
     },
     {
     	"name": "pen-techsupport",
-	"command": "/nic/bin/techsupport -config /nic/conf/naples-tsa.json",
+	"command": "/nic/bin/ntsa -config /nic/conf/naples-tsa.json",
     	"dependencies": [
 		{
 			"kind": "service",
