@@ -77,6 +77,7 @@ erspan:
     phvwr           p.capri_intrinsic_tm_span_session, 0
 
 mirror_truncate:
+    phvwr           p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
     sub             r5, k.capri_p4_intrinsic_frame_size, k.offset_metadata_l2_1
     sub             r1, r5, 14
     sne             c1, r6, r0
@@ -95,4 +96,4 @@ mirror_truncate:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 mirror_error:
     phvwr.e         p.capri_intrinsic_drop, 1
-    nop
+    phvwr           p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq

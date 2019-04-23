@@ -1,4 +1,5 @@
 action mirror_truncate(truncate_len, is_erspan) {
+    modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
     subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
              offset_metadata.l2_1);
     if ((truncate_len != 0) and
