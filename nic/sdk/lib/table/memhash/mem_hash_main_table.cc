@@ -307,7 +307,7 @@ __label__ done;
         match_ctx->handle->sindex(match_ctx->table_index);
     }
 
-    memcpy(ctx->params->appdata, ctx->sw_appdata, ctx->props->swappdata_len);
+    memcpy(ctx->params->appdata, match_ctx->sw_appdata, ctx->props->swappdata_len);
 
 done:
     if (match_ctx && match_ctx != ctx) {

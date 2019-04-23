@@ -237,7 +237,7 @@ protected:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t RemoveAllCached(sdk_ret_t expret, bool with_handle) {
+    sdk_ret_t RemoveAllCached(sdk_ret_t expret, bool with_handle, bool validate_data = true) {
         sdk_ret_t rs;
         uint32_t i = 0;
         sdk_table_api_params_t params = { 0 };
@@ -247,6 +247,11 @@ protected:
             
             rs = remove_(&params);
             MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
+            if (validate_data) {
+                for (auto e = i+1; e < h5_get_cache_count(); e++) {
+                    __get_one(e, SDK_RET_OK, false);
+                }
+            }
         }
         return SDK_RET_OK;
     }
@@ -262,6 +267,36 @@ protected:
             MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
         }
         return SDK_RET_OK;
+    }
+
+    void __get_one(uint32_t entry_index, sdk_ret_t expret, bool with_handle) {
+        sdk_ret_t rs;
+        sdk_table_api_params_t params = { 0 };
+        h5_entry_t *cache_entry;
+        h5_entry_t entry;
+        
+        cache_entry = h5_get_cache_entry(entry_index, NULL, with_handle);
+        bzero(&entry, sizeof(h5_entry_t));
+        memcpy(&entry.key, &cache_entry->key, sizeof(entry.key));
+        params.key = &entry.key;
+        params.appdata = &entry.appdata;
+        params.hash_32b = cache_entry->crc32.val;
+        params.hash_valid = cache_entry->crc32.val != 0;
+        
+        rs = get_(&params);
+        if (rs != expret) {
+            SDK_TRACE_ERR("Retcode:%d Expected:%d", rs, expret);
+            assert(0);
+        }
+
+        if (memcmp(&entry.appdata, &cache_entry->appdata, 
+                   sizeof(entry.appdata))) {
+            SDK_TRACE_VERBOSE("ERROR: Entry:%d Appdata mismatch.", entry_index);
+            SDK_TRACE_VERBOSE("Expected Appdata: %s", h5_appdata2str(&cache_entry->appdata));
+            SDK_TRACE_VERBOSE("  Actual Appdata: %s", h5_appdata2str(&entry.appdata));
+            assert(0);
+            return;
+        }
     }
 
     sdk_ret_t GetAllCached(sdk_ret_t expret, bool with_handle) {

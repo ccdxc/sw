@@ -602,7 +602,7 @@ mem_hash_table_bucket::move_(mem_hash_api_context *dst,
     SDK_ASSERT(p4pdret == P4PD_SUCCESS);
 
     // copy the data
-    p4pdret = set_sw_data_appdata_(dst, src->sw_data);
+    p4pdret = set_sw_data_appdata_(dst, src->sw_appdata);
     SDK_ASSERT(p4pdret == P4PD_SUCCESS);
 
     // Zero out src data
