@@ -17,25 +17,42 @@
 
 namespace api_test {
 
+typedef struct policy_seed_stepper_s {
+    pds_policy_id_t id;
+    uint16_t num_rules;
+    uint16_t stateful_rules;
+    rule_t *rules;
+    rule_dir_t direction;
+    policy_type_t type;
+    uint8_t af;
+    std::string pfx;
+} policy_seed_stepper_t;
+
 /// Policy test utility class
 class policy_util {
 public:
+
+    /// Test params
+    pds_policy_id_t id;
+    uint16_t num_rules;
+    uint16_t stateful_rules;
+    rule_t *rules;
+    rule_dir_t direction;
+    policy_type_t type;
+    uint8_t af;
+    std::string pfx;
+
     /// \brief constructor
     policy_util(pds_policy_id_t id, uint32_t, rule_t *,
                 rule_dir_t dir = RULE_DIR_INGRESS,
                 uint8_t af = IP_AF_IPV4,
                 policy_type_t type = POLICY_TYPE_FIREWALL);
 
+    /// parameterized constructor
+    policy_util(policy_seed_stepper_t *seed);
+
     /// \brief destructor
     ~policy_util();
-
-    /// Test params
-    pds_policy_id_t id;
-    uint32_t num_rules;
-    rule_t *rules;
-    rule_dir_t direction;
-    policy_type_t type;
-    uint8_t af;
 
     /// \brief Create policy
     ///
@@ -47,7 +64,7 @@ public:
     /// \param[in] compare_spec validation to be done or not
     /// \param[out] info policy information
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_policy_info_t *info, bool compare_spec=TRUE);
+    sdk_ret_t read(pds_policy_info_t *info, bool compare_spec=true);
 
     /// \brief Update the policy
     ///
@@ -67,13 +84,13 @@ public:
     /// \param[in] vpc_id VPC id
     /// \param[in] pfxstr policy prefix (cidr) in string form
     /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(pds_policy_key_t policy,
+    static sdk_ret_t many_create(policy_seed_stepper_t *seed,
                                  uint32_t num_policy);
 
     /// \brief Read many policies
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_read(pds_policy_key_t key, uint32_t num_policy,
+    static sdk_ret_t many_read(policy_seed_stepper_t *seed, uint32_t num_policy,
                                sdk::sdk_ret_t expected_res = sdk::SDK_RET_OK);
 
     /// \brief Delete multiple policies
@@ -81,7 +98,7 @@ public:
     ///
     /// \param[in] num_policy number of VPCs to be deleted
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(pds_policy_key_t key, uint32_t num_policy);
+    static sdk_ret_t many_delete(policy_seed_stepper_t *seed, uint32_t num_policy);
 
 private:
     void __init();
