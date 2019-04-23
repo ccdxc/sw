@@ -62,8 +62,8 @@ vcn_util::read(pds_vcn_info_t *info, bool compare_spec)
     memset(info, 0, sizeof(pds_vcn_info_t));
     key.id = this->id;
     rv = pds_vcn_read(&key, info);
-    cout << "vcn : key : " << key.id << ", id : " << info->spec.key.id << ", addr : "
-         << ipv4pfx2str(&info->spec.v4_pfx) << "\n";
+    //cout << "vcn : key : " << key.id << ", id : " << info->spec.key.id << ", addr : "
+         //<< ipv4pfx2str(&info->spec.v4_pfx) << "\n";
     if (rv != sdk::SDK_RET_OK) {
         return rv;
     }
