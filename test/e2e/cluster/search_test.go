@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/satori/go.uuid"
@@ -11,6 +12,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/search"
+	testutils "github.com/pensando/sw/test/utils"
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -18,6 +20,8 @@ import (
 
 type queryTestCase struct {
 	query         *search.SearchRequest
+	resultCheck   func(resp interface{}, tc queryTestCase) error
+	resp          interface{}
 	expNumEntries int64
 	expErr        error
 }
@@ -25,6 +29,20 @@ type queryTestCase struct {
 var (
 	dummyObjName = uuid.NewV4().String()
 )
+
+func auditEventResultCheck(resp interface{}, tc queryTestCase) error {
+	aResp := resp.(*testutils.AuditSearchResponse)
+	for _, ele := range aResp.Entries {
+		if ele.Object.RequestObject != "" || ele.Object.ResponseObject != "" {
+			return errors.New("Checking audit event's response and request should be empty string. ")
+		}
+	}
+	return nil
+}
+
+func defaultResultCheck(resp interface{}, tc queryTestCase) error {
+	return nil
+}
 
 var _ = Describe("Search test", func() {
 	It("spyglass restart", func() {
@@ -43,6 +61,8 @@ var _ = Describe("Search test", func() {
 					Mode: search.SearchRequest_Full.String(),
 				},
 				expNumEntries: 3, // 1 for the object, 2 for audit events
+				resultCheck:   defaultResultCheck,
+				resp:          &search.SearchResponse{},
 			},
 		}
 		testQueries(testCases)
@@ -68,6 +88,8 @@ var _ = Describe("Search test", func() {
 					Mode: search.SearchRequest_Full.String(),
 				},
 				expNumEntries: 4,
+				resultCheck:   auditEventResultCheck,
+				resp:          &testutils.AuditSearchResponse{},
 			},
 		}
 		testQueries(testCases)
@@ -86,6 +108,8 @@ var _ = Describe("Search test", func() {
 					Mode: search.SearchRequest_Full.String(),
 				},
 				expNumEntries: 0,
+				resultCheck:   defaultResultCheck,
+				resp:          &search.SearchResponse{},
 			},
 		}
 		testQueries(testCases)
@@ -120,17 +144,41 @@ func testQueries(testCases []*queryTestCase) {
 	log.Info("Executing Queries...")
 	Eventually(func() bool {
 		for i, tc := range testCases {
-			resp := search.SearchResponse{}
-			err := ts.tu.Search(ts.loggedInCtx, tc.query, &resp)
+			resp := tc.resp
+
+			err := ts.tu.Search(ts.loggedInCtx, tc.query, resp)
 			if err != tc.expErr {
 				log.Errorf("Test Case %d: Expected err %v, actual err was %d", i, tc.expErr, err)
 				return false
 			}
-			if tc.expNumEntries != resp.ActualHits {
-				log.Errorf("Test Case %d: Expected %d entries, actual was %d", i, tc.expNumEntries, resp.ActualHits)
+			switch resp.(type) {
+			case *search.SearchResponse:
+				respParsed, ok := resp.(*search.SearchResponse)
+				if !ok {
+					log.Fatalf("Type casting failed")
+				}
+				if tc.expNumEntries != respParsed.ActualHits {
+					log.Errorf("Test Case %d: Expected %d entries, actual was %d", i, tc.expNumEntries, respParsed.ActualHits)
+					return false
+				}
+			case *testutils.AuditSearchResponse:
+				respParsed, ok := resp.(*testutils.AuditSearchResponse)
+				if !ok {
+					log.Fatalf("Type casting failed")
+				}
+				if tc.expNumEntries != respParsed.ActualHits {
+					log.Errorf("Test Case %d: Expected %d entries, actual was %d", i, tc.expNumEntries, respParsed.ActualHits)
+					return false
+				}
+			}
+
+			if err := tc.resultCheck(resp, *tc); err != nil {
+				log.Errorf("Test Case %d %s", i, err)
 				return false
 			}
+
 		}
+
 		return true
 
 	}, 90, 10).Should(BeTrue(), "Query tests failed")
