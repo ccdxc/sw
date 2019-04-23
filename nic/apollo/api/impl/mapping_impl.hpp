@@ -155,6 +155,12 @@ public:
      */
     static uint16_t tep_idx(pds_mapping_key_t *key);
 
+    /**
+     * @brief    set is_local_ value of this mapping_impl object
+     * @param[in] val    set is_local_ for this mapping_impl object
+     */
+    void set_is_local(bool val);
+
 private:
     /**< @brief    constructor */
     mapping_impl() {

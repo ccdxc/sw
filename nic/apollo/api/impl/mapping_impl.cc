@@ -151,6 +151,11 @@ mapping_impl::destroy(mapping_impl *impl) {
     mapping_impl::soft_delete(impl);
 }
 
+void
+mapping_impl::set_is_local(bool val) {
+    is_local_ = val;
+}
+
 mapping_impl *
 mapping_impl::build(pds_mapping_key_t *key) {
     sdk_ret_t                             ret;

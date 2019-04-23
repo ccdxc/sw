@@ -46,7 +46,6 @@ pds_mapping_entry_find (pds_mapping_key_t *key)
 {
     pds_mapping_spec_t spec = {0};
     spec.key = *key;
-    spec.is_local = true;
 
     // Mapping does not have any entry database
     // As the call are single thread, we can use static entry
@@ -162,6 +161,7 @@ pds_local_mapping_read (pds_mapping_key_t *key,
     info.spec.key = *key;
     info.spec.vnic.id = local_info->spec.vnic.id;
     impl = dynamic_cast<api::impl::mapping_impl*>(entry->impl());
+    impl->set_is_local(true);
     rv = impl->read_hw(key, &info);
     pds_mapping_spec_to_local_spec(&local_info->spec, &info.spec);
     return rv;
@@ -186,6 +186,7 @@ pds_remote_mapping_read (pds_mapping_key_t *key,
 
     info.spec.key = *key;
     impl = dynamic_cast<api::impl::mapping_impl*>(entry->impl());
+    impl->set_is_local(false);
     rv = impl->read_hw(key, &info);
     pds_mapping_spec_to_remote_spec(&remote_info->spec, &info.spec);
     return rv;
