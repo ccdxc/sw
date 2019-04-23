@@ -194,7 +194,7 @@ func (act *ActionCtx) netcatTrigger(wpc *WorkloadPairCollection, serverOpt, clie
 			// verify client was what we expected
 			for _, cmdResp := range clientResp {
 				if expFail {
-					if cmdResp.ExitCode != expClientExitCode {
+					if expClientExitCode != 0 && cmdResp.ExitCode != expClientExitCode { // check non-zero exit codes on failure
 						log.Errorf("Netcat client command suceeded while expecting to fail. %+v", cmdResp)
 						clientErr = fmt.Errorf("Netcat client command suceeded while expecting failure on %s. exit code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
 					}
