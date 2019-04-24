@@ -435,12 +435,12 @@ ui-framework:
 	cd venice/ui/web-app-framework && npm run replaceShrinkwrap && npm run pack
 
 ui-venice-sdk:
-	cd venice/ui/venice-sdk && npm install --prefer-offline true --prefer-cache pensando-swagger-ts-generator-1.1.29.tgz && npm run replaceShrinkwrap
+	cd venice/ui/venice-sdk && npm install --offline true --prefer-cache pensando-swagger-ts-generator-1.1.29.tgz && npm run replaceShrinkwrap
 	cd venice/ui/venice-sdk && node swaggerGen.js
 
 ui:
 	npm version;
-	cd venice/ui/webapp && npm install --prefer-offline true --prefer-cache ../web-app-framework/dist/web-app-framework-0.0.0.tgz && npm run replaceShrinkwrap;
+	cd venice/ui/webapp && npm install --offline true --prefer-cache ../web-app-framework/dist/web-app-framework-0.0.0.tgz && npm run replaceShrinkwrap;
 	$(MAKE) ui-venice-sdk
 	cd venice/ui/webapp && npm run build-prod && ./gzipDist.sh
 

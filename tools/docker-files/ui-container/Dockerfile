@@ -52,6 +52,9 @@ COPY --from=0 /usr/local/lib/webapp/node_modules.tgz /usr/local/lib/webapp/node_
 COPY --from=0 /usr/local/lib/venice-sdk/node_modules.tgz /usr/local/lib/venice-sdk/node_modules.tgz
 COPY --from=0 /home/node/.npm-global /home/node/.npm-global
 COPY --from=0 /root/.npm /root/.npm
+RUN npm cache add /usr/local/lib/web-app-framework/node_modules.tgz
+RUN npm cache add /usr/local/lib/webapp/node_modules.tgz
+RUN npm cache add /usr/local/lib/venice-sdk/node_modules.tgz
 WORKDIR /import/src/github.com/pensando/sw
 ENV PATH=/usr/local/go/bin:/opt/bin:/import/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/node/.npm-global/bin:/usr/local/lib/web-app-framework/node_modules/.bin
 ENV HOME=/root
