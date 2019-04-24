@@ -356,6 +356,34 @@ func (m *KindPreview) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *PolicyMatchEntries) Clone(into interface{}) (interface{}, error) {
+	var out *PolicyMatchEntries
+	var ok bool
+	if into == nil {
+		out = &PolicyMatchEntries{}
+	} else {
+		out, ok = into.(*PolicyMatchEntries)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*PolicyMatchEntries))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *PolicyMatchEntries) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Entries {
+		if m.Entries[k] != nil {
+			i := m.Entries[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *PolicyMatchEntry) Clone(into interface{}) (interface{}, error) {
 	var out *PolicyMatchEntry
 	var ok bool
@@ -727,6 +755,48 @@ func (m *KindPreview) Validate(ver, path string, ignoreStatus bool) []error {
 }
 
 func (m *KindPreview) Normalize() {
+
+}
+
+func (m *PolicyMatchEntries) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		tag := path + dlmtr + "entries"
+
+		for _, v := range m.Entries {
+			if v != nil {
+				v.References(tenant, tag, resp)
+			}
+		}
+	}
+}
+
+func (m *PolicyMatchEntries) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Entries {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEntries[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *PolicyMatchEntries) Normalize() {
+
+	for _, v := range m.Entries {
+		if v != nil {
+			v.Normalize()
+		}
+	}
 
 }
 

@@ -17,6 +17,7 @@ The following Messages are defined.
   Kind
   KindAggregation
   KindPreview
+  PolicyMatchEntries
   PolicyMatchEntry
   PolicySearchRequest
   PolicySearchResponse

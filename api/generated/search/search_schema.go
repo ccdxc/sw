@@ -127,6 +127,12 @@ var typesMapSearch = map[string]*api.Struct{
 			"value": api.Field{Name: "value", CLITag: api.CLIInfo{ID: "value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT64"},
 		},
 	},
+	"search.PolicyMatchEntries": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PolicyMatchEntries{}) },
+		Fields: map[string]api.Field{
+			"Entries": api.Field{Name: "Entries", CLITag: api.CLIInfo{ID: "entries", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "entries", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "search.PolicyMatchEntry"},
+		},
+	},
 	"search.PolicyMatchEntry": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(PolicyMatchEntry{}) },
 		Fields: map[string]api.Field{
@@ -164,14 +170,14 @@ var typesMapSearch = map[string]*api.Struct{
 		Fields: map[string]api.Field{
 			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Results": api.Field{Name: "Results", CLITag: api.CLIInfo{ID: "results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "results", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "search.PolicyMatchEntry"},
+			"Results": api.Field{Name: "Results", CLITag: api.CLIInfo{ID: "results", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "results", Pointer: true, Slice: false, Mutable: true, Map: true, Inline: false, FromInline: false, KeyType: "TYPE_STRING", Type: "search.PolicyMatchEntries"},
 		},
 	},
 	"search.PolicySearchResponse.ResultsEntry": &api.Struct{
 		Fields: map[string]api.Field{
 			"key": api.Field{Name: "key", CLITag: api.CLIInfo{ID: "key", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"value": api.Field{Name: "value", CLITag: api.CLIInfo{ID: "value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "search.PolicyMatchEntry"},
+			"value": api.Field{Name: "value", CLITag: api.CLIInfo{ID: "value", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "search.PolicyMatchEntries"},
 		},
 	},
 	"search.SearchQuery": &api.Struct{

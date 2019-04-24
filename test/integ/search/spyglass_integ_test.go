@@ -2426,25 +2426,29 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
-				Results: map[string]*search.PolicyMatchEntry{
+				Results: map[string]*search.PolicyMatchEntries{
 					"sgp-1": {
-						Rule: &security.SGRule{
-							ProtoPorts: []security.ProtoPort{
-								{Protocol: "tcp", Ports: "80"},
-								{Protocol: "udp", Ports: "53"},
-							},
+						Entries: []*search.PolicyMatchEntry{
+							{
+								Rule: &security.SGRule{
+									ProtoPorts: []security.ProtoPort{
+										{Protocol: "tcp", Ports: "80"},
+										{Protocol: "udp", Ports: "53"},
+									},
 
-							FromIPAddresses: []string{
-								"172.0.0.1",
-								"172.0.0.2",
-								"10.0.0.1/30",
+									FromIPAddresses: []string{
+										"172.0.0.1",
+										"172.0.0.2",
+										"10.0.0.1/30",
+									},
+									ToIPAddresses: []string{
+										"229.204.171.210/16",
+									},
+									Action: security.SGRule_PERMIT.String(),
+								},
+								Index: 0,
 							},
-							ToIPAddresses: []string{
-								"229.204.171.210/16",
-							},
-							Action: security.SGRule_PERMIT.String(),
 						},
-						Index: 0,
 					},
 				},
 			},
@@ -2462,19 +2466,22 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
-				Results: map[string]*search.PolicyMatchEntry{
+				Results: map[string]*search.PolicyMatchEntries{
 					"sgp-1": {
-						Rule: &security.SGRule{
-							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "443"}},
-							FromIPAddresses: []string{
-								"37.232.218.135/22",
+						Entries: []*search.PolicyMatchEntry{
+							{Rule: &security.SGRule{
+								ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "443"}},
+								FromIPAddresses: []string{
+									"37.232.218.135/22",
+								},
+								ToIPAddresses: []string{
+									"37.232.218.136/30",
+								},
+								Action: security.SGRule_PERMIT.String(),
 							},
-							ToIPAddresses: []string{
-								"37.232.218.136/30",
+								Index: 1,
 							},
-							Action: security.SGRule_PERMIT.String(),
 						},
-						Index: 1,
 					},
 				},
 			},
@@ -2490,19 +2497,22 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
-				Results: map[string]*search.PolicyMatchEntry{
+				Results: map[string]*search.PolicyMatchEntries{
 					"sgp-1": {
-						Rule: &security.SGRule{
-							ProtoPorts: []security.ProtoPort{{Protocol: "icmp"}},
-							FromIPAddresses: []string{
-								"10.1.1.1",
+						Entries: []*search.PolicyMatchEntry{
+							{Rule: &security.SGRule{
+								ProtoPorts: []security.ProtoPort{{Protocol: "icmp"}},
+								FromIPAddresses: []string{
+									"10.1.1.1",
+								},
+								ToIPAddresses: []string{
+									"20.1.1.1",
+								},
+								Action: security.SGRule_PERMIT.String(),
 							},
-							ToIPAddresses: []string{
-								"20.1.1.1",
+								Index: 3,
 							},
-							Action: security.SGRule_PERMIT.String(),
 						},
-						Index: 3,
 					},
 				},
 			},
@@ -2519,19 +2529,22 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
-				Results: map[string]*search.PolicyMatchEntry{
+				Results: map[string]*search.PolicyMatchEntries{
 					"sgp-1": {
-						Rule: &security.SGRule{
-							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "22"}},
-							FromIPAddresses: []string{
-								"any",
+						Entries: []*search.PolicyMatchEntry{
+							{Rule: &security.SGRule{
+								ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "22"}},
+								FromIPAddresses: []string{
+									"any",
+								},
+								ToIPAddresses: []string{
+									"any",
+								},
+								Action: security.SGRule_PERMIT.String(),
 							},
-							ToIPAddresses: []string{
-								"any",
+								Index: 2,
 							},
-							Action: security.SGRule_PERMIT.String(),
 						},
-						Index: 2,
 					},
 				},
 			},
@@ -2548,24 +2561,28 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
-				Results: map[string]*search.PolicyMatchEntry{
+				Results: map[string]*search.PolicyMatchEntries{
 					"sgp-1": {
-						Rule: &security.SGRule{
-							ProtoPorts: []security.ProtoPort{
-								{Protocol: "tcp", Ports: "80"},
-								{Protocol: "udp", Ports: "53"},
+						Entries: []*search.PolicyMatchEntry{
+							{
+								Rule: &security.SGRule{
+									ProtoPorts: []security.ProtoPort{
+										{Protocol: "tcp", Ports: "80"},
+										{Protocol: "udp", Ports: "53"},
+									},
+									FromIPAddresses: []string{
+										"172.0.0.1",
+										"172.0.0.2",
+										"10.0.0.1/30",
+									},
+									ToIPAddresses: []string{
+										"229.204.171.210/16",
+									},
+									Action: security.SGRule_PERMIT.String(),
+								},
+								Index: 0,
 							},
-							FromIPAddresses: []string{
-								"172.0.0.1",
-								"172.0.0.2",
-								"10.0.0.1/30",
-							},
-							ToIPAddresses: []string{
-								"229.204.171.210/16",
-							},
-							Action: security.SGRule_PERMIT.String(),
 						},
-						Index: 0,
 					},
 				},
 			},
@@ -2624,19 +2641,23 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
-				Results: map[string]*search.PolicyMatchEntry{
+				Results: map[string]*search.PolicyMatchEntries{
 					"sgp-1": {
-						Rule: &security.SGRule{
-							ProtoPorts: []security.ProtoPort{{Protocol: "udp", Ports: "53"}},
-							FromSecurityGroups: []string{
-								"dns-clients",
+						Entries: []*search.PolicyMatchEntry{
+							{
+								Rule: &security.SGRule{
+									ProtoPorts: []security.ProtoPort{{Protocol: "udp", Ports: "53"}},
+									FromSecurityGroups: []string{
+										"dns-clients",
+									},
+									ToSecurityGroups: []string{
+										"dns-servers",
+									},
+									Action: security.SGRule_PERMIT.String(),
+								},
+								Index: 4,
 							},
-							ToSecurityGroups: []string{
-								"dns-servers",
-							},
-							Action: security.SGRule_PERMIT.String(),
 						},
-						Index: 4,
 					},
 				},
 			},
@@ -2654,22 +2675,25 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
-				Results: map[string]*search.PolicyMatchEntry{
+				Results: map[string]*search.PolicyMatchEntries{
 					"sgp-1": {
-						Rule: &security.SGRule{
-							ProtoPorts: []security.ProtoPort{{Protocol: "udp", Ports: "53"}},
-							FromIPAddresses: []string{
-								"any",
+						Entries: []*search.PolicyMatchEntry{
+							{Rule: &security.SGRule{
+								ProtoPorts: []security.ProtoPort{{Protocol: "udp", Ports: "53"}},
+								FromIPAddresses: []string{
+									"any",
+								},
+								FromSecurityGroups: []string{
+									"test-servers",
+								},
+								ToSecurityGroups: []string{
+									"dns-servers",
+								},
+								Action: security.SGRule_DENY.String(),
 							},
-							FromSecurityGroups: []string{
-								"test-servers",
+								Index: 5,
 							},
-							ToSecurityGroups: []string{
-								"dns-servers",
-							},
-							Action: security.SGRule_DENY.String(),
 						},
-						Index: 5,
 					},
 				},
 			},
@@ -2686,19 +2710,23 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
-				Results: map[string]*search.PolicyMatchEntry{
+				Results: map[string]*search.PolicyMatchEntries{
 					"sgp-2": {
-						Rule: &security.SGRule{
-							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "1024"}},
-							FromSecurityGroups: []string{
-								"web-servers",
+						Entries: []*search.PolicyMatchEntry{
+							{
+								Rule: &security.SGRule{
+									ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "1024"}},
+									FromSecurityGroups: []string{
+										"web-servers",
+									},
+									ToSecurityGroups: []string{
+										"app-servers",
+									},
+									Action: security.SGRule_PERMIT.String(),
+								},
+								Index: 0,
 							},
-							ToSecurityGroups: []string{
-								"app-servers",
-							},
-							Action: security.SGRule_PERMIT.String(),
 						},
-						Index: 0,
 					},
 				},
 			},
@@ -2715,19 +2743,23 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
-				Results: map[string]*search.PolicyMatchEntry{
+				Results: map[string]*search.PolicyMatchEntries{
 					"sgp-2": {
-						Rule: &security.SGRule{
-							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "80"}},
-							FromIPAddresses: []string{
-								"30.1.1.1-30.1.1.10",
+						Entries: []*search.PolicyMatchEntry{
+							{
+								Rule: &security.SGRule{
+									ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "80"}},
+									FromIPAddresses: []string{
+										"30.1.1.1-30.1.1.10",
+									},
+									ToIPAddresses: []string{
+										"40.1.1.1-40.1.1.10",
+									},
+									Action: security.SGRule_PERMIT.String(),
+								},
+								Index: 1,
 							},
-							ToIPAddresses: []string{
-								"40.1.1.1-40.1.1.10",
-							},
-							Action: security.SGRule_PERMIT.String(),
 						},
-						Index: 1,
 					},
 				},
 			},
@@ -2744,19 +2776,23 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
-				Results: map[string]*search.PolicyMatchEntry{
+				Results: map[string]*search.PolicyMatchEntries{
 					"sgp-2": {
-						Rule: &security.SGRule{
-							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "80"}},
-							FromIPAddresses: []string{
-								"30.1.1.1-30.1.1.10",
+						Entries: []*search.PolicyMatchEntry{
+							{
+								Rule: &security.SGRule{
+									ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "80"}},
+									FromIPAddresses: []string{
+										"30.1.1.1-30.1.1.10",
+									},
+									ToIPAddresses: []string{
+										"40.1.1.1-40.1.1.10",
+									},
+									Action: security.SGRule_PERMIT.String(),
+								},
+								Index: 1,
 							},
-							ToIPAddresses: []string{
-								"40.1.1.1-40.1.1.10",
-							},
-							Action: security.SGRule_PERMIT.String(),
 						},
-						Index: 1,
 					},
 				},
 			},
@@ -2857,19 +2893,23 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
-				Results: map[string]*search.PolicyMatchEntry{
+				Results: map[string]*search.PolicyMatchEntries{
 					"sgp-scale": {
-						Rule: &security.SGRule{
-							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "1"}},
-							FromIPAddresses: []string{
-								"10.0.0.0/32",
+						Entries: []*search.PolicyMatchEntry{
+							{
+								Rule: &security.SGRule{
+									ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "1"}},
+									FromIPAddresses: []string{
+										"10.0.0.0/32",
+									},
+									ToIPAddresses: []string{
+										"20.0.0.0/32",
+									},
+									Action: security.SGRule_PERMIT.String(),
+								},
+								Index: 0, // zero base
 							},
-							ToIPAddresses: []string{
-								"20.0.0.0/32",
-							},
-							Action: security.SGRule_PERMIT.String(),
 						},
-						Index: 0, // zero base
 					},
 				},
 			},
@@ -2887,19 +2927,23 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
-				Results: map[string]*search.PolicyMatchEntry{
+				Results: map[string]*search.PolicyMatchEntries{
 					"sgp-scale": {
-						Rule: &security.SGRule{
-							ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "35001"}},
-							FromIPAddresses: []string{
-								"10.0.136.184/32",
+						Entries: []*search.PolicyMatchEntry{
+							{
+								Rule: &security.SGRule{
+									ProtoPorts: []security.ProtoPort{{Protocol: "tcp", Ports: "35001"}},
+									FromIPAddresses: []string{
+										"10.0.136.184/32",
+									},
+									ToIPAddresses: []string{
+										"20.0.136.184/32",
+									},
+									Action: security.SGRule_PERMIT.String(),
+								},
+								Index: 35000, // zero base
 							},
-							ToIPAddresses: []string{
-								"20.0.136.184/32",
-							},
-							Action: security.SGRule_PERMIT.String(),
 						},
-						Index: 35000, // zero base
 					},
 				},
 			},
@@ -2917,19 +2961,23 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 			},
 			search.PolicySearchResponse{
 				Status: search.PolicySearchResponse_MATCH.String(),
-				Results: map[string]*search.PolicyMatchEntry{
+				Results: map[string]*search.PolicyMatchEntries{
 					"sgp-scale": {
-						Rule: &security.SGRule{
-							ProtoPorts: []security.ProtoPort{{Protocol: "udp", Ports: "4464"}},
-							FromIPAddresses: []string{
-								"10.1.17.111/32",
+						Entries: []*search.PolicyMatchEntry{
+							{
+								Rule: &security.SGRule{
+									ProtoPorts: []security.ProtoPort{{Protocol: "udp", Ports: "4464"}},
+									FromIPAddresses: []string{
+										"10.1.17.111/32",
+									},
+									ToIPAddresses: []string{
+										"20.1.17.111/32",
+									},
+									Action: security.SGRule_DENY.String(),
+								},
+								Index: 69999, // zero base
 							},
-							ToIPAddresses: []string{
-								"20.1.17.111/32",
-							},
-							Action: security.SGRule_DENY.String(),
 						},
-						Index: 69999, // zero base
 					},
 				},
 			},
@@ -3011,10 +3059,12 @@ func performPolicySearchTests(t *testing.T, searchMethod SearchMethod) {
 								t.Logf("@@@ PolicySearch required SGP object not found, obj: %s", name)
 								return false, nil
 							}
-							if eEntry.Index != aEntry.Index {
-								t.Logf("@@@ PolicySearch SGrule mismatch SGP object: %s expected: %d actual: %d",
-									name, eEntry.Index, aEntry.Index)
-								return false, nil
+							for idx, entry := range eEntry.Entries {
+								if entry.Index != aEntry.Entries[idx].Index {
+									t.Logf("@@@ PolicySearch SGrule mismatch SGP object: %s expected: %d actual: %d",
+										name, entry.Index, aEntry.Entries[idx].Index)
+									return false, nil
+								}
 							}
 						}
 					}

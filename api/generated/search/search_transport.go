@@ -357,6 +357,40 @@ func DecodeGrpcRespKindPreview(ctx context.Context, response interface{}) (inter
 	return response, nil
 }
 
+func encodeHTTPPolicyMatchEntries(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPPolicyMatchEntries(_ context.Context, r *http.Request) (interface{}, error) {
+	var req PolicyMatchEntries
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqPolicyMatchEntries encodes GRPC request
+func EncodeGrpcReqPolicyMatchEntries(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PolicyMatchEntries)
+	return req, nil
+}
+
+// DecodeGrpcReqPolicyMatchEntries decodes GRPC request
+func DecodeGrpcReqPolicyMatchEntries(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*PolicyMatchEntries)
+	return req, nil
+}
+
+// EncodeGrpcRespPolicyMatchEntries encodes GRC response
+func EncodeGrpcRespPolicyMatchEntries(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespPolicyMatchEntries decodes GRPC response
+func DecodeGrpcRespPolicyMatchEntries(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPPolicyMatchEntry(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

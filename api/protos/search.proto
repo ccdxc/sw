@@ -505,6 +505,11 @@ message PolicyMatchEntry {
                                 (gogoproto.jsontag) = "index"];
 }
 
+// PolicyMatchEntries multiple PolicyMatchEntry in entries
+message PolicyMatchEntries {
+    repeated PolicyMatchEntry Entries = 1 [(gogoproto.jsontag) = "entries"];
+}
+
 // PolicySearchResponse is response to the security/firewall policy search request
 message PolicySearchResponse {
 
@@ -519,6 +524,6 @@ message PolicySearchResponse {
                                                  (gogoproto.jsontag) = "status,omitempty"];
 
     // Result is Map of <SGPolicy object name, PolicyMatch Entry>. 
-    map <string, PolicyMatchEntry> Results = 2 [(gogoproto.nullable) = true,
+    map <string, PolicyMatchEntries> Results = 2 [(gogoproto.nullable) = true,
                                                 (gogoproto.jsontag) = "results,omitempty"];
 }

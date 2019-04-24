@@ -742,6 +742,18 @@
       },
       "description": "KindPreview contains map of search summary (#hits) grouped by Kind."
     },
+    "searchPolicyMatchEntries": {
+      "type": "object",
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/searchPolicyMatchEntry"
+          }
+        }
+      },
+      "title": "PolicyMatchEntries multiple PolicyMatchEntry in entries"
+    },
     "searchPolicyMatchEntry": {
       "type": "object",
       "properties": {
@@ -823,7 +835,7 @@
         "results": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/searchPolicyMatchEntry"
+            "$ref": "#/definitions/searchPolicyMatchEntries"
           },
           "description": "Result is Map of \u003cSGPolicy object name, PolicyMatch Entry\u003e."
         }

@@ -244,7 +244,7 @@ func (c *Cache) SearchPolicy(query *search.PolicySearchRequest) (*search.PolicyS
 		return &search.PolicySearchResponse{Status: search.PolicySearchResponse_MISS.String()}, nil
 	}
 
-	results := make(map[string]*search.PolicyMatchEntry)
+	results := make(map[string]*search.PolicyMatchEntries)
 
 	// Search within a specific SGPolicy object if specified
 	if query.SGPolicy != "" {
@@ -260,14 +260,16 @@ func (c *Cache) SearchPolicy(query *search.PolicySearchRequest) (*search.PolicyS
 				query.Tenant, query.SGPolicy)
 			return &search.PolicySearchResponse{Status: search.PolicySearchResponse_MISS.String()}, nil
 		}
-		if match, objName, entry, err := c.searchSGP(query, sgp); match {
-			results[objName] = entry
+		// search SGP, if there's a match return result
+		if match, objName, entries, err := c.searchSGP(query, sgp); match {
+			results[objName] = entries
 			resp := &search.PolicySearchResponse{
 				Status:  search.PolicySearchResponse_MATCH.String(),
 				Results: results,
 			}
 			return resp, err
 		}
+		// No match, return miss
 		return &search.PolicySearchResponse{Status: search.PolicySearchResponse_MISS.String()}, nil
 	}
 
@@ -279,8 +281,8 @@ func (c *Cache) SearchPolicy(query *search.PolicySearchRequest) (*search.PolicyS
 				query.Tenant, key)
 			continue
 		}
-		if match, objName, entry, _ := c.searchSGP(query, sgp); match {
-			results[objName] = entry
+		if match, objName, entries, _ := c.searchSGP(query, sgp); match {
+			results[objName] = entries
 			continue
 		}
 	}
@@ -297,7 +299,7 @@ func (c *Cache) SearchPolicy(query *search.PolicySearchRequest) (*search.PolicyS
 }
 
 // Helper function to match on SGPolicy attributes
-func (c *Cache) searchSGP(query *search.PolicySearchRequest, sgp *security.SGPolicy) (match bool, objName string, entry *search.PolicyMatchEntry, err error) {
+func (c *Cache) searchSGP(query *search.PolicySearchRequest, sgp *security.SGPolicy) (match bool, objName string, entries *search.PolicyMatchEntries, err error) {
 
 	if query == nil || sgp == nil {
 		return false, "", nil, fmt.Errorf("Invalid arguments")
@@ -331,7 +333,7 @@ func (c *Cache) searchSGP(query *search.PolicySearchRequest, sgp *security.SGPol
 	//   BenchmarkParallelSearchHit70000-8            100          24315854 ns/op
 	//   PASS
 	//   ok      github.com/pensando/sw/test/psearch     17.039s
-
+	entries = new(search.PolicyMatchEntries)
 	for i, rule := range sgp.Spec.Rules {
 		if c.matchApp(query, &rule) &&
 			c.matchProtocolPort(query, &rule) &&
@@ -339,12 +341,15 @@ func (c *Cache) searchSGP(query *search.PolicySearchRequest, sgp *security.SGPol
 			c.matchIP(query.ToIPAddress, rule.ToIPAddresses) &&
 			c.matchSG(query.FromSecurityGroup, rule.FromSecurityGroups) &&
 			c.matchSG(query.ToSecurityGroup, rule.ToSecurityGroups) {
-			entry = &search.PolicyMatchEntry{
+			entry := &search.PolicyMatchEntry{
 				Rule:  &rule,
 				Index: uint32(i),
 			}
-			return true, sgp.Name, entry, nil
+			entries.Entries = append(entries.Entries, entry)
 		}
+	}
+	if len(entries.Entries) != 0 {
+		return true, sgp.Name, entries, nil
 	}
 	return false, "", nil, nil
 }
