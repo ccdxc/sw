@@ -8,4 +8,5 @@ import (
 func RegisterPlugins(instance vos.Interface) {
 	// Register all needed plugins here
 	loggerRegisterCallbacks(instance)
+	uploadBundleImageCallbacks(instance)
 }

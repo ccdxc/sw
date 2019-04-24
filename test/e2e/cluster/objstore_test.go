@@ -5,12 +5,17 @@ import (
 	"context"
 	"crypto/md5"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
 	"mime/multipart"
 	"net/http"
+	"os"
+	"os/exec"
+
+	"github.com/pensando/sw/venice/utils/log"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -22,6 +27,74 @@ import (
 
 	"github.com/pkg/errors"
 )
+
+func createBundle() (int, error) {
+
+	venicefile := "venice.tgz"
+	naplesfile := "naples_fw.tar"
+	metafile := "metadata.json"
+	bundlefile := "bundle.tar"
+
+	buf := createBuffer(100 * 1024)
+
+	err := ioutil.WriteFile(venicefile, buf, 0644)
+	if err != nil {
+		return 0, errors.Wrap(err, "writing venice file")
+	}
+
+	err = ioutil.WriteFile(naplesfile, buf, 0644)
+	if err != nil {
+		return 0, errors.Wrap(err, "writing naples file")
+	}
+
+	meta := map[string]map[string]string{
+		"bundle": {"Version": "1.0.0",
+			"Description": "Meta File",
+			"ReleaseDate": "May2019",
+			"Name":        "metadata.json"},
+
+		"venice": {"Version": "3.2.0",
+			"Description": "Venice Image",
+			"ReleaseDate": "May2019",
+			"Name":        "venice.tgz"},
+
+		"naples": {"Version": "4.5.1",
+			"Description": "Naples Image",
+			"ReleaseDate": "May2019",
+			"Name":        "naples_fw.tar"}}
+
+	b, err := json.Marshal(meta)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to marshal meta info")
+	}
+
+	err = ioutil.WriteFile(metafile, b, 0644)
+	if err != nil {
+		return 0, errors.Wrap(err, "writing naples file")
+	}
+	if _, err = exec.LookPath("tar"); err != nil {
+		log.Errorf("LookPath failed during extract err %v", err)
+		return 0, errors.Wrap(err, "tar utility is not found")
+	}
+	cmd := exec.Command("tar", "-cvf", "/tmp/"+bundlefile, metafile, venicefile, naplesfile)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Errorf("Failed to create bundle Image %s with output:%s errcode %v", bundlefile, string(output), err)
+		return 0, errors.Wrap(err, "tar creation failed")
+	}
+
+	if err := os.Remove(metafile); err != nil {
+		log.Errorf("[%s] remove failed %s", metafile, err)
+	}
+	if err := os.Remove(venicefile); err != nil {
+		log.Errorf("[%s] remove failed %s", venicefile, err)
+	}
+	if err := os.Remove(naplesfile); err != nil {
+		log.Errorf("[%s] remove failed %s", naplesfile, err)
+	}
+
+	return 0, nil
+}
 
 func uploadFile(ctx context.Context, filename string, metadata map[string]string, content []byte) (int, error) {
 
@@ -161,4 +234,28 @@ var _ = Describe("Objstore Write and read test", func() {
 			}
 		}
 	})
+
+	It("Exercise Bundle Upload/Download", func() {
+		filename := "bundle.tar"
+		metadata := map[string]string{
+			"Version":     "v1.3.2",
+			"Environment": "production",
+			"Description": "E2E bundle Image upload",
+			"Releasedate": "May2018",
+		}
+		_, err := createBundle()
+		if err != nil {
+			log.Infof("Error (%+v) creating file /tmp/bundle.tar", err)
+			Fail(fmt.Sprintf("Failed to create /tmp/bundle.tar"))
+		}
+		fileBuf, err := ioutil.ReadFile("/tmp/" + filename)
+		if err != nil {
+			log.Infof("Error (%+v) reading file /tmp/bundle.tar", err)
+			Fail(fmt.Sprintf("Failed to read /tmp/bundle.tar"))
+		}
+		ctx := ts.tu.NewLoggedInContext(context.Background())
+		_, err = uploadFile(ctx, filename, metadata, fileBuf)
+		Expect(err).Should(BeNil(), "Failed to upload file")
+	})
+
 })
