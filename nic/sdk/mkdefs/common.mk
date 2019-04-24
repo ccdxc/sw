@@ -21,6 +21,15 @@ export SDK_THIRD_PARTY_INCLUDES := \
        ${SDKDIR}/third-party/gmp/include \
        ${SDKDIR}/third-party/ncurses/include
 
+export SDK_THIRD_PARTY_VPP_INCLUDES := \
+       ${SDKDIR}/third-party/vpp-pkg/include
+
+export SDK_THIRD_PARTY_VPP_LDPATH := \
+       ${SDKDIR}/third-party/vpp-pkg/${ARCH}/lib
+
+export SDK_THIRD_PARTY_VPP_LIBS := \
+       :libvnet.so.19.01 :libvlib.so.19.01 :libvppinfra.so.19.01
+
 export SDK_THIRDPARTY_CAPRI_LDLIBS := sdkcapri_csrint
 
 export THIRD_PARTY_INCLUDES := ${SDK_THIRD_PARTY_INCLUDES}
