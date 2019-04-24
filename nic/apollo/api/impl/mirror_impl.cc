@@ -46,8 +46,26 @@ mirror_impl::soft_delete(mirror_impl *impl) {
 
 mirror_impl *
 mirror_impl::build(pds_mirror_session_key_t *key) {
-    // TODO: later !!
-    return NULL;
+    mirror_impl *impl;
+    p4pd_error_t p4pd_ret;
+    uint32_t hw_id = key->id - 1;
+    mirror_actiondata_t mirror_data = { 0 };
+
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_MIRROR, hw_id, NULL, NULL,
+                                       &mirror_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read mirror session %u at idx %u",
+                      key->id, hw_id);
+        return NULL;
+    }
+
+    impl = mirror_impl_db()->alloc();
+    if (unlikely(impl == NULL)) {
+        return NULL;
+    }
+    new (impl) mirror_impl();
+    impl->hw_id_ = hw_id;
+    return impl;
 }
 
 void
@@ -57,8 +75,11 @@ mirror_impl::destroy(mirror_impl *impl) {
 
 sdk_ret_t
 mirror_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
+    pds_mirror_session_spec_t *spec;
+
     // allocate hw id for this session
-    return mirror_impl_db()->alloc_hw_id(&hw_id_);
+    spec = &obj_ctxt->api_params->mirror_session_spec;
+    return mirror_impl_db()->alloc_hw_id(&spec->key, &hw_id_);
 }
 
 sdk_ret_t

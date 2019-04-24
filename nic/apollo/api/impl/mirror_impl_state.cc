@@ -44,7 +44,8 @@ mirror_impl_state::free(mirror_impl *impl) {
 }
 
 sdk_ret_t
-mirror_impl_state::alloc_hw_id(uint16_t *hw_id) {
+mirror_impl_state::alloc_hw_id(pds_mirror_session_key_t *key, uint16_t *hw_id) {
+#if 0
     uint32_t cnt;
 
     cnt = __builtin_ctz(session_bmap_);
@@ -55,6 +56,11 @@ mirror_impl_state::alloc_hw_id(uint16_t *hw_id) {
         return SDK_RET_OK;
     }
     return sdk::SDK_RET_NO_RESOURCE;
+#endif
+    *hw_id = key->id - 1;
+    session_bmap_ |= (1 << *hw_id);
+    PDS_TRACE_DEBUG("Allocated mirror session hw id %u", *hw_id);
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

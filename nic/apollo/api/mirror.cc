@@ -27,7 +27,6 @@ namespace api {
 mirror_session::mirror_session() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     stateless_ = true;
-    //ht_ctxt_.reset();
 }
 
 mirror_session *
@@ -48,7 +47,6 @@ mirror_session::factory(pds_mirror_session_spec_t *spec) {
 }
 
 mirror_session::~mirror_session() {
-    // TODO: fix me
     //SDK_SPINLOCK_DESTROY(&slock_);
 }
 

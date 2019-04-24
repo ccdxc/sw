@@ -175,7 +175,6 @@ private:
 
 private:
     pds_mirror_session_key_t    key_;        ///< mirror session key
-    ht_ctxt_t                   ht_ctxt_;    ///< hash table context
     impl_base                   *impl_;      ///< impl object instance
 
     ///< mirror_session_state is friend of mirror_session
