@@ -81,6 +81,7 @@ class FlowMapObjectHelper:
             # Has default route
             # empty routes
         """
+        #TODO: remove empty routes check once it is fixed in HAL
         if routetblobj.VPCPeeringEnabled or routetblobj.HasDefaultRoute or\
            (0 == len(routetblobj.routes)):
            return False

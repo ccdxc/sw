@@ -65,6 +65,9 @@ class RouteObject(base.ConfigObjectBase):
             logger.info("-- %s" % str(route))
         return
 
+    def IsFilterMatch(self, selectors):
+        return super().IsFilterMatch(selectors.route.filters)
+
     def SetupTestcaseConfig(self, obj):
         obj.localmapping = self.l_obj
         obj.route = self
@@ -262,7 +265,7 @@ class RouteTableObjectHelper:
         objs = []
         rtype = selectors.route.GetValueByKey('RouteType')
         for route_obj in client.Objects():
-            if not route_obj.IsFilterMatch(selectors.route.filters):
+            if not route_obj.IsFilterMatch(selectors):
                 continue
             if rtype != 'empty' and 0 == len(route_obj.routes):
                 # skip route tables with no routes

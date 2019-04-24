@@ -67,9 +67,27 @@ def __get_host_from_route_impl(route, af):
         host += random.randint(0, total_hosts-1)
     return str(host)
 
+def __get_host_from_route(modargs, route, af):
+    pval = __get_module_args_value(modargs, 'prefix')
+    if pval == 'right':
+        # get next/right adjacent subnet
+        route = utils.GetNextSubnet(route)
+        host = route.network_address
+    elif pval == 'left':
+        # get previous/left adjacent subnet
+        route = utils.GetPreviousSubnet(route)
+        host = route.network_address
+    elif pval == 'first':
+        host = route.network_address
+    elif pval == 'last':
+        host = route.network_address + route.num_addresses - 1
+    else:
+        host = __get_host_from_route_impl(route, af)
+    return str(host)
+
 def GetUsableHostFromRoute(testcase, packet, args=None):
     route = __get_non_default_random_route(testcase.config.route.routes)
-    return __get_host_from_route_impl(route, testcase.config.route.AddrFamily)
+    return __get_host_from_route(testcase.module.args, route, testcase.config.route.AddrFamily)
 
 def __get_module_args_value(modargs, attr):
     if modargs is not None:
@@ -81,18 +99,7 @@ def __get_module_args_value(modargs, attr):
 
 def GetUsableHostFromPolicy(testcase, packet, args=None):
     route = testcase.config.tc_rule.Prefix if testcase.config.tc_rule else None
-    pval = __get_module_args_value(testcase.module.args, 'prefix')
-    if pval == 'right':
-        # get next/right adjacent subnet
-        route = utils.GetNextSubnet(route)
-        host = route.network_address
-    elif pval == 'left':
-        # get previous/left adjacent subnet
-        route = utils.GetPreviousSubnet(route)
-        host = route.network_address
-    else:
-        host = __get_host_from_route_impl(route, testcase.config.policy.AddrFamily)
-    return str(host)
+    return __get_host_from_route(testcase.module.args, route, testcase.config.policy.AddrFamily)
 
 def __get_random_port_in_range(beg=0, end=65535):
     return random.randint(beg, end)
