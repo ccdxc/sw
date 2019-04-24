@@ -790,6 +790,11 @@ netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev)
 	int ndescs;
 	int err;
 
+	if (unlikely(!test_bit(LIF_UP, lif->state))) {
+		dev_kfree_skb(skb);
+		return NETDEV_TX_OK;
+	}
+
 	if (likely(lif_to_txqcq(lif, queue_index)))
 		q = lif_to_txq(lif, queue_index);
 	else

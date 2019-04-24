@@ -226,6 +226,7 @@ static int ionic_lif_stop(struct lif *lif)
 	netif_carrier_off(ndev);
 	netif_tx_stop_all_queues(ndev);
 	netif_tx_disable(ndev);
+	synchronize_rcu();
 
 	for (i = 0; i < lif->nxqs; i++) {
 		if (lif->rxqcqs[i].qcq) {
@@ -254,11 +255,14 @@ static int ionic_lif_stop(struct lif *lif)
 	}
 
 	for (i = 0; i < lif->nxqs; i++) {
-		if (lif->txqcqs[i].qcq)
+		if (lif->txqcqs[i].qcq) {
 			ionic_qcq_free(lif, lif->txqcqs[i].qcq);
+			lif->txqcqs[i].qcq = NULL;
+		}
 		if (lif->rxqcqs[i].qcq) {
 			ionic_rx_empty(&lif->rxqcqs[i].qcq->q);
 			ionic_qcq_free(lif, lif->rxqcqs[i].qcq);
+			lif->rxqcqs[i].qcq = NULL;
 		}
 	}
 
@@ -1373,9 +1377,10 @@ static void ionic_qcq_free(struct lif *lif, struct qcq *qcq)
 	}
 
 	ionic_intr_free(lif, qcq->intr.index);
-	dma_free_coherent(dev, qcq->total_size, qcq->base, qcq->base_pa);
 	devm_kfree(dev, qcq->cq.info);
+	qcq->cq.info = NULL;
 	devm_kfree(dev, qcq->q.info);
+	qcq->q.info = NULL;
 	devm_kfree(dev, qcq);
 }
 
