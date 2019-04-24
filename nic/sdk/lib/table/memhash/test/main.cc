@@ -17,7 +17,7 @@ memhash_debug_logger (sdk_trace_level_e trace_level, const char *format, ...)
     char       logbuf[1024];
     va_list    args;
     if (logfp == NULL) {
-        logfp = fopen("run.log", "w");
+        logfp = fopen("memhash_test.log", "w");
         assert(logfp);
     }
 

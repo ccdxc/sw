@@ -237,7 +237,7 @@ protected:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t RemoveAllCached(sdk_ret_t expret, bool with_handle, bool validate_data = true) {
+    sdk_ret_t RemoveAllCached(sdk_ret_t expret, bool with_handle, bool validate_data = false) {
         sdk_ret_t rs;
         uint32_t i = 0;
         sdk_table_api_params_t params = { 0 };
