@@ -209,7 +209,7 @@ action f_insert_vxlan_header(mac_sa, mac_da) {
 
     modify_field(ethernet.srcAddr, mac_sa);
     modify_field(ethernet.dstAddr, mac_da);
-    modify_field(udp.srcPort, rewrite_metadata.entropy_hash);
+    modify_field(udp.srcPort, (0xC000 | rewrite_metadata.entropy_hash));
     modify_field(udp.dstPort, UDP_PORT_VXLAN);
     modify_field(udp.checksum, 0);
     add(udp.len, capri_p4_intrinsic.packet_len, 16);
@@ -264,7 +264,7 @@ action encap_mpls_udp(mac_sa, mac_da, ip_sa, ip_da, ip_type,
         modify_field(ethernet.srcAddr, mac_sa);
     }
     modify_field(ethernet.dstAddr, mac_da);
-    modify_field(udp.srcPort, rewrite_metadata.entropy_hash);
+    modify_field(udp.srcPort, (0xC000 | rewrite_metadata.entropy_hash));
     modify_field(udp.dstPort, UDP_PORT_MPLS);
     modify_field(udp.checksum, 0);
     add(udp.len, capri_p4_intrinsic.packet_len, -2);
@@ -304,7 +304,7 @@ action f_insert_vxlan_gpe_header(mac_sa, mac_da) {
 
     modify_field(ethernet.srcAddr, mac_sa);
     modify_field(ethernet.dstAddr, mac_da);
-    modify_field(udp.srcPort, rewrite_metadata.entropy_hash);
+    modify_field(udp.srcPort, (0xC000 | rewrite_metadata.entropy_hash));
     modify_field(udp.dstPort, UDP_PORT_VXLAN_GPE);
     modify_field(udp.checksum, 0);
     add(udp.len, capri_p4_intrinsic.packet_len, 16);
@@ -355,7 +355,7 @@ action f_insert_genv_header(mac_sa, mac_da) {
     modify_field(ethernet.srcAddr, mac_sa);
     modify_field(ethernet.dstAddr, mac_da);
 
-    modify_field(udp.srcPort, rewrite_metadata.entropy_hash);
+    modify_field(udp.srcPort, (0xC000 | rewrite_metadata.entropy_hash));
     modify_field(udp.dstPort, UDP_PORT_GENV);
     modify_field(udp.checksum, 0);
     add(udp.len, capri_p4_intrinsic.packet_len, 16);

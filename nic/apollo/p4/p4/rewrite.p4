@@ -119,7 +119,7 @@ action mpls_udp_tep_tx(dipo, dmac) {
     modify_field(ipv4_0.dstAddr, dipo);
     modify_field(ipv4_0.srcAddr, rewrite_metadata.mytep_ip);
 
-    modify_field(udp_0.srcPort, p4e_apollo_i2e.entropy_hash);
+    modify_field(udp_0.srcPort, (0xC000 | p4e_apollo_i2e.entropy_hash));
     modify_field(udp_0.dstPort, UDP_PORT_MPLS);
     subtract(udp_0.len, scratch_metadata.ip_totallen, 20);
 
@@ -168,7 +168,7 @@ action vxlan_tep_tx(dipo, dmac) {
     modify_field(ipv4_0.dstAddr, dipo);
     modify_field(ipv4_0.srcAddr, rewrite_metadata.mytep_ip);
 
-    modify_field(udp_0.srcPort, p4e_apollo_i2e.entropy_hash);
+    modify_field(udp_0.srcPort, (0xC000 | p4e_apollo_i2e.entropy_hash));
     modify_field(udp_0.dstPort, UDP_PORT_VXLAN);
     subtract(udp_0.len, scratch_metadata.ip_totallen, 20);
 

@@ -36,7 +36,8 @@ mpls_udp_tep_tx:
     phvwr.c1    p.mpls_src_0_valid, 1
     phvwr       p.ipv4_0_totalLen, r1
     sub         r1, r1, 20
-    add         r7, UDP_PORT_MPLS, k.p4e_apollo_i2e_entropy_hash, 16
+    or          r7, k.p4e_apollo_i2e_entropy_hash, 0xC000
+    or          r7, UDP_PORT_MPLS, r7, 16
     phvwr.e     p.{udp_0_srcPort,udp_0_dstPort}, r7
     phvwr.f     p.udp_0_len, r1
 
@@ -67,7 +68,8 @@ vxlan_tep_tx:
                     vxlan_0_reserved2}, r7
     phvwr       p.ipv4_0_totalLen, r1
     sub         r1, r1, 20
-    add         r7, UDP_PORT_VXLAN, k.p4e_apollo_i2e_entropy_hash, 16
+    or          r7, k.p4e_apollo_i2e_entropy_hash, 0xC000
+    or          r7, UDP_PORT_VXLAN, r7, 16
     phvwr.e     p.{udp_0_srcPort,udp_0_dstPort}, r7
     phvwr.f     p.udp_0_len, r1
 

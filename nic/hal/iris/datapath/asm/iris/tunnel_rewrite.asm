@@ -29,8 +29,9 @@ encap_vxlan:
   add         r1, r0, 0x08, 56
   or          r1, r1, k.rewrite_metadata_tunnel_vnid, 8
 
-  // udp header (srcPort, dstPort, len)
-  add         r2, r0, k.rewrite_metadata_entropy_hash, 48
+  // udp header (srcPort, dstPort, len, checksum)
+  or          r2, r0, k.rewrite_metadata_entropy_hash, 48
+  or          r2, r2, 0xC000, 48
   or          r2, r2, UDP_PORT_VXLAN, 32
   or          r2, r2, r7, 16
   phvwr       p.{vxlan_flags...vxlan_reserved2}, r1
@@ -85,7 +86,8 @@ encap_mpls_udp:
   phvwr.!c1   p.ethernet_srcAddr, d.u.encap_mpls_udp_d.mac_sa
   phvwr       p.ethernet_dstAddr, d.u.encap_mpls_udp_d.mac_da
   // udp header
-  add         r1, r0, k.rewrite_metadata_entropy_hash, 48
+  or          r1, r0, k.rewrite_metadata_entropy_hash, 48
+  or          r1, r1, 0xC000, 48
   or          r1, r1, UDP_PORT_MPLS, 32
   or          r1, r1, r7, 16
   phvwr       p.{udp_srcPort...udp_checksum}, r1
@@ -197,7 +199,8 @@ encap_vxlan_gpe:
   phvwr       p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da
   phvwr       p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
-  phvwr       p.udp_srcPort, k.rewrite_metadata_entropy_hash
+  or          r2, 0xC000, k.rewrite_metadata_entropy_hash
+  phvwr       p.udp_srcPort, r2
   phvwr       p.udp_dstPort, UDP_PORT_VXLAN_GPE
   phvwr       p.udp_checksum, 0
   or          r5, r0, k.capri_p4_intrinsic_packet_len
@@ -236,7 +239,8 @@ encap_genv:
   phvwr       p.ethernet_dstAddr, d.u.encap_vxlan_d.mac_da
   phvwr       p.ethernet_srcAddr, d.u.encap_vxlan_d.mac_sa
 
-  phvwr       p.udp_srcPort, k.rewrite_metadata_entropy_hash
+  or          r2, 0xC000, k.rewrite_metadata_entropy_hash
+  phvwr       p.udp_srcPort, r2
   phvwr       p.udp_dstPort, UDP_PORT_GENV
   phvwr       p.udp_checksum, 0
   or          r5, r0, k.capri_p4_intrinsic_packet_len
