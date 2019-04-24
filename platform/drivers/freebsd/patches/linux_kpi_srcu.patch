@@ -1,0 +1,489 @@
+Patch to separate the Linux KPI RCU and SRCU into separate domains
+
+In Linux, each SRCU key represents a different domain.
+
+Stock FreeBSD combines RCU and SRCU into a single domain.
+
+This patch splits out SRCU (by cloning RCU, basically) so that
+we can call synchronize_rcu() safely while in the middle of the
+ib_verbs SRCU read region.
+
+diff -urN3 a/sys/compat/linuxkpi/common/include/linux/rcupdate.h b/sys/compat/linuxkpi/common/include/linux/rcupdate.h
+--- a/sys/compat/linuxkpi/common/include/linux/rcupdate.h
++++ b/sys/compat/linuxkpi/common/include/linux/rcupdate.h
+@@ -33,6 +33,8 @@
+ 
+ #include <machine/atomic.h>
+ 
++#define HAVE_REAL_SRCU
++
+ #define	LINUX_KFREE_RCU_OFFSET_MAX	4096	/* exclusive */
+ 
+ #define	RCU_INITIALIZER(v)			\
+diff -urN3 a/sys/compat/linuxkpi/common/include/linux/sched.h b/sys/compat/linuxkpi/common/include/linux/sched.h
+--- a/sys/compat/linuxkpi/common/include/linux/sched.h
++++ b/sys/compat/linuxkpi/common/include/linux/sched.h
+@@ -76,7 +76,9 @@
+ 	struct completion parked;
+ 	struct completion exited;
+ 	TAILQ_ENTRY(task_struct) rcu_entry;
++	TAILQ_ENTRY(task_struct) srcu_entry;
+ 	int rcu_recurse;
++	int srcu_recurse;
+ 	int bsd_interrupt_value;
+ };
+ 
+diff -urN3 a/sys/compat/linuxkpi/common/src/linux_rcu.c b/sys/compat/linuxkpi/common/src/linux_rcu.c
+--- a/sys/compat/linuxkpi/common/src/linux_rcu.c
++++ b/sys/compat/linuxkpi/common/src/linux_rcu.c
+@@ -43,7 +43,6 @@
+ #include <ck_epoch.h>
+ 
+ #include <linux/rcupdate.h>
+-#include <linux/srcu.h>
+ #include <linux/slab.h>
+ #include <linux/kernel.h>
+ #include <linux/compat.h>
+@@ -360,39 +359,3 @@
+ 	taskqueue_enqueue(taskqueue_fast, &head->task);
+ 	mtx_unlock(&head->lock);
+ }
+-
+-int
+-init_srcu_struct(struct srcu_struct *srcu)
+-{
+-	return (0);
+-}
+-
+-void
+-cleanup_srcu_struct(struct srcu_struct *srcu)
+-{
+-}
+-
+-int
+-srcu_read_lock(struct srcu_struct *srcu)
+-{
+-	linux_rcu_read_lock();
+-	return (0);
+-}
+-
+-void
+-srcu_read_unlock(struct srcu_struct *srcu, int key __unused)
+-{
+-	linux_rcu_read_unlock();
+-}
+-
+-void
+-synchronize_srcu(struct srcu_struct *srcu)
+-{
+-	linux_synchronize_rcu();
+-}
+-
+-void
+-srcu_barrier(struct srcu_struct *srcu)
+-{
+-	linux_rcu_barrier();
+-}
+diff -urN3 a/sys/compat/linuxkpi/common/src/linux_srcu.c b/sys/compat/linuxkpi/common/src/linux_srcu.c
+--- a/sys/compat/linuxkpi/common/src/linux_srcu.c
++++ b/sys/compat/linuxkpi/common/src/linux_srcu.c
+@@ -0,0 +1,387 @@
++/*-
++ * Copyright (c) 2016 Matthew Macy (mmacy@mattmacy.io)
++ * Copyright (c) 2019 Pensando Systems, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice unmodified, this list of conditions, and the following
++ *    disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <sys/cdefs.h>
++__FBSDID("$FreeBSD$");
++
++#include <sys/types.h>
++#include <sys/systm.h>
++#include <sys/malloc.h>
++#include <sys/kernel.h>
++#include <sys/lock.h>
++#include <sys/mutex.h>
++#include <sys/proc.h>
++#include <sys/sched.h>
++#include <sys/smp.h>
++#include <sys/queue.h>
++#include <sys/taskqueue.h>
++#include <sys/kdb.h>
++
++#include <ck_epoch.h>
++
++#include <linux/rcupdate.h>
++#include <linux/srcu.h>
++#include <linux/slab.h>
++#include <linux/kernel.h>
++#include <linux/compat.h>
++
++/*
++ * By defining CONFIG_NO_RCU_SKIP LinuxKPI RCU locks and asserts will
++ * not be skipped during panic().
++ */
++#ifdef CONFIG_NO_RCU_SKIP
++#define	SRCU_SKIP(void) 0
++#else
++#define	SRCU_SKIP(void)	unlikely(SCHEDULER_STOPPED() || kdb_active)
++#endif
++
++struct callback_head {
++	STAILQ_ENTRY(callback_head) entry;
++	rcu_callback_t func;
++};
++
++struct linux_epoch_head {
++	STAILQ_HEAD(, callback_head) cb_head;
++	struct mtx lock;
++	struct task task;
++} __aligned(CACHE_LINE_SIZE);
++
++struct linux_epoch_record {
++	ck_epoch_record_t epoch_record;
++	TAILQ_HEAD(, task_struct) ts_head;
++	int cpuid;
++} __aligned(CACHE_LINE_SIZE);
++
++/*
++ * Verify that "struct rcu_head" is big enough to hold "struct
++ * callback_head". This has been done to avoid having to add special
++ * compile flags for including ck_epoch.h to all clients of the
++ * LinuxKPI.
++ */
++CTASSERT(sizeof(struct rcu_head) == sizeof(struct callback_head));
++
++/*
++ * Verify that "epoch_record" is at beginning of "struct
++ * linux_epoch_record":
++ */
++CTASSERT(offsetof(struct linux_epoch_record, epoch_record) == 0);
++
++static ck_epoch_t linux_epoch_s;
++static struct linux_epoch_head linux_epoch_head_s;
++static DPCPU_DEFINE(struct linux_epoch_record, linux_epoch_record_s);
++
++static void linux_srcu_cleaner_func(void *, int);
++static void linux_synchronize_srcu(void);
++
++static void
++linux_srcu_runtime_init(void *arg __unused)
++{
++	struct linux_epoch_head *head;
++	int i;
++
++	ck_epoch_init(&linux_epoch_s);
++
++	head = &linux_epoch_head_s;
++
++	mtx_init(&head->lock, "LSRCU-HEAD", NULL, MTX_DEF);
++	TASK_INIT(&head->task, 0, linux_srcu_cleaner_func, NULL);
++	STAILQ_INIT(&head->cb_head);
++
++	CPU_FOREACH(i) {
++		struct linux_epoch_record *record;
++
++		record = &DPCPU_ID_GET(i, linux_epoch_record_s);
++
++		record->cpuid = i;
++		ck_epoch_register(&linux_epoch_s, &record->epoch_record, NULL);
++		TAILQ_INIT(&record->ts_head);
++	}
++}
++SYSINIT(linux_srcu_runtime, SI_SUB_CPU, SI_ORDER_ANY, linux_srcu_runtime_init, NULL);
++
++static void
++linux_srcu_runtime_uninit(void *arg __unused)
++{
++	struct linux_epoch_head *head;
++
++	head = &linux_epoch_head_s;
++
++	/* destroy head lock */
++	mtx_destroy(&head->lock);
++}
++SYSUNINIT(linux_srcu_runtime, SI_SUB_LOCK, SI_ORDER_SECOND, linux_srcu_runtime_uninit, NULL);
++
++static void
++linux_srcu_cleaner_func(void *context __unused, int pending __unused)
++{
++	struct linux_epoch_head *head;
++	struct callback_head *srcu;
++	STAILQ_HEAD(, callback_head) tmp_head;
++
++	linux_set_current(curthread);
++
++	head = &linux_epoch_head_s;
++
++	/* move current callbacks into own queue */
++	mtx_lock(&head->lock);
++	STAILQ_INIT(&tmp_head);
++	STAILQ_CONCAT(&tmp_head, &head->cb_head);
++	mtx_unlock(&head->lock);
++
++	/* synchronize */
++	linux_synchronize_srcu();
++
++	/* dispatch all callbacks, if any */
++	while ((srcu = STAILQ_FIRST(&tmp_head)) != NULL) {
++		uintptr_t offset;
++
++		STAILQ_REMOVE_HEAD(&tmp_head, entry);
++
++		offset = (uintptr_t)srcu->func;
++
++		if (offset < LINUX_KFREE_RCU_OFFSET_MAX)
++			kfree((char *)srcu - offset);
++		else
++			srcu->func((struct rcu_head *)srcu);
++	}
++}
++
++static void
++linux_srcu_read_lock(void)
++{
++	struct linux_epoch_record *record;
++	struct task_struct *ts;
++
++	if (SRCU_SKIP())
++		return;
++
++	/*
++	 * Pin thread to current CPU so that the unlock code gets the
++	 * same per-CPU epoch record:
++	 */
++	sched_pin();
++
++	record = &DPCPU_GET(linux_epoch_record_s);
++	ts = current;
++
++	/*
++	 * Use a critical section to prevent recursion inside
++	 * ck_epoch_begin(). Else this function supports recursion.
++	 */
++	critical_enter();
++	ck_epoch_begin(&record->epoch_record, NULL);
++	ts->srcu_recurse++;
++	if (ts->srcu_recurse == 1)
++		TAILQ_INSERT_TAIL(&record->ts_head, ts, srcu_entry);
++	critical_exit();
++}
++
++static void
++linux_srcu_read_unlock(void)
++{
++	struct linux_epoch_record *record;
++	struct task_struct *ts;
++
++	if (SRCU_SKIP())
++		return;
++
++	record = &DPCPU_GET(linux_epoch_record_s);
++	ts = current;
++
++	/*
++	 * Use a critical section to prevent recursion inside
++	 * ck_epoch_end(). Else this function supports recursion.
++	 */
++	critical_enter();
++	ck_epoch_end(&record->epoch_record, NULL);
++	ts->srcu_recurse--;
++	if (ts->srcu_recurse == 0)
++		TAILQ_REMOVE(&record->ts_head, ts, srcu_entry);
++	critical_exit();
++
++	sched_unpin();
++}
++
++static void
++linux_synchronize_srcu_cb(ck_epoch_t *epoch __unused, ck_epoch_record_t *epoch_record, void *arg __unused)
++{
++	struct linux_epoch_record *record =
++	    container_of(epoch_record, struct linux_epoch_record, epoch_record);
++	struct thread *td = curthread;
++	struct task_struct *ts;
++
++	/* check if blocked on the current CPU */
++	if (record->cpuid == PCPU_GET(cpuid)) {
++		bool is_sleeping = 0;
++		u_char prio = 0;
++
++		/*
++		 * Find the lowest priority or sleeping thread which
++		 * is blocking synchronization on this CPU core. All
++		 * the threads in the queue are CPU-pinned and cannot
++		 * go anywhere while the current thread is locked.
++		 */
++		TAILQ_FOREACH(ts, &record->ts_head, srcu_entry) {
++			if (ts->task_thread->td_priority > prio)
++				prio = ts->task_thread->td_priority;
++			is_sleeping |= (ts->task_thread->td_inhibitors != 0);
++		}
++
++		if (is_sleeping) {
++			thread_unlock(td);
++			pause("W", 1);
++			thread_lock(td);
++		} else {
++			/* set new thread priority */
++			sched_prio(td, prio);
++			/* task switch */
++			mi_switch(SW_VOL | SWT_RELINQUISH, NULL);
++
++			/*
++			 * Release the thread lock while yielding to
++			 * allow other threads to acquire the lock
++			 * pointed to by TDQ_LOCKPTR(td). Else a
++			 * deadlock like situation might happen.
++			 */
++			thread_unlock(td);
++			thread_lock(td);
++		}
++	} else {
++		/*
++		 * To avoid spinning move execution to the other CPU
++		 * which is blocking synchronization. Set highest
++		 * thread priority so that code gets run. The thread
++		 * priority will be restored later.
++		 */
++		sched_prio(td, 0);
++		sched_bind(td, record->cpuid);
++	}
++}
++
++static void
++linux_synchronize_srcu(void)
++{
++	struct thread *td;
++	int was_bound;
++	int old_cpu;
++	int old_pinned;
++	u_char old_prio;
++
++	if (SRCU_SKIP())
++		return;
++
++	WITNESS_WARN(WARN_GIANTOK | WARN_SLEEPOK, NULL,
++	    "linux_synchronize_srcu() can sleep");
++
++	td = curthread;
++
++	/*
++	 * Synchronizing RCU might change the CPU core this function
++	 * is running on. Save current values:
++	 */
++	thread_lock(td);
++
++	DROP_GIANT();
++
++	old_cpu = PCPU_GET(cpuid);
++	old_pinned = td->td_pinned;
++	old_prio = td->td_priority;
++	was_bound = sched_is_bound(td);
++	sched_unbind(td);
++	td->td_pinned = 0;
++	sched_bind(td, old_cpu);
++
++	ck_epoch_synchronize_wait(&linux_epoch_s,
++	    &linux_synchronize_srcu_cb, NULL);
++
++	/* restore CPU binding, if any */
++	if (was_bound != 0) {
++		sched_bind(td, old_cpu);
++	} else {
++		/* get thread back to initial CPU, if any */
++		if (old_pinned != 0)
++			sched_bind(td, old_cpu);
++		sched_unbind(td);
++	}
++	/* restore pinned after bind */
++	td->td_pinned = old_pinned;
++
++	/* restore thread priority */
++	sched_prio(td, old_prio);
++	thread_unlock(td);
++
++	PICKUP_GIANT();
++}
++
++static void
++linux_srcu_barrier(void)
++{
++	struct linux_epoch_head *head;
++
++	linux_synchronize_srcu();
++
++	head = &linux_epoch_head_s;
++
++	/* wait for callbacks to complete */
++	taskqueue_drain(taskqueue_fast, &head->task);
++}
++
++int
++init_srcu_struct(struct srcu_struct *srcu)
++{
++	return (0);
++}
++
++void
++cleanup_srcu_struct(struct srcu_struct *srcu)
++{
++}
++
++int
++srcu_read_lock(struct srcu_struct *srcu)
++{
++	linux_srcu_read_lock();
++	return (0);
++}
++
++void
++srcu_read_unlock(struct srcu_struct *srcu, int key __unused)
++{
++	linux_srcu_read_unlock();
++}
++
++void
++synchronize_srcu(struct srcu_struct *srcu)
++{
++	linux_synchronize_srcu();
++}
++
++void
++srcu_barrier(struct srcu_struct *srcu)
++{
++	linux_srcu_barrier();
++}
+diff -urN3 a/sys/conf/files b/sys/conf/files
+--- a/sys/conf/files
++++ b/sys/conf/files
+@@ -4301,6 +4301,8 @@
+ 	compile-with "${LINUXKPI_C}"
+ compat/linuxkpi/common/src/linux_slab.c		optional compat_linuxkpi \
+ 	compile-with "${LINUXKPI_C}"
++compat/linuxkpi/common/src/linux_srcu.c		optional compat_linuxkpi \
++	compile-with "${LINUXKPI_C} -I$S/contrib/ck/include"
+ compat/linuxkpi/common/src/linux_usb.c		optional compat_linuxkpi usb \
+ 	compile-with "${LINUXKPI_C}"
+ compat/linuxkpi/common/src/linux_work.c		optional compat_linuxkpi \

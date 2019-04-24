@@ -6638,7 +6638,9 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 	dev->rrq_stride = ident->dev.rdma_rrq_stride;
 	dev->rsq_stride = ident->dev.rdma_rsq_stride;
 
+#ifndef HAVE_REAL_SRCU
 	rwlock_init(&dev->rcu_lock);
+#endif
 
 	xa_init(&dev->qp_tbl);
 	xa_init(&dev->cq_tbl);

@@ -122,7 +122,9 @@ struct ionic_ibdev {
 	u8			rrq_stride;
 	u8			rsq_stride;
 
+#ifndef HAVE_REAL_SRCU
 	rwlock_t		rcu_lock; /* FreeBSD mockup of RCU */
+#endif
 
 	/* These tables are used in the fast path.
 	 * They are protected by RCU.

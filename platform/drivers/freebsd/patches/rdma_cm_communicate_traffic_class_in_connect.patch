@@ -1,0 +1,25 @@
+From 96f69baa2c3040727c4ee3f94080a3ae9cc20e82 Mon Sep 17 00:00:00 2001
+From: Nitish Bhat <bnitish@pensando.io>
+Date: Thu, 31 Jan 2019 00:39:22 +0000
+Subject: [PATCH 2/2] RDMA CM: Communicate traffic class info in CM Connect req
+
+Signed-off-by: Nitish Bhat <bnitish@pensando.io>
+---
+ sys/ofed/drivers/infiniband/core/ib_cma.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/sys/ofed/drivers/infiniband/core/ib_cma.c b/sys/ofed/drivers/infiniband/core/ib_cma.c
+index 75fd0a29403..30c8d6dc7b8 100644
+--- a/sys/ofed/drivers/infiniband/core/ib_cma.c
++++ b/sys/ofed/drivers/infiniband/core/ib_cma.c
+@@ -2544,6 +2544,7 @@ static int cma_resolve_iboe_route(struct rdma_id_private *id_priv)
+ 	route->path_rec->pkey = cpu_to_be16(0xffff);
+ 	route->path_rec->mtu_selector = IB_SA_EQ;
+ 	route->path_rec->sl = iboe_tos_to_sl(ndev, id_priv->tos);
++	route->path_rec->traffic_class = id_priv->tos;
+ 	route->path_rec->mtu = iboe_get_mtu(ndev->if_mtu);
+ 	route->path_rec->rate_selector = IB_SA_EQ;
+ 	route->path_rec->rate = iboe_get_rate(ndev);
+-- 
+2.19.1
+

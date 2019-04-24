@@ -192,6 +192,8 @@ static inline void xa_destroy(struct xarray *xa)
 	/* No equivalent for radix-tree */
 }
 
+#ifndef HAVE_REAL_SRCU
+
 /* RCU cruft */
 #undef  rcu_read_lock
 #define rcu_read_lock()							\
@@ -209,5 +211,7 @@ static inline void xa_destroy(struct xarray *xa)
 		write_lock_irqsave(&dev->rcu_lock, _rcuflags);		\
 		write_unlock_irqrestore(&dev->rcu_lock, _rcuflags);	\
 	} while (0)
+
+#endif /* HAVE_REAL_SRCU */
 
 #endif /* IONIC_KCOMPAT */

@@ -1,0 +1,29 @@
+From 2947a24609477ea28c7b76d442406e661116a988 Mon Sep 17 00:00:00 2001
+From: Nitish Bhat <bnitish@pensando.io>
+Date: Thu, 31 Jan 2019 00:36:49 +0000
+Subject: [PATCH 1/2] Use v2 GIDs for tests on tagged interface
+
+Rdma CM defaults to using IB/RoCE v1 GIDs for tests running on
+tagged interfaces. Fix to use RoCE v2 GIDs instead.
+
+Signed-off-by: Nitish Bhat <bnitish@pensando.io>
+---
+ sys/ofed/drivers/infiniband/core/ib_addr.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sys/ofed/drivers/infiniband/core/ib_addr.c b/sys/ofed/drivers/infiniband/core/ib_addr.c
+index 3f62efbd6ac..6377fdff4c6 100644
+--- a/sys/ofed/drivers/infiniband/core/ib_addr.c
++++ b/sys/ofed/drivers/infiniband/core/ib_addr.c
+@@ -133,7 +133,7 @@ int rdma_copy_addr(struct rdma_dev_addr *dev_addr, struct net_device *dev,
+ 		return (0);
+ 	} else if (dev->if_type == IFT_INFINIBAND)
+ 		dev_addr->dev_type = ARPHRD_INFINIBAND;
+-	else if (dev->if_type == IFT_ETHER)
++	else if (dev->if_type == IFT_ETHER || dev->if_type == IFT_L2VLAN)
+ 		dev_addr->dev_type = ARPHRD_ETHER;
+ 	else
+ 		dev_addr->dev_type = 0;
+-- 
+2.19.1
+
