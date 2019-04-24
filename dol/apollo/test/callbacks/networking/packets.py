@@ -166,10 +166,15 @@ def __get_packet_srcmac_impl(fwdmode, dobj, robj, lobj, args):
     if dobj.IsEncapTypeMPLS():
         if fwdmode == 'L2':
             return robj.MACAddr
+        elif fwdmode == 'L2L':
+            return robj.VNIC.SUBNET.VirtualRouterMACAddr
         else:
             return lobj.VNIC.SUBNET.VirtualRouterMACAddr
     elif dobj.IsEncapTypeVXLAN():
-        return lobj.VNIC.SUBNET.VirtualRouterMACAddr
+        if fwdmode == 'L2L':
+            return robj.VNIC.SUBNET.VirtualRouterMACAddr
+        else:
+            return lobj.VNIC.SUBNET.VirtualRouterMACAddr
     else:
         assert 0
 

@@ -1,0 +1,29 @@
+# Feature Test Modules List
+feature:
+    id          : networking
+    sub         : local2local
+    package     : test.networking
+    module      : networking
+    enable      : True
+    ignore      : False
+
+modules:
+
+    - module:
+        name    : L2L_VNIC_IPV4_TCP_QTAG
+        spec    : local2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING
+
+    - module:
+        name    : L2L_SUBNET_IPV4_TCP_QTAG
+        spec    : local2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_SUBNET,Label=NETWORKING
+
+    - module:
+        name    : L2L_VPC_IPV4_TCP_QTAG
+        spec    : local2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_VPC,Label=NETWORKING
+

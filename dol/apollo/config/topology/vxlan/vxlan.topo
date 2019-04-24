@@ -41,11 +41,11 @@ vpc:
           v6prefixlen : 64
           vnic:
             - count   : 1             # VNICs per subnet
-              ipcount : 2             # Local IP mapping per vnic
+              ipcount : 4             # Local IP mapping per vnic
               srcguard : true         # true or false (default false)
               public  : true
             - count   : 1             # VNICs per subnet
-              ipcount : 2             # Local IP mapping per vnic
+              ipcount : 4             # Local IP mapping per vnic
               srcguard : false        # true or false (default false)
               public  : true
           rmap:                       # Remote IP mappings per subnet

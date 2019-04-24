@@ -119,6 +119,12 @@ class FlowMapObjectHelper:
         fwdmode = mapsel.flow.GetValueByKey(key)
         mapsel.flow.filters.remove((key, fwdmode))
 
+        # Get the local2local info.
+        key = 'L2LType'
+        l2l = mapsel.flow.GetValueByKey(key)
+        if l2l != None:
+            mapsel.flow.filters.remove((key, l2l))
+
         # Src and Dst check is not applicable for remote
         rmapsel = copy.deepcopy(mapsel)
         key = 'SourceGuard'
@@ -128,7 +134,7 @@ class FlowMapObjectHelper:
 
         assert (fwdmode == 'L2' or fwdmode == 'L3' or fwdmode == 'IGW' or \
                 fwdmode == 'IGW_NAT' or fwdmode == 'VPC_PEER' or \
-                fwdmode == 'POLICY') == True
+                fwdmode == 'POLICY' or fwdmode == 'L2L' ) == True
 
         if fwdmode == 'VPC_PEER':
             rmappings = rmapping.GetMatchingObjects(mapsel)
@@ -171,6 +177,36 @@ class FlowMapObjectHelper:
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.Tunnel)
+                    objs.append(obj)
+        elif fwdmode == "L2L":
+            # Select mapping objects for different IP on the same vnic.
+            lobjs = lmapping.GetMatchingObjects(mapsel)
+            for s in lobjs:
+                if not self.__is_lmapping_valid(s):
+                    continue
+                for d in lobjs:
+                    if not self.__is_lmapping_valid(d):
+                        continue
+                    if s.MappingId == d.MappingId:
+                        continue
+                    #print("%d:%d %d:%d" %(s.VNIC.SUBNET.SubnetId, s.VNIC.SUBNET.VPC.VPCId, d.VNIC.SUBNET.SubnetId, d.VNIC.SUBNET.VPC.VPCId))
+                    if l2l == 'SAME_VNIC':
+                        # Select ips from same vnic.
+                        if s.VNIC.VnicId != d.VNIC.VnicId:
+                            continue;
+                    elif l2l == 'SAME_SUBNET':
+                        # Select ips from same subnet but different vnic
+                        if s.VNIC.VnicId == d.VNIC.VnicId:
+                            continue
+                        if s.VNIC.SUBNET.SubnetId != d.VNIC.SUBNET.SubnetId:
+                            continue
+                    elif l2l == 'SAME_VPC':
+                        # Select ips from different subnet in a VPC
+                        if s.VNIC.SUBNET.SubnetId == d.VNIC.SUBNET.SubnetId:
+                            continue
+                        if s.VNIC.SUBNET.VPC.VPCId != d.VNIC.SUBNET.VPC.VPCId:
+                            continue
+                    obj = FlowMapObject(s, d, fwdmode, None, None)
                     objs.append(obj)
         else:
             for lobj in lmapping.GetMatchingObjects(mapsel):
