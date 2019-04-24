@@ -64,6 +64,23 @@ bool mock_memory_read (uint64_t addr, uint8_t * data, uint32_t size)
     return true;
 }
 
+void* mock_memory_map (uint64_t addr, uint32_t size)
+{
+    uint64_t offset = 0;
+    if (!__mock_mem) mock_memory_init();
+    if (addr >= __mock_mem_base) {
+        // Valid only HBM addresses
+        offset = addr - __mock_mem_base;
+        if (offset > __mock_mem_size) {
+            assert(0);
+        }
+        //printf("mock_memory_map: addr:%p size:%d\n",
+        //       __mock_mem + offset, size);
+        return (void *)(__mock_mem + offset);
+    }
+    return NULL;
+}
+
 int lib_model_connect ()
 {
     char        *zmqsockstr;
@@ -282,6 +299,14 @@ bool write_reg (uint64_t addr, uint32_t data)
     assert(rc != -1);
 
     return true;
+}
+
+void* mem_map (uint64_t addr, uint32_t size)
+{
+    if (__lmodel_mock_memory_mode) {
+        return mock_memory_map(addr, size);
+    }
+    return NULL;
 }
 
 

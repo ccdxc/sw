@@ -4,10 +4,12 @@
 #ifndef __FTL_UTILS_HPP__
 #define __FTL_UTILS_HPP__
 
-//#define FTL_TRACES_ENABLE
+#ifdef SIM
+#define FTL_TRACES_ENABLE
+#endif
 
 #ifdef FTL_TRACES_ENABLE
-#define FTL_TRACE_VERBOSE(_msg, _args...) SDK_TRACE_VERBOSE(_msg, ##_args)
+#define FTL_TRACE_VERBOSE(_msg, _args...) SDK_TRACE_DEBUG(_msg, ##_args)
 #define FTL_TRACE_DEBUG(_msg, _args...) SDK_TRACE_DEBUG(_msg, ##_args)
 #define FTL_SNPRINTF(_buf, _len, _fmt, _args...) snprintf(_buf, _len, _fmt, ##_args)
 #else

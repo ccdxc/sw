@@ -45,14 +45,19 @@ using sdk::table::ftlint::ftl_bucket;
 
 #ifndef SIM
 #define CRC32X(crc, value) __asm__("crc32x %w[c], %w[c], %x[v]":[c]"+r"(crc):[v]"r"(value))
-#define RBIT(value) __asm__("rbit %w0, %w1": "=r"(value) : "r"(value))
+#define RBITX(value) __asm__("rbit %x0, %x1": "=r"(value) : "r"(value))
+#define RBITW(value) __asm__("rbit %w0, %w1": "=r"(value) : "r"(value))
+#define REVX(value) __asm__("rev %x0, %x1": "=r"(value) : "r"(value))
 uint32_t
-crc32_aarch64(const uint64_t *p, uint32_t len) {
+crc32_aarch64(const uint64_t *p) {
     uint32_t crc = 0;
     for (auto i = 0; i < 8; i++) {
-        CRC32X(crc, *p);
+        auto v = p[i];
+        RBITX(v);
+        REVX(v);
+        CRC32X(crc, v);
     }
-    RBIT(crc);
+    RBITW(crc);
     return crc;
 }
 #endif
@@ -115,7 +120,6 @@ ftl::init_(sdk_table_factory_params_t *params) {
 
     props_->hash_poly = tinfo.hash_type;
 
-    assert(tinfo.base_mem_pa && tinfo.base_mem_va);
     props_->ptable_base_mem_pa = tinfo.base_mem_pa;
     props_->ptable_base_mem_va = tinfo.base_mem_va;
 
@@ -132,7 +136,6 @@ ftl::init_(sdk_table_factory_params_t *params) {
     p4pdret = p4pd_table_properties_get(props_->stable_id, &ctinfo);
     SDK_ASSERT_RETURN(p4pdret == P4PD_SUCCESS, SDK_RET_ERR);
 
-    assert(tinfo.base_mem_pa && tinfo.base_mem_va);
     props_->stable_base_mem_pa = ctinfo.base_mem_pa;
     props_->stable_base_mem_va = ctinfo.base_mem_va;
 
@@ -187,8 +190,7 @@ ftl::genhash_(sdk_table_api_params_t *params) {
                                               sizeof(ftl_entry_t),
                                               props_->hash_poly);
 #else
-    params->hash_32b = crc32_aarch64((uint64_t *)&hashkey,
-                                     props_->hwkey_len);
+    params->hash_32b = crc32_aarch64((uint64_t *)&hashkey);
 #endif
 
     params->hash_valid = true;

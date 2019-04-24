@@ -176,7 +176,7 @@ static void
 flow_test_time_profile_print() {
     printf("%-42s = %012ld\n", "TOTAL_FLOW_CREATE",
            time_profile_total(sdk::utils::time_profile::TABLE_LIB_MEMHASH_INSERT));
-    printf("%-42s = %012ld\n", "MEMHASH_INSERT(memhash only)",
+    printf("%-42s = %012ld\n", "FTL_INSERT(ftl only)",
            time_profile_total(sdk::utils::time_profile::TABLE_LIB_MEMHASH_INSERT) -
            time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_READ) -
            time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_INSTALL) -

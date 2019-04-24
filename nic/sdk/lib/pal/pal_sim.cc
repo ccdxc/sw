@@ -19,6 +19,7 @@ typedef bool (*read_mem_fn_t)(uint64_t addr, uint8_t * data, uint32_t size);
 typedef bool (*write_mem_fn_t)(uint64_t addr, uint8_t * data, uint32_t size);
 typedef bool (*ring_dbfn_t)(uint64_t addr, uint64_t data);
 typedef bool (*step_cpu_pkt_fn_t)(const uint8_t* pkt, size_t pkt_len);
+typedef void* (*mem_map_fn_t)(uint64_t addr, uint32_t size);
 
 typedef struct pal_sim_vectors_s {
     connect_fn_t        connect;
@@ -28,6 +29,7 @@ typedef struct pal_sim_vectors_s {
     write_mem_fn_t          write_mem;
     ring_dbfn_t             ring_doorbell;
     step_cpu_pkt_fn_t       step_cpu_pkt;
+    mem_map_fn_t            mem_map;
 } pal_sim_vectors_t;
 
 static pal_sim_vectors_t   gl_sim_vecs;
@@ -45,7 +47,7 @@ pal_init_sim_vectors ()
             (ring_dbfn_t)dlsym(gl_lib_handle, "step_doorbell");
     gl_sim_vecs.step_cpu_pkt =
             (step_cpu_pkt_fn_t)dlsym(gl_lib_handle, "step_cpu_pkt");
-
+    gl_sim_vecs.mem_map = (mem_map_fn_t)dlsym(gl_lib_handle, "mem_map");
     return PAL_RET_OK;
 }
 
@@ -142,6 +144,12 @@ pal_sim_mem_set (uint64_t addr, uint8_t data, uint32_t size, uint32_t flags)
     }
 
     return PAL_RET_OK;
+}
+
+void*
+pal_sim_mem_map(const uint64_t pa, const uint32_t sz)
+{
+    return (*gl_sim_vecs.mem_map)(pa, sz);
 }
 
 pal_ret_t
@@ -257,6 +265,7 @@ pal_sim_init_rwvectors (void)
     gl_pal_info.rwvecs.virtual_addr_to_physical_addr =
                         pal_sim_virtual_addr_to_physical_addr;
     gl_pal_info.rwvecs.mem_set = pal_sim_mem_set;
+    gl_pal_info.rwvecs.mem_map = pal_sim_mem_map;
     gl_pal_info.rwvecs.is_qsfp_port_present =
                             pal_sim_is_qsfp_port_present;
     gl_pal_info.rwvecs.qsfp_read = pal_sim_qsfp_read;

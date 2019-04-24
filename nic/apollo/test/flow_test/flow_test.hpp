@@ -16,7 +16,7 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/ip.hpp"
 #include "include/sdk/table.hpp"
-#include "nic/sdk/lib/table/memhash/mem_hash.hpp"
+#include "nic/utils/ftl/ftl.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -24,7 +24,7 @@
 
 #include "gen/p4gen/apollo/include/p4pd.h"
 
-using sdk::table::mem_hash;
+using sdk::table::ftl;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
@@ -104,7 +104,7 @@ typedef struct cfg_params_s {
 
 class flow_test {
 private:
-    mem_hash *table;
+    ftl *table;
     vpc_epdb_t epdb[MAX_VPCS];
     uint32_t flow_index;
     uint32_t hash;
@@ -114,8 +114,7 @@ private:
     uint16_t dport;
     sdk_table_api_params_t params;
     sdk_table_factory_params_t factory_params;
-    flow_swkey_t swkey;
-    flow_appdata_t swappdata;
+    ftl_entry_t entry;
     vpc_ep_pair_t ep_pairs[MAX_EP_PAIRS_PER_VPC];
     cfg_params_t cfg_params;
     bool with_hash;
@@ -189,11 +188,9 @@ private:
     }
 
 
-    sdk_ret_t insert_(flow_swkey_t *key,
-                      flow_appdata_t *appdata) {
+    sdk_ret_t insert_(ftl_entry_t *entry) {
         memset(&params, 0, sizeof(params));
-        params.key = key;
-        params.appdata = appdata;
+        params.entry = entry;
         if (with_hash) {
             params.hash_valid = true;
             params.hash_32b = hash++;
@@ -201,7 +198,7 @@ private:
         return table->insert(&params);
     }
 
-    sdk_ret_t remove_(flow_swkey_t *key) {
+    sdk_ret_t remove_(ftl_entry_t *key) {
         sdk_table_api_params_t params = { 0 };
         params.key = key;
         return table->remove(&params);
@@ -277,7 +274,7 @@ public:
         factory_params.max_recircs = 8;
         factory_params.key2str = flow_key2str;
         factory_params.appdata2str = flow_appdata2str;
-        table = mem_hash::factory(&factory_params);
+        table = ftl::factory(&factory_params);
         assert(table);
 
         memset(epdb, 0, sizeof(epdb));
@@ -328,7 +325,7 @@ public:
     }
 
     ~flow_test() {
-        mem_hash::destroy(table);
+        ftl::destroy(table);
     }
 
     void add_local_ep(uint32_t vpc_id, ip_addr_t ipaddr) {
@@ -391,12 +388,11 @@ public:
         uint16_t rev_sport = 0, rev_dport = 0;
         uint32_t nflows = 0;
 
-        memset(&swkey, 0, sizeof(swkey));
-        memset(&swappdata, 0, sizeof(swappdata));
+        memset(&entry, 0, sizeof(ftl_entry_t));
         if (ipv6) {
-            swkey.key_metadata_ktype = 2;
+            entry.ktype = 2;
         } else {
-            swkey.key_metadata_ktype = 1;
+            entry.ktype = 1;
         }
 
         for (uint32_t vpc = 1; vpc < MAX_VPCS; vpc++) {
@@ -420,19 +416,19 @@ public:
                         }
 
                         // Local to Remote Flow
-                        swkey.vnic_metadata_local_vnic_tag = vpc - 1;
-                        swkey.key_metadata_sport = fwd_sport;
-                        swkey.key_metadata_dport = fwd_dport;
-                        swkey.key_metadata_proto = proto;
+                        entry.local_vnic_tag = vpc - 1;
+                        entry.sport = fwd_sport;
+                        entry.dport = fwd_dport;
+                        entry.proto = proto;
                         if (ipv6) {
-                            sdk::lib::memrev(swkey.key_metadata_src, ep_pairs[i].lip6.addr8, sizeof(ipv6_addr_t));
-                            sdk::lib::memrev(swkey.key_metadata_dst, ep_pairs[i].rip6.addr8, sizeof(ipv6_addr_t));
+                            sdk::lib::memrev(entry.src, ep_pairs[i].lip6.addr8, sizeof(ipv6_addr_t));
+                            sdk::lib::memrev(entry.dst, ep_pairs[i].rip6.addr8, sizeof(ipv6_addr_t));
                         } else {
-                            memcpy(&(swkey.key_metadata_src), &ep_pairs[i].lip, sizeof(uint32_t));
-                            memcpy(&(swkey.key_metadata_dst), &ep_pairs[i].rip, sizeof(uint32_t));
+                            memcpy(&(entry.src), &ep_pairs[i].lip, sizeof(uint32_t));
+                            memcpy(&(entry.dst), &ep_pairs[i].rip, sizeof(uint32_t));
                         }
-                        swappdata.flow_index = flow_index++;
-                        ret = insert_(&swkey, &swappdata);
+                        entry.flow_index = flow_index++;
+                        ret = insert_(&entry);
                         if (ret != SDK_RET_OK) {
                             return ret;
                         }
@@ -443,19 +439,19 @@ public:
                         }
 #if 0 // Only create local to remote flows for now.
                         // Remote to Local Flow
-                        swkey.vnic_metadata_local_vnic_tag = vpc - 1;
-                        swkey.key_metadata_sport = rev_sport;
-                        swkey.key_metadata_dport = rev_dport;
-                        swkey.key_metadata_proto = proto;
+                        entry.vnic_metadata_local_vnic_tag = vpc - 1;
+                        entry.key_metadata_sport = rev_sport;
+                        entry.key_metadata_dport = rev_dport;
+                        entry.key_metadata_proto = proto;
                         if (ipv6) {
-                            memcpy(&(swkey.key_metadata_src), &ep_pairs[i].rip6, sizeof(ipv6_addr_t));
-                            memcpy(&(swkey.key_metadata_dst), &ep_pairs[i].lip6, sizeof(ipv6_addr_t));
+                            memcpy(&(entry.key_metadata_src), &ep_pairs[i].rip6, sizeof(ipv6_addr_t));
+                            memcpy(&(entry.key_metadata_dst), &ep_pairs[i].lip6, sizeof(ipv6_addr_t));
                         } else {
-                            memcpy(&(swkey.key_metadata_src), &ep_pairs[i].rip, sizeof(uint32_t));
-                            memcpy(&(swkey.key_metadata_dst), &ep_pairs[i].lip, sizeof(uint32_t));
+                            memcpy(&(entry.key_metadata_src), &ep_pairs[i].rip, sizeof(uint32_t));
+                            memcpy(&(entry.key_metadata_dst), &ep_pairs[i].lip, sizeof(uint32_t));
                         }
                         swappdata.flow_index = flow_index++;
-                        ret = insert_(&swkey, &swappdata);
+                        ret = insert_(&entry, &swappdata);
                         if (ret != SDK_RET_OK) {
                             return ret;
                         }

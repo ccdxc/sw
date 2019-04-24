@@ -32,10 +32,20 @@ ftl_swap_bytes(uint8_t *entry) {
 
 sdk_ret_t
 ftl_platform_read(ftl_apictx *ctx) {
-    auto baseaddr = ctx->level ? ctx->props->stable_base_mem_va
-                               : ctx->props->ptable_base_mem_va;
-    memcpy(&ctx->entry, ((ftl_entry_t *)baseaddr)+ctx->table_index,
-           sizeof(ftl_entry_t));
+    if (ctx->props->stable_base_mem_va && ctx->props->ptable_base_mem_va) {
+        auto baseaddr = ctx->level ? ctx->props->stable_base_mem_va
+                                   : ctx->props->ptable_base_mem_va;
+        memcpy(&ctx->entry, ((ftl_entry_t *)baseaddr)+ctx->table_index,
+               sizeof(ftl_entry_t));
+    } else if (ctx->props->stable_base_mem_pa && ctx->props->ptable_base_mem_pa) {
+        auto baseaddr = ctx->level ? ctx->props->stable_base_mem_pa
+                                   : ctx->props->ptable_base_mem_pa;
+        pal_mem_read(baseaddr+ctx->table_index*sizeof(ftl_entry_t),
+                     (uint8_t*)&ctx->entry, sizeof(ftl_entry_t));
+    } else {
+        assert(0);
+    }
+
     ftl_swap_bytes((uint8_t *)&ctx->entry);
     return SDK_RET_OK;
 }
@@ -53,10 +63,21 @@ ftl_platform_write(ftl_apictx *ctx) {
     }
     auto baseaddr = base;
 #endif
-    auto baseaddr = ctx->level ? ctx->props->stable_base_mem_va
-                               : ctx->props->ptable_base_mem_va;
+
     ftl_swap_bytes((uint8_t *)&ctx->entry);
-    memcpy(((ftl_entry_t *)baseaddr)+ctx->table_index,
-           &ctx->entry, sizeof(ftl_entry_t));
+    if (ctx->props->stable_base_mem_va && ctx->props->ptable_base_mem_va) {
+        auto baseaddr = ctx->level ? ctx->props->stable_base_mem_va
+                                   : ctx->props->ptable_base_mem_va;
+        memcpy(((ftl_entry_t *)baseaddr)+ctx->table_index,
+               &ctx->entry, sizeof(ftl_entry_t));
+    } else if (ctx->props->stable_base_mem_pa && ctx->props->ptable_base_mem_pa) {
+        auto baseaddr = ctx->level ? ctx->props->stable_base_mem_pa
+                                   : ctx->props->ptable_base_mem_pa;
+        pal_mem_write(baseaddr+ctx->table_index*sizeof(ftl_entry_t),
+                      (uint8_t*)&ctx->entry, sizeof(ftl_entry_t));
+    } else {
+        assert(0);
+    }
+
     return SDK_RET_OK;
 }
