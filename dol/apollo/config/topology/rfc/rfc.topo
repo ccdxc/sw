@@ -67,7 +67,7 @@ vpc:
 
               - type : specific
                 policytype : allow_tcp
-                direction  : egress
+                direction  : bidir
                 rule:
                   - protocol: tcp
                     stateful: false
@@ -76,7 +76,7 @@ vpc:
 
               - type : specific
                 policytype : disjoint_pfx    # disjoint prefix but proto & l4 overlap
-                direction  : egress
+                direction  : bidir
                 rule:
                   - protocol: tcp
                     stateful: false
@@ -90,7 +90,7 @@ vpc:
 
               - type : specific
                 policytype : disjoint    # totally disjoint rules
-                direction  : egress
+                direction  : bidir
                 rule:
                   - protocol: udp
                     stateful: false
@@ -112,7 +112,7 @@ vpc:
 
               - type : specific
                 policytype : disjoint
-                direction  : egress
+                direction  : bidir
                 rule:
                   - protocol: udp
                     stateful: false

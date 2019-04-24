@@ -1,0 +1,82 @@
+# RFC Test Spec for ingress cases
+selectors:
+    root: ref://store/templates/id=POLICY
+    maxlimits: 2
+    policy: filter://Direction=ingress
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base Packet from internet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : callback://networking/packets/GetPacketTemplateFromPolicy
+        headers     :
+            ipv4:
+                src     : callback://networking/packets/GetUsableHostFromPolicy
+                dst     : ref://testcase/config/localmapping/IP
+                ttl     : 64
+            ipv6:
+                src     : callback://networking/packets/GetUsableHostFromPolicy
+                dst     : ref://testcase/config/localmapping/IP
+                hlim    : 64
+            tcp:
+                sport   : callback://networking/packets/GetUsableSPortFromPolicy
+                dport   : callback://networking/packets/GetUsableDPortFromPolicy
+            udp:
+                sport   : callback://networking/packets/GetUsableSPortFromPolicy
+                dport   : callback://networking/packets/GetUsableDPortFromPolicy
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : FROM_SWITCH_PKT # Input packet from network
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      :
+            - ref://factory/packets/id=ENCAP_MPLS
+        headers     :
+            outereth:
+                src     : 00:02:0b:0a:0d:0e
+                dst     : ref://testcase/config/devicecfg/MACAddr
+            outeripv4:
+                src     : ref://testcase/config/route/TunIP
+                dst     : ref://testcase/config/devicecfg/IP
+                ttl     : 64
+                tos     : 0
+                id      : 0
+            mpls:
+                label   : ref://testcase/config/localmapping/VNIC/MplsSlot
+                ttl     : 0
+                s       : 1
+            vxlan:
+                vni     : ref://testcase/config/localmapping/VNIC/Vnid
+            eth:
+                src     : 00:02:00:00:00:00
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+            ipv4:
+                dst     : callback://networking/packets/GetIPFromLocalMapping
+            ipv6:
+                dst     : callback://networking/packets/GetIPFromLocalMapping
+
+    - packet:
+        id          : TO_HOST_PKT # Expected packet to host
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      :
+            - ref://factory/packets/id=ENCAP_QTAG
+        headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/SUBNET/VirtualRouterMACAddr
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
+
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=FROM_SWITCH_PKT
+            port    : ref://testcase/config/switchport
+
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=TO_HOST_PKT
+            port    : ref://testcase/config/hostport

@@ -250,11 +250,21 @@ class PolicyObjectClient:
             direction = policyspec.direction
             if __is_v4stack():
                 v4rules = __get_rules(utils.IP_VERSION_4, policyspec)
-                policyobj = __add_v4policy(direction, v4rules, policytype)
+                if direction == 'bidir':
+                    #For bidirectional, add policy in both directions
+                    policyobj = __add_v4policy('ingress', v4rules, policytype)
+                    policyobj = __add_v4policy('egress', v4rules, policytype)
+                else:
+                    policyobj = __add_v4policy(direction, v4rules, policytype)
 
             if __is_v6stack():
                 v6rules = __get_rules(utils.IP_VERSION_6, policyspec)
-                policyobj = __add_v6policy(direction, v6rules, policytype)
+                if direction == 'bidir':
+                    #For bidirectional, add policy in both directions
+                    policyobj = __add_v6policy('ingress', v6rules, policytype)
+                    policyobj = __add_v6policy('egress', v6rules, policytype)
+                else:
+                    policyobj = __add_v6policy(direction, v6rules, policytype)
 
         if not hasattr(vpc_spec_obj, 'policy'):
             #TODO: Need to install wildcard policies for other topo

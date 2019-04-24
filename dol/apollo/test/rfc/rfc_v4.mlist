@@ -15,13 +15,32 @@ modules:
             - policy : filter://AddrFamily=IPV4,PolicyType=allow_tcp
 
     - module:
+        name    : IPV4_INGRESS_ALLOW_TCP
+        spec    : rfc_ingress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=allow_tcp
+
+    - module:
         name    : IPV4_EGRESS_DISJOINT_PFX
         spec    : rfc_egress.testspec
         iterate :
             - policy : filter://AddrFamily=IPV4,PolicyType=disjoint_pfx
 
     - module:
+        name    : IPV4_INGRESS_DISJOINT_PFX
+        spec    : rfc_ingress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint_pfx
+
+    - module:
         name    : IPV4_EGRESS_DISJOINT
         spec    : rfc_egress.testspec
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+
+
+    - module:
+        name    : IPV4_INGRESS_DISJOINT
+        spec    : rfc_ingress.testspec
         iterate :
             - policy : filter://AddrFamily=IPV4,PolicyType=disjoint

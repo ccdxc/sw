@@ -82,3 +82,53 @@ modules:
             - dport  : left
         iterate :
             - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+
+    - module:
+        name    : IPV4_INGRESS_RIGHT_INVALID_SPORT
+        spec    : rfc_ingress_negative.testspec
+        args    :
+            - sport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+
+    - module:
+        name    : IPV4_INGRESS_RIGHT_INVALID_DPORT
+        spec    : rfc_ingress_negative.testspec
+        args    :
+            - dport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+
+    - module:
+        name    : IPV4_INGRESS_RIGHT_INVALID
+        spec    : rfc_ingress_negative.testspec
+        args    :
+            - sport  : right
+            - dport  : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+
+    - module:
+        name    : IPV4_INGRESS_LEFT_INVALID_SPORT
+        spec    : rfc_ingress_negative.testspec
+        args    :
+            - sport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+
+    - module:
+        name    : IPV4_INGRESS_LEFT_INVALID_DPORT
+        spec    : rfc_ingress_negative.testspec
+        args    :
+            - dport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+
+    - module:
+        name    : IPV4_INGRESS_LEFT_INVALID
+        spec    : rfc_ingress_negative.testspec
+        args    :
+            - sport  : left
+            - dport  : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
