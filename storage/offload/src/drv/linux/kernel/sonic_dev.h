@@ -221,6 +221,14 @@ static inline void sonic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(struct crypto_key_update_cpl) != 16);
 	BUILD_BUG_ON(sizeof(struct adminq_init_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct adminq_init_cpl) != 16);
+	BUILD_BUG_ON(sizeof(struct notifyq_init_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct notifyq_init_cpl) != 16);
+	BUILD_BUG_ON(sizeof(struct notifyq_event) != 64);
+	BUILD_BUG_ON(sizeof(struct reset_event) != 64);
+	BUILD_BUG_ON(sizeof(struct heartbeat_event) != 64);
+	BUILD_BUG_ON(sizeof(struct log_event) != 64);
+	BUILD_BUG_ON(sizeof(struct notifyq_cmd) != 4);
+	BUILD_BUG_ON(sizeof(union notifyq_cpl) != 64);
 	BUILD_BUG_ON(sizeof(union adminq_cmd) != 64);
 	BUILD_BUG_ON(sizeof(union adminq_cpl) != 16);
 }

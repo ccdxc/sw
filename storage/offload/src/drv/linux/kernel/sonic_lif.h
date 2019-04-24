@@ -9,6 +9,9 @@
 
 #include "sonic.h"
 
+#define ADMINQ_LENGTH	16
+#define NOTIFYQ_LENGTH	64
+
 struct tx_stats {
 	u64 dma_map_err;
 	u64 pkts;
@@ -36,6 +39,7 @@ struct rx_stats {
 #define QCQ_F_INTR		BIT(2)
 #define QCQ_F_TX_STATS		BIT(3)
 #define QCQ_F_RX_STATS		BIT(4)
+#define QCQ_F_NOTIFYQ		BIT(5)
 
 struct qcq {
 	struct queue q;
@@ -56,9 +60,7 @@ struct qcq {
 #define napi_to_cq(napi)	(&napi_to_qcq(napi)->cq)
 
 enum deferred_work_type {
-	DW_TYPE_RX_MODE,
-	DW_TYPE_RX_ADDR_ADD,
-	DW_TYPE_RX_ADDR_DEL,
+	DW_TYPE_RESET,
 };
 
 struct deferred_work {
@@ -93,6 +95,8 @@ struct lif {
 	unsigned int seq_q_index;
 	spinlock_t adminq_lock;
 	struct qcq *adminqcq;
+	struct qcq *notifyqcq;
+	uint64_t last_eid;
 	union stats_dump *stats_dump;
 	dma_addr_t stats_dump_pa;
 	struct deferred deferred;

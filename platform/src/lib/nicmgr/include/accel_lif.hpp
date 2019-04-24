@@ -6,14 +6,17 @@
 /*
  * Queue info
  */
-#define ACCEL_ADMINQ_REQ_QTYPE            2
+#define ACCEL_ADMINQ_REQ_QTYPE            STORAGE_SEQ_QTYPE_ADMIN
 #define ACCEL_ADMINQ_ADMIN_QID            0
 #define ACCEL_ADMINQ_REQ_QID              1
 #define ACCEL_ADMINQ_REQ_RING_SIZE        16
 
-#define ACCEL_ADMINQ_RESP_QTYPE           2
+#define ACCEL_ADMINQ_RESP_QTYPE           STORAGE_SEQ_QTYPE_ADMIN
 #define ACCEL_ADMINQ_RESP_QID             2
 #define ACCEL_ADMINQ_RESP_RING_SIZE       16
+
+#define ACCEL_NOTIFYQ_TX_QTYPE            STORAGE_SEQ_QTYPE_NOTIFY
+#define ACCEL_NOTIFYQ_TX_QID              0
 
 /*
  * Physical host address bit manipulation
@@ -46,11 +49,21 @@
 #define DB_UPD_SHFT                     17
 #define DB_LIF_SHFT                     6
 #define DB_TYPE_SHFT                    3
-#define ACCEL_LIF_LOCAL_DBADDR_SET(lif, qtype)          \
+#define DB_QID_SHFT                     24
+#define ACCEL_LIF_DBADDR_SET(lif, qtype)                \
     (((uint64_t)(lif) << DB_LIF_SHFT) |                 \
     ((uint64_t)(qtype) << DB_TYPE_SHFT) |               \
-    ((uint64_t)(ACCEL_LIF_DBADDR_UPD) << DB_UPD_SHFT) | \
-    DB_ADDR_BASE_LOCAL)
+    ((uint64_t)(ACCEL_LIF_DBADDR_UPD) << DB_UPD_SHFT))
+    
+#define ACCEL_LIF_LOCAL_DBADDR_SET(lif, qtype)          \
+    (ACCEL_LIF_DBADDR_SET(lif, qtype) | DB_ADDR_BASE_LOCAL)
+
+#define ACCEL_LIF_DBDATA_SET(qid, pndx)                 \
+    (((uint64_t)(qid) << DB_QID_SHFT) | (pndx))
+
+namespace AccelLifUtils {
+class NotifyQ;
+}
 
 class AccelLif;
 
@@ -63,6 +76,12 @@ typedef struct {
     accel_rgroup_rindices_rsp_t indices;
     accel_rgroup_rmetrics_rsp_t metrics;
 } accel_rgroup_ring_t;
+
+static inline bool
+is_power_of_2(uint64_t n)
+{
+    return n && !(n & (n - 1));
+}
 
 /*
  * Ring group map:
@@ -153,6 +172,7 @@ typedef enum {
     ACCEL_LIF_EV_SEQ_QUEUE_PRE_INIT,
     ACCEL_LIF_EV_PRE_INIT,
     ACCEL_LIF_EV_ADMINQ_INIT,
+    ACCEL_LIF_EV_NOTIFYQ_INIT,
     ACCEL_LIF_EV_SEQ_QUEUE_INIT,
     ACCEL_LIF_EV_SEQ_QUEUE_BATCH_INIT,
     ACCEL_LIF_EV_SEQ_QUEUE_INIT_COMPLETE,
@@ -181,6 +201,7 @@ typedef enum {
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_SEQ_QUEUE_PRE_INIT),       \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_PRE_INIT),                 \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_ADMINQ_INIT),              \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_NOTIFYQ_INIT),             \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_SEQ_QUEUE_INIT),           \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_SEQ_QUEUE_BATCH_INIT),     \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_SEQ_QUEUE_INIT_COMPLETE),  \
@@ -287,10 +308,12 @@ public:
     accel_lif_event_t accel_lif_rgroup_quiesce_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_rgroup_reset_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_adminq_init_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_notifyq_init_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_seq_queue_init_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_seq_queue_control_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_seq_queue_batch_init_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_seq_queue_batch_control_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_seq_queue_init_cpl_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_crypto_key_update_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_hang_notify_action(accel_lif_event_t event);
 
@@ -329,6 +352,10 @@ private:
                                                          uint32_t sub_ring);
     /* AdminQ Commands */
     AdminQ                      *adminq;
+    AccelLifUtils::NotifyQ      *notifyq;
+    uint64_t                    event_id;
+
+    uint64_t next_event_id_get(void) { return ++event_id; }
 
     accel_status_code_t 
     _DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd);
@@ -363,5 +390,53 @@ private:
                               const storage_seq_qstate_t& qstate);
     void accel_lif_state_machine(accel_lif_event_t event);
 };
+
+/**
+ * FW-Driver notify queue
+ */
+namespace AccelLifUtils {
+
+class NotifyQ {
+public:
+    NotifyQ(const std::string& name,
+            PdClient *pd,
+            uint64_t lif_id,
+            uint32_t tx_qtype, 
+            uint32_t tx_qid,
+            uint64_t intr_base,
+            uint8_t  ctl_cosA,
+            uint8_t  ctl_cosB,
+            bool host_dev = true);
+
+    bool TxQInit(const notifyq_init_cmd_t *init_cmd,
+                 uint32_t desc_size);
+    bool TxQPost(void *desc);
+    bool TxQReset(void);
+
+private:
+    const std::string&  name;
+    PdClient            *pd;
+
+    uint64_t            lif_id;
+    uint32_t            tx_qtype;
+    uint32_t            tx_qid;
+    uint32_t            intr_base;
+    uint8_t             ctl_cosA;
+    uint8_t             ctl_cosB;
+    bool                host_dev;
+
+    /*
+     * NotifyQ in host follows qcq structure where the host ring space
+     * consists of a command (Rx) ring and a completion (Tx) ring. 
+     * Only the completion (Tx) ring is used in the FW-to-host direction.
+     */
+    uint64_t            tx_ring_base;
+    uint32_t            tx_ring_size;
+    uint32_t            tx_alloc_size;
+    uint32_t            tx_desc_size;
+    uint32_t            tx_head;
+};
+
+} // AccelLifUtils
 
 #endif

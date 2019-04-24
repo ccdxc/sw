@@ -31,6 +31,7 @@ int sonic_debugfs_add_ident(struct sonic *sonic);
 int sonic_debugfs_add_sizes(struct sonic *sonic);
 int sonic_debugfs_add_lif(struct lif *lif);
 int sonic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq);
+void sonic_debugfs_del_qcq(struct qcq *qcq);
 #else
 static inline void sonic_debugfs_create(void) { }
 static inline void sonic_debugfs_destroy(void) { }
@@ -42,6 +43,7 @@ static inline int sonic_debugfs_add_ident(struct sonic *sonic) { return 0; }
 static inline int sonic_debugfs_add_sizes(struct sonic *sonic) { return 0; }
 static inline int sonic_debugfs_add_lif(struct lif *lif) { return 0; }
 static inline int sonic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq) { return 0; }
+static inline void sonic_debugfs_del_qcq(struct qcq *qcq) {}
 #endif
 
 #endif /* _SONIC_DEBUGFS_H_ */

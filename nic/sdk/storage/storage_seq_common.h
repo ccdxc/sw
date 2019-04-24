@@ -35,11 +35,11 @@
  */
 typedef enum storage_seq_qtype {
     STORAGE_SEQ_QTYPE_SQ        = 0,
+    STORAGE_SEQ_QTYPE_NOTIFY    = 1,
 
     /*
      * STORAGE_SEQ_QTYPE_ADMIN must equal 2 to match lib_driver ADMIN queue type
      */
-    STORAGE_SEQ_QTYPE_UNUSED    = 1,
     STORAGE_SEQ_QTYPE_ADMIN     = 2,
     STORAGE_SEQ_QTYPE_MAX
 } __attribute__((packed)) storage_seq_qtype_t;

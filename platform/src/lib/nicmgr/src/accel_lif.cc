@@ -15,6 +15,7 @@
 #define ACCEL_DEV_CMD_ENUMERATE  1
 
 #include "nic/include/base.hpp"
+#include "nic/include/notify.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 
 #include "gen/proto/nicmgr/accel_metrics.pb.h"
@@ -31,6 +32,10 @@
 #include "pd_client.hpp"
 #include "adminq.hpp"
 
+/*
+ * Define the following flag to post test notification message(s)
+ */
+#define ACCEL_LIF_NOTIFYQ_POST_TESTING
 
 #define GBPS_TO_BYTES_PER_SEC(gbps)                     \
     ((uint64_t)(gbps) * (1000000000ULL / 8))
@@ -459,6 +464,11 @@ static accel_lif_state_event_t  lif_seq_init_ev_table[] = {
         ACCEL_LIF_ST_POST_INIT,
     },
     {
+        ACCEL_LIF_EV_NOTIFYQ_INIT,
+        &AccelLif::accel_lif_notifyq_init_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_SEQ_QUEUE_INIT,
         &AccelLif::accel_lif_seq_queue_init_action,
         ACCEL_LIF_ST_SAME,
@@ -490,7 +500,7 @@ static accel_lif_state_event_t  lif_seq_init_ev_table[] = {
     },
     {
         ACCEL_LIF_EV_SEQ_QUEUE_INIT_COMPLETE,
-        &AccelLif::accel_lif_null_action,
+        &AccelLif::accel_lif_seq_queue_init_cpl_action,
         ACCEL_LIF_ST_IDLE,
     },
     {
@@ -596,6 +606,7 @@ static const opcode2event_map_t opcode2event_map = {
     {CMD_OPCODE_LIF_INIT,                ACCEL_LIF_EV_INIT},
     {CMD_OPCODE_LIF_RESET,               ACCEL_LIF_EV_RESET},
     {CMD_OPCODE_ADMINQ_INIT,             ACCEL_LIF_EV_ADMINQ_INIT},
+    {CMD_OPCODE_NOTIFYQ_INIT,            ACCEL_LIF_EV_NOTIFYQ_INIT},
     {CMD_OPCODE_SEQ_QUEUE_INIT,          ACCEL_LIF_EV_SEQ_QUEUE_INIT},
     {CMD_OPCODE_SEQ_QUEUE_BATCH_INIT,    ACCEL_LIF_EV_SEQ_QUEUE_BATCH_INIT},
     {CMD_OPCODE_SEQ_QUEUE_ENABLE,        ACCEL_LIF_EV_SEQ_QUEUE_ENABLE},
@@ -607,6 +618,23 @@ static const opcode2event_map_t opcode2event_map = {
     {CMD_OPCODE_CRYPTO_KEY_UPDATE,       ACCEL_LIF_EV_CRYPTO_KEY_UPDATE},
     {CMD_OPCODE_HANG_NOTIFY,             ACCEL_LIF_EV_HANG_NOTIFY},
 };
+
+/*
+ * Devapi availability check
+ */
+#define ACCEL_LIF_DEVAPI_CHECK(devcmd_status, ret_val)                          \
+    if (!dev_api) {                                                             \
+        NIC_LOG_ERR("{}: Uninitialized devapi", LifNameGet());                  \
+        if (devcmd_status) fsm_ctx.devcmd.status = devcmd_status;               \
+        return ret_val;                                                         \
+    }
+
+#define ACCEL_LIF_DEVAPI_CHECK_VOID(devcmd_status)                              \
+    if (!dev_api) {                                                             \
+        NIC_LOG_ERR("{}: Uninitialized devapi", LifNameGet());                  \
+        if (devcmd_status) fsm_ctx.devcmd.status = devcmd_status;               \
+        return;                                                                 \
+    }
 
 #define ACCEL_LIF_FSM_LOG()                                                     \
     NIC_LOG_DEBUG("{}: state {} event {}: ",                                    \
@@ -664,7 +692,8 @@ AccelLif::AccelLif(AccelDev& accel_dev,
     pd(accel_dev.PdClientGet()),
     dev_api(accel_dev.DevApiGet()),
     seq_created_count(0),
-    seq_qid_init_high(0)
+    seq_qid_init_high(0),
+    event_id(0)
 {
     accel_lif_state_machine_build();
 
@@ -856,10 +885,10 @@ AccelLif::accel_lif_create_action(accel_lif_event_t event)
         .entries = log_2(spec->seq_queue_count),
     };
 
-    qinfo[STORAGE_SEQ_QTYPE_UNUSED] = {
-        .type_num = STORAGE_SEQ_QTYPE_UNUSED,
-        .size = HW_CB_MIN_MULTIPLE,
-        .entries = 0,
+    qinfo[STORAGE_SEQ_QTYPE_NOTIFY] = {
+        .type_num = STORAGE_SEQ_QTYPE_NOTIFY,
+        .size = HW_CB_MULTIPLE(log_2(sizeof(notifyq_cpl_t))),
+        .entries = 1,
     };
 
     qinfo[STORAGE_SEQ_QTYPE_ADMIN] = {
@@ -891,6 +920,10 @@ AccelLif::accel_lif_create_action(accel_lif_event_t event)
                         ACCEL_ADMINQ_REQ_RING_SIZE, ACCEL_ADMINQ_RESP_QTYPE,
                         ACCEL_ADMINQ_RESP_QID, ACCEL_ADMINQ_RESP_RING_SIZE,
                         AdminCmdHandler, this);
+    if (!adminq) {
+        NIC_LOG_ERR("{}: Failed to create AdminQ", LifNameGet());
+        throw;
+    }
     return ACCEL_LIF_EV_NULL;
 }
 
@@ -909,17 +942,22 @@ AccelLif::accel_lif_hal_up_action(accel_lif_event_t event)
     cosA = 1;
     cosB = 0;
     ctl_cosA = 1;
-    if (!dev_api) {
-        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-        fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
-        return ACCEL_LIF_EV_NULL;
-    }
+
+    ACCEL_LIF_DEVAPI_CHECK(ACCEL_RC_ERROR, ACCEL_LIF_EV_NULL);
     dev_api->qos_get_txtc_cos("CONTROL", 1, &ctl_cosB);
     if (ctl_cosB < 0) {
         NIC_LOG_ERR("{}: Failed to get cosB for group {}, uplink {}",
                     LifNameGet(), "CONTROL", 1);
         ctl_cosB = 0;
         fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
+    }
+
+    notifyq = new AccelLifUtils::NotifyQ(LifNameGet(), pd, LifIdGet(),
+                                 ACCEL_NOTIFYQ_TX_QTYPE, ACCEL_NOTIFYQ_TX_QID,
+                                 intr_base, ctl_cosA, ctl_cosB);
+    if (!notifyq) {
+        NIC_LOG_ERR("{}: Failed to create NotifyQ", LifNameGet());
+        throw;
     }
     return ACCEL_LIF_EV_NULL;
 }
@@ -947,11 +985,7 @@ AccelLif::accel_lif_init_action(accel_lif_event_t event)
     ACCEL_LIF_FSM_LOG();
 
     fsm_ctx.reset_destroy = false;
-    if (!dev_api) {
-        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-        fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
-        return ACCEL_LIF_EV_NULL;
-    }
+    ACCEL_LIF_DEVAPI_CHECK(ACCEL_RC_ERROR, ACCEL_LIF_EV_NULL);
     if (dev_api->lif_create(&hal_lif_info_) != SDK_RET_OK) {
         NIC_LOG_ERR("{}: Failed to create LIF", LifNameGet());
         fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
@@ -984,6 +1018,7 @@ AccelLif::accel_lif_reset_action(accel_lif_event_t event)
     uint32_t                qid;
     uint8_t                 enable = 0;
     uint8_t                 abort = 1;
+    uint8_t                 pc_offs = 0;
 
     ACCEL_LIF_FSM_LOG();
     fsm_ctx.reset_destroy = (event == ACCEL_LIF_EV_RESET_DESTROY) ||
@@ -1006,7 +1041,7 @@ AccelLif::accel_lif_reset_action(accel_lif_event_t event)
                                 P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
-    // Disable all adminq
+    // Disable adminq
     for (qid = 0; qid < spec->adminq_count; qid++) {
         qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(),
                                                    STORAGE_SEQ_QTYPE_ADMIN, qid);
@@ -1015,8 +1050,8 @@ AccelLif::accel_lif_reset_action(accel_lif_event_t event)
                         LifNameGet(), qid);
             continue;
         }
-        MEM_SET(qstate_addr + offsetof(admin_qstate_t, p_index0), 0,
-                sizeof(admin_qstate_t) - offsetof(admin_qstate_t, p_index0), 0);
+        WRITE_MEM(qstate_addr + offsetof(admin_qstate_t, pc_offset),
+                  &pc_offs, sizeof(pc_offs), 0);
         PAL_barrier();
         p4plus_invalidate_cache(qstate_addr, sizeof(admin_qstate_t),
                                 P4PLUS_CACHE_INVALIDATE_TXDMA);
@@ -1074,6 +1109,14 @@ AccelLif::accel_lif_seq_quiesce_action(accel_lif_event_t event)
 
     NIC_LOG_DEBUG("{}: last qid quiesced: {} seq_qid_init_high: {}",
                  LifNameGet(), fsm_ctx.quiesce_qid, seq_qid_init_high);
+
+    if (adminq) {
+        adminq->Reset();
+    }
+    if (notifyq) {
+        notifyq->TxQReset();
+    }
+
     /*
      * Reset requires rings to be disabled which helps with convergence
      * to the quiesce state. For those rings that do not support disablement
@@ -1182,11 +1225,7 @@ AccelLif::accel_lif_rgroup_reset_action(accel_lif_event_t event)
      */
     fsm_ctx.devcmd.status = ACCEL_RC_SUCCESS;
     if (fsm_ctx.reset_destroy) {
-        if (!dev_api) {
-            NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-            fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
-            return ACCEL_LIF_EV_NULL;
-        }
+        ACCEL_LIF_DEVAPI_CHECK(ACCEL_RC_ERROR, ACCEL_LIF_EV_NULL);
         if (dev_api->lif_destroy(LifIdGet()) == SDK_RET_OK) {
             qmetrics_fini();
             accel_ring_info_del_all();
@@ -1287,8 +1326,57 @@ AccelLif::accel_lif_adminq_init_action(accel_lif_event_t event)
     cpl->qid = cmd->index;
     cpl->qtype = STORAGE_SEQ_QTYPE_ADMIN;
     NIC_LOG_DEBUG("{}: qid {} qtype {}", LifNameGet(), cpl->qid, cpl->qtype);
-
     fsm_ctx.devcmd.status = ACCEL_RC_SUCCESS;
+
+    if (!adminq->Init(0, ctl_cosA, ctl_cosB)) {
+        NIC_LOG_ERR("{}: Failed to reinitialize AdminQ service",
+                    LifNameGet());
+        fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
+    }
+    return ACCEL_LIF_EV_NULL;
+}
+
+accel_lif_event_t
+AccelLif::accel_lif_notifyq_init_action(accel_lif_event_t event)
+{
+    notifyq_init_cmd_t  *cmd = (notifyq_init_cmd_t *)fsm_ctx.devcmd.req;
+    notifyq_init_cpl_t  *cpl = (notifyq_init_cpl_t *)fsm_ctx.devcmd.resp;
+
+    ACCEL_LIF_FSM_LOG();
+    NIC_LOG_DEBUG("{}: queue_index {} ring_base {:#x} ring_size {} "
+                  "intr_index {}",  LifNameGet(), cmd->index, cmd->ring_base,
+                  cmd->ring_size, cmd->intr_index);
+
+    if (cmd->index > ACCEL_NOTIFYQ_TX_QID) {
+        NIC_LOG_ERR("{}: bad qid {}", LifNameGet(), cmd->index);
+        fsm_ctx.devcmd.status = ACCEL_RC_EQID;
+        return ACCEL_LIF_EV_NULL;
+    }
+
+    if (cmd->intr_index >= spec->intr_count) {
+        NIC_LOG_ERR("{}: bad intr {}", LifNameGet(), cmd->intr_index);
+        fsm_ctx.devcmd.status = ACCEL_RC_ERANGE;
+        return ACCEL_LIF_EV_NULL;
+    }
+
+    if (cmd->ring_size < 2 || cmd->ring_size > 16) {
+        NIC_LOG_ERR("{}: bad ring size {}", LifNameGet(), cmd->ring_size);
+        fsm_ctx.devcmd.status = ACCEL_RC_ERANGE;
+        return ACCEL_LIF_EV_NULL;
+    }
+
+    if (!notifyq || !notifyq->TxQInit(cmd, sizeof(notifyq_cpl_t))) {
+        NIC_LOG_ERR("{}: Failed to initialize NOTIFY qid {}",
+                    LifIdGet(), cmd->index);
+        fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
+        return ACCEL_LIF_EV_NULL;
+    }
+
+    cpl->qid = cmd->index;
+    cpl->qtype = STORAGE_SEQ_QTYPE_NOTIFY;
+    NIC_LOG_DEBUG("{}: NOTIFY qid {} qtype {}",
+                  LifNameGet(), cpl->qid, cpl->qtype);
+
     return ACCEL_LIF_EV_NULL;
 }
 
@@ -1349,6 +1437,25 @@ AccelLif::accel_lif_seq_queue_batch_init_action(accel_lif_event_t event)
 }
 
 accel_lif_event_t
+AccelLif::accel_lif_seq_queue_init_cpl_action(accel_lif_event_t event)
+{
+    ACCEL_LIF_FSM_LOG();
+
+#ifdef ACCEL_LIF_NOTIFYQ_POST_TESTING
+    if (notifyq) {
+        log_event_t log_ev = {0};
+        log_ev.ecode = EVENT_OPCODE_LOG;
+        log_ev.eid = next_event_id_get();
+        NIC_LOG_DEBUG("{}: sending EVENT_OPCODE_LOG eid {}",
+                      LifNameGet(), log_ev.eid);
+        notifyq->TxQPost((void *)&log_ev);
+    }
+#endif
+    fsm_ctx.devcmd.status = ACCEL_RC_SUCCESS;
+    return ACCEL_LIF_EV_NULL;
+}
+
+accel_lif_event_t
 AccelLif::accel_lif_seq_queue_control_action(accel_lif_event_t event)
 {
     seq_queue_control_cmd_t *cmd = (seq_queue_control_cmd_t *)fsm_ctx.devcmd.req;
@@ -1390,6 +1497,7 @@ AccelLif::accel_lif_seq_queue_batch_control_action(accel_lif_event_t event)
         }
         cmd.qid++;
     }
+
     return ACCEL_LIF_EV_NULL;
 }
 
@@ -1815,10 +1923,7 @@ AccelLif::accel_rgroup_add(void)
 {
     int     ret_val;
 
-    if (!dev_api) {
-        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-        return -1;
-    }
+    ACCEL_LIF_DEVAPI_CHECK(0, SDK_RET_ERR);
     ret_val = dev_api->accel_rgroup_add(LifNameGet(), cmb_rmetrics_addr,
                                         cmb_rmetrics_size);
     if (ret_val != SDK_RET_OK) {
@@ -1833,10 +1938,7 @@ AccelLif::accel_rgroup_add(void)
 void
 AccelLif::accel_rgroup_del(void)
 {
-    if (!dev_api) {
-        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-        return;
-    }
+    ACCEL_LIF_DEVAPI_CHECK_VOID(0);
     if (dev_api->accel_rgroup_del(LifNameGet()) != SDK_RET_OK) {
         NIC_LOG_ERR("{}: failed to delete ring group", LifNameGet());
     }
@@ -1850,10 +1952,7 @@ AccelLif::accel_rgroup_rings_add(void)
 {
     int     ret_val;
 
-    if (!dev_api) {
-        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-        return -1;
-    }
+    ACCEL_LIF_DEVAPI_CHECK(0, SDK_RET_ERR);
     ret_val = dev_api->accel_rgroup_ring_add(LifNameGet(), accel_ring_vec);
     if (ret_val != SDK_RET_OK) {
         NIC_LOG_ERR("{}: failed to add ring vector", LifNameGet());
@@ -1867,10 +1966,7 @@ AccelLif::accel_rgroup_rings_add(void)
 void
 AccelLif::accel_rgroup_rings_del(void)
 {
-    if (!dev_api) {
-        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-        return;
-    }
+    ACCEL_LIF_DEVAPI_CHECK_VOID(0);
     if (dev_api->accel_rgroup_ring_del(LifNameGet(),
                                        accel_ring_vec) != SDK_RET_OK) {
         NIC_LOG_ERR("{}: failed to delete ring vector", LifNameGet());
@@ -1885,10 +1981,7 @@ AccelLif::accel_rgroup_reset_set(bool reset_sense)
 {
     int     ret_val;
 
-    if (!dev_api) {
-        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-        return -1;
-    }
+    ACCEL_LIF_DEVAPI_CHECK(0, SDK_RET_ERR);
     ret_val = dev_api->accel_rgroup_reset_set(LifNameGet(),
                                     ACCEL_SUB_RING_ALL, reset_sense);
     if (ret_val != SDK_RET_OK) {
@@ -1906,10 +1999,7 @@ AccelLif::accel_rgroup_enable_set(bool enable_sense)
 {
     int     ret_val;
 
-    if (!dev_api) {
-        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-        return -1;
-    }
+    ACCEL_LIF_DEVAPI_CHECK(0, SDK_RET_ERR);
     ret_val = dev_api->accel_rgroup_enable_set(LifNameGet(),
                                     ACCEL_SUB_RING_ALL, enable_sense);
     if (ret_val != SDK_RET_OK) {
@@ -1928,10 +2018,7 @@ AccelLif::accel_rgroup_pndx_set(uint32_t val,
 {
     int     ret_val;
 
-    if (!dev_api) {
-        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-        return -1;
-    }
+    ACCEL_LIF_DEVAPI_CHECK(0, SDK_RET_ERR);
     ret_val = dev_api->accel_rgroup_pndx_set(LifNameGet(),
                                     ACCEL_SUB_RING_ALL, val, conditional);
     if (ret_val != SDK_RET_OK) {
@@ -1964,10 +2051,7 @@ AccelLif::accel_rgroup_rinfo_get(void)
     uint32_t    num_rings;
     int         ret_val;
 
-    if (!dev_api) {
-        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-        return -1;
-    }
+    ACCEL_LIF_DEVAPI_CHECK(0, SDK_RET_ERR);
     ret_val = dev_api->accel_rgroup_info_get(LifNameGet(), ACCEL_SUB_RING_ALL,
                              accel_rgroup_rinfo_rsp_cb, this, &num_rings);
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "rinfo");
@@ -2004,10 +2088,7 @@ AccelLif::accel_rgroup_rindices_get(void)
     uint32_t    num_rings;
     int         ret_val;
 
-    if (!dev_api) {
-        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-        return -1;
-    }
+    ACCEL_LIF_DEVAPI_CHECK(0, SDK_RET_ERR);
     ret_val = dev_api->accel_rgroup_indices_get(LifNameGet(), ACCEL_SUB_RING_ALL,
                              accel_rgroup_rindices_rsp_cb, this, &num_rings);
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "indices");
@@ -2046,10 +2127,7 @@ AccelLif::accel_rgroup_rmetrics_get(void)
     uint32_t    num_rings;
     int         ret_val;
 
-    if (!dev_api) {
-        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-        return -1;
-    }
+    ACCEL_LIF_DEVAPI_CHECK(0, SDK_RET_ERR);
     ret_val = dev_api->accel_rgroup_metrics_get(LifNameGet(), ACCEL_SUB_RING_ALL,
                              accel_rgroup_rmetrics_rsp_cb, this, &num_rings);
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "metrics");
@@ -2089,10 +2167,7 @@ AccelLif::accel_rgroup_rmisc_get(void)
     uint32_t    num_rings;
     int         ret_val;
 
-    if (!dev_api) {
-        NIC_LOG_ERR("{}: Uninitialzed devapi.", LifNameGet());
-        return -1;
-    }
+    ACCEL_LIF_DEVAPI_CHECK(0, SDK_RET_ERR);
     ret_val = dev_api->accel_rgroup_misc_get(LifNameGet(), ACCEL_SUB_RING_ALL,
                              accel_rgroup_rmisc_rsp_cb, this, &num_rings);
     ACCEL_RGROUP_GET_RET_CHECK(ret_val, num_rings, "misc");
@@ -2304,4 +2379,182 @@ lif_event_str(accel_lif_event_t event)
     }
     return "unknown_event";
 }
+
+
+/**
+ * FW-Driver notify queue
+ */
+namespace AccelLifUtils {
+
+NotifyQ::NotifyQ(const std::string& name,
+                 PdClient *pd,
+                 uint64_t lif_id,
+                 uint32_t tx_qtype, 
+                 uint32_t tx_qid,
+                 uint64_t intr_base,
+                 uint8_t  ctl_cosA,
+                 uint8_t  ctl_cosB,
+                 bool host_dev) :
+    name(name),
+    pd(pd),
+    lif_id(lif_id),
+    tx_qtype(tx_qtype),
+    tx_qid(tx_qid),
+    intr_base(intr_base),
+    ctl_cosA(ctl_cosA),
+    ctl_cosB(ctl_cosB),
+    host_dev(host_dev),
+    tx_ring_size(0),
+    tx_alloc_size(0)
+{
+}
+
+bool
+NotifyQ::TxQInit(const notifyq_init_cmd_t *cmd,
+                 uint32_t desc_size)
+{
+    notify_qstate_t     qstate = {0};
+    uint64_t            qstate_addr;
+    uint64_t            host_ring_base;
+    uint32_t            alloc_size;
+    uint8_t             pc_offs;
+
+    NIC_LOG_DEBUG("{}: NOTIFYQ desc_size {}", name, desc_size);
+
+    /*
+     * Ensure sizes are a power of 2
+     */
+    if (!is_power_of_2(desc_size)) {
+        NIC_LOG_ERR("{}: desc_size {} not a power of 2", name, desc_size);
+        return false;
+    }
+
+    tx_ring_size = 1 << cmd->ring_size;
+    alloc_size = desc_size << cmd->ring_size;
+    if (tx_alloc_size) {
+        if (tx_alloc_size < alloc_size) {
+            NIC_LOG_ERR("{}: alloc_size {} exceeds previous allocation {}",
+                        name, alloc_size, tx_alloc_size);
+            return false;
+        }
+    } else {
+        tx_ring_base = pd->nicmgr_mem_alloc(alloc_size);
+        if (tx_ring_base == 0) {
+            NIC_LOG_ERR("{}: Failed NOTIFYQ allocate tx queue size {}",
+                        name, alloc_size);
+            return false;
+        }
+        tx_alloc_size = alloc_size;
+        NIC_LOG_DEBUG("{}: NOTIFYQ tx queue address {:#x}", name, tx_ring_base);
+    }
+
+    tx_desc_size = desc_size;
+    tx_head = 0;
+
+    qstate_addr = pd->lm_->get_lif_qstate_addr(lif_id, tx_qtype, tx_qid);
+    if (qstate_addr < 0) {
+        NIC_LOG_ERR("{}: Failed NOTIFYQ get qstate address", name);
+        return false;
+    }
+
+    if (pd->get_pc_offset("txdma_stage0.bin", "notify_stage0",
+                          &pc_offs, NULL) < 0) {
+        NIC_LOG_ERR("Failed to resolve program: txdma_stage0.bin notify_stage0");
+        return false;
+    }
+
+    qstate.pc_offset = pc_offs;
+    qstate.cosA = ctl_cosA;
+    qstate.cosB = ctl_cosB;
+    qstate.total = 1;
+    qstate.cfg.enable = 1;
+    qstate.cfg.host_queue = host_dev;
+    qstate.cfg.intr_enable = 1;
+    qstate.ring_base = tx_ring_base;
+    qstate.ring_size = cmd->ring_size;
+
+    /*
+     * NotifyQ in host follows qcq structure where the host ring space
+     * consists of an (unused) cmd ring and a completion ring. When
+     * posting from FW to host, events are posted into the completion
+     * area, hence host_ring_base is adjusted to point beyond the cmd area.
+     */
+    host_ring_base = cmd->ring_base;
+    if (host_dev) {
+        host_ring_base |= ACCEL_PHYS_ADDR_HOST_SET(1) |
+                          ACCEL_PHYS_ADDR_LIF_SET(lif_id);
+    }
+    qstate.host_ring_base = roundup(host_ring_base + alloc_size, 4096);
+    NIC_LOG_DEBUG("{}: NOTIFYQ tx qstate {:#x} host_ring_base {:#x} "
+                  "adjusted base {:#x}", name, qstate_addr,
+                  host_ring_base, qstate.host_ring_base);
+
+    qstate.host_ring_size = cmd->ring_size;
+    qstate.host_intr_assert_index = intr_base + cmd->intr_index;
+    WRITE_MEM(qstate_addr, (uint8_t *)&qstate, sizeof(qstate), 0);
+    PAL_barrier();
+    p4plus_invalidate_cache(qstate_addr, sizeof(qstate),
+                            P4PLUS_CACHE_INVALIDATE_TXDMA);
+    return true;
+}
+
+bool
+NotifyQ::TxQPost(void *desc)
+{
+    uint64_t tx_db_addr;
+    uint64_t tx_db_data;
+    uint64_t desc_addr;
+
+    if (!tx_ring_base || !tx_ring_size) {
+        NIC_LOG_DEBUG("{}: Failed NOTIFYQ not yet initialized", name);
+        return false;
+    }
+
+    desc_addr = tx_ring_base + (tx_desc_size * tx_head);
+    WRITE_MEM(desc_addr, (uint8_t *)desc, tx_desc_size, 0);
+
+    tx_db_addr =
+#ifdef __aarch64__
+                CAP_ADDR_BASE_DB_WA_OFFSET +
+#endif
+                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
+                ACCEL_LIF_DBADDR_SET(lif_id, tx_qtype);
+
+    tx_head = (tx_head + 1) & (tx_ring_size - 1);
+    tx_db_data = ACCEL_LIF_DBDATA_SET(tx_qid, tx_head);
+    NIC_LOG_DEBUG("{}: NOTIFYQ tx_db_addr {:#x} tx_db_data {:#x}",
+                  name, tx_db_addr, tx_db_data);
+    PAL_barrier();
+    WRITE_DB64(tx_db_addr, tx_db_data);
+
+    return true;
+}
+
+bool
+NotifyQ::TxQReset(void)
+{
+    uint64_t                    qstate_addr;
+    struct notify_cfg_qstate    cfg = {0};
+    uint8_t                     pc_offs = 0;
+
+    qstate_addr = pd->lm_->get_lif_qstate_addr(lif_id, tx_qtype, tx_qid);
+    if (qstate_addr < 0) {
+        NIC_LOG_ERR("{}: Failed NOTIFYQ get qstate address", name);
+        return false;
+    }
+    NIC_LOG_DEBUG("{}: NOTIFYQ resetting qstate {:#x}", name, qstate_addr);
+
+    WRITE_MEM(qstate_addr + offsetof(notify_qstate_t, pc_offset), &pc_offs,
+              sizeof(pc_offs), 0);
+    WRITE_MEM(qstate_addr + offsetof(notify_qstate_t, cfg), (uint8_t *)&cfg,
+              sizeof(cfg), 0);
+    PAL_barrier();
+    p4plus_invalidate_cache(qstate_addr, sizeof(notify_qstate_t),
+                            P4PLUS_CACHE_INVALIDATE_TXDMA);
+    tx_head = 0;
+
+    return true;
+}
+
+} // namespace AccelLifUtils
 

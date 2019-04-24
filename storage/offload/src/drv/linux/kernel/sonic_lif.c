@@ -15,6 +15,7 @@
 #define PNSO_INIT_STAT(s) SYSCTL_ADD_PROC(ctx, child, OID_AUTO, #s, \
 		CTLTYPE_S64 | CTLFLAG_RD, lif, PNSO_STAT_ID(s), \
 		sonic_sysctl_stat_handler, "Q", NULL);
+#include <linux/printk.h>
 #endif
 #include "pnso_stats.h"
 
@@ -53,6 +54,117 @@ static int
 sonic_lif_seq_q_batch_control(struct seq_queue_batch *batch,
 			      void *cb_arg);
 
+static void sonic_lif_deferred_work(struct work_struct *work)
+{
+	struct lif *lif = container_of(work, struct lif, deferred.work);
+	struct deferred *def = &lif->deferred;
+	struct deferred_work *w = NULL;
+
+	spin_lock_bh(&def->lock);
+	if (!list_empty(&def->list)) {
+		w = list_first_entry(&def->list, struct deferred_work, list);
+		list_del(&w->list);
+	}
+	spin_unlock_bh(&def->lock);
+
+	if (w) {
+		switch (w->type) {
+		case DW_TYPE_RESET:
+			OSAL_LOG_DEBUG("Deferred RESET");
+			break;
+                default:
+			break;
+		};
+		devm_kfree(lif->sonic->dev, w);
+		schedule_work(&def->work);
+	}
+}
+
+static void sonic_lif_deferred_enqueue(struct deferred *def,
+				       struct deferred_work *work)
+{
+	spin_lock_bh(&def->lock);
+	list_add_tail(&work->list, &def->list);
+	spin_unlock_bh(&def->lock);
+	schedule_work(&def->work);
+}
+
+static void sonic_lif_deferred_cancel(struct lif *lif)
+{
+	struct deferred *def = &lif->deferred;
+	struct deferred_work *w;
+	struct deferred_work *w_next;
+
+	cancel_work_sync(&def->work);
+	spin_lock_bh(&def->lock);
+	list_for_each_entry_safe(w, w_next, &def->list, list) {
+		list_del(&w->list);
+		devm_kfree(lif->sonic->dev, w);
+	}
+	spin_unlock_bh(&def->lock);
+}
+
+static bool sonic_notifyq_service(struct cq *cq, struct cq_info *cq_info, void *cb_arg)
+{
+	union notifyq_cpl *cpl = cq_info->cq_desc;
+	struct queue *q;
+	struct deferred_work *work;
+	struct lif *lif;
+
+	q = cq->bound_q;
+	lif = q->admin_info[0].cb_arg;
+
+	/* Have we run out of new completions to process? */
+	if (!(cpl->event.eid > lif->last_eid))
+		return false;
+
+	lif->last_eid = cpl->event.eid;
+	switch (cpl->event.ecode) {
+	case EVENT_OPCODE_RESET:
+		OSAL_LOG_DEBUG("Notifyq EVENT_OPCODE_RESET eid=" PRIu64,
+			    cpl->event.eid);
+		OSAL_LOG_DEBUG("reset_code=%d state=%d",
+			    cpl->reset.reset_code,
+			    cpl->reset.state);
+		work = devm_kzalloc(lif->sonic->dev, sizeof(*work), GFP_ATOMIC);
+		if (!work) {
+			OSAL_LOG_ERROR("Failed DW_TYPE_RESET alloc");
+			break;
+		}
+		work->type = DW_TYPE_RESET;
+		sonic_lif_deferred_enqueue(&lif->deferred, work);
+		break;
+	case EVENT_OPCODE_HEARTBEAT:
+		OSAL_LOG_DEBUG("Notifyq EVENT_OPCODE_HEARTBEAT eid=" PRIu64,
+			    cpl->event.eid);
+		break;
+	case EVENT_OPCODE_LOG:
+		OSAL_LOG_DEBUG("Notifyq EVENT_OPCODE_LOG eid=" PRIu64,
+			    cpl->event.eid);
+		print_hex_dump_debug("notifyq ", DUMP_PREFIX_OFFSET, 16, 1,
+			       cpl->log.data, sizeof(cpl->log.data), true);
+		break;
+	default:
+		OSAL_LOG_DEBUG("Notifyq bad event ecode=%d eid=" PRIu64,
+			    cpl->event.ecode, cpl->event.eid);
+		break;
+	}
+
+	return true;
+}
+
+static int sonic_notifyq_clean(struct lif *lif, int budget)
+{
+	struct cq *cq = &lif->notifyqcq->cq;
+	int work_done;
+
+	work_done = sonic_cq_service(cq, budget, sonic_notifyq_service, NULL);
+	if (work_done)
+		sonic_intr_return_credits(cq->bound_intr, work_done,
+					  false, true);
+	return work_done;
+}
+
 static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 				 void *cb_arg)
 {
@@ -69,17 +181,29 @@ static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 #ifndef __FreeBSD__
 static int sonic_adminq_napi(struct napi_struct *napi, int budget)
 {
-	return sonic_napi(napi, budget, sonic_adminq_service, NULL);
+	struct lif *lif = napi_to_cq(napi)->lif;
+	int n_work = 0;
+	int a_work = 0;
+
+	if (likely(lif->notifyqcq && (lif->notifyqcq->flags & QCQ_F_INITED)))
+		n_work = sonic_notifyq_clean(lif, budget);
+	a_work = sonic_napi(napi, budget, sonic_adminq_service, NULL);
+
+	return max(n_work, a_work);
 }
 #else
 static void sonic_adminq_napi(struct napi_struct *napi)
 {
+	struct lif *lif = napi_to_cq(napi)->lif;
 	int budget = NAPI_POLL_WEIGHT;
-	int work_done;
+	int n_work = 0;
+	int a_work = 0;
 
-	work_done = sonic_napi(napi, budget, sonic_adminq_service, NULL);
+	if (likely(lif->notifyqcq && (lif->notifyqcq->flags & QCQ_F_INITED)))
+		n_work = sonic_notifyq_clean(lif, budget);
+	a_work = sonic_napi(napi, budget - n_work, sonic_adminq_service, NULL);
 
-	if (work_done == budget)
+	if ((n_work + a_work) >= budget)
 		napi_schedule(napi);
 }
 #endif
@@ -483,6 +607,12 @@ int sonic_q_alloc(struct lif *lif, struct queue *q,
 	return 0;
 }
 
+static void sonic_link_qcq_interrupts(struct qcq *src_qcq, struct qcq *n_qcq)
+{
+	n_qcq->intr.vector = src_qcq->intr.vector;
+	n_qcq->intr.ctrl = src_qcq->intr.ctrl;
+}
+
 static int sonic_qcq_alloc(struct lif *lif, unsigned int index,
 	 const char *base, unsigned int flags,
 	 unsigned int num_descs, unsigned int desc_size,
@@ -576,6 +706,8 @@ static void sonic_qcq_free(struct lif *lif, struct qcq *qcq)
 
 	sonic_q_free(lif, &qcq->q);
 	sonic_intr_free(lif, &qcq->intr);
+	devm_kfree(lif->sonic->dev, qcq->cq.info);
+	devm_kfree(lif->sonic->dev, qcq);
 }
 
 static unsigned int sonic_pid_get(struct lif *lif, unsigned int page)
@@ -589,22 +721,41 @@ static unsigned int sonic_pid_get(struct lif *lif, unsigned int page)
 
 static int sonic_qcqs_alloc(struct lif *lif)
 {
-	unsigned int flags;
 	unsigned int pid;
 	int err = -ENOMEM;
 
 	pid = sonic_pid_get(lif, 0);
-	flags = QCQ_F_INTR;
-	err = sonic_qcq_alloc(lif, 0, "admin", flags, 1 << 4,
+	err = sonic_qcq_alloc(lif, 0, "admin", QCQ_F_INTR, ADMINQ_LENGTH,
 			sizeof(struct admin_cmd),
 			sizeof(struct admin_cpl),
 			pid, &lif->adminqcq);
+	if (err)
+		goto err_out;
+
+	err = sonic_qcq_alloc(lif, 0, "notifyq", QCQ_F_NOTIFYQ, NOTIFYQ_LENGTH,
+			sizeof(struct notifyq_cmd),
+			sizeof(union notifyq_cpl),
+			pid, &lif->notifyqcq);
+	if (err)
+		goto err_out_free_adminqcq;
+
+	/* Let the notifyq ride on the adminq interrupt */
+	sonic_link_qcq_interrupts(lif->adminqcq, lif->notifyqcq);
+	return 0;
+
+err_out_free_adminqcq:
+	sonic_qcq_free(lif, lif->adminqcq);
+	lif->adminqcq = NULL;
+err_out:
 	return err;
 }
 
 static void sonic_qcqs_free(struct lif *lif)
 {
+	sonic_qcq_free(lif, lif->notifyqcq);
+	lif->notifyqcq = NULL;
 	sonic_qcq_free(lif, lif->adminqcq);
+	lif->adminqcq = NULL;
 }
 
 static int
@@ -662,12 +813,10 @@ static int sonic_lif_alloc(struct sonic *sonic, unsigned int index)
 	snprintf(lif->name, sizeof(lif->name), "lif%u", index);
 
 	spin_lock_init(&lif->adminq_lock);
-
-#if 0
 	spin_lock_init(&lif->deferred.lock);
 	INIT_LIST_HEAD(&lif->deferred.list);
 	INIT_WORK(&lif->deferred.work, sonic_lif_deferred_work);
-#endif
+
 	sonic_seq_q_batch_ht_init(lif);
 
 	err = sonic_qcqs_alloc(lif);
@@ -773,14 +922,12 @@ static void sonic_lif_free(struct lif *lif)
 {
 	sonic_lif_reset(lif);
 
-        flush_scheduled_work();
-        sonic_qcqs_free(lif);
-        sonic_per_core_resources_free(lif);
-#if 0
-	cancel_work_sync(&lif->deferred.work);
-#endif
+	flush_scheduled_work();
+	sonic_lif_deferred_cancel(lif);
+	sonic_qcqs_free(lif);
+	sonic_per_core_resources_free(lif);
 	list_del(&lif->list);
-        devm_kfree(lif->sonic->dev, lif);
+	devm_kfree(lif->sonic->dev, lif);
 }
 
 void sonic_lifs_free(struct sonic *sonic)
@@ -799,13 +946,20 @@ static void sonic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 #ifndef __FreeBSD__
 	struct device *dev = lif->sonic->dev;
 #endif
+	if (!qcq)
+		return;
+
+	sonic_debugfs_del_qcq(qcq);
 
 	if (!(qcq->flags & QCQ_F_INITED))
 		return;
-	sonic_intr_mask(&qcq->intr, true);
-	synchronize_irq(qcq->intr.vector);
-	devm_free_irq(dev, qcq->intr.vector, &qcq->napi);
-	netif_napi_del(&qcq->napi);
+
+	if (qcq->intr.index != INTR_INDEX_NOT_ASSIGNED) {
+		sonic_intr_mask(&qcq->intr, true);
+		synchronize_irq(qcq->intr.vector);
+		devm_free_irq(dev, qcq->intr.vector, &qcq->napi);
+		netif_napi_del(&qcq->napi);
+	}
 	qcq->flags &= ~QCQ_F_INITED;
 }
 
@@ -857,6 +1011,8 @@ static void sonic_lif_per_core_resources_deinit(struct lif *lif)
 
 static void sonic_lif_deinit(struct lif *lif)
 {
+	napi_disable(&lif->adminqcq->napi);
+	sonic_lif_qcq_deinit(lif, lif->notifyqcq);
 	sonic_lif_qcq_deinit(lif, lif->adminqcq);
 #ifdef __FreeBSD__
 	sonic_sysctl_deinit(lif);
@@ -945,6 +1101,41 @@ static int sonic_lif_adminq_init(struct lif *lif)
 	/* Enabling interrupts on adminq from here on... */
 	napi_enable(napi);
 	sonic_intr_mask(&lif->adminqcq->intr, false);
+
+	return sonic_debugfs_add_qcq(lif, qcq);
+}
+
+static int sonic_lif_notifyq_init(struct lif *lif)
+{
+	struct qcq *qcq = lif->notifyqcq;
+	struct queue *q = &qcq->q;
+	int err;
+
+	struct sonic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.notifyq_init.opcode = CMD_OPCODE_NOTIFYQ_INIT,
+		.cmd.notifyq_init.index = q->qid,
+		.cmd.notifyq_init.pid = q->pid,
+		.cmd.notifyq_init.intr_index = lif->adminqcq->intr.index,
+		.cmd.notifyq_init.lif_index = lif->index,
+		.cmd.notifyq_init.ring_size = ilog2(q->num_descs),
+		.cmd.notifyq_init.ring_base = q->base_pa,
+		.cmd.notifyq_init.notify_size = 0,
+		.cmd.notifyq_init.notify_base = 0,
+	};
+
+	err = sonic_adminq_post_wait(lif, &ctx);
+	if (err)
+		return err;
+
+	q->qid = ctx.comp.notifyq_init.qid;
+	q->qtype = ctx.comp.notifyq_init.qtype;
+	q->db = NULL;
+
+	/* preset the callback info */
+	q->admin_info[0].cb_arg = lif;
+
+	qcq->flags |= QCQ_F_INITED;
 
 	return sonic_debugfs_add_qcq(lif, qcq);
 }
@@ -1392,9 +1583,13 @@ static int sonic_lif_init(struct lif *lif)
 	if (err)
 		goto err_out_adminq_deinit;
 
+	err = sonic_lif_notifyq_init(lif);
+	if (err)
+		goto err_out_adminq_deinit;
+
 	err = sonic_lif_per_core_resources_init(lif);
 	if (err)
-		goto err_out_per_core_res_deinit;
+		goto err_out_notifyq_deinit;
 
 #ifdef __FreeBSD__
 	err = sonic_sysctl_init(lif);
@@ -1421,10 +1616,12 @@ static int sonic_lif_init(struct lif *lif)
 err_out_per_core_res_deinit:
 	sonic_lif_per_core_resources_deinit(lif);
 
+err_out_notifyq_deinit:
+	sonic_lif_qcq_deinit(lif, lif->notifyqcq);
+
 err_out_adminq_deinit:
 	sonic_lif_qcq_deinit(lif, lif->adminqcq);
 	sonic_lif_reset(lif);
-
 	return err;
 }
 

@@ -35,10 +35,10 @@
 #define DEV_CMD_SIGNATURE               0x44455643      /* 'DEVC' */
 
 enum cmd_opcode {
-	CMD_OPCODE_NOP				= 0,
-	CMD_OPCODE_RESET			= 1,
-	CMD_OPCODE_IDENTIFY			= 2,
-	CMD_OPCODE_LIF_INIT			= 3,
+	CMD_OPCODE_NOP			= 0,
+	CMD_OPCODE_RESET		= 1,
+	CMD_OPCODE_IDENTIFY		= 2,
+	CMD_OPCODE_LIF_INIT		= 3,
 	CMD_OPCODE_ADMINQ_INIT		= 4,
 	CMD_OPCODE_SEQ_QUEUE_INIT	= 5,
 	CMD_OPCODE_SEQ_QUEUE_ENABLE	= 6,
@@ -50,6 +50,7 @@ enum cmd_opcode {
 	CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE = 12,
 	CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE = 13,
 	CMD_OPCODE_LIF_RESET    	= 14,
+	CMD_OPCODE_NOTIFYQ_INIT		= 15,
 
 	CMD_OPCODE_SEQ_QUEUE_DUMP	= 0xf0,
 };
@@ -70,6 +71,7 @@ enum cmd_opcode {
     ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE);       \
     ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE);       \
     ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_LIF_RESET);                     \
+    ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_NOTIFYQ_INIT);                  \
     ACCEL_DEV_CASE_STRINGIFY(CMD_OPCODE_SEQ_QUEUE_DUMP);                \
     
 enum accel_status_code {
@@ -118,6 +120,13 @@ enum accel_status_code {
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_RC_ERROR),          \
 
 typedef int accel_status_code_t;
+
+enum notifyq_opcode {
+	EVENT_OPCODE_LINK_CHANGE    = 1,
+	EVENT_OPCODE_RESET          = 2,
+	EVENT_OPCODE_HEARTBEAT      = 3,
+	EVENT_OPCODE_LOG            = 4,
+};
 
 #pragma pack(push, 1)
 
@@ -400,9 +409,67 @@ typedef struct adminq_init_cpl {
 	uint32_t    rsvd2[2];
 } adminq_init_cpl_t;
 
-enum txq_type {
-	TXQ_TYPE_ETHERNET = 0,
-};
+/**
+ * struct notifyq_init_cmd - Event queue init command
+ * @opcode:       opcode = 11
+ * @pid:          Process ID
+ * @index:        LIF-relative queue index
+ * @intr_index:   Interrupt control register index
+ * @lif_index:    LIF index (should be 0)
+ * @ring_size:    NotifyQ queue ring size, encoded as a log2(size),
+ *                in number of descs.  The actual ring size is
+ *                (1 << ring_size).  For example, to
+ *                select a ring size of 64 descriptors write
+ *                ring_size = 6.  The minimum ring_size value is 2
+ *                for a ring size of 4 descriptors.  The maximum
+ *                ring_size value is 16 for a ring size of 64k
+ *                descriptors.  Values of ring_size <2 and >16 are
+ *                reserved.
+ * @notify_size:  Notify block size, encoded as a log2(size), in
+ *                number of bytes.  If the size is smaller that the
+ *                data available, the data will be truncated.
+ * @ring_base:    Notify queue ring base address. Should be aligned
+ *                on PAGE_SIZE. If not aligned properly can cause
+ *                CQ Errors
+ * @notify_base:  Base address for a block of memory reserved for
+ *                link status data, to be updated by the NIC and
+ *                read by the driver.  When link status changes,
+ *                the NIC should update this before signaling an
+ *                interrupt on the NotifyQ.
+ */
+typedef struct notifyq_init_cmd {
+	uint16_t    opcode;
+	uint16_t    pid;
+	uint16_t    index;
+	uint16_t    intr_index;
+	uint32_t    lif_index;
+	uint8_t     ring_size;
+	uint8_t     notify_size;
+	uint16_t    rsvd;
+	uint64_t    ring_base;
+	uint64_t    notify_base;
+	uint32_t    rsvd2[8];
+} notifyq_init_cmd_t;
+
+/**
+ * notifyq_init_cpl_t - Event queue init command completion
+ * @status:     The status of the command.  Values for status are:
+ *                 0 = Successful completion
+ * @comp_index: The index in the descriptor ring for which this
+ *              is the completion.
+ * @qid:        Queue ID
+ * @qtype:      Queue type
+ * @color:      Color bit.
+ */
+typedef struct notifyq_init_cpl {
+	uint8_t     status;
+	uint8_t     rsvd;
+	uint16_t    cpl_index;
+	uint32_t    qid;
+	uint8_t     qtype;
+	uint8_t     rsvd3[6];
+	uint8_t     color;
+} notifyq_init_cpl_t;
 
 /**
  * seq_queue_init_cmd_t - Sequencer queue init command
@@ -669,6 +736,70 @@ typedef struct seq_queue_dump_cpl {
 	uint32_t    rsvd3;
 } seq_queue_dump_cpl_t;
 
+/**
+ * notifyq_event_t
+ * @eid:   event number
+ * @ecode: event code
+ * @data:  unspecified data about the event
+ *
+ * This is the generic event report struct from which the other
+ * actual events will be formed.
+ */
+typedef struct notifyq_event {
+	uint64_t    eid;
+	uint16_t    ecode;
+	uint8_t     data[54];
+} notifyq_event_t;
+
+/**
+ * struct reset_event
+ * @eid:		event number
+ * @ecode:		event code = EVENT_OPCODE_RESET
+ * @reset_code:		reset type
+ * @state:		0=pending, 1=complete, 2=error
+ *
+ * Sent when the NIC or some subsystem is going to be or
+ * has been reset.
+ */
+typedef struct reset_event {
+	uint64_t    eid;
+	uint16_t    ecode;
+	uint8_t     reset_code;
+	uint8_t     state;
+	uint8_t     rsvd[52];
+} reset_event_t;
+
+/**
+ * struct heartbeat_event
+ * @eid:	event number
+ * @ecode:	event code = EVENT_OPCODE_HEARTBEAT
+ *
+ * Sent periodically by the NIC to indicate continued health
+ */
+typedef struct heartbeat_event {
+	uint64_t    eid;
+	uint16_t    ecode;
+	uint8_t     rsvd[54];
+} heartbeat_event_t;
+
+/**
+ * struct log_event
+ * @eid:	event number
+ * @ecode:	event code = EVENT_OPCODE_LOG
+ * @data:	log data
+ *
+ * Sent to notify the driver of an internal error.
+ */
+typedef struct log_event {
+	uint64_t    eid;
+	uint16_t    ecode;
+	uint8_t     data[54];
+} log_event_t;
+
+typedef struct notifyq_cmd {
+	uint32_t    data;       /* Not used but needed for qcq structure */
+} notifyq_cmd_t;
+
 #pragma pack(pop)
 
 typedef union adminq_cmd {
@@ -676,6 +807,7 @@ typedef union adminq_cmd {
 	nop_cmd_t               nop;
 	lif_init_cmd_t          lif_init;
 	lif_reset_cmd_t         lif_reset;
+	notifyq_init_cmd_t      notifyq_init;
 	seq_queue_init_cmd_t    seq_queue_init;
 	seq_queue_control_cmd_t seq_queue_control;
 	seq_queue_dump_cmd_t    seq_queue_dump;
@@ -691,6 +823,7 @@ typedef union adminq_cpl {
 	nop_cpl_t               nop;
 	lif_init_cpl_t          lif_init;
 	lif_reset_cpl_t         lif_reset;
+	notifyq_init_cpl_t      notifyq_init;
 	seq_queue_init_cpl_t    seq_queue_init;
 	seq_queue_control_cpl_t seq_queue_control;
 	seq_queue_dump_cpl_t    seq_queue_dump;
@@ -700,5 +833,12 @@ typedef union adminq_cpl {
 	crypto_key_update_cpl_t crypto_key_update;
 	hang_notify_cpl_t       hang_notify;
 } adminq_cpl_t;
+
+typedef union notifyq_cpl {
+	notifyq_event_t         event;
+	reset_event_t           reset;
+	heartbeat_event_t       heartbeat;
+	log_event_t             log;
+} notifyq_cpl_t;
 
 #endif /* _ACCEL_DEV_IF_H_ */

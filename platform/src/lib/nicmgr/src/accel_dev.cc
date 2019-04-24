@@ -47,6 +47,21 @@ using namespace nicmgr;
 
 extern class pciemgr *pciemgr;
 
+/*
+ * Devapi availability check
+ */
+#define ACCEL_DEVAPI_CHECK(ret_val)                                             \
+    if (!dev_api) {                                                             \
+        NIC_LOG_ERR("{}: Uninitialized devapi", DevNameGet());                  \
+        return ret_val;                                                         \
+    }
+
+#define ACCEL_DEVAPI_CHECK_VOID()                                               \
+    if (!dev_api) {                                                             \
+        NIC_LOG_ERR("{}: Uninitialized devapi", DevNameGet());                  \
+        return;                                                                 \
+    }
+
 #define ACCEL_DEV_NUM_CRYPTO_KEYS_MIN           512     // arbitrary low water mark
 
 // Minimum amount of STORAGE_SEQ_HBM_HANDLE we want to enforce
@@ -163,7 +178,7 @@ AccelDev::AccelDev(devapi *dapi,
     // if size is 64MB then the region must be aligned on a 64MB boundary!
     // This means we could potentially waste half of the space if
     // the region was not already aligned.
-    assert(cmb_mem_size && !(cmb_mem_size & (cmb_mem_size - 1)));
+    assert(is_power_of_2(cmb_mem_size));
     if (cmb_mem_addr & (cmb_mem_size - 1)) {
         cmb_mem_size /= 2;
         cmb_mem_addr = ACCEL_DEV_ADDR_ALIGN(cmb_mem_addr, cmb_mem_size);
@@ -615,7 +630,6 @@ AccelDev::_DevcmdCryptoKeyUpdate(void *req,
                                  void *resp,
                                  void *resp_data)
 {
-    sdk_ret_t                   ret = SDK_RET_OK;
     crypto_key_update_cmd_t     *cmd = (crypto_key_update_cmd_t *)req;
     crypto_key_accum_t          *key_accum;
     uint8_t                     *dst_key_data;
@@ -662,23 +676,17 @@ AccelDev::_DevcmdCryptoKeyUpdate(void *req,
     key_accum->num_key_parts = std::min(key_accum->num_key_parts + 1,
                                         (uint32_t)CMD_CRYPTO_KEY_PART_MAX);
     if (cmd->trigger_update) {
-        if (!dev_api) {
-            return ACCEL_RC_ERROR;
-        }
+        ACCEL_DEVAPI_CHECK(ACCEL_RC_ERROR);
         ret_val = dev_api->crypto_key_index_upd(cmd->key_index,
                            (crypto_key_type_t)crypto_key_type_tbl[cmd->key_type],
                            &key_accum->key_data[0][0],
                            key_accum->num_key_parts * CMD_CRYPTO_KEY_PART_SIZE);
-        if (ret != SDK_RET_OK) {
-            ret_val = -1;
-        }
-
         /*
          * Wipe and erase accumulator
          */
         memset(key_accum, 0, sizeof(*key_accum));
         crypto_key_accum_del(cmd->key_index);
-        if (ret_val) {
+        if (ret_val != SDK_RET_OK) {
             NIC_LOG_ERR("{}: failed to update crypto key for key_index {}",
                         DevNameGet(), cmd->key_index);
             return ACCEL_RC_ERROR;

@@ -128,19 +128,16 @@ int sonic_napi(struct napi_struct *napi, int budget, sonic_cq_cb cb,
 {
 	struct cq *cq = napi_to_cq(napi);
 	unsigned int work_done;
+	bool unmask = false;
 
 	work_done = sonic_cq_service(cq, budget, cb, cb_arg);
 
-	if (work_done > 0) {
-		sonic_intr_return_credits(cq->bound_intr, work_done,
-					  false, true);
-	} else {
-		OSAL_LOG_ERROR("No work_done but bottom half was scheduled");
-	}
-
 	if ((work_done < budget) && napi_complete_done(napi, work_done))
-		sonic_intr_mask(cq->bound_intr, false);
+		unmask = true;
 
+	if (work_done || unmask)
+		sonic_intr_return_credits(cq->bound_intr, work_done,
+					  unmask, true);
 	return work_done;
 }
 
