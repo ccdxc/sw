@@ -169,6 +169,10 @@ jobd/dol/apollo/vxlan: ${JOBD_PREREQS}
 jobd/dol/apollo/lpm: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mplsoudp --feature lpm
 
+.PHONY: jobd/dol/apollo/rfc
+jobd/dol/apollo/rfc: ${JOBD_PREREQS}
+	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo rfc --feature rfc
+
 .PHONY: jobd/apollo/scale_test_mock
 jobd/apollo/scale_test_mock: ${JOBD_PREREQS}
 	${NICDIR}/apollo/test/scale/run_scale_test_mock.sh
