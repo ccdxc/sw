@@ -110,8 +110,16 @@ This will reserve a testbed with two Naples HW and run the tests on it
 
 Instead of step 2 above, you can run this command to have a warmd testbed up and running during development.
 
+**For Naples Sim setup:**
+
 ```
 USER="" rund-run --logdir ~/ --load-factor=4 iota/test/venice/iotadev warmd
+```
+
+**For Naples HW setup:**
+
+```
+USER="" ~/go/bin/rund-run --logdir ~/ --load-factor=4 iota/test/venice/hwtest/hwtestdev e2e-venice-naples
 ```
 
 This command brings up a rund container, builds Venice and Naples images, brings up a warmd testbed, runs IOTA server in rund container and just wait for you to run the test manually.
@@ -122,7 +130,7 @@ you can login to the rund container using:
 docker exec -it <pensando-user-id>_rund bash
 ```
 
-once you are in the rund container, you can rebuild venice or naples images and run the IOTA venice tests in `iota/test/venice/testsuites/` directory using standard `go test` command. 
+once you are in the rund container, you can rebuild venice or naples images and run the IOTA venice tests in `iota/test/venice/testsuites/` directory using standard `go test` command. Both `iota/test/venice/iotadev` and `iota/test/venice/hwtest/hwtestdev` have a convinient `make test` target to run all tests on NaplesSim setup of NaplesHW setup.
 
 If you want to login to the testbed, rund container contains the test topology file called `/warmd.json`. you can do `
 `cat /warmd.json | python -mjson.tool` to look at the contents of it. The "NodeMgmtIP" field in each node contains the ip address of the VM. 
@@ -131,6 +139,7 @@ If you want to login to the testbed, rund container contains the test topology f
 
 1. `SKIP_INSTALL=1` : this option will skip installing naples images. This is useful for re-running tests on a setup that already has correct images
 2. `SKIP_SETUP=1` : this option is useful for rerunning tests on an already working setup. This will not cleanup configuration from previous run and just rerun the tests.
+3. `STOP_ON_ERROR=1` : this option will stop the tests on first failure.
 
 ## Mocking test environment during development
 

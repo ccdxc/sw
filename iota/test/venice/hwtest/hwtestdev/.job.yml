@@ -9,7 +9,7 @@ queue_name: builder
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
 e2e-targets:
   # baremetal + vm test case
- e2e-venice-2naples:
+ e2e-venice-naples:
    commands: [ "cat /warmd.json && sleep 30000000"]
    owners: ["email:shaleman@pensando.io"]
    area:
@@ -17,7 +17,7 @@ e2e-targets:
    feature:
    clusters:
      - image: build-115
-       count: 3
+       count: 1
        resources:
          cpus: 4
          memory: 8
@@ -25,7 +25,7 @@ e2e-targets:
          - control-1
          - control-2
      - image: build-10
-       count: 2
+       count: 1
        resources:
          # server-type could be server-a or server-d
          server-type: server-a
