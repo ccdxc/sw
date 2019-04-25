@@ -149,11 +149,10 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,19, /* RHEL */ 99,99, /* OFA */ 4_19a)
 #define HAVE_REQUIRED_IB_GID
-#define HAVE_IBDEV_PORT_CAP_FLAGS
 #define ib_gid_to_network_type(gid_type, gid) \
 	ib_gid_to_network_type(gid_type, (union ib_gid *)(gid))
 #else
-#define HAVE_IBDEV_IP_GIDS
+#define HAVE_PORT_ATTR_IP_GIDS
 #define HAVE_AH_ATTR_CACHED_GID
 #endif
 

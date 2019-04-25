@@ -1,0 +1,31 @@
+Patch to enable ibv_devinfo to decode flag bit 15.
+
+--- a/rdma-core/libibverbs/verbs.h
++++ b/rdma-core/libibverbs/verbs.h
+@@ -110,6 +110,7 @@
+ 	IBV_DEVICE_RC_RNR_NAK_GEN	= 1 << 12,
+ 	IBV_DEVICE_SRQ_RESIZE		= 1 << 13,
+ 	IBV_DEVICE_N_NOTIFY_CQ		= 1 << 14,
++	IBV_DEVICE_LOCAL_DMA_LKEY	= 1 << 15,
+ 	IBV_DEVICE_MEM_WINDOW           = 1 << 17,
+ 	IBV_DEVICE_UD_IP_CSUM		= 1 << 18,
+ 	IBV_DEVICE_XRC			= 1 << 20,
+--- a/rdma-core/libibverbs/examples/devinfo.c
++++ b/rdma-core/libibverbs/examples/devinfo.c
+@@ -236,6 +236,7 @@
+ 				   IBV_DEVICE_RC_RNR_NAK_GEN |
+ 				   IBV_DEVICE_SRQ_RESIZE |
+ 				   IBV_DEVICE_N_NOTIFY_CQ |
++				   IBV_DEVICE_LOCAL_DMA_LKEY |
+ 				   IBV_DEVICE_MEM_WINDOW |
+ 				   IBV_DEVICE_UD_IP_CSUM |
+ 				   IBV_DEVICE_XRC |
+@@ -276,6 +277,8 @@
+ 		printf("\t\t\t\t\tSRQ_RESIZE\n");
+ 	if (dev_cap_flags & IBV_DEVICE_N_NOTIFY_CQ)
+ 		printf("\t\t\t\t\tN_NOTIFY_CQ\n");
++	if (dev_cap_flags & IBV_DEVICE_LOCAL_DMA_LKEY)
++		printf("\t\t\t\t\tLOCAL_DMA_LKEY\n");
+ 	if (dev_cap_flags & IBV_DEVICE_MEM_WINDOW)
+ 		printf("\t\t\t\t\tMEM_WINDOW\n");
+ 	if (dev_cap_flags & IBV_DEVICE_UD_IP_CSUM)

@@ -214,4 +214,8 @@ static inline void xa_destroy(struct xarray *xa)
 
 #endif /* HAVE_REAL_SRCU */
 
+#define HAVE_GET_DEV_FW_STR_LEN
+
+#define HAVE_NETDEV_IF_MTU
+
 #endif /* IONIC_KCOMPAT */

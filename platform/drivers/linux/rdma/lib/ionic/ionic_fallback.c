@@ -37,9 +37,24 @@ static int fallback_query_device(struct ibv_context *ibctx,
 {
 	struct ibv_query_device req = {};
 	uint64_t fw_ver;
+	uint8_t maj, min, pnt;
+	uint16_t bld1, bld2;
+	int rc;
 
-	return ibv_cmd_query_device(ibctx, dev_attr, &fw_ver,
-				    &req, sizeof(req));
+	rc = ibv_cmd_query_device(ibctx, dev_attr, &fw_ver,
+				  &req, sizeof(req));
+	if (rc)
+		return rc;
+
+	maj  = (fw_ver >> 56) & 0xff;   /* Major  */
+	min  = (fw_ver >> 48) & 0xff;   /* Minor  */
+	pnt  = (fw_ver >> 40) & 0xff;   /* Point  */
+	bld1 = (fw_ver >> 24) & 0xffff; /* Build1 */
+	bld2 = (fw_ver >>  8) & 0xffff; /* Build2 */
+	snprintf(dev_attr->fw_ver, sizeof(dev_attr->fw_ver),
+		 "%u.%u.%u-%u-%u", maj, min, pnt, bld1, bld2);
+
+	return 0;
 }
 
 static int fallback_query_port(struct ibv_context *ibctx, uint8_t port,

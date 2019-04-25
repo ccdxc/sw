@@ -1,0 +1,35 @@
+Patch to enable ibv_devinfo to decode flag bit 15.
+
+diff --git a/contrib/ofed/libibverbs/examples/devinfo.c b/contrib/ofed/libibverbs/examples/devinfo.c
+index 94f16e1b3f3..4981cc8a480 100644
+--- a/contrib/ofed/libibverbs/examples/devinfo.c
++++ b/contrib/ofed/libibverbs/examples/devinfo.c
+@@ -217,6 +217,7 @@ static void print_device_cap_flags(uint32_t dev_cap_flags)
+ 				   IBV_DEVICE_RC_RNR_NAK_GEN |
+ 				   IBV_DEVICE_SRQ_RESIZE |
+ 				   IBV_DEVICE_N_NOTIFY_CQ |
++				   IBV_DEVICE_LOCAL_DMA_LKEY |
+ 				   IBV_DEVICE_MEM_WINDOW |
+ 				   IBV_DEVICE_UD_IP_CSUM |
+ 				   IBV_DEVICE_XRC |
+@@ -257,6 +258,8 @@ static void print_device_cap_flags(uint32_t dev_cap_flags)
+ 		printf("\t\t\t\t\tSRQ_RESIZE\n");
+ 	if (dev_cap_flags & IBV_DEVICE_N_NOTIFY_CQ)
+ 		printf("\t\t\t\t\tN_NOTIFY_CQ\n");
++	if (dev_cap_flags & IBV_DEVICE_LOCAL_DMA_LKEY)
++		printf("\t\t\t\t\tLOCAL_DMA_LKEY\n");
+ 	if (dev_cap_flags & IBV_DEVICE_MEM_WINDOW)
+ 		printf("\t\t\t\t\tMEM_WINDOW\n");
+ 	if (dev_cap_flags & IBV_DEVICE_UD_IP_CSUM)
+diff --git a/contrib/ofed/libibverbs/verbs.h b/contrib/ofed/libibverbs/verbs.h
+index eff10f87de5..39608c26aaa 100644
+--- a/contrib/ofed/libibverbs/verbs.h
++++ b/contrib/ofed/libibverbs/verbs.h
+@@ -117,6 +117,7 @@ enum ibv_device_cap_flags {
+ 	IBV_DEVICE_RC_RNR_NAK_GEN	= 1 << 12,
+ 	IBV_DEVICE_SRQ_RESIZE		= 1 << 13,
+ 	IBV_DEVICE_N_NOTIFY_CQ		= 1 << 14,
++	IBV_DEVICE_LOCAL_DMA_LKEY	= 1 << 15,
+ 	IBV_DEVICE_MEM_WINDOW           = 1 << 17,
+ 	IBV_DEVICE_UD_IP_CSUM		= 1 << 18,
+ 	IBV_DEVICE_XRC			= 1 << 20,

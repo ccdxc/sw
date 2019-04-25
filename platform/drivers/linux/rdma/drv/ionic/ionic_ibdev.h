@@ -31,6 +31,10 @@
 #define IONIC_MAX_MRID		0xffffff
 #define IONIC_MAX_QPID		0xffffff
 #define IONIC_MAX_CMB_ORDER	15
+#define IONIC_MAX_RD_ATOM	16
+#define IONIC_GID_TBL_LEN	256
+#define IONIC_PKEY_TBL_LEN	1
+#define IONIC_MAX_SGE_ADVERT	16
 
 #define IONIC_META_LAST ((void *)1ul)
 #define IONIC_META_POSTED ((void *)2ul)
@@ -63,11 +67,9 @@ struct ionic_ibdev {
 
 	struct list_head	driver_ent;
 
-	struct ib_device_attr	dev_attr;
-	struct ib_port_attr	port_attr;
-
 	struct device		*hwdev;
 	struct net_device	*ndev;
+	const union identity	*ident;
 	struct lif		*lif;
 	int			lif_id;
 

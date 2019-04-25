@@ -53,6 +53,7 @@ esac
 # build rdma-core
 #
 
+patch -f -p1 < "$DIR/patches/devinfo_flags.patch"
 cd rdma-core
 EXTRA_CMAKE_FLAGS='-DCMAKE_BUILD_TYPE=RelWithDebInfo' \
 ./build.sh || exit
