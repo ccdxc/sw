@@ -98,7 +98,8 @@ public:
     ///
     /// \param[in] num_policy number of VPCs to be deleted
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(policy_seed_stepper_t *seed, uint32_t num_policy);
+    static sdk_ret_t many_delete(policy_seed_stepper_t *seed,
+                                 uint32_t num_policy);
 
 private:
     void __init();

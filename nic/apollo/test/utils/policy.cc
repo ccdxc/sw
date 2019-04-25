@@ -87,7 +87,8 @@ policy_util::create()
 
     spec.key.id = this->id;
     spec.num_rules = this->num_rules;
-    create_rules(this->pfx, this->num_rules, &(this->rules), this->stateful_rules);
+    create_rules(this->pfx, this->num_rules, &(this->rules),
+                 this->stateful_rules);
     spec.rules = this->rules;
     spec.direction = this->direction;
     spec.policy_type = this->type;
@@ -121,7 +122,8 @@ policy_util::read(pds_policy_info_t *info, bool compare_spec)
     if (compare_spec) {
         SDK_ASSERT(info->spec.key.id == this->id);
         //SDK_ASSERT(info->spec.num_rules == this->num_rules);
-        //SDK_ASSERT(memcmp(info->spec.rules, this->rules, num_rules * sizeof(rule_t)));
+        //SDK_ASSERT(memcmp(info->spec.rules, this->rules,
+        //num_rules * sizeof(rule_t)));
         SDK_ASSERT(info->spec.direction == this->direction);
         //SDK_ASSERT(info->spec.policy_type == this->type);
         SDK_ASSERT(info->spec.af == this->af);

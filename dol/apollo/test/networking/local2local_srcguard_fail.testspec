@@ -1,8 +1,11 @@
 # Test Spec
+# Select local mappings where src and dst ip checks are true.
+# Packets will be dropped if it is not matching.
+# src will be checked from host to switch. Dst on reverse path
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 4
-    flow: filter://any
+    flow: filter://SourceGuard=True
 
 packets:
     - packet:
@@ -18,11 +21,11 @@ packets:
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
-                src     : ref://testcase/config/localmapping/IP
+                src     : 1.0.0.1
                 dst     : ref://testcase/config/remotemapping/IP
                 ttl     : 64
             ipv6:
-                src     : ref://testcase/config/localmapping/IP
+                src     : aaaa:0010:0010:0010::0010
                 dst     : ref://testcase/config/remotemapping/IP
                 hlim    : 64
             tcp:
@@ -30,18 +33,6 @@ packets:
                 dport   : 200
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
-
-
-    - packet:
-        id          : TO_HOST_PKT # Expected packet
-        clone       : ref://testcase/packets/id=FROM_HOST_PKT
-        headers     :
-            eth:
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-                dst     : ref://testcase/config/remotemapping/VNIC/MACAddr
-            qtag:
-                vlan    : ref://testcase/config/remotemapping/VNIC/VlanId
-                prio    : 0
 
 trigger:
     packets:
@@ -53,5 +44,5 @@ expect:
     delay: 1
     packets:
         - packet:
-            object  : ref://testcase/packets/id=TO_HOST_PKT
+            object  : None
             port    : ref://testcase/config/hostport

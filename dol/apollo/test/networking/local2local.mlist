@@ -10,6 +10,18 @@ feature:
 modules:
 
     - module:
+        name    : L2L_IPV4_VPC_PEERING
+        spec    : local2local_vpc_peering.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=VPC_PEER,Label=NETWORKING
+
+    - module:
+        name    : L2L_IPV6_VPC_PEERING
+        spec    : local2local_vpc_peering.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2L,L2LType=VPC_PEER,Label=NETWORKING
+
+    - module:
         name    : L2L_VNIC_IPV4_TCP_QTAG
         spec    : local2local.testspec
         iterate :
@@ -27,3 +39,44 @@ modules:
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_VPC,Label=NETWORKING
 
+    - module:
+        name    : L2L_VNIC_IPV6_TCP_QTAG
+        spec    : local2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING
+
+    - module:
+        name    : L2L_SUBNET_IPV6_TCP_QTAG
+        spec    : local2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2L,L2LType=SAME_SUBNET,Label=NETWORKING
+
+    - module:
+        name    : L2L_VPC_IPV6_TCP_QTAG
+        spec    : local2local.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2L,L2LType=SAME_VPC,Label=NETWORKING
+
+    - module:
+        name    : L2L_IPV4_TCP_QTAG_SRCGUARD_TRUE
+        spec    : local2local_srcguard_pass.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING
+
+    - module:
+        name    : L2L_IPV4_TCP_QTAG_SRCGUARD_FALSE
+        spec    : local2local_srcguard_fail.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING
+
+    - module:
+        name    : L2L_IPV6_TCP_QTAG_SRCGUARD_TRUE
+        spec    : local2local_srcguard_pass.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING
+
+    - module:
+        name    : L2L_IPV6_TCP_QTAG_SRCGUARD_FALSE
+        spec    : local2local_srcguard_fail.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING

@@ -95,6 +95,9 @@ class FlowMapObjectHelper:
             return lobj.AddrFamily == routetblobj.AddrFamily and\
                lobj.VNIC.SUBNET.V6RouteTableId == routetblobj.RouteTblId
 
+    def __is_lmapping_extract(self, vpcid, lobj):
+        return lobj.VNIC.SUBNET.VPC.VPCId == vpcid
+
     def __is_rmapping_match(self, routetblobj, robj):
         # match remote mapping VPC id with route table's peer VPC for VPC Peering
         if robj.AddrFamily == 'IPV4':
@@ -179,8 +182,17 @@ class FlowMapObjectHelper:
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.Tunnel)
                     objs.append(obj)
         elif fwdmode == "L2L":
-            # Select mapping objects for different IP on the same vnic.
             lobjs = lmapping.GetMatchingObjects(mapsel)
+            if l2l == 'VPC_PEER':
+                for routetblobj in routetable.GetAllMatchingObjects(mapsel):
+                    smappingobjs = filter(lambda x: self.__is_lmapping_match(routetblobj, x), lobjs)
+                    dmappingobjs = filter(lambda x: self.__is_lmapping_extract(routetblobj.PeerVPCId, x), lobjs)
+                    for s in smappingobjs:
+                        for d in dmappingobjs:
+                            obj = FlowMapObject(s, d, fwdmode, None, None)
+                            objs.append(obj)
+                return utils.GetFilteredObjects(objs, selectors.maxlimits)
+
             for s in lobjs:
                 if not self.__is_lmapping_valid(s):
                     continue
@@ -189,7 +201,6 @@ class FlowMapObjectHelper:
                         continue
                     if s.MappingId == d.MappingId:
                         continue
-                    #print("%d:%d %d:%d" %(s.VNIC.SUBNET.SubnetId, s.VNIC.SUBNET.VPC.VPCId, d.VNIC.SUBNET.SubnetId, d.VNIC.SUBNET.VPC.VPCId))
                     if l2l == 'SAME_VNIC':
                         # Select ips from same vnic.
                         if s.VNIC.VnicId != d.VNIC.VnicId:
@@ -206,6 +217,7 @@ class FlowMapObjectHelper:
                             continue
                         if s.VNIC.SUBNET.VPC.VPCId != d.VNIC.SUBNET.VPC.VPCId:
                             continue
+
                     obj = FlowMapObject(s, d, fwdmode, None, None)
                     objs.append(obj)
         else:
