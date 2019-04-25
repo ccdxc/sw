@@ -2,7 +2,7 @@ meta:
     name    : ionicdrv
     os      : [ linux, freebsd ]
     nics    : [ pensando, intel, mellanox, broadcom ]
-    targetcount : 1418
+    targetcount : 120
 
 testcases:
     -   name    : UplinkIntf_TX_RING_SIZE
@@ -17,7 +17,7 @@ testcases:
             ipproto            : [ 'v4']
         args    :
             test-type         : host
-            iperf_threads      : 1
+            iperfthreads      : 1
             #capture_pcap : True
 
     -   name    : UplinkIntf_RX_RING_SIZE
@@ -32,7 +32,7 @@ testcases:
             ipproto            : [ 'v4']
         args    :
             test-type    : host
-            iperf_threads     :  1
+            iperfthreads     :  1
             #capture_pcap : true
 
     -   name    : UplinkIntf_TX_QUEUE_SIZE
@@ -48,7 +48,7 @@ testcases:
             vlantag            : ['on', 'off']
         args    :
             test-type    : host
-            iperf_threads     :  1
+            iperfthreads     :  1
             #capture_pcap : true
 
     -   name    : UplinkIntf_RX_QUEUE_SIZE
@@ -64,7 +64,7 @@ testcases:
             vlantag            : ['on', 'off']
         args    :
             test-type    : host
-            iperf_threads     :  1
+            iperfthreads     :  1
             #capture_pcap : true
 
     -   name    : UplinkIntf_RX_SGL_SIZE
@@ -80,7 +80,7 @@ testcases:
             vlantag            : ['on', 'off']
         args    :
             test-type    : host
-            iperf_threads     :  1
+            iperfthreads     :  1
             #capture_pcap : true
 
     -   name    : UplinkIntf_TX_CHECKSUM
@@ -96,7 +96,7 @@ testcases:
             vlantag            : ['on', 'off']
         args    :
             test-type    : host
-            iperf_threads   : 2
+            iperfthreads   : 2
             #capture_pcap : true
 
     -   name    : UplinkIntf_RX_CHECKSUM
@@ -112,7 +112,7 @@ testcases:
             vlantag            : ['on', 'off']
         args    :
             test-type    : host
-            iperf_threads     :  1
+            iperfthreads     :  1
             #capture_pcap : true
 
     -   name    : UplinkIntf_TSO
@@ -133,7 +133,7 @@ testcases:
             vlantag            : ['on', 'off']
         args    :
             test-type    : host
-            iperf_threads     :  1
+            iperfthreads     :  1
             #capture_pcap : true
 
     -   name    : UplinkIntf_TSO_AFTER_RESTART
@@ -154,7 +154,7 @@ testcases:
             vlantag            : ['on', 'off']
         args    :
             test-type    : host
-            iperf_threads     :  1
+            iperfthreads     :  1
             restart      : true
 
     -   name    : UplinkIntf_RSS
@@ -171,7 +171,7 @@ testcases:
             vlantag            : ['on', 'off']
         args    :
             type: host
-            iperf_threads     :  1
+            iperfthreads     :  1
             #capture_pcap : true
 
     -   name    : VLAN_RX_OFFLOAD
@@ -186,7 +186,7 @@ testcases:
             vlantag            : [ 'on']
         args    :
             type: host
-            iperf_threads     :  1
+            iperfthreads     :  1
             #capture_pcap : true
 
     -   name    : VLAN_TX_OFFLOAD
@@ -201,7 +201,7 @@ testcases:
             vlantag            : [ 'on']
         args    :
             type: host
-            iperf_threads     :  1
+            iperfthreads     :  1
             #capture_pcap : true
 
     -   name    : MACVLAN_OFFLOAD
@@ -215,3 +215,10 @@ testcases:
         args    :
             type: host
             #capture_pcap : true
+
+    -   name    : DriverReloadStress
+        testcase: testcases.drivers.driverreload
+        disable : False
+        iterators :
+        args      :
+            loops     : 100

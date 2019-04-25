@@ -2,7 +2,7 @@ meta:
     name    : ionicdrv_regr
     os      : [ linux, freebsd ]
     nics    : [ pensando, intel, mellanox, broadcom ]
-    targetcount : 1418
+    targetcount : 120
 
 testcases:
     -   name    : UplinkIntf_INTR_COAL
@@ -153,3 +153,11 @@ testcases:
             type: remote_only
             iperfthreads     : 16
             #capture_pcap : true
+
+    -   name    : DriverReloadStress
+        testcase: testcases.drivers.driverreload
+        enable : true
+        iterators :
+        args      :
+            loops     : 100
+ 
