@@ -17,7 +17,8 @@ copy_files() {
     nicf+='nic/include/adminq.h nic/include/nvme_dev_if.h '
 
     p4d='nic/p4/include nic/p4/common nic/p4/common-p4+ nic/asm/common-p4+/include/ nic/p4-hlir ' 
-    p4d+='nic/include/hal_pd_error.hpp nic/p4/eth '
+    p4d+='nic/include/hal_pd_error.hpp nic/p4/eth nic/asm/eth '
+    p4d+='nic/p4/adminq nic/p4/edma nic/p4/notify nic/asm/adminq nic/asm/edma nic/asm/notify '
 
     pkgf='nic/tools/package/package.py nic/tools/package/pack_host.txt nic/tools/package/pack_apollo.txt '
     pkgf+='nic/tools/update_version.sh nic/tools/core_count_check.sh nic/tools/package/pack_platform.txt '
@@ -29,7 +30,7 @@ copy_files() {
     pack_apollo+='nic/tools/sysupdate.sh nic/tools/apollo nic/tools/sysreset.sh nic/tools/fwupdate '
     pack_apollo+='nic/conf/captrace platform/src/app/pciemgrd nic/hal/third-party/spdlog/include/ ' 
     pack_apollo+='platform/src/app/memtun nic/hal/third-party/judy '
-    pack_apollo+='platform/src/lib/pciemgr_if platform/drivers/common/ionic_if.h  platform/src/lib/nicmgr '
+    pack_apollo+='platform/src/lib/pciemgr_if platform/drivers  platform/src/lib/nicmgr '
     pack_apollo+='platform/src/lib/rdmamgr_apollo '
 
     protobuf=" "
@@ -44,7 +45,7 @@ copy_files() {
         cp -r /usr/local/go $DST/
     fi
 
-    miscd='nic/upgrade_manager/meta nic/utils/trace '
+    miscd='nic/upgrade_manager/meta nic/utils/trace nic/utils/ftl '
 
     pack_debug='nic/debug_cli nic/tools/p4ctl '
 
@@ -65,6 +66,7 @@ copy_files() {
     rm $DST/nic/include/hal_pd_error.hpp
     cp -H nic/include/hal_pd_error.hpp  $DST/nic/include
     cp -H nic/include/trace.hpp  $DST/nic/include
+    cp -H nic/include/accel_ring.h  $DST/nic/include
     sed -i '2,$d' $DST/nic/tools/gen_version.py
     if [ $agent == 0 ];then
         rm $DST/nic/apollo/tools/start-agent-sim.sh $DST/nic/apollo/tools/start-agent.sh
@@ -92,17 +94,50 @@ remove_files() {
     rm nic/sdk/platform/capri/csrint/module.mk
     find ./nic/sdk/third-party/asic -name "*.c" | xargs rm
     find ./nic/sdk/third-party/asic -name "*.cc" | xargs rm
+
+    # Copy back drivers
+    rm -rf platform/src/lib/*
+    rm -rf platform/drivers
+    rm -rf platform/gen
+    cd -
+    cd /tmp/drivers
+    find . -name *.ko | xargs -i{} cp -H --parents -u {} $DST
+    cd -
+
+    # Copy back header files to platform/src/lib
+    cd /tmp/platform/
+    cp -r --parents -u . $DST/platform/src/lib
     cd -
 }
 
 save_files() {
     # Mention the .so to be saved and restored'
-    files='libsdkcapri_csrint.so '
+    files='libsdkcapri_csrint.so libnicmgr_apollo.so libpciemgr_if.so librdmamgr_apollo.so'
+    # Platform includes used by nicmgr
+    platform_inc='pciemgr_if/include/pciemgr_if.hpp '
+    platform_inc+='nicmgr/include/dev.hpp nicmgr/include/pd_client.hpp nicmgr/include/device.hpp nicmgr/include/pal_compat.hpp '
+    platform_inc+='nicmgr/include/eth_dev.hpp nicmgr/include/eth_lif.hpp nicmgr/include/logger.hpp '
 
     mkdir -p $LIBDIR
     cd $DST/nic/build
     for f in $files ; do
         find . -name $f | xargs -i{} cp -H --parents -u {} $LIBDIR
+    done
+    cd -
+
+    # Keep only *.ko
+    cd $DST
+    rm -rf /tmp/drivers
+    mkdir -p /tmp/drivers
+    find ./platform -name *.ko | xargs -i{} cp -H --parents -u {} /tmp/drivers/
+    cd -
+
+    # Keep the required platform headers
+    cd $DST/platform/src/lib
+    rm -rf /tmp/platform
+    mkdir -p /tmp/platform
+    for f in $platform_inc ; do
+        cp -r --parents -u $f /tmp/platform
     done
     cd -
 }
@@ -120,8 +155,23 @@ remove_hiddens() {
 remove_build() {
     cd $DST/nic
     rm -rf build ../fake_root_target/
-    rm -f *.tar *.tgz
+    rm -f *.tar *.tgz *.log
     cd -
+}
+
+rebuild() {
+    mkdir $DST/nic/build
+    cd $LIBDIR
+    cp -r --parents -u . $DST/nic/build/
+    cd -
+    build
+}
+
+run_test() {
+    cd $DST/nic
+    ./apollo/test/tools/run_apollo_scale_test.sh
+    cd -
+    remove_build
 }
 
 if [ $# != 1 ];then
@@ -136,3 +186,5 @@ save_files
 remove_files
 remove_hiddens
 remove_build
+rebuild
+run_test
