@@ -90,7 +90,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		p := policyDb.ListObjects("FwlogPolicy")
 		return len(p) == 3, p
-	}, "fwlog update failed")
+	}, "fwlog update failed", "1s", "60s")
 
 	//update
 	handler.EXPECT().UpdateFwlogPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
@@ -99,7 +99,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		p := policyDb.ListObjects("FwlogPolicy")
 		return len(p) == 3, p
-	}, "fwlog update failed")
+	}, "fwlog update failed", "1s", "60s")
 
 	// delete
 	handler.EXPECT().DeleteFwlogPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
@@ -108,7 +108,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		p := policyDb.ListObjects("FwlogPolicy")
 		return len(p) == 2, p
-	}, "fwlog update failed")
+	}, "fwlog update failed", "1s", "60s")
 
 	contents := map[string]struct {
 		Watchers []int
@@ -189,7 +189,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		p := policyDb.ListObjects("FlowExportPolicy")
 		return len(p) == 3, p
-	}, "FlowExportPolicy update failed")
+	}, "FlowExportPolicy update failed", "1s", "60s")
 
 	// delete
 	handler.EXPECT().DeleteFlowExportPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
@@ -198,7 +198,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 	AssertEventually(t, func() (bool, interface{}) {
 		p := policyDb.ListObjects("FlowExportPolicy")
 		return len(p) == 2, p
-	}, "FlowExportPolicy update failed")
+	}, "FlowExportPolicy update failed", "1s", "60s")
 
 	contents := map[string]struct {
 		Watchers []int
