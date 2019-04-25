@@ -164,7 +164,7 @@ metadata qstate_hdr_t           scratch_qstate_hdr;
 
 @pragma dont_trim
 @pragma scratch_metadata
-metadata qstate_txdma_q_t       scratch_qstate_txdma_q;
+metadata qstate_info_t          scratch_qstate_info;
 
 @pragma dont_trim
 @pragma scratch_metadata

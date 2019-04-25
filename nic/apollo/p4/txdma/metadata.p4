@@ -28,16 +28,6 @@ header_type scratch_metadata_t {
     }
 }
 
-header_type txdma_qstate_t {
-    fields {
-        // sw dependent portion of qstate
-        sw_cindex0          : 16;
-        ring_size           : 16;   // log2(max_pindex)
-        ring_base           : 64;
-        rxdma_cindex_addr   : 64;
-    }
-}
-
 // PHV instantiation
 @pragma dont_trim
 metadata predicate_header_t predicate_header;
@@ -72,4 +62,4 @@ metadata qstate_hdr_t           scratch_qstate_hdr;
 
 @pragma dont_trim
 @pragma scratch_metadata
-metadata txdma_qstate_t         scratch_txdma_qstate;
+metadata qstate_info_t          scratch_qstate_info;

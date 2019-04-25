@@ -262,17 +262,14 @@ header_type qstate_hdr_t {
     }
 }
 
-header_type qstate_txdma_q_t {
+header_type qstate_info_t {
     fields {
-        // sw dependent portion of qstate
-        arm_pindex1     : 16;
-        arm_cindex1     : 16;
-        sw_pindex0      : 16;
-        sw_cindex0      : 16;
-        ring_base0      : 64;
-        ring_base1      : 64;
-        ring_size0      : 16;   // log2(max_pindex)
-        ring_size1      : 16;   // log2(max_pindex)
+        sw_pindex0          : 16;
+        sw_cindex0          : 16;
+        ring0_base          : 64;
+        ring1_base          : 64;
+        ring_size           : 16;   // log2(max_pindex)
+        rxdma_cindex_addr   : 64;
     }
 }
 

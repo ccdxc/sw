@@ -22,7 +22,7 @@ read_qstate_info:
     tblmincri.f d.read_qstate_info_d.sw_cindex0, \
                     d.{read_qstate_info_d.ring_size}.hx, 1
 
-    add         r2, r2, d.{read_qstate_info_d.ring_base}.dx
+    add         r2, r2, d.{read_qstate_info_d.ring0_base}.dx
     phvwr       p.txdma_control_control_addr, r2
     phvwr       p.txdma_control_rxdma_cindex_addr, d.{read_qstate_info_d.rxdma_cindex_addr}.dx
     // payload_addr will be after predicate header and p4_to_txdma_header

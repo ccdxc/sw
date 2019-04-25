@@ -46,7 +46,7 @@ action pkt_dma() {
     modify_field(scratch_metadata.lif, capri_intr.lif);
     modify_field(scratch_qstate_hdr.c_index0, txdma_control.cindex);
 
-    modify_field(scratch_txdma_qstate.rxdma_cindex_addr,
+    modify_field(scratch_qstate_info.rxdma_cindex_addr,
                  txdma_control.rxdma_cindex_addr);
 }
 

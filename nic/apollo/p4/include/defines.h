@@ -123,8 +123,8 @@
 /* Qstate definition for packet Q - RxDMA to TxDMA */
 #define PKTQ_QSTATE \
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host_rings, total_rings, pid, \
-    p_index0, c_index0, arm_pindex1, arm_cindex1, sw_pindex0, sw_cindex0, \
-    ring_base0, ring_base1, ring_size0, ring_size1
+    p_index0, c_index0, sw_pindex0, sw_cindex0, ring0_base, ring1_base,     \
+    ring_size, rxdma_cindex_addr
 
 #define PKTQ_QSTATE_DVEC_SCRATCH(_scratch_qstate_hdr, _scratch_qstate_txdma_q) \
     modify_field(_scratch_qstate_hdr.pc, pc);                                  \
@@ -139,11 +139,9 @@
     modify_field(_scratch_qstate_hdr.p_index0, p_index0);                      \
     modify_field(_scratch_qstate_hdr.c_index0, c_index0);                      \
                                                                                \
-    modify_field(_scratch_qstate_txdma_q.arm_pindex1, arm_pindex1);            \
-    modify_field(_scratch_qstate_txdma_q.arm_cindex1, arm_cindex1);            \
     modify_field(_scratch_qstate_txdma_q.sw_pindex0, sw_pindex0);              \
     modify_field(_scratch_qstate_txdma_q.sw_cindex0, sw_cindex0);              \
-    modify_field(_scratch_qstate_txdma_q.ring_base0, ring_base0);              \
-    modify_field(_scratch_qstate_txdma_q.ring_base1, ring_base1);              \
-    modify_field(_scratch_qstate_txdma_q.ring_size0, ring_size0);              \
-    modify_field(_scratch_qstate_txdma_q.ring_size1, ring_size1)
+    modify_field(_scratch_qstate_txdma_q.ring0_base, ring0_base);              \
+    modify_field(_scratch_qstate_txdma_q.ring1_base, ring1_base);              \
+    modify_field(_scratch_qstate_txdma_q.ring_size, ring_size);                \
+    modify_field(_scratch_qstate_txdma_q.rxdma_cindex_addr, rxdma_cindex_addr)

@@ -8,7 +8,7 @@ action pkt_enqueue(PKTQ_QSTATE) {
     //          tbl-wr sw_cindex0++
     //          doorbell(dma) cindex0
     // d-vector
-    PKTQ_QSTATE_DVEC_SCRATCH(scratch_qstate_hdr, scratch_qstate_txdma_q);
+    PKTQ_QSTATE_DVEC_SCRATCH(scratch_qstate_hdr, scratch_qstate_info);
 
     // k-vector
     modify_field(scratch_metadata.sacl_result, p4_to_rxdma_header.sacl_result);

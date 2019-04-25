@@ -11,7 +11,7 @@ struct txdma_enqueue_d  d;
 pkt_enqueue:
     // check q full
     add         r1, r0, d.pkt_enqueue_d.sw_pindex0
-    mincr       r1, d.{pkt_enqueue_d.ring_size0}.hx, 1
+    mincr       r1, d.{pkt_enqueue_d.ring_size}.hx, 1
     seq         c2, r1, d.{pkt_enqueue_d.sw_cindex0}
     bcf         [c2], txdma_q_full
     // compute entry offset for current p_index
@@ -22,7 +22,7 @@ pkt_enqueue:
     add         r1, k.{capri_p4_intr_packet_len_sbit0_ebit5, \
                     capri_p4_intr_packet_len_sbit6_ebit13}, \
                     (APOLLO_P4_TO_TXDMA_HDR_SZ + APOLLO_I2E_HDR_SZ + APOLLO_PREDICATE_HDR_SZ)
-    add         r2, r2, d.{pkt_enqueue_d.ring_base0}.dx
+    add         r2, r2, d.{pkt_enqueue_d.ring0_base}.dx
 
     // k.p4_to_rxdma_header_sacl_result
     // == 0X : txdma

@@ -46,13 +46,13 @@
 using namespace sdk::platform::utils;
 using namespace sdk::platform::capri;
 
-#define JRXDMA_PRGM "rxdma_program"
-#define JTXDMA_PRGM "txdma_program"
-#define JLIFQSTATE "lif2qstate_map"
-#define JPKTBUFFER "rxdma_to_txdma_buf"
-#define JSACLV4BASE "sacl_egress_v4"
-#define JLPMV4BASE "lpm_v4"
-#define JFLOWSTATSBASE "flow_stats"
+#define JRXDMA_PRGM     "rxdma_program"
+#define JTXDMA_PRGM     "txdma_program"
+#define JLIFQSTATE      "lif2qstate_map"
+#define JPKTBUFFER      "rxdma_to_txdma_buf"
+#define JSACLV4BASE     "sacl_egress_v4"
+#define JLPMV4BASE      "lpm_v4"
+#define JFLOWSTATSBASE  "flow_stats"
 #define JP4_PRGM        "p4_program"
 
 typedef struct __attribute__((__packed__)) lifqstate_ {
@@ -68,38 +68,15 @@ typedef struct __attribute__((__packed__)) lifqstate_ {
     uint64_t pindex : 16;
     uint64_t cindex : 16;
 
-    uint64_t arm_pindex : 16;
-    uint64_t arm_cindex : 16;
-    uint64_t sw_pindex : 16;
+    uint16_t sw_pindex;
     uint16_t sw_cindex;
     uint64_t ring0_base : 64;
     uint64_t ring1_base : 64;
-    uint64_t ring0_size : 16;
-    uint64_t ring1_size : 16;
-
-    uint8_t pad[(512 - 320) / 8];
-} lifqstate_t;
-
-typedef struct __attribute__((__packed__)) txdma_qstate_ {
-    uint64_t pc : 8;
-    uint64_t rsvd : 8;
-    uint64_t cos_a : 4;
-    uint64_t coa_b : 4;
-    uint64_t cos_sel : 8;
-    uint64_t eval_last : 8;
-    uint64_t host_rings : 4;
-    uint64_t total_rings : 4;
-    uint64_t pid : 16;
-    uint64_t pindex : 16;
-    uint64_t cindex : 16;
-
-    uint64_t sw_cindex : 16;
     uint64_t ring_size : 16;
-    uint64_t ring_base : 64;
     uint64_t rxdma_cindex_addr : 64;
 
-    uint8_t pad[(512 - 256) / 8];
-} txdma_qstate_t;
+    uint8_t pad[(512 - 336) / 8];
+} lifqstate_t;
 
 typedef struct cache_line_s {
     uint8_t action_pc;
@@ -491,15 +468,15 @@ init_service_lif ()
 
     lifqstate_t lif_qstate = {0};
     lif_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
-    lif_qstate.ring0_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
+    lif_qstate.ring_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
     lif_qstate.total_rings = 1;
     write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate,
                  sizeof(lif_qstate));
 
-    txdma_qstate_t txdma_qstate = {0};
+    lifqstate_t txdma_qstate = {0};
     txdma_qstate.rxdma_cindex_addr =
         qstate.hbm_address + offsetof(lifqstate_t, sw_cindex);
-    txdma_qstate.ring_base = get_mem_addr(JPKTBUFFER);
+    txdma_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
     txdma_qstate.ring_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
     txdma_qstate.total_rings = 1;
     write_qstate(qstate.hbm_address + sizeof(lifqstate_t),
