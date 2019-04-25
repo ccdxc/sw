@@ -252,16 +252,16 @@ func (na *Nagent) DeleteIPSecPolicy(tn, namespace, name string) error {
 		return err
 	}
 
-	vrf, err := na.ValidateVrf(ipSec.Tenant, ipSec.Namespace, ipSec.Spec.VrfName)
-	if err != nil {
-		log.Errorf("Failed to find the vrf %v", ipSec.Spec.VrfName)
-		return err
-	}
-
 	existingIPSec, err := na.FindIPSecPolicy(ipSec.ObjectMeta)
 	if err != nil {
 		log.Errorf("IPSecPolicy %+v not found", ipSec.ObjectMeta)
 		return errors.New("IPSec policy not found")
+	}
+
+	vrf, err := na.ValidateVrf(existingIPSec.Tenant, existingIPSec.Namespace, existingIPSec.Spec.VrfName)
+	if err != nil {
+		log.Errorf("Failed to find the vrf %v", ipSec.Spec.VrfName)
+		return err
 	}
 
 	// check if the current ipsec policy has any objects referring to it

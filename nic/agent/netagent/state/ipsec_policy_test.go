@@ -233,6 +233,134 @@ func TestIPSecPolicyUpdate(t *testing.T) {
 
 }
 
+func TestIPSecPolicyCreateDeleteNonDefaultVrf(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// Create an infra VRF
+	infraVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+
+	err := ag.CreateVrf(&infraVrf)
+	AssertOk(t, err, "infra vrf creates must succeed")
+
+	// Create backing Encrypt and Decrypt rules
+	saEncrypt := netproto.IPSecSAEncrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSAEncrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecSAEncrypt",
+		},
+		Spec: netproto.IPSecSAEncryptSpec{
+			Protocol:      "ESP",
+			AuthAlgo:      "AES_GCM",
+			AuthKey:       "someRandomString",
+			EncryptAlgo:   "AES_GCM_256",
+			EncryptionKey: "someRandomKey",
+			LocalGwIP:     "10.0.0.1",
+			RemoteGwIP:    "192.168.1.1",
+			TepVrf:        "infra",
+		},
+	}
+	err = ag.CreateIPSecSAEncrypt(&saEncrypt)
+	AssertOk(t, err, "Error creating IPSec SA Encrypt rule")
+
+	saDecrypt := netproto.IPSecSADecrypt{
+		TypeMeta: api.TypeMeta{Kind: "IPSecSADecrypt"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecSADecrypt",
+		},
+		Spec: netproto.IPSecSADecryptSpec{
+			Protocol:           "ESP",
+			AuthAlgo:           "AES_GCM",
+			AuthKey:            "someRandomString",
+			DecryptAlgo:        "AES_GCM_256",
+			DecryptionKey:      "someRandomKey",
+			RekeyDecryptAlgo:   "DES3",
+			RekeyDecryptionKey: "someRandomString",
+			LocalGwIP:          "10.0.0.1",
+			RemoteGwIP:         "192.168.1.1",
+			TepVrf:             "infra",
+		},
+	}
+	err = ag.CreateIPSecSADecrypt(&saDecrypt)
+	AssertOk(t, err, "Error creating IPSec SA Decrypt rule")
+
+	ipSecPolicy := netproto.IPSecPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPSecPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testIPSecPolicy",
+		},
+		Spec: netproto.IPSecPolicySpec{
+			VrfName: "infra",
+			Rules: []netproto.IPSecRule{
+				{
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+					},
+					SAName: "testIPSecSAEncrypt",
+					SAType: "ENCRYPT",
+				},
+				{
+					Src: &netproto.MatchSelector{
+						Addresses: []string{"10.0.0.0 - 10.0.1.0"},
+					},
+					Dst: &netproto.MatchSelector{
+						Addresses: []string{"192.168.0.1 - 192.168.1.0"},
+					},
+					SAName: "testIPSecSADecrypt",
+					SAType: "DECRYPT",
+					SPI:    42,
+				},
+			},
+		},
+	}
+
+	// create IPSec policy
+	err = ag.CreateIPSecPolicy(&ipSecPolicy)
+	AssertOk(t, err, "Error creating IPSec policy")
+	foundIPSecPolicy, err := ag.FindIPSecPolicy(ipSecPolicy.ObjectMeta)
+	AssertOk(t, err, "IPSec Policy was not found in DB")
+	Assert(t, foundIPSecPolicy.Name == "testIPSecPolicy", "IPSecPolicy names did not match", foundIPSecPolicy)
+
+	// verify duplicate tenant creations succeed
+	err = ag.CreateIPSecPolicy(&ipSecPolicy)
+	AssertOk(t, err, "Error creating duplicate IPSec policy")
+
+	// verify list api works.
+	npList := ag.ListIPSecPolicy()
+	Assert(t, len(npList) == 1, "Incorrect number of IPSec policies")
+
+	// delete the ipsec policy and verify its gone from db
+	err = ag.DeleteIPSecPolicy(ipSecPolicy.Tenant, ipSecPolicy.Namespace, ipSecPolicy.Name)
+	AssertOk(t, err, "Error deleting nat policy")
+	_, err = ag.FindIPSecPolicy(ipSecPolicy.ObjectMeta)
+	Assert(t, err != nil, "IPSec Pool was still found in database after deleting", ag)
+
+	// verify you can not delete non-existing tenant
+	err = ag.DeleteIPSecPolicy(ipSecPolicy.Tenant, ipSecPolicy.Namespace, ipSecPolicy.Name)
+	Assert(t, err != nil, "deleting non-existing nat policy succeeded", ag)
+}
+
 //--------------------- Corner Case Tests ---------------------//
 
 func TestIPSecPolicyCreateDeleteOnRemoteSARule(t *testing.T) {

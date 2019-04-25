@@ -503,6 +503,7 @@ func (hd *Datapath) DeleteIPSecPolicy(ipSec *netproto.IPSecPolicy, vrf *netproto
 			},
 		},
 	}
+
 	if hd.Kind == "hal" {
 		resp, err := hd.Hal.IPSecclient.IpsecRuleDelete(context.Background(), ipSecPolicyDeleteReqMsg)
 		if err != nil {
