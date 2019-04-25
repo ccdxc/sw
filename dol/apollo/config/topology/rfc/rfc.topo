@@ -15,6 +15,12 @@ uplink:
         mode    : switch
         status  : UP
 
+    - entry:
+        id      : cpu
+        port    : 128
+        mode    : cpu
+        status  : UP
+
 device:
     ipaddress   : None # Taken from resmgr
     gateway     : None # Taken from resmgr
@@ -35,7 +41,7 @@ vpc:
       count : 1
       type  : tenant
       subnet:
-        - count     : 4              # should be same as total routetbl / policy
+        - count     :  34             # should be same as total routetbl / policy
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
@@ -48,7 +54,7 @@ vpc:
       routetbl:
              - type: base
                routetype: fulloverlap_max_with_default
-               count : 4
+               count : 34
                v4base: '66.0.0.0\16'
                v4prefixlen: 24
                nv4routes   : 1021
@@ -62,7 +68,7 @@ vpc:
       policy:
               #- type : specific
               #  policytype : empty    # empty rules not supported
-              #  direction  : egress
+              #  direction  : bidir
               #  rule:
 
               - type : specific
@@ -74,8 +80,10 @@ vpc:
                     v4pfx: '0.0.0.0\0'
                     v6pfx: '0::\0'
 
+              # policies with stateless rules
               - type : specific
-                policytype : disjoint_pfx    # disjoint prefix but proto & l4 overlap
+                policytype : stateless      # disjoint prefix but proto & l4 overlap
+                overlaptype : disjoint_pfx
                 direction  : bidir
                 rule:
                   - protocol: tcp
@@ -89,7 +97,8 @@ vpc:
                     v6pfx: '1e7:a11:bad:b075:d1e::0\80'
 
               - type : specific
-                policytype : disjoint    # totally disjoint rules
+                policytype : stateless      # totally disjoint rules
+                overlaptype : none
                 direction  : bidir
                 rule:
                   - protocol: udp
@@ -111,7 +120,8 @@ vpc:
                     dporthigh: 30
 
               - type : specific
-                policytype : disjoint
+                policytype : stateless
+                overlaptype : none
                 direction  : bidir
                 rule:
                   - protocol: udp
@@ -122,3 +132,959 @@ vpc:
                     sporthigh: 65534
                     dportlow: 1
                     dporthigh: 65534
+
+              - type : specific
+                policytype : stateless
+                overlaptype : none          # no overlapping fields
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '11.11.0.0\16'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : pfx           # overlap pfx
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\60'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : full_pfx           # full overlap in pfx
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : pfx_with_default           # overlap pfx
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '0.0.0.0\0'
+                    v6pfx: '0::0\0'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : sport     # overlap sport
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '20.10.0.0\24'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 15
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : sport_full     # full overlap in sport
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '20.10.0.0\24'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : dport         # overlap dport
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '20.10.0.0\24'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 15
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : dport_full     # full overlap in dport
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '20.10.0.0\24'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 10
+                    dporthigh: 20
+
+              - type : specific
+                policytype : stateless
+                overlaptype : all           # overlap all
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 15
+                    sporthigh: 40
+                    dportlow: 15
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : adjacent_pfx   # prefixes are adjacent
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.1\32'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::1\128'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.2\32'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::1\128'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : adjacent_pfx_with_default   # prefixes are adjacent
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '0.0.0.0\0'
+                    v6pfx: '0::0\0'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.1\32'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::1\128'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.2\32'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::1\128'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : adjacent_sport   # sport ranges are adjacent
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '20.20.0.0\16'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 20
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateless
+                overlaptype : adjacent_dport   # dport ranges are adjacent
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '20.20.0.0\16'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 20
+                    dporthigh: 40
+
+              # policies with stateful rules
+              - type : specific
+                policytype : stateful       # disjoint prefix but proto & l4 overlap
+                overlaptype : disjoint_pfx
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '11.11.0.0\16'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+
+              - type : specific
+                policytype : stateful
+                overlaptype : none          # no overlapping fields
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '11.11.0.0\16'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateful
+                overlaptype : pfx           # overlap pfx
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateful
+                overlaptype : full_pfx           # full overlap in pfx
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateful
+                overlaptype : pfx_with_default           # overlap pfx
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true 
+                    v4pfx: '0.0.0.0\0'
+                    v6pfx: '0::0\0'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateful
+                overlaptype : sport          # overlap sport
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '20.10.0.0\24'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 15
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateful
+                overlaptype : sport_full     # overlap sport
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '20.10.0.0\24'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateful
+                overlaptype : dport         # overlap dport
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '20.10.0.0\24'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 15
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateful
+                overlaptype : dport_full     # overlap sport
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '20.10.0.0\24'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 10
+                    dporthigh: 20
+
+              - type : specific
+                policytype : stateful
+                overlaptype : all           # overlap all
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 15
+                    sporthigh: 40
+                    dportlow: 15
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateful
+                overlaptype : adjacent_pfx   # prefixes are adjacent
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.1\32'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::1\128'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.2\32'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::1\128'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateful
+                overlaptype : adjacent_pfx_with_default   # prefixes are adjacent
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '0.0.0.0\0'
+                    v6pfx: '0::0\0'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.1\32'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::1\128'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.2\32'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::1\128'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateful
+                overlaptype : adjacent_sport   # sport ranges are adjacent
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '20.20.0.0\16'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 20
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : stateful
+                overlaptype : adjacent_dport   # dport ranges are adjacent
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '20.20.0.0\16'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 20
+                    dporthigh: 40
+
+              # policies with both stateful & stateless rules
+              - type : specific
+                policytype : both           # disjoint prefix but proto & l4 overlap
+                overlaptype : disjoint_pfx
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '11.11.0.0\16'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+
+              - type : specific
+                policytype : both
+                overlaptype : none          # no overlapping fields
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '11.11.0.0\16'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : both
+                overlaptype : pfx           # overlap pfx
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : both
+                overlaptype : full_pfx           # full overlap in pfx
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : both
+                overlaptype : pfx_with_default           # overlap pfx
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true 
+                    v4pfx: '0.0.0.0\0'
+                    v6pfx: '0::0\0'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : both
+                overlaptype : sport         # overlap sport
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '20.10.0.0\24'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 15
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : both
+                overlaptype : sport_full     # full overlap in sport
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '20.10.0.0\24'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : both
+                overlaptype : dport         # overlap dport
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '20.10.0.0\24'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 15
+                    dporthigh: 40
+
+              - type : specific
+                policytype : both
+                overlaptype : dport_full     # full overlap in dport
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '20.10.0.0\24'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 10
+                    dporthigh: 20
+
+              - type : specific
+                policytype : both
+                overlaptype : all           # overlap all
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\24'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 15
+                    sporthigh: 40
+                    dportlow: 15
+                    dporthigh: 40
+
+              - type : specific
+                policytype : both
+                overlaptype : adjacent_pfx   # prefixes are adjacent
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '10.10.0.1\32'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::1\128'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.2\32'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::1\128'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : both
+                overlaptype : adjacent_pfx_with_default   # prefixes are adjacent
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '0.0.0.0\0'
+                    v6pfx: '0::0\0'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.1\32'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::1\128'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.2\32'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::1\128'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : both
+                overlaptype : adjacent_sport   # sport ranges are adjacent
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '20.20.0.0\16'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 20
+                    sporthigh: 40
+                    dportlow: 30
+                    dporthigh: 40
+
+              - type : specific
+                policytype : both
+                overlaptype : adjacent_dport   # dport ranges are adjacent
+                direction  : bidir
+                rule:
+                  - protocol: tcp
+                    stateful: true
+                    v4pfx: '10.10.0.0\16'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
+                    sportlow: 10
+                    sporthigh: 20
+                    dportlow: 10
+                    dporthigh: 20
+
+                  - protocol: tcp
+                    stateful: false
+                    v4pfx: '20.20.0.0\16'
+                    v6pfx: '1e7:a11:bad:b075:d1e::0\80'
+                    sportlow: 30
+                    sporthigh: 40
+                    dportlow: 20
+                    dporthigh: 40

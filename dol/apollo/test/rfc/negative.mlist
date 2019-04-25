@@ -15,13 +15,14 @@ modules:
         iterate :
             - policy : filter://AddrFamily=IPV4,PolicyType=empty
 
+    # policies with stateless rules
     - module:
         name    : IPV4_EGRESS_RIGHT_INVALID_IP
         spec    : rfc_egress_negative.testspec
         args    :
             - prefix : right
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
 
     - module:
         name    : IPV4_EGRESS_RIGHT_INVALID_SPORT
@@ -29,7 +30,7 @@ modules:
         args    :
             - sport : right
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
 
     - module:
         name    : IPV4_EGRESS_RIGHT_INVALID_DPORT
@@ -37,7 +38,7 @@ modules:
         args    :
             - dport : right
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
 
     - module:
         name    : IPV4_EGRESS_RIGHT_INVALID
@@ -47,7 +48,7 @@ modules:
             - sport  : right
             - dport  : right
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
 
     - module:
         name    : IPV4_EGRESS_LEFT_INVALID_IP
@@ -55,7 +56,7 @@ modules:
         args    :
             - prefix : left
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
 
     - module:
         name    : IPV4_EGRESS_LEFT_INVALID_SPORT
@@ -63,7 +64,7 @@ modules:
         args    :
             - sport : left
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
 
     - module:
         name    : IPV4_EGRESS_LEFT_INVALID_DPORT
@@ -71,7 +72,7 @@ modules:
         args    :
             - dport : left
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
 
     - module:
         name    : IPV4_EGRESS_LEFT_INVALID
@@ -81,7 +82,7 @@ modules:
             - sport  : left
             - dport  : left
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
 
     - module:
         name    : IPV4_INGRESS_RIGHT_INVALID_SPORT
@@ -89,7 +90,7 @@ modules:
         args    :
             - sport : right
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
 
     - module:
         name    : IPV4_INGRESS_RIGHT_INVALID_DPORT
@@ -97,7 +98,7 @@ modules:
         args    :
             - dport : right
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
 
     - module:
         name    : IPV4_INGRESS_RIGHT_INVALID
@@ -106,7 +107,7 @@ modules:
             - sport  : right
             - dport  : right
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
 
     - module:
         name    : IPV4_INGRESS_LEFT_INVALID_SPORT
@@ -114,7 +115,7 @@ modules:
         args    :
             - sport : left
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
 
     - module:
         name    : IPV4_INGRESS_LEFT_INVALID_DPORT
@@ -122,7 +123,7 @@ modules:
         args    :
             - dport : left
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
 
     - module:
         name    : IPV4_INGRESS_LEFT_INVALID
@@ -131,4 +132,270 @@ modules:
             - sport  : left
             - dport  : left
         iterate :
-            - policy : filter://AddrFamily=IPV4,PolicyType=disjoint
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateless,OverlapType=none
+
+    # policies with stateful rules
+    - module:
+        name    : IPV4_EGRESS_STATEFUL_RIGHT_INVALID_IP
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - prefix : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_STATEFUL_RIGHT_INVALID_SPORT
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - sport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_STATEFUL_RIGHT_INVALID_DPORT
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - dport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_STATEFUL_RIGHT_INVALID
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - prefix : right
+            - sport  : right
+            - dport  : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_STATEFUL_LEFT_INVALID_IP
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - prefix : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_STATEFUL_LEFT_INVALID_SPORT
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - sport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_STATEFUL_LEFT_INVALID_DPORT
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - dport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_STATEFUL_LEFT_INVALID
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - prefix : left
+            - sport  : left
+            - dport  : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    - module:
+        name    : IPV4_INGRESS_STATEFUL_RIGHT_INVALID_SPORT
+        spec    : rfc_ingress_negative.testspec
+        enable  : False
+        args    :
+            - sport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    - module:
+        name    : IPV4_INGRESS_STATEFUL_RIGHT_INVALID_DPORT
+        spec    : rfc_ingress_negative.testspec
+        enable  : False
+        args    :
+            - dport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    - module:
+        name    : IPV4_INGRESS_STATEFUL_RIGHT_INVALID
+        spec    : rfc_ingress_negative.testspec
+        enable  : False
+        args    :
+            - sport  : right
+            - dport  : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    - module:
+        name    : IPV4_INGRESS_STATEFUL_LEFT_INVALID_SPORT
+        spec    : rfc_ingress_negative.testspec
+        enable  : False
+        args    :
+            - sport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    - module:
+        name    : IPV4_INGRESS_STATEFUL_LEFT_INVALID_DPORT
+        spec    : rfc_ingress_negative.testspec
+        enable  : False
+        args    :
+            - dport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    - module:
+        name    : IPV4_INGRESS_STATEFUL_LEFT_INVALID
+        spec    : rfc_ingress_negative.testspec
+        enable  : False
+        args    :
+            - sport  : left
+            - dport  : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=stateful,OverlapType=none
+
+    # policies with both rules
+    - module:
+        name    : IPV4_EGRESS_BOTH_RIGHT_INVALID_IP
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - prefix : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_BOTH_RIGHT_INVALID_SPORT
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - sport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_BOTH_RIGHT_INVALID_DPORT
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - dport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_BOTH_RIGHT_INVALID
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - prefix : right
+            - sport  : right
+            - dport  : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_BOTH_LEFT_INVALID_IP
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - prefix : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_BOTH_LEFT_INVALID_SPORT
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - sport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_BOTH_LEFT_INVALID_DPORT
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - dport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none
+
+    - module:
+        name    : IPV4_EGRESS_BOTH_LEFT_INVALID
+        spec    : rfc_egress_negative.testspec
+        enable  : False
+        args    :
+            - prefix : left
+            - sport  : left
+            - dport  : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none
+
+    - module:
+        name    : IPV4_INGRESS_BOTH_RIGHT_INVALID_SPORT
+        spec    : rfc_ingress_negative.testspec
+        enable  : False
+        args    :
+            - sport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none
+
+    - module:
+        name    : IPV4_INGRESS_BOTH_RIGHT_INVALID_DPORT
+        spec    : rfc_ingress_negative.testspec
+        enable  : False
+        args    :
+            - dport : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none
+
+    - module:
+        name    : IPV4_INGRESS_BOTH_RIGHT_INVALID
+        spec    : rfc_ingress_negative.testspec
+        enable  : False
+        args    :
+            - sport  : right
+            - dport  : right
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none
+
+    - module:
+        name    : IPV4_INGRESS_BOTH_LEFT_INVALID_SPORT
+        spec    : rfc_ingress_negative.testspec
+        enable  : False
+        args    :
+            - sport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none
+
+    - module:
+        name    : IPV4_INGRESS_BOTH_LEFT_INVALID_DPORT
+        spec    : rfc_ingress_negative.testspec
+        enable  : False
+        args    :
+            - dport : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none
+
+    - module:
+        name    : IPV4_INGRESS_BOTH_LEFT_INVALID
+        spec    : rfc_ingress_negative.testspec
+        enable  : False
+        args    :
+            - sport  : left
+            - dport  : left
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=both,OverlapType=none

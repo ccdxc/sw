@@ -19,7 +19,6 @@ def TestCaseTeardown(tc):
     return True
 
 def TestCasePreTrigger(tc):
-    print('pretrigger')
     return True
 
 def TestCaseStepSetup(tc, step):

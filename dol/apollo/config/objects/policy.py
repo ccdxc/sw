@@ -27,8 +27,18 @@ class RuleObject:
         self.L4DportLow = dportlow
         self.L4DportHigh = dporthigh
 
+    def Show(self):
+        if self.L3Match:
+            logger.info("- Prefix:%s Proto:%d" %(self.Prefix, self.Proto))
+        else:
+            logger.info("- No L3Match")
+        if self.L4Match:
+            logger.info("- SrcPortRange:%d - %d DstPortRange:%d - %d" %(self.L4SportLow, self.L4SportHigh, self.L4DportLow, self.L4DportHigh))
+        else:
+            logger.info("- No L4Match")
+
 class PolicyObject(base.ConfigObjectBase):
-    def __init__(self, parent, af, direction, rules, policytype):
+    def __init__(self, parent, af, direction, rules, policytype, overlaptype):
         super().__init__()
         ################# PUBLIC ATTRIBUTES OF POLICY OBJECT #####################
         self.VPCId = parent.VPCId
@@ -42,6 +52,7 @@ class PolicyObject(base.ConfigObjectBase):
         self.GID('Policy%d'%self.PolicyId)
         ################# PRIVATE ATTRIBUTES OF POLICY OBJECT #####################
         self.PolicyType = policytype
+        self.OverlapType = overlaptype
         self.rules = rules
         self.Show()
         return
@@ -76,16 +87,10 @@ class PolicyObject(base.ConfigObjectBase):
         logger.info("- %s" % repr(self))
         logger.info("- Direction:%s" % self.Direction)
         logger.info("- PolicyType:%s" % self.PolicyType)
+        logger.info("- OverlapType:%s" % self.OverlapType)
         logger.info("- Number of rules:%d" % len(self.rules))
         for rule in self.rules:
-            if rule.L3Match:
-                logger.info("- Prefix:%s Proto:%d" %(rule.Prefix, rule.Proto))
-            else:
-                logger.info("- No L3Match")
-            if rule.L4Match:
-                logger.info("- SrcPortRange:%d - %d DstPortRange:%d - %d" %(rule.L4SportLow, rule.L4SportHigh, rule.L4DportLow, rule.L4DportHigh))
-            else:
-                logger.info("- No L4Match")
+            rule.Show()
         return
 
     def IsFilterMatch(self, selectors):
@@ -230,41 +235,41 @@ class PolicyObjectClient:
                 rules.append(rule)
             return rules
 
-        def __add_v4policy(direction, v4rules, policytype):
-            obj = PolicyObject(parent, utils.IP_VERSION_4, direction, v4rules, policytype)
+        def __add_v4policy(direction, v4rules, policytype, overlaptype):
+            obj = PolicyObject(parent, utils.IP_VERSION_4, direction, v4rules, policytype, overlaptype)
             if direction == 'ingress':
                 self.__v4ingressobjs[vpcid].append(obj)
             else:
                 self.__v4egressobjs[vpcid].append(obj)
             self.__objs.append(obj)
 
-        def __add_v6policy(direction, v6rules, policytype):
-            obj = PolicyObject(parent, utils.IP_VERSION_6, direction, v6rules, policytype)
+        def __add_v6policy(direction, v6rules, policytype, overlaptype):
+            obj = PolicyObject(parent, utils.IP_VERSION_6, direction, v6rules, policytype, overlaptype)
             if direction == 'ingress':
                 self.__v6ingressobjs[vpcid].append(obj)
             else:
                 self.__v6egressobjs[vpcid].append(obj)
             self.__objs.append(obj)
 
-        def __add_user_specified_policy(policyspec, policytype):
+        def __add_user_specified_policy(policyspec, policytype, overlaptype):
             direction = policyspec.direction
             if __is_v4stack():
                 v4rules = __get_rules(utils.IP_VERSION_4, policyspec)
                 if direction == 'bidir':
                     #For bidirectional, add policy in both directions
-                    policyobj = __add_v4policy('ingress', v4rules, policytype)
-                    policyobj = __add_v4policy('egress', v4rules, policytype)
+                    policyobj = __add_v4policy('ingress', v4rules, policytype, overlaptype)
+                    policyobj = __add_v4policy('egress', v4rules, policytype, overlaptype)
                 else:
-                    policyobj = __add_v4policy(direction, v4rules, policytype)
+                    policyobj = __add_v4policy(direction, v4rules, policytype, overlaptype)
 
             if __is_v6stack():
                 v6rules = __get_rules(utils.IP_VERSION_6, policyspec)
                 if direction == 'bidir':
                     #For bidirectional, add policy in both directions
-                    policyobj = __add_v6policy('ingress', v6rules, policytype)
-                    policyobj = __add_v6policy('egress', v6rules, policytype)
+                    policyobj = __add_v6policy('ingress', v6rules, policytype, overlaptype)
+                    policyobj = __add_v6policy('egress', v6rules, policytype, overlaptype)
                 else:
-                    policyobj = __add_v6policy(direction, v6rules, policytype)
+                    policyobj = __add_v6policy(direction, v6rules, policytype, overlaptype)
 
         if not hasattr(vpc_spec_obj, 'policy'):
             #TODO: Need to install wildcard policies for other topo
@@ -273,8 +278,10 @@ class PolicyObjectClient:
         for policy_spec_obj in vpc_spec_obj.policy:
             policy_spec_type = policy_spec_obj.type
             policytype = policy_spec_obj.policytype
+            overlaptype = policy_spec_obj.overlaptype if \
+                hasattr(policy_spec_obj, 'overlaptype') else None
             if policy_spec_type == "specific":
-                __add_user_specified_policy(policy_spec_obj, policytype)
+                __add_user_specified_policy(policy_spec_obj, policytype, overlaptype)
                 continue
 
         if len(self.__v4ingressobjs[vpcid]) != 0:

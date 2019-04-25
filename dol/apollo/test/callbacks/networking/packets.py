@@ -122,6 +122,12 @@ def GetUsableSPortFromPolicy(testcase, packet, args=None):
         return (rule.L4SportHigh + 1)
     if pval == 'left':
         return (rule.L4SportLow - 1)
+    if pval == 'first':
+        rule.Show()
+        return (rule.L4SportLow)
+    if pval == 'last':
+        rule.Show()
+        return (rule.L4SportHigh)
     return __get_port_from_rule(rule)
 
 def GetUsableDPortFromPolicy(testcase, packet, args=None):
@@ -131,6 +137,10 @@ def GetUsableDPortFromPolicy(testcase, packet, args=None):
         return (rule.L4DportHigh + 1)
     if pval == 'left':
         return (rule.L4DportLow - 1)
+    if pval == 'first':
+        return (rule.L4DportLow)
+    if pval == 'last':
+        return (rule.L4DportHigh)
     return __get_port_from_rule(rule, False)
 
 def GetInvalidMPLSTag(testcase, packet, args=None):

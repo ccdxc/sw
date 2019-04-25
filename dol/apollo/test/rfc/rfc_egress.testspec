@@ -75,3 +75,4 @@ expect:
         - packet:
             object  : ref://testcase/packets/id=EXP_SWITCH_PKT
             port    : ref://testcase/config/switchport
+            #port    : 100
