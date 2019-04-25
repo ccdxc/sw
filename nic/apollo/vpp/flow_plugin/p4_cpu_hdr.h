@@ -25,23 +25,24 @@ typedef struct p4_rx_cpu_hdr_s {
 } __attribute__ ((__packed__)) p4_rx_cpu_hdr_t;
 
 // Meta sent to P4 for tx packet
-#define CPU_P4_FLAG_DIRECTION
 typedef struct p4_tx_cpu_hdr_s {
-    uint8_t flags_octet;
-    struct {
+    union {
+        uint8_t flags_octet;
+        struct {
 #if __BYTE_ORDER == __BIG_ENDIAN
-        uint8_t pad0                    : 4;
-        uint8_t txdma_drop_event        : 1;
-        uint8_t redirect_to_arm         : 1;
-        uint8_t lpm_bypass              : 1;
-        uint8_t direction               : 1;
+            uint8_t pad0                    : 4;
+            uint8_t txdma_drop_event        : 1;
+            uint8_t redirect_to_arm         : 1;
+            uint8_t lpm_bypass              : 1;
+            uint8_t direction               : 1;
 #else
-        uint8_t direction               : 1;
-        uint8_t lpm_bypass              : 1;
-        uint8_t redirect_to_arm         : 1;
-        uint8_t txdma_drop_event        : 1;
-        uint8_t pad0                    : 4;
+            uint8_t direction               : 1;
+            uint8_t lpm_bypass              : 1;
+            uint8_t redirect_to_arm         : 1;
+            uint8_t txdma_drop_event        : 1;
+            uint8_t pad0                    : 4;
 #endif
+        };
     };
 } __attribute__ ((__packed__)) p4_tx_cpu_hdr_t;
 

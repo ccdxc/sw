@@ -147,8 +147,8 @@ pen_fwd_flow (vlib_main_t * vm,
         while (n_left_from >= 4 && n_left_to_next >= 2) {
             vlib_buffer_t *p0, *p1;
             u32 pi0, pi1;
-            vnet_hw_interface_t *hw_if0, *hw_if1;
-            ethernet_header_t *eth0, *eth1;
+            p4_tx_cpu_hdr_t *tx0, *tx1;
+            u16 *flag0, *flag1;
 
             /* Prefetch next iteration. */
             {
@@ -160,8 +160,11 @@ pen_fwd_flow (vlib_main_t * vm,
                 vlib_prefetch_buffer_header (p2, LOAD);
                 vlib_prefetch_buffer_header (p3, LOAD);
 
-                //CLIB_PREFETCH (p2->data, sizeof(), LOAD);
-                //CLIB_PREFETCH (p3->data, sizeof(), LOAD);
+                /* Fetch Max ethernet+vlan headers 22 bytes and predicate header */
+                CLIB_PREFETCH ((((u8 *) p2->data) - 22 - APOLLO_PREDICATE_HDR_SZ),
+                               64, WRITE);
+                CLIB_PREFETCH ((((u8 *) p3->data) - 22 - APOLLO_PREDICATE_HDR_SZ),
+                               64, WRITE);
             }
 
             pi0 = to_next[0] = from[0];
@@ -177,26 +180,31 @@ pen_fwd_flow (vlib_main_t * vm,
             vnet_buffer (p0)->sw_if_index[VLIB_TX] = vnet_buffer (p0)->sw_if_index[VLIB_RX];
             vnet_buffer (p1)->sw_if_index[VLIB_TX] = vnet_buffer (p1)->sw_if_index[VLIB_RX];
 
-            vlib_buffer_advance(p0, -((vnet_buffer (p0)->l3_hdr_offset - vnet_buffer (p0)->l2_hdr_offset)));
-            vlib_buffer_advance(p1, -((vnet_buffer (p1)->l3_hdr_offset - vnet_buffer (p1)->l2_hdr_offset)));
+            vlib_buffer_advance(p0, -(APOLLO_PREDICATE_HDR_SZ +
+                        (vnet_buffer (p0)->l3_hdr_offset - vnet_buffer (p0)->l2_hdr_offset)));
+            vlib_buffer_advance(p1, -(APOLLO_PREDICATE_HDR_SZ +
+                        (vnet_buffer (p1)->l3_hdr_offset - vnet_buffer (p1)->l2_hdr_offset)));
        
-            hw_if0 = vnet_get_sup_hw_interface (vnm, vnet_buffer (p0)->sw_if_index[VLIB_TX]);
-            hw_if1 = vnet_get_sup_hw_interface (vnm, vnet_buffer (p1)->sw_if_index[VLIB_TX]);
-
-            eth0 = vlib_buffer_get_current(p0); 
-            eth1 = vlib_buffer_get_current(p1);  
-            clib_memcpy(eth0->dst_address, eth0->src_address, 6);
-            clib_memcpy(eth1->dst_address, eth1->src_address, 6);
-            clib_memcpy(eth0->src_address, hw_if0->hw_address, 6);
-            clib_memcpy(eth1->src_address, hw_if1->hw_address, 6);
+            tx0 = vlib_buffer_get_current(p0);
+            tx1 = vlib_buffer_get_current(p1);
+            tx0->flags_octet = 0;
+            tx1->flags_octet = 0;
+            flag0 = (u16 *) &(vnet_buffer (p0)->pen_data.flags);
+            flag1 = (u16 *) &(vnet_buffer (p1)->pen_data.flags);
+            if (PREDICT_TRUE((*flag0) & APOLLO_CPU_FLAGS_DIRECTION)) {
+                tx0->direction = 1;
+            }
+            if (PREDICT_TRUE((*flag1) & APOLLO_CPU_FLAGS_DIRECTION)) {
+                tx1->direction = 1;
+            }
         }
 
         while (n_left_from > 0 && n_left_to_next > 0) {
             vlib_buffer_t *p0;
             u32 pi0;
-            vnet_hw_interface_t *hw_if0;
-            ethernet_header_t *eth0;
-            
+            p4_tx_cpu_hdr_t *tx0;
+            u16 *flag0;
+
             pi0 = from[0];
             to_next[0] = pi0;
 
@@ -207,11 +215,15 @@ pen_fwd_flow (vlib_main_t * vm,
 
             p0 = vlib_get_buffer (vm, pi0);
             vnet_buffer (p0)->sw_if_index[VLIB_TX] = vnet_buffer (p0)->sw_if_index[VLIB_RX];
-            vlib_buffer_advance(p0, -((vnet_buffer (p0)->l3_hdr_offset - vnet_buffer (p0)->l2_hdr_offset)));
-            hw_if0 = vnet_get_sup_hw_interface (vnm, vnet_buffer (p0)->sw_if_index[VLIB_TX]);
-            eth0 = vlib_buffer_get_current(p0);            
-            clib_memcpy(eth0->dst_address, eth0->src_address, 6);
-            clib_memcpy(eth0->src_address, hw_if0->hw_address, 6);
+            vlib_buffer_advance(p0, -(APOLLO_PREDICATE_HDR_SZ +
+                        (vnet_buffer (p0)->l3_hdr_offset - vnet_buffer (p0)->l2_hdr_offset)));
+
+            tx0 = vlib_buffer_get_current(p0);
+            tx0->flags_octet = 0;
+            flag0 = (u16 *) &(vnet_buffer (p0)->pen_data.flags);
+            if (PREDICT_TRUE((*flag0) & APOLLO_CPU_FLAGS_DIRECTION)) {
+                tx0->direction = 1;
+            }
         }
 
         vlib_put_next_frame (vm, node, next, n_left_to_next);
@@ -424,7 +436,7 @@ pen_flow_prog (vlib_main_t * vm,
                vlib_node_runtime_t * node,
                vlib_frame_t * from_frame, u8 is_ip4)
 {
-    u32 n_left_from, next = FLOW_PROG_NEXT_DROP, //FWD_FLOW,
+    u32 n_left_from, next = FLOW_PROG_NEXT_FWD_FLOW,
             n_left_to_next, * from, * to_next;
     pen_flow_main_t *fm = &pen_flow_main;
     int thread_id = node->thread_index;
@@ -601,6 +613,7 @@ pen_p4cpu_hdr_lookup_trace_add (vlib_main_t * vm,
         u32 bi0, bi1;
         vlib_buffer_t *b0, *b1;
         p4cpu_hdr_lookup_trace_t *t0, *t1;
+        u16 *flag0, *flag1;
 
         /* Prefetch next iteration. */
         vlib_prefetch_buffer_with_index (vm, from[2], LOAD);
@@ -616,7 +629,8 @@ pen_p4cpu_hdr_lookup_trace_add (vlib_main_t * vm,
         {
             t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
             t0->flow_hash = vnet_buffer (b0)->pen_data.flow_hash;
-            t0->flags = vnet_buffer (b0)->pen_data.flags;
+            flag0 = (u16 *) &(vnet_buffer (b0)->pen_data.flags);
+            t0->flags = *flag0;
             t0->l2_offset = vnet_buffer (b0)->l2_hdr_offset;
             t0->l3_offset = vnet_buffer (b0)->l3_hdr_offset;
             t0->l4_offset = vnet_buffer (b0)->l4_hdr_offset;
@@ -626,7 +640,8 @@ pen_p4cpu_hdr_lookup_trace_add (vlib_main_t * vm,
         {
             t1 = vlib_add_trace (vm, node, b1, sizeof (t1[0]));
             t1->flow_hash = vnet_buffer (b1)->pen_data.flow_hash;
-            t1->flags = vnet_buffer (b1)->pen_data.flags;
+            flag1 = (u16 *) &(vnet_buffer (b1)->pen_data.flags);
+            t1->flags = *flag0;
             t1->l2_offset = vnet_buffer (b1)->l2_hdr_offset;
             t1->l3_offset = vnet_buffer (b1)->l3_hdr_offset;
             t1->l4_offset = vnet_buffer (b1)->l4_hdr_offset;
@@ -641,6 +656,7 @@ pen_p4cpu_hdr_lookup_trace_add (vlib_main_t * vm,
         u32 bi0;
         vlib_buffer_t *b0;
         p4cpu_hdr_lookup_trace_t *t0;
+        u16 *flag0;
 
         bi0 = from[0];
 
@@ -650,7 +666,8 @@ pen_p4cpu_hdr_lookup_trace_add (vlib_main_t * vm,
         {
             t0 = vlib_add_trace (vm, node, b0, sizeof (t0[0]));
             t0->flow_hash = vnet_buffer (b0)->pen_data.flow_hash;
-            t0->flags = vnet_buffer (b0)->pen_data.flags;
+            flag0 = (u16 *) &(vnet_buffer (b0)->pen_data.flags);
+            t0->flags = *flag0;
             t0->l2_offset = vnet_buffer (b0)->l2_hdr_offset;
             t0->l3_offset = vnet_buffer (b0)->l3_hdr_offset;
             t0->l4_offset = vnet_buffer (b0)->l4_hdr_offset;
@@ -667,28 +684,31 @@ pen_parse_p4cpu_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
 {
     p4_rx_cpu_hdr_t *hdr0 = vlib_buffer_get_current(p0);
     p4_rx_cpu_hdr_t *hdr1 = vlib_buffer_get_current(p1);
-    u8 flag_orig0, flag_orig1;
+    u16 flag_orig0, flag_orig1;
+    u16 *pen_flag0, *pen_flag1;
 
     //hdr0--;
     //hdr1--;
     //hdr0->flags = APOLLO_CPU_FLAGS_IPV4_1_VALID;
     //hdr1->flags = APOLLO_CPU_FLAGS_IPV4_1_VALID;
-    flag_orig0 = (u8) clib_net_to_host_u16(hdr0->flags);
-    flag_orig1 = (u8) clib_net_to_host_u16(hdr1->flags);
-    u8 flags0 = flag_orig0 &
+    flag_orig0 = clib_net_to_host_u16(hdr0->flags);
+    flag_orig1 = clib_net_to_host_u16(hdr1->flags);
+    u16 flags0 = flag_orig0 &
         (APOLLO_CPU_FLAGS_IPV4_1_VALID | APOLLO_CPU_FLAGS_IPV6_1_VALID);
-    u8 flags1 = flag_orig1 &
+    u16 flags1 = flag_orig1 &
         (APOLLO_CPU_FLAGS_IPV4_1_VALID | APOLLO_CPU_FLAGS_IPV6_1_VALID);
 
     vnet_buffer (p0)->pen_data.flow_hash = clib_net_to_host_u32(hdr0->flow_hash);
-    vnet_buffer (p0)->pen_data.flags = flag_orig0;
+    pen_flag0 = (u16 *) &(vnet_buffer (p0)->pen_data.flags);
+    *pen_flag0 = flag_orig0;
     vnet_buffer (p0)->l2_hdr_offset = hdr0->l2_offset;
     vnet_buffer (p0)->l3_hdr_offset = hdr0->l3_offset;
     vnet_buffer (p0)->l4_hdr_offset = hdr0->l4_offset;
     vnet_buffer (p0)->sw_if_index[VLIB_TX] = clib_net_to_host_u16(hdr0->local_vnic_tag);
 
     vnet_buffer (p1)->pen_data.flow_hash = clib_net_to_host_u32(hdr1->flow_hash);
-    vnet_buffer (p1)->pen_data.flags = flag_orig1;
+    pen_flag1 = (u16 *) &(vnet_buffer (p1)->pen_data.flags);
+    *pen_flag1 = flag_orig1;
     vnet_buffer (p1)->l2_hdr_offset = hdr1->l2_offset;
     vnet_buffer (p1)->l3_hdr_offset = hdr1->l3_offset;
     vnet_buffer (p1)->l4_hdr_offset = hdr1->l4_offset;
@@ -752,15 +772,17 @@ pen_parse_p4cpu_hdr_x1 (vlib_buffer_t *p, u32 *next, u32 *counter)
 {
     p4_rx_cpu_hdr_t *hdr = vlib_buffer_get_current(p);
     //hdr--;
-    u8 flag_orig;
+    u16 flag_orig;
+    u16 *pen_flag;
     //hdr->flags = APOLLO_CPU_FLAGS_IPV4_1_VALID;
 
-    flag_orig = (u8) clib_net_to_host_u16(hdr->flags);
-    u8 flags = flag_orig & 
+    flag_orig = clib_net_to_host_u16(hdr->flags);
+    u16 flags = flag_orig & 
         (APOLLO_CPU_FLAGS_IPV4_1_VALID | APOLLO_CPU_FLAGS_IPV6_1_VALID);
 
     vnet_buffer (p)->pen_data.flow_hash = clib_net_to_host_u32(hdr->flow_hash);
-    vnet_buffer (p)->pen_data.flags = flag_orig;
+    pen_flag = (u16 *) &(vnet_buffer (p)->pen_data.flags);
+    *pen_flag = flag_orig;
     vnet_buffer (p)->l2_hdr_offset = hdr->l2_offset;
     vnet_buffer (p)->l3_hdr_offset = hdr->l3_offset;
     vnet_buffer (p)->l4_hdr_offset = hdr->l4_offset;
