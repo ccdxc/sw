@@ -11,6 +11,6 @@ export HAL_CONFIG_PATH=$NIC_DIR/conf/
 
 ulimit -c unlimited
 
-exec $NIC_DIR/bin/vpp unix { cli-listen localhost:5002 } heapsize 256M dpdk { vdev net_ionic0 } cpu { main-core 2  corelist-workers 3 }
+exec $NIC_DIR/bin/vpp -c $HAL_CONFIG_PATH/vpp/vpp.conf
 
 [[ $? -ne 0 ]] && echo "Failed to start VPP!" && exit 1
