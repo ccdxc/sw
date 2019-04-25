@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/pensando/sw/nic/apollo/agent/gen/pds"
 )
@@ -44,12 +45,28 @@ func IPAddrToStr(ipAddr *pds.IPAddress) string {
 
 // Uint32IPAddrtoStr converts uint32 IP to string
 func Uint32IPAddrtoStr(addr uint32) string {
-    ip := make(net.IP, 4)
-    binary.BigEndian.PutUint32(ip, addr)
-    return ip.String()
+	ip := make(net.IP, 4)
+	binary.BigEndian.PutUint32(ip, addr)
+	return ip.String()
 }
 
 // IPPrefixToStr converts prefix to string
 func IPPrefixToStr(pfx *pds.IPPrefix) string {
 	return fmt.Sprintf("%s/%d", IPAddrToStr(pfx.GetAddr()), pfx.GetLen())
+}
+
+// EncapToString converts encap to string
+func EncapToString(encap *pds.Encap) string {
+	encapType := encap.GetType()
+	encapStr := strings.Replace(encapType.String(), "ENCAP_TYPE_", "", -1)
+	switch encapType {
+	case pds.EncapType_ENCAP_TYPE_DOT1Q:
+		encapStr += fmt.Sprintf("/%d", encap.GetValue().GetVlanId())
+	case pds.EncapType_ENCAP_TYPE_MPLSoUDP:
+		encapStr += fmt.Sprintf("/%d", encap.GetValue().GetMPLSTag())
+	case pds.EncapType_ENCAP_TYPE_VXLAN:
+		encapStr += fmt.Sprintf("/%d", encap.GetValue().GetVnid())
+	default:
+	}
+	return encapStr
 }

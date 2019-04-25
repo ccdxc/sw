@@ -101,15 +101,7 @@ func printTunnelHeader() {
 
 func printTunnel(tunnel *pds.Tunnel) {
 	spec := tunnel.GetSpec()
-	encapStr := strings.Replace(spec.GetEncap().GetType().String(), "ENCAP_TYPE_", "", -1)
-	switch spec.GetEncap().GetType() {
-	case pds.EncapType_ENCAP_TYPE_DOT1Q:
-		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetVlanId())
-	case pds.EncapType_ENCAP_TYPE_MPLSoUDP:
-		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetMPLSTag())
-	case pds.EncapType_ENCAP_TYPE_VXLAN:
-		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetVnid())
-	}
+	encapStr := utils.EncapToString(spec.GetEncap())
 	fmt.Printf("%-6d%-6d%-16s%-16s%-16s\n",
 		spec.GetId(), spec.GetVPCId(),
 		encapStr,

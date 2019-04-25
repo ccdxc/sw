@@ -92,33 +92,25 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printVnicHeader() {
-	hdrLine := strings.Repeat("-", 97)
+	hdrLine := strings.Repeat("-", 120)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-7s%-6s%-9s%-6s%-20s%-10s%-10s%-14s%-15s\n",
-		"VnicID", "VpcID", "SubnetID", "HostEncap", "MAC",
-		"RscPoolID", "SrcGuard", "FabricEncap", "MirrorPolicyID")
+	fmt.Printf("%-7s%-6s%-9s%-14s%-20s%-10s%-10s%-14s%-15s%-15s\n",
+		"VnicID", "VpcID", "SubnetID", "VnicEncap", "MAC",
+		"RscPoolID", "SrcGuard", "FabricEncap", "RxMirrorSessionID",
+		"TxMirrorSessionID")
 	fmt.Println(hdrLine)
 }
 
 func printVnic(vnic *pds.Vnic) {
-    spec := vnic.GetSpec()
-    encapType := spec.GetFabricEncap().GetType()
-    encapStr := strings.Replace(encapType.String(), "ENCAP_TYPE_", "", -1)
-    switch encapType {
-    case pds.EncapType_ENCAP_TYPE_DOT1Q:
-        encapStr += fmt.Sprintf("/%d",
-            spec.GetFabricEncap().GetValue().GetVlanId())
-    case pds.EncapType_ENCAP_TYPE_MPLSoUDP:
-        encapStr += fmt.Sprintf("/%d",
-            spec.GetFabricEncap().GetValue().GetMPLSTag())
-    case pds.EncapType_ENCAP_TYPE_VXLAN:
-        encapStr += fmt.Sprintf("/%d",
-            spec.GetFabricEncap().GetValue().GetVnid())
-    default:
-    }
-    // TODO: let us add Tx/Rx mirror session id dump later
-    fmt.Printf("%-7d%-6d%-9d%-6d%-20s%-10d%-10t%-14s\n",
-        spec.GetVnicId(), spec.GetVPCId(), spec.GetSubnetId(),
-        spec.GetVnicEncap().GetValue(), utils.MactoStr(spec.GetMACAddress()),
-        spec.GetResourcePoolId(), spec.GetSourceGuardEnable(), encapStr)
+	spec := vnic.GetSpec()
+	fabricEncapStr := utils.EncapToString(spec.GetFabricEncap())
+	vnicEncapStr := utils.EncapToString(spec.GetVnicEncap())
+	txMirrorSessionStr := strings.Replace(strings.Trim(fmt.Sprint(spec.GetTxMirrorSessionId()), "[]"), " ", ",", -1)
+	rxMirrorSessionStr := strings.Replace(strings.Trim(fmt.Sprint(spec.GetRxMirrorSessionId()), "[]"), " ", ",", -1)
+
+	fmt.Printf("%-7d%-6d%-9d%-14s%-20s%-10d%-10t%-14s%-15s%-15s\n",
+		spec.GetVnicId(), spec.GetVPCId(), spec.GetSubnetId(),
+		vnicEncapStr, utils.MactoStr(spec.GetMACAddress()),
+		spec.GetResourcePoolId(), spec.GetSourceGuardEnable(), fabricEncapStr,
+		rxMirrorSessionStr, txMirrorSessionStr)
 }

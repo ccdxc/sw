@@ -104,9 +104,9 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printMappingHeader() {
-	hdrLine := strings.Repeat("-", 93)
+	hdrLine := strings.Repeat("-", 97)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-16s%-9s%-9s%-20s%-10s%-7s%-16s\n",
+	fmt.Printf("%-6s%-16s%-9s%-9s%-20s%-14s%-7s%-16s\n",
 		"VpcID", "PrivateIP", "SubnetID", "TunnelID", "MAC",
 		"Encap", "VnicID", "PublicIP")
 	fmt.Println(hdrLine)
@@ -114,18 +114,8 @@ func printMappingHeader() {
 
 func printMapping(mapping *pds.Mapping) {
 	spec := mapping.GetSpec()
-	encapType := spec.GetEncap().GetType()
-	encapStr := strings.Replace(encapType.String(), "ENCAP_TYPE_", "", -1)
-	switch encapType {
-	case pds.EncapType_ENCAP_TYPE_DOT1Q:
-		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetVlanId())
-	case pds.EncapType_ENCAP_TYPE_MPLSoUDP:
-		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetMPLSTag())
-	case pds.EncapType_ENCAP_TYPE_VXLAN:
-		encapStr += fmt.Sprintf("/%d", spec.GetEncap().GetValue().GetVnid())
-	default:
-	}
-	fmt.Printf("%-6s%-16s%-9s%-9s%-20s%-10s%-7s%-16s\n",
+	encapStr := utils.EncapToString(spec.GetEncap())
+	fmt.Printf("%-6s%-16s%-9s%-9s%-20s%-14s%-7d%-16s\n",
 		spec.GetId().GetVPCId(),
 		utils.IPAddrToStr(spec.GetId().GetIPAddr()),
 		spec.GetSubnetId(), spec.GetTunnelId(),
