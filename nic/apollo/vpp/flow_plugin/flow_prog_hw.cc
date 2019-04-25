@@ -6,11 +6,13 @@
 #include <cstddef>
 
 #include <nic/sdk/include/sdk/table.hpp>
+#include <cstring>
+#include <nic/utils/ftl/ftl.hpp>
+#include <nic/utils/ftl/ftl_structs.hpp>
 #include <nic/sdk/include/sdk/ip.hpp>
 #include <nic/sdk/include/sdk/base.hpp>
 #include <nic/sdk/include/sdk/types.hpp>
 #include <nic/sdk/include/sdk/platform.hpp>
-#include <nic/sdk/lib/table/memhash/mem_hash.hpp>
 #include <nic/sdk/platform/capri/csrint/csr_init.hpp>
 #include <nic/sdk/platform/capri/capri_state.hpp>
 #include <nic/sdk/lib/pal/pal.hpp>
@@ -21,6 +23,7 @@
 #include <nic/p4/common/defines.h>
 #include <nic/sdk/platform/capri/capri_p4.hpp>
 #include <nic/sdk/asic/pd/pd.hpp>
+#include "flow_prog_hw.h"
 
 using namespace sdk;
 using namespace sdk::table;
@@ -91,12 +94,12 @@ initialize_pds(void)
     return 0;
 }
 
-mem_hash *
-mem_hash_create(uint32_t table_id,
-                uint32_t num_hints,
-                uint32_t max_recircs,
-                void *key2str,
-                void *appdata2str)
+ftl *
+ftl_create(uint32_t table_id,
+           uint32_t num_hints,
+           uint32_t max_recircs,
+           void *key2str,
+           void *appdata2str)
 {
     sdk_table_factory_params_t factory_params = {0};
 
@@ -106,16 +109,17 @@ mem_hash_create(uint32_t table_id,
     factory_params.key2str = (key2str_t) (key2str);
     factory_params.appdata2str = (appdata2str_t) (appdata2str);
 
-    return mem_hash::factory(&factory_params);
+    return ftl::factory(&factory_params);
 }
 
 int
-mem_hash_insert(mem_hash *obj, void *key, void *app_data)
+ftl_insert(ftl *obj, ftentry_t *entry, uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
 
-    params.key = key;
-    params.appdata = app_data;
+    params.hash_32b = hash;
+    params.hash_valid = 1;
+    params.entry = entry;
     if (SDK_RET_OK != obj->insert(&params)) {
         return -1;
     }
@@ -123,9 +127,9 @@ mem_hash_insert(mem_hash *obj, void *key, void *app_data)
 }
 
 void
-mem_hash_delete(mem_hash *obj)
+ftl_delete(ftl *obj)
 {
-    mem_hash::destroy(obj);
+    ftl::destroy(obj);
 }
 
 }

@@ -6,7 +6,7 @@
 #define __VPP_FLOW_PLUGIN_FLOW_TEST_H__
 
 #include "flow.h"
-#include "flow_memhash.h"
+#include "flow_prog_hw.h"
 
 /* Stub for test - start */
 #define KEY_TYPE_NONE                   0

@@ -9,7 +9,7 @@
 #include <vnet/ip/ip.h>
 #include <vnet/udp/udp_packet.h>
 #include <nic/p4/common/defines.h>
-#include "flow_memhash.h"
+#include "flow_prog_hw.h"
 
 #define MAX_FLOWS_PER_FRAME (VLIB_FRAME_SIZE * 2)
 
@@ -110,6 +110,6 @@ void pen_flow_prog_lock(void);
 
 void pen_flow_prog_unlock(void);
 
-mem_hash * pen_flow_prog_get_table(void);
+ftl * pen_flow_prog_get_table(void);
 
 #endif    // __VPP_FLOW_PLUGIN_FLOW_H__

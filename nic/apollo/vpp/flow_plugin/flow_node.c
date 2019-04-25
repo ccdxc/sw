@@ -4,7 +4,7 @@
 
 #include "flow.h"
 #include "p4_cpu_hdr.h"
-#include "flow_memhash.h"
+#include "flow_prog_hw.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <vnet/ethernet/packet.h>
@@ -15,7 +15,7 @@
 #define P4TBL_ID_FLOW_HASH      1
 
 typedef struct pen_flow_main_t {
-    mem_hash *table;
+    ftl *table;
     volatile u32 *flow_prog_lock;
     pen_flow_params_t **ip4_flow_params;
     pen_flow_params_t **ip6_flow_params;
@@ -50,7 +50,7 @@ pen_flow_prog_unlock (void)
     clib_atomic_release (fm->flow_prog_lock);
 }
 
-mem_hash *
+ftl *
 pen_flow_prog_get_table (void)
 {
     pen_flow_main_t *fm = &pen_flow_main;
@@ -579,7 +579,7 @@ format_pen_p4cpu_hdr_lookup_trace (u8 * s, va_list * args)
     CLIB_UNUSED (vlib_node_t * node) = va_arg (*args, vlib_node_t *);
     p4cpu_hdr_lookup_trace_t *t = va_arg (*args, p4cpu_hdr_lookup_trace_t *);
 
-    s = format (s, "Flags[%d], flow_hash[%d], l2_offset[%d], "
+    s = format (s, "Flags[%d], flow_hash[0x%x], l2_offset[%d], "
             "l3_offset[%d] l4_offset[%d], vrf[%d]",
             t->flags, t->flow_hash, t->l2_offset, t->l3_offset,
             t->l4_offset, t->vrf);
@@ -695,8 +695,10 @@ pen_parse_p4cpu_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     vnet_buffer (p1)->sw_if_index[VLIB_TX] = clib_net_to_host_u16(hdr1->local_vnic_tag);
 
     /* Move to IPv4/IPv6 header */
-    vlib_buffer_advance(p0, (vnet_buffer(p0)->l3_hdr_offset /*- vnet_buffer (p0)->l2_hdr_offset*/));
-    vlib_buffer_advance(p1, (vnet_buffer(p1)->l3_hdr_offset /*- vnet_buffer (p1)->l2_hdr_offset*/));
+    vlib_buffer_advance(p0, (APOLLO_P4_TO_ARM_HDR_SZ +
+        (vnet_buffer(p0)->l3_hdr_offset - vnet_buffer (p0)->l2_hdr_offset)));
+    vlib_buffer_advance(p1, (APOLLO_P4_TO_ARM_HDR_SZ +
+        (vnet_buffer(p1)->l3_hdr_offset - vnet_buffer (p1)->l2_hdr_offset)));
 
     /* As of now only flow miss packets are punted to VPP for flow programming */
     if (flags0 == flags1) {
@@ -766,7 +768,8 @@ pen_parse_p4cpu_hdr_x1 (vlib_buffer_t *p, u32 *next, u32 *counter)
     vnet_buffer (p)->sw_if_index[VLIB_TX] = clib_net_to_host_u16(hdr->local_vnic_tag);
 
     /* Move to IPv4/IPv6 header */
-    vlib_buffer_advance(p, (vnet_buffer (p)->l3_hdr_offset /*- vnet_buffer (p)->l2_hdr_offset*/));
+    vlib_buffer_advance(p, (APOLLO_P4_TO_ARM_HDR_SZ + 
+        (vnet_buffer (p)->l3_hdr_offset - vnet_buffer (p)->l2_hdr_offset)));
 
     /* As of now only flow miss packets are punted to VPP for flow programming */
     if (flags == APOLLO_CPU_FLAGS_IPV4_1_VALID) {
@@ -946,7 +949,7 @@ pen_flow_init (vlib_main_t * vm)
         ASSERT(0);
     }
 
-    fm->table = mem_hash_create(P4TBL_ID_FLOW, 5, 8,
+    fm->table = ftl_create(P4TBL_ID_FLOW, 5, 8,
             (void *) pen_flow_key2str, (void *)pen_flow_appdata2str);
 
     fm->flow_prog_lock = clib_mem_alloc_aligned (CLIB_CACHE_LINE_BYTES,

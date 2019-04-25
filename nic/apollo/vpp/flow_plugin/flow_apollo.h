@@ -7,11 +7,13 @@
 
 #include <gen/p4gen/apollo/include/p4pd.h>
 #include <nic/apollo/p4/include/defines.h>
+#include <nic/utils/ftl/ftl_structs.hpp>
 #include "flow.h"
-#include "flow_memhash.h"
+#include "flow_prog_hw.h"
 
 typedef struct pen_flow_params_t {
-    flow_swkey_t entry;
+    ftentry_t entry;
+    u32 hash;
 } pen_flow_params_t;
 
 typedef struct pen_flow_hw_ctx_t {
@@ -35,42 +37,42 @@ pen_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 
         ip40 = vlib_buffer_get_current(p0);
 
-        local_params0->entry.key_metadata_ktype = KEY_TYPE_IPV4;
-        clib_memcpy(local_params0->entry.key_metadata_src,
+        local_params0->entry.ktype = KEY_TYPE_IPV4;
+        clib_memcpy(local_params0->entry.src,
                 ip40->src_address.data, sizeof(u32));
-        clib_memcpy(local_params0->entry.key_metadata_dst,
+        clib_memcpy(local_params0->entry.dst,
                 ip40->dst_address.data, sizeof(u32));
-        local_params0->entry.key_metadata_proto = ip40->protocol;
-        local_params0->entry.vnic_metadata_local_vnic_tag =
+        local_params0->entry.proto = ip40->protocol;
+        local_params0->entry.local_vnic_tag =
                 vnet_buffer (p0)->sw_if_index[VLIB_TX];
 
-        remote_params0->entry.key_metadata_ktype = KEY_TYPE_IPV4;
-        clib_memcpy(remote_params0->entry.key_metadata_dst,
+        remote_params0->entry.ktype = KEY_TYPE_IPV4;
+        clib_memcpy(remote_params0->entry.dst,
                 ip40->src_address.data, sizeof(u32));
-        clib_memcpy(remote_params0->entry.key_metadata_src,
+        clib_memcpy(remote_params0->entry.src,
                 ip40->dst_address.data, sizeof(u32));
-        remote_params0->entry.key_metadata_proto = ip40->protocol;
-        remote_params0->entry.vnic_metadata_local_vnic_tag =
+        remote_params0->entry.proto = ip40->protocol;
+        remote_params0->entry.local_vnic_tag =
                 vnet_buffer (p0)->sw_if_index[VLIB_TX];
         if (PREDICT_TRUE(((ip40->protocol == IP_PROTOCOL_TCP)
                 || (ip40->protocol == IP_PROTOCOL_UDP)))) {
             udp0 = (udp_header_t *) (((u8 *) ip40) +
                     (vnet_buffer (p0)->l4_hdr_offset -
                             vnet_buffer (p0)->l3_hdr_offset));
-            local_params0->entry.key_metadata_sport =
+            local_params0->entry.sport =
                     clib_net_to_host_u16(udp0->src_port);
-            local_params0->entry.key_metadata_dport =
+            local_params0->entry.dport =
                     clib_net_to_host_u16(udp0->dst_port);
 
-            remote_params0->entry.key_metadata_dport =
+            remote_params0->entry.dport =
                     clib_net_to_host_u16(udp0->src_port);
-            remote_params0->entry.key_metadata_sport =
+            remote_params0->entry.sport =
                     clib_net_to_host_u16(udp0->dst_port);
         } else {
-            local_params0->entry.key_metadata_sport =
-                    local_params0->entry.key_metadata_dport = 0;
-            remote_params0->entry.key_metadata_sport =
-                    remote_params0->entry.key_metadata_dport = 0;
+            local_params0->entry.sport =
+                    local_params0->entry.dport = 0;
+            remote_params0->entry.sport =
+                    remote_params0->entry.dport = 0;
         }
     } else {
 
@@ -78,22 +80,22 @@ pen_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 
         ip60 = vlib_buffer_get_current(p0);
 
-        local_params0->entry.key_metadata_ktype = KEY_TYPE_IPV6;
-        clib_memcpy(local_params0->entry.key_metadata_src,
+        local_params0->entry.ktype = KEY_TYPE_IPV6;
+        clib_memcpy(local_params0->entry.src,
                 ip60->src_address.as_u8, sizeof(ip6_address_t));
-        clib_memcpy(local_params0->entry.key_metadata_dst,
+        clib_memcpy(local_params0->entry.dst,
                 ip60->dst_address.as_u8, sizeof(ip6_address_t));
-        local_params0->entry.key_metadata_proto = ip60->protocol;
-        local_params0->entry.vnic_metadata_local_vnic_tag =
+        local_params0->entry.proto = ip60->protocol;
+        local_params0->entry.local_vnic_tag =
                 vnet_buffer (p0)->sw_if_index[VLIB_TX];
 
-        remote_params0->entry.key_metadata_ktype = KEY_TYPE_IPV6;
-        clib_memcpy(remote_params0->entry.key_metadata_dst,
+        remote_params0->entry.ktype = KEY_TYPE_IPV6;
+        clib_memcpy(remote_params0->entry.dst,
                 ip60->src_address.as_u8, sizeof(ip6_address_t));
-        clib_memcpy(remote_params0->entry.key_metadata_src,
+        clib_memcpy(remote_params0->entry.src,
                 ip60->dst_address.as_u8, sizeof(ip6_address_t));
-        remote_params0->entry.key_metadata_proto = ip60->protocol;
-        remote_params0->entry.vnic_metadata_local_vnic_tag =
+        remote_params0->entry.proto = ip60->protocol;
+        remote_params0->entry.local_vnic_tag =
                 vnet_buffer (p0)->sw_if_index[VLIB_TX];
 
         if (PREDICT_TRUE(((ip60->protocol == IP_PROTOCOL_TCP)
@@ -101,21 +103,23 @@ pen_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
             udp0 = (udp_header_t *) (((u8 *) ip60) +
                     (vnet_buffer (p0)->l4_hdr_offset -
                             vnet_buffer (p0)->l3_hdr_offset));
-            local_params0->entry.key_metadata_sport =
+            local_params0->entry.sport =
                     clib_net_to_host_u16(udp0->src_port);
-            local_params0->entry.key_metadata_dport =
+            local_params0->entry.dport =
                     clib_net_to_host_u16(udp0->dst_port);
-            remote_params0->entry.key_metadata_dport =
+            remote_params0->entry.dport =
                     clib_net_to_host_u16(udp0->src_port);
-            remote_params0->entry.key_metadata_sport =
+            remote_params0->entry.sport =
                     clib_net_to_host_u16(udp0->dst_port);
         } else {
-            local_params0->entry.key_metadata_sport =
-                    local_params0->entry.key_metadata_dport = 0;
-            remote_params0->entry.key_metadata_sport =
-                    remote_params0->entry.key_metadata_dport = 0;
+            local_params0->entry.sport =
+                    local_params0->entry.dport = 0;
+            remote_params0->entry.sport =
+                    remote_params0->entry.dport = 0;
         }
     }
+    local_params0->hash = remote_params0->hash =
+        vnet_buffer (p0)->pen_data.flow_hash;
     return;
 }
 
@@ -124,15 +128,14 @@ pen_flow_program_hw (pen_flow_params_t *key,
                      int size, u32 *counter)
 {
     int i;
-    flow_appdata_t swappdata = {0};
-    mem_hash *table = pen_flow_prog_get_table();
+    ftl *table = pen_flow_prog_get_table();
     pen_flow_hw_ctx_t *ctx;
 
     pen_flow_prog_lock();
     for (i = 0; i < size; i++) {
         pool_get(flow_index_pool, ctx);
-        swappdata.flow_index = ctx - flow_index_pool;
-        if (PREDICT_TRUE(0 == mem_hash_insert(table, (key + i), &swappdata))) {
+        key[i].entry.flow_index = ctx - flow_index_pool;
+        if (PREDICT_TRUE(0 == ftl_insert(table, &key[i].entry, key[i].hash))) {
             counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
         } else {
             counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
