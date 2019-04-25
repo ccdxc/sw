@@ -670,6 +670,9 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 						continue
 					}
 					delete(eObj.ObjectMeta.Labels, globals.CategoryLabel)
+					// removing response and request to make audit event small
+					eObj.ResponseObject = ""
+					eObj.RequestObject = ""
 					fdr.logger.Debugf("Search hits result - audit event entry: %d {%+v}", i, eObj)
 					robj = eObj
 					obj, err := types.MarshalAny(robj.(proto.Message))
@@ -831,6 +834,9 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 													continue
 												}
 												delete(eObj.ObjectMeta.Labels, globals.CategoryLabel)
+												// removing response and request to make audit event small
+												eObj.ResponseObject = ""
+												eObj.RequestObject = ""
 												fdr.logger.Debugf("Search hits result - audit event entry: %d {%+v}", i, eObj)
 												robj = eObj
 												obj, err := types.MarshalAny(robj.(proto.Message))
