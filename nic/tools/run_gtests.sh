@@ -103,11 +103,11 @@ LD_PRELOAD=${PRELOADS} tnnl_rw_tbl_test --gtest_output="xml:${GEN_TEST_RESULTS_D
 export CAPRI_MOCK_MEMORY_MODE=1
 # Any test using memhash library requires CAPRI_MOCK_MEMORY_MODE
 ${CMD_OPTS} alg_utils_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_utils_test.xml"
-#${CMD_OPTS} alg_rpc_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_rpc_test.xml"
-#${CMD_OPTS} alg_tftp_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_tftp_test.xml"
-#${CMD_OPTS} alg_ftp_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_ftp_test.xml"
-#${CMD_OPTS} alg_rtsp_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_rtsp_test.xml"
-#${CMD_OPTS} alg_dns_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_dns_test.xml"
+${CMD_OPTS} alg_rpc_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_rpc_test.xml"
+${CMD_OPTS} alg_tftp_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_tftp_test.xml"
+${CMD_OPTS} alg_ftp_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_ftp_test.xml"
+${CMD_OPTS} alg_rtsp_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_rtsp_test.xml"
+${CMD_OPTS} alg_dns_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_dns_test.xml"
 
 ${CMD_OPTS} session_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/session_test.xml"
 ${CMD_OPTS} fte_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/fte_test.xml"

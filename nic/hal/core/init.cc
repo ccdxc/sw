@@ -549,6 +549,11 @@ hal_logger_init (hal_cfg_t *hal_cfg)
 
     // initialize the logger
     hal_cfg->sync_mode_logging = false;
+    if (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_SIM) {
+        // TODO: Remove this hack. alg gtests are stuck with
+        //       sync disabled.
+        hal_cfg->sync_mode_logging = true;
+    }
     hal::utils::trace_init("hal", hal_cfg->control_cores_mask,
                            hal_cfg->sync_mode_logging, logfile.c_str(),
                            5 << 20, // 50MB
