@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import ipaddress
 
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
@@ -14,6 +15,10 @@ import types_pb2 as types_pb2
 
 from infra.common.logging import logger
 from apollo.config.store import Store
+
+PROTO_TCP = 6
+PROTO_UDP = 17
+protos = {PROTO_TCP, PROTO_UDP}
 
 class SubnetObject(base.ConfigObjectBase):
     def __init__(self, parent, spec, poolid):
@@ -42,6 +47,7 @@ class SubnetObject(base.ConfigObjectBase):
         self.__ip_address_pool[1] = resmgr.CreateIpv4AddrPool(self.IPPrefix[1])
 
         self.__set_vrouter_attributes()
+        self.__fill_default_rules_in_policy()
 
         self.Show()
 
@@ -51,6 +57,36 @@ class SubnetObject(base.ConfigObjectBase):
         rmapping.client.GenerateObjects(self, spec)
 
         return
+
+    def __fill_default_rules_in_policy(self):
+        ids = {self.IngV4SecurityPolicyId, self.EgV4SecurityPolicyId}
+        for id in ids:
+            policyobjs = policy.client.Objects()
+            for policyobj in policyobjs:
+                if policyobj.PolicyType == 'default':
+                    if id == policyobj.PolicyId:
+                        self.__fill_default_rules(policyobj)
+        return
+
+    def __fill_default_rules(self, policyobj):
+        rules = []
+        pfx = None
+        if policyobj.AddrFamily == 'IPV4':
+            if policyobj.PolicyType == 'default':
+                pfx = ipaddress.ip_network('0.0.0.0/0')
+            elif policyobj.PolicyType is 'subnet':
+                pfx = ipaddress.ip_network(self.IPPrefix[1])
+        else:
+            if policyobj.PolicyType == 'default':
+                pfx = ipaddress.ip_network('::/0')
+            elif policyobj.PolicyType is 'subnet':
+                pfx = ipaddress.ip_network(self.IPPrefix[0])
+        for proto in protos:
+            rule = policy.RuleObject(False, True, proto, pfx, True, 0, 65535, \
+                                     0, 65535)
+            rules.append(rule)
+        policyobj.rules = rules
+        policyobj.Show()
 
     def __set_vrouter_attributes(self):
         # 1st IP address of the subnet becomes the vrouter.
@@ -93,7 +129,7 @@ class SubnetObject(base.ConfigObjectBase):
         logger.info("- %s" % repr(self))
         logger.info("- Prefix %s" % self.IPPrefix)
         logger.info("- VirtualRouter IP:%s" % (self.VirtualRouterIPAddr))
-        logger.info("- TableIds  V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
+        logger.info("- TableIds V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
         logger.info("- SecurityPolicyIDs IngV4:%d|IngV6:%d|EgV4:%d|EgV6:%d" %\
                     (self.IngV4SecurityPolicyId, self.IngV6SecurityPolicyId, self.EgV4SecurityPolicyId, self.EgV6SecurityPolicyId))
         return

@@ -70,7 +70,8 @@ class PolicyObject(base.ConfigObjectBase):
             specrule.Match.L4Match.Ports.DstPortRange.PortHigh = rule.L4DportHigh
         if rule.L3Match:
             specrule.Match.L3Match.Protocol = rule.Proto
-            utils.GetRpcIPPrefix(rule.Prefix, specrule.Match.L3Match.Prefix)
+            if rule.Prefix is not None:
+                utils.GetRpcIPPrefix(rule.Prefix, specrule.Match.L3Match.Prefix)
 
     def GetGrpcCreateMessage(self):
         grpcmsg = policy_pb2.SecurityPolicyRequest()
@@ -225,7 +226,7 @@ class PolicyObjectClient:
 
         def __get_rules(af, policyspec):
             rules = []
-            if policyspec.rule is None:
+            if not hasattr(policyspec, 'rule'):
                 return rules
             for rulespec in policyspec.rule:
                 stateful = rulespec.stateful
@@ -271,18 +272,28 @@ class PolicyObjectClient:
                 else:
                     policyobj = __add_v6policy(direction, v6rules, policytype, overlaptype)
 
-        if not hasattr(vpc_spec_obj, 'policy'):
-            #TODO: Need to install wildcard policies for other topo
-            return
+        def __get_num_subnets(vpc_spec_obj):
+            count = 0
+            for subnet_obj in vpc_spec_obj.subnet:
+                count += subnet_obj.count
+            return count
+
+        def __add_default_policies(vpc_spec_obj, policyspec):
+            num_subnets = __get_num_subnets(vpc_spec_obj)
+            for i in range(num_subnets):
+                __add_user_specified_policy(policyspec, policyspec.policytype, None)
 
         for policy_spec_obj in vpc_spec_obj.policy:
             policy_spec_type = policy_spec_obj.type
-            policytype = policy_spec_obj.policytype
-            overlaptype = policy_spec_obj.overlaptype if \
-                hasattr(policy_spec_obj, 'overlaptype') else None
             if policy_spec_type == "specific":
-                __add_user_specified_policy(policy_spec_obj, policytype, overlaptype)
-                continue
+                policytype = policy_spec_obj.policytype
+                if policytype == 'default':
+                    __add_default_policies(vpc_spec_obj, policy_spec_obj)
+                else:
+                    overlaptype = policy_spec_obj.overlaptype if \
+                        hasattr(policy_spec_obj, 'overlaptype') else None
+                    __add_user_specified_policy(policy_spec_obj, \
+                                                policytype, overlaptype)
 
         if len(self.__v4ingressobjs[vpcid]) != 0:
             self.__v4ipolicyiter[vpcid] = utils.rrobiniter(self.__v4ingressobjs[vpcid])

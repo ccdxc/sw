@@ -329,3 +329,7 @@ vpc:
                    - '1234:5678:4321:8765:1111:3333::\96'
                    - '0::\0'
 
+      policy:
+              - type : specific
+                policytype : default
+                direction : bidir
