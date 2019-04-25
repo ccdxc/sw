@@ -188,17 +188,17 @@ func enicDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 
 func enicShowStatusHeader() {
 	fmt.Printf("\n")
-	fmt.Printf("Handle:  IF's handle          Status:    IF's status\n")
+	fmt.Printf("ID:  IF's ID                  Status:    IF's status\n")
 	fmt.Printf("LportId: LPort ID             UplnkHndl: Uplink IF handle\n")
 	fmt.Printf("MacVlanIdxHost:  Input prop. Mac Vlan table idx from host packets\n")
 	fmt.Printf("MacVlanIdxNet:   Input prop. Mac Vlan table idx from network packets\n")
 	fmt.Printf("NatL2SegClassic: Input prop. table idx for native l2seg. Classic mode\n")
 	fmt.Printf("L2SegMmbrInfo:   L2seg membership info for Enic. Classic mode\n")
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 104)
+	hdrLine := strings.Repeat("-", 109)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-10s%-16s%-16s%-16s%-16s\n",
-		"Handle", "Status", "LportId", "UplnkHndl", "MacVlanIdxHost", "MacVlanIdxNet", "NatL2SegClassic", "L2SegMmbrInfo")
+	fmt.Printf("%-15s%-10s%-10s%-10s%-16s%-16s%-16s%-16s\n",
+		"ID", "Status", "LportId", "UplnkHndl", "MacVlanIdxHost", "MacVlanIdxNet", "NatL2SegClassic", "L2SegMmbrInfo")
 	fmt.Println(hdrLine)
 }
 
@@ -208,8 +208,8 @@ func enicShowStatusOneResp(resp *halproto.InterfaceGetResponse) {
 		return
 	}
 
-	fmt.Printf("%-10d%-10s%-10d%-10d%-16d%-16d%-16d",
-		resp.GetStatus().GetIfHandle(),
+	fmt.Printf("%-15s%-10s%-10d%-10d%-16d%-16d%-16d",
+		fmt.Sprintf("enic-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId()),
 		strings.ToLower(strings.Replace(resp.GetStatus().GetIfStatus().String(), "IF_STATUS_", "", -1)),
 		resp.GetStatus().GetEnicInfo().GetEnicLportId(),
 		resp.GetStatus().GetEnicInfo().GetUplinkIfHandle(),
@@ -244,9 +244,9 @@ func enicShowHeader() {
 	fmt.Printf("EL2seg: Enic's l2seg         Emac:   Enic's mac\n")
 	fmt.Printf("Encap:  Enic's encap         ELif:   Enic's Lif\n")
 	fmt.Printf("\n")
-	hdrLine := strings.Repeat("-", 70)
+	hdrLine := strings.Repeat("-", 75)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-10s%-10s%-20s%-10s%-10s\n",
+	fmt.Printf("%-15s%-10s%-10s%-20s%-10s%-10s\n",
 		"Id", "EType", "EL2seg", "Emac", "Eencap", "ELif")
 	fmt.Println(hdrLine)
 }
@@ -258,7 +258,7 @@ func enicShowOneResp(resp *halproto.InterfaceGetResponse) {
 	}
 	enicType := resp.GetSpec().GetIfEnicInfo().GetEnicType()
 	ifID := fmt.Sprintf("enic-%d", resp.GetSpec().GetKeyOrHandle().GetInterfaceId())
-	fmt.Printf("%-10s%-10s",
+	fmt.Printf("%-15s%-10s",
 		ifID,
 		enicTypeToStr(enicType))
 
