@@ -339,3 +339,11 @@ DebugSvcImpl::PbStatsGet(ServerContext *context, const Empty *proto_req,
 
     return Status::OK;
 }
+
+Status
+DebugSvcImpl::FlowClear(ServerContext *context, const Empty *req,
+                        Empty *rsp) {
+    PDS_TRACE_DEBUG("Flow clear received");
+
+    return Status::OK;
+}
