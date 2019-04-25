@@ -107,7 +107,6 @@ update_port (pds_ifindex_t ifindex, port_admin_state_t admin_state)
     if_entry *intf;
     port_args_t port_info;
 
-    ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(), ifindex, IF_DEFAULT_CHILD_PORT);
     intf = if_db()->find(&ifindex);
     if (intf == NULL) {
         PDS_TRACE_ERR("port 0x%x update failed", ifindex);
@@ -122,7 +121,7 @@ update_port (pds_ifindex_t ifindex, port_admin_state_t admin_state)
     }
     port_info.port_num = intf->key();
 
-    // Set the admin state as per the argument
+    // set the admin state as per the argument
     port_info.admin_state = admin_state;
 
     ret = sdk::linkmgr::port_update(intf->if_info(), &port_info);
