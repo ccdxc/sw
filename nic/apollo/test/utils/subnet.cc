@@ -144,12 +144,12 @@ subnet_util_object_stepper (pds_subnet_key_t start_key, pds_vpc_key_t vpc_key,
     ip_prefix_t ip_pfx = {};
     pds_subnet_info_t info = {};
     uint32_t addr = 0;
-    uint32_t v4_route_table;
-    uint32_t v6_route_table;
-    uint32_t ing_v4_policy;
-    uint32_t ing_v6_policy;
-    uint32_t egr_v4_policy;
-    uint32_t egr_v6_policy;
+    uint32_t v4_route_table = 0;
+    uint32_t v6_route_table = 0;
+    uint32_t ing_v4_policy = 0;
+    uint32_t ing_v6_policy = 0;
+    uint32_t egr_v4_policy = 0;
+    uint32_t egr_v6_policy = 0;
 
     if (start_key.id == 0) start_key.id = 1;
     v4_route_table = start_key.id;
