@@ -58,7 +58,7 @@ GOCMD = /usr/local/go/bin/go
 PENS_AGENTS ?= 50
 REGISTRY_URL ?= registry.test.pensando.io:5000
 BUILD_CONTAINER ?= pens-bld:v0.13
-UI_BUILD_CONTAINER ?= pens-ui-bld:v0.20
+UI_BUILD_CONTAINER ?= pens-ui-bld:v0.21
 DIND_CONTAINER ?= pens-dind:v0.3
 E2E_CONTAINER ?= pens-e2e:v0.4
 TARGETS ?= ws-tools pull-assets gen build
@@ -220,12 +220,12 @@ debug-container:
 	scripts/create-debug-container.sh
 
 ui-container-helper:
-	cat venice/ui/venice-sdk/npm-shrinkwrap.json | jq 'del(.dependencies."@pensando/swagger-ts-generator")' > tools/docker-files/ui-container/venice-sdk/npm-shrinkwrap.json
-	cat venice/ui/venice-sdk/package.json | jq 'del(.dependencies."@pensando/swagger-ts-generator")' > tools/docker-files/ui-container/venice-sdk/package.json
-	cp venice/ui/web-app-framework/package.json tools/docker-files/ui-container/web-app-framework/package.json
+	mkdir -p tools/docker-files/ui-container/web-app-framework/dist tools/docker-files/ui-container/venice-sdk
+	cp venice/ui/venice-sdk/pensando-swagger-ts-generator-1.1.29.tgz tools/docker-files/ui-container/venice-sdk/pensando-swagger-ts-generator-1.1.29.tgz
+	cp venice/ui/venice-sdk/npm-shrinkwrap.json tools/docker-files/ui-container/venice-sdk/npm-shrinkwrap.json
 	cp venice/ui/web-app-framework/npm-shrinkwrap.json tools/docker-files/ui-container/web-app-framework/npm-shrinkwrap.json
-	cat venice/ui/webapp/npm-shrinkwrap.json | jq 'del(.dependencies."web-app-framework")' > tools/docker-files/ui-container/webapp/npm-shrinkwrap.json
-	cat venice/ui/webapp/package.json | jq 'del(.dependencies."web-app-framework")' > tools/docker-files/ui-container/webapp/package.json
+	cp venice/ui/webapp/npm-shrinkwrap.json tools/docker-files/ui-container/webapp/npm-shrinkwrap.json
+	cp venice/ui/web-app-framework/dist/web-app-framework-0.0.0.tgz tools/docker-files/ui-container/web-app-framework/dist/web-app-framework-0.0.0.tgz
 	@cd tools/docker-files/ui-container; docker build --squash -t ${REGISTRY_URL}/${UI_BUILD_CONTAINER} .
 
 

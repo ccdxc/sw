@@ -36,6 +36,17 @@
         "tslib": "^1.7.1"
       }
     },
+    "@pensando/swagger-ts-generator": {
+      "version": "file:pensando-swagger-ts-generator-1.1.29.tgz",
+      "integrity": "sha512-dgZ9e5mK6uAAL5XKHpzIaJLIKFQ2Bl+T5UimPRHO+R8cB4vlTwajd1p7gtfK8YE/DGPBQNZux7RarEk+230XVA==",
+      "requires": {
+        "fs": "0.0.2",
+        "handlebars": "^4.0.11",
+        "lodash": "^4.17.4",
+        "moment": "^2.20.1",
+        "path": "^0.12.7"
+      }
+    },
     "balanced-match": {
       "version": "1.0.0",
       "resolved": "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.0.tgz",
@@ -215,9 +226,9 @@
       "integrity": "sha512-4krF8scpejhaOgqzBEcGM7yDIEfi0/8+8zDRZhNZZ2kjmHJ4hv3zCbQWxoJGz1iw5U0Jl0nma13xzHXcncMavQ=="
     },
     "uglify-js": {
-      "version": "3.5.4",
-      "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-3.5.4.tgz",
-      "integrity": "sha512-GpKo28q/7Bm5BcX9vOu4S46FwisbPbAmkkqPnGIpKvKTM96I85N6XHQV+k4I6FA2wxgLhcsSyHoNhzucwCflvA==",
+      "version": "3.5.8",
+      "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-3.5.8.tgz",
+      "integrity": "sha512-GFSjB1nZIzoIq70qvDRtWRORHX3vFkAnyK/rDExc0BN7r9+/S+Voz3t/fwJuVfjppAMz+ceR2poE7tkhvnVwQQ==",
       "optional": true,
       "requires": {
         "commander": "~2.20.0",
