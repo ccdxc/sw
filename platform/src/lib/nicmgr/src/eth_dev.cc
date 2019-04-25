@@ -934,6 +934,7 @@ Eth::ConvertDevTypeToLifType(EthDevType dev_type)
         case ETH_MNIC_OOB_MGMT: return sdk::platform::LIF_TYPE_MNIC_OOB_MANAGEMENT;
         case ETH_MNIC_INTERNAL_MGMT: return sdk::platform::LIF_TYPE_MNIC_INTERNAL_MANAGEMENT;
         case ETH_MNIC_INBAND_MGMT: return sdk::platform::LIF_TYPE_MNIC_INBAND_MANAGEMENT;
+        case ETH_MNIC_CPU: return sdk::platform::LIF_TYPE_MNIC_CPU;
         default: return sdk::platform::LIF_TYPE_NONE;
     }
 }

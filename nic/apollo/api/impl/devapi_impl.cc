@@ -64,7 +64,11 @@ devapi_impl::lif_create(lif_info_t *info) {
         lif->program_filters(info);
     } else if (info->type == sdk::platform::LIF_TYPE_MNIC_INBAND_MANAGEMENT) {
         lif->program_inband_filters(info);
+    } else if ((info->type == sdk::platform::LIF_TYPE_MNIC_CPU)) {
+        lif->program_flow_miss_nacl(info);
     }
+    PDS_TRACE_DEBUG("Programmed filter for lif %u %s %u",
+                    info->lif_id, info->name, info->type);
     return SDK_RET_OK;
 }
 

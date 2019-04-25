@@ -70,7 +70,7 @@ void trace_update(utils::trace_level_e trace_level);
         core::trace_logger()->flush();                                         \
     }                                                                          \
 
-#define PDS_TRACE_WARN_NO_META(fmt, ...)                                       \
+#define PDS_TRACE_WARN_NO_META(fmt...)                                         \
     if (likely(core::trace_logger()) &&                                        \
         (core::trace_level() >= utils::trace_warn)) {                          \
         core::trace_logger()->warn(fmt);                                       \
@@ -85,7 +85,7 @@ void trace_update(utils::trace_level_e trace_level);
         core::trace_logger()->flush();                                         \
     }                                                                          \
 
-#define PDS_TRACE_INFO_NO_META(fmt, ...)                                       \
+#define PDS_TRACE_INFO_NO_META(fmt...)                                         \
     if (likely(core::trace_logger()) &&                                        \
         (core::trace_level() >= utils::trace_info)) {                          \
         core::trace_logger()->info(fmt);                                       \

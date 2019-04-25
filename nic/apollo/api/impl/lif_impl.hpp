@@ -95,6 +95,10 @@ public:
     ///< \param[in] lif_params    lif configuration parameters
     sdk_ret_t program_inband_filters(lif_info_t *lif_params);
 
+    ///< \brief    program nacl entry for flow miss packets
+    ///< \param[in] lif_params    lif configuration parameters
+    sdk_ret_t program_flow_miss_nacl(lif_info_t *lif_params);
+
 private:
     ///< constructor
     lif_impl(pds_lif_spec_t *spec);

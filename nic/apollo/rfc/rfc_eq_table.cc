@@ -1142,7 +1142,7 @@ rfc_compute_p2_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
                        rte_bitmap *cbm, uint32_t cbm_size)
 {
     int         rv;
-    uint16_t    result;
+    uint16_t    result = 0;
     uint32_t    ruleidx, posn, start_posn = 0, new_posn = 0;
     uint64_t    slab = 0;
 
@@ -1156,19 +1156,22 @@ rfc_compute_p2_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
     rv = rte_bitmap_scan(cbm, &start_posn, &slab);
     if (rv == 0) {
         // no bit is set in the bitmap
-        result = 0;
     } else {
         do {
             posn = RTE_BITMAP_START_SLAB_SCAN_POS;
             while (rte_bitmap_slab_scan(slab, posn, &new_posn) != 0) {
                 ruleidx =
                     rte_bitmap_get_global_bit_pos(cbm->index2 - 1, new_posn);
+                PDS_TRACE_DEBUG("ruleidx = %u", ruleidx);
                 if (rfc_ctxt->policy->rules[ruleidx].stateful) {
+                    PDS_TRACE_DEBUG("rule %u is SF", ruleidx);
                     RFC_RESULT_SET_STATEFUL_BIT(result);
                 } else {
+                    PDS_TRACE_DEBUG("rule %u is SL", ruleidx);
                     RFC_RESULT_SET_STATELESS_BIT(result);
                 }
                 if (RFC_RESULT_BOTH_BITS_SET(result)) {
+                    PDS_TRACE_DEBUG("Both SF and SL are set");
                     return result;
                 }
                 posn = new_posn;
