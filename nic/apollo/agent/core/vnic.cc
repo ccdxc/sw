@@ -87,7 +87,7 @@ vnic_delete (pds_vnic_key_t *key)
 sdk_ret_t
 vnic_get (pds_vnic_key_t *key, pds_vnic_info_t *info)
 {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     pds_vnic_spec_t *spec;
 
     spec = agent_state::state()->find_in_vnic_db(key);
@@ -97,6 +97,9 @@ vnic_get (pds_vnic_key_t *key, pds_vnic_info_t *info)
     memcpy(&info->spec, spec, sizeof(pds_vnic_spec_t));
     if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_vnic_read(key, info);
+    } else {
+        memset(&info->stats, 0, sizeof(info->stats));
+        memset(&info->status, 0, sizeof(info->status));
     }
     return ret;
 }
@@ -104,13 +107,16 @@ vnic_get (pds_vnic_key_t *key, pds_vnic_info_t *info)
 static inline sdk_ret_t
 vnic_get_all_cb (pds_vnic_spec_t *spec, void *ctxt)
 {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     pds_vnic_info_t info;
     vnic_db_cb_ctxt_t *cb_ctxt = (vnic_db_cb_ctxt_t *)ctxt;
 
     memcpy(&info.spec, spec, sizeof(pds_vnic_spec_t));
     if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_vnic_read(&spec->key, &info);
+    } else {
+        memset(&info.stats, 0, sizeof(info.stats));
+        memset(&info.status, 0, sizeof(info.status));
     }
     if (ret == SDK_RET_OK) {
         cb_ctxt->cb(&info, cb_ctxt->ctxt);

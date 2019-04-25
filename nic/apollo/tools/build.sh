@@ -19,12 +19,12 @@ build_x86() {
 
 build_arm() {
     copy_libs aarch64
-    make PIPELINE=apollo ARCH=aarch64 PLATFORM=hw PERF=1 "${@:1}"
+    make PIPELINE=apollo ARCH=aarch64 PLATFORM=hw "${@:1}"
 }
 
 build_fw() {
     copy_libs aarch64
-    make PIPELINE=apollo ARCH=aarch64 PLATFORM=hw PERF=1 firmware  "${@:1}"
+    make PIPELINE=apollo ARCH=aarch64 PLATFORM=hw firmware  "${@:1}"
 }
 
 print_usage() {

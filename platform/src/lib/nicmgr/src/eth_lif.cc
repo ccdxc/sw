@@ -14,7 +14,6 @@
 #include "cap_pics_c_hdr.h"
 #include "cap_wa_c_hdr.h"
 
-#include "nic/include/base.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/p4/common/defines.h"
 
@@ -24,6 +23,7 @@
 #endif
 
 #include "nic/sdk/platform/misc/include/misc.h"
+#include "nic/sdk/platform/utils/mpartition.hpp"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
 
@@ -201,7 +201,7 @@ EthLif::EthLif(devapi *dev_api,
                  spec->uplink_port_num);
 
     // Stats
-    stats_mem_addr = pd->mem_start_addr(CAPRI_HBM_REG_LIF_STATS);
+    stats_mem_addr = pd->mem_start_addr(MEM_REGION_LIF_STATS_NAME);
     if (stats_mem_addr == INVALID_MEM_ADDRESS) {
         NIC_LOG_ERR("{}: Failed to allocate stats region",
             hal_lif_info_.name);

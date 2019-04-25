@@ -18,6 +18,7 @@
 
 #include "nic/include/base.hpp"
 #include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
 
 #include "gen/proto/nicmgr/accel_metrics.pb.h"
 #include "gen/proto/nicmgr/accel_metrics.delphi.hpp"

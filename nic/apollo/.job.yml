@@ -62,6 +62,15 @@ targets:
     build-dependencies:
     - build-apollo-x86
 
+  apollo/container:
+    commands: ["make", "PIPELINE=apollo", "jobd/apollo/container"]
+    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apollo-x86
+
   #apollo/agent/testapp:
     #commands: ["make", "PIPELINE=apollo", "jobd/apollo/agent/testapp"]
     #owners: ["email:saratk@pensando.io", "email:vijasrin@pensando.io" ]

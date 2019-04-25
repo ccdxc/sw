@@ -14,7 +14,6 @@
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "platform/capri/capri_common.hpp"
 #include "platform/capri/capri_tbl_rw.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/platform/rdmamgr/rdmamgr.hpp"
 

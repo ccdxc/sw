@@ -4,8 +4,6 @@
 
 #include <cstring>
 
-#include "nic/include/base.hpp"
-#include "nic/include/hal_cfg.hpp"
 #include "nic/p4/common/defines.h"
 
 #include "logger.hpp"
@@ -17,6 +15,8 @@
 #ifdef APOLLO
 #include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd_table.h"
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd_table.h"
+#else
+#include "nic/hal/pd/capri/capri_hbm.hpp"
 #endif
 
 using namespace sdk::platform::capri;
@@ -456,7 +456,6 @@ PdClient::create_dirs() {
 
 void PdClient::init(fwd_mode_t fwd_mode)
 {
-    hal::hal_cfg_t hal_cfg;
 #ifdef APOLLO
     std::string mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
 #else
@@ -479,28 +478,6 @@ void PdClient::init(fwd_mode_t fwd_mode)
     lm_ = lif_mgr::factory(kNumMaxLIFs, mp_, kLif2QstateHBMLabel);
     assert(lm_);
 
-    switch (platform_){
-    case PLATFORM_SIM:
-        hal_cfg.platform = platform_type_t::PLATFORM_TYPE_SIM;
-        break;
-    case PLATFORM_HW:
-        hal_cfg.platform = platform_type_t::PLATFORM_TYPE_HW;
-        break;
-    case PLATFORM_HAPS:
-        hal_cfg.platform = platform_type_t::PLATFORM_TYPE_HAPS;
-        break;
-    case PLATFORM_RTL:
-        hal_cfg.platform = platform_type_t::PLATFORM_TYPE_RTL;
-        break;
-    case PLATFORM_MOCK:
-        hal_cfg.platform = platform_type_t::PLATFORM_TYPE_MOCK;
-        break;
-    default :
-        hal_cfg.platform = platform_type_t::PLATFORM_TYPE_NONE;
-        break;
-    }
-
-    hal_cfg.cfg_path = hal_cfg_path_;
 #ifndef APOLLO
     NIC_LOG_DEBUG("Initializing table rw ...");
     ret = capri_p4plus_table_rw_init();

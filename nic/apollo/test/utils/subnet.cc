@@ -143,7 +143,7 @@ subnet_util_object_stepper (pds_subnet_key_t start_key, pds_vpc_key_t vpc_key,
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
     ip_prefix_t ip_pfx = {};
     pds_subnet_info_t info = {};
-    uint32_t addr;
+    uint32_t addr = 0;
     uint32_t v4_route_table;
     uint32_t v6_route_table;
     uint32_t ing_v4_policy;

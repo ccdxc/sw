@@ -21,11 +21,12 @@
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
 #include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
-#include "gen/platform/mem_regions.hpp"
 
 extern int p4pd_txdma_get_max_action_id(uint32_t tableid);
 extern sdk_ret_t init_service_lif(const char *cfg_path);
 
+#define MEM_REGION_RXDMA_PROGRAM_NAME "rxdma_program"
+#define MEM_REGION_TXDMA_PROGRAM_NAME "txdma_program"
 #define MEM_REGION_LIF_STATS_BASE   "lif_stats_base"
 #define RXDMA_SYMBOLS_MAX           1
 #define TXDMA_SYMBOLS_MAX           1

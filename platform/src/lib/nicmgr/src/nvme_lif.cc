@@ -15,8 +15,6 @@
 // Tell nvme_dev.hpp to emumerate definitions of all devcmds
 #define NVME_DEV_CMD_ENUMERATE  1
 
-#include "nic/include/base.hpp"
-
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"

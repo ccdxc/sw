@@ -92,9 +92,9 @@ vpc_util_object_stepper(pds_vpc_key_t start_key, std::string start_pfxstr,
                         pds_vpc_type_t type, sdk_ret_t expected_result)
 {
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
-    ip_prefix_t ip_pfx;
+    ip_prefix_t ip_pfx = {0};
     ip_addr_t ipaddr_next;
-    uint32_t addr;
+    uint32_t addr = 0;
     pds_vpc_info_t info = {};
 
     if (start_key.id == 0) start_key.id = 1;

@@ -181,6 +181,15 @@ jobd/apollo/scale_test_mock: ${JOBD_PREREQS}
 jobd/apollo/agent/testapp: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/runtestapp.sh
 
+.PHONY: jobd/apollo/container
+jobd/apollo/container:${JOBD_PREREQS}
+	# With Agent
+	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 1
+	rm -rf ${TOPDIR}/apollo_sw
+	# Without Agent
+	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 0
+	rm -rf ${TOPDIR}/apollo_sw
+
 .PHONY: jobd/mbt/base
 jobd/mbt/base: ${JOBD_PREREQS}
 	DISABLE_AGING=1 ${NICDIR}/run.py ${COVERAGE_OPTS} --mbt --mbtrandomseed 6003702
