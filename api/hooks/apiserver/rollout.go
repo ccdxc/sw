@@ -2,21 +2,22 @@ package impl
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 
 	"github.com/gogo/protobuf/types"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/rollout"
 
 	"github.com/pkg/errors"
 
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/apiserver/pkg"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -158,8 +159,9 @@ func (h *rolloutHooks) doRolloutAction(ctx context.Context, kv kvstore.Interface
 		//update rolloutAction && create rollout
 		h.l.InfoLog("msg", "Updating RolloutAction & Create Rollout")
 		if inProgress := checkRolloutInProgress(*rolloutActionObj); inProgress {
-			h.l.InfoLog("msg", "Rollout in progress %#v", rolloutActionObj.Status)
-			return buf, false, errors.New("Rollout in progress")
+			errmsg := fmt.Sprintf("Rollout in progress %#v", rolloutActionObj.Status)
+			h.l.InfoLog("msg", errmsg)
+			return buf, false, errors.New(errmsg)
 		}
 
 		if _, err := updateRolloutActionObj(rolloutActionObj, &buf, txn); err != nil {

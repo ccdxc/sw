@@ -153,7 +153,7 @@ func runSteps(steps []installationStep) error {
 			oldpid, _ := syst.GetServiceProperty(step.Data, "MainPID")
 			if oldpid == "@u 0" {
 				log.Infof("Process %v is not active pid [%s]", step.Data, oldpid)
-				return nil
+				continue
 			}
 			log.Infof("restarting %s pid [%s]", step.Data, oldpid)
 			if err := syst.RestartTargetIfRunning(step.Data); err != nil {

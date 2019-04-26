@@ -3,13 +3,17 @@
 package cluster
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"time"
+
+	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 
 	"github.com/pensando/sw/venice/utils/log"
 
@@ -64,6 +68,40 @@ func GetGitVersion() map[string]string {
 	return imageConfig.GitVersion
 }
 
+//UploadImage uploads a given image to objectStore /rootDir/version/imageName should give the path to the file
+func UploadImage(ctx context.Context, client objstore.Client, rootDir string, version string, imageName string) error {
+
+	meta := make(map[string]string)
+	imageFile := rootDir + "/" + imageName
+	//TODO include version as objStoreFileName := version + ".img/" + imageName
+	objStoreFileName := "venice.tgz"
+
+	_, err := client.StatObject(objStoreFileName)
+	if err == nil {
+		log.Errorf("Image (%s) exists in the object store", objStoreFileName)
+		return nil
+	}
+
+	meta["Version"] = version
+	meta["Environment"] = "production"
+	meta["Description"] = objStoreFileName
+	meta["ReleaseDate"] = "May2018"
+
+	buf, err := ioutil.ReadFile(imageFile)
+	if err != nil {
+		By(fmt.Sprintf("Error (%+v) reading file %s", err, imageFile))
+		return err
+	}
+	_, err = client.PutObject(context.Background(), objStoreFileName, bytes.NewBuffer(buf), meta)
+	if err != nil {
+		By(fmt.Sprintf("UploadImage: Could not put object (%s) to datastore", err))
+		return err
+	}
+	By(fmt.Sprintf("Uploaded file %s to objectStore", imageFile))
+
+	return nil
+}
+
 // run the tests
 var _ = Describe("Rollout object tests", func() {
 
@@ -74,33 +112,31 @@ var _ = Describe("Rollout object tests", func() {
 			Skip(fmt.Sprintf("Skipping upload venice image test"))
 			node := ts.tu.QuorumNodes[rand.Intn(len(ts.tu.QuorumNodes))]
 			nodeIP := ts.tu.NameToIPMap[node]
-			url := fmt.Sprintf("http://pxe.pensando.io/builds/hourly/0.9.0_last-built/src/github.com/pensando/sw/bin/venice.tgz --output /import/src/github.com/pensando/sw/bin/venice.upg.tgz")
+			url := fmt.Sprintf("http://pxe.pensando.io/kickstart/veniceImageForRollout/venice.tgz --output /import/src/github.com/pensando/sw/bin/venice.upg.tgz")
 			res := ts.tu.CommandOutput(nodeIP, fmt.Sprintf(`curl %s`, url))
-			By(fmt.Sprintf("ts:%s CURL file upload [%s]", time.Now().String(), res))
+			By(fmt.Sprintf("ts:%s CURL image download [%s]", time.Now().String(), res))
 
-			url = fmt.Sprintf("http://pxe.pensando.io/builds/hourly/0.9.0_last-built/src/github.com/pensando/sw/tools/docker-files/install/target/etc/pensando/shared/common/venice.json --output /import/src/github.com/pensando/sw/bin/venice.json")
+			url = fmt.Sprintf("http://pxe.pensando.io/kickstart/veniceImageForRollout/venice.json --output /import/src/github.com/pensando/sw/bin/venice.json")
 			res = ts.tu.CommandOutput(nodeIP, fmt.Sprintf(`curl %s`, url))
-			By(fmt.Sprintf("ts:%s CURL file upload [%s]", time.Now().String(), res))
-
-			upgImageName := "/import/src/github.com/pensando/sw/bin/venice.1.tgz"
+			By(fmt.Sprintf("ts:%s CURL venice.json download [%s]", time.Now().String(), res))
 
 			cmdVersion := GetGitVersion()
 			for version = range cmdVersion {
 				break
 			}
-			metadata := map[string]string{
-				"Version":     version,
-				"Environment": "production",
-				"Description": "E2E test Image upload",
-				"Releasedate": "May2018",
+			if version == "" {
+				By(fmt.Sprintf("ts:%s Build Failure. Couldnt get version.json", time.Now().String()))
+				err := errors.New("Build Failure. Couldnt get version information")
+				Expect(err).Should(BeNil(), "Build Failure. Couldnt get version from version.json")
+
 			}
 			// location of the objstore.
 			err := ts.tu.SetupObjstoreClient()
-			filename := "venice.tgz"
+			filename := "venice.upg.tgz"
 
-			buf, _ := ioutil.ReadFile(upgImageName)
+			By(fmt.Sprintf("\nts:%s uploading image to object store..", time.Now().String()))
 			ctx := ts.tu.NewLoggedInContext(context.Background())
-			_, err = uploadFile(ctx, filename, metadata, buf)
+			err = UploadImage(ctx, ts.tu.VOSClient, "/import/src/github.com/pensando/sw/bin/", version, filename)
 			Expect(err).Should(BeNil(), "Failed to upload file")
 		})
 
@@ -135,10 +171,8 @@ var _ = Describe("Rollout object tests", func() {
 					UpgradeType:                 "Disruptive",
 				},
 			}
-
 			// Verify creation for rollout object
 			Eventually(func() bool {
-
 				r1, err := ts.restSvc.RolloutV1().Rollout().DoRollout(ts.loggedInCtx, &rollout)
 				if err != nil || r1.Name != rolloutName {
 					By(fmt.Sprintf("ts:%s Rollout CREATE failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutName, err, r1))
@@ -160,6 +194,54 @@ var _ = Describe("Rollout object tests", func() {
 				return true
 			}, 30, 1).Should(BeTrue(), fmt.Sprintf("Failed to get %s object", rolloutName))
 
+			// Verify pre-install rollout Node status
+			Eventually(func() bool {
+				obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
+				rollout, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
+				if err != nil {
+					By(fmt.Sprintf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout))
+					return false
+				}
+				status := rollout.Status.GetControllerNodesStatus()
+				if len(status) == 0 {
+					By(fmt.Sprintf("ts:%s Pre-install in progress", time.Now().String()))
+					return false
+				}
+				By(fmt.Sprintf("ts:%s Pre-install completed for : %d nodes", time.Now().String(), len(status)))
+				return true
+			}, 300, 5).Should(BeTrue(), "Failed to finish pre-install for controller node")
+
+			// Verify rollout Node status
+			Eventually(func() error {
+				obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
+				rollout, err := ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
+				if err != nil {
+					By(fmt.Sprintf("ts:%s Rollout GET failed for status check, err: %+v rollouts: %+v", time.Now().String(), err, rollout))
+					return errors.New("No rollout object found")
+				}
+				var numNodes int
+				status := rollout.Status.GetControllerNodesStatus()
+				if len(status) == 0 {
+					By(fmt.Sprintf("ts:%s Pre-install in progress", time.Now().String()))
+					return errors.New("No controller node status found")
+				}
+
+				for i := 0; i < len(status); i++ {
+					if status[i].Phase != "WAITING_FOR_TURN" {
+						By(fmt.Sprintf("ts:%s Controller node Pre-install Failed", time.Now().String()))
+						return errors.New("Controller Pre-install Failed")
+					}
+					numNodes++
+				}
+
+				if numNodes != ts.tu.NumQuorumNodes {
+					By(fmt.Sprintf("ts:%s Pre-install completed for : %d nodes", time.Now().String(), numNodes))
+					return errors.New("Controller Pre-install continues")
+				}
+				By(fmt.Sprintf("ts:%s Pre-install Status: Complete", time.Now().String()))
+				return nil
+			}, 300, 5).Should(BeNil(), "Failed to complete Pre-install")
+
 			// Verify Start Time of rollout object
 			Eventually(func() bool {
 				obj := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
@@ -169,12 +251,12 @@ var _ = Describe("Rollout object tests", func() {
 					return false
 				}
 				if r1.Status.StartTime == nil || r1.Spec.ScheduledStartTime.Seconds > r1.Status.StartTime.Seconds {
-					By(fmt.Sprintf("ts:%s Waiting to schedule rollout : %s", time.Now().String(), rolloutName))
+					By(fmt.Sprintf("ts:%s Waiting for pre-install to complete and to schedule rollout : %s", time.Now().String(), rolloutName))
 					return false
 				}
 				By(fmt.Sprintf("ts:%s Rollout successfully started at [%+v] for [%s]", time.Now().String(), time.Unix(r1.Status.StartTime.Seconds, 0), rolloutName))
 				return true
-			}, 300, 5).Should(BeTrue(), fmt.Sprintf("Failed to validate scheduled rollout for object %s", rolloutName))
+			}, 100, 5).Should(BeTrue(), fmt.Sprintf("Failed to validate scheduled rollout for object %s", rolloutName))
 
 			// Verify rollout Node status
 			Eventually(func() bool {
@@ -186,19 +268,26 @@ var _ = Describe("Rollout object tests", func() {
 				}
 
 				status := rollout.Status.GetControllerNodesStatus()
+				var numNodes int
 				if len(status) == 0 {
 					By(fmt.Sprintf("ts:%s Rollout controller node status: not found", time.Now().String()))
 					return false
 				}
-				if status[0].Phase != "COMPLETE" {
-					By(fmt.Sprintf("ts:%s Rollout controller node status: %+v", time.Now().String(), status[0].Phase))
+
+				for i := 0; i < len(status); i++ {
+					if status[i].Phase == "COMPLETE" {
+						numNodes++
+					}
+				}
+				if numNodes != len(status) {
+					By(fmt.Sprintf("ts:%s Rollout completed for : %d nodes", time.Now().String(), numNodes))
 					return false
 				}
 
 				By(fmt.Sprintf("ts:%s Rollout Node Status: Complete", time.Now().String()))
 
 				return true
-			}, 300, 5).Should(BeTrue(), "Failed to finish rollout controller node")
+			}, 500, 5).Should(BeTrue(), "Failed to finish rollout controller node")
 
 			// Verify rollout service status
 			Eventually(func() bool {
@@ -310,6 +399,13 @@ var _ = Describe("Rollout object tests", func() {
 					By(fmt.Sprintf("ts:%s Rollout Update failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutSuspendName, err, r1))
 					return false
 				}
+				obj := api.ObjectMeta{Name: rolloutSuspendName, Tenant: "default"}
+				r1, err = ts.restSvc.RolloutV1().Rollout().Get(ts.loggedInCtx, &obj)
+				if err != nil || r1.Name != rolloutSuspendName {
+					By(fmt.Sprintf("ts:%s Rollout GET failed for [%s] err: %+v r1: %+v", time.Now().String(), rolloutSuspendName, err, r1))
+					return false
+				}
+
 				if r1.Spec.GetSuspend() {
 					By(fmt.Sprintf("ts:%s Rollout suspended for [%s]", time.Now().String(), rolloutSuspendName))
 					return true
