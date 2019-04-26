@@ -360,5 +360,7 @@ func (ag *TSMClient) ListTechSupportRequests() []*tsproto.TechSupportRequestEven
 }
 
 func (ag *TSMClient) generateTargetID(instanceID, instanceName string) string {
-	return fmt.Sprintf("%s-%s-%s-%s", instanceName, instanceID, ag.kind, ag.name)
+	// Split the instance ID received
+	idSplit := strings.Split(instanceID, "-")
+	return fmt.Sprintf("%s-%s-%s-%s", instanceName, idSplit[0], ag.kind, ag.name)
 }
