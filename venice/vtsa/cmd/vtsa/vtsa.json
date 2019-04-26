@@ -11,9 +11,14 @@
 
 	"CollectActions" : [
                                 {
-                                        "Name" : "Action1",
+                                        "Name" : "GetNodeInfo",
                                         "Method" : 0,
-                                        "Command" : "ps -aefl"
+                                        "Command" : "kubectl describe nodes"
+                                },
+				{
+                                        "Name" : "GetAllKubectlInfo",
+                                        "Method" : 0,
+                                        "Command" : "kubectl describe all"
                                 },
                                 {
                                         "Name" : "GetKubeLogs",

@@ -76,7 +76,7 @@ func (s *service) handleNaplesObjectUpdates(obj *delphiProto.NaplesStatus) {
 
 		// Create a new Techsupport Agent
 		// NewTSMClient(name string, mac string, kind string, configPath string, controllers []string)
-		tsmClient := tsa.NewTSMClient(obj.SmartNicName, obj.Fru.MacStr, string(cluster.KindSmartNIC), s.configFile, controllers)
+		tsmClient := tsa.NewTSMClient(obj.Hostname, obj.Fru.MacStr, string(cluster.KindSmartNIC), s.configFile, controllers)
 		s.tsmClient = tsmClient
 
 		// TODO : Delete the sleep. This is a workaround while we debug the race condition in RPC-Kit
