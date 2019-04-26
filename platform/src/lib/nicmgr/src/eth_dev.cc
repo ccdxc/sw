@@ -9,6 +9,7 @@
 #include <cmath>
 #include <endian.h>
 #include <sstream>
+#include <sys/param.h>
 
 #include "cap_top_csr_defines.h"
 #include "cap_pics_c_hdr.h"

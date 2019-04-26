@@ -29,7 +29,6 @@
 #include "device.hpp"
 #include "pd_client.hpp"
 #include "eth_lif.hpp"
-#include "gen/proto/types.pb.h"
 
 namespace pt = boost::property_tree;
 

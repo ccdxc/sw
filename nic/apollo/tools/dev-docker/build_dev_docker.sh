@@ -83,8 +83,11 @@ copy_files() {
 build() {
     cd $DST/nic
     make PIPELINE=apollo
+    [[ $? -ne 0 ]] && echo "Aborting make!" && cd - && exit 1
     make PIPELINE=apollo  PLATFORM=hw ARCH=aarch64
+    [[ $? -ne 0 ]] && echo "Aborting make!" && cd - && exit 1
     make PIPELINE=apollo  PLATFORM=hw ARCH=aarch64 firmware
+    [[ $? -ne 0 ]] && echo "Aborting make!" && cd - && exit 1
     cd -
 }
 
@@ -169,7 +172,8 @@ rebuild() {
 
 run_test() {
     cd $DST/nic
-    ./apollo/test/tools/run_apollo_scale_test.sh
+    ./apollo/test/scale/run_scale_test_mock.sh --cfg scale_cfg_1vpc.json
+    [[ $? -ne 0 ]] && echo "Test failed!" && cd - && exit 1
     cd -
     remove_build
 }
