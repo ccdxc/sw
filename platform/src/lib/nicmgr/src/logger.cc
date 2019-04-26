@@ -46,7 +46,7 @@ init(bool log_to_console)
         }
     }
 
-    logdir = std::getenv("NIC_LOG_DIR");
+    logdir = std::getenv("LOG_DIR");
     if (!logdir) {
         // log in the current dir
         logfile = LOG_FILENAME;
