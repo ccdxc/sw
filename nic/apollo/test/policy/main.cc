@@ -71,8 +71,9 @@ protected:
 /// @{
 
 static inline void
-policy_seed_stepper_init(policy_seed_stepper_t *seed, uint32_t id, uint32_t stateless_rules,
-                         rule_dir_t dir, policy_type_t type, uint8_t af, std::string pfx)
+policy_seed_stepper_init(policy_seed_stepper_t *seed, uint32_t id,
+                         uint32_t stateless_rules, rule_dir_t dir,
+                         policy_type_t type, uint8_t af, std::string pfx)
 {
     SDK_ASSERT(stateless_rules < PDS_MAX_RULES_PER_SECURITY_POLICY);
     seed->id = id;
@@ -102,22 +103,20 @@ TEST_F(policy, policy_workflow_1) {
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(policy_util::many_create(&seed, num_policy) == sdk::SDK_RET_OK);
-    //ASSERT_TRUE(policy_util::many_delete(&seed, num_policy) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(policy_util::many_delete(&seed, num_policy) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed, num_policy) == sdk::SDK_RET_OK);
-    //ASSERT_TRUE(policy_util::many_read(&seed, num_policy,
-    //                                   sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(policy_util::many_read(&seed, num_policy,
+                                       sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create, delete and create max policies in the same batch
 /// Create and delete should be de-deduped by framework and subsequent create
 /// should result in successful creation
 /// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
-TEST_F(policy, DISABLED_policy_workflow_2) {
+TEST_F(policy, policy_workflow_2) {
     pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
-    uint32_t num_policy = 10;
-    uint32_t num_rules = PDS_MAX_RULES_PER_SECURITY_POLICY;
+    uint32_t num_policy = PDS_MAX_POLICY;
     uint32_t policy_id = 1;
 
     // setup
@@ -144,11 +143,10 @@ TEST_F(policy, DISABLED_policy_workflow_2) {
 /// The set1 policy should be de-duped and set2 and set3 should be programmed
 /// in the hardware
 /// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
-TEST_F(policy, DISABLED_policy_workflow_3) {
+TEST_F(policy, policy_workflow_3) {
     pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed1, seed2, seed3;
     uint32_t num_policy = 341;
-    uint32_t num_rules = PDS_MAX_RULES_PER_SECURITY_POLICY;
     uint32_t policy_id = 1;
 
     // setup
@@ -189,11 +187,10 @@ TEST_F(policy, DISABLED_policy_workflow_3) {
 /// The hardware should create and delete VPC correctly. Validate using reads
 /// at each batch end
 /// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
-TEST_F(policy, DISABLED_policy_workflow_4) {
+TEST_F(policy, policy_workflow_4) {
     pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
     uint32_t num_policy = PDS_MAX_POLICY;
-    uint32_t num_rules = PDS_MAX_RULES_PER_SECURITY_POLICY;
     uint32_t policy_id = 1;
 
     // setup
@@ -219,11 +216,10 @@ TEST_F(policy, DISABLED_policy_workflow_4) {
 
 /// \brief Create and delete mix and match of policies in two batches
 /// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
-TEST_F(policy, DISABLED_policy_workflow_5) {
+TEST_F(policy, policy_workflow_5) {
     pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed1, seed2, seed3;
     uint32_t num_policy = 341;
-    uint32_t num_rules = PDS_MAX_RULES_PER_SECURITY_POLICY;
     uint32_t policy_id = 1;
 
     // setup
@@ -266,11 +262,10 @@ TEST_F(policy, DISABLED_policy_workflow_5) {
 
 /// \brief Create maximum number of policies in two batches
 /// [ Create SetMax ] - [ Create SetMax ] - Read
-TEST_F(policy, DISABLED_policy_workflow_neg_1) {
+TEST_F(policy, policy_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
     uint32_t num_policy = PDS_MAX_POLICY;
-    uint32_t num_rules = PDS_MAX_RULES_PER_SECURITY_POLICY;
     uint32_t policy_id = 1;
 
     // setup
@@ -303,11 +298,10 @@ TEST_F(policy, DISABLED_policy_workflow_neg_1) {
 // @saratk - need to enable this after fixing the max policy value; search
 // for g_max_policy assignmnet at the top. If I use PDS_MAX_SUBNET, things
 // are crashing, so left it at 1024 for now.
-TEST_F(policy, DISABLED_policy_workflow_neg_2) {
+TEST_F(policy, policy_workflow_neg_2) {
     pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
     uint32_t num_policy = PDS_MAX_POLICY + 1;
-    uint32_t num_rules = PDS_MAX_RULES_PER_SECURITY_POLICY;
     uint32_t policy_id = 1;
 
     // setup
@@ -326,10 +320,9 @@ TEST_F(policy, DISABLED_policy_workflow_neg_2) {
 
 /// \brief Read of a non-existing policy should return entry not found.
 /// Read NonEx and Delete NonEx
-TEST_F(policy, DISABLED_policy_workflow_neg_3) {
+TEST_F(policy, policy_workflow_neg_3) {
     pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
-    uint32_t num_rules = PDS_MAX_RULES_PER_SECURITY_POLICY;
     uint32_t policy_id = 1;
 
     // setup
@@ -348,11 +341,10 @@ TEST_F(policy, DISABLED_policy_workflow_neg_3) {
 
 /// \brief Invalid batch shouldn't affect entries of previous batch
 /// [ Create Set1 ] - [Delete Set1, Set2 ] - Read
-TEST_F(policy, DISABLED_policy_workflow_neg_4) {
+TEST_F(policy, policy_workflow_neg_4) {
     pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed1, seed2;
     uint32_t num_policy = 512;
-    uint32_t num_rules = PDS_MAX_RULES_PER_SECURITY_POLICY;
     uint32_t policy_id = 1;
 
     // setup

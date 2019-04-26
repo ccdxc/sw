@@ -143,7 +143,7 @@ security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
  */
 sdk_ret_t
 security_policy_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    return sdk::SDK_RET_OK;
 }
 
 /**
@@ -188,7 +188,7 @@ security_policy_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 
     case api::API_OP_DELETE:
         /**< same as update but every entry written will have invalid bit set */
-        return SDK_RET_ERR;
+        //return SDK_RET_ERR;
         break;
 
     default:
