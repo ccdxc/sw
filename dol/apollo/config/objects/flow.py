@@ -79,11 +79,12 @@ class FlowMapObjectHelper:
             For local2remote, reject if route table has any of the following
             # VPC Peering enabled
             # Has default route
+            # Has Blackhole route
             # empty routes
         """
         #TODO: remove empty routes check once it is fixed in HAL
         if routetblobj.VPCPeeringEnabled or routetblobj.HasDefaultRoute or\
-           (0 == len(routetblobj.routes)):
+           (0 == len(routetblobj.routes)) or routetblobj.HasBlackHoleRoute:
            return False
         return True
 

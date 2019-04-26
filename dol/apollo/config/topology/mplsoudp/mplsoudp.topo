@@ -35,7 +35,7 @@ vpc:
       count : 2
       type  : tenant
       subnet:
-        - count     : 38              # should be same as total routetbl
+        - count     : 39              # should be same as total routetbl
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
@@ -329,6 +329,14 @@ vpc:
                    - '1234:5678:4321:8765:1111:3333::\96'
                    - '0::\0'
 
+             - type: specific # blackhole
+               routetype: blackhole
+               v4routes:
+                   - '10.10.0.0\16'
+                   - '11.11.0.0\16'
+               v6routes:
+                   - '1234:5678:4321:8765:1111::\80'
+                   - '1234:5678:4321:8765:1111:3333::\96'
       policy:
               - type : specific
                 policytype : default

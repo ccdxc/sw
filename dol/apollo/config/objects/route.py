@@ -31,17 +31,32 @@ class RouteObject(base.ConfigObjectBase):
         self.VPCId = parent.VPCId
         self.Label = 'NETWORKING'
         self.RouteType = routetype # used for lpm route cases
-        self.HasDefaultRoute = True if 'default' in routetype else False
         self.PeerVPCId = vpcpeerid
-        self.VPCPeeringEnabled = True if 'vpc_peer' in routetype else False
         ##########################################################################
+        self._derive_oper_info()
         self.Show()
         return
 
+    def _derive_oper_info(self):
+        # operational info useful for testspec
+        routetype = self.RouteType
+        self.HasDefaultRoute = True if 'default' in routetype else False
+        self.VPCPeeringEnabled = True if 'vpc_peer' in routetype else False
+        self.HasBlackHoleRoute = True if 'blackhole' in routetype else False
+        if self.HasBlackHoleRoute:
+            self.NextHopType = "blackhole"
+        elif self.VPCPeeringEnabled:
+            self.NextHopType = "vpcpeer"
+        else:
+            self.NextHopType = "tep"
+        return
+
     def __repr__(self):
-        return "RouteTblID:%d|VPCId:%d|NumRoutes:%d|HasDefaultRoute:%d|AddrFamily:%s|RouteType:%s|NextHop:%s|VPCPeering:%s ID:%d" %\
-               (self.RouteTblId, self.VPCId, len(self.routes), self.HasDefaultRoute,
-                self.AddrFamily, self.RouteType, str(self.TunIPAddr), self.VPCPeeringEnabled, self.PeerVPCId)
+        return "RouteTblID:%d|VPCId:%d|AddrFamily:%s|NumRoutes:%d|RouteType:%s|"\
+               "HasDefaultRoute:%s|HasBlackHoleRoute:%s|VPCPeering:%s ID:%d|NextHop:%s"\
+               %(self.RouteTblId, self.VPCId, self.AddrFamily, len(self.routes),\
+                 self.RouteType, self.HasDefaultRoute, self.HasBlackHoleRoute,
+                 self.VPCPeeringEnabled, self.PeerVPCId, str(self.TunIPAddr))
 
     def GetGrpcCreateMessage(self):
         grpcmsg = route_pb2.RouteTableRequest()
@@ -51,9 +66,9 @@ class RouteObject(base.ConfigObjectBase):
         for route in self.routes:
             rtspec = spec.Routes.add()
             utils.GetRpcIPPrefix(route, rtspec.Prefix)
-            if self.VPCPeeringEnabled:
+            if self.NextHopType == "vpcpeer":
                 rtspec.VPCId = self.PeerVPCId
-            else:
+            elif self.NextHopType == "tep":
                 rtspec.NextHop.Af = types_pb2.IP_AF_INET
                 rtspec.NextHop.V4Addr = int(self.TunIPAddr)
         return grpcmsg
