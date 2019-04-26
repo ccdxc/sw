@@ -380,7 +380,7 @@ static inline void ionic_lat_init(struct ionic_latencies *lats)
 	memset(lats, 0, sizeof(*lats));
 
 	/* There are eight traces in the body of the measured loop.
-	 * Estimate the overhead more conservativly by dividing by 14.
+	 * Estimate the overhead more conservatively by dividing by 14.
 	 */
 	lats->overhead = (end - start) / count / 14;
 	lats->stamp = end;

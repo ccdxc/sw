@@ -1,5 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
 /*
- * Copyright (c) 2018 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -1007,7 +1008,7 @@ static int ionic_admin_busy_wait(struct ionic_ibdev *dev,
 			return -ETIMEDOUT;
 		}
 
-		DELAY(1000 * IONIC_ADMIN_BUSY_RETRY_MS);
+		mdelay(IONIC_ADMIN_BUSY_RETRY_MS);
 
 		spin_lock_irqsave(&dev->admin_lock, irqflags);
 		ionic_admin_poll_locked(dev);
@@ -1351,15 +1352,6 @@ static int ionic_query_device(struct ib_device *ibdev,
 	return 0;
 }
 
-static int ib_get_eth_speed(struct ib_device *ibdev, u8 port,
-			    u8 *speed, u8 *width)
-{
-	*width = IB_WIDTH_4X;
-	*speed = IB_SPEED_EDR;
-
-	return 0;
-}
-
 static int ionic_query_port(struct ib_device *ibdev, u8 port,
 			    struct ib_port_attr *attr)
 {
@@ -1693,16 +1685,6 @@ static int ionic_dealloc_pd(struct ib_pd *ibpd)
 	return 0;
 }
 
-static void ether_addr_copy(void *dst, const void *src)
-{
-	u16 *dst16 = dst;
-	const u16 *src16 = src;
-
-	dst16[0] = src16[0];
-	dst16[1] = src16[1];
-	dst16[2] = src16[2];
-}
-
 static int ionic_build_hdr(struct ionic_ibdev *dev,
 			   struct ib_ud_header *hdr,
 			   const struct rdma_ah_attr *attr)
@@ -1711,8 +1693,8 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 	struct ib_gid_attr sgid_attr;
 	union ib_gid sgid;
 	u8 smac[ETH_ALEN];
-	u16 vlan;
 	enum rdma_network_type net;
+	u16 vlan;
 	int rc;
 
 	if (attr->ah_flags != IB_AH_GRH)
@@ -2492,9 +2474,9 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 		dma_sync_single_for_cpu(dev->hwdev, mr->buf.tbl_dma,
 					mr->buf.tbl_size, DMA_TO_DEVICE);
 
-    if (sg_offset)
-        page_off = *sg_offset;
-    
+	if (sg_offset)
+		page_off = *sg_offset;
+
 	dev_dbg(&dev->ibdev.dev, "sg %p nent %d\n", sg, sg_nents);
 	rc = ib_sg_to_pages(ibmr, sg, sg_nents, sg_offset, ionic_map_mr_page);
 
@@ -5675,7 +5657,7 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 
 	ionic_pgtbl_unbuf(dev, &rq_buf);
 
-	if (qp->ibsrq.srq_type == IB_SRQT_XRC) {
+	if (ib_srq_has_cq(qp->ibsrq.srq_type)) {
 		qp->ibsrq.ext.xrc.srq_num = qp->qpid;
 
 		rc = xa_err(xa_store(&dev->qp_tbl, qp->qpid, qp, GFP_KERNEL));
@@ -5736,7 +5718,7 @@ static int ionic_destroy_srq(struct ib_srq *ibsrq)
 
 	ionic_dbgfs_rm_qp(qp);
 
-	if (qp->ibsrq.srq_type == IB_SRQT_XRC) {
+	if (ib_srq_has_cq(qp->ibsrq.srq_type)) {
 		xa_erase(&dev->qp_tbl, qp->qpid);
 
 		cq = to_ionic_cq(qp->ibsrq.ext.xrc.cq);

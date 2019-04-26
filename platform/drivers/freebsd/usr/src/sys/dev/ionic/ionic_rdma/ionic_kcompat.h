@@ -1,5 +1,6 @@
+/* SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB */
 /*
- * Copyright (c) 2018 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -34,6 +35,8 @@
 #define IONIC_KCOMPAT
 
 #include <linux/sysfs.h>
+#include <linux/delay.h>
+#include <linux/etherdevice.h>
 #include <rdma/ib_verbs.h>
 
 #define rdma_ah_attr ib_ah_attr
@@ -213,6 +216,34 @@ static inline void xa_destroy(struct xarray *xa)
 	} while (0)
 
 #endif /* HAVE_REAL_SRCU */
+
+static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
+{
+	return (srq_type == IB_SRQT_XRC);
+}
+
+static inline int ib_get_eth_speed(struct ib_device *ibdev, u8 port,
+				   u8 *speed, u8 *width)
+{
+	*width = IB_WIDTH_4X;
+	*speed = IB_SPEED_EDR;
+
+	return 0;
+}
+
+static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
+{
+	if (mtu >= 4096)
+		return IB_MTU_4096;
+	else if (mtu >= 2048)
+		return IB_MTU_2048;
+	else if (mtu >= 1024)
+		return IB_MTU_1024;
+	else if (mtu >= 512)
+		return IB_MTU_512;
+	else
+		return IB_MTU_256;
+}
 
 #define HAVE_GET_DEV_FW_STR_LEN
 

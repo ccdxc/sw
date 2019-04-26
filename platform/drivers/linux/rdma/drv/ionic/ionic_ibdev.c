@@ -2537,10 +2537,10 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 		dma_sync_single_for_cpu(dev->hwdev, mr->buf.tbl_dma,
 					mr->buf.tbl_size, DMA_TO_DEVICE);
 
-    if (sg_offset)
-        page_off = *sg_offset;
+	if (sg_offset)
+		page_off = *sg_offset;
 
-    dev_dbg(&dev->ibdev.dev, "sg %p nent %d\n", sg, sg_nents);
+	dev_dbg(&dev->ibdev.dev, "sg %p nent %d\n", sg, sg_nents);
 	rc = ib_sg_to_pages(ibmr, sg, sg_nents, sg_offset, ionic_map_mr_page);
 
 	mr->buf.page_size_log2 = order_base_2(ibmr->page_size);
@@ -6350,7 +6350,7 @@ static struct ionic_cq *ionic_create_rdma_admincq(struct ionic_ibdev *dev,
 		goto err_cmd;
 
 	cq->ibcq.device = &dev->ibdev;
-	cq->ibcq.uobject = NULL;                   
+	cq->ibcq.uobject = NULL;
 	cq->ibcq.comp_handler = ionic_rdma_admincq_comp;
 	cq->ibcq.event_handler = ionic_rdma_admincq_event;
 	cq->ibcq.cq_context = NULL;

@@ -1,5 +1,6 @@
+/* SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB */
 /*
- * Copyright (c) 2018 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -558,19 +559,6 @@ static inline bool ionic_ibop_is_local(enum ib_wr_opcode op)
 
 void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
 void ionic_admin_cancel(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
-
-static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
-{
-	if (mtu >= 4096)
-		return IB_MTU_4096;
-	if (mtu >= 2048)
-		return IB_MTU_2048;
-	if (mtu >= 1024)
-		return IB_MTU_1024;
-	if (mtu >= 512)
-		return IB_MTU_512;
-	return IB_MTU_256;
-}
 
 int ionic_dcqcn_init(struct ionic_ibdev *dev, int prof_count);
 void ionic_dcqcn_destroy(struct ionic_ibdev *dev);
