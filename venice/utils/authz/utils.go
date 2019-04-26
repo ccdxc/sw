@@ -1,16 +1,28 @@
 package authz
 
 import (
+	"encoding/base64"
+	"errors"
 	"fmt"
 	"reflect"
 
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/staging"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
+)
+
+const (
+	// UserTenantKey stores user tenant
+	UserTenantKey = "pensando-venice-user-tenant-key"
+	// UsernameKey stores username
+	UsernameKey = "pensando-venice-user-key"
+	// PermsKey with -bin suffix tells grpc that value is binary. grpc auto base64 encodes and decodes it TODO see if we remove bin and manually base64 encode/decode
+	PermsKey = "pensando-venice-perms-key-bin"
 )
 
 // AuthorizedOperations returns authorized operations for an user
@@ -233,4 +245,81 @@ func PrintOperations(operations []Operation) string {
 		}
 	}
 	return message
+}
+
+// PopulateMapWithUserPerms puts user and its permissions in the provided map. Pass in nil perms for only populating user info
+func PopulateMapWithUserPerms(data map[string][]string, user *auth.User, perms []auth.Permission, encodePerms bool) error {
+	// validate user obj
+	if user == nil {
+		return errors.New("no user specified")
+	}
+	if user.Tenant == "" {
+		return errors.New("tenant not populated in user")
+	}
+	if user.Name == "" {
+		return errors.New("username not populated in user object")
+	}
+	// set user info
+	data[UserTenantKey] = []string{user.Tenant}
+	data[UsernameKey] = []string{user.Name}
+	// set perms, reset existing value
+	data[PermsKey] = []string{}
+	for _, perm := range perms {
+		permbytes, err := perm.Marshal()
+		if err != nil {
+			return err
+		}
+		var permstr string
+		if encodePerms {
+			permstr = base64.StdEncoding.EncodeToString(permbytes)
+		} else {
+			permstr = string(permbytes)
+		}
+		data[PermsKey] = append(data[PermsKey], permstr)
+	}
+	return nil
+}
+
+// RemoveUserPerms removes user and its permissions from the given map
+func RemoveUserPerms(data map[string][]string) {
+	delete(data, UserTenantKey)
+	delete(data, UsernameKey)
+	delete(data, PermsKey)
+}
+
+// UserMetaFromMap returns user meta info
+func UserMetaFromMap(data map[string][]string) (*api.ObjectMeta, bool) {
+	names := data[UsernameKey]
+	tenants := data[UserTenantKey]
+	if len(names) == 0 || len(tenants) == 0 {
+		return nil, false
+	}
+	return &api.ObjectMeta{Name: names[0], Tenant: tenants[0]}, true
+}
+
+// PermsFromMap returns user permissions
+func PermsFromMap(data map[string][]string, decodePerms bool) ([]auth.Permission, bool, error) {
+	vals, ok := data[PermsKey]
+	if !ok {
+		return nil, ok, nil
+	}
+	var perms []auth.Permission
+	for _, val := range vals {
+		var data []byte
+		var err error
+		if decodePerms {
+			data, err = base64.StdEncoding.DecodeString(val)
+			if err != nil {
+				return nil, false, err
+			}
+		} else {
+			data = []byte(val)
+		}
+		perm := &auth.Permission{}
+		if err := perm.Unmarshal(data); err != nil {
+			return nil, false, err
+		}
+		perms = append(perms, *perm)
+	}
+	return perms, true, nil
 }

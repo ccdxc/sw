@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/log"
 
+	. "github.com/pensando/sw/venice/utils/authz/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -211,7 +212,7 @@ func TestTelemetryOperationsHook(t *testing.T) {
 		nctx, out, err := r.operations(nctx, test.in)
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		operations, _ := apigwpkg.OperationsFromContext(nctx)
-		Assert(t, areOperationsEqual(test.expectedOperations, operations),
+		Assert(t, AreOperationsEqual(test.expectedOperations, operations),
 			fmt.Sprintf("unexpected operations, [%s] test failed, expected opertaions:%+v, got:%+v", test.name, authz.PrintOperations(test.expectedOperations),
 				authz.PrintOperations(operations)))
 		Assert(t, reflect.DeepEqual(test.out, out),

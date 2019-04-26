@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"sort"
 	"testing"
 
 	"github.com/pensando/sw/api"
@@ -24,6 +23,8 @@ import (
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
 	"github.com/pensando/sw/venice/utils/log"
+
+	. "github.com/pensando/sw/venice/utils/authz/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -45,24 +46,6 @@ var (
 
 	testNetworkAdminRoleBinding = login.NewRoleBinding("NetworkAdminRoleBinding", "testTenant", "NetworkAdmin", "testuser", "")
 )
-
-func sortOperations(operations []authz.Operation) {
-	sort.Slice(operations, func(i, j int) bool {
-		if operations[i] == nil {
-			return true
-		}
-		if operations[j] == nil {
-			return false
-		}
-		return fmt.Sprintf("%s%s", operations[i].GetResource().GetName(), operations[i].GetAction()) < fmt.Sprintf("%s%s", operations[j].GetResource().GetName(), operations[j].GetAction())
-	})
-}
-
-func areOperationsEqual(expected []authz.Operation, returned []authz.Operation) bool {
-	sortOperations(expected)
-	sortOperations(returned)
-	return reflect.DeepEqual(expected, returned)
-}
 
 func TestPrivilegeEscalationCheck(t *testing.T) {
 	tests := []struct {
@@ -141,7 +124,7 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 		nctx, out, err := r.privilegeEscalationCheck(context.TODO(), test.in)
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		operations, _ := apigwpkg.OperationsFromContext(nctx)
-		Assert(t, areOperationsEqual(test.expectedOperations, operations),
+		Assert(t, AreOperationsEqual(test.expectedOperations, operations),
 			fmt.Sprintf("unexpected operations, [%s] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out),
 			fmt.Sprintf("expected returned object [%v], got [%v], [%s] test failed", test.out, out, test.name))
@@ -934,7 +917,7 @@ func TestAddOwner(t *testing.T) {
 		nctx, out, err := r.addOwner(ctx, test.in)
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		operations, _ := apigwpkg.OperationsFromContext(nctx)
-		Assert(t, areOperationsEqual(test.expectedOperations, operations),
+		Assert(t, AreOperationsEqual(test.expectedOperations, operations),
 			fmt.Sprintf("unexpected operations, [%s] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out),
 			fmt.Sprintf("expected returned object [%v], got [%v], [%s] test failed", test.out, out, test.name))

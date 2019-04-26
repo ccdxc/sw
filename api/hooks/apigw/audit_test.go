@@ -17,6 +17,8 @@ import (
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/log"
+
+	. "github.com/pensando/sw/venice/utils/authz/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -100,7 +102,7 @@ func TestAuditOperationsHook(t *testing.T) {
 		nctx, out, err := r.operations(nctx, test.in)
 		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
 		operations, _ := apigwpkg.OperationsFromContext(nctx)
-		Assert(t, areOperationsEqual(test.expectedOperations, operations),
+		Assert(t, AreOperationsEqual(test.expectedOperations, operations),
 			fmt.Sprintf("unexpected operations, [%s] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out),
 			fmt.Sprintf("expected returned object [%v], got [%v], [%s] test failed", test.out, out, test.name))

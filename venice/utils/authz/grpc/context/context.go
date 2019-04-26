@@ -2,12 +2,12 @@ package context
 
 import (
 	"context"
-	"errors"
 
 	"google.golang.org/grpc/metadata"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/venice/utils/authz"
 )
 
 const (
@@ -66,20 +66,7 @@ func PermsFromIncomingContext(ctx context.Context) ([]auth.Permission, bool, err
 }
 
 func permsFromMD(md metadata.MD) ([]auth.Permission, bool, error) {
-	vals, ok := md[permsKey]
-	if !ok {
-		return nil, ok, nil
-	}
-	var perms []auth.Permission
-	for _, val := range vals {
-		data := []byte(val)
-		perm := &auth.Permission{}
-		if err := perm.Unmarshal(data); err != nil {
-			return nil, false, err
-		}
-		perms = append(perms, *perm)
-	}
-	return perms, true, nil
+	return authz.PermsFromMap(md, false)
 }
 
 // UserMetaFromIncomingContext return user meta info from grpc metadata in incoming context
@@ -88,12 +75,7 @@ func UserMetaFromIncomingContext(ctx context.Context) (*api.ObjectMeta, bool) {
 	if !ok || md == nil {
 		return nil, false
 	}
-	names := md[usernameKey]
-	tenants := md[userTenantKey]
-	if len(names) == 0 || len(tenants) == 0 {
-		return nil, false
-	}
-	return &api.ObjectMeta{Name: names[0], Tenant: tenants[0]}, true
+	return authz.UserMetaFromMap(md)
 }
 
 // UserMetaFromOutgoingContext return user meta info from grpc metadata in outgoing context
@@ -102,34 +84,9 @@ func UserMetaFromOutgoingContext(ctx context.Context) (*api.ObjectMeta, bool) {
 	if !ok || md == nil {
 		return nil, false
 	}
-	names := md[usernameKey]
-	tenants := md[userTenantKey]
-	if len(names) == 0 || len(tenants) == 0 {
-		return nil, false
-	}
-	return &api.ObjectMeta{Name: names[0], Tenant: tenants[0]}, true
+	return authz.UserMetaFromMap(md)
 }
 
 func populateMetadataWithUserPerms(md metadata.MD, user *auth.User, perms []auth.Permission) error {
-	// validate user obj
-	if user == nil {
-		return errors.New("no user specified")
-	}
-	if user.Tenant == "" {
-		return errors.New("tenant not populated in user")
-	}
-	if user.Name == "" {
-		return errors.New("username not populated in user object")
-	}
-	// set user info in md
-	md[userTenantKey] = []string{user.Tenant}
-	md[usernameKey] = []string{user.Name}
-	for _, perm := range perms {
-		data, err := perm.Marshal()
-		if err != nil {
-			return err
-		}
-		md[permsKey] = append(md[permsKey], string(data))
-	}
-	return nil
+	return authz.PopulateMapWithUserPerms(md, user, perms, false)
 }

@@ -45,6 +45,7 @@ import (
 	"github.com/pensando/sw/venice/utils/authn/cert"
 	authnmgr "github.com/pensando/sw/venice/utils/authn/manager"
 	"github.com/pensando/sw/venice/utils/authz"
+	authzhttp "github.com/pensando/sw/venice/utils/authz/http"
 	authzmgr "github.com/pensando/sw/venice/utils/authz/manager"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
@@ -877,6 +878,10 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	nctx := r.Context()
 
 	p.apiGw.logger.Infof("Handling HTTP proxy request")
+
+	// make sure end user is not able to set user and permission info in request headers
+	authzhttp.RemoveUserPermsFromRequest(r)
+
 	nctx, err = gwruntime.AnnotateContext(nctx, r)
 	if err != nil {
 		p.apiGw.logger.ErrorLog("method", "ServeHTTP", "msg", "annotating context failed", "error", err)

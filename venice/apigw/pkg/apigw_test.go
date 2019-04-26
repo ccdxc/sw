@@ -813,6 +813,12 @@ func TestHandleProxyRequest(t *testing.T) {
 	mock.retObj = &input
 
 	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
+
+	// set user and perm headers to check if they are deleted if set
+	req.Header[authz.UsernameKey] = []string{"testuser"}
+	req.Header[authz.UserTenantKey] = []string{globals.DefaultTenant}
+	req.Header[authz.PermsKey] = []string{"xyz"}
+
 	w := httptest.NewRecorder()
 	_ = MustGetAPIGateway()
 
@@ -876,6 +882,19 @@ func TestHandleProxyRequest(t *testing.T) {
 	tc = prof.PostCallHooks()
 	if len(tc) != 1 || mock.postCallCnt != len(tc) {
 		t.Errorf("expecting 1 pre call hooks got %d/%d", len(tc), mock.postCallCnt)
+	}
+	// check if user and perm info headers are deleted
+	_, ok := req.Header[authz.UsernameKey]
+	if ok {
+		t.Errorf("expecting user key to be not present")
+	}
+	_, ok = req.Header[authz.UserTenantKey]
+	if ok {
+		t.Errorf("expecting user tenant key to be not present")
+	}
+	_, ok = req.Header[authz.PermsKey]
+	if ok {
+		t.Errorf("expecting user perms key to be not present")
 	}
 }
 
