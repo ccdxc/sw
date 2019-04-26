@@ -69,7 +69,7 @@ mapping_impl_state::mapping_impl_state(pds_state *state) {
     nat_tbl_->reserve_index(NAT_TX_TBL_RSVD_ENTRY_IDX);
 
     // create a slab for mapping impl entries
-    mapping_impl_slab_ = slab::factory("mapping_impl", PDS_SLAB_ID_MAPPING_IMPL,
+    mapping_impl_slab_ = slab::factory("mapping-impl", PDS_SLAB_ID_MAPPING_IMPL,
                                        sizeof(mapping_impl), 8192, true, true);
     SDK_ASSERT(mapping_impl_slab_!= NULL);
 }

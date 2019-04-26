@@ -29,10 +29,7 @@ mirror_impl *
 mirror_impl::factory(pds_mirror_session_spec_t *spec) {
     mirror_impl *impl;
 
-    // TODO: move to slab later
-    // impl = mirror_impl_db()->alloc();
-    impl = (mirror_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_MIRROR_IMPL,
-                                     sizeof(mirror_impl));
+    impl = mirror_impl_db()->alloc();
     new (impl) mirror_impl();
     return impl;
 }
@@ -40,8 +37,7 @@ mirror_impl::factory(pds_mirror_session_spec_t *spec) {
 void
 mirror_impl::soft_delete(mirror_impl *impl) {
     impl->~mirror_impl();
-    //mirror_impl_db()->free(impl);
-    SDK_FREE(SDK_MEM_ALLOC_PDS_MIRROR_IMPL, impl);
+    mirror_impl_db()->free(impl);
 }
 
 mirror_impl *
