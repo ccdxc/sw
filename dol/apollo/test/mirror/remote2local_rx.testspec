@@ -1,4 +1,4 @@
-# Test Spec
+#Test Spec for Rx Mirror session in remote2local scenario
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 2
