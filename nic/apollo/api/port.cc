@@ -232,7 +232,8 @@ create_ports (void)
 
     num_phy_ports = g_pds_state.catalogue()->num_fp_ports();
     for (uint32_t phy_port = 1; phy_port <= num_phy_ports; phy_port++) {
-        ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(), phy_port, IF_DEFAULT_CHILD_PORT);
+        ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(),
+                              phy_port, IF_DEFAULT_CHILD_PORT);
         memset(&port_args, 0, sizeof(port_args));
         populate_port_info(ifindex, phy_port, &port_args);
         create_port(ifindex, &port_args);
@@ -259,7 +260,7 @@ if_walk_port_get_cb (void *entry, void *ctxt)
     port_info.stats_data = stats_data;
     ret = sdk::linkmgr::port_get(intf->if_info(), &port_info);
     if (ret != sdk::SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to get port %u info, err %u", intf->key(), ret);
+        PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", intf->key(), ret);
         return false;
     }
     port_info.port_num = intf->key();
@@ -267,7 +268,8 @@ if_walk_port_get_cb (void *entry, void *ctxt)
     if (phy_port != -1) {
         ret = sdk::platform::xcvr_get(phy_port - 1, &port_info.xcvr_event_info);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to get xcvr for port %u, err %u", phy_port, ret);
+            PDS_TRACE_ERR("Failed to get xcvr for port %u, err %u",
+                          phy_port, ret);
         }
     }
     cb_ctxt->port_get_cb(&port_info, cb_ctxt->ctxt);
@@ -292,10 +294,9 @@ port_get (uint32_t ifindex, port_get_cb_t port_get_cb, void *ctxt)
     if (ifindex == 0) {
         if_db()->walk(IF_TYPE_ETH, if_walk_port_get_cb, &cb_ctxt);
     } else {
-        ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(), ifindex, IF_DEFAULT_CHILD_PORT);
         intf = if_db()->find(&ifindex);
         if (intf == NULL)  {
-            PDS_TRACE_ERR("Port %u not created", ifindex);
+            PDS_TRACE_ERR("Port 0x%x not found", ifindex);
             return SDK_RET_INVALID_OP;
         }
         if_walk_port_get_cb(intf, &cb_ctxt);

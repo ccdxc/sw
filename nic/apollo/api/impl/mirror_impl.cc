@@ -209,7 +209,32 @@ mirror_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 sdk_ret_t
 mirror_impl::read_hw(pds_mirror_session_key_t *key,
                      pds_mirror_session_info_t *info) {
-    return sdk::SDK_RET_INVALID_OP;
+    p4pd_error_t p4pd_ret;
+    mirror_actiondata_t mirror_data;
+
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_MIRROR, key->id-1, NULL, NULL,
+                                      &mirror_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read mirror session %u at idx %u", key->id);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+    info->spec.key.id = key->id;
+    switch (mirror_data.action_id) {
+    case MIRROR_RSPAN_ID:
+        info->spec.type = PDS_MIRROR_SESSION_TYPE_RSPAN;
+        info->spec.snap_len = mirror_data.rspan_action.truncate_len;
+        //info->spec.rspan_spec.interface = ETH_IFINDEX(mirror_data.tm_oport);
+        info->spec.rspan_spec.encap.type = PDS_ENCAP_TYPE_DOT1Q;
+        info->spec.rspan_spec.encap.val.vlan_tag =
+            mirror_data.rspan_action.ctag;
+        break;
+
+    case MIRROR_ERSPAN_ID:
+    default:
+        PDS_TRACE_ERR("mirror read operation not supported");
+        return sdk::SDK_RET_INVALID_OP;
+    }
+    return SDK_RET_OK;
 }
 
 /// \@}    // end of PDS_MIRROR_IMPL
