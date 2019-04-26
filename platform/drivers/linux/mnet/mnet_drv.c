@@ -122,7 +122,6 @@ static long mnet_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 
 	case MNET_CREATE_DEV:
 
-		dev_err(mnet_device, "Create Dev called\n");
 		list_for_each_entry(mnet, &mnet_list, node) {
 			/* find the first free mnet instance to create mnic device */
 			if (!mnet->busy) {
