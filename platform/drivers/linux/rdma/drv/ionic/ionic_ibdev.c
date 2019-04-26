@@ -1300,8 +1300,8 @@ static int ionic_query_device(struct ib_device *ibdev,
 	attr->max_res_rd_atom = IONIC_MAX_RD_ATOM;
 	attr->max_qp_init_rd_atom = IONIC_MAX_RD_ATOM;
 	attr->max_ee_init_rd_atom = 0;
-	attr->atomic_cap = IB_ATOMIC_HCA; /* XXX or global? */
-	attr->masked_atomic_cap = IB_ATOMIC_HCA; /* XXX or global? */
+	attr->atomic_cap = IB_ATOMIC_GLOB;
+	attr->masked_atomic_cap = IB_ATOMIC_GLOB;
 	attr->max_mw = dev->inuse_mrid.inuse_size;
 	attr->max_mcast_grp = 0;
 	attr->max_mcast_qp_attach = 0;
