@@ -16,6 +16,8 @@ IPV6_DEFAULT_ROUTE = ipaddress.ip_network("0::/0")
 
 IPPROTO_TO_NAME_TBL = {num:name[8:] for name,num in vars(socket).items() if name.startswith("IPPROTO")}
 
+INTF2PORT = { 0x11010001: 1, 0x11020001: 2}
+
 class rrobiniter:
     def __init__(self, objs):
         assert len(objs) != 0
@@ -139,3 +141,6 @@ def GetRpcEncap(mplsslot, vxlanid, encap):
          encap.value.MPLSTag  = mplsslot
     else:
          encap.value.Vnid  = vxlanid
+
+def GetPortIDfromInterface(interfaceid):
+    return INTF2PORT[interfaceid]

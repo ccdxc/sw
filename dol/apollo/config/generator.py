@@ -16,6 +16,7 @@ import apollo.config.agent.api as agentapi
 import apollo.config.objects.batch as batch
 import apollo.config.objects.device as device
 import apollo.config.objects.vpc as vpc
+import apollo.config.objects.mirror as mirror
 
 from infra.common.logging import logger as logger
 from infra.asic.model import ModelConnector
@@ -29,9 +30,12 @@ def __generate(topospec):
     # Generate Device Configuration
     device.client.GenerateObjects(topospec)
 
+    # Generate Mirror configuration
+    mirror.client.GenerateObjects(topospec)
+
     # Generate VPC configuration
     vpc.client.GenerateObjects(topospec)
-
+    
     return
 
 def __create():
@@ -40,6 +44,9 @@ def __create():
 
     # Create Switch Object
     device.client.CreateObjects()
+
+    # Create Mirror session objects
+    mirror.client.CreateObjects()
 
     # Create VPC Objects
     vpc.client.CreateObjects()

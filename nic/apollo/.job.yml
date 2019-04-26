@@ -53,6 +53,15 @@ targets:
     build-dependencies:
     - build-apollo-x86
 
+  apollo/dol/mirror:
+    commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/mirror"]
+    owners: ["email:vgunta@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-apollo-x86
+
   apollo/scale_test_mock:
     commands: ["make", "PIPELINE=apollo", "jobd/apollo/scale_test_mock"]
     owners: ["email:saratk@pensando.io", "email:vijasrin@pensando.io" ]

@@ -80,10 +80,14 @@ vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t    *spec = &obj_ctxt->api_params->vnic_spec;
 
     PDS_TRACE_DEBUG("Programming vnic %u, vpc %u, subnet %u, mac %s, "
-                    "vnic encap %s, fabric encap %s", key_.id, spec->vpc.id,
+                    "vnic encap %s, fabric encap %s, "
+                    "rxmirror bitmap %x, tx mirror bitmap %x",
+                    key_.id, spec->vpc.id,
                     spec->subnet.id, macaddr2str(spec->mac_addr),
                     pdsencap2str(spec->vnic_encap),
-                    pdsencap2str(spec->fabric_encap));
+                    pdsencap2str(spec->fabric_encap),
+                    spec->rx_mirror_session_bmap,
+                    spec->tx_mirror_session_bmap);
     return impl_->program_hw(this, obj_ctxt);
 }
 

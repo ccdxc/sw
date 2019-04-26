@@ -14,7 +14,7 @@ import vnic_pb2_grpc as vnic_pb2_grpc
 import mapping_pb2_grpc as mapping_pb2_grpc
 import route_pb2_grpc as route_pb2_grpc
 import policy_pb2_grpc as policy_pb2_grpc
-
+import mirror_pb2_grpc as mirror_pb2_grpc
 import infra.common.defs as defs
 
 from infra.common.glopts  import GlobalOptions
@@ -44,7 +44,8 @@ class ObjectTypes(enum.IntEnum):
     MAPPING = 7
     ROUTE = 8
     POLICY = 9
-    MAX = 10
+    MIRROR = 10
+    MAX = 11
 
 class ClientStub:
     def __init__(self, stubclass, channel, rpc_prefix):
@@ -133,6 +134,8 @@ class ApolloAgentClient:
                                                       self.__channel, 'RouteTable')
         self.__stubs[ObjectTypes.POLICY] = ClientStub(policy_pb2_grpc.SecurityPolicySvcStub,
                                                       self.__channel, 'SecurityPolicy')
+        self.__stubs[ObjectTypes.MIRROR] = ClientStub(mirror_pb2_grpc.MirrorSvcStub,
+                                                      self.__channel, 'MirrorSession')
         return
 
     def Create(self, objtype, objs):
