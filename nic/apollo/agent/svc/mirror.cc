@@ -21,7 +21,7 @@ mirror_session_api_to_proto_spec (pds::MirrorSessionSpec *proto_spec,
             pds::RSpanSpec *proto_rspan = proto_spec->mutable_rspanspec();
             pds_encap_to_proto_encap(proto_rspan->mutable_encap(),
                                      &api_spec->rspan_spec.encap);
-            proto_rspan->set_frontpanelportid(api_spec->rspan_spec.interface);
+            proto_rspan->set_interfaceid(api_spec->rspan_spec.interface);
             proto_spec->set_allocated_rspanspec(proto_rspan);
         }
         break;
@@ -89,8 +89,19 @@ mirror_session_proto_to_api_spec (pds_mirror_session_spec_t *api_spec,
         api_spec->type = PDS_MIRROR_SESSION_TYPE_RSPAN;
         api_spec->rspan_spec.encap =
             proto_encap_to_pds_encap(proto_spec.rspanspec().encap());
+        if (api_spec->rspan_spec.encap.type != PDS_ENCAP_TYPE_DOT1Q) {
+            PDS_TRACE_ERR("Invalid encap type {} in RSPAN mirror session {} "
+                          "spec, only PDS_ENCAP_TYPE_DOT1Q encap type is valid",
+                          api_spec->rspan_spec.encap.type, api_spec->key.id);
+            return SDK_RET_INVALID_ARG;
+        }
+        if (api_spec->rspan_spec.encap.val.vlan_tag == 0) {
+            PDS_TRACE_ERR("Invalid vlan tag 0 in RSPAN mirror session {} spec",
+                          api_spec->key.id);
+            return SDK_RET_INVALID_ARG;
+        }
         api_spec->rspan_spec.interface =
-            proto_spec.rspanspec().frontpanelportid();
+            proto_spec.rspanspec().interfaceid();
     } else if (proto_spec.has_erspanspec()) {
         if (!proto_spec.erspanspec().has_dstip() ||
             !proto_spec.erspanspec().has_srcip()) {

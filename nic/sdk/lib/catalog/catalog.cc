@@ -976,5 +976,20 @@ catalog::ifindex_to_tm_port(uint32_t ifindex)
     return catalog::logical_port_to_tm_port(logical_port);
 }
 
+uint32_t
+catalog::tm_port_to_ifindex(uint32_t tm_port) {
+    uint32_t ifindex = 0xFFFFFFFF;
+
+    // logical ports are 1 based
+    for (uint32_t logical_port = 1; logical_port < num_logical_ports();
+                                                    logical_port++) {
+        if (logical_port_to_tm_port(logical_port) == tm_port) {
+            ifindex = logical_port_to_ifindex(logical_port);
+            break;
+        }
+    }
+    return ifindex;
+}
+
 }    // namespace lib
 }    // namespace sdk

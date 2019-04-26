@@ -426,7 +426,7 @@ populate_mirror_session_request (MirrorSessionRequest *req,
     spec->set_id(ms->key.id);
     spec->set_snaplen(ms->snap_len);
     if (ms->type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
-        spec->mutable_rspanspec()->set_frontpanelportid(ms->rspan_spec.interface);
+        spec->mutable_rspanspec()->set_interfaceid(ms->rspan_spec.interface);
         pds_encap_to_proto_encap(spec->mutable_rspanspec()->mutable_encap(),
                                  &ms->rspan_spec.encap);
     } else {

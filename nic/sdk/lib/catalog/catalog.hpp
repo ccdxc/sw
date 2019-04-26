@@ -196,6 +196,9 @@ public:
     uint32_t startup_vdd (void) const { return catalog_db_.voltages.startup_vdd; }
     uint32_t startup_arm (void) const { return catalog_db_.voltages.startup_arm; }
 
+    // lookups based on tm_port
+    uint32_t tm_port_to_ifindex(uint32_t tm_port);
+
     // lookups based on ifindex
     uint32_t ifindex_to_tm_port(uint32_t ifindex);
 

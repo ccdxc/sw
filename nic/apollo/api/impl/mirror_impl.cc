@@ -223,7 +223,8 @@ mirror_impl::read_hw(pds_mirror_session_key_t *key,
     case MIRROR_RSPAN_ID:
         info->spec.type = PDS_MIRROR_SESSION_TYPE_RSPAN;
         info->spec.snap_len = mirror_data.rspan_action.truncate_len;
-        //info->spec.rspan_spec.interface = ETH_IFINDEX(mirror_data.tm_oport);
+        info->spec.rspan_spec.interface =
+            g_pds_state.catalogue()->tm_port_to_ifindex(mirror_data.rspan_action.tm_oport);
         info->spec.rspan_spec.encap.type = PDS_ENCAP_TYPE_DOT1Q;
         info->spec.rspan_spec.encap.val.vlan_tag =
             mirror_data.rspan_action.ctag;
