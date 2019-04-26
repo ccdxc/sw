@@ -72,6 +72,13 @@ var citadelDbVolume = protos.ModuleSpec_Volume{
 	MountPath: globals.CitadelDbDir,
 }
 
+// kubernetesPKIVolume is a reusable volume definition for kuberenete API Client PKI directory.
+var kubernetesPKIVolume = protos.ModuleSpec_Volume{
+	Name:      "kubepki",
+	HostPath:  globals.KubeletPKIDir,
+	MountPath: globals.KubeletPKIDir,
+}
+
 // k8sModules contain definitions of controller objects that need to deployed
 // through k8s.
 var k8sModules = map[string]protos.Module{
@@ -405,6 +412,9 @@ var k8sModules = map[string]protos.Module{
 			Volumes: []protos.ModuleSpec_Volume{
 				logVolume,
 				eventsVolume,
+				configVolume,
+				runVolume,
+				kubernetesPKIVolume,
 			},
 		},
 	},

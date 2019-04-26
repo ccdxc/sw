@@ -224,6 +224,7 @@ func (ag *TSMClient) sendUpdate(work *tsproto.TechSupportRequest, status tsproto
 			return
 		}
 		update.Status.EndTime = &endTime
+		update.Status.URI = work.Status.URI
 	}
 
 	updParams := &tsproto.UpdateTechSupportResultParameters{
@@ -331,6 +332,9 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 			log.Info("SCP file")
 			export.ScpFile(tarballFile, destination.Destination, "root", "docker", destination.Path)
 		case "Venice":
+			uri := fmt.Sprintf("/objstore/v1/downloads/tenant/default/techsupport/%v", targetID)
+			work.Status.URI = uri
+			log.Infof("Send to VENICE. WORK : %v. URL : %v", work, uri)
 			export.SendToVenice(ag.resolverClient, tarballFile, targetID)
 		case "HTTPS":
 			log.Info("Transfer file using HTTPs")

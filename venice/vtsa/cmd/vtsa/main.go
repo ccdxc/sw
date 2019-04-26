@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -47,8 +48,14 @@ func main() {
 	log.Info("Log configuration set.")
 	controllers := strings.Split(*resolverURL, ",")
 
+	var hostname string
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "venice"
+	}
+
 	// Plugging in default values when the agent is created.
-	tsmClient := tsa.NewTSMClient("vtsa", "NA", string(cluster.KindNode), *configFile, controllers)
+	tsmClient := tsa.NewTSMClient(hostname, "NA", string(cluster.KindNode), *configFile, controllers)
 
 	// TODO : Delete the sleep. This is a workaround while we debug the race condition in RPC-Kit
 	time.Sleep(2 * time.Second)

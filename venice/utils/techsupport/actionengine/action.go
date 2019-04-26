@@ -139,6 +139,21 @@ func CollectTechSupport(config *tsconfig.TechSupportConfig, instanceID string) e
 
 	baseDir := config.FileSystemRoot + "/" + instanceID
 
+	if _, err := os.Stat(baseDir); os.IsNotExist(err) {
+		log.Infof("Creating techsupport directory : %v", baseDir)
+		res := os.MkdirAll(baseDir, 0777)
+		log.Infof("RES : %v", res)
+
+		if res != nil {
+			return err
+		}
+	}
+
+	err := os.Chdir(baseDir)
+	if err != nil {
+		log.Errorf("Failed to change to :%v. Techsupport collection may behave abnormally. Err: %v", baseDir, err)
+	}
+
 	log.Infof("Starting to collect TechSupport in directory : %v", baseDir)
 
 	log.Infof("======== Prep Actions - Start ========")
@@ -152,6 +167,7 @@ func CollectTechSupport(config *tsconfig.TechSupportConfig, instanceID string) e
 	log.Infof("======== Export Actions - Start ========")
 	RunActions(config.ExportActions, baseDir+"/ExportActions")
 	log.Infof("======== Export Actions - End ========")
+	os.Chdir("/")
 
 	return nil
 }
