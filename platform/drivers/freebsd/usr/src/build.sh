@@ -45,7 +45,6 @@ make_ext sys/modules/ionic_rdma
 make_ext contrib/ofed/libionic
 
 cd perftest
-patch -f -p1 < ../perftest-freebsd.patch
 ./configure || exit
 make -j12 || exit
 cd -
@@ -62,7 +61,6 @@ cd -
 #
 if [ -e /usr/local/bin/aclocal ]; then
     cd qperf
-    patch -f -p1 < ../qperf-freebsd.patch
     ./autogen.sh || exit
     ./configure || exit
     make || exit
