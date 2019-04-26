@@ -242,6 +242,7 @@ def ResetErrQState(tc):
     rs.lqp.rq.qstate.data.qp_err_dis_last_pkt_len_err = 0
     rs.lqp.rq.qstate.data.qp_err_dis_pmtu_err = 0
     rs.lqp.rq.qstate.data.qp_err_dis_opcode_err = 0
+    rs.lqp.rq.qstate.data.qp_err_dis_access_err = 0
     rs.lqp.rq.qstate.data.qp_err_dis_wr_only_zero_len_err = 0
     rs.lqp.rq.qstate.data.qp_err_dis_unaligned_atomic_va_err = 0
     rs.lqp.rq.qstate.data.qp_err_dis_insuff_sge_err = 0

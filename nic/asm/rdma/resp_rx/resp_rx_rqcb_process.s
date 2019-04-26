@@ -373,9 +373,6 @@ process_only_rd_atomic:
     bcf         [c6 | c5 | c3], process_read_atomic
     phvwr       p.s1.ack_info.psn, d.e_psn // BD Slot
 
-    // increment e_psn
-    tblmincri   d.e_psn, 24, 1
-
     // populate completion entry
     bcf         [c4], process_write_only
     phvwrpair   p.cqe.qid, CAPRI_RXDMA_INTRINSIC_QID, p.cqe.type, CQE_TYPE_RECV //BD Slot
@@ -386,6 +383,9 @@ process_only_rd_atomic:
 // branch to rc_checkout and load rqpt_process
 // or dummy_rqpt
 process_send_only:
+    // increment e_psn
+    tblmincri  d.e_psn, 24, 1
+
     // check if rnr case for Send Only
     seq        c7, SPEC_RQ_C_INDEX, PROXY_RQ_P_INDEX
     bcf        [c7], process_rnr
@@ -454,12 +454,16 @@ process_write_only:
     beqi        r5, 0, inv_req_nak_access_err
 #endif
 
+    // is it zero length write request ?
+    seq         c5, CAPRI_RXDMA_RETH_DMA_LEN, 0 // BD Slot
+
+    // increment e_psn
+    tblmincri   d.e_psn, 24, 1
+
     // c7 is initialized just before process_rd_only_atomic.
     // pls do not touch
-    tblwr.!c7.f d.busy, d.busy // BD Slot
+    tblwr.!c7.f d.busy, d.busy
 
-    // is it zero length write request ?
-    seq         c5, CAPRI_RXDMA_RETH_DMA_LEN, 0
     bcf         [c5], wr_only_zero_len
     CAPRI_RESET_TABLE_1_ARG()   //BD Slot
 
