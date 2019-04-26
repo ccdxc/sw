@@ -9,12 +9,13 @@ set -e
 
 PASS=centos
 
-while getopts ":v:i:" arg; do
+while getopts ":v:i:c" arg; do
   case $arg in
     v) VER=$OPTARG;;
     i) IP=$OPTARG;;
     p) PASS=$OPTARG;;
-    \? ) echo "usage: $0 -i veniceHost [ -v version ] [ -p password ]" ; exit 0;;
+    c) CLEAN=true;;
+    \? ) echo "usage: $0 -i veniceHost [ -v version ] [ -p password ] [-c]" ; exit 0;;
   esac
 done
 
@@ -27,7 +28,7 @@ fi
 if [ -z "$IP" ]
 then
     echo unknown ip address
-    echo  usage: $0 -i ipAddr [-v version]
+    echo  usage: $0 -i ipAddr [-v version] [-c]
     exit 1
 fi
 
@@ -38,6 +39,14 @@ SCP="scp -oUserKnownHostsFile=/dev/null -o StrictHostKeyChecking=false"
 curl -O http://pxe/builds/hourly/${VER}/VERSION
 VER=$(cat VERSION) # something like 0.9.0-79 instead of aliases live 0.9.0_last-built
 rm VERSION
+
+if [ ! -z "$CLEAN" ]
+then
+sshpass -p${PASS} ${SSH} root@${IP} "cd /tmp; \
+curl -O http://pxe/builds/hourly/${VER}/src/github.com/pensando/sw/tools/scripts/INSTALL.sh ;
+chmod +x ./INSTALL.sh ; \
+./INSTALL.sh --clean-only; "
+fi
 
 sshpass -p${PASS} ${SSH} root@${IP} "mkdir -p /run/initramfs/live/OS-${VER}; cd /run/initramfs/live/OS-${VER} ; \
 curl -O http://pxe/builds/hourly/${VER}/src/github.com/pensando/sw/bin/venice-install/squashfs.img ; \
