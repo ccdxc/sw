@@ -11,14 +11,8 @@
 #include "nic/apollo/framework/api_ctxt.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
+#include "nic/apollo/api/impl/mirror_impl.hpp"
 
-/// \defgroup PDS_MIRROR_SESSION_API - first level of mirror session
-//            API handling
-/// @{
-
-/// \brief create a mirror session
-/// \param[in] spec mirror session configuration
-/// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t
 pds_mirror_session_create (_In_ pds_mirror_session_spec_t *spec)
 {
@@ -37,9 +31,6 @@ pds_mirror_session_create (_In_ pds_mirror_session_spec_t *spec)
     return SDK_RET_OOM;
 }
 
-/// \brief delete given mirror session
-/// \param[in] key    mirror session key
-/// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t
 pds_mirror_session_delete (_In_ pds_mirror_session_key_t *key)
 {
@@ -58,15 +49,36 @@ pds_mirror_session_delete (_In_ pds_mirror_session_key_t *key)
     return SDK_RET_OOM;
 }
 
-/// \brief get mirror session
-/// \param[in] key, pointer to spec
-/// \param[out] info, mirror session information
-/// \return #SDK_RET_OK on success, failure status code on error
+static inline mirror_session *
+pds_mirror_session_find (pds_mirror_session_key_t *key)
+{
+    pds_mirror_session_spec_t spec = {0};
+    spec.key = *key;
+    static mirror_session *ms;
+
+    if (ms == NULL) {
+        ms = mirror_session::factory(&spec);
+    }
+    return ms;
+}
+
 sdk_ret_t
 pds_mirror_session_get (pds_mirror_session_key_t *key,
                         pds_mirror_session_info_t *info)
 {
-    return SDK_RET_OOM;
-}
+    mirror_session *entry = NULL;
+    api::impl::mirror_impl *impl;
 
-/// @}    // end of PDS_MIRROR_SESSION_API
+    if (key == NULL || info == NULL) {
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    if ((entry = pds_mirror_session_find(key)) == NULL) {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+    info->spec.key = *key;
+
+    // call the mirror hw implementaion directly
+    impl = dynamic_cast<api::impl::mirror_impl*>(entry->impl());
+    return impl->read_hw(key, info);
+}

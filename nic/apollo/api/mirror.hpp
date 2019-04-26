@@ -1,4 +1,3 @@
-
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
@@ -123,10 +122,17 @@ public:
     /// \brief          initiate delay deletion of this object
     virtual sdk_ret_t delay_delete(void) override;
 
+    /// \brief          return the mirror session's key
+    pds_mirror_session_key_t key(void) const { return key_; }
+
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
         return "ms-" + std::to_string(key_.id);
     }
+
+    /// \brief     return impl instance of this mirror session object
+    /// \return    impl instance of the mirror session object
+    impl_base *impl(void) { return impl_; }
 
     /// \brief          helper function to get key given mirror session entry
     /// \param[in]      entry    pointer to mirror session instance
@@ -160,7 +166,6 @@ public:
         return false;
     }
 
-    pds_mirror_session_key_t key(void) const { return key_; }
 private:
     /// \brief constructor
     mirror_session();
