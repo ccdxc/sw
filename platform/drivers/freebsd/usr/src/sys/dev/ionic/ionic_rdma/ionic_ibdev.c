@@ -3912,7 +3912,7 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 
 	rc = -EINVAL;
 
-	if (max_wr < 1 || max_wr > 0xffff)
+	if (max_wr < 0 || max_wr > 0xffff)
 		goto err_sq;
 
 	if (max_sge < 1 ||
@@ -4127,7 +4127,7 @@ static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 
 	rc = -EINVAL;
 
-	if (max_wr < 1 || max_wr > 0xffff)
+	if (max_wr < 0 || max_wr > 0xffff)
 		goto err_rq;
 
 	if (max_sge < 1 ||

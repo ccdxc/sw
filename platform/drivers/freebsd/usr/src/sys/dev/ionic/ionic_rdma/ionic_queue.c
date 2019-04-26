@@ -38,11 +38,14 @@
 int ionic_queue_init(struct ionic_queue *q, struct device *dma_dev,
 		     int depth, size_t stride)
 {
-	if (depth <= 0 || depth > 0xffff)
+	if (depth < 0 || depth > 0xffff)
 		return -EINVAL;
 
 	if (stride == 0 || stride > 0x10000)
 		return -EINVAL;
+
+	if (depth == 0)
+		depth = 1;
 
 	q->depth_log2 = order_base_2(depth + 1);
 	q->stride_log2 = order_base_2(stride);
