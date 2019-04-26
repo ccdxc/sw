@@ -41,6 +41,13 @@ const (
 	sleepBetweenItersSec = 5
 )
 
+var downwardAPIVars = map[string]string{
+	"KUBERNETES_POD_NAME":  "metadata.name",
+	"KUBERNETES_POD_IP":    "status.podIP",
+	"KUBERNETES_NODE_NAME": "spec.nodeName",
+	"KUBERNETES_HOST_IP":   "status.hostIP",
+}
+
 // k8sService is responsible for starting and reporting on controller
 // services deployed through k8s.
 type k8sService struct {
@@ -325,6 +332,16 @@ func populateEnv(args map[string]string) []v1.EnvVar {
 		envVars = append(envVars, v1.EnvVar{
 			Name:  k,
 			Value: v,
+		})
+	}
+	for varName, fieldPath := range downwardAPIVars {
+		envVars = append(envVars, v1.EnvVar{
+			Name: varName,
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{
+					FieldPath: fieldPath,
+				},
+			},
 		})
 	}
 	return envVars
