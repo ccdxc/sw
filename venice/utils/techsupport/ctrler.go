@@ -260,6 +260,7 @@ func (ag *TSMClient) Stop() {
 // StartWorking the work be the worker
 func (ag *TSMClient) StartWorking() {
 	log.Info("Worker is starting work.")
+	// TODO : Update this code to use channels instead of loop.
 	for {
 		if ag.isStopped() {
 			return
@@ -268,6 +269,9 @@ func (ag *TSMClient) StartWorking() {
 		if !ag.State.RQ.IsEmpty() {
 			ag.DoWork()
 		}
+
+		// TODO : Remove this once we move to channels
+		time.Sleep(5 * time.Second)
 	}
 }
 
