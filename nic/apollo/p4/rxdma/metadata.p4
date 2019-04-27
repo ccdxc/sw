@@ -179,13 +179,25 @@ metadata flow_key_t             scratch_flow_key;
 @pragma dont_trim
 metadata doorbell_addr_t        doorbell_addr;
 @pragma dont_trim
+@pragma pa_header_union ingress to_stage_1
 metadata doorbell_data_t        doorbell_data;
 
 // DMA commands
-@pragma pa_align 128
 @pragma dont_trim
-metadata dma_cmd_pkt2mem_t      payload_pkt2mem;
+@pragma pa_header_union ingress to_stage_2
+metadata dma_cmd_pkt2mem_t      pktdesc_pkt2mem;
+
 @pragma dont_trim
+@pragma pa_header_union ingress to_stage_3
+metadata dma_cmd_pkt2mem_t      pktbuf_pkt2mem;
+
+@pragma dont_trim
+@pragma pa_header_union ingress to_stage_4
 metadata dma_cmd_phv2mem_t      predicate_phv2mem;
 @pragma dont_trim
+@pragma pa_header_union ingress to_stage_4
 metadata dma_cmd_phv2mem_t      doorbell_phv2mem;
+
+@pragma dont_trim
+@pragma pa_header_union ingress to_stage_5
+metadata dma_cmd_phv2mem_t      doorbell2_phv2mem;

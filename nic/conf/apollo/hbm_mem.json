@@ -99,8 +99,13 @@
         },
         {
             "name": "rxdma_to_txdma_buf",
-            "size": "163840K",
-            "_comment": "160MB (16K buffers of size 10K)"
+            "size": "10M",
+            "_comment": "1K buffers of size 10K"
+        },
+        {
+            "name": "rxdma_to_txdma_desc",
+            "size": "64K",
+            "_comment": "1K descriptors of size 64B"
         },
         {
             "name": "local_ip_mapping",

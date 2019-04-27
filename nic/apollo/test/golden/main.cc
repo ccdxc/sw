@@ -50,6 +50,7 @@ using namespace sdk::platform::capri;
 #define JTXDMA_PRGM     "txdma_program"
 #define JLIFQSTATE      "lif2qstate_map"
 #define JPKTBUFFER      "rxdma_to_txdma_buf"
+#define JPKTDESC        "rxdma_to_txdma_desc"
 #define JSACLV4BASE     "sacl_egress_v4"
 #define JLPMV4BASE      "lpm_v4"
 #define JFLOWSTATSBASE  "flow_stats"
@@ -468,6 +469,7 @@ init_service_lif ()
 
     lifqstate_t lif_qstate = {0};
     lif_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
+    lif_qstate.ring1_base = get_mem_addr(JPKTDESC);
     lif_qstate.ring_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
     lif_qstate.total_rings = 1;
     write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate,
@@ -477,6 +479,7 @@ init_service_lif ()
     txdma_qstate.rxdma_cindex_addr =
         qstate.hbm_address + offsetof(lifqstate_t, sw_cindex);
     txdma_qstate.ring0_base = get_mem_addr(JPKTBUFFER);
+    txdma_qstate.ring1_base = get_mem_addr(JPKTDESC);
     txdma_qstate.ring_size = log2(get_mem_size_kb(JPKTBUFFER) / 10);
     txdma_qstate.total_rings = 1;
     write_qstate(qstate.hbm_address + sizeof(lifqstate_t),

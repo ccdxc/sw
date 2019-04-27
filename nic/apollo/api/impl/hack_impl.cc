@@ -22,8 +22,9 @@
 using sdk::platform::capri::LIFManager;
 using sdk::platform::utils::program_info;
 
-#define JLIF2QSTATE_MAP_NAME      "lif2qstate_map"
-#define JRXDMA_TO_TXDMA_BUF_NAME "rxdma_to_txdma_buf"
+#define JLIF2QSTATE_MAP_NAME        "lif2qstate_map"
+#define JRXDMA_TO_TXDMA_BUF_NAME    "rxdma_to_txdma_buf"
+#define JRXDMA_TO_TXDMA_DESC_NAME   "rxdma_to_txdma_desc"
 
 typedef struct __attribute__((__packed__)) lifqstate_  {
     uint64_t pc : 8;
@@ -91,6 +92,7 @@ init_service_lif (const char *cfg_path)
     lifqstate_t lif_qstate = { 0 };
     lif_qstate.pc = pgm_offset;
     lif_qstate.ring0_base = api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_BUF_NAME);
+    lif_qstate.ring1_base = api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_DESC_NAME);
     lif_qstate.ring_size = log2((api::g_pds_state.mempartition()->size(JRXDMA_TO_TXDMA_BUF_NAME) >> 10) / 10);
     lif_qstate.total_rings = 1;
     sdk::platform::capri::write_qstate(qstate.hbm_address, (uint8_t *)&lif_qstate, sizeof(lif_qstate));
@@ -99,6 +101,7 @@ init_service_lif (const char *cfg_path)
     txdma_qstate.pc = pgm_offset;
     txdma_qstate.rxdma_cindex_addr = qstate.hbm_address + offsetof(lifqstate_t, sw_cindex);
     txdma_qstate.ring0_base = api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_BUF_NAME);
+    txdma_qstate.ring1_base = api::g_pds_state.mempartition()->start_addr(JRXDMA_TO_TXDMA_DESC_NAME);
     txdma_qstate.ring_size = log2((api::g_pds_state.mempartition()->size(JRXDMA_TO_TXDMA_BUF_NAME) >> 10) / 10);
     txdma_qstate.total_rings = 1;
     sdk::platform::capri::write_qstate(qstate.hbm_address + sizeof(lifqstate_t),

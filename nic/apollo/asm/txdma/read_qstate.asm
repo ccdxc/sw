@@ -15,20 +15,19 @@ read_qstate_info:
 
     // Compute control offset based on current cindex
     mul         r2, d.read_qstate_info_d.sw_cindex0, PKTQ_PAGE_SIZE
-    phvwr       p.app_header_table3_valid, TRUE
+    add         r3, d.{read_qstate_info_d.ring1_base}.dx, \
+                    d.read_qstate_info_d.sw_cindex0, 6
 
-    // Increment sw_cindex0
     // update sw_cindex0, unlock
     tblmincri.f d.read_qstate_info_d.sw_cindex0, \
                     d.{read_qstate_info_d.ring_size}.hx, 1
 
-    add         r2, r2, d.{read_qstate_info_d.ring0_base}.dx
-    phvwr       p.txdma_control_control_addr, r2
+    phvwr       p.app_header_table3_valid, TRUE
     phvwr       p.txdma_control_rxdma_cindex_addr, d.{read_qstate_info_d.rxdma_cindex_addr}.dx
-    // payload_addr will be after predicate header and p4_to_txdma_header
-    addi        r3, r2, (APOLLO_PREDICATE_HDR_SZ + APOLLO_P4_TO_TXDMA_HDR_SZ)
-    phvwr.e     p.txdma_control_payload_addr, r3
     phvwr       p.txdma_control_cindex, d.read_qstate_info_d.sw_cindex0
+    phvwr       p.txdma_control_control_addr, r3
+    add.e       r2, r2, d.{read_qstate_info_d.ring0_base}.dx
+    phvwr.f     p.txdma_control_payload_addr, r2
 
 txdma_q_empty:
     phvwr.e     p.predicate_header_txdma_drop_event, TRUE
