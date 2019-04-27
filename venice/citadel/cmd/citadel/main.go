@@ -5,10 +5,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/pensando/sw/venice/utils/k8s"
 
 	_ "github.com/influxdata/influxdb/tsdb/engine"
 	_ "github.com/influxdata/influxdb/tsdb/index"
@@ -81,20 +82,25 @@ func main() {
 
 	// get host name and use that for node url & uuid
 	if *nodeURL == "" || *nodeUUID == "" {
-		// read my host name
-		hostname, err := os.Hostname()
-		if err != nil {
-			log.Fatalf("Failed to read the hostname. Err: %v", err)
+		if *nodeUUID == "" {
+			// read my node name
+			nodeName := k8s.GetNodeName()
+			if nodeName == "" {
+				log.Fatalf("failed to read the node name")
+			}
+			nodeUUID = &nodeName
 		}
 
 		if *nodeURL == "" {
-			lu := hostname + ":" + globals.CitadelRPCPort
+			addr := k8s.GetPodIP()
+			if addr == "" {
+				log.Fatalf("failed to read the ip address")
+			}
+			lu := addr + ":" + globals.CitadelRPCPort
 			nodeURL = &lu
 		}
 
-		if *nodeUUID == "" {
-			nodeUUID = &hostname
-		}
+		log.Infof("node-uuid: %v, node-url: %v", *nodeUUID, *nodeURL)
 	}
 
 	// cluster config
