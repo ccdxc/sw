@@ -381,7 +381,8 @@ apollo_impl::egress_drop_stats_init_(void) {
 
     for (uint32_t i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
         key.control_metadata_p4e_drop_reason = ((uint32_t)1 << i);
-        key_mask.control_metadata_p4e_drop_reason_mask = 0xFFFFFFFF;
+        key_mask.control_metadata_p4e_drop_reason_mask =
+            key.control_metadata_p4e_drop_reason;
         data.action_id = P4E_DROP_STATS_P4E_DROP_STATS_ID;
         ret =
             apollo_impl_db()->egress_drop_stats_tbl()->insert_withid(&key,
@@ -405,7 +406,8 @@ apollo_impl::ingress_drop_stats_init_(void) {
 
     for (uint32_t i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
         key.control_metadata_p4i_drop_reason = ((uint32_t)1 << i);
-        key_mask.control_metadata_p4i_drop_reason_mask = 0xFFFFFFFF;
+        key_mask.control_metadata_p4i_drop_reason_mask =
+            key.control_metadata_p4i_drop_reason;
         data.action_id = P4I_DROP_STATS_P4I_DROP_STATS_ID;
         ret =
             apollo_impl_db()->ingress_drop_stats_tbl()->insert_withid(&key,

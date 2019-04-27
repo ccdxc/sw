@@ -22,7 +22,6 @@ api_base::factory(api_ctxt_t *api_ctxt) {
         return device_entry::factory(&api_ctxt->api_params->device_spec);
 
     case OBJ_ID_VPC:
-        PDS_TRACE_DEBUG("allocating from vpc slab");
         return vpc_entry::factory(&api_ctxt->api_params->vpc_spec);
 
     case OBJ_ID_SUBNET:

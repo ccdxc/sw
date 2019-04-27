@@ -118,7 +118,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
 {
     uint32_t ntables = num_vpcs * num_subnets;
     uint32_t tep_offset = 3;
-    uint32_t v6rtnum = 0;
+    uint32_t v6rtnum;
     pds_route_table_spec_t v6route_table;
     sdk_ret_t rv = SDK_RET_OK;
 
@@ -129,6 +129,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
                                       (num_routes * sizeof(pds_route_t)));
     v6route_table.num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {
+        v6rtnum = 0;
         v6route_table.key.id = ntables + i;
         for (uint32_t j = 0; j < num_routes; j++) {
             v6route_table.routes[j].prefix = *v6_route_pfx;
@@ -195,7 +196,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
 {
     uint32_t ntables = num_vpcs * num_subnets;
     uint32_t tep_offset = 3;
-    uint32_t rtnum = 0;
+    uint32_t rtnum;
     pds_route_table_spec_t route_table;
     sdk_ret_t rv = SDK_RET_OK;
 
@@ -205,6 +206,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                                   (num_routes * sizeof(pds_route_t)));
     route_table.num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {
+        rtnum = 0;
         route_table.key.id = i;
         for (uint32_t j = 0; j < num_routes; j++) {
             route_table.routes[j].prefix.len = 24;
@@ -693,10 +695,6 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
     uint16_t             step = 4;
     bool                 done;
 
-    if (num_rules == 0) {
-        return SDK_RET_OK;
-    }
-
     policy.policy_type = POLICY_TYPE_FIREWALL;
     policy.af = ip_af;
     policy.direction = ingress ? RULE_DIR_INGRESS : RULE_DIR_EGRESS;
@@ -721,9 +719,9 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                     rule->stateful = false;
                     rule->match.l3_match.ip_proto = 17;    // UDP
                     rule->match.l4_match.sport_range.port_lo = 100;
-                    rule->match.l4_match.sport_range.port_hi = 1000;
+                    rule->match.l4_match.sport_range.port_hi = 10000;
                     rule->match.l3_match.ip_pfx = g_test_params.vpc_pfx;
-                    if (idx < num_rules - 1) {
+                    if (idx < (num_rules - 2)) {
                         rule->match.l3_match.ip_pfx.addr.addr.v4_addr =
                             rule->match.l3_match.ip_pfx.addr.addr.v4_addr |
                             ((j - 1) << 14) | ((k + 2) << 4);
@@ -733,7 +731,15 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                             dport_base + step - 1;
                         dport_base += step;
                         idx++;
+                    } else if (idx < (num_rules - 1)) {
+                        // catch-all policy within the vpc
+                        rule->match.l4_match.dport_range.port_lo = 100;
+                        rule->match.l4_match.dport_range.port_hi = 20000;
+                        idx++;
                     } else {
+                        // catch-all policy for LPM routes
+                        rule->match.l3_match.ip_pfx.addr.addr.v4_addr = (0xC << 28);
+                        rule->match.l3_match.ip_pfx.len = 8;
                         rule->match.l4_match.dport_range.port_lo = 1000;
                         rule->match.l4_match.dport_range.port_hi = 20000;
                         done = true;
@@ -882,6 +888,9 @@ create_objects (void)
                 assert(str2ipv6pfx((char *)pfxstr.c_str(), &g_test_params.v6_route_pfx) == 0);
             } else if (kind == "security-policy") {
                 g_test_params.num_rules = std::stol(obj.second.get<std::string>("count"));
+                if (g_test_params.num_rules < 4) {
+                    printf("Number of rules in the policy table must be >= 4\n");
+                }
             } else if (kind == "vpc") {
                 g_test_params.num_vpcs = std::stol(obj.second.get<std::string>("count"));
                 pfxstr = obj.second.get<std::string>("prefix");
