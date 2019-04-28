@@ -5,10 +5,29 @@
 
 set -x
 
-IPADDR=$(ip addr | grep 'inet ' | grep -v 127.0 | head -n 1 | awk '{print $2;}' | awk -F/ '{print $1}') 
+while getopts ":i:c:" arg; do
+  case $arg in
+    i) IPADDR=$OPTARG;;
+    c) CLUSTER=$OPTARG;;
+    \? ) echo "usage: $0 [-i ipAddr] [ -c clusterNodes ] " ; exit 0;;
+  esac
+done
+
+
+if [ -z "$IPADDR" ]
+then
+    IPADDR=$(ip addr | grep 'inet ' | grep -v 127.0 | head -n 1 | awk '{print $2;}' | awk -F/ '{print $1}') 
+fi
+if [ -z "$CLUSTER" ]
+then
+    CLUSTER=$IPADDR
+fi
+
+# change , seperated nodes to array elements to pass to json
+CLUSTER=$(echo $CLUSTER | sed 's/,/","/g')
 
 #post this object to create a cluster
-curl --header "Content-Type: application/json"   --request POST   --data '{ "kind": "Cluster", "api-version" : "v1", "meta": { "name" : "testCluster"  }, "spec" : { "auto-admit-nics" : true,"ntp-servers": [ "192.168.72.2" ], "quorum-nodes": [ "'$IPADDR'" ] } }' http://$IPADDR:9001/api/v1/cluster
+curl --header "Content-Type: application/json"   --request POST   --data '{ "kind": "Cluster", "api-version" : "v1", "meta": { "name" : "testCluster"  }, "spec" : { "auto-admit-nics" : true,"ntp-servers": [ "192.168.72.2" ], "quorum-nodes": [ "'$CLUSTER'" ] } }' http://$IPADDR:9001/api/v1/cluster
 
 #wait for services to come up
 sleep 30
