@@ -218,7 +218,7 @@ jobd/gft/gtest: ${JOBD_PREREQS}
 jobd/apollo/gtest: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_gtest
 	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_test
-	#${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_vxlan_test
+	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_vxlan_test
 	${NICDIR}/apollo/test/tools/run_gtests_apollo.sh ${COVERAGE_OPTS}
 
 .PHONY: jobd/storage
