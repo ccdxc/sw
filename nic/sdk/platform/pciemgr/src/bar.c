@@ -81,6 +81,7 @@ bar_finalize(const pciehwdev_t *phwdev,
 
     phwbar->type = bar_type_to_hwbar_type(bar->type);
     phwbar->cfgidx = bar->cfgidx;
+    phwbar->size = bar->size;
     phwbar->pmtb = pmtb;
     phwbar->pmtc = pmtc;
     phwbar->valid = 1;
@@ -139,28 +140,8 @@ pciehw_bars_finalize(pciehdev_t *pdev)
 u_int64_t
 pciehw_bar_getsize(pciehwbar_t *phwbar)
 {
-    pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    pciehw_spmt_t *spmt, *spmte;
-    u_int64_t barsz = 0;
-
     if (!phwbar->valid) return 0;
-
-    /*
-     * Walk through the allocated PMTs for this bar
-     * and find the one that represents the end.
-     * The largest pmt extent (offset+size) is
-     * this bar's true size.
-     */
-    spmt  = &pshmem->spmt[phwbar->pmtb];
-    spmte = spmt + phwbar->pmtc;
-    for ( ; spmt < spmte; spmt++) {
-        const u_int64_t offset = spmt->baroff;
-        const u_int64_t size = pmt_bar_getsize(&spmt->pmt);
-        const u_int64_t extent = offset + size;
-
-        if (barsz < extent) barsz = extent;
-    }
-    return roundup_power2(barsz);
+    return phwbar->size;
 }
 
 void

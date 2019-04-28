@@ -15,15 +15,12 @@
     modify_field(QSTATE.c_index0, c_index0);
 
 #define PARAM_SG_ELEM(n) \
-    addr_lo##n, rsvd##n, addr_hi##n, rsvd1##n, len##n, rsvd2##n
+    addr##n, len##n, rsvd##n
 
 #define MODIFY_SG_ELEM(n) \
-    modify_field(eth_sg_desc.addr_lo##n, addr_lo##n); \
-    modify_field(eth_sg_desc.rsvd##n, rsvd##n); \
-    modify_field(eth_sg_desc.addr_hi##n, addr_hi##n); \
-    modify_field(eth_sg_desc.rsvd1##n, rsvd1##n); \
+    modify_field(eth_sg_desc.addr##n, addr##n); \
     modify_field(eth_sg_desc.len##n, len##n); \
-    modify_field(eth_sg_desc.rsvd2##n, rsvd2##n);
+    modify_field(eth_sg_desc.rsvd##n, rsvd##n);
 
 /*
  * RXDMA
@@ -78,19 +75,13 @@
     modify_field(eth_rx_qstate.sg_ring_base, sg_ring_base);
 
 #define PARAM_RX_DESC(n) \
-    addr_lo##n, rsvd0##n, addr_hi##n, rsvd1##n, \
-    len##n, rsvd2##n, opcode##n, rsvd3##n, rsvd4##n
+    opcode##n, rsvd##n, len##n, addr##n
 
 #define MODIFY_RX_DESC(n) \
-    modify_field(eth_rx_desc.addr_lo##n, addr_lo##n); \
-    modify_field(eth_rx_desc.addr_hi##n, addr_hi##n); \
-    modify_field(eth_rx_desc.rsvd0##n, rsvd0##n); \
-    modify_field(eth_rx_desc.rsvd1##n, rsvd1##n); \
-    modify_field(eth_rx_desc.len##n, len##n); \
     modify_field(eth_rx_desc.opcode##n, opcode##n); \
-    modify_field(eth_rx_desc.rsvd2##n, rsvd2##n); \
-    modify_field(eth_rx_desc.rsvd3##n, rsvd3##n); \
-    modify_field(eth_rx_desc.rsvd4##n, rsvd4##n);
+    modify_field(eth_rx_desc.rsvd##n, rsvd##n); \
+    modify_field(eth_rx_desc.len##n, len##n); \
+    modify_field(eth_rx_desc.addr##n, addr##n); \
 
 /*
  * TXDMA
@@ -175,46 +166,35 @@
     modify_field(eth_tx_qstate.spurious_db_cnt, spurious_db_cnt); \
 
 #define PARAM_TX_DESC(n) \
-    addr_lo##n, rsvd##n, addr_hi##n, opcode##n, num_sg_elems##n, \
-    len##n, vlan_tci##n, \
-    hdr_len_lo##n, \
-    encap##n, cq_entry##n, vlan_insert##n, rsvd2##n, hdr_len_hi##n, \
-    mss_or_csumoff_lo##n, csum_l4_or_eot##n, csum_l3_or_sot##n, mss_or_csumoff_hi##n
+    opcode##n, \
+    csum_l4_or_eot##n, csum_l3_or_sot##n, encap##n, vlan_insert##n,\
+    addr_hi##n, num_sg_elems##n, addr_lo##n, \
+    len##n, vlan_tci##n, csum_start_or_hdr_len##n, csum_offset_or_mss##n
 
 #define MODIFY_TX_DESC(n) \
-    modify_field(eth_tx_desc.addr_lo##n, addr_lo##n); \
-    modify_field(eth_tx_desc.rsvd##n, rsvd##n); \
-    modify_field(eth_tx_desc.addr_hi##n, addr_hi##n); \
-    modify_field(eth_tx_desc.num_sg_elems##n, num_sg_elems##n); \
     modify_field(eth_tx_desc.opcode##n, opcode##n); \
-    modify_field(eth_tx_desc.len##n, len##n); \
-    modify_field(eth_tx_desc.vlan_tci##n, vlan_tci##n); \
-    modify_field(eth_tx_desc.hdr_len_lo##n, hdr_len_lo##n); \
-    modify_field(eth_tx_desc.hdr_len_hi##n, hdr_len_hi##n); \
-    modify_field(eth_tx_desc.rsvd2##n, rsvd2##n); \
-    modify_field(eth_tx_desc.vlan_insert##n, vlan_insert##n); \
-    modify_field(eth_tx_desc.cq_entry##n, cq_entry##n); \
-    modify_field(eth_tx_desc.encap##n, encap##n); \
-    modify_field(eth_tx_desc.mss_or_csumoff_lo##n, mss_or_csumoff_lo##n); \
     modify_field(eth_tx_desc.csum_l4_or_eot##n, csum_l4_or_eot##n); \
     modify_field(eth_tx_desc.csum_l3_or_sot##n, csum_l3_or_sot##n); \
-    modify_field(eth_tx_desc.mss_or_csumoff_hi##n, mss_or_csumoff_hi##n);
+    modify_field(eth_tx_desc.encap##n, encap##n); \
+    modify_field(eth_tx_desc.vlan_insert##n, vlan_insert##n); \
+    modify_field(eth_tx_desc.addr_hi##n, addr_hi##n); \
+    modify_field(eth_tx_desc.num_sg_elems##n, num_sg_elems##n); \
+    modify_field(eth_tx_desc.addr_lo##n, addr_lo##n); \
+    modify_field(eth_tx_desc.len##n, len##n); \
+    modify_field(eth_tx_desc.vlan_tci##n, vlan_tci##n); \
+    modify_field(eth_tx_desc.csum_start_or_hdr_len##n, csum_start_or_hdr_len##n); \
+    modify_field(eth_tx_desc.csum_offset_or_mss##n, csum_offset_or_mss##n);
 
 #define MODIFY_TX_DESC_KEY(hdr, n) \
-    modify_field(eth_tx_##hdr##_scratch.addr_lo##n, eth_tx_##hdr.addr_lo##n); \
-    modify_field(eth_tx_##hdr##_scratch.rsvd##n, eth_tx_##hdr.rsvd##n); \
-    modify_field(eth_tx_##hdr##_scratch.addr_hi##n, eth_tx_##hdr.addr_hi##n); \
-    modify_field(eth_tx_##hdr##_scratch.num_sg_elems##n, eth_tx_##hdr.num_sg_elems##n); \
     modify_field(eth_tx_##hdr##_scratch.opcode##n, eth_tx_##hdr.opcode##n); \
-    modify_field(eth_tx_##hdr##_scratch.len##n, eth_tx_##hdr.len##n); \
-    modify_field(eth_tx_##hdr##_scratch.vlan_tci##n, eth_tx_##hdr.vlan_tci##n); \
-    modify_field(eth_tx_##hdr##_scratch.hdr_len_lo##n, eth_tx_##hdr.hdr_len_lo##n); \
-    modify_field(eth_tx_##hdr##_scratch.hdr_len_hi##n, eth_tx_##hdr.hdr_len_hi##n); \
-    modify_field(eth_tx_##hdr##_scratch.rsvd2##n, eth_tx_##hdr.rsvd2##n); \
-    modify_field(eth_tx_##hdr##_scratch.vlan_insert##n, eth_tx_##hdr.vlan_insert##n); \
-    modify_field(eth_tx_##hdr##_scratch.cq_entry##n, eth_tx_##hdr.cq_entry##n); \
-    modify_field(eth_tx_##hdr##_scratch.encap##n, eth_tx_##hdr.encap##n); \
-    modify_field(eth_tx_##hdr##_scratch.mss_or_csumoff_lo##n, eth_tx_##hdr.mss_or_csumoff_lo##n); \
     modify_field(eth_tx_##hdr##_scratch.csum_l4_or_eot##n, eth_tx_##hdr.csum_l4_or_eot##n); \
     modify_field(eth_tx_##hdr##_scratch.csum_l3_or_sot##n, eth_tx_##hdr.csum_l3_or_sot##n); \
-    modify_field(eth_tx_##hdr##_scratch.mss_or_csumoff_hi##n, eth_tx_##hdr.mss_or_csumoff_hi##n);
+    modify_field(eth_tx_##hdr##_scratch.encap##n, eth_tx_##hdr.encap##n); \
+    modify_field(eth_tx_##hdr##_scratch.vlan_insert##n, eth_tx_##hdr.vlan_insert##n); \
+    modify_field(eth_tx_##hdr##_scratch.addr_hi##n, eth_tx_##hdr.addr_hi##n); \
+    modify_field(eth_tx_##hdr##_scratch.num_sg_elems##n, eth_tx_##hdr.num_sg_elems##n); \
+    modify_field(eth_tx_##hdr##_scratch.addr_lo##n, eth_tx_##hdr.addr_lo##n); \
+    modify_field(eth_tx_##hdr##_scratch.len##n, eth_tx_##hdr.len##n); \
+    modify_field(eth_tx_##hdr##_scratch.vlan_tci##n, eth_tx_##hdr.vlan_tci##n); \
+    modify_field(eth_tx_##hdr##_scratch.csum_start_or_hdr_len##n, eth_tx_##hdr.csum_start_or_hdr_len##n); \
+    modify_field(eth_tx_##hdr##_scratch.csum_offset_or_mss##n, eth_tx_##hdr.csum_offset_or_mss##n);

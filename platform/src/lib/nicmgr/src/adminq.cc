@@ -27,12 +27,12 @@ AdminQ::AdminQ(
         NIC_LOG_ERR("{}: Request ring size has to be power of 2", name);
         throw;
     }
-        
+
     if (resp_ring_size & (resp_ring_size - 1)) {
         NIC_LOG_ERR("{}: Response ring size has to be power of 2", name);
         throw;
     }
-        
+
     /* alloc request queue resources */
     req_ring_base = pd->nicmgr_mem_alloc(sizeof(struct nicmgr_req_desc) * req_ring_size);
     if (req_ring_base == 0) {
@@ -77,9 +77,9 @@ AdminQ::Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
         return false;
     }
 
-    evutil_timer_start(&adminq_timer, AdminQ::Poll, this, 0, 0.001);
-    evutil_add_check(&adminq_check, AdminQ::Poll, this);
     evutil_add_prepare(&adminq_prepare, AdminQ::Poll, this);
+    evutil_add_check(&adminq_check, AdminQ::Poll, this);
+    evutil_timer_start(&adminq_timer, AdminQ::Poll, this, 0.0, 0.001);
 
     return true;
 }
@@ -201,9 +201,9 @@ AdminQ::Reset()
         return false;
     }
 
-    evutil_timer_stop(&adminq_timer);
-    evutil_remove_check(&adminq_check);
     evutil_remove_prepare(&adminq_prepare);
+    evutil_remove_check(&adminq_check);
+    evutil_timer_stop(&adminq_timer);
 
     return true;
 }

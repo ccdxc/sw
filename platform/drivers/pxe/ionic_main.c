@@ -113,7 +113,7 @@ int ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd, unsigned long m
 		}
 
 		writel(0, &idev->dev_cmd->done);
-		writel(1, &idev->dev_cmd_db->v);
+		writel(1, &idev->dev_cmd->doorbell);
 
 		// Check the status
 		err = ionic_dev_cmd_wait_check(idev, max_seconds);
@@ -133,6 +133,16 @@ int ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd, unsigned long m
 	return -EIO;
 }
 
+int ionic_dev_cmd_init(struct ionic_dev *idev, unsigned long max_seconds)
+{
+	union dev_cmd cmd = {
+		.init.opcode = CMD_OPCODE_INIT,
+		.init.type = 0,
+	};
+
+	return ionic_dev_cmd_go(idev, &cmd, max_seconds);
+}
+
 int ionic_dev_cmd_reset(struct ionic_dev *idev, unsigned long max_seconds)
 {
 	union dev_cmd cmd = {
@@ -142,12 +152,12 @@ int ionic_dev_cmd_reset(struct ionic_dev *idev, unsigned long max_seconds)
 	return ionic_dev_cmd_go(idev, &cmd, max_seconds);
 }
 
-int ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver, dma_addr_t addr, unsigned long max_seconds)
+int ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver,
+	unsigned long max_seconds)
 {
 	union dev_cmd cmd = {
 		.identify.opcode = CMD_OPCODE_IDENTIFY,
 		.identify.ver = ver,
-		.identify.addr = addr,
 	};
 
 	return ionic_dev_cmd_go(idev, &cmd, max_seconds);
@@ -163,11 +173,13 @@ char *ionic_dev_asic_name(u8 asic_type)
 	}
 }
 
-int ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index, unsigned long max_seconds)
+int ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index, dma_addr_t addr,
+	unsigned long max_seconds)
 {
 	union dev_cmd cmd = {
 		.lif_init.opcode = CMD_OPCODE_LIF_INIT,
 		.lif_init.index = index,
+		.lif_init.info_pa = addr,
 	};
 
 	return ionic_dev_cmd_go(idev, &cmd, max_seconds);
@@ -186,13 +198,14 @@ int ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
 					   unsigned int lif_index, unsigned long max_seconds)
 {
 	union dev_cmd cmd = {
-		.adminq_init.opcode = CMD_OPCODE_ADMINQ_INIT,
-		.adminq_init.index = adminq->index,
-		.adminq_init.pid = adminq->pid,
-		//.adminq_init.intr_index = intr_index,
-		.adminq_init.lif_index = lif_index,
-		.adminq_init.ring_size = ilog2(adminq->num_descs),
-		.adminq_init.ring_base = adminq->base_pa,
+		.q_init.opcode = CMD_OPCODE_Q_INIT,
+		.q_init.lif_index = lif_index,
+		.q_init.type = adminq->type,
+		.q_init.index = adminq->index,
+		.q_init.flags = IONIC_QINIT_F_ENA,
+		.q_init.pid = adminq->pid,
+		.q_init.ring_size = ilog2(adminq->num_descs),
+		.q_init.ring_base = adminq->base_pa,
 	};
 
 	return ionic_dev_cmd_go(idev, &cmd, max_seconds);
@@ -212,7 +225,7 @@ int ionic_lif_reset(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 
-	return ionic_dev_cmd_lif_reset(idev, ionic->ionic_lif->index, devcmd_timeout);
+	return ionic_dev_cmd_lif_reset(idev, ionic->lif->index, devcmd_timeout);
 }
 
 /**
@@ -230,15 +243,15 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_device_bar bars[],
 		return -EFAULT;
 	}
 
-	idev->dev_cmd = bar->virtaddr + BAR0_DEV_CMD_REGS_OFFSET;
-	idev->dev_cmd_db = bar->virtaddr + BAR0_DEV_CMD_DB_OFFSET;
-	idev->intr_status = bar->virtaddr + BAR0_INTR_STATUS_OFFSET;
-	idev->intr_ctrl = bar->virtaddr + BAR0_INTR_CTRL_OFFSET;
-	idev->ident = bar->virtaddr + 0x800;
+	idev->dev_info = bar->vaddr + BAR0_DEV_INFO_REGS_OFFSET;
+	idev->dev_cmd = bar->vaddr + BAR0_DEV_CMD_REGS_OFFSET;
+	idev->intr_status = bar->vaddr + BAR0_INTR_STATUS_OFFSET;
+	idev->intr_ctrl = bar->vaddr + BAR0_INTR_CTRL_OFFSET;
 
-	sig = readl(&idev->dev_cmd->signature);
-	if (sig != DEV_CMD_SIGNATURE) {
-		DBG2("%s :: unable to read dev_cmd_signature %x\n", __FUNCTION__, sig);
+	sig = readl(&idev->dev_info->signature);
+	if (sig != IONIC_DEV_INFO_SIGNATURE) {
+		DBG2("%s :: Incompatible firmware signature %x\n",
+			__FUNCTION__, sig);
 		return -EFAULT;
 	}
 
@@ -249,7 +262,7 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_device_bar bars[],
 		return -EFAULT;
 	}
 
-	idev->db_pages = bar->virtaddr;
+	idev->db_pages = bar->vaddr;
 	idev->phy_db_pages = bar->bus_addr;
 
 	// BAR2 resources
@@ -258,8 +271,20 @@ int ionic_dev_setup(struct ionic_dev *idev, struct ionic_device_bar bars[],
 		idev->phy_hbm_pages = 0;
 		idev->hbm_npages = 0;
 		idev->hbm_inuse = NULL;
-		return 0;
 	}
+
+	// Device info region
+	idev->port_info_sz = ALIGN(sizeof(*idev->port_info), PAGE_SIZE);
+
+	idev->port_info = malloc_dma(idev->port_info_sz, PAGE_SIZE);
+	if (idev->port_info == NULL) {
+		DBG2("%s :: failed to allocate device info region\n", __FUNCTION__);
+		return -ENOMEM;
+	}
+	memset(idev->port_info, 0, sizeof (*idev->port_info));
+
+	idev->port_info_pa = virt_to_phys(idev->port_info);
+
 	return 0;
 }
 
@@ -284,20 +309,12 @@ int ionic_setup(struct ionic *ionic)
 int ionic_identify(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
-	union identity *ident;
-	dma_addr_t ident_pa;
+	struct identity *ident = &ionic->ident;
 	int err;
-	int i;
+	unsigned int i;
+	unsigned int nwords;
 
-	ident = malloc_dma(sizeof(*ident), IDENTITY_ALIGN);
-	if (!ident) {
-		return -ENOMEM;
-	}
-
-	memset(ident, 0, sizeof(*ident));
-
-	ident_pa = virt_to_phys(ident);
-	ident->drv.os_type = OS_TYPE_IPXE;
+	ident->drv.os_type = IONIC_OS_TYPE_IPXE;
 	ident->drv.os_dist = 0;
 	strncpy(ident->drv.os_dist_str, IPXE_OS_DIST_STR,
 		sizeof(ident->drv.os_dist_str) - 1);
@@ -307,23 +324,21 @@ int ionic_identify(struct ionic *ionic)
 	strncpy(ident->drv.driver_ver_str, DRV_VERSION,
 			sizeof(ident->drv.driver_ver_str) - 1);
 
-	for (i = 0; i < 512; i++)
-		writel(idev->ident->words[i], &ident->words[i]);
+	nwords = MIN(ARRAY_SIZE(ident->drv.words), ARRAY_SIZE(idev->dev_cmd->data));
+	for (i = 0; i < nwords; i++)
+		writel(ident->drv.words[i], &idev->dev_cmd->data[i]);
 
-	err = ionic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa, devcmd_timeout);
+	err = ionic_dev_cmd_identify(idev, IONIC_IDENTITY_VERSION_1, devcmd_timeout);
 	if (err)
 		goto err_free_identify;
 
-	for (i = 0; i < 512; i++)
-		ident->words[i] = readl(&idev->ident->words[i]);
-
-	ionic->ident = ident;
-	ionic->ident_pa = ident_pa;
+	nwords = MIN(ARRAY_SIZE(ident->dev.words), ARRAY_SIZE(idev->dev_cmd->data));
+	for (i = 0; i < nwords; i++)
+		ident->dev.words[i] = readl(&idev->dev_cmd->data[i]);
 
 	return 0;
 
 err_free_identify:
-	free_dma(ident, sizeof(*ident));
 	return err;
 }
 
@@ -477,7 +492,8 @@ void ionic_cq_bind(struct cq *cq, struct queue *q)
 /**
  * Allocating and initializing the qcq.
  * */
-static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
+static int ionic_qcq_alloc(struct lif *lif, unsigned int type,
+						   unsigned int index,
 						   const char *base, unsigned int flags,
 						   unsigned int num_descs, unsigned int desc_size,
 						   unsigned int cq_desc_size,
@@ -514,6 +530,8 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int index,
 		err = -ENOMEM;
 		goto err_free_new_qcq;
 	}
+
+	new->q.type = type;
 
 	err = ionic_q_init(lif, idev, &new->q, index, base, num_descs,
 					   desc_size, sg_desc_size, pid);
@@ -595,7 +613,8 @@ static int ionic_qcqs_alloc(struct lif *lif)
 
 	pid = 0;
 	flags = QCQ_F_INTR;
-	err = ionic_qcq_alloc(lif, 0, "admin", flags, 1 << 4,
+	err = ionic_qcq_alloc(lif, IONIC_QTYPE_ADMINQ, 0, "admin", flags,
+						  1 << 4,
 						  sizeof(struct admin_cmd),
 						  sizeof(struct admin_comp),
 						  0, pid, &lif->adminqcq);
@@ -603,15 +622,17 @@ static int ionic_qcqs_alloc(struct lif *lif)
 		goto err_free_adminqcq;
 
 	flags = QCQ_F_INTR | QCQ_F_NOTIFYQ;
-	err = ionic_qcq_alloc(lif, 0, "notifyq", flags, NOTIFYQ_LENGTH,
-					sizeof(struct notifyq_cmd),
-					sizeof(union notifyq_comp),
-					0, pid, &lif->notifyqcqs);
+	err = ionic_qcq_alloc(lif, IONIC_QTYPE_NOTIFYQ, 0, "notifyq", flags,
+						  NOTIFYQ_LENGTH,
+						  sizeof(struct notifyq_cmd),
+						  sizeof(union notifyq_comp),
+						  0, pid, &lif->notifyqcqs);
 	if (err)
 		goto err_free_notifyqcq;
 
 	flags = QCQ_F_TX_STATS | QCQ_F_INTR | QCQ_F_SG;
-	err = ionic_qcq_alloc(lif, 0, "tx", flags, NTXQ_DESC,
+	err = ionic_qcq_alloc(lif, IONIC_QTYPE_TXQ, 0, "tx", flags,
+						  NTXQ_DESC,
 						  sizeof(struct txq_desc),
 						  sizeof(struct txq_comp),
 						  sizeof(struct txq_sg_desc),
@@ -620,7 +641,8 @@ static int ionic_qcqs_alloc(struct lif *lif)
 		goto err_free_txqcq;
 
 	flags = QCQ_F_RX_STATS | QCQ_F_INTR;
-	err = ionic_qcq_alloc(lif, 0, "rx", flags, NRXQ_DESC,
+	err = ionic_qcq_alloc(lif, IONIC_QTYPE_RXQ, 0, "rx", flags,
+						  NRXQ_DESC,
 						  sizeof(struct rxq_desc),
 						  sizeof(struct rxq_comp),
 						  0, pid, &lif->rxqcqs);
@@ -658,24 +680,27 @@ int ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	lif->ionic = ionic;
 	lif->index = index;
 
-	lif->notifyblock_sz = ALIGN(sizeof(*lif->notifyblock), PAGE_SIZE);
-	lif->notifyblock = malloc_dma(lif->notifyblock_sz, IDENTITY_ALIGN);
-	if (!lif->notifyblock) {
+	// allocate lif info region
+	lif->info_sz = ALIGN(sizeof(*lif->info), PAGE_SIZE);
+
+	lif->info = malloc_dma(lif->info_sz, PAGE_SIZE);
+	if (!lif->info) {
 		goto err_freelif;
 	}
-	memset (lif->notifyblock, 0, lif->notifyblock_sz);
+	memset (lif->info, 0, lif->info_sz);
 
-	lif->notifyblock_pa = virt_to_phys(lif->notifyblock);
+	lif->info_pa = virt_to_phys(lif->info);
+
 	// allocate the qcqs
 	err = ionic_qcqs_alloc(lif);
 	if (err)
 		goto err_freenotify;
 
-	ionic->ionic_lif = lif;
+	ionic->lif = lif;
 	return 0;
 
 err_freenotify:
-	free_dma(lif->notifyblock, sizeof(lif->notifyblock_sz));
+	free_dma(lif->info, sizeof(lif->info_sz));
 err_freelif:
 	free(lif);
 	return err;
@@ -689,7 +714,7 @@ struct doorbell __iomem *ionic_db_map(struct ionic_dev *idev, struct queue *q)
 	struct doorbell __iomem *db;
 
 	db = (void *)idev->db_pages + (q->pid * PAGE_SIZE);
-	db += q->qtype;
+	db += q->hw_type;
 
 	return db;
 }
@@ -702,7 +727,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct qcq *qcq = lif->adminqcq;
 	struct queue *q = &qcq->q;
-	struct adminq_init_comp comp;
+	struct q_init_comp comp;
 	int err;
 
 	err = ionic_dev_cmd_adminq_init(idev, q, lif->index, devcmd_timeout);
@@ -712,53 +737,148 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	}
 
 	ionic_dev_cmd_comp(idev, &comp);
-	q->qid = comp.qid;
-	q->qtype = comp.qtype;
+	q->hw_index = comp.hw_index;
+	q->hw_type = comp.hw_type;
 	q->db = ionic_db_map(idev, q);
 	qcq->flags |= QCQ_F_INITED;
 
 	return 0;
 }
 
-/**
- * 
- * */
+static const char *ionic_error_to_str(enum status_code code)
+{
+	switch (code) {
+	case IONIC_RC_SUCCESS:
+		return "IONIC_RC_SUCCESS";
+	case IONIC_RC_EVERSION:
+		return "IONIC_RC_EVERSION";
+	case IONIC_RC_EOPCODE:
+		return "IONIC_RC_EOPCODE";
+	case IONIC_RC_EIO:
+		return "IONIC_RC_EIO";
+	case IONIC_RC_EPERM:
+		return "IONIC_RC_EPERM";
+	case IONIC_RC_EQID:
+		return "IONIC_RC_EQID";
+	case IONIC_RC_EQTYPE:
+		return "IONIC_RC_EQTYPE";
+	case IONIC_RC_ENOENT:
+		return "IONIC_RC_ENOENT";
+	case IONIC_RC_EINTR:
+		return "IONIC_RC_EINTR";
+	case IONIC_RC_EAGAIN:
+		return "IONIC_RC_EAGAIN";
+	case IONIC_RC_ENOMEM:
+		return "IONIC_RC_ENOMEM";
+	case IONIC_RC_EFAULT:
+		return "IONIC_RC_EFAULT";
+	case IONIC_RC_EBUSY:
+		return "IONIC_RC_EBUSY";
+	case IONIC_RC_EEXIST:
+		return "IONIC_RC_EEXIST";
+	case IONIC_RC_EINVAL:
+		return "IONIC_RC_EINVAL";
+	case IONIC_RC_ENOSPC:
+		return "IONIC_RC_ENOSPC";
+	case IONIC_RC_ERANGE:
+		return "IONIC_RC_ERANGE";
+	case IONIC_RC_BAD_ADDR:
+		return "IONIC_RC_BAD_ADDR";
+	case IONIC_RC_DEV_CMD:
+		return "IONIC_RC_DEV_CMD";
+	case IONIC_RC_ERROR:
+		return "IONIC_RC_ERROR";
+	case IONIC_RC_ERDMA:
+		return "IONIC_RC_ERDMA";
+	default:
+		return "IONIC_RC_UNKNOWN";
+	}
+}
+
+static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
+{
+	switch (opcode) {
+	case CMD_OPCODE_NOP:
+		return "CMD_OPCODE_NOP";
+
+	case CMD_OPCODE_IDENTIFY:
+		return "CMD_OPCODE_IDENTIFY";
+	case CMD_OPCODE_INIT:
+		return "CMD_OPCODE_INIT";
+	case CMD_OPCODE_RESET:
+		return "CMD_OPCODE_RESET";
+	case CMD_OPCODE_GETATTR:
+		return "CMD_OPCODE_GETATTR";
+	case CMD_OPCODE_SETATTR:
+		return "CMD_OPCODE_SETATTR";
+
+	case CMD_OPCODE_PORT_IDENTIFY:
+		return "CMD_OPCODE_PORT_IDENTIFY";
+	case CMD_OPCODE_PORT_INIT:
+		return "CMD_OPCODE_PORT_INIT";
+	case CMD_OPCODE_PORT_RESET:
+		return "CMD_OPCODE_PORT_RESET";
+	case CMD_OPCODE_PORT_GETATTR:
+		return "CMD_OPCODE_PORT_GETATTR";
+	case CMD_OPCODE_PORT_SETATTR:
+		return "CMD_OPCODE_PORT_SETATTR";
+
+	case CMD_OPCODE_LIF_IDENTIFY:
+		return "CMD_OPCODE_LIF_IDENTIFY";
+	case CMD_OPCODE_LIF_INIT:
+		return "CMD_OPCODE_LIF_INIT";
+	case CMD_OPCODE_LIF_RESET:
+		return "CMD_OPCODE_LIF_RESET";
+	case CMD_OPCODE_LIF_GETATTR:
+		return "CMD_OPCODE_LIF_GETATTR";
+	case CMD_OPCODE_LIF_SETATTR:
+		return "CMD_OPCODE_LIF_SETATTR";
+
+	case CMD_OPCODE_RX_MODE_SET:
+		return "CMD_OPCODE_RX_MODE_SET";
+	case CMD_OPCODE_RX_FILTER_ADD:
+		return "CMD_OPCODE_RX_FILTER_ADD";
+	case CMD_OPCODE_RX_FILTER_DEL:
+		return "CMD_OPCODE_RX_FILTER_DEL";
+
+	case CMD_OPCODE_Q_INIT:
+		return "CMD_OPCODE_Q_INIT";
+	case CMD_OPCODE_Q_CONTROL:
+		return "CMD_OPCODE_Q_CONTROL";
+
+	case CMD_OPCODE_RDMA_RESET_LIF:
+		return "CMD_OPCODE_RDMA_RESET_LIF";
+	case CMD_OPCODE_RDMA_CREATE_EQ:
+		return "CMD_OPCODE_RDMA_CREATE_EQ";
+	case CMD_OPCODE_RDMA_CREATE_CQ:
+		return "CMD_OPCODE_RDMA_CREATE_CQ";
+	case CMD_OPCODE_RDMA_CREATE_ADMINQ:
+		return "CMD_OPCODE_RDMA_CREATE_ADMINQ";
+
+	case CMD_OPCODE_FW_DOWNLOAD:
+		return "CMD_OPCODE_FW_DOWNLOAD";
+	case CMD_OPCODE_FW_CONTROL:
+		return "CMD_OPCODE_FW_CONTROL";
+
+	default:
+		return "CMD_OPCODE_UNKNOWN";
+	}
+}
+
 int ionic_adminq_check_err(struct ionic_admin_ctx *ctx)
 {
-	static struct cmds {
-		unsigned int cmd;
-		char *name;
-	} cmds[] = {
-		{ CMD_OPCODE_TXQ_INIT, "CMD_OPCODE_TXQ_INIT" },
-		{ CMD_OPCODE_RXQ_INIT, "CMD_OPCODE_RXQ_INIT" },
-		{ CMD_OPCODE_FEATURES, "CMD_OPCODE_FEATURES" },
-		{ CMD_OPCODE_Q_ENABLE, "CMD_OPCODE_Q_ENABLE" },
-		{ CMD_OPCODE_Q_DISABLE, "CMD_OPCODE_Q_DISABLE" },
-		{ CMD_OPCODE_STATION_MAC_ADDR_GET,
-			"CMD_OPCODE_STATION_MAC_ADDR_GET" },
-		{ CMD_OPCODE_MTU_SET, "CMD_OPCODE_MTU_SET" },
-		{ CMD_OPCODE_RX_MODE_SET, "CMD_OPCODE_RX_MODE_SET" },
-		{ CMD_OPCODE_RX_FILTER_ADD, "CMD_OPCODE_RX_FILTER_ADD" },
-		{ CMD_OPCODE_RX_FILTER_DEL, "CMD_OPCODE_RX_FILTER_DEL" },
-		{ CMD_OPCODE_RSS_HASH_SET, "CMD_OPCODE_RSS_HASH_SET" },
-		{ CMD_OPCODE_RSS_INDIR_SET, "CMD_OPCODE_RSS_INDIR_SET" },
-		{ CMD_OPCODE_STATS_DUMP_START, "CMD_OPCODE_STATS_DUMP_START" },
-		{ CMD_OPCODE_STATS_DUMP_STOP, "CMD_OPCODE_STATS_DUMP_STOP" },
-	};
-	int list_len = ARRAY_SIZE(cmds);
-	struct cmds *cmd = cmds;
-	char *name = "UNKNOWN";
-	int i;
+	const char *name;
+	const char *status;
 
 	if (ctx->comp.comp.status) {
-		for (i = 0; i < list_len; i++) {
-			if (cmd[i].cmd == ctx->cmd.cmd.opcode) {
-				name = cmd[i].name;
-				break;
-			}
-		}
-		DBG2("%s :: (%d) %s failed: %d)\n", __FUNCTION__, ctx->cmd.cmd.opcode,
-			name, ctx->comp.comp.status);
+		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
+		status = ionic_error_to_str(ctx->comp.comp.status);
+		DBG2("%s: %s (%d) failed: %s (%d)\n",
+			   __FUNCTION__,
+			   name,
+			   ctx->cmd.cmd.opcode,
+			   status,
+			   ctx->comp.comp.status);
 		return -EIO;
 	}
 
@@ -773,7 +893,7 @@ int polladminq(struct lif *lif, struct ionic_admin_ctx *ctx)
 	struct admin_comp *comp = admincq->info->cq_desc;
 
 	for (wait = 0; wait < devcmd_timeout; wait++) {
-		if (comp->color == admincq->done_color) {
+		if (color_match(comp->color, admincq->done_color)) {
 			// update the cq_info and check if the last descriptor.
 			if (admincq->info->last) {
 				admincq->done_color = !admincq->done_color;
@@ -810,8 +930,8 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 	memcpy(cmd, &ctx->cmd, sizeof(ctx->cmd));
 	adminq->head = adminq->head->next;
 	struct doorbell db = {
-		.qid_lo = adminq->qid,
-		.qid_hi = adminq->qid >> 8,
+		.qid_lo = adminq->hw_index,
+		.qid_hi = adminq->hw_index >> 8,
 		.ring = 0,
 		.p_index = adminq->head->index,
 	};
@@ -829,24 +949,23 @@ static int ionic_lif_notifyq_init(struct lif *lif, struct qcq *qcq)
 {
 	struct queue *q = &qcq->q;
 	struct ionic_admin_ctx ctx = {
-		.cmd.notifyq_init = {
-		.opcode = CMD_OPCODE_NOTIFYQ_INIT,
-		.index = q->index,
-		.pid = q->pid,
-//		.intr_index = qcq->intr.index,
-		.lif_index = lif->index,
-		.ring_size = ilog2(q->num_descs),
-		.ring_base = q->base_pa,
-		.notify_size = ilog2(lif->notifyblock_sz),
-		.notify_base = lif->notifyblock_pa,
+		.cmd.q_init = {
+			.opcode = CMD_OPCODE_Q_INIT,
+			.lif_index = lif->index,
+			.type = q->type,
+			.index = q->index,
+			.flags = IONIC_QINIT_F_ENA,
+			.pid = q->pid,
+			.ring_size = ilog2(q->num_descs),
+			.ring_base = q->base_pa,
 		},
 	};
 
 	if (ionic_adminq_post_wait(lif, &ctx))
 		return -EIO;
 
-	q->qid = ctx.comp.notifyq_init.qid;
-	q->qtype = ctx.comp.notifyq_init.qtype;
+	q->hw_index = ctx.comp.q_init.hw_index;
+	q->hw_type = ctx.comp.q_init.hw_type;
 	q->db = NULL;
 	qcq->flags |= QCQ_F_INITED;
 
@@ -861,25 +980,23 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 	struct queue *q = &qcq->q;
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct ionic_admin_ctx ctx = {
-		.cmd.txq_init = {
-			.opcode = CMD_OPCODE_TXQ_INIT,
-			.I = false,
-			.E = false,
-			.pid = q->pid,
-			//.intr_index = cq->bound_intr->index,
-			.type = TXQ_TYPE_ETHERNET,
+		.cmd.q_init = {
+			.opcode = CMD_OPCODE_Q_INIT,
+			.lif_index = lif->index,
+			.type = q->type,
 			.index = q->index,
-			.cos = DEFAULT_COS,
-			.ring_base = q->base_pa,
+			.flags = IONIC_QINIT_F_ENA,
+			.pid = q->pid,
 			.ring_size = ilog2(q->num_descs),
+			.ring_base = q->base_pa,
 		},
 	};
 
 	if (ionic_adminq_post_wait(lif, &ctx))
 		return -EIO;
 
-	q->qid = ctx.comp.txq_init.qid;
-	q->qtype = ctx.comp.txq_init.qtype;
+	q->hw_index = ctx.comp.q_init.hw_index;
+	q->hw_type = ctx.comp.q_init.hw_type;
 	q->db = ionic_db_map(idev, q);
 	qcq->flags |= QCQ_F_INITED;
 
@@ -894,24 +1011,23 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 	struct queue *q = &qcq->q;
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct ionic_admin_ctx ctx = {
-		.cmd.rxq_init = {
-			.opcode = CMD_OPCODE_RXQ_INIT,
-			.I = false,
-			.E = false,
-			.pid = q->pid,
-			//.intr_index = cq->bound_intr->index,
-			.type = RXQ_TYPE_ETHERNET,
+		.cmd.q_init = {
+			.opcode = CMD_OPCODE_Q_INIT,
+			.lif_index = lif->index,
+			.type = q->type,
 			.index = q->index,
-			.ring_base = q->base_pa,
+			.flags = IONIC_QINIT_F_ENA,
+			.pid = q->pid,
 			.ring_size = ilog2(q->num_descs),
+			.ring_base = q->base_pa,
 		},
 	};
 
 	if (ionic_adminq_post_wait(lif, &ctx))
 		return -EIO;
 
-	q->qid = ctx.comp.rxq_init.qid;
-	q->qtype = ctx.comp.rxq_init.qtype;
+	q->hw_index = ctx.comp.q_init.hw_index;
+	q->hw_type = ctx.comp.q_init.hw_type;
 	q->db = ionic_db_map(idev, q);
 	qcq->flags |= QCQ_F_INITED;
 	return 0;
@@ -944,8 +1060,9 @@ static int ionic_lif_station_mac_addr(struct lif *lif, struct net_device *netdev
 
 	int err;
 	struct ionic_admin_ctx ctx = {
-		.cmd.station_mac_addr_get = {
-			.opcode = CMD_OPCODE_STATION_MAC_ADDR_GET,
+		.cmd.lif_getattr = {
+			.opcode = CMD_OPCODE_LIF_GETATTR,
+			.attr = IONIC_LIF_ATTR_MAC,
 		},
 	};
 
@@ -955,16 +1072,16 @@ static int ionic_lif_station_mac_addr(struct lif *lif, struct net_device *netdev
 	}
 
 	DBG("Station MAC Success %02x:%02x:%02x:%02x:%02x:%02x\n",
-		ctx.comp.station_mac_addr_get.addr[0],
-		ctx.comp.station_mac_addr_get.addr[1],
-		ctx.comp.station_mac_addr_get.addr[2],
-		ctx.comp.station_mac_addr_get.addr[3],
-		ctx.comp.station_mac_addr_get.addr[4],
-		ctx.comp.station_mac_addr_get.addr[5]);
-	memcpy(netdev->hw_addr, ctx.comp.station_mac_addr_get.addr, ETH_ALEN);
+		ctx.comp.lif_getattr.mac[0],
+		ctx.comp.lif_getattr.mac[1],
+		ctx.comp.lif_getattr.mac[2],
+		ctx.comp.lif_getattr.mac[3],
+		ctx.comp.lif_getattr.mac[4],
+		ctx.comp.lif_getattr.mac[5]);
+	memcpy(netdev->hw_addr, ctx.comp.lif_getattr.mac, ETH_ALEN);
 
 	// adding the rx filter for the mac
-	err = ionic_lif_add_rx_filter(lif, ctx.comp.station_mac_addr_get.addr);
+	err = ionic_lif_add_rx_filter(lif, ctx.comp.lif_getattr.mac);
 	if (err) {
 		DBG2("%s ::Adding RX filter failed\n", __FUNCTION__);
 		return err;
@@ -981,11 +1098,11 @@ static int ionic_lif_station_mac_addr(struct lif *lif, struct net_device *netdev
 int ionic_lif_init(struct net_device *netdev)
 {
 	struct ionic *ionic = netdev->priv;
-	struct lif *lif = ionic->ionic_lif;
+	struct lif *lif = ionic->lif;
 	struct ionic_dev *idev = &lif->ionic->idev;
 	int err;
 
-	err = ionic_dev_cmd_lif_init(idev, lif->index, devcmd_timeout);
+	err = ionic_dev_cmd_lif_init(idev, lif->index, lif->info_pa, devcmd_timeout);
 	if (err) {
 		DBG2("%s:: lif initiation failed\n", __FUNCTION__);
 		return err;
@@ -1055,10 +1172,12 @@ int ionic_qcq_enable(struct qcq *qcq)
 	struct lif *lif = q->lif;
 	int err;
 	struct ionic_admin_ctx ctx = {
-		.cmd.q_enable = {
-			.opcode = CMD_OPCODE_Q_ENABLE,
-			.qid = q->qid,
-			.qtype = q->qtype,
+		.cmd.q_control = {
+			.opcode = CMD_OPCODE_Q_CONTROL,
+			.lif_index = lif->index,
+			.type = q->type,
+			.index = q->index,
+			.oper = IONIC_Q_ENABLE,
 		},
 	};
 
@@ -1080,10 +1199,12 @@ int ionic_qcq_disable(struct qcq *qcq)
 	struct lif *lif = q->lif;
 	int err;
 	struct ionic_admin_ctx ctx = {
-		.cmd.q_disable = {
-			.opcode = CMD_OPCODE_Q_DISABLE,
-			.qid = q->qid,
-			.qtype = q->qtype,
+		.cmd.q_control = {
+			.opcode = CMD_OPCODE_Q_CONTROL,
+			.lif_index = lif->index,
+			.type = q->type,
+			.index = q->index,
+			.oper = IONIC_Q_DISABLE,
 		},
 	};
 
@@ -1163,7 +1284,7 @@ bool ionic_q_has_space(struct queue *q, unsigned int want)
 void ionic_rx_fill(struct net_device *netdev, int length)
 {
 	struct ionic *ionic = netdev->priv;
-	struct queue *rxq = &ionic->ionic_lif->rxqcqs->q;
+	struct queue *rxq = &ionic->lif->rxqcqs->q;
 	struct rxq_desc *desc;
 	struct io_buffer *iobuf;
 	unsigned int i;
@@ -1186,8 +1307,8 @@ void ionic_rx_fill(struct net_device *netdev, int length)
 		// only ring doorbell every stride.
 //		if (((rxq->head->index + 1) & RX_RING_DOORBELL_STRIDE) == 0) {
 		struct doorbell db = {
-			.qid_lo = rxq->qid,
-			.qid_hi = rxq->qid >> 8,
+			.qid_lo = rxq->hw_index,
+			.qid_hi = rxq->hw_index >> 8,
 			.ring = 0,
 			.p_index = rxq->head->index,
 		};
@@ -1205,13 +1326,13 @@ void ionic_poll_rx(struct net_device *netdev)
 {
 	struct ionic *ionic = netdev->priv;
 
-	struct queue *rxq = &ionic->ionic_lif->rxqcqs->q;
-	struct cq *rxcq = &ionic->ionic_lif->rxqcqs->cq;
+	struct queue *rxq = &ionic->lif->rxqcqs->q;
+	struct cq *rxcq = &ionic->lif->rxqcqs->cq;
 	struct rxq_comp *comp = rxcq->info->cq_desc;
 	struct io_buffer *iobuf;
 	size_t len;
 
-	while (comp->color == rxcq->done_color) {
+	while (color_match(comp->pkt_type_color, rxcq->done_color)) {
 		rmb();
 
 		// update the cq_info and check if the last descriptor.
@@ -1221,8 +1342,8 @@ void ionic_poll_rx(struct net_device *netdev)
 		rxcq->info = rxcq->info->next;
 
 		// Populate I/O buffer
-		iobuf = ionic->ionic_lif->rx_iobuf[rxq->tail->index];
-		ionic->ionic_lif->rx_iobuf[rxq->tail->index] = NULL;
+		iobuf = ionic->lif->rx_iobuf[rxq->tail->index];
+		ionic->lif->rx_iobuf[rxq->tail->index] = NULL;
 		len = comp->len;
 		iob_put(iobuf, len);
 
@@ -1244,11 +1365,11 @@ void ionic_poll_rx(struct net_device *netdev)
 void ionic_poll_tx(struct net_device *netdev)
 {
 	struct ionic *ionic = netdev->priv;
-	struct queue *txq = &ionic->ionic_lif->txqcqs->q;
-	struct cq *txcq = &ionic->ionic_lif->txqcqs->cq;
+	struct queue *txq = &ionic->lif->txqcqs->q;
+	struct cq *txcq = &ionic->lif->txqcqs->cq;
 	struct txq_comp *comp = txcq->info->cq_desc;
 
-	while (comp->color == txcq->done_color) {
+	while (color_match(comp->color, txcq->done_color)) {
 		rmb();
 
 		// update the cq_info and check if the last descriptor.

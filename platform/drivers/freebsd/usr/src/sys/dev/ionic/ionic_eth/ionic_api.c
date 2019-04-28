@@ -98,11 +98,17 @@ int ionic_api_set_private(struct lif *lif, void *priv,
 }
 EXPORT_SYMBOL_GPL(ionic_api_set_private);
 
-const union identity *ionic_api_get_identity(struct lif *lif, int *lif_id)
+const union dev_info_regs *ionic_api_get_devinfo(struct lif *lif)
+{
+	return lif->ionic->idev.dev_info;
+}
+EXPORT_SYMBOL_GPL(ionic_api_get_devinfo);
+
+const union lif_identity *ionic_api_get_identity(struct lif *lif, int *lif_id)
 {
 	*lif_id = lif->index;
 
-	return lif->ionic->ident;
+	return &lif->ionic->ident.lif;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_identity);
 
@@ -186,7 +192,7 @@ void ionic_api_kernel_dbpage(struct lif *lif, u32 __iomem **intr_ctrl,
 	*dbpage = (void __iomem *)lif->kern_dbpage;
 
 	/* XXX remove when rdma drops xxx_kdbid workaround */
-	dbpage_num = ionic_db_page_num(&lif->ionic->idev, lif->index, 0);
+	dbpage_num = ionic_db_page_num(lif->ionic, lif->index, 0);
 	*xxx_dbpage_phys = ionic_bus_phys_dbpage(lif->ionic, dbpage_num);
 }
 EXPORT_SYMBOL_GPL(ionic_api_kernel_dbpage);
@@ -208,7 +214,7 @@ int ionic_api_get_dbid(struct lif *lif, u32 *dbid, phys_addr_t *addr)
 
 	mutex_unlock(&lif->dbid_inuse_lock);
 
-	dbpage_num = ionic_db_page_num(&lif->ionic->idev, lif->index, id);
+	dbpage_num = ionic_db_page_num(lif->ionic, lif->index, id);
 
 	*dbid = id;
 	*addr = ionic_bus_phys_dbpage(lif->ionic, dbpage_num);
@@ -278,8 +284,8 @@ static void ionic_adminq_ring_doorbell(struct adminq *adminq, int index)
 	struct doorbell *db;
 
 	IONIC_NETDEV_INFO(adminq->lif->netdev, "ring doorbell for index: %d\n", index);
-	db = adminq->lif->kern_dbpage + adminq->qtype;
-	ionic_ring_doorbell(db, adminq->qid, index);
+	db = adminq->lif->kern_dbpage + adminq->hw_type;
+	ionic_ring_doorbell(db, adminq->hw_index, index);
 }
 
 static bool ionic_adminq_avail(struct adminq *adminq, int want)

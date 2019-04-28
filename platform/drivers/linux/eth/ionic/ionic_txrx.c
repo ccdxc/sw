@@ -129,7 +129,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 				 false);
 
 	if (netdev->features & NETIF_F_RXHASH) {
-		switch (comp->pkt_type) {
+		switch (comp->pkt_type_color & IONIC_RXQ_COMP_PKT_TYPE_MASK) {
 		case PKT_TYPE_IPV4:
 		case PKT_TYPE_IPV6:
 			skb_set_hash(skb, comp->rss_hash, PKT_HASH_TYPE_L3);
@@ -143,26 +143,29 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 		}
 	}
 
-	if (netdev->features & NETIF_F_RXCSUM && comp->csum_calc) {
-		skb->ip_summed = CHECKSUM_COMPLETE;
-		skb->csum = comp->csum;
-		stats->csum_complete++;
+	if (netdev->features & NETIF_F_RXCSUM) {
+		if (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_CALC) {
+			skb->ip_summed = CHECKSUM_COMPLETE;
+			skb->csum = comp->csum;
+			stats->csum_complete++;
 #ifdef CSUM_DEBUG
-		if (skb->csum != (u16)~csum)
-			netdev_warn(netdev, "Rx CSUM incorrect.  Want 0x%04x got 0x%04x, protocol 0x%04x\n",
-				    (u16)~csum, skb->csum, htons(skb->protocol));
+			if (skb->csum != (u16)~csum)
+				netdev_warn(netdev, "Rx CSUM incorrect. "
+						"Want 0x%04x got 0x%04x, protocol 0x%04x\n",
+						(u16)~csum, skb->csum, htons(skb->protocol));
 #endif
+		}
 	} else {
 		stats->csum_none++;
 	}
 
-	if (comp->csum_tcp_bad ||
-	    comp->csum_udp_bad ||
-	    comp->csum_ip_bad)
+	if ((comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_TCP_BAD) ||
+	    (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_UDP_BAD) ||
+	    (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_IP_BAD))
 		stats->csum_error++;
 
 	if (netdev->features & NETIF_F_HW_VLAN_CTAG_RX) {
-		if (comp->V)
+		if (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_VLAN)
 			__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q),
 					       comp->vlan_tci);
 	}
@@ -174,7 +177,7 @@ static bool ionic_rx_service(struct cq *cq, struct cq_info *cq_info)
 {
 	struct rxq_comp *comp = cq_info->cq_desc;
 
-	if (comp->color != cq->done_color)
+	if (!color_match(comp->pkt_type_color, cq->done_color))
 		return false;
 
 	ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
@@ -196,7 +199,7 @@ static bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info)
 {
 	struct txq_comp *comp = cq_info->cq_desc;
 
-	if (comp->color != cq->done_color)
+	if (!color_match(comp->color, cq->done_color))
 		return false;
 
 	ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
@@ -386,13 +389,14 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
 	struct sk_buff *skb = cb_arg;
 	u16 queue_index;
 	unsigned int i;
+	__le64 addr;
+	u8 opcode, flags, nsge;
 
-	dma_unmap_page(dev, (dma_addr_t)desc->addr,
-		       desc->len, DMA_TO_DEVICE);
+	decode_txq_desc_cmd(desc->cmd, &opcode, &flags, &nsge, &addr);
 
-	for (i = 0; i < desc->num_sg_elems; i++, elem++)
-		dma_unmap_page(dev, (dma_addr_t)elem->addr,
-			       elem->len, DMA_TO_DEVICE);
+	dma_unmap_page(dev, (dma_addr_t)addr, desc->len, DMA_TO_DEVICE);
+	for (i = 0; i < nsge; i++, elem++)
+		dma_unmap_page(dev, (dma_addr_t)elem->addr, elem->len, DMA_TO_DEVICE);
 
 	if (skb) {
 		queue_index = skb_get_queue_mapping(skb);
@@ -444,18 +448,24 @@ static void ionic_tx_tcp_pseudo_csum(struct sk_buff *skb)
 }
 
 static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
-			      struct sk_buff *skb, unsigned int hdrlen,
-			      unsigned int mss, u16 vlan_tci, bool has_vlan,
-			      bool outer_csum, bool start, bool done)
+			      struct sk_buff *skb,
+			      dma_addr_t addr, u8 nsge, u16 len,
+			      unsigned int hdrlen, unsigned int mss,
+			      bool outer_csum,
+			      u16 vlan_tci, bool has_vlan,
+			      bool start, bool done)
 {
-	desc->opcode = TXQ_DESC_OPCODE_TSO;
+	u8 flags = 0;
+	flags |= has_vlan ? IONIC_TXQ_DESC_FLAG_VLAN : 0;
+	flags |= outer_csum ? IONIC_TXQ_DESC_FLAG_ENCAP : 0;
+	flags |= start ? IONIC_TXQ_DESC_FLAG_TSO_SOT : 0;
+	flags |= done ? IONIC_TXQ_DESC_FLAG_TSO_EOT : 0;
+
+	desc->cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_TSO,
+					flags, nsge, addr);
+	desc->len = len;
 	desc->vlan_tci = vlan_tci;
 	desc->hdr_len = hdrlen;
-	desc->V = has_vlan;
-	desc->C = 1;
-	desc->O = outer_csum;
-	desc->S = start;
-	desc->E = done;
 	desc->mss = mss;
 
 	if (done) {
@@ -488,6 +498,9 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 	struct txq_desc *desc;
 	struct txq_sg_elem *elem;
 	skb_frag_t *frag;
+	dma_addr_t desc_addr;
+	u16 desc_len;
+	u8 desc_nsge;
 	unsigned int hdrlen;
 	unsigned int mss = skb_shinfo(skb)->gso_size;
 	unsigned int nfrags = skb_shinfo(skb)->nr_frags;
@@ -534,18 +547,22 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 	while (left > 0) {
 		len = min(seglen, left);
 		frag_left = seglen - len;
-		desc->addr = ionic_tx_map_single(q, skb->data + offset, len);
-		if (!desc->addr)
+		desc_addr = ionic_tx_map_single(q, skb->data + offset, len);
+		if (!desc_addr)
 			goto err_out_abort;
-		desc->len = len;
-		desc->num_sg_elems = 0;
+		desc_len = len;
+		desc_nsge = 0;
 		left -= len;
 		offset += len;
 		if (nfrags > 0 && frag_left > 0)
 			continue;
 		done = (nfrags == 0 && left == 0);
-		ionic_tx_tso_post(q, desc, skb, hdrlen, mss, vlan_tci,
-				  has_vlan, outer_csum, start, done);
+		ionic_tx_tso_post(q, desc, skb,
+				  desc_addr, desc_nsge, desc_len,
+				  hdrlen, mss,
+				  outer_csum,
+				  vlan_tci, has_vlan,
+				  start, done);
 		total_pkts++;
 		total_bytes += start ? len : len + hdrlen;
 		desc = ionic_tx_tso_next(q, &elem);
@@ -572,15 +589,18 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 					goto err_out_abort;
 				elem->len = len;
 				elem++;
-				desc->num_sg_elems++;
+				desc_nsge++;
 				left -= len;
 				offset += len;
 				if (nfrags > 0 && frag_left > 0)
 					continue;
 				done = (nfrags == 0 && left == 0);
-				ionic_tx_tso_post(q, desc, skb, hdrlen, mss,
-						  vlan_tci, has_vlan,
-						  outer_csum, start, done);
+				ionic_tx_tso_post(q, desc, skb,
+						desc_addr, desc_nsge, desc_len,
+						hdrlen, mss,
+						outer_csum,
+						vlan_tci, has_vlan,
+						start, done);
 				total_pkts++;
 				total_bytes += start ? len : len + hdrlen;
 				desc = ionic_tx_tso_next(q, &elem);
@@ -588,20 +608,23 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 			} else {
 				len = min(mss, left);
 				frag_left = mss - len;
-				desc->addr = ionic_tx_map_frag(q, frag,
-							       offset, len);
-				if (!desc->addr)
+				desc_addr = ionic_tx_map_frag(q, frag,
+							             offset, len);
+				if (!desc_addr)
 					goto err_out_abort;
-				desc->len = len;
-				desc->num_sg_elems = 0;
+				desc_len = len;
+				desc_nsge = 0;
 				left -= len;
 				offset += len;
 				if (nfrags > 0 && frag_left > 0)
 					continue;
 				done = (nfrags == 0 && left == 0);
-				ionic_tx_tso_post(q, desc, skb, hdrlen, mss,
-						  vlan_tci, has_vlan,
-						  outer_csum, start, done);
+				ionic_tx_tso_post(q, desc, skb,
+						desc_addr, desc_nsge, desc_len,
+						hdrlen, mss,
+						outer_csum,
+						vlan_tci, has_vlan,
+						start, done);
 				total_pkts++;
 				total_bytes += start ? len : len + hdrlen;
 				desc = ionic_tx_tso_next(q, &elem);
@@ -630,23 +653,24 @@ static int ionic_tx_calc_csum(struct queue *q, struct sk_buff *skb)
 {
 	struct txq_desc *desc = q->head->desc;
 	struct tx_stats *stats = q_to_tx_stats(q);
-	bool encap = skb->encapsulation;
 	dma_addr_t addr;
+	u8 flags = 0;
+	bool encap = skb->encapsulation;
+	bool has_vlan = !!skb_vlan_tag_present(skb);
 
 	addr = ionic_tx_map_single(q, skb->data, skb_headlen(skb));
 	if (!addr)
 		return -ENOMEM;
 
-	desc->opcode = TXQ_DESC_OPCODE_CALC_CSUM;
-	desc->num_sg_elems = skb_shinfo(skb)->nr_frags;
+	flags |= has_vlan ? IONIC_TXQ_DESC_FLAG_VLAN : 0;
+	flags |= encap ? IONIC_TXQ_DESC_FLAG_ENCAP : 0;
+
+	desc->cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_CSUM_PARTIAL,
+					flags, skb_shinfo(skb)->nr_frags, addr);;
 	desc->len = skb_headlen(skb);
-	desc->addr = addr;
 	desc->vlan_tci = skb_vlan_tag_get(skb);
-	desc->hdr_len = skb_checksum_start_offset(skb);
+	desc->csum_start = skb_checksum_start_offset(skb);
 	desc->csum_offset = skb->csum_offset;
-	desc->V = !!skb_vlan_tag_present(skb);
-	desc->C = 1;
-	desc->O = encap;
 
 #ifdef HAVE_CSUM_NOT_INET
 	if (skb->csum_not_inet)
@@ -663,21 +687,21 @@ static int ionic_tx_calc_no_csum(struct queue *q, struct sk_buff *skb)
 	struct txq_desc *desc = q->head->desc;
 	struct tx_stats *stats = q_to_tx_stats(q);
 	dma_addr_t addr;
+	u8 flags = 0;
+	bool encap = skb->encapsulation;
+	bool has_vlan = !!skb_vlan_tag_present(skb);
 
 	addr = ionic_tx_map_single(q, skb->data, skb_headlen(skb));
 	if (!addr)
 		return -ENOMEM;
 
-	desc->opcode = TXQ_DESC_OPCODE_CALC_NO_CSUM;
-	desc->num_sg_elems = skb_shinfo(skb)->nr_frags;
+	flags |= has_vlan ? IONIC_TXQ_DESC_FLAG_VLAN : 0;
+	flags |= encap ? IONIC_TXQ_DESC_FLAG_ENCAP : 0;
+
+	desc->cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_CSUM_NONE,
+					flags, skb_shinfo(skb)->nr_frags, addr);
 	desc->len = skb_headlen(skb);
-	desc->addr = addr;
 	desc->vlan_tci = skb_vlan_tag_get(skb);
-	desc->hdr_len = 0;
-	desc->csum_offset = 0;
-	desc->V = !!skb_vlan_tag_present(skb);
-	desc->C = 1;
-	desc->O = 0;
 
 	stats->no_csum++;
 

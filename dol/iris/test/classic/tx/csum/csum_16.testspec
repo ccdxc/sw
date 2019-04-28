@@ -92,9 +92,9 @@ descriptors:
             _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
-            opcode             : callback://eth/callbacks/GetTxOpcodeCalcCsum
-            hdr_len            : callback://eth/callbacks/GetChecksumStart
-            mss_or_csumoffset  : callback://eth/callbacks/GetChecksumOffset
+            opcode : callback://eth/callbacks/GetTxOpcodeCalcCsum
+            csum_start_or_hdr_len : callback://eth/callbacks/GetChecksumStart
+            csum_offset_or_mss : callback://eth/callbacks/GetChecksumOffset
 
     - descriptor:
         id      : DESC2 # Expected Descriptor

@@ -16,13 +16,14 @@
 
 #define ACCEL_DEV_CMD_ENUMERATE
 #include "accel_dev.hpp"
+#include "accel_if.h"
 #include "dev.hpp"
 
 /*
- * Size of dev_cmd_regs_t's cmd/cpl area without the data portion.
+ * Size of accel_dev_cmd_regs_t's cmd/cpl area without the data portion.
  */
 #define DEV_CMDREGS_CMDCPL_SIZE         \
-    (offsetof(dev_cmd_regs_t, cpl) + sizeof(dev_cmd_cpl_t))
+    (offsetof(accel_dev_cmd_regs_t, cpl) + sizeof(dev_cmd_cpl_t))
 
 using namespace sdk::platform::utils;
 using namespace utils;
@@ -46,7 +47,7 @@ static dp_mem_t     *accel_devcmddbpa_buf;
 static dp_mem_t     *accel_devcmdpa_cmdcpl;
 static uint64_t     nicmgr_accel_lif_id;
 
-static dev_cmd_regs_t *nicmgr_if_push(dev_cmd_t& cmd);
+static accel_dev_cmd_regs_t *nicmgr_if_push(dev_cmd_t& cmd);
 
 
 static int
@@ -132,7 +133,7 @@ nicmgr_if_identify(uint64_t *ret_seq_lif,
                    accel_ring_t *ret_accel_ring_tbl,
                    uint32_t accel_ring_tbl_size)
 {
-    dev_cmd_regs_t  *dev_cmd;
+    accel_dev_cmd_regs_t  *dev_cmd;
     identity_t      *identity;
     identify_cpl_t  *cpl;
     dev_cmd_t       cmd = {0};
@@ -148,7 +149,7 @@ nicmgr_if_identify(uint64_t *ret_seq_lif,
         /*
          * Read the full result buffer including the data portion.
          */
-        dev_cmd = (dev_cmd_regs_t *)accel_devcmdpa_buf->read_thru();
+        dev_cmd = (accel_dev_cmd_regs_t *)accel_devcmdpa_buf->read_thru();
         cpl = &dev_cmd->cpl.identify;
         if (cpl->ver != IDENTITY_VERSION_1) {
             printf("%s unsupported identity version %u\n",
@@ -271,14 +272,14 @@ nicmgr_if_seq_queue_init_complete(void)
 }
 
 
-static dev_cmd_regs_t *
+static accel_dev_cmd_regs_t *
 nicmgr_if_push(dev_cmd_t& cmd)
 {
-    dev_cmd_regs_t  *dev_cmd;
+    accel_dev_cmd_regs_t  *dev_cmd;
     bool            cmd_complete = false;
 
     accel_devcmdpa_buf->clear();
-    dev_cmd = (dev_cmd_regs_t *)accel_devcmdpa_buf->read();
+    dev_cmd = (accel_dev_cmd_regs_t *)accel_devcmdpa_buf->read();
 
     while (!cmd_complete) {
         dev_cmd->signature = DEV_CMD_SIGNATURE;
@@ -297,7 +298,7 @@ nicmgr_if_push(dev_cmd_t& cmd)
          */
         accel_dev->DevcmdHandler();
 
-        dev_cmd = (dev_cmd_regs_t *)accel_devcmdpa_cmdcpl->read_thru();
+        dev_cmd = (accel_dev_cmd_regs_t *)accel_devcmdpa_cmdcpl->read_thru();
         if (!dev_cmd->done) {
             printf("%s command %u failed done %u\n", __FUNCTION__,
                    dev_cmd->cmd.nop.opcode, dev_cmd->done);

@@ -16,6 +16,9 @@
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/platform/rdmamgr/rdmamgr.hpp"
+#include "platform/utils/mpartition.hpp"
+
+#include "gen/platform/mem_regions.hpp"
 
 #ifndef APOLLO
 #include "common_rxdma_actions_p4pd.h"

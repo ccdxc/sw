@@ -26,7 +26,7 @@
 #include "nvme_lif.hpp"
 #include "pd_client.hpp"
 #include "adminq.hpp"
-#include "nic/include/edma.hpp"
+#include "nic/include/edmaq.h"
 
 using namespace std;
 

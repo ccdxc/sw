@@ -109,6 +109,7 @@ struct lif {
         struct ionic *ionic;
         bool registered;
         unsigned int index;
+        unsigned int hw_index;
         unsigned int kern_pid;
         spinlock_t adminq_lock;
         struct qcq *adminqcq;
@@ -121,13 +122,14 @@ struct lif {
         unsigned int nrxqcqs;
         unsigned int rx_mode;
         u32 hw_features;
-        struct ionic_lif_stats *lif_stats;
-        dma_addr_t lif_stats_pa;
-        u8 rss_hash_key[RSS_HASH_KEY_SIZE];
+
+        u16 rss_types;
+        u8 rss_hash_key[IONIC_RSS_HASH_KEY_SIZE];
         u8 *rss_ind_tbl;
         u32 rss_ind_tbl_size;
         u32 rss_key_size;
         dma_addr_t rss_ind_tbl_pa;
+
         struct rx_filters rx_filters;
         struct ionic_work_queue *def_work_queue;///////
         struct deferred deferred;
@@ -136,9 +138,10 @@ struct lif {
         void *api_private;
         u32 flags;
         //struct dentry *debugfs;
-        u32 notifyblock_sz;
-        struct notify_block *notifyblock;
-        dma_addr_t notifyblock_pa;
+
+        u32 info_sz;
+        struct lif_info *info;
+        dma_addr_t info_pa;
 };
 
 #define lif_to_txq(lif, i)      (&lif->txqcqs[i]->q)
@@ -146,6 +149,9 @@ struct lif {
 
 VMK_ReturnStatus
 ionic_dev_recover_world(void *data);
+
+VMK_ReturnStatus
+ionic_lif_identify(struct ionic *ionic);
 
 VMK_ReturnStatus
 ionic_lifs_alloc(struct ionic *ionic);
@@ -185,7 +191,7 @@ ionic_lifs_size_undo(struct ionic_en_priv_data *priv_data);
 
 VMK_ReturnStatus
 ionic_intr_alloc(struct lif *lif, struct intr *intr);
-void ionic_intr_free(struct lif *lif, struct intr *intr);
+void IONIC_QINIT_Free(struct lif *lif, struct intr *intr);
 
 VMK_ReturnStatus
 ionic_lif_addr_add(struct lif *lif, const u8 *addr);
@@ -207,10 +213,8 @@ ionic_vlan_rx_kill_vid(struct lif *lif,
                        u16 vid);
 
 VMK_ReturnStatus
-ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir);
-
-VMK_ReturnStatus
-ionic_rss_hash_key_set(struct lif *lif, const u8 *key);
+ionic_lif_rss_config(struct lif *lif, const u16 types,
+        const u8 *key, const u32 *indir);
 
 VMK_ReturnStatus
 ionic_lif_set_uplink_info(struct lif *lif);

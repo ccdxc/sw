@@ -33,9 +33,8 @@
             "rxq_count" : 16,
             "txq_count" : 16,
             "eq_count" : 1,
-            "adminq_count" : 16,
+            "adminq_count" : 1,
             "intr_count" : 64,
-            "qos_group" : "DEFAULT",
             "pcie" : {
                 "port" : 0,
                 "num_vfs" : 0,

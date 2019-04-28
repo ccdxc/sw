@@ -33,48 +33,61 @@
 #ifndef _IONIC_IF_H_
 #define _IONIC_IF_H_
 
-#define DEV_CMD_SIGNATURE               0x44455643      /* 'DEVC' */
+#pragma pack(push, 1)
 
+#define IONIC_DEV_INFO_SIGNATURE		0x44455649      /* 'DEVI' */
+#define IONIC_DEV_INFO_VERSION			1
+#define IONIC_IFNAMSIZ					16
+
+/**
+ * Commands
+ */
 enum cmd_opcode {
-	CMD_OPCODE_NOP				= 0,
-	CMD_OPCODE_RESET			= 1,
-	CMD_OPCODE_IDENTIFY			= 2,
-	CMD_OPCODE_LIF_INIT			= 3,
-	CMD_OPCODE_ADMINQ_INIT			= 4,
-	CMD_OPCODE_TXQ_INIT			= 5,
-	CMD_OPCODE_RXQ_INIT			= 6,
-	CMD_OPCODE_FEATURES			= 7,
-	CMD_OPCODE_HANG_NOTIFY			= 8,
+	CMD_OPCODE_NOP					= 0,
 
-	CMD_OPCODE_Q_ENABLE			= 9,
-	CMD_OPCODE_Q_DISABLE			= 10,
+	/* Device commands */
+	CMD_OPCODE_IDENTIFY				= 1,
+	CMD_OPCODE_INIT					= 2,
+	CMD_OPCODE_RESET				= 3,
+	CMD_OPCODE_GETATTR				= 4,
+	CMD_OPCODE_SETATTR				= 5,
 
-	CMD_OPCODE_NOTIFYQ_INIT			= 11,
-	CMD_OPCODE_LIF_RESET			= 12,
-	CMD_OPCODE_SET_NETDEV_INFO		= 13,
+	/* Port commands */
+	CMD_OPCODE_PORT_IDENTIFY		= 10,
+	CMD_OPCODE_PORT_INIT			= 11,
+	CMD_OPCODE_PORT_RESET			= 12,
+	CMD_OPCODE_PORT_GETATTR			= 13,
+	CMD_OPCODE_PORT_SETATTR			= 14,
 
-	CMD_OPCODE_STATION_MAC_ADDR_GET		= 15,
-	CMD_OPCODE_MTU_SET			= 16,
-	CMD_OPCODE_RX_MODE_SET			= 17,
-	CMD_OPCODE_RX_FILTER_ADD		= 18,
-	CMD_OPCODE_RX_FILTER_DEL		= 19,
-	CMD_OPCODE_STATS_DUMP_START		= 20,
-	CMD_OPCODE_STATS_DUMP_STOP		= 21,
-#define CMD_OPCODE_LIF_STATS_START	CMD_OPCODE_STATS_DUMP_START
-#define CMD_OPCODE_LIF_STATS_STOP	CMD_OPCODE_STATS_DUMP_STOP
-	CMD_OPCODE_RSS_HASH_SET			= 22,
-	CMD_OPCODE_RSS_INDIR_SET		= 23,
+	/* LIF commands */
+	CMD_OPCODE_LIF_IDENTIFY			= 20,
+	CMD_OPCODE_LIF_INIT				= 21,
+	CMD_OPCODE_LIF_RESET			= 22,
+	CMD_OPCODE_LIF_GETATTR			= 23,
+	CMD_OPCODE_LIF_SETATTR			= 24,
 
-	CMD_OPCODE_PORT_CONFIG_SET		= 24,
+	CMD_OPCODE_RX_MODE_SET			= 30,
+	CMD_OPCODE_RX_FILTER_ADD		= 31,
+	CMD_OPCODE_RX_FILTER_DEL		= 32,
 
+	/* Queue commands */
+	CMD_OPCODE_Q_INIT				= 40,
+	CMD_OPCODE_Q_CONTROL			= 41,
+
+	/* RDMA commands */
 	CMD_OPCODE_RDMA_RESET_LIF		= 50,
 	CMD_OPCODE_RDMA_CREATE_EQ		= 51,
 	CMD_OPCODE_RDMA_CREATE_CQ		= 52,
-	CMD_OPCODE_RDMA_CREATE_ADMINQ		= 53,
+	CMD_OPCODE_RDMA_CREATE_ADMINQ	= 53,
 
-	CMD_OPCODE_DEBUG_Q_DUMP			= 0xf0,
+	/* Firmware commands */
+	CMD_OPCODE_FW_DOWNLOAD			= 254,
+	CMD_OPCODE_FW_CONTROL			= 255,
 };
 
+/**
+ * Command Return codes
+ */
 enum status_code {
 	IONIC_RC_SUCCESS	= 0,	/* Success */
 	IONIC_RC_EVERSION	= 1,	/* Incorrect version for request */
@@ -101,13 +114,11 @@ enum status_code {
 };
 
 enum notifyq_opcode {
-	EVENT_OPCODE_LINK_CHANGE		= 1,
+	EVENT_OPCODE_LINK_CHANGE	= 1,
 	EVENT_OPCODE_RESET			= 2,
-	EVENT_OPCODE_HEARTBEAT			= 3,
+	EVENT_OPCODE_HEARTBEAT		= 3,
 	EVENT_OPCODE_LOG			= 4,
 };
-
-#pragma pack(push, 1)
 
 /**
  * struct cmd - General admin command format
@@ -115,16 +126,15 @@ enum notifyq_opcode {
  * @cmd_data: Opcode-specific command bytes
  */
 struct admin_cmd {
-	u16 opcode;
-	u16 cmd_data[31];
+	u8     opcode;
+	u8     rsvd;
+	__le16 lif_index;
+	u8     cmd_data[60];
 };
 
 /**
  * struct admin_comp - General admin command completion format
- * @status:     The status of the command.  Values for status are:
- *                 0 = Successful completion
- *                 Non-zero = Error code.  Error codes are
- *                 command-specific.
+ * @status:     The status of the command (enum status_code)
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
  * @cmd_data:   Command-specific bytes.
@@ -132,240 +142,361 @@ struct admin_cmd {
  *              Device Cmd Registers.)
  */
 struct admin_comp {
-	u32 status:8;
-	u32 rsvd:8;
-	u32 comp_index:16;
-	u8 cmd_data[11];
-	u8 rsvd2:7;
-	u8 color:1;
+	u8     status;
+	u8     rsvd;
+	__le16 comp_index;
+	u8     cmd_data[11];
+	u8     color;
+#define IONIC_COMP_COLOR_MASK  0x80
 };
+
+static inline u8 color_match(u8 color, u8 done_color)
+{
+	return (!!(color & IONIC_COMP_COLOR_MASK)) == done_color;
+}
 
 /**
  * struct nop_cmd - NOP command
- * @opcode: opcode = 0
+ * @opcode: opcode
  */
 struct nop_cmd {
-	u16 opcode;
-	u16 rsvd[31];
+	u8 opcode;
+	u8 rsvd[63];
 };
 
 /**
  * struct nop_comp - NOP command completion
- * @status: The status of the command.  Values for status are:
- *             0 = Successful completion
+ * @status: The status of the command (enum status_code)
  */
 struct nop_comp {
-	u32 status:8;
-	u32 rsvd:24;
-	u32 rsvd2[3];
+	u8 status;
+	u8 rsvd[15];
 };
 
 /**
- * struct reset_cmd - Device reset command
- * @opcode: opcode = 1
+ * struct dev_init_cmd - Device init command
+ * @opcode:    opcode
+ * @type:      device type
  */
-struct reset_cmd {
-	u16 opcode;
-	u16 rsvd[31];
+struct dev_init_cmd {
+	u8     opcode;
+	u8     type;
+	u8     rsvd[62];
+};
+
+/**
+ * struct init_comp - Device init command completion
+ * @status: The status of the command (enum status_code)
+ */
+struct dev_init_comp {
+	u8 status;
+	u8 rsvd[15];
+};
+
+/**
+ * struct dev_reset_cmd - Device reset command
+ * @opcode: opcode
+ */
+struct dev_reset_cmd {
+	u8 opcode;
+	u8 rsvd[63];
 };
 
 /**
  * struct reset_comp - Reset command completion
- * @status: The status of the command.  Values for status are:
- *             0 = Successful completion
+ * @status: The status of the command (enum status_code)
  */
-struct reset_comp {
-	u32 status:8;
-	u32 rsvd:24;
-	u32 rsvd2[3];
+struct dev_reset_comp {
+	u8 status;
+	u8 rsvd[15];
 };
 
-#define IDENTITY_VERSION_1		1
+#define IONIC_IDENTITY_VERSION_1	1
 
 /**
- * struct identify_cmd - Driver/device identify command
- * @opcode:  opcode = 2
- * @ver:     Highest version of identify supported by driver:
- *                 1 = version 1.0
- * @addr:    Destination address for the 4096-byte device
- *           identify info
+ * struct dev_identify_cmd - Driver/device identify command
+ * @opcode:  opcode
+ * @ver:     Highest version of identify supported by driver
  */
-struct identify_cmd {
-	u16 opcode;
-	u16 ver;
-	dma_addr_t addr;
-	u32 rsvd2[13];
+struct dev_identify_cmd {
+	u8 opcode;
+	u8 ver;
+	u8 rsvd[62];
 };
 
 /**
  * struct identify_comp - Driver/device identify command completion
- * @status: The status of the command.  Values for status are:
- *             0 = Successful completion
- *             1 = Version not supported by device
+ * @status: The status of the command (enum status_code)
  * @ver:    Version of identify returned by device
  */
-struct identify_comp {
-	u32 status:8;
-	u32 rsvd:24;
-	u16 ver;
-	u16 rsvd2[5];
+struct dev_identify_comp {
+	u8 status;
+	u8 ver;
+	u8 rsvd[14];
 };
 
 enum os_type {
-	OS_TYPE_LINUX   = 1,
-	OS_TYPE_WIN     = 2,
-	OS_TYPE_DPDK    = 3,
-	OS_TYPE_FREEBSD = 4,
-	OS_TYPE_IPXE    = 5,
-	OS_TYPE_ESXI    = 6,
+	IONIC_OS_TYPE_LINUX   = 1,
+	IONIC_OS_TYPE_WIN     = 2,
+	IONIC_OS_TYPE_DPDK    = 3,
+	IONIC_OS_TYPE_FREEBSD = 4,
+	IONIC_OS_TYPE_IPXE    = 5,
+	IONIC_OS_TYPE_ESXI    = 6,
 };
 
 /**
- * struct lif_logical_qtype - Descriptor of logical to numeric queue type.
- * @ qtype:		Numeric Queue Type.
- * @ qid_base:		Minimum Queue ID of the logical type.
- * @ qid_count:		Number of Queue IDs of the logical type.
+ * union drv_identity - driver identity information
+ * @os_type:          OS type (see enum os_type)
+ * @os_dist:          OS distribution, numeric format
+ * @os_dist_str:      OS distribution, string format
+ * @kernel_ver:       Kernel version, numeric format
+ * @kernel_ver_str:   Kernel version, string format
+ * @driver_ver_str:   Driver version, string format
+ */
+union drv_identity {
+	struct {
+		__le32 os_type;
+		__le32 os_dist;
+		char   os_dist_str[128];
+		__le32 kernel_ver;
+		char   kernel_ver_str[32];
+		char   driver_ver_str[32];
+	};
+	__le32 words[512];
+};
+
+/**
+ * union dev_identity - device identity information
+ * @nports:           Number of ports provisioned
+ * @nlifs:            Number of LIFs provisioned
+ * @nintrs:           Number of interrupts provisioned
+ * @ndbpgs_per_lif:   Number of doorbell pages per LIF
+ * @intr_coal_mult:   Interrupt coalescing multiplication factor.
+ *                    Scale user-supplied interrupt coalescing
+ *                    value in usecs to device units using:
+ *                    device units = usecs * mult / div
+ * @intr_coal_div:    Interrupt coalescing division factor.
+ *                    Scale user-supplied interrupt coalescing
+ *                    value in usecs to device units using:
+ *                    device units = usecs * mult / div
+ *
+ */
+union dev_identity {
+	struct {
+		u8     version;
+		u8     type;
+		u8     rsvd[2];
+		u8     nports;
+		u8     rsvd2[3];
+		__le32 nlifs;
+		__le32 nintrs;
+		__le32 ndbpgs_per_lif;
+		__le32 intr_coal_mult;
+		__le32 intr_coal_div;
+	};
+	__le32 words[512];
+};
+
+enum lif_type {
+	IONIC_LIF_TYPE_CLASSIC = 0,
+	IONIC_LIF_TYPE_MACVLAN = 1,
+	IONIC_LIF_TYPE_NETQUEUE = 2,
+};
+
+/**
+ * struct lif_identify_cmd - lif identify command
+ * @opcode:  opcode
+ * @type:    lif type (enum lif_type)
+ * @ver:     version of identify returned by device
+ */
+struct lif_identify_cmd {
+	u8 opcode;
+	u8 type;
+	u8 ver;
+	u8 rsvd[61];
+};
+
+/**
+ * struct lif_identify_comp - lif identify command completion
+ * @status:  status of the command (enum status_code)
+ * @ver:     version of identify returned by device
+ */
+struct lif_identify_comp {
+	u8 status;
+	u8 ver;
+	u8 rsvd2[14];
+};
+
+enum lif_capability {
+	IONIC_LIF_CAP_ETH        = BIT(0),
+	IONIC_LIF_CAP_RDMA       = BIT(1),
+};
+
+/**
+ * Logical Queue Types
+ */
+enum logical_qtype {
+	IONIC_QTYPE_ADMINQ  = 0,
+	IONIC_QTYPE_NOTIFYQ = 1,
+	IONIC_QTYPE_RXQ     = 2,
+	IONIC_QTYPE_TXQ     = 3,
+	IONIC_QTYPE_EQ      = 4,
+	IONIC_QTYPE_MAX     = 16,
+};
+
+/**
+ * struct lif_logical_qtype - Descriptor of logical to hardware queue type.
+ * @qtype:          Hardware Queue Type.
+ * @qid_base:       Minimum Queue ID of the logical type.
+ * @qid_count:      Number of Queue IDs of the logical type.
  */
 struct lif_logical_qtype {
-	u8 qtype;
-	u8 rsvd[3];
-	u32 qid_count;
-	u32 qid_base;
+	u8     qtype;
+	u8     rsvd[3];
+	__le32 qid_count;
+	__le32 qid_base;
+};
+
+enum lif_state {
+	IONIC_LIF_DISABLE 			= 0,
+	IONIC_LIF_ENABLE			= 1,
+	IONIC_LIF_HANG_RESET		= 2,
 };
 
 /**
- * union identity - 4096 bytes of driver/device identity information
- *
- * Supplied by driver (IN):
- *
- *     @os_type:          OS type (see enum os_type)
- *     @os_dist:          OS distribution, numeric format
- *     @os_dist_str:      OS distribution, string format
- *     @kernel_ver:       Kernel version, numeric format
- *     @kernel_ver_str:   Kernel version, string format
- *     @driver_ver_str:   Driver version, string format
- *
- * Return by device (OUT):
- *
- *     @asic_type:        ASIC type:
- *                           0 = Capri
- *     @asic_rev:         ASIC revision level, e.g. 0xA0
- *     @serial_num:       NULL-terminated string representing the
- *                        device serial number
- *     @fw_version:       NULL-terminated string representing the
- *                        firmware version
- *     @nlifs:            Number of LIFs provisioned
- *     @nintrs:           Number of interrupts provisioned
- *     @ndbpgs_per_lif:   Number of doorbell pages per LIF
- *     @nucasts_per_lif:  Number of perfect unicast addresses supported
- *     @nmcasts_per_lif:  Number of perfect multicast addresses supported.
- *     @intr_coal_mult:   Interrupt coalescing multiplication factor.
- *                        Scale user-supplied interrupt coalescing
- *                        value in usecs to device units using:
- *                           device units = usecs * mult / div
- *     @intr_coal_div:    Interrupt coalescing division factor.
- *                        Scale user-supplied interrupt coalescing
- *                        value in usecs to device units using:
- *                           device units = usecs * mult / div
- *     @rdma_version:     RDMA version of opcodes and queue descriptors.
- *     @rdma_qp_opcodes:  Number of rdma queue pair opcodes supported.
- *     @rdma_admin_opcodes: Number of rdma admin opcodes supported.
- *     @rdma_max_stride:  Max work request stride.
- *     @rdma_cl_stride:	  Cache line stride.
- *     @rdma_pte_stride:  Page table entry stride.
- *     @rdma_rrq_stride:  Remote RQ work request stride.
- *     @rdma_rsq_stride:  Remote SQ work request stride.
- *     @admin_qtype:      Admin Qtype.
- *     @tx_qtype:         Transmit Qtype.
- *     @rx_qtype:         Receive Qtype.
- *     @notify_qtype:     Notify Qtype.
- *     @rdma_aq_qtype:    RDMA Admin Qtype.
- *     @rdma_sq_qtype:    RDMA Send Qtype.
- *     @rdma_rq_qtype:    RDMA Receive Qtype.
- *     @rdma_cq_qtype:    RDMA Completion Qtype.
- *     @rdma_eq_qtype:    RDMA Event Qtype.
+ * LIF configuration
+ * @state:          lif state (enum lif_state)
+ * @name:           lif name
+ * @mtu:            mtu
+ * @mac:            station mac address
+ * @features:       features (enum eth_hw_features)
+ * @queue_count:    queue counts per queue-type
  */
-union identity {
+union lif_config {
 	struct {
-		u32 os_type;
-		u32 os_dist;
-		char os_dist_str[128];
-		u32 kernel_ver;
-		char kernel_ver_str[32];
-		char driver_ver_str[32];
-	} drv;
+		u8     state;
+		u8     rsvd[3];
+		char   name[IONIC_IFNAMSIZ];
+		__le32 mtu;
+		u8     mac[6];
+		u8     rsvd2[2];
+		__le64 features;
+		__le32 queue_count[IONIC_QTYPE_MAX];
+	};
+	__le32 words[128];
+};
+
+/**
+ * struct lif_identity - lif identity information (type-specific)
+ *
+ * @capabilities    LIF capabilities
+ *
+ * Ethernet:
+ *     @version:          Ethernet identify structure version.
+ *     @features:         Ethernet features supported on this lif type.
+ *     @max_ucast_filters:  Number of perfect unicast addresses supported.
+ *     @max_mcast_filters:  Number of perfect multicast addresses supported.
+ *     @queue_count:      Number of queues per logical type
+ *
+ * RDMA:
+ *     @version:         RDMA version of opcodes and queue descriptors.
+ *     @qp_opcodes:      Number of rdma queue pair opcodes supported.
+ *     @admin_opcodes:   Number of rdma admin opcodes supported.
+ *     @max_stride:      Max work request stride.
+ *     @cl_stride:       Cache line stride.
+ *     @pte_stride:      Page table entry stride.
+ *     @rrq_stride:      Remote RQ work request stride.
+ *     @rsq_stride:      Remote SQ work request stride.
+ *     @aq_qtype:        RDMA Admin Qtype.
+ *     @sq_qtype:        RDMA Send Qtype.
+ *     @rq_qtype:        RDMA Receive Qtype.
+ *     @cq_qtype:        RDMA Completion Qtype.
+ *     @eq_qtype:        RDMA Event Qtype.
+ */
+union lif_identity {
 	struct {
-		u8 asic_type;
-		u8 asic_rev;
-		u8 rsvd_asicid[2];
-		char serial_num[20];
-		char fw_version[20];
-		u32 nlifs;
-		u32 nintrs;
-		u32 ndbpgs_per_lif;
-		u32 nucasts_per_lif;
-		u32 nmcasts_per_lif;
-		u32 intr_coal_mult;
-		u32 intr_coal_div;
-		u16 rdma_version;
-		u8 rdma_qp_opcodes;
-		u8 rdma_admin_opcodes;
-		u32 nrdma_pts_per_lif;
-		u32 nrdma_mrs_per_lif;
-		u32 nrdma_ahs_per_lif;
-		u8 rdma_max_stride;
-		u8 rdma_cl_stride;
-		u8 rdma_pte_stride;
-		u8 rdma_rrq_stride;
-		u8 rdma_rsq_stride;
-		u8 rdma_dcqcn_profiles;
-		u8 rsvd_dimensions[10];
-		struct lif_logical_qtype tx_qtype;
-		struct lif_logical_qtype rx_qtype;
-		struct lif_logical_qtype admin_qtype;
-		struct lif_logical_qtype notify_qtype;
-		struct lif_logical_qtype rdma_aq_qtype;
-		struct lif_logical_qtype rdma_sq_qtype;
-		struct lif_logical_qtype rdma_rq_qtype;
-		struct lif_logical_qtype rdma_cq_qtype;
-		struct lif_logical_qtype rdma_eq_qtype;
-		struct lif_logical_qtype rsvd_qtype[7];
-	} dev;
-	u32 words[1024];
+		__le64 capabilities;
+
+		struct {
+			u8 version;
+			u8 rsvd[3];
+			__le32 max_ucast_filters;
+			__le32 max_mcast_filters;
+			__le16 rss_ind_tbl_sz;
+			__le32 min_frame_size;
+			__le32 max_frame_size;
+			u8 rsvd2[106];
+			union lif_config config;
+		} eth;
+
+		struct {
+			u8 version;
+			u8 qp_opcodes;
+			u8 admin_opcodes;
+			u8 rsvd;
+			__le32 npts_per_lif;
+			__le32 nmrs_per_lif;
+			__le32 nahs_per_lif;
+			u8 max_stride;
+			u8 cl_stride;
+			u8 pte_stride;
+			u8 rrq_stride;
+			u8 rsq_stride;
+			u8 dcqcn_profiles;
+			u8 rsvd_dimensions[10];
+			struct lif_logical_qtype aq_qtype;
+			struct lif_logical_qtype sq_qtype;
+			struct lif_logical_qtype rq_qtype;
+			struct lif_logical_qtype cq_qtype;
+			struct lif_logical_qtype eq_qtype;
+		} rdma;
+	};
+	__le32 words[512];
 };
 
 /**
  * struct lif_init_cmd - LIF init command
- * @opcode:    opcode = 3
- * @index:     LIF index
+ * @opcode:       opcode
+ * @type:         LIF type (enum lif_type)
+ * @index:        LIF index
+ * @info_pa:      destination address for lif info (struct lif_info)
  */
 struct lif_init_cmd {
-	u16 opcode;
-	u16 rsvd;
-	u32 index:24;
-	u32 rsvd2:8;
-	u32 rsvd3[14];
+	u8     opcode;
+	u8     type;
+	__le16 index;
+	__le32 rsvd;
+	__le64 info_pa;
+	u8     rsvd2[48];
 };
 
 /**
  * struct lif_init_comp - LIF init command completion
- * @status: The status of the command.  Values for status are:
- *             0 = Successful completion
+ * @status: The status of the command (enum status_code)
  */
 struct lif_init_comp {
-	u32 status:8;
-	u32 rsvd:24;
-	u32 rsvd2[3];
+	u8 status;
+	u8 rsvd;
+	__le16 hw_index;
+	u8 rsvd2[12];
 };
 
 /**
- * struct adminq_init_cmd - Admin queue init command
- * @opcode:       opcode = 4
- * @pid:          Process ID
- * @index:        LIF-relative admin queue index
- * @intr_index:   Interrupt control register index
+ * struct q_init_cmd - Queue init command
+ * @opcode:       opcode
  * @lif_index:    LIF index
- * @ring_size:    Admin queue ring size, encoded as a log2(size),
+ * @type:         Logical queue type
+ * @ver:          Queue version (defines opcode/descriptor scope)
+ * @index:        (lif, qtype) relative admin queue index
+ * @intr_index:   Interrupt control register index
+ * @pid:          Process ID
+ * @flags:
+ *    IRQ:        Interrupt requested on completion
+ *    ENA:        Enable the queue.  If ENA=0 the queue is initialized
+ *                but remains disabled, to be later enabled with the
+ *                Queue Enable command.  If ENA=1, then queue is
+ *                initialized and then enabled.
+ *    SG:         Enable Scatter-Gather on the queue.
  *                in number of descs.  The actual ring size is
  *                (1 << ring_size).  For example, to
  *                select a ring size of 64 descriptors write
@@ -374,120 +505,73 @@ struct lif_init_comp {
  *                ring_size value is 16 for a ring size of 64k
  *                descriptors.  Values of ring_size <2 and >16 are
  *                reserved.
- * @ring_base:    Admin queue ring base address
+ * @cos:          Class of service for this queue.
+ * @ring_base:    Queue ring base address
+ * @cq_ring_base: Completion queue ring base address
+ * @sg_ring_base: Scatter/Gather ring base address
+ * @ring_size:    Admin queue ring size, encoded as a log2(size)
+ * @eq_index:	  Event queue index
  */
-struct adminq_init_cmd {
-	u16 opcode;
-	u16 pid;
-	u16 index;
-	u16 intr_index;
-	u32 lif_index:24;
-	u32 ring_size:8;
-	dma_addr_t ring_base;
-	u32 rsvd2[11];
+struct q_init_cmd {
+	u8     opcode;
+	u8     type;
+	u8     ver;
+	u8     rsvd;
+	__le16 lif_index;
+	__le32 index;
+	__le16 pid;
+	__le16 intr_index;
+	__le16 flags;
+#define IONIC_QINIT_F_IRQ	0x01	/* Request interrupt on completion */
+#define IONIC_QINIT_F_ENA	0x02	/* Enable the queue */
+#define IONIC_QINIT_F_SG	0x04	/* Enable scatter/gather on this queue */
+#define IONIC_QINIT_F_EQ	0x08	/* Enable event queue */
+	u8     cos;
+	u8     ring_size;
+	__le64 ring_base;
+	__le64 cq_ring_base;
+	__le64 sg_ring_base;
+	__le32 eq_index;
+	u8     rsvd2[18];
 };
 
 /**
- * struct adminq_init_comp - Admin queue init command completion
- * @status:  The status of the command.  Values for status are:
- *              0 = Successful completion
- * @qid:     Queue ID
- * @qtype:   Queue type
- */
-struct adminq_init_comp {
-	u32 status:8;
-	u32 rsvd:24;
-	u32 qid:24;
-	u32 qtype:8;
-	u32 rsvd2[2];
-};
-
-enum txq_type {
-	TXQ_TYPE_ETHERNET = 0,
-};
-
-/**
- * struct txq_init_cmd - Transmit queue init command
- * @opcode:     opcode = 5
- * @I:          Interrupt requested on completion
- * @E:          Enable the queue.  If E=0 the queue is initialized
- *              but remains disabled, to be later enabled with the
- *              Queue Enable command.  If E=1, then queue is
- *              initialized and then enabled.
- * @pid:        Process ID
- * @intr_index: Interrupt control register index
- * @type:       Select the transmit queue type.
- *                 0 = Ethernet
- *              All other values of @type are reserved.
- * @index:      LIF-relative transmit queue index
- * @cos:        Class of service for this queue.
- * @ring_size:  Transmit queue ring size, encoded as a log2(size),
- *              in number of descriptors.  The actual ring size is
- *              (1 << ring_size) descriptors.  For example, to
- *              select a ring size of 64 descriptors write
- *              ring_size = 6.  The minimum ring_size value is 2
- *              for a ring size of 4 descriptors.  The maximum
- *              ring_size value is 16 for a ring size of 64k
- *              descriptors.  Values of ring_size <2 and >16 are
- *              reserved.
- * @sg_enable:  Enable SGL support on this queue.
- * @ring_base:  Transmit Queue ring base address.
- */
-struct txq_init_cmd {
-	u16 opcode;
-	u8 I:1;
-	u8 E:1;
-	u8 rsvd;
-	u16 pid;
-	u16 intr_index;
-	u32 type:8;
-	u32 index:16;
-	u32 rsvd2:8;
-	u32 cos:3;
-	u32 ring_size:8;
-	u32 sg_enable:1;
-	u32 rsvd3:20;
-	dma_addr_t ring_base;
-	u32 rsvd4[10];
-};
-
-/**
- * struct txq_init_comp - Tx queue init command completion
- * @status:     The status of the command.  Values for status are:
- *                 0 = Successful completion
+ * struct q_init_comp - Queue init command completion
+ * @status:     The status of the command (enum status_code)
+ * @ver:        Queue version (defines opcode/descriptor scope)
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
- * @qid:        Queue ID
- * @qtype:      Queue type
- * @color:      Color bit.
+ * @hw_index:   Hardware Queue ID
+ * @hw_type:    Hardware Queue type
+ * @color:      Color
  */
-struct txq_init_comp {
-	u32 status:8;
-	u32 rsvd:8;
-	u32 comp_index:16;
-	u32 qid:24;
-	u32 qtype:8;
-	u32 rsvd2;
-	u32 rsvd3:31;
-	u32 color:1;
+struct q_init_comp {
+	u8     status;
+	u8     ver;
+	__le16 comp_index;
+	__le32 hw_index;
+	u8     hw_type;
+	u8     rsvd2[6];
+	u8     color;
 };
 
+
+/* the device's internal addressing uses up to 52 bits */
+#define IONIC_ADDR_LEN				52
+#define IONIC_ADDR_MASK				(BIT_ULL(IONIC_ADDR_LEN) - 1)
+
 enum txq_desc_opcode {
-	TXQ_DESC_OPCODE_CALC_NO_CSUM = 0,
-	TXQ_DESC_OPCODE_CALC_CSUM,
-	TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP,
-	TXQ_DESC_OPCODE_TSO,
+	IONIC_TXQ_DESC_OPCODE_CSUM_NONE = 0,
+	IONIC_TXQ_DESC_OPCODE_CSUM_PARTIAL = 1,
+	IONIC_TXQ_DESC_OPCODE_CSUM_HW = 2,
+	IONIC_TXQ_DESC_OPCODE_TSO = 3,
 };
 
 /**
  * struct txq_desc - Ethernet Tx queue descriptor format
- * @addr:         First data buffer's DMA address.
- *                (Subsequent data buffers are on txq_sg_desc).
- * @num_sg_elems: Number of scatter-gather elements in SG
- *                descriptor
  * @opcode:       Tx operation, see TXQ_DESC_OPCODE_*:
  *
- *                   TXQ_DESC_OPCODE_CALC_NO_CSUM:
+ *                   IONIC_TXQ_DESC_OPCODE_CSUM_NONE:
  *
  *                      Non-offload send.  No segmentation,
  *                      fragmentation or checksum calc/insertion is
@@ -495,14 +579,14 @@ enum txq_desc_opcode {
  *                      to send by software stack and requires
  *                      no further manipulation from device.
  *
- *                   TXQ_DESC_OPCODE_CALC_CSUM:
+ *                   IONIC_TXQ_DESC_OPCODE_CSUM_PARTIAL:
  *
  *                      Offload 16-bit L4 checksum
  *                      calculation/insertion.  The device will
  *                      calculate the L4 checksum value and
  *                      insert the result in the packet's L4
  *                      header checksum field.  The L4 checksum
- *                      is calculated starting at @hdr_len bytes
+ *                      is calculated starting at @csum_start bytes
  *                      into the packet to the end of the packet.
  *                      The checksum insertion position is given
  *                      in @csum_offset.  This feature is only
@@ -514,20 +598,28 @@ enum txq_desc_opcode {
  *                      Software will preload the L4 checksum
  *                      field with the IP pseudo-header checksum.
  *
- *                      For tunnel encapsulation, @hdr_len and
+ *                      For tunnel encapsulation, @csum_start and
  *                      @csum_offset refer to the inner L4
  *                      header.  Supported tunnels encapsulations
- *                      are: IPIP, GRE, and UDP.  If the @O-bit
+ *                      are: IPIP, GRE, and UDP.  If the @encap
  *                      is clear, no further processing by the
  *                      device is required; software will
  *                      calculate the outer header checksums.  If
- *                      the @O-bit is set, the device will
+ *                      the @encap is set, the device will
  *                      offload the outer header checksums using
  *                      LCO (local checksum offload) (see
  *                      Documentation/networking/checksum-
  *                      offloads.txt for more info).
+ * 
+ *                   IONIC_TXQ_DESC_OPCODE_CSUM_HW:
+ * 
+ *                      Offload 16-bit checksum computation to hardware.
+ *                      If @csum_l3 is set then the packet's L3 checksum is
+ *                      updated. Similarly, if @csum_l4 is set the the L4
+ *                      checksum is updated. If @encap is set then encap header
+ *                      checksums are also updated.
  *
- *                   TXQ_DESC_OPCODE_TSO:
+ *                   IONIC_TXQ_DESC_OPCODE_TSO:
  *
  *                      Device preforms TCP segmentation offload
  *                      (TSO).  @hdr_len is the number of bytes
@@ -554,7 +646,23 @@ enum txq_desc_opcode {
  *                      will set CWR flag in the first segment if
  *                      CWR is set in the template header, and
  *                      clear CWR in remaining segments.
- *
+ * @flags:
+ *                vlan:
+ *                    Insert an L2 VLAN header using @vlan_tci.
+ *                encap:
+ *                    Calculate encap header checksum.
+ *                csum_l3:
+ *                    Compute L3 header checksum.
+ *                csum_l4:
+ *                    Compute L4 header checksum.
+ *                tso_sot:
+ *                    TSO start
+ *                tso_eot:
+ *                    TSO end
+ * @num_sg_elems: Number of scatter-gather elements in SG
+ *                descriptor
+ * @addr:         First data buffer's DMA address.
+ *                (Subsequent data buffers are on txq_sg_desc).
  * @len:          First data buffer's length, in bytes
  * @vlan_tci:     VLAN tag to insert in the packet (if requested
  *                by @V-bit).  Includes .1p and .1q tags
@@ -568,164 +676,110 @@ enum txq_desc_opcode {
  *                TXQ_DESC_OPCODE_TSO, @hdr_len is up to
  *                inner-most L4 payload, so inclusive of
  *                inner-most L4 header.
- * @V:            Insert an L2 VLAN header using @vlan_tci.
- * @C:            Create a completion entry (CQ) for this packet.
- * @O:            Calculate outer-header checksum for GRE or UDP
- *                encapsulations.
  * @mss:          Desired MSS value for TSO.  Only applicable for
  *                TXQ_DESC_OPCODE_TSO.
+ * @csum_start:   Offset into inner-most L3 header of checksum
  * @csum_offset:  Offset into inner-most L4 header of checksum
- *                field.  Only applicable for
- *                TXQ_DESC_OPCODE_CALC_CSUM.
- * @l3_csum:	  NIC populates L3 checksum even without csum_offset provided
- *                Valid for TXQ_DESC_OPCODE_CALC_CSUM.
- * @l4_csum:	  NIC populates L4 checksum even without csum_offset provided
- *                Valid for TXQ_DESC_OPCODE_CALC_CSUM.
  */
+
+#define IONIC_TXQ_DESC_OPCODE_MASK			0xf
+#define IONIC_TXQ_DESC_OPCODE_SHIFT			4
+#define IONIC_TXQ_DESC_FLAGS_MASK			0xf
+#define IONIC_TXQ_DESC_FLAGS_SHIFT			0
+#define IONIC_TXQ_DESC_NSGE_MASK			0xf
+#define IONIC_TXQ_DESC_NSGE_SHIFT			8
+#define IONIC_TXQ_DESC_ADDR_MASK			(BIT_ULL(IONIC_ADDR_LEN) - 1)
+#define IONIC_TXQ_DESC_ADDR_SHIFT			12
+
+/* common flags */
+#define IONIC_TXQ_DESC_FLAG_VLAN			0x1
+#define IONIC_TXQ_DESC_FLAG_ENCAP			0x2
+
+/* flags for csum_hw opcode */
+#define IONIC_TXQ_DESC_FLAG_CSUM_L3			0x4
+#define IONIC_TXQ_DESC_FLAG_CSUM_L4			0x8
+
+/* flags for tso opcode */
+#define IONIC_TXQ_DESC_FLAG_TSO_SOT			0x4
+#define IONIC_TXQ_DESC_FLAG_TSO_EOT			0x8
+
 struct txq_desc {
-	u64 addr:52;
-	u64 rsvd:4;
-	u64 num_sg_elems:5;
-	u64 opcode:3;
-	u16 len;
-	u16 vlan_tci;
-	u16 hdr_len:10;
-	u16 rsvd2:3;
-	u16 V:1;
-	u16 C:1;
-	u16 O:1;
+	__le64  cmd;
+	__le16  len;
 	union {
-		struct {
-			u16 mss:14;
-			u16 S:1;
-			u16 E:1;
-		};
-		struct {
-			u16 csum_offset:14;
-			u8 l3_csum:1;
-			u8 l4_csum:1;
-		};
+		__le16  vlan_tci;
+		__le16  hword0;
+	};
+	union {
+		__le16  csum_start;
+		__le16  hdr_len;
+		__le16  hword1;
+	};
+	union {
+		__le16  csum_offset;
+		__le16  mss;
+		__le16  hword2;
 	};
 };
 
-#define IONIC_TX_MAX_SG_ELEMS	16
+static inline __le64 encode_txq_desc_cmd(u8 opcode, u8 flags,
+										 u8 nsge, __le64 addr) {
+	__le64 cmd;
+	cmd = (opcode & IONIC_TXQ_DESC_OPCODE_MASK) << IONIC_TXQ_DESC_OPCODE_SHIFT;
+	cmd |= (flags & IONIC_TXQ_DESC_FLAGS_MASK) << IONIC_TXQ_DESC_FLAGS_SHIFT;
+	cmd |= (nsge & IONIC_TXQ_DESC_NSGE_MASK) << IONIC_TXQ_DESC_NSGE_SHIFT;
+	cmd |= (addr & IONIC_TXQ_DESC_ADDR_MASK) << IONIC_TXQ_DESC_ADDR_SHIFT;
+	return cmd;
+};
+
+static inline void decode_txq_desc_cmd(__le64 cmd,
+										 u8 *opcode, u8 *flags,
+										 u8 *nsge, __le64 *addr) {
+	*opcode = (cmd >> IONIC_TXQ_DESC_OPCODE_SHIFT) & IONIC_TXQ_DESC_OPCODE_MASK;
+	*flags = (cmd >> IONIC_TXQ_DESC_FLAGS_SHIFT) & IONIC_TXQ_DESC_FLAGS_MASK;
+	*nsge = (cmd >> IONIC_TXQ_DESC_NSGE_SHIFT) & IONIC_TXQ_DESC_NSGE_MASK;
+	*addr = (cmd >> IONIC_TXQ_DESC_ADDR_SHIFT) & IONIC_TXQ_DESC_ADDR_MASK;
+};
+
+#define IONIC_TX_MAX_SG_ELEMS	8
 #define IONIC_RX_MAX_SG_ELEMS	8
 
-/** struct txq_sg_desc - Transmit scatter-gather (SG) list
+/**
+ * struct txq_sg_desc - Transmit scatter-gather (SG) list
  * @addr:      DMA address of SG element data buffer
  * @len:       Length of SG element data buffer, in bytes
  */
 struct txq_sg_desc {
 	struct txq_sg_elem {
-		u64 addr:52;
-		u64 rsvd:12;
-		u16 len;
-		u16 rsvd2[3];
+		__le64 addr;
+		__le16 len;
+		__le16 rsvd[3];
 	} elems[IONIC_TX_MAX_SG_ELEMS];
 };
 
-/** struct txq_comp - Ethernet transmit queue completion descriptor
- * @status:     The status of the command.  Values for status are:
- *                 0 = Successful completion
+/**
+ * struct txq_comp - Ethernet transmit queue completion descriptor
+ * @status:     The status of the command (enum status_code)
  * @comp_index: The index in the descriptor ring for which this
- *              is the completion.
+ *                 is the completion.
  * @color:      Color bit.
  */
 struct txq_comp {
-	u32 status:8;
-	u32 rsvd:8;
-	u32 comp_index:16;
-	u32 rsvd2[2];
-	u32 rsvd3:31;
-	u32 color:1;
-};
-
-
-enum rxq_type {
-	RXQ_TYPE_ETHERNET = 0,
-};
-
-/**
- * struct rxq_init_cmd - Receive queue init command
- * @opcode:     opcode = 6
- * @I:          Interrupt requested on completion
- * @E:          Enable the queue.  If E=0 the queue is initialized
- *              but remains disabled, to be later enabled with the
- *              Queue Enable command.  If E=1, then queue is
- *              initialized and then enabled.
- * @pid:        Process ID
- * @intr_index: Interrupt control register index
- * @type:       Select the receive queue type.
- *                 0 = Ethernet
- *              All other values of @type are reserved.
- * @index:      LIF-relative receive queue index
- * @cos:        Class of service for this queue.
- * @ring_size:  Transmit queue ring size, encoded as a log2(size),
- *              in number of descriptors.  The actual ring size is
- *              (1 << ring_size) descriptors.  For example, to
- *              select a ring size of 64 descriptors write
- *              ring_size = 6.  The minimum ring_size value is 2
- *              for a ring size of 4 descriptors.  The maximum
- *              ring_size value is 16 for a ring size of 64k
- *              descriptors.  Values of ring_size <2 and >16 are
- *              reserved.
- * @sg_enable:  Enable SGL support on this queue.
- * @ring_base:  Receive Queue ring base address.
- */
-struct rxq_init_cmd {
-	u16 opcode;
-	u8 I:1;
-	u8 E:1;
-	u8 rsvd;
-	u16 pid;
-	u16 intr_index;
-	u32 type:8;
-	u32 index:16;
-	u32 rsvd2:8;
-	u32 ring_size:8;
-	u32 cos:3;
-	u32 sg_enable:1;
-	u32 rsvd3:20;
-	dma_addr_t ring_base;
-	u32 rsvd4[10];
-};
-
-/**
- * struct rxq_init_comp - Rx queue init command completion
- * @status:     The status of the command.  Values for status are:
- *                 0 = Successful completion
- * @comp_index: The index in the descriptor ring for which this
- *              is the completion.
- * @qid:        Queue ID
- * @qtype:      Queue type
- * @color:      Color bit.
- */
-struct rxq_init_comp {
-	u32 status:8;
-	u32 rsvd:8;
-	u32 comp_index:16;
-	u32 qid:24;
-	u32 qtype:8;
-	u32 rsvd2;
-	u32 rsvd3:31;
-	u32 color:1;
+	u8     status;
+	u8     rsvd;
+	__le16 comp_index;
+	u8     rsvd2[11];
+	u8     color;
 };
 
 enum rxq_desc_opcode {
-	RXQ_DESC_OPCODE_NOP = 0,
-	RXQ_DESC_OPCODE_SIMPLE,
+	RXQ_DESC_OPCODE_SIMPLE = 0,
+	RXQ_DESC_OPCODE_SG = 1,
 };
 
 /**
  * struct rxq_desc - Ethernet Rx queue descriptor format
- * @addr:         Data buffer's DMA address
- * @len:          Data buffer's length, in bytes.
  * @opcode:       Rx operation, see RXQ_DESC_OPCODE_*:
- *
- *                   RXQ_DESC_OPCODE_NOP:
- *
- *                      No packet received; used to pad out end
- *                      of queue (ring)
  *
  *                   RXQ_DESC_OPCODE_SIMPLE:
  *
@@ -734,32 +788,32 @@ enum rxq_desc_opcode {
  *                      receive, including actual bytes received,
  *                      are recorded in Rx completion descriptor.
  *
+ * @len:          Data buffer's length, in bytes.
+ * @addr:         Data buffer's DMA address
  */
 struct rxq_desc {
-	u64 addr:52;
-	u64 rsvd:12;
-	u16 len;
-	u16 opcode:3;
-	u16 rsvd2:13;
-	u32 rsvd3;
+	u8     opcode;
+	u8     rsvd[5];
+	__le16 len;
+	__le64 addr;
 };
 
-/** struct rxq_sg_desc - Receive scatter-gather (SG) list
+/**
+ * struct rxq_sg_desc - Receive scatter-gather (SG) list
  * @addr:      DMA address of SG element data buffer
  * @len:       Length of SG element data buffer, in bytes
  */
 struct rxq_sg_desc {
 	struct rxq_sg_elem {
-		u64 addr:52;
-		u64 rsvd:12;
-		u16 len;
-		u16 rsvd2[3];
+		__le64 addr;
+		__le16 len;
+		__le16 rsvd[3];
 	} elems[IONIC_RX_MAX_SG_ELEMS];
 };
 
-/** struct rxq_comp - Ethernet receive queue completion descriptor
- * @status:       The status of the command.  Values for status are:
- *                   0 = Successful completion
+/**
+ * struct rxq_comp - Ethernet receive queue completion descriptor
+ * @status:       The status of the command (enum status_code)
  * @num_sg_elems: Number of SG elements used by this descriptor
  * @comp_index:   The index in the descriptor ring for which this
  *                is the completion.
@@ -772,7 +826,6 @@ struct rxq_sg_desc {
  *                set.  Includes .1p and .1q tags.
  * @len:          Received packet length, in bytes.  Excludes FCS.
  * @csum_calc     L2 payload checksum is computed or not
- * @pkt_type:     Packet type
  * @csum_tcp_ok:  The TCP checksum calculated by the device
  *                matched the checksum in the receive packet's
  *                TCP header
@@ -797,29 +850,29 @@ struct rxq_sg_desc {
  *                contains both a tunnel IPv4 header and a
  *                transport IPv4 header, the device validates the
  *                checksum for both IP headers.
- * @V:            VLAN header was stripped and placed in @vlan_tci.
+ * @VLAN:         VLAN header was stripped and placed in @vlan_tci.
+ * @pkt_type:     Packet type
  * @color:        Color bit.
  */
 struct rxq_comp {
-	u32 status:8;
-	u32 num_sg_elems:5;
-	u32 rsvd:3;
-	u32 comp_index:16;
-	u32 rss_hash;
-	u16 csum;
-	u16 vlan_tci;
-	u32 len:14;
-	u32 csum_calc:1;
-	u32 rsvd2:1;
-	u32 pkt_type:8;
-	u32 csum_tcp_ok:1;
-	u32 csum_tcp_bad:1;
-	u32 csum_udp_ok:1;
-	u32 csum_udp_bad:1;
-	u32 csum_ip_ok:1;
-	u32 csum_ip_bad:1;
-	u32 V:1;
-	u32 color:1;
+	u8     status;
+	u8     num_sg_elems;
+	__le16 comp_index;
+	__le32 rss_hash;
+	__le16 csum;
+	__le16 vlan_tci;
+	__le16 len;
+	u8     csum_flags;
+#define IONIC_RXQ_COMP_CSUM_F_TCP_OK	0x01
+#define IONIC_RXQ_COMP_CSUM_F_TCP_BAD	0x02
+#define IONIC_RXQ_COMP_CSUM_F_UDP_OK	0x04
+#define IONIC_RXQ_COMP_CSUM_F_UDP_BAD	0x08
+#define IONIC_RXQ_COMP_CSUM_F_IP_OK	0x10
+#define IONIC_RXQ_COMP_CSUM_F_IP_BAD	0x20
+#define IONIC_RXQ_COMP_CSUM_F_VLAN	0x40
+#define IONIC_RXQ_COMP_CSUM_F_CALC	0x80
+	u8     pkt_type_color;
+#define IONIC_RXQ_COMP_PKT_TYPE_MASK	0x0f
 };
 
 enum pkt_type {
@@ -832,10 +885,6 @@ enum pkt_type {
 	PKT_TYPE_IPV6_UDP   = 0x028,
 };
 
-enum feature_set {
-	FEATURE_SET_ETH_HW_FEATURES = 1,
-};
-
 enum eth_hw_features {
 	ETH_HW_VLAN_TX_TAG	= BIT(0),
 	ETH_HW_VLAN_RX_STRIP	= BIT(1),
@@ -843,162 +892,42 @@ enum eth_hw_features {
 	ETH_HW_RX_HASH		= BIT(3),
 	ETH_HW_RX_CSUM		= BIT(4),
 	ETH_HW_TX_SG		= BIT(5),
-	ETH_HW_TX_CSUM		= BIT(6),
-	ETH_HW_TSO		= BIT(7),
-	ETH_HW_TSO_IPV6		= BIT(8),
-	ETH_HW_TSO_ECN		= BIT(9),
-	ETH_HW_TSO_GRE		= BIT(10),
-	ETH_HW_TSO_GRE_CSUM	= BIT(11),
-	ETH_HW_TSO_IPXIP4	= BIT(12),
-	ETH_HW_TSO_IPXIP6	= BIT(13),
-	ETH_HW_TSO_UDP		= BIT(14),
-	ETH_HW_TSO_UDP_CSUM	= BIT(15),
+	ETH_HW_RX_SG		= BIT(6),
+	ETH_HW_TX_CSUM		= BIT(7),
+	ETH_HW_TSO			= BIT(8),
+	ETH_HW_TSO_IPV6		= BIT(9),
+	ETH_HW_TSO_ECN		= BIT(10),
+	ETH_HW_TSO_GRE		= BIT(11),
+	ETH_HW_TSO_GRE_CSUM	= BIT(12),
+	ETH_HW_TSO_IPXIP4	= BIT(13),
+	ETH_HW_TSO_IPXIP6	= BIT(14),
+	ETH_HW_TSO_UDP		= BIT(15),
+	ETH_HW_TSO_UDP_CSUM	= BIT(16),
 };
 
 /**
- * struct features_cmd - Features command
- * @opcode:     opcode = 7
- * @set:        Feature set (see enum feature_set)
- * @wanted:     Features from set wanted by driver.
+ * struct q_control_cmd - Queue control command
+ * @opcode:     opcode
+ * @lif_index:  LIF index
+ * @index:      Queue index
+ * @type:       Queue type
+ * @oper:       Operation (enum q_control_oper)
  */
-struct features_cmd {
-	u16 opcode;
-	u16 set;
-	u32 wanted;
-	u32 rsvd2[14];
+struct q_control_cmd {
+	u8     opcode;
+	u8     type;
+	__le16 lif_index;
+	__le32 index;
+	u8     oper;
+	u8     rsvd[55];
 };
 
-/**
- * struct features_comp - Features command completion format
- * @status:     The status of the command.  Values for status are:
- *                 0 = Successful completion
- * @comp_index: The index in the descriptor ring for which this
- *              is the completion.
- * @supported:  Features from set supported by device.
- * @color:      Color bit.
- */
-struct features_comp {
-	u32 status:8;
-	u32 rsvd:8;
-	u32 comp_index:16;
-	u32 supported;
-	u32 rsvd2;
-	u32 rsvd3:31;
-	u32 color:1;
-};
+typedef struct admin_comp q_control_comp;
 
-/**
- * struct hang_notify_cmd - Hang notify command
- * @opcode:     opcode = 8
- */
-struct hang_notify_cmd {
-	u16 opcode;
-	u16 rsvd[31];
-};
-
-/**
- * struct hang_notify_comp - Hang notify command completion
- * @status: The status of the command.  Values for status are:
- *             0 = Successful completion
- */
-struct hang_notify_comp {
-	u32 status:8;
-	u32 rsvd:24;
-	u32 rsvd2[3];
-};
-
-/**
- * struct q_enable_cmd - Queue enable command
- * @opcode:     opcode = 9
- * @qid:        Queue ID
- * @qtype:      Queue type
- */
-struct q_enable_cmd {
-	u16 opcode;
-	u16 rsvd;
-	u32 qid:24;
-	u32 qtype:8;
-	u32 rsvd2[14];
-};
-
-typedef struct admin_comp q_enable_comp;
-
-/**
- * struct q_disable_cmd - Queue disable command
- * @opcode:     opcode = 10
- * @qid:        Queue ID
- * @qtype:      Queue type
- */
-struct q_disable_cmd {
-	u16 opcode;
-	u16 rsvd;
-	u32 qid:24;
-	u32 qtype:8;
-	u32 rsvd2[14];
-};
-
-typedef struct admin_comp q_disable_comp;
-
-/**
- * struct notifyq_init_cmd - Event queue init command
- * @opcode:       opcode = 11
- * @pid:          Process ID
- * @index:        LIF-relative queue index
- * @intr_index:   Interrupt control register index
- * @lif_index:    LIF index (should be 0)
- * @ring_size:    NotifyQ queue ring size, encoded as a log2(size),
- *                in number of descs.  The actual ring size is
- *                (1 << ring_size).  For example, to
- *                select a ring size of 64 descriptors write
- *                ring_size = 6.  The minimum ring_size value is 2
- *                for a ring size of 4 descriptors.  The maximum
- *                ring_size value is 16 for a ring size of 64k
- *                descriptors.  Values of ring_size <2 and >16 are
- *                reserved.
- * @notify_size:  Notify block size, encoded as a log2(size), in
- *                number of bytes.  If the size is smaller that the
- *                data available, the data will be truncated.
- * @ring_base:    Notify queue ring base address. Should be aligned
- *                on PAGE_SIZE. If not aligned properly can cause
- *                CQ Errors
- * @notify_base:  Base address for a block of memory reserved for
- *                link status data, to be updated by the NIC and
- *                read by the driver.  When link status changes,
- *                the NIC should update this before signaling an
- *                interrupt on the NotifyQ.
- */
-struct notifyq_init_cmd {
-	u16 opcode;
-	u16 pid;
-	u16 index;
-	u16 intr_index;
-	u32 lif_index;
-	u8 ring_size;
-	u8 notify_size;
-	u16 rsvd;
-	dma_addr_t ring_base;
-	dma_addr_t notify_base;
-	u32 rsvd2[8];
-};
-
-/**
- * struct notifyq_init_comp - Event queue init command completion
- * @status:     The status of the command.  Values for status are:
- *                 0 = Successful completion
- * @comp_index: The index in the descriptor ring for which this
- *              is the completion.
- * @qid:        Queue ID
- * @qtype:      Queue type
- * @color:      Color bit.
- */
-struct notifyq_init_comp {
-	u8 status;
-	u8 rsvd;
-	u16 comp_index;
-	u32 qid;
-	u8 qtype;
-	u8 rsvd3[6];
-	u8 color;
+enum q_control_oper {
+	IONIC_Q_DISABLE 		= 0,
+	IONIC_Q_ENABLE			= 1,
+	IONIC_Q_HANG_RESET		= 2,
 };
 
 /**
@@ -1025,118 +954,136 @@ enum xcvr_state {
  * Supported link modes
  */
 enum xcvr_pid {
-	XCVR_PID_UNKNOWN       = 0,
+	XCVR_PID_UNKNOWN           = 0,
 
-	// CU
+	/* CU */
 	XCVR_PID_QSFP_100G_CR4     = 1,
 	XCVR_PID_QSFP_40GBASE_CR4  = 2,
 	XCVR_PID_SFP_25GBASE_CR_S  = 3,
 	XCVR_PID_SFP_25GBASE_CR_L  = 4,
 	XCVR_PID_SFP_25GBASE_CR_N  = 5,
 
-	// Fiber
-	XCVR_PID_QSFP_100G_AOC   = 50,
-	XCVR_PID_QSFP_100G_ACC   = 51,
-	XCVR_PID_QSFP_100G_SR4   = 52,
-	XCVR_PID_QSFP_100G_LR4   = 53,
-	XCVR_PID_QSFP_100G_ER4   = 54,
+	/* Fiber */
+	XCVR_PID_QSFP_100G_AOC    = 50,
+	XCVR_PID_QSFP_100G_ACC    = 51,
+	XCVR_PID_QSFP_100G_SR4    = 52,
+	XCVR_PID_QSFP_100G_LR4    = 53,
+	XCVR_PID_QSFP_100G_ER4    = 54,
 	XCVR_PID_QSFP_40GBASE_ER4 = 55,
 	XCVR_PID_QSFP_40GBASE_SR4 = 56,
 	XCVR_PID_QSFP_40GBASE_LR4 = 57,
 	XCVR_PID_QSFP_40GBASE_AOC = 58,
-	XCVR_PID_SFP_25GBASE_SR  = 59,
-	XCVR_PID_SFP_25GBASE_LR  = 60,
-	XCVR_PID_SFP_25GBASE_ER  = 61,
-	XCVR_PID_SFP_25GBASE_AOC = 62,
-	XCVR_PID_SFP_10GBASE_SR  = 63,
-	XCVR_PID_SFP_10GBASE_LR  = 64,
-	XCVR_PID_SFP_10GBASE_LRM = 65,
-	XCVR_PID_SFP_10GBASE_ER  = 66,
-	XCVR_PID_SFP_10GBASE_AOC = 67,
-	XCVR_PID_SFP_10GBASE_CU  = 68,
+	XCVR_PID_SFP_25GBASE_SR   = 59,
+	XCVR_PID_SFP_25GBASE_LR   = 60,
+	XCVR_PID_SFP_25GBASE_ER   = 61,
+	XCVR_PID_SFP_25GBASE_AOC  = 62,
+	XCVR_PID_SFP_10GBASE_SR   = 63,
+	XCVR_PID_SFP_10GBASE_LR   = 64,
+	XCVR_PID_SFP_10GBASE_LRM  = 65,
+	XCVR_PID_SFP_10GBASE_ER   = 66,
+	XCVR_PID_SFP_10GBASE_AOC  = 67,
+	XCVR_PID_SFP_10GBASE_CU   = 68,
 };
 
 /**
  *  QSFP/QSFP28 sprom data
  */
 struct qsfp_sprom_data {
-	uint8_t  id;               /*  0 Type of transceiver */
-	uint8_t  ext_id;           /*  1 Extended identifier of type of transceiver */
-	uint8_t  connector;        /*  2 Code for connector type */
-	uint8_t  compliance[8];    /*  3 Code for electronic or optical compatibility */
-	uint8_t  encoding;         /* 11 Code for high speed serial encoding algorithm */
-	uint8_t  br_nominal1;      /* 12 Norminal signalling rate, units of 100MBd */
-	uint8_t  ext_rate_select;  /* 13 Extended rate select compliance */
-	uint8_t  length_smf_km;    /* 14 Link length supported for single mode fiber, units of km */
-	uint8_t  length_om3;       /* 15 Link length supported for 50/125um   OM3 fiber, units of 2m */
-	uint8_t  length_om2;       /* 16 Link length supported for 50/125um   OM2 fiber, units of 1m */
-	uint8_t  length_om1;       /* 17 Link length supported for 62.5/125um OM1 fiber, units of 1m */
-	uint8_t  length_dac;       /* 18 Link length supported for copper or direct attach cable, units of m */
-	uint8_t  device_tech;      /* 19 Device technology */
-	uint8_t  vendor_name[16];  /* 20 SFP vendor name */
-	uint8_t  ext_module;       /* 36 Extended module codes for Infiniband */
-	uint8_t  vendor_oui[3];    /* 37 SFP vendor IEEE company ID */
-	uint8_t  vendor_pn[16];    /* 40 Part number provided by vendor */
-	uint8_t  vendor_rev[2];    /* 56 Revision number for part number provided by vendor */
-	uint8_t  wavelength1[2];   /* 58 Nominal laser wavelength OR copper cable attenuation */
-	uint8_t  wavelength2[2];   /* 60 Guaranteed range of laser wavelength from nominal wavelength or copper cable attenuation */
-	uint8_t  max_case_temp;    /* 62 */
-	uint8_t  cc_base;          /* 63 Check code for Base ID Fields */
+	u8 id;               /*  0 Type of transceiver */
+	u8 ext_id;           /*  1 Extended identifier of type of transceiver */
+	u8 connector;        /*  2 Code for connector type */
+	u8 compliance[8];    /*  3 Code for electronic or optical compatibility */
+	u8 encoding;         /* 11 Code for high speed serial encoding algorithm */
+	u8 br_nominal1;      /* 12 Norminal signalling rate, units of 100MBd */
+	u8 ext_rate_select;  /* 13 Extended rate select compliance */
+	u8 length_smf_km;    /* 14 Link length supported for single mode fiber, units of km */
+	u8 length_om3;       /* 15 Link length supported for 50/125um   OM3 fiber, units of 2m */
+	u8 length_om2;       /* 16 Link length supported for 50/125um   OM2 fiber, units of 1m */
+	u8 length_om1;       /* 17 Link length supported for 62.5/125um OM1 fiber, units of 1m */
+	u8 length_dac;       /* 18 Link length supported for copper or direct attach cable, units of m */
+	u8 device_tech;      /* 19 Device technology */
+	u8 vendor_name[16];  /* 20 SFP vendor name */
+	u8 ext_module;       /* 36 Extended module codes for Infiniband */
+	u8 vendor_oui[3];    /* 37 SFP vendor IEEE company ID */
+	u8 vendor_pn[16];    /* 40 Part number provided by vendor */
+	u8 vendor_rev[2];    /* 56 Revision number for part number provided by vendor */
+	u8 wavelength1[2];   /* 58 Nominal laser wavelength OR copper cable attenuation */
+	u8 wavelength2[2];   /* 60 Guaranteed range of laser wavelength from nominal wavelength or copper cable attenuation */
+	u8 max_case_temp;    /* 62 */
+	u8 cc_base;          /* 63 Check code for Base ID Fields */
 
 	/* Extended ID Fields */
-	uint8_t  link_codes;       /* 64 extended specification compliance codes */
-	uint8_t  options[3];       /* 65 Indicates which optional transceiver signals are implemented */
-	uint8_t  vendor_sn[16];    /* 68 Serial number provided by vendor */
-	uint8_t  date_code[8];     /* 84 Vendor's manufacturing data code */
-	uint8_t  diag_mon_type;    /* 92 Indicates which type of diagnostic monitoring is implemented */
-	uint8_t  enhanced_options; /* 93 Indicates which optional enhanced features are implemented */
-	uint8_t  br_nominal2;      /* 94 Nominal bit rate per channel */
-	uint8_t  cc_ext;           /* 95 Check code for Extended ID Fields */
+	u8 link_codes;       /* 64 extended specification compliance codes */
+	u8 options[3];       /* 65 Indicates which optional transceiver signals are implemented */
+	u8 vendor_sn[16];    /* 68 Serial number provided by vendor */
+	u8 date_code[8];     /* 84 Vendor's manufacturing data code */
+	u8 diag_mon_type;    /* 92 Indicates which type of diagnostic monitoring is implemented */
+	u8 enhanced_options; /* 93 Indicates which optional enhanced features are implemented */
+	u8 br_nominal2;      /* 94 Nominal bit rate per channel */
+	u8 cc_ext;           /* 95 Check code for Extended ID Fields */
 
 	/* Vendor Specific Fields */
-	uint8_t  vendor_specific[32]; /* 96 Vendor specific EEPROM */
-} __attribute__((__packed__));
+	u8 vendor_specific[32]; /* 96 Vendor specific EEPROM */
+};
 
 /**
  * SFP/SFP+ sprom data
  */
 struct sfp_sprom_data {
-	uint8_t  id;               /*  0 Type of transceiver */
-	uint8_t  ext_id;           /*  1 Extended identifier of type of transceiver */
-	uint8_t  connector;        /*  2 Code for connector type */
-	uint8_t  compliance[8];    /*  3 Code for electronic or optical compatibility */
-	uint8_t  encoding;         /* 11 Code for high speed serial encoding algorithm */
-	uint8_t  br_nominal;       /* 12 Norminal signalling rate, units of 100MBd */
-	uint8_t  rate_identifier;  /* 13 Type of rate select functionality */
-	uint8_t  length_smf_km;    /* 14 Link length supported for single mode fiber, units of km */
-	uint8_t  length_smf;       /* 15 Link length supported for single mode fiber, units of 100m */
-	uint8_t  length_om2;       /* 16 Link length supported for 50um   OM2  fiber, units of 10m */
-	uint8_t  length_om1;       /* 17 Link length supported for 62.5um OM1  fiber, units of 10m */
-	uint8_t  length_dac;       /* 18 Link length supported for copper or direct attach cable, units of m */
-	uint8_t  length_om3;       /* 19 Link length supported for 50um   OM3  fiber, units of 10m */
-	uint8_t  vendor_name[16];  /* 20 SFP vendor name */
-	uint8_t  transceiver;      /* 36 Code for electronic or optical compatibility */
-	uint8_t  vendor_oui[3];    /* 37 SFP vendor IEEE company ID */
-	uint8_t  vendor_pn[16];    /* 40 Part number provided by vendor */
-	uint8_t  vendor_rev[4];    /* 56 Revision number for part number provided by vendor */
-	uint8_t  wavelength[2];    /* 60 Laser wavelength */
-	uint8_t  unallocated;      /* 62 */
-	uint8_t  cc_base;          /* 63 Check code for Base ID Fields */
+	u8 id;               /*  0 Type of transceiver */
+	u8 ext_id;           /*  1 Extended identifier of type of transceiver */
+	u8 connector;        /*  2 Code for connector type */
+	u8 compliance[8];    /*  3 Code for electronic or optical compatibility */
+	u8 encoding;         /* 11 Code for high speed serial encoding algorithm */
+	u8 br_nominal;       /* 12 Norminal signalling rate, units of 100MBd */
+	u8 rate_identifier;  /* 13 Type of rate select functionality */
+	u8 length_smf_km;    /* 14 Link length supported for single mode fiber, units of km */
+	u8 length_smf;       /* 15 Link length supported for single mode fiber, units of 100m */
+	u8 length_om2;       /* 16 Link length supported for 50um   OM2  fiber, units of 10m */
+	u8 length_om1;       /* 17 Link length supported for 62.5um OM1  fiber, units of 10m */
+	u8 length_dac;       /* 18 Link length supported for copper or direct attach cable, units of m */
+	u8 length_om3;       /* 19 Link length supported for 50um   OM3  fiber, units of 10m */
+	u8 vendor_name[16];  /* 20 SFP vendor name */
+	u8 transceiver;      /* 36 Code for electronic or optical compatibility */
+	u8 vendor_oui[3];    /* 37 SFP vendor IEEE company ID */
+	u8 vendor_pn[16];    /* 40 Part number provided by vendor */
+	u8 vendor_rev[4];    /* 56 Revision number for part number provided by vendor */
+	u8 wavelength[2];    /* 60 Laser wavelength */
+	u8 unallocated;      /* 62 */
+	u8 cc_base;          /* 63 Check code for Base ID Fields */
 
 	/* Extended ID Fields */
-	uint8_t  options[2];       /* 64 Indicates which optional transceiver signals are implemented */
-	uint8_t  br_max;           /* 66 Upper bit rate margin, units of % */
-	uint8_t  br_min;           /* 67 Lower bit rate margin, units of % */
-	uint8_t  vendor_sn[16];    /* 68 Serial number provided by vendor */
-	uint8_t  date_code[8];     /* 84 Vendor's manufacturing data code */
-	uint8_t  diag_mon_type;    /* 92 Indicates which type of diagnostic monitoring is implemented */
-	uint8_t  enhanced_options; /* 93 Indicates which optional enhanced features are implemented */
-	uint8_t  sff_compliance;   /* 94 Indicates which revision of SFF 8472 transceiver complies with */
-	uint8_t  cc_ext;           /* 95 Check code for Extended ID Fields */
+	u8 options[2];       /* 64 Indicates which optional transceiver signals are implemented */
+	u8 br_max;           /* 66 Upper bit rate margin, units of % */
+	u8 br_min;           /* 67 Lower bit rate margin, units of % */
+	u8 vendor_sn[16];    /* 68 Serial number provided by vendor */
+	u8 date_code[8];     /* 84 Vendor's manufacturing data code */
+	u8 diag_mon_type;    /* 92 Indicates which type of diagnostic monitoring is implemented */
+	u8 enhanced_options; /* 93 Indicates which optional enhanced features are implemented */
+	u8 sff_compliance;   /* 94 Indicates which revision of SFF 8472 transceiver complies with */
+	u8 cc_ext;           /* 95 Check code for Extended ID Fields */
 
 	/* Vendor Specific Fields */
-	uint8_t  vendor_specific[32]; /* 96 Vendor specific EEPROM */
-} __attribute__((__packed__));
+	u8 vendor_specific[32]; /* 96 Vendor specific EEPROM */
+};
+
+/**
+ * Port types
+ */
+enum PortType {
+	PORT_TYPE_NONE = 0,	/* port type not configured */
+	PORT_TYPE_ETH  = 1,	/* port carries ethernet traffic (inband) */
+	PORT_TYPE_MGMT = 2,	/* port carries mgmt ethernet traffic (out-of-band) */
+};
+
+/**
+ * Port config state
+ */
+enum PortAdminState {
+	PORT_ADMIN_STATE_NONE = 0,	/* port admin state not configured */
+	PORT_ADMIN_STATE_DOWN = 1,	/* port is admin disabled */
+	PORT_ADMIN_STATE_UP   = 2,	/* port is admin enabled */
+};
 
 /**
  * Port operational status
@@ -1151,9 +1098,9 @@ enum port_oper_status {
  * Ethernet Forward error correction (fec) modes
  */
 enum port_fec_type {
-	PORT_FEC_TYPE_NONE = 0,	/* Disabled */
-	PORT_FEC_TYPE_FC   = 1,	/* FireCode */
-	PORT_FEC_TYPE_RS   = 2,	/* ReedSolomon */
+	PORT_FEC_TYPE_NONE = 0,		/* Disabled */
+	PORT_FEC_TYPE_FC   = 1,		/* FireCode */
+	PORT_FEC_TYPE_RS   = 2,		/* ReedSolomon */
 };
 
 /**
@@ -1182,14 +1129,14 @@ enum port_loopback_mode {
  * @sprom:    Transceiver sprom contents
  */
 struct xcvr_status {
-	uint8_t   state;
-	uint8_t   phy;
-	uint16_t  pid;
-	uint8_t   sprom[256];
+	u8     state;
+	u8     phy;
+	__le16 pid;
+	u8     sprom[256];
 };
 
 /**
- * Port Config information
+ * Port configuration
  * @speed:              port speed (in Mbps)
  * @mtu:                mtu
  * @state:              port admin state (enum port_admin_state)
@@ -1198,180 +1145,393 @@ struct xcvr_status {
  * @pause_type:         pause type  (enum port_pause_type)
  * @loopback_mode:      loopback mode (enum port_loopback_mode)
  */
-struct port_config {
+union port_config {
+	struct {
 #define IONIC_SPEED_100G	100000	/* 100G in Mbps */
-#define IONIC_SPEED_50G		 50000	/*  50G in Mbps */
-#define IONIC_SPEED_40G		 40000 	/*  40G in Mbps */
-#define IONIC_SPEED_25G		 25000 	/*  25G in Mbps */
-#define IONIC_SPEED_10G		 10000 	/*  10G in Mbps */
-	uint32_t    speed;
-	uint32_t    mtu;
-	uint8_t     state;
-	uint8_t     an_enable;
-	uint8_t     fec_type;
-	uint8_t     pause_type;
-	uint8_t     loopback_mode;
+#define IONIC_SPEED_50G		50000 	/* 50G in Mbps */
+#define IONIC_SPEED_40G		40000 	/* 40G in Mbps */
+#define IONIC_SPEED_25G		25000 	/* 25G in Mbps */
+#define IONIC_SPEED_10G		10000 	/* 10G in Mbps */
+#define IONIC_SPEED_1G		1000 	/* 1G in Mbps */
+		__le32 speed;
+		__le32 mtu;
+		u8     state;
+		u8     an_enable;
+		u8     fec_type;
+		u8     pause_type;
+		u8     loopback_mode;
+	};
+	__le32 words[64];
 };
 
 /**
  * Port Status information
  * @status:             link status (enum port_oper_status)
- * @id:                 port number
+ * @id:                 port id
  * @speed:              link speed (in Mbps)
+ * @xcvr:               tranceiver status
  */
 struct port_status {
-	uint32_t            speed;
-	uint32_t            id;
-	uint8_t             status;
+	__le32 id;
+	__le32 speed;
+	u8     status;
+	u8     rsvd[55];
 	struct xcvr_status  xcvr;
 };
 
 /**
- * struct port_config_cmd - Port configuration command
- * @opcode:     opcode = 24
- * @config:	new port configuration parameters
+ * struct port_identify_cmd - Port identify command
+ * @opcode:     opcode
+ * @index:      port index
+ * @version:    Highest version of identify supported by driver
  */
-struct port_config_cmd {
-	u16 opcode;
-	u16 rsvd;
-	struct port_config config;
-	u8 pad[47];
+struct port_identify_cmd {
+	u8 opcode;
+	u8 index;
+	u8 ver;
+	u8 rsvd[61];
 };
 
 /**
- * struct port_config_comp - Port configuration command completion
+ * struct port_identify_comp - Port identify command completion
+ * @ver:    Version of identify returned by device
  */
-struct port_config_comp {
-	u32 status:8;
-	u32 rsvd:24;
-	u32 pad[3];
+struct port_identify_comp {
+	u8 status;
+	u8 ver;
+	u8 rsvd[14];
 };
 
 /**
- * struct notify_block - Memory block for notifications, updated by the NIC
+ * struct port_init_cmd - Port initialization command
+ * @opcode:     opcode
+ * @index:      port index
+ * @info_pa:    destination address for port info (struct port_info)
+ */
+struct port_init_cmd {
+	u8     opcode;
+	u8     index;
+	u8     rsvd[6];
+	__le64 info_pa;
+	u8     rsvd2[48];
+};
+
+/**
+ * struct port_init_comp - Port initialization command completion
+ */
+struct port_init_comp {
+	u8 status;
+	u8 rsvd[15];
+};
+
+/**
+ * struct port_reset_cmd - Port reset command
+ * @opcode:     opcode
+ * @index:      port index
+ */
+struct port_reset_cmd {
+	u8 opcode;
+	u8 index;
+	u8 rsvd[62];
+};
+
+/**
+ * struct port_reset_comp - Port reset command completion
+ */
+struct port_reset_comp {
+	u8 status;
+	u8 rsvd[15];
+};
+
+/**
+ * enum ionic_port_attr - List of device attributes
+ */
+enum ionic_port_attr {
+	IONIC_PORT_ATTR_STATE		= 0,
+	IONIC_PORT_ATTR_SPEED		= 1,
+	IONIC_PORT_ATTR_MTU			= 2,
+	IONIC_PORT_ATTR_AUTONEG		= 3,
+	IONIC_PORT_ATTR_FEC			= 4,
+	IONIC_PORT_ATTR_PAUSE		= 5,
+	IONIC_PORT_ATTR_LOOPBACK	= 6,
+};
+
+/**
+ * struct port_setattr_cmd - Set port attributes on the NIC
+ * @opcode:     Opcode
+ * @attr:       Attribute type (enum ionic_port_attr)
+ */
+struct port_setattr_cmd {
+	u8     opcode;
+	u8     index;
+	u8     attr;
+	u8     rsvd;
+	union {
+		u8      state;
+		__le32  speed;
+		__le32  mtu;
+		u8      an_enable;
+		u8      fec_type;
+		u8      pause_type;
+		u8      loopback_mode;
+		u8      rsvd2[60];
+	};
+};
+
+struct port_setattr_comp {
+	u8     status;
+	u8     rsvd;
+	__le16 comp_index;
+	u8     rsvd2[11];
+	u8     color;
+};
+
+/**
+ * struct port_getattr_cmd - Get port attributes from the NIC
+ * @attr:       Attribute type (enum ionic_port_attr)
+ */
+struct port_getattr_cmd {
+	u8     opcode;
+	u8     index;
+	u8     attr;
+	u8     rsvd[61];
+};
+
+struct port_getattr_comp {
+	u8     status;
+	u8     rsvd;
+	__le16 comp_index;
+	union {
+		u8      state;
+		__le32  speed;
+		__le32  mtu;
+		u8      an_enable;
+		u8      fec_type;
+		u8      pause_type;
+		u8      loopback_mode;
+		u8      rsvd2[11];
+	};
+	u8     color;
+};
+
+/**
+ * struct lif_status - Lif status register
  * @eid:             most recent NotifyQ event id
  * @link_status      link up/down
- * @link_error_bits: error bits if needed
  * @link_speed:      speed of link in Mbps
- * @phy_type:        type of physical connection
- * @autoneg_status:  autonegotiation status
  * @link_flap_count: number of times link status changes
- * @port_status:     port status information
- * @port_config:     port config information
  */
-struct notify_block {
-	u64 eid;
-	u16 link_status;
-	u16 link_error_bits;
-	u32 link_speed;		/* units of 1Mbps: e.g. 10000 = 10Gbps */
-	u16 phy_type;
-	u16 autoneg_status;
-	u16 link_flap_count;
-	struct port_status port_status;
-	struct port_config port_config;
+struct lif_status {
+	__le64 eid;
+	u8     port_num;
+	u8     rsvd;
+	__le16 link_status;
+	__le32 link_speed;		/* units of 1Mbps: eg 10000 = 10Gbps */
+	__le16 link_flap_count;
 };
 
 /**
  * struct lif_reset_cmd - LIF reset command
- * @opcode:    opcode = 12
- * @index:     LIF index
+ * @opcode:    opcode
+ * @lif_index: LIF index
  */
 struct lif_reset_cmd {
-        u16 opcode;
-        u16 rsvd;
-        u32 index:24;
-        u32 rsvd2:8;
-        u32 rsvd3[14];
+	u8     opcode;
+	u8     rsvd;
+	__le16 index;
+	__le32 rsvd2[15];
 };
 
 typedef struct admin_comp lif_reset_comp;
 
-/**
- * struct set_netdev_info_cmd - Tell the NIC of the LIF's netdev and PCI names
- * @opcode:     opcode = 13
- * @nd_name:	The netdev name string, 0 terminated
- * @dev_name:	The bus info, e.g. PCI slot-device-function, 0 terminated
- */
-#define IONIC_IFNAMSIZ  16
-struct set_netdev_info_cmd {
-	u16 opcode;
-	char nd_name[IONIC_IFNAMSIZ];
-	char dev_name[IONIC_IFNAMSIZ];
-	u16 rsvd[15];
-};
-
-typedef struct admin_comp set_netdev_info_comp;
-
-/**
- * struct station_mac_addr_get_cmd - Get LIF's station MAC address
- *                                   command
- * @opcode:     opcode = 15
- */
-struct station_mac_addr_get_cmd {
-	u16 opcode;
-	u16 rsvd[31];
+enum dev_state {
+	IONIC_DEV_DISABLE 			= 0,
+	IONIC_DEV_ENABLE			= 1,
+	IONIC_DEV_HANG_RESET		= 2,
 };
 
 /**
- * struct station_mac_addr_get_comp - Get LIF's station MAC address
- *                                    command completion
- * @status:     The status of the command.  Values for status are:
- *                 0 = Successful completion
- * @comp_index: The index in the descriptor ring for which this
- *              is the completion.
- * @addr:       Station MAC address (network-byte order)
- * @color:      Color bit.
+ * enum dev_attr - List of device attributes
  */
-struct station_mac_addr_get_comp {
-	u32 status:8;
-	u32 rsvd:8;
-	u32 comp_index:16;
-	u8 addr[6];
-	u16 rsvd2;
-	u32 rsvd3:31;
-	u32 color:1;
+enum dev_attr {
+	IONIC_DEV_ATTR_STATE    = 0,
+	IONIC_DEV_ATTR_NAME     = 1,
+	IONIC_DEV_ATTR_FEATURES = 2,
 };
 
 /**
- * struct mtu_set_cmd - Set LIF's MTU command
- * @opcode:     opcode = 16
- * @mtu:        MTU.  Min MTU=68, Min IPv4 MTU per RFC791.
- *              Max MTU=9200.
+ * struct dev_setattr_cmd - Set Device attributes on the NIC
+ * @opcode:     Opcode
+ * @attr:       Attribute type (enum dev_attr)
+ * @state:      Device state (enum dev_state)
+ * @name:       The bus info, e.g. PCI slot-device-function, 0 terminated
+ * @features:   Device features
  */
-struct mtu_set_cmd {
-	u16 opcode;
-	u16 mtu;
-	u16 rsvd[30];
+struct dev_setattr_cmd {
+	u8     opcode;
+	u8     attr;
+	__le16 rsvd;
+	union {
+		u8      state;
+		char    name[IONIC_IFNAMSIZ];
+		__le64  features;
+		u8      rsvd2[60];
+	};
 };
 
-typedef struct admin_comp mtu_set_comp;
+struct dev_setattr_comp {
+	u8     status;
+	u8     rsvd;
+	__le16 comp_index;
+	union {
+		__le64  features;
+		u8      rsvd2[11];
+	};
+	u8     color;
+};
+
+/**
+ * struct dev_getattr_cmd - Get Device attributes from the NIC
+ * @attr:       Attribute type (enum dev_attr)
+ */
+struct dev_getattr_cmd {
+	u8     opcode;
+	u8     attr;
+	u8     rsvd[62];
+};
+
+struct dev_getattr_comp {
+	u8     status;
+	u8     rsvd;
+	__le16 comp_index;
+	union {
+		__le64  features;
+		u8      rsvd2[11];
+	};
+	u8     color;
+};
+
+/**
+ * RSS parameters
+ */
+#define IONIC_RSS_HASH_KEY_SIZE		40
+
+enum rss_hash_types {
+	IONIC_RSS_TYPE_IPV4	= BIT(0),
+	IONIC_RSS_TYPE_IPV4_TCP	= BIT(1),
+	IONIC_RSS_TYPE_IPV4_UDP	= BIT(2),
+	IONIC_RSS_TYPE_IPV6	= BIT(3),
+	IONIC_RSS_TYPE_IPV6_TCP	= BIT(4),
+	IONIC_RSS_TYPE_IPV6_UDP	= BIT(5),
+};
+
+/**
+ * enum lif_attr - List of LIF attributes
+ */
+enum lif_attr {
+	IONIC_LIF_ATTR_STATE        = 0,
+	IONIC_LIF_ATTR_NAME         = 1,
+	IONIC_LIF_ATTR_MTU          = 2,
+	IONIC_LIF_ATTR_MAC          = 3,
+	IONIC_LIF_ATTR_FEATURES     = 4,
+	IONIC_LIF_ATTR_RSS          = 5,
+};
+
+/**
+ * struct lif_setattr_cmd - Set LIF attributes on the NIC
+ * @opcode:     Opcode
+ * @index:      LIF index
+ * @type:       Attribute type (enum lif_attr)
+ * @name:       The netdev name string, 0 terminated
+ * @mtu:        Mtu
+ * @mac:        Station mac
+ * @features:   Features
+ * @rss:        RSS properties
+ *              @types:     The hash types to enable (see rss_hash_types).
+ *              @key:       The hash secret key.
+ *              @addr:      Address for the indirection table shared memory.
+ */
+struct lif_setattr_cmd {
+	u8     opcode;
+	u8     attr;
+	__le16 index;
+	union {
+		u8      state;
+		char    name[IONIC_IFNAMSIZ];
+		__le32  mtu;
+		u8      mac[6];
+		__le64  features;
+		struct {
+			__le16 types;
+			u8     key[IONIC_RSS_HASH_KEY_SIZE];
+			u8     rsvd[6];
+			__le64 addr;
+		} rss;
+		u8      rsvd[60];
+	};
+};
+
+struct lif_setattr_comp {
+	u8     status;
+	u8     rsvd;
+	__le16 comp_index;
+	union {
+		__le64  features;
+		u8      rsvd2[11];
+	};
+	u8     color;
+};
+
+/**
+ * struct lif_getattr_cmd - Get LIF attributes from the NIC
+ * @index:      LIF index
+ * @type:       Attribute type (enum lif_attr)
+ */
+struct lif_getattr_cmd {
+	u8     opcode;
+	u8     attr;
+	__le16 index;
+	u8     rsvd[60];
+};
+
+struct lif_getattr_comp {
+	u8     status;
+	u8     rsvd;
+	__le16 comp_index;
+	union {
+		// char    name[IONIC_IFNAMSIZ];
+		__le32  mtu;
+		u8      mac[6];
+		u8      rsvd2[11];
+	};
+	u8     color;
+};
 
 enum rx_mode {
-	RX_MODE_F_UNICAST		= BIT(0),
-	RX_MODE_F_MULTICAST		= BIT(1),
-	RX_MODE_F_BROADCAST		= BIT(2),
-	RX_MODE_F_PROMISC		= BIT(3),
-	RX_MODE_F_ALLMULTI		= BIT(4),
+	RX_MODE_F_UNICAST	= BIT(0),
+	RX_MODE_F_MULTICAST	= BIT(1),
+	RX_MODE_F_BROADCAST	= BIT(2),
+	RX_MODE_F_PROMISC	= BIT(3),
+	RX_MODE_F_ALLMULTI	= BIT(4),
 };
 
 /**
  * struct rx_mode_set_cmd - Set LIF's Rx mode command
- * @opcode:     opcode = 17
+ * @opcode:     opcode
+ * @lif_index:  LIF index
  * @rx_mode:    Rx mode flags:
- *                  RX_MODE_F_UNICAST: Accept known unicast
- *                  packets.
- *                  RX_MODE_F_MULTICAST: Accept known
- *                  multicast packets.
- *                  RX_MODE_F_BROADCAST: Accept broadcast
- *                  packets.
+ *                  RX_MODE_F_UNICAST: Accept known unicast packets.
+ *                  RX_MODE_F_MULTICAST: Accept known multicast packets.
+ *                  RX_MODE_F_BROADCAST: Accept broadcast packets.
  *                  RX_MODE_F_PROMISC: Accept any packets.
- *                  RX_MODE_F_ALLMULTI: Accept any multicast
- *                  packets.
+ *                  RX_MODE_F_ALLMULTI: Accept any multicast packets.
  */
 struct rx_mode_set_cmd {
-	u16 opcode;
-	u16 rx_mode;
-	u16 rsvd[30];
+	u8     opcode;
+	u8     rsvd;
+	__le16 lif_index;
+	__le16 rx_mode;
+	__le16 rsvd2[29];
 };
 
 typedef struct admin_comp rx_mode_set_comp;
@@ -1384,206 +1544,67 @@ enum rx_filter_match_type {
 
 /**
  * struct rx_filter_add_cmd - Add LIF Rx filter command
- * @opcode:     opcode = 18
+ * @opcode:     opcode
+ * @lif_index:  LIF index
+ * @qid:        Queue ID
+ * @qtype:      Queue type
  * @match:      Rx filter match type.  (See RX_FILTER_MATCH_xxx)
  * @vlan:       VLAN ID
  * @addr:       MAC address (network-byte order)
- * @qid:        Queue ID
- * @qtype:      Queue type
  */
 struct rx_filter_add_cmd {
-	u16 opcode;
-	u16 match;
+	u8     opcode;
+	u8     qtype;
+	__le16 lif_index;
+	__le32 qid;
+	__le16 match;
 	union {
 		struct {
-			u16 vlan;
-			u16 rsvd[29];
+			__le16 vlan;
 		} vlan;
 		struct {
-			u8 addr[6];
-			u8 rsvd[2];
-			u16 rsvd2[26];
+			u8     addr[6];
 		} mac;
 		struct {
-			u16 vlan;
-			u8 addr[6];
-			u8 rsvd[2];
-			u16 rsvd3[25];
+			__le16 vlan;
+			u8     addr[6];
 		} mac_vlan;
+		u8 rsvd[54];
 	};
 };
 
 /**
  * struct rx_filter_add_comp - Add LIF Rx filter command completion
- * @status:     The status of the command.  Values for status are:
- *                 0 = Successful completion
+ * @status:     The status of the command (enum status_code)
  * @comp_index: The index in the descriptor ring for which this
  *              is the completion.
  * @filter_id:  Filter ID
  * @color:      Color bit.
  */
 struct rx_filter_add_comp {
-	u32 status:8;
-	u32 rsvd:8;
-	u32 comp_index:16;
-	u32 filter_id;
-	u32 rsvd2;
-	u32 rsvd3:31;
-	u32 color:1;
+	u8     status;
+	u8     rsvd;
+	__le16 comp_index;
+	__le32 filter_id;
+	u8     rsvd2[7];
+	u8     color;
 };
 
 /**
  * struct rx_filter_del_cmd - Delete LIF Rx filter command
- * @opcode:     opcode = 19
+ * @opcode:     opcode
+ * @lif_index:  LIF index
  * @filter_id:  Filter ID
  */
 struct rx_filter_del_cmd {
-	u16 opcode;
-	u32 filter_id;
-	u16 rsvd[29];
+	u8     opcode;
+	u8     rsvd;
+	__le16 lif_index;
+	__le32 filter_id;
+	__le32 rsvd2[14];
 };
 
 typedef struct admin_comp rx_filter_del_comp;
-
-#define STATS_DUMP_VERSION_1		1
-
-/**
- * struct stats_dump_cmd - Setup stats dump shared memory command
- * @opcode:     opcode = 20 (start), 21 (stop)
- * @ver:        Highest version of stats supported by driver:
- *                 1 = version 1.0 stats
- * @addr:       Destination address for the 4096-byte stats shared
- *              memory area (only valid when starting stats dump).
- *              (See union stats_dump).
- *
- * Once the start stats dump command is called, the device will
- * periodically dump stats to the shared memory area @addr.
- * The device will stop stats dump to the shared memory area
- * when the stop stats dump cmd is called.  Once a stopped
- * completion is received, the shared memory area can be
- * released by the driver.
- */
-struct stats_dump_cmd {
-	u16 opcode;
-	u16 ver;
-	dma_addr_t addr;
-	u32 rsvd2[13];
-};
-
-/**
- * struct stats_dump_comp - Setup stats dump shared memory
- *                          completion
- * @status:     The status of the command.  Values for status are:
- *                 0 = Successful completion
- *                 1 = Version not supported by device
- * @comp_index: The index in the descriptor ring for which this
- *              is the completion.
- * @ver:        Version of stats return by device.  The version
- *              returned by the device can be <= the requested
- *              version.
- * @color:      Color bit.
- */
-struct stats_dump_comp {
-	u32 status:8;
-	u32 rsvd:8;
-	u32 comp_index:16;
-	u16 ver;
-	u16 rsvd2[3];
-	u32 rsvd3:31;
-	u32 color:1;
-};
-
-#define RSS_HASH_KEY_SIZE	40
-
-enum rss_hash_types {
-/* Conflicts with FreeBSD rss definitions. */
-#ifndef __FreeBSD__
-	RSS_TYPE_IPV4		= BIT(0),
-	RSS_TYPE_IPV4_TCP	= BIT(1),
-	RSS_TYPE_IPV4_UDP	= BIT(2),
-	RSS_TYPE_IPV6		= BIT(3),
-	RSS_TYPE_IPV6_TCP	= BIT(4),
-	RSS_TYPE_IPV6_UDP	= BIT(5),
-	RSS_TYPE_IPV6_EX	= BIT(6),
-	RSS_TYPE_IPV6_TCP_EX	= BIT(7),
-	RSS_TYPE_IPV6_UDP_EX	= BIT(8),
-#else
-	IONIC_RSS_TYPE_IPV4		= BIT(0),
-	IONIC_RSS_TYPE_IPV4_TCP	= BIT(1),
-	IONIC_RSS_TYPE_IPV4_UDP	= BIT(2),
-	IONIC_RSS_TYPE_IPV6		= BIT(3),
-	IONIC_RSS_TYPE_IPV6_TCP	= BIT(4),
-	IONIC_RSS_TYPE_IPV6_UDP	= BIT(5),
-#endif
-};
-
-/**
- * struct rss_hash_set_cmd - Set the RSS hash types and the secret key
- * @opcode:    opcode = 22
- * @types:     The hash types to enable (see rss_hash_types).
- * @key:       The hash secret key.
- */
-struct rss_hash_set_cmd {
-	u16 opcode;
-	u16 types;
-	u8 key[RSS_HASH_KEY_SIZE];
-	u32 rsvd[5];
-};
-
-typedef struct admin_comp rss_hash_set_comp;
-
-#define RSS_IND_TBL_SIZE	128
-
-/**
- * struct rss_indir_set_cmd - Set the RSS indirection table values
- * @opcode:    opcode = 23
- * @addr:      Address for RSS indirection table shared memory.
-*/
-struct rss_indir_set_cmd {
-	u16 opcode;
-	dma_addr_t addr;
-	u16 rsvd[27];
-};
-
-typedef struct admin_comp rss_indir_set_comp;
-
-/**
- * struct debug_q_dump_cmd - Debug queue dump command
- * @opcode:     opcode = 0xf0
- * @qid:        Queue ID
- * @qtype:      Queue type
- */
-struct debug_q_dump_cmd {
-	u16 opcode;
-	u16 rsvd;
-	u32 qid:24;
-	u32 qtype:8;
-	u32 rsvd2[14];
-};
-
-/**
- * struct debug_q_dump_comp - Debug queue dump command completion
- * @status:     The status of the command.  Values for status are:
- *                 0 = Successful completion
- * @comp_index: The index in the descriptor ring for which this
- *              is the completion.
- * @p_index0:   Queue 0 producer index
- * @c_index0:   Queue 0 consumer index
- * @p_index1:   Queue 1 producer index
- * @c_index1:   Queue 1 consumer index
- * @color:      Color bit.
- */
-struct debug_q_dump_comp {
-	u32 status:8;
-	u32 rsvd:8;
-	u32 comp_index:16;
-	u16 p_index0;
-	u16 c_index0;
-	u16 p_index1;
-	u16 c_index1;
-	u32 rsvd2:31;
-	u32 color:1;
-};
 
 /******************************************************************
  ******************* RDMA Commands ********************************
@@ -1591,7 +1612,7 @@ struct debug_q_dump_comp {
 
 /**
  * struct rdma_reset_cmd - Reset RDMA LIF cmd
- * @opcode:        opcode = 50
+ * @opcode:        opcode
  * @lif_index:     lif index
  *
  * There is no rdma specific dev command completion struct.  Completion uses
@@ -1599,14 +1620,15 @@ struct debug_q_dump_comp {
  * means the LIF does not support rdma.
  **/
 struct rdma_reset_cmd {
-	u16 opcode;
-	u16 lif_index;
-	u8 rsvd[60];
+	u8     opcode;
+	u8     rsvd;
+	__le16 lif_index;
+	u8     rsvd2[60];
 };
 
 /**
  * struct rdma_queue_cmd - Create RDMA Queue command
- * @opcode:        opcode = 51, 52, 53
+ * @opcode:        opcode, 52, 53
  * @lif_index      lif index
  * @qid_ver:       (qid | (rdma version << 24))
  * @cid:           intr, eq_id, or cq_id
@@ -1634,16 +1656,17 @@ struct rdma_reset_cmd {
  * the common struct admin_comp.  Only the status is indicated.
  **/
 struct rdma_queue_cmd {
-	u16 opcode;
-	u16 lif_index;
-	u32 qid_ver;
-	u32 cid;
-	u16 dbid;
-	u8 depth_log2;
-	u8 stride_log2;
-	u64 dma_addr;
-	u8 rsvd[36];
-	u32 xxx_table_index;
+	u8     opcode;
+	u8     rsvd;
+	__le16 lif_index;
+	__le32 qid_ver;
+	__le32 cid;
+	__le16 dbid;
+	u8     depth_log2;
+	u8     stride_log2;
+	__le64 dma_addr;
+	u8     rsvd2[36];
+	__le32 xxx_table_index;
 };
 
 /******************************************************************
@@ -1660,31 +1683,26 @@ struct rdma_queue_cmd {
  * actual events will be formed.
  */
 struct notifyq_event {
-	u64 eid;
-	u16 ecode;
-	u8 data[54];
+	__le64 eid;
+	__le16 ecode;
+	u8     data[54];
 };
 
 /**
  * struct link_change_event
  * @eid:		event number
  * @ecode:		event code = EVENT_OPCODE_LINK_CHANGE
- * @link_status:	link up or down, with error bits
- * @phy_type:		specifies the type of PHY connected
+ * @link_status:	link up or down, with error bits (enum port_status)
  * @link_speed:		speed of the network link
- * @autoneg_status:	autonegotiation data
  *
  * Sent when the network link state changes between UP and DOWN
  */
 struct link_change_event {
-	u64 eid;
-	u16 ecode;
-	u16 link_status;	/* 0 = down, 1 = up */
-	u16 link_error_bits;	/* TBD */
-	u16 phy_type;
-	u32 link_speed;		/* units of 1Mbps: e.g. 10000 = 10Gbps */
-	u16 autoneg_status;
-	u8 rsvd[42];
+	__le64 eid;
+	__le16 ecode;
+	__le16 link_status;
+	__le32 link_speed;	/* units of 1Mbps: e.g. 10000 = 10Gbps */
+	u8     rsvd[48];
 };
 
 /**
@@ -1698,11 +1716,11 @@ struct link_change_event {
  * has been reset.
  */
 struct reset_event {
-	u64 eid;
-	u16 ecode;
-	u8 reset_code;
-	u8 state;
-	u8 rsvd[52];
+	__le64 eid;
+	__le16 ecode;
+	u8     reset_code;
+	u8     state;
+	u8     rsvd[52];
 };
 
 /**
@@ -1713,9 +1731,9 @@ struct reset_event {
  * Sent periodically by the NIC to indicate continued health
  */
 struct heartbeat_event {
-	u64 eid;
-	u16 ecode;
-	u8 rsvd[54];
+	__le64 eid;
+	__le16 ecode;
+	u8     rsvd[54];
 };
 
 /**
@@ -1727,208 +1745,565 @@ struct heartbeat_event {
  * Sent to notify the driver of an internal error.
  */
 struct log_event {
-	u64 eid;
-	u16 ecode;
-	u8 data[54];
+	__le64 eid;
+	__le16 ecode;
+	u8     data[54];
 };
 
 /**
- * struct ionic_lif_stats
+ * struct port_stats
  */
-struct ionic_lif_stats {
-	// RX
-	uint64_t rx_ucast_bytes;
-	uint64_t rx_ucast_packets;
-	uint64_t rx_mcast_bytes;
-	uint64_t rx_mcast_packets;
-	uint64_t rx_bcast_bytes;
-	uint64_t rx_bcast_packets;
-	uint64_t rsvd0;
-	uint64_t rsvd1;
-	// RX drops
-	uint64_t rx_ucast_drop_bytes;
-	uint64_t rx_ucast_drop_packets;
-	uint64_t rx_mcast_drop_bytes;
-	uint64_t rx_mcast_drop_packets;
-	uint64_t rx_bcast_drop_bytes;
-	uint64_t rx_bcast_drop_packets;
-	uint64_t rx_dma_error;
-	uint64_t rsvd2;
-	// TX
-	uint64_t tx_ucast_bytes;
-	uint64_t tx_ucast_packets;
-	uint64_t tx_mcast_bytes;
-	uint64_t tx_mcast_packets;
-	uint64_t tx_bcast_bytes;
-	uint64_t tx_bcast_packets;
-	uint64_t rsvd3;
-	uint64_t rsvd4;
-	// TX drops
-	uint64_t tx_ucast_drop_bytes;
-	uint64_t tx_ucast_drop_packets;
-	uint64_t tx_mcast_drop_bytes;
-	uint64_t tx_mcast_drop_packets;
-	uint64_t tx_bcast_drop_bytes;
-	uint64_t tx_bcast_drop_packets;
-	uint64_t tx_dma_error;
-	uint64_t rsvd5;
-	//Rx Queue/Ring drops
-	uint64_t rx_queue_disabled;
-	uint64_t rx_queue_empty;
-	uint64_t rx_queue_error;
-	uint64_t rx_desc_fetch_error;
-	uint64_t rx_desc_data_error;
-	uint64_t rsvd6;
-	uint64_t rsvd7;
-	uint64_t rsvd8;
-	//Tx Queue/Ring drops
-	uint64_t tx_queue_disabled;
-	uint64_t tx_queue_error;
-	uint64_t tx_desc_fetch_error;
-	uint64_t tx_desc_data_error;
-	uint64_t rsvd9;
-	uint64_t rsvd10;
-	uint64_t rsvd11;
-	uint64_t rsvd12;
-
-	// RDMA/ROCE TX
-	uint64_t tx_rdma_ucast_bytes;
-	uint64_t tx_rdma_ucast_packets;
-	uint64_t tx_rdma_mcast_bytes;
-	uint64_t tx_rdma_mcast_packets;
-	uint64_t tx_rdma_cnp_packets;
-	uint64_t rsvd13;
-	uint64_t rsvd14;
-	uint64_t rsvd15;
-
-	// RDMA/ROCE RX
-	uint64_t rx_rdma_ucast_bytes;
-	uint64_t rx_rdma_ucast_packets;
-	uint64_t rx_rdma_mcast_bytes;
-	uint64_t rx_rdma_mcast_packets;
-	uint64_t rx_rdma_cnp_packets;
-	uint64_t rx_rdma_ecn_packets;
-	uint64_t rsvd16;
-	uint64_t rsvd17;
-
-	uint64_t rsvd18;
-	uint64_t rsvd19;
-	uint64_t rsvd20;
-	uint64_t rsvd21;
-	uint64_t rsvd22;
-	uint64_t rsvd23;
-	uint64_t rsvd24;
-	uint64_t rsvd25;
-
-	uint64_t rsvd26;
-	uint64_t rsvd27;
-	uint64_t rsvd28;
-	uint64_t rsvd29;
-	uint64_t rsvd30;
-	uint64_t rsvd31;
-	uint64_t rsvd32;
-	uint64_t rsvd33;
-
-	uint64_t rsvd34;
-	uint64_t rsvd35;
-	uint64_t rsvd36;
-	uint64_t rsvd37;
-	uint64_t rsvd38;
-	uint64_t rsvd39;
-	uint64_t rsvd40;
-	uint64_t rsvd41;
-
-	uint64_t rsvd42;
-	uint64_t rsvd43;
-	uint64_t rsvd44;
-	uint64_t rsvd45;
-	uint64_t rsvd46;
-	uint64_t rsvd47;
-	uint64_t rsvd48;
-	uint64_t rsvd49;
-
-	// RDMA/ROCE REQ Error/Debugs (768 - 895)
-	uint64_t rdma_req_rx_pkt_seq_err;
-	uint64_t rdma_req_rx_rnr_retry_err;
-	uint64_t rdma_req_rx_remote_access_err;
-	uint64_t rdma_req_rx_remote_inv_req_err;
-	uint64_t rdma_req_rx_remote_oper_err;
-	uint64_t rdma_req_rx_implied_nak_seq_err;
-	uint64_t rdma_req_rx_cqe_err;
-	uint64_t rdma_req_rx_cqe_flush_err;
-
-	uint64_t rdma_req_rx_dup_responses;
-	uint64_t rdma_req_rx_invalid_packets;
-	uint64_t rdma_req_tx_local_access_err;
-	uint64_t rdma_req_tx_local_oper_err;
-	uint64_t rdma_req_tx_memory_mgmt_err;
-	uint64_t rsvd52;
-	uint64_t rsvd53;
-	uint64_t rsvd54;
-
-	// RDMA/ROCE RESP Error/Debugs (896 - 1023)
-	uint64_t rdma_resp_rx_dup_requests;
-	uint64_t rdma_resp_rx_out_of_buffer;
-	uint64_t rdma_resp_rx_out_of_seq_pkts;
-	uint64_t rdma_resp_rx_cqe_err;
-	uint64_t rdma_resp_rx_cqe_flush_err;
-	uint64_t rdma_resp_rx_local_len_err;
-	uint64_t rdma_resp_rx_inv_request_err;
-	uint64_t rdma_resp_rx_local_qp_oper_err;
-
-	uint64_t rdma_resp_rx_out_of_atomic_resource;
-	uint64_t rdma_resp_tx_pkt_seq_err;
-	uint64_t rdma_resp_tx_remote_inv_req_err;
-	uint64_t rdma_resp_tx_remote_access_err;
-	uint64_t rdma_resp_tx_remote_oper_err;
-	uint64_t rdma_resp_tx_rnr_retry_err;
-	uint64_t rsvd57;
-	uint64_t rsvd58;
+struct port_stats {
+	__le64 frames_rx_ok;
+	__le64 frames_rx_all;
+	__le64 frames_rx_bad_fcs;
+	__le64 frames_rx_bad_all;
+	__le64 octets_rx_ok;
+	__le64 octets_rx_all;
+	__le64 frames_rx_unicast;
+	__le64 frames_rx_multicast;
+	__le64 frames_rx_broadcast;
+	__le64 frames_rx_pause;
+	__le64 frames_rx_bad_length;
+	__le64 frames_rx_undersized;
+	__le64 frames_rx_oversized;
+	__le64 frames_rx_fragments;
+	__le64 frames_rx_jabber;
+	__le64 frames_rx_pripause;
+	__le64 frames_rx_stomped_crc;
+	__le64 frames_rx_too_long;
+	__le64 frames_rx_vlan_good;
+	__le64 frames_rx_dropped;
+	__le64 frames_rx_less_than_64b;
+	__le64 frames_rx_64b;
+	__le64 frames_rx_65b_127b;
+	__le64 frames_rx_128b_255b;
+	__le64 frames_rx_256b_511b;
+	__le64 frames_rx_512b_1023b;
+	__le64 frames_rx_1024b_1518b;
+	__le64 frames_rx_1519b_2047b;
+	__le64 frames_rx_2048b_4095b;
+	__le64 frames_rx_4096b_8191b;
+	__le64 frames_rx_8192b_9215b;
+	__le64 frames_rx_other;
+	__le64 frames_tx_ok;
+	__le64 frames_tx_all;
+	__le64 frames_tx_bad;
+	__le64 octets_tx_ok;
+	__le64 octets_tx_total;
+	__le64 frames_tx_unicast;
+	__le64 frames_tx_multicast;
+	__le64 frames_tx_broadcast;
+	__le64 frames_tx_pause;
+	__le64 frames_tx_pripause;
+	__le64 frames_tx_vlan;
+	__le64 frames_tx_less_than_64b;
+	__le64 frames_tx_64b;
+	__le64 frames_tx_65b_127b;
+	__le64 frames_tx_128b_255b;
+	__le64 frames_tx_256b_511b;
+	__le64 frames_tx_512b_1023b;
+	__le64 frames_tx_1024b_1518b;
+	__le64 frames_tx_1519b_2047b;
+	__le64 frames_tx_2048b_4095b;
+	__le64 frames_tx_4096b_8191b;
+	__le64 frames_tx_8192b_9215b;
+	__le64 frames_tx_other;
+	__le64 frames_tx_pri_0;
+	__le64 frames_tx_pri_1;
+	__le64 frames_tx_pri_2;
+	__le64 frames_tx_pri_3;
+	__le64 frames_tx_pri_4;
+	__le64 frames_tx_pri_5;
+	__le64 frames_tx_pri_6;
+	__le64 frames_tx_pri_7;
+	__le64 frames_rx_pri_0;
+	__le64 frames_rx_pri_1;
+	__le64 frames_rx_pri_2;
+	__le64 frames_rx_pri_3;
+	__le64 frames_rx_pri_4;
+	__le64 frames_rx_pri_5;
+	__le64 frames_rx_pri_6;
+	__le64 frames_rx_pri_7;
+	__le64 tx_pripause_0_1us_count;
+	__le64 tx_pripause_1_1us_count;
+	__le64 tx_pripause_2_1us_count;
+	__le64 tx_pripause_3_1us_count;
+	__le64 tx_pripause_4_1us_count;
+	__le64 tx_pripause_5_1us_count;
+	__le64 tx_pripause_6_1us_count;
+	__le64 tx_pripause_7_1us_count;
+	__le64 rx_pripause_0_1us_count;
+	__le64 rx_pripause_1_1us_count;
+	__le64 rx_pripause_2_1us_count;
+	__le64 rx_pripause_3_1us_count;
+	__le64 rx_pripause_4_1us_count;
+	__le64 rx_pripause_5_1us_count;
+	__le64 rx_pripause_6_1us_count;
+	__le64 rx_pripause_7_1us_count;
+	__le64 rx_pause_1us_count;
+	__le64 frames_tx_truncated;
+	u8 rsvd[312];
 };
 
-#pragma pack(pop)
+/**
+ * struct port_identity - port identity structure
+ * @version:        identity structure version
+ * @type:           type of port (enum port_type)
+ * @num_lanes:      number of lanes for the port
+ * @autoneg:        autoneg supported
+ * @max_frame_size: maximum frame size supported
+ * @fec_type:       supported fec types
+ * @pause_type:     supported pause types
+ * @loopback_mode:  supported loopback mode
+ * @config:         current port configuration
+ */
+union port_identity {
+	struct {
+		u8     version;
+		u8     type;
+		u8     num_lanes;
+		u8     autoneg;
+		__le32 min_frame_size;
+		__le32 max_frame_size;
+		u8     fec_type[4];
+		u8     pause_type[2];
+		u8     loopback_mode[2];
+		__le32 speeds[16];
+		u8     rsvd2[44];
+		union port_config config;
+	};
+	__le32 words[512];
+};
+
+/**
+ * struct port_info - port info structure
+ * @port_status:     port status
+ * @port_stats:      port stats
+ */
+struct port_info {
+	union port_config config;
+	struct port_status status;
+	struct port_stats stats;
+};
+
+/**
+ * struct lif_stats
+ */
+struct lif_stats {
+	/* RX */
+	__le64 rx_ucast_bytes;
+	__le64 rx_ucast_packets;
+	__le64 rx_mcast_bytes;
+	__le64 rx_mcast_packets;
+	__le64 rx_bcast_bytes;
+	__le64 rx_bcast_packets;
+	__le64 rsvd0;
+	__le64 rsvd1;
+	/* RX drops */
+	__le64 rx_ucast_drop_bytes;
+	__le64 rx_ucast_drop_packets;
+	__le64 rx_mcast_drop_bytes;
+	__le64 rx_mcast_drop_packets;
+	__le64 rx_bcast_drop_bytes;
+	__le64 rx_bcast_drop_packets;
+	__le64 rx_dma_error;
+	__le64 rsvd2;
+	/* TX */
+	__le64 tx_ucast_bytes;
+	__le64 tx_ucast_packets;
+	__le64 tx_mcast_bytes;
+	__le64 tx_mcast_packets;
+	__le64 tx_bcast_bytes;
+	__le64 tx_bcast_packets;
+	__le64 rsvd3;
+	__le64 rsvd4;
+	/* TX drops */
+	__le64 tx_ucast_drop_bytes;
+	__le64 tx_ucast_drop_packets;
+	__le64 tx_mcast_drop_bytes;
+	__le64 tx_mcast_drop_packets;
+	__le64 tx_bcast_drop_bytes;
+	__le64 tx_bcast_drop_packets;
+	__le64 tx_dma_error;
+	__le64 rsvd5;
+	/* Rx Queue/Ring drops */
+	__le64 rx_queue_disabled;
+	__le64 rx_queue_empty;
+	__le64 rx_queue_error;
+	__le64 rx_desc_fetch_error;
+	__le64 rx_desc_data_error;
+	__le64 rsvd6;
+	__le64 rsvd7;
+	__le64 rsvd8;
+	/* Tx Queue/Ring drops */
+	__le64 tx_queue_disabled;
+	__le64 tx_queue_error;
+	__le64 tx_desc_fetch_error;
+	__le64 tx_desc_data_error;
+	__le64 rsvd9;
+	__le64 rsvd10;
+	__le64 rsvd11;
+	__le64 rsvd12;
+
+	/* RDMA/ROCE TX */
+	__le64 tx_rdma_ucast_bytes;
+	__le64 tx_rdma_ucast_packets;
+	__le64 tx_rdma_mcast_bytes;
+	__le64 tx_rdma_mcast_packets;
+	__le64 tx_rdma_cnp_packets;
+	__le64 rsvd13;
+	__le64 rsvd14;
+	__le64 rsvd15;
+
+	/* RDMA/ROCE RX */
+	__le64 rx_rdma_ucast_bytes;
+	__le64 rx_rdma_ucast_packets;
+	__le64 rx_rdma_mcast_bytes;
+	__le64 rx_rdma_mcast_packets;
+	__le64 rx_rdma_cnp_packets;
+	__le64 rx_rdma_ecn_packets;
+	__le64 rsvd16;
+	__le64 rsvd17;
+
+	__le64 rsvd18;
+	__le64 rsvd19;
+	__le64 rsvd20;
+	__le64 rsvd21;
+	__le64 rsvd22;
+	__le64 rsvd23;
+	__le64 rsvd24;
+	__le64 rsvd25;
+
+	__le64 rsvd26;
+	__le64 rsvd27;
+	__le64 rsvd28;
+	__le64 rsvd29;
+	__le64 rsvd30;
+	__le64 rsvd31;
+	__le64 rsvd32;
+	__le64 rsvd33;
+
+	__le64 rsvd34;
+	__le64 rsvd35;
+	__le64 rsvd36;
+	__le64 rsvd37;
+	__le64 rsvd38;
+	__le64 rsvd39;
+	__le64 rsvd40;
+	__le64 rsvd41;
+
+	__le64 rsvd42;
+	__le64 rsvd43;
+	__le64 rsvd44;
+	__le64 rsvd45;
+	__le64 rsvd46;
+	__le64 rsvd47;
+	__le64 rsvd48;
+	__le64 rsvd49;
+
+	/* RDMA/ROCE REQ Error/Debugs (768 - 895) */
+	__le64 rdma_req_rx_pkt_seq_err;
+	__le64 rdma_req_rx_rnr_retry_err;
+	__le64 rdma_req_rx_remote_access_err;
+	__le64 rdma_req_rx_remote_inv_req_err;
+	__le64 rdma_req_rx_remote_oper_err;
+	__le64 rdma_req_rx_implied_nak_seq_err;
+	__le64 rdma_req_rx_cqe_err;
+	__le64 rdma_req_rx_cqe_flush_err;
+
+	__le64 rdma_req_rx_dup_responses;
+	__le64 rdma_req_rx_invalid_packets;
+	__le64 rdma_req_tx_local_access_err;
+	__le64 rdma_req_tx_local_oper_err;
+	__le64 rdma_req_tx_memory_mgmt_err;
+	__le64 rsvd52;
+	__le64 rsvd53;
+	__le64 rsvd54;
+
+	/* RDMA/ROCE RESP Error/Debugs (896 - 1023) */
+	__le64 rdma_resp_rx_dup_requests;
+	__le64 rdma_resp_rx_out_of_buffer;
+	__le64 rdma_resp_rx_out_of_seq_pkts;
+	__le64 rdma_resp_rx_cqe_err;
+	__le64 rdma_resp_rx_cqe_flush_err;
+	__le64 rdma_resp_rx_local_len_err;
+	__le64 rdma_resp_rx_inv_request_err;
+	__le64 rdma_resp_rx_local_qp_oper_err;
+
+	__le64 rdma_resp_rx_out_of_atomic_resource;
+	__le64 rdma_resp_tx_pkt_seq_err;
+	__le64 rdma_resp_tx_remote_inv_req_err;
+	__le64 rdma_resp_tx_remote_access_err;
+	__le64 rdma_resp_tx_remote_oper_err;
+	__le64 rdma_resp_tx_rnr_retry_err;
+	__le64 rsvd57;
+	__le64 rsvd58;
+};
+
+/**
+ * struct lif_info - lif info structure
+ */
+struct lif_info {
+	struct lif_status status;
+	struct lif_stats stats;
+};
+
+union dev_cmd {
+	u32 words[16];
+	struct admin_cmd cmd;
+	struct nop_cmd nop;
+
+	struct dev_identify_cmd identify;
+	struct dev_init_cmd init;
+	struct dev_reset_cmd reset;
+	struct dev_getattr_cmd getattr;
+	struct dev_setattr_cmd setattr;
+
+	struct port_identify_cmd port_identify;
+	struct port_init_cmd port_init;
+	struct port_reset_cmd port_reset;
+	struct port_getattr_cmd port_getattr;
+	struct port_setattr_cmd port_setattr;
+
+	struct lif_identify_cmd lif_identify;
+	struct lif_init_cmd lif_init;
+	struct lif_reset_cmd lif_reset;
+
+	struct q_init_cmd q_init;
+};
+
+union dev_cmd_comp {
+	u32 words[4];
+	u8 status;
+	struct admin_comp comp;
+	struct nop_comp nop;
+
+	struct dev_identify_comp identify;
+	struct dev_init_comp init;
+	struct dev_reset_comp reset;
+	struct dev_getattr_comp getattr;
+	struct dev_setattr_comp setattr;
+
+	struct port_identify_comp port_identify;
+	struct port_init_comp port_init;
+	struct port_reset_comp port_reset;
+	struct port_getattr_comp port_getattr;
+	struct port_setattr_comp port_setattr;
+
+	struct lif_identify_comp lif_identify;
+	struct lif_init_comp lif_init;
+	lif_reset_comp lif_reset;
+
+	struct q_init_comp q_init;
+};
+
+/**
+ * union dev_info - Device info register format (read-only)
+ * @signature:       Signature value of 0x44455649 ('DEVI').
+ * @version:         Current version of info.
+ * @asic_type:       Asic type.
+ * @asic_rev:        Asic revision.
+ * @fw_status:       Firmware status.
+ * @fw_heartbeat:    Firmware heartbeat counter.
+ * @serial_num:      Serial number.
+ * @fw_version:      Firmware version.
+ */
+union dev_info_regs {
+	struct {
+		__le32 signature;
+		u8     version;
+		u8     asic_type;
+		u8     asic_rev;
+		u8     fw_status;
+		u32    fw_heartbeat;
+		char   fw_version[32];
+		char   serial_num[32];
+	};
+	__le32 words[512];
+};
+
+/**
+ * union dev_cmd_regs - Device command register format (read-write)
+ * @doorbell:        Device Cmd Doorbell, write-only.
+ *                   Write a 1 to signal device to process cmd,
+ *                   poll done for completion.
+ * @done:            Done indicator, bit 0 == 1 when command is complete.
+ * @cmd:             Opcode-specific command bytes
+ * @comp:            Opcode-specific response bytes
+ * @data:            Opcode-specific side-data
+ */
+union dev_cmd_regs {
+	struct {
+		__le32                doorbell;
+		__le32                done;
+		union dev_cmd         cmd;
+		union dev_cmd_comp    comp;
+		u8                    rsvd[48];
+		__le32                data[478];
+	};
+	__le32 words[512];
+};
+
+/**
+ * union dev_regs - Device register format in for bar 0 page 0
+ * @info:            Device info registers
+ * @devcmd:          Device command registers
+ */
+union dev_regs {
+	struct {
+		union dev_info_regs info;
+		union dev_cmd_regs  devcmd;
+	};
+	__le32 words[1024];
+};
 
 union adminq_cmd {
 	struct admin_cmd cmd;
-	struct notifyq_init_cmd notifyq_init;
-	struct lif_reset_cmd lif_reset;
 	struct nop_cmd nop;
-	struct txq_init_cmd txq_init;
-	struct rxq_init_cmd rxq_init;
-	struct features_cmd features;
-	struct q_enable_cmd q_enable;
-	struct q_disable_cmd q_disable;
-	struct set_netdev_info_cmd netdev_info;
-	struct station_mac_addr_get_cmd station_mac_addr_get;
-	struct mtu_set_cmd mtu_set;
+	struct q_init_cmd q_init;
+	struct q_control_cmd q_control;
+	struct lif_setattr_cmd lif_setattr;
+	struct lif_getattr_cmd lif_getattr;
 	struct rx_mode_set_cmd rx_mode_set;
 	struct rx_filter_add_cmd rx_filter_add;
 	struct rx_filter_del_cmd rx_filter_del;
-	struct stats_dump_cmd stats_dump;
-	struct stats_dump_cmd lif_stats;
-	struct rss_hash_set_cmd rss_hash_set;
-	struct rss_indir_set_cmd rss_indir_set;
-	struct debug_q_dump_cmd debug_q_dump;
 	struct rdma_reset_cmd rdma_reset;
 	struct rdma_queue_cmd rdma_queue;
 };
 
 union adminq_comp {
 	struct admin_comp comp;
-	struct notifyq_init_comp notifyq_init;
 	struct nop_comp nop;
-	struct txq_init_comp txq_init;
-	struct rxq_init_comp rxq_init;
-	struct features_comp features;
-	struct station_mac_addr_get_comp station_mac_addr_get;
+	struct q_init_comp q_init;
+	struct lif_setattr_comp lif_setattr;
+	struct lif_getattr_comp lif_getattr;
 	struct rx_filter_add_comp rx_filter_add;
-	struct stats_dump_comp stats_dump;
-	struct stats_dump_comp lif_stats;
-	struct debug_q_dump_comp debug_q_dump;
+};
+
+#define IONIC_BARS_MAX				6
+#define IONIC_PCI_BAR_DBELL			1
+
+/* BAR0 */
+#define BAR0_SIZE							0x8000
+
+#define BAR0_DEV_INFO_REGS_OFFSET			0x0000
+#define BAR0_DEV_CMD_REGS_OFFSET			0x0800
+#define BAR0_DEV_CMD_DATA_REGS_OFFSET		0x0c00
+#define BAR0_INTR_STATUS_OFFSET				0x1000
+#define BAR0_INTR_CTRL_OFFSET				0x2000
+#define DEV_CMD_DONE						0x00000001
+
+#define ASIC_TYPE_CAPRI						0
+
+/**
+ * struct doorbell - Doorbell register layout
+ * @p_index: Producer index
+ * @ring:    Selects the specific ring of the queue to update.
+ *           Type-specific meaning:
+ *              ring=0: Default producer/consumer queue.
+ *              ring=1: (CQ, EQ) Re-Arm queue.  RDMA CQs
+ *              send events to EQs when armed.  EQs send
+ *              interrupts when armed.
+ * @qid:     The queue id selects the queue destination for the
+ *           producer index and flags.
+ */
+struct doorbell {
+	u16 p_index;
+	u8 ring;
+	u8 qid_lo;
+	u16 qid_hi;
+	u16 rsvd2;
+};
+
+/**
+ * struct intr_ctrl - Interrupt control register
+ * @coalescing_init:  Coalescing timer initial value, in
+ *                    device units.  Use @identity->intr_coal_mult
+ *                    and @identity->intr_coal_div to convert from
+ *                    usecs to device units:
+ *
+ *                      coal_init = coal_usecs * coal_mutl / coal_div
+ *
+ *                    When an interrupt is sent the interrupt
+ *                    coalescing timer current value
+ *                    (@coalescing_curr) is initialized with this
+ *                    value and begins counting down.  No more
+ *                    interrupts are sent until the coalescing
+ *                    timer reaches 0.  When @coalescing_init=0
+ *                    interrupt coalescing is effectively disabled
+ *                    and every interrupt assert results in an
+ *                    interrupt.  Reset value: 0.
+ * @mask:             Interrupt mask.  When @mask=1 the interrupt
+ *                    resource will not send an interrupt.  When
+ *                    @mask=0 the interrupt resource will send an
+ *                    interrupt if an interrupt event is pending
+ *                    or on the next interrupt assertion event.
+ *                    Reset value: 1.
+ * @int_credits:      Interrupt credits.  This register indicates
+ *                    how many interrupt events the hardware has
+ *                    sent.  When written by software this
+ *                    register atomically decrements @int_credits
+ *                    by the value written.  When @int_credits
+ *                    becomes 0 then the "pending interrupt" bit
+ *                    in the Interrupt Status register is cleared
+ *                    by the hardware and any pending but unsent
+ *                    interrupts are cleared.
+ *                    !!!IMPORTANT!!! This is a signed register.
+ * @flags:            Interrupt control flags
+ *                       @unmask -- When this bit is written with a 1
+ *                       the interrupt resource will set mask=0.
+ *                       @coal_timer_reset -- When this
+ *                       bit is written with a 1 the
+ *                       @coalescing_curr will be reloaded with
+ *                       @coalescing_init to reset the coalescing
+ *                       timer.
+ * @mask_on_assert:   Automatically mask on assertion.  When
+ *                    @mask_on_assert=1 the interrupt resource
+ *                    will set @mask=1 whenever an interrupt is
+ *                    sent.  When using interrupts in Legacy
+ *                    Interrupt mode the driver must select
+ *                    @mask_on_assert=0 for proper interrupt
+ *                    operation.
+ * @coalescing_curr:  Coalescing timer current value, in
+ *                    microseconds.  When this value reaches 0
+ *                    the interrupt resource is again eligible to
+ *                    send an interrupt.  If an interrupt event
+ *                    is already pending when @coalescing_curr
+ *                    reaches 0 the pending interrupt will be
+ *                    sent, otherwise an interrupt will be sent
+ *                    on the next interrupt assertion event.
+ */
+struct intr_ctrl {
+	u8 coalescing_init;
+	u8 rsvd[3];
+	u8 mask;
+	u8 rsvd2[3];
+	u16 int_credits;
+	u16 flags;
+#define INTR_F_UNMASK		0x0001
+#define INTR_F_TIMER_RESET	0x0002
+	u8 mask_on_assert;
+	u8 rsvd3[3];
+	u8 coalescing_curr;
+	u8 rsvd4[3];
+	u32 rsvd6[3];
+};
+
+#define INTR_CTRL_REGS_MAX	2048
+#define INTR_CTRL_COAL_MAX	0x3F
+
+#define intr_to_coal(intr_ctrl)			(void *)((u8 *)(intr_ctrl) + 0)
+#define intr_to_mask(intr_ctrl)			(void *)((u8 *)(intr_ctrl) + 4)
+#define intr_to_credits(intr_ctrl)		(void *)((u8 *)(intr_ctrl) + 8)
+#define intr_to_mask_on_assert(intr_ctrl)	(void *)((u8 *)(intr_ctrl) + 12)
+
+struct intr_status {
+	u32 status[2];
 };
 
 struct notifyq_cmd {
-	u32 data;	/* Not used but needed for qcq structure */
+	__le32 data;	/* Not used but needed for qcq structure */
 };
 
 union notifyq_comp {
@@ -1938,5 +2313,15 @@ union notifyq_comp {
 	struct heartbeat_event heartbeat;
 	struct log_event log;
 };
+
+/* Deprecate */
+struct identity {
+	union drv_identity drv;
+	union dev_identity dev;
+	union lif_identity lif;
+	union port_identity port;
+};
+
+#pragma pack(pop)
 
 #endif /* _IONIC_IF_H_ */

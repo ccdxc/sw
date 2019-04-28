@@ -209,11 +209,7 @@ DeviceManager::LoadConfig(string path)
                 NIC_LOG_DEBUG("Creating uplink: {}, oob: {}",
                              val.get<uint64_t>("id"),
                              val.get<bool>("oob", false));
-#if 0
-                Uplink::Factory(val.get<uint64_t>("id"),
-                                val.get<uint64_t>("port"),
-                                val.get<bool>("oob", false));
-#endif
+
                 up = new uplink_t();
                 up->id = val.get<uint64_t>("id");
                 up->port = val.get<uint64_t>("port");
@@ -396,21 +392,6 @@ DeviceManager::HalEventHandler(bool status)
 
         init_done = true;
     }
-
-#if 0
-    // If Sysmgr is able to update HAL Status to DOWN, we can handle it.
-    // Hal DOWN
-    if (!status) {
-        if (hal_common_client) {
-            NIC_LOG_DEBUG("Hal DOWN: Freeing up hal client");
-            // Cleanup HAL client
-            HalGRPCClient::Destroy(hal_common_client);
-            hal_common_client = NULL;
-            // Setting up HAL container for all objects
-            HalObject::PopulateHalCommonClient();
-        }
-    }
-#endif
 
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;

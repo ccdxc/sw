@@ -4,7 +4,9 @@
 #ifndef _IONIC_LIF_H_
 #define _IONIC_LIF_H_
 
-#define NOTIFYQ_LENGTH	64	/* must be a power of two */
+
+#define IONIC_ADMINQ_LENGTH		16	/* must be a power of two */
+#define IONIC_NOTIFYQ_LENGTH	64	/* must be a power of two */
 
 #include "ionic_rx_filter.h"
 
@@ -143,6 +145,7 @@ struct lif {
 	struct ionic *ionic;
 	bool registered;
 	unsigned int index;
+	unsigned int hw_index;
 	unsigned int kern_pid;
 	struct doorbell __iomem *kern_dbpage;
 	spinlock_t adminq_lock;
@@ -162,11 +165,17 @@ struct lif {
 	unsigned int nmcast;
 	bool uc_overflow;
 	unsigned int nucast;
-	struct ionic_lif_stats *lif_stats;
-	dma_addr_t lif_stats_pa;
-	u8 rss_hash_key[RSS_HASH_KEY_SIZE];
+
+	struct lif_info *info;
+	dma_addr_t info_pa;
+	u32 info_sz;
+
+	u16 rss_types;
+	u8 rss_hash_key[IONIC_RSS_HASH_KEY_SIZE];
 	u8 *rss_ind_tbl;
 	dma_addr_t rss_ind_tbl_pa;
+	u32 rss_ind_tbl_sz;
+
 	struct rx_filters rx_filters;
 	struct deferred deferred;
 	u32 tx_coalesce_usecs;
@@ -178,9 +187,6 @@ struct lif {
 	void (*api_reset_cb)(void *api_private);
 	struct dentry *dentry;
 	u32 flags;
-	u32 notifyblock_sz;
-	struct notify_block *notifyblock;
-	dma_addr_t notifyblock_pa;
 	struct work_struct tx_timeout_work;
 };
 
@@ -224,7 +230,10 @@ void ionic_lifs_deinit(struct ionic *ionic);
 int ionic_lifs_init(struct ionic *ionic);
 int ionic_lifs_register(struct ionic *ionic);
 void ionic_lifs_unregister(struct ionic *ionic);
+int ionic_lif_identify(struct ionic *ionic);
 int ionic_lifs_size(struct ionic *ionic);
+int ionic_lif_rss_config(struct lif *lif, u16 types,
+	const u8 *key, const u32 *indir);
 
 int ionic_intr_alloc(struct lif *lif, struct intr *intr);
 void ionic_intr_free(struct lif *lif, int index);
@@ -238,8 +247,9 @@ struct lif *ionic_netdev_lif(struct net_device *netdev);
 static void inline debug_stats_txq_post(struct qcq *qcq,
 	   struct txq_desc *desc, bool dbell)
 {
-	u64 num_sg_elems = desc->num_sg_elems;
-	u64 sg_cntr_idx;
+	u8 num_sg_elems = ((desc->cmd >> IONIC_TXQ_DESC_NSGE_SHIFT)
+						& IONIC_TXQ_DESC_NSGE_MASK);
+	u8 sg_cntr_idx;
 
 	qcq->q.dbell_count += dbell;
 
@@ -254,6 +264,7 @@ static inline void debug_stats_napi_poll(struct qcq *qcq,
 	   unsigned int work_done)
 {
 	u32 napi_cntr_idx;
+
 	qcq->napi_stats.poll_count++;
 
 	napi_cntr_idx = GET_NAPI_CNTR_IDX(work_done);

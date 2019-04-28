@@ -72,7 +72,8 @@ testcases:
         enable : True
         iterators :
             type               : nested
-            rx_sg_size         : [ 2048, 4096]
+            rx_ring_size       : [ 2048 ]
+            rx_sg_size         : [ 2048, 4096 ]
             mtu                : [ '9000' ]
             pktsize            : [ 1024 ]
             proto              : ['udp', 'tcp']

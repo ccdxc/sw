@@ -59,17 +59,23 @@ int ionic_api_set_private(struct lif *lif, void *priv,
 }
 EXPORT_SYMBOL_GPL(ionic_api_set_private);
 
+const union dev_info_regs *ionic_api_get_devinfo(struct lif *lif)
+{
+	return lif->ionic->idev.dev_info;
+}
+EXPORT_SYMBOL_GPL(ionic_api_get_devinfo);
+
 struct dentry *ionic_api_get_debugfs(struct lif *lif)
 {
 	return lif->dentry;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_debugfs);
 
-const union identity *ionic_api_get_identity(struct lif *lif, int *lif_id)
+const union lif_identity *ionic_api_get_identity(struct lif *lif, int *lif_id)
 {
 	*lif_id = lif->index;
 
-	return lif->ionic->ident;
+	return &lif->ionic->ident.lif;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_identity);
 

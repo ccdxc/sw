@@ -35,8 +35,23 @@ FILE_LICENCE(GPL2_OR_LATER_OR_UBDL);
 #include <ipxe/malloc.h>
 #include <ipxe/pci.h>
 
-typedef u64 dma_addr_t;
-#define BIT(n)  (1 << (n))
+/* Supply these for ionic_if.h */
+#define BIT(n)                  (1 << n)
+#define BIT_ULL(nr)             (1ULL << (nr))
+#define TEST_BIT(x, n)          ((x) & (1 << n))
+#define u8 uint8_t
+#define u16 uint16_t
+#define u32 uint32_t
+#define u64 uint64_t
+#define __le16 uint16_t
+#define __le32 uint32_t
+#define __le64 uint64_t
+#define dma_addr_t uint64_t
+typedef enum
+{
+	false = 0,
+	true = 1
+} bool;
 
 #include "ionic_if.h"
 
@@ -67,19 +82,8 @@ typedef u64 dma_addr_t;
 // Queue alignment
 #define IDENTITY_ALIGN 4096
 
-// BAR0 resources
-#define IONIC_BARS_MAX 2
-#define BAR0_SIZE 0x8000
-
-#define BAR0_DEV_CMD_REGS_OFFSET 0x0000
-#define BAR0_DEV_CMD_DB_OFFSET 0x1000
-#define BAR0_INTR_STATUS_OFFSET 0x2000
-#define BAR0_INTR_CTRL_OFFSET 0x3000
-
 // Dev Command related defines
-#define DEV_CMD_SIGNATURE 0x44455643 /* 'DEVC' */
 #define devcmd_timeout 30
-#define DEV_CMD_DONE 0x00000001
 
 #define RETRY_COUNT 30
 
@@ -103,174 +107,17 @@ typedef u64 dma_addr_t;
 #define NOTIFYQ_LENGTH	16
 //#define RX_RING_DOORBELL_STRIDE ((1 << 3) - 1)
 
-#define INTR_CTRL_REGS_MAX 64
-#define INTR_CTRL_COAL_MAX 0x3F
-
-#define intr_to_coal(intr_ctrl) (void *)((u8 *)(intr_ctrl) + 0)
-#define intr_to_mask(intr_ctrl) (void *)((u8 *)(intr_ctrl) + 4)
-#define intr_to_credits(intr_ctrl) (void *)((u8 *)(intr_ctrl) + 8)
-#define intr_to_mask_on_assert(intr_ctrl) (void *)((u8 *)(intr_ctrl) + 12)
-
-//define data types
-typedef enum
-{
-	false = 0,
-	true = 1
-} bool;
-
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
 typedef unsigned long long u64;
 typedef unsigned long uintptr_t;
 
-#pragma pack(push, 1)
-
-union dev_cmd {
-	u32 words[16];
-	struct admin_cmd cmd;
-	struct nop_cmd nop;
-	struct reset_cmd reset;
-	struct hang_notify_cmd hang_notify;
-	struct identify_cmd identify;
-	struct lif_init_cmd lif_init;
-	struct adminq_init_cmd adminq_init;
-};
-
-union dev_cmd_comp {
-	u32 words[4];
-	u8 status;
-	struct admin_comp comp;
-	struct nop_comp nop;
-	struct reset_comp reset;
-	struct hang_notify_comp hang_notify;
-	struct identify_comp identify;
-	struct lif_init_comp lif_init;
-	struct adminq_init_comp adminq_init;
-};
-
-struct dev_cmd_regs
-{
-	u32 signature;
-	u32 done;
-	union dev_cmd cmd;
-	union dev_cmd_comp comp;
-};
-
-struct dev_cmd_db
-{
-	u32 v;
-};
-
 struct ionic_device_bar
 {
-	void *virtaddr;
+	void *vaddr;
 	unsigned long long bus_addr;
 	unsigned long len;
-};
-
-/**
- * struct doorbell - Doorbell register layout
- * @p_index: Producer index
- * @ring:		Selects the specific ring of the queue to update.
- *					 Type-specific meaning:
- *							ring=0: Default producer/consumer queue.
- *							ring=1: (CQ, EQ) Re-Arm queue.	RDMA CQs
- *							send events to EQs when armed.	EQs send
- *							interrupts when armed.
- * @qid:		 The queue id selects the queue destination for the
- *					 producer index and flags.
- */
-struct doorbell
-{
-	u16 p_index;
-	u8 ring : 3;
-	u8 rsvd : 5;
-	u8 qid_lo;
-	u16 qid_hi;
-	u16 rsvd2;
-};
-
-/**
- * struct intr_ctrl - Interrupt control register
- * @coalescing_init:  Coalescing timer initial value, in
- *                    device units.  Use @identity->intr_coal_mult
- *                    and @identity->intr_coal_div to convert from
- *                    usecs to device units:
- *
- *                      coal_init = coal_usecs * coal_mutl / coal_div
- *
- *                    When an interrupt is sent the interrupt
- *                    coalescing timer current value
- *                    (@coalescing_curr) is initialized with this
- *                    value and begins counting down.  No more
- *                    interrupts are sent until the coalescing
- *                    timer reaches 0.  When @coalescing_init=0
- *                    interrupt coalescing is effectively disabled
- *                    and every interrupt assert results in an
- *                    interrupt.  Reset value: 0.
- * @mask:             Interrupt mask.  When @mask=1 the interrupt
- *                    resource will not send an interrupt.  When
- *                    @mask=0 the interrupt resource will send an
- *                    interrupt if an interrupt event is pending
- *                    or on the next interrupt assertion event.
- *                    Reset value: 1.
- * @int_credits:      Interrupt credits.  This register indicates
- *                    how many interrupt events the hardware has
- *                    sent.  When written by software this
- *                    register atomically decrements @int_credits
- *                    by the value written.  When @int_credits
- *                    becomes 0 then the "pending interrupt" bit
- *                    in the Interrupt Status register is cleared
- *                    by the hardware and any pending but unsent
- *                    interrupts are cleared.
- *                    The upper 2 bits are special flags:
- *                       Bits 0-15: Interrupt Events -- Interrupt
- *                       event count.
- *                       Bit 16: @unmask -- When this bit is
- *                       written with a 1 the interrupt resource
- *                       will set mask=0.
- *                       Bit 17: @coal_timer_reset -- When this
- *                       bit is written with a 1 the
- *                       @coalescing_curr will be reloaded with
- *                       @coalescing_init to reset the coalescing
- *                       timer.
- * @mask_on_assert:   Automatically mask on assertion.  When
- *                    @mask_on_assert=1 the interrupt resource
- *                    will set @mask=1 whenever an interrupt is
- *                    sent.  When using interrupts in Legacy
- *                    Interrupt mode the driver must select
- *                    @mask_on_assert=0 for proper interrupt
- *                    operation.
- * @coalescing_curr:  Coalescing timer current value, in
- *                    microseconds.  When this value reaches 0
- *                    the interrupt resource is again eligible to
- *                    send an interrupt.  If an interrupt event
- *                    is already pending when @coalescing_curr
- *                    reaches 0 the pending interrupt will be
- *                    sent, otherwise an interrupt will be sent
- *                    on the next interrupt assertion event.
- */
-struct intr_ctrl
-{
-	u32 coalescing_init : 6;
-	u32 rsvd : 26;
-	u32 mask : 1;
-	u32 rsvd2 : 31;
-	u32 int_credits : 16;
-	u32 unmask : 1;
-	u32 coal_timer_reset : 1;
-	u32 rsvd3 : 14;
-	u32 mask_on_assert : 1;
-	u32 rsvd4 : 31;
-	u32 coalescing_curr : 6;
-	u32 rsvd5 : 26;
-	u32 rsvd6[3];
-};
-
-struct intr_status
-{
-	u32 status[2];
 };
 
 /** ionic_admin_ctx - Admin command context.
@@ -280,20 +127,15 @@ struct intr_status
  * @side_data:        Additional data to be copied to the doorbell page,
  *              if the command is issued as a dev cmd.
  * @side_data_len:    Length of additional data to be copied.
- *
- * TODO:
- * The side_data and side_data_len are temporary and will be removed.  For now,
- * they are used when admin commands referring to side-band data are posted as
- * dev commands instead.  Only single-indirect side-band data is supported.
- * Only 2K of data is supported, because first half of page is for registers.
  */
+
+#define IONIC_IPXE_BARS_MAX   2
+
 struct ionic_admin_ctx
 {
 	union adminq_cmd cmd;
 	union adminq_comp comp;
 };
-
-#pragma pack(pop)
 
 struct cq_info
 {
@@ -339,7 +181,10 @@ struct queue
 	char name[QUEUE_NAME_MAX_SZ];
 	struct ionic_dev *idev;
 	struct lif *lif;
+	unsigned int type;
 	unsigned int index;
+	unsigned int hw_type;
+	unsigned int hw_index;
 	void *base;
 	void *sg_base;
 	dma_addr_t base_pa;
@@ -353,8 +198,6 @@ struct queue
 	struct doorbell __iomem *db;
 	void *nop_desc;
 	unsigned int pid;
-	unsigned int qid;
-	unsigned int qtype;
 };
 
 struct qcq
@@ -378,23 +221,30 @@ struct lif
 	struct qcq *rxqcqs;
 	struct io_buffer *rx_iobuf[NRXQ_DESC];
 	struct io_buffer *tx_iobuf[NTXQ_DESC];
-	u32 notifyblock_sz;
-	struct notify_block *notifyblock;
-	dma_addr_t notifyblock_pa;
+
+	u32 info_sz;
+	struct lif_info *info;
+	dma_addr_t info_pa;
 };
 
 struct ionic_dev
 {
-	struct dev_cmd_regs __iomem *dev_cmd;
-	struct dev_cmd_db __iomem *dev_cmd_db;
+	union dev_info_regs __iomem *dev_info;
+	union dev_cmd_regs __iomem *dev_cmd;
+
 	struct doorbell __iomem *db_pages;
 	dma_addr_t phy_db_pages;
+
 	struct intr_ctrl __iomem *intr_ctrl;
 	struct intr_status __iomem *intr_status;
+
 	unsigned long *hbm_inuse;
 	dma_addr_t phy_hbm_pages;
 	u32 hbm_npages;
-	union identity __iomem *ident;
+
+	u32 port_info_sz;
+	struct port_info *port_info;
+	dma_addr_t port_info_pa;
 };
 
 /** An ionic network card */
@@ -404,11 +254,10 @@ struct ionic
 	struct platform_device *pfdev;
 	struct device *dev;
 	struct ionic_dev idev;
-	struct ionic_device_bar bars[IONIC_BARS_MAX];
+	struct ionic_device_bar bars[IONIC_IPXE_BARS_MAX];
 	unsigned int num_bars;
-	union identity *ident;
-	dma_addr_t ident_pa;
-	struct lif *ionic_lif;
+	struct identity ident;
+	struct lif *lif;
 	u16 link_status;
 };
 
@@ -438,9 +287,11 @@ bool ionic_q_has_space(struct queue *q, unsigned int want);
 
 //helper functions from ionic_main
 int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_seconds);
-int ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index, unsigned long max_seconds);
+int ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index, dma_addr_t addr,
+	unsigned long max_seconds);
 char *ionic_dev_asic_name(u8 asic_type);
 int ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd, unsigned long max_seconds);
+int ionic_dev_cmd_init(struct ionic_dev *idev, unsigned long max_seconds);
 int ionic_dev_cmd_reset(struct ionic_dev *idev, unsigned long max_seconds);
 u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);

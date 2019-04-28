@@ -1,0 +1,5 @@
+meta:
+    id      : DESCR_ETH_RX_SG
+    package : factory.objects.eth
+    module  : descriptor
+    objname : EthRxSgDescriptorObject

@@ -109,7 +109,7 @@ descriptors:
             _buf  : ref://testcase/buffers/id=TX_BUF
             addr  : ref://testcase/buffers/id=TX_BUF/addr
             len   : ref://testcase/buffers/id=TX_BUF/size
-            V     : 1
+            vlan_insert : 1
             vlan_tci : callback://networking/packets/GetVlanId
 
     - descriptor:

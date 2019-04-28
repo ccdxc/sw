@@ -16,7 +16,8 @@
 #include "cap_wa_c_hdr.h"
 #include "cap_ms_c_hdr.h"
 
-#include "nic/sdk/lib/thread/thread.hpp"
+#include "nic/include/base.hpp"
+#include "nic/include/edmaq.h"
 #include "nic/p4/common/defines.h"
 
 #ifndef APOLLO
@@ -27,17 +28,20 @@
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 #endif
 
+#include "nic/sdk/lib/thread/thread.hpp"
+#include "nic/sdk/platform/mnet/include/mnet.h"
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
-#include "nicmgr_utils.hpp"
 
+#include "nicmgr_utils.hpp"
 #include "logger.hpp"
 #include "eth_if.h"
 #include "eth_dev.hpp"
 #include "rdma_dev.hpp"
 #include "pd_client.hpp"
+#include "edmaq.hpp"
 
 extern class pciemgr *pciemgr;
 
@@ -77,7 +81,8 @@ Eth::Eth(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to allocate lifs. ret: {}", spec->name, ret);
         throw;
     }
-    NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name, lif_base, spec->lif_count);
+    NIC_LOG_DEBUG("{}: lif_base {} lif_count {}", spec->name,
+        lif_base, spec->lif_count);
 
     // Allocate interrupts
     intr_base = pd->intr_alloc(spec->intr_count);
@@ -85,33 +90,47 @@ Eth::Eth(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to allocate interrupts", spec->name);
         throw;
     }
-    NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name, intr_base, spec->intr_count);
+    NIC_LOG_DEBUG("{}: intr_base {} intr_count {}", spec->name,
+        intr_base, spec->intr_count);
 
-    // Allocate & Init Devcmd Region
-    devcmd_mem_addr = pd->devcmd_mem_alloc(4096);
-    if (devcmd_mem_addr == 0) {
-        NIC_LOG_ERR("{}: Failed to allocate devcmd region", spec->name);
+    // Allocate & Init Device registers
+    regs_mem_addr = pd->devcmd_mem_alloc(sizeof(union dev_regs));
+    if (regs_mem_addr == 0) {
+        NIC_LOG_ERR("{}: Failed to allocate registers", spec->name);
         throw;
     }
-    MEM_SET(devcmd_mem_addr, 0, 4096, 0);
+    devcmd_mem_addr = regs_mem_addr + offsetof(union dev_regs, devcmd);
+
+    NIC_LOG_DEBUG("{}: regs_mem_addr {:#x} devcmd_mem_addr {:#x}",
+        spec->name, regs_mem_addr, devcmd_mem_addr);
+
     // TODO: mmap instead of calloc after porting to real pal
-    devcmd = (struct dev_cmd_regs *)calloc(1, sizeof(struct dev_cmd_regs));
-    if (devcmd == NULL) {
-        NIC_LOG_ERR("{}: Failed to map devcmd region", spec->name);
+    regs = (union dev_regs *)calloc(1, sizeof(union dev_regs));
+    if (regs == NULL) {
+        NIC_LOG_ERR("{}: Failed to map register region", spec->name);
         throw;
     }
-    devcmd->signature = DEV_CMD_SIGNATURE;
-    WRITE_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(*devcmd), 0);
+    devcmd = (union dev_cmd_regs *)regs + offsetof(union dev_regs, devcmd);
 
-    devcmddb_mem_addr = pd->devcmd_mem_alloc(4096);
-    if (devcmddb_mem_addr == 0) {
-        NIC_LOG_ERR("{}: Failed to allocate devcmddb region", spec->name);
-        throw;
-    }
-    MEM_SET(devcmddb_mem_addr, 0, 4096, 0);
+    // Init Device registers
+    regs->info.signature = IONIC_DEV_INFO_SIGNATURE;
+    regs->info.version = 0x1;
 
-    NIC_LOG_DEBUG("{}: devcmd_addr {:#x} devcmddb_addr {:#x}",
-        spec->name, devcmd_mem_addr, devcmddb_mem_addr);
+    const uint32_t sta_ver = READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET +
+                                        CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
+    regs->info.asic_type = sta_ver & 0xf;
+    regs->info.asic_rev  = (sta_ver >> 4) & 0xfff;
+#ifdef __aarch64__
+    std::string sn;
+    sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
+    strncpy0(regs->info.serial_num, sn.c_str(), sizeof(regs->info.serial_num));
+
+    boost::property_tree::ptree ver;
+    boost::property_tree::read_json(VERSION_FILE, ver);
+    strncpy0(regs->info.fw_version, ver.get<std::string>("sw.version").c_str(),
+        sizeof(regs->info.fw_version));
+#endif
+    WRITE_MEM(regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
 
     // Allocate CMB region
     if (spec->enable_rdma && spec->barmap_size) {
@@ -155,10 +174,36 @@ Eth::Eth(devapi *dev_api,
         lif_map[lif_id] = eth_lif;
     }
 
+    // Device Info
+    port_info_addr = pd->nicmgr_mem_alloc(sizeof(struct port_status));
+    host_port_info_addr = 0;
+    // TODO: mmap instead of calloc
+    port_info = (struct port_info *)calloc(1, sizeof(struct port_info));
+    // port_info = (struct port_info *)pal_mem_map(port_info_addr, sizeof(struct port_info), 0);
+    if (port_info == NULL) {
+        NIC_LOG_ERR("{}: Failed to map device info!", spec->name);
+        throw;
+    }
+    MEM_SET(port_info_addr, 0, sizeof(struct port_info), 0);
+    // memset(port_info, 0, sizeof(struct port_info));
+
+    NIC_LOG_INFO("{}: port_info_addr {:#x}",
+        spec->name, port_info_addr);
+
+    // TODO: Add cap_mx_c_hdr.h & cap_bx_c_hdr.h to sw tree then remove these
+    // hardcoded values
+    if (spec->uplink_port_num >= 1 and spec->uplink_port_num <= 4) {
+        port_stats_addr = 0x01d81000;
+    } else if (spec->uplink_port_num >= 5 and spec->uplink_port_num <= 8) {
+        port_stats_addr = 0x01e81000;
+    } else if (spec->uplink_port_num == 9) {
+        port_stats_addr = 0x01000100;
+    }
+
     // Enable Devcmd Handling
-    evutil_timer_start(&devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
-    evutil_add_check(&devcmd_check, Eth::DevcmdPoll, this);
     evutil_add_prepare(&devcmd_prepare, Eth::DevcmdPoll, this);
+    evutil_add_check(&devcmd_check, Eth::DevcmdPoll, this);
+    evutil_timer_start(&devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
 }
 
 static void *
@@ -204,12 +249,11 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
         eth_spec->rdma_rq_count = val.get<uint64_t>("rdma.rq_count");
         eth_spec->rdma_cq_count = val.get<uint64_t>("rdma.cq_count");
         eth_spec->rdma_eq_count = val.get<uint64_t>("rdma.eq_count");
-        eth_spec->rdma_adminq_count = val.get<uint64_t>("rdma.adminq_count");
+        eth_spec->rdma_aq_count = val.get<uint64_t>("rdma.adminq_count");
         eth_spec->rdma_pid_count = val.get<uint64_t>("rdma.pid_count");
         eth_spec->key_count = val.get<uint64_t>("rdma.key_count");
         eth_spec->pte_count = val.get<uint64_t>("rdma.pte_count");
         eth_spec->ah_count = val.get<uint64_t>("rdma.ah_count");
-        //eth_spec->barmap_size = val.get<uint64_t>("rdma.barmap_size");
         eth_spec->barmap_size = 1;
     }
 
@@ -257,21 +301,19 @@ Eth::CreateLocalDevice()
         return false;
     }
 
-    mnet_req->devcmd_pa = devcmd_mem_addr;
-    mnet_req->devcmd_db_pa = devcmddb_mem_addr;
-    mnet_req->doorbell_pa = DOORBELL_ADDR(lif_base);
+    mnet_req->regs_pa = regs_mem_addr;
     mnet_req->drvcfg_pa = intr_drvcfg_addr(intr_base);
     mnet_req->msixcfg_pa = intr_msixcfg_addr(intr_base);
+    mnet_req->doorbell_pa = DOORBELL_ADDR(lif_base);
     strcpy(mnet_req->iface_name, spec->name.c_str());
 
-    NIC_LOG_DEBUG("{}: devcmd_pa: {:#x}, devcmddb_pa: {:#x}, doorbell_pa: {:#x},"
-                    " drvcfg_pa: {:#x}, msixcfg_pa: {:#x}",
-                    mnet_req->iface_name,
-                    mnet_req->devcmd_pa,
-                    mnet_req->devcmd_db_pa,
-                    mnet_req->doorbell_pa,
-                    mnet_req->drvcfg_pa,
-                    mnet_req->msixcfg_pa);
+    NIC_LOG_DEBUG("{}: regs_pa: {:#x}, "
+                  "drvcfg_pa: {:#x}, msixcfg_pa: {:#x}, doorbell_pa: {:#x}",
+                  mnet_req->iface_name,
+                  mnet_req->regs_pa,
+                  mnet_req->drvcfg_pa,
+                  mnet_req->msixcfg_pa,
+                  mnet_req->doorbell_pa);
 
     // pba is unused by mnic, but config anyway
     intr_pba_cfg(lif_base, intr_base, spec->intr_count);
@@ -391,7 +433,7 @@ Eth::CreateHostDevice()
 
     if (!LoadOprom()) {
         NIC_LOG_ERR("{}: Failed to load oprom", spec->name);
-        // FIXME: error out after oproms are pacakged in the image
+        // FIXME: error out after oproms are packaged in the image
         // return false;
     }
 
@@ -402,8 +444,10 @@ Eth::CreateHostDevice()
     pres.pfres.intrc = spec->intr_count;
     pres.pfres.intrdmask = 1;
     pres.pfres.npids = spec->rdma_pid_count;
+    pres.pfres.devinfopa = regs_mem_addr;
+    pres.pfres.devinfosz = sizeof(dev_info_regs);
     pres.pfres.devcmdpa = devcmd_mem_addr;
-    pres.pfres.devcmddbpa = devcmddb_mem_addr;
+    pres.pfres.devcmdsz = sizeof(dev_cmd_regs);
     pres.pfres.cmbpa = cmb_mem_addr;
     pres.pfres.cmbsz = cmb_mem_size;
     pres.pfres.rompa = rom_mem_addr;
@@ -444,10 +488,10 @@ Eth::DevcmdPoll(void *obj)
     dev_cmd_db_t    db = {0};
     dev_cmd_db_t    db_clear = {0};
 
-    READ_MEM(dev->devcmddb_mem_addr, (uint8_t *)&db, sizeof(db), 0);
-    if (db.v) {
+    READ_MEM(dev->devcmd_mem_addr, (uint8_t *)&db, sizeof(db), 0);
+    if (db.v & 0x1) {
         NIC_LOG_INFO("{}: Devcmd doorbell", dev->spec->name);
-        WRITE_MEM(dev->devcmddb_mem_addr, (uint8_t *)&db_clear, sizeof(db_clear), 0);
+        WRITE_MEM(dev->devcmd_mem_addr, (uint8_t *)&db_clear, sizeof(db_clear), 0);
         dev->DevcmdHandler();
     }
 }
@@ -461,18 +505,10 @@ Eth::DevcmdHandler()
 
     // read devcmd region
     READ_MEM(devcmd_mem_addr, (uint8_t *)devcmd,
-             sizeof(struct dev_cmd_regs), 0);
+             sizeof(union dev_cmd_regs), 0);
 
     if (devcmd->done != 0) {
         NIC_LOG_ERR("{}: Devcmd done is set before processing command, opcode {}",
-            spec->name,
-            opcode_to_str((cmd_opcode_t)devcmd->cmd.cmd.opcode));
-        status = IONIC_RC_ERROR;
-        goto devcmd_done;
-    }
-
-    if (devcmd->signature != DEV_CMD_SIGNATURE) {
-        NIC_LOG_ERR("{}: Devcmd signature mismatch, opcode {}",
             spec->name,
             opcode_to_str((cmd_opcode_t)devcmd->cmd.cmd.opcode));
         status = IONIC_RC_ERROR;
@@ -483,8 +519,8 @@ Eth::DevcmdHandler()
 
     // write data
     if (status == IONIC_RC_SUCCESS) {
-        WRITE_MEM(devcmd_mem_addr + offsetof(struct dev_cmd_regs, data),
-                  (uint8_t *)devcmd + offsetof(struct dev_cmd_regs, data),
+        WRITE_MEM(devcmd_mem_addr + offsetof(union dev_cmd_regs, data),
+                  (uint8_t *)devcmd + offsetof(union dev_cmd_regs, data),
                   sizeof(devcmd->data), 0);
     }
 
@@ -493,13 +529,13 @@ devcmd_done:
     devcmd->done = 1;
 
     // write completion
-    WRITE_MEM(devcmd_mem_addr + offsetof(struct dev_cmd_regs, comp),
-              (uint8_t *)devcmd + offsetof(struct dev_cmd_regs, comp),
+    WRITE_MEM(devcmd_mem_addr + offsetof(union dev_cmd_regs, comp),
+              (uint8_t *)devcmd + offsetof(union dev_cmd_regs, comp),
               sizeof(devcmd->comp), 0);
 
     // write done
-    WRITE_MEM(devcmd_mem_addr + offsetof(struct dev_cmd_regs, done),
-              (uint8_t *)devcmd + offsetof(struct dev_cmd_regs, done),
+    WRITE_MEM(devcmd_mem_addr + offsetof(union dev_cmd_regs, done),
+              (uint8_t *)devcmd + offsetof(union dev_cmd_regs, done),
               sizeof(devcmd->done), 0);
 
     NIC_HEADER_TRACE("Devcmd End");
@@ -512,19 +548,25 @@ Eth::opcode_to_str(cmd_opcode_t opcode)
 {
     switch(opcode) {
         CASE(CMD_OPCODE_NOP);
-        CASE(CMD_OPCODE_RESET);
         CASE(CMD_OPCODE_IDENTIFY);
+        CASE(CMD_OPCODE_INIT);
+        CASE(CMD_OPCODE_RESET);
+        CASE(CMD_OPCODE_GETATTR);
+        CASE(CMD_OPCODE_SETATTR);
+        CASE(CMD_OPCODE_PORT_IDENTIFY);
+        CASE(CMD_OPCODE_PORT_INIT);
+        CASE(CMD_OPCODE_PORT_RESET);
+        CASE(CMD_OPCODE_PORT_GETATTR);
+        CASE(CMD_OPCODE_PORT_SETATTR);
+        CASE(CMD_OPCODE_LIF_IDENTIFY);
         CASE(CMD_OPCODE_LIF_INIT);
         CASE(CMD_OPCODE_LIF_RESET);
-        CASE(CMD_OPCODE_ADMINQ_INIT);
-        CASE(CMD_OPCODE_PORT_CONFIG_SET);
-        default: return "DEVCMD_UNKNOWN";
+        default: return "PROXY_CMD";
     }
 }
 
 status_code_t
-Eth::CmdHandler(void *req, void *req_data,
-    void *resp, void *resp_data)
+Eth::CmdHandler(void *req, void *req_data, void *resp, void *resp_data)
 {
     union dev_cmd *cmd = (union dev_cmd *)req;
     union dev_cmd_comp *comp = (union dev_cmd_comp *)resp;
@@ -533,18 +575,57 @@ Eth::CmdHandler(void *req, void *req_data,
     NIC_LOG_DEBUG("{}: Handling cmd: {}", spec->name,
         opcode_to_str((cmd_opcode_t)cmd->cmd.opcode));
 
-    switch (cmd->cmd.opcode) {
+    switch ((cmd_opcode_t)cmd->cmd.opcode) {
 
     case CMD_OPCODE_NOP:
         status = IONIC_RC_SUCCESS;
+        break;
+
+    /* Device Commands */
+    case CMD_OPCODE_IDENTIFY:
+        status = _CmdIdentify(req, req_data, resp, resp_data);
+        break;
+
+    case CMD_OPCODE_INIT:
+        status = _CmdInit(req, req_data, resp, resp_data);
         break;
 
     case CMD_OPCODE_RESET:
         status = _CmdReset(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_IDENTIFY:
-        status = _CmdIdentify(req, req_data, resp, resp_data);
+    case CMD_OPCODE_GETATTR:
+        status = _CmdGetAttr(req, req_data, resp, resp_data);
+        break;
+
+    case CMD_OPCODE_SETATTR:
+        status = _CmdSetAttr(req, req_data, resp, resp_data);
+        break;
+
+    /* Port Commands */
+    case CMD_OPCODE_PORT_IDENTIFY:
+        status = _CmdPortIdentify(req, req_data, resp, resp_data);
+        break;
+
+    case CMD_OPCODE_PORT_INIT:
+        status = _CmdPortInit(req, req_data, resp, resp_data);
+        break;
+
+    case CMD_OPCODE_PORT_RESET:
+        status = _CmdPortReset(req, req_data, resp, resp_data);
+        break;
+
+    case CMD_OPCODE_PORT_GETATTR:
+        status = _CmdPortGetAttr(req, req_data, resp, resp_data);
+        break;
+
+    case CMD_OPCODE_PORT_SETATTR:
+        status = _CmdPortSetAttr(req, req_data, resp, resp_data);
+        break;
+
+    /* LIF Commands */
+    case CMD_OPCODE_LIF_IDENTIFY:
+        status = _CmdLifIdentify(req, req_data, resp, resp_data);
         break;
 
     case CMD_OPCODE_LIF_INIT:
@@ -555,19 +636,9 @@ Eth::CmdHandler(void *req, void *req_data,
         status = _CmdLifReset(req, req_data, resp, resp_data);
         break;
 
-    case CMD_OPCODE_ADMINQ_INIT:
-        status = _CmdAdminQInit(req, req_data, resp, resp_data);
-        break;
-
-    case CMD_OPCODE_PORT_CONFIG_SET:
-        status = _CmdPortConfigSet(req, req_data, resp, resp_data);
-        break;
-
     default:
-        // FIXME: Remove Backwards compatibility
-        status = AdminCmdHandler(lif_base, req, req_data, resp, resp_data);
-        // NIC_LOG_ERR("{}: Unknown Opcode {}", spec->name, cmd->cmd.opcode);
-        // status = IONIC_RC_EOPCODE;
+        // FIXME: Check if this is a valid opcode
+        status = _CmdProxyHandler(req, req_data, resp, resp_data);
         break;
     }
 
@@ -582,127 +653,46 @@ Eth::CmdHandler(void *req, void *req_data,
 status_code_t
 Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 {
-    union identity *rsp = (union identity *)resp_data;
-    struct identify_comp *comp = (struct identify_comp *)resp;
+    union dev_identity *dev_ident = (union dev_identity *)resp_data;
+    struct dev_identify_cmd *cmd = (struct dev_identify_cmd *)req;
+    struct dev_identify_comp *comp = (struct dev_identify_comp *)resp;
 
-    NIC_LOG_DEBUG("{}: CMD_OPCODE_IDENTIFY", spec->name);
+    NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
-    const uint32_t sta_ver = READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET +
-                                        CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
-    rsp->dev.asic_type = sta_ver & 0xf;
-    rsp->dev.asic_rev  = (sta_ver >> 4) & 0xfff;
+    dev_ident->nports = 1;
+    dev_ident->nlifs = spec->lif_count;
+    dev_ident->nintrs = spec->intr_count;
+    dev_ident->ndbpgs_per_lif = MAX(spec->rdma_pid_count, 1);
+    dev_ident->intr_coal_mult = 1;
+    dev_ident->intr_coal_div = 10;
 
-    std::string sn;
-    sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
-    strncpy0(rsp->dev.serial_num, sn.c_str(), sizeof(rsp->dev.serial_num));
+    comp->ver = IONIC_IDENTITY_VERSION_1;
 
-    boost::property_tree::ptree ver;
-    boost::property_tree::read_json(VERSION_FILE, ver);
-    strncpy0(rsp->dev.fw_version, ver.get<std::string>("sw.version").c_str(),
-        sizeof(rsp->dev.fw_version));
+    return (IONIC_RC_SUCCESS);
+}
 
-    rsp->dev.nlifs = spec->lif_count;
-    rsp->dev.nintrs = spec->intr_count;
-    rsp->dev.ndbpgs_per_lif = MAX(spec->rdma_pid_count, 1);
-    rsp->dev.nucasts_per_lif = 32;
-    rsp->dev.nmcasts_per_lif = 32;
-    rsp->dev.intr_coal_mult = 1;
-    rsp->dev.intr_coal_div = 10;
+status_code_t
+Eth::_CmdInit(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct dev_init_cmd *cmd = (struct dev_init_cmd *)req;
+    status_code_t status;
+    EthLif *eth_lif = NULL;
 
-    rsp->dev.rdma_version = 1;
-    rsp->dev.rdma_qp_opcodes = 11;
-    rsp->dev.rdma_admin_opcodes = 16;
-    rsp->dev.nrdma_pts_per_lif = spec->pte_count;
-    rsp->dev.nrdma_mrs_per_lif = spec->key_count;
-    rsp->dev.nrdma_ahs_per_lif = spec->ah_count;
-    rsp->dev.rdma_max_stride = 11;
-    rsp->dev.rdma_cl_stride = 6;
-    rsp->dev.rdma_pte_stride = 3;
-    rsp->dev.rdma_rrq_stride = 6;
-    rsp->dev.rdma_rsq_stride = 5;
-    // TODO: num dcqcn profiles param from json
-    rsp->dev.rdma_dcqcn_profiles = 1;
+    NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
-    rsp->dev.tx_qtype.qtype = 0;
-    rsp->dev.tx_qtype.qid_count = spec->txq_count;
-    rsp->dev.tx_qtype.qid_base = 0;
+    // for (uint32_t intr = 0; intr < spec->intr_count; intr++) {
+    //     intr_pba_clear(intr_base + intr);
+    //     intr_drvcfg(intr_base + intr);
+    // }
 
-    rsp->dev.rx_qtype.qtype = 0;
-    rsp->dev.rx_qtype.qid_count = spec->rxq_count;
-    rsp->dev.rx_qtype.qid_base = 0;
-
-    rsp->dev.admin_qtype.qtype = 2;
-    rsp->dev.admin_qtype.qid_count = spec->adminq_count;
-    rsp->dev.admin_qtype.qid_base = 0;
-
-    rsp->dev.notify_qtype.qtype = 6;
-    rsp->dev.notify_qtype.qid_count = spec->eq_count;
-    rsp->dev.notify_qtype.qid_base = 0;
-
-    rsp->dev.rdma_aq_qtype.qtype = 2;
-    rsp->dev.rdma_aq_qtype.qid_count = spec->rdma_adminq_count;
-    rsp->dev.rdma_aq_qtype.qid_base = spec->adminq_count;
-
-    rsp->dev.rdma_sq_qtype.qtype = 3;
-    rsp->dev.rdma_sq_qtype.qid_count = spec->rdma_sq_count;
-    rsp->dev.rdma_sq_qtype.qid_base = 0;
-
-    rsp->dev.rdma_rq_qtype.qtype = 4;
-    rsp->dev.rdma_rq_qtype.qid_count = spec->rdma_rq_count;
-    rsp->dev.rdma_rq_qtype.qid_base = 0;
-
-    rsp->dev.rdma_cq_qtype.qtype = 5;
-    rsp->dev.rdma_cq_qtype.qid_count = spec->rdma_cq_count;
-    rsp->dev.rdma_cq_qtype.qid_base = 0;
-
-    rsp->dev.rdma_eq_qtype.qtype = 6;
-    rsp->dev.rdma_eq_qtype.qid_count = spec->rdma_eq_count;
-    rsp->dev.rdma_eq_qtype.qid_base = spec->eq_count;
-
-    // XXX RDMA data path requires that RDMA AdminQ is QID 1 for now.
-    rsp->dev.admin_qtype.qid_base = 0;
-    rsp->dev.admin_qtype.qid_count = 1;
-    rsp->dev.rdma_aq_qtype.qid_base = 1;
-    rsp->dev.rdma_aq_qtype.qid_count = 1;
-    // XXX Remove hardcode when flexibility is added.
-
-    comp->ver = IDENTITY_VERSION_1;
-
-    NIC_LOG_DEBUG("{}: asic_type {} asic_rev {} serial_num {} fw_version {} "
-                 "ndbpgs_per_lif {} nintrs {} nucasts_per_lif {} nmcasts_per_lif {} "
-                 "intr_coal_mult {} intr_coal_div {} "
-                 "rdma_version {} rdma_qp_opcodes {} rdma_admin_opcodes {} "
-                 "nrdma_pts_per_lif {} nrdma_mrs_per_lif {} "
-                 "nrdma_ahs_per_lif {} rdma_max_stride {} "
-                 "rdma_cl_stride {} rdma_pte_stride {} "
-                 "rdma_rrq_stride {} rdma_rsq_stride {} "
-                 "tx_qtype {} tx_qid_count {} tx_qid_base {} "
-                 "rx_qtype {} rx_qid_count {} rx_qid_base {} "
-                 "admin_qtype {} admin_qid_count {} admin_qid_base {} "
-                 "notify_qtype {} notify_qid_count {} notify_qid_base {} "
-                 "rdma_aq_qtype {} rdma_aq_qid_count {} rdma_aq_qid_base {} "
-                 "rdma_sq_qtype {} rdma_sq_qid_count {} rdma_sq_qid_base {} "
-                 "rdma_rq_qtype {} rdma_rq_qid_count {} rdma_rq_qid_base {} "
-                 "rdma_cq_qtype {} rdma_cq_qid_count {} rdma_cq_qid_base {} "
-                 "rdma_eq_qtype {} rdma_eq_qid_count {} rdma_eq_qid_base {}",
-                 spec->name,
-                 rsp->dev.asic_type, rsp->dev.asic_rev, rsp->dev.serial_num,
-                 rsp->dev.fw_version, rsp->dev.ndbpgs_per_lif, rsp->dev.nintrs,
-                 rsp->dev.nucasts_per_lif, rsp->dev.nmcasts_per_lif,
-                 rsp->dev.intr_coal_mult, rsp->dev.intr_coal_div,
-                 rsp->dev.rdma_version, rsp->dev.rdma_qp_opcodes, rsp->dev.rdma_admin_opcodes,
-                 rsp->dev.nrdma_pts_per_lif, rsp->dev.nrdma_mrs_per_lif, rsp->dev.nrdma_ahs_per_lif,
-                 rsp->dev.rdma_max_stride, rsp->dev.rdma_cl_stride, rsp->dev.rdma_pte_stride,
-                 rsp->dev.rdma_rrq_stride, rsp->dev.rdma_rsq_stride,
-                 rsp->dev.tx_qtype.qtype, rsp->dev.tx_qtype.qid_count, rsp->dev.tx_qtype.qid_base,
-                 rsp->dev.rx_qtype.qtype, rsp->dev.rx_qtype.qid_count, rsp->dev.rx_qtype.qid_base,
-                 rsp->dev.admin_qtype.qtype, rsp->dev.admin_qtype.qid_count, rsp->dev.admin_qtype.qid_base,
-                 rsp->dev.notify_qtype.qtype, rsp->dev.notify_qtype.qid_count, rsp->dev.notify_qtype.qid_base,
-                 rsp->dev.rdma_aq_qtype.qtype, rsp->dev.rdma_aq_qtype.qid_count, rsp->dev.rdma_aq_qtype.qid_base,
-                 rsp->dev.rdma_sq_qtype.qtype, rsp->dev.rdma_sq_qtype.qid_count, rsp->dev.rdma_sq_qtype.qid_base,
-                 rsp->dev.rdma_rq_qtype.qtype, rsp->dev.rdma_rq_qtype.qid_count, rsp->dev.rdma_rq_qtype.qid_base,
-                 rsp->dev.rdma_cq_qtype.qtype, rsp->dev.rdma_cq_qtype.qid_count, rsp->dev.rdma_cq_qtype.qid_base,
-                 rsp->dev.rdma_eq_qtype.qtype, rsp->dev.rdma_eq_qtype.qid_count, rsp->dev.rdma_eq_qtype.qid_base);
+    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
+        eth_lif = it->second;
+        status = eth_lif->Reset(req, req_data, resp, resp_data);
+        if (status != IONIC_RC_SUCCESS) {
+            NIC_LOG_ERR("{}: Failed to reset lif", spec->name);
+            return (status);
+        }
+    }
 
     return (IONIC_RC_SUCCESS);
 }
@@ -710,10 +700,11 @@ Eth::_CmdIdentify(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
 {
+    struct dev_reset_cmd *cmd = (struct dev_reset_cmd *)req;
     status_code_t status;
     EthLif *eth_lif = NULL;
 
-    NIC_LOG_DEBUG("{}: CMD_OPCODE_RESET", spec->name);
+    NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
     intr_reset_dev(intr_base, spec->intr_count, 1);
 
@@ -730,22 +721,300 @@ Eth::_CmdReset(void *req, void *req_data, void *resp, void *resp_data)
 }
 
 status_code_t
+Eth::_CmdGetAttr(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct dev_getattr_cmd *cmd = (struct dev_getattr_cmd *)req;
+
+    NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode),
+        cmd->attr);
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+Eth::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct dev_setattr_cmd *cmd = (struct dev_setattr_cmd *)req;
+
+    NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode),
+        cmd->attr);
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+Eth::_CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    union port_identity *info = (union port_identity *)resp_data;
+    union port_config *cfg = (union port_config *)&info->config;
+    struct port_identify_cmd *cmd = (struct port_identify_cmd *)req;
+
+    NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
+
+    if (spec->uplink_port_num == 0) {
+        port_info->config = {0};
+        port_info->status = {
+            .id = 0,
+            .speed = IONIC_SPEED_1G,
+            .status = PORT_ADMIN_STATE_UP
+        };
+        return (IONIC_RC_SUCCESS);
+    }
+
+    ret = dev_api->port_get_config(spec->uplink_port_num, (port_config_t *)cfg);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: failed to get port config", spec->name);
+        return (IONIC_RC_ERROR);
+    }
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    struct port_init_cmd *cmd = (struct port_init_cmd *)req;
+    union port_config *cfg = (union port_config *)req_data;
+
+    NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
+
+    if (spec->uplink_port_num == 0) {
+        return (IONIC_RC_SUCCESS);
+    }
+
+    ret = dev_api->port_set_config(spec->uplink_port_num, (port_config_t *)cfg);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: failed to set port config", spec->name);
+        return (IONIC_RC_ERROR);
+    }
+
+    if (cmd->info_pa) {
+        host_port_info_addr = cmd->info_pa;
+        if (spec->uplink_port_num != 9) {
+            host_port_stats_addr = cmd->info_pa + offsetof(struct port_info, stats);
+            NIC_LOG_INFO("{}: host_port_info_addr {:#x} host_port_stats_addr {:#x}",
+                        spec->name, host_port_info_addr, host_port_stats_addr);
+
+            // starts a non-repeating timer to update stats. the timer is reset when
+            // stats update is complete.
+            evutil_timer_start(&stats_timer, &Eth::StatsUpdate, this, 0.2, 0.0);
+        }
+    }
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+Eth::_CmdPortReset(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct port_reset_cmd *cmd = (struct port_reset_cmd *)req;
+
+    NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
+
+    if (spec->uplink_port_num == 0) {
+        return (IONIC_RC_SUCCESS);
+    }
+
+    host_port_info_addr = 0;
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+Eth::_CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    port_config_t cfg = {0};
+    struct port_setattr_cmd *cmd = (struct port_setattr_cmd *)req;
+
+    NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode),
+        cmd->attr);
+
+    ret = dev_api->port_get_config(spec->uplink_port_num, &cfg);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: failed to get port config", spec->name);
+        return (IONIC_RC_ERROR);
+    }
+
+    switch (cmd->attr) {
+    case IONIC_PORT_ATTR_STATE:
+        cfg.state = cmd->state;
+        break;
+    case IONIC_PORT_ATTR_SPEED:
+        cfg.speed = cmd->speed;
+        break;
+    case IONIC_PORT_ATTR_MTU:
+        cfg.mtu = cmd->mtu;
+        break;
+    case IONIC_PORT_ATTR_AUTONEG:
+        cfg.an_enable = cmd->an_enable;
+        break;
+    case IONIC_PORT_ATTR_FEC:
+        cfg.fec_type = cmd->fec_type;
+        break;
+    case IONIC_PORT_ATTR_PAUSE:
+        cfg.pause_type = cmd->pause_type;
+        break;
+    case IONIC_PORT_ATTR_LOOPBACK:
+        break;
+    default:
+        NIC_LOG_ERR("{}: Unknown attr {}", spec->name, cmd->attr);
+        return (IONIC_RC_ERROR);
+    }
+
+    ret = dev_api->port_set_config(spec->uplink_port_num, &cfg);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: failed to set port config", spec->name);
+        return (IONIC_RC_ERROR);
+    }
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+Eth::_CmdPortGetAttr(void *req, void *req_data, void *resp, void *resp_data)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    port_config_t cfg = {0};
+    struct port_getattr_cmd *cmd = (struct port_getattr_cmd *)req;
+    struct port_getattr_comp *comp = (struct port_getattr_comp *)resp;
+
+    NIC_LOG_DEBUG("{}: {} attr {}", spec->name, opcode_to_str(cmd->opcode),
+        cmd->attr);
+
+    ret = dev_api->port_get_config(spec->uplink_port_num, &cfg);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: failed to get port config", spec->name);
+        return (IONIC_RC_ERROR);
+    }
+
+    switch (cmd->attr) {
+    case IONIC_PORT_ATTR_STATE:
+        comp->state = cfg.state;
+        break;
+    case IONIC_PORT_ATTR_SPEED:
+        comp->speed = cfg.speed;
+        break;
+    case IONIC_PORT_ATTR_MTU:
+        comp->mtu = cfg.mtu;
+        break;
+    case IONIC_PORT_ATTR_AUTONEG:
+        comp->an_enable = cfg.an_enable;
+        break;
+    case IONIC_PORT_ATTR_FEC:
+        comp->fec_type = cfg.fec_type;
+        break;
+    case IONIC_PORT_ATTR_PAUSE:
+        comp->pause_type = cfg.pause_type;
+        break;
+    case IONIC_PORT_ATTR_LOOPBACK:
+        break;
+    default:
+        NIC_LOG_ERR("{}: Unknown attr {}", spec->name, cmd->attr);
+        return (IONIC_RC_ERROR);
+    }
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+Eth::_CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data)
+{
+    union lif_identity *ident = (union lif_identity *)resp_data;
+    struct lif_identify_cmd *cmd = (struct lif_identify_cmd *)req;
+    struct lif_identify_comp *comp = (struct lif_identify_comp *)resp;
+
+    NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
+
+    ident->capabilities = IONIC_LIF_CAP_ETH;
+
+    ident->eth.version = 1;
+    ident->eth.max_ucast_filters = 32;
+    ident->eth.max_mcast_filters = 32;
+    ident->eth.rss_ind_tbl_sz = RSS_IND_TBL_SIZE;
+    ident->eth.min_frame_size = 64;
+    ident->eth.max_frame_size = 9216;
+
+    ident->eth.config.features = 0;
+    ident->eth.config.queue_count[IONIC_QTYPE_ADMINQ] = 1; //spec->adminq_count;
+    ident->eth.config.queue_count[IONIC_QTYPE_NOTIFYQ] = 1;
+    ident->eth.config.queue_count[IONIC_QTYPE_TXQ] = spec->txq_count;
+    ident->eth.config.queue_count[IONIC_QTYPE_RXQ] = spec->rxq_count;
+    ident->eth.config.queue_count[IONIC_QTYPE_EQ] = spec->eq_count;
+
+    if (spec->enable_rdma) {
+        ident->capabilities |= IONIC_LIF_CAP_RDMA;
+
+        ident->rdma.version = 1;
+        ident->rdma.qp_opcodes = 11;
+        ident->rdma.admin_opcodes = 16;
+        ident->rdma.npts_per_lif = spec->pte_count;
+        ident->rdma.nmrs_per_lif = spec->key_count;
+        ident->rdma.nahs_per_lif = spec->ah_count;
+        ident->rdma.max_stride = 11;
+        ident->rdma.cl_stride = 6;
+        ident->rdma.pte_stride = 3;
+        ident->rdma.rrq_stride = 6;
+        ident->rdma.rsq_stride = 5;
+
+        ident->rdma.aq_qtype.qtype = ETH_HW_QTYPE_ADMIN;
+        ident->rdma.aq_qtype.qid_count = 1; //spec->rdma_aq_count;
+        ident->rdma.aq_qtype.qid_base = 1; //spec->adminq_count;
+
+        ident->rdma.sq_qtype.qtype = ETH_HW_QTYPE_SQ;
+        ident->rdma.sq_qtype.qid_count = spec->rdma_sq_count;
+        ident->rdma.sq_qtype.qid_base = 0;
+
+        ident->rdma.rq_qtype.qtype = ETH_HW_QTYPE_RQ;
+        ident->rdma.rq_qtype.qid_count = spec->rdma_rq_count;
+        ident->rdma.rq_qtype.qid_base = 0;
+
+        ident->rdma.cq_qtype.qtype = ETH_HW_QTYPE_CQ;
+        ident->rdma.cq_qtype.qid_count = spec->rdma_cq_count;
+        ident->rdma.cq_qtype.qid_base = 0;
+
+        ident->rdma.eq_qtype.qtype = ETH_HW_QTYPE_EQ;
+        ident->rdma.eq_qtype.qid_count = spec->rdma_eq_count;
+        ident->rdma.eq_qtype.qid_base = spec->eq_count;
+
+        ident->rdma.dcqcn_profiles = 1;
+    }
+
+    comp->ver = IONIC_IDENTITY_VERSION_1;
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
 Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct lif_init_cmd *cmd = (struct lif_init_cmd *)req;
-    uint64_t lif_id = lif_base + cmd->index;
+    struct lif_init_comp *comp = (struct lif_init_comp *)resp;
+    uint64_t lif_id = 0;
     EthLif *eth_lif = NULL;
+    status_code_t ret = IONIC_RC_SUCCESS;
+    sdk_ret_t rs = SDK_RET_OK;
 
-    NIC_LOG_DEBUG("{}: CMD_OPCODE_LIF_INIT: index {}", spec->name, cmd->index);
+    NIC_LOG_DEBUG("{}: {}: index {}", spec->name, opcode_to_str(cmd->opcode),
+        cmd->index);
 
     if (!hal_status) {
         NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
         return (IONIC_RC_EAGAIN);
     }
 
-    if (cmd->index >= spec->lif_count) {
-        NIC_LOG_ERR("{}: bad lif index {}", spec->name, cmd->index);
-        return (IONIC_RC_ERROR);
+    if (spec->enable_rdma && cmd->index > 0) {
+        NIC_LOG_INFO("{}: Multi-lif not supported on RDMA enabled device",
+            spec->name);
+        lif_id = 0;
+    } else {
+        if (cmd->index >= spec->lif_count) {
+            NIC_LOG_ERR("{}: bad lif index {}", spec->name, cmd->index);
+            return (IONIC_RC_ERROR);
+        }
+        lif_id = lif_base + cmd->index;
     }
 
     auto it = lif_map.find(lif_id);
@@ -755,26 +1024,88 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     }
     eth_lif = it->second;
 
-    return eth_lif->Init(req, req_data, resp, resp_data);
+    ret = eth_lif->Init(req, req_data, resp, resp_data);
+    if (ret != IONIC_RC_SUCCESS) {
+        NIC_LOG_ERR("{}: Failed to initialize lif, status {}", spec->name, ret);
+        return (ret);
+    }
+
+    if (spec->uplink_port_num == 0) {
+        port_info->status = {
+            .id = 0,
+            .speed = 1000,
+            .status = 1,
+        };
+    } else {
+        // Update port config
+        rs = dev_api->port_get_config(spec->uplink_port_num,
+                (port_config_t *)&port_info->config);
+        if (rs != SDK_RET_OK) {
+            NIC_LOG_ERR("{}: Unable to get port config {}", spec->name, lif_id);
+            return (IONIC_RC_ERROR);
+        }
+
+        // Update port status
+        rs = dev_api->port_get_status(spec->uplink_port_num,
+                (port_status_t *)&port_info->status);
+        if (rs != SDK_RET_OK) {
+            NIC_LOG_ERR("{}: Unable to get port status {}", spec->name, lif_id);
+            return (IONIC_RC_ERROR);
+        }
+    };
+
+    // TODO: Workaround for linkmgr not setting port id
+    port_info->status.id = spec->uplink_port_num;
+
+    // Update port info
+    WRITE_MEM(port_info_addr + offsetof(struct port_info, config),
+                (uint8_t *)&port_info->config, sizeof(union port_config), 0);
+
+    WRITE_MEM(port_info_addr + offsetof(struct port_info, status),
+                (uint8_t *)&port_info->status, sizeof(struct port_status), 0);
+
+    if (host_port_info_addr) {
+        eth_lif->EdmaProxy(
+            spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+            port_info_addr, host_port_info_addr,
+            sizeof(union port_config) + sizeof(struct port_status),
+            NULL
+        );
+    }
+
+    // Update link status
+    eth_lif->LinkEventHandler((port_status_t *)&port_info->status);
+
+    comp->hw_index = lif_id;
+
+    return (ret);
 }
 
 status_code_t
 Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
 {
     struct lif_reset_cmd *cmd = (struct lif_reset_cmd *)req;
-    uint64_t lif_id = lif_base + cmd->index;
+    uint64_t lif_id = 0;
     EthLif *eth_lif = NULL;
 
-    NIC_LOG_DEBUG("{}: CMD_OPCODE_LIF_RESET: index {}", spec->name, cmd->index);
+    NIC_LOG_DEBUG("{}: {}: index {}", spec->name, opcode_to_str(cmd->opcode),
+        cmd->index);
 
     if (!hal_status) {
         NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
         return (IONIC_RC_EAGAIN);
     }
 
-    if (cmd->index >= spec->lif_count) {
-        NIC_LOG_ERR("{}: bad lif index {}", spec->name, cmd->index);
-        return (IONIC_RC_ERROR);
+    if (spec->enable_rdma && cmd->index > 0) {
+        NIC_LOG_INFO("{}: Multi-lif not supported on RDMA enabled device",
+            spec->name);
+        lif_id = 0;
+    } else {
+        if (cmd->index >= spec->lif_count) {
+            NIC_LOG_ERR("{}: bad lif index {}", spec->name, cmd->index);
+            return (IONIC_RC_ERROR);
+        }
+        lif_id = lif_base + cmd->index;
     }
 
     auto it = lif_map.find(lif_id);
@@ -788,13 +1119,13 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
 }
 
 status_code_t
-Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
+Eth::_CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data)
 {
-    struct adminq_init_cmd *cmd = (struct adminq_init_cmd *)req;
+    struct admin_cmd *cmd = (struct admin_cmd *)req;
     uint64_t lif_id = lif_base + cmd->lif_index;
     EthLif *eth_lif = NULL;
 
-    NIC_LOG_DEBUG("{}: CMD_OPCODE_ADMINQ_INIT: lif_index {}", spec->name, cmd->lif_index);
+    NIC_LOG_DEBUG("{}: PROXY_CMD: lif_index {}", spec->name, cmd->lif_index);
 
     if (cmd->lif_index >= spec->lif_count) {
         NIC_LOG_ERR("{}: bad lif index {}", spec->name, cmd->lif_index);
@@ -808,53 +1139,48 @@ Eth::_CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data)
     }
     eth_lif = it->second;
 
-    return eth_lif->AdminQInit(req, req_data, resp, resp_data);
+    return eth_lif->CmdProxyHandler(req, req_data, resp, resp_data);
 }
 
-status_code_t
-Eth::_CmdPortConfigSet(void *req, void *req_data, void *resp, void *resp_data)
+/*
+ * Callbacks
+ */
+
+void
+Eth::StatsUpdate(void *obj)
 {
-    sdk_ret_t ret = SDK_RET_OK;
-    struct port_config_cmd *cmd = (struct port_config_cmd *)req;
-
-    NIC_LOG_DEBUG("{}: CMD_OPCODE_PORT_CONFIG_SET", spec->name);
-
-    if (!dev_api) {
-        return (IONIC_RC_ERROR);
-    }
-    ret = dev_api->port_set_config(spec->uplink_port_num,
-                                   (port_config_t *)&cmd->config);
-    if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("{}: failed to set port config", spec->name);
-        return (IONIC_RC_ERROR);
-    }
-#if 0
-    int ret = hal->PortConfigSet(spec->uplink_port_num,
-                (hal_port_config_t &)cmd->config);
-    if (ret < 0) {
-        NIC_LOG_ERR("{}: failed to set port config", spec->name);
-        return (IONIC_RC_ERROR);
-    }
-#endif
-
-    return (IONIC_RC_SUCCESS);
-}
-
-status_code_t
-Eth::AdminCmdHandler(uint64_t lif_id,
-    void *req, void *req_data,
-    void *resp, void *resp_data)
-{
+    Eth *eth = (Eth *)obj;
     EthLif *eth_lif = NULL;
 
-    auto it = lif_map.find(lif_id);
-    if (it == lif_map.cend()) {
-        NIC_FUNC_ERR("{}: Unable to find lif {}", spec->name, lif_id);
-        return (IONIC_RC_ERROR);
+    auto it = eth->lif_map.find(0);
+    if (it == eth->lif_map.cend()) {
+        NIC_FUNC_ERR("{}: Unable to find lif {}", eth->spec->name, 0);
+        return;
     }
     eth_lif = it->second;
 
-    return eth_lif->CmdHandler(req, req_data, resp, resp_data);
+    struct edmaq_ctx ctx = {
+        .cb = &Eth::StatsUpdateComplete,
+        .obj = obj
+    };
+
+    if (eth->port_stats_addr != 0 && eth->host_port_stats_addr != 0) {
+        eth_lif->EdmaProxy(
+            eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+            eth->port_stats_addr,
+            eth->host_port_stats_addr,
+            sizeof(struct port_stats),
+            &ctx
+        );
+    }
+}
+
+void
+Eth::StatsUpdateComplete(void *obj)
+{
+    Eth *eth = (Eth *)obj;
+
+    evutil_timer_again(&eth->stats_timer);
 }
 
 /*
@@ -865,7 +1191,7 @@ Eth::HalEventHandler(bool status)
 {
     hal_status = status;
 
-    if (!status) {
+    if (!hal_status) {
         return;
     }
 
@@ -888,6 +1214,12 @@ Eth::HalEventHandler(bool status)
 void
 Eth::LinkEventHandler(port_status_t *evd)
 {
+    if (!hal_status) {
+        NIC_LOG_ERR("{}: HAL is not UP!", spec->name);
+        return;
+    }
+
+    // TODO: Check if device is initialized
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         EthLif *eth_lif = it->second;
         eth_lif->LinkEventHandler(evd);

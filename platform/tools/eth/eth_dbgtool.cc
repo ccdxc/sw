@@ -7,27 +7,18 @@
 #include <cstring>
 
 #include "nic/include/adminq.h"
-#include "platform/capri/capri_common.hpp"
-#include "nic/include/edma.hpp"
+#include "nic/include/edmaq.h"
 #include "nic/include/eth_common.h"
 #include "nic/include/notify.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
+#include "platform/capri/capri_common.hpp"
+#include "platform/src/lib/nicmgr/include/eth_if.h"
+#include "platform/utils/mpartition.hpp"
+
 #include "gen/platform/mem_regions.hpp"
 
 #include "third-party/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
-
-
-/* Supply these for ionic_if.h */
-#define BIT(n)                  (1 << n)
-#define TEST_BIT(x, n)          ((x) & (1 << n))
-#define u8 uint8_t
-#define u16 uint16_t
-#define u32 uint32_t
-#define u64 uint64_t
-#define dma_addr_t uint64_t
-
-#include "platform/drivers/common/ionic_if.h"
 
 
 typedef struct {
@@ -546,17 +537,19 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 void
 eth_stats(uint16_t lif)
 {
-
-    struct ionic_lif_stats stats;
-    uint64_t addr = 0ULL;
-#ifdef MEM_REGION_LIF_STATS_NAME
-    // TODO. Need to read it fromf ile. Temporary fix for SDK compilation
-    addr = CAPRI_HBM_BASE + MEM_REGION_LIF_STATS_START_OFFSET + (lif << 10);
-    printf("\naddr: 0x%lx\n\n", addr);
+    struct lif_stats stats;
+    std::string hal_cfg_path_ = std::string(std::getenv("HAL_CONFIG_PATH")) + "/";
+#ifdef APOLLO
+    std::string mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
 #else
-    return;
+    std::string mpart_json = hal_cfg_path_ + "/iris/hbm_mem.json";
 #endif
-    sdk::lib::pal_mem_read(addr, (uint8_t *)&stats, sizeof(struct ionic_lif_stats));
+    sdk::platform::utils::mpartition *mp_ = mpartition::factory(mpart_json.c_str());
+    assert(mp_);
+    uint64_t addr = mp_->start_addr(MEM_REGION_LIF_STATS_NAME) + (lif << 10);
+
+    printf("\naddr: 0x%lx\n\n", addr);
+    sdk::lib::pal_mem_read(addr, (uint8_t *)&stats, sizeof(struct lif_stats));
 
     printf("rx_ucast_bytes              : %lu\n", stats.rx_ucast_bytes);
     printf("rx_ucast_packets            : %lu\n", stats.rx_ucast_packets);
@@ -655,21 +648,44 @@ eth_stats(uint16_t lif)
 }
 
 void
-usage()
+port_info(uint64_t addr)
 {
-    printf("Usage:\n");
-    printf("   qinfo          <lif>\n");
-    printf("   qstate         <lif> <qtype> <qid>\n");
-    printf("   nvme_qstate    <lif> <qtype> <qid>\n");
-    printf("   qpoll          <lif> <qtype>\n");
-    printf("   stats          <lif>\n");
-    printf("   memrd          <addr> <size_in_bytes>\n");
-    printf("   memwr          <addr> <size_in_bytes> <bytes> ...\n");
-    printf("   memdump        <addr> <size_in_bytes>\n");
-    printf("   bzero          <addr> <size_in_bytes>\n");
-    printf("   find           <addr> <size_in_bytes> <pattern>\n");
-    printf("   nfind          <addr> <size_in_bytes> <pattern>\n");
-    exit(1);
+    uint8_t *buf = (uint8_t *)calloc(1, sizeof(struct port_info));
+    assert(buf != NULL);
+    sdk::lib::pal_mem_read(addr, buf, sizeof(struct port_info));
+    struct port_info *info = (struct port_info *)buf;
+
+    printf("\n");
+    printf("port_config:\n");
+    printf("  speed: %u\n", info->config.speed);
+    printf("  mtu: %u\n", info->config.mtu);
+    printf("  state: %u\n", info->config.state);
+    printf("  an_enable: %u\n", info->config.an_enable);
+    printf("  fec_type: %u\n", info->config.fec_type);
+    printf("  pause_type: %u\n", info->config.pause_type);
+    printf("  loopback_mode: %u\n", info->config.loopback_mode);
+
+    printf("\n");
+    printf("port_status:\n");
+    printf("  speed: %u\n", info->status.speed);
+    printf("  id: %u\n", info->status.id);
+    printf("  status: %u\n", info->status.status);
+    printf("  xcvr:\n");
+    printf("    state: %u\n", info->status.xcvr.state);
+    printf("    phy: %u\n", info->status.xcvr.phy);
+    printf("    pid: %u\n", info->status.xcvr.pid);
+    printf("    sprom:\n");
+    for (uint32_t i = 0; i < sizeof(info->status.xcvr.sprom) / 16; i++) {
+        printf("      ");
+        for (uint32_t j = 0; j < 16; j++) {
+            printf("%02x ", info->status.xcvr.sprom[(i * 16) + j]);
+        }
+        printf("\n");
+    }
+
+    printf("\n");
+
+    free(buf);
 }
 
 void
@@ -692,6 +708,25 @@ int
 debug_logger(sdk_trace_level_e trace_level, const char *format, ...)
 {
     return 0;
+}
+
+void
+usage()
+{
+    printf("Usage:\n");
+    printf("   qinfo          <lif>\n");
+    printf("   qstate         <lif> <qtype> <qid>\n");
+    printf("   nvme_qstate    <lif> <qtype> <qid>\n");
+    printf("   qpoll          <lif> <qtype>\n");
+    printf("   stats          <lif>\n");
+    printf("   memrd          <addr> <size_in_bytes>\n");
+    printf("   memwr          <addr> <size_in_bytes> <bytes> ...\n");
+    printf("   memdump        <addr> <size_in_bytes>\n");
+    printf("   bzero          <addr> <size_in_bytes>\n");
+    printf("   find           <addr> <size_in_bytes> <pattern>\n");
+    printf("   nfind          <addr> <size_in_bytes> <pattern>\n");
+    printf("   port_info      <addr>\n");
+    exit(1);
 }
 
 int
@@ -770,7 +805,7 @@ main(int argc, char **argv)
         }
         uint64_t addr = strtoul(argv[2], NULL, 16);
         uint32_t size = strtoul(argv[3], NULL, 0);
-        if (argc == (int)(4 + size)) {
+        if (argc == (int)(3 + size)) {
             printf("Not enough bytes to write\n");
             usage();
         }
@@ -838,6 +873,12 @@ main(int argc, char **argv)
         }
         printf("Pattern 0x%x not found in region 0x%lx - 0x%lx\n", pattern, addr, addr + size);
         return -1;
+    } else if (strcmp(argv[1], "port_info") == 0) {
+        if (argc != 3) {
+            usage();
+        }
+        uint64_t addr = strtoul(argv[2], NULL, 16);
+        port_info(addr);
     } else {
         usage();
     }

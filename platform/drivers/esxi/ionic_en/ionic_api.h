@@ -6,7 +6,7 @@
 #define _IONIC_API_H_
 
 #include "ionic.h"
-
+#include "ionic_types.h"
 #include "ionic_if.h"
 #include "ionic_completion.h"
 

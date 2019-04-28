@@ -60,11 +60,10 @@ eth_rx_app_header:
   SAVE_STATS(_r_stats)
 
 #ifndef APOLLO
-  phvwr.e         p.eth_rx_cq_desc_len_lo, k.p4_to_p4plus_packet_len[7:0]
-  phvwr.f         p.eth_rx_cq_desc_len_hi, k.p4_to_p4plus_packet_len[13:8]
+  phvwr.e.f       p.eth_rx_cq_desc_len, k.{p4_to_p4plus_packet_len}.hx
+  nop
 #else
-  phvwr           p.eth_rx_cq_desc_len_lo, k.p4_to_p4plus_packet_len[7:0]
-  phvwr           p.eth_rx_cq_desc_len_hi, k.p4_to_p4plus_packet_len[13:8]
+  phvwr           p.eth_rx_cq_desc_len, k.{p4_to_p4plus_packet_len}.hx
 
   // Launch qstate in next stage
   phvwri          p.{app_header_table0_valid...app_header_table3_valid}, (1 << 3)

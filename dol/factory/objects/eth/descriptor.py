@@ -2,14 +2,15 @@
 import pdb
 from pprint import pformat
 from scapy.all import *
-import iris.config.resmgr            as resmgr
-from infra.common.logging       import logger
+import iris.config.resmgr as resmgr
+from infra.common.logging import logger
 from ctypes import *
 
 import infra.factory.base as base
 
 
-IONIC_TX_MAX_SG_ELEMS = 16
+IONIC_RX_MAX_SG_ELEMS = 8
+IONIC_TX_MAX_SG_ELEMS = 8
 
 
 def to_dict(obj):
@@ -29,63 +30,70 @@ def ctypes_pformat(cstruct):
 
 class EthRxDescriptor(LittleEndianStructure):
     _fields_ = [
-        ("addr", c_uint64, 52),
-        ("rsvd", c_uint64, 12),
+        ("opcode", c_uint8),
+        ("rsvd", c_uint8 * 5),
         ("len", c_uint16),
-        ("opcode", c_uint16, 3),
-        ("rsvd2", c_uint16, 13),
-        ("rsvd3", c_uint32)
+        ("addr", c_uint64),
+    ]
+
+
+class EthRxSgElement(LittleEndianStructure):
+    _fields_ = [
+        ("addr", c_uint64),
+        ("len", c_uint16),
+        ("rsvd", c_uint16 * 3),
+    ]
+
+
+class EthRxSgDescriptor(LittleEndianStructure):
+    _fields_ = [
+        ("elems", EthRxSgElement * IONIC_RX_MAX_SG_ELEMS),
     ]
 
 
 class EthRxCqDescriptor(LittleEndianStructure):
     _fields_ = [
-        ("status", c_uint32, 8),
-        ("rsvd", c_uint32, 8),
-        ("comp_index", c_uint32, 16),
+        ("status", c_uint8),
+        ("num_sg_elems", c_uint8),
+        ("comp_index", c_uint16),
         ("rss_hash", c_uint32),
         ("csum", c_uint16),
         ("vlan_tci", c_uint16),
-        ("len", c_uint32, 14),
-        ("csum_calc", c_uint32, 1),
-        ("rsvd2", c_uint32, 1),
-        ("pkt_type", c_uint32, 8),
-        ("csum_tcp_ok", c_uint32, 1),
-        ("csum_tcp_bad", c_uint32, 1),
-        ("csum_udp_ok", c_uint32, 1),
-        ("csum_udp_bad", c_uint32, 1),
-        ("csum_ip_ok", c_uint32, 1),
-        ("csum_ip_bad", c_uint32, 1),
-        ("V", c_uint32, 1),
-        ("color", c_uint32, 1),
+        ("len", c_uint16),
+        ("csum_tcp_ok", c_uint8, 1),
+        ("csum_tcp_bad", c_uint8, 1),
+        ("csum_udp_ok", c_uint8, 1),
+        ("csum_udp_bad", c_uint8, 1),
+        ("csum_ip_ok", c_uint8, 1),
+        ("csum_ip_bad", c_uint8, 1),
+        ("vlan_strip", c_uint8, 1),
+        ("csum_calc", c_uint8, 1),
+        ("pkt_type", c_uint8, 7),
+        ("color", c_uint8, 1),
     ]
 
 
 class EthTxDescriptor(LittleEndianStructure):
     _fields_ = [
+        ("vlan_insert", c_uint64, 1),
+        ("encap", c_uint64, 1),
+        ("csum_l3_or_sot", c_uint64, 1),
+        ("csum_l4_or_eot", c_uint64, 1),
+        ("opcode", c_uint64, 4),
+        ("num_sg_elems", c_uint64, 4),
         ("addr", c_uint64, 52),
-        ("rsvd", c_uint64, 4),
-        ("num_sg_elems", c_uint64, 5),
-        ("opcode", c_uint64, 3),
         ("len", c_uint16),
         ("vlan_tci", c_uint16),
-        ("hdr_len", c_uint16, 10),
-        ("rsvd2", c_uint16, 3),
-        ("V", c_uint16, 1),
-        ("C", c_uint16, 1),
-        ("O", c_uint16, 1),
-        ("mss_or_csumoffset", c_uint16, 14),
-        ("csum_l3", c_uint16, 1),
-        ("csum_l4", c_uint16, 1),
+        ("csum_start_or_hdr_len", c_uint16),
+        ("csum_offset_or_mss", c_uint16),
     ]
 
 
 class EthTxSgElement(LittleEndianStructure):
     _fields_ = [
-        ("addr", c_uint64, 52),
-        ("rsvd", c_uint64, 12),
+        ("addr", c_uint64),
         ("len", c_uint16),
-        ("rsvd1", c_uint16 * 3),
+        ("rsvd", c_uint16 * 3),
     ]
 
 
@@ -97,30 +105,31 @@ class EthTxSgDescriptor(LittleEndianStructure):
 
 class EthTxCqDescriptor(LittleEndianStructure):
     _fields_ = [
-        ("status", c_uint32, 8),
-        ("rsvd", c_uint32, 8),
-        ("comp_index", c_uint32, 16),
-        ("rsvd2", c_uint32 * 2),
-        ("rsvd3", c_uint32, 31),
-        ("color", c_uint32, 1),
+        ("status", c_uint8),
+        ("rsvd", c_uint8),
+        ("comp_index", c_uint16),
+        ("rsvd2", c_uint8 * 11),
+        ("rsvd3", c_uint8, 7),
+        ("color", c_uint8, 1),
     ]
 
 
-class AdminDesciptor(LittleEndianStructure):
+class AdminDescriptor(LittleEndianStructure):
     _fields_ = [
         ("opcode", c_uint16),
-        ("rsvd", c_uint16),
-        ("cmd_data", c_uint32 * 15),
+        ("lif_index", c_uint16),
+        ("cmd_data", c_uint8 * 60),
     ]
 
 
 class AdminCqDescriptor(LittleEndianStructure):
     _fields_ = [
-        ("cmd_status", c_uint16),
+        ("status", c_uint8),
+        ("rsvd", c_uint8),
         ("comp_index", c_uint16),
-        ("cmd_data", c_uint32 * 6),
-        ("rsvd0", c_uint32, 31),
-        ("color", c_uint32, 1),
+        ("cmd_data", c_uint8 * 11),
+        ("rsvd2", c_uint8, 7),
+        ("color", c_uint8, 1),
     ]
 
 
@@ -296,7 +305,7 @@ class EthTxCqDescriptorObject(EthDescriptorObject):
 
 
 class AdminDescriptorObject(EthDescriptorObject):
-    __data_class__ = AdminDesciptor
+    __data_class__ = AdminDescriptor
 
     def Read(self):
         # This is a write-only descriptor type

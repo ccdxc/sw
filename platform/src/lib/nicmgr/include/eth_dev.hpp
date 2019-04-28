@@ -10,7 +10,6 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include "nic/include/notify.hpp"
-#include "nic/include/edma.hpp"
 #include "nic/include/eth_common.h"
 
 #include "nic/sdk/lib/indexer/indexer.hpp"
@@ -22,9 +21,6 @@
 #endif
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
-
-// #include "platform/src/lib/hal_api/include/hal_types.hpp"
-#include "nic/sdk/platform/mnet/include/mnet.h"
 
 #include "device.hpp"
 #include "pd_client.hpp"
@@ -86,7 +82,7 @@ struct eth_devspec {
     uint32_t rdma_rq_count;
     uint32_t rdma_cq_count;
     uint32_t rdma_eq_count;
-    uint32_t rdma_adminq_count;
+    uint32_t rdma_aq_count;
     uint32_t rdma_pid_count;
     uint32_t barmap_size;    // in 8MB units
 };
@@ -120,6 +116,8 @@ public:
 private:
     // Device Spec
     const struct eth_devspec *spec;
+    // Info
+    char name[IONIC_IFNAMSIZ];
     // PD Info
     PdClient *pd;
     // HAL Info
@@ -130,9 +128,10 @@ private:
     uint32_t lif_base;
     uint32_t intr_base;
     // Devcmd
-    struct dev_cmd_regs *devcmd;
+    uint64_t regs_mem_addr;
     uint64_t devcmd_mem_addr;
-    uint64_t devcmddb_mem_addr;
+    union dev_regs *regs;
+    union dev_cmd_regs *devcmd;
     // CMB
     uint64_t cmb_mem_addr;
     uint32_t cmb_mem_size;
@@ -141,10 +140,18 @@ private:
     uint32_t rom_mem_size;
     // PCIe info
     pciehdev_t *pdev;
+    // Port Status
+    struct port_info *port_info;
+    uint64_t port_info_addr;
+    uint64_t host_port_info_addr;
+    uint64_t port_stats_addr;
+    uint64_t host_port_stats_addr;
     // Tasks
-    evutil_timer devcmd_timer;
-    evutil_check devcmd_check;
-    evutil_prepare devcmd_prepare;
+    evutil_prepare devcmd_prepare = {0};
+    evutil_check devcmd_check = {0};
+    evutil_timer devcmd_timer = {0};
+    evutil_timer stats_timer = {0};
+
     // Device Constructors
     bool CreateHostDevice();
     bool CreateLocalDevice();
@@ -155,17 +162,29 @@ private:
 
     /* Command Handlers */
     static void DevcmdPoll(void *obj);
-    status_code_t _CmdReset(void *req, void *req_data, void *resp, void *resp_data);
+
     status_code_t _CmdIdentify(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdReset(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdGetAttr(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data);
+
+    status_code_t _CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdPortInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdPortReset(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdPortGetAttr(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdPortSetAttr(void *req, void *req_data, void *resp, void *resp_data);
+
+    status_code_t _CmdLifIdentify(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdLifInit(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdLifReset(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdAdminQInit(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdPortConfigSet(void *req, void *req_data, void *resp, void *resp_data);
 
-    /* AdminCmd Proxy Handler */
-    status_code_t AdminCmdHandler(uint64_t lif_id,
-        void *req, void *req_data,
-        void *resp, void *resp_data);
+    /* Proxy Command Handlers */
+    status_code_t _CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data);
+
+    // Tasks
+    static void StatsUpdate(void *obj);
+    static void StatsUpdateComplete(void *obj);
 
     const char *opcode_to_str(cmd_opcode_t opcode);
 

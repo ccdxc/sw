@@ -220,15 +220,10 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto err_out_unmap_bars;
 	}
 
-	err = ionic_setup(ionic);
+	/* Configure the device */
+	err = ionic_dev_setup(ionic);
 	if (err) {
 		IONIC_DEV_ERROR(dev, "Cannot setup device, aborting\n");
-		goto err_out_unmap_bars;
-	}
-
-	err = ionic_reset(ionic);
-	if (err) {
-		IONIC_DEV_ERROR(dev, "Cannot reset device, aborting\n");
 		goto err_out_unmap_bars;
 	}
 
@@ -238,15 +233,36 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto err_out_unmap_bars;
 	}
 
-	dev_info(dev, "ASIC: %s rev: 0x%X serial num: %s fw_ver: %s\n",
-		 ionic_dev_asic_name(ionic->ident->dev.asic_type),
-		 ionic->ident->dev.asic_rev, ionic->ident->dev.serial_num,
-		 ionic->ident->dev.fw_version);
+	err = ionic_init(ionic);
+	if (err) {
+		IONIC_DEV_ERROR(dev, "Cannot init device, aborting\n");
+		goto err_out_unmap_bars;
+	}
+
+	/* Configure the ports */
+	err = ionic_port_identify(ionic);
+	if (err) {
+		dev_err(dev, "Cannot identify port: %d, aborting\n", err);
+		goto err_out_unmap_bars;
+	}
+
+	err = ionic_port_init(ionic);
+	if (err) {
+		dev_err(dev, "Cannot init port: %d, aborting\n", err);
+		goto err_out_unmap_bars;
+	}
+
+	/* Configure LIFs */
+	err = ionic_lif_identify(ionic);
+	if (err) {
+		dev_err(dev, "Cannot identify LIFs: %d, aborting\n", err);
+		goto err_out_unmap_bars;
+	}
 
 	err = ionic_lifs_size(ionic);
 	if (err) {
 		IONIC_DEV_ERROR(dev, "Cannot size LIFs, aborting\n");
-		goto err_out_forget_identity;
+		goto err_out_unmap_bars;
 	}
 
 	err = ionic_lifs_alloc(ionic);
@@ -276,8 +292,6 @@ err_out_deinit_lifs:
 err_out_free_lifs:
 	ionic_lifs_free(ionic);
 	ionic_free_msix_vector(ionic);
-err_out_forget_identity:
-	ionic_forget_identity(ionic);
 err_out_unmap_bars:
 	ionic_unmap_bars(ionic);
 	ionic_pci_deinit(pdev);
@@ -298,15 +312,14 @@ static void ionic_remove(struct pci_dev *pdev)
 	ionic_lifs_unregister(ionic);
 	ionic_lifs_deinit(ionic);
 	ionic_lifs_free(ionic);
-
-	ionic_free_msix_vector(ionic);
-	ionic_forget_identity(ionic);
+	ionic_port_reset(ionic);
 	ionic_reset(ionic);
+	ionic_free_msix_vector(ionic);
 	ionic_unmap_bars(ionic);
 	ionic_pci_deinit(pdev);
 	pci_set_drvdata(pdev, NULL);
 
-	if(ionic->idev.cmb_inuse)
+	if (ionic->idev.cmb_inuse)
 		free(ionic->idev.cmb_inuse, M_IONIC);
 	free(ionic, M_IONIC);
 }

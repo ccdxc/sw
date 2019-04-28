@@ -28,10 +28,24 @@ FILE_LICENCE(GPL2_OR_LATER_OR_UBDL);
 
 /******************************************************************************
  *
- * Device reset
+ * Device
  *
  ******************************************************************************
  */
+
+/**
+ * Init hardware
+ *
+ * @v ionic				ionic device
+ * @ret rc				Return status code
+ */
+static int ionic_init(struct ionic *ionic)
+{
+
+	struct ionic_dev *idev = &ionic->idev;
+
+	return ionic_dev_cmd_init(idev, devcmd_timeout);
+}
 
 /**
  * Reset hardware
@@ -63,7 +77,7 @@ static int ionic_check_link ( struct net_device *netdev ) {
 	struct ionic *ionic = netdev->priv;
 	u16 link_up;
 
-	link_up = ionic->ionic_lif->notifyblock->link_status;
+	link_up = ionic->lif->info->status.link_status;
 	if (link_up != ionic->link_status) {
 		ionic->link_status = link_up;
 		if (link_up == PORT_OPER_STATUS_UP) {
@@ -93,7 +107,7 @@ static int ionic_open(struct net_device *netdev)
 	int mtu;
 	int err;
 
-	err = ionic_qcq_enable(ionic->ionic_lif->txqcqs);
+	err = ionic_qcq_enable(ionic->lif->txqcqs);
 	if (err)
 		return err;
 
@@ -101,11 +115,11 @@ static int ionic_open(struct net_device *netdev)
 	mtu = ETH_HLEN + netdev->mtu + 4;
 	ionic_rx_fill(netdev, mtu);
 
-	err = ionic_lif_rx_mode(ionic->ionic_lif, 0x1F);
+	err = ionic_lif_rx_mode(ionic->lif, 0x1F);
 	if (err)
 		return err;
 
-	err = ionic_qcq_enable(ionic->ionic_lif->rxqcqs);
+	err = ionic_qcq_enable(ionic->lif->rxqcqs);
 	if (err)
 		return err;
 
@@ -124,19 +138,19 @@ static void ionic_close(struct net_device *netdev)
 {
 	struct ionic *ionic = netdev->priv;
 
-	ionic_qcq_disable(ionic->ionic_lif->rxqcqs);
+	ionic_qcq_disable(ionic->lif->rxqcqs);
 
-	ionic_qcq_disable(ionic->ionic_lif->txqcqs);
+	ionic_qcq_disable(ionic->lif->txqcqs);
 
-	ionic_tx_flush(netdev, ionic->ionic_lif);
+	ionic_tx_flush(netdev, ionic->lif);
 
-	ionic_rx_flush(ionic->ionic_lif);
+	ionic_rx_flush(ionic->lif);
 }
 
 /**
  * Transmit packet
  *
- * @v netdev				Network device
+ * @v netdev			Network device
  * @v iobuf				I/O buffer
  * @ret rc				Return status code
  */
@@ -144,7 +158,7 @@ static int ionic_transmit(struct net_device *netdev,
 						  struct io_buffer *iobuf)
 {
 	struct ionic *ionic = netdev->priv;
-	struct queue *txq = &ionic->ionic_lif->txqcqs->q;
+	struct queue *txq = &ionic->lif->txqcqs->q;
 	struct txq_desc *desc = txq->head->desc;
 
 	if (!ionic_q_has_space(txq, 1)) {
@@ -153,16 +167,12 @@ static int ionic_transmit(struct net_device *netdev,
 	}
 
 	// fill the descriptor
-	desc->opcode = TXQ_DESC_OPCODE_CALC_NO_CSUM;
-	desc->addr = virt_to_bus(iobuf->data);
-	desc->num_sg_elems = 0;
+	desc->cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_CSUM_NONE,
+					0, 0, virt_to_bus(iobuf->data));
 	desc->len = iob_len(iobuf);
-	desc->vlan_tci = 0;
-	desc->hdr_len = 0;
-	desc->csum_offset = 0;
-	desc->V = 0;
-	desc->C = 1;
-	desc->O = 0;
+	desc->hword0 = 0;
+	desc->hword1 = 0;
+	desc->hword2 = 0;
 
 	// store the iobuf in the txq
 	txq->lif->tx_iobuf[txq->head->index] = iobuf;
@@ -172,8 +182,8 @@ static int ionic_transmit(struct net_device *netdev,
 
 	// ring the doorbell
 	struct doorbell db = {
-		.qid_lo = txq->qid,
-		.qid_hi = txq->qid >> 8,
+		.qid_lo = txq->hw_index,
+		.qid_hi = txq->hw_index >> 8,
 		.ring = 0,
 		.p_index = txq->head->index,
 	};
@@ -243,12 +253,12 @@ static int ionic_map_bars(struct ionic *ionic, struct pci_device *pci)
 	unsigned int i, j;
 
 	ionic->num_bars = 0;
-	for (i = 0, j = 0; i < IONIC_BARS_MAX; i++) {
+	for (i = 0, j = 0; i < IONIC_IPXE_BARS_MAX; i++) {
 		bars[j].len = pci_bar_size(pci, PCI_BASE_ADDRESS(i * 2));
 		bars[j].bus_addr = pci_bar_start(pci, PCI_BASE_ADDRESS(i * 2));
-		bars[j].virtaddr = ioremap(bars[j].bus_addr, bars[j].len);
-		if (!bars[j].virtaddr) {
-			DBG2("Cannot memory-map BAR %d, aborting\n", j);
+		bars[j].vaddr = ioremap(bars[j].bus_addr, bars[j].len);
+		if (!bars[j].vaddr) {
+			DBG("Cannot memory-map BAR %d, aborting\n", j);
 			return -ENODEV;
 		}
 		ionic->num_bars++;
@@ -266,8 +276,8 @@ static void ionic_unmap_bars(struct ionic *ionic)
 	unsigned int i;
 
 	for (i = 0; i < IONIC_BARS_MAX; i++)
-		if (bars[i].virtaddr)
-			iounmap(bars[i].virtaddr);
+		if (bars[i].vaddr)
+			iounmap(bars[i].vaddr);
 }
 
 /**
@@ -302,7 +312,7 @@ static int ionic_probe(struct pci_device *pci)
 	// Map registers
 	errorcode = ionic_map_bars(ionic, pci);
 	if (errorcode) {
-		DBG2("%s :: the number of bars is %x mapped the bars.\n", __FUNCTION__, ionic->num_bars);
+		DBG2("%s :: Failed to map bars\n", __FUNCTION__);
 		goto err_ionicunmap;
 	}
 
@@ -312,8 +322,8 @@ static int ionic_probe(struct pci_device *pci)
 		goto err_ionicunmap;
 	}
 
-	// Reset the NIC
-	if ((errorcode = ionic_reset(ionic)) != 0)
+	// Init the NIC
+	if ((errorcode = ionic_init(ionic)) != 0)
 		goto err_reset;
 
 	// Identify the Ionic
@@ -323,15 +333,10 @@ static int ionic_probe(struct pci_device *pci)
 		goto err_reset;
 	}
 
-	DBG2("ASIC %s rev 0x%X serial num %s fw version %s\n",
-		 ionic_dev_asic_name(ionic->ident->dev.asic_type),
-		 ionic->ident->dev.asic_rev, ionic->ident->dev.serial_num,
-		 ionic->ident->dev.fw_version);
-
 	errorcode = ionic_lif_alloc(ionic, 0);
 	if (errorcode) {
 		DBG2("%s :: Cannot allocate LIFs, aborting\n", __FUNCTION__);
-		goto err_free_identify;
+		goto err_reset;
 	}
 
 	errorcode = ionic_lif_init(netdev);
@@ -354,14 +359,12 @@ static int ionic_probe(struct pci_device *pci)
 err_register_netdev:
 	ionic_reset(ionic);
 err_free_alloc:
-	ionic_qcq_dealloc(ionic->ionic_lif->adminqcq);
-	ionic_qcq_dealloc(ionic->ionic_lif->notifyqcqs);
-	ionic_qcq_dealloc(ionic->ionic_lif->txqcqs);
-	ionic_qcq_dealloc(ionic->ionic_lif->rxqcqs);
-	free_dma(ionic->ionic_lif->notifyblock, sizeof(ionic->ionic_lif->notifyblock_sz));
-	free(ionic->ionic_lif);
-err_free_identify:
-	free_dma(ionic->ident, sizeof(union identity));
+	ionic_qcq_dealloc(ionic->lif->adminqcq);
+	ionic_qcq_dealloc(ionic->lif->notifyqcqs);
+	ionic_qcq_dealloc(ionic->lif->txqcqs);
+	ionic_qcq_dealloc(ionic->lif->rxqcqs);
+	free_dma(ionic->lif->info, sizeof(ionic->lif->info_sz));
+	free(ionic->lif);
 err_reset:
 err_ionicunmap:
 	ionic_unmap_bars(ionic);
@@ -391,14 +394,14 @@ static void ionic_remove(struct pci_device *pci)
 	ionic_reset(ionic);
 
 	// Free network device
-	free_dma(ionic->ident, sizeof(union identity));
-	ionic_qcq_dealloc(ionic->ionic_lif->adminqcq);
-	ionic_qcq_dealloc(ionic->ionic_lif->notifyqcqs);
-	ionic_qcq_dealloc(ionic->ionic_lif->txqcqs);
-	ionic_qcq_dealloc(ionic->ionic_lif->rxqcqs);
-	free_dma(ionic->ionic_lif->notifyblock, sizeof(ionic->ionic_lif->notifyblock_sz));
-	free(ionic->ionic_lif);
+	ionic_qcq_dealloc(ionic->lif->adminqcq);
+	ionic_qcq_dealloc(ionic->lif->notifyqcqs);
+	ionic_qcq_dealloc(ionic->lif->txqcqs);
+	ionic_qcq_dealloc(ionic->lif->rxqcqs);
+	free_dma(ionic->lif->info, ionic->lif->info_sz);
+	free(ionic->lif);
 	ionic_unmap_bars(ionic);
+	free_dma(ionic->idev.port_info, ionic->idev.port_info_sz);
 	netdev_nullify(netdev);
 	netdev_put(netdev);
 }

@@ -104,14 +104,18 @@ struct adminq {
 
 	struct lif *lif;
 	unsigned int num_descs;
-	unsigned int index;					/* Queue number. */
+
 	unsigned int pid;
-	unsigned int qid;
-	unsigned int qtype;
+
+	unsigned int index;
+	unsigned int type;
+	unsigned int hw_index;
+	unsigned int hw_type;
 
 	bus_dma_tag_t buf_tag;
 	struct ionic_dma_info cmd_dma; 		/* DMA ring for command and completion. */
 	dma_addr_t cmd_ring_pa;
+	dma_addr_t comp_ring_pa;
 
 	struct mtx mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
@@ -137,10 +141,13 @@ struct notifyq {
 
 	struct lif *lif;
 	unsigned int num_descs;
-	unsigned int index;					/* Queue number. */
+
 	unsigned int pid;
-	unsigned int qid;
-	unsigned int qtype;
+
+	unsigned int index;
+	unsigned int type;
+	unsigned int hw_index;
+	unsigned int hw_type;
 
 	struct ionic_dma_info cmd_dma; 		/* DMA ring for command and completion. */
 	dma_addr_t cmd_ring_pa;
@@ -167,16 +174,21 @@ struct rxque {
 	struct lif *lif;
 	unsigned int num_descs; /* Max number of descriptors. */
 	uint32_t descs;			/* Descriptors posted in queue. */
-	unsigned int index;		/* Queue number. */
+
 	unsigned int pid;
-	unsigned int qid;
-	unsigned int qtype;
+
+	unsigned int index;
+	unsigned int type;
+	unsigned int hw_index;
+	unsigned int hw_type;
 
 	struct ionic_rx_buf *rxbuf; /* S/w rx buffer descriptors. */
 	bus_dma_tag_t buf_tag;
 
 	struct ionic_dma_info cmd_dma; /* DMA ring for command and completion. */
 	dma_addr_t cmd_ring_pa;	
+	dma_addr_t comp_ring_pa;
+	dma_addr_t sg_ring_pa;
 
 	struct mtx rx_mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
@@ -211,16 +223,20 @@ struct txque {
 
 	struct lif *lif;
 	unsigned int num_descs;
-	unsigned int index;				/* Queue number. */
+
 	unsigned int pid;
-	unsigned int qid;
-	unsigned int qtype;
+
+	unsigned int index;
+	unsigned int type;
+	unsigned int hw_index;
+	unsigned int hw_type;
 
 	struct ionic_tx_buf *txbuf;		/* S/w rx buffer descriptors. */
 	bus_dma_tag_t buf_tag;
 	struct ionic_dma_info cmd_dma; 	/* DMA ring for command and completion. */
-
 	dma_addr_t cmd_ring_pa;
+	dma_addr_t comp_ring_pa;
+	dma_addr_t sg_ring_pa;
 
 	struct mtx tx_mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
@@ -259,6 +275,7 @@ struct lif {
 	bool registered;
 
 	unsigned int index;
+	unsigned int hw_index;
 
 	unsigned int kern_pid;
 	struct doorbell __iomem *kern_dbpage;
@@ -276,20 +293,18 @@ struct lif {
 	unsigned int nrxqs;
 
 	unsigned int rx_mode;
-	uint16_t rss_hash_cfg;
 
 	int rx_mbuf_size;		/* Rx mbuf size pool. */
 	uint16_t max_frame_size;	/* MTU size. */
 
 	u32 hw_features;		/* Features enabled in hardware, e.g. checksum, TSO etc. */
-	struct ionic_dma_info stats_dma;/* DMA ring for command and completion. */
-	struct ionic_lif_stats *lif_stats;
-	dma_addr_t lif_stats_pa;
 
-	u8 rss_hash_key[RSS_HASH_KEY_SIZE];
+	uint16_t rss_types;
+	u8 rss_hash_key[IONIC_RSS_HASH_KEY_SIZE];
 	u8 *rss_ind_tbl;
 	dma_addr_t rss_ind_tbl_pa;
 	struct ionic_dma_info rss_dma;
+	u32 rss_ind_tbl_sz;
 
 	u32 tx_coalesce_usecs;
 	u32 rx_coalesce_usecs;
@@ -323,14 +338,12 @@ struct lif {
 	bool link_up;
 
 	u32 link_speed;		/* units of 1Mbps: e.g. 10000 = 10Gbps */
-	u16 phy_type;
-	u16 autoneg_status;
 	u16 link_flap_count;
-	u16 link_error_bits;
-	u32 notifyblock_sz;
-	dma_addr_t notifyblock_pa;
-	struct ionic_dma_info notify_dma;
-	struct notify_block *notifyblock;
+
+	u32 info_sz;
+	dma_addr_t info_pa;
+	struct ionic_dma_info info_dma;
+	struct lif_info *info;
 
 	u64 	num_dev_cmds;
 };
@@ -369,6 +382,7 @@ struct lif {
 int ionic_stop(struct net_device *netdev);
 void ionic_open_or_stop(struct lif *lif);
 
+int ionic_lif_identify(struct ionic *ionic);
 int ionic_lifs_alloc(struct ionic *ionic);
 void ionic_lifs_free(struct ionic *ionic);
 void ionic_lifs_deinit(struct ionic *ionic);
@@ -386,6 +400,9 @@ void ionic_dev_intr_unreserve(struct lif *lif, struct intr *intr);
 struct lif *ionic_netdev_lif(struct net_device *netdev);
 
 int ionic_set_hw_features(struct lif *lif, uint32_t features);
+
+int ionic_lif_rss_config(struct lif *lif, uint16_t types,
+	const u8 *key, const u32 *indir);
 
 int ionic_rx_clean(struct rxque* rxq , int rx_limit);
 void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *buf,

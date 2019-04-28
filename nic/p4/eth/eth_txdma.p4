@@ -49,10 +49,9 @@ header_type eth_tx_cq_desc_p {
         status : 8;
         rsvd : 8;
         comp_index : 16;
-        rsvd2 : 64;
-        rsvd3 : 24;
+        rsvd2 : 88;
         color : 1;
-        rsvd4 : 7;
+        rsvd3 : 7;
     }
 }
 
@@ -104,23 +103,18 @@ header_type eth_tx_qstate_d {
 }
 
 #define HEADER_TX_DESC(n) \
-    addr_lo##n : 48; \
-    rsvd##n : 4; \
-    addr_hi##n : 4; \
-    opcode##n : 3; \
-    num_sg_elems##n: 5; \
-    len##n : 16; \
-    vlan_tci##n : 16; \
-    hdr_len_lo##n : 8; \
-    encap##n : 1; \
-    cq_entry##n : 1; \
-    vlan_insert##n : 1; \
-    rsvd2##n : 3; \
-    hdr_len_hi##n: 2; \
-    mss_or_csumoff_lo##n : 8; \
+    opcode##n : 4; \
     csum_l4_or_eot##n : 1; \
     csum_l3_or_sot##n : 1; \
-    mss_or_csumoff_hi##n : 6;
+    encap##n : 1; \
+    vlan_insert##n : 1; \
+    addr_hi##n : 4; \
+    num_sg_elems##n: 4; \
+    addr_lo##n : 48; \
+    len##n : 16; \
+    vlan_tci##n : 16; \
+    csum_start_or_hdr_len##n : 16; \
+    csum_offset_or_mss##n : 16;
 
 header_type eth_tx_desc_d {
     fields {
@@ -132,12 +126,9 @@ header_type eth_tx_desc_d {
 }
 
 #define HEADER_SG_ELEM(n) \
-    addr_lo##n : 48; \
-    rsvd##n : 4; \
-    addr_hi##n : 4; \
-    rsvd1##n : 8; \
+    addr##n : 64; \
     len##n : 16; \
-    rsvd2##n : 48;
+    rsvd##n : 48;
 
 header_type eth_sg_desc_d {
     fields {

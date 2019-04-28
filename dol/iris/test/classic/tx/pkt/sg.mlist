@@ -65,58 +65,58 @@ modules:
             - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
               segment : filter://native=False
 
-    - module:
-        name    : SG_9
-        spec    : sg_9.testspec
-        iterate:
-            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
-              segment : filter://native=False
+    # - module:
+    #     name    : SG_9
+    #     spec    : sg_9.testspec
+    #     iterate:
+    #         - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+    #           segment : filter://native=False
 
-    - module:
-        name    : SG_10
-        spec    : sg_10.testspec
-        iterate:
-            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
-              segment : filter://native=False
+    # - module:
+    #     name    : SG_10
+    #     spec    : sg_10.testspec
+    #     iterate:
+    #         - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+    #           segment : filter://native=False
 
-    - module:
-        name    : SG_11
-        spec    : sg_11.testspec
-        iterate:
-            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
-              segment : filter://native=False
+    # - module:
+    #     name    : SG_11
+    #     spec    : sg_11.testspec
+    #     iterate:
+    #         - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+    #           segment : filter://native=False
 
-    - module:
-        name    : SG_12
-        spec    : sg_12.testspec
-        iterate:
-            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
-              segment : filter://native=False
+    # - module:
+    #     name    : SG_12
+    #     spec    : sg_12.testspec
+    #     iterate:
+    #         - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+    #           segment : filter://native=False
 
-    - module:
-        name    : SG_13
-        spec    : sg_13.testspec
-        iterate:
-            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
-              segment : filter://native=False
+    # - module:
+    #     name    : SG_13
+    #     spec    : sg_13.testspec
+    #     iterate:
+    #         - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+    #           segment : filter://native=False
 
-    - module:
-        name    : SG_14
-        spec    : sg_14.testspec
-        iterate:
-            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
-              segment : filter://native=False
+    # - module:
+    #     name    : SG_14
+    #     spec    : sg_14.testspec
+    #     iterate:
+    #         - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+    #           segment : filter://native=False
 
-    - module:
-        name    : SG_15
-        spec    : sg_15.testspec
-        iterate:
-            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
-              segment : filter://native=False
+    # - module:
+    #     name    : SG_15
+    #     spec    : sg_15.testspec
+    #     iterate:
+    #         - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+    #           segment : filter://native=False
 
-    - module:
-        name    : SG_16
-        spec    : sg_16.testspec
-        iterate:
-            - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
-              segment : filter://native=False
+    # - module:
+    #     name    : SG_16
+    #     spec    : sg_16.testspec
+    #     iterate:
+    #         - flow    : filter://type=IPV4,proto=UDP,label=CLASSIC
+    #           segment : filter://native=False

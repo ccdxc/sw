@@ -1720,7 +1720,7 @@ ionic_en_rx_filter_unregister(struct ionic_en_priv_data *priv_data,       // IN
  *    uplink_qid    - IN (queue ID)
  *    q_filter      - IN (queue Filter)
  *    fid           - OUT (Filter ID)
- *    pair_hw_qid   - OUT (Potential paired tx queue hardware index)
+ *    pair_hw_index   - OUT (Potential paired tx queue hardware index)
  *
  *  Results:
  *     VMK_ReturnStatus
@@ -1736,7 +1736,7 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,           // IN
                             vmk_UplinkQueueID uplink_qid,         // IN
                             vmk_UplinkQueueFilter *q_filter,      // IN
                             vmk_UplinkQueueFilterID *fid,         // OUT
-                            vmk_uint32 *pair_hw_qid)              // OUT
+                            vmk_uint32 *pair_hw_index)              // OUT
 {
         VMK_ReturnStatus status;
         struct ionic_en_priv_data *priv_data = (struct ionic_en_priv_data *) driver_data.ptr;
@@ -1879,7 +1879,7 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,           // IN
         if (shared_queue_data->activeFeatures & VMK_UPLINK_QUEUE_FEAT_PAIR) {
                 VMK_ASSERT((shared_queue_data->activeFeatures &
                            VMK_UPLINK_QUEUE_FEAT_RSS_DYN) == 0);
-                *pair_hw_qid = rx_ring_idx;
+                *pair_hw_index = rx_ring_idx;
         }
 
         vmk_SemaUnlock(&uplink_handle->mq_binary_sema);

@@ -12,18 +12,13 @@ header_type eth_rx_cq_desc_p {
     // RX Completion Descriptor
     fields {
         status : 8;
-        rsvd : 3;
-        num_sg_elems : 5;
+        num_sg_elems : 8;
         comp_index : 16;
         rss_hash : 32;
         csum : 16;
         vlan_tci : 16;
-        len_lo : 8;
-        rsvd2 : 1;
+        len : 16;
         csum_calc : 1;
-        len_hi : 6;
-        pkt_type : 8;
-        color : 1;
         vlan_strip : 1;
         csum_ip_bad : 1;
         csum_ip_ok : 1;
@@ -31,6 +26,8 @@ header_type eth_rx_cq_desc_p {
         csum_udp_ok : 1;
         csum_tcp_bad : 1;
         csum_tcp_ok : 1;
+        color : 1;
+        pkt_type : 7;
     }
 }
 
@@ -75,25 +72,17 @@ header_type eth_rx_qstate_d {
 
 header_type eth_rx_desc_d {
     fields {
-        addr_lo : 48;
-        rsvd0 : 4;
-        addr_hi : 4;
-        rsvd1 : 8;
+        opcode : 8;
+        rsvd : 40;
         len : 16;
-        rsvd2 : 5;
-        opcode : 3;
-        rsvd3 : 8;
-        rsvd4 : 32;
+        addr : 64;
     }
 }
 
 #define HEADER_SG_ELEM(n) \
-    addr_lo##n : 48; \
-    rsvd##n : 4; \
-    addr_hi##n : 4; \
-    rsvd1##n : 8; \
+    addr##n : 64; \
     len##n : 16; \
-    rsvd2##n : 48;
+    rsvd##n : 48;
 
 header_type eth_sg_desc_d {
     fields {

@@ -125,7 +125,7 @@ AccelDev::AccelDev(devapi *dapi,
     devcmd_mem_addr = pd->devcmd_mem_alloc(ACCEL_DEV_PAGE_SIZE);
     MEM_SET(devcmd_mem_addr, 0, ACCEL_DEV_PAGE_SIZE, 0);
     // TODO: mmap instead of calloc after porting to real pal
-    devcmd = (dev_cmd_regs_t *)calloc(1, sizeof(dev_cmd_regs_t));
+    devcmd = (accel_dev_cmd_regs_t *)calloc(1, sizeof(accel_dev_cmd_regs_t));
     if (devcmd == NULL) {
         NIC_LOG_ERR("{}: Failed to map devcmd region", DevNameGet());
         throw;
@@ -411,7 +411,7 @@ AccelDev::DevcmdHandler()
     NIC_HEADER_TRACE("Devcmd");
 
     // read devcmd region
-    READ_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(dev_cmd_regs_t), 0);
+    READ_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(accel_dev_cmd_regs_t), 0);
 
     if (devcmd->done) {
         NIC_LOG_ERR("{}: Devcmd done is set before processing command, opcode {}",
@@ -431,8 +431,8 @@ AccelDev::DevcmdHandler()
 
     // write data
     if (status == ACCEL_RC_SUCCESS) {
-        WRITE_MEM(devcmd_mem_addr + offsetof(dev_cmd_regs_t, data),
-                  (uint8_t *)devcmd + offsetof(dev_cmd_regs_t, data),
+        WRITE_MEM(devcmd_mem_addr + offsetof(accel_dev_cmd_regs_t, data),
+                  (uint8_t *)devcmd + offsetof(accel_dev_cmd_regs_t, data),
                   sizeof(devcmd->data), 0);
     }
 
@@ -441,14 +441,14 @@ devcmd_done:
     devcmd->done = 1;
 
     // write completion
-    WRITE_MEM(devcmd_mem_addr + offsetof(dev_cmd_regs_t, cpl),
-              (uint8_t *)devcmd + offsetof(dev_cmd_regs_t, cpl),
+    WRITE_MEM(devcmd_mem_addr + offsetof(accel_dev_cmd_regs_t, cpl),
+              (uint8_t *)devcmd + offsetof(accel_dev_cmd_regs_t, cpl),
               sizeof(devcmd->cpl), 0);
 
     // write done
     PAL_barrier();
-    WRITE_MEM(devcmd_mem_addr + offsetof(dev_cmd_regs_t, done),
-              (uint8_t *)devcmd + offsetof(dev_cmd_regs_t, done),
+    WRITE_MEM(devcmd_mem_addr + offsetof(accel_dev_cmd_regs_t, done),
+              (uint8_t *)devcmd + offsetof(accel_dev_cmd_regs_t, done),
               sizeof(devcmd->done), 0);
 
     NIC_HEADER_TRACE("Devcmd End");

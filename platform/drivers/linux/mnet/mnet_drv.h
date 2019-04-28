@@ -14,11 +14,10 @@
 #define MNIC_NAME_LEN       32
 
 struct mnet_dev_create_req_t {
-	uint64_t devcmd_pa;
-	uint64_t devcmd_db_pa;
-	uint64_t doorbell_pa;
+	uint64_t regs_pa;
 	uint64_t drvcfg_pa;
 	uint64_t msixcfg_pa;
+	uint64_t doorbell_pa;
 	char iface_name[MNIC_NAME_LEN];
 };
 

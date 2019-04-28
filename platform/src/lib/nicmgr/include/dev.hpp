@@ -25,7 +25,6 @@
 #include "pd_client.hpp"
 
 #include "device.hpp"
-#include "eth_dev.hpp"
 
 using std::string;
 

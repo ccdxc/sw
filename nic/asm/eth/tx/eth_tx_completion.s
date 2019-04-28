@@ -44,7 +44,7 @@ eth_tx_completion_entry:
 
     // DMA Completion
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_PHV2MEM(_r_ptr, !c1, k.eth_tx_global_host_queue, k.eth_tx_t0_s2s_cq_desc_addr, CAPRI_PHV_START_OFFSET(eth_tx_cq_desc_status), CAPRI_PHV_END_OFFSET(eth_tx_cq_desc_rsvd4), r7)
+    DMA_PHV2MEM(_r_ptr, !c1, k.eth_tx_global_host_queue, k.eth_tx_t0_s2s_cq_desc_addr, CAPRI_PHV_START_OFFSET(eth_tx_cq_desc_status), CAPRI_PHV_END_OFFSET(eth_tx_cq_desc_rsvd3), r7)
     DMA_CMD_NEXT(_r_index)
 
     bcf             [!c1], eth_tx_completion_done

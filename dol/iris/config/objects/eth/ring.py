@@ -5,7 +5,7 @@ import iris.config.resmgr            as resmgr
 import iris.config.objects.ring      as ring
 from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
-from factory.objects.eth.descriptor import IONIC_TX_MAX_SG_ELEMS, ctypes_pformat
+from factory.objects.eth.descriptor import *
 
 
 class EthRingObject(ring.RingObject):
@@ -20,13 +20,24 @@ class EthRingObject(ring.RingObject):
 
     def Init(self, queue, spec):
         super().Init(queue, spec)
+
         self.size = self.queue.size
         assert isinstance(self.size, int) and (self.size != 0) and ((self.size & (self.size - 1)) == 0)
-        self.desc_size = self.descriptor_template.meta.size
-        assert isinstance(self.desc_size, int) and (self.desc_size != 0) and ((self.desc_size & (self.desc_size - 1)) == 0)
+
         if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
-            self.sg_desc_size = self.descriptor_template.meta.size
-            assert isinstance(self.desc_size, int) and (self.sg_desc_size != 0) and ((self.desc_size & (self.desc_size - 1)) == 0)
+            self.desc_size = sizeof(EthTxDescriptor)
+            self.sg_elem_size = sizeof(EthTxSgElement)
+            self.sg_desc_size = sizeof(EthTxSgDescriptor)
+        elif self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
+            self.desc_size = sizeof(EthRxDescriptor)
+            self.sg_elem_size = sizeof(EthRxSgElement)
+            self.sg_desc_size = sizeof(EthRxSgDescriptor)
+        elif self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_ADMIN":
+            self.desc_size = sizeof(AdminDescriptor)
+
+        if self.queue.queue_type.purpose in ["LIF_QUEUE_PURPOSE_TX", "LIF_QUEUE_PURPOSE_RX"]:
+            assert (self.desc_size != 0) and ((self.desc_size & (self.desc_size - 1)) == 0)
+            assert (self.sg_desc_size != 0) and ((self.desc_size & (self.desc_size - 1)) == 0)
 
         if GlobalOptions.dryrun or GlobalOptions.cfgonly:
             return
@@ -35,8 +46,8 @@ class EthRingObject(ring.RingObject):
             #Make sure ring_size is a power of 2
             self._mem = resmgr.HostMemoryAllocator.get(self.size * self.desc_size)
             resmgr.HostMemoryAllocator.zero(self._mem, self.size * self.desc_size)
-            if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
-                self._sgmem = resmgr.HostMemoryAllocator.get(IONIC_TX_MAX_SG_ELEMS * self.size * self.sg_desc_size)
+            if self.queue.queue_type.purpose in ["LIF_QUEUE_PURPOSE_TX", "LIF_QUEUE_PURPOSE_RX"]:
+                self._sgmem = resmgr.HostMemoryAllocator.get(self.size * self.sg_desc_size)
 
         logger.info("Creating Ring %s" % self)
 
@@ -56,18 +67,18 @@ class EthRingObject(ring.RingObject):
         # Bind the descriptor to the ring
         descriptor.Bind(self._mem + (self.desc_size * self.pi))
         descriptor.Write()
-        if 'num_sg_elems'in descriptor.fields:
-            for i in range(descriptor.fields['num_sg_elems']):
-                index = (self.pi * IONIC_TX_MAX_SG_ELEMS) + i
-                byte_off = self.sg_desc_size * index
-                memhandle = resmgr.MemHandle(va=self._sgmem.va + byte_off, pa=self._sgmem.pa + byte_off)
-                sg_elem = descriptor._sgelems[i]
-                logger.info("Writing EthTxSGElem @ %s mem %s" % (index, memhandle))
-                resmgr.HostMemoryAllocator.write(memhandle, bytes(sg_elem))
-                logger.info(ctypes_pformat(sg_elem))
 
-        if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
-            self.queue.descriptors[self.pi] = descriptor
+        # For TX queues, write out the SG descriptor
+        self.queue.buffers[self.pi] = descriptor.GetBuffer()
+        if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_TX":
+            if 'num_sg_elems' in descriptor.fields:
+                offset = self.pi * self.sg_desc_size
+                for i in range(descriptor.fields['num_sg_elems']):
+                    sg_elem = descriptor._sgelems[i]
+                    logger.info("Writing EthTxSGElem @ %s mem %s" % (i, self._sgmem + offset))
+                    resmgr.HostMemoryAllocator.write(self._sgmem + offset, bytes(sg_elem))
+                    logger.info(ctypes_pformat(sg_elem))
+                    offset += self.sg_elem_size
 
         # Increment posted index
         self.pi = (self.pi + 1) % self.size
@@ -92,15 +103,14 @@ class EthRingObject(ring.RingObject):
         if descriptor.GetColor() != self.exp_color:
             return status.RETRY
 
-        # For RX queues, match completion descriptor with the posted descriptor.
+        # For RX queues, match the completion with the posted buffer.
         # We need this to verify buffer contents.
-        if self.queue.queue_type.purpose ==\
-                "LIF_QUEUE_PURPOSE_RX":
-            d = self.queue.descriptors[self.ci]
-            if d is None:
-                logger.error("Consume: Descriptor not found in map.")
+        buf = self.queue.buffers[self.ci]
+        if self.queue.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
+            if buf is None:
+                logger.error("Consume: Buffer not found in map.")
                 return status.ERROR
-            descriptor.GetBuffer().Bind(d.GetBuffer()._mem)
+            descriptor.GetBuffer().Bind(buf._mem)
 
         # Increment consumer index
         self.ci = (self.ci + 1) % self.size

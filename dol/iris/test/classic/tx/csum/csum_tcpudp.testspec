@@ -103,8 +103,8 @@ descriptors:
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
             opcode  : callback://eth/callbacks/GetTxOpcodeCalcCsumTcpUdp
-            csum_l4 : callback://eth/callbacks/GetIsTCPUDPICMP
-            csum_l3 : callback://eth/callbacks/GetIsIPV4
+            csum_l4_or_eot : callback://eth/callbacks/GetIsTCPUDPICMP
+            csum_l3_or_sot : callback://eth/callbacks/GetIsIPV4
 
     - descriptor:
         id      : DESC2 # Expected Descriptor

@@ -25,15 +25,8 @@
 #include "platform/src/sim/libsimdev/src/dev_utils.h"
 #include "platform/src/sim/libsimdev/src/simdev_impl.h"
 
-/* Supply these for ionic_if.h */
-typedef u_int8_t u8;
-typedef u_int16_t u16;
-typedef u_int32_t u32;
-typedef u_int64_t u64;
-typedef u_int64_t dma_addr_t;
-#define BIT(n)  (1 << (n))
+#include "platform/src/lib/nicmgr/include/eth_if.h"
 
-#include "platform/drivers/common/ionic_if.h"
 
 typedef struct ethparams_s {
     int lif;
@@ -43,6 +36,10 @@ typedef struct ethparams_s {
     u_int64_t devcmd_pa;
     u_int64_t devcmddb_pa;
 } ethparams_t;
+
+static union dev_regs dev_regs = {
+    .info.signature = IONIC_DEV_INFO_SIGNATURE,
+};
 
 static simdev_t *current_sd;
 
@@ -66,37 +63,6 @@ eth_cmb_base(simdev_t *sd)
     ethparams_t *ep = sd->priv;
     return ep->cmb_base;
 }
-
-/*
- * ================================================================
- * dev_cmd regs
- * ----------------------------------------------------------------
- */
-
-struct dev_cmd_regs {
-    u_int32_t signature;
-    u_int32_t done;
-    u_int32_t cmd[16];
-    u_int32_t comp[4];
-    uint8_t data[2048] __attribute__((aligned (2048)));
-};
-
-_Static_assert(sizeof(struct dev_cmd_regs) == 4096,
-                "Devcmd region should be 4K bytes");
-_Static_assert((offsetof(struct dev_cmd_regs, cmd)  % 4) == 0,
-                "Devcmd cmd field should be word-aligned");
-_Static_assert(sizeof(((struct dev_cmd_regs*)0)->cmd) == 64,
-                "Devcmd cmd field should be 64 bytes");
-_Static_assert((offsetof(struct dev_cmd_regs, comp) % 4) == 0,
-                "Devcmd comp field should be word-aligned");
-_Static_assert(sizeof(((struct dev_cmd_regs*)0)->comp) == 16,
-                "Devcmd comp field should be 16 bytes");
-_Static_assert((offsetof(struct dev_cmd_regs, data) % 4) == 0,
-                "Devcmd data region should be word-aligned");
-
-static struct dev_cmd_regs dev_cmd_regs = {
-    .signature = DEV_CMD_SIGNATURE,
-};
 
 /*
  * ================================================================
@@ -127,7 +93,7 @@ static int
 bar_devcmd_rd(int bar, int reg,
               u_int64_t offset, u_int8_t size, u_int64_t *valp)
 {
-    if (offset + size > sizeof(dev_cmd_regs)) {
+    if (offset + size > sizeof(dev_regs)) {
         simdev_error("devcmd_rd: invalid offset 0x%"PRIx64" size 0x%x\n",
                      offset, size);
         return -1;
@@ -143,7 +109,7 @@ static int
 bar_devcmd_wr(int bar, int reg,
               u_int64_t offset, u_int8_t size, u_int64_t val)
 {
-    if (offset + size >= sizeof(dev_cmd_regs)) {
+    if (offset + size >= sizeof(dev_regs)) {
         simdev_error("devcmd_rd: invalid offset 0x%"PRIx64" size 0x%x\n",
                      offset, size);
         return -1;

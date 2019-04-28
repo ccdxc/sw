@@ -213,7 +213,7 @@ int ionic_debugfs_add_bars(struct ionic *ionic)
 }
 
 static const struct debugfs_reg32 dev_cmd_regs[] = {
-	{ .name = "signature", .offset = 0, },
+	{ .name = "db", .offset = 0, },
 	{ .name = "done", .offset = 4, },
 	{ .name = "cmd.word[0]", .offset = 8, },
 	{ .name = "cmd.word[1]", .offset = 12, },
@@ -237,10 +237,6 @@ static const struct debugfs_reg32 dev_cmd_regs[] = {
 	{ .name = "comp.word[3]", .offset = 84, },
 };
 
-static const struct debugfs_reg32 dev_cmd_db_regs[] = {
-	{ .name = "v", .offset = 0, },
-};
-
 int ionic_debugfs_add_dev_cmd(struct ionic *ionic)
 {
 	struct device *dev = ionic->dev;
@@ -260,19 +256,6 @@ int ionic_debugfs_add_dev_cmd(struct ionic *ionic)
 	if (IS_ERR_OR_NULL(dentry))
 		return PTR_ERR(dentry);
 
-	dev_cmd_regset = devm_kzalloc(dev, sizeof(*dev_cmd_regset),
-				      GFP_KERNEL);
-	if (!dev_cmd_regset)
-		return -ENOMEM;
-	dev_cmd_regset->regs = dev_cmd_db_regs;
-	dev_cmd_regset->nregs = ARRAY_SIZE(dev_cmd_db_regs);
-	dev_cmd_regset->base = ionic->idev.dev_cmd_db;
-
-	dentry = debugfs_create_regset32("dev_cmd_db", 0400,
-					 ionic->dentry, dev_cmd_regset);
-	if (IS_ERR_OR_NULL(dentry))
-		return PTR_ERR(dentry);
-
 	return 0;
 }
 
@@ -287,40 +270,37 @@ static void identity_show_qtype(struct seq_file *seq, const char *name,
 static int identity_show(struct seq_file *seq, void *v)
 {
 	struct ionic *ionic = seq->private;
-	union identity *ident = ionic->ident;
+	struct ionic_dev *idev = &ionic->idev;
+	struct identity *ident = &ionic->ident;
 
-	seq_printf(seq, "asic_type:        %s\n",
-		   ionic_dev_asic_name(ident->dev.asic_type));
-	seq_printf(seq, "asic_rev:         0x%x\n", ident->dev.asic_rev);
-	seq_printf(seq, "serial_num:       %s\n", ident->dev.serial_num);
-	seq_printf(seq, "fw_version:       %s\n", ident->dev.fw_version);
+	seq_printf(seq, "asic_type:        0x%x\n", idev->dev_info->asic_type);
+	seq_printf(seq, "asic_rev:         0x%x\n", idev->dev_info->asic_rev);
+	seq_printf(seq, "serial_num:       %s\n", idev->dev_info->serial_num);
+	seq_printf(seq, "fw_version:       %s\n", idev->dev_info->fw_version);
+	seq_printf(seq, "fw_status:        0x%x\n", idev->dev_info->fw_status);
+
 	seq_printf(seq, "nlifs:            %d\n", ident->dev.nlifs);
 	seq_printf(seq, "nintrs:           %d\n", ident->dev.nintrs);
 	seq_printf(seq, "ndbpgs_per_lif:   %d\n", ident->dev.ndbpgs_per_lif);
-	seq_printf(seq, "nucasts_per_lif:  %d\n", ident->dev.nucasts_per_lif);
-	seq_printf(seq, "nmcasts_per_lif:  %d\n", ident->dev.nmcasts_per_lif);
 	seq_printf(seq, "intr_coal_mult:   %d\n", ident->dev.intr_coal_mult);
 	seq_printf(seq, "intr_coal_div:    %d\n", ident->dev.intr_coal_div);
 
-	seq_printf(seq, "rdma_version:     %d\n", ident->dev.rdma_version);
-	seq_printf(seq, "rdma_qp_opcodes:  %d\n", ident->dev.rdma_qp_opcodes);
-	seq_printf(seq, "rdma_admin_opcodes: %d\n", ident->dev.rdma_admin_opcodes);
-	seq_printf(seq, "rdma_max_stride:    %d\n", ident->dev.rdma_max_stride);
-	seq_printf(seq, "rdma_cl_stride:    %d\n", ident->dev.rdma_cl_stride);
-	seq_printf(seq, "rdma_pte_stride:    %d\n", ident->dev.rdma_pte_stride);
-	seq_printf(seq, "rdma_rrq_stride:    %d\n", ident->dev.rdma_rrq_stride);
-	seq_printf(seq, "rdma_rsq_stride:    %d\n", ident->dev.rdma_rsq_stride);
+	seq_printf(seq, "max_ucast_filters:  %d\n", ident->lif.eth.max_ucast_filters);
+	seq_printf(seq, "max_mcast_filters:  %d\n", ident->lif.eth.max_mcast_filters);
 
-	identity_show_qtype(seq, "admin", &ident->dev.admin_qtype);
-	identity_show_qtype(seq, "tx", &ident->dev.tx_qtype);
-	identity_show_qtype(seq, "rx", &ident->dev.rx_qtype);
-	identity_show_qtype(seq, "notify", &ident->dev.notify_qtype);
+	seq_printf(seq, "rdma_qp_opcodes:  %d\n", ident->lif.rdma.qp_opcodes);
+	seq_printf(seq, "rdma_admin_opcodes: %d\n", ident->lif.rdma.admin_opcodes);
+	seq_printf(seq, "rdma_max_stride:    %d\n", ident->lif.rdma.max_stride);
+	seq_printf(seq, "rdma_cl_stride:    %d\n", ident->lif.rdma.cl_stride);
+	seq_printf(seq, "rdma_pte_stride:    %d\n", ident->lif.rdma.pte_stride);
+	seq_printf(seq, "rdma_rrq_stride:    %d\n", ident->lif.rdma.rrq_stride);
+	seq_printf(seq, "rdma_rsq_stride:    %d\n", ident->lif.rdma.rsq_stride);
 
-	identity_show_qtype(seq, "rdma_aq", &ident->dev.rdma_aq_qtype);
-	identity_show_qtype(seq, "rdma_sq", &ident->dev.rdma_sq_qtype);
-	identity_show_qtype(seq, "rdma_rq", &ident->dev.rdma_rq_qtype);
-	identity_show_qtype(seq, "rdma_cq", &ident->dev.rdma_cq_qtype);
-	identity_show_qtype(seq, "rdma_eq", &ident->dev.rdma_eq_qtype);
+	identity_show_qtype(seq, "rdma_aq", &ident->lif.rdma.aq_qtype);
+	identity_show_qtype(seq, "rdma_sq", &ident->lif.rdma.sq_qtype);
+	identity_show_qtype(seq, "rdma_rq", &ident->lif.rdma.rq_qtype);
+	identity_show_qtype(seq, "rdma_cq", &ident->lif.rdma.cq_qtype);
+	identity_show_qtype(seq, "rdma_eq", &ident->lif.rdma.eq_qtype);
 
 	return 0;
 }
@@ -335,12 +315,13 @@ int ionic_debugfs_add_ident(struct ionic *ionic)
 int ionic_debugfs_add_sizes(struct ionic *ionic)
 {
 	debugfs_create_u32("nlifs", 0400, ionic->dentry,
-			   &ionic->ident->dev.nlifs);
-	debugfs_create_u32("ntxqs_per_lif", 0400, ionic->dentry,
-			   &ionic->ntxqs_per_lif);
-	debugfs_create_u32("nrxqs_per_lif", 0400, ionic->dentry,
-			   &ionic->nrxqs_per_lif);
+			   &ionic->ident.dev.nlifs);
 	debugfs_create_u32("nintrs", 0400, ionic->dentry, &ionic->nintrs);
+
+	debugfs_create_u32("ntxqs_per_lif", 0400, ionic->dentry,
+			   &ionic->ident.lif.eth.config.queue_count[IONIC_QTYPE_TXQ]);
+	debugfs_create_u32("nrxqs_per_lif", 0400, ionic->dentry,
+			   &ionic->ident.lif.eth.config.queue_count[IONIC_QTYPE_RXQ]);
 
 	return 0;
 }
@@ -417,8 +398,8 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 	debugfs_create_u32("num_descs", 0400, q_dentry, &q->num_descs);
 	debugfs_create_u32("desc_size", 0400, q_dentry, &q->desc_size);
 	debugfs_create_u32("pid", 0400, q_dentry, &q->pid);
-	debugfs_create_u32("qid", 0400, q_dentry, &q->qid);
-	debugfs_create_u32("qtype", 0400, q_dentry, &q->qtype);
+	debugfs_create_u32("qid", 0400, q_dentry, &q->hw_index);
+	debugfs_create_u32("qtype", 0400, q_dentry, &q->hw_type);
 	debugfs_create_u64("drop", 0400, q_dentry, &q->drop);
 	debugfs_create_u64("stop", 0400, q_dentry, &q->stop);
 	debugfs_create_u64("wake", 0400, q_dentry, &q->wake);
@@ -538,19 +519,13 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 			return PTR_ERR(stats_dentry);
 
 		debugfs_create_u64("eid", 0400, stats_dentry,
-				   &lif->notifyblock->eid);
+				   &lif->info->status.eid);
 		debugfs_create_u16("link_status", 0400, stats_dentry,
-				   &lif->notifyblock->link_status);
-		debugfs_create_u16("link_error_bits", 0400, stats_dentry,
-				   &lif->notifyblock->link_error_bits);
+				   &lif->info->status.link_status);
 		debugfs_create_u32("link_speed", 0400, stats_dentry,
-				   &lif->notifyblock->link_speed);
-		debugfs_create_u16("phy_type", 0400, stats_dentry,
-				   &lif->notifyblock->phy_type);
-		debugfs_create_u16("autoneg_status", 0400, stats_dentry,
-				   &lif->notifyblock->autoneg_status);
+				   &lif->info->status.link_speed);
 		debugfs_create_u16("link_flap_count", 0400, stats_dentry,
-				   &lif->notifyblock->link_flap_count);
+				   &lif->info->status.link_flap_count);
 	}
 
 	return 0;

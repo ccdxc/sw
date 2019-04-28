@@ -2,6 +2,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libstorage_qstate_if.so
 MODULE_PIPELINE = iris
+MODULE_PREREQS  = common_p4plus_rxdma.p4bin common_p4plus_txdma.p4bin hal.memrgns
 MODULE_SRCS     = ${MODULE_SRC_DIR}/qstate_if.cc
 MODULE_INCS     = ${TOPDIR}/nic/third-party/gflags/include \
                   ${TOPDIR}/nic/hal/third-party/grpc/include \

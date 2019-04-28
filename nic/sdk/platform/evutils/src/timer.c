@@ -40,3 +40,11 @@ evutil_timer_stop(evutil_timer *evu_timer)
     ev_timer_stop(EV_DEFAULT_ &evu_timer->ev_timer);
 #endif
 }
+
+void
+evutil_timer_again(evutil_timer *evu_timer)
+{
+#ifdef LIBEV
+    ev_timer_again(EV_DEFAULT_ &evu_timer->ev_timer);
+#endif
+}

@@ -51,10 +51,6 @@ private:
     uint32_t req_qid, resp_qid;
     uint16_t req_ring_size, resp_ring_size;
 
-    evutil_timer adminq_timer;
-    evutil_check adminq_check;
-    evutil_prepare adminq_prepare;
-
     adminq_cb_t handler;
     void *handler_obj;
     bool response_enabled;
@@ -78,6 +74,11 @@ private:
     uint16_t resp_comp_tail;
     uint64_t resp_comp_base;
     uint8_t resp_exp_color;
+
+    // Tasks
+    evutil_prepare adminq_prepare = {0};
+    evutil_check adminq_check = {0};
+    evutil_timer adminq_timer = {0};
 };
 
 #endif  /* __ADMINQ_HPP__ */

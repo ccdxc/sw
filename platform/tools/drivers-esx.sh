@@ -17,6 +17,8 @@
 # ./build.sh
 #
 
+set -x
+
 # Where am I
 TOP=$(readlink -f "$(dirname "$0")/../..")
 

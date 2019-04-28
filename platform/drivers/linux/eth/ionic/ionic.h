@@ -28,6 +28,7 @@
 extern unsigned int rx_copybreak;
 extern unsigned int devcmd_timeout;
 
+
 struct ionic {
 	struct pci_dev *pdev;
 	struct platform_device *pfdev;
@@ -37,8 +38,7 @@ struct ionic {
 	struct dentry *dentry;
 	struct ionic_dev_bar bars[IONIC_BARS_MAX];
 	unsigned int num_bars;
-	union identity *ident;
-	dma_addr_t ident_pa;
+	struct identity ident;
 	struct list_head lifs;
 	struct lif *master_lif;
 	bool is_mgmt_nic;
@@ -53,6 +53,7 @@ struct ionic {
 #ifndef HAVE_PCI_IRQ_API
 	struct msix_entry *msix;
 #endif
+
 #ifdef CONFIG_DEBUG_FS
 #ifdef DEBUGFS_TEST_API
 	void *scratch_bufs[NUM_SCRATCH_BUFS];
@@ -64,17 +65,22 @@ struct ionic {
 	struct notifier_block nb;
 };
 
+int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
+	       ionic_cq_done_cb done_cb, void *done_arg);
+
 int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 			   bool timeout);
 int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
-int ionic_napi(struct napi_struct *napi, int budget, ionic_cq_cb cb,
-	       ionic_cq_done_cb done_cb, void *done_arg);
 int ionic_dev_cmd_wait(struct ionic *ionic, unsigned long max_wait);
 int ionic_set_dma_mask(struct ionic *ionic);
 int ionic_setup(struct ionic *ionic);
+
 int ionic_identify(struct ionic *ionic);
-void ionic_forget_identity(struct ionic *ionic);
+int ionic_init(struct ionic *ionic);
 int ionic_reset(struct ionic *ionic);
-int ionic_port_config(struct ionic *ionic, struct port_config *pc);
+
+int ionic_port_identify(struct ionic *ionic);
+int ionic_port_init(struct ionic *ionic);
+int ionic_port_reset(struct ionic *ionic);
 
 #endif /* _IONIC_H_ */

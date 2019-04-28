@@ -72,6 +72,7 @@ void evutil_timer_start(evutil_timer *evu_timer,
                         evutil_cb_t *cb, void *arg,
                         ev_tstamp after, ev_tstamp repeat);
 void evutil_timer_stop(evutil_timer *evu_timer);
+void evutil_timer_again(evutil_timer *evu_timer);
 
 /*
  * Idle polling: Only runs when no-other higher priority watches are pending.

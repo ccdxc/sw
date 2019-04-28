@@ -80,52 +80,46 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 	switch (opcode) {
 	case CMD_OPCODE_NOP:
 		return "CMD_OPCODE_NOP";
+	case CMD_OPCODE_INIT:
+		return "CMD_OPCODE_INIT";
 	case CMD_OPCODE_RESET:
 		return "CMD_OPCODE_RESET";
 	case CMD_OPCODE_IDENTIFY:
 		return "CMD_OPCODE_IDENTIFY";
+	case CMD_OPCODE_GETATTR:
+		return "CMD_OPCODE_GETATTR";
+	case CMD_OPCODE_SETATTR:
+		return "CMD_OPCODE_SETATTR";
+	case CMD_OPCODE_PORT_IDENTIFY:
+		return "CMD_OPCODE_PORT_IDENTIFY";
+	case CMD_OPCODE_PORT_INIT:
+		return "CMD_OPCODE_PORT_INIT";
+	case CMD_OPCODE_PORT_RESET:
+		return "CMD_OPCODE_PORT_RESET";
+	case CMD_OPCODE_PORT_GETATTR:
+		return "CMD_OPCODE_PORT_GETATTR";
+	case CMD_OPCODE_PORT_SETATTR:
+		return "CMD_OPCODE_PORT_SETATTR";
 	case CMD_OPCODE_LIF_INIT:
 		return "CMD_OPCODE_LIF_INIT";
 	case CMD_OPCODE_LIF_RESET:
 		return "CMD_OPCODE_LIF_RESET";
-	case CMD_OPCODE_ADMINQ_INIT:
-		return "CMD_OPCODE_ADMINQ_INIT";
-	case CMD_OPCODE_TXQ_INIT:
-		return "CMD_OPCODE_TXQ_INIT";
-	case CMD_OPCODE_RXQ_INIT:
-		return "CMD_OPCODE_RXQ_INIT";
-	case CMD_OPCODE_FEATURES:
-		return "CMD_OPCODE_FEATURES";
-	case CMD_OPCODE_HANG_NOTIFY:
-		return "CMD_OPCODE_HANG_NOTIFY";
-	case CMD_OPCODE_Q_ENABLE:
-		return "CMD_OPCODE_Q_ENABLE";
-	case CMD_OPCODE_Q_DISABLE:
-		return "CMD_OPCODE_Q_DISABLE";
-	case CMD_OPCODE_NOTIFYQ_INIT:
-		return "CMD_OPCODE_NOTIFYQ_INIT";
-	case CMD_OPCODE_STATION_MAC_ADDR_GET:
-		return "CMD_OPCODE_STATION_MAC_ADDR_GET";
-	case CMD_OPCODE_MTU_SET:
-		return "CMD_OPCODE_MTU_SET";
+	case CMD_OPCODE_LIF_IDENTIFY:
+		return "CMD_OPCODE_LIF_IDENTIFY";
+	case CMD_OPCODE_LIF_SETATTR:
+		return "CMD_OPCODE_LIF_SETATTR";
+	case CMD_OPCODE_LIF_GETATTR:
+		return "CMD_OPCODE_LIF_GETATTR";
 	case CMD_OPCODE_RX_MODE_SET:
 		return "CMD_OPCODE_RX_MODE_SET";
 	case CMD_OPCODE_RX_FILTER_ADD:
 		return "CMD_OPCODE_RX_FILTER_ADD";
 	case CMD_OPCODE_RX_FILTER_DEL:
 		return "CMD_OPCODE_RX_FILTER_DEL";
-	case CMD_OPCODE_LIF_STATS_START:
-		return "CMD_OPCODE_LIF_STATS_START";
-	case CMD_OPCODE_LIF_STATS_STOP:
-		return "CMD_OPCODE_LIF_STATS_STOP";
-	case CMD_OPCODE_DEBUG_Q_DUMP:
-		return "CMD_OPCODE_DEBUG_Q_DUMP";
-	case CMD_OPCODE_RSS_HASH_SET:
-		return "CMD_OPCODE_RSS_HASH_SET";
-	case CMD_OPCODE_RSS_INDIR_SET:
-		return "CMD_OPCODE_RSS_INDIR_SET";
-	case CMD_OPCODE_PORT_CONFIG_SET:
-		return "CMD_OPCODE_PORT_CONFIG_SET";
+	case CMD_OPCODE_Q_INIT:
+		return "CMD_OPCODE_Q_INIT";
+	case CMD_OPCODE_Q_CONTROL:
+		return "CMD_OPCODE_Q_CONTROL";
 	case CMD_OPCODE_RDMA_RESET_LIF:
 		return "CMD_OPCODE_RDMA_RESET_LIF";
 	case CMD_OPCODE_RDMA_CREATE_EQ:
@@ -144,12 +138,16 @@ int ionic_adminq_check_err(struct lif *lif, struct ionic_admin_ctx *ctx,
 {
 	struct net_device *netdev = lif->netdev;
 	const char *name;
+	const char *status;
 
 	if (ctx->comp.comp.status || timeout) {
 		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
-		netdev_err(netdev, "%s (%d) failed: %d %s\n",
-			   name, ctx->cmd.cmd.opcode, ctx->comp.comp.status,
-			   (timeout ? "(timeout)" : ""));
+		status = ionic_error_to_str(ctx->comp.comp.status);
+		netdev_err(netdev, "%s (%d) failed: %s (%d)\n",
+				name,
+				ctx->cmd.cmd.opcode,
+				timeout ? "TIMEOUT" : status,
+				timeout ? -1 : ctx->comp.comp.status);
 		return -EIO;
 	}
 
@@ -246,7 +244,7 @@ try_again:
 
 			msleep(1000);
 			iowrite32(0, &idev->dev_cmd->done);
-			iowrite32(1, &idev->dev_cmd_db->v);
+			iowrite32(1, &idev->dev_cmd->doorbell);
 			goto try_again;
 		}
 
@@ -288,24 +286,15 @@ int ionic_setup(struct ionic *ionic)
 
 int ionic_identify(struct ionic *ionic)
 {
-	struct device *dev = ionic->dev;
 	struct ionic_dev *idev = &ionic->idev;
-	union identity *ident;
-	dma_addr_t ident_pa;
+	struct identity *ident = &ionic->ident;
 	int err;
-#ifdef HAPS
 	unsigned int i;
-#endif
+	unsigned int nwords;
 
-	ident = devm_kzalloc(dev, sizeof(*ident), GFP_KERNEL | GFP_DMA);
-	if (!ident)
-		return -ENOMEM;
-	ident_pa = dma_map_single(dev, ident, sizeof(*ident),
-				  DMA_BIDIRECTIONAL);
-	if (dma_mapping_error(dev, ident_pa))
-		return -EIO;
+	memset(ident, 0, sizeof(*ident));
 
-	ident->drv.os_type = OS_TYPE_LINUX;
+	ident->drv.os_type = IONIC_OS_TYPE_LINUX;
 	ident->drv.os_dist = 0;
 	strncpy(ident->drv.os_dist_str, utsname()->release,
 		sizeof(ident->drv.os_dist_str) - 1);
@@ -315,25 +304,26 @@ int ionic_identify(struct ionic *ionic)
 	strncpy(ident->drv.driver_ver_str, DRV_VERSION,
 		sizeof(ident->drv.driver_ver_str) - 1);
 
-#ifdef HAPS
-	for (i = 0; i < 512; i++)
-		iowrite32(idev->ident->words[i], &ident->words[i]);
-#endif
-
 	mutex_lock(&ionic->dev_cmd_lock);
-	ionic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa);
+
+	nwords = min(ARRAY_SIZE(ident->drv.words),
+					ARRAY_SIZE(idev->dev_cmd->data));
+	for (i = 0; i < nwords; i++)
+		iowrite32(ident->drv.words[i], &idev->dev_cmd->data[i]);
+
+	ionic_dev_cmd_identify(idev, IONIC_IDENTITY_VERSION_1);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+	if (!err) {
+		nwords = min(ARRAY_SIZE(ident->dev.words),
+						ARRAY_SIZE(idev->dev_cmd->data));
+		for (i = 0; i < nwords; i++)
+			ident->dev.words[i] = ioread32(&idev->dev_cmd->data[i]);
+	}
+
 	mutex_unlock(&ionic->dev_cmd_lock);
+
 	if (err)
 		goto err_out_unmap;
-
-#ifdef HAPS
-	for (i = 0; i < 512; i++)
-		ident->words[i] = ioread32(&idev->ident->words[i]);
-#endif
-
-	ionic->ident = ident;
-	ionic->ident_pa = ident_pa;
 
 	err = ionic_debugfs_add_ident(ionic);
 	if (err)
@@ -342,16 +332,20 @@ int ionic_identify(struct ionic *ionic)
 	return 0;
 
 err_out_unmap:
-	dma_unmap_single(dev, ident_pa, sizeof(*ident), DMA_BIDIRECTIONAL);
 	return err;
 }
 
-void ionic_forget_identity(struct ionic *ionic)
+int ionic_init(struct ionic *ionic)
 {
-	dma_unmap_single(ionic->dev, ionic->ident_pa,
-			 sizeof(*ionic->ident), DMA_BIDIRECTIONAL);
-	ionic->ident = NULL;
-	ionic->ident_pa = 0;
+	struct ionic_dev *idev = &ionic->idev;
+	int err;
+
+	mutex_lock(&ionic->dev_cmd_lock);
+	ionic_dev_cmd_init(idev);
+	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+	mutex_unlock(&ionic->dev_cmd_lock);
+
+	return err;
 }
 
 int ionic_reset(struct ionic *ionic)
@@ -367,21 +361,101 @@ int ionic_reset(struct ionic *ionic)
 	return err;
 }
 
-int ionic_port_config(struct ionic *ionic, struct port_config *pc)
+int ionic_port_identify(struct ionic *ionic)
+{
+	struct ionic_dev *idev = &ionic->idev;
+	struct identity *ident = &ionic->ident;
+	int err;
+	unsigned int i;
+	unsigned int nwords;
+
+	mutex_lock(&ionic->dev_cmd_lock);
+
+	ionic_dev_cmd_port_identify(idev);
+	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+	if (!err) {
+		nwords = min(ARRAY_SIZE(ident->port.words),
+						ARRAY_SIZE(idev->dev_cmd->data));
+		for (i = 0; i < nwords; i++)
+			ident->port.words[i] = ioread32(&idev->dev_cmd->data[i]);
+	}
+
+	mutex_unlock(&ionic->dev_cmd_lock);
+
+	dev_info(ionic->dev, "speed %d ", ident->port.config.speed);
+	dev_info(ionic->dev, "mtu %d ", ident->port.config.mtu);
+	dev_info(ionic->dev, "state %d ", ident->port.config.state);
+	dev_info(ionic->dev, "an_enable %d ", ident->port.config.an_enable);
+	dev_info(ionic->dev, "fec_type %d ", ident->port.config.fec_type);
+	dev_info(ionic->dev, "pause_type %d ", ident->port.config.pause_type);
+	dev_info(ionic->dev, "loopback_mode %d", ident->port.config.loopback_mode);
+
+	return err;
+}
+
+int ionic_port_init(struct ionic *ionic)
+{
+	struct ionic_dev *idev = &ionic->idev;
+	struct identity *ident = &ionic->ident;
+	int err;
+	unsigned int i;
+	unsigned int nwords;
+
+	if (idev->port_info)
+		return 0;
+
+	idev->port_info_sz = ALIGN(sizeof(*idev->port_info), PAGE_SIZE);
+	idev->port_info = dma_alloc_coherent(ionic->dev, idev->port_info_sz,
+					      &idev->port_info_pa,
+					      GFP_KERNEL);
+	if (!idev->port_info) {
+		dev_err(ionic->dev, "Failed to allocate port info, aborting\n");
+		return -ENOMEM;
+	}
+
+	mutex_lock(&ionic->dev_cmd_lock);
+
+	nwords = min(ARRAY_SIZE(ident->port.config.words),
+					ARRAY_SIZE(idev->dev_cmd->data));
+	for (i = 0; i < nwords; i++)
+		iowrite32(ident->port.config.words[i], &idev->dev_cmd->data[i]);
+
+	ionic_dev_cmd_port_init(idev);
+	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+
+	mutex_unlock(&ionic->dev_cmd_lock);
+	if (err) {
+		dev_err(ionic->dev, "Failed to init port\n");
+		return err;
+	}
+
+	return 0;
+}
+
+int ionic_port_reset(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	int err;
 
-	dev_dbg(ionic->dev, "%s: port_config state=0x%x speed=0x%x mtu=0x%x an_enable=0x%x fec_type=0x%x pause_type=0x%x loopback_mode=0x%x\n",
-		__func__, pc->state, pc->speed, pc->mtu, pc->an_enable,
-		pc->fec_type, pc->pause_type, pc->loopback_mode);
+	if (!idev->port_info)
+		return 0;
 
 	mutex_lock(&ionic->dev_cmd_lock);
-	ionic_dev_cmd_port_config(idev, pc);
+	ionic_dev_cmd_port_reset(idev);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	mutex_unlock(&ionic->dev_cmd_lock);
+	if (err) {
+		dev_err(ionic->dev, "Failed to reset port\n");
+		return err;
+	}
 
-	return err;
+	dma_free_coherent(ionic->dev, idev->port_info_sz,
+			  idev->port_info, idev->port_info_pa);
+
+	idev->port_info = NULL;
+	idev->port_info_pa = 0;
+
+	return 0;
 }
 
 static int __init ionic_init_module(void)

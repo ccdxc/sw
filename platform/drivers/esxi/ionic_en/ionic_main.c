@@ -9,6 +9,7 @@
  */
 
 #include "ionic.h"
+#include "ionic_lif.h"
 
 struct ionic_driver ionic_driver;
 
@@ -94,49 +95,131 @@ ionic_validate_module_params()
 }
 
 
+static const char *ionic_error_to_str(enum status_code code)
+{
+	switch (code) {
+	case IONIC_RC_SUCCESS:
+		return "IONIC_RC_SUCCESS";
+	case IONIC_RC_EVERSION:
+		return "IONIC_RC_EVERSION";
+	case IONIC_RC_EOPCODE:
+		return "IONIC_RC_EOPCODE";
+	case IONIC_RC_EIO:
+		return "IONIC_RC_EIO";
+	case IONIC_RC_EPERM:
+		return "IONIC_RC_EPERM";
+	case IONIC_RC_EQID:
+		return "IONIC_RC_EQID";
+	case IONIC_RC_EQTYPE:
+		return "IONIC_RC_EQTYPE";
+	case IONIC_RC_ENOENT:
+		return "IONIC_RC_ENOENT";
+	case IONIC_RC_EINTR:
+		return "IONIC_RC_EINTR";
+	case IONIC_RC_EAGAIN:
+		return "IONIC_RC_EAGAIN";
+	case IONIC_RC_ENOMEM:
+		return "IONIC_RC_ENOMEM";
+	case IONIC_RC_EFAULT:
+		return "IONIC_RC_EFAULT";
+	case IONIC_RC_EBUSY:
+		return "IONIC_RC_EBUSY";
+	case IONIC_RC_EEXIST:
+		return "IONIC_RC_EEXIST";
+	case IONIC_RC_EINVAL:
+		return "IONIC_RC_EINVAL";
+	case IONIC_RC_ENOSPC:
+		return "IONIC_RC_ENOSPC";
+	case IONIC_RC_ERANGE:
+		return "IONIC_RC_ERANGE";
+	case IONIC_RC_BAD_ADDR:
+		return "IONIC_RC_BAD_ADDR";
+	case IONIC_RC_DEV_CMD:
+		return "IONIC_RC_DEV_CMD";
+	case IONIC_RC_ERROR:
+		return "IONIC_RC_ERROR";
+	case IONIC_RC_ERDMA:
+		return "IONIC_RC_ERDMA";
+	default:
+		return "IONIC_RC_UNKNOWN";
+	}
+}
+
+static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
+{
+	switch (opcode) {
+	case CMD_OPCODE_NOP:
+		return "CMD_OPCODE_NOP";
+	case CMD_OPCODE_INIT:
+		return "CMD_OPCODE_INIT";
+	case CMD_OPCODE_RESET:
+		return "CMD_OPCODE_RESET";
+	case CMD_OPCODE_IDENTIFY:
+		return "CMD_OPCODE_IDENTIFY";
+	case CMD_OPCODE_GETATTR:
+		return "CMD_OPCODE_GETATTR";
+	case CMD_OPCODE_SETATTR:
+		return "CMD_OPCODE_SETATTR";
+	case CMD_OPCODE_PORT_IDENTIFY:
+		return "CMD_OPCODE_PORT_IDENTIFY";
+	case CMD_OPCODE_PORT_INIT:
+		return "CMD_OPCODE_PORT_INIT";
+	case CMD_OPCODE_PORT_RESET:
+		return "CMD_OPCODE_PORT_RESET";
+	case CMD_OPCODE_PORT_GETATTR:
+		return "CMD_OPCODE_PORT_GETATTR";
+	case CMD_OPCODE_PORT_SETATTR:
+		return "CMD_OPCODE_PORT_SETATTR";
+	case CMD_OPCODE_LIF_INIT:
+		return "CMD_OPCODE_LIF_INIT";
+	case CMD_OPCODE_LIF_RESET:
+		return "CMD_OPCODE_LIF_RESET";
+	case CMD_OPCODE_LIF_IDENTIFY:
+		return "CMD_OPCODE_LIF_IDENTIFY";
+	case CMD_OPCODE_LIF_SETATTR:
+		return "CMD_OPCODE_LIF_SETATTR";
+	case CMD_OPCODE_LIF_GETATTR:
+		return "CMD_OPCODE_LIF_GETATTR";
+	case CMD_OPCODE_RX_MODE_SET:
+		return "CMD_OPCODE_RX_MODE_SET";
+	case CMD_OPCODE_RX_FILTER_ADD:
+		return "CMD_OPCODE_RX_FILTER_ADD";
+	case CMD_OPCODE_RX_FILTER_DEL:
+		return "CMD_OPCODE_RX_FILTER_DEL";
+	case CMD_OPCODE_Q_INIT:
+		return "CMD_OPCODE_Q_INIT";
+	case CMD_OPCODE_Q_CONTROL:
+		return "CMD_OPCODE_Q_CONTROL";
+	case CMD_OPCODE_RDMA_RESET_LIF:
+		return "CMD_OPCODE_RDMA_RESET_LIF";
+	case CMD_OPCODE_RDMA_CREATE_EQ:
+		return "CMD_OPCODE_RDMA_CREATE_EQ";
+	case CMD_OPCODE_RDMA_CREATE_CQ:
+		return "CMD_OPCODE_RDMA_CREATE_CQ";
+	case CMD_OPCODE_RDMA_CREATE_ADMINQ:
+		return "CMD_OPCODE_RDMA_CREATE_ADMINQ";
+	default:
+		return "DEVCMD_UNKNOWN";
+	}
+}
+
 VMK_ReturnStatus
 ionic_adminq_check_err(struct lif *lif,
                        struct ionic_admin_ctx *ctx,
                        vmk_Bool is_timeout)
 {
-	static struct cmds {
-		unsigned int cmd;
-		char *name;
-	} cmds[] = {
-		{ CMD_OPCODE_TXQ_INIT, "CMD_OPCODE_TXQ_INIT" },
-		{ CMD_OPCODE_RXQ_INIT, "CMD_OPCODE_RXQ_INIT" },
-		{ CMD_OPCODE_FEATURES, "CMD_OPCODE_FEATURES" },
-		{ CMD_OPCODE_Q_ENABLE, "CMD_OPCODE_Q_ENABLE" },
-		{ CMD_OPCODE_Q_DISABLE, "CMD_OPCODE_Q_DISABLE" },
-                { CMD_OPCODE_NOTIFYQ_INIT, "CMD_OPCODE_NOTIFYQ_INIT" },
-                { CMD_OPCODE_LIF_RESET, "CMD_OPCODE_LIF_RESET" },
-                { CMD_OPCODE_SET_NETDEV_INFO, "CMD_OPCODE_SET_NETDEV_INFO" },
-		{ CMD_OPCODE_STATION_MAC_ADDR_GET,
-			"CMD_OPCODE_STATION_MAC_ADDR_GET" },
-		{ CMD_OPCODE_MTU_SET, "CMD_OPCODE_MTU_SET" },
-		{ CMD_OPCODE_RX_MODE_SET, "CMD_OPCODE_RX_MODE_SET" },
-		{ CMD_OPCODE_RX_FILTER_ADD, "CMD_OPCODE_RX_FILTER_ADD" },
-		{ CMD_OPCODE_RX_FILTER_DEL, "CMD_OPCODE_RX_FILTER_DEL" },
-		{ CMD_OPCODE_STATS_DUMP_START, "CMD_OPCODE_STATS_DUMP_START" },
-		{ CMD_OPCODE_STATS_DUMP_STOP, "CMD_OPCODE_STATS_DUMP_STOP" },
-		{ CMD_OPCODE_RSS_HASH_SET, "CMD_OPCODE_RSS_HASH_SET" },
-		{ CMD_OPCODE_RSS_INDIR_SET, "CMD_OPCODE_RSS_INDIR_SET" },
-	};
-        int list_len = ARRAY_SIZE(cmds);
-        struct cmds *cmd = cmds;
-	char *name = "UNKNOWN cmd opcode";
-        int i;
+	const char *name;
+	const char *status;
 
 	if (ctx->comp.comp.status || is_timeout) {
-                for (i = 0; i < list_len; i++) {
-                        if (cmd[i].cmd == ctx->cmd.cmd.opcode) {
-                                name = cmd[i].name;
-                                break;
-                        }
-                }
-		ionic_err("(%d) %s failed: %d %s\n", ctx->cmd.cmd.opcode,
-			  name, ctx->comp.comp.status,
-                          (is_timeout ? "(timeout)" : ""));
+		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
+		status = ionic_error_to_str(ctx->comp.comp.status);
+		ionic_err("%s (%d) failed: %s (%d) %s\n",
+			   name,
+			   ctx->cmd.cmd.opcode,
+			   status,
+			   ctx->comp.comp.status,
+			   (is_timeout ? "(timeout)" : ""));
 		return VMK_FAILURE;
 	}
 
@@ -219,7 +302,7 @@ ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
         do {
 
                 done = ionic_dev_cmd_done(idev);
-#ifdef HAPS
+#ifdef IONIC_DEBUG
                 if (done) {
                         ionic_dbg("DEVCMD %d done took %ld secs (%ld jiffies)\n",
                                   idev->dev_cmd->cmd.cmd.opcode,
@@ -240,7 +323,7 @@ ionic_dev_cmd_wait(struct ionic_dev *idev, unsigned long max_wait)
 
         } while (IONIC_TIME_AFTER(time, vmk_GetTimerCycles()));
 
-#ifdef HAPS
+#ifdef IONIC_DEBUG
         ionic_err("DEVCMD timeout after %ld secs\n", max_wait / HZ);
 #endif
         return VMK_TIMEOUT;
@@ -283,9 +366,7 @@ ionic_setup(struct ionic *ionic)
                 return status;
         }
 
-        status = ionic_dev_setup(&ionic->en_dev.idev,
-                                 ionic->bars,
-                                 ionic->num_bars);
+        status = ionic_dev_setup(ionic);
         if (status != VMK_OK) {
 		ionic_err("ionic_dev_setup() failed, status: %s",
 			  vmk_StatusToString(status));
@@ -325,7 +406,18 @@ ionic_clean(struct ionic *ionic)
         ionic_dev_clean(ionic);
 }
 
+VMK_ReturnStatus
+ionic_init(struct ionic *ionic)
+{
+        struct ionic_dev *idev = &ionic->en_dev.idev;
 
+	ionic_dbg("ionic_init() called");
+
+        ionic_dev_cmd_init(idev);
+
+        return ionic_dev_cmd_wait_check(idev,
+                                        HZ * devcmd_timeout);
+}
 
 VMK_ReturnStatus
 ionic_reset(struct ionic *ionic)
@@ -353,111 +445,148 @@ ionic_reset(struct ionic *ionic)
 VMK_ReturnStatus
 ionic_identify(struct ionic *ionic)
 {
-        VMK_ReturnStatus status;
-        struct ionic_en_priv_data *priv_data;
-        struct ionic_dev *idev = &ionic->en_dev.idev;
-        union identity *ident;
-        vmk_IOA ident_pa;
-        vmk_SystemVersionInfo sys_info;
-#ifdef HAPS
-        unsigned int i;
-#endif
+	VMK_ReturnStatus status;
+	struct ionic_dev *idev = &ionic->en_dev.idev;
+	struct identity *ident = &ionic->ident;
+	vmk_SystemVersionInfo sys_info;
+	unsigned int i;
+	unsigned int nwords;
 
 	ionic_dbg("ionic_identify() called");
 
-        priv_data = IONIC_CONTAINER_OF(ionic,
-                                       struct ionic_en_priv_data,
-                                       ionic);
+	status = vmk_SystemGetVersionInfo(&sys_info);
+	VMK_ASSERT(status == VMK_OK);
 
-        ident = ionic_dma_zalloc_align(ionic_driver.heap_id,
-                                       priv_data->dma_engine_coherent,
-                                       sizeof(union identity),
-                                       VMK_PAGE_SIZE,
-                                       &ident_pa);
-        if (VMK_UNLIKELY(ident == NULL)) {
-                ionic_err("ionic_dma_alloc_align() failed, status: NO MEMORY");
-                return VMK_NO_MEMORY;
-        }
+	ident->drv.os_type = IONIC_OS_TYPE_ESXI;
 
-        status = vmk_SystemGetVersionInfo(&sys_info);
-        VMK_ASSERT(status == VMK_OK);
+	vmk_Strncpy(ident->drv.os_dist_str,
+				sys_info.buildVersion,
+				sizeof(ident->drv.os_dist_str) - 1);
+	vmk_Strncpy(ident->drv.kernel_ver_str,
+				sys_info.productVersion,
+				sizeof(ident->drv.kernel_ver_str) - 1);
+	vmk_Strncpy(ident->drv.driver_ver_str, DRV_VERSION,
+				sizeof(ident->drv.driver_ver_str) - 1);
 
-        ident->drv.os_type = OS_TYPE_ESXI;
+	vmk_MutexLock(ionic->dev_cmd_lock);
 
-        vmk_Strncpy(ident->drv.os_dist_str,
-                    sys_info.buildVersion,
-                    sizeof(ident->drv.os_dist_str) - 1);
-        vmk_Strncpy(ident->drv.kernel_ver_str,
-                    sys_info.productVersion,
-                    sizeof(ident->drv.kernel_ver_str) - 1);
-        vmk_Strncpy(ident->drv.driver_ver_str, DRV_VERSION,
-                    sizeof(ident->drv.driver_ver_str) - 1);
+	nwords = IONIC_MIN(ARRAY_SIZE(ident->drv.words), ARRAY_SIZE(idev->dev_cmd->data));
+	for (i = 0; i < nwords; i++)
+		ionic_writel_raw(ident->drv.words[i], (vmk_VA)&idev->dev_cmd->data[i]);
 
-#ifdef HAPS
-        for (i = 0; i < 512; i++)
-                ionic_writel_raw(idev->ident->words[i],
-                                 (vmk_VA)&ident->words[i]);
-#endif
-        vmk_MutexLock(ionic->dev_cmd_lock);
-        ionic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa);
+	ionic_dev_cmd_identify(idev, IONIC_IDENTITY_VERSION_1);
+	status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	if (status == VMK_OK) {
+		nwords = IONIC_MIN(ARRAY_SIZE(ident->dev.words), ARRAY_SIZE(idev->dev_cmd->data));
+		for (i = 0; i < nwords; i++)
+			ident->dev.words[i] = ionic_readl_raw((vmk_VA)&idev->dev_cmd->data[i]);
+	}
 
-        status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
-        vmk_MutexUnlock(ionic->dev_cmd_lock);
+	vmk_MutexUnlock(ionic->dev_cmd_lock);
 
-        if (status != VMK_OK) {
-                ionic_err("ionic_dev_cmd_wait_check() failed, status: %s",
-                          vmk_StatusToString(status));
-                goto dev_cmd_wait_err;
-        };
-
-        vmk_WorldSleep(1000);
-
-#ifdef HAPS
-        for (i = 0; i < 512; i++)
-                ident->words[i] = ionic_readl_raw((vmk_VA)&idev->ident->words[i]);
-#endif
-        ionic->ident = ident;
-        ionic->ident_pa = ident_pa;
-
-	ionic_dbg("ionic_identify() completed successfully!");
-
-        return status;
-
-dev_cmd_wait_err:
-        ionic_dma_free(ionic_driver.heap_id,
-                       priv_data->dma_engine_streaming,
-                       sizeof(union identity),
-                       ident,
-                       ident_pa);              
-
-        return status;
+	return status;
 }
-
 
 VMK_ReturnStatus
-ionic_port_config(struct ionic *ionic,
-                  struct port_config *pc)
+ionic_port_identify(struct ionic *ionic)
 {
-        VMK_ReturnStatus status;
-        struct ionic_dev *idev = &ionic->en_dev.idev;
+	struct ionic_dev *idev = &ionic->en_dev.idev;
+	struct identity *ident = &ionic->ident;
+	int err;
+	unsigned int i;
+	unsigned int nwords;
 
-         ionic_dbg("port_config state=0x%x speed=0x%x mtu=0x%x an_enable=0x%x"
-                  " fec_type=0x%x pause_type=0x%x loopback_mode=0x%x\n",
-                  pc->state, pc->speed, pc->mtu, pc->an_enable,
-                  pc->fec_type, pc->pause_type, pc->loopback_mode);
+	vmk_MutexLock(ionic->dev_cmd_lock);
 
-         vmk_MutexLock(ionic->dev_cmd_lock);
-        ionic_dev_cmd_port_config(idev, pc);
-        status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
-        vmk_MutexUnlock(ionic->dev_cmd_lock);
-        if (status != VMK_OK) {
-                ionic_err("ionic_dev_cmd_wait_check() failed, status: %s",
-                          vmk_StatusToString(status));
-        }
+	ionic_dev_cmd_port_identify(idev);
+	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	if (err == VMK_OK) {
+		nwords = IONIC_MIN(ARRAY_SIZE(ident->port.words),
+							ARRAY_SIZE(idev->dev_cmd->data));
+		for (i = 0; i < nwords; i++)
+			ident->port.words[i] = ionic_readl_raw((vmk_VA)&idev->dev_cmd->data[i]);
+	}
 
-         return status;
+	vmk_MutexUnlock(ionic->dev_cmd_lock);
+
+	return err;
 }
 
+VMK_ReturnStatus
+ionic_port_init(struct ionic *ionic)
+{
+	struct ionic_en_priv_data *priv_data;
+	struct ionic_dev *idev = &ionic->en_dev.idev;
+	struct identity *ident = &ionic->ident;
+	int err;
+	unsigned int i;
+	unsigned int nwords;
+
+	if (idev->port_info)
+		return VMK_OK;
+
+	priv_data = IONIC_CONTAINER_OF(ionic, struct ionic_en_priv_data, ionic);
+
+	idev->port_info_sz = IONIC_ALIGN(sizeof(*idev->port_info), VMK_PAGE_SIZE);
+	idev->port_info = ionic_dma_zalloc_align(ionic_driver.heap_id,
+									priv_data->dma_engine_coherent,
+									idev->port_info_sz,
+									VMK_PAGE_SIZE,
+									&idev->port_info_pa);
+	if (VMK_UNLIKELY(idev->port_info == NULL)) {
+			ionic_err("ionic_dma_alloc_align() failed, status: NO MEMORY");
+			return VMK_NO_MEMORY;
+	}
+
+	vmk_MutexLock(ionic->dev_cmd_lock);
+
+	nwords = IONIC_MIN(ARRAY_SIZE(ident->port.config.words),
+						ARRAY_SIZE(idev->dev_cmd->data));
+	for (i = 0; i < nwords; i++)
+		ionic_writel_raw(ident->port.config.words[i],
+						(vmk_VA)&idev->dev_cmd->data[i]);
+
+	ionic_dev_cmd_port_init(idev);
+	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+
+	vmk_MutexUnlock(ionic->dev_cmd_lock);
+
+	return err;
+}
+
+VMK_ReturnStatus
+ionic_port_reset(struct ionic *ionic)
+{
+	struct ionic_en_priv_data *priv_data;
+	struct ionic_dev *idev = &ionic->en_dev.idev;
+	int err;
+
+	if (idev->port_info == NULL)
+		return VMK_OK;
+
+	vmk_MutexLock(ionic->dev_cmd_lock);
+	ionic_dev_cmd_port_reset(idev);
+	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	vmk_MutexUnlock(ionic->dev_cmd_lock);
+	if (err) {
+		ionic_err("ionic_port_reset() failed\n");
+		return err;
+	}
+
+	priv_data = IONIC_CONTAINER_OF(ionic,
+									struct ionic_en_priv_data,
+									ionic);
+
+	ionic_dma_free(ionic_driver.heap_id,
+					priv_data->dma_engine_coherent,
+					idev->port_info_sz,
+					idev->port_info,
+					idev->port_info_pa);
+	idev->port_info_pa = 0;
+	idev->port_info = NULL;
+
+	return 0;
+}
 
 
 /*
@@ -585,7 +714,7 @@ ionic_en_attach(vmk_Device device)                                // IN
                 goto setup_err;
         }
 
-        status = ionic_reset(&priv_data->ionic);
+        status = ionic_init(&priv_data->ionic);
         if (status != VMK_OK) {
                 ionic_err("ionic_reset() failed, status: %s",
                           vmk_StatusToString(status));
@@ -596,13 +725,6 @@ ionic_en_attach(vmk_Device device)                                // IN
         if (status != VMK_OK) {
                 ionic_err("ionic_identify() failed, status: %s",
                           vmk_StatusToString(status));
-        } else {
-	        ionic_info("ASIC: %s rev: 0x%X serial num: %s fw version: %s\n",
-		           ionic_dev_asic_name(priv_data->ionic.ident->dev.asic_type),
-        	           priv_data->ionic.ident->dev.asic_rev,
-	                   priv_data->ionic.ident->dev.serial_num,
-		           priv_data->ionic.ident->dev.fw_version);
-        	ionic_info("ionic_en_attach() completed successfully!");
         }
 
         return status;
@@ -660,6 +782,29 @@ ionic_en_scan(vmk_Device device)                                  // IN
                           "status: %s", vmk_StatusToString(status));
                 return status;
         }
+
+	/* Configure the ports */
+	status = ionic_port_identify(&priv_data->ionic);
+	if (status != VMK_OK) {
+		ionic_err("Cannot identify port: %s, aborting",
+                        vmk_StatusToString(status));
+		return status;
+	}
+
+	status = ionic_port_init(&priv_data->ionic);
+	if (status != VMK_OK) {
+		ionic_err("Cannot init port: %s, aborting",
+                        vmk_StatusToString(status));
+		return status;
+	}
+
+        /* Configure LIFs */
+	status = ionic_lif_identify(&priv_data->ionic);
+	if (status != VMK_OK) {
+		ionic_err("Cannot identify LIFs: %s, aborting",
+                        vmk_StatusToString(status));
+		return status;
+	}
 
         status = ionic_lifs_size(&priv_data->ionic);
 	if (status != VMK_OK) {
@@ -763,11 +908,14 @@ ionic_en_detach(vmk_Device device)                                // IN
                 return status;
 	}
 
-        ionic_dma_free(ionic_driver.heap_id,
-                       priv_data->dma_engine_streaming,
-                       sizeof(union identity),
-                       priv_data->ionic.ident,
-                       priv_data->ionic.ident_pa);              
+        status = ionic_reset(&priv_data->ionic);
+        if (status != VMK_OK) {
+                ionic_err("ionic_reset() failed, status: %s",
+                          vmk_StatusToString(status));
+                VMK_ASSERT(0);
+        }
+
+        ionic_port_reset(&priv_data->ionic);
 
         ionic_dma_engine_destroy(priv_data->dma_engine_streaming);
         ionic_dma_engine_destroy(priv_data->dma_engine_coherent);
@@ -776,6 +924,7 @@ ionic_en_detach(vmk_Device device)                                // IN
         if (priv_data->is_lifs_size_compl) {
                 ionic_en_uplink_cleanup(priv_data);
         }
+
 	ionic_pci_stop(priv_data);
 	ionic_heap_free(ionic_driver.heap_id, priv_data);
 

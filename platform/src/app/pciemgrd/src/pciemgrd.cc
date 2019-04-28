@@ -263,7 +263,7 @@ intr_init(void)
 #endif
     }
     if (need_poll_timer) {
-        static evutil_timer timer;
+        static evutil_timer timer = {0};
         evutil_timer_start(&timer, intr_poll, NULL, 0.01, 0.01);
     }
     return 0;

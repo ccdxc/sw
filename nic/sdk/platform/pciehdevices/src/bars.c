@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 #include <assert.h>
 #include <sys/types.h>
@@ -100,6 +102,7 @@ add_common_resource_bar(pciehbars_t *pbars,
 {
     const u_int32_t msixtbl_stride = roundup_power2(intr_msixcfg_size(1));
     const u_int32_t intrctrl_stride = roundup_power2(intr_drvcfg_size(1));
+    const u_int32_t dboff = 0x0800;
     u_int64_t intrctrlsz, msixtblsz, total_barsz, baroff;
     u_int32_t msixtbloff, msixpbaoff, intrs_to_map, intrb;
     pciehbarreg_t preg;
@@ -109,17 +112,16 @@ add_common_resource_bar(pciehbars_t *pbars,
     /*
      * Our minimum bar size is 4*0x1000=16k.  This is for a device with
      * no interrupts.  We allocate a page for each of these regions
-     *     Devcmd Regs (+0x0000)
-     *     Devcmd Doorbell (+0x1000)
-     *     Intr Status Regs (+0x2000) (unused)
-     *     Intr Ctrl Regs (+0x3000) (unused)
+     *     Info Regs, Devcmd Regs (+0x0000)
+     *     Intr Status Regs (+0x1000) (unused)
+     *     Intr Ctrl Regs (+0x2000) (unused)
+     *     (+0x3000 unused)
      *
      * If this device has interrupts (res->intrc > 0)
      * then we have these regions:
-     *     Devcmd Regs (+0x0000)
-     *     Devcmd Doorbell (+0x1000)
-     *     Intr Status Regs (+0x2000)
-     *     Intr Ctrl Regs (+0x3000)
+     *     Info Regs, Devcmd Regs (+0x0000)
+     *     Intr Status Regs (+0x1000)
+     *     Intr Ctrl Regs (+0x2000)
      *     MSIX Interrupt Table
      *     MSIX Interrupt PBA
      *
@@ -127,6 +129,15 @@ add_common_resource_bar(pciehbars_t *pbars,
      * depending on the number of interrupts, but always a multiple of 4k.
      * MSIX Interrupt PBA, if present, is the last 4k region of the bar.
      */
+
+    /*
+     * Expecting both of these fit in first page, each <= 2048.
+     * The addresses must be aligned to at least a 2048 boundary.
+     */
+    assert((res->devinfopa & (2048 - 1)) == 0);
+    assert(res->devinfosz <= 2048);
+    assert((res->devcmdpa & (2048 - 1)) == 0);
+    assert(res->devcmdsz <= 2048);
 
     /* Max MSIX Interrupt Table entries is 2048 per PCIe spec. */
     assert(res->intrc <= 2048);
@@ -141,13 +152,16 @@ add_common_resource_bar(pciehbars_t *pbars,
     /*
      * Total bar size must be a power-of-2 per PCIe spec.
      * The minimum bar size is 16k  if we have no          interrupts.
-     * The common  bar size is 32k  if we have [1-256]     interrupts.
-     * The big     bar size is 64k  if we have [257-1024]  interrupts.
+     * The common  bar size is 32k  if we have [1-384]     interrupts.
+     * The big     bar size is 64k  if we have [385-1024]  interrupts.
      * The maximum bar size is 128k if we have [1025-2048] interrupts.
      */
-    total_barsz = roundup_power2(4 * 0x1000 + intrctrlsz + msixtblsz);
+    total_barsz = roundup_power2(3 * 0x1000 + intrctrlsz + msixtblsz);
 
     /*
+     * PCIe spec recommends putting these on 4k boundaries,
+     * alone without any other resources in those pages.
+     *
      * MSIX Interrupt PBA is the last page of the bar.
      * MSIX Interrupt Table in the page(s) before PBA.
      */
@@ -163,46 +177,60 @@ add_common_resource_bar(pciehbars_t *pbars,
     pbar.cfgidx = 0;
 
     /*****************
-     * +0x0000 Device Cmd Regs 4-byte signature read-only */
+     * +0x0000 Device Info Regs read-only */
     memset(&preg, 0, sizeof(preg));
+    pmt_bar_enc(&preg.pmt,
+                res->port,
+                PMT_TYPE_MEM,
+                0x800, /* pmtsize */
+                0x800, /* prtsize */
+                PMTF_WR);
+    /* 0-size res mapping claims writes but discards them */
+    prt_res_enc(&prt, res->devinfopa, 0, PRT_RESF_PMVDIS);
+    pciehbarreg_add_prt(&preg, &prt);
+    pciehbar_add_reg(&pbar, &preg);
+
+    /*****************
+     * +0x0800 + dboff Device Cmd Regs 4-byte doorbell */
+    memset(&preg, 0, sizeof(preg));
+    preg.baroff = 0x800 + dboff;
     pmt_bar_enc(&preg.pmt,
                 res->port,
                 PMT_TYPE_MEM,
                 0x4,    /* pmtsize */
                 0x4,    /* prtsize */
                 PMTF_WR);
-    /* 0-size res mapping claims writes but discards them */
-    prt_res_enc(&prt, res->devcmdpa, 0, PRT_RESF_PMVDIS);
+    prt_res_enc(&prt, res->devcmdpa + dboff, 4,
+                PRT_RESF_PMVDIS | PRT_RESF_NOTIFY);
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
 
     /*****************
-     * +0x0000 Device Cmd Regs
-     * +0x1000 Device Cmd Doorbell
+     * +0x0000 Device Info Regs
+     * +0x0800 Device Cmd Regs
      */
     memset(&preg, 0, sizeof(preg));
     pmt_bar_enc(&preg.pmt,
                 res->port,
                 PMT_TYPE_MEM,
-                0x2000, /* pmtsize */
-                0x1000, /* prtsize */
+                0x1000, /* pmtsize */
+                0x0800, /* prtsize */
                 PMTF_RW);
-    pmt_bar_setr_prt(&preg.pmt, 12, 1);
+    pmt_bar_setr_prt(&preg.pmt, 11, 1);
 
-    /* +0x0000 Device Cmd Regs */
-    prt_res_enc(&prt, res->devcmdpa, 0x1000, PRT_RESF_PMVDIS);
+    /* +0x0000 Device Info Regs */
+    prt_res_enc(&prt, res->devinfopa, res->devinfosz, PRT_RESF_PMVDIS);
     pciehbarreg_add_prt(&preg, &prt);
 
-    /* +0x1000 Device Cmd Doorbell */
-    prt_res_enc(&prt, res->devcmddbpa, 0x4, (PRT_RESF_NOTIFY |
-                                              PRT_RESF_PMVDIS));
+    /* +0x0800 Device Cmd Regs */
+    prt_res_enc(&prt, res->devcmdpa, res->devcmdsz, PRT_RESF_PMVDIS);
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
 
     /*****************
-     * +0x2000 Interrupt Status reg */
+     * +0x1000 Interrupt Status reg */
     memset(&preg, 0, sizeof(preg));
-    preg.baroff = 0x2000;
+    preg.baroff = 0x1000;
     pmt_bar_enc(&preg.pmt,
                 res->port,
                 PMT_TYPE_MEM,
@@ -217,10 +245,10 @@ add_common_resource_bar(pciehbars_t *pbars,
     pciehbar_add_reg(&pbar, &preg);
 
     /*****************
-     * +0x3000 Interrupt Control regs */
+     * +0x2000 Interrupt Control regs */
     intrs_to_map = res->intrc;
     intrb = res->intrb;
-    baroff = 0x3000;
+    baroff = 0x2000;
     while (intrs_to_map > 0) {
         /*
          * Each page can map 128 intr control regs.
@@ -256,6 +284,7 @@ add_common_resource_bar(pciehbars_t *pbars,
 
     /*****************
      * For common bar sizes (intrs 1-128) these next pages are reserved.
+     * +0x3000 <reserved>
      * +0x4000 <reserved>
      * +0x5000 <reserved>
      * For larger bars with more intrs, these regions contain more intrs.

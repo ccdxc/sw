@@ -8,8 +8,7 @@
 #include <linux/of_platform.h>
 #include "mnet_drv.h"
 
-#define DEVCMD_SIZE             0x1000
-#define DEVCMD_DB_SIZE          0x4
+#define DEVINFO_SIZE            0x1000
 
 #define DRVCFG_SIZE             0x80
 
@@ -56,26 +55,22 @@ struct platform_device *mnet_get_platform_device(struct mnet_dev_t *mnet,
 	char *mnic_name = NULL;
 
 	struct resource mnic_resource[] = {
-		{	/*devcmd*/
+		{ /*devinfo*/
 			.flags    = IORESOURCE_MEM,
-			.start    = req->devcmd_pa,
-			.end    = req->devcmd_pa + DEVCMD_SIZE - 1
-		}, {/*devcmd_db*/
-			.flags    = IORESOURCE_MEM,
-			.start    = req->devcmd_db_pa,
-			.end    = req->devcmd_db_pa + DEVCMD_DB_SIZE - 1
+			.start    = req->regs_pa,
+			.end      = req->regs_pa + DEVINFO_SIZE - 1
 		}, {/*drvcfg/intr_ctrl*/
 			.flags    = IORESOURCE_MEM,
 			.start    = req->drvcfg_pa,
-			.end    = req->drvcfg_pa + DRVCFG_SIZE - 1
+			.end      = req->drvcfg_pa + DRVCFG_SIZE - 1
 		}, {/*msixcfg*/
 			.flags    = IORESOURCE_MEM,
 			.start    = req->msixcfg_pa,
-			.end    = req->msixcfg_pa + MSIXCFG_SIZE - 1
+			.end      = req->msixcfg_pa + MSIXCFG_SIZE - 1
 		}, {/*doorbell*/
 			.flags    = IORESOURCE_MEM,
 			.start    = req->doorbell_pa,
-			.end    = req->doorbell_pa + DOORBELL_PG_SIZE - 1
+			.end      = req->doorbell_pa + DOORBELL_PG_SIZE - 1
 		}
 	};
 

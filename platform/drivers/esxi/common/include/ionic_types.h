@@ -19,7 +19,8 @@
  *****************************************************************************
 */
 
-#define BIT(n)  (1UL << (n))
+#define BIT(n)                  (1UL << (n))
+#define BIT_ULL(n)              (1ULL << (n))
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof *(a))
 #define  __iomem
 #define true 1
@@ -31,9 +32,9 @@ VMK_ASSERT_LIST(ionic_types,
 
 
 typedef vmk_uint8 u8, uint8_t;
-typedef vmk_uint16 u16, uint16_t;
-typedef vmk_uint32 u32, uint32_t;
-typedef vmk_uint64 u64, size_t, uint64_t;
+typedef vmk_uint16 u16, uint16_t, __le16;
+typedef vmk_uint32 u32, uint32_t, __le32;
+typedef vmk_uint64 u64, size_t, uint64_t, __le64;
 typedef vmk_IOA dma_addr_t;
 typedef vmk_Bool bool;
 typedef vmk_Lock spinlock_t;

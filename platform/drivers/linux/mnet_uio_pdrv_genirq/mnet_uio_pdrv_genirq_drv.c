@@ -45,7 +45,7 @@ enum {
 
 static int uio_pdrv_genirq_open(struct uio_info *info, struct inode *inode)
 {
-	struct uio_pdrv_genirq_platdata *priv = info->priv;
+	// struct uio_pdrv_genirq_platdata *priv = info->priv;
 
 	/* Wait until the Runtime PM code has woken up the device */
 	//pm_runtime_get_sync(&priv->pdev->dev);
@@ -54,7 +54,7 @@ static int uio_pdrv_genirq_open(struct uio_info *info, struct inode *inode)
 
 static int uio_pdrv_genirq_release(struct uio_info *info, struct inode *inode)
 {
-	struct uio_pdrv_genirq_platdata *priv = info->priv;
+	// struct uio_pdrv_genirq_platdata *priv = info->priv;
 
 	/* Tell the Runtime PM code that the device has become idle */
 	//pm_runtime_put_sync(&priv->pdev->dev);

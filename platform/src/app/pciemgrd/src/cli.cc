@@ -255,8 +255,10 @@ add_eth_class(const char *type, int argc, char *argv[])
     memset(&pres, 0, sizeof(pres));
     pres.pfres.intrc = 4;
     pres.pfres.intrdmask = 1;
-    pres.pfres.devcmdpa = 0x13e000000;   /* XXX */
+    pres.pfres.devinfopa = 0x13d000000;   /* XXX */
+    pres.pfres.devinfosz = 0x800;   /* XXX */
     pres.pfres.devcmddbpa = pres.pfres.devcmdpa + 0x1000; /* XXX */
+    pres.pfres.devcmdpa = 0x13e000000;   /* XXX */
     name = NULL;
 
     getopt_reset(4, 2);

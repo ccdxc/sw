@@ -13,14 +13,19 @@
 #include "ionic_lif.h"
 #include "ionic_debugfs.h"
 
-#define DEVCMD_BAR      0
-#define DEVCMD_DB_BAR   1
-#define INTR_CTRL_BAR   2
-#define MSIX_CFG_BAR    3
-#define DOORBELL_BAR    4
-#define NUM_OF_BAR      5
+#define DEV_BAR         0
+#define INTR_CTRL_BAR   1
+#define MSIX_CFG_BAR    2
+#define DOORBELL_BAR    3
+#define NUM_OF_BAR      4
 
 #define INTR_MSIXCFG_STRIDE     0x10
+
+typedef struct intr_msixcfg_s {
+	__le64 msgaddr;
+	__le32 msgdata;
+	__le32 vector_ctrl;
+} __attribute__((packed)) intr_msixcfg_t;
 
 void *intr_msixcfg_addr(struct device *mnic_dev, const int intr)
 {
@@ -69,7 +74,7 @@ static void mnic_set_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
 		msg->address_hi, msg->address_lo, msg->data);
 
 	intr_msixcfg(desc->dev, desc->platform.msi_index,
-		     (((uint64_t)msg->address_hi << 32) | msg->address_lo),
+		     (((u64)msg->address_hi << 32) | msg->address_lo),
 		     msg->data, 0/*vctrl*/);
 }
 
@@ -123,20 +128,17 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 	if (num_bars < NUM_OF_BAR)
 		return -EFAULT;
 
-	idev->dev_cmd = ionic->bars[DEVCMD_BAR].vaddr;
-	idev->dev_cmd_db = ionic->bars[DEVCMD_DB_BAR].vaddr;
+	idev->dev_info = ionic->bars[DEV_BAR].vaddr;
+	idev->dev_cmd = ionic->bars[DEV_BAR].vaddr + \
+						offsetof(union dev_regs, devcmd);
 	idev->intr_ctrl = ionic->bars[INTR_CTRL_BAR].vaddr;
 	idev->msix_cfg_base = ionic->bars[MSIX_CFG_BAR].vaddr;
 
 	/* save the idev into dev->platform_data so we can use it later */
 	ionic->dev->platform_data = idev;
 
-#ifdef HAPS
-	idev->ident = ionic->bars[DEVCMD_BAR].vaddr + 0x800;
-#endif
-
-	sig = ioread32(&idev->dev_cmd->signature);
-	if (sig != DEV_CMD_SIGNATURE)
+	sig = ioread32(&idev->dev_info->signature);
+	if (sig != IONIC_DEV_INFO_SIGNATURE)
 		return -EFAULT;
 
 	idev->db_pages = ionic->bars[DOORBELL_BAR].vaddr;
@@ -187,7 +189,7 @@ static void ionic_unmap_bars(struct ionic *ionic)
 
 void __iomem *ionic_bus_map_dbpage(struct ionic *ionic, int page_num)
 {
-	return ionic->bars[DOORBELL_BAR].vaddr;
+	return ionic->idev.db_pages;
 }
 
 void ionic_bus_unmap_dbpage(struct ionic *ionic, void __iomem *page)
@@ -212,6 +214,7 @@ int ionic_probe(struct platform_device *pfdev)
 	ionic->pfdev = pfdev;
 	platform_set_drvdata(pfdev, ionic);
 	ionic->dev = dev;
+	mutex_init(&ionic->dev_cmd_lock);
 
 	ionic->is_mgmt_nic = true;
 
@@ -228,22 +231,14 @@ int ionic_probe(struct platform_device *pfdev)
 	}
 
 	/* Setup platform device */
-
 	err = ionic_map_bars(ionic);
 	if (err)
 		goto err_out_unmap_bars;
 
 	/* Discover ionic dev resources */
-
 	err = ionic_mnic_dev_setup(ionic);
 	if (err) {
 		dev_err(dev, "Cannot setup device, aborting\n");
-		goto err_out_unmap_bars;
-	}
-
-	err = ionic_reset(ionic);
-	if (err) {
-		dev_err(dev, "Cannot reset device, aborting\n");
 		goto err_out_unmap_bars;
 	}
 
@@ -253,21 +248,36 @@ int ionic_probe(struct platform_device *pfdev)
 		goto err_out_unmap_bars;
 	}
 
-	dev_info(dev, "ASIC %s rev 0x%X serial num %s fw version %s txqs = %d rxqs = %d adminqs = %d nintrs = %d\n",
-		 ionic_dev_asic_name(ionic->ident->dev.asic_type),
-		 ionic->ident->dev.asic_rev,
-		 ionic->ident->dev.serial_num,
-		 ionic->ident->dev.fw_version,
-		 ionic->ident->dev.tx_qtype.qid_count,
-		 ionic->ident->dev.rx_qtype.qid_count,
-		 ionic->ident->dev.admin_qtype.qid_count,
-		 ionic->ident->dev.nintrs);
+	err = ionic_init(ionic);
+	if (err) {
+		dev_err(dev, "Cannot init device, aborting\n");
+		goto err_out_unmap_bars;
+	}
+
+	/* Configure the ports */
+	err = ionic_port_identify(ionic);
+	if (err) {
+		dev_err(dev, "Cannot identify port: %d, aborting\n", err);
+		goto err_out_unmap_bars;
+	}
+
+	err = ionic_port_init(ionic);
+	if (err) {
+		dev_err(dev, "Cannot init port: %d, aborting\n", err);
+		goto err_out_unmap_bars;
+	}
 
 	/* Allocate and init LIFs, creating a netdev per LIF */
+	err = ionic_lif_identify(ionic);
+	if (err) {
+		dev_err(dev, "Cannot identify LIFs: %d, aborting\n", err);
+		goto err_out_unmap_bars;
+	}
+
 	err = ionic_lifs_size(ionic);
 	if (err) {
 		dev_err(dev, "Cannot size LIFs, aborting\n");
-		goto err_out_forget_identity;
+		goto err_out_unmap_bars;
 	}
 
 	err = ionic_lifs_alloc(ionic);
@@ -297,11 +307,10 @@ err_out_deinit_lifs:
 err_out_free_lifs:
 	ionic_lifs_free(ionic);
 	ionic_bus_free_irq_vectors(ionic);
-err_out_forget_identity:
-	ionic_forget_identity(ionic);
 err_out_unmap_bars:
 	ionic_unmap_bars(ionic);
 	ionic_debugfs_del_dev(ionic);
+	mutex_destroy(&ionic->dev_cmd_lock);
 	platform_set_drvdata(pfdev, NULL);
 
 	return err;
@@ -317,10 +326,15 @@ int ionic_remove(struct platform_device *pfdev)
 		ionic_lifs_unregister(ionic);
 		ionic_lifs_deinit(ionic);
 		ionic_lifs_free(ionic);
+		ionic_port_reset(ionic);
+		ionic_reset(ionic);
 		ionic_bus_free_irq_vectors(ionic);
-		ionic_forget_identity(ionic);
 		ionic_unmap_bars(ionic);
 		ionic_debugfs_del_dev(ionic);
+
+		mutex_destroy(&ionic->dev_cmd_lock);
+
+		dev_info(ionic->dev, "removed\n");
 	}
 
 	return 0;

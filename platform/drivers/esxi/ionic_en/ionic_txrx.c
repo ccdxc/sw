@@ -33,9 +33,8 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
         struct rx_stats *stats = q_to_rx_stats(q);
         dma_addr_t dma_addr;
         vmk_PktRssType hash_type = VMK_PKT_RSS_TYPE_NONE;
-#ifdef HAPS
+#ifdef IONIC_DEBUG
         vmk_uint32 mtu = 0;
-//        __sum16 csum;
 #endif
 
         if (comp->status) {
@@ -45,7 +44,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 
         uplink_handle = q->lif->uplink_handle;
 
-#ifdef HAPS
+#ifdef IONIC_DEBUG
         IONIC_EN_SHARED_AREA_BEGIN_READ(uplink_handle);
         mtu = uplink_handle->uplink_shared_data.mtu;
         IONIC_EN_SHARED_AREA_END_READ(uplink_handle);
@@ -80,13 +79,8 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 
         vmk_PktFrameLenSet(pkt, comp->len);
 
-#ifdef HAPS
-        //csum = ip_compute_csum(skb->data, skb->len);
-#endif
-//        skb_record_rx_queue(skb, q->index);
-
         if (priv_data->uplink_handle.hw_features & ETH_HW_RX_HASH) {
-                switch (comp->pkt_type) {
+                switch (comp->pkt_type_color & IONIC_RXQ_COMP_PKT_TYPE_MASK) {
                 case PKT_TYPE_IPV4:
                         hash_type = VMK_PKT_RSS_TYPE_IPV4;
                         break;
@@ -114,14 +108,14 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                 }
         }
 
-        if ((uplink_handle->hw_features & ETH_HW_RX_CSUM) &&
-            comp->csum_calc) {
-                if (comp->csum_tcp_bad ||
-                    comp->csum_udp_bad ||
-                    comp->csum_ip_bad) {
+        if (uplink_handle->hw_features & ETH_HW_RX_CSUM) {
+                if ((comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_TCP_BAD) ||
+                    (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_UDP_BAD) ||
+                    (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_IP_BAD)) {
                        stats->csum_err++;
                 } else {
                         vmk_PktSetCsumVfd(pkt);
+                        // FIXME: This driver does not use CHECKSUM_COMPLETE
                         stats->csum_complete++;
                 }
         } else {
@@ -129,7 +123,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
         }
 
         if (uplink_handle->hw_features & ETH_HW_VLAN_RX_STRIP) {
-                if (comp->V) {
+                if (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_VLAN) {
                         vmk_PktVlanIDSet(pkt, comp->vlan_tci & IONIC_VLAN_MASK);
                         vmk_PktPrioritySet(pkt,
                                            (comp->vlan_tci >> IONIC_VLAN_PRIO_SHIFT) &
@@ -154,7 +148,7 @@ ionic_rx_service(struct cq *cq,
 {
         struct rxq_comp *comp = cq_info->cq_desc;
 
-        if (comp->color != cq->done_color)
+        if (!color_match(comp->pkt_type_color, cq->done_color))
                 return VMK_FALSE;
 
         ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
@@ -425,10 +419,14 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
         struct tx_stats *stats = q_to_tx_stats(q);
         vmk_PktHandle *pkt = (vmk_PktHandle *) cb_arg;
         unsigned int i;
+        u8 opcode, flags, nsge;
+        u64 addr;
 
         cb_arg = NULL;
 
-        for (i = 0; i < desc->num_sg_elems; i++, elem++)
+        decode_txq_desc_cmd(desc->cmd, &opcode, &flags, &nsge, &addr);
+
+        for (i = 0; i < nsge; i++, elem++)
                 ionic_tx_unmap_frag(q,
                                     elem->len,
                                     (vmk_IOA) elem->addr);
@@ -457,7 +455,7 @@ ionic_tx_service(struct cq *cq,
 {
         struct txq_comp *comp = cq_info->cq_desc;
 
-        if (comp->color != cq->done_color)
+	if (!color_match(comp->color, cq->done_color))
                 return VMK_FALSE;
 
         ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
@@ -518,25 +516,25 @@ ionic_rx_netpoll(vmk_AddrCookie priv,
 }
 
 static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
-                              vmk_PktHandle *pkt, unsigned int hdrlen,
-                              unsigned int mss, u16 vlan_tci, bool has_vlan,
-                              bool outer_csum, bool start, bool done)
+                              vmk_PktHandle *pkt,
+                              dma_addr_t addr, u8 nsge, u16 len,
+                              unsigned int hdrlen, unsigned int mss,
+                              bool outer_csum,
+                              u16 vlan_tci, bool has_vlan,
+                              bool start, bool done)
 {
-        desc->opcode = TXQ_DESC_OPCODE_TSO;
+        u8 flags = 0;
+        flags |= has_vlan ? IONIC_TXQ_DESC_FLAG_VLAN : 0;
+        flags |= outer_csum ? IONIC_TXQ_DESC_FLAG_ENCAP : 0;
+        flags |= start ? IONIC_TXQ_DESC_FLAG_TSO_SOT : 0;
+        flags |= done ? IONIC_TXQ_DESC_FLAG_TSO_EOT : 0;
+
+        desc->cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_TSO,
+                                        flags, nsge, addr);
+        desc->len = len;
         desc->vlan_tci = vlan_tci;
-
-        if (start) {
-                desc->hdr_len = hdrlen;
-        }
-
-        desc->V = has_vlan;
-        desc->C = 1;
-        desc->O = outer_csum;
-        desc->S = start;
-        desc->E = done;
-        if (!start) {
-                desc->mss = mss;
-        }
+        desc->hdr_len = hdrlen;
+        desc->mss = mss;
 
         if (done) {
                 ionic_q_post(q, VMK_TRUE, /* !skb->xmit_more*/ ionic_tx_clean, pkt);
@@ -566,9 +564,12 @@ ionic_tx_tso(struct queue *q,
         struct txq_desc *desc;
         struct txq_sg_elem *elem;
         const vmk_SgElem *frag;
+        dma_addr_t desc_addr;
+        u16 desc_len;
+        u8 desc_nsge;
         unsigned int hdrlen;
         unsigned int mss = ctx->mss;
-        unsigned int nfrags = ctx->nr_frags; 
+        unsigned int nfrags = ctx->nr_frags - 1; 
         unsigned int len_left;
         unsigned int frag_left = 0;
         unsigned int left;
@@ -601,36 +602,25 @@ ionic_tx_tso(struct queue *q,
 
         while (left > 0) {
                 len = IONIC_MIN(seglen, left);
-
                 frag_left = seglen - len;
-                
-                desc->addr = ionic_tx_map_single(q,
-                                                 vmk_PktFrameMappedPointerGet(pkt) + offset,
-                                                 len);
-                if (!desc->addr)
+                desc_addr = ionic_tx_map_single(q,
+                                               vmk_PktFrameMappedPointerGet(pkt) + offset,
+                                               len);
+                if (!desc_addr)
                         goto err_out_abort;
-                desc->len = len;
-                desc->num_sg_elems = 0;
+                desc_len = len;
+                desc_nsge = 0;
                 left -= len;
                 offset += len;
-
-                if (offset == vmk_PktFrameLenGet(pkt)) {
-                        nfrags--;
-                        stats->frags++;
-                        done = VMK_TRUE;
-
-                        goto done_pkt;
-                }
-
-                if (nfrags > 0 && frag_left > 0) {
+                if (nfrags > 0 && frag_left > 0)
                         continue;
-                }
-
                 done = (nfrags == 0 && left == 0);
-
-done_pkt:
-                ionic_tx_tso_post(q, desc, pkt, hdrlen, mss, vlan_tci,
-                                  has_vlan, outer_csum, start, done);
+                ionic_tx_tso_post(q, desc, pkt,
+                                  desc_addr, desc_nsge, desc_len,
+                                  hdrlen, mss,
+                                  outer_csum,
+                                  vlan_tci, has_vlan,
+                                  start, done);
                 total_pkts++;
                 total_bytes += start ? len : len + hdrlen;
                 desc = ionic_tx_tso_next(q, &elem);
@@ -638,16 +628,11 @@ done_pkt:
                 seglen = mss;
         }
 
-
-        if (nfrags > 1) {
-                nfrags--;
-        }
-
-
         for (i = 1; len_left && nfrags; i++) { 
                 frag = vmk_PktSgElemGet(pkt, i);
+                VMK_ASSERT(frag);
                 offset = 0;
-                left = frag->length - offset;
+                left = frag->length;
                 len_left -= left;
                 nfrags--;
                 stats->frags++;
@@ -662,16 +647,18 @@ done_pkt:
                                         goto err_out_abort;
                                 elem->len = len;
                                 elem++;
-                                desc->num_sg_elems++;
+                                desc_nsge++;
                                 left -= len;
                                 offset += len;
-
                                 if (nfrags > 0 && frag_left > 0)
                                         continue;
                                 done = (nfrags == 0 && left == 0);
-                                ionic_tx_tso_post(q, desc, pkt, hdrlen, mss,
-                                                  vlan_tci, has_vlan,
-                                                  outer_csum, start, done);
+                                ionic_tx_tso_post(q, desc, pkt,
+                                                desc_addr, desc_nsge, desc_len,
+                                                hdrlen, mss,
+                                                outer_csum,
+                                                vlan_tci, has_vlan,
+                                                start, done);
                                 total_pkts++;
                                 total_bytes += start ? len : len + hdrlen;
                                 desc = ionic_tx_tso_next(q, &elem);
@@ -679,21 +666,23 @@ done_pkt:
                         } else {
                                 len = IONIC_MIN(mss, left);
                                 frag_left = mss - len;
-                                desc->addr = ionic_tx_map_frag(q, frag,
-                                                               offset, len);
-                                if (!desc->addr)
+                                desc_addr = ionic_tx_map_frag(q, frag,
+                                                              offset, len);
+                                if (!desc_addr)
                                         goto err_out_abort;
-                                desc->len = len;
-                                desc->num_sg_elems = 0;
+                                desc_len = len;
+                                desc_nsge = 0;
                                 left -= len;
                                 offset += len;
-
                                 if (nfrags > 0 && frag_left > 0)
                                         continue;
                                 done = (nfrags == 0 && left == 0);
-                                ionic_tx_tso_post(q, desc, pkt, hdrlen, mss,
-                                                  vlan_tci, has_vlan,
-                                                  outer_csum, start, done);
+                                ionic_tx_tso_post(q, desc, pkt,
+                                                desc_addr, desc_nsge, desc_len,
+                                                hdrlen, mss,
+                                                outer_csum,
+                                                vlan_tci, has_vlan,
+                                                start, done);
                                 total_pkts++;
                                 total_bytes += start ? len : len + hdrlen;
                                 desc = ionic_tx_tso_next(q, &elem);
@@ -728,6 +717,7 @@ ionic_tx_calc_csum(struct queue *q,
         struct tx_stats *stats = q_to_tx_stats(q);
         vmk_Bool is_insert_vlan;
         dma_addr_t addr;
+        u8 flags = 0;
 
         addr = ionic_tx_map_single(q,
                                    vmk_PktFrameMappedPointerGet(pkt),
@@ -739,31 +729,26 @@ ionic_tx_calc_csum(struct queue *q,
         }
 
         is_insert_vlan = !!(ctx->offload_flags & IONIC_TX_VLAN);
-
-        desc->opcode = TXQ_DESC_OPCODE_CALC_CSUM_TCPUDP;
-        desc->num_sg_elems = ctx->nr_frags - 1;
-        desc->len = ctx->mapped_len;
-        desc->addr = addr;
-
         if (is_insert_vlan) {
+                flags |= IONIC_TXQ_DESC_FLAG_VLAN;
                 desc->vlan_tci = (ctx->vlan_id & IONIC_VLAN_MASK) |
                                  (ctx->priority << IONIC_VLAN_PRIO_SHIFT);
         } else {
                 desc->vlan_tci = 0;
         }
 
-        desc->hdr_len = 0;
-//        desc->csum_offset = 0; 
-        desc->V = is_insert_vlan;
-        desc->C = 1;
-//        desc->O = ctx->is_encap;
         /* Since ESXi doesn't has API to check if we need l3 csum,
          * we make it follow the l4 csum value */
-        desc->l3_csum = VMK_TRUE; 
-        desc->l4_csum = VMK_TRUE;
-//        if (skb->csum_not_inet)
-//                stats->crc32_csum++;
-//        else
+        flags |= IONIC_TXQ_DESC_FLAG_CSUM_L3;
+        flags |= IONIC_TXQ_DESC_FLAG_CSUM_L4;
+
+        if (ctx->is_encap)
+                flags |= IONIC_TXQ_DESC_FLAG_ENCAP;
+
+        desc->cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_CSUM_HW,
+                        flags, ctx->nr_frags - 1, addr);
+        desc->len = ctx->mapped_len;
+
         stats->csum++;
 
         return VMK_OK;
@@ -778,6 +763,7 @@ ionic_tx_calc_no_csum(struct queue *q,
         struct tx_stats *stats = q_to_tx_stats(q);
         vmk_Bool is_insert_vlan;
         dma_addr_t addr;
+        u8 flags = 0;
 
         addr = ionic_tx_map_single(q,
                                    vmk_PktFrameMappedPointerGet(pkt),
@@ -789,24 +775,22 @@ ionic_tx_calc_no_csum(struct queue *q,
         }
 
         is_insert_vlan = !!(ctx->offload_flags & IONIC_TX_VLAN);
-
-        desc->opcode = TXQ_DESC_OPCODE_CALC_NO_CSUM;
-        desc->num_sg_elems = ctx->nr_frags - 1;
-        desc->len = ctx->mapped_len;
-        desc->addr = addr;
-
         if (is_insert_vlan) {
+                flags |= IONIC_TXQ_DESC_FLAG_VLAN;
                 desc->vlan_tci = (ctx->vlan_id & IONIC_VLAN_MASK) |
                                  (ctx->priority << IONIC_VLAN_PRIO_SHIFT);
         } else {
                 desc->vlan_tci = 0;
         }
 
-        desc->hdr_len = 0;
-        desc->csum_offset = 0;
-        desc->V = is_insert_vlan;
-        desc->C = 1;
-//        desc->O = ctx->is_encap;
+        if (ctx->is_encap)
+                flags |= IONIC_TXQ_DESC_FLAG_ENCAP;
+
+        desc->cmd = encode_txq_desc_cmd( IONIC_TXQ_DESC_OPCODE_CSUM_NONE,
+                                flags,
+                                ctx->nr_frags - 1,
+                                addr);
+        desc->len = ctx->mapped_len;
 
         stats->no_csum++;
 
@@ -1010,25 +994,26 @@ ionic_tx_descs_needed(struct queue *q,
 
         ctx->is_tso_needed = vmk_PktIsLargeTcpPacket(orig_pkt);
         ctx->nr_frags = vmk_PktSgArrayGet(orig_pkt)->numElems;
-
         ctx->frame_len = vmk_PktFrameLenGet(orig_pkt);
+
+        /* we need atleast one descriptor to send a packet */
+        *num_tx_descs = 1;
 
         /* If TSO, need roundup(len/mss) descs */
         if (ctx->is_tso_needed) {
                 ctx->mss = vmk_PktGetLargeTcpPacketMss(orig_pkt);
-                *num_tx_descs = (ctx->frame_len / ctx->mss) + 1;
+                /* we need one additional descriptor per tso segment */
+                *num_tx_descs += (ctx->frame_len / ctx->mss);
 
-                if (ctx->nr_frags > IONIC_TX_MAX_SG_ELEMS) {
+                if (ctx->nr_frags > IONIC_TX_MAX_SG_ELEMS + 1) {
                         goto linearize;
                 } else {
                         goto out;
                 }
         }
 
-        *num_tx_descs = 1;
-
         /* If non-TSO, just need 1 desc and nr_frags sg elems */
-        if (ctx->nr_frags <= IONIC_TX_MAX_SG_ELEMS) {
+        if (ctx->nr_frags <= IONIC_TX_MAX_SG_ELEMS + 1) {
                 goto out;
         }
 

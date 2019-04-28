@@ -3,7 +3,7 @@ OBJECTS = ddd.o
 default: ddd
 
 %.o: %.c
-	gcc -c $< -o $@
+	gcc -I ../../../../../common -c $< -o $@
 
 program: $(OBJECTS)
 	gcc $(OBJECTS) -o $@

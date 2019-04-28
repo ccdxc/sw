@@ -135,7 +135,7 @@ ionic_en_queue_apply_filter(vmk_AddrCookie driver_data,
                             vmk_UplinkQueueID uplink_qid,
                             vmk_UplinkQueueFilter *q_filter,
                             vmk_UplinkQueueFilterID *fid,
-                            vmk_uint32 *pair_hw_qid);
+                            vmk_uint32 *pair_hw_index);
 
 VMK_ReturnStatus
 ionic_en_queue_remove_filter(vmk_AddrCookie driver_data,

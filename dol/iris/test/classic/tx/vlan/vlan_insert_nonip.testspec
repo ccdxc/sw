@@ -58,7 +58,7 @@ descriptors:
             _buf  : ref://testcase/buffers/id=BUF1
             addr  : ref://testcase/buffers/id=BUF1/addr
             len   : ref://testcase/buffers/id=BUF1/size
-            V     : 1
+            vlan_insert : 1
             vlan_tci : callback://networking/packets/GetVlanId
 
     - descriptor:

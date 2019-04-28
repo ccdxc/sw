@@ -17,47 +17,6 @@
 
 #define IONIC_MIN_MTU           1500 
 #define IONIC_MAX_MTU           9000
-#define HAPS
-
-#pragma pack(push, 1)
-
-union dev_cmd {
-        u32 words[16];
-        struct admin_cmd cmd;
-        struct nop_cmd nop;
-        struct reset_cmd reset;
-        struct hang_notify_cmd hang_notify;
-        struct identify_cmd identify;
-        struct lif_init_cmd lif_init;
-        struct adminq_init_cmd adminq_init;
-        struct port_config_cmd port_config;
-};
-
-union dev_cmd_comp {
-        u32 words[4];
-        u8 status;
-        struct admin_comp comp;
-        struct nop_comp nop;
-        struct reset_comp reset;
-        struct hang_notify_comp hang_notify;
-        struct identify_comp identify;
-        struct lif_init_comp lif_init;
-        struct adminq_init_comp adminq_init;
-        struct port_config_comp port_config;
-};
-
-struct dev_cmd_regs {
-        u32 signature;
-        u32 done;
-        union dev_cmd cmd;
-        union dev_cmd_comp comp;
-};
-
-struct dev_cmd_db {
-        u32 v;
-};
-
-#define IONIC_BARS_MAX          6
 
 struct ionic_dev_bar {
         void __iomem *vaddr;
@@ -66,199 +25,114 @@ struct ionic_dev_bar {
         int res_index;
 };
 
-/**
- * struct doorbell - Doorbell register layout
- * @p_index: Producer index
- * @ring:    Selects the specific ring of the queue to update.
- *           Type-specific meaning:
- *              ring=0: Default producer/consumer queue.
- *              ring=1: (CQ, EQ) Re-Arm queue.  RDMA CQs
- *              send events to EQs when armed.  EQs send
- *              interrupts when armed.
- * @qid:     The queue id selects the queue destination for the
- *           producer index and flags.
- */
-struct doorbell {
-        u16 p_index;
-        u8 ring:3;
-        u8 rsvd:5;
-        u8 qid_lo;
-        u16 qid_hi;
-        u16 rsvd2;
-};
-
-#define INTR_CTRL_REGS_MAX      64
-#define INTR_CTRL_COAL_MAX      0x3F
-
-/**
- * struct intr_ctrl - Interrupt control register
- * @coalescing_init:  Coalescing timer initial value, in
- *                    device units.  Use @identity->intr_coal_mult
- *                    and @identity->intr_coal_div to convert from
- *                    usecs to device units:
- *
- *                      coal_init = coal_usecs * coal_mutl / coal_div
- *
- *                    When an interrupt is sent the interrupt
- *                    coalescing timer current value
- *                    (@coalescing_curr) is initialized with this
- *                    value and begins counting down.  No more
- *                    interrupts are sent until the coalescing
- *                    timer reaches 0.  When @coalescing_init=0
- *                    interrupt coalescing is effectively disabled
- *                    and every interrupt assert results in an
- *                    interrupt.  Reset value: 0.
- * @mask:             Interrupt mask.  When @mask=1 the interrupt
- *                    resource will not send an interrupt.  When
- *                    @mask=0 the interrupt resource will send an
- *                    interrupt if an interrupt event is pending
- *                    or on the next interrupt assertion event.
- *                    Reset value: 1.
- * @int_credits:      Interrupt credits.  This register indicates
- *                    how many interrupt events the hardware has
- *                    sent.  When written by software this
- *                    register atomically decrements @int_credits
- *                    by the value written.  When @int_credits
- *                    becomes 0 then the "pending interrupt" bit
- *                    in the Interrupt Status register is cleared
- *                    by the hardware and any pending but unsent
- *                    interrupts are cleared.
- *                    The upper 2 bits are special flags:
- *                       Bits 0-15: Interrupt Events -- Interrupt
- *                       event count.
- *                       Bit 16: @unmask -- When this bit is
- *                       written with a 1 the interrupt resource
- *                       will set mask=0.
- *                       Bit 17: @coal_timer_reset -- When this
- *                       bit is written with a 1 the
- *                       @coalescing_curr will be reloaded with
- *                       @coalescing_init to reset the coalescing
- *                       timer.
- * @mask_on_assert:   Automatically mask on assertion.  When
- *                    @mask_on_assert=1 the interrupt resource
- *                    will set @mask=1 whenever an interrupt is
- *                    sent.  When using interrupts in Legacy
- *                    Interrupt mode the driver must select
- *                    @mask_on_assert=0 for proper interrupt
- *                    operation.
- * @coalescing_curr:  Coalescing timer current value, in
- *                    microseconds.  When this value reaches 0
- *                    the interrupt resource is again eligible to
- *                    send an interrupt.  If an interrupt event
- *                    is already pending when @coalescing_curr
- *                    reaches 0 the pending interrupt will be
- *                    sent, otherwise an interrupt will be sent
- *                    on the next interrupt assertion event.
- */
-struct intr_ctrl {
-        u32 coalescing_init:6;
-        u32 rsvd:26;
-        u32 mask:1;
-        u32 rsvd2:31;
-        u32 int_credits:16;
-        u32 unmask:1;
-        u32 coal_timer_reset:1;
-        u32 rsvd3:14;
-        u32 mask_on_assert:1;
-        u32 rsvd4:31;
-        u32 coalescing_curr:6;
-        u32 rsvd5:26;
-        u32 rsvd6[3];
-};
-
-#define intr_to_coal(intr_ctrl)                 (void *)((u8 *)(intr_ctrl) + 0)
-#define intr_to_mask(intr_ctrl)                 (void *)((u8 *)(intr_ctrl) + 4)
-#define intr_to_credits(intr_ctrl)              (void *)((u8 *)(intr_ctrl) + 8)
-#define intr_to_mask_on_assert(intr_ctrl)       (void *)((u8 *)(intr_ctrl) + 12)
-
-struct intr_status {
-        u32 status[2];
-};
-
-#pragma pack(pop)
-
 static inline void ionic_struct_size_checks(void)
 {
-        VMK_ASSERT_ON_COMPILE(sizeof(struct doorbell) == 8);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct intr_ctrl) == 32);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct intr_status) == 8);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct admin_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct admin_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct nop_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct nop_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct reset_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct reset_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct hang_notify_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct hang_notify_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct identify_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct identify_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(union identity) == 4096);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct lif_init_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct lif_init_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct adminq_init_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct adminq_init_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct txq_init_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct txq_init_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct rxq_init_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct rxq_init_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct txq_desc) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct txq_sg_desc) == 256);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct txq_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct rxq_desc) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct rxq_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct features_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct features_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct q_enable_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(q_enable_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct q_disable_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(q_disable_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct notifyq_init_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct notifyq_init_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct notifyq_event) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct link_change_event) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct reset_event) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct heartbeat_event) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct log_event) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct notifyq_cmd) == 4);
-        VMK_ASSERT_ON_COMPILE(sizeof(union notifyq_comp) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct station_mac_addr_get_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct station_mac_addr_get_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct rx_mode_set_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(rx_mode_set_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct mtu_set_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(mtu_set_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct rx_filter_add_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct rx_filter_add_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct rx_filter_del_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(rx_filter_del_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct stats_dump_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct stats_dump_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct rss_hash_set_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(rss_hash_set_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct rss_indir_set_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(rss_indir_set_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct debug_q_dump_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct debug_q_dump_comp) == 16);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct rdma_reset_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(struct rdma_queue_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(union adminq_cmd) == 64);
-        VMK_ASSERT_ON_COMPILE(sizeof(union adminq_comp) == 16);
+	/* Registers */
+	VMK_ASSERT_ON_COMPILE(sizeof(struct doorbell) == 8);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct intr_ctrl) == 32);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct intr_status) == 8);
+
+	VMK_ASSERT_ON_COMPILE(sizeof(union dev_regs) == 4096);
+	VMK_ASSERT_ON_COMPILE(sizeof(union dev_info_regs) == 2048);
+	VMK_ASSERT_ON_COMPILE(sizeof(union dev_cmd_regs) == 2048);
+
+	VMK_ASSERT_ON_COMPILE(sizeof(struct port_stats) == 1024);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_stats) == 1024);
+
+	VMK_ASSERT_ON_COMPILE(sizeof(struct admin_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct admin_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct nop_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct nop_comp) == 16);
+
+	/* Device commands */
+	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_identify_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_identify_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_init_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_init_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_reset_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_reset_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_getattr_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_getattr_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_setattr_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct dev_setattr_comp) == 16);
+
+	/* Port commands */
+	VMK_ASSERT_ON_COMPILE(sizeof(struct port_identify_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct port_identify_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct port_init_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct port_init_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct port_reset_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct port_reset_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct port_getattr_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct port_getattr_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct port_setattr_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct port_setattr_comp) == 16);
+
+	/* LIF commands */
+	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_init_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_init_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_reset_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(lif_reset_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_getattr_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_getattr_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_setattr_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct lif_setattr_comp) == 16);
+
+	VMK_ASSERT_ON_COMPILE(sizeof(struct q_init_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct q_init_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct q_control_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(q_control_comp) == 16);
+
+	VMK_ASSERT_ON_COMPILE(sizeof(struct rx_mode_set_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(rx_mode_set_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct rx_filter_add_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct rx_filter_add_comp) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct rx_filter_del_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(rx_filter_del_comp) == 16);
+
+	/* RDMA commands */
+	VMK_ASSERT_ON_COMPILE(sizeof(struct rdma_reset_cmd) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct rdma_queue_cmd) == 64);
+
+	/* Events */
+	VMK_ASSERT_ON_COMPILE(sizeof(struct notifyq_cmd) == 4);
+	VMK_ASSERT_ON_COMPILE(sizeof(union notifyq_comp) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct notifyq_event) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct link_change_event) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct reset_event) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct heartbeat_event) == 64);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct log_event) == 64);
+
+	/* I/O */
+	VMK_ASSERT_ON_COMPILE(sizeof(struct txq_desc) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct txq_sg_desc) == 128);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct txq_comp) == 16);
+
+	VMK_ASSERT_ON_COMPILE(sizeof(struct rxq_desc) == 16);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct rxq_sg_desc) == 128);
+	VMK_ASSERT_ON_COMPILE(sizeof(struct rxq_comp) == 16);
 }
 
 struct ionic_dev {
-        struct dev_cmd_regs __iomem *dev_cmd;
-        struct dev_cmd_db __iomem *dev_cmd_db;
+		union dev_info_regs __iomem *dev_info;
+		union dev_cmd_regs __iomem *dev_cmd;
+
         struct doorbell __iomem *db_pages;
         dma_addr_t phy_db_pages;
+
         struct intr_ctrl __iomem *intr_ctrl;
         struct intr_status __iomem *intr_status;
+
         vmk_Mutex cmb_inuse_lock; /* for cmb_inuse */
         unsigned long *cmb_inuse;
         dma_addr_t phy_cmb_pages;
         uint32_t cmb_npages;
-#ifdef HAPS
-        union identity __iomem *ident;
-#endif
+
+        struct port_info *port_info;
+        u32 port_info_sz;
+        dma_addr_t port_info_pa;
+
+        u8 port_index;
 };
 
 struct cq_info {
@@ -269,6 +143,7 @@ struct cq_info {
 };
 
 struct queue;
+struct qcq;
 struct desc_info;
 
 typedef void (*desc_cb)(struct queue *q, struct desc_info *desc_info,
@@ -290,7 +165,10 @@ struct queue {
         char name[QUEUE_NAME_MAX_SZ];
         struct ionic_dev *idev;
         struct lif *lif;
-        unsigned int index;
+	unsigned int index;
+	unsigned int type;
+	unsigned int hw_index;
+	unsigned int hw_type;
         void *base;
         void *sg_base;
         dma_addr_t base_pa;
@@ -304,8 +182,6 @@ struct queue {
         struct doorbell __iomem *db;
         void *nop_desc;
         unsigned int pid;
-        unsigned int qid;
-        unsigned int qtype;
 };
 
 #define INTR_INDEX_NOT_ASSIGNED         (-1)
@@ -332,27 +208,37 @@ struct cq {
         bool done_color;
 };
 
-
-VMK_ReturnStatus
-ionic_dev_setup(struct ionic_dev *idev, struct ionic_dev_bar bars[],
-                unsigned int num_bars);
 struct ionic;
-inline void
-ionic_dev_clean(struct ionic *ionic);
 
-union dev_cmd; //Need to remove it
+VMK_ReturnStatus ionic_dev_setup(struct ionic *ionic);
+void ionic_dev_clean(struct ionic *ionic);
+
 void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
 u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
+
+void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver);
+void ionic_dev_cmd_init(struct ionic_dev *idev);
 void ionic_dev_cmd_reset(struct ionic_dev *idev);
-void ionic_dev_cmd_port_config(struct ionic_dev *idev, struct port_config *pc);
-void ionic_dev_cmd_hang_notify(struct ionic_dev *idev);
-void ionic_dev_cmd_identify(struct ionic_dev *idev, u16 ver, dma_addr_t addr);
-void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u32 index);
-void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
-                               unsigned int index, unsigned int lif_index,
-                               unsigned int intr_index);
+
+void ionic_dev_cmd_port_identify(struct ionic_dev *idev);
+void ionic_dev_cmd_port_init(struct ionic_dev *idev);
+void ionic_dev_cmd_port_reset(struct ionic_dev *idev);
+void ionic_dev_cmd_port_state(struct ionic_dev *idev, uint8_t state);
+void ionic_dev_cmd_port_speed(struct ionic_dev *idev, uint32_t speed);
+void ionic_dev_cmd_port_mtu(struct ionic_dev *idev, uint32_t mtu);
+void ionic_dev_cmd_port_autoneg(struct ionic_dev *idev, uint8_t an_enable);
+void ionic_dev_cmd_port_fec(struct ionic_dev *idev, uint8_t fec_type);
+void ionic_dev_cmd_port_pause(struct ionic_dev *idev, uint8_t pause_type);
+void ionic_dev_cmd_port_loopback(struct ionic_dev *idev, uint8_t loopback_mode);
+
+void ionic_dev_cmd_lif_identify(struct ionic_dev *idev, u8 type, u8 ver);
+void ionic_dev_cmd_lif_init(struct ionic_dev *idev, u16 lif_index,
+	dma_addr_t addr);
+void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u16 lif_index);
+void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
+	u16 lif_index, u16 intr_index);
 
 char *ionic_dev_asic_name(u8 asic_type);
 struct doorbell __iomem *ionic_db_map(struct ionic_dev *idev, struct queue *q);

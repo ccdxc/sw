@@ -33,8 +33,8 @@
 #include "ionic_txrx.h"
 #include "ionic_en_mq.h"
 #include "ionic_api.h"
+
 //#define ADMINQ
-#define HAPS
 #define DRV_DESCRIPTION       "Pensando Ethernet NIC Driver"
 #define DRV_VERSION           "0.8"
 #define DRV_REL_DATE          "Mar-31-2019"
@@ -87,13 +87,10 @@ struct ionic_en_device {
 struct ionic {
         struct ionic_en_device en_dev;
         struct dentry *dentry;
-	vmk_uint32 bar0_size;
+        vmk_uint32 bar0_size;
         struct ionic_dev_bar bars[IONIC_BARS_MAX];
         unsigned int num_bars;
-        union identity *ident;
-        dma_addr_t ident_pa;
-//        struct list_head lifs;
-        //TODO: ADD LOCK TO PROTECT LIFS
+        struct identity ident;
         vmk_Lock lifs_lock;
         vmk_ListLinks lifs;
         vmk_Bool is_mgmt_nic;
@@ -150,13 +147,23 @@ VMK_ReturnStatus
 ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
 
 VMK_ReturnStatus
-ionic_reset(struct ionic *ionic);
-
-VMK_ReturnStatus
 ionic_identify(struct ionic *ionic);
 
 VMK_ReturnStatus
-ionic_port_config(struct ionic *ionic,
-                  struct port_config *pc);
+ionic_init(struct ionic *ionic);
+
+VMK_ReturnStatus
+ionic_reset(struct ionic *ionic);
+
+VMK_ReturnStatus
+ionic_port_identify(struct ionic *ionic);
+
+VMK_ReturnStatus
+ionic_port_init(struct ionic *ionic);
+
+VMK_ReturnStatus
+ionic_port_reset(struct ionic *ionic);
+
+
 
 #endif /* End of _IONIC_H_ */

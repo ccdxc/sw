@@ -44,9 +44,12 @@ typedef struct pciehdev_res_s {
     u_int32_t intrdmask:1;      /* reset val for drvcfg.mask */
     u_int32_t npids;            /* number of rdma pids */
     u_int64_t devcmdpa;         /* devcmd region physical address */
+    u_int32_t devcmdsz;         /* devcmd region size */
     u_int32_t devcmd_stride;    /* VF: stride between devcmdpa regions */
     u_int64_t devcmddbpa;       /* devcmd doorbell physical address */
     u_int32_t devcmddb_stride;  /* VF: stride between devcmddbpa regions */
+    u_int64_t devinfopa;        /* dev info region physical address */
+    u_int32_t devinfosz;        /* dev info region size */
     u_int64_t cmbpa;            /* controller mem buf physical address */
     u_int32_t cmbsz;            /* controller mem buf bar size */
     u_int32_t cmbprefetch:1;    /* controller mem buf prefetch enable */

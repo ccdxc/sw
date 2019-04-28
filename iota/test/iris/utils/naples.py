@@ -36,7 +36,6 @@ def InsertIonicDriverCommands(os_type = OS_TYPE_LINUX, **kwargs):
     elif os_type == OS_TYPE_BSD:
         for arg  in driver_args.split(" "):
           cmds.append("kenv %s" %  arg)
-        cmds.append("kenv xxx_haps=1")
         cmds.append("cd %s/%s/ &&  kldload sys/modules/ionic/ionic.ko"  % (HOST_NAPLES_DRIVERS_DIR, __freebsd_directory))
 
     return cmds

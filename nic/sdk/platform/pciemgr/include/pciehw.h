@@ -61,6 +61,7 @@ typedef enum pciehwbartype_e {
 } pciehwbartype_t;
 
 typedef struct pciehwbar_s {
+    u_int64_t size;                     /* total size of this bar */
     u_int32_t valid:1;                  /* valid bar for this dev */
     pciehwbartype_t type;               /* PCIEHWBARTYPE_* */
     u_int8_t cfgidx;                    /* config bars index (0-5) */

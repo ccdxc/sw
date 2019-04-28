@@ -143,7 +143,7 @@ def bsd_ethtool_ring_size_cmd(node, intf,ring_type, size):
         cmds = naples.RemoveIonicDriverCommands(os_type = naples.OS_TYPE_BSD)
         cmds.extend(naples.InsertIonicDriverCommands(os_type = naples.OS_TYPE_BSD, **args))
         return cmds
-    return " ".join(["ethtool", "-G", ring_type,  str(size)])
+    return " " #.join(["ethtool", "-G", ring_type,  str(size)])
 
 def bsd_ethtool_queue_size_cmd(node, intf,queue_type, size):
     args = { }
@@ -155,7 +155,7 @@ def bsd_ethtool_queue_size_cmd(node, intf,queue_type, size):
         cmds = naples.RemoveIonicDriverCommands(os_type = naples.OS_TYPE_BSD)
         cmds.extend(naples.InsertIonicDriverCommands(os_type = naples.OS_TYPE_BSD, **args))
         return cmds
-    return " ".join(["ethtool", "-L", intf, queue_type,  str(size)])
+    return " " #.join(["ethtool", "-L", intf, queue_type,  str(size)])
 
 def bsd_ethtool_rx_sg_size_cmd(node, intf, size):
     args = { }

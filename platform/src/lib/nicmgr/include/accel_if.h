@@ -57,20 +57,20 @@ typedef union dev_cmd_cpl {
 } dev_cmd_cpl_t;
 #pragma pack(pop)
 
-typedef struct dev_cmd_regs {
+typedef struct accel_dev_cmd_regs {
     uint32_t                    signature;
     uint32_t                    done;
     dev_cmd_t                   cmd;
     dev_cmd_cpl_t               cpl;
     uint8_t data[2048] __attribute__((aligned (2048)));
-} dev_cmd_regs_t;
+} accel_dev_cmd_regs_t;
 
-static_assert(sizeof(dev_cmd_regs_t) == ACCEL_DEV_PAGE_SIZE);
-static_assert((offsetof(dev_cmd_regs_t, cmd) % 4) == 0);
+static_assert(sizeof(accel_dev_cmd_regs_t) == ACCEL_DEV_PAGE_SIZE);
+static_assert((offsetof(accel_dev_cmd_regs_t, cmd) % 4) == 0);
 static_assert(sizeof(union dev_cmd) == 64);
-static_assert((offsetof(dev_cmd_regs_t, cpl) % 4) == 0);
+static_assert((offsetof(accel_dev_cmd_regs_t, cpl) % 4) == 0);
 static_assert(sizeof(union dev_cmd_cpl) == 16);
-static_assert((offsetof(dev_cmd_regs_t, data) % 4) == 0);
+static_assert((offsetof(accel_dev_cmd_regs_t, data) % 4) == 0);
 
 #endif //__ACCEL_IF_HPP__
 

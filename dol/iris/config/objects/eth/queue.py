@@ -223,6 +223,10 @@ class EthQueueObject(QueueObject):
         self._mem = None
         self.pid = 0
 
+    def Init(self, queue_type, spec):
+        super().Init(queue_type, spec)
+        self.buffers = [None] * self.size
+
     def __str__(self):
         return ("%s Lif:%s/QueueType:%s/Queue:%s/Size:%s/Qstate:%x/QstateSize:%s" %
                 (self.__class__.__name__,
@@ -320,9 +324,6 @@ class EthQueueObject(QueueObject):
             return
 
         self.obj_helper_ring.Configure()
-
-        if self.queue_type.purpose == "LIF_QUEUE_PURPOSE_RX":
-            self.descriptors = [None] * self.size
 
         for ring in self.obj_helper_ring.rings:
             if ring.id == 'R0':

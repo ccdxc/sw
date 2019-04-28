@@ -5,20 +5,21 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
+#include <stdint.h>
 
 /* Supply these for ionic_if.h */
-typedef u_int8_t u8;
-typedef u_int16_t u16;
-typedef u_int32_t u32;
-typedef u_int64_t u64;
-typedef u_int64_t dma_addr_t;
+typedef uint8_t u8;
+typedef uint16_t u16, __le16;
+typedef uint32_t u32, __le32;
+typedef uint64_t u64, __le64;
+typedef uint64_t dma_addr_t;
 #define BIT(n)  (1 << (n))
 
 typedef u8 bool;
 #define false 0
 #define true 1
 
-#include "../../ionic_if.h"
+#include "ionic_if.h"
 
 char *make_path(char *q, char *obj)
 {
@@ -81,7 +82,7 @@ void dump_rxq(char *path)
 		printf("%s", heads_or_tails(i, head, tail));
 		printf("[%04x]", i);
 		printf(" addr 0x%lx len %d",
-		       (u64)desc.addr, desc.len);
+		       (u64)desc.addr, (u16)desc.len);
 
 		printf("\n");
 	}
@@ -109,23 +110,29 @@ void dump_rxcq(char *path)
 
 		printf("%s", heads_or_tails(i, -1, tail));
 		printf("[%04x]", i);
+
 		printf(" status %d comp_index 0x%x color %d",
-		       comp.status, comp.comp_index, comp.color);
+		       comp.status, comp.comp_index,
+			   comp.pkt_type_color & IONIC_COMP_COLOR_MASK ? 1 : 0);
 		printf(" len %4d", comp.len);
-		printf(" csum_calc %d", comp.csum_calc);
-		if (comp.csum_calc)
+
+		printf(" csum %d", comp.csum_flags & IONIC_RXQ_COMP_CSUM_F_CALC);
+		if (comp.csum_flags)
 			printf(" csum/flags 0x%04x/[%s%s%s%s%s%s]",
 				comp.csum,
-				comp.csum_tcp_ok ?  " TCP_OK"  : "",
-				comp.csum_tcp_bad ? " TCP_BAD" : "",
-				comp.csum_udp_ok ?  " UDP_OK"  : "",
-				comp.csum_udp_bad ? " UDP_BAD" : "",
-				comp.csum_ip_ok ?   " IP_OK"   : "",
-				comp.csum_ip_bad ?  " IP_BAD"  : "");
-		if (comp.rss_type)
-			printf(" rss_hash/type 0x%08x/%d", comp.rss_hash,
-			       comp.rss_type);
-		if (comp.V)
+				comp.csum_flags & IONIC_RXQ_COMP_CSUM_F_TCP_OK ? " TCP_OK"  : "",
+				comp.csum_flags & IONIC_RXQ_COMP_CSUM_F_TCP_BAD ? " TCP_BAD" : "",
+				comp.csum_flags & IONIC_RXQ_COMP_CSUM_F_UDP_OK ? " UDP_OK"  : "",
+				comp.csum_flags & IONIC_RXQ_COMP_CSUM_F_UDP_BAD ? " UDP_BAD" : "",
+				comp.csum_flags & IONIC_RXQ_COMP_CSUM_F_IP_OK ? " IP_OK"   : "",
+				comp.csum_flags & IONIC_RXQ_COMP_CSUM_F_IP_BAD ? " IP_BAD"  : "");
+
+		printf(" rss_hash 0x%08x pkt_type %d",
+				comp.rss_hash,
+				comp.pkt_type_color & IONIC_RXQ_COMP_PKT_TYPE_MASK);
+
+		printf(" vlan %d", comp.csum_flags & IONIC_RXQ_COMP_CSUM_F_VLAN ? 1 : 0);
+		if (comp.csum_flags & IONIC_RXQ_COMP_CSUM_F_VLAN)
 			printf(" vlan_tci 0x%04x", comp.vlan_tci);
 		printf("\n");
 	}
@@ -272,7 +279,7 @@ int main (int argc, char **argv)
 	q = strtok(NULL, "/");
 	qcq = strtok(NULL, "/");
 
-	tx = (q[0] == 't');
+	tx = (q[3] == 't');
 	cq = (qcq[0] == 'c');
 
 	if (tx && cq)

@@ -30,22 +30,22 @@
 #include "ionic_api.h"
 #include "ionic_kpicompat.h"
 
-#define DRV_NAME		"ionic"
-#define DRV_DESCRIPTION	"Pensando Ethernet NIC Driver"
-#define DRV_VERSION		"0.8.0"
+#define DRV_NAME			"ionic"
+#define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
+#define DRV_VERSION			"0.8.0"
 
-#define SIZE_1K			1024
+#define SIZE_1K				1024
 #define IONIX_TX_MIN_DESC	64
-#define IONIX_TX_MAX_DESC	(64 * SIZE_1K)
+#define IONIX_TX_MAX_DESC	(16 * SIZE_1K)
 #define IONIX_RX_MIN_DESC	64
-#define IONIX_RX_MAX_DESC	(64 * SIZE_1K)
+#define IONIX_RX_MAX_DESC	(16 * SIZE_1K)
 
 #define IONIC_ADDR_BITS		52
 #define IONIC_MAX_ADDR		(BIT_ULL(IONIC_ADDR_BITS) - 1)
 /* TSO DMA related definitions. */
 #define IONIC_MAX_TSO_SG_ENTRIES 	(IONIC_TX_MAX_SG_ELEMS)
 #define IONIC_MAX_TSO_SG_SIZE 		(64 * SIZE_1K)
-#define IONIC_MAX_TSO_SIZE 		(64 * SIZE_1K)
+#define IONIC_MAX_TSO_SIZE 			(64 * SIZE_1K)
 
 MALLOC_DECLARE(M_IONIC);
 
@@ -128,6 +128,7 @@ MALLOC_DECLARE(M_IONIC);
 #endif
 
 struct ionic_dev;
+struct ionic_dma_info;
 
 struct ionic {
 	struct pci_dev *pdev;
@@ -137,8 +138,7 @@ struct ionic {
 	struct dentry *dentry;
 	struct ionic_dev_bar bars[IONIC_BARS_MAX];
 	unsigned int num_bars;
-	union identity *ident;
-	dma_addr_t ident_pa;
+	struct identity ident;
 	struct list_head lifs;
 	bool is_mgmt_nic;
 	unsigned int nnqs_per_lif;
@@ -156,9 +156,13 @@ int ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx);
 int ionic_dev_cmd_wait_check(struct ionic_dev *idev, unsigned long max_wait);
 int ionic_set_dma_mask(struct ionic *ionic);
 int ionic_setup(struct ionic *ionic);
+
 int ionic_identify(struct ionic *ionic);
-void ionic_forget_identity(struct ionic *ionic);
+int ionic_init(struct ionic *ionic);
 int ionic_reset(struct ionic *ionic);
-int ionic_port_config(struct ionic *ionic, struct port_config *pc);
+
+int ionic_port_identify(struct ionic *ionic);
+int ionic_port_init(struct ionic *ionic);
+int ionic_port_reset(struct ionic *ionic);
 
 #endif /* _IONIC_H_ */

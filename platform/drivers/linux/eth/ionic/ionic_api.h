@@ -92,6 +92,13 @@ int ionic_api_set_private(struct lif *lif, void *priv,
  */
 struct dentry *ionic_api_get_debugfs(struct lif *lif);
 
+/** ionic_api_get_devinfo - Get the device information.
+ * @lif:		Handle to lif.
+ *
+ * Return: device info
+ */
+const union dev_info_regs *ionic_api_get_devinfo(struct lif *lif);
+
 /** ionic_api_get_identity - Get result of device identification.
  * @lif:		Handle to lif.
  * @lif_id:		This lif id.
@@ -100,7 +107,7 @@ struct dentry *ionic_api_get_debugfs(struct lif *lif);
  *
  * Return: pointer to result of identification.
  */
-const union identity *ionic_api_get_identity(struct lif *lif, int *lif_id);
+const union lif_identity *ionic_api_get_identity(struct lif *lif, int *lif_id);
 
 /** ionic_api_get_intr - Reserve a device iterrupt index.
  * @lif:		Handle to lif.

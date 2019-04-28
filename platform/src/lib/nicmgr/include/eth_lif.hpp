@@ -8,27 +8,31 @@
 using namespace std;
 
 #include "pd_client.hpp"
+#include "nic/include/edmaq.h"
 #include "nic/sdk/platform/devapi/devapi.hpp"
 
 namespace pt = boost::property_tree;
 
 class AdminQ;
+class EdmaQ;
 typedef uint8_t status_code_t;
 typedef uint16_t cmd_opcode_t;
 
 /**
  * ETH Qtype Enum
  */
-enum EthQtype {
-    ETH_QTYPE_RX = 0,
-    ETH_QTYPE_TX = 1,
-    ETH_QTYPE_ADMIN = 2,
-    ETH_QTYPE_SQ = 3,
-    ETH_QTYPE_RQ = 4,
-    ETH_QTYPE_CQ = 5,
-    ETH_QTYPE_EQ = 6,
-    ETH_QTYPE_SVC = 7,
+enum eth_hw_qtype {
+    ETH_HW_QTYPE_RX = 0,
+    ETH_HW_QTYPE_TX = 1,
+    ETH_HW_QTYPE_ADMIN = 2,
+    ETH_HW_QTYPE_SQ = 3,
+    ETH_HW_QTYPE_RQ = 4,
+    ETH_HW_QTYPE_CQ = 5,
+    ETH_HW_QTYPE_EQ = 6,
+    ETH_HW_QTYPE_SVC = 7,
 };
+
+#define IONIC_IFNAMSIZ  16
 
 #define BIT_MASK(n)                     ((1ULL << n) - 1)
 #define HOST_ADDR(lif, addr)            ((1ULL << 63) | (lif << 52) | (addr))
@@ -45,8 +49,6 @@ enum EthQtype {
 #define ETH_EDMAQ_QID                   1
 #define LG2_ETH_EDMAQ_RING_SIZE         4
 #define ETH_EDMAQ_RING_SIZE             (1 << LG2_ETH_EDMAQ_RING_SIZE)
-#define ETH_EDMAQ_COMP_POLL_US          (1000)
-#define ETH_EDMAQ_COMP_POLL_MAX         (10)
 
 #define ETH_ADMINQ_REQ_QTYPE            7
 #define ETH_ADMINQ_REQ_QID              2
@@ -74,7 +76,7 @@ typedef struct eth_lif_res_s {
 /**
  * LIF State enum
  */
-enum lif_state {
+enum eth_lif_state {
     LIF_STATE_RESETING,
     LIF_STATE_RESET,
     LIF_STATE_CREATING,
@@ -94,11 +96,16 @@ public:
 
     status_code_t Init(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t Reset(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t AdminQInit(void *req, void *req_data, void *resp, void *resp_data);
+    bool EdmaProxy(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
+        struct edmaq_ctx *ctx);
+
+    // Command Handlers
+    status_code_t CmdProxyHandler(void *req, void *req_data,
+                                  void *resp, void *resp_data);
+    status_code_t CmdHandler(void *req, void *req_data,
+                             void *resp, void *resp_data);
 
     // Event Handlers
-    status_code_t CmdHandler(void *req, void *req_data,
-                                 void *resp, void *resp_data);
     void LinkEventHandler(port_status_t *evd);
     void XcvrEventHandler(port_status_t *evd);
     void HalEventHandler(bool status);
@@ -110,8 +117,8 @@ public:
 private:
     static sdk::lib::indexer *fltr_allocator;
     // Info
-    std::string nd_name, dev_name;
-    enum lif_state state;
+    char name[IONIC_IFNAMSIZ];
+    enum eth_lif_state state;
     // PD Info
     PdClient *pd;
     // HAL Info
@@ -125,20 +132,17 @@ private:
     const struct eth_devspec *spec;
     struct queue_info qinfo[NUM_QUEUE_TYPES];
     // Stats
-    uint64_t stats_mem_addr;
-    uint64_t host_stats_mem_addr;
+    uint64_t lif_stats_addr;
+    uint64_t host_lif_stats_addr;
+    // Status
+    struct lif_status *lif_status;
+    uint64_t lif_status_addr;
+    uint64_t host_lif_status_addr;
     // NotifyQ
-    struct notify_block *notify_block;
     uint16_t notify_ring_head;
     uint64_t notify_ring_base;
-    uint64_t notify_block_addr;
-    uint64_t host_notify_block_addr;
+    uint8_t notify_enabled;
     // EdmaQ
-    uint16_t edma_ring_head;
-    uint16_t edma_comp_tail;
-    uint16_t edma_exp_color;
-    uint64_t edma_ring_base;
-    uint64_t edma_comp_base;
     uint64_t edma_buf_base;
     // RSS config
     uint16_t rss_type;
@@ -149,31 +153,32 @@ private:
     map<uint64_t, uint16_t> vlans;
     map<uint64_t, tuple<uint64_t, uint16_t>> mac_vlans;
     // Tasks
-    evutil_timer stats_timer;
-    evutil_check stats_check;
+    evutil_timer stats_timer = {0};
+
+    // Services
+    AdminQ *adminq;
+    EdmaQ *edmaq;
 
     /* AdminQ Commands */
-    AdminQ *adminq;
-
     static void AdminCmdHandler(void *obj,
         void *req, void *req_data, void *resp, void *resp_data);
 
-    status_code_t _CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdNotifyQInit(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdTxQInit(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdRxQInit(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdFeatures(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdSetNetdevInfo(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdQEnable(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdQDisable(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdSetMode(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t SetFeatures(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t RssConfig(void *req, void *req_data, void *resp, void *resp_data);
+
+    status_code_t _CmdGetAttr(void *req, void *req_data, void *resp, void *resp_data);
+
+    status_code_t _CmdRxSetMode(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdMacAddrGet(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdStatsDumpStart(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdStatsDumpStop(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdRssHashSet(void *req, void *req_data, void *resp, void *resp_data);
-    status_code_t _CmdRssIndirSet(void *req, void *req_data, void *resp, void *resp_data);
+
+    status_code_t _CmdQInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t AdminQInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t NotifyQInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t TxQInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t RxQInit(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdQControl(void *req, void *req_data, void *resp, void *resp_data);
 
     status_code_t _CmdRDMAResetLIF(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdRDMACreateEQ(void *req, void *req_data, void *resp, void *resp_data);
@@ -182,15 +187,14 @@ private:
 
     // Callbacks
     static void StatsUpdate(void *obj);
-    static void StatsUpdateCheck(void *obj);
-    static void NotifyBlockUpdate(void *arg);
+    static void StatsUpdateComplete(void *obj);
 
     // Helper methods
     void FreeUpMacFilters();
     void FreeUpVlanFilters();
     void FreeUpMacVlanFilters();
 
-    const char *lif_state_to_str(enum lif_state state);
+    const char *lif_state_to_str(enum eth_lif_state state);
     const char *opcode_to_str(cmd_opcode_t opcode);
 };
 

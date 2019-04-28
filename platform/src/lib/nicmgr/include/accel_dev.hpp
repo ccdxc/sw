@@ -49,7 +49,6 @@ typedef struct accel_devspec {
 class AccelLif;
 
 typedef int accel_status_code_t;
-typedef struct dev_cmd_regs dev_cmd_regs_t;
 
 #include "gen/proto/nicmgr/accel_metrics.pb.h"
 #include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
@@ -87,7 +86,7 @@ public:
     uint64_t DevcmdPageGet(void) { return devcmd_mem_addr; }
     uint64_t DevcmddbPageGet(void) { return devcmddb_mem_addr; }
 
-    dev_cmd_regs_t              *devcmd;
+    accel_dev_cmd_regs_t        *devcmd;
 
     static struct accel_devspec *ParseConfig(boost::property_tree::ptree::value_type node);
 

@@ -281,7 +281,7 @@ public:
     uint32_t SeqCreatedCountGet(void) { return seq_created_count; }
     const accel_ring_t *AccelRingTableGet(void) { return accel_ring_tbl; }
 
-    dev_cmd_regs_t              *devcmd;
+    accel_dev_cmd_regs_t              *devcmd;
     lif_info_t                  hal_lif_info_;
 
     friend void AdminCmdHandler(void *obj, void *req, void *req_data,

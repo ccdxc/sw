@@ -93,10 +93,11 @@ static void ionic_get_drvinfo(struct net_device *netdev,
 {
 	struct lif *lif = netdev_priv(netdev);
 	struct ionic *ionic = lif->ionic;
+	struct ionic_dev *idev = &ionic->idev;
 
 	strlcpy(drvinfo->driver, DRV_NAME, sizeof(drvinfo->driver));
 	strlcpy(drvinfo->version, DRV_VERSION, sizeof(drvinfo->version));
-	strlcpy(drvinfo->fw_version, ionic->ident->dev.fw_version,
+	strlcpy(drvinfo->fw_version, idev->dev_info->fw_version,
 		sizeof(drvinfo->fw_version));
 	strlcpy(drvinfo->bus_info, ionic_bus_info(ionic),
 		sizeof(drvinfo->bus_info));
@@ -106,6 +107,7 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 				    struct ethtool_link_ksettings *ks)
 {
 	struct lif *lif = netdev_priv(netdev);
+	struct ionic_dev *idev = &lif->ionic->idev;
 	int fake_port_type = 0;
 
 	ethtool_link_ksettings_zero_link_mode(ks, supported);
@@ -126,7 +128,7 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 		}
 	}
 
-	switch (lif->notifyblock->port_status.xcvr.pid) {
+	switch (idev->port_info->status.xcvr.pid) {
 		/* Copper */
 	case XCVR_PID_QSFP_100G_CR4:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
@@ -252,45 +254,45 @@ fake_port_type++;
 	case XCVR_PID_SFP_25GBASE_LR:
 	case XCVR_PID_SFP_25GBASE_ER:
 		dev_info(lif->ionic->dev, "no decode bits for xcvr type pid=%d / 0x%x\n",
-			 lif->notifyblock->port_status.xcvr.pid,
-			 lif->notifyblock->port_status.xcvr.pid);
+			 idev->port_info->status.xcvr.pid,
+			 idev->port_info->status.xcvr.pid);
 		break;
 	case XCVR_PID_UNKNOWN:
 	default:
 		dev_info(lif->ionic->dev, "unknown xcvr type pid=%d / 0x%x\n",
-			 lif->notifyblock->port_status.xcvr.pid,
-			 lif->notifyblock->port_status.xcvr.pid);
+			 idev->port_info->status.xcvr.pid,
+			 idev->port_info->status.xcvr.pid);
 		break;
 	}
 
 	ethtool_link_ksettings_add_link_mode(ks, supported, Pause);
-	if (lif->notifyblock->port_config.pause_type)
+	if (idev->port_info->config.pause_type)
 		ethtool_link_ksettings_add_link_mode(ks, advertising, Pause);
 
 #ifdef ETHTOOL_LINK_MODE_FEC_NONE_BIT
-	if (lif->notifyblock->port_config.fec_type == PORT_FEC_TYPE_FC)
+	if (idev->port_info->config.fec_type == PORT_FEC_TYPE_FC)
 		ethtool_link_ksettings_add_link_mode(ks, advertising, FEC_BASER);
-	else if (lif->notifyblock->port_config.fec_type == PORT_FEC_TYPE_RS)
+	else if (idev->port_info->config.fec_type == PORT_FEC_TYPE_RS)
 		ethtool_link_ksettings_add_link_mode(ks, advertising, FEC_RS);
 	else
 		ethtool_link_ksettings_add_link_mode(ks, advertising, FEC_NONE);
 #endif
 
-	if (lif->notifyblock->port_status.xcvr.phy == PHY_TYPE_COPPER ||
+	if (idev->port_info->status.xcvr.phy == PHY_TYPE_COPPER ||
 	    fake_port_type) {
 		ks->base.port = PORT_DA;
-	} else if (lif->notifyblock->port_status.xcvr.phy == PHY_TYPE_FIBER) {
+	} else if (idev->port_info->status.xcvr.phy == PHY_TYPE_FIBER) {
 		ks->base.port = PORT_FIBRE;
 	} else {
 		ks->base.port = PORT_OTHER;
 	}
 
-	ks->base.speed = lif->notifyblock->link_speed;
+	ks->base.speed = lif->info->status.link_speed;
 
-	if (lif->notifyblock->port_config.an_enable)
+	if (idev->port_info->config.an_enable)
 		ks->base.autoneg = AUTONEG_ENABLE;
 
-	if (lif->notifyblock->link_status)
+	if (lif->info->status.link_status)
 		ks->base.duplex = DUPLEX_FULL;
 	else
 		ks->base.duplex = DUPLEX_UNKNOWN;
@@ -302,25 +304,34 @@ static int ionic_set_link_ksettings(struct net_device *netdev,
 				    const struct ethtool_link_ksettings *ks)
 {
 	struct lif *lif = netdev_priv(netdev);
-	struct port_config pc;
+	struct ionic *ionic = lif->ionic;
+	struct ionic_dev *idev = &lif->ionic->idev;
 #ifdef ETHTOOL_LINK_MODE_FEC_NONE_BIT
 	u32 req_rs, req_b;
+	u8 fec_type = PORT_FEC_TYPE_NONE;
 #endif
-	u32 change = 0;
 	int err = 0;
 
-	pc = lif->notifyblock->port_config;
-
 	/* set autoneg */
-	if (ks->base.autoneg != pc.an_enable) {
-		pc.an_enable = ks->base.autoneg;
-		change++;
+	if (ks->base.autoneg != idev->port_info->config.an_enable) {
+		idev->port_info->config.an_enable = ks->base.autoneg;
+		mutex_lock(&ionic->dev_cmd_lock);
+		ionic_dev_cmd_port_autoneg(idev, ks->base.autoneg);
+		err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+		mutex_unlock(&ionic->dev_cmd_lock);
+		if (err)
+			return err;
 	}
 
 	/* set speed */
-	if (ks->base.speed != pc.speed) {
-		pc.speed = ks->base.speed;
-		change++;
+	if (ks->base.speed != idev->port_info->config.speed) {
+		idev->port_info->config.speed = ks->base.speed;
+		mutex_lock(&ionic->dev_cmd_lock);
+		ionic_dev_cmd_port_speed(idev, ks->base.speed);
+		err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+		mutex_unlock(&ionic->dev_cmd_lock);
+		if (err)
+			return err;
 	}
 
 #ifdef ETHTOOL_LINK_MODE_FEC_NONE_BIT
@@ -332,36 +343,37 @@ static int ionic_set_link_ksettings(struct net_device *netdev,
 		return -EINVAL;
 
 	} else if (req_b &&
-		   lif->notifyblock->port_config.fec_type != PORT_FEC_TYPE_FC) {
-		pc.fec_type = PORT_FEC_TYPE_FC;
-		change++;
-
+		   idev->port_info->config.fec_type != PORT_FEC_TYPE_FC) {
+		fec_type = PORT_FEC_TYPE_FC;
 	} else if (req_rs &&
-		   lif->notifyblock->port_config.fec_type != PORT_FEC_TYPE_RS) {
-		pc.fec_type = PORT_FEC_TYPE_RS;
-		change++;
-
+		   idev->port_info->config.fec_type != PORT_FEC_TYPE_RS) {
+		fec_type = PORT_FEC_TYPE_RS;
 	} else if (!(req_rs | req_b) &&
-		 lif->notifyblock->port_config.fec_type != PORT_FEC_TYPE_NONE) {
-		pc.fec_type = PORT_FEC_TYPE_NONE;
-		change++;
+		 idev->port_info->config.fec_type != PORT_FEC_TYPE_NONE) {
+		fec_type = PORT_FEC_TYPE_NONE;
 	}
+
+	idev->port_info->config.fec_type = fec_type;
+	mutex_lock(&ionic->dev_cmd_lock);
+	ionic_dev_cmd_port_fec(idev, PORT_FEC_TYPE_NONE);
+	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+	mutex_unlock(&ionic->dev_cmd_lock);
+	if (err)
+		return err;
 #endif
 
-	if (change)
-		err = ionic_port_config(lif->ionic, &pc);
-
-	return err;
+	return 0;
 }
 
 static void ionic_get_pauseparam(struct net_device *netdev,
 				 struct ethtool_pauseparam *pause)
 {
 	struct lif *lif = netdev_priv(netdev);
+	struct ionic_dev *idev = &lif->ionic->idev;
 
-	pause->autoneg = lif->notifyblock->port_config.an_enable;
+	pause->autoneg = idev->port_info->config.an_enable;
 
-	if (lif->notifyblock->port_config.pause_type) {
+	if (idev->port_info->config.pause_type) {
 		pause->rx_pause = 1;
 		pause->tx_pause = 1;
 	}
@@ -371,12 +383,14 @@ static int ionic_set_pauseparam(struct net_device *netdev,
 				struct ethtool_pauseparam *pause)
 {
 	struct lif *lif = netdev_priv(netdev);
-	struct port_config pc;
+	struct ionic *ionic = lif->ionic;
+	struct ionic_dev *idev = &lif->ionic->idev;
+
 	u32 requested_pause;
 	u32 cur_autoneg;
 	int err;
 
-	cur_autoneg = lif->notifyblock->port_config.an_enable ? AUTONEG_ENABLE :
+	cur_autoneg = idev->port_info->config.an_enable ? AUTONEG_ENABLE :
 								AUTONEG_DISABLE;
 	if (pause->autoneg != cur_autoneg) {
 		netdev_info(netdev, "Please use 'ethtool -s ...' to change autoneg\n");
@@ -391,15 +405,19 @@ static int ionic_set_pauseparam(struct net_device *netdev,
 	else
 		return -EINVAL;
 
-	if (requested_pause == lif->notifyblock->port_config.pause_type)
+	if (requested_pause == idev->port_info->config.pause_type)
 		return 0;
 
-	pc = lif->notifyblock->port_config;
-	pc.pause_type = requested_pause;
+	idev->port_info->config.pause_type = requested_pause;
 
-	err = ionic_port_config(lif->ionic, &pc);
+	mutex_lock(&ionic->dev_cmd_lock);
+	ionic_dev_cmd_port_pause(idev, requested_pause);
+	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+	mutex_unlock(&ionic->dev_cmd_lock);
+	if (err)
+		return err;
 
-	return err;
+	return 0;
 }
 
 static int ionic_get_coalesce(struct net_device *netdev,
@@ -417,7 +435,7 @@ static int ionic_set_coalesce(struct net_device *netdev,
 			      struct ethtool_coalesce *coalesce)
 {
 	struct lif *lif = netdev_priv(netdev);
-	union identity *ident = lif->ionic->ident;
+	struct identity *ident = &lif->ionic->ident;
 	u32 tx_coal, rx_coal;
 	unsigned int i;
 
@@ -447,7 +465,6 @@ static int ionic_set_coalesce(struct net_device *netdev,
 		return -EIO;
 
 	/* Convert from usecs to device units */
-
 	tx_coal = coalesce->tx_coalesce_usecs * ident->dev.intr_coal_mult /
 		  ident->dev.intr_coal_div;
 	rx_coal = coalesce->rx_coalesce_usecs * ident->dev.intr_coal_mult /
@@ -597,12 +614,13 @@ static int ionic_get_rxnfc(struct net_device *netdev,
 
 static u32 ionic_get_rxfh_indir_size(struct net_device *netdev)
 {
-	return RSS_IND_TBL_SIZE;
+	struct lif *lif = netdev_priv(netdev);
+	return lif->ionic->ident.lif.eth.rss_ind_tbl_sz;
 }
 
 static u32 ionic_get_rxfh_key_size(struct net_device *netdev)
 {
-	return RSS_HASH_KEY_SIZE;
+	return IONIC_RSS_HASH_KEY_SIZE;
 }
 
 #ifdef HAVE_RXFH_HASHFUNC
@@ -616,11 +634,11 @@ static int ionic_get_rxfh(struct net_device *netdev, u32 *indir, u8 *key)
 	unsigned int i;
 
 	if (indir)
-		for (i = 0; i < RSS_IND_TBL_SIZE; i++)
+		for (i = 0; i < lif->ionic->ident.lif.eth.rss_ind_tbl_sz; i++)
 			indir[i] = lif->rss_ind_tbl[i];
 
 	if (key)
-		memcpy(key, lif->rss_hash_key, RSS_HASH_KEY_SIZE);
+		memcpy(key, lif->rss_hash_key, IONIC_RSS_HASH_KEY_SIZE);
 
 #ifdef HAVE_RXFH_HASHFUNC
 	if (hfunc)
@@ -628,49 +646,6 @@ static int ionic_get_rxfh(struct net_device *netdev, u32 *indir, u8 *key)
 #endif
 
 	return 0;
-}
-
-int ionic_rss_ind_tbl_set(struct lif *lif, const u32 *indir)
-{
-	struct ionic_admin_ctx ctx = {
-		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
-		.cmd.rss_indir_set = {
-			.opcode = CMD_OPCODE_RSS_INDIR_SET,
-			.addr = lif->rss_ind_tbl_pa,
-		},
-	};
-	unsigned int i;
-
-	if (indir)
-		for (i = 0; i < RSS_IND_TBL_SIZE; i++)
-			lif->rss_ind_tbl[i] = indir[i];
-
-	netdev_info(lif->netdev, "rss_ind_tbl_set\n");
-
-	return ionic_adminq_post_wait(lif, &ctx);
-}
-
-int ionic_rss_hash_key_set(struct lif *lif, const u8 *key)
-{
-	struct ionic_admin_ctx ctx = {
-		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
-		.cmd.rss_hash_set = {
-			.opcode = CMD_OPCODE_RSS_HASH_SET,
-			.types = RSS_TYPE_IPV4
-			       | RSS_TYPE_IPV4_TCP
-			       | RSS_TYPE_IPV4_UDP
-			       | RSS_TYPE_IPV6
-			       | RSS_TYPE_IPV6_TCP
-			       | RSS_TYPE_IPV6_UDP,
-		},
-	};
-
-	memcpy(lif->rss_hash_key, key, RSS_HASH_KEY_SIZE);
-
-	memcpy(ctx.cmd.rss_hash_set.key, lif->rss_hash_key,
-	       RSS_HASH_KEY_SIZE);
-
-	return ionic_adminq_post_wait(lif, &ctx);
 }
 
 #ifdef HAVE_RXFH_HASHFUNC
@@ -689,17 +664,9 @@ static int ionic_set_rxfh(struct net_device *netdev, const u32 *indir,
 		return -EOPNOTSUPP;
 #endif
 
-	if (indir) {
-		err = ionic_rss_ind_tbl_set(lif, indir);
-		if (err)
-			return err;
-	}
-
-	if (key) {
-		err = ionic_rss_hash_key_set(lif, key);
-		if (err)
-			return err;
-	}
+	err = ionic_lif_rss_config(lif, lif->rss_types, key, indir);
+	if (err)
+		return err;
 
 	return 0;
 }
@@ -768,15 +735,14 @@ static int ionic_get_tunable(struct net_device *netdev,
 
 static int ionic_get_module_info(struct net_device *netdev,
 				 struct ethtool_modinfo *modinfo)
+
 {
 	struct lif *lif = netdev_priv(netdev);
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct sfp_sprom_data *sprom;
 	struct xcvr_status *xcvr;
 
-	if (!lif->notifyblock)
-		return -EOPNOTSUPP;
-
-	xcvr = &lif->notifyblock->port_status.xcvr;
+	xcvr = &idev->port_info->status.xcvr;
 	sprom = (struct sfp_sprom_data *)xcvr->sprom;
 
 	/* report the module data type and length */
@@ -803,39 +769,34 @@ static int ionic_get_module_eeprom(struct net_device *netdev,
 				   u8 *data)
 {
 	struct lif *lif = netdev_priv(netdev);
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct xcvr_status *xcvr;
 	u32 len;
 
-	if (!lif->notifyblock)
-		return -EOPNOTSUPP;
-
 	/* copy the module bytes into data */
-	xcvr = &lif->notifyblock->port_status.xcvr;
+	xcvr = &idev->port_info->status.xcvr;
 	len = min_t(u32, sizeof(xcvr->sprom), ee->len);
 	memcpy(data, xcvr->sprom, len);
 
-	dev_dbg(&lif->netdev->dev, "notifyblock eid=0x%llx link_status=0x%x error_bits=0x%x link_speed=0x%x phy_type=0x%x autoneg=0x%x flap=0x%x\n",
-		lif->notifyblock->eid,
-		lif->notifyblock->link_status,
-		lif->notifyblock->link_error_bits,
-		lif->notifyblock->link_speed,
-		lif->notifyblock->phy_type,
-		lif->notifyblock->autoneg_status,
-		lif->notifyblock->link_flap_count);
+	dev_dbg(&lif->netdev->dev, "notifyblock eid=0x%llx link_status=0x%x link_speed=0x%x flap=0x%x\n",
+		lif->info->status.eid,
+		lif->info->status.link_status,
+		lif->info->status.link_speed,
+		lif->info->status.link_flap_count);
 	dev_dbg(&lif->netdev->dev, "  port_status id=0x%x status=0x%x speed=0x%x\n",
-		lif->notifyblock->port_status.id,
-		lif->notifyblock->port_status.status,
-		lif->notifyblock->port_status.speed);
+		idev->port_info->status.id,
+		idev->port_info->status.status,
+		idev->port_info->status.speed);
 	dev_dbg(&lif->netdev->dev, "    xcvr status state=0x%x phy=0x%x pid=0x%x\n",
 		xcvr->state, xcvr->phy, xcvr->pid);
 	dev_dbg(&lif->netdev->dev, "  port_config state=0x%x speed=0x%x mtu=0x%x an_enable=0x%x fec_type=0x%x pause_type=0x%x loopback_mode=0x%x\n",
-		lif->notifyblock->port_config.state,
-		lif->notifyblock->port_config.speed,
-		lif->notifyblock->port_config.mtu,
-		lif->notifyblock->port_config.an_enable,
-		lif->notifyblock->port_config.fec_type,
-		lif->notifyblock->port_config.pause_type,
-		lif->notifyblock->port_config.loopback_mode);
+		idev->port_info->config.state,
+		idev->port_info->config.speed,
+		idev->port_info->config.mtu,
+		idev->port_info->config.an_enable,
+		idev->port_info->config.fec_type,
+		idev->port_info->config.pause_type,
+		idev->port_info->config.loopback_mode);
 
 	return 0;
 }
