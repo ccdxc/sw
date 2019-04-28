@@ -12,6 +12,7 @@ export BUILD_DIR=${NICDIR}/build/x86_64/apollo/
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
 export HAL_CONFIG_PATH=${NICDIR}/conf
 export CONFIG_PATH=${NICDIR}/conf
+export COVFILE=${NICDIR}/coverage/sim_bullseye_hal.cov
 #export GDB='gdb --args'
 
 if [[ "$1" ==  --coveragerun ]]; then

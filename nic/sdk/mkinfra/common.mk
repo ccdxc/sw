@@ -11,12 +11,15 @@ COMMON_GXX_FLAGS        := -fstack-protector \
                            -fPIC \
                            -U_FORTIFY_SOURCE \
                            -Wall \
-                           -Werror\
                            -Wunused-but-set-parameter \
                            -Wno-free-nonheap-object \
-                           -Wuninitialized \
                            -Wno-builtin-macro-redefined \
                            -MD
+ifeq ($(COVERAGE),0)
+    COMMON_GXX_FLAGS        += -Wuninitialized
+    COMMON_GXX_FLAGS        += -Werror
+endif
+
 ifeq ($(PLATFORM),haps)
     COMMON_GXX_FLAGS        += -DHAPS
 else ifeq ($(PLATFORM),hw)

@@ -41,8 +41,6 @@
                 ".c",
                 ".cc"
             ],
-            "build_cmd": "make COVERAGE=1 V=1",
-            "clean_cmd": "make clean && (find ../bazel-out/k8-fastbuild/bin -name '*.gcda'  -type f -delete || :)",
             "remove_files": [
                "/usr/include/*",
                 "/usr/local/*",
@@ -56,7 +54,6 @@
                 "/external/*",
                 "/bazel-out/*"
             ],
-            "obj_dir" : "build/x86_64/iris/gen",
             "obj_dir_type" : "hierarchical",
             "cov_type" : "lcov"
         },
@@ -69,7 +66,6 @@
                 ".h",
                 ".s"
             ],
-            "obj_dir" : "build/x86_64/iris/out",
             "obj_dir_type" : "flat",
             "cov_type" : "capcov"
         }
@@ -77,12 +73,6 @@
     "run": [{
         "dol": {
             "cmd_cfg": "./coverage/dol_cov_runs.json",
-            "modules": [
-                "hal"
-            ]
-        },
-        "mbt": {
-            "cmd": "./run.py --mbt && ./run.py --topo=up2up --feature=networking --mbt",
             "modules": [
                 "hal"
             ]

@@ -525,9 +525,10 @@ def run_and_generate_coverage(data):
                 #continue
             os.chdir(env.nic_dir)
             obj_dir = module.get("obj_dir")
-            os.chdir(obj_dir)
-            subprocess.call(["find . -type f -name '*.gcda' -delete"], shell=True)
-            os.chdir(env.nic_dir)
+            if obj_dir:
+                os.chdir(obj_dir)
+                subprocess.call(["find . -type f -name '*.gcda' -delete"], shell=True)
+                os.chdir(env.nic_dir)
 
 
     module_infos = defaultdict(lambda: [])

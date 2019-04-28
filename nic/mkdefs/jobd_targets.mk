@@ -277,11 +277,11 @@ jobd/e2e/naples-sim: ${JOBD_PREREQS}
 
 .PHONY: jobd/make/sdk
 jobd/make/sdk:
-	mkdir -p /sdk
-	mount --bind ${SDKDIR} /sdk
+	${SUDO_OPT} mkdir -p /sdk
+	${SUDO_OPT} mount --bind ${SDKDIR} /sdk
 	${MAKE} -C /sdk
 	${MAKE} -C /sdk ARCH=aarch64
-	umount /sdk
+	${SUDO_OPT} umount /sdk
 
 .PHONY: jobd/make/nic
 jobd/make/nic:

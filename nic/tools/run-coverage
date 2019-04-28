@@ -140,7 +140,7 @@ export BULLSEYE_COVMERGE=/home/asic/tools/eda/bullseye/bin/covmerge
 export GEN_DIR=$NIC_DIR/gen
 
 if [ ${#skip_targets[@]} -eq 0 ]; then
-    $NIC_DIR/tools/gen_dol_cov_run.py
+    $NIC_DIR/tools/gen_dol_cov_run.py --job-files ${jobs_files[@]}
 else
     $NIC_DIR/tools/gen_dol_cov_run.py --skip-targets ${skip_targets[@]} --job-files ${jobs_files[@]}
 fi
