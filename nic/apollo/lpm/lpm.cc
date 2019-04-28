@@ -369,6 +369,9 @@ lpm_write_stage_table (itree_type_t tree_type, lpm_stage_info_t *stage)
         SDK_ASSERT(0);
         break;
     }
+    /**< update this stage meta for next time */
+    stage->curr_index = 0;
+    stage->curr_table_addr += LPM_TABLE_SIZE;
     memset(stage->curr_table, 0xFF, LPM_TABLE_SIZE);
     return SDK_RET_OK;
 }
@@ -467,6 +470,9 @@ lpm_write_last_stage_table (itree_type_t tree_type, lpm_stage_info_t *stage)
         SDK_ASSERT(0);
         break;
     }
+    /**< update last stage meta for next time */
+    stage->curr_index = 0;
+    stage->curr_table_addr += LPM_TABLE_SIZE;
     memset(stage->curr_table, 0xFF, LPM_TABLE_SIZE);
     return SDK_RET_OK;
 }
@@ -478,22 +484,17 @@ lpm_write_last_stage_table (itree_type_t tree_type, lpm_stage_info_t *stage)
  * @return    SDK_RET_OK on success, failure status code on error
  */
 static sdk_ret_t
-lpm_flush_partial_tables (lpm_stage_meta_t *smeta, uint32_t nstages,
-                          uint32_t curr_default)
+lpm_flush_tables (lpm_stage_meta_t *smeta, uint32_t nstages)
 {
     for (uint32_t i = 0; i < (nstages - 1); i++) {
         lpm_write_stage_table(smeta->tree_type, &smeta->stage_info[i]);
     }
 
     if (nstages > 0) {
-        /**< table is ready to write, set the default data */
-        lpm_set_default_data(smeta->tree_type, &smeta->stage_info[nstages - 1],
-                             curr_default);
-        /**< write the table to memory */
         lpm_write_last_stage_table(smeta->tree_type,
                                    &smeta->stage_info[nstages - 1]);
-
     }
+
     return SDK_RET_OK;
 }
 
@@ -506,14 +507,11 @@ lpm_promote_route (lpm_inode_t *inode, uint32_t stage, lpm_stage_meta_t *smeta)
     SDK_ASSERT(0 <= stage && stage < LPM_MAX_STAGES);
     curr_stage = &smeta->stage_info[stage];
     if (curr_stage->curr_index == smeta->keys_per_table) {
+        /**< time to promote this to previous stage */
+        lpm_promote_route(inode, stage - 1, smeta);
         /**< flush current table to hw since its full */
         ret = lpm_write_stage_table(smeta->tree_type, curr_stage);
         SDK_ASSERT(ret == SDK_RET_OK);
-        /**< time to promote this to previous stage */
-        lpm_promote_route(inode, stage - 1, smeta);
-        /**< update this stage meta for next time */
-        curr_stage->curr_index = 0;
-        curr_stage->curr_table_addr += LPM_TABLE_SIZE;
         return;
     }
 
@@ -541,7 +539,6 @@ lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
     lpm_stage_info_t    *last_stage_info;
     lpm_stage_meta_t    smeta;
     uint32_t            nstages, nkeys_per_table;
-    uint32_t            curr_default = default_nh;
 
     PDS_TRACE_DEBUG("Building LPM tree type %u, interval count %u, "
                     "default nh %u, max routes %u, root addr 0x%llx, "
@@ -574,29 +571,28 @@ lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
      */
     nkeys_per_table = lpm_keys_per_table(itable->tree_type) >> 1;
     last_stage_info = &smeta.stage_info[nstages-1];
+    /**< set the default data for the first table */
+    lpm_set_default_data(smeta.tree_type, last_stage_info, default_nh);
     for (uint32_t i = 0; i < itable->num_intervals; i++) {
         lpm_add_key_to_last_stage(smeta.tree_type, last_stage_info,
                                   &itable->nodes[i]);
-
         if (last_stage_info->curr_index == nkeys_per_table) {
-            /**< table is ready to write. set the default data */
-            lpm_set_default_data(smeta.tree_type, last_stage_info,
-                                 curr_default);
-            /**< Write the table to HW memory */
-            lpm_write_last_stage_table(smeta.tree_type, last_stage_info);
-
+            /**< current table is full and ready to write */
+            /**< write the table here only if there are more nodes */
+            /**< otherwise, lpm_flush_tables() will write it */
             if (++i < itable->num_intervals) {
-                /**< propogate this node to one of the previous stages */
+                /**< promote the next node, if any, to the previous stage(s) */
                 lpm_promote_route(&itable->nodes[i], nstages - 2, &smeta);
-                /**< default data comes from the most recently promoted entry */
-                curr_default = itable->nodes[i].data;
-                /**< update the table address  */
-                last_stage_info->curr_index = 0;
-                last_stage_info->curr_table_addr += LPM_TABLE_SIZE;
+                /**< Write the current table to HW memory */
+                lpm_write_last_stage_table(smeta.tree_type, last_stage_info);
+                /**< set the default data for the next table */
+                /**< it comes from the most recently promoted entry */
+                lpm_set_default_data(smeta.tree_type, last_stage_info,
+                                     itable->nodes[i].data);
             }
         }
     }
-    ret = lpm_flush_partial_tables(&smeta, nstages, curr_default);
+    ret = lpm_flush_tables(&smeta, nstages);
     SDK_ASSERT(ret == SDK_RET_OK);
     return SDK_RET_OK;
 }
