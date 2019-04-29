@@ -57,6 +57,9 @@ namespace hal {
 #define HAL_MAX_PFC_COS_VALS HAL_MAX_DOT1Q_PCP_VALS
 #define HAL_MIN_MTU            1500
 #define HAL_JUMBO_MTU          9216
+#define QOS_DEFAULT_CPU_BPS    10000
+#define QOS_DEFAULT_XON_THRESHOLD  0x4B8800
+#define QOS_DEFAULT_XOFF_THRESHOLD 0x4C8200
 
 #define QOS_GROUPS(ENTRY)                                       \
     ENTRY(QOS_GROUP_DEFAULT,             0, "default")          \
@@ -89,11 +92,12 @@ inline std::ostream& operator<<(std::ostream& os, const qos_class_key_t& s)
    return os << fmt::format("{{qos_group={}}}", s.qos_group);
 }
 
-typedef struct qos_pfc_s {
-    uint32_t xon_threshold;       // Threshold at which to send xon (2-4 MTUs)
-    uint32_t xoff_threshold;      // Free buffer threshold at which to send xoff (2-8MTUs)
+typedef struct qos_pause_s {
+    uint32_t xon_threshold;       // Threshold at which to send xon
+    uint32_t xoff_threshold;      // Free buffer threshold at which to send xoff
+    bool     pfc_enable;          // PFC or link-level pause
     uint32_t pfc_cos;             // PFC cos
-} __PACK__   qos_pfc_t;
+} __PACK__   qos_pause_t;
 
 #define QOS_SCHED_TYPES(ENTRY)                       \
     ENTRY(QOS_SCHED_TYPE_DWRR,          0, "dwrr")   \
@@ -101,6 +105,12 @@ typedef struct qos_pfc_s {
 
 DEFINE_ENUM(qos_sched_type_e, QOS_SCHED_TYPES);
 #undef QOS_SCHED_TYPES
+
+typedef enum qos_pause_type_e {
+    QOS_PAUSE_TYPE_NONE,
+    QOS_PAUSE_TYPE_LINK_LEVEL,
+    QOS_PAUSE_TYPE_PFC
+} qos_pause_type_t;
 
 typedef struct qos_sched_s {
     qos_sched_type_e type;
@@ -142,10 +152,10 @@ typedef struct qos_class_s {
     qos_class_key_t      key;            // QOS group information
 
     uint32_t             mtu;            // MTU of the packets in bytes
-    qos_pfc_t            pfc;            // pfc configuration
+    qos_pause_t          pause;          // pause configuration
     bool                 no_drop;        // No drop class
     qos_sched_t          sched;          // scheduler configuration
-    qos_cmap_t           cmap;    // Uplink class map
+    qos_cmap_t           cmap;           // Uplink class map
     qos_marking_action_t marking;
 
                                          // operational state of qos-class
@@ -166,12 +176,13 @@ typedef struct qos_class_update_app_ctxt_s {
     bool mtu_changed;
     bool threshold_changed;
     bool dot1q_pcp_changed;
-    uint32_t dot1q_pcp_src;
+    uint32_t dot1q_pcp_remove;
     bool ip_dscp_changed;
     bool ip_dscp_remove[HAL_MAX_IP_DSCP_VALS];
     bool pfc_changed;
     bool scheduler_changed;
     bool marking_changed;
+    bool pfc_cos_changed;
 } __PACK__ qos_class_update_app_ctxt_t;
 
 static inline bool
@@ -299,6 +310,9 @@ hal_ret_t qosclass_get(qos::QosClassGetRequest& req,
                        qos::QosClassGetResponseMsg *rsp);
 hal_ret_t qos_class_thresholds_get(qos::QosClassThresholdsGetRequest& req,
                                    qos::QosClassThresholdsGetResponseMsg *rsp);
+hal_ret_t qos_class_set_global_pause_type(
+                        qos::QosClassSetGlobalPauseTypeRequest& req,
+                        qos::QosClassSetGlobalPauseTypeResponseMsg *rsp);
 hal_ret_t qos_class_store_cb(void *obj, uint8_t *mem,
                              uint32_t len, uint32_t *mlen);
 uint32_t qos_class_restore_cb(void *obj, uint32_t len);
@@ -430,6 +444,26 @@ copp_type_to_spec_type (copp_type_t copp_type)
         SDK_ASSERT(0);
         return kh::COPP_TYPE_FLOW_MISS;
     }
+}
+
+static inline bool
+spec_cmap_type_pcp(qos::QosClassMapType type) {
+    return type == qos::QOS_CLASS_MAP_TYPE_PCP;
+}
+
+static inline bool
+spec_cmap_type_dscp(qos::QosClassMapType type) {
+    return type == qos::QOS_CLASS_MAP_TYPE_DSCP;
+}
+
+static inline bool
+cmap_type_pcp(qos_cmap_type_e type) {
+    return type == QOS_CMAP_TYPE_PCP;
+}
+
+static inline bool
+cmap_type_dscp(qos_cmap_type_e type) {
+    return type == QOS_CMAP_TYPE_DSCP;
 }
 
 extern void *copp_get_key_func(void *entry);

@@ -19,19 +19,21 @@ import (
 )
 
 var (
-	qosGroup       string
-	qosClassHandle uint64
-	coppType       string
-	coppHandle     uint64
-	qosMtu         uint32
-	qosPcp         uint32
-	qosDscp        string
-	qosXon         uint32
-	qosXoff        uint32
-	qosBw          uint32
-	qosBps         uint64
-	qosPfc         bool
-	qosPfcCos      uint32
+	qosGroup        string
+	qosClassHandle  uint64
+	coppType        string
+	coppHandle      uint64
+	qosMtu          uint32
+	qosPcp          uint32
+	qosDscp         string
+	qosXon          uint32
+	qosXoff         uint32
+	qosBw           uint32
+	qosBps          uint64
+	qosPfcCos       uint32
+	qosPauseTypeStr string
+	qosPauseEnable  bool
+	qosPauseDisable bool
 )
 
 var qosShowCmd = &cobra.Command{
@@ -53,6 +55,13 @@ var qosClassCreateCmd = &cobra.Command{
 	Short: "qos-class object",
 	Long:  "qos-class object",
 	Run:   qosClassCreateCmdHandler,
+}
+
+var qosClassGlobalPauseTypeCmd = &cobra.Command{
+	Use:   "qos-class",
+	Short: "qos-class",
+	Long:  "qos-class",
+	Run:   qosClassGlobalPauseTypeCmdHandler,
 }
 
 var qosClassUpdateCmd = &cobra.Command{
@@ -104,25 +113,51 @@ var qosThresholdsCmd = &cobra.Command{
 	Run:   qosThresholdsCmdHandler,
 }
 
+var xonThresholdDefault uint32 = 0x4B8800
+var xoffThresholdDefault uint32 = 0x4C8200
+var qosPauseTypeDefault halproto.QosPauseType = halproto.QosPauseType_QOS_PAUSE_TYPE_LINK_LEVEL
+var qosPfcCosDefault uint32
+
 func init() {
 	showCmd.AddCommand(qosShowCmd)
 	showCmd.AddCommand(coppShowCmd)
+
+	// show qos-class queue-statistics
 	qosShowCmd.AddCommand(qosStatsCmd)
+
+	// show qos-class queues
 	qosShowCmd.AddCommand(qosQueuesCmd)
+
+	// show qos-class thresholds
 	qosShowCmd.AddCommand(qosThresholdsCmd)
+
+	// show qos-class queue-statistics input
 	qosStatsCmd.AddCommand(qosInputStatsCmd)
+
+	// show qos-class queue-statistics output
 	qosStatsCmd.AddCommand(qosOutputStatsCmd)
 
+	// show qos-class queues params
 	qosQueuesCmd.Flags().StringVar(&qosGroup, "qosgroup", "default", "Specify qos group")
 	qosQueuesCmd.Flags().Uint64Var(&qosClassHandle, "handle", 0, "Specify qos class handle")
+
+	// show qos-class params
 	qosShowCmd.Flags().StringVar(&qosGroup, "qosgroup", "default", "Specify qos group")
 	qosShowCmd.Flags().Uint64Var(&qosClassHandle, "handle", 0, "Specify qos class handle")
 	qosShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+
+	// show qos-class queue-statistics params
 	qosStatsCmd.PersistentFlags().StringVar(&qosGroup, "qosgroup", "default", "Specify qos group")
 	qosStatsCmd.PersistentFlags().Uint64Var(&qosClassHandle, "handle", 0, "Specify qos class handle")
+
 	coppShowCmd.Flags().StringVar(&coppType, "copptype", "flow-miss", "Specify copp type")
 	coppShowCmd.Flags().Uint64Var(&coppHandle, "handle", 0, "Specify copp handle")
 
+	// debug qos-class
+	debugCmd.AddCommand(qosClassGlobalPauseTypeCmd)
+	qosClassGlobalPauseTypeCmd.Flags().StringVar(&qosPauseTypeStr, "global-pause-type", "none", "Specify global pause type - none/link-level/pfc")
+
+	// debug create qos-class
 	debugCreateCmd.AddCommand(qosClassCreateCmd)
 	qosClassCreateCmd.Flags().StringVar(&qosGroup, "qosgroup", "", "Specify qos group. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
 	qosClassCreateCmd.Flags().Uint32Var(&qosMtu, "mtu", 9216, "Specify MTU (64-9216)")
@@ -130,17 +165,20 @@ func init() {
 	qosClassCreateCmd.Flags().StringVar(&qosDscp, "dscp", "0", "Specify dscp values 0-63 as --dscp 10,20,30")
 	qosClassCreateCmd.Flags().Uint32Var(&qosBw, "dwrr-bw", 0, "Specify DWRR BW percentage (0-100)")
 	qosClassCreateCmd.Flags().Uint64Var(&qosBps, "strict-priority-rate", 0, "Specify strict priority rate in bps (1-100Gbps)")
-	qosClassCreateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 0, "Specify xon threshold (2 * mtu to 4 * mtu)")
-	qosClassCreateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 0, "Specify xoff threshold (2 * mtu to 8 * mtu)")
-	qosClassCreateCmd.Flags().BoolVar(&qosPfc, "pfc-enable", false, "Enable PFC with default values")
+	qosClassCreateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 0, "Specify xon threshold in bytes")
+	qosClassCreateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 0, "Specify xoff threshold in bytes")
 	qosClassCreateCmd.Flags().Uint32Var(&qosPfcCos, "pfc-cos", 0, "Specify COS value for PFC")
+	qosClassCreateCmd.Flags().BoolVar(&qosPauseEnable, "pause-enable", false, "Enable pause")
+	qosClassCreateCmd.Flags().StringVar(&qosPauseTypeStr, "pause-type", "link-level", "Specify pause type - link-level/pfc")
 	qosClassCreateCmd.MarkFlagRequired("qosgroup")
 	qosClassCreateCmd.MarkFlagRequired("mtu")
 
+	// debug delete qos-class
 	debugDeleteCmd.AddCommand(qosClassDeleteCmd)
 	qosClassDeleteCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
 	qosClassDeleteCmd.MarkFlagRequired("qosgroup")
 
+	// debug update qos-class
 	debugUpdateCmd.AddCommand(qosClassUpdateCmd)
 	qosClassUpdateCmd.Flags().StringVar(&qosGroup, "qosgroup", "", "Specify qos group. Valid groups: default,user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosMtu, "mtu", 9216, "Specify MTU (64-9216)")
@@ -148,10 +186,10 @@ func init() {
 	qosClassUpdateCmd.Flags().StringVar(&qosDscp, "dscp", "0", "Specify dscp values 0-63 as --dscp 10,20,30")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosBw, "dwrr-bw", 0, "Specify DWRR BW percentage (0-100)")
 	qosClassUpdateCmd.Flags().Uint64Var(&qosBps, "strict-priority-rate", 0, "Specify strict priority rate in bps")
-	qosClassUpdateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 0, "Specify xon threshold (2 * mtu to 4 * mtu)")
-	qosClassUpdateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 0, "Specify xoff threshold (2 * mtu to 8 * mtu)")
-	qosClassUpdateCmd.Flags().BoolVar(&qosPfc, "pfc-enable", false, "Enable PFC with default values")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosXon, "xon-threshold", 0, "Specify xon threshold in bytes")
+	qosClassUpdateCmd.Flags().Uint32Var(&qosXoff, "xoff-threshold", 0, "Specify xoff threshold in bytes")
 	qosClassUpdateCmd.Flags().Uint32Var(&qosPfcCos, "pfc-cos", 0, "Specify COS value for PFC")
+	qosClassUpdateCmd.Flags().BoolVar(&qosPauseDisable, "pause-disable", false, "Disable pause")
 	qosClassUpdateCmd.MarkFlagRequired("qosgroup")
 }
 
@@ -227,13 +265,6 @@ func qosClassCmdCheck(cmd *cobra.Command, isCreate bool) bool {
 				return false
 			}
 		}
-
-		if cmd.Flags().Changed("pfc-enable") {
-			if cmd.Flags().Changed("pfc-cos") == false {
-				fmt.Printf("PFC cos needs to be specified\n")
-				return false
-			}
-		}
 	} else {
 		if isQosGroupValid(qosGroup) == false || (strings.Contains(qosGroup, "user") == false && strings.Contains(qosGroup, "default") == false) {
 			fmt.Printf("Invalid qos-group specified. Valid groups: default,user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6\n")
@@ -262,6 +293,78 @@ func qosClassCmdCheck(cmd *cobra.Command, isCreate bool) bool {
 	return true
 }
 
+func qosClassGlobalPauseTypeCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewQOSClient(c)
+
+	var req *halproto.QosClassSetGlobalPauseTypeRequest
+
+	qosPauseType := halproto.QosPauseType_QOS_PAUSE_TYPE_NONE
+	if cmd.Flags().Changed("global-pause-type") == true {
+		if qosPauseTypeStr == "link-level" {
+			qosPauseType = halproto.QosPauseType_QOS_PAUSE_TYPE_LINK_LEVEL
+		} else if qosPauseTypeStr == "pfc" {
+			qosPauseType = halproto.QosPauseType_QOS_PAUSE_TYPE_PFC
+		} else {
+			qosPauseTypeStr = "none"
+		}
+	}
+	fmt.Printf("Global pause type %s\n", qosPauseTypeStr)
+
+	req = &halproto.QosClassSetGlobalPauseTypeRequest{
+		PauseType: qosPauseType,
+	}
+	reqMsg := &halproto.QosClassSetGlobalPauseTypeRequestMsg{
+		Request: []*halproto.QosClassSetGlobalPauseTypeRequest{req},
+	}
+
+	// HAL call
+	_, err = client.QosClassSetGlobalPauseType(context.Background(), reqMsg)
+	if err != nil {
+		fmt.Printf("QOS set global pause type failed. %v\n", err)
+		return
+	}
+}
+
+func parseScheduler(cmd *cobra.Command, args []string, qosBw uint32, qosBps uint64) *halproto.QosSched {
+	var sched *halproto.QosSched
+
+	if cmd.Flags().Changed("dwrr-bw") {
+		sched = &halproto.QosSched{
+			SchedType: &halproto.QosSched_Dwrr{
+				Dwrr: &halproto.QosSched_DWRRInfo{
+					BwPercentage: qosBw,
+				},
+			},
+		}
+	} else if cmd.Flags().Changed("strict-priority-rate") {
+		sched = &halproto.QosSched{
+			SchedType: &halproto.QosSched_Strict{
+				Strict: &halproto.QosSched_StrictPriorityInfo{
+					Bps: qosBps,
+				},
+			},
+		}
+	}
+	return sched
+}
+
+func validateDot1qPcpDscp(cmd *cobra.Command) bool {
+	if cmd.Flags().Changed("dscp") == true &&
+		cmd.Flags().Changed("dot1q-pcp") == true {
+		fmt.Printf("Either DSCP or DOT1Q-PCP is supported, but not both\n")
+		return false
+	}
+	return true
+}
+
 func qosClassCreateCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
@@ -282,49 +385,57 @@ func qosClassCreateCmdHandler(cmd *cobra.Command, args []string) {
 	var sched *halproto.QosSched
 	qosClassMapType := halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_DSCP
 
-	if cmd.Flags().Changed("dwrr-bw") {
-		sched = &halproto.QosSched{
-			SchedType: &halproto.QosSched_Dwrr{
-				Dwrr: &halproto.QosSched_DWRRInfo{
-					BwPercentage: qosBw,
-				},
-			},
-		}
-	} else if cmd.Flags().Changed("strict-priority-rate") {
-		sched = &halproto.QosSched{
-			SchedType: &halproto.QosSched_Strict{
-				Strict: &halproto.QosSched_StrictPriorityInfo{
-					Bps: qosBps,
-				},
-			},
-		}
-	}
+	// scheduler config
+	sched = parseScheduler(cmd, args, qosBw, qosBps)
 
+	// DSCP or dot1q-pcp
+	if validateDot1qPcpDscp(cmd) == false {
+		return
+	}
 	if cmd.Flags().Changed("dscp") == true {
 		dscp = stringToDscpArray(qosDscp)
 		qosClassMapType = halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_DSCP
 	}
-
 	if cmd.Flags().Changed("dot1q-pcp") == true {
 		qosClassMapType = halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_PCP
 	}
 
-	if cmd.Flags().Changed("dscp") == true &&
-		cmd.Flags().Changed("dot1q-pcp") == true {
-		qosClassMapType = halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_PCP_DSCP
-	}
+	// pause config
+	if cmd.Flags().Changed("pause-enable") == true {
+		// xon/xoff thresholds
+		if cmd.Flags().Changed("xon-threshold") == false {
+			qosXon = xonThresholdDefault
+		}
+		if cmd.Flags().Changed("xoff-threshold") == false {
+			qosXoff = xoffThresholdDefault
+		}
 
-	pfc := false
-	if cmd.Flags().Changed("xon-threshold") && cmd.Flags().Changed("xoff-threshold") {
-		pfc = true
-	} else if cmd.Flags().Changed("pfc-enable") {
-		pfc = true
-		qosXon = 0x4B8800
-		qosXoff = 0x4C8200
-		fmt.Printf("Xon default threshold: %d, Xoff default threshold: %d\n", qosXon, qosXoff)
-	}
+		// pause type
+		qosPauseType := halproto.QosPauseType_QOS_PAUSE_TYPE_LINK_LEVEL
+		if cmd.Flags().Changed("pause-type") == true {
+			if qosPauseTypeStr == "pfc" {
+				qosPauseType = halproto.QosPauseType_QOS_PAUSE_TYPE_PFC
+			} else {
+				qosPauseTypeStr = "link-level"
+			}
+		}
 
-	if pfc == true {
+		fmt.Printf("Xon Threshold %d, Xoff Threshold %d, Pause Type %s\n",
+			qosXon, qosXoff, qosPauseTypeStr)
+
+		// PFC COS - applicable only if pause type is PFC
+		if qosPauseType == halproto.QosPauseType_QOS_PAUSE_TYPE_PFC {
+			if cmd.Flags().Changed("pfc-cos") == false {
+				fmt.Printf("Specify PFC COS for PFC type\n")
+				return
+			}
+		} else {
+			if cmd.Flags().Changed("pfc-cos") == true {
+				fmt.Printf("PFC COS applicable only if pause type is PFC\n")
+				return
+			}
+		}
+
 		req = &halproto.QosClassSpec{
 			KeyOrHandle: &halproto.QosClassKeyHandle{
 				KeyOrHandle: &halproto.QosClassKeyHandle_QosGroup{
@@ -338,9 +449,10 @@ func qosClassCreateCmdHandler(cmd *cobra.Command, args []string) {
 				Type:     qosClassMapType,
 			},
 			Sched: sched,
-			Pfc: &halproto.QosPFC{
+			Pause: &halproto.QosPause{
 				XonThreshold:  qosXon,
 				XoffThreshold: qosXoff,
+				Type:          qosPauseType,
 				PfcCos:        qosPfcCos,
 			},
 		}
@@ -398,7 +510,7 @@ func qosClassUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	var dscp []uint32
 	var req *halproto.QosClassSpec
 	var sched *halproto.QosSched
-	var pfc *halproto.QosPFC
+	var pause *halproto.QosPause
 	qosClassMapType := halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_DSCP
 	internal := false
 
@@ -432,86 +544,78 @@ func qosClassUpdateCmdHandler(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		if cmd.Flags().Changed("dscp") == true {
-			dscp = stringToDscpArray(qosDscp)
-			qosClassMapType = halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_DSCP
-		} else {
-			dscp = resp.GetSpec().GetClassMap().GetIpDscp()
+		// scheduler config
+		sched = parseScheduler(cmd, args, qosBw, qosBps)
+		if sched == nil {
+			sched = resp.GetSpec().GetSched()
 		}
 
-		if cmd.Flags().Changed("dot1q-pcp") == true {
-			qosClassMapType = halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_PCP
-		} else {
-			qosPcp = resp.GetSpec().GetClassMap().GetDot1QPcp()
+		// DSCP or dot1q-pcp
+		if validateDot1qPcpDscp(cmd) == false {
+			return
+		}
+		qosClassMapType = resp.GetSpec().GetClassMap().GetType()
+		if qosClassMapType == halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_DSCP {
+			if cmd.Flags().Changed("dscp") == true {
+				dscp = stringToDscpArray(qosDscp)
+			} else {
+				dscp = resp.GetSpec().GetClassMap().GetIpDscp()
+			}
+		}
+		if qosClassMapType == halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_PCP {
+			if cmd.Flags().Changed("dot1q-pcp") == false {
+				qosPcp = resp.GetSpec().GetClassMap().GetDot1QPcp()
+			}
 		}
 
-		if cmd.Flags().Changed("dscp") == true &&
-			cmd.Flags().Changed("dot1q-pcp") == true {
-			qosClassMapType = halproto.QosClassMapType_QOS_CLASS_MAP_TYPE_PCP_DSCP
-		}
-
-		if cmd.Flags().Changed("dscp") == false &&
-			cmd.Flags().Changed("dot1q-pcp") == false {
-			qosClassMapType = resp.GetSpec().GetClassMap().GetType()
-		}
-
+		// MTU
 		if cmd.Flags().Changed("mtu") == false {
 			qosMtu = resp.GetSpec().GetMtu()
 		}
 
-		if cmd.Flags().Changed("xon-threshold") && cmd.Flags().Changed("xoff-threshold") {
-			if cmd.Flags().Changed("pfc-cos") == false {
-				fmt.Printf("PFC cos needs to be specified\n")
-				return
-			}
-			pfc = &halproto.QosPFC{
-				XonThreshold:  qosXon,
-				XoffThreshold: qosXoff,
-				PfcCos:        qosPfcCos,
-			}
-		} else if cmd.Flags().Changed("pfc-enable") {
-			if cmd.Flags().Changed("pfc-cos") == false {
-				fmt.Printf("PFC cos needs to be specified\n")
-				return
-			}
-			qosXon = 2 * qosMtu
-			qosXoff = 8 * qosMtu
-			pfc = &halproto.QosPFC{
-				XonThreshold:  qosXon,
-				XoffThreshold: qosXoff,
-				PfcCos:        qosPfcCos,
-			}
-			fmt.Printf("Xon default threshold: %d, Xoff default threshold: %d\n", qosXon, qosXoff)
-		} else {
-			if resp.GetSpec().GetPfc().GetXonThreshold() == 0 {
-				pfc = nil
+		// pause config
+		if cmd.Flags().Changed("pause-disable") == false {
+			qosPauseType := qosPauseTypeDefault
+			// if pause needs to be enabled and the existing qos class
+			// does not have pause params, then use the defaults
+			if resp.GetSpec().GetPause() == nil {
+				// use the defaults
+				qosXon = xonThresholdDefault
+				qosXoff = xoffThresholdDefault
+				qosPauseType = qosPauseTypeDefault
+				qosPfcCos = qosPfcCosDefault
 			} else {
-				pfc = resp.GetSpec().GetPfc()
-			}
-		}
+				// xon/xoff thresholds
+				if cmd.Flags().Changed("xon-threshold") == false {
+					qosXon = resp.GetSpec().GetPause().GetXonThreshold()
+				}
+				if cmd.Flags().Changed("xoff-threshold") == false {
+					qosXoff = resp.GetSpec().GetPause().GetXoffThreshold()
+				}
 
-		if cmd.Flags().Changed("dwrr-bw") {
-			sched = &halproto.QosSched{
-				SchedType: &halproto.QosSched_Dwrr{
-					Dwrr: &halproto.QosSched_DWRRInfo{
-						BwPercentage: qosBw,
-					},
-				},
+				// pause type
+				qosPauseType = resp.GetSpec().GetPause().GetType()
+
+				fmt.Printf("Xon Threshold %d, Xoff Threshold %d, Pause Type %s\n",
+					qosXon, qosXoff, qosPauseTypeStr)
+
+				// PFC COS - applicable only if pause type is PFC
+				if qosPauseType == halproto.QosPauseType_QOS_PAUSE_TYPE_PFC {
+					if cmd.Flags().Changed("pfc-cos") == false {
+						qosPfcCos = resp.GetSpec().GetPause().GetPfcCos()
+					}
+				}
 			}
-		} else if cmd.Flags().Changed("strict-priority-rate") {
-			sched = &halproto.QosSched{
-				SchedType: &halproto.QosSched_Strict{
-					Strict: &halproto.QosSched_StrictPriorityInfo{
-						Bps: qosBps,
-					},
-				},
+			pause = &halproto.QosPause{
+				XonThreshold:  qosXon,
+				XoffThreshold: qosXoff,
+				Type:          qosPauseType,
+				PfcCos:        qosPfcCos,
 			}
-		} else {
-			sched = resp.GetSpec().GetSched()
 		}
 
 		if internal == false {
-			if pfc == nil {
+			if pause == nil {
 				req = &halproto.QosClassSpec{
 					KeyOrHandle: &halproto.QosClassKeyHandle{
 						KeyOrHandle: &halproto.QosClassKeyHandle_QosGroup{
@@ -540,11 +644,11 @@ func qosClassUpdateCmdHandler(cmd *cobra.Command, args []string) {
 						IpDscp:   dscp,
 					},
 					Sched: sched,
-					Pfc:   pfc,
+					Pause: pause,
 				}
 			}
 		} else {
-			if pfc == nil {
+			if pause == nil {
 				req = &halproto.QosClassSpec{
 					KeyOrHandle: &halproto.QosClassKeyHandle{
 						KeyOrHandle: &halproto.QosClassKeyHandle_QosGroup{
@@ -563,7 +667,7 @@ func qosClassUpdateCmdHandler(cmd *cobra.Command, args []string) {
 					},
 					Mtu:   qosMtu,
 					Sched: sched,
-					Pfc:   pfc,
+					Pause: pause,
 				}
 			}
 		}
@@ -1162,7 +1266,7 @@ func qosClassPrintOne(resp *halproto.QosClassSpec) {
 	if strings.Contains(qosGroup, "INTERNAL") == true {
 		return
 	}
-	pfcStr := fmt.Sprintf("%d/%d", resp.GetPfc().GetXonThreshold(), resp.GetPfc().GetXoffThreshold())
+	pfcStr := fmt.Sprintf("%d/%d", resp.GetPause().GetXonThreshold(), resp.GetPause().GetXoffThreshold())
 	scheduleStr := ""
 	if resp.GetSched().GetDwrr() == nil {
 		scheduleStr = fmt.Sprintf("%dbps", resp.GetSched().GetStrict().GetBps())
@@ -1181,7 +1285,7 @@ func qosClassPrintOne(resp *halproto.QosClassSpec) {
 		dot1qPcpStr = fmt.Sprintf("%d", resp.GetClassMap().GetDot1QPcp())
 	}
 	fmt.Printf("%-30s%-6d%-14s%-8d%-18s%-10s%-10s\n",
-		qosGroup, resp.GetMtu(), pfcStr, resp.GetPfc().GetPfcCos(),
+		qosGroup, resp.GetMtu(), pfcStr, resp.GetPause().GetPfcCos(),
 		scheduleStr, dot1qPcpStr, dscpStr)
 }
 

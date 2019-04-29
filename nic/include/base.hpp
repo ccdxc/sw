@@ -264,8 +264,9 @@ do {                                                       \
     ENTRY(HAL_RET_QOS_CLASS_DOT1Q_PCP_ALREADY_IN_USE,           97, "qos class dot1q pcp already in use")           \
     ENTRY(HAL_RET_QOS_CLASS_IP_DSCP_ALREADY_IN_USE,             98, "qos class ip dscp already in use")             \
     ENTRY(HAL_RET_QOS_CLASS_DROP_NO_DROP_CHANGE_NOT_ALLOWED,    99, "qos class drop no-drop change not allowed")    \
-    ENTRY(HAL_RET_RETRANSMISSION,                               100,"retransmission detected in flow miss path")    \
-    ENTRY(HAL_RET_FTE_SRC_LIF_MISMATCH,                         101,"src lif mismatch detected in fte")             \
+    ENTRY(HAL_RET_QOS_CLASS_PAUSE_TYPE_INVALID,                 100, "qos class invalid pause type")                \
+    ENTRY(HAL_RET_RETRANSMISSION,                               101,"retransmission detected in flow miss path")    \
+    ENTRY(HAL_RET_FTE_SRC_LIF_MISMATCH,                         102,"src lif mismatch detected in fte")             \
     ENTRY(HAL_RET_ERR,                                          255, "catch all generic error")
 
 DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)

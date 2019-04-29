@@ -49,12 +49,11 @@ TEST_F(qos_class_test, test1)
     spec.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_1);
     spec.set_mtu(2000);
     spec.mutable_sched()->mutable_strict()->set_bps(10000);
-    spec.mutable_class_map()->set_dot1q_pcp(3);
     spec.mutable_class_map()->add_ip_dscp(3);
     spec.mutable_class_map()->add_ip_dscp(5);
-    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
+    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_DSCP);
     spec.mutable_marking()->set_dot1q_pcp_rewrite_en(true);
-    spec.mutable_marking()->set_dot1q_pcp(3);
+    spec.mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_LINK_LEVEL);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::qosclass_create(spec, &rsp);
@@ -66,10 +65,10 @@ TEST_F(qos_class_test, test1)
     spec.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_2);
     spec.set_mtu(2000);
     spec.mutable_sched()->mutable_strict()->set_bps(10000);
-    spec.mutable_class_map()->set_dot1q_pcp(5);
     spec.mutable_class_map()->add_ip_dscp(3);
     spec.mutable_class_map()->add_ip_dscp(2);
-    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
+    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_DSCP);
+    spec.mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_LINK_LEVEL);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::qosclass_create(spec, &rsp);
     hal::hal_cfg_db_close();
@@ -80,12 +79,11 @@ TEST_F(qos_class_test, test1)
     spec.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_1);
     spec.set_mtu(2000);
     spec.mutable_sched()->mutable_strict()->set_bps(10000);
-    spec.mutable_class_map()->set_dot1q_pcp(4);
     spec.mutable_class_map()->add_ip_dscp(4);
     spec.mutable_class_map()->add_ip_dscp(5);
-    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
+    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_DSCP);
+    spec.mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_LINK_LEVEL);
     spec.mutable_marking()->set_dot1q_pcp_rewrite_en(true);
-    spec.mutable_marking()->set_dot1q_pcp(3);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::qosclass_update(spec, &rsp);
@@ -98,32 +96,15 @@ TEST_F(qos_class_test, test1)
     spec.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_2);
     spec.set_mtu(2000);
     spec.mutable_sched()->mutable_strict()->set_bps(10000);
-    spec.mutable_class_map()->set_dot1q_pcp(5);
     spec.mutable_class_map()->add_ip_dscp(3);
     spec.mutable_class_map()->add_ip_dscp(2);
-    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
+    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_DSCP);
+    spec.mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_LINK_LEVEL);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::qosclass_create(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
-
-    // Update fail because reuse same dot1_pcp as user-def-2
-    spec.Clear();
-    spec.mutable_key_or_handle()->set_qos_group(kh::USER_DEFINED_1);
-    spec.set_mtu(2000);
-    spec.mutable_sched()->mutable_strict()->set_bps(10000);
-    spec.mutable_class_map()->set_dot1q_pcp(5);
-    spec.mutable_class_map()->add_ip_dscp(4);
-    spec.mutable_class_map()->add_ip_dscp(5);
-    spec.mutable_class_map()->set_type(qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
-    spec.mutable_marking()->set_dot1q_pcp_rewrite_en(true);
-    spec.mutable_marking()->set_dot1q_pcp(3);
-
-    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::qosclass_update(spec, &rsp);
-    hal::hal_cfg_db_close();
-    ASSERT_NE(ret, HAL_RET_OK);
 
     // Delete
     QosClassDeleteRequest del_req;
@@ -142,7 +123,6 @@ TEST_F(qos_class_test, test1)
     ret = hal::qosclass_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
-
 }
 
 // Creating internal qos_classs

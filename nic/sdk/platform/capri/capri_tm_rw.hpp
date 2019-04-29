@@ -144,6 +144,9 @@ typedef struct tm_uplink_iq_params_s {
     tm_q_t   p4_q;
 } __PACK__ tm_uplink_iq_params_t;
 
+sdk_ret_t capri_tm_uplink_iq_no_drop_update (tm_port_t port,
+                                             tm_q_t iq,
+                                             bool no_drop);
 sdk_ret_t capri_tm_uplink_iq_params_update(tm_port_t port, tm_q_t iq,
                                            tm_uplink_iq_params_t *iq_params);
 
@@ -157,9 +160,15 @@ typedef struct tm_uplink_input_dscp_map_s {
 
 sdk_ret_t capri_tm_uplink_input_dscp_map_update(tm_port_t port,
                                                 tm_uplink_input_dscp_map_t *dscp_map);
-
-sdk_ret_t capri_tm_uplink_oq_update(tm_port_t port, tm_q_t oq,
-                                    bool xoff_enable, uint32_t xoff_cos);
+sdk_ret_t capri_tm_uplink_oq_update(tm_port_t port,
+                                    tm_q_t oq,
+                                    uint32_t xoff_cos);
+sdk_ret_t capri_tm_set_uplink_mac_xoff(tm_port_t port,
+                                       bool reset_all_xoff,
+                                       bool set_all_xoff,
+                                       bool reset_pfc_xoff,
+                                       bool set_pfc_xoff,
+                                       uint32_t xoff_cos);
 
 #define TM_SCHED_TYPES(ENTRY)                    \
     ENTRY(TM_SCHED_TYPE_DWRR,       0, "dwrr")   \

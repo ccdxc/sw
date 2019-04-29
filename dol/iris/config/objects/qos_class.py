@@ -76,6 +76,7 @@ class QosClassObject(base.ConfigObjectBase):
         # Mandatory parameters
         req_spec.mtu = 2000
         req_spec.sched.dwrr.bw_percentage = 10
+        req_spec.pause.type = haldefs.qos.QOS_PAUSE_TYPE_LINK_LEVEL
 
         if self.UplinkCmapNeeded():
             req_spec.class_map.dot1q_pcp = self.cmap_dot1q_pcp

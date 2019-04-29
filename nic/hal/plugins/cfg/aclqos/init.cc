@@ -51,6 +51,8 @@ hal_qos_config_init (hal_cfg_t *hal_cfg)
     CoppResponse       copp_rsp;
     int                max_default_qos_class = 8;
     QosClassSpec       spec;
+    qos::QosClassSetGlobalPauseTypeRequest global_pause_type_req;
+    qos::QosClassSetGlobalPauseTypeResponseMsg global_pause_type_rsp;
 
     kh::QosGroup qos_group[max_default_qos_class] = {
                             kh::QosGroup::DEFAULT,
@@ -75,13 +77,20 @@ hal_qos_config_init (hal_cfg_t *hal_cfg)
         goto end;
     }
 
-    for (int i = 0; i < max_default_qos_class; i++) {
+    // set the global pause mode to link-level
+    global_pause_type_req.set_pause_type(qos::QOS_PAUSE_TYPE_LINK_LEVEL);
+    qos_class_set_global_pause_type(global_pause_type_req,
+                                    &global_pause_type_rsp);
 
+    for (int i = 0; i < max_default_qos_class; i++) {
         spec.mutable_key_or_handle()->set_qos_group(qos_group[i]);
-        spec.set_mtu(9216);
+        spec.mutable_pause()->set_xon_threshold(QOS_DEFAULT_XON_THRESHOLD);
+        spec.mutable_pause()->set_xoff_threshold(QOS_DEFAULT_XOFF_THRESHOLD);
+        spec.mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_LINK_LEVEL);
+        spec.set_mtu(HAL_JUMBO_MTU);
 
         if (qos_group[i] == kh::QosGroup::INTERNAL_CPU_COPY) {
-            spec.mutable_sched()->mutable_strict()->set_bps(10000);
+            spec.mutable_sched()->mutable_strict()->set_bps(QOS_DEFAULT_CPU_BPS);
         } else {
             spec.mutable_sched()->mutable_dwrr()->set_bw_percentage(50);
         }

@@ -46,6 +46,12 @@ pd_qos_get_alloc_q_count (qos_class_t *qos_class,
 
     switch(qos_group) {
         case QOS_GROUP_DEFAULT:
+            alloc_params->cnt_uplink_iq = 1;
+            alloc_params->cnt_txdma_iq = 1;
+            alloc_params->cnt_oq = 1;
+            alloc_params->dest_oq_type = HAL_PD_QOS_OQ_COMMON;
+            alloc_params->pcie_oq = true;
+            break;
         case QOS_GROUP_USER_DEFINED_1:
         case QOS_GROUP_USER_DEFINED_2:
         case QOS_GROUP_USER_DEFINED_3:
@@ -435,12 +441,21 @@ qos_class_pd_program_uplink_iq_params (pd_qos_class_t *pd_qos_class)
     memset(&iq_params, 0, sizeof(iq_params));
 
     iq_params.mtu = qos_class->mtu;
-    iq_params.xoff_threshold = qos_class->pfc.xoff_threshold;
-    iq_params.xon_threshold = qos_class->pfc.xon_threshold;
+    iq_params.xoff_threshold = qos_class->pause.xoff_threshold;
+    iq_params.xon_threshold = qos_class->pause.xon_threshold;
     SDK_ASSERT(capri_tm_q_valid(pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX]));
     iq_params.p4_q = pd_qos_class->p4_ig_q[HAL_PD_QOS_IQ_RX];
 
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
+        sdk_ret = capri_tm_uplink_iq_no_drop_update(
+                                    port, iq, qos_class->no_drop);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming the iq no_drop for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
+        }
         sdk_ret = capri_tm_uplink_iq_params_update(port, iq, &iq_params);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
@@ -508,27 +523,19 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
     if (!capri_tm_q_valid(iq)) {
         return HAL_RET_OK;
     }
+    has_pcp = cmap_type_pcp(qos_class->cmap.type);
+    has_dscp = cmap_type_dscp(qos_class->cmap.type);
 
-    has_dscp = (qos_class->cmap.type == QOS_CMAP_TYPE_DSCP) ||
-                (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
-
-    has_pcp = (qos_class->cmap.type == QOS_CMAP_TYPE_PCP) ||
-                (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
-
-    SDK_ASSERT(sizeof(qos_class->cmap.ip_dscp) ==
-               sizeof(dscp_map.ip_dscp));
+    SDK_ASSERT(sizeof(qos_class->cmap.ip_dscp) == sizeof(dscp_map.ip_dscp));
 
     memcpy(dscp_map.ip_dscp, qos_class->cmap.ip_dscp,
-           sizeof(qos_class->cmap.ip_dscp));
-
+               sizeof(qos_class->cmap.ip_dscp));
     if (has_pcp) {
         dot1q_pcp = qos_class->cmap.dot1q_pcp;
     } else {
         dot1q_pcp = qos_class_group_get_dot1q_pcp(qos_class);
     }
-
     dscp_map.dot1q_pcp = dot1q_pcp;
-
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
         sdk_ret = capri_tm_uplink_input_map_update(
                                                port,
@@ -541,7 +548,6 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
                           qos_class->key, port, ret);
             return ret;
         }
-
         if (has_dscp) {
             sdk_ret = capri_tm_uplink_input_dscp_map_update(port, &dscp_map);
             ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -553,7 +559,6 @@ qos_class_pd_program_uplink_iq_map (pd_qos_class_t *pd_qos_class)
             }
         }
     }
-
     return HAL_RET_OK;
 }
 
@@ -613,6 +618,10 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
     hal_ret_t             ret = HAL_RET_OK;
     sdk_ret_t             sdk_ret;
     tm_port_t             port;
+    bool                  reset_pfc_xoff = false;    // reset current PFC xoff
+    bool                  reset_all_xoff = false;    // reset all xoff
+    bool                  set_pfc_xoff = false;      // set xoff for PFC
+    bool                  set_all_xoff = false;      // set all xoff
     qos_class_t           *qos_class = pd_qos_class->pi_qos_class;
 
     if (!capri_tm_q_valid(pd_qos_class->dest_oq) ||
@@ -620,12 +629,42 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
         return HAL_RET_OK;
     }
 
+    // no_drop = true (pause enabled):
+    //      Incoming config: PFC
+    //      set xoff for pfc_cos (react only to PFC frames with pfc_cos)
+    //
+    // no_drop = false:
+    //      Incoming config: no pause
+    //      reset xoff for pfc_cos (dont react to PFC frames with pfc_cos)
+
+    if (qos_class->no_drop == true) {
+        if (qos_class->pause.pfc_enable == true) {
+            set_pfc_xoff = true;
+        }
+    } else {
+        reset_pfc_xoff = true;
+    }
+
     for (port = TM_UPLINK_PORT_BEGIN; port <= TM_UPLINK_PORT_END; port++) {
-        sdk_ret = capri_tm_uplink_oq_update(port, pd_qos_class->dest_oq,
-                                        qos_class->no_drop, qos_class->pfc.pfc_cos);
+        sdk_ret = capri_tm_uplink_oq_update(port,
+                                            pd_qos_class->dest_oq,
+                                            qos_class->pause.pfc_cos);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Error programming the xoff params for "
+            HAL_TRACE_ERR("Error programming xoff2oq map for "
+                          "Qos-class {} on port {} ret {}",
+                          qos_class->key, port, ret);
+            return ret;
+        }
+        sdk_ret = capri_tm_set_uplink_mac_xoff(port,
+                                               reset_all_xoff,
+                                               set_all_xoff,
+                                               reset_pfc_xoff,
+                                               set_pfc_xoff,
+                                               qos_class->pause.pfc_cos);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error programming mac xoff for "
                           "Qos-class {} on port {} ret {}",
                           qos_class->key, port, ret);
             return ret;
@@ -928,11 +967,8 @@ qos_class_pd_deprogram_uplink_iq_map (pd_qos_class_t *pd_qos_class)
         return HAL_RET_OK;
     }
 
-    has_dscp = (qos_class->cmap.type == QOS_CMAP_TYPE_DSCP) ||
-                (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
-
-    has_pcp = (qos_class->cmap.type == QOS_CMAP_TYPE_PCP) ||
-                (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
+    has_pcp = cmap_type_pcp(qos_class->cmap.type);
+    has_dscp = cmap_type_dscp(qos_class->cmap.type);
 
     SDK_ASSERT(sizeof(qos_class->cmap.ip_dscp) ==
                sizeof(dscp_map.ip_dscp));
@@ -1181,6 +1217,52 @@ qos_class_pd_reset_stats (pd_qos_class_t *qos_class_pd)
 }
 
 // ----------------------------------------------------------------------------
+// Qos-class set global pause type
+// ----------------------------------------------------------------------------
+hal_ret_t
+pd_qos_class_set_global_pause_type (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    sdk_ret_t sdk_ret = SDK_RET_OK;
+    tm_port_t tm_port = TM_UPLINK_PORT_BEGIN;
+    bool reset_all_xoff = false;
+    bool set_all_xoff = false;
+    bool reset_pfc_xoff = false;    // unused in this method
+    bool set_pfc_xoff = false;      // unused in this method
+    uint32_t pfc_cos = 0x0;         // unused in this method
+    pd_qos_class_set_global_pause_type_args_t *args =
+                            pd_func_args->pd_qos_class_set_global_pause_type;
+
+    HAL_TRACE_DEBUG("setting global pause type {}", args->pause_type);
+    switch (args->pause_type) {
+    case hal::QOS_PAUSE_TYPE_LINK_LEVEL:
+        set_all_xoff = true;
+        break;
+
+    default:
+        reset_all_xoff = true;
+        break;
+    }
+    for (tm_port = TM_UPLINK_PORT_BEGIN;
+                        tm_port <= TM_UPLINK_PORT_END; tm_port++) {
+        sdk_ret = capri_tm_set_uplink_mac_xoff(tm_port,
+                                               reset_all_xoff,
+                                               set_all_xoff,
+                                               reset_pfc_xoff,
+                                               set_pfc_xoff,
+                                               pfc_cos);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error setting global pause type {} "
+                          "tm_port {} ret {}",
+                          args->pause_type, tm_port, ret);
+            break;
+        }
+    }
+    return ret;
+}
+
+// ----------------------------------------------------------------------------
 // Qos-class Create
 // ----------------------------------------------------------------------------
 hal_ret_t
@@ -1271,11 +1353,11 @@ pd_qos_class_update (pd_func_args_t *pd_func_args)
                           qos_class->key, ret);
             return ret;
         }
-
-        ret = qos_class_pd_update_uplink_iq_map_remove(args->dot1q_pcp_changed,
-                                                       args->dot1q_pcp_src,
-                                                       args->ip_dscp_remove,
-                                                       SDK_ARRAY_SIZE(args->ip_dscp_remove));
+        ret = qos_class_pd_update_uplink_iq_map_remove(
+                                        args->dot1q_pcp_changed,
+                                        args->dot1q_pcp_remove,
+                                        args->ip_dscp_remove,
+                                        SDK_ARRAY_SIZE(args->ip_dscp_remove));
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error removing uplink iq map for "
                           "Qos-class {} ret {}",
@@ -1284,7 +1366,7 @@ pd_qos_class_update (pd_func_args_t *pd_func_args)
         }
     }
 
-    if (args->pfc_changed) {
+    if (args->pfc_cos_changed) {
         ret = qos_class_pd_program_uplink_xoff(pd_qos_class);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming uplink oq xoff for "
@@ -1315,7 +1397,6 @@ pd_qos_class_update (pd_func_args_t *pd_func_args)
             return ret;
         }
     }
-
     return ret;
 }
 
@@ -1670,6 +1751,11 @@ pd_qos_class_get_qos_class_id (pd_func_args_t *pd_func_args)
     }
 
     if (dest_if) {
+        HAL_TRACE_ERR("dest_if if_type {} if_id {}",
+                      dest_if->if_type, dest_if->if_id);
+        if (dest_if->if_id == 132) {
+            HAL_TRACE_ERR("");
+        }
         args.pi_if = dest_if;
         pd_func_args1.pd_if_get_tm_oport = &args;
         pd_if_get_tm_oport(&pd_func_args1);

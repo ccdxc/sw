@@ -56,12 +56,12 @@ void scheduler_tx_test::qos_init()
     spec.mutable_class_map()->set_dot1q_pcp(2);
     spec.mutable_class_map()->add_ip_dscp(10);
     spec.mutable_class_map()->add_ip_dscp(15);
+    spec.mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_LINK_LEVEL);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::qosclass_create(spec, &rsp);
     hal::hal_cfg_db_close();
     ASSERT_EQ(ret, HAL_RET_OK);
-
 
     spec.Clear();
     spec.mutable_key_or_handle()->set_qos_group(cos_a_2);
@@ -72,6 +72,7 @@ void scheduler_tx_test::qos_init()
     spec.mutable_class_map()->add_ip_dscp(5);
     spec.mutable_marking()->set_dot1q_pcp_rewrite_en(true);
     spec.mutable_marking()->set_dot1q_pcp(3);
+    spec.mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_LINK_LEVEL);
 
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::qosclass_create(spec, &rsp);

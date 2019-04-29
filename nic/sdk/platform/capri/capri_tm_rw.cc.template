@@ -569,6 +569,59 @@ capri_tm_is_valid_port (uint32_t port)
 }
 
 sdk_ret_t
+capri_tm_uplink_iq_no_drop_update (tm_port_t port,
+                                   tm_q_t iq,
+                                   bool no_drop)
+{
+    if (!capri_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
+    uint32_t hbm_context;
+    uint32_t num_hbm_contexts_per_port;
+    cpp_int no_drop_val;
+
+    num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                if (port_supports_hbm_contexts(port)) {
+                    hbm_context =
+                           iq + (num_hbm_contexts_per_port * ${pinfo["enum"]});
+
+                    // per port no_drop config in hbm
+                    hbm_csr.hbm_port_${p}.cfg_hbm_context.read();
+                    no_drop_val =
+                            hbm_csr.hbm_port_${p}.cfg_hbm_context.no_drop();
+                    if (no_drop == true) {
+                        no_drop_val |= (1 << hbm_context);
+                    } else {
+                        no_drop_val &= ~(1 << hbm_context);
+                    }
+                    hbm_csr.hbm_port_${p}.cfg_hbm_context.no_drop(no_drop_val);
+                    if (tm_sw_cfg_write_enabled()) {
+                        hbm_csr.hbm_port_${p}.cfg_hbm_context.write();
+                    }
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_ERR;
+    }
+    return sdk::SDK_RET_OK;
+}
+
+sdk_ret_t
 capri_tm_uplink_iq_params_update (tm_port_t port,
                                   tm_q_t iq,
                                   tm_uplink_iq_params_t *iq_params)
@@ -603,15 +656,13 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
     cpp_int xon_val;
     cpp_int oq_map_val;
     cpp_int port_payload_occupancy_val;
-    uint32_t payload_occupancy;
-    uint32_t payload_occupancy_bytes;
     uint32_t xoff_threshold;
     uint32_t xon_threshold;
     uint32_t hbm_context;
     uint32_t num_hbm_contexts_per_port;
     cap_pbc_oq_map_t oq_map_decoder;
-    oq_map_decoder.init();
 
+    oq_map_decoder.init();
     num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
     switch(port) {
 //:: for p in range(TM_PORTS):
@@ -660,50 +711,56 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
                 }
 
                 if (port_supports_hbm_contexts(port)) {
-                    // HBM Thresholds
-                    hbm_csr.cfg_hbm_threshold.read();
+#if 0
+                    // Deprecated:
+                    // user specified xoff threshold is the offset from payload
+                    // occupancy. Read the payload occupancy and recalculate
+                    // xoff threshold to be programmed
+
                     hbm_csr.hbm_port_${p}.cfg_hbm_eth_payload_occupancy.read();
-
-                    port_payload_occupancy_val = hbm_csr.hbm_port_${p}.cfg_hbm_eth_payload_occupancy.threshold();
-
-                    xoff_val = hbm_csr.cfg_hbm_threshold.xoff();
-                    xon_val = hbm_csr.cfg_hbm_threshold.xon();
-                    hbm_context = iq + (num_hbm_contexts_per_port * ${pinfo["enum"]});
-
+                    port_payload_occupancy_val =
+                                    hbm_csr.hbm_port_${p}.
+                                    cfg_hbm_eth_payload_occupancy.threshold();
                     payload_occupancy = cpp_helper.get_slc(
                         port_payload_occupancy_val,
                         iq*19, ((iq + 1) * 19) - 1).convert_to<uint32_t>();
-
                     payload_occupancy_bytes = payload_occupancy << 10;
-
-                    // xoff threshold is the value from the payload occupancy
-                    // threshold.
-                    // But in the csr we need to write the value from the base.
-                    // So subtract it from the payload occupancy threshold
-
                     xoff_threshold = iq_params->xoff_threshold;
-                    if (xoff_threshold && (payload_occupancy_bytes > xoff_threshold)) {
-                        xoff_threshold = payload_occupancy_bytes - xoff_threshold;
+                    if (xoff_threshold &&
+                                   (payload_occupancy_bytes > xoff_threshold)) {
+                        xoff_threshold =
+                                   payload_occupancy_bytes - xoff_threshold;
                     } else {
                         xoff_threshold = 0;
                     }
-
+                    xoff_threshold >>= 9;
+#endif
                     // xoff and xon thresholds are in 512B units in register.
                     // So right shift by 9 (using ceil value for xon and floor
                     // for xoff)
-                    xoff_threshold >>= 9;
-                    xon_threshold = (iq_params->xon_threshold + (1<<9) - 1) >> 9;
+
+                    xoff_threshold =
+                                (iq_params->xoff_threshold + (1<<9) - 1) >> 9;
+                    xon_threshold =
+                                (iq_params->xon_threshold + (1<<9) - 1) >> 9;
+
+                    hbm_csr.cfg_hbm_threshold.read();
+                    xoff_val = hbm_csr.cfg_hbm_threshold.xoff();
+                    xon_val = hbm_csr.cfg_hbm_threshold.xon();
+                    hbm_context =
+                           iq + (num_hbm_contexts_per_port * ${pinfo["enum"]});
 
                     // 20 bits per hbm_context
                     cpp_helper.set_slc(xoff_val, xoff_threshold,
-                                        hbm_context * 20, ((hbm_context + 1) * 20) - 1);
+                                       hbm_context * 20,
+                                       ((hbm_context + 1) * 20) - 1);
                     // 20 bits per hbm_context
                     cpp_helper.set_slc(xon_val, xon_threshold,
-                                        hbm_context * 20, ((hbm_context + 1) * 20) - 1);
+                                       hbm_context * 20,
+                                       ((hbm_context + 1) * 20) - 1);
+                    hbm_csr.cfg_hbm_threshold.xoff(xoff_val);
+                    hbm_csr.cfg_hbm_threshold.xon(xon_val);
 
-                    // TODO:write the user provided threshold values
-                    //hbm_csr.cfg_hbm_threshold.xoff(xoff_val);
-                    //hbm_csr.cfg_hbm_threshold.xon(xon_val);
                     // Write all the registers
                     if (tm_sw_cfg_write_enabled()) {
                         ${trace_register("pbc_csr.hbm.cfg_hbm_threshold")}
@@ -717,11 +774,6 @@ capri_tm_uplink_iq_params_update (tm_port_t port,
         default:
             return sdk::SDK_RET_ERR;
     }
-
-    SDK_TRACE_DEBUG("%s", data.str().c_str());
-    SDK_TRACE_DEBUG("Updated the iq %u on port %u",
-                    iq, port);
-
     return sdk::SDK_RET_OK;
 }
 
@@ -835,19 +887,27 @@ capri_tm_uplink_input_dscp_map_update(tm_port_t port,
     return sdk::SDK_RET_OK;
 }
 
-
+/**
+ * @brief  Enable/Disable reacting to incoming pause frames
+ * @param[in] port           PB port
+ * @param[in] reset_all_xoff reset for all cos values
+ * @param[in] set_all_xoff   set for all cos values
+ * @param[in] reset_pfc_xoff reset for pfc xoff cos
+ * @param[in] set_pfc_xoff   set for pfc xoff cos
+ * @param[in] xoff_cos       pfc xoff cos. Applicable only if
+ *                           reset_pfc_xoff/set_pfc_xoff is true
+ */
 sdk_ret_t
-capri_tm_uplink_oq_update(tm_port_t port,
-                          tm_q_t oq,
-                          bool xoff_enable,
-                          uint32_t xoff_cos)
+capri_tm_set_uplink_mac_xoff (tm_port_t port,
+                              bool reset_all_xoff,
+                              bool set_all_xoff,
+                              bool reset_pfc_xoff,
+                              bool set_pfc_xoff,
+                              uint32_t xoff_cos)
 {
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     uint32_t xoff_enable_val;
-    cpp_int xoff2oq_map_val;
-    cap_pbc_eth_oq_xoff_map_t xoff2oq_map_decoder;
-    xoff2oq_map_decoder.init();
 
     if (!capri_tm_port_is_uplink_port(port)) {
         SDK_TRACE_ERR("%u is not a valid TM uplink port",
@@ -855,41 +915,27 @@ capri_tm_uplink_oq_update(tm_port_t port,
         return sdk::SDK_RET_INVALID_ARG;
     }
 
-    stringstream data;
-    data << hex << endl;
     switch(port) {
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
 //::    if pinfo["type"] == "uplink":
         case ${pinfo["enum"]}:
             {
-                pbc_csr.port_${p}.cfg_oq_xoff2oq.read();
-                xoff2oq_map_val = pbc_csr.port_${p}.cfg_oq_xoff2oq.map();
-
-                cpp_helper.set_slc(xoff2oq_map_val, xoff_cos, oq*3, ((oq+1)*3)-1);
-
-                // TODO: write to disable xoff by default
-                pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
-
                 pbc_csr.port_${p}.cfg_mac_xoff.read();
-                xoff_enable_val = pbc_csr.port_${p}.cfg_mac_xoff.enable().convert_to<uint32_t>();
-                if (xoff_enable) {
-                    xoff_enable_val |= 1<<xoff_cos;
-                } else {
-                    xoff_enable_val &= ~(1<<xoff_cos);
+                xoff_enable_val = pbc_csr.port_${p}.cfg_mac_xoff.enable().
+                                                    convert_to<uint32_t>();
+                if (reset_all_xoff == true) {
+                    xoff_enable_val = 0x0;
+                } else if (set_all_xoff == true) {
+                    xoff_enable_val = 0xff;
                 }
-                // TODO: write to disable xoff by default
-                // pbc_csr.port_${p}.cfg_mac_xoff.enable(xoff_enable_val);
-
-                xoff2oq_map_decoder.all(pbc_csr.port_${p}.cfg_oq_xoff2oq.map());
-                xoff2oq_map_decoder.set_name("cap0.pb.pbc.port_${p}.cfg_oq_xoff2oq.decoder");
+                if (reset_pfc_xoff == true) {
+                    xoff_enable_val &= ~(1 << xoff_cos);
+                } else if (set_pfc_xoff == true) {
+                    xoff_enable_val |= (1 << xoff_cos);
+                }
+                pbc_csr.port_${p}.cfg_mac_xoff.enable(xoff_enable_val);
                 if (tm_sw_cfg_write_enabled()) {
-                    xoff2oq_map_decoder.show();
-
-                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_oq_xoff2oq")}
-                    ${trace_register("pbc_csr.port_" + str(p) + ".cfg_mac_xoff")}
-
-                    pbc_csr.port_${p}.cfg_oq_xoff2oq.write();
                     pbc_csr.port_${p}.cfg_mac_xoff.write();
                 }
                 break;
@@ -899,8 +945,51 @@ capri_tm_uplink_oq_update(tm_port_t port,
         default:
             return sdk::SDK_RET_INVALID_ARG;
     }
-    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    return sdk::SDK_RET_OK;
+}
 
+/**
+ * @brief map OQ to xoff_cos
+ * @param[in] port      PB port
+ * @param[in] oq        PB output queue to xoff
+ * @param[in] xoff_cos  cos value of the incoming PFC
+ */
+sdk_ret_t
+capri_tm_uplink_oq_update(tm_port_t port, tm_q_t oq, uint32_t xoff_cos)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    cpp_int xoff2oq_map_val;
+    cap_pbc_eth_oq_xoff_map_t xoff2oq_map_decoder;
+
+    if (!capri_tm_port_is_uplink_port(port)) {
+        SDK_TRACE_ERR("%u is not a valid TM uplink port",
+                      port);
+        return sdk::SDK_RET_INVALID_ARG;
+    }
+    xoff2oq_map_decoder.init();
+    switch(port) {
+//:: for p in range(TM_PORTS):
+//::    pinfo = port_info[p]
+//::    if pinfo["type"] == "uplink":
+        case ${pinfo["enum"]}:
+            {
+                pbc_csr.port_${p}.cfg_oq_xoff2oq.read();
+                xoff2oq_map_val = pbc_csr.port_${p}.cfg_oq_xoff2oq.map();
+                cpp_helper.set_slc(xoff2oq_map_val, xoff_cos, oq*3, ((oq+1)*3)-1);
+                pbc_csr.port_${p}.cfg_oq_xoff2oq.map(xoff2oq_map_val);
+                xoff2oq_map_decoder.all(pbc_csr.port_${p}.cfg_oq_xoff2oq.map());
+                xoff2oq_map_decoder.set_name("cap0.pb.pbc.port_${p}.cfg_oq_xoff2oq.decoder");
+                if (tm_sw_cfg_write_enabled()) {
+                    pbc_csr.port_${p}.cfg_oq_xoff2oq.write();
+                }
+                break;
+            }
+//::    #endif
+//:: #endfor
+        default:
+            return sdk::SDK_RET_INVALID_ARG;
+    }
     return sdk::SDK_RET_OK;
 }
 
@@ -1901,12 +1990,11 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     hbm_csr.hbm_port_${p}.cfg_hbm_${reg_name}_ctrl.mem_sz(port_control_size_val);
 //::        #endif
 
-
     hbm_csr.hbm_port_${p}.cfg_hbm_context.read();
     hbm_csr.hbm_port_${p}.cfg_hbm_context.enable((1ull<<num_contexts)-1);
 
     // enable no_drop by default in PB
-    hbm_csr.hbm_port_${p}.cfg_hbm_context.no_drop((1ull << num_contexts) - 1);
+    // hbm_csr.hbm_port_${p}.cfg_hbm_context.no_drop((1ull << num_contexts) - 1);
 
     // TODO use tm_sw_init_enabled below
     hbm_csr.hbm_port_${p}.cfg_hbm_context.write();
@@ -2085,8 +2173,7 @@ capri_tm_port_program_defaults (void)
 //::    if pinfo["type"] == "uplink":
     // ${pinfo["enum"]}
     pbc_csr.port_${p}.cfg_mac_xoff.read();
-    // TODO: write to disable xoff by default
-    // pbc_csr.port_${p}.cfg_mac_xoff.enable(0);
+    pbc_csr.port_${p}.cfg_mac_xoff.enable(0);
     if (tm_sw_init_enabled()) {
         ${trace_register("pbc_csr.port_" + str(p) + ".cfg_mac_xoff")}
         pbc_csr.port_${p}.cfg_mac_xoff.write();

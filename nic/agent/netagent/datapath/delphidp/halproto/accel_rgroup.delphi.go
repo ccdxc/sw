@@ -1026,7 +1026,7 @@ It has these top-level messages:
 	PolicerBPSSpec
 	PolicerSpec
 	PolicerStats
-	QosPFC
+	QosPause
 	QosSched
 	QosClassMap
 	QosMarking
@@ -1060,6 +1060,9 @@ It has these top-level messages:
 	QosClassThresholdsGetRequest
 	QosClassThresholdsGetRequestMsg
 	QosClassGetResponseMsg
+	QosClassSetGlobalPauseTypeRequest
+	QosClassSetGlobalPauseTypeRequestMsg
+	QosClassSetGlobalPauseTypeResponseMsg
 	CoppSpec
 	CoppRequestMsg
 	CoppStatusEpd

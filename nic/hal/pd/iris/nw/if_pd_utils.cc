@@ -412,10 +412,13 @@ pd_if_get_tm_oport(pd_func_args_t *pd_func_args)
     if_t *pi_if = args->pi_if;
     pd_func_args_t             pd_func_args1 = {0};
 
+    args->tm_oport = HAL_PORT_INVALID;
     if (pi_if == NULL) {
+        HAL_TRACE_ERR("dest_if pi_if NULL");
         goto end;
     }
-
+    HAL_TRACE_ERR("dest_if if_type {} if_id {}",
+                  pi_if->if_type, pi_if->if_id);
     if_type = intf_get_if_type(pi_if);
     switch(if_type) {
         case intf::IF_TYPE_ENIC:

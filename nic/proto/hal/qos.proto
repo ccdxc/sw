@@ -18,6 +18,7 @@ service QOS {
   rpc QosClassDelete(QosClassDeleteRequestMsg) returns (QosClassDeleteResponseMsg) {}
   rpc QosClassGet(QosClassGetRequestMsg) returns (QosClassGetResponseMsg) {}
   rpc QosClassThresholdsGet(QosClassThresholdsGetRequestMsg) returns (QosClassThresholdsGetResponseMsg) {}
+  rpc QosClassSetGlobalPauseType(QosClassSetGlobalPauseTypeRequestMsg) returns (QosClassSetGlobalPauseTypeResponseMsg) {}
 
   // Copp related APIs
   rpc CoppUpdate(CoppRequestMsg) returns (CoppResponseMsg) {}
@@ -51,11 +52,18 @@ message PolicerStats {
   uint64 dropped_bytes     = 4;    // Count of dropped bytes by the policer
 }
 
-// QosPFC specifies the pfc cos to respond to
-message QosPFC {
-  uint32 xon_threshold  = 1 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:3000-36864}"];    // Threshold at which to send xon (2-4 MTUs)
-  uint32 xoff_threshold = 2 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:3000-73728}"];    // Free buffer threshold at which to send xoff (2-8MTUs)
-  uint32 pfc_cos        = 3 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];
+enum QosPauseType {
+    QOS_PAUSE_TYPE_NONE       = 0;  // Puase disabled
+    QOS_PAUSE_TYPE_LINK_LEVEL = 1;  // Link level pause
+    QOS_PAUSE_TYPE_PFC        = 2;  // Priority pause
+}
+
+// QosPause specifies the link-level or PFC configuration
+message QosPause {
+  uint32       xon_threshold  = 1;    // Threshold at which to send xon
+  uint32       xoff_threshold = 2;    // Threshold at which to send xoff
+  QosPauseType type           = 3;    // Link-level or PFC
+  uint32       pfc_cos        = 4 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];
 }
 
 // QosSched specifies the QosClass scheduling configuration
@@ -104,7 +112,7 @@ message QosClassSpec {
   // key_or_handle is QosClass's key or handle
   kh.QosClassKeyHandle key_or_handle    = 1 [(gogoproto.moretags) = "venice:key"];
   uint32               mtu              = 2 [(gogoproto.moretags) = "venice:mandatory,venice:constraints={range:1500-9216}"];    // MTU
-  QosPFC               pfc              = 3;    // PFC configuration
+  QosPause             pause            = 3;    // Pause configuration
   QosSched             sched            = 4 [(gogoproto.moretags) = "venice:mandatory"];    // Scheduling configuration
   QosClassMap          class_map        = 5;    // Class map for class derivation on uplinks
   QosMarking           marking          = 6;    // Marking policy for host-to-network traffic
@@ -277,6 +285,17 @@ message QosClassThresholdsGetRequestMsg {
 // QosClassGetResponseMsg is response to QosClassGetRequestMsg
 message QosClassGetResponseMsg {
   repeated QosClassGetResponse response  = 1;    // batched get responses
+}
+
+message QosClassSetGlobalPauseTypeRequest {
+    QosPauseType pause_type = 1;    // Global pause type - link-level or PFC
+}
+
+message QosClassSetGlobalPauseTypeRequestMsg {
+    repeated QosClassSetGlobalPauseTypeRequest request = 1;
+}
+
+message QosClassSetGlobalPauseTypeResponseMsg {
 }
 
 // Specifications of a Copp

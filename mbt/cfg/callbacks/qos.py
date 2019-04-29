@@ -2,6 +2,7 @@ import kh_pb2
 import random
 import utils
 import config_mgr
+import qos_pb2
 
 key_choices = [kh_pb2.USER_DEFINED_1, kh_pb2.USER_DEFINED_2, kh_pb2.USER_DEFINED_3,
            kh_pb2.USER_DEFINED_4, kh_pb2.USER_DEFINED_5, kh_pb2.USER_DEFINED_6]
@@ -22,7 +23,7 @@ def PreCreateCb(data, req_spec, resp_spec):
     global ip_dscp_marking
     global reclaim_dict_marking
     global pfc_class_counter
-    # We cannot have more than 6 QOS objects. 
+    # We cannot have more than 6 QOS objects.
     if len(key_choices) == 0:
         assert False
     key_choice = random.choice(key_choices)
@@ -53,14 +54,16 @@ def PreCreateCb(data, req_spec, resp_spec):
     req_spec.request[0].marking.dot1q_pcp = dot1q_pcp_choice
     req_spec.request[0].marking.ip_dscp = ip_dscp_choice
 
+    req_spec.request[0].pause.type = qos_pb2.QOS_PAUSE_TYPE_LINK_LEVEL
+
     pfc_class_counter += 1
 
     if pfc_class_counter > max_pfc_class_counter:
-        print("Cleared PFC")
-        req_spec.request[0].ClearField("pfc")
+        print("Cleared Pause")
+        req_spec.request[0].ClearField("pause")
     else:
-        req_spec.request[0].pfc.xon_threshold = int(random.uniform(2,4) * mtu)
-        req_spec.request[0].pfc.xoff_threshold = int(random.uniform(2,8) * mtu)
+        req_spec.request[0].pause.xon_threshold = int(random.uniform(2,4) * mtu)
+        req_spec.request[0].pause.xoff_threshold = int(random.uniform(2,8) * mtu)
 
     # Create a dict with the key and pcp/dscp values, so that they can be reclaimed
     # whenever they're modified as part of update
@@ -132,11 +135,15 @@ def PreUpdateCb(data, req_spec, resp_spec):
 
     mtu = random.randint(1500, 9216)
 
-    if (cache_create_msg.request[0].pfc.xon_threshold == 0):
-        req_spec.request[0].ClearField("pfc")
+    if (cache_create_msg.request[0].pause.xon_threshold == 0):
+        req_spec.request[0].ClearField("pause")
     else:
-        req_spec.request[0].pfc.xon_threshold = int(random.uniform(2,4) * mtu)
-        req_spec.request[0].pfc.xoff_threshold = int(random.uniform(2,8) * mtu)
+        req_spec.request[0].pause.xon_threshold = int(random.uniform(2,4) * mtu)
+        req_spec.request[0].pause.xoff_threshold = int(random.uniform(2,8) * mtu)
+
+    # class map type cannot be updated
+    req_spec.request[0].class_map.type = cache_create_msg.request[0].class_map.type
+    req_spec.request[0].pause.type = qos_pb2.QOS_PAUSE_TYPE_LINK_LEVEL
 
     req_spec.request[0].class_map.dot1q_pcp = dot1q_pcp_choice
     req_spec.request[0].class_map.ip_dscp[0] = ip_dscp_choice

@@ -209,6 +209,7 @@ PD_FUNC_STUB(pd_qos_class_make_clone);
 PD_FUNC_STUB(pd_qos_class_mem_free);
 PD_FUNC_STUB(pd_qos_class_get);
 PD_FUNC_STUB(pd_qos_class_periodic_stats_update);
+PD_FUNC_STUB(pd_qos_class_set_global_pause_type);
 
 // copp
 PD_FUNC_STUB(pd_copp_create);

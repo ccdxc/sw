@@ -357,6 +357,24 @@ func (mr *MockQOSClientMockRecorder) QosClassThresholdsGet(ctx, in interface{}, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClassThresholdsGet", reflect.TypeOf((*MockQOSClient)(nil).QosClassThresholdsGet), varargs...)
 }
 
+// QosClassSetGlobalPauseType mocks base method
+func (m *MockQOSClient) QosClassSetGlobalPauseType(ctx context.Context, in *QosClassSetGlobalPauseTypeRequestMsg, opts ...grpc.CallOption) (*QosClassSetGlobalPauseTypeResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "QosClassSetGlobalPauseType", varargs...)
+	ret0, _ := ret[0].(*QosClassSetGlobalPauseTypeResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QosClassSetGlobalPauseType indicates an expected call of QosClassSetGlobalPauseType
+func (mr *MockQOSClientMockRecorder) QosClassSetGlobalPauseType(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClassSetGlobalPauseType", reflect.TypeOf((*MockQOSClient)(nil).QosClassSetGlobalPauseType), varargs...)
+}
+
 // CoppUpdate mocks base method
 func (m *MockQOSClient) CoppUpdate(ctx context.Context, in *CoppRequestMsg, opts ...grpc.CallOption) (*CoppResponseMsg, error) {
 	varargs := []interface{}{ctx, in}
@@ -479,6 +497,19 @@ func (m *MockQOSServer) QosClassThresholdsGet(arg0 context.Context, arg1 *QosCla
 // QosClassThresholdsGet indicates an expected call of QosClassThresholdsGet
 func (mr *MockQOSServerMockRecorder) QosClassThresholdsGet(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClassThresholdsGet", reflect.TypeOf((*MockQOSServer)(nil).QosClassThresholdsGet), arg0, arg1)
+}
+
+// QosClassSetGlobalPauseType mocks base method
+func (m *MockQOSServer) QosClassSetGlobalPauseType(arg0 context.Context, arg1 *QosClassSetGlobalPauseTypeRequestMsg) (*QosClassSetGlobalPauseTypeResponseMsg, error) {
+	ret := m.ctrl.Call(m, "QosClassSetGlobalPauseType", arg0, arg1)
+	ret0, _ := ret[0].(*QosClassSetGlobalPauseTypeResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QosClassSetGlobalPauseType indicates an expected call of QosClassSetGlobalPauseType
+func (mr *MockQOSServerMockRecorder) QosClassSetGlobalPauseType(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QosClassSetGlobalPauseType", reflect.TypeOf((*MockQOSServer)(nil).QosClassSetGlobalPauseType), arg0, arg1)
 }
 
 // CoppUpdate mocks base method

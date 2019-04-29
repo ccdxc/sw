@@ -14,6 +14,8 @@
 
 namespace hal {
 
+qos::QosPauseType g_pause_type = qos::QOS_PAUSE_TYPE_NONE;
+
 static inline void
 qos_class_lock (qos_class_t *qos_class,
                 const char *fname, int lineno, const char *fxname)
@@ -26,6 +28,237 @@ qos_class_unlock (qos_class_t *qos_class,
                   const char *fname, int lineno, const char *fxname)
 {
     SDK_SPINLOCK_UNLOCK(&qos_class->slock);
+}
+
+static inline qos_pause_type_t
+qos_pause_type_spec_to_pause_type (qos::QosPauseType pause_type)
+{
+    switch (pause_type) {
+    case qos::QOS_PAUSE_TYPE_LINK_LEVEL:
+        return QOS_PAUSE_TYPE_LINK_LEVEL;
+
+    case qos::QOS_PAUSE_TYPE_PFC:
+        return QOS_PAUSE_TYPE_PFC;
+
+    case qos::QOS_PAUSE_TYPE_NONE:
+    default:
+        return QOS_PAUSE_TYPE_NONE;
+    }
+}
+
+// validate qos group
+static hal_ret_t
+validate_group (qos_group_t qos_group)
+{
+    if (!valid_qos_group(qos_group)) {
+        HAL_TRACE_ERR("Not valid qos group {}", qos_group);
+        return HAL_RET_QOS_CLASS_QOS_GROUP_INVALID;
+    }
+    return HAL_RET_OK;
+}
+
+// validate MTU
+static hal_ret_t
+validate_mtu_spec (const QosClassSpec &spec)
+{
+    uint32_t mtu = spec.mtu();
+
+    if ((mtu < HAL_MIN_MTU) || (mtu > HAL_JUMBO_MTU)) {
+        HAL_TRACE_ERR("mtu {} not within {}-{} bytes",
+                      mtu, HAL_MIN_MTU, HAL_JUMBO_MTU);
+        return HAL_RET_QOS_CLASS_MTU_INVALID;
+    }
+    return HAL_RET_OK;
+}
+
+//validate pause
+static hal_ret_t
+validate_pause_spec (const QosClassSpec &spec)
+{
+    if (spec.has_pause()) {
+        if (spec.pause().type() != g_pause_type) {
+            HAL_TRACE_ERR("config pause type {} does not match "
+                          "global pause type {}",
+                          spec.pause().type(),
+                          g_pause_type);
+            return HAL_RET_QOS_CLASS_PAUSE_TYPE_INVALID;
+        }
+    } else {
+        if (g_pause_type == qos::QOS_PAUSE_TYPE_LINK_LEVEL) {
+            HAL_TRACE_ERR("Global pause type set to link-level. "
+                          "No_drop to drop change not allowed");
+            return HAL_RET_QOS_CLASS_PAUSE_TYPE_INVALID;
+        }
+    }
+    return HAL_RET_OK;
+}
+
+// validate scheduler
+static hal_ret_t
+validate_sched_spec (const QosClassSpec &spec)
+{
+    if (!spec.has_sched()) {
+        HAL_TRACE_ERR("scheduler not set in request");
+        return HAL_RET_QOS_CLASS_SCHEDULER_NOT_SET;
+    }
+    if (spec.sched().has_dwrr() &&
+        (spec.sched().dwrr().bw_percentage() > 100)) {
+        HAL_TRACE_ERR("bw_percentage {} cannot be more than 100!",
+                      spec.sched().dwrr().bw_percentage());
+        return HAL_RET_QOS_CLASS_DWRR_INVALID;
+    }
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+validate_ip_dscp (uint32_t ip_dscp)
+{
+    if (ip_dscp >= HAL_MAX_IP_DSCP_VALS) {
+        HAL_TRACE_ERR("Invalid ip_dscp {} in the uplink class map", ip_dscp);
+        return HAL_RET_QOS_CLASS_IP_DSCP_INVALID;
+    }
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+validate_dot1q_pcp_exists (uint32_t dot1q_pcp)
+{
+    if (g_hal_state->qos_cmap_pcp_bmp()->is_set(dot1q_pcp)) {
+        HAL_TRACE_ERR("Dot1q pcp {} is already in use", dot1q_pcp);
+        return HAL_RET_QOS_CLASS_DOT1Q_PCP_ALREADY_IN_USE;
+    }
+    return HAL_RET_OK;
+}
+
+static inline hal_ret_t
+validate_ip_dscp_exists (uint32_t ip_dscp)
+{
+    if (g_hal_state->qos_cmap_dscp_bmp()->is_set(ip_dscp)) {
+        HAL_TRACE_ERR("IP dscp {} is already in use", ip_dscp);
+        return HAL_RET_QOS_CLASS_IP_DSCP_ALREADY_IN_USE;
+    }
+    return HAL_RET_OK;
+}
+
+// class map validation for creates
+static hal_ret_t
+validate_cmap_spec_create (const QosClassSpec &spec)
+{
+    hal_ret_t ret;
+    bool spec_has_pcp = false;
+    bool spec_has_dscp = false;
+    qos_group_t qos_group;
+    uint32_t ip_dscp;
+
+    qos_group =
+        qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group());
+    spec_has_pcp = spec_cmap_type_pcp(spec.class_map().type());
+    spec_has_dscp = spec_cmap_type_dscp(spec.class_map().type());
+
+    if (qos_group_is_user_defined(qos_group)) {
+        if (spec_has_pcp) {
+            ret = validate_dot1q_pcp_exists(spec.class_map().dot1q_pcp());
+            if (ret != HAL_RET_OK) {
+                return ret;
+            }
+        }
+        if (spec_has_dscp) {
+            for (int i = 0; i < spec.class_map().ip_dscp_size(); i++) {
+                ip_dscp = spec.class_map().ip_dscp(i);
+                ret = validate_ip_dscp(ip_dscp);
+                if (ret != HAL_RET_OK) {
+                    return ret;
+                }
+                ret = validate_ip_dscp_exists(ip_dscp);
+                if (ret != HAL_RET_OK) {
+                    return ret;
+                }
+            }
+        }
+    }
+    return HAL_RET_OK;
+}
+
+// common class map validations for creates and updates
+static hal_ret_t
+validate_cmap_spec (const QosClassSpec &spec)
+{
+    bool spec_has_pcp = false;
+    qos_group_t qos_group;
+
+    qos_group =
+        qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group());
+    spec_has_pcp = spec_cmap_type_pcp(spec.class_map().type());
+
+    if (qos_group_is_user_defined(qos_group)) {
+        // class map must be set for user-defined classes
+        if (!spec.has_class_map()) {
+            HAL_TRACE_ERR("uplink class map not set");
+            return HAL_RET_QOS_CLASS_UPLINK_CLASS_MAP_NOT_SET;
+        }
+        if (spec_has_pcp) {
+            if (spec.class_map().dot1q_pcp() >= HAL_MAX_DOT1Q_PCP_VALS) {
+                HAL_TRACE_ERR("Invalid dot1q_pcp {} in the uplink class map",
+                              spec.class_map().dot1q_pcp());
+                return HAL_RET_QOS_CLASS_DOT1Q_PCP_INVALID;
+            }
+        }
+    } else {
+        // class map must not be set for non-user-defined classes
+        if (spec.has_class_map()) {
+            HAL_TRACE_ERR("uplink class map set for internal class");
+            return HAL_RET_QOS_CLASS_UPLINK_CLASS_MAP_SET;
+        }
+    }
+    return HAL_RET_OK;
+}
+
+// validate qos marking
+static hal_ret_t
+validate_marking_spec (const QosClassSpec &spec)
+{
+    if (spec.has_marking()) {
+        if (spec.marking().dot1q_pcp_rewrite_en() &&
+            (spec.marking().dot1q_pcp() >= HAL_MAX_DOT1Q_PCP_VALS)) {
+            HAL_TRACE_ERR("Invalid dot1q_pcp {} in marking",
+                          spec.marking().dot1q_pcp());
+            return HAL_RET_QOS_CLASS_DOT1Q_PCP_MARKING_INVALID;
+        }
+        if (spec.marking().ip_dscp_rewrite_en() &&
+            (spec.marking().ip_dscp() >= HAL_MAX_IP_DSCP_VALS)) {
+            HAL_TRACE_ERR("Invalid ip_dscp {} in marking",
+                          spec.marking().ip_dscp());
+            return HAL_RET_QOS_CLASS_IP_DSCP_MARKING_INVALID;
+        }
+    }
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+qos_class_set_global_pause_type (
+                        qos::QosClassSetGlobalPauseTypeRequest& req,
+                        qos::QosClassSetGlobalPauseTypeResponseMsg *rsp)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    pd::pd_qos_class_set_global_pause_type_args_t pd_qos_class_args;
+    pd::pd_func_args_t pd_func_args = {0};
+
+    if (g_pause_type != req.pause_type()) {
+        g_pause_type = req.pause_type();
+
+        // PD Call to set global pause type
+        pd::pd_qos_class_set_global_pause_type_init(&pd_qos_class_args);
+        pd_qos_class_args.pause_type =
+                        qos_pause_type_spec_to_pause_type(g_pause_type);
+        pd_func_args.pd_qos_class_set_global_pause_type = &pd_qos_class_args;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE,
+                              &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("failed to set global pause type, err {}",
+                          ret);
+        }
+    }
+    return ret;
 }
 
 // ----------------------------------------------------------------------------
@@ -166,21 +399,14 @@ find_qos_class_by_key_handle (const QosClassKeyHandle& kh)
 static inline void
 qos_class_cmap_db_add (qos_class_t *qos_class)
 {
-    qos_cmap_t  *cmap = &qos_class->cmap;
-    bool        has_pcp = false;
-    bool        has_dscp = false;
-
-    has_pcp = (cmap->type == QOS_CMAP_TYPE_PCP) ||
-                (cmap->type == QOS_CMAP_TYPE_PCP_DSCP);
-    has_dscp = (cmap->type == QOS_CMAP_TYPE_DSCP) ||
-                (cmap->type == QOS_CMAP_TYPE_PCP_DSCP);
+    qos_cmap_t *cmap = &qos_class->cmap;
 
     // Update the global bmps for the cmaps
     if (qos_class_is_user_defined(qos_class)) {
-        if (has_pcp) {
+        if (cmap_type_pcp(cmap->type)) {
             g_hal_state->qos_cmap_pcp_bmp()->set(cmap->dot1q_pcp);
         }
-        if (has_dscp) {
+        if (cmap_type_dscp(cmap->type)) {
             for (unsigned i = 0; i < SDK_ARRAY_SIZE(cmap->ip_dscp); i++) {
                 if (cmap->ip_dscp[i]) {
                     g_hal_state->qos_cmap_dscp_bmp()->set(i);
@@ -285,9 +511,16 @@ qos_class_process_get (qos_class_t *qos_class, qos::QosClassGetResponse *rsp)
     spec = rsp->mutable_spec();
     spec->mutable_key_or_handle()->set_qos_group(qos_group_to_qos_spec_qos_group(qos_class->key.qos_group));
     spec->set_mtu(qos_class->mtu);
-    spec->mutable_pfc()->set_xon_threshold(qos_class->pfc.xon_threshold);
-    spec->mutable_pfc()->set_xoff_threshold(qos_class->pfc.xoff_threshold);
-    spec->mutable_pfc()->set_pfc_cos(qos_class->pfc.pfc_cos);
+    // set pause params only if pause is enabled on this class
+    if (qos_class->no_drop == true) {
+        spec->mutable_pause()->set_xon_threshold(qos_class->pause.xon_threshold);
+        spec->mutable_pause()->set_xoff_threshold(qos_class->pause.xoff_threshold);
+        spec->mutable_pause()->set_pfc_cos(qos_class->pause.pfc_cos);
+        spec->mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_LINK_LEVEL);
+        if (qos_class->pause.pfc_enable == true) {
+            spec->mutable_pause()->set_type(qos::QOS_PAUSE_TYPE_PFC);
+        }
+    }
     if (qos_class->sched.type == QOS_SCHED_TYPE_DWRR) {
         spec->mutable_sched()->mutable_dwrr()->set_bw_percentage(qos_class->sched.dwrr.bw);
     } else {
@@ -457,111 +690,36 @@ qos_class_spec_dump (QosClassSpec& spec)
 }
 
 static hal_ret_t
-validate_qos_class_spec (QosClassSpec& spec, qos_group_t qos_group, QosClassResponse *rsp)
+validate_qos_class_spec (QosClassSpec& spec)
 {
-    uint32_t mtu = spec.mtu();
-    uint32_t xon_threshold;
-    uint32_t min_xon_threshold;
-    uint32_t max_xon_threshold;
-    uint32_t xoff_threshold;
-    uint32_t min_xoff_threshold;
-    uint32_t max_xoff_threshold;
-    uint32_t ip_dscp;
+    hal_ret_t ret = HAL_RET_OK;
 
-    // mtu should be set
-    if ((mtu < HAL_MIN_MTU) || (mtu > HAL_JUMBO_MTU)) {
-        HAL_TRACE_ERR("mtu {} not within {}-{} bytes",
-                      mtu, HAL_MIN_MTU, HAL_JUMBO_MTU);
-        return HAL_RET_QOS_CLASS_MTU_INVALID;
+    // validate MTU
+    ret = validate_mtu_spec(spec);
+    if (ret != HAL_RET_OK) {
+        return ret;
     }
-
-    if (spec.has_pfc()) {
-        xon_threshold = spec.pfc().xon_threshold();
-        xoff_threshold = spec.pfc().xoff_threshold();
-
-        min_xon_threshold = 2*mtu;
-        max_xon_threshold = 4*mtu;
-
-        min_xoff_threshold = 2*mtu;
-        max_xoff_threshold = 8*mtu;
-
-        if ((xon_threshold < min_xon_threshold) ||
-            (xon_threshold > max_xon_threshold)) {
-            HAL_TRACE_ERR("xon_threshold {} should be in the range {}-{} bytes",
-                          xon_threshold, min_xon_threshold, max_xon_threshold);
-            return HAL_RET_QOS_CLASS_XON_THRESHOLD_INVALID;
-        }
-
-        if ((xoff_threshold < min_xoff_threshold) ||
-            (xoff_threshold > max_xoff_threshold)) {
-            HAL_TRACE_ERR("xoff_threshold {} should be in the range {}-{} bytes",
-                          xoff_threshold, min_xoff_threshold, max_xoff_threshold);
-            return HAL_RET_QOS_CLASS_XOFF_THRESHOLD_INVALID;
-        }
+    // validate pause
+    ret = validate_pause_spec(spec);
+    if (ret != HAL_RET_OK) {
+        return ret;
     }
-
-    // Scheduler configuration should be set
-    if (!spec.has_sched()) {
-        HAL_TRACE_ERR("scheduler not set in request");
-        return HAL_RET_QOS_CLASS_SCHEDULER_NOT_SET;
+    // validate scheduler
+    ret = validate_sched_spec(spec);
+    if (ret != HAL_RET_OK) {
+        return ret;
     }
-
-    if (spec.sched().has_dwrr() &&
-        (spec.sched().dwrr().bw_percentage() > 100)) {
-        HAL_TRACE_ERR("bw_percentage {} cannot be more than 100!",
-                      spec.sched().dwrr().bw_percentage());
-        return HAL_RET_QOS_CLASS_DWRR_INVALID;
+    // validate class maps
+    ret = validate_cmap_spec(spec);
+    if (ret != HAL_RET_OK) {
+        return ret;
     }
-
-    if (!valid_qos_group(qos_group)) {
-        HAL_TRACE_ERR("Not valid qos group {}",
-                      spec.key_or_handle().qos_group());
-        return HAL_RET_QOS_CLASS_QOS_GROUP_INVALID;
+    // validate qos marking
+    ret = validate_marking_spec(spec);
+    if (ret != HAL_RET_OK) {
+        return ret;
     }
-    // Validate the uplink-class-map
-    if (qos_group_is_user_defined(qos_group)) {
-        if (!spec.has_class_map()) {
-            HAL_TRACE_ERR("uplink class map not set");
-            return HAL_RET_QOS_CLASS_UPLINK_CLASS_MAP_NOT_SET;
-        }
-    } else if (spec.has_class_map()) {
-        HAL_TRACE_ERR("uplink class map set for internal class");
-        return HAL_RET_QOS_CLASS_UPLINK_CLASS_MAP_SET;
-    }
-
-    if (spec.has_class_map()) {
-        if (spec.class_map().dot1q_pcp() >= HAL_MAX_DOT1Q_PCP_VALS) {
-            HAL_TRACE_ERR("Invalid dot1q_pcp {} in the uplink class map",
-                          spec.class_map().dot1q_pcp());
-            return HAL_RET_QOS_CLASS_DOT1Q_PCP_INVALID;
-        }
-
-
-        for (int i = 0; i < spec.class_map().ip_dscp_size(); i++) {
-            ip_dscp = spec.class_map().ip_dscp(i);
-            if (ip_dscp >= HAL_MAX_IP_DSCP_VALS) {
-                HAL_TRACE_ERR("Invalid ip_dscp {} in the uplink class map",
-                              ip_dscp);
-                return HAL_RET_QOS_CLASS_IP_DSCP_INVALID;
-            }
-        }
-    }
-
-    if (spec.has_marking()) {
-        if (spec.marking().dot1q_pcp_rewrite_en() &&
-            (spec.marking().dot1q_pcp() >= HAL_MAX_DOT1Q_PCP_VALS)) {
-            HAL_TRACE_ERR("Invalid dot1q_pcp {} in marking",
-                          spec.marking().dot1q_pcp());
-            return HAL_RET_QOS_CLASS_DOT1Q_PCP_MARKING_INVALID;
-        }
-        if (spec.marking().ip_dscp_rewrite_en() &&
-            (spec.marking().ip_dscp() >= HAL_MAX_IP_DSCP_VALS)) {
-            HAL_TRACE_ERR("Invalid ip_dscp {} in marking",
-                          spec.marking().ip_dscp());
-            return HAL_RET_QOS_CLASS_IP_DSCP_MARKING_INVALID;
-        }
-    }
-    return HAL_RET_OK;
+    return ret;
 }
 
 //------------------------------------------------------------------------------
@@ -571,8 +729,6 @@ static hal_ret_t
 validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
-    bool spec_has_pcp = false;
-    bool spec_has_dscp = false;
     qos_group_t qos_group;
 
     // key-handle field must be set
@@ -580,54 +736,32 @@ validate_qos_class_create (QosClassSpec& spec, QosClassResponse *rsp)
         HAL_TRACE_ERR("qos group not set in request");
         return HAL_RET_INVALID_ARG;
     }
-
     auto kh = spec.key_or_handle();
     if (kh.key_or_handle_case() != QosClassKeyHandle::kQosGroup) {
         // key-handle field set, but qos-group not provided
         HAL_TRACE_ERR("qos group not set in request");
         return HAL_RET_INVALID_ARG;
     }
-
     if (find_qos_class_by_key_handle(kh)) {
         HAL_TRACE_ERR("qos class already exists");
         return HAL_RET_ENTRY_EXISTS;
     }
-
-    qos_group = qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group());
-    ret = validate_qos_class_spec(spec, qos_group, rsp);
+    qos_group = qos_spec_qos_group_to_qos_group(
+                            spec.key_or_handle().qos_group());
+    ret = validate_group(qos_group);
+    if (ret != HAL_RET_OK) {
+        return ret;
+    }
+    ret = validate_qos_class_spec(spec);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("qos_class spec validation failed ret {}", ret);
         return ret;
     }
-
-    spec_has_pcp = (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP) ||
-                    (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
-    spec_has_dscp = (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_DSCP) ||
-                    (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
-
-    // Validate the uplink-class-map
-    if (qos_group_is_user_defined(qos_group)) {
-        // Do validations to check that the dot1q_pcp and ip_dscp are not
-        // associated with other classes
-        if (spec_has_pcp) {
-            if (g_hal_state->qos_cmap_pcp_bmp()->is_set(spec.class_map().dot1q_pcp())) {
-                HAL_TRACE_ERR("Dot1q pcp {} is already in use",
-                              spec.class_map().dot1q_pcp());
-                return HAL_RET_QOS_CLASS_DOT1Q_PCP_ALREADY_IN_USE;
-            }
-        }
-
-        if (spec_has_dscp) {
-            for (int i = 0; i < spec.class_map().ip_dscp_size(); i++) {
-                if (g_hal_state->qos_cmap_dscp_bmp()->is_set(spec.class_map().ip_dscp(i))) {
-                    HAL_TRACE_ERR("IP dscp {} is already in use",
-                                  spec.class_map().ip_dscp(i));
-                    return HAL_RET_QOS_CLASS_IP_DSCP_ALREADY_IN_USE;
-                }
-            }
-        }
+    ret = validate_cmap_spec_create(spec);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("qos_class cmap validation failed ret {}", ret);
+        return ret;
     }
-
     return HAL_RET_OK;
 }
 
@@ -802,13 +936,16 @@ qos_class_prepare_rsp (QosClassResponse *rsp, hal_ret_t ret,
 static hal_ret_t
 update_pfc_params (const QosClassSpec& spec, qos_class_t *qos_class)
 {
-    if (spec.has_pfc()) {
-        qos_class->pfc.xon_threshold =  spec.pfc().xon_threshold();
-        qos_class->pfc.xoff_threshold =  spec.pfc().xoff_threshold();
-        qos_class->pfc.pfc_cos =  spec.pfc().pfc_cos();
+    if (spec.has_pause()) {
+        qos_class->pause.xon_threshold = spec.pause().xon_threshold();
+        qos_class->pause.xoff_threshold = spec.pause().xoff_threshold();
+        qos_class->pause.pfc_cos = spec.pause().pfc_cos();
+        if (spec.pause().type() == qos::QOS_PAUSE_TYPE_PFC) {
+            qos_class->pause.pfc_enable = true;
+        }
+        // no_drop is always true for pause
         qos_class->no_drop = true;
     }
-
     return HAL_RET_OK;
 }
 
@@ -816,9 +953,6 @@ static hal_ret_t
 update_sched_params (const QosClassSpec& spec, qos_class_t *qos_class)
 {
     qos_sched_t *sched = &qos_class->sched;
-    if (!spec.has_sched()) {
-        return HAL_RET_INVALID_ARG;
-    }
 
     if (spec.sched().has_dwrr()) {
         sched->type = QOS_SCHED_TYPE_DWRR;
@@ -829,7 +963,6 @@ update_sched_params (const QosClassSpec& spec, qos_class_t *qos_class)
     } else {
         return HAL_RET_INVALID_ARG;
     }
-
     return HAL_RET_OK;
 }
 
@@ -840,36 +973,18 @@ update_cmap_params (const QosClassSpec& spec, qos_class_t *qos_class)
     bool spec_has_pcp = false;
     bool spec_has_dscp = false;
 
-    if (!qos_class_is_user_defined(qos_class)) {
-        return HAL_RET_OK;
-    }
-
-    if (!spec.has_class_map()) {
-        HAL_TRACE_ERR("Invalid class map specified");
-        return HAL_RET_INVALID_ARG;
-    }
-
-    spec_has_pcp = (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP) ||
-                    (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
-    spec_has_dscp = (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_DSCP) ||
-                    (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
-
+    spec_has_pcp = spec_cmap_type_pcp(spec.class_map().type());
+    spec_has_dscp = spec_cmap_type_dscp(spec.class_map().type());
     if (spec_has_pcp) {
         cmap->dot1q_pcp = spec.class_map().dot1q_pcp();
         cmap->type = QOS_CMAP_TYPE_PCP;
     }
-
     if (spec_has_dscp) {
         for (int i = 0; i < spec.class_map().ip_dscp_size(); i++) {
             cmap->ip_dscp[spec.class_map().ip_dscp(i)] = true;
         }
         cmap->type = QOS_CMAP_TYPE_DSCP;
     }
-
-    if (spec_has_pcp && spec_has_dscp) {
-        cmap->type = QOS_CMAP_TYPE_PCP_DSCP;
-    }
-
     return HAL_RET_OK;
 }
 
@@ -884,7 +999,6 @@ update_marking_params (const QosClassSpec& spec, qos_class_t *qos_class)
         marking->dscp_rewrite_en = spec.marking().ip_dscp_rewrite_en();
         marking->dscp = spec.marking().ip_dscp();
     }
-
     return HAL_RET_OK;
 }
 
@@ -895,32 +1009,23 @@ qos_class_init_from_spec (qos_class_t *qos_class, const QosClassSpec& spec)
 
     qos_class->key.qos_group =
         qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group());
-    if (!valid_qos_group(qos_class->key.qos_group)) {
-        return HAL_RET_INVALID_ARG;
-    }
-
     qos_class->mtu = spec.mtu();
-
     ret = update_pfc_params(spec, qos_class);
     if (ret != HAL_RET_OK) {
         return ret;
     }
-
     ret = update_sched_params(spec, qos_class);
     if (ret != HAL_RET_OK) {
         return ret;
     }
-
     ret = update_cmap_params(spec, qos_class);
     if (ret != HAL_RET_OK) {
         return ret;
     }
-
     ret = update_marking_params(spec, qos_class);
     if (ret != HAL_RET_OK) {
         return ret;
     }
-
     return HAL_RET_OK;
 }
 
@@ -965,7 +1070,6 @@ qosclass_create (QosClassSpec& spec, QosClassResponse *rsp)
     }
 
     HAL_TRACE_DEBUG("qos_class create for qos-group {} ",
-
                     qos_spec_qos_group_to_qos_group(spec.key_or_handle().qos_group()));
 
     // instantiate qos class
@@ -1047,18 +1151,15 @@ validate_qos_class_update (QosClassSpec& spec, QosClassResponse *rsp)
     qos_class = find_qos_class_by_key_handle(spec.key_or_handle());
     if (qos_class == NULL) {
         HAL_TRACE_ERR("failed to find qos_class, group {}, handle {}",
-
                       spec.key_or_handle().qos_group(),
                       spec.key_or_handle().qos_class_handle());
         return HAL_RET_QOS_CLASS_NOT_FOUND;
     }
-
-    ret = validate_qos_class_spec(spec, qos_class->key.qos_group, rsp);
+    ret = validate_qos_class_spec(spec);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("qos_class spec validation failed ret {}", ret);
         return ret;
     }
-
     return ret;
 }
 
@@ -1085,8 +1186,7 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     qos_class_clone = (qos_class_t *)dhl_entry->cloned_obj;
 
-    HAL_TRACE_DEBUG("update upd cb {}",
-                    qos_class_clone->key);
+    HAL_TRACE_DEBUG("update upd cb {}", qos_class_clone->key);
 
     // 1. PD Call to allocate PD resources and HW programming
     pd::pd_qos_class_update_args_init(&pd_qos_class_args);
@@ -1095,12 +1195,12 @@ qos_class_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd_qos_class_args.threshold_changed = app_ctxt->threshold_changed;
     pd_qos_class_args.ip_dscp_changed = app_ctxt->ip_dscp_changed;
     pd_qos_class_args.dot1q_pcp_changed = app_ctxt->dot1q_pcp_changed;
-    pd_qos_class_args.dot1q_pcp_src = app_ctxt->dot1q_pcp_src;
+    pd_qos_class_args.dot1q_pcp_remove = app_ctxt->dot1q_pcp_remove;
     SDK_ASSERT(sizeof(pd_qos_class_args.ip_dscp_remove) ==
                sizeof(app_ctxt->ip_dscp_remove));
     memcpy(pd_qos_class_args.ip_dscp_remove, app_ctxt->ip_dscp_remove,
            sizeof(app_ctxt->ip_dscp_remove));
-    pd_qos_class_args.pfc_changed = app_ctxt->pfc_changed;
+    pd_qos_class_args.pfc_cos_changed = app_ctxt->pfc_cos_changed;
     pd_qos_class_args.scheduler_changed = app_ctxt->scheduler_changed;
     pd_qos_class_args.marking_changed = app_ctxt->marking_changed;
     pd_func_args.pd_qos_class_update = &pd_qos_class_args;
@@ -1232,57 +1332,64 @@ static inline hal_ret_t
 qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
                          qos_class_update_app_ctxt_t *app_ctxt)
 {
+    hal_ret_t ret;
+    uint32_t ip_dscp;
     bool ip_dscp_to_rem[HAL_MAX_IP_DSCP_VALS];
     bool spec_has_pcp = false, spec_has_dscp = false;
     bool qos_has_pcp = false, qos_has_dscp = false;
 
-    spec_has_pcp = (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP) ||
-                    (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
-    spec_has_dscp = (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_DSCP) ||
-                    (spec.class_map().type() == qos::QOS_CLASS_MAP_TYPE_PCP_DSCP);
+    spec_has_pcp = spec_cmap_type_pcp(spec.class_map().type());
+    spec_has_dscp = spec_cmap_type_dscp(spec.class_map().type());
+    qos_has_pcp = cmap_type_pcp(qos_class->cmap.type);
+    qos_has_dscp = cmap_type_dscp(qos_class->cmap.type);
 
-    qos_has_pcp = (qos_class->cmap.type == QOS_CMAP_TYPE_PCP) ||
-                    (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
-    qos_has_dscp = (qos_class->cmap.type == QOS_CMAP_TYPE_DSCP) ||
-                    (qos_class->cmap.type == QOS_CMAP_TYPE_PCP_DSCP);
-
+    if (spec.mtu() != qos_class->mtu) {
+        app_ctxt->mtu_changed = true;
+    }
     if (qos_class_is_user_defined(qos_class)) {
-        // Do validations to check that the dot1q_pcp and ip_dscp are not
-        // associated with other classes
         qos_cmap_t *cmap = &qos_class->cmap;
         if (qos_has_pcp) {
-            if (spec_has_pcp && (spec.class_map().dot1q_pcp() != cmap->dot1q_pcp)) {
+            if (spec_has_pcp &&
+                    (spec.class_map().dot1q_pcp() != cmap->dot1q_pcp)) {
                 app_ctxt->dot1q_pcp_changed = true;
-                app_ctxt->dot1q_pcp_src = cmap->dot1q_pcp;
-                if (g_hal_state->qos_cmap_pcp_bmp()->is_set(spec.class_map().dot1q_pcp())) {
-                    HAL_TRACE_ERR("Dot1q pcp {} is already in use",
-                                  spec.class_map().dot1q_pcp());
-                    return HAL_RET_QOS_CLASS_DOT1Q_PCP_ALREADY_IN_USE;
+                app_ctxt->dot1q_pcp_remove = cmap->dot1q_pcp;
+                ret = validate_dot1q_pcp_exists(spec.class_map().dot1q_pcp());
+                if (ret != HAL_RET_OK) {
+                    return ret;
                 }
             } else if (!spec_has_pcp) {
                 app_ctxt->dot1q_pcp_changed = true;
-                app_ctxt->dot1q_pcp_src = cmap->dot1q_pcp;
+                app_ctxt->dot1q_pcp_remove = cmap->dot1q_pcp;
+            }
+        } else {
+            if (spec_has_pcp == true) {
+                // update from dot1q_pcp to dscp not allowed
+                return HAL_RET_QOS_CLASS_DOT1Q_PCP_INVALID;
             }
         }
-
         if (qos_has_dscp) {
             memcpy(ip_dscp_to_rem, cmap->ip_dscp, sizeof(ip_dscp_to_rem));
-
             if (spec_has_dscp) {
                 for (int i = 0; i < spec.class_map().ip_dscp_size(); i++) {
-                    ip_dscp_to_rem[spec.class_map().ip_dscp(i)] = false;
-
-                    if (!cmap->ip_dscp[spec.class_map().ip_dscp(i)]) {
+                    ip_dscp = spec.class_map().ip_dscp(i);
+                    ret = validate_ip_dscp(ip_dscp);
+                    if (ret != HAL_RET_OK) {
+                        return ret;
+                    }
+                    // dscp value already being used by this class
+                    if (cmap->ip_dscp[ip_dscp] == true) {
+                        ip_dscp_to_rem[ip_dscp] = false;
+                    } else {
+                        // new dscp value
                         app_ctxt->ip_dscp_changed = true;
-                        if (g_hal_state->qos_cmap_dscp_bmp()->is_set(spec.class_map().ip_dscp(i))) {
-                            HAL_TRACE_ERR("IP dscp {} is already in use",
-                                          spec.class_map().ip_dscp(i));
-                            return HAL_RET_QOS_CLASS_IP_DSCP_ALREADY_IN_USE;
+                        // check if new dscp value is being used by other class
+                        ret = validate_ip_dscp_exists(ip_dscp);
+                        if (ret != HAL_RET_OK) {
+                            return ret;
                         }
                     }
                 }
             }
-
             for (unsigned i = 0; i < SDK_ARRAY_SIZE(ip_dscp_to_rem); i++) {
                 if (ip_dscp_to_rem[i]) {
                     app_ctxt->ip_dscp_changed = true;
@@ -1290,16 +1397,37 @@ qos_class_handle_update (QosClassSpec& spec, qos_class_t *qos_class,
                 }
             }
             memcpy(app_ctxt->ip_dscp_remove, ip_dscp_to_rem, sizeof(ip_dscp_to_rem));
+        } else {
+            if (spec_has_dscp == true) {
+                // update from dscp to pcp not allowed
+                return HAL_RET_QOS_CLASS_IP_DSCP_INVALID;
+            }
         }
     }
-
-    if (qos_class->no_drop != spec.has_pfc()) {
+    if (spec.has_pause()) {
+        // pause type change not allowed
+        if ((spec.pause().type() == qos::QOS_PAUSE_TYPE_PFC &&
+                qos_class->pause.pfc_enable == false) ||
+            (spec.pause().type() == qos::QOS_PAUSE_TYPE_LINK_LEVEL &&
+                qos_class->pause.pfc_enable == true)) {
+                return HAL_RET_QOS_CLASS_PAUSE_TYPE_INVALID;
+        }
+        if ((spec.pause().xon_threshold() != qos_class->pause.xon_threshold) ||
+            (spec.pause().xoff_threshold() != qos_class->pause.xoff_threshold)) {
+            app_ctxt->threshold_changed = true;
+        }
+        if (spec.pause().pfc_cos() != qos_class->pause.pfc_cos) {
+            app_ctxt->pfc_cos_changed = true;
+        }
+    }
+    // allow no_drop<->drop change only for default class
+    if (qos_class->no_drop != spec.has_pause() &&
+        qos_class->key.qos_group != QOS_GROUP_DEFAULT) {
         HAL_TRACE_ERR("{} class cannot be changed to {} class",
                       qos_class->no_drop ? "No drop" : "Drop",
-                      spec.has_pfc() ? "No drop" : "Drop");
+                      spec.has_pause() ? "No drop" : "Drop");
         return HAL_RET_QOS_CLASS_DROP_NO_DROP_CHANGE_NOT_ALLOWED;
     }
-
     return HAL_RET_OK;
 }
 
@@ -1337,8 +1465,7 @@ qosclass_update (QosClassSpec& spec, QosClassResponse *rsp)
         ret = HAL_RET_QOS_CLASS_NOT_FOUND;
         goto end;
     }
-    HAL_TRACE_DEBUG("update qos_class {}",
-                    qos_class->key);
+    HAL_TRACE_DEBUG("update qos_class {}", qos_class->key);
 
     ret = qos_class_handle_update(spec, qos_class, &app_ctxt);
     if (ret != HAL_RET_OK) {
@@ -1358,20 +1485,9 @@ qosclass_update (QosClassSpec& spec, QosClassResponse *rsp)
 
     qos_class_clone = (qos_class_t *)dhl_entry.cloned_obj;
 
-    if (qos_class_clone->mtu != qos_class->mtu) {
-        app_ctxt.mtu_changed = true;
-    }
-
-    if ((qos_class_clone->pfc.xon_threshold != qos_class->pfc.xon_threshold) ||
-        (qos_class_clone->pfc.xoff_threshold != qos_class->pfc.xoff_threshold) ||
-        (qos_class_clone->pfc.pfc_cos != qos_class->pfc.pfc_cos)) {
-        app_ctxt.threshold_changed = true;
-    }
-
     if (memcmp(&qos_class_clone->sched, &qos_class->sched, sizeof(qos_class->sched))) {
         app_ctxt.scheduler_changed = true;
     }
-
     if (memcmp(&qos_class_clone->marking, &qos_class->marking, sizeof(qos_class->marking))) {
         app_ctxt.marking_changed = true;
     }

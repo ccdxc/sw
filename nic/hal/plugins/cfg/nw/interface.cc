@@ -1927,17 +1927,11 @@ if_update_pi_with_mbr_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
     // Revisit: this is a clone and may be we dont have to take the lock
     if_lock(hal_if, __FILENAME__, __LINE__, __func__);
 
-    // Copy aggr to clone
-    hal_copy_block_lists(hal_if->mbr_if_list, app_ctxt->aggr_mbrlist);
+    // Destroy clone's list which is original's list as well
+    hal_cleanup_handle_block_list(&hal_if->mbr_if_list);
+    // Assign aggr list to clone's list
+    hal_if->mbr_if_list = app_ctxt->aggr_mbrlist;
 
-#if 0
-    // Free list in clone
-    hal_remove_all_handles_block_list(&hal_if->mbr_if_list);
-    // hal_free_handles_list(&hal_if->mbr_if_list_head);
-
-    // Move aggregated list to clone
-    dllist_move(&hal_if->mbr_if_list_head, app_ctxt->aggr_mbrlist);
-#endif
     // add/del relations from member ports.
     ret = uplinkpc_update_mbrs_relation(app_ctxt->add_mbrlist,
                                         hal_if, true);
@@ -1956,15 +1950,9 @@ if_update_pi_with_mbr_list (if_t *hal_if, if_update_app_ctxt_t *app_ctxt)
     }
 
 end:
-
     // Free add & del list
     hal_cleanup_handle_block_list(&app_ctxt->add_mbrlist);
     hal_cleanup_handle_block_list(&app_ctxt->del_mbrlist);
-    hal_cleanup_handle_block_list(&app_ctxt->aggr_mbrlist);
-
-    // interface_cleanup_handle_list(&app_ctxt->add_mbrlist);
-    // interface_cleanup_handle_list(&app_ctxt->del_mbrlist);
-    // interface_cleanup_handle_list(&app_ctxt->aggr_mbrlist);
 
     // Unlock if
     if_unlock(hal_if, __FILENAME__, __LINE__, __func__);
@@ -2095,8 +2083,8 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         case intf::IF_TYPE_UPLINK:
         case intf::IF_TYPE_UPLINK_PC:
             // move lists
-            hal_copy_block_lists(intf_clone->l2seg_list, intf->l2seg_list);
-            hal_copy_block_lists(intf_clone->mbr_if_list, intf->mbr_if_list);
+            // hal_copy_block_lists(intf_clone->l2seg_list, intf->l2seg_list);
+            // hal_copy_block_lists(intf_clone->mbr_if_list, intf->mbr_if_list);
 
             // update clone with new attrs
             if (app_ctxt->native_l2seg_change) {
@@ -2109,10 +2097,15 @@ if_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
                 intf_clone->native_l2seg = seg_id;
             }
 
-            // update mbr list, valid only for uplink pc
+            if (intf->if_type == intf::IF_TYPE_UPLINK_PC) {
+                // update mbr list, valid only for uplink pc
+                ret = if_update_pi_with_mbr_list(intf_clone, app_ctxt);
+            }
+#if 0
             if (app_ctxt->mbrlist_change) {
                 ret = if_update_pi_with_mbr_list(intf_clone, app_ctxt);
             }
+#endif
 
             if (app_ctxt->is_oob_change) {
                 intf_clone->is_oob_management = app_ctxt->is_oob;
@@ -4568,6 +4561,7 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
     HAL_TRACE_DEBUG("deleted mbrs:");
     hal_print_handles_block_list(*del_mbrlist);
 
+#if 0
     if (!*mbrlist_change) {
         // Got same mbrs as existing
         // interface_cleanup_handle_list(add_mbrlist);
@@ -4578,6 +4572,7 @@ uplinkpc_mbr_list_update(InterfaceSpec& spec, if_t *hal_if,
         hal_cleanup_handle_block_list(del_mbrlist);
         hal_cleanup_handle_block_list(aggr_mbrlist);
     }
+#endif
 
 end:
 

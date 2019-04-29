@@ -1576,6 +1576,18 @@ pd_qos_class_create_args_init (pd_qos_class_create_args_t *args)
     return;
 }
 
+typedef struct pd_qos_class_set_global_pause_type_args_s {
+    qos_pause_type_t pause_type;
+} __PACK__ pd_qos_class_set_global_pause_type_args_t;
+
+static inline void
+pd_qos_class_set_global_pause_type_init (
+                pd_qos_class_set_global_pause_type_args_t *args)
+{
+    args->pause_type = QOS_PAUSE_TYPE_NONE;
+    return;
+}
+
 typedef struct pd_qos_class_restore_args_s {
     qos_class_t              *qos_class;
     const QosClassStatus    *qos_class_status;
@@ -1605,10 +1617,10 @@ typedef struct pd_qos_class_update_args_s {
     bool mtu_changed;
     bool threshold_changed;
     bool dot1q_pcp_changed;
-    uint32_t dot1q_pcp_src;
+    uint32_t dot1q_pcp_remove;
     bool ip_dscp_changed;
     bool ip_dscp_remove[HAL_MAX_IP_DSCP_VALS];
-    bool pfc_changed;
+    bool pfc_cos_changed;
     bool scheduler_changed;
     bool marking_changed;
 } __PACK__ pd_qos_class_update_args_t;
@@ -3336,7 +3348,8 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_INIT,        299, "PD_FUNC_ID_ACCEL_RGROUP_INIT")\
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_FINI,        300, "PD_FUNC_ID_ACCEL_RGROUP_FINI")\
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_MISC_GET,    301, "PD_FUNC_ID_ACCEL_RGROUP_MISC_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      302, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE, 302, "PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE")  \
+    ENTRY(PD_FUNC_ID_MAX,                      303, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3519,6 +3532,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_qos_class_get);
         PD_UNION_ARGS_FIELD(pd_qos_class_thresholds_get);
         PD_UNION_ARGS_FIELD(pd_qos_class_periodic_stats_update);
+        PD_UNION_ARGS_FIELD(pd_qos_class_set_global_pause_type);
 
         // copp
         PD_UNION_ARGS_FIELD(pd_copp_create);
@@ -3954,6 +3968,7 @@ PD_FUNCP_TYPEDEF(pd_qos_class_make_clone);
 PD_FUNCP_TYPEDEF(pd_qos_class_get);
 PD_FUNCP_TYPEDEF(pd_qos_class_thresholds_get);
 PD_FUNCP_TYPEDEF(pd_qos_class_periodic_stats_update);
+PD_FUNCP_TYPEDEF(pd_qos_class_set_global_pause_type);
 
 // copp
 PD_FUNCP_TYPEDEF(pd_copp_create);

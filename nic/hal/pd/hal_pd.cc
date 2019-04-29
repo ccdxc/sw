@@ -247,6 +247,8 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_THRESHOLDS_GET, pd_qos_class_thresholds_get);
     PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_PERIODIC_STATS_UPDATE,
                    pd_qos_class_periodic_stats_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE,
+                   pd_qos_class_set_global_pause_type);
 
     // copp
     PD_FUNC_LOAD(PD_FUNC_ID_COPP_CREATE, pd_copp_create);
