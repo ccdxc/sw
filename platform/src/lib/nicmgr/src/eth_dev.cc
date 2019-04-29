@@ -16,7 +16,6 @@
 #include "cap_wa_c_hdr.h"
 #include "cap_ms_c_hdr.h"
 
-#include "nic/include/base.hpp"
 #include "nic/include/edmaq.h"
 #include "nic/p4/common/defines.h"
 

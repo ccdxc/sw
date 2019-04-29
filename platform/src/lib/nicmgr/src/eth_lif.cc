@@ -15,7 +15,6 @@
 #include "cap_pics_c_hdr.h"
 #include "cap_wa_c_hdr.h"
 
-#include "nic/include/base.hpp"
 #include "nic/include/edmaq.h"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/p4/common/defines.h"
