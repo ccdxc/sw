@@ -23,9 +23,10 @@ const IfTypeMask = 0xF
 const IfSlotMask = 0xF
 const IfParentPortMask = 0xFF
 const IfChildPortMask = 0xFF
+const InvalidIfIndex = 0xFFFFFFFF
 
 var (
-	portID         uint32
+	portID         string
 	portAdminState string
 )
 
@@ -59,15 +60,15 @@ var portUpdateCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatsShowCmd)
-	portStatsShowCmd.Flags().Uint32VarP(&portID, "id", "i", 0, "Specify Port ID")
+	portStatsShowCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify Port ID. Ex: Eth1/2")
 	portShowCmd.AddCommand(portStatusShowCmd)
-	portStatusShowCmd.Flags().Uint32VarP(&portID, "id", "i", 0, "Specify Port ID")
+	portStatusShowCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify Port ID. Ex: Eth1/2")
 
 	debugCmd.AddCommand(portUpdateCmd)
-	portUpdateCmd.Flags().Uint32VarP(&portID, "id", "i", 0, "Specify Port ID")
+	portUpdateCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify Port ID. Ex: Eth1/2")
 	portUpdateCmd.Flags().StringVarP(&portAdminState, "admin-state", "a", "up", "Set port admin state - up, down")
 	portUpdateCmd.MarkFlagRequired("admin-state")
-	portUpdateCmd.MarkFlagRequired("id")
+	portUpdateCmd.MarkFlagRequired("port")
 }
 
 func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
@@ -87,7 +88,7 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if cmd.Flags().Changed("admin-state") == false ||
-		cmd.Flags().Changed("id") == false {
+		cmd.Flags().Changed("port") == false {
 		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
 		return
 	}
@@ -100,11 +101,17 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 
 	client := pds.NewPortSvcClient(c)
 
+	ifIndex := portIDStrToIfIndex(portID)
+	if ifIndex == InvalidIfIndex {
+		fmt.Printf("Invalid port ID\n")
+		return
+	}
+
 	var req *pds.PortUpdateRequest
 
 	req = &pds.PortUpdateRequest{
 		Spec: &pds.PortSpec{
-			PortId:     portID,
+			PortId:     ifIndex,
 			AdminState: adminState,
 		},
 	}
@@ -163,10 +170,16 @@ func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewPortSvcClient(c)
 
 	var req *pds.PortGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd.Flags().Changed("port") {
 		// Get specific Port
+		ifIndex := portIDStrToIfIndex(portID)
+		if ifIndex == InvalidIfIndex {
+			fmt.Printf("Invalid port ID\n")
+			return
+		}
+
 		req = &pds.PortGetRequest{
-			PortId: []uint32{portID},
+			PortId: []uint32{ifIndex},
 		}
 	} else {
 		// Get all Ports
@@ -253,10 +266,16 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewPortSvcClient(c)
 
 	var req *pds.PortGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd.Flags().Changed("port") {
 		// Get specific Port
+		ifIndex := portIDStrToIfIndex(portID)
+		if ifIndex == InvalidIfIndex {
+			fmt.Printf("Invalid port ID\n")
+			return
+		}
+
 		req = &pds.PortGetRequest{
-			PortId: []uint32{portID},
+			PortId: []uint32{ifIndex},
 		}
 	} else {
 		// Get all Ports
@@ -290,6 +309,23 @@ func printPortStatsHeader() {
 	fmt.Println(hdrLine)
 	fmt.Printf("%-8s%-25s%-5s\n", "PortId", "Field", "Count")
 	fmt.Println(hdrLine)
+}
+
+func portIDStrToIfIndex(portIDStr string) uint32 {
+	var slotIndex uint32
+	var portIndex uint32
+	var ifIndex uint32
+
+	n, err := fmt.Sscanf(portIDStr, "Eth%d/%d", &slotIndex, &portIndex)
+	if err != nil || n != 2 {
+		return InvalidIfIndex
+	}
+	ifIndex = 1 << IfTypeShift // 1 is Eth port
+	ifIndex |= slotIndex << IfSlotShift
+	ifIndex |= portIndex << IfParentPortShift
+	ifIndex |= 1 // Default child port
+
+	return ifIndex
 }
 
 func ifIndexToSlot(ifIndex uint32) uint32 {
