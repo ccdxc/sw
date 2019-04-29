@@ -5,7 +5,7 @@ feature:
     package     : test.mirror
     module      : mirror
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
 
