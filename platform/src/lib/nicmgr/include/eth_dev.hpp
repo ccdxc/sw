@@ -61,6 +61,7 @@ struct eth_devspec {
     std::string name;
     OpromType oprom;
     uint8_t pcie_port;
+    uint32_t pcie_total_vfs;
     bool host_dev;
     // Network
     uint32_t uplink_port_num;
@@ -95,8 +96,12 @@ public:
     Eth(devapi *dev_api,
         void *dev_spec,
         PdClient *pd_client);
+    static std::vector<Eth*> factory(enum DeviceType type, devapi *dev_api,
+         void *dev_spec,
+         PdClient *pd_client);
 
     std::string GetName() { return spec->name; }
+    EthDevType GetType() { return spec->eth_type; }
 
     void DevcmdHandler();
     status_code_t CmdHandler(void *req, void *req_data,
@@ -112,6 +117,7 @@ public:
     void SetHalClient(devapi *dapi);
 
     int GenerateQstateInfoJson(pt::ptree &lifs);
+    bool CreateHostDevice();
 
 private:
     // Device Spec
@@ -153,7 +159,6 @@ private:
     evutil_timer stats_timer = {0};
 
     // Device Constructors
-    bool CreateHostDevice();
     bool CreateLocalDevice();
     //
     bool LoadOprom();

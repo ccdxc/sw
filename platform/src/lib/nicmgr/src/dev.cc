@@ -285,8 +285,6 @@ DeviceManager::LoadConfig(string path)
 Device *
 DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 {
-    Eth *eth_dev;
-
 #ifdef IRIS
     AccelDev *accel_dev;
     NvmeDev *nvme_dev;
@@ -294,18 +292,37 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
 
     switch (type) {
     case MNIC:
-        eth_dev = new Eth(dev_api, dev_spec, pd);
-        eth_dev->SetType(MNIC);
-        devices[eth_dev->GetName()] = eth_dev;
-        return (Device *)eth_dev;
+        {
+            std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd);
+            for (std::size_t idx = 0; idx < eth_devices.size(); ++idx)
+                devices[eth_devices[idx]->GetName()] = eth_devices[idx];
+            return (Device *)eth_devices[0];
+        }
     case DEBUG:
         NIC_LOG_ERR("Unsupported Device Type DEBUG");
         return NULL;
     case ETH:
-        eth_dev = new Eth(dev_api, dev_spec, pd);
-        eth_dev->SetType(type);
-        devices[eth_dev->GetName()] = eth_dev;
-        return (Device *)eth_dev;
+        {
+            std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd);
+            for (std::size_t idx = 0; idx < eth_devices.size(); ++idx) {
+                //Create PCIe device for only PF
+                if (!idx) {
+                    // Create the device
+                    if (eth_devices[idx]->GetType() == ETH_HOST_MGMT || eth_devices[idx]->GetType() == ETH_HOST) {
+                        if (!eth_devices[idx]->CreateHostDevice()) {
+                            NIC_LOG_ERR("CreateHostDevice() failed for {}", eth_devices[idx]->GetName());
+                            return NULL;
+                        }
+                    }
+                    else {
+                        NIC_LOG_DEBUG("{}: Skipped creating host device", eth_devices[idx]->GetName());
+                    }
+                }
+                NIC_LOG_DEBUG("{}: Adding device to dev manager", eth_devices[idx]->GetName());
+                devices[eth_devices[idx]->GetName()] = eth_devices[idx];
+            }
+            return (Device *)eth_devices[0];
+        }
 #ifdef IRIS
     case ACCEL:
         accel_dev = new AccelDev(dev_api, dev_spec, pd);

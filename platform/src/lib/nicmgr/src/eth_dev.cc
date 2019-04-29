@@ -148,6 +148,7 @@ Eth::Eth(devapi *dev_api,
         cmb_mem_size = 0;
     }
 
+#if 0
     // Create the device
     if (spec->eth_type == ETH_HOST_MGMT || spec->eth_type == ETH_HOST) {
         if (!CreateHostDevice()) {
@@ -157,6 +158,7 @@ Eth::Eth(devapi *dev_api,
     } else {
         NIC_LOG_DEBUG("{}: Skipped creating host device", spec->name);
     }
+#endif
 
     // Create all LIFs
     for (uint32_t lif_index = 0; lif_index < spec->lif_count; lif_index++) {
@@ -203,6 +205,38 @@ Eth::Eth(devapi *dev_api,
     evutil_add_prepare(&devcmd_prepare, Eth::DevcmdPoll, this);
     evutil_add_check(&devcmd_check, Eth::DevcmdPoll, this);
     evutil_timer_start(&devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
+}
+
+std::vector<Eth*>
+Eth::factory(enum DeviceType type, devapi *dev_api,
+         void *dev_spec,
+         PdClient *pd_client)
+{
+    std::vector<Eth*> eth_devs;
+    Eth *dev_obj;
+    struct eth_devspec *spec = (struct eth_devspec *)dev_spec;
+
+    // Create object for PF
+    dev_obj = new Eth(dev_api, spec, pd_client);
+    dev_obj->SetType(type);
+    eth_devs.push_back(dev_obj);
+    
+    NIC_LOG_DEBUG("{}: pcie_total_vfs: {}", spec->name, spec->pcie_total_vfs);
+
+    // Create objects for all VFs within this PF
+    for (uint32_t dev=0; dev < spec->pcie_total_vfs; dev++) {
+        struct eth_devspec *vf_spec = new struct eth_devspec;
+        *vf_spec = *(struct eth_devspec *)spec;
+        vf_spec->name = vf_spec->name + "_vf_" + std::to_string(dev);
+        //Keeping the mac for VF as 0
+        vf_spec->mac_addr =  0;
+        dev_obj = new Eth(dev_api, vf_spec, pd_client);
+        dev_obj->SetType(type);
+        eth_devs.push_back(dev_obj);
+    }
+
+    NIC_LOG_DEBUG("returning from factory");
+    return eth_devs;
 }
 
 static void *
@@ -261,6 +295,8 @@ Eth::ParseConfig(boost::property_tree::ptree::value_type node)
     }
 
     eth_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
+    eth_spec->pcie_total_vfs = val.get<uint8_t>("pcie.total_vfs", 0);
+
     if (val.get_optional<string>("pcie.oprom")) {
         eth_spec->oprom = Device::oprom_type_str_to_type(val.get<string>("pcie.oprom"));
     }
@@ -451,10 +487,31 @@ Eth::CreateHostDevice()
     pres.pfres.cmbsz = cmb_mem_size;
     pres.pfres.rompa = rom_mem_addr;
     pres.pfres.romsz = rom_mem_size;
+    pres.pfres.totalvfs = spec->pcie_total_vfs;
+
+    if (pres.pfres.totalvfs > 0) {
+        pciehdev_res_t *vfres = &pres.vfres;
+        pciehdev_res_t *pfres = &pres.pfres;
+        vfres->is_vf = 1;
+        /* XXX just some sample values */
+        if (pfres->lifc) {
+            vfres->lifb = pfres->lifb + pfres->lifc;
+            vfres->lifc = pfres->totalvfs;
+        }
+        if (pfres->intrc) {
+            vfres->intrb = pfres->intrb + pfres->intrc;
+            vfres->intrc = pfres->intrc;
+            vfres->intrdmask = pfres->intrdmask;
+        }
+        vfres->devcmdpa = pfres->devcmddbpa + 0x1000;
+        vfres->devcmd_stride = 0x1000;
+        vfres->devcmddbpa = vfres->devcmdpa + (0x1000 * pfres->totalvfs);
+        vfres->devcmddb_stride = 0x1000;
+    }
 
     // Create PCI device
     if (spec->eth_type == ETH_HOST) {
-        NIC_LOG_DEBUG("{}: Creating Host device", spec->name);
+        NIC_LOG_DEBUG("{}: Creating Host device with total_vfs: {}", spec->name, pres.pfres.totalvfs);
         pdev = pciehdevice_new("eth", spec->name.c_str(), &pres);
     } else if (spec->eth_type == ETH_HOST_MGMT) {
         NIC_LOG_DEBUG("{}: Creating Host Management device", spec->name);
