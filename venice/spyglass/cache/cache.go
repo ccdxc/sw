@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/pensando/sw/venice/utils/ref"
+
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/venice/utils/log"
@@ -342,7 +344,7 @@ func (c *Cache) searchSGP(query *search.PolicySearchRequest, sgp *security.SGPol
 			c.matchSG(query.FromSecurityGroup, rule.FromSecurityGroups) &&
 			c.matchSG(query.ToSecurityGroup, rule.ToSecurityGroups) {
 			entry := &search.PolicyMatchEntry{
-				Rule:  &rule,
+				Rule:  ref.DeepCopy(&rule).(*security.SGRule),
 				Index: uint32(i),
 			}
 			entries.Entries = append(entries.Entries, entry)

@@ -2,6 +2,7 @@ package cache
 
 import (
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/pensando/sw/api"
@@ -149,6 +150,21 @@ func TestCache_SearchPolicy_MultiQuery_MATCH_MULTIPLE(t *testing.T) {
 	AssertOk(t, err, "Search failed")
 	Assert(t, resp.Status == search.PolicySearchResponse_MATCH.String(), "Should have results after search")
 	Assert(t, len(resp.Results["testpolicy"].Entries) == 2, "Should only have multiple result")
+}
+
+func TestCache_SearchOnlyProtocol(t *testing.T) {
+	resp, err := c.SearchPolicy(&search.PolicySearchRequest{Tenant: "default",
+		Namespace:     "default",
+		SGPolicy:      "testpolicy",
+		Protocol:      "tcp",
+		FromIPAddress: "any",
+		ToIPAddress:   "any"})
+	AssertOk(t, err, "Search failed")
+	Assert(t, resp.Status == search.PolicySearchResponse_MATCH.String(), "Should have results after search")
+	Assert(t, len(resp.Results["testpolicy"].Entries) == 4, "Should only have multiple result")
+	for i := 0; i <= 2; i++ {
+		AssertEquals(t, false, reflect.DeepEqual(resp.Results["testpolicy"].Entries[i], resp.Results["testpolicy"].Entries[i+1]), "Every entry should be unique")
+	}
 }
 
 func TestCache_DeleteObject(t *testing.T) {
