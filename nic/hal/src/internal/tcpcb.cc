@@ -652,6 +652,14 @@ tcp_proxy_global_stats_get(tcp_proxy::TcpProxyGlobalStatsGetRequest& req,
                   pd_tcp_global_stats_get_args.fin_sent_cnt);
     rsp->mutable_global_stats()->set_rst_sent_cnt(
                   pd_tcp_global_stats_get_args.rst_sent_cnt);
+    rsp->mutable_global_stats()->set_rx_win_probe(
+                  pd_tcp_global_stats_get_args.rx_win_probe);
+    rsp->mutable_global_stats()->set_rx_keep_alive(
+                  pd_tcp_global_stats_get_args.rx_keep_alive);
+    rsp->mutable_global_stats()->set_rx_pkt_after_win(
+                  pd_tcp_global_stats_get_args.rx_pkt_after_win);
+    rsp->mutable_global_stats()->set_rx_pure_win_upd(
+                  pd_tcp_global_stats_get_args.rx_pure_win_upd);
     rsp->mutable_global_stats()->set_tcp_debug1(
                   pd_tcp_global_stats_get_args.tcp_debug1);
     rsp->mutable_global_stats()->set_tcp_debug2(

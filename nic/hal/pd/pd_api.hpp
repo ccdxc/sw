@@ -3032,6 +3032,10 @@ typedef struct pd_tcp_global_stats_get_args_s {
     uint64_t rx_ack_for_unsent_data;
     uint64_t fin_sent_cnt;
     uint64_t rst_sent_cnt;
+    uint64_t rx_win_probe;
+    uint64_t rx_keep_alive;
+    uint64_t rx_pkt_after_win;
+    uint64_t rx_pure_win_upd;
 
     uint64_t tcp_debug1;
     uint64_t tcp_debug2;

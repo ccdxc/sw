@@ -20,6 +20,7 @@ struct s1_t0_tcp_rx_d d;
     .param          tcp_rx_read_rnmdr_start
     .param          tcp_ooo_book_keeping
     .param          tcp_ooo_book_keeping_in_order
+    .param          TCP_PROXY_STATS
     .align
 
     /*
@@ -72,8 +73,9 @@ tcp_rx_process_start:
     sne             c5, r1, d.u.tcp_rx_d.pred_flags[23:16]
     seq             c6, d.u.tcp_rx_d.ooq_not_empty, 1
     seq.!c6         c6, k.common_phv_ooq_tx2rx_pkt, 1
+    seq             c7, k.to_s1_rcv_wnd_adv, 0
 
-    bcf             [c1 | c2 | c3 | c4 | c5 | c6], tcp_rx_slow_path
+    bcf             [c1 | c2 | c3 | c4 | c5 | c6 | c7], tcp_rx_slow_path
 
 tcp_rx_fast_path:
 
@@ -250,6 +252,23 @@ tcp_rx_ooo_skip_dup_ack:
     phvwr.c3        p.common_phv_skip_pkt_dma, 1
     phvwr.c3        p.common_phv_write_serq, 0
 
+    // if (seqnum == rcv_nxt - 1 && payload_len == 0) {it is a keep alive, add stats}
+    add             r1, k.s1_s2s_seq, 1
+    sne             c4, d.u.tcp_rx_d.rcv_nxt, r1
+    bcf             [c4 | c2], tcp_rx_check_win_probe 
+    addui           r2, r0, hiword(TCP_PROXY_STATS)
+    addi            r2, r2, loword(TCP_PROXY_STATS)
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RCVD_KEEP_ALIVE, 1)
+
+tcp_rx_check_win_probe: 
+    seq             c4, k.to_s1_rcv_wnd_adv, 0
+    // c4: adv_win == 0
+    // c1: seqnum != rcv_nxt
+    // c2: payload_len != 0
+    // if (win_adv == 0 && payload_len != 0 && seq_num == rcv_nxt) {zwinprobe}
+    bcf             [c1 | !c2 | !c4], tcp_rx_ooo_check
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RCV_WIN_PROBE, 1)
+
 tcp_rx_ooo_check:
      // Consider OOO only if payload_len != 0 && seq > rcv_nxt
     scwlt           c1, d.u.tcp_rx_d.rcv_nxt, k.s1_s2s_seq
@@ -263,6 +282,8 @@ tcp_rx_ooo_check:
     seq             c2, d.u.tcp_rx_d.cfg_flags[TCP_CFG_FLAG_OOO_QUEUE_BIT], 1
     bcf             [c1 & c2], tcp_rx_ooo_rcv
     nop
+    bcf             [c1], tcp_rx_ooo_check_done
+    CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RCVD_PKT_AFTER_WIN, 1)
 
 tcp_rx_ooo_check_done:
     tbladd.c3       d.u.tcp_rx_d.rx_drop_cnt, 1

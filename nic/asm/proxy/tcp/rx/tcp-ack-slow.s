@@ -46,6 +46,15 @@ tcp_ack_slow:
     CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RCVD_ACK_FOR_UNSENT, 1)
 
     /*
+     * Placeholder comment: TODO
+     * if (no data && ack_seq == snd_wl1 && to_s2_window > d.snd_wnd && no data)
+     * {
+     *  Pure window update
+     *  CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r2, TCP_PROXY_STATS_RCVD_PURE_WIN_UPD, 1)
+     * }
+     */
+
+    /*
      * check for dupack
      */
 check_dup_ack:

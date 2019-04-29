@@ -378,6 +378,11 @@ message TcpProxyGlobalStats {
   uint64 rx_ack_for_unsent_data = 14;
   uint64 fin_sent_cnt = 15;
   uint64 rst_sent_cnt = 16;
+  uint64 rx_win_probe = 17;
+  uint64 rx_keep_alive = 18;
+  uint64 rx_pkt_after_win = 19;
+  uint64 rx_pure_win_upd = 20;
+
   uint64 tcp_debug1 = 1002;
   uint64 tcp_debug2 = 1003;
   uint64 tcp_debug3 = 1004;
