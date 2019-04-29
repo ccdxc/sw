@@ -102,8 +102,22 @@ vpc:
                 - msid    : 7
                 - msid    : 8
 
+            - count   : 1             # VNICs per subnet
+              ipcount : 2             # Local IP mapping per vnic
+              srcguard : false        # true or false (default false)
+              public  : true
+              txmirror :
+                - msid    : 5
+              rxmirror :
+                - msid    : 8
+
+            - count   : 1             # VNICs per subnet
+              ipcount : 2             # Local IP mapping per vnic
+              srcguard : false        # true or false (default false)
+              public  : true
+
           rmap:                       # Remote IP mappings per subnet
-            - count : 2
+            - count : 6
       routetbl:
              - type: base
                routetype: adjacent
