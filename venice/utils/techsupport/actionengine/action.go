@@ -122,9 +122,13 @@ func ReadConfig(configPath string) (*tsconfig.TechSupportConfig, error) {
 		return nil, fmt.Errorf("empty filesystem name")
 	}
 
+	if techsupportConfig.Retention != tsconfig.TechSupportConfig_DelOnExport && techsupportConfig.Retention != tsconfig.TechSupportConfig_Manual {
+		return nil, fmt.Errorf("invalid retention option passed")
+	}
+
 	if _, err := os.Stat(techsupportConfig.FileSystemRoot); os.IsNotExist(err) {
 		log.Errorf("Directory does not exist. %v", techsupportConfig.FileSystemRoot)
-		return nil, err
+		os.MkdirAll(techsupportConfig.FileSystemRoot, 0777)
 	}
 
 	return &techsupportConfig, nil
@@ -145,7 +149,7 @@ func CollectTechSupport(config *tsconfig.TechSupportConfig, instanceID string) e
 		log.Infof("RES : %v", res)
 
 		if res != nil {
-			return err
+			return res
 		}
 	}
 

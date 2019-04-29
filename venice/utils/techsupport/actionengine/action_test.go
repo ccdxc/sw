@@ -87,6 +87,7 @@ func TestInvalidConfig(t *testing.T) {
 	techSupportConfig := &tsconfig.TechSupportConfig{
 		Name:           "invalid",
 		FileSystemRoot: "/garbage",
+		Retention:      5,
 	}
 
 	writeConfigToFile(techSupportConfig, defaultConfigPath)

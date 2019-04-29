@@ -10,6 +10,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
+	tsconfig "github.com/pensando/sw/venice/ctrler/tsm/config"
 	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -305,6 +306,20 @@ func (ag *TSMClient) DoWork() error {
 	return nil
 }
 
+func (ag *TSMClient) handleTechSupportRetention(work *tsproto.TechSupportRequest) error {
+	if ag.State.Cfg.Retention == tsconfig.TechSupportConfig_Manual {
+		return nil
+	}
+
+	if ag.State.Cfg.Retention == tsconfig.TechSupportConfig_DelOnExport {
+		cmd := fmt.Sprintf("rm -rf %s/%s", ag.State.Cfg.FileSystemRoot, work.Spec.InstanceID)
+		_, err := action.RunShellCmd(cmd)
+		return err
+	}
+
+	return nil
+}
+
 // Move these into their own directory
 func (ag *TSMClient) pre(work *tsproto.TechSupportRequest) error {
 	log.Info("PreWork")
@@ -351,7 +366,7 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 
 func (ag *TSMClient) post(work *tsproto.TechSupportRequest) error {
 	log.Info("Post Work")
-	return nil
+	return ag.handleTechSupportRetention(work)
 }
 
 // ListTechSupportRequests List of all techsupport request - complete/incomplete presented

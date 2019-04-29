@@ -72,7 +72,9 @@ func (s *service) handleNaplesObjectUpdates(obj *delphiProto.NaplesStatus) {
 		}
 
 		log.Infof("Populating Venice Co-ordinates with %v", controllers)
-		s.tsmClient.Stop()
+		if s.tsmClient != nil {
+			s.tsmClient.Stop()
+		}
 
 		// Create a new Techsupport Agent
 		// NewTSMClient(name string, mac string, kind string, configPath string, controllers []string)
@@ -81,15 +83,25 @@ func (s *service) handleNaplesObjectUpdates(obj *delphiProto.NaplesStatus) {
 
 		// TODO : Delete the sleep. This is a workaround while we debug the race condition in RPC-Kit
 		time.Sleep(2 * time.Second)
-		go s.tsmClient.Start()
+		if s.tsmClient != nil {
+			go s.tsmClient.Start()
+		} else {
+			log.Errorf("Initialization of TSM Client failed. Cannot start TechSupport Client")
+		}
 	} else {
-		s.tsmClient.Stop()
+		if s.tsmClient != nil {
+			s.tsmClient.Stop()
+		}
 		tsmClient := tsa.NewTSMClient("naples-tsa", obj.Fru.MacStr, string(cluster.KindSmartNIC), s.configFile, nil)
 		s.tsmClient = tsmClient
 
 		// TODO : Delete the sleep. This is a workaround while we debug the race condition in RPC-Kit
 		time.Sleep(2 * time.Second)
-		go s.tsmClient.Start()
+		if s.tsmClient != nil {
+			go s.tsmClient.Start()
+		} else {
+			log.Errorf("Initialization of TSM Client failed. Cannot start TechSupport Client")
+		}
 	}
 }
 
@@ -135,7 +147,11 @@ func main() {
 
 	// TODO : Delete the sleep. This is a workaround while we debug the race condition in RPC-Kit
 	time.Sleep(2 * time.Second)
-	go delphiService.tsmClient.Start()
+	if delphiService.tsmClient != nil {
+		go delphiService.tsmClient.Start()
+	} else {
+		log.Errorf("Initialization of TSM Client failed. Cannot start TechSupport Client")
+	}
 
 	delphiClient, err := delphi.NewClient(delphiService)
 	if err != nil {

@@ -1,6 +1,7 @@
 {
 	"Name" : "ExampleConfig",
 	"FilesystemRoot" : "/tmp",
+	"Retention" : 0,
 	"PrepActions" : [
 				{
 					"Name" : "Action1",
