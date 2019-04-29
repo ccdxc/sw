@@ -50,6 +50,7 @@ header_type control_metadata_t {
         vlan_strip                          : 1;
         local_switching                     : 1;
         mirror_session                      : 8;
+        tunneled_packet                     : 1;
     }
 }
 

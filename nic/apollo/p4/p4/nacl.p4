@@ -33,6 +33,7 @@ table nacl {
         ctag_1.valid                        : ternary;
         ctag_1.vid                          : ternary;
         predicate_header.redirect_to_arm    : ternary;
+        control_metadata.tunneled_packet    : ternary;
     }
     actions {
         nacl_permit;

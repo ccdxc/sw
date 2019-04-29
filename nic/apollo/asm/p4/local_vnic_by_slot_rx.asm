@@ -20,6 +20,7 @@ local_vnic_info_rx:
                                                     mpls_src_label_sbit16_ebit19}
     phvwr           p.vnic_metadata_local_vnic_tag, DATA.local_vnic_tag
     phvwr           p.vnic_metadata_vpc_id, DATA.vpc_id
+    phvwr           p.control_metadata_tunneled_packet, TRUE
     /* c2 will be set if using epoch1, else will be reset */
     seq             c1, k.service_header_valid, TRUE
     seq.c1          c2, k.service_header_epoch, DATA.epoch1

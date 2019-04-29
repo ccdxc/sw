@@ -140,6 +140,8 @@ lif_impl::program_inband_filters(lif_info_t *lif_params) {
     mask.capri_intrinsic_lif_mask = 0xFFFF;
     key.ctag_1_valid = 0;
     mask.ctag_1_valid_mask = 0xF;
+    key.control_metadata_tunneled_packet = 0;
+    mask.control_metadata_tunneled_packet_mask = 0xF;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport =
@@ -161,6 +163,8 @@ lif_impl::program_inband_filters(lif_info_t *lif_params) {
     mask.capri_intrinsic_lif_mask = 0xFFFF;
     key.ctag_1_valid = 0;
     mask.ctag_1_valid_mask = 0xF;
+    key.control_metadata_tunneled_packet = 0;
+    mask.control_metadata_tunneled_packet_mask = 0xF;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;

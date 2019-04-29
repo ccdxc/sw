@@ -114,6 +114,7 @@ action local_vnic_info_rx(local_vnic_tag, vpc_id,
     }
 
     modify_field(vnic_metadata.src_slot_id, mpls_src.label);
+    modify_field(control_metadata.tunneled_packet, TRUE);
     local_vnic_info_common(RX_FROM_SWITCH, 0, local_vnic_tag, vpc_id,
                            epoch1_valid, epoch1, skip_src_dst_check1, 0, 0,
                            sacl_v4addr1, sacl_v6addr1, resource_group1, 0,
