@@ -18,9 +18,8 @@
 #include "nic/sdk/platform/rdmamgr/rdmamgr.hpp"
 #include "platform/utils/mpartition.hpp"
 
-#include "gen/platform/mem_regions.hpp"
-
 #ifndef APOLLO
+#include "gen/platform/mem_regions.hpp"
 #include "common_rxdma_actions_p4pd.h"
 #include "common_rxdma_actions_p4pd_table.h"
 #include "common_txdma_actions_p4pd.h"

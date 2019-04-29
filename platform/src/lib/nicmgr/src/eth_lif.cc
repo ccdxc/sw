@@ -1221,8 +1221,8 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
     uint8_t count = 3;
     while(count--) {
         port_status_t retry_status = {0};
-        retry_status.status = notify_block->link_status;
-        retry_status.speed = notify_block->link_speed;
+        retry_status.status = lif_status->link_status;
+        retry_status.speed = lif_status->link_speed;
         retry_status.id = spec->uplink_port_num;
         NIC_LOG_INFO("{}: Retrying link event status: {}, speed: {}, port_num: {}",
                      hal_lif_info_.name, retry_status.status, retry_status.speed,
