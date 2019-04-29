@@ -1218,10 +1218,22 @@ union header_template_t {
    
 #define HDR_TEMPLATE_T struct header_template_t
 #define HDR_TEMPLATE_T_SIZE_BYTES (sizeof(struct header_template_t)/8)
-#define AH_ENTRY_T_SIZE_BYTES (HDR_TEMPLATE_T_SIZE_BYTES + 1)
-#define AT_ENTRY_SIZE_BYTES 136
 #define GRH_HDR_T_SIZE_BYTES (sizeof(struct ipv6hdr_t)/8)
 #define PRIVILEGE_KEY_BASE 0x80000000
+
+
+// Note: not using sizeof, because this needs to match exactly hal and nicmgr,
+// and any discrepency will be easier to spot as plain numbers vs sizeof.
+//
+// We still must be sure that header_template_t, dcqcn_cb_t actually fit.
+//
+// Header template, bytes size of header_template_t, size aligned to 8 bytes
+#define AH_ENTRY_T_SIZE_BYTES           72
+// DCQCN CB, bytes size of dcqcn_cb_t, size aligned to 8 bytes
+#define DCQCN_CB_T_SIZE_BYTES           64
+// AH Table Entry has header template and DCQCN CB
+#define AT_ENTRY_SIZE_BYTES             (AH_ENTRY_T_SIZE_BYTES + DCQCN_CB_T_SIZE_BYTES)
+
 
 #define ACK_SYNDROME        0x00
 #define RNR_SYNDROME        0x20

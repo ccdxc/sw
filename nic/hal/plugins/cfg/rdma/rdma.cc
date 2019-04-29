@@ -328,7 +328,6 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
     uint64_t            cq_base_addr; //address in HBM memory
     uint64_t            sq_base_addr; //address in HBM memory
     uint64_t            rq_base_addr; //address in HBM memory
-    uint64_t            pad_size;
     hal_ret_t           rc;
 
     // LIFQState *qstate = lif_manager()->GetLIFQState(lif);
@@ -394,11 +393,7 @@ rdma_lif_init (intf::LifSpec& spec, uint32_t lif)
 
     max_ahs = roundup_to_pow_2(max_ahs);
 
-    // TODO: Resize ah table after dcqcn related structures are moved to separate table
-    pad_size = sizeof(ah_entry_t) + sizeof(dcqcn_cb_t);
-    pad_size = HBM_PAGE_ALIGN(pad_size);
-
-    ah_table_size = pad_size * max_ahs;
+    ah_table_size = AT_ENTRY_SIZE_BYTES * max_ahs;
     ah_table_size = HBM_PAGE_ALIGN(ah_table_size);
 
     // For DOL, hardcode 8MB space as a makeshift barmap
@@ -627,7 +622,6 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
     uint32_t            lif = spec.hw_lif_id();
     uint64_t            ah_table_base_addr;
     uint64_t            header_template_addr;
-    uint64_t            pad_size;
     ah_entry_t          ah_entry;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
@@ -636,17 +630,11 @@ rdma_ah_create (RdmaAhSpec& spec, RdmaAhResponse *rsp)
     HAL_TRACE_DEBUG("{}: Inputs: lif: {} ahid: {} header_template_size: {}",
                     __FUNCTION__, lif, spec.ahid(), spec.header_template().size());
 
-    ah_table_base_addr = rdma_lif_at_base_addr(lif);
     pd::pd_capri_hbm_write_mem_args_t args = {0};
     pd::pd_func_args_t          pd_func_args = {0};
 
-    pad_size = sizeof(ah_entry_t) + sizeof(dcqcn_cb_t);
-    if (pad_size & ((1 << HDR_TEMP_ADDR_SHIFT) - 1)) {
-        pad_size = ((pad_size >> HDR_TEMP_ADDR_SHIFT) + 1) << HDR_TEMP_ADDR_SHIFT;
-    }
-
-    header_template_addr = (uint64_t)(((uint8_t*) ah_table_base_addr)
-                           + (spec.ahid() * pad_size));
+    ah_table_base_addr = rdma_lif_at_base_addr(lif);
+    header_template_addr = ah_table_base_addr + AT_ENTRY_SIZE_BYTES * spec.ahid();
 
     ah_entry.ah_size = std::min(sizeof(header_template_t), spec.header_template().size());
     memcpy(&ah_entry.hdr_tmp, (uint8_t *)spec.header_template().c_str(), ah_entry.ah_size);

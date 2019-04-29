@@ -36,6 +36,10 @@ from factory.objects.rdma.descriptor import RdmaSgeLen16x2
 
 from infra.common.glopts import GlobalOptions
 
+# asm/rdma/common/include/types.h
+AH_ENTRY_T_SIZE_BYTES = 72
+DCQCN_CB_T_SIZE_BYTES = 64
+
 class QpObject(base.ConfigObjectBase):
     def __init__(self, pd, qp_id, spec, sges):
         super().__init__()
@@ -555,19 +559,19 @@ class QpObject(base.ConfigObjectBase):
     def WriteDcqcnCb(self):
         if (GlobalOptions.dryrun): return
         # dcqcn_cb is located after header_template. header_template is 66 bytes len and 1 byte ah_size.
-        logger.info("Writing DCQCN Qstate @0x%x  size: %d" % (self.header_temp_addr + 67, 64))
-        model_wrap.write_mem_pcie(self.header_temp_addr + 67, bytes(self.dcqcn_data), 64)
+        logger.info("Writing DCQCN Qstate @0x%x  size: %d" % (self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES, DCQCN_CB_T_SIZE_BYTES))
+        model_wrap.write_mem_pcie(self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES, bytes(self.dcqcn_data), DCQCN_CB_T_SIZE_BYTES)
         self.ReadDcqcnCb()
         return
 
     def ReadDcqcnCb(self):
         if (GlobalOptions.dryrun):
-            dcqcn_data = bytes(64)
+            dcqcn_data = bytes(DCQCN_CB_T_SIZE_BYTES)
             self.dcqcn_data = RdmaDCQCNstate(dcqcn_data)
             return
-        self.dcqcn_data = RdmaDCQCNstate(model_wrap.read_mem(self.header_temp_addr + 67, 64))
+        self.dcqcn_data = RdmaDCQCNstate(model_wrap.read_mem(self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES, DCQCN_CB_T_SIZE_BYTES))
         logger.ShowScapyObject(self.dcqcn_data)
-        logger.info("Read DCQCN Qstate @0x%x size: %d" % (self.header_temp_addr + 67, 64))
+        logger.info("Read DCQCN Qstate @0x%x size: %d" % (self.header_temp_addr + AH_ENTRY_T_SIZE_BYTES, DCQCN_CB_T_SIZE_BYTES))
         return
 
     # Routines to read and write to atomic_res_addr

@@ -112,7 +112,6 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
     uint64_t            cq_base_addr; //address in HBM memory
     uint64_t            sq_base_addr; //address in HBM memory
     uint64_t            rq_base_addr; //address in HBM memory
-    uint64_t            pad_size;
 
     NIC_FUNC_DEBUG("lif-{}: RDMA lif init", lif);
 
@@ -169,11 +168,7 @@ rdmamgr_iris::lif_init(uint32_t lif, uint32_t max_keys,
 
     max_ahs = roundup_to_pow_2_(max_ahs);
 
-    // TODO: Resize ah table after dcqcn related structures are moved to separate table
-    pad_size = sizeof(ah_entry_t) + sizeof(dcqcn_cb_t);
-    pad_size = HBM_PAGE_ALIGN(pad_size);
-
-    ah_table_size = pad_size * max_ahs;
+    ah_table_size = AT_ENTRY_SIZE_BYTES * max_ahs;
     ah_table_size = HBM_PAGE_ALIGN(ah_table_size);
 
     total_size = pt_size + key_table_size + ah_table_size + HBM_PAGE_SIZE;

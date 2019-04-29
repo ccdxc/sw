@@ -71,10 +71,11 @@ extern RDMAManager *rdma_manager();
 
 #define PACKED __attribute__((__packed__))
 
+#define SIZE_ALIGN(x, _size) (((x) + ((_size) - 1)) & ~(uint64_t)((_size) - 1))
+
 #define HBM_PAGE_SIZE 4096
 #define HBM_PAGE_SIZE_SHIFT 12
-#define HBM_PAGE_ALIGN(x) (((x) + (HBM_PAGE_SIZE - 1)) & \
-                           ~(uint64_t)(HBM_PAGE_SIZE - 1))
+#define HBM_PAGE_ALIGN(x) SIZE_ALIGN(x, HBM_PAGE_SIZE)
 
 #define HBM_BARMAP_BASE_SHIFT 23
 #define HBM_BARMAP_SIZE_SHIFT 23
@@ -91,6 +92,13 @@ extern RDMAManager *rdma_manager();
     
 #define SQCB_SIZE_SHIFT    9
 #define RQCB_SIZE_SHIFT    9
+
+// Header template, bytes size of header_template_t, aligned to 8 bytes
+#define AH_ENTRY_T_SIZE_BYTES           72
+// DCQCN CB, bytes size of dcqcn_cb_t, aligned to 8 bytes
+#define DCQCN_CB_T_SIZE_BYTES           64
+// AH Table Entry has header template and DCQCN CB
+#define AT_ENTRY_SIZE_BYTES             (AH_ENTRY_T_SIZE_BYTES + DCQCN_CB_T_SIZE_BYTES)
 
 // all the page_ids are encoded as 22-bits, assuming 4K page size (12-bits)
 // appropriate shift will make 34-bit (22+12) hbm address.

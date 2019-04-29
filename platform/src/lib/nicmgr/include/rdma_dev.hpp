@@ -22,10 +22,18 @@
 #define SQCB_SIZE_SHIFT 9
 #define RQCB_SIZE_SHIFT 9
 
+#define SIZE_ALIGN(x, _size) (((x) + ((_size) - 1)) & ~(uint64_t)((_size) - 1))
+
 #define HBM_PAGE_SIZE 4096
 #define HBM_PAGE_SIZE_SHIFT 12
-#define HBM_PAGE_ALIGN(x) (((x) + (HBM_PAGE_SIZE - 1)) & \
-                           ~(uint64_t)(HBM_PAGE_SIZE - 1))
+#define HBM_PAGE_ALIGN(x) SIZE_ALIGN(x, HBM_PAGE_SIZE)
+
+// Header template, bytes size of header_template_t, aligned to 8 bytes
+#define AH_ENTRY_T_SIZE_BYTES           72
+// DCQCN CB, bytes size of dcqcn_cb_t, aligned to 8 bytes
+#define DCQCN_CB_T_SIZE_BYTES           64
+// AH Table Entry has header template and DCQCN CB
+#define AT_ENTRY_SIZE_BYTES             (AH_ENTRY_T_SIZE_BYTES + DCQCN_CB_T_SIZE_BYTES)
 
 typedef struct qpcb_ring_s {
     uint16_t  c_index;
