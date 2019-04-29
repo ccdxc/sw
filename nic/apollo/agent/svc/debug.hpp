@@ -45,6 +45,8 @@ public:
                       pds::PbStatsGetResponse *proto_rsp) override;
     Status FlowClear(ServerContext *context, const Empty *req,
                      Empty *rsp) override;
+    Status TraceFlush(ServerContext *context, const Empty *req,
+                      Empty *rsp) override;
 };
 
 #endif    // __AGENT_SVC_DEBUG_HPP__

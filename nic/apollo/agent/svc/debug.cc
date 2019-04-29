@@ -347,3 +347,10 @@ DebugSvcImpl::FlowClear(ServerContext *context, const Empty *req,
 
     return Status::OK;
 }
+
+Status
+DebugSvcImpl::TraceFlush(ServerContext *context, const Empty *req,
+                         Empty *rsp) {
+    core::flush_logs();
+    return Status::OK;
+}

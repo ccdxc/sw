@@ -16,6 +16,7 @@ service DebugSvc {
   rpc SystemTemperatureGet (types.Empty) returns (SystemTemperatureGetResponse) {}
   rpc SystemPowerGet (types.Empty) returns (SystemPowerGetResponse) {}
   rpc TraceUpdate (TraceRequest) returns (TraceResponse) {}
+  rpc TraceFlush(types.Empty) returns (types.Empty) {}
   rpc TableStatsGet (types.Empty) returns (TableStatsGetResponse) {}
   rpc LlcSetup (LlcSetupRequest) returns (LlcSetupResponse) {}
   rpc LlcStatsGet (types.Empty) returns (LlcStatsGetResponse) {}

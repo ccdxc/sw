@@ -33,6 +33,7 @@ trace_level (void)
 }
 
 void trace_update(utils::trace_level_e trace_level);
+void flush_logs(void);
 
 }    // namespace core
 

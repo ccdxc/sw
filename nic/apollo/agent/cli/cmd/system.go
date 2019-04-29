@@ -81,6 +81,7 @@ func init() {
 
 	debugCmd.AddCommand(traceDebugCmd)
 	traceDebugCmd.Flags().StringVar(&traceLevel, "level", "none", "Specify trace level (Allowed: none, error, warn, info, debug, verbose)")
+	traceDebugCmd.Flags().Bool("flush", false, "Flush logs")
 
 	debugCmd.AddCommand(llcDebugCmd)
 	llcDebugCmd.Flags().StringVar(&llcTypeStr, "type", "none", "Specify LLC Cache type (Allowed: cache-read,cache-write,scratchpad-access,cache-hit,cache-miss,partial-write,cache-maint-op,eviction,retry-needed,retry-access,disable)")
@@ -589,25 +590,37 @@ func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
 		traceReq = &pds.TraceRequest{
 			TraceLevel: inputToTraceLevel(traceLevel),
 		}
+
+		// HAL call
+		resp, err := client.TraceUpdate(context.Background(), traceReq)
+		if err != nil {
+			fmt.Printf("Set trace level failed. %v\n", err)
+			return
+		}
+
+		// Print Trace Level
+		if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+			return
+		}
+
+		fmt.Printf("Trace level set to %-12s\n", resp.GetTraceLevel())
+	} else if cmd.Flags().Changed("flush") {
+		var empty *pds.Empty
+
+		// PDS call
+		_, err := client.TraceFlush(context.Background(), empty)
+		if err != nil {
+			fmt.Printf("Flush logs failed. %v\n", err)
+			return
+		}
+
+		fmt.Printf("Flush logs succeeded\n")
 	} else {
-		fmt.Printf("Argument required. Set level using '--level ...' flag\n")
+		fmt.Printf("Argument required. Use --help for valid arguments\n")
 		return
 	}
 
-	// HAL call
-	resp, err := client.TraceUpdate(context.Background(), traceReq)
-	if err != nil {
-		fmt.Printf("Set trace level failed. %v\n", err)
-		return
-	}
-
-	// Print Trace Level
-	if resp.ApiStatus != pds.ApiStatus_API_STATUS_OK {
-		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
-		return
-	}
-
-	fmt.Printf("Trace level set to %-12s\n", resp.GetTraceLevel())
 }
 
 func isTraceLevelValid(level string) bool {

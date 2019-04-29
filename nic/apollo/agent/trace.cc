@@ -52,4 +52,15 @@ trace_update (utils::trace_level_e trace_level)
     return;
 }
 
+
+//------------------------------------------------------------------------------
+// flush logs
+//------------------------------------------------------------------------------
+void
+flush_logs (void)
+{
+    trace_logger()->flush();
+    return;
+}
+
 }    // namespace core
