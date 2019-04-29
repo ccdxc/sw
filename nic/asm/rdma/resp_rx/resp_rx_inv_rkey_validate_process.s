@@ -20,6 +20,7 @@ struct key_entry_aligned_t d;
 #define TO_S_WB1_P to_s5_wb1_info
 #define TO_S_STATS_INFO_P to_s7_stats_info
 
+#define K_USER_KEY CAPRI_KEY_RANGE(IN_TO_S_P, user_key_sbit0_ebit6, user_key_sbit7_ebit7)
 
 %%
 
@@ -54,6 +55,10 @@ resp_rx_inv_rkey_validate_process:
     seq         c3, d.type, MR_TYPE_MW_TYPE_1 
     bcf         [c1 | c2 | c3], flag_state_type_err
 
+    seq         c1, d.mr_flags.ukey_en, 1 //BD Slot
+    // check if user key in rkey matches user key in keytable
+    seq         c2, d.user_key, K_USER_KEY
+    bcf         [c1 & !c2], user_key_err
     // check PD if MR
     seq         c1, d.type, MR_TYPE_MR // BD Slot
     bcf         [c1], check_pd
@@ -108,6 +113,11 @@ qp_mismatch:
     b           error_completion
     phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
                 CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_type2a_mw_qp_mismatch), 1 // BD Slot
+
+user_key_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_user_key_err), 1 // BD Slot
 
 error_completion:
     // As per standard, NAK is NOT required to be generated when an

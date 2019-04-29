@@ -32,6 +32,9 @@ def TestCaseSetup(tc):
     tc.pvtdata.r_key = rs.lqp.pd.GetNewType2MW().rkey
 
     tc.pvtdata.user_key = 132
+    # rkey in ieth of RDMA request should include index and user key
+    tc.pvtdata.ieth_r_key = tc.pvtdata.r_key | tc.pvtdata.user_key
+
     # Read SQ CQ pre state
     rs.lqp.sq_cq.qstate.Read()
     tc.pvtdata.sq_cq_pre_qstate = rs.lqp.sq_cq.qstate.data
@@ -88,6 +91,7 @@ def TestCaseStepVerify(tc, step):
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'nxt_to_go_token_id', 1):
             return False
 
+        rs.lqp.rq.qstate.Show()
         ############     RQ STATS VALIDATIONS #################
         # verify that num_pkts is incremented by 1
         if not VerifyFieldModify(tc, tc.pvtdata.rq_pre_qstate, tc.pvtdata.rq_post_qstate, 'num_pkts', 1):

@@ -9,7 +9,7 @@ struct resp_rx_s1_t1_k k;
 
 #define RKEY_INFO_P t1_s2s_rkey_info
 #define RQCB0_WB_T struct resp_rx_rqcb0_write_back_info_t
-#define R_KEY r2
+#define R_KEY r4
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r2
 #define RQCB0_ADDR r2
@@ -84,6 +84,8 @@ skip_priv_oper:
     KT_BASE_ADDR_GET2(KT_BASE_ADDR, r1)
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, R_KEY)
     
+    CAPRI_SET_FIELD2(RKEY_INFO_P, user_key, R_KEY[7:0])
+
     IS_ANY_FLAG_SET(c4, GLOBAL_FLAGS, RESP_RX_FLAG_COMPLETION | RESP_RX_FLAG_RING_DBELL)
     sne          c3, CAPRI_KEY_FIELD(IN_P, pad), r0
     //if completion present OR pad non-zero, set cmdeop to 0

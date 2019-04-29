@@ -187,7 +187,8 @@ header_type resp_rx_rkey_info_t {
         dma_cmdeop                       :    1;
         skip_pt                          :    1;
         rsvd_key_err                     :    1;
-        pad                              :   42;
+        user_key                         :    8;
+        pad                              :   34;
     }
 }
 
@@ -425,6 +426,7 @@ header_type resp_rx_to_stage_stats_info_t {
         qp_err_dis_key_state_err         :    1;
         qp_err_dis_key_pd_mismatch       :    1;
         qp_err_dis_key_acc_ctrl_err      :    1;
+        qp_err_dis_user_key_err          :    1;
         qp_err_dis_key_va_err            :    1;
         qp_err_dis_inv_rkey_rsvd_key_err :    1;
         qp_err_dis_ineligible_mr_err     :    1;
@@ -438,7 +440,7 @@ header_type resp_rx_to_stage_stats_info_t {
         qp_err_dis_table_error           :    1;
         qp_err_dis_phv_intrinsic_error   :    1;
         qp_err_dis_table_resp_error      :    1;
-        qp_err_dis_rsvd                  :    4;
+        qp_err_dis_rsvd                  :    3;
         max_recirc_cnt_err               :    1;
         lif_cqe_error_id_vld             :    1;
         lif_error_id_vld                 :    1;
@@ -507,7 +509,8 @@ header_type resp_rx_to_stage_lkey_info_t {
         pd                               :   32;
         mw_cookie                        :   32;
         rsvd_key_err                     :   1;
-        pad                              :   63;
+        user_key                         :   8;
+        pad                              :   55;
     }
 }
 
@@ -1468,6 +1471,7 @@ action resp_rx_inv_rkey_validate_process () {
     modify_field(to_s4_lkey_info_scr.pd, to_s4_lkey_info.pd);
     modify_field(to_s4_lkey_info_scr.mw_cookie, to_s4_lkey_info.mw_cookie);
     modify_field(to_s4_lkey_info_scr.rsvd_key_err, to_s4_lkey_info.rsvd_key_err);
+    modify_field(to_s4_lkey_info_scr.user_key, to_s4_lkey_info.user_key);
     modify_field(to_s4_lkey_info_scr.pad, to_s4_lkey_info.pad);
 
     // stage to stage
@@ -1612,6 +1616,7 @@ action resp_rx_rqrkey_process () {
     modify_field(t1_s2s_rkey_info_scr.dma_cmdeop, t1_s2s_rkey_info.dma_cmdeop);
     modify_field(t1_s2s_rkey_info_scr.skip_pt, t1_s2s_rkey_info.skip_pt);
     modify_field(t1_s2s_rkey_info_scr.rsvd_key_err, t1_s2s_rkey_info.rsvd_key_err);
+    modify_field(t1_s2s_rkey_info_scr.user_key, t1_s2s_rkey_info.user_key);
     modify_field(t1_s2s_rkey_info_scr.pad, t1_s2s_rkey_info.pad);
 
 }
@@ -1687,6 +1692,7 @@ action resp_rx_stats_process () {
     modify_field(to_s7_stats_info_scr.qp_err_dis_key_state_err, to_s7_stats_info.qp_err_dis_key_state_err);
     modify_field(to_s7_stats_info_scr.qp_err_dis_key_pd_mismatch, to_s7_stats_info.qp_err_dis_key_pd_mismatch);
     modify_field(to_s7_stats_info_scr.qp_err_dis_key_acc_ctrl_err, to_s7_stats_info.qp_err_dis_key_acc_ctrl_err);
+    modify_field(to_s7_stats_info_scr.qp_err_dis_user_key_err, to_s7_stats_info.qp_err_dis_user_key_err);
     modify_field(to_s7_stats_info_scr.qp_err_dis_key_va_err, to_s7_stats_info.qp_err_dis_key_va_err);
     modify_field(to_s7_stats_info_scr.qp_err_dis_feedback, to_s7_stats_info.qp_err_dis_feedback);
     modify_field(to_s7_stats_info_scr.qp_err_dis_table_error, to_s7_stats_info.qp_err_dis_table_error);

@@ -8,7 +8,7 @@ struct rdma_atomic_resource_t d;
 struct resp_rx_s1_t1_k k;
 
 #define RKEY_INFO_P t1_s2s_rkey_info
-#define R_KEY r2
+#define R_KEY r4
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r2
 
@@ -173,6 +173,7 @@ skip_priv_oper:
     // set write back related params incr_nxt_to_go_token_id: 1
     phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, incr_nxt_to_go_token_id), 1
 
+    CAPRI_SET_FIELD2(RKEY_INFO_P, user_key, R_KEY[7:0])
     // invoke rqrkey 
     //CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqrkey_process, KEY_ADDR)
     CAPRI_NEXT_TABLE1_READ_PC_C(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqrkey_rsvd_rkey_process, resp_rx_rqrkey_process, KEY_ADDR, c5)

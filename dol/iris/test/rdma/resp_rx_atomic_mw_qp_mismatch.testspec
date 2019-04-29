@@ -61,7 +61,7 @@ packets:
                 a       : 1
             atomiceth:
                 va      : ref://testcase/pvtdata/mw_va
-                r_key   : ref://testcase/pvtdata/r_key
+                r_key   : ref://testcase/pvtdata/atomiceth_r_key
                 swapdt  : callback://rdma/rdma/GetAtomicData/pktid=ADD_DATA
                 #ref://testcase/packets/id=ADD_DATA/rawbytes
                 cmpdt   : 0

@@ -52,7 +52,7 @@ packets:
                 psn     : callback://rdma/rdma/GetRqPreEpsn
                 a       : 1
             ieth:
-                r_key   : ref://testcase/pvtdata/r_key
+                r_key   : ref://testcase/pvtdata/ieth_r_key
             payload:
                 data    : pattern-random://0/255/1
 

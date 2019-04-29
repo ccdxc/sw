@@ -59,7 +59,7 @@ packets:
             reth:
                 va      : ref://testcase/pvtdata/mw_va
                 dma_len : ref://testcase/packets/id=BASE_PKT/size
-                r_key   : ref://testcase/pvtdata/r_key
+                r_key   : ref://testcase/pvtdata/reth_r_key
             payload:
                 data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 

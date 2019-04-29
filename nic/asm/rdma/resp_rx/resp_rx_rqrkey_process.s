@@ -35,6 +35,7 @@ struct key_entry_aligned_t d;
 #define K_ACC_CTRL CAPRI_KEY_RANGE(IN_P, acc_ctrl_sbit0_ebit4, acc_ctrl_sbit5_ebit7)
 #define K_PD CAPRI_KEY_RANGE(IN_TO_S_P, pd_sbit0_ebit7, pd_sbit24_ebit31)
 #define K_LEN CAPRI_KEY_FIELD(IN_P, len)
+#define K_USER_KEY CAPRI_KEY_RANGE(IN_P, user_key_sbit0_ebit1, user_key_sbit2_ebit7)
 
 %%
     .param  resp_rx_ptseg_mpu_only_process
@@ -74,6 +75,10 @@ resp_rx_rqrkey_process:
     seq         c1, d.state, KEY_STATE_VALID // BD Slot
     bcf         [!c1], rkey_state_err
 
+    seq         c1, d.mr_flags.ukey_en, 1 //BD Slot
+    // check if user key in rkey matches user key in keytable
+    seq         c2, d.user_key, K_USER_KEY
+    bcf         [c1 & !c2], user_key_err
     // check PD if MR
     seq         c5, d.type, MR_TYPE_MR // BD Slot
     // check PD if MW type 1
@@ -218,6 +223,11 @@ rkey_va_err:
     b           error_completion
     phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
                 CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_key_va_err), 1 // BD Slot
+
+user_key_err:
+    b           error_completion
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_user_key_err), 1 // BD Slot
 
 error_completion:
     add         GLOBAL_FLAGS, r0, K_GLOBAL_FLAGS

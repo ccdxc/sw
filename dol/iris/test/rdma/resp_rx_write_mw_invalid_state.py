@@ -33,6 +33,8 @@ def TestCaseSetup(tc):
     tc.pvtdata.mr_kt_entry = RdmaKeyTableEntryObject(rs.lqp.pd.ep.intf.lif, (tc.pvtdata.l_key))
 
     tc.pvtdata.user_key = 132
+    # rkey in reth of RDMA request should include index and user key
+    tc.pvtdata.reth_r_key = tc.pvtdata.r_key | tc.pvtdata.user_key
 
     if (GlobalOptions.dryrun):
         tc.pvtdata.mw_va = 0

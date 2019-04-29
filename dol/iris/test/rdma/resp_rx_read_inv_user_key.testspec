@@ -1,23 +1,22 @@
 # Test Spec
 selectors:
     root: ref://store/templates/id=RDMA_SESSION
-#    src:
-#        tenant      : filter://overlay=VLAN,type=TENANT
-#        segment     : filter://any
-#        endpoint    : filter://remote=False
-#        interface   : filter://any
-#    dst:
-#        tenant      : filter://overlay=VLAN,type=TENANT
-#        segment     : filter://any
-#        endpoint    : filter://remote=True
-#        interface   : filter://any
-#    flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
+#   src:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=True
+#       interface   : filter://any
+#   dst:
+#       tenant      : filter://overlay=VLAN,type=TENANT
+#       segment     : filter://any
+#       endpoint    : filter://remote=False
+#       interface   : filter://any
+#   flow            : filter://fwtype=L2,type=IPV4,dport=4791,proto=UDP,label=RDMA
     rdmasession     :
         lqp         : filter://svc=0
         rqp         : filter://svc=0
-        base        : filter://any
-#    maxflows    : 1
-#    maxrdmasessions     : 1
+#    maxflows    : 1 
+#    maxrdmasessions     : 1 
 
 packets:
    - packet:
@@ -27,10 +26,9 @@ packets:
         headers     :
             payload:
                 data    : pattern-random://0/255/1
-
    - packet:
-        id          : IN_PKT_BASE    # Base for Input packet
-        payloadsize : ref://testcase/packets/id=BASE_PKT/size
+        id          : IN_PKT_BASE    # Base for Input packet 
+        payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH,v6=ETH_IPV6_UDP_BTH_RETH
         icrc        : True
         headers     :
@@ -52,19 +50,18 @@ packets:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                opcode  : 10
+                opcode  : 12
                 destqp  : ref://testcase/config/rdmasession/lqp/id
                 psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
-                a       : 1
             reth:
-                va      : ref://testcase/pvtdata/mw_va
-                dma_len : ref://testcase/packets/id=BASE_PKT/size
-                r_key   : ref://testcase/pvtdata/reth_r_key
+                va      : callback://rdma/rdma/GetVAfromTcSLAB1/offset=0
+                r_key   : ref://testcase/pvtdata/r_key 
+                dma_len : 64
             payload:
-                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+                data    : None
 
    - packet:
-        id          : IN_PKT    # Input packet
+        id          : IN_PKT    # Input packet 
         encaps      : callback://rdma/rdma/GetPacketEncaps
         clone       : ref://testcase/packets/id=IN_PKT_BASE
         headers     :
@@ -124,34 +121,13 @@ buffers:
 
 descriptors:
     - descriptor:
-        id      : DESC
-        template: ref://factory/templates/id=DESC_RDMA_SQ
+        id      : EXP_EQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_EQ
         fields:
-            op_type : 10  # OP_TYPE_BIND_MW
-            wrid    : ref://testcase/pvtdata/wrid
-
-            bind_mw:
-                va            : ref://testcase/pvtdata/mw_va
-                len           : 1234
-                l_key         : ref://testcase/pvtdata/l_key
-                #r_key         : callback://rdma/rdma/GetNewType1MWRkey
-                r_key         : ref://testcase/pvtdata/r_key
-                new_r_key_key : ref://testcase/pvtdata/user_key
-                access_ctrl   : 0xe # (ACC_CTRL_REMOTE_WRITE | ACC_CTRL_REMOTE_READ | ACC_CTRL_REMOTE_ATOMIC)
-                mw_type       : 2
-                zbva          : 0
-
-    - descriptor:
-        id      : EXP_CQ_DESC
-        template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
-        fields:
-            wrid   :  ref://testcase/pvtdata/wrid
             qid    : ref://testcase/config/rdmasession/lqp/id
-            #op_type: 10  # OP_TYPE_BIND_MW
-            status : 0  # CQ_STATUS_SUCCESS
-            color  : callback://rdma/rdma/GetCQExpColor/entries=1
-            error  : 0
-            type   : 3 #CQE_TYPE_SEND_NPG
+            type   : callback://rdma/rdma/GetEQEtypeQP
+            code   : callback://rdma/rdma/GetEQEcodeQPErrAccess
+            color  : callback://rdma/rdma/GetAsyncEQExpColor
 
     - descriptor:
         id      : EXP_SQ_FLUSH_CQ_DESC
@@ -160,55 +136,27 @@ descriptors:
             wrid   : 0
             qid: ref://testcase/config/rdmasession/lqp/id
             status : 4  # CQ_STATUS_WQE_FLUSHED_ERR
-            color  : callback://rdma/rdma/GetCQExpColor/entries=2
+            color  : callback://rdma/rdma/GetCQExpColor/entries=1
             error  : 1
             type   : 3 #CQE_TYPE_SEND_NPG
 
-    - descriptor:
-        id      : EXP_EQ_DESC
-        template: ref://factory/templates/id=DESC_RDMA_EQ
-        fields:
-            qid    : ref://testcase/config/rdmasession/lqp/id
-            type   : callback://rdma/rdma/GetEQEtypeQP
-            code   : callback://rdma/rdma/GetEQEcodeQPErrAccess
-            color  : callback://rdma/rdma/GetAsyncEQExpColor
-            
-session:
-    - step:
-        trigger:
-            descriptors:
-                - descriptor:
-                    object  : ref://testcase/descriptors/id=DESC
-                    ring    : ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ
+trigger:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=IN_PKT
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
 
-            doorbell:
-                object: ref://testcase/config/rdmasession/lqp/sq/rings/id=SQ/doorbell
-                fields:
-                    upd : 0x9 # PI from DB data and DB_SCHED_EVAL
-
-        expect:
-            descriptors:
-                - descriptor:
-                    object  : ref://testcase/descriptors/id=EXP_CQ_DESC
-                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
-
-    - step:
-        trigger:
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=IN_PKT
-                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
-
-        expect:
-            descriptors:
-                - descriptor:
-                    object  : ref://testcase/descriptors/id=EXP_EQ_DESC
-                    ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/async_eq/rings/id=EQ
-        
-                - descriptor:
-                    object  : ref://testcase/descriptors/id=EXP_SQ_FLUSH_CQ_DESC
-                    ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
-            packets:
-                - packet:
-                    object  : ref://testcase/packets/id=EXP_PKT
-                    port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+expect:
+    packets:
+        - packet:
+            object  : ref://testcase/packets/id=EXP_PKT
+            port    : ref://testcase/config/rdmasession/session/responder/ep/intf/ports
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_EQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/async_eq/rings/id=EQ
+ 
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_SQ_FLUSH_CQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
+                                                                                         

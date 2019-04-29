@@ -12,7 +12,7 @@ struct resp_rx_s1_t1_k k;
 #define TO_S_WB1_P      to_s5_wb1_info
 #define RKEY_INFO_P     t1_s2s_rkey_info
 
-#define R_KEY r2
+#define R_KEY r3
 #define KT_BASE_ADDR r6
 #define KEY_ADDR r2
 
@@ -67,6 +67,7 @@ skip_priv_oper:
     // set write back related params
     // incr_nxt_to_go_token_id: 1, incr_c_index: 0, 
     phvwr       CAPRI_PHV_RANGE(TO_S_WB1_P, incr_nxt_to_go_token_id, incr_c_index), (1<<1 | 0)
+    CAPRI_SET_FIELD2(RKEY_INFO_P, user_key, R_KEY[7:0])
 
     // invoke rqrkey 
     //CAPRI_NEXT_TABLE1_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqrkey_process, KEY_ADDR)

@@ -947,6 +947,14 @@ modules:
     #    ignore  : False
 
     - module:
+        name    : RDMA_RESP_RX_READ_INV_USER_KEY
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_read_inv_user_key
+        spec    : resp_rx_read_inv_user_key.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RESP_RX_READ_FIRST_MID_LAST
         enable  : True
         package : test.rdma

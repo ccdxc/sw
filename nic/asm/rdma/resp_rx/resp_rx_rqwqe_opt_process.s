@@ -15,6 +15,7 @@ struct rqwqe_base_t d;
 #define IN_TO_S_P     to_s2_wqe_info
 #define TO_S_WB1_P to_s5_wb1_info
 #define TO_S_RECIRC_P to_s1_recirc_info
+#define TO_S_INV_RKEY_P to_s4_lkey_info
 
 #define LEN_SUM         r3
 #define SGE_P           r4
@@ -395,6 +396,7 @@ send_only_zero_len_join:
     add         TMP, r0, K_INV_R_KEY
     KEY_ENTRY_ADDR_GET(KEY_ADDR, KT_BASE_ADDR, TMP)
 
+    CAPRI_SET_FIELD2(TO_S_INV_RKEY_P, user_key, K_INV_R_KEY[7:0])
     CAPRI_NEXT_TABLE3_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_256_BITS, resp_rx_inv_rkey_validate_process, KEY_ADDR)
 
 skip_inv_rkey:
