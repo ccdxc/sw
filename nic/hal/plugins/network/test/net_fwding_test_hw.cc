@@ -3,6 +3,7 @@
 #include "nic/hal/iris/datapath/p4/include/defines.h"
 #include "nic/include/pd_api.hpp"
 #include "nic/include/fte.hpp"
+#include "lib/utils/time_profile.hpp"
 #include <vector>
 
 #include <tins/tins.h>
@@ -10,11 +11,11 @@
 using namespace fte;
 using namespace std;
 
-class fwding_test : public fte_base_test {
+class fwding_test_hw : public fte_base_test {
 protected:
-    fwding_test() {}
+    fwding_test_hw() {}
 
-    virtual ~fwding_test() {}
+    virtual ~fwding_test_hw() {}
 
     // will be called immediately after the constructor before each test
     virtual void SetUp() {}
@@ -24,8 +25,8 @@ protected:
 
     // Will be called at the beginning of all test cases in this class
     static void SetUpTestCase() {
-        setenv("DISABLE_LOGGING", "true", 1);
-        fte_base_test::SetUpTestCase();
+        setenv("HAL_CONFIG_PATH", "/nic/conf", 1);
+        fte_base_test::SetUpTestCase("hal_hw.json");
 
         // create topo
         vrfh_ = add_vrf();
@@ -52,28 +53,13 @@ public:
     static void route_lookup_test(void *ptr);
 };
 
-hal_handle_t fwding_test::eph_, fwding_test::gwh_, fwding_test::vrfh_, fwding_test::nwh_,
-    fwding_test::l2segh1_, fwding_test::l2segh2_, fwding_test::intfh1_, fwding_test::intfh2_;
+hal_handle_t fwding_test_hw::eph_, fwding_test_hw::gwh_, fwding_test_hw::vrfh_, fwding_test_hw::nwh_,
+    fwding_test_hw::l2segh1_, fwding_test_hw::l2segh2_, fwding_test_hw::intfh1_, fwding_test_hw::intfh2_;
 
-void timeit(const std::string &msg, int count, std::function<void()> fn)
-{
-    cout << msg << " " << count << " " << std::flush;
-
-    std::clock_t start = clock();
-    fn();
-    int ticks = clock()-start;
-
-    cout << " (" << 1000.0*ticks/CLOCKS_PER_SEC << " ms) ";
-    if (count) {
-        cout << count*CLOCKS_PER_SEC/ticks << "/sec";
-    }
-    cout << "\n";
-}
-
-TEST_F (fwding_test, flow_benchmark)
+TEST_F (fwding_test_hw, flow_benchmark)
 {
     vector<Tins::EthernetII> pkts;
-    const int num_flows = 1000; // thousnads
+    const int num_flows = 100; // thousnads
 
     for (uint32_t sport = 1; sport <= num_flows; sport++) {
         for (uint32_t dport = 1; dport <= 1000; dport++) {
@@ -90,8 +76,9 @@ TEST_F (fwding_test, flow_benchmark)
         }
     }
 
-    timeit("inject_pkts", pkts.size(), [&]() {
-            inject_eth_pkt(fte::FLOW_MISS_LIFQ, intfh1_, l2segh1_, pkts);
-        });
+    inject_eth_pkt(fte::FLOW_MISS_LIFQ, intfh1_, l2segh1_, pkts);
 
+    double total_secs = (double)time_profile_total(sdk::utils::time_profile::FTE_CTXT_INIT) / (double)1000000000ULL;
+    printf("Total secs: %lf\n", total_secs);
+    printf("Rate: %lf flows/sec\n", (double)(num_flows * 1000 / total_secs));
 }

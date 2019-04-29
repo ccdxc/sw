@@ -33,7 +33,7 @@ nic/build/aarch64/iris/bin/penlog                                   /nic/bin/
 nic/build/aarch64/iris/bin/ntsa                                     /nic/bin/
 # hal objects CLI
 nic/build/aarch64/iris/bin/halctl                                   /nic/bin/
-nic/build/aarch64/iris/bin/net_fwding_test                          /nic/bin/
+nic/build/aarch64/iris/bin/net_fwding_test_hw                       /nic/bin/
 
 #diag binaries
 nic/build/aarch64/iris/bin/diag_test                                /nic/bin/
@@ -151,6 +151,12 @@ nic/build/aarch64/iris/lib/liblif_mgr.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libdevapi_iris.so                        /nic/lib/
 nic/build/aarch64/iris/lib/librdmamgr_iris.so                       /nic/lib/
 nic/build/aarch64/iris/lib/liblfq.so                                /nic/lib/
+
+#test binaries
+nic/build/aarch64/iris/lib/libfte_base_test.so                       /nic/lib/
+nic/build/aarch64/iris/lib/libe2e*.so                                /nic/lib/
+nic/build/aarch64/iris/lib/libtins.so.4.0                            /nic/lib/
+nic/build/aarch64/iris/lib/libpcap.so.0.8                            /nic/lib/
 
 # linkmgr
 nic/build/aarch64/iris/bin/port_client                              /nic/bin

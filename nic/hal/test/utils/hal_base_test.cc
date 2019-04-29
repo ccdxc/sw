@@ -29,8 +29,9 @@ hal_initialize (const char c_file[], bool disable_fte=true)
     }
     printf("Parsed cfg json file \n");
 
+#if 0
     // set the full path of the catalog file
-    hal::g_hal_cfg.catalog_file = "/catalog.json";
+    hal::g_hal_cfg.catalog_file = "catalog_hw_68-0003.json";
 
     // make sure catalog file exists
     if (access(hal::g_hal_cfg.catalog_file.c_str(), R_OK) < 0) {
@@ -38,6 +39,7 @@ hal_initialize (const char c_file[], bool disable_fte=true)
                 hal::g_hal_cfg.catalog_file.c_str());
         exit(1);
     }
+#endif
 
     // parse the ini
     if (hal::hal_parse_ini(ini_file.c_str(), &hal::g_hal_cfg) != HAL_RET_OK) {
@@ -75,9 +77,9 @@ hal_base_test::SetUpTestCase (void)
 }
 
 void
-hal_base_test::SetUpTestCase (bool disable_fte)
+hal_base_test::SetUpTestCase (bool disable_fte, std::string c_file)
 {
-    hal_initialize("", disable_fte);
+    hal_initialize(c_file.c_str(), disable_fte);
 }
 
 void

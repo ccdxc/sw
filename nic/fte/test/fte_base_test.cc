@@ -16,6 +16,7 @@
 #include "gen/proto/nwsec.pb.h"
 #include "gen/proto/nat.pb.h"
 #include "nic/hal/iris/datapath/p4/include/defines.h"
+#include "lib/utils/time_profile.hpp"
 
 #define UPLINK_IF_ID_OFFSET 127
 #define ENIC_IF_ID_OFFSET 150
@@ -482,6 +483,7 @@ hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
             rflow[i]  =  {};
         }
 
+        time_profile_begin(sdk::utils::time_profile::FTE_CTXT_INIT);
         for (uint32_t i=0; i<fn_ctx->pkts.size(); i++) {
             hal::hal_cfg_db_open(hal::CFG_OP_READ);
             fn_ctx->ret = ctx->init(fn_ctx->cpu_rxhdr, pkt, fn_ctx->pkt_len, fn_ctx->copied_pkt,
@@ -492,6 +494,7 @@ hal_ret_t fte_base_test::inject_pkt(fte::cpu_rxhdr_t *cpu_rxhdr,
             SDK_ASSERT(fn_ctx->ret == HAL_RET_OK);
             hal::hal_cfg_db_close();
         }
+        time_profile_end(sdk::utils::time_profile::FTE_CTXT_INIT);
         HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);
     }, &fn_ctx );
 

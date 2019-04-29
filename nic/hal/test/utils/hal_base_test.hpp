@@ -34,7 +34,7 @@ protected:
 
   static void SetUpTestCase(const char c_file[]);
 
-  static void SetUpTestCase(bool disable_fte);
+  static void SetUpTestCase(bool disable_fte, std::string c_file="hal.json");
 
   // Will be called at the end of all test cases in this class
   static void TearDownTestCase(void);

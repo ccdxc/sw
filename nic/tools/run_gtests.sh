@@ -112,6 +112,7 @@ ${CMD_OPTS} alg_dns_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/alg_dns_tes
 ${CMD_OPTS} session_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/session_test.xml"
 ${CMD_OPTS} fte_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/fte_test.xml"
 ${CMD_OPTS} nwsec_policy_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/nwsec_policy_test.xml"
+${CMD_OPTS} net_fwding_test --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/net_fwding_test.xml"
 
 sdk/lib/table/memhash/test/run.sh
 sdk/lib/table/sltcam/test/run.sh

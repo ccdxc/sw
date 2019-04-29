@@ -139,12 +139,12 @@ protected:
     virtual void TearDown() { }
 
     // Will be called at the beginning of all test cases in this class
-    static void SetUpTestCase() {
+    static void SetUpTestCase(std::string c_file="hal.json") {
         hal_ret_t                   ret;
         DeviceRequest               nic_req;
         DeviceResponseMsg           nic_rsp;
  
-        hal_base_test::SetUpTestCase(false);
+        hal_base_test::SetUpTestCase(false, c_file);
         sleep(1);
 
         // Set device mode as Smart switch

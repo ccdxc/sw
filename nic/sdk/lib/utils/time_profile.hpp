@@ -45,6 +45,7 @@ public:
         __handler(PAL_MEM_WR) \
         __handler(PAL_REG_WRITE) \
         __handler(COMPUTE_CRC) \
+        __handler(FTE_CTXT_INIT) \
         __handler(TIME_PROFILE_ID_MAX)
 
 #define HANDLER_GENERATE_ENUM(ENUM) ENUM,
