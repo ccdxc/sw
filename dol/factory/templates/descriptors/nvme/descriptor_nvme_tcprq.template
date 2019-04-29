@@ -1,0 +1,6 @@
+meta:
+    id      : DESC_NVME_TCPRQ
+    size    : 8
+    package : factory.objects.nvme
+    module  : descriptor
+    objname : NvmeTcprqDescriptorObject

@@ -1,0 +1,13 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=NVME_SESSION
+
+packets:
+
+buffers:
+
+descriptors:
+
+trigger:
+
+expect:

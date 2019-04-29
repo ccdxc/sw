@@ -1,0 +1,7 @@
+# RDMA Session Object Template
+meta:
+    id: NVME_NS
+    package : config.objects.nvme
+    module  : ns
+    feature_set:
+        - iris

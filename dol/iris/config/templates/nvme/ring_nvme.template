@@ -1,0 +1,6 @@
+# RDMA Send Queue Ring Template
+meta:
+    id  : RING_NVME
+    base: ref://store/templates/id=RING 
+    feature_set:
+        - iris

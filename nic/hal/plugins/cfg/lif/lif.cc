@@ -15,6 +15,7 @@
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/cfg/rdma/rdma.hpp"
+#include "nic/hal/plugins/cfg/nvme/nvme.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/src/internal/eth.hpp"
 #include "nic/hal/plugins/cfg/aclqos/qos.hpp"
@@ -602,6 +603,21 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
     }
 
+    // For NICmgr created lifs, hal doesn't have to do this init.
+    if (!is_platform_type_haps() && !is_platform_type_hw() &&
+        g_hal_cfg.qemu != true) {
+        // For nvme enabled Lifs, call RDMA specific init (allocates KT, PT, etc)
+        if (lif->enable_nvme) {
+            ret = nvme_lif_init(*spec, hw_lif_id);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("NVME Lif create failure, err : {}", ret);
+                ret = HAL_RET_ERR;
+                goto end;
+            }
+        }
+    }
+
+
 end:
     return ret;
 }
@@ -831,6 +847,10 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->enable_rdma = spec.enable_rdma();
     lif->rdma_max_keys = spec.rdma_max_keys();
     lif->rdma_max_pt_entries = spec.rdma_max_pt_entries();
+
+    lif->enable_nvme = spec.enable_nvme();
+    lif->nvme_max_ns = spec.nvme_max_ns();
+    lif->nvme_max_sess = spec.nvme_max_sess();
 
     if (spec.has_rx_policer()) {
         qos_policer_update_from_spec(spec.rx_policer(), &lif->qos_info.rx_policer);
@@ -1895,6 +1915,9 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     spec->set_enable_rdma(lif->enable_rdma);
     spec->set_rdma_max_keys(lif->rdma_max_keys);
     spec->set_rdma_max_pt_entries(lif->rdma_max_pt_entries);
+    spec->set_enable_nvme(lif->enable_nvme);
+    spec->set_nvme_max_ns(lif->nvme_max_ns);
+    spec->set_nvme_max_sess(lif->nvme_max_sess);
 
     spec->set_vlan_strip_en(lif->vlan_strip_en);
     spec->set_vlan_insert_en(lif->vlan_insert_en);
@@ -2277,9 +2300,11 @@ lif_print(lif_t *lif)
     }
 
     buf.write("lif id:{}, vlan_strip_en:{}, vlan_insert_en:{}, "
-              "pinned_uplink:{}, enable_rdma:{}, hal_handle:{}, num_enics:{} ",
+              "pinned_uplink:{}, enable_rdma:{}, enable_nvme:{}, "
+              "hal_handle:{}, num_enics:{} ",
               lif->lif_id, lif->vlan_strip_en, lif->vlan_insert_en,
-              lif->pinned_uplink, lif->enable_rdma, lif->hal_handle,
+              lif->pinned_uplink, lif->enable_rdma, lif->enable_nvme,
+              lif->hal_handle,
               dllist_count(&(lif->if_list_head)));
 
     if (dllist_count(&(lif->if_list_head))) {

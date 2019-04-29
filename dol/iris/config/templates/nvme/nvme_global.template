@@ -1,0 +1,5 @@
+# NVME Global Object Template
+meta:
+    id: NVME_GLOBAL
+    feature_set:
+        - iris

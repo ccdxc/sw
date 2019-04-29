@@ -256,6 +256,15 @@
             "deps"      : ["pensando.io/nw"]
         },
         {
+            "name"      : "nvme",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_nvme.so",
+            "init_func" : "nvme_init",
+            "exit_func" : "nvme_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
             "name"      : "gft",
             "provider"  : "pensando.io",
             "lib"       : "libcfg_plugin_gft.so",

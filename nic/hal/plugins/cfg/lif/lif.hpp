@@ -88,6 +88,9 @@ typedef struct lif_s {
     uint32_t            rdma_max_keys;
     uint32_t            rdma_max_ahs;
     uint32_t            rdma_max_pt_entries;
+    bool                enable_nvme;     // enable NVME on this LIF
+    uint32_t            nvme_max_ns;     // maximum number of namespaces on this LIF
+    uint32_t            nvme_max_sess;   // maximum number of sessions on this LIF
     lif_queue_info_t    qinfo[intf::LifQPurpose_MAX+1]; // purpose to qtype mapping
     lif_qos_info_t      qos_info;
     bool                qstate_init_done;// qstate map init status.

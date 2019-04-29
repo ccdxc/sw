@@ -8,6 +8,7 @@ import infra.config.base        as base
 
 import iris.config.resmgr            as resmgr
 import iris.config.objects.queue_type     as queue_type
+import iris.config.objects.nvme.lif as nvme_lif
 import infra.clibs.clibs        as clibs
 
 from iris.config.store               import Store
@@ -84,6 +85,12 @@ class LifObject(base.ConfigObjectBase):
         self.rdma_kt_base_addr = 0
         self.rdma_dcqcn_profile_base_addr = 0
         self.rdma_at_base_addr = 0
+
+        if hasattr(spec, 'nvme') and spec.nvme.enable:
+            self.enable_nvme = spec.nvme.enable
+            self.nvme_lif = nvme_lif.NvmeLifObject(self, spec.nvme)
+        else:
+            self.enable_nvme = False
 
         self.vlan_strip_en = False
         self.vlan_insert_en = False
@@ -303,13 +310,24 @@ class LifObject(base.ConfigObjectBase):
         req_spec.rss.type = self.rss_type
         req_spec.rss.key = bytes(self.rss_key)
         req_spec.rss.indir = bytes(self.rss_indir)
+
+        req_spec.enable_nvme = self.enable_nvme
+        if self.enable_nvme:
+            req_spec.nvme_max_ns = self.spec.nvme.max_ns
+            req_spec.nvme_max_sess = self.spec.nvme.max_sess
+            req_spec.nvme_host_page_size = self.spec.nvme.host_page_size
+        else:
+            req_spec.nvme_max_ns = 0
+            req_spec.nvme_max_sess = 0
+            req_spec.nvme_host_page_size = 0
+
         for queue_type in self.queue_types.GetAll():
             qstate_map_spec = req_spec.lif_qstate_map.add()
             queue_type.PrepareHALRequestSpec(qstate_map_spec)
             for queue in queue_type.queues.GetAll():
                 qstate_spec = req_spec.lif_qstate.add()
                 queue.PrepareHALRequestSpec(qstate_spec)
-
+        
     def ProcessHALResponse(self, req_spec, resp_spec):
         self.hal_handle = resp_spec.status.lif_handle
         if (self.c_lib):
@@ -440,6 +458,8 @@ class LifObjectHelper:
         for lif in self.lifs:
             lif.ConfigureQueueTypes()
             lif.ConfigureRdmaLifRes()
+            if lif.enable_nvme:
+                lif.nvme_lif.Configure()
         Store.objects.SetAll(self.lifs)
 
     def Update(self):

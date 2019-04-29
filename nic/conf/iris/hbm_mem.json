@@ -385,6 +385,11 @@
             "reset": true
         },
         {
+            "name": "nvme",
+            "size": "2048K",
+            "reset": true
+        },
+        {
             "name": "ipfix",
             "size": "32K"
         },

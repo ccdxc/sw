@@ -214,6 +214,7 @@ def LifPreCreateCb(data, req_spec, resp_spec):
     req_spec.request[0].ClearField('tx_qos_class')
     req_spec.request[0].ClearField('rx_qos_class')
     req_spec.request[0].enable_rdma = False
+    req_spec.request[0].enable_nvme = False
     req_spec.request[0].packet_filter.receive_promiscuous = False
     req_spec.request[0].packet_filter.receive_broadcast = False
     req_spec.request[0].packet_filter.receive_all_multicast = False

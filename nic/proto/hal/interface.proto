@@ -80,6 +80,13 @@ enum LifQPurpose {
   LIF_QUEUE_PURPOSE_VIRTIO_TX = 10;
   LIF_QUEUE_PURPOSE_VIRTIO_RX = 11;
   LIF_QUEUE_PURPOSE_SVC       = 12;
+  LIF_QUEUE_PURPOSE_NVME_SQ   = 13;
+  LIF_QUEUE_PURPOSE_NVME_CQ   = 14;
+  LIF_QUEUE_PURPOSE_NVME_ARMQ = 15;
+  LIF_QUEUE_PURPOSE_NVME_SESS_XTS_TX = 16;
+  LIF_QUEUE_PURPOSE_NVME_SESS_DGST_TX = 17;
+  LIF_QUEUE_PURPOSE_NVME_SESS_XTS_RX = 18;
+  LIF_QUEUE_PURPOSE_NVME_SESS_DGST_RX = 19;
 
   // Add more purposes as needed.
 }
@@ -147,6 +154,10 @@ message LifSpec {
   kh.QosClassKeyHandle       rx_qos_class                = 21;   // QOS class-of-service for Rx traffic.
   kh.QosClassKeyHandle       tx_qos_class                = 22;   // QOS class-of-service for Tx traffic.
   uint32                     rdma_barmap_size            = 23;   // RDMA: barmap size in bytes, rounded to power of 2
+  bool                       enable_nvme                 = 24;   // NVME: enable NVME on LIF
+  uint32                     nvme_max_ns                 = 25;   // NVME: maximum number of namespaces
+  uint32                     nvme_max_sess               = 26;   // NVME: maximum number of sessions
+  uint32                     nvme_host_page_size         = 27;   // NVME: host page size, must be power of 2
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

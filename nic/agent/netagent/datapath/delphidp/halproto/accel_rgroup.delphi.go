@@ -26,6 +26,7 @@ It is generated from these files:
 	multicast.proto
 	nat.proto
 	nic.proto
+	nvme.proto
 	nw.proto
 	nwsec.proto
 	port.proto
@@ -854,6 +855,22 @@ It has these top-level messages:
 	DeviceGetRequestMsg
 	DeviceGetResponse
 	DeviceGetResponseMsg
+	NvmeEnableRequest
+	NvmeEnableRequestMsg
+	NvmeEnableResponse
+	NvmeEnableResponseMsg
+	NvmeSqSpec
+	NvmeSqRequestMsg
+	NvmeSqResponse
+	NvmeSqResponseMsg
+	NvmeCqSpec
+	NvmeCqRequestMsg
+	NvmeCqResponse
+	NvmeCqResponseMsg
+	NvmeNsSpec
+	NvmeNsRequestMsg
+	NvmeNsResponse
+	NvmeNsResponseMsg
 	NetworkSpec
 	NetworkRequestMsg
 	NetworkStatus

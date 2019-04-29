@@ -38,6 +38,7 @@
 #include "gen/hal/svc/l2segment_svc_gen.hpp"
 #include "gen/hal/svc/nw_svc_gen.hpp"
 #include "gen/hal/svc/rdma_svc_gen.hpp"
+#include "gen/hal/svc/nvme_svc_gen.hpp"
 #include "nic/hal/svc/interface_svc.hpp"
 #include "gen/hal/svc/endpoint_svc_gen.hpp"
 #include "gen/hal/svc/session_svc_gen.hpp"

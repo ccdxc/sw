@@ -18,6 +18,8 @@ from iris.config.objects.uplinkpc            import UplinkPcHelper
 from iris.config.objects.tenant              import TenantHelper
 from iris.config.objects.session             import SessionHelper
 from iris.config.objects.rdma.session        import RdmaSessionHelper
+from iris.config.objects.nvme.gbl            import NvmeGlobalObject
+from iris.config.objects.nvme.session        import NvmeSessionHelper
 from iris.config.objects.security_profile    import SecurityProfileHelper
 from iris.config.objects.acl                 import AclHelper
 from iris.config.objects.qos_class           import QosClassHelper
@@ -49,6 +51,12 @@ def process(topospec):
     # Security Profiles
     SecurityProfileHelper.main(topospec)
     QosClassHelper.main(topospec)
+
+    #initialize nvme proxy related global resources before
+    #any LIFs are configured
+    nvme_proxy = getattr(topospec, 'nvme_proxy', False)
+    if nvme_proxy:
+        NvmeGlobalObject().main(topospec.nvme_proxy)
 
     # Uplinks
     UplinkHelper.main(topospec)
@@ -92,6 +100,10 @@ def process(topospec):
 
     # Generate all sessions
     RdmaSessionHelper.main()
+
+    # Generate all Nvme sessions
+    if nvme_proxy:
+        NvmeSessionHelper.main()
 
     ipsec = getattr(topospec, 'ipsec', False)
     #if ipsec:

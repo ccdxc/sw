@@ -1,0 +1,6 @@
+meta:
+    id      : DESC_NVME_SESSQ
+    size    : 4
+    package : factory.objects.nvme
+    module  : descriptor
+    objname : NvmeSessqDescriptorObject

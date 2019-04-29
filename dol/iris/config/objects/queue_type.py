@@ -7,6 +7,7 @@ import infra.common.objects     as objects
 import iris.config.objects.eth.queue as eth_queue
 import iris.config.objects.eth.doorbell as doorbell
 import iris.config.objects.rdma.queue as rdma_queue
+import iris.config.objects.nvme.queue as nvme_queue
 import iris.config.hal.defs          as haldefs
 from infra.common.glopts        import GlobalOptions
 from infra.common.defs          import status
@@ -15,6 +16,7 @@ from infra.common.logging       import logger
 
 eth_queue_type_ids = {'RX', 'TX', 'ADMIN'}
 rdma_queue_type_ids = {'RDMA_AQ', 'RDMA_SQ', 'RDMA_RQ', 'RDMA_CQ', 'RDMA_EQ'}
+nvme_queue_type_ids = {'NVME_SQ', 'NVME_CQ', 'NVME_ARMQ', 'NVME_SESS_XTS_TX', 'NVME_SESS_DGST_TX', 'NVME_SESS_XTS_RX', 'NVME_SESS_DGST_RX'}
 
 
 class QueueTypeObject(base.ConfigObjectBase):
@@ -65,6 +67,9 @@ class QueueTypeObject(base.ConfigObjectBase):
                     self.upd = 0x0
         elif spec.id in rdma_queue_type_ids:
             self.obj_helper_q = rdma_queue.RdmaQueueObjectHelper()
+        elif spec.id in nvme_queue_type_ids:
+            logger.info("nvme queue type %s" %(self.id))
+            self.obj_helper_q = nvme_queue.NvmeQueueObjectHelper()
         else:
             self.need_type_specific_configure = False
             return

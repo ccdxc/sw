@@ -23,6 +23,7 @@ selectors:
     maxsessions: 0
     maxlimits: 0
     rdmasession: None
+    nvmesession: None
     maxrdmasessions: 0
     rdma:
         lqpair  : filter://any # Local QPair

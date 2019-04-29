@@ -34,6 +34,7 @@ import gft_pb2              as gft_pb2
 import dos_pb2              as dos_pb2
 import nic_pb2              as nic_pb2
 import internal_pb2         as internal_pb2
+import nvme_pb2             as nvme_pb2
 
 HAL_MAX_BATCH_SIZE = 64
 
@@ -811,3 +812,30 @@ def ConfigureDropMonitorRules(objlist):
              stub.DropMonitorRuleCreate)
     return
 
+def NvmeEnable(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = nvme_pb2.NvmeStub(HalChannel)
+    __config(objlist, nvme_pb2.NvmeEnableRequestMsg,
+             stub.NvmeEnable)
+    return
+
+def NvmeSqCreate(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = nvme_pb2.NvmeStub(HalChannel)
+    __config(objlist, nvme_pb2.NvmeSqRequestMsg,
+             stub.NvmeSqCreate)
+    return
+
+def NvmeCqCreate(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = nvme_pb2.NvmeStub(HalChannel)
+    __config(objlist, nvme_pb2.NvmeCqRequestMsg,
+             stub.NvmeCqCreate)
+    return
+
+def NvmeNsCreate(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = nvme_pb2.NvmeStub(HalChannel)
+    __config(objlist, nvme_pb2.NvmeNsRequestMsg,
+             stub.NvmeNsCreate)
+    return

@@ -1,0 +1,45 @@
+# Configuration Spec
+# # Topology specification
+meta:
+    id: TOPO_NVME_PROXY
+
+uplink:
+    - entry:
+        id      : Uplink1
+        port    : 1
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+    - entry:
+        id      : Uplink2
+        port    : 2
+        mode    : TRUNK
+        sriov   : True
+        status  : UP
+
+uplinkpc: None
+acls: None
+qos : True
+tenants:
+    -   spec    : ref://store/specs/id=TENANT_NVME_PROXY
+        count   : 1
+        lifns   : range/251/251
+
+security_profiles: None
+security_policy: None
+#proxy: True
+nvme_proxy:
+    enable          : True
+    max_cmd_context : 4096
+    max_sess        : 1024
+    max_ns          : 256
+
+timers:
+    - entry:
+        id          : SLOW_TIMER
+        slowfast    : 0
+        ctime       : 0
+    - entry:
+        id          : FAST_TIMER
+        slowfast    : 1
+        ctime       : 0

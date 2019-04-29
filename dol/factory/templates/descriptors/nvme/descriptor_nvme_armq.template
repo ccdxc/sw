@@ -1,0 +1,6 @@
+meta:
+    id      : DESC_NVME_ARMQ
+    size    : 16
+    package : factory.objects.nvme
+    module  : descriptor
+    objname : NvmeArmqDescriptorObject

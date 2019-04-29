@@ -1,0 +1,6 @@
+meta:
+    id      : DESC_NVME_SQ
+    size    : 64
+    package : factory.objects.nvme
+    module  : descriptor
+    objname : NvmeSqDescriptorObject

@@ -1,0 +1,132 @@
+//------------------------------------------------------------------------------
+// protobuf specification for NVME HAL APIs
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+option go_package="halproto";
+
+package nvme;
+
+// Interface service definition
+service Nvme {
+  // NVME feature Enable API
+  rpc NvmeEnable(NvmeEnableRequestMsg) returns (NvmeEnableResponseMsg) {}
+
+  // Submission Q related APIs
+  rpc NvmeSqCreate(NvmeSqRequestMsg) returns (NvmeSqResponseMsg) {}
+
+  // Completion Q related APIs
+  rpc NvmeCqCreate(NvmeCqRequestMsg) returns (NvmeCqResponseMsg) {}
+
+  // Namespace related APIs
+  rpc NvmeNsCreate(NvmeNsRequestMsg) returns (NvmeNsResponseMsg) {}
+
+}
+
+//**********************   NVME Feature Enable *****************************//
+// NvmeEnable Request object
+message NvmeEnableRequest {
+  uint32                   max_ns          = 1;    // Max Namespaces
+  uint32                   max_sess        = 2;    // Max Sessions
+  uint32                   max_cmd_context = 3;    // Max Command Contexts
+}
+
+// NvmeEnableRequestMsg is batched request
+message NvmeEnableRequestMsg {
+  repeated NvmeEnableRequest request = 1;    // batch of requests
+}
+
+// NvmeEnableResponse response to one NvmeEnableSpec
+message NvmeEnableResponse {
+  types.ApiStatus     api_status       = 1;      // API status code
+  uint64              cmd_context_ring_base = 2; //Base address of command context ring
+  uint64              cmd_context_page_base = 3; //Base address of command context pages
+}
+
+// NvmeEnableResponseMsg is batched Response
+message NvmeEnableResponseMsg {
+  repeated NvmeEnableResponse response = 1;    // batch of responses
+}
+
+//**********************   Submission Queue  *****************************//
+// NvmeSq object
+message NvmeSqSpec {
+  uint32                   sq_num          = 1;    // SQ Number
+  uint32                   hw_lif_id       = 2;    // LIF id
+  uint32                   sq_wqe_size     = 3;    // CQWQE size
+  uint32                   num_sq_wqes     = 4;    // Num CQWQEs
+  uint64                   base_addr       = 5;    // Q base addr
+  uint32                   cq_num          = 6;    // CQ Number
+}
+
+// NvmeSqRequestMsg is batched request
+message NvmeSqRequestMsg {
+  repeated NvmeSqSpec    request = 1;    // batch of requests
+}
+
+// NvmeSqResponse response to one NvmeSqSpec
+message NvmeSqResponse {
+  types.ApiStatus     api_status       = 1;    // API status code
+}
+
+// NvmeSqResponseMsg is response to NvmeSqRequestMsg
+message NvmeSqResponseMsg {
+  repeated NvmeSqResponse    response = 1;    // batch of responses
+}
+
+
+//**********************   Completion Queue  *****************************//
+// NvmeCq object
+message NvmeCqSpec {
+  uint32                   cq_num          = 1;    // CQ Number
+  uint32                   hw_lif_id       = 2;    // LIF id
+  uint32                   cq_wqe_size     = 3;    // CQWQE size
+  uint32                   num_cq_wqes     = 4;    // Num CQWQEs
+  uint64                   base_addr       = 5;    // Q base addr
+  uint32                   int_num         = 6;    // Interrupt Number
+}
+
+// NvmeCqRequestMsg is batched request
+message NvmeCqRequestMsg {
+  repeated NvmeCqSpec    request = 1;    // batch of requests
+}
+
+// NvmeCqResponse response to one NvmeCqSpec
+message NvmeCqResponse {
+  types.ApiStatus     api_status       = 1;    // API status code
+  uint32              cq_intr_tbl_addr = 2;    // EQ interrupt table addr
+}
+
+// NvmeCqResponseMsg is response to NvmeCqRequestMsg
+message NvmeCqResponseMsg {
+  repeated NvmeCqResponse    response = 1;    // batch of responses
+}
+
+//**********************   NameSpace *****************************//
+// NvmeNs object
+message NvmeNsSpec {
+  uint32                   nsid            = 1;    // NS Id
+  uint32                   hw_lif_id       = 2;    // HW LIF Id
+  uint32                   backend_nsid    = 3;    // Backed NS Id
+  uint32                   size            = 4;    // Size in LBAs
+  uint32                   lba_size        = 5;    // Size in each LBA
+  uint32                   max_sess        = 6;    // Max Sessions
+}
+
+// NvmeNsRequestMsg is batched request used to create/update of Nvme QPs
+message NvmeNsRequestMsg {
+  repeated NvmeNsSpec    request = 1;    // batch of requests
+}
+
+// NvmeNsResponse response to one NvmeNsSpec
+message NvmeNsResponse {
+  types.ApiStatus     api_status       = 1;    // API status code
+  uint64              nscb_addr        = 2;    // HBM address of NSCB
+}
+
+// NvmeNsResponseMsg is response to NvmeNsRequestMsg
+message NvmeNsResponseMsg {
+  repeated NvmeNsResponse    response = 1;    // batch of responses
+}
