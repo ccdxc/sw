@@ -217,6 +217,7 @@ func (n *NMD) PersistHALConfiguration(profileName string) (err error) {
 		fwdMode := device.ForwardingMode_FORWARDING_MODE_CLASSIC
 		var featureProfile device.FeatureProfile
 		var profile *nmd.NaplesProfile
+		var defaultPortAdmin string
 		var ok bool
 		log.Info("Updating feature profile.")
 		// Check if the profile exists.
@@ -241,11 +242,17 @@ func (n *NMD) PersistHALConfiguration(profileName string) (err error) {
 			featureProfile = device.FeatureProfile_FEATURE_PROFILE_CLASSIC_DEFAULT
 		}
 
-		err = n.PersistDeviceSpec(fwdMode, featureProfile)
+		if profile.Spec.DefaultPortAdmin == nmd.PortAdminState_PORT_ADMIN_STATE_DISABLE.String() {
+			defaultPortAdmin = device.PortAdminState_PORT_ADMIN_STATE_DISABLE.String()
+		} else {
+			defaultPortAdmin = device.PortAdminState_PORT_ADMIN_STATE_ENABLE.String()
+		}
+
+		err = n.PersistDeviceSpec(fwdMode, featureProfile, defaultPortAdmin)
 		return
 	}
 
-	err = n.PersistDeviceSpec(device.ForwardingMode_FORWARDING_MODE_HOSTPIN, device.FeatureProfile_FEATURE_PROFILE_NONE)
+	err = n.PersistDeviceSpec(device.ForwardingMode_FORWARDING_MODE_HOSTPIN, device.FeatureProfile_FEATURE_PROFILE_NONE, device.PortAdminState_PORT_ADMIN_STATE_ENABLE.String())
 	return
 }
 
@@ -284,11 +291,13 @@ func (n *NMD) UpdateCurrentManagementMode() {
 }
 
 // PersistDeviceSpec accepts forwarding mode and feature profile and persists this in device.conf
-func (n *NMD) PersistDeviceSpec(fwdMode device.ForwardingMode, featureProfile device.FeatureProfile) (err error) {
+func (n *NMD) PersistDeviceSpec(fwdMode device.ForwardingMode, featureProfile device.FeatureProfile, defaultPortAdmin string) (err error) {
 	log.Infof("Setting forwarding mode to : %v", fwdMode)
+	log.Infof("Setting default port admin to : %v", defaultPortAdmin)
 	deviceSpec := device.SystemSpec{
 		FwdMode:        fwdMode,
 		FeatureProfile: featureProfile,
+		PortAdminState: defaultPortAdmin,
 	}
 
 	// Create the /sysconfig/config0 if it doesn't exist. Needed for non naples nmd test environments
@@ -301,6 +310,7 @@ func (n *NMD) PersistDeviceSpec(fwdMode device.ForwardingMode, featureProfile de
 		log.Errorf("Failed to marshal device spec. Err: %v", err)
 		return err
 	}
+	log.Infof("Marshalled JSON is : %v ", data)
 
 	if err = ioutil.WriteFile(globals.NaplesModeConfigFile, data, 0664); err != nil {
 		log.Errorf("Failed to write feature profile to %s. Err: %v", globals.NaplesModeConfigFile, err)

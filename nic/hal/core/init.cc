@@ -662,8 +662,9 @@ hal_device_cfg_init (device_cfg_t *device_cfg)
     feature_profile = prop_tree.get<std::string>(
                                     "feature-profile", "classic-default");
     device_cfg->feature_profile = parse_feature_profile(feature_profile);
-    port_admin_state = prop_tree.get<std::string>("port-admin-state", "enable");
-    if (port_admin_state == "disable") {
+    port_admin_state = prop_tree.get<std::string>("port-admin-state", "PORT_ADMIN_STATE_ENABLE");
+    if (port_admin_state == "PORT_ADMIN_STATE_DISABLE") {
+	HAL_TRACE_DEBUG("Setting default port admin state to disabled.")
         device_cfg->admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
     }
     return HAL_RET_OK;

@@ -102,7 +102,8 @@ func NewNMD(platform nmdapi.PlatformAPI, upgmgr nmdapi.UpgMgrAPI, resolverClient
 			Kind: "NaplesProfile",
 		},
 		Spec: nmd.NaplesProfileSpec{
-			NumLifs: 1,
+			NumLifs:          1,
+			DefaultPortAdmin: nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String(),
 		},
 	}
 

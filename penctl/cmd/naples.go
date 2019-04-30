@@ -62,7 +62,7 @@ var naplesProfileDeleteCmd = &cobra.Command{
 
 var numLifs int32
 var controllers []string
-var managedBy, managementNetwork, priMac, hostname, mgmtIP, defaultGW, naplesProfile, profileName string
+var managedBy, managementNetwork, priMac, hostname, mgmtIP, defaultGW, naplesProfile, profileName, portDefault string
 var dnsServers []string
 
 func init() {
@@ -82,6 +82,7 @@ func init() {
 	naplesCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
 	naplesProfileCreateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile to be deleted")
 	naplesProfileCreateCmd.Flags().Int32VarP(&numLifs, "num-lifs", "i", 0, "Maximum number of LIFs on the eth device. 1 or 16")
+	naplesProfileCreateCmd.Flags().StringVarP(&portDefault, "port-default", "p", "enable", "Set default port admin state for next reboot. (enable | disable)")
 
 	naplesProfileDeleteCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile to be deleted")
 }
@@ -190,13 +191,22 @@ func naplesProfileShowCmdHandler(cmd *cobra.Command, args []string) error {
 }
 
 func naplesProfileCreateCmdHandler(cmd *cobra.Command, args []string) error {
+	var portState string
+
+	if portDefault == "enable" {
+		portState = nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String()
+	} else if portDefault == "disable" {
+		portState = nmd.PortAdminState_PORT_ADMIN_STATE_DISABLE.String()
+	}
+
 	profile := nmd.NaplesProfile{
 		TypeMeta: api.TypeMeta{Kind: "NaplesProfile"},
 		ObjectMeta: api.ObjectMeta{
 			Name: profileName,
 		},
 		Spec: nmd.NaplesProfileSpec{
-			NumLifs: numLifs,
+			NumLifs:          numLifs,
+			DefaultPortAdmin: portState,
 		},
 	}
 
@@ -332,6 +342,15 @@ func naplesProfileDeleteCmdValidator(cmd *cobra.Command, args []string) error {
 	if profileName == "default" {
 		return errors.New("deleting default profile is disallowed")
 	}
+
+	if len(portDefault) == 0 {
+		return errors.New("port default must be passed")
+	}
+
+	if portDefault != "enable" && portDefault != "disable" {
+		return errors.New("invalid port default value set")
+	}
+
 	return nil
 }
 
