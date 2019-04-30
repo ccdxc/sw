@@ -400,6 +400,7 @@ lpm_add_key_to_last_stage (itree_type_t tree_type, lpm_stage_info_t *stage,
         lpm_ipv4_acl_add_key_to_last_stage(stage->curr_table,
                                            stage->curr_index,
                                            lpm_inode);
+        break;
     case ITREE_TYPE_IPV6:
         lpm_ipv6_route_add_key_to_last_stage(stage->curr_table,
                                              stage->curr_index,
