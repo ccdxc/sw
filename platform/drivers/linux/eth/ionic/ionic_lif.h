@@ -198,7 +198,8 @@ struct lif {
 
 static inline bool ionic_is_mnic(struct ionic *ionic)
 {
-	return ionic->pfdev || ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
+	return ionic->pfdev ||
+	       ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT;
 }
 
 static inline bool ionic_is_pf(struct ionic *ionic)
@@ -244,8 +245,8 @@ int ionic_reset_queues(struct lif *lif);
 struct lif *ionic_netdev_lif(struct net_device *netdev);
 
 #ifdef IONIC_DEBUG_STATS
-static void inline debug_stats_txq_post(struct qcq *qcq,
-	   struct txq_desc *desc, bool dbell)
+static inline void debug_stats_txq_post(struct qcq *qcq,
+					struct txq_desc *desc, bool dbell)
 {
 	u8 num_sg_elems = ((desc->cmd >> IONIC_TXQ_DESC_NSGE_SHIFT)
 						& IONIC_TXQ_DESC_NSGE_MASK);
@@ -261,7 +262,7 @@ static void inline debug_stats_txq_post(struct qcq *qcq,
 }
 
 static inline void debug_stats_napi_poll(struct qcq *qcq,
-	   unsigned int work_done)
+					 unsigned int work_done)
 {
 	u32 napi_cntr_idx;
 
@@ -274,24 +275,11 @@ static inline void debug_stats_napi_poll(struct qcq *qcq,
 	qcq->napi_stats.work_done_cntr[napi_cntr_idx]++;
 }
 
-#define DEBUG_STATS_CQE_CNT(cq) \
-	do { \
-		(cq)->compl_count++; \
-	} while (0);
-
-#define DEBUG_STATS_RX_BUFF_CNT(qcq) \
-	do { \
-		(qcq)->stats->rx.buffers_posted++; \
-	} while (0);
-
-#define DEBUG_STATS_INTR_REARM(intr) \
-	do { \
-		(intr)->rearm_count++; \
-	} while (0);
-
+#define DEBUG_STATS_CQE_CNT(cq)		((cq)->compl_count++)
+#define DEBUG_STATS_RX_BUFF_CNT(qcq)	((qcq)->stats->rx.buffers_posted++)
+#define DEBUG_STATS_INTR_REARM(intr)	((intr)->rearm_count++)
 #define DEBUG_STATS_TXQ_POST(qcq, txdesc, dbell) \
 	debug_stats_txq_post(qcq, txdesc, dbell)
-
 #define DEBUG_STATS_NAPI_POLL(qcq, work_done) \
 	debug_stats_napi_poll(qcq, work_done)
 

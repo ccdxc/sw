@@ -21,27 +21,28 @@
 
 #define INTR_MSIXCFG_STRIDE     0x10
 
-typedef struct intr_msixcfg_s {
+struct intr_msixcfg {
 	__le64 msgaddr;
 	__le32 msgdata;
 	__le32 vector_ctrl;
-} __attribute__((packed)) intr_msixcfg_t;
+};
 
 void *intr_msixcfg_addr(struct device *mnic_dev, const int intr)
 {
 	struct ionic_dev *idev = (struct ionic_dev *) mnic_dev->platform_data;
+
 	dev_info(mnic_dev, "msix_cfg_base: %p\n", idev->msix_cfg_base);
 	return (idev->msix_cfg_base + (intr * INTR_MSIXCFG_STRIDE));
 }
 
-void intr_msixcfg(struct device *mnic_dev, const int intr, const u_int64_t msgaddr,
-		  const u_int32_t msgdata, const int vctrl)
+void intr_msixcfg(struct device *mnic_dev, const int intr, const u64 msgaddr,
+		  const u32 msgdata, const int vctrl)
 {
 	volatile void *pa = intr_msixcfg_addr(mnic_dev, intr);
 
-	writeq(msgaddr, (pa + offsetof(intr_msixcfg_t, msgaddr)));
-	writel(msgdata, (pa + offsetof(intr_msixcfg_t, msgdata)));
-	writel(vctrl, (pa + offsetof(intr_msixcfg_t, vector_ctrl)));
+	writeq(msgaddr, (pa + offsetof(struct intr_msixcfg, msgaddr)));
+	writel(msgdata, (pa + offsetof(struct intr_msixcfg, msgdata)));
+	writel(vctrl, (pa + offsetof(struct intr_msixcfg, vector_ctrl)));
 }
 
 int ionic_bus_get_irq(struct ionic *ionic, unsigned int num)
@@ -70,8 +71,9 @@ const char *ionic_bus_info(struct ionic *ionic)
 
 static void mnic_set_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
 {
-	dev_dbg(desc->dev, "msi_index: [%d] (msi_addr hi_lo): %x_%x msi_data: %x\n", desc->platform.msi_index,
-		msg->address_hi, msg->address_lo, msg->data);
+	dev_dbg(desc->dev, "msi_index: [%d] (msi_addr hi_lo): %x_%x msi_data: %x\n",
+		desc->platform.msi_index, msg->address_hi,
+		msg->address_lo, msg->data);
 
 	intr_msixcfg(desc->dev, desc->platform.msi_index,
 		     (((u64)msg->address_hi << 32) | msg->address_lo),
@@ -103,9 +105,7 @@ struct net_device *ionic_alloc_netdev(struct ionic *ionic)
 	int nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
 
 	netdev = alloc_netdev_mqs(sizeof(struct lif), ionic->pfdev->name,
-			NET_NAME_USER, ether_setup,
-			nqueues, nqueues);
-
+				  NET_NAME_USER, ether_setup, nqueues, nqueues);
 	if (!netdev)
 		return netdev;
 
@@ -113,7 +113,7 @@ struct net_device *ionic_alloc_netdev(struct ionic *ionic)
 
 	/* lif name is used for naming the interrupt handler so better
 	 * to name them differently for mnic
-	 * */
+	 */
 	snprintf(lif->name, sizeof(lif->name), "%s-", ionic->pfdev->name);
 
 	return netdev;
@@ -129,8 +129,8 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 		return -EFAULT;
 
 	idev->dev_info = ionic->bars[DEV_BAR].vaddr;
-	idev->dev_cmd = ionic->bars[DEV_BAR].vaddr + \
-						offsetof(union dev_regs, devcmd);
+	idev->dev_cmd = ionic->bars[DEV_BAR].vaddr +
+					offsetof(union dev_regs, devcmd);
 	idev->intr_ctrl = ionic->bars[INTR_CTRL_BAR].vaddr;
 	idev->msix_cfg_base = ionic->bars[MSIX_CFG_BAR].vaddr;
 
@@ -315,7 +315,6 @@ err_out_unmap_bars:
 
 	return err;
 }
-
 EXPORT_SYMBOL_GPL(ionic_probe);
 
 int ionic_remove(struct platform_device *pfdev)
@@ -339,7 +338,6 @@ int ionic_remove(struct platform_device *pfdev)
 
 	return 0;
 }
-
 EXPORT_SYMBOL_GPL(ionic_remove);
 
 static const struct of_device_id mnic_of_match[] = {

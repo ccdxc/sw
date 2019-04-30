@@ -150,9 +150,9 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 			stats->csum_complete++;
 #ifdef CSUM_DEBUG
 			if (skb->csum != (u16)~csum)
-				netdev_warn(netdev, "Rx CSUM incorrect. "
-						"Want 0x%04x got 0x%04x, protocol 0x%04x\n",
-						(u16)~csum, skb->csum, htons(skb->protocol));
+				netdev_warn(netdev, "Rx CSUM incorrect. Want 0x%04x got 0x%04x, protocol 0x%04x\n",
+					    (u16)~csum, skb->csum,
+					    htons(skb->protocol));
 #endif
 		}
 	} else {
@@ -396,7 +396,8 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
 
 	dma_unmap_page(dev, (dma_addr_t)addr, desc->len, DMA_TO_DEVICE);
 	for (i = 0; i < nsge; i++, elem++)
-		dma_unmap_page(dev, (dma_addr_t)elem->addr, elem->len, DMA_TO_DEVICE);
+		dma_unmap_page(dev, (dma_addr_t)elem->addr,
+			       elem->len, DMA_TO_DEVICE);
 
 	if (skb) {
 		queue_index = skb_get_queue_mapping(skb);
@@ -456,6 +457,7 @@ static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
 			      bool start, bool done)
 {
 	u8 flags = 0;
+
 	flags |= has_vlan ? IONIC_TXQ_DESC_FLAG_VLAN : 0;
 	flags |= outer_csum ? IONIC_TXQ_DESC_FLAG_ENCAP : 0;
 	flags |= start ? IONIC_TXQ_DESC_FLAG_TSO_SOT : 0;
@@ -609,7 +611,7 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 				len = min(mss, left);
 				frag_left = mss - len;
 				desc_addr = ionic_tx_map_frag(q, frag,
-							             offset, len);
+							      offset, len);
 				if (!desc_addr)
 					goto err_out_abort;
 				desc_len = len;
@@ -666,7 +668,7 @@ static int ionic_tx_calc_csum(struct queue *q, struct sk_buff *skb)
 	flags |= encap ? IONIC_TXQ_DESC_FLAG_ENCAP : 0;
 
 	desc->cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_CSUM_PARTIAL,
-					flags, skb_shinfo(skb)->nr_frags, addr);;
+					flags, skb_shinfo(skb)->nr_frags, addr);
 	desc->len = skb_headlen(skb);
 	desc->vlan_tci = skb_vlan_tag_get(skb);
 	desc->csum_start = skb_checksum_start_offset(skb);
@@ -793,9 +795,11 @@ u16 ionic_select_queue(struct net_device *netdev, struct sk_buff *skb,
 		if (accel_priv) {
 			struct lif *lif = (struct lif *)accel_priv;
 			struct lif *master_lif = lif->ionic->master_lif;
+
 			index = master_lif->nxqs + lif->index - 1;
 		} else {
 			struct lif *lif = (struct lif *)netdev_priv(netdev);
+
 			index = lif->index;
 		}
 	} else {

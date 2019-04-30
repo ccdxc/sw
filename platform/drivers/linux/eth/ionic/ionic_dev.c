@@ -18,6 +18,7 @@ int ionic_dev_setup(struct ionic *ionic)
 	unsigned int num_bars = ionic->num_bars;
 	struct ionic_dev *idev = &ionic->idev;
 	struct device *dev = ionic->dev;
+	int size;
 	u32 sig;
 
 	/* BAR0: dev_cmd and interrupts */
@@ -65,8 +66,8 @@ int ionic_dev_setup(struct ionic *ionic)
 
 	idev->phy_cmb_pages = bar->bus_addr;
 	idev->cmb_npages = bar->len / PAGE_SIZE;
-	idev->cmb_inuse = kzalloc(BITS_TO_LONGS(idev->cmb_npages) * sizeof(long),
-				  GFP_KERNEL);
+	size = BITS_TO_LONGS(idev->cmb_npages) * sizeof(long);
+	idev->cmb_inuse = kzalloc(size, GFP_KERNEL);
 	if (!idev->cmb_inuse) {
 		idev->phy_cmb_pages = 0;
 		idev->cmb_npages = 0;
@@ -79,12 +80,10 @@ void ionic_dev_teardown(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 
-	if (idev->cmb_inuse) {
-		kfree(idev->cmb_inuse);
-		idev->cmb_inuse = NULL;
-		idev->phy_cmb_pages = 0;
-		idev->cmb_npages = 0;
-	}
+	kfree(idev->cmb_inuse);
+	idev->cmb_inuse = NULL;
+	idev->phy_cmb_pages = 0;
+	idev->cmb_npages = 0;
 
 	mutex_destroy(&idev->cmb_inuse_lock);
 }
@@ -301,7 +300,7 @@ void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u16 lif_index)
 }
 
 void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
-							   u16 lif_index, u16 intr_index)
+			       u16 lif_index, u16 intr_index)
 {
 	struct queue *q = &qcq->q;
 	struct cq *cq = &qcq->cq;

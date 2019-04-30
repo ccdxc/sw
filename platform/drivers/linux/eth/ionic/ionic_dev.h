@@ -120,7 +120,7 @@ struct ionic_dev {
 
 	struct intr_ctrl __iomem *intr_ctrl;
 	struct intr_status __iomem *intr_status;
-	u8* msix_cfg_base;
+	u8 *msix_cfg_base;
 
 	struct mutex cmb_inuse_lock; /* for cmb_inuse */
 	unsigned long *cmb_inuse;

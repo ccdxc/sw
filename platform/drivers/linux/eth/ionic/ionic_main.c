@@ -217,7 +217,7 @@ try_again:
 		done = ionic_dev_cmd_done(idev);
 		if (done)
 			break;
-		msleep(10);
+		msleep(20);
 	} while (!done && time_before(jiffies, max_wait));
 	duration = jiffies - start_time;
 
@@ -307,7 +307,7 @@ int ionic_identify(struct ionic *ionic)
 	mutex_lock(&ionic->dev_cmd_lock);
 
 	nwords = min(ARRAY_SIZE(ident->drv.words),
-					ARRAY_SIZE(idev->dev_cmd->data));
+		     ARRAY_SIZE(idev->dev_cmd->data));
 	for (i = 0; i < nwords; i++)
 		iowrite32(ident->drv.words[i], &idev->dev_cmd->data[i]);
 
@@ -315,7 +315,7 @@ int ionic_identify(struct ionic *ionic)
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	if (!err) {
 		nwords = min(ARRAY_SIZE(ident->dev.words),
-						ARRAY_SIZE(idev->dev_cmd->data));
+			     ARRAY_SIZE(idev->dev_cmd->data));
 		for (i = 0; i < nwords; i++)
 			ident->dev.words[i] = ioread32(&idev->dev_cmd->data[i]);
 	}
@@ -375,20 +375,20 @@ int ionic_port_identify(struct ionic *ionic)
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	if (!err) {
 		nwords = min(ARRAY_SIZE(ident->port.words),
-						ARRAY_SIZE(idev->dev_cmd->data));
+			     ARRAY_SIZE(idev->dev_cmd->data));
 		for (i = 0; i < nwords; i++)
 			ident->port.words[i] = ioread32(&idev->dev_cmd->data[i]);
 	}
 
 	mutex_unlock(&ionic->dev_cmd_lock);
 
-	dev_info(ionic->dev, "speed %d ", ident->port.config.speed);
-	dev_info(ionic->dev, "mtu %d ", ident->port.config.mtu);
-	dev_info(ionic->dev, "state %d ", ident->port.config.state);
-	dev_info(ionic->dev, "an_enable %d ", ident->port.config.an_enable);
-	dev_info(ionic->dev, "fec_type %d ", ident->port.config.fec_type);
-	dev_info(ionic->dev, "pause_type %d ", ident->port.config.pause_type);
-	dev_info(ionic->dev, "loopback_mode %d", ident->port.config.loopback_mode);
+	dev_dbg(ionic->dev, "speed %d ", ident->port.config.speed);
+	dev_dbg(ionic->dev, "mtu %d ", ident->port.config.mtu);
+	dev_dbg(ionic->dev, "state %d ", ident->port.config.state);
+	dev_dbg(ionic->dev, "an_enable %d ", ident->port.config.an_enable);
+	dev_dbg(ionic->dev, "fec_type %d ", ident->port.config.fec_type);
+	dev_dbg(ionic->dev, "pause_type %d ", ident->port.config.pause_type);
+	dev_dbg(ionic->dev, "loopback_mode %d", ident->port.config.loopback_mode);
 
 	return err;
 }

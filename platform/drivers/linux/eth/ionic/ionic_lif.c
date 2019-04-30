@@ -103,7 +103,8 @@ static int ionic_qcq_enable(struct qcq *qcq)
 		ctx.cmd.q_control.index, ctx.cmd.q_control.type);
 
 	if (qcq->intr.index != INTR_INDEX_NOT_ASSIGNED) {
-		irq_set_affinity_hint(qcq->intr.vector, &qcq->intr.affinity_mask);
+		irq_set_affinity_hint(qcq->intr.vector,
+				      &qcq->intr.affinity_mask);
 		napi_enable(&qcq->napi);
 		ionic_intr_clean(&qcq->intr);
 		ionic_intr_mask(&qcq->intr, false);
@@ -367,7 +368,7 @@ static void ionic_link_status_check(struct lif *lif)
 	} else {
 		netdev_info(netdev, "Link down\n");
 
-		/* carrier off before disabling queues to avoid watchdog timeout */
+		/* carrier off first to avoid watchdog timeout */
 		netif_carrier_off(netdev);
 		if (test_bit(LIF_UP, lif->state))
 			netif_tx_stop_all_queues(netdev);
@@ -573,13 +574,13 @@ static int ionic_lif_addr_add(struct lif *lif, const u8 *addr)
 		}
 	}
 
+	netdev_info(lif->netdev, "rx_filter add ADDR %pM (id %d)\n", addr,
+		    ctx.comp.rx_filter_add.filter_id);
+
 	memcpy(ctx.cmd.rx_filter_add.mac.addr, addr, ETH_ALEN);
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		return err;
-
-	netdev_info(lif->netdev, "rx_filter add ADDR %pM (id %d)\n", addr,
-		    ctx.comp.rx_filter_add.filter_id);
 
 	return ionic_rx_filter_save(lif, 0, RXQ_INDEX_ANY, 0, &ctx);
 }
@@ -623,9 +624,6 @@ static int ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 	struct deferred_work *work;
 
 	if (add) {
-		netdev_info(lif->netdev, "%s: add mcast %d ucast %d\n", __FUNCTION__,
-			ionic->ident.lif.eth.max_mcast_filters,
-			ionic->ident.lif.eth.max_ucast_filters);
 		/* Do we have space for this filter?  We test the counters
 		 * here before checking the need for deferral so that we
 		 * can return an overflow error to the stack.
@@ -639,7 +637,6 @@ static int ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 		else
 			return -ENOSPC;
 	} else {
-
 		if (is_multicast_ether_addr(addr) && lif->nmcast)
 			lif->nmcast--;
 		else if (!is_multicast_ether_addr(addr) && lif->nucast)
@@ -654,11 +651,11 @@ static int ionic_lif_addr(struct lif *lif, const u8 *addr, bool add)
 		}
 		work->type = add ? DW_TYPE_RX_ADDR_ADD : DW_TYPE_RX_ADDR_DEL;
 		memcpy(work->addr, addr, ETH_ALEN);
-		netdev_info(lif->netdev, "deferred: rx_filter %s %pM\n",
+		netdev_dbg(lif->netdev, "deferred: rx_filter %s %pM\n",
 			   add ? "add" : "del", addr);
 		ionic_lif_deferred_enqueue(&lif->deferred, work);
 	} else {
-		netdev_info(lif->netdev, "rx_filter %s %pM\n",
+		netdev_dbg(lif->netdev, "rx_filter %s %pM\n",
 			   add ? "add" : "del", addr);
 		if (add)
 			return ionic_lif_addr_add(lif, addr);
@@ -728,7 +725,7 @@ static void _ionic_lif_rx_mode(struct lif *lif, unsigned int rx_mode)
 		}
 		work->type = DW_TYPE_RX_MODE;
 		work->rx_mode = rx_mode;
-		netdev_info(lif->netdev, "deferred: rx_mode\n");
+		netdev_dbg(lif->netdev, "deferred: rx_mode\n");
 		ionic_lif_deferred_enqueue(&lif->deferred, work);
 	} else {
 		ionic_lif_rx_mode(lif, rx_mode);
@@ -854,21 +851,8 @@ static int ionic_change_mtu(struct net_device *netdev, int new_mtu)
 static void ionic_tx_timeout_work(struct work_struct *ws)
 {
 	struct lif *lif = container_of(ws, struct lif, tx_timeout_work);
-	int err;
 
 	netdev_info(lif->netdev, "Tx Timeout recovery\n");
-
-	/* Let the fw know we saw a problem */
-#if 0
-	mutex_lock(&lif->ionic->dev_cmd_lock);
-	ionic_dev_cmd_hang_notify(idev);
-	err = ionic_dev_cmd_wait(lif->ionic, devcmd_timeout);
-	mutex_unlock(&lif->ionic->dev_cmd_lock);
-	if (err)
-		return;
-#endif
-
-	/* Tear down and rebuild the Tx and Rx queues */
 	ionic_reset_queues(lif);
 }
 
@@ -926,6 +910,9 @@ static int ionic_vlan_rx_kill_vid(struct net_device *netdev, __be16 proto,
 		return -ENOENT;
 	}
 
+	netdev_info(netdev, "rx_filter del VLAN %d (id %d)\n", vid,
+		    ctx.cmd.rx_filter_del.filter_id);
+
 	ctx.cmd.rx_filter_del.filter_id = f->filter_id;
 	ionic_rx_filter_free(lif, f);
 	spin_unlock_bh(&lif->rx_filters.lock);
@@ -933,9 +920,6 @@ static int ionic_vlan_rx_kill_vid(struct net_device *netdev, __be16 proto,
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
 		return err;
-
-	netdev_info(netdev, "rx_filter del VLAN %d (id %d)\n", vid,
-		    ctx.cmd.rx_filter_del.filter_id);
 
 	return 0;
 }
@@ -975,14 +959,14 @@ static void *ionic_dfwd_add_station(struct net_device *lower_dev,
 
 	/* slaves need 2 interrupts - adminq and txrx queue pair */
 	if (ionic_intr_remaining(ionic) < 2) {
-		netdev_info(lower_dev, "insufficient device interupts left for macvlan offload\n");
+		netdev_info(lower_dev, "insufficient device interrupts left for macvlan offload\n");
 		return NULL;
 	}
 
 	/* master_lif index is 0, slave index starts at 1 */
 	index = ionic_slave_alloc(ionic);
 	if (index < 0) {
-		netdev_info(lower_dev, "no space left for macvlan offload: %d, max=%d\n",
+		netdev_info(lower_dev, "no lifs left for macvlan offload: %d, max=%d\n",
 			    index, ionic->nslaves);
 		return NULL;
 	}
@@ -1270,8 +1254,10 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int type,
 	sg_size = num_descs * sg_desc_size;
 
 	total_size = ALIGN(q_size, PAGE_SIZE) + ALIGN(cq_size, PAGE_SIZE);
-	/* Note: aligning q_size/cq_size is not enough due to cq_base address aligning
-	 * as q_base could be not aligned to the page. Adding PAGE_SIZE. */ 
+	/* Note: aligning q_size/cq_size is not enough due to cq_base
+	 * address aligning as q_base could be not aligned to the page.
+	 * Adding PAGE_SIZE.
+	 */
 	total_size += PAGE_SIZE;
 	if (flags & QCQ_F_SG) {
 		total_size += ALIGN(sg_size, PAGE_SIZE);
@@ -1322,9 +1308,9 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int type,
 		ionic_intr_mask_on_assertion(&new->intr);
 
 		new->intr.cpu = new->intr.index % num_online_cpus();
-		if (cpu_online(new->intr.cpu)) {
-			cpumask_set_cpu(new->intr.cpu, &new->intr.affinity_mask);
-		}
+		if (cpu_online(new->intr.cpu))
+			cpumask_set_cpu(new->intr.cpu,
+					&new->intr.affinity_mask);
 	} else {
 		new->intr.index = INTR_INDEX_NOT_ASSIGNED;
 	}
@@ -1546,8 +1532,8 @@ static int ionic_qcqs_alloc(struct lif *lif)
 
 	if (is_master_lif(lif) && lif->ionic->nnqs_per_lif) {
 		flags = QCQ_F_NOTIFYQ;
-		err = ionic_qcq_alloc(lif, IONIC_QTYPE_NOTIFYQ, 0, "notifyq", flags,
-				      IONIC_NOTIFYQ_LENGTH,
+		err = ionic_qcq_alloc(lif, IONIC_QTYPE_NOTIFYQ, 0, "notifyq",
+				      flags, IONIC_NOTIFYQ_LENGTH,
 				      sizeof(struct notifyq_cmd),
 				      sizeof(union notifyq_comp),
 				      0, lif->kern_pid, &lif->notifyqcq);
@@ -1659,7 +1645,8 @@ static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		 */
 		nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
 		dev_info(ionic->dev, "nxqs=%d nslaves=%d nqueues=%d nintrs=%d\n",
-			ionic->ntxqs_per_lif, ionic->nslaves, nqueues, ionic->nintrs);
+			ionic->ntxqs_per_lif, ionic->nslaves,
+			nqueues, ionic->nintrs);
 
 		netdev = ionic_alloc_netdev(ionic);
 		if (!netdev) {
@@ -1766,8 +1753,8 @@ static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 		goto err_out_free_lif_info;
 
 	/* allocate rss indirection table */
-	lif->rss_ind_tbl_sz = sizeof(*lif->rss_ind_tbl) * \
-		lif->ionic->ident.lif.eth.rss_ind_tbl_sz;
+	lif->rss_ind_tbl_sz = sizeof(*lif->rss_ind_tbl) *
+				     lif->ionic->ident.lif.eth.rss_ind_tbl_sz;
 	lif->rss_ind_tbl = dma_alloc_coherent(dev, lif->rss_ind_tbl_sz,
 					      &lif->rss_ind_tbl_pa,
 					      GFP_KERNEL);
@@ -2046,16 +2033,15 @@ static int ionic_lif_adminq_init(struct lif *lif)
 
 	err = ionic_request_irq(lif, qcq);
 	if (err) {
-		netdev_warn(lif->netdev, "adminq irq request failed: %d\n", err);
+		netdev_warn(lif->netdev, "adminq irq request failed %d\n", err);
 		netif_napi_del(napi);
 		return err;
 	}
 
 	napi_enable(napi);
 
-	if (qcq->flags & QCQ_F_INTR) {
+	if (qcq->flags & QCQ_F_INTR)
 		ionic_intr_mask(&qcq->intr, false);
-	}
 
 	qcq->flags |= QCQ_F_INITED;
 
@@ -2749,17 +2735,18 @@ int ionic_lif_identify(struct ionic *ionic)
 	int i, err;
 	unsigned int nwords;
 
+	nwords = min(ARRAY_SIZE(ident->lif.words),
+		     ARRAY_SIZE(idev->dev_cmd->data));
+
 	mutex_lock(&ionic->dev_cmd_lock);
 	ionic_dev_cmd_lif_identify(idev, IONIC_LIF_TYPE_CLASSIC,
-		IONIC_IDENTITY_VERSION_1);
+				   IONIC_IDENTITY_VERSION_1);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
+	for (i = 0; i < nwords; i++)
+		ident->lif.words[i] = ioread32(&idev->dev_cmd->data[i]);
 	mutex_unlock(&ionic->dev_cmd_lock);
 	if (err)
 		return (err);
-
-	nwords = min(ARRAY_SIZE(ident->lif.words), ARRAY_SIZE(idev->dev_cmd->data));
-	for (i = 0; i < nwords; i++)
-		ident->lif.words[i] = ioread32(&idev->dev_cmd->data[i]);
 
 	dev_info(ionic->dev, "capabilities 0x%llx ", ident->lif.capabilities);
 
@@ -2785,16 +2772,23 @@ int ionic_lif_identify(struct ionic *ionic)
 int ionic_lifs_size(struct ionic *ionic)
 {
 	struct identity *ident = &ionic->ident;
-	unsigned int nlifs = ident->dev.nlifs;
-	unsigned int nintrs, dev_nintrs = ident->dev.nintrs;
-	unsigned int neqs_per_lif = ident->lif.rdma.eq_qtype.qid_count;
-	unsigned int nnqs_per_lif = ident->lif.eth.config.queue_count[IONIC_QTYPE_NOTIFYQ];
-	unsigned int ntxqs_per_lif = ident->lif.eth.config.queue_count[IONIC_QTYPE_TXQ];
-	unsigned int nrxqs_per_lif = ident->lif.eth.config.queue_count[IONIC_QTYPE_RXQ];
+	unsigned int nintrs, dev_nintrs;
+	unsigned int ntxqs_per_lif;
+	unsigned int nrxqs_per_lif;
+	unsigned int neqs_per_lif;
+	unsigned int nnqs_per_lif;
+	unsigned int nxqs, neqs;
 	unsigned int min_intrs;
 	unsigned int nslaves;
-	unsigned int nxqs, neqs;
+	unsigned int nlifs;
 	int err;
+
+	nlifs = ident->dev.nlifs;
+	dev_nintrs = ident->dev.nintrs;
+	neqs_per_lif = ident->lif.rdma.eq_qtype.qid_count;
+	nnqs_per_lif = ident->lif.eth.config.queue_count[IONIC_QTYPE_NOTIFYQ];
+	ntxqs_per_lif = ident->lif.eth.config.queue_count[IONIC_QTYPE_TXQ];
+	nrxqs_per_lif = ident->lif.eth.config.queue_count[IONIC_QTYPE_RXQ];
 
 	nxqs = min(ntxqs_per_lif, nrxqs_per_lif);
 	nxqs = min(nxqs, num_online_cpus());

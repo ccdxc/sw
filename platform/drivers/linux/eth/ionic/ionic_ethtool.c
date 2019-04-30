@@ -615,6 +615,7 @@ static int ionic_get_rxnfc(struct net_device *netdev,
 static u32 ionic_get_rxfh_indir_size(struct net_device *netdev)
 {
 	struct lif *lif = netdev_priv(netdev);
+
 	return lif->ionic->ident.lif.eth.rss_ind_tbl_sz;
 }
 

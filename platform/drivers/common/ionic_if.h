@@ -94,8 +94,8 @@ enum status_code {
 	IONIC_RC_EOPCODE	= 2,	/* Invalid cmd opcode */
 	IONIC_RC_EIO		= 3,	/* I/O error */
 	IONIC_RC_EPERM		= 4,	/* Permission denied */
-	IONIC_RC_EQID		= 5, 	/* Bad qid */
-	IONIC_RC_EQTYPE		= 6, 	/* Bad qtype */
+	IONIC_RC_EQID		= 5,	/* Bad qid */
+	IONIC_RC_EQTYPE		= 6,	/* Bad qtype */
 	IONIC_RC_ENOENT		= 7,	/* No such element */
 	IONIC_RC_EINTR		= 8,	/* operation interrupted */
 	IONIC_RC_EAGAIN		= 9,	/* Try again */
@@ -358,7 +358,7 @@ struct lif_logical_qtype {
 };
 
 enum lif_state {
-	IONIC_LIF_DISABLE 			= 0,
+	IONIC_LIF_DISABLE			= 0,
 	IONIC_LIF_ENABLE			= 1,
 	IONIC_LIF_HANG_RESET		= 2,
 };
@@ -524,7 +524,7 @@ struct q_init_cmd {
 	__le16 flags;
 #define IONIC_QINIT_F_IRQ	0x01	/* Request interrupt on completion */
 #define IONIC_QINIT_F_ENA	0x02	/* Enable the queue */
-#define IONIC_QINIT_F_SG	0x04	/* Enable scatter/gather on this queue */
+#define IONIC_QINIT_F_SG	0x04	/* Enable scatter/gather on the queue */
 #define IONIC_QINIT_F_EQ	0x08	/* Enable event queue */
 	u8     cos;
 	u8     ring_size;
@@ -610,9 +610,9 @@ enum txq_desc_opcode {
  *                      LCO (local checksum offload) (see
  *                      Documentation/networking/checksum-
  *                      offloads.txt for more info).
- * 
+ *
  *                   IONIC_TXQ_DESC_OPCODE_CSUM_HW:
- * 
+ *
  *                      Offload 16-bit checksum computation to hardware.
  *                      If @csum_l3 is set then the packet's L3 checksum is
  *                      updated. Similarly, if @csum_l4 is set the the L4
@@ -682,26 +682,26 @@ enum txq_desc_opcode {
  * @csum_offset:  Offset into inner-most L4 header of checksum
  */
 
-#define IONIC_TXQ_DESC_OPCODE_MASK			0xf
-#define IONIC_TXQ_DESC_OPCODE_SHIFT			4
-#define IONIC_TXQ_DESC_FLAGS_MASK			0xf
-#define IONIC_TXQ_DESC_FLAGS_SHIFT			0
-#define IONIC_TXQ_DESC_NSGE_MASK			0xf
-#define IONIC_TXQ_DESC_NSGE_SHIFT			8
-#define IONIC_TXQ_DESC_ADDR_MASK			(BIT_ULL(IONIC_ADDR_LEN) - 1)
-#define IONIC_TXQ_DESC_ADDR_SHIFT			12
+#define IONIC_TXQ_DESC_OPCODE_MASK		0xf
+#define IONIC_TXQ_DESC_OPCODE_SHIFT		4
+#define IONIC_TXQ_DESC_FLAGS_MASK		0xf
+#define IONIC_TXQ_DESC_FLAGS_SHIFT		0
+#define IONIC_TXQ_DESC_NSGE_MASK		0xf
+#define IONIC_TXQ_DESC_NSGE_SHIFT		8
+#define IONIC_TXQ_DESC_ADDR_MASK		(BIT_ULL(IONIC_ADDR_LEN) - 1)
+#define IONIC_TXQ_DESC_ADDR_SHIFT		12
 
 /* common flags */
-#define IONIC_TXQ_DESC_FLAG_VLAN			0x1
-#define IONIC_TXQ_DESC_FLAG_ENCAP			0x2
+#define IONIC_TXQ_DESC_FLAG_VLAN		0x1
+#define IONIC_TXQ_DESC_FLAG_ENCAP		0x2
 
 /* flags for csum_hw opcode */
-#define IONIC_TXQ_DESC_FLAG_CSUM_L3			0x4
-#define IONIC_TXQ_DESC_FLAG_CSUM_L4			0x8
+#define IONIC_TXQ_DESC_FLAG_CSUM_L3		0x4
+#define IONIC_TXQ_DESC_FLAG_CSUM_L4		0x8
 
 /* flags for tso opcode */
-#define IONIC_TXQ_DESC_FLAG_TSO_SOT			0x4
-#define IONIC_TXQ_DESC_FLAG_TSO_EOT			0x8
+#define IONIC_TXQ_DESC_FLAG_TSO_SOT		0x4
+#define IONIC_TXQ_DESC_FLAG_TSO_EOT		0x8
 
 struct txq_desc {
 	__le64  cmd;
@@ -723,8 +723,9 @@ struct txq_desc {
 };
 
 static inline __le64 encode_txq_desc_cmd(u8 opcode, u8 flags,
-										 u8 nsge, __le64 addr) {
+					 u8 nsge, __le64 addr) {
 	__le64 cmd;
+
 	cmd = (opcode & IONIC_TXQ_DESC_OPCODE_MASK) << IONIC_TXQ_DESC_OPCODE_SHIFT;
 	cmd |= (flags & IONIC_TXQ_DESC_FLAGS_MASK) << IONIC_TXQ_DESC_FLAGS_SHIFT;
 	cmd |= (nsge & IONIC_TXQ_DESC_NSGE_MASK) << IONIC_TXQ_DESC_NSGE_SHIFT;
@@ -732,9 +733,8 @@ static inline __le64 encode_txq_desc_cmd(u8 opcode, u8 flags,
 	return cmd;
 };
 
-static inline void decode_txq_desc_cmd(__le64 cmd,
-										 u8 *opcode, u8 *flags,
-										 u8 *nsge, __le64 *addr) {
+static inline void decode_txq_desc_cmd(__le64 cmd, u8 *opcode, u8 *flags,
+				       u8 *nsge, __le64 *addr) {
 	*opcode = (cmd >> IONIC_TXQ_DESC_OPCODE_SHIFT) & IONIC_TXQ_DESC_OPCODE_MASK;
 	*flags = (cmd >> IONIC_TXQ_DESC_FLAGS_SHIFT) & IONIC_TXQ_DESC_FLAGS_MASK;
 	*nsge = (cmd >> IONIC_TXQ_DESC_NSGE_SHIFT) & IONIC_TXQ_DESC_NSGE_MASK;
@@ -925,7 +925,7 @@ struct q_control_cmd {
 typedef struct admin_comp q_control_comp;
 
 enum q_control_oper {
-	IONIC_Q_DISABLE 		= 0,
+	IONIC_Q_DISABLE			= 0,
 	IONIC_Q_ENABLE			= 1,
 	IONIC_Q_HANG_RESET		= 2,
 };
@@ -1073,7 +1073,7 @@ struct sfp_sprom_data {
 enum PortType {
 	PORT_TYPE_NONE = 0,	/* port type not configured */
 	PORT_TYPE_ETH  = 1,	/* port carries ethernet traffic (inband) */
-	PORT_TYPE_MGMT = 2,	/* port carries mgmt ethernet traffic (out-of-band) */
+	PORT_TYPE_MGMT = 2,	/* port carries mgmt traffic (out-of-band) */
 };
 
 /**
@@ -1148,11 +1148,11 @@ struct xcvr_status {
 union port_config {
 	struct {
 #define IONIC_SPEED_100G	100000	/* 100G in Mbps */
-#define IONIC_SPEED_50G		50000 	/* 50G in Mbps */
-#define IONIC_SPEED_40G		40000 	/* 40G in Mbps */
-#define IONIC_SPEED_25G		25000 	/* 25G in Mbps */
-#define IONIC_SPEED_10G		10000 	/* 10G in Mbps */
-#define IONIC_SPEED_1G		1000 	/* 1G in Mbps */
+#define IONIC_SPEED_50G		50000	/* 50G in Mbps */
+#define IONIC_SPEED_40G		40000	/* 40G in Mbps */
+#define IONIC_SPEED_25G		25000	/* 25G in Mbps */
+#define IONIC_SPEED_10G		10000	/* 10G in Mbps */
+#define IONIC_SPEED_1G		1000	/* 1G in Mbps */
 		__le32 speed;
 		__le32 mtu;
 		u8     state;
@@ -1345,9 +1345,9 @@ struct lif_reset_cmd {
 typedef struct admin_comp lif_reset_comp;
 
 enum dev_state {
-	IONIC_DEV_DISABLE 			= 0,
-	IONIC_DEV_ENABLE			= 1,
-	IONIC_DEV_HANG_RESET		= 2,
+	IONIC_DEV_DISABLE	= 0,
+	IONIC_DEV_ENABLE	= 1,
+	IONIC_DEV_HANG_RESET	= 2,
 };
 
 /**

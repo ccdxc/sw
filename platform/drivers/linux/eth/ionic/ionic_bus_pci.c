@@ -76,6 +76,7 @@ struct net_device *ionic_alloc_netdev(struct ionic *ionic)
 {
 	struct lif *lif;
 	int nqueues = ionic->ntxqs_per_lif + ionic->nslaves;
+
 	return alloc_etherdev_mqs(sizeof(*lif), nqueues, nqueues);
 }
 
@@ -204,9 +205,8 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	pci_set_master(pdev);
 
 	err = ionic_map_bars(ionic);
-	if (err) {
+	if (err)
 		goto err_out_pci_clear_master;
-	}
 
 	/* Configure the device */
 	err = ionic_setup(ionic);
