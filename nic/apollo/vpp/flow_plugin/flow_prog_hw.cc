@@ -117,8 +117,10 @@ ftl_insert(ftl *obj, ftentry_t *entry, uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
 
-    params.hash_32b = hash;
-    params.hash_valid = 1;
+    if (hash) {
+        params.hash_32b = hash;
+        params.hash_valid = 1;
+    }
     params.entry = entry;
     if (SDK_RET_OK != obj->insert(&params)) {
         return -1;
