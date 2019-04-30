@@ -37,4 +37,7 @@ if [[ -f $NIC_DIR/tools/start-vpp.sh ]]; then
     [[ $? -ne 0 ]] && echo "Aborting Sysinit - VPP failed to start!" && exit 1
 fi
 
-echo "Launched all applications ..."
+# start cronjobs
+nice crond -c /nic/conf/apollo/crontabs
+
+echo "System initialization done ..."

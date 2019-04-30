@@ -184,3 +184,6 @@ nic/sdk/third-party/vpp-pkg/$ARCH/lib/dpdk_plugin.so              /nic/lib/vpp_p
 nic/apollo/tools/start-vpp.sh                                     /nic/tools/
 nic/apollo/vpp/conf/*                                             /nic/conf/vpp/
 
+# cronjobs
+nic/conf/apollo/crontabs/root                                     /nic/conf/apollo/crontabs/
+nic/apollo/tools/run_cron.sh                                      /nic/tools/

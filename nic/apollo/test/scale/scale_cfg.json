@@ -25,7 +25,8 @@
         {
             "_comment_" : "security policy parameters here are per subnet per direction",
             "kind" : "security-policy",
-            "count" : "1023"
+            "count" : "1023",
+            "stateful" : "false"
         },
         {
             "_comment_" : "All VPCs have same prefix",

@@ -56,6 +56,7 @@ typedef struct test_params_s {
     // policy config
     struct {
         uint32_t num_rules;
+        bool stateful;
     };
     // vpc config
     struct {
@@ -716,12 +717,12 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                     rule = &policy.rules[idx];
                     rule->action_data.fw_action.action =
                         SECURITY_RULE_ACTION_ALLOW;
-                    rule->stateful = false;
+                    rule->stateful = g_test_params.stateful;
                     rule->match.l3_match.ip_proto = 17;    // UDP
                     rule->match.l4_match.sport_range.port_lo = 100;
                     rule->match.l4_match.sport_range.port_hi = 10000;
                     rule->match.l3_match.ip_pfx = g_test_params.vpc_pfx;
-                    if (idx < (num_rules - 2)) {
+                    if (idx < (num_rules - 3)) {
                         rule->match.l3_match.ip_pfx.addr.addr.v4_addr =
                             rule->match.l3_match.ip_pfx.addr.addr.v4_addr |
                             ((j - 1) << 14) | ((k + 2) << 4);
@@ -731,13 +732,19 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                             dport_base + step - 1;
                         dport_base += step;
                         idx++;
-                    } else if (idx < (num_rules - 1)) {
-                        // catch-all policy within the vpc
+                    } else if (idx < (num_rules - 2)) {
+                        // catch-all policy within the vpc for UDP traffic
                         rule->match.l4_match.dport_range.port_lo = 100;
                         rule->match.l4_match.dport_range.port_hi = 20000;
                         idx++;
+                    } else if (idx < (num_rules - 1)) {
+                        // catch-all policy within the vpc for TCP traffic
+                        rule->match.l3_match.ip_proto = 6;
+                        rule->match.l4_match.dport_range.port_lo = 0;
+                        rule->match.l4_match.dport_range.port_hi = 65535;
+                        idx++;
                     } else {
-                        // catch-all policy for LPM routes
+                        // catch-all policy for LPM routes + UDP
                         rule->match.l3_match.ip_pfx.addr.addr.v4_addr = (0xC << 28);
                         rule->match.l3_match.ip_pfx.len = 8;
                         rule->match.l4_match.dport_range.port_lo = 1000;
@@ -890,6 +897,11 @@ create_objects (void)
                 g_test_params.num_rules = std::stol(obj.second.get<std::string>("count"));
                 if (g_test_params.num_rules < 4) {
                     printf("Number of rules in the policy table must be >= 4\n");
+                }
+                if (!obj.second.get<std::string>("stateful").compare("true")) {
+                    g_test_params.stateful = true;
+                } else {
+                    g_test_params.stateful = false;
                 }
             } else if (kind == "vpc") {
                 g_test_params.num_vpcs = std::stol(obj.second.get<std::string>("count"));

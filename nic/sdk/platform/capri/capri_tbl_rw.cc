@@ -1606,7 +1606,9 @@ capri_hbm_table_entry_read (uint32_t tableid,
         addr  = tbl_info.base_mem_pa + entry_start_addr;
         sdk::asic::asic_mem_read(addr, hwentry, tbl_info.entry_width);
     } else {
-        SDK_ASSERT(0);
+        // if base_mem_va/base_mem_pa is not set, get hbm addr from tablename
+        addr = get_mem_addr(tbl_info.tablename) + entry_start_addr;
+        sdk::asic::asic_mem_read(addr, hwentry, tbl_info.entry_width);
     }
     *entry_size = tbl_info.entry_width;
     return CAPRI_OK;
