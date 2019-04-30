@@ -185,14 +185,24 @@ jobd/apollo/scale_test_mock: ${JOBD_PREREQS}
 jobd/apollo/agent/testapp: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/runtestapp.sh
 
-.PHONY: jobd/apollo/container
-jobd/apollo/container:${JOBD_PREREQS}
+.PHONY: jobd/apollo/aarch64/container
+jobd/apollo/aarch64/container:${JOBD_PREREQS}
 	# With Agent
-	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 1
+	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 1 aarch64
 	rm -rf ${TOPDIR}/apollo_sw
 	# Without Agent
-	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 0
+	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 0 aarch64
 	rm -rf ${TOPDIR}/apollo_sw
+
+.PHONY: jobd/apollo/x86_64/container
+jobd/apollo/x86_64/container:${JOBD_PREREQS}
+	# With Agent
+	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 1 x86_64
+	rm -rf ${TOPDIR}/apollo_sw
+	# Without Agent
+	${NICDIR}/apollo/tools/dev-docker/build_dev_docker.sh 0 x86_64
+	rm -rf ${TOPDIR}/apollo_sw
+
 
 .PHONY: jobd/mbt/base
 jobd/mbt/base: ${JOBD_PREREQS}

@@ -7,6 +7,9 @@
 DST='/sw/apollo_sw'
 LIBDIR=$DST/nic/sdk/third-party/libs
 agent=$1
+buildarch=$2
+SWMNTDIR='/usr/src/github.com/pensando/sw'
+CDIR=`pwd`
 set -x
 copy_files() {
     # Add a space in end of each line.
@@ -67,28 +70,48 @@ copy_files() {
     cp -H nic/include/hal_pd_error.hpp  $DST/nic/include
     cp -H nic/include/trace.hpp  $DST/nic/include
     cp -H nic/include/accel_ring.h  $DST/nic/include
+
+    # Patch for gen_version
+    ./nic/tools/gen_version.py --output-dir $DST/nic/conf
     sed -i '2,$d' $DST/nic/tools/gen_version.py
+    echo -e "import os\nimport sys\nos.system('cp /sw/nic/conf/VERSION.json %s' %sys.argv[2])\n" >> $DST/nic/tools/gen_version.py
+
     if [ $agent == 0 ];then
         rm $DST/nic/apollo/tools/start-agent-sim.sh $DST/nic/apollo/tools/start-agent.sh
         rm -rf $DST/nic/apollo/agent
     fi
     cp nic/conf/catalog* $DST/nic/conf
     cp nic/conf/serdes* $DST/nic/conf
-    cd -
 
     # libdir
     mkdir -p $LIBDIR
 }
 
+script_exit() {
+    rb=$1
+    rv=$2
+    if [ $rb == 1 ];then
+        cd /
+        umount /sw
+        umount $SWMNTDIR
+        mount --bind /sw $SWMNTDIR
+    fi
+    cd $CDIR
+    exit $rv
+}
+
 build() {
-    cd $DST/nic
-    make PIPELINE=apollo
-    [[ $? -ne 0 ]] && echo "Aborting make!" && cd - && exit 1
-    make PIPELINE=apollo  PLATFORM=hw ARCH=aarch64
-    [[ $? -ne 0 ]] && echo "Aborting make!" && cd - && exit 1
-    make PIPELINE=apollo  PLATFORM=hw ARCH=aarch64 firmware
-    [[ $? -ne 0 ]] && echo "Aborting make!" && cd - && exit 1
-    cd -
+    rb=$1
+    cd $2
+    if [[ "$buildarch" == "aarch64" || $buildarch == "all" ]];then
+        make PIPELINE=apollo  PLATFORM=hw ARCH=aarch64 firmware
+        [[ $? -ne 0 ]] && echo "Aborting make!" && script_exit $rb 1
+    fi
+
+    if [[ "$buildarch" == "x86_64" || "$buildarch" == "all" ]];then
+        make PIPELINE=apollo
+        [[ $? -ne 0 ]] && echo "Aborting make!" && script_exit $rb 1
+    fi
 }
 
 remove_files() {
@@ -102,15 +125,12 @@ remove_files() {
     rm -rf platform/src/lib/*
     rm -rf platform/drivers
     rm -rf platform/gen
-    cd -
     cd /tmp/drivers
     find . -name *.ko | xargs -i{} cp -H --parents -u {} $DST
-    cd -
 
     # Copy back header files to platform/src/lib
     cd /tmp/platform/
     cp -r --parents -u . $DST/platform/src/lib
-    cd -
 }
 
 save_files() {
@@ -126,14 +146,12 @@ save_files() {
     for f in $files ; do
         find . -name $f | xargs -i{} cp -H --parents -u {} $LIBDIR
     done
-    cd -
 
     # Keep only *.ko
     cd $DST
     rm -rf /tmp/drivers
     mkdir -p /tmp/drivers
     find ./platform -name *.ko | xargs -i{} cp -H --parents -u {} /tmp/drivers/
-    cd -
 
     # Keep the required platform headers
     cd $DST/platform/src/lib
@@ -142,7 +160,6 @@ save_files() {
     for f in $platform_inc ; do
         cp -r --parents -u $f /tmp/platform
     done
-    cd -
 }
 
 remove_hiddens() {
@@ -152,43 +169,46 @@ remove_hiddens() {
     rm -rf .appro*
     rm -rf .warmd*
     rm -rf .git*
-    cd -
 }
 
 remove_build() {
-    cd $DST/nic
+    cd $1
     rm -rf build ../fake_root_target/
     rm -f *.tar *.tgz *.log
-    cd -
 }
 
-rebuild() {
-    mkdir $DST/nic/build
+rebuild_and_runtest() {
     cd $LIBDIR
+    mkdir -p $DST/nic/build
     cp -r --parents -u . $DST/nic/build/
-    cd -
-    build
+
+    cd /
+    umount $SWMNTDIR
+    mount --bind /sw/apollo_sw $SWMNTDIR
+    mount --bind /sw/apollo_sw /sw
+
+    build 1 /sw/nic
+
+    cd /sw/nic
+    if [[ "$buildarch" == "x86_64" || "$buildarch" == "all" ]];then
+        ./apollo/test/scale/run_scale_test_mock.sh --cfg scale_cfg_1vpc.json
+        [[ $? -ne 0 ]] && echo "Test failed!" && script_exit 1 1
+    fi
 }
 
-run_test() {
-    cd $DST/nic
-    ./apollo/test/scale/run_scale_test_mock.sh --cfg scale_cfg_1vpc.json
-    [[ $? -ne 0 ]] && echo "Test failed!" && cd - && exit 1
-    cd -
-    remove_build
-}
-
-if [ $# != 1 ];then
-    echo "Usage : ./build_dev_docker.sh <agent(1/0)>"
+if [ $# != 2 ];then
+    echo "Usage : ./build_dev_docker.sh <agent(1/0)> <buildarch(aarch64/x86_64/all)"
     exit;
 fi
 
 copy_files
-build
+build 0 $DST/nic
 # TODO check for build success before removing the asic files
 save_files
 remove_files
 remove_hiddens
-remove_build
-rebuild
-run_test
+remove_build $DST/nic
+rebuild_and_runtest
+# Comment the below calls, if we want to keep the images build for future debug
+remove_build /sw/nic
+script_exit 1 0

@@ -50,7 +50,6 @@ trigger:
             port    : ref://testcase/config/hostport
 
 expect:
-    delay: 1
     packets:
         - packet:
             object  : ref://testcase/packets/id=TO_HOST_PKT

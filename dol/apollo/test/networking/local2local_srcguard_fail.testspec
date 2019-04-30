@@ -41,7 +41,6 @@ trigger:
             port    : ref://testcase/config/hostport
 
 expect:
-    delay: 1
     packets:
         - packet:
             object  : None
