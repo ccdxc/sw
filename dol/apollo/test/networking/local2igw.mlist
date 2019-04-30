@@ -1,12 +1,11 @@
-# Feature Test Modules List
+# Feature networking Modules List for Local to Internet Gateway scenario
 feature:
     id          : networking
     sub         : local2igw
     package     : test.networking
     module      : networking
     enable      : True
-    # keeping it in ignore mode until NAT issues are fixed
-    ignore      : True
+    ignore      : False
 
 modules:
     - module:

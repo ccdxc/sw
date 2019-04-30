@@ -1,4 +1,4 @@
-# Feature Test Modules List
+# Feature networking Modules List for Local to Remote scenario
 feature:
     id          : networking
     sub         : local2remote

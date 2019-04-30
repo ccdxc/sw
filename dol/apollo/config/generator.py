@@ -30,7 +30,7 @@ def __generate(topospec):
     # Generate Device Configuration
     device.client.GenerateObjects(topospec)
 
-    # Generate Mirror configuration
+    # Generate Mirror session configuration
     mirror.client.GenerateObjects(topospec)
 
     # Generate VPC configuration
@@ -42,7 +42,7 @@ def __create():
     # Start the Batch
     batch.client.Start()
 
-    # Create Switch Object
+    # Create Device Object
     device.client.CreateObjects()
 
     # Create Mirror session objects

@@ -2,7 +2,6 @@
 # Networking Module
 import pdb
 import apollo.test.callbacks.common.modcbs as modcbs
-import apollo.config.objects.policy as policy
 
 def Setup(infra, module):
     modcbs.Setup(infra, module)

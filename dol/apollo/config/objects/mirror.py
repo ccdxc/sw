@@ -6,7 +6,6 @@ import sys
 
 import infra.config.base as base
 import apollo.config.resmgr as resmgr
-import apollo.config.utils as utils
 import apollo.config.agent.api as api
 import mirror_pb2 as mirror_pb2
 import types_pb2 as types_pb2
@@ -18,16 +17,16 @@ class MirrorSessionObject(base.ConfigObjectBase):
     def __init__(self, span_type, snap_len, interface, vlan_id):
         super().__init__()
         self.Id = next(resmgr.MirrorSessionIdAllocator)
-        self.GID("Mirror session %d"%self.Id)
+        self.GID("MirrorSession%d"%self.Id)
 
-        ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
+        ################# PUBLIC ATTRIBUTES OF MIRROR OBJECT #####################
         self.SnapLen = snap_len
         self.SpanType = span_type
         if span_type == 'rspan':
             self.Interface = interface
             self.VlanId = vlan_id
 
-        ################# PRIVATE ATTRIBUTES OF TUNNEL OBJECT #####################
+        ################# PRIVATE ATTRIBUTES OF MIRROR OBJECT #####################
         self.Show()
         return
 
@@ -55,17 +54,14 @@ class MirrorSessionObject(base.ConfigObjectBase):
 
 class MirrorSessionObjectClient:
     def __init__(self):
-        self.__objs = []
+        self.__objs = dict()
         return
 
     def Objects(self):
-        return self.__objs
+        return self.__objs.values()
 
     def GetMirrorObject(self, mirrorid):
-        for mirrorobj in self.__objs:
-            if mirrorobj.Id == mirrorid:
-                return mirrorobj
-        return None
+        return self.__objs.get(mirrorid, None)
 
     def GenerateObjects(self, mirrorsessionspec):
         def __add_mirror_session(msspec):
@@ -75,7 +71,7 @@ class MirrorSessionObjectClient:
                 interface = msspec.interface
                 vlanid = msspec.vlanid
             obj = MirrorSessionObject(spantype, snaplen, interface, vlanid)
-            self.__objs.append(obj)
+            self.__objs.update({obj.Id: obj})
 
         if not hasattr(mirrorsessionspec, 'mirror'):
             return
@@ -85,7 +81,7 @@ class MirrorSessionObjectClient:
         return
 
     def CreateObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
         api.client.Create(api.ObjectTypes.MIRROR, msgs)
         return
 

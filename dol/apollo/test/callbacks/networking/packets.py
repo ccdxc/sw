@@ -70,16 +70,16 @@ def __get_host_from_route_impl(route, af):
 def __get_host_from_route(modargs, route, af):
     pval = __get_module_args_value(modargs, 'prefix')
     if pval == 'right':
-        # get next/right adjacent subnet
-        route = utils.GetNextSubnet(route)
-        host = route.network_address
+        #first ip post prefix range
+        host = route.network_address + route.num_addresses
     elif pval == 'left':
-        # get previous/left adjacent subnet
-        route = utils.GetPreviousSubnet(route)
-        host = route.network_address
+        #first ip pre prefix range
+        host = route.network_address - 1
     elif pval == 'first':
+        #first ip in prefix range
         host = route.network_address
     elif pval == 'last':
+        #last ip in prefix range
         host = route.network_address + route.num_addresses - 1
     else:
         host = __get_host_from_route_impl(route, af)

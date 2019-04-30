@@ -159,7 +159,7 @@ class FlowMapObjectHelper:
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
                     if IsNatEnabled(routetblobj) is True:
-                    # Skip IGWs with nat flag set to True
+                        # Skip IGWs with nat flag set to True
                         continue
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.Tunnel)
                     objs.append(obj)
@@ -171,7 +171,7 @@ class FlowMapObjectHelper:
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
                     if IsNatEnabled(routetblobj) is False:
-                    # Skip IGWs without nat flag set to True
+                        # Skip IGWs without nat flag set to True
                         continue
                     obj = FlowMapObject(lobj, None, fwdmode, routetblobj, routetblobj.Tunnel)
                     objs.append(obj)

@@ -1,6 +1,6 @@
-# Topology Specification
+# Scale Topology Specification
 meta:
-    id: TOPO_OCI
+    id: TOPO_SCALE
 
 uplink:
     - entry:

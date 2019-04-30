@@ -94,7 +94,7 @@ class RouteObject(base.ConfigObjectBase):
 
 class RouteObjectClient:
     def __init__(self):
-        self.__objs = []
+        self.__objs = dict()
         self.__v4objs = {}
         self.__v6objs = {}
         self.__v4iter = {}
@@ -108,36 +108,30 @@ class RouteObjectClient:
             return resmgr.RemoteInternetNatTunAllocator.rrnext()
 
     def Objects(self):
-        return self.__objs
+        return self.__objs.values()
 
     def GetRouteV4Table(self, vpcid, routetblid):
-        for routetbl in self.__v4objs[vpcid]:
-            if routetbl.RouteTblId == routetblid:
-                return routetbl
-        return None
+        return self.__v4objs[vpcid].get(routetblid, None)
 
     def GetRouteV6Table(self, vpcid, routetblid):
-        for routetbl in self.__v6objs[vpcid]:
-            if routetbl.RouteTblId == routetblid:
-                return routetbl
-        return None
+        return self.__v6objs[vpcid].get(routetblid, None)
 
     def GetRouteV4TableId(self, vpcid):
-        if len(self.__v4objs[vpcid]) == 0:
-            return 0
-        return self.__v4iter[vpcid].rrnext().RouteTblId
+        if self.__v4objs[vpcid]:
+            return self.__v4iter[vpcid].rrnext().RouteTblId
+        return 0
 
     def GetRouteV6TableId(self, vpcid):
-        if len(self.__v6objs[vpcid]) == 0:
-            return 0
-        return self.__v6iter[vpcid].rrnext().RouteTblId
+        if self.__v6objs[vpcid]:
+            return self.__v6iter[vpcid].rrnext().RouteTblId
+        return 0
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         vpcid = parent.VPCId
         vpccount = vpc_spec_obj.count
         stack = parent.Stack
-        self.__v4objs[vpcid] = []
-        self.__v6objs[vpcid] = []
+        self.__v4objs[vpcid] = dict()
+        self.__v6objs[vpcid] = dict()
         self.__v4iter[vpcid] = None
         self.__v6iter[vpcid] = None
 
@@ -186,14 +180,14 @@ class RouteObjectClient:
         def __add_v4routetable(v4routes, routetype):
             vpcpeerid = __get_vpc_peerid()
             obj = RouteObject(parent, utils.IP_VERSION_4, v4routes, routetype, tunobj, vpcpeerid)
-            self.__v4objs[vpcid].append(obj)
-            self.__objs.append(obj)
+            self.__v4objs[vpcid].update({obj.RouteTblId: obj})
+            self.__objs.update({obj.RouteTblId: obj})
 
         def __add_v6routetable(v6routes, routetype):
             vpcpeerid = __get_vpc_peerid()
             obj = RouteObject(parent, utils.IP_VERSION_6, v6routes, routetype, tunobj, vpcpeerid)
-            self.__v6objs[vpcid].append(obj)
-            self.__objs.append(obj)
+            self.__v6objs[vpcid].update({obj.RouteTblId: obj})
+            self.__objs.update({obj.RouteTblId: obj})
 
         def __get_user_specified_routes(routespec):
             routes = []
@@ -250,15 +244,15 @@ class RouteObjectClient:
                         __add_v6routetable(routes, routetype)
                         v6base = utils.GetNextSubnet(routes[-1])
 
-        if len(self.__v6objs[vpcid]) != 0:
-            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
+        if self.__v6objs[vpcid]:
+            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid].values())
 
-        if len(self.__v4objs[vpcid]) != 0:
-            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
+        if self.__v4objs[vpcid]:
+            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
 
 
     def CreateObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
         api.client.Create(api.ObjectTypes.ROUTE, msgs)
         return
 
