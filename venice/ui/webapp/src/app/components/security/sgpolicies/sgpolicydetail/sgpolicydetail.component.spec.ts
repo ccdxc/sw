@@ -67,11 +67,16 @@ function setNewRuleData(component, fixture, numRules: number = 40) {
   fixture.detectChanges();
 }
 
+function resetSearchInputs(src: DebugElement, dest: DebugElement, app: DebugElement, testingUtility: TestingUtility) {
+  testingUtility.setText(src, '');
+  testingUtility.setText(dest, '');
+  testingUtility.setText(app, '');
+}
 
 class MockActivatedRoute extends ActivatedRoute {
   policyId = 'policy1';
-  paramObserver = new BehaviorSubject<any>({ id: this.policyId });
-  snapshot: any = { url: ['security', 'sgpolicies', 'policy1'] };
+  paramObserver = new BehaviorSubject<any>({id: this.policyId});
+  snapshot: any = {url: ['security', 'sgpolicies', 'policy1']};
 
   constructor() {
     super();
@@ -80,7 +85,7 @@ class MockActivatedRoute extends ActivatedRoute {
 
   setPolicyId(id) {
     this.policyId = id;
-    this.paramObserver.next({ id: this.policyId });
+    this.paramObserver.next({id: this.policyId});
   }
 }
 
@@ -149,7 +154,7 @@ describe('SgpolicydetailComponent', () => {
   function verifyServiceCalls(policyName) {
     expect(sgPolicyWatchSpy).toHaveBeenCalled();
     const calledObj = sgPolicyWatchSpy.calls.mostRecent().args[0];
-    expect(_.isEqual({ 'field-selector': 'meta.name=' + policyName }, calledObj)).toBeTruthy('Incorrect selector for ' + policyName);
+    expect(_.isEqual({'field-selector': 'meta.name=' + policyName}, calledObj)).toBeTruthy('Incorrect selector for ' + policyName);
 
     expect(sgPolicyGetSpy).toHaveBeenCalled();
     expect(sgPolicyGetSpy).toHaveBeenCalledWith(policyName);
@@ -433,6 +438,97 @@ describe('SgpolicydetailComponent', () => {
 
   });
 
+  it('should reset table contents if search input are all empty', () => {
+    fixture.detectChanges();
+    const updateRulesByPolicySpy = spyOn(component, 'updateRulesByPolicy').and.callThrough();
+    const sourceIPInput = getSourceIpInput();
+    const destIPInput = getDestIpInput();
+    const portInput = getPortInput();
+    resetSearchInputs(sourceIPInput, destIPInput, portInput, testingUtility);
+    testingUtility.sendEnterKeyup(sourceIPInput);
+
+    expect(component.updateRulesByPolicy).toHaveBeenCalled()
+  });
+
+  it('should reset table contents when click clear search button', () => {
+    fixture.detectChanges();
+    const updateRulesByPolicySpy = spyOn(component, 'updateRulesByPolicy').and.callThrough();
+    const sourceIPInput = getSourceIpInput();
+    const destIPInput = getDestIpInput();
+    const portInput = getPortInput();
+
+    testingUtility.setText(sourceIPInput, "192");
+    let searchButton = getSearchButton();
+    let searchClearButton = getSearchClearButton();
+    testingUtility.sendClick(searchClearButton);
+
+    expect(component.updateRulesByPolicy).toHaveBeenCalled()
+  });
+
+  it('should show search/cancel buttons when either src ip, dest ip or app is not empty', () => {
+    fixture.detectChanges();
+    const invokePolicySearchSpy = spyOn(component, 'invokePolicySearch').and.callThrough();
+    const service = TestBed.get(SearchService);
+    const querySpy = spyOn(service, 'PostPolicyQuery').and.returnValue(
+      new BehaviorSubject<any>({
+          body: {
+            status: 'MISS'
+          }
+        }
+      ));
+
+    // No inputs have text, so search and clear buttons are undefined
+    // There should be no error message
+    let searchButton = getSearchButton();
+    let searchClearButton = getSearchClearButton();
+    let errorMessageDiv = getSearchErrorDiv();
+    expect(searchButton).toBeNull();
+    expect(searchClearButton).toBeNull();
+    expect(errorMessageDiv).toBeNull();
+
+    // search inputs
+    const sourceIPInput = getSourceIpInput();
+    const destIPInput = getDestIpInput();
+    const portInput = getPortInput();
+
+    // ---------------------------
+    // Putting in text into source IP
+    testingUtility.setText(sourceIPInput, '192');
+
+    // The search and cancel buttons should appear
+    searchButton = getSearchButton();
+    searchClearButton = getSearchClearButton();
+    expect(searchButton).toBeTruthy();
+    expect(searchClearButton).toBeTruthy();
+
+    resetSearchInputs(sourceIPInput, destIPInput, portInput, testingUtility);
+
+    // ---------------------------
+    // Putting in text into dest IP
+    testingUtility.setText(destIPInput, '192');
+
+    // The search and cancel buttons should appear
+    searchButton = getSearchButton();
+    searchClearButton = getSearchClearButton();
+    expect(searchButton).toBeTruthy();
+    expect(searchClearButton).toBeTruthy();
+
+    resetSearchInputs(sourceIPInput, destIPInput, portInput, testingUtility);
+
+    // ---------------------------
+    // Putting in text into port
+    testingUtility.setText(portInput, '80');
+
+    // The search and cancel buttons should appear
+    searchButton = getSearchButton();
+    searchClearButton = getSearchClearButton();
+    expect(searchButton).toBeTruthy();
+    expect(searchClearButton).toBeTruthy();
+
+    resetSearchInputs(sourceIPInput, destIPInput, portInput, testingUtility);
+
+  });
+
   it('should show search/cancel buttons when there is input and error message when input searched is not a valid IP', () => {
     fixture.detectChanges();
 
@@ -440,10 +536,10 @@ describe('SgpolicydetailComponent', () => {
     const service = TestBed.get(SearchService);
     const querySpy = spyOn(service, 'PostPolicyQuery').and.returnValue(
       new BehaviorSubject<any>({
-        body: {
-          status: 'MISS'
+          body: {
+            status: 'MISS'
+          }
         }
-      }
       ));
 
     // No inputs have text, so search and clear buttons are undefined
@@ -459,32 +555,27 @@ describe('SgpolicydetailComponent', () => {
     const sourceIPInput = getSourceIpInput();
     const portInput = getPortInput();
     testingUtility.setText(sourceIPInput, '192');
-
-    // The search and cancel buttons shouldnt appear
-    searchButton = getSearchButton();
-    searchClearButton = getSearchClearButton();
-    expect(searchButton).toBeNull();
-    expect(searchClearButton).toBeNull();
-
-    const destIPInput = getDestIpInput();
-    testingUtility.setText(destIPInput, '10.1.1.1');
-
     // The search and cancel buttons should appear
     searchButton = getSearchButton();
     searchClearButton = getSearchClearButton();
     expect(searchButton).toBeTruthy();
     expect(searchClearButton).toBeTruthy();
-
+    // Putting in text into dest IP
+    const destIPInput = getDestIpInput();
+    testingUtility.setText(destIPInput, '10.1.1.1');
+    // The search and cancel buttons should appear
+    searchButton = getSearchButton();
+    searchClearButton = getSearchClearButton();
+    expect(searchButton).toBeTruthy();
+    expect(searchClearButton).toBeTruthy();
     // Click the search button should invoke a search
     testingUtility.sendClick(searchButton);
     expect(component.invokePolicySearch).toHaveBeenCalled();
     expect(service.PostPolicyQuery).toHaveBeenCalledTimes(0);
-
     // There should be an invalid IP message
     errorMessageDiv = getSearchErrorDiv();
     expect(errorMessageDiv).toBeTruthy();
     expect(errorMessageDiv.children[1].nativeElement.textContent).toContain('Invalid IP');
-
     // Typing again should remove the message if the content is different
     testingUtility.setText(sourceIPInput, '192');
     errorMessageDiv = getSearchErrorDiv();
@@ -495,153 +586,18 @@ describe('SgpolicydetailComponent', () => {
     fixture.detectChanges();
     errorMessageDiv = getSearchErrorDiv();
     expect(errorMessageDiv).toBeNull();
-
     // Clicking clear button should empty out the results, but not reset the scroll
     // since we don't have a match
     // TODO: Find a way to check scroll
     testingUtility.sendClick(searchClearButton);
     expect(sourceIPInput.nativeElement.value).toBe('');
 
-    // Shouldn't allow port only search
+    // allow port only search
     testingUtility.setText(sourceIPInput, '');
     testingUtility.setText(portInput, 'tcp/88');
     searchButton = getSearchButton();
-    expect(searchButton).toBeNull();
+    expect(searchButton).toBeTruthy();
   });
-
-
-  it('should display sgpolicy meta/rules and highlight matching row or display there is none on search', () => {
-    fixture.detectChanges();
-    verifyMeta(sgPolicy1.meta.name, sgPolicy1.meta['creation-time'], sgPolicy1.meta['mod-time']);
-    verifyTable(sgPolicy1.spec.rules, component.cols);
-
-
-    // Mocking enough entries to test search highlighting
-    setNewRuleData(component, fixture, 40);
-    const searchService = TestBed.get(SearchService);
-    let matchingIndex = 10;
-    const postQuerySpy = spyOn(searchService, 'PostPolicyQuery').and.returnValue(
-      new BehaviorSubject<any>({
-        body: {
-          status: 'MATCH',
-          results: {
-            'policy1': {
-              'index': matchingIndex
-            }
-          }
-        }
-      }
-      ));
-    spyOn(component.lazyRenderWrapper, 'scrollToRowNumber');
-    component.invokePolicySearch('10.1.1.1');
-    fixture.detectChanges();
-    expect(searchService.PostPolicyQuery).toHaveBeenCalled();
-    // 10th row should be highlighted and we should have scrolled to it
-    expect(component.selectedRuleIndex).toBe(10);
-    let rule = getMatchingRule();
-    expect(rule).toBeTruthy();
-    expect(rule.children[0].nativeElement.textContent).toContain(matchingIndex + 1);
-    expect(component.lazyRenderWrapper.scrollToRowNumber).toHaveBeenCalledWith(matchingIndex);
-    // If user starts to modify search, the highlight row disappears
-    const sourceIPInput = getSourceIpInput();
-    testingUtility.setText(sourceIPInput, '192');
-    // Listens for key up, so we trigger one with a random keyCode
-    sourceIPInput.triggerEventHandler('keyup', { keyCode: 20 });
-    fixture.detectChanges();
-    rule = getMatchingRule();
-    expect(rule).toBeNull();
-
-    // Search with a miss or missing policy name
-    postQuerySpy.and.returnValue(
-      new BehaviorSubject<any>({
-        body: {
-          status: 'MISS'
-        }
-      }
-      ));
-    component.invokePolicySearch('10.1.1.1');
-    fixture.detectChanges();
-    let errorMessageDiv = getSearchErrorDiv();
-    expect(errorMessageDiv).toBeTruthy();
-    expect(errorMessageDiv.children[1].nativeElement.textContent).toContain('No Matching Rule');
-
-    // Checking results from a different policy don't register a match
-    postQuerySpy.and.returnValue(
-      new BehaviorSubject<any>({
-        body: {
-          status: 'MATCH',
-          results: {
-            'randomPolicy': {
-              'index': 10
-            }
-          }
-        }
-      }
-      ));
-    component.invokePolicySearch('10.1.1.1');
-    fixture.detectChanges();
-    errorMessageDiv = getSearchErrorDiv();
-    expect(errorMessageDiv).toBeTruthy();
-    expect(errorMessageDiv.children[1].nativeElement.textContent).toContain('No Matching Rule');
-
-    // Setting a valid search for the following test examples
-    postQuerySpy.and.returnValue(
-      new BehaviorSubject<any>({
-        body: {
-          status: 'MATCH',
-          results: {
-            'policy1': {
-              'index': 10
-            }
-          }
-        }
-      }
-      ));
-    component.invokePolicySearch('10.1.1.1');
-    fixture.detectChanges();
-    errorMessageDiv = getSearchErrorDiv();
-    expect(errorMessageDiv).toBeNull();
-
-    // Causing new data button
-    component.lazyRenderWrapper.hasUpdate = true;
-
-    // Setting up for the next search
-    postQuerySpy.calls.reset();
-    matchingIndex = 5;
-    postQuerySpy.and.returnValue(
-      new BehaviorSubject<any>({
-        body: {
-          status: 'MATCH',
-          results: {
-            'policy1': {
-              'index': matchingIndex
-            }
-          }
-        }
-      }
-      ));
-
-    // if user clicks new data button, we should redo the search
-    component.lazyRenderWrapper.resetTableView(); // Equivalent of clicking update data button
-    fixture.detectChanges();
-    expect(searchService.PostPolicyQuery).toHaveBeenCalled();
-    // 5th row should be highlighted and we should have scrolled to it
-    expect(component.selectedRuleIndex).toBe(matchingIndex);
-    rule = getMatchingRule();
-    expect(rule).toBeTruthy();
-    expect(rule.children[0].nativeElement.textContent).toContain(matchingIndex + 1);
-    expect(component.lazyRenderWrapper.scrollToRowNumber).toHaveBeenCalledWith(matchingIndex);
-
-    // If there is new data, and user tries to perform a search
-    // we should force an update to the new data
-    component.lazyRenderWrapper.hasUpdate = true;
-    component.invokePolicySearch('10.1.1.1');
-    fixture.detectChanges();
-    // Should have switched to new data and invoked search
-    expect(component.lazyRenderWrapper.hasUpdate).toBeFalsy();
-    expect(searchService.PostPolicyQuery).toHaveBeenCalledTimes(2);
-  });
-
 
   it('should display missing policy overlay and deleted policy overlay', () => {
     // change param id
@@ -739,7 +695,6 @@ describe('SgpolicydetailComponent', () => {
     expect(routerLinks[0].navigatedTo).toBe('../');
 
   });
-
 
 
   it('should rerender when user navigates to same page with different id and use field selectors', () => {

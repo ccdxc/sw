@@ -73,7 +73,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   @ViewChild('sgpolicyTable') sgpolicyTurboTable: Table;
   @ViewChild(LazyrenderComponent) lazyRenderWrapper: LazyrenderComponent;
   viewInitComplete: boolean = false;
-
+  searchPolicyInvoked:boolean = false;  // avoid loop caused by invokeSearchPolicy
   subscriptions = [];
 
   cols: TableCol[] = [
@@ -219,6 +219,18 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   }
 
   keyUpInput(event) {
+    // if all search input is empty, we reset the table
+    // If a user hits the enter key on an empty search, we shouldn't try to execute a policy search.
+    const sourceIP = this.sourceIpFormControl.value;
+    const destIP = this.destIpFormControl.value;
+    const port = this.portFormControl.value;
+    if(sourceIP == "" && destIP == "" && port == ""){
+      this.searchErrorMessage = '';
+      this.updateRulesByPolicy();
+      this.currentSearch = null;
+      return;
+    }
+
     if (event.keyCode === SearchUtil.EVENT_KEY_ENTER) {
       this.invokePolicySearch();
     } else if (this.currentSearch != null) {
@@ -248,10 +260,14 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
    * for when the data changes
    */
   dataUpdated() {
+    this.ruleCount = this.sgPolicyRules.length;
+    if (this.searchPolicyInvoked){
+      this.searchPolicyInvoked = false;
+      return
+    }
     if (this.currentSearch != null) {
       this.invokePolicySearch(this.currentSearch.sourceIP, this.currentSearch.destIP, this.currentSearch.port);
     }
-    this.ruleCount = this.sgPolicyRules.length;
   }
 
   /**
@@ -260,8 +276,10 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   showSearchButton(): boolean {
     const sourceIP = this.sourceIpFormControl.value;
     const destIP = this.destIpFormControl.value;
-    return (sourceIP != null && sourceIP.length > 0) &&
-      (destIP != null && destIP.length > 0);
+    const port = this.portFormControl.value;
+    return (sourceIP != null && sourceIP.length > 0) ||
+      (destIP != null && destIP.length > 0) ||
+      (port != null && port.length > 0);
   }
 
   clearSearch() {
@@ -274,6 +292,8 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
       // scroll back to top
       this.lazyRenderWrapper.resetTableView();
     }
+    this.updateRulesByPolicy();
+    this.currentSearch = null;
   }
 
   invokePolicySearch(sourceIP = null, destIP = null, port: string = null) {
@@ -354,13 +374,18 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
         if (body.status === 'MATCH') {
           if (this.selectedPolicy == null || body.results[this.selectedPolicy.meta.name] == null) {
             this.searchErrorMessage = 'No Matching Rule';
+            this.searchPolicyInvoked = true;
+            this.sgPolicyRules = []
           } else {
             this.searchErrorMessage = '';
-            this.selectedRuleIndex = body.results[this.selectedPolicy.meta.name].index;
-            this.lazyRenderWrapper.scrollToRowNumber(this.selectedRuleIndex);
+            const entries = body.results[this.selectedPolicy.meta.name].entries;
+            this.searchPolicyInvoked = true;
+            this.sgPolicyRules = this.addOrderRanking(entries.map(ele => ele.rule))
           }
         } else {
           this.searchErrorMessage = 'No Matching Rule';
+          this.searchPolicyInvoked = true;
+          this.sgPolicyRules = []
         }
         this.loading = false;
       },
@@ -396,6 +421,10 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     return this.constructor.name;
   }
 
+  updateRulesByPolicy(){
+    this.sgPolicyRules = this.addOrderRanking(this.selectedPolicy.spec.rules);
+  }
+
   getSGPoliciesDetail() {
     // We perform a get as well as a watch so that we can know if the object the user is
     // looking for exists or not.
@@ -418,6 +447,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     // const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId}).subscribe(
     const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId }).subscribe(
       response => {
+        if (this.searchSubscription != null) this.searchSubscription.unsubscribe();  // avoid racing condition for searchSubscription and WatchSGPolicy
         this.sgPoliciesEventUtility.processEvents(response);
         if (this.sgPolicies.length > 1) {
           // because of the name selector, we should
@@ -435,7 +465,8 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
           this.enableFormControls();
           // Set sgpolicyrules
           this.selectedPolicy = this.sgPolicies[0];
-          this.sgPolicyRules = this.addOrderRanking(this.selectedPolicy.spec.rules);
+          this.searchPolicyInvoked = false;
+          this.updateRulesByPolicy();
         } else {
           // Must have received a delete event.
           this.showDeletionScreen = true;
