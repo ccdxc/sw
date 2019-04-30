@@ -212,6 +212,12 @@ ionic_adminq_check_err(struct lif *lif,
 	const char *status;
 
 	if (ctx->comp.comp.status || is_timeout) {
+                /* For FW upgrade use */
+                if (ctx->cmd.cmd.opcode == CMD_OPCODE_RX_FILTER_DEL &&
+                    ctx->comp.comp.status == IONIC_RC_ENOENT) {
+                        return VMK_OK;
+                }
+
 		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
 		status = ionic_error_to_str(ctx->comp.comp.status);
 		ionic_err("%s (%d) failed: %s (%d) %s\n",
@@ -240,8 +246,8 @@ ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 	}
 
 	is_timeout = ionic_wait_for_completion_timeout(&ctx->work,
-                                               devcmd_timeout *
-                                               VMK_MSEC_PER_SEC);
+                                                       devcmd_timeout *
+                                                       VMK_MSEC_PER_SEC);
 	return ionic_adminq_check_err(lif,
                                       ctx,
                                       is_timeout);
@@ -253,22 +259,19 @@ int ionic_netpoll(int budget, ionic_cq_cb cb,
         struct qcq *qcq = (struct qcq *) cb_arg;
         struct cq *cq = &qcq->cq;
         unsigned int work_done;
+        vmk_Bool unmask = VMK_FALSE;
 
         work_done = ionic_cq_service(cq, budget, cb, cb_arg);
 
-        if (work_done > 0)
+        if (work_done < budget) {
+                unmask = VMK_TRUE;
+        }
+
+        if (work_done || unmask)
                 ionic_intr_return_credits(cq->bound_intr,
                                           work_done,
-                                          VMK_FALSE,
+                                          unmask,
                                           VMK_TRUE);
-
-        if (work_done < budget) {
-/*                ionic_intr_return_credits(cq->bound_intr,
-                                          0,
-                                          VMK_TRUE,
-                                          VMK_TRUE);*/
-                ionic_intr_mask(cq->bound_intr, VMK_FALSE);
-        }
 
         return work_done;
 }
@@ -281,8 +284,10 @@ ionic_dev_cmd_check_error(struct ionic_dev *idev)
 
         status = ionic_dev_cmd_status(idev);
         switch (status) {
-        case 0:
-                return VMK_OK;
+                case IONIC_RC_SUCCESS:
+                case IONIC_RC_EEXIST:
+                case IONIC_RC_ENOENT:
+                        return VMK_OK;
         }
 
         return VMK_FAILURE;
@@ -716,9 +721,9 @@ ionic_en_attach(vmk_Device device)                                // IN
 
         status = ionic_init(&priv_data->ionic);
         if (status != VMK_OK) {
-                ionic_err("ionic_reset() failed, status: %s",
+                ionic_err("ionic_init() failed, status: %s",
                           vmk_StatusToString(status));
-                goto reset_err;
+                goto init_err;
         }
 
 	status = ionic_identify(&priv_data->ionic);
@@ -729,7 +734,7 @@ ionic_en_attach(vmk_Device device)                                // IN
 
         return status;
 
-reset_err:
+init_err:
         ionic_clean(&priv_data->ionic);
 
 setup_err:

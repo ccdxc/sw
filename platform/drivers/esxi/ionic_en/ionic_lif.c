@@ -92,14 +92,6 @@ ionic_qcq_enable(struct qcq *qcq)
 
 	ionic_completion_init(&ctx.work);
 
-        status  = ionic_adminq_post_wait(lif, &ctx);
-        ionic_completion_destroy(&ctx.work);
-	if (status != VMK_OK) { 
-		ionic_err("ionic_adminq_post_wait() failed, status: %s",
-			  vmk_StatusToString(status));
-	        return status;
-        }
-
         if (!qcq->is_netpoll_enabled) {
                 vmk_NetPollInterruptSet(qcq->netpoll,
                                         qcq->intr.cookie);
@@ -107,6 +99,13 @@ ionic_qcq_enable(struct qcq *qcq)
                 qcq->is_netpoll_enabled = VMK_TRUE;
                 vmk_IntrEnable(qcq->intr.cookie);
                 ionic_intr_mask(&qcq->intr, VMK_FALSE);
+        }
+
+        status  = ionic_adminq_post_wait(lif, &ctx);
+        ionic_completion_destroy(&ctx.work);
+	if (status != VMK_OK) { 
+		ionic_err("ionic_adminq_post_wait() failed, status: %s",
+			  vmk_StatusToString(status));
         }
 
         return status;
@@ -143,12 +142,6 @@ ionic_qcq_disable(struct qcq *qcq)
 
 	ionic_completion_init(&ctx.work);
 
-        ionic_intr_mask(&qcq->intr, VMK_TRUE);
-
-//	synchronize_irq(qcq->intr.vector);
-//	napi_disable(&qcq->napi);
-
-
         status = ionic_adminq_post_wait(lif, &ctx);
         ionic_completion_destroy(&ctx.work);
         if (status != VMK_OK) {
@@ -157,6 +150,7 @@ ionic_qcq_disable(struct qcq *qcq)
         }
         
         if (qcq->is_netpoll_enabled) {
+                ionic_intr_mask(&qcq->intr, VMK_TRUE);
                 vmk_IntrDisable(qcq->intr.cookie);
                 vmk_IntrSync(qcq->intr.cookie);
                 vmk_NetPollDisable(qcq->netpoll);
@@ -317,6 +311,10 @@ ionic_stop(struct lif *lif)
                 }
         }
 
+        for (i = 0; i < lif->ntxqcqs; i++) {
+                ionic_tx_flush(&lif->txqcqs[i]->cq);
+        }
+
         if (!priv_data->uplink_handle.is_mgmt_nic) {
                 ionic_en_rx_rss_deinit(priv_data,
                                        lif);
@@ -337,6 +335,16 @@ static bool ionic_adminq_service(struct cq *cq,
 	ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
 
 	return VMK_TRUE;
+}
+
+void ionic_adminq_flush(struct cq *cq)
+{
+        unsigned int work_done;
+
+        work_done = ionic_cq_service(cq, cq->num_descs, ionic_adminq_service, NULL);
+
+        if (work_done)
+                ionic_intr_return_credits(cq->bound_intr, work_done, 0, VMK_TRUE);
 }
 
 static vmk_Bool
@@ -373,8 +381,16 @@ ionic_qcq_recover(struct lif *lif,
 	dma_addr_t q_base_pa, cq_base_pa, sg_base_pa;
 	unsigned int q_size = num_descs * desc_size;
 	unsigned int cq_size = num_descs * cq_desc_size;
+        unsigned int sg_size = num_descs * sg_desc_size;
 
         struct ionic_dev *idev = &lif->ionic->en_dev.idev;
+
+        vmk_Memset(qcq->q.info,
+                   0,
+                   sizeof(*qcq->q.info) * num_descs);
+        vmk_Memset(qcq->cq.info,
+                   0,
+                   sizeof(*qcq->cq.info) * num_descs);
 
 	status = ionic_q_init(lif, idev, &qcq->q, index, base, num_descs,
 		              desc_size, sg_desc_size, pid);
@@ -394,13 +410,16 @@ ionic_qcq_recover(struct lif *lif,
 
         q_base = qcq->base;
 	q_base_pa = qcq->base_pa;
+        vmk_Memset(q_base, 0, q_size);
 
 	cq_base = (void *)IONIC_ALIGN((vmk_uintptr_t)q_base + q_size, VMK_PAGE_SIZE);
 	cq_base_pa = IONIC_ALIGN(q_base_pa + q_size, VMK_PAGE_SIZE);
+        vmk_Memset(cq_base, 0, cq_size);
 
 	if (qcq->flags & QCQ_F_SG) {
 		sg_base = (void *)IONIC_ALIGN((vmk_uintptr_t)cq_base + cq_size,
 	             			       VMK_PAGE_SIZE);
+                vmk_Memset(sg_base, 0, sg_size);
 		sg_base_pa = IONIC_ALIGN(cq_base_pa + cq_size, VMK_PAGE_SIZE);
 		ionic_q_sg_map(&qcq->q, sg_base, sg_base_pa);
 	}
@@ -461,20 +480,61 @@ ionic_qcqs_recover(struct ionic *ionic)
 }
 
 
+void
+ionic_stop_control_path(struct lif *lif)
+{
+        struct qcq *adminqcq, *notifyqcq;
+        adminqcq = lif->adminqcq;
+        notifyqcq = lif->notifyqcq;
+
+        ionic_intr_mask(&adminqcq->intr, VMK_TRUE);
+        vmk_IntrDisable(adminqcq->intr.cookie);
+        vmk_IntrSync(adminqcq->intr.cookie);
+        vmk_NetPollDisable(adminqcq->netpoll);
+        adminqcq->is_netpoll_enabled = VMK_FALSE;
+        vmk_NetPollFlushRx(adminqcq->netpoll);
+        vmk_NetPollInterruptUnSet(adminqcq->netpoll);
+
+        ionic_intr_mask(&notifyqcq->intr, VMK_TRUE);
+        vmk_IntrDisable(notifyqcq->intr.cookie);
+        vmk_IntrSync(notifyqcq->intr.cookie);
+        vmk_NetPollDisable(notifyqcq->netpoll);
+        notifyqcq->is_netpoll_enabled = VMK_FALSE;
+        vmk_NetPollFlushRx(notifyqcq->netpoll);
+        vmk_NetPollInterruptUnSet(notifyqcq->netpoll);
+}
+
+
+static void
+ionic_clean_priv_sw_stats(struct lif *lif)
+{
+        vmk_uint32 i;
+        struct rx_stats *rx_stats = NULL;
+        struct tx_stats *tx_stats = NULL;
+
+        for (i = 0; i < lif->nrxqcqs; i++) {
+                rx_stats = &lif->rxqcqs[i]->stats.rx;
+                vmk_Memset(rx_stats, 0, sizeof(struct rx_stats));
+        }
+
+        for (i = 0; i < lif->ntxqcqs; i++) {
+                tx_stats = &lif->txqcqs[i]->stats.tx;
+                vmk_Memset(tx_stats, 0, sizeof(struct tx_stats));
+        }
+}
+
+
 static VMK_ReturnStatus
 ionic_dev_recover(struct ionic_en_priv_data *priv_data)
 {
         VMK_ReturnStatus status;
         vmk_AddrCookie driver_data;
+        struct lif *lif;
 
         driver_data.ptr = priv_data;
 
-        status = ionic_en_uplink_quiesce_io(driver_data);
-        if (status != VMK_OK) {
-                ionic_err("ionic_en_uplink_quiesce_io() failed, status: %s",
-                          vmk_StatusToString(status));
-                VMK_ASSERT(0);
-        }
+        lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
+                             struct lif, list);
 
         status = ionic_init(&priv_data->ionic);
         if (status != VMK_OK) {
@@ -490,12 +550,21 @@ ionic_dev_recover(struct ionic_en_priv_data *priv_data)
                 VMK_ASSERT(0);
         }
 
-        // activeQueues number clean
+        vmk_BitVectorZap(priv_data->uplink_handle.uplink_q_info.activeQueues);
 
         // Assume no change in lifs_size
 
         status = ionic_qcqs_recover(&priv_data->ionic);
         VMK_ASSERT(status == VMK_OK);
+
+        vmk_Memset(priv_data->uplink_handle.vmk_mac_addr,
+                   0,
+                   VMK_ETH_ADDR_LENGTH);
+
+        lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
+                             struct lif, list);
+
+        lif->last_eid = 0;
 
         status = ionic_lifs_init(&priv_data->ionic);
         if (status != VMK_OK) {
@@ -504,8 +573,13 @@ ionic_dev_recover(struct ionic_en_priv_data *priv_data)
                 VMK_ASSERT(0);
         }
 
+        lif->is_skip_res_alloc_after_fw = VMK_FALSE;
+
+        ionic_lif_set_uplink_info(lif);
+
         ionic_en_uplink_default_coal_params_set(priv_data);
 
+        ionic_clean_priv_sw_stats(lif);
         status = ionic_en_uplink_start_io(driver_data);
         VMK_ASSERT(status == VMK_OK);
 
@@ -519,20 +593,39 @@ ionic_dev_recover_world(void *data)
 {
         VMK_ReturnStatus status = VMK_OK;
         struct ionic_en_priv_data *priv_data = data;
+        vmk_uint32 wait_time = VMK_TIMEOUT_UNLIMITED_MS;
+        vmk_Bool is_done_fw_upgrade = VMK_FALSE;
+        struct lif *lif;
 
         ionic_dbg("ionic_dev_recover_world() called");
 
         while (status != VMK_DEATH_PENDING) {
                 status = vmk_WorldWait(VMK_EVENT_NONE,
                                        VMK_LOCK_INVALID,
-                                       VMK_TIMEOUT_UNLIMITED_MS,
+                                       wait_time,
                                        "waiting for recover event");
 
                 if (status == VMK_DEATH_PENDING) {
                         break;
                 }    
 
-                ionic_dev_recover(priv_data);
+                /* wait one second */
+                wait_time = 1000;
+
+                if (!is_done_fw_upgrade) {
+                        lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
+                                             struct lif,
+                                             list);
+                        lif->is_skip_res_alloc_after_fw = VMK_TRUE;
+                        ionic_stop_control_path(lif);
+                        is_done_fw_upgrade = VMK_TRUE;
+                }
+
+                if (priv_data->ionic.en_dev.idev.dev_info->fw_status) {
+                        ionic_dev_recover(priv_data);
+                        wait_time = VMK_TIMEOUT_UNLIMITED_MS;
+                        is_done_fw_upgrade = VMK_FALSE;
+                }
         }
 
         return VMK_OK;
@@ -543,13 +636,44 @@ static void
 ionic_notifyq_link_change_event(struct ionic_en_uplink_handle *uplink_handle,
                                 union notifyq_comp *comp)
 {
+        VMK_ReturnStatus status;
+        vmk_Bool is_start_io = VMK_FALSE;
+        vmk_Bool is_link_state_changed = VMK_FALSE;
+        vmk_LinkState new_link_state;
+        vmk_AddrCookie driver_data;
+
         vmk_SpinlockLockIgnoreDeathPending(uplink_handle->link_status_lock);
-        uplink_handle->cur_hw_link_status.state =
-                comp->link_change.link_status == PORT_OPER_STATUS_UP ?
-                VMK_LINK_STATE_UP : VMK_LINK_STATE_DOWN;
+        new_link_state = comp->link_change.link_status == PORT_OPER_STATUS_UP ?
+                         VMK_LINK_STATE_UP : VMK_LINK_STATE_DOWN;
+
+        is_link_state_changed = (new_link_state !=
+                                 uplink_handle->cur_hw_link_status.state);
+        if (is_link_state_changed &&
+            new_link_state == VMK_LINK_STATE_UP) {
+                is_start_io = VMK_TRUE;
+        } else if (is_link_state_changed &&
+                   new_link_state == VMK_LINK_STATE_DOWN) {
+                is_start_io = VMK_FALSE;
+        }
+
+        uplink_handle->cur_hw_link_status.state = new_link_state;
         uplink_handle->cur_hw_link_status.duplex = VMK_LINK_DUPLEX_FULL;
         uplink_handle->cur_hw_link_status.speed = comp->link_change.link_speed;
         vmk_SpinlockUnlock(uplink_handle->link_status_lock); 
+
+        ionic_info("is_link_state_changed: %d, is_start_io: %d",
+                   is_link_state_changed, is_start_io);
+
+        if (is_link_state_changed) {
+                driver_data.ptr = uplink_handle->priv_data;
+                if (is_start_io) {
+                        status = ionic_en_uplink_start_io(driver_data);
+                        VMK_ASSERT(status == VMK_OK);
+                } else {
+                        status = ionic_en_uplink_quiesce_io(driver_data);
+                        VMK_ASSERT(status == VMK_OK);
+                }
+        }
 
         vmk_WorldForceWakeup(uplink_handle->link_check_world);
 }
@@ -608,6 +732,18 @@ ionic_lif_set_uplink_info(struct lif *lif)
 }
 
 
+static void
+ionic_lif_reset(struct lif *lif)
+{
+        struct ionic_dev *idev = &lif->ionic->en_dev.idev;
+
+        vmk_MutexLock(lif->ionic->dev_cmd_lock);
+        ionic_dev_cmd_lif_reset(idev, lif->index);
+        ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+        vmk_MutexUnlock(lif->ionic->dev_cmd_lock);
+}
+
+
 static bool ionic_notifyq_cb(struct cq *cq,
                              struct cq_info *cq_info,
                              void *cb_arg)
@@ -620,7 +756,6 @@ static bool ionic_notifyq_cb(struct cq *cq,
 
         q = cq->bound_q;
         lif = q->info[0].cb_arg;
-//        netdev = lif->netdev;
 
         /* Have we run out of new completions to process? */
         if (!(comp->event.eid > lif->last_eid))
@@ -653,7 +788,6 @@ static bool ionic_notifyq_cb(struct cq *cq,
                            comp->link_change.link_speed);
                 ionic_notifyq_link_change_event(uplink_handle,
                                                 comp);
-//                vmk_WorldForceWakeup(priv_data->dev_recover_world);
                 break;
         case EVENT_OPCODE_RESET:
                 ionic_info("%s: Notifyq EVENT_OPCODE_RESET eid=%ld",
@@ -663,6 +797,9 @@ static bool ionic_notifyq_cb(struct cq *cq,
                            vmk_NameToString(&uplink_handle->uplink_name),
                            comp->reset.reset_code,
                            comp->reset.state);
+                ionic_lif_reset(lif);
+                ionic_reset(&priv_data->ionic);
+                vmk_WorldForceWakeup(priv_data->dev_recover_world);
                 break;
         case EVENT_OPCODE_HEARTBEAT:
                 ionic_info("%s: Notifyq EVENT_OPCODE_HEARTBEAT eid=%ld\n",
@@ -686,6 +823,18 @@ static bool ionic_notifyq_cb(struct cq *cq,
 
         return VMK_TRUE;
 }
+
+
+void ionic_notifyq_flush(struct cq *cq)
+{
+        unsigned int work_done;
+
+        work_done = ionic_cq_service(cq, cq->num_descs, ionic_notifyq_cb, NULL);
+
+        if (work_done)
+                ionic_intr_return_credits(cq->bound_intr, work_done, 0, VMK_TRUE);
+}
+
 
 static vmk_Bool
 ionic_notifyq_netpoll(vmk_AddrCookie priv,
@@ -776,19 +925,15 @@ ionic_lif_addr_del(struct lif *lif, const u8 *addr)
 
 	ionic_completion_init(&ctx.work);
 
-//	spin_lock_bh(&lif->rx_filters.lock);
-
         vmk_SpinlockLock(lif->rx_filters.lock);
 	f = ionic_rx_filter_by_addr(lif, addr);
 	if (!f) {
-//		spin_unlock_bh(&lif->rx_filters.lock);
                 vmk_SpinlockUnlock(lif->rx_filters.lock);
-		return VMK_FAILURE;
+                return VMK_FAILURE;
 	}
 
 	ctx.cmd.rx_filter_del.filter_id = f->filter_id;
 	ionic_rx_filter_free(f);
-//	spin_unlock_bh(&lif->rx_filters.lock);
         vmk_SpinlockUnlock(lif->rx_filters.lock);
 
 	status = ionic_adminq_post_wait(lif, &ctx);
@@ -799,7 +944,7 @@ ionic_lif_addr_del(struct lif *lif, const u8 *addr)
                           vmk_StatusToString(status));
         }
 
-	ionic_info("lif: %p: rx_filter del ADDR %p (id %d)\n",
+	ionic_info("lif: %p: rx_filter del ADDR %p (id %d)",
                    lif, addr, ctx.cmd.rx_filter_del.filter_id);
 
 	return status;
@@ -976,7 +1121,7 @@ ionic_vlan_rx_kill_vid(struct lif *lif,
 	f = ionic_rx_filter_by_vlan(lif, vid);
 	if (!f) {
                 vmk_SpinlockUnlock(lif->rx_filters.lock);
-		return VMK_FAILURE;
+                return VMK_FAILURE;
 	}
 
 	ctx.cmd.rx_filter_del.filter_id = f->filter_id;
@@ -991,8 +1136,8 @@ ionic_vlan_rx_kill_vid(struct lif *lif,
                 return status;
         }
 
-	ionic_info("rx_filter del VLAN %d (id %d)\n", vid,
-		   ctx.cmd.rx_filter_del.filter_id);
+	ionic_info("rx_filter del VLAN %d (id %d)", vid,
+                   ctx.cmd.rx_filter_del.filter_id);
 
 	return status;
 }
@@ -1527,6 +1672,7 @@ ionic_lif_free(struct lif *lif)
                                         struct ionic_en_priv_data,
                                         ionic);
 
+        ionic_lif_reset(lif);
         ionic_work_queue_flush(lif->def_work_queue);
         ionic_qcqs_free(lif);
         ionic_work_queue_destroy(lif->def_work_queue);
@@ -1694,16 +1840,20 @@ ionic_lif_rss_setup(struct lif *lif)
                         | IONIC_RSS_TYPE_IPV6_TCP
                         | IONIC_RSS_TYPE_IPV6_UDP;
 
-        lif->rss_ind_tbl = ionic_dma_zalloc_align(ionic_driver.heap_id,
-                                                  priv_data->dma_engine_coherent,
-                                                  tbl_size,
-                                                  VMK_PAGE_SIZE,
-                                                  &lif->rss_ind_tbl_pa);
+        if (!lif->is_skip_res_alloc_after_fw) {
+                lif->rss_ind_tbl = ionic_dma_zalloc_align(ionic_driver.heap_id,
+                                                          priv_data->dma_engine_coherent,
+                                                          tbl_size,
+                                                          VMK_PAGE_SIZE,
+                                                          &lif->rss_ind_tbl_pa);
 
-	if (!lif->rss_ind_tbl) {
-	        ionic_err("ionic_dma_zalloc_align() failed, "
-                          "status: VMK_NO_MEMORY");
-                return  VMK_NO_MEMORY;
+        	if (!lif->rss_ind_tbl) {
+	                ionic_err("ionic_dma_zalloc_align() failed, "
+                                  "status: VMK_NO_MEMORY");
+                        return  VMK_NO_MEMORY;
+                }
+        } else {
+                vmk_Memset(lif->rss_ind_tbl, 0, tbl_size);
         }
 
 	ionic_info("rss_ind_tbl_pa: %lu", lif->rss_ind_tbl_pa);
@@ -1715,7 +1865,7 @@ ionic_lif_rss_setup(struct lif *lif)
         }
 
 	status = ionic_lif_rss_config(lif, lif->rss_types,
-                toeplitz_symmetric_key, NULL);
+                                      toeplitz_symmetric_key, NULL);
 	if (status != VMK_OK) {
                 ionic_err("ionic_lif_rss_config() failed, status: %s",
                           vmk_StatusToString(status));
@@ -1854,9 +2004,11 @@ ionic_lif_adminq_init(struct lif *lif)
 	struct queue *q = &qcq->q;
         struct q_init_comp comp;
 
+        vmk_MutexLock(lif->ionic->dev_cmd_lock);
 	ionic_dev_cmd_adminq_init(idev, qcq, lif->index, qcq->cq.bound_intr->index);
 
         status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+        vmk_MutexUnlock(lif->ionic->dev_cmd_lock);
 	if (status != VMK_OK) {
                 ionic_err("ionic_dev_cmd_wait_check() failed, status: %s",
                           vmk_StatusToString(status));
@@ -1893,6 +2045,7 @@ ionic_lif_adminq_init(struct lif *lif)
                 vmk_NetPollEnable(qcq->netpoll);
                 qcq->is_netpoll_enabled = VMK_TRUE;
                 vmk_IntrEnable(qcq->intr.cookie);
+                ionic_intr_clean(&qcq->intr);
 	        ionic_intr_mask(&qcq->intr, VMK_FALSE);
         }
 	return status;
@@ -1969,12 +2122,12 @@ ionic_lif_notifyq_init(struct lif *lif)
 
         /* Enabling interrupts on notifyq from here on... */
         if (!qcq->is_netpoll_enabled) {
-                ionic_info("notifyq netpoll enabled");
                 vmk_NetPollInterruptSet(qcq->netpoll,
                                         qcq->intr.cookie);
                 vmk_NetPollEnable(qcq->netpoll);
                 qcq->is_netpoll_enabled = VMK_TRUE;
                 vmk_IntrEnable(qcq->intr.cookie);
+                ionic_intr_clean(&qcq->intr);
                 ionic_intr_mask(&qcq->intr, VMK_FALSE);
         }
 
@@ -2363,9 +2516,11 @@ ionic_lif_init(struct lif *lif)
         struct ionic_dev *idev = &lif->ionic->en_dev.idev;
         struct q_init_comp comp;
 
+        vmk_MutexLock(lif->ionic->dev_cmd_lock);
 	ionic_dev_cmd_lif_init(idev, lif->index, lif->info_pa);
 	status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
         ionic_dev_cmd_comp(idev, &comp);
+        vmk_MutexUnlock(lif->ionic->dev_cmd_lock);
 	if (status != VMK_OK) {
                 ionic_err("ionic_dev_cmd_wait_check() failed, status: %s",
                           vmk_StatusToString(status));
@@ -2479,6 +2634,7 @@ rxqs_init_err:
 
 get_features_err:
         ionic_lif_qcq_deinit(lif->notifyqcq);
+        ionic_lif_reset(lif);
 
 notifyq_err:
 	ionic_intr_mask(&lif->adminqcq->intr, VMK_TRUE);

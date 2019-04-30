@@ -55,6 +55,7 @@ struct ionic_en_uplink_handle {
         vmk_UplinkState                 prev_state;
         vmk_UplinkRegData               uplink_reg_data;
         vmk_uint32                      DRSS;
+        struct ionic_en_priv_data       *priv_data;
 
         vmk_Lock                        share_data_write_lock;
         vmk_UplinkSharedData            uplink_shared_data;

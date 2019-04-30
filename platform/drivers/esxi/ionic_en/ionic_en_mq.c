@@ -1674,6 +1674,7 @@ ionic_en_rx_filter_unregister(struct ionic_en_priv_data *priv_data,       // IN
                 vlan_id = filter_info->vlan_filter_info->vlanID;
         } else {
                 ionic_err("Unsupported class type: %d", filter_info->filter_class);
+                return VMK_FAILURE;
         }
 
 //        vmk_SpinlockLock(priv_data->ionic.lifs_lock);

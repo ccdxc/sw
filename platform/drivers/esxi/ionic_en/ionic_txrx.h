@@ -115,6 +115,9 @@ void
 ionic_rx_flush(struct cq *cq);
 
 void
+ionic_tx_flush(struct cq *cq);
+
+void
 ionic_rx_fill(struct queue *q);
 
 vmk_Bool

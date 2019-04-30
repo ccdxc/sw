@@ -137,11 +137,11 @@ struct lif {
         u32 rx_coalesce_usecs;
         void *api_private;
         u32 flags;
-        //struct dentry *debugfs;
 
         u32 info_sz;
         struct lif_info *info;
         dma_addr_t info_pa;
+        vmk_Bool is_skip_res_alloc_after_fw;
 };
 
 #define lif_to_txq(lif, i)      (&lif->txqcqs[i]->q)
@@ -188,6 +188,9 @@ ionic_stop(struct lif *lif);
 
 void
 ionic_lifs_size_undo(struct ionic_en_priv_data *priv_data);
+
+void
+ionic_notifyq_flush(struct cq *cq);
 
 VMK_ReturnStatus
 ionic_intr_alloc(struct lif *lif, struct intr *intr);

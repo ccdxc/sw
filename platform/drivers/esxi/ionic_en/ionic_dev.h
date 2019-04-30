@@ -114,8 +114,8 @@ static inline void ionic_struct_size_checks(void)
 }
 
 struct ionic_dev {
-		union dev_info_regs __iomem *dev_info;
-		union dev_cmd_regs __iomem *dev_cmd;
+        union dev_info_regs __iomem *dev_info;
+	union dev_cmd_regs __iomem *dev_cmd;
 
         struct doorbell __iomem *db_pages;
         dma_addr_t phy_db_pages;
@@ -242,7 +242,7 @@ void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
 
 char *ionic_dev_asic_name(u8 asic_type);
 struct doorbell __iomem *ionic_db_map(struct ionic_dev *idev, struct queue *q);
-
+void ionic_intr_clean(struct intr *intr);
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
                     unsigned long index);
 void ionic_intr_mask_on_assertion(struct intr *intr);

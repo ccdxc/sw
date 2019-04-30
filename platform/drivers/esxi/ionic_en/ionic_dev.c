@@ -289,7 +289,6 @@ void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u16 lif_index)
         ionic_dev_cmd_go(idev, &cmd);
 }
 
-
 void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
         u16 lif_index, u16 intr_index)
 {
@@ -332,12 +331,24 @@ struct doorbell __iomem *ionic_db_map(struct ionic_dev *idev, struct queue *q)
         return db;
 }
 
+void ionic_intr_clean(struct intr *intr)
+{
+        u32 credits;
+
+        /* clear the credits by writing the current value back */
+        credits = 0xffff &
+                  ionic_readl_raw((vmk_VA)intr_to_credits(intr->ctrl));
+
+        ionic_intr_return_credits(intr, credits, VMK_FALSE, VMK_TRUE);
+}
+
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
                     unsigned long index)
 {
         intr->index = index;
         intr->ctrl = idev->intr_ctrl + index;
 
+        ionic_intr_clean(intr);
         return 0;
 }
 
@@ -489,7 +500,6 @@ ionic_q_init(struct lif *lif, struct ionic_dev *idev, struct queue *q,
         q->head = q->tail = q->info;
         q->pid = pid;
 
-        //snprintf(q->name, sizeof(q->name), "%s%u", base, index);
         vmk_Snprintf(q->name, sizeof(q->name), "%s%u", base, index);
 
         cur = q->info;

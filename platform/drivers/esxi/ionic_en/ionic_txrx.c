@@ -483,13 +483,14 @@ ionic_tx_netpoll(vmk_AddrCookie priv,
         vmk_Bool poll_again = VMK_TRUE;
         void *qcq = priv.ptr;
 
-//        ionic_err("ionic_tx_netpoll(), ring_idx: %d", ((struct qcq*)qcq)->ring_idx);
-
 	polled = ionic_netpoll(budget, ionic_tx_service, qcq);
 
         if (polled != budget) {
                 poll_again = VMK_FALSE;
         }
+
+//        ionic_err("ionic_tx_netpoll(), ring_idx: %d, work_done: %d",
+//                  ((struct qcq*)qcq)->ring_idx, polled);
 
         return poll_again;
 }
@@ -503,7 +504,6 @@ ionic_rx_netpoll(vmk_AddrCookie priv,
         void *qcq = priv.ptr;
         struct cq *cq = &((struct qcq *)qcq)->cq;
 
-//        ionic_err("ionic_rx_netpoll(), ring_idx: %d", ((struct qcq*)qcq)->ring_idx);
         polled = ionic_netpoll(budget, ionic_rx_service, qcq);
 
         if (polled != budget) {
@@ -511,6 +511,8 @@ ionic_rx_netpoll(vmk_AddrCookie priv,
                 poll_again = VMK_FALSE;
         }
 
+//        ionic_err("ionic_rx_netpoll(), ring_idx: %d, work_done: %d",
+//                  ((struct qcq*)qcq)->ring_idx, polled);
 
         return poll_again;
 }

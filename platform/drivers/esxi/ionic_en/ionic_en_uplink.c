@@ -721,7 +721,7 @@ ionic_en_link_status_set(vmk_AddrCookie driver_data,              // IN
 
         switch (link_info->state) {
                 case VMK_LINK_STATE_DOWN:
-                        status = ionic_en_uplink_quiesce_io(priv_data);
+                        status = ionic_en_uplink_quiesce_io(driver_data);
                         if (status != VMK_OK) {
                                 ionic_err("ionic_en_UplinkQuiesceIO failed: %s",
                                           vmk_StatusToString(status));
@@ -730,7 +730,7 @@ ionic_en_link_status_set(vmk_AddrCookie driver_data,              // IN
                         break;
                 case VMK_LINK_STATE_UP:
 //                        ionic_en_uplink_quiesce_io(priv_data);
-                        status = ionic_en_uplink_start_io(priv_data);
+                        status = ionic_en_uplink_start_io(driver_data);
                          if (status != VMK_OK) {
                                 ionic_err("ionic_en_UplinkStartIO failed: %s",
                                           vmk_StatusToString(status));
@@ -2052,6 +2052,7 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
 
         uplink_handle->is_mgmt_nic = priv_data->ionic.is_mgmt_nic;
         uplink_handle->is_ready_notify_linkup = VMK_FALSE;
+        uplink_handle->priv_data = priv_data;
 
         uplink_reg_data->apiRevision    = VMKAPI_REVISION;
         uplink_reg_data->moduleID       = priv_data->module_id;

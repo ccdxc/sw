@@ -79,7 +79,12 @@ ionic_rx_filters_init(struct lif *lif)
         VMK_ReturnStatus status;
         vmk_HashProperties hash_props;
 
-//        spin_lock_init(&lif->rx_filters.lock);
+        /* After live FW upgrade, we don't need to reinitialize
+         * these resources */
+        if (lif->is_skip_res_alloc_after_fw) {
+                return VMK_OK;
+        }
+
         status = ionic_spinlock_create("lif->rx_filters.lock",
                                        ionic_driver.module_id,
                                        ionic_driver.heap_id ,
@@ -112,18 +117,7 @@ ionic_rx_filters_init(struct lif *lif)
                 goto by_hash_err;
         }
 
-        status = vmk_HashAlloc(&hash_props,
-                               &lif->rx_filters.by_id);
-        if (status != VMK_OK) {
-                ionic_err("vmk_HashAlloc() failed, status: %s",
-                          vmk_StatusToString(status));
-                goto by_id_err;
-        }
-       
         return status;
-
-by_id_err:
-        vmk_HashRelease(lif->rx_filters.by_hash);         
 
 by_hash_err:
         ionic_spinlock_destroy(lif->rx_filters.lock);
@@ -137,20 +131,6 @@ ionic_rx_filters_hash_tables_destroy(struct rx_filters *rx_filters)     // IN
         VMK_ReturnStatus status;
 
         vmk_SpinlockLock(rx_filters->lock);
-        status = vmk_HashDeleteAll(rx_filters->by_id);
-        if (status != VMK_OK) {
-                ionic_err("vmk_HashDeleteAll() failed, status: %s",
-                          vmk_StatusToString(status));
-        }
-        vmk_SpinlockUnlock(rx_filters->lock);
-
-        status = vmk_HashRelease(rx_filters->by_id);
-        if (status != VMK_OK) {
-                ionic_err("vmk_HashRelease() failed, status: %s",
-                          vmk_StatusToString(status));
-        }
-
-        vmk_SpinlockLock(rx_filters->lock);
         status = vmk_HashDeleteAll(rx_filters->by_hash);
         if (status != VMK_OK) {
                 ionic_err("vmk_HashDeleteAll() failed, status: %s",
@@ -158,14 +138,13 @@ ionic_rx_filters_hash_tables_destroy(struct rx_filters *rx_filters)     // IN
         }
         vmk_SpinlockUnlock(rx_filters->lock);
 
-        status = vmk_HashRelease(rx_filters->by_hash);;
+        status = vmk_HashRelease(rx_filters->by_hash);
         if (status != VMK_OK) {
                 ionic_err("vmk_HashRelease() failed, status: %s",
                           vmk_StatusToString(status));
         }
 
 }
-
 
 
 void ionic_rx_filters_deinit(struct lif *lif)
@@ -196,14 +175,9 @@ VMK_ReturnStatus
 ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
                      u32 hash, struct ionic_admin_ctx *ctx)
 {
-//        struct device *dev = lif->ionic->dev;
-//        struct rx_filter *f = devm_kzalloc(dev, sizeof(*f), GFP_KERNEL);
-//        struct hlist_head *head;
         VMK_ReturnStatus status;
         unsigned int key;
 
-//        if (!f)
-//                return -ENOMEM;
         struct rx_filter *f;
 
         f = ionic_heap_zalloc(ionic_driver.heap_id,
@@ -220,9 +194,6 @@ ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
         f->rxq_index = rxq_index;
         f->lif = lif;
         vmk_Memcpy(&f->cmd, &ctx->cmd, sizeof(f->cmd));
-
-//        INIT_HLIST_NODE(&f->by_hash);
-//        INIT_HLIST_NODE(&f->by_id);
 
         switch (f->cmd.match) {
                 case RX_FILTER_MATCH_VLAN:
@@ -247,18 +218,6 @@ ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
         if (status != VMK_OK) {
                 ionic_err("vmk_HashKeyInsert() failed, status: %s",
                           vmk_StatusToString(status));
-                goto by_hash_insert_err;
-        }
-
-        key = f->filter_id & RX_FILTER_HLISTS_MASK;
- 
-        status = vmk_HashKeyInsert(lif->rx_filters.by_id,
-                                   (vmk_HashKey) (vmk_uint64) key,
-                                   (vmk_HashValue) f);
-        if (status != VMK_OK) {
-                ionic_err("vmk_HashKeyInsert() failed, status: %s",
-                          vmk_StatusToString(status));
-                // TODO: DO WE NEED TO REMOVE previous element that inserted into by_hash?
                 goto by_hash_insert_err;
         }
 
