@@ -316,7 +316,8 @@ func portIDStrToIfIndex(portIDStr string) uint32 {
 	var portIndex uint32
 	var ifIndex uint32
 
-	n, err := fmt.Sscanf(portIDStr, "Eth%d/%d", &slotIndex, &portIndex)
+	portIDStr = strings.ToLower(portIDStr)
+	n, err := fmt.Sscanf(portIDStr, "eth%d/%d", &slotIndex, &portIndex)
 	if err != nil || n != 2 {
 		return InvalidIfIndex
 	}
@@ -343,7 +344,7 @@ func ifIndexToChildPort(ifIndex uint32) uint32 {
 func ifIndexToPortIdStr(ifIndex uint32) string {
 	slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
 	parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
-	return "Eth " + slotStr + "/" + parentPortStr
+	return "Eth" + slotStr + "/" + parentPortStr
 }
 
 func printPortStats(resp *pds.Port) {
