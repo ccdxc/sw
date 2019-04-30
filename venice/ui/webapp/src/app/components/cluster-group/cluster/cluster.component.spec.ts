@@ -33,6 +33,7 @@ import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { TestingUtility } from '@app/common/TestingUtility';
 import {CertificateComponent} from '@components/cluster-group/cluster/certificate/certificate.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import { AuthService } from '@app/services/generated/auth.service';
 
 @Component({
   template: ''
@@ -76,7 +77,8 @@ describe('ClusterComponent', () => {
         MonitoringService,
         MessageService,
         MetricsqueryService,
-        MessageService
+        MessageService,
+        AuthService
       ]
     })
       .compileComponents();

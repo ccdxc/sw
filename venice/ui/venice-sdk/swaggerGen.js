@@ -104,6 +104,51 @@ Object.keys(data).forEach( (version) => {
   swaggerTSGenerator.utils.log(`generated ${outputFileName}`);
 })
 
+const delimiter = '_';
+const authPath = path.join(__dirname, '../../../api/generated/auth/swagger/svc_auth.swagger.json');
+const authSwagger = JSON.parse(fs.readFileSync(authPath, 'utf8').trim());
+const permActions = authSwagger.definitions.authPermission.properties.actions.enum
+const permEnum = [];
+Object.keys(manifest).forEach( (category) => {
+  if (category === "bookstore") {
+    // Skipping the bookstore exampe
+    return;
+  }
+  if (category === "staging") {
+    // Skipping the staging category
+    return;
+  }
+  const internalServices = manifest[category]["Svcs"];
+  // We assume only one internal service
+  const serviceData = internalServices[Object.keys(internalServices)[0]];
+  permActions.forEach( (action) => {
+    permEnum.push(_.toLower(category) + "apigroup" + delimiter + _.toLower(action));
+  })
+
+  serviceData.Messages.forEach( (kind) => {
+    permActions.forEach( (action) => {
+      permEnum.push( _.toLower(kind) + delimiter + _.toLower(action));
+    });
+  });
+});
+const addCustomKind = (kind) => {
+  permActions.forEach( (action) => {
+    permEnum.push( _.toLower(kind) + delimiter + _.toLower(action));
+  });
+}
+permEnum.push('auditevent' + delimiter + 'read');
+permEnum.push('event' + delimiter + 'read');
+permEnum.push('metric' + delimiter + 'read');
+permEnum.push('fwlog' + delimiter + 'read');
+
+Object.keys(data).forEach( (version) => {
+  const template = readAndCompileTemplateFile('generate-permissions-enum-ts.hbs');
+  const result = template(permEnum);
+  const outputFileName = version + '/models/generated/UI-permissions-enum.ts';
+  swaggerTSGenerator.utils.ensureFile(outputFileName, result);
+  swaggerTSGenerator.utils.log(`generated ${outputFileName}`);
+});
+
 function readAndCompileTemplateFile(templateFileName) {
   let templateSource = fs.readFileSync(path.resolve(__dirname, "templates", templateFileName), 'utf8');
   let template = handlebars.compile(templateSource);

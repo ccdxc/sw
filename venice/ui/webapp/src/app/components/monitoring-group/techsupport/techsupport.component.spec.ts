@@ -27,6 +27,7 @@ import { WidgetsModule } from 'web-app-framework';
 
 import { NewtechsupportComponent } from './newtechsupport/newtechsupport.component';
 import { TechsupportComponent } from './techsupport.component';
+import { AuthService } from '@app/services/generated/auth.service';
 
 describe('TechsupportComponent', () => {
   let component: TechsupportComponent;
@@ -53,6 +54,7 @@ describe('TechsupportComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         UIConfigsService,
+        AuthService,
         EventsService,
         SearchService,
         MonitoringService,

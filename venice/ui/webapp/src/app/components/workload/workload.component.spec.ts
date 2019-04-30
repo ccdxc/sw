@@ -41,6 +41,7 @@ import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { MessageService } from '@app/services/message.service';
+import { AuthService } from '@app/services/generated/auth.service';
 
 @Component({
   template: ''
@@ -184,7 +185,7 @@ describe('WorkloadComponent', () => {
         MatIconRegistry,
         UIConfigsService,
         MessageService,
-        MessageService
+        AuthService
       ]
     })
       .compileComponents();

@@ -31,6 +31,7 @@ import { ActivatedRoute } from '@angular/router';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { RouterLinkStubDirective } from '@app/common/RouterLinkStub.directive.spec';
 import { MessageService } from '@app/services/message.service';
+import { AuthService } from '@app/services/generated/auth.service';
 
 
 
@@ -253,6 +254,7 @@ describe('SgpolicydetailComponent', () => {
         SearchService,
         SecurityService,
         UIConfigsService,
+        AuthService,
         MessageService,
         {
           provide: ActivatedRoute,
@@ -447,7 +449,7 @@ describe('SgpolicydetailComponent', () => {
     resetSearchInputs(sourceIPInput, destIPInput, portInput, testingUtility);
     testingUtility.sendEnterKeyup(sourceIPInput);
 
-    expect(component.updateRulesByPolicy).toHaveBeenCalled()
+    expect(component.updateRulesByPolicy).toHaveBeenCalled();
   });
 
   it('should reset table contents when click clear search button', () => {
@@ -457,12 +459,12 @@ describe('SgpolicydetailComponent', () => {
     const destIPInput = getDestIpInput();
     const portInput = getPortInput();
 
-    testingUtility.setText(sourceIPInput, "192");
-    let searchButton = getSearchButton();
-    let searchClearButton = getSearchClearButton();
+    testingUtility.setText(sourceIPInput, '192');
+    const searchButton = getSearchButton();
+    const searchClearButton = getSearchClearButton();
     testingUtility.sendClick(searchClearButton);
 
-    expect(component.updateRulesByPolicy).toHaveBeenCalled()
+    expect(component.updateRulesByPolicy).toHaveBeenCalled();
   });
 
   it('should show search/cancel buttons when either src ip, dest ip or app is not empty', () => {
@@ -481,7 +483,7 @@ describe('SgpolicydetailComponent', () => {
     // There should be no error message
     let searchButton = getSearchButton();
     let searchClearButton = getSearchClearButton();
-    let errorMessageDiv = getSearchErrorDiv();
+    const errorMessageDiv = getSearchErrorDiv();
     expect(searchButton).toBeNull();
     expect(searchClearButton).toBeNull();
     expect(errorMessageDiv).toBeNull();

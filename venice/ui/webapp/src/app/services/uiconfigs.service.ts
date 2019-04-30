@@ -1,7 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { AUTH_BODY } from '@app/core';
 import { ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot } from '@angular/router';
-import { Observable, Subject, of } from 'rxjs';
+import { Subject, of, forkJoin } from 'rxjs';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { IAuthOperationStatus, IAuthSubjectAccessReviewRequest, AuthPermission_actions, IAuthOperation, IAuthUser, AuthOperation_action } from '@sdk/v1/models/generated/auth';
+import { ControllerService } from './controller.service';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { Utility } from '@app/common/Utility';
+import { AuthService } from './generated/auth.service';
 
 interface UIConfig {
   'disabled-objects': string[];
@@ -49,9 +56,60 @@ export class UIConfigsService {
     }
   };
 
+  private _userPermissions: IAuthOperationStatus[] = [];
+  private uiPermissions: { [key: string]: boolean } = {};
+
+  get userPermissions() {
+    return this._userPermissions;
+  }
+
+  set userPermissions(value: IAuthOperationStatus[]) {
+    this._userPermissions = value;
+    this.setUIPermissions();
+  }
+
   constructor(protected router: Router,
+    protected controllerService: ControllerService,
+    protected authService: AuthService,
     protected http: HttpClient
-  ) { }
+  ) {
+    this.controllerService.subscribe(Eventtypes.FETCH_USER_PERMISSIONS, (payload) => {
+      this.getUserObj().subscribe(
+        (resp: any) => {
+          if (resp != null) {
+            const body = resp.body as IAuthUser;
+            this.userPermissions = body.status['access-review'];
+          }
+        },
+        (error) => {
+          console.warn('Failed to get user permissions', error);
+        }
+      );
+    });
+  }
+
+  setUIPermissions() {
+    const _ = Utility.getLodash();
+    this.uiPermissions = {};
+    this._userPermissions.forEach( (permission) => {
+      if (permission.allowed) {
+        const kind = permission.operation.resource.kind;
+        const action = permission.operation.action;
+        if (action === AuthOperation_action.AllActions) {
+          Object.keys(AuthPermission_actions).forEach( (a) => {
+            const key = _.toLower(kind) + '_' + _.toLower(a);
+            this.uiPermissions[key] = permission.allowed;
+          });
+        } else {
+          const key = _.toLower(kind) + '_' + _.toLower(action);
+          this.uiPermissions[key] = permission.allowed;
+        }
+      }
+    });
+
+    // Publish to roleGuards that UI permissions have been changed
+    this.controllerService.publish(Eventtypes.NEW_USER_PERMISSIONS, null);
+  }
 
   /**
    * Looks up the route in the pageRequirements object
@@ -124,6 +182,9 @@ export class UIConfigsService {
   loadConfig() {
     // Only want to do this once - if root page is revisited, it calls this again.
     if (this.configFile == null) {
+      // Setting UI permissions from local storage object
+      this.setUserPermissionsFromLocalStorage();
+
       let baseUrl = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
       baseUrl += '/assets/' + CONFIG_FILENAME;
       const observable = new Subject();
@@ -153,10 +214,51 @@ export class UIConfigsService {
     }
   }
 
+  setUserPermissionsFromLocalStorage() {
+    const authBody = JSON.parse(sessionStorage.getItem(AUTH_BODY));
+    if (authBody != null && authBody.status != null && authBody.status['access-review'] != null) {
+      this.userPermissions = authBody.status['access-review'];
+    }
+  }
+
+  getUserObj() {
+    const authBody = JSON.parse(sessionStorage.getItem(AUTH_BODY));
+    if (authBody != null && authBody.meta != null && authBody.meta.name != null) {
+      return this.authService.GetUser(authBody.meta.name);
+    } else {
+      // This should never happen. If username is null we shouldn't have been logged in
+      console.error('User was none when attempting to get role permissions');
+      return of();
+    }
+  }
+
   isConfigLoaded(): boolean {
     return this.configFile != null;
   }
 
+  roleGuardIsAuthorized(req: UIRolePermissions[], opt: UIRolePermissions[]): boolean {
+    if (req != null && req.length !== 0) {
+      // If one of the required objects are disabled, we return false
+      return !req.some( (p) => {
+        if (!this.isAuthorized(p)) {
+          return true;
+        }
+      });
+    }
+
+    if (opt != null && opt.length !== 0) {
+      // If all of the optional objects are disabled, we return false
+      return opt.some( (p) => {
+        return this.isAuthorized(p);
+      });
+    }
+
+    return true;
+  }
+
+  isAuthorized(permission: UIRolePermissions) {
+    return !!this.uiPermissions[permission];
+  }
 }
 
 

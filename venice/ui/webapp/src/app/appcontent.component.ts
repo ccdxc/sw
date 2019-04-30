@@ -2,27 +2,35 @@ import { OverlayContainer } from '@angular/cdk/overlay';
 import { Component, HostBinding, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
-import { logout, AUTH_BODY } from '@app/core';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { AUTH_BODY, logout } from '@app/core';
 import { AlerttableService } from '@app/services/alerttable.service';
+import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { LogService } from '@app/services/logging/log.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.component';
 import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
 import { Store } from '@ngrx/store';
-import { map, takeUntil } from 'rxjs/operators';
+import { IApiStatus, IAuthUser } from '@sdk/v1/models/generated/auth';
+import { ClusterCluster } from '@sdk/v1/models/generated/cluster';
+import { MonitoringAlert } from '@sdk/v1/models/generated/monitoring';
 import { Subject, Subscription } from 'rxjs';
+import { map, takeUntil } from 'rxjs/operators';
 import { CommonComponent } from './common.component';
 import { Utility } from './common/Utility';
 import { selectorSettings } from './components/settings-group';
 import { Eventtypes } from './enum/eventtypes.enum';
 import { ControllerService } from './services/controller.service';
-import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { MonitoringAlert, MonitoringAuditInfo, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
-import { ClusterCluster } from '@sdk/v1/models/generated/cluster';
+import { AuthService } from './services/generated/auth.service';
 import { ClusterService } from './services/generated/cluster.service';
+import { sideNavMenu, SideNavItem } from './appcontent.sidenav';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
+export interface GetUserObjRequest {
+  success: (resp: { body: IAuthUser | IApiStatus | Error; statusCode: number; }) => void;
+  err: (err: IAuthUser | IApiStatus | Error) => void;
+}
 
 /**
  * This is the entry point component of Pensando-Venice Web-Application
@@ -63,17 +71,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
   alertQuery = {};
 
-  protected sidenavmenu: any = [
-    {
-      title: 'dashboard',
-      children: []
-    },
-    {
-      title: 'workload',
-      children: []
-    }
-
-  ];
+  sideNavMenu: SideNavItem[] = sideNavMenu;
 
   userName: string = '';
 
@@ -102,6 +100,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     protected uiconfigsService: UIConfigsService,
     protected monitoringService: MonitoringService,
     protected clusterService: ClusterService,
+    protected authService: AuthService
   ) {
     super();
   }
@@ -117,7 +116,9 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     this.browsertype = browserObj['browserName'];
     this.browserversion = browserObj['browserName'] + browserObj['majorVersion'];
     this._initAppData();
-    this.getCluster();
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.cluster_read)) {
+      this.getCluster();
+    }
 
     this._subscribeToEvents();
     this._bindtoStore();
@@ -126,8 +127,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
       this.userName = authBody.meta.name;
     }
   }
-
-
 
   /**
    * Component life cycle event hook
@@ -176,70 +175,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
       });
   }
 
-
-  protected _registerSidenavMenuItemClick() {
-
-    const jQ = Utility.getJQuery();
-    const self = this;
-    jQ('.app-sidenav-item').on('click', function(event) {
-      self._sideNavMenuItemClickHandler(event);
-    });
-
-    jQ('a[aria-expanded]').on('click', function(event) {
-      self._sideNavMenuGroupHeaderClickHandler(event);
-    });
-
-  }
-
-  /**
-   * Make the sideNav group function like an accordion. (only one group expand and all other collapse)
-   * This is highly related to html make-up.
-   */
-  _sideNavMenuGroupHeaderClickHandler(event) {
-    const $ = Utility.getJQuery();
-    const groupheaders = $('a[aria-expanded]');
-    for (let i = 0; i < groupheaders.length; i++) {
-      if (groupheaders[i] !== event.currentTarget) {
-        $(groupheaders[i]).attr('aria-expanded', false);
-        if ($(groupheaders[i]).siblings('ul')) {
-          $(groupheaders[i]).siblings('ul').removeClass('in');
-        }
-      }
-    }
-    this._resetHighlightedItems(event);
-  }
-
-  /**
-   * Invoke Left-hand-side menu item selection
-   * @param event
-   */
-  protected _sideNavMenuItemClickHandler(event) {
-    this.log('APP _sideNavMenuItemClickHandler()', event.currentTarget.textContent.trim());
-    let _invokeId = null;
-    _invokeId = event.currentTarget.id;
-    if (_invokeId) {
-      this._controllerService.publish(Eventtypes.SIDENAV_INVOKATION_REQUEST, { 'id': _invokeId });
-    }
-    this._resetHighlightedItems(event);
-  }
-
-  /**
-   * Removes previously highlighted item -- say 'workload' was highlighted, now user clicks 'security group'. 'workload' should be reset.
-   */
-  private _resetHighlightedItems(event: any) {
-    if (!event) {
-      return;
-    }
-    const $ = Utility.getJQuery();
-    const list = $('.app-sidenav-selected');
-    for (let i = 0; i < list.length; i++) {
-      if (list[i] !== event.currentTarget) {
-        $(list[i]).removeClass('app-sidenav-selected');
-      }
-    }
-    $(event.currentTarget).addClass('app-sidenav-selected');
-  }
-
   /***** Routing *****/
 
   public navigate(paths: string[]) {
@@ -255,42 +190,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     this.navigate(['/login']);
   }
 
-  /**
-   * Routing the sidebar navigation
-   */
-  private onSidenavInvokation(payload) {
-    if (payload['id'] === 'workload') {
-      this.navigate(['/workload']);
-    } else if (payload['id'] === 'sgpolicies') {
-      this.navigate(['/security', 'sgpolicies']);
-    } else if (payload['id'] === 'securityapps') {
-      this.navigate(['/security', 'securityapps']);
-    } else if (payload['id'] === 'network') {
-      this.navigate(['/network', 'network']);
-    } else if (payload['id'] === 'troubleshooting') {
-      this.navigate(['/monitoring', 'troubleshooting']);
-    } else if (payload['id'] === 'cluster') {
-      this.navigate(['/cluster', 'cluster']);
-    } else if (payload['id'] === 'naples') {
-      this.navigate(['/cluster', 'naples']);
-    } else if (payload['id'] === 'hosts') {
-      this.navigate(['/cluster', 'hosts']);
-    } else if (payload['id'] === 'alertsevents') {
-      this.navigate(['/monitoring', 'alertsevents']);
-    } else if (payload['id'] === 'auditevents') {
-      this.navigate(['/monitoring', 'auditevents']);
-    } else if (payload['id'] === 'flowexport') {
-      this.navigate(['/monitoring', 'flowexport']);
-    } else if (payload['id'] === 'fwlogs') {
-      this.navigate(['/monitoring', 'fwlogs']);
-    } else if (payload['id'] === 'techsupport') {
-      this.navigate(['/monitoring', 'techsupport']);
-    } else if (payload['id'] === 'dashboard') {
-      this.navigate(['/dashboard']);
-    } else {
-      this.uiconfigsService.navigateToHomepage();
-    }
-  }
 
   private onSearchResultReady(payload) {
     if (payload['id'] === 'searchresult') {
@@ -302,18 +201,12 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
 
   private _subscribeToEvents() {
-
-
     this.subscriptions[Eventtypes.IDLE_CHANGE] = this._controllerService.subscribe(Eventtypes.IDLE_CHANGE, (payload) => {
       this.handleIdleChange(payload);
     });
 
     this.subscriptions[Eventtypes.LOGOUT] = this._controllerService.subscribe(Eventtypes.LOGOUT, (payload) => {
       this.onLogout(payload);
-    });
-
-    this.subscriptions[Eventtypes.SIDENAV_INVOKATION_REQUEST] = this._controllerService.subscribe(Eventtypes.SIDENAV_INVOKATION_REQUEST, (payload) => {
-      this.onSidenavInvokation(payload);
     });
 
     this.subscriptions[Eventtypes.COMPONENT_INIT] = this._controllerService.subscribe(Eventtypes.COMPONENT_INIT, (payload) => {
@@ -325,6 +218,14 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     this.subscriptions[Eventtypes.SEARCH_RESULT_LOAD_REQUEST] = this._controllerService.subscribe(Eventtypes.SEARCH_RESULT_LOAD_REQUEST, (payload) => {
       this.onSearchResultReady(payload);
     });
+
+    this.subscriptions[Eventtypes.FETCH_USER_OBJ] = this._controllerService.subscribe(Eventtypes.FETCH_USER_OBJ, (payload) => {
+      this.getUserObj(payload);
+    });
+  }
+
+  getUserObj(req: GetUserObjRequest) {
+    this.authService.GetUser(this.userName).subscribe(req.success, req.err);
   }
 
   _handleComponentStateChangeInit(payload: any) {
@@ -335,11 +236,11 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     if (this._boolInitApp === true) {
       return;
     } else {
-      this._registerSidenavMenuItemClick();
-      this.getAlerts();
+      if (this.uiconfigsService.isAuthorized(UIRolePermissions.alert_read)) {
+        this.getAlerts();
+      }
     }
     this._boolInitApp = true;
-    // Idle currently doesn't work. Commenting out for now.
     this._setupIdle();
   }
 
@@ -418,7 +319,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
         setTimeout(() => {
           this._sidenav.open();
         }, 500);
-
       }
     }
   }
@@ -464,7 +364,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
       // programmatically trigger window resize to tell sideNav container adjust widow size
       window.dispatchEvent(new Event('resize'));
     }, 500);
-
   }
 
   /**
@@ -534,7 +433,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
     component.instance.data = dataset;
     component.instance.updateData();
-
   }
 
 }

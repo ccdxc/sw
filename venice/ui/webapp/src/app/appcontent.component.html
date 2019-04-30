@@ -33,7 +33,8 @@
             </a>
             <!-- Commenting out for August release -->
             <!-- <button mat-button>Save</button> -->
-            <button mat-icon-button (click)="onToolbarIconClick($event, 'notifications')">
+            <button *roleGuard="'alert_read'" mat-icon-button
+                    (click)="onToolbarIconClick($event, 'notifications')">
               <mat-icon>notifications </mat-icon>
               <span class="app-notification-number" *ngIf="alertNumbers>0">{{alertNumbers}}</span>
             </button>
@@ -71,136 +72,8 @@
                      id="app-sidebar">
           <!-- Side Nav Items -->
           <ul class="list-unstyled components">
-            <li routerLink="/dashboard" routerLinkActive="app-sidenav-selected">
-              <a class="app-sidenav-item" id="dashboard">
-                <i class="material-icons">dashboard</i>
-                <span class="app-l-side-nav-item-label">Dashboard</span>
-              </a>
-            </li>
-            <li>
-              <a href="#clusterSubmenu" data-toggle="collapse" aria-expanded="false"
-                 class="app-sidenav-group-header">
-                <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster"></i>
-                <span class="app-l-side-nav-item-label">Cluster</span>
-              </a>
-              <ul class="collapse list-unstyled app-l-side-nav-ul-submenu" id="clusterSubmenu">
-                <li>
-                  <a class="app-sidenav-item" id="cluster">
-                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster-detail"></i>
-                    <span class="app-l-side-nav-item-label">Cluster</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="app-sidenav-item" id="naples">
-                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster-naples"></i>
-                    <span class="app-l-side-nav-item-label">NAPLES</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="app-sidenav-item" id="hosts">
-                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-cluster-hosts"></i>
-                    <span class="app-l-side-nav-item-label">Hosts</span>
-                  </a>
-                </li>
-                <!-- Commenting out for August release -->
-                <!-- <li>
-                                    <a class="app-sidenav-item" id="updates">Updates</a>
-                                </li> -->
-              </ul>
-            </li>
-            <li routerLink="/workload" routerLinkActive="app-sidenav-selected">
-              <a class="app-sidenav-item" id="workload">
-                <i class="glyphicon app-l-side-nav-li app-l-side-nav-workload"></i>
-                <span class="app-l-side-nav-item-label">Workloads</span>
-              </a>
-            </li>
-            <li>
-              <a href="#securitySubmenu" data-toggle="collapse" aria-expanded="false">
-                <i class="glyphicon app-l-side-nav-li app-l-side-nav-security"></i>
-                <span class="app-l-side-nav-item-label">Security</span>
-              </a>
-              <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="securitySubmenu">
-                <li>
-                  <a class="app-sidenav-item" id="sgpolicies">
-                    <i
-                       class="glyphicon app-l-side-nav-li app-l-side-nav-security-securitypolicy"></i>
-                    <span class="app-l-side-nav-item-label">SG Policies</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="app-sidenav-item" id="securityapps">
-                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-security-apps"></i>
-                    <span class="app-l-side-nav-item-label">Security Apps</span>
-                  </a>
-                </li>
-              </ul>
-            </li>
-
-            <!-- Commenting out for August release -->
-            <!-- <li>
-                            <a href="#networkSubmenu" data-toggle="collapse" aria-expanded="false">
-                                <i class="glyphicon app-l-side-nav-li app-l-side-nav-network"></i>
-                                <span class="app-l-side-nav-item-label">Network</span>
-                            </a>
-                            <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="networkSubmenu">
-                                <li>
-                                    <a class="app-sidenav-item" id="networks">
-                                        <i class="glyphicon app-l-side-nav-li app-l-side-nav-network"></i>
-                                        <span class="app-l-side-nav-item-label">Networks</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li> -->
-            <li>
-              <a href="#monitoringSubmenu" data-toggle="collapse" aria-expanded="false">
-                <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring"></i>
-                <span class="app-l-side-nav-item-label">Monitoring</span>
-              </a>
-              <ul class="collapse list-unstyled  app-l-side-nav-ul-submenu" id="monitoringSubmenu">
-                <!-- Commenting out for August release -->
-                <!-- <li>
-                                    <a class="app-sidenav-item" id="metrics">Metrics</a>
-                                </li> -->
-                <li>
-                  <a class="app-sidenav-item" id="alertsevents">
-                    <i class="material-icons">event_available</i>
-                    <span class="app-l-side-nav-item-label">Alerts & Events</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="app-sidenav-item" id="auditevents">
-                    <i
-                       class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring-auditevents"></i>
-                    <span class="app-l-side-nav-item-label">Audit Events</span>
-                  </a>
-                </li>
-
-                <li>
-                  <a class="app-sidenav-item" id="fwlogs">
-                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring-fwlogs"></i>
-                    <span class="app-l-side-nav-item-label">Firewall Logs</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="app-sidenav-item" id="flowexport">
-                    <i class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring-flowexport"></i>
-                    <span class="app-l-side-nav-item-label">Flow Export</span>
-                  </a>
-                </li>
-                <li>
-                  <a class="app-sidenav-item" id="techsupport">
-                    <i
-                       class="glyphicon app-l-side-nav-li app-l-side-nav-monitoring-techsupport"></i>
-                    <span class="app-l-side-nav-item-label">Tech Support</span>
-                  </a>
-                </li>
-                <!-- 
-                                <li>
-                                    <a class="app-sidenav-item" id="troubleshooting">Troubleshooting</a>
-                                </li> 
-                                -->
-              </ul>
-            </li>
+            <ng-container *ngTemplateOutlet="SideNavMenu; context:{items:sideNavMenu}">
+            </ng-container>
           </ul>
         </mat-sidenav>
         <mat-sidenav-content>
@@ -255,6 +128,31 @@
     </ng-container>
   </div>
 </div>
+
+<ng-template #SideNavMenu let-items="items">
+  <ng-container *ngFor="let item of items">
+    <li *roleGuard="item.roleGuard">
+      <a *ngIf="item.children == null" [routerLink]="item.link"
+         routerLinkActive="app-sidenav-selected" class="app-sidenav-item" [id]="item.label">
+        <i
+           [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
+        <span class="app-l-side-nav-item-label">{{item.label}}</span>
+      </a>
+
+      <a *ngIf="item.children != null" class="app-sidenav-group-header" data-toggle="collapse"
+         aria-expanded="false" [href]="'#' + item.label + 'Submenu'">
+        <i
+           [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
+        <span class="app-l-side-nav-item-label">{{item.label}}</span>
+      </a>
+
+      <ul *ngIf="item.children != null && item.children.length > 0"
+          class="collapse list-unstyled app-l-side-nav-ul-submenu" [id]="item.label + 'Submenu'">
+        <ng-container *ngTemplateOutlet="SideNavMenu; context:{items:item.children}"></ng-container>
+      </ul>
+    </li>
+  </ng-container>
+</ng-template>
 
 <ng-template #sideNavNotification let-item="item">
   <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Notification">

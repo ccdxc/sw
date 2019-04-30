@@ -7,6 +7,9 @@ import { ConfirmationService } from 'primeng/primeng';
 import { RouteGuard } from '@app/services/routeguard.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MessageService } from '@app/services/message.service';
+import { LogService } from './logging/log.service';
+import { AuthService } from './generated/auth.service';
+import { LogPublishersService } from './logging/log-publishers.service';
 
 class MockUIConfigService extends UIConfigsService {
   static allowRoute = false;
@@ -34,7 +37,10 @@ describe('RouteGuardService', () => {
         ControllerService,
         ConfirmationService,
         { provide: UIConfigsService, useClass: MockUIConfigService },
-        MessageService
+        MessageService,
+        LogService,
+        LogPublishersService,
+        AuthService
       ],
     })
       .compileComponents(); // compile template and css

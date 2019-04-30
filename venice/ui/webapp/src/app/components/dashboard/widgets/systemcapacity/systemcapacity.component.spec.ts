@@ -16,6 +16,7 @@ import { MessageService } from '@app/services/message.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { AuthService } from '@app/services/generated/auth.service';
 
 
 describe('SystemcapacitywidgetComponent', () => {
@@ -43,6 +44,7 @@ describe('SystemcapacitywidgetComponent', () => {
         MatIconRegistry,
         UIConfigsService,
         MessageService,
+        AuthService
       ]
     })
       .compileComponents();

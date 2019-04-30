@@ -16,8 +16,8 @@ import { throwError, BehaviorSubject, Subscription } from 'rxjs';
 @Component({
   template: ''
 })
-class DummyComponent { 
-  metricStatus:string =  'init';
+class DummyComponent {
+  metricStatus: string =  'init';
   metricSub: Subscription;
   metricsqueryService;
 
@@ -32,12 +32,12 @@ class DummyComponent {
     };
     this.metricSub = this.metricsqueryService.pollMetrics('test', queryList).subscribe(
       (data) => {
-        this.metricStatus = 'ready'
+        this.metricStatus = 'ready';
       },
       (err) => {
-        this.metricStatus = 'failed'
+        this.metricStatus = 'failed';
       }
-    )
+    );
   }
 
   stopQuery() {
@@ -77,20 +77,20 @@ describe('MetricsqueryService', () => {
       results: []
     }));
     component.startQuery();
-    expect(component.metricStatus = 'ready')
+    expect(component.metricStatus = 'ready');
 
     spy.and.returnValue(throwError({statusCode: 401}));
-    tick()
-    expect(component.metricStatus = 'failed')
+    tick();
+    expect(component.metricStatus = 'failed');
     spy.and.returnValue(new BehaviorSubject({
       results: []
     }));
-    tick(200)
+    tick(200);
 
     component.stopQuery();
-    expect(component.metricStatus).toBe('failed')
+    expect(component.metricStatus).toBe('failed');
     component.startQuery();
-    expect(component.metricStatus).toBe('ready')
+    expect(component.metricStatus).toBe('ready');
 
     component.stopQuery();
     tick();

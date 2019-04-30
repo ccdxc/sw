@@ -27,6 +27,7 @@ import { Utility } from '@app/common/Utility';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { By } from '@angular/platform-browser';
 import { IClusterSmartNIC, ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
+import { AuthService } from '@app/services/generated/auth.service';
 
 class MockActivatedRoute extends ActivatedRoute {
   id = '4444.4444.0002';
@@ -151,6 +152,7 @@ describe('NaplesdetailComponent', () => {
         MetricsqueryService,
         SearchService,
         EventsService,
+        AuthService,
         MonitoringService,
         {
           provide: ActivatedRoute,

@@ -19,6 +19,7 @@ import { Table } from 'primeng/table';
 
 import { Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 export interface AlertsEventsSelector {
   alertSelector: {
@@ -199,8 +200,16 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     }
 
     // If get alerts/events wasn't triggered by on change
-    if (!this.alertSubscription) {
+    if (!this.alertSubscription || !this.eventsSubscription) {
+      this.getObjects();
+    }
+  }
+
+  getObjects() {
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.alert_read)) {
       this.getAlerts();
+    }
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.event_read)) {
       this.getEvents();
     }
   }
@@ -208,8 +217,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   ngOnChanges(change: SimpleChanges) {
     if (change.selector) {
       this.genQueryBodies();
-      this.getAlerts();
-      this.getEvents();
+      this.getObjects();
     }
   }
 

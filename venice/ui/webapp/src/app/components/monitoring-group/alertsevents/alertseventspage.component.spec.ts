@@ -25,6 +25,7 @@ import { EventsService } from '@app/services/events.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from '@app/services/message.service';
+import { AuthService } from '@app/services/generated/auth.service';
 
 
 @Component({
@@ -62,7 +63,8 @@ describe('AlertseventspageComponent', () => {
         EventsService,
         SearchService,
         MonitoringService,
-        MessageService
+        MessageService,
+        AuthService
       ]
     })
       .compileComponents();

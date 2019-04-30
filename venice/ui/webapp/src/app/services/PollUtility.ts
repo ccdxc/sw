@@ -82,10 +82,10 @@ export class PollUtility {
 
       const handler = new BehaviorSubject<any>(defaultValue);
       const sub = handler.subscribe(() => {}, (error) => {
-        // We push it to the end of the event queue 
+        // We push it to the end of the event queue
         // so that other subscribers get the error event
         // before we destroy the handler
-        setTimeout(() => {this.terminatePolling(key)}, 0);
+        setTimeout(() => {this.terminatePolling(key); }, 0);
       });
 
       this.pollingHandlerMap[key] = {
@@ -131,7 +131,7 @@ export class PollUtility {
         poll.pollingHandlerSubscription.unsubscribe();
         poll.handler.complete();
         poll.handler = null;
-        delete this.pollingHandlerMap[key]
+        delete this.pollingHandlerMap[key];
       }
     }
   }

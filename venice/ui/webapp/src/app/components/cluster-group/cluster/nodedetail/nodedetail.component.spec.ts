@@ -23,6 +23,7 @@ import { AlerttableService } from '@app/services/alerttable.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { EventsService } from '@app/services/events.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
+import { AuthService } from '@app/services/generated/auth.service';
 
 class MockActivatedRoute extends ActivatedRoute {
   id = 'node1';
@@ -68,6 +69,7 @@ describe('NodedetailComponent', () => {
         MetricsqueryService,
         SearchService,
         EventsService,
+        AuthService,
         MonitoringService,
         {
           provide: ActivatedRoute,

@@ -36,6 +36,8 @@ import { TestingUtility } from '@app/common/TestingUtility';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from '@app/services/message.service';
 import { SorticonComponent } from '../sorticon/sorticon.component';
+import { RoleGuardDirective } from '../directives/roleGuard.directive';
+import { AuthService } from '@app/services/generated/auth.service';
 
 
 @Component({
@@ -73,6 +75,7 @@ describe('AlertseventsComponent', () => {
   let component: AlertseventsComponent;
   let fixture: ComponentFixture<AlertseventsComponent>;
   let eventsService: EventsService;
+  let uiconfigService: UIConfigsService;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
@@ -83,7 +86,8 @@ describe('AlertseventsComponent', () => {
         PrettyDatePipe,
         TableheaderComponent,
         WhitespaceTrimDirective,
-        SorticonComponent
+        SorticonComponent,
+        RoleGuardDirective,
       ],
       imports: [
         RouterTestingModule.withRoutes([
@@ -109,6 +113,7 @@ describe('AlertseventsComponent', () => {
         AlerttableService,
         SearchService,
         UIConfigsService,
+        AuthService,
         MonitoringService,
         MessageService
       ]
@@ -118,6 +123,9 @@ describe('AlertseventsComponent', () => {
 
   beforeEach(() => {
     eventsService = TestBed.get(EventsService);
+    uiconfigService = TestBed.get(UIConfigsService);
+    spyOn(uiconfigService, 'isAuthorized').and.returnValue(true);
+    spyOn(uiconfigService, 'roleGuardIsAuthorized').and.returnValue(true);
     spyOn(eventsService, 'pollEvents').and.returnValue(observer);
     fixture = TestBed.createComponent(AlertseventsComponent);
     component = fixture.componentInstance;

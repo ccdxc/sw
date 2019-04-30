@@ -27,6 +27,7 @@ import { LinegraphComponent } from './linegraph/linegraph.component';
 import { FlipComponent } from './flip/flip.component';
 import { ErrorTooltipDirective } from './directives/errorTooltip.directive';
 import { TablevieweditHTMLComponent } from './tableviewedit/tableviewedit.component';
+import { RoleGuardDirective } from './directives/roleGuard.directive';
 
 @NgModule({
   imports: [
@@ -60,6 +61,7 @@ import { TablevieweditHTMLComponent } from './tableviewedit/tableviewedit.compon
     FlipComponent,
     ErrorTooltipDirective,
     TablevieweditHTMLComponent,
+    RoleGuardDirective,
   ],
   exports: [
     PagebodyComponent,
@@ -83,6 +85,7 @@ import { TablevieweditHTMLComponent } from './tableviewedit/tableviewedit.compon
     FlipComponent,
     ErrorTooltipDirective,
     TablevieweditHTMLComponent,
+    RoleGuardDirective,
   ],
 })
 export class SharedModule { }

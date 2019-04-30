@@ -19,14 +19,13 @@ import { ControllerService } from './services/controller.service';
 import { LogService } from './services/logging/log.service';
 import { LogPublishersService } from './services/logging/log-publishers.service';
 import { AuthService } from './services/auth.service';
+import { AuthService as AuthServiceGen } from './services/generated/auth.service';
 import { CoreModule } from '@app/core';
 import { AlertlistModule } from '@app/components/alertlist';
 import { LoginModule } from './components/login/login.module';
 import { ToolbarComponent } from './widgets/toolbar/toolbar.component';
 
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
 
 
 /* ---------------------------------------------------
@@ -95,8 +94,9 @@ describe('AppcontentComponent', () => {
         SearchService,
         OverlayContainer,
         UIConfigsService,
+        AuthServiceGen,
         MessageService,
-        ClusterService
+        ClusterService,
       ],
     });
 

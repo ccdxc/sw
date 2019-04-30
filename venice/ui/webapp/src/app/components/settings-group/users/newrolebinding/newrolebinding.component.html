@@ -16,7 +16,9 @@
            class="newrolebinding-panel-rolegroup-header-add-property-label newrolebinding-panel-rolegroup-header-add-property-label-role">
         Role:</div>
       <div class="newrolebinding-panel-rolegroup-header-add-property-value">
-        <p-dropdown [options]="sourceRoles" formControlName="role" placeholder="Select one" appErrorTooltip ></p-dropdown>  <!-- per VS-215, edit role-binding can change role  -->
+        <p-dropdown [options]="sourceRoles" formControlName="role" placeholder="Select one"
+                    appErrorTooltip></p-dropdown>
+        <!-- per VS-215, edit role-binding can change role  -->
       </div>
     </div>
     <div fxLayout="row" formGroupName="spec">

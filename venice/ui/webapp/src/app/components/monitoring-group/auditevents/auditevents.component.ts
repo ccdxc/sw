@@ -48,7 +48,7 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
   startingSortOrder: number = -1;
 
   loading: boolean = false;
-  auditEventDetail:AuditEvent;
+  auditEventDetail: AuditEvent;
 
   cache = new LRUMap<String, AuditEvent>(Utility.getAuditEventCacheSize());  // cache with limit 10
 
@@ -225,27 +225,23 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
   }
 
   onAuditeventsTableRowClick(event: RowClickEvent) {
-    this.tableContainer.table.toggleRow(event.rowData, event.event);
     if (this.expandedRowData === event.rowData) {
       // Click was on the same row
-      this.expandedRowData = null;
-      this.showRowExpand = false;
+      this.closeRowExpand();
     } else {
-      this.showRowExpand = true;
-      this.expandedRowData = event.rowData;
-
       // fetch detail audit event data
       const auditEvent = event.rowData;
       this.auditEventDetail = this.cache.get(auditEvent.meta.uuid);  // cache hit
-      if(!this.auditEventDetail){
+      if (!this.auditEventDetail) {
         // cache miss
         this.auditService.GetGetEvent(auditEvent.meta.uuid).subscribe(resp => {
           this.auditEventDetail = resp.body as AuditEvent;  // fetching actual data
           this.cache.set(auditEvent.meta.uuid, this.auditEventDetail);
-        }, this.controllerService.restErrorHandler("Failed to get Audit Event"));
+          this.expandRowRequest(event.event, event.rowData);
+        }, this.controllerService.restErrorHandler('Failed to get Audit Event'));
+      } else {
+        this.expandRowRequest(event.event, event.rowData);
       }
-
-      this.expandRowRequest(event.event, event.rowData);
     }
   }
 

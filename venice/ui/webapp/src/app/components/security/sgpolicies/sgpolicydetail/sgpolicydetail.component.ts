@@ -73,7 +73,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   @ViewChild('sgpolicyTable') sgpolicyTurboTable: Table;
   @ViewChild(LazyrenderComponent) lazyRenderWrapper: LazyrenderComponent;
   viewInitComplete: boolean = false;
-  searchPolicyInvoked:boolean = false;  // avoid loop caused by invokeSearchPolicy
+  searchPolicyInvoked: boolean = false;  // avoid loop caused by invokeSearchPolicy
   subscriptions = [];
 
   cols: TableCol[] = [
@@ -221,10 +221,10 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
   keyUpInput(event) {
     // if all search input is empty, we reset the table
     // If a user hits the enter key on an empty search, we shouldn't try to execute a policy search.
-    const sourceIP = this.sourceIpFormControl.value;
-    const destIP = this.destIpFormControl.value;
-    const port = this.portFormControl.value;
-    if(sourceIP == "" && destIP == "" && port == ""){
+    let sourceIP = this.sourceIpFormControl.value;
+    let destIP = this.destIpFormControl.value;
+    let port = this.portFormControl.value;
+    if (sourceIP === '' && destIP === '' && port === '') {
       this.searchErrorMessage = '';
       this.updateRulesByPolicy();
       this.currentSearch = null;
@@ -238,9 +238,9 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
       // to be different than the current search
       // we clear the current search and selected index,
       // but we don't scroll to the top like we do on clearSearch
-      const sourceIP = this.sourceIpFormControl.value;
-      const destIP = this.destIpFormControl.value;
-      const port = this.portFormControl.value;
+      sourceIP = this.sourceIpFormControl.value;
+      destIP = this.destIpFormControl.value;
+      port = this.portFormControl.value;
       if (sourceIP !== this.currentSearch.sourceIP ||
         destIP !== this.currentSearch.destIP ||
         port !== this.currentSearch.port) {
@@ -261,9 +261,9 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
    */
   dataUpdated() {
     this.ruleCount = this.sgPolicyRules.length;
-    if (this.searchPolicyInvoked){
+    if (this.searchPolicyInvoked) {
       this.searchPolicyInvoked = false;
-      return
+      return;
     }
     if (this.currentSearch != null) {
       this.invokePolicySearch(this.currentSearch.sourceIP, this.currentSearch.destIP, this.currentSearch.port);
@@ -375,17 +375,17 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
           if (this.selectedPolicy == null || body.results[this.selectedPolicy.meta.name] == null) {
             this.searchErrorMessage = 'No Matching Rule';
             this.searchPolicyInvoked = true;
-            this.sgPolicyRules = []
+            this.sgPolicyRules = [];
           } else {
             this.searchErrorMessage = '';
             const entries = body.results[this.selectedPolicy.meta.name].entries;
             this.searchPolicyInvoked = true;
-            this.sgPolicyRules = this.addOrderRanking(entries.map(ele => ele.rule))
+            this.sgPolicyRules = this.addOrderRanking(entries.map(ele => ele.rule));
           }
         } else {
           this.searchErrorMessage = 'No Matching Rule';
           this.searchPolicyInvoked = true;
-          this.sgPolicyRules = []
+          this.sgPolicyRules = [];
         }
         this.loading = false;
       },
@@ -421,7 +421,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     return this.constructor.name;
   }
 
-  updateRulesByPolicy(){
+  updateRulesByPolicy() {
     this.sgPolicyRules = this.addOrderRanking(this.selectedPolicy.spec.rules);
   }
 
@@ -447,7 +447,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     // const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId}).subscribe(
     const subscription = this.securityService.WatchSGPolicy({ 'field-selector': 'meta.name=' + this.selectedPolicyId }).subscribe(
       response => {
-        if (this.searchSubscription != null) this.searchSubscription.unsubscribe();  // avoid racing condition for searchSubscription and WatchSGPolicy
+        if (this.searchSubscription != null) { this.searchSubscription.unsubscribe(); }  // avoid racing condition for searchSubscription and WatchSGPolicy
         this.sgPoliciesEventUtility.processEvents(response);
         if (this.sgPolicies.length > 1) {
           // because of the name selector, we should

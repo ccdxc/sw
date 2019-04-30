@@ -9,10 +9,6 @@ import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
 
-export interface GetUserObjRequest {
-  success: () => void;
-  err: () => void;
-}
 
 
 @Injectable()

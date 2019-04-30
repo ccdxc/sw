@@ -46,7 +46,7 @@ export class Utility {
 
   private constructor() { }
 
-  public static getAuditEventCacheSize():number {
+  public static getAuditEventCacheSize(): number {
     return 10; // For future code refactoring, we are planning to use user-preferences and env.variable
   }
 

@@ -6,6 +6,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { CoreModule } from '@app/core';
 
 import { AuthService } from '../../services/auth.service';
+import { AuthService as AuthServiceGen } from '../../services/generated/auth.service';
 import { ControllerService } from '../../services/controller.service';
 import { LoginComponent } from './login.component';
 import { LogService } from '@app/services/logging/log.service';
@@ -35,7 +36,8 @@ describe('LoginComponent', () => {
         AuthService,
         MatIconRegistry,
         UIConfigsService,
-        MessageService
+        MessageService,
+        AuthServiceGen
       ]
     })
       .compileComponents();

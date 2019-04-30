@@ -27,6 +27,7 @@ import { Table } from 'primeng/table';
 
 import { WidgetsModule } from 'web-app-framework';
 import { NewtechsupportComponent } from './newtechsupport.component';
+import { AuthService } from '@app/services/generated/auth.service';
 
 describe('NewtechsupportComponent', () => {
   let component: NewtechsupportComponent;
@@ -53,6 +54,7 @@ describe('NewtechsupportComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         UIConfigsService,
+        AuthService,
         EventsService,
         SearchService,
         MonitoringService,

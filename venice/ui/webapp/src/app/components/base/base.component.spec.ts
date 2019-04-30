@@ -10,6 +10,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { ConfirmationService } from 'primeng/primeng';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MessageService } from '@app/services/message.service';
+import { AuthService } from '@app/services/generated/auth.service';
 
 describe('BaseComponent', () => {
   let component: BaseComponent;
@@ -29,7 +30,8 @@ describe('BaseComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         UIConfigsService,
-        MessageService
+        MessageService,
+        AuthService
       ]
     })
       .compileComponents();
