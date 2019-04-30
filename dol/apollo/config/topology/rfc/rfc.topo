@@ -173,7 +173,7 @@ vpc:
                   - protocol: tcp
                     stateful: false
                     v4pfx: '10.10.0.0\24'
-                    v6pfx: 'e1ba:aced:a11:face:b00c::0\60'
+                    v6pfx: 'e1ba:aced:a11:face:b00c::0\90'
                     sportlow: 30
                     sporthigh: 40
                     dportlow: 30

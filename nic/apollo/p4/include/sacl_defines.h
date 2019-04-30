@@ -2,6 +2,7 @@
 #define SACL_SPORT_TREE_MAX_NODES         511        // (31 + 32 * 15)
 #define SACL_SPORT_TREE_MAX_CLASSES       128
 #define SACL_IPV4_TABLE_SIZE              17472      // 64+(16*64)+(16*16*64)
+#define SACL_IPV6_TABLE_SIZE              87360    // 64+(64*4)+(64*16)+(64*64)+(64*256)+(64*1024)
 #define SACL_IPV4_TREE_MAX_NODES          2047       // for 1023 prefixes
                                                      // 15 + (16 * 15) + (256 * 7)
 #define SACL_IPV4_TREE_MAX_CLASSES        1024
@@ -29,6 +30,8 @@
     (SACL_PROTO_DPORT_TABLE_OFFSET + SACL_PROTO_DPORT_TABLE_SIZE)
 #define SACL_P2_TABLE_OFFSET           \
     (SACL_P1_TABLE_OFFSET + SACL_P1_TABLE_SIZE)
+#define SACL_IPV6_TABLE_OFFSET         \
+    (SACL_P2_TABLE_OFFSET + SACL_P2_TABLE_SIZE)
 
 /*****************************************************************************/
 /* sport related details                                                     */

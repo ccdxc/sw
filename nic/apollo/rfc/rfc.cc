@@ -98,7 +98,7 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
     inode_t     *addr_inode, *port_inode, *proto_port_inode;
 
     /** walk the policy and start building tables */
-    SDK_ASSERT(policy->af == IP_AF_IPV4);
+    //SDK_ASSERT(policy->af == IP_AF_IPV4);
     addr_inode = &addr_itable->nodes[0];
     port_inode = &port_itable->nodes[0];
     proto_port_inode = &proto_port_itable->nodes[0];
