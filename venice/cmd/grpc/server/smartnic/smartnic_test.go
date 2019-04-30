@@ -55,7 +55,7 @@ import (
 )
 
 const (
-	smartNICServerURL = "localhost:" + globals.CMDSmartNICRegistrationAPIPort
+	smartNICServerURL = "localhost:" + globals.CMDSmartNICRegistrationPort
 	resolverURLs      = ":" + globals.CMDResolverPort
 	healthInterval    = 1 * time.Second
 	deadtimeInterval  = 3 * time.Second
@@ -134,7 +134,7 @@ func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, 
 		return nil, err
 	}
 	tInfo.rpcServer = rpcServer
-	cmdenv.UnauthRPCServer = rpcServer
+	cmdenv.SmartNICRegRPCServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
 	tInfo.smartNICServer, err = NewRPCServer(healthInterval, deadtimeInterval, getRESTPort(1), cmdenv.StateMgr, tInfo)

@@ -281,6 +281,17 @@ def copyEtcdAccessCredentials():
     finally:
         shutil.rmtree(tmpDir)
 
+# Copy CMD CA keys from node1 to node0
+# E2E tests can use them to mint certificates that give them direct access to cluster endpoints
+def copyCMDCAKeys():
+    tmpDir = tempfile.mkdtemp()
+    try:
+        runCommand("""docker exec node1 tar Ccf /var/lib/pensando/pki/pen-cmd/certmgr - . | tar Cxf {} -""".format(tmpDir))
+        runCommand("""docker exec node0 mkdir -p /var/lib/pensando/pki/pen-cmd/certmgr""")
+        runCommand("""docker cp {}/. node0:/var/lib/pensando/pki/pen-cmd/certmgr""".format(tmpDir))
+    finally:
+        shutil.rmtree(tmpDir)
+
 def deleteCluster():
     runCommand("""docker stop -t 3 node0 >/dev/null 2>&1""", ignore_error=True)
     runCommand(""" for i in $(docker ps -f label=pens-dind --format '{{.ID}}'); do docker exec $i init 0; done """, ignore_error=True)
@@ -333,6 +344,7 @@ def restartCluster(nodeList, nodes, init_cluster_nodeIP, quorum, clustervip):
       copyK8sAccessCredentials()
       copyElasticAccessCredentials()
       copyEtcdAccessCredentials()
+      copyCMDCAKeys()
 
 parser = argparse.ArgumentParser()
 # these 4 below are used internally not to be directly executed by the caller
@@ -467,5 +479,6 @@ if not args.skipnode0:
     copyK8sAccessCredentials()
     copyElasticAccessCredentials()
     copyEtcdAccessCredentials()
+    copyCMDCAKeys()
 
 sys.exit(0)

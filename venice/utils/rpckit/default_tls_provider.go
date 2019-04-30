@@ -13,7 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/testenv"
 )
 
-var certSrvEndpoint = globals.Localhost + ":" + globals.CMDCertAPIPort
+var certSrvEndpoint = globals.Localhost + ":" + globals.CMDUnauthCertAPIPort
 
 var mu sync.Mutex
 var defaultTLSProviders = make(map[string]TLSProvider)

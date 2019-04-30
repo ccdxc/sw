@@ -61,7 +61,7 @@ import (
 )
 
 const (
-	smartNICRegURL  = "localhost:" + globals.CMDSmartNICRegistrationAPIPort
+	smartNICRegURL  = "localhost:" + globals.CMDSmartNICRegistrationPort
 	smartNICUpdURL  = "localhost:" + globals.CMDSmartNICUpdatesPort
 	smartNICAuthURL = "localhost:" + globals.CMDGRPCAuthPort
 	resolverURLs    = ":" + globals.CMDResolverPort
@@ -155,7 +155,7 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 	if err != nil {
 		return nil, nil, fmt.Errorf("Error creating CertMgr instance: %v", err)
 	}
-	cmdenv.UnauthRPCServer = regRPCServer
+	cmdenv.SmartNICRegRPCServer = regRPCServer
 	tInfo.stateMgr = cache.NewStatemgr(tInfo)
 	cmdenv.StateMgr = tInfo.stateMgr
 

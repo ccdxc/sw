@@ -100,7 +100,7 @@ const (
 	integTestCitadelURL = "localhost:9094"
 	integTestRolloutURL = "localhost:9095"
 
-	smartNICServerURL       = "localhost:" + globals.CMDSmartNICRegistrationAPIPort
+	smartNICServerURL       = "localhost:" + globals.CMDSmartNICRegistrationPort
 	cmdAuthServer           = "localhost:" + globals.CMDGRPCAuthPort
 	cmdLeaderInstanceServer = "localhost:" + globals.CMDGRPCLeaderInstancePort
 
@@ -283,7 +283,7 @@ func (it *veniceIntegSuite) launchCMDServer() {
 	if err != nil {
 		log.Fatalf("Error creating CertMgr instance: %v", err)
 	}
-	cmdenv.UnauthRPCServer = rpcServer
+	cmdenv.SmartNICRegRPCServer = rpcServer
 
 	cw := cmdapi.NewCfgWatcherService(it.logger, it.apiSrvAddr)
 	cmdenv.StateMgr = cache.NewStatemgr(cw)

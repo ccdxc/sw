@@ -26,7 +26,11 @@ func Run(options *options.ServerRunOptions) {
 	log.Infof("%s is running", globals.Cmd)
 	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.Cmd, utils.GetHostname()), nil)
 
-	grpcserver.RunUnauthServer(":"+options.GRPCUnauthPort, nil)
+	clusterMgmtURL := ":" + options.ClusterMgmtPort
+	localCertsURL := globals.Localhost + ":" + options.UnauthCertAPIPort
+	nicRegURL := ":" + options.SmartNICRegistrationPort
+
+	grpcserver.RunUnauthServer(clusterMgmtURL, localCertsURL, nicRegURL, nil)
 
 	// Server for authenticated services is not started here because it needs a
 	// certificate. It can only be started after the cluster is formed and the

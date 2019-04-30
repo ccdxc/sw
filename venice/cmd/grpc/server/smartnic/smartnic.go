@@ -786,9 +786,9 @@ func (s *RPCServer) InitiateNICRegistration(nic *cluster.SmartNIC) {
 			}
 
 			nicObj := s.GetNicInRetryDB(s.getNicKey(nic))
-			controller, _, err := net.SplitHostPort(env.UnauthRPCServer.GetListenURL())
+			controller, _, err := net.SplitHostPort(env.SmartNICRegRPCServer.GetListenURL())
 			if err != nil {
-				log.Errorf("Error parsing unauth RPC server URL %s: %v", env.UnauthRPCServer.GetListenURL(), err)
+				log.Errorf("Error parsing unauth RPC server URL %s: %v", env.SmartNICRegRPCServer.GetListenURL(), err)
 				// retry
 				continue
 			}

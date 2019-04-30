@@ -42,7 +42,9 @@ var (
 	NICService           types.SmartNICService
 	CfgWatcherService    types.CfgWatcherService
 	CertMgr              *certmgr.CertificateMgr
-	UnauthRPCServer      *rpckit.RPCServer // Unauthenticated services
+	ClusterMgmtRPCServer *rpckit.RPCServer // Unauthenticated service for Cluster initialization
+	SmartNICRegRPCServer *rpckit.RPCServer // Unauthenticated service for SmartNIC registration
+	LocalCertsRPCServer  *rpckit.RPCServer // Unauthenticated local service for certificate issuance
 	AuthRPCServer        *rpckit.RPCServer // Authenticated services (requires TLS and client certificate)
 	LeaderRPCServer      *rpckit.RPCServer // Authenticated services offered by leader CMD
 	ServiceTracker       types.ServiceTracker

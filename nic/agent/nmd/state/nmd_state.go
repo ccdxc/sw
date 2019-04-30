@@ -281,7 +281,7 @@ func (n *NMD) UpdateCMDClient(resolverURLs []string) error {
 	tsdb.Start(n.resolverClient)
 
 	// Use the first resolverURL as registration URL
-	cmdRegistrationURL := fmt.Sprintf("%s:%s", resolverURLs[0], globals.CMDGRPCUnauthPort)
+	cmdRegistrationURL := fmt.Sprintf("%s:%s", resolverURLs[0], globals.CMDSmartNICRegistrationPort)
 
 	newCMDClient, err := cmdif.NewCmdClient(n, cmdRegistrationURL, n.resolverClient)
 	if err != nil {

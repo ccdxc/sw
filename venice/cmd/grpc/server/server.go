@@ -13,29 +13,40 @@ import (
 )
 
 // RunUnauthServer creates a gRPC server for cluster operations.
-func RunUnauthServer(url string, stopChannel chan bool) {
-	// create an RPC server for cluster management and certificates
-	// It uses a nil TLS provider because clients cannot do TLS before acquiring a certificate
-	rpcServer, err := rpckit.NewRPCServer(globals.Cmd, url, rpckit.WithTLSProvider(nil), rpckit.WithLoggerEnabled(false))
+func RunUnauthServer(clusterMgmtURL, certsURL, nicRegURL string, stopChannel chan bool) {
+	// create an unauthenticated RPC server for initial cluster setup
+	clusterMgmtRPCServer, err := rpckit.NewRPCServer(globals.Cmd, clusterMgmtURL, rpckit.WithTLSProvider(nil), rpckit.WithLoggerEnabled(false))
 	if err != nil {
-		log.Fatalf("Error creating grpc server: %v", err)
+		log.Fatalf("Error creating ClusterMgmt server at %s: %v", clusterMgmtURL, err)
 	}
-	defer func() { rpcServer.Stop() }()
+	env.ClusterMgmtRPCServer = clusterMgmtRPCServer
+	grpc.RegisterClusterServer(clusterMgmtRPCServer.GrpcServer, &clusterRPCHandler{})
 
-	env.UnauthRPCServer = rpcServer
-
-	// create and register the RPC handler for cluster object.
-	grpc.RegisterClusterServer(rpcServer.GrpcServer, &clusterRPCHandler{})
-
+	// create a local unauthenticated RPC server for certificate requests
+	certsRPCServer, err := rpckit.NewRPCServer(globals.Cmd, certsURL, rpckit.WithTLSProvider(nil), rpckit.WithLoggerEnabled(false))
+	if err != nil {
+		log.Fatalf("Error creating Certificates server at %s: %v", certsURL, err)
+	}
+	env.LocalCertsRPCServer = certsRPCServer
 	certRPCHandler := certificates.NewRPCHandler(env.CertMgr)
-	certapi.RegisterCertificatesServer(rpcServer.GrpcServer, certRPCHandler)
+	certapi.RegisterCertificatesServer(certsRPCServer.GrpcServer, certRPCHandler)
 
-	// Create and register the RPC handler for SmartNIC service
+	// create an unauthenticated RPC server for SmartNIC registration
+	smartNICRegRPCServer, err := rpckit.NewRPCServer(globals.Cmd, nicRegURL, rpckit.WithTLSProvider(nil), rpckit.WithLoggerEnabled(false))
+	if err != nil {
+		log.Fatalf("Error creating NIC Registration server at %s: %v", nicRegURL, err)
+	}
+	env.SmartNICRegRPCServer = smartNICRegRPCServer
 	RegisterSmartNICRegistrationServer(env.StateMgr)
 
 	// start RPC servers
-	rpcServer.Start()
+	certsRPCServer.Start()
+	defer certsRPCServer.Stop()
+	smartNICRegRPCServer.Start()
+	defer smartNICRegRPCServer.Stop()
+	clusterMgmtRPCServer.Start()
+	defer clusterMgmtRPCServer.Stop()
 
-	// wait forever
+	// wait until stop request
 	<-stopChannel
 }

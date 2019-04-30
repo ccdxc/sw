@@ -32,9 +32,14 @@ type ServerRunOptions struct {
 	// RESTPort is the port for REST server.
 	RESTPort string
 
-	// GRPCUnauthPort is the port for the unauthenticated gRPC server.
-	// Does not require TLS. Used for cluster formation, NIC admission and certificates issuance.
-	GRPCUnauthPort string
+	// ClusterMgmtPort is the port for the unauthenticated GRPC endpoint where CMD receives requests to join a cluster
+	ClusterMgmtPort string
+
+	// UnauthCertAPIPort is the port for the unauthenticated GRPC endpoint where CMD receives certificates requests
+	UnauthCertAPIPort string
+
+	// SmartNICNICRegistrationPort is the port for the unauthenticated GRPC endpoint where CMD receives SmartNIC registration requests
+	SmartNICRegistrationPort string
 
 	// GRPCAuthPort is the port for the authenticated gRPC server.
 	// Requires TLS and valid client certificate. Used by resolver.
@@ -74,16 +79,18 @@ func NewServerRunOptions() *ServerRunOptions {
 	}
 
 	return &ServerRunOptions{
-		KVStore:                kvStoreOptions,
-		RESTPort:               globals.CMDRESTPort,
-		GRPCAuthPort:           globals.CMDGRPCAuthPort,
-		GRPCLeaderInstancePort: globals.CMDGRPCLeaderInstancePort,
-		GRPCUnauthPort:         globals.CMDGRPCUnauthPort,
-		ConfigDir:              globals.CmdConfigDir,
-		CommonConfigDir:        globals.CommonConfigDir,
-		ClusterConfigFile:      "cluster.conf",
-		ContainerConfigFile:    "venice.json",
-		CustomConfigFile:       "venice-conf.json",
-		PKIDir:                 globals.CmdPKIDir,
+		KVStore:                  kvStoreOptions,
+		RESTPort:                 globals.CMDRESTPort,
+		GRPCAuthPort:             globals.CMDGRPCAuthPort,
+		GRPCLeaderInstancePort:   globals.CMDGRPCLeaderInstancePort,
+		ClusterMgmtPort:          globals.CMDClusterMgmtPort,
+		UnauthCertAPIPort:        globals.CMDUnauthCertAPIPort,
+		SmartNICRegistrationPort: globals.CMDSmartNICRegistrationPort,
+		ConfigDir:                globals.CmdConfigDir,
+		CommonConfigDir:          globals.CommonConfigDir,
+		ClusterConfigFile:        "cluster.conf",
+		ContainerConfigFile:      "venice.json",
+		CustomConfigFile:         "venice-conf.json",
+		PKIDir:                   globals.CmdPKIDir,
 	}
 }

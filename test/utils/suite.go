@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -28,6 +29,9 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/balancer"
+	"github.com/pensando/sw/venice/utils/certmgr"
+	"github.com/pensando/sw/venice/utils/certs"
+	"github.com/pensando/sw/venice/utils/keymgr"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -96,6 +100,7 @@ type TestUtils struct {
 	client          map[string]*ssh.Client
 	resolver        resolver.Interface
 	APIGwAddr       string
+	CA              *certmgr.CertificateAuthority
 	tlsProvider     rpckit.TLSProvider
 	APIClient       apiclient.Services
 	VOSClient       objstore.Client
@@ -234,6 +239,57 @@ func (tu *TestUtils) sshInit() {
 	ginkgo.By(fmt.Sprintf("VeniceModules: %+v ", tu.VeniceModules))
 }
 
+// Initialize a test CA with the same keys used by the CMD CAs, so that the suite can create
+// certificates for direct access to cluster endpoints as needed by tests
+func (tu *TestUtils) caInit() {
+	caBackend, err := keymgr.NewGoCryptoBackend(path.Join(globals.CmdPKIDir, "certmgr"))
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("Error opening CA backend: %v", err))
+	}
+	caKeyMgr, err := keymgr.NewKeyMgr(caBackend)
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("Error creating CA KeyMgr: %v", err))
+	}
+	ca, err := certmgr.NewCertificateAuthority(caKeyMgr, false)
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("Error creating CA KeyMgr: %v", err))
+	}
+	tu.CA = ca
+}
+
+// Initialize TLS provider for accessing cluster endpoints using rpckit
+func (tu *TestUtils) tlsProviderInit() {
+	tlsProvider, err := tlsproviders.NewDefaultKeyMgrBasedProvider("")
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("Error creating TLS provider: %v", err))
+	}
+	tlsKeyPair, err := tlsProvider.CreateDefaultKeyPair(keymgr.ECDSA384)
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("Error creating default key pair: %v", err))
+	}
+	csr, err := certs.CreateCSR(tlsKeyPair.Signer, nil, []string{"e2eClusterTest"}, nil)
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("Error creating CSR: %v", err))
+	}
+	tlsCert, err := tu.CA.Sign(csr)
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("Error signing CSR: %v", err))
+	}
+	err = tlsProvider.SetDefaultCertificate(tlsCert)
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("Error setting certificate: %v", err))
+	}
+	tlsProvider.SetCaTrustChain(tu.CA.TrustChain())
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("Error setting trust chain: %v", err))
+	}
+	tlsProvider.SetTrustRoots(tu.CA.TrustRoots())
+	if err != nil {
+		ginkgo.Fail(fmt.Sprintf("Error setting trust roots: %v", err))
+	}
+	tu.tlsProvider = tlsProvider
+}
+
 // SetupAuth bootstraps default tenant, authentication policy, local user and super admin role
 func (tu *TestUtils) SetupAuth() {
 	apicl, err := apiclient.NewRestAPIClient(tu.APIGwAddr)
@@ -294,13 +350,11 @@ func (tu *TestUtils) Init() {
 		tu.VeniceNodeIPs = append(tu.VeniceNodeIPs, ip.String())
 		ip[3]++
 	}
-	var err error
-	tu.tlsProvider, err = tlsproviders.NewDefaultCMDBasedProvider(tu.ClusterVIP+":9002", "e2eClusterTest")
-	if err != nil {
-		ginkgo.Fail(fmt.Sprintf("cannot create TLS provider err: %v", err))
-	}
 
+	tu.caInit()
+	tu.tlsProviderInit()
 	tu.sshInit()
+
 	ginkgo.By(fmt.Sprintf("VeniceNodeIPs: %+v ", tu.VeniceNodeIPs))
 	ginkgo.By(fmt.Sprintf("NameToIPMap: %+v", tu.NameToIPMap))
 	ginkgo.By(fmt.Sprintf("IPToNameMap: %+v", tu.IPToNameMap))

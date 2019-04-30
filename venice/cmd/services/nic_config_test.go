@@ -111,7 +111,7 @@ func launchCMDServer(m *testing.M, url, certFile, keyFile, caFile string) (*rpck
 		return nil, err
 	}
 	tInfo.rpcServer = rpcServer
-	cmdenv.UnauthRPCServer = rpcServer
+	cmdenv.SmartNICRegRPCServer = rpcServer
 
 	// create and register the RPC handler for SmartNIC service
 	tInfo.smartNICServer, err = smartnic.NewRPCServer(

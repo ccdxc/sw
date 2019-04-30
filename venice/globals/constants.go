@@ -105,16 +105,15 @@ const (
 	APIGwRESTPort = "443"
 
 	// CMD
-	CMDRESTPort                    = "9001"
-	CMDGRPCUnauthPort              = "9002"
-	CMDCertAPIPort                 = CMDGRPCUnauthPort
-	CMDClusterMgmtPort             = CMDGRPCUnauthPort
-	CMDSmartNICRegistrationAPIPort = CMDGRPCUnauthPort
-	CMDGRPCAuthPort                = "9009"
-	CMDResolverPort                = CMDGRPCAuthPort
-	CMDAuthCertAPIPort             = CMDGRPCAuthPort
-	CMDGRPCLeaderInstancePort      = "9014"
-	CMDSmartNICUpdatesPort         = CMDGRPCLeaderInstancePort
+	CMDRESTPort                 = "9001"
+	CMDClusterMgmtPort          = "9002"
+	CMDGRPCAuthPort             = "9009"
+	CMDResolverPort             = CMDGRPCAuthPort
+	CMDAuthCertAPIPort          = CMDGRPCAuthPort
+	CMDGRPCLeaderInstancePort   = "9014"
+	CMDSmartNICUpdatesPort      = CMDGRPCLeaderInstancePort
+	CMDUnauthCertAPIPort        = "9018"
+	CMDSmartNICRegistrationPort = "9019"
 
 	// API Server
 	APIServerPort     = "9003"

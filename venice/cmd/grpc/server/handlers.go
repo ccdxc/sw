@@ -440,7 +440,7 @@ func RegisterSmartNICRegistrationServer(smgr *cache.Statemgr) {
 
 		// Register smartNIC gRPC server
 		log.Debugf("Registering SmartNIC RPCserver")
-		grpc.RegisterSmartNICRegistrationServer(env.UnauthRPCServer.GrpcServer, nicServer)
+		grpc.RegisterSmartNICRegistrationServer(env.SmartNICRegRPCServer.GrpcServer, nicServer)
 		return
 	}
 	log.Fatalf("Failed to register SmartNIC RPCserver, apiClient not up")
