@@ -4,12 +4,19 @@ import {Utility} from '@app/common/Utility';
 import {TableCol, TablevieweditAbstract} from '@app/components/shared/tableviewedit/tableviewedit.component';
 import {Icon} from '@app/models/frontend/shared/icon.interface';
 import {ControllerService} from '@app/services/controller.service';
+import {ObjstoreService} from '@app/services/generated/objstore.service';
 import {RolloutService} from '@app/services/generated/rollout.service';
-import {EventsEvent} from '@sdk/v1/models/generated/events';
 import {IApiStatus, IRolloutRollout, RolloutRollout} from '@sdk/v1/models/generated/rollout';
+import { IObjstoreObject, ObjstoreObject, IObjstoreObjectList, ObjstoreObjectList } from '@sdk/v1/models/generated/objstore';
 import {Observable} from 'rxjs';
 import {Router} from '@angular/router';
 import {HttpEventUtility} from '@common/HttpEventUtility';
+
+/**
+ * This component let user manage Venice Rollouts.
+ * User can run CRUD opeations.  As well, user can click on one rollout to watch rollout status.
+ * User can also go to rollout images management UI in toolbar [IMAGES] button
+ */
 
 @Component({
   selector: 'app-rollouts',
@@ -23,6 +30,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
   isTabComponent: boolean = false;
   disableTableWhenRowExpanded: boolean = true;
   selectedRollOut: RolloutRollout;
+  rolloutImages: IObjstoreObjectList ;
 
   rolloutsEventUtility: HttpEventUtility<RolloutRollout>;
   bodyicon: any = {
@@ -35,25 +43,26 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
 
   cols: TableCol[] = [
     {field: 'meta.name', header: 'Name', class: '', sortable: true, width: 10},
-    {field: 'meta.mod-time', header: 'Modification Time', class: '', sortable: true, width: 10},
+    {field: 'meta.mod-time', header: 'Updated Time', class: '', sortable: true, width: 10},
     {field: 'meta.creation-time', header: 'Creation Time', class: '', sortable: true, width: 10},
-    {field: 'spec.version', header: 'Version', class: '', sortable: false, width: 5},
+    {field: 'spec.version', header: 'Version', class: '', sortable: true, width: 5},
     {
       field: 'spec.scheduled-start-time',
       header: 'Scheduled Start Time',
       class: '',
-      sortable: false,
-      width: 20
+      sortable: true,
+      width: 10
     },
-    {field: 'spec.strategy', header: 'Strategy', class: '', sortable: false, width: 10},
-    {field: 'spec.upgrade-type', header: 'Upgrade Type', class: '', sortable: false, width: 10},
-    {field: 'status.prev-version', header: 'Prev Version', class: '', sortable: false, width: 15},
-    {field: 'status.state', header: 'State', class: '', sortable: false, width: 10},
+    {field: 'spec.strategy', header: 'Strategy', class: '', sortable: true, width: 10},
+    {field: 'spec.upgrade-type', header: 'Upgrade Type', class: '', sortable: true, width: 10},
+    {field: 'status.prev-version', header: 'Prev Version', class: '', sortable: true, width: 15},
+    {field: 'status.state', header: 'State', class: '', sortable: true, width: 20},
   ];
 
   constructor(protected controllerService: ControllerService,
               protected cdr: ChangeDetectorRef,
               protected rolloutService: RolloutService,
+              protected objstoreService: ObjstoreService,
               protected router: Router) {
     super(controllerService, cdr);
   }
@@ -65,6 +74,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
 
   postNgInit() {
     this.getRollouts();
+    this.getRolloutImages();
   }
 
   getRollouts() {
@@ -79,25 +89,37 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
     this.subscriptions.push(subscription);
   }
 
+  getRolloutImages() {
+    const sub = this.objstoreService.ListObject(Utility.ROLLOUT_IMGAGE_NAMESPACE).subscribe(
+      (response) => {
+        this.rolloutImages = response.body as IObjstoreObjectList;
+      },
+      (error) => {
+        this.controllerService.invokeRESTErrorToaster('Failed to fetch rollout images.', error);
+      }
+    );
+    this.subscriptions.push(sub);
+  }
+
   setDefaultToolbar() {
     this.controllerService.setToolbarData({
       buttons: [
         {
           cssClass: 'global-button-primary rollouts-button',
-          text: 'UPLOAD IMAGE',
+          text: 'ROLLOUT IMAGES',
           computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
           callback: () => {
             this.invokeUploadImageUI();
           }
         },
-        // {
-        //   cssClass: 'global-button-primary rollouts-button',
-        //   text: 'CREATE ROLLOUT',
-        //   computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
-        //   callback: () => {
-        //     this.createNewObject();
-        //   }
-        // },
+        {
+          cssClass: 'global-button-primary rollouts-button',
+          text: 'CREATE ROLLOUT',
+          computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+          callback: () => {
+            this.createNewObject();
+          }
+        },
       ],
       breadcrumb: [{label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade'}]
     });
@@ -142,7 +164,6 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
       default:
         return value;
     }
-
   }
 
 }

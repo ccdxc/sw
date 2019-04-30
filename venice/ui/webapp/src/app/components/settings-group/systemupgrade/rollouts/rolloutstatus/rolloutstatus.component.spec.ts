@@ -6,6 +6,8 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ControllerService } from '@app/services/controller.service';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { RolloutService } from '@app/services/generated/rollout.service';
 import { MatIconRegistry } from '@angular/material';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -15,15 +17,15 @@ import { PrimengModule } from '@app/lib/primeng.module';
 import { MessageService } from '@app/services/message.service';
 import { ObjstoreService } from '@app/services/generated/objstore.service';
 
-import { ImageuploadComponent } from './imageupload.component';
+import { RolloutstatusComponent } from './rolloutstatus.component';
 
-describe('ImageuploadComponent', () => {
-  let component: ImageuploadComponent;
-  let fixture: ComponentFixture<ImageuploadComponent>;
+describe('RolloutstatusComponent', () => {
+  let component: RolloutstatusComponent;
+  let fixture: ComponentFixture<RolloutstatusComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ImageuploadComponent ],
+      declarations: [ RolloutstatusComponent ],
       imports: [
         MaterialdesignModule,
         RouterTestingModule,
@@ -41,14 +43,16 @@ describe('ImageuploadComponent', () => {
         MessageService,
         ConfirmationService,
         MatIconRegistry,
-        ObjstoreService
+        ObjstoreService,
+        UIConfigsService,
+        RolloutService
       ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ImageuploadComponent);
+    fixture = TestBed.createComponent(RolloutstatusComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

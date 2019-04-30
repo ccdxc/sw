@@ -303,6 +303,9 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
     super.closeRowExpand();
   }
 
+  /** API hook for extended component to act after deleteRecord() is completed */
+  postDeleteRecord () {}
+
 
   onDeleteRecord(event, object: T) {
     // Should not be able to delete any record while we are editing
@@ -317,6 +320,7 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
         const sub = this.deleteRecord(object).subscribe(
           (response) => {
             this.controllerService.invokeSuccessToaster(Utility.DELETE_SUCCESS_SUMMARY, this.generateDeleteSuccessMsg(object));
+            this.postDeleteRecord();
           },
           (error) => {
             if (error.body instanceof Error) {

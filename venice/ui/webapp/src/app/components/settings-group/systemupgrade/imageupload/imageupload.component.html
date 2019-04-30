@@ -1,14 +1,75 @@
-<app-pagebody [icon]="bodyIcon" header="Upload System Image File" class="systemupgrade">
-  <div class="imageupload-fileupload-info-div">File type is *.tgz and maximum file size is 10G
-  </div>
-  <p-fileUpload name="file" url="/objstore/v1/uploads/images/" (onUpload)="onUpload($event)"
-                (onError)="onError($event)"
-                accept=".tgz" maxFileSize="1000000000000">
-    <ng-template pTemplate="content">
-      <ul *ngIf="uploadedFiles.length">
-        <li *ngFor="let file of uploadedFiles">{{file.name}} - {{file.size}} bytes</li>
-      </ul>
-    </ng-template>
-  </p-fileUpload>
+<app-pagebody [icon]="bodyIcon" header="Rollout Images" class="systemupgrade">
+  <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel" [expanded]="false">
+    <mat-expansion-panel-header class="imageupload-expansionpanel-header">
+      <mat-panel-title class="imageupload-summary-panel-header">
+        Upload 
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="imageupload-summary-panel-content">
+      <div class="imageupload-fileupload-info-div">File type is *.tgz and maximum file size is 10G
+      </div>
+      <p-fileUpload name="file" url="/objstore/v1/uploads/images/" (onUpload)="onUpload($event)"
+        (onError)="onError($event)"  (onBeforeSend)="onBeforeSend($event)" accept=".tgz" maxFileSize="1000000000000">
+        <ng-template pTemplate="content">
+          <ul *ngIf="uploadedFiles.length">
+            <li *ngFor="let file of uploadedFiles">{{file.name}} - {{file.size}} bytes</li>
+          </ul>
+        </ng-template>
+      </p-fileUpload>
+    </div>
+  </mat-expansion-panel>
+  <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel imageupload-panel-table" [expanded]="true" [hideToggle]="false">
+    <mat-expansion-panel-header class="imageupload-expansionpanel-header">
+        <mat-panel-title class="imageupload-summary-panel-header">
+          Uploaded Image
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+    <app-tableviewedit fxLayout="column" class="imageupload-table" 
+        [data]="dataObjects"
+        [cols]="cols"
+        [virtualRowHeight]="48"
+        [sortField]="startingSortField" 
+        [sortOrder]="startingSortOrder" 
+        [tableLoading]="loading"
+        [captionTemplate]="captionTemplate" 
+        [bodyTemplate]="bodyTemplate"
+        [actionTemplate]="actionTemplate">
+    </app-tableviewedit>
+  </mat-expansion-panel>
 
 </app-pagebody>
+
+<!-- TABLE HEADER -->
+<ng-template #captionTemplate let-count="count">
+  <app-tableheader title="Images" [total]="count" width="250px">
+  </app-tableheader>
+  <div fxFlex></div>
+
+</ng-template>
+
+<ng-template #bodyTemplate let-rowData let-col="col">
+  <ng-container [ngSwitch]="col.field">
+    <ng-container *ngSwitchCase="'meta.mod-time'">
+      <div>
+        {{rowData.meta['mod-time'] | PrettyDate }}
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchCase="'meta.creation-time'">
+      <div>
+        {{rowData.meta['creation-time'] | PrettyDate }}
+      </div>
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      {{displayColumn(rowData, col)}}
+    </ng-container>
+  </ng-container>
+</ng-template>
+
+<ng-template #actionTemplate let-rowData>
+  <div
+    class="global-column-action-icon-container"
+    fxLayout="row" fxLayoutGap="5px">
+    <mat-icon matTooltip="Delete image" class="global-table-action-icon"
+      (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+  </div>
+</ng-template>

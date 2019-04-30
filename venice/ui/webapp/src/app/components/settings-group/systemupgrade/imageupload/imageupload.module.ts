@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ImageuploadComponent } from './imageupload.component';
 import { ImageuploadRoutingModule } from './imageupload.route';
-
+import { ObjstoreService } from '@app/services/generated/objstore.service';
 /**-----
  Venice UI lib-  imports
  ------------------*/
@@ -20,6 +20,9 @@ import { ImageuploadRoutingModule } from './imageupload.route';
     PrimengModule,
     MaterialdesignModule,
     SharedModule
+  ],
+  providers: [
+    ObjstoreService
   ]
 })
 export class ImageuploadModule { }

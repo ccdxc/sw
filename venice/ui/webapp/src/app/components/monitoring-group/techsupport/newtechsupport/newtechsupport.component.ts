@@ -100,27 +100,7 @@ export class NewtechsupportComponent extends BaseComponent implements OnInit, Af
   }
 
   isTechSupportRequestNameValid(existingTechSupportRequest: MonitoringTechSupportRequest[]): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors | null => {
-      if (this.isTechSupportRequestNameExist(control.value, existingTechSupportRequest)) {
-        return {
-          'tech-support-request-name': {
-            required: true,
-            message: 'Name is required and must be unique.'
-          }
-        };
-      }
-      return null;
-    };
-  }
-
-  isTechSupportRequestNameExist(name: string, techsupportReqs: MonitoringTechSupportRequest[]): boolean {
-    for (let i = 0; i < techsupportReqs.length; i++) {
-      const tsrObj = techsupportReqs[i];
-      if (tsrObj.meta.name === name) {
-        return true;
-      }
-    }
-    return false;
+    return Utility.isModelNameUniqueValidator(existingTechSupportRequest, 'tech-support-request-name');
   }
 
   saveTechsupportRequest() {
@@ -138,12 +118,17 @@ export class NewtechsupportComponent extends BaseComponent implements OnInit, Af
   buildTechSupportRequest(): IMonitoringTechSupportRequest {
     const techsupport: IMonitoringTechSupportRequest = this.newTechsupport.getFormGroupValues();
 
+   /* Comment it out as backend-does not support label-selector yet
     techsupport.spec['collection-selector'].requirements = Utility.convertRepeaterValuesToSearchExpression(this.cslabelRepeater);
-    // this.csLabelOutput;
     techsupport.spec['node-selector'].labels.requirements = Utility.convertRepeaterValuesToSearchExpression(this.nmlabelRepeater);
+   */
     if (!Array.isArray(techsupport.spec['node-selector'].names)) {
       const nsNames: string = techsupport.spec['node-selector'].names;
-      techsupport.spec['node-selector'].names = nsNames.split(',');
+      const myNames = [];
+      nsNames.split(',').forEach(nsName => {
+        myNames.push(nsName.trim());
+      });
+      techsupport.spec['node-selector'].names = myNames;
     }
     return techsupport;
   }

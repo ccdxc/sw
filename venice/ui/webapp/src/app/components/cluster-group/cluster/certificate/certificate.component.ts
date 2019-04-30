@@ -50,7 +50,7 @@ export class CertificateComponent extends BaseComponent implements OnInit, OnDes
     this.controllerService.setToolbarData(newToolbarData);
     this.newCert = new ClusterUpdateTLSConfigRequest();
     // must not be empty for key and certs
-    this.newCert.$formGroup.get(['key']).setValidators([required]);
+    // key is not required.
     this.newCert.$formGroup.get(['certs']).setValidators([required]);
   }
 

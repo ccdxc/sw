@@ -354,7 +354,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
    */
   ngOnDestroy() {
     // publish event that AppComponent is about to be destroyed
-    this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'sgpolicydetailComponent', 'state': Eventtypes.COMPONENT_DESTROY });
+    this._controllerService.publish(Eventtypes.COMPONENT_DESTROY, { 'component': 'NaplesdetailComponent', 'state': Eventtypes.COMPONENT_DESTROY });
     this.subscriptions.forEach(subscription => {
       subscription.unsubscribe();
     });

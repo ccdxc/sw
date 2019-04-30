@@ -1,0 +1,125 @@
+@import 'src/global-mixins';
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.newrollout-container {
+  background: white;
+
+  &:hover {
+    background: white;
+  }
+}
+
+.newrollout-border {
+  border-bottom: 6px solid #6ba0e5;
+}
+
+.newrollout-content {
+  background: white;
+  min-height: 180px;
+  margin-top: 4* $vertical-gutter;
+  @include primary-font();
+}
+
+.newrollout-font {
+  @include primary-font();
+}
+
+.newrollout-row {
+  margin: 0px $horizontal-gutter;
+}
+
+.newrollout-toggle {
+  margin: 10px;
+  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+}
+
+.newrollout-input-common {
+  margin: $vertical-gutter $horizontal-gutter;
+  height: 30px !important;
+}
+
+.newrollout-name {
+  margin-left: 0px;
+}
+
+.newrollout-save,
+.newrollout-cancel {
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+}
+
+.newrollout-buttoncontainer {
+  margin-top: 1.5 * $vertical-gutter;
+}
+
+.newrollout-version-desc,
+.newrollout-text {
+  margin-top: 2 * $vertical-gutter;
+  height: 30px;
+  margin-right: 10px;
+  margin-left: 10px;
+  min-width: 150px; // set minimum label width. 
+}
+
+.newrollout-version-desc {
+  margin-left: 20px;
+}
+
+.newrollout-text.newrollout-text-upgradetype {
+    margin-left:30px;
+}
+
+.newrollout-and {
+  color: #6ba0e5;
+  display: inline-block;
+
+  > span:hover {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  > mat-icon:hover {
+    cursor: pointer;
+  }
+}
+
+.newrollout-toolbar-button {
+  @include primary-font(16px, #ffffff);
+  height: 30px;
+  text-align: center;
+  width: 120px;
+  display: block;
+  padding: 0px 10px;
+}
+
+/** customize calendar's internal input */
+.newrollout-calendar > input.ui-inputtext {
+  padding: 5px !important;
+}
+
+.newrollout-divider {
+  border-bottom: 1px solid #dddddd;
+}
+
+.newrollout-toggle {
+  margin: 10px;
+  @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
+}
+
+.newrollout-title {
+  margin: 20px;
+  @include primary-font(18px, #676763, 500);
+}
+.newrollout-edit-button {
+  width: 100px;
+}
+
+.newrollout-calendar {
+  margin-left:10px;
+}
+.newrollout-calendar > input.ui-inputtext {
+  width:170px;  // line up the calendar widget
+}

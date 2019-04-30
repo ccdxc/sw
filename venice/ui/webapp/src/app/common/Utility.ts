@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { AbstractControl, FormArray, FormGroup } from '@angular/forms';
+import { AbstractControl, FormArray, FormGroup, ValidatorFn, ValidationErrors } from '@angular/forms';
 import { SearchExpression } from '@app/components/search/index.ts';
 import { TableCol } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { AUTH_BODY, AUTH_KEY } from '@app/core/auth/auth.reducer';
@@ -37,7 +37,7 @@ export class Utility {
   public static CREATE_SUCCESS_SUMMARY = 'Create Successful';
   public static DELETE_SUCCESS_SUMMARY = 'Delete Successful';
   public static VENICE_CONNECT_FAILURE_SUMMARY = 'Failed to connect to Venice';
-
+  public static ROLLOUT_IMGAGE_NAMESPACE = 'images';
   // In RBAC, when kind is ['AuditEvent', 'Fwlog', 'Metric', 'Event'] , there is no group
   public static KINDS_WITHOUT_GROUP = ['AuditEvent', 'Fwlog', 'Metric', 'Event'];
 
@@ -1273,6 +1273,19 @@ export class Utility {
     }
   }
 
+  public static displaySimpleObject( obj: Object, delimiter: string = ':'): string {
+    if (!obj) {
+      return '';
+    }
+    const list = [];
+    Object.keys(obj).forEach((key) => {
+      let ret = '';
+      ret += key + delimiter + obj[key];
+      list.push(ret);
+    });
+    return list.join(',');
+  }
+
   // Walks the object and if a nested object has only null or defaults, it is
   // removed fromt he request
   // Request should be an object from Venice_sdk
@@ -1351,6 +1364,29 @@ export class Utility {
     return retError;
   }
 
+  public static isModelNameUniqueValidator(existingTechSupportRequest: any[], objetname: string): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (this.isNameAlreadyExist(control.value, existingTechSupportRequest)) {
+        return {
+          objetname: {
+            required: true,
+            message: 'Name is required and must be unique.'
+          }
+        };
+      }
+      return null;
+    };
+  }
+
+  public static isNameAlreadyExist(name: string, modelobjects: any[]): boolean {
+    for (let i = 0; i < modelobjects.length; i++) {
+      const tsrObj = modelobjects[i];
+      if (tsrObj.meta.name === name) {
+        return true;
+      }
+    }
+    return false;
+  }
 
 
   // instance API.  Usage: Utility.getInstance().apiName(xxx)  e.g Utility.getInstance.getControllerService()

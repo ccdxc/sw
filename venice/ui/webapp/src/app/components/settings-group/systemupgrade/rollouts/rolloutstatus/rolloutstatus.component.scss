@@ -1,0 +1,95 @@
+@import 'src/global-mixins';
+
+.rolloutstatus-card-container {
+  margin-right: 10px;
+}
+
+.rolloutstatus-alertsevents-container {
+  min-height: 600px;
+}
+
+.rolloutstatus-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.6);
+  z-index: 10;
+}
+
+.rolloutstatus-overlay-content {
+  z-index: 20;
+}
+
+.rolloutstatus-deleted-node {
+  background: url("/assets/images/icons/cluster/naples/icon-naples-deleted.svg") center center no-repeat;
+  background-size: contain;
+}
+
+.rolloutstatus-missing-node {
+  background: url("/assets/images/icons/cluster/naples/icon-naples-missing.svg") center center no-repeat;
+  background-size: contain;
+}
+
+.rolloutstatus-overlay-text {
+  @include primary-font(45px, #676763, 600);
+  text-align: center;
+}
+
+.rolloutstatus-overlay-button {
+  font-size: 16px;
+  padding: 6px 20px;
+}
+
+.rolloutstatus-node-table-container {
+  margin: 10px;
+  padding: 5px 20px;
+  width: 450px;
+  border: solid 2px #dddddd;
+}
+
+.rolloutstatus-node-fieldtitle {
+  @include primary-font(16px, #676763, 500);
+}
+
+.rolloutstatus-node-value {
+  @include primary-font(16px);
+  margin-left: 5px;
+}
+
+
+.rolloutstatus-details {
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.rolloutstatus-details-title {
+  @include primary-font(20px);
+}
+
+.rolloutstatus-alertsevents-container {
+  min-height: 600px;
+}
+
+.rolloutstatus-phase-icon {
+  margin-left: 10px;
+}
+
+/************* */ 
+.rolloutstatus-summary-panel-content-row{
+  margin: 5px
+}
+
+.rolloutstatus-summary-panel-content-label {
+  margin-right: 5px;
+  min-width: 200px;
+}
+
+.rolloutstatus-toolbar-button {
+  width: 150px !important;
+}
+.rolloutstatus-column-message {
+  
+  word-break: break-all !important;
+}

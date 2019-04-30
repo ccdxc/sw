@@ -16,7 +16,9 @@
 </app-pagebody>
 
 <ng-template #createTemplate>
-  <app-newtechsupport (formClose)="creationFormClose()" fxFlex="none"></app-newtechsupport>
+  <app-newtechsupport (formClose)="creationFormClose()" fxFlex="none"
+                      [existingTechSupportRequest]='dataObjects'
+  ></app-newtechsupport>
 </ng-template>
 
 <ng-template #captionTemplate let-count="count">
@@ -28,6 +30,19 @@
   <ng-container [ngSwitch]="col.field">
     <ng-container *ngSwitchCase="'meta.mod-time'">
       {{rowData.meta['mod-time'] | PrettyDate }}
+    </ng-container>
+    <ng-container *ngSwitchCase="'status.status'">
+      <div *ngIf="!isTechsupportCompleted(rowData, col)" [innerHTML]="displayColumn(rowData, col)"></div>
+      <div *ngIf="isTechsupportCompleted(rowData, col)" >
+          <div *ngFor="let v of rowData['techsupportdownload']['nicNodes']">
+              <a class="techsupportrequests-button-category-kind-entry-link"
+                     href = "{{v.url}}" [matTooltip]="'Download NIC file ' + v.name " >{{v.name}}</a>
+          </div>
+          <div *ngFor="let v of rowData['techsupportdownload']['controlnodes']">
+              <a class="techsupportrequests-button-category-kind-entry-link"
+                     href = "{{v.url}}" [matTooltip]="'Download Controller file ' + v.name "  >{{v.name}}</a>
+          </div>
+      </div>            
     </ng-container>
     <ng-container *ngSwitchDefault>
       <div [innerHTML]="displayColumn(rowData, col)">
