@@ -77,7 +77,7 @@ resp_rx_rqwqe_opt_process:
 
     seq         c1, d.num_sges, 0
 
-    bcf         [c1], nak
+    bcf         [c1], len_err_nak
     seq         c1, d.wqe_format, RQWQE_FORMAT_DEFAULT // BD Slot
     // c1: num_sges <= 2
     bcf         [c1], decode_2x4
@@ -93,8 +93,6 @@ resp_rx_rqwqe_opt_process:
     CAPRI_RESET_TABLE_0_ARG()
     // wqe_to_sge_info_p->rem_pyld_bytes = rem_pyld_bytes
     CAPRI_SET_FIELD2(INFO_SGE_T, remaining_payload_bytes, K_REM_PYLD_BYTES)
-
-    phvwr       p.cqe.recv.wrid, d.wrid
 
     add         SGE_P, r0, RQWQE_SGE_OFFSET_BITS
 
@@ -266,7 +264,7 @@ decode_2x4:
 
 sge2:
     // if num_sges != 2, generate NAK
-    bcf         [!c1], nak
+    bcf         [!c1], len_err_nak
     // update SGE_P to SGE 2
     sub         SGE_P, SGE_P, 1, LOG_SIZEOF_SGE_T_BITS // BD Slot
     // curr_sge_offset -= len of SGE 1
@@ -439,6 +437,8 @@ qp_oper_err_nak:
                     ((1 << 5) | (1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_LOCAL_QP_OPER_ERR_OFFSET))
     phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
                 CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_max_sge_err), 1
+    phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR)
+
     b           nak
     phvwrpair   p.cqe.status, CQ_STATUS_LOCAL_QP_OPER_ERR, p.cqe.error, 1 // BD Slot
 
@@ -449,19 +449,14 @@ len_err_nak:
     phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
                 CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_insuff_sge_err), 1
 
+    phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ)
+
     // fall thru
 
 nak:
     // since num_sges is <=2, we would have consumed all of them in this pass
     // and if payload_bytes > 0,
     // there are no sges left. generate NAK
-    phvwr          p.cqe.recv.wrid, d.wrid
-    phvwrpair      p.cqe.status, CQ_STATUS_LOCAL_LEN_ERR, p.cqe.error, 1 // BD Slot
-
-    phvwr          CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_cqe_error_id_vld, lif_error_id), \
-                    ((1<< 5) | (1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_LOCAL_LEN_ERR_OFFSET))
-    phvwrpair      CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
-                   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_insuff_sge_err), 1
 
     // turn on ACK req bit
     // set err_dis_qp and completion flags
@@ -476,8 +471,6 @@ nak:
     // rqlkey and ptseg. we just need to load writeback
     CAPRI_SET_TABLE_0_VALID(0)
     CAPRI_SET_TABLE_1_VALID(0)
-
-    phvwr          p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_REM_OP_ERR)
 
     // invoke an mpu-only program which will bubble down and eventually invoke write back
     CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)

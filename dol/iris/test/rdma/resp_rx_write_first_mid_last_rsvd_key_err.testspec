@@ -212,6 +212,15 @@ buffers:
 
 descriptors:
     - descriptor:
+        id      : EXP_EQ_DESC
+        template: ref://factory/templates/id=DESC_RDMA_EQ
+        fields:
+            qid    : ref://testcase/config/rdmasession/lqp/id
+            type   : callback://rdma/rdma/GetEQEtypeQP
+            code   : callback://rdma/rdma/GetEQEcodeQPErrAccess
+            color  : callback://rdma/rdma/GetAsyncEQExpColor
+
+    - descriptor:
         id      : EXP_SQ_FLUSH_CQ_DESC
         template: ref://factory/templates/id=DESC_RDMA_CQ_SEND
         fields:
@@ -239,6 +248,11 @@ expect:
 #       - descriptor:
 #           object : ref://testcase/buffers/id=EXP_BUF
 #           ring   : ref://testcase/buffers/id=XFER_BUF
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EXP_EQ_DESC
+            ring    : ref://testcase/config/rdmasession/lqp/pd/ep/intf/lif/async_eq/rings/id=EQ
+
         - descriptor:
             object  : ref://testcase/descriptors/id=EXP_SQ_FLUSH_CQ_DESC
             ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ

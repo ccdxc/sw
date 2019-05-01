@@ -2,6 +2,7 @@
 #include "resp_rx.h"
 #include "rqcb.h"
 #include "common_phv.h"
+#include "defines.h"
 
 struct resp_rx_phv_t p;
 struct rqcb3_t d;
@@ -18,6 +19,8 @@ struct resp_rx_s1_t1_k k;
 
 #define IN_P t1_s2s_rqcb_to_write_rkey_info
 #define TO_S_WB1_P      to_s5_wb1_info
+#define TO_S_STATS_INFO_P to_s7_stats_info
+#define TO_S_CQCB_P to_s6_cqcb_info
 
 #define K_REM_PYLD_BYTES CAPRI_KEY_RANGE(IN_P, remaining_payload_bytes_sbit0_ebit7, remaining_payload_bytes_sbit8_ebit15)
 #define K_VA CAPRI_KEY_RANGE(IN_P, va_sbit0_ebit7, va_sbit8_ebit63)
@@ -28,6 +31,7 @@ struct resp_rx_s1_t1_k k;
 %%
     .param  resp_rx_rqrkey_process
     .param  resp_rx_rqrkey_rsvd_rkey_process
+    .param  resp_rx_rqcb1_write_back_mpu_only_process
 
 .align
 resp_rx_write_dummy_process:
@@ -51,21 +55,25 @@ resp_rx_write_dummy_process:
 
     cmov    R_KEY, c1, d.r_key, K_RKEY
 
+    sub     r3, r3, K_REM_PYLD_BYTES
+    tblwr   d.len, r3
+
     IS_ANY_FLAG_SET(c7, r7, RESP_RX_FLAG_LAST|RESP_RX_FLAG_ONLY)
     bcf     [c7], last_or_only
 
     add     r1, r1, K_REM_PYLD_BYTES // BD Slot
     tblwr   d.va, r1
 
-    sub     r3, r3, K_REM_PYLD_BYTES
-    tblwr   d.len, r3
- 
     b       done
     tblwr.f d.r_key, R_KEY // BD Slot
 
 last_or_only:
     tblwr    d.va, 0
     tblwr    d.r_key, 0
+
+    // if d.len is not 0, send a NAK
+    seq      c5, d.len, 0
+    bcf      [!c5], inv_req_nak
     tblwr.f  d.len, 0
     
     // copy the orignal dma_len as the cqe.length. 
@@ -107,3 +115,42 @@ skip_priv_oper:
     // invoke rqrkey 
     //CAPRI_NEXT_TABLE1_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqrkey_process, KEY_ADDR)
     CAPRI_NEXT_TABLE1_READ_PC_CE(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_512_BITS, resp_rx_rqrkey_rsvd_rkey_process, resp_rx_rqrkey_process, KEY_ADDR, c5)
+
+inv_req_nak:
+    phvwrpair   p.cqe.status, CQ_STATUS_REMOTE_INV_REQ_ERR, p.cqe.error, 1
+    phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_INV_REQUEST_OFFSET))
+
+    phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_disabled), 1, \
+                CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, qp_err_dis_dma_len_err), 1
+
+    phvwr       p.s1.ack_info.syndrome, AETH_NAK_SYNDROME_INLINE_GET(NAK_CODE_INV_REQ)
+
+    // fall thru
+
+nak:
+    // turn on ACK req bit
+    // set err_dis_qp flag
+    or          GLOBAL_FLAGS, GLOBAL_FLAGS, RESP_RX_FLAG_ERR_DIS_QP | RESP_RX_FLAG_ACK_REQ
+
+    //Generate DMA command to skip to payload end
+    DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, RESP_RX_DMA_CMD_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
+    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 0 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/)
+
+    bbeq        K_GLOBAL_FLAG(_completion), 1, load_wb
+    // if we encounter an error here, we don't need to load
+    // rqrkey. we just need to load writeback
+    CAPRI_SET_TABLE_1_VALID(0) // BD Slot
+
+    phvwr       CAPRI_PHV_FIELD(TO_S_CQCB_P, async_error_event), 1
+    phvwrpair   p.s1.eqwqe.code, EQE_CODE_QP_ERR_REQEST, p.s1.eqwqe.type, EQE_TYPE_QP
+    phvwr       p.s1.eqwqe.qid, K_GLOBAL_QID
+    phvwr       CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_INV_REQUEST_OFFSET))
+
+    phvwr       CAPRI_PHV_FIELD(TO_S_WB1_P, async_or_async_error_event), 1
+
+load_wb:
+    CAPRI_SET_FIELD_RANGE2(phv_global_common, _ud, _error_disable_qp, GLOBAL_FLAGS)
+    // invoke an mpu-only program which will bubble down and eventually invoke write back
+    CAPRI_NEXT_TABLE2_READ_PC_E(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, resp_rx_rqcb1_write_back_mpu_only_process, r0)

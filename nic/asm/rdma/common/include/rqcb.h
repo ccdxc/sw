@@ -309,6 +309,8 @@ struct rqcb5_t {
     qp_err_dis_access_err               :    1;
     qp_err_dis_wr_only_zero_len_err     :    1;
     qp_err_dis_unaligned_atomic_va_err  :    1;
+    // write_dummy errors
+    qp_err_dis_dma_len_err              :    1;
     // rqwqe errors
     qp_err_dis_insuff_sge_err           :    1;
     qp_err_dis_max_sge_err              :    1;
@@ -335,7 +337,7 @@ struct rqcb5_t {
     qp_err_dis_table_error              :    1;
     qp_err_dis_phv_intrinsic_error      :    1;
     qp_err_dis_table_resp_error         :    1;
-    qp_err_dis_rsvd                     :    3;
+    qp_err_dis_rsvd                     :    2;
     //a packet which went thru too many recirculations had to be terminated and qp had to 
     //be put into error disabled state. The recirc reason, opcode, the psn of the packet etc.
     //are remembered for further debugging.

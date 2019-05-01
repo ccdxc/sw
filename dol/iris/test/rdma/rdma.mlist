@@ -1043,6 +1043,22 @@ modules:
     #    ignore  : False
 
     - module:
+        name    : RDMA_RX_WRITE_ONLY_INV_DMA_LEN
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_inv_dma_len
+        spec    : resp_rx_write_only_inv_dma_len.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_RX_WRITE_ONLY_IMM_INV_DMA_LEN
+        enable  : True
+        package : test.rdma
+        module  : resp_rx_write_only_imm_inv_dma_len
+        spec    : resp_rx_write_only_imm_inv_dma_len.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_WRITE_FIRST_MID_LAST
         enable  : True
         package : test.rdma

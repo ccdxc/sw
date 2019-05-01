@@ -16,12 +16,12 @@ selectors:
         lqp         : filter://svc=0
         rqp         : filter://svc=0
 #    maxflows    : 1 
-#    maxrdmasessions     : 4 
+#   maxrdmasessions     : 1 
 
 packets:
    - packet:
         id          : BASE_PKT # Base packet
-        payloadsize : 1024
+        payloadsize : 64
         template    : ref://factory/packets/id=PAYLOAD
         headers     :
             payload:
@@ -30,7 +30,7 @@ packets:
    - packet:
         id          : IN_PKT    # Input packet 
         payloadsize : ref://testcase/packets/id=BASE_PKT/size
-        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH,v6=ETH_IPV6_UDP_BTH
+        template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_RETH_IMMDT,v6=ETH_IPV6_UDP_BTH_RETH_IMMDT
         icrc        : True
         encaps      :   
             - ref://factory/packets/id=ENCAP_QTAG
@@ -54,15 +54,22 @@ packets:
                 sport   : ref://testcase/config/rdmasession/session/iflow/sport
                 dport   : ref://testcase/config/rdmasession/session/iflow/dport
             bth:
-                opcode  : 4 
+                opcode  : 11
                 destqp  : ref://testcase/config/rdmasession/lqp/id
-                psn     : callback://rdma/rdma/GetRqPreEpsn
+                psn     : callback://rdma/rdma/GetPktExpPsn/pkt_num=0
                 a       : 1
+            reth: 
+                va      : callback://rdma/rdma/GetVAfromSLAB/slab_id=SLAB0000,offset=1024
+                # purposely set DMA len to a value different from the actual message size
+                dma_len : 32
+                r_key   : ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0000/rkey
+            immdt:
+                imm_data: ref://testcase/pvtdata/imm_data
             payload:
                 data    : ref://testcase/packets/id=BASE_PKT/rawbytes
 
    - packet:
-        id          : EXP_PKT    # Expected Nak packet
+        id          : EXP_PKT    # Expected NAK packet
         payloadsize : 0
         template    : callback://rdma/rdma/PickPktTemplate/v4=ETH_IPV4_UDP_BTH_AETH,v6=ETH_IPV6_UDP_BTH_AETH
         icrc        : True
@@ -99,6 +106,15 @@ packets:
 
 
 buffers:
+    - buffer:
+        id      : RQ_BUF
+        template: ref://factory/templates/id=RDMA_BUFFER
+        fields:
+           slab    : ref://testcase/config/rdmasession/lqp/pd/ep/slabs/id=SLAB0001
+           offset  : 0
+           segments:
+               - size    : 64 #not really used for data transfer
+                 data    : None
 
 descriptors:
     - descriptor:
@@ -106,7 +122,12 @@ descriptors:
         template: ref://factory/templates/id=DESC_RDMA_RQ
         fields:
             wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
-            num_sges: 0
+            num_sges: 1
+               
+            sges:
+                - va  : ref://testcase/buffers/id=RQ_BUF/address
+                  len : ref://testcase/buffers/id=RQ_BUF/size
+                  l_key: ref://testcase/config/rdmasession/lqp/pd/mrs/id=MR-SLAB0001/lkey
 
     - descriptor:
         id      : EXP_CQ_DESC
@@ -114,9 +135,9 @@ descriptors:
         fields:
             wrid: callback://rdma/rdma/GetRqPindex/rq_wqe_num=0
             qid: ref://testcase/config/rdmasession/lqp/id
-            op_type: callback://rdma/rdma/GetCqeOpTypeSendOnly
-            status : 1  #CQ_STATUS_LOCAL_LEN_ERR
-            color  : callback://rdma/rdma/GetCQExpColor
+            op_type: callback://rdma/rdma/GetCqeOpTypeRdmaImm
+            status : 8  #CQ_STATUS_REMOTE_INV_REQ_ERR
+            color  : callback://rdma/rdma/GetCQExpColor/entries=1
             error  : 1
             smac: callback://rdma/rdma/GetZeroMAC
 
@@ -154,11 +175,11 @@ session:
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_CQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/rq_cq/rings/id=CQ
- 
+
                 - descriptor:
                     object  : ref://testcase/descriptors/id=EXP_SQ_FLUSH_CQ_DESC
                     ring    : ref://testcase/config/rdmasession/lqp/sq_cq/rings/id=CQ
-       
+
             packets:
                 - packet:
                     object  : ref://testcase/packets/id=EXP_PKT
