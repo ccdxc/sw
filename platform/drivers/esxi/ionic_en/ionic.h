@@ -34,7 +34,6 @@
 #include "ionic_en_mq.h"
 #include "ionic_api.h"
 
-//#define ADMINQ
 #define DRV_DESCRIPTION       "Pensando Ethernet NIC Driver"
 #define DRV_VERSION           "0.8"
 #define DRV_REL_DATE          "Mar-31-2019"

@@ -155,7 +155,7 @@ inline void
 ionic_en_rx_ring_deinit(vmk_uint32 ring_idx,
                         struct ionic_en_priv_data *priv_data);
 
-void
+VMK_ReturnStatus
 ionic_en_rx_rss_init(struct ionic_en_priv_data *priv_data,
                      struct lif *lif);
 

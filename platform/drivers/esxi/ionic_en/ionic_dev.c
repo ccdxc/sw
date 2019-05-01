@@ -83,6 +83,9 @@ void ionic_dev_clean(struct ionic *ionic)
         if (ionic->num_bars >= 3) {
                 ionic_heap_free(ionic_driver.heap_id,
                                 ionic->en_dev.idev.cmb_inuse);
+                ionic->en_dev.idev.cmb_inuse = NULL;
+                ionic->en_dev.idev.phy_cmb_pages = 0;
+                ionic->en_dev.idev.cmb_npages = 0;
         }
 
         ionic_mutex_destroy(ionic->en_dev.idev.cmb_inuse_lock);
@@ -290,7 +293,7 @@ void ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u16 lif_index)
 }
 
 void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
-        u16 lif_index, u16 intr_index)
+                               u16 lif_index, u16 intr_index)
 {
         struct queue *q = &qcq->q;
         struct cq *cq = &qcq->cq;

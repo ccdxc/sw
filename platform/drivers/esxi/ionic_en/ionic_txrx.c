@@ -1363,10 +1363,11 @@ ionic_en_rx_ring_deinit(vmk_uint32 ring_idx,
  ******************************************************************************
  */
 
-void
+VMK_ReturnStatus
 ionic_en_rx_rss_init(struct ionic_en_priv_data *priv_data,
                      struct lif *lif)
 {
+        VMK_ReturnStatus status;
         vmk_uint32 i, attached_rx_ring_idx, num_attached_rings;
         struct ionic_en_rx_rss_ring *rx_rss_ring;
         struct ionic_en_uplink_handle *uplink_handle;
@@ -1392,10 +1393,16 @@ ionic_en_rx_rss_init(struct ionic_en_priv_data *priv_data,
                           i, rx_rss_ring->shared_q_data_idx,
                           attached_rx_ring_idx);
 
-                ionic_en_rx_ring_init(attached_rx_ring_idx,
-                                      rx_rss_ring->shared_q_data_idx,
-                                      priv_data,
-                                      lif);
+                status = ionic_en_rx_ring_init(attached_rx_ring_idx,
+                                               rx_rss_ring->shared_q_data_idx,
+                                               priv_data,
+                                               lif);
+                if (status != VMK_OK) {
+                        ionic_err("ionic_en_rx_ring_init() failed, status: %s",
+                                  vmk_StatusToString(status));
+                        goto rx_ring_err;
+                }
+                
                 rx_rss_ring->p_attached_rx_rings[i] =
                         &uplink_handle->rx_rings[attached_rx_ring_idx];
 
@@ -1403,6 +1410,17 @@ ionic_en_rx_rss_init(struct ionic_en_priv_data *priv_data,
 
         rx_rss_ring->is_init               = VMK_TRUE;
         rx_rss_ring->is_actived            = VMK_FALSE;
+
+        return status;
+
+rx_ring_err:
+        for (; i > 0; i--) {
+                attached_rx_ring_idx = uplink_handle->max_rx_normal_queues + i;
+                ionic_en_rx_ring_deinit(attached_rx_ring_idx,
+                                        priv_data);
+        }
+
+        return status;
 }
 
 

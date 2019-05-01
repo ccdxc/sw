@@ -20,7 +20,6 @@ ionic_rx_filter_del(struct lif *lif, struct rx_filter *f)
 {
         VMK_ReturnStatus status;
         struct ionic_admin_ctx ctx = {
-//                .work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
                 .cmd.rx_filter_del = {
                         .opcode = CMD_OPCODE_RX_FILTER_DEL,
                         .filter_id = f->filter_id,
@@ -61,9 +60,6 @@ ionic_hash_table_free_filter_iterator(vmk_HashTable hash_table,
 {
         vmk_uint32 *cnt = (vmk_uint32 *) addr_cookie.ptr;
         struct rx_filter *f = (struct rx_filter *) value;
-
-//        status = ionic_rx_filter_del(f->lif, f);
-//        VMK_ASSERT(status == VMK_OK);
 
         ionic_rx_filter_free(f);
 
@@ -237,7 +233,6 @@ struct rx_filter *ionic_rx_filter_by_vlan(struct lif *lif, u16 vid)
 {
         VMK_ReturnStatus status;
         unsigned int key = vid & RX_FILTER_HLISTS_MASK;
-//        struct hlist_head *head = &lif->rx_filters.by_hash[key];
         struct rx_filter *f = NULL;
 
         status = vmk_HashKeyDelete(lif->rx_filters.by_hash,
@@ -254,7 +249,6 @@ struct rx_filter *ionic_rx_filter_by_addr(struct lif *lif, const u8 *addr)
 {
         VMK_ReturnStatus status;
         unsigned int key = *(u32 *)addr & RX_FILTER_MAC_MASK;
-//        struct hlist_head *head = &lif->rx_filters.by_hash[key];
         struct rx_filter *f = NULL;
 
         status = vmk_HashKeyDelete(lif->rx_filters.by_hash,

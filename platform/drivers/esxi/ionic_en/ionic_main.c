@@ -465,24 +465,27 @@ ionic_identify(struct ionic *ionic)
 	ident->drv.os_type = IONIC_OS_TYPE_ESXI;
 
 	vmk_Strncpy(ident->drv.os_dist_str,
-				sys_info.buildVersion,
-				sizeof(ident->drv.os_dist_str) - 1);
+                    sys_info.buildVersion,
+                    sizeof(ident->drv.os_dist_str) - 1);
 	vmk_Strncpy(ident->drv.kernel_ver_str,
-				sys_info.productVersion,
-				sizeof(ident->drv.kernel_ver_str) - 1);
+                    sys_info.productVersion,
+                    sizeof(ident->drv.kernel_ver_str) - 1);
 	vmk_Strncpy(ident->drv.driver_ver_str, DRV_VERSION,
-				sizeof(ident->drv.driver_ver_str) - 1);
+                    sizeof(ident->drv.driver_ver_str) - 1);
 
 	vmk_MutexLock(ionic->dev_cmd_lock);
 
-	nwords = IONIC_MIN(ARRAY_SIZE(ident->drv.words), ARRAY_SIZE(idev->dev_cmd->data));
+	nwords = IONIC_MIN(ARRAY_SIZE(ident->drv.words),
+                           ARRAY_SIZE(idev->dev_cmd->data));
 	for (i = 0; i < nwords; i++)
-		ionic_writel_raw(ident->drv.words[i], (vmk_VA)&idev->dev_cmd->data[i]);
+		ionic_writel_raw(ident->drv.words[i],
+                                 (vmk_VA)&idev->dev_cmd->data[i]);
 
 	ionic_dev_cmd_identify(idev, IONIC_IDENTITY_VERSION_1);
 	status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
 	if (status == VMK_OK) {
-		nwords = IONIC_MIN(ARRAY_SIZE(ident->dev.words), ARRAY_SIZE(idev->dev_cmd->data));
+		nwords = IONIC_MIN(ARRAY_SIZE(ident->dev.words),
+                                   ARRAY_SIZE(idev->dev_cmd->data));
 		for (i = 0; i < nwords; i++)
 			ident->dev.words[i] = ionic_readl_raw((vmk_VA)&idev->dev_cmd->data[i]);
 	}
@@ -495,26 +498,27 @@ ionic_identify(struct ionic *ionic)
 VMK_ReturnStatus
 ionic_port_identify(struct ionic *ionic)
 {
-	struct ionic_dev *idev = &ionic->en_dev.idev;
+        VMK_ReturnStatus status;
+        struct ionic_dev *idev = &ionic->en_dev.idev;
 	struct identity *ident = &ionic->ident;
-	int err;
 	unsigned int i;
 	unsigned int nwords;
 
 	vmk_MutexLock(ionic->dev_cmd_lock);
 
 	ionic_dev_cmd_port_identify(idev);
-	err = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
-	if (err == VMK_OK) {
+	status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
+	if (status == VMK_OK) {
 		nwords = IONIC_MIN(ARRAY_SIZE(ident->port.words),
-							ARRAY_SIZE(idev->dev_cmd->data));
+                                   ARRAY_SIZE(idev->dev_cmd->data));
 		for (i = 0; i < nwords; i++)
-			ident->port.words[i] = ionic_readl_raw((vmk_VA)&idev->dev_cmd->data[i]);
+			ident->port.words[i] =
+                                ionic_readl_raw((vmk_VA)&idev->dev_cmd->data[i]);
 	}
 
 	vmk_MutexUnlock(ionic->dev_cmd_lock);
 
-	return err;
+	return status;
 }
 
 VMK_ReturnStatus
