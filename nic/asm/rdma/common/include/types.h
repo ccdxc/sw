@@ -1635,6 +1635,7 @@ struct resp_rx_send_fml_t {
 #define AQ_CAPTRACE_ENABLE      7
 #define AQ_CAPTRACE_DISABLE     8
 #define AQ_STATS_DUMP_TYPE_DCQCN_CONFIG 9
+#define AQ_STATS_DUMP_TYPE_DCQCN_CB 10
 
 #define AQ_QPF_LOCAL_WRITE      0x00000001
 #define AQ_QPF_REMOTE_WRITE     0x00000002

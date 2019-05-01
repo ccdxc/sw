@@ -50,6 +50,7 @@ struct aq_tx_s1_t0_k k;
     .param      rdma_aq_tx_feedback_process
     .param      rdma_aq_tx_modify_qp_2_process
     .param      rdma_aq_tx_query_sqcb2_process
+    .param      rdma_aq_tx_dump_sqcb2_process
     .param      rdma_aq_tx_fetch_tx_iq_process
 
 .align
@@ -590,7 +591,9 @@ stats_dump:
     .brcase     AQ_STATS_DUMP_TYPE_DCQCN_CONFIG
         b           dcqcn_config_dump
         nop
-    .brcase     10
+    .brcase     AQ_STATS_DUMP_TYPE_DCQCN_CB
+        b           dcqcn_cb_dump
+        nop
     .brcase     11
     .brcase     12
     .brcase     13
@@ -691,6 +694,23 @@ dcqcn_config_dump:
 
     b           prepare_feedback
     nop
+
+dcqcn_cb_dump:
+    // r1: addr of sqcb2
+    add         r3, r0, d.{id_ver}.wx
+    SQCB_ADDR_GET(r1, r3[23:0], K_SQCB_BASE_ADDR_HI)
+    add         r1, r1, (CB_UNIT_SIZE_BYTES * 2)
+
+    // setup dma src addr in later stage, where sqcb2 will be loaded
+    CAPRI_RESET_TABLE_2_ARG()
+    CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, rdma_aq_tx_dump_sqcb2_process, r1)
+
+    // setup dma dest addr here
+    DMA_CMD_STATIC_BASE_GET(r6, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_STATS_DUMP_2)
+    DMA_HOST_MEM2MEM_DST_SETUP(r6, DCQCN_CONFIG_SIZE_BYTES, d.{stats.dma_addr}.dx)
+
+    b           prepare_feedback
+    nop // BD Slot
 
 qp_dump:
 

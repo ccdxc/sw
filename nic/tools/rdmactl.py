@@ -30,6 +30,7 @@ DUMP_TYPE_LIF=6
 AQ_DEBUG_ENABLE=7
 AQ_DEBUG_DISABLE=8
 DUMP_TYPE_DCQCN_PROFILE=9
+DUMP_TYPE_DCQCN_CB=10
 
 DBG_WR_CTRL='dbg_wr_ctrl'
 DBG_WR_DATA='dbg_wr_data'
@@ -851,6 +852,34 @@ class RdmaDcqcnProfile(Packet):
         BitField("rp_rsvd", 0, 64),
     ]
 
+class RdmaDcqcnCB(Packet):
+    name = "RdmaDcqcnCB"
+    fields_desc = [
+        BitField("last_cnp_timestamp", 0, 48),
+        IntField("byte_counter_thr", 0),
+        ShortField("timer_exp_thr", 0),
+        ShortField("g_val", 0),
+        IntField("rate_enforced", 0),
+        IntField("target_rate", 0),
+        ShortField("alpha_value", 0),
+        IntField("cur_byte_counter", 0),
+        ShortField("byte_counter_exp_cnt", 0),
+        ShortField("timer_exp_cnt", 0),
+        ShortField("num_alpha_exp_cnt", 0),
+        ByteField("num_cnp_rcvd", 0),
+        ByteField("num_cnp_processed", 0),
+        BitField("max_rate_reached", 0, 1),
+        BitField("log_sq_size", 0, 5),
+        BitField("rsvd0", 0, 2),
+        BitField("last_sched_timestamp", 0, 48),
+        ShortField("delta_ticks_last_sched", 0),
+        BitField("cur_avail_tokens", 0, 48),
+        BitField("token_bucket_size", 0, 48),
+        ShortField("sq_cindex", 0),
+        ByteField("num_sched_drop", 0),
+        IntField("cur_timestamp", 0),
+    ]
+
 class RdmaKeyTableEntry(Packet):
     name = "RdmaKeyTableEntry"
     fields_desc = [
@@ -1207,6 +1236,9 @@ def parse_dmesg():
             else:
                 line = fp.readline()
 
+def show_slice(parse, bin_str, start_offset, num_bytes):
+    parse(bin_str[start_offset: start_offset + num_bytes]).show()
+
 def exec_dump_cmd(tbl_type, tbl_index, start_offset, num_bytes):
     if HOST != '':
         options = USER + '@' + HOST + ' " '
@@ -1403,6 +1435,7 @@ grp.add_argument('--req_rx_stats', help='prints req_rx stats given qid', type=in
 grp.add_argument('--resp_tx_stats', help='prints resp_tx stats given qid', type=int, metavar='qid')
 grp.add_argument('--resp_rx_stats', help='prints resp_rx stats given qid', type=int, metavar='qid')
 grp.add_argument('--dcqcn_profile', help='prints dcqcn config for profile number', type=int, metavar='profile')
+grp.add_argument('--dcqcn_cb', help='prints dcqcn state for RC queue pair', type=int, metavar='qid')
 grp.add_argument('--kt_entry', help='prints key table entry given key id', type=int, metavar='key_id')
 grp.add_argument('--pt_entry', help='print page table entry given pt offset', type=int, metavar='pt_offset')
 grp.add_argument('--lif_stats', help='prints rdma LIF statistics', action='store_true', default=False)
@@ -1455,6 +1488,7 @@ if args.host is not None and \
        args.aqcb0 is not None or \
        args.aqcb1 is not None or \
        args.dcqcn_profile is not None or \
+       args.dcqcn_cb is not None or \
        args.kt_entry is not None or \
        args.pt_entry is not None or \
        args.lif_stats is True:
@@ -1879,6 +1913,10 @@ elif args.dcqcn_profile is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_DCQCN_PROFILE, args.dcqcn_profile, 0, 64)
     dcqcn_profile = RdmaDcqcnProfile(bin_str)
     dcqcn_profile.show()
+elif args.dcqcn_cb is not None:
+    bin_str = exec_dump_cmd(DUMP_TYPE_DCQCN_CB, args.dcqcn_cb, 0, 64)
+    dcqcn_cb = RdmaDcqcnCB(bin_str)
+    dcqcn_cb.show()
 elif args.kt_entry is not None:
     bin_str = exec_dump_cmd(DUMP_TYPE_KT, args.kt_entry, 0, 64)
     kt_entry = RdmaKeyTableEntry(bin_str)
@@ -1892,43 +1930,24 @@ elif args.lif_stats is True:
     lif_stats = LifStats(bin_str)
     lif_stats.show()
 elif args.q_stats is not None:
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_stats, 256, 64)
-    req_tx_stats = RdmaReqTxStats(bin_str)
-    req_tx_stats.show()
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_stats, 320, 64)
-    req_rx_stats = RdmaReqRxStats(bin_str)
-    req_rx_stats.show()
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_stats, 512+256, 64)
-    resp_tx_stats = RdmaRespTxStats(bin_str)
-    resp_tx_stats.show()
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_stats, 512+320, 64)
-    resp_rx_stats = RdmaRespRxStats(bin_str)
-    resp_rx_stats.show()
+    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_state, 0, 1024)
+    show_slice(RdmaReqTxStats, bin_str, 256, 64)
+    show_slice(RdmaReqRxStats, bin_str, 320, 64)
+    show_slice(RdmaRespTxStats, bin_str, 512+256, 64)
+    show_slice(RdmaRespRxStats, bin_str, 512+320, 64)
 elif args.q_state is not None:
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_state, 0, 64)
-    sqcb0 = RdmaSQCB0state(bin_str)
-    sqcb0.show()
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_state, 64, 64)
-    sqcb1 = RdmaSQCB1state(bin_str)
-    sqcb1.show()
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_state, 128, 64)
-    sqcb2 = RdmaSQCB2state(bin_str)
-    sqcb2.show()
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_state, 192, 64)
-    sqcb3 = RdmaSQCB3state(bin_str)
-    sqcb3.show()
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_state, 512, 64)
-    rqcb0 = RdmaRQCB0state(bin_str)
-    rqcb0.show()
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_state, 512+64, 64)
-    rqcb1 = RdmaRQCB1state(bin_str)
-    rqcb1.show()
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_state, 512+128, 64)
-    rqcb2 = RdmaRQCB2state(bin_str)
-    rqcb2.show()
-    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_state, 512+192, 64)
-    rqcb3 = RdmaRQCB3state(bin_str)
-    rqcb3.show()
+    bin_str = exec_dump_cmd(DUMP_TYPE_QP, args.q_state, 0, 1024)
+    show_slice(RdmaSQCB0state, bin_str, 0, 64)
+    show_slice(RdmaSQCB1state, bin_str, 64, 64)
+    show_slice(RdmaSQCB2state, bin_str, 128, 64)
+    show_slice(RdmaSQCB3state, bin_str, 192, 64)
+    show_slice(RdmaRQCB0state, bin_str, 512, 64)
+    show_slice(RdmaRQCB1state, bin_str, 512+64, 64)
+    show_slice(RdmaRQCB2state, bin_str, 512+128, 64)
+    show_slice(RdmaRQCB3state, bin_str, 512+192, 64)
+    bin_str = exec_dump_cmd(DUMP_TYPE_DCQCN_CB, args.q_state, 0, 64)
+    dcqcn_cb = RdmaDcqcnCB(bin_str)
+    dcqcn_cb.show()
 elif args.dmesg is True:
     parse_dmesg()
 elif args.dmesg_file is not None:
