@@ -1220,6 +1220,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_NAK_REM_ACC_ERR_ON_READ
+        enable  : True
+        package : test.rdma
+        module  : req_tx_nak_rem_acc_err_on_read
+        spec    : req_tx_nak_rem_acc_err_on_read.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_RX_SEND_ONLY_ARM_EQ
         enable  : True
         package : test.rdma

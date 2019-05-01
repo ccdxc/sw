@@ -81,7 +81,7 @@ ack_or_nak_or_rnr_or_implicit_nak:
 
     // if (pkt_psn >= rrqwqe_p->psn)
     // implicit nak, ring bktrack ring setting rexmit_psn to rrqwqe_p->psn
-    scwle24        c5, d.psn, K_BTH_PSN // Branch Delay Slot
+    scwlt24        c5, d.psn, K_BTH_PSN // Branch Delay Slot
     bcf            [c5 & c6], implicit_nak
 ack_or_nak_or_rnr:
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS, CAPRI_TABLE_SIZE_0_BITS, req_rx_sqcb1_write_back_process, r0)
