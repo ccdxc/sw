@@ -1,47 +1,46 @@
 <div [style.width]="'100%'" fxLayout="column">
   <div fxFlex="auto" fxLayout="row" fxLayoutAlign="center start" class="newtechsupport-container">
-    <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start stretch"
-         class="newtechsupport-content" [formGroup]="newTechsupport.$formGroup">
+    <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start stretch" class="newtechsupport-content">
 
       <div fxFlex="nogrow" fxLayout="column">
-        <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" class="newtechsupport-row">
+        <div fxFlex="nogrow" fxLayout="row" class="newtechsupport-row" [formGroup]="newTechsupport.$formGroup">
           <!-- First row-->
-          <input fxFlex="300px" formControlName="name" class="newtechsupport-name" appErrorTooltip
-                 spellcheck="false"
-                 type="text" pInputText placeholder="Unique Techsupport Name...">
+          <div formGroupName="meta">
+            <input fxFlex="300px" formControlName="name" class="newtechsupport-name" appErrorTooltip spellcheck="false"
+              type="text" pInputText placeholder="Unique Techsupport Name...">
+          </div>
         </div>
         <div fxFlex="25px"></div>
         <!-- Buffer, creating as a div so there are no hiccups in the animation-->
 
-        <div fxFlex="noshrink" fxLayout="row" class="newtechsupport-row" formGroupName="spec">
-          <div fxFlex="nogrow" class="newtechsupport-text">Node Names:</div>
-          <div formGroupName="node-selector">
-            <input fxFlex="300px" formControlName="names" class="newtechsupport-nodes"
-                   appErrorTooltip
-                   spellcheck="false" type="text" pInputText placeholder="Nodes: node1, nic-1...">
+        <div fxFlex="100" fxLayout="row">
+          <div fxFlex="50" fxLayout="row" class="newtechsupport-row">
+            <div fxFlex="nogrow" class="">Nodes:</div>
+            <div class="newtechsupport-plist-div">
+              <p-listbox #nodesListbox [options]="nodesOptions" *ngIf="nodesOptions && nodesOptions.length>0"
+                         [(ngModel)]="selectedNodes" multiple="multiple" checkbox="checkbox" [showToggleAll]="true"
+                         optionLabel="label" [listStyle]="{'height':'100px'}">
+              </p-listbox>
+            </div>
+          </div>
+          <div fxFlex="50" fxLayout="row" class="newtechsupport-row">
+            <div fxFlex="nogrow" class="">Naples:</div>
+            <div class="newtechsupport-plist-div">
+              <p-pickList [source]="sourceNaples" [target]="targetNaples" filterBy="label,title" sourceHeader="Available"
+                          targetHeader="Selected" dragdrop="true" sourceFilterPlaceholder="Search by name/mac"
+                          targetFilterPlaceholder="Search by name/mac" [showSourceControls]="false" [showTargetControls]="false"
+                          [sourceStyle]="{'height':'100px'}" [targetStyle]="{'height':'100px'}">
+                <ng-template let-naple pTemplate="item">
+                  <div class="newtechsupport-plist-item">
+                    <div class="newtechsupport-naple-label">{{naple.label}} </div>
+                    <div class="newtechsupport-naple-description">{{naple.title}} </div>
+                  </div>
+                </ng-template>
+              </p-pickList>
+            </div>
           </div>
         </div>
 
-        <!-- Per agreement, backend does not support label selector yet. Comment it out. Will use p-pickList in next PR
-        <ng-container *ngTemplateOutlet="divider"></ng-container>
-        <div fxFlex="noshrink" fxLayout="row"
-             class="newtechsupport-row newtechsupport-row-nodeselector">
-          <div fxFlex="nogrow" class="newtechsupport-text">Node Selector:</div>
-          <app-repeater #nmlabelRepeater [data]="cslabelData" [formArray]="nmlabelFormArray">
-          </app-repeater>
-        </div>
-
-        <ng-container *ngTemplateOutlet="divider"></ng-container>
-
-        <div fxFlex="noshrink" fxLayout="row"
-             class="newtechsupport-row  newtechsupport-row-collectionselector">
-          <div fxFlex="nogrow" class="newtechsupport-text">Collection Selector:</div>
-          <app-repeater #cslabelRepeater [data]="cslabelData" [formArray]="cslabelFormArray">
-          </app-repeater>
-        </div>
-
-        <ng-container *ngTemplateOutlet="divider"></ng-container>
-        -->
         <div fxFlex="10px"></div>
         <!-- Buffer, creating as a div so there are no hiccups in the animation-->
 

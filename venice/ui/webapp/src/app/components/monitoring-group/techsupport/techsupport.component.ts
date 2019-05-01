@@ -164,7 +164,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
      keys.forEach( key => {
        const obj = {
          name : key,
-         url :  '/objstore/v1/downloads/tenant/' + Utility.getInstance().getTenant() + '/techsupport/' + tsName + '-' + instanceId + '-SmartNIC-' + key
+         url :  results[key].uri
        };
        list.push(obj);
      });

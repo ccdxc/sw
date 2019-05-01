@@ -88,3 +88,24 @@ $vertical-gutter: 5px;
 .newtechsupport-group {
   margin-top: 2*$vertical-gutter;
 }
+
+.newtechsupport-row .newtechsupport-plist-div {
+  margin-left: 2 * $horizontal-gutter;
+}
+
+.newtechsupport-plist-div .ui-picklist-filter-icon {
+  right: 1em !important;
+}
+
+.newtechsupport-plist-div .ui-picklist .ui-picklist-filter-container .ui-picklist-filter{
+  text-indent: 0em !important;
+}
+
+.newtechsupport-naple-description{
+  font-size: 10px;
+  color: grey;
+}
+
+.newtechsupport-plist-item{
+  margin-left: $horizontal-gutter;
+}
