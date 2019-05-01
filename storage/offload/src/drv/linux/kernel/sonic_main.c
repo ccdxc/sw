@@ -21,6 +21,7 @@
 #include "sonic_lif.h"
 #include "sonic_debugfs.h"
 #include "osal_logger.h"
+#include "pnso_batch.h"
 
 MODULE_DESCRIPTION(DRV_DESCRIPTION);
 MODULE_AUTHOR("Pensando");
@@ -63,6 +64,10 @@ MODULE_PARM_DESC(chain_rate_limit_dst_en, "Chaining destination rate limiting en
 unsigned int interm_buf_size = 8192;
 module_param(interm_buf_size, uint, 0444);
 MODULE_PARM_DESC(interm_buf_size, "Intermediate buffer size (default=8KB)");
+
+bool error_reset_recovery_en = false;
+module_param(error_reset_recovery_en, bool, 0444);
+MODULE_PARM_DESC(error_reset_recovery_en, "Enable hardware error reset recovery (default=false)");
 
 int body(void);
 

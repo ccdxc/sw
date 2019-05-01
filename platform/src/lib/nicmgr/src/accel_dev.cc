@@ -488,6 +488,11 @@ AccelDev::CmdHandler(void *req, void *req_data,
         status = _DevcmdIdentify(req, req_data, resp, resp_data);
         break;
 
+    case CMD_OPCODE_HANG_NOTIFY:
+        status = _AdminCmdHandler(cmd->hang_notify.lif_index, req, req_data,
+                                  resp, resp_data);
+        break;
+
     case CMD_OPCODE_CRYPTO_KEY_UPDATE:
         status = _DevcmdCryptoKeyUpdate(req, req_data, resp, resp_data);
         break;

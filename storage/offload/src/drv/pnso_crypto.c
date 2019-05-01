@@ -145,6 +145,11 @@ crypto_key_index_update(const void *key1,
 			uint32_t key_size,
 			uint32_t key_idx)
 {
+	uint32_t keys_max;
+
+	if (!sonic_validate_crypto_key_idx(key_idx, &keys_max))
+		return EINVAL;
+
 	return sonic_crypto_key_index_update(key1, key2, key_size,
 					     sonic_get_crypto_key_idx(key_idx));
 }

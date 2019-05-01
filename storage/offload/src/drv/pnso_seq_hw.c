@@ -713,18 +713,20 @@ hw_cleanup_desc(struct service_info *svc_info)
 	}
 }
 
-static void
+static pnso_error_t
 hw_ring_db(struct service_info *svc_info)
 {
 	struct batch_page *page;
 	struct queue *seq_q;
 	struct sequencer_desc *seq_desc;
+	pnso_error_t err = PNSO_OK;
 
 	OSAL_LOG_DEBUG("enter ... ");
 
 	seq_q = svc_info->si_seq_info.sqi_seq_q;
 	if (!seq_q) {
-		OSAL_LOG_ERROR("failed to get sequencer q!");
+		err = EINVAL;
+		OSAL_LOG_ERROR("failed to get sequencer q!: err: %d", err);
 		OSAL_ASSERT(seq_q);
 		goto out;
 	}
@@ -751,6 +753,7 @@ hw_ring_db(struct service_info *svc_info)
 
 out:
 	OSAL_LOG_DEBUG("exit!");
+	return err;
 }
 
 static void

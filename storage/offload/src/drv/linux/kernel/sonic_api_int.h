@@ -17,7 +17,10 @@ extern bool rate_limit_dst_en;
 extern bool chain_rate_limit_src_en;
 extern bool chain_rate_limit_dst_en;
 extern unsigned int interm_buf_size;
+extern bool error_reset_recovery_en;
 
+struct sonic;
+struct sonic_dev;
 
 #define SONIC_INTR_FIRE_DATA32		0x95969798
 #define SONIC_RMEM_ADDR_INVALID		0
@@ -64,6 +67,12 @@ sonic_interm_buf_size_get(void)
 	return interm_buf_size;
 }
 
+static inline bool
+sonic_error_reset_recovery_en_get(void)
+{
+	return error_reset_recovery_en;
+}
+
 uint32_t sonic_rmem_total_pages_get(void);
 uint32_t sonic_rmem_avail_pages_get(void);
 uint32_t sonic_rmem_page_size_get(void);
@@ -74,7 +83,7 @@ void sonic_rmem_set(uint64_t pgaddr, uint8_t val, size_t size);
 void sonic_rmem_read(void *dst, uint64_t pgaddr, size_t size);
 void sonic_rmem_write(uint64_t pgaddr, const void *src, size_t size);
 
-uint16_t sonic_get_lif_id(void);
+unsigned int sonic_get_lif_id(struct sonic *sonic, uint32_t idx);
 uint64_t sonic_get_lif_local_dbaddr(void);
 bool sonic_validate_crypto_key_idx(uint32_t user_key_idx, uint32_t *ret_keys_max);
 uint32_t sonic_get_crypto_key_idx(uint32_t user_key_idx);
@@ -82,6 +91,7 @@ uint64_t sonic_get_intr_assert_addr(uint32_t intr_idx);
 uint32_t sonic_get_intr_assert_data(void);
 struct sonic_accel_ring *sonic_get_accel_ring(uint32_t accel_ring_id);
 const char *sonic_accel_ring_name_get(uint32_t accel_ring_id);
+void sonic_accel_rings_reinit(struct sonic_dev *idev);
 int sonic_accounting_atomic_take(osal_atomic_int_t *atomic_c,
 				 uint32_t count,
 				 uint32_t high_water);

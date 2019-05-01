@@ -14,6 +14,8 @@ extern "C" {
 #include "pnso_mpool.h"
 #include "pnso_chain_params.h"
 
+#define PNSO_LIF_IO_ERROR		(EIO)
+
 #define MAX_PAGE_ENTRIES_SHIFT_BITS	(4)	/* 16 entries per page */
 #define MAX_PAGE_ENTRIES		(1 << MAX_PAGE_ENTRIES_SHIFT_BITS)
 #define MAX_NUM_PAGES			(32)	/* 512 entries per batch */

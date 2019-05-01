@@ -275,9 +275,7 @@ chksum_ring_db(struct service_info *svc_info)
 		cpdc_update_seq_batch_size(svc_info);
 
 		seq_info = &svc_info->si_seq_info;
-		seq_ring_db(svc_info);
-
-		err = PNSO_OK;
+		err = seq_ring_db(svc_info);
 	}
 
 	OSAL_LOG_DEBUG("exit!");

@@ -5,6 +5,7 @@
  */
 #include "pnso_seq_ops.h"
 #include "pnso_seq.h"
+#include "pnso_utils.h"
 
 /* run on model/dol or on real hardware */
 #ifdef PNSO_API_ON_MODEL
@@ -26,10 +27,19 @@ seq_cleanup_desc(struct service_info *svc_info)
 	return g_sequencer_ops->cleanup_desc(svc_info);
 }
 
-void
+pnso_error_t
 seq_ring_db(struct service_info *svc_info)
 {
-	g_sequencer_ops->ring_db(svc_info);
+	pnso_error_t err;
+
+	if (pnso_lif_reset_ctl_pending()) {
+		err = PNSO_LIF_IO_ERROR;
+		OSAL_LOG_ERROR("pnso pending error reset! err: %d", err);
+		goto out;
+	}
+	err = g_sequencer_ops->ring_db(svc_info);
+out:
+	return err;
 }
 
 pnso_error_t

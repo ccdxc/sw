@@ -883,6 +883,12 @@ pnso_submit_request(struct pnso_service_request *svc_req,
 	REQ_PPRINT_REQUEST(svc_req);
 	REQ_PPRINT_RESULT(svc_res);
 
+	if (pnso_lif_reset_ctl_pending()) {
+		err = PNSO_LIF_IO_ERROR;
+		OSAL_LOG_ERROR("pnso pending error reset! err: %d", err);
+		goto out;
+	}
+
 	/* validate each service request */
 	err = validate_service_request(svc_req);
 	if (err) {
@@ -943,6 +949,12 @@ pnso_add_to_batch(struct pnso_service_request *svc_req,
 
 	OSAL_LOG_DEBUG("enter...");
 
+	if (pnso_lif_reset_ctl_pending()) {
+		err = PNSO_LIF_IO_ERROR;
+		OSAL_LOG_ERROR("pnso pending error reset! err: %d", err);
+		goto out;
+	}
+
 	REQ_PPRINT_REQUEST(svc_req);
 	REQ_PPRINT_RESULT(svc_res);
 
@@ -991,7 +1003,7 @@ pnso_error_t
 pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 		void **pnso_poll_ctx)
 {
-	pnso_error_t err = EINVAL;
+	pnso_error_t err;
 	struct request_params req_params;
 	uint32_t req_flags = 0;
 	struct per_core_resource *pcr = putil_get_per_core_resource();
@@ -1000,6 +1012,12 @@ pnso_flush_batch(completion_cb_t cb, void *cb_ctx, pnso_poll_fn_t *pnso_poll_fn,
 
 	OSAL_LOG_DEBUG("enter...");
 	PAS_START_PERF();
+
+	if (pnso_lif_reset_ctl_pending()) {
+		err = PNSO_LIF_IO_ERROR;
+		OSAL_LOG_ERROR("pnso pending error reset! err: %d", err);
+		goto out;
+	}
 
 	err = get_request_mode(cb, cb_ctx, pnso_poll_fn,
 			pnso_poll_ctx, &req_flags);

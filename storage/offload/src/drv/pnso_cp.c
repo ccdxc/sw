@@ -343,9 +343,7 @@ compress_ring_db(struct service_info *svc_info)
 		OSAL_LOG_INFO("ring door bell <===");
 
 		seq_info = &svc_info->si_seq_info;
-		seq_ring_db(svc_info);
-
-		err = PNSO_OK;
+		err = seq_ring_db(svc_info);
 	}
 
 	OSAL_LOG_DEBUG("exit!");
@@ -390,6 +388,11 @@ compress_poll(struct service_info *svc_info)
 	cur_ts = osal_get_clock_nsec();
 	start_ts = svc_poll_expiry_start(svc_info, cur_ts);
 	while (1) {
+		if (pnso_lif_reset_ctl_pending()) {
+			err = PNSO_LIF_IO_ERROR;
+			break;
+		}
+
 		/* poll on padding opaque tag updated by P4+ */
 		if (*cp_pad_cpl_addr == CPDC_PAD_STATUS_DATA) {
 			OSAL_LOG_DEBUG("cp/pad status data matched!");
@@ -402,6 +405,9 @@ compress_poll(struct service_info *svc_info)
 			OSAL_LOG_ERROR("cp/pad poll-time limit reached! service: %s status_desc: 0x" PRIx64 " err: %d",
 					svc_get_type_str(svc_info->si_type),
 					(uint64_t) status_desc, err);
+			/* Initiate error reset recovery */
+			if (pnso_lif_error_reset_recovery_en_get())
+				pnso_lif_reset_ctl_start();
 			break;
 		}
 

@@ -15,10 +15,10 @@ model_setup_desc(struct service_info *svc_info, const void *src_desc,
 	return NULL;	/* EOPNOTSUPP */
 }
 
-static void
+static pnso_error_t
 model_ring_db(const struct service_info *svc_info)
 {
-	/* EOPNOTSUPP */
+	return EOPNOTSUPP;
 }
 
 static pnso_error_t

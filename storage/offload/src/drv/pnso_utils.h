@@ -13,6 +13,7 @@
 #include "pnso_cpdc.h"
 #include "pnso_chain_params.h"
 #include "sonic_dev.h"
+#include "sonic_lif.h"
 #include "sonic_api_int.h"
 
 #ifdef NDEBUG
@@ -148,6 +149,49 @@ svc_rate_limit_control_eval(struct service_info *svc_info,
 		chn_service_dst_blist_is_host_present(svc_info);
 	rl->rate_limit_en =
 		rl->rate_limit_src_en || rl->rate_limit_dst_en;
+}
+
+static inline bool
+pnso_lif_error_reset_recovery_en_get(void)
+{
+	return sonic_error_reset_recovery_en_get();
+}
+
+static inline void
+pnso_lif_reset_ctl_register(reset_ctl_cb cb,
+			    void *cb_arg)
+{
+	sonic_lif_reset_ctl_register(sonic_get_lif(), cb, cb_arg);
+}
+
+static inline void
+pnso_lif_reset_ctl_start(void)
+{
+	sonic_lif_reset_ctl_start(sonic_get_lif());
+}
+
+static inline void
+pnso_lif_reset_ctl_reset(void)
+{
+	sonic_lif_reset_ctl_reset(sonic_get_lif());
+}
+
+static inline void
+pnso_lif_reset_ctl_reinit(void)
+{
+	sonic_lif_reset_ctl_reinit(sonic_get_lif());
+}
+
+static inline void
+pnso_lif_reset_ctl_end(void)
+{
+	sonic_lif_reset_ctl_end(sonic_get_lif());
+}
+
+static inline bool
+pnso_lif_reset_ctl_pending(void)
+{
+	return sonic_lif_reset_ctl_pending(sonic_get_lif());
 }
 
 #endif  /* __PNSO_UTILS_H__ */

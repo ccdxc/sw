@@ -651,10 +651,12 @@ typedef struct crypto_key_update_cpl {
 /**
  * hang_notify_cmd_t - Hang notify command
  * @opcode:     opcode = 8
+ * @lif_index:  LIF index
  */
 typedef struct hang_notify_cmd {
 	uint16_t    opcode;
-	uint16_t    rsvd[31];
+        uint32_t    lif_index;
+	uint16_t    rsvd[29];
 } hang_notify_cmd_t;
 
 /**

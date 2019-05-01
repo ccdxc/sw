@@ -231,12 +231,13 @@ static identity_t *sonic_get_identity(void)
 	return sonic_get_lif()->sonic->ident;
 }
 
-uint16_t
-sonic_get_lif_id(void)
+unsigned int
+sonic_get_lif_id(struct sonic *sonic, uint32_t idx)
 {
-	identity_t *ident = sonic_get_identity();
+	identity_t *ident = sonic->ident;
 
-	return ident->dev.lif_tbl[0].hw_lif_id;
+	OSAL_ASSERT(ident && (idx < ident->dev.num_lifs));
+	return ident->dev.lif_tbl[idx].hw_lif_id;
 }
 
 uint64_t
@@ -326,6 +327,18 @@ const char *sonic_accel_ring_name_get(uint32_t accel_ring_id)
 		return accel_ring_name_tbl[accel_ring_id];
 
 	return "unknown";
+}
+
+void sonic_accel_rings_reinit(struct sonic_dev *idev)
+{
+	struct sonic_accel_ring *ring;
+	int i;
+
+	for (i = 0, ring = idev->ring_tbl;
+	     i < ACCEL_RING_ID_MAX;
+	     i++, ring++) {
+		osal_atomic_init(&ring->descs_inuse, 0);
+	}
 }
 
 /*

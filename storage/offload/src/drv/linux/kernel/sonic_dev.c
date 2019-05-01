@@ -160,6 +160,18 @@ void sonic_dev_cmd_adminq_init(struct sonic_dev *idev, struct queue *adminq,
 	sonic_dev_cmd_go(idev, &cmd);
 }
 
+void sonic_dev_cmd_hang_notify(struct sonic_dev *idev,
+			       uint32_t lif_id)
+{
+	union dev_cmd cmd = {
+		.hang_notify.opcode = CMD_OPCODE_HANG_NOTIFY,
+		.hang_notify.lif_index = lif_id,
+	};
+
+	OSAL_LOG_INFO("hang_notify lif_id %u", lif_id);
+	sonic_dev_cmd_go(idev, &cmd);
+}
+
 char *sonic_dev_asic_name(u8 asic_type)
 {
 	switch (asic_type) {
@@ -234,12 +246,34 @@ void sonic_intr_coal_set(struct intr *intr, u32 intr_coal)
 	(void)ioread32(intr_to_coal(intr->ctrl)); /* flush write */
 }
 
+static int sonic_cq_list_init(struct cq *cq)
+{
+	struct cq_info *cur;
+	unsigned int i;
+
+	cq->tail = cq->info;
+	cq->done_color = 1;
+
+	cur = cq->info;
+
+	for (i = 0; i < cq->num_descs; i++) {
+                cur->last = false;
+		if (i + 1 == cq->num_descs) {
+			cur->next = cq->info;
+			cur->last = true;
+		} else {
+			cur->next = cur + 1;
+		}
+		cur->index = i;
+		cur++;
+	}
+	return 0;
+}
+
 int sonic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 		  unsigned int num_descs, size_t desc_size)
 {
-	struct cq_info *cur;
 	unsigned int ring_size;
-	unsigned int i;
 
 	if (desc_size == 0 || !is_power_of_2(num_descs))
 		return -EINVAL;
@@ -252,23 +286,13 @@ int sonic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 	cq->bound_intr = intr;
 	cq->num_descs = num_descs;
 	cq->desc_size = desc_size;
-	cq->tail = cq->info;
-	cq->done_color = 1;
+	return sonic_cq_list_init(cq);
+}
 
-	cur = cq->info;
-
-	for (i = 0; i < num_descs; i++) {
-		if (i + 1 == num_descs) {
-			cur->next = cq->info;
-			cur->last = true;
-		} else {
-			cur->next = cur + 1;
-		}
-		cur->index = i;
-		cur++;
-	}
-
-	return 0;
+int sonic_cq_reinit(struct cq *cq)
+{
+	memset(cq->base, 0, cq->num_descs * cq->desc_size);
+	return sonic_cq_list_init(cq);
 }
 
 void sonic_cq_map(struct cq *cq, void *base, dma_addr_t base_pa)
@@ -308,13 +332,32 @@ unsigned int sonic_cq_service(struct cq *cq, unsigned int work_to_do,
 	return work_done;
 }
 
+static int sonic_q_list_init(struct queue *q)
+{
+	struct admin_desc_info *cur;
+	unsigned int i;
+
+	q->admin_head = q->admin_tail = q->admin_info;
+	osal_atomic_init(&q->descs_inuse, 0);
+
+	cur = q->admin_info;
+	for (i = 0; i < q->num_descs; i++) {
+		if (i + 1 == q->num_descs)
+			cur->next = q->admin_info;
+		else
+			cur->next = cur + 1;
+		cur->index = i;
+		cur->left = q->num_descs - i;
+		cur++;
+	}
+	return 0;
+}
+
 int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 		 unsigned int index, const char *base, unsigned int num_descs,
 		 size_t desc_size, unsigned int pid)
 {
-	struct admin_desc_info *cur;
 	unsigned int ring_size;
-	unsigned int i;
 
 	if (desc_size == 0 || !is_power_of_2(num_descs))
 		return -EINVAL;
@@ -331,28 +374,19 @@ int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 	q->qid = index;
 	q->num_descs = num_descs;
 	q->desc_size = desc_size;
-	q->admin_head = q->admin_tail = q->admin_info;
 	q->pid = pid;
-	osal_atomic_init(&q->descs_inuse, 0);
 
 	OSAL_LOG_INFO("sonic_q_init q: " PRIx64 " q->head " PRIx64 " index %d",
 			(u64) q, (u64) q->admin_head, index);
 
 	snprintf(q->name, sizeof(q->name), "%s%u", base, index);
+	return sonic_q_list_init(q);
+}
 
-	cur = q->admin_info;
-
-	for (i = 0; i < num_descs; i++) {
-		if (i + 1 == num_descs)
-			cur->next = q->admin_info;
-		else
-			cur->next = cur + 1;
-		cur->index = i;
-		cur->left = num_descs - i;
-		cur++;
-	}
-
-	return 0;
+int sonic_q_reinit(struct queue *q)
+{
+	memset(q->base, 0, q->num_descs * q->desc_size);
+	return sonic_q_list_init(q);
 }
 
 void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa)

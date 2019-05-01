@@ -31,6 +31,7 @@ typedef union dev_cmd {
     identify_cmd_t              identify;
     lif_init_cmd_t              lif_init;
     lif_reset_cmd_t             lif_reset;
+    hang_notify_cmd_t           hang_notify;
     adminq_init_cmd_t           adminq_init;
     seq_queue_init_cmd_t        seq_q_init;
     seq_queue_init_complete_cmd_t seq_q_init_complete;
@@ -48,6 +49,7 @@ typedef union dev_cmd_cpl {
     identify_cpl_t              identify;
     lif_init_cpl_t              lif_init;
     lif_reset_cpl_t             lif_reset;
+    hang_notify_cpl_t           hang_notify;
     adminq_init_cpl_t           adminq_init;
     seq_queue_init_cpl_t        seq_q_init;
     seq_queue_init_complete_cpl_t seq_q_init_complete;

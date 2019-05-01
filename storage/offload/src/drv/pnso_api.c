@@ -11,6 +11,7 @@
 #include "pnso_api.h"
 #include "pnso_crypto.h"
 #include "pnso_cpdc_cmn.h"
+#include "pnso_utils.h"
 
 /*
  * NOTE/TODO:
@@ -187,6 +188,16 @@ pnso_error_t pnso_set_key_desc_idx(const void *key1,
 				   uint32_t key_size,
 				   uint32_t key_idx)
 {
-	return crypto_key_index_update(key1, key2, key_size, key_idx);
+	pnso_error_t err;
+
+	if (pnso_lif_reset_ctl_pending()) {
+		err = PNSO_LIF_IO_ERROR;
+		OSAL_LOG_ERROR("pnso pending error reset! err: %d", err);
+		goto out;
+	}
+
+	err = crypto_key_index_update(key1, key2, key_size, key_idx);
+out:
+	return err;
 }
 OSAL_EXPORT_SYMBOL(pnso_set_key_desc_idx);

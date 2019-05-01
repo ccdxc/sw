@@ -61,17 +61,36 @@ struct qcq {
 
 enum deferred_work_type {
 	DW_TYPE_RESET,
-};
+} __attribute__((packed));
 
 struct deferred_work {
 	struct list_head list;
 	enum deferred_work_type type;
+	u8 dont_free;
 };
 
 struct deferred {
 	spinlock_t lock;
 	struct list_head list;
 	struct work_struct work;
+};
+
+enum reset_ctl_state {
+	RESET_CTL_ST_IDLE,
+	RESET_CTL_ST_PRE_RESET,
+	RESET_CTL_ST_RESET,
+	RESET_CTL_ST_REINIT,
+};
+
+typedef void (*reset_ctl_cb)(void *cb_arg,
+			     enum reset_ctl_state ctl_state,
+			     int err);
+struct reset_ctl {
+        struct deferred_work work;
+	atomic_t state;
+	reset_ctl_cb cb;
+	void *cb_arg;
+	int8_t sense;
 };
 
 #define LIF_F_INITED		BIT(0)
@@ -92,6 +111,7 @@ struct lif {
 	bool registered;
 	unsigned int num_seq_q_batches;
 	unsigned int index;
+	unsigned int lif_id;
 	unsigned int seq_q_index;
 	spinlock_t adminq_lock;
 	struct qcq *adminqcq;
@@ -106,6 +126,7 @@ struct lif {
 	struct dentry *dentry;
 	unsigned int flags;
 	struct res res;
+        struct reset_ctl reset_ctl;
 };
 
 enum sonic_queue_type {
@@ -120,6 +141,8 @@ enum sonic_queue_type {
 #define SONIC_SEQ_Q_DESC_SIZE        64
 #define SONIC_SEQ_STATUS_Q_DESC_SIZE 128
 
+extern struct lif *sonic_glif;
+
 #define lif_to_txq(lif, i)	(&lif->txqcqs[i]->q)
 #define lif_to_rxq(lif, i)	(&lif->rxqcqs[i]->q)
 
@@ -130,17 +153,18 @@ int sonic_lifs_init(struct sonic *sonic);
 int sonic_lifs_register(struct sonic *sonic);
 void sonic_lifs_unregister(struct sonic *sonic);
 int sonic_lifs_size(struct sonic *sonic);
+void sonic_lif_reset_ctl_register(struct lif *lif,
+				 reset_ctl_cb cb,
+				 void *cb_arg);
+void sonic_lif_reset_ctl_start(struct lif *lif);
+void sonic_lif_reset_ctl_reset(struct lif *lif);
+void sonic_lif_reset_ctl_reinit(struct lif *lif);
+void sonic_lif_reset_ctl_end(struct lif *lif);
+bool sonic_lif_reset_ctl_pending(struct lif *lif);
+int sonic_lif_reinit(struct lif *lif);
 
 int sonic_intr_alloc(struct lif *lif, struct intr *intr);
 void sonic_intr_free(struct lif *lif, struct intr *intr);
-
-int sonic_lif_cpdc_seq_qs_legacy_init(struct per_core_resource *res);
-int sonic_lif_crypto_seq_qs_legacy_init(struct per_core_resource *res);
-
-int sonic_lif_cpdc_seq_qs_legacy_control(struct per_core_resource *res,
-		uint16_t opcode);
-int sonic_lif_crypto_seq_qs_legacy_control(struct per_core_resource *res,
-		uint16_t opcode);
 
 int sonic_get_per_core_seq_sq(struct per_core_resource *res,
 		enum sonic_queue_type qtype,
@@ -152,14 +176,23 @@ int sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type qtype,
 		struct queue **q);
 void sonic_put_seq_statusq(struct queue *q);
 
-struct lif *sonic_get_lif(void);
-struct sonic_dev *sonic_get_idev(void);
-int sonic_lif_hang_notify(struct lif *lif);
-
 uint32_t sonic_get_num_per_core_res(struct lif *lif);
 struct per_core_resource *sonic_get_per_core_res_by_res_id(struct lif *lif,
 		uint32_t res_id);
 struct per_core_resource *sonic_get_per_core_res(struct lif *lif);
+
+static inline struct lif *
+sonic_get_lif(void)
+{
+	return sonic_glif;
+}
+
+static inline struct sonic_dev *
+sonic_get_idev(void)
+{
+	return sonic_glif && sonic_glif->sonic ?
+	       &sonic_glif->sonic->idev : NULL;
+}
 
 static inline uint32_t
 sonic_get_seq_sq_num_descs(struct lif *lif,

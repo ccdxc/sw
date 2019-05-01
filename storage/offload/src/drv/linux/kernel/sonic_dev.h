@@ -34,6 +34,7 @@ union dev_cmd {
 	struct lif_init_cmd lif_init;
 	struct lif_reset_cmd lif_reset;
 	struct adminq_init_cmd adminq_init;
+	struct hang_notify_cmd hang_notify;
 };
 
 union dev_cmd_cpl {
@@ -45,6 +46,7 @@ union dev_cmd_cpl {
 	struct identify_cpl identify;
 	struct lif_init_cpl lif_init;
 	struct adminq_init_cpl adminq_init;
+	struct hang_notify_cpl hang_notify;
 };
 
 struct dev_cmd_regs {
@@ -395,6 +397,7 @@ u8 sonic_dev_cmd_status(struct sonic_dev *idev);
 bool sonic_dev_cmd_done(struct sonic_dev *idev);
 void sonic_dev_cmd_comp(struct sonic_dev *idev, void *mem);
 void sonic_dev_cmd_reset(struct sonic_dev *idev);
+void sonic_dev_cmd_hang_notify(struct sonic_dev *idev, uint32_t lif_id);
 void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver, dma_addr_t addr);
 void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 index);
 void sonic_dev_cmd_lif_reset(struct sonic_dev *idev, u32 index);
@@ -418,6 +421,7 @@ void sonic_intr_mask(struct intr *intr, bool mask);
 void sonic_intr_coal_set(struct intr *intr, u32 coal_usecs);
 int sonic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 		  unsigned int num_descs, size_t desc_size);
+int sonic_cq_reinit(struct cq *cq);
 void sonic_cq_map(struct cq *cq, void *base, dma_addr_t base_pa);
 void sonic_cq_bind(struct cq *cq, struct queue *q);
 typedef bool (*sonic_cq_cb)(struct cq *cq, struct cq_info *cq_info,
@@ -432,6 +436,7 @@ void sonic_q_free(struct lif *lif, struct queue *q);
 int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 		 unsigned int index, const char *base, unsigned int num_descs,
 		 size_t desc_size, unsigned int pid);
+int sonic_q_reinit(struct queue *q);
 void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa);
 void sonic_q_post(struct queue *q, bool ring_doorbell, admin_desc_cb cb,
 		  void *cb_arg);
