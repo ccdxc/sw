@@ -7,7 +7,6 @@ import (
 	"github.com/pensando/sw/venice/globals"
 
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	protos "github.com/pensando/sw/nic/agent/netagent/protos"
 	netagent "github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/tpa/ctrlerif"
 	mockdatapath "github.com/pensando/sw/nic/agent/tpa/datapath"
@@ -22,17 +21,15 @@ type PolicyAgent struct {
 	netAgent *netagent.Nagent
 	tpCtrler *ctrlerif.TpClient
 	TpState  *state.PolicyState
-	mode     protos.AgentMode
 	datapath string
 	hal      halproto.TelemetryClient
 }
 
 // NewPolicyAgent creates a new instance of telemetry policy agent
-func NewPolicyAgent(nodeUUID string, ctrlerURL string, resolverClient resolver.Interface, mode protos.AgentMode, datapath string, netAgent *netagent.Nagent, getMgmtIPAddr func() string) (*PolicyAgent, error) {
-	log.Infof("starting policy agent node:%s ctrler:%s mode:%s", nodeUUID, ctrlerURL, mode)
+func NewPolicyAgent(nodeUUID string, ctrlerURL string, resolverClient resolver.Interface, datapath string, netAgent *netagent.Nagent, getMgmtIPAddr func() string) (*PolicyAgent, error) {
+	log.Infof("starting policy agent node:%s ctrler:%s", nodeUUID, ctrlerURL)
 
 	agent := &PolicyAgent{
-		mode:     mode,
 		datapath: datapath,
 		netAgent: netAgent,
 	}
@@ -70,22 +67,20 @@ func NewPolicyAgent(nodeUUID string, ctrlerURL string, resolverClient resolver.I
 	agent.TpState = tpAgent
 
 	// start grpc client to venice
-	if mode == protos.AgentMode_MANAGED {
-		ctrler, err := ctrlerif.NewTpClient(nodeUUID, tpAgent, globals.Tpm, resolverClient)
-		if err != nil {
-			log.Errorf("Error creating telemetry policy controller client. Err: %v", err)
-			return nil, err
-		}
-
-		agent.tpCtrler = ctrler
+	ctrler, err := ctrlerif.NewTpClient(nodeUUID, tpAgent, globals.Tpm, resolverClient)
+	if err != nil {
+		log.Errorf("Error creating telemetry policy controller client. Err: %v", err)
+		return nil, err
 	}
+
+	agent.tpCtrler = ctrler
 
 	return agent, nil
 }
 
 // Stop stops the agent
 func (agent *PolicyAgent) Stop() {
-	if agent.mode == protos.AgentMode_MANAGED {
+	if agent.tpCtrler != nil {
 		agent.tpCtrler.Stop()
 	}
 	agent.TpState.Close()

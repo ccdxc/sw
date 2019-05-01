@@ -12,9 +12,9 @@ import (
 	"google.golang.org/grpc/connectivity"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	debugStats "github.com/pensando/sw/venice/utils/debug/stats"

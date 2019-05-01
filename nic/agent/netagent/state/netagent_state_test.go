@@ -9,8 +9,7 @@ import (
 	"strings"
 
 	hal "github.com/pensando/sw/nic/agent/netagent/datapath"
-	state "github.com/pensando/sw/nic/agent/netagent/protos"
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
 type mockCtrler struct {
@@ -48,7 +47,7 @@ func createNetAgent(t *testing.T) (*Nagent, *mockCtrler, *hal.Datapath) {
 	}
 
 	// create new network agent
-	nagent, err := NewNetAgent(dp, state.AgentMode_MANAGED, "")
+	nagent, err := NewNetAgent(dp, "")
 
 	if err != nil {
 		t.Fatalf("Error creating network agent. Err: %v", err)

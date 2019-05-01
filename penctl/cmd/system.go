@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	cluster "github.com/pensando/sw/api/generated/cluster"
-	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
+	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
 )
 
 var getSysMemCmd = &cobra.Command{

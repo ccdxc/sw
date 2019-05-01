@@ -183,7 +183,7 @@ func main() {
 	// start event services based to the mode
 	es := &evtServices{
 		config: &config{
-			restURL:       fmt.Sprintf(":" + globals.EvtsProxyRESTPort),
+			restURL:       fmt.Sprintf("localhost:" + globals.EvtsProxyRESTPort),
 			grpcListenURL: fmt.Sprintf("localhost:%s", globals.EvtsProxyRPCPort),
 			evtsStoreDir:  *evtsStoreDir,
 			agentDbPath:   *agentDbPath,

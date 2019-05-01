@@ -10,8 +10,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	tstype "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
-	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
 )
 
 // CtrlerIntf provides all CRUD operations on telemetry policy objects

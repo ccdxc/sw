@@ -5,7 +5,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
-	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/protos"
+	emgrpc "github.com/pensando/sw/nic/agent/protos/evtprotos"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 )

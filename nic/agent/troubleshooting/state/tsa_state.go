@@ -8,16 +8,15 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/pensando/sw/nic/agent/troubleshooting/utils"
-
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	config "github.com/pensando/sw/nic/agent/netagent/protos"
 	netAgentState "github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/nic/agent/troubleshooting/state/types"
-	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
+	"github.com/pensando/sw/nic/agent/troubleshooting/utils"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -45,7 +44,7 @@ var ErrDbRead = errors.New("Error retrieving object from database")
 var nAgent *netAgentState.Nagent
 
 // NewTsAgent creates new troubleshooting agent
-func NewTsAgent(dp types.TsDatapathAPI, mode config.AgentMode, nodeUUID string, na *netAgentState.Nagent) (*Tagent, error) {
+func NewTsAgent(dp types.TsDatapathAPI, nodeUUID string, na *netAgentState.Nagent) (*Tagent, error) {
 	var tsa Tagent
 	var err error
 
@@ -54,23 +53,18 @@ func NewTsAgent(dp types.TsDatapathAPI, mode config.AgentMode, nodeUUID string, 
 
 	restart := false
 
-	c := config.Agent{
+	tn := netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Name: "TsAgentConfig",
-		},
-		TypeMeta: api.TypeMeta{
-			Kind: "TsAgent",
-		},
-		Spec: config.AgentSpec{
-			Mode: mode,
+			Name: "default",
 		},
 	}
 
-	_, err = emdb.Read(&c)
+	_, err = emdb.Read(&tn)
 
 	// Blank slate. Persist config and do init stuff
 	if err != nil {
-		err := emdb.Write(&c)
+		err := emdb.Write(&tn)
 		if err != nil {
 			emdb.Close()
 			return nil, err

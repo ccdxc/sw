@@ -327,14 +327,14 @@ func (tb *TestBed) CheckNaplesHealth(node *Naples) error {
 		Mode                 string   `json:"naples-mode,omitempty"`
 		IsNpmClientConnected bool     `json:"is-npm-client-connected,omitempty"`
 	}
-	err = netutils.HTTPGet("http://"+nodeIP+":9007/api/system/info/", &naplesInfo)
+	err = netutils.HTTPGet("http://"+nodeIP+":8888/api/system/info/", &naplesInfo)
 	if err != nil {
 		nerr := fmt.Errorf("Error checking netagent health. Err: %v", err)
 		log.Errorf("%v", nerr)
 		return nerr
 	}
 
-	if !strings.Contains(naplesInfo.Mode, "MANAGED") {
+	if !strings.Contains(naplesInfo.Mode, "network-managed") {
 		nerr := fmt.Errorf("Naples/Netagent is in incorrect mode: %s", naplesInfo.Mode)
 		log.Errorf("%v", nerr)
 		return nerr

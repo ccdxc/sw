@@ -5,9 +5,9 @@ package rpcserver
 import (
 	"github.com/pkg/errors"
 
+	emgrpc "github.com/pensando/sw/nic/agent/protos/evtprotos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
-	emgrpc "github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"

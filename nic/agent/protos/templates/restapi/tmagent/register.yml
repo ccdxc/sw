@@ -1,0 +1,7 @@
+ basepath: "github.com/pensando/sw/nic/agent/protos/templates/restapi/tmagent"
+ templates:
+   - template: "register.tmpl"
+     outputpath: "register.go"
+   - template: "restapi_test_global.tmpl"
+     outputpath: "restapi_test.go"
+     once: true

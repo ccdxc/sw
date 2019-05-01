@@ -9,7 +9,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/venice/ctrler/tsm/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"

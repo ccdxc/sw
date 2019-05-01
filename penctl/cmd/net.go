@@ -43,7 +43,7 @@ func pickNetwork(cmd *cobra.Command, args []string) error {
 		return errors.New("naples unreachable. please set NAPLES_URL variable to http://<naples_ip>")
 	}
 	naplesIP = strings.TrimPrefix(naplesURL, "http://")
-	revProxyPort = globals.RevProxyPort
+	revProxyPort = globals.AgentProxyPort
 	naplesURL += ":" + revProxyPort + "/"
 
 	return isNaplesReachable()

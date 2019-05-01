@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/emstore"
 )
 
@@ -142,7 +142,7 @@ type NetAgent struct {
 	SecurityProfileDB map[string]*netproto.SecurityProfile //Security Profile DB
 	RuleIDAppLUT      sync.Map                             // SGPolicy Rule ID to App Objects look up table.
 	ControllerIPs     []string                             // Controller IPs that NetAgent is using
-	Mode              string                               //Netagent Mode
+	Mode              string                               // Netagent Mode
 	NetAgentStartTime time.Time                            // Time when NetAgent was started
 }
 

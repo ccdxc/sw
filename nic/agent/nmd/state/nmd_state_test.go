@@ -24,7 +24,7 @@ import (
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
-	"github.com/pensando/sw/nic/agent/nmd/protos"
+	"github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/certificates/certapi"
 	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	Pkg "github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 	Tests "github.com/pensando/sw/nic/e2etests/go/agent/pkg/traffic/tests"
 	TestApi "github.com/pensando/sw/nic/e2etests/go/agent/pkg/traffic/tests/api"

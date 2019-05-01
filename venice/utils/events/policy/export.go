@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/protos"
+	evtsmgrprotos "github.com/pensando/sw/nic/agent/protos/evtprotos"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events"

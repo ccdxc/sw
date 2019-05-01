@@ -8,7 +8,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
-	"github.com/pensando/sw/nic/agent/netagent/protos/generated/nimbus"
+	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"

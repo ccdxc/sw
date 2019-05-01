@@ -93,7 +93,7 @@ func (it *veniceIntegSuite) TestMetrics(c *C) {
 
 		return true, res
 
-	}, "failed to query metrics", "5s", "180s")
+	}, "failed to query metrics")
 }
 
 func (it *veniceIntegSuite) TestMetricsAuthz(c *C) {
@@ -189,5 +189,5 @@ func (it *veniceIntegSuite) TestMetricsAuthz(c *C) {
 
 		return true, res
 
-	}, "failed to query metrics", "5s", "180s")
+	}, "failed to query metrics")
 }

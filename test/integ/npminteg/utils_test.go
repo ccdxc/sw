@@ -16,8 +16,7 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
-	state "github.com/pensando/sw/nic/agent/netagent/protos"
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -40,7 +39,7 @@ func (it *integTestSuite) pollTimeout() string {
 // CreateAgent creates an instance of agent
 func CreateAgent(kind datapath.Kind, srvURL, nodeUUID string, resolver resolver.Interface) (*Dpagent, error) {
 	// create new network agent
-	nagent, err := netagent.NewAgent(kind.String(), "", srvURL, resolver, state.AgentMode_MANAGED)
+	nagent, err := netagent.NewAgent(kind.String(), "", srvURL, resolver)
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)
 		return nil, err

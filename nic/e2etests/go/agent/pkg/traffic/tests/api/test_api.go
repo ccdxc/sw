@@ -1,7 +1,7 @@
 package TestsApi
 
 import (
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	Pkg "github.com/pensando/sw/nic/e2etests/go/agent/pkg"
 	Infra "github.com/pensando/sw/nic/e2etests/go/infra"
 )

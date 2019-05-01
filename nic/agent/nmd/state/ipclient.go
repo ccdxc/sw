@@ -15,8 +15,8 @@ import (
 	"github.com/fsnotify/fsnotify"
 
 	"github.com/pensando/sw/api/generated/cluster"
-	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
+	"github.com/pensando/sw/nic/agent/protos/nmd"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/globals"
 	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"

@@ -15,8 +15,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
-	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	tpmprotos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"

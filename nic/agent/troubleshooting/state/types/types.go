@@ -7,7 +7,7 @@ import (
 
 	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	tsproto "github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
+	tsproto "github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/venice/utils/emstore"
 )
 

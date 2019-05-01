@@ -3,7 +3,7 @@
 package rpcserver
 
 import (
-	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/venice/ctrler/tsm/statemgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/nic/agent/nevtsproxy/ctrlerif/types"
-	"github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/protos"
+	evtsmgrprotos "github.com/pensando/sw/nic/agent/protos/evtprotos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/policy"

@@ -7,9 +7,9 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg"
-	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 )
 
 func (c *CfgGen) GenerateMirrorSessions() error {

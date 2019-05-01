@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/protos"
+	evtsmgrprotos "github.com/pensando/sw/nic/agent/protos/evtprotos"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"

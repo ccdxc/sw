@@ -3,7 +3,7 @@ package types
 import (
 	"context"
 
-	"github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/protos"
+	evtsmgrprotos "github.com/pensando/sw/nic/agent/protos/evtprotos"
 )
 
 // CtrlerIntf provides all CRUD operations on event policy object

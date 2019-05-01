@@ -11,7 +11,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
-	"github.com/pensando/sw/nic/agent/netagent/protos/generated/nimbus"
+	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"

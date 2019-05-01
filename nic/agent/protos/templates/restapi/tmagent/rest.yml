@@ -1,0 +1,7 @@
+ basepath: "github.com/pensando/sw/nic/agent/protos/templates/restapi/tmagent"
+ templates:
+   - template: "restgen.tmpl"
+     outputpath: "{FILE}_apigen.go"
+   - template: "restapi_global.tmpl"
+     outputpath: "restapi.go"
+     once: true

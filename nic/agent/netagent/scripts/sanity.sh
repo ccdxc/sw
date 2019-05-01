@@ -16,6 +16,7 @@ export SYSUUID="42:42:42:42:42:42"
 ./agent/netagent/scripts/wait-for-hal.sh || cleanup $?
 ./build/x86_64/iris/bin/fake_nic_mgr || cleanup $?
 
+export VENICE_DEV=1
 cd $GOPATH/src/github.com/pensando/sw
 if [ "$1" == "single-threaded" ]; then
   export GOMAXPROCS=1

@@ -9,7 +9,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	apiProtos "github.com/pensando/sw/api/generated/monitoring"
-	tpmProtos "github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
+	tpmProtos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/ctxutils"
 	vlog "github.com/pensando/sw/venice/utils/log"

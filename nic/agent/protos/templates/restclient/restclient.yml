@@ -1,0 +1,7 @@
+ basepath: "github.com/pensando/sw/nic/agent/protos/templates/restclient"
+ templates:
+   - template: "restclient.tmpl"
+     outputpath: "{FILE}_client.go"
+   - template: "restclient_global.tmpl"
+     outputpath: "restclient.go"
+     once: true

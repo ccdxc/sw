@@ -99,7 +99,7 @@ const (
 	DebugDir = RuntimeDir + "/debug"
 
 	//Reverse Proxy Router Port
-	RevProxyPort = "8888"
+	AgentProxyPort = "8888"
 
 	// API gw Port
 	APIGwRESTPort = "443"

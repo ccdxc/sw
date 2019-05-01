@@ -16,6 +16,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
+	genapi "github.com/pensando/sw/nic/agent/protos/generated/restapi/tmagent"
 	"github.com/pensando/sw/nic/agent/tpa/state/types"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ntranslate"
@@ -26,16 +27,15 @@ import (
 
 // RestServer is the REST api server
 type RestServer struct {
-	ctx               context.Context
-	cancel            context.CancelFunc
-	waitGrp           sync.WaitGroup
-	TpAgent           types.CtrlerIntf         // telemetry policy agent
-	listenURL         string                   // URL where http server is listening
-	listener          net.Listener             // socket listener
-	httpServer        *http.Server             // HTTP server
-	keyTranslator     *ntranslate.Translator   // key to objMeta translator
-	prefixRoutes      map[string]routeAddFunc  // REST API route add functions
-	getPointsFuncList map[string]getPointsFunc // Get metrics points
+	ctx           context.Context
+	cancel        context.CancelFunc
+	waitGrp       sync.WaitGroup
+	TpAgent       types.CtrlerIntf       // telemetry policy agent
+	listenURL     string                 // URL where http server is listening
+	listener      net.Listener           // socket listener
+	httpServer    *http.Server           // HTTP server
+	keyTranslator *ntranslate.Translator // key to objMeta translator
+	gensrv        *genapi.RestServer     // generated rest server
 }
 
 // Response captures the HTTP Response sent by Agent REST Server
@@ -58,7 +58,7 @@ func MakeErrorResponse(code int, err error) (*Response, error) {
 	return res, err
 }
 
-type routeAddFunc func(*mux.Router, *RestServer)
+type routeAddFunc func(*mux.Router)
 type getPointsFunc func() ([]*tsdb.Point, error)
 
 // NewRestServer creates a new HTTP server servicg REST api
@@ -89,23 +89,25 @@ func NewRestServer(pctx context.Context, listenURL string, tpAgent types.CtrlerI
 	// setup the top level routes
 	router := mux.NewRouter()
 
-	// update functions from auto-generated code
-	srv.registerAPIRoutes()
-	srv.registerListMetrics()
+	srv.gensrv, _ = genapi.NewRestServer(tpAgent, tstr, listenURL)
 
-	for prefix, subRouter := range srv.prefixRoutes {
+	// update functions from auto-generated code
+	srv.gensrv.RegisterAPIRoutes()
+	srv.gensrv.RegisterListMetrics()
+
+	for prefix, subRouter := range srv.gensrv.PrefixRoutes {
 		sub := router.PathPrefix(prefix).Subrouter().StrictSlash(true)
-		subRouter(sub, &srv)
+		subRouter(sub)
 	}
 
 	prefixRoutes := map[string]routeAddFunc{
-		"/api/telemetry/flowexports/": addFlowExportPolicyAPIRoutes,
-		"/api/telemetry/fwlog/":       addFwlogPolicyAPIRoutes,
+		"/api/telemetry/flowexports/": srv.gensrv.AddFlowExportPolicyAPIRoutes,
+		"/api/telemetry/fwlog/":       srv.gensrv.AddFwlogPolicyAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {
 		sub := router.PathPrefix(prefix).Subrouter().StrictSlash(true)
-		subRouter(sub, &srv)
+		subRouter(sub)
 	}
 
 	router.Methods("GET").Subrouter().Handle("/debug/vars", expvar.Handler())
@@ -156,7 +158,7 @@ func (s *RestServer) ReportMetrics(frequency int) {
 	tsdbObj := map[string]tsdb.Obj{}
 
 	// create tsdb objects
-	for kind := range s.getPointsFuncList {
+	for kind := range s.gensrv.GetPointsFuncList {
 		obj, err := tsdb.NewObj(kind, nil, nil, nil)
 		if err != nil {
 			log.Errorf("failed to create tsdb object for kind: %s", kind)
@@ -177,7 +179,7 @@ func (s *RestServer) ReportMetrics(frequency int) {
 			ts := time.Now()
 
 			for kind, obj := range tsdbObj {
-				mi, err := s.getPointsFuncList[kind]()
+				mi, err := s.gensrv.GetPointsFuncList[kind]()
 				if err != nil {
 					log.Errorf("failed to get %s metrics, %s", kind, err)
 					continue

@@ -25,13 +25,12 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
-	"github.com/pensando/sw/nic/agent/netagent/protos"
 	tmstate "github.com/pensando/sw/nic/agent/tmagent/state"
 
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
-	nmdproto "github.com/pensando/sw/nic/agent/nmd/protos"
 	"github.com/pensando/sw/nic/agent/nmd/upg"
+	nmdproto "github.com/pensando/sw/nic/agent/protos/nmd"
 	tmrestapi "github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
 
 	"github.com/pensando/sw/nic/agent/tpa"
@@ -111,7 +110,7 @@ const (
 	// default valules
 	numIntegTestAgents = 1
 	agentDatapathKind  = "mock"
-	maxConnRetry       = 5
+	maxConnRetry       = 30
 
 	// TLS keys and certificates used by mock CKM endpoint to generate control-plane certs
 	certPath  = "../../../venice/utils/certmgr/testdata/ca.cert.pem"
@@ -669,7 +668,7 @@ func (it *veniceIntegSuite) startAgent() {
 
 		// Create netagent
 		rc := it.resolverClient
-		agent, aerr := netagent.NewAgent(datapathKind.String(), n, globals.Npm, rc, state.AgentMode_MANAGED)
+		agent, aerr := netagent.NewAgent(datapathKind.String(), n, globals.Npm, rc)
 		if aerr != nil {
 			log.Fatalf("Error creating netagent. Err: %v", aerr)
 		}
@@ -701,7 +700,7 @@ func (it *veniceIntegSuite) startAgent() {
 		it.tmpFiles = append(it.tmpFiles, n)
 
 		log.Infof("creating troubleshooting subagent")
-		tsa, aerr := troubleshooting.NewTsAgent(tsdp, fmt.Sprintf("dummy-uuid-%d", i), globals.Tsm, rc, state.AgentMode_MANAGED, agent.NetworkAgent)
+		tsa, aerr := troubleshooting.NewTsAgent(tsdp, fmt.Sprintf("dummy-uuid-%d", i), globals.Tsm, rc, agent.NetworkAgent)
 		if aerr != nil {
 			log.Fatalf("Error creating TS agent. Err: %v", aerr)
 		}
@@ -718,7 +717,7 @@ func (it *veniceIntegSuite) startAgent() {
 		it.tmpFiles = append(it.tmpFiles, n)
 
 		log.Infof("creating telemetry policy agent")
-		tpa, aerr := tpa.NewPolicyAgent(fmt.Sprintf("dummy-uuid-%d", i), globals.Tpm, rc, state.AgentMode_MANAGED, "mock", agent.NetworkAgent, agent.GetMgmtIPAddr)
+		tpa, aerr := tpa.NewPolicyAgent(fmt.Sprintf("dummy-uuid-%d", i), globals.Tpm, rc, "mock", agent.NetworkAgent, agent.GetMgmtIPAddr)
 		if aerr != nil {
 			log.Fatalf("Error creating TPAgent. Err: %v", aerr)
 		}
@@ -1019,6 +1018,7 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 		if err == nil {
 			break
 		}
+		time.Sleep(time.Second)
 	}
 	if err != nil {
 		c.Fatalf("cannot create grpc client")

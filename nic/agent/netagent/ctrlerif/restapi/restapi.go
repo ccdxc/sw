@@ -12,6 +12,10 @@ import (
 
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
+	genapi "github.com/pensando/sw/nic/agent/protos/generated/restapi/netagent"
+	tpagent "github.com/pensando/sw/nic/agent/protos/generated/restapi/tpagent"
+	tsagent "github.com/pensando/sw/nic/agent/protos/generated/restapi/tsagent"
+
 	tpa "github.com/pensando/sw/nic/agent/tpa/state/types"
 	troubleshooting "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
@@ -51,14 +55,15 @@ func MakeErrorResponse(code int, err error) (*Response, error) {
 }
 
 type routeAddFunc func(*mux.Router, *RestServer)
+type subrouteAddFunc func(*mux.Router)
 
 // NewRestServer creates a new HTTP server servicg REST api
-func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, tpAgent tpa.CtrlerIntf, listenURL string) (*RestServer, error) {
+func NewRestServer(agent types.CtrlerIntf, tsAgent troubleshooting.CtrlerIntf, tpAgent tpa.CtrlerIntf, listenURL string) (*RestServer, error) {
 	// create server instance
 	srv := RestServer{
 		listenURL: listenURL,
 		agent:     agent,
-		TsAgent:   tsagent,
+		TsAgent:   tsAgent,
 		TpAgent:   tpAgent,
 	}
 
@@ -67,37 +72,49 @@ func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, t
 		return &srv, nil
 	}
 
+	nsrv, _ := genapi.NewRestServer(agent, listenURL)
+	tsasrv, _ := tsagent.NewRestServer(tsAgent, listenURL)
+	tpasrv, _ := tpagent.NewRestServer(tpAgent, listenURL)
+
 	// setup the top level routes
 	router := mux.NewRouter()
-	prefixRoutes := map[string]routeAddFunc{
-		"/api/networks/":              addNetworkAPIRoutes,
-		"/api/endpoints/":             addEndpointAPIRoutes,
-		"/api/sgs/":                   addSecurityGroupAPIRoutes,
-		"/api/tenants/":               addTenantAPIRoutes,
-		"/api/interfaces/":            addInterfaceAPIRoutes,
-		"/api/namespaces/":            addNamespaceAPIRoutes,
-		"/api/nat/pools/":             addNatPoolAPIRoutes,
-		"/api/nat/policies/":          addNatPolicyAPIRoutes,
-		"/api/routes/":                addRouteAPIRoutes,
-		"/api/nat/bindings/":          addNatBindingAPIRoutes,
-		"/api/ipsec/policies/":        addIPSecPolicyAPIRoutes,
-		"/api/ipsec/encryption/":      addIPSecSAEncryptAPIRoutes,
-		"/api/ipsec/decryption/":      addIPSecSADecryptAPIRoutes,
-		"/api/security/policies/":     addSGPolicyAPIRoutes,
-		"/api/security/profiles/":     addSecurityProfileAPIRoutes,
-		"/api/mirror/sessions/":       addMirrorSessionAPIRoutes,
-		"/api/tunnels/":               addTunnelAPIRoutes,
-		"/api/tcp/proxies/":           addTCPProxyPolicyAPIRoutes,
-		"/api/telemetry/flowexports/": addFlowExportPolicyAPIRoutes,
-		"/api/telemetry/fwlog/":       addFwlogPolicyAPIRoutes,
-		"/api/system/ports":           addPortAPIRoutes,
-		"/api/apps":                   addAppAPIRoutes,
-		"/api/system/info":            addNaplesInfoAPIRoutes,
-		"/api/system/debug":           addSystemDebugRoutes,
-		"/api/vrfs":                   addVrfAPIRoutes,
+	prefixRoutes := map[string]subrouteAddFunc{
+		"/api/networks/":              nsrv.AddNetworkAPIRoutes,
+		"/api/endpoints/":             nsrv.AddEndpointAPIRoutes,
+		"/api/sgs/":                   nsrv.AddSecurityGroupAPIRoutes,
+		"/api/tenants/":               nsrv.AddTenantAPIRoutes,
+		"/api/interfaces/":            nsrv.AddInterfaceAPIRoutes,
+		"/api/namespaces/":            nsrv.AddNamespaceAPIRoutes,
+		"/api/nat/pools/":             nsrv.AddNatPoolAPIRoutes,
+		"/api/nat/policies/":          nsrv.AddNatPolicyAPIRoutes,
+		"/api/routes/":                nsrv.AddRouteAPIRoutes,
+		"/api/nat/bindings/":          nsrv.AddNatBindingAPIRoutes,
+		"/api/ipsec/policies/":        nsrv.AddIPSecPolicyAPIRoutes,
+		"/api/ipsec/encryption/":      nsrv.AddIPSecSAEncryptAPIRoutes,
+		"/api/ipsec/decryption/":      nsrv.AddIPSecSADecryptAPIRoutes,
+		"/api/security/policies/":     nsrv.AddSGPolicyAPIRoutes,
+		"/api/security/profiles/":     nsrv.AddSecurityProfileAPIRoutes,
+		"/api/tunnels/":               nsrv.AddTunnelAPIRoutes,
+		"/api/tcp/proxies/":           nsrv.AddTCPProxyPolicyAPIRoutes,
+		"/api/system/ports":           nsrv.AddPortAPIRoutes,
+		"/api/apps":                   nsrv.AddAppAPIRoutes,
+		"/api/vrfs":                   nsrv.AddVrfAPIRoutes,
+		"/api/mirror/sessions/":       tsasrv.AddMirrorSessionAPIRoutes,
+		"/api/telemetry/flowexports/": tpasrv.AddFlowExportPolicyAPIRoutes,
+		"/api/telemetry/fwlog/":       tpasrv.AddFwlogPolicyAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {
+		sub := router.PathPrefix(prefix).Subrouter().StrictSlash(true)
+		subRouter(sub)
+	}
+
+	localRoutes := map[string]routeAddFunc{
+		"/api/system/info":  addNaplesInfoAPIRoutes,
+		"/api/system/debug": addSystemDebugRoutes,
+	}
+
+	for prefix, subRouter := range localRoutes {
 		sub := router.PathPrefix(prefix).Subrouter().StrictSlash(true)
 		subRouter(sub, &srv)
 	}
@@ -120,8 +137,8 @@ func NewRestServer(agent types.CtrlerIntf, tsagent troubleshooting.CtrlerIntf, t
 		router.Methods("GET").Subrouter().Handle("/debug/tpa", httputils.MakeHTTPHandler(tpAgent.Debug))
 	}
 
-	if tsagent != nil {
-		router.Methods("GET").Subrouter().Handle("/debug/tsa", http.HandlerFunc(tsagent.Debug))
+	if tsAgent != nil {
+		router.Methods("GET").Subrouter().Handle("/debug/tsa", http.HandlerFunc(tsAgent.Debug))
 	}
 
 	log.Infof("Starting server at %s", listenURL)

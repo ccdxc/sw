@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 

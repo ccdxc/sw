@@ -16,14 +16,15 @@ TO_PREGEN := venice/utils/apigen/annotations
 
 # Lists venice venice protos and all things auto generated.
 TO_GEN := api api/labels api/fields venice/cmd/types/protos venice/cmd/grpc \
-venice/ctrler/ckm/rpcserver/ckmproto nic/agent/netagent/protos/netproto \
-venice/ctrler/tpm/rpcserver/protos  \
-venice/ctrler/tsm/rpcserver/tsproto \
+venice/ctrler/ckm/rpcserver/ckmproto \
+nic/agent/protos/netproto \
+nic/agent/protos/tpmprotos  \
+nic/agent/protos/tsproto \
+nic/agent/protos/nmd \
+nic/agent/protos/evtprotos \
 venice/citadel/collector/rpcserver/metric venice/utils/runtime/test \
 venice/orch venice/cmd/grpc/server/certificates/certapi \
-venice/ctrler/evtsmgr/rpcserver/protos \
 venice/evtsproxy/rpcserver/evtsproxyproto \
-nic/agent/nmd/protos nic/agent/netagent/protos \
 nic/sysmgr/events_proto \
 venice/utils/authn/radius                      \
 venice/ctrler/rollout/rpcserver/protos \

@@ -13,13 +13,13 @@ import (
 	"time"
 
 	protobuftypes "github.com/gogo/protobuf/types"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/ctrlerif/types"
-	"github.com/pensando/sw/venice/ctrler/evtsmgr/rpcserver/protos"
+	evtsmgrprotos "github.com/pensando/sw/nic/agent/protos/evtprotos"
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/emstore"

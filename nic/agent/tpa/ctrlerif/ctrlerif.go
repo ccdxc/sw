@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api"
+	tpmproto "github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/nic/agent/tpa/state/types"
-	tpmproto "github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -51,18 +51,20 @@ func (client *TpClient) runWatcher(ctx context.Context) {
 
 	for client.watchCtx.Err() == nil {
 		// create a grpc client
-		rpcClient, err := rpckit.NewRPCClient(client.agentName, client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
-		if err != nil {
-			log.Errorf("Error connecting to %s, Err: %v", client.srvURL, err)
-			time.Sleep(time.Second)
-			continue
+		if client.resolverClient != nil {
+			rpcClient, err := rpckit.NewRPCClient(client.agentName, client.srvURL, rpckit.WithBalancer(balancer.New(client.resolverClient)))
+			if err != nil {
+				log.Errorf("Error connecting to %s, Err: %v", client.srvURL, err)
+				time.Sleep(time.Second)
+				continue
+			}
+			log.Infof("grpc client connected to %v", client.srvURL)
+
+			client.rpcClient = rpcClient
+			client.processEvents(ctx)
+
+			client.rpcClient.Close()
 		}
-		log.Infof("grpc client connected to %v", client.srvURL)
-
-		client.rpcClient = rpcClient
-		client.processEvents(ctx)
-
-		client.rpcClient.Close()
 		time.Sleep(time.Second)
 	}
 }

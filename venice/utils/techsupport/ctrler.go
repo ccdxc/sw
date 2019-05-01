@@ -10,8 +10,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	tsconfig "github.com/pensando/sw/venice/ctrler/tsm/config"
-	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/log"

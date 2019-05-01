@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 

@@ -183,7 +183,7 @@ func main() {
 		host,
 		macAddr.String(),
 		*cmdRegistrationURL,
-		":"+globals.NmdRESTPort,
+		globals.Localhost+":"+globals.NmdRESTPort,
 		globals.Localhost+":"+globals.CMDUnauthCertAPIPort,
 		*cmdCertsURL,
 		*mode,

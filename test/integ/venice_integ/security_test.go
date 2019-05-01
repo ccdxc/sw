@@ -4,6 +4,7 @@ package veniceinteg
 
 import (
 	"fmt"
+	"time"
 
 	. "gopkg.in/check.v1"
 
@@ -12,7 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -397,6 +398,7 @@ func (it *veniceIntegSuite) TestSGPolicyRuleWithMultipleApps(c *C) {
 	AssertOk(c, err, "Error creating ssh app")
 	_, err = it.restClient.SecurityV1().App().Create(ctx, &httpApp)
 	AssertOk(c, err, "Error creating http app")
+	time.Sleep(time.Millisecond * 10)
 
 	// sg policy params
 	sgp := security.SGPolicy{

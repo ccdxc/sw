@@ -18,7 +18,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
+	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
 )
 
 var showTechCmd = &cobra.Command{

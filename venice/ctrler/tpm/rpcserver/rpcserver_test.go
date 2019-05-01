@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api/generated/monitoring"
-	tpmProtos "github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
+	tpmProtos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	vLog "github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/rpckit"

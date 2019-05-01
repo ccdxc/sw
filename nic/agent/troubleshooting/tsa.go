@@ -3,7 +3,6 @@
 package troubleshooting
 
 import (
-	protos "github.com/pensando/sw/nic/agent/netagent/protos"
 	netAgentState "github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/troubleshooting/ctrlerif"
 	"github.com/pensando/sw/nic/agent/troubleshooting/state"
@@ -48,34 +47,30 @@ type Agent struct {
 	datapath             types.TsDatapathAPI
 	TroubleShootingAgent *state.Tagent
 	tsClient             *ctrlerif.TsClient
-	Mode                 protos.AgentMode
 }
 
 // NewTsAgent creates troubleshooting agent instance
-func NewTsAgent(dp types.TsDatapathAPI, nodeUUID, ctrlerURL string, resolverClient resolver.Interface, mode protos.AgentMode, na *netAgentState.Nagent) (*Agent, error) {
+func NewTsAgent(dp types.TsDatapathAPI, nodeUUID, ctrlerURL string, resolverClient resolver.Interface, na *netAgentState.Nagent) (*Agent, error) {
 
 	var tsClient *ctrlerif.TsClient
 
-	tsAgent, err := state.NewTsAgent(dp, mode, nodeUUID, na)
+	tsAgent, err := state.NewTsAgent(dp, nodeUUID, na)
 	if err != nil {
 		log.Errorf("Error creating trouble shooting agent, Err: %v", err)
 		return nil, err
 	}
 
-	if mode == protos.AgentMode_MANAGED {
-		tsClient, err = ctrlerif.NewTsClient(tsAgent, ctrlerURL, resolverClient)
-		if err != nil {
-			log.Errorf("Error creating TroubleShooting client. Err: %v", err)
-			return nil, err
-		}
-		log.Infof("TroubleShooting client {%+v} is running", tsClient)
+	tsClient, err = ctrlerif.NewTsClient(tsAgent, ctrlerURL, resolverClient)
+	if err != nil {
+		log.Errorf("Error creating TroubleShooting client. Err: %v", err)
+		return nil, err
 	}
+	log.Infof("TroubleShooting client {%+v} is running", tsClient)
 
 	agent := Agent{
 		datapath:             dp,
 		TroubleShootingAgent: tsAgent,
 		tsClient:             tsClient,
-		Mode:                 mode,
 	}
 	return &agent, nil
 }

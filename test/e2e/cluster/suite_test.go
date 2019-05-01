@@ -20,8 +20,8 @@ import (
 	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi/restclient"
-	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
+	"github.com/pensando/sw/nic/agent/protos/generated/restclient"
+	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
 )
@@ -46,7 +46,7 @@ func TestE2ETest(t *testing.T) {
 type TestSuite struct {
 	tu              *testutils.TestUtils
 	restSvc         apiclient.Services
-	netagentClients []*restclient.NetagentClient
+	netagentClients []*restclient.AgentClient
 	loggedInCtx     context.Context
 }
 
@@ -72,15 +72,15 @@ var _ = BeforeSuite(func() {
 		agIP := net.ParseIP(ts.tu.FirstNaplesIP).To4()
 		Expect(len(agIP)).ShouldNot(Equal(0))
 		for idx := 0; idx < ts.tu.NumNaplesHosts; idx++ {
-			agURL := agIP.String() + ":" + globals.AgentRESTPort
+			agURL := agIP.String() + ":" + globals.AgentProxyPort
 			By(fmt.Sprintf("ts:%s connecting to netagent [%s]", time.Now().String(), agURL))
 
-			rclient := restclient.NewNetagentClient(agURL)
+			rclient := restclient.NewAgentClient(agURL)
 			Expect(rclient).ShouldNot(Equal(nil))
 			ts.netagentClients = append(ts.netagentClients, rclient)
 
 			var naples nmd.Naples
-			nmdURL := "http://" + agIP.String() + ":" + globals.RevProxyPort + "/api/v1/naples/"
+			nmdURL := "http://" + agIP.String() + ":" + globals.AgentProxyPort + "/api/v1/naples/"
 			By(fmt.Sprintf("Getting Naples object from %v", nmdURL))
 
 			resp, err := http.Get(nmdURL)

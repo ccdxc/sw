@@ -12,10 +12,9 @@ import (
 	gogoproto "github.com/gogo/protobuf/types"
 
 	"github.com/pensando/sw/api"
-	config "github.com/pensando/sw/nic/agent/netagent/protos"
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/dependencies"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -24,7 +23,7 @@ import (
 type Nagent types.NetAgent
 
 // NewNetAgent creates a new network agent
-func NewNetAgent(dp types.NetDatapathAPI, mode config.AgentMode, dbPath string) (*Nagent, error) {
+func NewNetAgent(dp types.NetDatapathAPI, dbPath string) (*Nagent, error) {
 	var na Nagent
 	var emdb emstore.Emstore
 	var err error
@@ -40,29 +39,19 @@ func NewNetAgent(dp types.NetDatapathAPI, mode config.AgentMode, dbPath string) 
 	}
 
 	na.init(emdb, dp)
+	na.Mode = "host-managed"
 
-	na.Mode = mode.String()
-
-	c := config.Agent{
+	tn := netproto.Tenant{
+		TypeMeta: api.TypeMeta{Kind: "Tenant"},
 		ObjectMeta: api.ObjectMeta{
-			Name: "AgentConfig",
-		},
-		TypeMeta: api.TypeMeta{
-			Kind: "Agent",
-		},
-		Spec: config.AgentSpec{
-			Mode: mode,
+			Name: "default",
 		},
 	}
-	_, err = emdb.Read(&c)
+
+	_, err = emdb.Read(&tn)
 
 	// Blank slate. Persist config and do init stuff
 	if err != nil {
-		err := emdb.Write(&c)
-		if err != nil {
-			emdb.Close()
-			return nil, err
-		}
 		// We need to create a default tenant and default namespace at startup.
 		err = na.createDefaultTenant()
 		if err != nil {
@@ -76,6 +65,7 @@ func NewNetAgent(dp types.NetDatapathAPI, mode config.AgentMode, dbPath string) 
 			return nil, err
 		}
 	}
+
 	err = na.GetUUID()
 	err = na.GetHwInterfaces()
 	if err != nil {

@@ -11,7 +11,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 
-	protos "github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
+	protos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
 )
 
 // MockCtrlerIntf is a mock of CtrlerIntf interface

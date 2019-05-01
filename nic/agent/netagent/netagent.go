@@ -12,7 +12,6 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	grpcDatapath "github.com/pensando/sw/nic/agent/netagent/datapath"
 	delphiDatapath "github.com/pensando/sw/nic/agent/netagent/datapath/delphidp"
-	protos "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
@@ -62,7 +61,6 @@ type Agent struct {
 	ResolverClient resolver.Interface
 	NpmClient      *ctrlerif.NpmClient
 	RestServer     *restapi.RestServer
-	Mode           protos.AgentMode
 	mgmtIPAddr     string
 	SysmgrClient   *sysmgr.Client
 	DelphiClient   clientApi.Client
@@ -71,7 +69,7 @@ type Agent struct {
 }
 
 // NewAgent creates an agent instance
-func NewAgent(datapath string, dbPath, ctrlerURL string, resolverClient resolver.Interface, mode protos.AgentMode) (*Agent, error) {
+func NewAgent(datapath string, dbPath, ctrlerURL string, resolverClient resolver.Interface) (*Agent, error) {
 	var ag Agent
 	var dp types.NetDatapathAPI
 
@@ -106,10 +104,9 @@ func NewAgent(datapath string, dbPath, ctrlerURL string, resolverClient resolver
 	}
 
 	// create a new network agent
-	nagent, err := state.NewNetAgent(dp, mode, dbPath)
+	nagent, err := state.NewNetAgent(dp, dbPath)
 	ag.NetworkAgent = nagent
 	ag.datapath = dp
-	ag.Mode = mode
 	ag.ResolverClient = resolverClient
 
 	if err != nil {
@@ -131,11 +128,6 @@ func NewAgent(datapath string, dbPath, ctrlerURL string, resolverClient resolver
 
 // Stop stops the agent
 func (ag *Agent) Stop() {
-	if ag.Mode == protos.AgentMode_CLASSIC {
-		ag.RestServer.Stop()
-		ag.NetworkAgent.Stop()
-		return
-	}
 	if ag.NpmClient != nil {
 		ag.NpmClient.Stop()
 	}
@@ -237,10 +229,10 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			}
 
 			ag.NetworkAgent.ControllerIPs = controllers
-			ag.NetworkAgent.Mode = obj.NaplesMode.String()
 
 			// Clear previously registered controller interface.
 			ag.NetworkAgent.Ctrlerif = nil
+			ag.NetworkAgent.Mode = "network-managed"
 
 			// create the NPM client
 			npmClient, err := ctrlerif.NewNpmClient(ag.NetworkAgent, globals.Npm, ag.ResolverClient)

@@ -10,6 +10,7 @@ import (
 
 	"github.com/pensando/sw/nic/agent/nevtsproxy/ctrlerif"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/ctrlerif/types"
+	genapi "github.com/pensando/sw/nic/agent/protos/generated/restapi/nevtsproxy"
 	"github.com/pensando/sw/venice/utils/events/policy"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -46,10 +47,12 @@ func NewRestServer(listenURL string, policyMgr *policy.Manager, logger log.Logge
 		logger:    logger,
 	}
 
+	esrv, _ := genapi.NewRestServer(handler, listenURL)
+
 	// setup the top level routes
 	router := mux.NewRouter()
 	subRouter := router.PathPrefix("/api/eventpolicies/").Subrouter().StrictSlash(true)
-	addEventPolicyAPIRoutes(subRouter, srv)
+	esrv.AddEventPolicyAPIRoutes(subRouter)
 
 	log.Infof("Starting server at %s", listenURL)
 

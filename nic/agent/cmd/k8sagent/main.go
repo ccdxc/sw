@@ -12,7 +12,6 @@ import (
 
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
-	"github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/plugins/k8s/cni"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -78,7 +77,7 @@ func main() {
 	defer cancel()
 
 	// create the new NetAgent
-	ag, err := netagent.NewAgent("mock", *agentDbPath, *npmURL, resolverClient, state.AgentMode_MANAGED)
+	ag, err := netagent.NewAgent("mock", *agentDbPath, *npmURL, resolverClient)
 	if err != nil {
 		log.Fatalf("Error creating network agent. Err: %v", err)
 	}

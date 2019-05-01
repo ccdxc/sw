@@ -13,16 +13,16 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi/restclient"
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/generated/restclient"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/nic/e2etests/go/agent/pkg"
-	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 )
 
 type CfgPush struct {
 	GenDir string
 
-	NetAgentRESTClients []*restclient.NetagentClient
+	NetAgentRESTClients []*restclient.AgentClient
 
 	Namespaces         []*netproto.Namespace
 	Networks           []*netproto.Network
@@ -41,7 +41,7 @@ func NewPusher(genDir string, netagentRESTEndpoints []string) (*CfgPush, error) 
 	}
 
 	for _, url := range netagentRESTEndpoints {
-		r := restclient.NewNetagentClient(url)
+		r := restclient.NewAgentClient(url)
 		p.NetAgentRESTClients = append(p.NetAgentRESTClients, r)
 	}
 	if err := p.ReadJSON(); err != nil {

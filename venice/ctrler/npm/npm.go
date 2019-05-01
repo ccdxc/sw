@@ -34,7 +34,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pensando/sw/nic/agent/netagent/protos/generated/nimbus"
+	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
 	"github.com/pensando/sw/venice/ctrler/npm/statemgr"
 	"github.com/pensando/sw/venice/globals"
 	debugStats "github.com/pensando/sw/venice/utils/debug/stats"

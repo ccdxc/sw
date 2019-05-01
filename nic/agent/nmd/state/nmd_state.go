@@ -25,7 +25,7 @@ import (
 	"github.com/pensando/sw/nic/agent/httputils"
 	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
-	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
+	"github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	roprotos "github.com/pensando/sw/venice/ctrler/rollout/rpcserver/protos"
 	"github.com/pensando/sw/venice/globals"

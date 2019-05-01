@@ -43,7 +43,7 @@ func main() {
 		LogToFile:   true,
 		FileCfg: log.FileConfig{
 			Filename:   *logToFile,
-			MaxSize:    10,
+			MaxSize:    50,
 			MaxBackups: 3,
 			MaxAge:     7,
 		},

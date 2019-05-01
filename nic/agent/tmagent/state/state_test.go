@@ -23,10 +23,9 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	state2 "github.com/pensando/sw/nic/agent/netagent/protos"
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/netagent/state"
-	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver/protos"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	tpmprotos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
@@ -152,7 +151,7 @@ func startNetagent() (*state.Nagent, *restapi.RestServer, error) {
 		dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 	}
 
-	nagent, err := state.NewNetAgent(dp, state2.AgentMode_CLASSIC, "")
+	nagent, err := state.NewNetAgent(dp, "")
 	if err != nil {
 		log.Errorf("Could not create net agent")
 		return nil, nil, err

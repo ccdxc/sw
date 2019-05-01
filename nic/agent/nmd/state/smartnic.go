@@ -8,7 +8,7 @@ import (
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
-	nmd "github.com/pensando/sw/nic/agent/nmd/protos"
+	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"

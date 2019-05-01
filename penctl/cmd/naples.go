@@ -13,11 +13,11 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/nic/agent/protos/nmd"
 
 	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/nmd/protos"
 	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/strconv"
 )

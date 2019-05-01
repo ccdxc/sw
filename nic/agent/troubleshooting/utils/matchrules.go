@@ -8,12 +8,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/nic/agent/troubleshooting/state/types"
-	"github.com/pensando/sw/venice/ctrler/tsm/rpcserver/tsproto"
 )
 
 // ErrInvalidFlowMonitorRule error code is returned when flow monitor rule is invalid

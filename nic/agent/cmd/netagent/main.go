@@ -4,18 +4,14 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/revproxy"
-	protos "github.com/pensando/sw/nic/agent/netagent/protos"
 	"github.com/pensando/sw/nic/agent/tpa"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
@@ -23,8 +19,6 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
-	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // Main function
@@ -39,12 +33,10 @@ func main() {
 		debugflag       = flag.Bool("debug", false, "Enable debug mode")
 		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Netagent)), "Redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
-		resolverURLs    = flag.String("resolver-urls", ":"+globals.CMDResolverPort, "comma separated list of resolver URLs <IP:Port>")
-		restURL         = flag.String("rest-url", ":"+globals.AgentRESTPort, "specify Agent REST URL")
-		revProxyURL     = flag.String("rev-proxy-url", ":"+globals.RevProxyPort, "specify Reverse Proxy Router REST URL")
+		restURL         = flag.String("rest-url", "localhost:"+globals.AgentRESTPort, "specify Agent REST URL")
+		revProxyURL     = flag.String("rev-proxy-url", ":"+globals.AgentProxyPort, "specify Reverse Proxy Router REST URL")
 		// ToDo Remove this flag prior to FCS the datapath should be defaulted to HAL
 		datapath = flag.String("datapath", "mock", "specify the agent datapath type either mock or hal")
-		mode     = flag.String("mode", "classic", "specify the agent mode either classic or managed")
 	)
 	flag.Parse()
 
@@ -83,19 +75,8 @@ func main() {
 		hostIfMAC = macAddr.String()
 	}
 
-	var agMode protos.AgentMode
-	var resolverClient resolver.Interface
-
-	if *mode == "managed" {
-		agMode = protos.AgentMode_MANAGED
-		// TODO Remove this once e2e is migrated to IOTA
-		resolverClient = resolver.New(&resolver.Config{Name: globals.Netagent, Servers: strings.Split(*resolverURLs, ",")})
-	} else {
-		agMode = protos.AgentMode_CLASSIC
-	}
-
 	// create the new NetAgent
-	ag, err := netagent.NewAgent(*datapath, *agentDbPath, *npmURL, resolverClient, agMode)
+	ag, err := netagent.NewAgent(*datapath, *agentDbPath, *npmURL, nil)
 	if err != nil {
 		log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
 	}
@@ -104,28 +85,6 @@ func main() {
 	// Set start time
 	ag.NetworkAgent.NetAgentStartTime = time.Now()
 
-	// TODO Remove manual setting up of npm client based on cmdline flag once venice e2e tests are moved to IOTA
-	if agMode == protos.AgentMode_MANAGED {
-		// create the NPM client
-		npmClient, err := ctrlerif.NewNpmClient(ag.NetworkAgent, *npmURL, ag.ResolverClient)
-		if err != nil {
-			log.Errorf("Error creating NPM client. Err: %v", err)
-		}
-		ag.NpmClient = npmClient
-
-		// initialize netagent's tsdb client
-		opts := &tsdb.Opts{
-			ClientName:              globals.Netagent + ag.NetworkAgent.NodeUUID,
-			ResolverClient:          resolverClient,
-			Collector:               globals.Collector,
-			DBName:                  "default",
-			SendInterval:            time.Duration(30) * time.Second,
-			ConnectionRetryInterval: 100 * time.Millisecond,
-		}
-		ctx, cancel := context.WithCancel(context.Background())
-		tsdb.Init(ctx, opts)
-		defer cancel()
-	}
 	// create the new Troublehshooting agent
 	var tsdp tstypes.TsDatapathAPI
 	// ToDo Remove mock hal datapath prior to FCS
@@ -152,14 +111,14 @@ func main() {
 		ag.RestServer = restServer
 	} else {
 
-		tsa, err := troubleshooting.NewTsAgent(tsdp, ag.NetworkAgent.NodeUUID, *tpmURL, resolverClient, agMode, ag.NetworkAgent)
+		tsa, err := troubleshooting.NewTsAgent(tsdp, ag.NetworkAgent.NodeUUID, *tpmURL, nil, ag.NetworkAgent)
 		if err != nil {
 			log.Fatalf("Error creating Naples NetAgent. Err: %v", err)
 		}
 		log.Printf("TroubleShooting Agent {%+v} instantiated", tsa)
 
 		// telemetry policy agent
-		tpa, err := tpa.NewPolicyAgent(ag.NetworkAgent.NodeUUID, *npmURL, resolverClient, agMode, *datapath, ag.NetworkAgent, ag.GetMgmtIPAddr)
+		tpa, err := tpa.NewPolicyAgent(ag.NetworkAgent.NodeUUID, *npmURL, nil, *datapath, ag.NetworkAgent, ag.GetMgmtIPAddr)
 		if err != nil {
 			log.Fatalf("Error creating telemetry policy agent, Err: %v", err)
 		}
@@ -196,7 +155,31 @@ func main() {
 
 		// NET-AGENT
 		"/api/telemetry/flowexports/": "http://127.0.0.1:" + globals.AgentRESTPort,
-		"/api ":                       "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/networks/":              "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/endpoints/":             "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/sgs/":                   "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/tenants/":               "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/interfaces/":            "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/namespaces/":            "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/nat/pools/":             "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/nat/policies/":          "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/routes/":                "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/nat/bindings/":          "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/ipsec/policies/":        "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/ipsec/encryption/":      "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/ipsec/decryption/":      "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/security/policies/":     "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/security/profiles/":     "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/tunnels/":               "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/tcp/proxies/":           "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/system/ports":           "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/apps":                   "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/vrfs":                   "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/mirror/sessions/":       "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/system/info":            "http://127.0.0.1:" + globals.AgentRESTPort,
+		"/api/system/debug":           "http://127.0.0.1:" + globals.AgentRESTPort,
+
+		"/api ": "http://127.0.0.1:" + globals.AgentRESTPort,
 	}
 
 	proxyRouter, err := revproxy.NewRevProxyRouter(*revProxyURL, proxyConfig)

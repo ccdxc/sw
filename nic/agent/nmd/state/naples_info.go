@@ -15,7 +15,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/nic/agent/nmd/protos"
+	"github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/utils/log"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 )

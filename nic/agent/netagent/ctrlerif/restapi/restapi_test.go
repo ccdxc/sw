@@ -9,9 +9,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
-	protos "github.com/pensando/sw/nic/agent/netagent/protos"
-	"github.com/pensando/sw/nic/agent/netagent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	tpdatapath "github.com/pensando/sw/nic/agent/tpa/datapath"
 	tpstate "github.com/pensando/sw/nic/agent/tpa/state"
 	tsdatapath "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
@@ -49,7 +48,7 @@ func setup() (*RestServer, error) {
 		dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
 	}
 
-	nagent, err := state.NewNetAgent(dp, protos.AgentMode_CLASSIC, "")
+	nagent, err := state.NewNetAgent(dp, "")
 	if err != nil {
 		log.Errorf("Could not create net agent")
 		return nil, err
@@ -67,7 +66,7 @@ func setup() (*RestServer, error) {
 		log.Errorf("Could not create troubleshooting HAL datapath. Kind: %v, Error %v", datapathKind, err)
 		return nil, err
 	}
-	tsagent, err := tsstate.NewTsAgent(tsdp, protos.AgentMode_CLASSIC, "dummy-node-uuid", nagent)
+	tsagent, err := tsstate.NewTsAgent(tsdp, "dummy-node-uuid", nagent)
 	if err != nil {
 		log.Errorf("Could not create ts troubleshooting agent")
 		return nil, err

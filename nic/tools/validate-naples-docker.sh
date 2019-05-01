@@ -3,7 +3,7 @@
 set -x
 
 function create_namespaces {
-  NAMESPACE_URL="$NAPLES_AGENT_IP:9007/api/namespaces/"
+  NAMESPACE_URL="$NAPLES_AGENT_IP:8888/api/namespaces/"
 
   curl -d'{"Kind":"Namespace","meta":{"Name":"kg1","Tenant":"default"}}' -X POST -H "Content-Type: application/json" $NAMESPACE_URL
   validate_get "kg1" $NAMESPACE_URL
@@ -19,7 +19,7 @@ function create_namespaces {
 
 function create_networks {
   echo "Creating Networks"
-  NETWORK_URL="$NAPLES_AGENT_IP:9007/api/networks/"
+  NETWORK_URL="$NAPLES_AGENT_IP:8888/api/networks/"
 
   curl -d'{"Kind":"Network","meta":{"Name":"kg1","Tenant":"default","Namespace":"kg1"}, "spec":{"IPv4Subnet": "10.1.1.0/24", "IPv4Gateway":"10.1.1.1", "VlanID":100}}' -X POST -H "Content-Type: application/json" $NETWORK_URL
   validate_get "kg1" $NETWORK_URL
@@ -31,7 +31,7 @@ function create_networks {
 }
 
 function create_endpoints {
-  EP_URL="$NAPLES_AGENT_IP:9007/api/endpoints/"
+  EP_URL="$NAPLES_AGENT_IP:8888/api/endpoints/"
 
   curl -d'{"Kind":"Endpoint","Meta":{"Name":"kg1-router","Tenant":"default","Namespace":"kg1"},"spec":{"NetworkName":"kg1","Interface":"uplink-0"},"status":{"IPv4Address":"10.1.1.1/24","MacAddress":"00:22:22:22:22:22","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" $EP_URL
   validate_get "kg1" $EP_URL
@@ -43,7 +43,7 @@ function create_endpoints {
 }
 
 function create_routes {
-  ROUTE_URL="$NAPLES_AGENT_IP:9007/api/routes/"
+  ROUTE_URL="$NAPLES_AGENT_IP:8888/api/routes/"
 
   curl -d'{"Kind":"Route","meta":{"Name":"kg1","Tenant":"default","Namespace":"kg1"}, "spec":{"ip-prefix":"10.1.1.0/24", "interface":"uplink-0","gateway-ip":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" $ROUTE_URL
   validate_get "kg1" $ROUTE_URL
@@ -55,7 +55,7 @@ function create_routes {
 }
 
 function create_nat_pools {
-  NAT_POOL_URL="$NAPLES_AGENT_IP:9007/api/natpools/"
+  NAT_POOL_URL="$NAPLES_AGENT_IP:8888/api/natpools/"
 
   curl -d'{"kind":"NatPool","meta":{"name":"pool-1","tenant":"default","namespace":"kg1"},"spec":{"ip-range":"10.1.2.1-10.1.2.200"}}' -X POST -H "Content-Type: application/json" $NAT_POOL_URL
   validate_get "kg1-pool-1" $NAT_POOL_URL
@@ -64,7 +64,7 @@ function create_nat_pools {
 }
 
 function create_nat_policies {
-  NAT_POLICY_URL="$NAPLES_AGENT_IP:9007/api/natpolicies/"
+  NAT_POLICY_URL="$NAPLES_AGENT_IP:8888/api/natpolicies/"
 
   curl -d'{"kind":"NatPolicy","meta":{"name":"kg2","tenant":"default","namespace":"kg2"},"spec":{"rules":[{ "source": {"address": "10.0.0.0-10.0.255.255"}, "nat-pool":"kg1/pool-1","action":"SNAT"}]}}'  -X POST -H "Content-Type: application/json" $NAT_POLICY_URL
   curl -d'{"kind":"NatPolicy","meta":{"name":"kg1-nat-policy","tenant":"default","namespace":"kg2"},"spec":{"rules":[{"nat-pool":"kg1/pool-1","action":"SNAT"}]}}' -X POST -H "Content-Type: application/json" $NAT_POLICY_URL
@@ -74,7 +74,7 @@ function create_nat_policies {
 }
 
 function create_nat_bindings {
-  NAT_BINDING_URL="$NAPLES_AGENT_IP:9007/api/natbindings/"
+  NAT_BINDING_URL="$NAPLES_AGENT_IP:8888/api/natbindings/"
 
   curl -d'{"Kind":"NatBinding","meta":{"Name":"kg2","Tenant":"default","Namespace":"default"}, "spec":{"nat-pool":"kg1/kg1-pool-1", "ip-address":"10.1.1.1"}}' -X POST -H "Content-Type: application/json" $NAT_BINDING_URL
   validate_get "kg1" $NAT_BINDING_URL
