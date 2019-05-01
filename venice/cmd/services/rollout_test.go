@@ -81,7 +81,6 @@ func TestRolloutMgr(t *testing.T) {
 	r.getUpgradeOrder = func() []string { numgetUpgradeOrderCalled++; return []string{} }
 	r.venicePreCheck = func(version string) error { numVenicePrecheckCalled++; return nil }
 	r.veniceRunVersion = func(version string) error { numVeniceRunVersionCalled++; return nil }
-
 	r.Start()
 	defer r.Stop()
 

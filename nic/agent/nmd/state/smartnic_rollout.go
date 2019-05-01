@@ -113,7 +113,12 @@ func (n *NMD) issueNextPendingOp() {
 			return
 		}
 	case protos.SmartNICOp_SmartNICImageDownload:
-		imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, n.inProgressOps.Version)
+		naplesVersion, err := imagestore.GetNaplesRolloutVersion(context.Background(), n.resolverClient, n.inProgressOps.Version)
+		if err != nil {
+			log.Errorf("Failed to get naples version from objectstore %+v", err)
+			return
+		}
+		imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, naplesVersion)
 	}
 }
 

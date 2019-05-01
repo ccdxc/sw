@@ -133,7 +133,7 @@ func uploadFileToObjStore(client vos.BackendClient, bucket string, root string, 
 	meta[metaReleaseDate] = metaMap[imageType][metaReleaseDate]
 	meta[metaVersion] = metaMap[imageType][metaVersion]
 
-	_, err = client.PutObject("default."+bucket, metaMap[imageType][metaVersion]+"_img/"+metaMap[imageType][metaName], bytes.NewBuffer(fileBuf), -1, minio.PutObjectOptions{UserMetadata: meta})
+	_, err = client.PutObject("default."+bucket, imageType+"/"+metaMap[imageType][metaVersion]+"_img/"+metaMap[imageType][metaName], bytes.NewBuffer(fileBuf), -1, minio.PutObjectOptions{UserMetadata: meta})
 	if err != nil {
 		log.Errorf("UploadImage: Could not put object [%s] to datastore (%s)", metaMap[imageType][metaName], err)
 		return err

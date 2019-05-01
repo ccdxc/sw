@@ -48,17 +48,17 @@ func createBundle() (int, error) {
 	}
 
 	meta := map[string]map[string]string{
-		"bundle": {"Version": "1.0.0",
+		"Bundle": {"Version": "1.0.0",
 			"Description": "Meta File",
 			"ReleaseDate": "May2019",
 			"Name":        "metadata.json"},
 
-		"venice": {"Version": "3.2.0",
+		"Venice": {"Version": "3.2.0",
 			"Description": "Venice Image",
 			"ReleaseDate": "May2019",
 			"Name":        "venice.tgz"},
 
-		"naples": {"Version": "4.5.1",
+		"Naples": {"Version": "4.5.1",
 			"Description": "Naples Image",
 			"ReleaseDate": "May2019",
 			"Name":        "naples_fw.tar"}}

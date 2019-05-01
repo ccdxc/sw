@@ -15,34 +15,41 @@ import (
 )
 
 const (
-	imageName = "venice.tgz"
+	veniceImageName = "venice.tgz"
+	naplesImageName = "naples_fw.tar"
+	bucketName      = "images"
 )
 
 // DownloadNaplesImage downloads naples image from minio
 func DownloadNaplesImage(ctx context.Context, resolver resolver.Interface, version string) error {
-	return downloadImage(ctx, resolver, version, "naples")
+	if version == "" {
+		log.Errorf("Version is needed to download a naples image from objstore")
+		return fmt.Errorf("Version is needed to download a naples image from objstore")
+	}
+
+	objectStoreFileName := "Naples/" + version + "_img/" + naplesImageName
+	return downloadImage(ctx, resolver, objectStoreFileName, "naples_fw.tar")
 }
 
 // DownloadVeniceImage downloads a venice image from minio
 func DownloadVeniceImage(ctx context.Context, resolver resolver.Interface, version string) error {
-	return downloadImage(ctx, resolver, version, "venice")
+
+	if version == "" {
+		log.Errorf("Version is needed to download a venice image from objstore")
+		return fmt.Errorf("Version is needed to download a venice image from objstore")
+	}
+
+	objectStoreFileName := "Venice/" + version + "_img/" + veniceImageName
+	return downloadImage(ctx, resolver, objectStoreFileName, "venice.tgz")
 }
 
-func downloadImage(ctx context.Context, resolver resolver.Interface, version string, imageType string) error {
+func downloadImage(ctx context.Context, resolver resolver.Interface, name string, outFile string) error {
 
-	bucket := "images"
-	//name := version + ".img/venice"
-	//out := version + ".img"
-	name := imageType + ".tgz"
-	out := imageType + ".tgz"
+	bucket := bucketName
 
 	if resolver == nil {
 		log.Errorf("Resolver cannot be null")
 		return fmt.Errorf("Resolver cannot be null")
-	}
-	if version == "" {
-		log.Errorf("Version is needed to download a naples image from objstore")
-		return fmt.Errorf("Version is needed to download a naples image from objstore")
 	}
 
 	tlsp, err := rpckit.GetDefaultTLSProvider(globals.Vos)
@@ -69,10 +76,10 @@ func downloadImage(ctx context.Context, resolver resolver.Interface, version str
 		return fmt.Errorf("Could not get object (%s)", err)
 	}
 
-	of, err := os.Create(out)
+	of, err := os.Create(outFile)
 	if err != nil {
-		log.Errorf("Could not create output file [%s](%s)", out, err)
-		return fmt.Errorf("Could not create output file [%s](%s)", out, err)
+		log.Errorf("Could not create output file [%s](%s)", outFile, err)
+		return fmt.Errorf("Could not create output file [%s](%s)", outFile, err)
 	}
 	defer of.Close()
 	buf := make([]byte, 1024)

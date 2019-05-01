@@ -68,16 +68,31 @@ func GetGitVersion() map[string]string {
 	return imageConfig.GitVersion
 }
 
+func uploadBundleImg(ctx context.Context, client objstore.Client, rootDir string, version string, imageName string, objStoreFile string) error {
+
+	imageFile := rootDir + "/" + imageName
+	objectStoreFileName := "Bundle/" + version + "_img/" + objStoreFile
+	return UploadImage(ctx, client, version, imageFile, objectStoreFileName)
+
+}
+
+func uploadVeniceImg(ctx context.Context, client objstore.Client, rootDir string, version string, imageName string, objStoreFile string) error {
+
+	imageFile := rootDir + "/" + imageName
+	objectStoreFileName := "Venice/" + version + "_img/" + objStoreFile
+	return UploadImage(ctx, client, version, imageFile, objectStoreFileName)
+
+}
+
 //UploadImage uploads a given image to objectStore /rootDir/version/imageName should give the path to the file
-func UploadImage(ctx context.Context, client objstore.Client, rootDir string, version string, imageName string) error {
+func UploadImage(ctx context.Context, client objstore.Client, version string, imageName string, objStoreFileName string) error {
 
 	meta := make(map[string]string)
-	imageFile := rootDir + "/" + imageName
-	//TODO include version as objStoreFileName := version + ".img/" + imageName
-	objStoreFileName := "venice.tgz"
+	imageFile := imageName
 
 	_, err := client.StatObject(objStoreFileName)
 	if err == nil {
+		By(fmt.Sprintf("Image (%s) exists in objectStore", objStoreFileName))
 		log.Errorf("Image (%s) exists in the object store", objStoreFileName)
 		return nil
 	}
@@ -136,8 +151,40 @@ var _ = Describe("Rollout object tests", func() {
 
 			By(fmt.Sprintf("\nts:%s uploading image to object store..", time.Now().String()))
 			ctx := ts.tu.NewLoggedInContext(context.Background())
-			err = UploadImage(ctx, ts.tu.VOSClient, "/import/src/github.com/pensando/sw/bin/", version, filename)
+			err = uploadVeniceImg(ctx, ts.tu.VOSClient, "/import/src/github.com/pensando/sw/bin/", version, filename, "venice.tgz")
 			Expect(err).Should(BeNil(), "Failed to upload file")
+			meta := map[string]map[string]string{
+				"Bundle": {"Version": "2.0",
+					"Description": "Meta File",
+					"ReleaseDate": "May2019",
+					"Name":        "metadata.json"},
+
+				"Venice": {"Version": version,
+					"Description": "Venice Image",
+					"ReleaseDate": "May2019",
+					"Name":        "venice.tgz"},
+
+				"Naples": {"Version": "5.1",
+					"Description": "Naples Image",
+					"ReleaseDate": "May2019",
+					"Name":        "naples_fw.tar"}}
+
+			b, err := json.Marshal(meta)
+			if err != nil {
+				By(fmt.Sprintf("ts:%s Failed to marshal meta info", time.Now().String()))
+				err := errors.New("Failed to marshal meta info")
+				Expect(err).Should(BeNil(), "Failed to marshal meta info")
+			}
+
+			err = ioutil.WriteFile("/tmp/metadata.json", b, 0644)
+			if err != nil {
+				By(fmt.Sprintf("ts:%s Failed to marshal meta info", time.Now().String()))
+				err := errors.New("Failed to marshal meta info")
+				Expect(err).Should(BeNil(), "Failed to marshal meta info")
+			}
+			err = uploadBundleImg(ctx, ts.tu.VOSClient, "/tmp/", "2.0", "metadata.json", "metadata.json")
+			Expect(err).Should(BeNil(), "Failed to upload file")
+
 		})
 
 		// run tests
@@ -158,7 +205,7 @@ var _ = Describe("Rollout object tests", func() {
 					Name: rolloutName,
 				},
 				Spec: rollout.RolloutSpec{
-					Version:                     version,
+					Version:                     "2.0",
 					ScheduledStartTime:          scheduledStartTime,
 					Duration:                    "",
 					Strategy:                    "LINEAR",
@@ -171,6 +218,13 @@ var _ = Describe("Rollout object tests", func() {
 					UpgradeType:                 "Disruptive",
 				},
 			}
+			// Verify creation for rollout object
+			Eventually(func() bool {
+				oMeta := api.ObjectMeta{Name: rolloutName, Tenant: "default"}
+				_, _ = ts.tu.APIClient.RolloutV1().RolloutAction().Delete(ts.loggedInCtx, &oMeta)
+				return true
+			}).Should(BeTrue(), fmt.Sprintf("Failed to create %s object", rolloutName))
+
 			// Verify creation for rollout object
 			Eventually(func() bool {
 				r1, err := ts.restSvc.RolloutV1().Rollout().DoRollout(ts.loggedInCtx, &rollout)

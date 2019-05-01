@@ -83,8 +83,14 @@ func RunVersion(version string) error {
 // DownloadImage downloads an image from minio and returns the local filename
 func DownloadImage(version string) (string, error) {
 
-	if err := imagestore.DownloadVeniceImage(context.Background(), env.ResolverClient, version); err != nil {
-		return "", fmt.Errorf("Error %s during image download of version %s", err, version)
+	veniceVersion, err := imagestore.GetVeniceRolloutVersion(context.Background(), env.ResolverClient, version)
+	if err != nil {
+		log.Errorf("Failed to obtain venice image %#v", err)
+		return "", err
+	}
+
+	if err := imagestore.DownloadVeniceImage(context.Background(), env.ResolverClient, veniceVersion); err != nil {
+		return "", fmt.Errorf("Error %s during image download of version %s", err, veniceVersion)
 	}
 
 	if err := os.RemoveAll(installerTmpDir); err != nil {

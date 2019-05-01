@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/pensando/sw/venice/utils/imagestore"
+
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/installer"
 	"github.com/pensando/sw/venice/cmd/types"
@@ -116,9 +118,20 @@ func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 		existingStatus, found := r.cachedStatus[key]
 		if !found {
 			var st rolloutproto.VeniceOpStatus
+			var veniceVersion string
+			var err error
+			if env.ResolverClient == nil {
+				veniceVersion = opSpec.Version
+			} else {
+				veniceVersion, err = imagestore.GetVeniceRolloutVersion(context.TODO(), env.ResolverClient, opSpec.Version)
+				if err != nil {
+					log.Errorf("Failed to get veniceVersion from objectStore %+v", err)
+					continue
+				}
+			}
 			cmdVersion := utils.GetGitVersion()
-			log.Infof("Rollout from %+v to OpSepc version %+v to cmdVersion %+v", env.GitVersion, opSpec.Version, cmdVersion[opSpec.Version])
-			if env.GitVersion != cmdVersion[opSpec.Version] {
+			log.Infof("Rollout from %+v to bundleVersion %+v and veniceVersion %+v : %+v", env.GitVersion, opSpec.Version, veniceVersion, cmdVersion)
+			if env.GitVersion != cmdVersion[veniceVersion] {
 				log.Infof("Performing Rollout to version %+v", utils.GetGitVersion())
 				st = r.doOP(opSpec.Op, opSpec.Version)
 			} else {
