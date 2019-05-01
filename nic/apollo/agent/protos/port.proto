@@ -165,9 +165,9 @@ message PortStats {
 
 // PortAdminState specifies if the port is enabled (admin up) or disabled (admin down)
 enum PortAdminState {
-  PORT_ADMIN_STATE_NONE = 0;   // port admin state not configured
-  PORT_ADMIN_STATE_DOWN = 1;   // port is admin disabled
-  PORT_ADMIN_STATE_UP   = 2;   // port is admin enabled
+  PORT_ADMIN_STATE_NONE = 0; // port admin state not configured
+  PORT_ADMIN_STATE_DOWN = 1; // port is admin disabled
+  PORT_ADMIN_STATE_UP   = 2; // port is admin enabled
 }
 
 enum PortXcvrState {
@@ -210,57 +210,91 @@ enum PortXcvrPid {
   XCVR_PID_SFP_10GBASE_CU   = 68;
 }
 
-enum CableType {
-  CABLE_TYPE_NONE   = 0;
-  CABLE_TYPE_COPPER = 1;
-  CABLE_TYPE_FIBER  = 2;
+enum MediaType {
+  MEDIA_TYPE_NONE   = 0; // media not connected
+  MEDIA_TYPE_COPPER = 1; // copper cable
+  MEDIA_TYPE_FIBER  = 2; // fiber cable
 }
 
 // PortOperState reflects the current status of the port
 enum PortOperState {
   PORT_OPER_STATUS_NONE = 0;
-  PORT_OPER_STATUS_UP   = 1;    // port is linked up
-  PORT_OPER_STATUS_DOWN = 2;    // port link status is down
+  PORT_OPER_STATUS_UP   = 1; // port is linked up
+  PORT_OPER_STATUS_DOWN = 2; // port link status is down
 }
 
 // PortSpeed specifies the speed of the port
 enum PortSpeed {
-  PORT_SPEED_NONE = 0;     // port speed not configured
-  PORT_SPEED_1G   = 1;     // port speed is 1Gbps
-  PORT_SPEED_10G  = 2;     // port speed is 10Gbps
-  PORT_SPEED_25G  = 3;     // port speed is 25Gbps
-  PORT_SPEED_40G  = 4;     // port speed is 40Gbps
-  PORT_SPEED_50G  = 5;     // port speed is 50Gbps
-  PORT_SPEED_100G = 6;     // port speed is 100Gbps
+  PORT_SPEED_NONE = 0; // port speed not configured
+  PORT_SPEED_1G   = 1; // port speed is 1Gbps
+  PORT_SPEED_10G  = 2; // port speed is 10Gbps
+  PORT_SPEED_25G  = 3; // port speed is 25Gbps
+  PORT_SPEED_40G  = 4; // port speed is 40Gbps
+  PORT_SPEED_50G  = 5; // port speed is 50Gbps
+  PORT_SPEED_100G = 6; // port speed is 100Gbps
 }
 
-message PortLinkStatus {
-  PortOperState OperState = 1;    // operational state of port
-  PortSpeed     PortSpeed = 2;    // operational speed of the port
+enum PortPauseType {
+  PORT_PAUSE_TYPE_NONE = 0; // Disable Pause
+  PORT_PAUSE_TYPE_LINK = 1; // Link level pause
+  PORT_PAUSE_TYPE_PFC  = 2; // PFC
+}
+
+enum PortLoopBackMode {
+  PORT_LOOPBACK_MODE_NONE = 0; // No loopback
+  PORT_LOOPBACK_MODE_MAC  = 1; // MAC loopback
+  PORT_LOOPBACK_MODE_PHY  = 2; // PHY/Serdes loopback
+}
+
+enum PortFecType {
+  PORT_FEC_TYPE_NONE = 0; // Disable FEC
+  PORT_FEC_TYPE_FC   = 1; // FireCode (FC) FEC
+  PORT_FEC_TYPE_RS   = 2; // ReedSolomon (RS) FEC
 }
 
 message PortSpec {
-  uint32         PortId     = 1;
-  PortAdminState AdminState = 2;
+  // port id (key for this object)
+  uint32           PortId          = 1;
+  // port up|down adminstratively
+  PortAdminState   AdminState      = 2;
+  // port speed
+  PortSpeed        Speed           = 3;
+  // FEC type
+  PortFecType      FECType         = 4;
+  // enable/disable auto negotiation feature
+  bool             AutoNegEn       = 5;
+  // link debounce timeout in msec (default = 0 ms)
+  uint32           DeBounceTimeout = 6;
+  // MTU size in bytes
+  uint32           Mtu             = 7;
+  // // Pause type (pfc or link level)
+  PortPauseType    PauseType       = 8;
+  // Port loopback mode - MAC/PHY
+  PortLoopBackMode LoopbackMode    = 9;
+}
+
+message PortLinkStatus {
+  PortOperState OperState = 1; // operational state of port
+  PortSpeed     PortSpeed = 2; // operational speed of the port
 }
 
 message PortXcvrStatus {
   int32         Port      = 1;
   PortXcvrState State     = 2;
   PortXcvrPid   Pid       = 3;
-  CableType     CableType = 4;
+  MediaType     MediaType = 4;
   bytes         XcvrSprom = 5;
 }
 
 message PortStatus {
-  PortLinkStatus LinkStatus = 1;    // operational link status
-  PortXcvrStatus XcvrStatus = 2;    // transceiver status
+  PortLinkStatus LinkStatus = 1; // operational link status
+  PortXcvrStatus XcvrStatus = 2; // transceiver status
 }
 
 message Port {
-  PortSpec   Spec   = 1;    // port configuration
-  PortStatus Status = 2;    // status of port
-  PortStats  Stats  = 3;    // Port statistics
+  PortSpec   Spec   = 1; // port configuration
+  PortStatus Status = 2; // status of port
+  PortStats  Stats  = 3; // Port statistics
 }
 
 message PortGetRequest {

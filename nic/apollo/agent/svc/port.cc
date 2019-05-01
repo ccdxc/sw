@@ -50,7 +50,7 @@ pds_port_status_fill (pds::PortStatus *status, sdk::linkmgr::port_args_t *port_i
     auto link_status = status->mutable_linkstatus();
     auto xcvr_status = status->mutable_xcvrstatus();
 
-    switch (port_info->oper_status) { 
+    switch (port_info->oper_status) {
     case port_oper_status_t::PORT_OPER_STATUS_UP:
         link_status->set_operstate(pds::PORT_OPER_STATUS_UP);
         break;
@@ -89,7 +89,7 @@ pds_port_status_fill (pds::PortStatus *status, sdk::linkmgr::port_args_t *port_i
     xcvr_status->set_port(port_info->xcvr_event_info.phy_port);
     xcvr_status->set_state(pds::PortXcvrState(port_info->xcvr_event_info.state));
     xcvr_status->set_pid(pds::PortXcvrPid(port_info->xcvr_event_info.pid));
-    xcvr_status->set_cabletype(pds::CableType(port_info->xcvr_event_info.cable_type));
+    xcvr_status->set_mediatype(pds::MediaType(port_info->xcvr_event_info.cable_type));
     xcvr_status->set_xcvrsprom(std::string((char*)&port_info->xcvr_event_info.xcvr_sprom));
 }
 
