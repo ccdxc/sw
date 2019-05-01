@@ -25,8 +25,9 @@ service_header_done:
                         k.control_metadata_sacl_v6addr
     sub             r1, k.capri_p4_intrinsic_frame_size, \
                         k.offset_metadata_l2_1
-    phvwr.e         p.capri_p4_intrinsic_packet_len, r1
-    phvwr           p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
+    phvwr           p.capri_p4_intrinsic_packet_len, r1
+    sne.e           c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
+    phvwr.c1        p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
 
 /*****************************************************************************/
 /* error function                                                            */
@@ -34,5 +35,6 @@ service_header_done:
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 init_config_error:
-    phvwr.e         p.capri_intrinsic_drop, 1
-    phvwr           p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
+    phvwr           p.capri_intrinsic_drop, 1
+    sne.e           c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
+    phvwr.c1        p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq

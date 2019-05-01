@@ -109,7 +109,9 @@ action init_config() {
     service_header_info();
     subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
              offset_metadata.l2_1);
-    modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
+    if (capri_intrinsic.tm_oq != TM_P4_RECIRC_QUEUE) {
+        modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
+    }
     if (key_metadata.ktype == KEY_TYPE_IPV6) {
         modify_field(p4_to_rxdma_header.sacl_base_addr,
                      control_metadata.sacl_v6addr);
