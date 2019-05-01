@@ -67,7 +67,9 @@ E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
 E2E_CUSTOM_CONFIG ?= test/e2e/cluster/venice-conf.json
 GIT_COMMIT ?= $(shell git rev-list -1 HEAD --abbrev-commit)
 GIT_VERSION ?= $(shell git describe --dirty --always)
+#IMAGE_VERSION is venice image version
 IMAGE_VERSION ?= ${GIT_VERSION}
+BUNDLE_VERSION ?= ${IMAGE_VERSION}
 BUILD_DATE ?= $(shell date   +%Y-%m-%dT%H:%M:%S%z)
 export GIT_COMMIT GIT_VERSION BUILD_DATE
 
@@ -449,7 +451,6 @@ ui-autogen:
 	echo docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-venice-sdk; \
 	docker run --user $(shell id -u):$(shell id -g)  -e "GIT_COMMIT=${GIT_COMMIT}" -e "GIT_VERSION=${GIT_VERSION}" -e "BUILD_DATE=${BUILD_DATE}" --rm -v ${PWD}:/import/src/github.com/pensando/sw${CACHEMOUNT} -w /import/src/github.com/pensando/sw ${REGISTRY_URL}/${UI_BUILD_CONTAINER} make ui-venice-sdk; \
 
-VENICE_RELEASE_TAG := v0.3
 venice-image:
 	printf "\n+++++++++++++++++ start container-compile $$(date) +++++++++++++++++\n"
 	$(MAKE) container-compile
@@ -462,7 +463,30 @@ venice-image:
 	cd bin && tar -cvf - tars/*.tar venice-install.json -C ../tools/scripts INSTALL.sh | gzip -1 -c > venice.tgz
 	printf "\n+++++++++++++++++ complete venice-image $$(date) +++++++++++++++++\n"
 
-venice-release: venice-image
+# this creates the OS image - like buildroot for venice from centos DVD image
+# Only needed to be run when contents of FS need to change
+venice-base-iso:
+	$(MAKE) -C tools/docker-files/vinstall
+
+# this adds pensando specific scripts and bin/venice.tgz to the squashfs
+# and creates the venice iso file (from base iso downloaded from pull-assets)
+# This also creates files for the ability to pxe boot appliance installation inside pensando
+venice-iso:
+	$(MAKE) -C tools/docker-files/vinstall venice-iso
+
+bundle-image:
+	cp -f tools/scripts/venice_appl_GrubEntry.sh bin/venice-install
+	cd bin/venice-install && tar -cvf - initrd0.img  squashfs.img  vmlinuz0 -C ../../tools/scripts venice_appl_GrubEntry.sh | gzip -1 -c > venice_appl_os.tgz
+	mkdir -p bin/bundle
+	@ #bundle.py creates metadata.json for the bundle image
+	@tools/scripts/bundle.py -v ${BUNDLE_VERSION}  -d ${BUILD_DATE}
+	ln -f bin/venice.tgz bin/bundle/venice.tgz
+	ln -f nic/naples_fw_.tar bin/bundle/naples_fw.tar
+	ln -f bin/venice-install/venice_appl_os.tgz bin/bundle/venice_appl_os.tgz
+	cd bin/bundle && tar -cvf bundle.tar venice.tgz  naples_fw.tar venice_appl_os.tgz metadata.json
+
+VENICE_RELEASE_TAG := v0.3
+gs-venice-release: venice-image
 	docker pull ${REGISTRY_URL}/${DIND_CONTAINER}
 	docker save -o bin/pen-dind.tar ${REGISTRY_URL}/${DIND_CONTAINER}
 	docker pull ${REGISTRY_URL}/${E2E_CONTAINER}
@@ -473,13 +497,6 @@ venice-release: venice-image
 	cd tools/docker-files/venice/ && docker build -t pensando/venice:${VENICE_RELEASE_TAG} .
 	cd test/topos/gs && tar -cvf venice_sim_addons.tar naples_admit.py start.sh stop.sh testbed.json venice-conf.json authbootstrap_postman_collection.json login_postman_collection.json postman_collection.json customroles_postman_collection.json
 
-# this creates the OS image - like buildroot for venice
-venice-base-iso:
-	$(MAKE) -C tools/docker-files/vinstall
-
-# this adds the bin/venice.tgz to the iso file (typically downloaded from asset-pull) but created as above
-venice-iso:
-	$(MAKE) -C tools/docker-files/vinstall venice-iso
 
 # After testing venice-release upload the script assets with a command like below
 # cd test/topos/gs && asset-upload venice_sim_addons.tar v0.2 ./venice_sim_addons.tar
