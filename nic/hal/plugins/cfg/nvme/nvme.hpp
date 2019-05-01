@@ -25,6 +25,10 @@ using nvme::NvmeNsSpec;
 using nvme::NvmeNsRequestMsg;
 using nvme::NvmeNsResponse;
 using nvme::NvmeNsResponseMsg;
+using nvme::NvmeSessSpec;
+using nvme::NvmeSessRequestMsg;
+using nvme::NvmeSessResponse;
+using nvme::NvmeSessResponseMsg;
 using nvme::NvmeEnableRequest;
 using nvme::NvmeEnableResponse;
 using nvme::NvmeEnableRequestMsg;
@@ -40,6 +44,7 @@ extern uint64_t nvme_lif_pt_base_addr(uint32_t lif_id);
 hal_ret_t nvme_sq_create (NvmeSqSpec& spec, NvmeSqResponse *rsp);
 hal_ret_t nvme_cq_create (NvmeCqSpec& spec, NvmeCqResponse *rsp);
 hal_ret_t nvme_ns_create (NvmeNsSpec& spec, NvmeNsResponse *rsp);
+hal_ret_t nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp);
 hal_ret_t nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp);
 
 

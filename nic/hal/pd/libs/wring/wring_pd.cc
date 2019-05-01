@@ -692,6 +692,29 @@ p4pd_wring_set_meta(pd_wring_t* wring_pd)
     return ret;
 }
 
+static
+hal_ret_t
+p4pd_wring_get_base_addr(pd_wring_t* wring_pd)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    wring_t*            wring = wring_pd->wring;
+    wring_hw_id_t       wring_base;
+
+    ret = wring_pd_get_base_addr(wring->wring_type,
+                                 wring->wring_id,
+                                 &wring_base);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Could not find the wring base addr");
+        return ret;
+    }
+
+    HAL_TRACE_DEBUG("wring {} {}: {:#x}", wring->wring_type, wring->wring_id,
+            wring_base);
+
+    wring->phys_base_addr = wring_base;
+    return ret;
+}
+
 hal_ret_t
 wring_pd_init_global_rings()
 {
@@ -845,6 +868,30 @@ pd_wring_set_meta (pd_func_args_t *pd_func_args)
 
     // get hw wring entry
     ret = p4pd_wring_set_meta(&wring_pd);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get wring meta");
+        goto cleanup;
+    }
+cleanup:
+    return ret;
+}
+
+hal_ret_t
+pd_wring_get_base_addr (pd_func_args_t *pd_func_args)
+{
+    hal_ret_t               ret;
+    pd_wring_get_meta_args_t *args = pd_func_args->pd_wring_get_meta;
+    pd_wring_t              wring_pd;
+
+    HAL_TRACE_DEBUG("Wring pd get base_addr");
+
+    // allocate PD wring state
+    wring_pd_init(&wring_pd);
+
+    wring_pd.wring = args->wring;
+
+    // get hw wring entry
+    ret = p4pd_wring_get_base_addr(&wring_pd);
     if(ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get wring meta");
         goto cleanup;

@@ -334,11 +334,11 @@ class NvmeQueueObject(QueueObject):
         logger.info('- type   : %s' % self.queue_type.GID())
         logger.info('- id     : %s' % self.id)
 
-    def SetRingParams(self, ring_id, hw_ring_id, host, nic_resident, mem_handle, address, size, desc_size):
+    def SetRingParams(self, ring_id, nic_resident, mem_handle, address, size):
         r = self.rings.Get(ring_id)
         if r is None:
             assert(0)
-        r.SetRingParams(hw_ring_id, host, nic_resident, mem_handle, address, size, desc_size)
+        r.SetRingParams(nic_resident, mem_handle, address, size)
         return
 
 class NvmeQueueObjectHelper:

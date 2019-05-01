@@ -27,7 +27,7 @@ tenants:
 
 security_profiles: None
 security_policy: None
-#proxy: True
+proxy: True
 nvme_proxy:
     enable          : True
     max_cmd_context : 4096

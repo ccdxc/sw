@@ -163,8 +163,7 @@ header_type nscb_t {
         log_lba_size                    : 5;
 
         //Backend Info
-        backend_ns_id                   : 16;
-        rsvd1                           : 8;
+        backend_ns_id                   : 32;
         
         //Session Info
         num_sessions                    : 11; //1-based
@@ -175,13 +174,13 @@ header_type nscb_t {
 
         sess_prodcb_table_addr          : 34;
 
-        pad                             : 94;
+        pad                             : 86;
     }
 }
 
 #define NSCB_PARAMS                                                      \
 ns_size, ns_valid, ns_active, rsvd0, log_lba_size, backend_ns_id,        \
-rsvd1, num_sessions, rr_session_id_served, valid_session_bitmap,         \
+num_sessions, rr_session_id_served, valid_session_bitmap,                \
 num_outstanding_req, sess_prodcb_table_addr, pad
 
 #define GENERATE_NSCB_D                                                  \
@@ -192,7 +191,6 @@ num_outstanding_req, sess_prodcb_table_addr, pad
     modify_field(nscb_d.rsvd0, rsvd0);                                   \
     modify_field(nscb_d.log_lba_size, log_lba_size);                     \
     modify_field(nscb_d.backend_ns_id, backend_ns_id);                   \
-    modify_field(nscb_d.rsvd1, rsvd1);                                   \
     modify_field(nscb_d.num_sessions, num_sessions);                     \
     modify_field(nscb_d.rr_session_id_served, rr_session_id_served);     \
     modify_field(nscb_d.num_outstanding_req, num_outstanding_req);       \

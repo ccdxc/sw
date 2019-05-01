@@ -42,7 +42,11 @@ class TcpCbObject(base.ConfigObjectBase):
 
         # assert(len(self.uplinks) > 0)
         logger.info("  - %s" % self)
-        self.tlscb = TlsCbHelper.main(self)
+        if session is not None: 
+            if session.iflow.label == 'NVME-PROXY':
+                logger.info("skipping TLS cb creation for nvme..")
+            else:
+                self.tlscb = TlsCbHelper.main(self)
         self.sesq = SwDscrRingHelper.main("SESQ", gid, self.id)
         self.asesq = SwDscrRingHelper.main("ASESQ", gid, self.id)
 

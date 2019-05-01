@@ -3353,7 +3353,8 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_FINI,        300, "PD_FUNC_ID_ACCEL_RGROUP_FINI")\
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_MISC_GET,    301, "PD_FUNC_ID_ACCEL_RGROUP_MISC_GET")\
     ENTRY(PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE, 302, "PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE")  \
-    ENTRY(PD_FUNC_ID_MAX,                      303, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_WRING_GET_BASE_ADDR,      303, "PD_FUNC_ID_WRING_GET_BASE_ADDR")               \
+    ENTRY(PD_FUNC_ID_MAX,                      304, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3999,6 +4000,7 @@ PD_FUNCP_TYPEDEF(pd_wring_update);
 PD_FUNCP_TYPEDEF(pd_wring_get_entry);
 PD_FUNCP_TYPEDEF(pd_wring_get_meta);
 PD_FUNCP_TYPEDEF(pd_wring_set_meta);
+PD_FUNCP_TYPEDEF(pd_wring_get_base_addr);
 
 // mirror session
 PD_FUNCP_TYPEDEF(pd_mirror_session_create);

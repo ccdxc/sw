@@ -5,6 +5,9 @@
 syntax = "proto3";
 
 import "types.proto";
+import "session.proto";
+import "kh.proto";
+
 option go_package="halproto";
 
 package nvme;
@@ -23,6 +26,9 @@ service Nvme {
   // Namespace related APIs
   rpc NvmeNsCreate(NvmeNsRequestMsg) returns (NvmeNsResponseMsg) {}
 
+  // Namespace related APIs
+  rpc NvmeSessCreate(NvmeSessRequestMsg) returns (NvmeSessResponseMsg) {}
+
 }
 
 //**********************   NVME Feature Enable *****************************//
@@ -31,6 +37,8 @@ message NvmeEnableRequest {
   uint32                   max_ns          = 1;    // Max Namespaces
   uint32                   max_sess        = 2;    // Max Sessions
   uint32                   max_cmd_context = 3;    // Max Command Contexts
+  uint32                   tx_max_aol      = 4;    // Max Tx AOL descriptors
+  uint32                   rx_max_aol      = 5;    // Max Rx AOL descriptors
 }
 
 // NvmeEnableRequestMsg is batched request
@@ -113,6 +121,8 @@ message NvmeNsSpec {
   uint32                   size            = 4;    // Size in LBAs
   uint32                   lba_size        = 5;    // Size in each LBA
   uint32                   max_sess        = 6;    // Max Sessions
+  uint32                   key_index       = 7;    // Key Index
+  uint32                   sec_key_index   = 8;    // Second Key Index
 }
 
 // NvmeNsRequestMsg is batched request used to create/update of Nvme QPs
@@ -129,4 +139,44 @@ message NvmeNsResponse {
 // NvmeNsResponseMsg is response to NvmeNsRequestMsg
 message NvmeNsResponseMsg {
   repeated NvmeNsResponse    response = 1;    // batch of responses
+}
+
+
+//**********************   NameSpace *****************************//
+// NvmeSess object
+message NvmeSessSpec {
+  uint32                   hw_lif_id       = 1;    // HW LIF Id
+  uint32                   nsid            = 2;    // Namespace Id
+  session.FlowKey          flow_key        = 3;    // flow key
+  kh.VrfKeyHandle          vrf_key_handle  = 4;    // vrf key or handle
+}
+
+// NvmeNsRequestMsg is batched request used to create/update of Nvme QPs
+message NvmeSessRequestMsg {
+  repeated NvmeSessSpec    request = 1;    // batch of requests
+}
+
+// NvmeSessResponse response to one NvmeSessSpec
+message NvmeSessResponse {
+  types.ApiStatus     api_status            = 1;    // API status code
+  uint32              sess_id               = 2;    // LIF local Session ID
+  uint64              txsessprodcb_addr     = 3;    // HBM address of Sess Producer CB
+  uint64              rxsessprodcb_addr     = 4;    // HBM address of Sess Producer CB
+  uint64              tx_xtsq_base          = 5;    // Q base addr of Tx Sess XTSQ
+  uint64              tx_xtsq_num_entries   = 6;    // Q num_entries of Tx Sess XTSQ
+  uint64              tx_dgstq_base         = 7;    // Q base addr of Tx Sess DGSTQ
+  uint64              tx_dgstq_num_entries  = 8;    // Q num_entries of Tx Sess DGSTQ
+  uint64              tx_sesq_base          = 9;    // Q base addr of Tx TCP SESQ
+  uint64              tx_sesq_num_entries   = 10;   // Q num_entries of Tx TCP SESQ
+  uint64              rx_xtsq_base          = 11;   // Q base addr of Rx Sess XTSQ
+  uint64              rx_xtsq_num_entries   = 12;   // Q num_entries of Rx Sess XTSQ
+  uint64              rx_dgstq_base         = 13;   // Q base addr of Rx Sess DGSTQ
+  uint64              rx_dgstq_num_entries  = 14;   // Q num_entries of Rx Sess DGSTQ
+  uint64              rx_serq_base          = 15;   // Q base addr of Rx TCP SERQ
+  uint64              rx_serq_num_entries   = 16;   // Q num_entries of Rx TCP SERQ
+}
+
+// NvmeSessResponseMsg is response to NvmeSessRequestMsg
+message NvmeSessResponseMsg {
+  repeated NvmeSessResponse    response = 1;    // batch of responses
 }

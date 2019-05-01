@@ -25,6 +25,8 @@ type NvmeEnableRequest struct {
 	MaxNs         uint32 `protobuf:"varint,1,opt,name=max_ns,json=maxNs,proto3" json:"max_ns,omitempty"`
 	MaxSess       uint32 `protobuf:"varint,2,opt,name=max_sess,json=maxSess,proto3" json:"max_sess,omitempty"`
 	MaxCmdContext uint32 `protobuf:"varint,3,opt,name=max_cmd_context,json=maxCmdContext,proto3" json:"max_cmd_context,omitempty"`
+	TxMaxAol      uint32 `protobuf:"varint,4,opt,name=tx_max_aol,json=txMaxAol,proto3" json:"tx_max_aol,omitempty"`
+	RxMaxAol      uint32 `protobuf:"varint,5,opt,name=rx_max_aol,json=rxMaxAol,proto3" json:"rx_max_aol,omitempty"`
 }
 
 func (m *NvmeEnableRequest) Reset()                    { *m = NvmeEnableRequest{} }
@@ -49,6 +51,20 @@ func (m *NvmeEnableRequest) GetMaxSess() uint32 {
 func (m *NvmeEnableRequest) GetMaxCmdContext() uint32 {
 	if m != nil {
 		return m.MaxCmdContext
+	}
+	return 0
+}
+
+func (m *NvmeEnableRequest) GetTxMaxAol() uint32 {
+	if m != nil {
+		return m.TxMaxAol
+	}
+	return 0
+}
+
+func (m *NvmeEnableRequest) GetRxMaxAol() uint32 {
+	if m != nil {
+		return m.RxMaxAol
 	}
 	return 0
 }
@@ -355,6 +371,8 @@ type NvmeNsSpec struct {
 	Size_       uint32 `protobuf:"varint,4,opt,name=size,proto3" json:"size,omitempty"`
 	LbaSize     uint32 `protobuf:"varint,5,opt,name=lba_size,json=lbaSize,proto3" json:"lba_size,omitempty"`
 	MaxSess     uint32 `protobuf:"varint,6,opt,name=max_sess,json=maxSess,proto3" json:"max_sess,omitempty"`
+	KeyIndex    uint32 `protobuf:"varint,7,opt,name=key_index,json=keyIndex,proto3" json:"key_index,omitempty"`
+	SecKeyIndex uint32 `protobuf:"varint,8,opt,name=sec_key_index,json=secKeyIndex,proto3" json:"sec_key_index,omitempty"`
 }
 
 func (m *NvmeNsSpec) Reset()                    { *m = NvmeNsSpec{} }
@@ -400,6 +418,20 @@ func (m *NvmeNsSpec) GetLbaSize() uint32 {
 func (m *NvmeNsSpec) GetMaxSess() uint32 {
 	if m != nil {
 		return m.MaxSess
+	}
+	return 0
+}
+
+func (m *NvmeNsSpec) GetKeyIndex() uint32 {
+	if m != nil {
+		return m.KeyIndex
+	}
+	return 0
+}
+
+func (m *NvmeNsSpec) GetSecKeyIndex() uint32 {
+	if m != nil {
+		return m.SecKeyIndex
 	}
 	return 0
 }
@@ -463,6 +495,219 @@ func (m *NvmeNsResponseMsg) GetResponse() []*NvmeNsResponse {
 	return nil
 }
 
+// **********************   NameSpace *****************************//
+// NvmeSess object
+type NvmeSessSpec struct {
+	HwLifId      uint32        `protobuf:"varint,1,opt,name=hw_lif_id,json=hwLifId,proto3" json:"hw_lif_id,omitempty"`
+	Nsid         uint32        `protobuf:"varint,2,opt,name=nsid,proto3" json:"nsid,omitempty"`
+	FlowKey      *FlowKey      `protobuf:"bytes,3,opt,name=flow_key,json=flowKey" json:"flow_key,omitempty"`
+	VrfKeyHandle *VrfKeyHandle `protobuf:"bytes,4,opt,name=vrf_key_handle,json=vrfKeyHandle" json:"vrf_key_handle,omitempty"`
+}
+
+func (m *NvmeSessSpec) Reset()                    { *m = NvmeSessSpec{} }
+func (m *NvmeSessSpec) String() string            { return proto.CompactTextString(m) }
+func (*NvmeSessSpec) ProtoMessage()               {}
+func (*NvmeSessSpec) Descriptor() ([]byte, []int) { return fileDescriptorNvme, []int{16} }
+
+func (m *NvmeSessSpec) GetHwLifId() uint32 {
+	if m != nil {
+		return m.HwLifId
+	}
+	return 0
+}
+
+func (m *NvmeSessSpec) GetNsid() uint32 {
+	if m != nil {
+		return m.Nsid
+	}
+	return 0
+}
+
+func (m *NvmeSessSpec) GetFlowKey() *FlowKey {
+	if m != nil {
+		return m.FlowKey
+	}
+	return nil
+}
+
+func (m *NvmeSessSpec) GetVrfKeyHandle() *VrfKeyHandle {
+	if m != nil {
+		return m.VrfKeyHandle
+	}
+	return nil
+}
+
+// NvmeNsRequestMsg is batched request used to create/update of Nvme QPs
+type NvmeSessRequestMsg struct {
+	Request []*NvmeSessSpec `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
+}
+
+func (m *NvmeSessRequestMsg) Reset()                    { *m = NvmeSessRequestMsg{} }
+func (m *NvmeSessRequestMsg) String() string            { return proto.CompactTextString(m) }
+func (*NvmeSessRequestMsg) ProtoMessage()               {}
+func (*NvmeSessRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptorNvme, []int{17} }
+
+func (m *NvmeSessRequestMsg) GetRequest() []*NvmeSessSpec {
+	if m != nil {
+		return m.Request
+	}
+	return nil
+}
+
+// NvmeSessResponse response to one NvmeSessSpec
+type NvmeSessResponse struct {
+	ApiStatus         ApiStatus `protobuf:"varint,1,opt,name=api_status,json=apiStatus,proto3,enum=types.ApiStatus" json:"api_status,omitempty"`
+	SessId            uint32    `protobuf:"varint,2,opt,name=sess_id,json=sessId,proto3" json:"sess_id,omitempty"`
+	TxsessprodcbAddr  uint64    `protobuf:"varint,3,opt,name=txsessprodcb_addr,json=txsessprodcbAddr,proto3" json:"txsessprodcb_addr,omitempty"`
+	RxsessprodcbAddr  uint64    `protobuf:"varint,4,opt,name=rxsessprodcb_addr,json=rxsessprodcbAddr,proto3" json:"rxsessprodcb_addr,omitempty"`
+	TxXtsqBase        uint64    `protobuf:"varint,5,opt,name=tx_xtsq_base,json=txXtsqBase,proto3" json:"tx_xtsq_base,omitempty"`
+	TxXtsqNumEntries  uint64    `protobuf:"varint,6,opt,name=tx_xtsq_num_entries,json=txXtsqNumEntries,proto3" json:"tx_xtsq_num_entries,omitempty"`
+	TxDgstqBase       uint64    `protobuf:"varint,7,opt,name=tx_dgstq_base,json=txDgstqBase,proto3" json:"tx_dgstq_base,omitempty"`
+	TxDgstqNumEntries uint64    `protobuf:"varint,8,opt,name=tx_dgstq_num_entries,json=txDgstqNumEntries,proto3" json:"tx_dgstq_num_entries,omitempty"`
+	TxSesqBase        uint64    `protobuf:"varint,9,opt,name=tx_sesq_base,json=txSesqBase,proto3" json:"tx_sesq_base,omitempty"`
+	TxSesqNumEntries  uint64    `protobuf:"varint,10,opt,name=tx_sesq_num_entries,json=txSesqNumEntries,proto3" json:"tx_sesq_num_entries,omitempty"`
+	RxXtsqBase        uint64    `protobuf:"varint,11,opt,name=rx_xtsq_base,json=rxXtsqBase,proto3" json:"rx_xtsq_base,omitempty"`
+	RxXtsqNumEntries  uint64    `protobuf:"varint,12,opt,name=rx_xtsq_num_entries,json=rxXtsqNumEntries,proto3" json:"rx_xtsq_num_entries,omitempty"`
+	RxDgstqBase       uint64    `protobuf:"varint,13,opt,name=rx_dgstq_base,json=rxDgstqBase,proto3" json:"rx_dgstq_base,omitempty"`
+	RxDgstqNumEntries uint64    `protobuf:"varint,14,opt,name=rx_dgstq_num_entries,json=rxDgstqNumEntries,proto3" json:"rx_dgstq_num_entries,omitempty"`
+	RxSerqBase        uint64    `protobuf:"varint,15,opt,name=rx_serq_base,json=rxSerqBase,proto3" json:"rx_serq_base,omitempty"`
+	RxSerqNumEntries  uint64    `protobuf:"varint,16,opt,name=rx_serq_num_entries,json=rxSerqNumEntries,proto3" json:"rx_serq_num_entries,omitempty"`
+}
+
+func (m *NvmeSessResponse) Reset()                    { *m = NvmeSessResponse{} }
+func (m *NvmeSessResponse) String() string            { return proto.CompactTextString(m) }
+func (*NvmeSessResponse) ProtoMessage()               {}
+func (*NvmeSessResponse) Descriptor() ([]byte, []int) { return fileDescriptorNvme, []int{18} }
+
+func (m *NvmeSessResponse) GetApiStatus() ApiStatus {
+	if m != nil {
+		return m.ApiStatus
+	}
+	return ApiStatus_API_STATUS_OK
+}
+
+func (m *NvmeSessResponse) GetSessId() uint32 {
+	if m != nil {
+		return m.SessId
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetTxsessprodcbAddr() uint64 {
+	if m != nil {
+		return m.TxsessprodcbAddr
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetRxsessprodcbAddr() uint64 {
+	if m != nil {
+		return m.RxsessprodcbAddr
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetTxXtsqBase() uint64 {
+	if m != nil {
+		return m.TxXtsqBase
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetTxXtsqNumEntries() uint64 {
+	if m != nil {
+		return m.TxXtsqNumEntries
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetTxDgstqBase() uint64 {
+	if m != nil {
+		return m.TxDgstqBase
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetTxDgstqNumEntries() uint64 {
+	if m != nil {
+		return m.TxDgstqNumEntries
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetTxSesqBase() uint64 {
+	if m != nil {
+		return m.TxSesqBase
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetTxSesqNumEntries() uint64 {
+	if m != nil {
+		return m.TxSesqNumEntries
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetRxXtsqBase() uint64 {
+	if m != nil {
+		return m.RxXtsqBase
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetRxXtsqNumEntries() uint64 {
+	if m != nil {
+		return m.RxXtsqNumEntries
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetRxDgstqBase() uint64 {
+	if m != nil {
+		return m.RxDgstqBase
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetRxDgstqNumEntries() uint64 {
+	if m != nil {
+		return m.RxDgstqNumEntries
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetRxSerqBase() uint64 {
+	if m != nil {
+		return m.RxSerqBase
+	}
+	return 0
+}
+
+func (m *NvmeSessResponse) GetRxSerqNumEntries() uint64 {
+	if m != nil {
+		return m.RxSerqNumEntries
+	}
+	return 0
+}
+
+// NvmeSessResponseMsg is response to NvmeSessRequestMsg
+type NvmeSessResponseMsg struct {
+	Response []*NvmeSessResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
+}
+
+func (m *NvmeSessResponseMsg) Reset()                    { *m = NvmeSessResponseMsg{} }
+func (m *NvmeSessResponseMsg) String() string            { return proto.CompactTextString(m) }
+func (*NvmeSessResponseMsg) ProtoMessage()               {}
+func (*NvmeSessResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptorNvme, []int{19} }
+
+func (m *NvmeSessResponseMsg) GetResponse() []*NvmeSessResponse {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*NvmeEnableRequest)(nil), "nvme.NvmeEnableRequest")
 	proto.RegisterType((*NvmeEnableRequestMsg)(nil), "nvme.NvmeEnableRequestMsg")
@@ -480,6 +725,10 @@ func init() {
 	proto.RegisterType((*NvmeNsRequestMsg)(nil), "nvme.NvmeNsRequestMsg")
 	proto.RegisterType((*NvmeNsResponse)(nil), "nvme.NvmeNsResponse")
 	proto.RegisterType((*NvmeNsResponseMsg)(nil), "nvme.NvmeNsResponseMsg")
+	proto.RegisterType((*NvmeSessSpec)(nil), "nvme.NvmeSessSpec")
+	proto.RegisterType((*NvmeSessRequestMsg)(nil), "nvme.NvmeSessRequestMsg")
+	proto.RegisterType((*NvmeSessResponse)(nil), "nvme.NvmeSessResponse")
+	proto.RegisterType((*NvmeSessResponseMsg)(nil), "nvme.NvmeSessResponseMsg")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -501,6 +750,8 @@ type NvmeClient interface {
 	NvmeCqCreate(ctx context.Context, in *NvmeCqRequestMsg, opts ...grpc.CallOption) (*NvmeCqResponseMsg, error)
 	// Namespace related APIs
 	NvmeNsCreate(ctx context.Context, in *NvmeNsRequestMsg, opts ...grpc.CallOption) (*NvmeNsResponseMsg, error)
+	// Namespace related APIs
+	NvmeSessCreate(ctx context.Context, in *NvmeSessRequestMsg, opts ...grpc.CallOption) (*NvmeSessResponseMsg, error)
 }
 
 type nvmeClient struct {
@@ -547,6 +798,15 @@ func (c *nvmeClient) NvmeNsCreate(ctx context.Context, in *NvmeNsRequestMsg, opt
 	return out, nil
 }
 
+func (c *nvmeClient) NvmeSessCreate(ctx context.Context, in *NvmeSessRequestMsg, opts ...grpc.CallOption) (*NvmeSessResponseMsg, error) {
+	out := new(NvmeSessResponseMsg)
+	err := grpc.Invoke(ctx, "/nvme.Nvme/NvmeSessCreate", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Nvme service
 
 type NvmeServer interface {
@@ -558,6 +818,8 @@ type NvmeServer interface {
 	NvmeCqCreate(context.Context, *NvmeCqRequestMsg) (*NvmeCqResponseMsg, error)
 	// Namespace related APIs
 	NvmeNsCreate(context.Context, *NvmeNsRequestMsg) (*NvmeNsResponseMsg, error)
+	// Namespace related APIs
+	NvmeSessCreate(context.Context, *NvmeSessRequestMsg) (*NvmeSessResponseMsg, error)
 }
 
 func RegisterNvmeServer(s *grpc.Server, srv NvmeServer) {
@@ -636,6 +898,24 @@ func _Nvme_NvmeNsCreate_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Nvme_NvmeSessCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NvmeSessRequestMsg)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NvmeServer).NvmeSessCreate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/nvme.Nvme/NvmeSessCreate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NvmeServer).NvmeSessCreate(ctx, req.(*NvmeSessRequestMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Nvme_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "nvme.Nvme",
 	HandlerType: (*NvmeServer)(nil),
@@ -655,6 +935,10 @@ var _Nvme_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "NvmeNsCreate",
 			Handler:    _Nvme_NvmeNsCreate_Handler,
+		},
+		{
+			MethodName: "NvmeSessCreate",
+			Handler:    _Nvme_NvmeSessCreate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -690,6 +974,16 @@ func (m *NvmeEnableRequest) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x18
 		i++
 		i = encodeVarintNvme(dAtA, i, uint64(m.MaxCmdContext))
+	}
+	if m.TxMaxAol != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.TxMaxAol))
+	}
+	if m.RxMaxAol != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.RxMaxAol))
 	}
 	return i, nil
 }
@@ -1099,6 +1393,16 @@ func (m *NvmeNsSpec) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintNvme(dAtA, i, uint64(m.MaxSess))
 	}
+	if m.KeyIndex != 0 {
+		dAtA[i] = 0x38
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.KeyIndex))
+	}
+	if m.SecKeyIndex != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.SecKeyIndex))
+	}
 	return i, nil
 }
 
@@ -1190,6 +1494,214 @@ func (m *NvmeNsResponseMsg) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *NvmeSessSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NvmeSessSpec) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.HwLifId != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.HwLifId))
+	}
+	if m.Nsid != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.Nsid))
+	}
+	if m.FlowKey != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.FlowKey.Size()))
+		n1, err := m.FlowKey.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n1
+	}
+	if m.VrfKeyHandle != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.VrfKeyHandle.Size()))
+		n2, err := m.VrfKeyHandle.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	return i, nil
+}
+
+func (m *NvmeSessRequestMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NvmeSessRequestMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, msg := range m.Request {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNvme(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *NvmeSessResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NvmeSessResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.ApiStatus))
+	}
+	if m.SessId != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.SessId))
+	}
+	if m.TxsessprodcbAddr != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.TxsessprodcbAddr))
+	}
+	if m.RxsessprodcbAddr != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.RxsessprodcbAddr))
+	}
+	if m.TxXtsqBase != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.TxXtsqBase))
+	}
+	if m.TxXtsqNumEntries != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.TxXtsqNumEntries))
+	}
+	if m.TxDgstqBase != 0 {
+		dAtA[i] = 0x38
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.TxDgstqBase))
+	}
+	if m.TxDgstqNumEntries != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.TxDgstqNumEntries))
+	}
+	if m.TxSesqBase != 0 {
+		dAtA[i] = 0x48
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.TxSesqBase))
+	}
+	if m.TxSesqNumEntries != 0 {
+		dAtA[i] = 0x50
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.TxSesqNumEntries))
+	}
+	if m.RxXtsqBase != 0 {
+		dAtA[i] = 0x58
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.RxXtsqBase))
+	}
+	if m.RxXtsqNumEntries != 0 {
+		dAtA[i] = 0x60
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.RxXtsqNumEntries))
+	}
+	if m.RxDgstqBase != 0 {
+		dAtA[i] = 0x68
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.RxDgstqBase))
+	}
+	if m.RxDgstqNumEntries != 0 {
+		dAtA[i] = 0x70
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.RxDgstqNumEntries))
+	}
+	if m.RxSerqBase != 0 {
+		dAtA[i] = 0x78
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.RxSerqBase))
+	}
+	if m.RxSerqNumEntries != 0 {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintNvme(dAtA, i, uint64(m.RxSerqNumEntries))
+	}
+	return i, nil
+}
+
+func (m *NvmeSessResponseMsg) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *NvmeSessResponseMsg) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, msg := range m.Response {
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintNvme(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
 func encodeVarintNvme(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -1210,6 +1722,12 @@ func (m *NvmeEnableRequest) Size() (n int) {
 	}
 	if m.MaxCmdContext != 0 {
 		n += 1 + sovNvme(uint64(m.MaxCmdContext))
+	}
+	if m.TxMaxAol != 0 {
+		n += 1 + sovNvme(uint64(m.TxMaxAol))
+	}
+	if m.RxMaxAol != 0 {
+		n += 1 + sovNvme(uint64(m.RxMaxAol))
 	}
 	return n
 }
@@ -1391,6 +1909,12 @@ func (m *NvmeNsSpec) Size() (n int) {
 	if m.MaxSess != 0 {
 		n += 1 + sovNvme(uint64(m.MaxSess))
 	}
+	if m.KeyIndex != 0 {
+		n += 1 + sovNvme(uint64(m.KeyIndex))
+	}
+	if m.SecKeyIndex != 0 {
+		n += 1 + sovNvme(uint64(m.SecKeyIndex))
+	}
 	return n
 }
 
@@ -1419,6 +1943,104 @@ func (m *NvmeNsResponse) Size() (n int) {
 }
 
 func (m *NvmeNsResponseMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Response) > 0 {
+		for _, e := range m.Response {
+			l = e.Size()
+			n += 1 + l + sovNvme(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NvmeSessSpec) Size() (n int) {
+	var l int
+	_ = l
+	if m.HwLifId != 0 {
+		n += 1 + sovNvme(uint64(m.HwLifId))
+	}
+	if m.Nsid != 0 {
+		n += 1 + sovNvme(uint64(m.Nsid))
+	}
+	if m.FlowKey != nil {
+		l = m.FlowKey.Size()
+		n += 1 + l + sovNvme(uint64(l))
+	}
+	if m.VrfKeyHandle != nil {
+		l = m.VrfKeyHandle.Size()
+		n += 1 + l + sovNvme(uint64(l))
+	}
+	return n
+}
+
+func (m *NvmeSessRequestMsg) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Request) > 0 {
+		for _, e := range m.Request {
+			l = e.Size()
+			n += 1 + l + sovNvme(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *NvmeSessResponse) Size() (n int) {
+	var l int
+	_ = l
+	if m.ApiStatus != 0 {
+		n += 1 + sovNvme(uint64(m.ApiStatus))
+	}
+	if m.SessId != 0 {
+		n += 1 + sovNvme(uint64(m.SessId))
+	}
+	if m.TxsessprodcbAddr != 0 {
+		n += 1 + sovNvme(uint64(m.TxsessprodcbAddr))
+	}
+	if m.RxsessprodcbAddr != 0 {
+		n += 1 + sovNvme(uint64(m.RxsessprodcbAddr))
+	}
+	if m.TxXtsqBase != 0 {
+		n += 1 + sovNvme(uint64(m.TxXtsqBase))
+	}
+	if m.TxXtsqNumEntries != 0 {
+		n += 1 + sovNvme(uint64(m.TxXtsqNumEntries))
+	}
+	if m.TxDgstqBase != 0 {
+		n += 1 + sovNvme(uint64(m.TxDgstqBase))
+	}
+	if m.TxDgstqNumEntries != 0 {
+		n += 1 + sovNvme(uint64(m.TxDgstqNumEntries))
+	}
+	if m.TxSesqBase != 0 {
+		n += 1 + sovNvme(uint64(m.TxSesqBase))
+	}
+	if m.TxSesqNumEntries != 0 {
+		n += 1 + sovNvme(uint64(m.TxSesqNumEntries))
+	}
+	if m.RxXtsqBase != 0 {
+		n += 1 + sovNvme(uint64(m.RxXtsqBase))
+	}
+	if m.RxXtsqNumEntries != 0 {
+		n += 1 + sovNvme(uint64(m.RxXtsqNumEntries))
+	}
+	if m.RxDgstqBase != 0 {
+		n += 1 + sovNvme(uint64(m.RxDgstqBase))
+	}
+	if m.RxDgstqNumEntries != 0 {
+		n += 1 + sovNvme(uint64(m.RxDgstqNumEntries))
+	}
+	if m.RxSerqBase != 0 {
+		n += 1 + sovNvme(uint64(m.RxSerqBase))
+	}
+	if m.RxSerqNumEntries != 0 {
+		n += 2 + sovNvme(uint64(m.RxSerqNumEntries))
+	}
+	return n
+}
+
+func (m *NvmeSessResponseMsg) Size() (n int) {
 	var l int
 	_ = l
 	if len(m.Response) > 0 {
@@ -1525,6 +2147,44 @@ func (m *NvmeEnableRequest) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.MaxCmdContext |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxMaxAol", wireType)
+			}
+			m.TxMaxAol = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TxMaxAol |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxMaxAol", wireType)
+			}
+			m.RxMaxAol = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxMaxAol |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2771,6 +3431,44 @@ func (m *NvmeNsSpec) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KeyIndex", wireType)
+			}
+			m.KeyIndex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.KeyIndex |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SecKeyIndex", wireType)
+			}
+			m.SecKeyIndex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SecKeyIndex |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipNvme(dAtA[iNdEx:])
@@ -3042,6 +3740,676 @@ func (m *NvmeNsResponseMsg) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *NvmeSessSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNvme
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NvmeSessSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NvmeSessSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HwLifId", wireType)
+			}
+			m.HwLifId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.HwLifId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Nsid", wireType)
+			}
+			m.Nsid = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Nsid |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FlowKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNvme
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.FlowKey == nil {
+				m.FlowKey = &FlowKey{}
+			}
+			if err := m.FlowKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VrfKeyHandle", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNvme
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.VrfKeyHandle == nil {
+				m.VrfKeyHandle = &VrfKeyHandle{}
+			}
+			if err := m.VrfKeyHandle.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNvme(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNvme
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NvmeSessRequestMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNvme
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NvmeSessRequestMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NvmeSessRequestMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Request", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNvme
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Request = append(m.Request, &NvmeSessSpec{})
+			if err := m.Request[len(m.Request)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNvme(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNvme
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NvmeSessResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNvme
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NvmeSessResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NvmeSessResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ApiStatus", wireType)
+			}
+			m.ApiStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ApiStatus |= (ApiStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessId", wireType)
+			}
+			m.SessId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SessId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxsessprodcbAddr", wireType)
+			}
+			m.TxsessprodcbAddr = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TxsessprodcbAddr |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxsessprodcbAddr", wireType)
+			}
+			m.RxsessprodcbAddr = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxsessprodcbAddr |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxXtsqBase", wireType)
+			}
+			m.TxXtsqBase = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TxXtsqBase |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxXtsqNumEntries", wireType)
+			}
+			m.TxXtsqNumEntries = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TxXtsqNumEntries |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxDgstqBase", wireType)
+			}
+			m.TxDgstqBase = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TxDgstqBase |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxDgstqNumEntries", wireType)
+			}
+			m.TxDgstqNumEntries = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TxDgstqNumEntries |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxSesqBase", wireType)
+			}
+			m.TxSesqBase = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TxSesqBase |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxSesqNumEntries", wireType)
+			}
+			m.TxSesqNumEntries = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TxSesqNumEntries |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxXtsqBase", wireType)
+			}
+			m.RxXtsqBase = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxXtsqBase |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxXtsqNumEntries", wireType)
+			}
+			m.RxXtsqNumEntries = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxXtsqNumEntries |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 13:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxDgstqBase", wireType)
+			}
+			m.RxDgstqBase = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxDgstqBase |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 14:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxDgstqNumEntries", wireType)
+			}
+			m.RxDgstqNumEntries = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxDgstqNumEntries |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxSerqBase", wireType)
+			}
+			m.RxSerqBase = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxSerqBase |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 16:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RxSerqNumEntries", wireType)
+			}
+			m.RxSerqNumEntries = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RxSerqNumEntries |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNvme(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNvme
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *NvmeSessResponseMsg) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowNvme
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: NvmeSessResponseMsg: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: NvmeSessResponseMsg: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNvme
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNvme
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Response = append(m.Response, &NvmeSessResponse{})
+			if err := m.Response[len(m.Response)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipNvme(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthNvme
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipNvme(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3150,52 +4518,77 @@ var (
 func init() { proto.RegisterFile("nvme.proto", fileDescriptorNvme) }
 
 var fileDescriptorNvme = []byte{
-	// 737 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x95, 0xcd, 0x6e, 0xda, 0x4a,
-	0x14, 0xc7, 0xe3, 0x84, 0x10, 0x38, 0x24, 0xb9, 0xdc, 0x51, 0x3e, 0xb8, 0x44, 0x42, 0xb9, 0x5e,
-	0xdc, 0x1b, 0x75, 0x91, 0x36, 0x69, 0xd7, 0x95, 0x88, 0x15, 0x55, 0x91, 0x0a, 0xaa, 0x4c, 0xa5,
-	0x4a, 0x5d, 0x74, 0x34, 0x1e, 0x4f, 0x88, 0x5b, 0x3c, 0x60, 0x1f, 0x93, 0xd0, 0x3c, 0x49, 0x5f,
-	0xa1, 0xea, 0xb2, 0xea, 0x3b, 0x74, 0xd9, 0x47, 0xa8, 0xf2, 0x24, 0xd5, 0x78, 0x6c, 0x6c, 0x30,
-	0x69, 0x51, 0x56, 0x8c, 0xcf, 0x17, 0xff, 0xf3, 0xff, 0xe1, 0x01, 0x40, 0x5e, 0xfb, 0xe2, 0x78,
-	0x14, 0x0e, 0xa3, 0x21, 0x29, 0xa9, 0x73, 0xb3, 0x16, 0x7d, 0x1c, 0x09, 0xd4, 0x21, 0xd3, 0x87,
-	0xbf, 0xbb, 0xd7, 0xbe, 0x38, 0x97, 0xcc, 0x19, 0x08, 0x5b, 0x04, 0x63, 0x81, 0x11, 0xd9, 0x85,
-	0xb2, 0xcf, 0x26, 0x54, 0x62, 0xc3, 0x38, 0x34, 0x8e, 0xb6, 0xec, 0x75, 0x9f, 0x4d, 0xba, 0x48,
-	0xfe, 0x81, 0x8a, 0x0a, 0xa3, 0x40, 0x6c, 0xac, 0xc6, 0x89, 0x0d, 0x9f, 0x4d, 0x7a, 0x02, 0x91,
-	0xfc, 0x07, 0x7f, 0xa9, 0x14, 0xf7, 0x5d, 0xca, 0x87, 0x32, 0x12, 0x93, 0xa8, 0xb1, 0x16, 0x57,
-	0x6c, 0xf9, 0x6c, 0x62, 0xf9, 0xae, 0xa5, 0x83, 0xe6, 0x05, 0xec, 0x14, 0xbe, 0xae, 0x83, 0x7d,
-	0x72, 0x02, 0x1b, 0xa1, 0x7e, 0x6a, 0x18, 0x87, 0x6b, 0x47, 0xb5, 0xd3, 0xfd, 0xe3, 0x58, 0x77,
-	0xa1, 0xd8, 0x4e, 0xeb, 0xcc, 0x2f, 0x06, 0x90, 0x7c, 0x1a, 0x47, 0x43, 0x89, 0x82, 0x3c, 0x06,
-	0x60, 0x23, 0x8f, 0x62, 0xc4, 0xa2, 0xb1, 0xd6, 0xbf, 0x7d, 0x5a, 0x3f, 0xd6, 0x2b, 0xb7, 0x47,
-	0x5e, 0x2f, 0x8e, 0xdb, 0x55, 0x96, 0x1e, 0xc9, 0x09, 0xec, 0xe6, 0x64, 0xd3, 0xd0, 0x93, 0x7d,
-	0xea, 0x30, 0x14, 0xf1, 0x8a, 0x25, 0x9b, 0xf0, 0xa9, 0x7a, 0xdb, 0x93, 0xfd, 0x33, 0x86, 0x62,
-	0xbe, 0x65, 0xc4, 0xfa, 0x42, 0xb7, 0xac, 0xcd, 0xb7, 0xbc, 0x62, 0x7d, 0xa1, 0x5a, 0xcc, 0x0e,
-	0xec, 0x16, 0xc5, 0xaa, 0xcd, 0x9f, 0x41, 0x25, 0x4c, 0x1e, 0x93, 0xd5, 0x1b, 0xc5, 0xd5, 0x75,
-	0xde, 0x9e, 0x56, 0x9a, 0x5f, 0x0d, 0x00, 0x55, 0xd0, 0x0b, 0x7a, 0x23, 0xc1, 0x15, 0x30, 0x0c,
-	0xa8, 0x1c, 0xfb, 0x29, 0x30, 0x0c, 0xba, 0x63, 0x9f, 0x34, 0xa1, 0x7a, 0x75, 0x43, 0x07, 0xde,
-	0x25, 0xf5, 0xdc, 0x94, 0xd8, 0xd5, 0xcd, 0x4b, 0xef, 0xf2, 0xc2, 0x25, 0x2d, 0xa8, 0x61, 0x40,
-	0x6f, 0x02, 0x41, 0xd1, 0xbb, 0x15, 0x09, 0xad, 0x2a, 0x06, 0x6f, 0x02, 0xd1, 0xf3, 0x6e, 0x85,
-	0xca, 0xcb, 0xb1, 0x4f, 0x75, 0x0d, 0x36, 0x4a, 0x3a, 0x2f, 0xc7, 0x7e, 0x4f, 0x95, 0x20, 0x39,
-	0x80, 0xaa, 0x5a, 0x99, 0x32, 0xd7, 0x0d, 0x1b, 0xeb, 0xf1, 0xde, 0x15, 0x15, 0x68, 0xbb, 0x6e,
-	0xa8, 0xf4, 0x70, 0xad, 0xa7, 0xac, 0xf5, 0x70, 0xa5, 0xc7, 0x7c, 0x0e, 0x75, 0x2d, 0x3a, 0x47,
-	0xfe, 0xd1, 0x3c, 0xf9, 0x7a, 0xb6, 0xbe, 0xde, 0x2e, 0x43, 0xde, 0x86, 0xed, 0xb4, 0xff, 0x81,
-	0xb4, 0xcd, 0x73, 0xfd, 0x7b, 0xcf, 0x46, 0x28, 0x0d, 0x4f, 0x0a, 0x0c, 0x76, 0xf2, 0x22, 0x16,
-	0xf8, 0xff, 0x2d, 0xf1, 0xdf, 0x9a, 0xfa, 0xcf, 0x67, 0xfc, 0xe7, 0xcb, 0xf8, 0xcf, 0x8b, 0xfe,
-	0xf3, 0x79, 0xff, 0x79, 0xc1, 0x7f, 0x6b, 0x09, 0xff, 0xf7, 0x61, 0xc3, 0x93, 0x51, 0x0e, 0x40,
-	0xd9, 0x93, 0x51, 0x8e, 0x80, 0xb5, 0x2c, 0x01, 0x6b, 0x8e, 0xc0, 0x7b, 0x4d, 0xc0, 0x7a, 0x38,
-	0x01, 0xf2, 0x3f, 0xd4, 0x79, 0x40, 0x3d, 0x19, 0x85, 0x34, 0x72, 0x06, 0x5a, 0xbf, 0xf6, 0x66,
-	0x8b, 0x07, 0x17, 0x32, 0x0a, 0x5f, 0x3b, 0x03, 0xb5, 0x44, 0x8a, 0xca, 0x5a, 0x1e, 0x95, 0xb5,
-	0x08, 0xd5, 0xe7, 0x04, 0x55, 0x17, 0x63, 0x54, 0x04, 0x4a, 0x12, 0x3d, 0x37, 0x01, 0x15, 0x9f,
-	0x7f, 0xcb, 0xe9, 0x5f, 0xd8, 0x74, 0x18, 0xff, 0x20, 0xa4, 0x4b, 0xe3, 0x3e, 0x0d, 0xaa, 0x96,
-	0xc4, 0xba, 0xaa, 0x9d, 0x40, 0x29, 0x66, 0xa8, 0x19, 0xc5, 0x67, 0x75, 0x57, 0x0e, 0x1c, 0xa6,
-	0xd9, 0xae, 0xeb, 0x89, 0x03, 0x87, 0xf5, 0x92, 0xd4, 0xf4, 0x1a, 0x2d, 0xcf, 0x5c, 0xa3, 0x29,
-	0x9e, 0x2e, 0x2e, 0x89, 0x47, 0xef, 0x94, 0xe1, 0x79, 0xa7, 0xf1, 0xa8, 0xfe, 0x87, 0xe2, 0x39,
-	0x80, 0xaa, 0x44, 0xee, 0x64, 0x5c, 0x4a, 0x76, 0x45, 0x05, 0xf2, 0x48, 0xb2, 0xf9, 0x7f, 0x44,
-	0x92, 0x95, 0x66, 0x48, 0x4e, 0x3f, 0xad, 0x42, 0x49, 0x25, 0xc9, 0x0b, 0x8d, 0x46, 0x5f, 0x73,
-	0xa4, 0x79, 0xcf, 0x9d, 0xdf, 0xc1, 0x7e, 0xf3, 0xe0, 0xbe, 0x4b, 0xb1, 0x83, 0x7d, 0x73, 0x85,
-	0xb4, 0x61, 0x53, 0xbf, 0xab, 0x56, 0x28, 0x58, 0x24, 0xc8, 0xde, 0xec, 0xfb, 0x3b, 0x1d, 0xb3,
-	0xbf, 0xe8, 0xbd, 0x9e, 0x19, 0x61, 0x2d, 0x18, 0x61, 0xdd, 0x33, 0xc2, 0x5a, 0x3c, 0xa2, 0x8b,
-	0xc5, 0x11, 0x79, 0xa4, 0xf9, 0x11, 0x33, 0x56, 0x9a, 0x2b, 0x67, 0x7b, 0xdf, 0xef, 0x5a, 0xc6,
-	0x8f, 0xbb, 0x96, 0xf1, 0xf3, 0xae, 0x65, 0xbc, 0xad, 0x5c, 0xb1, 0x41, 0xfc, 0x3f, 0xed, 0x94,
-	0xe3, 0x8f, 0xa7, 0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0xbe, 0x87, 0xfc, 0xff, 0xcf, 0x07, 0x00,
-	0x00,
+	// 1148 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x97, 0xdd, 0x6e, 0xe3, 0x44,
+	0x14, 0xc7, 0xd7, 0xdb, 0x34, 0x1f, 0x27, 0x4d, 0x37, 0x9d, 0xed, 0x47, 0xb6, 0x45, 0x55, 0xf1,
+	0x05, 0xac, 0x58, 0xe8, 0xb2, 0x05, 0x71, 0x89, 0xd4, 0x9a, 0xb2, 0x44, 0xa5, 0x11, 0x72, 0x10,
+	0x20, 0x2e, 0xb0, 0x1c, 0x7b, 0x92, 0x98, 0xda, 0x4e, 0x3c, 0x33, 0x69, 0xdd, 0x7d, 0x1d, 0xb8,
+	0x41, 0x5c, 0x22, 0xde, 0x81, 0x4b, 0x1e, 0x01, 0x7a, 0xc9, 0x53, 0xa0, 0x99, 0x63, 0xc7, 0x76,
+	0x9c, 0x42, 0xd4, 0xab, 0xce, 0xc7, 0x7f, 0xfe, 0x3d, 0xe7, 0xfc, 0xec, 0x33, 0x0e, 0x40, 0x78,
+	0x1d, 0xd0, 0xe3, 0x29, 0x9b, 0x88, 0x09, 0xa9, 0xc8, 0xf1, 0x7e, 0x53, 0xdc, 0x4e, 0x29, 0xc7,
+	0xa5, 0xfd, 0x16, 0xa7, 0x9c, 0x7b, 0x93, 0x30, 0x99, 0xd6, 0xaf, 0xc6, 0x38, 0xd2, 0x7f, 0xd1,
+	0x60, 0xab, 0x77, 0x1d, 0xd0, 0xf3, 0xd0, 0x1e, 0xf8, 0xd4, 0xa4, 0xd1, 0x8c, 0x72, 0x41, 0x76,
+	0xa0, 0x1a, 0xd8, 0xb1, 0x15, 0xf2, 0x8e, 0x76, 0xa4, 0x3d, 0x6f, 0x99, 0xeb, 0x81, 0x1d, 0xf7,
+	0x38, 0x79, 0x06, 0x75, 0xb9, 0x2c, 0xbd, 0x3a, 0x8f, 0xd5, 0x46, 0x2d, 0xb0, 0xe3, 0x3e, 0xe5,
+	0x9c, 0xbc, 0x03, 0x4f, 0xe4, 0x96, 0x13, 0xb8, 0x96, 0x33, 0x09, 0x05, 0x8d, 0x45, 0x67, 0x4d,
+	0x29, 0x5a, 0x81, 0x1d, 0x1b, 0x81, 0x6b, 0xe0, 0x22, 0x79, 0x0b, 0x40, 0xc4, 0x96, 0x94, 0xda,
+	0x13, 0xbf, 0x53, 0x51, 0x92, 0xba, 0x88, 0x2f, 0xed, 0xf8, 0x74, 0xe2, 0xcb, 0x5d, 0x96, 0xed,
+	0xae, 0xe3, 0x2e, 0x4b, 0x76, 0xf5, 0x2e, 0x6c, 0x97, 0x42, 0xbd, 0xe4, 0x23, 0xf2, 0x0a, 0x6a,
+	0x0c, 0x67, 0x1d, 0xed, 0x68, 0xed, 0x79, 0xf3, 0x64, 0xef, 0x58, 0x55, 0xa3, 0x24, 0x36, 0x53,
+	0x9d, 0xfe, 0xab, 0x06, 0x24, 0xbf, 0xcd, 0xa7, 0x93, 0x90, 0x53, 0xf2, 0x12, 0xc0, 0x9e, 0x7a,
+	0x16, 0x17, 0xb6, 0x98, 0x61, 0xee, 0x9b, 0x27, 0xed, 0x63, 0x2c, 0xe4, 0xe9, 0xd4, 0xeb, 0xab,
+	0x75, 0xb3, 0x61, 0xa7, 0x43, 0xf2, 0x0a, 0x76, 0x72, 0x29, 0x5b, 0xcc, 0x0b, 0x47, 0xd6, 0xc0,
+	0xe6, 0x54, 0x95, 0xa7, 0x62, 0x12, 0x67, 0x9e, 0xb9, 0xe9, 0x85, 0xa3, 0x33, 0x9b, 0xd3, 0xc5,
+	0x23, 0x53, 0x7b, 0x44, 0xf1, 0xc8, 0xda, 0xe2, 0x91, 0xaf, 0xec, 0x11, 0x95, 0x47, 0xf4, 0x4b,
+	0xd8, 0x29, 0x07, 0x2b, 0x33, 0xff, 0x18, 0xea, 0x2c, 0x99, 0x26, 0xa9, 0x77, 0xca, 0xa9, 0xe3,
+	0xbe, 0x39, 0x57, 0xea, 0xbf, 0x69, 0x00, 0x52, 0xd0, 0x8f, 0xfa, 0x53, 0xea, 0x48, 0xd8, 0x3c,
+	0xb2, 0xc2, 0x59, 0x90, 0xc2, 0xe6, 0x51, 0x6f, 0x16, 0x90, 0x7d, 0x68, 0x8c, 0x6f, 0x2c, 0xdf,
+	0x1b, 0x5a, 0x9e, 0x9b, 0xd2, 0x1e, 0xdf, 0x7c, 0xe9, 0x0d, 0xbb, 0x2e, 0x39, 0x84, 0x26, 0x8f,
+	0xac, 0x9b, 0x88, 0x5a, 0xdc, 0x7b, 0x43, 0x13, 0xd2, 0x0d, 0x1e, 0x7d, 0x1b, 0xd1, 0xbe, 0xf7,
+	0x86, 0xca, 0xfd, 0x70, 0x16, 0x58, 0xa8, 0xe1, 0x09, 0xe6, 0x46, 0x38, 0x0b, 0xfa, 0x52, 0xc2,
+	0xc9, 0x01, 0x34, 0x64, 0xca, 0x96, 0xed, 0xba, 0x4c, 0x61, 0xae, 0x98, 0x75, 0xb9, 0x70, 0xea,
+	0xba, 0x4c, 0xc6, 0xe3, 0x60, 0x3c, 0x55, 0x8c, 0xc7, 0x91, 0xf1, 0xe8, 0x9f, 0x42, 0x1b, 0x83,
+	0xce, 0x91, 0x7f, 0x6f, 0x91, 0x7c, 0x3b, 0x4b, 0x1f, 0xb3, 0xcb, 0x90, 0x9f, 0xc2, 0x66, 0x7a,
+	0xfe, 0x81, 0xb4, 0xf5, 0x73, 0x7c, 0x57, 0x32, 0x0b, 0x19, 0xc3, 0x87, 0x25, 0x06, 0xdb, 0xf9,
+	0x20, 0x96, 0xd4, 0xff, 0xf7, 0xa4, 0xfe, 0xc6, 0xbc, 0xfe, 0x4e, 0xa1, 0xfe, 0xce, 0x2a, 0xf5,
+	0x77, 0xca, 0xf5, 0x77, 0x16, 0xeb, 0xef, 0x94, 0xea, 0x6f, 0xac, 0x50, 0xff, 0x3d, 0xa8, 0x79,
+	0xa1, 0xc8, 0x01, 0xa8, 0x7a, 0xa1, 0xc8, 0x11, 0x30, 0x56, 0x25, 0x60, 0x2c, 0x10, 0xf8, 0x11,
+	0x09, 0x18, 0x0f, 0x27, 0x40, 0xde, 0x85, 0xb6, 0x13, 0x59, 0x5e, 0x28, 0x98, 0x25, 0x06, 0x3e,
+	0xc6, 0x8f, 0xb5, 0x69, 0x39, 0x51, 0x37, 0x14, 0xec, 0xeb, 0x81, 0x2f, 0x93, 0x48, 0x51, 0x19,
+	0xab, 0xa3, 0x32, 0x96, 0xa1, 0xfa, 0x27, 0x41, 0xd5, 0xe3, 0x0a, 0x15, 0x81, 0x4a, 0xc8, 0x3d,
+	0x37, 0x01, 0xa5, 0xc6, 0xff, 0xc9, 0xe9, 0x6d, 0xd8, 0x18, 0xd8, 0xce, 0x15, 0x0d, 0x5d, 0x4b,
+	0x9d, 0x43, 0x50, 0xcd, 0x64, 0xad, 0x27, 0x8f, 0x13, 0xa8, 0x28, 0x86, 0xc8, 0x48, 0x8d, 0x65,
+	0x9f, 0xf5, 0x07, 0x36, 0xb2, 0xc5, 0x26, 0x58, 0xf3, 0x07, 0x76, 0x3f, 0xd9, 0x9a, 0xb7, 0xe0,
+	0x6a, 0xb1, 0x05, 0x1f, 0x40, 0xe3, 0x8a, 0xde, 0x5a, 0x5e, 0xe8, 0xd2, 0xb8, 0x53, 0xc3, 0xde,
+	0x79, 0x45, 0x6f, 0xbb, 0x72, 0x4e, 0x74, 0x68, 0x71, 0xea, 0x58, 0x99, 0xa0, 0x8e, 0xa1, 0x70,
+	0xea, 0x5c, 0x24, 0x9a, 0x94, 0x6f, 0x8f, 0xaf, 0xc8, 0x17, 0x8b, 0x92, 0xf1, 0xfd, 0x01, 0xf9,
+	0xca, 0xf3, 0x0f, 0xe5, 0x7b, 0x00, 0x8d, 0x90, 0x3b, 0x83, 0x0c, 0x6c, 0xc5, 0xac, 0xcb, 0x85,
+	0x3c, 0xd3, 0xcc, 0xff, 0x7f, 0x99, 0x66, 0xd2, 0x1c, 0xd3, 0x9f, 0x34, 0xd8, 0x50, 0xef, 0x26,
+	0xe5, 0x48, 0xb5, 0x40, 0x50, 0x2b, 0x12, 0x4c, 0x89, 0x3f, 0xce, 0x11, 0x7f, 0x01, 0xf5, 0xa1,
+	0x3f, 0xb9, 0x91, 0xc5, 0x54, 0x44, 0x65, 0x51, 0xd2, 0xfb, 0xf5, 0x73, 0x7f, 0x72, 0x73, 0x41,
+	0x6f, 0xcd, 0xda, 0x10, 0x07, 0xe4, 0x13, 0xd8, 0xbc, 0x66, 0x43, 0x55, 0xf8, 0xb1, 0x1d, 0xba,
+	0x3e, 0x92, 0x96, 0x47, 0xae, 0xc6, 0xc7, 0xdf, 0xb0, 0xe1, 0x05, 0xbd, 0xfd, 0x42, 0xad, 0x9b,
+	0x1b, 0xd7, 0xb9, 0x99, 0x7e, 0x86, 0x17, 0x94, 0x0c, 0x32, 0x87, 0xe3, 0xfd, 0x45, 0x1c, 0x24,
+	0xd7, 0x6b, 0x92, 0x7c, 0x32, 0x20, 0x3f, 0xaf, 0x27, 0x3d, 0x53, 0x99, 0x3c, 0x94, 0xc9, 0x1e,
+	0xd4, 0x64, 0x76, 0xd9, 0xe3, 0x5d, 0x95, 0xd3, 0xae, 0xac, 0xc3, 0x96, 0x88, 0xe5, 0x78, 0xca,
+	0x26, 0x6e, 0x0a, 0x0d, 0x6f, 0xb1, 0x76, 0x7e, 0x43, 0x75, 0x95, 0x17, 0xb0, 0xc5, 0x4a, 0xe2,
+	0x0a, 0x8a, 0xd9, 0xa2, 0xf8, 0x08, 0x36, 0x44, 0x6c, 0xc5, 0x82, 0x47, 0x78, 0x35, 0x62, 0x8b,
+	0x02, 0x11, 0x7f, 0x27, 0x78, 0xa4, 0x6e, 0xd1, 0x0f, 0xe0, 0x69, 0xaa, 0x90, 0x9d, 0x8e, 0x86,
+	0x82, 0x79, 0x14, 0x5f, 0x09, 0xf5, 0xdf, 0xa5, 0xb0, 0x37, 0x0b, 0xce, 0x71, 0x5d, 0x3e, 0xfe,
+	0x22, 0xb6, 0xdc, 0x11, 0x17, 0x89, 0x63, 0x4d, 0x09, 0x9b, 0x22, 0xfe, 0x4c, 0xae, 0x29, 0xcb,
+	0x97, 0xb0, 0x3d, 0xd7, 0xe4, 0x3d, 0xeb, 0x4a, 0xba, 0x95, 0x48, 0x73, 0xa6, 0x18, 0x25, 0xa7,
+	0x69, 0x94, 0x8d, 0x34, 0xca, 0x3e, 0x2d, 0x44, 0xa9, 0x14, 0x79, 0x47, 0x48, 0xa3, 0x94, 0xc2,
+	0xa2, 0x21, 0xcb, 0xa7, 0xdd, 0x44, 0x43, 0x56, 0x48, 0x9b, 0x2d, 0x49, 0x7b, 0x23, 0xad, 0x63,
+	0x39, 0x6d, 0x56, 0x48, 0xbb, 0x85, 0x69, 0xb3, 0x62, 0xda, 0x6c, 0x59, 0xda, 0x9b, 0x98, 0x36,
+	0x5b, 0x96, 0x36, 0x93, 0x49, 0xb1, 0xc4, 0xf3, 0x49, 0x1a, 0x65, 0x9f, 0xb2, 0x7c, 0x94, 0x4a,
+	0x91, 0x77, 0x6c, 0xa7, 0x51, 0x4a, 0x61, 0x66, 0xa8, 0x77, 0xe1, 0xe9, 0xe2, 0x53, 0x2a, 0x9f,
+	0xf5, 0x93, 0xd2, 0x9b, 0xbd, 0x5b, 0x7c, 0xd8, 0xcb, 0xef, 0xf6, 0xc9, 0xdf, 0x8f, 0xa1, 0x22,
+	0xb7, 0xc9, 0x6b, 0xec, 0xdb, 0xf8, 0x0d, 0x44, 0xf6, 0xef, 0xf9, 0x20, 0xbc, 0xe4, 0xa3, 0xfd,
+	0x83, 0xfb, 0xbe, 0x98, 0x2e, 0xf9, 0x48, 0x7f, 0x44, 0x4e, 0x93, 0x66, 0x11, 0x19, 0x8c, 0xda,
+	0x82, 0x92, 0xdd, 0xe2, 0xe5, 0x3e, 0xb7, 0xd9, 0x5b, 0x76, 0xe9, 0x17, 0x2c, 0x8c, 0x25, 0x16,
+	0xc6, 0x3d, 0x16, 0xc6, 0x72, 0x8b, 0x1e, 0x2f, 0x5b, 0xe4, 0xdb, 0x75, 0xde, 0xa2, 0xd0, 0x26,
+	0xf5, 0x47, 0xe4, 0x75, 0xf2, 0xfd, 0x43, 0x79, 0x6a, 0xd2, 0x59, 0x2c, 0xe7, 0xdc, 0xe6, 0xd9,
+	0xf2, 0x42, 0x2b, 0xa3, 0xb3, 0xdd, 0x3f, 0xee, 0x0e, 0xb5, 0x3f, 0xef, 0x0e, 0xb5, 0xbf, 0xee,
+	0x0e, 0xb5, 0xef, 0xeb, 0x63, 0xdb, 0x57, 0x3f, 0x25, 0x06, 0x55, 0xf5, 0xe7, 0xa3, 0x7f, 0x03,
+	0x00, 0x00, 0xff, 0xff, 0xfe, 0x4e, 0xd5, 0xd7, 0x8b, 0x0c, 0x00, 0x00,
 }

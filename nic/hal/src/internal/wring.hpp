@@ -58,6 +58,7 @@ typedef struct wring_s {
     sdk_spinlock_t        slock;                   // lock to protect this structure
     wring_id_t            wring_id;                // WRing id
     types::WRingType      wring_type;              // Wring Type
+    uint64_t              phys_base_addr;          // wring base address
     uint64_t              slot_index;              // PI/CI for the request
     uint64_t              slot_value;              // Slot Value
     // operational state of WRing
@@ -136,6 +137,9 @@ extern bool wring_compare_key_func(void *key1, void *key2);
 extern void *wring_get_handle_key_func(void *entry);
 extern uint32_t wring_compute_handle_hash_func(void *key, uint32_t ht_size);
 extern bool wring_compare_handle_key_func(void *key1, void *key2);
+extern hal_ret_t wring_get_phys_addr(types::WRingType wring_type,
+        wring_id_t wring_id, uint64_t *phys_addr);
+
 
 }    // namespace hal
 

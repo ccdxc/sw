@@ -236,6 +236,7 @@ PD_FUNC_STUB(pd_wring_update);
 PD_FUNC_STUB(pd_wring_get_entry);
 PD_FUNC_STUB(pd_wring_get_meta);
 PD_FUNC_STUB(pd_wring_set_meta);
+PD_FUNC_STUB(pd_wring_get_base_addr);
 
 // mirror session
 PD_FUNC_STUB(pd_mirror_session_create);

@@ -511,7 +511,7 @@ class FlowObject(base.ConfigObjectBase):
 
         return True
 
-    def PrepareHALRequestSpec(self, req_spec):
+    def PrepareHALRequestFlowKeySpec(self, req_spec):
         if self.IsMAC():
             req_spec.flow_key.l2_key.smac = self.smac.getnum()
             req_spec.flow_key.l2_key.dmac = self.dmac.getnum()
@@ -532,6 +532,12 @@ class FlowObject(base.ConfigObjectBase):
         else:
             assert(0)
 
+
+    def PrepareHALRequestSpec(self, req_spec):
+        #prepare the flow key
+        self.PrepareHALRequestFlowKeySpec(req_spec)
+
+        #prepare the flow data
         action = "FLOW_ACTION_" + self.action
         if action == "FLOW_ACTION_DENY":
             action = "FLOW_ACTION_DROP"

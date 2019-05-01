@@ -43,16 +43,13 @@ class NvmeRingObject(ring.RingObject):
 
         logger.info("Creating Ring %s" % self)
 
-    def SetRingParams(self, nic_resident, mem_handle, address, size, desc_size):
+    def SetRingParams(self, nic_resident, mem_handle, address, size):
         self.initialized = True
         self.nic_resident = nic_resident
         self.address = address
         self.mem_handle = mem_handle
         self.size = size
-        self.desc_size = desc_size
-        logger.info("SetRingParams: nic_resident %d base_addr: 0x%x" \
-                       " size %d desc_size %d hw_ring_id: %d" %\
-                       (self.nic_resident, self.address, self.size, self.desc_size, self.hw_ring_id))
+        logger.info("Updating params for Ring %s" % self)
 
     def Configure(self):
         if self.id == 'SQ':
@@ -128,16 +125,18 @@ class NvmeRingObject(ring.RingObject):
         raise NotImplementedError
 
     def __str__(self):
-        return ("%s Lif:%s/QueueType:%s/Queue:%s/Ring:%s/HwRingId:%s/Mem:%s/Size:%d/DescSize:%d/BaseAddr:0x%x" %
+        return ("%s Lif:%s/QueueType:%s/Queue:%s/Ring:%s/HwRingId:%s/Init:%s/NicRes:%s/Mem:%s/Size:%d/DescSize:%d/BaseAddr:0x%x" %
                 (self.__class__.__name__,
                  self.queue.queue_type.lif.hw_lif_id,
                  self.queue.queue_type.type,
                  self.queue.id,
                  self.id,
                  self.hw_ring_id,
+                 self.initialized,
+                 self.nic_resident,
                  self._mem,
                  self.size, self.desc_size,
-                 self._mem.pa if self._mem is not None else 0))
+                 self.address if self.address is not None else 0))
 
 
 class NvmeRingObjectHelper:

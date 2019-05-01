@@ -16,6 +16,7 @@ from iris.config.objects.tls_proxy_sess_profile import TlsProxySessProfileHelper
 
 class ProxyCbServiceObject(base.ConfigObjectBase):
     def __init__(self, session):
+        logger.info("creating proxycb object for session %s" %(session.GID()))
         super().__init__()
         self.Clone(Store.templates.Get("PROXYCB"))
         self.session = session
@@ -46,7 +47,7 @@ class ProxyCbServiceObject(base.ConfigObjectBase):
     def PrepareHALRequestSpec(self, req_spec):
         logger.info("Configuring proxy for the flow with label: " + self.session.iflow.label)
         if self.session.iflow.label == 'TCP-PROXY' or self.session.iflow.label == 'TCP-PROXY-E2E' or \
-            self.session.iflow.label == 'PROXY-REDIR':
+            self.session.iflow.label == 'PROXY-REDIR' or self.session.iflow.label == 'NVME-PROXY':
             req_spec.spec.vrf_key_handle.vrf_id = self.session.initiator.ep.tenant.id
             req_spec.spec.key_or_handle.proxy_id = 0
             req_spec.spec.proxy_type = 1
@@ -129,6 +130,7 @@ class ProxyCbServiceObjectHelper:
 
     def Configure(self):
         for proxycb in self.proxy_service_list:
+            logger.info("configuring proxycb object for session %s" %(proxycb.session.GID()))
             if proxycb.session.iflow.label == 'TCP-PROXY-E2E':
                 tls_sess_profile_template = \
                         getattr(proxycb.session.spec, 'tls_sess_profile', None)
@@ -142,12 +144,12 @@ class ProxyCbServiceObjectHelper:
                 proxycb.session.iflow.label == 'RAW-REDIR-SPAN-FLOW-MISS' or \
                 proxycb.session.iflow.label == 'PROXY-REDIR' or proxycb.session.iflow.label == 'PROXY-REDIR-E2E' or \
                 proxycb.session.iflow.label == 'PROXY-REDIR-SPAN-E2E' or \
-                proxycb.session.iflow.label == 'TCP-PROXY-E2E':
+                proxycb.session.iflow.label == 'TCP-PROXY-E2E' or proxycb.session.iflow.label == 'NVME-PROXY':
                 lst = []
                 lst.append(proxycb)
                 halapi.ConfigureProxyCbService(lst)
                 halapi.GetQidProxycbGetFlowInfo(lst)
-            if proxycb.session.iflow.label == 'TCP-PROXY':
+            if proxycb.session.iflow.label == 'TCP-PROXY' or proxycb.session.iflow.label == 'NVME-PROXY':
                 TcpCbHelper.main(proxycb.qid, proxycb.other_qid, proxycb.session, True)
                 TcpCbHelper.main(proxycb.other_qid, proxycb.qid, proxycb.session, False)
             #if proxycb.session.iflow.label == 'ESP-PROXY' or proxycb.session.iflow.label == 'IPSEC-PROXY':

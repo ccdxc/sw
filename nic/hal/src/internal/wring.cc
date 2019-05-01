@@ -319,5 +319,42 @@ wring_set_meta (WRingSpec& spec, WRingSetMetaResponse *rsp)
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// process a WRing get base address
+//------------------------------------------------------------------------------
+hal_ret_t
+wring_get_phys_addr(types::WRingType wring_type, wring_id_t wring_id,
+        uint64_t *phys_addr)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    wring_t wring;
+    pd::pd_wring_get_meta_args_t pd_wring_args;
+    pd::pd_func_args_t pd_func_args = {0};
+
+    if (wring_type <= types::WRING_TYPE_NONE) {
+        HAL_TRACE_ERR("Invalid wring type");
+        return HAL_RET_INVALID_ARG;
+    }
+
+    wring_init(&wring);
+    wring.wring_type = wring_type;
+    wring.wring_id = wring_id;
+
+    pd::pd_wring_get_meta_args_init(&pd_wring_args);
+    pd_wring_args.wring = &wring;
+
+    pd_func_args.pd_wring_get_meta = &pd_wring_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_GET_BASE_ADDR, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD Wring: Failed to get, err: {}", ret);
+        return HAL_RET_HW_FAIL;
+    }
+
+    HAL_TRACE_DEBUG("Ring base_addr {}", wring.phys_base_addr);
+    *phys_addr = wring.phys_base_addr;
+
+    return HAL_RET_OK;
+}
+
 
 }    // namespace hal

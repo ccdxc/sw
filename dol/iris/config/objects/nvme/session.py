@@ -24,6 +24,7 @@ import socket
 class NvmeSessionObject(base.ConfigObjectBase):
     def __init__(self):
         super().__init__()
+        self.Clone(Store.templates.Get('NVME_SESSION'))
         return
 
     def Init(self, session):
@@ -33,24 +34,84 @@ class NvmeSessionObject(base.ConfigObjectBase):
         self.IsIPV6 = session.IsIPV6()
 
     def Configure(self):
-        #TBD
+        nvme_lif = self.session.initiator.ep.intf.lif.nvme_lif
+        self.nsid = nvme_lif.GetNextNsid()
+        nvme_lif.NsSessionAttach(self.nsid, self)
+        halapi.NvmeSessionCreate([self])
         return
          
     def Show(self):
         logger.info('Nvme Session: %s' % self.GID())
         logger.info('- Session: %s' % self.session.GID())
-        logger.info('- IsIPV6: %s' % self.IsIPV6)
+        logger.info('- sess_id: %s ' % self.sess_id)
+        logger.info('- nsid: %s ' % self.nsid)
+        logger.info('- hw_lif_id: %s ' % self.session.initiator.ep.intf.lif.hw_lif_id)
+        logger.info('- vrf_id: %s ' % self.session.initiator.ep.tenant.id)
+        logger.info('- xtstxbase: 0x%x size: %d' \
+                     % (self.tx_xtsq_base, self.tx_xtsq_num_entries))
+        logger.info('- dgsttxbase: 0x%x size: %d' \
+                     % (self.tx_dgstq_base, self.tx_dgstq_num_entries))
+        logger.info('- xtsrxbase: 0x%x size: %d' \
+                     % (self.rx_xtsq_base, self.rx_xtsq_num_entries))
+        logger.info('- dgstrxbase: 0x%x size: %d' \
+                     % (self.rx_dgstq_base, self.rx_dgstq_num_entries))
+        logger.info('- sesqbase: 0x%x size: %d' \
+                     % (self.tx_sesq_base, self.tx_sesq_num_entries))
+        logger.info('- serqbase: 0x%x size: %d' \
+                     % (self.rx_serq_base, self.rx_serq_num_entries))
         return
 
     def PrepareHALRequestSpec(self, req_spec):
         if (GlobalOptions.dryrun): return
-        #TBD
+
+        req_spec.vrf_key_handle.vrf_id = self.session.initiator.ep.tenant.id
+        req_spec.hw_lif_id = self.session.initiator.ep.intf.lif.hw_lif_id
+        req_spec.nsid = self.nsid
+        self.session.iflow.PrepareHALRequestFlowKeySpec(req_spec)
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
         logger.info("ProcessHALResponse:: Nvme Session: %s Session: %s "
                      % (self.GID(), self.session.GID()))
-        #TBD
+    
+        self.sess_id = resp_spec.sess_id #LIF local Session ID
+        self.txsessprodcb_addr = resp_spec.txsessprodcb_addr #HBM address of Tx Sess Producer CB
+        self.rxsessprodcb_addr = resp_spec.rxsessprodcb_addr #HBM address of Rx Sess Producer CB
+        self.tx_xtsq_base = resp_spec.tx_xtsq_base #Q base addr of Tx Sess XTSQ
+        self.tx_xtsq_num_entries = resp_spec.tx_xtsq_num_entries #Q num_entries of Tx Sess XTSQ
+        self.tx_dgstq_base = resp_spec.tx_dgstq_base #Q base addr of Tx Sess DGSTQ
+        self.tx_dgstq_num_entries = resp_spec.tx_dgstq_num_entries #Q num_entries of Tx Sess DGSTQ
+        self.tx_sesq_base = resp_spec.tx_sesq_base #Q base addr of Tx TCP SESQ
+        self.tx_sesq_num_entries = resp_spec.tx_sesq_num_entries #Q num_entries of Tx TCP SESQ
+        self.rx_xtsq_base = resp_spec.rx_xtsq_base #Q base addr of Rx Sess XTSQ
+        self.rx_xtsq_num_entries = resp_spec.rx_xtsq_num_entries #Q num_entries of Rx Sess XTSQ
+        self.rx_dgstq_base = resp_spec.rx_dgstq_base #Q base addr of Rx Sess DGSTQ
+        self.rx_dgstq_num_entries = resp_spec.rx_dgstq_num_entries #Q num_entries of Rx Sess DGSTQ
+        self.rx_serq_base = resp_spec.rx_serq_base #Q base addr of Rx TCP SERQ
+        self.rx_serq_num_entries = resp_spec.rx_serq_num_entries #Q num_entries of Rx TCP SERQ
+
+        # Both R0/R1 of sessxtstx use the same q
+        self.tx_xtsq = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS_XTS_TX', self.sess_id)
+        self.tx_xtsq.SetRingParams('PREXTS', True, None, self.tx_xtsq_base, self.tx_xtsq_num_entries)
+        self.tx_xtsq.SetRingParams('POSTXTS', True, None, self.tx_xtsq_base, self.tx_xtsq_num_entries)
+
+        # Both R0/R1 of sessdgsttx use the same q
+        self.tx_dgstq = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS_DGST_TX', self.sess_id)
+        self.tx_dgstq.SetRingParams('PREDGST', True, None, self.tx_dgstq_base, self.tx_dgstq_num_entries)
+        self.tx_dgstq.SetRingParams('POSTDGST', True, None, self.tx_dgstq_base, self.tx_dgstq_num_entries)
+
+        # Both R0/R1 of sessxtsrx use the same q
+        self.rx_xtsq = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS_XTS_RX', self.sess_id)
+        self.rx_xtsq.SetRingParams('PREXTS', True, None, self.rx_xtsq_base, self.rx_xtsq_num_entries)
+        self.rx_xtsq.SetRingParams('POSTXTS', True, None, self.rx_xtsq_base, self.rx_xtsq_num_entries)
+
+        # R0 of sessdgstrx is same as TCP SERQ
+        # R1 of sessdgstrx is the session q
+        self.rx_dgstq = self.session.initiator.ep.intf.lif.GetQ('NVME_SESS_DGST_RX', self.sess_id)
+        self.rx_dgstq.SetRingParams('PREDGST', True, None, self.rx_serq_base, self.rx_serq_num_entries)
+        self.rx_dgstq.SetRingParams('POSTDGST', True, None, self.rx_dgstq_base, self.rx_dgstq_num_entries)
+
+        #TBD: for now there is no modeling object for TCP SESQ
         return
 
     def IsIPV6(self):
@@ -113,8 +174,8 @@ class NvmeSessionObjectHelper:
 
     def Configure(self):
         logger.info("Configuring NVME sessions..")
-        if GlobalOptions.agent:
-            return
+        if GlobalOptions.agent: return
+        if GlobalOptions.dryrun: return
         for Nvme_s in self.nvme_sessions:
             logger.info('Walking Nvme Session: %s ' % 
                         (Nvme_s.GID()))

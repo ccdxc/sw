@@ -107,6 +107,24 @@ func (mr *MockNvmeClientMockRecorder) NvmeNsCreate(ctx, in interface{}, opts ...
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NvmeNsCreate", reflect.TypeOf((*MockNvmeClient)(nil).NvmeNsCreate), varargs...)
 }
 
+// NvmeSessCreate mocks base method
+func (m *MockNvmeClient) NvmeSessCreate(ctx context.Context, in *NvmeSessRequestMsg, opts ...grpc.CallOption) (*NvmeSessResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "NvmeSessCreate", varargs...)
+	ret0, _ := ret[0].(*NvmeSessResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NvmeSessCreate indicates an expected call of NvmeSessCreate
+func (mr *MockNvmeClientMockRecorder) NvmeSessCreate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NvmeSessCreate", reflect.TypeOf((*MockNvmeClient)(nil).NvmeSessCreate), varargs...)
+}
+
 // MockNvmeServer is a mock of NvmeServer interface
 type MockNvmeServer struct {
 	ctrl     *gomock.Controller
@@ -180,4 +198,17 @@ func (m *MockNvmeServer) NvmeNsCreate(arg0 context.Context, arg1 *NvmeNsRequestM
 // NvmeNsCreate indicates an expected call of NvmeNsCreate
 func (mr *MockNvmeServerMockRecorder) NvmeNsCreate(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NvmeNsCreate", reflect.TypeOf((*MockNvmeServer)(nil).NvmeNsCreate), arg0, arg1)
+}
+
+// NvmeSessCreate mocks base method
+func (m *MockNvmeServer) NvmeSessCreate(arg0 context.Context, arg1 *NvmeSessRequestMsg) (*NvmeSessResponseMsg, error) {
+	ret := m.ctrl.Call(m, "NvmeSessCreate", arg0, arg1)
+	ret0, _ := ret[0].(*NvmeSessResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NvmeSessCreate indicates an expected call of NvmeSessCreate
+func (mr *MockNvmeServerMockRecorder) NvmeSessCreate(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NvmeSessCreate", reflect.TypeOf((*MockNvmeServer)(nil).NvmeSessCreate), arg0, arg1)
 }

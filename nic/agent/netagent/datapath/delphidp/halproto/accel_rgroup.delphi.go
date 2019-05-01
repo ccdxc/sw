@@ -871,6 +871,10 @@ It has these top-level messages:
 	NvmeNsRequestMsg
 	NvmeNsResponse
 	NvmeNsResponseMsg
+	NvmeSessSpec
+	NvmeSessRequestMsg
+	NvmeSessResponse
+	NvmeSessResponseMsg
 	NetworkSpec
 	NetworkRequestMsg
 	NetworkStatus

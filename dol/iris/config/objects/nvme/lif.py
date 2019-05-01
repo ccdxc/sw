@@ -28,6 +28,9 @@ class NvmeLifObject(base.ConfigObjectBase):
         self.obj_helper_ns.Generate(self, spec.max_ns)
         if len(self.obj_helper_ns.ns_list):
             self.nsdb.SetAll(self.obj_helper_ns.ns_list)
+
+        #nsid dispenser to associate nvme sessions to namespaces on this lif
+        self.next_nsid = 0
         
         self.Show()
         return
@@ -42,3 +45,16 @@ class NvmeLifObject(base.ConfigObjectBase):
         if len(self.obj_helper_ns.ns_list):
             self.obj_helper_ns.Configure()
         return
+
+    def GetNextNsid(self):
+        self.next_nsid = self.next_nsid + 1
+        #handle wrap-around
+        if self.next_nsid == self.spec.max_ns+1:
+            self.next_nsid = 1; 
+        logger.info("dispensed next_nsid: %s on nvme lif: %s" \
+                     %(self.next_nsid, self.GID()))
+        return self.next_nsid
+
+    def NsSessionAttach(self, nsid, nvme_sess):
+        self.obj_helper_ns.SessionAttach(nsid, nvme_sess)
+

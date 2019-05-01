@@ -29,6 +29,7 @@ class NvmeNsObject(base.ConfigObjectBase):
         self.max_sess = 16
         self.nscb_addr = None
         self.backend_nsid = None
+        self.session_list = []
         return
 
     def Show(self):
@@ -59,6 +60,11 @@ class NvmeNsObject(base.ConfigObjectBase):
         self.nscb_addr = resp_spec.nscb_addr
         self.Show()
         return
+
+    def SessionAttach(self, nvme_sess):
+        logger.info("Attaching nvme_sess: %s to ns: %s" \
+                     %(nvme_sess.GID(), self.GID()))
+        self.session_list.append(nvme_sess)
         
 
 class NsObjectHelper:
@@ -81,3 +87,6 @@ class NsObjectHelper:
         if (GlobalOptions.dryrun):  return
         halapi.NvmeNsCreate(self.ns_list)
         return
+
+    def SessionAttach(self, nsid, nvme_sess):
+        self.ns_list[nsid-1].SessionAttach(nvme_sess)

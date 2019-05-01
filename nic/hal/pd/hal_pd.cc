@@ -275,6 +275,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_WRING_GET_ENTRY, pd_wring_get_entry);
     PD_FUNC_LOAD(PD_FUNC_ID_WRING_GET_META, pd_wring_get_meta);
     PD_FUNC_LOAD(PD_FUNC_ID_WRING_SET_META, pd_wring_set_meta);
+    PD_FUNC_LOAD(PD_FUNC_ID_WRING_GET_BASE_ADDR, pd_wring_get_base_addr);
 
     // mirror session
     PD_FUNC_LOAD(PD_FUNC_ID_MIRROR_SESSION_CREATE, pd_mirror_session_create);

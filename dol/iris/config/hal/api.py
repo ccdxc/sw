@@ -839,3 +839,10 @@ def NvmeNsCreate(objlist):
     __config(objlist, nvme_pb2.NvmeNsRequestMsg,
              stub.NvmeNsCreate)
     return
+
+def NvmeSessionCreate(objlist):
+    if not IsConfigAllowed(objlist): return
+    stub = nvme_pb2.NvmeStub(HalChannel)
+    __config(objlist, nvme_pb2.NvmeSessRequestMsg,
+             stub.NvmeSessCreate)
+    return
