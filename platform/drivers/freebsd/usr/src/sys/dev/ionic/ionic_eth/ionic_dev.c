@@ -39,6 +39,7 @@ int ionic_dev_setup(struct ionic* ionic)
 	unsigned int num_bars = ionic->num_bars;
 	struct ionic_dev *idev = &ionic->idev;
 	struct device *dev = ionic->dev;
+	union dev_info_regs *info;
 	u32 sig;
 
 	/*
@@ -61,11 +62,17 @@ int ionic_dev_setup(struct ionic* ionic)
 	idev->intr_status = bar->vaddr + BAR0_INTR_STATUS_OFFSET;
 	idev->intr_ctrl = bar->vaddr + BAR0_INTR_CTRL_OFFSET;
 
-	sig = ioread32(&idev->dev_info->signature);
+	info = ionic->idev.dev_info;
+	sig = ioread32(&info->signature);
 	if (sig != IONIC_DEV_INFO_SIGNATURE) {
 		dev_err(dev, "Incompatible firmware signature %x", sig);
 		return -EFAULT;
 	}
+
+	dev_info(dev, "ASIC: %s rev: 0x%X serial num: %s fw_ver: %s\n",
+		 ionic_dev_asic_name(info->asic_type),
+		 info->asic_rev, info->serial_num,
+		 info->fw_version);
 
 	/*
 	 * BAR1 resources

@@ -1200,7 +1200,7 @@ ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 
 	snprintf(rxq->name, sizeof(rxq->name) - 1, "rxq%d", qnum);
 	/* Interrupt is shared between tx and rx. */
-	snprintf(rxq->intr.name, sizeof(rxq->intr.name), "rxtx%d", rxq->index);
+	snprintf(rxq->intr.name, sizeof(rxq->intr.name), "rxtx%d", qnum);
 	snprintf(rxq->mtx_name, sizeof(rxq->mtx_name) - 1, "rxq%d_mtx", qnum);
 	rxq->lif = lif;
 	rxq->type = IONIC_QTYPE_RXQ;
@@ -1731,7 +1731,7 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 	/* Allocate lif info */
 	lif->info_sz = ALIGN(sizeof(*lif->info), PAGE_SIZE);
 
-	if ((err = ionic_dma_alloc(lif->ionic, lif->info_sz, &lif->info_dma, BUS_DMA_NOWAIT))) {
+	if ((err = ionic_dma_alloc(lif->ionic, lif->info_sz, &lif->info_dma, 0))) {
 		dev_err(dev, "failed to allocate lif registers, err: %d\n", err);
 		goto err_out_unmap_dbell;
 	}
@@ -3271,6 +3271,17 @@ try_again:
 	ionic->ntxqs_per_lif = nqs;
 	ionic->nrxqs_per_lif = nqs;
 	ionic->nintrs = nintrs;
+
+	dev_info(ionic->dev, "Lifs: %u, Intrs: %u/%u, NotifyQs: %u/%u, "
+		"TxQs: %u/%u, RxQs: %u/%u, EQs: %u/%u\n",
+		ident->dev.nlifs, nintrs, dev_nintrs,
+		nnqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_NOTIFYQ],
+		nqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_TXQ],
+		nqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_RXQ],
+		neqs, ident->lif.eth.config.queue_count[IONIC_QTYPE_EQ]);
+	dev_info(ionic->dev, "ucasts: %u, mcasts: %u, intr_coal: %u, div: %u\n",
+		ident->lif.eth.max_ucast_filters, ident->lif.eth.max_mcast_filters,
+		ident->dev.intr_coal_mult, ident->dev.intr_coal_div);
 
 	return 0;
 try_fewer:
