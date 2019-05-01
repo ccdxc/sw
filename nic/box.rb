@@ -19,9 +19,9 @@ if user != ""
   # update user .bash_profile
   run "echo 'export GOPATH=/usr' >> /home/#{user}/.bash_profile"
   run "echo 'export PATH=/usr/local/go/bin:$PATH' >> /home/#{user}/.bash_profile"
-  run "echo 'cd /sw/nic' >> /home/#{user}/.bash_profile"
   run "echo 'sudo chown -R #{user} /sw/' >> /home/#{user}/.bash_profile"
   run "echo 'sudo chgrp -R #{user} /sw/' >> /home/#{user}/.bash_profile"
+  run "echo 'cd /usr/src/github.com/pensando/sw/nic' >> /home/#{user}/.bash_profile"
   run "echo 'Defaults secure_path = /usr/local/go/bin:$PATH:/bin:/usr/sbin/' >> /etc/sudoers"
 
   run "echo '#{user} ALL=(root) NOPASSWD:ALL' > /etc/sudoers.d/#{user} && chmod 0440 /etc/sudoers.d/#{user}"
