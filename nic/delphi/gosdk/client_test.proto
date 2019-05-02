@@ -20,7 +20,7 @@ message TestInterfaceSpec {
 message MessageFrom {
     delphi.ObjectMeta Meta  = 1;
     uint32            Key   = 2;
-    string            Ref   = 3 [(delphi.foreign_key) = {message_name: "MessageTo"}];
+    uint32            Ref   = 3 [(delphi.foreign_key) = {kind: "MessageTo"}];
     string            Value = 4;
 }
 

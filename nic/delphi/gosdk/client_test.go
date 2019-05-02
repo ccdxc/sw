@@ -148,13 +148,13 @@ func TestClientBasic(t *testing.T) {
 
 	fObj := &MessageFrom{
 		Key:   1,
+		Ref:   1,
 		Value: "FromObject 1",
 	}
 	tObj := &MessageTo{
 		Key:   1,
 		Value: "ToObject 1",
 	}
-	fObj.LinkToRef(tObj)
 
 	c1.SetObject(fObj)
 	c1.SetObject(tObj)
@@ -166,17 +166,12 @@ func TestClientBasic(t *testing.T) {
 	}
 	log.Printf("tObj2: %+v", tObj2)
 
-	fObj2 := GetMessageFromFromRef(c2, tObj2)
-	if fObj2 == nil || fObj2.Value != fObj.Value {
+	obj2 := c2.GetFromIndex("MessageTo", "MessageFrom", "Ref", "1")
+	fObj2, ok := obj2.(*MessageFrom)
+	if !ok || fObj2 == nil || fObj2.Value != fObj.Value {
 		t.Errorf(`fObj2 is wrong`)
 	}
 	log.Printf("fObj2: %+v", fObj2)
-
-	tObj3 := MessageFromGetRefObj(c2, fObj2)
-	if tObj3 == nil || tObj3.Value != tObj.Value {
-		t.Errorf("tObj3 is wrong: %v", tObj3)
-	}
-	log.Printf("tObj3: %+v", tObj3)
 
 	log.Printf("Client 2 index:\n")
 	c2.DumpIndex()

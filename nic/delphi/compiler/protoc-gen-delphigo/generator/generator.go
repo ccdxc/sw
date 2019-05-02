@@ -30,9 +30,9 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*
-	The code generator for the plugin for the Google protocol buffer compiler.
-	It generates Go code from the protocol buffer description files read by the
-	main routine.
+   The code generator for the plugin for the Google protocol buffer compiler.
+   It generates Go code from the protocol buffer description files read by the
+   main routine.
 */
 package generator
 
@@ -1482,14 +1482,14 @@ func (g *Generator) generateEnum(enum *EnumDescriptor) {
 // The tag is a string like "varint,2,opt,name=fieldname,def=7" that
 // identifies details of the field for the protocol buffer marshaling and unmarshaling
 // code.  The fields are:
-//	wire encoding
-//	protocol tag number
-//	opt,req,rep for optional, required, or repeated
-//	packed whether the encoding is "packed" (optional; repeated primitives only)
-//	name= the original declared name
-//	enum= the name of the enum type if it is an enum-typed field.
-//	proto3 if this field is in a proto3 message
-//	def= string representation of the default value, if any.
+//  wire encoding
+//  protocol tag number
+//  opt,req,rep for optional, required, or repeated
+//  packed whether the encoding is "packed" (optional; repeated primitives only)
+//  name= the original declared name
+//  enum= the name of the enum type if it is an enum-typed field.
+//  proto3 if this field is in a proto3 message
+//  def= string representation of the default value, if any.
 // The default value must be in a representation that can be used at run-time
 // to generate the default value. Thus bools become 0 and 1, for instance.
 func (g *Generator) goTag(message *Descriptor, field *descriptor.FieldDescriptorProto, wiretype string) string {
@@ -2147,52 +2147,19 @@ func (g *Generator) generateMessage(message *Descriptor) {
 			}
 			fk := ext.(*delphi.ForeignKey)
 
-			// LinkTo function
-			g.P(`func (o *` + ccTypeName + `) LinkTo` + *f.Name + `(f *` +
-				fk.MessageName + `) {`)
-			g.P(`   o.` + *f.Name + ` = f.GetDelphiKey()`)
-			g.P(`}`)
-
-			// Forward Refernce Function
-			g.P(`func `, ccTypeName, `Get`, *f.Name, `Obj(`,
-				`client clientApi.Client, o *`, ccTypeName, `) *`,
-				fk.MessageName, `{`)
-			g.P(`   obj := client.GetObject("` + fk.MessageName + `", o.` +
-				*f.Name + `)`)
-			g.P(`   if obj == nil {`)
-			g.P(`      return nil`)
-			g.P(`   }`)
-			g.P(`   cobj, ok := obj.(*`, fk.MessageName, `)`)
-			g.P("if ok != true {")
-			g.P(" panic(\"Cast failed\")")
-			g.P("}")
-			g.P(`   return cobj`)
-			g.P(`}`)
-
-			// Reverse Reference Function
-			g.P(`func Get`, ccTypeName, `From`, *f.Name, `(`,
-				`client clientApi.Client, f * `, fk.MessageName, `) *`,
-				ccTypeName, `{`)
-			g.P(`o := client.GetFromIndex("`, fk.MessageName, `", "`,
-				ccTypeName, `", "`, *f.Name, `",`, `f.GetDelphiKey())`)
-			g.P(`if o == nil {`)
-			g.P(` return nil`)
-			g.P(`}`)
-			g.P(`obj, ok := o.(*`, ccTypeName, `)`)
-			g.P("if ok != true {")
-			g.P(" panic(\"Cast failed\")")
-			g.P("}")
-			g.P(`return obj`)
-			g.P(`}`)
-
 			// KeyExtractor Function
-			g.P(`func ` + ccTypeName + *f.Name + `KeyExtractor` +
-				`(o clientApi.BaseObject) string {`)
-			g.P(`   obj, _ := o.(*` + ccTypeName + `)`)
-			g.P(`   return obj.` + *f.Name)
-			g.P(`}`)
+			g.P("func ", ccTypeName, *f.Name,
+				"KeyExtractor(o clientApi.BaseObject) string {")
+			g.P("   obj, _ := o.(*" + ccTypeName + ")")
+			if isScalar(f) ||
+				*f.Type == descriptor.FieldDescriptorProto_TYPE_STRING {
+				g.P(`return fmt.Sprintf("%v", `, `obj.`, *f.Name, `)`)
+			} else {
+				g.P("return obj.", *f.Name, ".String()")
+			}
+			g.P("}")
 			g.init = append(g.init, `clientApi.CreateIndex("`+
-				ccTypeName+`", "`+*f.Name+`", "`+fk.MessageName+
+				ccTypeName+`", "`+*f.Name+`", "`+fk.Kind+
 				`", `+ccTypeName+*f.Name+`KeyExtractor)`)
 		}
 	}
