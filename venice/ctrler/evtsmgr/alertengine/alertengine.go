@@ -28,7 +28,7 @@ import (
 
 var (
 	pkgName  = "evts-alerts-engine"
-	maxRetry = 5
+	maxRetry = 15
 )
 
 //
@@ -74,29 +74,29 @@ type alertEngineImpl struct {
 	memDb          *memdb.MemDb            // in-memory db/cache
 	apiClient      apiclient.Services      // API server client
 	exporter       *exporter.AlertExporter // exporter to export alerts to different destinations
+	ctx            context.Context         // context to cancel goroutines
+	cancelFunc     context.CancelFunc      // context to cancel goroutines
+	wg             sync.WaitGroup          // for start routine
+	running        bool                    // indicates if alert engine is running or not
 }
 
 // NewAlertEngine creates the new events alert engine.
-func NewAlertEngine(memDb *memdb.MemDb, logger log.Logger, resolverClient resolver.Interface) (Interface, error) {
-	var err error
+func NewAlertEngine(parentCtx context.Context, memDb *memdb.MemDb, logger log.Logger, resolverClient resolver.Interface) (Interface, error) {
 	if nil == logger || nil == resolverClient {
 		return nil, errors.New("all parameters are required")
 	}
 
+	ctx, cancelFunc := context.WithCancel(parentCtx)
 	ae := &alertEngineImpl{
 		logger:         logger,
 		resolverClient: resolverClient,
 		memDb:          memDb,
+		ctx:            ctx,
+		cancelFunc:     cancelFunc,
 	}
 
-	// create API client
-	if ae.apiClient, err = ae.createAPIClient(); err != nil {
-		ae.logger.Errorf("failed to create API client, err: %v", err)
-		return nil, err
-	}
-
-	// create alert exporter
-	ae.exporter = exporter.NewAlertExporter(memDb, ae.apiClient, logger.WithContext("submodule", "alert_exporter"))
+	ae.wg.Add(1)
+	go ae.Start()
 
 	return ae, nil
 }
@@ -104,6 +104,14 @@ func NewAlertEngine(memDb *memdb.MemDb, logger log.Logger, resolverClient resolv
 // ProcessEvents will be called from the events manager whenever the events are received.
 // And, it creates an alert whenever the event matches any policy.
 func (a *alertEngineImpl) ProcessEvents(eventList *evtsapi.EventList) {
+	a.Lock()
+	if !a.running {
+		a.logger.Errorf("alert engine not running, could not process events")
+		a.Unlock()
+		return
+	}
+	a.Unlock()
+
 	for _, evt := range eventList.GetItems() {
 		// fetch alert policies belonging to evt.Tenant
 		alertPolicies := a.memDb.GetAlertPolicies(
@@ -127,10 +135,44 @@ func (a *alertEngineImpl) ProcessEvents(eventList *evtsapi.EventList) {
 	}
 }
 
+// Start starts the alert engine after establishing a conn. with API server
+func (a *alertEngineImpl) Start() {
+	defer a.wg.Done()
+	var err error
+
+	for {
+		select {
+		case <-a.ctx.Done():
+			return
+		default:
+			// create API client
+			if a.apiClient, err = a.createAPIClient(); err != nil {
+				a.logger.Errorf("failed to create API client, retrying... err: %v", err)
+				continue
+			}
+
+			if a.ctx.Err() != nil {
+				return
+			}
+
+			// create alert exporter
+			a.Lock()
+			a.exporter = exporter.NewAlertExporter(a.memDb, a.apiClient, a.logger.WithContext("submodule", "alert_exporter"))
+			a.running = true
+			a.Unlock()
+
+			return
+		}
+	}
+}
+
 // Stop stops the alert engine by closing all the workers.
 func (a *alertEngineImpl) Stop() {
 	a.Lock()
 	defer a.Unlock()
+
+	a.cancelFunc()
+	a.wg.Wait()
 
 	if a.apiClient != nil {
 		if err := a.apiClient.Close(); err != nil {
@@ -138,7 +180,10 @@ func (a *alertEngineImpl) Stop() {
 		}
 	}
 
-	a.exporter.Stop() // this will stop any exports that're in line
+	if a.running {
+		a.exporter.Stop() // this will stop any exports that're in line
+		a.running = false
+	}
 }
 
 // runPolicy helper function to run the given policy against event. Also, it updates

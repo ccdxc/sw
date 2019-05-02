@@ -78,7 +78,7 @@ func setup(t *testing.T) (*mock.ElasticServer, apiserver.Server, *RPCServer, *rp
 	memDb := memdb.NewMemDb()
 
 	// create alert engine
-	alertEngine, err := alertengine.NewAlertEngine(memDb, tLogger.WithContext("submodule", "alertengine"), mr)
+	alertEngine, err := alertengine.NewAlertEngine(context.Background(), memDb, tLogger.WithContext("submodule", "alertengine"), mr)
 	AssertOk(t, err, "failed to create alert engine")
 
 	// create grpc server

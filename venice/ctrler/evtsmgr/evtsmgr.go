@@ -119,7 +119,7 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 
 	var err error
 
-	em.alertEngine, err = alertengine.NewAlertEngine(em.memDb, logger.WithContext("pkg", "evts-alert-engine"), resolverClient)
+	em.alertEngine, err = alertengine.NewAlertEngine(ctx, em.memDb, logger.WithContext("pkg", "evts-alert-engine"), resolverClient)
 	if err != nil {
 		em.logger.Errorf("failed to create alert engine, err: %v", err)
 		return nil, err
