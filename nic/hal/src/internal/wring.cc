@@ -356,5 +356,35 @@ wring_get_phys_addr(types::WRingType wring_type, wring_id_t wring_id,
     return HAL_RET_OK;
 }
 
+//------------------------------------------------------------------------------
+// Get ring meta info
+//------------------------------------------------------------------------------
+hal_ret_t
+wring_get_meta(types::WRingType wring_type, wring_id_t wring_id,
+        wring_t *wring)
+{
+    hal_ret_t               ret = HAL_RET_OK;
+    pd::pd_wring_get_meta_args_t     pd_wring_args;
+    pd::pd_func_args_t          pd_func_args = {0};
+
+    wring_init(wring);
+    wring->wring_type = wring_type;
+    wring->wring_id = wring_id;
+
+    pd::pd_wring_get_meta_args_init(&pd_wring_args);
+    pd_wring_args.wring = wring;
+
+    pd_func_args.pd_wring_get_meta = &pd_wring_args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_WRING_GET_META, &pd_func_args);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("PD Wring: Failed to get, err: {}", ret);
+        return HAL_RET_HW_FAIL;
+    }
+
+    HAL_TRACE_DEBUG("Ring {} phys_addr {:#x} num_entries {}", wring_type,
+            wring->phys_base_addr, wring->num_entries);
+
+    return HAL_RET_OK;
+}
 
 }    // namespace hal

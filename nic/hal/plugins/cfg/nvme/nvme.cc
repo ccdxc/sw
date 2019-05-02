@@ -57,9 +57,13 @@ typedef struct nvme_global_info_s {
     uint32_t tx_max_aol;
     uint64_t tx_aol_page_base;
     uint64_t tx_aol_ring_base;
+    uint64_t tx_nmdpr_ring_base;
+    uint64_t tx_nmdpr_ring_size;
     uint32_t rx_max_aol;
     uint64_t rx_aol_page_base;
     uint64_t rx_aol_ring_base;
+    uint64_t rx_nmdpr_ring_base;
+    uint64_t rx_nmdpr_ring_size;
     uint64_t tx_resourcecb_addr;
     uint64_t rx_resourcecb_addr;
 
@@ -212,6 +216,8 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     uint64_t            base_addr;
     uint64_t            iter_addr;
     uint32_t            index;
+    hal_ret_t           ret;
+    wring_t             wring;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
  
@@ -378,6 +384,37 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     rsp->set_cmd_context_page_base(g_nvme_global_info.cmd_context_page_base);
     rsp->set_cmd_context_ring_base(g_nvme_global_info.cmd_context_ring_base);
 
+    // Get TX_NMDPR_RING_BASE
+    ret = wring_get_meta(types::WRING_TYPE_NMDPR_BIG_TX,
+                         0,
+                         &wring);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to receive NMDPR ring base");
+        return HAL_RET_ERR;
+    } else {
+        g_nvme_global_info.tx_nmdpr_ring_base = wring.phys_base_addr;
+        g_nvme_global_info.tx_nmdpr_ring_size = wring.num_entries;
+        HAL_TRACE_DEBUG("tx_nmdpr_ring_base: {:#x}, size: {}", 
+                        g_nvme_global_info.tx_nmdpr_ring_base, 
+                        g_nvme_global_info.tx_nmdpr_ring_size);
+    }
+
+    // Get RX_NMDPR_RING_BASE
+    ret = wring_get_meta(types::WRING_TYPE_NMDPR_BIG_RX,
+                         0,
+                         &wring);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to receive NMDPR ring base");
+        return HAL_RET_ERR;
+    } else {
+        g_nvme_global_info.rx_nmdpr_ring_base = wring.phys_base_addr;
+        g_nvme_global_info.rx_nmdpr_ring_size = wring.num_entries;
+        HAL_TRACE_DEBUG("rx_nmdpr_ring_base: {:#x}, size: {}", 
+                        g_nvme_global_info.rx_nmdpr_ring_base,
+                        g_nvme_global_info.rx_nmdpr_ring_size);
+    }
+
+
     //Setup tx_resourcecb
     nvme_resourcecb_t tx_resourcecb;
 
@@ -392,6 +429,11 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     tx_resourcecb.aol_ring_pi = 0;
     tx_resourcecb.aol_ring_proxy_ci = 0;
 
+    tx_resourcecb.page_ring_log_sz = log2(g_nvme_global_info.tx_nmdpr_ring_size);
+    tx_resourcecb.page_ring_ci = 0;
+    tx_resourcecb.page_ring_pi = 0;
+    tx_resourcecb.page_ring_proxy_ci = 0;
+
     nvme_hbm_write(g_nvme_global_info.tx_resourcecb_addr, (void *)&tx_resourcecb, sizeof(nvme_resourcecb_t));
 
     //Setup rx_resourcecb
@@ -403,10 +445,15 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     rx_resourcecb.cmdid_ring_pi = 0;
     rx_resourcecb.cmdid_ring_proxy_ci = 0;
 
-    rx_resourcecb.aol_ring_log_sz = log2(tx_max_aol);
+    rx_resourcecb.aol_ring_log_sz = log2(rx_max_aol);
     rx_resourcecb.aol_ring_ci = 0;
     rx_resourcecb.aol_ring_pi = 0;
     rx_resourcecb.aol_ring_proxy_ci = 0;
+
+    rx_resourcecb.page_ring_log_sz = log2(g_nvme_global_info.rx_nmdpr_ring_size);
+    rx_resourcecb.page_ring_ci = 0;
+    rx_resourcecb.page_ring_pi = 0;
+    rx_resourcecb.page_ring_proxy_ci = 0;
 
     nvme_hbm_write(g_nvme_global_info.rx_resourcecb_addr, (void *)&rx_resourcecb, sizeof(nvme_resourcecb_t));
 
@@ -763,10 +810,16 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     uint64_t      rx_sess_dgstq_base;
     uint32_t      sess_id;
     uint32_t      sesq_qid;
+    uint32_t      serq_qid;
+    uint64_t      sesq_base;
+    uint64_t      serq_base;
+    uint32_t      sesq_size;
+    uint32_t      serq_size;
     hal_ret_t     ret;
     nvme_nscb_t   *nscb_p;
     uint32_t      g_nsid;
     nvme_ns_info_t *ns_info_p;
+    wring_t       wring;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF:{}: NVME Sess Create for lif {}", __FUNCTION__, lif);
@@ -812,26 +865,46 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     SDK_ASSERT(pfi->proxy != NULL);
     SDK_ASSERT(pfi->proxy->type == types::PROXY_TYPE_TCP);
 
-    sesq_qid = pfi->qid2;
+    serq_qid = sesq_qid = pfi->qid2;
 
     HAL_TRACE_DEBUG("TCP Flow LIF: {}, QType: {}, QID1: {}, QID2: {}",
                     pfi->proxy->meta->lif_info[0].lif_id,
                     pfi->proxy->meta->lif_info[0].qtype_info[0].qtype_val,
-                    pfi->qid1, sesq_qid);
+                    pfi->qid1, pfi->qid2);
 
     // Get Sesq address
-    uint64_t sesq_base;
-    ret = wring_get_phys_addr(types::WRING_TYPE_SESQ,
-                              sesq_qid,
-                              &sesq_base);
+    ret = wring_get_meta(types::WRING_TYPE_SESQ,
+                         sesq_qid,
+                         &wring);
     if(ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to receive serq base for tlscbcb: {}",
+        HAL_TRACE_ERR("Failed to receive serq base for transport TCPQ: {}",
                       sesq_qid);
-    } else {
-        HAL_TRACE_DEBUG("Sesq id: {:#x} Sesq base: {:#x}", sesq_qid, sesq_base);
         return HAL_RET_ERR;
+    } else {
+        sesq_base = wring.phys_base_addr;
+        sesq_size = wring.num_entries;
+        HAL_TRACE_DEBUG("Sesq id: {:#x} Sesq base: {:#x}, size: {}", 
+                        sesq_qid, sesq_base, sesq_size);
     }
     rsp->set_tx_sesq_base(sesq_base);
+    rsp->set_tx_sesq_num_entries(sesq_size);
+
+    // Get Serq address
+    ret = wring_get_meta(types::WRING_TYPE_SERQ,
+                         serq_qid,
+                         &wring);
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to receive serq base for transport TCPQ: {}",
+                      serq_qid);
+        return HAL_RET_ERR;
+    } else {
+        serq_base = wring.phys_base_addr;
+        serq_size = wring.num_entries;
+        HAL_TRACE_DEBUG("Serq id: {:#x} Serq base: {:#x}, size: {}", 
+                        serq_qid, serq_base, serq_size);
+    }
+    rsp->set_rx_serq_base(serq_base);
+    rsp->set_rx_serq_num_entries(serq_size);
 
     //global session id
     sess_id = ns_info_p->sess_start + ns_info_p->cur_sess++;
@@ -860,6 +933,10 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     txsessprodcb.dgst_q_pi = 0;
     txsessprodcb.dgst_q_ci = 0;
     txsessprodcb.log_num_dgst_q_entries = log2(NVME_TX_SESS_DGSTQ_ENTRIES);
+    txsessprodcb.tcp_q_base_addr = sesq_base;
+    txsessprodcb.tcp_q_pi = 0;
+    txsessprodcb.tcp_q_ci = 0;
+    txsessprodcb.log_num_tcp_q_entries = log2(sesq_size);
     SDK_ASSERT((NVME_TX_SESS_DGSTQ_ENTRIES & (NVME_TX_SESS_DGSTQ_ENTRIES - 1)) == 0);
     rsp->set_tx_dgstq_base(tx_sess_dgstq_base);
     rsp->set_tx_dgstq_num_entries(NVME_TX_SESS_DGSTQ_ENTRIES);
@@ -884,6 +961,10 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     rxsessprodcb.xts_q_pi = 0;
     rxsessprodcb.xts_q_ci = 0;
     rxsessprodcb.log_num_xts_q_entries = log2(NVME_RX_SESS_XTSQ_ENTRIES);
+    rxsessprodcb.tcp_q_base_addr = serq_base;
+    rxsessprodcb.tcp_q_pi = 0;
+    rxsessprodcb.tcp_q_ci = 0;
+    rxsessprodcb.log_num_tcp_q_entries = log2(serq_size);
     SDK_ASSERT((NVME_RX_SESS_XTSQ_ENTRIES & (NVME_RX_SESS_XTSQ_ENTRIES - 1)) == 0);
     rsp->set_rx_xtsq_base(rx_sess_xtsq_base);
     rsp->set_rx_xtsq_num_entries(NVME_RX_SESS_XTSQ_ENTRIES);

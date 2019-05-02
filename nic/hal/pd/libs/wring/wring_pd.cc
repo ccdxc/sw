@@ -631,6 +631,20 @@ p4pd_wring_get_meta(pd_wring_t* wring_pd)
     wring_t*            wring = wring_pd->wring;
     pd_wring_meta_t     *meta = &g_meta[wring->wring_type];
     uint64_t            sem_addr = meta->alloc_semaphore_addr;
+    wring_hw_id_t       wring_base;
+
+    wring->num_entries = meta->num_slots;
+    wring->obj_size = meta->obj_size;
+    wring->is_global = meta->is_global;
+
+    ret = wring_pd_get_base_addr(wring->wring_type,
+                                 wring->wring_id,
+                                 &wring_base);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Could not find the wring base addr");
+        return ret;
+    }
+    wring->phys_base_addr = wring_base;
 
     if(meta->get_hw_meta_fn) {
     	return meta->get_hw_meta_fn(wring_pd);
