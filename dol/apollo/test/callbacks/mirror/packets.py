@@ -20,6 +20,7 @@ def GetRSPANVlanID(testcase, packet, args=None):
 def GetExpectedPacket(testcase, args):
     vnic = testcase.config.localmapping.VNIC
     mirrorid = args.id
+    direction = args.direction
     objs = __get_mirror_objects(vnic, args.direction)
     mirrorObj = objs.get(mirrorid, None)
-    return testcase.packets.Get('MIRROR_PKT_' + str(mirrorid)) if mirrorObj else None
+    return testcase.packets.Get('MIRROR_PKT_' + direction.upper() + '_' + str(mirrorid)) if mirrorObj else None

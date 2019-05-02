@@ -1,0 +1,22 @@
+# Feature  Tx, Rx mirror Modules List
+feature:
+    id          : mirror
+    sub         : tx_rx_mirror
+    package     : test.mirror
+    module      : mirror
+    enable      : True
+    ignore      : True
+
+modules:
+
+    - module:
+        name    : L2L_VNIC_IPV4_TCP_QTAG
+        spec    : local2local_tx_rx.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING
+
+    - module:
+        name    : L2L_VNIC_IPV6_TCP_QTAG
+        spec    : local2local_tx_rx.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING

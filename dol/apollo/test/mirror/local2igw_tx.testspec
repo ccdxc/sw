@@ -66,7 +66,7 @@ packets:
                 dst     : 00:02:00:00:00:00
 
     - packet:
-        id          : MIRROR_PKT_1 # Expected tx mirrored packet
+        id          : MIRROR_PKT_TX_1 # Expected tx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -81,7 +81,7 @@ packets:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
 
     - packet:
-        id          : MIRROR_PKT_2 # Expected tx mirrored packet
+        id          : MIRROR_PKT_TX_2 # Expected tx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -96,7 +96,7 @@ packets:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
 
     - packet:
-        id          : MIRROR_PKT_3 # Expected tx mirrored packet
+        id          : MIRROR_PKT_TX_3 # Expected tx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -111,7 +111,7 @@ packets:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
 
     - packet:
-        id          : MIRROR_PKT_4 # Expected tx mirrored packet
+        id          : MIRROR_PKT_TX_4 # Expected tx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -126,7 +126,7 @@ packets:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
 
     - packet:
-        id          : MIRROR_PKT_5 # Expected tx mirrored packet
+        id          : MIRROR_PKT_TX_5 # Expected tx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -141,7 +141,7 @@ packets:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
 
     - packet:
-        id          : MIRROR_PKT_6 # Expected tx mirrored packet
+        id          : MIRROR_PKT_TX_6 # Expected tx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -156,7 +156,7 @@ packets:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
 
     - packet:
-        id          : MIRROR_PKT_7 # Expected tx mirrored packet
+        id          : MIRROR_PKT_TX_7 # Expected tx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -171,7 +171,7 @@ packets:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
 
     - packet:
-        id          : MIRROR_PKT_8 # Expected tx mirrored packet
+        id          : MIRROR_PKT_TX_8 # Expected tx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ

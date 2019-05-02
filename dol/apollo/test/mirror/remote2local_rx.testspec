@@ -65,7 +65,7 @@ packets:
                 prio    : 0
 
     - packet:
-        id          : MIRROR_PKT_1 # Expected rx mirrored packet
+        id          : MIRROR_PKT_RX_1 # Expected rx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -82,7 +82,7 @@ packets:
 
 
     - packet:
-        id          : MIRROR_PKT_2 # Expected rx mirrored packet
+        id          : MIRROR_PKT_RX_2 # Expected rx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -98,7 +98,7 @@ packets:
                 prio    : 0
 
     - packet:
-        id          : MIRROR_PKT_3 # Expected rx mirrored packet
+        id          : MIRROR_PKT_RX_3 # Expected rx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -114,7 +114,7 @@ packets:
                 prio    : 0
 
     - packet:
-        id          : MIRROR_PKT_4 # Expected rx mirrored packet
+        id          : MIRROR_PKT_RX_4 # Expected rx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -130,7 +130,7 @@ packets:
                 prio    : 0
 
     - packet:
-        id          : MIRROR_PKT_5 # Expected rx mirrored packet
+        id          : MIRROR_PKT_RX_5 # Expected rx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -146,7 +146,7 @@ packets:
                 prio    : 0
 
     - packet:
-        id          : MIRROR_PKT_6 # Expected rx mirrored packet
+        id          : MIRROR_PKT_RX_6 # Expected rx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -162,7 +162,7 @@ packets:
                 prio    : 0
 
     - packet:
-        id          : MIRROR_PKT_7 # Expected rx mirrored packet
+        id          : MIRROR_PKT_RX_7 # Expected rx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
@@ -178,7 +178,7 @@ packets:
                 prio    : 0
 
     - packet:
-        id          : MIRROR_PKT_8 # Expected rx mirrored packet
+        id          : MIRROR_PKT_RX_8 # Expected rx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ

@@ -80,7 +80,7 @@ vpc:
           v6prefixlen : 64
           vnic:
             - count   : 1             # VNICs per subnet
-              ipcount : 2             # Local IP mapping per vnic
+              ipcount : 4             # Local IP mapping per vnic
               srcguard : false        # true or false (default false)
               public  : true
               txmirror :
@@ -117,7 +117,13 @@ vpc:
               public  : true
 
           rmap:                       # Remote IP mappings per subnet
-            - count : 6
+            - count : 2
+        - count     : 2
+          v4prefixlen : 28
+          v6prefixlen : 96
+          rmap:                       # Remote IP mappings per subnet
+            - count : 2
+        
       routetbl:
              - type: base
                routetype: adjacent
