@@ -276,12 +276,12 @@ func (s *RPCServer) isHostnameUnique(subj *cluster.SmartNIC) (bool, error) {
 	}
 
 	for _, n := range nics {
-		n.Lock()
+		n.RLock()
 		if subj.Spec.Hostname == n.Spec.Hostname && subj.Name != n.Name {
-			n.Unlock()
+			n.RUnlock()
 			return false, nil
 		}
-		n.Unlock()
+		n.RUnlock()
 	}
 	return true, nil
 }

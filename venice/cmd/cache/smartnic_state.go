@@ -23,7 +23,7 @@ const (
 
 // SmartNICState security policy state
 type SmartNICState struct {
-	*sync.Mutex
+	*sync.RWMutex
 	*cluster.SmartNIC // smartnic policy object
 }
 
@@ -43,7 +43,7 @@ func NewSmartNICState(sn *cluster.SmartNIC) (*SmartNICState, error) {
 	// create smartnic state object
 	sns := SmartNICState{
 		SmartNIC: sn,
-		Mutex:    new(sync.Mutex),
+		RWMutex:  new(sync.RWMutex),
 	}
 
 	return &sns, nil
