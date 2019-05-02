@@ -90,9 +90,9 @@ header_type scratch_metadata_t {
         use_epoch1          : 1;
         epoch_valid         : 1;
         epoch               : 32;
-        local_ip_hash       : 15;
-        local_ip_hint       : 14;
-        vnic_mapping_hash   : 12;
+        local_ip_hash       : 14;
+        local_ip_hint       : 15;
+        vnic_mapping_hash   : 11;
         vnic_mapping_hint   : 18;
         ipv4_src            : 32;
         flow_hash           : 8;

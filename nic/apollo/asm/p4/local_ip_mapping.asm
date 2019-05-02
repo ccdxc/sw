@@ -17,54 +17,54 @@ local_ip_mapping_info:
     bcf         [c1], local_ip_mapping_hit
 
     // Check hash1 and hint1
-    add         r3, d.local_ip_mapping_info_d.hash1_sbit4_ebit14, \
-                    d.local_ip_mapping_info_d.hash1_sbit0_ebit3, 11
-    seq         c1, r1[31:17], r3
+    add         r3, d.local_ip_mapping_info_d.hash1_sbit4_ebit13, \
+                    d.local_ip_mapping_info_d.hash1_sbit0_ebit3, 10
+    seq         c1, r1[31:18], r3
     sne         c2, d.local_ip_mapping_info_d.hint1, r0
     bcf         [c1&c2], local_ip_mapping_hash_hit
     add         r2, r2, d.local_ip_mapping_info_d.hint1
     // Check hash2 and hint2
-    seq         c1, r1[31:17], d.local_ip_mapping_info_d.hash2
+    seq         c1, r1[31:18], d.local_ip_mapping_info_d.hash2
     sne         c2, d.local_ip_mapping_info_d.hint2, r0
     bcf         [c1&c2], local_ip_mapping_hash_hit
     add         r2, r2, d.local_ip_mapping_info_d.hint2
     // Check hash3 and hint3
-    seq         c1, r1[31:17], d.local_ip_mapping_info_d.hash3
+    seq         c1, r1[31:18], d.local_ip_mapping_info_d.hash3
     sne         c2, d.local_ip_mapping_info_d.hint3, r0
     bcf         [c1&c2], local_ip_mapping_hash_hit
     add         r2, r2, d.local_ip_mapping_info_d.hint3
     // Check hash4 and hint4
-    seq         c1, r1[31:17], d.local_ip_mapping_info_d.hash4
+    seq         c1, r1[31:18], d.local_ip_mapping_info_d.hash4
     sne         c2, d.local_ip_mapping_info_d.hint4, r0
     bcf         [c1&c2], local_ip_mapping_hash_hit
     add         r2, r2, d.local_ip_mapping_info_d.hint4
     // Check hash5 and hint5
-    seq         c1, r1[31:17], d.local_ip_mapping_info_d.hash5
+    seq         c1, r1[31:18], d.local_ip_mapping_info_d.hash5
     sne         c2, d.local_ip_mapping_info_d.hint5, r0
     bcf         [c1&c2], local_ip_mapping_hash_hit
     add         r2, r2, d.local_ip_mapping_info_d.hint5
     // Check hash6 and hint6
-    seq         c1, r1[31:17], d.local_ip_mapping_info_d.hash6
+    seq         c1, r1[31:18], d.local_ip_mapping_info_d.hash6
     sne         c2, d.local_ip_mapping_info_d.hint6, r0
     bcf         [c1&c2], local_ip_mapping_hash_hit
     add         r2, r2, d.local_ip_mapping_info_d.hint6
     // Check hash7 and hint7
-    seq         c1, r1[31:17], d.local_ip_mapping_info_d.hash7
+    seq         c1, r1[31:18], d.local_ip_mapping_info_d.hash7
     sne         c2, d.local_ip_mapping_info_d.hint7, r0
     bcf         [c1&c2], local_ip_mapping_hash_hit
     add         r2, r2, d.local_ip_mapping_info_d.hint7
     // Check hash8 and hint8
-    seq         c1, r1[31:17], d.local_ip_mapping_info_d.hash8
+    seq         c1, r1[31:18], d.local_ip_mapping_info_d.hash8
     sne         c2, d.local_ip_mapping_info_d.hint8, r0
     bcf         [c1&c2], local_ip_mapping_hash_hit
     add         r2, r2, d.local_ip_mapping_info_d.hint8
     // Check hash9 and hint9
-    seq         c1, r1[31:17], d.local_ip_mapping_info_d.hash9
+    seq         c1, r1[31:18], d.local_ip_mapping_info_d.hash9
     sne         c2, d.local_ip_mapping_info_d.hint9, r0
     bcf         [c1&c2], local_ip_mapping_hash_hit
     add         r2, r2, d.local_ip_mapping_info_d.hint9
     // Check hash10 and hint10
-    seq         c1, r1[31:17], d.local_ip_mapping_info_d.hash10
+    seq         c1, r1[31:18], d.local_ip_mapping_info_d.hash10
     sne         c2, d.local_ip_mapping_info_d.hint10, r0
     bcf         [c1&c2], local_ip_mapping_hash_hit
     add         r2, r2, d.local_ip_mapping_info_d.hint10
