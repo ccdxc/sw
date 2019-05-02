@@ -112,7 +112,7 @@ struct test_crypto_key {
 #define TEST_RESERVED_CORE_COUNT 2 /* 1 for ctl, 1 for user terminal */
 #define TEST_MIN_OSAL_CORE_COUNT (1 + TEST_RESERVED_CORE_COUNT)
 #define TEST_MAX_CORE_COUNT 32
-#define TEST_MAX_BATCH_CONCURRENCY 32
+#define TEST_MAX_BATCH_CONCURRENCY 128
 #define TEST_MAX_BATCH_DEPTH 512
 
 enum {

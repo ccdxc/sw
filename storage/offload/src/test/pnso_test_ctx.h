@@ -123,10 +123,6 @@ struct chain_context {
 	struct buffer_context *inputs;
 };
 
-#ifndef TEMP_DEBUG_TO_BE_REMOVED
-#define REQ_CTX_MAGIC   0x12345678
-#endif
-
 struct request_context {
 	struct batch_context *batch_ctx;
 	const struct test_svc_chain *svc_chain;
@@ -152,9 +148,6 @@ struct request_context {
 
 	/* Initial values inherited from parent */
 	uint32_t vars[TEST_VAR_MAX];
-#ifndef TEMP_DEBUG_TO_BE_REMOVED
-	uint32_t magic;
-#endif
 
 	pnso_error_t req_rc;
 };
@@ -194,14 +187,24 @@ struct testcase_stats {
 	struct testcase_io_stats io_stats[2];
 };
 
+union callback_context {
+	uint64_t val;
+	struct {
+		uint32_t gen_id;
+		uint32_t batch_id;
+	} s;
+};
+
 struct batch_context {
 	const struct test_desc *desc;
 	struct testcase_context *test_ctx;
 	uint64_t first_req_id;
 	uint32_t batch_id;
 	uint32_t worker_id;
+	union callback_context cb_ctx;
 	osal_atomic_int_t cb_count;
 	pnso_error_t req_rc;
+	pnso_error_t res_rc;
 
 	pnso_poll_fn_t poll_fn;
 	void *poll_ctx;
@@ -357,6 +360,7 @@ struct testcase_context {
 	uint32_t chain_lb_table_count;
 	uint32_t *chain_lb_table;
 
+	uint32_t gen_id;
 	uint32_t worker_count;
 	struct worker_context *worker_ctxs[TEST_MAX_CORE_COUNT];
 
@@ -366,8 +370,9 @@ struct testcase_context {
 	 */
 	uint16_t max_batch_depth;
 	uint32_t batch_concurrency;
-	struct worker_queue *batch_ctx_alloclist;
 	struct worker_queue *batch_ctx_freelist;
+	uint32_t batch_ctx_count;
+	struct batch_context **batch_ctxs;
 
 	uint32_t vars[TEST_VAR_MAX];
 };

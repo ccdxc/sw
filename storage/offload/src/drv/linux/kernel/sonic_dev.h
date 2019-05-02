@@ -233,6 +233,7 @@ static inline void sonic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(union notifyq_cpl) != 64);
 	BUILD_BUG_ON(sizeof(union adminq_cmd) != 64);
 	BUILD_BUG_ON(sizeof(union adminq_cpl) != 16);
+	BUILD_BUG_ON(sizeof(void *) != sizeof(uint64_t));
 }
 
 struct sonic_accel_ring {

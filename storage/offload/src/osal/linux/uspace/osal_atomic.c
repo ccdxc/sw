@@ -51,6 +51,22 @@ int osal_atomic_exchange(osal_atomic_int_t* addr, int new_val)
 	return atomic_exchange(addr, new_val);
 }
 
+int osal_atomic_add_unless(osal_atomic_int_t *addr, int val, int cmp_val)
+{
+	int tmp;
+
+	tmp = atomic_load(addr);
+	while (1) {
+		if (tmp == cmp_val)
+			break;
+
+		if (atomic_compare_exchange_strong(addr, &tmp, tmp + val))
+			break;
+	}
+
+	return tmp;
+}
+
 void osal_atomic_lock(osal_atomic_int_t *addr)
 {
 	int tmp;

@@ -16,6 +16,16 @@ extern "C" {
 #define REQ_SZ_ROUND_UP_TO_BLK_SZ(sz, blk_sz)		\
 	(REQ_SZ_TO_NUM_BLKS(sz, blk_sz) * (blk_sz))
 
+union request_poll_context {
+	uint64_t val;
+	struct {
+		uint32_t obj_id;
+		uint16_t gen_id;
+		uint8_t pcr_id;
+		uint8_t mpool_type;
+	} s;
+};
+
 struct request_params {
 	uint16_t rp_flags;	/* mode/type flags (rflags) */
 

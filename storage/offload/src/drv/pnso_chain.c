@@ -156,6 +156,7 @@ chn_pprint_chain(const struct service_chain *chain)
 	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_num_services",
 			chain->sc_num_services);
 	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_flags", chain->sc_flags);
+	OSAL_LOG_DEBUG("%30s: %d", "chain->sc_gen_id", chain->sc_gen_id);
 
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "chain->sc_req",
 			(uint64_t) chain->sc_req);
@@ -274,13 +275,40 @@ chn_poll_all_services(struct service_chain *chain)
 	return err;
 }
 
+static void *chain_to_poll_ctx(struct service_chain *chain)
+{
+	return req_obj_to_poll_ctx(chain, MPOOL_TYPE_SERVICE_CHAIN,
+				   chain->sc_gen_id, chain->sc_pcr);
+}
+
+static struct service_chain *poll_ctx_to_chain(void *poll_ctx)
+{
+	struct service_chain *chain;
+	uint16_t gen_id;
+	uint8_t mpool_type;
+
+	chain = (struct service_chain *) poll_ctx_to_req_obj(poll_ctx, &mpool_type, &gen_id);
+	if (!chain || mpool_type != MPOOL_TYPE_SERVICE_CHAIN) {
+		OSAL_LOG_ERROR("invalid chain poll ctx, mpool_type %d", mpool_type);
+		return NULL;
+	}
+
+	if (chain->sc_gen_id != gen_id) {
+		OSAL_LOG_ERROR("old chain gen_id %d found, expected %d",
+			       gen_id, chain->sc_gen_id);
+		return NULL;
+	}
+
+	return chain;
+}
+
 pnso_error_t chn_poller(void *pnso_poll_ctx);
 
 pnso_error_t
 chn_poller(void *poll_ctx)
 {
 	pnso_error_t err = EINVAL;
-	struct service_chain *chain = (struct service_chain *) poll_ctx;
+	struct service_chain *chain = poll_ctx_to_chain(poll_ctx);
 	struct pnso_service_result *res;
 	completion_cb_t	cb;
 	void *cb_ctx;
@@ -655,6 +683,7 @@ chn_destroy_chain(struct service_chain *chain)
 		sc_entry = sc_next;
 	}
 
+	chain->sc_gen_id++;
 	mpool_put_object(svc_chain_mpool, chain);
 	OSAL_LOG_DEBUG("exit!");
 }
@@ -711,7 +740,9 @@ chn_create_chain(struct request_params *req_params,
 	struct service_info *svc_info = NULL;
 	struct service_params svc_params = { 0 };
 	struct service_info *svc_prev = NULL;
+	void *poll_ctx = NULL;
 	uint32_t i;
+	uint8_t gen_id;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -736,7 +767,9 @@ chn_create_chain(struct request_params *req_params,
 				err);
 		goto out;
 	}
+	gen_id = chain->sc_gen_id;
 	memset(chain, 0, sizeof(struct service_chain));
+	chain->sc_gen_id = gen_id;
 
 	req = req_params->rp_svc_req;
 	res = req_params->rp_svc_res;
@@ -762,10 +795,11 @@ chn_create_chain(struct request_params *req_params,
 		chain->sc_req_cb = req_params->rp_cb;
 		chain->sc_req_cb_ctx = req_params->rp_cb_ctx;
 
+		poll_ctx = chain_to_poll_ctx(chain);
 		if (chain->sc_flags & CHAIN_CFLAG_MODE_POLL) {
 			/* for caller to poll */
 			*req_params->rp_poll_fn = chn_poller;
-			*req_params->rp_poll_ctx = (void *) chain;
+			*req_params->rp_poll_ctx = poll_ctx;
 		}
 	}
 
@@ -860,7 +894,7 @@ chn_create_chain(struct request_params *req_params,
 	/* setup interrupt params in last chain's last service */
 	if (svc_info && !(req_params->rp_flags & REQUEST_RFLAG_TYPE_BATCH) &&
 		(req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC)) {
-		err = svc_info->si_ops.enable_interrupt(svc_info, chain);
+		err = svc_info->si_ops.enable_interrupt(svc_info, poll_ctx);
 		if (err)
 			goto out_chain;
 	}

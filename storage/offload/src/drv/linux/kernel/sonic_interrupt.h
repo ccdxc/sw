@@ -68,6 +68,7 @@ struct sonic_event_list {
 
 int sonic_create_ev_list(struct per_core_resource *pc_res, uint32_t ev_count);
 void sonic_destroy_ev_list(struct per_core_resource *pc_res);
+void sonic_disable_ev_list(struct per_core_resource *pc_res);
 irqreturn_t sonic_async_ev_isr(int irq, void *evlptr);
 void sonic_pprint_ev_list(struct sonic_event_list *evl);
 

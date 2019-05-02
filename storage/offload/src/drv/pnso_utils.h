@@ -194,4 +194,56 @@ pnso_lif_reset_ctl_pending(void)
 	return sonic_lif_reset_ctl_pending(sonic_get_lif());
 }
 
+static inline void *
+req_obj_to_poll_ctx(void *obj, uint8_t mpool_type, uint16_t gen_id,
+		    struct per_core_resource *pcr)
+{
+	union request_poll_context req_poll_ctx;
+	struct mem_pool *mpool;
+
+	if (!mpool_type_is_valid(mpool_type))
+		return NULL;
+
+	mpool = pcr->mpools[mpool_type];
+	if (!mpool)
+		return NULL;
+
+	req_poll_ctx.s.obj_id = mpool_get_obj_id(mpool, obj);
+	req_poll_ctx.s.pcr_id = pcr->idx;
+	req_poll_ctx.s.gen_id = gen_id;
+	req_poll_ctx.s.mpool_type = mpool_type;
+
+	return (void *) req_poll_ctx.val;
+}
+
+static inline void *
+poll_ctx_to_req_obj(void *poll_ctx, uint8_t *mpool_type, uint16_t *gen_id)
+{
+	void *obj;
+	struct per_core_resource *pcr;
+	struct mem_pool *mpool;
+	union request_poll_context req_poll_ctx = {.val = (uint64_t) poll_ctx};
+
+	*gen_id = req_poll_ctx.s.gen_id;
+	*mpool_type = req_poll_ctx.s.mpool_type;
+
+	if (!poll_ctx)
+		return NULL;
+
+	if (!mpool_type_is_valid(req_poll_ctx.s.mpool_type))
+		return NULL;
+
+	pcr = sonic_get_per_core_res_by_res_id(sonic_get_lif(), req_poll_ctx.s.pcr_id);
+	if (!pcr)
+		return NULL;
+
+	mpool = pcr->mpools[req_poll_ctx.s.mpool_type];
+	if (!mpool)
+		return NULL;
+
+	obj = mpool_get_obj_by_id(mpool, req_poll_ctx.s.obj_id);
+
+	return obj;
+}
+
 #endif  /* __PNSO_UTILS_H__ */

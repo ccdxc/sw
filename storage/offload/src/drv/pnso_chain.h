@@ -292,6 +292,7 @@ struct chain_entry {
 
 struct service_chain {
 	uint16_t sc_flags;		/* chain flags (CFLAGS) */
+	uint16_t sc_gen_id;		/* generation id */
 	uint16_t sc_num_services;	/* number of services in the chain */
 	uint32_t sc_req_id;		/* unique request id */
 	uint64_t sc_poll_ts;		/* first poll timestamp */

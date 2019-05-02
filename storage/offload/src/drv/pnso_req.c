@@ -1060,16 +1060,13 @@ OSAL_EXPORT_SYMBOL(pnso_flush_batch);
 static void
 get_poll_context_type(void *poll_ctx, bool *is_chain, bool *is_batch)
 {
-	struct service_chain *chain = (struct service_chain *) poll_ctx;
-	struct batch_info *batch_info = (struct batch_info *) poll_ctx;
+	union request_poll_context req_poll_ctx = {.val = (uint64_t) poll_ctx};
 
-	if ((chain->sc_flags & CHAIN_CFLAG_MODE_ASYNC) &&
-			!(chain->sc_flags & CHAIN_CFLAG_RESERVED))
-		*is_chain = true;
-
-	if ((batch_info->bi_flags & BATCH_BFLAG_MODE_ASYNC) &&
-			!(batch_info->bi_flags & BATCH_BFLAG_RESERVED))
+	if (req_poll_ctx.s.mpool_type == MPOOL_TYPE_BATCH_INFO) {
 		*is_batch = true;
+	} else if (req_poll_ctx.s.mpool_type == MPOOL_TYPE_SERVICE_CHAIN) {
+		*is_chain = true;
+	}
 
 	OSAL_LOG_DEBUG(" poll context! poll_ctx: 0x" PRIx64 " is_chain: %d is_batch: %d",
 				(uint64_t) poll_ctx, *is_chain, *is_batch);

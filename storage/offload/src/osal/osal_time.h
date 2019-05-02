@@ -23,15 +23,22 @@ extern "C" {
 #ifdef __KERNEL__
 
 #include <linux/ktime.h>
+#include <linux/delay.h>
 
 static inline uint64_t osal_get_clock_nsec(void)
 {
 	return (uint64_t) ktime_get_raw_ns();
 }
 
+static inline void osal_msleep(int ms)
+{
+	msleep(ms);
+}
+
 #else
 
 #include <time.h>
+#include <unistd.h>
 
 static inline uint64_t osal_get_clock_nsec(void)
 {
@@ -40,6 +47,11 @@ static inline uint64_t osal_get_clock_nsec(void)
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 
 	return ((uint64_t) ts.tv_sec * OSAL_NSEC_PER_SEC) + (uint64_t) ts.tv_nsec;
+}
+
+static inline void osal_msleep(int ms)
+{
+	sleep((ms+999)/1000);
 }
 
 #endif

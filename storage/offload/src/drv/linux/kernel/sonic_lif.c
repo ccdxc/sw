@@ -1175,6 +1175,7 @@ static void sonic_ev_intr_deinit(struct per_core_resource *res)
 	if (!res->evl)
 		return;
 
+	sonic_disable_ev_list(res);
 	if (res->intr.index != INTR_INDEX_NOT_ASSIGNED) {
 		sonic_intr_mask(&res->intr, true);
 		synchronize_irq(res->intr.vector);

@@ -9,6 +9,7 @@
 #include "osal_errno.h"
 #include "osal_logger.h"
 
+#include <linux/delay.h>
 #ifdef _KERNEL
 #include <sys/mutex.h>
 #endif
@@ -29,6 +30,9 @@ static int  osal_thread_fn_wrapper(void *arg)
 #endif
 
 	rv = (int)ot->fn(ot->arg);
+	while (!kthread_should_stop()) {
+		msleep(100);
+	}
 	osal_atomic_set(&ot->running, 0);
 	return rv;
 }
@@ -98,7 +102,7 @@ int osal_thread_start(osal_thread_t *thread)
 int osal_thread_stop(osal_thread_t *osal_thread)
 {
 	int rv = 0;
-	int running = osal_atomic_read(&osal_thread->running);
+	int running = osal_atomic_exchange(&osal_thread->running, 0);
 
 	if (running)
 	{

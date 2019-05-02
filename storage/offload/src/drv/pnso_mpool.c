@@ -431,6 +431,33 @@ mpool_put_object(struct mem_pool *mpool, void *object)
 	spin_unlock(&mem_stack->mps_lock);
 }
 
+uint32_t mpool_get_obj_id(struct mem_pool *mpool, void *object)
+{
+	if (!mpool || !mpool->mp_objects || !mpool->mp_config.mpc_vec_elem_size)
+		return (uint32_t) -1;
+
+	/* range check */
+	if (object < mpool->mp_objects ||
+	    object >= (mpool->mp_objects + mpool->mp_config.mpc_pool_size))
+		return (uint32_t) -1;
+
+	return (object - mpool->mp_objects) / mpool->mp_config.mpc_vec_elem_size;
+}
+
+void *mpool_get_obj_by_id(struct mem_pool *mpool, uint32_t id)
+{
+	void *object;
+
+	if (!mpool || !mpool->mp_objects || !mpool->mp_config.mpc_vec_elem_size)
+		return NULL;
+
+	object = mpool->mp_objects + (mpool->mp_config.mpc_vec_elem_size * id);
+	if (object >= (mpool->mp_objects + mpool->mp_config.mpc_pool_size))
+		return NULL;
+
+	return object;
+}
+
 void __attribute__ ((unused))
 mpool_pprint(const struct mem_pool *mpool)
 {

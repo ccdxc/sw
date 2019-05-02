@@ -190,6 +190,28 @@ void mpool_put_object(struct mem_pool *mpool, void *object);
 uint32_t mpool_get_pad_size(uint32_t object_size, uint32_t align_size);
 
 /**
+ * mpool_get_obj_id() - returns the array index of the specified object.
+ * @mpool:	[in]	specifies the pointer to the mpool.
+ * @object:	[in]	specifies the pointer to the object.
+ *
+ * Return Value:
+ *	- array index of the object in the mpool.
+ *
+ */
+uint32_t mpool_get_obj_id(struct mem_pool *mpool, void *object);
+
+/**
+ * mpool_get_obj_by_id() - returns the object at the specified array index.
+ * @mpool:	[in]	specifies the pointer to the mpool.
+ * @id:		[in]	specifies the array index of the object.
+ *
+ * Return Value:
+ *	- a pointer to the object.
+ *
+ */
+void *mpool_get_obj_by_id(struct mem_pool *mpool, uint32_t id);
+
+/**
  * mpool_pprint() - prints details of the pool.
  * @mpool:	[in]	specifies the pointer to the mpool.
  *

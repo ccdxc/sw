@@ -53,15 +53,9 @@ struct batch_page {
 #define BATCH_BFLAG_MODE_ASYNC		(1 << 3)
 #define BATCH_BFLAG_CHAIN_PRESENT	(1 << 4)
 
-#ifndef TEMP_DEBUG_TO_BE_REMOVED
-struct batch_color {
-	uint32_t color_out;
-	uint32_t color_in;
-};
-#endif
-
 struct batch_info {
 	uint16_t bi_flags;		/* for async/intr, must be 1st member */
+	uint16_t bi_gen_id;		/* generation id */
 	uint16_t bi_svc_type;		/* to ensure homogeneous request */
 	enum mem_pool_type bi_mpool_type;	/* bulk desc */
 	struct per_core_resource *bi_pcr;
@@ -74,10 +68,6 @@ struct batch_info {
 	void *bi_bulk_desc[MAX_NUM_DESCS];	/* cpdc/crypto desc */
 	struct batch_page *bi_pages[MAX_NUM_PAGES];
 	uint64_t bi_poll_ts;		/* first poll timestamp */
-#ifndef TEMP_DEBUG_TO_BE_REMOVED
-	int core_id;
-	struct batch_color color;
-#endif
 };
 
 pnso_error_t bat_add_to_batch(struct pnso_service_request *svc_req,

@@ -34,6 +34,7 @@ int osal_atomic_fetch_and(osal_atomic_int_t *addr, int val);
 int osal_atomic_fetch_or(osal_atomic_int_t *addr, int val);
 int osal_atomic_fetch_xor(osal_atomic_int_t *addr, int val);
 int osal_atomic_exchange(osal_atomic_int_t *addr, int new_val);
+int osal_atomic_add_unless(osal_atomic_int_t *addr, int val, int cmp_val);
 
 void osal_atomic_lock(osal_atomic_int_t *addr);
 void osal_atomic_unlock(osal_atomic_int_t *addr);

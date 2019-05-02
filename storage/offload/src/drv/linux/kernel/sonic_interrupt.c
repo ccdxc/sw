@@ -199,6 +199,9 @@ static void sonic_ev_idle_handler(struct work_struct *work)
 	int used_count = 0;
 	bool was_armed;
 
+	if (!evl->enable)
+		return;
+
 	/* Mask! */
 	sonic_intr_mask(&evl->pc_res->intr, true);
 	was_armed = xchg(&evl->armed, false);
@@ -239,6 +242,9 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	uint32_t i;
 	int used_count = 0;
 	int npolled = 0;
+
+	if (!evl->enable)
+		return;
 
 	OSAL_LOG_DEBUG("sonic_ev_work_handler enter (workid %u)...", work_id);
 
@@ -419,6 +425,19 @@ void sonic_intr_put_db_addr(struct per_core_resource *pc_res, uint64_t addr)
 	}
 }
 
+void sonic_disable_ev_list(struct per_core_resource *pc_res)
+{
+	struct sonic_event_list *evl = pc_res->evl;
+
+	evl->enable = false;
+
+	if (evl->wq) {
+		cancel_delayed_work_sync(&evl->idle_work);
+		//flush_workqueue(evl->wq);
+		cancel_work_sync(&evl->work_data.work);
+	}
+}
+
 void sonic_destroy_ev_list(struct per_core_resource *pc_res)
 {
 	struct sonic_event_list *evl = pc_res->evl;
@@ -426,11 +445,10 @@ void sonic_destroy_ev_list(struct per_core_resource *pc_res)
 	if (!evl)
 		return;
 
-	evl->enable = false;
+	if (evl->enable)
+		sonic_disable_ev_list(pc_res);
 
 	if (evl->wq) {
-		cancel_delayed_work(&evl->idle_work);
-		flush_workqueue(evl->wq);
 		destroy_workqueue(evl->wq);
 		evl->wq = NULL;
 	}

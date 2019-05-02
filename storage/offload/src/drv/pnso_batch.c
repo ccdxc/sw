@@ -47,6 +47,7 @@ pprint_batch_info(struct batch_info *batch_info)
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "=== batch_info",
 			(uint64_t) batch_info);
 	OSAL_LOG_DEBUG("%30s: %d", "bi_flags", batch_info->bi_flags);
+	OSAL_LOG_DEBUG("%30s: %d", "bi_gen_id", batch_info->bi_gen_id);
 	OSAL_LOG_DEBUG("%30s: %d", "bi_svc_type", batch_info->bi_svc_type);
 	OSAL_LOG_DEBUG("%30s: %d", "bi_mpool_type", batch_info->bi_mpool_type);
 	OSAL_LOG_DEBUG("%30s: 0x" PRIx64, "bi_pcr",
@@ -55,11 +56,6 @@ pprint_batch_info(struct batch_info *batch_info)
 	OSAL_LOG_DEBUG("%30s: %d", "bi_polled_idx", batch_info->bi_polled_idx);
 	OSAL_LOG_DEBUG("%30s: %d", "bi_num_entries",
 			batch_info->bi_num_entries);
-#ifndef TEMP_DEBUG_TO_BE_REMOVED
-	OSAL_LOG_DEBUG("%30s: %d", "core_id", batch_info->core_id);
-	OSAL_LOG_DEBUG("%30s: %d", "color_out", batch_info->color.color_out);
-	OSAL_LOG_DEBUG("%30s: %d", "color_in", batch_info->color.color_in);
-#endif
 
 	for (i = 0; i < batch_info->bi_num_entries;  i++) {
 		batch_page = GET_PAGE(batch_info, i);
@@ -333,6 +329,7 @@ init_batch_info(struct pnso_service_request *req)
 	struct per_core_resource *pcr = putil_get_per_core_resource();
 	enum mem_pool_type mpool_type;
 	struct batch_info *batch_info = NULL;
+	uint8_t gen_id;
 
 	mpool_type = get_batch_mpool_type(&req->svc[0]);
 	if (mpool_type == MPOOL_TYPE_NONE)
@@ -343,12 +340,9 @@ init_batch_info(struct pnso_service_request *req)
 	if (!batch_info)
 		goto out;
 
-#ifndef TEMP_DEBUG_TO_BE_REMOVED
-	memset(batch_info, 0, offsetof(struct batch_info, color));
-	batch_info->color.color_out ^= 1;
-#else
+	gen_id = batch_info->bi_gen_id;
 	memset(batch_info, 0, sizeof(struct batch_info));
-#endif
+	batch_info->bi_gen_id = gen_id;
 
 	batch_info->bi_svc_type = req->svc[0].svc_type;
 	batch_info->bi_mpool_type = mpool_type;
@@ -411,9 +405,7 @@ deinit_batch(struct batch_info *batch_info)
 				(uint64_t) pcr, (uint64_t) batch_page, idx);
 	}
 
-#ifndef TEMP_DEBUG_TO_BE_REMOVED
-	batch_info->color.color_in = batch_info->color.color_out;
-#endif
+	batch_info->bi_gen_id++;
 	put_mpool_batch_object(pcr, MPOOL_TYPE_BATCH_INFO, batch_info);
 }
 
@@ -475,13 +467,40 @@ static void read_write_result_all_chains(struct batch_info *batch_info);
 static void read_write_error_result_all_chains(struct batch_info *batch_info,
 					       pnso_error_t err);
 
+static void *batch_to_poll_ctx(struct batch_info *batch)
+{
+	return req_obj_to_poll_ctx(batch, MPOOL_TYPE_BATCH_INFO,
+				   batch->bi_gen_id, batch->bi_pcr);
+}
+
+static struct batch_info *poll_ctx_to_batch(void *poll_ctx)
+{
+	struct batch_info *batch;
+	uint16_t gen_id;
+	uint8_t mpool_type;
+
+	batch = (struct batch_info *) poll_ctx_to_req_obj(poll_ctx, &mpool_type, &gen_id);
+	if (!batch || mpool_type != MPOOL_TYPE_BATCH_INFO) {
+		OSAL_LOG_ERROR("invalid batch poll ctx, mpool_type %d", mpool_type);
+		return NULL;
+	}
+
+	if (batch->bi_gen_id != gen_id) {
+		OSAL_LOG_ERROR("old batch gen_id %d found, expected %d",
+			       gen_id, batch->bi_gen_id);
+		return NULL;
+	}
+
+	return batch;
+}
+
 pnso_error_t bat_poller(void *pnso_poll_ctx);
 
 pnso_error_t
 bat_poller(void *poll_ctx)
 {
 	pnso_error_t err = EINVAL;
-	struct batch_info *batch_info = (struct batch_info *) poll_ctx;
+	struct batch_info *batch_info = poll_ctx_to_batch(poll_ctx);
 	completion_cb_t	cb;
 	void *cb_ctx;
 
@@ -494,14 +513,6 @@ bat_poller(void *poll_ctx)
 		goto out;
 	}
 	PPRINT_BATCH_INFO(batch_info);
-
-#ifndef TEMP_DEBUG_TO_BE_REMOVED
-	if ((batch_info->color.color_in ^ batch_info->color.color_out) == 0) {
-		g_osal_log_level = OSAL_LOG_LEVEL_DEBUG;
-		pprint_batch_info(batch_info);
-		OSAL_ASSERT(batch_info->color.color_in ^ batch_info->color.color_out);
-	}
-#endif
 
 	err = poll_all_chains(batch_info);
 	if (err) {
@@ -549,7 +560,8 @@ set_batch_mode(uint16_t mode_flags, uint16_t *flags)
 }
 
 static pnso_error_t
-set_interrupt_params(struct batch_info *batch_info, struct service_chain *chain)
+set_interrupt_params(struct batch_info *batch_info, struct service_chain *chain,
+		     void *poll_ctx)
 {
 	struct service_chain *last_chain;
 	struct chain_entry *last_ce;
@@ -559,7 +571,7 @@ set_interrupt_params(struct batch_info *batch_info, struct service_chain *chain)
 	last_ce = chn_get_last_centry(last_chain);
 	svc_info = &last_ce->ce_svc_info;
 
-	return svc_info->si_ops.enable_interrupt(svc_info, batch_info);
+	return svc_info->si_ops.enable_interrupt(svc_info, poll_ctx);
 }
 
 static pnso_error_t
@@ -570,6 +582,7 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 	struct batch_page_entry *page_entry;
 	struct service_chain *chain = NULL;
 	uint32_t idx, num_entries;
+	void *poll_ctx = NULL;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -580,10 +593,11 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 		batch_info->bi_req_cb = req_params->rp_cb;
 		batch_info->bi_req_cb_ctx = req_params->rp_cb_ctx;
 
+		poll_ctx = batch_to_poll_ctx(batch_info);
 		if (req_params->rp_flags & REQUEST_RFLAG_MODE_POLL) {
 			/* for caller to poll */
 			*req_params->rp_poll_fn = bat_poller;
-			*req_params->rp_poll_ctx = (void *) batch_info;
+			*req_params->rp_poll_ctx = poll_ctx;
 		}
 	}
 	PPRINT_BATCH_INFO(batch_info);
@@ -620,7 +634,7 @@ build_batch(struct batch_info *batch_info, struct request_params *req_params)
 
 	/* setup interrupt params in last chain's last service */
 	if ((req_params->rp_flags & REQUEST_RFLAG_MODE_ASYNC) && chain) {
-		err = set_interrupt_params(batch_info, chain);
+		err = set_interrupt_params(batch_info, chain, poll_ctx);
 		if (err)
 			goto out;
 	}
@@ -660,9 +674,6 @@ bat_add_to_batch(struct pnso_service_request *svc_req,
 					err);
 			goto out;
 		}
-#ifndef TEMP_DEBUG_TO_BE_REMOVED
-		batch_info->core_id = pcr->core_id;
-#endif
 		new_batch = true;
 	}
 
