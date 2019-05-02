@@ -52,7 +52,7 @@ tree_base_addr_size (mem_addr_t rfc_block_base_addr, itree_type_t tree_type,
 
     case ITREE_TYPE_IPV6_ACL:
         *tree_base_addr = rfc_block_base_addr + SACL_IPV6_TABLE_OFFSET;
-        *tree_size = SACL_IPV6_TABLE_OFFSET;
+        *tree_size = SACL_IPV6_TABLE_SIZE;
         break;
 
     default:
