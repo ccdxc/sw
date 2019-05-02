@@ -2,7 +2,7 @@
 /* nvme_sess_pre_xts_tx.p4 */
 /***********************************************************************/
 
-#include "../txdma/common_txdma_dummy.p4"
+#include "common_txdma_dummy.p4"
 
 /**** table declarations ****/
 
@@ -52,7 +52,7 @@
 #define tx_table_s4_t0_action nvme_sessprexts_tx_ip_desc_process
 #define tx_table_s4_t1_action nvme_sessprexts_tx_op_desc_process
 
-#include "../txdma/common_txdma.p4"
+#include "common_txdma.p4"
 #include "nvme_common.p4"
 
 /**** Macros ****/

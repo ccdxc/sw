@@ -1,5 +1,7 @@
+#ifdef NVME_APOLLO
 #include "../../../p4/common-p4+/capri_dma_cmd.p4"
 #include "../../../p4/common-p4+/capri_doorbell.p4"
+#endif
 
 // NVME command definition
 header_type nvme_sqe_t {
@@ -650,3 +652,107 @@ pi, ci, dgst_ring_base_addr, log_sz, rsvd, choke_counter, pad
     modify_field(dgstcb_d.rsvd, rsvd); \
     modify_field(dgstcb_d.choke_counter, choke_counter); \
     modify_field(dgstcb_d.pad, pad); \
+
+/* XTS Descriptor definition */
+//128B
+header_type xts_desc_t {
+    fields {
+        input_list_address                  : 64;
+        output_list_address                 : 64;
+        command                             : 32;
+        key_desc_index                      : 32;
+        iv_address                          : 64;
+        auth_tag_addr                       : 64;
+        header_size                         : 32;
+        status_address                      : 64;
+        opaque_tag_value                    : 32;
+        opaque_tag_write_en                 : 1;
+        rsvd1                               : 31;
+        sector_size                         : 16;
+        application_tag                     : 16;
+        sector_num                          : 32;
+        doorbell_address                    : 64;
+        doorbell_data                       : 64;
+        second_key_desc_index               : 32;
+    }
+}
+
+//64B
+header_type xts_aol_desc_t {
+    fields {
+        A0      : 64;
+        O0      : 32;
+        L0      : 32;
+        A1      : 64;
+        O1      : 32;
+        L1      : 32;
+        A2      : 64;
+        O2      : 32;
+        L2      : 32;
+        nxt     : 64;
+        rsvd    : 64;
+    }
+}
+
+header_type xts_iv_t {
+    fields {
+        iv_0                                : 64;
+        iv_1                                : 64;
+    }
+}
+
+/* dgst Descriptor definition */
+//64B
+header_type dgst_desc_t {
+    fields {
+        src             : 64;
+        dst             : 64;
+        cmd             : 16;
+        datain_len      : 16;
+        extended_len    : 16;
+        threshold_len   : 16;
+        status_addr     : 64;
+        doorbell_addr   : 64;
+        doorbell_data   : 64;
+        opaque_tag_addr : 64;
+        opaque_tag_data : 32;
+        status_data     : 32;
+    }
+}
+
+//64B
+header_type dgst_aol_desc_t {
+    fields {
+        A0      : 64;
+        L0      : 32;
+        R0      : 32;
+        A1      : 64;
+        L1      : 32;
+        R1      : 32;
+        A2      : 64;
+        L2      : 32;
+        R2      : 32;
+        nxt     : 64;
+        rsvd    : 64;
+    }
+}
+
+
+header_type ptr64_t {
+    fields {
+        ptr : 64;
+    }
+}
+
+header_type ptr32_t {
+    fields {
+        ptr : 32;
+    }
+}
+
+header_type index16_t {
+  fields {
+    index   : 16;
+  }
+}
+

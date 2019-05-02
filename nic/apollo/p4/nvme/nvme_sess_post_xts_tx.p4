@@ -2,7 +2,7 @@
 /* nvme_sess_post_xts_tx.p4 */
 /***********************************************************************/
 
-#include "../txdma/common_txdma_dummy.p4"
+#include "common_txdma_dummy.p4"
 
 /**** table declarations ****/
 
@@ -50,7 +50,7 @@
 
 #define tx_table_s6_t0_action nvme_sesspostxts_tx_cb_writeback_process
 
-#include "../txdma/common_txdma.p4"
+#include "common_txdma.p4"
 #include "nvme_common.p4"
 
 /**** Macros ****/

@@ -2,7 +2,7 @@
 /* nvme_req_tx.p4 */
 /***********************************************************************/
 
-#include "../txdma/common_txdma_dummy.p4"
+#include "common_txdma_dummy.p4"
 
 /**** table declarations ****/
 
@@ -60,7 +60,7 @@
 
 #define tx_table_s7_t1_action nvme_req_tx_sq_statscb_process
 
-#include "../txdma/common_txdma.p4"
+#include "common_txdma.p4"
 #include "nvme_common.p4"
 
 /**** Macros ****/

@@ -2,7 +2,7 @@
 /* nvme_sess_pre_dgst_tx.p4 */
 /***********************************************************************/
 
-#include "../txdma/common_txdma_dummy.p4"
+#include "common_txdma_dummy.p4"
 
 /**** table declarations ****/
 
@@ -53,7 +53,7 @@
 #define tx_table_s5_t0_action nvme_sesspredgst_tx_hdgst_process
 #define tx_table_s5_t1_action nvme_sesspredgst_tx_ddgst_process
 
-#include "../txdma/common_txdma.p4"
+#include "common_txdma.p4"
 #include "nvme_common.p4"
 
 /**** Macros ****/
