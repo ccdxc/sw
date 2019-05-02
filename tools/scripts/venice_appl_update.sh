@@ -22,7 +22,7 @@ done
 
 if [ -z "$VER" ]
 then
-    VER=0.9.0_last-built
+    VER=0.10.0_last-built
 fi
 
 if [ -z "$IP" ]
