@@ -197,7 +197,7 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 		if len(strings.Split(overlay[i], ".")) != 4 {
 			return errors.New("Invalid overlay IP address specified")
 		}
-		overlayIP[i] = IPAddrStrtoUint32(overlay[i])
+		overlayIP[i] = utils.IPAddrStrtoUint32(overlay[i])
 	}
 
 	mplsInStr := strings.Split(ifMplsIn, ",")
@@ -214,12 +214,12 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(strings.Split(ifSubIP, ".")) != 4 {
 		return errors.New("Invalid substrate IP address specified")
 	}
-	substrateIP = IPAddrStrtoUint32(ifSubIP)
+	substrateIP = utils.IPAddrStrtoUint32(ifSubIP)
 
 	if len(strings.Split(ifTunnelDestIP, ".")) != 4 {
 		return errors.New("Invalid tunnel destination IP address specified")
 	}
-	tunnelDestIP = IPAddrStrtoUint32(ifTunnelDestIP)
+	tunnelDestIP = utils.IPAddrStrtoUint32(ifTunnelDestIP)
 
 	mac, err := net.ParseMAC(ifGwMac)
 	if err != nil {
@@ -256,7 +256,7 @@ func ifUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	if sourceGWPrefixLen < 0 || sourceGWPrefixLen > 32 {
 		return errors.New("Invalid source gateway prefix specified")
 	}
-	sourceGWPrefix = IPAddrStrtoUint32(sourceGwStr[0])
+	sourceGWPrefix = utils.IPAddrStrtoUint32(sourceGwStr[0])
 
 	if ifIngressBw > 12500000 {
 		return errors.New("Invalid ingress BW. Valid range is 0-12500000 KBytes/sec")

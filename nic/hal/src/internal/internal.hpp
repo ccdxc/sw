@@ -163,6 +163,9 @@ hal_ret_t rawccb_get(internal::RawcCbGetRequest& req,
 hal_ret_t testsendfin_req(internal::TestSendFinRequest& req,
                           internal::TestSendFinResponse *rsp);
 
+hal_ret_t flow_hash_get(internal::FlowHashGetRequest& req,
+                        internal::FlowHashGetResponseMsg *rsp);
+
 }    // namespace hal
 
 #endif    // __INTERNAL_HPP__

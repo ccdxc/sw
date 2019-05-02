@@ -153,7 +153,10 @@ table_entry_fill(sdk_table_api_params_t *params) {
     TableResponse *rsp = static_cast<TableResponse*>(params->cbdata);
     TableFlowEntry *entry = rsp->mutable_flow_table()->add_flow_entry();
 
-    entry->set_handle(params->handle.tou64());
+    entry->set_primary_index_valid(params->handle.pvalid());
+    entry->set_primary_index(params->handle.pindex());
+    entry->set_secondary_index_valid(params->handle.svalid());
+    entry->set_secondary_index(params->handle.sindex());
     str = key2str(params->key);
     entry->set_key(str);
     HAL_TRACE_DEBUG("Key: {}", str);
@@ -161,6 +164,8 @@ table_entry_fill(sdk_table_api_params_t *params) {
     str = appdata2str(params->appdata);
     entry->set_data(str);
     HAL_TRACE_DEBUG("Data: {}", str);
+    HAL_TRACE_DEBUG("Pindex valid: {} Pindex: {} Sindex valid: {} Sindex: {}", params->handle.pvalid(), 
+                    params->handle.pindex(), params->handle.svalid(), params->handle.sindex());
     return;
 }
 
@@ -242,6 +247,30 @@ flow_table_pd::meta_get(table::TableMetadataResponseMsg *rsp_msg) {
         flow_meta->set_num_update_failures(api_stats.update_fail);
         flow_meta->set_num_deletes(api_stats.remove);
         flow_meta->set_num_delete_failures(api_stats.remove_fail + api_stats.remove_not_found);
+    }
+
+    return hal_sdk_ret_to_hal_ret(sret);
+}
+
+hal_ret_t
+flow_table_pd::get(void *key, FlowHashGetResponse *entry) {
+    flow_hash_appdata_t swappdata = { 0 };
+    sdk_table_api_params_t params = { 0 };
+    sdk_ret_t sret = SDK_RET_OK;
+    char *str = NULL;
+
+    params.key = key;
+    params.appdata = &swappdata;
+    sret = table_->get(&params);
+    if (sret == SDK_RET_OK) {
+        str = appdata2str(params.appdata);
+        entry->set_data(str);
+        entry->set_primary_index_valid(params.handle.pvalid());
+        entry->set_primary_index(params.handle.pindex());
+        entry->set_secondary_index_valid(params.handle.svalid());
+        entry->set_secondary_index(params.handle.sindex());
+        str = key2str(params.key);
+        entry->set_key(str);
     }
 
     return hal_sdk_ret_to_hal_ret(sret);

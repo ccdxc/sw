@@ -304,8 +304,10 @@ __label__ done;
     // Set the Handle
     if (MEMHASH_API_CONTEXT_IS_MAIN(match_ctx)) {
         match_ctx->handle->pindex(match_ctx->table_index);
+        ctx->params->handle.pindex(match_ctx->table_index);
     } else {
         match_ctx->handle->sindex(match_ctx->table_index);
+        ctx->params->handle.sindex(match_ctx->table_index);
     }
 
     memcpy(ctx->params->appdata, match_ctx->sw_appdata, ctx->props->swappdata_len);

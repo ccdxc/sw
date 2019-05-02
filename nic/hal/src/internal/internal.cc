@@ -161,4 +161,10 @@ hal_ret_t testsendfin_req(internal::TestSendFinRequest& req,
     return (session_handle_upgrade());
 }
 
+hal_ret_t flow_hash_get(internal::FlowHashGetRequest& req,
+                        internal::FlowHashGetResponseMsg *rsp)
+{
+    return (session_flow_hash_get(req, rsp));
+}
+
 }    // namespace hal

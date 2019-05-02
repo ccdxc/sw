@@ -210,13 +210,13 @@ func tcpProxySessionShowCmdHandler(cmd *cobra.Command, args []string) {
 				SrcIp: &halproto.IPAddress{
 					IpAf: halproto.IPAddressFamily_IP_AF_INET,
 					V4OrV6: &halproto.IPAddress_V4Addr{
-						V4Addr: IPAddrStrtoUint32(tcpProxySessionSrcIP),
+						V4Addr: utils.IPAddrStrtoUint32(tcpProxySessionSrcIP),
 					},
 				},
 				DstIp: &halproto.IPAddress{
 					IpAf: halproto.IPAddressFamily_IP_AF_INET,
 					V4OrV6: &halproto.IPAddress_V4Addr{
-						V4Addr: IPAddrStrtoUint32(tcpProxySessionDstIP),
+						V4Addr: utils.IPAddrStrtoUint32(tcpProxySessionDstIP),
 					},
 				},
 				SrcPort:  tcpProxySessionSrcPort,

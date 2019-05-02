@@ -6,6 +6,7 @@ syntax = "proto3";
 
 import "types.proto";
 import "fwlog.proto";
+import "session.proto";
 
 package internal;
 option go_package="halproto";
@@ -96,6 +97,8 @@ service Internal {
 
   // Test send fin
   rpc TestSendFinReq (TestSendFinRequestMsg) returns (TestSendFinResponseMsg) {}
+ 
+  rpc FlowHashGet (FlowHashGetRequestMsg) returns (FlowHashGetResponseMsg) {}
 }
 
 message ProgramAddressReq {
@@ -1721,4 +1724,31 @@ message TestSendFinResponseMsg {
 
 message TestSendFinResponse {
   types.ApiStatus api_status  = 1 [(gogoproto.jsontag) = "api_status"];    // API status code
+}
+
+message FlowHashGetResponseMsg {
+  repeated FlowHashGetResponse  response = 1;
+}
+
+message FlowHashGetResponse {
+  types.ApiStatus      api_status                  = 1;
+  bool                 primary_index_valid         = 2;
+  uint32               primary_index               = 3;
+  bool                 secondary_index_valid       = 4;
+  uint32               secondary_index             = 5;
+  string               key                         = 6;
+  string               data                        = 7;
+}
+
+
+// FlowTableGetRequest is used to get information about the flows programmed in the hardware
+message FlowHashGetRequest {
+  uint64               hardware_vrf_id = 1;    // hardware vrf
+  session.FlowKey      flow_key        = 2;    // flow key
+  types.FlowDirection  flow_direction  = 3;    // flow direction
+  session.FlowInstance flow_instance   = 4;    // flow instance (for proxy etc.)
+}
+
+message FlowHashGetRequestMsg {
+  repeated FlowHashGetRequest request = 1;
 }

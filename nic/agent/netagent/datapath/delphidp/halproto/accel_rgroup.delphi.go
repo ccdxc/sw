@@ -630,6 +630,10 @@ It has these top-level messages:
 	TestSendFinRequest
 	TestSendFinResponseMsg
 	TestSendFinResponse
+	FlowHashGetResponseMsg
+	FlowHashGetResponse
+	FlowHashGetRequest
+	FlowHashGetRequestMsg
 	Key
 	IpsecSAEncrypt
 	IpsecSADecrypt

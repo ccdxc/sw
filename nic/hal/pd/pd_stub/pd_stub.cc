@@ -117,6 +117,7 @@ PD_FUNC_STUB(pd_session_update);
 PD_FUNC_STUB(pd_session_delete);
 PD_FUNC_STUB(pd_session_get);
 PD_FUNC_STUB(pd_get_cpu_bypass_flowid);
+PD_FUNC_STUB(pd_flow_hash_get);
 
 // tlscb calls
 PD_FUNC_STUB(pd_tlscb_create);

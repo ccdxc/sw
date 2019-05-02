@@ -159,9 +159,12 @@ message TableHashMsg {
 }
 
 message TableFlowEntry {
-  fixed64   handle                      = 1;
-  string    key                         = 2;
-  string    data                        = 3;
+  bool      primary_index_valid         = 1;
+  uint32    primary_index               = 2;
+  bool      secondary_index_valid       = 3;
+  uint32    secondary_index             = 4;
+  string    key                         = 5;
+  string    data                        = 6;
 }
 
 message TableFlowMsg {

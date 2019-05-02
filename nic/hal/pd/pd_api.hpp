@@ -918,6 +918,24 @@ pd_session_get_args_init (pd_session_get_args_t *args)
     return;
 }
 
+typedef struct pd_flow_hash_get_args_s {
+    flow_key_t                  key;
+    uint64_t                    hw_vrf_id;
+    uint32_t                    lkp_inst;
+    FlowHashGetResponse        *rsp;
+} pd_flow_hash_get_args_t;
+
+static inline void
+pd_flow_hash_get_args_init (pd_flow_hash_get_args_t *args)
+{
+    bzero(&args->key, sizeof(flow_key_t));
+    args->hw_vrf_id = 0;
+    args->lkp_inst = 0;
+    args->rsp = NULL;
+
+    return;
+}
+
 typedef struct pd_get_cpu_bypass_flowid_args_s {
     uint64_t       hw_flowid;
 } __PACK__ pd_get_cpu_bypass_flowid_args_t;
@@ -3354,7 +3372,8 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_ACCEL_RGROUP_MISC_GET,    301, "PD_FUNC_ID_ACCEL_RGROUP_MISC_GET")\
     ENTRY(PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE, 302, "PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE")  \
     ENTRY(PD_FUNC_ID_WRING_GET_BASE_ADDR,      303, "PD_FUNC_ID_WRING_GET_BASE_ADDR")               \
-    ENTRY(PD_FUNC_ID_MAX,                      304, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_FLOW_HASH_GET,            304, "PD_FUNC_ID_FLOW_HASH_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      305, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3450,6 +3469,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_session_delete);
         PD_UNION_ARGS_FIELD(pd_session_get);
         PD_UNION_ARGS_FIELD(pd_get_cpu_bypass_flowid);
+        PD_UNION_ARGS_FIELD(pd_flow_hash_get);
 
         // tlscb calls
         PD_UNION_ARGS_FIELD(pd_tlscb_create);
@@ -3880,6 +3900,7 @@ PD_FUNCP_TYPEDEF(pd_session_update);
 PD_FUNCP_TYPEDEF(pd_session_delete);
 PD_FUNCP_TYPEDEF(pd_session_get);
 PD_FUNCP_TYPEDEF(pd_get_cpu_bypass_flowid);
+PD_FUNCP_TYPEDEF(pd_flow_hash_get);
 
 // tlscb calls
 PD_FUNCP_TYPEDEF(pd_tlscb_create);

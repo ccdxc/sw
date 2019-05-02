@@ -19,6 +19,7 @@
 #include "gen/proto/system.pb.h"
 #include "gen/proto/session.grpc.pb.h"
 #include "nic/p4/common/defines.h"
+#include "gen/proto/internal.grpc.pb.h"
 
 #define HAL_MAX_INACTIVTY_TIMEOUT    0xFFFFFFFF
 
@@ -51,6 +52,9 @@ using session::SessionDeleteResponse;
 using session::FlowTCPState;
 using types::IPProtocol;
 using sys::SystemResponse;
+using internal::FlowHashGetRequest;
+using internal::FlowHashGetResponseMsg;
+using internal::FlowHashGetResponse;
 
 namespace hal {
 
@@ -486,6 +490,8 @@ hal_ret_t session_delete (session::SessionDeleteRequest& spec,
 void incr_global_session_tcp_rst_stats (uint8_t fte_id);
 void incr_global_session_icmp_error_stats (uint8_t fte_id);
 hal_ret_t session_handle_upgrade (void);
+hal_ret_t session_flow_hash_get(FlowHashGetRequest& req,
+                                FlowHashGetResponseMsg *rsp);
 
 }    // namespace hal
 

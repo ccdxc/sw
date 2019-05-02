@@ -7,9 +7,11 @@
 #include "nic/sdk/lib/table/memhash/mem_hash.hpp"
 #include "gen/proto/system.pb.h"
 #include "gen/proto/table.pb.h"
+#include "gen/proto/internal.pb.h"
 
 using sdk::table::mem_hash;
 using table::TableResponse;
+using internal::FlowHashGetResponse;
 
 namespace hal {
 namespace pd {
@@ -26,6 +28,7 @@ public:
     hal_ret_t insert(void *key, void *data,
                      uint32_t *hash_value, bool hash_valid);
     hal_ret_t remove(void *key);
+    hal_ret_t get(void *key, FlowHashGetResponse *entry);
     
     hal_ret_t meta_get(table::TableMetadataResponseMsg *rsp_msg);
     hal_ret_t stats_get(sys::TableStatsEntry *stats_entry);

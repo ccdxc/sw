@@ -24,6 +24,23 @@ func MactoStr(mac uint64) string {
 	return macStr
 }
 
+// MacStrtoUint64 converts a MAC string to uint64
+func MacStrtoUint64(macStr string) uint64 {
+	var bytes [6]uint64
+	var mac uint64
+
+	fmt.Sscanf(macStr, "%d:%d:%d:%d:%d:%d", &bytes[0], &bytes[1], &bytes[2], &bytes[3], &bytes[4], &bytes[5])
+
+	mac = (bytes[0] << 40)
+	mac |= (bytes[1] << 32)
+	mac |= (bytes[2] << 24)
+	mac |= (bytes[3] << 16)
+	mac |= (bytes[4] << 8)
+	mac |= bytes[5]
+
+	return mac
+}
+
 // VrfTypeToStr converts a VRF type to VRF string
 func VrfTypeToStr(vrfType halproto.VrfType) string {
 	switch vrfType {
@@ -113,4 +130,11 @@ func AddressToStr(addr *halproto.Address) string {
 // L4PortRangeToStr convers L4 Port range to string
 func L4PortRangeToStr(portR *halproto.L4PortRange) string {
 	return fmt.Sprintf("%d-%d", portR.GetPortLow(), portR.GetPortHigh())
+}
+
+// IPAddrStrtoUint32 converts string IP address to uint32
+func IPAddrStrtoUint32(ip string) uint32 {
+	var addr [4]uint32
+	fmt.Sscanf(ip, "%d.%d.%d.%d", &addr[0], &addr[1], &addr[2], &addr[3])
+	return ((addr[0] << 24) + (addr[1] << 16) + (addr[2] << 8) + (addr[3]))
 }

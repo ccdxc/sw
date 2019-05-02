@@ -3078,4 +3078,28 @@ session_handle_upgrade (void)
     return HAL_RET_OK;
 }
 
+hal_ret_t session_flow_hash_get(FlowHashGetRequest& req,
+                                FlowHashGetResponseMsg *rsp) {
+    pd::pd_flow_hash_get_args_t   args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+    hal_ret_t                   ret = HAL_RET_OK;
+
+    extract_flow_key_from_spec(req.flow_key().src_vrf_id(), &args.key, req.flow_key()); 
+
+    HAL_TRACE_DEBUG("Flow key: {}", args.key);
+    args.key.dir = (req.flow_direction() == types::FLOW_DIRECTION_FROM_UPLINK)?FLOW_DIR_FROM_UPLINK:FLOW_DIR_FROM_DMA;
+    args.hw_vrf_id = req.hardware_vrf_id();
+    args.lkp_inst = req.flow_instance();
+    args.rsp = rsp->add_response();
+    pd_func_args.pd_flow_hash_get = &args;
+    ret = hal::pd::hal_pd_call(hal::pd::PD_FUNC_ID_FLOW_HASH_GET, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to fetch flow hash for key {}",
+                      args.key);
+        return HAL_RET_ERR;
+    }
+
+    return ret;
+}
+
 }    // namespace hal

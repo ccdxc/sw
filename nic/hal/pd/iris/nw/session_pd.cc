@@ -1411,5 +1411,25 @@ pd_get_cpu_bypass_flowid (pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
+// 
+// Read the flow hash table given flow key
+//
+hal_ret_t
+pd_flow_hash_get (pd_func_args_t *pd_func_args) {
+    pd_flow_hash_get_args_t *args = pd_func_args->pd_flow_hash_get;
+    hal_ret_t ret = HAL_RET_OK;
+    flow_hash_swkey_t key = { 0 };
+
+    p4pd_fill_flow_hash_key(&args->key,
+            args->hw_vrf_id, args->lkp_inst, key);
+
+    ret = g_hal_state_pd->flow_table_pd_get()->get(&key, args->rsp);
+    if (ret != HAL_RET_OK) {
+        return HAL_RET_OK;
+    }
+
+    return ret;
+}
+
 }    // namespace pd
 }    // namespace hal

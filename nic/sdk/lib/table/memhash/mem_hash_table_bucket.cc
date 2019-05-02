@@ -717,6 +717,12 @@ mem_hash_table_bucket::iterate_(mem_hash_api_context *ctx) {
         params.key = ctx->sw_key;
         params.appdata = ctx->sw_appdata;
         params.cbdata = ctx->params->cbdata;
+        // Set the Handle
+        if (MEMHASH_API_CONTEXT_IS_MAIN(ctx)) {
+            params.handle.pindex(ctx->table_index);
+        } else {
+            params.handle.sindex(ctx->table_index);
+        } 
         ctx->params->itercb(&params);
     }
     return SDK_RET_OK;

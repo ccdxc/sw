@@ -399,8 +399,11 @@ func tableFlowShow(resp *halproto.TableResponse) {
 
 	for _, entry := range flowMsg.GetFlowEntry() {
 		// All or specific entry ID
-		if !tableEntryIDSpecified || (tableHandle == entry.GetHandle()) {
-			fmt.Printf("Handle: 0x%x\n", entry.GetHandle())
+		if !tableEntryIDSpecified {
+			fmt.Printf("Primary Index valid=%t\n", entry.GetPrimaryIndexValid())
+			fmt.Printf("Primary Index=0x%x\n", entry.GetPrimaryIndex())
+			fmt.Printf("Secondary Index valid=%t\n", entry.GetSecondaryIndexValid())
+			fmt.Printf("Secondary Index=0x%x\n", entry.GetSecondaryIndex())
 			fmt.Printf("Key=%s\n", entry.GetKey())
 			fmt.Printf("Data=%s\n", entry.GetData())
 			fmt.Printf("-----------\n")

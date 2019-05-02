@@ -1743,6 +1743,24 @@ func (mr *MockInternalClientMockRecorder) TestSendFinReq(ctx, in interface{}, op
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TestSendFinReq", reflect.TypeOf((*MockInternalClient)(nil).TestSendFinReq), varargs...)
 }
 
+// FlowHashGet mocks base method
+func (m *MockInternalClient) FlowHashGet(ctx context.Context, in *FlowHashGetRequestMsg, opts ...grpc.CallOption) (*FlowHashGetResponseMsg, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "FlowHashGet", varargs...)
+	ret0, _ := ret[0].(*FlowHashGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FlowHashGet indicates an expected call of FlowHashGet
+func (mr *MockInternalClientMockRecorder) FlowHashGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FlowHashGet", reflect.TypeOf((*MockInternalClient)(nil).FlowHashGet), varargs...)
+}
+
 // MockInternalServer is a mock of InternalServer interface
 type MockInternalServer struct {
 	ctrl     *gomock.Controller
@@ -2453,6 +2471,19 @@ func (m *MockInternalServer) TestSendFinReq(arg0 context.Context, arg1 *TestSend
 // TestSendFinReq indicates an expected call of TestSendFinReq
 func (mr *MockInternalServerMockRecorder) TestSendFinReq(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TestSendFinReq", reflect.TypeOf((*MockInternalServer)(nil).TestSendFinReq), arg0, arg1)
+}
+
+// FlowHashGet mocks base method
+func (m *MockInternalServer) FlowHashGet(arg0 context.Context, arg1 *FlowHashGetRequestMsg) (*FlowHashGetResponseMsg, error) {
+	ret := m.ctrl.Call(m, "FlowHashGet", arg0, arg1)
+	ret0, _ := ret[0].(*FlowHashGetResponseMsg)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FlowHashGet indicates an expected call of FlowHashGet
+func (mr *MockInternalServerMockRecorder) FlowHashGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FlowHashGet", reflect.TypeOf((*MockInternalServer)(nil).FlowHashGet), arg0, arg1)
 }
 
 // MockSoftwarePhvClient is a mock of SoftwarePhvClient interface

@@ -132,13 +132,13 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 						SrcIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionSrcIP),
+								V4Addr: utils.IPAddrStrtoUint32(sessionSrcIP),
 							},
 						},
 						DstIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionDstIP),
+								V4Addr: utils.IPAddrStrtoUint32(sessionDstIP),
 							},
 						},
 						SrcPort:     sessionSrcPort,
@@ -157,7 +157,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 						SrcIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionSrcIP),
+								V4Addr: utils.IPAddrStrtoUint32(sessionSrcIP),
 							},
 						},
 						SrcPort:     sessionSrcPort,
@@ -176,7 +176,7 @@ func sessionShowCmdHandler(cmd *cobra.Command, args []string) {
 						DstIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionDstIP),
+								V4Addr: utils.IPAddrStrtoUint32(sessionDstIP),
 							},
 						},
 						SrcPort:     sessionSrcPort,
@@ -277,13 +277,13 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 						SrcIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionSrcIP),
+								V4Addr: utils.IPAddrStrtoUint32(sessionSrcIP),
 							},
 						},
 						DstIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionDstIP),
+								V4Addr: utils.IPAddrStrtoUint32(sessionDstIP),
 							},
 						},
 						SrcPort:     sessionSrcPort,
@@ -302,7 +302,7 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 						SrcIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionSrcIP),
+								V4Addr: utils.IPAddrStrtoUint32(sessionSrcIP),
 							},
 						},
 						SrcPort:     sessionSrcPort,
@@ -321,7 +321,7 @@ func handleSessionDetailShowCmd(cmd *cobra.Command, ofile *os.File) {
 						DstIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionDstIP),
+								V4Addr: utils.IPAddrStrtoUint32(sessionDstIP),
 							},
 						},
 						SrcPort:     sessionSrcPort,
@@ -680,13 +680,6 @@ func Uint32IPAddrToStr(ip uint32) string {
 	return fmt.Sprintf("%d.%d.%d.%d", (ip>>24)&0xff, (ip>>16)&0xff, (ip>>8)&0xff, ip&0xff)
 }
 
-// IPAddrStrtoUint32 converts string IP address to uint32
-func IPAddrStrtoUint32(ip string) uint32 {
-	var addr [4]uint32
-	fmt.Sscanf(ip, "%d.%d.%d.%d", &addr[0], &addr[1], &addr[2], &addr[3])
-	return ((addr[0] << 24) + (addr[1] << 16) + (addr[2] << 8) + (addr[3]))
-}
-
 func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
@@ -727,13 +720,13 @@ func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 						SrcIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionSrcIP),
+								V4Addr: utils.IPAddrStrtoUint32(sessionSrcIP),
 							},
 						},
 						DstIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionDstIP),
+								V4Addr: utils.IPAddrStrtoUint32(sessionDstIP),
 							},
 						},
 						SrcPort:     sessionSrcPort,
@@ -752,7 +745,7 @@ func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 						SrcIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionSrcIP),
+								V4Addr: utils.IPAddrStrtoUint32(sessionSrcIP),
 							},
 						},
 						SrcPort:     sessionSrcPort,
@@ -771,7 +764,7 @@ func sessionClearCmdHandler(cmd *cobra.Command, args []string) {
 						DstIp: &halproto.IPAddress{
 							IpAf: halproto.IPAddressFamily_IP_AF_INET,
 							V4OrV6: &halproto.IPAddress_V4Addr{
-								V4Addr: IPAddrStrtoUint32(sessionDstIP),
+								V4Addr: utils.IPAddrStrtoUint32(sessionDstIP),
 							},
 						},
 						SrcPort:     sessionSrcPort,
