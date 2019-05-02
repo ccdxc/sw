@@ -53,7 +53,7 @@ using namespace sdk::platform::capri;
 #define JPKTDESC        "rxdma_to_txdma_desc"
 #define JSACLV4BASE     "sacl_egress_v4"
 #define JLPMV4BASE      "lpm_v4"
-#define JFLOWSTATSBASE  "flow_stats"
+#define JSTATSBASE      "session_stats"
 #define JP4_PRGM        "p4_program"
 
 typedef struct __attribute__((__packed__)) lifqstate_ {
@@ -381,7 +381,7 @@ uint16_t g_vpc_id1 = 0x2D1;
 uint16_t g_vpc_id2 = 0x2D2;
 uint16_t g_local_vnic_tag = 100;
 uint32_t g_local_slot_id = 0x12345;
-uint32_t g_flow_index = 0x31;
+uint32_t g_session_index = 0x31;
 
 uint16_t g_nexthop_index = 0x155;
 uint16_t g_nexthop_index2 = 0x333;
@@ -811,7 +811,7 @@ flow_tx_hash_init ()
     key.key_metadata_dport = g_layer1_dport;
     data.action_id = FLOW_FLOW_HASH_ID;
     flow_hash_info->entry_valid = true;
-    flow_hash_info->flow_index = g_flow_index;
+    flow_hash_info->session_index = g_session_index;
 
     entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
 }
@@ -819,19 +819,19 @@ flow_tx_hash_init ()
 static void
 flow_tx_info_init ()
 {
-    flow_info_actiondata_t data;
-    flow_info_flow_info_t *flow_info = &data.action_u.flow_info_flow_info;
-    uint32_t tbl_id = P4TBL_ID_FLOW_INFO;
-    uint64_t flow_stats_addr;
+    session_actiondata_t data;
+    session_session_info_t *session_info = &data.action_u.session_session_info;
+    uint32_t tbl_id = P4TBL_ID_SESSION;
+    uint64_t session_stats_addr;
 
     memset(&data, 0, sizeof(data));
-    data.action_id = FLOW_INFO_FLOW_INFO_ID;
-    flow_stats_addr = get_mem_addr(JFLOWSTATSBASE) + g_flow_index * 64;
-    flow_stats_addr -= ((uint64_t)1 << 31);
-    memcpy(flow_info->flow_stats_addr, &flow_stats_addr,
-           sizeof(flow_info->flow_stats_addr));
+    data.action_id = SESSION_SESSION_INFO_ID;
+    session_stats_addr = get_mem_addr(JSTATSBASE) + g_session_index * 64;
+    session_stats_addr -= ((uint64_t)1 << 31);
+    memcpy(session_info->session_stats_addr, &session_stats_addr,
+           sizeof(session_info->session_stats_addr));
 
-    entry_write(tbl_id, g_flow_index, NULL, NULL, &data, false, 0);
+    entry_write(tbl_id, g_session_index, NULL, NULL, &data, false, 0);
 }
 
 static void
@@ -854,7 +854,7 @@ flow_rx_hash_init ()
     key.key_metadata_dport = g_layer1_sport;
     data.action_id = FLOW_FLOW_HASH_ID;
     flow_hash_info->entry_valid = true;
-    flow_hash_info->flow_index = g_flow_index + 1;
+    flow_hash_info->session_index = g_session_index + 1;
 
     entry_write(tbl_id, 0, &key, NULL, &data, true, FLOW_TABLE_SIZE);
 #endif
@@ -864,19 +864,19 @@ static void
 flow_rx_info_init ()
 {
 #ifdef FLOW_RX_HIT
-    flow_info_actiondata_t data;
-    flow_info_flow_info_t *flow_info = &data.action_u.flow_info_flow_info;
-    uint32_t tbl_id = P4TBL_ID_FLOW_INFO;
-    uint64_t flow_stats_addr;
+    session_actiondata_t data;
+    session_session_info_t *session_info = &data.action_u.session_session_info;
+    uint32_t tbl_id = P4TBL_ID_SESSION;
+    uint64_t session_stats_addr;
 
     memset(&data, 0, sizeof(data));
     data.action_id = FLOW_INFO_FLOW_INFO_ID;
-    flow_stats_addr = get_mem_addr(JFLOWSTATSBASE) + (g_flow_index + 1) * 64;
-    flow_stats_addr -= ((uint64_t)1 << 31);
-    memcpy(flow_info->flow_stats_addr, &flow_stats_addr,
-           sizeof(flow_info->flow_stats_addr));
+    session_stats_addr = get_mem_addr(JSTATSBASE) + (g_session_index + 1) * 64;
+    session_stats_addr -= ((uint64_t)1 << 31);
+    memcpy(flow_info->session_stats_addr, &session_stats_addr,
+           sizeof(flow_info->session_stats_addr));
 
-    entry_write(tbl_id, g_flow_index + 1, NULL, NULL, &data, false, 0);
+    entry_write(tbl_id, g_session_index + 1, NULL, NULL, &data, false, 0);
 #endif
 }
 

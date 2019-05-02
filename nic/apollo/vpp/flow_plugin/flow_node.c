@@ -950,8 +950,8 @@ pen_flow_appdata2str (void *appdata)
 {
     static char str[512];
     flow_appdata_t *d = (flow_appdata_t *)appdata;
-    sprintf(str, "flow_index:%d flow_role:%d",
-            d->flow_index, d->flow_role);
+    sprintf(str, "session_index:%d flow_role:%d",
+            d->session_index, d->flow_role);
     return str;
 }
 

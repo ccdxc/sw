@@ -20,7 +20,7 @@ typedef struct pen_flow_hw_ctx_t {
     u8 dummy;
 } pen_flow_hw_ctx_t;
 
-pen_flow_hw_ctx_t *flow_index_pool = NULL;
+pen_flow_hw_ctx_t *session_index_pool = NULL;
 
 always_inline void
 clib_memrev2 (u8 *dst1, u8* dst2, u8 *src, int size)
@@ -132,8 +132,8 @@ pen_flow_program_hw (pen_flow_params_t *key,
 
     pen_flow_prog_lock();
     for (i = 0; i < size; i++) {
-        pool_get(flow_index_pool, ctx);
-        key[i].entry.flow_index = ctx - flow_index_pool + 1;
+        pool_get(session_index_pool, ctx);
+        key[i].entry.session_index = ctx - session_index_pool + 1;
         if (PREDICT_TRUE(0 == ftl_insert(table, &key[i].entry, key[i].hash))) {
             counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
         } else {

@@ -190,23 +190,27 @@
         },
         {
             "name": "flow",
-            "size": "1048576K",
-            "cache": "p4ig"
+            "size": "1G",
+            "cache": "p4ig",
+            "_comment": "16M * 64B"
         },
         {
             "name": "flow_ohash",
-            "size": "262144K",
-            "cache": "p4ig"
+            "size": "640M",
+            "cache": "p4ig",
+            "_comment": "10M * 64B"
         },
         {
-            "name": "flow_info",
-            "size": "524288K",
-            "cache": "p4ig"
+            "name": "session",
+            "size": "64M",
+            "cache": "p4ig",
+            "_comment": "8M * 8B"
         },
         {
-            "name": "flow_stats",
-            "size": "524288K",
-            "cache": "p4ig"
+            "name": "session_stats",
+            "size": "512M",
+            "cache": "p4ig",
+            "_comment": "16M * 32B"
         },
         {
             "name": "udp_flow_overflow0",

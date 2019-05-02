@@ -9,17 +9,15 @@
 typedef struct __attribute__((__packed__)) ftl_entry_s {
     // data after key
     uint32_t __pad_to_512b : 4;
-    uint32_t more_hints: 21;
+    uint32_t more_hints: 24;
     uint32_t more_hashes : 1;
-    uint32_t hint5 : 21;
-    uint32_t hash5 : 8;
-    uint32_t hint4 : 21;
+    uint32_t hint4 : 24;
     uint32_t hash4 : 8;
-    uint32_t hint3 : 21;
+    uint32_t hint3 : 24;
     uint32_t hash3 : 8;
-    uint32_t hint2 : 21;
+    uint32_t hint2 : 24;
     uint32_t hash2 : 8;
-    uint32_t hint1 : 21;
+    uint32_t hint1 : 24;
     uint32_t hash1_sbit7_ebit7 : 1;
     /* FieldType = K */
     uint32_t ktype : 4; /* phvbit[320], Flit[0], FlitOffset[320] */
@@ -38,19 +36,19 @@ typedef struct __attribute__((__packed__)) ftl_entry_s {
     // data before key
     uint32_t hash1_sbit0_ebit6 : 7;
     uint32_t flow_role : 1;
-    uint32_t flow_index : 23;
+    uint32_t session_index : 24;
     uint32_t entry_valid : 1;
 } ftl_entry_t;
 
 #define FTLENTRY_STR(_e, _b, _l) \
 { \
-    FTL_SNPRINTF((_b), (_l), "more_hints:%d more_hashes:%d hint5:%d hash5:%#x "\
+    FTL_SNPRINTF((_b), (_l), "more_hints:%d more_hashes:%d "\
          "hint4:%d hash4:%#x hint3:%d hash3:%#x hint2:%d hash2:%#x "\
          "hint1:%d hash1:%#x ktype:%d sport:%d dport:%d "\
          "src:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x "\
          "dst:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x "\
-         "local_vnic_tag:%d proto:%d flow_role:%d flow_index:%d entry_valid:%d",\
-         (_e)->more_hints, (_e)->more_hashes, (_e)->hint5, (_e)->hash5, \
+         "local_vnic_tag:%d proto:%d flow_role:%d session_index:%d entry_valid:%d",\
+         (_e)->more_hints, (_e)->more_hashes, \
          (_e)->hint4, (_e)->hash4, (_e)->hint3, (_e)->hash3, (_e)->hint2, (_e)->hash2, \
          (_e)->hint1, (((_e)->hash1_sbit7_ebit7 << 7) | (_e)->hash1_sbit0_ebit6), \
          (_e)->ktype, (_e)->sport, (_e)->dport, (_e)->src[0], (_e)->src[1], \
@@ -61,7 +59,7 @@ typedef struct __attribute__((__packed__)) ftl_entry_s {
          (_e)->dst[2], (_e)->dst[3], (_e)->dst[4], (_e)->dst[5], (_e)->dst[6], \
          (_e)->dst[7], (_e)->dst[8], (_e)->dst[9], (_e)->dst[10], (_e)->dst[11], \
          (_e)->dst[12], (_e)->dst[13], (_e)->dst[14], (_e)->dst[15], \
-         (_e)->local_vnic_tag, (_e)->proto, (_e)->flow_role, (_e)->flow_index, \
+         (_e)->local_vnic_tag, (_e)->proto, (_e)->flow_role, (_e)->session_index, \
          (_e)->entry_valid); \
 }
 
@@ -70,8 +68,6 @@ typedef struct __attribute__((__packed__)) ftl_entry_s {
     (_e)->__pad_to_512b = 0; \
     (_e)->more_hints = 0; \
     (_e)->more_hashes = 0; \
-    (_e)->hash5 = 0; \
-    (_e)->hint5 = 0; \
     (_e)->hash4 = 0; \
     (_e)->hint4 = 0; \
     (_e)->hash3 = 0; \
@@ -100,7 +96,7 @@ typedef struct __attribute__((__packed__)) ftl_entry_s {
 #define FTL_ENTRY_CLEAR_DATA(_e) \
 {\
     (_e)->flow_role = 0;\
-    (_e)->flow_index = 0;\
+    (_e)->session_index = 0;\
 }
 
 #define FTL_ENTRY_CLEAR_KEY_DATA(_e) \
@@ -130,7 +126,7 @@ typedef struct __attribute__((__packed__)) ftl_entry_s {
 #define FTL_ENTRY_COPY_DATA(_d, _s) \
 {\
     (_d)->flow_role = (_s)->flow_role;\
-    (_d)->flow_index = (_s)->flow_index;\
+    (_d)->session_index = (_s)->session_index;\
 }
 
 #define FTL_ENTRY_COPY_KEY_DATA(_d, _s) \
@@ -168,8 +164,6 @@ ftl_entry_key_compare(ftl_entry_t *src, ftl_entry_t *dst) {
     { (_e)->hint3 = (_h); (_e)->hash2 = (_s); }
 #define __SET_HINT_HASH_4(_e, _h, _s) \
     { (_e)->hint4 = (_h); (_e)->hash2 = (_s); }
-#define __SET_HINT_HASH_5(_e, _h, _s) \
-    { (_e)->hint5 = (_h); (_e)->hash2 = (_s); }
 #define __SET_HINT_HASH_MORE(_e, _h, _s) \
     { (_e)->more_hints = (_h); (_e)->more_hashes = (_s); }
 #define FTL_ENTRY_SET_HINT_HASH(_i, _e, _h, _s) \
@@ -180,7 +174,6 @@ ftl_entry_key_compare(ftl_entry_t *src, ftl_entry_t *dst) {
     case 2: __SET_HINT_HASH_2(_e, _h, _s); break; \
     case 3: __SET_HINT_HASH_3(_e, _h, _s); break; \
     case 4: __SET_HINT_HASH_4(_e, _h, _s); break; \
-    case 5: __SET_HINT_HASH_5(_e, _h, _s); break; \
     default: __SET_HINT_HASH_MORE(_e, _h, 1); break; \
     } \
 }
@@ -195,8 +188,6 @@ ftl_entry_key_compare(ftl_entry_t *src, ftl_entry_t *dst) {
     { (_h) = (_e)->hint3; (_s) = (_e)->hash2; }
 #define __GET_HINT_HASH_4(_e, _h, _s) \
     { (_h) = (_e)->hint4; (_s) = (_e)->hash2; }
-#define __GET_HINT_HASH_5(_e, _h, _s) \
-    { (_h) = (_e)->hint5; (_s) = (_e)->hash2; }
 #define __GET_HINT_HASH_MORE(_e, _h, _s) \
     { (_h) = (_e)->more_hints; (_s) = (_e)->more_hashes; }
 #define FTL_ENTRY_GET_HINT_HASH(_i, _e, _h, _s) \
@@ -207,7 +198,6 @@ ftl_entry_key_compare(ftl_entry_t *src, ftl_entry_t *dst) {
     case 2: __GET_HINT_HASH_2(_e, _h, _s); break; \
     case 3: __GET_HINT_HASH_3(_e, _h, _s); break; \
     case 4: __GET_HINT_HASH_4(_e, _h, _s); break; \
-    case 5: __GET_HINT_HASH_5(_e, _h, _s); break; \
     default: __GET_HINT_HASH_MORE(_e, _h, _s); break; \
     } \
 }

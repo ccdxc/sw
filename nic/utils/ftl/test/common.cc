@@ -46,7 +46,7 @@ fill_entry (uint32_t index, ftl_entry_t *entry)
     entry->dst[14] = index >> 8 & 0xFF;
     entry->dst[15] = index & 0xFF;
 
-    entry->flow_index = index+1;
+    entry->session_index = index+1;
     return;
 }
 

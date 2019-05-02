@@ -38,7 +38,7 @@ header_type control_metadata_t {
         remote_vnic_mapping_tx_ohash_lkp    : 1;
         skip_flow_lkp                       : 1;
         flow_ohash_lkp                      : 1;
-        flow_index                          : 23;
+        session_index                       : 24;
         flow_role                           : 1;
         span_copy                           : 1;
         direction                           : 1;
@@ -96,7 +96,7 @@ header_type scratch_metadata_t {
         vnic_mapping_hint   : 18;
         ipv4_src            : 32;
         flow_hash           : 8;
-        flow_hint           : 21;
+        flow_hint           : 24;
         in_packets          : 64;
         in_bytes            : 64;
         class_id            : 8;
@@ -111,7 +111,7 @@ header_type scratch_metadata_t {
         drop_stats_pkts     : 40;
         tcp_state           : 4;
         tcp_flags           : 8;
-        flow_stats_addr     : 34;
+        session_stats_addr  : 34;
         hint_valid          : 1;
         cpu_flags           : 16;
 

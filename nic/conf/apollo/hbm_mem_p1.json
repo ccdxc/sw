@@ -102,8 +102,13 @@
         },
         {
             "name": "rxdma_to_txdma_buf",
-            "size": "163840K",
-            "_comment": "160MB (16K buffers of size 10K)"
+            "size": "10M",
+            "_comment": "1K buffers of size 10K"
+        },
+        {
+            "name": "rxdma_to_txdma_desc",
+            "size": "64K",
+            "_comment": "1K descriptors of size 64B"
         },
         {
             "name": "local_ip_mapping",
@@ -188,23 +193,27 @@
         },
         {
             "name": "flow",
-            "size": "1048576K",
-            "cache": "p4ig"
+            "size": "1G",
+            "cache": "p4ig",
+            "_comment": "16M * 64B"
         },
         {
             "name": "flow_ohash",
-            "size": "262144K",
-            "cache": "p4ig"
+            "size": "640M",
+            "cache": "p4ig",
+            "_comment": "10M * 64B"
         },
         {
-            "name": "flow_info",
-            "size": "524288K",
-            "cache": "p4ig"
+            "name": "session",
+            "size": "64M",
+            "cache": "p4ig",
+            "_comment": "8M * 8B"
         },
         {
-            "name": "flow_stats",
-            "size": "524288K",
-            "cache": "p4ig"
+            "name": "session_stats",
+            "size": "512M",
+            "cache": "p4ig",
+            "_comment": "16M * 32B"
         },
         {
             "name": "udp_flow_overflow0",

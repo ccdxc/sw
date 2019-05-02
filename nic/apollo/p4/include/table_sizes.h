@@ -8,8 +8,8 @@
 #define REMOTE_VNIC_MAPPINGS_RX_OHASH_TABLE_SIZE            262144      // 256K
 #define TEP_TABLE_SIZE                                      1024        // 1K
 #define FLOW_TABLE_SIZE                                     16777216    // 16M
-#define FLOW_OHASH_TABLE_SIZE                               2097152     // 2M
-#define FLOW_INFO_TABLE_SIZE                                8388608     // 8M
+#define FLOW_OHASH_TABLE_SIZE                               10485760    // 10M
+#define SESSION_TABLE_SIZE                                  8388608     // 8M
 #define VNIC_STATS_TABLE_SIZE                               1024        // 1K
 #define NACL_TABLE_SIZE                                     512
 #define DROP_STATS_TABLE_SIZE                               64

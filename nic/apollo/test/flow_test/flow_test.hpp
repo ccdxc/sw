@@ -59,7 +59,7 @@ flow_appdata2str(void *appdata) {
     static char str[512];
     flow_appdata_t *d = (flow_appdata_t *)appdata;
     sprintf(str, "I:%d R:%d",
-            d->flow_index, d->flow_role);
+            d->session_index, d->flow_role);
     return str;
 }
 
@@ -106,7 +106,7 @@ class flow_test {
 private:
     ftl *table;
     vpc_epdb_t epdb[MAX_VPCS];
-    uint32_t flow_index;
+    uint32_t session_index;
     uint32_t hash;
     uint16_t sport_base;
     uint16_t sport;
@@ -279,7 +279,7 @@ public:
 
         memset(epdb, 0, sizeof(epdb));
         memset(&cfg_params, 0, sizeof(cfg_params_t));
-        flow_index = 0;
+        session_index = 0;
         hash = 0;
         with_hash = w;
 
@@ -427,7 +427,7 @@ public:
                             memcpy(&(entry.src), &ep_pairs[i].lip, sizeof(uint32_t));
                             memcpy(&(entry.dst), &ep_pairs[i].rip, sizeof(uint32_t));
                         }
-                        entry.flow_index = flow_index++;
+                        entry.session_index = session_index++;
                         ret = insert_(&entry);
                         if (ret != SDK_RET_OK) {
                             return ret;
@@ -450,7 +450,7 @@ public:
                             memcpy(&(entry.key_metadata_src), &ep_pairs[i].rip, sizeof(uint32_t));
                             memcpy(&(entry.key_metadata_dst), &ep_pairs[i].lip, sizeof(uint32_t));
                         }
-                        swappdata.flow_index = flow_index++;
+                        swappdata.session_index = session_index++;
                         ret = insert_(&entry, &swappdata);
                         if (ret != SDK_RET_OK) {
                             return ret;
