@@ -97,7 +97,7 @@ struct ionic_ibdev {
 	struct device		*hwdev;
 	struct net_device	*ndev;
 
-	const union dev_info_regs	*info;
+	const struct ionic_devinfo	*info;
 	const union lif_identity	*ident;
 
 	struct lif		*lif;

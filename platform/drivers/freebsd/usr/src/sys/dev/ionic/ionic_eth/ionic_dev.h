@@ -29,6 +29,7 @@
 #include <linux/mutex.h>
 
 #include "ionic_if.h"
+#include "ionic_api.h"
 
 #define IONIC_MIN_MTU	ETHER_MIN_LEN
 #define IONIC_MAX_MTU	(9216 - ETHER_HDR_LEN - ETHER_VLAN_ENCAP_LEN - ETHER_CRC_LEN)
@@ -136,7 +137,7 @@ struct ionic;
 
 struct ionic_dev
 {
-	union dev_info_regs __iomem *dev_info;
+	union dev_info_regs __iomem *dev_info_regs;
 	union dev_cmd_regs __iomem *dev_cmd;
 
 	struct doorbell __iomem *db_pages;
@@ -153,6 +154,8 @@ struct ionic_dev
 	struct port_info *port_info;
 	dma_addr_t port_info_pa;
 	uint32_t port_info_sz;
+
+	struct ionic_devinfo dev_info;
 };
 
 #define INTR_INDEX_NOT_ASSIGNED (-1)

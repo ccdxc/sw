@@ -273,11 +273,14 @@ static int identity_show(struct seq_file *seq, void *v)
 	struct ionic_dev *idev = &ionic->idev;
 	struct identity *ident = &ionic->ident;
 
-	seq_printf(seq, "asic_type:        0x%x\n", idev->dev_info->asic_type);
-	seq_printf(seq, "asic_rev:         0x%x\n", idev->dev_info->asic_rev);
-	seq_printf(seq, "serial_num:       %s\n", idev->dev_info->serial_num);
-	seq_printf(seq, "fw_version:       %s\n", idev->dev_info->fw_version);
-	seq_printf(seq, "fw_status:        0x%x\n", idev->dev_info->fw_status);
+	seq_printf(seq, "asic_type:        0x%x\n", idev->dev_info.asic_type);
+	seq_printf(seq, "asic_rev:         0x%x\n", idev->dev_info.asic_rev);
+	seq_printf(seq, "serial_num:       %s\n", idev->dev_info.serial_num);
+	seq_printf(seq, "fw_version:       %s\n", idev->dev_info.fw_version);
+	seq_printf(seq, "fw_status:        0x%x\n",
+		   ioread8(&idev->dev_info_regs->fw_status));
+	seq_printf(seq, "fw_heartbeat:     0x%x\n",
+		   ioread32(&idev->dev_info_regs->fw_heartbeat));
 
 	seq_printf(seq, "nlifs:            %d\n", ident->dev.nlifs);
 	seq_printf(seq, "nintrs:           %d\n", ident->dev.nintrs);

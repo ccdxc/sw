@@ -1273,9 +1273,7 @@ static int ionic_query_device(struct ib_device *ibdev,
 	attr->page_size_cap = ~0; /* TODO */
 	attr->vendor_id = to_pci_dev(dev->hwdev)->vendor;
 	attr->vendor_part_id = to_pci_dev(dev->hwdev)->device;
-#if 0
 	attr->hw_ver = dev->info->asic_rev;
-#endif
 	attr->max_qp = dev->size_qpid;
 	attr->max_qp_wr = IONIC_MAX_DEPTH;
 	attr->device_cap_flags =
@@ -5905,7 +5903,7 @@ static void ionic_get_dev_fw_str(struct ib_device *ibdev, char *str)
 	size_t str_len = IB_FW_VERSION_NAME_MAX;
 #endif
 
-	snprintf(str, str_len, "%s", dev->info->fw_version);
+	strlcpy(str, dev->info->fw_version, str_len);
 }
 
 #ifdef HAVE_GET_VECTOR_AFFINITY

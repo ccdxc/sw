@@ -33,13 +33,29 @@
 #include "ionic_dev.h"
 #include "ionic.h"
 
+static void ionic_init_devinfo(struct ionic_dev *idev)
+{
+	idev->dev_info.asic_type = ioread8(&idev->dev_info_regs->asic_type);
+	idev->dev_info.asic_rev = ioread8(&idev->dev_info_regs->asic_rev);
+
+	memcpy_fromio(idev->dev_info.fw_version,
+		      idev->dev_info_regs->fw_version,
+		      IONIC_DEVINFO_FWVERS_BUFLEN);
+
+	memcpy_fromio(idev->dev_info.serial_num,
+		      idev->dev_info_regs->serial_num,
+		      IONIC_DEVINFO_SERIAL_BUFLEN);
+
+	idev->dev_info.fw_version[IONIC_DEVINFO_FWVERS_BUFLEN] = 0;
+	idev->dev_info.serial_num[IONIC_DEVINFO_SERIAL_BUFLEN] = 0;
+}
+
 int ionic_dev_setup(struct ionic* ionic)
 {
 	struct ionic_dev_bar *bar = ionic->bars;
 	unsigned int num_bars = ionic->num_bars;
 	struct ionic_dev *idev = &ionic->idev;
 	struct device *dev = ionic->dev;
-	union dev_info_regs *info;
 	u32 sig;
 
 	/*
@@ -57,22 +73,24 @@ int ionic_dev_setup(struct ionic* ionic)
 		return -EFAULT;
 	}
 
-	idev->dev_info = bar->vaddr + BAR0_DEV_INFO_REGS_OFFSET;
+	idev->dev_info_regs = bar->vaddr + BAR0_DEV_INFO_REGS_OFFSET;
 	idev->dev_cmd = bar->vaddr + BAR0_DEV_CMD_REGS_OFFSET;
 	idev->intr_status = bar->vaddr + BAR0_INTR_STATUS_OFFSET;
 	idev->intr_ctrl = bar->vaddr + BAR0_INTR_CTRL_OFFSET;
 
-	info = ionic->idev.dev_info;
-	sig = ioread32(&info->signature);
+	sig = ioread32(&idev->dev_info_regs->signature);
 	if (sig != IONIC_DEV_INFO_SIGNATURE) {
 		dev_err(dev, "Incompatible firmware signature %x", sig);
 		return -EFAULT;
 	}
 
+	ionic_init_devinfo(idev);
+
 	dev_info(dev, "ASIC: %s rev: 0x%X serial num: %s fw_ver: %s\n",
-		 ionic_dev_asic_name(info->asic_type),
-		 info->asic_rev, info->serial_num,
-		 info->fw_version);
+		 ionic_dev_asic_name(idev->dev_info.asic_type),
+		 idev->dev_info.asic_rev,
+		 idev->dev_info.serial_num,
+		 idev->dev_info.fw_version);
 
 	/*
 	 * BAR1 resources

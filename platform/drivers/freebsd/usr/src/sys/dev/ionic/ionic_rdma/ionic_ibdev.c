@@ -5777,7 +5777,7 @@ static void ionic_get_dev_fw_str(struct ib_device *ibdev, char *str)
 	size_t str_len = IB_FW_VERSION_NAME_MAX;
 #endif
 
-	snprintf(str, str_len, "%s", dev->info->fw_version);
+	strlcpy(str, dev->info->fw_version, str_len);
 }
 
 static void ionic_port_event(struct ionic_ibdev *dev, enum ib_event_type event)

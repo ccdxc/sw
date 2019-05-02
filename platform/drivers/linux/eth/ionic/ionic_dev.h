@@ -8,6 +8,7 @@
 #include <linux/workqueue.h>
 
 #include "ionic_if.h"
+#include "ionic_api.h"
 
 #define IONIC_MIN_MTU			ETH_MIN_MTU
 #define IONIC_MAX_MTU			9194
@@ -112,7 +113,7 @@ static inline void ionic_struct_size_checks(void)
 }
 
 struct ionic_dev {
-	union dev_info_regs __iomem *dev_info;
+	union dev_info_regs __iomem *dev_info_regs;
 	union dev_cmd_regs __iomem *dev_cmd;
 
 	struct doorbell __iomem *db_pages;
@@ -130,6 +131,8 @@ struct ionic_dev {
 	struct port_info *port_info;
 	dma_addr_t port_info_pa;
 	u32 port_info_sz;
+
+	struct ionic_devinfo dev_info;
 };
 
 struct cq_info {
@@ -214,6 +217,7 @@ struct cq {
 
 struct ionic;
 
+void ionic_init_devinfo(struct ionic_dev *idev);
 int ionic_dev_setup(struct ionic *ionic);
 void ionic_dev_teardown(struct ionic *ionic);
 

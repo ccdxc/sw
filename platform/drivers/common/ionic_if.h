@@ -2110,6 +2110,8 @@ union dev_cmd_comp {
  * @fw_version:      Firmware version.
  */
 union dev_info_regs {
+#define IONIC_DEVINFO_FWVERS_BUFLEN 32
+#define IONIC_DEVINFO_SERIAL_BUFLEN 32
 	struct {
 		__le32 signature;
 		u8     version;
@@ -2117,8 +2119,8 @@ union dev_info_regs {
 		u8     asic_rev;
 		u8     fw_status;
 		u32    fw_heartbeat;
-		char   fw_version[32];
-		char   serial_num[32];
+		char   fw_version[IONIC_DEVINFO_FWVERS_BUFLEN];
+		char   serial_num[IONIC_DEVINFO_SERIAL_BUFLEN];
 	};
 	__le32 words[512];
 };

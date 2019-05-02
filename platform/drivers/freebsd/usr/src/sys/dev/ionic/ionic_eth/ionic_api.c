@@ -98,9 +98,9 @@ int ionic_api_set_private(struct lif *lif, void *priv,
 }
 EXPORT_SYMBOL_GPL(ionic_api_set_private);
 
-const union dev_info_regs *ionic_api_get_devinfo(struct lif *lif)
+const struct ionic_devinfo *ionic_api_get_devinfo(struct lif *lif)
 {
-	return lif->ionic->idev.dev_info;
+	return &lif->ionic->idev.dev_info;
 }
 EXPORT_SYMBOL_GPL(ionic_api_get_devinfo);
 

@@ -24,10 +24,18 @@
  * incompatible if compiled from different sources, or if some other driver
  * happens to be called "ionic".
  */
-#define IONIC_API_VERSION "3"
+#define IONIC_API_VERSION "4"
 
 struct dentry;
 struct lif;
+
+/** struct ionic_devinfo - device information. */
+struct ionic_devinfo {
+	u8 asic_type;
+	u8 asic_rev;
+	char fw_version[IONIC_DEVINFO_FWVERS_BUFLEN + 1];
+	char serial_num[IONIC_DEVINFO_SERIAL_BUFLEN + 1];
+};
 
 /** enum ionic_api_prsn - personalities that can be applied to the lif. */
 enum ionic_api_prsn {
@@ -92,12 +100,12 @@ int ionic_api_set_private(struct lif *lif, void *priv,
  */
 struct dentry *ionic_api_get_debugfs(struct lif *lif);
 
-/** ionic_api_get_devinfo - Get the device information.
+/** ionic_api_get_devinfo - Get device information.
  * @lif:		Handle to lif.
  *
- * Return: device info
+ * Return: pointer to device information.
  */
-const union dev_info_regs *ionic_api_get_devinfo(struct lif *lif);
+const struct ionic_devinfo *ionic_api_get_devinfo(struct lif *lif);
 
 /** ionic_api_get_identity - Get result of device identification.
  * @lif:		Handle to lif.

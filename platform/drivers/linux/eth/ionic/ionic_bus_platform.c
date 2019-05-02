@@ -128,7 +128,7 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 	if (num_bars < NUM_OF_BAR)
 		return -EFAULT;
 
-	idev->dev_info = ionic->bars[DEV_BAR].vaddr;
+	idev->dev_info_regs = ionic->bars[DEV_BAR].vaddr;
 	idev->dev_cmd = ionic->bars[DEV_BAR].vaddr +
 					offsetof(union dev_regs, devcmd);
 	idev->intr_ctrl = ionic->bars[INTR_CTRL_BAR].vaddr;
@@ -137,9 +137,11 @@ int ionic_mnic_dev_setup(struct ionic *ionic)
 	/* save the idev into dev->platform_data so we can use it later */
 	ionic->dev->platform_data = idev;
 
-	sig = ioread32(&idev->dev_info->signature);
+	sig = ioread32(&idev->dev_info_regs->signature);
 	if (sig != IONIC_DEV_INFO_SIGNATURE)
 		return -EFAULT;
+
+	ionic_init_devinfo(idev);
 
 	idev->db_pages = ionic->bars[DOORBELL_BAR].vaddr;
 	idev->phy_db_pages = ionic->bars[DOORBELL_BAR].bus_addr;

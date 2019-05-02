@@ -11,6 +11,22 @@
 #include "ionic_dev.h"
 #include "ionic_lif.h"
 
+void ionic_init_devinfo(struct ionic_dev *idev)
+{
+	idev->dev_info.asic_type = ioread8(&idev->dev_info_regs->asic_type);
+	idev->dev_info.asic_rev = ioread8(&idev->dev_info_regs->asic_rev);
+
+	memcpy_fromio(idev->dev_info.fw_version,
+		      idev->dev_info_regs->fw_version,
+		      IONIC_DEVINFO_FWVERS_BUFLEN);
+
+	memcpy_fromio(idev->dev_info.serial_num,
+		      idev->dev_info_regs->serial_num,
+		      IONIC_DEVINFO_SERIAL_BUFLEN);
+
+	idev->dev_info.fw_version[IONIC_DEVINFO_FWVERS_BUFLEN] = 0;
+	idev->dev_info.serial_num[IONIC_DEVINFO_SERIAL_BUFLEN] = 0;
+}
 
 int ionic_dev_setup(struct ionic *ionic)
 {
@@ -33,16 +49,18 @@ int ionic_dev_setup(struct ionic *ionic)
 		return -EFAULT;
 	}
 
-	idev->dev_info = bar->vaddr + BAR0_DEV_INFO_REGS_OFFSET;
+	idev->dev_info_regs = bar->vaddr + BAR0_DEV_INFO_REGS_OFFSET;
 	idev->dev_cmd = bar->vaddr + BAR0_DEV_CMD_REGS_OFFSET;
 	idev->intr_status = bar->vaddr + BAR0_INTR_STATUS_OFFSET;
 	idev->intr_ctrl = bar->vaddr + BAR0_INTR_CTRL_OFFSET;
 
-	sig = ioread32(&idev->dev_info->signature);
+	sig = ioread32(&idev->dev_info_regs->signature);
 	if (sig != IONIC_DEV_INFO_SIGNATURE) {
 		dev_err(dev, "Incompatible firmware signature %x", sig);
 		return -EFAULT;
 	}
+
+	ionic_init_devinfo(idev);
 
 	/* BAR1: doorbells */
 	bar++;
