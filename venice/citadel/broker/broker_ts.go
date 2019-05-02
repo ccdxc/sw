@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"reflect"
 	"strings"
 	"time"
 
@@ -224,9 +225,8 @@ func (br *Broker) WritePoints(ctx context.Context, database string, points []mod
 	for _, pt := range points {
 		msrmt := string(pt.Name())
 
-		// TODO: hashing to multiple shards
-		// get shard for the measurement
-		shard, err := cl.ShardMap.GetShardForPoint(database, msrmt)
+		// get shard for the point, note: tag keys are sorted
+		shard, err := cl.ShardMap.GetShardForPoint(database, msrmt, string(pt.Tags().HashKey()))
 		if err != nil {
 			br.logger.Errorf("Error getting shard for %s/%s. Err: %v", database, msrmt, err)
 			return err
@@ -380,11 +380,11 @@ func (br *Broker) queryShardAgg(ctx context.Context, shard *meta.Shard, database
 		}
 		return resp, nil
 	}
-	return nil, errors.New("Query to allreplicas failed")
+	return nil, errors.New("query to all replicas failed")
 }
 
-// ExecuteQuery executes a query on data nodes
-func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string) ([]*query.Result, error) {
+// ExecuteQuerySingle executes a query on data nodes, deprecated
+func (br *Broker) ExecuteQuerySingle(ctx context.Context, database string, qry string, shardNum int) ([]*query.Result, error) {
 	// parse the query
 	pq, err := influxql.ParseQuery(qry)
 	if err != nil {
@@ -406,8 +406,7 @@ func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string)
 					return nil, errors.New("Shard map is empty")
 				}
 
-				// get the shard
-				shard, err := cl.ShardMap.GetShardForPoint(database, measurement.Name)
+				shard, err := cl.ShardMap.GetShardFromID(shardNum)
 				if err != nil {
 					br.logger.Errorf("Error getting shard for %s/%s. Err: %v", database, measurement.Name, err)
 					return nil, err
@@ -436,6 +435,11 @@ func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string)
 	}
 
 	return results, nil
+}
+
+// ExecuteQuery executes a query on data nodes
+func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string) ([]*query.Result, error) {
+	return br.ExecuteAggQuery(ctx, database, qry)
 }
 
 // ExecuteAggQuery executes query on all shards and aggregates the result
@@ -590,8 +594,19 @@ func (br *Broker) ExecuteShowCmd(ctx context.Context, database string, qry strin
 	valMap := map[string]*models.Row{}
 	for _, s := range result.Series {
 		if val, ok := valMap[s.Name]; ok {
-			// todo: remove duplicates when sharding scheme changes
-			val.Values = append(val.Values, s.Values...)
+			// remove duplicates
+			for _, nVal := range s.Values {
+				if func() bool {
+					for _, v := range val.Values {
+						if reflect.DeepEqual(nVal, v) {
+							return true
+						}
+					}
+					return false
+				}() != true {
+					val.Values = append(val.Values, nVal)
+				}
+			}
 		} else {
 			valMap[s.Name] = s
 		}

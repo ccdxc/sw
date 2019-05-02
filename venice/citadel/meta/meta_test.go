@@ -186,7 +186,7 @@ func TestMetaBasic(t *testing.T) {
 
 	// verify that shardmap is setup correctly
 	tcl := w1.GetCluster(meta.ClusterTypeTstore)
-	_, err = tcl.ShardMap.GetShardForPoint("db0", "measurement0")
+	_, err = tcl.ShardMap.GetShardForPoint("db0", "measurement0", "")
 	AssertOk(t, err, "Could not get a shard for point")
 	kcl := w1.GetCluster(meta.ClusterTypeKstore)
 	_, err = kcl.ShardMap.GetShardForKey("table0", tproto.Key{Key: []byte("key1")})

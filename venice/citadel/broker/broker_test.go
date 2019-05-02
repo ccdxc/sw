@@ -150,6 +150,10 @@ func TestBrokerTstoreBasic(t *testing.T) {
 		restr, _ := json.Marshal(results)
 		log.Infof("Got result: %v", string(restr))
 
+		// query deprecated apis
+		_, err = brokers[0].ExecuteQuerySingle(context.Background(), "db0", fmt.Sprintf("SELECT * FROM cpu%d", idx), 1)
+		AssertOk(t, err, "Error executing query-single")
+
 		// test show commands
 
 		// SHOW TAG KEYS

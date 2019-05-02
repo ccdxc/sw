@@ -83,6 +83,15 @@ func testQueryingFwlogs() {
 	fivemin, err := time.ParseDuration("5ms")
 	Expect(err).Should(BeNil())
 
+	Eventually(func() bool {
+		_, err := tc.Fwlogs(context.Background(), &telemetry_query.FwlogsQueryList{})
+		if err != nil {
+			By(fmt.Sprintf("Fwlog query returned err %v", err))
+			return false
+		}
+		return true
+	}, "1s", "180s")
+
 	logs := []*telemetry_query.Fwlog{}
 	for i := 0; i < 10; i++ {
 		timestamp := &api.Timestamp{}
@@ -507,7 +516,7 @@ func writeFwlogs(logs []*telemetry_query.Fwlog) error {
 		}
 
 		tags := map[string]string{"source": ipSrc, "destination": ipDest, "destination-port": dPort, "protocol": ipProt}
-		fields := map[string]interface{}{"source-port": sPort, "action": action, "direction": dir, "rule-id": ruleID, "flow_action": 1}
+		fields := map[string]interface{}{"source-port": sPort, "action": action, "direction": dir, "rule-id": ruleID}
 
 		pt, err := client.NewPoint("Fwlogs", tags, fields, timestamp)
 		if err != nil {

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"hash/crc32"
-	"strings"
 
 	"github.com/pensando/sw/venice/citadel/tproto"
 )
@@ -44,9 +43,9 @@ func (sm *ShardMap) computeHashForPoint(keys string) uint32 {
 }
 
 // GetShardForPoint returns a shard for the measurement
-func (sm *ShardMap) GetShardForPoint(keys ...string) (*Shard, error) {
+func (sm *ShardMap) GetShardForPoint(kind, measurement, tags string) (*Shard, error) {
 	// calculate the hash
-	hash := sm.computeHashForPoint(strings.Join(keys, "|"))
+	hash := sm.computeHashForPoint(kind + "|" + measurement + "|" + tags)
 
 	// calculate modulo
 	mod := hash % sm.NumShards
@@ -55,6 +54,20 @@ func (sm *ShardMap) GetShardForPoint(keys ...string) (*Shard, error) {
 	shard := sm.Shards[mod]
 	if shard == nil {
 		return nil, errors.New("Shard not found")
+	}
+
+	return shard, nil
+}
+
+// GetShardFromID returns a shard from id
+func (sm *ShardMap) GetShardFromID(shardNum int) (*Shard, error) {
+	// calculate modulo
+	mod := uint32(shardNum) % sm.NumShards
+
+	// find the shard
+	shard := sm.Shards[mod]
+	if shard == nil {
+		return nil, errors.New("shard not found")
 	}
 
 	return shard, nil

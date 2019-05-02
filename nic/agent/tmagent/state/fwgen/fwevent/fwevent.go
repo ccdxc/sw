@@ -32,15 +32,16 @@ func NewFwEventGen(ctx context.Context, num int) chan *halproto.FWEvent {
 	go func() {
 		for i := 0; i < num; i++ {
 			ev := &halproto.FWEvent{
-				Sipv4:     uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
-				Dipv4:     uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
-				Dport:     uint32(rand.Int31n(5000)),
-				Sport:     uint32(rand.Int31n(5000)),
-				IpProt:    halproto.IPProtocol(protKey()),
-				Fwaction:  halproto.SecurityAction(fwActionKey()),
-				Direction: uint32(rand.Int31n(2) + 1),
-				RuleId:    uint64(rand.Int63n(5000)),
-				SessionId: uint64(rand.Int63n(5000)),
+				Flowaction: halproto.FlowLogEventType_FLOW_LOG_EVENT_TYPE_CREATE,
+				Sipv4:      uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
+				Dipv4:      uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
+				Dport:      uint32(rand.Int31n(5000)),
+				Sport:      uint32(rand.Int31n(5000)),
+				IpProt:     halproto.IPProtocol(protKey()),
+				Fwaction:   halproto.SecurityAction(fwActionKey()),
+				Direction:  uint32(rand.Int31n(2) + 1),
+				RuleId:     uint64(rand.Int63n(5000)),
+				SessionId:  uint64(rand.Int63n(5000)),
 			}
 
 			if ev.IpProt == halproto.IPProtocol_IPPROTO_ICMP {

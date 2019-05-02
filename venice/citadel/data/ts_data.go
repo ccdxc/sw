@@ -115,7 +115,7 @@ func (dn *DNode) ReadDatabases(ctx context.Context, req *tproto.DatabaseReq) (*t
 func (dn *DNode) PointsWrite(ctx context.Context, req *tproto.PointsWriteReq) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	dn.logger.Debugf("%s Received PointsWrite req %+v", dn.nodeUUID, req)
+	dn.logger.Infof("%s Received PointsWrite req %+v", dn.nodeUUID, req)
 
 	// check if datanode is already stopped
 	if dn.isStopped {
@@ -237,7 +237,7 @@ func (dn *DNode) replicatePoints(ctx context.Context, req *tproto.PointsWriteReq
 		}
 	}
 
-	log.Debugf("shard:%d replica:%d replicated points to %v", req.ShardID, req.ReplicaID, secRepl)
+	log.Infof("shard:%d replica:%d replicated points to %v", req.ShardID, req.ReplicaID, secRepl)
 	return nil
 }
 
@@ -480,8 +480,7 @@ func (dn *DNode) writePointsInAggregator(queryDb string, measurement string, res
 		for res := range ch {
 			if res.Err != nil {
 				dn.logger.Errorf("query %s failed, %s", measurement, res.Err)
-				//TODO: retry
-				continue
+				return res.Err
 			}
 
 			// StatementID=0 is the tags query
@@ -512,9 +511,8 @@ func (dn *DNode) writePointsInAggregator(queryDb string, measurement string, res
 		}
 	}
 
-	dn.logger.Infof("writting %v points to %s", buff.Len(), queryDb)
-	buff.Flush()
-	return nil
+	dn.logger.Infof("writing %v points to %s", buff.Len(), queryDb)
+	return buff.Flush()
 }
 
 // executeQueryRemote executes a query on the remote replica
@@ -530,6 +528,14 @@ func (dn *DNode) executeQueryRemote(ctx context.Context, req *tproto.QueryReq, n
 		defer close(ch)
 
 		resp, err := dnclient.ExecuteQuery(ctx, req)
+		if err != nil && dn.isGrpcConnectErr(err) {
+			// try reconnecting if this was a connection error
+			dnclient, err = dn.reconnectDnclient(meta.ClusterTypeTstore, nodeUUID)
+			if err == nil {
+				resp, err = dnclient.ExecuteQuery(ctx, req)
+			}
+		}
+
 		if err != nil {
 			ch <- &query.Result{
 				Err: err,
@@ -736,12 +742,10 @@ func (dn *DNode) ExecuteAggQuery(ctx context.Context, req *tproto.QueryReq) (*tp
 	// create a unique db
 	queryDb := req.Database + uuid.New().String()
 
-	// todo: retention policy
-	retentionPeriod := time.Duration(meta2.MinRetentionPolicyDuration)
-
+	d := time.Duration(0)
 	rp := &meta2.RetentionPolicySpec{
 		Name:     dn.clusterCfg.RetentionPolicyName,
-		Duration: &retentionPeriod,
+		Duration: &d,
 	}
 
 	if err := dn.tsQueryStore.CreateDatabase(queryDb, rp); err != nil {
@@ -754,6 +758,6 @@ func (dn *DNode) ExecuteAggQuery(ctx context.Context, req *tproto.QueryReq) (*tp
 		return nil, err
 	}
 
-	// aggreagted query
+	// aggregated query
 	return dn.executeAggQuery(ctx, req, origQuery, queryDb)
 }

@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
+	"strconv"
 	"strings"
 	"time"
 
@@ -50,9 +51,9 @@ func NewHTTPServer(listenURL string, broker *broker.Broker, dbg *debug.Debug) (*
 	r.HandleFunc("/db", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.readdbReqHandler))).Methods("GET")
 	r.HandleFunc("/db", netutils.MakeHTTPHandler(netutils.RestAPIFunc(hsrv.deletedbReqHandler))).Methods("DELETE")
 	r.HandleFunc("/query", hsrv.queryReqHandler).Methods("GET")
-	r.HandleFunc("/qagg", hsrv.aggQueryReqHandler).Methods("POST")
-	r.HandleFunc("/qagg", hsrv.aggQueryReqHandler).Methods("GET")
 	r.HandleFunc("/query", hsrv.queryReqHandler).Methods("POST")
+	r.HandleFunc("/shard", hsrv.queryShardReqHandler).Methods("POST")
+	r.HandleFunc("/shard", hsrv.queryShardReqHandler).Methods("GET")
 	r.HandleFunc("/cmd", hsrv.showReqHandler).Methods("GET")
 	r.HandleFunc("/cmd", hsrv.showReqHandler).Methods("POST")
 	r.HandleFunc("/ping", hsrv.pingReqHandler).Methods("GET")
@@ -229,8 +230,8 @@ func (hsrv *HTTPServer) queryReqHandler(w http.ResponseWriter, r *http.Request) 
 	return
 }
 
-// queryReqHandler handles a query request
-func (hsrv *HTTPServer) aggQueryReqHandler(w http.ResponseWriter, r *http.Request) {
+// queryShardReqHandler handles query to a shard
+func (hsrv *HTTPServer) queryShardReqHandler(w http.ResponseWriter, r *http.Request) {
 	// Attempt to read the form value from the "q" form value.
 	qp := strings.TrimSpace(r.FormValue("q"))
 	if qp == "" {
@@ -239,8 +240,20 @@ func (hsrv *HTTPServer) aggQueryReqHandler(w http.ResponseWriter, r *http.Reques
 	}
 	database := r.FormValue("db")
 
+	shid := strings.TrimSpace(r.FormValue("shard"))
+	if shid == "" {
+		http.Error(w, `missing required shard id parameter "shard"`, http.StatusBadRequest)
+		return
+	}
+
+	shardNum, err := strconv.Atoi(shid)
+	if err != nil {
+		http.Error(w, `invalid shard`, http.StatusBadRequest)
+		return
+	}
+
 	// execute the query
-	result, err := hsrv.broker.ExecuteAggQuery(context.Background(), database, qp)
+	result, err := hsrv.broker.ExecuteQuerySingle(context.Background(), database, qp, shardNum)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error executing the query: %v", err), http.StatusInternalServerError)
 		return

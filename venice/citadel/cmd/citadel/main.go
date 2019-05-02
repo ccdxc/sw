@@ -71,6 +71,8 @@ func main() {
 	log.SetConfig(logConfig)
 	logger := log.GetNewLogger(logConfig)
 
+	log.Infof("=== %s is starting", globals.Citadel)
+
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 		Component: globals.Citadel,
@@ -132,7 +134,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	log.Infof("=== %s is running {%+v}", globals.Citadel, srv)
+	log.Infof("%s is running {%+v}", globals.Citadel, srv)
 
 	// Creating debug instance
 	dbg := debug.New(srv.Debug)

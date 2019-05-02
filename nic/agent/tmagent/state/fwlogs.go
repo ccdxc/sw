@@ -95,15 +95,15 @@ func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
 
 	point := &tsdb.Point{
 		Tags:   map[string]string{"source": ipSrc, "destination": ipDest, "destination-port": dPort, "protocol": ipProt},
-		Fields: map[string]interface{}{"source-port": sPort, "action": action, "direction": dir, "rule-id": ruleID, "session-id": sessionID, "flow_action": int64(ev.GetFlowaction())},
+		Fields: map[string]interface{}{"source-port": sPort, "action": action, "direction": dir, "rule-id": ruleID, "session-id": sessionID},
 	}
 
 	// icmp fields
-	if ev.GetIpProt() == halproto.IPProtocol_IPPROTO_ICMP {
-		point.Fields["icmp-type"] = int64(ev.GetIcmptype())
-		point.Fields["icmp-id"] = int64(ev.GetIcmpid())
-		point.Fields["icmp-code"] = int64(ev.GetIcmpcode())
-	}
+	//if ev.GetIpProt() == halproto.IPProtocol_IPPROTO_ICMP {
+	//	point.Fields["icmp-type"] = int64(ev.GetIcmptype())
+	//	point.Fields["icmp-id"] = int64(ev.GetIcmpid())
+	//	point.Fields["icmp-code"] = int64(ev.GetIcmpcode())
+	//}
 
 	log.Debugf("Fwlog: %+v", point)
 
