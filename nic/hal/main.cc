@@ -33,6 +33,7 @@
 #include "nic/hal/svc/system_svc.hpp"
 #include "nic/hal/svc/proxy_svc.hpp"
 #include "nic/hal/svc/nic_svc.hpp"
+#include "nic/hal/svc/hal_ext.hpp"
 
 #include "gen/hal/svc/vrf_svc_gen.hpp"
 #include "gen/hal/svc/l2segment_svc_gen.hpp"
@@ -118,7 +119,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     HAL_SYSLOG_INFO("HAL-STATUS:UP");
 
     // notify sysmgr that we are up
-    //hal::svc::init_done();
+    hal::svc::hal_init_done();
 
     // assemble the server
     std::unique_ptr<Server> server(server_builder->BuildAndStart());

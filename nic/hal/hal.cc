@@ -260,7 +260,7 @@ hal_init (hal_cfg_t *hal_cfg)
     }
 
     // notify sysmgr that we are up
-    svc::hal_init_done();
+    //svc::hal_init_done();
 
     if (!getenv("DISABLE_FTE")) {
         if (hal_cfg->forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
