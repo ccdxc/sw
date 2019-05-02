@@ -460,6 +460,18 @@ static int ionic_pgtbl_page(struct ionic_tbl_buf *buf, u64 dma)
 	return 0;
 }
 
+static void ionic_pgtbl_contiguous(struct ionic_tbl_buf *buf, u64 offset)
+{
+	buf->page_size_log2 = 0;
+
+	if (buf->tbl_buf) {
+		offset += le64_to_cpu(buf->tbl_buf[buf->tbl_pages]);
+		buf->tbl_buf[buf->tbl_pages] = cpu_to_le64(offset);
+	} else {
+		buf->tbl_dma += offset;
+	}
+}
+
 static int ionic_pgtbl_umem(struct ionic_tbl_buf *buf, struct ib_umem *umem)
 {
 	struct scatterlist *sg;
@@ -490,15 +502,8 @@ static int ionic_pgtbl_umem(struct ionic_tbl_buf *buf, struct ib_umem *umem)
 	buf->page_size_log2 = page_shift;
 
 	/* treat single page as contiguous, no page size or offset */
-	if (buf->tbl_pages == 1) {
-		buf->page_size_log2 = 0;
-		page_dma = ib_umem_offset(umem);
-
-		if (buf->tbl_buf)
-			buf->tbl_buf[buf->tbl_pages] += page_dma;
-		else
-			buf->tbl_dma += page_dma;
-	}
+	if (buf->tbl_pages == 1)
+		ionic_pgtbl_contiguous(buf, ib_umem_offset(umem));
 
 out:
 	return rc;
@@ -795,7 +800,7 @@ static void ionic_admin_poll_locked(struct ionic_ibdev *dev)
 		if (unlikely(be16_to_cpu(cqe->admin.cmd_idx) != aq->q.cons)) {
 			dev_warn_ratelimited(&dev->ibdev.dev,
 					     "unexpected idx %u cons %u qid %u\n",
-					     le16_to_cpu(cqe->admin.cmd_idx),
+					     be16_to_cpu(cqe->admin.cmd_idx),
 					     aq->q.cons, qid);
 			goto cq_next;
 		}
@@ -1045,7 +1050,7 @@ static int ionic_v1_stats_cmd(struct ionic_ibdev *dev,
 			.op = op,
 			.stats = {
 				.dma_addr = cpu_to_le64(dma),
-				.length = cpu_to_le64(len),
+				.length = cpu_to_le32(len),
 			}
 		}
 	};
@@ -1730,7 +1735,7 @@ static int ionic_build_hdr(struct ionic_ibdev *dev,
 		hdr->eth.type = cpu_to_be16(ETH_P_IP);
 		hdr->ip4.frag_off = cpu_to_be16(0x4000); /* don't fragment */
 		hdr->ip4.ttl = grh->hop_limit;
-		hdr->ip4.tot_len = 65535;
+		hdr->ip4.tot_len = cpu_to_be16(0xffff);
 #ifdef HAVE_AH_ATTR_CACHED_GID
 		hdr->ip4.saddr = *(const __be32 *)(grh->sgid_attr->gid.raw + 12);
 #else
@@ -1844,7 +1849,8 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 	struct ib_ud_header *hdr;
 	dma_addr_t hdr_dma = 0;
 	void *hdr_buf;
-	int rc, hdr_len = 0, gfp = GFP_ATOMIC;
+	gfp_t gfp = GFP_ATOMIC;
+	int rc, hdr_len = 0;
 
 	if (flags & RDMA_CREATE_AH_SLEEPABLE)
 		gfp = GFP_KERNEL;
@@ -1883,7 +1889,7 @@ static int ionic_v1_create_ah_cmd(struct ionic_ibdev *dev,
 		goto err_dma;
 
 	wr.wqe.ah.dma_addr = cpu_to_le64(hdr_dma);
-	wr.wqe.ah.length = cpu_to_le64(hdr_len);
+	wr.wqe.ah.length = cpu_to_le32(hdr_len);
 
 	ionic_admin_post(dev, &wr);
 
@@ -2078,7 +2084,8 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	struct ionic_pd *pd = to_ionic_pd(ibpd);
 	struct ionic_ah *ah;
 	struct ionic_ah_resp resp = {};
-	int rc, gfp = GFP_ATOMIC;
+	gfp_t gfp = GFP_ATOMIC;
+	int rc;
 #ifndef HAVE_CREATE_AH_FLAGS
 	u32 flags = 0;
 #endif
@@ -2548,14 +2555,8 @@ static int ionic_map_mr_sg(struct ib_mr *ibmr, struct scatterlist *sg,
 	mr->buf.page_size_log2 = order_base_2(ibmr->page_size);
 
 	/* treat single page as contiguous, no page size or offset */
-	if (mr->buf.tbl_pages == 1) {
-		mr->buf.page_size_log2 = 0;
-
-		if (mr->buf.tbl_buf)
-			mr->buf.tbl_buf[mr->buf.tbl_pages] += page_off;
-		else
-			mr->buf.tbl_dma += page_off;
-	}
+	if (mr->buf.tbl_pages == 1)
+		ionic_pgtbl_contiguous(&mr->buf, page_off);
 
 	if (mr->buf.tbl_buf)
 		dma_sync_single_for_device(dev->hwdev, mr->buf.tbl_dma,
@@ -3681,8 +3682,8 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 			.mod_qp = {
 				.attr_mask = cpu_to_be32(mask),
 				.access_flags = cpu_to_be16(flags),
-				.rq_psn = attr->rq_psn,
-				.sq_psn = attr->sq_psn,
+				.rq_psn = cpu_to_le32(attr->rq_psn),
+				.sq_psn = cpu_to_le32(attr->sq_psn),
 #ifdef HAVE_QP_RATE_LIMIT
 				.rate_limit_kbps = cpu_to_le32(attr->rate_limit),
 #endif
@@ -3761,7 +3762,7 @@ static int ionic_v1_modify_qp_cmd(struct ionic_ibdev *dev,
 			goto err_dma;
 
 		wr.wqe.mod_qp.ah_id_len = cpu_to_le32(qp->ahid | (hdr_len << 24));
-		wr.wqe.mod_qp.dma_addr = hdr_dma;
+		wr.wqe.mod_qp.dma_addr = cpu_to_le64(hdr_dma);
 
 		wr.wqe.mod_qp.en_pcp = attr->ah_attr.sl;
 		wr.wqe.mod_qp.ip_dscp =
@@ -4753,15 +4754,15 @@ static int ionic_v1_query_qp_cmd(struct ionic_ibdev *dev,
 	if (rc)
 		goto err_sqdma;
 
-	flags = le32_to_cpu(query_sqbuf->access_perms_flags);
+	flags = be16_to_cpu(query_sqbuf->access_perms_flags);
 
 	attr->qp_state = from_ionic_qp_state(query_rqbuf->state_pmtu & 0xf);
 	attr->cur_qp_state = attr->qp_state;
 	attr->path_mtu = (query_rqbuf->state_pmtu >> 4) - 7;
 	attr->path_mig_state = IB_MIG_MIGRATED;
-	attr->qkey = le32_to_cpu(query_sqbuf->qkey_dest_qpn);
-	attr->rq_psn = le32_to_cpu(query_sqbuf->rq_psn);
-	attr->sq_psn = le32_to_cpu(query_rqbuf->sq_psn);
+	attr->qkey = be32_to_cpu(query_sqbuf->qkey_dest_qpn);
+	attr->rq_psn = be32_to_cpu(query_sqbuf->rq_psn);
+	attr->sq_psn = be32_to_cpu(query_rqbuf->sq_psn);
 	attr->dest_qp_num = attr->qkey;
 	attr->qp_access_flags = from_ionic_qp_flags(flags);
 	attr->pkey_index = 0;
@@ -4778,7 +4779,7 @@ static int ionic_v1_query_qp_cmd(struct ionic_ibdev *dev,
 	attr->alt_port_num = 0;
 	attr->alt_timeout = 0;
 #ifdef HAVE_QP_RATE_LIMIT
-	attr->rate_limit = le32_to_cpu(query_sqbuf->rate_limit_kbps);
+	attr->rate_limit = be32_to_cpu(query_sqbuf->rate_limit_kbps);
 #endif
 
 	if (mask & IB_QP_AV)
@@ -6189,8 +6190,8 @@ static int ionic_rdma_reset_devcmd(struct ionic_ibdev *dev)
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
 		.cmd.rdma_reset = {
-			.opcode = (__force u16)cpu_to_le16(CMD_OPCODE_RDMA_RESET_LIF),
-			.lif_index = (__force u16)cpu_to_le16(dev->lif_id),
+			.opcode = CMD_OPCODE_RDMA_RESET_LIF,
+			.lif_index = cpu_to_le16(dev->lif_id),
 		},
 	};
 
@@ -6205,7 +6206,7 @@ static int ionic_rdma_queue_devcmd(struct ionic_ibdev *dev,
 	struct ionic_admin_ctx admin = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(admin.work),
 		.cmd.rdma_queue = {
-			.opcode = cpu_to_le16(opcode),
+			.opcode = opcode,
 			.lif_index = cpu_to_le16(dev->lif_id),
 			.qid_ver = cpu_to_le32(qid),
 			.cid = cpu_to_le32(cid),
@@ -6815,7 +6816,7 @@ static struct ionic_ibdev *ionic_create_ibdev(struct lif *lif,
 		ident->rdma.eq_qtype.qtype,
 		ident->rdma.eq_qtype.qid_base, ident->rdma.eq_qtype.qid_count);
 
-	version = le16_to_cpu(ident->rdma.version);
+	version = ident->rdma.version;
 
 	if (version < IONIC_MIN_RDMA_VERSION) {
 		netdev_err(ndev, FW_INFO "ionic_rdma: Firmware RDMA Version %u\n",

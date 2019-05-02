@@ -456,7 +456,7 @@ static ssize_t dcqcn_show_rules(struct kobject *kobj,
 		rc = snprintf(buf, size, "%s %d %d\n",
 			      rule->name, rule->cond, rule->prof);
 		if (rc < 0)
-			return rc;
+			goto out;
 
 		off += rc;
 
@@ -469,9 +469,12 @@ static ssize_t dcqcn_show_rules(struct kobject *kobj,
 		}
 	}
 
+	rc = off;
+
+out:
 	spin_unlock_irqrestore(&dcqcn->rules_lock, irqflags);
 
-	return off;
+	return rc;
 }
 
 static bool match_prio(struct rdma_ah_attr *attr, int cond)

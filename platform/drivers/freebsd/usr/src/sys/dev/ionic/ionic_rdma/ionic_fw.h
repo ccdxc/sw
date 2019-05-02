@@ -465,7 +465,7 @@ struct ionic_v1_recv_bdy {
 struct ionic_v1_common_bdy {
 	union {
 		struct {
-			__le32		ah_id;
+			__be32		ah_id;
 			__be32		dest_qpn;
 			__be32		dest_qkey;
 		} send;

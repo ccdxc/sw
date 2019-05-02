@@ -810,7 +810,7 @@ static ssize_t ionic_aq_ctrl_write(struct file *fp, const char __user *ubuf,
 				goto out;
 			} else if (ionic_v1_cqe_error(&wr->wr.cqe)) {
 				dev_warn(&aq->dev->ibdev.dev, "cqe error %u\n",
-					 le32_to_cpu(wr->wr.cqe.status_length));
+					 be32_to_cpu(wr->wr.cqe.status_length));
 				rc = -EINVAL;
 				goto out;
 			}
