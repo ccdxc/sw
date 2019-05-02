@@ -316,10 +316,6 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
     sdk_ret_t     ret;
     rfc_ctxt_t    rfc_ctxt;
 
-    if (unlikely(policy->num_rules == 0)) {
-        return sdk::SDK_RET_INVALID_ARG;
-    }
-
     /**< allocate memory for all the RFC itree tables */
     ret = rfc_ctxt_init(&rfc_ctxt, policy, rfc_tree_root_addr, mem_size);
     if (ret != SDK_RET_OK) {

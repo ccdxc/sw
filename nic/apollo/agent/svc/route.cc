@@ -8,10 +8,12 @@
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/route.hpp"
 
-static inline void
+static inline sdk_ret_t
 pds_agent_route_table_api_spec_fill (pds_route_table_spec_t *api_spec,
                                      const pds::RouteTableSpec &proto_spec)
 {
+    uint32_t num_routes = 0;
+
     api_spec->key.id = proto_spec.id();
     switch (proto_spec.af()) {
     case types::IP_AF_INET:
@@ -23,13 +25,19 @@ pds_agent_route_table_api_spec_fill (pds_route_table_spec_t *api_spec,
         break;
 
     default:
-        break;
+        return SDK_RET_INVALID_ARG;
     }
-    api_spec->num_routes = proto_spec.routes_size();
+    num_routes = proto_spec.routes_size();
+    api_spec->num_routes = num_routes;
     api_spec->routes = (pds_route_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
                                                  sizeof(pds_route_t) *
-                                                 api_spec->num_routes);
-    for (int i = 0; i < proto_spec.routes_size(); i++) {
+                                                 num_routes);
+    if (unlikely(api_spec->routes == NULL)) {
+        PDS_TRACE_ERR("Failed to allocate memory for route table {}",
+                      api_spec->key.id);
+        return sdk::SDK_RET_OOM;
+    }
+    for (uint32_t i = 0; i < num_routes; i++) {
         const pds::Route &proto_route = proto_spec.routes(i);
         ippfx_proto_spec_to_api_spec(&api_spec->routes[i].prefix, proto_route.prefix());
         switch (proto_route.Nh_case()) {
@@ -46,6 +54,8 @@ pds_agent_route_table_api_spec_fill (pds_route_table_spec_t *api_spec,
             break;
         }
     }
+
+    return SDK_RET_OK;
 }
 
 Status
@@ -69,7 +79,10 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
         }
         auto request = proto_req->request(i);
         key.id = request.id();
-        pds_agent_route_table_api_spec_fill(api_spec, request);
+        ret = pds_agent_route_table_api_spec_fill(api_spec, request);
+        if (unlikely(ret != SDK_RET_OK)) {
+            return Status::CANCELLED;
+        }
         ret = core::route_table_create(&key, api_spec);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != sdk::SDK_RET_OK) {

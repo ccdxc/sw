@@ -106,10 +106,6 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     vpc_entry                 *vpc;
 
     spec = &obj_ctxt->api_params->route_table_spec;
-    if (spec->num_routes == 0) {
-        PDS_TRACE_WARN("Route table %u doesn't have any routes", spec->key.id);
-        return SDK_RET_OK;
-    }
 
     // allocate memory for the library to build route table
     rtable =

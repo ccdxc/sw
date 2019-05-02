@@ -115,7 +115,6 @@ security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     rfc::policy_t        policy;
 
     spec = &obj_ctxt->api_params->policy_spec;
-    SDK_ASSERT_RETURN((spec->num_rules > 0), sdk::SDK_RET_INVALID_ARG);
 
     memset(&policy, 0, sizeof(policy));
     policy.policy_type = spec->policy_type;

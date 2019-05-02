@@ -156,18 +156,13 @@ pds_policy_proto_to_api_spec (const pds::SecurityPolicySpec &proto_spec,
         return ret;
     }
     num_rules = proto_spec.rules_size();
-    if (unlikely(num_rules == 0)) {
-        PDS_TRACE_ERR("Rejecting empty security policy {}",
-                      api_spec->key.id);
-        return SDK_RET_INVALID_ARG;
-    }
     api_spec->num_rules = num_rules;
     api_spec->rules = (rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_SECURITY_POLICY,
                                            sizeof(rule_t) * num_rules);
     if (unlikely(api_spec->rules == NULL)) {
         PDS_TRACE_ERR("Failed to allocate memory for security policy {}",
                       api_spec->key.id);
-        return sdk::SDK_RET_OOM;
+        return SDK_RET_OOM;
     }
     for (uint32_t i = 0; i < num_rules; i++) {
         const pds::SecurityRule &proto_rule = proto_spec.rules(i);

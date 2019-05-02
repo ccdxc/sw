@@ -41,7 +41,7 @@ vpc:
       count : 1
       type  : tenant
       subnet:
-        - count     :  34             # should be same as total routetbl / policy
+        - count     :  46             # should be same as total routetbl / policy
           v4prefixlen : 24
           v6prefixlen : 64
           vnic:
@@ -54,7 +54,7 @@ vpc:
       routetbl:
              - type: base
                routetype: fulloverlap_max_with_default
-               count : 34
+               count : 46
                v4base: '66.0.0.0\16'
                v4prefixlen: 24
                nv4routes   : 1021
@@ -66,10 +66,9 @@ vpc:
                v6routes:
                    - '0::\0'
       policy:
-              #- type : specific
-              #  policytype : empty    # empty rules not supported
-              #  direction  : bidir
-              #  rule:
+              - type : specific
+                policytype : empty
+                direction  : bidir
 
               - type : specific
                 policytype : allow_tcp

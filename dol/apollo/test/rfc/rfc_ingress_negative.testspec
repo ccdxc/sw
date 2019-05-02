@@ -1,4 +1,4 @@
-# RFC Test Spec for negative egress cases
+# RFC Test Spec for negative ingress cases
 selectors:
     root: ref://store/templates/id=POLICY
     maxlimits: 1

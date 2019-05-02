@@ -80,11 +80,9 @@ class FlowMapObjectHelper:
             # VPC Peering enabled
             # Has default route
             # Has Blackhole route
-            # empty routes
         """
-        #TODO: remove empty routes check once it is fixed in HAL
         if routetblobj.VPCPeeringEnabled or routetblobj.HasDefaultRoute or\
-           (0 == len(routetblobj.routes)) or routetblobj.HasBlackHoleRoute:
+           routetblobj.HasBlackHoleRoute:
            return False
         return True
 

@@ -9,9 +9,14 @@ feature:
 
 modules:
     - module:
-        name    : IPV4_EMTPY_POLICY
+        name    : IPV4_EGRESS_EMTPY_POLICY
         spec    : rfc_egress_negative.testspec
-        enable  : False #Empty policy not supported
+        iterate :
+            - policy : filter://AddrFamily=IPV4,PolicyType=empty
+
+    - module:
+        name    : IPV4_INGRESS_EMTPY_POLICY
+        spec    : rfc_ingress_negative.testspec
         iterate :
             - policy : filter://AddrFamily=IPV4,PolicyType=empty
 
