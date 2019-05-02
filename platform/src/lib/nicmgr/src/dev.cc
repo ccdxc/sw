@@ -94,6 +94,8 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
     if (ret < 0) {
         throw runtime_error("Failed to reserve HAL LIFs");
     }
+
+    upg_state = UNKNOWN_STATE;
 }
 
 string
@@ -279,6 +281,8 @@ DeviceManager::LoadConfig(string path)
 
 #endif //IRIS
 
+    upg_state = DEVICES_ACTIVE_STATE;
+
     return 0;
 }
 
@@ -293,7 +297,8 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
     switch (type) {
     case MNIC:
         {
-            std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd);
+            //For mnic upgrade_mode is always false
+            std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd, false);
             for (std::size_t idx = 0; idx < eth_devices.size(); ++idx)
                 devices[eth_devices[idx]->GetName()] = eth_devices[idx];
             return (Device *)eth_devices[0];
@@ -303,7 +308,7 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         return NULL;
     case ETH:
         {
-            std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd);
+            std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd, upgrade_mode);
             for (std::size_t idx = 0; idx < eth_devices.size(); ++idx) {
                 //Create PCIe device for only PF
                 if (!idx) {
@@ -431,6 +436,18 @@ DeviceManager::HalEventHandler(bool status)
 }
 
 void
+DeviceManager::SetFwStatus(uint8_t fw_status)
+{
+    for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *)dev;
+            eth_dev->SetFwStatus(fw_status);
+        }
+    }
+}
+
+void
 DeviceManager::LinkEventHandler(port_status_t *evd)
 {
     NIC_HEADER_TRACE("Link Event");
@@ -442,6 +459,50 @@ DeviceManager::LinkEventHandler(port_status_t *evd)
             eth_dev->LinkEventHandler(evd);
         }
     }
+}
+
+bool
+DeviceManager::IsDataPathQuiesced()
+{
+    for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
+            Eth *eth_dev = (Eth *) dev;
+            if (!eth_dev->IsDevQuiesced())
+                return false;
+        }
+    }
+
+    return true;
+}
+
+bool
+DeviceManager::CheckAllDevsDisabled()
+{
+     for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
+            Eth *eth_dev = (Eth *) dev;
+            if (!eth_dev->IsDevReset())
+                return false;
+        }
+    }
+
+    return true;
+}
+
+int
+DeviceManager::SendFWDownEvent()
+{
+     for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        if (dev->GetType() == ETH || dev->GetType() == MNIC) {
+            Eth *eth_dev = (Eth *) dev;
+            eth_dev->SendFWDownEvent();
+        }
+    }
+
+    return 0;
 }
 
 void
@@ -485,4 +546,60 @@ DeviceManager::GenerateQstateInfoJson(std::string qstate_info_file)
     root.push_back(std::make_pair("lifs", lifs));
     pt::write_json(qstate_info_file, root);
     return 0;
+}
+
+int
+DeviceManager::HandleUpgradeEvent(UpgradeEvent event)
+{
+    port_status_t st = {0};
+
+    switch(event) {
+        case UPG_EVENT_QUIESCE:
+            //send link down event for all the uplinks
+            for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
+                uplink_t *up = it->second;
+                st.id = up->port;
+                LinkEventHandler(&st);
+            }
+
+            //send link down event to mgmt port
+            st.id = 0;
+            LinkEventHandler(&st);
+
+            break;
+        case UPG_EVENT_DEVICE_RESET:
+            //Send fw_down event
+            SendFWDownEvent();
+
+            break;
+        default:
+            NIC_LOG_DEBUG("Event {} not implemented", event);
+    }
+
+    return 0;
+}
+
+UpgradeState
+DeviceManager::GetUpgradeState()
+{
+    switch (upg_state) {
+        case DEVICES_ACTIVE_STATE:
+            if(IsDataPathQuiesced())
+                upg_state = DEVICES_QUIESCED_STATE;
+
+            break;
+        case DEVICES_QUIESCED_STATE:
+            if(CheckAllDevsDisabled())
+                upg_state = DEVICES_RESET_STATE;
+
+            break;
+        case DEVICES_RESET_STATE:
+            //nothing to be done here
+
+            break;
+        default:
+            NIC_LOG_DEBUG("Unsupported state {}", upg_state);
+    }
+
+    return upg_state;
 }

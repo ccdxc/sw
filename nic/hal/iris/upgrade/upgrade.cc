@@ -35,7 +35,6 @@ upgrade_handler::LinkDownHandler(UpgCtx& upgCtx)
     pd::pd_uplink_tm_control_args_t     tm_args = {0};
 
     HAL_TRACE_DEBUG("[upgrade] Handling link down msg ...");
-    return HdlrResp(::upgrade::SUCCESS, empty_str);
 
     // send TCP FIN on sessions with local EPs
     if ((hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) &&

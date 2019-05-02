@@ -126,7 +126,7 @@ fi
 update_fwupgrade_state "REMOVING MNIC DRIVERS FROM KERNEL"
 
 ifconfig bond0 down
-rmmod mnet ionic_mnic
+rmmod mnet mnet_uio_pdrv_genirq ionic_mnic
 
 update_fwupgrade_state "KILLING INIT..."
 

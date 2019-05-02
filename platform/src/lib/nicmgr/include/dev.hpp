@@ -41,6 +41,18 @@ enum {
     NICMGR_TIMER_ID_MAX                      = 2,
 };
 
+enum UpgradeState {
+    UNKNOWN_STATE,
+    DEVICES_ACTIVE_STATE,
+    DEVICES_QUIESCED_STATE,
+    DEVICES_RESET_STATE
+};
+
+enum UpgradeEvent {
+    UPG_EVENT_QUIESCE,
+    UPG_EVENT_DEVICE_RESET
+};
+
 const char *oprom_type_to_str(OpromType_s);
 
 typedef struct uplink_s {
@@ -77,6 +89,11 @@ public:
     int GenerateQstateInfoJson(std::string qstate_info_file);
     static string ParseDeviceConf(string input_arg);
     PdClient *GetPdClient(void) { return pd; }
+    void SetUpgradeMode(bool upg_mode) { upgrade_mode = upg_mode; };
+    UpgradeState GetUpgradeState();
+    int HandleUpgradeEvent(UpgradeEvent event);
+    std::map<uint32_t, uplink_t*> GetUplinks() { return uplinks; };
+    void SetFwStatus(uint8_t fw_status);
 
 private:
     static DeviceManager *instance;
@@ -89,10 +106,15 @@ private:
     std::map<uint32_t, uplink_t*> uplinks;
 
     bool init_done;
+    bool upgrade_mode;
     std::string config_file;
     fwd_mode_t fwd_mode;
+    UpgradeState upg_state;
 
     Device *AddDevice(enum DeviceType type, void *dev_spec);
+    bool IsDataPathQuiesced();
+    bool CheckAllDevsDisabled();
+    int SendFWDownEvent();
 };
 
 #endif /* __DEV_HPP__ */

@@ -72,22 +72,42 @@ atexit_handler (void)
     }
 }
 
+const char* nicmgr_upgrade_state_file = "/update/nicmgr_upgstate";
+
+static bool
+upgrade_in_progress()
+{
+    return (access(nicmgr_upgrade_state_file, R_OK) == 0);
+}
+
 static void
 loop(void)
 {
     evutil_check log_check;
+    bool upg_mode;
+
+    upg_mode = upgrade_in_progress();
+
+    NIC_LOG_INFO("upg_mode: {}", upg_mode);
 
     if (platform_is_hw(platform)) {
         pciemgr = new class pciemgr("nicmgrd");
-        pciemgr->initialize();
+
+        if (!upg_mode)
+            pciemgr->initialize();
     }
 
     devmgr = new DeviceManager(config_file, fwd_mode, platform);
+
+    devmgr->SetUpgradeMode(upg_mode);
     devmgr->LoadConfig(config_file);
 
     if (pciemgr) {
         pciemgr->finalize();
     }
+
+    //All nicmgr objects are restored now so we can delete the file
+    unlink(nicmgr_upgrade_state_file);
 
     evutil_add_check(&log_check, &log_flush, NULL);
 

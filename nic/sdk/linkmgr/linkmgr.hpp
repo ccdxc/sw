@@ -89,7 +89,7 @@ port_admin_state_t port_default_admin_state(void);
 static inline void
 port_args_init (port_args_t *args)
 {
-    args->port_p = NULL;
+    memset(args, 0, sizeof(port_args_t));
 }
 
 }    // namespace linkmgr

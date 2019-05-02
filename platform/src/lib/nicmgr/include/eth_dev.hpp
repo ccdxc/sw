@@ -95,10 +95,12 @@ class Eth : public Device {
 public:
     Eth(devapi *dev_api,
         void *dev_spec,
-        PdClient *pd_client);
+        PdClient *pd_client,
+        bool upg_mode = false);
     static std::vector<Eth*> factory(enum DeviceType type, devapi *dev_api,
          void *dev_spec,
-         PdClient *pd_client);
+         PdClient *pd_client,
+         bool upg_mode);
 
     std::string GetName() { return spec->name; }
     EthDevType GetType() { return spec->eth_type; }
@@ -118,6 +120,11 @@ public:
 
     int GenerateQstateInfoJson(pt::ptree &lifs);
     bool CreateHostDevice();
+    void SetFwStatus(uint8_t fw_status);
+
+    bool IsDevQuiesced();
+    bool IsDevReset();
+    int SendFWDownEvent();
 
 private:
     // Device Spec
@@ -162,6 +169,9 @@ private:
     bool CreateLocalDevice();
     //
     bool LoadOprom();
+
+    //Lif ref cnt
+    uint32_t active_lif_ref_cnt;
 
     static EthDevType eth_dev_type_str_to_type(std::string const& s);
 

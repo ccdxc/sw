@@ -412,6 +412,7 @@ devapi_lif::del_mac(mac_t mac, bool update_db, bool add_failure)
         }
     } else {
         NIC_LOG_ERR("Mac not registered: {}", mac);
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     return SDK_RET_OK;
 }
@@ -535,6 +536,7 @@ devapi_lif::del_vlan(vlan_t vlan, bool update_db, bool add_failure)
         }
     } else {
         NIC_LOG_ERR("Vlan not registered: {}", vlan);
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     return SDK_RET_OK;
 }
@@ -633,8 +635,9 @@ devapi_lif::del_macvlan(mac_t mac, vlan_t vlan, bool update_db, bool add_failure
             mac_vlan_table_.erase(mac_vlan_key);
         }
     } else {
-        NIC_LOG_ERR("(Mac,Vlan) already not registered: mac: {}, vlan: {}",
+        NIC_LOG_ERR("(Mac,Vlan) not registered: mac: {}, vlan: {}",
                       mac, vlan);
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
     }
     return SDK_RET_OK;
 }

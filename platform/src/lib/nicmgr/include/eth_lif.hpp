@@ -108,11 +108,16 @@ public:
     // Event Handlers
     void LinkEventHandler(port_status_t *evd);
     void XcvrEventHandler(port_status_t *evd);
+    void SendFWDownEvent();
     void HalEventHandler(bool status);
 
     void SetHalClient(devapi *dev_api);
 
     int GenerateQstateInfoJson(pt::ptree &lifs);
+
+    uint32_t GetActiveQRefCnt() { return active_q_ref_cnt; }
+
+    bool IsLifQuiesced() { return ( (state == LIF_STATE_UP) ? false:true); }
 
 private:
     static sdk::lib::indexer *fltr_allocator;
@@ -154,6 +159,9 @@ private:
     map<uint64_t, tuple<uint64_t, uint16_t>> mac_vlans;
     // Tasks
     evutil_timer stats_timer = {0};
+
+    //ref_cnt for queues for this lif
+    uint32_t active_q_ref_cnt;
 
     // Services
     AdminQ *adminq;

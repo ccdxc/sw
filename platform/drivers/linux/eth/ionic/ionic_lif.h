@@ -94,6 +94,7 @@ enum deferred_work_type {
 	DW_TYPE_RX_ADDR_ADD,
 	DW_TYPE_RX_ADDR_DEL,
 	DW_TYPE_LINK_STATUS,
+	DW_TYPE_LIF_RESET,
 };
 
 struct deferred_work {
@@ -130,6 +131,7 @@ enum lif_state_flags {
 	LIF_UP,
 	LIF_LINK_CHECK_NEEDED,
 	LIF_QUEUE_RESET,
+	LIF_F_FW_READY,
 
 	/* leave this as last */
 	LIF_STATE_SIZE
@@ -195,6 +197,11 @@ struct lif {
 #define lif_to_txq(lif, i)	(&lif_to_txqcq(lif, i)->q)
 #define lif_to_rxq(lif, i)	(&lif_to_txqcq(lif, i)->q)
 #define is_master_lif(lif)	((lif)->index == 0)
+
+static inline bool ionic_is_platform_dev(struct ionic *ionic)
+{
+	return (ionic->pfdev ? true:false);
+}
 
 static inline bool ionic_is_mnic(struct ionic *ionic)
 {

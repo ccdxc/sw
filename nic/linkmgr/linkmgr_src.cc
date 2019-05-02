@@ -1042,10 +1042,12 @@ port_get (port_args_t *port_args)
 static hal_ret_t
 port_disable (port_t *port_p)
 {
-    sdk_ret_t      sdk_ret;
-    port_args_t    port_args;
+    sdk_ret_t   sdk_ret;
+    port_args_t port_args;
+    uint64_t    stats_data[MAX_MAC_STATS];
 
     sdk::linkmgr::port_args_init(&port_args);
+    port_args.stats_data = stats_data;
     sdk_ret = sdk::linkmgr::port_get(port_p->pd_p, &port_args);
     if (sdk_ret != SDK_RET_OK) {
         HAL_TRACE_ERR("Failed to get pd for port: {}, err: {}",

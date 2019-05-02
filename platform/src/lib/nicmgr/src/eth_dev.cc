@@ -41,6 +41,7 @@
 #include "rdma_dev.hpp"
 #include "pd_client.hpp"
 #include "edmaq.hpp"
+#include "dev.hpp"
 
 extern class pciemgr *pciemgr;
 
@@ -67,7 +68,7 @@ Eth::eth_dev_type_str_to_type(std::string const& s)
 
 Eth::Eth(devapi *dev_api,
          void *dev_spec,
-         PdClient *pd_client)
+         PdClient *pd_client, bool upg_mode)
 {
     sdk_ret_t ret = SDK_RET_OK;
     Eth::dev_api = dev_api;
@@ -150,7 +151,7 @@ Eth::Eth(devapi *dev_api,
 
 #if 0
     // Create the device
-    if (spec->eth_type == ETH_HOST_MGMT || spec->eth_type == ETH_HOST) {
+    if (!upg_mode && (spec->eth_type == ETH_HOST_MGMT || spec->eth_type == ETH_HOST)) {
         if (!CreateHostDevice()) {
             NIC_LOG_ERR("{}: Failed to create device", spec->name);
             throw;
@@ -205,19 +206,24 @@ Eth::Eth(devapi *dev_api,
     evutil_add_prepare(&devcmd_prepare, Eth::DevcmdPoll, this);
     evutil_add_check(&devcmd_check, Eth::DevcmdPoll, this);
     evutil_timer_start(&devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
+
+    //reset the active_lif_ref_cnt to 0
+    active_lif_ref_cnt = 0;
+
 }
 
 std::vector<Eth*>
 Eth::factory(enum DeviceType type, devapi *dev_api,
          void *dev_spec,
-         PdClient *pd_client)
+         PdClient *pd_client,
+         bool upg_mode)
 {
     std::vector<Eth*> eth_devs;
     Eth *dev_obj;
     struct eth_devspec *spec = (struct eth_devspec *)dev_spec;
 
     // Create object for PF
-    dev_obj = new Eth(dev_api, spec, pd_client);
+    dev_obj = new Eth(dev_api, spec, pd_client, upg_mode);
     dev_obj->SetType(type);
     eth_devs.push_back(dev_obj);
     
@@ -1086,6 +1092,9 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
         return (ret);
     }
 
+    active_lif_ref_cnt++;
+    NIC_LOG_DEBUG("LifInit: {}: active_lif_ref_cnt: {}", spec->name, active_lif_ref_cnt);
+ 
     if (spec->uplink_port_num == 0) {
         port_info->status = {
             .id = 0,
@@ -1134,12 +1143,19 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 
     comp->hw_index = lif_id;
 
+    // Assumption that we will allow host to send cmds on host lifs only after
+    // mgmt mnic is INITed
+    if (spec->eth_type == ETH_MNIC_INTERNAL_MGMT) {
+        DeviceManager::GetInstance()->SetFwStatus(1);
+    }
+
     return (ret);
 }
 
 status_code_t
 Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
 {
+    status_code_t ret;
     struct lif_reset_cmd *cmd = (struct lif_reset_cmd *)req;
     uint64_t lif_id = 0;
     EthLif *eth_lif = NULL;
@@ -1171,7 +1187,15 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
     }
     eth_lif = it->second;
 
-    return eth_lif->Reset(req, req_data, resp, resp_data);
+    ret = eth_lif->Reset(req, req_data, resp, resp_data);
+    if (ret != IONIC_RC_SUCCESS) {
+        NIC_LOG_DEBUG("{}: LIF reset failed !", spec->name);
+    }
+
+    active_lif_ref_cnt--;
+    NIC_LOG_DEBUG("LifReset: {}: active_lif_ref_cnt: {}", spec->name, active_lif_ref_cnt);
+
+    return ret;
 }
 
 status_code_t
@@ -1291,6 +1315,64 @@ Eth::XcvrEventHandler(port_status_t *evd)
     }
 }
 
+bool
+Eth::IsDevQuiesced()
+{
+    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
+        EthLif *eth_lif = it->second;
+
+        if (!eth_lif->IsLifQuiesced()) {
+            NIC_LOG_DEBUG("{}: uplink {}: Device not Quiesced",
+                 spec->name,
+                 spec->uplink_port_num);
+
+            return false;
+        }
+    }
+
+    NIC_LOG_DEBUG("{}: uplink {}: Device is Quiesced",
+            spec->name,
+            spec->uplink_port_num);
+
+    return true;
+}
+
+bool Eth::IsDevReset()
+{
+    if (!active_lif_ref_cnt) {
+        NIC_LOG_DEBUG("{}: uplink {}: Device is in reset state!",
+                spec->name,
+                spec->uplink_port_num);
+        return true;
+    }
+
+    NIC_LOG_DEBUG("{}: uplink {}: Device is not in reset state yet! active_lif_ref_cnt: {}",
+            spec->name,
+            spec->uplink_port_num, active_lif_ref_cnt);
+
+    return false;
+}
+
+int
+Eth::SendFWDownEvent()
+{
+    //regs->info.fw_status = 0;
+    //WRITE_MEM(regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
+    SetFwStatus(0);
+
+    for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
+        EthLif *eth_lif = it->second;
+
+        NIC_LOG_DEBUG("{}: uplink {}: DBG: setting fw_state to 0",
+                spec->name,
+                spec->uplink_port_num);
+
+        eth_lif->SendFWDownEvent();
+    }
+
+    return 0;
+}
+
 int
 Eth::GenerateQstateInfoJson(pt::ptree &lifs)
 {
@@ -1311,6 +1393,13 @@ Eth::SetHalClient(devapi *dapi)
         EthLif *eth_lif = it->second;
         eth_lif->SetHalClient(dapi);
     }
+}
+
+void
+Eth::SetFwStatus(uint8_t fw_status)
+{
+    regs->info.fw_status = fw_status;;
+    WRITE_MEM(regs_mem_addr, (uint8_t *)regs, sizeof(*regs), 0);
 }
 
 lif_type_t

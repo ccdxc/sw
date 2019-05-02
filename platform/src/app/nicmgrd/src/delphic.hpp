@@ -36,6 +36,7 @@ private:
 
 public:
     delphi::SdkPtr sdk(void) const { return sdk_; }
+    UpgSdkPtr upgsdk(void) const { return upgsdk_; }
     NicMgrService(delphi::SdkPtr sk);
     void OnMountComplete(void);
     virtual std::string Name();

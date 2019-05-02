@@ -26,6 +26,7 @@ static struct lif *ionic_lif_alloc(struct ionic *ionic, unsigned int index);
 static int ionic_lif_init(struct lif *lif);
 static int ionic_txrx_alloc(struct lif *lif);
 static int ionic_txrx_init(struct lif *lif);
+static void ionic_lif_handle_fw_down(struct lif *lif);
 static void ionic_lif_free(struct lif *lif);
 static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq);
 static void ionic_lif_deinit(struct lif *lif);
@@ -67,6 +68,15 @@ static void ionic_lif_deferred_work(struct work_struct *work)
 			break;
 		case DW_TYPE_LINK_STATUS:
 			ionic_link_status_check(lif);
+			break;
+		case DW_TYPE_LIF_RESET:
+			/* FW_DOWN event is only handled by mnic in fw */
+			if (ionic_is_platform_dev(lif->ionic)) {
+				netdev_info(lif->netdev, "Handling the LIF_RESET event\n");
+				ionic_lif_handle_fw_down(lif);
+			}
+			else
+				netdev_info(lif->netdev, "Ignoring the LIF_RESET event\n");
 			break;
 		};
 		kfree(w);
@@ -385,6 +395,7 @@ static bool ionic_notifyq_service(struct cq *cq, struct cq_info *cq_info)
 	struct net_device *netdev;
 	struct queue *q;
 	struct lif *lif;
+	struct deferred_work *work;
 
 	q = cq->bound_q;
 	lif = q->info[0].cb_arg;
@@ -418,6 +429,15 @@ static bool ionic_notifyq_service(struct cq *cq, struct cq_info *cq_info)
 		netdev_info(netdev, "  reset_code=%d state=%d\n",
 			    comp->reset.reset_code,
 			    comp->reset.state);
+
+		work = kzalloc(sizeof(*work), GFP_ATOMIC);
+		if (!work) {
+			netdev_err(lif->netdev, "%s OOM\n", __func__);
+		} else {
+			work->type = DW_TYPE_LIF_RESET;
+			ionic_lif_deferred_enqueue(&lif->deferred, work);
+		}
+
 		break;
 	case EVENT_OPCODE_HEARTBEAT:
 		netdev_info(netdev, "Notifyq EVENT_OPCODE_HEARTBEAT eid=%lld\n",
@@ -1813,6 +1833,17 @@ static void ionic_lif_reset(struct lif *lif)
 	mutex_unlock(&lif->ionic->dev_cmd_lock);
 }
 
+static void ionic_lif_handle_fw_down(struct lif* lif)
+{
+	struct ionic* ionic = lif->ionic;
+
+	clear_bit(LIF_F_FW_READY, lif->state);
+	ionic_lifs_unregister(ionic);
+	ionic_lifs_deinit(ionic);
+
+	netdev_info(lif->netdev, "FW Down: Lif is in reset state!\n");
+}
+
 static void ionic_lif_free(struct lif *lif)
 {
 	struct device *dev = lif->ionic->dev;
@@ -1827,6 +1858,10 @@ static void ionic_lif_free(struct lif *lif)
 
 	/* free queues */
 	ionic_qcqs_free(lif);
+	if (test_bit(LIF_F_FW_READY, lif->state))
+		ionic_lif_reset(lif);
+
+	cancel_work_sync(&lif->deferred.work);
 
 	/* free lif info */
 	if (lif->info) {
@@ -1955,7 +1990,8 @@ static void ionic_lif_deinit(struct lif *lif)
 
 	clear_bit(LIF_INITED, lif->state);
 
-	cancel_work_sync(&lif->deferred.work);
+	if (test_bit(LIF_F_FW_READY, lif->state))
+		cancel_work_sync(&lif->deferred.work);
 
 	ionic_rx_filters_deinit(lif);
 	ionic_lif_rss_deinit(lif);
@@ -2531,6 +2567,7 @@ static int ionic_lif_init(struct lif *lif)
 
 	lif->api_private = NULL;
 	set_bit(LIF_INITED, lif->state);
+	set_bit(LIF_F_FW_READY, lif->state);
 
 	ionic_link_status_check(lif);
 
@@ -2725,7 +2762,8 @@ void ionic_lifs_unregister(struct ionic *ionic)
 	 * current model, so don't bother searching the
 	 * ionic->lif for candidates to unregister
 	 */
-	unregister_netdev(ionic->master_lif->netdev);
+	if (ionic->master_lif->netdev->reg_state == NETREG_REGISTERED)
+		unregister_netdev(ionic->master_lif->netdev);
 }
 
 int ionic_lif_identify(struct ionic *ionic)

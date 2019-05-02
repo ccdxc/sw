@@ -1326,9 +1326,11 @@ capri_tm_enable_disable_uplink_port (tm_port_t port, bool enable)
                 pbc_csr.port_${p}.cfg_write_control.read();
                 pbc_csr.port_${p}.cfg_oq.read();
 
+                // dont accept any packet into port
                 pbc_csr.port_${p}.cfg_write_control.enable(enable ? 1 : 0);
-                pbc_csr.port_${p}.cfg_oq.flush(enable ? 0 : 1);
 
+                // flush the oq for this port
+                pbc_csr.port_${p}.cfg_oq.flush(enable ? 0 : 1);
                 if (tm_sw_cfg_write_enabled()) {
                     ${trace_register("pbc_csr.port_" + str(p) + ".cfg_write_control")}
                     pbc_csr.port_${p}.cfg_write_control.write();
@@ -3695,7 +3697,6 @@ capri_tm_init_enable_ports (void)
     sdk_ret_t ret = sdk::SDK_RET_OK;
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
-
     tm_port_t port;
     tm_port_type_e port_type;
     uint32_t enable;
@@ -3706,8 +3707,10 @@ capri_tm_init_enable_ports (void)
     bool set_cut_thru;
     bool drop_on_error;
 
+//::
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
+//::
     // ${pinfo["enum"]}
     port = ${pinfo["enum"]};
     port_type = capri_tm_get_port_type(port);
@@ -3722,7 +3725,6 @@ capri_tm_init_enable_ports (void)
     if (is_active_port(${pinfo["enum"]})) {
         enable = 1;
     }
-
     switch(port_type) {
         case TM_PORT_TYPE_UPLINK:
             drop_on_error = true;
@@ -3744,30 +3746,27 @@ capri_tm_init_enable_ports (void)
         case NUM_TM_PORT_TYPES:
             break;
     }
-
     pbc_csr.port_${p}.cfg_write_control.read();
-
     pbc_csr.port_${p}.cfg_write_control.enable(enable);
-
     if (set_rate_limiter) {
         pbc_csr.port_${p}.cfg_write_control.rate_limiter(rate_limiter);
     }
-
     if (set_cut_thru) {
         pbc_csr.port_${p}.cfg_write_control.cut_thru(cut_thru);
     }
-
     if (drop_on_error) {
         pbc_csr.port_${p}.cfg_write_control.drop_on_error(1);
     } else {
         pbc_csr.port_${p}.cfg_write_control.drop_on_error(0);
     }
-
+//::
 //::    if pinfo["type"] == "p4":
+//::
     pbc_csr.port_${p}.cfg_write_control.recirc_enable(1);
     pbc_csr.port_${p}.cfg_write_control.recirc_oq(recirc_q);
+//::
 //::    #endif
-
+//::
     if (tm_sw_init_enabled()) {
         stringstream data;
         data << hex << endl;
@@ -3776,8 +3775,12 @@ capri_tm_init_enable_ports (void)
 
         pbc_csr.port_${p}.cfg_write_control.write();
     }
-//:: #endfor
+    // Enable port flush and write control
+    capri_tm_enable_disable_uplink_port(port, true);
 
+//::
+//:: #endfor
+//::
     return ret;
 }
 

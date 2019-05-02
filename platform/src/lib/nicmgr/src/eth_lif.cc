@@ -272,6 +272,8 @@ EthLif::EthLif(devapi *dev_api,
     );
 
     state = LIF_STATE_CREATED;
+    active_q_ref_cnt = 0;
+
 }
 
 status_code_t
@@ -1428,6 +1430,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         WRITE_MEM(addr + offsetof(eth_rx_qstate_t, cfg), (uint8_t *)&rx_cfg, sizeof(rx_cfg), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_rx_qstate_t), P4PLUS_CACHE_INVALIDATE_BOTH);
+        active_q_ref_cnt--;
         break;
     case IONIC_QTYPE_TXQ:
         if (cmd->index >= spec->txq_count) {
@@ -1448,6 +1451,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
         WRITE_MEM(addr + offsetof(eth_tx_qstate_t, cfg), (uint8_t *)&tx_cfg, sizeof(tx_cfg), 0);
         PAL_barrier();
         p4plus_invalidate_cache(addr, sizeof(eth_tx_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
+        active_q_ref_cnt--;
         break;
     case IONIC_QTYPE_ADMINQ:
         if (cmd->index >= spec->adminq_count) {
@@ -1560,9 +1564,12 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         if (ret != SDK_RET_OK) {
             NIC_LOG_WARN("{}: Failed Add Mac:{} ret: {}",
                          hal_lif_info_.name, macaddr2str(mac_addr), ret);
-            return (IONIC_RC_ERROR);
+            if (ret == sdk::SDK_RET_ENTRY_EXISTS)
+                return (IONIC_RC_EEXIST);
+            else
+                return (IONIC_RC_ERROR);
         }
-
+ 
         // Store filter
         if (fltr_allocator->alloc(&filter_id) != sdk::lib::indexer::SUCCESS) {
             NIC_LOG_ERR("Failed to allocate MAC address filter");
@@ -1579,7 +1586,10 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         ret = dev_api->lif_add_vlan(hal_lif_info_.lif_id, vlan);
         if (ret != SDK_RET_OK) {
             NIC_LOG_WARN("{}: Failed Add Vlan:{}. ret: {}", hal_lif_info_.name, vlan, ret);
-            return (IONIC_RC_ERROR);
+            if (ret == sdk::SDK_RET_ENTRY_EXISTS)
+                return (IONIC_RC_EEXIST);
+            else
+                return (IONIC_RC_ERROR);
         }
 
         // Store filter
@@ -1603,7 +1613,10 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
         if (ret != SDK_RET_OK) {
             NIC_LOG_WARN("{}: Failed Add Mac-Vlan:{}-{}. ret: {}", hal_lif_info_.name,
                          macaddr2str(mac_addr), vlan, ret);
-            return (IONIC_RC_ERROR);
+            if (ret == sdk::SDK_RET_ENTRY_EXISTS)
+                return (IONIC_RC_EEXIST);
+            else
+                return (IONIC_RC_ERROR);
         }
 
         // Store filter
@@ -1624,6 +1637,7 @@ status_code_t
 EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
 {
     //int status;
+    sdk_ret_t ret;
     uint64_t mac_addr;
     uint16_t vlan;
     struct rx_filter_del_cmd *cmd = (struct rx_filter_del_cmd *)req;
@@ -1646,14 +1660,14 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
                       hal_lif_info_.name,
                       macaddr2str(mac_addr));
         DEVAPI_CHECK
-        dev_api->lif_del_mac(hal_lif_info_.lif_id, mac_addr);
+        ret = dev_api->lif_del_mac(hal_lif_info_.lif_id, mac_addr);
         mac_addrs.erase(cmd->filter_id);
     } else if (vlans.find(cmd->filter_id) != vlans.end()) {
         vlan = vlans[cmd->filter_id];
         NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_VLAN vlan {}",
                      hal_lif_info_.name, vlan);
         DEVAPI_CHECK
-        dev_api->lif_del_vlan(hal_lif_info_.lif_id, vlan);
+        ret = dev_api->lif_del_vlan(hal_lif_info_.lif_id, vlan);
         vlans.erase(cmd->filter_id);
     } else if (mac_vlans.find(cmd->filter_id) != mac_vlans.end()) {
         auto mac_vlan = mac_vlans[cmd->filter_id];
@@ -1662,11 +1676,11 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_DEBUG("{}: Del RX_FILTER_MATCH_MAC_VLAN mac {} vlan {}",
                      hal_lif_info_.name, macaddr2str(mac_addr), vlan);
         DEVAPI_CHECK
-        dev_api->lif_del_macvlan(hal_lif_info_.lif_id, mac_addr, vlan);
+        ret = dev_api->lif_del_macvlan(hal_lif_info_.lif_id, mac_addr, vlan);
         mac_vlans.erase(cmd->filter_id);
     } else {
-        NIC_LOG_ERR("Invalid filter id {}", cmd->filter_id);
-        return (IONIC_RC_ERROR);
+        NIC_LOG_ERR("Invalid filter(Non-exist) id {}", cmd->filter_id);
+        return (IONIC_RC_ENOENT);
     }
 
     rs = fltr_allocator->free(cmd->filter_id);
@@ -1677,6 +1691,9 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
     }
     NIC_LOG_DEBUG("Freed filter_id: {}", cmd->filter_id);
 
+    if (ret == sdk::SDK_RET_ENTRY_NOT_FOUND) {
+        return (IONIC_RC_ENOENT);
+    }
     return (IONIC_RC_SUCCESS);
 }
 
@@ -2176,6 +2193,73 @@ EthLif::XcvrEventHandler(port_status_t *evd)
         hal_lif_info_.name,
         lif_state_to_str(state),
         (evd->status == 1) ? "LINK_UP" : "LINK_DN",
+        lif_state_to_str(state));
+}
+
+void
+EthLif::SendFWDownEvent()
+{
+    if (state == LIF_STATE_RESET) {
+        NIC_LOG_WARN("{}: state: {} Cannot send RESET event when lif is in RESET state!",
+            hal_lif_info_.name, lif_state_to_str(state));
+        return;
+    }
+
+    // Update local lif status
+    lif_status->link_status = 0;
+    lif_status->link_speed = 0;
+    ++lif_status->eid;
+    ++lif_status->link_flap_count;
+    WRITE_MEM(lif_status_addr, (uint8_t *)lif_status, sizeof(struct lif_status), 0);
+
+    // Update host lif status
+    if (host_lif_status_addr != 0) {
+        edmaq->Post(
+            spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+            lif_status_addr,
+            host_lif_status_addr,
+            sizeof(struct lif_status),
+            NULL
+        );
+    }
+
+    if (notify_enabled == 0) {
+        return;
+    }
+
+    uint64_t addr, req_db_addr;
+
+    // Send the link event notification
+    struct reset_event msg = {
+        .eid = lif_status->eid,
+        .ecode = EVENT_OPCODE_RESET,
+        .reset_code = 0, //FIXME: not sure what to program here
+        .state = 1, //reset complete
+    };
+
+    addr = notify_ring_base + notify_ring_head * sizeof(union notifyq_comp);
+    WRITE_MEM(addr, (uint8_t *)&msg, sizeof(union notifyq_comp), 0);
+    req_db_addr =
+#ifdef __aarch64__
+                CAP_ADDR_BASE_DB_WA_OFFSET +
+#endif
+                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
+                (0b1011 /* PI_UPD + SCHED_SET */ << 17) +
+                (hal_lif_info_.lif_id << 6) +
+                (ETH_NOTIFYQ_QTYPE << 3);
+
+    // NIC_LOG_DEBUG("{}: Sending notify event, eid {} notify_idx {} notify_desc_addr {:#x}",
+    //     hal_lif_info_.lif_id, notify_block->eid, notify_ring_head, addr);
+    notify_ring_head = (notify_ring_head + 1) % ETH_NOTIFYQ_RING_SIZE;
+    PAL_barrier();
+    WRITE_DB64(req_db_addr, (ETH_NOTIFYQ_QID << 24) | notify_ring_head);
+
+    // FIXME: Wait for completion
+
+    NIC_LOG_INFO("{}: {} + {} => {}",
+        hal_lif_info_.name,
+        lif_state_to_str(state),
+        "RESET",
         lif_state_to_str(state));
 }
 
