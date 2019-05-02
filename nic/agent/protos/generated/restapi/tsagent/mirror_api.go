@@ -16,7 +16,7 @@ import (
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 
-	api "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/httputils"
 	"github.com/pensando/sw/nic/agent/protos/tsproto"
 )

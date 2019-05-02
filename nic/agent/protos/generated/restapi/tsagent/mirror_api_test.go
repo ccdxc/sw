@@ -9,7 +9,7 @@ package restapi_test
 import (
 	"testing"
 
-	api "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/venice/utils/netutils"
