@@ -48,7 +48,6 @@ route_table_util::route_table_util(pds_route_table_id_t id,
     this->first_route_pfx = route_pfx;
     this->first_nh_ip = first_nh_ip;
     this->num_routes = num_routes;
-    this->routes = new route_util[num_routes];
 
     for (uint32_t i = 0; i < this->num_routes; ++i) {
         this->routes[i].ip_pfx = route_pfx;
@@ -66,10 +65,7 @@ route_table_util::route_table_util(pds_route_table_id_t id,
     }
 }
 
-route_table_util::~route_table_util() {
-    if (this->num_routes)
-        delete[] this->routes;
-}
+route_table_util::~route_table_util() {}
 
 sdk::sdk_ret_t
 route_table_util::create() {
@@ -120,24 +116,6 @@ route_table_util::many_create(uint32_t num_route_tables,
 
     return rv;
 }
-
-#if 0
-sdk::sdk_ret_t
-route_table_util::read(pds_route_table_info_t *info, bool compare_spec) {
-    sdk_ret_t rv;
-    pds_route_table_key_t key;
-
-    memset(&key, 0, sizeof(pds_route_table_key_t));
-    key.id = this->id;
-    rv = pds_route_table_read(&key, info);
-    if (rv != sdk::SDK_RET_OK) {
-        return rv;
-    }
-    if (compare_spec) {
-    }
-    return sdk::SDK_RET_OK;
-}
-#endif
 
 sdk::sdk_ret_t
 route_table_util::del() {

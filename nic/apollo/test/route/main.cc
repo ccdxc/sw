@@ -85,7 +85,6 @@ TEST_F(route_test, v4v6_route_table_workflow_1) {
     pds_batch_params_t batch_params = {0};
     pds_route_table_id_t first_v4_route_table_id = 22222;
     pds_route_table_id_t first_v6_route_table_id = 11111;
-    uint32_t num_routes = PDS_MAX_ROUTE_PER_TABLE;
 
     // trigger - test max route tables with zero routes
     batch_params.epoch = ++g_batch_epoch;

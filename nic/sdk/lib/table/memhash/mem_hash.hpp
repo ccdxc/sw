@@ -44,21 +44,12 @@ private:
     sdk_ret_t genhash_(sdk_table_api_params_t *params);
     sdk_ret_t ctxinit_(sdk_table_api_op_t op,
                        sdk_table_api_params_t *params);
+    mem_hash();
+    ~mem_hash();
 
 public:
     static mem_hash *factory(sdk_table_factory_params_t *params);
     static void destroy(mem_hash *memhash);
-
-    mem_hash() {
-        props_ = NULL;
-        main_table_ = NULL;
-        crc32gen_ = NULL;
-        SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
-    }
-
-    ~mem_hash() {
-        SDK_SPINLOCK_DESTROY(&slock_);
-    }
 
     sdk_ret_t txn_start();
     sdk_ret_t txn_end();

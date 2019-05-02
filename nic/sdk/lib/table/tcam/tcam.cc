@@ -66,9 +66,6 @@ void
 tcam::destroy(tcam *te)
 {
     if (te) {
-        indexer::destroy(te->indexer_);
-        SDK_FREE(SDK_MEM_ALLOC_ID_TCAM_STATS, te->stats_);
-        SDK_FREE(SDK_MEM_ALLOC_ID_TCAM_NAME, te->name_);
         te->~tcam();
         SDK_FREE(SDK_MEM_ALLOC_ID_TCAM, te);
     }
@@ -111,6 +108,14 @@ tcam::tcam(uint32_t id, uint32_t capacity, uint32_t swkey_len,
 //---------------------------------------------------------------------------
 tcam::~tcam()
 {
+    if (entry_ht_) {
+        ht::destroy(entry_ht_);
+    }
+    if (indexer_) {
+        indexer::destroy(indexer_);
+    }
+    SDK_FREE(SDK_MEM_ALLOC_ID_TCAM_STATS, stats_);
+    SDK_FREE(SDK_MEM_ALLOC_ID_TCAM_NAME, name_);
 }
 
 void

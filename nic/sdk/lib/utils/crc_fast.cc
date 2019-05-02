@@ -78,6 +78,18 @@ crcFast::factory(bool thread_safe)
 }
 
 //------------------------------------------------------------------------------
+// method to free & delete the object
+//------------------------------------------------------------------------------
+void
+crcFast::destroy(crcFast *crc)
+{
+    if (crc) {
+        crc->~crcFast();
+        SDK_FREE(SDK_MEM_ALLOC_LIB_CRCFAST, crc);
+    }
+}
+
+//------------------------------------------------------------------------------
 // destructor
 //------------------------------------------------------------------------------
 crcFast::~crcFast()
@@ -86,6 +98,9 @@ crcFast::~crcFast()
         SDK_SPINLOCK_LOCK(&slock_);
     }
     if (crcTable_) {
+        for (int i = 0; i < num_polys_; i++) {
+            SDK_FREE(SDK_MEM_ALLOC_LIB_CRCFAST, crcTable_[i]);
+        }
         SDK_FREE(SDK_MEM_ALLOC_LIB_CRCFAST, crcTable_);
     }
     if (thread_safe_) {

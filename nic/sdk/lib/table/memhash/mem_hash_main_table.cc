@@ -68,6 +68,7 @@ void
 mem_hash_main_table::destroy_(mem_hash_main_table *table) {
     mem_hash_hint_table::destroy_(table->hint_table_);
     mem_hash_base_table::destroy_(table);
+    SDK_FREE(SDK_MEM_ALLOC_mem_HASH_MAIN_TABLE, table);
 }
 
 //---------------------------------------------------------------------------

@@ -76,9 +76,9 @@ protected:
         PrintStats();
     }
     virtual void TearDown() {
+        ValidateStats();
         mem_hash::destroy(table);
         h5_reset_cache();
-        ValidateStats();
         mem_hash_mock_cleanup();
         SDK_TRACE_VERBOSE("============== TEARDOWN : %s.%s ===============",
                           ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),

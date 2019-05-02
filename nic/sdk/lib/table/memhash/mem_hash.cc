@@ -175,6 +175,13 @@ mem_hash::init_(sdk_table_factory_params_t *params) {
     return SDK_RET_OK;
 }
 
+mem_hash::mem_hash() {
+    props_ = NULL;
+    main_table_ = NULL;
+    crc32gen_ = NULL;
+    SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
+}
+
 //---------------------------------------------------------------------------
 // mem_hash Destructor
 //---------------------------------------------------------------------------
@@ -188,6 +195,16 @@ mem_hash::destroy(mem_hash *table) {
     MEM_HASH_API_END("DestroyTable", SDK_RET_OK);
 
     mem_hash_p4pd_stats_print();
+    table->~mem_hash();
+    SDK_FREE(SDK_MEM_ALLOC_MEM_HASH, table);
+}
+
+mem_hash::~mem_hash() {
+    if (crc32gen_) {
+        crcFast::destroy(crc32gen_);
+    }
+    SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_PROPERTIES, props_);
+    SDK_SPINLOCK_DESTROY(&slock_);
 }
 
 //---------------------------------------------------------------------------

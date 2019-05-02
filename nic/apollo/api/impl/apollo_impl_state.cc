@@ -72,6 +72,7 @@ apollo_impl_state::~apollo_impl_state() {
     tcam::destroy(key_tunneled_tbl_);
     tcam::destroy(ingress_drop_stats_tbl_);
     tcam::destroy(egress_drop_stats_tbl_);
+    tcam::destroy(nacl_tbl_);
 }
 
 /// \@}    // end of PDS_APOLLO_IMPL_STATE

@@ -72,6 +72,7 @@ mem_hash_hint_table::destroy_(mem_hash_hint_table *table)
 {
     mem_hash_base_table::destroy_(table);
     indexer::destroy(table->indexer_);
+    SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_HINT_TABLE, table);
 }
 
 //---------------------------------------------------------------------------

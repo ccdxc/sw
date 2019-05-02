@@ -31,8 +31,9 @@ lif_impl_state::lif_impl_state(pds_state *state) {
                           lif_impl::lif_key_func_compare);
     SDK_ASSERT(lif_ht_ != NULL);
 
-    p4pd_table_properties_get(P4_APOLLO_TXDMA_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE,
-                              &tinfo);
+    p4pluspd_txdma_table_properties_get(
+                P4_APOLLO_TXDMA_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE,
+                &tinfo);
     tx_rate_limiter_tbl_ =
         directmap::factory(tinfo.tablename,
                            P4_APOLLO_TXDMA_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE,

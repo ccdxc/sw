@@ -132,11 +132,20 @@ hash::~hash()
 {
     // freeing up OTcam
     if (otcam_) {
-        // delete otcam_;
         tcam::destroy(otcam_);
+    }
+    // freeing up ht
+    if (entry_ht_) {
+        ht::destroy(entry_ht_);
+    }
+    // freeing up crcFast
+    if (crc32gen_) {
+        crcFast::destroy(crc32gen_);
     }
     // delete[] stats_;
     SDK_FREE(SDK_MEM_ALLOC_HASH_STATS, stats_);
+    // delete[] name_;
+    SDK_FREE(SDK_MEM_ALLOC_HASH_NAME, name_);
 }
 
 // ---------------------------------------------------------------------------

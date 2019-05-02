@@ -41,7 +41,8 @@ public:
     uint32_t num_routes;
     ip_prefix_t first_route_pfx;
     ip_addr_t first_nh_ip;
-    route_util *routes;
+    // PDS_MAX_ROUTE_PER_TABLE + 1 for testing max + 1 routes
+    route_util routes[PDS_MAX_ROUTE_PER_TABLE + 1];
 
     /// \brief Constructor
     route_table_util();
