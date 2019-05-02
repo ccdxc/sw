@@ -72,6 +72,17 @@ type ClusterV1TenantInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 }
 
+// ClusterV1VersionInterface exposes the CRUD methods for Version
+type ClusterV1VersionInterface interface {
+	Create(ctx context.Context, in *Version) (*Version, error)
+	Update(ctx context.Context, in *Version) (*Version, error)
+	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Version, error)
+	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Version, error)
+	List(ctx context.Context, options *api.ListWatchOptions) ([]*Version, error)
+	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
+	Allowed(oper apiintf.APIOperType) bool
+}
+
 // ClusterV1Interface exposes objects with CRUD operations allowed by the service
 type ClusterV1Interface interface {
 	Cluster() ClusterV1ClusterInterface
@@ -79,5 +90,6 @@ type ClusterV1Interface interface {
 	Host() ClusterV1HostInterface
 	SmartNIC() ClusterV1SmartNICInterface
 	Tenant() ClusterV1TenantInterface
+	Version() ClusterV1VersionInterface
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 }

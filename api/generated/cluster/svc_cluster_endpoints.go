@@ -49,26 +49,31 @@ type EndpointsClusterV1Client struct {
 	AutoAddNodeEndpoint           endpoint.Endpoint
 	AutoAddSmartNICEndpoint       endpoint.Endpoint
 	AutoAddTenantEndpoint         endpoint.Endpoint
+	AutoAddVersionEndpoint        endpoint.Endpoint
 	AutoDeleteClusterEndpoint     endpoint.Endpoint
 	AutoDeleteHostEndpoint        endpoint.Endpoint
 	AutoDeleteNodeEndpoint        endpoint.Endpoint
 	AutoDeleteSmartNICEndpoint    endpoint.Endpoint
 	AutoDeleteTenantEndpoint      endpoint.Endpoint
+	AutoDeleteVersionEndpoint     endpoint.Endpoint
 	AutoGetClusterEndpoint        endpoint.Endpoint
 	AutoGetHostEndpoint           endpoint.Endpoint
 	AutoGetNodeEndpoint           endpoint.Endpoint
 	AutoGetSmartNICEndpoint       endpoint.Endpoint
 	AutoGetTenantEndpoint         endpoint.Endpoint
+	AutoGetVersionEndpoint        endpoint.Endpoint
 	AutoListClusterEndpoint       endpoint.Endpoint
 	AutoListHostEndpoint          endpoint.Endpoint
 	AutoListNodeEndpoint          endpoint.Endpoint
 	AutoListSmartNICEndpoint      endpoint.Endpoint
 	AutoListTenantEndpoint        endpoint.Endpoint
+	AutoListVersionEndpoint       endpoint.Endpoint
 	AutoUpdateClusterEndpoint     endpoint.Endpoint
 	AutoUpdateHostEndpoint        endpoint.Endpoint
 	AutoUpdateNodeEndpoint        endpoint.Endpoint
 	AutoUpdateSmartNICEndpoint    endpoint.Endpoint
 	AutoUpdateTenantEndpoint      endpoint.Endpoint
+	AutoUpdateVersionEndpoint     endpoint.Endpoint
 	UpdateTLSConfigEndpoint       endpoint.Endpoint
 }
 
@@ -85,32 +90,38 @@ type EndpointsClusterV1RestClient struct {
 	AutoAddNodeEndpoint           endpoint.Endpoint
 	AutoAddSmartNICEndpoint       endpoint.Endpoint
 	AutoAddTenantEndpoint         endpoint.Endpoint
+	AutoAddVersionEndpoint        endpoint.Endpoint
 	AutoDeleteClusterEndpoint     endpoint.Endpoint
 	AutoDeleteHostEndpoint        endpoint.Endpoint
 	AutoDeleteNodeEndpoint        endpoint.Endpoint
 	AutoDeleteSmartNICEndpoint    endpoint.Endpoint
 	AutoDeleteTenantEndpoint      endpoint.Endpoint
+	AutoDeleteVersionEndpoint     endpoint.Endpoint
 	AutoGetClusterEndpoint        endpoint.Endpoint
 	AutoGetHostEndpoint           endpoint.Endpoint
 	AutoGetNodeEndpoint           endpoint.Endpoint
 	AutoGetSmartNICEndpoint       endpoint.Endpoint
 	AutoGetTenantEndpoint         endpoint.Endpoint
+	AutoGetVersionEndpoint        endpoint.Endpoint
 	AutoListClusterEndpoint       endpoint.Endpoint
 	AutoListHostEndpoint          endpoint.Endpoint
 	AutoListNodeEndpoint          endpoint.Endpoint
 	AutoListSmartNICEndpoint      endpoint.Endpoint
 	AutoListTenantEndpoint        endpoint.Endpoint
+	AutoListVersionEndpoint       endpoint.Endpoint
 	AutoUpdateClusterEndpoint     endpoint.Endpoint
 	AutoUpdateHostEndpoint        endpoint.Endpoint
 	AutoUpdateNodeEndpoint        endpoint.Endpoint
 	AutoUpdateSmartNICEndpoint    endpoint.Endpoint
 	AutoUpdateTenantEndpoint      endpoint.Endpoint
+	AutoUpdateVersionEndpoint     endpoint.Endpoint
 	AutoWatchClusterEndpoint      endpoint.Endpoint
 	AutoWatchHostEndpoint         endpoint.Endpoint
 	AutoWatchNodeEndpoint         endpoint.Endpoint
 	AutoWatchSmartNICEndpoint     endpoint.Endpoint
 	AutoWatchSvcClusterV1Endpoint endpoint.Endpoint
 	AutoWatchTenantEndpoint       endpoint.Endpoint
+	AutoWatchVersionEndpoint      endpoint.Endpoint
 	UpdateTLSConfigEndpoint       endpoint.Endpoint
 }
 
@@ -127,26 +138,31 @@ type EndpointsClusterV1Server struct {
 	AutoAddNodeEndpoint           endpoint.Endpoint
 	AutoAddSmartNICEndpoint       endpoint.Endpoint
 	AutoAddTenantEndpoint         endpoint.Endpoint
+	AutoAddVersionEndpoint        endpoint.Endpoint
 	AutoDeleteClusterEndpoint     endpoint.Endpoint
 	AutoDeleteHostEndpoint        endpoint.Endpoint
 	AutoDeleteNodeEndpoint        endpoint.Endpoint
 	AutoDeleteSmartNICEndpoint    endpoint.Endpoint
 	AutoDeleteTenantEndpoint      endpoint.Endpoint
+	AutoDeleteVersionEndpoint     endpoint.Endpoint
 	AutoGetClusterEndpoint        endpoint.Endpoint
 	AutoGetHostEndpoint           endpoint.Endpoint
 	AutoGetNodeEndpoint           endpoint.Endpoint
 	AutoGetSmartNICEndpoint       endpoint.Endpoint
 	AutoGetTenantEndpoint         endpoint.Endpoint
+	AutoGetVersionEndpoint        endpoint.Endpoint
 	AutoListClusterEndpoint       endpoint.Endpoint
 	AutoListHostEndpoint          endpoint.Endpoint
 	AutoListNodeEndpoint          endpoint.Endpoint
 	AutoListSmartNICEndpoint      endpoint.Endpoint
 	AutoListTenantEndpoint        endpoint.Endpoint
+	AutoListVersionEndpoint       endpoint.Endpoint
 	AutoUpdateClusterEndpoint     endpoint.Endpoint
 	AutoUpdateHostEndpoint        endpoint.Endpoint
 	AutoUpdateNodeEndpoint        endpoint.Endpoint
 	AutoUpdateSmartNICEndpoint    endpoint.Endpoint
 	AutoUpdateTenantEndpoint      endpoint.Endpoint
+	AutoUpdateVersionEndpoint     endpoint.Endpoint
 	UpdateTLSConfigEndpoint       endpoint.Endpoint
 
 	watchHandlerCluster  func(options *api.ListWatchOptions, stream grpc.ServerStream) error
@@ -154,6 +170,7 @@ type EndpointsClusterV1Server struct {
 	watchHandlerHost     func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerSmartNIC func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerTenant   func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+	watchHandlerVersion  func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 }
 
 // AuthBootstrapComplete is endpoint for AuthBootstrapComplete
@@ -240,6 +257,20 @@ type respClusterV1AutoAddTenant struct {
 	Err error
 }
 
+// AutoAddVersion is endpoint for AutoAddVersion
+func (e EndpointsClusterV1Client) AutoAddVersion(ctx context.Context, in *Version) (*Version, error) {
+	resp, err := e.AutoAddVersionEndpoint(ctx, in)
+	if err != nil {
+		return &Version{}, err
+	}
+	return resp.(*Version), nil
+}
+
+type respClusterV1AutoAddVersion struct {
+	V   Version
+	Err error
+}
+
 // AutoDeleteCluster is endpoint for AutoDeleteCluster
 func (e EndpointsClusterV1Client) AutoDeleteCluster(ctx context.Context, in *Cluster) (*Cluster, error) {
 	resp, err := e.AutoDeleteClusterEndpoint(ctx, in)
@@ -307,6 +338,20 @@ func (e EndpointsClusterV1Client) AutoDeleteTenant(ctx context.Context, in *Tena
 
 type respClusterV1AutoDeleteTenant struct {
 	V   Tenant
+	Err error
+}
+
+// AutoDeleteVersion is endpoint for AutoDeleteVersion
+func (e EndpointsClusterV1Client) AutoDeleteVersion(ctx context.Context, in *Version) (*Version, error) {
+	resp, err := e.AutoDeleteVersionEndpoint(ctx, in)
+	if err != nil {
+		return &Version{}, err
+	}
+	return resp.(*Version), nil
+}
+
+type respClusterV1AutoDeleteVersion struct {
+	V   Version
 	Err error
 }
 
@@ -380,6 +425,20 @@ type respClusterV1AutoGetTenant struct {
 	Err error
 }
 
+// AutoGetVersion is endpoint for AutoGetVersion
+func (e EndpointsClusterV1Client) AutoGetVersion(ctx context.Context, in *Version) (*Version, error) {
+	resp, err := e.AutoGetVersionEndpoint(ctx, in)
+	if err != nil {
+		return &Version{}, err
+	}
+	return resp.(*Version), nil
+}
+
+type respClusterV1AutoGetVersion struct {
+	V   Version
+	Err error
+}
+
 // AutoListCluster is endpoint for AutoListCluster
 func (e EndpointsClusterV1Client) AutoListCluster(ctx context.Context, in *api.ListWatchOptions) (*ClusterList, error) {
 	resp, err := e.AutoListClusterEndpoint(ctx, in)
@@ -447,6 +506,20 @@ func (e EndpointsClusterV1Client) AutoListTenant(ctx context.Context, in *api.Li
 
 type respClusterV1AutoListTenant struct {
 	V   TenantList
+	Err error
+}
+
+// AutoListVersion is endpoint for AutoListVersion
+func (e EndpointsClusterV1Client) AutoListVersion(ctx context.Context, in *api.ListWatchOptions) (*VersionList, error) {
+	resp, err := e.AutoListVersionEndpoint(ctx, in)
+	if err != nil {
+		return &VersionList{}, err
+	}
+	return resp.(*VersionList), nil
+}
+
+type respClusterV1AutoListVersion struct {
+	V   VersionList
 	Err error
 }
 
@@ -520,6 +593,20 @@ type respClusterV1AutoUpdateTenant struct {
 	Err error
 }
 
+// AutoUpdateVersion is endpoint for AutoUpdateVersion
+func (e EndpointsClusterV1Client) AutoUpdateVersion(ctx context.Context, in *Version) (*Version, error) {
+	resp, err := e.AutoUpdateVersionEndpoint(ctx, in)
+	if err != nil {
+		return &Version{}, err
+	}
+	return resp.(*Version), nil
+}
+
+type respClusterV1AutoUpdateVersion struct {
+	V   Version
+	Err error
+}
+
 // UpdateTLSConfig is endpoint for UpdateTLSConfig
 func (e EndpointsClusterV1Client) UpdateTLSConfig(ctx context.Context, in *UpdateTLSConfigRequest) (*Cluster, error) {
 	resp, err := e.UpdateTLSConfigEndpoint(ctx, in)
@@ -561,6 +648,11 @@ func (e EndpointsClusterV1Client) AutoWatchSmartNIC(ctx context.Context, in *api
 // AutoWatchTenant performs Watch for Tenant
 func (e EndpointsClusterV1Client) AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchTenantClient, error) {
 	return e.Client.AutoWatchTenant(ctx, in)
+}
+
+// AutoWatchVersion performs Watch for Version
+func (e EndpointsClusterV1Client) AutoWatchVersion(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchVersionClient, error) {
+	return e.Client.AutoWatchVersion(ctx, in)
 }
 
 // AuthBootstrapComplete implementation on server Endpoint
@@ -695,6 +787,28 @@ func MakeClusterV1AutoAddTenantEndpoint(s ServiceClusterV1Server, logger log.Log
 	return trace.ServerEndpoint("ClusterV1:AutoAddTenant")(f)
 }
 
+// AutoAddVersion implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoAddVersion(ctx context.Context, in Version) (Version, error) {
+	resp, err := e.AutoAddVersionEndpoint(ctx, in)
+	if err != nil {
+		return Version{}, err
+	}
+	return *resp.(*Version), nil
+}
+
+// MakeClusterV1AutoAddVersionEndpoint creates  AutoAddVersion endpoints for the service
+func MakeClusterV1AutoAddVersionEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Version)
+		v, err := s.AutoAddVersion(ctx, *req)
+		return respClusterV1AutoAddVersion{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoAddVersion")(f)
+}
+
 // AutoDeleteCluster implementation on server Endpoint
 func (e EndpointsClusterV1Server) AutoDeleteCluster(ctx context.Context, in Cluster) (Cluster, error) {
 	resp, err := e.AutoDeleteClusterEndpoint(ctx, in)
@@ -803,6 +917,28 @@ func MakeClusterV1AutoDeleteTenantEndpoint(s ServiceClusterV1Server, logger log.
 		}, nil
 	}
 	return trace.ServerEndpoint("ClusterV1:AutoDeleteTenant")(f)
+}
+
+// AutoDeleteVersion implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoDeleteVersion(ctx context.Context, in Version) (Version, error) {
+	resp, err := e.AutoDeleteVersionEndpoint(ctx, in)
+	if err != nil {
+		return Version{}, err
+	}
+	return *resp.(*Version), nil
+}
+
+// MakeClusterV1AutoDeleteVersionEndpoint creates  AutoDeleteVersion endpoints for the service
+func MakeClusterV1AutoDeleteVersionEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Version)
+		v, err := s.AutoDeleteVersion(ctx, *req)
+		return respClusterV1AutoDeleteVersion{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoDeleteVersion")(f)
 }
 
 // AutoGetCluster implementation on server Endpoint
@@ -915,6 +1051,28 @@ func MakeClusterV1AutoGetTenantEndpoint(s ServiceClusterV1Server, logger log.Log
 	return trace.ServerEndpoint("ClusterV1:AutoGetTenant")(f)
 }
 
+// AutoGetVersion implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoGetVersion(ctx context.Context, in Version) (Version, error) {
+	resp, err := e.AutoGetVersionEndpoint(ctx, in)
+	if err != nil {
+		return Version{}, err
+	}
+	return *resp.(*Version), nil
+}
+
+// MakeClusterV1AutoGetVersionEndpoint creates  AutoGetVersion endpoints for the service
+func MakeClusterV1AutoGetVersionEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Version)
+		v, err := s.AutoGetVersion(ctx, *req)
+		return respClusterV1AutoGetVersion{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoGetVersion")(f)
+}
+
 // AutoListCluster implementation on server Endpoint
 func (e EndpointsClusterV1Server) AutoListCluster(ctx context.Context, in api.ListWatchOptions) (ClusterList, error) {
 	resp, err := e.AutoListClusterEndpoint(ctx, in)
@@ -1023,6 +1181,28 @@ func MakeClusterV1AutoListTenantEndpoint(s ServiceClusterV1Server, logger log.Lo
 		}, nil
 	}
 	return trace.ServerEndpoint("ClusterV1:AutoListTenant")(f)
+}
+
+// AutoListVersion implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoListVersion(ctx context.Context, in api.ListWatchOptions) (VersionList, error) {
+	resp, err := e.AutoListVersionEndpoint(ctx, in)
+	if err != nil {
+		return VersionList{}, err
+	}
+	return *resp.(*VersionList), nil
+}
+
+// MakeClusterV1AutoListVersionEndpoint creates  AutoListVersion endpoints for the service
+func MakeClusterV1AutoListVersionEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*api.ListWatchOptions)
+		v, err := s.AutoListVersion(ctx, *req)
+		return respClusterV1AutoListVersion{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoListVersion")(f)
 }
 
 // AutoUpdateCluster implementation on server Endpoint
@@ -1135,6 +1315,28 @@ func MakeClusterV1AutoUpdateTenantEndpoint(s ServiceClusterV1Server, logger log.
 	return trace.ServerEndpoint("ClusterV1:AutoUpdateTenant")(f)
 }
 
+// AutoUpdateVersion implementation on server Endpoint
+func (e EndpointsClusterV1Server) AutoUpdateVersion(ctx context.Context, in Version) (Version, error) {
+	resp, err := e.AutoUpdateVersionEndpoint(ctx, in)
+	if err != nil {
+		return Version{}, err
+	}
+	return *resp.(*Version), nil
+}
+
+// MakeClusterV1AutoUpdateVersionEndpoint creates  AutoUpdateVersion endpoints for the service
+func MakeClusterV1AutoUpdateVersionEndpoint(s ServiceClusterV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Version)
+		v, err := s.AutoUpdateVersion(ctx, *req)
+		return respClusterV1AutoUpdateVersion{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("ClusterV1:AutoUpdateVersion")(f)
+}
+
 // UpdateTLSConfig implementation on server Endpoint
 func (e EndpointsClusterV1Server) UpdateTLSConfig(ctx context.Context, in UpdateTLSConfigRequest) (Cluster, error) {
 	resp, err := e.UpdateTLSConfigEndpoint(ctx, in)
@@ -1234,6 +1436,19 @@ func MakeAutoWatchTenantEndpoint(s ServiceClusterV1Server, logger log.Logger) fu
 	}
 }
 
+// AutoWatchVersion is the watch handler for Version on the server side.
+func (e EndpointsClusterV1Server) AutoWatchVersion(in *api.ListWatchOptions, stream ClusterV1_AutoWatchVersionServer) error {
+	return e.watchHandlerVersion(in, stream)
+}
+
+// MakeAutoWatchVersionEndpoint creates the Watch endpoint
+func MakeAutoWatchVersionEndpoint(s ServiceClusterV1Server, logger log.Logger) func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+	return func(options *api.ListWatchOptions, stream grpc.ServerStream) error {
+		wstream := stream.(ClusterV1_AutoWatchVersionServer)
+		return s.AutoWatchVersion(options, wstream)
+	}
+}
+
 // MakeClusterV1ServerEndpoints creates server endpoints
 func MakeClusterV1ServerEndpoints(s ServiceClusterV1Server, logger log.Logger) EndpointsClusterV1Server {
 	return EndpointsClusterV1Server{
@@ -1245,26 +1460,31 @@ func MakeClusterV1ServerEndpoints(s ServiceClusterV1Server, logger log.Logger) E
 		AutoAddNodeEndpoint:           MakeClusterV1AutoAddNodeEndpoint(s, logger),
 		AutoAddSmartNICEndpoint:       MakeClusterV1AutoAddSmartNICEndpoint(s, logger),
 		AutoAddTenantEndpoint:         MakeClusterV1AutoAddTenantEndpoint(s, logger),
+		AutoAddVersionEndpoint:        MakeClusterV1AutoAddVersionEndpoint(s, logger),
 		AutoDeleteClusterEndpoint:     MakeClusterV1AutoDeleteClusterEndpoint(s, logger),
 		AutoDeleteHostEndpoint:        MakeClusterV1AutoDeleteHostEndpoint(s, logger),
 		AutoDeleteNodeEndpoint:        MakeClusterV1AutoDeleteNodeEndpoint(s, logger),
 		AutoDeleteSmartNICEndpoint:    MakeClusterV1AutoDeleteSmartNICEndpoint(s, logger),
 		AutoDeleteTenantEndpoint:      MakeClusterV1AutoDeleteTenantEndpoint(s, logger),
+		AutoDeleteVersionEndpoint:     MakeClusterV1AutoDeleteVersionEndpoint(s, logger),
 		AutoGetClusterEndpoint:        MakeClusterV1AutoGetClusterEndpoint(s, logger),
 		AutoGetHostEndpoint:           MakeClusterV1AutoGetHostEndpoint(s, logger),
 		AutoGetNodeEndpoint:           MakeClusterV1AutoGetNodeEndpoint(s, logger),
 		AutoGetSmartNICEndpoint:       MakeClusterV1AutoGetSmartNICEndpoint(s, logger),
 		AutoGetTenantEndpoint:         MakeClusterV1AutoGetTenantEndpoint(s, logger),
+		AutoGetVersionEndpoint:        MakeClusterV1AutoGetVersionEndpoint(s, logger),
 		AutoListClusterEndpoint:       MakeClusterV1AutoListClusterEndpoint(s, logger),
 		AutoListHostEndpoint:          MakeClusterV1AutoListHostEndpoint(s, logger),
 		AutoListNodeEndpoint:          MakeClusterV1AutoListNodeEndpoint(s, logger),
 		AutoListSmartNICEndpoint:      MakeClusterV1AutoListSmartNICEndpoint(s, logger),
 		AutoListTenantEndpoint:        MakeClusterV1AutoListTenantEndpoint(s, logger),
+		AutoListVersionEndpoint:       MakeClusterV1AutoListVersionEndpoint(s, logger),
 		AutoUpdateClusterEndpoint:     MakeClusterV1AutoUpdateClusterEndpoint(s, logger),
 		AutoUpdateHostEndpoint:        MakeClusterV1AutoUpdateHostEndpoint(s, logger),
 		AutoUpdateNodeEndpoint:        MakeClusterV1AutoUpdateNodeEndpoint(s, logger),
 		AutoUpdateSmartNICEndpoint:    MakeClusterV1AutoUpdateSmartNICEndpoint(s, logger),
 		AutoUpdateTenantEndpoint:      MakeClusterV1AutoUpdateTenantEndpoint(s, logger),
+		AutoUpdateVersionEndpoint:     MakeClusterV1AutoUpdateVersionEndpoint(s, logger),
 		UpdateTLSConfigEndpoint:       MakeClusterV1UpdateTLSConfigEndpoint(s, logger),
 
 		watchHandlerCluster:  MakeAutoWatchClusterEndpoint(s, logger),
@@ -1272,6 +1492,7 @@ func MakeClusterV1ServerEndpoints(s ServiceClusterV1Server, logger log.Logger) E
 		watchHandlerHost:     MakeAutoWatchHostEndpoint(s, logger),
 		watchHandlerSmartNIC: MakeAutoWatchSmartNICEndpoint(s, logger),
 		watchHandlerTenant:   MakeAutoWatchTenantEndpoint(s, logger),
+		watchHandlerVersion:  MakeAutoWatchVersionEndpoint(s, logger),
 	}
 }
 
@@ -1383,6 +1604,19 @@ func (m loggingClusterV1MiddlewareClient) AutoAddTenant(ctx context.Context, in 
 	resp, err = m.next.AutoAddTenant(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoAddVersion(ctx context.Context, in *Version) (resp *Version, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddVersion", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoAddVersion(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareClient) AutoDeleteCluster(ctx context.Context, in *Cluster) (resp *Cluster, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1446,6 +1680,19 @@ func (m loggingClusterV1MiddlewareClient) AutoDeleteTenant(ctx context.Context, 
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteTenant", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoDeleteTenant(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoDeleteVersion(ctx context.Context, in *Version) (resp *Version, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteVersion", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoDeleteVersion(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareClient) AutoGetCluster(ctx context.Context, in *Cluster) (resp *Cluster, err error) {
@@ -1513,6 +1760,19 @@ func (m loggingClusterV1MiddlewareClient) AutoGetTenant(ctx context.Context, in 
 	resp, err = m.next.AutoGetTenant(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoGetVersion(ctx context.Context, in *Version) (resp *Version, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetVersion", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoGetVersion(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareClient) AutoListCluster(ctx context.Context, in *api.ListWatchOptions) (resp *ClusterList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1578,6 +1838,19 @@ func (m loggingClusterV1MiddlewareClient) AutoListTenant(ctx context.Context, in
 	resp, err = m.next.AutoListTenant(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoListVersion(ctx context.Context, in *api.ListWatchOptions) (resp *VersionList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListVersion", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoListVersion(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareClient) AutoUpdateCluster(ctx context.Context, in *Cluster) (resp *Cluster, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1641,6 +1914,19 @@ func (m loggingClusterV1MiddlewareClient) AutoUpdateTenant(ctx context.Context, 
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateTenant", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.AutoUpdateTenant(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareClient) AutoUpdateVersion(ctx context.Context, in *Version) (resp *Version, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateVersion", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoUpdateVersion(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareClient) UpdateTLSConfig(ctx context.Context, in *UpdateTLSConfigRequest) (resp *Cluster, err error) {
@@ -1736,6 +2022,19 @@ func (m loggingClusterV1MiddlewareClient) AutoWatchTenant(ctx context.Context, i
 	resp, err = m.next.AutoWatchTenant(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareClient) AutoWatchVersion(ctx context.Context, in *api.ListWatchOptions) (resp ClusterV1_AutoWatchVersionClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoWatchVersion", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AutoWatchVersion(ctx, in)
+	return
+}
 
 func (m loggingClusterV1MiddlewareServer) AuthBootstrapComplete(ctx context.Context, in ClusterAuthBootstrapRequest) (resp Cluster, err error) {
 	defer func(begin time.Time) {
@@ -1815,6 +2114,19 @@ func (m loggingClusterV1MiddlewareServer) AutoAddTenant(ctx context.Context, in 
 	resp, err = m.next.AutoAddTenant(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoAddVersion(ctx context.Context, in Version) (resp Version, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoAddVersion", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoAddVersion(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareServer) AutoDeleteCluster(ctx context.Context, in Cluster) (resp Cluster, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -1878,6 +2190,19 @@ func (m loggingClusterV1MiddlewareServer) AutoDeleteTenant(ctx context.Context, 
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteTenant", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoDeleteTenant(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoDeleteVersion(ctx context.Context, in Version) (resp Version, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoDeleteVersion", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoDeleteVersion(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareServer) AutoGetCluster(ctx context.Context, in Cluster) (resp Cluster, err error) {
@@ -1945,6 +2270,19 @@ func (m loggingClusterV1MiddlewareServer) AutoGetTenant(ctx context.Context, in 
 	resp, err = m.next.AutoGetTenant(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoGetVersion(ctx context.Context, in Version) (resp Version, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoGetVersion", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoGetVersion(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareServer) AutoListCluster(ctx context.Context, in api.ListWatchOptions) (resp ClusterList, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2010,6 +2348,19 @@ func (m loggingClusterV1MiddlewareServer) AutoListTenant(ctx context.Context, in
 	resp, err = m.next.AutoListTenant(ctx, in)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoListVersion(ctx context.Context, in api.ListWatchOptions) (resp VersionList, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoListVersion", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoListVersion(ctx, in)
+	return
+}
 func (m loggingClusterV1MiddlewareServer) AutoUpdateCluster(ctx context.Context, in Cluster) (resp Cluster, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -2073,6 +2424,19 @@ func (m loggingClusterV1MiddlewareServer) AutoUpdateTenant(ctx context.Context, 
 		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateTenant", "result", rslt, "duration", time.Since(begin))
 	}(time.Now())
 	resp, err = m.next.AutoUpdateTenant(ctx, in)
+	return
+}
+func (m loggingClusterV1MiddlewareServer) AutoUpdateVersion(ctx context.Context, in Version) (resp Version, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ClusterV1", "method", "AutoUpdateVersion", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AutoUpdateVersion(ctx, in)
 	return
 }
 func (m loggingClusterV1MiddlewareServer) UpdateTLSConfig(ctx context.Context, in UpdateTLSConfigRequest) (resp Cluster, err error) {
@@ -2168,6 +2532,19 @@ func (m loggingClusterV1MiddlewareServer) AutoWatchTenant(in *api.ListWatchOptio
 	err = m.next.AutoWatchTenant(in, stream)
 	return
 }
+func (m loggingClusterV1MiddlewareServer) AutoWatchVersion(in *api.ListWatchOptions, stream ClusterV1_AutoWatchVersionServer) (err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(stream.Context(), "service", "ClusterV1", "method", "AutoWatchVersion", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	err = m.next.AutoWatchVersion(in, stream)
+	return
+}
 
 func (r *EndpointsClusterV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
 	val, ok := loginctx.AuthzHeaderFromContext(ctx)
@@ -2225,6 +2602,12 @@ func makeURIClusterV1AutoAddTenantCreateOper(in *Tenant) string {
 }
 
 //
+func makeURIClusterV1AutoAddVersionCreateOper(in *Version) string {
+	return ""
+
+}
+
+//
 func makeURIClusterV1AutoDeleteClusterDeleteOper(in *Cluster) string {
 	return ""
 
@@ -2251,6 +2634,12 @@ func makeURIClusterV1AutoDeleteTenantDeleteOper(in *Tenant) string {
 }
 
 //
+func makeURIClusterV1AutoDeleteVersionDeleteOper(in *Version) string {
+	return ""
+
+}
+
+//
 func makeURIClusterV1AutoGetClusterGetOper(in *Cluster) string {
 	return fmt.Sprint("/configs/cluster/v1", "/cluster")
 }
@@ -2273,6 +2662,11 @@ func makeURIClusterV1AutoGetSmartNICGetOper(in *SmartNIC) string {
 //
 func makeURIClusterV1AutoGetTenantGetOper(in *Tenant) string {
 	return fmt.Sprint("/configs/cluster/v1", "/tenants/", in.Name)
+}
+
+//
+func makeURIClusterV1AutoGetVersionGetOper(in *Version) string {
+	return fmt.Sprint("/configs/cluster/v1", "/version")
 }
 
 //
@@ -2302,6 +2696,12 @@ func makeURIClusterV1AutoListTenantListOper(in *api.ListWatchOptions) string {
 }
 
 //
+func makeURIClusterV1AutoListVersionListOper(in *api.ListWatchOptions) string {
+	return ""
+
+}
+
+//
 func makeURIClusterV1AutoUpdateClusterUpdateOper(in *Cluster) string {
 	return fmt.Sprint("/configs/cluster/v1", "/cluster")
 }
@@ -2324,6 +2724,12 @@ func makeURIClusterV1AutoUpdateSmartNICUpdateOper(in *SmartNIC) string {
 //
 func makeURIClusterV1AutoUpdateTenantUpdateOper(in *Tenant) string {
 	return fmt.Sprint("/configs/cluster/v1", "/tenants/", in.Name)
+}
+
+//
+func makeURIClusterV1AutoUpdateVersionUpdateOper(in *Version) string {
+	return ""
+
 }
 
 //
@@ -2355,6 +2761,11 @@ func makeURIClusterV1AutoWatchSvcClusterV1WatchOper(in *api.ListWatchOptions) st
 //
 func makeURIClusterV1AutoWatchTenantWatchOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/cluster/v1", "/watch/tenants")
+}
+
+//
+func makeURIClusterV1AutoWatchVersionWatchOper(in *api.ListWatchOptions) string {
+	return fmt.Sprint("/configs/cluster/v1", "/watch/version")
 }
 
 //
@@ -3098,6 +3509,96 @@ func (r *EndpointsClusterV1RestClient) AutoWatchTenant(ctx context.Context, opti
 	bridgefn := func(lw *listerwatcher.WatcherClient) {
 		for {
 			in := &AutoMsgTenantWatchHelper{}
+			err := conn.ReadJSON(in)
+			if err != nil {
+				return
+			}
+			for _, e := range in.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-ctx.Done():
+					close(lw.OutCh)
+					conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(nil, bridgefn)
+	lw.Run()
+	go func() {
+		<-ctx.Done()
+		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
+	}()
+	return lw, nil
+}
+
+// AutoAddVersion CRUD method for Version
+func (r *EndpointsClusterV1RestClient) AutoAddVersion(ctx context.Context, in *Version) (*Version, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoUpdateVersion CRUD method for Version
+func (r *EndpointsClusterV1RestClient) AutoUpdateVersion(ctx context.Context, in *Version) (*Version, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoGetVersion CRUD method for Version
+func (r *EndpointsClusterV1RestClient) AutoGetVersion(ctx context.Context, in *Version) (*Version, error) {
+	path := makeURIClusterV1AutoGetVersionGetOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "GET", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespClusterV1AutoGetVersion(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Version), err
+}
+
+// AutoDeleteVersion CRUD method for Version
+func (r *EndpointsClusterV1RestClient) AutoDeleteVersion(ctx context.Context, in *Version) (*Version, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoListVersion CRUD method for Version
+func (r *EndpointsClusterV1RestClient) AutoListVersion(ctx context.Context, options *api.ListWatchOptions) (*VersionList, error) {
+	return nil, errors.New("not allowed")
+}
+
+// AutoWatchVersion CRUD method for Version
+func (r *EndpointsClusterV1RestClient) AutoWatchVersion(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	path := r.instance + makeURIClusterV1AutoWatchVersionWatchOper(options)
+	path = strings.Replace(path, "http://", "ws://", 1)
+	path = strings.Replace(path, "https://", "wss://", 1)
+	params := apiutils.GetQueryStringFromListWatchOptions(options)
+	if params != "" {
+		path = path + "?" + params
+	}
+	header := http.Header{}
+	r.updateHTTPHeader(ctx, &header)
+	dialer := websocket.DefaultDialer
+	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	conn, hresp, err := dialer.Dial(path, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect web socket to [%s](%s)[%+v]", path, err, hresp)
+	}
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			in := &AutoMsgVersionWatchHelper{}
 			err := conn.ReadJSON(in)
 			if err != nil {
 				return

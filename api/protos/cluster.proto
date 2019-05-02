@@ -94,6 +94,40 @@ message ClusterStatus {
     bool AuthBootstrapped                   = 6 [(gogoproto.jsontag) = "auth-bootstrapped"];
 }
 
+// Version is public accessible object that holds build information.
+message Version {
+    option (venice.objectPrefix) = {Singleton: "version"};
+
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true,
+                            (gogoproto.nullable) = false,
+                            (gogoproto.jsontag) = "meta,omitempty"];
+    // Spec contains the configuration of the cluster.
+    VersionSpec Spec     = 3 [(gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = "spec,omitempty"];
+    // Status contains the current state of the Version.
+    VersionStatus Status = 4 [(gogoproto.nullable) = false,
+                             (gogoproto.jsontag) = "status,omitempty"];
+}
+
+// VersionSpec contains the configuration of the Version.
+message VersionSpec {
+
+}
+
+// VersionStatus contains the current state of the Version.
+message VersionStatus {
+    // Human friendly build version
+    string BuildVersion                     = 1 [(gogoproto.jsontag) = "build-version,omitempty"];
+    // Representation of ommit in version control system - e.g: hash in git
+    string VCSCommit                        = 2 [(gogoproto.jsontag) = "vcs-commit,omitempty"];
+    // Date and Time at which the source code was built
+    string BuildDate                        = 3 [(gogoproto.jsontag) = "build-date,omitempty"];
+}
+
 // ClusterAuthBootstrapRequest is to set auth bootstrap flag in cluster
 message ClusterAuthBootstrapRequest {
     api.TypeMeta T      = 1 [(gogoproto.embed) = true,

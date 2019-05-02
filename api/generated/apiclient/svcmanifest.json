@@ -171,7 +171,8 @@
           "Node",
           "Host",
           "SmartNIC",
-          "Tenant"
+          "Tenant",
+          "Version"
         ],
         "Properties": {
           "Cluster": {
@@ -236,6 +237,15 @@
               "delete",
               "post",
               "list",
+              "watch"
+            ]
+          },
+          "Version": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "get",
               "watch"
             ]
           }

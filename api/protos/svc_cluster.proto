@@ -53,6 +53,8 @@ service ClusterV1 {
     option(venice.apiGrpcCrudService) = "Host";
     option(venice.apiGrpcCrudService) = "SmartNIC";
     option(venice.apiGrpcCrudService) = "Tenant";
+    option(venice.apiGrpcCrudService) = "Version";
+
 
     option (venice.apiRestService) = {
         Object: "Cluster"
@@ -93,6 +95,11 @@ service ClusterV1 {
     option (venice.apiRestService) = {
         Object: "Tenant"
         Method: ["get", "put", "delete", "post", "list" , "watch"]
+    };
+
+    option (venice.apiRestService) = {
+        Object: "Version"
+        Method : ["get", "watch"]
     };
 
     // name of enums containing event types.

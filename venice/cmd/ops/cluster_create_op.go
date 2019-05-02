@@ -30,12 +30,14 @@ const (
 // clusterCreateOp contains state for creating a cluster.
 type clusterCreateOp struct {
 	cluster *cmd.Cluster
+	version *cmd.Version
 }
 
 // NewClusterCreateOp creates an op for creating a cluster.
 func NewClusterCreateOp(cluster *cmd.Cluster) Op {
 	return &clusterCreateOp{
 		cluster: cluster,
+		version: &cmd.Version{},
 	}
 }
 
@@ -70,11 +72,25 @@ func (o *clusterCreateOp) populateClusterDefaults() {
 	}
 }
 
+func (o *clusterCreateOp) populateVersionDefaults() {
+	o.version.Kind = "Version"
+	o.version.APIVersion = "v1"
+	o.version.UUID = uuid.NewV4().String()
+	o.version.SelfLink = o.version.MakeKey("cluster")
+	o.version.GenerationID = "1"
+	o.version.Status = cmd.VersionStatus{
+		BuildVersion: env.GitVersion,
+		VCSCommit:    env.GitCommit,
+		BuildDate:    env.BuildDate,
+	}
+}
+
 // Run executes the cluster creation steps.
 func (o *clusterCreateOp) Run() (interface{}, error) {
 
 	// Populate defaults (UUID, NTP Servers etc)
 	o.populateClusterDefaults()
+	o.populateVersionDefaults()
 
 	utils.SyncTimeOnce(o.cluster.Spec.NTPServers)
 
@@ -175,6 +191,14 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 			sendDisjoins(nil, o.cluster.Spec.QuorumNodes)
 			return nil, errors.NewInternalError(err)
 		}
+	}
+
+	// store version in KV store
+	err = txn.Create(o.version.MakeKey("cluster"), o.version)
+	if err != nil {
+		log.Errorf("Failed to add version to txn, error: %v", err)
+		sendDisjoins(nil, o.cluster.Spec.QuorumNodes)
+		return nil, errors.NewInternalError(err)
 	}
 
 	if _, err := txn.Commit(context.Background()); err != nil {

@@ -189,6 +189,29 @@ func (a adapterClusterV1) AutoAddTenant(oldctx oldcontext.Context, t *cluster.Te
 	return ret.(*cluster.Tenant), err
 }
 
+func (a adapterClusterV1) AutoAddVersion(oldctx oldcontext.Context, t *cluster.Version, options ...grpc.CallOption) (*cluster.Version, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoAddVersion")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.CreateOper, "Version", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.Version)
+		return a.service.AutoAddVersion(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.Version), err
+}
+
 func (a adapterClusterV1) AutoDeleteCluster(oldctx oldcontext.Context, t *cluster.Cluster, options ...grpc.CallOption) (*cluster.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -304,6 +327,29 @@ func (a adapterClusterV1) AutoDeleteTenant(oldctx oldcontext.Context, t *cluster
 	return ret.(*cluster.Tenant), err
 }
 
+func (a adapterClusterV1) AutoDeleteVersion(oldctx oldcontext.Context, t *cluster.Version, options ...grpc.CallOption) (*cluster.Version, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoDeleteVersion")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.DeleteOper, "Version", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.Version)
+		return a.service.AutoDeleteVersion(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.Version), err
+}
+
 func (a adapterClusterV1) AutoGetCluster(oldctx oldcontext.Context, t *cluster.Cluster, options ...grpc.CallOption) (*cluster.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -417,6 +463,29 @@ func (a adapterClusterV1) AutoGetTenant(oldctx oldcontext.Context, t *cluster.Te
 		return nil, err
 	}
 	return ret.(*cluster.Tenant), err
+}
+
+func (a adapterClusterV1) AutoGetVersion(oldctx oldcontext.Context, t *cluster.Version, options ...grpc.CallOption) (*cluster.Version, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoGetVersion")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.GetOper, "Version", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.Version)
+		return a.service.AutoGetVersion(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.Version), err
 }
 
 func (a adapterClusterV1) AutoListCluster(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.ClusterList, error) {
@@ -549,6 +618,32 @@ func (a adapterClusterV1) AutoListTenant(oldctx oldcontext.Context, t *api.ListW
 	return ret.(*cluster.TenantList), err
 }
 
+func (a adapterClusterV1) AutoListVersion(oldctx oldcontext.Context, t *api.ListWatchOptions, options ...grpc.CallOption) (*cluster.VersionList, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoListVersion")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	t.Tenant = ""
+	t.Namespace = ""
+	oper, kind, tenant, namespace, group, name := apiintf.ListOper, "Version", t.Tenant, t.Namespace, "cluster", ""
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		return a.service.AutoListVersion(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.VersionList), err
+}
+
 func (a adapterClusterV1) AutoUpdateCluster(oldctx oldcontext.Context, t *cluster.Cluster, options ...grpc.CallOption) (*cluster.Cluster, error) {
 	// Not using options for now. Will be passed through context as needed.
 	ctx := context.Context(oldctx)
@@ -662,6 +757,29 @@ func (a adapterClusterV1) AutoUpdateTenant(oldctx oldcontext.Context, t *cluster
 		return nil, err
 	}
 	return ret.(*cluster.Tenant), err
+}
+
+func (a adapterClusterV1) AutoUpdateVersion(oldctx oldcontext.Context, t *cluster.Version, options ...grpc.CallOption) (*cluster.Version, error) {
+	// Not using options for now. Will be passed through context as needed.
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoUpdateVersion")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name := apiintf.UpdateOper, "Version", t.Tenant, t.Namespace, "cluster", t.Name
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*cluster.Version)
+		return a.service.AutoUpdateVersion(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*cluster.Version), err
 }
 
 func (a adapterClusterV1) UpdateTLSConfig(oldctx oldcontext.Context, t *cluster.UpdateTLSConfigRequest, options ...grpc.CallOption) (*cluster.Cluster, error) {
@@ -1026,6 +1144,63 @@ func (a adapterClusterV1) AutoWatchTenant(oldctx oldcontext.Context, in *api.Lis
 	return ret.(cluster.ClusterV1_AutoWatchTenantClient), err
 }
 
+func (a adapterClusterV1) AutoWatchVersion(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (cluster.ClusterV1_AutoWatchVersionClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AutoWatchVersion")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+
+	in.Tenant = ""
+	in.Namespace = ""
+	oper, kind, tenant, namespace, group := apiintf.WatchOper, "Version", in.Tenant, in.Namespace, "cluster"
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, ""), oper)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*api.ListWatchOptions)
+		iws, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwWebSocketWatch)
+		if ok && iws.(bool) {
+			nctx, cancel := context.WithCancel(ctx)
+			ir, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPReq)
+			if !ok {
+				return nil, errors.New("unable to retrieve request")
+			}
+			iw, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPIGwHTTPWriter)
+			if !ok {
+				return nil, errors.New("unable to retrieve writer")
+			}
+			conn, err := wsUpgrader.Upgrade(iw.(http.ResponseWriter), ir.(*http.Request), nil)
+			if err != nil {
+				log.Errorf("WebSocket Upgrade failed (%s)", err)
+				return nil, err
+			}
+			ctx = apiutils.SetVar(nctx, apiutils.CtxKeyAPIGwWebSocketConn, conn)
+			conn.SetCloseHandler(func(code int, text string) error {
+				cancel()
+				log.Infof("received close notification on websocket [AutoWatchVersion] (%v/%v)", code, text)
+				return nil
+			})
+			// start a dummy reciever
+			go func() {
+				for {
+					_, _, err := conn.ReadMessage()
+					if err != nil {
+						log.Errorf("received error on websocket receive (%s)", err)
+						cancel()
+						return
+					}
+				}
+			}()
+		}
+		return a.service.AutoWatchVersion(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(cluster.ClusterV1_AutoWatchVersionClient), err
+}
+
 func (e *sClusterV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "cluster", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
@@ -1057,6 +1232,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 
 	e.svcProf["AutoGetTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Tenant", "cluster", apiintf.GetOper)
 
+	e.svcProf["AutoGetVersion"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Version", "cluster", apiintf.GetOper)
+
 	e.svcProf["AutoListHost"] = apigwpkg.NewServiceProfile(e.defSvcProf, "HostList", "cluster", apiintf.ListOper)
 
 	e.svcProf["AutoListNode"] = apigwpkg.NewServiceProfile(e.defSvcProf, "NodeList", "cluster", apiintf.ListOper)
@@ -1084,6 +1261,8 @@ func (e *sClusterV1GwService) setupSvcProfile() {
 	e.svcProf["AutoWatchSmartNIC"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgSmartNICWatchHelper", "cluster", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchTenant"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgTenantWatchHelper", "cluster", apiintf.WatchOper)
+
+	e.svcProf["AutoWatchVersion"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgVersionWatchHelper", "cluster", apiintf.WatchOper)
 
 	e.svcProf["UpdateTLSConfig"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Cluster", "cluster", apiintf.CreateOper)
 }

@@ -56,6 +56,21 @@ func (a *clusterHooks) registerSetAuthBootstrapFlagHook(svc apigw.APIGatewayServ
 	return nil
 }
 
+func (a *clusterHooks) addOwner(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
+	user, ok := apigwpkg.UserFromContext(ctx)
+	if !ok || user == nil {
+		a.logger.ErrorLog("method", "addOwner", "msg", "pre-authz hook failed, failed to get user info from context")
+		return ctx, in, errors.New("internal error")
+	}
+
+	nctx, err := addOwnerToContext(ctx, user, a.logger)
+	if err != nil {
+		a.logger.ErrorLog("method", "addOwner", "msg", "pre-authz hook failed, failed add owner to context")
+		return ctx, in, err
+	}
+	return nctx, in, nil
+}
+
 func registerClusterHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	r := clusterHooks{
 		bootstrapper: bootstrapper.GetBootstrapper(),
@@ -66,6 +81,13 @@ func registerClusterHooks(svc apigw.APIGatewayService, l log.Logger) error {
 		return err
 	}
 	prof.AddPreAuthNHook(r.authBootstrap)
+
+	// user should get and watch version without limitation
+	prof, err = svc.GetCrudServiceProfile("Version", apiintf.GetOper)
+	prof.AddPreAuthZHook(r.addOwner)
+	prof, err = svc.GetCrudServiceProfile("Version", apiintf.WatchOper)
+	prof.AddPreAuthZHook(r.addOwner)
+
 	return r.registerSetAuthBootstrapFlagHook(svc)
 }
 

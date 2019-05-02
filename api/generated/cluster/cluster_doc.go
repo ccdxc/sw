@@ -29,6 +29,9 @@ The following Messages are defined.
   StorageDeviceInfo
   StorageInfo
   UpdateTLSConfigRequest
+  Version
+  VersionSpec
+  VersionStatus
 
 The following Services and Methods are defined.
 

@@ -607,6 +607,119 @@ func (mr *MockClusterV1TenantInterfaceMockRecorder) Allowed(oper interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1TenantInterface)(nil).Allowed), oper)
 }
 
+// MockClusterV1VersionInterface is a mock of ClusterV1VersionInterface interface
+type MockClusterV1VersionInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockClusterV1VersionInterfaceMockRecorder
+}
+
+// MockClusterV1VersionInterfaceMockRecorder is the mock recorder for MockClusterV1VersionInterface
+type MockClusterV1VersionInterfaceMockRecorder struct {
+	mock *MockClusterV1VersionInterface
+}
+
+// NewMockClusterV1VersionInterface creates a new mock instance
+func NewMockClusterV1VersionInterface(ctrl *gomock.Controller) *MockClusterV1VersionInterface {
+	mock := &MockClusterV1VersionInterface{ctrl: ctrl}
+	mock.recorder = &MockClusterV1VersionInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockClusterV1VersionInterface) EXPECT() *MockClusterV1VersionInterfaceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method
+func (m *MockClusterV1VersionInterface) Create(ctx context.Context, in *cluster.Version) (*cluster.Version, error) {
+	ret := m.ctrl.Call(m, "Create", ctx, in)
+	ret0, _ := ret[0].(*cluster.Version)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Create indicates an expected call of Create
+func (mr *MockClusterV1VersionInterfaceMockRecorder) Create(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockClusterV1VersionInterface)(nil).Create), ctx, in)
+}
+
+// Update mocks base method
+func (m *MockClusterV1VersionInterface) Update(ctx context.Context, in *cluster.Version) (*cluster.Version, error) {
+	ret := m.ctrl.Call(m, "Update", ctx, in)
+	ret0, _ := ret[0].(*cluster.Version)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update
+func (mr *MockClusterV1VersionInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterV1VersionInterface)(nil).Update), ctx, in)
+}
+
+// Get mocks base method
+func (m *MockClusterV1VersionInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Version, error) {
+	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
+	ret0, _ := ret[0].(*cluster.Version)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get
+func (mr *MockClusterV1VersionInterfaceMockRecorder) Get(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockClusterV1VersionInterface)(nil).Get), ctx, objMeta)
+}
+
+// Delete mocks base method
+func (m *MockClusterV1VersionInterface) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Version, error) {
+	ret := m.ctrl.Call(m, "Delete", ctx, objMeta)
+	ret0, _ := ret[0].(*cluster.Version)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockClusterV1VersionInterfaceMockRecorder) Delete(ctx, objMeta interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockClusterV1VersionInterface)(nil).Delete), ctx, objMeta)
+}
+
+// List mocks base method
+func (m *MockClusterV1VersionInterface) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.Version, error) {
+	ret := m.ctrl.Call(m, "List", ctx, options)
+	ret0, _ := ret[0].([]*cluster.Version)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List
+func (mr *MockClusterV1VersionInterfaceMockRecorder) List(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockClusterV1VersionInterface)(nil).List), ctx, options)
+}
+
+// Watch mocks base method
+func (m *MockClusterV1VersionInterface) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	ret := m.ctrl.Call(m, "Watch", ctx, options)
+	ret0, _ := ret[0].(kvstore.Watcher)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Watch indicates an expected call of Watch
+func (mr *MockClusterV1VersionInterfaceMockRecorder) Watch(ctx, options interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockClusterV1VersionInterface)(nil).Watch), ctx, options)
+}
+
+// Allowed mocks base method
+func (m *MockClusterV1VersionInterface) Allowed(oper interfaces.APIOperType) bool {
+	ret := m.ctrl.Call(m, "Allowed", oper)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Allowed indicates an expected call of Allowed
+func (mr *MockClusterV1VersionInterfaceMockRecorder) Allowed(oper interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockClusterV1VersionInterface)(nil).Allowed), oper)
+}
+
 // MockClusterV1Interface is a mock of ClusterV1Interface interface
 type MockClusterV1Interface struct {
 	ctrl     *gomock.Controller
@@ -688,6 +801,18 @@ func (m *MockClusterV1Interface) Tenant() cluster.ClusterV1TenantInterface {
 // Tenant indicates an expected call of Tenant
 func (mr *MockClusterV1InterfaceMockRecorder) Tenant() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Tenant", reflect.TypeOf((*MockClusterV1Interface)(nil).Tenant))
+}
+
+// Version mocks base method
+func (m *MockClusterV1Interface) Version() cluster.ClusterV1VersionInterface {
+	ret := m.ctrl.Call(m, "Version")
+	ret0, _ := ret[0].(cluster.ClusterV1VersionInterface)
+	return ret0
+}
+
+// Version indicates an expected call of Version
+func (mr *MockClusterV1InterfaceMockRecorder) Version() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Version", reflect.TypeOf((*MockClusterV1Interface)(nil).Version))
 }
 
 // Watch mocks base method

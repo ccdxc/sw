@@ -119,6 +119,15 @@ func (m *UpdateTLSConfigRequest) MakeURI(cat, ver, prefix string) string {
 	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/cluster")
 }
 
+// MakeKey generates a KV store key for the object
+func (m *Version) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "version", "/Singleton")
+}
+
+func (m *Version) MakeURI(cat, ver, prefix string) string {
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/version")
+}
+
 // Clone clones the object into into or creates one of into is nil
 func (m *CPUInfo) Clone(into interface{}) (interface{}, error) {
 	var out *CPUInfo
@@ -640,6 +649,75 @@ func (m *UpdateTLSConfigRequest) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *UpdateTLSConfigRequest) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *Version) Clone(into interface{}) (interface{}, error) {
+	var out *Version
+	var ok bool
+	if into == nil {
+		out = &Version{}
+	} else {
+		out, ok = into.(*Version)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*Version))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *Version) Defaults(ver string) bool {
+	var ret bool
+	m.Kind = "Version"
+	ret = m.Tenant != "" || m.Namespace != ""
+	if ret {
+		m.Tenant, m.Namespace = "", ""
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *VersionSpec) Clone(into interface{}) (interface{}, error) {
+	var out *VersionSpec
+	var ok bool
+	if into == nil {
+		out = &VersionSpec{}
+	} else {
+		out, ok = into.(*VersionSpec)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*VersionSpec))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *VersionSpec) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *VersionStatus) Clone(into interface{}) (interface{}, error) {
+	var out *VersionStatus
+	var ok bool
+	if into == nil {
+		out = &VersionStatus{}
+	} else {
+		out, ok = into.(*VersionStatus)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*VersionStatus))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *VersionStatus) Defaults(ver string) bool {
 	return false
 }
 
@@ -1171,6 +1249,65 @@ func (m *UpdateTLSConfigRequest) Normalize() {
 
 }
 
+func (m *Version) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *Version) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+
+	if m.Tenant != "" {
+		ret = append(ret, errors.New("Tenant not allowed for Version"))
+	}
+	if m.Namespace != "" {
+		ret = append(ret, errors.New("Namespace not allowed for Version"))
+	}
+
+	{
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "ObjectMeta"
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *Version) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
+func (m *VersionSpec) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *VersionSpec) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *VersionSpec) Normalize() {
+
+}
+
+func (m *VersionStatus) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *VersionStatus) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *VersionStatus) Normalize() {
+
+}
+
 // Transformers
 
 func (m *Cluster) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
@@ -1221,6 +1358,7 @@ func init() {
 		&Host{},
 		&Node{},
 		&UpdateTLSConfigRequest{},
+		&Version{},
 	)
 
 	validatorMapCluster = make(map[string]map[string][]func(string, interface{}) error)

@@ -2,6 +2,9 @@ package impl
 
 import (
 	"context"
+	"errors"
+
+	"github.com/pensando/sw/venice/utils/authz"
 
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apigw/pkg"
@@ -37,4 +40,25 @@ func isGlobalAdmin(user *auth.User, permGetter rbac.PermissionGetter) bool {
 		}
 	}
 	return false
+}
+
+func addOwnerToContext(ctx context.Context, user *auth.User, logger log.Logger) (context.Context, error) {
+	// get existing operations from context
+	operations, ok := apigwpkg.OperationsFromContext(ctx)
+
+	if !ok || operations == nil {
+		logger.ErrorLog("method", "addOwner", "msg", "addOwnerToContext failed, operation not present in context")
+		return ctx, errors.New("internal error")
+	}
+
+	for _, operation := range operations {
+		if !authz.IsValidOperationValue(operation) {
+			logger.ErrorLog("method", "addOwner", "msg", "addOwnerToContext failed, invalid operation: %v", operation)
+			return ctx, errors.New("internal error")
+		}
+		resource := operation.GetResource()
+		resource.SetOwner(user)
+	}
+	nctx := apigwpkg.NewContextWithOperations(ctx, operations...)
+	return nctx, nil
 }

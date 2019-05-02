@@ -206,6 +206,10 @@ func (m mockClusterV1) Host() cluster.ClusterV1HostInterface {
 	return nil
 }
 
+func (m mockClusterV1) Version() cluster.ClusterV1VersionInterface {
+	return nil
+}
+
 func (m mockClusterV1) SmartNIC() cluster.ClusterV1SmartNICInterface {
 	return nil
 }

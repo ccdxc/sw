@@ -764,3 +764,105 @@ func EncodeGrpcRespUpdateTLSConfigRequest(ctx context.Context, response interfac
 func DecodeGrpcRespUpdateTLSConfigRequest(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }
+
+func encodeHTTPVersion(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPVersion(_ context.Context, r *http.Request) (interface{}, error) {
+	var req Version
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqVersion encodes GRPC request
+func EncodeGrpcReqVersion(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Version)
+	return req, nil
+}
+
+// DecodeGrpcReqVersion decodes GRPC request
+func DecodeGrpcReqVersion(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*Version)
+	return req, nil
+}
+
+// EncodeGrpcRespVersion encodes GRC response
+func EncodeGrpcRespVersion(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespVersion decodes GRPC response
+func DecodeGrpcRespVersion(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPVersionSpec(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPVersionSpec(_ context.Context, r *http.Request) (interface{}, error) {
+	var req VersionSpec
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqVersionSpec encodes GRPC request
+func EncodeGrpcReqVersionSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*VersionSpec)
+	return req, nil
+}
+
+// DecodeGrpcReqVersionSpec decodes GRPC request
+func DecodeGrpcReqVersionSpec(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*VersionSpec)
+	return req, nil
+}
+
+// EncodeGrpcRespVersionSpec encodes GRC response
+func EncodeGrpcRespVersionSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespVersionSpec decodes GRPC response
+func DecodeGrpcRespVersionSpec(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPVersionStatus(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPVersionStatus(_ context.Context, r *http.Request) (interface{}, error) {
+	var req VersionStatus
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqVersionStatus encodes GRPC request
+func EncodeGrpcReqVersionStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*VersionStatus)
+	return req, nil
+}
+
+// DecodeGrpcReqVersionStatus decodes GRPC request
+func DecodeGrpcReqVersionStatus(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*VersionStatus)
+	return req, nil
+}
+
+// EncodeGrpcRespVersionStatus encodes GRC response
+func EncodeGrpcRespVersionStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespVersionStatus decodes GRPC response
+func DecodeGrpcRespVersionStatus(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}

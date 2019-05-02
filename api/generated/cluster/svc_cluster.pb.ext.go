@@ -112,6 +112,16 @@ func (m *TenantList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *VersionList) MakeKey(prefix string) string {
+	obj := Version{}
+	return obj.MakeKey(prefix)
+}
+
+func (m *VersionList) MakeURI(ver, prefix string) string {
+	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
+}
+
+// MakeKey generates a KV store key for the object
 func (m *AutoMsgClusterWatchHelper) MakeKey(prefix string) string {
 	obj := Cluster{}
 	return obj.MakeKey(prefix)
@@ -138,6 +148,12 @@ func (m *AutoMsgSmartNICWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgTenantWatchHelper) MakeKey(prefix string) string {
 	obj := Tenant{}
+	return obj.MakeKey(prefix)
+}
+
+// MakeKey generates a KV store key for the object
+func (m *AutoMsgVersionWatchHelper) MakeKey(prefix string) string {
+	obj := Version{}
 	return obj.MakeKey(prefix)
 }
 
@@ -352,6 +368,48 @@ func (m *AutoMsgTenantWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgVersionWatchHelper) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgVersionWatchHelper
+	var ok bool
+	if into == nil {
+		out = &AutoMsgVersionWatchHelper{}
+	} else {
+		out, ok = into.(*AutoMsgVersionWatchHelper)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgVersionWatchHelper))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgVersionWatchHelper) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AutoMsgVersionWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AutoMsgVersionWatchHelper_WatchEvent
+	var ok bool
+	if into == nil {
+		out = &AutoMsgVersionWatchHelper_WatchEvent{}
+	} else {
+		out, ok = into.(*AutoMsgVersionWatchHelper_WatchEvent)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AutoMsgVersionWatchHelper_WatchEvent))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AutoMsgVersionWatchHelper_WatchEvent) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
 func (m *ClusterList) Clone(into interface{}) (interface{}, error) {
 	var out *ClusterList
 	var ok bool
@@ -453,6 +511,27 @@ func (m *TenantList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *TenantList) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *VersionList) Clone(into interface{}) (interface{}, error) {
+	var out *VersionList
+	var ok bool
+	if into == nil {
+		out = &VersionList{}
+	} else {
+		out, ok = into.(*VersionList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*VersionList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *VersionList) Defaults(ver string) bool {
 	return false
 }
 
@@ -748,6 +827,64 @@ func (m *AutoMsgTenantWatchHelper_WatchEvent) Normalize() {
 
 }
 
+func (m *AutoMsgVersionWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgVersionWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Events {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgVersionWatchHelper) Normalize() {
+
+	for _, v := range m.Events {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
+func (m *AutoMsgVersionWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AutoMsgVersionWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	if m.Object != nil {
+		{
+			dlmtr := "."
+			if path == "" {
+				dlmtr = ""
+			}
+			npath := path + dlmtr + "Object"
+			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+				ret = append(ret, errs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (m *AutoMsgVersionWatchHelper_WatchEvent) Normalize() {
+
+	if m.Object != nil {
+		m.Object.Normalize()
+	}
+
+}
+
 func (m *ClusterList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -884,6 +1021,35 @@ func (m *TenantList) Validate(ver, path string, ignoreStatus bool) []error {
 }
 
 func (m *TenantList) Normalize() {
+
+	for _, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+		}
+	}
+
+}
+
+func (m *VersionList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *VersionList) Validate(ver, path string, ignoreStatus bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *VersionList) Normalize() {
 
 	for _, v := range m.Items {
 		if v != nil {

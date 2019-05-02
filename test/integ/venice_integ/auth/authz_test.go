@@ -435,6 +435,39 @@ func TestAPIGroupAuthorization(t *testing.T) {
 	Assert(t, err != nil, "authorization error expected while listing SGPolicy")
 }
 
+func TestGetVersionInfo(t *testing.T) {
+	adminCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create default tenant and global admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, adminCred, tinfo.l)
+
+	MustCreateVersion(tinfo.apicl, "version")
+	defer MustDeleteVersion(tinfo.apicl, "version")
+
+	// create normalUser with limited access
+	MustCreateTestUser(tinfo.apicl, "normalUser", testPassword, globals.DefaultTenant)
+	defer MustDeleteUser(tinfo.apicl, "normalUser", globals.DefaultTenant)
+
+	// logged in as an normal user with no access
+	ctx, err := NewLoggedInContext(context.Background(), tinfo.apiGwAddr, &auth.PasswordCredential{
+		Username: "normalUser",
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	})
+	AssertOk(t, err, "error creating logged in context")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.ClusterV1().Version().Get(ctx, &api.ObjectMeta{Name: "version", Tenant: globals.DefaultTenant})
+		return err == nil, err
+	}, fmt.Sprintf("error while retrieving version"))
+}
+
 func TestUserSelfOperations(t *testing.T) {
 	userCred := &auth.PasswordCredential{
 		Username: testUser,

@@ -13,7 +13,7 @@ import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
 import { Store } from '@ngrx/store';
 import { IApiStatus, IAuthUser } from '@sdk/v1/models/generated/auth';
-import { ClusterCluster } from '@sdk/v1/models/generated/cluster';
+import { ClusterVersion } from '@sdk/v1/models/generated/cluster';
 import { MonitoringAlert } from '@sdk/v1/models/generated/monitoring';
 import { Subject, Subscription } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
@@ -75,10 +75,9 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
 
   userName: string = '';
 
-  clusterArray: ReadonlyArray<ClusterCluster> = [];
-  cluster: ClusterCluster = new ClusterCluster();
-  // Used for processing the stream events
-  clusterEventUtility: HttpEventUtility<ClusterCluster>;
+  versionEventUtility: HttpEventUtility<ClusterVersion>;
+  versionArray: ReadonlyArray<ClusterVersion> = [];
+  version: ClusterVersion = new ClusterVersion();
 
   @HostBinding('class') componentCssClass;
   private unsubscribeStore$: Subject<void> = new Subject<void>();
@@ -116,9 +115,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     this.browsertype = browserObj['browserName'];
     this.browserversion = browserObj['browserName'] + browserObj['majorVersion'];
     this._initAppData();
-    if (this.uiconfigsService.isAuthorized(UIRolePermissions.cluster_read)) {
-      this.getCluster();
-    }
+    this.getVersion();
 
     this._subscribeToEvents();
     this._bindtoStore();
@@ -126,6 +123,20 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     if (authBody != null && authBody.meta != null && authBody.meta.name != null) {
       this.userName = authBody.meta.name;
     }
+  }
+
+  getVersion(){
+    this.versionEventUtility = new HttpEventUtility<ClusterVersion>(ClusterVersion, true);
+    this.versionArray = this.versionEventUtility.array as ReadonlyArray<ClusterVersion>;
+    const subscription = this.clusterService.WatchVersion().subscribe(
+      response => {
+        this.versionEventUtility.processEvents(response);
+        if (this.versionArray.length > 0) {
+          this.version = this.versionArray[0];
+        }
+      },
+    )
+    this.subscriptions.push(subscription);
   }
 
   /**
@@ -146,20 +157,6 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
    */
   getClassName(): string {
     return this.constructor.name;
-  }
-
-  getCluster() {
-    this.clusterEventUtility = new HttpEventUtility<ClusterCluster>(ClusterCluster, true);
-    this.clusterArray = this.clusterEventUtility.array as ReadonlyArray<ClusterCluster>;
-    const subscription = this.clusterService.WatchCluster().subscribe(
-      response => {
-        this.clusterEventUtility.processEvents(response);
-        if (this.clusterArray.length > 0) {
-          this.cluster = this.clusterArray[0];
-        }
-      },
-    );
-    this.subscriptions.push(subscription);
   }
 
   private _bindtoStore() {

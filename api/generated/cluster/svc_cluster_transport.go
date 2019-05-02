@@ -31,26 +31,31 @@ type grpcServerClusterV1 struct {
 	AutoAddNodeHdlr           grpctransport.Handler
 	AutoAddSmartNICHdlr       grpctransport.Handler
 	AutoAddTenantHdlr         grpctransport.Handler
+	AutoAddVersionHdlr        grpctransport.Handler
 	AutoDeleteClusterHdlr     grpctransport.Handler
 	AutoDeleteHostHdlr        grpctransport.Handler
 	AutoDeleteNodeHdlr        grpctransport.Handler
 	AutoDeleteSmartNICHdlr    grpctransport.Handler
 	AutoDeleteTenantHdlr      grpctransport.Handler
+	AutoDeleteVersionHdlr     grpctransport.Handler
 	AutoGetClusterHdlr        grpctransport.Handler
 	AutoGetHostHdlr           grpctransport.Handler
 	AutoGetNodeHdlr           grpctransport.Handler
 	AutoGetSmartNICHdlr       grpctransport.Handler
 	AutoGetTenantHdlr         grpctransport.Handler
+	AutoGetVersionHdlr        grpctransport.Handler
 	AutoListClusterHdlr       grpctransport.Handler
 	AutoListHostHdlr          grpctransport.Handler
 	AutoListNodeHdlr          grpctransport.Handler
 	AutoListSmartNICHdlr      grpctransport.Handler
 	AutoListTenantHdlr        grpctransport.Handler
+	AutoListVersionHdlr       grpctransport.Handler
 	AutoUpdateClusterHdlr     grpctransport.Handler
 	AutoUpdateHostHdlr        grpctransport.Handler
 	AutoUpdateNodeHdlr        grpctransport.Handler
 	AutoUpdateSmartNICHdlr    grpctransport.Handler
 	AutoUpdateTenantHdlr      grpctransport.Handler
+	AutoUpdateVersionHdlr     grpctransport.Handler
 	UpdateTLSConfigHdlr       grpctransport.Handler
 }
 
@@ -104,6 +109,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddTenant", logger)))...,
 		),
 
+		AutoAddVersionHdlr: grpctransport.NewServer(
+			endpoints.AutoAddVersionEndpoint,
+			DecodeGrpcReqVersion,
+			EncodeGrpcRespVersion,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoAddVersion", logger)))...,
+		),
+
 		AutoDeleteClusterHdlr: grpctransport.NewServer(
 			endpoints.AutoDeleteClusterEndpoint,
 			DecodeGrpcReqCluster,
@@ -137,6 +149,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqTenant,
 			EncodeGrpcRespTenant,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteTenant", logger)))...,
+		),
+
+		AutoDeleteVersionHdlr: grpctransport.NewServer(
+			endpoints.AutoDeleteVersionEndpoint,
+			DecodeGrpcReqVersion,
+			EncodeGrpcRespVersion,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoDeleteVersion", logger)))...,
 		),
 
 		AutoGetClusterHdlr: grpctransport.NewServer(
@@ -174,6 +193,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetTenant", logger)))...,
 		),
 
+		AutoGetVersionHdlr: grpctransport.NewServer(
+			endpoints.AutoGetVersionEndpoint,
+			DecodeGrpcReqVersion,
+			EncodeGrpcRespVersion,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoGetVersion", logger)))...,
+		),
+
 		AutoListClusterHdlr: grpctransport.NewServer(
 			endpoints.AutoListClusterEndpoint,
 			DecodeGrpcReqListWatchOptions,
@@ -209,6 +235,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListTenant", logger)))...,
 		),
 
+		AutoListVersionHdlr: grpctransport.NewServer(
+			endpoints.AutoListVersionEndpoint,
+			DecodeGrpcReqListWatchOptions,
+			EncodeGrpcRespVersionList,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoListVersion", logger)))...,
+		),
+
 		AutoUpdateClusterHdlr: grpctransport.NewServer(
 			endpoints.AutoUpdateClusterEndpoint,
 			DecodeGrpcReqCluster,
@@ -242,6 +275,13 @@ func MakeGRPCServerClusterV1(ctx context.Context, endpoints EndpointsClusterV1Se
 			DecodeGrpcReqTenant,
 			EncodeGrpcRespTenant,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateTenant", logger)))...,
+		),
+
+		AutoUpdateVersionHdlr: grpctransport.NewServer(
+			endpoints.AutoUpdateVersionEndpoint,
+			DecodeGrpcReqVersion,
+			EncodeGrpcRespVersion,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("AutoUpdateVersion", logger)))...,
 		),
 
 		UpdateTLSConfigHdlr: grpctransport.NewServer(
@@ -361,6 +401,24 @@ func decodeHTTPrespClusterV1AutoAddTenant(_ context.Context, r *http.Response) (
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoAddVersion(ctx oldcontext.Context, req *Version) (*Version, error) {
+	_, resp, err := s.AutoAddVersionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoAddVersion).V
+	return &r, resp.(respClusterV1AutoAddVersion).Err
+}
+
+func decodeHTTPrespClusterV1AutoAddVersion(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Version
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoDeleteCluster(ctx oldcontext.Context, req *Cluster) (*Cluster, error) {
 	_, resp, err := s.AutoDeleteClusterHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -447,6 +505,24 @@ func decodeHTTPrespClusterV1AutoDeleteTenant(_ context.Context, r *http.Response
 		return nil, errorDecoder(r)
 	}
 	var resp Tenant
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoDeleteVersion(ctx oldcontext.Context, req *Version) (*Version, error) {
+	_, resp, err := s.AutoDeleteVersionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoDeleteVersion).V
+	return &r, resp.(respClusterV1AutoDeleteVersion).Err
+}
+
+func decodeHTTPrespClusterV1AutoDeleteVersion(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Version
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -541,6 +617,24 @@ func decodeHTTPrespClusterV1AutoGetTenant(_ context.Context, r *http.Response) (
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoGetVersion(ctx oldcontext.Context, req *Version) (*Version, error) {
+	_, resp, err := s.AutoGetVersionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoGetVersion).V
+	return &r, resp.(respClusterV1AutoGetVersion).Err
+}
+
+func decodeHTTPrespClusterV1AutoGetVersion(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Version
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) AutoListCluster(ctx oldcontext.Context, req *api.ListWatchOptions) (*ClusterList, error) {
 	_, resp, err := s.AutoListClusterHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -627,6 +721,24 @@ func decodeHTTPrespClusterV1AutoListTenant(_ context.Context, r *http.Response) 
 		return nil, errorDecoder(r)
 	}
 	var resp TenantList
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerClusterV1) AutoListVersion(ctx oldcontext.Context, req *api.ListWatchOptions) (*VersionList, error) {
+	_, resp, err := s.AutoListVersionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoListVersion).V
+	return &r, resp.(respClusterV1AutoListVersion).Err
+}
+
+func decodeHTTPrespClusterV1AutoListVersion(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp VersionList
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }
@@ -721,6 +833,24 @@ func decodeHTTPrespClusterV1AutoUpdateTenant(_ context.Context, r *http.Response
 	return &resp, err
 }
 
+func (s *grpcServerClusterV1) AutoUpdateVersion(ctx oldcontext.Context, req *Version) (*Version, error) {
+	_, resp, err := s.AutoUpdateVersionHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respClusterV1AutoUpdateVersion).V
+	return &r, resp.(respClusterV1AutoUpdateVersion).Err
+}
+
+func decodeHTTPrespClusterV1AutoUpdateVersion(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp Version
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
 func (s *grpcServerClusterV1) UpdateTLSConfig(ctx oldcontext.Context, req *UpdateTLSConfigRequest) (*Cluster, error) {
 	_, resp, err := s.UpdateTLSConfigHdlr.ServeGRPC(ctx, req)
 	if err != nil {
@@ -761,6 +891,10 @@ func (s *grpcServerClusterV1) AutoWatchSmartNIC(in *api.ListWatchOptions, stream
 
 func (s *grpcServerClusterV1) AutoWatchTenant(in *api.ListWatchOptions, stream ClusterV1_AutoWatchTenantServer) error {
 	return s.Endpoints.AutoWatchTenant(in, stream)
+}
+
+func (s *grpcServerClusterV1) AutoWatchVersion(in *api.ListWatchOptions, stream ClusterV1_AutoWatchVersionServer) error {
+	return s.Endpoints.AutoWatchVersion(in, stream)
 }
 
 func encodeHTTPClusterList(ctx context.Context, req *http.Request, request interface{}) error {
@@ -930,5 +1064,39 @@ func EncodeGrpcRespTenantList(ctx context.Context, response interface{}) (interf
 
 // DecodeGrpcRespTenantList decodes the GRPC response
 func DecodeGrpcRespTenantList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+func encodeHTTPVersionList(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPVersionList(_ context.Context, r *http.Request) (interface{}, error) {
+	var req VersionList
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqVersionList encodes GRPC request
+func EncodeGrpcReqVersionList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*VersionList)
+	return req, nil
+}
+
+// DecodeGrpcReqVersionList decodes GRPC request
+func DecodeGrpcReqVersionList(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*VersionList)
+	return req, nil
+}
+
+// EncodeGrpcRespVersionList endodes the GRPC response
+func EncodeGrpcRespVersionList(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespVersionList decodes the GRPC response
+func DecodeGrpcRespVersionList(ctx context.Context, response interface{}) (interface{}, error) {
 	return response, nil
 }

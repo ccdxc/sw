@@ -256,6 +256,61 @@ func MustDeleteAuthenticationPolicy(apicl apiclient.Services) {
 	}
 }
 
+// MustCreateVersion creates a version and panics if fails
+func MustCreateVersion(apicl apiclient.Services, name string) *cluster.Version {
+	version, err := CreateVersion(apicl, name)
+	if err != nil {
+		panic(fmt.Sprintf("error %s in CreateVersion", err))
+	}
+	return version
+}
+
+// MustDeleteVersion deletes a version
+func MustDeleteVersion(apicl apiclient.Services, version string) {
+	if err := DeleteVersion(apicl, version); err != nil {
+		panic(fmt.Sprintf("DeleteVersion failed with err: %v", err))
+	}
+}
+
+// DeleteVersion deletes a version
+func DeleteVersion(apicl apiclient.Services, version string) error {
+	// delete version object in api server
+	_, err := apicl.ClusterV1().Version().Delete(context.Background(), &api.ObjectMeta{Name: version})
+	if err != nil {
+		return err
+	}
+	deletedVersion, err := apicl.ClusterV1().Version().Get(context.Background(), &api.ObjectMeta{Name: version})
+	if err == nil {
+		log.Errorf("Error deleting version, found [%#v]", deletedVersion)
+		return fmt.Errorf("deleted version still exists")
+	}
+
+	return nil
+}
+
+// CreateVersion creates a version
+func CreateVersion(apicl apiclient.Services, name string) (*cluster.Version, error) {
+	version := &cluster.Version{
+		TypeMeta: api.TypeMeta{Kind: "Version"},
+		ObjectMeta: api.ObjectMeta{
+			Name: name,
+		},
+	}
+	var err error
+	var createdVersion *cluster.Version
+	if !testutils.CheckEventually(func() (bool, interface{}) {
+		createdVersion, err = apicl.ClusterV1().Version().Create(context.Background(), version)
+		if (err == nil) || strings.Contains(err.Error(), "AlreadyExists") {
+			return true, nil
+		}
+		return false, nil
+	}, "100ms", "20s") {
+		log.Errorf("Error creating version, Err: %v", err)
+		return nil, err
+	}
+	return createdVersion, err
+}
+
 // CreateTenant creates a tenant
 func CreateTenant(apicl apiclient.Services, name string) (*cluster.Tenant, error) {
 	tenant := &cluster.Tenant{

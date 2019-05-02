@@ -25,26 +25,31 @@ type ServiceClusterV1Client interface {
 	AutoAddNode(ctx context.Context, t *Node) (*Node, error)
 	AutoAddSmartNIC(ctx context.Context, t *SmartNIC) (*SmartNIC, error)
 	AutoAddTenant(ctx context.Context, t *Tenant) (*Tenant, error)
+	AutoAddVersion(ctx context.Context, t *Version) (*Version, error)
 	AutoDeleteCluster(ctx context.Context, t *Cluster) (*Cluster, error)
 	AutoDeleteHost(ctx context.Context, t *Host) (*Host, error)
 	AutoDeleteNode(ctx context.Context, t *Node) (*Node, error)
 	AutoDeleteSmartNIC(ctx context.Context, t *SmartNIC) (*SmartNIC, error)
 	AutoDeleteTenant(ctx context.Context, t *Tenant) (*Tenant, error)
+	AutoDeleteVersion(ctx context.Context, t *Version) (*Version, error)
 	AutoGetCluster(ctx context.Context, t *Cluster) (*Cluster, error)
 	AutoGetHost(ctx context.Context, t *Host) (*Host, error)
 	AutoGetNode(ctx context.Context, t *Node) (*Node, error)
 	AutoGetSmartNIC(ctx context.Context, t *SmartNIC) (*SmartNIC, error)
 	AutoGetTenant(ctx context.Context, t *Tenant) (*Tenant, error)
+	AutoGetVersion(ctx context.Context, t *Version) (*Version, error)
 	AutoListCluster(ctx context.Context, t *api.ListWatchOptions) (*ClusterList, error)
 	AutoListHost(ctx context.Context, t *api.ListWatchOptions) (*HostList, error)
 	AutoListNode(ctx context.Context, t *api.ListWatchOptions) (*NodeList, error)
 	AutoListSmartNIC(ctx context.Context, t *api.ListWatchOptions) (*SmartNICList, error)
 	AutoListTenant(ctx context.Context, t *api.ListWatchOptions) (*TenantList, error)
+	AutoListVersion(ctx context.Context, t *api.ListWatchOptions) (*VersionList, error)
 	AutoUpdateCluster(ctx context.Context, t *Cluster) (*Cluster, error)
 	AutoUpdateHost(ctx context.Context, t *Host) (*Host, error)
 	AutoUpdateNode(ctx context.Context, t *Node) (*Node, error)
 	AutoUpdateSmartNIC(ctx context.Context, t *SmartNIC) (*SmartNIC, error)
 	AutoUpdateTenant(ctx context.Context, t *Tenant) (*Tenant, error)
+	AutoUpdateVersion(ctx context.Context, t *Version) (*Version, error)
 	UpdateTLSConfig(ctx context.Context, t *UpdateTLSConfigRequest) (*Cluster, error)
 
 	AutoWatchCluster(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchClusterClient, error)
@@ -52,6 +57,7 @@ type ServiceClusterV1Client interface {
 	AutoWatchHost(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchHostClient, error)
 	AutoWatchSmartNIC(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchSmartNICClient, error)
 	AutoWatchTenant(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchTenantClient, error)
+	AutoWatchVersion(ctx context.Context, in *api.ListWatchOptions) (ClusterV1_AutoWatchVersionClient, error)
 }
 
 // ServiceClusterV1Server is the server interface for the service.
@@ -64,26 +70,31 @@ type ServiceClusterV1Server interface {
 	AutoAddNode(ctx context.Context, t Node) (Node, error)
 	AutoAddSmartNIC(ctx context.Context, t SmartNIC) (SmartNIC, error)
 	AutoAddTenant(ctx context.Context, t Tenant) (Tenant, error)
+	AutoAddVersion(ctx context.Context, t Version) (Version, error)
 	AutoDeleteCluster(ctx context.Context, t Cluster) (Cluster, error)
 	AutoDeleteHost(ctx context.Context, t Host) (Host, error)
 	AutoDeleteNode(ctx context.Context, t Node) (Node, error)
 	AutoDeleteSmartNIC(ctx context.Context, t SmartNIC) (SmartNIC, error)
 	AutoDeleteTenant(ctx context.Context, t Tenant) (Tenant, error)
+	AutoDeleteVersion(ctx context.Context, t Version) (Version, error)
 	AutoGetCluster(ctx context.Context, t Cluster) (Cluster, error)
 	AutoGetHost(ctx context.Context, t Host) (Host, error)
 	AutoGetNode(ctx context.Context, t Node) (Node, error)
 	AutoGetSmartNIC(ctx context.Context, t SmartNIC) (SmartNIC, error)
 	AutoGetTenant(ctx context.Context, t Tenant) (Tenant, error)
+	AutoGetVersion(ctx context.Context, t Version) (Version, error)
 	AutoListCluster(ctx context.Context, t api.ListWatchOptions) (ClusterList, error)
 	AutoListHost(ctx context.Context, t api.ListWatchOptions) (HostList, error)
 	AutoListNode(ctx context.Context, t api.ListWatchOptions) (NodeList, error)
 	AutoListSmartNIC(ctx context.Context, t api.ListWatchOptions) (SmartNICList, error)
 	AutoListTenant(ctx context.Context, t api.ListWatchOptions) (TenantList, error)
+	AutoListVersion(ctx context.Context, t api.ListWatchOptions) (VersionList, error)
 	AutoUpdateCluster(ctx context.Context, t Cluster) (Cluster, error)
 	AutoUpdateHost(ctx context.Context, t Host) (Host, error)
 	AutoUpdateNode(ctx context.Context, t Node) (Node, error)
 	AutoUpdateSmartNIC(ctx context.Context, t SmartNIC) (SmartNIC, error)
 	AutoUpdateTenant(ctx context.Context, t Tenant) (Tenant, error)
+	AutoUpdateVersion(ctx context.Context, t Version) (Version, error)
 	UpdateTLSConfig(ctx context.Context, t UpdateTLSConfigRequest) (Cluster, error)
 
 	AutoWatchCluster(in *api.ListWatchOptions, stream ClusterV1_AutoWatchClusterServer) error
@@ -91,4 +102,5 @@ type ServiceClusterV1Server interface {
 	AutoWatchHost(in *api.ListWatchOptions, stream ClusterV1_AutoWatchHostServer) error
 	AutoWatchSmartNIC(in *api.ListWatchOptions, stream ClusterV1_AutoWatchSmartNICServer) error
 	AutoWatchTenant(in *api.ListWatchOptions, stream ClusterV1_AutoWatchTenantServer) error
+	AutoWatchVersion(in *api.ListWatchOptions, stream ClusterV1_AutoWatchVersionServer) error
 }

@@ -3,7 +3,7 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
-import { IClusterCluster,IApiStatus,IClusterClusterAuthBootstrapRequest,IClusterUpdateTLSConfigRequest,IClusterHostList,IClusterHost,IClusterNodeList,IClusterNode,IClusterSmartNICList,IClusterSmartNIC,IClusterTenantList,IClusterTenant,IClusterAutoMsgClusterWatchHelper,IClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,IClusterAutoMsgSmartNICWatchHelper,IClusterAutoMsgTenantWatchHelper } from '../../models/generated/cluster';
+import { IClusterCluster,IApiStatus,IClusterClusterAuthBootstrapRequest,IClusterUpdateTLSConfigRequest,IClusterHostList,IClusterHost,IClusterNodeList,IClusterNode,IClusterSmartNICList,IClusterSmartNIC,IClusterTenantList,IClusterTenant,IClusterVersion,IClusterAutoMsgClusterWatchHelper,IClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,IClusterAutoMsgSmartNICWatchHelper,IClusterAutoMsgTenantWatchHelper,IClusterAutoMsgVersionWatchHelper } from '../../models/generated/cluster';
 
 @Injectable()
 export class Clusterv1Service extends AbstractService {
@@ -236,6 +236,15 @@ export class Clusterv1Service extends AbstractService {
     return this.invokeAJAXPutCall(url, body, 'UpdateTenant') as Observable<{body: IClusterTenant | IApiStatus | Error, statusCode: number}>;
   }
   
+  /** Get Version object */
+  public GetVersion(queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterVersion | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/version';
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXGetCall(url, queryParam, 'GetVersion') as Observable<{body: IClusterVersion | IApiStatus | Error, statusCode: number}>;
+  }
+  
   /** Watch Cluster objects. Supports WebSockets or HTTP long poll */
   public WatchCluster(queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterAutoMsgClusterWatchHelper | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/cluster';
@@ -279,6 +288,15 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
     }
     return this.invokeAJAXGetCall(url, queryParam, 'WatchTenant') as Observable<{body: IClusterAutoMsgTenantWatchHelper | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Watch Version objects. Supports WebSockets or HTTP long poll */
+  public WatchVersion(queryParam: any = null, stagingID: string = ""):Observable<{body: IClusterAutoMsgVersionWatchHelper | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/cluster/v1/watch/version';
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+    }
+    return this.invokeAJAXGetCall(url, queryParam, 'WatchVersion') as Observable<{body: IClusterAutoMsgVersionWatchHelper | IApiStatus | Error, statusCode: number}>;
   }
   
 }

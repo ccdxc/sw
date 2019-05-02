@@ -7,11 +7,19 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/auth"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authz"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/apigw/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
 	"github.com/pensando/sw/venice/utils/log"
+
+	. "github.com/pensando/sw/venice/utils/authz/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -109,5 +117,54 @@ func TestSetAuthBootstrapFlag(t *testing.T) {
 		_, _, skipCall, err := r.setAuthBootstrapFlag(context.TODO(), nil)
 		Assert(t, skipCall == test.skipCall, fmt.Sprintf("[%s] test failed, expected skipCall [%v], got [%v]", test.name, test.skipCall, skipCall))
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected err [%v], got [%v]", test.name, test.err, err))
+	}
+}
+
+func TestAddOwnerForVersionGetAndWatch(t *testing.T) {
+	user := &auth.User{
+		ObjectMeta: api.ObjectMeta{Name: "test", Tenant: globals.DefaultTenant},
+	}
+	tests := []struct {
+		name               string
+		in                 interface{}
+		operations         []authz.Operation
+		expectedOperations []authz.Operation
+		out                interface{}
+		err                bool
+	}{
+		{
+			name: "should grant user access",
+			in:   cluster.Version{},
+			operations: []authz.Operation{
+				authz.NewOperation(authz.NewResource(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test"),
+					auth.Permission_Create.String()),
+			},
+			expectedOperations: []authz.Operation{
+				authz.NewOperation(authz.NewResourceWithOwner(globals.DefaultTenant,
+					string(apiclient.GroupAuth), string(auth.KindUser),
+					"", "test",
+					user),
+					auth.Permission_Create.String()),
+			},
+			out: cluster.Version{},
+			err: false,
+		},
+	}
+	logConfig := log.GetDefaultConfig("TestAPIGwAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	r := &clusterHooks{}
+	r.logger = l
+	for _, test := range tests {
+		ctx := apigwpkg.NewContextWithOperations(context.TODO(), test.operations...)
+		ctx = apigwpkg.NewContextWithUser(ctx, user)
+		nctx, out, err := r.addOwner(ctx, test.in)
+		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
+		operations, _ := apigwpkg.OperationsFromContext(nctx)
+		Assert(t, AreOperationsEqual(test.expectedOperations, operations),
+			fmt.Sprintf("unexpected operations, [%s] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.out, out),
+			fmt.Sprintf("expected returned object [%v], got [%v], [%s] test failed", test.out, out, test.name))
 	}
 }

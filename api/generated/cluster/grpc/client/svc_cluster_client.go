@@ -113,6 +113,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoAddTenantEndpoint = trace.ClientEndPoint("ClusterV1:AutoAddTenant")(lAutoAddTenantEndpoint)
 	}
+	var lAutoAddVersionEndpoint endpoint.Endpoint
+	{
+		lAutoAddVersionEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoAddVersion",
+			cluster.EncodeGrpcReqVersion,
+			cluster.DecodeGrpcRespVersion,
+			&cluster.Version{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoAddVersionEndpoint = trace.ClientEndPoint("ClusterV1:AutoAddVersion")(lAutoAddVersionEndpoint)
+	}
 	var lAutoDeleteClusterEndpoint endpoint.Endpoint
 	{
 		lAutoDeleteClusterEndpoint = grpctransport.NewClient(
@@ -182,6 +196,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteTenantEndpoint = trace.ClientEndPoint("ClusterV1:AutoDeleteTenant")(lAutoDeleteTenantEndpoint)
+	}
+	var lAutoDeleteVersionEndpoint endpoint.Endpoint
+	{
+		lAutoDeleteVersionEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoDeleteVersion",
+			cluster.EncodeGrpcReqVersion,
+			cluster.DecodeGrpcRespVersion,
+			&cluster.Version{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoDeleteVersionEndpoint = trace.ClientEndPoint("ClusterV1:AutoDeleteVersion")(lAutoDeleteVersionEndpoint)
 	}
 	var lAutoGetClusterEndpoint endpoint.Endpoint
 	{
@@ -253,6 +281,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoGetTenantEndpoint = trace.ClientEndPoint("ClusterV1:AutoGetTenant")(lAutoGetTenantEndpoint)
 	}
+	var lAutoGetVersionEndpoint endpoint.Endpoint
+	{
+		lAutoGetVersionEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoGetVersion",
+			cluster.EncodeGrpcReqVersion,
+			cluster.DecodeGrpcRespVersion,
+			&cluster.Version{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoGetVersionEndpoint = trace.ClientEndPoint("ClusterV1:AutoGetVersion")(lAutoGetVersionEndpoint)
+	}
 	var lAutoListClusterEndpoint endpoint.Endpoint
 	{
 		lAutoListClusterEndpoint = grpctransport.NewClient(
@@ -322,6 +364,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListTenantEndpoint = trace.ClientEndPoint("ClusterV1:AutoListTenant")(lAutoListTenantEndpoint)
+	}
+	var lAutoListVersionEndpoint endpoint.Endpoint
+	{
+		lAutoListVersionEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoListVersion",
+			cluster.EncodeGrpcReqListWatchOptions,
+			cluster.DecodeGrpcRespVersionList,
+			&cluster.VersionList{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoListVersionEndpoint = trace.ClientEndPoint("ClusterV1:AutoListVersion")(lAutoListVersionEndpoint)
 	}
 	var lAutoUpdateClusterEndpoint endpoint.Endpoint
 	{
@@ -393,6 +449,20 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		).Endpoint()
 		lAutoUpdateTenantEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateTenant")(lAutoUpdateTenantEndpoint)
 	}
+	var lAutoUpdateVersionEndpoint endpoint.Endpoint
+	{
+		lAutoUpdateVersionEndpoint = grpctransport.NewClient(
+			conn,
+			"cluster.ClusterV1",
+			"AutoUpdateVersion",
+			cluster.EncodeGrpcReqVersion,
+			cluster.DecodeGrpcRespVersion,
+			&cluster.Version{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAutoUpdateVersionEndpoint = trace.ClientEndPoint("ClusterV1:AutoUpdateVersion")(lAutoUpdateVersionEndpoint)
+	}
 	var lUpdateTLSConfigEndpoint endpoint.Endpoint
 	{
 		lUpdateTLSConfigEndpoint = grpctransport.NewClient(
@@ -416,26 +486,31 @@ func NewClusterV1(conn *grpc.ClientConn, logger log.Logger) cluster.ServiceClust
 		AutoAddNodeEndpoint:           lAutoAddNodeEndpoint,
 		AutoAddSmartNICEndpoint:       lAutoAddSmartNICEndpoint,
 		AutoAddTenantEndpoint:         lAutoAddTenantEndpoint,
+		AutoAddVersionEndpoint:        lAutoAddVersionEndpoint,
 		AutoDeleteClusterEndpoint:     lAutoDeleteClusterEndpoint,
 		AutoDeleteHostEndpoint:        lAutoDeleteHostEndpoint,
 		AutoDeleteNodeEndpoint:        lAutoDeleteNodeEndpoint,
 		AutoDeleteSmartNICEndpoint:    lAutoDeleteSmartNICEndpoint,
 		AutoDeleteTenantEndpoint:      lAutoDeleteTenantEndpoint,
+		AutoDeleteVersionEndpoint:     lAutoDeleteVersionEndpoint,
 		AutoGetClusterEndpoint:        lAutoGetClusterEndpoint,
 		AutoGetHostEndpoint:           lAutoGetHostEndpoint,
 		AutoGetNodeEndpoint:           lAutoGetNodeEndpoint,
 		AutoGetSmartNICEndpoint:       lAutoGetSmartNICEndpoint,
 		AutoGetTenantEndpoint:         lAutoGetTenantEndpoint,
+		AutoGetVersionEndpoint:        lAutoGetVersionEndpoint,
 		AutoListClusterEndpoint:       lAutoListClusterEndpoint,
 		AutoListHostEndpoint:          lAutoListHostEndpoint,
 		AutoListNodeEndpoint:          lAutoListNodeEndpoint,
 		AutoListSmartNICEndpoint:      lAutoListSmartNICEndpoint,
 		AutoListTenantEndpoint:        lAutoListTenantEndpoint,
+		AutoListVersionEndpoint:       lAutoListVersionEndpoint,
 		AutoUpdateClusterEndpoint:     lAutoUpdateClusterEndpoint,
 		AutoUpdateHostEndpoint:        lAutoUpdateHostEndpoint,
 		AutoUpdateNodeEndpoint:        lAutoUpdateNodeEndpoint,
 		AutoUpdateSmartNICEndpoint:    lAutoUpdateSmartNICEndpoint,
 		AutoUpdateTenantEndpoint:      lAutoUpdateTenantEndpoint,
+		AutoUpdateVersionEndpoint:     lAutoUpdateVersionEndpoint,
 		UpdateTLSConfigEndpoint:       lUpdateTLSConfigEndpoint,
 	}
 }
@@ -1353,6 +1428,181 @@ func (a *restObjClusterV1Tenant) Allowed(oper apiintf.APIOperType) bool {
 	}
 }
 
+type grpcObjClusterV1Version struct {
+	logger log.Logger
+	client cluster.ServiceClusterV1Client
+}
+
+func (a *grpcObjClusterV1Version) Create(ctx context.Context, in *cluster.Version) (*cluster.Version, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Version", "oper", "create")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoAddVersion(nctx, in)
+}
+
+func (a *grpcObjClusterV1Version) Update(ctx context.Context, in *cluster.Version) (*cluster.Version, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Version", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateVersion(nctx, in)
+}
+
+func (a *grpcObjClusterV1Version) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Version, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Version", "oper", "get")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.Version{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoGetVersion(nctx, &in)
+}
+
+func (a *grpcObjClusterV1Version) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Version, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Version", "oper", "delete")
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.Version{}
+	in.ObjectMeta = *objMeta
+	nctx := addVersion(ctx, "v1")
+	return a.client.AutoDeleteVersion(nctx, &in)
+}
+
+func (a *grpcObjClusterV1Version) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.Version, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Version", "oper", "list")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	r, err := a.client.AutoListVersion(nctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *grpcObjClusterV1Version) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Version", "oper", "WatchOper")
+	nctx := addVersion(ctx, "v1")
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	stream, err := a.client.AutoWatchVersion(nctx, options)
+	if err != nil {
+		return nil, err
+	}
+	wstream := stream.(cluster.ClusterV1_AutoWatchVersionClient)
+	bridgefn := func(lw *listerwatcher.WatcherClient) {
+		for {
+			r, err := wstream.Recv()
+			if err != nil {
+				a.logger.ErrorLog("msg", "error on receive", "error", err)
+				close(lw.OutCh)
+				return
+			}
+			for _, e := range r.Events {
+				ev := kvstore.WatchEvent{
+					Type:   kvstore.WatchEventType(e.Type),
+					Object: e.Object,
+				}
+				select {
+				case lw.OutCh <- &ev:
+				case <-wstream.Context().Done():
+					close(lw.OutCh)
+					return
+				}
+			}
+		}
+	}
+	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
+	lw.Run()
+	return lw, nil
+}
+
+func (a *grpcObjClusterV1Version) Allowed(oper apiintf.APIOperType) bool {
+	return true
+}
+
+type restObjClusterV1Version struct {
+	endpoints cluster.EndpointsClusterV1RestClient
+	instance  string
+}
+
+func (a *restObjClusterV1Version) Create(ctx context.Context, in *cluster.Version) (*cluster.Version, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoAddVersion(ctx, in)
+}
+
+func (a *restObjClusterV1Version) Update(ctx context.Context, in *cluster.Version) (*cluster.Version, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoUpdateVersion(ctx, in)
+}
+
+func (a *restObjClusterV1Version) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Version, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.Version{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoGetVersion(ctx, &in)
+}
+
+func (a *restObjClusterV1Version) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Version, error) {
+	if objMeta == nil {
+		return nil, errors.New("invalid input")
+	}
+	in := cluster.Version{}
+	in.ObjectMeta = *objMeta
+	return a.endpoints.AutoDeleteVersion(ctx, &in)
+}
+
+func (a *restObjClusterV1Version) List(ctx context.Context, options *api.ListWatchOptions) ([]*cluster.Version, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+
+	r, err := a.endpoints.AutoListVersion(ctx, options)
+	if err == nil {
+		return r.Items, nil
+	}
+	return nil, err
+}
+
+func (a *restObjClusterV1Version) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
+	if options == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AutoWatchVersion(ctx, options)
+}
+
+func (a *restObjClusterV1Version) Allowed(oper apiintf.APIOperType) bool {
+	switch oper {
+	case apiintf.CreateOper:
+		return false
+	case apiintf.UpdateOper:
+		return false
+	case apiintf.GetOper:
+		return true
+	case apiintf.DeleteOper:
+		return false
+	case apiintf.ListOper:
+		return false
+	case apiintf.WatchOper:
+		return true
+	default:
+		return false
+	}
+}
+
 type crudClientClusterV1 struct {
 	logger log.Logger
 	client cluster.ServiceClusterV1Client
@@ -1362,6 +1612,7 @@ type crudClientClusterV1 struct {
 	grpcHost     cluster.ClusterV1HostInterface
 	grpcSmartNIC cluster.ClusterV1SmartNICInterface
 	grpcTenant   cluster.ClusterV1TenantInterface
+	grpcVersion  cluster.ClusterV1VersionInterface
 }
 
 // NewGrpcCrudClientClusterV1 creates a GRPC client for the service
@@ -1376,6 +1627,7 @@ func NewGrpcCrudClientClusterV1(conn *grpc.ClientConn, logger log.Logger) cluste
 		grpcHost:     &grpcObjClusterV1Host{client: client, logger: logger},
 		grpcSmartNIC: &grpcObjClusterV1SmartNIC{client: client, logger: logger},
 		grpcTenant:   &grpcObjClusterV1Tenant{client: client, logger: logger},
+		grpcVersion:  &grpcObjClusterV1Version{client: client, logger: logger},
 	}
 }
 
@@ -1397,6 +1649,10 @@ func (a *crudClientClusterV1) SmartNIC() cluster.ClusterV1SmartNICInterface {
 
 func (a *crudClientClusterV1) Tenant() cluster.ClusterV1TenantInterface {
 	return a.grpcTenant
+}
+
+func (a *crudClientClusterV1) Version() cluster.ClusterV1VersionInterface {
+	return a.grpcVersion
 }
 
 func (a *crudClientClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
@@ -1447,6 +1703,7 @@ type crudRestClientClusterV1 struct {
 	restHost     cluster.ClusterV1HostInterface
 	restSmartNIC cluster.ClusterV1SmartNICInterface
 	restTenant   cluster.ClusterV1TenantInterface
+	restVersion  cluster.ClusterV1VersionInterface
 }
 
 // NewRestCrudClientClusterV1 creates a REST client for the service.
@@ -1462,6 +1719,7 @@ func NewRestCrudClientClusterV1(url string, httpClient *http.Client) cluster.Clu
 		restHost:     &restObjClusterV1Host{endpoints: endpoints, instance: url},
 		restSmartNIC: &restObjClusterV1SmartNIC{endpoints: endpoints, instance: url},
 		restTenant:   &restObjClusterV1Tenant{endpoints: endpoints, instance: url},
+		restVersion:  &restObjClusterV1Version{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -1478,6 +1736,7 @@ func NewStagedRestCrudClientClusterV1(url string, id string, httpClient *http.Cl
 		restHost:     &restObjClusterV1Host{endpoints: endpoints, instance: url},
 		restSmartNIC: &restObjClusterV1SmartNIC{endpoints: endpoints, instance: url},
 		restTenant:   &restObjClusterV1Tenant{endpoints: endpoints, instance: url},
+		restVersion:  &restObjClusterV1Version{endpoints: endpoints, instance: url},
 	}
 }
 
@@ -1499,6 +1758,10 @@ func (a *crudRestClientClusterV1) SmartNIC() cluster.ClusterV1SmartNICInterface 
 
 func (a *crudRestClientClusterV1) Tenant() cluster.ClusterV1TenantInterface {
 	return a.restTenant
+}
+
+func (a *crudRestClientClusterV1) Version() cluster.ClusterV1VersionInterface {
+	return a.restVersion
 }
 
 func (a *crudRestClientClusterV1) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {

@@ -105,6 +105,20 @@ func removeNodeOper(obj interface{}) error {
 	return nil
 }
 
+// CreateVersionFlags specifies flags for Version create operation
+var CreateVersionFlags = []gen.CliFlag{}
+
+func removeVersionOper(obj interface{}) error {
+	if v, ok := obj.(*cluster.Version); ok {
+		v.UUID = ""
+		v.ResourceVersion = ""
+		v.CreationTime = api.Timestamp{}
+		v.ModTime = api.Timestamp{}
+		v.Status = cluster.VersionStatus{}
+	}
+	return nil
+}
+
 func init() {
 	cl := gen.GetInfo()
 
@@ -115,5 +129,7 @@ func init() {
 	cl.AddRemoveObjOperFunc("cluster.Host", removeHostOper)
 
 	cl.AddRemoveObjOperFunc("cluster.Node", removeNodeOper)
+
+	cl.AddRemoveObjOperFunc("cluster.Version", removeVersionOper)
 
 }

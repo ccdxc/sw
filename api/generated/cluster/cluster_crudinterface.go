@@ -17,3 +17,4 @@ var _ kvstore.Interface
 const KindCluster ObjKind = "Cluster"
 const KindHost ObjKind = "Host"
 const KindNode ObjKind = "Node"
+const KindVersion ObjKind = "Version"

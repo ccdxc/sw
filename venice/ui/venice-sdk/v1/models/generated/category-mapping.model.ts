@@ -7,6 +7,7 @@ import { ClusterNode } from './cluster';
 import { ClusterHost } from './cluster';
 import { ClusterSmartNIC } from './cluster';
 import { ClusterTenant } from './cluster';
+import { ClusterVersion } from './cluster';
 import { MonitoringEventPolicy } from './monitoring';
 import { MonitoringStatsPolicy } from './monitoring';
 import { MonitoringFwlogPolicy } from './monitoring';
@@ -48,6 +49,7 @@ export const CategoryMapping  = {
     "Host" : new ClusterHost(),
     "SmartNIC" : new ClusterSmartNIC(),
     "Tenant" : new ClusterTenant(),
+    "Version" : new ClusterVersion(),
   },
   "Monitoring" : {
     "EventPolicy" : new MonitoringEventPolicy(),

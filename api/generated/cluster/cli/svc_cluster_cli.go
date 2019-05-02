@@ -414,6 +414,47 @@ func restPutTenant(hostname, token string, obj interface{}) error {
 
 }
 
+func restGetVersion(hostname, tenant, token string, obj interface{}) error {
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*cluster.Version); ok {
+		nv, err := restcl.ClusterV1().Version().Get(loginCtx, &v.ObjectMeta)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+
+	if v, ok := obj.(*cluster.VersionList); ok {
+		objMeta := api.ObjectMeta{}
+		nv, err := restcl.ClusterV1().Version().Get(loginCtx, &objMeta)
+		if err != nil {
+			return err
+		}
+		v.Items = append(v.Items, nv)
+	}
+	return nil
+
+}
+
+func restDeleteVersion(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("delete operation not supported for Version object")
+}
+
+func restPostVersion(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("create operation not supported for Version object")
+}
+
+func restPutVersion(hostname, token string, obj interface{}) error {
+	return fmt.Errorf("put operation not supported for Version object")
+}
+
 func init() {
 	cl := gen.GetInfo()
 	if cl == nil {
@@ -441,5 +482,7 @@ func init() {
 	cl.AddRestDeleteFunc("cluster.Tenant", "v1", restDeleteTenant)
 	cl.AddRestPutFunc("cluster.Tenant", "v1", restPutTenant)
 	cl.AddRestGetFunc("cluster.Tenant", "v1", restGetTenant)
+
+	cl.AddRestGetFunc("cluster.Version", "v1", restGetVersion)
 
 }

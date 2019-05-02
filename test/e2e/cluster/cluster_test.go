@@ -13,7 +13,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	api "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	cmdprotos "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
@@ -204,6 +204,13 @@ func validateCluster() {
 	Expect(err).ShouldNot(HaveOccurred())
 	Expect(cl.Kind).Should(Equal("Cluster"))
 	Expect(cl.UUID).ShouldNot(BeEmpty())
+
+	versionIf := apiClient.ClusterV1().Version()
+	vl, err := versionIf.Get(ts.tu.NewLoggedInContext(context.Background()), &obj)
+	By(fmt.Sprintf("Version fields should be ok"))
+	Expect(err).ShouldNot(HaveOccurred())
+	Expect(vl.Kind).Should(Equal("Version"))
+	Expect(vl.APIVersion).ShouldNot(BeEmpty())
 
 	Eventually(func() string {
 		s1 := getServices(ts.tu.QuorumNodes[0])
