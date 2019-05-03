@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -58,8 +58,7 @@ func main() {
 
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Component: globals.Tpm,
-		EvtTypes:  evtsapi.GetEventTypes()}, logger)
+		Component: globals.Tpm}, logger)
 	if err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}
@@ -85,7 +84,8 @@ func main() {
 	defer debugSocket.StopServer()
 
 	log.Infof("%s is running {%+v}", globals.Tpm, pm)
-	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.Tpm, utils.GetHostname()), nil)
+	recorder.Event(eventtypes.SERVICE_RUNNING,
+		fmt.Sprintf("Service %s running on %s", globals.Tpm, utils.GetHostname()), nil)
 
 	select {}
 }

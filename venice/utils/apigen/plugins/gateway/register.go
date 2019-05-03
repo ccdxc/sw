@@ -13,18 +13,21 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/golang/glog"
+	"github.com/gogo/protobuf/proto"
 
 	gogoproto "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	gogen "github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
+	"github.com/golang/glog"
 	"github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins"
 	googapi "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
+	"github.com/pensando/sw/events/generated/eventattrs"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	cgen "github.com/pensando/sw/venice/cli/gen"
 	"github.com/pensando/sw/venice/globals"
-	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
+	"github.com/pensando/sw/venice/utils/apigen/annotations"
 	mutator "github.com/pensando/sw/venice/utils/apigen/autogrpc"
 	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
 )
@@ -2439,27 +2442,55 @@ func getFileName(name string) string {
 	return strings.Title(strings.TrimSuffix(filepath.Base(name), filepath.Ext(filepath.Base(name))))
 }
 
-// returns the list of event types
-func getEventTypes(s *descriptor.Service) ([]string, error) {
-	ets := []string{}
-	enumNames, err := reg.GetExtension("venice.eventTypes", s)
-	if err != nil {
-		return ets, nil
+// EventType represents the event type and it's attributes
+type EventType struct {
+	EType    string // event type
+	Severity string // severity
+	Category string // category
+	Desc     string // description or UI hint
+}
+
+// returns the list of event types found from given file
+func getEventTypes(file *descriptor.File) ([]*EventType, error) {
+	var ets []*EventType
+
+	if len(file.Enums) > 1 {
+		return nil, errors.New("more than 1 enum is not allowed for event types")
 	}
 
-	// look through all the enums and construct slice of event types
-	if enumNames != nil {
-		for _, eName := range enumNames.([]string) {
-			eventTypes, err := s.File.Reg.LookupEnum("", fmt.Sprintf(".%s.%s", s.File.GetPackage(), eName))
-			if err != nil {
-				continue
+	for _, val := range file.Enums[0].Value {
+		if val.Options != nil {
+			et := &EventType{EType: val.GetName()}
+
+			// get severity
+			v, err := proto.GetExtension(val.Options, eventtypes.E_Severity)
+			if err == nil && v.(*eventattrs.Severity) != nil {
+				et.Severity = fmt.Sprintf("%v", v.(*eventattrs.Severity))
+			} else {
+				return nil, err
 			}
 
-			// read individual event type
-			for _, val := range eventTypes.GetValue() {
-				ets = append(ets, val.GetName())
+			// get category
+			v, err = proto.GetExtension(val.Options, eventtypes.E_Category)
+			if err == nil && v.(*eventattrs.Category) != nil {
+				et.Category = fmt.Sprintf("%v", v.(*eventattrs.Category))
+			} else {
+				return nil, err
 			}
+
+			// get description
+			v, err = proto.GetExtension(val.Options, eventtypes.E_Desc)
+			if err == nil && v.(*string) != nil {
+				et.Desc = *(v.(*string))
+			} else {
+				return nil, err
+			}
+
+			ets = append(ets, et)
+		} else {
+			return nil, errors.New("all event types must define it's attributes using annotations")
 		}
+
 	}
 
 	return ets, nil

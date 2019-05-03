@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -157,7 +158,7 @@ func TestProcessEvent(t *testing.T) {
 			"processEventCb times out",
 			2 * time.Second,
 			context.DeadlineExceeded,
-			"type=ServiceUnresponsive",
+			eventtypes.EventType_name[int32(eventtypes.SERVICE_UNRESPONSIVE)],
 		},
 		{
 			"processEventCb successful",

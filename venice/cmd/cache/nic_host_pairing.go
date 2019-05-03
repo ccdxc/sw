@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -53,7 +53,7 @@ func (sm *Statemgr) UpdateHostPairingStatus(et kvstore.WatchEventType, newNIC, o
 					log.Infof("NIC %s(%s) paired with host %s", nic.Name, nic.Spec.Hostname, host.Name)
 				} else if nic.Status.Host != host.Name {
 					errMsg := fmt.Sprintf("NIC %s(%s) matches Spec IDs of host %s but is already associated with host %s", nic.Name, nic.Spec.Hostname, host.Name, nic.Status.Host)
-					recorder.Event(cluster.HostSmartNICSpecConflict, evtsapi.SeverityLevel_WARNING, errMsg, nil)
+					recorder.Event(eventtypes.HOST_SMART_NIC_SPEC_CONFLICT, errMsg, nil)
 					log.Errorf(errMsg)
 				}
 			}
@@ -128,7 +128,7 @@ func (sm *Statemgr) UpdateNICPairingStatus(et kvstore.WatchEventType, newHost, o
 					log.Infof("NIC %s(%s) paired with host %s", nic.Name, nic.Spec.Hostname, host.Name)
 				} else if nic.Status.Host != host.Name {
 					errMsg := fmt.Sprintf("NIC %s(%s) matches Spec IDs of host %s but is already associated with host %s", nic.Name, nic.Spec.Hostname, host.Name, nic.Status.Host)
-					recorder.Event(cluster.HostSmartNICSpecConflict, evtsapi.SeverityLevel_WARNING, errMsg, nil)
+					recorder.Event(eventtypes.HOST_SMART_NIC_SPEC_CONFLICT, errMsg, nil)
 					log.Errorf(errMsg)
 				}
 			}

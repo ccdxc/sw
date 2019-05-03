@@ -1,0 +1,33 @@
+//
+// This is a backup to fallback when the generated code is deleted/cleaned up (/events/generated)
+// Without these variables, make ws-tools will fail. In order to avoid those issues, these variables
+// are saved in this file. When an issue arises we can just temporarily rename this file to generated/eventtypes/*.go
+// and run make ws-tools and make. And, revert this back to .golden
+//
+
+var E_Severity = &proto.ExtensionDesc{
+	ExtendedType:  (*google_protobuf.EnumValueOptions)(nil),
+	ExtensionType: (*eventattrs.Severity)(nil),
+	Field:         10005,
+	Name:          "eventtypes.severity",
+	Tag:           "varint,10005,opt,name=severity,enum=eventattrs.Severity",
+	Filename:      "eventtypes.proto",
+}
+
+var E_Category = &proto.ExtensionDesc{
+	ExtendedType:  (*google_protobuf.EnumValueOptions)(nil),
+	ExtensionType: (*eventattrs.Category)(nil),
+	Field:         10006,
+	Name:          "eventtypes.category",
+	Tag:           "varint,10006,opt,name=category,enum=eventattrs.Category",
+	Filename:      "eventtypes.proto",
+}
+
+var E_Desc = &proto.ExtensionDesc{
+	ExtendedType:  (*google_protobuf.EnumValueOptions)(nil),
+	ExtensionType: (*string)(nil),
+	Field:         10007,
+	Name:          "eventtypes.desc",
+	Tag:           "bytes,10007,opt,name=desc",
+	Filename:      "eventtypes.proto",
+}

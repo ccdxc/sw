@@ -14,7 +14,7 @@
 #include "nic/linkmgr/linkmgr_utils.hpp"
 #include "nic/utils/events/recorder/recorder.hpp"
 #include "gen/proto/port.pb.h"
-#include "gen/proto/events.pb.h"
+#include "gen/proto/eventtypes.pb.h"
 #include "gen/proto/kh.pb.h"
 
 namespace linkmgr {
@@ -59,7 +59,6 @@ Status port_svc_init(delphi::SdkPtr sdk) {
                            "linkmgr.events",     // name; this should end with ".events"
                            2048, // size of the shared memory
                            "linkmgr", // component that records the event
-                           port::PortOperState_descriptor(), // list of event types
                            std::shared_ptr<logger>(hal::utils::hal_logger())); // logger
 
     if (g_linkmgr_svc.recorder == nullptr) {
@@ -215,8 +214,7 @@ port_event_notify (uint32_t port_num, port_event_t event,
                             port::PORT_OPER_STATUS_UP,
                             sdk_port_speed_to_port_speed_spec(port_speed));
         events_recorder_get()->event(
-                            events::INFO,
-                            port::PORT_OPER_STATUS_UP,
+                            eventtypes::LINK_UP,
                             "PortKeyHandle",
                             port_key_handle,
                             "Link UP");
@@ -229,8 +227,7 @@ port_event_notify (uint32_t port_num, port_event_t event,
                             port::PORT_OPER_STATUS_DOWN,
                             sdk_port_speed_to_port_speed_spec(port_speed));
         events_recorder_get()->event(
-                            events::WARNING,
-                            port::PORT_OPER_STATUS_DOWN,
+                            eventtypes::LINK_DOWN,
                             "PortKeyHandle",
                             port_key_handle,
                             "Link DOWN");

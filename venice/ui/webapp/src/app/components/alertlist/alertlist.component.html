@@ -11,8 +11,8 @@
               (click)="onAlertNumberClick($event, 'CRITICAL')"
               *ngIf="alertnumber.CRITICAL>0">{{alertnumber.CRITICAL}}</span>
         <span class="alertlist-main-menu-number alertlist-main-menu-number-warning"
-              (click)="onAlertNumberClick($event, 'WARNING')"
-              *ngIf="alertnumber.WARNING>0">{{alertnumber.WARNING}}</span>
+              (click)="onAlertNumberClick($event, 'WARN')"
+              *ngIf="alertnumber.WARN>0">{{alertnumber.WARN}}</span>
         <span class="alertlist-main-menu-number alertlist-main-menu-number-info"
               (click)="onAlertNumberClick($event, 'INFO')"
               *ngIf="alertnumber.INFO>0">{{alertnumber.INFO}}</span>

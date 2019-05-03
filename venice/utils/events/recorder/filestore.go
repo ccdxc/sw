@@ -14,11 +14,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/venice/utils/events"
-
 	"github.com/pkg/errors"
 
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 )
 

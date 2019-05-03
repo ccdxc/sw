@@ -5,6 +5,7 @@
 #include "gen/proto/sysmgr.delphi.hpp"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "nic/utils/penlog/lib/penlog.hpp"
+#include "gen/proto/eventtypes.pb.h"
 
 #include "eventlogger.hpp"
 #include "service_watcher.hpp"
@@ -105,9 +106,9 @@ ServicePtr Service::create(ServiceSpecPtr spec)
 
 #if 0
     EventLogger::getInstance()->LogServiceEvent(
-        sysmgr_events::SERVICE_PENDING, "Service %s pending", spec->name);
+        eventtypes::SERVICE_PENDING, "Service %s pending", spec->name);
 #endif
-
+    
     return svc;
 }
 
@@ -117,7 +118,7 @@ void Service::on_service_start(std::string name)
     {
         logger->info("Service {} started", name);
         EventLogger::getInstance()->LogServiceEvent(
-            sysmgr_events::SERVICE_UP, "Service %s started", spec->name);
+            eventtypes::SERVICE_STARTED, "Service %s started", spec->name);
         return;
     }
 
@@ -147,7 +148,7 @@ void Service::on_child(pid_t pid)
     std::string reason = parse_status(this->child_watcher->get_status());
 
     logger->info("Service {} {}", this->spec->name, reason);
-    EventLogger::getInstance()->LogServiceEvent(sysmgr_events::SERVICE_DOWN,
+    EventLogger::getInstance()->LogServiceEvent(eventtypes::SERVICE_STOPPED,
         "Service %s stopped", this->spec->name);
 
     if (this->spec->flags & COPY_STDOUT_ON_CRASH) {

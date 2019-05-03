@@ -25,12 +25,6 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
-// EventTypesV1_normal is a map of normalized values for the enum
-var EventTypesV1_normal = map[string]string{
-	"LoginFailed": "LoginFailed",
-	"loginfailed": "LoginFailed",
-}
-
 // MakeKey generates a KV store key for the object
 func (m *AuthenticationPolicyList) MakeKey(prefix string) string {
 	obj := AuthenticationPolicy{}

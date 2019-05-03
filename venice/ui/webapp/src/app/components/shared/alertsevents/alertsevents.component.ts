@@ -102,8 +102,9 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   // Will hold mapping from severity types to counts
   eventNumbers: { [severity in EventsEvent_severity]: number} = {
     'INFO': 0,
-    'WARNING': 0,
+    'WARN': 0,
     'CRITICAL': 0,
+    'DEBUG': 0
   };
 
   eventsIcon: Icon = {
@@ -155,8 +156,9 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   // Will hold mapping from severity types to counts
   alertNumbers: { [severity in MonitoringAlertStatus_severity]: number} = {
     'INFO': 0,
-    'WARNING': 0,
+    'WARN': 0,
     'CRITICAL': 0,
+    'DEBUG': 0
   };
 
   // The current alert severity filter, set to null if it is on All.

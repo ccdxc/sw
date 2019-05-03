@@ -3,7 +3,6 @@ package alertengine
 import (
 	"testing"
 
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -12,7 +11,7 @@ import (
 
 // TestGenerateSyslogMessage tests GenerateSyslogMessage(...)
 func TestGenerateSyslogMessage(t *testing.T) {
-	alertObj := policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)], "test-alert1", nil, nil, nil)
+	alertObj := policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil, nil, nil)
 	tcs := []struct {
 		alert *monitoring.Alert
 	}{

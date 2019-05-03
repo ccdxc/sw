@@ -8,6 +8,7 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { EventsEventAttributes_severity,  EventsEventAttributes_severity_uihint  } from './enums';
+import { EventsEventAttributes_category,  } from './enums';
 import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
 import { EventsEventSource, IEventsEventSource } from './events-event-source.model';
 
@@ -15,6 +16,7 @@ export interface IEventsEventAttributes {
     'severity': EventsEventAttributes_severity;
     'type'?: string;
     'message'?: string;
+    'category': EventsEventAttributes_category;
     'object-ref'?: IApiObjectRef;
     'source'?: IEventsEventSource;
     'count'?: number;
@@ -25,6 +27,7 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
     'severity': EventsEventAttributes_severity = null;
     'type': string = null;
     'message': string = null;
+    'category': EventsEventAttributes_category = null;
     'object-ref': ApiObjectRef = null;
     'source': EventsEventSource = null;
     'count': number = null;
@@ -41,6 +44,12 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
         },
         'message': {
             required: false,
+            type: 'string'
+        },
+        'category': {
+            enum: EventsEventAttributes_category,
+            default: 'Cluster',
+            required: true,
             type: 'string'
         },
         'object-ref': {
@@ -110,6 +119,13 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
         } else {
             this['message'] = null
         }
+        if (values && values['category'] != null) {
+            this['category'] = values['category'];
+        } else if (fillDefaults && EventsEventAttributes.hasDefaultValue('category')) {
+            this['category'] = <EventsEventAttributes_category>  EventsEventAttributes.propInfo['category'].default;
+        } else {
+            this['category'] = null
+        }
         if (values) {
             this['object-ref'].setValues(values['object-ref'], fillDefaults);
         } else {
@@ -137,6 +153,7 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
                 'severity': CustomFormControl(new FormControl(this['severity'], [required, enumValidator(EventsEventAttributes_severity), ]), EventsEventAttributes.propInfo['severity']),
                 'type': CustomFormControl(new FormControl(this['type']), EventsEventAttributes.propInfo['type']),
                 'message': CustomFormControl(new FormControl(this['message']), EventsEventAttributes.propInfo['message']),
+                'category': CustomFormControl(new FormControl(this['category'], [required, enumValidator(EventsEventAttributes_category), ]), EventsEventAttributes.propInfo['category']),
                 'object-ref': CustomFormGroup(this['object-ref'].$formGroup, EventsEventAttributes.propInfo['object-ref'].required),
                 'source': CustomFormGroup(this['source'].$formGroup, EventsEventAttributes.propInfo['source'].required),
                 'count': CustomFormControl(new FormControl(this['count']), EventsEventAttributes.propInfo['count']),
@@ -164,6 +181,7 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
             this._formGroup.controls['severity'].setValue(this['severity']);
             this._formGroup.controls['type'].setValue(this['type']);
             this._formGroup.controls['message'].setValue(this['message']);
+            this._formGroup.controls['category'].setValue(this['category']);
             this['object-ref'].setFormGroupValuesToBeModelValues();
             this['source'].setFormGroupValuesToBeModelValues();
             this._formGroup.controls['count'].setValue(this['count']);

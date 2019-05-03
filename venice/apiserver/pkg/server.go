@@ -9,12 +9,11 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
-	"github.com/pensando/sw/api/graph"
-
 	"github.com/pensando/sw/api/cache"
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/graph"
 	"github.com/pensando/sw/api/interfaces"
-	apiserver "github.com/pensando/sw/venice/apiserver"
+	"github.com/pensando/sw/events/generated/eventtypes"
+	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -339,7 +338,7 @@ func (a *apiSrv) Run(config apiserver.Config) {
 	a.runstate.cond.L.Unlock()
 	a.runstate.cond.Broadcast()
 	a.Unlock()
-	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.APIServer, utils.GetHostname()), nil)
+	recorder.Event(eventtypes.SERVICE_RUNNING, fmt.Sprintf("Service %s running on %s", globals.APIServer, utils.GetHostname()), nil)
 
 	select {
 	case donemsg := <-a.doneCh:

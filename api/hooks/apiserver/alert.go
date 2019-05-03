@@ -7,13 +7,11 @@ import (
 
 	"github.com/gogo/protobuf/types"
 
-	"github.com/pensando/sw/api/utils"
-
-	"github.com/pensando/sw/api/interfaces"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -48,16 +46,16 @@ func (a *alertHooks) getAlertUpdFunc(flags *alertUpdateFlags) kvstore.UpdateFunc
 		}
 
 		timeNow, _ := types.TimestampProto(time.Now())
-		if alertObj.Spec.State == monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_OPEN)] {
+		if alertObj.Spec.State == monitoring.AlertState_OPEN.String() {
 			// current state: OPEN; possible states: ACKNOWLEDGED, RESOLVED
-			switch monitoring.AlertSpec_AlertState(monitoring.AlertSpec_AlertState_value[flags.alert.Spec.State]) {
-			case monitoring.AlertSpec_ACKNOWLEDGED:
+			switch monitoring.AlertState(monitoring.AlertState_value[flags.alert.Spec.State]) {
+			case monitoring.AlertState_ACKNOWLEDGED:
 				alertObj.Status.Acknowledged = &monitoring.AuditInfo{
 					User: flags.userSelfLink,
 					Time: &api.Timestamp{Timestamp: *timeNow},
 				}
 				flags.incrementAckAlerts++
-			case monitoring.AlertSpec_RESOLVED:
+			case monitoring.AlertState_RESOLVED:
 				alertObj.Status.Resolved = &monitoring.AuditInfo{
 					User: flags.userSelfLink,
 					Time: &api.Timestamp{
@@ -66,10 +64,10 @@ func (a *alertHooks) getAlertUpdFunc(flags *alertUpdateFlags) kvstore.UpdateFunc
 				}
 				flags.incrementOpenAlerts--
 			}
-		} else if alertObj.Spec.State == monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_ACKNOWLEDGED)] {
+		} else if alertObj.Spec.State == monitoring.AlertState_ACKNOWLEDGED.String() {
 			// current state: ACKNOWLEDGED; possible states: OPEN, RESOLVED
-			switch monitoring.AlertSpec_AlertState(monitoring.AlertSpec_AlertState_value[flags.alert.Spec.State]) {
-			case monitoring.AlertSpec_RESOLVED:
+			switch monitoring.AlertState(monitoring.AlertState_value[flags.alert.Spec.State]) {
+			case monitoring.AlertState_RESOLVED:
 				alertObj.Status.Resolved = &monitoring.AuditInfo{
 					User: flags.userSelfLink,
 					Time: &api.Timestamp{
@@ -78,19 +76,19 @@ func (a *alertHooks) getAlertUpdFunc(flags *alertUpdateFlags) kvstore.UpdateFunc
 				}
 				flags.incrementOpenAlerts--
 				flags.incrementAckAlerts--
-			case monitoring.AlertSpec_OPEN:
+			case monitoring.AlertState_OPEN:
 				alertObj.Status.Resolved = nil
 				alertObj.Status.Acknowledged = nil
 				flags.incrementAckAlerts--
 			}
-		} else if alertObj.Spec.State == monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_RESOLVED)] {
+		} else if alertObj.Spec.State == monitoring.AlertState_RESOLVED.String() {
 			// current state: RESOLVED; possible states: OPEN, ACKNOWLEDGED
-			switch monitoring.AlertSpec_AlertState(monitoring.AlertSpec_AlertState_value[flags.alert.Spec.State]) {
-			case monitoring.AlertSpec_OPEN:
+			switch monitoring.AlertState(monitoring.AlertState_value[flags.alert.Spec.State]) {
+			case monitoring.AlertState_OPEN:
 				alertObj.Status.Resolved = nil
 				alertObj.Status.Acknowledged = nil
 				flags.incrementOpenAlerts++
-			case monitoring.AlertSpec_ACKNOWLEDGED:
+			case monitoring.AlertState_ACKNOWLEDGED:
 				alertObj.Status.Acknowledged = &monitoring.AuditInfo{
 					User: flags.userSelfLink,
 					Time: &api.Timestamp{Timestamp: *timeNow},

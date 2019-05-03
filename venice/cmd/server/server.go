@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	grpcserver "github.com/pensando/sw/venice/cmd/grpc/server"
 	"github.com/pensando/sw/venice/cmd/rest"
 	"github.com/pensando/sw/venice/cmd/server/options"
@@ -24,7 +24,8 @@ func Run(options *options.ServerRunOptions) {
 	}()
 
 	log.Infof("%s is running", globals.Cmd)
-	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.Cmd, utils.GetHostname()), nil)
+	recorder.Event(eventtypes.SERVICE_RUNNING,
+		fmt.Sprintf("Service %s running on %s", globals.Cmd, utils.GetHostname()), nil)
 
 	clusterMgmtURL := ":" + options.ClusterMgmtPort
 	localCertsURL := globals.Localhost + ":" + options.UnauthCertAPIPort

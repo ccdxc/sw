@@ -15,46 +15,20 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-type Severity int32
-
-const (
-	Severity_INFO     Severity = 0
-	Severity_WARNING  Severity = 1
-	Severity_CRITICAL Severity = 2
-)
-
-var Severity_name = map[int32]string{
-	0: "INFO",
-	1: "WARNING",
-	2: "CRITICAL",
-}
-var Severity_value = map[string]int32{
-	"INFO":     0,
-	"WARNING":  1,
-	"CRITICAL": 2,
-}
-
-func (x Severity) String() string {
-	return proto.EnumName(Severity_name, int32(x))
-}
-func (Severity) EnumDescriptor() ([]byte, []int) { return fileDescriptorEvents, []int{0} }
-
 type Event struct {
-	// INFO, WARNING or CRITICAL
-	Severity Severity `protobuf:"varint,1,opt,name=severity,proto3,enum=events.Severity" json:"severity,omitempty"`
 	// event type; this should be one of the event type from
 	// service proto. e.g nw::EventTypes_Name(nw::NETWORK_CREATE_FAILED)
-	Type string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Type int32 `protobuf:"varint,1,opt,name=type,proto3" json:"type,omitempty"`
 	// free form event message
-	Message string `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	// name of component producing event e.g. nicmgr, fte, etc.
-	Component string `protobuf:"bytes,4,opt,name=component,proto3" json:"component,omitempty"`
+	Component string `protobuf:"bytes,3,opt,name=component,proto3" json:"component,omitempty"`
 	// number of seconds since the epoch (std::time(0))
-	Time uint64 `protobuf:"varint,5,opt,name=time,proto3" json:"time,omitempty"`
+	Time uint64 `protobuf:"varint,4,opt,name=time,proto3" json:"time,omitempty"`
 	// kind of the affected object
-	ObjectKind string `protobuf:"bytes,6,opt,name=object_kind,json=objectKind,proto3" json:"object_kind,omitempty"`
+	ObjectKind string `protobuf:"bytes,5,opt,name=object_kind,json=objectKind,proto3" json:"object_kind,omitempty"`
 	// protobuf message; key/id of the affected object. e.g. kh::NetworkKeyHandle
-	ObjectKey *google_protobuf1.Any `protobuf:"bytes,7,opt,name=object_key,json=objectKey" json:"object_key,omitempty"`
+	ObjectKey *google_protobuf1.Any `protobuf:"bytes,6,opt,name=object_key,json=objectKey" json:"object_key,omitempty"`
 }
 
 func (m *Event) Reset()                    { *m = Event{} }
@@ -62,18 +36,11 @@ func (m *Event) String() string            { return proto.CompactTextString(m) }
 func (*Event) ProtoMessage()               {}
 func (*Event) Descriptor() ([]byte, []int) { return fileDescriptorEvents, []int{0} }
 
-func (m *Event) GetSeverity() Severity {
-	if m != nil {
-		return m.Severity
-	}
-	return Severity_INFO
-}
-
-func (m *Event) GetType() string {
+func (m *Event) GetType() int32 {
 	if m != nil {
 		return m.Type
 	}
-	return ""
+	return 0
 }
 
 func (m *Event) GetMessage() string {
@@ -113,7 +80,6 @@ func (m *Event) GetObjectKey() *google_protobuf1.Any {
 
 func init() {
 	proto.RegisterType((*Event)(nil), "events.Event")
-	proto.RegisterEnum("events.Severity", Severity_name, Severity_value)
 }
 func (m *Event) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -130,42 +96,36 @@ func (m *Event) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Severity != 0 {
+	if m.Type != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintEvents(dAtA, i, uint64(m.Severity))
-	}
-	if len(m.Type) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.Type)))
-		i += copy(dAtA[i:], m.Type)
+		i = encodeVarintEvents(dAtA, i, uint64(m.Type))
 	}
 	if len(m.Message) > 0 {
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x12
 		i++
 		i = encodeVarintEvents(dAtA, i, uint64(len(m.Message)))
 		i += copy(dAtA[i:], m.Message)
 	}
 	if len(m.Component) > 0 {
-		dAtA[i] = 0x22
+		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintEvents(dAtA, i, uint64(len(m.Component)))
 		i += copy(dAtA[i:], m.Component)
 	}
 	if m.Time != 0 {
-		dAtA[i] = 0x28
+		dAtA[i] = 0x20
 		i++
 		i = encodeVarintEvents(dAtA, i, uint64(m.Time))
 	}
 	if len(m.ObjectKind) > 0 {
-		dAtA[i] = 0x32
+		dAtA[i] = 0x2a
 		i++
 		i = encodeVarintEvents(dAtA, i, uint64(len(m.ObjectKind)))
 		i += copy(dAtA[i:], m.ObjectKind)
 	}
 	if m.ObjectKey != nil {
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x32
 		i++
 		i = encodeVarintEvents(dAtA, i, uint64(m.ObjectKey.Size()))
 		n1, err := m.ObjectKey.MarshalTo(dAtA[i:])
@@ -189,12 +149,8 @@ func encodeVarintEvents(dAtA []byte, offset int, v uint64) int {
 func (m *Event) Size() (n int) {
 	var l int
 	_ = l
-	if m.Severity != 0 {
-		n += 1 + sovEvents(uint64(m.Severity))
-	}
-	l = len(m.Type)
-	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
+	if m.Type != 0 {
+		n += 1 + sovEvents(uint64(m.Type))
 	}
 	l = len(m.Message)
 	if l > 0 {
@@ -262,9 +218,9 @@ func (m *Event) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Severity", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
 			}
-			m.Severity = 0
+			m.Type = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvents
@@ -274,41 +230,12 @@ func (m *Event) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Severity |= (Severity(b) & 0x7F) << shift
+				m.Type |= (int32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Type = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
 			}
@@ -337,7 +264,7 @@ func (m *Event) Unmarshal(dAtA []byte) error {
 			}
 			m.Message = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 4:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Component", wireType)
 			}
@@ -366,7 +293,7 @@ func (m *Event) Unmarshal(dAtA []byte) error {
 			}
 			m.Component = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Time", wireType)
 			}
@@ -385,7 +312,7 @@ func (m *Event) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 6:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ObjectKind", wireType)
 			}
@@ -414,7 +341,7 @@ func (m *Event) Unmarshal(dAtA []byte) error {
 			}
 			m.ObjectKind = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 7:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ObjectKey", wireType)
 			}
@@ -576,23 +503,19 @@ var (
 func init() { proto.RegisterFile("events.proto", fileDescriptorEvents) }
 
 var fileDescriptorEvents = []byte{
-	// 280 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x44, 0x8f, 0xc1, 0x4a, 0xf3, 0x40,
-	0x10, 0xc7, 0xbf, 0xed, 0x97, 0xb6, 0xe9, 0x24, 0x48, 0x58, 0x3c, 0xac, 0x22, 0x31, 0x78, 0x0a,
-	0x22, 0x09, 0xb4, 0x4f, 0x10, 0x8b, 0x4a, 0x50, 0x22, 0xac, 0x82, 0x47, 0x69, 0xda, 0x31, 0x44,
-	0xcd, 0x6e, 0x68, 0xd6, 0xc2, 0xbe, 0xa1, 0x47, 0x1f, 0x41, 0x72, 0xf5, 0x25, 0xc4, 0x4d, 0xa2,
-	0xb7, 0x99, 0xdf, 0xfc, 0xe6, 0x0f, 0x7f, 0x70, 0x71, 0x87, 0x42, 0x35, 0x51, 0xbd, 0x95, 0x4a,
-	0xd2, 0x49, 0xb7, 0x1d, 0x1e, 0x14, 0x52, 0x16, 0xaf, 0x18, 0x1b, 0x9a, 0xbf, 0x3d, 0xc5, 0x2b,
-	0xa1, 0x3b, 0xe5, 0xe4, 0x8b, 0xc0, 0xf8, 0xe2, 0xc7, 0xa2, 0x67, 0x60, 0x37, 0xb8, 0xc3, 0x6d,
-	0xa9, 0x34, 0x23, 0x01, 0x09, 0xf7, 0xe6, 0x5e, 0xd4, 0xa7, 0xdd, 0xf5, 0x9c, 0xff, 0x1a, 0x94,
-	0x82, 0xa5, 0x74, 0x8d, 0x6c, 0x14, 0x90, 0x70, 0xc6, 0xcd, 0x4c, 0x19, 0x4c, 0x2b, 0x6c, 0x9a,
-	0x55, 0x81, 0xec, 0xbf, 0xc1, 0xc3, 0x4a, 0x8f, 0x60, 0xb6, 0x96, 0x55, 0x2d, 0x05, 0x0a, 0xc5,
-	0x2c, 0x73, 0xfb, 0x03, 0x26, 0xab, 0xac, 0x90, 0x8d, 0x03, 0x12, 0x5a, 0xdc, 0xcc, 0xf4, 0x18,
-	0x1c, 0x99, 0x3f, 0xe3, 0x5a, 0x3d, 0xbe, 0x94, 0x62, 0xc3, 0x26, 0xe6, 0x07, 0x3a, 0x74, 0x5d,
-	0x8a, 0x0d, 0x5d, 0x00, 0x0c, 0x02, 0x6a, 0x36, 0x0d, 0x48, 0xe8, 0xcc, 0xf7, 0xa3, 0xae, 0x68,
-	0x34, 0x14, 0x8d, 0x12, 0xa1, 0xf9, 0xac, 0xff, 0x42, 0x7d, 0x1a, 0x83, 0x3d, 0x74, 0xa1, 0x36,
-	0x58, 0x69, 0x76, 0x79, 0xeb, 0xfd, 0xa3, 0x0e, 0x4c, 0x1f, 0x12, 0x9e, 0xa5, 0xd9, 0x95, 0x47,
-	0xa8, 0x0b, 0xf6, 0x92, 0xa7, 0xf7, 0xe9, 0x32, 0xb9, 0xf1, 0x46, 0xe7, 0xee, 0x7b, 0xeb, 0x93,
-	0x8f, 0xd6, 0x27, 0x9f, 0xad, 0x4f, 0xf2, 0x89, 0xc9, 0x5d, 0x7c, 0x07, 0x00, 0x00, 0xff, 0xff,
-	0x14, 0x45, 0x79, 0x62, 0x66, 0x01, 0x00, 0x00,
+	// 216 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x44, 0x8e, 0x4f, 0x4a, 0xc6, 0x30,
+	0x10, 0xc5, 0x19, 0x6d, 0x2b, 0x9d, 0x76, 0x15, 0x5c, 0x44, 0x91, 0x1a, 0x5c, 0x65, 0x95, 0x82,
+	0x3d, 0x81, 0x82, 0x2b, 0x77, 0xb9, 0x80, 0xf4, 0xcf, 0x58, 0xaa, 0x36, 0x29, 0x36, 0x0a, 0x39,
+	0x9c, 0x7b, 0x97, 0x1e, 0x41, 0x7a, 0x12, 0x31, 0xf9, 0xca, 0xb7, 0x7b, 0xef, 0xcd, 0xef, 0x0d,
+	0x0f, 0x4b, 0xfa, 0x24, 0xe3, 0x56, 0xb5, 0xbc, 0x5b, 0x67, 0x59, 0x16, 0xdd, 0xe5, 0xc5, 0x68,
+	0xed, 0xf8, 0x46, 0x75, 0x48, 0xbb, 0x8f, 0xe7, 0xba, 0x35, 0x3e, 0x22, 0x37, 0x5f, 0x80, 0xe9,
+	0xc3, 0x3f, 0xc5, 0x18, 0x26, 0xce, 0x2f, 0xc4, 0x41, 0x80, 0x4c, 0x75, 0xd0, 0x8c, 0xe3, 0xd9,
+	0x4c, 0xeb, 0xda, 0x8e, 0xc4, 0x4f, 0x04, 0xc8, 0x5c, 0xef, 0x96, 0x5d, 0x61, 0xde, 0xdb, 0x79,
+	0xb1, 0x86, 0x8c, 0xe3, 0xa7, 0xe1, 0x76, 0x0c, 0xc2, 0xaf, 0x69, 0x26, 0x9e, 0x08, 0x90, 0x89,
+	0x0e, 0x9a, 0x5d, 0x63, 0x61, 0xbb, 0x17, 0xea, 0xdd, 0xd3, 0xeb, 0x64, 0x06, 0x9e, 0x86, 0x0e,
+	0xc6, 0xe8, 0x71, 0x32, 0x03, 0x6b, 0x10, 0x77, 0x80, 0x3c, 0xcf, 0x04, 0xc8, 0xe2, 0xf6, 0x5c,
+	0xc5, 0xe9, 0x6a, 0x9f, 0xae, 0xee, 0x8c, 0xd7, 0xf9, 0xa1, 0x45, 0xfe, 0xbe, 0xfc, 0xde, 0x2a,
+	0xf8, 0xd9, 0x2a, 0xf8, 0xdd, 0x2a, 0xe8, 0xb2, 0x80, 0x35, 0x7f, 0x01, 0x00, 0x00, 0xff, 0xff,
+	0x79, 0x41, 0x8a, 0x06, 0x07, 0x01, 0x00, 0x00,
 }

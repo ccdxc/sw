@@ -10,9 +10,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/pensando/sw/nic/agent/ipc"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-
 	"golang.org/x/net/context"
 	"gopkg.in/check.v1"
 
@@ -21,10 +18,11 @@ import (
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	pencluster "github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/nic/agent/ipc"
 	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	tmstate "github.com/pensando/sw/nic/agent/tmagent/state"
 
 	"github.com/pensando/sw/nic/agent/nmd"
@@ -121,11 +119,9 @@ const (
 var (
 	logger = log.GetNewLogger(log.GetDefaultConfig("venice_integ_test"))
 
-	evtType = append(evtsapi.GetEventTypes(), append(pencluster.GetEventTypes(), auth.GetEventTypes()...)...)
 	// create events recorder
 	_, _ = recorder.NewRecorder(&recorder.Config{
 		Component:     "venice_integ_test",
-		EvtTypes:      evtType,
 		BackupDir:     "/tmp",
 		SkipEvtsProxy: true}, logger)
 

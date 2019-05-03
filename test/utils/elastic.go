@@ -225,7 +225,7 @@ func createElasticClient(elasticsearchAddr string, resolverClient resolver.Inter
 
 	opts := []elastic.Option{}
 	if signer != nil {
-		authDir, err := ioutil.TempDir("", "elastic-client")
+		authDir, err := ioutil.TempDir("/tmp", "elastic-client")
 		if err != nil {
 			return nil, fmt.Errorf("error creating temp dir for credentials: %v", err)
 		}

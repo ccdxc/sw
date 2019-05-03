@@ -10,7 +10,7 @@ import (
 
 	_ "net/http/pprof"
 
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -54,8 +54,7 @@ func main() {
 
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Component: globals.Npm,
-		EvtTypes:  evtsapi.GetEventTypes()}, logger)
+		Component: globals.Npm}, logger)
 	if err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}
@@ -72,7 +71,8 @@ func main() {
 	}
 
 	log.Infof("%s is running {%+v}", globals.Npm, ctrler)
-	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.Npm, utils.GetHostname()), nil)
+	recorder.Event(eventtypes.SERVICE_RUNNING,
+		fmt.Sprintf("Service %s running on %s", globals.Npm, utils.GetHostname()), nil)
 
 	// wait forever
 	<-waitCh

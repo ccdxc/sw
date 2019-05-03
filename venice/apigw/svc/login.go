@@ -26,9 +26,9 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	auditapi "github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -150,7 +150,7 @@ func (s *loginV1GwService) CompleteRegistration(ctx context.Context,
 				objRef.Defaults("all")
 				objRef.Tenant = cred.Tenant
 				objRef.Name = cred.Username
-				recorder.Event(auth.LoginFailed, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("Unsuccessful login attempt by user [%s|%s] connecting from client IPs [%v]", cred.Tenant, cred.Username, getClientIPs(req)), objRef)
+				recorder.Event(eventtypes.LOGIN_FAILED, fmt.Sprintf("Unsuccessful login attempt by user [%s|%s] connecting from client IPs [%v]", cred.Tenant, cred.Username, getClientIPs(req)), objRef)
 			}
 		}()
 		switch err {

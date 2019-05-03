@@ -13313,14 +13313,16 @@
           "type": "string",
           "enum": [
             "INFO",
-            "WARNING",
-            "CRITICAL"
+            "WARN",
+            "CRITICAL",
+            "DEBUG"
           ],
           "default": "INFO",
           "x-ui-hints": {
             "CRITICAL": "Critical",
+            "DEBUG": "Debug",
             "INFO": "Informational",
-            "WARNING": "Warning"
+            "WARN": "Warning"
           },
           "title": "Severity to be set for an alert that gets triggered from this rule"
         },
@@ -13445,14 +13447,16 @@
           "type": "string",
           "enum": [
             "INFO",
-            "WARNING",
-            "CRITICAL"
+            "WARN",
+            "CRITICAL",
+            "DEBUG"
           ],
           "default": "INFO",
           "x-ui-hints": {
             "CRITICAL": "Critical",
+            "DEBUG": "Debug",
             "INFO": "Informational",
-            "WARNING": "Warning"
+            "WARN": "Warning"
           },
           "title": "Severity of an alert"
         },

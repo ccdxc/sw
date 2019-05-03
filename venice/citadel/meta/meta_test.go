@@ -7,13 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/cluster"
-
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/cluster"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/venice/citadel/meta"
@@ -471,8 +469,7 @@ func TestGetMetastoreURLs(t *testing.T) {
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 		Component: globals.Citadel,
-		BackupDir: "/tmp/" + t.Name(),
-		EvtTypes:  evtsapi.GetEventTypes()}, log.WithContext("test", t.Name()))
+		BackupDir: "/tmp/" + t.Name()}, log.WithContext("test", t.Name()))
 	if err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}

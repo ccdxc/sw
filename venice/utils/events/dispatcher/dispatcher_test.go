@@ -19,6 +19,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventattrs"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/exporters"
 	"github.com/pensando/sw/venice/utils/log"
@@ -42,7 +43,7 @@ var (
 		},
 		EventAttributes: evtsapi.EventAttributes{
 			Source:   dummyEvtSource,
-			Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
+			Severity: eventattrs.Severity_INFO.String(),
 			Type:     "DUMMY",
 			Count:    1,
 		},

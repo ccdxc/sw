@@ -5,32 +5,23 @@ import "google/protobuf/any.proto";
 
 package events;
 
-enum Severity {
-  INFO      = 0;
-  WARNING   = 1;
-  CRITICAL  = 2;
-}
-
 message Event {
-    // INFO, WARNING or CRITICAL
-    Severity            severity    = 1;
-
     // event type; this should be one of the event type from
     // service proto. e.g nw::EventTypes_Name(nw::NETWORK_CREATE_FAILED)
-    string              type        = 2;
+    int32               type        = 1;
 
     // free form event message
-    string              message     = 3;
+    string              message     = 2;
 
     // name of component producing event e.g. nicmgr, fte, etc.
-    string              component   = 4;
+    string              component   = 3;
 
     // number of seconds since the epoch (std::time(0))
-    uint64              time        = 5;
+    uint64              time        = 4;
 
     // kind of the affected object
-    string              object_kind = 6;
+    string              object_kind = 5;
 
     // protobuf message; key/id of the affected object. e.g. kh::NetworkKeyHandle
-    google.protobuf.Any object_key  = 7;
+    google.protobuf.Any object_key  = 6;
 }

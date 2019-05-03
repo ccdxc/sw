@@ -16,7 +16,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 
-	"github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventattrs"
 
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
@@ -30,8 +30,8 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
-// AlertSpec_AlertState_normal is a map of normalized values for the enum
-var AlertSpec_AlertState_normal = map[string]string{
+// AlertState_normal is a map of normalized values for the enum
+var AlertState_normal = map[string]string{
 	"ACKNOWLEDGED": "ACKNOWLEDGED",
 	"OPEN":         "OPEN",
 	"RESOLVED":     "RESOLVED",
@@ -829,7 +829,7 @@ func (m *AlertPolicySpec) Normalize() {
 		}
 	}
 
-	m.Severity = events.SeverityLevel_normal[strings.ToLower(m.Severity)]
+	m.Severity = eventattrs.Severity_normal[strings.ToLower(m.Severity)]
 
 }
 
@@ -933,7 +933,7 @@ func (m *AlertSpec) Validate(ver, path string, ignoreStatus bool) []error {
 
 func (m *AlertSpec) Normalize() {
 
-	m.State = AlertSpec_AlertState_normal[strings.ToLower(m.State)]
+	m.State = AlertState_normal[strings.ToLower(m.State)]
 
 }
 
@@ -984,7 +984,7 @@ func (m *AlertStatus) Normalize() {
 
 	m.Reason.Normalize()
 
-	m.Severity = events.SeverityLevel_normal[strings.ToLower(m.Severity)]
+	m.Severity = eventattrs.Severity_normal[strings.ToLower(m.Severity)]
 
 }
 
@@ -1148,9 +1148,9 @@ func init() {
 	validatorMapAlerts["AlertPolicySpec"]["all"] = append(validatorMapAlerts["AlertPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*AlertPolicySpec)
 
-		if _, ok := events.SeverityLevel_value[m.Severity]; !ok {
+		if _, ok := eventattrs.Severity_value[m.Severity]; !ok {
 			vals := []string{}
-			for k1, _ := range events.SeverityLevel_value {
+			for k1, _ := range eventattrs.Severity_value {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Severity", vals)
@@ -1162,9 +1162,9 @@ func init() {
 	validatorMapAlerts["AlertSpec"]["all"] = append(validatorMapAlerts["AlertSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*AlertSpec)
 
-		if _, ok := AlertSpec_AlertState_value[m.State]; !ok {
+		if _, ok := AlertState_value[m.State]; !ok {
 			vals := []string{}
-			for k1, _ := range AlertSpec_AlertState_value {
+			for k1, _ := range AlertState_value {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"State", vals)
@@ -1176,9 +1176,9 @@ func init() {
 	validatorMapAlerts["AlertStatus"]["all"] = append(validatorMapAlerts["AlertStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*AlertStatus)
 
-		if _, ok := events.SeverityLevel_value[m.Severity]; !ok {
+		if _, ok := eventattrs.Severity_value[m.Severity]; !ok {
 			vals := []string{}
-			for k1, _ := range events.SeverityLevel_value {
+			for k1, _ := range eventattrs.Severity_value {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Severity", vals)

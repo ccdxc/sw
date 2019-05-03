@@ -9,13 +9,12 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/server"
 	"github.com/pensando/sw/venice/cmd/server/options"
 	"github.com/pensando/sw/venice/cmd/startup"
-	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
+	"github.com/pensando/sw/venice/cmd/systemd-configs"
 	cmdutils "github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -73,8 +72,7 @@ func main() {
 	// update the event source.
 	if env.Recorder, err = recorder.NewRecorder(&recorder.Config{
 		SkipEvtsProxy: true,
-		Component:     globals.Cmd,
-		EvtTypes:      append(cmd.GetEventTypes(), evtsapi.GetEventTypes()...)}, env.Logger); err != nil {
+		Component:     globals.Cmd}, env.Logger); err != nil {
 		fmt.Printf("failed to create events recorder, err: %v", err)
 	}
 	defer env.Recorder.Close()

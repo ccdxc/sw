@@ -69,7 +69,7 @@ do
 done < ${curdir}/generated/pkgmanifest
 
 cd ${curdir}
-PROTOSUBST=Mgoogle/api/annotations.proto=github.com/pensando/grpc-gateway/third_party/googleapis/google/api,Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types
+PROTOSUBST=Mgoogle/api/annotations.proto=github.com/pensando/grpc-gateway/third_party/googleapis/google/api,Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,Mgithub.com/pensando/sw/events/protos/attributes.proto=github.com/pensando/sw/events/generated/eventattrs
 cd $protopath && while read -r line || [[ -n "$line" ]];
 do
     protofile=$(echo $line | awk '{ print $1 }')

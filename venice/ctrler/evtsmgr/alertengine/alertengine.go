@@ -234,7 +234,7 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 			},
 		},
 		Spec: monitoring.AlertSpec{
-			State: monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_OPEN)],
+			State: monitoring.AlertState_OPEN.String(),
 		},
 		Status: monitoring.AlertStatus{
 			Severity: alertPolicy.Spec.GetSeverity(),
@@ -257,7 +257,7 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 		// check there is an existing alert from the same event
 		outstandingAlerts := a.memDb.GetAlerts(
 			memdb.WithTenantFilter(alertPolicy.GetTenant()),
-			memdb.WithAlertStateFilter([]monitoring.AlertSpec_AlertState{monitoring.AlertSpec_OPEN}),
+			memdb.WithAlertStateFilter([]monitoring.AlertState{monitoring.AlertState_OPEN}),
 			memdb.WithAlertPolicyIDFilter(alertPolicy.GetName()),
 			memdb.WithEventURIFilter(evt.GetSelfLink()))
 		if len(outstandingAlerts) > 0 {
@@ -269,7 +269,7 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 		if evt.GetObjectRef() != nil {
 			outstandingAlerts = a.memDb.GetAlerts(
 				memdb.WithTenantFilter(alertPolicy.GetTenant()),
-				memdb.WithAlertStateFilter([]monitoring.AlertSpec_AlertState{monitoring.AlertSpec_OPEN, monitoring.AlertSpec_ACKNOWLEDGED}),
+				memdb.WithAlertStateFilter([]monitoring.AlertState{monitoring.AlertState_OPEN, monitoring.AlertState_ACKNOWLEDGED}),
 				memdb.WithAlertPolicyIDFilter(alertPolicy.GetName()),
 				memdb.WithObjectRefFilter(evt.GetObjectRef()))
 			if len(outstandingAlerts) >= 1 { // there should be exactly one outstanding alert; not more than that

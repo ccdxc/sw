@@ -5,8 +5,8 @@ import (
 	"strings"
 	"sync"
 
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/events/generated/eventattrs"
 	"github.com/pensando/sw/venice/utils"
 	aeutils "github.com/pensando/sw/venice/utils/alertengine"
 	"github.com/pensando/sw/venice/utils/log"
@@ -43,12 +43,12 @@ func (s *syslogExport) Export(alert *monitoring.Alert) int {
 	s.Lock()
 	defer s.Unlock()
 	for _, writer := range s.writers {
-		switch evtsapi.SeverityLevel(evtsapi.SeverityLevel_value[alert.Status.GetSeverity()]) {
-		case evtsapi.SeverityLevel_INFO:
+		switch eventattrs.Severity(eventattrs.Severity_value[alert.Status.GetSeverity()]) {
+		case eventattrs.Severity_INFO:
 			err = writer.Info(sMsg)
-		case evtsapi.SeverityLevel_WARNING:
+		case eventattrs.Severity_WARN:
 			err = writer.Warning(sMsg)
-		case evtsapi.SeverityLevel_CRITICAL:
+		case eventattrs.Severity_CRITICAL:
 			err = writer.Crit(sMsg)
 		}
 

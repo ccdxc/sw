@@ -54,6 +54,8 @@ var typesMapEvents = map[string]*api.Struct{
 
 			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{ID: "message", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
 
+			"Category": api.Field{Name: "Category", CLITag: api.CLIInfo{ID: "category", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "category", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "TYPE_STRING"},
+
 			"ObjectRef": api.Field{Name: "ObjectRef", CLITag: api.CLIInfo{ID: "object-ref", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object-ref", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "api.ObjectRef"},
 
 			"Source": api.Field{Name: "Source", CLITag: api.CLIInfo{ID: "source", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "source", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: true, KeyType: "", Type: "events.EventSource"},
@@ -69,6 +71,8 @@ var typesMapEvents = map[string]*api.Struct{
 			"Type": api.Field{Name: "Type", CLITag: api.CLIInfo{ID: "type", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "type", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Message": api.Field{Name: "Message", CLITag: api.CLIInfo{ID: "message", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "message", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Category": api.Field{Name: "Category", CLITag: api.CLIInfo{ID: "category", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "category", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"ObjectRef": api.Field{Name: "ObjectRef", CLITag: api.CLIInfo{ID: "object-ref", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "object-ref", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.ObjectRef"},
 

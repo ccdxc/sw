@@ -50,6 +50,7 @@ var fieldOrTypeOverride = map[string]map[string]string{
 		"type":      "keyword",
 		"component": "keyword",
 		"name":      "keyword",
+		"category":  "keyword",
 
 		// special types mapping
 		"Timestamp": "date",

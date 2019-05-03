@@ -11,6 +11,7 @@ import (
 
 	api "github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
@@ -43,12 +44,12 @@ func validateNICHealth(ctx context.Context, snIf cmd.ClusterV1SmartNICInterface,
 	}, 90, 1).Should(BeTrue(), "SmartNIC health status check failed")
 }
 
-func getNICHealthEvents(ctx context.Context, esClient elastic.ESClient, evtType string) *es.SearchResult {
+func getNICHealthEvents(ctx context.Context, esClient elastic.ESClient, evtType eventtypes.EventType) *es.SearchResult {
 	var err error
 	var res *es.SearchResult
 
 	query := es.NewBoolQuery().Must(es.NewTermQuery("source.component.keyword", globals.Cmd),
-		es.NewTermQuery("type.keyword", evtType))
+		es.NewTermQuery("type.keyword", eventtypes.EventType_name[int32(evtType)]))
 
 	Eventually(func() error {
 		res, err = esClient.Search(context.Background(),
@@ -61,7 +62,7 @@ func getNICHealthEvents(ctx context.Context, esClient elastic.ESClient, evtType 
 	return res
 }
 
-func validateNICHealthEvents(ctx context.Context, esClient elastic.ESClient, evtType string, numExpectedHits int) {
+func validateNICHealthEvents(ctx context.Context, esClient elastic.ESClient, evtType eventtypes.EventType, numExpectedHits int) {
 	var err error
 
 	Eventually(func() error {
@@ -226,8 +227,8 @@ var _ = Describe("SmartNIC tests", func() {
 			}, 30, 1).Should(BeTrue(), "SmartNIC condition condition.LastTransitionTime check failed")
 
 			// check that events were generated
-			validateNICHealthEvents(ctx, esClient, cmd.NICHealthUnknown, ts.tu.NumNaplesHosts)
-			validateNICHealthEvents(ctx, esClient, cmd.NICHealthy, ts.tu.NumNaplesHosts)
+			validateNICHealthEvents(ctx, esClient, eventtypes.NIC_HEALTH_UNKNOWN, ts.tu.NumNaplesHosts)
+			validateNICHealthEvents(ctx, esClient, eventtypes.NIC_HEALTHY, ts.tu.NumNaplesHosts)
 		})
 	})
 })

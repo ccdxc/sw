@@ -35,8 +35,8 @@ import (
 	"github.com/pensando/sw/api/errors"
 	auditapi "github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/login"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -499,7 +499,7 @@ Loop:
 	a.runstate.running = true
 	a.runstate.cond.Broadcast()
 	a.runstate.cond.L.Unlock()
-	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.APIGw, utils.GetHostname()), nil)
+	recorder.Event(eventtypes.SERVICE_RUNNING, fmt.Sprintf("Service %s running on %s", globals.APIGw, utils.GetHostname()), nil)
 	a.logger.Info("exit ", <-a.doneCh)
 }
 
@@ -660,8 +660,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 	}
 	// audit before making the call
 	if err := a.audit(auditEventID, user, i, nil, operations, auditLevel, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
-		recorder.Event(auditapi.AuditingFailed,
-			evtsapi.SeverityLevel_CRITICAL,
+		recorder.Event(eventtypes.AUDITING_FAILED,
 			fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) and operations (%s)", auditEventID, user.Tenant, user.Name, authz.PrintOperations(operations)), nil)
 		return nil, apierrors.ToGrpcError("Auditing failed, call aborted", []string{err.Error()}, int32(codes.Unavailable), "", nil)
 	}
@@ -698,8 +697,7 @@ func (a *apiGw) HandleRequest(ctx context.Context, in interface{}, prof apigw.Se
 
 	a.copyToOutgoingContext(nctx, ctx)
 	if err := a.audit(auditEventID, user, nil, out, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
-		recorder.Event(auditapi.AuditingFailed,
-			evtsapi.SeverityLevel_CRITICAL,
+		recorder.Event(eventtypes.AUDITING_FAILED,
 			fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) and operations (%s)", auditEventID, user.Tenant, user.Name, authz.PrintOperations(operations)), nil)
 		return out, apierrors.ToGrpcError("Auditing failed", []string{err.Error()}, int32(codes.Aborted), "", nil)
 	}
@@ -967,8 +965,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// audit before making the call
 	if err := p.apiGw.audit(auditEventID, user, r, nil, operations, auditLevel, auditapi.Stage_RequestAuthorization, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
-		recorder.Event(auditapi.AuditingFailed,
-			evtsapi.SeverityLevel_CRITICAL,
+		recorder.Event(eventtypes.AUDITING_FAILED,
 			fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) and operations (%s)", auditEventID, user.Tenant, user.Name, authz.PrintOperations(operations)), nil)
 		p.apiGw.HTTPOtherErrorHandler(w, r, "Auditing failed, call aborted", int(codes.Unavailable))
 		return
@@ -1005,8 +1002,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if err := p.apiGw.audit(auditEventID, user, nil, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Success, nil, clientIPs, reqURI); err != nil {
-		recorder.Event(auditapi.AuditingFailed,
-			evtsapi.SeverityLevel_CRITICAL,
+		recorder.Event(eventtypes.AUDITING_FAILED,
 			fmt.Sprintf("Failure in recording audit event (%s) for user (%s|%s) and operations (%s)", auditEventID, user.Tenant, user.Name, authz.PrintOperations(operations)), nil)
 		p.apiGw.HTTPOtherErrorHandler(w, r, "Auditing failed", int(codes.Aborted))
 		return

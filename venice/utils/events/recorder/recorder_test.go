@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	epgrpc "github.com/pensando/sw/venice/evtsproxy/rpcserver"
 	"github.com/pensando/sw/venice/evtsproxy/rpcserver/evtsproxyproto"
 	"github.com/pensando/sw/venice/globals"
@@ -27,19 +27,9 @@ import (
 	"github.com/pensando/sw/venice/utils/testutils/policygen"
 )
 
-const (
-	TestNICDisconnected = "TestNICDisconnected"
-	TestNICConnected    = "TestNICConnected"
-)
-
 var (
 	testServerURL = "localhost:0"
 	numEvents     = 1000
-
-	testEventTypes = []string{
-		TestNICDisconnected,
-		TestNICConnected,
-	}
 
 	logger        = log.GetNewLogger(log.GetDefaultConfig("recorder_test"))
 	mockBufferLen = 10
@@ -98,14 +88,13 @@ func TestEventsRecorder(t *testing.T) {
 	// create recorder
 	evtsRecorder, err := NewRecorder(&Config{
 		Component:    "test-component" + t.Name(),
-		EvtTypes:     testEventTypes,
 		EvtsProxyURL: rpcServer.GetListenURL(),
 		BackupDir:    recorderEventsDir}, logger)
 	AssertOk(t, err, "failed to create events recorder")
 	defer evtsRecorder.Close()
 
-	evtsRecorder.Event(TestNICDisconnected, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
-	evtsRecorder.Event(TestNICConnected, evtsapi.SeverityLevel_INFO, "test event - 2", nil)
+	evtsRecorder.Event(eventtypes.NIC_ADMITTED, "test event - 1", nil)
+	evtsRecorder.Event(eventtypes.NIC_UNHEALTHY, "test event - 2", nil)
 
 	// send events using multiple workers and check if things are still intact
 	wg := new(sync.WaitGroup)
@@ -119,8 +108,8 @@ func TestEventsRecorder(t *testing.T) {
 			for j := 0; j < each; j++ {
 				// record events w/o reference object
 				message := fmt.Sprintf("thread: %v; event: %v", j, threadID)
-				evtsRecorder.Event(TestNICDisconnected, evtsapi.SeverityLevel_CRITICAL, message, nil)
-				evtsRecorder.Event(TestNICConnected, evtsapi.SeverityLevel_INFO, message, nil)
+				evtsRecorder.Event(eventtypes.NIC_UNHEALTHY, message, nil)
+				evtsRecorder.Event(eventtypes.NIC_ADMITTED, message, nil)
 
 				// create test NIC object
 				testNIC := policygen.CreateSmartNIC("0014.2201.2345",
@@ -132,8 +121,8 @@ func TestEventsRecorder(t *testing.T) {
 					})
 
 				// record events with reference object
-				evtsRecorder.Event(TestNICDisconnected, evtsapi.SeverityLevel_CRITICAL, message, testNIC)
-				evtsRecorder.Event(TestNICConnected, evtsapi.SeverityLevel_INFO, message, testNIC)
+				evtsRecorder.Event(eventtypes.NIC_UNHEALTHY, message, testNIC)
+				evtsRecorder.Event(eventtypes.NIC_ADMITTED, message, testNIC)
 			}
 			wg.Done()
 		}(i, evtsRecorder)
@@ -142,76 +131,14 @@ func TestEventsRecorder(t *testing.T) {
 	wg.Wait()
 }
 
-// TestInvalidEventInputs tests invalid event inputs (severity, type)
-func TestInvalidEventInputs(t *testing.T) {
-	eventsStorePath := filepath.Join(eventsDir, t.Name())
-	defer os.RemoveAll(eventsStorePath)
-
-	// run events proxy server
-	rpcServer, evtsDispatcher, rpcClient, _ := createEventsProxy(t, testServerURL, eventsStorePath)
-	defer rpcServer.Stop()
-	defer evtsDispatcher.Shutdown()
-	defer rpcClient.ClientConn.Close()
-
-	// create recorder events directory
-	recorderEventsDir, err := ioutil.TempDir("", "")
-	AssertOk(t, err, "failed to create recorder events directory")
-	defer os.RemoveAll(recorderEventsDir)
-
-	// create events proxy client
-	proxyClient := evtsproxyproto.NewEventsProxyAPIClient(rpcClient.ClientConn)
-	Assert(t, proxyClient != nil, "failed to created events proxy client")
-
-	// create recorder
-	evtsRecorder, err := NewRecorder(&Config{
-		Component:    "test-component-" + t.Name(),
-		EvtTypes:     testEventTypes,
-		EvtsProxyURL: rpcServer.GetListenURL(),
-		BackupDir:    recorderEventsDir}, logger)
-	AssertOk(t, err, "failed to create events recorder")
-	defer evtsRecorder.Close()
-
-	// send events using multiple workers and check if things are still intact
-	wg := new(sync.WaitGroup)
-	wg.Add(2)
-
-	// test invalid event type
-	go func() {
-		defer func() {
-			if r := recover(); r != nil {
-				wg.Done()
-			}
-		}()
-
-		evtsRecorder.Event("InvalidEvent", evtsapi.SeverityLevel_INFO, "test event - 1", nil)
-	}()
-
-	// test invalid severity - 100
-	go func() {
-		defer func() {
-			if r := recover(); r != nil {
-				wg.Done()
-			}
-		}()
-
-		evtsRecorder.Event(TestNICConnected, 100, "test event - 1", nil)
-	}()
-
-	wg.Wait()
-}
-
 // TestEventRecorderInstantiation tests event recorder instantiation cases
 func TestEventRecorderInstantiation(t *testing.T) {
 	// missing component name
-	_, err := NewRecorder(&Config{EvtTypes: testEventTypes, EvtsProxyURL: testServerURL}, logger)
-	Assert(t, err != nil, "expected failure, event recorder instantiation succeeded")
-
-	// empty event types
-	_, err = NewRecorder(&Config{Component: t.Name(), EvtsProxyURL: testServerURL}, logger)
+	_, err := NewRecorder(&Config{EvtsProxyURL: testServerURL}, logger)
 	Assert(t, err != nil, "expected failure, event recorder instantiation succeeded")
 
 	// skip evts proxy
-	r, err := NewRecorder(&Config{Component: t.Name(), EvtTypes: []string{"DUMMY"},
+	r, err := NewRecorder(&Config{Component: t.Name(),
 		EvtsProxyURL: testServerURL, BackupDir: "/tmp", SkipEvtsProxy: true}, logger)
 	AssertOk(t, err, "expected success, event recorder instantiation failed")
 	r.StartExport()
@@ -242,10 +169,10 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 		var evtsRecorder events.Recorder
 
 		evtsRecorder, err = NewRecorder(&Config{
-			Component:    t.Name(),
-			EvtTypes:     testEventTypes,
-			EvtsProxyURL: proxyRPCServer.GetListenURL(),
-			BackupDir:    recorderEventsDir}, logger)
+			Component:                   t.Name(),
+			EvtsProxyURL:                proxyRPCServer.GetListenURL(),
+			BackupDir:                   recorderEventsDir,
+			SkipCategoryBasedEventTypes: true}, logger)
 		if err != nil {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
@@ -258,10 +185,10 @@ func TestRecorderWithProxyRestart(t *testing.T) {
 			case <-stopEventRecorder:
 				return
 			case <-ticker.C:
-				evtsRecorder.Event(TestNICConnected, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
+				evtsRecorder.Event(eventtypes.NIC_ADMITTED, "test event - 1", nil)
 				atomic.AddUint64(&totalEventsSent, 1)
 
-				evtsRecorder.Event(TestNICDisconnected, evtsapi.SeverityLevel_CRITICAL, "test event - 2", nil)
+				evtsRecorder.Event(eventtypes.NIC_UNHEALTHY, "test event - 2", nil)
 				atomic.AddUint64(&totalEventsSent, 1)
 			}
 		}
@@ -321,9 +248,9 @@ func TestRecorderFileBackup(t *testing.T) {
 	defer os.RemoveAll(recorderEventsDir)
 
 	evtsRecorder, err := NewRecorder(&Config{
-		Component: t.Name(),
-		EvtTypes:  testEventTypes,
-		BackupDir: recorderEventsDir}, logger)
+		Component:                   t.Name(),
+		BackupDir:                   recorderEventsDir,
+		SkipCategoryBasedEventTypes: true}, logger)
 	AssertOk(t, err, "failed to create recorder")
 	defer evtsRecorder.Close()
 
@@ -342,10 +269,10 @@ func TestRecorderFileBackup(t *testing.T) {
 			case <-stopEventRecorder:
 				return
 			case <-ticker.C:
-				evtsRecorder.Event(TestNICConnected, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
+				evtsRecorder.Event(eventtypes.NIC_ADMITTED, "test event - 1", nil)
 				atomic.AddUint64(&totalEventsSent, 1)
 
-				evtsRecorder.Event(TestNICDisconnected, evtsapi.SeverityLevel_CRITICAL, "test event - 2", nil)
+				evtsRecorder.Event(eventtypes.NIC_UNHEALTHY, "test event - 2", nil)
 				atomic.AddUint64(&totalEventsSent, 1)
 			}
 		}
@@ -394,10 +321,10 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 	wg.Add(2)
 
 	evtsRecorder, err := NewRecorder(&Config{
-		Component:    t.Name(),
-		EvtTypes:     testEventTypes,
-		EvtsProxyURL: proxyRPCServer.GetListenURL(),
-		BackupDir:    recorderEventsDir}, logger)
+		Component:                   t.Name(),
+		EvtsProxyURL:                proxyRPCServer.GetListenURL(),
+		BackupDir:                   recorderEventsDir,
+		SkipCategoryBasedEventTypes: true}, logger)
 	AssertOk(t, err, "failed to create recorder")
 	defer evtsRecorder.Close()
 
@@ -412,10 +339,10 @@ func TestRecorderFailedEventsForwarder(t *testing.T) {
 			case <-stopWorkers:
 				return
 			case <-ticker.C:
-				evtsRecorder.Event(TestNICConnected, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
+				evtsRecorder.Event(eventtypes.NIC_ADMITTED, "test event - 1", nil)
 				atomic.AddUint64(&totalEventsSent, 1)
 
-				evtsRecorder.Event(TestNICDisconnected, evtsapi.SeverityLevel_CRITICAL, "test event - 2", nil)
+				evtsRecorder.Event(eventtypes.NIC_UNHEALTHY, "test event - 2", nil)
 				atomic.AddUint64(&totalEventsSent, 1)
 			}
 		}

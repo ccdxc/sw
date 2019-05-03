@@ -15,7 +15,7 @@ EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|vendor|baz
 TO_PREGEN := venice/utils/apigen/annotations
 
 # Lists venice venice protos and all things auto generated.
-TO_GEN := api api/labels api/fields venice/cmd/types/protos venice/cmd/grpc \
+TO_GEN := api api/labels api/fields events venice/cmd/types/protos venice/cmd/grpc \
 venice/ctrler/ckm/rpcserver/ckmproto \
 nic/agent/protos/netproto \
 nic/agent/protos/tpmprotos  \
@@ -25,7 +25,6 @@ nic/agent/protos/evtprotos \
 venice/citadel/collector/rpcserver/metric venice/utils/runtime/test \
 venice/orch venice/cmd/grpc/server/certificates/certapi \
 venice/evtsproxy/rpcserver/evtsproxyproto \
-nic/sysmgr/events_proto \
 venice/utils/authn/radius                      \
 venice/ctrler/rollout/rpcserver/protos \
 venice/utils/objstore/client/mock \

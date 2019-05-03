@@ -16,8 +16,8 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/ctrlerif/types"
 	evtsmgrprotos "github.com/pensando/sw/nic/agent/protos/evtprotos"
 	"github.com/pensando/sw/venice/evtsproxy"
@@ -403,10 +403,10 @@ func TestEventPolicy(t *testing.T) {
 		defer wg.Done()
 
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Component:    fmt.Sprintf("%s-%s", t.Name(), uuid.NewV4().String()),
-			EvtTypes:     []string{"EVT1", "EVT2"},
-			EvtsProxyURL: eps.RPCServer.GetListenURL(),
-			BackupDir:    eventsDir}, logger)
+			Component:                   fmt.Sprintf("%s-%s", t.Name(), uuid.NewV4().String()),
+			EvtsProxyURL:                eps.RPCServer.GetListenURL(),
+			BackupDir:                   eventsDir,
+			SkipCategoryBasedEventTypes: true}, logger)
 		if err != nil {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
@@ -417,12 +417,12 @@ func TestEventPolicy(t *testing.T) {
 			case <-stopEvtsRecorder:
 				return
 			case <-time.After(100 * time.Millisecond):
-				evtType := "EVT1"
+				evtType := eventtypes.SERVICE_RUNNING
 				if atomic.LoadUint32(&count)%2 == 0 {
-					evtType = "EVT2"
+					evtType = eventtypes.SERVICE_STOPPED
 				}
 
-				evtsRecorder.Event(evtType, evtsapi.SeverityLevel_INFO, fmt.Sprintf("event message - %d", count), nil)
+				evtsRecorder.Event(evtType, fmt.Sprintf("event message - %d", count), nil)
 				atomic.AddUint32(&count, 1)
 			}
 		}

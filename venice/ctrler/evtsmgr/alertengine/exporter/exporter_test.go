@@ -12,7 +12,6 @@ import (
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
 	mockapi "github.com/pensando/sw/api/mock"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
@@ -76,7 +75,7 @@ func TestExporter(t *testing.T) {
 	err = memDb.AddObject(alertDestBSDSyslog)
 	AssertOk(t, err, "Add object failed %v", err)
 
-	alert := policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)], "test-alert1", nil, nil, nil)
+	alert := policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil, nil, nil)
 
 	totalExports := struct {
 		sync.Mutex

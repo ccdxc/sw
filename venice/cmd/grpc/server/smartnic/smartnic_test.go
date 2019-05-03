@@ -23,6 +23,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
 	"github.com/pensando/sw/nic/agent/nmd/upg"
@@ -422,7 +423,7 @@ func verifyWatchAPIIsInvoked(t *testing.T, client grpc.SmartNICUpdatesClient, na
 
 func validateNICSpecConflictEvent(events *[]mockevtsrecorder.Event, nic, host1, host2 string) bool {
 	for _, ev := range *events {
-		if ev.EventType == cmd.HostSmartNICSpecConflict {
+		if ev.EventType == eventtypes.EventType_name[int32(eventtypes.HOST_SMART_NIC_SPEC_CONFLICT)] {
 			msg := ev.Message
 			return strings.Contains(msg, nic) && strings.Contains(msg, host1) && strings.Contains(msg, host2)
 		}
@@ -1383,7 +1384,7 @@ func TestManualAdmission(t *testing.T) {
 	// check that events got generated
 	numRejectEvents := 0
 	for _, ev := range mr.GetEvents() {
-		if ev.EventType == cmd.NICRejected && strings.Contains(ev.Message, mac2) {
+		if ev.EventType == eventtypes.EventType_name[int32(eventtypes.NIC_REJECTED)] && strings.Contains(ev.Message, mac2) {
 			numRejectEvents++
 		}
 	}
@@ -1472,7 +1473,7 @@ func TestAutoAdmitRejectedNICs(t *testing.T) {
 
 	numRejectEvents := 0
 	for _, ev := range mr.GetEvents() {
-		if ev.EventType == cmd.NICRejected && strings.Contains(ev.Message, mac2) {
+		if ev.EventType == eventtypes.EventType_name[int32(eventtypes.NIC_REJECTED)] && strings.Contains(ev.Message, mac2) {
 			numRejectEvents++
 		}
 	}
@@ -1722,7 +1723,7 @@ func TestHostNICPairing(t *testing.T) {
 
 	// Check that there are no conflict events
 	for _, ev := range mr.GetEvents() {
-		if ev.EventType == cmd.HostSmartNICSpecConflict {
+		if ev.EventType == eventtypes.EventType_name[int32(eventtypes.HOST_SMART_NIC_SPEC_CONFLICT)] {
 			log.Fatalf("Found unexpected NIC conflict events: %+v", mr.GetEvents())
 		}
 	}

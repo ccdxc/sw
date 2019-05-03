@@ -10,15 +10,14 @@ import (
 	k8sclient "k8s.io/client-go/kubernetes"
 	k8srest "k8s.io/client-go/rest"
 
-	api "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
-	"github.com/pensando/sw/venice/cmd/env"
-	"github.com/pensando/sw/venice/cmd/ops"
-
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/cmd/credentials"
+	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
-	configs "github.com/pensando/sw/venice/cmd/systemd-configs"
+	"github.com/pensando/sw/venice/cmd/ops"
+	"github.com/pensando/sw/venice/cmd/systemd-configs"
 	"github.com/pensando/sw/venice/cmd/types"
 	k8stypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
@@ -162,12 +161,12 @@ func (r *resolverServiceObserver) OnNotifyServiceInstance(e k8stypes.ServiceInst
 	if e.GetInstance() != nil && !utils.IsEmpty(e.GetInstance().GetNode()) {
 		switch e.Type {
 		case k8stypes.ServiceInstanceEvent_Added:
-			log.Infof("triggering event {%v} on service {%v:%v}", evtsapi.ServiceStarted, e.GetInstance().GetService(), e.GetInstance().GetNode())
-			recorder.Event(evtsapi.ServiceStarted, evtsapi.SeverityLevel_INFO,
+			log.Infof("triggering event {%v} on service {%v:%v}", eventtypes.SERVICE_STARTED, e.GetInstance().GetService(), e.GetInstance().GetNode())
+			recorder.Event(eventtypes.SERVICE_STARTED,
 				fmt.Sprintf("Service %s started on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), nil)
 		case k8stypes.ServiceInstanceEvent_Deleted:
-			log.Infof("triggering event {%v} on service {%v:%v}", evtsapi.ServiceStopped, e.GetInstance().GetService(), e.GetInstance().GetNode())
-			recorder.Event(evtsapi.ServiceStopped, evtsapi.SeverityLevel_WARNING,
+			log.Infof("triggering event {%v} on service {%v:%v}", eventtypes.SERVICE_STOPPED, e.GetInstance().GetService(), e.GetInstance().GetNode())
+			recorder.Event(eventtypes.SERVICE_STOPPED,
 				fmt.Sprintf("Service %s stopped on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), nil)
 		}
 	}

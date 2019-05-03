@@ -59,12 +59,12 @@ func WithEnabledFilter(enabled bool) FilterFn {
 
 // WithAlertStateFilter returns a fn() which returns true if the alert object matches one of the given states
 // * applicable only for alert object *
-func WithAlertStateFilter(states []monitoring.AlertSpec_AlertState) FilterFn {
+func WithAlertStateFilter(states []monitoring.AlertState) FilterFn {
 	return func(obj runtime.Object) bool {
 		switch obj.(type) {
 		case *monitoring.Alert:
 			for _, st := range states {
-				if obj.(*monitoring.Alert).Spec.GetState() == monitoring.AlertSpec_AlertState_name[int32(st)] {
+				if obj.(*monitoring.Alert).Spec.GetState() == st.String() {
 					return true
 				}
 			}

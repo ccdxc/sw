@@ -8,6 +8,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/events/generated/eventattrs"
 	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/policygen"
@@ -18,13 +19,13 @@ func TestMemDb(t *testing.T) {
 	mDb := NewMemDb()
 
 	// add some objects
-	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "infra", CreateAlphabetString(5), "Event", evtsapi.SeverityLevel_INFO, "convert INFO events to alerts", []*fields.Requirement{}, []string{}))
-	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Event", evtsapi.SeverityLevel_INFO, "convert INFO events to alerts", []*fields.Requirement{}, []string{}))
-	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Event", evtsapi.SeverityLevel_CRITICAL, "convert CRITICAL events to alerts", []*fields.Requirement{}, []string{}))
-	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Event", evtsapi.SeverityLevel_WARNING, "convert WARNING events to alerts", []*fields.Requirement{}, []string{}))
+	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "infra", CreateAlphabetString(5), "Event", eventattrs.Severity_INFO, "convert INFO events to alerts", []*fields.Requirement{}, []string{}))
+	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Event", eventattrs.Severity_INFO, "convert INFO events to alerts", []*fields.Requirement{}, []string{}))
+	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Event", eventattrs.Severity_CRITICAL, "convert CRITICAL events to alerts", []*fields.Requirement{}, []string{}))
+	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Event", eventattrs.Severity_WARN, "convert WARNING events to alerts", []*fields.Requirement{}, []string{}))
 
-	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)], "test-alert1", nil, nil, nil))
-	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)], "test-alert2", nil, nil, nil))
+	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil, nil, nil))
+	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert2", nil, nil, nil))
 
 	mDb.AddObject(policygen.CreateSmartNIC("0014.2201.2345", cluster.SmartNICStatus_ADMITTED.String(), "esx-1",
 		&cluster.SmartNICCondition{Type: cluster.SmartNICCondition_HEALTHY.String(), Status: cluster.ConditionStatus_FALSE.String()}))
@@ -39,7 +40,7 @@ func TestMemDb(t *testing.T) {
 	Assert(t, len(objs) == 2, "invalid number of Smart NIC objects, expected: %v, got: %v", 2, len(objs))
 
 	// test update
-	ap := policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Event", evtsapi.SeverityLevel_WARNING, "convert WARNING events to alerts", []*fields.Requirement{}, []string{})
+	ap := policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Event", eventattrs.Severity_WARN, "convert WARNING events to alerts", []*fields.Requirement{}, []string{})
 	AssertOk(t, mDb.AddObject(ap), "failed to add object to mem DB")
 	ap.Spec.Enable = false
 	AssertOk(t, mDb.UpdateObject(ap), "failed to update object to mem DB")
@@ -57,10 +58,10 @@ func TestGetAlertPolicies(t *testing.T) {
 	mDb := NewMemDb()
 
 	// add some objects
-	mDb.AddObject(policygen.CreateAlertPolicyObj("infra", "infra", CreateAlphabetString(5), "Event", evtsapi.SeverityLevel_INFO, "convert INFO events to alerts", []*fields.Requirement{}, []string{}))
-	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Node", evtsapi.SeverityLevel_INFO, "convert INFO events to alerts", []*fields.Requirement{}, []string{}))
-	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Event", evtsapi.SeverityLevel_CRITICAL, "convert CRITICAL events to alerts", []*fields.Requirement{}, []string{}))
-	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Event", evtsapi.SeverityLevel_WARNING, "convert WARNING events to alerts", []*fields.Requirement{}, []string{}))
+	mDb.AddObject(policygen.CreateAlertPolicyObj("infra", "infra", CreateAlphabetString(5), "Event", eventattrs.Severity_INFO, "convert INFO events to alerts", []*fields.Requirement{}, []string{}))
+	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Node", eventattrs.Severity_INFO, "convert INFO events to alerts", []*fields.Requirement{}, []string{}))
+	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Event", eventattrs.Severity_CRITICAL, "convert CRITICAL events to alerts", []*fields.Requirement{}, []string{}))
+	mDb.AddObject(policygen.CreateAlertPolicyObj(globals.DefaultTenant, "system", CreateAlphabetString(5), "Event", eventattrs.Severity_WARN, "convert WARNING events to alerts", []*fields.Requirement{}, []string{}))
 
 	tests := []struct {
 		filters             []FilterFn
@@ -107,7 +108,7 @@ func TestGetAlertPolicies(t *testing.T) {
 	}
 
 	// test with enable = false
-	pol := policygen.CreateAlertPolicyObj("infra", "infra", CreateAlphabetString(5), "Event", evtsapi.SeverityLevel_INFO, "convert INFO events to alerts", []*fields.Requirement{}, []string{})
+	pol := policygen.CreateAlertPolicyObj("infra", "infra", CreateAlphabetString(5), "Event", eventattrs.Severity_INFO, "convert INFO events to alerts", []*fields.Requirement{}, []string{})
 	err := mDb.AddObject(pol)
 	AssertOk(t, err, "failed to add object to mem DB, err: %v", err)
 	pol.Spec.Enable = false
@@ -123,8 +124,8 @@ func TestGetAlerts(t *testing.T) {
 	mDb := NewMemDb()
 
 	// add some objects
-	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)], "test-alert1", nil, nil, nil))
-	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)], "test-alert1",
+	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil, nil, nil))
+	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1",
 		&monitoring.AlertPolicy{
 			ObjectMeta: api.ObjectMeta{
 				UUID: "policy1",
@@ -138,7 +139,7 @@ func TestGetAlerts(t *testing.T) {
 				},
 			},
 		}, nil))
-	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)], "test-alert1", nil,
+	mDb.AddObject(policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil,
 		&evtsapi.Event{
 			EventAttributes: evtsapi.EventAttributes{
 				ObjectRef: &api.ObjectRef{
@@ -147,7 +148,7 @@ func TestGetAlerts(t *testing.T) {
 				},
 			},
 		}, nil))
-	mDb.AddObject(policygen.CreateAlertObj("infra", globals.DefaultNamespace, CreateAlphabetString(5), evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)], "test-alert1", nil, nil, nil))
+	mDb.AddObject(policygen.CreateAlertObj("infra", globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil, nil, nil))
 	tests := []struct {
 		filters      []FilterFn
 		expNumAlerts int
@@ -208,13 +209,13 @@ func TestGetAlerts(t *testing.T) {
 		Assert(t, tests[i].expNumAlerts == len(objs), "invalid number of alerts for tc#%v, expected: %v, got: %v", i, tests[i].expNumAlerts, len(objs))
 	}
 
-	a := policygen.CreateAlertObj("infra", globals.DefaultNamespace, CreateAlphabetString(5), evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)], "test-alert1", nil, nil, nil)
+	a := policygen.CreateAlertObj("infra", globals.DefaultNamespace, CreateAlphabetString(5), monitoring.AlertState_OPEN, "test-alert1", nil, nil, nil)
 	AssertOk(t, mDb.AddObject(a), "failed to add object to mem DB")
-	objs := mDb.GetAlerts(WithAlertStateFilter([]monitoring.AlertSpec_AlertState{monitoring.AlertSpec_RESOLVED}))
+	objs := mDb.GetAlerts(WithAlertStateFilter([]monitoring.AlertState{monitoring.AlertState_RESOLVED}))
 	Assert(t, len(objs) == 0, "invalid number of alerts, expected: %v, got: %v", 0, len(objs))
 
 	a.Spec.State = "RESOLVED"
 	AssertOk(t, mDb.UpdateObject(a), "failed to update object to mem DB")
-	objs = mDb.GetAlerts(WithAlertStateFilter([]monitoring.AlertSpec_AlertState{monitoring.AlertSpec_RESOLVED}))
+	objs = mDb.GetAlerts(WithAlertStateFilter([]monitoring.AlertState{monitoring.AlertState_RESOLVED}))
 	Assert(t, len(objs) == 1, "invalid number of alerts, expected: %v, got: %v", 1, len(objs))
 }

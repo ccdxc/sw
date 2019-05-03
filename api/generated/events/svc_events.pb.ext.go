@@ -23,18 +23,6 @@ var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
 
-// EventTypesV1_normal is a map of normalized values for the enum
-var EventTypesV1_normal = map[string]string{
-	"ServiceRunning":      "ServiceRunning",
-	"ServiceStarted":      "ServiceStarted",
-	"ServiceStopped":      "ServiceStopped",
-	"ServiceUnresponsive": "ServiceUnresponsive",
-	"servicerunning":      "ServiceRunning",
-	"servicestarted":      "ServiceStarted",
-	"servicestopped":      "ServiceStopped",
-	"serviceunresponsive": "ServiceUnresponsive",
-}
-
 // Clone clones the object into into or creates one of into is nil
 func (m *GetEventRequest) Clone(into interface{}) (interface{}, error) {
 	var out *GetEventRequest

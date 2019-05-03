@@ -6,13 +6,11 @@ import (
 	"regexp"
 	"sync"
 
-	cmd "github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
-	"github.com/pensando/sw/venice/utils/events/recorder"
-	"github.com/pensando/sw/venice/utils/log"
-
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/cmd/types"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 const (
@@ -89,7 +87,7 @@ func (l *leaderService) start() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	l.cancel = cancel
 
-	recorder.Event(cmd.ElectionStarted, evtsapi.SeverityLevel_INFO, "Leader election started", nil)
+	recorder.Event(eventtypes.ELECTION_STARTED, "Leader election started", nil)
 
 	election, err := l.store.Contest(ctx, l.leaderKey, l.id, ttl)
 	if err != nil {
@@ -123,7 +121,7 @@ func (l *leaderService) waitForEventsOrCancel(ctx context.Context) {
 			}
 		case <-ctx.Done():
 			log.Infof("Leader election cancelled")
-			recorder.Event(cmd.ElectionCancelled, evtsapi.SeverityLevel_INFO, "Leader election cancelled", nil)
+			recorder.Event(eventtypes.ELECTION_CANCELLED, "Leader election cancelled", nil)
 			return
 		}
 	}
@@ -147,7 +145,7 @@ func (l *leaderService) stop() {
 		l.election = nil
 	}
 
-	recorder.Event(cmd.ElectionStopped, evtsapi.SeverityLevel_INFO, "Leader election stopped", nil)
+	recorder.Event(eventtypes.ELECTION_STOPPED, "Leader election stopped", nil)
 }
 
 // processEvent handles leader election events.
@@ -159,22 +157,22 @@ func (l *leaderService) processEvent(leader string) {
 		}
 		e := types.LeaderEvent{Evt: types.LeaderEventWon, Leader: leader}
 		err := l.notify(e)
-		recorder.Event(cmd.LeaderElected, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node %s elected as the leader", leader), nil)
+		recorder.Event(eventtypes.LEADER_ELECTED, fmt.Sprintf("Node %s elected as the leader", leader), nil)
 		if err != nil {
 			log.Errorf("Failed to notify %v with error: %v", e, err)
 			l.notify(types.LeaderEvent{Evt: types.LeaderEventLost, Leader: leader})
 			l.stop()
 			go l.Start()
-			recorder.Event(cmd.ElectionNotificationFailed, evtsapi.SeverityLevel_WARNING, "Failed to send leader election notification", nil)
+			recorder.Event(eventtypes.ELECTION_NOTIFICATION_FAILED, "Failed to send leader election notification", nil)
 			return
 		}
 
 	} else if l.IsLeader() {
 		l.notify(types.LeaderEvent{Evt: types.LeaderEventLost, Leader: leader})
-		recorder.Event(cmd.LeaderLost, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node %s lost leadership", l.leader), nil)
+		recorder.Event(eventtypes.LEADER_LOST, fmt.Sprintf("Node %s lost leadership", l.leader), nil)
 	} else if l.leader != leader {
 		l.notify(types.LeaderEvent{Evt: types.LeaderEventChange, Leader: leader})
-		recorder.Event(cmd.LeaderChanged, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Leader changed from %s to %s",
+		recorder.Event(eventtypes.LEADER_CHANGED, fmt.Sprintf("Leader changed from %s to %s",
 			regexp.MustCompile("^$").ReplaceAllString(l.leader, "<none>"),
 			regexp.MustCompile("^$").ReplaceAllString(leader, "<none>")), nil)
 	}

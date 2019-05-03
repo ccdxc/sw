@@ -2,6 +2,7 @@
 #include "nic/utils/events/recorder/constants.h"
 #include "nic/utils/events/queue/queue.hpp"
 #include "gen/proto/events.pb.h"
+#include "gen/proto/eventtypes.pb.h"
 #include "lib/logger/logger.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include <google/protobuf/any.h>
@@ -20,9 +21,7 @@
 // initialize the events recorder; size is defaulted to SHM_SIZE
 // if undefined (shm_size = 0)
 events_recorder* events_recorder::init(const char* shm_name, int shm_size,
-    const char *component,
-    const ::google::protobuf::EnumDescriptor* event_types_descriptor,
-    Logger logger)
+    const char *component, Logger logger)
 {
     if (logger == nullptr) {
         return nullptr;
@@ -33,17 +32,11 @@ events_recorder* events_recorder::init(const char* shm_name, int shm_size,
         abs_shm_name =  std::string("/") + shm_name; // /dev/shm/{shm_name}
     }
 
-    logger->info("{}: initializing events recorder...", abs_shm_name);
-
-    if (!event_types_descriptor) {
-        logger->error("{}: event_types enum descriptor is "
-	    "required for event recorder", abs_shm_name);
-        return nullptr;
-    }
-
     if(shm_size == 0) {
         shm_size = SHM_SIZE;
     }
+
+    logger->info("{}: initializing events recorder...", abs_shm_name);
 
     // create events queue
     events_queue *evts_queue = events_queue::init(abs_shm_name.c_str(),
@@ -56,7 +49,6 @@ events_recorder* events_recorder::init(const char* shm_name, int shm_size,
     events_recorder* recorder = new(events_recorder);
     recorder->component_ = component;
     recorder->queue_ = evts_queue;
-    recorder->event_types_descriptor = event_types_descriptor;
     recorder->logger_ = logger;
 
     recorder->logger_->info("{}: events recorder created", abs_shm_name);
@@ -70,20 +62,10 @@ void events_recorder::deinit()
 }
 
 // construct and record event in the shared memory queue
-int events_recorder::event(events::Severity severity, const int type,
+int events_recorder::event(eventtypes::EventTypes type,
     const char* kind, const ::google::protobuf::Message& key,
     const char* msg...)
 {
-    // this ensures the event type belongs to given descriptor
-    const std::string event_type_str =
-	::google::protobuf::internal::NameOfEnum(this->event_types_descriptor,
-	    type);
-    if (event_type_str.empty()) {
-        this->logger_->error("{}: event type {} does not exist",
-	    this->queue_->get_name(), type);
-        return -1;
-    }
-
     events::Event evt;
     va_list args;
     char buffer[256];                           // message buffer
@@ -93,8 +75,7 @@ int events_recorder::event(events::Severity severity, const int type,
     clock_gettime(CLOCK_REALTIME, &time_ts);
     sdk::timestamp_to_nsecs(&time_ts, &time_ns);
 
-    evt.set_severity(severity);                 // severity
-    evt.set_type(event_type_str.c_str());       // type
+    evt.set_type(type);                         // type
     evt.set_component(this->component_);        // component
     evt.set_time(time_ns);                      // time
     evt.set_object_kind(kind);                  // object_kind

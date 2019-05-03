@@ -15,6 +15,8 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 
+	"github.com/pensando/sw/events/generated/eventattrs"
+
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
 	"github.com/pensando/sw/api/interfaces"
@@ -25,16 +27,6 @@ import (
 var _ kvstore.Interface
 var _ log.Logger
 var _ listerwatcher.WatcherClient
-
-// SeverityLevel_normal is a map of normalized values for the enum
-var SeverityLevel_normal = map[string]string{
-	"CRITICAL": "CRITICAL",
-	"INFO":     "INFO",
-	"WARNING":  "WARNING",
-	"critical": "CRITICAL",
-	"info":     "INFO",
-	"warning":  "WARNING",
-}
 
 var _ validators.DummyVar
 var validatorMapEvents = make(map[string]map[string][]func(string, interface{}) error)
@@ -84,6 +76,7 @@ func (m *EventAttributes) Defaults(ver string) bool {
 	ret = true
 	switch ver {
 	default:
+		m.Category = "Cluster"
 		m.Severity = "INFO"
 	}
 	return ret
@@ -192,7 +185,9 @@ func (m *EventAttributes) Validate(ver, path string, ignoreStatus bool) []error 
 
 func (m *EventAttributes) Normalize() {
 
-	m.Severity = SeverityLevel_normal[strings.ToLower(m.Severity)]
+	m.Category = eventattrs.Category_normal[strings.ToLower(m.Category)]
+
+	m.Severity = eventattrs.Severity_normal[strings.ToLower(m.Severity)]
 
 }
 
@@ -250,9 +245,22 @@ func init() {
 	validatorMapEvents["EventAttributes"]["all"] = append(validatorMapEvents["EventAttributes"]["all"], func(path string, i interface{}) error {
 		m := i.(*EventAttributes)
 
-		if _, ok := SeverityLevel_value[m.Severity]; !ok {
+		if _, ok := eventattrs.Category_value[m.Category]; !ok {
 			vals := []string{}
-			for k1, _ := range SeverityLevel_value {
+			for k1, _ := range eventattrs.Category_value {
+				vals = append(vals, k1)
+			}
+			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Category", vals)
+		}
+		return nil
+	})
+
+	validatorMapEvents["EventAttributes"]["all"] = append(validatorMapEvents["EventAttributes"]["all"], func(path string, i interface{}) error {
+		m := i.(*EventAttributes)
+
+		if _, ok := eventattrs.Severity_value[m.Severity]; !ok {
+			vals := []string{}
+			for k1, _ := range eventattrs.Severity_value {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Severity", vals)

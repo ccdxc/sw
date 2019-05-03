@@ -6,7 +6,7 @@
 #include "nic/delphi/sdk/delphi_sdk.hpp"
 #include "gen/proto/client.delphi.hpp"
 #include "gen/proto/sysmgr.delphi.hpp"
-#include "gen/proto/sysmgr.pb.h"
+#include "gen/proto/eventtypes.pb.h"
 
 #include "eventlogger.hpp"
 #include "service_watcher.hpp"
@@ -37,7 +37,7 @@ void DelphiService::OnMountComplete()
     ServiceLoop::getInstance()->queue_event(
 	ServiceEvent::create("delphi", SERVICE_EVENT_START));
     EventLogger::getInstance()->LogSystemEvent(
-	sysmgr_events::SYSTEM_COLDBOOT, "System booted");
+	eventtypes::SYSTEM_COLDBOOT, "System booted");
 }
 
 std::string DelphiService::Name()
@@ -53,13 +53,13 @@ delphi::error DelphiService::OnSysmgrServiceStatusCreate(
 	ServiceEvent::create(obj->key(), SERVICE_EVENT_START));
     return delphi::error::OK();
 }
-    
+
 delphi::error DelphiService::OnSysmgrServiceStatusDelete(
     delphi::objects::SysmgrServiceStatusPtr obj)
 {
     return delphi::error::OK();
 }
-        
+
 delphi::error DelphiService::OnSysmgrServiceStatusUpdate(
     delphi::objects::SysmgrServiceStatusPtr obj)
 {

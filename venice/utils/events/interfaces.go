@@ -4,6 +4,7 @@ package events
 
 import (
 	"github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 )
 
 // from Venice, Events Recorder -> Events Proxy -> {Events Dispatcher -> Events Exporters}
@@ -26,9 +27,8 @@ type Recorder interface {
 	// Otherwise, it will be created under the default tenant `globals.DefaultTenant` and `globals.DefaultNamespace`.
 	//
 	// eventType should be one of the valid event type
-	// severity should be one of INFO, WARNING, CRITICAL
 	// message is a free form text explaining the reason of the event
-	Event(eventType string, severity events.SeverityLevel, message string, objRef interface{})
+	Event(eventType eventtypes.EventType, message string, objRef interface{})
 
 	// StartExport to start the client
 	StartExport()

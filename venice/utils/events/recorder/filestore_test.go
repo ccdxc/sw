@@ -8,9 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pensando/sw/venice/utils/events"
-
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/events"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/policygen"
 )

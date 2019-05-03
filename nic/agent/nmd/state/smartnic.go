@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -29,7 +29,7 @@ func (n *NMD) RegisterSmartNICReq(nic *cmd.SmartNIC) (grpc.RegisterNICResponse, 
 
 	log.Infof("Register NIC response mac: %s response: %v", nic.ObjectMeta.Name, resp)
 	if n.config.Status.AdmissionPhase == cmd.SmartNICStatus_ADMITTED.String() {
-		recorder.Event(cmd.NICAdmitted, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Smart NIC %s admitted to the cluster", nic.GetName()), nic)
+		recorder.Event(eventtypes.NIC_ADMITTED, fmt.Sprintf("Smart NIC %s admitted to the cluster", nic.GetName()), nic)
 	}
 	return resp, nil
 }

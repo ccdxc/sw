@@ -38,8 +38,9 @@ export enum LabelsRequirement_operator {
 
 export enum MonitoringAlertPolicySpec_severity {
     'INFO' = "INFO",
-    'WARNING' = "WARNING",
+    'WARN' = "WARN",
     'CRITICAL' = "CRITICAL",
+    'DEBUG' = "DEBUG",
 }
 
 export enum MonitoringAlertSpec_state {
@@ -50,8 +51,9 @@ export enum MonitoringAlertSpec_state {
 
 export enum MonitoringAlertStatus_severity {
     'INFO' = "INFO",
-    'WARNING' = "WARNING",
+    'WARN' = "WARN",
     'CRITICAL' = "CRITICAL",
+    'DEBUG' = "DEBUG",
 }
 
 export enum MonitoringAuthConfig_algo {
@@ -206,8 +208,9 @@ export enum LabelsRequirement_operator_uihint {
 
 export enum MonitoringAlertPolicySpec_severity_uihint {
     'CRITICAL' = "Critical",
+    'DEBUG' = "Debug",
     'INFO' = "Informational",
-    'WARNING' = "Warning",
+    'WARN' = "Warning",
 }
 
 export enum MonitoringAlertSpec_state_uihint {
@@ -218,8 +221,9 @@ export enum MonitoringAlertSpec_state_uihint {
 
 export enum MonitoringAlertStatus_severity_uihint {
     'CRITICAL' = "Critical",
+    'DEBUG' = "Debug",
     'INFO' = "Informational",
-    'WARNING' = "Warning",
+    'WARN' = "Warning",
 }
 
 export enum MonitoringEventPolicySpec_format_uihint {

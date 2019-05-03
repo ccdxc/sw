@@ -505,14 +505,16 @@
           "type": "string",
           "enum": [
             "INFO",
-            "WARNING",
-            "CRITICAL"
+            "WARN",
+            "CRITICAL",
+            "DEBUG"
           ],
           "default": "INFO",
           "x-ui-hints": {
             "CRITICAL": "Critical",
+            "DEBUG": "Debug",
             "INFO": "Informational",
-            "WARNING": "Warning"
+            "WARN": "Warning"
           }
         },
         "type": {
@@ -520,6 +522,15 @@
         },
         "message": {
           "type": "string"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "Cluster",
+            "Network",
+            "System"
+          ],
+          "default": "Cluster"
         },
         "object-ref": {
           "$ref": "#/definitions/apiObjectRef"
@@ -537,21 +548,24 @@
     "eventsEventAttributes": {
       "type": "object",
       "required": [
-        "severity"
+        "severity",
+        "category"
       ],
       "properties": {
         "severity": {
           "type": "string",
           "enum": [
             "INFO",
-            "WARNING",
-            "CRITICAL"
+            "WARN",
+            "CRITICAL",
+            "DEBUG"
           ],
           "default": "INFO",
           "x-ui-hints": {
             "CRITICAL": "Critical",
+            "DEBUG": "Debug",
             "INFO": "Informational",
-            "WARNING": "Warning"
+            "WARN": "Warning"
           },
           "title": "Severity represents the criticality level of an event"
         },
@@ -562,6 +576,16 @@
         "message": {
           "type": "string",
           "title": "Message represents the human readable description of an event"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "Cluster",
+            "Network",
+            "System"
+          ],
+          "default": "Cluster",
+          "title": "Category represents the category of an event. e.g. Cluster/Network/Datapath"
         },
         "object-ref": {
           "$ref": "#/definitions/apiObjectRef",

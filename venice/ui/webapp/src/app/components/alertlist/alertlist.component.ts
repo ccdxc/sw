@@ -26,7 +26,7 @@ export class AlertlistComponent implements OnInit, OnDestroy, OnChanges {
   alertnumber = {
     TOTAL: 0,
     CRITICAL: 0,
-    WARNING: 0,
+    WARN: 0,
     INFO: 0
   };
 

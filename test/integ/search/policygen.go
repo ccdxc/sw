@@ -12,10 +12,10 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
@@ -187,7 +187,6 @@ func recordEvents(proxyURL, eventsDir string, eventCount int64, logger log.Logge
 	// create recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
 		Component:    "search_integ_test",
-		EvtTypes:     evtsapi.GetEventTypes(),
 		EvtsProxyURL: proxyURL,
 		BackupDir:    eventsDir}, logger)
 	if err != nil {
@@ -195,7 +194,7 @@ func recordEvents(proxyURL, eventsDir string, eventCount int64, logger log.Logge
 	}
 
 	for i := int64(0); i < eventCount; i++ {
-		evtsRecorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running", testutils.CreateAlphabetString(5)), nil)
+		evtsRecorder.Event(eventtypes.SERVICE_RUNNING, fmt.Sprintf("Service %s running", testutils.CreateAlphabetString(5)), nil)
 	}
 }
 

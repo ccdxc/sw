@@ -15,8 +15,6 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/delphi/gosdk"
@@ -69,9 +67,7 @@ var numHosts = flag.Int("hosts", numIntegTestAgents, "Number of agents")
 var datapathKind = flag.String("datapath", agentDatapathKind, "Specify the datapath type. mock | hal")
 
 var (
-	logger  = log.GetNewLogger(log.GetDefaultConfig("npm-integ-test"))
-	evtType = append(evtsapi.GetEventTypes(), cluster.GetEventTypes()...)
-
+	logger = log.GetNewLogger(log.GetDefaultConfig("npm-integ-test"))
 	// create mock events recorder
 	_ = recorder.Override(mockevtsrecorder.NewRecorder("npm_integ_test", logger))
 )

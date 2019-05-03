@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = sysmgr.bin
 MODULE_PIPELINE = iris
-MODULE_SOLIBS   = delphisdk penlog events_recorder eventproto sysmgreventsproto
+MODULE_SOLIBS   = delphisdk penlog events_recorder eventproto eventtypes
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev pthread z
 MODULE_ARLIBS   = sysmgrproto delphiproto
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cpp)

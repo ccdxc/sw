@@ -11,10 +11,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pensando/sw/venice/utils"
-
 	"github.com/pensando/sw/venice/evtsproxy"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/exporters"
 	"github.com/pensando/sw/venice/utils/events/policy"

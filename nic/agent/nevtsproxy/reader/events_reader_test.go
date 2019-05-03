@@ -13,6 +13,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/satori/go.uuid"
 
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/shm"
 	"github.com/pensando/sw/venice/utils/events"
@@ -38,8 +39,7 @@ func TestEventsReaderBasic(t *testing.T) {
 	ipc := sm.GetIPCInstance()
 
 	hEvt := &halproto.Event{
-		Severity:  halproto.Severity_INFO,
-		Type:      "DUMMY",
+		Type:      int32(eventtypes.SERVICE_RUNNING),
 		Component: "reader-test",
 		Message:   "test-msg",
 	}
@@ -64,7 +64,7 @@ func TestEventsReaderBasic(t *testing.T) {
 	errCh := make(chan error, 1)
 	go ipcR.Receive(context.Background(), func(nEvt *halproto.Event) error {
 		if nEvt.Message != hEvt.Message || nEvt.Component != hEvt.Component ||
-			nEvt.Severity != hEvt.Severity || nEvt.Type != hEvt.Type {
+			nEvt.Type != hEvt.Type {
 			err := fmt.Errorf("mismatch between write and read")
 			errCh <- err
 			return err
@@ -104,8 +104,7 @@ func TestEventsReaderWithCorruptedMessage(t *testing.T) {
 	ipc := sm.GetIPCInstance()
 
 	hEvt := &halproto.Event{
-		Severity:  halproto.Severity_INFO,
-		Type:      "DUMMY",
+		Type:      int32(eventtypes.SERVICE_RUNNING),
 		Component: "reader-test",
 		Message:   "test-msg",
 	}
@@ -298,8 +297,7 @@ func startEventWriter(shmName string, size int, stopCh chan struct{}, fakeErrors
 		case <-time.After(10 * time.Millisecond):
 
 			hEvt := &halproto.Event{
-				Severity:  halproto.Severity_INFO,
-				Type:      "DUMMY",
+				Type:      int32(eventtypes.SERVICE_RUNNING),
 				Component: "reader-test",
 				Message:   fmt.Sprintf("test msg - %d", totalEventsSent),
 			}

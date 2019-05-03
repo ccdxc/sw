@@ -11,7 +11,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -243,7 +243,8 @@ func (w *Watcher) processEvent(event *kvstore.WatchEvent) error {
 		w.logger.ErrorLog("method", "processEvent",
 			"msg", fmt.Sprintf("watch event processing timed out for watch event obj kind [%s], objmeta [%v]", event.Object.GetObjectKind(), obj),
 			"error", ctx.Err())
-		recorder.Event(events.ServiceUnresponsive, events.SeverityLevel_CRITICAL, fmt.Sprintf("module [%s] timed out processing watch events, please check system resources", w.module), event.Object)
+		recorder.Event(eventtypes.SERVICE_UNRESPONSIVE,
+			fmt.Sprintf("module [%s] timed out processing watch events, please check system resources", w.module), event.Object)
 		return ctx.Err()
 	case err := <-c:
 		return err

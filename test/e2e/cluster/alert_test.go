@@ -12,7 +12,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventattrs"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/testutils/policygen"
@@ -25,10 +26,10 @@ var _ = Describe("alert test", func() {
 	It("ServiceStopped events to INFO alerts", func() {
 
 		// create alert policy to convert `ServiceStopped` events to INFO alerts
-		alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "eventstoalerts", "Event", evtsapi.SeverityLevel_INFO,
+		alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, "eventstoalerts", "Event", eventattrs.Severity_INFO,
 			"convert `ServiceStopped` events to INFO alerts",
 			[]*fields.Requirement{
-				{Key: "type", Operator: "in", Values: []string{evtsapi.ServiceStopped}},
+				{Key: "type", Operator: "in", Values: []string{eventtypes.EventType_name[int32(eventtypes.SERVICE_STOPPED)]}},
 			}, []string{})
 
 		// upload alert policy

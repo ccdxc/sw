@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package eventattrs;
+
+// list of V1 event types supported by the cluster service
+enum Category {
+    // Cluster related events (leader election, K8s, CMD, NMD, etc..)
+    Cluster     = 0;
+    // Network related events (linkmgr, etc..)
+    Network     = 1;
+    // System related events (service events, system boot/reboot events, etc...)
+    System      = 2;
+}
+
+// Severity Level of an event
+enum Severity {
+    // ui-hint: Informational
+    INFO        = 0; // no action needed
+    // ui-hint: Warning
+    WARN        = 1; // can cause problems in the future, no immediate action required
+    // ui-hint: Critical
+    CRITICAL    = 2; // immediate attention required
+    // ui-hint: Debug
+    DEBUG       = 3; // debug events, not explicitly visible to the user
+}
+
+// Common event key that can be used when there is no real object reference
+// attached to the event. e.g. system/service events
+message Key {
+    // name of the service or system
+    string Name = 1;
+}

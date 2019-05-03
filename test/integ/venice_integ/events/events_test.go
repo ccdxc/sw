@@ -27,6 +27,8 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/events/generated/eventattrs"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/spyglass/finder"
@@ -39,7 +41,6 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/testutils/policygen"
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
-
 	// import gateway services
 	_ "github.com/pensando/sw/api/generated/auth/gateway"
 	_ "github.com/pensando/sw/api/generated/events/gateway"
@@ -61,13 +62,6 @@ import (
 // all the events go through below pipeline:
 // events recorder -> events proxy (dispatcher, writer) -> events manager -> elasticsearch
 
-var (
-	eventType1     = "DUMMYEVENT-1"
-	eventType2     = "DUMMYEVENT-2"
-	eventType3     = "DUMMYEVENT-3"
-	testEventTypes = []string{eventType1, eventType2, eventType3}
-)
-
 // TestEvents tests events pipeline
 // 1. record events using recorder.
 // 2. verify the events reached elastic through the pipeline (proxy->writer->evtsmgr->elastic) using elastic client.
@@ -82,45 +76,50 @@ func TestEvents(t *testing.T) {
 	// create recorder events directory
 	recorderEventsDir, err := ioutil.TempDir("", "")
 	AssertOk(t, err, "failed to create recorder events directory")
-	defer os.RemoveAll(recorderEventsDir)
+	fmt.Println("****** recorder events dir: ", recorderEventsDir)
+	//defer os.RemoveAll(recorderEventsDir)
 
 	// create recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Component:    componentID,
-		EvtTypes:     testEventTypes,
-		EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-		BackupDir:    recorderEventsDir}, ti.logger)
+		Component:                   componentID,
+		EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+		BackupDir:                   recorderEventsDir,
+		SkipCategoryBasedEventTypes: true}, ti.logger)
 	AssertOk(t, err, "failed to create events recorder")
 	defer evtsRecorder.Close()
 
 	// send events  (recorder -> proxy -> dispatcher -> writer -> evtsmgr -> elastic)
-	evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
-	evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_INFO, "test event - 2", nil)
+	evtsRecorder.Event(eventtypes.SERVICE_STARTED, "test event - 1", nil)
+	evtsRecorder.Event(eventtypes.SERVICE_RUNNING, "test event - 2", nil)
 
 	// verify that it has reached elasticsearch; these are the first occurrences of an event
 	// so it should have reached elasticsearch without being de-duped.
-	query := es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewTermQuery("type.keyword", eventType1))
+	query := es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID),
+		es.NewTermQuery("type.keyword", eventtypes.SERVICE_STARTED.String()))
 	ti.assertElasticUniqueEvents(t, query, true, 1, "4s") // unique == 1
 	ti.assertElasticTotalEvents(t, query, true, 1, "4s")  // total  == 1
-	query = es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewMatchQuery("message", "test event -2").Operator("and"))
+	query = es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID),
+		es.NewMatchQuery("message", "test event -2").Operator("and"))
 	ti.assertElasticUniqueEvents(t, query, true, 1, "4s") // unique == 1
 	ti.assertElasticTotalEvents(t, query, true, 1, "4s")  // total == 1
 
 	// send duplicates and check whether they're compressed
 	numDuplicates := 25
 	for i := 0; i < numDuplicates; i++ {
-		evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test dup event - 1", nil)
-		evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_INFO, "test dup event - 2", nil)
+		evtsRecorder.Event(eventtypes.SERVICE_STARTED, "test dup event - 1", nil)
+		evtsRecorder.Event(eventtypes.SERVICE_RUNNING, "test dup event - 2", nil)
 	}
 
 	// ensure the de-duped events reached elasticsearch
 	// test duplicate event - 1
-	query = es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewMatchQuery("message", "test dup event - 1").Operator("and"))
+	query = es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID),
+		es.NewMatchQuery("message", "test dup event - 1").Operator("and"))
 	ti.assertElasticUniqueEvents(t, query, true, 1, "4s")            // unique == 1
 	ti.assertElasticTotalEvents(t, query, true, numDuplicates, "2s") // total == numDuplicates
 
 	// test duplicate event - 2
-	query = es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID), es.NewMatchQuery("message", "test dup event - 2").Operator("and"))
+	query = es.NewBoolQuery().Must(es.NewMatchQuery("source.component", componentID),
+		es.NewMatchQuery("message", "test dup event - 2").Operator("and"))
 	ti.assertElasticUniqueEvents(t, query, true, 1, "4s")            // unique == 1
 	ti.assertElasticTotalEvents(t, query, true, numDuplicates, "2s") // total == numDuplicates
 
@@ -135,8 +134,8 @@ func TestEvents(t *testing.T) {
 
 	// record events with reference object
 	for i := 0; i < numDuplicates; i++ {
-		evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test dup event - 1", testNIC)
-		evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_INFO, "test dup event - 2", testNIC)
+		evtsRecorder.Event(eventtypes.SERVICE_STARTED, "test dup event - 1", testNIC)
+		evtsRecorder.Event(eventtypes.SERVICE_RUNNING, "test dup event - 2", testNIC)
 	}
 
 	// query by kind
@@ -174,10 +173,10 @@ func TestEventsProxyRestart(t *testing.T) {
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
 			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-				Component:    fmt.Sprintf("%v-%v", componentID, i),
-				EvtTypes:     testEventTypes,
-				EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-				BackupDir:    recorderEventsDir}, ti.logger)
+				Component:                   fmt.Sprintf("%v-%v", componentID, i),
+				EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+				BackupDir:                   recorderEventsDir,
+				SkipCategoryBasedEventTypes: true}, ti.logger)
 			if err != nil {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
@@ -193,13 +192,13 @@ func TestEventsProxyRestart(t *testing.T) {
 					wg.Done()
 					return
 				case <-ticker.C:
-					evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
+					evtsRecorder.Event(eventtypes.SERVICE_STARTED, "test event - 1", nil)
 					totalEventsSentBySrc[i]++
 
-					evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_INFO, "test event - 2", nil)
+					evtsRecorder.Event(eventtypes.SERVICE_RUNNING, "test event - 2", nil)
 					totalEventsSentBySrc[i]++
 
-					evtsRecorder.Event(eventType3, evtsapi.SeverityLevel_CRITICAL, "test event - 3", nil)
+					evtsRecorder.Event(eventtypes.SERVICE_STOPPED, "test event - 3", nil)
 					totalEventsSentBySrc[i]++
 				}
 			}
@@ -285,10 +284,10 @@ func TestEventsMgrRestart(t *testing.T) {
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
 			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-				Component:    fmt.Sprintf("%v-%v", componentID, i),
-				EvtTypes:     testEventTypes,
-				EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-				BackupDir:    recorderEventsDir}, ti.logger)
+				Component:                   fmt.Sprintf("%v-%v", componentID, i),
+				EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+				BackupDir:                   recorderEventsDir,
+				SkipCategoryBasedEventTypes: true}, ti.logger)
 			if err != nil {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
@@ -304,13 +303,13 @@ func TestEventsMgrRestart(t *testing.T) {
 					wg.Done()
 					return
 				case <-ticker.C:
-					evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
+					evtsRecorder.Event(eventtypes.SERVICE_STARTED, "test event - 1", nil)
 					totalEventsSentBySrc[i]++
 
-					evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_WARNING, "test event - 2", nil)
+					evtsRecorder.Event(eventtypes.SERVICE_RUNNING, "test event - 2", nil)
 					totalEventsSentBySrc[i]++
 
-					evtsRecorder.Event(eventType3, evtsapi.SeverityLevel_CRITICAL, "test event - 3", nil)
+					evtsRecorder.Event(eventtypes.SERVICE_STOPPED, "test event - 3", nil)
 					totalEventsSentBySrc[i]++
 				}
 			}
@@ -413,27 +412,20 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	}
 	// define list of events to be recorded
 	recordEvents := []struct {
-		eventType string
-		severity  evtsapi.SeverityLevel
+		eventType eventtypes.EventType
 		message   string
 		objRef    interface{}
 	}{
-		{eventType1, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO), nil},
-		{eventType1, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), nil},
-		{eventType1, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), nil},
-
-		{eventType2, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO), nil},
-		{eventType2, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), nil},
-		{eventType2, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), nil},
-
-		{eventType3, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), nil},
-		{eventType3, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), nil},
-		{eventType3, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), nil},
+		{eventtypes.SERVICE_STARTED, fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name()), nil},
+		{eventtypes.SERVICE_RUNNING, fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name()), nil},
+		{eventtypes.SERVICE_UNRESPONSIVE, fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()), nil},
+		{eventtypes.SERVICE_STOPPED, fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()), nil},
 
 		// events in non default tenant
-		{eventType3, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), dummyObjRef},
-		{eventType3, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), dummyObjRef},
-		{eventType3, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), dummyObjRef},
+		{eventtypes.SERVICE_STARTED, fmt.Sprintf("(tenant:%s) test %s started", testTenant, t.Name()), dummyObjRef},
+		{eventtypes.SERVICE_RUNNING, fmt.Sprintf("(tenant:%s) test %s running", testTenant, t.Name()), dummyObjRef},
+		{eventtypes.SERVICE_UNRESPONSIVE, fmt.Sprintf("(tenant:%s) test %s unresponsive", testTenant, t.Name()), dummyObjRef},
+		{eventtypes.SERVICE_STOPPED, fmt.Sprintf("(tenant:%s) test %s stopped", testTenant, t.Name()), dummyObjRef},
 	}
 
 	wg := new(sync.WaitGroup)
@@ -447,10 +439,10 @@ func TestEventsRESTEndpoints(t *testing.T) {
 		defer wg.Done()
 
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Component:    uuid.NewV4().String(),
-			EvtTypes:     testEventTypes,
-			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-			BackupDir:    recorderEventsDir}, ti.logger)
+			Component:                   uuid.NewV4().String(),
+			EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:                   recorderEventsDir,
+			SkipCategoryBasedEventTypes: true}, ti.logger)
 		if err != nil {
 			log.Errorf("failed to create recorder")
 			return
@@ -461,7 +453,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 
 		// record events
 		for _, evt := range recordEvents {
-			evtsRecorder.Event(evt.eventType, evt.severity, evt.message, evt.objRef)
+			evtsRecorder.Event(evt.eventType, evt.message, evt.objRef)
 		}
 	}()
 
@@ -484,294 +476,189 @@ func TestEventsRESTEndpoints(t *testing.T) {
 	}
 
 	validTCs := []*tc{
-		{ // GET all events; should match 9 events
-			name:          "GET all events for default tenant; should match 9 events",
+		{ // GET all events ; should match 4 events
+			name:          "GET all events from default tenant; should match 4 events",
 			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{}, // default max-results to 1000
 			expStatusCode: http.StatusOK,
 			expResponse: &expectedResponse{
-				numEvents: 9,
+				numEvents: 4,
 				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO): {
+					fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType1,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
+							Type:     eventtypes.SERVICE_STARTED.String(),
+							Severity: eventattrs.Severity_INFO.String(),
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING): {
+					fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType1,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
+							Type:     eventtypes.SERVICE_RUNNING.String(),
+							Severity: eventattrs.Severity_INFO.String(),
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL): {
+					fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType1,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Type:     eventtypes.SERVICE_UNRESPONSIVE.String(),
+							Severity: eventattrs.Severity_CRITICAL.String(),
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO): {
+					fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType2,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
-							Count:    1,
-						},
-					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType2,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
-							Count:    1,
-						},
-					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType2,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
-							Count:    1,
-						},
-					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType3,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
-							Count:    1,
-						},
-					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType3,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
-							Count:    1,
-						},
-					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType3,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Type:     eventtypes.SERVICE_STOPPED.String(),
+							Severity: eventattrs.Severity_WARN.String(),
 							Count:    1,
 						},
 					},
 				},
 			},
 		},
-		{ // GET events with severity = INFO; should match 3 events
-			name:          "GET events in default tenant with severity = INFO; should match 3 events",
+		{ // GET events with severity = INFO; should match 2 events (1 * SERVICE_RUNNING + 1 * SERVICE_STARTED)
+			name:          "GET events from default tenant with severity = INFO; should match 2 events",
 			authzHdr:      authzHeader,
 			requestURI:    "events",
-			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s", evtsapi.SeverityLevel_INFO), MaxResults: 100},
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s", eventattrs.Severity_INFO), MaxResults: 100},
 			expStatusCode: http.StatusOK,
 			expResponse: &expectedResponse{
-				numEvents: 3,
+				numEvents: 2,
 				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO): {
+					fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType1,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
+							Type:     eventtypes.SERVICE_STARTED.String(),
+							Severity: eventattrs.Severity_INFO.String(),
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO): {
+					fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType2,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
-							Count:    1,
-						},
-					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType3,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
-							Count:    1,
-						},
-					}},
-			},
-		},
-		{ // GET events with severity = "CRITICAL" and source.node-name="TestEventsRESTEndpoints"; should match 3 events
-			name:          "GET events in default tenant with severity = 'CRITICAL' and source.node-name='TestEventsRESTEndpoints'; should match 3 events",
-			authzHdr:      authzHeader,
-			requestURI:    "events",
-			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,source.node-name=%s", evtsapi.SeverityLevel_CRITICAL, t.Name()), MaxResults: 100},
-			expStatusCode: http.StatusOK,
-			expResponse: &expectedResponse{
-				numEvents: 3,
-				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType1,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
-							Count:    1,
-						},
-					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType2,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
-							Count:    1,
-						},
-					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType3,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Type:     eventtypes.SERVICE_RUNNING.String(),
+							Severity: eventattrs.Severity_INFO.String(),
 							Count:    1,
 						},
 					},
 				},
 			},
 		},
-		{ // Get events with severity = "CRITICAL" and type in ("EVENT-TYPE2"); should match only one event
-			name:          "Get events with severity = 'CRITICAL' and type in ('EVENT-TYPE2'); should match only one event",
+		{ // GET events with severity = "CRITICAL" and source.node-name="TestEventsRESTEndpoints"; should match 1 events (1 * SERVICE_UNRESPONSIVE)
+			name:          "GET events from default tenant with severity = 'CRITICAL' and source.node-name='TestEventsRESTEndpoints'; should match 2 events",
 			authzHdr:      authzHeader,
 			requestURI:    "events",
-			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s)", evtsapi.SeverityLevel_CRITICAL, eventType2), MaxResults: 100},
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,source.node-name=%s", eventattrs.Severity_CRITICAL, t.Name()), MaxResults: 100},
 			expStatusCode: http.StatusOK,
 			expResponse: &expectedResponse{
 				numEvents: 1,
 				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): {
+					fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType2,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Type:     eventtypes.SERVICE_UNRESPONSIVE.String(),
+							Severity: eventattrs.Severity_CRITICAL.String(),
 							Count:    1,
 						},
 					},
 				},
 			},
 		},
-		{ // GET events from timeNow to time.Now()+ 100s; should match ALL(9) events
-			name:          "GET events from timeNow to time.Now()+ 100s; should match ALL(9) events",
+		{ // Get events with severity = "CRITICAL" and type in ("SERVICE_UNRESPONSIVE") and tenant="default"; should match only one event
+			name:       "Get events from default tenant with severity = 'CRITICAL' and type in ('SERVICE_UNRESPONSIVE'); should match only one event",
+			authzHdr:   authzHeader,
+			requestURI: "events",
+			requestBody: &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s),meta.tenant=%s",
+				eventattrs.Severity_CRITICAL, eventtypes.SERVICE_UNRESPONSIVE.String(), globals.DefaultTenant), MaxResults: 100},
+			expStatusCode: http.StatusOK,
+			expResponse: &expectedResponse{
+				numEvents: 1,
+				events: map[string]*evtsapi.Event{
+					fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()): {
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventtypes.SERVICE_UNRESPONSIVE.String(),
+							Severity: eventattrs.Severity_CRITICAL.String(),
+							Count:    1,
+						},
+					},
+				},
+			},
+		},
+		{ // GET events from timeNow to time.Now()+ 100s; should match ALL(4) events
+			name:          "GET events from timeNow to time.Now()+ 100s; should match ALL(4) events",
 			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("meta.creation-time>=%v,meta.creation-time<=%v", timeNow.Format(time.RFC3339Nano), time.Now().Add(100*time.Second).Format(time.RFC3339Nano)), MaxResults: 100},
 			expStatusCode: http.StatusOK,
 			expResponse: &expectedResponse{
-				numEvents: 9,
+				numEvents: 4,
 				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO): {
+					fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType1,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
+							Type:     eventtypes.SERVICE_STARTED.String(),
+							Severity: eventattrs.Severity_INFO.String(),
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING): {
+					fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType1,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
+							Type:     eventtypes.SERVICE_RUNNING.String(),
+							Severity: eventattrs.Severity_INFO.String(),
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL): {
+					fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType1,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Type:     eventtypes.SERVICE_UNRESPONSIVE.String(),
+							Severity: eventattrs.Severity_CRITICAL.String(),
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO): {
+					fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType2,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
-							Count:    1,
-						},
-					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType2,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
-							Count:    1,
-						},
-					},
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType2,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
-							Count:    1,
-						},
-					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType3,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
-							Count:    1,
-						},
-					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType3,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
-							Count:    1,
-						},
-					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType3,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Type:     eventtypes.SERVICE_STOPPED.String(),
+							Severity: eventattrs.Severity_WARN.String(),
 							Count:    1,
 						},
 					},
 				},
 			},
 		},
-		{ // Get events with creation-time>timeNow
-			name:          "Get events with creation-time>timeNow",
-			authzHdr:      authzHeader,
-			requestURI:    "events",
-			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s),meta.creation-time>%v", evtsapi.SeverityLevel_CRITICAL, eventType2, timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
+		{ // Get events with severity="CRITICAL" and creation-time>timeNow
+			name:       "Get events from default tenant with severity='CRITICAL' and creation-time>timeNow; should match one",
+			authzHdr:   authzHeader,
+			requestURI: "events",
+			requestBody: &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,meta.creation-time>%v",
+				eventattrs.Severity_CRITICAL, timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
 			expStatusCode: http.StatusOK,
 			expResponse: &expectedResponse{
 				numEvents: 1,
 				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): {
+					fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType2,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Type:     eventtypes.SERVICE_UNRESPONSIVE.String(),
+							Severity: eventattrs.Severity_CRITICAL.String(),
 							Count:    1,
 						},
 					},
 				},
 			},
 		},
-		{ // Get events with modified-time>timeNow
-			name:          "Get events with modified-time>timeNow",
-			authzHdr:      authzHeader,
-			requestURI:    "events",
-			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s),meta.mod-time>%v", evtsapi.SeverityLevel_CRITICAL, eventType2, timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
-			expStatusCode: http.StatusOK,
-			expResponse: &expectedResponse{
-				numEvents: 1,
-				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL): {
-						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType2,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
-							Count:    1,
-						},
-					},
-				},
-			},
-		},
-		{ // Get events with creation-time<=timeNow
-			name:          "Get events with creation-time<=timeNow",
-			authzHdr:      authzHeader,
-			requestURI:    "events",
-			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s),meta.creation-time<=%v", evtsapi.SeverityLevel_CRITICAL, eventType2, timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
+		{ // Get events with severity="CRITICAL" and type in ("SERVICE_UNRESPONSIVE") and creation-time<=timeNow
+			name:       "Get events from default tenant with severity='CRITICAL' and creation-time<=timeNow; should match none",
+			authzHdr:   authzHeader,
+			requestURI: "events",
+			requestBody: &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s,type in (%s),meta.creation-time<=%v",
+				eventattrs.Severity_CRITICAL, eventtypes.SERVICE_UNRESPONSIVE.String(), timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
 			expStatusCode: http.StatusOK,
 			expResponse: &expectedResponse{
 				numEvents: 0,
 				events:    map[string]*evtsapi.Event{},
 			},
 		},
-		{ // Get events with type in (EVENT-TYPE1,EVENT-TYPE2),source.node-name notin (TestEventsRESTEndpoints); should match none
-			name:          "Get events with type in (EVENT-TYPE1,EVENT-TYPE2),source.node-name notin (TestEventsRESTEndpoints); should match none",
-			authzHdr:      authzHeader,
-			requestURI:    "events",
-			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("type in (%s,%s),source.node-name notin (%s)", eventType1, eventType2, t.Name()), MaxResults: 100},
+		{ // Get events with type in (SERVICE_RUNNING,SERVICE_STARTED),source.node-name notin (TestEventsRESTEndpoints); should match none
+			name:       "Get events from default tenant with type in (SERVICE_RUNNING,SERVICE_STARTED),source.node-name notin (TestEventsRESTEndpoints); should match none",
+			authzHdr:   authzHeader,
+			requestURI: "events",
+			requestBody: &api.ListWatchOptions{FieldSelector: fmt.Sprintf("type in (%s,%s),source.node-name notin (%s)",
+				eventtypes.SERVICE_RUNNING.String(), eventtypes.SERVICE_STARTED.String(), t.Name()), MaxResults: 100},
 			expStatusCode: http.StatusOK,
 			expResponse: &expectedResponse{
 				numEvents: 0,
@@ -779,7 +666,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // GET events with severity="TEST"; should match none
-			name:          "GET events with severity='TEST'; should match none",
+			name:          "GET events from default tenant with severity='TEST'; should match none",
 			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: "severity=TEST", MaxResults: 100},
@@ -790,7 +677,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // GET events with source.component="test" and type= "test"; should match none
-			name:          "GET events with source.component='test 'and type= 'test'; should match none",
+			name:          "GET events from default tenant with source.component='test 'and type= 'test'; should match none",
 			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: "source.component=test,type=test", MaxResults: 100},
@@ -801,10 +688,11 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // Get events with invalid field names
-			name:          "Get events with invalid field names",
-			authzHdr:      authzHeader,
-			requestURI:    "events",
-			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("invalid-field=%s,type in (%s)", evtsapi.SeverityLevel_CRITICAL, eventType2), MaxResults: 100},
+			name:       "Get events from default tenant with invalid field names",
+			authzHdr:   authzHeader,
+			requestURI: "events",
+			requestBody: &api.ListWatchOptions{FieldSelector: fmt.Sprintf("invalid-field=%s,type in (%s)",
+				eventattrs.Severity_CRITICAL, eventtypes.SERVICE_UNRESPONSIVE.String()), MaxResults: 100},
 			expStatusCode: http.StatusInternalServerError,
 			expResponse: &expectedResponse{
 				numEvents: 0,
@@ -812,7 +700,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 			},
 		},
 		{ // Get events with invalid field names
-			name:          "Get events with invalid field names",
+			name:          "Get events from default tenant with invalid field names",
 			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("meta.invalid<=%v", timeNow.Format(time.RFC3339Nano)), MaxResults: 100},
@@ -822,33 +710,40 @@ func TestEventsRESTEndpoints(t *testing.T) {
 				events:    map[string]*evtsapi.Event{},
 			},
 		},
-		{ // GET events from testtenant; should match 3 events
-			name:          "GET events from testtenant; should match 3 events",
+		{ // //TODO: check with Vishal, this doesn't look right. GET events from testtenant; should match 4 events
+			name:          "GET events from testtenant; should match 4 events",
 			authzHdr:      authzHeader,
 			requestURI:    "events",
 			requestBody:   &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: testTenant, Namespace: globals.DefaultNamespace}}, // default max-results to 1000
 			expStatusCode: http.StatusOK,
 			expResponse: &expectedResponse{
-				numEvents: 3,
+				numEvents: 4,
 				events: map[string]*evtsapi.Event{
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO): {
+					fmt.Sprintf("(tenant:%s) test %s started", testTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType3,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
+							Type:     eventtypes.SERVICE_STARTED.String(),
+							Severity: eventattrs.Severity_INFO.String(),
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING): {
+					fmt.Sprintf("(tenant:%s) test %s running", testTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType3,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)],
+							Type:     eventtypes.SERVICE_RUNNING.String(),
+							Severity: eventattrs.Severity_INFO.String(),
 							Count:    1,
 						},
 					},
-					fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL): {
+					fmt.Sprintf("(tenant:%s) test %s unresponsive", testTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
-							Type:     eventType3,
-							Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)],
+							Type:     eventtypes.SERVICE_UNRESPONSIVE.String(),
+							Severity: eventattrs.Severity_CRITICAL.String(),
+							Count:    1,
+						},
+					},
+					fmt.Sprintf("(tenant:%s) test %s stopped", testTenant, t.Name()): {
+						EventAttributes: evtsapi.EventAttributes{
+							Type:     eventtypes.SERVICE_STOPPED.String(),
+							Severity: eventattrs.Severity_WARN.String(),
 							Count:    1,
 						},
 					},
@@ -898,17 +793,17 @@ func TestEventsRESTEndpoints(t *testing.T) {
 				// verity resp against the expected response
 				for _, obtainedEvt := range resp.GetItems() {
 					expectedEvt, ok := rr.expResponse.events[obtainedEvt.GetMessage()]
-					Assert(t, ok, "obtained event is not in the expected list: %s", obtainedEvt.GetMessage())
-					Assert(t, expectedEvt.GetType() == obtainedEvt.GetType(), "expected event message: %s, got: %s", expectedEvt.GetType(), obtainedEvt.GetType())
-					Assert(t, expectedEvt.GetSeverity() == obtainedEvt.GetSeverity(), "expected event severity: %s, got: %s", expectedEvt.GetSeverity(), obtainedEvt.GetSeverity())
-					Assert(t, expectedEvt.GetCount() == obtainedEvt.GetCount(), "expected event count: %d, got: %d", expectedEvt.GetCount(), obtainedEvt.GetCount())
+					Assert(t, ok, "{%s} obtained event is not in the expected list: %s", rr.name, obtainedEvt.GetMessage())
+					Assert(t, expectedEvt.GetType() == obtainedEvt.GetType(), "{%s} expected event message: %s, got: %s", rr.name, expectedEvt.GetType(), obtainedEvt.GetType())
+					Assert(t, expectedEvt.GetSeverity() == obtainedEvt.GetSeverity(), "{%s} expected event severity: %s, got: %s", rr.name, expectedEvt.GetSeverity(), obtainedEvt.GetSeverity())
+					Assert(t, expectedEvt.GetCount() == obtainedEvt.GetCount(), "{%s} expected event count: %d, got: %d", rr.name, expectedEvt.GetCount(), obtainedEvt.GetCount())
 
 					// make sure self-link works
 					selfLink := obtainedEvt.GetSelfLink()
 					evt := evtsapi.Event{}
 					statusCode, err := httpClient.Req("GET", fmt.Sprintf("https://%s/%s", apiGwAddr, selfLink), nil, &evt)
-					Assert(t, err == nil && statusCode == http.StatusOK, "failed to get the event using self-link: %v, status: %v, err: %v", selfLink, statusCode, err)
-					Assert(t, evt.GetUUID() == obtainedEvt.GetUUID(), "obtained: %v, expected: %v", evt.GetUUID(), obtainedEvt.GetUUID())
+					Assert(t, err == nil && statusCode == http.StatusOK, "{%s} failed to get the event using self-link: %v, status: %v, err: %v", rr.name, selfLink, statusCode, err)
+					Assert(t, evt.GetUUID() == obtainedEvt.GetUUID(), "{%s} obtained: %v, expected: %v", rr.name, evt.GetUUID(), obtainedEvt.GetUUID())
 
 					// update the TC's request to test /events/{UUID}
 					if len(totalEventByUUIDRequests) < cap(totalEventByUUIDRequests) {
@@ -934,14 +829,14 @@ func TestEventsRESTEndpoints(t *testing.T) {
 					return true, nil
 				}, "failed to get events", "200ms", "6s")
 
-			Assert(t, resp.GetUUID() != "", "failed to get event by UUID: %v", rr.requestURI)
+			Assert(t, resp.GetUUID() != "", "{%s} failed to get event by UUID: %v", rr.name, rr.requestURI)
 
 			// make sure self-link works
 			selfLink := resp.GetSelfLink()
 			evt := evtsapi.Event{}
 			statusCode, err := httpClient.Req("GET", fmt.Sprintf("https://%s/%s", apiGwAddr, selfLink), nil, &evt)
-			Assert(t, err == nil && statusCode == http.StatusOK, "failed to get the event using self-link: %v, status: %v, err: %v", selfLink, statusCode, err)
-			Assert(t, evt.GetUUID() == resp.GetUUID(), "obtained: %v, expected: %v", evt.GetUUID(), resp.GetUUID())
+			Assert(t, err == nil && statusCode == http.StatusOK, "{%s} failed to get the event using self-link: %v, status: %v, err: %v", rr.name, selfLink, statusCode, err)
+			Assert(t, evt.GetUUID() == resp.GetUUID(), "{%s} obtained: %v, expected: %v", rr.name, evt.GetUUID(), resp.GetUUID())
 		}
 	}
 
@@ -986,31 +881,31 @@ func TestEventsAlertEngine(t *testing.T) {
 	// add event based alert policies
 	// policy - 1
 	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, fmt.Sprintf("ap1-%s", uuid.NewV4().String()),
-		"Event", evtsapi.SeverityLevel_CRITICAL, "alerts from events",
+		"Event", eventattrs.Severity_CRITICAL, "critical alerts from events",
 		[]*fields.Requirement{
-			{Key: "type", Operator: "in", Values: []string{eventType1, eventType2, eventType3}},
 			{Key: "count", Operator: "gte", Values: []string{"15"}},
 			{Key: "source.node-name", Operator: "equals", Values: []string{t.Name()}},
 		}, []string{})
 
 	alertPolicy1, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
-	AssertOk(t, err, "failed to add alert policy, err: %v", err)
+	AssertOk(t, err, "failed to add alert policy{ap1-*}, err: %v", err)
 
 	// policy - 2
 	alertPolicy2 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, fmt.Sprintf("ap2-%s", uuid.NewV4().String()),
-		"Event", evtsapi.SeverityLevel_WARNING, "alerts from events",
+		"Event", eventattrs.Severity_WARN, "warning alerts from events",
 		[]*fields.Requirement{
 			{Key: "count", Operator: "gte", Values: []string{"5"}},
 			{Key: "count", Operator: "lt", Values: []string{"7"}},
-			{Key: "severity", Operator: "equals", Values: []string{evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)]}},
-			{Key: "type", Operator: "in", Values: []string{eventType1, eventType2, eventType3}},
+			{Key: "severity", Operator: "equals", Values: []string{
+				eventattrs.Severity_INFO.String(),
+				eventattrs.Severity_WARN.String()}},
 		}, []string{})
 
 	alertPolicy2, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
-	AssertOk(t, err, "failed to add alert policy, err: %v", err)
+	AssertOk(t, err, "failed to add alert policy{ap2-*}, err: %v", err)
 
 	alertPolicy3 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, fmt.Sprintf("ap3-%s", uuid.NewV4().String()),
-		"Event", evtsapi.SeverityLevel_WARNING, "policy with no reqs", []*fields.Requirement{}, []string{})
+		"Event", eventattrs.Severity_WARN, "policy with no reqs", []*fields.Requirement{}, []string{})
 	alertPolicy3, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy3)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
 
@@ -1026,27 +921,26 @@ func TestEventsAlertEngine(t *testing.T) {
 		},
 	}
 	recordEvents := []*struct {
-		eventType string
-		severity  evtsapi.SeverityLevel
+		eventType eventtypes.EventType
 		message   string
 		objRef    interface{}
 		repeat    int // number of times to repeat the event
 	}{
-		{eventType1, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO), *dummyObjRef, 5}, // this should generate an alert (alertPolicy2)
-		{eventType1, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), *dummyObjRef, 10},
-		{eventType1, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), *dummyObjRef, 15}, // this should generate an alert (alertPolicy1)
+		{eventtypes.SERVICE_STARTED, fmt.Sprintf("(tenant:%s) test %s started", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 10},
+		{eventtypes.SERVICE_RUNNING, fmt.Sprintf("(tenant:%s) test %s running", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 10},
+		{eventtypes.SERVICE_UNRESPONSIVE, fmt.Sprintf("(tenant:%s) test %s unresponsive", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 15}, // this should generate an alert (alertPolicy1)
+		{eventtypes.SERVICE_STOPPED, fmt.Sprintf("(tenant:%s) test %s stopped", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 5},            // this should generate an alert (alertPolicy2)
 
-		{eventType2, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO), *dummyObjRef, 5}, // this should generate an alert (alertPolicy2)
-		{eventType2, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), *dummyObjRef, 10},
-		{eventType2, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), *dummyObjRef, 15}, // this should generate an alert (alertPolicy1)
+		{eventtypes.ELECTION_STARTED, fmt.Sprintf("(tenant:%s) dummy election: election started %s", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 10},
+		{eventtypes.LEADER_ELECTED, fmt.Sprintf("(tenant:%s) dummy election: leader elected %s", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 10},
+		{eventtypes.LEADER_CHANGED, fmt.Sprintf("(tenant:%s) dummy election: leader changed %s", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 15}, // this should generate an alert (alertPolicy1)
+		{eventtypes.LEADER_LOST, fmt.Sprintf("(tenant:%s) dummy election: leader lost %s", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 5},        // this should generate an alert (alertPolicy2)
 
-		{eventType3, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), *dummyObjRef, 5}, // this should generate an alert (alertPolicy2)
-		{eventType3, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), *dummyObjRef, 10},
-		{eventType3, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), *dummyObjRef, 15}, // this should generate an alert (alertPolicy1)
-
-		{eventType1, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO), nil, 5}, // this should generate an alert (alertPolicy2)
-		{eventType2, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), nil, 10},
-		{eventType3, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), nil, 15}, // this should generate an alert (alertPolicy1)
+		// events in non default tenant
+		{eventtypes.SERVICE_STARTED, fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name()), nil, 10},
+		{eventtypes.SERVICE_RUNNING, fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name()), nil, 10},
+		{eventtypes.SERVICE_UNRESPONSIVE, fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()), nil, 15}, // this should generate an alert (alertPolicy1)
+		{eventtypes.SERVICE_STOPPED, fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()), nil, 5},            // this should generate an alert (alertPolicy2)
 	}
 
 	wg := new(sync.WaitGroup)
@@ -1060,10 +954,10 @@ func TestEventsAlertEngine(t *testing.T) {
 		defer wg.Done()
 
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Component:    uuid.NewV4().String(),
-			EvtTypes:     testEventTypes,
-			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-			BackupDir:    recorderEventsDir}, ti.logger)
+			Component:                   uuid.NewV4().String(),
+			EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:                   recorderEventsDir,
+			SkipCategoryBasedEventTypes: true}, ti.logger)
 		if err != nil {
 			log.Errorf("failed to create recorder, err: %v", err)
 			return
@@ -1079,7 +973,7 @@ func TestEventsAlertEngine(t *testing.T) {
 				recordEvents[i].objRef = &objRef
 			}
 			for j := 0; j < recordEvents[i].repeat; j++ {
-				evtsRecorder.Event(recordEvents[i].eventType, recordEvents[i].severity, recordEvents[i].message, recordEvents[i].objRef)
+				evtsRecorder.Event(recordEvents[i].eventType, recordEvents[i].message, recordEvents[i].objRef)
 			}
 		}
 
@@ -1088,48 +982,57 @@ func TestEventsAlertEngine(t *testing.T) {
 		// if objRef!=nil, this should increase the hits but not recreate the alerts.
 		// it will recreate alerts otherwise.
 		for i := range recordEvents {
-			evtsRecorder.Event(recordEvents[i].eventType, recordEvents[i].severity, recordEvents[i].message, recordEvents[i].objRef)
+			evtsRecorder.Event(recordEvents[i].eventType, recordEvents[i].message, recordEvents[i].objRef)
 		}
 	}()
 
+	// TODO: cannot add criteria meta.tenant="default" or any meta.*
 	// list of alerts to be generated by the alert engine
 	tests := []struct {
 		selector   string
+		expMessage string // stings will spaces are not allowed in field selector; so, this attribute
 		expSuccess bool
 	}{
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy1.GetName(), fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s,status.object-ref.kind=%s,meta.tenant=%s",
+				alertPolicy1.GetName(), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind(), dummyObjRef.GetTenant()),
+			expMessage: fmt.Sprintf("(tenant:%s) test %s unresponsive", dummyObjRef.Tenant, t.Name()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy1.GetName(), fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s,status.object-ref.kind=%s,meta.tenant=%s",
+				alertPolicy1.GetName(), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind(), dummyObjRef.GetTenant()),
+			expMessage: fmt.Sprintf("(tenant:%s) dummy election: leader changed %s", dummyObjRef.Tenant, t.Name()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy1.GetName(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.Spec.GetSeverity(), dummyObjRef.GetKind()),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s",
+				alertPolicy1.GetName(), alertPolicy1.Spec.GetSeverity()),
+			expMessage: fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy2.GetName(), fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s,status.object-ref.kind=%s,meta.tenant=%s",
+				alertPolicy2.GetName(), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind(), dummyObjRef.GetTenant()),
+			expMessage: fmt.Sprintf("(tenant:%s) test %s stopped", dummyObjRef.Tenant, t.Name()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy2.GetName(), fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s,meta.tenant=%s",
+				alertPolicy2.GetName(), alertPolicy2.Spec.GetSeverity(), globals.DefaultTenant),
+			expMessage: fmt.Sprintf("(tenant:%s) test %s stopped", dummyObjRef.Tenant, t.Name()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy2.GetName(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind()),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s,status.object-ref.kind=%s,meta.tenant=%s",
+				alertPolicy2.GetName(), alertPolicy2.Spec.GetSeverity(), dummyObjRef.GetKind(), dummyObjRef.GetTenant()),
+			expMessage: fmt.Sprintf("(tenant:%s) dummy election: leader lost %s", dummyObjRef.Tenant, t.Name()),
 			expSuccess: true,
 		},
 		{
-			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.message=%s,status.severity=%s,status.object-ref.kind=%s",
-				alertPolicy2.GetName(), fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), alertPolicy2.Spec.GetSeverity(), "invalid"),
+			selector: fmt.Sprintf("status.reason.alert-policy-id=%s,status.severity=%s,status.object-ref.kind=%s",
+				alertPolicy2.GetName(), alertPolicy2.Spec.GetSeverity(), "invalid"),
+			expMessage: fmt.Sprintf("(tenant:%s) dummy election: leader lost %s", dummyObjRef.Tenant, t.Name()),
 			expSuccess: false,
 		},
 		{
@@ -1151,12 +1054,20 @@ func TestEventsAlertEngine(t *testing.T) {
 					return false, fmt.Sprintf("%v failed, err: %v", test.selector, err)
 				}
 
-				if test.expSuccess && len(alerts) != 1 {
-					return false, fmt.Sprintf("expected: %v, obtained: %v", test.selector, alerts)
+				if test.expSuccess {
+					for _, alert := range alerts {
+						if alert.Status.Message == test.expMessage {
+							return true, nil
+						}
+					}
 				}
 
-				return true, nil
-			}, "did not receive the expected alert", string("200ms"), string("10s"))
+				if !test.expSuccess && len(alerts) == 0 {
+					return true, nil
+				}
+
+				return false, fmt.Sprintf("expected: %v, obtained: %v", test.selector, alerts)
+			}, "did not receive the expected alert", string("200ms"), string("20s"))
 		}
 	}()
 
@@ -1170,8 +1081,8 @@ func TestEventsAlertEngine(t *testing.T) {
 		openAlerts         int32
 		acknowledgedAlerts int32
 	}{
-		{policyMeta: alertPolicy1.GetObjectMeta(), minTotalHits: 4, maxTotalHits: 8, openAlerts: 4, acknowledgedAlerts: 0},
-		{policyMeta: alertPolicy2.GetObjectMeta(), minTotalHits: 4, maxTotalHits: 8, openAlerts: 4, acknowledgedAlerts: 0},
+		{policyMeta: alertPolicy1.GetObjectMeta(), minTotalHits: 3, maxTotalHits: 6, openAlerts: 3, acknowledgedAlerts: 0},
+		{policyMeta: alertPolicy2.GetObjectMeta(), minTotalHits: 3, maxTotalHits: 6, openAlerts: 3, acknowledgedAlerts: 0},
 		{policyMeta: alertPolicy3.GetObjectMeta(), minTotalHits: 0, maxTotalHits: 0, openAlerts: 0, acknowledgedAlerts: 0}, // no reqs so, there should be no alerts
 	}
 	for _, as := range expectedAlertStatus {
@@ -1236,7 +1147,7 @@ func TestEventsAlertEngine(t *testing.T) {
 			resp := monitoring.Alert{}
 			AssertEventually(t,
 				func() (bool, interface{}) {
-					at.alert.Spec.State = monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_ACKNOWLEDGED)]
+					at.alert.Spec.State = monitoring.AlertState_ACKNOWLEDGED.String()
 					statusCode, err := httpClient.Req("PUT", aURL, at.alert, &resp)
 					if err != nil {
 						return false, fmt.Sprintf("err: %v", err)
@@ -1256,7 +1167,7 @@ func TestEventsAlertEngine(t *testing.T) {
 			resp := monitoring.Alert{}
 			AssertEventually(t,
 				func() (bool, interface{}) {
-					at.alert.Spec.State = monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_RESOLVED)]
+					at.alert.Spec.State = monitoring.AlertState_RESOLVED.String()
 					statusCode, err := httpClient.Req("PUT", aURL, at.alert, &resp)
 					if err != nil {
 						return false, fmt.Sprintf("err: %v", err)
@@ -1356,8 +1267,8 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 	defer apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
 
 	// policy - 1: convert CRITICAL events with occurrences > 10 to a CRITICAL alert and export it to the given alert dest
-	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_CRITICAL, "alerts from events", []*fields.Requirement{
-		{Key: "severity", Operator: "in", Values: []string{evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)]}},
+	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", eventattrs.Severity_CRITICAL, "alerts from events", []*fields.Requirement{
+		{Key: "severity", Operator: "in", Values: []string{eventattrs.Severity_CRITICAL.String()}},
 		{Key: "count", Operator: "gt", Values: []string{"10"}},
 	}, []string{alertDestBSDSyslog.GetName(), alertDestRFC5424Syslog.GetName()})
 	alertPolicy1, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
@@ -1365,13 +1276,24 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 	defer apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
 
 	// policy - 2: convert WARNING events with occurrences = 10 to a WARNING alert and export it to the given alert dest
-	alertPolicy2 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_WARNING, "alerts from events", []*fields.Requirement{
-		{Key: "severity", Operator: "equals", Values: []string{evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_WARNING)]}},
+	alertPolicy2 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", eventattrs.Severity_WARN, "alerts from events", []*fields.Requirement{
+		{Key: "severity", Operator: "equals", Values: []string{eventattrs.Severity_WARN.String()}},
 		{Key: "count", Operator: "gte", Values: []string{"10"}},
 	}, []string{alertDestBSDSyslog.GetName(), alertDestRFC5424Syslog.GetName()})
 	alertPolicy2, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
 	defer apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy2.GetObjectMeta())
+
+	// object reference for events
+	dummyObjRef := &cluster.Node{
+		TypeMeta: api.TypeMeta{
+			Kind: "Node",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+		},
+	}
 
 	messages := map[chan string][]struct {
 		Substrs   []string                          // syslog message should contain all these strings
@@ -1379,57 +1301,49 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 	}{
 		receivedMsgsAtTCPServer: {
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy2.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()), alertPolicy2.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()), alertPolicy2.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetName()},
-				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-			},
-			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy2.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()), alertPolicy2.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetName()},
-				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
-			},
-			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), alertPolicy2.GetName()},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()), alertPolicy2.GetName()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 		},
 	}
 
-	testSyslogMessageDelivery(t, ti, messages)
+	testSyslogMessageDelivery(t, ti, dummyObjRef, messages)
 
 	AssertEventually(t,
 		func() (bool, interface{}) {
@@ -1438,11 +1352,11 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 				return false, err
 			}
 
-			if ad.Status.TotalNotificationsSent == 6 {
+			if ad.Status.TotalNotificationsSent == 5 {
 				return true, nil
 			}
 
-			return false, fmt.Sprintf("TotalNotificationSent expected:6, got: %v", ad.Status.TotalNotificationsSent)
+			return false, fmt.Sprintf("TotalNotificationSent expected:5, got: %v", ad.Status.TotalNotificationsSent)
 		}, fmt.Sprintf("alert destionation %v is not updated", alertDestBSDSyslog.GetName()), "200ms", "10s")
 
 	AssertEventually(t,
@@ -1452,11 +1366,11 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 				return false, err
 			}
 
-			if ad.Status.TotalNotificationsSent == 6 {
+			if ad.Status.TotalNotificationsSent == 5 {
 				return true, nil
 			}
 
-			return false, fmt.Sprintf("TotalNotificationSent expected:6, got: %v", ad.Status.TotalNotificationsSent)
+			return false, fmt.Sprintf("TotalNotificationSent expected:5, got: %v", ad.Status.TotalNotificationsSent)
 		}, fmt.Sprintf("alert destionation %v is not updated", alertDestRFC5424Syslog.GetName()), "200ms", "10s")
 }
 
@@ -1526,103 +1440,17 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 	defer apiClient.MonitoringV1().AlertDestination().Delete(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
 
 	// convert CRITICAL events with occurrences > 10 to a CRITICAL alert and export it to the given alert dest
-	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", evtsapi.SeverityLevel_CRITICAL, "alerts from events", []*fields.Requirement{
-		{Key: "severity", Operator: "in", Values: []string{evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_CRITICAL)]}},
+	alertPolicy1 := policygen.CreateAlertPolicyObj(globals.DefaultTenant, globals.DefaultNamespace, uuid.NewV1().String(), "Event", eventattrs.Severity_CRITICAL, "alerts from events", []*fields.Requirement{
+		{Key: "severity", Operator: "in", Values: []string{
+			eventattrs.Severity_CRITICAL.String(),
+			eventattrs.Severity_WARN.String()}},
 		{Key: "count", Operator: "gt", Values: []string{"10"}},
 	}, []string{alertDestBSDSyslog.GetName(), alertDestRFC5424Syslog.GetName()})
 	alertPolicy1, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy1)
 	AssertOk(t, err, "failed to add alert policy, err: %v", err)
 	defer apiClient.MonitoringV1().AlertPolicy().Delete(context.Background(), alertPolicy1.GetObjectMeta())
 
-	messages := map[chan string][]struct {
-		Substrs   []string                          // syslog message should contain all these strings
-		MsgFormat monitoring.MonitoringExportFormat // BSD style message contains the JSON formatted alert; RFC contains <msgID, structured data, msg>
-	}{
-		receivedMsgsAtUDPServer1: {
-			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
-				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-			},
-			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
-				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-			},
-			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
-				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-			},
-			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
-				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
-			},
-			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
-				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
-			},
-			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
-				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
-			},
-		},
-		receivedMsgsAtUDPServer2: {
-			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
-				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-			},
-			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
-				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-			},
-			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), alertPolicy1.GetName()},
-				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
-			},
-		},
-	}
-
-	testSyslogMessageDelivery(t, ti, messages)
-
-	AssertEventually(t,
-		func() (bool, interface{}) {
-			ad, err := apiClient.MonitoringV1().AlertDestination().Get(context.Background(), alertDestBSDSyslog.GetObjectMeta())
-			if err != nil {
-				return false, err
-			}
-
-			// (3 * 2) for 2 targets
-			if ad.Status.TotalNotificationsSent == 6 {
-				return true, nil
-			}
-
-			return false, fmt.Sprintf("TotalNotificationSent expected: 6, got: %v", ad.Status.TotalNotificationsSent)
-		}, fmt.Sprintf("alert destionation %v is not updated", alertDestBSDSyslog.GetName()), "200ms", "10s")
-
-	AssertEventually(t,
-		func() (bool, interface{}) {
-			ad, err := apiClient.MonitoringV1().AlertDestination().Get(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
-			if err != nil {
-				return false, err
-			}
-
-			if ad.Status.TotalNotificationsSent == 3 {
-				return true, nil
-			}
-
-			return false, fmt.Sprintf("TotalNotificationSent expected: 3, got: %v", ad.Status.TotalNotificationsSent)
-		}, fmt.Sprintf("alert destionation %v is not updated", alertDestRFC5424Syslog.GetName()), "200ms", "10s")
-}
-
-// ensures the delivery of expected syslog messages
-func testSyslogMessageDelivery(t *testing.T, ti tInfo, messages map[chan string][]struct {
-	Substrs   []string
-	MsgFormat monitoring.MonitoringExportFormat
-}) {
-
-	var m sync.Mutex
-	wg := new(sync.WaitGroup)
-	wg.Add(1) // events recorder
-
-	// define list of events to be recorded
+	// object reference for events
 	dummyObjRef := &cluster.Node{
 		TypeMeta: api.TypeMeta{
 			Kind: "Node",
@@ -1632,115 +1460,107 @@ func testSyslogMessageDelivery(t *testing.T, ti tInfo, messages map[chan string]
 			Namespace: globals.DefaultNamespace,
 		},
 	}
-	recordEvents := []*struct {
-		eventType string
-		severity  evtsapi.SeverityLevel
-		message   string
-		objRef    interface{}
-		repeat    int // number of times to repeat the event
+
+	messages := map[chan string][]struct {
+		Substrs   []string                          // syslog message should contain all these strings
+		MsgFormat monitoring.MonitoringExportFormat // BSD style message contains the JSON formatted alert; RFC contains <msgID, structured data, msg>
 	}{
-		{eventType1, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO), *dummyObjRef, 5},
-		{eventType1, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING), *dummyObjRef, 10},
-		{eventType1, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL), *dummyObjRef, 15},
-
-		{eventType2, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO), *dummyObjRef, 5},
-		{eventType2, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING), *dummyObjRef, 10},
-		{eventType2, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL), *dummyObjRef, 15},
-
-		{eventType3, evtsapi.SeverityLevel_INFO, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO), *dummyObjRef, 5},
-		{eventType3, evtsapi.SeverityLevel_WARNING, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING), *dummyObjRef, 10},
-		{eventType3, evtsapi.SeverityLevel_CRITICAL, fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL), *dummyObjRef, 15},
+		receivedMsgsAtUDPServer1: {
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+		},
+		receivedMsgsAtUDPServer2: {
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()), alertPolicy1.GetName()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+		},
 	}
 
-	// start recorder
-	recorderEventsDir, err := ioutil.TempDir("", t.Name())
-	AssertOk(t, err, "failed to create recorder events directory")
-	defer os.RemoveAll(recorderEventsDir)
-	go func() {
-		defer wg.Done()
+	testSyslogMessageDelivery(t, ti, dummyObjRef, messages)
 
-		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Component:    uuid.NewV4().String(),
-			EvtTypes:     testEventTypes,
-			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-			BackupDir:    recorderEventsDir}, ti.logger)
-		if err != nil {
-			log.Errorf("failed to create recorder, err: %v", err)
-			return
-		}
-		ti.recorders.Lock()
-		ti.recorders.list = append(ti.recorders.list, evtsRecorder)
-		ti.recorders.Unlock()
-
-		// record events
-		for i := range recordEvents {
-			if objRef, ok := recordEvents[i].objRef.(cluster.Node); ok {
-				objRef.ObjectMeta.Name = CreateAlphabetString(5)
-				recordEvents[i].objRef = &objRef
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			ad, err := apiClient.MonitoringV1().AlertDestination().Get(context.Background(), alertDestBSDSyslog.GetObjectMeta())
+			if err != nil {
+				return false, err
 			}
-			for j := 0; j < recordEvents[i].repeat; j++ {
-				evtsRecorder.Event(recordEvents[i].eventType, recordEvents[i].severity, recordEvents[i].message, recordEvents[i].objRef)
-			}
-		}
 
-		// wait for the batch interval
-		time.Sleep(ti.batchInterval + 10*time.Millisecond)
-		// resend the events again after batch interval, this should increase the hits but not recreate the alerts as per our alert policy
-		// thus, no alert export for these events.
-		for i := range recordEvents {
-			evtsRecorder.Event(recordEvents[i].eventType, recordEvents[i].severity, recordEvents[i].message, recordEvents[i].objRef)
-		}
-	}()
-
-	for messageCh, expectedMessages := range messages {
-		closeMsgCh := make(chan struct{})
-
-		// ensure all the alerts are exported to the given syslog(UDP/TCP) server in the respective format.
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			for {
-				select {
-				case <-closeMsgCh:
-					return
-				case msg, ok := <-messageCh:
-					if !ok {
-						return
-					}
-
-					m.Lock()
-					for i := 0; i < len(expectedMessages); i++ {
-						if len(expectedMessages[i].Substrs) > 0 {
-							match := true
-							for _, substr := range expectedMessages[i].Substrs {
-								match = match && strings.Contains(msg, substr)
-							}
-							if match && syslog.ValidateSyslogMessage(expectedMessages[i].MsgFormat, msg) {
-								expectedMessages = append(expectedMessages[:i], expectedMessages[i+1:]...)
-								break
-							}
-						}
-					}
-					m.Unlock()
-				}
-			}
-		}()
-
-		AssertEventually(t,
-			func() (bool, interface{}) {
-				m.Lock()
-				defer m.Unlock()
-				if len(expectedMessages) != 0 {
-					return false, fmt.Sprintf("pending: %v", len(expectedMessages))
-				}
+			// (5 * 2) for 2 targets
+			if ad.Status.TotalNotificationsSent == 10 {
 				return true, nil
-			}, "did not receive all the expected syslog messages", "200ms", "10s")
+			}
 
-		close(closeMsgCh)
-	}
+			return false, fmt.Sprintf("TotalNotificationSent expected: 10, got: %v", ad.Status.TotalNotificationsSent)
+		}, fmt.Sprintf("alert destionation %v is not updated", alertDestBSDSyslog.GetName()), "200ms", "10s")
 
-	wg.Wait()
+	AssertEventually(t,
+		func() (bool, interface{}) {
+			ad, err := apiClient.MonitoringV1().AlertDestination().Get(context.Background(), alertDestRFC5424Syslog.GetObjectMeta())
+			if err != nil {
+				return false, err
+			}
+
+			if ad.Status.TotalNotificationsSent == 5 {
+				return true, nil
+			}
+
+			return false, fmt.Sprintf("TotalNotificationSent expected: 5, got: %v", ad.Status.TotalNotificationsSent)
+		}, fmt.Sprintf("alert destionation %v is not updated", alertDestRFC5424Syslog.GetName()), "200ms", "10s")
 }
 
 // TestEventsExport tests events export with dummy UDP and TCP servers as syslog server
@@ -1817,6 +1637,17 @@ func TestEventsExport(t *testing.T) {
 	// to let the event policies reach the policy manager (api server -> evtsmgr -> policy watcher -> policy manager -> exporter)
 	time.Sleep(2 * time.Second)
 
+	// object reference for events
+	dummyObjRef := &cluster.Node{
+		TypeMeta: api.TypeMeta{
+			Kind: "Node",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+		},
+	}
+
 	messages := map[chan string][]struct {
 		Substrs   []string                          // syslog message should contain all these strings
 		MsgFormat monitoring.MonitoringExportFormat // BSD style message contains the JSON formatted alert; RFC contains <msgID, structured data, msg>
@@ -1824,131 +1655,182 @@ func TestEventsExport(t *testing.T) {
 		// all the messages that are sent should be received at the syslog server
 		receivedMsgsAtUDPServer1: {
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s started on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s running on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election started %s", dummyObjRef.Tenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: leader elected %s", dummyObjRef.Tenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: leader changed %s", dummyObjRef.Tenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: leader lost %s", dummyObjRef.Tenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name())},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name())},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name())},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name())},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 		},
 		receivedMsgsAtTCPServer1: {
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s started on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s running on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election started %s", dummyObjRef.Tenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: leader elected %s", dummyObjRef.Tenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: leader changed %s", dummyObjRef.Tenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: leader lost %s", dummyObjRef.Tenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL)},
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name())},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name())},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name())},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name())},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
+			},
+			{
+				Substrs:   []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name())},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_BSD,
 			},
 		},
 		receivedMsgsAtTCPServer2: { // messages belonging to event policy - 2
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO),
-					eventPolicy2.Spec.GetSyslogConfig().GetPrefix(),
-					fmt.Sprintf("%d", (int32(monitoring.SyslogFacility_LOG_SYSLOG)&0xF8)|(int32(syslog.LogInfo)&0x07))},
-				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
-			},
-			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s started on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s running on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: election started %s", dummyObjRef.Tenant, t.Name()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: leader elected %s", dummyObjRef.Tenant, t.Name()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: leader changed %s", dummyObjRef.Tenant, t.Name()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: leader lost %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name()),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name()),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 		},
 	}
 
-	testSyslogMessageDelivery(t, ti, messages)
+	testSyslogMessageDelivery(t, ti, dummyObjRef, messages)
 
 	// update event policy - 1; remove the existing target and add a new one
 	// start UDP server to receive syslog messages
@@ -2017,130 +1899,207 @@ func TestEventsExport(t *testing.T) {
 	}{
 		receivedMsgsAtUDPServer1: { // target - 1 of event policy - 1
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s started on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s running on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: election started %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: leader elected %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: leader changed %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: leader lost %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 		},
-		receivedMsgsAtUDPServer2: { // target - 2 of event policy - 2
+		receivedMsgsAtUDPServer2: { // target - 2 of event policy - 1
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s started on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s running on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: election started %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: leader elected %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: leader changed %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: leader lost %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs:   []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL)},
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()),
+					eventPolicy1.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 		},
 		receivedMsgsAtTCPServer2: { // messages belonging to event policy - 2
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_INFO),
-					eventPolicy2.Spec.GetSyslogConfig().GetPrefix(),
-					fmt.Sprintf("%d", (int32(monitoring.SyslogFacility_LOG_SYSLOG)&0xF8)|(int32(syslog.LogInfo)&0x07))},
-				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
-			},
-			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_WARNING),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s started on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType1, evtsapi.SeverityLevel_CRITICAL),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s running on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_INFO),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_WARNING),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType2, evtsapi.SeverityLevel_CRITICAL),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: election started %s", dummyObjRef.Tenant, t.Name()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_INFO),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: leader elected %s", dummyObjRef.Tenant, t.Name()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_WARNING),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: leader changed %s", dummyObjRef.Tenant, t.Name()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 			{
-				Substrs: []string{fmt.Sprintf("%s-%s", eventType3, evtsapi.SeverityLevel_CRITICAL),
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: leader lost %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name()),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name()),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()),
+					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
+				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
+			},
+			{
+				Substrs: []string{fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()),
 					eventPolicy2.Spec.GetSyslogConfig().GetPrefix()},
 				MsgFormat: monitoring.MonitoringExportFormat_SYSLOG_RFC5424,
 			},
 		},
 	}
-	testSyslogMessageDelivery(t, ti, messages)
+	testSyslogMessageDelivery(t, ti, dummyObjRef, messages)
 
 	close(closeMsgCh)
 
@@ -2213,10 +2172,10 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 		defer os.RemoveAll(recorderEventsDir)
 
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Component:    uuid.NewV4().String(),
-			EvtTypes:     testEventTypes,
-			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-			BackupDir:    recorderEventsDir}, ti.logger)
+			Component:                   uuid.NewV4().String(),
+			EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:                   recorderEventsDir,
+			SkipCategoryBasedEventTypes: true}, ti.logger)
 		if err != nil {
 			ti.logger.Errorf("failed to create recorder, err: %v", err)
 			return
@@ -2231,7 +2190,7 @@ func TestEventsExportWithSyslogReconnect(t *testing.T) {
 			case <-stopGoRoutines:
 				return
 			case <-time.After(100 * time.Millisecond):
-				evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, fmt.Sprintf("message-%d", count), nil)
+				evtsRecorder.Event(eventtypes.SERVICE_RUNNING, fmt.Sprintf("message-%d", count), nil)
 			}
 		}
 	}()
@@ -2322,10 +2281,10 @@ func TestEventsExportWithSlowExporter(t *testing.T) {
 		defer os.RemoveAll(recorderEventsDir)
 
 		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-			Component:    uuid.NewV4().String(),
-			EvtTypes:     testEventTypes,
-			EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-			BackupDir:    recorderEventsDir}, ti.logger)
+			Component:                   uuid.NewV4().String(),
+			EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:                   recorderEventsDir,
+			SkipCategoryBasedEventTypes: true}, ti.logger)
 		if err != nil {
 			ti.logger.Errorf("failed to create recorder, err: %v", err)
 			return
@@ -2340,7 +2299,7 @@ func TestEventsExportWithSlowExporter(t *testing.T) {
 				return
 			case <-time.After(10 * time.Millisecond):
 				count++
-				evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, fmt.Sprintf("message-%d", count), nil)
+				evtsRecorder.Event(eventtypes.SERVICE_RUNNING, fmt.Sprintf("message-%d", count), nil)
 			}
 		}
 	}()
@@ -2430,10 +2389,10 @@ func TestEventsMgrWithElasticRestart(t *testing.T) {
 	for i := 0; i < numRecorders; i++ {
 		go func(i int) {
 			evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-				Component:    fmt.Sprintf("%v-%v", componentID, i),
-				EvtTypes:     testEventTypes,
-				EvtsProxyURL: ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
-				BackupDir:    recorderEventsDir}, ti.logger)
+				Component:                   fmt.Sprintf("%v-%v", componentID, i),
+				EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+				BackupDir:                   recorderEventsDir,
+				SkipCategoryBasedEventTypes: true}, ti.logger)
 			if err != nil {
 				log.Errorf("failed to create recorder for source %v", i)
 				return
@@ -2449,13 +2408,13 @@ func TestEventsMgrWithElasticRestart(t *testing.T) {
 					wg.Done()
 					return
 				case <-ticker.C:
-					evtsRecorder.Event(eventType1, evtsapi.SeverityLevel_INFO, "test event - 1", nil)
+					evtsRecorder.Event(eventtypes.SERVICE_RUNNING, "test event - 1", nil)
 					totalEventsSentBySrc[i]++
 
-					evtsRecorder.Event(eventType2, evtsapi.SeverityLevel_WARNING, "test event - 2", nil)
+					evtsRecorder.Event(eventtypes.SERVICE_UNRESPONSIVE, "test event - 2", nil)
 					totalEventsSentBySrc[i]++
 
-					evtsRecorder.Event(eventType3, evtsapi.SeverityLevel_CRITICAL, "test event - 3", nil)
+					evtsRecorder.Event(eventtypes.SERVICE_STOPPED, "test event - 3", nil)
 					totalEventsSentBySrc[i]++
 				}
 			}
@@ -2514,6 +2473,132 @@ func TestEventsMgrWithElasticRestart(t *testing.T) {
 	ti.assertElasticUniqueEvents(t, query, true, 3*numRecorders, "120s")
 	ti.assertElasticTotalEvents(t, query, false, totalEventsSent, "120s")
 	Assert(t, ti.esClient.GetResetCount() > 0, "client should have restarted")
+}
+
+// ensures the delivery of expected syslog messages
+func testSyslogMessageDelivery(t *testing.T, ti tInfo, dummyObjRef *cluster.Node, messages map[chan string][]struct {
+	Substrs   []string
+	MsgFormat monitoring.MonitoringExportFormat
+}) {
+
+	var m sync.Mutex
+	wg := new(sync.WaitGroup)
+	wg.Add(1) // events recorder
+
+	// define list of events to be recorded
+	recordEvents := []*struct {
+		eventType eventtypes.EventType
+		message   string
+		objRef    interface{}
+		repeat    int // number of times to repeat the event
+	}{
+		{eventtypes.SERVICE_STARTED, fmt.Sprintf("(tenant:%s) test %s started on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), *dummyObjRef, 10},
+		{eventtypes.SERVICE_RUNNING, fmt.Sprintf("(tenant:%s) test %s running on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), *dummyObjRef, 10},
+		{eventtypes.SERVICE_UNRESPONSIVE, fmt.Sprintf("(tenant:%s) test %s unresponsive on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), *dummyObjRef, 15},
+		{eventtypes.SERVICE_STOPPED, fmt.Sprintf("(tenant:%s) test %s stopped on %s", dummyObjRef.Tenant, t.Name(), dummyObjRef.GetKind()), *dummyObjRef, 11},
+
+		{eventtypes.ELECTION_STARTED, fmt.Sprintf("(tenant:%s) dummy election: election started %s", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 10},
+		{eventtypes.LEADER_ELECTED, fmt.Sprintf("(tenant:%s) dummy election: leader elected %s", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 10},
+		{eventtypes.LEADER_CHANGED, fmt.Sprintf("(tenant:%s) dummy election: leader changed %s", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 15},
+		{eventtypes.LEADER_LOST, fmt.Sprintf("(tenant:%s) dummy election: leader lost %s", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 11},
+		{eventtypes.ELECTION_STOPPED, fmt.Sprintf("(tenant:%s) dummy election: election stopped %s", dummyObjRef.Tenant, t.Name()), *dummyObjRef, 15},
+
+		// events in non default tenant
+		{eventtypes.SERVICE_STARTED, fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name()), nil, 10},
+		{eventtypes.SERVICE_RUNNING, fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name()), nil, 10},
+		{eventtypes.SERVICE_UNRESPONSIVE, fmt.Sprintf("(tenant:%s) test %s unresponsive", globals.DefaultTenant, t.Name()), nil, 15},
+		{eventtypes.SERVICE_STOPPED, fmt.Sprintf("(tenant:%s) test %s stopped", globals.DefaultTenant, t.Name()), nil, 11},
+	}
+
+	// start recorder
+	recorderEventsDir, err := ioutil.TempDir("", t.Name())
+	AssertOk(t, err, "failed to create recorder events directory")
+	defer os.RemoveAll(recorderEventsDir)
+	go func() {
+		defer wg.Done()
+
+		evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
+			Component:                   uuid.NewV4().String(),
+			EvtsProxyURL:                ti.evtProxyServices.EvtsProxy.RPCServer.GetListenURL(),
+			BackupDir:                   recorderEventsDir,
+			SkipCategoryBasedEventTypes: true}, ti.logger)
+		if err != nil {
+			log.Errorf("failed to create recorder, err: %v", err)
+			return
+		}
+		ti.recorders.Lock()
+		ti.recorders.list = append(ti.recorders.list, evtsRecorder)
+		ti.recorders.Unlock()
+
+		// record events
+		for i := range recordEvents {
+			if objRef, ok := recordEvents[i].objRef.(cluster.Node); ok {
+				objRef.ObjectMeta.Name = CreateAlphabetString(5)
+				recordEvents[i].objRef = &objRef
+			}
+			for j := 0; j < recordEvents[i].repeat; j++ {
+				evtsRecorder.Event(recordEvents[i].eventType, recordEvents[i].message, recordEvents[i].objRef)
+			}
+		}
+
+		// wait for the batch interval
+		time.Sleep(ti.batchInterval + 10*time.Millisecond)
+		// resend the events again after batch interval, this should increase the hits but not recreate the alerts as per our alert policy
+		// thus, no alert export for these events.
+		for i := range recordEvents {
+			evtsRecorder.Event(recordEvents[i].eventType, recordEvents[i].message, recordEvents[i].objRef)
+		}
+	}()
+
+	for messageCh, expectedMessages := range messages {
+		closeMsgCh := make(chan struct{})
+
+		// ensure all the alerts are exported to the given syslog(UDP/TCP) server in the respective format.
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			for {
+				select {
+				case <-closeMsgCh:
+					return
+				case msg, ok := <-messageCh:
+					if !ok {
+						return
+					}
+
+					m.Lock()
+					for i := 0; i < len(expectedMessages); i++ {
+						if len(expectedMessages[i].Substrs) > 0 {
+							match := true
+							for _, substr := range expectedMessages[i].Substrs {
+								match = match && strings.Contains(msg, substr)
+							}
+							if match && syslog.ValidateSyslogMessage(expectedMessages[i].MsgFormat, msg) {
+								expectedMessages = append(expectedMessages[:i], expectedMessages[i+1:]...)
+								break
+							}
+						}
+					}
+					m.Unlock()
+				}
+			}
+		}()
+
+		AssertEventually(t,
+			func() (bool, interface{}) {
+				m.Lock()
+				defer m.Unlock()
+				if len(expectedMessages) != 0 {
+					return false, fmt.Sprintf("pending: %v", len(expectedMessages))
+				}
+				return true, nil
+			}, "did not receive all the expected syslog messages", "200ms", "10s")
+
+		close(closeMsgCh)
+	}
+
+	wg.Wait()
 }
 
 // getAvailablePort returns the port available between [from, to]

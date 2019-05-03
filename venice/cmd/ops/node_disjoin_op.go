@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -42,7 +42,7 @@ func (o *NodeDisjoinOp) Run() (interface{}, error) {
 	err2 := env.K8sService.DeleteNode(o.node.Name)
 	log.Infof("node %v disjoin from cluster. err %v", o.node.Name, err2)
 	if err != nil || err2 != nil {
-		recorder.Event(cmd.NodeDisjoined, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Node %s disjoined from cluster", o.node.Name), o.node)
+		recorder.Event(eventtypes.NODE_DISJOINED, fmt.Sprintf("Node %s disjoined from cluster", o.node.Name), o.node)
 	}
 	return o.node.Name, err
 }

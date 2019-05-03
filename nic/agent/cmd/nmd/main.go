@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/nmd"
 	"github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/nic/agent/nmd/platform"
@@ -92,8 +91,7 @@ func main() {
 
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Component: globals.Nmd,
-		EvtTypes:  cmd.GetEventTypes()}, logger)
+		Component: globals.Nmd}, logger)
 	if err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}

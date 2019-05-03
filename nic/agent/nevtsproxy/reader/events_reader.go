@@ -10,6 +10,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/shm"
 	"github.com/pensando/sw/venice/globals"
@@ -18,7 +19,6 @@ import (
 	"github.com/pensando/sw/venice/utils/ntranslate"
 	// to register key/handles with protobuf; this is needed to convert any to protobuf message
 	_ "github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	_ "github.com/pensando/sw/nic/sysmgr/events_proto"
 )
 
 // Events reader implementation internally uses shared memory reader (shm/reader.go)
@@ -156,6 +156,7 @@ func convertToVeniceEvent(nEvt *halproto.Event) *evtsapi.Event {
 	t := time.Unix(0, int64(nEvt.GetTime())).UTC() // get time from nsecs
 	ts, _ := types.TimestampProto(t)
 
+	eTypeAttrs := eventtypes.GetEventTypeAttrs(eventtypes.EventType(nEvt.GetType()))
 	vEvt := &evtsapi.Event{ // create event object
 		TypeMeta: api.TypeMeta{Kind: "Event"},
 		ObjectMeta: api.ObjectMeta{
@@ -173,9 +174,10 @@ func convertToVeniceEvent(nEvt *halproto.Event) *evtsapi.Event {
 			Labels:    map[string]string{"_category": globals.Kind2Category["Event"]},
 		},
 		EventAttributes: evtsapi.EventAttributes{
-			Type:     nEvt.GetType(),
-			Severity: halproto.Severity_name[int32(nEvt.GetSeverity())],
+			Type:     eTypeAttrs.EType,
+			Severity: eTypeAttrs.Severity,
 			Message:  nEvt.GetMessage(),
+			Category: eTypeAttrs.Category,
 			Source:   &evtsapi.EventSource{Component: nEvt.GetComponent()},
 			Count:    1,
 		},

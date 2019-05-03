@@ -136,16 +136,6 @@ func parseObjectPrefix(val interface{}) (interface{}, error) {
 	return c, nil
 }
 
-// parseEventTypes parses the list of enum names from the given interface
-func parseEventTypes(val interface{}) (interface{}, error) {
-	enumNames, ok := val.([]string)
-	if !ok {
-		return nil, errInvalidOption
-	}
-
-	return enumNames, nil
-}
-
 func parseProxyEndpoint(val interface{}) (interface{}, error) {
 	c, ok := val.([]*venice.ProxyEndpoint)
 	if !ok {
@@ -870,7 +860,6 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.fileApiServerBacked", parseBoolOptions)
 	reg.RegisterOptionParser("venice.apiAction", parseAPIActions)
 	reg.RegisterOptionParser("venice.default", parseStringSliceOptions)
-	reg.RegisterOptionParser("venice.eventTypes", parseEventTypes)
 	reg.RegisterOptionParser("venice.fileCategory", parseStringOptions)
 	reg.RegisterOptionParser("venice.proxyPrefix", parseProxyEndpoint)
 	reg.RegisterOptionParser("venice.methodActionObject", parseStringOptions)

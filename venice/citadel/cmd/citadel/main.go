@@ -14,9 +14,7 @@ import (
 	_ "github.com/influxdata/influxdb/tsdb/engine"
 	_ "github.com/influxdata/influxdb/tsdb/index"
 
-	"github.com/pensando/sw/api/generated/events"
-
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/citadel/broker"
 	"github.com/pensando/sw/venice/citadel/collector"
 	"github.com/pensando/sw/venice/citadel/collector/rpcserver"
@@ -75,8 +73,7 @@ func main() {
 
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Component: globals.Citadel,
-		EvtTypes:  evtsapi.GetEventTypes()}, logger)
+		Component: globals.Citadel}, logger)
 	if err != nil {
 		log.Fatalf("failed to create events recorder, err: %v", err)
 	}
@@ -160,7 +157,7 @@ func checkClusterHealth(br *broker.Broker) {
 		for i := 0; i < maxRetry; i++ {
 			if err = br.ClusterCheck(); err == nil {
 				log.Infof("cluster is ready")
-				recorder.Event(events.ServiceRunning, events.SeverityLevel_INFO, globals.Citadel+" service is ready", nil)
+				recorder.Event(eventtypes.SERVICE_RUNNING, globals.Citadel+" service is ready", nil)
 				return
 			}
 			log.Errorf("cluster failed %v", err)
@@ -168,6 +165,6 @@ func checkClusterHealth(br *broker.Broker) {
 		}
 
 		// log event
-		recorder.Event(events.ServiceUnresponsive, events.SeverityLevel_WARNING, globals.Citadel+" service failed, "+err.Error(), nil)
+		recorder.Event(eventtypes.SERVICE_UNRESPONSIVE, globals.Citadel+" service failed, "+err.Error(), nil)
 	}
 }

@@ -22,14 +22,6 @@ option (venice.fileCategory) = "events";
 // file are not backed by the API server.
 option (venice.fileApiServerBacked) = false;
 
-// list of common V1 event types supported across different services
-enum EventTypesV1 {
-    ServiceStarted      = 0; // Service started
-    ServiceStopped      = 1; // Service stopped
-    ServiceRunning      = 2; // Service running
-    ServiceUnresponsive = 3; // Service unresponsive due to lack of system resources
-}
-
 // Request for GET /event
 message GetEventRequest {
     string UUID   = 1 [(gogoproto.jsontag) = "uuid,omitempty"];
@@ -55,6 +47,4 @@ service EventsV1 {
         get: "/events/{UUID}"
       };
     }
-
-    option(venice.eventTypes) = "EventTypesV1";
 }

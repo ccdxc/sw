@@ -14,6 +14,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/satori/go.uuid"
 
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/shm"
 	"github.com/pensando/sw/venice/utils/log"
@@ -78,8 +79,7 @@ func TestReader(t *testing.T) {
 					return
 				case <-time.After(10 * time.Millisecond):
 					hEvt := &halproto.Event{
-						Severity:  halproto.Severity_INFO,
-						Type:      "DUMMY",
+						Type:      int32(eventtypes.SERVICE_RUNNING),
 						Component: "shm-reader-test",
 						Message:   "test-msg",
 						ObjectKey: halKey,

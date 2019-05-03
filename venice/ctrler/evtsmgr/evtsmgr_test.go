@@ -239,7 +239,7 @@ func TestEventsMgrAlertCache(t *testing.T) {
 		TypeMeta:   api.TypeMeta{Kind: "Alert"},
 		ObjectMeta: api.ObjectMeta{Name: "test-alert1", Tenant: "test-ten1"},
 		Spec: monitoring.AlertSpec{
-			State: monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_OPEN)],
+			State: monitoring.AlertState_OPEN.String(),
 		},
 	}
 
@@ -254,11 +254,11 @@ func TestEventsMgrAlertCache(t *testing.T) {
 	Assert(t, reflect.DeepEqual(alert.GetObjectMeta(), oAlert.GetObjectMeta()),
 		"alert meta didn't match, expected: %+v, got %+v", alert.GetObjectMeta(), oAlert.GetObjectMeta())
 	a := oAlert.(*monitoring.Alert)
-	Assert(t, monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_OPEN)] == a.Spec.GetState(),
-		"alert state didn't match, expected: %v, got: %v", monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_OPEN)], a.Spec.GetState())
+	Assert(t, monitoring.AlertState_OPEN.String() == a.Spec.GetState(),
+		"alert state didn't match, expected: %v, got: %v", monitoring.AlertState_OPEN.String(), a.Spec.GetState())
 
 	// update alert
-	alert.Spec.State = monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_RESOLVED)]
+	alert.Spec.State = monitoring.AlertState_RESOLVED.String()
 	err = evtsMgr.processAlert(kvstore.Updated, alert)
 	AssertOk(t, err, "failed to update alert")
 	oAlert, err = evtsMgr.memDb.FindObject(alert.GetKind(), alert.GetObjectMeta())
@@ -268,8 +268,8 @@ func TestEventsMgrAlertCache(t *testing.T) {
 	Assert(t, reflect.DeepEqual(alert.GetObjectMeta(), oAlert.GetObjectMeta()),
 		"alert meta didn't match, expected: %+v, got %+v", alert.GetObjectMeta(), oAlert.GetObjectMeta())
 	a = oAlert.(*monitoring.Alert)
-	Assert(t, monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_RESOLVED)] == a.Spec.GetState(),
-		"alert state didn't match, expected: %v, got: %v", monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_RESOLVED)], a.Spec.GetState())
+	Assert(t, monitoring.AlertState_RESOLVED.String() == a.Spec.GetState(),
+		"alert state didn't match, expected: %v, got: %v", monitoring.AlertState_RESOLVED.String(), a.Spec.GetState())
 
 	// delete alert
 	err = evtsMgr.processAlert(kvstore.Deleted, alert)

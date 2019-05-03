@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/pensando/sw/api"
-	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
@@ -97,7 +97,7 @@ var _ = Describe("events test", func() {
 		// check for `LeaderElected` event
 		Eventually(func() error {
 			query := es.NewBoolQuery().Must(es.NewTermQuery("source.component.keyword", globals.Cmd),
-				es.NewTermQuery("type.keyword", cmd.LeaderElected))
+				es.NewTermQuery("type.keyword", eventtypes.EventType_name[int32(eventtypes.LEADER_ELECTED)]))
 			res, err := esClient.Search(context.Background(),
 				elastic.GetIndex(globals.Events, globals.DefaultTenant),
 				elastic.GetDocType(globals.Events),
@@ -124,7 +124,7 @@ var _ = Describe("events test", func() {
 		// different than other events (e.g.venice.external.<tenant>.events.2018-09-12).
 		Eventually(func() error {
 			query := es.NewBoolQuery().Must(es.NewTermQuery("source.component.keyword", globals.Nmd),
-				es.NewTermQuery("type.keyword", cmd.NICAdmitted))
+				es.NewTermQuery("type.keyword", eventtypes.EventType_name[int32(eventtypes.NIC_ADMITTED)]))
 			res, err := esClient.Search(context.Background(),
 				elastic.GetIndex(globals.Events, globals.DefaultTenant), // empty tenant
 				elastic.GetDocType(globals.Events),

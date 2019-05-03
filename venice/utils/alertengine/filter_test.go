@@ -10,6 +10,8 @@ import (
 	"github.com/pensando/sw/api/fields"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/events/generated/eventattrs"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -34,8 +36,8 @@ func TestFilter(t *testing.T) {
 		},
 		EventAttributes: evtsapi.EventAttributes{
 			Count:    5,
-			Severity: evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)],
-			Type:     evtsapi.ServiceRunning,
+			Severity: eventattrs.Severity_INFO.String(),
+			Type:     eventtypes.SERVICE_RUNNING.String(),
 			ObjectRef: &api.ObjectRef{
 				Tenant:    globals.DefaultTenant,
 				Namespace: globals.DefaultNamespace,
@@ -52,117 +54,117 @@ func TestFilter(t *testing.T) {
 	}{
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "count", Operator: "lt", Values: []string{"7"}},
-				&fields.Requirement{Key: "severity", Operator: "equals", Values: []string{evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)]}},
+				{Key: "count", Operator: "lt", Values: []string{"7"}},
+				{Key: "severity", Operator: "equals", Values: []string{eventattrs.Severity_INFO.String()}},
 			},
 			expSuccess: true,
 			expResp: []*monitoring.MatchedRequirement{
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "Count", Operator: "lt", Values: []string{"7"}}, ObservedValue: "5"},
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "Severity", Operator: "equals", Values: []string{evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)]}}, ObservedValue: "INFO"},
+				{Requirement: &fields.Requirement{Key: "Count", Operator: "lt", Values: []string{"7"}}, ObservedValue: "5"},
+				{Requirement: &fields.Requirement{Key: "Severity", Operator: "equals", Values: []string{eventattrs.Severity_INFO.String()}}, ObservedValue: "INFO"},
 			},
 		},
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "type", Operator: "notIn", Values: []string{evtsapi.ServiceStarted, evtsapi.ServiceStopped}},
+				{Key: "type", Operator: "notIn", Values: []string{eventtypes.EventType_name[int32(eventtypes.SERVICE_STARTED)], eventtypes.EventType_name[int32(eventtypes.SERVICE_STOPPED)]}},
 			},
 			expSuccess: true,
 			expResp: []*monitoring.MatchedRequirement{
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "Type", Operator: "notIn", Values: []string{evtsapi.ServiceStarted, evtsapi.ServiceStopped}}, ObservedValue: ""},
+				{Requirement: &fields.Requirement{Key: "Type", Operator: "notIn", Values: []string{eventtypes.EventType_name[int32(eventtypes.SERVICE_STARTED)], eventtypes.EventType_name[int32(eventtypes.SERVICE_STOPPED)]}}, ObservedValue: ""},
 			},
 		},
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "object-ref.kind", Operator: "notEquals", Values: []string{"Cluster", "Network"}},
+				{Key: "object-ref.kind", Operator: "notEquals", Values: []string{"Cluster", "Network"}},
 			},
 			expSuccess: true,
 			expResp: []*monitoring.MatchedRequirement{
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectRef.Kind", Operator: "notEquals", Values: []string{"Cluster", "Network"}}, ObservedValue: "Node"},
+				{Requirement: &fields.Requirement{Key: "ObjectRef.Kind", Operator: "notEquals", Values: []string{"Cluster", "Network"}}, ObservedValue: "Node"},
 			},
 		},
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "object-ref.kind", Operator: "notEquals", Values: []string{"Cluster", "Network"}},
-				&fields.Requirement{Key: "object-ref.name", Operator: "equals", Values: []string{"node1"}},
-				&fields.Requirement{Key: "type", Operator: "in", Values: []string{evtsapi.ServiceRunning}},
+				{Key: "object-ref.kind", Operator: "notEquals", Values: []string{"Cluster", "Network"}},
+				{Key: "object-ref.name", Operator: "equals", Values: []string{"node1"}},
+				{Key: "type", Operator: "in", Values: []string{eventtypes.SERVICE_RUNNING.String()}},
 			},
 			expSuccess: true,
 			expResp: []*monitoring.MatchedRequirement{
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectRef.Kind", Operator: "notEquals", Values: []string{"Cluster", "Network"}}, ObservedValue: "Node"},
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectRef.Name", Operator: "equals", Values: []string{"node1"}}, ObservedValue: "node1"},
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "Type", Operator: "in", Values: []string{evtsapi.ServiceRunning}}, ObservedValue: evtsapi.ServiceRunning},
+				{Requirement: &fields.Requirement{Key: "ObjectRef.Kind", Operator: "notEquals", Values: []string{"Cluster", "Network"}}, ObservedValue: "Node"},
+				{Requirement: &fields.Requirement{Key: "ObjectRef.Name", Operator: "equals", Values: []string{"node1"}}, ObservedValue: "node1"},
+				{Requirement: &fields.Requirement{Key: "Type", Operator: "in", Values: []string{eventtypes.SERVICE_RUNNING.String()}}, ObservedValue: eventtypes.SERVICE_RUNNING.String()},
 			},
 		},
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "kind", Operator: "equals", Values: []string{"Event"}},
+				{Key: "kind", Operator: "equals", Values: []string{"Event"}},
 			},
 			expSuccess: true,
 			expResp: []*monitoring.MatchedRequirement{
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "Kind", Operator: "equals", Values: []string{"Event"}}, ObservedValue: "Event"},
+				{Requirement: &fields.Requirement{Key: "Kind", Operator: "equals", Values: []string{"Event"}}, ObservedValue: "Event"},
 			},
 		},
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "count", Operator: "gte", Values: []string{"5"}},
+				{Key: "count", Operator: "gte", Values: []string{"5"}},
 			},
 			expSuccess: true,
 			expResp: []*monitoring.MatchedRequirement{
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "Count", Operator: "gte", Values: []string{"5"}}, ObservedValue: "5"},
+				{Requirement: &fields.Requirement{Key: "Count", Operator: "gte", Values: []string{"5"}}, ObservedValue: "5"},
 			},
 		},
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "meta.name", Operator: "equals", Values: []string{"evt1"}},
+				{Key: "meta.name", Operator: "equals", Values: []string{"evt1"}},
 			},
 			expSuccess: true,
 			expResp: []*monitoring.MatchedRequirement{
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.Name", Operator: "equals", Values: []string{"evt1"}}, ObservedValue: "evt1"},
+				{Requirement: &fields.Requirement{Key: "ObjectMeta.Name", Operator: "equals", Values: []string{"evt1"}}, ObservedValue: "evt1"},
 			},
 		},
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "meta.creation-time", Operator: "equals", Values: []string{ts.String()}},
+				{Key: "meta.creation-time", Operator: "equals", Values: []string{ts.String()}},
 			},
 			expSuccess: true,
 			expResp: []*monitoring.MatchedRequirement{
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.CreationTime", Operator: "equals", Values: []string{ts.String()}}, ObservedValue: ts.String()},
+				{Requirement: &fields.Requirement{Key: "ObjectMeta.CreationTime", Operator: "equals", Values: []string{ts.String()}}, ObservedValue: ts.String()},
 			},
 		},
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "meta.creation-time", Operator: "lte", Values: []string{nw.Format(time.RFC3339Nano)}},
+				{Key: "meta.creation-time", Operator: "lte", Values: []string{nw.Format(time.RFC3339Nano)}},
 			},
 			expSuccess: true,
 			expResp: []*monitoring.MatchedRequirement{
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.CreationTime", Operator: "lte", Values: []string{nw.Format(time.RFC3339Nano)}}, ObservedValue: ts.String()},
+				{Requirement: &fields.Requirement{Key: "ObjectMeta.CreationTime", Operator: "lte", Values: []string{nw.Format(time.RFC3339Nano)}}, ObservedValue: ts.String()},
 			},
 		},
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "meta.creation-time", Operator: "gte", Values: []string{ts.String()}},
-				&fields.Requirement{Key: "meta.mod-time", Operator: "lt", Values: []string{nw.Add(10 * time.Second).Format(time.RFC3339Nano)}},
+				{Key: "meta.creation-time", Operator: "gte", Values: []string{ts.String()}},
+				{Key: "meta.mod-time", Operator: "lt", Values: []string{nw.Add(10 * time.Second).Format(time.RFC3339Nano)}},
 			},
 			expSuccess: true,
 			expResp: []*monitoring.MatchedRequirement{
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.CreationTime", Operator: "gte", Values: []string{ts.String()}}, ObservedValue: ts.String()},
-				&monitoring.MatchedRequirement{Requirement: &fields.Requirement{Key: "ObjectMeta.ModTime", Operator: "lt", Values: []string{nw.Add(10 * time.Second).Format(time.RFC3339Nano)}}, ObservedValue: ts.String()},
+				{Requirement: &fields.Requirement{Key: "ObjectMeta.CreationTime", Operator: "gte", Values: []string{ts.String()}}, ObservedValue: ts.String()},
+				{Requirement: &fields.Requirement{Key: "ObjectMeta.ModTime", Operator: "lt", Values: []string{nw.Add(10 * time.Second).Format(time.RFC3339Nano)}}, ObservedValue: ts.String()},
 			},
 		},
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "count", Operator: "gte", Values: []string{"15"}},
+				{Key: "count", Operator: "gte", Values: []string{"15"}},
 			},
 			expSuccess: false,
 		},
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "type", Operator: "notIn", Values: []string{evtsapi.ServiceRunning}},
+				{Key: "type", Operator: "notIn", Values: []string{eventtypes.SERVICE_RUNNING.String()}},
 			},
 			expSuccess: false,
 		},
 		{
 			reqs: []*fields.Requirement{
-				&fields.Requirement{Key: "dummy-field", Operator: "notIn", Values: []string{evtsapi.ServiceRunning}},
+				{Key: "dummy-field", Operator: "notIn", Values: []string{eventtypes.SERVICE_RUNNING.String()}},
 			},
 			expSuccess: false,
 		},

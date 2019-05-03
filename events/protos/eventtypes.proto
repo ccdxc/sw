@@ -1,0 +1,135 @@
+syntax = "proto3";
+
+package eventtypes;
+
+import public "gogo.proto";
+import "google/protobuf/descriptor.proto";
+import "attributes.proto";
+
+extend google.protobuf.EnumValueOptions {
+    eventattrs.Severity severity   = 10005;
+    eventattrs.Category category   = 10006;
+    string desc                    = 10007;
+}
+
+enum EventTypes {
+    option (gogoproto.goproto_enum_stringer) = false;
+    option (gogoproto.enum_stringer) = true;
+    option (gogoproto.enum_customname) = "EventType";
+    option (gogoproto.goproto_enum_prefix) = false;
+
+    // ----------------------------- Cluster events -------------------------- //
+    ELECTION_STARTED                = 0 [(category) = Cluster,
+                                         (severity) = INFO,
+                                         (desc)     = "Leader election started in the cluster"];
+
+    ELECTION_CANCELLED              = 1 [(category) = Cluster,
+                                         (severity) = WARN,
+                                         (desc)     = "Leader election cancelled"];
+
+    ELECTION_NOTIFICATION_FAILED    = 2 [(category) = Cluster,
+                                         (severity) = WARN,
+                                         (desc)     = "Failed to send leader election notification"];
+
+    ELECTION_STOPPED                = 3 [(category) = Cluster,
+                                         (severity) = WARN,
+                                         (desc)     = "Leader election stopped"];
+
+    LEADER_ELECTED                  = 4 [(category) = Cluster,
+                                         (severity) = INFO,
+                                         (desc)     = "Leader elected for the cluster"];
+
+    LEADER_LOST                     = 5 [(category) = Cluster,
+                                         (severity) = INFO,
+                                         (desc)     = "Node lost leadership during the election"];
+
+    LEADER_CHANGED                  = 6 [(category) = Cluster,
+                                         (severity) = INFO,
+                                         (desc)     = "Leader changed in the election"];
+
+
+    // ------------------------------- Node events ----------------------------- //
+    NODE_JOINED                     = 7 [(category) = Cluster,
+                                         (severity) = INFO,
+                                         (desc)     = "Node joined the cluster"];
+
+    NODE_DISJOINED                  = 8 [(category) = Cluster,
+                                         (severity) = WARN,
+                                         (desc)     = "Node disjoined from the cluster"];
+
+
+    // -------------------------------- Host/NIC events -------------------------- //
+    NIC_ADMITTED                    = 100 [(category) = Cluster,
+                                           (severity) = INFO,
+                                           (desc)     = "NIC admitted to the cluster"];
+
+    NIC_HEALTH_UNKNOWN              = 101 [(category) = Cluster,
+                                            (severity) = WARN,
+                                            (desc)     = "NIC health transitioned to 'unknown'"];
+
+    NIC_HEALTHY                     = 102 [(category) = Cluster,
+                                            (severity) = INFO,
+                                            (desc)     = "NIC health transitioned to 'true'"];
+
+    NIC_UNHEALTHY                   = 103 [(category) = Cluster,
+                                           (severity) = WARN,
+                                           (desc)     = "NIC health transitioned to 'false'"];
+
+    NIC_REJECTED                    = 104 [(category) = Cluster,
+                                           (severity) = WARN,
+                                           (desc)     = "A SmartNIC admission request was rejected"];
+
+    HOST_SMART_NIC_SPEC_CONFLICT    = 105 [(category) = Cluster,
+                                           (severity) = WARN,
+                                           (desc)     = "The system has detected a conflict between the SmartNIC specifications of different Host objects"];
+
+    // ----------------------------- API Gateway events ---------------------- //
+    AUTO_GENERATED_TLS_CERT         = 200 [(category) = Cluster,
+                                           (severity) = WARN,
+                                           (desc)     = "Auto generated certificate is being used for API Gateway TLS"];
+
+    // --------------------------- Auth/Audit events ------------------------- //
+    LOGIN_FAILED                    = 300 [(category) = Cluster,
+                                           (severity) = INFO,
+                                           (desc)     = "User login failed"];
+
+    AUDITING_FAILED                 = 301 [(category) = Cluster,
+                                           (severity) = CRITICAL,
+                                           (desc)     = "Writing of AuditEvent failed"];
+
+
+    // --------------------------- HAL/Link events --------------------------- //
+    LINK_UP                         = 400 [(category) = Network,
+                                           (severity) = INFO,
+                                           (desc)     = "Port is linked up"];
+
+    LINK_DOWN                       = 401 [(category) = Network,
+                                           (severity) = WARN,
+                                           (desc)     = "Port link status is down"];
+
+
+    // ------------------------------ System events -------------------------- //
+    SERVICE_STARTED                 = 500 [(category) = System,
+                                           (severity) = INFO,
+                                           (desc)     = "Service started"];
+
+    SERVICE_STOPPED                 = 501 [(category) = System,
+                                           (severity) = WARN,
+                                           (desc)     = "Service stopped"];
+
+    SERVICE_PENDING                 = 502 [(category) = System,
+                                           (severity) = WARN,
+                                           (desc)     = "Service pending"];
+
+    SERVICE_RUNNING                 = 503 [(category) = System,
+                                           (severity) = INFO,
+                                           (desc)     = "Service running"];
+
+    SERVICE_UNRESPONSIVE            = 504 [(category) = System,
+                                           (severity) = CRITICAL,
+                                           (desc)     = "Service unresponsive due to lack of system resources"];
+
+    SYSTEM_COLDBOOT                 = 505 [(category) = System,
+                                           (severity) = WARN,
+                                           (desc)     = "System cold booted"];
+}

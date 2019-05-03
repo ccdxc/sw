@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
@@ -76,8 +76,7 @@ func main() {
 
 	// create events recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Component: globals.EvtsMgr,
-		EvtTypes:  evtsapi.GetEventTypes()}, logger)
+		Component: globals.EvtsMgr}, logger)
 	if err != nil {
 		logger.Fatalf("failed to create events recorder, err: %v", err)
 	}
@@ -96,7 +95,8 @@ func main() {
 	}
 
 	logger.Infof("%s is running {%+v}", globals.EvtsMgr, emgr)
-	recorder.Event(evtsapi.ServiceRunning, evtsapi.SeverityLevel_INFO, fmt.Sprintf("Service %s running on %s", globals.EvtsMgr, utils.GetHostname()), nil)
+	recorder.Event(eventtypes.SERVICE_RUNNING,
+		fmt.Sprintf("Service %s running on %s", globals.EvtsMgr, utils.GetHostname()), nil)
 
 	// wait till the server stops
 	<-emgr.RPCServer.Done()

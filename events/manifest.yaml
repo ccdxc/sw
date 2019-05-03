@@ -1,0 +1,5 @@
+basepath: "github.com/pensando/sw/venice/utils/apigen/templates"
+templates:
+  - template: "eventtypes.tmpl"
+    outputpath: "{FILE}.go"
+    once: true

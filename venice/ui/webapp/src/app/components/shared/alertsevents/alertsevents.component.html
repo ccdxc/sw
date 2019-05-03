@@ -44,9 +44,9 @@
                  *ngIf="eventNumbers.CRITICAL>0 && eventNumbers.CRITICAL !== events.length">
               {{ eventNumbers.CRITICAL }}</div>
             <div class="global-button global-alert-warning alertsevents-main-menu-number "
-                 (click)="onEventNumberClick($event, 'WARNING')" [matTooltip]="'Warning Events'"
-                 *ngIf="eventNumbers.WARNING>0 && eventNumbers.WARNING !== events.length">
-              {{ eventNumbers.WARNING }}</div>
+                 (click)="onEventNumberClick($event, 'WARN')" [matTooltip]="'Warning Events'"
+                 *ngIf="eventNumbers.WARN>0 && eventNumbers.WARN !== events.length">
+              {{ eventNumbers.WARN }}</div>
             <div class="global-button global-alert-info alertsevents-main-menu-number "
                  (click)="onEventNumberClick($event, 'INFO')" [matTooltip]="'Infomational Events'"
                  *ngIf="eventNumbers.INFO>0 && eventNumbers.INFO !== events.length">
@@ -76,7 +76,7 @@
               <ng-container *ngSwitchCase="'severity'">
                 <mat-icon *ngIf="rowData.severity === 'CRITICAL'"
                           class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
-                <mat-icon *ngIf="rowData.severity === 'WARNING'"
+                <mat-icon *ngIf="rowData.severity === 'WARN'"
                           class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
                 <mat-icon *ngIf="rowData.severity === 'INFO'"
                           class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>
@@ -137,9 +137,9 @@
                  *ngIf="alertNumbers.CRITICAL>0 && alertNumbers.CRITICAL !== alerts.length">
               {{ alertNumbers.CRITICAL }}</div>
             <div class="global-button global-alert-warning alertsevents-main-menu-number "
-                 (click)="onAlertNumberClick('WARNING')"   [matTooltip]="'Warning Alerts'"
-                 *ngIf="alertNumbers.WARNING>0 && alertNumbers.WARNING !== alerts.length">
-              {{ alertNumbers.WARNING }}</div>
+                 (click)="onAlertNumberClick('WARN')"   [matTooltip]="'Warning Alerts'"
+                 *ngIf="alertNumbers.WARN>0 && alertNumbers.WARN !== alerts.length">
+              {{ alertNumbers.WARN }}</div>
             <div class="global-button global-alert-info alertsevents-main-menu-number "
                  (click)="onAlertNumberClick('INFO')"   [matTooltip]="'Infomational Alerts'"
                  *ngIf="alertNumbers.INFO>0 && alertNumbers.INFO !== alerts.length">
@@ -169,7 +169,7 @@
               <ng-container *ngSwitchCase="'status.severity'">
                 <mat-icon *ngIf="rowData.status.severity === 'CRITICAL'"
                           class="alertsevents-icon global-alert-critical-icon">error</mat-icon>
-                <mat-icon *ngIf="rowData.status.severity === 'WARNING'"
+                <mat-icon *ngIf="rowData.status.severity === 'WARN'"
                           class="alertsevents-icon global-alert-warning-icon">error</mat-icon>
                 <mat-icon *ngIf="rowData.status.severity === 'INFO'"
                           class="alertsevents-icon global-alert-info-icon">notifications</mat-icon>

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventattrs"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
@@ -142,12 +143,12 @@ func (s *SyslogExporter) WriteEvents(evts []*evtsapi.Event) error {
 		sMsg := s.GenerateSyslogMessage(evt)
 		s.writers.Lock()
 		for _, writer := range s.writers.ws {
-			switch evtsapi.SeverityLevel(evtsapi.SeverityLevel_value[evt.GetSeverity()]) {
-			case evtsapi.SeverityLevel_INFO:
+			switch eventattrs.Severity(eventattrs.Severity_value[evt.GetSeverity()]) {
+			case eventattrs.Severity_INFO:
 				err = writer.Info(sMsg)
-			case evtsapi.SeverityLevel_WARNING:
+			case eventattrs.Severity_WARN:
 				err = writer.Warning(sMsg)
-			case evtsapi.SeverityLevel_CRITICAL:
+			case eventattrs.Severity_CRITICAL:
 				err = writer.Crit(sMsg)
 			}
 

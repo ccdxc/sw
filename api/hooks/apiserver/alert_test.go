@@ -8,13 +8,11 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	"github.com/pensando/sw/api/cache/mocks"
-	"github.com/pensando/sw/api/utils"
-
-	"github.com/pensando/sw/api/interfaces"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/cache/mocks"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/memkv"
@@ -137,11 +135,11 @@ func TestAlertHooks(t *testing.T) {
 		*kvAPol = *ap
 		switch {
 		case tc.acknowledge:
-			alertObj.Spec.State = monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_ACKNOWLEDGED)]
+			alertObj.Spec.State = monitoring.AlertState_ACKNOWLEDGED.String()
 		case tc.resolve:
-			alertObj.Spec.State = monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_RESOLVED)]
+			alertObj.Spec.State = monitoring.AlertState_RESOLVED.String()
 		case tc.open:
-			alertObj.Spec.State = monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_OPEN)]
+			alertObj.Spec.State = monitoring.AlertState_OPEN.String()
 		}
 
 		_, skipBackend, err := ah.updateStatus(ctx, kvs, kvs.NewTxn(), tc.key, apiintf.UpdateOper, false, *alertObj)
@@ -243,7 +241,7 @@ func setup(t *testing.T) (context.Context, kvstore.Interface, string, string) {
 				Tenant: globals.DefaultTenant,
 			},
 			Spec: monitoring.AlertSpec{
-				State: monitoring.AlertSpec_AlertState_name[int32(monitoring.AlertSpec_OPEN)],
+				State: monitoring.AlertState_OPEN.String(),
 			},
 			Status: monitoring.AlertStatus{
 				Reason: monitoring.AlertReason{

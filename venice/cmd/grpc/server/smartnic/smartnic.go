@@ -15,8 +15,7 @@ import (
 	"github.com/pensando/sw/api"
 	apierrors "github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/generated/events"
-	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
 	nmd "github.com/pensando/sw/nic/agent/protos/nmd"
 	"github.com/pensando/sw/venice/cmd/cache"
@@ -226,19 +225,17 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 
 	// generate event if there was a health transition
 	if updHealthCond != nil && refHealthCond != nil && refHealthCond.Status != updHealthCond.Status {
-		var evtType string
-		var severity events.SeverityLevel
+		var evtType eventtypes.EventType
+		evtType = -1
 		var msg string
 
 		switch updHealthCond.Status {
 		case cluster.ConditionStatus_TRUE.String():
-			evtType = cluster.NICHealthy
-			severity = evtsapi.SeverityLevel_INFO
+			evtType = eventtypes.NIC_HEALTHY
 			msg = fmt.Sprintf("Healthy condition for SmartNIC %s is now %s", nicName, cluster.ConditionStatus_TRUE.String())
 
 		case cluster.ConditionStatus_FALSE.String():
-			evtType = cluster.NICUnhealthy
-			severity = evtsapi.SeverityLevel_CRITICAL
+			evtType = eventtypes.NIC_UNHEALTHY
 			msg = fmt.Sprintf("Healthy condition for SmartNIC %s is now %s", nicName, cluster.ConditionStatus_FALSE.String())
 
 		default:
@@ -246,9 +243,9 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 			log.Errorf("NIC reported unknown health condition: %+v", updHealthCond)
 		}
 
-		if evtType != "" {
-			recorder.Event(evtType, severity, msg, nil)
-			log.Infof("Generated event, type: %v, sev: %v, msg: %s", evtType, severity.String(), msg)
+		if evtType != -1 {
+			recorder.Event(evtType, msg, nil)
+			log.Infof("Generated event, type: %v, msg: %s", evtType, msg)
 		}
 
 		// Ignore the time-stamp provided by NMD and replace it with our own.
@@ -492,7 +489,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		}
 
 		if nicObj.Status.AdmissionPhase == cluster.SmartNICStatus_REJECTED.String() {
-			recorder.Event(cluster.NICRejected, evtsapi.SeverityLevel_WARNING,
+			recorder.Event(eventtypes.NIC_REJECTED,
 				fmt.Sprintf("Admission for SmartNIC %s was rejected, reason: %s", nicObj.Name, nicObj.Status.AdmissionPhaseReason), nil)
 
 			return &grpc.RegisterNICResponse{
@@ -739,7 +736,7 @@ func (s *RPCServer) MonitorHealth() {
 								if err != nil {
 									log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
 								}
-								recorder.Event(cluster.NICHealthUnknown, evtsapi.SeverityLevel_WARNING,
+								recorder.Event(eventtypes.NIC_HEALTH_UNKNOWN,
 									fmt.Sprintf("Healthy condition for SmartNIC %s is now %s", nic.Name, cluster.ConditionStatus_UNKNOWN.String()), nil)
 							}
 							break

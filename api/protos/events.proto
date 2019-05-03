@@ -8,17 +8,9 @@ import "google/api/annotations.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
+import "github.com/pensando/sw/events/protos/attributes.proto";
 
 // -------------------------------- Event ---------------------------------
-// Severity Level of an event
-enum SeverityLevel {
-    // ui-hint: Informational
-    INFO        = 0; // no action needed
-    // ui-hint: Warning
-    WARNING     = 1; // can cause problems in the future, no immediate action required
-    // ui-hint: Critical
-    CRITICAL    = 2; // immediate attention required
-}
 
 // Event is a system notification of a fault, condition or configuration
 // that should be user visible. These objects are created internally by
@@ -43,7 +35,7 @@ message Event {
 // EventAttributes contains all the event attributes
 message EventAttributes {
     // Severity represents the criticality level of an event
-    string Severity         = 1 [(venice.check) = "StrEnum(SeverityLevel)",
+    string Severity         = 1 [(venice.check) = "StrEnum(.eventattrs.Severity)",
                                 (gogoproto.jsontag) = "severity,omitempty"];
 
     // Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined
@@ -52,14 +44,18 @@ message EventAttributes {
     // Message represents the human readable description of an event
     string Message          = 3 [(gogoproto.jsontag) = "message,omitempty"];
 
+    // Category represents the category of an event. e.g. Cluster/Network/Datapath
+    string Category         = 4 [(venice.check) = "StrEnum(.eventattrs.Category)",
+                                 (gogoproto.jsontag) = "category,omitempty"];
+
     // ObjectRef is the reference to the object associated with an event
-    api.ObjectRef ObjectRef = 4 [(gogoproto.jsontag) = "object-ref,omitempty"];
+    api.ObjectRef ObjectRef = 5 [(gogoproto.jsontag) = "object-ref,omitempty"];
 
     // Source is the component and host/node which generated an event
-    EventSource Source      = 5 [(gogoproto.jsontag) = "source,omitempty"];
+    EventSource Source      = 6 [(gogoproto.jsontag) = "source,omitempty"];
 
     // Number of occurrence of this event in the active interval
-    uint32 Count            = 6 [(gogoproto.jsontag) = "count,omitempty"];
+    uint32 Count            = 7 [(gogoproto.jsontag) = "count,omitempty"];
 }
 
 // EventSource has info about the component and

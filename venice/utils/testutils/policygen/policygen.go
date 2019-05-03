@@ -14,6 +14,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/events/generated/eventattrs"
 )
 
 // CreateEventPolicyObj helper function to create event policy object with the given params.
@@ -99,7 +100,7 @@ func CreateAlertDestinationObj(tenant, namespace, name string, syslogExport *mon
 }
 
 // CreateAlertObj helper function to create alert obj
-func CreateAlertObj(tenant, namespace, name, state, message string, alertPolicy *monitoring.AlertPolicy,
+func CreateAlertObj(tenant, namespace, name string, state monitoring.AlertState, message string, alertPolicy *monitoring.AlertPolicy,
 	evt *evtsapi.Event, matchedRequirements []*monitoring.MatchedRequirement) *monitoring.Alert {
 	creationTime, _ := types.TimestampProto(time.Now())
 
@@ -118,7 +119,7 @@ func CreateAlertObj(tenant, namespace, name, state, message string, alertPolicy 
 			},
 		},
 		Spec: monitoring.AlertSpec{
-			State: state,
+			State: state.String(),
 		},
 		Status: monitoring.AlertStatus{
 			Message: message,
@@ -149,7 +150,7 @@ func CreateAlertObj(tenant, namespace, name, state, message string, alertPolicy 
 }
 
 // CreateAlertPolicyObj helper function to create alert policy object with the given params.
-func CreateAlertPolicyObj(tenant, namespace, name, resource string, severity evtsapi.SeverityLevel, message string,
+func CreateAlertPolicyObj(tenant, namespace, name, resource string, severity eventattrs.Severity, message string,
 	requirements []*fields.Requirement, destinations []string) *monitoring.AlertPolicy {
 	creationTime, _ := types.TimestampProto(time.Now())
 
@@ -172,7 +173,7 @@ func CreateAlertPolicyObj(tenant, namespace, name, resource string, severity evt
 		},
 		Spec: monitoring.AlertPolicySpec{
 			Resource:     resource,
-			Severity:     evtsapi.SeverityLevel_name[int32(severity)],
+			Severity:     severity.String(),
 			Message:      message,
 			Requirements: requirements,
 			Enable:       true,

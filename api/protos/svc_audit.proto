@@ -19,11 +19,6 @@ option (venice.fileCategory) = "audit";
 // file are not backed by the API server.
 option (venice.fileApiServerBacked) = false;
 
-// list of V1 event types supported by the audit service
-enum EventTypesV1 {
-    AuditingFailed = 0; // Writing of AuditEvent failed
-}
-
 // Audit Log service API
 service AuditV1 {
     option (venice.apiVersion) = "v1";
@@ -34,8 +29,4 @@ service AuditV1 {
         get: "/events/{UUID}"
       };
     }
-
-    // name of enums containing event types.
-    // e.g: V2 can include "EventTypesV1" and "EventTypesV2" in this list.
-    option(venice.eventTypes) = "EventTypesV1";
 }

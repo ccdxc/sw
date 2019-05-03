@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/generated/staging"
 	"github.com/pensando/sw/api/login"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw/svc"
 	"github.com/pensando/sw/venice/globals"
@@ -293,7 +294,7 @@ var _ = Describe("auth tests", func() {
 							{
 								Key:      "type",
 								Operator: "equals",
-								Values:   []string{auth.LoginFailed},
+								Values:   []string{eventtypes.EventType_name[int32(eventtypes.LOGIN_FAILED)]},
 							},
 							{
 								Key:      "meta.mod-time",

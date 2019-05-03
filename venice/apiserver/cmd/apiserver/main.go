@@ -11,7 +11,6 @@ import (
 	"google.golang.org/grpc/grpclog"
 
 	"github.com/pensando/sw/api/cache"
-	evtsapi "github.com/pensando/sw/api/generated/events"
 	_ "github.com/pensando/sw/api/generated/exports/apiserver"
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	apisrv "github.com/pensando/sw/venice/apiserver"
@@ -74,8 +73,8 @@ func main() {
 	}
 
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
-		Component: globals.APIServer,
-		EvtTypes:  evtsapi.GetEventTypes(), SkipEvtsProxy: *disableEvents}, pl)
+		Component:     globals.APIServer,
+		SkipEvtsProxy: *disableEvents}, pl)
 	if err != nil {
 		pl.Fatalf("failed to create events recorder, err: %v", err)
 	}
