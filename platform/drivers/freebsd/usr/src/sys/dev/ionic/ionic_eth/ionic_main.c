@@ -342,6 +342,7 @@ int ionic_port_init(struct ionic *ionic)
 	int err;
 	unsigned int i;
 	unsigned int nwords;
+	union port_config *config;
 
 	if (idev->port_info)
 		return 0;
@@ -357,8 +358,13 @@ int ionic_port_init(struct ionic *ionic)
 
 	nwords = min(ARRAY_SIZE(ident->port.config.words),
 					ARRAY_SIZE(idev->dev_cmd_regs->data));
+	config = &ident->port.config;
+	/* Bring the physical port up. */
+	if (!ionic->is_mgmt_nic)
+		config->state = PORT_ADMIN_STATE_UP;
 	for (i = 0; i < nwords; i++)
-		iowrite32(ident->port.config.words[i], &idev->dev_cmd_regs->data[i]);
+		iowrite32(config->words[i], &idev->dev_cmd_regs->data[i]);
+
 
 	ionic_dev_cmd_port_init(idev);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);

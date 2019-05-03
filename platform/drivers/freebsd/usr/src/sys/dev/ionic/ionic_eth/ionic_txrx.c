@@ -1787,114 +1787,324 @@ ionic_lif_add_txtstat(struct txque *txq, struct sysctl_ctx_list *ctx,
 			 &txstat->tso_max_sg, "TSO maximum number of sg");
 }
 
+/*
+ * Stats provided by firmware.
+ */
 static void
-ionic_setup_hw_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
+ionic_setup_fw_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 	struct sysctl_oid_list *child)
 {
 	struct lif_stats *stat = &lif->info->stats;
+	struct sysctl_oid *queue_node;
+	struct sysctl_oid_list *queue_list;
+	char namebuf[QUEUE_NAME_LEN];
 
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast_bytes", CTLFLAG_RD,
+	snprintf(namebuf, QUEUE_NAME_LEN, "fw");
+	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
+				CTLFLAG_RD, NULL, "Firmware generated counters");
+	queue_list = SYSCTL_CHILDREN(queue_node);
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_ucast_bytes", CTLFLAG_RD,
 			&stat->rx_ucast_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_ucast_packets", CTLFLAG_RD,
 			&stat->rx_ucast_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_mcast_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_mcast_bytes", CTLFLAG_RD,
 			&stat->rx_mcast_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_mcast_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_mcast_packets", CTLFLAG_RD,
 			&stat->rx_mcast_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_bcast_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_bcast_bytes", CTLFLAG_RD,
 			&stat->rx_bcast_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_bcast_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_bcast_packets", CTLFLAG_RD,
 			&stat->rx_bcast_packets, "");
 
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast_drop_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_ucast_drop_bytes", CTLFLAG_RD,
 			&stat->rx_ucast_drop_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_ucast_drop_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_ucast_drop_packets", CTLFLAG_RD,
 			&stat->rx_ucast_drop_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_mcast_drop_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_mcast_drop_bytes", CTLFLAG_RD,
 			&stat->rx_mcast_drop_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_mcast_drop_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_mcast_drop_packets", CTLFLAG_RD,
 			&stat->rx_mcast_drop_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_bcast_drop_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_bcast_drop_bytes", CTLFLAG_RD,
 			&stat->rx_bcast_drop_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_bcast_drop_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_bcast_drop_packets", CTLFLAG_RD,
 			&stat->rx_bcast_drop_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_dma_error", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_dma_error", CTLFLAG_RD,
 			&stat->rx_dma_error, "");
 
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_ucast_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_ucast_bytes", CTLFLAG_RD,
 			&stat->tx_ucast_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_ucast_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_ucast_packets", CTLFLAG_RD,
 			&stat->tx_ucast_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_mcast_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_mcast_bytes", CTLFLAG_RD,
 			&stat->tx_mcast_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_mcast_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_mcast_packets", CTLFLAG_RD,
 			&stat->tx_mcast_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_bcast_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_bcast_bytes", CTLFLAG_RD,
 			&stat->tx_bcast_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_bcast_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_bcast_packets", CTLFLAG_RD,
 			&stat->tx_bcast_packets, "");
 
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_ucast_drop_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_ucast_drop_bytes", CTLFLAG_RD,
 			&stat->tx_ucast_drop_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_ucast_drop_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_ucast_drop_packets", CTLFLAG_RD,
 			&stat->tx_ucast_drop_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_mcast_drop_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_mcast_drop_bytes", CTLFLAG_RD,
 			&stat->tx_mcast_drop_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_mcast_drop_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_mcast_drop_packets", CTLFLAG_RD,
 			&stat->tx_mcast_drop_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_bcast_drop_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_bcast_drop_bytes", CTLFLAG_RD,
 			&stat->tx_bcast_drop_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_bcast_drop_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_bcast_drop_packets", CTLFLAG_RD,
 			&stat->tx_bcast_drop_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_dma_error", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_dma_error", CTLFLAG_RD,
 			&stat->tx_dma_error, "");
 
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_disabled", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_queue_disabled", CTLFLAG_RD,
 			&stat->rx_queue_disabled, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_empty", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_queue_empty", CTLFLAG_RD,
 			&stat->rx_queue_empty, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_queue_error", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_queue_error", CTLFLAG_RD,
 			&stat->rx_queue_error, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_desc_fetch_error", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_desc_fetch_error", CTLFLAG_RD,
 			&stat->rx_desc_fetch_error, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_desc_data_error", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_desc_data_error", CTLFLAG_RD,
 			&stat->rx_desc_data_error, "");
 
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_queue_disabled", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_queue_disabled", CTLFLAG_RD,
 			&stat->tx_queue_disabled, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_queue_error", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_queue_error", CTLFLAG_RD,
 			&stat->tx_queue_error, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_desc_fetch_error", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_desc_fetch_error", CTLFLAG_RD,
 			&stat->tx_desc_fetch_error, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_desc_data_error", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_desc_data_error", CTLFLAG_RD,
 			&stat->tx_desc_data_error, "");
 
 	/* H/w stats for RoCE devices. */
 	if (lif->api_private == NULL)
 		return;
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_ucast_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_rdma_ucast_bytes", CTLFLAG_RD,
 			&stat->tx_rdma_ucast_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_ucast_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_rdma_ucast_packets", CTLFLAG_RD,
 			&stat->tx_rdma_ucast_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_mcast_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_rdma_mcast_bytes", CTLFLAG_RD,
 			&stat->tx_rdma_mcast_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_mcast_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_rdma_mcast_packets", CTLFLAG_RD,
 			&stat->tx_rdma_mcast_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "tx_rdma_cnp_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_rdma_cnp_packets", CTLFLAG_RD,
 			&stat->tx_rdma_cnp_packets, "");
 
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_ucast_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_rdma_ucast_bytes", CTLFLAG_RD,
 			&stat->rx_rdma_ucast_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_ucast_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_rdma_ucast_packets", CTLFLAG_RD,
 			&stat->rx_rdma_ucast_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_mcast_bytes", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_rdma_mcast_bytes", CTLFLAG_RD,
 			&stat->rx_rdma_mcast_bytes, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_mcast_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_rdma_mcast_packets", CTLFLAG_RD,
 			&stat->rx_rdma_mcast_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_cnp_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_rdma_cnp_packets", CTLFLAG_RD,
 			&stat->rx_rdma_cnp_packets, "");
-	SYSCTL_ADD_ULONG(ctx, child, OID_AUTO, "rx_rdma_ecn_packets", CTLFLAG_RD,
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_rdma_ecn_packets", CTLFLAG_RD,
 			&stat->rx_rdma_ecn_packets, "");
+}
+
+/*
+ * MAC statistics.
+ */
+static void
+ionic_setup_mac_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
+	struct sysctl_oid_list *child)
+{
+	struct port_stats *stats;
+	struct sysctl_oid *queue_node;
+	struct sysctl_oid_list *queue_list;
+	char namebuf[QUEUE_NAME_LEN];
+
+	snprintf(namebuf, QUEUE_NAME_LEN, "mac");
+	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
+				CTLFLAG_RD, NULL, "MAC provided counters");
+	queue_list = SYSCTL_CHILDREN(queue_node);
+	stats = &lif->ionic->idev.port_info->stats;
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_ok", CTLFLAG_RD,
+			&stats->frames_rx_ok, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_all", CTLFLAG_RD,
+			&stats->frames_rx_all, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_bad_fcs", CTLFLAG_RD,
+			&stats->frames_rx_bad_fcs, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_bad_all", CTLFLAG_RD,
+			&stats->frames_rx_bad_all, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "octets_rx_ok", CTLFLAG_RD,
+			&stats->octets_rx_ok, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "octets_rx_all", CTLFLAG_RD,
+			&stats->octets_rx_all, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_unicast", CTLFLAG_RD,
+			&stats->frames_rx_unicast, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_multicast", CTLFLAG_RD,
+			&stats->frames_rx_multicast, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_broadcast", CTLFLAG_RD,
+			&stats->frames_rx_broadcast, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_pause", CTLFLAG_RD,
+			&stats->frames_rx_pause, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_bad_length", CTLFLAG_RD,
+			&stats->frames_rx_bad_length, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_undersized", CTLFLAG_RD,
+			&stats->frames_rx_undersized, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_oversized", CTLFLAG_RD,
+			&stats->frames_rx_oversized, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_fragments", CTLFLAG_RD,
+			&stats->frames_rx_fragments, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_jabber", CTLFLAG_RD,
+			&stats->frames_rx_jabber, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_pripause", CTLFLAG_RD,
+			&stats->frames_rx_pripause, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_stomped_crc", CTLFLAG_RD,
+			&stats->frames_rx_stomped_crc, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_too_long", CTLFLAG_RD,
+			&stats->frames_rx_too_long, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_vlan_good", CTLFLAG_RD,
+			&stats->frames_rx_vlan_good, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_dropped", CTLFLAG_RD,
+			&stats->frames_rx_dropped, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_less_than_64b", CTLFLAG_RD,
+			&stats->frames_rx_less_than_64b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_64b", CTLFLAG_RD,
+			&stats->frames_rx_64b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_65b_127b", CTLFLAG_RD,
+			&stats->frames_rx_65b_127b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_128b_255b", CTLFLAG_RD,
+			&stats->frames_rx_128b_255b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_256b_511b", CTLFLAG_RD,
+			&stats->frames_rx_256b_511b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_512b_1023b", CTLFLAG_RD,
+			&stats->frames_rx_512b_1023b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_1024b_1518b", CTLFLAG_RD,
+			&stats->frames_rx_1024b_1518b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_1519b_2047b", CTLFLAG_RD,
+			&stats->frames_rx_1519b_2047b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_2048b_4095b", CTLFLAG_RD,
+			&stats->frames_rx_2048b_4095b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_4096b_8191b", CTLFLAG_RD,
+			&stats->frames_rx_4096b_8191b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_8192b_9215b", CTLFLAG_RD,
+			&stats->frames_rx_8192b_9215b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_other", CTLFLAG_RD,
+			&stats->frames_rx_other, "");
+	/* Trasnmit stats. */
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_ok", CTLFLAG_RD,
+			&stats->frames_tx_ok, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "octets_tx_ok", CTLFLAG_RD,
+			&stats->octets_tx_ok, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_unicast", CTLFLAG_RD,
+			&stats->frames_tx_unicast, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_multicast", CTLFLAG_RD,
+			&stats->frames_tx_multicast, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_broadcast", CTLFLAG_RD,
+			&stats->frames_tx_broadcast, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_pause", CTLFLAG_RD,
+			&stats->frames_tx_pause, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_pripause", CTLFLAG_RD,
+			&stats->frames_tx_pripause, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_less_than_64b", CTLFLAG_RD,
+			&stats->frames_tx_less_than_64b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_64b", CTLFLAG_RD,
+			&stats->frames_tx_64b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_65b_127b", CTLFLAG_RD,
+			&stats->frames_tx_65b_127b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_128b_255b", CTLFLAG_RD,
+			&stats->frames_tx_128b_255b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_256b_511b", CTLFLAG_RD,
+			&stats->frames_tx_256b_511b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_512b_1023b", CTLFLAG_RD,
+			&stats->frames_tx_512b_1023b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_1024b_1518b", CTLFLAG_RD,
+			&stats->frames_tx_1024b_1518b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_1519b_2047b", CTLFLAG_RD,
+			&stats->frames_tx_1519b_2047b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_2048b_4095b", CTLFLAG_RD,
+			&stats->frames_tx_2048b_4095b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_4096b_8191b", CTLFLAG_RD,
+			&stats->frames_tx_4096b_8191b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_8192b_9215b", CTLFLAG_RD,
+			&stats->frames_tx_8192b_9215b, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_other", CTLFLAG_RD,
+			&stats->frames_tx_other, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_truncated", CTLFLAG_RD,
+			&stats->frames_tx_truncated, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_pri_0", CTLFLAG_RD,
+			&stats->frames_rx_pri_0, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_pri_0", CTLFLAG_RD,
+			&stats->frames_tx_pri_0, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_pri_1", CTLFLAG_RD,
+			&stats->frames_rx_pri_1, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_pri_1", CTLFLAG_RD,
+			&stats->frames_tx_pri_1, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_pri_2", CTLFLAG_RD,
+			&stats->frames_rx_pri_2, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_pri_2", CTLFLAG_RD,
+			&stats->frames_tx_pri_2, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_pri_3", CTLFLAG_RD,
+			&stats->frames_rx_pri_3, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_pri_3", CTLFLAG_RD,
+			&stats->frames_tx_pri_3, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_pri_4", CTLFLAG_RD,
+			&stats->frames_rx_pri_4, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_pri_4", CTLFLAG_RD,
+			&stats->frames_tx_pri_4, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_pri_5", CTLFLAG_RD,
+			&stats->frames_rx_pri_5, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_pri_5", CTLFLAG_RD,
+			&stats->frames_tx_pri_5, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_pri_6", CTLFLAG_RD,
+			&stats->frames_rx_pri_6, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_pri_6", CTLFLAG_RD,
+			&stats->frames_tx_pri_6, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_pri_7", CTLFLAG_RD,
+			&stats->frames_rx_pri_7, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_pri_7", CTLFLAG_RD,
+			&stats->frames_tx_pri_7, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_pripause_0_1us_count", CTLFLAG_RD,
+			&stats->rx_pripause_0_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_pripause_0_1us_count", CTLFLAG_RD,
+			&stats->tx_pripause_0_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_pripause_1_1us_count", CTLFLAG_RD,
+			&stats->rx_pripause_1_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_pripause_1_1us_count", CTLFLAG_RD,
+			&stats->tx_pripause_1_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_pripause_2_1us_count", CTLFLAG_RD,
+			&stats->rx_pripause_2_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_pripause_2_1us_count", CTLFLAG_RD,
+			&stats->tx_pripause_2_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_pripause_3_1us_count", CTLFLAG_RD,
+			&stats->rx_pripause_3_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_pripause_3_1us_count", CTLFLAG_RD,
+			&stats->tx_pripause_3_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_pripause_4_1us_count", CTLFLAG_RD,
+			&stats->rx_pripause_4_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_pripause_4_1us_count", CTLFLAG_RD,
+			&stats->tx_pripause_4_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_pripause_5_1us_count", CTLFLAG_RD,
+			&stats->rx_pripause_5_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_pripause_5_1us_count", CTLFLAG_RD,
+			&stats->tx_pripause_5_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_pripause_6_1us_count", CTLFLAG_RD,
+			&stats->rx_pripause_6_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_pripause_6_1us_count", CTLFLAG_RD,
+			&stats->tx_pripause_6_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "rx_pripause_7_1us_count", CTLFLAG_RD,
+			&stats->rx_pripause_7_1us_count, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "tx_pripause_7_1us_count", CTLFLAG_RD,
+			&stats->tx_pripause_7_1us_count, "");
 }
 
 static void
@@ -1991,7 +2201,8 @@ ionic_setup_device_stats(struct lif *lif)
 			ionic_flow_ctrl_sysctl, "I",
 			"Set flow control - 0(off), 1(link), 2(pfc)");
 
-	ionic_setup_hw_stats(lif, ctx, child);
+	ionic_setup_fw_stats(lif, ctx, child);
+	ionic_setup_mac_stats(lif, ctx, child);
 	ionic_adminq_sysctl(lif, ctx, child);
 	ionic_notifyq_sysctl(lif, ctx, child);
 
