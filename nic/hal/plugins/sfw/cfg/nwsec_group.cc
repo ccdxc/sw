@@ -14,6 +14,9 @@
 #include "gen/proto/nwsec.pb.h"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
 #include <google/protobuf/util/json_util.h>
+#include <fcntl.h>
+#include <malloc.h>
+
 
 #define SESSION_MAX_INACTIVITY_TIMEOUT 0xFFFFFFFF
 
@@ -49,6 +52,44 @@ acl::acl_config_t nwsec_rule_config_glbl = { };
 //-----------------------------------------------------------------------------
 // dump security policy spec
 //-----------------------------------------------------------------------------
+/*
+ * Malloc holds lot of free memory.
+ * By trimming the memory the memory is released back
+ * used this in cases where we free memory in large blocks
+*/
+#define TRIM_LOG_ENABLE 0
+void
+trim_mem_usage (const char *opn)
+{
+    char buffer[2048];
+
+    malloc_trim(0);
+#if TRIM_LOG_ENABLE
+    struct mallinfo minfo = mallinfo();
+    int fd = 0;
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    fd = open("/data/minfo.txt", O_RDWR | O_APPEND | O_CREAT, mode);
+    int len_writ = sprintf(buffer, "%s \n"
+                     "Non-mmapped space allocated (bytes)  (arena)       : %d \n"
+                     "Number of free chunks                (ordblks)     :  %d \n"
+                     "Number of free fastbin blocks        (smblks)      : %d \n"
+                     "Number of mmapped regions            (hblks)       : %d \n"
+                     "Space allocated in mmapped regions (bytes)(hblkhd) : %d \n"
+                     "Maximum total allocated space (bytes) (usmblks)    : %d \n"
+                    "Space in freed fastbin blocks (bytes) (fsmblks)    : %d \n"
+                     "Total allocated space (bytes)        (uordblks)    : %d \n"
+                     "Total free space (bytes)          (fordblks)       : %d \n"
+                     "Top-most, releasable space (bytes)   (keepcost)    : %d \n",
+                     opn,
+                     minfo.arena, minfo.ordblks, minfo.smblks, minfo.hblks, minfo.hblkhd,
+                     minfo.usmblks, minfo.fsmblks, minfo.uordblks, minfo.fordblks, minfo.keepcost);
+    write(fd, buffer, len_writ);
+    memset(buffer, 0, sizeof(buffer));
+    malloc_stats();
+    close(fd);
+#endif
+}
+
 static inline void
 nwsec_spec_dump(void *spec)
 {
@@ -739,7 +780,7 @@ nwsec_rulelist_init (nwsec_rulelist_t *rule)
     // Slab free will be called when the ref count drops to zero
     ref_init(&rule->ref_count, [] (const ref_t * ref) {
         nwsec_rulelist_t * rule = container_of(ref, nwsec_rulelist_t, ref_count);
-        HAL_TRACE_DEBUG("Calling rulelist free");
+        //HAL_TRACE_DEBUG("Calling rulelist free");
         g_hal_state->nwsec_rulelist_slab()->free(rule);
 
     });
@@ -846,6 +887,10 @@ nwsec_policy_rules_free(nwsec_policy_t *policy)
         }
         ref_dec(&rulelist->ref_count);
         return false; }), NULL);
+    for (int i = 0; i < MAX_VERSION; i++) {
+        ht::destroy(policy->rules_ht[i]);
+    }
+
 
     return HAL_RET_OK;
 }
@@ -1366,6 +1411,7 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
     HAL_TRACE_DEBUG("---------------------- API Start ---------------------");
 
     //nwsec_spec_dump(&spec);
+    trim_mem_usage("Before Create");
 
     ret = validate_nwsec_policy_create(spec, res);
 
@@ -1450,6 +1496,7 @@ end:
     }
     nwsec_policy_prepare_rsp(res, ret, nwsec_policy ? nwsec_policy->hal_handle : HAL_HANDLE_INVALID);
     HAL_TRACE_DEBUG("------------------------ API End -----------------------------");
+    trim_mem_usage("After Create");
     return HAL_RET_OK;
 }
 
@@ -1557,6 +1604,7 @@ securitypolicy_update(nwsec::SecurityPolicySpec&      spec,
 
     HAL_TRACE_DEBUG("---------------------- API Start-------------------");
     //nwsec_spec_dump(&spec);
+    trim_mem_usage("Before update");
 
     ret = validate_nwsec_policy_update(spec, res);
     if (ret != HAL_RET_OK) {
@@ -1621,6 +1669,8 @@ end:
     nwsec_policy_prepare_rsp(res, ret,
                              policy_clone ? policy_clone->hal_handle : HAL_HANDLE_INVALID);
     hal_api_trace(" API End: nwsec_policy update");
+    trim_mem_usage("After update");
+
     return HAL_RET_OK;
 }
 
@@ -1695,7 +1745,8 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&    req,
     const char       *ctx_name = NULL;
     //const acl_ctx_t  *acl_ctx = NULL;
     SecurityPolicyKeyHandle kh = req.key_or_handle();
-
+    trim_mem_usage("Before delete");
+    
     ret = validate_nwsec_policy_delete(req, res);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(" security policy validate failed ret : {}", ret);
@@ -1739,6 +1790,8 @@ end:
         HAL_API_STATS_INC(HAL_API_SECURITYPOLICY_DELETE_FAIL);
     }
     res->set_api_status(hal_prepare_rsp(ret));
+    trim_mem_usage("After delete");
+
 
     return ret;
 }

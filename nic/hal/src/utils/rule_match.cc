@@ -435,7 +435,6 @@ init_rule_data(rule_data_t *rule_data, void *usr_data, void *ctr)
     memset(rule_data, 0, sizeof(rule_data_t));
     ref_init(&rule_data->ref_cnt, [] (const ref_t *ref) {
         rule_data_t *data = container_of(ref, rule_data_t, ref_cnt);
-        HAL_TRACE_DEBUG("Freeing rule data");
         ref_dec((acl::ref_t *)data->ctr);
         ref_dec((acl::ref_t *)data->user_data);
         g_hal_state->rule_data_slab()->free(data);
@@ -515,6 +514,7 @@ rule_lib_delete(const char *name)
     // walk rule_data_ht and free them
     rcfg = (rule_cfg_t *)g_rule_cfg_ht->remove((void *)name);
     if (rcfg) {
+        ht::destroy(rcfg->rule_ctr_ht);
         g_hal_state->rule_cfg_slab()->free(rcfg);
     } else {
         HAL_TRACE_ERR("Rule cfg not found");
