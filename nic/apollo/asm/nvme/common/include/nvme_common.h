@@ -1,0 +1,18 @@
+#ifndef __NVME_COMMON_H
+#define __NVME_COMMON_H
+
+#define MAX_SESSXTS_TX_RINGS    2
+#define SESSPREXTS_TX_PRI       1
+#define SESSPOSTXTS_TX_PRI      0
+
+#define SESSPREXTS_TX_RING_ID   0
+#define SESSPOSTXTS_TX_RING_ID  1
+
+#define MAX_SESSDGST_TX_RINGS   2
+#define SESSPREDGST_TX_PRI      1
+#define SESSPOSTDGST_TX_PRI     0
+
+#define SESSPREDGST_TX_RING_ID   0
+#define SESSPOSTDGST_TX_RING_ID  1
+
+#endif //__NVME_COMMON_H

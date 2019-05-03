@@ -19,6 +19,7 @@ IRIS_SUBDIRS = \
           common-p4+ \
           proxy \
           rdma \
+          nvme \
           smbdc \
           ipsec-p4+ \
           storage \
