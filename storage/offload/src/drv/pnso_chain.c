@@ -751,7 +751,7 @@ chn_create_chain(struct request_params *req_params,
 	struct service_info *svc_prev = NULL;
 	void *poll_ctx = NULL;
 	uint32_t i;
-	uint8_t gen_id;
+	uint16_t gen_id;
 
 	OSAL_LOG_DEBUG("enter ...");
 

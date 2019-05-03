@@ -329,7 +329,7 @@ init_batch_info(struct pnso_service_request *req)
 	struct per_core_resource *pcr = putil_get_per_core_resource();
 	enum mem_pool_type mpool_type;
 	struct batch_info *batch_info = NULL;
-	uint8_t gen_id;
+	uint16_t gen_id;
 
 	mpool_type = get_batch_mpool_type(&req->svc[0]);
 	if (mpool_type == MPOOL_TYPE_NONE)
@@ -788,14 +788,13 @@ clear_batch_page_cflag(struct batch_page *bp, uint16_t cflag)
 }
 
 static pnso_error_t
-execute_batch(struct batch_info *batch_info)
+execute_batch(struct batch_info *batch_info, bool is_sync_mode)
 {
 	pnso_error_t err = EINVAL;
 	struct service_chain *first_chain, *last_chain;
 	struct chain_entry *first_ce, *last_ce;
 	uint32_t idx;
 	uint32_t num_entries;
-	bool is_sync_mode = (batch_info->bi_flags & BATCH_BFLAG_MODE_SYNC) != 0;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -868,6 +867,7 @@ bat_flush_batch(struct request_params *req_params)
 	pnso_error_t err = EINVAL;
 	struct per_core_resource *pcr = putil_get_per_core_resource();
 	struct batch_info *batch_info;
+	bool is_sync_mode;
 
 	OSAL_LOG_DEBUG("enter ...");
 
@@ -883,14 +883,15 @@ bat_flush_batch(struct request_params *req_params)
 		goto out;
 	}
 
-	err = execute_batch(batch_info);
+	is_sync_mode = (batch_info->bi_flags & BATCH_BFLAG_MODE_SYNC) != 0;
+	err = execute_batch(batch_info, is_sync_mode);
 	if (err) {
 		OSAL_LOG_DEBUG("batch/execute failed! err: %d", err);
 		goto out;
 	}
+	/* do not read or write batch_info after this point */
 
-	if ((batch_info->bi_flags & BATCH_BFLAG_MODE_POLL) ||
-		(batch_info->bi_flags & BATCH_BFLAG_MODE_ASYNC))
+	if (!is_sync_mode)
 		pcr->batch_info = NULL;
 
 	OSAL_LOG_DEBUG("exit!");
