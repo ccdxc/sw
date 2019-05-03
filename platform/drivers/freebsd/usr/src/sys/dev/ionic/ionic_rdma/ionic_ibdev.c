@@ -3976,11 +3976,9 @@ static int ionic_qp_sq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 err_sq_tbl:
 	ionic_qp_sq_destroy_cmb(dev, ctx, qp);
 
-	if (qp->sq_msn_idx)
-		kfree(qp->sq_msn_idx);
+	kfree(qp->sq_msn_idx);
 err_sq_msn:
-	if (qp->sq_meta)
-		kfree(qp->sq_meta);
+	kfree(qp->sq_meta);
 err_sq_meta:
 	if (qp->sq_umem)
 		ib_umem_release(qp->sq_umem);
@@ -4001,11 +3999,8 @@ static void ionic_qp_sq_destroy(struct ionic_ibdev *dev,
 
 	ionic_qp_sq_destroy_cmb(dev, ctx, qp);
 
-	if (qp->sq_msn_idx)
-		kfree(qp->sq_msn_idx);
-
-	if (qp->sq_meta)
-		kfree(qp->sq_meta);
+	kfree(qp->sq_msn_idx);
+	kfree(qp->sq_meta);
 
 	if (qp->sq_umem)
 		ib_umem_release(qp->sq_umem);
@@ -4184,8 +4179,7 @@ static int ionic_qp_rq_init(struct ionic_ibdev *dev, struct ionic_ctx *ctx,
 err_rq_tbl:
 	ionic_qp_rq_destroy_cmb(dev, ctx, qp);
 
-	if (qp->rq_meta)
-		kfree(qp->rq_meta);
+	kfree(qp->rq_meta);
 err_rq_meta:
 	if (qp->rq_umem)
 		ib_umem_release(qp->rq_umem);
@@ -4207,8 +4201,7 @@ static void ionic_qp_rq_destroy(struct ionic_ibdev *dev,
 
 	ionic_qp_rq_destroy_cmb(dev, ctx, qp);
 
-	if (qp->rq_meta)
-		kfree(qp->rq_meta);
+	kfree(qp->rq_meta);
 
 	if (qp->rq_umem)
 		ib_umem_release(qp->rq_umem);
@@ -6363,7 +6356,7 @@ static void ionic_kill_ibdev(struct ionic_ibdev *dev, bool fatal_path)
 
 	/* Notify each affected CQ */
 	list_for_each_entry(cq, &dev->cq_list, cq_list_ent)
-		if (cq && cq->flush && cq->ibcq.comp_handler)
+		if (cq->flush && cq->ibcq.comp_handler)
 			cq->ibcq.comp_handler(&cq->ibcq, cq->ibcq.cq_context);
 
 skip_flush:

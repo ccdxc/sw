@@ -291,8 +291,7 @@ void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 
 void ionic_dbgfs_rm_dev(struct ionic_ibdev *dev)
 {
-	if (dev->debug)
-		debugfs_remove_recursive(dev->debug);
+	debugfs_remove_recursive(dev->debug);
 
 	dev->debug = NULL;
 	dev->debug_ah = NULL;
@@ -394,8 +393,7 @@ void ionic_dbgfs_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq)
 
 void ionic_dbgfs_rm_eq(struct ionic_eq *eq)
 {
-	if (eq->debug)
-		debugfs_remove_recursive(eq->debug);
+	debugfs_remove_recursive(eq->debug);
 
 	eq->debug = NULL;
 }
@@ -500,8 +498,7 @@ void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
 
 void ionic_dbgfs_rm_mr(struct ionic_mr *mr)
 {
-	if (mr->debug)
-		debugfs_remove_recursive(mr->debug);
+	debugfs_remove_recursive(mr->debug);
 
 	mr->debug = NULL;
 }
@@ -612,8 +609,7 @@ void ionic_dbgfs_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 
 void ionic_dbgfs_rm_cq(struct ionic_cq *cq)
 {
-	if (cq->debug)
-		debugfs_remove_recursive(cq->debug);
+	debugfs_remove_recursive(cq->debug);
 
 	cq->debug = NULL;
 }
@@ -938,8 +934,7 @@ void ionic_dbgfs_rm_aq(struct ionic_aq *aq)
 	struct ionic_ibdev *dev = aq->dev;
 	struct ionic_dbgfs_admin_wr *wr;
 
-	if (aq->debug)
-		debugfs_remove_recursive(aq->debug);
+	debugfs_remove_recursive(aq->debug);
 
 	aq->debug = NULL;
 
@@ -1143,8 +1138,7 @@ void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 
 void ionic_dbgfs_rm_qp(struct ionic_qp *qp)
 {
-	if (qp->debug)
-		debugfs_remove_recursive(qp->debug);
+	debugfs_remove_recursive(qp->debug);
 
 	qp->debug = NULL;
 }
