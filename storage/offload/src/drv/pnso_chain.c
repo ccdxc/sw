@@ -253,6 +253,13 @@ chn_poll_all_services(struct service_chain *chain)
 	OSAL_ASSERT(chain);
 	OSAL_ASSERT(chain->sc_entry);
 
+	if (chain->sc_num_services != chain->sc_res->num_services) {
+		OSAL_LOG_ERROR("service count mismatch! chain_num_svcs: %d res_num_svcs: %d err %d",
+			       chain->sc_num_services,
+			       chain->sc_res->num_services, err);
+		goto out;
+	}
+
 	sc_entry = chain->sc_entry;
 	while (sc_entry) {
 		svc_info = &sc_entry->ce_svc_info;
@@ -272,6 +279,7 @@ chn_poll_all_services(struct service_chain *chain)
 	if (!err)
 		chain->sc_flags |= CHAIN_CFLAG_POLLED;
 
+out:
 	return err;
 }
 
@@ -317,8 +325,9 @@ chn_poller(void *poll_ctx)
 
 	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
 
-	if (!poll_ctx) {
-		OSAL_LOG_ERROR("invalid poll context! err: %d", err);
+	if (!chain) {
+		OSAL_LOG_ERROR("invalid chain poll context 0x" PRIx64 "! err: %d",
+			       (uint64_t) poll_ctx, err);
 		goto out;
 	}
 	PPRINT_CHAIN(chain);

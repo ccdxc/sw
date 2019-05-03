@@ -286,6 +286,11 @@ hash_write_result(struct service_info *svc_info)
 
 	obj_size = cpdc_get_status_desc_size();
 	svc_status = svc_info->si_svc_status;
+	if (svc_status->svc_type != svc_info->si_type) {
+		OSAL_LOG_ERROR("service type mismatch! svc_type: %d si_type: %d err: %d",
+			svc_status->svc_type, svc_info->si_type, err);
+		goto out;
+	}
 	st_desc = status_desc;
 
 	for (i = 0; i < num_tags; i++) {

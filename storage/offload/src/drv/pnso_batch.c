@@ -508,8 +508,9 @@ bat_poller(void *poll_ctx)
 
 	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
 
-	if (!poll_ctx) {
-		OSAL_LOG_ERROR("invalid poll context! err: %d", err);
+	if (!batch_info) {
+		OSAL_LOG_ERROR("invalid batch poll context 0x" PRIx64 "! err: %d",
+			       (uint64_t) poll_ctx, err);
 		goto out;
 	}
 	PPRINT_BATCH_INFO(batch_info);

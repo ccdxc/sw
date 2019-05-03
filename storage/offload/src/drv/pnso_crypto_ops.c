@@ -584,18 +584,22 @@ out:
 static pnso_error_t
 crypto_write_result(struct service_info *svc_info)
 {
-	pnso_error_t err;
+	pnso_error_t err = EINVAL;
 	struct pnso_service_status	*svc_status;
 	struct crypto_status_desc	*status_desc;
 	bool from_parent;
 
 	svc_status = svc_info->si_svc_status;
+	if (svc_status->svc_type != svc_info->si_type) {
+		OSAL_LOG_ERROR("service type mismatch! svc_type: %d si_type: %d err: %d",
+			svc_status->svc_type, svc_info->si_type, err);
+		goto out;
+	}
 	status_desc = svc_info->si_status_desc.desc;
 
-	err = status_desc->csd_err;
-	if (err) {
-		OSAL_LOG_ERROR("hw error reported: %d", err);
-		svc_status->err = crypto_desc_status_convert(err);
+	if (status_desc->csd_err) {
+		OSAL_LOG_ERROR("hw error reported: " PRIu64, status_desc->csd_err);
+		svc_status->err = crypto_desc_status_convert(status_desc->csd_err);
 		goto out;
 	}
 
@@ -628,8 +632,9 @@ crypto_write_result(struct service_info *svc_info)
 		PAS_INC_NUM_DEC_BYTES(svc_info->si_pcr,
 				svc_status->u.dst.data_len);
 
+	err = PNSO_OK;
 out:
-	return PNSO_OK;
+	return err;
 }
 
 static void

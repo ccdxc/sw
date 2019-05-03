@@ -1386,6 +1386,7 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 		}
 		i++;
 	}
+	OSAL_ASSERT(i == svc_chain->num_services);
 
 	/* setup response */
 	req_ctx->svc_res.err = PNSO_OK;
@@ -1439,6 +1440,7 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 		}
 		i++;
 	}
+	OSAL_ASSERT(i == svc_chain->num_services);
 
 	/* stats */
 	batch_ctx->stats.io_stats[0].svcs += svc_chain->num_services;
