@@ -384,7 +384,7 @@ func (idr *Indexer) startWriter(id int) {
 
 // Attempts to send the buffered requests for the writer with the given id
 func (idr *Indexer) attemptSendBulkRequest(id int) error {
-	result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		return idr.elasticClient.Bulk(idr.ctx, idr.requests[id])
 	}, indexRetryIntvl, indexMaxRetries)
 	if err != nil {

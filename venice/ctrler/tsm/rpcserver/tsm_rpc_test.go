@@ -218,7 +218,7 @@ func TestMirrorSessionRpc(t *testing.T) {
 func mustReadTechSupportEvent(t *testing.T, stream tsproto.TechSupportApi_WatchTechSupportRequestsClient, numExpectedNotifications int) {
 	ctx, cancel := context.WithTimeout(stream.Context(), 3*time.Second)
 	defer cancel()
-	recvFn := func() (interface{}, error) {
+	recvFn := func(ctx context.Context) (interface{}, error) {
 		evtList, err := stream.Recv()
 		AssertOk(t, err, "Error reading event from stream")
 		Assert(t, len(evtList.Events) == numExpectedNotifications,

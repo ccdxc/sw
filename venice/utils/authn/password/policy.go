@@ -1,6 +1,7 @@
 package password
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -75,7 +76,7 @@ func NewPolicyChecker() PolicyChecker {
 
 // CreatePassword generates password of length 12 with 1 digit and 1 special char
 func CreatePassword() (string, error) {
-	result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		passwd, err := passwdgen.Generate(12, Digits, Symbols, false, false)
 		if err != nil {
 			return "", err

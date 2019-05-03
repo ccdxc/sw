@@ -326,10 +326,10 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 	// so we execute the entire registration sequence under a single timeout.
 	// https://github.com/grpc/grpc-go/issues/445
 	// https://github.com/grpc/grpc-go/issues/1229
-	procRequest := func() (interface{}, error) {
+	procRequest := func(ctx context.Context) (interface{}, error) {
 
 		msg, err := stream.Recv()
-		if err != nil {
+		if err != nil || ctx.Err() != nil {
 			return nil, errors.Wrapf(err, "Error receiving admission request")
 		}
 
@@ -375,13 +375,13 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		}
 
 		err = stream.Send(authReq)
-		if err != nil {
+		if err != nil || ctx.Err() != nil {
 			return nil, errors.Wrapf(err, "Error sending auth request")
 		}
 
 		// Receive challenge response
 		msg, err = stream.Recv()
-		if err != nil {
+		if err != nil || ctx.Err() != nil {
 			return nil, errors.Wrapf(err, "Error receiving auth response")
 		}
 

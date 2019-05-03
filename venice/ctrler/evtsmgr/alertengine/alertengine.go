@@ -253,7 +253,7 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 	}
 	alert.SelfLink = alert.MakeURI("configs", "v1", "monitoring")
 
-	alertCreated, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+	alertCreated, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		// check there is an existing alert from the same event
 		outstandingAlerts := a.memDb.GetAlerts(
 			memdb.WithTenantFilter(alertPolicy.GetTenant()),
@@ -280,7 +280,7 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 
 		// evt.GetObjectRef() == nil; cannot find outstanding alert if any.
 		// create an alert
-		_, err = a.apiClient.MonitoringV1().Alert().Create(context.Background(), alert)
+		_, err = a.apiClient.MonitoringV1().Alert().Create(ctx, alert)
 		if err == nil {
 			return true, nil
 		}
@@ -299,11 +299,11 @@ func (a *alertEngineImpl) createAlert(alertPolicy *monitoring.AlertPolicy, evt *
 
 // updateAlertPolicy helper function to update total hits and open alerts count on the alert policy.
 func (a *alertEngineImpl) updateAlertPolicy(meta *api.ObjectMeta, incrementTotalHitsBy, incrementOpenAlertsBy int) error {
-	_, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+	_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		a.Lock() // to avoid racing updates
 		defer a.Unlock()
 
-		ap, err := a.apiClient.MonitoringV1().AlertPolicy().Get(context.Background(),
+		ap, err := a.apiClient.MonitoringV1().AlertPolicy().Get(ctx,
 			&api.ObjectMeta{Name: meta.GetName(), Tenant: meta.GetTenant(), Namespace: meta.GetNamespace(), ResourceVersion: meta.GetResourceVersion(), UUID: meta.GetUUID()}) // get the alert policy
 		if err != nil {
 			return nil, err
@@ -312,7 +312,7 @@ func (a *alertEngineImpl) updateAlertPolicy(meta *api.ObjectMeta, incrementTotal
 		ap.Status.OpenAlerts += int32(incrementOpenAlertsBy)
 		ap.Status.TotalHits += int32(incrementTotalHitsBy)
 
-		ap, err = a.apiClient.MonitoringV1().AlertPolicy().Update(context.Background(), ap) // update the policy
+		ap, err = a.apiClient.MonitoringV1().AlertPolicy().Update(ctx, ap) // update the policy
 		if err != nil {
 			return nil, err
 		}
@@ -326,7 +326,7 @@ func (a *alertEngineImpl) updateAlertPolicy(meta *api.ObjectMeta, incrementTotal
 // createAPIClient helper function to create API server client.
 func (a *alertEngineImpl) createAPIClient() (apiclient.Services, error) {
 	logger := a.logger.WithContext("pkg", fmt.Sprintf("%s-%s", globals.EvtsMgr, "alert-engine-api-client"))
-	client, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+	client, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		return apiclient.NewGrpcAPIClient(globals.EvtsMgr, globals.APIServer, logger,
 			rpckit.WithBalancer(balancer.New(a.resolverClient)), rpckit.WithLogger(logger))
 	}, 2*time.Second, maxRetry)

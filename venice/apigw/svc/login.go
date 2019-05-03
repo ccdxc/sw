@@ -289,15 +289,15 @@ func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*
 		}
 
 		if user.Spec.Type == auth.UserSpec_Local.String() { // update local user with retries as ResourceVersion could have changed
-			result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
-				storedUser, err = apicl.AuthV1().User().Get(context.Background(), user.GetObjectMeta())
+			result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+				storedUser, err = apicl.AuthV1().User().Get(ctx, user.GetObjectMeta())
 				if err != nil {
 					return nil, err
 				}
 				// set user plaintext password for local user before updating user status; user object retrieved from API server contains hashed password.
 				storedUser.Spec.Password = password
 				storedUser.Status = user.Status
-				return apicl.AuthV1().User().Update(context.Background(), storedUser)
+				return apicl.AuthV1().User().Update(ctx, storedUser)
 			}, 100*time.Millisecond, 20)
 			if err != nil {
 				return nil, err

@@ -3,6 +3,7 @@
 package dispatcher
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"path"
@@ -340,7 +341,7 @@ func (d *dispatcherImpl) Shutdown() {
 			wg.Add(1)
 			go func(w *evtsExporter) {
 				defer wg.Done()
-				_, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+				_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 					exporterOffset, err := w.offsetTracker.GetOffset()
 					if err != nil {
 						return false, err

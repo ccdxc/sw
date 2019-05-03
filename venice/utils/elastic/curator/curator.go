@@ -126,7 +126,7 @@ func (c *Curator) Scan(cfg *Config) {
 				}
 				c.Lock()               // to ensure there is one go routine trying to reset the client
 				if c.esClient == nil { // initialize elastic client if required
-					result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+					result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 						return elastic.NewAuthenticatedClient("", c.resolverClient, c.logger)
 					}, retryDelay, maxRetries)
 

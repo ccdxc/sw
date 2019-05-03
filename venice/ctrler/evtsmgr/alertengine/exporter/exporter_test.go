@@ -73,7 +73,8 @@ func TestExporter(t *testing.T) {
 		})
 	alertDestBSDSyslog.ObjectMeta.ModTime = api.Timestamp{}
 	alertDestBSDSyslog.ObjectMeta.CreationTime = api.Timestamp{}
-	memDb.AddObject(alertDestBSDSyslog)
+	err = memDb.AddObject(alertDestBSDSyslog)
+	AssertOk(t, err, "Add object failed %v", err)
 
 	alert := policygen.CreateAlertObj(globals.DefaultTenant, globals.DefaultNamespace, CreateAlphabetString(5), evtsapi.SeverityLevel_name[int32(evtsapi.SeverityLevel_INFO)], "test-alert1", nil, nil, nil)
 
@@ -97,8 +98,8 @@ func TestExporter(t *testing.T) {
 				if ad != nil && ad.Spec.SyslogExport != nil {
 					numTargets := len(ad.Spec.SyslogExport.Targets)
 					go func() {
-						getC := mAlertDestination.EXPECT().Get(context.Background(), alertDestBSDSyslog.GetObjectMeta()).Return(alertDestBSDSyslog, nil).MinTimes(0).MaxTimes(1)
-						mAlertDestination.EXPECT().Update(context.Background(), alertDestBSDSyslog).Return(alertDestBSDSyslog, nil).MinTimes(0).MaxTimes(1).After(getC)
+						getC := mAlertDestination.EXPECT().Get(gomock.Any(), alertDestBSDSyslog.GetObjectMeta()).Return(alertDestBSDSyslog, nil).MinTimes(0).MaxTimes(1)
+						mAlertDestination.EXPECT().Update(gomock.Any(), alertDestBSDSyslog).Return(alertDestBSDSyslog, nil).MinTimes(0).MaxTimes(1).After(getC)
 						mAPI.EXPECT().MonitoringV1().Return(mMonitoring).MinTimes(0).MaxTimes(2)
 					}()
 
@@ -167,11 +168,14 @@ func TestExporter(t *testing.T) {
 		})
 	alertDestBSDSyslog.ObjectMeta.ModTime = api.Timestamp{}
 	alertDestBSDSyslog.ObjectMeta.CreationTime = api.Timestamp{}
-	memDb.UpdateObject(alertDestBSDSyslog)
+	err = memDb.UpdateObject(alertDestBSDSyslog)
+	AssertOk(t, err, "Update object failed %v", err)
 
 	time.Sleep(1 * time.Second)
 
-	memDb.DeleteObject(alertDestBSDSyslog) // delete alert destination
+	err = memDb.DeleteObject(alertDestBSDSyslog) // delete alert destination
+	AssertOk(t, err, "Delete object failed %v", err)
+
 	close(stop)
 
 	AssertEventually(t,

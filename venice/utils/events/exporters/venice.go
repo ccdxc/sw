@@ -244,13 +244,13 @@ func (v *VeniceExporter) initEvtsMgrGrpcClient(maxRetries int) error {
 
 	if !utils.IsEmpty(v.eventsMgr.url) {
 		v.logger.Debugf("creating events manager client using URL: {%v}", v.eventsMgr.url)
-		client, err = utils.ExecuteWithRetry(func() (interface{}, error) {
+		client, err = utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 			return rpckit.NewRPCClient(v.name, v.eventsMgr.url, rpckit.WithRemoteServerName(globals.EvtsMgr),
 				rpckit.WithLogger(v.logger))
 		}, 2*time.Second, maxRetries)
 	} else { // use resolver client
 		v.logger.Debug("creating events manager client using resolver")
-		client, err = utils.ExecuteWithRetry(func() (interface{}, error) {
+		client, err = utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 			return rpckit.NewRPCClient(v.name, globals.EvtsMgr, rpckit.WithBalancer(balancer.New(v.eventsMgr.resolverClient)),
 				rpckit.WithRemoteServerName(globals.EvtsMgr), rpckit.WithLogger(v.logger))
 		}, 2*time.Second, maxRetries)

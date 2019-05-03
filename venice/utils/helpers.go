@@ -12,10 +12,11 @@ import (
 )
 
 // Evaluator function
-type Evaluator func() (interface{}, error)
+type Evaluator func(ctx context.Context) (interface{}, error)
 
 // ExecuteWithRetry call the Evaluator until success or maxRetries
 // is met with the specified retry interval
+// Evaluator is also called with context that expires after the retryInterval..
 func ExecuteWithRetry(eval Evaluator, retryInterval time.Duration, maxRetries int) (interface{}, error) {
 
 	var result interface{}
@@ -27,7 +28,9 @@ retryloop:
 		select {
 		case <-time.After(retryInterval):
 			retryCount++
-			result, err = eval()
+			ctx, cancel := context.WithTimeout(context.Background(), retryInterval)
+			result, err = eval(ctx)
+			cancel()
 			if err != nil {
 				if retryCount > maxRetries {
 					log.Errorf("Retry exhausted, evaluator failed err: %v", err)
@@ -51,7 +54,7 @@ func ExecuteWithContext(ctx context.Context, eval Evaluator) (interface{}, error
 	}
 	ch := make(chan Result, 1)
 	go func() {
-		i, e := eval()
+		i, e := eval(ctx)
 		ch <- Result{I: i, E: e}
 		close(ch)
 	}()

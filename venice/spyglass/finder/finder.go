@@ -109,7 +109,7 @@ func (fdr *Finder) Start() error {
 
 	// Initialize elastic client
 	if fdr.elasticClient == nil {
-		result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 			return elastic.NewAuthenticatedClient("", fdr.rsr, fdr.logger.WithContext("submodule", "elastic"))
 		}, elasticWaitIntvl, maxElasticRetries)
 		if err != nil {

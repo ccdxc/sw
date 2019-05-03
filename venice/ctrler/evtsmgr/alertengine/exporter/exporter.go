@@ -211,16 +211,16 @@ func (e *AlertExporter) updateAlertDestination(destName string, numNotifications
 		return fmt.Errorf("could not update alert destination")
 	}
 
-	_, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+	_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		aDest := e.memDb.GetAlertDestination(destName)
 		if aDest != nil {
-			ad, err := e.apiClient.MonitoringV1().AlertDestination().Get(context.Background(), aDest.GetObjectMeta()) // get the alert destination
+			ad, err := e.apiClient.MonitoringV1().AlertDestination().Get(ctx, aDest.GetObjectMeta()) // get the alert destination
 			if err != nil {
 				return nil, err
 			}
 
 			ad.Status.TotalNotificationsSent += int32(numNotificationsSent)
-			ad, err = e.apiClient.MonitoringV1().AlertDestination().Update(context.Background(), ad)
+			ad, err = e.apiClient.MonitoringV1().AlertDestination().Update(ctx, ad)
 			if err != nil {
 				return nil, err
 			}

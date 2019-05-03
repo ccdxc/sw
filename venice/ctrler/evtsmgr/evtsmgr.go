@@ -97,7 +97,7 @@ func NewEventsManager(serverName, serverURL string, resolverClient resolver.Inte
 
 	// create elastic client
 	if em.esClient == nil {
-		result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 			return elastic.NewAuthenticatedClient("", resolverClient, em.logger.WithContext("submodule", "elastic-client"))
 		}, retryDelay, maxRetries)
 		if err != nil {

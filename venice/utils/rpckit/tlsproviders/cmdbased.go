@@ -172,7 +172,7 @@ func (p *CMDBasedProvider) openCmdConnection() (*grpc.ClientConn, error) {
 
 func (p *CMDBasedProvider) fetchCaCertificates() error {
 	// Execute the entire operation under a timeout
-	request := func() (interface{}, error) {
+	request := func(ctx context.Context) (interface{}, error) {
 		conn, err := p.openCmdConnection()
 		if err != nil {
 			log.Errorf("Error opening CMD Connection, URL: %v, balancer: %+v, err: %+v", p.cmdEndpointURL, p.balancer, err)
@@ -182,7 +182,7 @@ func (p *CMDBasedProvider) fetchCaCertificates() error {
 		cmdClient := certapi.NewCertificatesClient(conn)
 
 		// Fetch CA trust chain
-		tcs, err := cmdClient.GetCaTrustChain(context.Background(), &certapi.Empty{})
+		tcs, err := cmdClient.GetCaTrustChain(ctx, &certapi.Empty{})
 		if err != nil {
 			return nil, errors.Wrap(err, "Error fetching CA trust chain")
 		}
@@ -195,7 +195,7 @@ func (p *CMDBasedProvider) fetchCaCertificates() error {
 		}
 
 		// Fetch additional trust roots
-		rootsResp, err := cmdClient.GetTrustRoots(context.Background(), &certapi.Empty{})
+		rootsResp, err := cmdClient.GetTrustRoots(ctx, &certapi.Empty{})
 		if err != nil {
 			return nil, errors.Wrap(err, "Error fetching trust roots")
 		}
@@ -219,7 +219,7 @@ func (p *CMDBasedProvider) fetchCaCertificates() error {
 
 func (p *CMDBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certificate, error) {
 	// Execute the entire operation under a timeout
-	request := func() (interface{}, error) {
+	request := func(ctx context.Context) (interface{}, error) {
 		conn, err := p.openCmdConnection()
 		if err != nil {
 			log.Errorf("Error opening CMD Connection, URL: %v, balancer: %+v", p.cmdEndpointURL, p.balancer)
@@ -244,7 +244,7 @@ func (p *CMDBasedProvider) getTLSCertificate(subjAltName string) (*tls.Certifica
 		}
 
 		// Get the CSR signed
-		csrResp, err := cmdClient.SignCertificateRequest(context.Background(), &certapi.CertificateSignReq{Csr: csr.Raw})
+		csrResp, err := cmdClient.SignCertificateRequest(ctx, &certapi.CertificateSignReq{Csr: csr.Raw})
 		if err != nil {
 			return nil, errors.Wrap(err, "Error issuing sign request")
 		}

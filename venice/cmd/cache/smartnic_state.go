@@ -109,8 +109,8 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC, writeback bool) (*Smart
 	}
 
 	if writeback {
-		f := func() (interface{}, error) {
-			return sm.APIClient().SmartNIC().Create(context.Background(), sn)
+		f := func(ctx context.Context) (interface{}, error) {
+			return sm.APIClient().SmartNIC().Create(ctx, sn)
 		}
 		_, err := utils.ExecuteWithRetry(f, apiServerRetryInterval, maxAPIServerWriteRetries)
 		if err != nil {

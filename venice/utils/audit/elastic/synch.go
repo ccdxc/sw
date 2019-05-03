@@ -88,7 +88,7 @@ func (a *synchAuditor) ProcessEvents(events ...*auditapi.Event) error {
 func (a *synchAuditor) Run(stopCh <-chan struct{}) error {
 	if a.elasticClient == nil {
 		// Initialize elastic client
-		result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 			return elastic.NewAuthenticatedClient(a.elasticServer, a.rslver, a.logger)
 		}, a.elasticWaitIntvl, a.maxElasticRetries)
 		if err != nil {

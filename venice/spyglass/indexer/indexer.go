@@ -183,7 +183,7 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 
 	if indexer.elasticClient == nil {
 		// Initialize elastic client
-		result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 			return elastic.NewAuthenticatedClient("", rsr, logger.WithContext("submodule", "elastic"))
 		}, elasticWaitIntvl, maxElasticRetries)
 		if err != nil {
@@ -195,7 +195,7 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 	}
 
 	// Initialize api client
-	result, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		return apiservice.NewGrpcAPIClient(globals.Spyglass, globals.APIServer, logger, rpckit.WithBalancer(balancer.New(rsr)))
 	}, apiSrvWaitIntvl, maxAPISrvRetries)
 	if err != nil {
@@ -255,7 +255,7 @@ func (idr *Indexer) initializeAndStartWatchers() error {
 	idr.Lock()
 	idr.watcherDone = make(chan bool)
 	idr.Unlock()
-	_, err := utils.ExecuteWithRetry(func() (interface{}, error) {
+	_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 		return func() (interface{}, error) {
 			return nil, idr.createWatchers()
 		}()
