@@ -247,7 +247,7 @@ void ionic_dbgfs_add_dev(struct ionic_ibdev *dev, struct dentry *parent)
 	if (!dev->debug)
 		return;
 
-	debugfs_create_file("info", 0220, dev->debug, dev,
+	debugfs_create_file("info", 0440, dev->debug, dev,
 			    &ionic_dev_info_fops);
 	debugfs_create_file("reset", 0220, dev->debug, dev,
 			    &ionic_dev_reset_fops);
@@ -384,10 +384,10 @@ void ionic_dbgfs_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq)
 	if (!eq->debug)
 		return;
 
-	debugfs_create_file("info", 0220, eq->debug, eq,
+	debugfs_create_file("info", 0440, eq->debug, eq,
 			    &ionic_eq_info_fops);
 
-	debugfs_create_file("q", 0220, eq->debug, eq,
+	debugfs_create_file("q", 0440, eq->debug, eq,
 			    &ionic_eq_q_fops);
 }
 
@@ -484,15 +484,15 @@ void ionic_dbgfs_add_mr(struct ionic_ibdev *dev, struct ionic_mr *mr)
 	if (!mr->debug)
 		return;
 
-	debugfs_create_file("info", 0220, mr->debug, mr,
+	debugfs_create_file("info", 0440, mr->debug, mr,
 			    &ionic_mr_info_fops);
 
 	if (mr->umem)
-		debugfs_create_file("umem", 0220, mr->debug, mr,
+		debugfs_create_file("umem", 0440, mr->debug, mr,
 				    &ionic_mr_umem_fops);
 
 	if (mr->buf.tbl_buf)
-		debugfs_create_file("buf", 0220, mr->debug, mr,
+		debugfs_create_file("buf", 0440, mr->debug, mr,
 				    &ionic_mr_tbl_buf_fops);
 }
 
@@ -595,15 +595,15 @@ void ionic_dbgfs_add_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 	if (!cq->debug)
 		return;
 
-	debugfs_create_file("info", 0220, cq->debug, cq,
+	debugfs_create_file("info", 0440, cq->debug, cq,
 			    &ionic_cq_info_fops);
 
 	if (cq->q.ptr)
-		debugfs_create_file("q", 0220, cq->debug, cq,
+		debugfs_create_file("q", 0440, cq->debug, cq,
 				    &ionic_cq_q_fops);
 
 	if (cq->umem)
-		debugfs_create_file("umem", 0220, cq->debug, cq,
+		debugfs_create_file("umem", 0440, cq->debug, cq,
 				    &ionic_cq_umem_fops);
 }
 
@@ -879,11 +879,11 @@ void ionic_dbgfs_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
 	if (!aq->debug)
 		return;
 
-	debugfs_create_file("info", 0220, aq->debug, aq,
+	debugfs_create_file("info", 0440, aq->debug, aq,
 			    &ionic_aq_info_fops);
 
 	if (aq->q.ptr)
-		debugfs_create_file("q", 0220, aq->debug, aq,
+		debugfs_create_file("q", 0440, aq->debug, aq,
 				    &ionic_aq_q_fops);
 
 	wr = kzalloc(sizeof(*wr), GFP_KERNEL);
@@ -907,13 +907,13 @@ void ionic_dbgfs_add_aq(struct ionic_ibdev *dev, struct ionic_aq *aq)
 
 	aq->debug_wr = &wr->wr;
 
-	debugfs_create_file("dbg_wr_wqe", 0220, aq->debug, aq,
+	debugfs_create_file("dbg_wr_wqe", 0440, aq->debug, aq,
 			    &ionic_aq_wqe_fops);
 
-	debugfs_create_file("dbg_wr_cqe", 0220, aq->debug, aq,
+	debugfs_create_file("dbg_wr_cqe", 0440, aq->debug, aq,
 			    &ionic_aq_cqe_fops);
 
-	debugfs_create_file("dbg_wr_data", 0220, aq->debug, aq,
+	debugfs_create_file("dbg_wr_data", 0440, aq->debug, aq,
 			    &ionic_aq_data_fops);
 
 	debugfs_create_file("dbg_wr_ctrl", 0220, aq->debug, aq,
@@ -1112,26 +1112,26 @@ void ionic_dbgfs_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 	if (!qp->debug)
 		return;
 
-	debugfs_create_file("info", 0220, qp->debug, qp,
+	debugfs_create_file("info", 0440, qp->debug, qp,
 			    &ionic_qp_info_fops);
 
 	if (qp->has_sq) {
 		if (qp->sq.ptr)
-			debugfs_create_file("sq", 0220, qp->debug, qp,
+			debugfs_create_file("sq", 0440, qp->debug, qp,
 					    &ionic_qp_sq_fops);
 
 		if (qp->sq_umem)
-			debugfs_create_file("sq_umem", 0220, qp->debug, qp,
+			debugfs_create_file("sq_umem", 0440, qp->debug, qp,
 					    &ionic_qp_sq_umem_fops);
 	}
 
 	if (qp->has_rq) {
 		if (qp->rq.ptr)
-			debugfs_create_file("rq", 0220, qp->debug, qp,
+			debugfs_create_file("rq", 0440, qp->debug, qp,
 					    &ionic_qp_rq_fops);
 
 		if (qp->rq_umem)
-			debugfs_create_file("rq_umem", 0220, qp->debug, qp,
+			debugfs_create_file("rq_umem", 0440, qp->debug, qp,
 					    &ionic_qp_rq_umem_fops);
 	}
 }
