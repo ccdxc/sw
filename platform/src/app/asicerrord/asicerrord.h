@@ -11,7 +11,11 @@
 #include <stdint.h>
 #include <math.h>
 #include "logger.h"
+#include "asic/pd/pd.hpp"
+#include "gen/proto/asicerrord.delphi.hpp"
 #include "third-party/asic/capri/model/cap_top/cap_top_csr_defines.h"
+#include "third-party/asic/capri/verif/apis/sdram_csr_ipxact.h"
+#include "third-party/asic/capri/model/cap_top/csr_defines/cap_mc_c_hdr.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_dpp_c_hdr.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_dpr_c_hdr.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_pics_c_hdr.h"
@@ -22,8 +26,6 @@
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_mpns_c_hdr.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_pbc_c_hdr.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_pbm_c_hdr.h"
-#include "third-party/asic/capri/model/cap_top/csr_defines/cap_mc_c_hdr.h"
-#include "gen/proto/asicerrord.delphi.hpp"
 
 #define DPP0_INT_CREDIT CAP_ADDR_BASE_DPP_DPP_0_OFFSET + CAP_DPP_CSR_INT_CREDIT_INTREG_BYTE_ADDRESS
 #define DPP1_INT_CREDIT CAP_ADDR_BASE_DPP_DPP_1_OFFSET + CAP_DPP_CSR_INT_CREDIT_INTREG_BYTE_ADDRESS
@@ -183,10 +185,8 @@ enum etype {
     FATAL = 2,
     UNKNOWN = 3,
 };
-#define CATTRIP_STATUS 0x6a15004c
-#define AERR_STATUS 0x6a100020
-#define DERR_STATUS 0x6a143dc4
 
+void unravel_intr(uint32_t data);
 void poll_capri_intr();
 const char* errortostring(etype errortype);
 
@@ -231,29 +231,7 @@ static inline void poll_##kind##metrics(uint64_t key, uint32_t addr) { \
     } \
 
 #define CAPRI_PRINT_HBM_ERROR() \
-    if (data) { \
-        uint32_t debugvalue = 0; \
-        uint32_t debugaddr = 0; \
-        uint32_t counter = 0; \
-        debugaddr = CATTRIP_STATUS; \
-        for (counter = 0; counter < 8; counter++) { \
-            debugvalue = 0; \
-            sdk::lib::pal_reg_read(debugaddr, &debugvalue, 1); \
-            INFO("Debugging::Address {:x} value {:x}", debugaddr, debugvalue); \
-            debugaddr += 0x100000; \
-        } \
-        debugaddr = AERR_STATUS; \
-        debugvalue = 0; \
-        sdk::lib::pal_reg_read(debugaddr, &debugvalue, 1); \
-        INFO("Debugging::Address {:x} value {:x}", debugaddr, debugvalue); \
-        debugaddr = DERR_STATUS; \
-        for (counter = 0; counter < 8; counter++) { \
-            debugvalue = 0; \
-            sdk::lib::pal_reg_read(debugaddr, &debugvalue, 1); \
-            INFO("Debugging::Address {:x} value {:x}", debugaddr, debugvalue); \
-            debugaddr += 0x000004; \
-        } \
-    }
+    unravel_intr(data);
 
 #define CAPRI_INTR_KIND_FIELD(fld, offset, type) \
     if (data & (1 << offset)) { \

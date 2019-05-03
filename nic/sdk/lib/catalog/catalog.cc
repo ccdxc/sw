@@ -607,6 +607,7 @@ catalog::populate_catalog(std::string &catalog_file, ptree &prop_tree)
     catalog_db_.num_logical_oob_ports =
                         prop_tree.get<uint32_t>("num_logical_oob_ports", 0);
     catalog_db_.num_fp_ports = prop_tree.get<uint32_t>("num_fp_ports", 0);
+    catalog_db_.halfclock_hbmtemp = prop_tree.get<uint32_t>("halfclock_hbmtemp", 105);
 
     populate_voltages(prop_tree);
 

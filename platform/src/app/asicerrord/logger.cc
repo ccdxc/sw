@@ -28,3 +28,29 @@ GetLogger()
 
     return _logger;
 }
+
+int
+asicerrord_logger (sdk_trace_level_e tracel_level, const char *format, ...)
+{
+    char       logbuf[1024];
+    va_list    args;
+
+    va_start(args, format);
+    vsnprintf(logbuf, sizeof(logbuf), format, args);
+    switch (tracel_level) {
+    case sdk::lib::SDK_TRACE_LEVEL_ERR:
+        ERR("{}", logbuf);
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_WARN:
+        WARN("{}", logbuf);
+        break;
+    case sdk::lib::SDK_TRACE_LEVEL_INFO:
+        INFO("{}", logbuf);
+        break;
+    default:
+        break;
+    }
+    va_end(args);
+
+    return 0;
+}

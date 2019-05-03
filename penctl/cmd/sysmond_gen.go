@@ -12,6 +12,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
+//cmd - frequency
+//rootCmd = system
+//helpStr = System power information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n
+var frequencysystemShowCmd = &cobra.Command{
+	Use:   "frequency",
+	Short: "System power information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n",
+	Long:  "\n---------------------------------\n System power information:\n\n\nValue Description:\n\nfrequency: Frequency of the system.\nThe frequency is MHz\n\n---------------------------------\n",
+	RunE:  frequencysystemShowCmdHandler,
+}
+
+func frequencysystemShowCmdHandler(cmd *cobra.Command, args []string) error {
+	jsonFormat = true
+	bodyBytes, err := restGet("telemetry/v1/metrics/asicfrequencymetrics/")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	if bodyBytes == nil {
+		fmt.Println("No asicfrequencymetrics object(s) found")
+	}
+	return nil
+}
+
 //cmd - power
 //rootCmd = system
 //helpStr = System power information:\n\n\nValue Description:\n\npin: Input power to the system.\npout1: Core output power.\npout2: Arm output power.\nThe power is milli Watt\n
@@ -68,6 +91,8 @@ var systemShowCmd = &cobra.Command{
 }
 
 func init() {
+
+	systemShowCmd.AddCommand(frequencysystemShowCmd)
 
 	systemShowCmd.AddCommand(powersystemShowCmd)
 

@@ -1,3 +1,6 @@
+#ifndef _SYSMOND_DELPHI_H_
+#define _SYSMOND_DELPHI_H_
+
 #include "sysmond.h"
 #include "gen/proto/sysmgr.delphi.hpp"
 #include "nic/delphi/sdk/delphi_sdk.hpp"
@@ -15,6 +18,7 @@ class SysmondService : public delphi::Service,
     public:
         SysmondService(delphi::SdkPtr sdk, string name);
         void init();
+        void ChangeAsicFrequency();
         virtual void OnMountComplete();
 
         virtual delphi::error OnSysmgrSystemStatusCreate(  
@@ -30,3 +34,4 @@ class SysmondService : public delphi::Service,
 
         virtual std::string Name();
 };
+#endif

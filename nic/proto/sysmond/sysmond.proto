@@ -27,7 +27,6 @@ message AsicTemperatureMetrics {
     delphi.Counter local_temperature           = 2;
     delphi.Counter die_temperature             = 3;
     delphi.Counter hbm_temperature             = 4;
-
 }
 
 message AsicPowerMetrics {
@@ -38,7 +37,7 @@ message AsicPowerMetrics {
                  "pin: Input power to the system.\\n"
                  "pout1: Core output power.\\n"
                  "pout2: Arm output power.\\n"
-                "The power is milli Watt\\n",
+                 "The power is milli Watt\\n",
         RootCmd: "system"
     };
     fixed64 Key = 1;
@@ -46,5 +45,30 @@ message AsicPowerMetrics {
     delphi.Counter pin           = 2;
     delphi.Counter pout1         = 3;
     delphi.Counter pout2         = 4;
+}
 
+message AsicFrequencyMetrics {
+    option (venice.penctlCmd) = {
+        Cmd:     "frequency",
+        HelpStr: "System power information:\\n"
+                 "\\n\\nValue Description:\\n\\n"
+                 "frequency: Frequency of the system.\\n"
+                 "The frequency is MHz\\n",
+        RootCmd: "system"
+    };
+    fixed64 Key = 1;
+
+    delphi.Counter frequency           = 2;
+}
+
+enum SpeedState {
+    Full  = 0;
+    Half  = 1;
+}
+
+message SysmondAsicFrequency {
+    option (delphi.update_event)  = true;
+    option (delphi.singleton)     = true;
+    delphi.ObjectMeta      Meta   = 1;
+    SpeedState             Speed  = 2;
 }

@@ -2,6 +2,8 @@
 #include "lib/thread/thread.hpp"
 #include "asicerrord.h"
 
+using namespace sdk::asic::pd;
+
 delphi::objects::dppintcreditmetrics_t                  dppintcreditmetrics[2];
 delphi::objects::dppintfifometrics_t                    dppintfifometrics[2];
 delphi::objects::dppintreg1metrics_t                    dppintreg1metrics[2];
@@ -54,6 +56,16 @@ const char
     }
 }
 
+void
+unravel_intr(uint32_t data)
+{
+    bool iscattrip = false;
+
+    if (data) {
+        asic_pd_unravel_hbm_intrs(&iscattrip);
+    }
+}
+
 void createTables() {
     delphi::objects::DppintcreditMetrics::CreateTable();
     delphi::objects::DppintfifoMetrics::CreateTable();
@@ -96,6 +108,8 @@ void createTables() {
 int
 main(int argc, char *argv[])
 {
+    sdk::lib::logger::init(asicerrord_logger, asicerrord_logger);
+
     // initialize the pal
 #ifdef __x86_64__
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM) == sdk::lib::PAL_RET_OK);

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <memory>
 #include "logger.h"
+#include "LogMsg.h"
 #include "lib/thread/thread.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/platform/pal/include/pal.h"
@@ -16,7 +17,8 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include "third-party/asic/capri/verif/apis/cap_freq_api.h"
+#include "nic/sdk/lib/catalog/catalog.hpp"
+#include "sysmond_delphi.hpp"
 
 typedef struct monfunc_s {
     void (*func)(void);
@@ -35,6 +37,7 @@ typedef struct systemled_s {
     pal_led_color_t color;
 } systemled_t;
 
+#define UPTIME_FILENAME "/obfl/uptime.log"
 #define MONFUNC(fnc) \
 static monfunc_t monfunc_t_##fnc \
     __attribute__((used, section("monfunclist"), aligned(4))) = \

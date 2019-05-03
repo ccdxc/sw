@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include "nic/sdk/lib/logger/logger.hpp"
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 
@@ -31,5 +32,5 @@ Logger GetLogger();
 #define ERR(args...) GetLogger()->error(args)
 #define FATAL(args...) { GetLogger()->error(args); assert(0); }
 
-
+int asicerrord_logger (sdk_trace_level_e tracel_level, const char *format, ...);
 #endif

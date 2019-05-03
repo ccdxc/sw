@@ -13,6 +13,25 @@ namespace pd {
 
 // set this macro with max coses supported
 #define ASIC_NUM_MAX_COSES   16
+typedef enum pd_adjust_perf_index {
+    PD_PERF_ID0 = 0,
+    PD_PERF_ID1 = 1,
+    PD_PERF_ID2 = 2,
+    PD_PERF_ID3 = 3,
+    PD_PERF_ID4 = 4
+} pd_adjust_perf_index_t;
+
+typedef enum pd_adjust_perf_type {
+    PD_PERF_UP = 0,
+    PD_PERF_DOWN = 1,
+    PD_PERF_SET = 2
+} pd_adjust_perf_type_t;
+
+typedef enum pd_adjust_perf_status {
+    PD_PERF_SUCCESS = 0,
+    PD_PERF_FAILED = 1,
+    PD_PERF_INVALID = 2
+} pd_adjust_perf_status_t;
 
 // TODO: please move this to sdk/lib/p4 later !!
 typedef struct p4_table_mem_layout_ {
@@ -139,6 +158,11 @@ sdk_ret_t asic_pd_qstate_clear (lif_qstate_t *qstate);
 sdk_ret_t asic_pd_p4plus_invalidate_cache (mpartition_region_t *reg,
                                            uint64_t q_addr, uint32_t size);
 uint32_t asic_pd_clock_freq_get(void);
+pd_adjust_perf_status_t asic_pd_adjust_perf(int chip_id, int inst_id,
+                                            pd_adjust_perf_index_t &idx,
+                                            pd_adjust_perf_type_t perf_type);
+void asic_pd_set_half_clock(int chip_id, int inst_id);
+sdk_ret_t asic_pd_unravel_hbm_intrs(bool *iscattrip);
 
 }    // namespace pd
 }    // namespace asic

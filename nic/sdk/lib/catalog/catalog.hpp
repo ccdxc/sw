@@ -135,6 +135,7 @@ typedef struct catalog_s {
     mac_profile_t              mac_profiles[MAC_MODE_MAX];            // MAC profiles
     mac_profile_t              mgmt_mac_profiles[MAC_MODE_MAX];       // MGMT MAC profiles
     catalog_voltage_t          voltages;                              // Voltage parameters for the board.
+    uint32_t                   halfclock_hbmtemp;                 // temp limit when system goes to half clock
 
     // pcie parameters
     uint8_t                    pcie_hostport_mask;                    // host ports enabled
@@ -195,6 +196,7 @@ public:
     }
     uint32_t startup_vdd (void) const { return catalog_db_.voltages.startup_vdd; }
     uint32_t startup_arm (void) const { return catalog_db_.voltages.startup_arm; }
+    uint32_t hbmtemperature_threshold (void) const { return catalog_db_.halfclock_hbmtemp; }
 
     // lookups based on tm_port
     uint32_t tm_port_to_ifindex(uint32_t tm_port);

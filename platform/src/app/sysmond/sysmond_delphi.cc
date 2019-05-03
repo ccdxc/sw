@@ -4,6 +4,7 @@ using namespace std;
 
 void SysmondService::init() {
     delphi::objects::SysmgrSystemStatus::Mount(this->sdk, delphi::ReadMode);
+    delphi::objects::SysmondAsicFrequency::Mount(this->sdk, delphi::ReadWriteMode);
     delphi::objects::SysmgrSystemStatus::Watch(this->sdk, shared_from_this());
 }
 
@@ -61,3 +62,8 @@ void *delphi_thread_run(void *ctx)
     return NULL;
 }
 
+void SysmondService::ChangeAsicFrequency(){
+    auto obj = std::make_shared<delphi::objects::SysmondAsicFrequency>();
+    obj->set_speed(::sysmond::Half);
+    this->sdk->QueueUpdate(obj);
+}

@@ -13,6 +13,7 @@
         "startup_arm" : "",
         "startup_vdd" : "700"
     },
+    "halfclock_hbmtemp" : "105",
     "asics" :
     [
         {

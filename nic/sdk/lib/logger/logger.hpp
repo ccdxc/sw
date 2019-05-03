@@ -29,11 +29,13 @@ class logger {
 public:
     typedef int (*trace_cb_t)(sdk_trace_level_e trace_level,
                               const char *format, ...);
-    static void init(trace_cb_t trace_cb);
+    static void init(trace_cb_t trace_cb, trace_cb_t obfl_trace_cb = NULL);
     static trace_cb_t trace_cb(void) {
         return trace_cb_ ? trace_cb_ : null_logger_;
     }
-
+    static trace_cb_t obfl_trace_cb(void) {
+        return obfl_trace_cb_ ? obfl_trace_cb_ : null_logger_;
+    }
 private:
     static int null_logger_(sdk_trace_level_e trace_level,
                             const char *fmt, ...) {
@@ -47,6 +49,7 @@ private:
 
 private:
     static trace_cb_t     trace_cb_;
+    static trace_cb_t     obfl_trace_cb_;
 };
 
 }    // namespace lib
@@ -80,6 +83,20 @@ using sdk_logger = sdk::lib::logger;
                                         ##__VA_ARGS__)
 
 #define SDK_TRACE_PRINT             SDK_TRACE_DEBUG
+
+#define SDK_OBFL_TRACE_ERR(fmt, ...)   sdk::lib::logger::obfl_trace_cb()(      \
+                                      sdk::lib::SDK_TRACE_LEVEL_ERR, "[%s:%d] "\
+                                      fmt, __func__, __LINE__, ##__VA_ARGS__)
+
+#define SDK_OBFL_TRACE_WARN(fmt, ...)  sdk::lib::logger::obfl_trace_cb()(      \
+                                      sdk::lib::SDK_TRACE_LEVEL_WARN,          \
+                                      "[%s:%d] " fmt, __func__,                \
+                                      __LINE__, ##__VA_ARGS__)
+
+#define SDK_OBFL_TRACE_INFO(fmt, ...)  sdk::lib::logger::obfl_trace_cb()(      \
+                                      sdk::lib::SDK_TRACE_LEVEL_INFO,          \
+                                      "[%s:%d] " fmt, __func__,                \
+                                      __LINE__, ##__VA_ARGS__)
 
 #endif    // __SDK_LOGGER_HPP__
 

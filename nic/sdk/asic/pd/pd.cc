@@ -5,6 +5,7 @@
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "platform/capri/capri_txs_scheduler.hpp"
 #include "platform/capri/capri_qstate.hpp"
+#include "platform/capri/capri_mon.hpp"
 #include "asic/pd/pd.hpp"
 #include "lib/utils/time_profile.hpp"
 #include "platform/utils/mpartition.hpp"
@@ -709,6 +710,23 @@ uint32_t
 asic_pd_clock_freq_get (void)
 {
     return capri_freq_get();
+}
+
+pd_adjust_perf_status_t asic_pd_adjust_perf(int chip_id, int inst_id,
+                                            pd_adjust_perf_index_t &idx,
+                                            pd_adjust_perf_type_t perf_type)
+{
+    return (pd_adjust_perf_status_t)capri_adjust_perf(chip_id, inst_id, (pen_adjust_index_t&)idx, (pen_adjust_perf_type_t)perf_type);
+}
+
+void asic_pd_set_half_clock(int chip_id, int inst_id)
+{
+    return capri_set_half_clock(chip_id, inst_id);
+}
+
+sdk_ret_t asic_pd_unravel_hbm_intrs(bool *iscattrip)
+{
+    return capri_unravel_hbm_intrs(iscattrip);
 }
 
 }    // namespace pd

@@ -2,14 +2,17 @@
  * Copyright (c) 2019, Pensando Systems Inc.
  */
 #include "sysmond.h"
-#include "sysmond_delphi.hpp"
+#include "nic/sdk/platform/capri/csrint/csr_init.hpp"
 
 ::utils::log *g_trace_logger;
-extern int configurablefrequency();
+::utils::log *obfl_trace_logger;
+extern sdk::lib::catalog *catalog;
+extern int configurefrequency();
 
 extern monfunc_t __start_monfunclist[];
 extern monfunc_t __stop_monfunclist[];
 
+shared_ptr<SysmondService> svc;
 systemled_t currentstatus = {UKNOWN_STATE, LED_COLOR_NONE};
 
 static void monitorsystem() {
@@ -55,14 +58,18 @@ sysmgrsystemled (systemled_t led) {
 
 void initializeLogger() {
     static bool initDone = false;
-
+    LogMsg::Instance().get()->setMaxErrCount(0);
     if (!initDone) {
         g_trace_logger = ::utils::log::factory("sysmond", 0x0,
                                         ::utils::log_mode_sync, false,
                                         LOG_FILENAME, LOG_MAX_FILESIZE,
                                         LOG_MAX_FILES, ::utils::trace_debug,
                                         ::utils::log_none);
-
+        obfl_trace_logger = ::utils::log::factory("sysmond_obfl", 0x0,
+                                        ::utils::log_mode_sync, false,
+                                        OBFL_LOG_FILENAME, OBFL_LOG_MAX_FILESIZE,
+                                        LOG_MAX_FILES, ::utils::trace_debug,
+                                        ::utils::log_none);
         initDone = true;
     }
 }
@@ -73,6 +80,7 @@ main(int argc, char *argv[])
     systemled_t led;
     //initialize the logger
     initializeLogger();
+    sdk::lib::logger::init(local_sdk_logger, obfl_sdk_logger);
 
     TRACE_INFO(GetLogger(), "Monitoring system events");
     // initialize the pal
@@ -82,17 +90,22 @@ main(int argc, char *argv[])
     assert(sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_HAPS) == sdk::lib::PAL_RET_OK);
 #endif
 
-    // Register for mac metrics
+    // Register for sysmond metrics
     delphi::objects::AsicTemperatureMetrics::CreateTable();
     delphi::objects::AsicPowerMetrics::CreateTable();
+    delphi::objects::AsicFrequencyMetrics::CreateTable();
 
-    if (configurablefrequency() == 0) {
+    sdk::platform::capri::csr_init();
+    catalog = sdk::lib::catalog::factory();
+    TRACE_INFO(GetLogger(), "HBM Threshold temperature is {}", catalog->hbmtemperature_threshold());
+
+    if (configurefrequency() == 0) {
         TRACE_INFO(GetLogger(), "Frequency set from file");
     } else {
         TRACE_INFO(GetLogger(), "Failed to set frequency from file");
     }
     delphi::SdkPtr sdk(make_shared<delphi::Sdk>());
-    shared_ptr<SysmondService> svc = make_shared<SysmondService>(sdk, "Sysmond");
+    svc = make_shared<SysmondService>(sdk, "Sysmond");
     svc->init();
     sdk->RegisterService(svc);
 

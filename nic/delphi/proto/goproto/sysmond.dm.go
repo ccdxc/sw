@@ -337,3 +337,132 @@ func NewAsicPowerMetricsIterator() (*AsicPowerMetricsIterator, error) {
 
 	return &AsicPowerMetricsIterator{iter: iter}, nil
 }
+
+type AsicFrequencyMetrics struct {
+	ObjectMeta api.ObjectMeta
+
+	key uint64
+
+	Frequency metrics.Counter
+
+	// private state
+	metrics gometrics.Metrics
+}
+
+func (mtr *AsicFrequencyMetrics) GetKey() uint64 {
+	return mtr.key
+}
+
+// Size returns the size of the metrics object
+func (mtr *AsicFrequencyMetrics) Size() int {
+	sz := 0
+
+	sz += mtr.Frequency.Size()
+
+	return sz
+}
+
+// Unmarshal unmarshal the raw counters from shared memory
+func (mtr *AsicFrequencyMetrics) Unmarshal() error {
+	var offset int
+
+	gometrics.DecodeScalarKey(&mtr.key, mtr.metrics.GetKey())
+
+	mtr.Frequency = mtr.metrics.GetCounter(offset)
+	offset += mtr.Frequency.Size()
+
+	return nil
+}
+
+// getOffset returns the offset for raw counters in shared memory
+func (mtr *AsicFrequencyMetrics) getOffset(fldName string) int {
+	var offset int
+
+	if fldName == "Frequency" {
+		return offset
+	}
+	offset += mtr.Frequency.Size()
+
+	return offset
+}
+
+// SetFrequency sets cunter in shared memory
+func (mtr *AsicFrequencyMetrics) SetFrequency(val metrics.Counter) error {
+	mtr.metrics.SetCounter(val, mtr.getOffset("Frequency"))
+	return nil
+}
+
+// AsicFrequencyMetricsIterator is the iterator object
+type AsicFrequencyMetricsIterator struct {
+	iter gometrics.MetricsIterator
+}
+
+// HasNext returns true if there are more objects
+func (it *AsicFrequencyMetricsIterator) HasNext() bool {
+	return it.iter.HasNext()
+}
+
+// Next returns the next metrics
+func (it *AsicFrequencyMetricsIterator) Next() *AsicFrequencyMetrics {
+	mtr := it.iter.Next()
+	if mtr == nil {
+		return nil
+	}
+
+	tmtr := &AsicFrequencyMetrics{metrics: mtr}
+	tmtr.Unmarshal()
+	return tmtr
+}
+
+// Find finds the metrics object by key
+
+func (it *AsicFrequencyMetricsIterator) Find(key uint64) (*AsicFrequencyMetrics, error) {
+
+	mtr, err := it.iter.Find(gometrics.EncodeScalarKey(key))
+
+	if err != nil {
+		return nil, err
+	}
+	tmtr := &AsicFrequencyMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Create creates the object in shared memory
+
+func (it *AsicFrequencyMetricsIterator) Create(key uint64) (*AsicFrequencyMetrics, error) {
+	tmtr := &AsicFrequencyMetrics{}
+
+	mtr := it.iter.Create(gometrics.EncodeScalarKey(key), tmtr.Size())
+
+	tmtr = &AsicFrequencyMetrics{metrics: mtr, key: key}
+	tmtr.Unmarshal()
+	return tmtr, nil
+}
+
+// Delete deletes the object from shared memory
+
+func (it *AsicFrequencyMetricsIterator) Delete(key uint64) error {
+
+	return it.iter.Delete(gometrics.EncodeScalarKey(key))
+
+}
+
+// Free frees the iterator memory
+func (it *AsicFrequencyMetricsIterator) Free() {
+	it.iter.Free()
+}
+
+// NewAsicFrequencyMetricsIterator returns an iterator
+func NewAsicFrequencyMetricsIterator() (*AsicFrequencyMetricsIterator, error) {
+	iter, err := gometrics.NewMetricsIterator("AsicFrequencyMetrics")
+	if err != nil {
+		return nil, err
+	}
+	// little hack to skip creating iterators on osx
+	if iter == nil {
+		return nil, nil
+	}
+
+	return &AsicFrequencyMetricsIterator{iter: iter}, nil
+}
