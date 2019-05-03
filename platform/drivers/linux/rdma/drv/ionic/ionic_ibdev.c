@@ -1250,21 +1250,6 @@ static int ionic_query_device(struct ib_device *ibdev,
 			      struct ib_udata *udata)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
-	unsigned int maj = 0, min = 0, pnt = 0, bld1 = 0, bld2 = 0;
-	int rc;
-
-	rc = sscanf(dev->info->fw_version,
-		    "%u.%u.%u-%u-%u", &maj, &min, &pnt, &bld1, &bld2);
-	if (rc != 5)
-		dev_dbg(&dev->ibdev.dev, "failed to parse version str: %s\n",
-			dev->info->fw_version);
-
-	attr->fw_ver =
-		((u64)(maj  & 0xff)   << 56) |
-		((u64)(min  & 0xff)   << 48) |
-		((u64)(pnt  & 0xff)   << 40) |
-		((u64)(bld1 & 0xffff) << 24) |
-		((u64)(bld2 & 0xffff) <<  8);
 
 	addrconf_ifid_eui48((u8 *)&attr->sys_image_guid, dev->ndev);
 	attr->max_mr_size =
@@ -1274,6 +1259,7 @@ static int ionic_query_device(struct ib_device *ibdev,
 	attr->vendor_id = to_pci_dev(dev->hwdev)->vendor;
 	attr->vendor_part_id = to_pci_dev(dev->hwdev)->device;
 	attr->hw_ver = dev->info->asic_rev;
+	attr->fw_ver = 0;
 	attr->max_qp = dev->size_qpid;
 	attr->max_qp_wr = IONIC_MAX_DEPTH;
 	attr->device_cap_flags =

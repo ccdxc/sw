@@ -37,8 +37,6 @@ static int fallback_query_device(struct ibv_context *ibctx,
 {
 	struct ibv_query_device req = {};
 	uint64_t fw_ver;
-	uint8_t maj, min, pnt;
-	uint16_t bld1, bld2;
 	int rc;
 
 	rc = ibv_cmd_query_device(ibctx, dev_attr, &fw_ver,
@@ -46,13 +44,10 @@ static int fallback_query_device(struct ibv_context *ibctx,
 	if (rc)
 		return rc;
 
-	maj  = (fw_ver >> 56) & 0xff;   /* Major  */
-	min  = (fw_ver >> 48) & 0xff;   /* Minor  */
-	pnt  = (fw_ver >> 40) & 0xff;   /* Point  */
-	bld1 = (fw_ver >> 24) & 0xffff; /* Build1 */
-	bld2 = (fw_ver >>  8) & 0xffff; /* Build2 */
-	snprintf(dev_attr->fw_ver, sizeof(dev_attr->fw_ver),
-		 "%u.%u.%u-%u-%u", maj, min, pnt, bld1, bld2);
+	rc = ibv_read_sysfs_file(ibctx->device->ibdev_path, "fw_ver",
+				 dev_attr->fw_ver, sizeof(dev_attr->fw_ver));
+	if (rc < 0)
+		dev_attr->fw_ver[0] = 0;
 
 	return 0;
 }
