@@ -91,6 +91,12 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC, writeback bool) (*Smart
 		return esn, sm.UpdateSmartNIC(sn, writeback)
 	}
 
+	if sn.Spec.Hostname == "" {
+		err = fmt.Errorf("Error creating new smartnic state: SmartNIC has empty hostname: %+v", sn)
+		log.Errorf(err.Error())
+		return nil, err
+	}
+
 	// create new smartnic state
 	sns, err := NewSmartNICState(sn)
 	if err != nil {
@@ -100,6 +106,19 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC, writeback bool) (*Smart
 
 	sns.Lock()
 	defer sns.Unlock()
+
+	// Rejected SmartNIC objects can have duplicate hostnames.
+	// In this case we don't update the map
+	if sn.Status.AdmissionPhase != cluster.SmartNICStatus_REJECTED.String() {
+		sm.hostnameToSmartNICMapLock.Lock()
+		nic, ok := sm.hostnameToSmartNICMap[sn.Spec.Hostname]
+		if ok || nic != nil {
+			log.Errorf("Error updating hostnameToSmartNICMap, key %s, exists: %v, value:%+v", sn.Spec.Hostname, ok, nic)
+			// continue anyway
+		}
+		sm.hostnameToSmartNICMap[sn.Spec.Hostname] = sn
+		sm.hostnameToSmartNICMapLock.Unlock()
+	}
 
 	// store it in local DB
 	err = sm.memDB.AddObject(sns)
@@ -124,29 +143,53 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC, writeback bool) (*Smart
 
 // UpdateSmartNIC updates a smartNIC object
 // Caller is responsible for acquiring the lock before invocation and releasing it afterwards
-func (sm *Statemgr) UpdateSmartNIC(sn *cluster.SmartNIC, writeback bool) error {
-	obj, err := sm.FindObject("SmartNIC", "", sn.ObjectMeta.Name)
+func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.SmartNIC, writeback bool) error {
+	obj, err := sm.FindObject("SmartNIC", "", updObj.ObjectMeta.Name)
 	if err != nil {
-		log.Errorf("Can not find the smartnic %s err: %v", sn.ObjectMeta.Name, err)
+		log.Errorf("Can not find the smartnic %s err: %v", updObj.ObjectMeta.Name, err)
 		return fmt.Errorf("SmartNIC not found")
 	}
 
-	sns, err := SmartNICStateFromObj(obj)
+	if updObj.Spec.Hostname == "" {
+		err = fmt.Errorf("Error updating smartnic state: SmartNIC has empty hostname: %+v", updObj)
+		log.Errorf(err.Error())
+		return err
+	}
+
+	cachedState, err := SmartNICStateFromObj(obj)
 	if err != nil {
 		log.Errorf("Wrong object type in memdb! Expected SmartNIC, got %T", obj)
 		return err
 	}
-	sns.SmartNIC = sn
+
+	sm.hostnameToSmartNICMapLock.Lock()
+	if cachedState.Spec.Hostname != updObj.Spec.Hostname &&
+		cachedState.Status.AdmissionPhase != cluster.SmartNICStatus_REJECTED.String() {
+		_, ok := sm.hostnameToSmartNICMap[cachedState.Spec.Hostname]
+		if !ok || cachedState.Spec.Hostname == "" {
+			log.Errorf("Error updating hostnameToSmartNICMap, key %s does not exist or is empty", cachedState.Spec.Hostname)
+			// continue anyway
+		}
+		delete(sm.hostnameToSmartNICMap, cachedState.Spec.Hostname)
+	}
+	// update hostnameToSmartNICMap entry even if there is no hostname change so the map
+	// and the cache stay in sync and we don't keep old objects around
+	if updObj.Status.AdmissionPhase != cluster.SmartNICStatus_REJECTED.String() {
+		sm.hostnameToSmartNICMap[updObj.Spec.Hostname] = updObj
+	}
+	sm.hostnameToSmartNICMapLock.Unlock()
+
+	cachedState.SmartNIC = updObj
 
 	// store it in local DB
-	err = sm.memDB.UpdateObject(sns)
+	err = sm.memDB.UpdateObject(cachedState)
 	if err != nil {
 		log.Errorf("Error storing smartnic in memdb. Err: %v", err)
 		return err
 	}
 
 	if writeback {
-		nicObj := sn
+		nicObj := updObj
 		ok := false
 		for i := 0; i < maxAPIServerWriteRetries; i++ {
 			ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
@@ -171,12 +214,23 @@ func (sm *Statemgr) UpdateSmartNIC(sn *cluster.SmartNIC, writeback bool) error {
 		}
 	}
 
-	log.Debugf("Updated SmartNIC state {%+v}", sns)
+	log.Debugf("Updated SmartNIC state {%+v}", cachedState)
 	return nil
 }
 
 // DeleteSmartNIC deletes a smartNIC state
 func (sm *Statemgr) DeleteSmartNIC(sn *cluster.SmartNIC) error {
+	if sn.Status.AdmissionPhase != cluster.SmartNICStatus_REJECTED.String() {
+		sm.hostnameToSmartNICMapLock.Lock()
+		_, ok := sm.hostnameToSmartNICMap[sn.Spec.Hostname]
+		if !ok || sn.Spec.Hostname == "" {
+			log.Errorf("Error updating hostnameToSmartNICMap, key %s does not exist or is empty", sn.Spec.Hostname)
+			// continue anyway
+		}
+		delete(sm.hostnameToSmartNICMap, sn.Spec.Hostname)
+		sm.hostnameToSmartNICMapLock.Unlock()
+	}
+
 	// delete it from the DB
 	err := sm.memDB.DeleteObject(sn)
 	if err != nil {
@@ -187,4 +241,11 @@ func (sm *Statemgr) DeleteSmartNIC(sn *cluster.SmartNIC) error {
 	// Deletes are never written back to ApiServer
 	log.Infof("Deleted SmartNIC state {%+v}", sn.ObjectMeta)
 	return nil
+}
+
+// GetSmartNICByHostname returns the SmartNIC object for a given hostname
+func (sm *Statemgr) GetSmartNICByHostname(hostname string) *cluster.SmartNIC {
+	sm.hostnameToSmartNICMapLock.RLock()
+	defer sm.hostnameToSmartNICMapLock.RUnlock()
+	return sm.hostnameToSmartNICMap[hostname]
 }

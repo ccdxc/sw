@@ -3,6 +3,8 @@
 package cache
 
 import (
+	"sync"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -19,6 +21,10 @@ type Statemgr struct {
 
 	// Implement APIClientGetter interface for ApiServer access
 	clientGetter APIClientGetter
+
+	// hostnameToSmartNICMap is a cache of known SmartNIC objects indexed by hostname
+	hostnameToSmartNICMap     map[string]*cluster.SmartNIC
+	hostnameToSmartNICMapLock sync.RWMutex
 }
 
 // FindObject looks up an object in local db
@@ -61,8 +67,9 @@ func NewStatemgr(clientGetter APIClientGetter) *Statemgr {
 
 	// create new statemgr instance
 	statemgr := &Statemgr{
-		memDB:        memdb.NewMemdb(),
-		clientGetter: clientGetter,
+		memDB:                 memdb.NewMemdb(),
+		clientGetter:          clientGetter,
+		hostnameToSmartNICMap: make(map[string]*cluster.SmartNIC),
 	}
 
 	return statemgr

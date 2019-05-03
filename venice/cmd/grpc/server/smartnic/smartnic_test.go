@@ -374,6 +374,13 @@ func verifySmartNICObj(t *testing.T, name string, exists bool, phase, host strin
 				log.Infof("ApiServer object does not match local cached object. ApiServer: %+v, Cache: %+v", nicObj, nicState.SmartNIC)
 				return false, nil
 			}
+			if phase != cmd.SmartNICStatus_REJECTED.String() {
+				nicByHostname := cmdenv.StateMgr.GetSmartNICByHostname(nicState.Spec.Hostname)
+				if nicByHostname != nicState.SmartNIC {
+					log.Errorf("Got incorrect smartNIC object when getting by hostname. Expected: %+v obtained: %+v", nicState.SmartNIC, nicByHostname)
+					return false, nil
+				}
+			}
 			return true, nil
 		} else {
 			if nicState != nil {
@@ -507,6 +514,8 @@ func setHostSmartNICIDs(t *testing.T, meta *api.ObjectMeta, smartnics ...cmd.Sma
 // if the request is accepted by the server, it returns the challenge response to be sent in Phase 2,
 // otherwise it returns the error message sent by the server
 func doPhase1Exchange(t *testing.T, stream grpc.SmartNICRegistration_RegisterNICClient, mac, nicHostname string, validCert, expectChallenge bool) (*grpc.NICAdmissionRequest, *grpc.AuthenticationResponse, *grpc.NICAdmissionResponse) {
+	Assert(t, nicHostname != "", "nicHostname needs to be specified")
+
 	// create a platform agent and NMD instance to access factory key/cert
 	pa, err := platform.NewNaplesPlatformAgent()
 	AssertOk(t, err, "Error creating platform agent. Err: %v", err)
@@ -848,7 +857,7 @@ func TestRegisterSmartNICTimeouts(t *testing.T) {
 		}
 		log.Infof("NIC %s, sleepTime: %v, expectSuccess: %v", mac, sleepTime, expectSuccess)
 
-		_, challengeResp, errResp := doPhase1Exchange(t, stream, host.Spec.SmartNICs[0].MACAddress, "", true, true)
+		_, challengeResp, errResp := doPhase1Exchange(t, stream, host.Spec.SmartNICs[0].MACAddress, mac, true, true)
 		Assert(t, errResp == nil, fmt.Sprintf("Server returned unexpected error: %+v", err))
 
 		time.Sleep(sleepTime)
@@ -1006,6 +1015,7 @@ func TestUpdateSmartNIC(t *testing.T) {
 			},
 			MgmtMode:    cmd.SmartNICSpec_NETWORK.String(),
 			NetworkMode: cmd.SmartNICSpec_OOB.String(),
+			Hostname:    nicName,
 		},
 		Status: cmd.SmartNICStatus{
 			PrimaryMAC:     "2222.2222.2222",
@@ -1628,7 +1638,6 @@ func TestHostNICPairing(t *testing.T) {
 	for i := 0; i < numHostsAndNICs; i++ {
 		verifySmartNICObj(t, nicMAC(i), true, cmd.SmartNICStatus_PENDING.String(), "")
 		verifyHostObj(t, hostName(i), "")
-		defer deleteSmartNIC(api.ObjectMeta{Name: nicMAC(i)})
 	}
 
 	// Admit NICs

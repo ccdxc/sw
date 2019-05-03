@@ -266,21 +266,10 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 	return refObj, err
 }
 
-func (s *RPCServer) isHostnameUnique(subj *cluster.SmartNIC) (bool, error) {
-	nics, err := s.stateMgr.ListSmartNICs()
-	if err != nil {
-		return false, err
-	}
-
-	for _, n := range nics {
-		n.RLock()
-		if subj.Spec.Hostname == n.Spec.Hostname && subj.Name != n.Name {
-			n.RUnlock()
-			return false, nil
-		}
-		n.RUnlock()
-	}
-	return true, nil
+func (s *RPCServer) isHostnameUnique(subj *cluster.SmartNIC) bool {
+	nic := s.stateMgr.GetSmartNICByHostname(subj.Spec.Hostname)
+	// no need to lock nic for reading as Name is immutable
+	return nic == nil || nic.Name == subj.Name
 }
 
 // RegisterNIC handles the register NIC request and upon validation creates SmartNIC object.
@@ -416,11 +405,6 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			return intErrResp, errors.Wrapf(err, "Error getting Cluster object")
 		}
 
-		hostnameUnique, err := s.isHostnameUnique(&naplesNIC)
-		if err != nil {
-			return intErrResp, errors.Wrapf(err, "Error getting SmartNIC list")
-		}
-
 		var nicObj *cluster.SmartNIC
 		var smartNICObjExists bool // does the SmartNIC object already exist ?
 		nicObjState, err := s.stateMgr.FindSmartNIC(name)
@@ -434,7 +418,11 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		} else {
 			nicObjState.Lock()
 			defer nicObjState.Unlock()
-			nicObj = nicObjState.SmartNIC
+			// we need to work on a copy of the cached object, as opposed to making modifications in-place, because
+			// UpdateSmartNIC has logic that triggers only if the updated object differs from the cached one
+			updNIC := cluster.SmartNIC{}
+			_, err = nicObjState.SmartNIC.Clone(&updNIC)
+			nicObj = &updNIC
 			smartNICObjExists = true
 		}
 
@@ -446,7 +434,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 		}
 
 		// If hostname supplied by NAPLES is not unique, reject but still create SmartNIC object
-		if !hostnameUnique {
+		if !s.isHostnameUnique(&naplesNIC) {
 			nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_REJECTED.String()
 			nicObj.Status.AdmissionPhaseReason = "Hostname is not unique"
 			nicObj.Status.Conditions = nil
