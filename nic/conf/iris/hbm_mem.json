@@ -390,6 +390,102 @@
             "reset": true
         },
         {
+            "_comment" : "upto 1K namespaces x 64B",
+            "name": "nvme-nscb",
+            "size": "64K",
+            "reset": true
+        },
+        {
+            "_comment" : "upto 4K cmd-context-pages x 2KB",
+            "name": "nvme-cmd-context-pages",
+            "size": "8192K",
+            "reset": true
+        },
+        {
+            "_comment" : "upto 4K cmd-context-page entries x 2B",
+            "name": "nvme-cmd-context-ring",
+            "size": "8K",
+            "reset": true
+        },
+        {
+            "_comment" : "upto 1K tx-AOL-pages x 128B",
+            "name": "nvme-tx-aol-pages",
+            "size": "128K",
+            "reset": true
+        },
+        {
+            "_comment" : "upto 1K rx-AOL-pages x 128B",
+            "name": "nvme-rx-aol-pages",
+            "size": "128K",
+            "reset": true
+        },
+        {
+            "_comment" : "upto 1K tx-AOL-ring entries x 2B",
+            "name": "nvme-tx-aol-ring",
+            "size": "2K",
+            "reset": true
+        },
+        {
+            "_comment" : "upto 1K rx-AOL-ring entries x 2B",
+            "name": "nvme-rx-aol-ring",
+            "size": "2K",
+            "reset": true
+        },
+        {
+            "_comment" : "1 entry x 64B",
+            "name": "nvme-tx-resourcecb",
+            "size": "64B",
+            "reset": true
+        },
+        {
+            "_comment" : "1 entry x 64B",
+            "name": "nvme-rx-resourcecb",
+            "size": "64B",
+            "reset": true
+        },
+        {
+            "_comment" : "4K entries x 64B",
+            "name": "nvme-txsessprodcb",
+            "size": "256K",
+            "reset": true
+        },
+        {
+            "_comment" : "4K entries x 64B",
+            "name": "nvme-rxsessprodcb",
+            "size": "256K",
+            "reset": true
+        },
+        {
+            "_comment" : "4K sessions x 64 deep x 4B",
+            "name": "nvme-tx-sess-xtsq",
+            "size": "1024K",
+            "reset": true
+        },
+        {
+            "_comment" : "4K sessions x 64 deep x 4B",
+            "name": "nvme-tx-sess-dgstq",
+            "size": "1024K",
+            "reset": true
+        },
+        {
+            "_comment" : "4K sessions x 64 deep x 4B",
+            "name": "nvme-rx-sess-xtsq",
+            "size": "1024K",
+            "reset": true
+        },
+        {
+            "_comment" : "4K sessions x 64 deep x 4B",
+            "name": "nvme-rx-sess-dgstq",
+            "size": "1024K",
+            "reset": true
+        },
+        {
+            "_comment" : "active session bitmap, 64K / 8",
+            "name": "nvme-active-session-bitmap",
+            "size": "8K",
+            "reset": true
+        },
+        {
             "name": "ipfix",
             "size": "32K"
         },

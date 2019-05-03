@@ -14,7 +14,7 @@ namespace pd {
 
 #define IPSEC_N2H_GLOBAL_STATS_OFFSET 512
 
-#define P4PLUS_SYMBOLS_MAX 60
+#define P4PLUS_SYMBOLS_MAX 77
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -301,6 +301,75 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
 
     symbols[i].name = LIF_STATS_BASE;
     symbols[i].val = get_mem_addr(CAPRI_HBM_REG_LIF_STATS);
+    i++;
+
+    //NVMe related
+    symbols[i].name = NVME_NSCB_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_NSCB_BASE);
+    i++;
+
+    symbols[i].name = NVME_CMD_CONTEXT_PAGE_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_CMD_CONTEXT_PAGE_BASE);
+    i++;
+
+    symbols[i].name = NVME_CMD_CONTEXT_RING_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_CMD_CONTEXT_RING_BASE);
+    i++;
+
+    symbols[i].name = NVME_TX_RESOURCECB;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_TX_RESOURCECB);
+    i++;
+
+    symbols[i].name = NVME_RX_RESOURCECB;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_RX_RESOURCECB);
+    i++;
+
+    symbols[i].name = NVME_TXSESSPRODCB_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_TXSESSPRODCB_BASE);
+    i++;
+
+    symbols[i].name = NVME_RXSESSPRODCB_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_RXSESSPRODCB_BASE);
+    i++;
+
+    symbols[i].name = NVME_TX_AOL_PAGE_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_TX_AOL_PAGE_BASE);
+    i++;
+
+    symbols[i].name = NVME_TX_AOL_RING_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_TX_AOL_RING_BASE);
+    i++;
+
+    symbols[i].name = NVME_RX_AOL_PAGE_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_RX_AOL_PAGE_BASE);
+    i++;
+
+    symbols[i].name = NVME_RX_AOL_RING_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_TX_AOL_RING_BASE);
+    i++;
+
+    symbols[i].name = NVME_TX_NMDPR_RING_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_TX_NMDPR_RING_BASE);
+    i++;
+
+    symbols[i].name = NVME_RX_NMDPR_RING_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_TX_NMDPR_RING_BASE);
+    i++;
+
+    symbols[i].name = NVME_TX_SESS_XTSQ_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_TX_SESS_XTSQ_BASE);
+    i++;
+
+    symbols[i].name = NVME_TX_SESS_DGSTQ_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_TX_SESS_DGSTQ_BASE);
+    i++;
+
+    symbols[i].name = NVME_RX_SESS_XTSQ_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_RX_SESS_XTSQ_BASE);
+    i++;
+
+    symbols[i].name = NVME_RX_SESS_DGSTQ_BASE;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_RX_SESS_DGSTQ_BASE);
     i++;
 
     // Please increment CAPRI_P4PLUS_NUM_SYMBOLS when you want to add more below

@@ -280,7 +280,7 @@ typedef struct nvme_resourcecb_s {
 
 
 typedef struct nvme_cmd_context_s {
-    uint8_t pad[4096];
+    uint8_t pad[2048];
 } nvme_cmd_context_t;
 
 typedef struct nvme_cmd_context_ring_entry_s {

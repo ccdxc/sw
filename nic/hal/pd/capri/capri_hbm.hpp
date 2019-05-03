@@ -110,6 +110,27 @@
 #define CAPRI_HBM_REG_P4_HWERR_STATS        "p4_hwerr_stats"
 #define CAPRI_HBM_REG_QOS_DSCP_COS_MAP     "qos-dscp-cos-map"
 #define CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS "tcp_proxy_per_flow_stats"
+#define CAPRI_HBM_REG_NVME                        "nvme"
+#define CAPRI_HBM_NVME_NSCB_BASE                  "nvme-nscb"
+#define CAPRI_HBM_NVME_CMD_CONTEXT_PAGE_BASE      "nvme-cmd-context-pages"
+#define CAPRI_HBM_NVME_CMD_CONTEXT_RING_BASE      "nvme-cmd-context-ring"
+#define CAPRI_HBM_NVME_TX_RESOURCECB              "nvme-tx-resourcecb"
+#define CAPRI_HBM_NVME_RX_RESOURCECB              "nvme-rx-resourcecb"
+#define CAPRI_HBM_NVME_TXSESSPRODCB_BASE          "nvme-txsessprodcb"
+#define CAPRI_HBM_NVME_RXSESSPRODCB_BASE          "nvme-rxsessprodcb"
+#define CAPRI_HBM_NVME_TX_AOL_PAGE_BASE           "nvme-tx-aol-pages"
+#define CAPRI_HBM_NVME_TX_AOL_RING_BASE           "nvme-tx-aol-ring"
+#define CAPRI_HBM_NVME_RX_AOL_PAGE_BASE           "nvme-rx-aol-pages"
+#define CAPRI_HBM_NVME_RX_AOL_RING_BASE           "nvme-rx-aol-ring"
+#define CAPRI_HBM_NVME_TX_SESS_XTSQ_BASE          "nvme-tx-sess-xtsq"
+#define CAPRI_HBM_NVME_TX_SESS_DGSTQ_BASE         "nvme-tx-sess-dgstq"
+#define CAPRI_HBM_NVME_RX_SESS_XTSQ_BASE          "nvme-rx-sess-xtsq"
+#define CAPRI_HBM_NVME_RX_SESS_DGSTQ_BASE         "nvme-rx-sess-dgstq"
+#define CAPRI_HBM_NVME_ACTIVE_SESSION_BITMAP      "nvme-active-session-bitmap"
+#define CAPRI_HBM_NVME_TX_NMDPR_RING_BASE         CAPRI_HBM_REG_NMDPR_BIG_TX
+#define CAPRI_HBM_NVME_RX_NMDPR_RING_BASE         CAPRI_HBM_REG_NMDPR_BIG_RX
+
+
 
 #define CAPRI_NUM_SEMAPHORES            512
 
@@ -193,4 +214,25 @@
 #define LIF_STATS_BASE                  "lif_stats_base"
 
 #define QOS_DSCP_COS_MAP_BASE           "qos_dscp_cos_map_addr"
+
+#define NVME_NSCB_BASE                  "nvme_nscb_base"
+#define NVME_CMD_CONTEXT_PAGE_BASE      "nvme_cmd_context_page_base"
+#define NVME_CMD_CONTEXT_RING_BASE      "nvme_cmd_context_ring_base"
+#define NVME_TX_RESOURCECB              "nvme_tx_resourcecb_addr"
+#define NVME_RX_RESOURCECB              "nvme_rx_resourcecb_addr"
+#define NVME_TXSESSPRODCB_BASE          "nvme_txsessprodcb_base"
+#define NVME_RXSESSPRODCB_BASE          "nvme_rxsessprodcb_base"
+#define NVME_TX_AOL_PAGE_BASE           "nvme_tx_aol_page_base"
+#define NVME_TX_AOL_RING_BASE           "nvme_tx_aol_ring_base"
+#define NVME_RX_AOL_PAGE_BASE           "nvme_rx_aol_page_base"
+#define NVME_RX_AOL_RING_BASE           "nvme_rx_aol_ring_base"
+#define NVME_TX_SESS_XTSQ_BASE          "nvme_tx_sess_xtsq_base"
+#define NVME_TX_SESS_DGSTQ_BASE         "nvme_tx_sess_dgstq_base"
+#define NVME_RX_SESS_XTSQ_BASE          "nvme_rx_sess_xtsq_base"
+#define NVME_RX_SESS_DGSTQ_BASE         "nvme_rx_sess_dgstq_base"
+#define NVME_ACTIVE_SESSION_BITMAP      "nvme_active_session_bitmap"
+#define NVME_TX_NMDPR_RING_BASE         TNMDPR_BIG_TABLE_BASE
+#define NVME_RX_NMDPR_RING_BASE         RNMDPR_BIG_TABLE_BASE
+
+
 #endif    // __CAPRI_HBM_HPP__
