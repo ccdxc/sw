@@ -42,6 +42,7 @@ using sdk::lib::indexer;
 #define CAPRI_TM_SCHED_TIMER           5000
 #define CAPRI_TM_CLK_PERIOD            833
 #define CAPRI_TM_BUS_WIDTH             512
+#define CAPRI_TM_MAX_QUEUES            32
 
 #define CAPRI_TM_BUFFER_ISLAND_0_CELL_COUNT 8192
 #define CAPRI_TM_BUFFER_ISLAND_1_CELL_COUNT 5120
@@ -295,6 +296,7 @@ typedef struct tm_iq_stats_s {
     tm_iq_oflow_fifo_stats_t oflow;
     uint32_t                 buffer_occupancy;
     uint32_t                 peak_occupancy;
+    uint64_t                 port_monitor;
 } __PACK__ tm_iq_stats_t;
 
 sdk_ret_t capri_tm_get_iq_stats(tm_port_t port, tm_q_t iq,
@@ -304,6 +306,7 @@ sdk_ret_t capri_tm_reset_iq_stats(tm_port_t port, tm_q_t iq);
 
 typedef struct tm_oq_stats_s {
     uint32_t queue_depth;
+    uint64_t port_monitor;
 } __PACK__ tm_oq_stats_t;
 
 sdk_ret_t capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq,
@@ -404,6 +407,14 @@ cap_pb_sched_spq_pgm (uint32_t chip_id,
 uint32_t capri_tm_get_port_occupancy(tm_port_t port, uint32_t iq);
 uint32_t capri_tm_get_xon_threshold(uint32_t ctx);
 uint32_t capri_tm_get_xoff_threshold(uint32_t ctx);
+uint64_t capri_tm_get_port_mon_out (int chip_id,
+                                    int inst_id,
+                                    tm_port_t tm_port,
+                                    tm_q_t tm_oq);
+uint64_t capri_tm_get_port_mon_in (int chip_id,
+                                   int inst_id,
+                                   tm_port_t tm_port,
+                                   tm_q_t tm_iq);
 
 }    // namespace capri
 }    // namespace platform

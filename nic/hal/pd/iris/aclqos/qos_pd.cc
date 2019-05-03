@@ -1521,6 +1521,7 @@ qos_class_pd_populate_qos_queue_stats (tm_port_t port,
             input_stats->mutable_oflow_fifo_stats()->set_max_fifo_depth(iq_stats.oflow.max_fifo_depth);
             input_stats->set_buffer_occupancy(iq_stats.buffer_occupancy);
             input_stats->set_peak_occupancy(iq_stats.peak_occupancy);
+            input_stats->set_port_monitor(iq_stats.port_monitor);
         }
     }
 
@@ -1539,6 +1540,7 @@ qos_class_pd_populate_qos_queue_stats (tm_port_t port,
             auto output_stats = q_stats->add_output_queue_stats();
             output_stats->set_output_queue_idx(oqs[i].oq);
             output_stats->set_queue_depth(oq_stats.queue_depth);
+            output_stats->set_port_monitor(oq_stats.port_monitor);
         }
     }
     return first_err_ret;
@@ -1592,9 +1594,8 @@ qos_class_pd_get_queue_stats (tm_port_t port,
         oqs[i].valid = true;
         oqs[i].oq = i;
     }
-    
-    return qos_class_pd_populate_qos_queue_stats(port, iqs, 
-                                                 oqs, q_stats);
+
+    return qos_class_pd_populate_qos_queue_stats(port, iqs, oqs, q_stats);
 }
 
 // ----------------------------------------------------------------------------

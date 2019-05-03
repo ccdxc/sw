@@ -4141,7 +4141,7 @@ capri_tm_get_iq_stats(tm_port_t port, tm_q_t iq, tm_iq_stats_t *iq_stats)
     capri_tm_get_buffer_occupancy(port, iq, &cur_occupancy, &peak_occupancy);
     iq_stats->buffer_occupancy = CAPRI_TM_CELL_SIZE * cur_occupancy;
     iq_stats->peak_occupancy = CAPRI_TM_CELL_SIZE * peak_occupancy;
-
+    iq_stats->port_monitor = capri_tm_get_port_mon_in(0, 0, port, iq);
     return sdk::SDK_RET_OK;
 }
 
@@ -4198,6 +4198,7 @@ capri_tm_get_oq_stats(tm_port_t port, tm_q_t oq, tm_oq_stats_t *oq_stats)
     oq_stats->queue_depth = pack_bytes_unpack((uint8_t *)pbc_csr.sta_oq[port].depth_value(),
                                               oq*16, 16);
 #endif
+    oq_stats->port_monitor = capri_tm_get_port_mon_out(0, 0, port, oq);
     return sdk::SDK_RET_OK;
 }
 
@@ -4358,6 +4359,97 @@ capri_tm_get_xoff_threshold (uint32_t ctx)
     xoff_threshold = cpp_helper.get_slc(xoff_val, ctx*20, ((ctx+1)*20)-1).convert_to<uint32_t>();
 
     return (xoff_threshold << 9);
+}
+
+uint64_t
+capri_tm_get_port_mon_out (int chip_id,
+                           int inst_id,
+                           tm_port_t tm_port,
+                           tm_q_t tm_oq)
+{
+    cpp_int count;
+    uint32_t cfg_port_0;
+    uint32_t cfg_port_1;
+    uint32_t cfg_port_2;
+    uint32_t cfg_port_3;
+    int port = 0;
+    int cur_address = 0;
+    cap_pbc_csr_t &pbc_csr =
+                CAP_BLK_REG_MODEL_ACCESS(cap_pbc_csr_t, chip_id, inst_id);
+
+    pbc_csr.cfg_port_mon_out.read();
+    cfg_port_0 = pbc_csr.cfg_port_mon_out.port_0().convert_to<int>();
+    cfg_port_1 = pbc_csr.cfg_port_mon_out.port_0().convert_to<int>();
+    cfg_port_2 = pbc_csr.cfg_port_mon_out.port_0().convert_to<int>();
+    cfg_port_3 = pbc_csr.cfg_port_mon_out.port_0().convert_to<int>();
+
+    if (tm_port == cfg_port_0) {
+        port = 0;
+    } else if (tm_port == cfg_port_1) {
+        port = 1;
+    } else if (tm_port == cfg_port_2) {
+        port = 2;
+    } else if (tm_port == cfg_port_3) {
+        port = 3;
+    } else {
+        // port monitor not configured for tm_port
+        return 0;
+    }
+
+    cur_address = (port * CAPRI_TM_MAX_QUEUES) + tm_oq;
+    cap_pb_read_port_mon_out(chip_id, inst_id, cur_address, count);
+    return count.convert_to<uint64_t>();
+}
+
+uint64_t
+capri_tm_get_port_mon_in (int chip_id,
+                          int inst_id,
+                          tm_port_t tm_port,
+                          tm_q_t tm_iq)
+{
+    uint32_t eth_port_start = 0;
+    int cur_address = 0;
+    cpp_int count;
+    cap_pbc_csr_t &pbc_csr =
+                CAP_BLK_REG_MODEL_ACCESS(cap_pbc_csr_t, chip_id, inst_id);
+
+    pbc_csr.cfg_port_mon_in.read();
+    eth_port_start = pbc_csr.cfg_port_mon_in.eth().convert_to<uint32_t>();
+
+    // port monitor order in HW - INGRESS, EGRESS, DMA, ETH
+    switch (tm_port) {
+        case TM_PORT_INGRESS:
+            cur_address = 0 + tm_iq;
+            break;
+
+        case TM_PORT_EGRESS:
+            cur_address = capri_tm_get_num_iqs_for_port(TM_PORT_INGRESS) +
+                          tm_iq;
+            break;
+
+        case TM_PORT_DMA:
+            cur_address = capri_tm_get_num_iqs_for_port(TM_PORT_INGRESS) +
+                          capri_tm_get_num_iqs_for_port(TM_PORT_EGRESS)  +
+                          tm_iq;
+            break;
+
+        default:
+            // NCSI and UPLINKS
+            // only 6 ETH ports can be monitored
+            if (tm_port > eth_port_start + 5) {
+                return 0;
+            }
+            cur_address = capri_tm_get_num_iqs_for_port(TM_PORT_INGRESS) +
+                          capri_tm_get_num_iqs_for_port(TM_PORT_EGRESS)  +
+                          capri_tm_get_num_iqs_for_port(TM_PORT_DMA)     +
+                          (capri_tm_get_num_iqs_for_port(TM_PORT_TYPE_UPLINK)
+                                                              * tm_port) +
+                          tm_iq;
+            break;
+    }
+
+    cap_pb_read_port_mon_in(chip_id, inst_id, cur_address, count);
+    return count.convert_to<uint64_t>();
 }
 
 } // namespace capri

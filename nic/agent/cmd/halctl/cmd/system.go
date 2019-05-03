@@ -447,13 +447,15 @@ func systemPbDropStatsShowPortEntry(entry *halproto.PacketBufferPortStats) {
 type InputQueueInfo struct {
 	bufferOccupancy uint32
 	peakOccupancy   uint32
+	portMonitor     uint64
 	valid           bool
 }
 
 // OutputQueueInfo defines the output queue details
 type OutputQueueInfo struct {
-	queueDepth uint32
-	valid      bool
+	queueDepth  uint32
+	portMonitor uint64
+	valid       bool
 }
 
 func systemPbOqCountersShowInternal(outputQueueInfo [][]OutputQueueInfo, startQ uint32, endQ uint32) {
@@ -462,8 +464,8 @@ func systemPbOqCountersShowInternal(outputQueueInfo [][]OutputQueueInfo, startQ 
 	fmt.Printf("%-5s", "Port")
 	dashes.WriteString(strings.Repeat("-", 5))
 	for iQ := startQ; iQ <= endQ; iQ++ {
-		fmt.Printf("%-8d", iQ)
-		dashes.WriteString(strings.Repeat("-", 8))
+		fmt.Printf("%-18d", iQ)
+		dashes.WriteString(strings.Repeat("-", 18))
 	}
 	fmt.Printf("\n" + dashes.String() + "\n")
 	dashes.Reset()
@@ -471,8 +473,8 @@ func systemPbOqCountersShowInternal(outputQueueInfo [][]OutputQueueInfo, startQ 
 	fmt.Printf("%-5s", " ")
 	dashes.WriteString(strings.Repeat("-", 5))
 	for iQ := startQ; iQ <= endQ; iQ++ {
-		fmt.Printf("%-8s", "depth")
-		dashes.WriteString(strings.Repeat("-", 8))
+		fmt.Printf("%-8s%-10s", "depth", "port_mon")
+		dashes.WriteString(strings.Repeat("-", 18))
 	}
 	fmt.Printf("\n" + dashes.String() + "\n")
 
@@ -480,10 +482,11 @@ func systemPbOqCountersShowInternal(outputQueueInfo [][]OutputQueueInfo, startQ 
 		fmt.Printf("%-5d    ", pbPort)
 		for iQ := startQ; iQ <= endQ; iQ++ {
 			if outputQueueInfo[pbPort][iQ].valid == true {
-				fmt.Printf("%-8d",
-					outputQueueInfo[pbPort][iQ].queueDepth)
+				fmt.Printf("%-8d%-10d",
+					outputQueueInfo[pbPort][iQ].queueDepth,
+					outputQueueInfo[pbPort][iQ].portMonitor)
 			} else {
-				fmt.Printf("%-8s", "-")
+				fmt.Printf("%-18s", "-")
 			}
 		}
 		fmt.Printf("\n")
@@ -492,11 +495,15 @@ func systemPbOqCountersShowInternal(outputQueueInfo [][]OutputQueueInfo, startQ 
 }
 
 func systemPbOqCountersShow(outputQueueInfo [][]OutputQueueInfo) {
-	fmt.Printf("Output Queue Depth\n")
+	fmt.Printf("Output Queue Depth and Port monitor\n")
 	fmt.Printf("------------------\n")
-	systemPbOqCountersShowInternal(outputQueueInfo, 0, 15)
+	systemPbOqCountersShowInternal(outputQueueInfo, 0, 7)
 	fmt.Printf("\n")
-	systemPbOqCountersShowInternal(outputQueueInfo, 16, 31)
+	systemPbOqCountersShowInternal(outputQueueInfo, 8, 15)
+	fmt.Printf("\n")
+	systemPbOqCountersShowInternal(outputQueueInfo, 16, 23)
+	fmt.Printf("\n")
+	systemPbOqCountersShowInternal(outputQueueInfo, 24, 31)
 	fmt.Printf("\n")
 }
 
@@ -506,8 +513,8 @@ func systemPbOccupancyCounterShowInternal(inputQueueInfo [][]InputQueueInfo, sta
 	fmt.Printf("%-5s", "Port")
 	dashes.WriteString(strings.Repeat("-", 5))
 	for iQ := startQ; iQ <= endQ; iQ++ {
-		fmt.Printf("%-16d", iQ)
-		dashes.WriteString(strings.Repeat("-", 16))
+		fmt.Printf("%-26d", iQ)
+		dashes.WriteString(strings.Repeat("-", 26))
 	}
 	fmt.Printf("\n" + dashes.String() + "\n")
 	dashes.Reset()
@@ -515,8 +522,8 @@ func systemPbOccupancyCounterShowInternal(inputQueueInfo [][]InputQueueInfo, sta
 	fmt.Printf("%-5s", " ")
 	dashes.WriteString(strings.Repeat("-", 5))
 	for iQ := startQ; iQ <= endQ; iQ++ {
-		fmt.Printf("%-8s%-8s", "occ", "peak")
-		dashes.WriteString(strings.Repeat("-", 16))
+		fmt.Printf("%-8s%-8s%-10s", "occ", "peak", "port_mon")
+		dashes.WriteString(strings.Repeat("-", 26))
 	}
 	fmt.Printf("\n" + dashes.String() + "\n")
 
@@ -524,11 +531,12 @@ func systemPbOccupancyCounterShowInternal(inputQueueInfo [][]InputQueueInfo, sta
 		fmt.Printf("%-5d", pbPort)
 		for iQ := startQ; iQ <= endQ; iQ++ {
 			if inputQueueInfo[pbPort][iQ].valid == true {
-				fmt.Printf("%-8d%-8d",
+				fmt.Printf("%-8d%-8d%-10d",
 					inputQueueInfo[pbPort][iQ].bufferOccupancy,
-					inputQueueInfo[pbPort][iQ].peakOccupancy)
+					inputQueueInfo[pbPort][iQ].peakOccupancy,
+					inputQueueInfo[pbPort][iQ].portMonitor)
 			} else {
-				fmt.Printf("%-8s%-8s", "-", "-")
+				fmt.Printf("%-8s%-8s%-10s", "-", "-", "-")
 			}
 		}
 		fmt.Printf("\n")
@@ -537,7 +545,7 @@ func systemPbOccupancyCounterShowInternal(inputQueueInfo [][]InputQueueInfo, sta
 }
 
 func systemPbOccupancyCountersShow(inputQueueInfo [][]InputQueueInfo) {
-	fmt.Printf("Input Queue Occupancy and Peak\n")
+	fmt.Printf("Input Queue Occupancy, Peak and Port monitor\n")
 	fmt.Printf("------------------------------\n")
 	systemPbOccupancyCounterShowInternal(inputQueueInfo, 0, 7)
 	fmt.Printf("\n")
@@ -556,15 +564,19 @@ func systemPbOccupancyOqCountersPopulate(portStats *halproto.PacketBufferPortSta
 		inputQueueIndex := inputQueueStats.GetInputQueueIdx()
 		bufferOccupancy := inputQueueStats.GetBufferOccupancy()
 		peakOccupancy := inputQueueStats.GetPeakOccupancy()
+		portMonitor := inputQueueStats.GetPortMonitor()
 		inputQueueInfo[portNum][inputQueueIndex].valid = true
 		inputQueueInfo[portNum][inputQueueIndex].bufferOccupancy = bufferOccupancy
 		inputQueueInfo[portNum][inputQueueIndex].peakOccupancy = peakOccupancy
+		inputQueueInfo[portNum][inputQueueIndex].portMonitor = portMonitor
 	}
 	for _, outputQueueStats := range portStats.GetQosQueueStats().GetOutputQueueStats() {
 		outputQueueIndex := outputQueueStats.GetOutputQueueIdx()
 		outputQueueDepth := outputQueueStats.GetQueueDepth()
+		portMonitor := outputQueueStats.GetPortMonitor()
 		outputQueueInfo[portNum][outputQueueIndex].valid = true
 		outputQueueInfo[portNum][outputQueueIndex].queueDepth = outputQueueDepth
+		outputQueueInfo[portNum][outputQueueIndex].portMonitor = portMonitor
 	}
 }
 

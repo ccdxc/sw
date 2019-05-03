@@ -206,11 +206,13 @@ message QosClassInputQueueStats {
   QosClassInputOflowQueueStats oflow_fifo_stats = 2;    // Overflow fifo stats
   uint32                       buffer_occupancy = 3;    // Instantaneous buffer occupancy in bytes
   uint32                       peak_occupancy   = 4;    // Peak buffer occupancy in bytes
+  uint64                       port_monitor     = 5;    // port monitor counter
 }
 
 message QosClassOutputQueueStats {
   uint32 output_queue_idx = 1;
   uint32 queue_depth      = 2;    // Instantaneous output queue depth in pkts
+  uint64 port_monitor     = 3;    // port monitor counter
 }
 
 message QosClassQueueStats {
