@@ -25,58 +25,12 @@ const (
 	testPassword = "Pensando0$"
 )
 
-// Creates a new file upload http request with optional extra params
-func uploadFile(srv, uri string, params map[string]string, path string) (*http.Request, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	fmt.Printf("Opened file [%v]\n", path)
-
-	userCred := &auth.PasswordCredential{
-		Username: testUser,
-		Password: testPassword,
-		Tenant:   globals.DefaultTenant,
-	}
-	ctx, err := testutils.NewLoggedInContext(context.Background(), srv, userCred)
-	if err != nil {
-		return nil, fmt.Errorf("could not login (%s)", err)
-	}
-	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
-	if !ok {
-		return nil, fmt.Errorf("no authorizaton header in context")
-	}
-
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("file", filepath.Base(path))
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Printf("uploading contents\n")
-	_, err = io.Copy(part, file)
-
-	for key, val := range params {
-		_ = writer.WriteField(key, val)
-	}
-	err = writer.Close()
-	if err != nil {
-		return nil, err
-	}
-	req, err := http.NewRequest("POST", srv+uri, body)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	req.Header.Set("Authorization", authzHeader)
-	return req, err
-}
-
 func main() {
 	URI := flag.String("uri", "https://localhost:19000", "server URI")
-	file := flag.String("file", "", "file to upload")
+	fileName := flag.String("file", "", "file to upload")
 	flag.Parse()
 
-	if *file == "" {
+	if *fileName == "" {
 		fmt.Printf("file name not provided")
 		os.Exit(-1)
 	}
@@ -89,16 +43,62 @@ func main() {
 		"Description": "image with fixes",
 		"ReleaseDate": "May2018",
 	}
-	request, err := uploadFile(sURI, reqURI, metadata, *file)
+	path := *fileName
+
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Printf("Failed to open file (%s)", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+	fmt.Printf("Opened file [%v]\n", path)
+
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	ctx, err := testutils.NewLoggedInContext(context.Background(), sURI, userCred)
+	if err != nil {
+		log.Fatalf("could not login (%s)", err)
+	}
+	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if !ok {
+		log.Fatalf("no authorizaton header in context")
+	}
+
+	reader, writer := io.Pipe()
+	mpWriter := multipart.NewWriter(writer)
+
+	req, err := http.NewRequest("POST", sURI+reqURI, reader)
 	if err != nil {
 		log.Fatal(err)
 	}
+	req.Header.Set("Content-Type", mpWriter.FormDataContentType())
+	req.Header.Set("Authorization", authzHeader)
+
+	go func() {
+		defer writer.Close()
+		defer mpWriter.Close()
+		// close(ch)
+
+		part, err := mpWriter.CreateFormFile("file", filepath.Base(path))
+		if err != nil {
+			log.Fatalf("failed to create form file (%s)", err)
+		}
+		fmt.Printf("uploading contents\n")
+		_, err = io.Copy(part, file)
+
+		for key, val := range metadata {
+			_ = mpWriter.WriteField(key, val)
+		}
+	}()
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	fmt.Printf("sending request\n")
 	client := &http.Client{Transport: transport}
-	resp, err := client.Do(request)
+	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
 	} else {

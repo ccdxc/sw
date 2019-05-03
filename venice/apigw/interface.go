@@ -124,6 +124,12 @@ type ServiceProfile interface {
 	// GetOper returns the operation involved, Unknown oper if none or more than one oper.
 	GetOper() apiintf.APIOperType
 
+	// GetAuditLevel returns the audit level if it is set. if not isSet is returned as false
+	GetAuditLevel() (level string, isSet bool)
+
+	// SetAuditLevel sets the audit level for the service profile
+	SetAuditLevel(level string) error
+
 	// Rate Limiters- TBD
 
 	// Registered hooks

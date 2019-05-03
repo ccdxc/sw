@@ -3,6 +3,8 @@ package impl
 import (
 	"context"
 
+	"github.com/pensando/sw/api/generated/audit"
+
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api/generated/apiclient"
@@ -83,11 +85,13 @@ func registerObjstoreHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	}
 	prof.AddPreAuthZHook(r.addObjUploadOps)
 	prof.AddPreCallHook(r.userContext)
+	prof.SetAuditLevel(audit.Level_Basic.String())
 	prof, err = svc.GetServiceProfile("DownloadFile")
 	if err != nil {
 		return err
 	}
 	prof.AddPreAuthZHook(r.addObjDownloadOps)
+	prof.SetAuditLevel(audit.Level_Basic.String())
 	prof, err = svc.GetCrudServiceProfile("Object", apiintf.ListOper)
 	if err != nil {
 		return err

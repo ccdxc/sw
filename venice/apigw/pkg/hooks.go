@@ -1,19 +1,23 @@
 package apigwpkg
 
 import (
+	"fmt"
+
+	auditapi "github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
 )
 
 type svcProfile struct {
-	kind     string
-	group    string
-	oper     apiintf.APIOperType
-	defProf  apigw.ServiceProfile
-	preauthn []apigw.PreAuthNHook
-	preauthz []apigw.PreAuthZHook
-	precall  []apigw.PreCallHook
-	postcall []apigw.PostCallHook
+	kind       string
+	group      string
+	auditLevel *string
+	oper       apiintf.APIOperType
+	defProf    apigw.ServiceProfile
+	preauthn   []apigw.PreAuthNHook
+	preauthz   []apigw.PreAuthZHook
+	precall    []apigw.PreCallHook
+	postcall   []apigw.PostCallHook
 }
 
 // GetKind gets the kind on which this Service profile operates on, "" if it is none or more than one kind
@@ -29,6 +33,25 @@ func (s *svcProfile) GetAPIGoup() string {
 // GetOper returns the operation involved, Unknown oper if none or more than one oper.
 func (s *svcProfile) GetOper() apiintf.APIOperType {
 	return s.oper
+}
+
+// GetAuditLevel returns the audit level if it is set. if not isSet is returned as false
+func (s *svcProfile) GetAuditLevel() (level string, isSet bool) {
+	if s.auditLevel != nil {
+		return *s.auditLevel, true
+	}
+	return auditapi.Level_Basic.String(), false
+}
+
+// SetAuditLevel sets the audit level for the service profile
+func (s *svcProfile) SetAuditLevel(level string) error {
+	switch level {
+	case auditapi.Level_Basic.String(), auditapi.Level_Request.String(), auditapi.Level_Response.String(), auditapi.Level_RequestResponse.String():
+		s.auditLevel = &level
+	default:
+		return fmt.Errorf("Unknown level [%v]", level)
+	}
+	return nil
 }
 
 // preauthNHooks returns all registered pre authn hooks

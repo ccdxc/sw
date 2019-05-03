@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/pensando/sw/api/generated/audit"
+
 	"github.com/pensando/sw/api/interfaces"
 )
 
@@ -120,4 +122,27 @@ func TestSvcProfile(t *testing.T) {
 		t.Errorf("expecting 1 pre call hooks got %d", len(tc))
 	}
 
+	// When no audit level is set
+	_, ok := mprof.GetAuditLevel()
+	if ok {
+		t.Errorf("expecting ok to be false")
+	}
+
+	err := mprof.SetAuditLevel("JunkValue")
+	if err == nil {
+		t.Errorf("Set Audit level is expected to fail")
+	}
+
+	err = mprof.SetAuditLevel(audit.Level_RequestResponse.String())
+	if err != nil {
+		t.Errorf("Set Audit level is expected to pass (%s)", err)
+	}
+
+	lvl, ok := mprof.GetAuditLevel()
+	if !ok {
+		t.Errorf("expecting ok to be true")
+	}
+	if lvl != audit.Level_RequestResponse.String() {
+		t.Errorf("unexpected level [%v]", lvl)
+	}
 }

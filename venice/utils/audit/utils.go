@@ -2,6 +2,7 @@ package audit
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 
@@ -22,10 +23,14 @@ func NewRequestObjectPopulator(reqObj interface{}, body bool) EventPopulator {
 		if reqObj == nil {
 			return nil
 		}
+		dumpBody := body
+		if event.Level == audit.Level_Basic.String() || event.Level == audit.Level_Response.String() {
+			dumpBody = false
+		}
 		switch obj := reqObj.(type) {
 		case *http.Request: // for reverse proxy use cases
 			// TODO: clear cookie header
-			b, err := httputil.DumpRequest(obj, body)
+			b, err := httputil.DumpRequest(obj, dumpBody)
 			if err != nil {
 				return err
 			}
@@ -47,9 +52,13 @@ func NewResponseObjectPopulator(resObj interface{}, body bool) EventPopulator {
 		if resObj == nil {
 			return nil
 		}
+		dumpBody := body
+		if event.Level == audit.Level_Basic.String() || event.Level == audit.Level_Request.String() {
+			dumpBody = false
+		}
 		switch obj := resObj.(type) {
 		case *http.Response: // for reverse proxy use cases
-			b, err := httputil.DumpResponse(obj, body)
+			b, err := httputil.DumpResponse(obj, dumpBody)
 			if err != nil {
 				return err
 			}
@@ -108,4 +117,20 @@ func (p *policyChecker) PopulateEvent(event *audit.Event, populators ...EventPop
 // NewPolicyChecker creates PolicyChecker to populate information in audit event based on audit policy
 func NewPolicyChecker() PolicyChecker {
 	return &policyChecker{}
+}
+
+// GetAuditLevelFromString gets the audit level given the string.
+func GetAuditLevelFromString(level string) (audit.Level, error) {
+	switch level {
+	case audit.Level_Basic.String():
+		return audit.Level_Basic, nil
+	case audit.Level_Request.String():
+		return audit.Level_Request, nil
+	case audit.Level_Response.String():
+		return audit.Level_Response, nil
+	case audit.Level_RequestResponse.String():
+		return audit.Level_RequestResponse, nil
+	default:
+		return audit.Level_Basic, fmt.Errorf("unknown level")
+	}
 }
