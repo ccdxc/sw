@@ -234,7 +234,7 @@ EXPORT_SYMBOL_GPL(ionic_api_put_dbid);
 // XXX temp func to get side-band data from 2nd half page of dev_cmd reg space.
 static int SBD_get(struct ionic_dev *idev, void *dst, size_t len)
 {
-	u32 __iomem *page32 = (void __iomem *)idev->dev_cmd;
+	u32 __iomem *page32 = (void __iomem *)idev->dev_cmd_regs;
 	u32 *dst32 = dst;
 	unsigned int i, count;
 
@@ -258,7 +258,7 @@ static int SBD_get(struct ionic_dev *idev, void *dst, size_t len)
 // XXX temp func to put side-band data into 2nd half page of dev_cmd reg space.
 static int SBD_put(struct ionic_dev *idev, void *src, size_t len)
 {
-	u32 __iomem *page32 = (void __iomem *)idev->dev_cmd;
+	u32 __iomem *page32 = (void __iomem *)idev->dev_cmd_regs;
 	u32 *src32 = src;
 	unsigned int i, count;
 

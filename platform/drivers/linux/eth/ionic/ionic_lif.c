@@ -2774,14 +2774,14 @@ int ionic_lif_identify(struct ionic *ionic)
 	unsigned int nwords;
 
 	nwords = min(ARRAY_SIZE(ident->lif.words),
-		     ARRAY_SIZE(idev->dev_cmd->data));
+		     ARRAY_SIZE(idev->dev_cmd_regs->data));
 
 	mutex_lock(&ionic->dev_cmd_lock);
 	ionic_dev_cmd_lif_identify(idev, IONIC_LIF_TYPE_CLASSIC,
 				   IONIC_IDENTITY_VERSION_1);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	for (i = 0; i < nwords; i++)
-		ident->lif.words[i] = ioread32(&idev->dev_cmd->data[i]);
+		ident->lif.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
 	mutex_unlock(&ionic->dev_cmd_lock);
 	if (err)
 		return (err);

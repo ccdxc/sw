@@ -222,7 +222,7 @@ static int ionic_dev_cmd_check_error(struct ionic_dev *idev)
 
 	if (status) {
 		IONIC_ERROR("DEVCMD(%d) failed, status: %s\n",
-			idev->dev_cmd->cmd.cmd.opcode, ionic_error_to_str(status));
+			idev->dev_cmd_regs->cmd.cmd.opcode, ionic_error_to_str(status));
 		return (EIO);
 	}
 
@@ -279,9 +279,9 @@ int ionic_identify(struct ionic *ionic)
 	strncpy(ident->drv.driver_ver_str, DRV_VERSION,
 		sizeof(ident->drv.driver_ver_str) - 1);
 
-	nwords = min(ARRAY_SIZE(ident->drv.words), ARRAY_SIZE(idev->dev_cmd->data));
+	nwords = min(ARRAY_SIZE(ident->drv.words), ARRAY_SIZE(idev->dev_cmd_regs->data));
 	for (i = 0; i < nwords; i++)
-		iowrite32(ident->drv.words[i], &idev->dev_cmd->data[i]);
+		iowrite32(ident->drv.words[i], &idev->dev_cmd_regs->data[i]);
 
 	ionic_dev_cmd_identify(idev, IONIC_IDENTITY_VERSION_1);
 
@@ -289,9 +289,9 @@ int ionic_identify(struct ionic *ionic)
 	if (err)
 		goto err_out_unmap;
 
-	nwords = min(ARRAY_SIZE(ident->dev.words), ARRAY_SIZE(idev->dev_cmd->data));
+	nwords = min(ARRAY_SIZE(ident->dev.words), ARRAY_SIZE(idev->dev_cmd_regs->data));
 	for (i = 0; i < nwords; i++)
-		ident->dev.words[i] = ioread32(&idev->dev_cmd->data[i]);
+		ident->dev.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
 
 	return 0;
 
@@ -327,9 +327,9 @@ int ionic_port_identify(struct ionic *ionic)
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
 	if (!err) {
 		nwords = min(ARRAY_SIZE(ident->port.words),
-						ARRAY_SIZE(idev->dev_cmd->data));
+						ARRAY_SIZE(idev->dev_cmd_regs->data));
 		for (i = 0; i < nwords; i++)
-			ident->port.words[i] = ioread32(&idev->dev_cmd->data[i]);
+			ident->port.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
 	}
 
 	return err;
@@ -356,9 +356,9 @@ int ionic_port_init(struct ionic *ionic)
 	}
 
 	nwords = min(ARRAY_SIZE(ident->port.config.words),
-					ARRAY_SIZE(idev->dev_cmd->data));
+					ARRAY_SIZE(idev->dev_cmd_regs->data));
 	for (i = 0; i < nwords; i++)
-		iowrite32(ident->port.config.words[i], &idev->dev_cmd->data[i]);
+		iowrite32(ident->port.config.words[i], &idev->dev_cmd_regs->data[i]);
 
 	ionic_dev_cmd_port_init(idev);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);

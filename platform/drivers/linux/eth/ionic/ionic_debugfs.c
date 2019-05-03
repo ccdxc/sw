@@ -249,7 +249,7 @@ int ionic_debugfs_add_dev_cmd(struct ionic *ionic)
 		return -ENOMEM;
 	dev_cmd_regset->regs = dev_cmd_regs;
 	dev_cmd_regset->nregs = ARRAY_SIZE(dev_cmd_regs);
-	dev_cmd_regset->base = ionic->idev.dev_cmd;
+	dev_cmd_regset->base = ionic->idev.dev_cmd_regs;
 
 	dentry = debugfs_create_regset32("dev_cmd", 0400,
 					 ionic->dentry, dev_cmd_regset);

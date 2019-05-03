@@ -50,7 +50,7 @@ int ionic_dev_setup(struct ionic *ionic)
 	}
 
 	idev->dev_info_regs = bar->vaddr + BAR0_DEV_INFO_REGS_OFFSET;
-	idev->dev_cmd = bar->vaddr + BAR0_DEV_CMD_REGS_OFFSET;
+	idev->dev_cmd_regs = bar->vaddr + BAR0_DEV_CMD_REGS_OFFSET;
 	idev->intr_status = bar->vaddr + BAR0_INTR_STATUS_OFFSET;
 	idev->intr_ctrl = bar->vaddr + BAR0_INTR_CTRL_OFFSET;
 
@@ -109,12 +109,12 @@ void ionic_dev_teardown(struct ionic *ionic)
 /* Devcmd Interface */
 u8 ionic_dev_cmd_status(struct ionic_dev *idev)
 {
-	return ioread8(&idev->dev_cmd->comp.comp.status);
+	return ioread8(&idev->dev_cmd_regs->comp.comp.status);
 }
 
 bool ionic_dev_cmd_done(struct ionic_dev *idev)
 {
-	return ioread32(&idev->dev_cmd->done) & DEV_CMD_DONE;
+	return ioread32(&idev->dev_cmd_regs->done) & DEV_CMD_DONE;
 }
 
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
@@ -123,7 +123,7 @@ void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
 	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE(comp->words); i++)
-		comp->words[i] = ioread32(&idev->dev_cmd->comp.words[i]);
+		comp->words[i] = ioread32(&idev->dev_cmd_regs->comp.words[i]);
 }
 
 void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
@@ -131,10 +131,10 @@ void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd)
 	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE(cmd->words); i++)
-		iowrite32(cmd->words[i], &idev->dev_cmd->cmd.words[i]);
+		iowrite32(cmd->words[i], &idev->dev_cmd_regs->cmd.words[i]);
 
-	iowrite32(0, &idev->dev_cmd->done);
-	iowrite32(1, &idev->dev_cmd->doorbell);
+	iowrite32(0, &idev->dev_cmd_regs->done);
+	iowrite32(1, &idev->dev_cmd_regs->doorbell);
 }
 
 /* Device commands */

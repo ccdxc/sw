@@ -3153,9 +3153,9 @@ ionic_lif_identify(struct ionic *ionic)
 	if (err)
 		return (err);
 
-	nwords = min(ARRAY_SIZE(ident->lif.words), ARRAY_SIZE(idev->dev_cmd->data));
+	nwords = min(ARRAY_SIZE(ident->lif.words), ARRAY_SIZE(idev->dev_cmd_regs->data));
 	for (i = 0; i < nwords; i++)
-		ident->lif.words[i] = ioread32(&idev->dev_cmd->data[i]);
+		ident->lif.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
 
 	IONIC_DEV_INFO(ionic->dev, "capabilities 0x%lx\n",
 		ident->lif.capabilities);

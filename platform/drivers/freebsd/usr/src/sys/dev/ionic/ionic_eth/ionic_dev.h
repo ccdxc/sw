@@ -138,7 +138,7 @@ struct ionic;
 struct ionic_dev
 {
 	union dev_info_regs __iomem *dev_info_regs;
-	union dev_cmd_regs __iomem *dev_cmd;
+	union dev_cmd_regs __iomem *dev_cmd_regs;
 
 	struct doorbell __iomem *db_pages;
 	dma_addr_t phy_db_pages;

@@ -223,14 +223,14 @@ try_again:
 
 	dev_dbg(ionic->dev,
 		 "DEVCMD %s (%d) done=%d took %ld secs (%ld jiffies)\n",
-		 ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
-		 idev->dev_cmd->cmd.cmd.opcode,
+		 ionic_opcode_to_str(idev->dev_cmd_regs->cmd.cmd.opcode),
+		 idev->dev_cmd_regs->cmd.cmd.opcode,
 		 done, duration/HZ, duration);
 
 	if (!done && !time_before(jiffies, max_wait)) {
 		dev_warn(ionic->dev, "DEVCMD %s (%d) timeout after %ld secs\n",
-			 ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
-			 idev->dev_cmd->cmd.cmd.opcode, max_seconds);
+			 ionic_opcode_to_str(idev->dev_cmd_regs->cmd.cmd.opcode),
+			 idev->dev_cmd_regs->cmd.cmd.opcode, max_seconds);
 		return -ETIMEDOUT;
 	}
 
@@ -238,19 +238,19 @@ try_again:
 	if (err) {
 		if (err == IONIC_RC_EAGAIN && !time_after(jiffies, max_wait)) {
 			dev_err(ionic->dev, "DEV_CMD %s (%d) error, %s (%d) retrying...\n",
-				ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
-				idev->dev_cmd->cmd.cmd.opcode,
+				ionic_opcode_to_str(idev->dev_cmd_regs->cmd.cmd.opcode),
+				idev->dev_cmd_regs->cmd.cmd.opcode,
 				ionic_error_to_str(err), err);
 
 			msleep(1000);
-			iowrite32(0, &idev->dev_cmd->done);
-			iowrite32(1, &idev->dev_cmd->doorbell);
+			iowrite32(0, &idev->dev_cmd_regs->done);
+			iowrite32(1, &idev->dev_cmd_regs->doorbell);
 			goto try_again;
 		}
 
 		dev_err(ionic->dev, "DEV_CMD %s (%d) error, %s (%d) failed\n",
-			ionic_opcode_to_str(idev->dev_cmd->cmd.cmd.opcode),
-			idev->dev_cmd->cmd.cmd.opcode,
+			ionic_opcode_to_str(idev->dev_cmd_regs->cmd.cmd.opcode),
+			idev->dev_cmd_regs->cmd.cmd.opcode,
 			ionic_error_to_str(err), err);
 
 		return -EIO;
@@ -307,17 +307,17 @@ int ionic_identify(struct ionic *ionic)
 	mutex_lock(&ionic->dev_cmd_lock);
 
 	nwords = min(ARRAY_SIZE(ident->drv.words),
-		     ARRAY_SIZE(idev->dev_cmd->data));
+		     ARRAY_SIZE(idev->dev_cmd_regs->data));
 	for (i = 0; i < nwords; i++)
-		iowrite32(ident->drv.words[i], &idev->dev_cmd->data[i]);
+		iowrite32(ident->drv.words[i], &idev->dev_cmd_regs->data[i]);
 
 	ionic_dev_cmd_identify(idev, IONIC_IDENTITY_VERSION_1);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	if (!err) {
 		nwords = min(ARRAY_SIZE(ident->dev.words),
-			     ARRAY_SIZE(idev->dev_cmd->data));
+			     ARRAY_SIZE(idev->dev_cmd_regs->data));
 		for (i = 0; i < nwords; i++)
-			ident->dev.words[i] = ioread32(&idev->dev_cmd->data[i]);
+			ident->dev.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
 	}
 
 	mutex_unlock(&ionic->dev_cmd_lock);
@@ -375,9 +375,9 @@ int ionic_port_identify(struct ionic *ionic)
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	if (!err) {
 		nwords = min(ARRAY_SIZE(ident->port.words),
-			     ARRAY_SIZE(idev->dev_cmd->data));
+			     ARRAY_SIZE(idev->dev_cmd_regs->data));
 		for (i = 0; i < nwords; i++)
-			ident->port.words[i] = ioread32(&idev->dev_cmd->data[i]);
+			ident->port.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
 	}
 
 	mutex_unlock(&ionic->dev_cmd_lock);
@@ -416,9 +416,9 @@ int ionic_port_init(struct ionic *ionic)
 	mutex_lock(&ionic->dev_cmd_lock);
 
 	nwords = min(ARRAY_SIZE(ident->port.config.words),
-					ARRAY_SIZE(idev->dev_cmd->data));
+					ARRAY_SIZE(idev->dev_cmd_regs->data));
 	for (i = 0; i < nwords; i++)
-		iowrite32(ident->port.config.words[i], &idev->dev_cmd->data[i]);
+		iowrite32(ident->port.config.words[i], &idev->dev_cmd_regs->data[i]);
 
 	ionic_dev_cmd_port_init(idev);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
