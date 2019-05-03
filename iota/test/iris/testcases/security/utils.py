@@ -76,7 +76,7 @@ class Command(object):
 def GetSecurityPolicy(workload):
     mnicIP = api.GetNicIntMgmtIP(workload.node_name)
 
-    cmd = 'sshpass -p vm ssh vm@{} curl -X GET -H "Content-Type:application/json" http://{}:9007/api/security/policies/'.format(workload.workload_name,mnicIP)
+    cmd = 'sshpass -p vm ssh vm@{} curl -X GET -H "Content-Type:application/json" http://{}:8888/api/security/policies/'.format(workload.workload_name,mnicIP)
     return Command(cmd).run()
 
 def GetProtocolDirectory(proto):
@@ -209,7 +209,7 @@ def ParseVerifStr(verif_str):
     return verif
 
 def GetVerifDict(workload):
-    cmd = 'curl -X GET -H "Content-Type:application/json" http://169.254.0.1:9007/api/security/policies/'
+    cmd = 'curl -X GET -H "Content-Type:application/json" http://169.254.0.1:8888/api/security/policies/'
     req = api.Trigger_CreateExecuteCommandsRequest()
     result = api.types.status.SUCCESS
     verif = None

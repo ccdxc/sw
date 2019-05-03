@@ -100,7 +100,7 @@ def Main(step):
     #Verify Agent in right mode.
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
     for n in nodes:
-        cmd = "curl localhost:9007/api/system/info/"
+        cmd = "curl localhost:8888/api/system/info/"
         api.Trigger_AddNaplesCommand(req, n, cmd)
 
     resp = api.Trigger(req)

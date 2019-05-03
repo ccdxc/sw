@@ -11,7 +11,7 @@ from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 _cfg_dir = api.GetTopDir() + "/iota/test/iris/config/netagent/cfg/"
 
-base_url = "http://169.254.0.1:9007/"
+base_url = "http://169.254.0.1:8888/"
 
 AGENT_URLS = []
 AGENT_NODES = []
@@ -23,7 +23,7 @@ def Init(agent_nodes, hw=False):
         agent_ip = api.GetNaplesMgmtIpAddress(node)
         if agent_ip == None:
             assert(0)
-        AGENT_URLS.append('http://%s:9007/' % agent_ip)
+        AGENT_URLS.append('http://%s:8888/' % agent_ip)
 
     global AGENT_NODES
     AGENT_NODES = agent_nodes
@@ -34,7 +34,7 @@ def Init(agent_nodes, hw=False):
     return
 
 def __get_base_url(nic_ip):
-    return "http://" + nic_ip + ":9007/"
+    return "http://" + nic_ip + ":8888/"
 
 
 def __get_agent_cfg_nodes(node_names = None):

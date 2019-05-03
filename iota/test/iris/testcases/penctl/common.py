@@ -231,7 +231,7 @@ def StartDhcpServer(remote_node, remote_intf):
 
 
 def GetNaplesSystemInfoJson(n):
-    cmd = 'curl -X GET -H "Content-Type:application/json" {}:9007/api/system/info/'.format(GetNaplesMgmtIP(n))
+    cmd = 'curl -X GET -H "Content-Type:application/json" {}:8888/api/system/info/'.format(GetNaplesMgmtIP(n))
     req = api.Trigger_CreateExecuteCommandsRequest()
     result = api.types.status.SUCCESS
 

@@ -302,6 +302,6 @@ class CfgNode:
         return data
 
     def BaseUrl(self):
-        return "http://" + self.nic_ip + ":9007/"
+        return "http://" + self.nic_ip + ":8888/"
 
 ObjectConfigStore = ConfigStore()

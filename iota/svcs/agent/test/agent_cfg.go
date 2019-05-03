@@ -17,7 +17,7 @@ import (
 var PostMethod = http.Post
 
 //AgentURL URL agent endpoint
-var AgentURL = "http://127.0.0.1:9007/"
+var AgentURL = "http://127.0.0.1:8888/"
 
 //AgentObject Agent object
 type AgentObject interface {

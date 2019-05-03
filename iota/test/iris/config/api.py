@@ -88,15 +88,15 @@ if __name__ == '__main__':
     PrintConfigsObjects(objects)
     for obj in objects:
         obj.spec.node_uuid = "myuuid"
-        print (obj.Update("http://169.254.0.1:9007/", remote_node="192.168.69.23"))
+        print (obj.Update("http://169.254.0.1:8888/", remote_node="192.168.69.23"))
     for obj in objects:
-        print (obj.Get("http://169.254.0.1:9007/", remote_node="192.168.69.23"))
+        print (obj.Get("http://169.254.0.1:8888/", remote_node="192.168.69.23"))
     for obj in objects:
-        print (obj.Delete("http://169.254.0.1:9007/", remote_node="192.168.69.23"))
+        print (obj.Delete("http://169.254.0.1:8888/", remote_node="192.168.69.23"))
     for obj in objects:
-        print (obj.Get("http://169.254.0.1:9007/", remote_node="192.168.69.23"))
+        print (obj.Get("http://169.254.0.1:8888/", remote_node="192.168.69.23"))
     for obj in objects:
         obj.spec.node_uuid = "myuuid"
-        print (obj.Push("http://169.254.0.1:9007/", remote_node="192.168.69.23"))
+        print (obj.Push("http://169.254.0.1:8888/", remote_node="192.168.69.23"))
     for obj in objects:
-        print (obj.Get("http://169.254.0.1:9007/", remote_node="192.168.69.23"))
+        print (obj.Get("http://169.254.0.1:8888/", remote_node="192.168.69.23"))
