@@ -40,6 +40,9 @@ protected:
         params.enable_fte = false;
         pds_test_base::SetUpTestCase(params);
     }
+    static void TearDownTestCase() {
+        pds_test_base::TearDownTestCase();
+    }
 };
 
 //----------------------------------------------------------------------------

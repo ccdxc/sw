@@ -51,6 +51,9 @@ protected:
         ASSERT_TRUE(subnet_obj.create() == sdk::SDK_RET_OK);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
     }
+    static void TearDownTestCase() {
+        pds_test_base::TearDownTestCase();
+    }
 };
 
 //----------------------------------------------------------------------------

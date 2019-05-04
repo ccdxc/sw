@@ -190,6 +190,8 @@ pds_teardown (void)
     // 5. bring asic down (scheduler etc.)
     // 6. kill FTE threads and other other threads
     // 7. flush all logs
+    core::threads_stop();
+    sdk::linkmgr::linkmgr_threads_stop();
     return SDK_RET_OK;
 }
 

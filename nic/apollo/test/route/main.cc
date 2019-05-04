@@ -67,6 +67,8 @@ protected:
         ASSERT_TRUE(tep_util::many_delete(PDS_MAX_TEP - 1, k_first_nh_ip_str,
             PDS_TEP_TYPE_WORKLOAD, encap) == sdk::SDK_RET_OK);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+        pds_test_base::TearDownTestCase();
     }
 };
 

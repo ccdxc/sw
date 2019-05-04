@@ -27,14 +27,23 @@ export PATH=${PATH}:${BUILD_DIR}/bin
 
 # gtests
 $GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" > apollo_scale_test.log.txt
+[[ $? -ne 0 ]] && echo "apollo_scale_test failed!" && exit 1
 $GDB apollo_device_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_device_test.xml"
+[[ $? -ne 0 ]] && echo "apollo_device_test failed!" && exit 1
 $GDB apollo_vpc_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vpc_test.xml"
+[[ $? -ne 0 ]] && echo "apollo_vpc_test failed!" && exit 1
 $GDB apollo_subnet_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_subnet_test.xml"
+[[ $? -ne 0 ]] && echo "apollo_subnet_test failed!" && exit 1
 $GDB apollo_vnic_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_vnic_test.xml"
+[[ $? -ne 0 ]] && echo "apollo_vnic_test failed!" && exit 1
 $GDB apollo_tep_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_tep_test.xml"
+[[ $? -ne 0 ]] && echo "apollo_tep_test failed!" && exit 1
 $GDB apollo_route_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_route_test.xml"
+[[ $? -ne 0 ]] && echo "apollo_route_test failed!" && exit 1
 $GDB apollo_mapping_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_mapping_test.xml"
+[[ $? -ne 0 ]] && echo "apollo_mapping_test failed!" && exit 1
 $GDB apollo_mirror_session_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_mirror_session_test.xml"
+[[ $? -ne 0 ]] && echo "apollo_mirror_session_test failed!" && exit 1
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
 
 MEMHASH_PRELOADS=${BUILD_DIR}/lib/libmemhashp4pd_mock.so

@@ -230,7 +230,7 @@ thread::start(void *ctxt)
         sched_params.sched_priority = prio_;
         rv = pthread_attr_setschedparam(&attr, &sched_params);
         if (rv != 0) {
-            SDK_TRACE_ERR("pthread_attr_setschedparam failure, err : {}", rv);
+            SDK_TRACE_ERR("pthread_attr_setschedparam failure, err : %d", rv);
             return SDK_RET_ERR;
         }
     }
@@ -294,14 +294,37 @@ thread::stop(void)
         return SDK_RET_OK;
     }
 
-    return SDK_RET_OK;
-
     rv = pthread_cancel(pthread_id_);
     if (rv != 0) {
-        SDK_TRACE_ERR("pthread cancel failed on thread {}", name_);
+        SDK_TRACE_ERR("pthread cancel failed on thread %s", name_);
     }
 
     running_ = false;
+    return SDK_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+// wait for the thread to complete
+//------------------------------------------------------------------------------
+sdk_ret_t
+thread::wait(void)
+{
+    int    rv;
+    void   *res;
+
+    if (running_) {
+        SDK_TRACE_ERR("pthread cancel not done on thread %s", name_);
+        return SDK_RET_ERR;
+    }
+
+    rv = pthread_join(pthread_id_, &res);
+    if (rv != 0) {
+        SDK_TRACE_ERR("pthread cancel failed on thread %s", name_);
+    }
+    if (res != PTHREAD_CANCELED) {
+        SDK_TRACE_ERR("ptread cancel failed on thread %s", name_);
+    }
+
     return SDK_RET_OK;
 }
 

@@ -221,6 +221,9 @@ protected:
         params.profile = g_profile;
         pds_test_base::SetUpTestCase(params);
     }
+    static void TearDownTestCase() {
+        pds_test_base::TearDownTestCase();
+    }
 };
 
 #ifdef SIM

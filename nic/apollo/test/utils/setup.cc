@@ -90,5 +90,5 @@ pds_test_base::SetUpTestCase(test_case_params_t &params)
 void
 pds_test_base::TearDownTestCase(void)
 {
-    // pds_teardown();
+    pds_teardown();
 }

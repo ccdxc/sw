@@ -56,6 +56,10 @@ typedef struct pds_init_params_s {
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk::sdk_ret_t pds_init(pds_init_params_t *params);
 
+/// \brief uninitialize routine
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk::sdk_ret_t pds_teardown(void);
+
 /// \@}
 
 #endif    // __INCLUDE_API_PDS_INIT_HPP__

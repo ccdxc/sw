@@ -239,6 +239,28 @@ thread_nicmgr_spawn (pds_state *state)
     return SDK_RET_OK;
 }
 
+// Stop the threads
+void
+threads_stop (void)
+{
+    int thread_id;
+
+    for (thread_id = 0; thread_id < THREAD_ID_MAX; thread_id++) {
+        if (g_thread_store[thread_id] != NULL) {
+            // stop the thread
+            g_thread_store[thread_id]->stop();
+        }
+    }
+    for (thread_id = 0; thread_id < THREAD_ID_MAX; thread_id++) {
+        if (g_thread_store[thread_id] != NULL) {
+            g_thread_store[thread_id]->wait();
+            // free the allocated thread
+            SDK_FREE(SDK_MEM_ALLOC_LIB_THREAD, g_thread_store[thread_id]);
+            g_thread_store[thread_id] = NULL;
+        }
+    }
+}
+
 // install signal handler for given signal
 sdk_ret_t
 sig_init (int signal, sig_handler_t sig_handler)

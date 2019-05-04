@@ -61,6 +61,8 @@ protected:
         ASSERT_TRUE(vpc_obj.del() == sdk::SDK_RET_OK);
         ASSERT_TRUE(subnet_obj.del() == sdk::SDK_RET_OK);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+
+        pds_test_base::TearDownTestCase();
     }
 };
 

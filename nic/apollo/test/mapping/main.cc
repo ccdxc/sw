@@ -228,6 +228,7 @@ protected:
         ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 #endif
+        pds_test_base::TearDownTestCase();
     }
 };
 

@@ -228,13 +228,20 @@ linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data,
 {
     uint16_t            pindx = 0;
     sdk::lib::thread    *curr_thread = current_thread();
-    uint32_t            curr_tid = curr_thread->thread_id();
+    uint32_t            curr_tid = 0;
     linkmgr_entry_t     *rw_entry;
     sdk_ret_t           ret = SDK_RET_OK;
+    const char *name = "";
+    bool can_yield = true;
 
+    if (curr_thread != NULL) {
+        name = curr_thread->name();
+        can_yield = curr_thread->can_yield();
+        curr_tid = curr_thread->thread_id();
+    }
     if (g_linkmgr_workq[curr_tid].nentries >= LINKMGR_CONTROL_Q_SIZE) {
         SDK_TRACE_ERR("Error: operation %d for thread %s, tid %d full",
-                      operation, curr_thread->name(), curr_tid);
+                      operation, name, curr_tid);
         return SDK_RET_ERR;
     }
 
@@ -257,7 +264,7 @@ linkmgr_notify (uint8_t operation, linkmgr_entry_data_t *data,
 
     if (mode == q_notify_mode_t::Q_NOTIFY_MODE_BLOCKING) {
         while (SDK_ATOMIC_LOAD_BOOL(&rw_entry->done) == false) {
-            if (curr_thread->can_yield()) {
+            if (can_yield == true) {
                 pthread_yield();
             }
         }
@@ -497,27 +504,28 @@ thread_init (linkmgr_cfg_t *cfg)
                                   thread_prio,
                                   sched_policy,
                                   true);
-
-    // TODO
-    // Since Linkmgr's current_thread doesn't have access to HAL's CFG thread,
-    // init the CFG thread as a work around for now.
-    // This thread wont be started, but the thread structure is used only to
-    // get the current_thread's ID during config push.
-    if (cfg->process_mode == false) {
-        // init the config thread
-        thread_id = LINKMGR_THREAD_ID_CFG;
-        g_linkmgr_threads[thread_id] =
-            sdk::lib::thread::factory(std::string("linkmgr-cfg").c_str(),
-                                      thread_id,
-                                      sdk::lib::THREAD_ROLE_CONTROL,
-                                      0x0 /* use all control cores */,
-                                      linkmgr_event_loop /* TODO NULL? */,
-                                      thread_prio,
-                                      sched_policy,
-                                      true);
-        }
-
     return SDK_RET_OK;
+}
+
+void
+linkmgr_threads_stop (void)
+{
+    int thread_id;
+
+    for (thread_id = 0; thread_id < LINKMGR_THREAD_ID_MAX; thread_id++) {
+        if (g_linkmgr_threads[thread_id] != NULL) {
+            // stop the thread
+            g_linkmgr_threads[thread_id]->stop();
+        }
+    }
+    for (thread_id = 0; thread_id < LINKMGR_THREAD_ID_MAX; thread_id++) {
+        if (g_linkmgr_threads[thread_id] != NULL) {
+            g_linkmgr_threads[thread_id]->wait();
+            // free the allocated thread
+            SDK_FREE(SDK_MEM_ALLOC_LIB_THREAD, g_linkmgr_threads[thread_id]);
+            g_linkmgr_threads[thread_id] = NULL;
+        }
+    }
 }
 
 static void
