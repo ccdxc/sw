@@ -23,6 +23,35 @@ void UpgAppRegReact::OnMountComplete(void) {
     for (vector<delphi::objects::UpgAppPtr>::iterator app=upgApplist.begin(); app!=upgApplist.end(); ++app) {
         OnUpgAppCreate(*app);
     }
+
+    auto upgReq = upgMgr_->findUpgReq();
+    if (upgReq == NULL) {
+        UPG_LOG_DEBUG("No active upgrade request");
+        return;
+    }
+    UPG_LOG_DEBUG("UpgReq found for {}", upgReq->meta().ShortDebugString());
+    auto upgStateReq = upgMgr_->findUpgStateReq();
+    if (upgStateReq == NULL) {
+        UPG_LOG_DEBUG("Reconciling outstanding upgrade request with key: {}", upgReq->GetKey());
+        upgMgr_->OnUpgReqCreate(upgReq);
+    } else {
+        UPG_LOG_DEBUG("Update request in progress. Check if State Machine can be moved.");
+        upgMgr_->SetStateMachine(upgReq);
+        if (upgMgr_->CanMoveStateMachine()) {
+            UPG_LOG_DEBUG("Can move state machine. Moving it forward.");
+            UpgReqStateType type = upgStateReq->upgreqstate();
+            if (!upgMgr_->InvokePrePostStateHandlers(type)) {
+                UPG_LOG_DEBUG("PrePostState handlers returned false");
+                type = UpgStateFailed;
+                upgMgr_->SetAppRespFail();
+            } else {
+                type = upgMgr_->GetNextState();
+            }
+            upgMgr_->MoveStateMachine(type);
+        } else {
+            UPG_LOG_DEBUG("Cannot move state machine yet");
+        }
+    }
 }
 
 } // namespace upgrade
