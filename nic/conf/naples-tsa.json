@@ -1,6 +1,6 @@
 {
 	"Name" : "ExampleConfig",
-	"FilesystemRoot" : "/tmp/techsupport",
+	"FilesystemRoot" : "/data/techsupport",
 	"Retention" : 0,
 	"PrepActions" : [
 				{

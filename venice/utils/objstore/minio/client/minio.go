@@ -92,6 +92,35 @@ func (c *Client) PutObject(ctx context.Context, objectName string, reader io.Rea
 	return n, err
 }
 
+// PutObjectOfSize - puts an object of "size" in the objectstore
+func (c *Client) PutObjectOfSize(ctx context.Context, objectName string, reader io.Reader, size int64, userMeta map[string]string) (int64, error) {
+	// check bucket
+	s, err := c.client.BucketExists(c.bucketName)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get bucket details, err:%s", err)
+	}
+
+	if !s {
+		if err := c.client.MakeBucket(c.bucketName, c.location); err != nil {
+			return 0, err
+		}
+	}
+
+	// update the metadata
+	metaData := map[string]string{}
+	for k, v := range userMeta {
+		// store system meta as is
+		if strings.HasPrefix(strings.ToLower(k), amzPrefix) {
+			metaData[k] = v
+		} else {
+			metaData[amzMetaPrefix+k] = v
+		}
+	}
+
+	n, err := c.client.PutObjectWithContext(ctx, c.bucketName, objectName, reader, size, minio.PutObjectOptions{UserMetadata: metaData})
+	return n, err
+}
+
 // GetObject gets the object from object store, caller should close() after readall()
 func (c *Client) GetObject(ctx context.Context, objectName string) (io.ReadCloser, error) {
 	_, err := c.client.StatObject(c.bucketName, objectName, minio.StatObjectOptions{})

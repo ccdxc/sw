@@ -311,8 +311,10 @@ func (ag *TSMClient) handleTechSupportRetention(work *tsproto.TechSupportRequest
 		return nil
 	}
 
+	targetID := ag.generateTargetID(work.Spec.InstanceID, work.ObjectMeta.Name)
+
 	if ag.State.Cfg.Retention == tsconfig.TechSupportConfig_DelOnExport {
-		cmd := fmt.Sprintf("rm -rf %s/%s", ag.State.Cfg.FileSystemRoot, work.Spec.InstanceID)
+		cmd := fmt.Sprintf("rm -rf %s/%s", ag.State.Cfg.FileSystemRoot, targetID)
 		_, err := action.RunShellCmd(cmd)
 		return err
 	}
@@ -337,10 +339,11 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 		instanceID = work.Spec.InstanceID
 		instanceName = work.ObjectMeta.Name
 	}
-	action.CollectTechSupport(ag.State.Cfg, instanceID)
-	export.GenerateTechsupportZip(instanceID, ag.State.Cfg.FileSystemRoot+"/"+instanceID)
-	tarballFile := ag.State.Cfg.FileSystemRoot + "/" + instanceID + "/" + instanceID + ".tgz"
 	targetID := ag.generateTargetID(instanceID, instanceName)
+	vosTarget := fmt.Sprintf("%v.tar.gz", targetID)
+	action.CollectTechSupport(ag.State.Cfg, targetID)
+	export.GenerateTechsupportZip(vosTarget, ag.State.Cfg.FileSystemRoot+"/"+targetID)
+	tarballFile := ag.State.Cfg.FileSystemRoot + "/" + targetID + "/" + vosTarget
 
 	for _, destination := range work.Spec.Destinations {
 		log.Infof("Destination : %v", destination)
@@ -351,10 +354,10 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 			log.Info("SCP file")
 			export.ScpFile(tarballFile, destination.Destination, "root", "docker", destination.Path)
 		case "Venice":
-			uri := fmt.Sprintf("/objstore/v1/downloads/tenant/default/techsupport/%v", targetID)
+			uri := fmt.Sprintf("/objstore/v1/downloads/tenant/default/techsupport/%v", vosTarget)
 			work.Status.URI = uri
 			log.Infof("Send to VENICE. WORK : %v. URL : %v", work, uri)
-			export.SendToVenice(ag.resolverClient, tarballFile, targetID)
+			export.SendToVenice(ag.resolverClient, tarballFile, vosTarget)
 		case "HTTPS":
 			log.Info("Transfer file using HTTPs")
 			export.SendToHTTP(tarballFile, destination.Path, "", "")
@@ -377,5 +380,5 @@ func (ag *TSMClient) ListTechSupportRequests() []*tsproto.TechSupportRequestEven
 func (ag *TSMClient) generateTargetID(instanceID, instanceName string) string {
 	// Split the instance ID received
 	idSplit := strings.Split(instanceID, "-")
-	return fmt.Sprintf("%s-%s-%s-%s.tar.gz", instanceName, idSplit[0], ag.kind, ag.name)
+	return fmt.Sprintf("%s-%s-%s-%s", instanceName, idSplit[0], ag.kind, ag.name)
 }

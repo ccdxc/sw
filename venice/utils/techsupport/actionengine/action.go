@@ -135,13 +135,13 @@ func ReadConfig(configPath string) (*tsconfig.TechSupportConfig, error) {
 }
 
 // CollectTechSupport runs all actions in config file
-func CollectTechSupport(config *tsconfig.TechSupportConfig, instanceID string) error {
+func CollectTechSupport(config *tsconfig.TechSupportConfig, targetID string) error {
 	if config == nil {
 		log.Error("TechSupportConfig passed is nil.")
 		return fmt.Errorf("config passed is nil")
 	}
 
-	baseDir := config.FileSystemRoot + "/" + instanceID
+	baseDir := config.FileSystemRoot + "/" + targetID
 
 	if _, err := os.Stat(baseDir); os.IsNotExist(err) {
 		log.Infof("Creating techsupport directory : %v", baseDir)

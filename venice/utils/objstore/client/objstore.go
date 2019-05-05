@@ -34,6 +34,9 @@ type objStoreBackend interface {
 	// PutObject uploads object into the object store
 	PutObject(ctx context.Context, objectName string, reader io.Reader, userMeta map[string]string) (int64, error)
 
+	// PutObjectOfSize uploads object of size to the object store
+	PutObjectOfSize(ctx context.Context, objectName string, reader io.Reader, size int64, userMeta map[string]string) (int64, error)
+
 	// GetObject gets the object from object store
 	GetObject(ctx context.Context, objectName string) (io.ReadCloser, error)
 
@@ -154,6 +157,25 @@ func (c *client) getObjStoreAddr() ([]string, error) {
 func (c *client) PutObject(ctx context.Context, objectName string, reader io.Reader, userMeta map[string]string) (int64, error) {
 	for retry := 0; retry < maxRetry; retry++ {
 		n, err := c.client.PutObject(ctx, objectName, reader, userMeta)
+		if err == nil {
+			return n, err
+		}
+
+		if !strings.Contains(err.Error(), connectErr) {
+			return 0, err
+		}
+		if err := c.connect(); err != nil {
+			return 0, err
+		}
+	}
+
+	return 0, fmt.Errorf("maximum retries exceeded to upload %s", objectName)
+}
+
+// PutObjectOfSize uploads object of "size" to object store
+func (c *client) PutObjectOfSize(ctx context.Context, objectName string, reader io.Reader, size int64, userMeta map[string]string) (int64, error) {
+	for retry := 0; retry < maxRetry; retry++ {
+		n, err := c.client.PutObjectOfSize(ctx, objectName, reader, size, userMeta)
 		if err == nil {
 			return n, err
 		}

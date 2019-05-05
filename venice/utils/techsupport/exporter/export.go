@@ -1,10 +1,8 @@
 package exporter
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -19,25 +17,9 @@ import (
 // GenerateTechsupportZip archives the contents of the techsupport into a tarball
 func GenerateTechsupportZip(techsupportFile string, directory string) error {
 	log.Infof("Creating techsupport tarball : %v from the directory : %v", techsupportFile, directory)
-	cmdStr := fmt.Sprintf("mkdir %s/core  && cp /data/core/* %s/core", directory, directory)
+	cmdStr := fmt.Sprintf("pushd %s && tar cvf %s %s && popd", directory, techsupportFile, directory)
 	cmd := exec.Command("bash", "-c", cmdStr)
 	out, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("collect core command out:\n%s\n", string(out))
-		log.Errorf("Collecting cores failed with: %s\n", err)
-	}
-
-	cmdStr = fmt.Sprintf("mkdir %s/logs  && cp -r /var/log/pensando/** %s/logs", directory, directory)
-	cmd = exec.Command("bash", "-c", cmdStr)
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("collect logs command out:\n%s\n", string(out))
-		log.Errorf("Collecting logs failed with: %s\n", err)
-	}
-
-	cmdStr = fmt.Sprintf("pushd %s && tar cvf %s.tgz %s && popd", directory, techsupportFile, directory)
-	cmd = exec.Command("bash", "-c", cmdStr)
-	out, err = cmd.CombinedOutput()
 	if err != nil {
 		fmt.Printf("tar command out:\n%s\n", string(out))
 		log.Errorf("Collecting log files failed with: %s\n", err)
@@ -59,7 +41,7 @@ func ScpFile(source string, destination string, username string, password string
 }
 
 // SendToVenice uploads the techsupport to VOS
-func SendToVenice(resolver resolver.Interface, source string, targetID string) error {
+func SendToVenice(resolver resolver.Interface, source string, vosTarget string) error {
 	log.Infof("Sending file %v to Venice", source)
 	bucket := "techsupport"
 
@@ -87,29 +69,28 @@ func SendToVenice(resolver resolver.Interface, source string, targetID string) e
 		return fmt.Errorf("Could not create client (%s)", err)
 	}
 
-	_, err = os.Stat(source)
+	stat, err := os.Stat(source)
 	if err != nil {
 		return err
 	}
 
-	data, err := ioutil.ReadFile(source)
+	f, err := os.Open(source)
 	if err != nil {
 		return err
 	}
 
-	buffer := bytes.NewBuffer(data)
 	meta := map[string]string{
-		"techsupport": targetID,
+		"techsupport": vosTarget,
 	}
 
-	_, err = client.PutObject(context.Background(), targetID, buffer, meta)
+	_, err = client.PutObjectOfSize(context.Background(), vosTarget, f, stat.Size(), meta)
 	if err != nil {
 		return err
 	}
 
-	_, err = client.GetObject(context.Background(), targetID)
+	_, err = client.GetObject(context.Background(), vosTarget)
 	if err != nil {
-		log.Errorf("Could not get object %v", targetID)
+		log.Errorf("Could not get object %v", vosTarget)
 	}
 
 	return nil
