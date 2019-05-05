@@ -587,6 +587,24 @@ intr_assert_addr(const int intr)
     return INTR_ASSERT_BASE + (intr * INTR_ASSERT_STRIDE);
 }
 
+hal_ret_t
+get_program_offset (char *progname, char *labelname, uint64_t *offset)
+{
+    pd::pd_capri_program_label_to_offset_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+    args.handle = "p4plus";
+    args.prog_name = progname;
+    args.label_name = labelname;
+    args.offset = offset;
+    pd_func_args.pd_capri_program_label_to_offset = &args;
+    hal_ret_t ret = pd::hal_pd_call(pd::PD_FUNC_ID_PROG_LBL_TO_OFFSET, &pd_func_args);
+
+    if(ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("{}: ret: {}\n", __FUNCTION__, ret);
+        return HAL_RET_HW_FAIL;
+   }
+    return HAL_RET_OK;
+}
 
 hal_ret_t
 nvme_sq_create (NvmeSqSpec& spec, NvmeSqResponse *rsp)
@@ -594,6 +612,7 @@ nvme_sq_create (NvmeSqSpec& spec, NvmeSqResponse *rsp)
     uint32_t     lif = spec.hw_lif_id();
     uint32_t     num_sq_wqes, sqwqe_size;
     nvme_sqcb_t       sqcb;
+    uint64_t     offset;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF: NVME SQ Create for lif {}", lif);
@@ -624,6 +643,13 @@ nvme_sq_create (NvmeSqSpec& spec, NvmeSqResponse *rsp)
     sqcb.log_num_wqes = log2(num_sq_wqes);
     sqcb.log_host_page_size = g_nvme_lif_info[lif].log_host_page_size;
     sqcb.cq_id = spec.cq_num();
+
+    get_program_offset((char *)"txdma_stage0.bin", 
+                       (char *)"nvme_sq_stage0",
+                       &offset);
+    sqcb.ring_header.pc = offset >> 6;
+
+    HAL_TRACE_DEBUG("sqid: {}, pc: {:#x}", spec.sq_num(), offset);
 
     // write to hardware
     HAL_TRACE_DEBUG("LIF: {}: Writing initial SQCB State, baseaddr: {:#x} sqcb_size: {}",
@@ -789,6 +815,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     uint32_t      g_nsid;
     nvme_ns_info_t *ns_info_p;
     wring_t       wring;
+    uint64_t      offset;
 
     HAL_TRACE_DEBUG("--------------------- API Start ------------------------");
     HAL_TRACE_DEBUG("PI-LIF: NVME Sess Create for lif {}", lif);
@@ -959,6 +986,13 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     sessxtstxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_XTSQ, sess_id);
     memset(&sessxtstxcb, 0, sizeof(nvme_sessxtstxcb_t));
 
+    get_program_offset((char *)"txdma_stage0.bin", 
+                       (char *)"nvme_tx_sessxts_stage0",
+                       &offset);
+    sessxtstxcb.ring_header.pc = offset >> 6;
+
+    HAL_TRACE_DEBUG("sess_num: {}, tx sessxts pc: {:#x}", ns_info_p->cur_sess, offset);
+
     sessxtstxcb.base_addr = tx_sess_xtsq_base;
     sessxtstxcb.log_num_entries = txsessprodcb.log_num_xts_q_entries;
     sessxtstxcb.log_lba_size = ns_info_p->log_lba_size;
@@ -976,6 +1010,13 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     sessdgsttxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_DGSTQ, sess_id);
     memset(&sessdgsttxcb, 0, sizeof(nvme_sessdgsttxcb_t));
 
+    get_program_offset((char *)"txdma_stage0.bin", 
+                       (char *)"nvme_tx_sessdgst_stage0",
+                       &offset);
+    sessdgsttxcb.ring_header.pc = offset >> 6;
+
+    HAL_TRACE_DEBUG("sess_num: {}, tx sessdgst pc: {:#x}", ns_info_p->cur_sess, offset);
+
     sessdgsttxcb.base_addr = tx_sess_dgstq_base;
     sessdgsttxcb.log_num_entries = txsessprodcb.log_num_dgst_q_entries;
 
@@ -989,6 +1030,13 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     uint64_t sessxtsrxcb_addr;
     sessxtsrxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_XTSQ, sess_id);
     memset(&sessxtsrxcb, 0, sizeof(nvme_sessxtsrxcb_t));
+
+    get_program_offset((char *)"txdma_stage0.bin", 
+                       (char *)"nvme_rx_sessxts_stage0",
+                       &offset);
+    sessxtsrxcb.ring_header.pc = offset >> 6;
+
+    HAL_TRACE_DEBUG("sess_num: {}, rx sessxts pc: {:#x}", ns_info_p->cur_sess, offset);
 
     sessxtsrxcb.base_addr = rx_sess_xtsq_base;
     sessxtsrxcb.log_num_entries = rxsessprodcb.log_num_xts_q_entries;
@@ -1006,6 +1054,13 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     uint64_t sessdgstrxcb_addr;
     sessdgstrxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_DGSTQ, sess_id);
     memset(&sessdgstrxcb, 0, sizeof(nvme_sessdgstrxcb_t));
+
+    get_program_offset((char *)"txdma_stage0.bin", 
+                       (char *)"nvme_rx_sessdgst_stage0",
+                       &offset);
+    sessdgstrxcb.ring_header.pc = offset >> 6;
+
+    HAL_TRACE_DEBUG("sess_num: {}, rx sessdgst pc: {:#x}", ns_info_p->cur_sess, offset);
 
     sessdgstrxcb.base_addr = rx_sess_dgstq_base;
     sessdgstrxcb.log_num_entries = rxsessprodcb.log_num_dgst_q_entries;

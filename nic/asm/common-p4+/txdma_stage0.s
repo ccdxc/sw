@@ -54,6 +54,13 @@ struct phv_ p;
     .param      rdma_cq_tx_cqcb_process
     .param      rdma_aq_tx_aqcb_process
     .param      tcp_ooq_load_qstate
+#ifndef GFT
+    .param      nvme_req_tx_sqcb_process
+    .param      nvme_sessxts_tx_cb_process
+    .param      nvme_sessdgst_tx_cb_process
+    .param      nvme_sessxts_rx_cb_process
+    .param      nvme_sessdgst_rx_cb_process
+#endif
     
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -242,3 +249,32 @@ storage_seq_stage0:
 tcp_ooq_rx2tx_stage0:
     j tcp_ooq_load_qstate
     nop
+
+#ifndef GFT
+.align
+nvme_sq_stage0:
+    j nvme_req_tx_sqcb_process
+    nop
+
+.align
+nvme_tx_sessxts_stage0:
+    j nvme_sessxts_tx_cb_process
+    nop
+
+.align
+nvme_tx_sessdgst_stage0:
+    j nvme_sessdgst_tx_cb_process
+    nop
+
+.align
+nvme_rx_sessxts_stage0:
+    #j nvme_sessxts_rx_cb_process
+    nop.e
+    nop
+
+.align
+nvme_rx_sessdgst_stage0:
+    #j nvme_sessdgst_rx_cb_process
+    nop.e
+    nop
+#endif

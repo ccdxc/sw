@@ -1,6 +1,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "INGRESS_s0_t0_k.h"
+#include "capri.h"
 
 struct phv_ p;
 struct s0_t0_k_ k;

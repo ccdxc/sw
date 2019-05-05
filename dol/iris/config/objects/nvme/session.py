@@ -32,10 +32,25 @@ class NvmeSessionObject(base.ConfigObjectBase):
         self.GID("NvmeSession%d" % self.id)
         self.session = session
         self.IsIPV6 = session.IsIPV6()
+        self.sq_id = None
+        self.cq_id = None
+        self.sq = None
+        self.cq = None
 
     def Configure(self):
         nvme_lif = self.session.initiator.ep.intf.lif.nvme_lif
         self.nsid = nvme_lif.GetNextNsid()
+
+        #for DOL purpose, map session to a sq/cq.
+        #more than one session can map to same sq/cq
+        #for now using nsid%2 as the sq/cq number
+
+        self.sqid = self.nsid % 2
+        self.cqid = self.sqid
+
+        self.sq = self.session.initiator.ep.intf.lif.GetQ('NVME_SQ', self.sqid)
+        self.cq = self.session.initiator.ep.intf.lif.GetQ('NVME_CQ', self.cqid)
+        
         nvme_lif.NsSessionAttach(self.nsid, self)
         halapi.NvmeSessionCreate([self])
         return
@@ -45,6 +60,7 @@ class NvmeSessionObject(base.ConfigObjectBase):
         logger.info('- Session: %s' % self.session.GID())
         logger.info('- sess_id: %s ' % self.sess_id)
         logger.info('- nsid: %s ' % self.nsid)
+        logger.info('- sqid: %s cqid: %s ' %(self.sqid, self.cqid))
         logger.info('- hw_lif_id: %s ' % self.session.initiator.ep.intf.lif.hw_lif_id)
         logger.info('- vrf_id: %s ' % self.session.initiator.ep.tenant.id)
         logger.info('- xtstxbase: 0x%x size: %d' \
@@ -135,7 +151,7 @@ class NvmeSessionObject(base.ConfigObjectBase):
         return True
 
     def SetupTestcaseConfig(self, obj):
-        obj.Nvmesession = self;
+        obj.nvmesession = self;
         return
 
     def ShowTestcaseConfig(self, obj):

@@ -7,7 +7,25 @@ packets:
 buffers:
 
 descriptors:
+    - descriptor:
+        id      : DESC
+        template: ref://factory/templates/id=DESC_NVME_SQ
+        fields:
+            opc     :   1   #WRITE
+            cid     :   1
+            nsid    :   ref://testcase/config/nvmesession/nsid
+            prp1    :   0
+            prp2    :   0
 
 trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC
+            ring    : ref://testcase/config/nvmesession/sq/rings/id=SQ
+
+    doorbell:
+        object: ref://testcase/config/nvmesession/sq/rings/id=SQ/doorbell
+        fields:
+            upd : 0x9 # PI from DB data and DB_SCHED_EVAL
 
 expect:
