@@ -63,9 +63,20 @@ rcdev_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
     return 0;
 }
 
+static int
+rcdev_initpf(pciehdev_t *pfdev, const pciehdev_res_t *pfres)
+{
+    if (rcdev_bars(pfdev, pfres) < 0) {
+        return -1;
+    }
+    if (rcdev_cfg(pfdev, pfres) < 0) {
+        return -1;
+    }
+    return 0;
+}
+
 static pciehdevice_t rcdev_device = {
-    .name = "rcdev",
-    .init_bars = rcdev_bars,
-    .init_cfg  = rcdev_cfg,
+    .type = PCIEHDEVICE_RCDEV,
+    .initpf = rcdev_initpf,
 };
 PCIEHDEVICE_REGISTER(rcdev_device);

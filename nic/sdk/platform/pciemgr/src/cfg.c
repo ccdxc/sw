@@ -374,13 +374,15 @@ pciehw_cfgwr_bars(pciehwdev_t *phwdev,
             const int cfgoff = cfgbase + phwbar->cfgidx * 4;
             const int barlen = phwbar->type == PCIEHWBARTYPE_MEM64 ? 8 : 4;
             if (stlp_overlap(stlp, cfgoff, barlen)) {
+                const u_int64_t vfbaroff = (pciehw_bar_getsize(phwbar) *
+                                            phwdev->vfidx);
                 u_int64_t baraddr = cfg_baraddr(cs, cfgoff, barlen);
                 if (phwbar->type == PCIEHWBARTYPE_IO) {
                     baraddr &= ~0x3ULL;
                 } else {
                     baraddr &= ~0xfULL;
                 }
-                pciehw_bar_setaddr(phwbar, baraddr);
+                pciehw_bar_setaddr(phwbar, baraddr + vfbaroff);
             }
         }
     }
@@ -446,7 +448,7 @@ pciehw_cfgwr_msix(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 }
 
 static void
-pciehw_sriov_numvfs(pciehwdev_t *phwdev, const u_int16_t numvfs)
+pciehw_sriov_numvfs_event(pciehwdev_t *phwdev, const u_int16_t numvfs)
 {
     pciehdev_eventdata_t evd;
     pciehdev_sriov_numvfs_t *sriov_numvfs;
@@ -460,16 +462,72 @@ pciehw_sriov_numvfs(pciehwdev_t *phwdev, const u_int16_t numvfs)
     pciehw_event(phwdev, &evd);
 }
 
+/*
+ * Note this depends on all VFs being allocated contiguously,
+ * which is true (at the moment).  If that assumption changes
+ * we'll need another algorithm to find the VF from the PF.
+ */
+static pciehwdev_t *
+pciehwdev_getvf(pciehwdev_t *phwdev, const int vfidx)
+{
+    assert(vfidx >= 0 && vfidx < phwdev->totalvfs);
+    return pciehwdev_get(phwdev->childh + vfidx);
+}
+
+static void
+pciehw_sriov_enable_vf(pciehwdev_t *vfhwdev,
+                       const int cfg_en, const int bar_en)
+{
+    u_int16_t cmd;
+
+    /* XXX handled cfg_en load/unload cfg space */
+    /* refactor and call pciehw_cfg_load(vfhwdev, cfg_en) */
+
+    /* load/unload the bars */
+    cmd = bar_en ? PCI_COMMAND_MEMORY : 0;
+    pciehw_cfg_bars_enable(vfhwdev, cmd);
+}
+
+static void
+pciehw_sriov_enable_numvfs(pciehwdev_t *phwdev, const u_int16_t numvfs,
+                           const int cfg_en, const int bar_en)
+{
+    pciehwdev_t *vfhwdev;
+    int onumvfs, vfidx;
+
+    onumvfs = phwdev->numvfs;
+
+    /*
+     * If numvfs < onumvfs (our currently enabled vfs),
+     * we need to disable some vfs.
+     */
+    for (vfidx = numvfs; vfidx < onumvfs; vfidx++) {
+        vfhwdev = pciehwdev_getvf(phwdev, vfidx);
+        pciehw_sriov_enable_vf(vfhwdev, 0, 0);
+    }
+
+    /*
+     * Now go enable any newly enabled VFs, i.e. numvfs > onumvfs.
+     */
+    for (vfidx = 0; vfidx < numvfs; vfidx++) {
+        vfhwdev = pciehwdev_getvf(phwdev, vfidx);
+        pciehw_sriov_enable_vf(vfhwdev, cfg_en, bar_en);
+    }
+
+    if (phwdev->numvfs != numvfs) {
+        phwdev->numvfs = numvfs;
+        pciehw_sriov_numvfs_event(phwdev, numvfs);
+    }
+}
+
 static void
 pciehw_cfgwr_sriov_ctrl(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 {
     cfgspace_t cs;
-    u_int16_t sriovcap, sriovctrl, numvfs, cmd;
-    pciehwdev_t *vfhwdev = pciehwdev_get(phwdev->childh);
+    u_int16_t sriovcap, sriovctrl, numvfs;
     int cfg_en, bar_en;
 
     pciehwdev_get_cfgspace(phwdev, &cs);
-    cmd = cfgspace_readw(&cs, PCI_COMMAND);
     sriovcap = cfgspace_findextcap(&cs, PCI_EXT_CAP_ID_SRIOV);
     sriovctrl = cfgspace_readw(&cs, sriovcap + PCI_SRIOV_CTRL);
     numvfs = cfgspace_readw(&cs, sriovcap + PCI_SRIOV_NUM_VF);
@@ -479,26 +537,31 @@ pciehw_cfgwr_sriov_ctrl(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
     bar_en = cfg_en && (sriovctrl & PCI_SRIOV_CTRL_MSE) != 0;
 
     pciesys_loginfo("sriov_ctrl: "
-                    "ctrl 0x%04x (cfg_en %d bar_en %d) numvfs %d\n",
-                    sriovctrl, cfg_en, bar_en, numvfs);
+                    "ctrl 0x%04x (cfg_en %d bar_en %d) numvfs %d->%d\n",
+                    sriovctrl, cfg_en, bar_en, phwdev->numvfs, numvfs);
 
-    cmd = bar_en ? PCI_COMMAND_MEMORY : 0;
-    pciehw_cfg_bars_enable(vfhwdev, cmd);
-
-    pciehw_sriov_numvfs(phwdev, cfg_en ? numvfs : 0);
+    pciehw_sriov_enable_numvfs(phwdev, numvfs, cfg_en, bar_en);
 }
 
 static void
 pciehw_cfgwr_sriov_bars(pciehwdev_t *phwdev, const pcie_stlp_t *stlp)
 {
     pciehwdev_t *vfhwdev;
-    cfgspace_t cs;
-    int sriovcap;
+    cfgspace_t pfcs;
+    int vfidx, sriovcap;
 
-    pciehwdev_get_cfgspace(phwdev, &cs);
-    sriovcap = cfgspace_findextcap(&cs, PCI_EXT_CAP_ID_SRIOV);
-    vfhwdev = pciehwdev_get(phwdev->childh);
-    pciehw_cfgwr_bars(vfhwdev, stlp, &cs, sriovcap + 0x24);
+    pciehwdev_get_cfgspace(phwdev, &pfcs);
+    sriovcap = cfgspace_findextcap(&pfcs, PCI_EXT_CAP_ID_SRIOV);
+
+    /*
+     * Distribute the new bar address to all the VFs.
+     * Each VF will compute its own offset within
+     * the bar for its VF sliced region.
+     */
+    for (vfidx = 0; vfidx < phwdev->totalvfs; vfidx++) {
+        vfhwdev = pciehwdev_getvf(phwdev, vfidx);
+        pciehw_cfgwr_bars(vfhwdev, stlp, &pfcs, sriovcap + 0x24);
+    }
 }
 
 void

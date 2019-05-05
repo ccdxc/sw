@@ -5,7 +5,7 @@ MODULE_TARGET   := nicmgrd.bin
 MODULE_PIPELINE := iris
 MODULE_PREREQS  := nicmgr.proto delphi.proto
 MODULE_SOLIBS   := nicmgr mnet \
-                    pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp cfgspace \
+                    pciemgr_if \
                     intrutils pal misc evutils \
                     ${NIC_SDK_SOLIBS} trace mtrack bm_allocator \
                     commonproto nicmgrproto halproto \

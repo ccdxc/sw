@@ -226,7 +226,7 @@ Eth::factory(enum DeviceType type, devapi *dev_api,
     dev_obj = new Eth(dev_api, spec, pd_client, upg_mode);
     dev_obj->SetType(type);
     eth_devs.push_back(dev_obj);
-    
+
     NIC_LOG_DEBUG("{}: pcie_total_vfs: {}", spec->name, spec->pcie_total_vfs);
 
     // Create objects for all VFs within this PF
@@ -234,8 +234,10 @@ Eth::factory(enum DeviceType type, devapi *dev_api,
         struct eth_devspec *vf_spec = new struct eth_devspec;
         *vf_spec = *(struct eth_devspec *)spec;
         vf_spec->name = vf_spec->name + "_vf_" + std::to_string(dev);
-        //Keeping the mac for VF as 0
-        vf_spec->mac_addr =  0;
+        // Keeping the mac for VF as 0
+        vf_spec->mac_addr = 0;
+        // XXX no rdma on VFs for now
+        vf_spec->enable_rdma = 0;
         dev_obj = new Eth(dev_api, vf_spec, pd_client);
         dev_obj->SetType(type);
         eth_devs.push_back(dev_obj);
@@ -470,7 +472,7 @@ Eth::LoadOprom()
 bool
 Eth::CreateHostDevice()
 {
-    pciehdevice_resources_t pres = {0};
+    pciehdevice_resources_t pres;
 
     if (!LoadOprom()) {
         NIC_LOG_ERR("{}: Failed to load oprom", spec->name);
@@ -478,6 +480,8 @@ Eth::CreateHostDevice()
         // return false;
     }
 
+    memset(&pres, 0, sizeof(pres));
+    strncpy0(pres.pfres.name, spec->name.c_str(), sizeof(pres.pfres.name));
     pres.pfres.port = spec->pcie_port;
     pres.pfres.lifb = lif_base;
     pres.pfres.lifc = spec->lif_count;
@@ -485,55 +489,46 @@ Eth::CreateHostDevice()
     pres.pfres.intrc = spec->intr_count;
     pres.pfres.intrdmask = 1;
     pres.pfres.npids = spec->rdma_pid_count;
-    pres.pfres.devinfopa = regs_mem_addr;
-    pres.pfres.devinfosz = sizeof(dev_info_regs);
-    pres.pfres.devcmdpa = devcmd_mem_addr;
-    pres.pfres.devcmdsz = sizeof(dev_cmd_regs);
     pres.pfres.cmbpa = cmb_mem_addr;
     pres.pfres.cmbsz = cmb_mem_size;
     pres.pfres.rompa = rom_mem_addr;
     pres.pfres.romsz = rom_mem_size;
     pres.pfres.totalvfs = spec->pcie_total_vfs;
+    pres.pfres.eth.devregspa = regs_mem_addr;
+    pres.pfres.eth.devregssz = sizeof(union dev_regs);
 
     if (pres.pfres.totalvfs > 0) {
         pciehdev_res_t *vfres = &pres.vfres;
         pciehdev_res_t *pfres = &pres.pfres;
         vfres->is_vf = 1;
-        /* XXX just some sample values */
         if (pfres->lifc) {
             vfres->lifb = pfres->lifb + pfres->lifc;
-            vfres->lifc = pfres->totalvfs;
+            vfres->lifc = pfres->lifc;
         }
         if (pfres->intrc) {
             vfres->intrb = pfres->intrb + pfres->intrc;
             vfres->intrc = pfres->intrc;
             vfres->intrdmask = pfres->intrdmask;
         }
-        vfres->devcmdpa = pfres->devcmddbpa + 0x1000;
-        vfres->devcmd_stride = 0x1000;
-        vfres->devcmddbpa = vfres->devcmdpa + (0x1000 * pfres->totalvfs);
-        vfres->devcmddb_stride = 0x1000;
+        vfres->eth.devregspa = pfres->eth.devregspa + 0x1000;
+        vfres->eth.devregssz = pfres->eth.devregssz;
+        vfres->eth.devregs_stride = vfres->eth.devregssz;
     }
 
     // Create PCI device
     if (spec->eth_type == ETH_HOST) {
         NIC_LOG_DEBUG("{}: Creating Host device with total_vfs: {}", spec->name, pres.pfres.totalvfs);
-        pdev = pciehdevice_new("eth", spec->name.c_str(), &pres);
+        pres.type = PCIEHDEVICE_ETH;
     } else if (spec->eth_type == ETH_HOST_MGMT) {
         NIC_LOG_DEBUG("{}: Creating Host Management device", spec->name);
-        pdev = pciehdevice_new("mgmteth", spec->name.c_str(), &pres);
+        pres.type = PCIEHDEVICE_MGMTETH;
     } else {
         assert(0); // NOT REACHABLE
     }
 
-    if (pdev == NULL) {
-        NIC_LOG_ERR("{}: Failed to create PCI device", spec->name);
-        return false;
-    }
-
     // Add device to PCI topology
     if (pciemgr) {
-        int ret = pciemgr->add_device(pdev);
+        int ret = pciemgr->add_devres(&pres);
         if (ret != 0) {
             NIC_LOG_ERR("{}: Failed to add PCI device to topology", spec->name);
             return false;

@@ -115,9 +115,8 @@ pciehdev_finalize_dev(pciehdev_t *pdev, u_int16_t bdf, u_int8_t *nextbus)
         if (pdev->peer) {
             int peerbdf;
             if (pdev->peer->vf || pdev->peer->fnn) {
-                peerbdf = bdf_make(bdf_to_bus(bdf),
-                                   bdf_to_dev(bdf),
-                                   bdf_to_fnc(bdf) + 1);
+                /* ARI math, rolls over into dev/bus if needed */
+                peerbdf = bdf + 1;
             } else {
                 peerbdf = bdf_make(bdf_to_bus(bdf), bdf_to_dev(bdf) + 1, 0);
             }
@@ -328,7 +327,7 @@ pciehdev_find_by_name(pciehdev_t *pdev, const char *name)
 pciehdev_t *
 pciehdev_get_by_name(const char *name)
 {
-    pciehdev_t *pdev_found = NULL;    
+    pciehdev_t *pdev_found = NULL;
     int port;
 
     for (port = 0; port < NPORTS; port++) {

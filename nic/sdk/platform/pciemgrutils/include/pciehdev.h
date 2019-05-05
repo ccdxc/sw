@@ -32,12 +32,18 @@ int pciehdev_linkvf(pciehdev_t *pfdev, pciehdev_t *vfdev,
                     const u_int16_t totalvfs);
 pciehbars_t *pciehdev_get_vfbars(pciehdev_t *pfdev);
 u_int16_t pciehdev_get_totalvfs(pciehdev_t *pdev);
+void pciehdev_set_totalvfs(pciehdev_t *pdev, const u_int16_t totalvfs);
 int pciehdev_addchild(pciehdev_t *pdev, pciehdev_t *pchild);
+int pciehdev_addvf(pciehdev_t *pfdev, pciehdev_t *vfdev);
 int pciehdev_make_fn0(pciehdev_t *pdev);
 int pciehdev_make_fnn(pciehdev_t *pdev, const int fnc);
 
 int pciehdev_is_pf(pciehdev_t *pdev);
 int pciehdev_is_vf(pciehdev_t *pdev);
+void pciehdev_set_pf(pciehdev_t *pdev, const int pf);
+void pciehdev_set_vf(pciehdev_t *pdev, const int vf);
+int pciehdev_get_vfidx(pciehdev_t *pdev);
+void pciehdev_set_vfidx(pciehdev_t *pdev, const int vfidx);
 
 pciehdev_t *pciehdev_get_by_bdf(const u_int8_t port, const u_int16_t bdf);
 pciehdev_t *pciehdev_get_by_name(const char *name);

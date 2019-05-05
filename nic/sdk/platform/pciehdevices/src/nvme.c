@@ -59,7 +59,7 @@ nvme_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
                 0x1000,         /* pmtsize */
                 0x1000,         /* prtsize */
                 PMTF_RW);
-    prt_res_enc(&prt, res->nvmeregspa, 0x1000, PRT_RESF_NONE);
+    prt_res_enc(&prt, res->nvme.nvmeregspa, 0x1000, PRT_RESF_NONE);
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
 
@@ -79,7 +79,7 @@ nvme_bars(pciehdev_t *pdev, const pciehdev_res_t *res)
      * So we can support up to 512 q's per 4k page.
      * (XXX For now, limit to 512 q's.  Grow bar for more doorbells.)
      */
-    nqids = MIN(res->nvmeqidc, 0x10000);
+    nqids = MIN(res->nvme.nvmeqidc, 0x10000);
     nqids = MIN(nqids, 512); /* XXX limit to 512 q's */
 
     pmt_bar_enc(&preg.pmt,
@@ -135,9 +135,20 @@ nvme_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
     return 0;
 }
 
+static int
+nvme_initpf(pciehdev_t *pfdev, const pciehdev_res_t *pfres)
+{
+    if (nvme_bars(pfdev, pfres) < 0) {
+        return -1;
+    }
+    if (nvme_cfg(pfdev, pfres) < 0) {
+        return -1;
+    }
+    return 0;
+}
+
 static pciehdevice_t nvme_device = {
-    .name = "nvme",
-    .init_bars = nvme_bars,
-    .init_cfg  = nvme_cfg,
+    .type = PCIEHDEVICE_NVME,
+    .initpf = nvme_initpf,
 };
 PCIEHDEVICE_REGISTER(nvme_device);

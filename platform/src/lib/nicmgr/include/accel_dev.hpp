@@ -101,8 +101,6 @@ private:
     PdClient                    *pd;
     // HAL Info
     devapi                      *dev_api;
-    // PCIe info
-    pciehdev_t                  *pdev;
     // Resources
     std::map<uint64_t, AccelLif *> lif_map;
     uint32_t                    lif_base;

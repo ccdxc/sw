@@ -5,7 +5,7 @@ MODULE_ARCH     := x86_64
 MODULE_TARGET   := nicmgr.gtest
 MODULE_PIPELINE := iris
 MODULE_SOLIBS   := nicmgr mnet \
-                   pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp cfgspace \
+                   pciemgr_if \
                    intrutils pal misc evutils \
                    ${NIC_SDK_SOLIBS} trace mtrack bm_allocator \
                    commonproto nicmgrproto halproto \

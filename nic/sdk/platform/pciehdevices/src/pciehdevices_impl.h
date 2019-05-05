@@ -12,8 +12,19 @@ extern "C" {
 #endif
 #endif
 
+struct pciehdevice_resources_s;
+typedef struct pciehdevice_resources_s pciehdevice_resources_t;
+struct pciehdev_s;
+typedef struct pciehdev_s pciehdev_t;
+struct pciehbars_s;
+typedef struct pciehbars_s pciehbars_t;
+struct pciehbar_s;
+typedef struct pciehbar_s pciehbar_t;
+
 typedef struct pciehdevice_s {
-    const char *name;
+    pciehdevice_type_t type;
+    int (*initpf)(pciehdev_t *pfdev, const pciehdev_res_t *pfres);
+    int (*initvf)(pciehdev_t *vfdev, const pciehdev_res_t *vfres);
     int (*init_bars)  (pciehdev_t *pdev, const pciehdev_res_t *res);
     int (*init_cfg)   (pciehdev_t *pdev, const pciehdev_res_t *res);
     int (*init_vfbars)(pciehdev_t *pdev, const pciehdev_res_t *res);

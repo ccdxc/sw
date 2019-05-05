@@ -76,6 +76,8 @@ typedef struct pciehwdev_s {
     u_int16_t pf:1;                     /* is pf */
     u_int16_t vf:1;                     /* is vf */
     u_int16_t totalvfs;                 /* totalvfs */
+    u_int16_t numvfs;                   /* current numvfs enabled */
+    u_int16_t vfidx;                    /* if is vf, vf position */
     u_int16_t bdf;                      /* bdf of this dev */
     u_int32_t lifb;                     /* lif base  for this dev */
     u_int32_t lifc;                     /* lif count for this dev */

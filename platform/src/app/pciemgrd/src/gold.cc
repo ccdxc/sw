@@ -10,6 +10,7 @@
 #include <cinttypes>
 #include <sys/types.h>
 
+#include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
@@ -57,8 +58,10 @@ gold_loop(void)
         if (pme->enabled_ports & (1 << port)) {
             pciehdev_initialize(port);
             memset(pres, 0, sizeof(*pres));
+            pres->type = PCIEHDEVICE_DEBUG;
+            strncpy0(pres->pfres.name, "debug-gold", sizeof(pres->pfres.name));
             pres->pfres.port = port;
-            pdev = pciehdevice_new("debug", "debug-gold", pres);
+            pdev = pciehdevice_new(pres);
             pciehdev_add(pdev);
             pciehdev_finalize(port);
             pcieport_crs_off(port);

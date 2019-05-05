@@ -19,6 +19,7 @@ typedef struct pciehdev_s {
     u_int32_t fn0:1;                    /* multifunction dev, function 0 */
     u_int32_t fnn;                      /* multifunction dev, function N */
     u_int16_t totalvfs;
+    u_int16_t vfidx;                    /* vf position */
     u_int32_t lifb;
     u_int32_t lifc;
     u_int32_t intrb;

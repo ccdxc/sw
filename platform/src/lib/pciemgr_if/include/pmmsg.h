@@ -15,7 +15,7 @@ extern "C" {
 typedef enum pmmsg_type_e {
     PMMSG_OPEN,
     PMMSG_INITIALIZE,
-    PMMSG_DEV_ADD,
+    PMMSG_DEVRES_ADD,
     PMMSG_FINALIZE,
     PMMSG_EVENT,
 } pmmsgtype_t;
@@ -52,6 +52,13 @@ typedef struct pmmsg_dev_add_s {
      */
 } pmmsg_dev_add_t;
 
+typedef struct pmmsg_devres_add_s {
+    int unused;
+    /*
+     * pciehdevice_resources_t
+     */
+} pmmsg_devres_add_t;
+
 typedef struct pmmsg_event_s {
     int unused;
     /*
@@ -67,6 +74,7 @@ typedef struct pmmsg_s {
         pmmsg_finalize_t finalize;
         pmmsg_initialize_t initialize;
         pmmsg_dev_add_t dev_add;
+        pmmsg_devres_add_t devres_add;
         pmmsg_event_t event;
     };
 } pmmsg_t;

@@ -282,7 +282,7 @@ pciehw_pmt_load_bar(pciehwbar_t *phwbar)
     pciehw_spmt_t *spmt = &pshmem->spmt[phwbar->pmtb];
     pciehw_spmt_t *spmte = spmt + phwbar->pmtc;
     const pciehwdev_t *phwdev = pciehwdev_get(spmt->owner);
-    const u_int16_t bdf = pciehwdev_get_bdf(phwdev);
+    const u_int16_t bdf = pciehwdev_get_hostbdf(phwdev);
 
 #ifdef __aarch64__
     pciesys_loginfo("%s: bar %d pmt %d loaded\n",
@@ -412,19 +412,21 @@ pmt_show_cfg_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
     const pmt_cfg_format_t *d = &dm->data.cfg;
     /* const pmt_cfg_format_t *m = &dm->mask.cfg; */
     const pmr_cfg_entry_t *r = &pmt->pmre.cfg;
+    /* bus adjust cfg bdf to match display of bar bdf */
+    const u_int16_t bdf = pciehw_hostbdf(d->port, d->bdf);
 
     if (last_hdr_displayed != PMTT_CFG) {
         pmt_show_cfg_entry_hdr();
         last_hdr_displayed = PMTT_CFG;
     }
 
-    pciesys_loginfo("%-4d %2d %-3s %c%c %1d:%-7s 0x%04x "
-                    "%4d %d:%-7s %4d %5d 0x%09" PRIx64 " %c%c%c%c%c\n",
+    pciesys_loginfo("%-4d %-2d %-3s %c%c %1d:%-7s 0x%04x "
+                    "%-4d %d:%-7s %-4d %-5d 0x%09" PRIx64 " %c%c%c%c%c\n",
                     pmti, d->tblid,
                     d->type == r->type ? pmt_type_str(d->type) : "BAD",
                     pmt_allows_rd(pmt) ? 'r' : '-',
                     pmt_allows_wr(pmt) ? 'w' : '-',
-                    d->port, bdf_to_str(d->bdf), d->addrdw << 2,
+                    d->port, bdf_to_str(bdf), d->addrdw << 2,
                     r->vfbase,
                     r->plimit,
                     bdf_to_str(bdf_make(r->blimit, r->dlimit, r->flimit)),
@@ -490,6 +492,7 @@ pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
     const pmt_bar_format_t *d = &dm->data.bar;
     /* const pmt_bar_format_t *m = &dm->mask.bar; */
     const pmr_bar_entry_t *pmr = &pmt->pmre.bar;
+    const u_int16_t bdf = pmr->bdf; /* already host adjusted */
     prt_t lprt, *prt = &lprt;
     int pidb, pidc, qtyb, qtyc, qidb, qidc;
     int vfb, vfc, lifb, lifc, resb, resc;
@@ -591,7 +594,7 @@ pmt_show_bar_entry(const int pmti, const pmt_t *pmt, const pmt_datamask_t *dm)
                     d->type == pmr->type ? pmt_type_str(d->type) : "BAD",
                     pmt_allows_rd(pmt) ? 'r' : '-',
                     pmt_allows_wr(pmt) ? 'w' : '-',
-                    d->port, bdf_to_str(pmr->bdf),
+                    d->port, bdf_to_str(bdf),
                     (u_int64_t)d->addrdw << 2,
                     human_readable(pmt_bar_getsize(pmt)),
                     prts,

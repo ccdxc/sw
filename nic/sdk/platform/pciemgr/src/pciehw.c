@@ -78,15 +78,23 @@ pciehwdev_get_name(const pciehwdev_t *phwdev)
     return phwdev->name;
 }
 
+/*
+ * Return a host bdf from a local bdf.
+ */
 u_int16_t
-pciehwdev_get_bdf(const pciehwdev_t *phwdev)
+pciehw_hostbdf(const int port, const u_int16_t lbdf)
 {
     pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    const pciehw_port_t *p = &pshmem->port[phwdev->port];
-    const u_int16_t bdf = bdf_make(bdf_to_bus(phwdev->bdf) + p->secbus,
-                                   bdf_to_dev(phwdev->bdf),
-                                   bdf_to_fnc(phwdev->bdf));
-    return bdf;
+    const pciehw_port_t *p = &pshmem->port[port];
+    return bdf_make(bdf_to_bus(lbdf) + p->secbus,
+                    bdf_to_dev(lbdf),
+                    bdf_to_fnc(lbdf));
+}
+
+u_int16_t
+pciehwdev_get_hostbdf(const pciehwdev_t *phwdev)
+{
+    return pciehw_hostbdf(phwdev->port, phwdev->bdf);
 }
 
 pciehwdev_t *
@@ -661,6 +669,7 @@ pciehw_finalize_dev(pciehdev_t *pdev)
     phwdev->pf = pciehdev_is_pf(pdev);
     phwdev->vf = pciehdev_is_vf(pdev);
     phwdev->totalvfs = pciehdev_get_totalvfs(pdev);
+    phwdev->vfidx = pciehdev_get_vfidx(pdev);
     phwdev->bdf = pciehdev_get_bdf(pdev);
     phwdev->port = pciehdev_get_port(pdev);
     phwdev->lifb = pciehdev_get_lifb(pdev);
@@ -786,7 +795,7 @@ dev_show1(const pciehwdev_t *phwdev, const int flags)
                     lifstr,
                     pciehwdev_get_name(phwdev),
                     phwdev->port,
-                    bdf_to_str(pciehwdev_get_bdf(phwdev)),
+                    bdf_to_str(pciehwdev_get_hostbdf(phwdev)),
                     !phwdev->vf && phwdev->intrc ?
                         "ABCD"[phwdev->intpin] : ' ',
                     intrsstr);

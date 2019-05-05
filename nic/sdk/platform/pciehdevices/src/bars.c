@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -131,13 +131,12 @@ add_common_resource_bar(pciehbars_t *pbars,
      */
 
     /*
-     * Expecting both of these fit in first page, each <= 2048.
-     * The addresses must be aligned to at least a 2048 boundary.
+     * Expecting devregs to fit in first page.
+     * The address must be aligned to at least a 4096 boundary.
      */
-    assert((res->devinfopa & (2048 - 1)) == 0);
-    assert(res->devinfosz <= 2048);
-    assert((res->devcmdpa & (2048 - 1)) == 0);
-    assert(res->devcmdsz <= 2048);
+    assert((res->eth.devregspa & (4096 - 1)) == 0);
+    assert(res->eth.devregssz <= 4096);
+    assert(res->eth.devregssz > dboff + 4); /* must cover doorbell */
 
     /* Max MSIX Interrupt Table entries is 2048 per PCIe spec. */
     assert(res->intrc <= 2048);
@@ -186,44 +185,36 @@ add_common_resource_bar(pciehbars_t *pbars,
                 0x800, /* prtsize */
                 PMTF_WR);
     /* 0-size res mapping claims writes but discards them */
-    prt_res_enc(&prt, res->devinfopa, 0, PRT_RESF_PMVDIS);
+    prt_res_enc(&prt, res->eth.devregspa, 0, PRT_RESF_PMVDIS);
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
 
     /*****************
-     * +0x0800 + dboff Device Cmd Regs 4-byte doorbell */
+     * +0x0800 Device Cmd Regs 4-byte doorbell */
     memset(&preg, 0, sizeof(preg));
-    preg.baroff = 0x800 + dboff;
+    preg.baroff = dboff;
     pmt_bar_enc(&preg.pmt,
                 res->port,
                 PMT_TYPE_MEM,
                 0x4,    /* pmtsize */
                 0x4,    /* prtsize */
                 PMTF_WR);
-    prt_res_enc(&prt, res->devcmdpa + dboff, 4,
+    prt_res_enc(&prt, res->eth.devregspa + dboff, 4,
                 PRT_RESF_PMVDIS | PRT_RESF_NOTIFY);
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
 
     /*****************
-     * +0x0000 Device Info Regs
-     * +0x0800 Device Cmd Regs
+     * +0x0000 Device Info/Cmd Regs (rw for devcmd section)
      */
     memset(&preg, 0, sizeof(preg));
     pmt_bar_enc(&preg.pmt,
                 res->port,
                 PMT_TYPE_MEM,
                 0x1000, /* pmtsize */
-                0x0800, /* prtsize */
+                0x1000, /* prtsize */
                 PMTF_RW);
-    pmt_bar_setr_prt(&preg.pmt, 11, 1);
-
-    /* +0x0000 Device Info Regs */
-    prt_res_enc(&prt, res->devinfopa, res->devinfosz, PRT_RESF_PMVDIS);
-    pciehbarreg_add_prt(&preg, &prt);
-
-    /* +0x0800 Device Cmd Regs */
-    prt_res_enc(&prt, res->devcmdpa, res->devcmdsz, PRT_RESF_PMVDIS);
+    prt_res_enc(&prt, res->eth.devregspa, res->eth.devregssz, PRT_RESF_PMVDIS);
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
 

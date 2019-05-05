@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2019, Pensando Systems Inc.
  */
 
 #ifndef __PCIEMGR_IF_HPP__
@@ -7,6 +7,9 @@
 
 struct pciehdev_s;
 typedef struct pciehdev_s pciehdev_t;
+
+struct pciehdevice_resources_s;
+typedef struct pciehdevice_resources_s pciehdevice_resources_t;
 
 struct pciehdev_eventdata_s;
 typedef struct pciehdev_eventdata_s pciehdev_eventdata_t;
@@ -42,7 +45,7 @@ public:
 
     int initialize(const int port = 0);
     int finalize(const int port = 0);
-    int add_device(pciehdev_t *pdev);
+    int add_devres(pciehdevice_resources_t *pres);
 
 private:
     void msghandler(pmmsg_t *m);

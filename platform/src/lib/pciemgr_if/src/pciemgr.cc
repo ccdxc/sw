@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -12,6 +12,7 @@
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/cfgspace/include/cfgspace.h"
+#include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciehdev_impl.h"
@@ -72,113 +73,23 @@ pciemgr::finalize(const int port)
     return pciemgrc_msgsend(&m);
 }
 
-static void
-msg_copy(pmmsg_t *m, char **mpp, void *buf, size_t len)
-{
-    if (m) {
-        memcpy(*mpp, buf, len);
-    }
-    *mpp += len;
-}
-
-static void
-msgwrite_reg(pmmsg_t *m, char **mpp, pciehbarreg_t *preg)
-{
-    msg_copy(m, mpp, preg, sizeof(pciehbarreg_t));
-    msg_copy(m, mpp, preg->prts, sizeof(prt_t) * preg->nprts);
-}
-
-static void
-msgwrite_bar(pmmsg_t *m, char **mpp, pciehbar_t *pbar)
-{
-    pciehbarreg_t *preg = pbar->regs;
-
-    for (int r = 0; r < pbar->nregs; r++, preg++) {
-        msgwrite_reg(m, mpp, preg);
-    }
-}
-
-static void
-msgwrite_bars(pmmsg_t *m, char **mpp, pciehbars_t *pbars)
-{
-    pciehbar_t *pbar;
-
-    // copy our bars header structure
-    msg_copy(m, mpp, pbars, sizeof(pciehbars_t));
-
-    // copy each bar
-    for (pbar = pciehbars_get_first(pbars);
-         pbar != NULL;
-         pbar = pciehbars_get_next(pbars, pbar)) {
-        msgwrite_bar(m, mpp, pbar);
-    }
-    // rom bar
-    pbar = pciehbars_get_rombar(pbars);
-    if (pbar) {
-        msgwrite_bar(m, mpp, pbar);
-    }
-}
-
-static void
-msgwrite_cfg(pmmsg_t *m, char **mpp, pciehcfg_t *pcfg)
-{
-    msg_copy(m, mpp, pcfg, sizeof(pciehcfg_t));
-    msg_copy(m, mpp, pcfg->cur, PCIEHCFGSZ);
-    msg_copy(m, mpp, pcfg->msk, PCIEHCFGSZ);
-}
-
-static void
-msgwrite_dev(pmmsg_t *m, char **mpp, pciehdev_t *pdev)
-{
-    msg_copy(m, mpp, pdev, sizeof(pciehdev_t));
-}
-
-static void
-msgwrite_dev_structs(pmmsg_t *m, char **mpp, pciehdev_t *pdev)
-{
-    msgwrite_dev(m, mpp, pdev);
-
-    pciehcfg_t *pcfg = pciehdev_get_cfg(pdev);
-    msgwrite_cfg(m, mpp, pcfg);
-
-    pciehbars_t *pbars = pciehdev_get_bars(pdev);
-    msgwrite_bars(m, mpp, pbars);
-}
-
 int
-pciemgr::add_device(pciehdev_t *pdev)
+pciemgr::add_devres(pciehdevice_resources_t *pres)
 {
     pmmsg_t *m;
     char *mp;
 
-    //
-    // Determine the total size of our msg payload.
-    // NULL msg here indicates just count bytes in mp.
-    //
-    mp = NULL;
-    msgwrite_dev_structs(NULL, &mp, pdev);
-    if (pdev->pf) {
-        pciehdev_t *vfdev = pdev->child;
-        msgwrite_dev_structs(NULL, &mp, vfdev);
-    }
-
-    //
-    // Alloc a msg of the determined size.
-    //
-    const size_t msglen = sizeof(pmmsg_dev_add_t) + (size_t)mp;
+    const size_t msglen = (sizeof(pmmsg_devres_add_t) +
+                           sizeof(pciehdevice_resources_t));
     pciemgrc_msgalloc(&m, msglen);
     // msg header
-    m->hdr.msgtype = PMMSG_DEV_ADD;
-    mp = (char *)&m->dev_add + sizeof(pmmsg_dev_add_t);
+    m->hdr.msgtype = PMMSG_DEVRES_ADD;
+    mp = (char *)&m->devres_add + sizeof(pmmsg_devres_add_t);
 
     //
     // Now copy our data to the msg.
     //
-    msgwrite_dev_structs(m, &mp, pdev);
-    if (pdev->pf) {
-        pciehdev_t *vfdev = pdev->child;
-        msgwrite_dev_structs(m, &mp, vfdev);
-    }
+    memcpy(mp, pres, sizeof(*pres));
 
     // msg complete - send it
     pciemgrc_msgsend(m);

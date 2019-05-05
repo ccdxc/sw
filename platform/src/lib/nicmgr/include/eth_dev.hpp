@@ -151,8 +151,6 @@ private:
     // ROM
     uint64_t rom_mem_addr;
     uint32_t rom_mem_size;
-    // PCIe info
-    pciehdev_t *pdev;
     // Port Status
     struct port_info *port_info;
     uint64_t port_info_addr;

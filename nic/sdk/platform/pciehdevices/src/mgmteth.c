@@ -65,9 +65,20 @@ mgmteth_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
     return 0;
 }
 
+static int
+mgmteth_initpf(pciehdev_t *pfdev, const pciehdev_res_t *pfres)
+{
+    if (mgmteth_bars(pfdev, pfres) < 0) {
+        return -1;
+    }
+    if (mgmteth_cfg(pfdev, pfres) < 0) {
+        return -1;
+    }
+    return 0;
+}
+
 static pciehdevice_t mgmteth_device = {
-    .name = "mgmteth",
-    .init_bars = mgmteth_bars,
-    .init_cfg  = mgmteth_cfg,
+    .type = PCIEHDEVICE_MGMTETH,
+    .initpf = mgmteth_initpf,
 };
 PCIEHDEVICE_REGISTER(mgmteth_device);

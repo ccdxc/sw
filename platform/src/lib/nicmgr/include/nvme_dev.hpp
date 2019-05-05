@@ -74,8 +74,6 @@ private:
     PdClient                    *pd;
     // HAL Info
     devapi                      *dev_api;
-    // PCIe info
-    pciehdev_t                  *pdev;
     // Resources
     NvmeLif                     *lif;
 

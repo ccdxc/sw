@@ -108,9 +108,20 @@ debug_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
     return 0;
 }
 
+static int
+debug_initpf(pciehdev_t *pfdev, const pciehdev_res_t *pfres)
+{
+    if (debug_bars(pfdev, pfres) < 0) {
+        return -1;
+    }
+    if (debug_cfg(pfdev, pfres) < 0) {
+        return -1;
+    }
+    return 0;
+}
+
 static pciehdevice_t debug_device = {
-    .name = "debug",
-    .init_bars = debug_bars,
-    .init_cfg  = debug_cfg,
+    .type = PCIEHDEVICE_DEBUG,
+    .initpf = debug_initpf,
 };
 PCIEHDEVICE_REGISTER(debug_device);

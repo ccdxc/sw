@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Pensando Systems Inc.
+ * Copyright (c) 2018-2019, Pensando Systems Inc.
  */
 
 #include <stdio.h>
@@ -13,6 +13,7 @@
 #include <sys/param.h>
 #include <sys/time.h>
 
+#include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
@@ -98,14 +99,17 @@ main(int argc, char *argv[])
     pciehdev_res_t *pfres = &pres.pfres;
     pciehdev_res_t *vfres = &pres.vfres;
     memset(&pres, 0, sizeof(pres));
+    pres.type = PCIEHDEVICE_ETH;
+    strncpy0(pres.pfres.name, "eth", sizeof(pres.pfres.name));
     pfres->lifb = 5;
     pfres->lifc = 1;
     pfres->intrb = 0;
     pfres->intrc = 4;
-    pfres->devcmdpa = 0x13f000000;
-    pfres->devcmddbpa = 0x13f001000;
+    pfres->intrdmask = 1;
     pfres->romsz = 4096;
     pfres->rompa = 0x13f000000;
+    pfres->eth.devregspa = 0x13f000000;
+    pfres->eth.devregssz = 0x1000;
 
     /* sriov pf with totalvfs */
     if (totalvfs) {
@@ -113,23 +117,22 @@ main(int argc, char *argv[])
         vfres->is_vf = 1;
         if (pfres->lifc) {
             vfres->lifb = pfres->lifb + pfres->lifc;
-            vfres->lifc = pfres->totalvfs;
+            vfres->lifc = pfres->lifc;
         }
         if (pfres->intrc) {
             vfres->intrb = pfres->intrb + pfres->intrc;
             vfres->intrc = pfres->intrc;
+            vfres->intrdmask = pfres->intrdmask;
         }
-        vfres->devcmdpa = pfres->devcmddbpa + 0x1000;
-        vfres->devcmd_stride = 0x1000;
-        vfres->devcmddbpa = vfres->devcmdpa + (0x1000 * pfres->totalvfs);
-        vfres->devcmddb_stride = 0x1000;
+        vfres->eth.devregspa = pfres->eth.devregspa + 0x1000;
+        vfres->eth.devregssz = pfres->eth.devregssz;
+        vfres->eth.devregs_stride = vfres->eth.devregssz;
     }
 
-    pciehdev_t *pdev = pciehdevice_new("eth", "eth", &pres);
-    printf("adding pdev %p lif %u totalvfs %d\n",
-           pdev, pfres->lifb, pfres->totalvfs);
-    pciemgr->add_device(pdev);
-
+    if (pciemgr->add_devres(&pres) < 0) {
+        fprintf(stderr, "add_devres failed\n");
+        exit(1);
+    }
     pciemgr->finalize();
 
     printf("evutil_run()\n");

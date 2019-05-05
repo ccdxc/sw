@@ -85,10 +85,26 @@ pciehdev_linkvf(pciehdev_t *pfdev, pciehdev_t *vfdev, const u_int16_t totalvfs)
     return 0;
 }
 
+int
+pciehdev_addvf(pciehdev_t *pfdev, pciehdev_t *vfdev)
+{
+    pciehdev_t **ppdev;
+
+    ppdev = &pfdev->child;
+    for (; *ppdev; ppdev = &(*ppdev)->peer) {
+        continue;
+    }
+    *ppdev = vfdev;
+    if (vfdev) {
+        vfdev->parent = pfdev;
+    }
+    return 0;
+}
+
 pciehbars_t *
 pciehdev_get_vfbars(pciehdev_t *pfdev)
 {
-    return pciehdev_get_bars(pfdev->child);
+    return pciehdev_is_pf(pfdev) ? pciehdev_get_bars(pfdev->child) : NULL;
 }
 
 u_int16_t
@@ -97,16 +113,46 @@ pciehdev_get_totalvfs(pciehdev_t *pdev)
     return pdev->totalvfs;
 }
 
+void
+pciehdev_set_totalvfs(pciehdev_t *pdev, const u_int16_t totalvfs)
+{
+    pdev->totalvfs = totalvfs;
+}
+
 int
 pciehdev_is_pf(pciehdev_t *pdev)
 {
     return pdev->pf;
 }
 
+void
+pciehdev_set_pf(pciehdev_t *pdev, const int pf)
+{
+    pdev->pf = pf;
+}
+
 int
 pciehdev_is_vf(pciehdev_t *pdev)
 {
     return pdev->vf;
+}
+
+void
+pciehdev_set_vf(pciehdev_t *pdev, const int vf)
+{
+    pdev->vf = vf;
+}
+
+int
+pciehdev_get_vfidx(pciehdev_t *pdev)
+{
+    return pdev->vfidx;
+}
+
+void
+pciehdev_set_vfidx(pciehdev_t *pdev, const int vfidx)
+{
+    pdev->vfidx = vfidx;
 }
 
 int

@@ -109,9 +109,20 @@ pciestress_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
     return 0;
 }
 
+static int
+pciestress_initpf(pciehdev_t *pfdev, const pciehdev_res_t *pfres)
+{
+    if (pciestress_bars(pfdev, pfres) < 0) {
+        return -1;
+    }
+    if (pciestress_cfg(pfdev, pfres) < 0) {
+        return -1;
+    }
+    return 0;
+}
+
 static pciehdevice_t pciestress_device = {
-    .name = "pciestress",
-    .init_bars = pciestress_bars,
-    .init_cfg  = pciestress_cfg,
+    .type = PCIEHDEVICE_PCIESTRESS,
+    .initpf = pciestress_initpf,
 };
 PCIEHDEVICE_REGISTER(pciestress_device);

@@ -112,9 +112,20 @@ virtio_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
     return 0;
 }
 
+static int
+virtio_initpf(pciehdev_t *pfdev, const pciehdev_res_t *pfres)
+{
+    if (virtio_bars(pfdev, pfres) < 0) {
+        return -1;
+    }
+    if (virtio_cfg(pfdev, pfres) < 0) {
+        return -1;
+    }
+    return 0;
+}
+
 static pciehdevice_t virtio_device = {
-    .name = "virtio",
-    .init_bars = virtio_bars,
-    .init_cfg  = virtio_cfg,
+    .type = PCIEHDEVICE_VIRTIO,
+    .initpf = virtio_initpf,
 };
 PCIEHDEVICE_REGISTER(virtio_device);

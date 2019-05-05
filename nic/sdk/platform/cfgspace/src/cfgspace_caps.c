@@ -416,26 +416,19 @@ cfgspace_setcap_pm(cfgspace_t *cs,
     u_int16_t pmc, pmcsr_mask;
 
     assert(capaddr + caplen < cfgspace_size(cs));
-    cfgspace_setb(cs, capaddr, 0x1); /* power managmenet cap id */
+    cfgspace_setb(cs, capaddr, 0x1); /* power management cap id */
     cfgspace_setb(cs, capaddr + 0x1, 0); /* cap->next = NULL */
 
     /*****************
      * Power Management Capabilities (PMC)
      */
     pmc = 0x0003;               /* Version 1.2 */
-    if (cfgspace_is_bridge(cp)) {
-        /* spec: a bridge must implement at least these */
-        pmc |= ((1 << 11) |     /* PME D0 */
-                (1 << 14) |     /* PME D3 hot */
-                (1 << 15));     /* PME D3 cold */
-    }
     cfgspace_setw(cs, capaddr + 0x2, pmc);
 
     /*****************
      * Power Management Control/Status (PMCSR)
      */
-    pmcsr_mask = (0x3 |         /* PowerState */
-                  (1 << 8));    /* PME_En */
+    pmcsr_mask = 0x3;           /* PowerState */
     cfgspace_setwm(cs, capaddr + 0x4, 0, pmcsr_mask);
 
     cfgspace_setb(cs, capaddr + 0x6, 0); /* PMCSR_BSE */

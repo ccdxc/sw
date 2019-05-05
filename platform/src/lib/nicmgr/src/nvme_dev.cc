@@ -45,8 +45,7 @@ NvmeDev::NvmeDev(devapi *dapi,
                  PdClient *pd_client) :
     spec((nvme_devspec_t *)dev_spec),
     pd(pd_client),
-    dev_api(dapi),
-    pdev(nullptr)
+    dev_api(dapi)
 {
     nvme_lif_res_t      lif_res;
     sdk_ret_t           ret = SDK_RET_OK;
@@ -219,32 +218,24 @@ NvmeDev::ParseConfig(boost::property_tree::ptree::value_type node)
 bool
 NvmeDev::_CreateHostDevice(void)
 {
-    pciehdevice_resources_t pres = {0};
+    pciehdevice_resources_t pres;
 
+    memset(&pres, 0, sizeof(pres));
+    pres.type = PCIEHDEVICE_NVME;
+    strncpy0(pres.pfres.name, DevNameGet().c_str(), sizeof(pres.pfres.name));
     pres.pfres.port = spec->pcie_port;
     pres.pfres.lifb = lif_base;
     pres.pfres.lifc = spec->lif_count;
     pres.pfres.intrb = intr_base;
     pres.pfres.intrc = spec->intr_count;
     pres.pfres.intrdmask = 0;
-    pres.pfres.npids = 1;
-    //pres.pfres.devcmdpa = devcmd_mem_addr;
-    pres.pfres.devcmddbpa = devcmddb_mem_addr;
-    pres.pfres.nvmeregspa = devcmd_mem_addr;
     pres.pfres.cmbpa = cmb_mem_addr;
     pres.pfres.cmbsz = cmb_mem_size;
-
-    // Create PCI device
-    NIC_LOG_DEBUG("{}: Creating PCI device", DevNameGet());
-    pdev = pciehdevice_new("nvme", DevNameGet().c_str(), &pres);
-    if (pdev == NULL) {
-        NIC_LOG_ERR("{}: Failed to create PCI device", DevNameGet());
-        return false;
-    }
+    pres.pfres.nvme.nvmeregspa = devcmd_mem_addr;
 
     // Add device to PCI topology
     if (pciemgr) {
-        int ret = pciemgr->add_device(pdev);
+        int ret = pciemgr->add_devres(&pres);
         if (ret != 0) {
             NIC_LOG_ERR("{}: Failed to add PCI device to topology",
                         DevNameGet());
@@ -258,10 +249,6 @@ NvmeDev::_CreateHostDevice(void)
 void
 NvmeDev::_DestroyHostDevice(void)
 {
-    if (pdev) {
-        pciehdev_delete(pdev);
-        pdev = nullptr;
-    }
 }
 
 void

@@ -11,6 +11,7 @@
 #include <sys/param.h>
 
 #include "platform/pciehdevices/include/pci_ids.h"
+#include "platform/misc/include/misc.h"
 #include "platform/cfgspace/include/cfgspace.h"
 #include "platform/pciemgrutils/include/pciemgrutils.h"
 #include "pciehcfg_impl.h"
@@ -476,7 +477,7 @@ pciehcfg_add_standard_pfcaps(pciehcfg_t *pcfg, pciehbars_t *vfbars)
     if (pcfg->pf) {
         addextcap(pcfg, cs, cp, "sriov");
     }
-    if (!cfgspace_is_bridge(cp)) {
+    if ((pcfg->pf || pcfg->vf) && !cfgspace_is_bridge(cp)) {
         /* only endpoints need ARI */
         addextcap(pcfg, cs, cp, "ari");
     }

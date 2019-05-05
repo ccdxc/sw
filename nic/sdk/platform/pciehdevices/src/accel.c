@@ -95,7 +95,7 @@ add_accel_resource_bar(pciehbars_t *pbars,
                 0x4,    /* prtsize */
                 PMTF_WR);
     /* 0-size res mapping claims writes but discards them */
-    prt_res_enc(&prt, res->devcmdpa, 0, PRT_RESF_PMVDIS);
+    prt_res_enc(&prt, res->accel.devcmdpa, 0, PRT_RESF_PMVDIS);
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
 
@@ -113,12 +113,12 @@ add_accel_resource_bar(pciehbars_t *pbars,
     pmt_bar_setr_prt(&preg.pmt, 12, 1);
 
     /* +0x0000 Device Cmd Regs */
-    prt_res_enc(&prt, res->devcmdpa, 0x1000, PRT_RESF_PMVDIS);
+    prt_res_enc(&prt, res->accel.devcmdpa, 0x1000, PRT_RESF_PMVDIS);
     pciehbarreg_add_prt(&preg, &prt);
 
     /* +0x1000 Device Cmd Doorbell */
-    prt_res_enc(&prt, res->devcmddbpa, 0x4, (PRT_RESF_NOTIFY |
-                                             PRT_RESF_PMVDIS));
+    prt_res_enc(&prt, res->accel.devcmddbpa, 0x4, (PRT_RESF_NOTIFY |
+                                                   PRT_RESF_PMVDIS));
     pciehbarreg_add_prt(&preg, &prt);
     pciehbar_add_reg(&pbar, &preg);
 
@@ -299,9 +299,20 @@ accel_cfg(pciehdev_t *pdev, const pciehdev_res_t *res)
     return 0;
 }
 
+static int
+accel_initpf(pciehdev_t *pfdev, const pciehdev_res_t *pfres)
+{
+    if (accel_bars(pfdev, pfres) < 0) {
+        return -1;
+    }
+    if (accel_cfg(pfdev, pfres) < 0) {
+        return -1;
+    }
+    return 0;
+}
+
 static pciehdevice_t accel_device = {
-    .name = "accel",
-    .init_bars = accel_bars,
-    .init_cfg  = accel_cfg,
+    .type = PCIEHDEVICE_ACCEL,
+    .initpf = accel_initpf,
 };
 PCIEHDEVICE_REGISTER(accel_device);
