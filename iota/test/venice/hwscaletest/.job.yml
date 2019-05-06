@@ -26,7 +26,7 @@ e2e-targets:
          - control-1
          - control-2
      - image: build-10
-       count: 18
+       count: 15
        resources:
          # server-type could be server-a or server-d
          server-type: server-d
