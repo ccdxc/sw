@@ -1,0 +1,121 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for interface related objects
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "meta/meta.proto";
+import "types.proto";
+
+service IfSvc {
+  rpc InterfaceCreate (InterfaceRequest) returns (InterfaceResponse) {}
+  rpc InterfaceDelete (InterfaceDeleteRequest) returns (InterfaceDeleteResponse) {}
+  rpc InterfaceGet (InterfaceGetRequest) returns (InterfaceGetResponse) {}
+}
+
+// types of interfaces
+enum IfType {
+  IF_TYPE_NONE      = 0;
+  // uplink interface
+  IF_TYPE_UPLINK    = 1;
+  // uplink port-channel interface
+  IF_TYPE_UPLINK_PC = 2;
+}
+
+// IfStatus status reflects the operational status of Interface
+enum IfStatus {
+  IF_STATUS_NONE = 0;
+  IF_STATUS_UP   = 1;
+  IF_STATUS_DOWN = 2;
+}
+
+// Uplink configuration (if interface type is IF_TYPE_UPLINK)
+message UplinkSpec {
+  // physical port id corresponding to this interface
+  uint32 PortId       = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // Untagged ingress packets are considered as coming with this VLAN id
+  // Egress packet tagged with this VLAN id are sent untagge
+  uint32 NativeVlanId = 2;
+}
+
+// Uplink port-channel configuration (i.e., if interface type is
+// IF_TYPE_UPLINK_PC)
+message UplinkPCSpec {
+  // member interfaces of this port-channel in the form of bitmap
+  // (e.g. if uplink interfaces 1 and 2 part of this port channel
+  // this is set to 0x11
+  uint64 MemberIfBitmap = 1;
+  // Untagged ingress packets are considered as coming with this VLAN id
+  // Egress packet tagged with this VLAN id are sent untagge
+  uint32 NativeVlanId   = 2;
+}
+
+// InterfaceSpec is used to add or update of an interface
+message InterfaceSpec {
+  // unique interface id
+  // NOTE: interface ids start from 1, for IF_TYPE_UPLINK this id is in the
+  //       range [1...max-ports#] and same for IF_TYPE_UPLINK_PC
+  uint32           Id          = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // type of the interface
+  IfType           Type        = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // port up|down adminstratively
+  IfStatus         AdminStatus = 3;
+  // interface type specific configuration
+  oneof if_info {
+    // uplink specific configuration
+    UplinkSpec   UplinkSpec    = 4 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.type==IF_TYPE_UPLINK}"];
+    UplinkPCSpec UplinkPCSpec  = 5 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.type==IF_TYPE_UPLINK_PC}"];
+  }
+}
+
+// operational status of an interface, if any
+message InterfaceStatus {
+}
+
+// stats for an interface, if any
+message InterfaceStats {
+}
+
+// interface Object
+message Interface {
+  meta.TypeMeta  TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta   ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  InterfaceSpec   Spec    = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  InterfaceStatus Status  = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  InterfaceStats  Stats   = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// interface create and update request
+message InterfaceRequest {
+  repeated InterfaceSpec Request = 1; // batched requests
+}
+
+// interface create and update response
+message InterfaceResponse {
+  types.ApiStatus          ApiStatus = 1;
+  repeated InterfaceStatus Response  = 2; // batched response
+}
+
+// interface get request
+message InterfaceGetRequest {
+  repeated uint32 Id = 1;
+}
+
+// interface get response
+message InterfaceGetResponse {
+  types.ApiStatus    ApiStatus = 1; // API status code
+  repeated Interface Response  = 2;
+}
+
+// interface delete request
+message InterfaceDeleteRequest {
+  repeated uint32 Id = 1;
+}
+
+// interface delete response
+message InterfaceDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1; // API status code
+}

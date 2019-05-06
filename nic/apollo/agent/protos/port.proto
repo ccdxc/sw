@@ -254,9 +254,10 @@ enum PortFecType {
 
 message PortSpec {
   // port id (key for this object)
-  uint32           PortId          = 1;
+  // NOTE: currently, port ids must be in the range of [1-2]
+  uint32           Id              = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // port up|down adminstratively
-  PortAdminState   AdminState      = 2;
+  PortAdminState   AdminState      = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // port speed
   PortSpeed        Speed           = 3;
   // FEC type
@@ -298,7 +299,7 @@ message Port {
 }
 
 message PortGetRequest {
-  repeated uint32 PortId = 1;
+  repeated uint32 Id = 1;
 }
 
 message PortGetResponse {

@@ -10,7 +10,8 @@
 #include "nic/apollo/agent/svc/util.hpp"
 
 static inline void
-pds_port_stats_fill (pds::PortStats *stats, sdk::linkmgr::port_args_t *port_info)
+pds_port_stats_fill (pds::PortStats *stats,
+                     sdk::linkmgr::port_args_t *port_info)
 {
     if (port_info->port_type == port_type_t::PORT_TYPE_ETH) {
         for (uint32_t i = 0; i < MAX_MAC_STATS; i++) {
@@ -30,7 +31,7 @@ pds_port_stats_fill (pds::PortStats *stats, sdk::linkmgr::port_args_t *port_info
 static inline void
 pds_port_specs_fill (pds::PortSpec *spec, sdk::linkmgr::port_args_t *port_info)
 {
-    spec->set_portid(port_info->port_num);
+    spec->set_id(port_info->port_num);
     switch(port_info->admin_state) {
     case port_admin_state_t::PORT_ADMIN_STATE_DOWN:
         spec->set_adminstate(pds::PORT_ADMIN_STATE_DOWN);
@@ -45,7 +46,8 @@ pds_port_specs_fill (pds::PortSpec *spec, sdk::linkmgr::port_args_t *port_info)
 }
 
 static inline void
-pds_port_status_fill (pds::PortStatus *status, sdk::linkmgr::port_args_t *port_info)
+pds_port_status_fill (pds::PortStatus *status,
+                      sdk::linkmgr::port_args_t *port_info)
 {
     auto link_status = status->mutable_linkstatus();
     auto xcvr_status = status->mutable_xcvrstatus();
@@ -108,20 +110,23 @@ pds_port_fill (sdk::linkmgr::port_args_t *port_info, void *ctxt)
 }
 
 Status
-PortSvcImpl::PortGet(ServerContext *context, const pds::PortGetRequest *proto_req,
+PortSvcImpl::PortGet(ServerContext *context,
+                     const pds::PortGetRequest *proto_req,
                      pds::PortGetResponse *proto_rsp) {
     sdk_ret_t ret;
 
     PDS_TRACE_VERBOSE("Received Port Get");
 
     if (proto_req) {
-        for (int i = 0; i < proto_req->portid_size(); i ++) {
-            if ((ret = api::port_get(proto_req->portid(i), pds_port_fill, proto_rsp)) != SDK_RET_OK) {
+        for (int i = 0; i < proto_req->id_size(); i ++) {
+            if ((ret = api::port_get(proto_req->id(i), pds_port_fill,
+                                     proto_rsp)) != SDK_RET_OK) {
                 proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
             }
         }
-        if (proto_req->portid_size() == 0) {
-            if ((ret = api::port_get(0, pds_port_fill, proto_rsp)) != SDK_RET_OK) {
+        if (proto_req->id_size() == 0) {
+            if ((ret = api::port_get(0, pds_port_fill,
+                                     proto_rsp)) != SDK_RET_OK) {
                 proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
             }
         }
@@ -145,12 +150,13 @@ proto_port_admin_state_to_sdk_admin_state (pds::PortAdminState proto_state)
 }
 
 Status
-PortSvcImpl::PortUpdate(ServerContext *context, const pds::PortUpdateRequest *proto_req,
+PortSvcImpl::PortUpdate(ServerContext *context,
+                        const pds::PortUpdateRequest *proto_req,
                         pds::PortUpdateResponse *proto_rsp) {
     sdk_ret_t ret;
 
     PDS_TRACE_VERBOSE("Received Port Update");
-    ret = api::update_port(proto_req->spec().portid(),
+    ret = api::update_port(proto_req->spec().id(),
                            proto_port_admin_state_to_sdk_admin_state(proto_req->spec().adminstate()));
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
 

@@ -111,7 +111,7 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 
 	req = &pds.PortUpdateRequest{
 		Spec: &pds.PortSpec{
-			PortId:     ifIndex,
+			Id:     ifIndex,
 			AdminState: adminState,
 		},
 	}
@@ -179,12 +179,12 @@ func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 		}
 
 		req = &pds.PortGetRequest{
-			PortId: []uint32{ifIndex},
+			Id: []uint32{ifIndex},
 		}
 	} else {
 		// Get all Ports
 		req = &pds.PortGetRequest{
-			PortId: []uint32{},
+			Id: []uint32{},
 		}
 	}
 
@@ -243,8 +243,8 @@ func printPortStatus(resp *pds.Port) {
 	}
 
 	fmt.Printf("%-10s0x%-14x%-12s%-10s%-14s\n",
-		ifIndexToPortIdStr(resp.GetSpec().GetPortId()),
-		resp.GetSpec().GetPortId(),
+		ifIndexToPortIdStr(resp.GetSpec().GetId()),
+		resp.GetSpec().GetId(),
 		adminStateStr, operStatusStr,
 		xcvrStr)
 }
@@ -275,12 +275,12 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 
 		req = &pds.PortGetRequest{
-			PortId: []uint32{ifIndex},
+			Id: []uint32{ifIndex},
 		}
 	} else {
 		// Get all Ports
 		req = &pds.PortGetRequest{
-			PortId: []uint32{},
+			Id: []uint32{},
 		}
 	}
 
@@ -352,7 +352,7 @@ func printPortStats(resp *pds.Port) {
 	macStats := resp.GetStats().GetMacStats()
 	mgmtMacStats := resp.GetStats().GetMgmtMacStats()
 
-	fmt.Printf("%-8s", ifIndexToPortIdStr(resp.GetSpec().GetPortId()))
+	fmt.Printf("%-8s", ifIndexToPortIdStr(resp.GetSpec().GetId()))
 	for _, s := range macStats {
 		if first == false {
 			fmt.Printf("%-8s", "")
