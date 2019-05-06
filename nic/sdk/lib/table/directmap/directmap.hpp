@@ -105,7 +105,7 @@ private:
         ITERATE
     };
     directmap();
-    ~directmap() {}
+    ~directmap();
     bool init(char *name, uint32_t id, uint32_t capacity, uint32_t swdata_len,
               bool sharing_en = false, bool entry_trace_en = false,
               table_health_monitor_func_t health_monitor_func = NULL);

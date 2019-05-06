@@ -255,7 +255,7 @@ threads_stop (void)
         if (g_thread_store[thread_id] != NULL) {
             g_thread_store[thread_id]->wait();
             // free the allocated thread
-            SDK_FREE(SDK_MEM_ALLOC_LIB_THREAD, g_thread_store[thread_id]);
+            sdk::lib::thread::destroy(g_thread_store[thread_id]);
             g_thread_store[thread_id] = NULL;
         }
     }

@@ -522,7 +522,7 @@ linkmgr_threads_stop (void)
         if (g_linkmgr_threads[thread_id] != NULL) {
             g_linkmgr_threads[thread_id]->wait();
             // free the allocated thread
-            SDK_FREE(SDK_MEM_ALLOC_LIB_THREAD, g_linkmgr_threads[thread_id]);
+            sdk::lib::thread::destroy(g_linkmgr_threads[thread_id]);
             g_linkmgr_threads[thread_id] = NULL;
         }
     }
@@ -1352,7 +1352,7 @@ stop_aacs_server (void)
         // stop the thread
         g_linkmgr_threads[thread_id]->stop();
         // free the allocated thread
-        SDK_FREE(SDK_MEM_ALLOC_LIB_THREAD, g_linkmgr_threads[thread_id]);
+        sdk::lib::thread::destroy(g_linkmgr_threads[thread_id]);
         g_linkmgr_threads[thread_id] = NULL;
     }
 

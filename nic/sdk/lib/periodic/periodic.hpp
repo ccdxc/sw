@@ -38,6 +38,11 @@ void *periodic_thread_init(void *ctxt);
 void *periodic_thread_run(void *ctxt);
 
 //------------------------------------------------------------------------------
+// cleanup for periodic thread
+//------------------------------------------------------------------------------
+void periodic_thread_cleanup(void *arg=NULL);
+
+//------------------------------------------------------------------------------
 // API invoked by other threads to trigger cb after timeout
 // Returns the timer entry used to update/delete the timer
 //------------------------------------------------------------------------------

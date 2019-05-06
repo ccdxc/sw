@@ -34,6 +34,10 @@ public:
     /// \return always NULL
     static void *nicmgr_thread_start(void *ctxt);
 
+    /// \brief    nicmgr thread's cleanup point
+    /// \param[in]    arg object to be destroyed
+    static void nicmgr_thread_cleanup(void *arg=NULL);
+
 private:
     /// \brief    constructor
     nicmgrapi() {}

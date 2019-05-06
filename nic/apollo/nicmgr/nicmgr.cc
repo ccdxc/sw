@@ -51,6 +51,7 @@ nicmgrapi::nicmgr_thread_start(void *ctxt) {
     devmgr = new DeviceManager(config_file, fwd_mode, platform);
     devmgr->LoadConfig(config_file);
 
+    pthread_cleanup_push(nicmgr::nicmgrapi::nicmgr_thread_cleanup, NULL);
     // creating mnets
     PDS_TRACE_INFO("Creating mnets ...");
     devmgr->HalEventHandler(true);
@@ -63,9 +64,19 @@ nicmgrapi::nicmgr_thread_start(void *ctxt) {
 
     PDS_TRACE_INFO("Listening to events ...");
     evutil_run();
+    pthread_cleanup_pop(1);
 
     return NULL;
 }
+
+//------------------------------------------------------------------------------
+// nicmgr thread cleanup
+//------------------------------------------------------------------------------
+void
+nicmgrapi::nicmgr_thread_cleanup (void *arg) {
+    delete devmgr;
+}
+
 
 void
 nicmgrapi::port_status_handler_(void *ctxt) {

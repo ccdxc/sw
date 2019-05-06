@@ -101,12 +101,19 @@ directmap::directmap() {
 // method to free & delete the object
 //----------------------------------------------------------------------------
 void
-directmap::destroy(directmap *dm)
-{
+directmap::destroy(directmap *dm) {
     if (dm) {
-        indexer::destroy(dm->indexer_);
         dm->~directmap();
         SDK_FREE(SDK_MEM_ALLOC_LIB_DIRECTMAP, dm);
+    }
+}
+
+directmap::~directmap() {
+    if (indexer_) {
+        indexer::destroy(indexer_);
+    }
+    if (entry_ht_) {
+        ht::destroy(entry_ht_);
     }
 }
 

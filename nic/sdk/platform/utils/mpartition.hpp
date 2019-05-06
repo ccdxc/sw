@@ -175,7 +175,7 @@ private:
 
 private:
     mpartition() = default;
-    ~mpartition() = default;
+    ~mpartition();
     mpartition(const mpartition &) = delete;
     mpartition &operator=(const mpartition &) = delete;
     static mpartition *init(const char *mpart_json_file, shmmgr *mmgr);

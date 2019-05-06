@@ -12,7 +12,7 @@
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
 #include "nic/sdk/platform/utils/mpartition.hpp"
-//#include "nic/sdk/platform/utils/program.hpp"
+#include "nic/sdk/platform/utils/program.hpp"
 //#include "nic/sdk/platform/capri/capri_lif_manager.hpp"
 #include "nic/apollo/api/device_state.hpp"
 #include "nic/apollo/api/tep_state.hpp"
@@ -39,14 +39,15 @@ class pds_state {
 public:
     pds_state();
     ~pds_state();
+    static void destroy(pds_state *ps);
     void set_cfg_path(string cfg_path) { cfg_path_ = cfg_path; }
     string cfg_path(void) const { return cfg_path_; }
     void set_catalog(catalog *catalog) { catalog_ = catalog; }
     catalog *catalogue(void) const { return catalog_; }
     void set_mpartition(mpartition *mpartition) { mpartition_ = mpartition; }
     mpartition *mempartition(void) const { return mpartition_; }
-    //void set_prog_info(program_info *pginfo) { pginfo_ = pginfo; }
-    //program_info *prog_info(void) const { return pginfo_; }
+    void set_prog_info(program_info *pginfo) { pginfo_ = pginfo; }
+    program_info *prog_info(void) const { return pginfo_; }
     //void set_lif_mgr(LIFManager *lm) { lm_ = lm; }
     //LIFManager *lm(void) const { return lm_; }
     void set_platform_type(platform_type_t type) { platform_type_ = type; }
@@ -88,7 +89,7 @@ private:
     mpartition              *mpartition_;
     platform_type_t         platform_type_;
     pds_scale_profile_t     scale_profile_;
-    //program_info          *pginfo_;
+    program_info            *pginfo_;
     //LIFManager            *lm_;
     uint64_t                control_cores_mask_;
     uint16_t                num_control_cores_;

@@ -65,8 +65,8 @@ init_service_lif (const char *cfg_path)
 
     program_info *pginfo = program_info::factory(prog_info_file.c_str());
     SDK_ASSERT(pginfo != NULL);
-/*
     api::g_pds_state.set_prog_info(pginfo);
+/*
     LIFManager *lm = LIFManager::factory(api::g_pds_state.mempartition(),
                                          api::g_pds_state.prog_info(),
                                          JLIF2QSTATE_MAP_NAME);

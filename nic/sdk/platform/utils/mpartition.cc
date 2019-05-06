@@ -217,6 +217,10 @@ mpartition::get_instance(void)
     return instance_;
 }
 
+mpartition::~mpartition() {
+    SDK_FREE(SDK_MEM_ALLOC_ID_PLATFORM_MEMORY, regions_);
+}
+
 void
 mpartition::destroy(mpartition *mpartition)
 {

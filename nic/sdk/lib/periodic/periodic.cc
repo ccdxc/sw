@@ -69,6 +69,7 @@ periodic_thread_run (void *ctxt)
     uint64_t            missed;
     sdk::lib::thread    *curr_thread = (sdk::lib::thread *)ctxt;
 
+    pthread_cleanup_push(periodic_thread_cleanup, NULL);
     // mark periodic thread as ready
     g_periodic_thread_ready = true;
     while (TRUE) {
@@ -83,9 +84,20 @@ periodic_thread_run (void *ctxt)
         curr_thread->punch_heartbeat();
     }
     g_twheel_is_running = false;
+    pthread_cleanup_pop(1);
     SDK_TRACE_ERR("Periodic thread exiting !!!");
 
     return NULL;
+}
+
+//------------------------------------------------------------------------------
+// periodic thread cleanup
+//------------------------------------------------------------------------------
+void
+periodic_thread_cleanup (void *arg)
+{
+    // destroy timer wheel
+    sdk::lib::twheel::destroy(g_twheel);
 }
 
 //------------------------------------------------------------------------------
