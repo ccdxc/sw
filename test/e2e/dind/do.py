@@ -216,7 +216,7 @@ class NaplesNode(Node):
             time.sleep(3)
             runCommand("""docker exec -d {} /ntsa -config /naples-tsa.json &""".format(self.name))
             runCommand("""docker exec -d {} /nmd -hostif eth1 -hostname {}-host -mode host -updinterval 2 -standalone=false & """.format(self.name, self.name))
-            runCommand("""docker exec -d {} /netagent -datapath mock -disabletsa &""".format(self.name))
+            runCommand("""docker exec -d {} /netagent -datapath mock &""".format(self.name))
             runCommand("""docker exec -d {} /tmagent """.format(self.name))
             runCommand("""docker exec -d {} /nevtsproxy &""".format(self.name))
             runCommand("""docker exec -d {} /fwgen  & """.format(self.name))
