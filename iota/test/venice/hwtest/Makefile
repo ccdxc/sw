@@ -3,7 +3,6 @@ default:
 	cd ../../../../ && make naples-firmware
 	cd ../../../../ && make venice-image
 	cd ../../../ && make
-	cat /warmd.json
 	../start_iota.sh
 	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/firewall -timeout 120m -v -ginkgo.v  -topo 3Venice_2Naples
 	VENICE_DEV=1 SKIP_SETUP=1 go test github.com/pensando/sw/iota/test/venice/testsuites/fwlog -timeout 120m -v -ginkgo.v  -topo 3Venice_2Naples
@@ -15,7 +14,6 @@ jobd:
 	cd ../../../../ && make ws-tools && make pull-assets && tar -zxf /sw/naples_fw_all.tgz -C .
 	ln -s /sw/bin/venice.tgz /go/src/github.com/pensando/sw/bin/venice.tgz
 	cd ../../../ && make
-	cat /warmd.json
 	../start_iota.sh
 	VENICE_DEV=1 go test github.com/pensando/sw/iota/test/venice/testsuites/firewall -timeout 120m -v -ginkgo.v  -topo 3Venice_2Naples
 	VENICE_DEV=1 SKIP_SETUP=1 go test github.com/pensando/sw/iota/test/venice/testsuites/fwlog -timeout 120m -v -ginkgo.v  -topo 3Venice_2Naples
