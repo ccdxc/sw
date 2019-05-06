@@ -8,7 +8,7 @@
 
 typedef struct __attribute__((__packed__)) ftl_entry_s {
     // data after key
-    uint32_t __pad_to_512b : 4;
+    uint32_t __pad_to_512b : 17;
     uint32_t more_hints: 24;
     uint32_t more_hashes : 1;
     uint32_t hint4 : 24;
@@ -18,7 +18,7 @@ typedef struct __attribute__((__packed__)) ftl_entry_s {
     uint32_t hint2 : 24;
     uint32_t hash2 : 8;
     uint32_t hint1 : 24;
-    uint32_t hash1_sbit7_ebit7 : 1;
+    uint32_t hash1_sbit6_ebit7 : 2;
     /* FieldType = K */
     uint32_t ktype : 4; /* phvbit[320], Flit[0], FlitOffset[320] */
     /* FieldType = K */
@@ -34,7 +34,7 @@ typedef struct __attribute__((__packed__)) ftl_entry_s {
     /* FieldType = K */
     uint32_t proto : 8; /* phvbit[184], Flit[0], FlitOffset[184] */
     // data before key
-    uint32_t hash1_sbit0_ebit6 : 7;
+    uint32_t hash1_sbit0_ebit5 : 6;
     uint32_t flow_role : 1;
     uint32_t session_index : 24;
     uint32_t entry_valid : 1;
@@ -50,7 +50,7 @@ typedef struct __attribute__((__packed__)) ftl_entry_s {
          "local_vnic_tag:%d proto:%d flow_role:%d session_index:%d entry_valid:%d",\
          (_e)->more_hints, (_e)->more_hashes, \
          (_e)->hint4, (_e)->hash4, (_e)->hint3, (_e)->hash3, (_e)->hint2, (_e)->hash2, \
-         (_e)->hint1, (((_e)->hash1_sbit7_ebit7 << 7) | (_e)->hash1_sbit0_ebit6), \
+         (_e)->hint1, (((_e)->hash1_sbit6_ebit7 << 6) | (_e)->hash1_sbit0_ebit5), \
          (_e)->ktype, (_e)->sport, (_e)->dport, (_e)->src[0], (_e)->src[1], \
          (_e)->src[2], (_e)->src[3], (_e)->src[4], (_e)->src[5], (_e)->src[6], \
          (_e)->src[7], (_e)->src[8], (_e)->src[9], (_e)->src[10], (_e)->src[11], \
@@ -75,8 +75,8 @@ typedef struct __attribute__((__packed__)) ftl_entry_s {
     (_e)->hash2 = 0; \
     (_e)->hint2 = 0; \
     (_e)->hint1 = 0; \
-    (_e)->hash1_sbit7_ebit7 = 0; \
-    (_e)->hash1_sbit0_ebit6 = 0; \
+    (_e)->hash1_sbit6_ebit7 = 0; \
+    (_e)->hash1_sbit0_ebit5 = 0; \
 }
 
 #define FTL_ENTRY_CLEAR_KEY(_e) \
@@ -155,8 +155,8 @@ ftl_entry_key_compare(ftl_entry_t *src, ftl_entry_t *dst) {
 
 #define __SET_HINT_HASH_1(_e, _h, _s) {\
     (_e)->hint1 = _h;\
-    (_e)->hash1_sbit7_ebit7 = ((_s) >> 7);\
-    (_e)->hash1_sbit0_ebit6 = ((_s) & 0x7F);\
+    (_e)->hash1_sbit6_ebit7 = (((_s) & 0xC0)>> 6);\
+    (_e)->hash1_sbit0_ebit5 = ((_s) & 0x3F);\
 }
 #define __SET_HINT_HASH_2(_e, _h, _s) \
     { (_e)->hint2 = (_h); (_e)->hash2 = (_s); }
@@ -179,8 +179,8 @@ ftl_entry_key_compare(ftl_entry_t *src, ftl_entry_t *dst) {
 }
 #define __GET_HINT_HASH_1(_e, _h, _s) {\
     (_h) = (_e)->hint1;\
-    (_s) = ((_e)->hash1_sbit7_ebit7 << 7) |\
-           ((_e)->hash1_sbit0_ebit6);\
+    (_s) = ((_e)->hash1_sbit6_ebit7 << 6) |\
+           ((_e)->hash1_sbit0_ebit5);\
 }
 #define __GET_HINT_HASH_2(_e, _h, _s) \
     { (_h) = (_e)->hint2; (_s) = (_e)->hash2; }
