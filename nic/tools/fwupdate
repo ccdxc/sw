@@ -73,6 +73,7 @@ IGNORE_MISSING=0
 WANT_STARTUP=""
 FROM_LEGACY=0
 TO_LEGACY=0
+IS_CUSTOM_INSTALLER=0
 VERIFY_FWNAME=""
 D=""
 
@@ -101,6 +102,9 @@ main()
     elif [ "X-$1" = "X---init-emmc" ]; then
         action=INIT_EMMC
         shift
+    elif [ "X-$1" = "X---custom-installer" ]; then
+        IS_CUSTOM_INSTALLER=1
+        shift
     fi
     while getopts "i:vV:rs:SlLp:DIC" opt; do
         case "$opt" in
@@ -126,6 +130,7 @@ main()
     D=/tmp/update$$
     mkdir -p $D
     MANIFEST=$D/MANIFEST
+    INSTALLER=$D/installer
     TMPFILE=$D/tmpfile
     CACHEFILE=$R/var/run/fwupdate.cache
 
@@ -146,7 +151,14 @@ main()
 
     if [ $need_pkg -ne 0 ]; then
         tar xfO $PKG MANIFEST > $MANIFEST
-        #MANIFEST=MANIFEST.test
+        if [ $IS_CUSTOM_INSTALLER -eq 0 ]; then
+            s=`mani_opt_value .installer`
+            if [ "$s" != "null" ]; then
+                echo "===> Found custom package installer; launching..."
+                launch_custom_installer $@
+                fatal "custom installer failed"
+            fi
+        fi
     fi
 
     if [ $action != VERIFY_PACKAGE ]; then
@@ -224,6 +236,30 @@ alt_fw_of()
         fatal "alt_fw_of: Unknown fwname $fwname"
         ;;
     esac
+}
+
+launch_custom_installer()
+{
+    name=`mani_opt_value ".installer.name"`
+    if [ "$name" = "null" ]; then
+        fatal "installer name not found"
+    fi
+    algo=`mani_opt_value ".installer.verify.algorithm"`
+    if [ "$algo" = "null" ]; then
+        fatal "installer hash algorithm not found"
+    fi
+    check_hash_algo "$algo"
+    want_hash=`mani_opt_value ".installer.verify.hash"`
+    if [ "$want_hash" = "null" ]; then
+        fatal "installer hash not found"
+    fi
+    got_hash=`tar xfO $PKG $name | hash $algo`
+    if [ "$got_hash" != "$want_hash" ]; then
+        fatal "installer verifcation failed"
+    fi
+    tar xfO $PKG $name > $INSTALLER
+    chmod +x $INSTALLER
+    exec $INSTALLER --custom-installer $@
 }
 
 # find_mmcpart_bypartuuid D4E53BE5-7DC1-4199-914C-48EDFEA92C5E
