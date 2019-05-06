@@ -10,6 +10,7 @@ struct phv_ p;
 
 rx_key4:
 
+#ifdef IPV6_SUPPORT
 normalize_roce:
 check_roce_bth1_valid:
     seq             c7, k.roce_bth_1_valid, TRUE
@@ -26,6 +27,7 @@ check_roce_bth2_valid:
                         p.roce_bth_destQP, k.roce_bth_2_destQP
     b               normalize_udp_2
     phvwr           p.roce_metadata_roce_valid, TRUE
+#endif
 
 check_roce_bth_valid:
     bbne            k.roce_bth_valid, TRUE, rx_key4_start

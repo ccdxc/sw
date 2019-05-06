@@ -115,7 +115,7 @@ hal_parse_ini (const char *inifile, hal_cfg_t *hal_cfg)
     std::ifstream in(ini_file.c_str());
     if (access(ini_file.c_str(), R_OK) < 0) {
         fprintf(stderr, "HAL ini file %s doesn't exist or not accessible, "
-                "picking smart-switch mode\n",
+                "picking host-pinned mode\n",
                 ini_file.c_str());
         hal_cfg->forwarding_mode = HAL_FORWARDING_MODE_SMART_HOST_PINNED;
         goto end;
@@ -273,7 +273,7 @@ hal_init (hal_cfg_t *hal_cfg)
             // start fte threads
             for (uint32_t i = 0; i < hal_cfg->num_data_cores; i++) {
                 // init IPC logger infra for FTE
-                if (!i && (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) && 
+                if (!i && (hal_cfg->platform == platform_type_t::PLATFORM_TYPE_HW) &&
                     !getenv("DISABLE_FWLOG") &&
                     ipc_logger::init(std::shared_ptr<logger>(utils::hal_logger())) != HAL_RET_OK) {
                     HAL_TRACE_ERR("IPC logger init failed");

@@ -3,9 +3,9 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = gft_test.gtest
 MODULE_PIPELINE = gft
-MODULE_ARCH     = x86_64
 MODULE_SOLIBS   = ${NIC_${PIPELINE}_P4PD_SOLIBS} \
-                  pal hal_mock model_client halproto \
+                  ${NIC_HAL_PD_SOLIBS_${ARCH}} \
+                  pal hal_mock halproto \
                   sdkcapri_asicrw_if \
                   ${NIC_SDK_SOLIBS} \
                   pdcommon core fte_mock agent_api \

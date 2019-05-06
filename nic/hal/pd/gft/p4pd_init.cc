@@ -34,7 +34,8 @@ p4pd_rx_vport_init (void)
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
 
-    data.action_u.rx_vport_rx_vport.tm_oport = TM_PORT_DMA;
+    //data.action_u.rx_vport_rx_vport.tm_oport = TM_PORT_DMA;
+    data.action_u.rx_vport_rx_vport.tm_oport = TM_PORT_UPLINK_0;
 
     sdk_ret = rx_vport->insert(&key, &mask, &data, &idx, false);
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
@@ -64,7 +65,7 @@ p4pd_rx_vport_init (void)
                     idx);                                                   \
 
 //-----------------------------------------------------------------------------
-// TX Transpositions 
+// TX Transpositions
 //  0: nop entry
 //-----------------------------------------------------------------------------
 static hal_ret_t
@@ -72,10 +73,10 @@ p4pd_tx_transp_init (void)
 {
     hal_ret_t                               ret;
     sdk_ret_t                               sdk_ret;
-    tx_hdr_transpositions0_actiondata_t       xpo0_data = { 0 }; 
-    tx_hdr_transpositions1_actiondata_t       xpo1_data = { 0 }; 
-    tx_hdr_transpositions2_actiondata_t       xpo2_data = { 0 }; 
-    tx_hdr_transpositions3_actiondata_t       xpo3_data = { 0 }; 
+    tx_hdr_transpositions0_actiondata_t       xpo0_data = { 0 };
+    tx_hdr_transpositions1_actiondata_t       xpo1_data = { 0 };
+    tx_hdr_transpositions2_actiondata_t       xpo2_data = { 0 };
+    tx_hdr_transpositions3_actiondata_t       xpo3_data = { 0 };
     directmap                               *tx_xpos_tbl = NULL;
     uint32_t                                idx = TX_TRANSPOSITION_NOP_ENTRY;
 
@@ -102,7 +103,7 @@ end:
     HAL_TRACE_DEBUG("Programmed rx_hdr_xpos" #TBL_ID " at {}",              \
                     idx);                                                   \
 //-----------------------------------------------------------------------------
-// RX Transpositions 
+// RX Transpositions
 //  0: nop entry
 //-----------------------------------------------------------------------------
 static hal_ret_t
@@ -110,10 +111,10 @@ p4pd_rx_transp_init (void)
 {
     hal_ret_t                               ret;
     sdk_ret_t                               sdk_ret;
-    rx_hdr_transpositions0_actiondata_t       xpo0_data = { 0 }; 
-    rx_hdr_transpositions1_actiondata_t       xpo1_data = { 0 }; 
-    rx_hdr_transpositions2_actiondata_t       xpo2_data = { 0 }; 
-    rx_hdr_transpositions3_actiondata_t       xpo3_data = { 0 }; 
+    rx_hdr_transpositions0_actiondata_t       xpo0_data = { 0 };
+    rx_hdr_transpositions1_actiondata_t       xpo1_data = { 0 };
+    rx_hdr_transpositions2_actiondata_t       xpo2_data = { 0 };
+    rx_hdr_transpositions3_actiondata_t       xpo3_data = { 0 };
     directmap                               *rx_xpos_tbl = NULL;
     uint32_t                                idx = RX_TRANSPOSITION_NOP_ENTRY;
 

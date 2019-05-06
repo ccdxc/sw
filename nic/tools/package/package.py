@@ -75,7 +75,7 @@ if args.target == 'sim':
     if args.pipeline == 'apollo':
         files.append('nic/tools/package/pack_apollo.txt')
     elif args.pipeline == 'gft':
-        files.append('nic/tools/package/pack_sim_gft.txt')
+        files.append('nic/tools/package/pack_gft.txt')
     else:
         files.append('nic/tools/package/pack_sim.txt')
 elif args.target == 'zebu':
@@ -124,6 +124,8 @@ else:
 
     if args.pipeline == 'apollo':
         files.append('nic/tools/package/pack_apollo.txt')
+    elif args.pipeline == 'gft':
+        files.append('nic/tools/package/pack_gft.txt')
     else:
         files.append('nic/tools/package/pack_haps.txt')
         # skip platform for apollo

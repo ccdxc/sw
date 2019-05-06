@@ -8,7 +8,8 @@ action rx_vport_stats(permit_packets, permit_bytes,
         add_header(capri_txdma_intrinsic);
         add_header(p4plus_to_p4);
         modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
-        if ((roce_bth_1.valid == TRUE) or (roce_bth_2.valid == TRUE)) {
+        if ((roce_bth.valid == TRUE) or (roce_bth_1.valid == TRUE) or
+            (roce_bth_2.valid == TRUE)) {
             modify_field(p4plus_to_p4.p4plus_app_id, P4PLUS_APPTYPE_RDMA);
         }
     }

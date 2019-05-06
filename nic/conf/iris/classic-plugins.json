@@ -1,0 +1,77 @@
+{
+    "plugins": [
+        {
+            "name"      : "classic",
+            "provider"  : "pensando.io",
+            "lib"       : "libplugin_classic.so",
+            "init_func" : "classic_init",
+            "exit_func" : "classic_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"],
+            "features"  : ["fwding", "qos"]
+        },
+        {
+            "name"      : "lif",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_lif.so",
+            "init_func" : "lif_init",
+            "exit_func" : "lif_exit",
+            "auto_load" : "true"
+        },
+        {
+            "name"      : "nw",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_nw.so",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/lif"]
+        },
+        {
+            "name"      : "rdma",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_rdma.so",
+            "init_func" : "rdma_init",
+            "exit_func" : "rdma_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
+            "name"      : "aclqos",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_aclqos.so",
+            "init_func" : "aclqos_init",
+            "exit_func" : "aclqos_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
+            "name"      : "mcast",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_mcast.so",
+            "init_func" : "mcast_init",
+            "exit_func" : "mcast_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
+            "name"      : "accelcfg",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_accel.so",
+            "init_func" : "accelcfg_init",
+            "exit_func" : "accelcfg_exit",
+            "thread_init_func" : "accelcfg_thread_init",
+            "thread_exit_func" : "accelcfg_thread_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : ["accel_rgroup"]
+        }
+    ],
+    "pipelines": [
+        {
+            "name": "flow-miss",
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_FLOWMISS" },
+            "outbound_features": [
+                "pensando.io/classic:fwding"
+            ]
+        }
+    ]
+}

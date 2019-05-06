@@ -14,7 +14,7 @@ action rx_gft_hash_info(entry_valid, flow_index, policer_index,
         // if register c1 indicates miss, compare hints and lookup
         // overflow hash table
         modify_field(flow_action_metadata.overflow_lkp, TRUE);
-        modify_field(flow_lkp_metadata.overflow_hash, hint1);
+        modify_field(flow_lkp_metadata.overflow_hash, scratch_metadata.hash);
     }
 
     modify_field(scratch_metadata.flag, entry_valid);
@@ -97,7 +97,7 @@ table rx_gft_hash {
     actions {
         rx_gft_hash_info;
     }
-    size : FLOW_HASH_TABLE_SIZE;
+    size : RX_FLOW_HASH_TABLE_SIZE;
 }
 
 @pragma stage 3
@@ -110,7 +110,7 @@ table rx_gft_hash_overflow {
     actions {
         rx_gft_hash_info;
     }
-    size : FLOW_HASH_OVERFLOW_TABLE_SIZE;
+    size : RX_FLOW_HASH_OVERFLOW_TABLE_SIZE;
 }
 
 control rx_flow_lookup {
@@ -136,7 +136,7 @@ action tx_gft_hash_info(entry_valid, flow_index, policer_index,
         // if register c1 indicates miss, compare hints and lookup
         // overflow hash table
         modify_field(flow_action_metadata.overflow_lkp, TRUE);
-        modify_field(flow_lkp_metadata.overflow_hash, hint1);
+        modify_field(flow_lkp_metadata.overflow_hash, scratch_metadata.hash);
     }
 
     modify_field(scratch_metadata.flag, entry_valid);
@@ -184,7 +184,7 @@ table tx_gft_hash {
     actions {
         tx_gft_hash_info;
     }
-    size : FLOW_HASH_TABLE_SIZE;
+    size : TX_FLOW_HASH_TABLE_SIZE;
 }
 
 @pragma stage 2
@@ -197,7 +197,7 @@ table tx_gft_hash_overflow {
     actions {
         tx_gft_hash_info;
     }
-    size : FLOW_HASH_OVERFLOW_TABLE_SIZE;
+    size : TX_FLOW_HASH_OVERFLOW_TABLE_SIZE;
 }
 
 control tx_flow_lookup {

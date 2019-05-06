@@ -916,8 +916,8 @@ directmap::entry_to_str(void *data, uint32_t index, char *buff,
 sdk_ret_t
 directmap::entry_trace_(void *data, uint32_t index)
 {
-    char         buff[4096] = {0};
     sdk_ret_t    ret;
+    char         buff[4096] = {0};
 
     ret = entry_to_str(data, index, buff, sizeof(buff));
     SDK_ASSERT(ret == SDK_RET_OK);

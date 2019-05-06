@@ -1715,7 +1715,8 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     // Change Flood replication entry for change of native l2seg
-    if (is_forwarding_mode_smart_switch() && pd_if_args.native_l2seg_change) {
+    if (is_forwarding_mode_smart_switch() && pd_if_args.native_l2seg_change &&
+        hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) {
         // Remove and add replication entry
         if (hal_if->native_l2seg != 0) {
             native_l2seg_old = find_l2seg_by_id(hal_if->native_l2seg);

@@ -221,6 +221,7 @@ header p4plus_to_p4_header_t p4plus_to_p4;
 parser start {
     extract(capri_intrinsic);
     return select(capri_intrinsic.csum_err) {
+#ifdef IPV6_SUPPORT
         0 : parse_ethernet_1;
         1 : start_ipv4_bth_deth;
         2 : start_vlan_ipv4_bth_deth;
@@ -246,6 +247,7 @@ parser start {
         22 : start_outer_vlan_vxlan_ipv4_bth;
         23 : start_outer_vxlan_ipv6_bth;
         24 : start_outer_vlan_vxlan_ipv6_bth;
+#endif
         default: parse_ethernet_1;
         0x1 mask 0 : egress_start;
         0x1 mask 0 : rx_deparse_start;
@@ -774,7 +776,9 @@ parser parse_udp_1_split {
 
 parser parse_gre_1 {
     extract(gre_1);
+#ifdef IPV6_SUPPORT
     set_metadata(tunnel_metadata.tunnel_type_1, INGRESS_TUNNEL_TYPE_GRE);
+#endif
     return select(latest.C, latest.R, latest.K, latest.S, latest.s,
                   latest.recurse, latest.flags, latest.ver, latest.proto) {
         ETHERTYPE_IPV4 : parse_gre_ipv4_1;
@@ -1755,8 +1759,8 @@ field_list_calculation rx_ipv6_2_roce_icrc {
     output_width : 32;
 }
 
+#ifdef IPV6_SUPPORT
 calculated_field parser_metadata.icrc {
-
     // icrc for optimized parse path case.
     verify rx_ipv4_1_roce_1_icrc if (valid(roce_bth_1));
     verify rx_ipv6_1_roce_1_icrc if (valid(roce_bth_1));
@@ -1769,8 +1773,7 @@ calculated_field parser_metadata.icrc {
     verify rx_ipv4_2_roce_icrc if (valid(roce_bth));
     verify rx_ipv6_2_roce_icrc if (valid(roce_bth));
 }
-
-
+#endif
 
 /******************************************************************************/
 /* Egress parser                                                              */

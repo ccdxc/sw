@@ -1,0 +1,229 @@
+{
+    "plugins": [
+        {
+            "name"      : "network",
+            "provider"  : "pensando.io",
+            "lib"       : "libplugin_network.so",
+            "init_func" : "network_init",
+            "exit_func" : "network_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : [
+                "stage-marker",
+                "fwding",
+                "fwding-pre-stage",
+                "tunnel",
+                "qos",
+                "rdma",
+                "ingress-checks"
+            ]
+        },
+        {
+            "name"      : "alg_utils",
+            "provider"  : "pensando.io",
+            "lib"       : "libplugin_alg_utils.so",
+            "init_func" : "alg_utils_init",
+            "exit_func" : "alg_utils_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : ["alg_utils"]
+        },
+        {
+            "name"      : "sfw",
+            "provider"  : "pensando.io",
+            "lib"       : "libplugin_sfw.so",
+            "init_func" : "sfw_init",
+            "exit_func" : "sfw_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/alg_utils"],
+            "features"  : [
+                "sfw",
+                "conntrack"
+            ]
+        },
+        {
+            "name"      : "dol",
+            "provider"  : "pensando.io",
+            "lib"       : "libplugin_dol.so",
+            "init_func" : "dol_init",
+            "exit_func" : "dol_exit",
+            "auto_load" : "true",
+            "deps"      : [],
+            "features"  : ["test"]
+        },
+        {
+            "name"      : "lif",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_lif.so",
+            "init_func" : "lif_init",
+            "exit_func" : "lif_exit",
+            "auto_load" : "true"
+        },
+        {
+            "name"      : "nw",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_nw.so",
+            "thread_init_func" : "nw_thread_init",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/lif"]
+        },
+        {
+            "name"      : "aclqos",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_aclqos.so",
+            "init_func" : "aclqos_init",
+            "exit_func" : "aclqos_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
+            "name"      : "gft",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_gft.so",
+            "init_func" : "gft_init",
+            "exit_func" : "gft_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/lif"]
+        }
+    ],
+
+    "pipelines": [
+        {
+            "name": "flow-miss",
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_FLOWMISS" },
+            "outbound_features": [
+                "pensando.io/dol:test",
+                "pensando.io/network:ingress-checks",
+                "pensando.io/telemetry:telemetry",
+                "pensando.io/eplearn:eplearn",
+                "pensando.io/sfw:sfw",
+                "pensando.io/sfw:conntrack",
+                "pensando.io/alg_ftp:alg_ftp",
+                "pensando.io/alg_tftp:alg_tftp",
+                "pensando.io/alg_dns:alg_dns",
+                "pensando.io/alg_rpc:alg_rpc",
+                "pensando.io/alg_rtsp:alg_rtsp",
+                "pensando.io/proxy:tcp",
+                "pensando.io/sfw:sfw",
+                "pensando.io/network:qos",
+                "pensando.io/network:fwding-pre-stage",
+                "pensando.io/network:stage-marker",
+                "pensando.io/lb:lb",
+                "pensando.io/nat:nat",
+                "pensando.io/network:qos",
+                "pensando.io/network:rdma",
+                "pensando.io/proxy:ipsec",
+                "pensando.io/network:fwding",
+                "pensando.io/network:tunnel",
+                "pensando.io/proxy:tcp-trigger-connection"
+            ],
+            "inbound_features": [
+                "pensando.io/dol:test",
+                "pensando.io/network:ingress-checks",
+                "pensando.io/telemetry:telemetry",
+                "pensando.io/sfw:sfw",
+                "pensando.io/eplearn:eplearn",
+                "pensando.io/nat:nat",
+                "pensando.io/lb:lb",
+                "pensando.io/proxy:tcp",
+                "pensando.io/sfw:sfw",
+                "pensando.io/network:qos",
+                "pensando.io/network:rdma",
+                "pensando.io/network:fwding-pre-stage",
+                "pensando.io/network:stage-marker",
+                "pensando.io/sfw:sfw",
+                "pensando.io/sfw:conntrack",
+                "pensando.io/alg_ftp:alg_ftp",
+                "pensando.io/alg_tftp:alg_tftp",
+                "pensando.io/alg_dns:alg_dns",
+                "pensando.io/alg_rpc:alg_rpc",
+                "pensando.io/alg_rtsp:alg_rtsp",
+                "pensando.io/network:qos",
+                "pensando.io/proxy:ipsec",
+                "pensando.io/network:fwding",
+                "pensando.io/network:tunnel",
+                "pensando.io/proxy:tcp-trigger-connection"
+           ]
+        },
+        {
+            "name": "tcp-close",
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_TCP_CLOSE" },
+            "outbound_features": [
+                 "pensando.io/dol:test",
+                 "pensando.io/sfw:conntrack"
+            ]
+        },
+        {
+            "name": "app-redir",
+            "selector": { "lif": "SERVICE_LIF_APP_REDIR", "qtype_mask": 1, "qtype": 0},
+            "outbound_features": [
+                "pensando.io/app-redir:app-redir",
+                "pensando.io/app-redir:app-redir-appid",
+                "pensando.io/sfw:sfw",
+                "pensando.io/network:qos",
+                "pensando.io/network:fwding",
+                "pensando.io/network:tunnel",
+                "pensando.io/app-redir:app-redir-fini"
+            ],
+            "inbound_features": [
+                "pensando.io/app-redir:app-redir",
+                "pensando.io/app-redir:app-redir-appid",
+                "pensando.io/sfw:sfw",
+                "pensando.io/network:qos",
+                "pensando.io/network:fwding",
+                "pensando.io/network:tunnel",
+                "pensando.io/app-redir:app-redir-fini"
+            ]
+        },
+        {
+            "name": "alg-cflow",
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_RELIABLE_COPY" },
+            "outbound_features": [
+                "pensando.io/alg_ftp:alg_ftp",
+                "pensando.io/alg_tftp:alg_tftp",
+                "pensando.io/alg_rpc:alg_rpc",
+                "pensando.io/alg_rtsp:alg_rtsp",
+                "pensando.io/alg_dns:alg_dns"
+            ]
+        },
+        {
+            "name": "tcp-proxy",
+            "selector": { "lif": "SERVICE_LIF_TCP_PROXY" },
+            "outbound_features": [
+                "pensando.io/proxy:tcp",
+                "pensando.io/app-redir:app-redir",
+                "pensando.io/app-redir:app-redir-appid",
+                "pensando.io/app-redir:app-redir-fini"
+            ]
+        },
+        {
+            "name": "tls-proxy",
+            "selector": { "lif": "SERVICE_LIF_TLS_PROXY"},
+            "outbound_features": [
+                "pensando.io/proxy:tls"
+            ]
+        },
+        {
+            "name": "nacl-redirect",
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_NACL_REDIRECT" },
+            "outbound_features": [
+                "pensando.io/dol:test"
+            ]
+        },
+        {
+            "name": "nacl-log",
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_NACL_LOG" },
+            "outbound_features": [
+                "pensando.io/dol:test"
+            ]
+        },
+        {
+            "name": "quiesce",
+            "selector": { "lif": "HAL_LIF_CPU", "qid": "CPUCB_ID_QUIESCE" },
+            "outbound_features": [
+                "pensando.io/dol:test",
+                "pensando.io/proxy:quiesce"
+            ]
+        }
+    ]
+}

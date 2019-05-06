@@ -79,12 +79,12 @@ public:
 
     static void control_cores_mask_set(uint64_t mask) {
         control_cores_mask_ = mask;
-        SDK_TRACE_PRINT("control_cores_mask : %lu", control_cores_mask_);
+        SDK_TRACE_PRINT("control_cores_mask : 0x%lx", control_cores_mask_);
     }
 
     static void data_cores_mask_set(uint64_t mask) {
         data_cores_mask_ = data_cores_free_ = mask;
-        SDK_TRACE_PRINT("data_cores_mask : %lu", data_cores_mask_);
+        SDK_TRACE_PRINT("data_cores_mask : 0x%lx", data_cores_mask_);
     }
     static uint64_t get_cpu_mask(cpu_set_t cpu_set);
     static uint64_t control_cores_mask(void) { return control_cores_mask_; }

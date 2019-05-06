@@ -11,7 +11,8 @@ rx_policer:
     seq             c1, d.rx_policer_d.entry_valid, TRUE
     seq.c1          c1, d.rx_policer_d.tbkt[39], TRUE
     nop.e
-    phvwr.c1.f      p.capri_intrinsic_drop, TRUE
+    nop
+    //phvwr.c1.f      p.capri_intrinsic_drop, TRUE
 
 /*****************************************************************************/
 /* error function                                                            */

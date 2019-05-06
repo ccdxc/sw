@@ -145,13 +145,13 @@ jobd/dol/swphv: ${JOBD_PREREQS}
 jobd/dol/gft: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --topo gft --feature gft --gft
 
-.PHONY: jobd/dol/gft/rdma
-jobd/dol/gft/rdma: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --topo rdma_gft --feature rdma_perf --gft
+#.PHONY: jobd/dol/gft/rdma
+#jobd/dol/gft/rdma: ${JOBD_PREREQS}
+	#${NICDIR}/run.py ${COVERAGE_OPTS} --topo rdma_gft --feature rdma_perf --gft
 
-.PHONY: jobd/dol/gft/rdma_l2l
-jobd/dol/gft/rdma_l2l: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --topo rdma_gft --feature rdma_send_only_inline_l2l,rdma_send_l2l --l2l --gft
+#.PHONY: jobd/dol/gft/rdma_l2l
+#jobd/dol/gft/rdma_l2l: ${JOBD_PREREQS}
+	#${NICDIR}/run.py ${COVERAGE_OPTS} --topo rdma_gft --feature rdma_send_only_inline_l2l,rdma_send_l2l --l2l --gft
 
 #.PHONY: jobd/dol/agent/up2up
 #jobd/dol/agent/up2up: ${JOBD_PREREQS}

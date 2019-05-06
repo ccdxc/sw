@@ -2800,6 +2800,7 @@ class capri_parser:
                 op.op_type == meta_op.EXTRACT_CONST:
                 continue
 
+            off = 0
             if op.src1:
                 hdr = op.src1.get_p4_hdr()
                 off = cs.fld_off[op.src1]

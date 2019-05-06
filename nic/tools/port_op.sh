@@ -13,8 +13,8 @@ PORT_CLIENT=$NIC_DIR/bin/port_client
 GRPC_PORT=localhost:50054
 GDB=
 
-OPTIONS=crudp:s:y:f:l:e:ith
-LONGOPTS=create,get,update,delete,port:,speed:,type:,fec:,pause:,enable:,sim,test,help
+OPTIONS=crudp:s:y:f:l:e:a:ith
+LONGOPTS=create,get,update,delete,port:,speed:,type:,fec:,pause:,enable:,auto-neg:,sim,test,help
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -30,6 +30,7 @@ delete=0
 port=0
 speed=0
 en=0
+an=0
 dry_run=0
 port_type=eth
 fec=not_set
@@ -77,6 +78,10 @@ while true; do
             en=$2
             shift 2
             ;;
+        -a|--auto-neg)
+            an=$2
+            shift 2
+            ;;
         -i|--sim)
             PORT_CLIENT=./build/x86_64/iris/bin/port_client
             shift
@@ -87,9 +92,9 @@ while true; do
             ;;
         -h|--help)
             echo "Usage:"
-            echo "$0 [--sim] --create --port <port_num> --speed <100|40|50|25|10> --type <eth/mgmt> --enable <0|1> --fec <rs/fc/none> --pause <link/pfc/none>"
+            echo "$0 [--sim] --create --port <port_num> --speed <100|40|50|25|10> --type <eth/mgmt> --enable <0|1> --fec <rs/fc/none> --pause <link/pfc/none> --auto-neg <0|1>"
             echo "$0 [--sim] --get    --port <port_num> "
-            echo "$0 [--sim] --update --port <port_num> --enable <0|1> --fec <rs/fc/none> --pause <link/pfc/none>"
+            echo "$0 [--sim] --update --port <port_num> --enable <0|1> --fec <rs/fc/none> --pause <link/pfc/none> --auto-neg <0|1>"
             echo "$0 [--sim] --delete --port <port_num>"
             exit 0
             ;;
@@ -148,7 +153,7 @@ if [[ "$create" == "1" ]]; then
         admin_st=up
     fi
 
-    CMD="$GDB $PORT_CLIENT -g $GRPC_PORT --create -p $port --speed $speed --num_lanes $num_lanes --port_type $port_type --pause $pause --fec_type $fec --mac_id $mac_id --mac_ch $mac_ch --admin_state $admin_st $dry_run"
+    CMD="$GDB $PORT_CLIENT -g $GRPC_PORT --create -p $port --speed $speed --num_lanes $num_lanes --port_type $port_type --pause $pause --fec_type $fec --mac_id $mac_id --mac_ch $mac_ch --admin_state $admin_st $dry_run --an_enable $an"
 fi
 
 if [[ "$get" == "1" ]]; then

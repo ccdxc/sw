@@ -530,17 +530,21 @@ l2seg_build_oiflists (l2seg_t *l2seg)
 {
     hal_ret_t ret = HAL_RET_OK;
 
+    if (hal::g_hal_cfg.features == hal::HAL_FEATURE_SET_GFT) {
+        return HAL_RET_OK;
+    }
+
     // Create all oiflists
     ret = l2seg_create_oiflists(l2seg);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete OIFlist for l2seg, err : {}", ret);
+        HAL_TRACE_ERR("Failed to create OIFlist for l2seg, err : {}", ret);
     }
 
     if (is_forwarding_mode_smart_switch()) {
         // Add oifs to bcast oiflist.
         ret = l2seg_add_oifs(l2seg);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("Failed to delete OIFs for l2seg, err : {}", ret);
+            HAL_TRACE_ERR("Failed to create OIFs for l2seg, err : {}", ret);
         }
     }
 

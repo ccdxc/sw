@@ -4,10 +4,12 @@ nic/coverage/hw_bullseye_hal.cov                                    /nic/conf/
 nic/conf/init_bins/                                                 /nic/conf/init_bins/
 nic/conf/openssl/                                                   /nic/conf/openssl/
 nic/conf/bullseye/                                                  /nic/conf/bullseye/
+nic/conf/iris/plugins.json                                          /nic/conf/iris/
+nic/conf/iris/classic-plugins.json                                  /nic/conf/iris/
 nic/conf/iris/hbm_mem.json                                          /nic/conf/iris/
 nic/conf/iris/hbm_classic_mem.json                                  /nic/conf/iris/
 nic/sysmgr/src/naples.json                                          /nic/conf/sysmgr.json
-nic/conf/naples-tsa.json                                            /nic/conf/	
+nic/conf/naples-tsa.json                                            /nic/conf/
 nic/build/aarch64/iris/bin/p4asm/                                   /nic/conf/iris/asm_bin/
 nic/build/aarch64/iris/bin/p4pasm/                                  /nic/conf/iris/p4plus_bin/
 nic/build/aarch64/iris/pgm_bin/                                     /nic/conf/iris/pgm_bin/
@@ -43,6 +45,8 @@ nic/build/aarch64/iris/lib/libcommonproto.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libnicmgrproto.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libpciemgrproto.so                       /nic/lib/
 nic/build/aarch64/iris/lib/libftestatsproto.so                      /nic/lib/
+nic/build/aarch64/iris/lib/libfte.so                                /nic/lib/
+nic/build/aarch64/iris/lib/libfte_iris.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libhal_mock.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libpacket_parser.so                      /nic/lib/
 nic/build/aarch64/iris/lib/libipc.so                                /nic/lib/
@@ -65,8 +69,6 @@ nic/build/aarch64/iris/lib/libcrypto.so.1.1                         /nic/lib/
 nic/build/aarch64/iris/lib/libdirectmap.so                          /nic/lib/
 nic/build/aarch64/iris/lib/libeventmgr.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libfsm.so                                /nic/lib/
-nic/build/aarch64/iris/lib/libfte.so                                /nic/lib/
-nic/build/aarch64/iris/lib/libfte_iris.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libhal_lib.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libhalproto.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libhal_src.so                            /nic/lib/

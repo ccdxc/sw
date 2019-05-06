@@ -3,4 +3,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libhaltestutils.so
 MODULE_PIPELINE = iris gft
+MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS}
 include ${MKDEFS}/post.mk

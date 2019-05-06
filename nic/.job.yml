@@ -328,22 +328,22 @@ targets:
     feature:
     build-dependencies:
     - build-gft-x86
-  dol/gft/rdma:
-    commands: ["make", "PIPELINE=gft", "jobd/dol/gft/rdma"]
-    owners: ["email:ksmurty@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-gft-x86
-  dol/gft/rdma_l2l:
-    commands: ["make", "PIPELINE=gft", "jobd/dol/gft/rdma_l2l"]
-    owners: ["email:ksmurty@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-gft-x86
+  #dol/gft/rdma:
+  #commands: ["make", "PIPELINE=gft", "jobd/dol/gft/rdma"]
+  #  owners: ["email:ksmurty@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-gft-x86
+  #dol/gft/rdma_l2l:
+  #  commands: ["make", "PIPELINE=gft", "jobd/dol/gft/rdma_l2l"]
+  #  owners: ["email:ksmurty@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-gft-x86
   gft/gtest:
     commands: ["make", "PIPELINE=gft", "jobd/gft/gtest"]
     owners: ["email:jcruz@pensando.io"]

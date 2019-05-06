@@ -278,6 +278,7 @@ uint16_t g_layer31_dport = 0xBEEF;
 uint16_t g_layer32_sport = 0x1234;
 uint16_t g_layer32_dport = 0x5678;
 uint32_t g_ohash_idx     = 0xDEAF;
+uint32_t g_hash_msb      = 0x7F;
 uint32_t g_flow_idx1     = 0xA32;
 uint32_t g_flow_idx2     = 0xA34;
 uint32_t g_flow_idx3     = 0xA36;
@@ -880,7 +881,8 @@ rx_create_transposition() {
 }
 
 static void
-rx_gft_entry_write(rx_gft_hash_swkey_t *key, rx_gft_hash_actiondata_t *data) {
+rx_gft_entry_write(rx_gft_hash_swkey_t *key, rx_gft_hash_actiondata_t *data,
+                   bool has_overflow_entry) {
     uint32_t hwkey_len = 0;
     uint32_t hwdata_len = 0;
     uint32_t hash = 0;
@@ -909,9 +911,13 @@ rx_gft_entry_write(rx_gft_hash_swkey_t *key, rx_gft_hash_actiondata_t *data) {
         crc_init_val = hash;
     }
     hash = generate_hash_(hwkey, hash_len, 0);
-    gft_idx = hash & 0xFFFFF;
+    gft_idx = hash & 0x7FFFFF;
     //printf("Final hash : 0x%0x, index : 0x%0x\n", hash, gft_idx);
 
+    if (has_overflow_entry) {
+        // reset the key to 0
+        memset(hwkey, 0, hash_len);
+    }
     p4pd_entry_write(P4TBL_ID_RX_GFT_HASH, gft_idx, hwkey, NULL, data);
     delete [] hwkey;
 }
@@ -947,7 +953,7 @@ rx_create_gft_entry1() {
     data.action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
     data.action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx1;
 
-    rx_gft_entry_write(&key, &data);
+    rx_gft_entry_write(&key, &data, false);
 }
 
 static void
@@ -980,9 +986,10 @@ rx_create_gft_entry2() {
     // data
     data.action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
     data.action_u.rx_gft_hash_rx_gft_hash_info.flow_index = 0;
-    data.action_u.rx_gft_hash_rx_gft_hash_info.hint9 = g_ohash_idx;
+    data.action_u.rx_gft_hash_rx_gft_hash_info.hint1 = g_ohash_idx;
+    data.action_u.rx_gft_hash_rx_gft_hash_info.hash1 = g_hash_msb;
 
-    rx_gft_entry_write(&key, &data);
+    rx_gft_entry_write(&key, &data, true);
 }
 
 static void
@@ -1006,7 +1013,7 @@ rx_create_gft_entry3() {
     data.action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
     data.action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx3;
 
-    rx_gft_entry_write(&key, &data);
+    rx_gft_entry_write(&key, &data, false);
 }
 
 static void
@@ -1035,7 +1042,7 @@ rx_create_gft_entry4() {
     data.action_u.rx_gft_hash_rx_gft_hash_info.entry_valid = 1;
     data.action_u.rx_gft_hash_rx_gft_hash_info.flow_index = g_flow_idx4;
 
-    rx_gft_entry_write(&key, &data);
+    rx_gft_entry_write(&key, &data, false);
 }
 
 static void
@@ -1418,17 +1425,13 @@ TEST_F(gft_test, test1) {
     };
 
     cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
-    const char *hal_conf_file = "conf/gft/hal.json";
     std::string mpart_json = cfg.cfg_path + "/gft/hbm_mem.json";
     platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM;
     catalog = sdk::lib::catalog::factory(cfg.cfg_path, "/catalog.json");
-
     if (getenv("HAL_PLATFORM_RTL")) {
-        hal_conf_file = "conf/gft/hal_rtl.json";
         platform = platform_type_t::PLATFORM_TYPE_RTL;
     } else if (getenv("HAL_PLATFORM_HW")) {
-        hal_conf_file = "conf/gft/hal_hw.json";
-        platform= platform_type_t::PLATFORM_TYPE_HW;
+        platform = platform_type_t::PLATFORM_TYPE_HW;
         catalog = sdk::lib::catalog::factory(cfg.cfg_path, "");
     }
     ASSERT_TRUE(catalog != NULL);
@@ -1451,7 +1454,8 @@ TEST_F(gft_test, test1) {
     hal::utils::trace_init("hal", 0, true, "hal.log",
                            TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
                            ::utils::trace_debug);
-    ret = sdk::lib::pal_init(platform_type_t::PLATFORM_TYPE_SIM);
+    ret = sdk::lib::pal_init(platform);
+    ASSERT_TRUE(ret == 0);
 
     cfg.num_pgm_cfgs = 1;
     memset(cfg.pgm_cfg, 0, sizeof(cfg.pgm_cfg));
@@ -1479,7 +1483,9 @@ TEST_F(gft_test, test1) {
     ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
     ASSERT_EQ(ret, SDK_RET_OK);
 
+#ifdef SIM
     config_done();
+#endif
 
     rx_roce_init();
     rx_key_init();
@@ -1498,6 +1504,7 @@ TEST_F(gft_test, test1) {
     tx_create_gft_entry2();
     tx_create_gft_entry3();
 
+#ifdef SIM
     uint32_t i = 0;
     uint32_t port = 0;
     uint32_t cos = 0;
@@ -1669,6 +1676,7 @@ TEST_F(gft_test, test1) {
     }
 
     exit_simulation();
+#endif
 }
 
 int main(int argc, char **argv) {

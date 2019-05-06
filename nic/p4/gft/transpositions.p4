@@ -467,6 +467,7 @@ action rx_l4_hdr_transpositions(hdr_bits, l4_sport_1, l4_dport_1, l4_sport_2,
 
 @pragma stage 4
 @pragma hbm_table
+@pragma index_table
 table rx_hdr_transpositions0 {
     reads {
         flow_action_metadata.flow_index : exact;
@@ -474,11 +475,12 @@ table rx_hdr_transpositions0 {
     actions {
         rx_hdr_transpositions;
     }
-    size : HDR_TRANSPOSITIONS_TABLE_SIZE;
+    size : RX_HDR_TRANSPOSITIONS_TABLE_SIZE;
 }
 
 @pragma stage 4
 @pragma hbm_table
+@pragma index_table
 table rx_hdr_transpositions1 {
     reads {
         flow_action_metadata.flow_index : exact;
@@ -486,11 +488,12 @@ table rx_hdr_transpositions1 {
     actions {
         rx_hdr_transpositions;
     }
-    size : HDR_TRANSPOSITIONS_TABLE_SIZE;
+    size : RX_HDR_TRANSPOSITIONS_TABLE_SIZE;
 }
 
-@pragma stage 4
+@pragma stage 5
 @pragma hbm_table
+@pragma index_table
 table rx_hdr_transpositions2 {
     reads {
         flow_action_metadata.flow_index : exact;
@@ -498,11 +501,13 @@ table rx_hdr_transpositions2 {
     actions {
         rx_hdr_transpositions;
     }
-    size : HDR_TRANSPOSITIONS_TABLE_SIZE;
+    size : RX_HDR_TRANSPOSITIONS_TABLE_SIZE;
 }
 
-@pragma stage 4
+@pragma stage 5
 @pragma hbm_table
+@pragma table_write
+@pragma index_table
 table rx_hdr_transpositions3 {
     reads {
         flow_action_metadata.flow_index : exact;
@@ -510,7 +515,7 @@ table rx_hdr_transpositions3 {
     actions {
         rx_l4_hdr_transpositions;
     }
-    size : HDR_TRANSPOSITIONS_TABLE_SIZE;
+    size : RX_HDR_TRANSPOSITIONS_TABLE_SIZE;
 }
 
 control rx_transpositions {
@@ -559,6 +564,7 @@ action tx_l4_hdr_transpositions(hdr0_bits, hdr_bits, encap_len_00,
 
 @pragma stage 3
 @pragma hbm_table
+@pragma index_table
 table tx_hdr_transpositions0 {
     reads {
         flow_action_metadata.flow_index : exact;
@@ -566,11 +572,12 @@ table tx_hdr_transpositions0 {
     actions {
         tx_hdr_transpositions;
     }
-    size : HDR_TRANSPOSITIONS_TABLE_SIZE;
+    size : TX_HDR_TRANSPOSITIONS_TABLE_SIZE;
 }
 
 @pragma stage 3
 @pragma hbm_table
+@pragma index_table
 table tx_hdr_transpositions1 {
     reads {
         flow_action_metadata.flow_index : exact;
@@ -578,11 +585,12 @@ table tx_hdr_transpositions1 {
     actions {
         tx_hdr_transpositions;
     }
-    size : HDR_TRANSPOSITIONS_TABLE_SIZE;
+    size : TX_HDR_TRANSPOSITIONS_TABLE_SIZE;
 }
 
 @pragma stage 3
 @pragma hbm_table
+@pragma index_table
 table tx_hdr_transpositions2 {
     reads {
         flow_action_metadata.flow_index : exact;
@@ -590,11 +598,12 @@ table tx_hdr_transpositions2 {
     actions {
         tx_hdr_transpositions;
     }
-    size : HDR_TRANSPOSITIONS_TABLE_SIZE;
+    size : TX_HDR_TRANSPOSITIONS_TABLE_SIZE;
 }
 
 @pragma stage 3
 @pragma hbm_table
+@pragma index_table
 table tx_hdr_transpositions3 {
     reads {
         flow_action_metadata.flow_index : exact;
@@ -602,7 +611,7 @@ table tx_hdr_transpositions3 {
     actions {
         tx_l4_hdr_transpositions;
     }
-    size : HDR_TRANSPOSITIONS_TABLE_SIZE;
+    size : TX_HDR_TRANSPOSITIONS_TABLE_SIZE;
 }
 
 control tx_transpositions {

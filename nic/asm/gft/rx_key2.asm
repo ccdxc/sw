@@ -44,8 +44,11 @@ rx_key2_ipv6:
                     k.{ipv6_2_srcAddr_sbit0_ebit7...ipv6_2_srcAddr_sbit32_ebit63}
     phvwr.c1    p.flow_lkp_metadata_ip_src_2[63:0], \
                     k.{ipv6_2_srcAddr_sbit64_ebit95,ipv6_2_srcAddr_sbit96_ebit127}
+#ifdef IPV6_SUPPORT
     phvwr.c2    p.flow_lkp_metadata_ip_dst_2[127:40], k.ipv6_2_dstAddr_sbit0_ebit87
     phvwr.c2    p.flow_lkp_metadata_ip_dst_2[39:0], k.ipv6_2_dstAddr_sbit88_ebit127
+#endif
+    phvwr.c2    p.flow_lkp_metadata_ip_dst_2, k.ipv6_2_dstAddr
     add         r7, r0, r0
     or.c3       r7, r7, k.{ipv6_2_trafficClass_sbit0_ebit3,\
                            ipv6_2_trafficClass_sbit4_ebit7}, 16

@@ -9,6 +9,8 @@ struct phv_ p;
 %%
 
 rx_vport_stats:
+    //phvwrpair       p.capri_intrinsic_tm_oport, TM_PORT_UPLINK_0, \
+                        //p.capri_intrinsic_tm_oq, 0
 #ifdef SUPPORT_GFT_GTEST
     seq             c1, k.{capri_intrinsic_lif_sbit0_ebit2, \
                            capri_intrinsic_lif_sbit3_ebit10}, EXCEPTION_VPORT
@@ -16,9 +18,15 @@ rx_vport_stats:
     phvwr.c1        p.{p4plus_to_p4_valid,capri_txdma_intrinsic_valid}, 0x3
     phvwrpair       p.capri_intrinsic_tm_oport, TM_PORT_EGRESS, \
                         p.capri_intrinsic_tm_oq, 0
+#ifdef IPV6_SUPPORT
     seq             c7, k.roce_bth_1_valid, TRUE
     seq.!c7         c7, k.roce_bth_2_valid, TRUE
     phvwr.c7        p.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_RDMA
+#else
+    seq             c7, k.roce_bth_valid, TRUE
+    phvwr.c7        p.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_RDMA
+#endif
+    phvwr           p.capri_intrinsic_drop, 0
 #endif
 
 rx_vport_stats_2:

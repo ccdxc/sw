@@ -86,7 +86,7 @@
         },
         {
             "name": "rdma",
-            "size": "131072K",
+            "size": "1K",
             "cache": "p4plus-all"
         },
         {
@@ -116,62 +116,62 @@
         },
         {
             "name": "rx_gft_hash",
-            "size": "262144K",
+            "size": "2G",
             "cache": "p4ig"
         },
         {
             "name": "rx_gft_hash_overflow",
-            "size": "4096K",
+            "size": "512M",
             "cache": "p4ig"
         },
         {
             "name": "rx_hdr_transpositions0",
-            "size": "65536K",
+            "size": "256M",
             "cache": "p4ig"
         },
         {
             "name": "rx_hdr_transpositions1",
-            "size": "65536K",
+            "size": "256M",
             "cache": "p4ig"
         },
         {
             "name": "rx_hdr_transpositions2",
-            "size": "65536K",
+            "size": "256M",
             "cache": "p4ig"
         },
         {
             "name": "rx_hdr_transpositions3",
-            "size": "65536K",
+            "size": "256M",
             "cache": "p4ig"
         },
         {
             "name": "tx_gft_hash",
-            "size": "262144K",
+            "size": "128M",
             "cache": "p4eg"
         },
         {
             "name": "tx_gft_hash_overflow",
-            "size": "4096K",
+            "size": "8M",
             "cache": "p4eg"
         },
         {
             "name": "tx_hdr_transpositions0",
-            "size": "65536K",
+            "size": "4M",
             "cache": "p4eg"
         },
         {
             "name": "tx_hdr_transpositions1",
-            "size": "65536K",
+            "size": "4M",
             "cache": "p4eg"
         },
         {
             "name": "tx_hdr_transpositions2",
-            "size": "65536K",
+            "size": "4M",
             "cache": "p4eg"
         },
         {
             "name": "tx_hdr_transpositions3",
-            "size": "65536K",
+            "size": "4M",
             "cache": "p4eg"
         },
         {

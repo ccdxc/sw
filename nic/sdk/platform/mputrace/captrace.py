@@ -48,13 +48,13 @@ args = parser.parse_args()
 
 if args.command == "gen_syms":
     if args.pipeline is not None:
-        if args.pipeline == "apollo" or args.pipeline ==  "iris":
+        if args.pipeline == "apollo" or args.pipeline ==  "iris" or args.pipeline ==  "gft":
             sym_dir = 'build/aarch64/%s/out/' % args.pipeline
             create_symbol_file(sym_dir, sym_file=args.sym_file)
         else:
-            print('Pipeline %s is incorrect. Please use iris or apollo.' % args.pipeline)
+            print('Pipeline %s is incorrect. Please use iris or apollo or gft.' % args.pipeline)
     else:
-        print('Please provide a pipeline name, either iris or apollo with --pipeline option')
+        print('Please provide a pipeline name, either iris or apollo or gft with --pipeline option')
 elif args.command == "phv":
     if args.sym:
         load_symbol_file(args.sym)

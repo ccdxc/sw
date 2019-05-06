@@ -49,6 +49,7 @@ hal/third-party/grpc/aarch64/
 hal/third-party/grpc/x86_64/
 hal/third-party/grpc/include/
 hal/third-party/crchack/bin/
+hal/third-party/ldd/aarch64
 hal/obj/*.so
 third-party/googletest-release-1.8.0/googletest/make/*.a
 sdk/third-party/boost/

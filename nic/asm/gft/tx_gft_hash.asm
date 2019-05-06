@@ -11,9 +11,11 @@ struct phv_ p;
 tx_gft_hash_info:
     seq.c1      c1, d.tx_gft_hash_info_d.entry_valid, TRUE
     bcf         [!c1], tx_gft_hash_miss
-    phvwr.c1    p.flow_action_metadata_flow_index, d.tx_gft_hash_info_d.flow_index
-    phvwr       p.flow_action_metadata_policer_index, \
-                    d.tx_gft_hash_info_d.policer_index
+    phvwr.c1    p.flow_action_metadata_flow_index, \
+                    d.tx_gft_hash_info_d.flow_index
+    or          r2, d.tx_gft_hash_info_d.policer_index_sbit7_ebit12, \
+                    d.tx_gft_hash_info_d.policer_index_sbit0_ebit6, 6
+    phvwr       p.flow_action_metadata_policer_index, r2
 
     // copy hint only if is non-zero
     sne         c1, d.tx_gft_hash_info_d.hint9, r0

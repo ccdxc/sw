@@ -129,7 +129,7 @@ using hal::utils::hal_trace_level;
 
 #define HAL_TRACE_VERBOSE(fmt, ...)                                            \
     if (likely(hal::utils::hal_logger()) &&                                    \
-        (hal_trace_level() >= ::utils::trace_verbose)) {                         \
+        (hal_trace_level() >= ::utils::trace_verbose)) {                       \
         hal::utils::hal_logger()->trace("[{}:{}] " fmt, __func__, __LINE__,    \
                                         ##__VA_ARGS__);                        \
     }                                                                          \

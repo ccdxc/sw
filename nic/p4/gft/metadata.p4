@@ -77,8 +77,7 @@ header_type l4_metadata_t {
 
 header_type flow_act_metadata_t {
     fields {
-        //flow_index        : 20;
-        flow_index          : 16;
+        flow_index          : 24;
         policer_index       : 13;
         overflow_lkp        : 1;
         tx_ethernet_dst     : 48;
@@ -120,8 +119,8 @@ header_type scratch_metadata_t {
         hdr_bits            : 24;
         num_packets         : 64;
         num_bytes           : 64;
-        hash                : 12;
-        hint                : 16;
+        hash                : 8;
+        hint                : 21;
         policer_valid       : 1;
         policer_pkt_rate    : 1;
         policer_rlimit_en   : 1;

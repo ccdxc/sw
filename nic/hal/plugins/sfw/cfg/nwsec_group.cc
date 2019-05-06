@@ -61,10 +61,9 @@ acl::acl_config_t nwsec_rule_config_glbl = { };
 void
 trim_mem_usage (const char *opn)
 {
-    char buffer[2048];
-
     malloc_trim(0);
 #if TRIM_LOG_ENABLE
+    char buffer[2048];
     struct mallinfo minfo = mallinfo();
     int fd = 0;
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
@@ -1746,7 +1745,7 @@ securitypolicy_delete(nwsec::SecurityPolicyDeleteRequest&    req,
     //const acl_ctx_t  *acl_ctx = NULL;
     SecurityPolicyKeyHandle kh = req.key_or_handle();
     trim_mem_usage("Before delete");
-    
+
     ret = validate_nwsec_policy_delete(req, res);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR(" security policy validate failed ret : {}", ret);

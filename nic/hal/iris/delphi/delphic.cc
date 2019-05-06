@@ -114,6 +114,9 @@ delphi_client::init_done(void)
 void
 hal_init_done (void)
 {
+    if (!g_delphic) {
+        return;
+    }
     g_delphic->init_done();
 }
 
@@ -127,11 +130,14 @@ std::string delphi_client::Name()
 {
     return "hal";
 }
-    
+
 // API to update HAL status
 void
 set_hal_status (hal::hal_status_t hal_status)
 {
+    if (!g_delphic) {
+        return;
+    }
     set_hal_status(hal_status, g_delphic->sdk());
 }
 

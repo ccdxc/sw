@@ -1,0 +1,10 @@
+{
+  "mode" : "hw",
+  "sw" : {
+    "grpc_port" : "50054",
+    "feature_set" : "gft",
+    "control_cores_mask" : "0x1",
+    "data_cores_mask" : "0xe",
+    "shm": false
+  }
+}

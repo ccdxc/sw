@@ -55,12 +55,11 @@ Status port_svc_init(delphi::SdkPtr sdk) {
     HAL_TRACE_DEBUG("Linkmgr: Mounted port objects from delphi...");
 
     // initialize events recorder; size of the shm. mem = 2048 bytes
-    g_linkmgr_svc.recorder = events_recorder::init(
-                           "linkmgr.events",     // name; this should end with ".events"
-                           2048, // size of the shared memory
-                           "linkmgr", // component that records the event
-                           std::shared_ptr<logger>(hal::utils::hal_logger())); // logger
-
+    g_linkmgr_svc.recorder =
+        events_recorder::init("linkmgr.events",     // name; this should end with ".events"
+                              2048, // size of the shared memory
+                              "linkmgr", // component that records the event
+                              std::shared_ptr<logger>(hal::utils::hal_logger())); // logger
     if (g_linkmgr_svc.recorder == nullptr) {
         HAL_TRACE_ERR("events recorder init failed");
         return Status::CANCELLED;
@@ -181,6 +180,9 @@ error port_svc::update_port_status(google::protobuf::uint32 port_num,
                                    PortOperState            status,
                                    PortSpeed                speed)
 {
+    if (sdk_ == NULL) {
+        error::OK();
+    }
     // create port status object
     PortStatusPtr port = std::make_shared<PortStatus>();
 
@@ -204,6 +206,10 @@ port_event_notify (uint32_t port_num, port_event_t event,
                    port_speed_t port_speed)
 {
     kh::PortKeyHandle port_key_handle;
+
+    if (port_svc_get() == NULL) {
+        return;
+    }
 
     port_key_handle.set_port_id(port_num);
     switch (event) {
@@ -244,6 +250,10 @@ error port_svc::update_xcvr_status(google::protobuf::uint32 port_num,
                                    PortXcvrPid pid,
                                    CableType cable_type,
                                    void *xcvr_sprom) {
+    if (sdk_ == NULL) {
+        error::OK();
+    }
+
     // create port status object
     PortStatusPtr port = std::make_shared<PortStatus>();
     port->mutable_key_or_handle()->set_port_id(port_num);
