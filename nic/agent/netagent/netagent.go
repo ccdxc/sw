@@ -8,7 +8,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/troubleshooting"
+
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
+	tsctrler "github.com/pensando/sw/nic/agent/troubleshooting/ctrlerif"
+
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	grpcDatapath "github.com/pensando/sw/nic/agent/netagent/datapath"
 	delphiDatapath "github.com/pensando/sw/nic/agent/netagent/datapath/delphidp"
@@ -66,6 +70,7 @@ type Agent struct {
 	DelphiClient   clientApi.Client
 	NaplesStatus   delphiProto.NaplesStatus
 	mountComplete  bool
+	TroubleShoot   *troubleshooting.Agent
 }
 
 // NewAgent creates an agent instance
@@ -244,6 +249,12 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 
 			log.Infof("NPM client {%+v} is running", npmClient)
 			ag.NpmClient = npmClient
+
+			ag.TroubleShoot.TsClient, err = tsctrler.NewTsClient(ag.TroubleShoot.TroubleShootingAgent, globals.Tsm, ag.ResolverClient)
+			if err != nil {
+				log.Errorf("Error creating TroubleShooting client. Err: %v", err)
+			}
+			log.Infof("TroubleShooting client {%+v} is running", ag.TroubleShoot.TroubleShootingAgent)
 		}
 	}
 }

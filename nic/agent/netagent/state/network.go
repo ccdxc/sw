@@ -19,6 +19,7 @@ var ErrNetworkNotFound = errors.New("network not found")
 
 // CreateNetwork creates a network
 func (na *Nagent) CreateNetwork(nt *netproto.Network) error {
+	log.Infof("Network Create: %v", nt)
 	err := na.validateMeta(nt.Kind, nt.ObjectMeta)
 	if err != nil {
 		return err

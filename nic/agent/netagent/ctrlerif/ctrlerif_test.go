@@ -687,6 +687,16 @@ func (ag *fakeAgent) DeleteApp(tn, ns, name string) error {
 	return nil
 }
 
+// CreateLateralNetAgentObjects is a stubbed out to satisfy the interface
+func (ag *fakeAgent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error {
+	return nil
+}
+
+// DeleteLateralNetAgentObjects is a stubbed out to satisfy the interface
+func (ag *fakeAgent) DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error {
+	return nil
+}
+
 type fakeRPCServer struct {
 	sync.Mutex
 	grpcServer  *rpckit.RPCServer

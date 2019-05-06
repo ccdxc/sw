@@ -33,6 +33,10 @@ const (
 	agentDatapathKind = "mock"
 )
 
+func getMgmtIP() string {
+	return "10.10.10.10"
+}
+
 var datapathKind = flag.String("datapath", agentDatapathKind, "Specify the datapath type. mock | hal")
 
 func setup() (*RestServer, error) {
@@ -66,7 +70,7 @@ func setup() (*RestServer, error) {
 		log.Errorf("Could not create troubleshooting HAL datapath. Kind: %v, Error %v", datapathKind, err)
 		return nil, err
 	}
-	tsagent, err := tsstate.NewTsAgent(tsdp, "dummy-node-uuid", nagent)
+	tsagent, err := tsstate.NewTsAgent(tsdp, "dummy-node-uuid", nagent, getMgmtIP)
 	if err != nil {
 		log.Errorf("Could not create ts troubleshooting agent")
 		return nil, err

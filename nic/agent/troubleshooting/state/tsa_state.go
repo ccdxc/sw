@@ -43,12 +43,15 @@ var ErrDbRead = errors.New("Error retrieving object from database")
 
 var nAgent *netAgentState.Nagent
 
+var getMgmtIP func() string
+
 // NewTsAgent creates new troubleshooting agent
-func NewTsAgent(dp types.TsDatapathAPI, nodeUUID string, na *netAgentState.Nagent) (*Tagent, error) {
+func NewTsAgent(dp types.TsDatapathAPI, nodeUUID string, na *netAgentState.Nagent, getMgmtIPAddr func() string) (*Tagent, error) {
 	var tsa Tagent
 	var err error
 
 	nAgent = na
+	getMgmtIP = getMgmtIPAddr
 	emdb := na.Store
 
 	restart := false
@@ -1158,7 +1161,6 @@ func (tsa *Tagent) createPacketCaptureSessionProtoObjs(mirrorSession *tsproto.Mi
 	var mirrorSessionProtoObjs *halproto.MirrorSessionRequestMsg
 	var err error
 	var mirrorObjs mirrorProtoObjs
-
 	// Check if flow rules or drop rules needs to be processed.
 	dropMonitor := true
 	if len(mirrorSession.Spec.MatchRules) > 0 {
@@ -1359,6 +1361,15 @@ func (tsa *Tagent) deleteModifyMirrorSessionRules(pcSession *tsproto.MirrorSessi
 }
 
 func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession *tsproto.MirrorSession, update bool) error {
+	// Create lateral objects here
+	for _, mirrorCollector := range pcSession.Spec.Collectors {
+		err := nAgent.CreateLateralNetAgentObjects(getMgmtIP(), mirrorCollector.ExportCfg.Destination, true)
+		if err != nil {
+			log.Errorf("Failed to create lateral objects. Err: %v", err)
+			return fmt.Errorf("failed to create lateral objects. Err: %v", err)
+		}
+	}
+
 	var deleteFmRuleIDs, deleteDropRuleIDs []uint64
 	var err error
 
@@ -1408,7 +1419,7 @@ func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession *tsproto.MirrorSes
 		}
 	}
 	if err != nil {
-		log.Errorf("Packet capture session create or update request errored")
+		log.Errorf("Packet capture session create or update request errored. Err: %v", err)
 		if mirrorProtoObjs != nil {
 			//clean up new rules added to DB maps
 			for _, d := range mirrorProtoObjs.NewDropRuleIDs {
@@ -1443,6 +1454,13 @@ func (tsa *Tagent) createUpdatePacketCaptureSession(pcSession *tsproto.MirrorSes
 }
 
 func (tsa *Tagent) deletePacketCaptureSession(pcSession *tsproto.MirrorSession) error {
+	for _, mirrorCollector := range pcSession.Spec.Collectors {
+		err := nAgent.DeleteLateralNetAgentObjects(getMgmtIP(), mirrorCollector.ExportCfg.Destination, true)
+		if err != nil {
+			log.Errorf("Failed to delete lateral objects. Err: %v", err)
+			return fmt.Errorf("failed to delete lateral objects. Err: %v", err)
+		}
+	}
 	key := objectKey(pcSession.ObjectMeta, pcSession.TypeMeta)
 	tsa.Lock()
 	defer tsa.Unlock()
@@ -1630,7 +1648,16 @@ func (tsa *Tagent) Debug(w http.ResponseWriter, r *http.Request) {
 func (tsa *Tagent) ListMirrorSession() []*tsproto.MirrorSession {
 	log.Debugf("Processing packet capture session list...")
 	//TODO
-	return nil
+	tsa.Lock()
+	defer tsa.Unlock()
+	var mirrList []*tsproto.MirrorSession
+
+	// walk all mirror sessions
+	for _, mr := range tsa.DB.MirrorSessionDB {
+		mirrList = append(mirrList, mr)
+	}
+
+	return mirrList
 }
 
 // CreateTechSupportRequest is not implemented

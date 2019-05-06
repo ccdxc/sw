@@ -5,8 +5,11 @@ package state
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/gogo/protobuf/proto"
+
+	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
@@ -48,7 +51,8 @@ func (na *Nagent) CreateVrf(vrf *netproto.Vrf) error {
 
 	// create it in datapath
 	err = na.Datapath.CreateVrf(vrf.Status.VrfID, vrf.Spec.VrfType)
-	if err != nil {
+
+	if err != nil && !strings.Contains(err.Error(), halproto.ApiStatus_API_STATUS_EXISTS_ALREADY.String()) {
 		log.Errorf("Error creating vrf in datapath. Vrf {%+v}. Err: %v", vrf, err)
 		return err
 	}

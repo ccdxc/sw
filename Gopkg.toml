@@ -254,6 +254,15 @@ noverify = ["github.com/docker/docker", "github.com/pensando/vic", "github.com/v
   revision = "805b8bc09a50b1f1dc8bc0f8e9fbf32237aa333c"
   name = "github.com/pensando/goexpect"
 
+# Override needed as the master commit needs go 1.12 and org/x/sys needs a upgrade which might affect other things
+[[override]]
+  revision = "640d790d2bdd9420ffa04d44e5568b80260e28dc"
+  name = "github.com/mdlayher/raw"
+
+[[override]]
+  revision = "e9c59d9d2f1bf69b3f30f99b7b0ebf75d28c7799"
+  name = "github.com/mdlayher/arp"
+
 [[constraint]]
   branch = "master"
   name = "golang.org/x/tools"

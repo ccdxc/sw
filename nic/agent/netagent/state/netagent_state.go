@@ -3,11 +3,9 @@
 package state
 
 import (
+	"context"
 	"fmt"
-	"strings"
 	"time"
-
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 
 	gogoproto "github.com/gogo/protobuf/types"
 
@@ -55,6 +53,7 @@ func NewNetAgent(dp types.NetDatapathAPI, dbPath string) (*Nagent, error) {
 		// We need to create a default tenant and default namespace at startup.
 		err = na.createDefaultTenant()
 		if err != nil {
+			log.Errorf("Failed to create default tenant. Err: %v", err)
 			emdb.Close()
 			return nil, err
 		}
@@ -126,7 +125,6 @@ func (na *Nagent) createDefaultTenant() error {
 
 func (na *Nagent) createDefaultVrf() error {
 	c, _ := gogoproto.TimestampProto(time.Now())
-
 	defVrf := netproto.Vrf{
 		TypeMeta: api.TypeMeta{Kind: "Vrf"},
 		ObjectMeta: api.ObjectMeta{
@@ -145,9 +143,6 @@ func (na *Nagent) createDefaultVrf() error {
 		},
 	}
 	err := na.CreateVrf(&defVrf)
-	if err != nil && strings.Contains(err.Error(), halproto.ApiStatus_API_STATUS_EXISTS_ALREADY.String()) {
-		return nil
-	}
 	return err
 }
 
@@ -185,6 +180,9 @@ func (na *Nagent) init(emdb emstore.Emstore, dp types.NetDatapathAPI) {
 	na.AppDB = make(map[string]*netproto.App)
 	na.VrfDB = make(map[string]*netproto.Vrf)
 	na.Solver = dependencies.NewDepSolver()
+	na.ArpCache = types.ArpCache{
+		DoneCache: make(map[string]context.CancelFunc),
+	}
 }
 
 // GetUUID gets the naples uuid from the datapath

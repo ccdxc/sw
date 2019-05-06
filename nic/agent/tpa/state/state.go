@@ -303,7 +303,6 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 			}
 		}
 	}()
-
 	srcIPAddr := p.state.getMgmtIPAddr()
 	if srcIPAddr == "" {
 		// get local endpoint
@@ -333,6 +332,12 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 			log.Infof("collector %s exists", ckey.Destination)
 			cdata.PolicyNames[getObjMetaKey(&p.objMeta)] = true
 			continue
+		}
+
+		// Create lateral objects here
+		mgmtIP := p.state.getMgmtIPAddr()
+		if err := p.state.netAgent.CreateLateralNetAgentObjects(mgmtIP, ckey.Destination, false); err != nil {
+			log.Errorf("Failed to create lateral objects in netagent. Err: %v", err)
 		}
 
 		halDestAddr, destAddr, err := convertToHalIPAddr(ckey.Destination)

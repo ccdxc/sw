@@ -1311,6 +1311,28 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:f74e3c9a4ad67ced47e7913abeb0ce1e8a152f841e89e843d68e22c2d72bf326"
+  name = "github.com/mdlayher/arp"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "e9c59d9d2f1bf69b3f30f99b7b0ebf75d28c7799"
+
+[[projects]]
+  branch = "master"
+  digest = "1:88810ec115324c260951440d11f030e4bfe451cd888720481e1ddc037a5c8678"
+  name = "github.com/mdlayher/ethernet"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "5b5fc417d966b71d3781b0d5860413e9fae947c1"
+
+[[projects]]
+  digest = "1:8a46ec7474ef045389659a945fe0692b8caaf47aaf4a2cdf2b8d4ab48ef2a11e"
+  name = "github.com/mdlayher/raw"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "640d790d2bdd9420ffa04d44e5568b80260e28dc"
+
+[[projects]]
   digest = "1:0ec0157fd7fc1c385d1f46fc446f07ef6751e1b7d0f6e0402a33509097b5f38b"
   name = "github.com/miekg/dns"
   packages = ["."]
@@ -2093,7 +2115,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d129afdf4044fab1e03a8912d0c2cb3241ac65781ad524764713afe79bbb5be8"
+  digest = "1:ee8a9d7869332ced999895df59d56af8156ab3295595115f684ed50e70a080dd"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -2101,7 +2123,7 @@
     "windows",
   ]
   pruneopts = "NUT"
-  revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
+  revision = "d89cdac9e8725f2aefce25fcbfef41134c9ad412"
 
 [[projects]]
   branch = "master"
@@ -2645,6 +2667,7 @@
     "github.com/jeromer/syslogparser/rfc3164",
     "github.com/jeromer/syslogparser/rfc5424",
     "github.com/juju/ratelimit",
+    "github.com/mdlayher/arp",
     "github.com/miekg/pkcs11",
     "github.com/minio/minio-go",
     "github.com/minio/minio/cmd",

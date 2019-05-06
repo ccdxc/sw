@@ -310,6 +310,9 @@ func (ws *WorkloadState) createEndpoints() error {
 				MicroSegmentVlan:   ws.Workload.Spec.Interfaces[ii].MicroSegVlan,
 			},
 		}
+		if len(ws.Workload.Spec.Interfaces[ii].IpAddresses) > 0 {
+			epInfo.Status.IPv4Address = ws.Workload.Spec.Interfaces[ii].IpAddresses[0]
+		}
 
 		// create it in apiserver
 		err = ws.stateMgr.ctrler.Endpoint().Create(&epInfo)

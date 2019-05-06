@@ -46,15 +46,15 @@ import (
 type Agent struct {
 	datapath             types.TsDatapathAPI
 	TroubleShootingAgent *state.Tagent
-	tsClient             *ctrlerif.TsClient
+	TsClient             *ctrlerif.TsClient
 }
 
 // NewTsAgent creates troubleshooting agent instance
-func NewTsAgent(dp types.TsDatapathAPI, nodeUUID, ctrlerURL string, resolverClient resolver.Interface, na *netAgentState.Nagent) (*Agent, error) {
+func NewTsAgent(dp types.TsDatapathAPI, nodeUUID, ctrlerURL string, resolverClient resolver.Interface, na *netAgentState.Nagent, getMgmtIPAddr func() string) (*Agent, error) {
 
 	var tsClient *ctrlerif.TsClient
 
-	tsAgent, err := state.NewTsAgent(dp, nodeUUID, na)
+	tsAgent, err := state.NewTsAgent(dp, nodeUUID, na, getMgmtIPAddr)
 	if err != nil {
 		log.Errorf("Error creating trouble shooting agent, Err: %v", err)
 		return nil, err
@@ -70,7 +70,7 @@ func NewTsAgent(dp types.TsDatapathAPI, nodeUUID, ctrlerURL string, resolverClie
 	agent := Agent{
 		datapath:             dp,
 		TroubleShootingAgent: tsAgent,
-		tsClient:             tsClient,
+		TsClient:             tsClient,
 	}
 	return &agent, nil
 }
@@ -78,8 +78,8 @@ func NewTsAgent(dp types.TsDatapathAPI, nodeUUID, ctrlerURL string, resolverClie
 // Stop stops the agent
 func (agent *Agent) Stop() {
 	agent.TroubleShootingAgent.Stop()
-	if agent.tsClient != nil {
-		agent.tsClient.Stop()
-		agent.tsClient = nil
+	if agent.TsClient != nil {
+		agent.TsClient.Stop()
+		agent.TsClient = nil
 	}
 }

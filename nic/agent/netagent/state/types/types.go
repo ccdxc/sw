@@ -3,10 +3,12 @@
 package types
 
 import (
+	"context"
+	"fmt"
 	"sync"
 	"time"
 
-	"fmt"
+	"github.com/mdlayher/arp"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -31,30 +33,33 @@ const (
 	VrfOffset = 64
 
 	// NetworkOffset will ensure that agent will allocate VRD IDs starting from 16 i.e NETAGENT_L2SEG_ID_MIN
-	NetworkOffset = 15
+	NetworkOffset = 100
 )
 
 // ID types
 const (
-	NetworkID         = "networkID"
-	SecurityGroupID   = "sgID"
-	TenantID          = "tenantID"
-	NamespaceID       = "namespaceID"
-	VrfID             = "vrfID"
-	InterfaceID       = "interfaceID"
-	NatPoolID         = "natPoolID"
-	NatPolicyID       = "natPolicyID"
-	NatRuleID         = "natRuleID"
-	RouteID           = "routeID"
-	NatBindingID      = "natBindingID"
-	IPSecPolicyID     = "ipSecPolicyID"
-	IPSecSAEncryptID  = "ipSecSAEncryptID"
-	IPSecSADecryptID  = "ipSecSADencryptID"
-	IPSecRuleID       = "ipSecRuleID"
-	SGPolicyID        = "securityGroupPolicyID"
-	TCPProxyPolicyID  = "tcpProxyPolicyID"
-	SecurityProfileID = "securityProfileID"
-	AppID             = "appID"
+	NetworkID              = "networkID"
+	SecurityGroupID        = "sgID"
+	TenantID               = "tenantID"
+	NamespaceID            = "namespaceID"
+	VrfID                  = "vrfID"
+	InterfaceID            = "interfaceID"
+	NatPoolID              = "natPoolID"
+	NatPolicyID            = "natPolicyID"
+	NatRuleID              = "natRuleID"
+	RouteID                = "routeID"
+	NatBindingID           = "natBindingID"
+	IPSecPolicyID          = "ipSecPolicyID"
+	IPSecSAEncryptID       = "ipSecSAEncryptID"
+	IPSecSADecryptID       = "ipSecSADencryptID"
+	IPSecRuleID            = "ipSecRuleID"
+	SGPolicyID             = "securityGroupPolicyID"
+	TCPProxyPolicyID       = "tcpProxyPolicyID"
+	SecurityProfileID      = "securityProfileID"
+	AppID                  = "appID"
+	UntaggedVLAN           = 8192
+	OOBManagementInterface = "oob_mnic0"
+	ManagementUplink       = "uplink130"
 )
 
 // IntfInfo has the interface names to be plumbed into container
@@ -144,6 +149,14 @@ type NetAgent struct {
 	ControllerIPs     []string                             // Controller IPs that NetAgent is using
 	Mode              string                               // Netagent Mode
 	NetAgentStartTime time.Time                            // Time when NetAgent was started
+	ArpClient         *arp.Client                          // Arp Client Handler
+	ArpCache          ArpCache                             // ARP Cache
+}
+
+// ArpCache maintains a list of ARP entries for the SPAN Dest IPs
+type ArpCache struct {
+	Cache     sync.Map
+	DoneCache map[string]context.CancelFunc
 }
 
 // CtrlerAPI is the API provided by controller modules to netagent
@@ -258,6 +271,8 @@ type CtrlerIntf interface {
 	GetHwInterfaces() error                                                     // Gets all the uplinks created on the hal by nic mgr
 	GetNaplesInfo() (*NaplesInfo, error)                                        // Returns Naples information
 	GetNetagentUptime() (string, error)                                         // Returns NetAgent Uptime
+	CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error    // API for TSAgent and TPAgent to use to create dependent objects
+	DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error    // API for TSAgent and TPAgent to delete dependent objects
 }
 
 // PluginIntf is the API provided by the netagent to plugins

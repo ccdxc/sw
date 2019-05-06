@@ -696,7 +696,7 @@ func (it *veniceIntegSuite) startAgent() {
 		it.tmpFiles = append(it.tmpFiles, n)
 
 		log.Infof("creating troubleshooting subagent")
-		tsa, aerr := troubleshooting.NewTsAgent(tsdp, fmt.Sprintf("dummy-uuid-%d", i), globals.Tsm, rc, agent.NetworkAgent)
+		tsa, aerr := troubleshooting.NewTsAgent(tsdp, fmt.Sprintf("dummy-uuid-%d", i), globals.Tsm, rc, agent.NetworkAgent, agent.GetMgmtIPAddr)
 		if aerr != nil {
 			log.Fatalf("Error creating TS agent. Err: %v", aerr)
 		}
