@@ -1834,6 +1834,44 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 			nil,
 		},
 		{
+			// Multiple IN test case
+			search.SearchRequest{
+				Query: &search.SearchQuery{
+					Kinds: []string{"SmartNIC"},
+					Fields: &fields.Selector{
+						Requirements: []*fields.Requirement{
+							{
+								Key:      "meta.name",
+								Operator: "in",
+								Values:   []string{"4444.4400.0000", "4444.4400.0001"},
+							},
+							{
+								Key:      "meta.name",
+								Operator: "in",
+								Values:   []string{"4444.4400.0000", "4444.4400.0002"},
+							},
+						},
+					},
+				},
+				From:       from,
+				MaxResults: maxResults,
+			},
+			"",
+			"",
+			1,
+			nil,
+			map[string]map[string]map[string]map[string]interface{}{
+				"default": {
+					"Cluster": {
+						"SmartNIC": {
+							"4444.4400.0000": nil,
+						},
+					},
+				},
+			},
+			nil,
+		},
+		{
 			// NOT-IN test case
 			search.SearchRequest{
 				Query: &search.SearchQuery{

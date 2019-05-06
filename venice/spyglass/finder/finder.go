@@ -203,10 +203,11 @@ func (fdr *Finder) QueryBuilder(req *search.SearchRequest) (es.Query, error) {
 					query = query.MustNot(es.NewMatchPhraseQuery(field.Key, field.Values[0]))
 				}
 			case fields.Operator_name[int32(fields.Operator_in)]:
-				query = query.MinimumNumberShouldMatch(1)
+				fieldQuery := es.NewBoolQuery().MinimumNumberShouldMatch(1)
 				for _, val := range field.GetValues() {
-					query = query.Should(es.NewMatchPhraseQuery(field.Key, val))
+					fieldQuery.Should(es.NewMatchPhraseQuery(field.Key, val))
 				}
+				query = query.Must(fieldQuery)
 			case fields.Operator_name[int32(fields.Operator_notIn)]:
 				for _, val := range field.GetValues() {
 					query = query.MustNot(es.NewMatchPhraseQuery(field.Key, val))
