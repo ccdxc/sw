@@ -40,8 +40,8 @@ var systemClockShowCmd = &cobra.Command{
 
 var systemStatsShowCmd = &cobra.Command{
 	Use:   "statistics",
-	Short: "show system statistics [fte | fte-txrx | table | api | pb | intf | all] (Default: all)",
-	Long:  "show system statistics [fte | fte-txrx | table | api | pb | intf | all] (Default: all)",
+	Short: "show system statistics [fte | fte-txrx | table | api | pb | pb_det | intf | all] (Default: all)",
+	Long:  "show system statistics [fte | fte-txrx | table | api | pb | pb_det | intf | all] (Default: all)",
 	Run:   systemStatsShowCmdHandler,
 }
 
@@ -594,6 +594,7 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	fte := false
 	api := false
 	pb := false
+	pbDet := false
 	intf := false
 	fteTxRx := false
 
@@ -606,6 +607,8 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 			api = true
 		} else if strings.Compare(args[0], "pb") == 0 {
 			pb = true
+		} else if strings.Compare(args[0], "pb_det") == 0 {
+			pbDet = true
 		} else if strings.Compare(args[0], "intf") == 0 {
 			intf = true
 		} else if strings.Compare(args[0], "fte-txrx") == 0 {
@@ -699,16 +702,6 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		uplinkIn := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
 		uplinkOut := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
 
-		inputQueueInfo := make([][]InputQueueInfo, 12)
-		for i := range inputQueueInfo {
-			inputQueueInfo[i] = make([]InputQueueInfo, 32)
-		}
-
-		outputQueueInfo := make([][]OutputQueueInfo, 12)
-		for i := range outputQueueInfo {
-			outputQueueInfo[i] = make([]OutputQueueInfo, 32)
-		}
-
 		for _, entry := range resp.GetStats().GetPacketBufferStats().PortStats {
 			if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_DMA {
 				dmaIn = entry.GetBufferStats().GetSopCountIn()
@@ -723,14 +716,29 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 				uplinkIn[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountIn()
 				uplinkOut[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountOut()
 			}
-
-			systemPbOccupancyOqCountersPopulate(entry, inputQueueInfo, outputQueueInfo)
 		}
 
 		pbStatsShow(dmaIn, dmaOut,
 			ingIn, ingOut,
 			egrIn, egrOut,
 			uplinkIn, uplinkOut)
+
+	}
+
+	if pbDet {
+		inputQueueInfo := make([][]InputQueueInfo, 12)
+		for i := range inputQueueInfo {
+			inputQueueInfo[i] = make([]InputQueueInfo, 32)
+		}
+
+		outputQueueInfo := make([][]OutputQueueInfo, 12)
+		for i := range outputQueueInfo {
+			outputQueueInfo[i] = make([]OutputQueueInfo, 32)
+		}
+
+		for _, entry := range resp.GetStats().GetPacketBufferStats().PortStats {
+			systemPbOccupancyOqCountersPopulate(entry, inputQueueInfo, outputQueueInfo)
+		}
 
 		systemPbOccupancyCountersShow(inputQueueInfo)
 		systemPbOqCountersShow(outputQueueInfo)
