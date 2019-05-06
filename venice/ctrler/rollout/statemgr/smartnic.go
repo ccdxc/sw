@@ -108,13 +108,14 @@ func (sm *Statemgr) ListSmartNICRollouts() ([]*SmartNICRolloutState, error) {
 // UpdateSmartNICRolloutStatus - update status
 func (snicState *SmartNICRolloutState) UpdateSmartNICRolloutStatus(newStatus *protos.SmartNICRolloutStatus) {
 
-	log.Infof("Updating status of SmartNICRollout %v", snicState.SmartNICRollout.Name)
+	log.Infof("Updating status %+v of SmartNICRollout %v", newStatus, snicState.SmartNICRollout.Name)
 	version := snicState.ros.Rollout.Spec.Version
 
 	var phase rollout.RolloutPhase_Phases
 	var reason, message string
 	snicState.Mutex.Lock()
 	for _, s := range newStatus.OpStatus {
+		log.Infof("Updating OpStatus %+v", s)
 		if s.Version != version {
 			continue
 		}
@@ -193,6 +194,7 @@ func (snicState *SmartNICRolloutState) addSpecOp(version string, op protos.Smart
 			return // version and op already exist
 		}
 	}
+	snicState.Spec.Ops = snicState.Spec.Ops[:0]
 	snicState.Spec.Ops = append(snicState.Spec.Ops, &protos.SmartNICOpSpec{Op: op, Version: version})
 	snicState.Mutex.Unlock()
 

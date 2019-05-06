@@ -107,6 +107,14 @@ func (n *NMD) issueNextPendingOp() {
 			return
 		}
 	case protos.SmartNICOp_SmartNICPreCheckForDisruptive:
+		naplesVersion, err := imagestore.GetNaplesRolloutVersion(context.Background(), n.resolverClient, n.inProgressOps.Version)
+		if err != nil {
+			log.Errorf("Failed to get naples version from objectstore %+v", err)
+		}
+		err = imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, naplesVersion)
+		if err != nil {
+			log.Errorf("Failed to download naples image from objectstore %+v", err)
+		}
 		err = n.upgmgr.StartPreCheckDisruptive(n.inProgressOps.Version)
 		if err != nil {
 			log.Errorf("Precheck returned %s", err)
@@ -118,7 +126,11 @@ func (n *NMD) issueNextPendingOp() {
 			log.Errorf("Failed to get naples version from objectstore %+v", err)
 			return
 		}
-		imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, naplesVersion)
+		err = imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, naplesVersion)
+		if err != nil {
+			log.Errorf("Failed to download naples image from objectstore %+v", err)
+			return
+		}
 	}
 }
 

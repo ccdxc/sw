@@ -28,7 +28,7 @@ func DownloadNaplesImage(ctx context.Context, resolver resolver.Interface, versi
 	}
 
 	objectStoreFileName := "Naples/" + version + "_img/" + naplesImageName
-	return downloadImage(ctx, resolver, objectStoreFileName, "naples_fw.tar")
+	return downloadImage(ctx, resolver, objectStoreFileName, "/update/naples_fw.tar")
 }
 
 // DownloadVeniceImage downloads a venice image from minio

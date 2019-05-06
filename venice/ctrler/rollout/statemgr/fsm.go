@@ -12,7 +12,7 @@ import (
 
 const defaultNumParallel = 2 // if user has not specified parallelism in Spec, we do do many SmartNICs in parallel. We can change this logic in future as needed..
 
-var preUpgradeTimeout = 45 * time.Second
+var preUpgradeTimeout = 240 * time.Second
 
 type rofsmEvent uint
 type rofsmState uint
