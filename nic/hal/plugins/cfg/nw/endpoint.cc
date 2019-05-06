@@ -837,13 +837,18 @@ ep_get_pinned_uplink(ep_t *ep)
     hal_ret_t   ret     = HAL_RET_OK;
     if_t        *hal_if = NULL;
     if_t        *uplink_if = NULL;
+    
+    if (ep == NULL) {
+        HAL_TRACE_ERR("EP is NULL");
+        goto end;
+    }
 
     if (ep->ep_flags & EP_FLAGS_REMOTE) {
         HAL_TRACE_DEBUG("EP {} is Remote. No pinned uplink",
                         ep_l2_key_to_str(ep));
         goto end;
     }
-
+    
     hal_if = find_if_by_handle(ep->if_handle);
     if (hal_if == NULL) {
         HAL_TRACE_ERR("Interface {} not found for if handle", ep->if_handle);

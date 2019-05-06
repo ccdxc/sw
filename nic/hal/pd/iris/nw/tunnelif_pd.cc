@@ -1,5 +1,6 @@
 #include "nic/sdk/include/sdk/lock.hpp"
 #include "nic/hal/pd/iris/hal_state_pd.hpp"
+#include "nic/include/pd.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/nw/interface_api.hpp"
 #include "nic/hal/plugins/cfg/nw/l2segment_api.hpp"
@@ -869,8 +870,13 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
                    sizeof(ip_addr_t));
         }
         tnnl_rw_key->ip_type = IP_HEADER_TYPE_IPV4;
-        tnnl_rw_key->vlan_valid = vlan_v;
-        tnnl_rw_key->vlan_id = vlan_id;
+        if (vlan_id != NATIVE_VLAN_ID) {
+            tnnl_rw_key->vlan_valid = vlan_v;
+            tnnl_rw_key->vlan_id = vlan_id;
+        } else {
+            tnnl_rw_key->vlan_valid = 0;
+            tnnl_rw_key->vlan_id = 0;
+        }
     } else if (actionid == TUNNEL_REWRITE_ENCAP_MPLS_UDP_ID) {
         memcpy(tnnl_rw_key->mac_da, pi_if->gw_mac_da, sizeof(mac_addr_t));
         memcpy(tnnl_rw_key->mac_sa, pi_if->pf_mac, sizeof(mac_addr_t));

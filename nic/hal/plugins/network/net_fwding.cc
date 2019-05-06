@@ -153,6 +153,7 @@ update_fwding_info(fte::ctx_t&ctx)
     hal_ret_t ret;
     hal::if_t *dif = ctx.dif();
     hal::if_t *pinned_if;
+    hal::ep_t *dep = NULL;
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
 
     if (dif && dif->if_type == intf::IF_TYPE_ENIC) {
@@ -186,8 +187,8 @@ update_fwding_info(fte::ctx_t&ctx)
             } else {
                 dif = find_if_by_handle(ctx.sl2seg()->pinned_uplink);
                 if (dif == NULL) {
-                    HAL_TRACE_INFO("net_fwding: HALIF lookup by l2seg"
-                                   "pinned uplink failed!");
+                    HAL_TRACE_INFO("net_fwding: HALIF lookup by l2seg and "
+                                   "dest-ep pinned uplink failed!");
                 }
             }
         }

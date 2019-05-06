@@ -6,6 +6,8 @@
 namespace hal {
 namespace pd {
 
+#define NATIVE_VLAN_ID 8192
+
 typedef struct pd_vrf_s pd_vrf_t;
 typedef struct pd_nwsec_profile_s pd_nwsec_profile_t;
 typedef struct pd_dos_policy_s pd_dos_policy_t;

@@ -255,6 +255,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     pd::pd_collector_create_args_t args;
     pd::pd_func_args_t pd_func_args = {0};
     hal_ret_t ret = HAL_RET_OK;
+    mac_addr_t *mac = NULL;
 
     HAL_TRACE_DEBUG("ExportID {}", spec.key_or_handle().collector_id());
     collector_spec_dump(spec);
@@ -269,7 +270,10 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
-    memcpy(cfg.dest_mac, ep->l2_key.mac_addr, sizeof(cfg.dest_mac));
+    /* MAC DA */
+    mac = ep_get_mac_addr(ep);
+    memcpy(cfg.dest_mac, mac, sizeof(mac_addr_t));
+    
     cfg.template_id = spec.template_id();
     cfg.export_intvl = spec.export_interval();
     switch (spec.format()) {
@@ -294,6 +298,10 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
+    /* MAC SA */
+    mac = ep_get_rmac(ep, cfg.l2seg);
+    memcpy(cfg.src_mac, mac, sizeof(mac_addr_t));
+    
     /* Encap comes from the l2seg */
     auto encap = l2seg_get_wire_encap(cfg.l2seg);
     if (encap.type == types::ENCAP_TYPE_DOT1Q) {
@@ -304,13 +312,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
         return HAL_RET_INVALID_ARG;
     }
-    auto dmac = l2seg_get_rtr_mac(cfg.l2seg);
-    if (dmac == NULL) {
-        HAL_TRACE_DEBUG("PI-Collector: Could not retrieve L2 segment source mac");
-        rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
-    }
-    memcpy(cfg.src_mac, *dmac, sizeof(cfg.src_mac));
+
     args.cfg = &cfg;
     pd_func_args.pd_collector_create = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_COLLECTOR_CREATE, &pd_func_args);

@@ -157,6 +157,12 @@ telemetry_exec (fte::ctx_t &ctx)
     ret = update_flow_from_telemetry_rules(ctx, true);
     /* Update flowmon rules */
     ret = update_flow_from_telemetry_rules(ctx, false);
+    
+    /* Skip rflow for IPFIX pkts */
+    if (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
+        (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY)) {
+        ctx.set_valid_rflow(false);
+    }
 
     if (ret != HAL_RET_OK) {
         ctx.set_feature_status(ret);
