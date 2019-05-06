@@ -5,11 +5,15 @@ package iotakit
 import (
 	"context"
 	"fmt"
+	"time"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/venice/utils/log"
 )
+
+// used instead of infinite timeout for triggers or log copying
+const maxOpTimeout = 20 * time.Minute
 
 // Trigger is an instance of trigger
 type Trigger struct {
@@ -62,7 +66,9 @@ func (tr *Trigger) Run() ([]*iota.Command, error) {
 
 	// Trigger App
 	topoClient := iota.NewTopologyApiClient(tr.iotaClient.Client)
-	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
+	ctx, cancel := context.WithTimeout(context.Background(), maxOpTimeout)
+	triggerResp, err := topoClient.Trigger(ctx, trigMsg)
+	cancel()
 	if err != nil {
 		return nil, fmt.Errorf("Trigger failed. API Status: err: %v", err)
 	} else if triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
@@ -85,7 +91,9 @@ func (tr *Trigger) RunParallel() ([]*iota.Command, error) {
 
 	// Trigger App
 	topoClient := iota.NewTopologyApiClient(tr.iotaClient.Client)
-	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
+	ctx, cancel := context.WithTimeout(context.Background(), maxOpTimeout)
+	triggerResp, err := topoClient.Trigger(ctx, trigMsg)
+	cancel()
 	if err != nil {
 		return nil, fmt.Errorf("Trigger failed. API Status: err: %v", err)
 	} else if triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
@@ -108,7 +116,9 @@ func (tr *Trigger) RunSerial() ([]*iota.Command, error) {
 
 	// Trigger App
 	topoClient := iota.NewTopologyApiClient(tr.iotaClient.Client)
-	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
+	ctx, cancel := context.WithTimeout(context.Background(), maxOpTimeout)
+	triggerResp, err := topoClient.Trigger(ctx, trigMsg)
+	cancel()
 	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		return nil, fmt.Errorf("Trigger failed. API Status: %+v | Err: %v", triggerResp.ApiResponse, err)
 	}
@@ -129,7 +139,9 @@ func (tr *Trigger) StopCommands(cmds []*iota.Command) ([]*iota.Command, error) {
 
 	// Trigger App
 	topoClient := iota.NewTopologyApiClient(tr.iotaClient.Client)
-	triggerResp, err := topoClient.Trigger(context.Background(), trigMsg)
+	ctx, cancel := context.WithTimeout(context.Background(), maxOpTimeout)
+	triggerResp, err := topoClient.Trigger(ctx, trigMsg)
+	cancel()
 	if err != nil || triggerResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		return nil, fmt.Errorf("Trigger failed. API Status: %+v | Err: %v", triggerResp.ApiResponse, err)
 	}
@@ -153,7 +165,9 @@ func (tb *TestBed) CopyToHost(nodeName string, files []string, destDir string) e
 
 	// send it to iota
 	topoClient := iota.NewTopologyApiClient(tb.iotaClient.Client)
-	copyResp, err := topoClient.EntityCopy(context.Background(), &copyMsg)
+	ctx, cancel := context.WithTimeout(context.Background(), maxOpTimeout)
+	copyResp, err := topoClient.EntityCopy(ctx, &copyMsg)
+	cancel()
 	if err != nil {
 		log.Errorf("Copy failed: Err: %v", err)
 		return fmt.Errorf("Copy files failed.  Err: %v", err)
@@ -180,7 +194,9 @@ func (tb *TestBed) CopyFromHost(nodeName string, files []string, destDir string)
 
 	// send it to iota
 	topoClient := iota.NewTopologyApiClient(tb.iotaClient.Client)
-	copyResp, err := topoClient.EntityCopy(context.Background(), &copyMsg)
+	ctx, cancel := context.WithTimeout(context.Background(), maxOpTimeout)
+	copyResp, err := topoClient.EntityCopy(ctx, &copyMsg)
+	cancel()
 	if err != nil {
 		log.Errorf("Copy failed: Err: %v", err)
 		return fmt.Errorf("Copy files failed.  Err: %v", err)
@@ -208,7 +224,9 @@ func (tb *TestBed) CopyFromNaples(nodeName string, files []string, destDir strin
 
 	// send it to iota
 	topoClient := iota.NewTopologyApiClient(tb.iotaClient.Client)
-	copyResp, err := topoClient.EntityCopy(context.Background(), &copyMsg)
+	ctx, cancel := context.WithTimeout(context.Background(), maxOpTimeout)
+	copyResp, err := topoClient.EntityCopy(ctx, &copyMsg)
+	cancel()
 	if err != nil {
 		log.Errorf("Copy failed: Err: %v", err)
 		return fmt.Errorf("Copy files failed.  Err: %v", err)
@@ -236,7 +254,9 @@ func (tb *TestBed) CopyFromVenice(nodeName string, files []string, destDir strin
 
 	// send it to iota
 	topoClient := iota.NewTopologyApiClient(tb.iotaClient.Client)
-	copyResp, err := topoClient.EntityCopy(context.Background(), &copyMsg)
+	ctx, cancel := context.WithTimeout(context.Background(), maxOpTimeout)
+	copyResp, err := topoClient.EntityCopy(ctx, &copyMsg)
+	cancel()
 	if err != nil {
 		log.Errorf("Copy failed: Err: %v", err)
 		return fmt.Errorf("Copy files failed.  Err: %v", err)
@@ -274,7 +294,9 @@ func (tb *TestBed) CopyToFromWorkload(direction iota.CopyDirection, nodeName, wo
 
 	// send it to iota
 	topoClient := iota.NewTopologyApiClient(tb.iotaClient.Client)
-	copyResp, err := topoClient.EntityCopy(context.Background(), &copyMsg)
+	ctx, cancel := context.WithTimeout(context.Background(), maxOpTimeout)
+	copyResp, err := topoClient.EntityCopy(ctx, &copyMsg)
+	cancel()
 	if err != nil || copyResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		err := fmt.Errorf("Copy %v failed: %v, resp %+v", direction, err, copyResp)
 		log.Errorf("%s", err)

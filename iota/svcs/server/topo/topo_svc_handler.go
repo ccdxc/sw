@@ -737,12 +737,12 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 		}
 	}
 	// Triggers
-	triggers := func(ctx context.Context) error {
-		pool, ctx := errgroup.WithContext(ctx)
+	triggers := func(ctx2 context.Context) error {
+		pool, ctx3 := errgroup.WithContext(ctx2)
 		for _, node := range triggerNodes {
 			node := node
 			pool.Go(func() error {
-				if err := node.Trigger(); err != nil {
+				if err := node.TriggerWithContext(ctx3); err != nil {
 					return err
 				}
 				return nil
@@ -760,7 +760,7 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 		}
 	}
 
-	err := triggers(context.Background())
+	err := triggers(ctx)
 	defer resetTriggers()
 	if err != nil {
 		log.Errorf("TOPO SVC | Trigger | Trigger Call Failed. %v", err)
@@ -789,7 +789,7 @@ func (ts *TopologyService) runSerialTrigger(ctx context.Context, req *iota.Trigg
 		node.TriggerInfo = &iota.TriggerMsg{Commands: []*iota.Command{cmd},
 			TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
 		node.TriggerResp = nil
-		if err := node.Trigger(); err != nil {
+		if err := node.TriggerWithContext(ctx); err != nil {
 
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | Trigger | RunSerialTrigger Call Failed. %v", err)

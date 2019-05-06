@@ -10,7 +10,10 @@ import (
 
 // Trigger triggers a workload
 func (n *TestNode) Trigger() error {
-	resp, err := n.AgentClient.Trigger(context.Background(), n.TriggerInfo)
+	return n.TriggerWithContext(context.Background())
+}
+func (n *TestNode) TriggerWithContext(ctx context.Context) error {
+	resp, err := n.AgentClient.Trigger(ctx, n.TriggerInfo)
 	log.Infof("TOPO SVC | DEBUG | Trigger Agent . Received Response Msg: %v", resp)
 
 	if err != nil {
