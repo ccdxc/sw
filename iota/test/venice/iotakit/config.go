@@ -17,6 +17,7 @@ import (
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/workload"
 	loginctx "github.com/pensando/sw/api/login/context"
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -392,6 +393,117 @@ func (tb *TestBed) ListWorkload() (objs []*workload.Workload, err error) {
 	}
 
 	return objs, err
+}
+
+// CreateMirrorSession creates Mirror policy
+func (tb *TestBed) CreateMirrorSession(msp *monitoring.MirrorSession) error {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return err
+	}
+
+	for _, restcl := range restcls {
+		_, err = restcl.MonitoringV1().MirrorSession().Create(ctx, msp)
+		if err == nil {
+			break
+		} else if strings.Contains(err.Error(), "already exists") {
+			_, err = restcl.MonitoringV1().MirrorSession().Update(ctx, msp)
+			if err == nil {
+				break
+			}
+		}
+	}
+
+	return err
+}
+
+// UpdateMirrorSession updates an Mirror policy
+func (tb *TestBed) UpdateMirrorSession(msp *monitoring.MirrorSession) error {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return err
+	}
+
+	for _, restcl := range restcls {
+		_, err = restcl.MonitoringV1().MirrorSession().Update(ctx, msp)
+		if err == nil {
+			break
+		}
+	}
+	return err
+}
+
+// GetMirrorSession gets MirrorSession from venice cluster
+func (tb *TestBed) GetMirrorSession(meta *api.ObjectMeta) (msp *monitoring.MirrorSession, err error) {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, restcl := range restcls {
+		msp, err = restcl.MonitoringV1().MirrorSession().Get(ctx, meta)
+		if err == nil {
+			break
+		}
+	}
+
+	return msp, err
+}
+
+// ListMirrorSession gets all MirrorPolicies from venice cluster
+func (tb *TestBed) ListMirrorSession() (objs []*monitoring.MirrorSession, err error) {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return nil, err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return nil, err
+	}
+
+	opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}}
+
+	for _, restcl := range restcls {
+		objs, err = restcl.MonitoringV1().MirrorSession().List(ctx, &opts)
+		if err == nil {
+			break
+		}
+	}
+
+	return objs, err
+}
+
+// DeleteMirrorSession deletes Mirror policy
+func (tb *TestBed) DeleteMirrorSession(msp *monitoring.MirrorSession) error {
+	ctx, err := tb.VeniceLoggedInCtx()
+	if err != nil {
+		return err
+	}
+	restcls, err := tb.VeniceRestClient()
+	if err != nil {
+		return err
+	}
+
+	for _, restcl := range restcls {
+		_, err = restcl.MonitoringV1().MirrorSession().Delete(ctx, &msp.ObjectMeta)
+		if err == nil {
+			break
+		}
+	}
+
+	return err
 }
 
 // CreateSGPolicy creates SG policy

@@ -197,6 +197,25 @@ func (wc *WorkloadCollection) Error() error {
 	return wc.err
 }
 
+// Any returns subset of workloads
+func (wc *WorkloadCollection) Any(num int) *WorkloadCollection {
+        if wc.err != nil {
+            return wc
+        }
+
+	newWc := WorkloadCollection{workloads: []*Workload{}}
+	tmpArry := make([]*Workload, len(wc.workloads))
+	copy(tmpArry, wc.workloads)
+	for i := 0; i < num; i++ {
+		idx := rand.Intn(len(tmpArry))
+		w := tmpArry[idx]
+		tmpArry = append(tmpArry[:idx], tmpArry[idx+1:]...)
+		newWc.workloads = append(newWc.workloads, w)
+	}
+
+	return &newWc
+}
+
 // MeshPairs returns full-mesh pair of workloads
 func (wc *WorkloadCollection) MeshPairs() *WorkloadPairCollection {
 	if wc.HasError() {
@@ -303,6 +322,25 @@ func (wpc *WorkloadPairCollection) WithinNetwork() *WorkloadPairCollection {
 		if pair.first.iotaWorkload.UplinkVlan == pair.second.iotaWorkload.UplinkVlan {
 			newCollection.pairs = append(newCollection.pairs, pair)
 		}
+	}
+
+	return &newCollection
+}
+
+// ExcludeWorkload excludes a workload from collection
+func (wpc *WorkloadPairCollection) ExcludeWorkloads(wc *WorkloadCollection) *WorkloadPairCollection {
+	if wpc.err != nil {
+		return wpc
+	}
+	newCollection := WorkloadPairCollection{}
+
+	for _, pair := range wpc.pairs {
+                for _, w := range wc.workloads {
+		    if pair.first.iotaWorkload.WorkloadName != w.iotaWorkload.WorkloadName && 
+                        pair.second.iotaWorkload.WorkloadName != w.iotaWorkload.WorkloadName {
+			newCollection.pairs = append(newCollection.pairs, pair)
+		    }
+                }
 	}
 
 	return &newCollection

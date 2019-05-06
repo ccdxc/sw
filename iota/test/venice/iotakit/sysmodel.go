@@ -33,6 +33,7 @@ type SysModel struct {
 	workloads      map[string]*Workload   // workloads
 	subnets        []*Network             // subnets
 	sgpolicies     map[string]*SGPolicy   // security policies
+	msessions      map[string]*MirrorSession // mirror sessions
 	veniceNodes    map[string]*VeniceNode // Venice nodes
 	fakeHosts      map[string]*Host       // simulated hosts
 	fakeNaples     map[string]*Naples     // simulated Naples instances
@@ -55,6 +56,7 @@ func NewSysModel(tb *TestBed) (*SysModel, error) {
 		veniceNodes:    make(map[string]*VeniceNode),
 		workloads:      make(map[string]*Workload),
 		sgpolicies:     make(map[string]*SGPolicy),
+		msessions:      make(map[string]*MirrorSession),
 		fakeHosts:      make(map[string]*Host),
 		fakeNaples:     make(map[string]*Naples),
 		fakeWorkloads:  make(map[string]*Workload),
