@@ -31,22 +31,22 @@ typedef struct __attribute__((__packed__)) __flow_appdata {
 
 /* Stub for test - end */
 
-typedef struct pen_flow_params_t {
+typedef struct pds_flow_params_s {
     flow_swkey_t swkey;
-} pen_flow_params_t;
+} pds_flow_params_t;
 
-typedef struct pen_flow_hw_ctx_t {
+typedef struct pds_flow_hw_ctx_s {
     u8 dummy;
-} pen_flow_hw_ctx_t;
+} pds_flow_hw_ctx_t;
 
-pen_flow_hw_ctx_t *flow_index_pool = NULL;
+pds_flow_hw_ctx_t *flow_index_pool = NULL;
 
 always_inline void
-pen_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
-                               pen_flow_params_t *params_arr,
+pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
+                               pds_flow_params_t *params_arr,
                                int *size, u8 is_ip4)
 {
-    pen_flow_params_t   *local_params0 = params_arr + (*size),
+    pds_flow_params_t   *local_params0 = params_arr + (*size),
                         *remote_params0 = local_params0 + 1;
     udp_header_t        *udp0;
 
@@ -141,16 +141,16 @@ pen_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 }
 
 always_inline void
-pen_flow_program_hw (pen_flow_params_t *key,
+pds_flow_program_hw (pds_flow_params_t *key,
                      int size, u32 *counter)
 {
     int i;
     flow_appdata_t swappdata = {0};
-    mem_hash *table = pen_flow_prog_get_table();
-    //pen_flow_hw_ctx_t *ctx;
+    mem_hash *table = pds_flow_prog_get_table();
+    //pds_flow_hw_ctx_t *ctx;
     static uint32_t count = 0;
 
-    pen_flow_prog_lock();
+    pds_flow_prog_lock();
     for (i = 0; i < size; i++) {
         //pool_get(flow_index_pool, ctx);
         //swappdata.flow_index = ctx - flow_index_pool;
@@ -161,7 +161,7 @@ pen_flow_program_hw (pen_flow_params_t *key,
             counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
         }
     }
-    pen_flow_prog_unlock();
+    pds_flow_prog_unlock();
 }
 
 #endif    // __VPP_FLOW_PLUGIN_FLOW_TEST_H__

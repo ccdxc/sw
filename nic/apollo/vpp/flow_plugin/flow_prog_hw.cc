@@ -128,6 +128,22 @@ ftl_insert(ftl *obj, ftentry_t *entry, uint32_t hash)
     return 0;
 }
 
+int
+ftl_remove(ftl *obj, ftentry_t *entry, uint32_t hash)
+{
+    sdk_table_api_params_t params = {0};
+
+    if (hash) {
+        params.hash_32b = hash;
+        params.hash_valid = 1;
+    }
+    params.entry = entry;
+    if (SDK_RET_OK != obj->remove(&params)) {
+        return -1;
+    }
+    return 0;
+}
+
 void
 ftl_delete(ftl *obj)
 {

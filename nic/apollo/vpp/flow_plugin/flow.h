@@ -13,31 +13,36 @@
 
 #define MAX_FLOWS_PER_FRAME (VLIB_FRAME_SIZE * 2)
 
-#define foreach_p4cpu_hdr_lookup_next                   \
-        _(IP4_FLOW_PROG, "pen-ip4-flow-program" )       \
-        _(IP6_FLOW_PROG, "pen-ip6-flow-program" )       \
-        _(DROP, "error-drop")                           \
+#define foreach_p4cpu_hdr_lookup_next                               \
+        _(IP4_FLOW_PROG, "pds-ip4-flow-program" )                   \
+        _(IP6_FLOW_PROG, "pds-ip6-flow-program" )                   \
+        _(IP4_TUN_FLOW_PROG, "pds-tunnel-ip4-flow-program" )        \
+        _(IP6_TUN_FLOW_PROG, "pds-tunnel-ip6-flow-program" )        \
+        _(DROP, "error-drop")                                       \
 
-#define foreach_p4cpu_hdr_lookup_counter                \
-        _(IP4_FLOW, "IPv4 flow packets" )               \
-        _(IP6_FLOW, "IPv6 flow packets" )               \
-        _(UNKOWN, "Unknown flow packets")               \
+#define foreach_p4cpu_hdr_lookup_counter                            \
+        _(IP4_FLOW, "IPv4 flow packets" )                           \
+        _(IP6_FLOW, "IPv6 flow packets" )                           \
+        _(IP4_TUN_FLOW, "IPv4 tunnel flow packets" )                \
+        _(IP6_TUN_FLOW, "IPv6 tunnel flow packets" )                \
+        _(UNKOWN, "Unknown flow packets")                           \
 
-#define foreach_flow_prog_next                          \
-        _(FWD_FLOW, "pen-fwd-flow" )                    \
-        _(DROP, "error-drop")                           \
+#define foreach_flow_prog_next                                      \
+        _(FWD_FLOW, "pds-fwd-flow" )                                \
+        _(DROP, "error-drop")                                       \
 
-#define foreach_flow_prog_counter                       \
-        _(FLOW_SUCCESS, "Flow programming success" )    \
-        _(FLOW_FAILED, "Flow programming failed")       \
+#define foreach_flow_prog_counter                                   \
+        _(FLOW_SUCCESS, "Flow programming success" )                \
+        _(FLOW_FAILED, "Flow programming failed")                   \
+        _(FLOW_DELETE_FAILED, "Flow delete failed")                 \
 
-#define foreach_fwd_flow_next                           \
-        _(INTF_OUT, "interface-tx" )                    \
-        _(DROP, "error-drop")                           \
+#define foreach_fwd_flow_next                                       \
+        _(INTF_OUT, "interface-tx" )                                \
+        _(DROP, "error-drop")                                       \
 
-#define foreach_fwd_flow_counter                        \
-        _(REWRITE_SUCCESS, "Rewrite success" )          \
-        _(REWRITE_FAILED, "Rewrite failed" )            \
+#define foreach_fwd_flow_counter                                    \
+        _(REWRITE_SUCCESS, "Rewrite success" )                      \
+        _(REWRITE_FAILED, "Rewrite failed" )                        \
 
 typedef enum
 {
@@ -101,15 +106,15 @@ typedef struct p4cpu_hdr_lookup_trace_t {
     u32 l2_offset;
     u32 l3_offset;
     u32 l4_offset;
-    u32 vrf;
+    u32 vnic;
     u32 flow_hash;
     u32 flags;
 } p4cpu_hdr_lookup_trace_t;
 
-void pen_flow_prog_lock(void);
+void pds_flow_prog_lock(void);
 
-void pen_flow_prog_unlock(void);
+void pds_flow_prog_unlock(void);
 
-ftl * pen_flow_prog_get_table(void);
+ftl * pds_flow_prog_get_table(void);
 
 #endif    // __VPP_FLOW_PLUGIN_FLOW_H__

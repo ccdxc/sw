@@ -11,17 +11,18 @@
 #include "flow.h"
 #include "flow_prog_hw.h"
 
-typedef struct pen_flow_params_t {
+typedef struct pds_flow_params_s {
     ftentry_t entry;
     u32 hash;
-} pen_flow_params_t;
+} pds_flow_params_t;
 
-typedef struct pen_flow_hw_ctx_t {
+typedef struct pds_flow_hw_ctx_s {
     u8 dummy;
-} pen_flow_hw_ctx_t;
+} pds_flow_hw_ctx_t;
 
-pen_flow_hw_ctx_t *session_index_pool = NULL;
+pds_flow_hw_ctx_t *session_index_pool = NULL;
 
+#if 0
 always_inline void
 clib_memrev2 (u8 *dst1, u8* dst2, u8 *src, int size)
 {
@@ -29,13 +30,14 @@ clib_memrev2 (u8 *dst1, u8* dst2, u8 *src, int size)
         *dst1++ = *dst2++ = *src--;
     }
 }
+#endif
 
 always_inline void
-pen_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
-                               pen_flow_params_t *params_arr,
+pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
+                               pds_flow_params_t *params_arr,
                                int *size, u8 is_ip4)
 {
-    pen_flow_params_t   *local_params0 = params_arr + (*size),
+    pds_flow_params_t   *local_params0 = params_arr + (*size),
                         *remote_params0 = local_params0 + 1;
     udp_header_t        *udp0;
     u32                 *ip4_local0, *ip4_remote0;
@@ -87,11 +89,13 @@ pen_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 
         local_params0->entry.ktype =
             remote_params0->entry.ktype = KEY_TYPE_IPV6;
-        clib_memrev2(local_params0->entry.src,
-                     remote_params0->entry.dst,
+        clib_memcpy(local_params0->entry.src,
                      ip60->src_address.as_u8, sizeof(ip6_address_t));
-        clib_memrev2(local_params0->entry.dst,
-                     remote_params0->entry.src,
+        clib_memcpy(remote_params0->entry.dst,
+                     ip60->src_address.as_u8, sizeof(ip6_address_t));
+        clib_memcpy(local_params0->entry.dst,
+                     ip60->dst_address.as_u8, sizeof(ip6_address_t));
+        clib_memcpy(remote_params0->entry.src,
                      ip60->dst_address.as_u8, sizeof(ip6_address_t));
         local_params0->entry.proto =
                      remote_params0->entry.proto = ip60->protocol;
@@ -123,24 +127,41 @@ pen_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 }
 
 always_inline void
-pen_flow_program_hw (pen_flow_params_t *key,
-                     int size, u32 *counter)
+pds_flow_program_hw (pds_flow_params_t *key,
+                     int size, u16 *next, u32 *counter)
 {
     int i;
-    ftl *table = pen_flow_prog_get_table();
-    pen_flow_hw_ctx_t *ctx;
+    ftl *table = pds_flow_prog_get_table();
+    pds_flow_hw_ctx_t *ctx;
 
-    pen_flow_prog_lock();
+    pds_flow_prog_lock();
     for (i = 0; i < size; i++) {
         pool_get(session_index_pool, ctx);
         key[i].entry.session_index = ctx - session_index_pool + 1;
         if (PREDICT_TRUE(0 == ftl_insert(table, &key[i].entry, key[i].hash))) {
             counter[FLOW_PROG_COUNTER_FLOW_SUCCESS]++;
+            next[i/2] = FLOW_PROG_NEXT_FWD_FLOW;
         } else {
             counter[FLOW_PROG_COUNTER_FLOW_FAILED]++;
+            next[i/2] = FLOW_PROG_NEXT_DROP;
+            pool_put_index(session_index_pool, (key[i].entry.session_index - 1));
+            if (i % 2) {
+                /* Remove last entry as local flow succeeded
+                 * but remote entry failed */
+                pool_put_index(session_index_pool,
+                               (key[i-1].entry.session_index - 1));
+                if (PREDICT_FALSE(0 != ftl_remove(table,
+                                                  &key[i-1].entry,
+                                                  key[i-1].hash))) {
+                    counter[FLOW_PROG_COUNTER_FLOW_DELETE_FAILED]++;
+                }
+            } else {
+                /* Skip remote flow entry as local entry failed */
+                i++;
+            }
         }
     }
-    pen_flow_prog_unlock();
+    pds_flow_prog_unlock();
 }
 
 #endif    // __VPP_FLOW_PLUGIN_FLOW_APOLLO_H__

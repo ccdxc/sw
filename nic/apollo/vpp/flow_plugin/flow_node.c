@@ -10,56 +10,56 @@
 #include <vnet/ethernet/packet.h>
 #include "flow_apollo.h"
 
-//#include "pen_flow_test.h"
-
 #define P4TBL_ID_FLOW_HASH      1
 
-typedef struct pen_flow_main_t {
+typedef struct pds_flow_main_s {
     ftl *table;
     volatile u32 *flow_prog_lock;
-    pen_flow_params_t **ip4_flow_params;
-    pen_flow_params_t **ip6_flow_params;
-} pen_flow_main_t;
+    pds_flow_params_t **ip4_flow_params;
+    pds_flow_params_t **ip6_flow_params;
+} pds_flow_main_t;
 
-pen_flow_main_t pen_flow_main;
+pds_flow_main_t pds_flow_main;
 
-vlib_node_registration_t pen_fwd_flow_node,
-                         pen_ip4_flow_prog_node,
-                         pen_ip6_flow_prog_node,
-                         pen_p4cpu_hdr_lookup_node;
+vlib_node_registration_t pds_fwd_flow_node,
+                         pds_ip4_flow_prog_node,
+                         pds_ip6_flow_prog_node,
+                         pds_tun_ip4_flow_prog_node,
+                         pds_tun_ip6_flow_prog_node,
+                         pds_p4cpu_hdr_lookup_node;
 
 u32
 pen_flow_get_p4cpu_lk_node_index (void)
 {
-    return pen_p4cpu_hdr_lookup_node.index;
+    return pds_p4cpu_hdr_lookup_node.index;
 }
 
 void
-pen_flow_prog_lock (void)
+pds_flow_prog_lock (void)
 {
-    pen_flow_main_t *fm = &pen_flow_main;
+    pds_flow_main_t *fm = &pds_flow_main;
 
     clib_atomic_test_and_set (fm->flow_prog_lock);
 }
 
 void
-pen_flow_prog_unlock (void)
+pds_flow_prog_unlock (void)
 {
-    pen_flow_main_t *fm = &pen_flow_main;
+    pds_flow_main_t *fm = &pds_flow_main;
 
     clib_atomic_release (fm->flow_prog_lock);
 }
 
 ftl *
-pen_flow_prog_get_table (void)
+pds_flow_prog_get_table (void)
 {
-    pen_flow_main_t *fm = &pen_flow_main;
+    pds_flow_main_t *fm = &pds_flow_main;
 
     return fm->table;
 }
 
 static u8 *
-format_pen_fwd_flow_trace (u8 * s, va_list * args)
+format_pds_fwd_flow_trace (u8 * s, va_list * args)
 {
     CLIB_UNUSED (vlib_main_t * vm) = va_arg (*args, vlib_main_t *);
     CLIB_UNUSED (vlib_node_t * node) = va_arg (*args, vlib_node_t *);
@@ -71,7 +71,7 @@ format_pen_fwd_flow_trace (u8 * s, va_list * args)
 }
 
 void
-pen_fwd_flow_trace_add (vlib_main_t * vm,
+pds_fwd_flow_trace_add (vlib_main_t * vm,
                         vlib_node_runtime_t * node,
                         vlib_frame_t * frame)
 {
@@ -126,7 +126,7 @@ pen_fwd_flow_trace_add (vlib_main_t * vm,
 }
 
 static uword
-pen_fwd_flow (vlib_main_t * vm,
+pds_fwd_flow (vlib_main_t * vm,
               vlib_node_runtime_t * node,
               vlib_frame_t * from_frame)
 {
@@ -160,11 +160,8 @@ pen_fwd_flow (vlib_main_t * vm,
                 vlib_prefetch_buffer_header (p2, LOAD);
                 vlib_prefetch_buffer_header (p3, LOAD);
 
-                /* Fetch Max ethernet+vlan headers 22 bytes and predicate header */
-                CLIB_PREFETCH ((((u8 *) p2->data) - 22 - APOLLO_PREDICATE_HDR_SZ),
-                               64, WRITE);
-                CLIB_PREFETCH ((((u8 *) p3->data) - 22 - APOLLO_PREDICATE_HDR_SZ),
-                               64, WRITE);
+                CLIB_PREFETCH (p2->data, APOLLO_PREDICATE_HDR_SZ, WRITE);
+                CLIB_PREFETCH (p3->data, APOLLO_PREDICATE_HDR_SZ, WRITE);
             }
 
             pi0 = to_next[0] = from[0];
@@ -179,12 +176,7 @@ pen_fwd_flow (vlib_main_t * vm,
             p1 = vlib_get_buffer (vm, pi1);
             vnet_buffer (p0)->sw_if_index[VLIB_TX] = vnet_buffer (p0)->sw_if_index[VLIB_RX];
             vnet_buffer (p1)->sw_if_index[VLIB_TX] = vnet_buffer (p1)->sw_if_index[VLIB_RX];
-
-            vlib_buffer_advance(p0, -(APOLLO_PREDICATE_HDR_SZ +
-                        (vnet_buffer (p0)->l3_hdr_offset - vnet_buffer (p0)->l2_hdr_offset)));
-            vlib_buffer_advance(p1, -(APOLLO_PREDICATE_HDR_SZ +
-                        (vnet_buffer (p1)->l3_hdr_offset - vnet_buffer (p1)->l2_hdr_offset)));
-       
+ 
             tx0 = vlib_buffer_get_current(p0);
             tx1 = vlib_buffer_get_current(p1);
             tx0->flags_octet = 0;
@@ -215,8 +207,6 @@ pen_fwd_flow (vlib_main_t * vm,
 
             p0 = vlib_get_buffer (vm, pi0);
             vnet_buffer (p0)->sw_if_index[VLIB_TX] = vnet_buffer (p0)->sw_if_index[VLIB_RX];
-            vlib_buffer_advance(p0, -(APOLLO_PREDICATE_HDR_SZ +
-                        (vnet_buffer (p0)->l3_hdr_offset - vnet_buffer (p0)->l2_hdr_offset)));
 
             tx0 = vlib_buffer_get_current(p0);
             tx0->flags_octet = 0;
@@ -230,7 +220,7 @@ pen_fwd_flow (vlib_main_t * vm,
     }
 
     if (node->flags & VLIB_NODE_FLAG_TRACE) {
-        pen_fwd_flow_trace_add (vm, node, from_frame);
+        pds_fwd_flow_trace_add (vm, node, from_frame);
     }
 
     return from_frame->n_vectors;
@@ -242,9 +232,9 @@ static char * fwd_flow_error_strings[] = {
 #undef _
 };
 
-VLIB_REGISTER_NODE (pen_fwd_flow_node) = {
-    .function = pen_fwd_flow,
-    .name = "pen-fwd-flow",
+VLIB_REGISTER_NODE (pds_fwd_flow_node) = {
+    .function = pds_fwd_flow,
+    .name = "pds-fwd-flow",
     /* Takes a vector of packets. */
     .vector_size = sizeof (u32),
 
@@ -258,11 +248,11 @@ VLIB_REGISTER_NODE (pen_fwd_flow_node) = {
 #undef _
     },
 
-    .format_trace = format_pen_fwd_flow_trace,
+    .format_trace = format_pds_fwd_flow_trace,
 };
 
 static u8 *
-format_pen_flow_prog_trace (u8 * s, va_list * args)
+format_pds_flow_prog_trace (u8 * s, va_list * args)
 {
     CLIB_UNUSED (vlib_main_t * vm) = va_arg (*args, vlib_main_t *);
     CLIB_UNUSED (vlib_node_t * node) = va_arg (*args, vlib_node_t *);
@@ -278,7 +268,7 @@ format_pen_flow_prog_trace (u8 * s, va_list * args)
 }
 
 void
-pen_flow_prog_trace_add (vlib_main_t * vm,
+pds_flow_prog_trace_add (vlib_main_t * vm,
                          vlib_node_runtime_t * node,
                          vlib_frame_t * frame, u8 is_ip4)
 {
@@ -311,6 +301,9 @@ pen_flow_prog_trace_add (vlib_main_t * vm,
                 ip4_header_t *ip40;
 
                 ip40 = vlib_buffer_get_current(b0);
+                ip40 = (ip4_header_t *) (((u8 *)vlib_buffer_get_current(b0)) +
+                        (APOLLO_PREDICATE_HDR_SZ +
+                        (vnet_buffer (b0)->l3_hdr_offset - vnet_buffer (b0)->l2_hdr_offset)));
                 ip46_address_set_ip4(&t0->src, &ip40->src_address);
                 ip46_address_set_ip4(&t0->dst, &ip40->dst_address);
                 t0->protocol = ip40->protocol;
@@ -326,8 +319,9 @@ pen_flow_prog_trace_add (vlib_main_t * vm,
 
                 ip6_header_t *ip60;
 
-                ip60 = vlib_buffer_get_current(b0);
-
+                ip60 = (ip6_header_t *) (((u8 *)vlib_buffer_get_current(b0)) +
+                        (APOLLO_PREDICATE_HDR_SZ +
+                        (vnet_buffer (b0)->l3_hdr_offset - vnet_buffer (b0)->l2_hdr_offset)));
                 ip46_address_set_ip6(&t0->src, &ip60->src_address);
                 ip46_address_set_ip6(&t0->dst, &ip60->dst_address);
                 t0->protocol = ip60->protocol;
@@ -347,7 +341,9 @@ pen_flow_prog_trace_add (vlib_main_t * vm,
             if (is_ip4) {
                 ip4_header_t *ip41;
 
-                ip41 = vlib_buffer_get_current(b1);
+                ip41 = (ip4_header_t *) (((u8 *)vlib_buffer_get_current(b1)) +
+                        (APOLLO_PREDICATE_HDR_SZ +
+                        (vnet_buffer (b1)->l3_hdr_offset - vnet_buffer (b1)->l2_hdr_offset)));
                 ip46_address_set_ip4(&t1->src, &ip41->src_address);
                 ip46_address_set_ip4(&t1->dst, &ip41->dst_address);
                 t1->protocol = ip41->protocol;
@@ -362,7 +358,9 @@ pen_flow_prog_trace_add (vlib_main_t * vm,
             } else {
                 ip6_header_t *ip61;
 
-                ip61 = vlib_buffer_get_current(b1);
+                ip61 = (ip6_header_t *) (((u8 *)vlib_buffer_get_current(b1)) +
+                        (APOLLO_PREDICATE_HDR_SZ +
+                        (vnet_buffer (b1)->l3_hdr_offset - vnet_buffer (b1)->l2_hdr_offset)));
                 ip46_address_set_ip6(&t1->src, &ip61->src_address);
                 ip46_address_set_ip6(&t1->dst, &ip61->dst_address);
                 t1->protocol = ip61->protocol;
@@ -397,7 +395,9 @@ pen_flow_prog_trace_add (vlib_main_t * vm,
             if (is_ip4) {
                 ip4_header_t *ip40;
 
-                ip40 = vlib_buffer_get_current(b0);
+                ip40 = (ip4_header_t *) (((u8 *)vlib_buffer_get_current(b0)) +
+                        (APOLLO_PREDICATE_HDR_SZ +
+                        (vnet_buffer (b0)->l3_hdr_offset - vnet_buffer (b0)->l2_hdr_offset)));
                 ip46_address_set_ip4(&t0->src, &ip40->src_address);
                 ip46_address_set_ip4(&t0->dst, &ip40->dst_address);
                 t0->protocol = ip40->protocol;
@@ -412,7 +412,9 @@ pen_flow_prog_trace_add (vlib_main_t * vm,
             } else {
                 ip6_header_t *ip60;
 
-                ip60 = vlib_buffer_get_current(b0);
+                ip60 = (ip6_header_t *) (((u8 *)vlib_buffer_get_current(b0)) +
+                        (APOLLO_PREDICATE_HDR_SZ +
+                        (vnet_buffer (b0)->l3_hdr_offset - vnet_buffer (b0)->l2_hdr_offset)));
                 ip46_address_set_ip6(&t0->src, &ip60->src_address);
                 ip46_address_set_ip6(&t0->dst, &ip60->dst_address);
                 t0->protocol = ip60->protocol;
@@ -432,22 +434,24 @@ pen_flow_prog_trace_add (vlib_main_t * vm,
 }
 
 always_inline uword
-pen_flow_prog (vlib_main_t * vm,
+pds_flow_prog (vlib_main_t * vm,
                vlib_node_runtime_t * node,
                vlib_frame_t * from_frame, u8 is_ip4)
 {
-    u32 n_left_from, next = FLOW_PROG_NEXT_FWD_FLOW,
-            n_left_to_next, * from, * to_next;
-    pen_flow_main_t *fm = &pen_flow_main;
+    u32 n_left_from, last_next = ~0, next,
+        n_left_to_next, * from, * to_next, *start_from;
+    pds_flow_main_t *fm = &pds_flow_main;
     int thread_id = node->thread_index;
-    int size = 0;
-    pen_flow_params_t *params =
+    int size = 0, i = 0;
+    pds_flow_params_t *params =
             is_ip4 ? fm->ip4_flow_params[thread_id] :
                     fm->ip6_flow_params[thread_id];
     u32 counter[FLOW_PROG_COUNTER_LAST] = {0};
+    u16 next_arr[VLIB_FRAME_SIZE];
 
-    from = vlib_frame_vector_args (from_frame);
+    start_from = from = vlib_frame_vector_args (from_frame);
     n_left_from = from_frame->n_vectors;
+    next = node->cached_next_index;
 
     while (n_left_from > 0) {
 
@@ -456,8 +460,6 @@ pen_flow_prog (vlib_main_t * vm,
         while (n_left_from >= 4 && n_left_to_next >= 2) {
             vlib_buffer_t *p0, *p1;
             u32 pi0, pi1;
-                //next0 = FLOW_PROG_NEXT_INTF_OUT,
-                //next1 = FLOW_PROG_NEXT_INTF_OUT;
 
             /* Prefetch next iteration. */
             {
@@ -484,14 +486,18 @@ pen_flow_prog (vlib_main_t * vm,
             p0 = vlib_get_buffer (vm, pi0);
             p1 = vlib_get_buffer (vm, pi1);
 
-            pen_flow_extract_prog_args_x1(p0, params, &size, is_ip4);
-            pen_flow_extract_prog_args_x1(p1, params, &size, is_ip4);
+            pds_flow_extract_prog_args_x1(p0, params, &size, is_ip4);
+            pds_flow_extract_prog_args_x1(p1, params, &size, is_ip4);
 
+            vlib_buffer_advance(p0, -(APOLLO_PREDICATE_HDR_SZ +
+                        (vnet_buffer (p0)->l3_hdr_offset - vnet_buffer (p0)->l2_hdr_offset)));
+            vlib_buffer_advance(p1, -(APOLLO_PREDICATE_HDR_SZ +
+                        (vnet_buffer (p1)->l3_hdr_offset - vnet_buffer (p1)->l2_hdr_offset)));
         }
 
         while (n_left_from > 0 && n_left_to_next > 0) {
             vlib_buffer_t *p0;
-            u32 pi0;// next0 = FLOW_PROG_NEXT_INTF_OUT;
+            u32 pi0;
 
             pi0 = from[0];
             to_next[0] = pi0;
@@ -502,13 +508,17 @@ pen_flow_prog (vlib_main_t * vm,
             n_left_from -= 1;
 
             p0 = vlib_get_buffer (vm, pi0);
-            pen_flow_extract_prog_args_x1(p0, params, &size, is_ip4);
-        }
+            pds_flow_extract_prog_args_x1(p0, params, &size, is_ip4);
 
-        vlib_put_next_frame (vm, node, next, n_left_to_next);
+            vlib_buffer_advance(p0, -(APOLLO_PREDICATE_HDR_SZ +
+                        (vnet_buffer (p0)->l3_hdr_offset - vnet_buffer (p0)->l2_hdr_offset)));
+        }
     }
 
-    pen_flow_program_hw(params, size, counter);
+    pds_flow_program_hw(params, size, next_arr, counter);
+
+    vlib_buffer_enqueue_to_next (vm, node, start_from,
+                                 next_arr, from_frame->n_vectors);
 
 #define _(n, s) \
     vlib_node_increment_counter (vm, node->node_index,           \
@@ -518,18 +528,18 @@ pen_flow_prog (vlib_main_t * vm,
 #undef _
 
     if (node->flags & VLIB_NODE_FLAG_TRACE) {
-        pen_flow_prog_trace_add (vm, node, from_frame, is_ip4);
+        pds_flow_prog_trace_add (vm, node, from_frame, is_ip4);
     }
 
     return from_frame->n_vectors;
 }
 
 static uword
-pen_ip6_flow_prog (vlib_main_t * vm,
+pds_ip6_flow_prog (vlib_main_t * vm,
                    vlib_node_runtime_t * node,
                    vlib_frame_t * from_frame)
 {
-    return pen_flow_prog(vm, node, from_frame, 1);
+    return pds_flow_prog(vm, node, from_frame, 1);
 }
 
 static char * flow_prog_error_strings[] = {
@@ -538,9 +548,9 @@ static char * flow_prog_error_strings[] = {
 #undef _
 };
 
-VLIB_REGISTER_NODE (pen_ip6_flow_prog_node) = {
-    .function = pen_ip6_flow_prog,
-    .name = "pen-ip6-flow-program",
+VLIB_REGISTER_NODE (pds_ip6_flow_prog_node) = {
+    .function = pds_ip6_flow_prog,
+    .name = "pds-ip6-flow-program",
     /* Takes a vector of packets. */
     .vector_size = sizeof (u32),
 
@@ -554,20 +564,20 @@ VLIB_REGISTER_NODE (pen_ip6_flow_prog_node) = {
 #undef _
     },
 
-    .format_trace = format_pen_flow_prog_trace,
+    .format_trace = format_pds_flow_prog_trace,
 };
 
 static uword
-pen_ip4_flow_prog (vlib_main_t * vm,
+pds_ip4_flow_prog (vlib_main_t * vm,
                    vlib_node_runtime_t * node,
                    vlib_frame_t * from_frame)
 {
-    return pen_flow_prog(vm, node, from_frame, 1);
+    return pds_flow_prog(vm, node, from_frame, 1);
 }
 
-VLIB_REGISTER_NODE (pen_ip4_flow_prog_node) = {
-    .function = pen_ip4_flow_prog,
-    .name = "pen-ip4-flow-program",
+VLIB_REGISTER_NODE (pds_ip4_flow_prog_node) = {
+    .function = pds_ip4_flow_prog,
+    .name = "pds-ip4-flow-program",
     /* Takes a vector of packets. */
     .vector_size = sizeof (u32),
 
@@ -581,25 +591,79 @@ VLIB_REGISTER_NODE (pen_ip4_flow_prog_node) = {
 #undef _
     },
 
-    .format_trace = format_pen_flow_prog_trace,
+    .format_trace = format_pds_flow_prog_trace,
+};
+
+static uword
+pds_tunnel_ip6_flow_prog (vlib_main_t * vm,
+                          vlib_node_runtime_t * node,
+                          vlib_frame_t * from_frame)
+{
+    return pds_flow_prog(vm, node, from_frame, 1);
+}
+
+VLIB_REGISTER_NODE (pds_tun_ip6_flow_prog_node) = {
+    .function = pds_tunnel_ip6_flow_prog,
+    .name = "pds-tunnel-ip6-flow-program",
+    /* Takes a vector of packets. */
+    .vector_size = sizeof (u32),
+
+    .n_errors = FLOW_PROG_COUNTER_LAST,
+    .error_strings = flow_prog_error_strings,
+
+    .n_next_nodes = FLOW_PROG_N_NEXT,
+    .next_nodes = {
+#define _(s,n) [FLOW_PROG_NEXT_##s] = n,
+    foreach_flow_prog_next
+#undef _
+    },
+
+    .format_trace = format_pds_flow_prog_trace,
+};
+
+static uword
+pds_tunnel_ip4_flow_prog (vlib_main_t * vm,
+                          vlib_node_runtime_t * node,
+                          vlib_frame_t * from_frame)
+{
+    return pds_flow_prog(vm, node, from_frame, 1);
+}
+
+VLIB_REGISTER_NODE (pds_tun_ip4_flow_prog_node) = {
+    .function = pds_tunnel_ip4_flow_prog,
+    .name = "pds-tunnel-ip4-flow-program",
+    /* Takes a vector of packets. */
+    .vector_size = sizeof (u32),
+
+    .n_errors = FLOW_PROG_COUNTER_LAST,
+    .error_strings = flow_prog_error_strings,
+
+    .n_next_nodes = FLOW_PROG_N_NEXT,
+    .next_nodes = {
+#define _(s,n) [FLOW_PROG_NEXT_##s] = n,
+    foreach_flow_prog_next
+#undef _
+    },
+
+    .format_trace = format_pds_flow_prog_trace,
 };
 
 static u8 *
-format_pen_p4cpu_hdr_lookup_trace (u8 * s, va_list * args)
+format_pds_p4cpu_hdr_lookup_trace (u8 * s, va_list * args)
 {
     CLIB_UNUSED (vlib_main_t * vm) = va_arg (*args, vlib_main_t *);
     CLIB_UNUSED (vlib_node_t * node) = va_arg (*args, vlib_node_t *);
     p4cpu_hdr_lookup_trace_t *t = va_arg (*args, p4cpu_hdr_lookup_trace_t *);
 
-    s = format (s, "Flags[%d], flow_hash[0x%x], l2_offset[%d], "
-            "l3_offset[%d] l4_offset[%d], vrf[%d]",
+    s = format (s, "Flags[0x%x], flow_hash[0x%x], l2_offset[%d], "
+            "l3_offset[%d] l4_offset[%d], vnic[%d]",
             t->flags, t->flow_hash, t->l2_offset, t->l3_offset,
-            t->l4_offset, t->vrf);
+            t->l4_offset, t->vnic);
     return s;
 }
 
 void
-pen_p4cpu_hdr_lookup_trace_add (vlib_main_t * vm,
+pds_p4cpu_hdr_lookup_trace_add (vlib_main_t * vm,
                                 vlib_node_runtime_t * node,
                                 vlib_frame_t * frame)
 {
@@ -634,18 +698,18 @@ pen_p4cpu_hdr_lookup_trace_add (vlib_main_t * vm,
             t0->l2_offset = vnet_buffer (b0)->l2_hdr_offset;
             t0->l3_offset = vnet_buffer (b0)->l3_hdr_offset;
             t0->l4_offset = vnet_buffer (b0)->l4_hdr_offset;
-            t0->vrf = vnet_buffer (b0)->sw_if_index[VLIB_TX];
+            t0->vnic = vnet_buffer (b0)->sw_if_index[VLIB_TX];
         }
         if (b1->flags & VLIB_BUFFER_IS_TRACED)
         {
             t1 = vlib_add_trace (vm, node, b1, sizeof (t1[0]));
             t1->flow_hash = vnet_buffer (b1)->pen_data.flow_hash;
             flag1 = (u16 *) &(vnet_buffer (b1)->pen_data.flags);
-            t1->flags = *flag0;
+            t1->flags = *flag1;
             t1->l2_offset = vnet_buffer (b1)->l2_hdr_offset;
             t1->l3_offset = vnet_buffer (b1)->l3_hdr_offset;
             t1->l4_offset = vnet_buffer (b1)->l4_hdr_offset;
-            t1->vrf = vnet_buffer (b1)->sw_if_index[VLIB_TX];
+            t1->vnic = vnet_buffer (b1)->sw_if_index[VLIB_TX];
         }
         from += 2;
         n_left -= 2;
@@ -671,7 +735,7 @@ pen_p4cpu_hdr_lookup_trace_add (vlib_main_t * vm,
             t0->l2_offset = vnet_buffer (b0)->l2_hdr_offset;
             t0->l3_offset = vnet_buffer (b0)->l3_hdr_offset;
             t0->l4_offset = vnet_buffer (b0)->l4_hdr_offset;
-            t0->vrf = vnet_buffer (b0)->sw_if_index[VLIB_TX];
+            t0->vnic = vnet_buffer (b0)->sw_if_index[VLIB_TX];
         }
         from += 1;
         n_left -= 1;
@@ -679,39 +743,41 @@ pen_p4cpu_hdr_lookup_trace_add (vlib_main_t * vm,
 }
 
 always_inline void
-pen_parse_p4cpu_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
+pds_parse_p4cpu_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
                         u32 *next0, u32 *next1, u32 *counter)
 {
     p4_rx_cpu_hdr_t *hdr0 = vlib_buffer_get_current(p0);
     p4_rx_cpu_hdr_t *hdr1 = vlib_buffer_get_current(p1);
     u16 flag_orig0, flag_orig1;
-    u16 *pen_flag0, *pen_flag1;
+    u16 *pds_flag0, *pds_flag1;
 
-    //hdr0--;
-    //hdr1--;
-    //hdr0->flags = APOLLO_CPU_FLAGS_IPV4_1_VALID;
-    //hdr1->flags = APOLLO_CPU_FLAGS_IPV4_1_VALID;
     flag_orig0 = clib_net_to_host_u16(hdr0->flags);
     flag_orig1 = clib_net_to_host_u16(hdr1->flags);
     u16 flags0 = flag_orig0 &
-        (APOLLO_CPU_FLAGS_IPV4_1_VALID | APOLLO_CPU_FLAGS_IPV6_1_VALID);
+        (APOLLO_CPU_FLAGS_IPV4_1_VALID | APOLLO_CPU_FLAGS_IPV6_1_VALID |
+         APOLLO_CPU_FLAGS_IPV4_2_VALID | APOLLO_CPU_FLAGS_IPV6_2_VALID);
     u16 flags1 = flag_orig1 &
-        (APOLLO_CPU_FLAGS_IPV4_1_VALID | APOLLO_CPU_FLAGS_IPV6_1_VALID);
+        (APOLLO_CPU_FLAGS_IPV4_1_VALID | APOLLO_CPU_FLAGS_IPV6_1_VALID |
+         APOLLO_CPU_FLAGS_IPV4_2_VALID | APOLLO_CPU_FLAGS_IPV6_2_VALID);
 
     vnet_buffer (p0)->pen_data.flow_hash = clib_net_to_host_u32(hdr0->flow_hash);
-    pen_flag0 = (u16 *) &(vnet_buffer (p0)->pen_data.flags);
-    *pen_flag0 = flag_orig0;
+    pds_flag0 = (u16 *) &(vnet_buffer (p0)->pen_data.flags);
+    *pds_flag0 = flag_orig0;
     vnet_buffer (p0)->l2_hdr_offset = hdr0->l2_offset;
-    vnet_buffer (p0)->l3_hdr_offset = hdr0->l3_offset;
-    vnet_buffer (p0)->l4_hdr_offset = hdr0->l4_offset;
+    vnet_buffer (p0)->l3_hdr_offset =
+            hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
+    vnet_buffer (p0)->l4_hdr_offset =
+            hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
     vnet_buffer (p0)->sw_if_index[VLIB_TX] = clib_net_to_host_u16(hdr0->local_vnic_tag);
 
     vnet_buffer (p1)->pen_data.flow_hash = clib_net_to_host_u32(hdr1->flow_hash);
-    pen_flag1 = (u16 *) &(vnet_buffer (p1)->pen_data.flags);
-    *pen_flag1 = flag_orig1;
+    pds_flag1 = (u16 *) &(vnet_buffer (p1)->pen_data.flags);
+    *pds_flag1 = flag_orig1;
     vnet_buffer (p1)->l2_hdr_offset = hdr1->l2_offset;
-    vnet_buffer (p1)->l3_hdr_offset = hdr1->l3_offset;
-    vnet_buffer (p1)->l4_hdr_offset = hdr1->l4_offset;
+    vnet_buffer (p1)->l3_hdr_offset =
+            hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
+    vnet_buffer (p1)->l4_hdr_offset =
+            hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
     vnet_buffer (p1)->sw_if_index[VLIB_TX] = clib_net_to_host_u16(hdr1->local_vnic_tag);
 
     /* Move to IPv4/IPv6 header */
@@ -721,71 +787,81 @@ pen_parse_p4cpu_hdr_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         (vnet_buffer(p1)->l3_hdr_offset - vnet_buffer (p1)->l2_hdr_offset)));
 
     /* As of now only flow miss packets are punted to VPP for flow programming */
-    if (flags0 == flags1) {
-        if (flags0 == APOLLO_CPU_FLAGS_IPV4_1_VALID) {
+    if ((flags0 == flags1)) {
+        if ((flags0 == APOLLO_CPU_FLAGS_IPV4_1_VALID)) {
             *next0 = *next1 = P4CPU_HDR_LOOKUP_NEXT_IP4_FLOW_PROG;
             counter[P4CPU_HDR_LOOKUP_COUNTER_IP4_FLOW] += 2;
+        } else if (flags0 & APOLLO_CPU_FLAGS_IPV4_2_VALID) {
+            *next0 = *next1 = P4CPU_HDR_LOOKUP_NEXT_IP4_TUN_FLOW_PROG;
+            counter[P4CPU_HDR_LOOKUP_COUNTER_IP4_TUN_FLOW] += 2;
         } else if (flags0 == APOLLO_CPU_FLAGS_IPV6_1_VALID) {
             *next0 = *next1 = P4CPU_HDR_LOOKUP_NEXT_IP6_FLOW_PROG;
             counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_FLOW] += 2;
+        } else if (flags0 & APOLLO_CPU_FLAGS_IPV6_2_VALID) {
+            *next0 = *next1 = P4CPU_HDR_LOOKUP_NEXT_IP6_TUN_FLOW_PROG;
+            counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_TUN_FLOW] += 2;
         } else {
             *next0 = *next1 = P4CPU_HDR_LOOKUP_NEXT_DROP;
             counter[P4CPU_HDR_LOOKUP_COUNTER_UNKOWN] += 2;
         }
         return;
     }
-    if (flags0 == APOLLO_CPU_FLAGS_IPV4_1_VALID) {
+
+    if ((flags0 == APOLLO_CPU_FLAGS_IPV4_1_VALID)) {
         *next0 = P4CPU_HDR_LOOKUP_NEXT_IP4_FLOW_PROG;
-        counter[P4CPU_HDR_LOOKUP_COUNTER_IP4_FLOW]++;
-        if (flags1 == APOLLO_CPU_FLAGS_IPV6_1_VALID) {
-            *next1 = P4CPU_HDR_LOOKUP_NEXT_IP6_FLOW_PROG;
-            counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_FLOW]++;
-        } else {
-            *next1 = P4CPU_HDR_LOOKUP_NEXT_DROP;
-            counter[P4CPU_HDR_LOOKUP_COUNTER_UNKOWN]++;
-        }
+        counter[P4CPU_HDR_LOOKUP_COUNTER_IP4_FLOW] += 1;
+    } else if (flags0 & APOLLO_CPU_FLAGS_IPV4_2_VALID) {
+        *next0 = P4CPU_HDR_LOOKUP_NEXT_IP4_TUN_FLOW_PROG;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_IP4_TUN_FLOW] += 1;
     } else if (flags0 == APOLLO_CPU_FLAGS_IPV6_1_VALID) {
         *next0 = P4CPU_HDR_LOOKUP_NEXT_IP6_FLOW_PROG;
-        counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_FLOW]++;
-        if (flags1 == APOLLO_CPU_FLAGS_IPV4_1_VALID) {
-            *next1 = P4CPU_HDR_LOOKUP_NEXT_IP4_FLOW_PROG;
-            counter[P4CPU_HDR_LOOKUP_COUNTER_IP4_FLOW]++;
-        } else {
-            *next1 = P4CPU_HDR_LOOKUP_NEXT_DROP;
-            counter[P4CPU_HDR_LOOKUP_COUNTER_UNKOWN]++;
-        }
+        counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_FLOW] += 1;
+    } else if (flags0 & APOLLO_CPU_FLAGS_IPV6_2_VALID) {
+        *next0 = P4CPU_HDR_LOOKUP_NEXT_IP6_TUN_FLOW_PROG;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_TUN_FLOW] += 1;
     } else {
         *next0 = P4CPU_HDR_LOOKUP_NEXT_DROP;
-        counter[P4CPU_HDR_LOOKUP_COUNTER_UNKOWN]++;
-        if (flags1 == APOLLO_CPU_FLAGS_IPV4_1_VALID) {
-            *next1 = P4CPU_HDR_LOOKUP_NEXT_IP4_FLOW_PROG;
-            counter[P4CPU_HDR_LOOKUP_COUNTER_IP4_FLOW]++;
-        } else if (flags1 == APOLLO_CPU_FLAGS_IPV6_1_VALID) {
-            *next1 = P4CPU_HDR_LOOKUP_NEXT_IP6_FLOW_PROG;
-            counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_FLOW]++;
-        }
+        counter[P4CPU_HDR_LOOKUP_COUNTER_UNKOWN] += 1;
+    }
+
+    if ((flags1 == APOLLO_CPU_FLAGS_IPV4_1_VALID)) {
+        *next1 = P4CPU_HDR_LOOKUP_NEXT_IP4_FLOW_PROG;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_IP4_FLOW] += 1;
+    } else if (flags1 & APOLLO_CPU_FLAGS_IPV4_2_VALID) {
+        *next1 = P4CPU_HDR_LOOKUP_NEXT_IP4_TUN_FLOW_PROG;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_IP4_TUN_FLOW] += 1;
+    } else if (flags1 == APOLLO_CPU_FLAGS_IPV6_1_VALID) {
+        *next1 = P4CPU_HDR_LOOKUP_NEXT_IP6_FLOW_PROG;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_FLOW] += 1;
+    } else if (flags1 & APOLLO_CPU_FLAGS_IPV6_2_VALID) {
+        *next1 = P4CPU_HDR_LOOKUP_NEXT_IP6_TUN_FLOW_PROG;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_TUN_FLOW] += 1;
+    } else {
+        *next1 = P4CPU_HDR_LOOKUP_NEXT_DROP;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_UNKOWN] += 1;
     }
 }
 
 always_inline void
-pen_parse_p4cpu_hdr_x1 (vlib_buffer_t *p, u32 *next, u32 *counter)
+pds_parse_p4cpu_hdr_x1 (vlib_buffer_t *p, u32 *next, u32 *counter)
 {
     p4_rx_cpu_hdr_t *hdr = vlib_buffer_get_current(p);
-    //hdr--;
     u16 flag_orig;
-    u16 *pen_flag;
-    //hdr->flags = APOLLO_CPU_FLAGS_IPV4_1_VALID;
+    u16 *pds_flag;
 
     flag_orig = clib_net_to_host_u16(hdr->flags);
     u16 flags = flag_orig & 
-        (APOLLO_CPU_FLAGS_IPV4_1_VALID | APOLLO_CPU_FLAGS_IPV6_1_VALID);
+        (APOLLO_CPU_FLAGS_IPV4_1_VALID | APOLLO_CPU_FLAGS_IPV6_1_VALID |
+         APOLLO_CPU_FLAGS_IPV4_2_VALID | APOLLO_CPU_FLAGS_IPV6_2_VALID);
 
     vnet_buffer (p)->pen_data.flow_hash = clib_net_to_host_u32(hdr->flow_hash);
-    pen_flag = (u16 *) &(vnet_buffer (p)->pen_data.flags);
-    *pen_flag = flag_orig;
+    pds_flag = (u16 *) &(vnet_buffer (p)->pen_data.flags);
+    *pds_flag = flag_orig;
     vnet_buffer (p)->l2_hdr_offset = hdr->l2_offset;
-    vnet_buffer (p)->l3_hdr_offset = hdr->l3_offset;
-    vnet_buffer (p)->l4_hdr_offset = hdr->l4_offset;
+    vnet_buffer (p)->l3_hdr_offset =
+            hdr->l3_inner_offset ? hdr->l3_inner_offset : hdr->l3_offset;
+    vnet_buffer (p)->l4_hdr_offset =
+            hdr->l4_inner_offset ? hdr->l4_inner_offset : hdr->l4_offset;
 
     vnet_buffer (p)->sw_if_index[VLIB_TX] = clib_net_to_host_u16(hdr->local_vnic_tag);
 
@@ -794,21 +870,26 @@ pen_parse_p4cpu_hdr_x1 (vlib_buffer_t *p, u32 *next, u32 *counter)
         (vnet_buffer (p)->l3_hdr_offset - vnet_buffer (p)->l2_hdr_offset)));
 
     /* As of now only flow miss packets are punted to VPP for flow programming */
-    if (flags == APOLLO_CPU_FLAGS_IPV4_1_VALID) {
+    if ((flags == APOLLO_CPU_FLAGS_IPV4_1_VALID)) {
         *next = P4CPU_HDR_LOOKUP_NEXT_IP4_FLOW_PROG;
-        counter[P4CPU_HDR_LOOKUP_COUNTER_IP4_FLOW]++;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_IP4_FLOW] += 1;
+    } else if (flags & APOLLO_CPU_FLAGS_IPV4_2_VALID) {
+        *next = P4CPU_HDR_LOOKUP_NEXT_IP4_TUN_FLOW_PROG;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_IP4_TUN_FLOW] += 1;
     } else if (flags == APOLLO_CPU_FLAGS_IPV6_1_VALID) {
         *next = P4CPU_HDR_LOOKUP_NEXT_IP6_FLOW_PROG;
-        counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_FLOW]++;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_FLOW] += 1;
+    } else if (flags & APOLLO_CPU_FLAGS_IPV6_2_VALID) {
+        *next = P4CPU_HDR_LOOKUP_NEXT_IP6_TUN_FLOW_PROG;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_IP6_TUN_FLOW] += 1;
     } else {
         *next = P4CPU_HDR_LOOKUP_NEXT_DROP;
-        counter[P4CPU_HDR_LOOKUP_COUNTER_UNKOWN]++;
+        counter[P4CPU_HDR_LOOKUP_COUNTER_UNKOWN] += 1;
     }
-
 }
 
 static uword
-pen_p4cpu_hdr_lookup (vlib_main_t * vm,
+pds_p4cpu_hdr_lookup (vlib_main_t * vm,
                       vlib_node_runtime_t * node,
                       vlib_frame_t * from_frame)
 {
@@ -854,7 +935,7 @@ pen_p4cpu_hdr_lookup (vlib_main_t * vm,
             p0 = vlib_get_buffer (vm, pi0);
             p1 = vlib_get_buffer (vm, pi1);
 
-            pen_parse_p4cpu_hdr_x2(p0, p1, &next0, &next1, counter);
+            pds_parse_p4cpu_hdr_x2(p0, p1, &next0, &next1, counter);
 
             vlib_validate_buffer_enqueue_x2 (vm, node, next,
                     to_next, n_left_to_next,
@@ -873,7 +954,7 @@ pen_p4cpu_hdr_lookup (vlib_main_t * vm,
             n_left_from -= 1;
 
             p0 = vlib_get_buffer (vm, pi0);
-            pen_parse_p4cpu_hdr_x1(p0, &next0, counter);
+            pds_parse_p4cpu_hdr_x1(p0, &next0, counter);
 
             if (PREDICT_FALSE (next0 != next)) {
                 n_left_to_next += 1;
@@ -890,14 +971,14 @@ pen_p4cpu_hdr_lookup (vlib_main_t * vm,
     }
 
 #define _(n, s) \
-    vlib_node_increment_counter (vm, pen_p4cpu_hdr_lookup_node.index,   \
+    vlib_node_increment_counter (vm, pds_p4cpu_hdr_lookup_node.index,   \
             P4CPU_HDR_LOOKUP_COUNTER_##n,                               \
             counter[P4CPU_HDR_LOOKUP_COUNTER_##n]);
     foreach_p4cpu_hdr_lookup_counter
 #undef _
 
     if (node->flags & VLIB_NODE_FLAG_TRACE) {
-        pen_p4cpu_hdr_lookup_trace_add (vm, node, from_frame);
+        pds_p4cpu_hdr_lookup_trace_add (vm, node, from_frame);
     }
 
     return from_frame->n_vectors;
@@ -909,9 +990,9 @@ static char * p4cpu_error_strings[] = {
 #undef _
 };
 
-VLIB_REGISTER_NODE (pen_p4cpu_hdr_lookup_node) = {
-    .function = pen_p4cpu_hdr_lookup,
-    .name = "pen-p4cpu-hdr-lookup",
+VLIB_REGISTER_NODE (pds_p4cpu_hdr_lookup_node) = {
+    .function = pds_p4cpu_hdr_lookup,
+    .name = "pds-p4cpu-hdr-lookup",
     /* Takes a vector of packets. */
     .vector_size = sizeof (u32),
 
@@ -925,20 +1006,25 @@ VLIB_REGISTER_NODE (pen_p4cpu_hdr_lookup_node) = {
 #undef _
     },
 
-    .format_trace = format_pen_p4cpu_hdr_lookup_trace,
+    .format_trace = format_pds_p4cpu_hdr_lookup_trace,
 };
 
 static char *
-pen_flow_key2str (void *key)
+pds_flow_key2str (void *key)
 {
     static char str[256];
     flow_swkey_t *k = (flow_swkey_t *)key;
-    char srcstr[INET_ADDRSTRLEN];
-    char dststr[INET_ADDRSTRLEN];
+    char srcstr[INET6_ADDRSTRLEN];
+    char dststr[INET6_ADDRSTRLEN];
 
-    inet_ntop(AF_INET, k->key_metadata_src, srcstr, INET_ADDRSTRLEN);
-    inet_ntop(AF_INET, k->key_metadata_dst, dststr, INET_ADDRSTRLEN);
-    sprintf(str, "Type:%d Src:%s Dst:%s Dport:%d Sport:%d Proto:%d Tag:%d",
+    if (KEY_TYPE_IPV4 == k->key_metadata_ktype) {
+        inet_ntop(AF_INET, k->key_metadata_src, srcstr, INET_ADDRSTRLEN);
+        inet_ntop(AF_INET, k->key_metadata_dst, dststr, INET_ADDRSTRLEN);
+    } else {
+        inet_ntop(AF_INET6, k->key_metadata_src, srcstr, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, k->key_metadata_dst, dststr, INET6_ADDRSTRLEN);
+    }
+    sprintf(str, "Type:%d Src:%s Dst:%s Dport:%u Sport:%u Proto:%u Tag:%u",
             k->key_metadata_ktype, srcstr, dststr,
             k->key_metadata_dport, k->key_metadata_sport,
             k->key_metadata_proto, k->vnic_metadata_local_vnic_tag);
@@ -946,7 +1032,7 @@ pen_flow_key2str (void *key)
 }
 
 static char *
-pen_flow_appdata2str (void *appdata)
+pds_flow_appdata2str (void *appdata)
 {
     static char str[512];
     flow_appdata_t *d = (flow_appdata_t *)appdata;
@@ -956,9 +1042,9 @@ pen_flow_appdata2str (void *appdata)
 }
 
 static clib_error_t *
-pen_flow_init (vlib_main_t * vm)
+pds_flow_init (vlib_main_t * vm)
 {
-    pen_flow_main_t *fm = &pen_flow_main;
+    pds_flow_main_t *fm = &pds_flow_main;
     int no_of_threads = vec_len (vlib_worker_threads);
     int i;
 
@@ -972,7 +1058,7 @@ pen_flow_init (vlib_main_t * vm)
     }
 
     fm->table = ftl_create(P4TBL_ID_FLOW, 5, 8,
-            (void *) pen_flow_key2str, (void *)pen_flow_appdata2str);
+            (void *) pds_flow_key2str, (void *)pds_flow_appdata2str);
 
     fm->flow_prog_lock = clib_mem_alloc_aligned (CLIB_CACHE_LINE_BYTES,
                               CLIB_CACHE_LINE_BYTES);
@@ -986,4 +1072,4 @@ pen_flow_init (vlib_main_t * vm)
     return 0;
 }
 
-VLIB_INIT_FUNCTION (pen_flow_init);
+VLIB_INIT_FUNCTION (pds_flow_init);

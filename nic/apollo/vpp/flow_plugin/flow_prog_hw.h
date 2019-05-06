@@ -25,6 +25,8 @@ ftl* ftl_create(uint32_t table_id,
 
 int ftl_insert(ftl *obj, ftentry_t *entry, uint32_t hash);
 
+int ftl_remove(ftl *obj, ftentry_t *entry, uint32_t hash);
+
 void ftl_delete(ftl *obj);
 
 #ifdef __cplusplus
