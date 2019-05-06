@@ -75,6 +75,9 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
 
   // Holds all events
   events: IEventsEvent[] = [];
+  // Contains the total number of events.
+  // Count does not include debug events if show debug events is not selected
+  eventsTotalCount = 0;
 
   // Mapping from meta.name to event object. Used for mapping entries from elastic
   // to the event objects we have.
@@ -167,6 +170,8 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   // Alert State filters
   selectedStateFilters = [MonitoringAlertSpec_state_uihint.OPEN];
   possibleFilterStates = Object.values(MonitoringAlertSpec_state_uihint);
+
+  showDebugEvents: boolean = false;
 
   alertTrackBy = HttpEventUtility.trackBy;
 
@@ -329,7 +334,11 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
    * It will filter events displayed in table
    */
   onEventNumberClick(event, severityType: string) {
-    this.currentEventSeverityFilter = severityType;
+    if (this.currentEventSeverityFilter === severityType) {
+      this.currentEventSeverityFilter = null;
+    } else {
+      this.currentEventSeverityFilter = severityType;
+    }
     this.filterEvents();
     // Disabling search to reduce scope for august release
     // Adding <any> to prevent typescript compilation from failing due to unreachable code
@@ -344,7 +353,11 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
    * It will filter events displayed in table
    */
   onAlertNumberClick(severityType: string) {
-    this.currentAlertSeverityFilter = severityType;
+    if (this.currentAlertSeverityFilter === severityType) {
+      this.currentAlertSeverityFilter = null;
+    } else {
+      this.currentAlertSeverityFilter = severityType;
+    }
     this.filterAlerts();
   }
 
@@ -356,13 +369,20 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     // becomes visible. This allows the checkbox animation to happen immediately, and then we render
     // the new table.
     setTimeout(() => {
-      if (this.currentEventSeverityFilter == null) {
+      // checking whether to show debug events
+      if (this.showDebugEvents) {
         this.filteredEvents = this.events;
       } else {
-        this.filteredEvents =
-          this.events.filter(item => item.severity === this.currentEventSeverityFilter);
+        this.filteredEvents = this.events.filter(item => item.severity !== EventsEvent_severity.DEBUG);
       }
+      this.eventsTotalCount = this.filteredEvents.length;
+
+      if (this.currentEventSeverityFilter != null) { 
+        this.filteredEvents = this.filteredEvents.filter(item => item.severity === this.currentEventSeverityFilter);
+      }
+
       this.eventsLoading = false;
+      this.lazyRenderWrapper.resetTableView();
     }, 0);
   }
 
