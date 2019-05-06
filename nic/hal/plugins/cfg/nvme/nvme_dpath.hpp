@@ -208,6 +208,9 @@ typedef struct nvme_sessxtstxcb_s {
 
 static_assert(sizeof(nvme_sessxtstxcb_t) == 64);
 
+#define MAX_SESSXTSRX_RINGS 2
+#define MAX_SESSXTSRX_HOST_RINGS 0
+
 #define nvme_sessxtsrxcb_t nvme_sessxtstxcb_t
 
 
@@ -244,6 +247,9 @@ typedef struct nvme_sessdgsttxcb_s {
 } PACKED nvme_sessdgsttxcb_t;
 
 static_assert(sizeof(nvme_sessdgsttxcb_t) == 64);
+
+#define MAX_SESSDGSTRX_RINGS 2
+#define MAX_SESSDGSTRX_HOST_RINGS 0
 
 #define nvme_sessdgstrxcb_t nvme_sessdgsttxcb_t
 

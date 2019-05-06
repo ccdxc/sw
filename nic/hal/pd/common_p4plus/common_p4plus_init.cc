@@ -345,7 +345,7 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     i++;
 
     symbols[i].name = NVME_RX_AOL_RING_BASE;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_TX_AOL_RING_BASE);
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_RX_AOL_RING_BASE);
     i++;
 
     symbols[i].name = NVME_TX_NMDPR_RING_BASE;
@@ -353,7 +353,7 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
     i++;
 
     symbols[i].name = NVME_RX_NMDPR_RING_BASE;
-    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_TX_NMDPR_RING_BASE);
+    symbols[i].val = get_mem_addr(CAPRI_HBM_NVME_RX_NMDPR_RING_BASE);
     i++;
 
     symbols[i].name = NVME_TX_SESS_XTSQ_BASE;

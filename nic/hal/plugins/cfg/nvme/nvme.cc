@@ -298,7 +298,7 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
 
     //tx aol ring
     g_nvme_global_info.tx_aol_ring_base = nvme_manager()->MRStartAddress(CAPRI_HBM_NVME_TX_AOL_RING_BASE);
-    SDK_ASSERT(tx_max_aol * sizeof(nvme_aol_t)  <= nvme_manager()->MRSize(CAPRI_HBM_NVME_TX_AOL_RING_BASE));
+    SDK_ASSERT(tx_max_aol * sizeof(nvme_aol_ring_entry_t)  <= nvme_manager()->MRSize(CAPRI_HBM_NVME_TX_AOL_RING_BASE));
 
     //rx aol page
     g_nvme_global_info.rx_aol_page_base = nvme_manager()->MRStartAddress(CAPRI_HBM_NVME_RX_AOL_PAGE_BASE);
@@ -306,7 +306,7 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
 
     //rx aol ring
     g_nvme_global_info.rx_aol_ring_base = nvme_manager()->MRStartAddress(CAPRI_HBM_NVME_RX_AOL_RING_BASE);
-    SDK_ASSERT(rx_max_aol * sizeof(nvme_aol_t)  <= nvme_manager()->MRSize(CAPRI_HBM_NVME_RX_AOL_RING_BASE));
+    SDK_ASSERT(rx_max_aol * sizeof(nvme_aol_ring_entry_t)  <= nvme_manager()->MRSize(CAPRI_HBM_NVME_RX_AOL_RING_BASE));
 
     HAL_TRACE_DEBUG("nscb_base_addr: {:#x} "
                     "txsessprodcb_base: {:#x}, "
@@ -353,6 +353,7 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     //NS runtime info
     g_nvme_ns_info = (nvme_ns_info_t *)malloc(sizeof(nvme_ns_info_t) * max_ns);
     SDK_ASSERT(g_nvme_ns_info != NULL);
+    memset(g_nvme_ns_info, 0, sizeof(nvme_ns_info_t) * max_ns);
 
     // Get TX_NMDPR_RING_BASE
     ret = wring_get_meta(types::WRING_TYPE_NMDPR_BIG_TX,
@@ -986,6 +987,9 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     sessxtstxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_XTSQ, sess_id);
     memset(&sessxtstxcb, 0, sizeof(nvme_sessxtstxcb_t));
 
+    sessxtstxcb.ring_header.total_rings = MAX_SESSXTSTX_RINGS;
+    sessxtstxcb.ring_header.host_rings = MAX_SESSXTSTX_HOST_RINGS;
+
     get_program_offset((char *)"txdma_stage0.bin", 
                        (char *)"nvme_tx_sessxts_stage0",
                        &offset);
@@ -1010,6 +1014,9 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     sessdgsttxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_DGSTQ, sess_id);
     memset(&sessdgsttxcb, 0, sizeof(nvme_sessdgsttxcb_t));
 
+    sessdgsttxcb.ring_header.total_rings = MAX_SESSDGSTTX_RINGS;
+    sessdgsttxcb.ring_header.host_rings = MAX_SESSDGSTTX_HOST_RINGS;
+
     get_program_offset((char *)"txdma_stage0.bin", 
                        (char *)"nvme_tx_sessdgst_stage0",
                        &offset);
@@ -1030,6 +1037,9 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     uint64_t sessxtsrxcb_addr;
     sessxtsrxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_XTSQ, sess_id);
     memset(&sessxtsrxcb, 0, sizeof(nvme_sessxtsrxcb_t));
+
+    sessxtsrxcb.ring_header.total_rings = MAX_SESSXTSRX_RINGS;
+    sessxtsrxcb.ring_header.host_rings = MAX_SESSXTSRX_HOST_RINGS;
 
     get_program_offset((char *)"txdma_stage0.bin", 
                        (char *)"nvme_rx_sessxts_stage0",
@@ -1054,6 +1064,9 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     uint64_t sessdgstrxcb_addr;
     sessdgstrxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_DGSTQ, sess_id);
     memset(&sessdgstrxcb, 0, sizeof(nvme_sessdgstrxcb_t));
+
+    sessdgstrxcb.ring_header.total_rings = MAX_SESSDGSTRX_RINGS;
+    sessdgstrxcb.ring_header.host_rings = MAX_SESSDGSTRX_HOST_RINGS;
 
     get_program_offset((char *)"txdma_stage0.bin", 
                        (char *)"nvme_rx_sessdgst_stage0",
