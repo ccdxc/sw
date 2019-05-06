@@ -33,7 +33,7 @@ typedef struct pds_device_status_s {
 
 /// \brief Ingress drop statistics
 typedef struct pds_device_ing_drop_stats_s {
-    uint64_t drop_stats_pkts[P4I_DROP_REASON_MAX];
+    uint64_t drop_stats_pkts[P4I_DROP_REASON_MAX + 1];
 } __PACK__ pds_device_ing_drop_stats_t;
 
 /// \brief Device egress drop statistics

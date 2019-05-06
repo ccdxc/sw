@@ -62,8 +62,7 @@ device_impl::fill_ing_drop_stats_(pds_device_ing_drop_stats_t *ing_drop_stats) {
             memcpy(&pkts,
                    data.action_u.p4i_drop_stats_p4i_drop_stats.drop_stats_pkts,
                    sizeof(data.action_u.p4i_drop_stats_p4i_drop_stats.drop_stats_pkts));
-            ing_drop_stats->drop_stats_pkts[key.control_metadata_p4i_drop_reason] =
-                pkts;
+            ing_drop_stats->drop_stats_pkts[i] = pkts;
         }
     }
     return;
