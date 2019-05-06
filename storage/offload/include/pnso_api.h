@@ -254,7 +254,8 @@ struct pnso_crypto_desc {
  * @threshold_len: specifies the expected compressed buffer length in bytes.
  * This is to instruct the compression operation, upon its completion, to
  * compress the buffer to a length that must be less than or equal to
- * 'threshold_len'.
+ * 'threshold_len'.  If PNSO_CP_DFLAG_INSERT_HEADER flag is specified, then
+ * the 'threshold_len' should be 8 bytes less than final desired value.
  * @hdr_fmt_idx: specifies the index for the header format in the header format
  * array.
  * @hdr_algo: specifies the value for header field PNSO_HDR_FIELD_TYPE_ALGO.
