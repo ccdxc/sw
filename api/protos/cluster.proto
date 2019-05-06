@@ -69,7 +69,7 @@ message ClusterSpec {
     // into Venice Cluster. When it is disabled, NICs validated by CMD are
     // set to Pending state and it requires Manual approval to be admitted
     // into the cluster.
-    bool AutoAdmitNICs          = 4 [(gogoproto.jsontag) = "auto-admit-nics,omitempty"];
+    bool AutoAdmitNICs          = 4 [(gogoproto.jsontag) = "auto-admit-nics"];
 
     // Certs is the pem encoded certificate bundle used for API Gateway TLS
     string Certs                = 5 [(gogoproto.jsontag) = "certs,omitempty"];
