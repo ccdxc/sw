@@ -38,17 +38,18 @@ var _ = Describe("events tests", func() {
 			startTime = startTime.Add(-3 * time.Minute) // TODO: remove this; there is ~2 to ~3 minute delay between naples sim and rund VM
 
 			// get a random naples and flap the port
-			nc := ts.model.Naples().Any(1)
+			npc := ts.model.Naples()
+			nc := npc.Any(1)
 			Expect(nc.Error()).ShouldNot(HaveOccurred())
 			Expect(ts.model.Action().PortFlap(nc)).Should(Succeed())
 			time.Sleep(60 * time.Second) // wait for the event to reach venice
 
 			// ensures the link events are triggered and available in venice
-			ec := ts.model.LinkUpEventsSince(startTime)
+			ec := ts.model.LinkUpEventsSince(startTime, npc)
 			Expect(ec.Error()).ShouldNot(HaveOccurred())
 			Expect(ec.LenGreaterThanEqualTo(1)).Should(BeTrue())
 
-			ec = ts.model.LinkDownEventsSince(startTime)
+			ec = ts.model.LinkDownEventsSince(startTime, npc)
 			Expect(ec.Error()).ShouldNot(HaveOccurred())
 			Expect(ec.LenGreaterThanEqualTo(1)).Should(BeTrue())
 

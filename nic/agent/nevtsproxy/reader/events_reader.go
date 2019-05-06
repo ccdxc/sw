@@ -30,6 +30,7 @@ type Option func(*EvtReader)
 
 // EvtReader reads events from shared memory
 type EvtReader struct {
+	nodeName       string
 	filePath       string
 	sm             *shm.SharedMem
 	ipcR           *shm.IPCReader
@@ -48,7 +49,7 @@ func WithEventsDispatcher(evtsDispatcher events.Dispatcher) Option {
 // NewEventReader creates a new events reader
 // - Open shared memory identified by the given path and get the IPC instance from shared memory.
 // - Use events dispatcher to dispatch events if given.
-func NewEventReader(path string, pollDelay time.Duration,
+func NewEventReader(nodeName, path string, pollDelay time.Duration,
 	logger log.Logger, opts ...Option) (*EvtReader, error) {
 
 	sm, err := shm.OpenSharedMem(path)
@@ -60,6 +61,7 @@ func NewEventReader(path string, pollDelay time.Duration,
 	ipc := sm.GetIPCInstance()
 
 	eRdr := &EvtReader{
+		nodeName:   nodeName,
 		filePath:   path,
 		sm:         sm,
 		ipcR:       shm.NewIPCReader(ipc, pollDelay),
@@ -112,6 +114,12 @@ func (r *EvtReader) NumPendingEvents() int {
 func (r *EvtReader) handler(nEvt *halproto.Event) error {
 	// convert received halproto.Event to venice event
 	vEvt := convertToVeniceEvent(nEvt)
+
+	// default all events to smart nic object; update it with the respective object if given (key)
+	vEvt.EventAttributes.ObjectRef = &api.ObjectRef{
+		Name: r.nodeName,
+		Kind: "SmartNIC",
+	}
 
 	// convert nEvt.ObjectKey to api.ObjectMeta
 	if nEvt.ObjectKey != nil {

@@ -25,6 +25,7 @@ var retryCount = 10
 // Reader represents the events shared memory reader which reads events
 // dir `shm.GetSharedMemoryDirectory()`
 type Reader struct {
+	nodeName       string                // user friendly smart NIC name
 	dir            string                // dir to watch, e.g. /dev/shm/pen-events
 	pollDelay      time.Duration         // poll interval
 	evtReaders     map[string]*EvtReader // list of event readers that were spun up; one reader per shm file
@@ -37,8 +38,9 @@ type Reader struct {
 
 // NewReader creates a new shm events reader
 // - it creates a file watcher on the given dir to watch file(shm) create events/
-func NewReader(dir string, pollDelay time.Duration, evtsDispatcher events.Dispatcher, logger log.Logger) *Reader {
+func NewReader(nodeName, dir string, pollDelay time.Duration, evtsDispatcher events.Dispatcher, logger log.Logger) *Reader {
 	rdr := &Reader{
+		nodeName:       nodeName,
 		dir:            dir,
 		pollDelay:      pollDelay,
 		evtReaders:     map[string]*EvtReader{},
@@ -164,7 +166,7 @@ func (r *Reader) startEvtsReader(shmPath string) {
 		existingRdr.Stop()
 	}
 
-	eRdr, err := NewEventReader(shmPath, r.pollDelay, r.logger,
+	eRdr, err := NewEventReader(r.nodeName, shmPath, r.pollDelay, r.logger,
 		WithEventsDispatcher(r.evtsDispatcher))
 	if err != nil {
 		r.logger.Errorf("failed to create reader for shm: %s, err: %v", shmPath, err)

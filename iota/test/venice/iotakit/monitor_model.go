@@ -2,12 +2,13 @@ package iotakit
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/events/generated/eventtypes"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -29,10 +30,16 @@ func (sm *SysModel) Events() *EventsCollection {
 	return &EventsCollection{list: eventsList}
 }
 
-// LinkUpEventsSince returns all the link up events since the given time
-func (sm *SysModel) LinkUpEventsSince(since time.Time) *EventsCollection {
-	fieldSelector := fmt.Sprintf("type=%s,meta.mod-time>=%v",
-		eventtypes.LINK_UP, since.Format(time.RFC3339Nano))
+// LinkUpEventsSince returns all the link up events since the given time from any of the given naples collection
+func (sm *SysModel) LinkUpEventsSince(since time.Time, npc *NaplesCollection) *EventsCollection {
+	var naplesNames []string
+	for _, naples := range npc.nodes {
+		naplesNames = append(naplesNames, naples.iotaNode.Name)
+	}
+
+	fieldSelector := fmt.Sprintf("type=%s,meta.mod-time>=%v,object-ref.kind=SmartNIC,object-ref.name in (%v)",
+		eventtypes.LINK_UP, since.Format(time.RFC3339Nano), fmt.Sprintf("%s", strings.Join(naplesNames, ",")))
+
 	eventsList, err := sm.tb.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
 	if err != nil {
 		log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)
@@ -42,10 +49,16 @@ func (sm *SysModel) LinkUpEventsSince(since time.Time) *EventsCollection {
 	return &EventsCollection{list: eventsList}
 }
 
-// LinkDownEventsSince returns all the link down events since the given time
-func (sm *SysModel) LinkDownEventsSince(since time.Time) *EventsCollection {
-	fieldSelector := fmt.Sprintf("type=%s,meta.mod-time>=%v",
-		eventtypes.LINK_DOWN, since.Format(time.RFC3339Nano))
+// LinkDownEventsSince returns all the link down events since the given time from any of the given naples collection
+func (sm *SysModel) LinkDownEventsSince(since time.Time, npc *NaplesCollection) *EventsCollection {
+	var naplesNames []string
+	for _, naples := range npc.nodes {
+		naplesNames = append(naplesNames, naples.iotaNode.Name)
+	}
+
+	fieldSelector := fmt.Sprintf("type=%s,meta.mod-time>=%v,object-ref.kind=SmartNIC,object-ref.name in (%v)",
+		eventtypes.LINK_DOWN, since.Format(time.RFC3339Nano), fmt.Sprintf("%s", strings.Join(naplesNames, ",")))
+
 	eventsList, err := sm.tb.ListEvents(&api.ListWatchOptions{FieldSelector: fieldSelector})
 	if err != nil {
 		log.Errorf("failed to list events matching options: %v, err: %v", fieldSelector, err)

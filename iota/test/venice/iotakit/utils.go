@@ -1,10 +1,10 @@
 package iotakit
 
 import (
-	"sort"
-	"strings"
 	"regexp"
-        "strconv"
+	"sort"
+	"strconv"
+	"strings"
 )
 
 // parses and returns one of the port number from `halctl show port status` output

@@ -214,7 +214,7 @@ func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher, logger log
 	go func() {
 		defer wg.Done()
 
-		eRdr := startEventReader(shmName, evtsDipsatcher, logger)
+		eRdr := startEventReader(t.Name(), shmName, evtsDipsatcher, logger)
 		Assert(t, eRdr != nil, "failed to start reader")
 		defer eRdr.Stop()
 
@@ -253,12 +253,12 @@ func testEventsReader(t *testing.T, evtsDipsatcher events.Dispatcher, logger log
 // helper function to start the reader
 // - start events reader to read events from given shmName
 // - spin off a go routine to start receiving events
-func startEventReader(shmName string, evtsDispatcher events.Dispatcher, logger log.Logger) *EvtReader {
+func startEventReader(nodeName, shmName string, evtsDispatcher events.Dispatcher, logger log.Logger) *EvtReader {
 	var evtsReader *EvtReader
 	var err error
 
 	for i := 0; i < 10; i++ {
-		if evtsReader, err = NewEventReader(shmName, 50*time.Millisecond, logger, WithEventsDispatcher(evtsDispatcher)); err == nil {
+		if evtsReader, err = NewEventReader(nodeName, shmName, 50*time.Millisecond, logger, WithEventsDispatcher(evtsDispatcher)); err == nil {
 			break
 		}
 		log.Errorf("failed to open shared memory, retrying..")
