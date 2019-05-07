@@ -23,8 +23,8 @@ typedef enum op_e {
     OP_NONE,            ///< None
     OP_MANY_CREATE,     ///< Create
     OP_MANY_READ,       ///< Read
-    OP_MANY_DELETE,     ///< Delete
     OP_MANY_UPDATE,     ///< Update
+    OP_MANY_DELETE,     ///< Delete
     OP_INVALID,         ///< Invalid
 } utils_op_t;
 

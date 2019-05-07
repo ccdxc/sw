@@ -17,6 +17,21 @@
 
 namespace api_test {
 
+typedef struct subnet_util_stepper_seed_s {
+    pds_subnet_key_t key;
+    pds_vpc_key_t vpc;
+    std::string cidr_str;
+    ip_prefix_t pfx;
+    std::string vr_ip;
+    std::string vr_mac;
+    pds_route_table_key_t v4_route_table;    /// Route table id
+    pds_route_table_key_t v6_route_table;    /// Route table id
+    pds_policy_key_t ing_v4_policy;
+    pds_policy_key_t ing_v6_policy;
+    pds_policy_key_t egr_v4_policy;
+    pds_policy_key_t egr_v6_policy;
+} subnet_util_stepper_seed_t;
+
 /// Subnet test utility class
 class subnet_util {
 public:
@@ -26,6 +41,7 @@ public:
     subnet_util(pds_vpc_id_t vpc_id, pds_subnet_id_t id, std::string cidr_str,
                 uint32_t, uint32_t, uint32_t ing_v4_policy = 0, uint32_t ing_v6_policy = 0,
                 uint32_t egr_v4_policy = 0, uint32_t egr_v6_policy = 0);
+    subnet_util(subnet_util_stepper_seed_t *seed);
 
     /// \brief destructor
     ~subnet_util();
@@ -34,6 +50,7 @@ public:
     pds_subnet_id_t id;
     pds_vpc_key_t vpc;
     std::string cidr_str;
+    ip_prefix_t pfx;
     std::string vr_ip;
     std::string vr_mac;
     pds_route_table_key_t v4_route_table;    /// Route table id
@@ -69,25 +86,44 @@ public:
 
     /// \brief Create many subnets
     ///
+    /// \param[in] seed subnet seed
     /// \param[in] num_subnet number of subnets to create
-    /// \param[in] vpc_id VPC id
-    /// \param[in] pfxstr subnet prefix (cidr) in string form
     /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(pds_subnet_key_t subnet, pds_vpc_key_t vpc_key,
-                                 std::string pfxstr, uint32_t num_subnet);
+    static sdk_ret_t many_create(subnet_util_stepper_seed_t *seed,
+                                 uint32_t num_subnet);
 
     /// \brief Read many subnets
     ///
+    /// \param[in] seed subnet seed
+    /// \param[in] num_subnet number of subnets to read
+    /// \param[in] expected_res expected result after read operation
     /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_read(pds_subnet_key_t key, uint32_t num_subnets,
+    static sdk_ret_t many_read(subnet_util_stepper_seed_t *seed,
+                               uint32_t num_subnets,
                                sdk::sdk_ret_t expected_res = sdk::SDK_RET_OK);
+
+    /// \brief Update multiple subnets
+    /// Update "num_subnets" subnets starting from id
+    ///
+    /// \param[in] seed subnet seed
+    /// \param[in] num_subnet number of subnets to update
+    /// \returns #SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t many_update(subnet_util_stepper_seed_t *seed,
+                                 uint32_t num_subnets);
 
     /// \brief Delete multiple subnets
     /// Delete "num_subnets" subnets starting from id
     ///
-    /// \param[in] num_subnets number of VPCs to be deleted
+    /// \param[in] seed subnet seed
+    /// \param[in] num_subnet number of subnets to delete
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(pds_subnet_key_t key, uint32_t num_subnets);
+    static sdk_ret_t many_delete(subnet_util_stepper_seed_t *seed,
+                                 uint32_t num_subnets);
+
+    static sdk_ret_t stepper_seed_init(subnet_util_stepper_seed_t *seed,
+                                       pds_subnet_key_t key,
+                                       pds_vpc_key_t vpc_key,
+                                       std::string subnet_start_addr);
 
 private:
     void __init();

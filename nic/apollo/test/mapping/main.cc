@@ -96,6 +96,7 @@ protected:
         std::string nr_cidr = "100.0.0.1/16";
         ip_prefix_t ip_pfx, rt_pfx, nr_pfx;
         ip_addr_t ipaddr, rt_addr, nr_addr;
+        subnet_util_stepper_seed_t subnet_seed;
 
         vpc_key.id = api_test::g_vpc_id;
         subnet_key.id = api_test::g_subnet_id;
@@ -133,9 +134,10 @@ protected:
         subnet_key.id = api_test::g_subnet_id;
         vpc_key.id = api_test::g_vpc_id;
         for (uint16_t idx = 0; idx < PDS_MAX_VPC; idx++) {
-            ASSERT_TRUE(subnet_util::many_create(subnet_key, vpc_key,
-                                                 subnet_cidr,
-                                                 1) == sdk ::SDK_RET_OK);
+            subnet_util::stepper_seed_init(
+                &subnet_seed, subnet_key, vpc_key, subnet_cidr);
+            ASSERT_TRUE(subnet_util::many_create(
+                    &subnet_seed, 1) == sdk ::SDK_RET_OK);
             subnet_key.id += 1;
             vpc_key.id += 1;
             ip_prefix_ip_next(&ip_pfx, &ipaddr);
@@ -151,8 +153,14 @@ protected:
         vpc_key.id = api_test::g_vpc_id;
         ASSERT_TRUE(vpc_util::many_read(vpc_key, PDS_MAX_VPC,
                                         sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
-        ASSERT_TRUE(subnet_util::many_read(subnet_key, PDS_MAX_VPC,
-                                           sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        for (uint16_t idx = 0; idx < PDS_MAX_VPC; idx++) {
+            subnet_util::stepper_seed_init(
+                &subnet_seed, subnet_key, vpc_key, subnet_cidr);
+            ASSERT_TRUE(subnet_util::many_read(
+                    &subnet_seed, 1, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+            subnet_key.id += 1;
+            vpc_key.id += 1;
+        }
         ASSERT_TRUE(device_obj.read(&dev_info, false) == sdk::SDK_RET_OK);
         ASSERT_TRUE(tep_obj.read(&tep_info) == sdk::SDK_RET_OK);
         ASSERT_TRUE(tep_util::many_read(num_teps, api_test::g_tep_cidr_v4,
