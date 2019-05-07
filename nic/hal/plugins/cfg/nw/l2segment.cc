@@ -606,10 +606,20 @@ l2seg_cleanup_oiflists (l2seg_t *l2seg)
 {
     hal_ret_t ret = HAL_RET_OK;
 
-    // Remove oifs from bcast oiflist.
-    ret = l2seg_delete_oifs(l2seg);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("Failed to delete OIFs for l2seg, err : {}", ret);
+    // Smart switch:
+    //   Uplinks which are passed as mbrs in l2seg are added to oiflists.
+    // Host Pin:
+    //   Uplinks are not added to l2seg's oiflists. The pkts go to uplinks
+    //   through honor ingress.
+    // Classic:
+    //   Uplinks are not added to l2seg's oiflists. The pkts go to uplinks
+    //   through honor ingress.
+    if (is_forwarding_mode_smart_switch()) {
+        // Remove oifs from bcast oiflist.
+        ret = l2seg_delete_oifs(l2seg);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to delete OIFs for l2seg, err : {}", ret);
+        }
     }
 
     // Remove all oiflists
