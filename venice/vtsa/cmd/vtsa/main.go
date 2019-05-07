@@ -3,12 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/utils/k8s"
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -49,8 +49,8 @@ func main() {
 	controllers := strings.Split(*resolverURL, ",")
 
 	var hostname string
-	hostname, err := os.Hostname()
-	if err != nil {
+	hostname = k8s.GetNodeName()
+	if len(hostname) == 0 {
 		hostname = "venice"
 	}
 
