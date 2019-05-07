@@ -21,6 +21,13 @@ func (it *veniceIntegSuite) TestScale(c *C) {
 	if it.config.DatapathKind == "hal" {
 		c.Skip("Uncomment when deletes go through to HAL.")
 	}
+
+	// Currently out of order creation is not handled generously in netagent.
+	// If a dependent object is not yet created, we wait exponentially and depending on the order or creation of objects
+	// agent could be sleeping for 10s of minutes..
+	// e.g: http://jobd/logs/2673907 where TestScale is affecting subsequent Test cases. Enable after this issue is resolved
+	c.Skip("netAgent handling of out of order objects can take minutes. Skip till thats fixed..")
+
 	loginCtx, err := it.loggedInCtx()
 	AssertOk(c, err, "Error creating logged in context")
 
