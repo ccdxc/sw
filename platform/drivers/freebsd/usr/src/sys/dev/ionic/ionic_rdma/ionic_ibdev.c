@@ -1330,11 +1330,13 @@ static int ionic_query_device(struct ib_device *ibdev,
 	attr->max_mcast_grp = 0;
 	attr->max_mcast_qp_attach = 0;
 	attr->max_ah = dev->inuse_ahid.inuse_size;
+#ifdef XXX_SRQ
 	attr->max_srq = dev->size_srqid;
 	attr->max_srq_wr = IONIC_MAX_DEPTH;
 	attr->max_srq_sge =
 		min(ionic_v1_recv_wqe_max_sge(dev->max_stride, 0),
 		    IONIC_MAX_SGE_ADVERT);
+#endif
 	attr->max_fast_reg_page_list_len =
 		(dev->inuse_restbl.inuse_size / 2) <<
 		(dev->cl_stride - dev->pte_stride);
@@ -2141,6 +2143,7 @@ static int ionic_v1_create_mr_cmd(struct ionic_ibdev *dev, struct ionic_pd *pd,
 			 be32_to_cpu(wr.cqe.status_length));
 		rc = -EINVAL;
 	} else {
+		mr->created = true;
 		rc = 0;
 	}
 
@@ -2287,7 +2290,7 @@ static int ionic_rereg_user_mr(struct ib_mr *ibmr, int flags, u64 start,
 	if (!mr->ibmr.lkey)
 		return -EINVAL;
 
-	if (mr->res.tbl_order == IONIC_RES_INVALID) {
+	if (!mr->created) {
 		/* must set translation if not already on device */
 		if (~flags & IB_MR_REREG_TRANS)
 			return -EINVAL;
@@ -2296,6 +2299,8 @@ static int ionic_rereg_user_mr(struct ib_mr *ibmr, int flags, u64 start,
 		rc = ionic_destroy_mr_cmd(dev, mr->mrid);
 		if (rc)
 			return rc;
+
+		mr->created = false;
 	}
 
 	if (~flags & IB_MR_REREG_PD)
@@ -2359,13 +2364,11 @@ static int ionic_dereg_mr(struct ib_mr *ibmr)
 	if (!mr->ibmr.lkey)
 		goto out;
 
-	/* no reservation, and the mr does not exist on device */
-	if (mr->res.tbl_order == IONIC_RES_INVALID)
-		goto out_mrid;
-
-	rc = ionic_destroy_mr_cmd(dev, mr->mrid);
-	if (rc)
-		return rc;
+	if (mr->created) {
+		rc = ionic_destroy_mr_cmd(dev, mr->mrid);
+		if (rc)
+			return rc;
+	}
 
 	ionic_dbgfs_rm_mr(mr);
 
@@ -2375,7 +2378,6 @@ static int ionic_dereg_mr(struct ib_mr *ibmr)
 	if (mr->umem)
 		ib_umem_release(mr->umem);
 
-out_mrid:
 	ionic_put_mrid(dev, mr->mrid);
 
 out:
@@ -2539,6 +2541,8 @@ static int ionic_dealloc_mw(struct ib_mw *ibmw)
 	ionic_dbgfs_rm_mr(mr);
 
 	ionic_put_mrid(dev, mr->mrid);
+
+	kfree(mr);
 
 	return 0;
 }
@@ -5146,6 +5150,9 @@ static int ionic_v1_prep_inv(struct ionic_qp *qp,
 	wqe->base.op = IONIC_V1_OP_LOCAL_INV;
 	wqe->base.imm_data_key = cpu_to_be32(wr->ex.invalidate_rkey);
 
+	meta->len = 0;
+	meta->ibop = IB_WC_LOCAL_INV;
+
 	ionic_v1_prep_base(qp, wr, meta, wqe);
 
 	return 0;
@@ -5190,6 +5197,9 @@ static int ionic_v1_prep_reg(struct ionic_qp *qp,
 	wqe->reg_mr.flags = cpu_to_be16(flags);
 	wqe->reg_mr.dir_size_log2 = 0;
 	wqe->reg_mr.page_size_log2 = order_base_2(mr->ibmr.page_size);
+
+	meta->len = 0;
+	meta->ibop = IB_WC_REG_MR;
 
 	ionic_v1_prep_base(qp, &wr->wr, meta, wqe);
 
@@ -5621,7 +5631,7 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	if (rc)
 		goto err_rq;
 
-	/* TODO need admin command */
+	/* TODO SRQ need admin command */
 	rc = -ENOSYS;
 	goto err_cmd;
 

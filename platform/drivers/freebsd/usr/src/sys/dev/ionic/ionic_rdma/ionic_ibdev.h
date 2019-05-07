@@ -406,6 +406,7 @@ struct ionic_mr {
 	struct ib_umem		*umem;
 	struct ionic_tbl_res	res;
 	struct ionic_tbl_buf	buf;
+	bool			created;
 
 	struct sysctl_ctx_list	debug_ctx;
 	struct sysctl_oid	*debug;
