@@ -13,7 +13,7 @@ import { MatIconRegistry } from '@angular/material';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MessageService } from '@app/services/message.service';
 import { RouterTestingModule } from '@angular/router/testing';
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService } from '@app/services/auth.service';
 
 describe('SyslogComponent', () => {
   let component: SyslogComponent;

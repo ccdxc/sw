@@ -39,9 +39,9 @@
 
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon matTooltip="Edit policy" class="global-table-action-icon"
+    <mat-icon *roleGuard="'monitoringeventpolicy_update'" matTooltip="Edit policy" class="global-table-action-icon"
               (click)="expandRowRequest($event, rowData)">edit</mat-icon>
-    <mat-icon matTooltip="Delete policy" class="global-table-action-icon"
+    <mat-icon *roleGuard="'monitoringeventpolicy_delete'"  matTooltip="Delete policy" class="global-table-action-icon"
               (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
 </ng-template>

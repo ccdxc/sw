@@ -14,6 +14,8 @@ import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResul
 import { Subscription } from 'rxjs';
 import { StatArrowDirection, CardStates } from '@app/components/shared/basecard/basecard.component';
 import {Animations} from '@app/animations';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 
 @Component({
   selector: 'app-cluster',
@@ -77,10 +79,11 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
 
   constructor(
     private _clusterService: ClusterService,
+    protected uiconfigService: UIConfigsService,
     protected _controllerService: ControllerService,
     protected metricsqueryService: MetricsqueryService,
   ) {
-    super(_controllerService);
+    super(_controllerService, uiconfigService);
   }
 
   ngOnInit() {
@@ -88,12 +91,18 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     this.getNodes();
     this.getMetrics();
 
-    this._controllerService.setToolbarData({
-      buttons: [{
+    let buttons = [];
+
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.clustercluster_create)) {
+      buttons = [{
         cssClass: 'global-button-primary cluster-toolbar-button',
         text: 'UPDATE TLS',
         callback: () => { this.certMode =  !this.certMode; },
-      }],
+      }]
+    }
+
+    this._controllerService.setToolbarData({
+      buttons: buttons,
       breadcrumb: [{ label: 'Cluster', url: Utility.getBaseUIUrl() + 'cluster/cluster' }]
     });
   }

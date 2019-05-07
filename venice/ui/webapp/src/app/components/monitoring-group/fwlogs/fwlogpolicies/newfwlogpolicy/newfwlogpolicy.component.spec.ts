@@ -15,6 +15,8 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { PrimengModule } from '@app/lib/primeng.module';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
 
 
 describe('NewfwlogpolicyComponent', () => {
@@ -36,6 +38,8 @@ describe('NewfwlogpolicyComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,

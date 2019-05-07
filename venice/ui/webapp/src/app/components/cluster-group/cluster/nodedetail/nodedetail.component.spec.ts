@@ -23,7 +23,10 @@ import { AlerttableService } from '@app/services/alerttable.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { EventsService } from '@app/services/events.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService } from '@app/services/auth.service';
+import { TestingUtility } from '@app/common/TestingUtility';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { By } from '@angular/platform-browser';
 
 class MockActivatedRoute extends ActivatedRoute {
   id = 'node1';
@@ -84,10 +87,30 @@ describe('NodedetailComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(NodedetailComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
+  });
+
+  describe('RBAC', () => {
+    it('metrics permission', () => {
+      TestingUtility.addPermissions(
+        [UIRolePermissions.metricsquery_read]
+      );
+      fixture.detectChanges();
+      // metrics should be visible
+      const cards = fixture.debugElement.queryAll(By.css('app-herocard'));
+      expect(cards.length).toBe(3);
+    });
+
+    it('no permission', () => {
+    fixture.detectChanges();
+      // metrics should be visible
+      const cards = fixture.debugElement.queryAll(By.css('app-herocard'));
+      expect(cards.length).toBe(0);
+    });
+
   });
 });

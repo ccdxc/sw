@@ -14,12 +14,14 @@ import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { MatIconRegistry } from '@angular/material';
-import { BehaviorSubject } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
 import { MessageService } from '@app/services/message.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
+import { AuthService } from '@app/services/auth.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   template: ''
@@ -111,6 +113,8 @@ describe('NaplesComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,
@@ -126,28 +130,14 @@ describe('NaplesComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(NaplesComponent);
     component = fixture.componentInstance;
+    const service = TestBed.get(ClusterService);
+    spyOn(service, 'WatchSmartNIC').and.returnValue(
+      TestingUtility.createWatchEvents([naples1, naples2, naples3])
+    )
   });
 
   it('should populate table', () => {
-    const service = TestBed.get(ClusterService);
-    spyOn(service, 'WatchSmartNIC').and.returnValue(
-      new BehaviorSubject({
-        events: [
-          {
-            type: 'Created',
-            object: naples1
-          },
-          {
-            type: 'Created',
-            object: naples2
-          },
-          {
-            type: 'Created',
-            object: naples3
-          }
-        ]
-      })
-    );
+    TestingUtility.setAllPermissions();
     fixture.detectChanges();
     // check table header
     const title = fixture.debugElement.query(By.css('.tableheader-title'));
@@ -172,4 +162,25 @@ describe('NaplesComponent', () => {
     };
     TestingUtility.verifyTable([new ClusterSmartNIC(naples1), new ClusterSmartNIC(naples2), new ClusterSmartNIC(naples3)], component.cols, tableBody);
   });
+
+  describe('RBAC', () => {
+    it('metrics permission', () => {
+      TestingUtility.addPermissions(
+        [UIRolePermissions.metricsquery_read]
+      );
+    fixture.detectChanges();
+      // metrics should be visible
+      const cards = fixture.debugElement.queryAll(By.css('app-herocard'));
+      expect(cards.length).toBe(3);
+    });
+
+    it('no permission', () => {
+    fixture.detectChanges();
+      // metrics should be hidden
+      const cards = fixture.debugElement.queryAll(By.css('app-herocard'));
+      expect(cards.length).toBe(0);
+    });
+
+  });
+
 });

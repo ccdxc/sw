@@ -9,6 +9,8 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
 import { FieldsRequirement, IApiStatus, IMonitoringEventPolicy, MonitoringEventPolicy } from '@sdk/v1/models/generated/monitoring';
 import { Observable } from 'rxjs';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   selector: 'app-eventpolicy',
@@ -50,6 +52,7 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
   disableTableWhenRowExpanded = true;
 
   constructor(protected controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected cdr: ChangeDetectorRef,
     protected monitoringService: MonitoringService) {
     super(controllerService, cdr);
@@ -64,14 +67,17 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
   }
 
   setDefaultToolbar() {
-    this.controllerService.setToolbarData({
-      buttons: [{
+    let buttons = [];
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringeventpolicy_create)) {
+      buttons = [{
         cssClass: 'global-button-primary eventpolicy-button',
         text: 'ADD EVENT POLICY',
         computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
         callback: () => { this.createNewObject(); }
-      },
-      ],
+      }]
+    }
+    this.controllerService.setToolbarData({
+      buttons: buttons,
       breadcrumb: [{ label: 'Alerts & Events', url: Utility.getBaseUIUrl() + 'monitoring/alertsevents' },
       { label: 'Event Policy', url: Utility.getBaseUIUrl() + 'monitoring/alertsevents/eventpolicy' }
       ]

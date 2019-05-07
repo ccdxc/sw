@@ -7,6 +7,8 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringFlowExportPolicy, IMonitoringMatchRule, MonitoringFlowExportPolicy } from '@sdk/v1/models/generated/monitoring';
 import { Observable } from 'rxjs';
 import { TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   selector: 'app-flowexportpolicy',
@@ -36,20 +38,24 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
   disableTableWhenRowExpanded = true;
 
   constructor(protected controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected cdr: ChangeDetectorRef,
     protected monitoringService: MonitoringService) {
     super(controllerService, cdr);
   }
 
   setDefaultToolbar() {
-    this.controllerService.setToolbarData({
-      buttons: [{
+    let buttons = [];
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringflowexportpolicy_create)) {
+      buttons = [{
         cssClass: 'global-button-primary flowexportpolicy-button',
         text: 'ADD FlOW EXPORT',
         computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
         callback: () => { this.createNewObject(); }
-      },
-      ],
+      }]
+    }
+    this.controllerService.setToolbarData({
+      buttons: buttons,
       breadcrumb: [
         { label: 'Flow Export Policies', url: Utility.getBaseUIUrl() + 'monitoring/flowexport' }
       ]

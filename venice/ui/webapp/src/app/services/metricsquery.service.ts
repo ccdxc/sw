@@ -7,6 +7,7 @@ import { PollingInstance, PollUtility } from '@app/services/PollUtility';
 import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQueryList, Telemetry_queryMetricsQueryResult, ITelemetry_queryMetricsQueryList } from '@sdk/v1/models/generated/telemetry_query';
 
 import { ITelemetry_queryMetricsQueryResponse, Telemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
+import { UIConfigsService } from './uiconfigs.service';
 
 export interface MetricsPollingOptions {
   timeUpdater?: (body: ITelemetry_queryMetricsQuerySpec) => void;
@@ -42,8 +43,9 @@ export class MetricsqueryService extends TelemetryqueryServiceGen {
   metrics: Array<any> = [];
 
   constructor(protected _http: HttpClient,
-    protected _controllerService: ControllerService) {
-    super(_http, _controllerService);
+    protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService) {
+    super(_http, _controllerService, uiconfigsService);
     this.pollingUtility = new PollUtility(
       (key, body, useRealData) => {
         this.pollingFetchData(key, body, useRealData);

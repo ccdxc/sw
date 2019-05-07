@@ -12,7 +12,7 @@ import { MatIconRegistry } from '@angular/material';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { SharedModule } from '@app/components/shared/shared.module';
 
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { StagingService } from '@app/services/generated/staging.service';
 
 import { NewuserComponent } from '../newuser/newuser.component';
@@ -20,6 +20,8 @@ import { UsersComponent } from '../users.component';
 import { MessageService } from '@app/services/message.service';
 import { NewroleComponent } from '../newrole/newrole.component';
 import { NewrolebindingComponent } from './newrolebinding.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
 
 describe('NewrolebindingComponent', () => {
   let component: NewrolebindingComponent;
@@ -40,11 +42,13 @@ describe('NewrolebindingComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,
-        AuthService,
+        AuthServiceGen,
         MessageService,
         StagingService
       ]

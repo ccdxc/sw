@@ -17,6 +17,8 @@ import { WidgetsModule } from 'web-app-framework';
 import { MessageService } from '@app/services/message.service';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MonitoringGroupModule } from '@app/components/monitoring-group/monitoring-group.module';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
 
 describe('NewdestinationComponent', () => {
   let component: NewdestinationComponent;
@@ -39,6 +41,8 @@ describe('NewdestinationComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,

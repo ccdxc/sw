@@ -13,7 +13,7 @@ import { PrimengModule } from '@app/lib/primeng.module';
 import { WidgetsModule } from 'web-app-framework';
 import { SharedModule } from '@app/components/shared/shared.module';
 
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 
 import { NewuserComponent } from './newuser.component';
 import { NewroleComponent } from '../newrole/newrole.component';
@@ -21,6 +21,8 @@ import { NewrolebindingComponent } from '../newrolebinding/newrolebinding.compon
 import { UsersComponent } from '../users.component';
 import { MessageService } from '@app/services/message.service';
 import { StagingService } from '@app/services/generated/staging.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
 
 describe('NewuserComponent', () => {
   let component: NewuserComponent;
@@ -42,11 +44,13 @@ describe('NewuserComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,
         MatIconRegistry,
-        AuthService,
+        AuthServiceGen,
         MessageService,
         StagingService
       ]

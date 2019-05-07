@@ -41,10 +41,10 @@
 
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
 
-    <mat-icon matTooltip="Edit policy"
+    <mat-icon *roleGuard="'monitoringflowexportpolicy_update'" matTooltip="Edit policy"
               class="global-table-action-icon flowexportpolicy-table-action-icon-edit"
               (click)="expandRowRequest($event, rowData)">edit</mat-icon>
-    <mat-icon matTooltip="Delete policy"
+    <mat-icon *roleGuard="'monitoringflowexportpolicy_delete'" matTooltip="Delete policy"
               class="global-table-action-icon flowexportpolicy-table-action-icon-delete"
               (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>

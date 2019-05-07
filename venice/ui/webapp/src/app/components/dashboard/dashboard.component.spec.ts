@@ -29,6 +29,8 @@ import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MessageService } from '@app/services/message.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
 
 @Component({
   template: ''
@@ -67,6 +69,8 @@ describe('DashboardComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         MatIconRegistry,
         LogService,

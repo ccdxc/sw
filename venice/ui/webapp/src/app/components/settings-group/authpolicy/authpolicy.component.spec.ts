@@ -11,7 +11,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { ConfirmationService } from 'primeng/primeng';
 import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { MatIconRegistry } from '@angular/material';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -21,6 +21,8 @@ import { AuthAuthenticators_authenticator_order } from '@sdk/v1/models/generated
 import { By } from '@angular/platform-browser';
 import { MessageService } from '@app/services/message.service';
 import { PrimengModule } from '@app/lib/primeng.module';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
 
 class MockAuthService extends AuthService {
   public GetAuthenticationPolicy(): any {
@@ -99,11 +101,13 @@ describe('AuthpolicyComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,
         MessageService,
-        { provide: AuthService, useClass: MockAuthService },
+        { provide: AuthServiceGen, useClass: MockAuthService },
         MatIconRegistry,
       ]
     })
@@ -121,7 +125,7 @@ describe('AuthpolicyComponent', () => {
 
   it('should fetch data and change ranks', async(() => {
     // TODO: Add RADIUS data
-    const authService = fixture.debugElement.injector.get(AuthService);
+    const authService = fixture.debugElement.injector.get(AuthServiceGen);
     const spy = spyOn(authService, 'GetAuthenticationPolicy').and.callThrough();
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();

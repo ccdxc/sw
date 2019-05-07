@@ -1,6 +1,7 @@
 <app-pagebody [icon]="bodyicon" [header]="selectedId">
   <div fxFlex="none" fxLayout="row">
     <div fxFlex fxLayout="row wrap" class="nodedetail-card-container">
+      <ng-container *roleGuard="'metricsquery_read'">
       <ng-container *ngFor="let cardData of heroCards">
         <app-herocard fxFlex="nogrow"
                       [title]="cardData.title"
@@ -16,9 +17,10 @@
                       [cardState]="cardData.cardState">
         </app-herocard>
       </ng-container>
+      </ng-container>
     </div>
   </div>
-  <div fxFlex class="nodedetail-alertsevents-container">
+  <div *roleGuard="{opt: ['monitoringAlert_read', 'eventsevent_read']}" fxFlex class="nodedetail-alertsevents-container">
     <app-shared-alertsevents [selector]="alertseventsSelector"></app-shared-alertsevents>
   </div>
   <!-- Deletion screen overlay displays when the policy we are viewing is deleted -->

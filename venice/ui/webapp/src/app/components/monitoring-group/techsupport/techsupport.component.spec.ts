@@ -27,7 +27,10 @@ import { WidgetsModule } from 'web-app-framework';
 
 import { NewtechsupportComponent } from './newtechsupport/newtechsupport.component';
 import { TechsupportComponent } from './techsupport.component';
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService } from '@app/services/auth.service';
+import { TestTablevieweditRBAC } from '@app/components/shared/tableviewedit/tableviewedit.component.spec';
+import { MonitoringTechSupportRequest } from '@sdk/v1/models/generated/monitoring';
+import { TestingUtility } from '@app/common/TestingUtility';
 
 describe('TechsupportComponent', () => {
   let component: TechsupportComponent;
@@ -49,6 +52,8 @@ describe('TechsupportComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,
@@ -67,10 +72,26 @@ describe('TechsupportComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(TechsupportComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
   });
+
+  describe('RBAC', () => {
+    let testHelper = new TestTablevieweditRBAC('monitoringtechsupportrequest');
+    testHelper.skipEdit = true;
+
+    beforeEach(() => {
+      const service = TestBed.get(MonitoringService)
+      spyOn(service, 'WatchTechSupportRequest').and.returnValue(
+        TestingUtility.createWatchEvents([new MonitoringTechSupportRequest()])
+      );
+      testHelper.fixture = fixture;
+    });
+
+    testHelper.runTests();
+  });
+
 });

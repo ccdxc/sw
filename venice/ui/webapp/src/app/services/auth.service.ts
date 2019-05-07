@@ -4,14 +4,26 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AbstractService } from './abstract.service';
 import { Utility } from '@app/common/Utility';
+import { ControllerService } from './controller.service';
+import { IAuthSubjectAccessReviewRequest, IApiStatus, IAuthUser } from '@sdk/v1/models/generated/auth';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
+import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.interface';
+import { GenServiceUtility } from './generated/GenUtility';
 
 
 @Injectable()
 export class AuthService extends AbstractService {
   redirectUrl: string;
+  protected serviceUtility: GenServiceUtility;
 
-  constructor(private _http: HttpClient) {
+  constructor(private _http: HttpClient,
+              protected _controllerService: ControllerService) {
     super();
+    this.serviceUtility = new GenServiceUtility(_http,
+      (payload) => { this.publishAJAXStart(payload); },
+      (payload) => { this.publishAJAXEnd(payload); }
+    );
   }
 
   protected callServer(url: string, payload: any) {
@@ -54,6 +66,57 @@ export class AuthService extends AbstractService {
   public isToMockData(): boolean {
     const boolUseRealData = !environment.isRESTAPIReady;
     return boolUseRealData;
+  }
+
+  /** 
+   * Methods that are always accessible to a user are copied from authv1.service.ts.
+   * This is so UIConfigService can call them without causing a circular dependency.
+   */
+
+  /** Get User object */
+  public GetUser(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetUser',
+      objType: 'AuthUser',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
+  }
+
+  public IsAuthorized(O_Name, body: IAuthSubjectAccessReviewRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/IsAuthorized';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'IsAuthorized',
+      objType: 'AuthUser',
+      isStaging: false,
+    }
+    if (stagingID != null && stagingID.length != 0) {
+      url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
+    }
+    return this.invokeAJAX('POST', url, body, opts, false);
+  }
+
+  protected publishAJAXStart(eventPayload: any) {
+    this._controllerService.publish(Eventtypes.AJAX_START, eventPayload);
+  }
+
+  protected publishAJAXEnd(eventPayload: any) {
+    this._controllerService.publish(Eventtypes.AJAX_END, eventPayload);
+  }
+
+  protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<VeniceResponse> {
+    const isOnline = !this.isToMockData() || forceReal;
+    return this.serviceUtility.invokeAJAX(method, url, payload, opts.eventID, isOnline);
   }
 
   /**

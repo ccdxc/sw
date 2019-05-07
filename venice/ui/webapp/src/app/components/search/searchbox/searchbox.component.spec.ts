@@ -12,7 +12,6 @@ import { LogService } from '@app/services/logging/log.service';
 import { LogPublishersService } from '@app/services/logging/log-publishers.service';
 
 import { SearchService } from '@app/services/generated/search.service';
-import { SearchSearchResponse, SearchSearchRequest, ApiStatus } from '@sdk/v1/models/generated/search';
 
 import { SharedModule } from '@app/components/shared/shared.module';
 import { PrimengModule } from '@app/lib/primeng.module';
@@ -25,6 +24,8 @@ import { SearchsuggestionsComponent } from '@app/components/search/searchsuggest
 import { SearchresultComponent } from '@app/components/search/searchresult/searchresult.component';
 import { GuidesearchComponent } from '@app/components/search/guidedsearch/guidedsearch.component';
 import { MessageService } from '@app/services/message.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
 
 @Component({
   template: ''
@@ -60,6 +61,8 @@ describe('SearchboxComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,

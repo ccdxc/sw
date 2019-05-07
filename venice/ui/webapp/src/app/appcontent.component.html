@@ -23,7 +23,7 @@
           </div>
 
           <div class="app-shell-header-search-div">
-            <app-searchbox></app-searchbox>
+            <app-searchbox *roleGuard="'search_read'" ></app-searchbox>
           </div>
 
           <span class="app-shell-spacer"></span>
@@ -33,7 +33,7 @@
             </a>
             <!-- Commenting out for August release -->
             <!-- <button mat-button>Save</button> -->
-            <button *roleGuard="'alert_read'" mat-icon-button
+            <button *roleGuard="'monitoringAlert_read'" mat-icon-button
                     (click)="onToolbarIconClick($event, 'notifications')">
               <mat-icon>notifications </mat-icon>
               <span class="app-notification-number" *ngIf="alertNumbers>0">{{alertNumbers}}</span>

@@ -15,7 +15,7 @@ import { SecurityService } from '@app/services/generated/security.service';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MessageService } from '@app/services/message.service';
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService } from '@app/services/auth.service';
 
 describe('SecurityappsComponent', () => {
   let component: SecurityappsComponent;

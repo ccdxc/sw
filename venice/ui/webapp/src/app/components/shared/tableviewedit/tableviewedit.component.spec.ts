@@ -17,7 +17,98 @@ import { BehaviorSubject } from 'rxjs';
 import { TableCol, TablevieweditHTMLComponent, TablevieweditAbstract } from './tableviewedit.component';
 import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { SorticonComponent } from '../sorticon/sorticon.component';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
+export class TestTablevieweditRBAC {
+  fixture: ComponentFixture<any>;
+  skipEdit: boolean = false;
+
+  constructor(protected permissonBase: string) {
+  }
+
+  /**
+   * Runs basic rbac test to check for create, edit, and delete buttons.
+   * Meant for use with components that use table view edit.
+   */
+  runTests() {
+      let toolbarSpy: jasmine.Spy;
+  
+      beforeEach(() => {
+        TestingUtility.removeAllPermissions();
+        const controllerService = TestBed.get(ControllerService)
+        toolbarSpy = spyOn(controllerService, 'setToolbarData');
+      })
+  
+      it('Admin user', () => {
+        TestingUtility.setAllPermissions();
+        this.fixture.detectChanges();
+  
+        // create button
+        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
+        const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
+        if (!this.skipEdit) {
+          // edit button
+          expect(actionButtons.length).toBe(2);
+          expect(actionButtons[0].nativeElement.textContent).toBe('edit');
+          // delete button
+          expect(actionButtons[1].nativeElement.textContent).toBe('delete');
+        } else {
+          // delete button
+          expect(actionButtons.length).toBe(1);
+          expect(actionButtons[0].nativeElement.textContent).toBe('delete');
+        }
+      });
+  
+      it('create access only', () => {
+        TestingUtility.addPermissions([UIRolePermissions[this.permissonBase + '_create']]);
+        this.fixture.detectChanges();
+  
+        // create button
+        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
+
+        // edit button not present
+        const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
+        expect(actionButtons.length).toBe(0);
+      });
+  
+      it('edit access only', () => {
+        if (this.skipEdit) {
+          return;
+        }
+        TestingUtility.addPermissions([UIRolePermissions[this.permissonBase + '_update']]);
+        this.fixture.detectChanges();
+  
+        // create button
+        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
+        // edit button not present
+        const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
+        expect(actionButtons.length).toBe(1);
+        expect(actionButtons[0].nativeElement.textContent).toBe('edit');
+      });
+  
+      it('delete access only', () => {
+        TestingUtility.addPermissions([UIRolePermissions[this.permissonBase + '_delete']]);
+        this.fixture.detectChanges();
+  
+        // create button
+        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
+        // edit button not present
+        const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
+        expect(actionButtons.length).toBe(1);
+        expect(actionButtons[0].nativeElement.textContent).toBe('delete');
+      });
+
+      it('no access', () => {
+        this.fixture.detectChanges();
+  
+        // create button
+        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
+        // edit and delete button not present
+        const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
+        expect(actionButtons.length).toBe(0);
+      });
+    }
+}
 
 interface IDummyObj {
   name: string;

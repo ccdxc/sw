@@ -3,10 +3,10 @@
         when tabs change so it knows to resize itself -->
   <mat-tab-group fxFlex [disableRipple]="true"
                  (selectedIndexChange)="selectedIndexChangeEvent($event)">
-    <mat-tab *roleGuard="'alert_read'" label="ALERTS">
+    <mat-tab *roleGuard="'monitoringAlert_read'" label="ALERTS">
       <ng-container *ngTemplateOutlet="AlertsTableTemplate"></ng-container>
     </mat-tab>
-    <mat-tab *roleGuard="'event_read'" label="EVENTS">
+    <mat-tab *roleGuard="'eventsevent_read'" label="EVENTS">
       <ng-container *ngTemplateOutlet="EventsTableTemplate"></ng-container>
     </mat-tab>
   </mat-tab-group>

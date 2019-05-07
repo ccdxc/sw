@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { IEventsEvent, IEventsEventList, ApiListWatchOptions, IApiListWatchOptions, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 import { PollUtility, PollingInstance } from '@app/services/PollUtility';
 import { Utility } from '@app/common/Utility';
+import { UIConfigsService } from './uiconfigs.service';
 
 /**
  * Events polling
@@ -25,8 +26,9 @@ export class EventsService extends EventGenService {
   POLLING_INTERVAL = 10000;
   events: Array<IEventsEvent> = [];
   constructor(protected _http: HttpClient,
-    protected _controllerService: ControllerService) {
-    super(_http, _controllerService);
+    protected _controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService) {
+    super(_http, _controllerService, uiconfigsService);
     this.pollingUtility = new PollUtility(
       (key, body, useRealData) => {
         this.pollingFetchData(key, body, useRealData);

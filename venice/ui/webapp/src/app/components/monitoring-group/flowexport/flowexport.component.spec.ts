@@ -24,6 +24,8 @@ import { NewflowexportpolicyComponent } from './flowexportpolicy/newflowexportpo
 import { FlowexportpolicyComponent } from './flowexportpolicy/flowexportpolicy.component';
 import { MessageService } from '@app/services/message.service';
 import { MonitoringGroupModule } from '../monitoring-group.module';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
 
 
 describe('FlowexportComponent', () => {
@@ -51,6 +53,8 @@ describe('FlowexportComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,

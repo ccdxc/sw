@@ -2,8 +2,9 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
+import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 
-import { ISearchPolicySearchResponse,ISearchPolicySearchRequest,ISearchSearchResponse,ISearchSearchRequest } from '../../models/generated/search';
+import { ISearchPolicySearchResponse,SearchPolicySearchResponse,SearchPolicySearchRequest,ISearchPolicySearchRequest,ISearchSearchResponse,SearchSearchResponse,SearchSearchRequest,ISearchSearchRequest } from '../../models/generated/search';
 
 @Injectable()
 export class Searchv1Service extends AbstractService {
@@ -22,13 +23,26 @@ export class Searchv1Service extends AbstractService {
   /** Security Policy Query */
   public GetPolicyQuery_1(queryParam: any = null):Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/policy-query';
-    return this.invokeAJAXGetCall(url, queryParam, 'GetPolicyQuery_1') as Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}>;
+    const opts = {
+      eventID: 'GetPolicyQuery_1',
+      objType: 'SearchPolicySearchResponse',
+      isStaging: false,
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}>;
   }
   
   /** Security Policy Query */
-  public PostPolicyQuery(body: ISearchPolicySearchRequest):Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}> {
+  public PostPolicyQuery(body: ISearchPolicySearchRequest, trimObject: boolean = true):Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/policy-query';
-    return this.invokeAJAXPostCall(url, body, 'PostPolicyQuery') as Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}>;
+    const opts = {
+      eventID: 'PostPolicyQuery',
+      objType: 'SearchPolicySearchResponse',
+      isStaging: false,
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new SearchPolicySearchRequest(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISearchPolicySearchResponse | Error, statusCode: number}>;
   }
   
   /** In the example below a query like
@@ -37,16 +51,29 @@ export class Searchv1Service extends AbstractService {
  SearchRequest{ QueryString: "XXXXX", MaxResults:100} */
   public GetQuery_1(queryParam: any = null):Observable<{body: ISearchSearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/query';
-    return this.invokeAJAXGetCall(url, queryParam, 'GetQuery_1') as Observable<{body: ISearchSearchResponse | Error, statusCode: number}>;
+    const opts = {
+      eventID: 'GetQuery_1',
+      objType: 'SearchSearchResponse',
+      isStaging: false,
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ISearchSearchResponse | Error, statusCode: number}>;
   }
   
   /** In the example below a query like
    http://<...>/venice/v1/search/query?QueryString=XXXXX&MaxResults=100
  generates a RPC call Query with the parameter as
  SearchRequest{ QueryString: "XXXXX", MaxResults:100} */
-  public PostQuery(body: ISearchSearchRequest):Observable<{body: ISearchSearchResponse | Error, statusCode: number}> {
+  public PostQuery(body: ISearchSearchRequest, trimObject: boolean = true):Observable<{body: ISearchSearchResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/search/v1/query';
-    return this.invokeAJAXPostCall(url, body, 'PostQuery') as Observable<{body: ISearchSearchResponse | Error, statusCode: number}>;
+    const opts = {
+      eventID: 'PostQuery',
+      objType: 'SearchSearchResponse',
+      isStaging: false,
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new SearchSearchRequest(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ISearchSearchResponse | Error, statusCode: number}>;
   }
   
 }

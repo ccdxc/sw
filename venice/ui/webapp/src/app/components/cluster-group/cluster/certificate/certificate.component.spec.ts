@@ -17,8 +17,9 @@ import {MatIconRegistry} from '@angular/material';
 import {ClusterService} from '@app/services/generated/cluster.service';
 import {MessageService} from '@app/services/message.service';
 import {DebugElement} from '@angular/core';
-import {log} from 'util';
 import {TestingUtility} from '@common/TestingUtility';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
 
 describe('CertificateComponent', () => {
   let component: CertificateComponent;
@@ -47,6 +48,8 @@ describe('CertificateComponent', () => {
         SharedModule],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,

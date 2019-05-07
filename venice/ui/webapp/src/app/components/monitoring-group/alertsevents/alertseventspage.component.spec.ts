@@ -25,7 +25,9 @@ import { EventsService } from '@app/services/events.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from '@app/services/message.service';
-import { AuthService } from '@app/services/generated/auth.service';
+import { TestingUtility } from '@app/common/TestingUtility';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { AuthService } from '@app/services/auth.service';
 
 
 @Component({
@@ -73,10 +75,76 @@ describe('AlertseventspageComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(AlertseventspageComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
   });
+
+  describe('RBAC', () => {
+      let toolbarSpy: jasmine.Spy;
+
+      beforeEach(() => {
+        TestingUtility.removeAllPermissions();
+        const controllerService = TestBed.get(ControllerService)
+        toolbarSpy = spyOn(controllerService, 'setToolbarData');
+      })
+
+    it('Admin user', () => {
+      TestingUtility.setAllPermissions();
+      fixture.detectChanges();
+
+      // create button
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons[0].text).toBe('ALERT POLICIES');
+
+      // Switch tab
+      component.setTabToolbar('events');
+      fixture.detectChanges();
+
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons[0].text).toBe('EVENT POLICIES');
+    });
+
+    it('alert policy only', () => {
+      TestingUtility.addPermissions([UIRolePermissions.monitoringalertpolicy_read]);
+      fixture.detectChanges();
+
+      // create button
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
+
+      // Switch tab
+      component.setTabToolbar('events');
+      fixture.detectChanges();
+
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
+    });
+
+    it('event policy only', () => {
+      TestingUtility.addPermissions([UIRolePermissions.monitoringeventpolicy_read]);
+      fixture.detectChanges();
+
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
+
+      // Switch tab
+      component.setTabToolbar('events');
+      fixture.detectChanges();
+
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons[0].text).toBe('EVENT POLICIES');
+    });
+
+    it('no access', () => {
+      fixture.detectChanges();
+
+      // create button
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
+      // Switch tab
+      component.setTabToolbar('events');
+      fixture.detectChanges();
+
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
+    });
+  })
 });

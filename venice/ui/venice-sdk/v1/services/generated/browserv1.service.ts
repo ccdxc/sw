@@ -2,8 +2,9 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
+import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 
-import { IBrowserBrowseResponse,IBrowserBrowseRequest } from '../../models/generated/browser';
+import { IBrowserBrowseResponse,BrowserBrowseResponse,BrowserBrowseRequest,IBrowserBrowseRequest } from '../../models/generated/browser';
 
 @Injectable()
 export class Browserv1Service extends AbstractService {
@@ -21,34 +22,61 @@ export class Browserv1Service extends AbstractService {
 
   public GetReferrers(queryParam: any = null, stagingID: string = ""):Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/browser/v1/dependedby/**';
+    const opts = {
+      eventID: 'GetReferrers',
+      objType: 'BrowserBrowseResponse',
+      isStaging: false,
+    }
     if (stagingID != null && stagingID.length != 0) {
       url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
     }
-    return this.invokeAJAXGetCall(url, queryParam, 'GetReferrers') as Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}>;
   }
   
   public GetReferences(queryParam: any = null, stagingID: string = ""):Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/browser/v1/dependencies/**';
+    const opts = {
+      eventID: 'GetReferences',
+      objType: 'BrowserBrowseResponse',
+      isStaging: false,
+    }
     if (stagingID != null && stagingID.length != 0) {
       url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
     }
-    return this.invokeAJAXGetCall(url, queryParam, 'GetReferences') as Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}>;
   }
   
   public GetQuery_1(queryParam: any = null, stagingID: string = ""):Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/browser/v1/query';
+    const opts = {
+      eventID: 'GetQuery_1',
+      objType: 'BrowserBrowseResponse',
+      isStaging: false,
+    }
     if (stagingID != null && stagingID.length != 0) {
       url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
     }
-    return this.invokeAJAXGetCall(url, queryParam, 'GetQuery_1') as Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}>;
   }
   
-  public PostQuery(body: IBrowserBrowseRequest, stagingID: string = ""):Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}> {
+  public PostQuery(body: IBrowserBrowseRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/browser/v1/query';
+    const opts = {
+      eventID: 'PostQuery',
+      objType: 'BrowserBrowseResponse',
+      isStaging: false,
+    }
     if (stagingID != null && stagingID.length != 0) {
       url = url.replace('configs', 'staging/' + stagingID);
+      opts.isStaging = true;
     }
-    return this.invokeAJAXPostCall(url, body, 'PostQuery') as Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}>;
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new BrowserBrowseRequest(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IBrowserBrowseResponse | Error, statusCode: number}>;
   }
   
 }

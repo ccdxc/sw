@@ -33,8 +33,13 @@
     </ng-container>
     <ng-container *ngSwitchCase="'spec.smart-nics'">
       <div *ngFor="let v of rowData['processedSmartNics']">
-        <a *ngIf="v.mac != ''" routerLink="/cluster/naples/{{v.mac}}">{{v.text}}</a>
-        <a *ngIf="v.mac == ''">{{v.text}}</a>
+        <ng-container *roleGuard="'clusterSmartnic_read'">
+          <a *ngIf="v.mac != ''" routerLink="/cluster/naples/{{v.mac}}">{{v.text}}</a>
+          <a *ngIf="v.mac == ''">{{v.text}}</a>
+        </ng-container>
+        <ng-container *roleGuard="{req: 'clusterSmartnic_read', checkUnauthorized: true }">
+          <a>{{v.text}}</a>
+        </ng-container>
         <mat-icon class="not_admitted_icon" [inline]="true" *ngIf="!v.admitted"
                   [matTooltip]="'Not Admitted'">announcement</mat-icon>
       </div>

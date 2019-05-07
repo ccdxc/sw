@@ -33,10 +33,10 @@
 
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon matTooltip="Edit policy"
+    <mat-icon *roleGuard="'monitoringfwlogpolicy_update'" matTooltip="Edit policy"
               class="global-table-action-icon fwlogpolicies-table-action-icon-edit"
               (click)="expandRowRequest($event, rowData)">edit</mat-icon>
-    <mat-icon matTooltip="Delete policy"
+    <mat-icon *roleGuard="'monitoringfwlogpolicy_delete'" matTooltip="Delete policy"
               class="global-table-action-icon fwlogpolicies-table-action-icon-delete"
               (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>

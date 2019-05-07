@@ -1,12 +1,62 @@
 import { DebugElement } from '@angular/core';
-import { ComponentFixture } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { By } from '@angular/platform-browser';
 import { Utility } from '@app/common/Utility';
 import { } from 'jasmine';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { BehaviorSubject } from 'rxjs';
+import { ControllerService } from '@app/services/controller.service';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
 
 export class TestingUtility {
   fixture: ComponentFixture<any>;
+
+  public static createWatchEvents(obj: any[]) {
+    const events = []
+    obj.forEach( (o) => {
+      events.push({
+        type: 'Created',
+        object: o
+      })
+    })
+    return new BehaviorSubject({
+      events: events
+    })
+  }
+
+  public static updateRoleGuards() {
+    const service = TestBed.get(ControllerService);
+    service.publish(Eventtypes.NEW_USER_PERMISSIONS, null);
+  }
+
+  public static setAllPermissions() {
+    const serviceAny = TestBed.get(UIConfigsService) as any;
+    serviceAny.uiPermissions = {};
+    Object.keys(UIRolePermissions).forEach((p) => {
+      serviceAny.uiPermissions[p] = true;
+    });
+  }
+
+  public static removeAllPermissions() {
+    const serviceAny = TestBed.get(UIConfigsService) as any;
+    serviceAny.uiPermissions = {};
+  }
+
+  public static addPermissions(permissions: UIRolePermissions[]) {
+    const serviceAny = TestBed.get(UIConfigsService) as any;
+    permissions.forEach((p) => {
+      serviceAny.uiPermissions[p] = true;
+    });
+  }
+
+  public static removePermissions(permissions: UIRolePermissions[]) {
+    const serviceAny = TestBed.get(UIConfigsService) as any;
+    permissions.forEach((p) => {
+      delete serviceAny.uiPermissions[p]
+    });
+  }
 
   /**
    * Returning the equality instead of using a jasmine expect so

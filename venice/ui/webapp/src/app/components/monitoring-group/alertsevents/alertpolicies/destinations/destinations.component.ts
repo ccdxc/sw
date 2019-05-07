@@ -7,6 +7,8 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringAlertDestination, MonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
 import { Observable } from 'rxjs';
 import { TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 
 @Component({
@@ -40,6 +42,7 @@ export class DestinationpolicyComponent extends TablevieweditAbstract<IMonitorin
 
   constructor(protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef,
+    protected uiconfigsService: UIConfigsService,
     protected monitoringService: MonitoringService) {
     super(controllerService, cdr);
   }
@@ -50,14 +53,17 @@ export class DestinationpolicyComponent extends TablevieweditAbstract<IMonitorin
 
   setDefaultToolbar() {
     const currToolbar = this.controllerService.getToolbarData();
-    currToolbar.buttons = [
-      {
-        cssClass: 'global-button-primary destinations-button',
-        text: 'ADD DESTINATION',
-        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
-        callback: () => { this.createNewObject(); }
-      },
-    ];
+    currToolbar.buttons = [];
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringalertdestination_create)) {
+      currToolbar.buttons = [
+        {
+          cssClass: 'global-button-primary destinations-button',
+          text: 'ADD DESTINATION',
+          computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+          callback: () => { this.createNewObject(); }
+        },
+      ];
+    }
     this.controllerService.setToolbarData(currToolbar);
   }
 

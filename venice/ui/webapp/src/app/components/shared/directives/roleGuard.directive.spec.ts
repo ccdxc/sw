@@ -17,7 +17,7 @@
  import { MessageService } from '@app/services/message.service';
 import { RoleGuardDirective } from './roleGuard.directive';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService } from '@app/services/auth.service';
 
 
 @Component({

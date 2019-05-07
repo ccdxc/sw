@@ -33,61 +33,227 @@ import { SecurityApp } from './security';
 import { SecurityFirewallProfile } from './security';
 import { SecurityCertificate } from './security';
 import { SecurityTrafficEncryptionPolicy } from './security';
+import { StagingBuffer } from './staging';
 import { WorkloadEndpoint } from './workload';
 import { WorkloadWorkload } from './workload';
 
-export const CategoryMapping  = {
+interface CatMap {
+  [key: string]: {
+    [key: string]: {
+      instance: any,
+      scopes: string[],
+      actions: string[],
+    }
+  }
+}
+
+export const CategoryMapping: CatMap  = {
   "Auth" : {
-    "User" : new AuthUser(),
-    "AuthenticationPolicy" : new AuthAuthenticationPolicy(),
-    "Role" : new AuthRole(),
-    "RoleBinding" : new AuthRoleBinding(),
+    "User" : {
+      instance: new AuthUser(),
+      scopes: [ 'tenant', ] ,
+      actions:  [ 'PasswordChange',  'PasswordReset',  'IsAuthorized', ] ,
+    },
+    "AuthenticationPolicy" : {
+      instance: new AuthAuthenticationPolicy(),
+      scopes: [ 'cluster', ] ,
+      actions:  [ 'LdapConnectionCheck',  'LdapBindCheck', ] ,
+    },
+    "Role" : {
+      instance: new AuthRole(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "RoleBinding" : {
+      instance: new AuthRoleBinding(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
   },
   "Cluster" : {
-    "Cluster" : new ClusterCluster(),
-    "Node" : new ClusterNode(),
-    "Host" : new ClusterHost(),
-    "SmartNIC" : new ClusterSmartNIC(),
-    "Tenant" : new ClusterTenant(),
-    "Version" : new ClusterVersion(),
+    "Cluster" : {
+      instance: new ClusterCluster(),
+      scopes: [ 'cluster', ] ,
+      actions:  [ 'AuthBootstrapComplete',  'UpdateTLSConfig', ] ,
+    },
+    "Node" : {
+      instance: new ClusterNode(),
+      scopes: [ 'cluster', ] ,
+      actions:  [] ,
+    },
+    "Host" : {
+      instance: new ClusterHost(),
+      scopes: [ 'cluster', ] ,
+      actions:  [] ,
+    },
+    "SmartNIC" : {
+      instance: new ClusterSmartNIC(),
+      scopes: [ 'cluster', ] ,
+      actions:  [] ,
+    },
+    "Tenant" : {
+      instance: new ClusterTenant(),
+      scopes: [ 'cluster', ] ,
+      actions:  [] ,
+    },
+    "Version" : {
+      instance: new ClusterVersion(),
+      scopes: [ 'cluster', ] ,
+      actions:  [] ,
+    },
   },
   "Monitoring" : {
-    "EventPolicy" : new MonitoringEventPolicy(),
-    "StatsPolicy" : new MonitoringStatsPolicy(),
-    "FwlogPolicy" : new MonitoringFwlogPolicy(),
-    "FlowExportPolicy" : new MonitoringFlowExportPolicy(),
-    "Alert" : new MonitoringAlert(),
-    "AlertPolicy" : new MonitoringAlertPolicy(),
-    "AlertDestination" : new MonitoringAlertDestination(),
-    "MirrorSession" : new MonitoringMirrorSession(),
-    "TechSupportRequest" : new MonitoringTechSupportRequest(),
-    "Event" : new EventsEvent(),
-    "AuditEvent" : new AuditEvent(),
+    "EventPolicy" : {
+      instance: new MonitoringEventPolicy(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "StatsPolicy" : {
+      instance: new MonitoringStatsPolicy(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "FwlogPolicy" : {
+      instance: new MonitoringFwlogPolicy(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "FlowExportPolicy" : {
+      instance: new MonitoringFlowExportPolicy(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "Alert" : {
+      instance: new MonitoringAlert(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "AlertPolicy" : {
+      instance: new MonitoringAlertPolicy(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "AlertDestination" : {
+      instance: new MonitoringAlertDestination(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "MirrorSession" : {
+      instance: new MonitoringMirrorSession(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "TechSupportRequest" : {
+      instance: new MonitoringTechSupportRequest(),
+      scopes: [ 'cluster', ] ,
+      actions:  [] ,
+    },
+    "Event" : {
+      instance: new EventsEvent(),
+      scopes: [] ,
+      actions:  [] ,
+    },
+    "AuditEvent" : {
+      instance: new AuditEvent(),
+      scopes: [] ,
+      actions:  [] ,
+    },
   },
   "Network" : {
-    "Network" : new NetworkNetwork(),
-    "Service" : new NetworkService(),
-    "LbPolicy" : new NetworkLbPolicy(),
-    "VirtualRouter" : new NetworkVirtualRouter(),
+    "Network" : {
+      instance: new NetworkNetwork(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "Service" : {
+      instance: new NetworkService(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "LbPolicy" : {
+      instance: new NetworkLbPolicy(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "VirtualRouter" : {
+      instance: new NetworkVirtualRouter(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
   },
   "Objstore" : {
-    "Bucket" : new ObjstoreBucket(),
-    "Object" : new ObjstoreObject(),
+    "Bucket" : {
+      instance: new ObjstoreBucket(),
+      scopes: [ 'cluster', ] ,
+      actions:  [] ,
+    },
+    "Object" : {
+      instance: new ObjstoreObject(),
+      scopes: [ 'tenant',  'namespace', ] ,
+      actions:  [] ,
+    },
   },
   "Rollout" : {
-    "Rollout" : new RolloutRollout(),
-    "RolloutAction" : new RolloutRolloutAction(),
+    "Rollout" : {
+      instance: new RolloutRollout(),
+      scopes: [ 'cluster', ] ,
+      actions:  [ 'DoRollout', ] ,
+    },
+    "RolloutAction" : {
+      instance: new RolloutRolloutAction(),
+      scopes: [ 'cluster', ] ,
+      actions:  [] ,
+    },
   },
   "Security" : {
-    "SecurityGroup" : new SecuritySecurityGroup(),
-    "SGPolicy" : new SecuritySGPolicy(),
-    "App" : new SecurityApp(),
-    "FirewallProfile" : new SecurityFirewallProfile(),
-    "Certificate" : new SecurityCertificate(),
-    "TrafficEncryptionPolicy" : new SecurityTrafficEncryptionPolicy(),
+    "SecurityGroup" : {
+      instance: new SecuritySecurityGroup(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "SGPolicy" : {
+      instance: new SecuritySGPolicy(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "App" : {
+      instance: new SecurityApp(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "FirewallProfile" : {
+      instance: new SecurityFirewallProfile(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "Certificate" : {
+      instance: new SecurityCertificate(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "TrafficEncryptionPolicy" : {
+      instance: new SecurityTrafficEncryptionPolicy(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+  },
+  "Staging" : {
+    "Buffer" : {
+      instance: new StagingBuffer(),
+      scopes: [ 'tenant', ] ,
+      actions:  [ 'commit',  'clear', ] ,
+    },
   },
   "Workload" : {
-    "Endpoint" : new WorkloadEndpoint(),
-    "Workload" : new WorkloadWorkload(),
+    "Endpoint" : {
+      instance: new WorkloadEndpoint(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
+    "Workload" : {
+      instance: new WorkloadWorkload(),
+      scopes: [ 'tenant', ] ,
+      actions:  [] ,
+    },
   },
 }

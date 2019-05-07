@@ -10,6 +10,8 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MonitoringFwlogPolicy, IMonitoringFwlogPolicy, IApiStatus } from '@sdk/v1/models/generated/monitoring';
 import { Table } from 'primeng/table';
 import { Observable } from 'rxjs';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   selector: 'app-fwlogpolicies',
@@ -52,6 +54,7 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
   ];
 
   constructor(protected controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected cdr: ChangeDetectorRef,
     protected monitoringService: MonitoringService,
   ) {
@@ -67,14 +70,17 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
   }
 
   setDefaultToolbar() {
-    this.controllerService.setToolbarData({
-      buttons: [{
+    let buttons = [];
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringfwlogpolicy_create)) {
+      buttons = [{
         cssClass: 'global-button-primary fwlogpolicies-button fwlogpolicies-button-ADD',
         text: 'ADD FIREWALL LOG POLICY',
         computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
         callback: () => { this.createNewObject(); }
-      },
-      ],
+      }]
+    }
+    this.controllerService.setToolbarData({
+      buttons: buttons,
       breadcrumb: [{ label: 'Firewall Logs', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs' },
       { label: 'Firewall Log Policies', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs/fwlogpolicies' }
       ]

@@ -28,6 +28,8 @@ import { NeweventalertpolicyComponent } from '@app/components/monitoring-group/a
 import { NewdestinationComponent } from '@app/components/monitoring-group/alertsevents/alertpolicies/destinations/newdestination/newdestination.component';
 import { MessageService } from '@app/services/message.service';
 import { MonitoringGroupModule } from '../../monitoring-group.module';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
 
 
 describe('AlertpoliciesComponent', () => {
@@ -58,6 +60,8 @@ describe('AlertpoliciesComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,

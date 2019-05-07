@@ -19,6 +19,7 @@ export const sideNavMenu: SideNavItem[] = [
       cssClass: 'material-icons',
       matIconName: 'dashboard',
     },
+    roleGuard: UIRolePermissions.metricsquery_read,
     link: ['/dashboard']
   },
   {
@@ -28,7 +29,7 @@ export const sideNavMenu: SideNavItem[] = [
     },
     roleGuard: {
       opt: [
-        UIRolePermissions.cluster_read, UIRolePermissions.smartnic_read
+        UIRolePermissions.clustercluster_read, UIRolePermissions.clustersmartnic_read
       ]
     },
     children: [
@@ -37,7 +38,7 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'app-l-side-nav-cluster-detail'
         },
-        roleGuard: UIRolePermissions.cluster_read,
+        roleGuard: UIRolePermissions.clustercluster_read,
         link: ['/cluster', 'cluster']
       },
       {
@@ -45,7 +46,7 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'app-l-side-nav-cluster-naples'
         },
-        roleGuard: UIRolePermissions.smartnic_read,
+        roleGuard: UIRolePermissions.clustersmartnic_read,
         link: ['/cluster/', 'naples']
       },
       {
@@ -53,7 +54,7 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'app-l-side-nav-cluster-hosts'
         },
-        roleGuard: UIRolePermissions.host_read,
+        roleGuard: UIRolePermissions.clusterhost_read,
         link: ['/cluster/', 'hosts']
       }
     ]
@@ -63,7 +64,7 @@ export const sideNavMenu: SideNavItem[] = [
     icon: {
       cssClass: 'app-l-side-nav-workload',
     },
-    roleGuard: UIRolePermissions.workload_read,
+    roleGuard: UIRolePermissions.workloadworkload_read,
     link: ['/workload']
   },
   {
@@ -72,7 +73,7 @@ export const sideNavMenu: SideNavItem[] = [
       cssClass: 'app-l-side-nav-security',
     },
     roleGuard: {
-      opt: [UIRolePermissions.sgpolicy_read, UIRolePermissions.app_read]
+      opt: [UIRolePermissions.securitysgpolicy_read, UIRolePermissions.securityapp_read]
     },
     children: [
       {
@@ -80,7 +81,7 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'app-l-side-nav-security-securitypolicy'
         },
-        roleGuard: UIRolePermissions.sgpolicy_read,
+        roleGuard: UIRolePermissions.securitysgpolicy_read,
         link: ['/security', 'sgpolicies']
       },
       {
@@ -88,7 +89,7 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'app-l-side-nav-security-apps'
         },
-        roleGuard: UIRolePermissions.app_read,
+        roleGuard: UIRolePermissions.securityapp_read,
         link: ['/security', 'securityapps']
       }
     ]
@@ -100,12 +101,12 @@ export const sideNavMenu: SideNavItem[] = [
     },
     roleGuard: {
       opt: [
-        UIRolePermissions.alert_read,
-        UIRolePermissions.event_read,
+        UIRolePermissions.monitoringalert_read,
+        UIRolePermissions.eventsevent_read,
         UIRolePermissions.auditevent_read,
-        UIRolePermissions.fwlog_read,
-        UIRolePermissions.flowexportpolicy_read,
-        UIRolePermissions.techsupportrequest_read,
+        UIRolePermissions.fwlogsquery_read,
+        UIRolePermissions.monitoringflowexportpolicy_read,
+        UIRolePermissions.monitoringtechsupportrequest_read,
       ]
     },
     children: [
@@ -117,8 +118,8 @@ export const sideNavMenu: SideNavItem[] = [
         },
         roleGuard: {
           opt: [
-            UIRolePermissions.alert_read,
-            UIRolePermissions.event_read,
+            UIRolePermissions.monitoringalert_read,
+            UIRolePermissions.eventsevent_read,
           ]
         },
         link: ['/monitoring', 'alertsevents']
@@ -136,7 +137,7 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'app-l-side-nav-monitoring-fwlogs'
         },
-        roleGuard: UIRolePermissions.fwlog_read,
+        roleGuard: UIRolePermissions.fwlogsquery_read,
         link: ['/monitoring', 'fwlogs']
       },
       {
@@ -144,7 +145,7 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'app-l-side-nav-monitoring-flowexport'
         },
-        roleGuard: UIRolePermissions.flowexportpolicy_read,
+        roleGuard: UIRolePermissions.monitoringflowexportpolicy_read,
         link: ['/monitoring', 'flowexport']
       },
       {
@@ -152,7 +153,7 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'app-l-side-nav-monitoring-techsupport'
         },
-        roleGuard: UIRolePermissions.techsupportrequest_read,
+        roleGuard: UIRolePermissions.monitoringtechsupportrequest_read,
         link: ['/monitoring', 'techsupport']
       }
     ]

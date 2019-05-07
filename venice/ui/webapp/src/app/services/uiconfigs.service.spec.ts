@@ -9,7 +9,7 @@ import { LogService } from './logging/log.service';
 import { LogPublishersService } from './logging/log-publishers.service';
 import { MatIconRegistry } from '@angular/material';
 import { MessageService } from './message.service';
-import { AuthService } from './generated/auth.service';
+import { AuthService } from './auth.service';
 
 describe('UiconfigsService', () => {
   beforeEach(() => {

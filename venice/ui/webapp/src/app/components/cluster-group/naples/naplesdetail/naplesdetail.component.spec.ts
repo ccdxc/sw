@@ -27,7 +27,8 @@ import { Utility } from '@app/common/Utility';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { By } from '@angular/platform-browser';
 import { IClusterSmartNIC, ClusterSmartNIC, ClusterSmartNICStatus_admission_phase_uihint } from '@sdk/v1/models/generated/cluster';
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService } from '@app/services/auth.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 class MockActivatedRoute extends ActivatedRoute {
   id = '4444.4444.0002';
@@ -411,4 +412,25 @@ describe('NaplesdetailComponent', () => {
     expect(getOverlay()).toBeTruthy();
 
   });
+
+  describe('RBAC', () => {
+    it('metrics permission', () => {
+      TestingUtility.addPermissions(
+        [UIRolePermissions.metricsquery_read]
+      );
+      fixture.detectChanges();
+      // metrics should be visible
+      const cards = fixture.debugElement.queryAll(By.css('app-herocard'));
+      expect(cards.length).toBe(3);
+    });
+
+    it('no permission', () => {
+    fixture.detectChanges();
+      // metrics should be visible
+      const cards = fixture.debugElement.queryAll(By.css('app-herocard'));
+      expect(cards.length).toBe(0);
+    });
+
+  });
+
 });

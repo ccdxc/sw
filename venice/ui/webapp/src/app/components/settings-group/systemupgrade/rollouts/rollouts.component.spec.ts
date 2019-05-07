@@ -14,7 +14,7 @@ import {ConfirmationService} from 'primeng/api';
 import {LogService} from '@app/services/logging/log.service';
 import {LogPublishersService} from '@app/services/logging/log-publishers.service';
 import {MatIconRegistry} from '@angular/material';
-import {AuthService} from '@app/services/generated/auth.service';
+import {AuthService as AuthServiceGen} from '@app/services/generated/auth.service';
 import {MessageService} from '@app/services/message.service';
 import {StagingService} from '@app/services/generated/staging.service';
 import {RolloutService} from '@app/services/generated/rollout.service';
@@ -22,6 +22,8 @@ import {ObjstoreService} from '@app/services/generated/objstore.service';
 
 import { RolloutsComponent } from './rollouts.component';
 import { NewrolloutComponent } from './newrollout/newrollout.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
 
 describe('RolloutsComponent', () => {
   let component: RolloutsComponent;
@@ -43,12 +45,14 @@ describe('RolloutsComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         RolloutService,
         LogService,
         LogPublishersService,
         MatIconRegistry,
-        AuthService,
+        AuthServiceGen,
         MessageService,
         StagingService,
         ObjstoreService

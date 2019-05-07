@@ -12,6 +12,8 @@ import { MessageService } from './message.service';
 import { Component } from '@angular/core';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { throwError, BehaviorSubject, Subscription } from 'rxjs';
+import { UIConfigsService } from './uiconfigs.service';
+import { AuthService } from './auth.service';
 
 @Component({
   template: ''
@@ -56,6 +58,8 @@ describe('MetricsqueryService', () => {
       providers: [
         MetricsqueryService,
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,

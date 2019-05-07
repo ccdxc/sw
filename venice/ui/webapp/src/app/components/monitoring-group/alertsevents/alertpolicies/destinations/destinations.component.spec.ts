@@ -22,6 +22,10 @@ import { DestinationpolicyComponent } from './destinations.component';
 import { NewdestinationComponent } from './newdestination/newdestination.component';
 import { MessageService } from '@app/services/message.service';
 import { MonitoringGroupModule } from '@app/components/monitoring-group/monitoring-group.module';
+import { TestTablevieweditRBAC } from '@app/components/shared/tableviewedit/tableviewedit.component.spec';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
+import { MonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
 
 
 describe('DestinationpolicyComponent', () => {
@@ -44,6 +48,8 @@ describe('DestinationpolicyComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,
@@ -58,10 +64,22 @@ describe('DestinationpolicyComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(DestinationpolicyComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
+  });
+
+  describe('RBAC', () => {
+    let testHelper = new TestTablevieweditRBAC('monitoringalertdestination');
+
+    beforeEach(() => {
+      component.isActiveTab = true;
+      component.dataObjects = [new MonitoringAlertDestination()];
+      testHelper.fixture = fixture;
+    });
+
+    testHelper.runTests();
   });
 });

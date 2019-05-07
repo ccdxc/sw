@@ -8,6 +8,10 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
+import { UIConfigsService } from '../uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { never } from 'rxjs';
+import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 
 @Injectable()
 export class NetworkService extends Networkv1Service {
@@ -18,7 +22,8 @@ export class NetworkService extends Networkv1Service {
   protected serviceUtility: GenServiceUtility;
 
   constructor(protected _http: HttpClient,
-              protected _controllerService: ControllerService) {
+              protected _controllerService: ControllerService,
+              protected uiconfigsService: UIConfigsService) {
       super(_http);
       this.serviceUtility = new GenServiceUtility(
         _http,
@@ -42,9 +47,14 @@ export class NetworkService extends Networkv1Service {
     this._controllerService.publish(Eventtypes.AJAX_END, eventPayload);
   }
 
-  protected invokeAJAX(method: string, url: string, payload: any, eventPayloadID: any, forceReal: boolean = false): Observable<VeniceResponse> {
+  protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<VeniceResponse> {
+
+    const key = this.serviceUtility.convertEventID(opts);
+    if (!this.uiconfigsService.isAuthorized(key)) {
+      return never();
+    }
     const isOnline = !this.isToMockData() || forceReal;
-    return this.serviceUtility.invokeAJAX(method, url, payload, eventPayloadID, isOnline);
+    return this.serviceUtility.invokeAJAX(method, url, payload, opts.eventID, isOnline);
   }
 
   /**

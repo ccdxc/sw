@@ -22,6 +22,9 @@ import {RouterLinkStubDirective} from '@common/RouterLinkStub.directive.spec';
 import {TestingUtility} from '@common/TestingUtility';
 import {ClusterHost} from '@sdk/v1/models/generated/cluster';
 import {DebugElement} from '@angular/core';
+import { AuthService } from '@app/services/auth.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 describe('HostsComponent', () => {
   let component: HostsComponent;
@@ -173,6 +176,8 @@ describe('HostsComponent', () => {
         SharedModule],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,
@@ -192,18 +197,9 @@ describe('HostsComponent', () => {
   it('should populate table', () => {
     const service = TestBed.get(ClusterService);
     spyOn(service, 'WatchHost').and.returnValue(
-      new BehaviorSubject({
-        events: [
-          {
-            type: 'Created',
-            object: host1
-          },
-          {
-            type: 'Created',
-            object: host2
-          }
-        ]
-      })
+      TestingUtility.createWatchEvents([
+        host1, host2
+      ])
     );
 
     fixture.detectChanges();
@@ -225,35 +221,18 @@ describe('HostsComponent', () => {
   });
 
   it('should have correct router links', () => {
+    TestingUtility.setAllPermissions();
     const service = TestBed.get(ClusterService);
     spyOn(service, 'WatchHost').and.returnValue(
-      new BehaviorSubject({
-        events: [
-          {
-            type: 'Created',
-            object: host1
-          },
-          {
-            type: 'Created',
-            object: host2
-          },
-          {
-            type: 'Created',
-            object: host3
-          }
-        ]
-      })
+      TestingUtility.createWatchEvents([
+        host1, host2, host3
+      ])
     );
 
     spyOn(service, 'WatchSmartNIC').and.returnValue(
-      new BehaviorSubject({
-        events: [
-          {
-            type: 'Created',
-            object: naple1
-          }
-        ]
-      })
+      TestingUtility.createWatchEvents([
+        naple1
+      ])
     );
     fixture.detectChanges();
 
@@ -267,6 +246,47 @@ describe('HostsComponent', () => {
 
     expect(routerLinks[0].linkParams).toBe('/cluster/naples/00ae.cd00.1142');
     expect(routerLinks[1].linkParams).toBe('/cluster/naples/0242.c0a8.1c02');
+  });
+
+  describe('RBAC', () => {
+    beforeEach(() => {
+      const service = TestBed.get(ClusterService);
+      spyOn(service, 'WatchHost').and.returnValue(
+        TestingUtility.createWatchEvents([
+          host1, host2, host3
+        ])
+      );
+  
+      spyOn(service, 'WatchSmartNIC').and.returnValue(
+        TestingUtility.createWatchEvents([
+          naple1
+        ])
+      );
+    })
+
+    it('naples read permission', () => {
+      TestingUtility.addPermissions(
+        [UIRolePermissions.clustersmartnic_read]
+      );
+      fixture.detectChanges();
+    const linkDes = fixture.debugElement
+      .queryAll(By.directive(RouterLinkStubDirective));
+    // get attached link directive instances
+    // using each DebugElement's injector
+    const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
+    expect(routerLinks.length).toBe(2, 'Should have 2 routerLinks');
+    });
+
+    it('no permission', () => {
+      fixture.detectChanges();
+    const linkDes = fixture.debugElement
+      .queryAll(By.directive(RouterLinkStubDirective));
+    // get attached link directive instances
+    // using each DebugElement's injector
+    const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
+    expect(routerLinks.length).toBe(0, 'Should have no routerLinks');
+    });
+
   });
 
 });

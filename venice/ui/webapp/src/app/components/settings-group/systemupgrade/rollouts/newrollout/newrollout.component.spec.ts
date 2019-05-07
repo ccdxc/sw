@@ -22,12 +22,12 @@
  import { EventsService } from '@app/services/events.service';
  import { SearchService } from '@app/services/generated/search.service';
  import { MessageService } from '@app/services/message.service';
- import { Table } from 'primeng/table';
  import { WidgetsModule } from 'web-app-framework';
 
 import { NewrolloutComponent } from './newrollout.component';
 import { RolloutService } from '@app/services/generated/rollout.service';
 import { ObjstoreService } from '@app/services/generated/objstore.service';
+import { AuthService } from '@app/services/auth.service';
 
 describe('NewrolloutComponent', () => {
   let component: NewrolloutComponent;
@@ -54,6 +54,7 @@ describe('NewrolloutComponent', () => {
         LogPublishersService,
         MatIconRegistry,
         UIConfigsService,
+        AuthService,
         EventsService,
         SearchService,
         MessageService,

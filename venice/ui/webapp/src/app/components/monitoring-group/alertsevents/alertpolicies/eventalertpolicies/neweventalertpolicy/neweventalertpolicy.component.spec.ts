@@ -16,6 +16,8 @@ import { PrimengModule } from '@app/lib/primeng.module';
 import { WidgetsModule } from 'web-app-framework';
 import { SharedModule } from '@app/components/shared/shared.module';
 import { MessageService } from '@app/services/message.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
 
 describe('NeweventalertpolicyComponent', () => {
   let component: NeweventalertpolicyComponent;
@@ -37,6 +39,8 @@ describe('NeweventalertpolicyComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,

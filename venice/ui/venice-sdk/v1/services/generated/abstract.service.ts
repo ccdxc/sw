@@ -8,6 +8,12 @@ import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 
+export interface MethodOpts {
+  eventID: string, 
+  objType: string,
+  isStaging: boolean
+}
+
 @Injectable()
 export class AbstractService {
   protected O_Tenant: string = "";
@@ -23,7 +29,7 @@ export class AbstractService {
   }
 
   // This function should be overwritten
-  protected invokeAJAX(method: string, url: string, payload: any, eventPayloadID: any, forceReal: boolean = false): Observable<any> {
+  protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts,  forceReal: boolean = false): Observable<any> {
     let observer;
     switch (method) {
       case 'GET':
@@ -48,19 +54,19 @@ export class AbstractService {
     return observer;
   }
 
-  protected invokeAJAXGetCall(url: string, payload: any, eventPayloadID: any, forceReal: boolean = false): Observable<any> {
-    return this.invokeAJAX('GET', url, payload, eventPayloadID, forceReal);
+  protected invokeAJAXGetCall(url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<any> {
+    return this.invokeAJAX('GET', url, payload, opts, forceReal);
   }
 
-  protected invokeAJAXPostCall(url: string, payload: any, eventPayloadID: any, forceReal: boolean = false): Observable<any> {
-    return this.invokeAJAX('POST', url, payload, eventPayloadID, forceReal);
+  protected invokeAJAXPostCall(url: string, payload: any, opts: MethodOpts,forceReal: boolean = false): Observable<any> {
+    return this.invokeAJAX('POST', url, payload, opts, forceReal);
   }
 
-  protected invokeAJAXPutCall(url: string, payload: any, eventPayloadID: any, forceReal: boolean = false): Observable<any> {
-    return this.invokeAJAX('PUT', url, payload, eventPayloadID, forceReal);
+  protected invokeAJAXPutCall(url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<any> {
+    return this.invokeAJAX('PUT', url, payload, opts, forceReal);
   }
 
-  protected invokeAJAXDeleteCall(url: string, eventPayloadID: any, forceReal: boolean = false): Observable<any> {
-    return this.invokeAJAX('DELETE', url, null, eventPayloadID, forceReal);
+  protected invokeAJAXDeleteCall(url: string, opts: MethodOpts, forceReal: boolean = false): Observable<any> {
+    return this.invokeAJAX('DELETE', url, null, opts, forceReal);
   }
 }

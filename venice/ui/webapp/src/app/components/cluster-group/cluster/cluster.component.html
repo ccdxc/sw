@@ -8,72 +8,79 @@
   <div fxFlex="none" fxLayout="row">
     <div fxFlex fxLayout="row wrap" class="cluster-card-container">
       <ng-container *ngTemplateOutlet="nodeTable"></ng-container>
-      <ng-container *ngFor="let cardData of heroCards">
-        <app-herocard fxFlex="nogrow"
-                      [title]="cardData.title"
-                      [firstStat]="cardData.firstStat"
-                      [secondStat]="cardData.secondStat"
-                      [thirdStat]="cardData.thirdStat"
-                      [backgroundIcon]="cardData.backgroundIcon"
-                      [themeColor]="cardData.themeColor"
-                      [icon]="cardData.icon"
-                      [data]="cardData.data"
-                      [arrowDirection]="cardData.arrowDirection"
-                      [lastUpdateTime]="lastUpdateTime"
-                      [cardState]="cardData.cardState">
-        </app-herocard>
+        <ng-container  *roleGuard="{req: ['metricsquery_read', 'clusterNode_read']}">
+
+        <ng-container *ngFor="let cardData of heroCards">
+          <app-herocard fxFlex="nogrow"
+                        [title]="cardData.title"
+                        [firstStat]="cardData.firstStat"
+                        [secondStat]="cardData.secondStat"
+                        [thirdStat]="cardData.thirdStat"
+                        [backgroundIcon]="cardData.backgroundIcon"
+                        [themeColor]="cardData.themeColor"
+                        [icon]="cardData.icon"
+                        [data]="cardData.data"
+                        [arrowDirection]="cardData.arrowDirection"
+                        [lastUpdateTime]="lastUpdateTime"
+                        [cardState]="cardData.cardState">
+          </app-herocard>
+        </ng-container>
       </ng-container>
     </div>
   </div>
-  <div fxFlex class="cluster-alertsevents-container">
+  <div *roleGuard="{opt: ['monitoringAlert_read', 'eventsevent_read']}" fxFlex class="cluster-alertsevents-container">
     <app-shared-alertsevents></app-shared-alertsevents>
   </div>
 </app-pagebody>
+
 <ng-template #createTemplate>
   <app-certificate (cancelEvent)="onCertificateCancel($event)"></app-certificate>
 </ng-template>
+
 <ng-template #nodeTable>
   <div fxFlex="none" fxLayout="column" class="cluster-node-table-container">
-    <div fxFlex="none" fxLayout="row" class="cluster-node-table-title">
-      Nodes ({{nodes.length }})
-    </div>
-    <ng-container *ngFor="let node of nodes">
-      <div routerLink="./{{node.meta.name}}" fxFlex="none" fxLayout="column"
-           class="cluster-node-container">
-        <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px"
-             class="cluster-node-name">
-          <div fxFlex="none" class="cluster-node-status"></div>
-          <span class="cluster-node-name" fxFlex="none">{{ node.meta.name }}</span>
-          <mat-icon fxFlex="none" *ngIf="cluster.status.leader === node.meta.name"
-                    class="cluster-node-star" title="Leader">star_rate</mat-icon>
-        </div>
-        <div fxLayout="row">
-          <div fxFlex="none" fxLayout="column">
-            <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
-                 fxLayoutAlign="start center">
-              <div>Quorum Node:</div>
-            </div>
-          </div>
-          <div fxFlex fxLayout="column">
-            <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
-                 class="cluster-node-value">
-              <div class="cluster-node-quorum">{{ node.status.quorum }}</div>
-            </div>
-          </div>
-          <div fxFlex="none" fxLayout="column">
-            <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
-                 fxLayoutAlign="start center">
-              <div>Phase:</div>
-            </div>
-          </div>
-          <div fxFlex fxLayout="column">
-            <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
-                 class="cluster-node-value">
-              <div class="cluster-node-phase">{{ phaseEnum[node.status.phase] }}</div>
-            </div>
-          </div>
-        </div>
+    <ng-container *roleGuard="'clusterNode_read'">
+      <div fxFlex="none" fxLayout="row" class="cluster-node-table-title">
+        Nodes ({{nodes.length }})
       </div>
+      <ng-container *ngFor="let node of nodes">
+        <div routerLink="./{{node.meta.name}}" fxFlex="none" fxLayout="column"
+            class="cluster-node-container">
+          <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px"
+              class="cluster-node-name">
+            <div fxFlex="none" class="cluster-node-status"></div>
+            <span class="cluster-node-name" fxFlex="none">{{ node.meta.name }}</span>
+            <mat-icon fxFlex="none" *ngIf="cluster.status.leader === node.meta.name"
+                      class="cluster-node-star" title="Leader">star_rate</mat-icon>
+          </div>
+          <div fxLayout="row">
+            <div fxFlex="none" fxLayout="column">
+              <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                  fxLayoutAlign="start center">
+                <div>Quorum Node:</div>
+              </div>
+            </div>
+            <div fxFlex fxLayout="column">
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                  class="cluster-node-value">
+                <div class="cluster-node-quorum">{{ node.status.quorum }}</div>
+              </div>
+            </div>
+            <div fxFlex="none" fxLayout="column">
+              <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
+                  fxLayoutAlign="start center">
+                <div>Phase:</div>
+              </div>
+            </div>
+            <div fxFlex fxLayout="column">
+              <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
+                  class="cluster-node-value">
+                <div class="cluster-node-phase">{{ phaseEnum[node.status.phase] }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
     </ng-container>
     <div fxFlex="none" fxLayout="column" class="cluster-details">
       <div fxFlex="none" class="cluster-details-title"> Cluster Detail </div>

@@ -8,6 +8,8 @@ import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { IApiStatus, IMonitoringTechSupportRequest, MonitoringTechSupportRequest, MonitoringTechSupportRequestStatus_status, IMonitoringTechSupportRequestStatus } from '@sdk/v1/models/generated/monitoring';
 import { Observable } from 'rxjs';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 
 @Component({
@@ -49,6 +51,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   disableTableWhenRowExpanded = true;
 
   constructor(protected controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected cdr: ChangeDetectorRef,
     protected monitoringService: MonitoringService) {
     super(controllerService, cdr);
@@ -67,15 +70,17 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   }
 
   setDefaultToolbar() {
-    this.controllerService.setToolbarData({
-      buttons: [
-        {
+    let buttons = [];
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringtechsupportrequest_create)) {
+      buttons = [{
           cssClass: 'global-button-primary techsupportrequests-toolbar-button techsupportrequests-toolbar-button-ADD',
           text: 'ADD TECH-SUPPORT REQUEST',
           computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
           callback: () => { this.createNewObject(); }
-        },
-      ],
+      }]
+    }
+    this.controllerService.setToolbarData({
+      buttons: buttons,
       breadcrumb: [{ label: 'Tech Supports', url: Utility.getBaseUIUrl() + 'monitoring/techsupport' }]
     });
   }

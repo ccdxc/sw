@@ -19,7 +19,7 @@ import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { By } from '@angular/platform-browser';
 import { MessageService } from '@app/services/message.service';
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService } from '@app/services/auth.service';
 
 describe('SgpoliciesComponent', () => {
   let component: SgpoliciesComponent;

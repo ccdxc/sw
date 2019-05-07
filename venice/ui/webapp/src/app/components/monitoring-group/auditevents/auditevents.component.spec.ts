@@ -23,11 +23,10 @@ import { EventsService } from '@app/services/events.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from '@app/services/message.service';
-import { Table } from 'primeng/table';
 
 import { AuditeventsComponent } from './auditevents.component';
 import {AuditService} from '@app/services/generated/audit.service';
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService } from '@app/services/auth.service';
 
 describe('AuditeventsComponent', () => {
   let component: AuditeventsComponent;

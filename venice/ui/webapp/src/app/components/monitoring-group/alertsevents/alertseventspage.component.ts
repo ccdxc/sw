@@ -4,6 +4,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   selector: 'app-alertsevents',
@@ -30,7 +31,7 @@ export class AlertseventspageComponent extends BaseComponent implements OnInit, 
 
   setTabToolbar(tabName) {
     let buttons = [];
-    if (tabName === 'alerts') {
+    if (tabName === 'alerts' && this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringalertpolicy_read)) {
       buttons = [
         {
           cssClass: 'global-button-primary alertsevents-button',
@@ -38,11 +39,11 @@ export class AlertseventspageComponent extends BaseComponent implements OnInit, 
           callback: () => { this._controllerService.navigate(['/monitoring', 'alertsevents', 'alertpolicies']); }
         },
       ];
-    } else {
+    } else if (tabName === 'events' && this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringeventpolicy_read)) {
       buttons = [
         {
           cssClass: 'global-button-primary alertsevents-button',
-          text: 'EVENT POLICY',
+          text: 'EVENT POLICIES',
           callback: () => { this._controllerService.navigate(['/monitoring', 'alertsevents', 'eventpolicy']); }
         }
       ];

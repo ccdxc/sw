@@ -16,7 +16,7 @@ import { ConfirmationService } from 'primeng/primeng';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { MessageService } from '@app/services/message.service';
 import { ObjstoreService } from '@app/services/generated/objstore.service';
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService } from '@app/services/auth.service';
 
 import { RolloutstatusComponent } from './rolloutstatus.component';
 

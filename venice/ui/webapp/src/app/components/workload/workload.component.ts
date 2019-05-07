@@ -107,7 +107,7 @@ export class WorkloadComponent extends BaseComponent implements OnInit, OnDestro
     // Setting the toolbar of the app
     this._controllerService.setToolbarData({
       buttons: [],
-      breadcrumb: [{ label: 'Workloads Overview', url: Utility.getBaseUIUrl() + 'workloads' }]
+      breadcrumb: [{ label: 'Workloads Overview', url: Utility.getBaseUIUrl() + 'workload' }]
     });
     // Fetching workload items
     this.getWorkloads();

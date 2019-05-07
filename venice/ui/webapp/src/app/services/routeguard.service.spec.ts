@@ -8,7 +8,7 @@ import { RouteGuard } from '@app/services/routeguard.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { MessageService } from '@app/services/message.service';
 import { LogService } from './logging/log.service';
-import { AuthService } from './generated/auth.service';
+import { AuthService } from './auth.service';
 import { LogPublishersService } from './logging/log-publishers.service';
 
 class MockUIConfigService extends UIConfigsService {

@@ -4,11 +4,25 @@ import { {{importName}} } from '{{importPath}}';
 {{/each}}
 {{/each}}
 
-export const CategoryMapping  = {
+interface CatMap {
+  [key: string]: {
+    [key: string]: {
+      instance: any,
+      scopes: string[],
+      actions: string[],
+    }
+  }
+}
+
+export const CategoryMapping: CatMap  = {
   {{#each this}}
   "{{@key}}" : {
     {{#each this}}
-    "{{@key}}" : new {{importName}}(),
+    "{{@key}}" : {
+      instance: new {{importName}}(),
+      scopes: [{{#each scopes}} '{{this}}', {{/each}}] ,
+      actions:  [{{#each actions}} '{{this}}', {{/each}}] ,
+    },
     {{/each}}
   },
   {{/each}}

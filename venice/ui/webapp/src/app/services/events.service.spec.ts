@@ -11,6 +11,8 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { BehaviorSubject } from 'rxjs';
 import { MessageService } from '@app/services/message.service';
 import { ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
+import { UIConfigsService } from './uiconfigs.service';
+import { AuthService } from './auth.service';
 
 describe('EventsService', () => {
   let postSpy;
@@ -18,6 +20,8 @@ describe('EventsService', () => {
     TestBed.configureTestingModule({
       providers: [EventsService,
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,

@@ -2,8 +2,9 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
+import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 
-import { ITelemetry_queryFwlogsQueryResponse,ITelemetry_queryFwlogsQueryList,ITelemetry_queryMetricsQueryResponse,ITelemetry_queryMetricsQueryList } from '../../models/generated/telemetry_query';
+import { ITelemetry_queryFwlogsQueryResponse,Telemetry_queryFwlogsQueryResponse,Telemetry_queryFwlogsQueryList,ITelemetry_queryFwlogsQueryList,ITelemetry_queryMetricsQueryResponse,Telemetry_queryMetricsQueryResponse,Telemetry_queryMetricsQueryList,ITelemetry_queryMetricsQueryList } from '../../models/generated/telemetry_query';
 
 @Injectable()
 export class Telemetry_queryv1Service extends AbstractService {
@@ -22,25 +23,51 @@ export class Telemetry_queryv1Service extends AbstractService {
   /** Fwlogs is the telemetry fwlog query RPC, http://localhost:443/telemetry/v1/fwlogs */
   public GetFwlogs_1(queryParam: any = null):Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/telemetry/v1/fwlogs';
-    return this.invokeAJAXGetCall(url, queryParam, 'GetFwlogs_1') as Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}>;
+    const opts = {
+      eventID: 'GetFwlogs_1',
+      objType: 'Telemetry_queryFwlogsQueryResponse',
+      isStaging: false,
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}>;
   }
   
   /** Fwlogs is the telemetry fwlog query RPC, http://localhost:443/telemetry/v1/fwlogs */
-  public PostFwlogs(body: ITelemetry_queryFwlogsQueryList):Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}> {
+  public PostFwlogs(body: ITelemetry_queryFwlogsQueryList, trimObject: boolean = true):Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/telemetry/v1/fwlogs';
-    return this.invokeAJAXPostCall(url, body, 'PostFwlogs') as Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}>;
+    const opts = {
+      eventID: 'PostFwlogs',
+      objType: 'Telemetry_queryFwlogsQueryResponse',
+      isStaging: false,
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new Telemetry_queryFwlogsQueryList(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ITelemetry_queryFwlogsQueryResponse | Error, statusCode: number}>;
   }
   
   /** Metrics is the telemetry metrics query RPC, http://localhost:443/telemetry/v1/metrics */
   public GetMetrics_1(queryParam: any = null):Observable<{body: ITelemetry_queryMetricsQueryResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/telemetry/v1/metrics';
-    return this.invokeAJAXGetCall(url, queryParam, 'GetMetrics_1') as Observable<{body: ITelemetry_queryMetricsQueryResponse | Error, statusCode: number}>;
+    const opts = {
+      eventID: 'GetMetrics_1',
+      objType: 'Telemetry_queryMetricsQueryResponse',
+      isStaging: false,
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: ITelemetry_queryMetricsQueryResponse | Error, statusCode: number}>;
   }
   
   /** Metrics is the telemetry metrics query RPC, http://localhost:443/telemetry/v1/metrics */
-  public PostMetrics(body: ITelemetry_queryMetricsQueryList):Observable<{body: ITelemetry_queryMetricsQueryResponse | Error, statusCode: number}> {
+  public PostMetrics(body: ITelemetry_queryMetricsQueryList, trimObject: boolean = true):Observable<{body: ITelemetry_queryMetricsQueryResponse | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/telemetry/v1/metrics';
-    return this.invokeAJAXPostCall(url, body, 'PostMetrics') as Observable<{body: ITelemetry_queryMetricsQueryResponse | Error, statusCode: number}>;
+    const opts = {
+      eventID: 'PostMetrics',
+      objType: 'Telemetry_queryMetricsQueryResponse',
+      isStaging: false,
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new Telemetry_queryMetricsQueryList(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: ITelemetry_queryMetricsQueryResponse | Error, statusCode: number}>;
   }
   
 }

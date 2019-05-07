@@ -54,7 +54,7 @@
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container  global-column-action-icon-container-techsupport_{{rowData.meta.name}}"
        fxLayout="row" fxLayoutGap="5px">
-    <mat-icon matTooltip="Delete tech-support" class="global-table-action-icon"
+    <mat-icon *roleGuard="'monitoringtechsupportrequest_delete'" matTooltip="Delete tech-support" class="global-table-action-icon"
               (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
 </ng-template>

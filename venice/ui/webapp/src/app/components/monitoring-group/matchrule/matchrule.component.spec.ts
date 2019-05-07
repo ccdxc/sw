@@ -13,7 +13,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { MatIconRegistry } from '@angular/material';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { RouterTestingModule } from '@angular/router/testing';
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService } from '@app/services/auth.service';
 
 describe('MatchruleComponent', () => {
   let component: MatchruleComponent;

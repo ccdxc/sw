@@ -18,6 +18,11 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from '@app/services/message.service';
 import { MonitoringGroupModule } from '../../monitoring-group.module';
 import { NewfwlogpolicyComponent } from './newfwlogpolicy/newfwlogpolicy.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
+import { TestTablevieweditRBAC } from '@app/components/shared/tableviewedit/tableviewedit.component.spec';
+import { MonitoringFwlogPolicy } from '@sdk/v1/models/generated/monitoring';
+import { TestingUtility } from '@app/common/TestingUtility';
 
 
 describe('FwlogpoliciesComponent', () => {
@@ -41,6 +46,8 @@ describe('FwlogpoliciesComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,
@@ -55,10 +62,24 @@ describe('FwlogpoliciesComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(FwlogpoliciesComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
+  });
+
+  describe('RBAC', () => {
+    let testHelper = new TestTablevieweditRBAC('monitoringfwlogpolicy');
+
+    beforeEach(() => {
+      const service = TestBed.get(MonitoringService)
+      spyOn(service, 'WatchFwlogPolicy').and.returnValue(
+        TestingUtility.createWatchEvents([new MonitoringFwlogPolicy()])
+      );
+      testHelper.fixture = fixture;
+    });
+
+    testHelper.runTests();
   });
 });

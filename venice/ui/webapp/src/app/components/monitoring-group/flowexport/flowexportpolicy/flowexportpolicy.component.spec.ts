@@ -18,6 +18,10 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from '@app/services/message.service';
 import { MonitoringGroupModule } from '../../monitoring-group.module';
 import { NewflowexportpolicyComponent } from './newflowexportpolicy/newflowexportpolicy.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
+import { TestTablevieweditRBAC } from '@app/components/shared/tableviewedit/tableviewedit.component.spec';
+import { MonitoringFlowExportPolicy } from '@sdk/v1/models/generated/monitoring';
 
 
 describe('FlowexportpolicyComponent', () => {
@@ -41,6 +45,8 @@ describe('FlowexportpolicyComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,
@@ -55,10 +61,21 @@ describe('FlowexportpolicyComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(FlowexportpolicyComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
+  });
+
+  describe('RBAC', () => {
+    let testHelper = new TestTablevieweditRBAC('monitoringflowexportpolicy');
+
+    beforeEach(() => {
+      component.dataObjects = [new MonitoringFlowExportPolicy()];
+      testHelper.fixture = fixture;
+    });
+
+    testHelper.runTests();
   });
 });

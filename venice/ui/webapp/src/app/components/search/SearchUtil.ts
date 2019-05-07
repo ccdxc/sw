@@ -137,7 +137,7 @@ export class SearchUtil {
     if (!category) {
       return null;
     }
-    const instance = CategoryMapping[category][kind];
+    const instance = CategoryMapping[category][kind].instance;
     if (!instance) {
       return null;
     }
@@ -622,7 +622,7 @@ export class SearchUtil {
     if (!category) {
       _.union(SearchUtil.stringOperators, SearchUtil.numberOperators);
     }
-    const instance = CategoryMapping[category][kind];
+    const instance = CategoryMapping[category][kind].instance;
     if (!instance) {
       return _.union(SearchUtil.stringOperators, SearchUtil.numberOperators);
     }

@@ -9,6 +9,8 @@
     "@angular/forms": "5.2.11",
     "@angular/platform-browser": "5.2.11",
     "@pensando/swagger-ts-generator": "file:pensando-swagger-ts-generator-1.1.29.tgz",
+    "handlebars": "^4.1.2",
+    "lodash": "^4.17.11",
     "rxjs": "5.5.11",
     "zone.js": "0.8.26"
   },

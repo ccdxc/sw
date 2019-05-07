@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {Auditv1Service} from '@sdk/v1/services/generated/auditv1.service';
-import {Observable} from 'rxjs';
+import {Observable } from 'rxjs';
 import {VeniceResponse} from '@app/models/frontend/shared/veniceresponse.interface';
 import {GenServiceUtility} from '@app/services/generated/GenUtility';
 import {HttpClient} from '@angular/common/http';
@@ -8,6 +8,10 @@ import {ControllerService} from '@app/services/controller.service';
 import {Eventtypes} from '@app/enum/eventtypes.enum';
 import {environment} from '@env/environment';
 import {Utility} from '@common/Utility';
+import { UIConfigsService } from '../uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { never } from 'rxjs';
+import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 
 @Injectable()
 export class AuditService extends Auditv1Service {
@@ -18,7 +22,8 @@ export class AuditService extends Auditv1Service {
   protected serviceUtility: GenServiceUtility;
 
   constructor(protected _http: HttpClient,
-              protected _controllerService: ControllerService) {
+              protected _controllerService: ControllerService,
+              protected uiconfigsService: UIConfigsService) {
     super(_http);
     this.serviceUtility = new GenServiceUtility(
       _http,
@@ -43,9 +48,20 @@ export class AuditService extends Auditv1Service {
     this._controllerService.publish(Eventtypes.AJAX_END, eventPayload);
   }
 
-  protected invokeAJAX(method: string, url: string, payload: any, eventPayloadID: any, forceReal: boolean = false): Observable<VeniceResponse> {
+  protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<VeniceResponse> {
+
+    const key = this.convertEventID(opts);
+    if (!this.uiconfigsService.isAuthorized(key)) {
+      return never();
+    }
     const isOnline = !this.isToMockData() || forceReal;
-    return this.serviceUtility.invokeAJAX(method, url, payload, eventPayloadID, isOnline);
+    return this.serviceUtility.invokeAJAX(method, url, payload, opts.eventID, isOnline);
+  }
+
+  convertEventID(opts) {
+    // All event operations are reads, even posts.
+    const key = 'auditevent' + '_' + 'read';
+    return UIRolePermissions[key]
   }
 
   /**

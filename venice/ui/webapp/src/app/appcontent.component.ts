@@ -25,7 +25,6 @@ import { ControllerService } from './services/controller.service';
 import { AuthService } from './services/generated/auth.service';
 import { ClusterService } from './services/generated/cluster.service';
 import { sideNavMenu, SideNavItem } from './appcontent.sidenav';
-import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 export interface GetUserObjRequest {
   success: (resp: { body: IAuthUser | IApiStatus | Error; statusCode: number; }) => void;
@@ -233,9 +232,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     if (this._boolInitApp === true) {
       return;
     } else {
-      if (this.uiconfigsService.isAuthorized(UIRolePermissions.alert_read)) {
-        this.getAlerts();
-      }
+      this.getAlerts();
     }
     this._boolInitApp = true;
     this._setupIdle();

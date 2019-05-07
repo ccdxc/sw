@@ -33,7 +33,8 @@ import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { TestingUtility } from '@app/common/TestingUtility';
 import {CertificateComponent} from '@components/cluster-group/cluster/certificate/certificate.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService } from '@app/services/auth.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   template: ''
@@ -109,6 +110,7 @@ describe('ClusterComponent', () => {
   });
 
   it('cluster should have right values', () => {
+    TestingUtility.setAllPermissions();
     fixture.detectChanges();
     // Cluster icon should be visible
     const clusterDe: DebugElement = fixture.debugElement;
@@ -143,5 +145,103 @@ describe('ClusterComponent', () => {
     expect(clusterHe.querySelector('div.cluster-details-panel-virtual-ip').textContent).toContain('192.168.30.10');
     expect(clusterHe.querySelector('div.cluster-details-panel-auto-admit-nics').textContent).toContain('yes');
   });
+
+  describe('RBAC', () => {
+      let toolbarSpy: jasmine.Spy;
+
+      beforeEach(() => {
+        TestingUtility.removeAllPermissions();
+        const controllerService = TestBed.get(ControllerService)
+        toolbarSpy = spyOn(controllerService, 'setToolbarData');
+      });
+
+      it('cert option has access', () => {
+        TestingUtility.addPermissions([UIRolePermissions.clustercluster_create]);
+        fixture.detectChanges();
+        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
+      });
+
+      it('cert option no access', () => {
+        fixture.detectChanges();
+        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
+      })
+
+      it('nodes table', () => {
+        TestingUtility.addPermissions([UIRolePermissions.clusternode_read]);
+        fixture.detectChanges();
+        // Check nodes
+        expect(fixture.debugElement.queryAll(By.css('div.cluster-node-container')).length).toBe(5, 'Number of nodes displayed was incorrect');
+
+        TestingUtility.removeAllPermissions();
+        TestingUtility.updateRoleGuards();
+        fixture.detectChanges();
+
+        expect(fixture.debugElement.queryAll(By.css('div.cluster-node-container')).length).toBe(0, 'Number of nodes displayed was incorrect');
+      });
+
+      it('metric cards', () => {
+        TestingUtility.addPermissions([UIRolePermissions.metricsquery_read, UIRolePermissions.clusternode_read]);
+        fixture.detectChanges();
+        // metrics should be visible
+        let cards = fixture.debugElement.queryAll(By.css('app-herocard'));
+        expect(cards.length).toBe(3);
+
+        TestingUtility.removeAllPermissions();
+        TestingUtility.updateRoleGuards();
+        fixture.detectChanges();
+
+        // metrics should be hidden 
+        cards = fixture.debugElement.queryAll(By.css('app-herocard'));
+        expect(cards.length).toBe(0);
+
+        TestingUtility.addPermissions([UIRolePermissions.clusternode_read]);
+        TestingUtility.updateRoleGuards();
+        fixture.detectChanges();
+
+        // metrics should be hidden 
+        cards = fixture.debugElement.queryAll(By.css('app-herocard'));
+        expect(cards.length).toBe(0);
+
+        TestingUtility.removeAllPermissions();
+        TestingUtility.addPermissions([UIRolePermissions.metricsquery_read]);
+        TestingUtility.updateRoleGuards();
+        fixture.detectChanges();
+
+        // metrics should be hidden 
+        cards = fixture.debugElement.queryAll(By.css('app-herocard'));
+        expect(cards.length).toBe(0);
+
+      });
+
+      it('alertsevents table', () => {
+        // both permissions
+        TestingUtility.addPermissions([UIRolePermissions.monitoringalert_read, UIRolePermissions.eventsevent_read]);
+        fixture.detectChanges();
+        expect(fixture.debugElement.queryAll(By.css('app-shared-alertsevents')).length).toBe(1, 'alertsevents table should be present');
+
+        TestingUtility.removeAllPermissions();
+        TestingUtility.updateRoleGuards();
+        fixture.detectChanges();
+
+        // no permissions
+        expect(fixture.debugElement.queryAll(By.css('app-shared-alertsevents')).length).toBe(0, 'alertsevents table should not be present');
+
+        TestingUtility.addPermissions([UIRolePermissions.eventsevent_read]);
+        TestingUtility.updateRoleGuards();
+        fixture.detectChanges();
+
+        // events only
+        expect(fixture.debugElement.queryAll(By.css('app-shared-alertsevents')).length).toBe(1, 'alertsevents table should be present');
+
+        TestingUtility.removeAllPermissions();
+        TestingUtility.addPermissions([UIRolePermissions.monitoringalert_read]);
+        TestingUtility.updateRoleGuards();
+        fixture.detectChanges();
+
+        // alerts only
+        expect(fixture.debugElement.queryAll(By.css('app-shared-alertsevents')).length).toBe(1, 'alertsevents table should be present');
+      })
+  });
+
 
 });

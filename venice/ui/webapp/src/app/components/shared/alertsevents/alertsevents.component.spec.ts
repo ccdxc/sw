@@ -37,7 +37,7 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from '@app/services/message.service';
 import { SorticonComponent } from '../sorticon/sorticon.component';
 import { RoleGuardDirective } from '../directives/roleGuard.directive';
-import { AuthService } from '@app/services/generated/auth.service';
+import { AuthService } from '@app/services/auth.service';
 
 
 @Component({

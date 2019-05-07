@@ -8,7 +8,7 @@ import { IAuthOperationStatus, IAuthSubjectAccessReviewRequest, AuthPermission_a
 import { ControllerService } from './controller.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
-import { AuthService } from './generated/auth.service';
+import { AuthService } from './auth.service';
 
 interface UIConfig {
   'disabled-objects': string[];
@@ -39,21 +39,77 @@ export class UIConfigsService {
   // NOTE: If a subroute is not allowed, further nested paths are automatically blocked
   // Ex. if monitoring is blocked, monitoring/alertsevevnts will be blocked without checking
   pageRequirements: PageRequirementMap = {
-    'monitoring/alertsevents/alertpolicies': {
+    'cluster/cluster': {
       required: [
-        'AlertPolicies'
+        UIRolePermissions.clustercluster_read,
       ],
-      default: [
-        'AlertPolicies',
-        'AlertDestinations'
-      ]
+    },
+    'cluster/:id': {
+      required: [
+        UIRolePermissions.clusternode_read,
+      ],
+    },
+    'cluster/naples': {
+      required: [
+        UIRolePermissions.clustersmartnic_read,
+      ],
+    },
+    'cluster/hosts': {
+      required: [
+        UIRolePermissions.clusterhost_read,
+      ],
+    },
+    '/workload': {
+      required: [
+        UIRolePermissions.workloadworkload_read,
+      ],
+    },
+    '/security/sgpolicies': {
+      required: [
+        UIRolePermissions.securitysgpolicy_read,
+      ],
+    },
+    '/security/securityapps': {
+      required: [
+        UIRolePermissions.securityapp_read,
+      ],
     },
     'monitoring/alertsevents/': {
       default: [
-        'Alerts',
-        'Events'
+        UIRolePermissions.monitoringalert_read,
+        UIRolePermissions.eventsevent_read,
       ]
-    }
+    },
+    'monitoring/alertsevents/alertpolicies': {
+      required: [
+        UIRolePermissions.monitoringalertpolicy_read,
+      ],
+    },
+    'monitoring/alertsevents/eventpolicy': {
+      default: [
+        UIRolePermissions.monitoringeventpolicy_read,
+      ]
+    },
+    '/monitoring/fwlogs': {
+      required: [
+        UIRolePermissions.fwlogsquery_read,
+      ],
+    },
+    '/monitoring/fwlogs/fwlogpolicies': {
+      required: [
+        UIRolePermissions.monitoringfwlogpolicy_read,
+      ],
+    },
+    '/monitoring/flowexport': {
+      required: [
+        UIRolePermissions.monitoringflowexportpolicy_read,
+      ],
+    },
+    '/monitoring/techsupport': {
+      required: [
+        UIRolePermissions.monitoringtechsupportrequest_read,
+      ],
+    },
   };
 
   private _userPermissions: IAuthOperationStatus[] = [];
@@ -93,11 +149,15 @@ export class UIConfigsService {
     this.uiPermissions = {};
     this._userPermissions.forEach( (permission) => {
       if (permission.allowed) {
+        let cat = permission.operation.resource.group;
+        if (cat == null) {
+          cat = '';
+        }
         const kind = permission.operation.resource.kind;
         const action = permission.operation.action;
         if (action === AuthOperation_action.AllActions) {
           Object.keys(AuthPermission_actions).forEach( (a) => {
-            const key = _.toLower(kind) + '_' + _.toLower(a);
+            const key = _.toLower(cat) + _.toLower(kind) + '_' + _.toLower(a);
             this.uiPermissions[key] = permission.allowed;
           });
         } else {
@@ -180,11 +240,11 @@ export class UIConfigsService {
   }
 
   loadConfig() {
+    // Setting UI permissions from local storage object
+    this.setUserPermissionsFromLocalStorage();
+
     // Only want to do this once - if root page is revisited, it calls this again.
     if (this.configFile == null) {
-      // Setting UI permissions from local storage object
-      this.setUserPermissionsFromLocalStorage();
-
       let baseUrl = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
       baseUrl += '/assets/' + CONFIG_FILENAME;
       const observable = new Subject();

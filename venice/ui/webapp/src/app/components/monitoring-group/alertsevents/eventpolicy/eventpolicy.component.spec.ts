@@ -18,6 +18,12 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { MessageService } from '@app/services/message.service';
 import { NeweventpolicyComponent } from './neweventpolicy/neweventpolicy.component';
 import { MonitoringGroupModule } from '../../monitoring-group.module';
+import { TestTablevieweditRBAC } from '@app/components/shared/tableviewedit/tableviewedit.component.spec';
+import { MonitoringEventPolicy } from '@sdk/v1/models/generated/monitoring';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AuthService } from '@app/services/auth.service';
+import { never } from 'rxjs';
+import { TestingUtility } from '@app/common/TestingUtility';
 
 describe('EventpolicyComponent', () => {
   let component: EventpolicyComponent;
@@ -40,6 +46,8 @@ describe('EventpolicyComponent', () => {
       ],
       providers: [
         ControllerService,
+        UIConfigsService,
+        AuthService,
         ConfirmationService,
         LogService,
         LogPublishersService,
@@ -54,10 +62,24 @@ describe('EventpolicyComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(EventpolicyComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
+  });
+
+  describe('RBAC', () => {
+    let testHelper = new TestTablevieweditRBAC('monitoringeventpolicy');
+
+    beforeEach(() => {
+      const service = TestBed.get(MonitoringService)
+      spyOn(service, 'WatchEventPolicy').and.returnValue(
+        TestingUtility.createWatchEvents([new MonitoringEventPolicy()])
+      );
+      testHelper.fixture = fixture;
+    });
+
+    testHelper.runTests();
   });
 });

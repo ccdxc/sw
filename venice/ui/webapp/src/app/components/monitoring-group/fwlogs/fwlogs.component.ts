@@ -7,6 +7,8 @@ import { TelemetryqueryService } from '@app/services/generated/telemetryquery.se
 import { IPUtility } from '@app/common/IPUtility';
 import { LazyLoadEvent } from 'primeng/primeng';
 import { TableCol, TableviewAbstract, TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   selector: 'app-fwlogs',
@@ -15,7 +17,6 @@ import { TableCol, TableviewAbstract, TablevieweditHTMLComponent } from '@app/co
   encapsulation: ViewEncapsulation.None
 })
 export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Telemetry_queryFwlog> {
-  // @ViewChild('fwlogsTable') fwlogTable: Table;
   @ViewChild(TablevieweditHTMLComponent) tableWrapper: TablevieweditHTMLComponent;
 
   dataObjects: ReadonlyArray<Telemetry_queryFwlog> = [];
@@ -66,6 +67,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
 
   constructor(
     protected controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected cdr: ChangeDetectorRef,
     protected telemetryService: TelemetryqueryService,
   ) {
@@ -77,8 +79,7 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
   }
 
   setDefaultToolbar() {
-    this.controllerService.setToolbarData({
-      buttons: [
+      const buttons = [
         {
           cssClass: 'global-button-primary fwlogs-button',
           text: 'EXPORT LOGS',
@@ -89,11 +90,16 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
           text: 'REFRESH',
           callback: () => { this.getFwlogs(); },
         },
-        {
+      ]
+      if (this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringfwlogpolicy_read)) {
+        buttons.push({
           cssClass: 'global-button-primary fwlogs-button',
           text: 'FIREWALL LOG POLICIES',
           callback: () => { this.controllerService.navigate(['/monitoring', 'fwlogs', 'fwlogpolicies']); }
-        }],
+        })
+      }
+    this.controllerService.setToolbarData({
+      buttons: buttons,
       breadcrumb: [{ label: 'Firewall Logs', url: Utility.getBaseUIUrl() + 'monitoring/fwlogs' }]
     });
   }

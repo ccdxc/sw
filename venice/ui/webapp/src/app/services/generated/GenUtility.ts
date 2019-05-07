@@ -7,6 +7,8 @@ import { VeniceResponse } from '@app/models/frontend/shared/veniceresponse.inter
 import { MockDataUtil } from '@app/common/MockDataUtil';
 import { AUTH_KEY } from '@app/core/auth/auth.reducer';
 import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
+import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 export class GenServiceUtility {
   protected _http;
@@ -37,6 +39,41 @@ export class GenServiceUtility {
       }
     });
   }
+
+  convertEventID(opts: MethodOpts): UIRolePermissions {
+    let action;
+    if (opts.eventID.startsWith('Watch')) {
+      action = "read"
+      opts.objType = opts.objType.replace('AutoMsg', '')
+      opts.objType = opts.objType.replace('WatchHelper', '')
+    } else if (opts.eventID.startsWith('List')) {
+      action = "read"
+      opts.objType = opts.objType.replace('List', '')
+    } else if (opts.eventID.startsWith('Get')) {
+      action = "read"
+    } else if (opts.eventID.startsWith('Update')) {
+      action = "update"
+    } else if (opts.eventID.startsWith('Delete')) {
+      if (opts.isStaging) {
+        action = 'clear'
+      } else {
+        action = "delete"
+      }
+    } else if (opts.eventID.startsWith('Add')) {
+      if (opts.isStaging) {
+        action = 'commit'
+      } else {
+        action = 'create'
+      }
+    } else {
+      const catKind = Utility.actionMethodNameToObject(opts.eventID);
+      action = 'create'
+      opts.objType = catKind.category + catKind.kind;
+    }
+    const key = opts.objType.toLowerCase() + '_' + action;
+    return UIRolePermissions[key]
+  }
+
 
   /**
    * Function to create an observer that starts an oboe instance

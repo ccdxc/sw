@@ -59,10 +59,10 @@ Object.keys(manifest).forEach( (category) => {
     // Skipping the bookstore exampe
     return;
   }
-  if (category === "staging") {
-    // Skipping the staging category
-    return;
-  }
+  // if (category === "staging") {
+  //   // Skipping the staging category
+  //   return;
+  // }
   const internalServices = manifest[category]["Svcs"];
   // We assume only one internal service
   const serviceData = internalServices[Object.keys(internalServices)[0]];
@@ -82,6 +82,8 @@ Object.keys(manifest).forEach( (category) => {
       // File will be placed in {Version}/models/generated/
       "importPath": "./" + category,
       "importName": _.upperFirst(category) + kind,
+      scopes: serviceData.Properties[kind].Scopes,
+      actions: serviceData.Properties[kind].Actions
     }
   });
   if (category === "monitoring") {
@@ -114,20 +116,16 @@ Object.keys(manifest).forEach( (category) => {
     // Skipping the bookstore exampe
     return;
   }
-  if (category === "staging") {
-    // Skipping the staging category
-    return;
-  }
   const internalServices = manifest[category]["Svcs"];
   // We assume only one internal service
   const serviceData = internalServices[Object.keys(internalServices)[0]];
-  permActions.forEach( (action) => {
-    permEnum.push(_.toLower(category) + "apigroup" + delimiter + _.toLower(action));
-  })
+  // permActions.forEach( (action) => {
+  //   permEnum.push(_.toLower(category) + "apigroup" + delimiter + _.toLower(action));
+  // })
 
   serviceData.Messages.forEach( (kind) => {
     permActions.forEach( (action) => {
-      permEnum.push( _.toLower(kind) + delimiter + _.toLower(action));
+      permEnum.push( _.toLower(category) + _.toLower(kind) + delimiter + _.toLower(action));
     });
   });
 });
@@ -137,9 +135,10 @@ const addCustomKind = (kind) => {
   });
 }
 permEnum.push('auditevent' + delimiter + 'read');
-permEnum.push('event' + delimiter + 'read');
-permEnum.push('metric' + delimiter + 'read');
-permEnum.push('fwlog' + delimiter + 'read');
+permEnum.push('eventsevent' + delimiter + 'read');
+permEnum.push('search' + delimiter + 'read');
+permEnum.push('metricsquery' + delimiter + 'read');
+permEnum.push('fwlogsquery' + delimiter + 'read');
 
 Object.keys(data).forEach( (version) => {
   const template = readAndCompileTemplateFile('generate-permissions-enum-ts.hbs');

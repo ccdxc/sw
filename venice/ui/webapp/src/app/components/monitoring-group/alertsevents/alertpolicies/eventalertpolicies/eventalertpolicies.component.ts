@@ -8,6 +8,8 @@ import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
 import { IApiStatus, IMonitoringAlertPolicy, MonitoringAlertDestination, MonitoringAlertPolicy, MonitoringAlertPolicySpec_severity_uihint } from '@sdk/v1/models/generated/monitoring';
 import { Observable } from 'rxjs';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 
 @Component({
@@ -47,6 +49,7 @@ export class EventalertpolicyComponent extends TablevieweditAbstract<IMonitoring
 
   constructor(protected controllerService: ControllerService,
     protected cdr: ChangeDetectorRef,
+    protected uiconfigsService: UIConfigsService,
     protected monitoringService: MonitoringService) {
     super(controllerService, cdr);
   }
@@ -57,14 +60,17 @@ export class EventalertpolicyComponent extends TablevieweditAbstract<IMonitoring
 
   setDefaultToolbar() {
     const currToolbar = this.controllerService.getToolbarData();
-    currToolbar.buttons = [
-      {
-        cssClass: 'global-button-primary eventalertpolicies-button',
-        text: 'ADD ALERT POLICY',
-        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
-        callback: () => { this.createNewObject(); }
-      },
-    ];
+    currToolbar.buttons = [];
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringalertpolicy_create)) {
+      currToolbar.buttons = [
+        {
+          cssClass: 'global-button-primary eventalertpolicies-button',
+          text: 'ADD ALERT POLICY',
+          computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+          callback: () => { this.createNewObject(); }
+        },
+      ];
+    }
     this.controllerService.setToolbarData(currToolbar);
   }
 

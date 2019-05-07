@@ -2,24 +2,26 @@
   <div fxFlex="none" fxLayout="row">
     <div fxFlex fxLayout="row wrap" class="naplesdetail-card-container">
       <ng-container *ngTemplateOutlet="detailsTable"></ng-container>
-      <ng-container *ngFor="let cardData of heroCards">
-        <app-herocard fxFlex="nogrow"
-                      [title]="cardData.title"
-                      [firstStat]="cardData.firstStat"
-                      [secondStat]="cardData.secondStat"
-                      [thirdStat]="cardData.thirdStat"
-                      [backgroundIcon]="cardData.backgroundIcon"
-                      [themeColor]="cardData.themeColor"
-                      [icon]="cardData.icon"
-                      [data]="cardData.data"
-                      [arrowDirection]="cardData.arrowDirection"
-                      [lastUpdateTime]="lastUpdateTime"
-                      [cardState]="cardData.cardState">
-        </app-herocard>
+      <ng-container *roleGuard="'metricsquery_read'">
+        <ng-container *ngFor="let cardData of heroCards">
+          <app-herocard fxFlex="nogrow"
+                        [title]="cardData.title"
+                        [firstStat]="cardData.firstStat"
+                        [secondStat]="cardData.secondStat"
+                        [thirdStat]="cardData.thirdStat"
+                        [backgroundIcon]="cardData.backgroundIcon"
+                        [themeColor]="cardData.themeColor"
+                        [icon]="cardData.icon"
+                        [data]="cardData.data"
+                        [arrowDirection]="cardData.arrowDirection"
+                        [lastUpdateTime]="lastUpdateTime"
+                        [cardState]="cardData.cardState">
+          </app-herocard>
+        </ng-container>
       </ng-container>
     </div>
   </div>
-  <div fxFlex class="naplesdetail-alertsevents-container">
+  <div *roleGuard="{opt: ['monitoringAlert_read', 'eventsevent_read']}" fxFlex class="naplesdetail-alertsevents-container">
     <app-shared-alertsevents [selector]="alertseventsSelector"></app-shared-alertsevents>
   </div>
   <!-- Deletion screen overlay displays when the policy we are viewing is deleted -->
