@@ -13,9 +13,96 @@ import "meta/meta.proto";
 import "types.proto";
 
 service NhSvc {
+  rpc NexthopCreate (NexthopRequest) returns (NexthopResponse) {}
+  rpc NexthopGet (NexthopGetRequest) returns (NexthopGetResponse) {}
+  rpc NexthopDelete (NexthopDeleteRequest) returns (NexthopDeleteResponse) {}
   rpc NhGroupCreate (NhGroupRequest) returns (NhGroupResponse) {}
   rpc NhGroupGet (NhGroupGetRequest) returns (NhGroupGetResponse) {}
   rpc NhGroupDelete (NhGroupDeleteRequest) returns (NhGroupDeleteResponse) {}
+}
+
+enum NexthopType {
+  NEXTHOP_TYPE_NONE = 0;
+  NEXTHOP_TYPE_IP   = 1;
+}
+
+message IPNexthopInfo {
+  // egress VRF id
+  uint32           VCNId      = 1;
+  // nexthop's IP address
+  types.IPAddress  IP         = 2;
+  // egress interface
+  uint32           IntefaceId = 3;
+  // egress vlan
+  uint32           Vlan       = 4;
+}
+
+// nexthop specification
+message NexthopSpec {
+  // unique nexthop id
+  uint32 Id                = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  NexthopType Type         = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // nexthop can be one of different types
+  oneof NhInfo {
+    IPNexthopInfo IPNhInfo = 3 [(gogoproto.moretags) = "meta:constraints={NexthopSpec.Type==NEXTHOP_TYPE_IP}"];
+  }
+}
+
+// operational status of nexthop, if any
+message NexthopStatus {
+}
+
+// stats of a nexthop, if any
+message NexthopStats {
+}
+
+// nexthop object
+message Nexthop {
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  NexthopSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  NexthopStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  NexthopStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// nexthop create and update request
+message NexthopRequest {
+  // batched create or update requests
+  repeated NexthopSpec Request = 1;
+}
+
+// nexthop create and update response
+message NexthopResponse {
+  // API status code for create & update operations
+  types.ApiStatus        ApiStatus = 1;
+  // response containing operational status of the objects created/updated
+  repeated NexthopStatus Response  = 2;
+}
+
+// nexthop get request
+message NexthopGetRequest {
+  // list of nexthops of interest
+  repeated uint32 Id = 1;
+}
+
+// nexthop get response
+message NexthopGetResponse {
+  // API status code for get operation
+  types.ApiStatus  ApiStatus = 1;
+  // list of nexthops
+  repeated Nexthop Response  = 2;
+}
+
+// nexthop delete request
+message NexthopDeleteRequest {
+  // list of nexthops to delete
+  repeated uint32 Id = 1;
+}
+
+// nexthop delete response
+message NexthopDeleteResponse {
+  // API status code for delete operation
+  repeated types.ApiStatus ApiStatus = 1;
 }
 
 // type of the nexthop group
@@ -51,13 +138,13 @@ message NhGroup {
   NhGroupStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
 
-// NhGroup create and update request
+// nexthop group create and update request
 message NhGroupRequest {
   // batched create or update requests
   repeated NhGroupSpec Request = 1;
 }
 
-// NhGroup create and update response
+// nexthop group create and update response
 message NhGroupResponse {
   // API status code for create & update operations
   types.ApiStatus        ApiStatus = 1;
@@ -65,27 +152,27 @@ message NhGroupResponse {
   repeated NhGroupStatus Response  = 2;
 }
 
-// NhGroup get request
+// nexthop group get request
 message NhGroupGetRequest {
   // list of nexthop groups of interest
   repeated uint32 Id = 1;
 }
 
-// NhGroup get response
+// nexthop group get response
 message NhGroupGetResponse {
   // API status code for get operation
   types.ApiStatus  ApiStatus = 1;
-  // list of nexthop group information
+  // list of nexthop groups
   repeated NhGroup Response  = 2;
 }
 
-// NhGroup delete request
+// nexthop group delete request
 message NhGroupDeleteRequest {
   // list of nexthop groups to delete
   repeated uint32 Id = 1;
 }
 
-// NhGroup delete response
+// nexthop group delete response
 message NhGroupDeleteResponse {
   // API status code for delete operation
   repeated types.ApiStatus ApiStatus = 1;
