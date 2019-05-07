@@ -226,9 +226,9 @@
       "integrity": "sha512-4krF8scpejhaOgqzBEcGM7yDIEfi0/8+8zDRZhNZZ2kjmHJ4hv3zCbQWxoJGz1iw5U0Jl0nma13xzHXcncMavQ=="
     },
     "uglify-js": {
-      "version": "3.5.10",
-      "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-3.5.10.tgz",
-      "integrity": "sha512-/GTF0nosyPLbdJBd+AwYiZ+Hu5z8KXWnO0WCGt1BQ/u9Iamhejykqmz5o1OHJ53+VAk6xVxychonnApDjuqGsw==",
+      "version": "3.5.11",
+      "resolved": "https://registry.npmjs.org/uglify-js/-/uglify-js-3.5.11.tgz",
+      "integrity": "sha512-izPJg8RsSyqxbdnqX36ExpbH3K7tDBsAU/VfNv89VkMFy3z39zFjunQGsSHOlGlyIfGLGprGeosgQno3bo2/Kg==",
       "optional": true,
       "requires": {
         "commander": "~2.20.0",

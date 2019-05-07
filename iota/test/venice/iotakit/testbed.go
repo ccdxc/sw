@@ -18,6 +18,7 @@ import (
 
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
+
 	"github.com/pensando/sw/api/generated/apiclient"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/svcs/common"
@@ -219,7 +220,7 @@ func newTestBed(topoName string, paramsFile string, skipSetup bool) (*TestBed, e
 		log.Warnf("Error while setting up testbed. Retrying...")
 	}
 	if err != nil {
-		log.Infof("Seetting up testbed failed. collecting logs")
+		log.Errorf("Setting up testbed failed after retries. collecting logs")
 		tb.CollectLogs()
 		return nil, err
 	}
@@ -227,7 +228,7 @@ func newTestBed(topoName string, paramsFile string, skipSetup bool) (*TestBed, e
 	// check iota cluster health
 	err = tb.CheckIotaClusterHealth()
 	if err != nil {
-		log.Infof("Checking cluster health. collecting logs")
+		log.Errorf("Error during Checking cluster health. collecting logs")
 		tb.CollectLogs()
 		return nil, err
 	}
