@@ -37,7 +37,7 @@ make -j -C krping || exit
 ;;
 
 # Vanilla / Ubuntu / Oracle
-4.14.*|4.15.*)
+4.14.*|4.15.*|4.18.*)
 make -j -C krping || exit
 ;;
 

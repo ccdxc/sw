@@ -4,3 +4,4 @@
 
 rmmod ionic_rdma
 rmmod ionic
+rmmod rdma_krping
