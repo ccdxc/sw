@@ -36,6 +36,7 @@ mirror_session_api_to_proto_spec (pds::MirrorSessionSpec *proto_spec,
                                           &api_spec->erspan_spec.src_ip);
             proto_erspan->set_dscp(api_spec->erspan_spec.dscp);
             proto_erspan->set_spanid(api_spec->erspan_spec.span_id);
+            proto_erspan->set_vpcid(api_spec->erspan_spec.vpc.id);
             proto_spec->set_allocated_erspanspec(proto_erspan);
         }
         break;
@@ -116,6 +117,7 @@ mirror_session_proto_to_api_spec (pds_mirror_session_spec_t *api_spec,
         ipaddr_proto_spec_to_api_spec(&api_spec->erspan_spec.src_ip, srcip);
         api_spec->erspan_spec.dscp = proto_spec.erspanspec().dscp();
         api_spec->erspan_spec.span_id = proto_spec.erspanspec().spanid();
+        api_spec->erspan_spec.vpc.id = proto_spec.erspanspec().vpcid();
     } else {
         PDS_TRACE_ERR("rspan & erspan config missing in mirror session {} spec",
                       api_spec->key.id);

@@ -136,8 +136,9 @@ mirror_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
                    ((tep_impl *)(tep->impl()))->mac(), ETH_ADDR_LEN);
             memcpy(mirror_data.erspan_action.smac,
                    device_db()->find()->mac(), ETH_ADDR_LEN);
-            //mirror_data.erspan_action.sip = ;
-            //mirror_data.erspan_action.dip = ;
+            mirror_data.erspan_action.sip = spec->erspan_spec.src_ip.addr.v4_addr;
+            mirror_data.erspan_action.dip = spec->erspan_spec.dst_ip.addr.v4_addr;
+            mirror_data.erspan_action.truncate_len = spec->snap_len;
         } else {
 #if 0
             mapping_key.vpc = spec->erspan_spec.vpc;
@@ -227,6 +228,19 @@ mirror_impl::read_hw(pds_mirror_session_key_t *key,
         break;
 
     case MIRROR_ERSPAN_ID:
+        info->spec.type = PDS_MIRROR_SESSION_TYPE_ERSPAN;
+        info->spec.snap_len = mirror_data.erspan_action.truncate_len;
+        info->spec.erspan_spec.src_ip.addr.v4_addr = mirror_data.erspan_action.sip;
+        info->spec.erspan_spec.dst_ip.addr.v4_addr = mirror_data.erspan_action.dip;
+        // TODO as there is no field in HW for spanId,
+        // assume we are using mirror session id
+        info->spec.erspan_spec.span_id = key->id;
+        // TODO dscp no value n HW entry, assuming it is sending zero in paket.
+        info->spec.erspan_spec.dscp = 0;
+        //TODO how to extract vcn
+        //info->spec.erspan_spec.vcn.id =
+        break;
+
     default:
         PDS_TRACE_ERR("mirror read operation not supported");
         return sdk::SDK_RET_INVALID_OP;
