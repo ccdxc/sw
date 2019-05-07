@@ -429,6 +429,8 @@ message TcpCbSpec {
   uint32                zero_window_sent           = 56;
   fixed64               cb_base_qtype1             = 57;
   uint32                srtt_us                    = 58;
+  bool                  sack_perm                  = 59;
+  bool                  timestamps                 = 60;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request

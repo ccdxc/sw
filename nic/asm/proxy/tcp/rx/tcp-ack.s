@@ -99,7 +99,6 @@ bytes_acked_stats_update_end:
      */
     phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_SND_UNA_UPDATE, \
                         TCP_PENDING_TXDMA_SND_UNA_UPDATE
-    phvwr           p.common_phv_snd_una, d.snd_una
 
     /*
      * Launch next stage

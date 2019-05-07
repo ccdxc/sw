@@ -101,11 +101,18 @@
 #define TCP_TX_INVALID_SESQ_TX_CI           0xffff
 
 // TCP CB CFG flags
-#define TCP_CFG_FLAG_DELACK_BIT             0
-#define TCP_CFG_FLAG_OOO_QUEUE_BIT          1
+#define TCP_OPER_FLAG_DELACK_BIT            0
+#define TCP_OPER_FLAG_OOO_QUEUE_BIT         1
 
-#define TCP_CFG_FLAG_DELACK                 (1 << TCP_CFG_FLAG_DELACK_BIT)
-#define TCP_CFG_FLAG_OOO_QUEUE              (1 << TCP_CFG_FLAG_OOO_QUEUE_BIT)
+#define TCP_OPER_FLAG_DELACK                (1 << TCP_OPER_FLAG_DELACK_BIT)
+#define TCP_OPER_FLAG_OOO_QUEUE             (1 << TCP_OPER_FLAG_OOO_QUEUE_BIT)
+
+// TCP CB Option CFG flags
+#define TCP_OPT_FLAG_SACK_PERM_BIT          0
+#define TCP_OPT_FLAG_TIMESTAMPS_BIT         1
+
+#define TCP_OPT_FLAG_SACK_PERM              (1 << TCP_OPT_FLAG_SACK_PERM_BIT)
+#define TCP_OPT_FLAG_TIMESTAMPS             (1 << TCP_OPT_FLAG_TIMESTAMPS_BIT)
 
 #define TCP_QUICKACKS                       2
 

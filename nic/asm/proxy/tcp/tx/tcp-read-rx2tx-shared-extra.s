@@ -50,6 +50,9 @@ tcp_tx_read_rx2tx_shared_extra_stage1_start:
     phvwr           p.tcp_ts_opt_ts_ecr, d.rcv_tsval
     phvwr           p.tcp_ts_opt_ts_val, r4
 
+    seq             c1, d.launch_sack_rx, 1
+    phvwr.c1        p.common_phv_launch_sack_rx, 1
+
     // When dup_ack is set, use dup_rcv_nxt
     phvwr           p.common_phv_pending_dup_ack_send, d.pending_dup_ack_send
     seq             c1, d.pending_dup_ack_send, 1

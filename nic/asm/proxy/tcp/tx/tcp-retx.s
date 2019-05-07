@@ -22,8 +22,13 @@ struct s3_t0_tcp_tx_retx_d d;
     .param          tcp_xmit_ack_process_start
     .param          tcp_xmit_idle_process_start
     .param          tcp_tx_read_nmdr_gc_idx_start
+    .param          tcp_tx_sack_rx
 
 tcp_retx_process_start:
+    seq             c1, k.common_phv_launch_sack_rx, 1
+    bal.c1          r7, tcp_retx_launch_sack_rx
+    nop
+
     bbeq            k.common_phv_pending_ack_send, 1, tcp_retx_ack_send
     nop
     bbeq            k.common_phv_pending_idle, 1, tcp_retx_idle
@@ -84,11 +89,19 @@ tcp_retx_ack_send:
     seq             c2, d.last_ack, k.t0_s2s_rcv_nxt
     setcf           c3, [!c1 & c2]
     tblwr.e         d.last_ack, k.t0_s2s_rcv_nxt
-    phvwri.c3       p.app_header_table0_valid, 0
+    phvwri.c3       p.{app_header_table0_valid...app_header_table3_valid}, 0
 
 tcp_retx_idle:
     CAPRI_NEXT_TABLE_READ_OFFSET_e(0, TABLE_LOCK_EN,
                         tcp_xmit_idle_process_start,
                         k.common_phv_qstate_addr,
                         TCP_TCB_XMIT_OFFSET, TABLE_SIZE_512_BITS)
+    nop
+
+tcp_retx_launch_sack_rx:
+    CAPRI_NEXT_TABLE_READ_OFFSET(1, TABLE_LOCK_DIS,
+                        tcp_tx_sack_rx,
+                        k.common_phv_qstate_addr,
+                        TCP_TCB_OOO_BOOK_KEEPING_OFFSET0, TABLE_SIZE_512_BITS)
+    jr              r7
     nop

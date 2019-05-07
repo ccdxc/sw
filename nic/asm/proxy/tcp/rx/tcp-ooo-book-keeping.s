@@ -30,6 +30,14 @@ struct s2_t2_tcp_rx_ooo_book_keeping_d d;
 #define QUEUE2_MASK     (1 << QUEUE2_BIT)
 #define QUEUE3_MASK     (1 << QUEUE3_BIT)
 
+#define INVALID_POS     0
+#define FIRST_POS       1
+
+/*
+ * Global variables
+ */
+#define r_last_queued_q r6
+
 %%
     .align
     .param          tcp_ooo_processing_launch_dummy1
@@ -85,6 +93,7 @@ tcp_ooo_book_keeping_begin_use_ooo_queue0:
     add             r1, k.t2_s2s_seq, k.t2_s2s_payload_len
     tblwr           d.end_seq0, r1
     tbladd          d.tail_index0, 1
+    add             r_last_queued_q, QUEUE0, 0
     b               tcp_ooo_book_keeping_launch_alloc_queue
     phvwr           p.t2_s2s_ooo_queue_id, QUEUE0
 
@@ -93,6 +102,7 @@ tcp_ooo_book_keeping_begin_use_ooo_queue1:
     add             r1, k.t2_s2s_seq, k.t2_s2s_payload_len
     tblwr           d.end_seq1, r1
     tbladd          d.tail_index1, 1
+    add             r_last_queued_q, QUEUE1, 0
     b               tcp_ooo_book_keeping_launch_alloc_queue
     phvwr           p.t2_s2s_ooo_queue_id, QUEUE1
 
@@ -101,6 +111,7 @@ tcp_ooo_book_keeping_begin_use_ooo_queue2:
     add             r1, k.t2_s2s_seq, k.t2_s2s_payload_len
     tblwr           d.end_seq2, r1
     tbladd          d.tail_index2, 1
+    add             r_last_queued_q, QUEUE2, 0
     b               tcp_ooo_book_keeping_launch_alloc_queue
     phvwr           p.t2_s2s_ooo_queue_id, QUEUE2
 
@@ -109,6 +120,7 @@ tcp_ooo_book_keeping_begin_use_ooo_queue3:
     add             r1, k.t2_s2s_seq, k.t2_s2s_payload_len
     tblwr           d.end_seq3, r1
     tbladd          d.tail_index3, 1
+    add             r_last_queued_q, QUEUE3, 0
     b               tcp_ooo_book_keeping_launch_alloc_queue
     phvwr           p.t2_s2s_ooo_queue_id, QUEUE3
 
@@ -116,6 +128,7 @@ tcp_ooo_book_keeping_enqueue_tail_of_queue0:
     tbladd          d.end_seq0, k.t2_s2s_payload_len
     phvwr           p.t2_s2s_ooo_tail_index, d.tail_index0
     tbladd          d.tail_index0, 1
+    add             r_last_queued_q, QUEUE0, 0
     b               tcp_ooo_book_keeping_launch_dummy
     phvwr           p.t2_s2s_ooo_queue_id, QUEUE0
 
@@ -123,6 +136,7 @@ tcp_ooo_book_keeping_enqueue_tail_of_queue1:
     tbladd          d.end_seq1, k.t2_s2s_payload_len
     phvwr           p.t2_s2s_ooo_tail_index, d.tail_index1
     tbladd          d.tail_index1, 1
+    add             r_last_queued_q, QUEUE1, 0
     b               tcp_ooo_book_keeping_launch_dummy
     phvwr           p.t2_s2s_ooo_queue_id, QUEUE1
 
@@ -130,6 +144,7 @@ tcp_ooo_book_keeping_enqueue_tail_of_queue2:
     tbladd          d.end_seq2, k.t2_s2s_payload_len
     phvwr           p.t2_s2s_ooo_tail_index, d.tail_index2
     tbladd          d.tail_index2, 1
+    add             r_last_queued_q, QUEUE2, 0
     b               tcp_ooo_book_keeping_launch_dummy
     phvwr           p.t2_s2s_ooo_queue_id, QUEUE2
 
@@ -137,16 +152,25 @@ tcp_ooo_book_keeping_enqueue_tail_of_queue3:
     tbladd          d.end_seq3, k.t2_s2s_payload_len
     phvwr           p.t2_s2s_ooo_tail_index, d.tail_index3
     tbladd          d.tail_index3, 1
+    add             r_last_queued_q, QUEUE3, 0
     b               tcp_ooo_book_keeping_launch_dummy
     phvwr           p.t2_s2s_ooo_queue_id, QUEUE3
 
 tcp_ooo_book_keeping_launch_alloc_queue:
+    smeqb           c1, d.tcp_opt_flags, TCP_OPT_FLAG_SACK_PERM, TCP_OPT_FLAG_SACK_PERM
+    phvwr.c1        p.rx2tx_extra_launch_sack_rx, 1
+    bal             r7, tcp_ooo_book_keeping_adjust_pos
+    nop
     CAPRI_NEXT_TABLE_READ_i(2, TABLE_LOCK_DIS, tcp_ooq_alloc_idx_start,
                         TCP_OOQ_ALLOC_IDX, TABLE_SIZE_64_BITS)
     nop.e
     nop
 
 tcp_ooo_book_keeping_launch_dummy:
+    smeqb           c1, d.tcp_opt_flags, TCP_OPT_FLAG_SACK_PERM, TCP_OPT_FLAG_SACK_PERM
+    phvwr.c1        p.rx2tx_extra_launch_sack_rx, 1
+    bal             r7, tcp_ooo_book_keeping_adjust_pos
+    nop
     CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(2, tcp_ooo_processing_launch_dummy1)
     nop.e
     nop
@@ -180,6 +204,7 @@ tcp_ooo_book_keeping_in_order_check_queue0:
     b.!c1           tcp_ooo_book_keeping_in_order_check_queue1
     phvwr.c1        p.s3_t2_s2s_ooo_rx2tx_ready_len0, d.tail_index0
     tblwr           d.tail_index0, 0
+    tblwr           d.q0_pos, INVALID_POS
     sub             r3, r1, d.start_seq0
     phvwr           p.s3_t2_s2s_ooo_rx2tx_ready_trim0, r3
     // Set r1 = max(pkt.end_seq, queue.end_seq)
@@ -193,6 +218,7 @@ tcp_ooo_book_keeping_in_order_check_queue1:
     b.!c1           tcp_ooo_book_keeping_in_order_check_queue2
     phvwr.c1        p.s3_t2_s2s_ooo_rx2tx_ready_len1, d.tail_index1
     tblwr           d.tail_index1, 0
+    tblwr           d.q1_pos, INVALID_POS
     sub             r3, r1, d.start_seq1
     phvwr           p.s3_t2_s2s_ooo_rx2tx_ready_trim1, r3
     // set r1 = max(pkt.end_seq, queue.end_seq)
@@ -206,6 +232,7 @@ tcp_ooo_book_keeping_in_order_check_queue2:
     b.!c1           tcp_ooo_book_keeping_in_order_check_queue3
     phvwr.c1        p.s3_t2_s2s_ooo_rx2tx_ready_len2, d.tail_index2
     tblwr           d.tail_index2, 0
+    tblwr           d.q2_pos, INVALID_POS
     sub             r3, r1, d.start_seq2
     phvwr           p.s3_t2_s2s_ooo_rx2tx_ready_trim2, r3
     // set r1 = max(pkt.end_seq, queue.end_seq)
@@ -219,6 +246,7 @@ tcp_ooo_book_keeping_in_order_check_queue3:
     b.!c1           tcp_ooo_book_keeping_done
     phvwr.c1        p.s3_t2_s2s_ooo_rx2tx_ready_len3, d.tail_index3
     tblwr           d.tail_index3, 0
+    tblwr           d.q3_pos, INVALID_POS
     sub             r3, r1, d.start_seq3
     phvwr           p.s3_t2_s2s_ooo_rx2tx_ready_trim3, r3
     // set r1 = max(pkt.end_seq, queue.end_seq)
@@ -228,12 +256,14 @@ tcp_ooo_book_keeping_in_order_check_queue3:
     or              r2, r2, QUEUE3_MASK
 
 tcp_ooo_book_keeping_done:
+    smeqb           c1, d.tcp_opt_flags, TCP_OPT_FLAG_SACK_PERM, TCP_OPT_FLAG_SACK_PERM
+    phvwr.c1        p.rx2tx_extra_launch_sack_rx, 1
     /*
      * No queue became in-order, send acks if necessary as we would have
      * suppressed sending acks when OOQ is not empty.
      */
     phvwr           p.rx2tx_extra_pending_dup_ack_send, 0
-    phvwrmi.c1      p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
+    phvwrmi         p.common_phv_pending_txdma, TCP_PENDING_TXDMA_ACK_SEND, \
                         TCP_PENDING_TXDMA_ACK_SEND
 
     CAPRI_CLEAR_TABLE_VALID(2)
@@ -305,9 +335,91 @@ tcp_ooo_end_scan:
     seq             c2, d.tail_index1, 0
     seq             c3, d.tail_index2, 0
     seq             c4, d.tail_index3, 0
+    smeqb           c5, d.tcp_opt_flags, TCP_OPT_FLAG_SACK_PERM, TCP_OPT_FLAG_SACK_PERM
+    phvwr.c5        p.rx2tx_extra_launch_sack_rx, 1
     bcf             [!c1 | !c2 | !c3 | !c4], tcp_ooo_launch_dummy
     add             r1, k.common_phv_qstate_addr, TCP_TCB_RX_OOQ_NOT_EMPTY
     memwr.b         r1, 0
+    phvwr           p.rx2tx_extra_launch_sack_rx, 0
 tcp_ooo_launch_dummy:
     b               tcp_ooo_book_keeping_launch_dummy
+    nop
+
+/*
+ * Function: tcp_ooo_book_keeping_adjust_pos()
+ *     Maintain order of packets arriving in OOO queues
+ *
+ * if (r_last_queued_q == QUEUE0) {
+ *     if (d.q0_pos != FIRT_POS) {
+ *         if (d.q0_pos < d.q1_pos) 
+ *             d.q1_pos--;
+ *         if (d.q0_pos < d.q2_pos) 
+ *             d.q2_pos--;
+ *         if (d.q0_pos < d.q3_pos) 
+ *             d.q3_pos--;
+ *         d.q0_pos = FIRST_POS
+ *     }
+ * } else if (r_last_queued_q == QUEUE1) {
+ *     if (d.q1_pos != FIRST_POS) {
+ *         if (d.q1_pos < d.q0_pos)
+ *             d.q0_pos--;
+ *         if (d.q1_pos < d.q2_pos)
+ *         ...
+ */
+tcp_ooo_book_keeping_adjust_pos:
+queued_to_q0:
+    seq             c1, r_last_queued_q, QUEUE0
+    b.!c1           queued_to_q1
+    nop
+    seq             c1, d.q0_pos, FIRST_POS
+    b.c1            adjust_pos_end
+    slt             c1, d.q0_pos, d.q1_pos
+    tblssub         d.q1_pos, 1
+    slt             c1, d.q0_pos, d.q2_pos
+    tblssub         d.q2_pos, 1
+    slt             c1, d.q0_pos, d.q3_pos
+    tblssub         d.q3_pos, 1
+    b               adjust_pos_end
+    tblwr           d.q0_pos, FIRST_POS
+queued_to_q1:
+    seq             c1, r_last_queued_q, QUEUE1
+    b.!c1           queued_to_q2
+    nop
+    seq             c1, d.q1_pos, FIRST_POS
+    b.c1            adjust_pos_end
+    slt             c1, d.q1_pos, d.q0_pos
+    tblssub         d.q0_pos, 1
+    slt             c1, d.q1_pos, d.q2_pos
+    tblssub         d.q2_pos, 1
+    slt             c1, d.q1_pos, d.q3_pos
+    tblssub         d.q3_pos, 1
+    b               adjust_pos_end
+    tblwr           d.q1_pos, FIRST_POS
+queued_to_q2:
+    seq             c1, r_last_queued_q, QUEUE2
+    b.!c1           queued_to_q3
+    nop
+    seq             c1, d.q2_pos, FIRST_POS
+    b.c1            adjust_pos_end
+    slt             c1, d.q2_pos, d.q0_pos
+    tblssub         d.q0_pos, 1
+    slt             c1, d.q2_pos, d.q1_pos
+    tblssub         d.q1_pos, 1
+    slt             c1, d.q2_pos, d.q3_pos
+    tblssub         d.q3_pos, 1
+    b               adjust_pos_end
+    tblwr           d.q2_pos, FIRST_POS
+queued_to_q3:
+    seq             c1, d.q3_pos, FIRST_POS
+    b.c1            adjust_pos_end
+    slt             c1, d.q3_pos, d.q0_pos
+    tblssub         d.q0_pos, 1
+    slt             c1, d.q3_pos, d.q1_pos
+    tblssub         d.q1_pos, 1
+    slt             c1, d.q3_pos, d.q2_pos
+    tblssub         d.q2_pos, 1
+    b               adjust_pos_end
+    tblwr           d.q3_pos, FIRST_POS
+adjust_pos_end:
+    jr              r7
     nop

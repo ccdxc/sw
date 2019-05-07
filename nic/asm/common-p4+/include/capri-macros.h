@@ -747,6 +747,13 @@
                      (CAPRI_PHV_START_OFFSET(_sfield) << 7) |                                   \
                      CAPRI_DMA_COMMAND_PHV_TO_PKT);
 
+#define CAPRI_DMA_CMD_PHV2PKT_SETUP_WITH_LEN(_r, _dma_cmd_prefix, _sfield, _len)                \
+        phvwri      p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},            \
+                     ((CAPRI_PHV_START_OFFSET(_sfield) << 7) |                                   \
+                     CAPRI_DMA_COMMAND_PHV_TO_PKT);                                             \
+        add         _r, (CAPRI_PHV_START_OFFSET(_sfield) - 1), _len;                            \
+        phvwr       p.##_dma_cmd_prefix##_phv_end_addr, _r
+
 #define CAPRI_DMA_CMD_PHV2PKT_SETUP_STOP(_dma_cmd_prefix, _sfield, _efield)                          \
         phvwri      p.{##_dma_cmd_prefix##_phv_end_addr...##_dma_cmd_prefix##_type},            \
                     ((CAPRI_PHV_END_OFFSET(_efield) << 17) |                                    \

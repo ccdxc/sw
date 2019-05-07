@@ -117,7 +117,7 @@ tcp_event_data_rcv_done:
 
 tcp_ack_snd_check:
     CAPRI_OPERAND_DEBUG(d.u.tcp_rx_d.ato)
-    bbeq            d.u.tcp_rx_d.cfg_flags[TCP_CFG_FLAG_DELACK_BIT], 0, tcp_schedule_ack
+    bbeq            d.u.tcp_rx_d.cfg_flags[TCP_OPER_FLAG_DELACK_BIT], 0, tcp_schedule_ack
     tblssub         d.u.tcp_rx_d.quick, 1
     // c1 = 1 ==> Start delayed ack timer
     seq             c1, d.u.tcp_rx_d.quick, 0
@@ -279,7 +279,7 @@ tcp_rx_ooo_check:
     sll             r3, k.to_s1_rcv_wnd_adv, d.u.tcp_rx_d.rcv_wscale
     add             r2, k.to_s1_rcv_wup, r3
     scwle           c1, r1[31:0], r2[31:0]
-    seq             c2, d.u.tcp_rx_d.cfg_flags[TCP_CFG_FLAG_OOO_QUEUE_BIT], 1
+    seq             c2, d.u.tcp_rx_d.cfg_flags[TCP_OPER_FLAG_OOO_QUEUE_BIT], 1
     bcf             [c1 & c2], tcp_rx_ooo_rcv
     nop
     bcf             [c1], tcp_rx_ooo_check_done

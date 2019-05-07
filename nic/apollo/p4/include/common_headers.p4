@@ -290,6 +290,15 @@ header_type tcp_header_ts_option_t {
     }
 }
 
+header_type tcp_header_sack_option_t {
+    fields {
+        kind : 8;       // set to 5
+        len : 8;        // variable 10 - 34
+        start_seq1 : 32;
+        end_seq1 : 32;
+    }
+}
+
 header_type tcp_sack_perm_option_t {
     fields {
         kind : 8;       // set to 4

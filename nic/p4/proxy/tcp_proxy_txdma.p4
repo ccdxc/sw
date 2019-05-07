@@ -73,6 +73,7 @@
 
 #define tx_table_s4_t0_action xmit
 #define tx_table_s4_t1_action read_nmdr_gc_pi
+#define tx_table_s4_t1_action1 sack_rx
 
 #define tx_table_s5_t0_action tso
 
@@ -100,6 +101,7 @@
     modify_field(common_global_scratch.pending_fast_retx, common_phv.pending_fast_retx); \
     modify_field(common_global_scratch.partial_retx_cleanup, common_phv.partial_retx_cleanup); \
     modify_field(common_global_scratch.debug_dol_dont_send_ack, common_phv.debug_dol_dont_send_ack);\
+    modify_field(common_global_scratch.launch_sack_rx, common_phv.launch_sack_rx);\
     modify_field(common_global_scratch.pending_asesq, common_phv.pending_asesq); \
     modify_field(common_global_scratch.debug_dol_dont_tx, common_phv.debug_dol_dont_tx); \
     modify_field(common_global_scratch.debug_dol_free_rnmdr, common_phv.debug_dol_free_rnmdr);\
@@ -263,6 +265,7 @@ header_type common_global_phv_t {
         pending_fast_retx       : 1;
         partial_retx_cleanup    : 1;
         debug_dol_dont_send_ack : 1;
+        launch_sack_rx          : 1;
         pending_asesq           : 1;
         debug_dol_dont_tx       : 1;
         debug_dol_free_rnmdr    : 1;
@@ -309,13 +312,9 @@ header_type to_stage_5_phv_t {
     fields {
         rcv_wnd                 : 16;
 
-        pending_challenge_ack_send : 1;
-        pending_sync_mss        : 1;
-        pending_tso_keep_alive  : 1;
-        pending_tso_pmtu_probe  : 1;
+        sack_opt_len            : 8;
         pending_tso_data        : 1;
-        pending_tso_probe_data  : 1;
-        pending_tso_retx        : 1;
+        pending_pad             : 7;
     }
 }
 
@@ -401,6 +400,8 @@ metadata tcp_xmit_d_t xmit_d;
 @pragma scratch_metadata
 metadata read_nmdr_gc_d_t read_nmdr_gc_d;
 @pragma scratch_metadata
+metadata ooo_book_keeping_t ooo_book_keeping;
+@pragma scratch_metadata
 metadata tso_d_t tso_d;
 
 /******************************************************************************
@@ -483,11 +484,13 @@ metadata tcp_header_pad_t tcp_nop_opt1;          // 1 byte
 metadata tcp_header_pad_t tcp_nop_opt2;          // 1 byte
 @pragma dont_trim
 metadata tcp_header_ts_option_t tcp_ts_opt;     // 10 bytes
+@pragma dont_trim
+metadata tcp_header_sack_option_t tcp_sack_opt; // variable
 
 header_type txdma_max_options_t {
     fields {
         pad1           : 36;
-        pad2           : 104;
+        pad2           : 24;
     }
 }
 @pragma dont_trim
@@ -628,7 +631,7 @@ action read_rx2tx(RX2TX_PARAMS) {
 action read_rx2tx_extra(
        snd_cwnd, rcv_nxt, dup_rcv_nxt, snd_wnd, rcv_wnd, rto, snd_una, rcv_tsval,
        cc_flags, rtt_seq_req_, t_flags, limited_transmit, state,
-       pending_dup_ack_send, pending_challenge_ack_send) {
+       pending_dup_ack_send, pending_challenge_ack_send, launch_sack_rx) {
 
     // from ki global
     GENERATE_GLOBAL_K
@@ -655,6 +658,7 @@ action read_rx2tx_extra(
     modify_field(rx2tx_extra_d.state, state);
     modify_field(rx2tx_extra_d.pending_dup_ack_send, pending_dup_ack_send);
     modify_field(rx2tx_extra_d.pending_challenge_ack_send, pending_challenge_ack_send);
+    modify_field(rx2tx_extra_d.launch_sack_rx, launch_sack_rx);
 }
 
 /*
@@ -839,6 +843,19 @@ action read_nmdr_gc_pi(sw_pi, sw_ci) {
 }
 
 /*
+ * Stage 4 table 1 action1
+ */
+action sack_rx(TCP_RX_BOOKKEEPING_PARAMS) {
+    // from ki global
+    GENERATE_GLOBAL_K
+
+    // from stage to stage
+
+    // d for stage 4 table 1 sack_rx
+    TCP_RX_GENERATE_BOOKKEEPING_D
+}
+
+/*
  * Stage 5 table 0 action
  */
 action tso(TSO_PARAMS) {
@@ -847,13 +864,9 @@ action tso(TSO_PARAMS) {
 
     // from to_stage 5
     modify_field(to_s5_scratch.rcv_wnd, to_s5.rcv_wnd);
-    modify_field(to_s5_scratch.pending_challenge_ack_send, to_s5.pending_challenge_ack_send);
-    modify_field(to_s5_scratch.pending_sync_mss, to_s5.pending_sync_mss);
-    modify_field(to_s5_scratch.pending_tso_keep_alive, to_s5.pending_tso_keep_alive);
-    modify_field(to_s5_scratch.pending_tso_pmtu_probe, to_s5.pending_tso_pmtu_probe);
+    modify_field(to_s5_scratch.sack_opt_len, to_s5.sack_opt_len);
     modify_field(to_s5_scratch.pending_tso_data, to_s5.pending_tso_data);
-    modify_field(to_s5_scratch.pending_tso_probe_data, to_s5.pending_tso_probe_data);
-    modify_field(to_s5_scratch.pending_tso_retx, to_s5.pending_tso_retx);
+    modify_field(to_s5_scratch.pending_pad, to_s5.pending_pad);
 
     // from stage to stage
     GENERATE_T0_S2S

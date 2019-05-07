@@ -180,7 +180,6 @@ tcp_in_ack_event_end:
 tcp_dup_ack_done:
     tblwr           d.snd_wnd, k.to_s2_window
     phvwr           p.to_s4_snd_wnd, k.to_s2_window
-    phvwr           p.common_phv_snd_una, d.snd_una
     /*
      * Launch next stage
      */

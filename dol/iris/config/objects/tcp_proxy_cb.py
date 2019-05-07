@@ -106,6 +106,7 @@ class TcpCbObject(base.ConfigObjectBase):
            req_spec.ato                       = self.ato
            req_spec.abc_l_var                 = self.abc_l_var
            req_spec.ooo_queue                 = self.ooo_queue
+           req_spec.sack_perm                 = self.sack_perm
            if hasattr(self, 'header_template'):
                req_spec.header_template           = self.header_template
         return
@@ -155,6 +156,7 @@ class TcpCbObject(base.ConfigObjectBase):
             self.ato = resp_spec.spec.ato
             self.abc_l_var = resp_spec.spec.abc_l_var
             self.ooo_queue = resp_spec.spec.ooo_queue
+            self.sack_perm = resp_spec.spec.sack_perm
 
             self.bytes_rcvd = resp_spec.stats.bytes_rcvd
             self.pkts_rcvd = resp_spec.stats.pkts_rcvd

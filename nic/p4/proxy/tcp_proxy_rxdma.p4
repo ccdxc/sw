@@ -76,7 +76,6 @@
 #define GENERATE_GLOBAL_K \
     modify_field(common_global_scratch.fid, common_phv.fid); \
     modify_field(common_global_scratch.qstate_addr, common_phv.qstate_addr); \
-    modify_field(common_global_scratch.snd_una, common_phv.snd_una); \
     modify_field(common_global_scratch.debug_dol, common_phv.debug_dol); \
     modify_field(common_global_scratch.process_ack_flag, \
                             common_phv.process_ack_flag); \
@@ -257,23 +256,7 @@ header_type read_ooo_qbase_index_t {
 }
 
 // d for stage 3 table 0 - ooo book keeping
-header_type ooo_book_keeping_t {
-    fields {
-        start_seq0      : 32;
-        end_seq0        : 32;
-        tail_index0     : 16;
-        start_seq1      : 32;
-        end_seq1        : 32;
-        tail_index1     : 16;
-        start_seq2      : 32;
-        end_seq2        : 32;
-        tail_index2     : 16;
-        start_seq3      : 32;
-        end_seq3        : 32;
-        tail_index3     : 16;
-        ooo_queue_full  : 32;
-    }
-}
+// ooo_book_keeping_t
 
 // offset 0 (TCP_TCB_CC_SND_CWND_OFFSET)
 
@@ -519,7 +502,6 @@ header_type common_global_phv_t {
         // global k (max 128)
         fid                     : 24;
         qstate_addr             : 34;
-        snd_una                 : 32;
         debug_dol               : 8;
         flags                   : 8;
         process_ack_flag        : 1;
@@ -996,29 +978,13 @@ action read_rnmdr(rnmdr_pidx, rnmdr_pidx_full) {
 /*
  * Stage 2 table 2 action
  */
-action ooo_book_keeping (start_seq0, end_seq0, tail_index0,
-                             start_seq1, end_seq1, tail_index1,
-                             start_seq2, end_seq2, tail_index2,
-                             start_seq3, end_seq3, tail_index3,
-                             ooo_queue_full)
+action ooo_book_keeping (TCP_RX_BOOKKEEPING_PARAMS)
 {
     GENERATE_GLOBAL_K
 
     GENERATE_T2_S2S_K
 
-    modify_field(ooo_book_keeping.start_seq0, start_seq0);
-    modify_field(ooo_book_keeping.end_seq0, end_seq0);
-    modify_field(ooo_book_keeping.tail_index0, tail_index0);
-    modify_field(ooo_book_keeping.start_seq1, start_seq1);
-    modify_field(ooo_book_keeping.end_seq1, end_seq1);
-    modify_field(ooo_book_keeping.tail_index1, tail_index1);
-    modify_field(ooo_book_keeping.start_seq2, start_seq2);
-    modify_field(ooo_book_keeping.end_seq2, end_seq2);
-    modify_field(ooo_book_keeping.tail_index2, tail_index2);
-    modify_field(ooo_book_keeping.start_seq3, start_seq3);
-    modify_field(ooo_book_keeping.end_seq3, end_seq3);
-    modify_field(ooo_book_keeping.tail_index3, tail_index3);
-    modify_field(ooo_book_keeping.ooo_queue_full, ooo_queue_full);
+    TCP_RX_GENERATE_BOOKKEEPING_D
 }
 
 

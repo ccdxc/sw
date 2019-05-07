@@ -249,6 +249,8 @@ proxy_tcp_cb_init_def_params(TcpCbSpec& spec)
     spec.set_ato(TCP_ATO_USEC);
     spec.set_delay_ack(true);
     spec.set_ooo_queue(true);
+    spec.set_sack_perm(true);
+    spec.set_timestamps(false);
     spec.set_abc_l_var(2);
     // pred_flags
     //   header len = 8 (32 bytes with timestamp)
@@ -435,6 +437,8 @@ tcp_update_cb(void *tcpcb, uint32_t qid, uint16_t src_lif)
     spec->set_delay_ack(get_rsp.mutable_spec()->delay_ack());
     spec->set_ato(get_rsp.mutable_spec()->ato());
     spec->set_ooo_queue(get_rsp.mutable_spec()->ooo_queue());
+    spec->set_sack_perm(get_rsp.mutable_spec()->sack_perm());
+    spec->set_timestamps(get_rsp.mutable_spec()->timestamps());
 
     memcpy(data,
            get_rsp.mutable_spec()->header_template().c_str(),

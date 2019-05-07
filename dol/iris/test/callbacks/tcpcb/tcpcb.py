@@ -217,3 +217,13 @@ def GetPktAckOutTcpOptions(tc, pkt):
     echo_ts.append(TcpOptions('NOP', None))
     echo_ts.append(TcpOptions('EOL', None))
     return echo_ts
+
+def GetPktAckOutSackTcpOptions(tc, pkt):
+    sack_opt = []
+    startSeq = tc.pvtdata.flow1_rcv_nxt + tc.pvtdata.ooo_seq_delta
+    endSeq = tc.pvtdata.flow1_rcv_nxt + tc.pvtdata.ooo_seq_delta + tc.pvtdata.flow1_bytes_rxed
+    sack_str = '%s %s' % (str(startSeq), str(endSeq))
+    sack_opt.append(TcpOptions('NOP', None))
+    sack_opt.append(TcpOptions('NOP', None))
+    sack_opt.append(TcpOptions('SAck', sack_str))
+    return sack_opt

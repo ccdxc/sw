@@ -106,6 +106,8 @@ typedef struct tcpcb_s {
     uint32_t              abc_l_var;
     bool                  ooo_queue;
     uint64_t              ooo_rx2tx_qbase;
+    bool                  sack_perm;
+    bool                  timestamps;
 
     // operational state of TCP Proxy CB
     bool                  ooq_not_empty;

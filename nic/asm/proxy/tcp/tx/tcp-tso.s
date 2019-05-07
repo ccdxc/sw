@@ -98,13 +98,24 @@ dma_cmd_tcp_header:
     tbladd.c2       d.zero_window_sent, 1
 
     //phvwr           p.tcp_header_data_ofs, 8		// 32 bytes
-    phvwrpair       p.tcp_header_data_ofs, 5, \
+
+    // TODO : handle tsopt
+    // r1 = tcp hdr len = 20 + sack_opt_len + 2 bytes pad
+    // r2 = r1 / 4
+    seq             c1, k.to_s5_sack_opt_len, 0
+    add.c1          r1, 20, 0
+    add.!c1         r1, 22, k.to_s5_sack_opt_len
+    smeqb           c2, d.tcp_opt_flags, TCP_OPT_FLAG_TIMESTAMPS, \
+                        TCP_OPT_FLAG_TIMESTAMPS
+    add.c2          r1, r1, TCPOLEN_TIMESTAMP
+    srl             r2, r1, 2
+    phvwrpair       p.tcp_header_data_ofs, r2, \
                         p.tcp_header_window, k.to_s5_rcv_wnd
 	phvwr           p.{tcp_nop_opt1_kind...tcp_nop_opt2_kind}, \
                         (TCPOPT_NOP << 8 | TCPOPT_NOP)
 
     // Disable timestamps for now
-    CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_header_urg)
+    CAPRI_DMA_CMD_PHV2PKT_SETUP_WITH_LEN(r7, tcp_header_dma_dma_cmd, tcp_header_source_port, r1)
     //CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_header_dma_dma_cmd, tcp_header_source_port, tcp_ts_opts_ts_ecr)
 
 dma_cmd_data:

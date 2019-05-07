@@ -54,6 +54,7 @@ ato         : 0
 abc_l_var   : 0
 ooo_queue   : 0
 ooq_not_empty : 0
+sack_perm : 0
 ooq_status  : [ {'queue_addr' : 0, 'start_seq' : 0, 'end_seq' : 0, 'num_entries' : 0},
                 {'queue_addr' : 0, 'start_seq' : 0, 'end_seq' : 0, 'num_entries' : 0},
                 {'queue_addr' : 0, 'start_seq' : 0, 'end_seq' : 0, 'num_entries' : 0},

@@ -61,7 +61,8 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         state                           : 8                     ;\
         pending_dup_ack_send            : 1                     ;\
         pending_challenge_ack_send      : 1                     ;\
-        rx2tx_end_marker                : 22                    ;\
+        launch_sack_rx                  : 1                     ;\
+        rx2tx_end_marker                : 21                    ;\
         pad_rx2tx_extra                 : 216                   ;\
 
 #define TCB_RETX_SHARED_STATE \
@@ -110,6 +111,7 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         pure_acks_sent                  : 8                     ;\
         quick_acks_decr                 : 4                     ;\
         zero_window_sent                : 16                    ;\
+        tcp_opt_flags                   : 8                     ;\
 
 #define RETX_SHARED_PARAMS \
 retx_snd_una,\
@@ -132,7 +134,8 @@ smss, is_cwnd_limited, rtt_seq_req, limited_transmit, rto_backoff, no_window
 #define TSO_PARAMS \
 tx_stats_base, \
 ip_id, source_lif, source_port, dest_port, header_len, \
-bytes_sent, smss, pkts_sent, pure_acks_sent, zero_window_sent 
+bytes_sent, smss, pkts_sent, pure_acks_sent, zero_window_sent, \
+tcp_opt_flags
 
 #define GENERATE_RETX_SHARED_D \
     modify_field(retx_d.retx_snd_una, retx_snd_una); \
@@ -179,6 +182,7 @@ bytes_sent, smss, pkts_sent, pure_acks_sent, zero_window_sent
     modify_field(tso_d.pkts_sent, pkts_sent);\
     modify_field(tso_d.pure_acks_sent, pure_acks_sent);\
     modify_field(tso_d.zero_window_sent, zero_window_sent);\
+    modify_field(tso_d.tcp_opt_flags, tcp_opt_flags);\
 
 header_type rx2tx_extra_t {
     fields {
@@ -205,6 +209,55 @@ header_type p4_to_p4plus_ooq_txdma_header_t {
         descr_addr          : 64;
     }
 }
+
+header_type ooo_book_keeping_t {
+    fields {
+        start_seq0      : 32;
+        end_seq0        : 32;
+        tail_index0     : 16;
+        start_seq1      : 32;
+        end_seq1        : 32;
+        tail_index1     : 16;
+        start_seq2      : 32;
+        end_seq2        : 32;
+        tail_index2     : 16;
+        start_seq3      : 32;
+        end_seq3        : 32;
+        tail_index3     : 16;
+        ooo_queue_full  : 32;
+        q0_pos          : 4;
+        q1_pos          : 4;
+        q2_pos          : 4;
+        q3_pos          : 4;
+        tcp_opt_flags   : 8;
+    }
+}
+
+#define TCP_RX_BOOKKEEPING_PARAMS \
+    start_seq0, end_seq0, tail_index0, start_seq1, end_seq1, tail_index1, \
+    start_seq2, end_seq2, tail_index2, start_seq3, end_seq3, tail_index3, \
+    ooo_queue_full, q0_pos, q1_pos, q2_pos, q3_pos, tcp_opt_flags
+
+#define TCP_RX_GENERATE_BOOKKEEPING_D \
+    modify_field(ooo_book_keeping.start_seq0, start_seq0); \
+    modify_field(ooo_book_keeping.end_seq0, end_seq0); \
+    modify_field(ooo_book_keeping.tail_index0, tail_index0); \
+    modify_field(ooo_book_keeping.start_seq1, start_seq1); \
+    modify_field(ooo_book_keeping.end_seq1, end_seq1); \
+    modify_field(ooo_book_keeping.tail_index1, tail_index1); \
+    modify_field(ooo_book_keeping.start_seq2, start_seq2); \
+    modify_field(ooo_book_keeping.end_seq2, end_seq2); \
+    modify_field(ooo_book_keeping.tail_index2, tail_index2); \
+    modify_field(ooo_book_keeping.start_seq3, start_seq3); \
+    modify_field(ooo_book_keeping.end_seq3, end_seq3); \
+    modify_field(ooo_book_keeping.tail_index3, tail_index3); \
+    modify_field(ooo_book_keeping.ooo_queue_full, ooo_queue_full); \
+    modify_field(ooo_book_keeping.q0_pos, q0_pos); \
+    modify_field(ooo_book_keeping.q1_pos, q1_pos); \
+    modify_field(ooo_book_keeping.q2_pos, q2_pos); \
+    modify_field(ooo_book_keeping.q3_pos, q3_pos); \
+    modify_field(ooo_book_keeping.tcp_opt_flags, tcp_opt_flags);
+
 
 /******************************************************************************
  * DMA commands

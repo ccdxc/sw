@@ -172,6 +172,8 @@ tcpcb_create (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->ato = spec.ato();
     tcpcb->abc_l_var = spec.abc_l_var();
     tcpcb->ooo_queue = spec.ooo_queue();
+    tcpcb->sack_perm = spec.sack_perm();
+    tcpcb->timestamps = spec.timestamps();
 
     tcpcb->hal_handle = hal_alloc_handle();
 
@@ -274,6 +276,8 @@ tcpcb_update (TcpCbSpec& spec, TcpCbResponse *rsp)
     tcpcb->ato = spec.ato();
     tcpcb->abc_l_var = spec.abc_l_var();
     tcpcb->ooo_queue = spec.ooo_queue();
+    tcpcb->sack_perm = spec.sack_perm();
+    tcpcb->timestamps = spec.timestamps();
     memcpy(tcpcb->header_template, spec.header_template().c_str(),
             std::max(sizeof(tcpcb->header_template), spec.header_template().size()));
     pd_tcpcb_args.tcpcb = tcpcb;
@@ -420,7 +424,7 @@ hal_ret_t
 tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
 {
     hal_ret_t              ret = HAL_RET_OK;
-    tcpcb_t                rtcpcb;
+    tcpcb_t                rtcpcb = { 0 };
     tcpcb_t*               tcpcb;
     pd::pd_tcpcb_get_args_t    pd_tcpcb_args;
     pd::pd_func_args_t          pd_func_args = {0};
@@ -505,6 +509,8 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_ato(rtcpcb.ato);
     rsp->mutable_spec()->set_abc_l_var(rtcpcb.abc_l_var);
     rsp->mutable_spec()->set_ooo_queue(rtcpcb.ooo_queue);
+    rsp->mutable_spec()->set_sack_perm(rtcpcb.sack_perm);
+    rsp->mutable_spec()->set_timestamps(rtcpcb.timestamps);
     rsp->mutable_spec()->set_cb_base(rtcpcb.cb_base);
     rsp->mutable_spec()->set_cb_base_qtype1(rtcpcb.cb_base_qtype1);
 

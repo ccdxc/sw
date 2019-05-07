@@ -144,13 +144,13 @@ p4pd_add_or_del_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_rx_d.pred_flags = htonl(tcpcb_pd->tcpcb->pred_flags);
         data.u.tcp_rx_d.rcv_wscale = tcpcb_pd->tcpcb->rcv_wscale;
         if (tcpcb_pd->tcpcb->delay_ack) {
-            data.u.tcp_rx_d.cfg_flags |= TCP_CFG_FLAG_DELACK;
+            data.u.tcp_rx_d.cfg_flags |= TCP_OPER_FLAG_DELACK;
             data.u.tcp_rx_d.ato = htons(tcpcb_pd->tcpcb->ato / TCP_TIMER_TICK);
             data.u.tcp_rx_d.quick = TCP_QUICKACKS;
             HAL_TRACE_DEBUG("TCPCB ato: {} us", tcpcb_pd->tcpcb->ato);
         }
         if (tcpcb_pd->tcpcb->ooo_queue) {
-            data.u.tcp_rx_d.cfg_flags |= TCP_CFG_FLAG_OOO_QUEUE;
+            data.u.tcp_rx_d.cfg_flags |= TCP_OPER_FLAG_OOO_QUEUE;
         }
         switch (data.u.tcp_rx_d.state) {
             case TCP_SYN_SENT:
@@ -406,6 +406,13 @@ p4pd_add_or_del_tcpcb_rx_ooq(pd_tcpcb_t* tcpcb_pd, bool del)
             HAL_TRACE_DEBUG("ooo rx2tx base: {:#x}", ooo_rx2tx_qbase);
             ooq_cb_load_d.ooo_rx2tx_qbase = htonll(ooo_rx2tx_qbase);
         }
+        if (tcpcb_pd->tcpcb->sack_perm) {
+            ooq_book_keeping_d.tcp_opt_flags |= TCP_OPT_FLAG_SACK_PERM;
+        }
+        if (tcpcb_pd->tcpcb->timestamps) {
+            ooq_book_keeping_d.tcp_opt_flags |= TCP_OPT_FLAG_TIMESTAMPS;
+        }
+        HAL_TRACE_DEBUG("tcp_opt_flags: {:#x}", ooq_book_keeping_d.tcp_opt_flags);
     }
     if(!p4plus_hbm_write(hwid, (uint8_t *)&ooq_cb_load_d, sizeof(ooq_cb_load_d),
                 P4PLUS_CACHE_INVALIDATE_BOTH)) {
@@ -541,10 +548,10 @@ p4pd_get_tcp_rx_tcp_rx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->pred_flags = ntohl(data.u.tcp_rx_d.pred_flags);
     tcpcb_pd->tcpcb->snd_recover = ntohl(data.u.tcp_rx_d.snd_recover);
     tcpcb_pd->tcpcb->ooq_not_empty = data.u.tcp_rx_d.ooq_not_empty;
-    if (data.u.tcp_rx_d.cfg_flags | TCP_CFG_FLAG_DELACK) {
+    if (data.u.tcp_rx_d.cfg_flags & TCP_OPER_FLAG_DELACK) {
         tcpcb_pd->tcpcb->delay_ack = true;
     }
-    if (data.u.tcp_rx_d.cfg_flags | TCP_CFG_FLAG_OOO_QUEUE) {
+    if (data.u.tcp_rx_d.cfg_flags & TCP_OPER_FLAG_OOO_QUEUE) {
         tcpcb_pd->tcpcb->ooo_queue = true;
     }
     tcpcb_pd->tcpcb->ato = ntohs(data.u.tcp_rx_d.ato * TCP_TIMER_TICK);
@@ -673,6 +680,14 @@ p4pd_get_tcp_rx_ooq_entry(pd_tcpcb_t* tcpcb_pd)
         HAL_TRACE_ERR("Failed to read rx: ooq bookkeeping entry for TCP CB");
         return HAL_RET_HW_FAIL;
     }
+
+    if (bookkeeping_d.tcp_opt_flags & TCP_OPT_FLAG_SACK_PERM) {
+        tcpcb_pd->tcpcb->sack_perm = true;
+    }
+    if (bookkeeping_d.tcp_opt_flags & TCP_OPT_FLAG_TIMESTAMPS) {
+        tcpcb_pd->tcpcb->timestamps = true;
+    }
+    HAL_TRACE_DEBUG("tcp_opt_flags: {:#x}", bookkeeping_d.tcp_opt_flags);
 
     tcpcb_pd->tcpcb->ooq_entry[0].queue_addr = ntohll(cb_load_d.ooo_qbase_addr0);
     tcpcb_pd->tcpcb->ooq_entry[0].start_seq = ntohl(bookkeeping_d.start_seq0);
@@ -1215,6 +1230,14 @@ p4pd_add_or_del_tcp_tx_tso_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         HAL_TRACE_DEBUG("TCPCB source port: {:#x} dest port {:#x}",
             data.source_port, data.dest_port);
         HAL_TRACE_DEBUG("TCPCB header len: {}", data.header_len);
+
+        if (tcpcb_pd->tcpcb->sack_perm) {
+            data.tcp_opt_flags |= TCP_OPT_FLAG_SACK_PERM;
+        }
+        if (tcpcb_pd->tcpcb->timestamps) {
+            data.tcp_opt_flags |= TCP_OPT_FLAG_TIMESTAMPS;
+        }
+        HAL_TRACE_DEBUG("tcp_opt_flags: {:#x}", data.tcp_opt_flags);
     }
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),

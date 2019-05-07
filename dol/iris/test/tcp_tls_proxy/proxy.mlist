@@ -1106,6 +1106,7 @@ modules:
         iterate :
             - flow: filter://type=IPV4
 
+    - module:
         name    : OOO_2PKT_IN_ORDER
         spec    : ooo_2pkt_inorder.testspec
         module  : pkt_to_p4
@@ -1118,6 +1119,23 @@ modules:
             num_rx_pkts : 2
             bypass_barco : 1
             send_ack_flow1 : 1
+        iterate :
+            - flow: filter://type=IPV4
+
+    - module:
+        name    : OOO_2PKT_IN_ORDER_SACK_RX
+        spec    : ooo_2pkt_inorder_sack_rx.testspec
+        module  : pkt_to_p4
+        rtl     : True
+        args    :
+            maxflows: 1
+            test_ooo_queue: 1
+            test_ooo_queue_in_order: 1
+            ooo_seq_delta: 64
+            num_rx_pkts : 2
+            bypass_barco : 1
+            send_ack_flow1 : 1
+            sack_perm : 1
         iterate :
             - flow: filter://type=IPV4
 

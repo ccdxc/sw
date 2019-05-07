@@ -92,6 +92,7 @@ def SetupProxyArgs(tc):
     rto_backoff = 0
     snd_wnd = 0
     abc_l_var = 0
+    sack_perm = 0
     if hasattr(tc.module.args, 'same_flow'):
         same_flow = tc.module.args.same_flow
         logger.info("- same_flow %s" % tc.module.args.same_flow)
@@ -196,6 +197,9 @@ def SetupProxyArgs(tc):
     if hasattr(tc.module.args, 'abc_l_var'):
         abc_l_var = tc.module.args.abc_l_var
         logger.info("- abc_l_var %s" % tc.module.args.abc_l_var)
+    if hasattr(tc.module.args, 'sack_perm'):
+        sack_perm = tc.module.args.sack_perm
+        logger.info("- sack_perm %s" % tc.module.args.sack_perm)
     if hasattr(tc.module.args, 'num_rx_pkts'):
         num_rx_pkts = tc.module.args.num_rx_pkts
         logger.info("- num_rx_pkts %s" % tc.module.args.num_rx_pkts)
@@ -287,6 +291,7 @@ def SetupProxyArgs(tc):
     tc.pvtdata.rto_backoff = rto_backoff
     tc.pvtdata.snd_wnd = snd_wnd
     tc.pvtdata.abc_l_var = abc_l_var
+    tc.pvtdata.sack_perm = sack_perm
 
 def init_flow_pvtdata(tc, tcb1, tcb2):
     tc.pvtdata.flow1_rcv_nxt = tcb1.rcv_nxt
@@ -371,6 +376,7 @@ def init_tcb_inorder(tc, tcb):
     tcb.ts_recent = 0x1AFAFAF0
     tcb.snd_wnd = 10000
     tcb.abc_l_var = 0
+    tcb.sack_perm = 0
     if tc.pvtdata.snd_cwnd:
         tcb.snd_cwnd = tc.pvtdata.snd_cwnd
     else:
@@ -437,6 +443,8 @@ def init_tcb_inorder(tc, tcb):
         tcb.snd_wnd = tc.pvtdata.snd_wnd
     if tc.pvtdata.abc_l_var:
         tcb.abc_l_var = tc.pvtdata.abc_l_var
+    if tc.pvtdata.sack_perm:
+        tcb.sack_perm = tc.pvtdata.sack_perm
 
     vlan_id = 0
     if tc.config.dst.endpoint.intf.type == 'UPLINK':
@@ -549,6 +557,7 @@ def init_tcb_inorder2(tc, tcb):
     tcb.ts_recent = 0x2AFAFAF0
     tcb.snd_wnd = 10000
     tcb.abc_l_var = 0
+    tcb.sack_perm = 0
     if tc.pvtdata.snd_cwnd:
         tcb.snd_cwnd = tc.pvtdata.snd_cwnd
     else:
@@ -615,6 +624,8 @@ def init_tcb_inorder2(tc, tcb):
         tcb.snd_wnd = tc.pvtdata.snd_wnd
     if tc.pvtdata.abc_l_var:
         tcb.abc_l_var = tc.pvtdata.abc_l_var
+    if tc.pvtdata.sack_perm:
+        tcb.sack_perm = tc.pvtdata.sack_perm
 
     tcb.source_port = tc.config.flow.sport
     tcb.dest_port = tc.config.flow.dport
