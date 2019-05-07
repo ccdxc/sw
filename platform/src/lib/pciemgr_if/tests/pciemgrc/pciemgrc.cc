@@ -80,7 +80,7 @@ main(int argc, char *argv[])
 {
     const char *myname = "pciemgr";
     myevhandler myevh;
-    pciemgr = new class pciemgr(myname, myevh);
+    pciemgr = new class pciemgr(myname, myevh, EV_DEFAULT);
     int opt, totalvfs = 0;
 
     while ((opt = getopt(argc, argv, "v:")) != -1) {
@@ -136,7 +136,7 @@ main(int argc, char *argv[])
     pciemgr->finalize();
 
     printf("evutil_run()\n");
-    evutil_run();
+    evutil_run(EV_DEFAULT);
 
     delete pciemgr;
     exit(0);

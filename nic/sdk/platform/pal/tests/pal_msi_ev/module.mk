@@ -3,4 +3,5 @@ include ${MKDEFS}/pre.mk
 MODULE_ARCH     := aarch64
 MODULE_TARGET   := test_pal_msi_ev.bin
 MODULE_SOLIBS   := evutils intrutils pal
+MODULE_LDLIBS   := ev
 include ${MKDEFS}/post.mk

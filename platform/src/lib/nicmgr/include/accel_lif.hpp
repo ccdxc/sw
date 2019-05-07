@@ -54,7 +54,7 @@
     (((uint64_t)(lif) << DB_LIF_SHFT) |                 \
     ((uint64_t)(qtype) << DB_TYPE_SHFT) |               \
     ((uint64_t)(ACCEL_LIF_DBADDR_UPD) << DB_UPD_SHFT))
-    
+
 #define ACCEL_LIF_LOCAL_DBADDR_SET(lif, qtype)          \
     (ACCEL_LIF_DBADDR_SET(lif, qtype) | DB_ADDR_BASE_LOCAL)
 
@@ -266,7 +266,8 @@ typedef struct eth_lif_res_s {
 class AccelLif {
 public:
     AccelLif(AccelDev& accel_dev,
-             accel_lif_res_t& lif_res);
+             accel_lif_res_t& lif_res,
+             EV_P);
     ~AccelLif();
 
     accel_status_code_t
@@ -345,6 +346,8 @@ private:
     uint32_t                    seq_qid_init_high;
     accel_lif_fsm_ctx_t         fsm_ctx;
 
+    EV_P;
+
     // HW rings
     accel_ring_t                accel_ring_tbl[ACCEL_RING_ID_MAX];
 
@@ -357,7 +360,7 @@ private:
 
     uint64_t next_event_id_get(void) { return ++event_id; }
 
-    accel_status_code_t 
+    accel_status_code_t
     _DevcmdSeqQueueSingleInit(const seq_queue_init_cmd_t *cmd);
 
     accel_status_code_t
@@ -401,7 +404,7 @@ public:
     NotifyQ(const std::string& name,
             PdClient *pd,
             uint64_t lif_id,
-            uint32_t tx_qtype, 
+            uint32_t tx_qtype,
             uint32_t tx_qid,
             uint64_t intr_base,
             uint8_t  ctl_cosA,
@@ -427,7 +430,7 @@ private:
 
     /*
      * NotifyQ in host follows qcq structure where the host ring space
-     * consists of a command (Rx) ring and a completion (Tx) ring. 
+     * consists of a command (Rx) ring and a completion (Tx) ring.
      * Only the completion (Tx) ring is used in the FW-to-host direction.
      */
     uint64_t            tx_ring_base;

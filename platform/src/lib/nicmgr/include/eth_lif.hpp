@@ -92,7 +92,8 @@ public:
     EthLif(devapi *dev_api,
            void *dev_spec,
            PdClient *pd_client,
-           eth_lif_res_t *res);
+           eth_lif_res_t *res,
+           EV_P);
 
     status_code_t Init(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t Reset(void *req, void *req_data, void *resp, void *resp_data);
@@ -118,6 +119,8 @@ public:
     uint32_t GetActiveQRefCnt() { return active_q_ref_cnt; }
 
     bool IsLifQuiesced() { return ( (state == LIF_STATE_UP) ? false:true); }
+
+    EV_P;
 
 private:
     static sdk::lib::indexer *fltr_allocator;

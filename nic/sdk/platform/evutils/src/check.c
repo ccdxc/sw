@@ -19,23 +19,23 @@ evutil_checkcb(EV_P_ ev_check *w, int revents)
 }
 
 void
-evutil_add_check(evutil_check *evu_check,
+evutil_add_check(EV_P_ evutil_check *evu_check,
                 evutil_cb_t *cb, void *arg)
 {
     evu_check->cb = cb;
     evu_check->cbarg = arg;
 #ifdef LIBEV
     ev_check_init(&evu_check->ev_check, evutil_checkcb);
-    ev_check_start(EV_DEFAULT_ &evu_check->ev_check);
+    ev_check_start(EV_A_ &evu_check->ev_check);
 #else
-    if (0) evutil_checkcb(EV_DEFAULT_ &evu_check->ev_check, 0);
+    if (0) evutil_checkcb(EV_A_ &evu_check->ev_check, 0);
 #endif
 }
 
 void
-evutil_remove_check(evutil_check *evu_check)
+evutil_remove_check(EV_P_ evutil_check *evu_check)
 {
 #ifdef LIBEV
-    ev_check_stop(EV_DEFAULT_ &evu_check->ev_check);
+    ev_check_stop(EV_A_ &evu_check->ev_check);
 #endif
 }

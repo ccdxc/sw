@@ -97,7 +97,7 @@ pciemgrs_socket(const char *addrstr)
 static void
 client_disconnect(pmsclient_t *pmsc)
 {
-    evutil_remove_fd(pmsc->fd);
+    evutil_remove_fd(EV_DEFAULT_ pmsc->fd);
     close(pmsc->fd);
     pmsc->fd = -1;
     pmsc->connected = 0;
@@ -147,7 +147,7 @@ client_connect_cb(void *arg)
     pmsc->addr = addr;
     pmsc->addrlen = addrlen;
     pmsc->connected = 1;
-    evutil_add_fd(fd, client_msg_cb, NULL, pmsc);
+    evutil_add_fd(EV_DEFAULT_ fd, client_msg_cb, NULL, pmsc);
 }
 
 int
@@ -163,7 +163,7 @@ pciemgrs_open(const char *addrstr, pciemgrs_handler_t *handler)
     pms->handler = handler;
     pms->open = 1;
     pms->sync_writes = 1;
-    evutil_add_fd(fd, client_connect_cb, NULL, pms);
+    evutil_add_fd(EV_DEFAULT_ fd, client_connect_cb, NULL, pms);
     return fd;
 }
 

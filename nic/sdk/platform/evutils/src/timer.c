@@ -19,7 +19,7 @@ evutil_timercb(EV_P_ ev_timer *w, int revents)
 }
 
 void
-evutil_timer_start(evutil_timer *evu_timer, 
+evutil_timer_start(EV_P_ evutil_timer *evu_timer,
                    evutil_cb_t *cb, void *arg,
                    ev_tstamp after, ev_tstamp repeat)
 {
@@ -27,24 +27,24 @@ evutil_timer_start(evutil_timer *evu_timer,
     evu_timer->cbarg = arg;
 #ifdef LIBEV
     ev_timer_init(&evu_timer->ev_timer, evutil_timercb, after, repeat);
-    ev_timer_start(EV_DEFAULT_ &evu_timer->ev_timer);
+    ev_timer_start(EV_A_ &evu_timer->ev_timer);
 #else
-    if (0) evutil_timercb(EV_DEFAULT_ &evu_timer->ev_timer, 0);
+    if (0) evutil_timercb(EV_A_ &evu_timer->ev_timer, 0);
 #endif
 }
 
 void
-evutil_timer_stop(evutil_timer *evu_timer)
+evutil_timer_stop(EV_P_ evutil_timer *evu_timer)
 {
 #ifdef LIBEV
-    ev_timer_stop(EV_DEFAULT_ &evu_timer->ev_timer);
+    ev_timer_stop(EV_A_ &evu_timer->ev_timer);
 #endif
 }
 
 void
-evutil_timer_again(evutil_timer *evu_timer)
+evutil_timer_again(EV_P_ evutil_timer *evu_timer)
 {
 #ifdef LIBEV
-    ev_timer_again(EV_DEFAULT_ &evu_timer->ev_timer);
+    ev_timer_again(EV_A_ &evu_timer->ev_timer);
 #endif
 }

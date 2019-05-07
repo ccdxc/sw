@@ -178,7 +178,8 @@ typedef struct nvme_lif_res_s {
 class NvmeLif {
 public:
     NvmeLif(NvmeDev& nvme_dev,
-             nvme_lif_res_t& lif_res);
+             nvme_lif_res_t& lif_res,
+             EV_P);
     ~NvmeLif();
 
     nvme_status_code_t
@@ -246,6 +247,8 @@ private:
 
     /* AdminQ Commands */
     AdminQ                      *adminq;
+
+    EV_P;
 
     void nvme_lif_state_machine(nvme_lif_event_t event);
 };

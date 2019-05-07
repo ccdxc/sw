@@ -69,6 +69,7 @@ nic/build/$ARCH/$PIPELINE/lib/libpdsapi.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdscore.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsframework.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsnicmgr.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdspciemgr.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblpmitree.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/librfc.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblfq.so                           /nic/lib/
@@ -148,6 +149,7 @@ nic/build/$ARCH/$PIPELINE/lib/libmnet.so                          /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/librdmamgr_apollo.so                /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpciemgr_if.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpciemgr.so                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpciemgrd.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpciemgrutils.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpciehdevices.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpcietlp.so                       /nic/lib/
@@ -174,6 +176,7 @@ nic/build/$ARCH/$PIPELINE/lib/libprotobuf.so.14                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libtrace.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/agent                               /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/testapp                             /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/pcieutil                            /nic/bin/
 
 # Drivers
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                    /nic/bin/

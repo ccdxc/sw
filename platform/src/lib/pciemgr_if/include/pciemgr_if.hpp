@@ -5,6 +5,8 @@
 #ifndef __PCIEMGR_IF_HPP__
 #define __PCIEMGR_IF_HPP__
 
+#include "nic/sdk/platform/evutils/include/evutils.h"
+
 struct pciehdev_s;
 typedef struct pciehdev_s pciehdev_t;
 
@@ -39,8 +41,8 @@ public:
                                   const uint16_t numvfs) {};
     };
 
-    pciemgr(const char *name);
-    pciemgr(const char *name, evhandler &evhandlercb);
+    pciemgr(const char *name, EV_P);
+    pciemgr(const char *name, evhandler &evhandlercb, EV_P);
     ~pciemgr(void);
 
     int initialize(const int port = 0);
@@ -51,6 +53,7 @@ private:
     void msghandler(pmmsg_t *m);
     void handle_event(const pciehdev_eventdata_t *evd);
 
+    EV_P;
     int serverfd;
     evhandler &evhandlercb;
     static void msgrecv(void *arg);

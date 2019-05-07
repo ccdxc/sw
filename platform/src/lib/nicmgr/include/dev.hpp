@@ -70,7 +70,7 @@ class AdminQ;
 class DeviceManager {
 public:
     DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
-                  platform_t platform);
+                  platform_t platform, EV_P = NULL);
 
     int LoadConfig(std::string path);
     static DeviceManager *GetInstance() { return instance; }
@@ -101,6 +101,7 @@ private:
     boost::property_tree::ptree spec;
     std::map<std::string, Device*> devices;
 
+    EV_P;
     devapi *dev_api;
     PdClient *pd;
     std::map<uint32_t, uplink_t*> uplinks;

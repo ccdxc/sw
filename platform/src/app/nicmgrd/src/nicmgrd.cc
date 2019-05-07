@@ -91,7 +91,7 @@ loop(void)
     NIC_LOG_INFO("upg_mode: {}", upg_mode);
 
     if (platform_is_hw(platform)) {
-        pciemgr = new class pciemgr("nicmgrd");
+        pciemgr = new class pciemgr("nicmgrd", EV_DEFAULT);
 
         if (!upg_mode)
             pciemgr->initialize();
@@ -109,9 +109,9 @@ loop(void)
     //All nicmgr objects are restored now so we can delete the file
     unlink(nicmgr_upgrade_state_file);
 
-    evutil_add_check(&log_check, &log_flush, NULL);
+    evutil_add_check(EV_DEFAULT_ &log_check, &log_flush, NULL);
 
-    evutil_run();
+    evutil_run(EV_DEFAULT);
 
     /* NOTREACHED */
     if (pciemgr) {

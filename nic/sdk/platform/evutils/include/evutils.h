@@ -45,19 +45,21 @@ extern "C" {
 
 typedef void (evutil_cb_t)(void *cbarg);
 
-void evutil_run(void);
-void evutil_stop(void);
+struct ev_loop *evutil_create_loop(void);
+
+void evutil_run(EV_P);
+void evutil_stop(EV_P);
 
 /*
  * I/O: Runs after prepare handlers
  */
-void evutil_add_fd(int fd, evutil_cb_t *rdcb, evutil_cb_t *wrcb, void *cbarg);
-void evutil_remove_fd(const int fd);
+void evutil_add_fd(EV_P_ int fd, evutil_cb_t *rdcb, evutil_cb_t *wrcb, void *cbarg);
+void evutil_remove_fd(EV_P_ const int fd);
 
 struct pal_int;
-void evutil_add_pal_int(struct pal_int *pal_int,
+void evutil_add_pal_int(EV_P_ struct pal_int *pal_int,
                         evutil_cb_t *isrcb, void *cbarg);
-void evutil_remove_pal_int(struct pal_int *pal_int);
+void evutil_remove_pal_int(EV_P_ struct pal_int *pal_int);
 
 /*
  * Relative timers: Runs after I/O handlers
@@ -68,11 +70,11 @@ typedef struct {
     void *cbarg;
 } evutil_timer;
 
-void evutil_timer_start(evutil_timer *evu_timer,
+void evutil_timer_start(EV_P_ evutil_timer *evu_timer,
                         evutil_cb_t *cb, void *arg,
                         ev_tstamp after, ev_tstamp repeat);
-void evutil_timer_stop(evutil_timer *evu_timer);
-void evutil_timer_again(evutil_timer *evu_timer);
+void evutil_timer_stop(EV_P_ evutil_timer *evu_timer);
+void evutil_timer_again(EV_P_ evutil_timer *evu_timer);
 
 /*
  * Idle polling: Only runs when no-other higher priority watches are pending.
@@ -83,9 +85,9 @@ typedef struct {
     void *cbarg;
 } evutil_idle;
 
-void evutil_add_idle(evutil_idle *evu_idle,
+void evutil_add_idle(EV_P_ evutil_idle *evu_idle,
                      evutil_cb_t *cb, void *arg);
-void evutil_remove_idle(evutil_idle *evu_idle);
+void evutil_remove_idle(EV_P_ evutil_idle *evu_idle);
 
 /*
  * Prepare Polling: Runs after fork handlers
@@ -96,9 +98,9 @@ typedef struct {
     void *cbarg;
 } evutil_prepare;
 
-void evutil_add_prepare(evutil_prepare *evu_prepare,
-                     evutil_cb_t *cb, void *arg);
-void evutil_remove_prepare(evutil_prepare *evu_prepare);
+void evutil_add_prepare(EV_P_ evutil_prepare *evu_prepare,
+                        evutil_cb_t *cb, void *arg);
+void evutil_remove_prepare(EV_P_ evutil_prepare *evu_prepare);
 
 /*
  * Check Polling: Runs after idle handlers
@@ -109,9 +111,9 @@ typedef struct {
     void *cbarg;
 } evutil_check;
 
-void evutil_add_check(evutil_check *evu_check,
+void evutil_add_check(EV_P_ evutil_check *evu_check,
                      evutil_cb_t *cb, void *arg);
-void evutil_remove_check(evutil_check *evu_check);
+void evutil_remove_check(EV_P_ evutil_check *evu_check);
 
 #ifdef __cplusplus
 }

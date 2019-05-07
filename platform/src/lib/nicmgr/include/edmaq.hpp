@@ -30,7 +30,8 @@ public:
         const char *name,
         PdClient *pd,
         uint16_t lif,
-        uint8_t qtype, uint32_t qid, uint16_t ring_size
+        uint8_t qtype, uint32_t qid, uint16_t ring_size,
+        EV_P
     );
 
     bool Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB);
@@ -58,6 +59,7 @@ private:
     struct edmaq_ctx *pending;
 
     // Tasks
+    EV_P;
     evutil_prepare prepare = {0};
 };
 

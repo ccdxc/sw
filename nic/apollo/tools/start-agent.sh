@@ -23,6 +23,9 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
+# start memtun
+/nic/bin/memtun &
+
 # bring up oob
 echo "Bringing up OOB ..."
 $NIC_DIR/tools/bringup_mgmt_ifs.sh >/var/log/pensando/mgmt_if.log

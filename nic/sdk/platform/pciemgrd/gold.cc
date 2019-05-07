@@ -16,7 +16,7 @@
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 
-#include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
+#include "pciemgrd_impl.hpp"
 
 static int poll_enabled;
 

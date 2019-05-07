@@ -11,9 +11,9 @@
 #include "evutils.h"
 
 void
-evutil_stop(void)
+evutil_stop(EV_P)
 {
 #ifdef LIBEV
-    ev_break(EV_DEFAULT_ EVBREAK_ALL);
+    ev_break(EV_A_ EVBREAK_ALL);
 #endif
 }

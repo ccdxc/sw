@@ -197,12 +197,14 @@ static bool nvme_lif_fsm_verbose;
                 lif_state_str(fsm_ctx.enter_state), lif_event_str(event))
 
 NvmeLif::NvmeLif(NvmeDev& nvme_dev,
-                   nvme_lif_res_t& lif_res) :
+                   nvme_lif_res_t& lif_res,
+                   EV_P) :
     nvme_dev(nvme_dev),
     spec(nvme_dev.DevSpecGet()),
     pd(nvme_dev.PdClientGet()),
     dev_api(nvme_dev.DevApiGet())
 {
+    this->loop = loop;
     nvme_lif_state_machine_build();
 
     NIC_HEADER_TRACE("Adding NVME LIF");
@@ -272,18 +274,18 @@ NvmeLif::CmdHandler(void *req,
     bool        cpl_valid = true;
 
     NIC_LOG_DEBUG("Nvme {}: Handling cmd", LifNameGet());
-                  
+
     cmd_p = (nvme_cmd_t *) req;
 
     NIC_LOG_DEBUG("Nvme opc: {} cid: {} nsid: {} "
                   "prp1: {:#x} prp2: {:#x} cdw10: {:#x} "
-                  "cdw11: {:#x} cdw12: {:#x} cdw13: {:#x} cdw14: {:#x}", 
+                  "cdw11: {:#x} cdw12: {:#x} cdw13: {:#x} cdw14: {:#x}",
                    cmd_p->opc, cmd_p->cid, cmd_p->nsid,
                    cmd_p->dptr.prp.prp1, cmd_p->dptr.prp.prp2,
                    cmd_p->cdw10, cmd_p->cdw11, cmd_p->cdw12,
                    cmd_p->cdw13, cmd_p->cdw14);
 
-    // cpl default return values 
+    // cpl default return values
     cpl.status.p = cq_color;
     cpl.cid = cmd_p->cid;
     cpl.sqid = NVME_ASQ_QID;
@@ -303,12 +305,12 @@ NvmeLif::CmdHandler(void *req,
     if (cmd_p->opc == NVME_OPC_IDENTIFY) {
         // identify
         uint8_t cns;
-        
-        NIC_LOG_DEBUG("Nvme Identify cntid: {} cns: {}", 
+
+        NIC_LOG_DEBUG("Nvme Identify cntid: {} cns: {}",
                       cmd_p->cdw10 >> 16, cmd_p->cdw10 & 0xff);
 
         cns = cmd_p->cdw10 & 0xff;
-    
+
         if (cns == NVME_IDENTIFY_CTRLR) {
             //controller
             //PCI_DEVICE_ID_PENSANDO_NVME
@@ -320,7 +322,7 @@ NvmeLif::CmdHandler(void *req,
             std::string sn;
             sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
             strncpy0((char *)ctrlr_data.sn, sn.c_str(), sizeof(ctrlr_data.sn));
-    
+
             strncpy0((char *)ctrlr_data.mn, "PDS-NVMEDEV1", sizeof(ctrlr_data.mn));
             strncpy0((char *)ctrlr_data.fr, "0.90", sizeof(ctrlr_data.fr));
 
@@ -380,11 +382,11 @@ NvmeLif::CmdHandler(void *req,
             ns_data.lbaf[0].ms = 0;
             ns_data.lbaf[0].lbads = 9; //512B
             ns_data.lbaf[0].rp = 3;
-            
+
             ns_data.lbaf[1].ms = 0;
             ns_data.lbaf[1].lbads = 12; //4K
             ns_data.lbaf[1].rp = 0;
-            
+
             xfer_size = sizeof(nvme_ns_data_t);
             src_addr = edma_buf_base;
 
@@ -395,10 +397,10 @@ NvmeLif::CmdHandler(void *req,
 
         // set_features
         uint8_t fid;
-        
+
         fid = cmd_p->cdw10 & 0xff;
 
-        NIC_LOG_DEBUG("Nvme Set Features fid: {}", fid); 
+        NIC_LOG_DEBUG("Nvme Set Features fid: {}", fid);
 
         if (fid == NVME_FEAT_NUMBER_OF_QUEUES) {
 
@@ -460,13 +462,13 @@ NvmeLif::CmdHandler(void *req,
             .dst_lif = (uint16_t)LifIdGet(),
             .dst_addr = dst_addr,
         };
-    
+
         NIC_LOG_DEBUG("edma opc: L2H, src_lif: {}, dst_lif: {}, "
                       "src_addr: {:#x}, dst_addr: {:#x}, len: {}",
-                      edma_cmd.src_lif, edma_cmd.dst_lif, 
-                      edma_cmd.src_addr, edma_cmd.dst_addr, 
+                      edma_cmd.src_lif, edma_cmd.dst_lif,
+                      edma_cmd.src_addr, edma_cmd.dst_addr,
                       edma_cmd.len);
-    
+
         addr = edma_ring_base + edma_ring_head * sizeof(struct edma_cmd_desc);
         WRITE_MEM(addr, (uint8_t *)&edma_cmd, sizeof(struct edma_cmd_desc), 0);
         edma_ring_head = (edma_ring_head + 1) % NVME_ARMQ_EDMA_RING_SIZE;
@@ -478,7 +480,7 @@ NvmeLif::CmdHandler(void *req,
         edma_comp_tail = (edma_comp_tail + 1) % NVME_ARMQ_EDMA_RING_SIZE;
     }
 
-    
+
     // post completion
 
     src_addr = edma_buf_base2;
@@ -496,8 +498,8 @@ NvmeLif::CmdHandler(void *req,
 
     NIC_LOG_DEBUG("cpl edma opc: L2H, src_lif: {}, dst_lif: {}, "
                   "src_addr: {:#x}, dst_addr: {:#x}, len: {}",
-                  cpl_edma_cmd.src_lif, cpl_edma_cmd.dst_lif, 
-                  cpl_edma_cmd.src_addr, cpl_edma_cmd.dst_addr, 
+                  cpl_edma_cmd.src_lif, cpl_edma_cmd.dst_lif,
+                  cpl_edma_cmd.src_addr, cpl_edma_cmd.dst_addr,
                   cpl_edma_cmd.len);
 
     addr = edma_ring_base + edma_ring_head * sizeof(struct edma_cmd_desc);
@@ -516,7 +518,7 @@ NvmeLif::CmdHandler(void *req,
 
     // post completion interrupt
     uint32_t intr_assert_data = 1;
-    
+
     src_addr = edma_buf_base2 + sizeof(nvme_cpl_t);
     WRITE_MEM(src_addr, (uint8_t *) &intr_assert_data, sizeof(uint32_t), 0);
 
@@ -531,8 +533,8 @@ NvmeLif::CmdHandler(void *req,
 
     NIC_LOG_DEBUG("cpl intr edma opc: L2L, src_lif: {}, dst_lif: {}, "
                   "src_addr: {:#x}, dst_addr: {:#x}, len: {}",
-                  cpl_intr_edma_cmd.src_lif, cpl_intr_edma_cmd.dst_lif, 
-                  cpl_intr_edma_cmd.src_addr, cpl_intr_edma_cmd.dst_addr, 
+                  cpl_intr_edma_cmd.src_lif, cpl_intr_edma_cmd.dst_lif,
+                  cpl_intr_edma_cmd.src_addr, cpl_intr_edma_cmd.dst_addr,
                   cpl_intr_edma_cmd.len);
 
     addr = edma_ring_base + edma_ring_head * sizeof(struct edma_cmd_desc);
@@ -540,7 +542,7 @@ NvmeLif::CmdHandler(void *req,
     edma_ring_head = (edma_ring_head + 1) % NVME_ARMQ_EDMA_RING_SIZE;
 
     //skip color check to later after polling
-    
+
     //Ring doorbell at the end
     db_addr = NVME_LIF_LOCAL_DBADDR_SET(LifIdGet(), NVME_QTYPE_ARMQ);
     db_data = NVME_LIF_LOCAL_DBDATA_SET(NVME_ARMQ_EDMAQ_QID, 0 /*ring*/, edma_ring_head);
@@ -565,7 +567,7 @@ NvmeLif::CmdHandler(void *req,
 
     NIC_LOG_DEBUG("cq_ring_base: {:#x}, cq_head: {}, cq_color: {} "
                   "poll_addr: {:#x} exp_color: {}, color: {}, npolls: {}",
-                  cq_ring_base, cq_head, cq_color, addr, 
+                  cq_ring_base, cq_head, cq_color, addr,
                   edma_exp_color, comp.color, npolls);
 
     if (edma_ring_head == 0) {
@@ -595,7 +597,7 @@ NvmeLif::Disable(nvme_dev_cmd_regs_t *regs_p)
 /*
  * LIF State Machine Actions
  */
-nvme_lif_event_t 
+nvme_lif_event_t
 NvmeLif::nvme_lif_null_action(nvme_lif_event_t event)
 {
     NVME_LIF_FSM_LOG();
@@ -603,7 +605,7 @@ NvmeLif::nvme_lif_null_action(nvme_lif_event_t event)
     return NVME_LIF_EV_NULL;
 }
 
-nvme_lif_event_t 
+nvme_lif_event_t
 NvmeLif::nvme_lif_eagain_action(nvme_lif_event_t event)
 {
     NVME_LIF_FSM_LOG();
@@ -611,7 +613,7 @@ NvmeLif::nvme_lif_eagain_action(nvme_lif_event_t event)
     return NVME_LIF_EV_NULL;
 }
 
-nvme_lif_event_t 
+nvme_lif_event_t
 NvmeLif::nvme_lif_reject_action(nvme_lif_event_t event)
 {
     NVME_LIF_FSM_ERR_LOG();
@@ -619,7 +621,7 @@ NvmeLif::nvme_lif_reject_action(nvme_lif_event_t event)
     return NVME_LIF_EV_NULL;
 }
 
-nvme_lif_event_t 
+nvme_lif_event_t
 NvmeLif::nvme_lif_create_action(nvme_lif_event_t event)
 {
     NVME_LIF_FSM_LOG();
@@ -649,7 +651,7 @@ NvmeLif::nvme_lif_create_action(nvme_lif_event_t event)
     return NVME_LIF_EV_NULL;
 }
 
-nvme_lif_event_t 
+nvme_lif_event_t
 NvmeLif::nvme_lif_destroy_action(nvme_lif_event_t event)
 {
     NVME_LIF_FSM_LOG();
@@ -696,7 +698,7 @@ NvmeLif::nvme_lif_init_action(nvme_lif_event_t event)
     //return NVME_LIF_EV_NULL;
 }
 
-nvme_lif_event_t 
+nvme_lif_event_t
 NvmeLif::nvme_lif_edmaq_init_action(nvme_lif_event_t event)
 {
     uint64_t    addr;
@@ -737,7 +739,7 @@ NvmeLif::nvme_lif_edmaq_init_action(nvme_lif_event_t event)
 
     NIC_LOG_INFO("{}: edma_ring_base {:#x} edma_comp_base {:#x} "
                  "edma_buf_base {:#x} edma_buf_base2 {:#x}",
-                 hal_lif_info_.name, edma_ring_base, edma_comp_base, 
+                 hal_lif_info_.name, edma_ring_base, edma_comp_base,
                  edma_buf_base, edma_buf_base2);
 
     // Initialize EDMA service
@@ -781,7 +783,7 @@ NvmeLif::nvme_lif_edmaq_init_action(nvme_lif_event_t event)
     return NVME_LIF_EV_NULL;
 }
 
-nvme_lif_event_t 
+nvme_lif_event_t
 NvmeLif::nvme_lif_adminq_init_action(nvme_lif_event_t event)
 {
     admin_qstate_t      qstate;
@@ -789,9 +791,9 @@ NvmeLif::nvme_lif_adminq_init_action(nvme_lif_event_t event)
     nvme_dev_cmd_regs_t  *regs_p= (nvme_dev_cmd_regs_t *)fsm_ctx.devcmd.req;
 
     NIC_LOG_DEBUG("aqa_acqs: {} aqa_asqs: {} acq: {:#x} asq: {:#x} "
-                  "acqb: {:#x} asqb: {:#x}", 
-                  regs_p->aqa.acqs, regs_p->aqa.asqs, 
-                  regs_p->acq.num64, regs_p->asq.num64, 
+                  "acqb: {:#x} asqb: {:#x}",
+                  regs_p->aqa.acqs, regs_p->aqa.asqs,
+                  regs_p->acq.num64, regs_p->asq.num64,
                   regs_p->acq.acqb, regs_p->asq.asqb);
 
     fsm_ctx.devcmd.status = NVME_RC_ERROR;
@@ -868,7 +870,8 @@ NvmeLif::nvme_lif_adminq_init_action(nvme_lif_event_t event)
                         pd, LifIdGet(),
                         NVME_QTYPE_ARMQ, NVME_ARMQ_ASQ_QID, regs_p->aqa.asqs + 1,
                         NVME_QTYPE_ARMQ, NVME_ARMQ_ACQ_QID, regs_p->aqa.acqs + 1,
-                        NvmeAdminCmdHandler, this, false);
+                        NvmeAdminCmdHandler, this, loop,
+                        false);
 
     // Initialize AdminQ service
     if (!adminq->Init(0, ctl_cosA, ctl_cosB)) {
@@ -925,7 +928,7 @@ NvmeLif::nvme_lif_state_machine(nvme_lif_event_t event)
 }
 
 static void
-nvme_lif_state_machine_build(void) 
+nvme_lif_state_machine_build(void)
 {
     nvme_lif_state_event_t    **fsm_entry;
     nvme_lif_state_event_t    *state_event;

@@ -38,6 +38,8 @@
 #include "adminq.hpp"
 #include "edmaq.hpp"
 
+// struct ev_loop * EthLif::loop = NULL;
+
 // ----------------------------------------------------------------------------
 // Mac address to string
 // ----------------------------------------------------------------------------
@@ -111,10 +113,10 @@ EthLif::opcode_to_str(cmd_opcode_t opcode)
 }
 
 EthLif::EthLif(devapi *dev_api,
-                // HalCommonClient *hal_common_client,
-                void *dev_spec,
-                PdClient *pd_client,
-                eth_lif_res_t *res)
+               void *dev_spec,
+               PdClient *pd_client,
+               eth_lif_res_t *res,
+               EV_P)
 {
     EthLif::dev_api = dev_api;
     EthLif::spec = (struct eth_devspec *)dev_spec;
@@ -122,6 +124,8 @@ EthLif::EthLif(devapi *dev_api,
     EthLif::pd = pd_client;
     EthLif::adminq = NULL;
     strncpy0(EthLif::name, spec->name.c_str(), sizeof(EthLif::name));
+
+    EthLif::loop = loop;
 
     // Create LIF
     state = LIF_STATE_CREATING;
@@ -260,7 +264,7 @@ EthLif::EthLif(devapi *dev_api,
         hal_lif_info_.name,
         pd,
         hal_lif_info_.lif_id,
-        ETH_EDMAQ_QTYPE, ETH_EDMAQ_QID, ETH_EDMAQ_RING_SIZE
+        ETH_EDMAQ_QTYPE, ETH_EDMAQ_QID, ETH_EDMAQ_RING_SIZE, EV_A
     );
 
     adminq = new AdminQ(hal_lif_info_.name,
@@ -268,7 +272,7 @@ EthLif::EthLif(devapi *dev_api,
         hal_lif_info_.lif_id,
         ETH_ADMINQ_REQ_QTYPE, ETH_ADMINQ_REQ_QID, ETH_ADMINQ_REQ_RING_SIZE,
         ETH_ADMINQ_RESP_QTYPE, ETH_ADMINQ_RESP_QID, ETH_ADMINQ_RESP_RING_SIZE,
-        AdminCmdHandler, this
+        AdminCmdHandler, this, EV_A
     );
 
     state = LIF_STATE_CREATED;
@@ -419,7 +423,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
         // starts a non-repeating timer to update stats. the timer is reset when
         // stats update is complete.
-        evutil_timer_start(&stats_timer, &EthLif::StatsUpdate, this, 0.2, 0.0);
+        evutil_timer_start(EV_A_ &stats_timer, &EthLif::StatsUpdate, this, 0.2, 0.0);
     }
 
     // Init the status block
@@ -591,7 +595,7 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     // Disable Stats
     if (host_lif_stats_addr != 0) {
         host_lif_stats_addr = 0;
-        evutil_timer_stop(&stats_timer);
+        evutil_timer_stop(EV_A_ &stats_timer);
     }
 
     state = LIF_STATE_RESET;
@@ -1603,7 +1607,7 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
             else
                 return (IONIC_RC_ERROR);
         }
- 
+
         // Store filter
         if (fltr_allocator->alloc(&filter_id) != sdk::lib::indexer::SUCCESS) {
             NIC_LOG_ERR("Failed to allocate MAC address filter");
@@ -2333,7 +2337,7 @@ EthLif::StatsUpdateComplete(void *obj)
 {
     EthLif *eth = (EthLif *)obj;
 
-    evutil_timer_again(&eth->stats_timer);
+    evutil_timer_again(eth->loop, &eth->stats_timer);
 }
 
 int

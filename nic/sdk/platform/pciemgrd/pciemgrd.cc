@@ -22,10 +22,12 @@
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
 #include "nic/sdk/lib/catalog/catalog.hpp"
 
-#include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
+#include "pciemgrd_impl.hpp"
 
+#ifdef IRIS
 #ifndef PCIEMGRD_GOLD
-#include "delphic.h"
+#include "platform/src/app/pciemgrd/src/delphic.h"
+#endif
 #endif
 
 static pciemgrenv_t pciemgrenv;
@@ -95,9 +97,11 @@ port_evhandler(pcieport_event_t *ev, void *arg)
         pciesys_loginfo("port%d: hostup gen%dx%d\n",
                         ev->port, ev->hostup.gen, ev->hostup.width);
         pciehw_event_hostup(ev->port, ev->hostup.gen, ev->hostup.width);
+#ifdef IRIS
 #ifndef PCIEMGRD_GOLD
         delphi_update_pcie_port_status(ev->port, pciemgr::Up,
                                        ev->hostup.gen, ev->hostup.width);
+#endif
 #endif
         break;
     }
@@ -107,8 +111,10 @@ port_evhandler(pcieport_event_t *ev, void *arg)
         }
         pciesys_loginfo("port%d: hostdn\n", ev->port);
         pciehw_event_hostdn(ev->port);
+#ifdef IRIS
 #ifndef PCIEMGRD_GOLD
         delphi_update_pcie_port_status(ev->port, pciemgr::Down);
+#endif
 #endif
         break;
     }
@@ -120,9 +126,11 @@ port_evhandler(pcieport_event_t *ev, void *arg)
     }
     case PCIEPORT_EVENT_FAULT: {
         pciesys_logerror("port%d: fault %s\n", ev->port, ev->fault.reason);
+#ifdef IRIS
 #ifndef PCIEMGRD_GOLD
         delphi_update_pcie_port_status(ev->port,
                                        pciemgr::Fault, 0, 0, ev->fault.reason);
+#endif
 #endif
         break;
     }
@@ -154,9 +162,11 @@ open_hostports(void)
                 pciesys_logerror("pcieport_hostconfig %d failed\n", port);
                 goto close_error_out;
             }
+#ifdef IRIS
 #ifndef PCIEMGRD_GOLD
             /* initialize delphi port status object */
             delphi_update_pcie_port_status(port, pciemgr::Down);
+#endif
 #endif
         }
     }
@@ -340,6 +350,7 @@ pciemgrd_catalog_defaults(pciemgrenv_t *pme)
 #endif /* PCIEMGRD_GOLD */
 }
 
+#if 0
 int
 main(int argc, char *argv[])
 {
@@ -460,6 +471,59 @@ main(int argc, char *argv[])
         r = server_loop();
     }
 #endif
+
+    exit(r < 0 ? 1 : 0);
+}
+#endif
+
+void
+pciemgrd_start()
+{
+    pciemgrenv_t *pme = pciemgrenv_get();
+    pciemgr_params_t *params = &pme->params;
+    int r;
+
+    pme->interactive = 1;
+    pme->reboot_on_hostdn = pal_is_asic() ? 1 : 0;
+    pme->poll_port = 1;
+    pme->poll_dev = 0;
+
+    params->strict_crs = 1;
+
+    /*
+     * For aarch64 we can inherit a system in which we get restarted on
+     * a running system (mostly for testing).
+     * For x86_64 we want to FORCE_INIT to reinitialize hw/shmem on startup.
+     *
+     * On "real" ARM systems the upstream port bridge
+     * is in hw and our first virtual device is bus 0 at 00:00.0.
+     *
+     * For simulation we want the virtual upstream port bridge
+     * at 00:00.0 so our first virtual device is bus 1 at 01:00.0.
+     */
+#ifdef __aarch64__
+    params->initmode = INHERIT_OK;
+    params->first_bus = 0;
+#else
+    params->initmode = FORCE_INIT;
+    params->first_bus = 1;
+    params->fake_bios_scan = 1;         /* simulate bios scan to set bdf's */
+#endif
+
+#ifndef PCIEMGRD_GOLD
+    if (upgrade_in_progress()) {
+        params->restart = 1;
+        params->initmode = INHERIT_OK;
+    }
+#endif
+
+    /*
+     * Get the catalog defaults.
+     * For testing, cmdline args can override below if desired.
+     */
+    pciemgrd_catalog_defaults(pme);
+
+    r = server_loop();
 
     exit(r < 0 ? 1 : 0);
 }

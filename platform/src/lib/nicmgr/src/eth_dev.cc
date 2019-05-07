@@ -68,12 +68,16 @@ Eth::eth_dev_type_str_to_type(std::string const& s)
 
 Eth::Eth(devapi *dev_api,
          void *dev_spec,
-         PdClient *pd_client, bool upg_mode)
+         PdClient *pd_client,
+         EV_P_
+         bool upg_mode)
 {
     sdk_ret_t ret = SDK_RET_OK;
     Eth::dev_api = dev_api;
     Eth::spec = (struct eth_devspec *)dev_spec;
     Eth::pd = pd_client;
+
+    this->loop = loop;
 
     // Allocate lifs
     ret = pd->lm_->alloc_id(&lif_base, spec->lif_count);
@@ -172,7 +176,7 @@ Eth::Eth(devapi *dev_api,
         lif_res->cmb_mem_size = cmb_mem_size;
 
         EthLif *eth_lif = new EthLif(dev_api,
-            dev_spec, pd_client, lif_res);
+            dev_spec, pd_client, lif_res, loop);
         lif_map[lif_id] = eth_lif;
     }
 
@@ -203,9 +207,9 @@ Eth::Eth(devapi *dev_api,
     }
 
     // Enable Devcmd Handling
-    evutil_add_prepare(&devcmd_prepare, Eth::DevcmdPoll, this);
-    evutil_add_check(&devcmd_check, Eth::DevcmdPoll, this);
-    evutil_timer_start(&devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
+    evutil_add_prepare(EV_A_ &devcmd_prepare, Eth::DevcmdPoll, this);
+    evutil_add_check(EV_A_ &devcmd_check, Eth::DevcmdPoll, this);
+    evutil_timer_start(EV_A_ &devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
 
     //reset the active_lif_ref_cnt to 0
     active_lif_ref_cnt = 0;
@@ -216,6 +220,7 @@ std::vector<Eth*>
 Eth::factory(enum DeviceType type, devapi *dev_api,
          void *dev_spec,
          PdClient *pd_client,
+         EV_P_
          bool upg_mode)
 {
     std::vector<Eth*> eth_devs;
@@ -223,7 +228,7 @@ Eth::factory(enum DeviceType type, devapi *dev_api,
     struct eth_devspec *spec = (struct eth_devspec *)dev_spec;
 
     // Create object for PF
-    dev_obj = new Eth(dev_api, spec, pd_client, upg_mode);
+    dev_obj = new Eth(dev_api, spec, pd_client, EV_A_ upg_mode);
     dev_obj->SetType(type);
     eth_devs.push_back(dev_obj);
 
@@ -238,7 +243,7 @@ Eth::factory(enum DeviceType type, devapi *dev_api,
         vf_spec->mac_addr = 0;
         // XXX no rdma on VFs for now
         vf_spec->enable_rdma = 0;
-        dev_obj = new Eth(dev_api, vf_spec, pd_client);
+        dev_obj = new Eth(dev_api, vf_spec, pd_client, EV_A);
         dev_obj->SetType(type);
         eth_devs.push_back(dev_obj);
     }
@@ -856,7 +861,7 @@ Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
 
             // starts a non-repeating timer to update stats. the timer is reset when
             // stats update is complete.
-            evutil_timer_start(&stats_timer, &Eth::StatsUpdate, this, 0.2, 0.0);
+            evutil_timer_start(EV_A_ &stats_timer, &Eth::StatsUpdate, this, 0.2, 0.0);
         }
     }
 
@@ -1089,7 +1094,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 
     active_lif_ref_cnt++;
     NIC_LOG_DEBUG("LifInit: {}: active_lif_ref_cnt: {}", spec->name, active_lif_ref_cnt);
- 
+
     if (spec->uplink_port_num == 0) {
         port_info->status = {
             .id = 0,
@@ -1255,7 +1260,7 @@ Eth::StatsUpdateComplete(void *obj)
 {
     Eth *eth = (Eth *)obj;
 
-    evutil_timer_again(&eth->stats_timer);
+    evutil_timer_again(eth->loop, &eth->stats_timer);
 }
 
 /*

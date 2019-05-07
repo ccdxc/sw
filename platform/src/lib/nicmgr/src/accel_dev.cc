@@ -91,7 +91,8 @@ static void crypto_key_accum_del(uint32_t key_index);
 
 AccelDev::AccelDev(devapi *dapi,
                    void *dev_spec,
-                   PdClient *pd_client) :
+                   PdClient *pd_client,
+                   EV_P) :
     spec((accel_devspec_t *)dev_spec),
     pd(pd_client),
     dev_api(dapi),
@@ -100,6 +101,8 @@ AccelDev::AccelDev(devapi *dapi,
     accel_lif_res_t     lif_res;
     sdk_ret_t           ret = SDK_RET_OK;
     uint32_t            num_keys_max;
+
+    this->loop = loop;
 
     // Allocate lifs
     // lif_base = pd->lm_->LIFRangeAlloc(-1, spec->lif_count);
@@ -210,7 +213,7 @@ AccelDev::AccelDev(devapi *dapi,
     lif_res.intr_base = intr_base;
     lif_res.cmb_mem_addr = cmb_mem_addr;
     lif_res.cmb_mem_size = cmb_mem_size;
-    auto lif = new AccelLif(*this, lif_res);
+    auto lif = new AccelLif(*this, lif_res, EV_DEFAULT);
     if (!lif) {
         NIC_LOG_ERR("{}: failed to create AccelLif {}",
                     DevNameGet(), lif_res.lif_id);
@@ -219,7 +222,7 @@ AccelDev::AccelDev(devapi *dapi,
     lif_map[lif_base] = lif;
 
     _MetricsInit();
-    evutil_timer_start(&devcmd_timer, &AccelDev::_DevcmdPoll, this, 0.0, 0.01);
+    evutil_timer_start(EV_A_ &devcmd_timer, &AccelDev::_DevcmdPoll, this, 0.0, 0.01);
 }
 
 AccelDev::~AccelDev()
@@ -228,7 +231,7 @@ AccelDev::~AccelDev()
      * Most HBM related allocs don't have corresponding free API so
      * we'll leave them alone. Same with intr_alloc().
      */
-    evutil_timer_stop(&devcmd_timer);
+    evutil_timer_stop(EV_A_ &devcmd_timer);
     _MetricsFini();
 
     auto iter = lif_map.begin();

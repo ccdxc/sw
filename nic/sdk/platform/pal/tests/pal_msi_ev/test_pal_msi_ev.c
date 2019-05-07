@@ -46,12 +46,12 @@ main(int argc, char *argv[])
            intrres, msgaddr, msgdata);
 
     intr_config_local_msi(intrres, msgaddr, msgdata);
-    evutil_add_pal_int(&pal_int, my_isr, NULL);
+    evutil_add_pal_int(EV_DEFAULT_ &pal_int, my_isr, NULL);
 
     printf("waiting for intr %d\n", intrres);
-    evutil_run();
+    evutil_run(EV_DEFAULT);
 
-    evutil_remove_pal_int(&pal_int);
+    evutil_remove_pal_int(EV_DEFAULT_ &pal_int);
     pal_int_close(&pal_int);
     exit(0);
 }

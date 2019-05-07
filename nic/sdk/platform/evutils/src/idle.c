@@ -19,23 +19,23 @@ evutil_idlecb(EV_P_ ev_idle *w, int revents)
 }
 
 void
-evutil_add_idle(evutil_idle *evu_idle,
+evutil_add_idle(EV_P_ evutil_idle *evu_idle,
                 evutil_cb_t *cb, void *arg)
 {
     evu_idle->cb = cb;
     evu_idle->cbarg = arg;
 #ifdef LIBEV
     ev_idle_init(&evu_idle->ev_idle, evutil_idlecb);
-    ev_idle_start(EV_DEFAULT_ &evu_idle->ev_idle);
+    ev_idle_start(EV_A_ &evu_idle->ev_idle);
 #else
-    if (0) evutil_idlecb(EV_DEFAULT_ &evu_idle->ev_idle, 0);
+    if (0) evutil_idlecb(EV_A_ &evu_idle->ev_idle, 0);
 #endif
 }
 
 void
-evutils_remove_idle(evutil_idle *evu_idle)
+evutils_remove_idle(EV_P_ evutil_idle *evu_idle)
 {
 #ifdef LIBEV
-    ev_idle_stop(EV_DEFAULT_ &evu_idle->ev_idle);
+    ev_idle_stop(EV_A_ &evu_idle->ev_idle);
 #endif
 }

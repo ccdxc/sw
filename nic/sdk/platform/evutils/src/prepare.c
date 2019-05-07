@@ -19,23 +19,23 @@ evutil_preparecb(EV_P_ ev_prepare *w, int revents)
 }
 
 void
-evutil_add_prepare(evutil_prepare *evu_prepare,
+evutil_add_prepare(EV_P_ evutil_prepare *evu_prepare,
                 evutil_cb_t *cb, void *arg)
 {
     evu_prepare->cb = cb;
     evu_prepare->cbarg = arg;
 #ifdef LIBEV
     ev_prepare_init(&evu_prepare->ev_prepare, evutil_preparecb);
-    ev_prepare_start(EV_DEFAULT_ &evu_prepare->ev_prepare);
+    ev_prepare_start(EV_A_ &evu_prepare->ev_prepare);
 #else
-    if (0) evutil_preparecb(EV_DEFAULT_ &evu_prepare->ev_prepare, 0);
+    if (0) evutil_preparecb(EV_A_ &evu_prepare->ev_prepare, 0);
 #endif
 }
 
 void
-evutil_remove_prepare(evutil_prepare *evu_prepare)
+evutil_remove_prepare(EV_P_ evutil_prepare *evu_prepare)
 {
 #ifdef LIBEV
-    ev_prepare_stop(EV_DEFAULT_ &evu_prepare->ev_prepare);
+    ev_prepare_stop(EV_A_ &evu_prepare->ev_prepare);
 #endif
 }

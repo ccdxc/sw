@@ -717,7 +717,7 @@ cmd_run(int argc, char *argv[])
     intr_init();
 
     printf("Running, ^C to exit...\n");
-    evutil_run();
+    evutil_run(EV_DEFAULT);
     printf("Running stopped\n");
 }
 

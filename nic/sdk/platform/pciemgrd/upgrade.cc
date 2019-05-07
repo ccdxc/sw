@@ -15,7 +15,7 @@
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
 #include "nic/sdk/platform/pcieport/include/pcieport.h"
-#include "platform/src/app/pciemgrd/src/pciemgrd_impl.hpp"
+#include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 
 /*****************************************************************
  * manage data file paths

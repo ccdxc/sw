@@ -96,10 +96,12 @@ public:
     Eth(devapi *dev_api,
         void *dev_spec,
         PdClient *pd_client,
+        EV_P_
         bool upg_mode = false);
     static std::vector<Eth*> factory(enum DeviceType type, devapi *dev_api,
          void *dev_spec,
          PdClient *pd_client,
+         EV_P_
          bool upg_mode);
 
     std::string GetName() { return spec->name; }
@@ -158,6 +160,7 @@ private:
     uint64_t port_stats_addr;
     uint64_t host_port_stats_addr;
     // Tasks
+    EV_P;
     evutil_prepare devcmd_prepare = {0};
     evutil_check devcmd_check = {0};
     evutil_timer devcmd_timer = {0};

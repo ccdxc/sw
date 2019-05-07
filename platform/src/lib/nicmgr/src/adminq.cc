@@ -12,7 +12,8 @@ AdminQ::AdminQ(
     uint16_t lif,
     uint8_t req_qtype, uint32_t req_qid, uint16_t req_ring_size,
     uint8_t resp_qtype, uint32_t resp_qid, uint16_t resp_ring_size,
-    adminq_cb_t handler, void *handler_obj, bool response_enabled
+    adminq_cb_t handler, void *handler_obj, EV_P_
+    bool response_enabled
 ) :
     name(name),
     pd(pd),
@@ -23,6 +24,8 @@ AdminQ::AdminQ(
     handler(handler), handler_obj(handler_obj),
     response_enabled(response_enabled)
 {
+    this->loop = loop;
+
     if (req_ring_size & (req_ring_size - 1)) {
         NIC_LOG_ERR("{}: Request ring size has to be power of 2", name);
         throw;
@@ -77,9 +80,9 @@ AdminQ::Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
         return false;
     }
 
-    evutil_add_prepare(&adminq_prepare, AdminQ::Poll, this);
-    evutil_add_check(&adminq_check, AdminQ::Poll, this);
-    evutil_timer_start(&adminq_timer, AdminQ::Poll, this, 0.0, 0.001);
+    evutil_add_prepare(EV_A_ &adminq_prepare, AdminQ::Poll, this);
+    evutil_add_check(EV_A_ &adminq_check, AdminQ::Poll, this);
+    evutil_timer_start(EV_A_ &adminq_timer, AdminQ::Poll, this, 0.0, 0.001);
 
     return true;
 }
@@ -201,9 +204,9 @@ AdminQ::Reset()
         return false;
     }
 
-    evutil_remove_prepare(&adminq_prepare);
-    evutil_remove_check(&adminq_check);
-    evutil_timer_stop(&adminq_timer);
+    evutil_remove_prepare(EV_A_ &adminq_prepare);
+    evutil_remove_check(EV_A_ &adminq_check);
+    evutil_timer_stop(EV_A_ &adminq_timer);
 
     return true;
 }

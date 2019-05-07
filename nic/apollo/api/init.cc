@@ -164,6 +164,12 @@ pds_init (pds_init_params_t *params)
     api::linkmgr_init(asic_cfg.catalog, asic_cfg.cfg_path.c_str());
     SDK_ASSERT(api::create_ports() == SDK_RET_OK);
 
+    // spin pciemgr thread.
+    core::thread_pciemgr_spawn(&api::g_pds_state);
+
+    PDS_TRACE_INFO("Sleeping for pciemgr server to come up ...");
+    sleep(2);
+
     // spin nicmgr thread. have to be after linkmgr init
     core::thread_nicmgr_spawn(&api::g_pds_state);
 

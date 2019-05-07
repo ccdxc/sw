@@ -13,7 +13,7 @@
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 
 #include "spdlog/spdlog.h"
-#include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
+#include "pciemgrd_impl.hpp"
 
 static std::shared_ptr<spdlog::logger> spdlogger;
 

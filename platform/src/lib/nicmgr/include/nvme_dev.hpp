@@ -45,7 +45,8 @@ class NvmeDev : public Device {
 public:
     NvmeDev(devapi *dev_api,
              void *dev_spec,
-             PdClient *pd_client);
+             PdClient *pd_client,
+             EV_P);
     ~NvmeDev();
 
     void DevcmdHandler();
@@ -95,6 +96,7 @@ private:
     static void _DevcmdPoll(void *obj);
 
     // Tasks
+    EV_P;
     evutil_timer                devcmd_timer;
 
     NvmeLif *_LifFind(uint64_t lif_id);

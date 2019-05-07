@@ -14,13 +14,15 @@ EdmaQ::EdmaQ(
     const char *name,
     PdClient *pd,
     uint16_t lif,
-    uint8_t qtype, uint32_t qid, uint16_t ring_size
+    uint8_t qtype, uint32_t qid, uint16_t ring_size, EV_P
 ) :
     name(name),
     pd(pd),
     lif(lif),
     qtype(qtype), qid(qid), ring_size(ring_size)
 {
+    this->loop = loop;
+
     if (ring_size & (ring_size - 1)) {
         NIC_LOG_ERR("{}: Ring size has to be power of 2", name);
         throw;
@@ -185,7 +187,7 @@ EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
             }
         } while(comp.comp_index != head);
     } else {
-        evutil_add_prepare(&prepare, &EdmaQ::Poll, this);
+        evutil_add_prepare(EV_A_ &prepare, &EdmaQ::Poll, this);
     }
 
     return true;

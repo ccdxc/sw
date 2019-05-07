@@ -10,10 +10,10 @@
 #include "ev.h"
 #include "evutils.h"
 
-void
-evutil_run(EV_P)
+struct ev_loop *
+evutil_create_loop(void)
 {
 #ifdef LIBEV
-    ev_run(EV_A_ 0);
+    return ev_loop_new (EVBACKEND_EPOLL | EVFLAG_NOENV);
 #endif
 }

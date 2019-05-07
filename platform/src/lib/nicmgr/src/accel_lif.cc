@@ -686,7 +686,8 @@ accel_ring_id2name_get(uint32_t ring_handle)
 
 
 AccelLif::AccelLif(AccelDev& accel_dev,
-                   accel_lif_res_t& lif_res) :
+                   accel_lif_res_t& lif_res,
+                   EV_P) :
     accel_dev(accel_dev),
     spec(accel_dev.DevSpecGet()),
     pd(accel_dev.PdClientGet()),
@@ -695,6 +696,8 @@ AccelLif::AccelLif(AccelDev& accel_dev,
     seq_qid_init_high(0),
     event_id(0)
 {
+
+    this->loop = loop;
     accel_lif_state_machine_build();
 
     memset(&hal_lif_info_, 0, sizeof(hal_lif_info_));
@@ -919,7 +922,7 @@ AccelLif::accel_lif_create_action(accel_lif_event_t event)
                         ACCEL_ADMINQ_REQ_QTYPE, ACCEL_ADMINQ_REQ_QID,
                         ACCEL_ADMINQ_REQ_RING_SIZE, ACCEL_ADMINQ_RESP_QTYPE,
                         ACCEL_ADMINQ_RESP_QID, ACCEL_ADMINQ_RESP_RING_SIZE,
-                        AdminCmdHandler, this);
+                        AdminCmdHandler, this, EV_A);
     if (!adminq) {
         NIC_LOG_ERR("{}: Failed to create AdminQ", LifNameGet());
         throw;
@@ -2389,7 +2392,7 @@ namespace AccelLifUtils {
 NotifyQ::NotifyQ(const std::string& name,
                  PdClient *pd,
                  uint64_t lif_id,
-                 uint32_t tx_qtype, 
+                 uint32_t tx_qtype,
                  uint32_t tx_qid,
                  uint64_t intr_base,
                  uint8_t  ctl_cosA,

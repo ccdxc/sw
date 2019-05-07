@@ -7,7 +7,7 @@
 #include <cinttypes>
 
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
-#include "platform/src/app/pciemgrd/src/pciemgrd_impl.hpp"
+#include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 
 #include "delphic.h"
 

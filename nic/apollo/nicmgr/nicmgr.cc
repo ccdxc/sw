@@ -40,30 +40,45 @@ log_flush(void *arg)
 void *
 nicmgrapi::nicmgr_thread_start(void *ctxt) {
     evutil_check log_check, port_status_check;
+    EV_P;
     string config_file = "/nic/conf/device.json";
     fwd_mode_t fwd_mode = sdk::platform::FWD_MODE_CLASSIC;
     platform_t platform = PLATFORM_HW;
 
+    EV_A = evutil_create_loop();
+
     // instantiate the logger
     utils::logger::init();
 
+    // initialize pciemgr
+    if (platform_is_hw(platform)) {
+        PDS_TRACE_INFO("initializing pciemgr");
+        pciemgr = new class pciemgr("nicmgrd", EV_A);
+        pciemgr->initialize();
+    }
+
+
     PDS_TRACE_INFO("Initializing device manager ...");
-    devmgr = new DeviceManager(config_file, fwd_mode, platform);
+    devmgr = new DeviceManager(config_file, fwd_mode, platform, EV_A);
     devmgr->LoadConfig(config_file);
+
+    if (pciemgr) {
+        pciemgr->finalize();
+    }
 
     pthread_cleanup_push(nicmgr::nicmgrapi::nicmgr_thread_cleanup, NULL);
     // creating mnets
     PDS_TRACE_INFO("Creating mnets ...");
     devmgr->HalEventHandler(true);
 
-    evutil_add_check(&log_check, &log_flush, NULL);
+    evutil_add_check(EV_A_ &log_check, &log_flush, NULL);
 
     // port status event handler
-    evutil_add_check(&port_status_check,
+    evutil_add_check(EV_A_ &port_status_check,
                      &nicmgrapi::port_status_handler_, NULL);
 
     PDS_TRACE_INFO("Listening to events ...");
-    evutil_run();
+    evutil_run(EV_A);
     pthread_cleanup_pop(1);
 
     return NULL;

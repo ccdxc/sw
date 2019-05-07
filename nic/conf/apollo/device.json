@@ -72,5 +72,61 @@
             "adminq_count" : 1,
             "intr_count" : 4
         }
+    ],
+    "eth_dev" : [
+        {
+            "name" : "eth0",
+            "dev_uuid" : 1,
+            "type": "host",
+            "lif_count" : 1,
+            "rxq_count" : 16,
+            "txq_count" : 16,
+            "eq_count" : 1,
+            "adminq_count" : 16,
+            "intr_count" : 64,
+            "qos_group" : "DEFAULT",
+            "pcie" : {
+                "port" : 0,
+                "num_vfs" : 0,
+                "oprom": "uefi"
+            },
+            "network" : {
+                "uplink" : 285278209
+            }
+        },
+        {
+            "name" : "eth1",
+            "dev_uuid" : 2,
+            "type": "host",
+            "lif_count" : 1,
+            "rxq_count" : 16,
+            "txq_count" : 16,
+            "eq_count" : 1,
+            "adminq_count" : 16,
+            "intr_count" : 64,
+            "pcie" : {
+                "port" : 0,
+                "num_vfs" : 0,
+                "oprom": "uefi"
+            },
+            "network" : {
+                "uplink" : 285343745
+            }
+        },
+        {
+            "name" : "eth_mgmt0",
+            "dev_uuid" : 3,
+            "type": "host_mgmt",
+            "lif_count" : 1,
+            "rxq_count" : 1,
+            "txq_count" : 1,
+            "eq_count" : 1,
+            "adminq_count" : 1,
+            "intr_count" : 4,
+            "pcie" : {
+                "port" : 0,
+                "num_vfs" : 0
+            }
+        }
     ]
 }

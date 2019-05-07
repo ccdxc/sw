@@ -42,13 +42,16 @@ extern class pciemgr *pciemgr;
 
 NvmeDev::NvmeDev(devapi *dapi,
                  void *dev_spec,
-                 PdClient *pd_client) :
+                 PdClient *pd_client,
+                 EV_P) :
     spec((nvme_devspec_t *)dev_spec),
     pd(pd_client),
     dev_api(dapi)
 {
     nvme_lif_res_t      lif_res;
     sdk_ret_t           ret = SDK_RET_OK;
+
+    this->loop = loop;
 
     // Allocate lifs
     // lif_base = pd->lm_->LIFRangeAlloc(-1, spec->lif_count);
@@ -83,7 +86,7 @@ NvmeDev::NvmeDev(devapi *dapi,
     MEM_SET(devcmddb_mem_addr, 0, NVME_DEV_PAGE_SIZE, 0);
 
     NvmeRegsInit();
-    
+
     WRITE_MEM(devcmd_mem_addr, (uint8_t *)devcmd, sizeof(*devcmd), 0);
 
     NIC_LOG_DEBUG("{}: devcmd_addr {:#x} devcmddb_addr {:#x}",
@@ -111,14 +114,14 @@ NvmeDev::NvmeDev(devapi *dapi,
     lif_res.cmb_mem_addr = cmb_mem_addr;
     lif_res.cmb_mem_size = cmb_mem_size;
 
-    lif = new NvmeLif(*this, lif_res);
+    lif = new NvmeLif(*this, lif_res, loop);
     if (!lif) {
         NIC_LOG_ERR("{}: failed to create NvmeLif {}",
                     DevNameGet(), lif_res.lif_id);
         throw;
     }
 
-    evutil_timer_start(&devcmd_timer, &NvmeDev::_DevcmdPoll, this, 0.0, 0.01);
+    evutil_timer_start(EV_A_ &devcmd_timer, &NvmeDev::_DevcmdPoll, this, 0.0, 0.01);
 }
 
 NvmeDev::~NvmeDev()
@@ -127,7 +130,7 @@ NvmeDev::~NvmeDev()
      * Most HBM related allocs don't have corresponding free API so
      * we'll leave them alone. Same with intr_alloc().
      */
-    evutil_timer_stop(&devcmd_timer);
+    evutil_timer_stop(EV_A_ &devcmd_timer);
 
     delete lif;
 
@@ -143,7 +146,7 @@ NvmeDev::NvmeRegsInit()
 
     NIC_HEADER_TRACE("Preparing Nvme Register Set");
 
-    // cap 
+    // cap
     cap.mpsmax = cap.mpsmin = 0;    //4K page
     cap.css = 0x01;                 //NVMe command set
     cap.nssrs = 0;
@@ -155,12 +158,12 @@ NvmeDev::NvmeRegsInit()
 
     //vs = 1.2
     vs.mjr = 1;
-    vs.mnr = 2;                     
+    vs.mnr = 2;
 
     devcmd->cap.num64 = (cap.num64);
     devcmd->vs.num32 = (vs.num32);
 
-    NIC_LOG_DEBUG("NvmeRegsInit: cap {:#x} vs {:#x}", 
+    NIC_LOG_DEBUG("NvmeRegsInit: cap {:#x} vs {:#x}",
                   devcmd->cap.num64, devcmd->vs.num32);
     return;
 }
@@ -208,8 +211,8 @@ NvmeDev::ParseConfig(boost::property_tree::ptree::value_type node)
 
     nvme_spec->pcie_port = val.get<uint8_t>("pcie.port", 0);
 
-    NIC_LOG_DEBUG("enable: {} name: {} lif_count: {} adminq_count: {} sq_count: {} cq count: {} intr_count: {}", 
-                  nvme_spec->enable, nvme_spec->name, nvme_spec->lif_count, nvme_spec->adminq_count, 
+    NIC_LOG_DEBUG("enable: {} name: {} lif_count: {} adminq_count: {} sq_count: {} cq count: {} intr_count: {}",
+                  nvme_spec->enable, nvme_spec->name, nvme_spec->lif_count, nvme_spec->adminq_count,
                   nvme_spec->sq_count, nvme_spec->cq_count, nvme_spec->intr_count);
 
     return nvme_spec;
@@ -272,9 +275,9 @@ NvmeDev::DevcmdHandler()
         NIC_LOG_DEBUG("!!! controller is getting enabled.. !!!");
         NIC_LOG_DEBUG("cc: {:#x}  iocqes: {} iosqes: {} ams: {} "
                       "mps: {} css: {} en: {}",
-                      devcmd->cc.num32, devcmd->cc.iocqes, 
-                      devcmd->cc.iosqes, devcmd->cc.ams, 
-                      devcmd->cc.mps, devcmd->cc.css, 
+                      devcmd->cc.num32, devcmd->cc.iocqes,
+                      devcmd->cc.iosqes, devcmd->cc.ams,
+                      devcmd->cc.mps, devcmd->cc.css,
                       devcmd->cc.en);
 
         if (lif != nullptr) {
@@ -291,7 +294,7 @@ NvmeDev::DevcmdHandler()
     } else if ((cc_en == true) && (devcmd->cc.en == 0)) {
         NIC_LOG_DEBUG("!!! controller is getting disabled.. !!!");
 
-        // cleanup 
+        // cleanup
         if (lif != nullptr) {
             status = lif->Disable(devcmd);
         }

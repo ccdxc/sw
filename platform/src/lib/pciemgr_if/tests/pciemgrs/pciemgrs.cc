@@ -139,8 +139,8 @@ main(int argc, char *argv[])
     if (sc->fd < 0) {
         exit(1);
     }
-    evutil_timer_start(&timer, timercb, NULL, 3.0, 3.0);
-    evutil_run();
+    evutil_timer_start(EV_DEFAULT_ &timer, timercb, NULL, 3.0, 3.0);
+    evutil_run(EV_DEFAULT);
     pciemgrs_close();
     exit(0);
     if (0) verbose("reference to verbose func\n");

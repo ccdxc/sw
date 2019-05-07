@@ -13,7 +13,7 @@ MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl pdstestutils \
 MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS} \
                    ${NIC_CAPSIM_LDLIBS} \
                    ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
-                   AAPL
+                   AAPL edit ncurses
 MODULE_INCS     = ${NIC_CSR_INCS}
 MODULE_FLAGS    = ${NIC_CSR_FLAGS}
 MODULE_DEFS     = -DCAPRI_SW ${NIC_CSR_DEFINES}

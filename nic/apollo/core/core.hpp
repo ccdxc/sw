@@ -24,6 +24,7 @@ enum {
     THREAD_ID_CONTROL    = 1,
     THREAD_ID_PERIODIC   = 2,
     THREAD_ID_NICMGR     = 3,
+    THREAD_ID_PCIEMGR    = 4,
     THREAD_ID_DATA_START = 16,
     THREAD_ID_DATA_END   = 47,
     THREAD_ID_MAX        = 38
@@ -37,6 +38,7 @@ enum {
 
 sdk_ret_t thread_periodic_spawn(pds_state *state);
 sdk_ret_t thread_nicmgr_spawn(pds_state *state);
+sdk_ret_t thread_pciemgr_spawn(pds_state *state);
 void threads_stop();
 sdk::lib::thread *thread_get(uint32_t thread_id);
 sdk_ret_t parse_global_config(string pipeline, string cfg_file,

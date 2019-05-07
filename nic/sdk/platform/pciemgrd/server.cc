@@ -18,10 +18,12 @@
 #include "nic/sdk/platform/pciemgrutils/include/pciehdev_impl.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciehcfg_impl.h"
 #include "nic/sdk/platform/pciemgrutils/include/pciehbar_impl.h"
-#include "platform/src/app/pciemgrd/src/pciemgrd_impl.hpp"
+#include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 #include "platform/src/lib/pciemgr_if/include/pmserver.h"
 
-#include "delphic.h"
+#ifdef IRIS
+#include "platform/src/app/pciemgrd/src/delphic.h"
+#endif
 
 static void
 do_open(pmmsg_t *m)
@@ -177,6 +179,7 @@ dev_evhandler(const pciehdev_eventdata_t *evd)
     pciemgrs_msgfree(m);
 }
 
+#ifdef IRIS
 #ifdef __aarch64__
 static void
 update_stats(void *arg)
@@ -190,6 +193,7 @@ update_stats(void *arg)
     }
 }
 #endif
+#endif
 
 int
 server_loop(void)
@@ -200,9 +204,11 @@ server_loop(void)
     logger_init();
     pciesys_loginfo("pciemgrd started\n");
 
+#ifdef IRIS
 #ifdef __aarch64__
     // connect to delphi
     delphi_client_start();
+#endif
 #endif
 
     pciemgrd_params(pme);
@@ -228,15 +234,17 @@ server_loop(void)
     }
     intr_init();
 
+#ifdef IRIS
 #ifdef __aarch64__
     // initialize stats timer to update stats to delphi
     static evutil_timer stats_timer;
-    evutil_timer_start(&stats_timer, update_stats, NULL, 10.0, 10.0);
+    evutil_timer_start(EV_DEFAULT_ &stats_timer, update_stats, NULL, 10.0, 10.0);
+#endif
 #endif
 
     pciemgrs_open(NULL, pciemgr_msg_cb);
     pciesys_loginfo("pciemgrd ready\n");
-    evutil_run();
+    evutil_run(EV_DEFAULT);
     pciemgrs_close();
 
  close_dev_error_out:

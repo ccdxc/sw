@@ -68,7 +68,7 @@ oprom_type_to_str(OpromType type)
 }
 
 DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
-                             platform_t platform)
+                             platform_t platform, EV_P)
 {
     NIC_HEADER_TRACE("Initializing DeviceManager");
     init_done = false;
@@ -82,10 +82,17 @@ DeviceManager::DeviceManager(std::string config_file, fwd_mode_t fwd_mode,
                sdk::lib::PAL_RET_OK);
 #endif
 #endif
+    if (loop == NULL) {
+        this->loop = EV_DEFAULT;
+    } else {
+        this->loop = loop;
+    }
     this->fwd_mode = fwd_mode;
     this->config_file = config_file;
     pd = PdClient::factory(platform, fwd_mode);
     assert(pd);
+
+    NIC_LOG_DEBUG("Event loop: {:#x}", (uint64_t)this->loop);
 
     // Reserve all the LIF ids used by HAL
     NIC_LOG_DEBUG("Reserving HAL lifs {}-{}", HAL_LIF_ID_MIN, HAL_LIF_ID_MAX);
@@ -298,7 +305,7 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
     case MNIC:
         {
             //For mnic upgrade_mode is always false
-            std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd, false);
+            std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd, EV_A_ false);
             for (std::size_t idx = 0; idx < eth_devices.size(); ++idx)
                 devices[eth_devices[idx]->GetName()] = eth_devices[idx];
             return (Device *)eth_devices[0];
@@ -308,7 +315,7 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         return NULL;
     case ETH:
         {
-            std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd, upgrade_mode);
+            std::vector<Eth*> eth_devices = Eth::factory(type, dev_api, dev_spec, pd, EV_A_ upgrade_mode);
             for (std::size_t idx = 0; idx < eth_devices.size(); ++idx) {
                 //Create PCIe device for only PF
                 if (!idx) {
@@ -330,12 +337,12 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         }
 #ifdef IRIS
     case ACCEL:
-        accel_dev = new AccelDev(dev_api, dev_spec, pd);
+        accel_dev = new AccelDev(dev_api, dev_spec, pd, EV_A);
         accel_dev->SetType(type);
         devices[accel_dev->GetName()] = accel_dev;
         return (Device *)accel_dev;
     case NVME:
-        nvme_dev = new NvmeDev(dev_api, dev_spec, pd);
+        nvme_dev = new NvmeDev(dev_api, dev_spec, pd, EV_A);
         nvme_dev->SetType(type);
         devices[nvme_dev->GetName()] = nvme_dev;
         return (Device *)nvme_dev;

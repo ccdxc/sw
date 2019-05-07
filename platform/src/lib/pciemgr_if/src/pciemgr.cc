@@ -24,10 +24,10 @@
 
 static pciemgr::evhandler default_evhandler;
 
-pciemgr::pciemgr(const char *name) :
-    pciemgr(name, default_evhandler) {}
+pciemgr::pciemgr(const char *name, EV_P) :
+    pciemgr(name, default_evhandler, loop) {}
 
-pciemgr::pciemgr(const char *name, evhandler &evhandlercb) :
+pciemgr::pciemgr(const char *name, evhandler &evhandlercb, EV_P) :
         evhandlercb (evhandlercb)
 {
     serverfd = pciemgrc_open(name, NULL);
@@ -36,12 +36,13 @@ pciemgr::pciemgr(const char *name, evhandler &evhandlercb) :
         fprintf(stderr, "No pciemgr server found - exiting\n");
         exit(1);
     }
-    evutil_add_fd(serverfd, msgrecv, NULL, this);
+    this->loop = loop;
+    evutil_add_fd(EV_A_ serverfd, msgrecv, NULL, this);
 }
 
 pciemgr::~pciemgr(void)
 {
-    evutil_remove_fd(serverfd);
+    evutil_remove_fd(EV_A_ serverfd);
     pciemgrc_close();
 }
 

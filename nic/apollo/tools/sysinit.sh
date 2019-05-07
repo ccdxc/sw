@@ -5,10 +5,6 @@ export LD_LIBRARY_PATH=$NIC_DIR/lib
 ulimit -c unlimited
 cd /
 ifconfig lo up
-# start pciemgrd
-/nic/bin/pciemgrd-gold &
-# start memtun
-/nic/bin/memtun &
 
 # load kernel modules for mnics
 insmod /nic/bin/ionic_mnic.ko &> /var/log/pensando/ionic_mnic_load.log

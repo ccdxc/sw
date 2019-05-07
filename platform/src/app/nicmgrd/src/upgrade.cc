@@ -58,7 +58,7 @@ nicmgr_upg_hndlr::CompatCheckHandler(UpgCtx& upgCtx)
     return resp;
 }
 
-HdlrResp 
+HdlrResp
 nicmgr_upg_hndlr::ProcessQuiesceHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
     return resp;
@@ -71,7 +71,7 @@ nicmgr_upg_hndlr::check_device_quiesced(void *obj)
     if (devmgr->GetUpgradeState() == DEVICES_QUIESCED_STATE) {
         NIC_FUNC_DEBUG("All devices are in Quiesced state");
         g_nicmgr_svc->upgsdk()->SendAppRespSuccess();
-        evutil_timer_stop(&dev_quiesce_timer);
+        evutil_timer_stop(EV_DEFAULT_ &dev_quiesce_timer);
     }
 
     return;
@@ -90,12 +90,12 @@ nicmgr_upg_hndlr::LinkDownHandler(UpgCtx& upgCtx)
     }
 
     NIC_FUNC_DEBUG("Starting timer thread to check whether all devices are quiesced or not ...");
-    evutil_timer_start(&dev_quiesce_timer, nicmgr_upg_hndlr::check_device_quiesced, this, 0.0, 0.1);
+    evutil_timer_start(EV_DEFAULT_ &dev_quiesce_timer, nicmgr_upg_hndlr::check_device_quiesced, this, 0.0, 0.1);
 
     return resp;
 }
 
-HdlrResp 
+HdlrResp
 nicmgr_upg_hndlr::PostHostDownHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
 
@@ -141,7 +141,7 @@ nicmgr_upg_hndlr::AbortHandler(UpgCtx& upgCtx)
 {
 }
 
-HdlrResp 
+HdlrResp
 nicmgr_upg_hndlr::SaveStateHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
 
@@ -150,7 +150,7 @@ nicmgr_upg_hndlr::SaveStateHandler(UpgCtx& upgCtx) {
     return resp;
 }
 
-HdlrResp 
+HdlrResp
 nicmgr_upg_hndlr::PostLinkUpHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
 
@@ -165,13 +165,13 @@ nicmgr_upg_hndlr::check_device_reset(void *obj)
         NIC_FUNC_DEBUG("All devices are in reset state");
         writefile(nicmgr_upgrade_state_file, "in progress", 12);
         g_nicmgr_svc->upgsdk()->SendAppRespSuccess();
-        evutil_timer_stop(&dev_reset_timer);
+        evutil_timer_stop(EV_DEFAULT_ &dev_reset_timer);
     }
 
     return;
 }
 
-HdlrResp 
+HdlrResp
 nicmgr_upg_hndlr::HostDownHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=INPROGRESS, .errStr=""};
 
@@ -182,12 +182,12 @@ nicmgr_upg_hndlr::HostDownHandler(UpgCtx& upgCtx) {
     }
 
     NIC_FUNC_DEBUG("Starting timer thread to check whether all devices are in reset or not ...");
-    evutil_timer_start(&dev_reset_timer, nicmgr_upg_hndlr::check_device_reset, this, 0.0, 0.1);
+    evutil_timer_start(EV_DEFAULT_ &dev_reset_timer, nicmgr_upg_hndlr::check_device_reset, this, 0.0, 0.1);
 
     return resp;
 }
 
-HdlrResp 
+HdlrResp
 nicmgr_upg_hndlr::HostUpHandler(UpgCtx& upgCtx) {
     HdlrResp resp = {.resp=SUCCESS, .errStr=""};
 

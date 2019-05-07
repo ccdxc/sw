@@ -32,7 +32,8 @@ public:
         uint16_t lif,
         uint8_t req_qtype, uint32_t req_qid, uint16_t req_ring_size,
         uint8_t resp_qtype, uint32_t resp_qid, uint16_t resp_ring_size,
-        adminq_cb_t handler, void *handler_obj, bool response_enabled = true
+        adminq_cb_t handler, void *handler_obj, EV_P_
+        bool response_enabled = true
     );
 
     bool Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB);
@@ -76,6 +77,7 @@ private:
     uint8_t resp_exp_color;
 
     // Tasks
+    EV_P;
     evutil_prepare adminq_prepare = {0};
     evutil_check adminq_check = {0};
     evutil_timer adminq_timer = {0};

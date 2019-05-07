@@ -16,7 +16,7 @@ MODULE_LDLIBS   =  ${NIC_COMMON_LDLIBS}                                     \
                    ${NIC_CAPSIM_LDLIBS}                                     \
                    ${SDK_THIRDPARTY_CAPRI_LDLIBS}                           \
                    ${SDK_THIRD_PARTY_VPP_LIBS}                              \
-                   AAPL
+                   AAPL edit ncurses
 MODULE_INCS     = ${NIC_CSR_INCS}                                           \
                   ${SDK_THIRD_PARTY_VPP_INCLUDES}
 MODULE_LDPATHS  = ${SDK_THIRD_PARTY_VPP_LDPATH}

@@ -48,7 +48,7 @@ evutil_fd_cb(EV_P_ ev_io *w, int revents)
 }
 
 static void
-evutil_add_fd_cmn(int fd, evutil_cb_t *rdcb, evutil_cb_t *wrcb, void *cbarg,
+evutil_add_fd_cmn(EV_P_ int fd, evutil_cb_t *rdcb, evutil_cb_t *wrcb, void *cbarg,
                   struct pal_int *pal_int)
 {
     evutil_fd_ctx_t *fdctx;
@@ -66,43 +66,43 @@ evutil_add_fd_cmn(int fd, evutil_cb_t *rdcb, evutil_cb_t *wrcb, void *cbarg,
     if (fdctx->wrcb) events |= EV_WRITE;
 #ifdef LIBEV
     ev_io_init(&fdctx->evio, evutil_fd_cb, fd, events);
-    ev_io_start(EV_DEFAULT_ &fdctx->evio);
+    ev_io_start(EV_A_ &fdctx->evio);
 #else
-    if (0) evutil_fd_cb(EV_DEFAULT_ &fdctx->evio, 0);
+    if (0) evutil_fd_cb(EV_A_ &fdctx->evio, 0);
 #endif
 }
 
 void
-evutil_add_fd(int fd, evutil_cb_t *rdcb, evutil_cb_t *wrcb, void *cbarg)
+evutil_add_fd(EV_P_ int fd, evutil_cb_t *rdcb, evutil_cb_t *wrcb, void *cbarg)
 {
-    evutil_add_fd_cmn(fd, rdcb, wrcb, cbarg, NULL);
+    evutil_add_fd_cmn(EV_A_ fd, rdcb, wrcb, cbarg, NULL);
 }
 
 void
-evutil_remove_fd(const int fd)
+evutil_remove_fd(EV_P_ const int fd)
 {
     evutil_fd_ctx_t *fdctx;
 
     assert(fd >= 0 && fd < EVUTIL_NFDS);
     fdctx = &evutil_fd_ctx[fd];
 #ifdef LIBEV
-    ev_io_stop(EV_DEFAULT_ &fdctx->evio);
+    ev_io_stop(EV_A_ &fdctx->evio);
 #endif
     fdctx->rdcb = fdctx->wrcb = NULL;
 }
 
 void
-evutil_add_pal_int(struct pal_int *pal_int, evutil_cb_t *isrcb, void *cbarg)
+evutil_add_pal_int(EV_P_ struct pal_int *pal_int, evutil_cb_t *isrcb, void *cbarg)
 {
     int fd = pal_int_fd(pal_int);
 
-    evutil_add_fd_cmn(fd, isrcb, NULL, cbarg, pal_int);
+    evutil_add_fd_cmn(EV_A_ fd, isrcb, NULL, cbarg, pal_int);
 }
 
 void
-evutil_remove_pal_int(struct pal_int *pal_int)
+evutil_remove_pal_int(EV_P_ struct pal_int *pal_int)
 {
     int fd = pal_int_fd(pal_int);
 
-    evutil_remove_fd(fd);
+    evutil_remove_fd(EV_A_ fd);
 }

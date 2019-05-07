@@ -65,7 +65,8 @@ class AccelDev : public Device {
 public:
     AccelDev(devapi *dev_api,
              void *dev_spec,
-             PdClient *pd_client);
+             PdClient *pd_client,
+             EV_P);
     ~AccelDev();
 
     void DevcmdHandler();
@@ -138,6 +139,7 @@ private:
     _DevcmdCryptoKeyUpdate(void *req, void *req_data, void *resp, void *resp_data);
 
     // Tasks
+    EV_P;
     evutil_timer                devcmd_timer;
 
     void _MetricsInit(void);

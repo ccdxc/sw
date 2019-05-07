@@ -8,5 +8,5 @@ MODULE_SOLIBS   = pdsproto trace svc pdsapi memhash ftl pdsagentcore \
                   ${NIC_APOLLO_NICMGR_LIBS}
 
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
-                  ${NIC_COMMON_LDLIBS}
+                  ${NIC_COMMON_LDLIBS} edit ncurses
 include ${MKDEFS}/post.mk
