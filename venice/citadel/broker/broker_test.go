@@ -665,6 +665,8 @@ func TestBrokerBenchmark(t *testing.T) {
 	broker, err := createBroker(fmt.Sprintf("node-0"), logger)
 	AssertOk(t, err, "Error creating broker")
 
+	t.Skip("TODO: Reenable after https://github.com/pensando/sw/issues/11893 is fixed")
+
 	AssertEventually(t, func() (bool, interface{}) {
 		if err := broker.ClusterCheck(); err != nil {
 			log.Errorf("cluster check %v", err)
