@@ -1,0 +1,92 @@
+
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for nexthop and nexthop group objects
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+service NhSvc {
+  rpc NhGroupCreate (NhGroupRequest) returns (NhGroupResponse) {}
+  rpc NhGroupGet (NhGroupGetRequest) returns (NhGroupGetResponse) {}
+  rpc NhGroupDelete (NhGroupDeleteRequest) returns (NhGroupDeleteResponse) {}
+}
+
+// type of the nexthop group
+enum NhGroupType {
+  NEXTHOP_GROUP_TYPE_NONE = 0;
+  NEXTHOP_GROUP_TYPE_ECMP = 1;
+}
+
+// nexthop group specification - a nextgroup consists of bunch of nexthops
+message NhGroupSpec {
+  // unique nexthop group id
+  uint32 Id                = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // type of the nexthop
+  NhGroupType Type         = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  // 0 or more member nexthop identifiers
+  repeated uint32 Nexthops = 3;
+}
+
+// operational status of nexthop group, if any
+message NhGroupStatus {
+}
+
+// stats of a nexthop group, if any
+message NhGroupStats {
+}
+
+// nexthop group object
+message NhGroup {
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  NhGroupSpec   Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  NhGroupStatus Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  NhGroupStats  Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// NhGroup create and update request
+message NhGroupRequest {
+  // batched create or update requests
+  repeated NhGroupSpec Request = 1;
+}
+
+// NhGroup create and update response
+message NhGroupResponse {
+  // API status code for create & update operations
+  types.ApiStatus        ApiStatus = 1;
+  // response containing operational status of the objects created/updated
+  repeated NhGroupStatus Response  = 2;
+}
+
+// NhGroup get request
+message NhGroupGetRequest {
+  // list of nexthop groups of interest
+  repeated uint32 Id = 1;
+}
+
+// NhGroup get response
+message NhGroupGetResponse {
+  // API status code for get operation
+  types.ApiStatus  ApiStatus = 1;
+  // list of nexthop group information
+  repeated NhGroup Response  = 2;
+}
+
+// NhGroup delete request
+message NhGroupDeleteRequest {
+  // list of nexthop groups to delete
+  repeated uint32 Id = 1;
+}
+
+// NhGroup delete response
+message NhGroupDeleteResponse {
+  // API status code for delete operation
+  repeated types.ApiStatus ApiStatus = 1;
+}

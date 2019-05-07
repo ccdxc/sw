@@ -38,7 +38,6 @@ message RouteTableSpec {
   types.IPAF     AF     = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // routes in this route table
   repeated Route Routes = 3;
-
 }
 
 // operational status of the route table, if any
