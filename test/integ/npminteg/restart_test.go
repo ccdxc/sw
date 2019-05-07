@@ -234,6 +234,9 @@ func (it *integTestSuite) TestNpmRestart(c *C) {
 }
 
 func (it *integTestSuite) TestRestartWithWorkload(c *C) {
+	// TODO: Currently fails inconsistently with Endpoint check at line 290
+	c.Skip("Enable after fixing https://github.com/pensando/sw/issues/8298")
+
 	const numWorkloadPerHost = 10
 	// if not present create the default tenant
 	it.CreateTenant("default")
