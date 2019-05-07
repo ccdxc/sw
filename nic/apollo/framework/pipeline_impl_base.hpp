@@ -37,6 +37,11 @@ public:
     /// \return new instance of pipeline impl or NULL, in case of error
     static pipeline_impl_base *factory(pipeline_cfg_t *pipeline_cfg);
 
+    /// \brief Destory method to free pipeline impl instance
+    ///
+    /// \param[in] impl pipeline impl instance
+    static void destroy(pipeline_impl_base *impl);
+
     /// \brief Initialize program configuration
     ///
     /// \param[in] init_params Initialization time parameters passed by app
@@ -109,6 +114,9 @@ public:
     ///
     /// \param[in] fp File handle
     virtual void debug_dump(FILE *fp) { }
+
+private:
+    pipeline_cfg_t pipeline_cfg_;
 };
 
 /// \@}

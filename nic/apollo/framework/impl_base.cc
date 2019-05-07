@@ -28,7 +28,7 @@ pipeline_impl_base *impl_base::pipeline_impl_  = NULL;
 
 sdk_ret_t
 impl_base::init(pds_init_params_t *params, asic_cfg_t *asic_cfg) {
-    pipeline_cfg_t        pipeline_cfg;
+    pipeline_cfg_t pipeline_cfg;
 
     // instanitiate asic implementaiton object
     asic_impl_ = asic_impl_base::factory(asic_cfg);
@@ -50,6 +50,12 @@ impl_base::init(pds_init_params_t *params, asic_cfg_t *asic_cfg) {
     pipeline_impl_->pipeline_init();
 
     return SDK_RET_OK;
+}
+
+void
+impl_base::destroy(void) {
+    pipeline_impl_->destroy(pipeline_impl_);
+    asic_impl_->destroy(asic_impl_);
 }
 
 void

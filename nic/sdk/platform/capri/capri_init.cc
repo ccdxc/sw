@@ -151,8 +151,12 @@ capri_asm_init (capri_cfg_t *cfg)
            num_symbols,
            cfg->asm_cfg[i].sort_func);
 
-       if(symbols)
+       if (symbols) {
+           for (uint32_t j = 0; j < num_symbols; j++) {
+               symbols[j].name = "";
+           }
            SDK_FREE(SDK_MEM_ALLOC_PD, symbols);
+       }
 
        if (iret != 0) {
           SDK_TRACE_ERR("Failed to load program %s", full_path);
@@ -544,6 +548,12 @@ asic_init (asic_cfg_t *cfg)
     }
     capri_cfg.completion_func = cfg->completion_func;
     return capri_init(&capri_cfg);
+}
+
+void
+asic_cleanup (void)
+{
+    sdk::p4::p4_cleanup();
 }
 
 }    // namespace asic

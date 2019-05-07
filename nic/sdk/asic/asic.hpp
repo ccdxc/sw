@@ -49,6 +49,8 @@ typedef struct asic_cfg_s {
 
 // initialize the asic
 sdk_ret_t asic_init(asic_cfg_t *asic_cfg);
+// cleanup asic initialization
+void asic_cleanup(void);
 
 typedef enum asic_block_e {
     ASIC_BLOCK_PACKET_BUFFER,

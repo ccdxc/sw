@@ -173,6 +173,11 @@ apollo_impl::factory(pipeline_cfg_t *pipeline_cfg) {
     return impl;
 }
 
+void
+apollo_impl::destroy(apollo_impl *impl) {
+    p4pd_cleanup();
+}
+
 /**
  * @brief    initialize program configuration
  * @param[in] init_params    initialization time parameters passed by app

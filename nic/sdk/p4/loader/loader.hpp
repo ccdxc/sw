@@ -117,6 +117,11 @@ sdk_ret_t p4_program_to_base_addr(const char *handle,
  */
 sdk_ret_t p4_dump_program_info (const char *cfg_path);
 
+/**
+ * p4_cleanup: Cleanup the memories and variables allocated/used during init
+ */
+void p4_cleanup(void);
+
 }    // namespace p4
 }    // namnespace sdk
 

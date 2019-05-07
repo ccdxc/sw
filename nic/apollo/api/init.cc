@@ -198,6 +198,7 @@ pds_teardown (void)
     // 7. flush all logs
     core::threads_stop();
     sdk::linkmgr::linkmgr_threads_stop();
+    impl_base::destroy();
     api::pds_state::destroy(&api::g_pds_state);
     return SDK_RET_OK;
 }

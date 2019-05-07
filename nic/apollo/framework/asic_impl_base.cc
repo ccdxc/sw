@@ -20,13 +20,26 @@ namespace impl {
 asic_impl_base *
 asic_impl_base::factory(asic_cfg_t *asic_cfg) {
     switch (asic_cfg->asic_type) {
-        case asic_type_t::SDK_ASIC_TYPE_CAPRI:
-        return capri_impl::factory(asic_cfg);
-
+    case asic_type_t::SDK_ASIC_TYPE_CAPRI:
+        asic_impl_base *impl;
+        impl = capri_impl::factory(asic_cfg);
+        impl->asic_type_ = asic_type_t::SDK_ASIC_TYPE_CAPRI;
+        return impl;
     default:
         break;
     }
     return NULL;
+}
+
+void
+asic_impl_base::destroy(asic_impl_base *impl) {
+    switch (impl->asic_type_) {
+    case asic_type_t::SDK_ASIC_TYPE_CAPRI:
+        return capri_impl::destroy(static_cast<capri_impl*>(impl));
+    default:
+        break;
+    }
+    return;
 }
 
 /// \@}

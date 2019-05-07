@@ -365,6 +365,24 @@ p4_load_mpu_programs (const char *handle,
     return SDK_RET_OK;
 }
 
+void
+p4_cleanup (void)
+{
+    p4_loader_ctx_t *ctx;
+
+    for (auto it = loader_instances.begin(); it != loader_instances.end(); it++) {
+        if ((ctx = loader_instances[it->first]) != NULL) {
+            if (ctx) {
+                if (ctx->program_info) {
+                    delete[] ctx->program_info;
+                }
+                delete ctx;
+                loader_instances[it->first] = NULL;
+            }
+        }
+    }
+}
+
 /**
  * p4_program_label_to_offset: Resolve a programs, label to its relative
  *                                offset

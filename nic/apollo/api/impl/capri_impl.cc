@@ -75,6 +75,11 @@ capri_impl::factory(asic_cfg_t *asic_cfg) {
     return impl;
 }
 
+void
+capri_impl::destroy(capri_impl *impl) {
+    sdk::asic::asic_cleanup();
+}
+
 /**
  * @brief    init routine to initialize the asic
  * @param[in] asic_cfg    asic information

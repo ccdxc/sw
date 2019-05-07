@@ -35,6 +35,12 @@ public:
     static apollo_impl *factory(pipeline_cfg_t *pipeline_cfg);
 
     /**
+     * @brief     desroy method to pipeline impl instance
+     * @param[in] impl pointer to the allocated instance
+     */
+    static void destroy(apollo_impl *impl);
+
+    /**
      * @brief    initialize program configuration
      * @param[in] init_params    initialization time parameters passed by app
      * @param[in] asic_cfg       asic configuration to be populated with program

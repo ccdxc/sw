@@ -40,6 +40,9 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t init(pds_init_params_t *params, asic_cfg_t *asic_cfg);
 
+    /// \brief destroy function which should be called at teardown
+    static void destroy(void);
+
     /// \brief Dump all the debug information to given file
     ///
     /// \param[in] fp File handle

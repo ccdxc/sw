@@ -36,6 +36,11 @@ public:
     static capri_impl *factory(asic_cfg_t *asic_cfg);
 
     /**
+     * @brief destroy method to free the asic impl instance
+     */
+    static void destroy(capri_impl *impl);
+
+    /**
      * @brief    init routine to initialize the asic
      * @param[in] asic_cfg    asic configuration information
      * @return    SDK_RET_OK on success, failure status code on error

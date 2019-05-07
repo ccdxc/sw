@@ -31,6 +31,10 @@ public:
     /// \return    new instance of ASIC impl or NULL, in case of error
     static asic_impl_base *factory(asic_cfg_t *asic_cfg);
 
+    /// \brief    destroy method to free the ASIC impl instance
+    /// \param[in] impl ASIC impl instance
+    static void destroy(asic_impl_base *impl);
+
     /// \brief    init routine to initialize the asic
     /// \param[in] asic_cfg    ASIC configuration information
     /// \return    SDK_RET_OK on success, failure status code on error
@@ -90,6 +94,9 @@ public:
     /// \brief Dump all the debug information to given file
     /// \param[in] fp File handle
     virtual void debug_dump(FILE *fp) {}
+
+private:
+    sdk::platform::asic_type_t asic_type_;
 };
 
 /// \@}
