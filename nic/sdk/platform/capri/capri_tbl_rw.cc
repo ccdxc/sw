@@ -1565,10 +1565,10 @@ capri_hbm_table_entry_write (uint32_t tableid,
 int
 capri_hbm_table_entry_cache_invalidate (bool ingress,
                                         uint64_t entry_addr,
-                                        p4_table_mem_layout_t &tbl_info)
+                                        mem_addr_t base_mem_pa)
 {
     time_profile_begin(sdk::utils::time_profile::CAPRI_HBM_TABLE_ENTRY_CACHE_INVALIDATE);
-    uint32_t claddr = ((tbl_info.base_mem_pa + entry_addr) >> CACHE_LINE_SIZE_SHIFT) << 1;
+    uint32_t claddr = ((base_mem_pa + entry_addr) >> CACHE_LINE_SIZE_SHIFT) << 1;
     if (ingress) {
         if (csr_cache_inval_ingress_va) {
             *csr_cache_inval_ingress_va = claddr;

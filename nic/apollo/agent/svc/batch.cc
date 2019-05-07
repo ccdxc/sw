@@ -7,6 +7,8 @@
 #include "nic/apollo/test/flow_test/flow_test.hpp"
 extern flow_test *g_flow_test_obj;
 
+//#define PDS_FLOW_TEST
+
 Status
 BatchSvcImpl::BatchStart(ServerContext *context,
                          const pds::BatchSpec *proto_spec,
@@ -20,12 +22,14 @@ BatchSvcImpl::BatchStart(ServerContext *context,
     // flows. This needs to be cleaned up
     sdk_ret_t ret;
     if (api_batch_params.epoch == PDS_EPOCH_INVALID) {
-        ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, false);
+        //ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, false);
+        ret = g_flow_test_obj->create_flows();
         if (ret != sdk::SDK_RET_OK) {
             return Status::CANCELLED;
         }
- 
-        ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, true);
+
+        //ret = g_flow_test_obj->create_flows(1024*1024, 17, 100, 100, true);
+        ret = g_flow_test_obj->create_flows();
         if (ret != sdk::SDK_RET_OK) {
             return Status::CANCELLED;
         }

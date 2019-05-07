@@ -54,9 +54,13 @@ ftl_hint_table::init_(sdk::table::properties_t *props) {
     ret = indexer_.init(table_size_);
     SDK_ASSERT(ret == SDK_RET_OK);
 
+    // Index 0 cannot be used, so reserve it by doing a dummy alloc.
+    uint32_t temp = 0;
+    ret = indexer_.alloc(temp);
+    SDK_ASSERT(ret == SDK_RET_OK);
     FTL_TRACE_VERBOSE("Created ftl_main_table TableID:%d TableSize:%d "
-                          "NumTableIndexBits:%d",
-                          table_id_, table_size_, num_table_index_bits_);
+                      "NumTableIndexBits:%d",
+                      table_id_, table_size_, num_table_index_bits_);
     return ret;
 }
 
@@ -80,10 +84,12 @@ ftl_hint_table::alloc_(ftl_apictx *ctx) {
     ctx->hint = hint_index++;
     return SDK_RET_OK;
 #endif
-    ctx->hint = indexer_.alloc();
-    if (!ctx->hint) {
-        return SDK_RET_NO_RESOURCE;
+    uint32_t hint = 0;
+    auto ret = indexer_.alloc(hint);
+    if (ret != SDK_RET_OK) {
+        return ret;
     }
+    ctx->hint = hint;
     FTL_TRACE_VERBOSE("%s: Allocated index:%d Meta:[%s]",
                       ctx->idstr(), ctx->hint, ctx->metastr());
 

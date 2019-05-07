@@ -80,6 +80,7 @@ eth_tx_fetch_desc:
   add             _r_tbladdr, d.{ring_base}.dx, d.{ci_fetch}.hx, LG2_TX_DESC_SIZE
 
   // Save data for next stages
+  phvwr           p.eth_tx_global_cpu_queue, d.cpu_queue
   phvwr           p.eth_tx_t0_s2s_num_todo, _r_numtodo
   phvwr           p.eth_tx_to_s1_qstate_addr[33:0], k.p4_txdma_intr_qstate_addr
   phvwr           p.eth_tx_global_lif, k.p4_intr_global_lif

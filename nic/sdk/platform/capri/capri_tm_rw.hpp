@@ -398,23 +398,18 @@ sdk_ret_t capri_tm_get_pb_debug_stats(tm_port_t port,
 uint32_t capri_tm_get_num_iqs_for_port(tm_port_t port);
 uint32_t capri_tm_get_num_oqs_for_port(tm_port_t port);
 
-sdk_ret_t
-cap_pb_sched_spq_pgm (uint32_t chip_id,
-                      uint32_t inst_id,
-                      tm_port_t port,
-                      tm_q_t oq,
-                      pb_sched_node_input_info_t *input_info);
+sdk_ret_t cap_pb_sched_spq_pgm(uint32_t chip_id, uint32_t inst_id,
+                               tm_port_t port, tm_q_t oq,
+                               pb_sched_node_input_info_t *input_info);
 uint32_t capri_tm_get_port_occupancy(tm_port_t port, uint32_t iq);
 uint32_t capri_tm_get_xon_threshold(uint32_t ctx);
 uint32_t capri_tm_get_xoff_threshold(uint32_t ctx);
-uint64_t capri_tm_get_port_mon_out (int chip_id,
-                                    int inst_id,
-                                    tm_port_t tm_port,
-                                    tm_q_t tm_oq);
-uint64_t capri_tm_get_port_mon_in (int chip_id,
-                                   int inst_id,
+uint64_t capri_tm_get_port_mon_out(int chip_id, int inst_id,
                                    tm_port_t tm_port,
-                                   tm_q_t tm_iq);
+                                   tm_q_t tm_oq);
+uint64_t capri_tm_get_port_mon_in(int chip_id, int inst_id,
+                                  tm_port_t tm_port,
+                                  tm_q_t tm_iq);
 
 }    // namespace capri
 }    // namespace platform

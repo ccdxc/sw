@@ -6,11 +6,12 @@
             "gw-ip-addr": "1.0.0.1",
             "ip-addr" : "1.0.0.2",
             "mac-addr" : "0x000201000001",
-            "dual-stack": "true",
+            "dual-stack": "false",
             "_comment_" : "encap is either vxlan or mplsoudp",
             "encap": "vxlan"
         },
         {
+            "_comment_" : "tep is a server with IP in the subtrate",
             "kind" : "tep",
             "count" : "1024",
             "prefix": "1.0.0.0/8"
@@ -25,16 +26,16 @@
         {
             "_comment_" : "security policy parameters here are per subnet per direction",
             "kind" : "security-policy",
-            "count" : "1023",
-            "stateful" : "false"
+            "count" : "4",
+            "stateful" : "true"
         },
         {
             "_comment_" : "All VPCs have same prefix",
             "kind" : "vpc",
-            "count" : "512",
+            "count" : "1024",
             "prefix" : "2.0.0.0/8",
             "v6-prefix" : "2019::/96",
-            "subnets" : "2"
+            "subnets" : "1"
         },
         {
             "_comment_" : "per vpc, per subnet vnic scale",
@@ -44,8 +45,8 @@
         },
         {
             "kind" : "mappings",
-            "remotes" : "512",
-            "locals" : "16",
+            "remotes" : "1024",
+            "locals" : "32",
             "nat-prefix" : "3.0.0.0/8",
             "v6-nat-prefix": "2020::/96"
         },
@@ -58,7 +59,7 @@
         {
             "kind" : "flows",
             "num_tcp": "0",
-            "num_udp": "524288",
+            "num_udp": "0",
             "num_icmp": "0",
             "sport_lo": "100",
             "sport_hi": "100",

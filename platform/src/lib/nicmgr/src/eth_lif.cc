@@ -982,20 +982,39 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
     qstate.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
     qstate.cfg.intr_enable = (cmd->flags & IONIC_QINIT_F_IRQ) ? 1 : 0;
     qstate.cfg.host_queue = spec->host_dev;
+
+    // Apollo VPP changes
+    if (hal_lif_info_.type == sdk::platform::lif_type_t::LIF_TYPE_MNIC_CPU) {
+        qstate.cfg.cpu_queue = 1;
+    } else {
+        qstate.cfg.cpu_queue = 0;
+    }
+
+    // FIXME: Workaround for mnic
+    if (spec->host_dev) {
+        // TODO: this doesn't work on TOT
+        //qstate.cfg.intr_enable = cmd->I;
+    } else {
+        qstate.cfg.intr_enable = 1;
+    }
+
     if (spec->host_dev) {
         qstate.ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->ring_base);
         qstate.cq_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->cq_ring_base);
-        if (cmd->flags & IONIC_QINIT_F_SG)
+        if (cmd->flags & IONIC_QINIT_F_SG) {
             qstate.sg_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->sg_ring_base);
+        }
     } else {
         qstate.ring_base = cmd->ring_base;
         qstate.cq_ring_base = cmd->cq_ring_base;
-        if (cmd->flags & IONIC_QINIT_F_SG)
+        if (cmd->flags & IONIC_QINIT_F_SG) {
             qstate.sg_ring_base = cmd->sg_ring_base;
+        }
     }
     qstate.ring_size = cmd->ring_size;
-    if (cmd->flags & IONIC_QINIT_F_IRQ)
+    if (cmd->flags & IONIC_QINIT_F_IRQ) {
         qstate.intr_assert_index = res->intr_base + cmd->intr_index;
+    }
     qstate.spurious_db_cnt = 0;
 
     WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
@@ -1085,6 +1104,21 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
     qstate.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
     qstate.cfg.intr_enable = (cmd->flags & IONIC_QINIT_F_IRQ) ? 1 : 0;
     qstate.cfg.host_queue = spec->host_dev;
+
+    // Apollo VPP changes
+    if (hal_lif_info_.type == sdk::platform::lif_type_t::LIF_TYPE_MNIC_CPU)
+        qstate.cfg.cpu_queue = 1;
+    else
+        qstate.cfg.cpu_queue = 0;
+
+    // FIXME: Workaround for mnic
+    if (spec->host_dev) {
+        // TODO: this doesn't work on TOT
+        //qstate.cfg.intr_enable = cmd->I;
+    } else {
+        qstate.cfg.intr_enable = 1;
+    }
+
     if (spec->host_dev) {
         qstate.ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->ring_base);
         qstate.cq_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->cq_ring_base);

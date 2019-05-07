@@ -383,7 +383,7 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                "pid=0x%0x\n"
                "p_index0=0x%0x\nc_index0=0x%0x\ncomp_index=0x%0x\n"
                "color=0x%0x\n"
-               "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\n"
+               "enable=0x%0x\nhost_queue=0x%0x\ncpu_queue=0x%0x\nintr_enable=0x%0x\n"
                "ring_base=0x%0lx\nring_size=0x%0x\n"
                "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
                "sg_ring_base=0x%0lx\n",
@@ -391,7 +391,8 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                qstate_ethrx.cos_sel, qstate_ethrx.eval_last, qstate_ethrx.host, qstate_ethrx.total,
                qstate_ethrx.pid, qstate_ethrx.p_index0, qstate_ethrx.c_index0,
                qstate_ethrx.comp_index, qstate_ethrx.sta.color, qstate_ethrx.cfg.enable,
-               qstate_ethrx.cfg.host_queue, qstate_ethrx.cfg.intr_enable, qstate_ethrx.ring_base,
+               qstate_ethrx.cfg.host_queue, qstate_ethrx.cfg.cpu_queue,
+               qstate_ethrx.cfg.intr_enable, qstate_ethrx.ring_base,
                qstate_ethrx.ring_size, qstate_ethrx.cq_ring_base, qstate_ethrx.intr_assert_index,
                qstate_ethrx.sg_ring_base);
         break;
@@ -406,7 +407,7 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                "p_index0=0x%0x\nc_index0=0x%0x\n"
                "comp_index=0x%0x\nci_fetch=0x%0x\nci_miss=0x%0x\n"
                "color=0x%0x\nspec_miss=0x%0x\n"
-               "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\n"
+               "enable=0x%0x\nhost_queue=0x%0x\ncpu_queue=0x%0x\nintr_enable=0x%0x\n"
                "ring_base=0x%0lx\nring_size=0x%0x\n"
                "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
                "sg_ring_base=0x%0lx\n"
@@ -416,7 +417,8 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                qstate_ethtx.pid, qstate_ethtx.p_index0, qstate_ethtx.c_index0,
                qstate_ethtx.comp_index, qstate_ethtx.ci_fetch, qstate_ethtx.ci_miss,
                qstate_ethtx.sta.color, qstate_ethtx.sta.spec_miss, qstate_ethtx.cfg.enable,
-               qstate_ethtx.cfg.host_queue, qstate_ethtx.cfg.intr_enable, qstate_ethtx.ring_base,
+               qstate_ethtx.cfg.host_queue, qstate_ethtx.cfg.cpu_queue,
+               qstate_ethtx.cfg.intr_enable, qstate_ethtx.ring_base,
                qstate_ethtx.ring_size, qstate_ethtx.cq_ring_base, qstate_ethtx.intr_assert_index,
                qstate_ethtx.sg_ring_base, qstate_ethtx.spurious_db_cnt);
         break;

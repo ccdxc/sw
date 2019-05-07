@@ -56,3 +56,8 @@ TEST_F(scale, insert8M) {
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
+TEST_F(scale, DISABLED_insert16M) {
+    sdk_ret_t rs;
+    rs = Insert(16*1024*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    ASSERT_TRUE(rs == sdk::SDK_RET_OK);
+}

@@ -85,8 +85,9 @@ header_type eth_tx_qstate_d {
         // cfg
         enable : 1;
         host_queue : 1;
+        cpu_queue : 1;
         intr_enable : 1;
-        rsvd2 : 5;
+        rsvd2 : 4;
 
         ring_base : 64;
         ring_size : 16;
@@ -152,6 +153,7 @@ header_type eth_tx_global_k {
         tso_eot : 1;    // end of tso
         tso_sot : 1;    // start of tso
         host_queue : 1;
+        cpu_queue : 1;
         cq_entry : 1;   // generate a completion
         intr_enable : 1;    // generate an interrupt
         lif : 11;

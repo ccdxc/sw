@@ -7,12 +7,14 @@
 #include "nic/sdk/asic/pd/pd.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
 #include "nic/sdk/include/sdk/platform.hpp"
+#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 
 #include "ftl_apictx.hpp"
 #include "ftl_platform.hpp"
 #include "ftl_utils.hpp"
 
 using namespace sdk::lib;
+using namespace sdk::platform::capri;
 
 sdk_ret_t
 ftl_platform_init(sdk::table::properties_t *props) {
@@ -78,6 +80,17 @@ ftl_platform_write(ftl_apictx *ctx) {
     } else {
         assert(0);
     }
+#ifndef SIM
+    // TODO: we need a asicpd API here instead of using capri
+    // @hareesh, can you please check how we can make this work efficiently even
+    // for elba ? also direction here is hard-coded, should we take this in
+    // factory call ?
+    auto baseaddr = ctx->level ? ctx->props->stable_base_mem_pa :
+                                 ctx->props->ptable_base_mem_pa;
+    capri_hbm_table_entry_cache_invalidate(
+        true,    // ctx->props->gress == P4_GRESS_INGRESS,
+        ctx->table_index * sizeof(ftl_entry_t), baseaddr);
+#endif
 
     return SDK_RET_OK;
 }

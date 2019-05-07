@@ -17,6 +17,20 @@ rm -f $LOG_DIR/pen-agent.log*
 ulimit -c unlimited
 
 export LD_LIBRARY_PATH=$LIBRARY_PATH
-exec $NIC_DIR/bin/agent -c hal_hw.json $*
+$NIC_DIR/bin/agent -c hal_hw.json $* &
+if [[ $? -ne 0 ]]; then
+    echo "Failed to start agent!"
+    exit 1
+fi
 
-[[ $? -ne 0 ]] && echo "Failed to start agent!" && exit 1
+# bring up oob
+echo "Bringing up OOB ..."
+$NIC_DIR/tools/bringup_mgmt_ifs.sh >/var/log/pensando/mgmt_if.log
+
+# start vpp
+echo "Bringing up vpp ..."
+if [[ -f $NIC_DIR/tools/start-vpp.sh ]]; then
+    echo "Launching VPP ..."
+    $NIC_DIR/tools/start-vpp.sh &
+    [[ $? -ne 0 ]] && echo "Aborting Sysinit - VPP failed to start!" && exit 1
+fi

@@ -66,7 +66,8 @@ eth_rx_fetch_desc:
 
   SAVE_STATS(_r_stats)
 
-  // Save completion and interrupt information
+  // Save data for next stages
+  phvwr           p.eth_rx_global_cpu_queue, d.cpu_queue
   phvwr           p.eth_rx_global_host_queue, d.host_queue
   phvwr           p.eth_rx_global_intr_enable, d.intr_enable
   phvwr           p.eth_rx_t0_s2s_cq_desc_addr, _r_cq_desc_addr

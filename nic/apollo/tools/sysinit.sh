@@ -21,21 +21,12 @@ insmod /nic/bin/mnet.ko &> /var/log/pensando/mnet_load.log
 [[ $? -ne 0 ]] && echo "Aborting sysinit, failed to load mnet driver!" && exit 1
 
 # start agent
-if [[ -f $NIC_DIR/tools/start-agent.sh ]]; then
-    echo "Launching agent ..."
-    $NIC_DIR/tools/start-agent.sh &
-    [[ $? -ne 0 ]] && echo "Aborting sysinit, failed to start agent!" && exit 1
-fi
 
-# bring up oob
-$NIC_DIR/tools/bringup_mgmt_ifs.sh &>/var/log/pensando/mgmt_if.log
-
-# start vpp
-if [[ -f $NIC_DIR/tools/start-vpp.sh ]]; then
-    echo "Launching VPP ..."
-    $NIC_DIR/tools/start-vpp.sh &
-    [[ $? -ne 0 ]] && echo "Aborting Sysinit - VPP failed to start!" && exit 1
-fi
+#if [[ -f $NIC_DIR/tools/start-agent.sh ]]; then
+    #echo "Launching agent ..."
+    #$NIC_DIR/tools/start-agent.sh
+    #[[ $? -ne 0 ]] && echo "Aborting sysinit, failed to start agent!" && exit 1
+#fi
 
 # start cronjobs
 nice crond -c /nic/conf/apollo/crontabs

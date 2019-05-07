@@ -121,7 +121,9 @@
  */
 
 #define BUILD_APP_HEADER(n, _r_t1, _r_t2, _r_stats) \
-    phvwri      p.eth_tx_app_hdr##n##_p4plus_app_id, P4PLUS_APPTYPE_CLASSIC_NIC; \
+    seq         c7, k.eth_tx_global_cpu_queue, 1; \
+    cmov        r7, c7, P4PLUS_APPTYPE_CPU, P4PLUS_APPTYPE_CLASSIC_NIC; \
+    phvwr       p.eth_tx_app_hdr##n##_p4plus_app_id, r7; \
     sne         c7, d.vlan_insert##n, 0; \
     phvwr.c7    p.eth_tx_app_hdr##n##_insert_vlan_tag, d.vlan_insert##n; \
     phvwr.c7    p.eth_tx_app_hdr##n##_vlan_tag, d.{vlan_tci##n}.hx; \

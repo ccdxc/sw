@@ -59,8 +59,9 @@ header_type eth_rx_qstate_d {
         // cfg
         enable : 1;
         host_queue : 1;
+        cpu_queue : 1;
         intr_enable : 1;
-        rsvd2 : 5;
+        rsvd2 : 4;
 
         ring_base : 64;
         ring_size : 16;
@@ -102,6 +103,7 @@ header_type eth_rx_global_k {
         dma_cur_index : 6;
         qstate_addr : 34;
         host_queue : 1;
+        cpu_queue : 1;
         intr_enable : 1;
         lif : 11;
         stats : 32;

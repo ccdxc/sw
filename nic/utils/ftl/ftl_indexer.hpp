@@ -39,19 +39,20 @@ public:
         SDK_FREE(SDK_MEM_ALLOC_INDEX_POOL, pool);
     }
 
-    uint32_t alloc() {
+    sdk_ret_t alloc(uint32_t &ret_index) {
         uint32_t w = I2W(last_alloc);
         uint32_t index = 0;
         do {
             index = __builtin_ffsll(~pool[w]);
             if (index) {
                 pool[w] |= ((uint64_t)1<<(index-1));
-                last_alloc = W2I(w, index);
-                return last_alloc;
+                last_alloc = W2I(w, index-1);
+                ret_index = last_alloc;
+                return SDK_RET_OK;
             }
             w = (w + 1) % num_words;
         } while (w != I2W(last_alloc));
-        return 0;
+        return SDK_RET_NO_RESOURCE;
     }
     
     void free(uint32_t index) {

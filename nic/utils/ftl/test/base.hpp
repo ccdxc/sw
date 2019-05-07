@@ -159,7 +159,6 @@ protected:
         SDK_TRACE_VERBOSE("GTest Table Stats: Entries:%d", table_count);
         SDK_TRACE_VERBOSE("SW Table Stats: Entries=%d Collisions:%d",
                           table_stats.entries, table_stats.collisions);
-        
         SDK_TRACE_VERBOSE("Test  API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
                           num_insert, num_update, num_get, num_remove, num_reserve, num_release);
         SDK_TRACE_VERBOSE("Table API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
@@ -171,7 +170,7 @@ protected:
     sdk_ret_t ValidateStats() {
         PrintStats();
         EXPECT_TRUE(api_stats.insert >= api_stats.remove);
-        EXPECT_EQ(table_count, table_stats.entries + table_stats.collisions);
+        EXPECT_EQ(table_count, table_stats.entries);
         EXPECT_EQ(num_insert, api_stats.insert + api_stats.insert_duplicate + api_stats.insert_fail);
         EXPECT_EQ(num_remove, api_stats.remove + api_stats.remove_not_found + api_stats.remove_fail);
         EXPECT_EQ(num_update, api_stats.update + api_stats.update_fail);

@@ -156,8 +156,8 @@ schedule_timers (pds_state *state, sdk::lib::twheel_cb_t sysmon_cb)
             PDS_TRACE_ERR("Failed to start system monitoring timer\n");
             return SDK_RET_ERR;
         }
-        PDS_TRACE_DEBUG("Started periodic system scan timer with %us intvl",
-                        SYSTEM_SCAN_INTVL);
+        //PDS_TRACE_DEBUG("Started periodic system scan timer with %us intvl",
+                          //SYSTEM_SCAN_INTVL);
     }
     return SDK_RET_OK;
 }

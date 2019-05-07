@@ -30,6 +30,7 @@
     modify_field(eth_rx_global_scratch.dma_cur_index, eth_rx_global.dma_cur_index); \
     modify_field(eth_rx_global_scratch.qstate_addr, eth_rx_global.qstate_addr); \
     modify_field(eth_rx_global_scratch.host_queue, eth_rx_global.host_queue); \
+    modify_field(eth_rx_global_scratch.cpu_queue, eth_rx_global.cpu_queue); \
     modify_field(eth_rx_global_scratch.intr_enable, eth_rx_global.intr_enable); \
     modify_field(eth_rx_global_scratch.lif, eth_rx_global.lif); \
     modify_field(eth_rx_global_scratch.stats, eth_rx_global.stats); \
@@ -55,7 +56,7 @@
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, \
     p_index0, c_index0, comp_index, \
     color, rsvd1, \
-    enable, host_queue, intr_enable, rsvd2, \
+    enable, host_queue, cpu_queue, intr_enable, rsvd2, \
     ring_base, ring_size, cq_ring_base, intr_assert_index, \
     sg_ring_base
 
@@ -66,6 +67,7 @@
     modify_field(eth_rx_qstate.rsvd1, rsvd1); \
     modify_field(eth_rx_qstate.enable, enable); \
     modify_field(eth_rx_qstate.host_queue, host_queue); \
+    modify_field(eth_rx_qstate.cpu_queue, cpu_queue); \
     modify_field(eth_rx_qstate.intr_enable, intr_enable); \
     modify_field(eth_rx_qstate.rsvd2, rsvd2); \
     modify_field(eth_rx_qstate.ring_base, ring_base); \
@@ -95,6 +97,7 @@
     modify_field(eth_tx_global_scratch.tso_sot, eth_tx_global.tso_sot); \
     modify_field(eth_tx_global_scratch.tso_eot, eth_tx_global.tso_eot); \
     modify_field(eth_tx_global_scratch.host_queue, eth_tx_global.host_queue); \
+    modify_field(eth_tx_global_scratch.cpu_queue, eth_tx_global.cpu_queue); \
     modify_field(eth_tx_global_scratch.cq_entry, eth_tx_global.cq_entry); \
     modify_field(eth_tx_global_scratch.intr_enable, eth_tx_global.intr_enable); \
     modify_field(eth_tx_global_scratch.lif, eth_tx_global.lif); \
@@ -136,7 +139,7 @@
         pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, \
         p_index0, c_index0, comp_index, ci_fetch, ci_miss, \
         color, spec_miss, rsvd1, \
-        enable, host_queue, intr_enable, rsvd2, \
+        enable, host_queue, cpu_queue, intr_enable, rsvd2, \
         ring_base, ring_size, cq_ring_base, intr_assert_index, \
         sg_ring_base, \
         tso_hdr_addr, tso_hdr_len, tso_ipid_delta, tso_seq_delta, \
@@ -152,6 +155,7 @@
     modify_field(eth_tx_qstate.rsvd1, rsvd1); \
     modify_field(eth_tx_qstate.enable, enable); \
     modify_field(eth_tx_qstate.host_queue, host_queue); \
+    modify_field(eth_tx_qstate.cpu_queue, cpu_queue); \
     modify_field(eth_tx_qstate.intr_enable, intr_enable); \
     modify_field(eth_tx_qstate.rsvd2, rsvd2); \
     modify_field(eth_tx_qstate.ring_base, ring_base); \

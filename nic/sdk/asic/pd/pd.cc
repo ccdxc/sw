@@ -540,7 +540,8 @@ asicpd_hbm_table_entry_write (uint32_t tableid,
 
     uint64_t    entry_addr = (index * cap_tbl_info.entry_width);
     ret |= capri_hbm_table_entry_cache_invalidate(tbl_ctx.gress == P4_GRESS_INGRESS,
-                                                  entry_addr, cap_tbl_info);
+                                                  entry_addr,
+                                                  cap_tbl_info.base_mem_pa);
 
 #if SDK_LOG_TABLE_WRITE
     char    buffer[2048];

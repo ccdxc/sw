@@ -26,7 +26,7 @@
             "_comment_" : "security policy parameters here are per subnet per direction",
             "kind" : "security-policy",
             "count" : "1023",
-            "stateful" : "false"
+            "stateful" : "true"
         },
         {
             "_comment_" : "All VPCs have same prefix",
@@ -58,7 +58,7 @@
         {
             "kind" : "flows",
             "num_tcp": "0",
-            "num_udp": "524288",
+            "num_udp": "0",
             "num_icmp": "0",
             "sport_lo": "100",
             "sport_hi": "100",
