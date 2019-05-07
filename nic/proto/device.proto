@@ -49,4 +49,5 @@ message SystemSpec {
   ForwardingMode     fwd_mode           = 2 [(gogoproto.jsontag) = "forwarding-mode,omitempty"];    // forwarding mode
   FeatureProfile     feature_profile    = 3 [(gogoproto.jsontag) = "feature-profile"]; // feature profile
   string             port_admin_state   = 4 [(gogoproto.jsontag) = "port-admin-state"];
+  fixed64            system_mac_address = 5 [(gogoproto.jsontag) = "system-mac-address"];
 }

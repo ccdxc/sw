@@ -1,6 +1,7 @@
 package state
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"time"
@@ -16,16 +17,17 @@ import (
 )
 
 const (
-	inbandIntf      = "bond0"
-	oobIntf         = "oob_mnic0"
-	refreshDuration = time.Duration(time.Second * 1)
-	timeout         = time.Duration(time.Millisecond * 500)
+	inbandIntf           = "bond0"
+	oobIntf              = "oob_mnic0"
+	refreshDuration      = time.Duration(time.Minute * 1)
+	arpResolutionTimeout = time.Duration(time.Millisecond * 500)
 )
 
 // CreateLateralNetAgentObjects creates the backing objects to ensure that telemetry works.
 // It runs an arp client in the background to ensure that appropriate destEP is created.
 // TODO clean this up. Currently this is in NetAgent as there is no control plane which does this.
 func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error {
+	log.Infof("Creating Lateral NetAgent objects. MgmtIP: %v DestIP: %v TunnelOp: %v", mgmtIP, destIP, tunnelOp)
 	var epIfType, epIf string
 	var objectName = fmt.Sprintf("_internal-%s", destIP)
 
@@ -65,11 +67,12 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 	log.Infof("Starting refresh loop for %s", dIP.String())
 
 	//// Cache the handler for outer done. This needs to be called during the object deletes
-	//_, done := context.WithCancel(context.Background())
-	//na.ArpCache.DoneCache[dIP.String()] = done
-	go na.startRefreshLoop(dIP)
+	refreshCtx, done := context.WithCancel(context.Background())
+	na.ArpCache.DoneCache[dIP.String()] = done
 
-	time.Sleep(time.Second * 5)
+	go na.startRefreshLoop(refreshCtx, dIP)
+
+	time.Sleep(time.Second * 3)
 
 	sMAC = mgmtLink.Attrs().HardwareAddr.String()
 	for i := 0; i < 3; i++ {
@@ -99,10 +102,7 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 			Name:      objectName,
 		},
 		Spec: netproto.NetworkSpec{
-			VlanID:      types.UntaggedVLAN,           // Untagged
-			IPv4Subnet:  fmt.Sprintf("%s/32", mgmtIP), // TODO Get the actual mgmt intf's subnet
-			IPv4Gateway: destIP,
-			RouterMAC:   sMAC,
+			VlanID: types.UntaggedVLAN, // Untagged
 		},
 	}
 
@@ -142,21 +142,22 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 			Dst:         epIP,
 		},
 	}
-	log.Infof("Creating internal network")
+
+	log.Infof("Creating internal network %v", nw)
 
 	if err := na.CreateNetwork(nw); err != nil {
 		log.Errorf("Failed to create an untagged network. Err: %v", err)
 		return err
 	}
 
-	log.Infof("Creating internal endpoint")
+	log.Infof("Creating internal endpoint %v", ep)
 	if _, err := na.CreateEndpoint(ep); err != nil {
 		log.Errorf("Failed to create TEP EP. Err: %v", err)
 		return err
 	}
 
 	if tunnelOp {
-		log.Infof("Creating internal tunnel")
+		log.Infof("Creating internal tunnel %v", tun)
 		if err := na.CreateTunnel(tun); err != nil {
 			log.Errorf("Failed to create tunnel. Err: %v", err)
 			return err
@@ -169,6 +170,15 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 // DeleteLateralNetAgentObjects deletes the backing objects to ensure that telemetry works.
 // TODO clean this up. Currently this is in NetAgent as there is no control plane which does this.
 func (na *Nagent) DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error {
+	log.Infof("Deleting Lateral NetAgent objects. MgmtIP: %v DestIP: %v TunnelOp: %v", mgmtIP, destIP, tunnelOp)
+
+	// This will keep it symmetric to CreateLateralNetAgentObjects. This is valid only on real NAPLES
+	mgmtLink := getMgmtLink(mgmtIP)
+	if mgmtLink == nil {
+		log.Errorf("Failed to get the mgmt interface")
+		return nil
+	}
+
 	var objectName = fmt.Sprintf("_internal-%s", destIP)
 	log.Infof("Deleting objects: %v", objectName)
 
@@ -216,67 +226,72 @@ func getMgmtLink(mgmtIP string) (mgmtLink netlink.Link) {
 	return
 }
 
-func (na *Nagent) startRefreshLoop(IP net.IP) {
+func (na *Nagent) startRefreshLoop(refreshCtx context.Context, IP net.IP) {
 	log.Infof("Starting ARP refresh loop for %v", IP)
 
 	defer func() {
 		if err := recover(); err != nil {
 			log.Errorf("Refresh control loop exited. Err: %v", err)
 			log.Infof("Restarting refresh loop...")
-			go na.startRefreshLoop(IP)
+			go na.startRefreshLoop(refreshCtx, IP)
 		}
 	}()
 
-	log.Info("Done func cached")
 	ticker := time.NewTicker(refreshDuration)
-
-	for {
-		select {
-		case <-ticker.C:
-			mac, err := na.ArpClient.Resolve(IP)
-			if err != nil {
-				log.Errorf("Failed to resolve MAC for %v", err)
+	go func(refreshCtx context.Context, IP net.IP) {
+		mac := na.resolveWithDeadline(refreshCtx, IP)
+		log.Infof("Resolved MAC 1st Tick: %s", mac)
+		for {
+			select {
+			case <-ticker.C:
+				mac := na.resolveWithDeadline(refreshCtx, IP)
+				fmt.Println("Resolved Mac: ", mac)
+			case <-refreshCtx.Done():
+				fmt.Println("Cancelling ARP refresh loop for ", IP)
+				return
 			}
-			log.Infof("FOUND MAC: %v", mac)
-			// Populate the ARPCache.
-			na.ArpCache.Cache.LoadOrStore(IP.String(), mac.String())
 		}
+	}(refreshCtx, IP)
+}
+
+func (na *Nagent) resolveWithDeadline(ctx context.Context, IP net.IP) string {
+	resolveCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	arpChan := make(chan string, 1)
+
+	go func(arpChan chan string, IP net.IP) {
+		fmt.Println("Resolving IP. ", IP)
+		mac, err := na.ArpClient.Resolve(IP)
+		if err != nil {
+			log.Errorf("Failed to resolve MAC for %v", err)
+		}
+		log.Infof("FOUND MAC: %v", mac)
+		// Populate the ARPCache.
+		na.ArpCache.Cache.LoadOrStore(IP.String(), mac.String())
+		arpChan <- mac.String()
+	}(arpChan, IP)
+
+	select {
+	case <-time.After(arpResolutionTimeout):
+		cancel()
+		return resolveCtx.Err().Error()
+	case mac := <-arpChan:
+		return mac
 	}
 }
 
 func (na *Nagent) isCollectorKnown(netagentCreatedEPName, mgmtIP, destIP, destMAC, srcMAC string, createTunnel bool) (known bool) {
 	// Find EP
+	log.Infof("Testing for known collector with Name: %v MgmtIP: %v DestIP: %v DestMAC: %v SrcMAC: %v, TunnelOp: %v", netagentCreatedEPName, mgmtIP, destIP, destMAC, srcMAC, createTunnel)
 	for _, ep := range na.ListEndpoint() {
-		if ep.Spec.IPv4Address == fmt.Sprintf("%s/32", destIP) {
+		epIP, _, _ := net.ParseCIDR(ep.Spec.IPv4Address)
+		if epIP.String() == destIP {
 			known = true
 			// Collector known -> This can either be venice created or a agent created
 			switch ep.Name {
 			case netagentCreatedEPName:
 				return
 			default:
-				// EP known to venice. Fetch the corresponding l2seg ID and trigger a network create with the same ID and trigger a L2Seg Update
-				nwMeta := api.ObjectMeta{
-					Tenant:    "default",
-					Namespace: "default",
-					Name:      ep.Spec.NetworkName,
-				}
-				net, err := na.FindNetwork(nwMeta)
-				if err != nil {
-					log.Errorf("Failed to lookup known network. Err: %v", err)
-					known = false
-					return
-				}
-				net.Spec.IPv4Subnet = fmt.Sprintf("%s/32", mgmtIP)
-				net.Spec.IPv4Gateway = destIP
-				net.Spec.RouterMAC = srcMAC
-
-				err = na.UpdateNetwork(net)
-				if err != nil {
-					known = false
-					log.Errorf("Failed to update the network for a venice known EP. Err: %v", err)
-					return
-				}
-
 				tun := &netproto.Tunnel{
 					TypeMeta: api.TypeMeta{Kind: "Tunnel"},
 					ObjectMeta: api.ObjectMeta{

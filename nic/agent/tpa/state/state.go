@@ -334,12 +334,6 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 			continue
 		}
 
-		// Create lateral objects here
-		mgmtIP := p.state.getMgmtIPAddr()
-		if err := p.state.netAgent.CreateLateralNetAgentObjects(mgmtIP, ckey.Destination, false); err != nil {
-			log.Errorf("Failed to create lateral objects in netagent. Err: %v", err)
-		}
-
 		halDestAddr, destAddr, err := convertToHalIPAddr(ckey.Destination)
 		if err != nil {
 			return fmt.Errorf("invalid destination address %s, %s", ckey.Destination, err)
@@ -424,7 +418,6 @@ func (p *policyDb) deleteCollectorPolicy(ctx context.Context, key uint64) error 
 	if key == 0 {
 		return nil
 	}
-
 	var req []*halproto.CollectorDeleteRequest
 
 	req = append(req, &halproto.CollectorDeleteRequest{
@@ -879,6 +872,13 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 	if numCollector > maxFlowExportCollectors {
 		return fmt.Errorf("exceeds(%d>%d) maximum collector configs", numCollector, maxFlowExportCollectors)
 	}
+	// Create lateral objects here
+	for _, c := range p.Spec.Exports {
+		mgmtIP := s.getMgmtIPAddr()
+		if err := s.netAgent.CreateLateralNetAgentObjects(mgmtIP, c.Destination, false); err != nil {
+			log.Errorf("Failed to create lateral objects in netagent. Err: %v", err)
+		}
+	}
 
 	if err := policyCtx.createFlowMonitorRule(ctx); err != nil {
 		return fmt.Errorf("failed to create policy, err:%s", err)
@@ -962,6 +962,13 @@ func (s *PolicyState) DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 
 	s.Lock()
 	defer s.Unlock()
+
+	for _, c := range p.Spec.Exports {
+		mgmtIP := s.getMgmtIPAddr()
+		if err := s.netAgent.DeleteLateralNetAgentObjects(mgmtIP, c.Destination, false); err != nil {
+			log.Errorf("Failed to delete lateral objects in netagent. Err: %v", err)
+		}
+	}
 
 	polCtx, err := s.createPolicyContext(p)
 	if err != nil {

@@ -12,6 +12,8 @@
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
 
+uint64_t g_system_mac_addr;
+
 namespace hal {
 
 using boost::property_tree::ptree;
@@ -666,6 +668,11 @@ hal_device_cfg_init (device_cfg_t *device_cfg)
     if (port_admin_state == "PORT_ADMIN_STATE_DISABLE") {
 	HAL_TRACE_DEBUG("Setting default port admin state to disabled.")
         device_cfg->admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
+    }
+    try {
+        g_system_mac_addr = prop_tree.get<std::uint64_t>("system-mac-address");
+    } catch (std::exception const &e) {
+	HAL_TRACE_DEBUG("No System mac address specified");
     }
     return HAL_RET_OK;
 }

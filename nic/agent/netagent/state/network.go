@@ -139,12 +139,15 @@ func (na *Nagent) FindNetwork(meta api.ObjectMeta) (*netproto.Network, error) {
 // UpdateNetwork updates a network. ToDo implement network updates in datapath
 func (na *Nagent) UpdateNetwork(nt *netproto.Network) error {
 	// find the corresponding namespace
+	log.Infof("Update Network: %v", nt)
 	_, err := na.FindNamespace(nt.Tenant, nt.Namespace)
 	if err != nil {
 		return err
 	}
 
 	existingNetwork, err := na.FindNetwork(nt.ObjectMeta)
+	log.Infof("Existing Network: %v", existingNetwork)
+
 	if err != nil {
 		log.Errorf("Network %v not found", nt.ObjectMeta)
 		return err
@@ -253,9 +256,9 @@ func (na *Nagent) validateDuplicateNetworks(vrfName, prefix string, vlanID uint3
 		if net.Spec.VrfName == vrfName {
 			switch {
 			// Dup prefixes
-			case len(net.Spec.IPv4Subnet) != 0 && net.Spec.IPv4Subnet == prefix:
-				err = fmt.Errorf("found an existing network %v with prefix %v", net.Name, prefix)
-				return
+			//case len(net.Spec.IPv4Subnet) != 0 && net.Spec.IPv4Subnet == prefix:
+			//	err = fmt.Errorf("found an existing network %v with prefix %v", net.Name, prefix)
+			//	return
 			// Dup VLANs
 			case net.Spec.VlanID != 0 && net.Spec.VlanID == vlanID:
 				err = fmt.Errorf("found an existing network %v with vlan-id %v", net.Name, vlanID)

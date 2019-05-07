@@ -1573,12 +1573,12 @@ func (tsa *Tagent) UpdateMirrorSession(pcSession *tsproto.MirrorSession) error {
 // DeleteMirrorSession deletes packet capture session.
 func (tsa *Tagent) DeleteMirrorSession(pcSession *tsproto.MirrorSession) error {
 	log.Debugf("Processing packet capture session delete... %v", pcSession.Name)
-	_, err := tsa.findMirrorSession(pcSession.ObjectMeta)
+	existingPcSession, err := tsa.findMirrorSession(pcSession.ObjectMeta)
 	if err != nil {
 		log.Errorf("MirrorSession %v does not exist to delete it", pcSession.Name)
 		return fmt.Errorf("mirror session %v does not exist", pcSession.Name)
 	}
-	return tsa.deletePacketCaptureSession(pcSession)
+	return tsa.deletePacketCaptureSession(existingPcSession)
 }
 
 // GetMirrorSession gets a mirror session

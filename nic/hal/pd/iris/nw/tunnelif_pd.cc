@@ -12,6 +12,8 @@
 #include "nic/hal/pd/iris/nw/if_pd_utils.hpp"
 #include "nic/hal/pd/iris/lif/lif_pd.hpp"
 
+extern uint64_t g_system_mac_addr;
+
 namespace hal {
 namespace pd {
 
@@ -821,6 +823,7 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
     l2seg_t     *l2seg         = NULL;
     if_t        *ep_if         = NULL;
     mac_addr_t  *mac           = NULL;
+    mac_addr_t  smac;
     ep_t        *rtep_ep = NULL;
     uint8_t     actionid;
     uint8_t     vlan_v;
@@ -853,9 +856,14 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
         mac = ep_get_mac_addr(rtep_ep);
         memcpy(tnnl_rw_key->mac_da, mac, sizeof(mac_addr_t));
 
-        /* MAC SA */
-        mac = ep_get_rmac(rtep_ep, l2seg);
-        memcpy(tnnl_rw_key->mac_sa, mac, sizeof(mac_addr_t));
+        /* MAC SA. Use mac from device.conf only if it is set. Else derive the smac via rtep ep */
+	if (g_system_mac_addr == 0) {
+		mac = ep_get_rmac(rtep_ep, l2seg);
+		memcpy(tnnl_rw_key->mac_sa, mac, sizeof(mac_addr_t));
+	} else {
+		MAC_UINT64_TO_ADDR(smac, g_system_mac_addr)
+		memcpy(tnnl_rw_key->mac_sa, smac, sizeof(mac_addr_t));
+	}
 
         /* Populate vxlan encap params */
         if (actionid == TUNNEL_REWRITE_ENCAP_VXLAN_ID) {

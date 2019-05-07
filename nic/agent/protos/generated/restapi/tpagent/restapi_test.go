@@ -25,6 +25,10 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+func getMgmtIP() string {
+	return "10.10.10.10"
+}
+
 const (
 	agentRestURL      = "localhost:1337"
 	agentDatapathKind = "mock"
@@ -73,7 +77,7 @@ func setup() (*restapi.RestServer, error) {
 		log.Errorf("Could not create troubleshooting HAL datapath. Kind: %v, Error %v", datapathKind, err)
 		return nil, err
 	}
-	tsagent, err := tsstate.NewTsAgent(tsdp, "dummy-node-uuid", nagent)
+	tsagent, err := tsstate.NewTsAgent(tsdp, "dummy-node-uuid", nagent, getMgmtIP)
 	if err != nil {
 		log.Errorf("Could not create ts troubleshooting agent")
 		return nil, err
