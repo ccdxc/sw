@@ -80,7 +80,7 @@ func (s *service) OnNaplesStatusDelete(obj *delphiProto.NaplesStatus) {
 func (s *service) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 	log.Infof("Tmagent reactor called with %v", obj)
 	s.tmagent.mode = obj.NaplesMode.String()
-	s.tmagent.nodeUUID = obj.GetHostname()
+	s.tmagent.nodeUUID = obj.GetSmartNicName()
 	log.Infof("tmagent uuid: %s", s.tmagent.nodeUUID)
 	if obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_INBAND || obj.NaplesMode == delphiProto.NaplesStatus_NETWORK_MANAGED_OOB {
 		var controllers []string

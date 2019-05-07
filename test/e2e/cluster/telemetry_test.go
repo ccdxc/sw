@@ -344,7 +344,7 @@ var _ = Describe("telemetry tests", func() {
 					return false
 				}
 				for i, s := range snic {
-					smartnics[s.Spec.Hostname] = i
+					smartnics[s.Name] = i
 				}
 				return true
 			}, 120, 2).Should(BeTrue())
