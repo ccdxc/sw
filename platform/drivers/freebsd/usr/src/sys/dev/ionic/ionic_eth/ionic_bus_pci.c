@@ -308,13 +308,7 @@ static void ionic_remove(struct pci_dev *pdev)
 	struct ionic *ionic = pci_get_drvdata(pdev);
 
 	KASSERT(ionic, ("ionic is NULL"));
-
-#if 0
-	/* Bring the physical port down. */
-	if (!ionic->is_mgmt_nic)
-		ionic_dev_cmd_port_state(&ionic->idev, PORT_ADMIN_STATE_DOWN);
-#endif
-
+	
 	ionic_lifs_unregister(ionic);
 	ionic_lifs_deinit(ionic);
 	ionic_lifs_free(ionic);

@@ -116,6 +116,7 @@ struct adminq {
 	struct ionic_dma_info cmd_dma; 		/* DMA ring for command and completion. */
 	dma_addr_t cmd_ring_pa;
 	dma_addr_t comp_ring_pa;
+	uint32_t total_ring_size;
 
 	struct mtx mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
@@ -151,6 +152,7 @@ struct notifyq {
 
 	struct ionic_dma_info cmd_dma; 		/* DMA ring for command and completion. */
 	dma_addr_t cmd_ring_pa;
+	uint32_t total_ring_size;
 
 	struct mtx mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
@@ -189,6 +191,7 @@ struct rxque {
 	dma_addr_t cmd_ring_pa;	
 	dma_addr_t comp_ring_pa;
 	dma_addr_t sg_ring_pa;
+	uint32_t total_ring_size;
 
 	struct mtx rx_mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
@@ -237,6 +240,7 @@ struct txque {
 	dma_addr_t cmd_ring_pa;
 	dma_addr_t comp_ring_pa;
 	dma_addr_t sg_ring_pa;
+	uint32_t total_ring_size;
 
 	struct mtx tx_mtx;
 	char mtx_name[QUEUE_NAME_MAX_SZ];
@@ -403,13 +407,14 @@ int ionic_set_hw_features(struct lif *lif, uint32_t features);
 
 int ionic_lif_rss_config(struct lif *lif, uint16_t types,
 	const u8 *key, const u32 *indir);
-
-int ionic_rx_clean(struct rxque* rxq , int rx_limit);
+ 
+void ionic_rx_fill(struct rxque *rxq);
+int ionic_rx_clean(struct rxque *rxq, int rx_limit);
 void ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *buf,
-			   struct rxq_comp *comp, 	struct rxq_desc *desc);
+		struct rxq_comp *comp, struct rxq_desc *desc);
 
 void ionic_tx_ring_doorbell(struct txque *txq, int index);
-int ionic_tx_clean(struct txque* txq , int tx_limit);
+int ionic_tx_clean(struct txque* txq, int tx_limit);
 
 int ionic_change_mtu(struct net_device *netdev, int new_mtu);
 void ionic_set_rx_mode(struct net_device *netdev);
@@ -417,6 +422,7 @@ void ionic_set_rx_mode(struct net_device *netdev);
 int ionic_set_multi(struct lif* lif);
 
 int ionic_set_mac(struct net_device *netdev);
+extern int ionic_lif_reinit(struct lif *lif);
 
 extern int ionic_devcmd_timeout;
 extern int ionic_rx_stride;

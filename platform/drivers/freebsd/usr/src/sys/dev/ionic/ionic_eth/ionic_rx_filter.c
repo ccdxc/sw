@@ -59,7 +59,11 @@ int ionic_rx_filters_init(struct lif *lif)
 {
 	unsigned int i;
 
-	IONIC_RX_FILTER_INIT(&lif->rx_filters);
+	/*
+	 * Init the filter lock only once, not in reinit process.
+	 */
+	if (!lif->rx_filters.init)
+		IONIC_RX_FILTER_INIT(&lif->rx_filters);
 
 	for (i = 0; i < RX_FILTER_HLISTS; i++) {
 		INIT_HLIST_HEAD(&lif->rx_filters.by_hash[i]);

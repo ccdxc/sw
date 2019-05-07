@@ -535,6 +535,9 @@ ionic_queue_isr(int irq, void *data)
 		rxstats->isr_count, rxq->comp_index, rxq->head_index, rxq->tail_index);
 	rxstats->isr_count++;
 	work_done = ionic_rx_clean(rxq, ionic_rx_clean_limit);
+	/* Fill the receive ring. */
+	if ((rxq->num_descs - rxq->descs) >= ionic_rx_fill_threshold)
+		ionic_rx_fill(rxq);
 	IONIC_RX_TRACE(rxq, "processed: %d packets, h/w credits: %d\n",
 		work_done, ionic_intr_credits(&rxq->intr));
 	IONIC_RX_UNLOCK(rxq);
@@ -1458,6 +1461,37 @@ ionic_filter_sysctl(SYSCTL_HANDLER_ARGS)
 	return (err);
 }
 
+static int
+ionic_vlan_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct lif *lif;
+	struct sbuf *sb;
+	struct ionic_mc_addr *mc;
+	struct rx_filter *f;
+	int i, err;
+
+	lif = oidp->oid_arg1;
+	err = sysctl_wire_old_buffer(req, 0);
+	if (err)
+		return (err);
+
+	sb = sbuf_new_for_sysctl(NULL, NULL, 4096, req);
+	if (sb == NULL)
+		return (ENOMEM);
+
+	for (i = 0; i < MAX_VLAN_TAG; i++) {
+		mc = &lif->mc_addrs[i];
+		f = ionic_rx_filter_by_vlan(lif, i);
+		if (f != NULL)
+			sbuf_printf(sb, "\nVLAN[%d](%d)", i, f->filter_id);
+	}
+
+	err = sbuf_finish(sb);
+	sbuf_delete(sb);
+
+	return (err);
+}
+
 /*
  * Dump perQ intetrrupt status.
  */
@@ -1662,6 +1696,21 @@ ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 	sbuf_delete(sb);
 
 	return (err);
+}
+
+static int
+ionic_lif_reset_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct lif *lif;
+	int error, reset;
+
+	lif = oidp->oid_arg1;
+
+	error = sysctl_handle_int(oidp, &reset, 0, req);
+	if ((error) || (req->newptr == NULL))
+		return (error);
+
+	return ionic_lif_reinit(lif);
 }
 
 static void
@@ -2190,6 +2239,9 @@ ionic_setup_device_stats(struct lif *lif)
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "filters",
 			CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
 			ionic_filter_sysctl, "A", "Print MAC filter list");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "vlans",
+			CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
+			ionic_vlan_sysctl, "A", "Print vlan filter list");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "media_status",
 			CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
 			ionic_media_sysctl, "A", "Miscellenious media details");
@@ -2200,6 +2252,9 @@ ionic_setup_device_stats(struct lif *lif)
 			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
 			ionic_flow_ctrl_sysctl, "I",
 			"Set flow control - 0(off), 1(link), 2(pfc)");
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "reset",
+			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
+			ionic_lif_reset_sysctl, "I", "Reinit lif");
 
 	ionic_setup_fw_stats(lif, ctx, child);
 	ionic_setup_mac_stats(lif, ctx, child);
