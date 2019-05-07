@@ -9,8 +9,6 @@ struct phv_ p;
 %%
 
 rx_vport_stats:
-    //phvwrpair       p.capri_intrinsic_tm_oport, TM_PORT_UPLINK_0, \
-                        //p.capri_intrinsic_tm_oq, 0
 #ifdef SUPPORT_GFT_GTEST
     seq             c1, k.{capri_intrinsic_lif_sbit0_ebit2, \
                            capri_intrinsic_lif_sbit3_ebit10}, EXCEPTION_VPORT

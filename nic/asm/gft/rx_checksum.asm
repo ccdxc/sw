@@ -9,8 +9,6 @@ struct phv_ p;
 
 rx_checksum:
 rx_checksum_1:
-    nop.e
-    nop
     bbne            k.control_metadata_update_checksum_1, TRUE, rx_checksum_2
     seq             c1, k.ipv4_1_valid, TRUE
     phvwr           p.ipv4_1_csum, k.ipv4_1_valid
@@ -24,8 +22,6 @@ rx_checksum_1:
                         p.ipv6_1_tcp_csum, k.ipv6_1_valid
 
 rx_checksum_1_non_tcp:
-    nop.e
-    nop
     bbne            k.udp_1_valid, TRUE, rx_checksum_2
     phvwrpair       p.ipv4_1_udp_csum, k.ipv4_1_valid, \
                         p.ipv6_1_udp_csum, k.ipv6_1_valid
@@ -34,8 +30,6 @@ rx_checksum_1_non_tcp:
                         k.{udp_1_len_sbit0_ebit7,udp_1_len_sbit8_ebit15}
 
 rx_checksum_2:
-    nop.e
-    nop
     bbne            k.control_metadata_update_checksum_2, TRUE, rx_checksum_3
     seq             c1, k.ipv4_2_valid, TRUE
     phvwr           p.ipv4_2_csum, k.ipv4_2_valid
@@ -49,8 +43,6 @@ rx_checksum_2:
                         p.ipv6_2_tcp_csum, k.ipv6_2_valid
 
 rx_checksum_2_non_tcp:
-    nop.e
-    nop
     bbne            k.udp_2_valid, TRUE, rx_checksum_2
     phvwrpair       p.ipv4_2_udp_csum, k.ipv4_2_valid, \
                         p.ipv6_2_udp_csum, k.ipv6_2_valid
@@ -59,8 +51,6 @@ rx_checksum_2_non_tcp:
                         k.{udp_2_len_sbit0_ebit7,udp_2_len_sbit8_ebit15}
 
 rx_checksum_3:
-    nop.e
-    nop
     seq             c1, k.control_metadata_update_checksum_3, TRUE
     nop.!c1.e
     seq             c1, k.ipv4_3_valid, TRUE
@@ -74,8 +64,6 @@ rx_checksum_3:
     phvwr.f         p.tcp_3_csum, TRUE
 
 rx_checksum_3_non_tcp:
-    nop.e
-    nop
     seq             c1, k.udp_3_valid, TRUE
     nop.!c1.e
     phvwrpair       p.ipv4_3_udp_csum, k.ipv4_3_valid, \
