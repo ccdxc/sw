@@ -936,7 +936,7 @@ class LifStats(Packet):
         LELongField("rx_rdma_ecn_packets", 0),
         BitField("rsvd_rdma_rx", 0, 128),
 
-        BitField("rsvd_eth_dbg", 0, 1024),
+        BitField("rsvd_eth_dbg", 0, 2048),
 
         LELongField("rdma_req_rx_pkt_seq_err", 0),
         LELongField("rdma_req_rx_rnr_retry_err", 0),
@@ -952,7 +952,8 @@ class LifStats(Packet):
         LELongField("rdma_req_tx_local_access_err", 0),
         LELongField("rdma_req_tx_local_oper_err", 0),
         LELongField("rdma_req_tx_memory_mgmt_err", 0),
-        BitField("rsvd_rdma_dbg_req", 0, 192),
+        LELongField("rdma_req_tx_retry_exceeded_err", 0),
+        BitField("rsvd_rdma_dbg_req", 0, 128),
 
         LELongField("rdma_resp_rx_dup_requests", 0),
         LELongField("rdma_resp_rx_out_of_buffer", 0),
