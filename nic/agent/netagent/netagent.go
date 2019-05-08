@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/tpa"
 	"github.com/pensando/sw/nic/agent/troubleshooting"
 
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
@@ -69,6 +70,7 @@ type Agent struct {
 	SysmgrClient   *sysmgr.Client
 	DelphiClient   clientApi.Client
 	NaplesStatus   delphiProto.NaplesStatus
+	Tmagent        *tpa.PolicyAgent
 	mountComplete  bool
 	TroubleShoot   *troubleshooting.Agent
 }
@@ -255,6 +257,13 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 				log.Errorf("Error creating TroubleShooting client. Err: %v", err)
 			}
 			log.Infof("TroubleShooting client {%+v} is running", ag.TroubleShoot.TroubleShootingAgent)
+
+			if ag.Tmagent != nil { // tmagent was enableds
+				if err := ag.Tmagent.NewTpClient(ag.NetworkAgent.NodeUUID, ag.ResolverClient); err != nil {
+					log.Errorf("Error creating telemetry policy client, Err: %v", err)
+				}
+				log.Infof("telemetry policy client {%+v} is running", ag.Tmagent.TpState)
+			}
 		}
 	}
 }

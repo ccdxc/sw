@@ -120,11 +120,12 @@ func main() {
 		log.Printf("TroubleShooting Agent {%+v} instantiated", tsa)
 
 		// telemetry policy agent
-		tpa, err := tpa.NewPolicyAgent(ag.NetworkAgent.NodeUUID, *npmURL, nil, *datapath, ag.NetworkAgent, ag.GetMgmtIPAddr)
+		tpa, err := tpa.NewPolicyAgent(*datapath, ag.NetworkAgent, ag.GetMgmtIPAddr)
 		if err != nil {
 			log.Fatalf("Error creating telemetry policy agent, Err: %v", err)
 		}
 		log.Printf("telemetry policy agent {%+v} instantiated", tpa)
+		ag.Tmagent = tpa
 
 		// create REST api server
 		restServer, err := restapi.NewRestServer(ag.NetworkAgent, tsa.TroubleShootingAgent, tpa.TpState, *restURL)

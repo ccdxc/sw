@@ -26,9 +26,7 @@ type PolicyAgent struct {
 }
 
 // NewPolicyAgent creates a new instance of telemetry policy agent
-func NewPolicyAgent(nodeUUID string, ctrlerURL string, resolverClient resolver.Interface, datapath string, netAgent *netagent.Nagent, getMgmtIPAddr func() string) (*PolicyAgent, error) {
-	log.Infof("starting policy agent node:%s ctrler:%s", nodeUUID, ctrlerURL)
-
+func NewPolicyAgent(datapath string, netAgent *netagent.Nagent, getMgmtIPAddr func() string) (*PolicyAgent, error) {
 	agent := &PolicyAgent{
 		datapath: datapath,
 		netAgent: netAgent,
@@ -65,17 +63,19 @@ func NewPolicyAgent(nodeUUID string, ctrlerURL string, resolverClient resolver.I
 	}
 
 	agent.TpState = tpAgent
+	return agent, nil
 
-	// start grpc client to venice
-	ctrler, err := ctrlerif.NewTpClient(nodeUUID, tpAgent, globals.Tpm, resolverClient)
+}
+
+// NewTpClient creates a client to watch telemetry policy in Venice
+func (agent *PolicyAgent) NewTpClient(nodeUUID string, resolverClient resolver.Interface) error {
+	ctrler, err := ctrlerif.NewTpClient(nodeUUID, agent.TpState, globals.Tpm, resolverClient)
 	if err != nil {
 		log.Errorf("Error creating telemetry policy controller client. Err: %v", err)
-		return nil, err
+		return err
 	}
-
 	agent.tpCtrler = ctrler
-
-	return agent, nil
+	return nil
 }
 
 // Stop stops the agent
