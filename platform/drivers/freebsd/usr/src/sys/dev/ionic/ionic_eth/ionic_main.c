@@ -25,7 +25,6 @@
 
 #include <linux/module.h>
 #include <linux/netdevice.h>
-#include <linux/dma-mapping.h>
 #include <linux/pci.h>
 
 #include "ionic.h"
@@ -265,6 +264,7 @@ int ionic_set_dma_mask(struct ionic *ionic)
 	return err;
 }
 
+
 int ionic_identify(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
@@ -323,9 +323,7 @@ int ionic_port_identify(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	struct identity *ident = &ionic->ident;
-	int err;
-	unsigned int i;
-	unsigned int nwords;
+	int i, err, nwords;
 
 	ionic_dev_cmd_port_identify(idev);
 	err = ionic_dev_cmd_wait_check(idev, ionic_devcmd_timeout * HZ);
@@ -343,23 +341,26 @@ int ionic_port_init(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	struct identity *ident = &ionic->ident;
-	int err;
-	unsigned int i;
-	unsigned int nwords;
+	int i, err, nwords;
 	union port_config *config;
 
 	if (idev->port_info)
 		return 0;
 
 	idev->port_info_sz = ALIGN(sizeof(*idev->port_info), PAGE_SIZE);
-	idev->port_info = dma_alloc_coherent(ionic->dev, idev->port_info_sz,
-					      &idev->port_info_pa,
-					      GFP_KERNEL);
+
+	if ((err = ionic_dma_alloc(ionic, idev->port_info_sz, &ionic->port_dma, 0))) {
+		dev_err(ionic->dev, "failed to allocate memory for port, err: %d\n", err);
+		return -ENOMEM;
+	}
+
+	idev->port_info = (struct port_info *)ionic->port_dma.dma_vaddr;
 	if (!idev->port_info) {
 		dev_err(ionic->dev, "Failed to allocate port info, aborting\n");
 		return -ENOMEM;
 	}
 
+	idev->port_info_pa = ionic->port_dma.dma_paddr;
 	nwords = min(ARRAY_SIZE(ident->port.config.words),
 					ARRAY_SIZE(idev->dev_cmd_regs->data));
 	config = &ident->port.config;
@@ -390,8 +391,7 @@ int ionic_port_reset(struct ionic *ionic)
 		return err;
 	}
 
-	dma_free_coherent(ionic->dev, idev->port_info_sz,
-			  idev->port_info, idev->port_info_pa);
+	ionic_dma_free(ionic, &ionic->port_dma);
 
 	idev->port_info = NULL;
 	idev->port_info_pa = 0;

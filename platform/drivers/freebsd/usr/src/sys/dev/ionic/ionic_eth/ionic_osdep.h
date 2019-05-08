@@ -30,8 +30,6 @@
 #include <sys/bus.h>
 #include <sys/systm.h>
 
-#include "ionic.h"
-
 /*
  * DMA allocation structure.
  */

@@ -29,6 +29,7 @@
 #include "ionic_dev.h"
 #include "ionic_api.h"
 #include "ionic_kpicompat.h"
+#include "ionic_osdep.h"
 
 #define DRV_NAME			"ionic"
 #define DRV_DESCRIPTION		"Pensando Ethernet NIC Driver"
@@ -128,7 +129,6 @@ MALLOC_DECLARE(M_IONIC);
 #endif
 
 struct ionic_dev;
-struct ionic_dma_info;
 
 struct ionic {
 	struct pci_dev *pdev;
@@ -137,6 +137,7 @@ struct ionic {
 	struct ionic_dev idev;
 	struct dentry *dentry;
 	struct ionic_dev_bar bars[IONIC_BARS_MAX];
+	struct ionic_dma_info port_dma;
 	unsigned int num_bars;
 	struct identity ident;
 	struct list_head lifs;

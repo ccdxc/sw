@@ -28,7 +28,6 @@
 #include <linux/errno.h>
 #include <linux/io.h>
 #include <linux/slab.h>
-#include <linux/dma-mapping.h>
 
 #include "ionic_dev.h"
 #include "ionic.h"

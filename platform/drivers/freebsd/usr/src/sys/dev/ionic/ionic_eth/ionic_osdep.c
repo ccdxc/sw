@@ -33,7 +33,6 @@
 #include <linux/types.h> // for types u8, u16 etc.
 #include <linux/bitops.h>
 
-#include "ionic_osdep.h"
 #include "ionic.h"
 
 /* DMA related functions. */

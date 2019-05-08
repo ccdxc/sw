@@ -177,6 +177,7 @@ static int ionic_pci_init(struct pci_dev *pdev)
 		return (err);
 	}
 
+	/* Set DMA mask for RDMA device. */
 	err = ionic_set_dma_mask(ionic);
 	if (err) {
 		IONIC_DEV_ERROR(dev, "Cannot set DMA mask, aborting\n");
