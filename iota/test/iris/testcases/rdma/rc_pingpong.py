@@ -31,7 +31,23 @@ def Setup(tc):
         else:
             tc.ib_prefix.append('')
 
+    tc.stats_results = []
+
     return api.types.status.SUCCESS
+
+def StatsCmds(tc, w, dev, counter):
+    if w.IsNaples():
+        cmds = {}
+        if api.GetNodeOs(w.node_name) == 'linux':
+            # set counter lifespan zero so it does not return an old value if the test runs quickly
+            cmds['lifespan'] = 'echo 0 > /sys/class/infiniband/{dev}/ports/1/hw_counters/lifespan'
+            cmds['counter'] = 'cat /sys/class/infiniband/{dev}/ports/1/hw_counters/{counter}'
+        else:
+            cmds['lifespan'] = 'sysctl sys.class.infiniband.{dev}.ports.1.hw_counters.lifespan=0'
+            cmds['counter'] = 'sysctl sys.class.infiniband.{dev}.ports.1.hw_counters.{counter}'
+        cmds['lifespan'] = cmds['lifespan'].format(dev=dev)
+        cmds['counter'] = cmds['counter'].format(dev=dev, counter=counter)
+        return cmds
 
 def Trigger(tc):
 
@@ -50,6 +66,34 @@ def Trigger(tc):
                        (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
 
         api.Logger.info("Starting ibv_rc_pingpong test from %s" % (tc.cmd_descr))
+
+        # stats dump before / after test
+        w1_stats_cmds = StatsCmds(tc, w1, tc.devices[i], 'tx_rdma_ucast_pkts')
+        w2_stats_cmds = StatsCmds(tc, w2, tc.devices[j], 'tx_rdma_ucast_pkts')
+        w1_stats_results = []
+        w2_stats_results = []
+
+        if w1_stats_cmds is not None:
+            api.Trigger_AddCommand(req,
+                                   w1.node_name,
+                                   w1.workload_name,
+                                   w1_stats_cmds['lifespan'])
+            cmd_ref = api.Trigger_AddCommand(req,
+                                             w1.node_name,
+                                             w1.workload_name,
+                                             w1_stats_cmds['counter'])
+            w1_stats_results.append(cmd_ref)
+
+        if w2_stats_cmds is not None:
+            api.Trigger_AddCommand(req,
+                                   w2.node_name,
+                                   w2.workload_name,
+                                   w2_stats_cmds['lifespan'])
+            cmd_ref = api.Trigger_AddCommand(req,
+                                             w2.node_name,
+                                             w2.workload_name,
+                                             w2_stats_cmds['counter'])
+            w2_stats_results.append(cmd_ref)
 
         # cmd for server
         cmd = "ibv_rc_pingpong -d " + tc.devices[i] + " -g " + tc.gid[i] + " -s 1024 -r 10 -n 10"
@@ -74,6 +118,23 @@ def Trigger(tc):
                                w2.workload_name,
                                tc.ib_prefix[j] + cmd)
 
+        # stats dump after test
+        if w1_stats_cmds is not None:
+            cmd_ref = api.Trigger_AddCommand(req,
+                                             w1.node_name,
+                                             w1.workload_name,
+                                             w1_stats_cmds['counter'])
+            w1_stats_results.append(cmd_ref)
+            tc.stats_results.append(w1_stats_results)
+
+        if w2_stats_cmds is not None:
+            cmd_ref = api.Trigger_AddCommand(req,
+                                             w2.node_name,
+                                             w2.workload_name,
+                                             w2_stats_cmds['counter'])
+            w2_stats_results.append(cmd_ref)
+            tc.stats_results.append(w2_stats_results)
+
         i = i + 1
     #end while
 
@@ -95,6 +156,12 @@ def Verify(tc):
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
+            result = api.types.status.FAILURE
+
+    for cmd_refs in tc.stats_results:
+        if cmd_refs[0].stdout == cmd_refs[1].stdout:
+            api.Logger.info("counter value did not change %s -> %s" % (
+                            cmd_refs[0].stdout, cmd_refs[1].stdout))
             result = api.types.status.FAILURE
 
     return result
