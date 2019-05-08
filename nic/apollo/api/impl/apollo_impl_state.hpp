@@ -26,6 +26,9 @@ namespace impl {
 // forward declaration
 class apollo_impl;
 
+#define MAX_KEY_NATIVE_TBL_ENTRIES   3
+#define MAX_KEY_TUNNELED_TBL_ENTRIES 3
+
 /// \brief    pipeline global state
 class apollo_impl_state : public obj_base {
 public:
@@ -50,6 +53,8 @@ private:
     tcam *ingress_drop_stats_tbl_;  // ingress drop stats table
     tcam *egress_drop_stats_tbl_;   // egress drop stats table
     tcam *nacl_tbl_;                // NACL tcam table
+    uint32_t key_native_tbl_idx_[MAX_KEY_NATIVE_TBL_ENTRIES];
+    uint32_t key_tunneled_tbl_idx_[MAX_KEY_TUNNELED_TBL_ENTRIES];
 };
 
 /// \@}    // end of PDS_APOLLO_IMPL_STATE

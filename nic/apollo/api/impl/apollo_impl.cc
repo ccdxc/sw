@@ -175,6 +175,25 @@ apollo_impl::factory(pipeline_cfg_t *pipeline_cfg) {
 
 void
 apollo_impl::destroy(apollo_impl *impl) {
+    int i;
+
+    // Remove key native table entries
+    for (i = 0; i < MAX_KEY_NATIVE_TBL_ENTRIES; i++) {
+        apollo_impl_db()->key_native_tbl()->remove(
+            apollo_impl_db()->key_native_tbl_idx_[i]);
+    }
+    // Remove key tunneled table entries
+    for (i = 0; i < MAX_KEY_TUNNELED_TBL_ENTRIES; i++) {
+        apollo_impl_db()->key_tunneled_tbl()->remove(
+            apollo_impl_db()->key_tunneled_tbl_idx_[i]);
+    }
+    // Remove drop stats table entries
+    for (i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
+        apollo_impl_db()->egress_drop_stats_tbl()->remove(i);
+    }
+    for (i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
+        apollo_impl_db()->ingress_drop_stats_tbl()->remove(i);
+    }
     p4pd_cleanup();
 }
 
@@ -224,7 +243,7 @@ apollo_impl::asm_config_init(pds_init_params_t *init_params,
 sdk_ret_t
 apollo_impl::key_native_init_(void) {
     sdk_ret_t                  ret;
-    uint32_t                   idx;
+    uint32_t                   idx = 0;
     key_native_swkey_t         key;
     key_native_swkey_mask_t    mask;
     key_native_actiondata_t    data;
@@ -245,7 +264,8 @@ apollo_impl::key_native_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = apollo_impl_db()->key_native_tbl()->insert(&key, &mask, &data, &idx);
+    ret = apollo_impl_db()->key_native_tbl()->insert(
+        &key, &mask, &data, &apollo_impl_db()->key_native_tbl_idx_[idx++]);
 
     // entry for native IPv6 packets
     memset(&key, 0, sizeof(key));
@@ -262,7 +282,8 @@ apollo_impl::key_native_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = apollo_impl_db()->key_native_tbl()->insert(&key, &mask, &data, &idx);
+    ret = apollo_impl_db()->key_native_tbl()->insert(
+        &key, &mask, &data, &apollo_impl_db()->key_native_tbl_idx_[idx++]);
 
     // entry for native non-IP packets
     memset(&key, 0, sizeof(key));
@@ -279,7 +300,11 @@ apollo_impl::key_native_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = apollo_impl_db()->key_native_tbl()->insert(&key, &mask, &data, &idx);
+    ret = apollo_impl_db()->key_native_tbl()->insert(
+        &key, &mask, &data, &apollo_impl_db()->key_native_tbl_idx_[idx++]);
+
+    // check overflow 
+    SDK_ASSERT(idx <= MAX_KEY_NATIVE_TBL_ENTRIES);
     return ret;
 }
 
@@ -290,7 +315,7 @@ apollo_impl::key_native_init_(void) {
 sdk_ret_t
 apollo_impl::key_tunneled_init_(void) {
     sdk_ret_t                    ret;
-    uint32_t                     idx;
+    uint32_t                     idx = 0;
     key_tunneled_swkey_t         key;
     key_tunneled_swkey_mask_t    mask;
     key_tunneled_actiondata_t    data;
@@ -311,8 +336,8 @@ apollo_impl::key_tunneled_init_(void) {
     mask.ethernet_2_valid_mask = 0x0;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = apollo_impl_db()->key_tunneled_tbl()->insert(&key, &mask,
-                                                       &data, &idx);
+    ret = apollo_impl_db()->key_tunneled_tbl()->insert(
+        &key, &mask, &data, &apollo_impl_db()->key_tunneled_tbl_idx_[idx++]);
     // entry for tunneled (inner) IPv6 packets
     key.ipv4_1_valid = 1;
     key.ipv6_1_valid = 0;
@@ -325,8 +350,8 @@ apollo_impl::key_tunneled_init_(void) {
     mask.ethernet_2_valid_mask = 0x0;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = apollo_impl_db()->key_tunneled_tbl()->insert(&key, &mask,
-                                                       &data, &idx);
+    ret = apollo_impl_db()->key_tunneled_tbl()->insert(
+        &key, &mask, &data, &apollo_impl_db()->key_tunneled_tbl_idx_[idx++]);
 
     // entry for tunneled (inner) non-IP packets
     key.ipv4_1_valid = 1;
@@ -340,8 +365,11 @@ apollo_impl::key_tunneled_init_(void) {
     mask.ethernet_2_valid_mask = 0xFF;
     mask.ipv4_2_valid_mask = 0xFF;
     mask.ipv6_2_valid_mask = 0xFF;
-    ret = apollo_impl_db()->key_tunneled_tbl()->insert(&key, &mask,
-                                                       &data, &idx);
+    ret = apollo_impl_db()->key_tunneled_tbl()->insert(
+        &key, &mask, &data, &apollo_impl_db()->key_tunneled_tbl_idx_[idx++]);
+
+    // check max
+    SDK_ASSERT(idx <= MAX_KEY_TUNNELED_TBL_ENTRIES);
     return ret;
 }
 

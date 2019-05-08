@@ -1,0 +1,24 @@
+{
+   ignore_unversioned_libs
+   Memcheck:Leak
+   ...
+   obj:*/libsdkcapri_csrint.so
+}
+{
+   ignore_versioned_libs
+   Memcheck:Leak
+   ...
+   obj:*/libsdkcapri_csrint.so
+}
+{
+    ignore_func
+    Memcheck:Cond
+    ...
+    fun:*p4pd_table_ds_decoded_string_get*
+}
+{
+    ignore_func
+    Memcheck:Value8
+    ...
+    fun:*p4pd_table_ds_decoded_string_get*
+}
