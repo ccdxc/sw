@@ -5,7 +5,7 @@ MODULE_TARGET   = delphi_hub.bin
 MODULE_PIPELINE = iris
 MODULE_INCS     = ${BLD_GEN_DIR}/proto
 MODULE_SOLIBS   = delphisdk halproto upgradeproto nicmgrproto pciemgrproto \
-		  ftestatsproto commonproto
+		  ftestatsproto commonproto dropstatsproto
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev dl lmdb
 MODULE_ARLIBS   = delphimessenger delphishm
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cc)

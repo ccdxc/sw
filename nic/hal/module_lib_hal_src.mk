@@ -12,5 +12,6 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/hal.cc \
                   $(wildcard ${MODULE_SRC_DIR}/src/internal/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/src/utils/*.cc)
 MODULE_INCS     = ${TOPDIR}/nic/hal/third-party/openssl/include \
-                  ${TOPDIR}/nic/hal/iris/deplhi
+                  ${TOPDIR}/nic/hal/iris/delphi \
+                  ${BLD_PROTOGEN_DIR}/
 include ${MKDEFS}/post.mk

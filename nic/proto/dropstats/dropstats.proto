@@ -1,0 +1,49 @@
+syntax = "proto3";
+package dropstats;
+
+import "delphi.proto";
+
+message DropMetrics {
+    // External
+    option (delphi.datapath_metrics) = true;
+    fixed64          Key                              = 1;        // Global id 0
+    delphi.Counter   drop_malformed_pkt               = 2;        // malformed pkt drop
+    delphi.Counter   drop_parser_icrc_error           = 3;       // RDMA ICRC Errors
+    delphi.Counter   drop_parse_len_error             = 4;       // Packet Length Errors
+    delphi.Counter   drop_hardware_error              = 5;
+    delphi.Counter   drop_input_mapping               = 6;        // input mapping table miss
+    delphi.Counter   drop_input_mapping_dejavu        = 7;        // deja-vu drop
+    delphi.Counter   drop_multi_dest_not_pinned_uplink  = 8;        // Multi destination frame recieved for a l2seg on not pinned uplink
+    delphi.Counter   drop_flow_hit                    = 9;        // flow hit drop
+    delphi.Counter   drop_flow_miss                   = 10;        // flow miss drop
+    delphi.Counter   drop_nacl                        = 11;        // nacl drop
+    delphi.Counter   drop_ipsg                        = 12;        // ipsg drop
+    delphi.Counter   drop_ip_normalization            = 13;        // ip norm. drop
+    delphi.Counter   drop_tcp_normalization           = 14;        // tcp norm. drop
+    delphi.Counter   drop_tcp_rst_with_invalid_ack_num = 15;       // rst with invalid ack num
+    delphi.Counter   drop_tcp_non_syn_first_pkt       = 16;       // non-syn first pkt
+    delphi.Counter   drop_icmp_normalization          = 17;       // icmp norm. drop
+    delphi.Counter   drop_input_properties_miss       = 18;       // input properties miss
+    delphi.Counter   drop_tcp_out_of_window           = 19;       // tcp OOW drop
+    delphi.Counter   drop_tcp_split_handshake         = 20;       // split handshake drop
+    delphi.Counter   drop_tcp_win_zero_drop           = 21;       // tcp win. zero
+    delphi.Counter   drop_tcp_data_after_fin          = 22;       // tcp data after fin
+    delphi.Counter   drop_tcp_non_rst_pkt_after_rst   = 23;       // tcp non rst
+    delphi.Counter   drop_tcp_invalid_responder_first_pkt = 24;       // tcp invalid resp.
+    delphi.Counter   drop_tcp_unexpected_pkt          = 25;       // tcp unexpected packet
+    delphi.Counter   drop_src_lif_mismatch            = 26;
+    delphi.Counter   drop_vf_ip_label_mismatch        = 27;
+    delphi.Counter   drop_vf_bad_rr_dst_ip            = 28;
+}
+
+message EgressDropMetrics {
+    // External
+    option (delphi.datapath_metrics) = true;
+    fixed64          Key                              = 1;        // Global id 0
+    delphi.Counter   drop_output_mapping              = 2;        // output mapping table miss
+    delphi.Counter   drop_prune_src_port              = 3;        // prune source port drop
+    delphi.Counter   drop_mirror                      = 4;        // mirror drop
+    delphi.Counter   drop_policer                     = 5;        // policer drop
+    delphi.Counter   drop_copp                        = 6;        // copp drop
+    delphi.Counter   drop_checksum_err                = 7;        // checksum error drop
+}

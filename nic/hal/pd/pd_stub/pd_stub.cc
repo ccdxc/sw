@@ -311,6 +311,7 @@ PD_FUNC_STUB(pd_drop_stats_clear);
 PD_FUNC_STUB(pd_egress_drop_stats_get);
 PD_FUNC_STUB(pd_egress_drop_stats_clear);
 PD_FUNC_STUB(pd_table_stats_get);
+PD_FUNC_STUB(pd_system_drop_stats_get);
 
 // oifl
 PD_FUNC_STUB(pd_oif_list_get);

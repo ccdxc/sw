@@ -154,6 +154,7 @@ nic/build/aarch64/iris/lib/libdevapi_iris.so                        /nic/lib/
 nic/build/aarch64/iris/lib/librdmamgr_iris.so                       /nic/lib/
 nic/build/aarch64/iris/lib/liblfq.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libpciemgrd.so                           /nic/lib/
+nic/build/aarch64/iris/lib/libdropstatsproto.so                     /nic/lib/
 
 #test binaries
 nic/build/aarch64/iris/lib/libfte_base_test.so                       /nic/lib/

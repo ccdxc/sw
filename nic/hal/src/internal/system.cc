@@ -10,6 +10,7 @@
 #include "nic/hal/src/internal/system.hpp"
 #include "nic/include/pd_api.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
+#include "gen/proto/system.pb.h"
 
 namespace hal {
 

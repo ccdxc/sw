@@ -2367,6 +2367,10 @@ typedef struct pd_pb_stats_get_args_s {
     pd_system_args_t *pd_sys_args;
 } __PACK__ pd_pb_stats_get_args_t;
 
+typedef struct pd_system_drop_stats_get_args_s {
+    pd_system_args_t *pd_sys_args;
+} __PACK__ pd_system_drop_stats_get_args_t;
+
 // oiflist
 typedef struct pd_oif_list_create_args_s {
     oif_list_id_t *list;
@@ -3373,7 +3377,8 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE, 302, "PD_FUNC_ID_QOS_CLASS_SET_GLOBAL_PAUSE_TYPE")  \
     ENTRY(PD_FUNC_ID_WRING_GET_BASE_ADDR,      303, "PD_FUNC_ID_WRING_GET_BASE_ADDR")               \
     ENTRY(PD_FUNC_ID_FLOW_HASH_GET,            304, "PD_FUNC_ID_FLOW_HASH_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      305, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_SYSTEM_DROP_STATS_GET,    305, "PD_FUNC_ID_SYSTEM_DROP_STATS_GET")\
+    ENTRY(PD_FUNC_ID_MAX,                      306, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3658,6 +3663,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_drop_stats_get);
         PD_UNION_ARGS_FIELD(pd_egress_drop_stats_get);
         PD_UNION_ARGS_FIELD(pd_table_stats_get);
+        PD_UNION_ARGS_FIELD(pd_system_drop_stats_get);
 
         // oifl
         PD_UNION_ARGS_FIELD(pd_oif_list_get);
@@ -4103,6 +4109,7 @@ PD_FUNCP_TYPEDEF(pd_drop_stats_clear);
 PD_FUNCP_TYPEDEF(pd_egress_drop_stats_get);
 PD_FUNCP_TYPEDEF(pd_egress_drop_stats_clear);
 PD_FUNCP_TYPEDEF(pd_table_stats_get);
+PD_FUNCP_TYPEDEF(pd_system_drop_stats_get);
 
 // oifl
 PD_FUNCP_TYPEDEF(pd_oif_list_get);

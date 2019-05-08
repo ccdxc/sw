@@ -147,7 +147,7 @@ pd_drop_stats_get (pd_func_args_t *pd_func_args)
     SystemResponse          *rsp = pd_sys_args->rsp;
     DropStatsEntry          *stats_entry = NULL;
 
-    HAL_TRACE_DEBUG("Querying drop stats");
+    HAL_TRACE_VERBOSE("Querying drop stats");
     for (int i = 0; i < (DROP_MAX + 1); i++) {
         stats_entry = rsp->mutable_stats()->mutable_drop_stats()->
             add_drop_entries();
@@ -241,7 +241,7 @@ pd_egress_drop_stats_get (pd_func_args_t *pd_func_args)
     SystemResponse          *rsp = pd_sys_args->rsp;
     EgressDropStatsEntry    *stats_entry = NULL;
 
-    HAL_TRACE_DEBUG("Querying egress drop stats");
+    HAL_TRACE_VERBOSE("Querying egress drop stats");
     for (int i = 0; i < (EGRESS_DROP_MAX + 1); i++) {
         stats_entry = rsp->mutable_stats()->mutable_egress_drop_stats()->
             add_drop_entries();
@@ -862,6 +862,43 @@ pd_pb_stats_clear (pd_func_args_t *pd_func_args)
 hal_ret_t
 pd_packet_buffer_update (pd_func_args_t *pd_func_args)
 {
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_system_drop_stats_get (pd_func_args_t *pd_func_args)
+{
+    pd_system_drop_stats_get_args_t    *args = pd_func_args->pd_system_drop_stats_get;
+    pd_system_args_t                   *sys_args = args->pd_sys_args;
+    pd_drop_stats_get_args_t            d_args;
+    pd_egress_drop_stats_get_args_t     ed_args;
+    //pd_pb_stats_get_args_t              pb_args;
+    pd_func_args_t                      func_args;
+    hal_ret_t                           ret;
+
+    d_args.pd_sys_args = sys_args;
+    func_args.pd_drop_stats_get = &d_args;
+    ret = pd_drop_stats_get(&func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get drop stats, err : {}", ret);
+    }
+
+    ed_args.pd_sys_args = sys_args;
+    func_args.pd_egress_drop_stats_get = &ed_args;
+    ret = pd_egress_drop_stats_get(&func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get egress drop stats, err : {}", ret);
+    }
+
+#if 0
+    t_args.pd_sys_args = &pd_system_args;
+    pd_func_args.pd_table_stats_get = &t_args;
+    ret = pd_pb_stats_get(&pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to get packet buffer stats, err : {}", ret);
+    }
+#endif
+         
     return HAL_RET_OK;
 }
 

@@ -353,6 +353,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_EGRESS_DROP_STATS_GET, pd_egress_drop_stats_get);
     PD_FUNC_LOAD(PD_FUNC_ID_EGRESS_DROP_STATS_CLEAR, pd_egress_drop_stats_clear);
     PD_FUNC_LOAD(PD_FUNC_ID_TABLE_STATS_GET, pd_table_stats_get);
+    PD_FUNC_LOAD(PD_FUNC_ID_SYSTEM_DROP_STATS_GET, pd_system_drop_stats_get);
 
     // oifl
     PD_FUNC_LOAD(PD_FUNC_ID_OIFL_GET, pd_oif_list_get);
