@@ -1,6 +1,5 @@
 #! /usr/bin/python3
 import pdb
-import ipaddress
 import copy
 
 import infra.config.base as base
@@ -43,8 +42,8 @@ class FlowMapObject(base.ConfigObjectBase):
         obj.route = self.__routeTblObj
         obj.tunnel = self.__tunobj
         obj.devicecfg = self.__dev
-        obj.hostport = 1
-        obj.switchport = 2
+        obj.hostport = utils.PortTypes.HOST
+        obj.switchport = utils.PortTypes.SWITCH
         return
 
     def __repr__(self):

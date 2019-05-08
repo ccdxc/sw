@@ -22,7 +22,10 @@ class VpcObject(base.ConfigObjectBase):
         ################# PUBLIC ATTRIBUTES OF VPC OBJECT #####################
         self.VPCId = next(resmgr.VpcIdAllocator)
         self.GID('Vpc%d'%self.VPCId)
-        self.Type = vpc_pb2.VPC_TYPE_TENANT
+        if spec.type == 'substrate':
+            self.Type = vpc_pb2.VPC_TYPE_SUBSTRATE
+        else:
+            self.Type = vpc_pb2.VPC_TYPE_TENANT
         self.IPPrefix = {}
         self.IPPrefix[0] = resmgr.GetVpcIPv6Prefix(self.VPCId)
         self.IPPrefix[1] = resmgr.GetVpcIPv4Prefix(self.VPCId)
@@ -42,6 +45,10 @@ class VpcObject(base.ConfigObjectBase):
         self.__ip_subnet_prefix_pool[1] = {}
 
         self.Show()
+
+        if self.Type == vpc_pb2.VPC_TYPE_SUBSTRATE:
+            # Nothing to be done for substrate vpc
+            return
 
         ############### CHILDREN OBJECT GENERATION
         # Generate Policy configuration.
@@ -83,23 +90,31 @@ class VpcObject(base.ConfigObjectBase):
         logger.info("- Prefix:%s" %self.IPPrefix)
         return
 
+    def IsSubstrateVPC(self):
+        if self.Type == vpc_pb2.VPC_TYPE_SUBSTRATE:
+            return True
+        return False
+
 class VpcObjectClient:
     def __init__(self):
-        self.__objs = []
+        self.__objs = dict()
         return
 
     def Objects(self):
-        return self.__objs
+        return self.__objs.values()
+
+    def GetVpcObject(self, vpcid):
+        return self.__objs.get(vpcid, None)
 
     def GenerateObjects(self, topospec):
         for p in topospec.vpc:
             for c in range(p.count):
                 obj = VpcObject(p, c)
-                self.__objs.append(obj)
+                self.__objs.update({obj.VPCId: obj})
         return
 
     def CreateObjects(self):
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs))
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(), self.__objs.values()))
         api.client.Create(api.ObjectTypes.VPC, msgs)
 
         # Create Policy object.

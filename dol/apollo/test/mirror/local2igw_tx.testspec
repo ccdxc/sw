@@ -11,6 +11,11 @@ packets:
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=UDP
         headers     :
+            eth:
+                src     : ref://testcase/config/localmapping/VNIC/MACAddr
+                dst     : 00:02:00:00:00:00
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             ipv4:
                 src     : ref://testcase/config/localmapping/IP
                 dst     : callback://networking/packets/GetUsableHostFromRoute
@@ -30,12 +35,6 @@ packets:
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
-        headers     :
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
 
     - packet:
         id          : TO_SWITCH_PKT # Expected packet to network
@@ -61,129 +60,253 @@ packets:
                 src     : callback://networking/packets/GetIPFromLocalMapping
             ipv6:
                 src     : callback://networking/packets/GetIPFromLocalMapping
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
 
     - packet:
-        id          : MIRROR_PKT_TX_1 # Expected tx mirrored packet
+        id          : RSPAN_MIRROR_PKT_TX_BASE # Expected RSPAN tx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
         headers     :
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=tx,id=1
+                vlan    : 0
                 prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
 
     - packet:
-        id          : MIRROR_PKT_TX_2 # Expected tx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
+        id          : RSPAN_MIRROR_PKT_TX_1 # Expected RSPAN tx mirrored packet for session 1
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_TX_BASE
         headers     :
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=tx,id=2
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=TX,id=1
 
     - packet:
-        id          : MIRROR_PKT_TX_3 # Expected tx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
+        id          : RSPAN_MIRROR_PKT_TX_2 # Expected RSPAN tx mirrored packet for session 2
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_TX_BASE
         headers     :
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=tx,id=3
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=TX,id=2
 
     - packet:
-        id          : MIRROR_PKT_TX_4 # Expected tx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
+        id          : RSPAN_MIRROR_PKT_TX_3 # Expected RSPAN tx mirrored packet for session 3
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_TX_BASE
         headers     :
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=tx,id=4
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=TX,id=3
 
     - packet:
-        id          : MIRROR_PKT_TX_5 # Expected tx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
+        id          : RSPAN_MIRROR_PKT_TX_4 # Expected RSPAN tx mirrored packet for session 4
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_TX_BASE
         headers     :
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=tx,id=5
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=TX,id=4
 
     - packet:
-        id          : MIRROR_PKT_TX_6 # Expected tx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
+        id          : RSPAN_MIRROR_PKT_TX_5 # Expected RSPAN tx mirrored packet for session 5
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_TX_BASE
         headers     :
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=tx,id=6
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=TX,id=5
 
     - packet:
-        id          : MIRROR_PKT_TX_7 # Expected tx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
+        id          : RSPAN_MIRROR_PKT_TX_6 # Expected RSPAN tx mirrored packet for session 6
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_TX_BASE
         headers     :
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=tx,id=7
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=TX,id=6
 
     - packet:
-        id          : MIRROR_PKT_TX_8 # Expected tx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
+        id          : RSPAN_MIRROR_PKT_TX_7 # Expected RSPAN tx mirrored packet for session 7
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_TX_BASE
         headers     :
-            eth:
-                src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : 00:02:00:00:00:00
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=tx,id=8
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=TX,id=7
+
+    - packet:
+        id          : RSPAN_MIRROR_PKT_TX_8 # Expected RSPAN tx mirrored packet for session 8
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_TX_BASE
+        headers     :
+            outerqtag:
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=TX,id=8
+
+    - packet:
+        id          : ERSPAN_MIRROR_PKT_TX_BASE # Expected ERSPAN tx mirrored packet base
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO70/size
+        template    : ref://testcase/packets/id=RAW
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers     :
+            erspaneth:
+                src    : 01:00:00:01:02:00 #TODO: fix in impl ref://testcase/config/devicecfg/MACAddr
+                dst    : 00:02:0b:0a:0d:0e
+            erspanqtag:
+                prio   : 0
+                vlan   : 0
+            erspanipv4:
+                tos    : 0
+                id     : 0
+            erspangre:
+            erspan:
+                sessionid : 0
+                ver       : const/2
+                d         : callback://mirror/packets/GetERSPANDirection/direction=TX
+                gra       : 0x3
+                t         : 0
+                vlan      : ref://testcase/config/localmapping/VNIC/VlanId
+                # TODO: check 'cos' value
+                cos       : 7
+            payload :
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO70/data
+
+    - packet:
+        id          : ERSPAN_MIRROR_PKT_TX_1 # Expected RSPAN tx mirrored packet for session 1
+        clone       : ref://testcase/packets/id=ERSPAN_MIRROR_PKT_TX_BASE
+        payloadsize : callback://mirror/packets/GetERSPANPayloadSize/basepktid=FROM_HOST_PKT,direction=TX,id=1
+        headers     :
+            erspaneth:
+                dst    : callback://mirror/packets/GetERSPANDstMac/direction=TX,id=1
+            erspanqtag:
+                vlan   : callback://mirror/packets/GetSPANVlanID/direction=TX,id=1
+            erspanipv4:
+                tos    : callback://mirror/packets/GetERSPANDscp/direction=TX,id=1
+                src    : callback://mirror/packets/GetERSPANSrcIP/direction=TX,id=1
+                dst    : callback://mirror/packets/GetERSPANDstIP/direction=TX,id=1
+            erspangre:
+            erspan:
+                sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=1
+            payload :
+                data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=1
+
+    - packet:
+        id          : ERSPAN_MIRROR_PKT_TX_2 # Expected RSPAN tx mirrored packet for session 2
+        clone       : ref://testcase/packets/id=ERSPAN_MIRROR_PKT_TX_BASE
+        payloadsize : callback://mirror/packets/GetERSPANPayloadSize/basepktid=FROM_HOST_PKT,direction=TX,id=2
+        headers     :
+            erspaneth:
+                dst    : callback://mirror/packets/GetERSPANDstMac/direction=TX,id=2
+            erspanqtag:
+                vlan   : callback://mirror/packets/GetSPANVlanID/direction=TX,id=2
+            erspanipv4:
+                tos    : callback://mirror/packets/GetERSPANDscp/direction=TX,id=2
+                src    : callback://mirror/packets/GetERSPANSrcIP/direction=TX,id=2
+                dst    : callback://mirror/packets/GetERSPANDstIP/direction=TX,id=2
+            erspangre:
+            erspan:
+                sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=2
+            payload :
+                data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=2
+
+    - packet:
+        id          : ERSPAN_MIRROR_PKT_TX_3 # Expected RSPAN tx mirrored packet for session 3
+        clone       : ref://testcase/packets/id=ERSPAN_MIRROR_PKT_TX_BASE
+        payloadsize : callback://mirror/packets/GetERSPANPayloadSize/basepktid=FROM_HOST_PKT,direction=TX,id=3
+        headers     :
+            erspaneth:
+                dst    : callback://mirror/packets/GetERSPANDstMac/direction=TX,id=3
+            erspanqtag:
+                vlan   : callback://mirror/packets/GetSPANVlanID/direction=TX,id=3
+            erspanipv4:
+                tos    : callback://mirror/packets/GetERSPANDscp/direction=TX,id=3
+                src    : callback://mirror/packets/GetERSPANSrcIP/direction=TX,id=3
+                dst    : callback://mirror/packets/GetERSPANDstIP/direction=TX,id=3
+            erspangre:
+            erspan:
+                sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=3
+            payload :
+                data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=3
+
+    - packet:
+        id          : ERSPAN_MIRROR_PKT_TX_4 # Expected RSPAN tx mirrored packet for session 4
+        clone       : ref://testcase/packets/id=ERSPAN_MIRROR_PKT_TX_BASE
+        payloadsize : callback://mirror/packets/GetERSPANPayloadSize/basepktid=FROM_HOST_PKT,direction=TX,id=4
+        headers     :
+            erspaneth:
+                dst    : callback://mirror/packets/GetERSPANDstMac/direction=TX,id=4
+            erspanqtag:
+                vlan   : callback://mirror/packets/GetSPANVlanID/direction=TX,id=4
+            erspanipv4:
+                tos    : callback://mirror/packets/GetERSPANDscp/direction=TX,id=4
+                src    : callback://mirror/packets/GetERSPANSrcIP/direction=TX,id=4
+                dst    : callback://mirror/packets/GetERSPANDstIP/direction=TX,id=4
+            erspangre:
+            erspan:
+                sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=4
+            payload :
+                data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=4
+
+    - packet:
+        id          : ERSPAN_MIRROR_PKT_TX_5 # Expected RSPAN tx mirrored packet for session 5
+        clone       : ref://testcase/packets/id=ERSPAN_MIRROR_PKT_TX_BASE
+        payloadsize : callback://mirror/packets/GetERSPANPayloadSize/basepktid=FROM_HOST_PKT,direction=TX,id=5
+        headers     :
+            erspaneth:
+                dst    : callback://mirror/packets/GetERSPANDstMac/direction=TX,id=5
+            erspanqtag:
+                vlan   : callback://mirror/packets/GetSPANVlanID/direction=TX,id=5
+            erspanipv4:
+                tos    : callback://mirror/packets/GetERSPANDscp/direction=TX,id=5
+                src    : callback://mirror/packets/GetERSPANSrcIP/direction=TX,id=5
+                dst    : callback://mirror/packets/GetERSPANDstIP/direction=TX,id=5
+            erspangre:
+            erspan:
+                sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=5
+            payload :
+                data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=5
+
+    - packet:
+        id          : ERSPAN_MIRROR_PKT_TX_6 # Expected RSPAN tx mirrored packet for session 6
+        clone       : ref://testcase/packets/id=ERSPAN_MIRROR_PKT_TX_BASE
+        payloadsize : callback://mirror/packets/GetERSPANPayloadSize/basepktid=FROM_HOST_PKT,direction=TX,id=6
+        headers     :
+            erspaneth:
+                dst    : callback://mirror/packets/GetERSPANDstMac/direction=TX,id=6
+            erspanqtag:
+                vlan   : callback://mirror/packets/GetSPANVlanID/direction=TX,id=6
+            erspanipv4:
+                tos    : callback://mirror/packets/GetERSPANDscp/direction=TX,id=6
+                src    : callback://mirror/packets/GetERSPANSrcIP/direction=TX,id=6
+                dst    : callback://mirror/packets/GetERSPANDstIP/direction=TX,id=6
+            erspangre:
+            erspan:
+                sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=6
+            payload :
+                data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=6
+
+    - packet:
+        id          : ERSPAN_MIRROR_PKT_TX_7 # Expected RSPAN tx mirrored packet for session 7
+        clone       : ref://testcase/packets/id=ERSPAN_MIRROR_PKT_TX_BASE
+        payloadsize : callback://mirror/packets/GetERSPANPayloadSize/basepktid=FROM_HOST_PKT,direction=TX,id=7
+        headers     :
+            erspaneth:
+                dst    : callback://mirror/packets/GetERSPANDstMac/direction=TX,id=7
+            erspanqtag:
+                vlan   : callback://mirror/packets/GetSPANVlanID/direction=TX,id=7
+            erspanipv4:
+                tos    : callback://mirror/packets/GetERSPANDscp/direction=TX,id=7
+                src    : callback://mirror/packets/GetERSPANSrcIP/direction=TX,id=7
+                dst    : callback://mirror/packets/GetERSPANDstIP/direction=TX,id=7
+            erspangre:
+            erspan:
+                sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=7
+            payload :
+                data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=7
+
+    - packet:
+        id          : ERSPAN_MIRROR_PKT_TX_8 # Expected RSPAN tx mirrored packet for session 8
+        clone       : ref://testcase/packets/id=ERSPAN_MIRROR_PKT_TX_BASE
+        payloadsize : callback://mirror/packets/GetERSPANPayloadSize/basepktid=FROM_HOST_PKT,direction=TX,id=8
+        headers     :
+            erspaneth:
+                dst    : callback://mirror/packets/GetERSPANDstMac/direction=TX,id=8
+            erspanqtag:
+                vlan   : callback://mirror/packets/GetSPANVlanID/direction=TX,id=8
+            erspanipv4:
+                tos    : callback://mirror/packets/GetERSPANDscp/direction=TX,id=8
+                src    : callback://mirror/packets/GetERSPANSrcIP/direction=TX,id=8
+                dst    : callback://mirror/packets/GetERSPANDstIP/direction=TX,id=8
+            erspangre:
+            erspan:
+                sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=8
+            payload :
+                data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=8
 
 trigger:
     packets:
@@ -198,33 +321,33 @@ expect:
             port    : ref://testcase/config/switchport
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=tx,id=1
-            port    : callback://mirror/packets/GetRSPANPortID/direction=tx,id=1
+            object  : callback://mirror/packets/GetExpectedPacket/direction=TX,id=1
+            port    : callback://mirror/packets/GetSPANPortID/direction=TX,id=1
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=tx,id=2
-            port    : callback://mirror/packets/GetRSPANPortID/direction=tx,id=2
+            object  : callback://mirror/packets/GetExpectedPacket/direction=TX,id=2
+            port    : callback://mirror/packets/GetSPANPortID/direction=TX,id=2
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=tx,id=3
-            port    : callback://mirror/packets/GetRSPANPortID/direction=tx,id=3
+            object  : callback://mirror/packets/GetExpectedPacket/direction=TX,id=3
+            port    : callback://mirror/packets/GetSPANPortID/direction=TX,id=3
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=tx,id=4
-            port    : callback://mirror/packets/GetRSPANPortID/direction=tx,id=4
+            object  : callback://mirror/packets/GetExpectedPacket/direction=TX,id=4
+            port    : callback://mirror/packets/GetSPANPortID/direction=TX,id=4
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=tx,id=5
-            port    : callback://mirror/packets/GetRSPANPortID/direction=tx,id=5
+            object  : callback://mirror/packets/GetExpectedPacket/direction=TX,id=5
+            port    : callback://mirror/packets/GetSPANPortID/direction=TX,id=5
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=tx,id=6
-            port    : callback://mirror/packets/GetRSPANPortID/direction=tx,id=6
+            object  : callback://mirror/packets/GetExpectedPacket/direction=TX,id=6
+            port    : callback://mirror/packets/GetSPANPortID/direction=TX,id=6
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=tx,id=7
-            port    : callback://mirror/packets/GetRSPANPortID/direction=tx,id=7
+            object  : callback://mirror/packets/GetExpectedPacket/direction=TX,id=7
+            port    : callback://mirror/packets/GetSPANPortID/direction=TX,id=7
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=tx,id=8
-            port    : callback://mirror/packets/GetRSPANPortID/direction=tx,id=8
+            object  : callback://mirror/packets/GetExpectedPacket/direction=TX,id=8
+            port    : callback://mirror/packets/GetSPANPortID/direction=TX,id=8

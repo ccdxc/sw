@@ -1,4 +1,4 @@
-# Feature  Tx, Rx mirror Modules List
+# Feature  Tx & Rx mirror Modules List
 feature:
     id          : mirror
     sub         : tx_rx_mirror

@@ -120,8 +120,8 @@ class PolicyObject(base.ConfigObjectBase):
         obj.localmapping = self.l_obj
         obj.policy = self
         obj.route = self.l_obj.VNIC.SUBNET.V6RouteTable if self.AddrFamily == 'IPV6' else self.l_obj.VNIC.SUBNET.V4RouteTable
-        obj.hostport = 1
-        obj.switchport = 2
+        obj.hostport = utils.PortTypes.HOST
+        obj.switchport = utils.PortTypes.SWITCH
         obj.devicecfg = Store.GetDevice()
         # select a random rule for this testcase
         obj.tc_rule = self.__get_non_default_random_rule()

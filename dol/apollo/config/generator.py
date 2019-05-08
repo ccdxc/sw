@@ -30,7 +30,7 @@ def __generate(topospec):
     # Generate Device Configuration
     device.client.GenerateObjects(topospec)
 
-    # Generate Mirror session configuration
+    # Generate Mirror session configuration before vnic
     mirror.client.GenerateObjects(topospec)
 
     # Generate VPC configuration
@@ -45,11 +45,18 @@ def __create():
     # Create Device Object
     device.client.CreateObjects()
 
-    # Create Mirror session objects
-    mirror.client.CreateObjects()
-
     # Create VPC Objects
     vpc.client.CreateObjects()
+
+    # Commit the Batch
+    batch.client.Commit()
+
+    # Start separate batch for mirror
+    # so that mapping gets programmed before mirror
+    batch.client.Start()
+
+    # Create Mirror session objects
+    mirror.client.CreateObjects()
 
     # Commit the Batch
     batch.client.Commit()

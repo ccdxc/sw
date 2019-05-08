@@ -11,15 +11,18 @@ packets:
         template    : callback://networking/packets/GetPacketTemplateFromMapping/proto=TCP
         headers     :
             eth:
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
                 src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
+                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
+            qtag:
+                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                prio    : 0
             ipv4:
-                dst     : ref://testcase/config/localmapping/IP
                 src     : ref://testcase/config/remotemapping/IP
+                dst     : ref://testcase/config/localmapping/IP
                 ttl     : 64
             ipv6:
-                dst     : ref://testcase/config/localmapping/IP
                 src     : ref://testcase/config/remotemapping/IP
+                dst     : ref://testcase/config/localmapping/IP
                 hlim    : 64
             tcp:
                 sport   : 100
@@ -34,11 +37,11 @@ packets:
         encaps      : callback://networking/packets/GetPacketEncapFromMapping
         headers     :
             outereth:
-                dst     : ref://testcase/config/devicecfg/MACAddr
                 src     : 00:02:0b:0a:0d:0e
+                dst     : ref://testcase/config/devicecfg/MACAddr
             outeripv4:
-                dst     : ref://testcase/config/devicecfg/IP
                 src     : ref://testcase/config/remotemapping/TunIP
+                dst     : ref://testcase/config/devicecfg/IP
                 ttl     : 64
                 tos     : 0
                 id      : 0
@@ -48,6 +51,7 @@ packets:
             mpls:
                 label   : ref://testcase/config/localmapping/VNIC/MplsSlot
                 ttl     : 0
+                s       : 1
             vxlan:
                 vni     : ref://testcase/config/localmapping/VNIC/Vnid
 
@@ -56,142 +60,121 @@ packets:
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QTAG
-        headers     :
-            eth:
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
-                prio    : 0
 
     - packet:
-        id          : MIRROR_PKT_RX_1 # Expected rx mirrored packet
+        id          : RSPAN_MIRROR_PKT_RX_BASE # Expected RSPAN rx mirrored packet
         clone       : ref://testcase/packets/id=BASE_PKT
         encaps      :
             - ref://factory/packets/id=ENCAP_QINQ
         headers     :
-            eth:
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=rx,id=1
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
-                prio    : 0
-
-
-    - packet:
-        id          : MIRROR_PKT_RX_2 # Expected rx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
-        headers     :
-            eth:
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
-            outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=rx,id=2
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
+                vlan    : 0
                 prio    : 0
 
     - packet:
-        id          : MIRROR_PKT_RX_3 # Expected rx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
+        id          : RSPAN_MIRROR_PKT_RX_1 # Expected RSPAN rx mirrored packet for session 1
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
-            eth:
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=rx,id=3
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
-                prio    : 0
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=1
 
     - packet:
-        id          : MIRROR_PKT_RX_4 # Expected rx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
+        id          : RSPAN_MIRROR_PKT_RX_2 # Expected RSPAN rx mirrored packet for session 2
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
-            eth:
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=rx,id=4
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
-                prio    : 0
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=2
+
 
     - packet:
-        id          : MIRROR_PKT_RX_5 # Expected rx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
+        id          : RSPAN_MIRROR_PKT_RX_3 # Expected RSPAN rx mirrored packet for session 3
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
-            eth:
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=rx,id=5
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
-                prio    : 0
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=3
 
     - packet:
-        id          : MIRROR_PKT_RX_6 # Expected rx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
+        id          : RSPAN_MIRROR_PKT_RX_4 # Expected RSPAN rx mirrored packet for session 4
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
-            eth:
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=rx,id=6
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
-                prio    : 0
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=4
 
     - packet:
-        id          : MIRROR_PKT_RX_7 # Expected rx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
+        id          : RSPAN_MIRROR_PKT_RX_5 # Expected RSPAN rx mirrored packet for session 5
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
-            eth:
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=rx,id=7
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
-                prio    : 0
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=5
 
     - packet:
-        id          : MIRROR_PKT_RX_8 # Expected rx mirrored packet
-        clone       : ref://testcase/packets/id=BASE_PKT
-        encaps      :
-            - ref://factory/packets/id=ENCAP_QINQ
+        id          : RSPAN_MIRROR_PKT_RX_6 # Expected RSPAN rx mirrored packet for session 6
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
         headers     :
-            eth:
-                src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-                dst     : ref://testcase/config/localmapping/VNIC/MACAddr
             outerqtag:
-                vlan    : callback://mirror/packets/GetRSPANVlanID/direction=rx,id=8
-                prio    : 0
-            qtag:
-                vlan    : ref://testcase/config/localmapping/VNIC/VlanId
-                prio    : 0
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=6
+
+
+    - packet:
+        id          : RSPAN_MIRROR_PKT_RX_7 # Expected RSPAN rx mirrored packet for session 7
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
+        headers     :
+            outerqtag:
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=7
+
+    - packet:
+        id          : RSPAN_MIRROR_PKT_RX_8 # Expected RSPAN rx mirrored packet for session 8
+        clone       : ref://testcase/packets/id=RSPAN_MIRROR_PKT_RX_BASE
+        headers     :
+            outerqtag:
+                vlan    : callback://mirror/packets/GetSPANVlanID/direction=RX,id=8
+
+    - packet:
+        id          : ERSPAN_MIRROR_PKT_RX_BASE # Expected ERSPAN rx mirrored packet base
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO70/size
+        template    : ref://testcase/packets/id=RAW
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers     :
+            erspaneth:
+                src    : 01:00:00:01:02:00 #TODO: fix in impl ref://testcase/config/devicecfg/MACAddr
+                dst    : 00:02:0b:0a:0d:0e
+            erspanqtag:
+                prio   : 0
+                vlan   : 0
+            erspanipv4:
+                tos    : 0
+                id     : 0
+            erspangre:
+            erspan:
+                sessionid : 0
+                ver       : const/2
+                d         : callback://mirror/packets/GetERSPANDirection/direction=RX
+                gra       : 0x3
+                t         : 0
+                vlan      : ref://testcase/config/localmapping/VNIC/VlanId
+                cos       : 0
+            payload :
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO70/data
+
+    - packet:
+        id          : ERSPAN_MIRROR_PKT_RX_8 # Expected RSPAN rx mirrored packet for session 8
+        clone       : ref://testcase/packets/id=ERSPAN_MIRROR_PKT_RX_BASE
+        payloadsize : callback://mirror/packets/GetERSPANPayloadSize/basepktid=TO_HOST_PKT,direction=RX,id=8
+        headers     :
+            erspaneth:
+                dst    : callback://mirror/packets/GetERSPANDstMac/direction=RX,id=8
+            erspanqtag:
+                vlan   : callback://mirror/packets/GetSPANVlanID/direction=RX,id=8
+            erspanipv4:
+                tos    : callback://mirror/packets/GetERSPANDscp/direction=RX,id=8
+                src    : callback://mirror/packets/GetERSPANSrcIP/direction=RX,id=8
+                dst    : callback://mirror/packets/GetERSPANDstIP/direction=RX,id=8
+            erspangre:
+            erspan:
+                sessionid : callback://mirror/packets/GetERSPANSessionId/direction=RX,id=8
+            payload :
+                data    : callback://mirror/packets/GetERSPANPayload/basepktid=TO_HOST_PKT,direction=RX,id=8
 
 trigger:
     packets:
@@ -206,33 +189,33 @@ expect:
             port    : ref://testcase/config/hostport
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=rx,id=1
-            port    : callback://mirror/packets/GetRSPANPortID/direction=rx,id=1
+            object  : callback://mirror/packets/GetExpectedPacket/direction=RX,id=1
+            port    : callback://mirror/packets/GetSPANPortID/direction=RX,id=1
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=rx,id=2
-            port    : callback://mirror/packets/GetRSPANPortID/direction=rx,id=2
+            object  : callback://mirror/packets/GetExpectedPacket/direction=RX,id=2
+            port    : callback://mirror/packets/GetSPANPortID/direction=RX,id=2
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=rx,id=3
-            port    : callback://mirror/packets/GetRSPANPortID/direction=rx,id=3
+            object  : callback://mirror/packets/GetExpectedPacket/direction=RX,id=3
+            port    : callback://mirror/packets/GetSPANPortID/direction=RX,id=3
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=rx,id=4
-            port    : callback://mirror/packets/GetRSPANPortID/direction=rx,id=4
+            object  : callback://mirror/packets/GetExpectedPacket/direction=RX,id=4
+            port    : callback://mirror/packets/GetSPANPortID/direction=RX,id=4
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=rx,id=5
-            port    : callback://mirror/packets/GetRSPANPortID/direction=rx,id=5
+            object  : callback://mirror/packets/GetExpectedPacket/direction=RX,id=5
+            port    : callback://mirror/packets/GetSPANPortID/direction=RX,id=5
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=rx,id=6
-            port    : callback://mirror/packets/GetRSPANPortID/direction=rx,id=6
+            object  : callback://mirror/packets/GetExpectedPacket/direction=RX,id=6
+            port    : callback://mirror/packets/GetSPANPortID/direction=RX,id=6
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=rx,id=7
-            port    : callback://mirror/packets/GetRSPANPortID/direction=rx,id=7
+            object  : callback://mirror/packets/GetExpectedPacket/direction=RX,id=7
+            port    : callback://mirror/packets/GetSPANPortID/direction=RX,id=7
 
         - packet:
-            object  : callback://mirror/packets/GetExpectedPacket/direction=rx,id=8
-            port    : callback://mirror/packets/GetRSPANPortID/direction=rx,id=8
+            object  : callback://mirror/packets/GetExpectedPacket/direction=RX,id=8
+            port    : callback://mirror/packets/GetSPANPortID/direction=RX,id=8

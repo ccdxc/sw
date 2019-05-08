@@ -1,14 +1,9 @@
 #! /usr/bin/python3
-import enum
 import infra.config.base as base
 
 from infra.common.logging import logger
 from apollo.config.store import Store
-
-class PortTypes(enum.IntEnum):
-    NONE = 0
-    HOST = 1
-    SWITCH = 2
+import apollo.config.utils as utils
 
 class PortObject(base.ConfigObjectBase):
     def __init__(self, spec):
@@ -16,7 +11,7 @@ class PortObject(base.ConfigObjectBase):
         self.GID(spec.port)
         
         ################# PUBLIC ATTRIBUTES OF PORT OBJECT #####################
-        self.Type = PortTypes.HOST
+        self.Type = utils.PortTypes.HOST
         self.Port = spec.port
         
         ################# PRIVATE ATTRIBUTES OF PORT OBJECT #####################

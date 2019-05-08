@@ -30,48 +30,57 @@ device:
           type  : workload
 
 mirror:
-    - spantype   : 'rspan' # span type rspan or erspan
+    - spantype   : 'RSPAN' # span type RSPAN or ERSPAN
       snaplen    : 128 # max packet length gets spanned
-      interface  : 285278209 #destination or collector interface ethe 1/1
+      interface  : 285278209 #destination or collector interface eth 1/1
       vlanid     : 10 # rspan vlanid
 
-    - spantype   : 'rspan' # span type rspan or erspan
-      snaplen    : 128 # max packet length gets spanned
-      interface  : 285278209 #destination or collector interface eth 1/1
-      vlanid     : 20 # rspan vlanid
+    - spantype   : 'RSPAN'
+      snaplen    : 128
+      interface  : 285278209
+      vlanid     : 20
 
-    - spantype   : 'rspan' # span type rspan or erspan
-      snaplen    : 128 # max packet length gets spanned
-      interface  : 285278209 #destination or collector interface eth 1/1
-      vlanid     : 30 # rspan vlanid
+    - spantype   : 'RSPAN'
+      snaplen    : 128
+      interface  : 285278209
+      vlanid     : 30
 
-    - spantype   : 'rspan' # span type rspan or erspan
-      snaplen    : 128 # max packet length gets spanned
-      interface  : 285278209 #destination or collector interface eth 1/1
-      vlanid     : 40 # rspan vlanid
+    - spantype   : 'RSPAN'
+      snaplen    : 128
+      interface  : 285278209
+      vlanid     : 40
 
-    - spantype   : 'rspan' # span type rspan or erspan
-      snaplen    : 128 # max packet length gets spanned
+    - spantype   : 'RSPAN'
+      snaplen    : 128
       interface  : 285343745 #destination or collector interface eth 1/2
-      vlanid     : 50 # rspan vlanid
+      vlanid     : 50
 
-    - spantype   : 'rspan' # span type rspan or erspan
-      snaplen    : 128 # max packet length gets spanned
-      interface  : 285343745 #destination or collector interface eth 1/2
-      vlanid     : 60 # rspan vlanid
+    - spantype   : 'RSPAN'
+      snaplen    : 128
+      interface  : 285343745
+      vlanid     : 60
 
-    - spantype   : 'rspan' # span type rspan or erspan
-      snaplen    : 128 # max packet length gets spanned
-      interface  : 285343745 #destination or collector interface eth 1/2
-      vlanid     : 70 # rspan vlanid
+    - spantype   : 'RSPAN'
+      snaplen    : 128
+      interface  : 285343745
+      vlanid     : 70
 
-    - spantype   : 'rspan' # span type rspan or erspan
-      snaplen    : 128 # max packet length gets spanned
-      interface  : 285343745 #destination or collector interface eth 1/2
-      vlanid     : 80 # rspan vlanid
+    # ERSPAN session to substrate vpc
+    - spantype   : 'ERSPAN'
+      snaplen    : 128
+      dscp       : 0
+      vpcid      : 1
+      # TODO: Check why srcip is configurable. Until then hardcoding device ip
+      srcip      : '172.16.0.1'
+      dstip      : '172.16.0.3'
+
 vpc:
-    # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
     - stack  : dual # dual, ipv4 , ipv6
+      count : 1 # only one substrate vpc
+      type  : substrate
+
+    # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
+    - stack  : dual
       count : 1
       type  : tenant
       subnet:

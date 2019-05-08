@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import sys
+import enum
 import ipaddress
 import socket
 from random import sample
@@ -16,11 +17,16 @@ IPV6_DEFAULT_ROUTE = ipaddress.ip_network("0::/0")
 
 IPPROTO_TO_NAME_TBL = {num:name[8:] for name,num in vars(socket).items() if name.startswith("IPPROTO")}
 
+class PortTypes(enum.IntEnum):
+    NONE = 0
+    HOST = 1
+    SWITCH = 2
+
 """
     # Eth1/1 0x11010001 ==> 1 Hostport
     # Eth2/1 0x11020001 ==> 2 Switchport
 """
-INTF2PORT_TBL = { 0x11010001: 1, 0x11020001: 2}
+INTF2PORT_TBL = { 0x11010001: PortTypes.HOST, 0x11020001: PortTypes.SWITCH}
 
 class rrobiniter:
     def __init__(self, objs):
@@ -147,4 +153,4 @@ def GetRpcEncap(mplsslot, vxlanid, encap):
          encap.value.Vnid  = vxlanid
 
 def GetPortIDfromInterface(interfaceid):
-    return INTF2PORT_TBL[interfaceid]
+    return INTF2PORT_TBL.get(interfaceid, PortTypes.NONE)
