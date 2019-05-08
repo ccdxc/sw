@@ -139,7 +139,6 @@ func naplesCmdHandler(cmd *cobra.Command, args []string) error {
 			}
 		} else {
 			fmt.Println("Unable to update naples.")
-			fmt.Println("Error:", err.Error())
 		}
 		return err
 	}

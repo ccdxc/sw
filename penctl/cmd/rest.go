@@ -160,6 +160,12 @@ func restPost(v interface{}, url string) error {
 	}
 	defer postResp.Body.Close()
 	printHTTPResp(postResp)
+	if postResp.StatusCode != 200 {
+		if verbose {
+			fmt.Println(postResp.Status + " " + url)
+		}
+		return errors.New(url + " not found")
+	}
 	if verbose {
 		fmt.Println("Successfully posted the request")
 		fmt.Println("Status:", postResp.Status)
