@@ -21,7 +21,7 @@ setup:
         - step : config.venice.mode_switch_hostpin
         - step : config.netagent.hw_push_config_host
           args :
-             spec : scale_cfg_1vrf_1nw_24ep_1024rep.cfgyml
+             spec : scale_cfg_1vrf_1nw_20ep_512rep.cfgyml
         - step : testcases.drivers.install_iperf
         - step : testcases.penctl.install
 

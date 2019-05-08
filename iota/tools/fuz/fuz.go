@@ -101,8 +101,8 @@ func main() {
 			printMsg("protocol must be either udp or tcp\n")
 			return
 		}
-		if conns > 10000 || conns < 1 {
-			printMsg("error specifying the number of connections, must be between 1-10000\n")
+		if conns > 50000 || conns < 1 {
+			printMsg("error specifying the number of connections, must be between 1-50000\n")
 			return
 		}
 
@@ -177,19 +177,34 @@ func main() {
 	}
 }
 
-func worker(id int, jobs <-chan net.Conn) {
+type sworker struct {
+	id       int
+	curConns uint32
+	maxConns uint32
+}
+
+func (w *sworker) getMaxConns() uint32 {
+	return atomic.LoadUint32((*uint32)(&w.maxConns))
+}
+
+func (w *sworker) getCurrentConns() uint32 {
+	return atomic.LoadUint32((*uint32)(&w.curConns))
+}
+
+func (w *sworker) run(jobs <-chan net.Conn) {
 	workingConns := []net.Conn{}
 
 	bytesReceived := 0
 	bytesSent := 0
+	printMsg(fmt.Sprintf("Started worker : %v\n", w.id))
 	for true {
 		for true {
 			breakup := false
 			select {
 			case c := <-jobs:
-				printMsg(fmt.Sprintf("client %s connected\n", c.RemoteAddr().String()))
+				//printMsg(fmt.Sprintf("client %s connected\n", c.RemoteAddr().String()))
 				workingConns = append(workingConns, c)
-			case <-time.After(20 * time.Millisecond):
+			case <-time.After(1 * time.Microsecond):
 				breakup = true
 			}
 			if breakup {
@@ -203,29 +218,29 @@ func worker(id int, jobs <-chan net.Conn) {
 		}
 		newWorkingConns := []net.Conn{}
 		for _, wc := range workingConns {
-			wc.SetReadDeadline(time.Now().Add(1 * time.Millisecond))
+			wc.SetReadDeadline(time.Now().Add(1 * time.Microsecond))
 			in, err := bufio.NewReader(wc).ReadString('\n')
 			if err != nil {
-				if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
-					//socket timeout, add it for later
-				} else {
-					if err != io.EOF {
-						printMsg(err.Error())
-					}
-					//Connection done, no need to add it to working connection
-					wc.Close()
-				}
 			} else {
 				bytesReceived += len(in)
 				len, _ := wc.Write([]byte(in))
+				//printMsg(fmt.Sprintf("server %s response sent\n", wc.RemoteAddr().String()))
 				bytesSent += len
 			}
 
 			if err == nil || (err != io.EOF && (err.(net.Error).Timeout())) {
 				newWorkingConns = append(newWorkingConns, wc)
+			} else {
+				//Connection done, no need to add it to working connection
+				wc.Close()
 			}
 		}
 		workingConns = newWorkingConns
+		//atomic.StoreUint32(&w.curConns, uint32(len(workingConns)))
+		//w.curConns = uint32(len(workingConns))
+		//if w.maxConns < w.curConns {
+		//	atomic.StoreUint32(&w.maxConns, uint32(len(workingConns)))
+		//}
 
 	}
 }
@@ -233,37 +248,65 @@ func worker(id int, jobs <-chan net.Conn) {
 func runServer(proto string, connDatas []*fuze.ConnectionData,
 	done chan<- error) {
 	waitCh := make(chan error)
-	workers := runtime.GOMAXPROCS(0) - 2
+	workers := int((float64(runtime.GOMAXPROCS(0))) * 0.9)
 	if workers <= 0 {
 		workers = 1
 	}
 	jobs := make(chan net.Conn, 16384)
+
+	sworkers := []*sworker{}
 	for w := 1; w <= workers; w++ {
-		go worker(w, jobs)
+		wrker := &sworker{id: w}
+		sworkers = append(sworkers, wrker)
+		go wrker.run(jobs)
 	}
+
+	//Periodically print max connections reached
+	/* go func() {
+		maxConns := (uint32)(0)
+		for true {
+			time.Sleep(3 * time.Second)
+			currConns := (uint32)(0)
+			for _, w := range sworkers {
+				currConns += w.getCurrentConns()
+			}
+			if currConns > maxConns {
+				maxConns = currConns
+			}
+			printMsg(fmt.Sprintf("Max connections : %v Current Connections : %v\n", maxConns, currConns))
+		}
+	}()*/
+	listeners := []net.Listener{}
 	for _, connData := range connDatas {
 		connData := connData
-		go func() {
-			printMsg(fmt.Sprintf("running %s server on %s\n", connData.Proto, connData.ServerIPPort))
-			l, err := net.Listen(connData.Proto, connData.ServerIPPort)
-			if err != nil {
-				printMsg(err.Error())
-				waitCh <- fmt.Errorf("error listening %s, protocol %s, '%s'\n", connData.ServerIPPort, connData.Proto, err)
-				return
-			}
-			defer l.Close()
+		printMsg(fmt.Sprintf("running %s server on %s\n", connData.Proto, connData.ServerIPPort))
+		l, err := net.Listen(connData.Proto, connData.ServerIPPort)
+		if err != nil {
+			printMsg(err.Error())
+			waitCh <- fmt.Errorf("error listening %s, protocol %s, '%s'\n", connData.ServerIPPort, connData.Proto, err)
+			return
+		}
+		listeners = append(listeners, l)
 
-			for {
-				c, err := l.Accept()
-				if err != nil {
-					printMsg(err.Error())
-					continue
-				}
-				connData.ClientIPPort = c.RemoteAddr().String()
+	}
+
+	for true {
+		for _, l := range listeners {
+			l.(*net.TCPListener).SetDeadline(time.Now().Add(1 * time.Millisecond))
+			c, err := l.Accept()
+			if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
+				continue
+			}
+			if err == nil {
+				//connData.ClientIPPort = c.RemoteAddr().String()
 				printMsg(fmt.Sprintf("client %s accepted\n", c.RemoteAddr().String()))
 				jobs <- c
+			} else {
+				printMsg(err.Error())
+				waitCh <- fmt.Errorf("error listening %s , '%s'\n", l.Addr(), err)
 			}
-		}()
+		}
+		//time.Sleep(20 * time.Millisecond)
 	}
 
 	for ii := 0; ii < len(connDatas); ii++ {
@@ -319,6 +362,9 @@ func runClient(proto string, connDatas []*fuze.ConnectionData, conns, rate, cps,
 					waitCh <- msg
 				}
 				conn, err := net.Dial(connData.Proto, connData.ServerIPPort)
+				if conn != nil {
+					connData.ClientIPPort = conn.LocalAddr().String()
+				}
 				printMsg(fmt.Sprintf("Initiating connection to : %s\n", connData.ServerIPPort))
 				if err != nil {
 					msg = fmt.Errorf("error dialing %s, protocol %s, '%s'\n", connData.ServerIPPort, connData.Proto, err)
@@ -327,9 +373,13 @@ func runClient(proto string, connDatas []*fuze.ConnectionData, conns, rate, cps,
 				}
 				defer conn.Close()
 
-				connData.ClientIPPort = conn.LocalAddr().String()
 				printMsg(fmt.Sprintf("Established connection to : %s\n", connData.ServerIPPort))
 				for ticks := duration; ticks > 0; ticks-- {
+
+					time.Sleep(time.Second)
+					//if ticks%2!= 0 {
+					//	continue
+					//}
 					written, err := fmt.Fprintf(conn, randomBytes)
 					if err != nil {
 						msg = fmt.Errorf("error '%s' writin to socket", err)
@@ -360,12 +410,11 @@ func runClient(proto string, connDatas []*fuze.ConnectionData, conns, rate, cps,
 							updateStats()
 							return
 						}
-					case <-time.After(time.Duration(90) * time.Second):
+					case <-time.After(time.Duration(180) * time.Second):
 						msg = fmt.Errorf("Timeout on reading from server")
 						updateStats()
 						return
 					}
-					time.Sleep(time.Second)
 				}
 
 				msg = nil
@@ -374,13 +423,20 @@ func runClient(proto string, connDatas []*fuze.ConnectionData, conns, rate, cps,
 		}
 	}
 
+	success := 0
+	failed := 0
 	for ii := 0; ii < len(connDatas)*conns; ii++ {
 		err := <-waitCh
 		if err != nil {
 			printMsg(err.Error())
+			failed++
+		} else {
+			success++
 		}
+
 	}
 
+	printMsg(fmt.Sprintf("Success connections %v Failed connections %v\n", success, failed))
 	err <- nil
 }
 

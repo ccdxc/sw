@@ -28,6 +28,7 @@ def __generate_config(cfgMetaFile, cfgOutputDir):
     tmpl_file = __generate_heimdall_template()
     heimdallExec = api.GetTopDir() + '/nic/build/x86_64/iris/bin/heimdall'
     cmd = heimdallExec + " gen -f " + cfgMetaFile + " -t " + tmpl_file +  " -o " + cfgOutputDir +  " -u node1 --remote-uuid node2"
+    api.Logger.info("Generating config %s" % cmd)
     ret = os.system(cmd)
     if ret != 0:
         api.Logger.error("Failed to generate heimdall config")
@@ -66,9 +67,44 @@ def Main(args):
     for node in api.GetWorkloadNodeHostnames():
         if api.GetWorkloadTypeForNode(node) == topo_svc.WorkloadType.Value('WORKLOAD_TYPE_BARE_METAL_MAC_VLAN_ENCAP'):
             req = api.Trigger_CreateExecuteCommandsRequest()
-            cmd = "echo 2 >/proc/sys/net/ipv4/conf/all/rp_filter"
+            #cmd = "echo 2 >/proc/sys/net/ipv4/conf/all/rp_filter"
+            #api.Trigger_AddHostCommand(req, node, cmd)
+            cmd = "sudo sysctl -w net.core.netdev_max_backlog=100000"
             api.Trigger_AddHostCommand(req, node, cmd)
-            api.Trigger(req)
+            cmd = "sudo sysctl -w net.core.somaxconn=65535"
+            api.Trigger_AddHostCommand(req, node, cmd)
+            cmd = "sudo sysctl -w net.ipv4.tcp_max_syn_backlog=100000"
+            api.Trigger_AddHostCommand(req, node, cmd)
+            cmd = "sudo sysctl -w net.nf_conntrack_max=300000"
+            api.Trigger_AddHostCommand(req, node, cmd)
+            cmd = "echo 'net.core.rmem_max=16777216' >> /etc/sysctl.conf"
+            api.Trigger_AddHostCommand(req, node, cmd)
+            cmd = "echo 'net.core.wmem_max=16777216' >> /etc/sysctl.conf"
+            api.Trigger_AddHostCommand(req, node, cmd)
+            cmd = "echo 'net.ipv4.tcp_no_metrics_save = 1' >> /etc/sysctl.conf"
+            api.Trigger_AddHostCommand(req, node, cmd)
+
+            cmd = "echo 'net.ipv4.ip_local_port_range = 15000 61000' >> /etc/sysctl.conf"
+            api.Trigger_AddHostCommand(req, node, cmd)
+
+            cmd = "echo 'net.ipv4.tcp_fin_timeout= 30' >> /etc/sysctl.conf"
+            api.Trigger_AddHostCommand(req, node, cmd)
+
+            cmd = "echo 'net.ipv4.tcp_rmem = 4096 4096 16777216' >> /etc/sysctl.conf"
+            api.Trigger_AddHostCommand(req, node, cmd)
+            cmd = "echo 'net.ipv4.tcp_wmem = 4096 4096 16777216' >> /etc/sysctl.conf"
+            api.Trigger_AddHostCommand(req, node, cmd)
+
+            cmd = "echo 1048576 | sudo tee /proc/sys/fs/nr_open"
+            api.Trigger_AddHostCommand(req, node, cmd)
+            cmd = "echo 1048576 | sudo tee /proc/sys/fs/file-max"
+            api.Trigger_AddHostCommand(req, node, cmd)
+
+
+            resp = api.Trigger(req)
+            for cmd in resp.commands:
+                if cmd.exit_code != 0 :
+                    assert(0)
 
     hw_push_config.AddWorkloads()
     return api.types.status.SUCCESS

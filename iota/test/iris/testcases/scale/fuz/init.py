@@ -14,9 +14,13 @@ class FuzContext:
         self.workload_intf = workload_intf
         self.pcap_file = workload_intf + ".pcap"
         self.servers = []
+        self.interfaces = set()
 
     def AddServer(self, server_ip, server_port):
         self.servers.append(server_ip + ":" + str(server_port))
+
+    def AddInterface(self, interface):
+        self.interfaces.add(interface)
 
     def GetServers(self):
         return self.servers
@@ -93,6 +97,8 @@ def Trigger(tc):
             if not fuzServer:
                 fuzServer = FuzContext(server.workload_name, server.interface, server.node_name)
                 fuzServers[server.node_name] = fuzServer
+            else:
+                fuzServer.AddInterface(server.interface)
             fuzServer.AddServer(server.ip_address, port)
         else:
             serverCmd = FUZ_EXEC[server.workload_name]  + " -port " + str(port)

@@ -43,7 +43,8 @@ def Trigger(tc):
             api.Trigger_AddHostCommand(serverReq, server.node_name,
                                    serverCmd, background = True)
 
-            server_pcap_info.append((server.node_name, server.workload_intf, server.pcap_file))
+            for intf in server.interfaces:
+                server_pcap_info.append((server.node_name, intf, intf + ".pcap"))
 
         #Start server
         store["combined_server_resp"] = api.Trigger(serverReq)

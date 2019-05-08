@@ -17,6 +17,7 @@ def Setup(tc):
         api.Logger.info("Skipping Testcase due to no workload pairs.")
         tc.skip = True
 
+    tc.action = str(getattr(tc.args, "action", "PERMIT"))
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -27,6 +28,7 @@ def Trigger(tc):
     cps = int(getattr(tc.args, "cps", 500))
     pcap_capture = int(getattr(tc.args, "pcap", False))
     sessions = int(getattr(tc.args, "num_sessions", 1))
+    session_time = str(getattr(tc.args, "session_time", "10")) + "s"
     static_arp = int(getattr(tc.args, "static_arp", False))
 
     if static_arp:
@@ -39,7 +41,7 @@ def Trigger(tc):
 
     clientPcapReq = api.Trigger_CreateAllParallelCommandsRequest()
     cps_per_node = int(cps / len(store["client_ctxts"]))
-    for _, client in store["client_ctxts"].items():
+    for index, (_, client) in enumerate(store["client_ctxts"].items()):
         jsonInput = {"connections" : []}
         for serverIPPort in client.GetServers():
             jsonInput["connections"].append({"ServerIPPort" : serverIPPort, "proto" : "tcp"})
@@ -49,7 +51,7 @@ def Trigger(tc):
         api.CopyToWorkload(client.node_name, client.workload_name, [outfile], "")
         api.Trigger_AddCommand(clientPcapReq, client.node_name, client.workload_name,
                                "tcpdump -i eth1 -w %s.pcap" % (client.workload_name),  background=True)
-        clientCmd = fuz_init.FUZ_EXEC[client.workload_name]  + " -conns " + str(sessions) + " -cps " + str(cps_per_node) + " -talk  --jsonOut --jsonInput " + os.path.basename(outfile)
+        clientCmd = fuz_init.FUZ_EXEC[client.workload_name]  + " -duration " + session_time + " -conns " + str(sessions) + " -cps " + str(cps_per_node) + " -talk  --jsonOut --jsonInput " + os.path.basename(outfile)
         api.Trigger_AddCommand(clientReq, client.node_name, client.workload_name,
                                clientCmd, timeout = 0)
 
@@ -77,9 +79,9 @@ def Trigger(tc):
             api.CopyFromWorkload(client.node_name, client.workload_name, [client.workload_name + ".pcap"], tc.GetLogsDir())
 
         #Stop server Pcaps too
-        for pcap_info in store["server_pcap_info"]:
-            node_name, intf, pcap_file = pcap_info[0], pcap_info[1], pcap_info[2]
-            api.CopyFromHost(node_name, [pcap_file], tc.GetLogsDir())
+        #for pcap_info in store["server_pcap_info"]:
+        #    node_name, intf, pcap_file = pcap_info[0], pcap_info[1], pcap_info[2]
+        #    api.CopyFromHost(node_name, [pcap_file], tc.GetLogsDir())
 
 
 
@@ -97,21 +99,27 @@ def verify_fuz(tc):
     failed_connections = 0
     success_connections = 0
     for idx, cmd in enumerate(tc.fuz_client_resp.commands):
+        jsonOut = __get_json(cmd.stdout)
+        success_connections = success_connections + jsonOut["successConnections"]
         if cmd.exit_code != 0:
-            jsonOut = __get_json(cmd.stdout)
             failed_connections = failed_connections + jsonOut["failedConnections"]
-            success_connections = success_connections + jsonOut["successConnections"]
             for conn in jsonOut["connections"]:
                 if  conn["error"] != "":
                     api.Logger.error("Failed Connection {}:{}, err : {}, sent/received : {}/{}".format(conn["ServerIPPort"],
                      conn["ClientIPPort"], conn["error"], conn["dataSent"], conn["dataReceived"]))
 
     api.Logger.info("Total Success connections {}".format(success_connections))
-    if failed_connections:
-        api.Logger.info("Total Failed connections {}".format(failed_connections))
+
+    if tc.action == "PERMIT" and failed_connections:
+        api.Logger.info("Total Failed connections (Policy : ALLOW) {}".format(failed_connections))
         api.Logger.error("fuz test had errors")
         return api.types.status.FAILURE
-    api.Logger.info("Fuz test successfull")
+    elif tc.action == "DENY" and success_connections:
+        api.Logger.info("Total Success connections  (Policy : DENY)  {}".format(success_connections))
+        api.Logger.error("fuz test had errors")
+        return api.types.status.FAILURE
+    else:
+        api.Logger.info("Fuz test successfull")
     return api.types.status.SUCCESS
 
 def Verify(tc):

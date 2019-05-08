@@ -420,6 +420,8 @@ def AddWorkloadBringUp(req, workload):
         wl_msg.parent_interface = wl.parent_interface
         wl_msg.workload_type = wl.workload_type
         wl_msg.workload_image = wl.workload_image
+        wl_msg.cpus = wl.cpus
+        wl_msg.memory = wl.memory
 
 def __bringUpWorkloads(wloads):
 

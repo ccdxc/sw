@@ -779,7 +779,7 @@ def Main():
     # Check if we need to switch to GoldFw or not.
     if GlobalOptions.only_mode_change:
         # Case 2: Only change mode, reboot and install drivers
-        naples.InitForUpgrade(goldfw = False)
+        #naples.InitForUpgrade(goldfw = False)
         naples.Close()
     else:
         # Case 1: Main firmware upgrade.

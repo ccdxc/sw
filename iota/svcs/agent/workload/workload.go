@@ -633,6 +633,10 @@ func (app *bareMetalMacVlanEncapWorkload) AddInterface(parent_interface string, 
 		}
 	}
 
+	//Disbale rp filtering
+	cmd := []string{"sysctl", "-w", "net.ipv4.conf." + workload_interface + ".rp_filter=2"}
+	Utils.Run(cmd, 0, false, false, nil)
+
 	app.subIF = workload_interface
 	return workload_interface, nil
 }

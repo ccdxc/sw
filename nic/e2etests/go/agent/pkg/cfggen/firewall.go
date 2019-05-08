@@ -255,7 +255,8 @@ func (c *CfgGen) generatePolicyRules(namespace string, count int) (policyRules [
 		}
 
 		if !rulesAdded {
-			log.Panic("Not enough EP pairs to generate all rules")
+			//log.Panic("Not enough EP pairs to generate all rules")
+			continue
 		}
 	}
 	return

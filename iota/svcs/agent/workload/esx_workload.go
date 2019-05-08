@@ -181,6 +181,13 @@ func (vm *vmESXWorkload) BringUp(args ...string) error {
 		vm.logger.Errorf("Mounting VM directory failed")
 	}
 
+	cmd := []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh1=1024"}
+	vm.RunCommand(cmd, "", 0, false, true)
+	cmd = []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh2=2048"}
+	vm.RunCommand(cmd, "", 0, false, true)
+	cmd = []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh3=4096"}
+	vm.RunCommand(cmd, "", 0, false, true)
+
 	return vm.startVMAgent()
 }
 

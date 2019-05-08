@@ -63,6 +63,8 @@ class Workload:
             self.interface_type = msg.interface_type
             self.pinned_port = msg.pinned_port
             self.uplink_vlan = msg.uplink_vlan
+            self.cpus = msg.cpus
+            self.memory = msg.memory
         return
 
     def init(self, workload_name, node_name, ip_address, interface=None):

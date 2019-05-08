@@ -23,9 +23,10 @@ testcases:
             #proto     : [ udp, tcp ]
             proto     : [ tcp ]
         args    :
-            num_sessions : 1
-            cps : 500
-            pcap : True
+            num_sessions : 10
+            cps : 200
+            pcap : False
+            session_time : 900
             static_arp : True
 
     -   name    : fuz_server_stop
@@ -45,17 +46,20 @@ testcases:
             #proto     : [ udp, tcp ]
             proto     : [ tcp ]
         args    :
-            num_sessions : 1
-            cps : 500
-            pcap : True
+            num_sessions : 10
+            cps : 200
+            pcap : False
+            session_time : 900
             static_arp : True
+            action : PERMIT
 
     -   name    : fuz_server_stop_1
         testcase: testcases.scale.fuz.server_stop
 
-    -   name    : delete_add_config_1
-        testcase: testcases.config.delete_add_base
-        stress  : True
+    -   name    : policy_change_to_drop
+        testcase: testcases.config.update.policy
+        args    :
+            action : DENY
 
     -   name    : fuz_server_start_2
         testcase: testcases.scale.fuz.server_start
@@ -67,10 +71,12 @@ testcases:
             #proto     : [ udp, tcp ]
             proto     : [ tcp ]
         args    :
-            num_sessions : 1
-            cps : 500
-            pcap : True
+            num_sessions : 10
+            cps : 200
+            pcap : False
+            session_time : 900
             static_arp : True
+            action : DENY
 
     -   name    : fuz_server_stop_2
         testcase: testcases.scale.fuz.server_stop
