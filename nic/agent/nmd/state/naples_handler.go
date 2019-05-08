@@ -60,7 +60,8 @@ func (n *NMD) CreateNaplesProfile(profile nmd.NaplesProfile) error {
 	}
 
 	if profile.Spec.DefaultPortAdmin != nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String() && profile.Spec.DefaultPortAdmin != nmd.PortAdminState_PORT_ADMIN_STATE_DISABLE.String() {
-		return fmt.Errorf("invalid port admin state set. Expecting enable or disable")
+		log.Infof("Invalid port admin state set. Setting to default of Enabled.")
+		profile.Spec.DefaultPortAdmin = nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String()
 	}
 
 	n.Lock()

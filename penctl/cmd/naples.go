@@ -80,8 +80,8 @@ func init() {
 	naplesCmd.Flags().StringVarP(&defaultGW, "default-gw", "g", "", "Default GW for mgmt")
 	naplesCmd.Flags().StringVarP(&naplesProfile, "naples-profile", "f", "default", "Active NAPLES Profile")
 	naplesCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
-	naplesProfileCreateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile to be deleted")
-	naplesProfileCreateCmd.Flags().Int32VarP(&numLifs, "num-lifs", "i", 0, "Maximum number of LIFs on the eth device. 1 or 16")
+	naplesProfileCreateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile to be created")
+	naplesProfileCreateCmd.Flags().Int32VarP(&numLifs, "num-lifs", "i", 1, "Maximum number of LIFs on the eth device. 1 or 16")
 	naplesProfileCreateCmd.Flags().StringVarP(&portDefault, "port-default", "p", "enable", "Set default port admin state for next reboot. (enable | disable)")
 
 	naplesProfileDeleteCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the NAPLES profile to be deleted")
