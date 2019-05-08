@@ -61,13 +61,13 @@ func (Category) EnumDescriptor() ([]byte, []int) { return fileDescriptorAttribut
 type Severity int32
 
 const (
-	// ui-hint: Informational
+	//
 	Severity_INFO Severity = 0
-	// ui-hint: Warning
+	//
 	Severity_WARN Severity = 1
-	// ui-hint: Critical
+	//
 	Severity_CRITICAL Severity = 2
-	// ui-hint: Debug
+	//
 	Severity_DEBUG Severity = 3
 )
 

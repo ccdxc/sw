@@ -68,6 +68,6 @@ func Minify(events []*evtsapi.Event) []string {
 
 // MinifyEvent returns the formatted string containing event details
 func MinifyEvent(evt *evtsapi.Event) string {
-	return fmt.Sprintf("%s: {%s, count: %d, source: %s}", evt.GetName(), evt.GetMessage(), evt.GetCount(),
+	return fmt.Sprintf("%s: {severity: %s, count: %d, source: %s}", evt.GetMessage(), evt.GetSeverity(), evt.GetCount(),
 		fmt.Sprintf("%s-%s", evt.GetSource().GetNodeName(), evt.GetSource().GetComponent()))
 }

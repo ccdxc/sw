@@ -14,13 +14,9 @@ enum Category {
 
 // Severity Level of an event
 enum Severity {
-    // ui-hint: Informational
     INFO        = 0; // no action needed
-    // ui-hint: Warning
     WARN        = 1; // can cause problems in the future, no immediate action required
-    // ui-hint: Critical
     CRITICAL    = 2; // immediate attention required
-    // ui-hint: Debug
     DEBUG       = 3; // debug events, not explicitly visible to the user
 }
 

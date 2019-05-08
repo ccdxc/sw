@@ -7,7 +7,7 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { MonitoringAlertPolicySpec_severity,  MonitoringAlertPolicySpec_severity_uihint  } from './enums';
+import { MonitoringAlertPolicySpec_severity,  } from './enums';
 import { FieldsRequirement, IFieldsRequirement } from './fields-requirement.model';
 
 export interface IMonitoringAlertPolicySpec {
@@ -51,7 +51,7 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
             type: 'string'
         },
         'severity': {
-            enum: MonitoringAlertPolicySpec_severity_uihint,
+            enum: MonitoringAlertPolicySpec_severity,
             default: 'INFO',
             required: true,
             type: 'string'

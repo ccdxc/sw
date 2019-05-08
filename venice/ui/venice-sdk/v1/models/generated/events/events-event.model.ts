@@ -8,7 +8,7 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
-import { EventsEvent_severity,  EventsEvent_severity_uihint  } from './enums';
+import { EventsEvent_severity,  } from './enums';
 import { EventsEvent_category,  } from './enums';
 import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
 import { EventsEventSource, IEventsEventSource } from './events-event-source.model';
@@ -52,7 +52,7 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
             type: 'object'
         },
         'severity': {
-            enum: EventsEvent_severity_uihint,
+            enum: EventsEvent_severity,
             default: 'INFO',
             required: false,
             type: 'string'

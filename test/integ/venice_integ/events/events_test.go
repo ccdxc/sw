@@ -487,14 +487,14 @@ func TestEventsRESTEndpoints(t *testing.T) {
 					fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventtypes.SERVICE_STARTED.String(),
-							Severity: eventattrs.Severity_INFO.String(),
+							Severity: eventattrs.Severity_DEBUG.String(),
 							Count:    1,
 						},
 					},
 					fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventtypes.SERVICE_RUNNING.String(),
-							Severity: eventattrs.Severity_INFO.String(),
+							Severity: eventattrs.Severity_DEBUG.String(),
 							Count:    1,
 						},
 					},
@@ -515,11 +515,11 @@ func TestEventsRESTEndpoints(t *testing.T) {
 				},
 			},
 		},
-		{ // GET events with severity = INFO; should match 2 events (1 * SERVICE_RUNNING + 1 * SERVICE_STARTED)
-			name:          "GET events from default tenant with severity = INFO; should match 2 events",
+		{ // GET events with severity = DEBUG; should match 2 events (1 * SERVICE_RUNNING + 1 * SERVICE_STARTED)
+			name:          "GET events from default tenant with severity = DEBUG; should match 2 events",
 			authzHdr:      authzHeader,
 			requestURI:    "events",
-			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s", eventattrs.Severity_INFO), MaxResults: 100},
+			requestBody:   &api.ListWatchOptions{FieldSelector: fmt.Sprintf("severity=%s", eventattrs.Severity_DEBUG), MaxResults: 100},
 			expStatusCode: http.StatusOK,
 			expResponse: &expectedResponse{
 				numEvents: 2,
@@ -527,14 +527,14 @@ func TestEventsRESTEndpoints(t *testing.T) {
 					fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventtypes.SERVICE_STARTED.String(),
-							Severity: eventattrs.Severity_INFO.String(),
+							Severity: eventattrs.Severity_DEBUG.String(),
 							Count:    1,
 						},
 					},
 					fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventtypes.SERVICE_RUNNING.String(),
-							Severity: eventattrs.Severity_INFO.String(),
+							Severity: eventattrs.Severity_DEBUG.String(),
 							Count:    1,
 						},
 					},
@@ -592,14 +592,14 @@ func TestEventsRESTEndpoints(t *testing.T) {
 					fmt.Sprintf("(tenant:%s) test %s started", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventtypes.SERVICE_STARTED.String(),
-							Severity: eventattrs.Severity_INFO.String(),
+							Severity: eventattrs.Severity_DEBUG.String(),
 							Count:    1,
 						},
 					},
 					fmt.Sprintf("(tenant:%s) test %s running", globals.DefaultTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventtypes.SERVICE_RUNNING.String(),
-							Severity: eventattrs.Severity_INFO.String(),
+							Severity: eventattrs.Severity_DEBUG.String(),
 							Count:    1,
 						},
 					},
@@ -721,14 +721,14 @@ func TestEventsRESTEndpoints(t *testing.T) {
 					fmt.Sprintf("(tenant:%s) test %s started", testTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventtypes.SERVICE_STARTED.String(),
-							Severity: eventattrs.Severity_INFO.String(),
+							Severity: eventattrs.Severity_DEBUG.String(),
 							Count:    1,
 						},
 					},
 					fmt.Sprintf("(tenant:%s) test %s running", testTenant, t.Name()): {
 						EventAttributes: evtsapi.EventAttributes{
 							Type:     eventtypes.SERVICE_RUNNING.String(),
-							Severity: eventattrs.Severity_INFO.String(),
+							Severity: eventattrs.Severity_DEBUG.String(),
 							Count:    1,
 						},
 					},

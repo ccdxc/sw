@@ -509,13 +509,7 @@
             "CRITICAL",
             "DEBUG"
           ],
-          "default": "INFO",
-          "x-ui-hints": {
-            "CRITICAL": "Critical",
-            "DEBUG": "Debug",
-            "INFO": "Informational",
-            "WARN": "Warning"
-          }
+          "default": "INFO"
         },
         "type": {
           "type": "string"
@@ -561,12 +555,6 @@
             "DEBUG"
           ],
           "default": "INFO",
-          "x-ui-hints": {
-            "CRITICAL": "Critical",
-            "DEBUG": "Debug",
-            "INFO": "Informational",
-            "WARN": "Warning"
-          },
           "title": "Severity represents the criticality level of an event"
         },
         "type": {

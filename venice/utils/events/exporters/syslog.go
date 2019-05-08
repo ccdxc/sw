@@ -150,6 +150,8 @@ func (s *SyslogExporter) WriteEvents(evts []*evtsapi.Event) error {
 				err = writer.Warning(sMsg)
 			case eventattrs.Severity_CRITICAL:
 				err = writer.Crit(sMsg)
+			case eventattrs.Severity_DEBUG:
+				err = writer.Debug(sMsg)
 			}
 
 			if err != nil {

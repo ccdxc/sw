@@ -8,7 +8,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { EventsEvent_severity_uihint } from '@sdk/v1/models/generated/events';
+import { EventsEventAttributes_severity } from '@sdk/v1/models/generated/events';
 import { SecuritySGPolicy } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
 
@@ -26,7 +26,7 @@ export class SgpoliciesComponent extends BaseComponent implements OnInit, OnDest
   @ViewChild(LazyrenderComponent) lazyRenderWrapper: LazyrenderComponent;
 
   subscriptions: Subscription[] = [];
-  severityEnum = EventsEvent_severity_uihint;
+  severityEnum = EventsEventAttributes_severity;
 
   // When true, the table displays a loading symbol
   loading = false;

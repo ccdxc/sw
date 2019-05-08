@@ -148,7 +148,7 @@ void Service::on_child(pid_t pid)
     std::string reason = parse_status(this->child_watcher->get_status());
 
     logger->info("Service {} {}", this->spec->name, reason);
-    EventLogger::getInstance()->LogServiceEvent(eventtypes::SERVICE_STOPPED,
+    EventLogger::getInstance()->LogServiceEvent(eventtypes::NAPLES_SERVICE_STOPPED,
         "Service %s stopped", this->spec->name);
 
     if (this->spec->flags & COPY_STDOUT_ON_CRASH) {

@@ -29,7 +29,7 @@ import { WhitespaceTrimDirective } from '@app/components/shared/directives/white
 import { TableheaderComponent } from '@app/components/shared/tableheader/tableheader.component';
 import { BehaviorSubject } from 'rxjs';
 import { Utility } from '@app/common/Utility';
-import { EventsEvent, EventsEventAttributes_severity_uihint, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
+import { EventsEvent, EventsEventAttributes_severity, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 import { Eventsv1Service } from '@sdk/v1/services/generated/eventsv1.service';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
@@ -178,7 +178,7 @@ describe('AlertseventsComponent', () => {
                 expect(field.children[0].nativeElement.textContent).toContain('error');
               }
               expect(field.children[1].nativeElement.textContent)
-                .toContain(EventsEventAttributes_severity_uihint[rowData.severity],
+                .toContain(EventsEventAttributes_severity[rowData.severity],
                   'severity column did not match');
             },
             'source': (field, rowData, rowIndex) => {

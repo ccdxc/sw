@@ -11,7 +11,7 @@ import { EventsService } from '@app/services/events.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { EventsEvent_severity, EventsEvent_severity_uihint, IApiListWatchOptions, IEventsEvent, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
+import { EventsEvent_severity, EventsEventAttributes_severity, IApiListWatchOptions, IEventsEvent, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 import { MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
 import { FieldsRequirement, FieldsRequirement_operator, ISearchSearchResponse, SearchSearchQuery_kinds, SearchSearchRequest, SearchTextRequirement } from '@sdk/v1/models/generated/search';
 import { Table } from 'primeng/table';
@@ -63,7 +63,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
   @Output() activeTab: EventEmitter<string> = new EventEmitter<string>();
 
   subscriptions: Subscription[] = [];
-  severityEnum = EventsEvent_severity_uihint;
+  severityEnum = EventsEventAttributes_severity;
 
   alertSubscription: Subscription;
   eventsSubscription: Subscription;
@@ -160,7 +160,6 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
     'INFO': 0,
     'WARN': 0,
     'CRITICAL': 0,
-    'DEBUG': 0
   };
 
   // The current alert severity filter, set to null if it is on All.

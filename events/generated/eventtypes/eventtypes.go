@@ -143,7 +143,7 @@ func init() {
 
 	eventTypes[SERVICE_STARTED] = &EventTypeAttributes{
 		EType:    "SERVICE_STARTED",
-		Severity: "INFO",
+		Severity: "DEBUG",
 		Category: "System",
 		Desc:     "Service started"}
 
@@ -153,15 +153,21 @@ func init() {
 		Category: "System",
 		Desc:     "Service stopped"}
 
+	eventTypes[NAPLES_SERVICE_STOPPED] = &EventTypeAttributes{
+		EType:    "NAPLES_SERVICE_STOPPED",
+		Severity: "CRITICAL",
+		Category: "System",
+		Desc:     "Naples service stopped"}
+
 	eventTypes[SERVICE_PENDING] = &EventTypeAttributes{
 		EType:    "SERVICE_PENDING",
-		Severity: "WARN",
+		Severity: "DEBUG",
 		Category: "System",
 		Desc:     "Service pending"}
 
 	eventTypes[SERVICE_RUNNING] = &EventTypeAttributes{
 		EType:    "SERVICE_RUNNING",
-		Severity: "INFO",
+		Severity: "DEBUG",
 		Category: "System",
 		Desc:     "Service running"}
 

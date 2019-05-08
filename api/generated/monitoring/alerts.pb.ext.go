@@ -16,8 +16,6 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 
-	"github.com/pensando/sw/events/generated/eventattrs"
-
 	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 
 	"github.com/pensando/sw/api/interfaces"
@@ -38,6 +36,16 @@ var AlertState_normal = map[string]string{
 	"acknowledged": "ACKNOWLEDGED",
 	"open":         "OPEN",
 	"resolved":     "RESOLVED",
+}
+
+// AlertSeverity_normal is a map of normalized values for the enum
+var AlertSeverity_normal = map[string]string{
+	"CRITICAL": "CRITICAL",
+	"INFO":     "INFO",
+	"WARN":     "WARN",
+	"critical": "CRITICAL",
+	"info":     "INFO",
+	"warn":     "WARN",
 }
 
 var _ validators.DummyVar
@@ -869,7 +877,7 @@ func (m *AlertPolicySpec) Normalize() {
 		}
 	}
 
-	m.Severity = eventattrs.Severity_normal[strings.ToLower(m.Severity)]
+	m.Severity = AlertSeverity_normal[strings.ToLower(m.Severity)]
 
 }
 
@@ -1024,7 +1032,7 @@ func (m *AlertStatus) Normalize() {
 
 	m.Reason.Normalize()
 
-	m.Severity = eventattrs.Severity_normal[strings.ToLower(m.Severity)]
+	m.Severity = AlertSeverity_normal[strings.ToLower(m.Severity)]
 
 }
 
@@ -1190,9 +1198,9 @@ func init() {
 	validatorMapAlerts["AlertPolicySpec"]["all"] = append(validatorMapAlerts["AlertPolicySpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*AlertPolicySpec)
 
-		if _, ok := eventattrs.Severity_value[m.Severity]; !ok {
+		if _, ok := AlertSeverity_value[m.Severity]; !ok {
 			vals := []string{}
-			for k1, _ := range eventattrs.Severity_value {
+			for k1, _ := range AlertSeverity_value {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Severity", vals)
@@ -1218,9 +1226,9 @@ func init() {
 	validatorMapAlerts["AlertStatus"]["all"] = append(validatorMapAlerts["AlertStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*AlertStatus)
 
-		if _, ok := eventattrs.Severity_value[m.Severity]; !ok {
+		if _, ok := AlertSeverity_value[m.Severity]; !ok {
 			vals := []string{}
-			for k1, _ := range eventattrs.Severity_value {
+			for k1, _ := range AlertSeverity_value {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Severity", vals)

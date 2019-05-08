@@ -7,7 +7,7 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { MonitoringAlertStatus_severity,  MonitoringAlertStatus_severity_uihint  } from './enums';
+import { MonitoringAlertStatus_severity,  } from './enums';
 import { MonitoringAlertSource, IMonitoringAlertSource } from './monitoring-alert-source.model';
 import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
 import { MonitoringAlertReason, IMonitoringAlertReason } from './monitoring-alert-reason.model';
@@ -38,7 +38,7 @@ export class MonitoringAlertStatus extends BaseModel implements IMonitoringAlert
     'resolved': MonitoringAuditInfo = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'severity': {
-            enum: MonitoringAlertStatus_severity_uihint,
+            enum: MonitoringAlertStatus_severity,
             default: 'INFO',
             required: true,
             type: 'string'

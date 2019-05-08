@@ -110,26 +110,30 @@ enum EventTypes {
 
     // ------------------------------ System events -------------------------- //
     SERVICE_STARTED                 = 500 [(category) = System,
-                                           (severity) = INFO,
+                                           (severity) = DEBUG,
                                            (desc)     = "Service started"];
 
     SERVICE_STOPPED                 = 501 [(category) = System,
                                            (severity) = WARN,
                                            (desc)     = "Service stopped"];
 
-    SERVICE_PENDING                 = 502 [(category) = System,
-                                           (severity) = WARN,
+    NAPLES_SERVICE_STOPPED          = 502 [(category) = System,
+                                           (severity) = CRITICAL,
+                                           (desc)     = "Naples service stopped"];
+
+    SERVICE_PENDING                 = 503 [(category) = System,
+                                           (severity) = DEBUG,
                                            (desc)     = "Service pending"];
 
-    SERVICE_RUNNING                 = 503 [(category) = System,
-                                           (severity) = INFO,
+    SERVICE_RUNNING                 = 504 [(category) = System,
+                                           (severity) = DEBUG,
                                            (desc)     = "Service running"];
 
-    SERVICE_UNRESPONSIVE            = 504 [(category) = System,
+    SERVICE_UNRESPONSIVE            = 505 [(category) = System,
                                            (severity) = CRITICAL,
                                            (desc)     = "Service unresponsive due to lack of system resources"];
 
-    SYSTEM_COLDBOOT                 = 505 [(category) = System,
+    SYSTEM_COLDBOOT                 = 506 [(category) = System,
                                            (severity) = WARN,
                                            (desc)     = "System cold booted"];
 }

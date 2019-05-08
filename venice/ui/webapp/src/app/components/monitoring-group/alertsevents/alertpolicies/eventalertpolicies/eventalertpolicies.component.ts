@@ -6,7 +6,7 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
-import { IApiStatus, IMonitoringAlertPolicy, MonitoringAlertDestination, MonitoringAlertPolicy, MonitoringAlertPolicySpec_severity_uihint } from '@sdk/v1/models/generated/monitoring';
+import { IApiStatus, IMonitoringAlertPolicy, MonitoringAlertDestination, MonitoringAlertPolicy, MonitoringAlertPolicySpec_severity } from '@sdk/v1/models/generated/monitoring';
 import { Observable } from 'rxjs';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
@@ -30,7 +30,7 @@ export class EventalertpolicyComponent extends TablevieweditAbstract<IMonitoring
     matIcon: 'notifications'
   };
   globalFilterFields: string[] = ['meta.name', 'spec.destinations', 'spec.severity'];
-  severityEnum = MonitoringAlertPolicySpec_severity_uihint;
+  severityEnum = MonitoringAlertPolicySpec_severity;
 
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Policy Name', class: 'eventalertpolicies-column-name', sortable: true, width: 20 },

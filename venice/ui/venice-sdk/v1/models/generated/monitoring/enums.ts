@@ -40,7 +40,6 @@ export enum MonitoringAlertPolicySpec_severity {
     'INFO' = "INFO",
     'WARN' = "WARN",
     'CRITICAL' = "CRITICAL",
-    'DEBUG' = "DEBUG",
 }
 
 export enum MonitoringAlertSpec_state {
@@ -53,7 +52,6 @@ export enum MonitoringAlertStatus_severity {
     'INFO' = "INFO",
     'WARN' = "WARN",
     'CRITICAL' = "CRITICAL",
-    'DEBUG' = "DEBUG",
 }
 
 export enum MonitoringAuthConfig_algo {
@@ -206,24 +204,10 @@ export enum LabelsRequirement_operator_uihint {
     'notIn' = "not in",
 }
 
-export enum MonitoringAlertPolicySpec_severity_uihint {
-    'CRITICAL' = "Critical",
-    'DEBUG' = "Debug",
-    'INFO' = "Informational",
-    'WARN' = "Warning",
-}
-
 export enum MonitoringAlertSpec_state_uihint {
     'ACKNOWLEDGED' = "Acknowledged",
     'OPEN' = "Open",
     'RESOLVED' = "Resolved",
-}
-
-export enum MonitoringAlertStatus_severity_uihint {
-    'CRITICAL' = "Critical",
-    'DEBUG' = "Debug",
-    'INFO' = "Informational",
-    'WARN' = "Warning",
 }
 
 export enum MonitoringEventPolicySpec_format_uihint {
@@ -371,9 +355,7 @@ export class AllEnums {
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
     FieldsRequirement_operator_uihint = FieldsRequirement_operator_uihint;
     LabelsRequirement_operator_uihint = LabelsRequirement_operator_uihint;
-    MonitoringAlertPolicySpec_severity_uihint = MonitoringAlertPolicySpec_severity_uihint;
     MonitoringAlertSpec_state_uihint = MonitoringAlertSpec_state_uihint;
-    MonitoringAlertStatus_severity_uihint = MonitoringAlertStatus_severity_uihint;
     MonitoringEventPolicySpec_format_uihint = MonitoringEventPolicySpec_format_uihint;
     MonitoringExternalCred_auth_type_uihint = MonitoringExternalCred_auth_type_uihint;
     MonitoringFwlogPolicySpec_format_uihint = MonitoringFwlogPolicySpec_format_uihint;

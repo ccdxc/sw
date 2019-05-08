@@ -7,7 +7,7 @@ import { Validators, FormControl, FormGroup, FormArray, ValidatorFn } from '@ang
 import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthValidator, required, enumValidator, patternValidator, CustomFormControl, CustomFormGroup } from '../../../utils/validators';
 import { BaseModel, PropInfoItem } from './base-model';
 
-import { EventsEventAttributes_severity,  EventsEventAttributes_severity_uihint  } from './enums';
+import { EventsEventAttributes_severity,  } from './enums';
 import { EventsEventAttributes_category,  } from './enums';
 import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
 import { EventsEventSource, IEventsEventSource } from './events-event-source.model';
@@ -33,7 +33,7 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
     'count': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'severity': {
-            enum: EventsEventAttributes_severity_uihint,
+            enum: EventsEventAttributes_severity,
             default: 'INFO',
             required: true,
             type: 'string'

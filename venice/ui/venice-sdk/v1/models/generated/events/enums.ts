@@ -57,20 +57,6 @@ export enum ApiListWatchOptions_sort_order_uihint {
     'None' = "None",
 }
 
-export enum EventsEvent_severity_uihint {
-    'CRITICAL' = "Critical",
-    'DEBUG' = "Debug",
-    'INFO' = "Informational",
-    'WARN' = "Warning",
-}
-
-export enum EventsEventAttributes_severity_uihint {
-    'CRITICAL' = "Critical",
-    'DEBUG' = "Debug",
-    'INFO' = "Informational",
-    'WARN' = "Warning",
-}
-
 
 
 
@@ -109,6 +95,4 @@ export class AllEnums {
     EventsEventAttributes_category = EventsEventAttributes_category;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
-    EventsEvent_severity_uihint = EventsEvent_severity_uihint;
-    EventsEventAttributes_severity_uihint = EventsEventAttributes_severity_uihint;
 }

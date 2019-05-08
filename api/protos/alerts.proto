@@ -9,7 +9,6 @@ import "google/api/annotations.proto";
 import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
-import "github.com/pensando/sw/events/protos/attributes.proto";
 import "github.com/pensando/sw/api/fields/selector.proto";
 import "export.proto";
 
@@ -25,6 +24,13 @@ enum AlertState {
     RESOLVED     = 1;
     //ui-hint: Acknowledged
     ACKNOWLEDGED = 2;
+}
+
+// Severity Level of an alert
+enum AlertSeverity {
+    INFO        = 0; // no action needed
+    WARN        = 1; // can cause problems in the future, no immediate action required
+    CRITICAL    = 2; // immediate attention required
 }
 
 // Source of an alert; for alerts generated from events, it maps to event.Source
@@ -78,7 +84,7 @@ message AlertSpec {
 // Status part of the alert object
 message AlertStatus {
   // Severity of an alert
-  string Severity                 = 1 [(venice.check) = "StrEnum(.eventattrs.Severity)",
+  string Severity                 = 1 [(venice.check) = "StrEnum(AlertSeverity)",
                                        (gogoproto.jsontag) = "severity, omitempty"];
 
   // Alert source or origin
@@ -199,7 +205,7 @@ message AlertPolicySpec {
   string Resource                           = 1 [(gogoproto.jsontag) = "resource, omitempty"];
 
   // Severity to be set for an alert that gets triggered from this rule
-  string Severity                           = 2 [(venice.check) = "StrEnum(.eventattrs.Severity)",
+  string Severity                           = 2 [(venice.check) = "StrEnum(AlertSeverity)",
                                                  (gogoproto.jsontag) = "severity, omitempty"];
 
   // Message to be used while generating the alert
