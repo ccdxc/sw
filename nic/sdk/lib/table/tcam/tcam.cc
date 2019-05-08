@@ -396,7 +396,24 @@ end:
     return rs;
 }
 
+
 //---------------------------------------------------------------------------
+// retrieve using key API
+//---------------------------------------------------------------------------
+sdk_ret_t
+tcam::retrieve_using_key(void *key, void *key_mask, void *data)
+{
+    tcam_entry_t  *te = NULL;
+
+    // check if TCAM entry already exists
+    if (entry_exists_(key, key_mask, swkey_len_, &te)) {
+        memcpy(data, te->data, te->data_len);
+        return SDK_RET_OK;
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
+}
+
+//--------------------------------------------------------------------------
 // retrieve from hardware table
 //---------------------------------------------------------------------------
 sdk_ret_t

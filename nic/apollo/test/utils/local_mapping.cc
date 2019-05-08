@@ -95,9 +95,9 @@ local_mapping_util::read(pds_local_mapping_info_t *info, bool compare_spec) {
 
     std::cout << "Mapping info:" << "\n";
     std::cout << "HW: vpc id: " << info->spec.key.vpc.id
-              << " SW: vpc_id: " << this->vpc_id << "\n";
+              << " SW: vpc id: " << this->vpc_id << "\n";
     std::cout << "HW: vnic ip: " << ipaddr2str(&info->spec.key.ip_addr)
-              << " SW: vpc_id: " << this->vnic_ip.c_str() << "\n";
+              << " SW: vnic ip: " << this->vnic_ip.c_str() << "\n";
     if (this->is_public_ip_valid)
         std::cout << "HW: public ip: " << ipaddr2str(&info->spec.public_ip)
                   << " SW: public ip: " << this->public_ip.c_str() << "\n";

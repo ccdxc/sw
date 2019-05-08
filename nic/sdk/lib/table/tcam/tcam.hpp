@@ -147,6 +147,7 @@ public:
     sdk_ret_t fetch_stats(const uint64_t **stats);
     sdk_ret_t entry_to_str(void *key, void *key_mask, void *data, uint32_t index,
                            char *buff, uint32_t buff_size);
+    sdk_ret_t retrieve_using_key(void *key, void *key_mask, void *data);
 };
 
 }    // namespace table

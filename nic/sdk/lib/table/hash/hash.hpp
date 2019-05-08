@@ -177,6 +177,7 @@ public:
                       hash::EntryType type);
     sdk_ret_t entry_to_str(void *key, void *key_mask, void *data, uint32_t index,
                            char *buff, uint32_t buff_size);
+    sdk_ret_t retrieve_using_key(void *key, void *key_mask, void *data);
 
     // For Debugging
     static bool is_dleft(uint32_t hash_idx);

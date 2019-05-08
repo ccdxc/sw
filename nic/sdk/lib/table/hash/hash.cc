@@ -542,6 +542,60 @@ end:
     return rs;
 }
 
+// ---------------------------------------------------------------------------
+// Retrive using key
+//
+// Return Code:
+//      SDK_RET_OK              : Successfull
+//      SDK_RET_ENTRY_NOT_FOUND : Entry not found
+//
+// ---------------------------------------------------------------------------
+sdk_ret_t
+hash::retrieve_using_key(void *key, void *key_mask, void *data)
+{
+    sdk_ret_t rs                = SDK_RET_OK;
+    p4pd_error_t pd_err         = P4PD_SUCCESS;
+    hash_entry_t *he            = NULL;
+    void *hwkey                 = NULL;
+    uint32_t dleft_index        = 0;
+    bool key_mask_free          = false;
+
+    hwkey = SDK_CALLOC(SDK_MEM_ALLOC_HASH_HW_KEY_INS, hwkey_len_);
+    pd_err = p4pd_hwkey_hwmask_build(id_, key, NULL,
+                                     (uint8_t *)hwkey, NULL);
+    if (pd_err != P4PD_SUCCESS) {
+        rs = SDK_RET_HW_PROGRAM_ERR;
+        goto end;
+    }
+
+    dleft_index = generate_hash_(hwkey, hwkey_len_);
+    he = (hash_entry_t *)entry_ht_->lookup(&dleft_index);
+    if (he != NULL && !std::memcmp(he->key, key, swkey_len_)) {
+        if (data) {
+            memcpy(data, he->data, he->data_len);
+        }
+    } else if (has_otcam_()) {
+        if (key_mask == NULL) {
+            key_mask = SDK_MALLOC(SDK_MEM_ALLOC_HASH_SW_KEY_MASK_INS,
+                                  swkey_len_);
+            memset(key_mask, ~0, swkey_len_);
+            key_mask_free = true;
+        }
+        rs = otcam_->retrieve_using_key(key, key_mask, data);
+        if (key_mask_free) {
+            SDK_FREE(SDK_MEM_ALLOC_HASH_SW_KEY_MASK_INS, key_mask);
+        }
+    } else {
+       rs = SDK_RET_ENTRY_NOT_FOUND;
+    }
+end:
+    if (hwkey) {
+        SDK_FREE(SDK_MEM_ALLOC_HASH_HW_KEY_INS, hwkey);
+    }
+    return rs;
+}
+
+
 
 // ---------------------------------------------------------------------------
 // call back func. for otcam iterate

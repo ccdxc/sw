@@ -892,13 +892,16 @@ mapping_impl::fill_mapping_spec_(
     }
 }
 
+#define local_vnic_by_slot_rx_info    action_u.local_vnic_by_slot_rx_local_vnic_info_rx
 sdk_ret_t
 mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
-    sdk_ret_t                   ret;
-    vnic_impl                   *vnic_impl_obj;
-    local_ip_mapping_swkey_t    local_ip_mapping_key = { 0 };
-    local_ip_mapping_appdata_t  local_ip_mapping_data = { 0 };
-    sdk_table_api_params_t      tparams = { 0 };
+    sdk_ret_t                           ret;
+    local_ip_mapping_swkey_t            local_ip_mapping_key = { 0 };
+    local_ip_mapping_appdata_t          local_ip_mapping_data = { 0 };
+    sdk_table_api_params_t              tparams = { 0 };
+    local_vnic_by_slot_rx_swkey_t       vnic_by_slot_key = { 0 };
+    local_vnic_by_slot_rx_actiondata_t  vnic_by_slot_data = { 0 };
+    uint32_t                            vnic_hw_id;
 
     // first read the remote mapping, it can provide all the info except vnic id
     ret = read_remote_mapping_(vpc, spec);
@@ -906,15 +909,20 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
         return ret;
     }
 
-    // TODO: change this logic to read vnic_hw_id from hw table
-    // read local only if user passes the vnic-id.
-    if (spec->vnic.id == 0) {
-        return SDK_RET_OK;
+    // Read vnic id
+    if (spec->fabric_encap.type == PDS_ENCAP_TYPE_MPLSoUDP) {
+        vnic_by_slot_key.mpls_dst_label = spec->fabric_encap.val.mpls_tag;
+    } else if (spec->fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
+        vnic_by_slot_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
     }
-    vnic_impl_obj =
-        (vnic_impl *)vnic_db()->vnic_find(&spec->vnic)->impl();
+    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->retrieve_using_key(
+                              &vnic_by_slot_key, NULL, &vnic_by_slot_data);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    vnic_hw_id = vnic_by_slot_data.local_vnic_by_slot_rx_info.local_vnic_tag;
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
-                                         vnic_impl_obj->hw_id(),
+                                         vnic_hw_id,
                                          &spec->key.ip_addr, true);
     // prepare the api parameters to read the LOCAL_IP_MAPPING table
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_ip_mapping_key,

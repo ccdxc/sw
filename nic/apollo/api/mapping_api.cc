@@ -159,7 +159,6 @@ pds_local_mapping_read (pds_mapping_key_t *key,
         return SDK_RET_ENTRY_NOT_FOUND;
 
     info.spec.key = *key;
-    info.spec.vnic.id = local_info->spec.vnic.id;
     impl = dynamic_cast<api::impl::mapping_impl*>(entry->impl());
     impl->set_is_local(true);
     rv = impl->read_hw(key, &info);

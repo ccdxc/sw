@@ -57,6 +57,7 @@ private:
     sdk_hash *local_vnic_by_slot_rx_tbl(void) { return local_vnic_by_slot_rx_tbl_; }
     directmap *egress_local_vnic_info_tbl(void) { return egress_local_vnic_info_tbl_; }
     friend class vnic_impl;   /**< vnic_impl class is friend of vnic_impl_state */
+    friend class mapping_impl; /**< mapping_impl class is friend of vnic_impl_state */
 
 private:
     /**< P4 datapath tables for vnic */
