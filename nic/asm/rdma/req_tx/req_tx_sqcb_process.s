@@ -262,8 +262,9 @@ in_progress:
         // do not speculate for in_progress processing
         add            r1, r0, SQ_C_INDEX // Branch Delay Slot
 
-        phvwr CAPRI_PHV_FIELD(TO_S2_SQWQE_P, wqe_addr), d.curr_wqe_ptr
-        
+        phvwrpair CAPRI_PHV_FIELD(TO_S2_SQWQE_P, wqe_addr), d.curr_wqe_ptr, \
+                  CAPRI_PHV_FIELD(TO_S2_SQWQE_P, header_template_addr), d.header_template_addr 
+       
         phvwrpair CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, header_template_addr_or_pd), d.pd, \
                   CAPRI_PHV_FIELD(TO_S4_DCQCN_BIND_MW_P, spec_cindex), r1
         

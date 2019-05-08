@@ -67,6 +67,14 @@ modules:
         ignore  : False
 
     - module:
+        name    : RDMA_TX_SEND_ONLY_DCQCN
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_only_dcqcn
+        spec    : req_tx_send_only_dcqcn.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_SEND_ONLY_INLINE_DCQCN_PASS
         enable  : True
         package : test.rdma
@@ -123,6 +131,54 @@ modules:
             maxrdmasessions: 1
 
     - module:
+        name    : RDMA_TX_SEND_FML_DCQCN
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_fml_dcqcn
+        spec    : req_tx_send_fml_dcqcn.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_FML_2SGES_DCQCN
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_fml_2sges_dcqcn
+        spec    : req_tx_send_fml_2sges_dcqcn.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_SEND_FML_4SGES_DCQCN
+        enable  : True
+        package : test.rdma
+        module  : req_tx_send_fml_4sges_dcqcn
+        spec    : req_tx_send_fml_4sges_dcqcn.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_READ_ONLY_DCQCN
+        enable  : True
+        package : test.rdma
+        module  : resp_tx_read_only_dcqcn
+        spec    : resp_tx_read_only_dcqcn.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_READ_FML_DCQCN
+        enable  : True
+        package : test.rdma
+        module  : resp_tx_read_fml_dcqcn
+        spec    : resp_tx_read_fml_dcqcn.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_READ_FML_PAD_DCQCN
+        enable  : True
+        package : test.rdma
+        module  : resp_tx_read_fml_pad_dcqcn
+        spec    : resp_tx_read_fml_pad_dcqcn.testspec
+        ignore  : False
+
+    - module:
         name    : RDMA_TX_WRITE_ONLY_ZERO_LENGTH
         enable  : True
         package : test.rdma
@@ -152,6 +208,22 @@ modules:
         package : test.rdma
         module  : req_tx_write_first_last_imm
         spec    : req_tx_write_first_last_imm.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_WRITE_FML_4SGES_DCQCN
+        enable  : True
+        package : test.rdma
+        module  : req_tx_write_fml_4sges_dcqcn
+        spec    : req_tx_write_fml_4sges_dcqcn.testspec
+        ignore  : False
+
+    - module:
+        name    : RDMA_TX_WRITE_FML_PAD_DCQCN
+        enable  : True
+        package : test.rdma
+        module  : req_tx_write_fml_pad_dcqcn
+        spec    : req_tx_write_fml_pad_dcqcn.testspec
         ignore  : False
 
     - module:
@@ -1428,3 +1500,4 @@ modules:
         module  : resp_rx_send_only_error
         spec    : resp_rx_send_only_error.testspec
         ignore  : False
+
