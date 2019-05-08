@@ -13,6 +13,8 @@ export interface IClusterStorageDeviceInfo {
     'type'?: string;
     'vendor'?: string;
     'capacity'?: string;
+    'percent-life-used-A'?: number;
+    'percent-life-used-B'?: number;
 }
 
 
@@ -21,6 +23,8 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
     'type': string = null;
     'vendor': string = null;
     'capacity': string = null;
+    'percent-life-used-A': number = null;
+    'percent-life-used-B': number = null;
     public static propInfo: { [prop: string]: PropInfoItem } = {
         'serial-num': {
             required: false,
@@ -37,6 +41,14 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
         'capacity': {
             required: false,
             type: 'string'
+        },
+        'percent-life-used-A': {
+            required: false,
+            type: 'number'
+        },
+        'percent-life-used-B': {
+            required: false,
+            type: 'number'
         },
     }
 
@@ -98,6 +110,20 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
         } else {
             this['capacity'] = null
         }
+        if (values && values['percent-life-used-A'] != null) {
+            this['percent-life-used-A'] = values['percent-life-used-A'];
+        } else if (fillDefaults && ClusterStorageDeviceInfo.hasDefaultValue('percent-life-used-A')) {
+            this['percent-life-used-A'] = ClusterStorageDeviceInfo.propInfo['percent-life-used-A'].default;
+        } else {
+            this['percent-life-used-A'] = null
+        }
+        if (values && values['percent-life-used-B'] != null) {
+            this['percent-life-used-B'] = values['percent-life-used-B'];
+        } else if (fillDefaults && ClusterStorageDeviceInfo.hasDefaultValue('percent-life-used-B')) {
+            this['percent-life-used-B'] = ClusterStorageDeviceInfo.propInfo['percent-life-used-B'].default;
+        } else {
+            this['percent-life-used-B'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -109,6 +135,8 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
                 'type': CustomFormControl(new FormControl(this['type']), ClusterStorageDeviceInfo.propInfo['type']),
                 'vendor': CustomFormControl(new FormControl(this['vendor']), ClusterStorageDeviceInfo.propInfo['vendor']),
                 'capacity': CustomFormControl(new FormControl(this['capacity']), ClusterStorageDeviceInfo.propInfo['capacity']),
+                'percent-life-used-A': CustomFormControl(new FormControl(this['percent-life-used-A']), ClusterStorageDeviceInfo.propInfo['percent-life-used-A']),
+                'percent-life-used-B': CustomFormControl(new FormControl(this['percent-life-used-B']), ClusterStorageDeviceInfo.propInfo['percent-life-used-B']),
             });
         }
         return this._formGroup;
@@ -124,6 +152,8 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
             this._formGroup.controls['type'].setValue(this['type']);
             this._formGroup.controls['vendor'].setValue(this['vendor']);
             this._formGroup.controls['capacity'].setValue(this['capacity']);
+            this._formGroup.controls['percent-life-used-A'].setValue(this['percent-life-used-A']);
+            this._formGroup.controls['percent-life-used-B'].setValue(this['percent-life-used-B']);
         }
     }
 }
