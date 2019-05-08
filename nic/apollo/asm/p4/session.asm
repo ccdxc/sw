@@ -17,9 +17,9 @@ session_info:
     setcf           c3, [!c1 | c2]
     nop.c1.e
     phvwr.c3        p.p4_to_rxdma_header_sacl_bypass, 1
-    seq             c1, d.session_info_d.session_stats_addr, r0
+    seq             c1, r5, r0
     nop.c1.e
-    add             r5, r0, d.session_info_d.session_stats_addr
+    add             r5, r5, k.control_metadata_session_index, 6
     seq             c1, k.control_metadata_flow_role, TCP_FLOW_RESPONDER
     add.c1          r5, r5, 32
     add             r7, r0, k.capri_p4_intrinsic_packet_len

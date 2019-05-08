@@ -823,16 +823,10 @@ static void
 flow_tx_info_init ()
 {
     session_actiondata_t data;
-    session_session_info_t *session_info = &data.action_u.session_session_info;
     uint32_t tbl_id = P4TBL_ID_SESSION;
-    uint64_t session_stats_addr;
 
     memset(&data, 0, sizeof(data));
     data.action_id = SESSION_SESSION_INFO_ID;
-    session_stats_addr = get_mem_addr(JSTATSBASE) + g_session_index * 64;
-    session_stats_addr -= ((uint64_t)1 << 31);
-    memcpy(session_info->session_stats_addr, &session_stats_addr,
-           sizeof(session_info->session_stats_addr));
 
     entry_write(tbl_id, g_session_index, NULL, NULL, &data, false, 0);
 }
@@ -868,18 +862,12 @@ flow_rx_info_init ()
 {
 #ifdef FLOW_RX_HIT
     session_actiondata_t data;
-    session_session_info_t *session_info = &data.action_u.session_session_info;
     uint32_t tbl_id = P4TBL_ID_SESSION;
-    uint64_t session_stats_addr;
 
     memset(&data, 0, sizeof(data));
     data.action_id = FLOW_INFO_FLOW_INFO_ID;
-    session_stats_addr = get_mem_addr(JSTATSBASE) + (g_session_index + 1) * 64;
-    session_stats_addr -= ((uint64_t)1 << 31);
-    memcpy(flow_info->session_stats_addr, &session_stats_addr,
-           sizeof(flow_info->session_stats_addr));
 
-    entry_write(tbl_id, g_session_index + 1, NULL, NULL, &data, false, 0);
+    entry_write(tbl_id, g_session_index, NULL, NULL, &data, false, 0);
 #endif
 }
 
@@ -954,6 +942,13 @@ rewrite_init (void)
                                                  mytep_ip);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP, mytep_ip);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP, mytep_mac);
+
+    uint64_t session_stats_addr;
+    session_stats_addr = get_mem_addr(JSTATSBASE);
+    // reset bit 31 (saves one ASM instruction)
+    session_stats_addr &= ~((uint64_t)1 << 31);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION,
+                                                 session_stats_addr);
 
     nexthop_group_init(g_nexthop_group_index, g_nexthop_index);
     nexthop_init(g_nexthop_index, g_tep_index, g_gw_slot_id);

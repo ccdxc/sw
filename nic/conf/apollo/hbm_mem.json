@@ -213,8 +213,7 @@
         {
             "name": "session_stats",
             "size": "512M",
-            "cache": "p4ig",
-            "_comment": "16M * 32B"
+            "_comment": "8M * 32B * 2"
         },
         {
             "name": "udp_flow_overflow0",

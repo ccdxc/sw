@@ -95,7 +95,7 @@ table flow_ohash {
     size : FLOW_OHASH_TABLE_SIZE;
 }
 
-action session_info(drop, iflow_tcp_state, rflow_tcp_state, session_stats_addr) {
+action session_info(drop, iflow_tcp_state, rflow_tcp_state) {
     if (control_metadata.session_index == 0) {
         if (p4_to_rxdma_header.sacl_base_addr == 0) {
             modify_field(p4_to_rxdma_header.sacl_bypass, TRUE);
@@ -104,7 +104,9 @@ action session_info(drop, iflow_tcp_state, rflow_tcp_state, session_stats_addr) 
     }
 
     modify_field(p4_to_rxdma_header.sacl_bypass, TRUE);
-    modify_field(scratch_metadata.session_stats_addr, session_stats_addr);
+    modify_field(scratch_metadata.session_stats_addr,
+                 scratch_metadata.session_stats_addr +
+                 (control_metadata.session_index * 8 * 8));
     modify_field(scratch_metadata.flag, drop);
     modify_field(scratch_metadata.in_bytes, capri_p4_intrinsic.packet_len);
     if (drop == TRUE) {
