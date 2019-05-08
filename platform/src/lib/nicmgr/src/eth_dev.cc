@@ -180,21 +180,33 @@ Eth::Eth(devapi *dev_api,
         lif_map[lif_id] = eth_lif;
     }
 
-    // Device Info
-    port_info_addr = pd->nicmgr_mem_alloc(sizeof(struct port_status));
-    host_port_info_addr = 0;
-    // TODO: mmap instead of calloc
-    port_info = (struct port_info *)calloc(1, sizeof(struct port_info));
-    // port_info = (struct port_info *)pal_mem_map(port_info_addr, sizeof(struct port_info), 0);
-    if (port_info == NULL) {
-        NIC_LOG_ERR("{}: Failed to map device info!", spec->name);
+    // Port Config
+    port_config_addr = pd->nicmgr_mem_alloc(sizeof(union port_config));
+    host_port_config_addr = 0;
+    port_config = (union port_config *)MEM_MAP(port_config_addr,
+                                        sizeof(union port_config), 0);
+    if (port_config == NULL) {
+        NIC_LOG_ERR("{}: Failed to map lif config!", spec->name);
         throw;
     }
-    MEM_SET(port_info_addr, 0, sizeof(struct port_info), 0);
-    // memset(port_info, 0, sizeof(struct port_info));
+    memset(port_config, 0, sizeof(union port_config));
 
-    NIC_LOG_INFO("{}: port_info_addr {:#x}",
-        spec->name, port_info_addr);
+    NIC_LOG_INFO("{}: port_config_addr {:#x}", spec->name,
+        port_config_addr);
+
+    // Port Status
+    port_status_addr = pd->nicmgr_mem_alloc(sizeof(struct port_status));
+    host_port_status_addr = 0;
+    port_status = (struct port_status *)MEM_MAP(port_status_addr,
+                                        sizeof(struct port_status), 0);
+    if (port_status == NULL) {
+        NIC_LOG_ERR("{}: Failed to map lif status!", spec->name);
+        throw;
+    }
+    memset(port_status, 0, sizeof(struct port_status));
+
+    NIC_LOG_INFO("{}: port_status_addr {:#x}", spec->name,
+        port_status_addr);
 
     // TODO: Add cap_mx_c_hdr.h & cap_bx_c_hdr.h to sw tree then remove these
     // hardcoded values
@@ -815,12 +827,10 @@ Eth::_CmdPortIdentify(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {}", spec->name, opcode_to_str(cmd->opcode));
 
     if (spec->uplink_port_num == 0) {
-        port_info->config = {0};
-        port_info->status = {
-            .id = 0,
-            .speed = IONIC_SPEED_1G,
-            .status = PORT_ADMIN_STATE_UP
-        };
+        memset(port_config, 0, sizeof(*port_config));
+        port_status->id = 0;
+        port_status->speed = IONIC_SPEED_1G;
+        port_status->status = PORT_ADMIN_STATE_UP;
         return (IONIC_RC_SUCCESS);
     }
 
@@ -854,15 +864,19 @@ Eth::_CmdPortInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (cmd->info_pa) {
         host_port_info_addr = cmd->info_pa;
-        if (spec->uplink_port_num != 9) {
-            host_port_stats_addr = cmd->info_pa + offsetof(struct port_info, stats);
-            NIC_LOG_INFO("{}: host_port_info_addr {:#x} host_port_stats_addr {:#x}",
-                        spec->name, host_port_info_addr, host_port_stats_addr);
+        NIC_LOG_INFO("{}: host_port_info_addr {:#x}", spec->name, cmd->info_pa);
 
-            // starts a non-repeating timer to update stats. the timer is reset when
-            // stats update is complete.
-            evutil_timer_start(EV_A_ &stats_timer, &Eth::StatsUpdate, this, 0.2, 0.0);
-        }
+        host_port_config_addr = cmd->info_pa + offsetof(struct port_info, config);
+        NIC_LOG_INFO("{}: host_port_config_addr {:#x}",
+                    spec->name, host_port_config_addr);
+
+        host_port_status_addr = cmd->info_pa + offsetof(struct port_info, status);
+        NIC_LOG_INFO("{}: host_port_status_addr {:#x}",
+                    spec->name, host_port_status_addr);
+
+        host_port_stats_addr = cmd->info_pa + offsetof(struct port_info, stats);
+        NIC_LOG_INFO("{}: host_port_stats_addr {:#x}",
+                    spec->name, host_port_stats_addr);
     }
 
     return (IONIC_RC_SUCCESS);
@@ -879,7 +893,9 @@ Eth::_CmdPortReset(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_SUCCESS);
     }
 
-    host_port_info_addr = 0;
+    if (spec->uplink_port_num != 9) {
+        evutil_timer_stop(EV_A_ &stats_timer);
+    }
 
     return (IONIC_RC_SUCCESS);
 }
@@ -1070,13 +1086,15 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     if (spec->enable_rdma && cmd->index > 0) {
         NIC_LOG_INFO("{}: Multi-lif not supported on RDMA enabled device",
             spec->name);
-        lif_id = 0;
+        lif_id = lif_base;
+        comp->hw_index = 0;
     } else {
         if (cmd->index >= spec->lif_count) {
             NIC_LOG_ERR("{}: bad lif index {}", spec->name, cmd->index);
             return (IONIC_RC_ERROR);
         }
         lif_id = lif_base + cmd->index;
+        comp->hw_index = cmd->index;
     }
 
     auto it = lif_map.find(lif_id);
@@ -1096,15 +1114,13 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("LifInit: {}: active_lif_ref_cnt: {}", spec->name, active_lif_ref_cnt);
 
     if (spec->uplink_port_num == 0) {
-        port_info->status = {
-            .id = 0,
-            .speed = 1000,
-            .status = 1,
-        };
+        port_status->id = 0;
+        port_status->speed = 1000;
+        port_status->status = 1;
     } else {
         // Update port config
         rs = dev_api->port_get_config(spec->uplink_port_num,
-                (port_config_t *)&port_info->config);
+                (port_config_t *)port_config);
         if (rs != SDK_RET_OK) {
             NIC_LOG_ERR("{}: Unable to get port config {}", spec->name, lif_id);
             return (IONIC_RC_ERROR);
@@ -1112,7 +1128,7 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 
         // Update port status
         rs = dev_api->port_get_status(spec->uplink_port_num,
-                (port_status_t *)&port_info->status);
+                (port_status_t *)port_status);
         if (rs != SDK_RET_OK) {
             NIC_LOG_ERR("{}: Unable to get port status {}", spec->name, lif_id);
             return (IONIC_RC_ERROR);
@@ -1120,28 +1136,37 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
     };
 
     // TODO: Workaround for linkmgr not setting port id
-    port_info->status.id = spec->uplink_port_num;
+    port_status->id = spec->uplink_port_num;
 
-    // Update port info
-    WRITE_MEM(port_info_addr + offsetof(struct port_info, config),
-                (uint8_t *)&port_info->config, sizeof(union port_config), 0);
-
-    WRITE_MEM(port_info_addr + offsetof(struct port_info, status),
-                (uint8_t *)&port_info->status, sizeof(struct port_status), 0);
-
-    if (host_port_info_addr) {
+    if (host_port_config_addr) {
         eth_lif->EdmaProxy(
             spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
-            port_info_addr, host_port_info_addr,
-            sizeof(union port_config) + sizeof(struct port_status),
+            port_config_addr,
+            host_port_config_addr,
+            sizeof(union port_config),
             NULL
         );
     }
 
-    // Update link status
-    eth_lif->LinkEventHandler((port_status_t *)&port_info->status);
+    if (host_port_status_addr) {
+        eth_lif->EdmaProxy(
+            spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+            port_status_addr,
+            host_port_status_addr,
+            sizeof(struct port_status),
+            NULL
+        );
+    }
 
-    comp->hw_index = lif_id;
+    // Assume: Port init is done already
+    if (spec->uplink_port_num != 9) {
+        // starts a non-repeating timer to update stats. the timer is reset when
+        // stats update is complete.
+        evutil_timer_start(EV_A_ &stats_timer, &Eth::StatsUpdate, this, 0.0, 0.2);
+    }
+
+    // Update link status
+    eth_lif->LinkEventHandler((port_status_t *)port_status);
 
     // Assumption that we will allow host to send cmds on host lifs only after
     // mgmt mnic is INITed
@@ -1171,7 +1196,7 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
     if (spec->enable_rdma && cmd->index > 0) {
         NIC_LOG_INFO("{}: Multi-lif not supported on RDMA enabled device",
             spec->name);
-        lif_id = 0;
+        lif_id = lif_base;
     } else {
         if (cmd->index >= spec->lif_count) {
             NIC_LOG_ERR("{}: bad lif index {}", spec->name, cmd->index);
@@ -1232,7 +1257,10 @@ Eth::StatsUpdate(void *obj)
     Eth *eth = (Eth *)obj;
     EthLif *eth_lif = NULL;
 
-    auto it = eth->lif_map.find(0);
+    // TODO: Debug DMA failure
+    return;
+
+    auto it = eth->lif_map.find(eth->lif_base);
     if (it == eth->lif_map.cend()) {
         NIC_FUNC_ERR("{}: Unable to find lif {}", eth->spec->name, 0);
         return;
@@ -1249,7 +1277,7 @@ Eth::StatsUpdate(void *obj)
             eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
             eth->port_stats_addr,
             eth->host_port_stats_addr,
-            sizeof(struct port_stats),
+            712, //sizeof(struct port_stats),
             &ctx
         );
     }

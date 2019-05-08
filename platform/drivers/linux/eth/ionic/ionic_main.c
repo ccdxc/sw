@@ -128,6 +128,10 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 		return "CMD_OPCODE_RDMA_CREATE_CQ";
 	case CMD_OPCODE_RDMA_CREATE_ADMINQ:
 		return "CMD_OPCODE_RDMA_CREATE_ADMINQ";
+	case CMD_OPCODE_FW_DOWNLOAD:
+		return "CMD_OPCODE_FW_DOWNLOAD";
+	case CMD_OPCODE_FW_CONTROL:
+		return "CMD_OPCODE_FW_CONTROL";
 	default:
 		return "DEVCMD_UNKNOWN";
 	}

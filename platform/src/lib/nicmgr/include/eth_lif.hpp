@@ -35,7 +35,6 @@ enum eth_hw_qtype {
 #define IONIC_IFNAMSIZ  16
 
 #define BIT_MASK(n)                     ((1ULL << n) - 1)
-#define HOST_ADDR(lif, addr)            ((1ULL << 63) | (lif << 52) | (addr))
 
 #define LG2_LIF_STATS_SIZE              10
 #define LIF_STATS_SIZE                  (1 << LG2_LIF_STATS_SIZE)
@@ -62,6 +61,9 @@ enum eth_hw_qtype {
 
 #define RSS_HASH_KEY_SIZE	40
 #define RSS_IND_TBL_SIZE	128
+
+#define FW_MAX_SZ           ((900 << 20))       // 900 MiB
+#define FW_FILEPATH         "/update/firmware.tar"
 
 /**
  * LIF Resource structure
@@ -139,19 +141,27 @@ private:
     // Spec
     const struct eth_devspec *spec;
     struct queue_info qinfo[NUM_QUEUE_TYPES];
-    // Stats
-    uint64_t lif_stats_addr;
-    uint64_t host_lif_stats_addr;
+    // Config
+    union lif_config *lif_config;
+    uint64_t lif_config_addr;
+    uint64_t host_lif_config_addr;
     // Status
     struct lif_status *lif_status;
     uint64_t lif_status_addr;
     uint64_t host_lif_status_addr;
+    // Stats
+    uint64_t lif_stats_addr;
+    uint64_t host_lif_stats_addr;
     // NotifyQ
     uint16_t notify_ring_head;
     uint64_t notify_ring_base;
     uint8_t notify_enabled;
     // EdmaQ
-    uint64_t edma_buf_base;
+    uint64_t edma_buf_addr;
+    // Firmware
+    uint64_t fw_buf_addr;
+    uint32_t fw_buf_size;
+    uint8_t *fw_buf;
     // RSS config
     uint16_t rss_type;
     uint8_t  rss_key[RSS_HASH_KEY_SIZE]; // 40B
@@ -196,6 +206,9 @@ private:
     status_code_t _CmdRDMACreateCQ(void *req, void *req_data, void *resp, void *resp_data);
     status_code_t _CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_data);
 
+    status_code_t _CmdFwDownload(void *req, void *req_data, void *resp, void *resp_data);
+    status_code_t _CmdFwControl(void *req, void *req_data, void *resp, void *resp_data);
+
     // Callbacks
     static void StatsUpdate(void *obj);
     static void StatsUpdateComplete(void *obj);
@@ -209,4 +222,4 @@ private:
     const char *opcode_to_str(cmd_opcode_t opcode);
 };
 
-#endif   /* __ETH_LIF_HPP__*/
+#endif   /* __ETH_LIF_HPP__ */

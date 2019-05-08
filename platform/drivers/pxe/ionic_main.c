@@ -194,18 +194,22 @@ void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem)
 		comp->words[i] = readl(&idev->dev_cmd->comp.words[i]);
 }
 
-int ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
+int ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
 					   unsigned int lif_index, unsigned long max_seconds)
 {
+	struct queue *q = &qcq->q;
+	struct cq *cq = &qcq->cq;
+
 	union dev_cmd cmd = {
 		.q_init.opcode = CMD_OPCODE_Q_INIT,
 		.q_init.lif_index = lif_index,
-		.q_init.type = adminq->type,
-		.q_init.index = adminq->index,
+		.q_init.type = q->type,
+		.q_init.index = q->index,
 		.q_init.flags = IONIC_QINIT_F_ENA,
-		.q_init.pid = adminq->pid,
-		.q_init.ring_size = ilog2(adminq->num_descs),
-		.q_init.ring_base = adminq->base_pa,
+		.q_init.pid = q->pid,
+		.q_init.ring_size = ilog2(q->num_descs),
+		.q_init.ring_base = q->base_pa,
+		.q_init.cq_ring_base = cq->base_pa,
 	};
 
 	return ionic_dev_cmd_go(idev, &cmd, max_seconds);
@@ -612,7 +616,7 @@ static int ionic_qcqs_alloc(struct lif *lif)
 	int err = -ENOMEM;
 
 	pid = 0;
-	flags = QCQ_F_INTR;
+	flags = 0;
 	err = ionic_qcq_alloc(lif, IONIC_QTYPE_ADMINQ, 0, "admin", flags,
 						  1 << 4,
 						  sizeof(struct admin_cmd),
@@ -621,7 +625,7 @@ static int ionic_qcqs_alloc(struct lif *lif)
 	if (err)
 		goto err_free_adminqcq;
 
-	flags = QCQ_F_INTR | QCQ_F_NOTIFYQ;
+	flags = QCQ_F_NOTIFYQ;
 	err = ionic_qcq_alloc(lif, IONIC_QTYPE_NOTIFYQ, 0, "notifyq", flags,
 						  NOTIFYQ_LENGTH,
 						  sizeof(struct notifyq_cmd),
@@ -630,17 +634,16 @@ static int ionic_qcqs_alloc(struct lif *lif)
 	if (err)
 		goto err_free_notifyqcq;
 
-	flags = QCQ_F_TX_STATS | QCQ_F_INTR | QCQ_F_SG;
+	flags = QCQ_F_TX_STATS;
 	err = ionic_qcq_alloc(lif, IONIC_QTYPE_TXQ, 0, "tx", flags,
 						  NTXQ_DESC,
 						  sizeof(struct txq_desc),
 						  sizeof(struct txq_comp),
-						  sizeof(struct txq_sg_desc),
-						  pid, &lif->txqcqs);
+						  0, pid, &lif->txqcqs);
 	if (err)
 		goto err_free_txqcq;
 
-	flags = QCQ_F_RX_STATS | QCQ_F_INTR;
+	flags = QCQ_F_RX_STATS;
 	err = ionic_qcq_alloc(lif, IONIC_QTYPE_RXQ, 0, "rx", flags,
 						  NRXQ_DESC,
 						  sizeof(struct rxq_desc),
@@ -730,7 +733,7 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	struct q_init_comp comp;
 	int err;
 
-	err = ionic_dev_cmd_adminq_init(idev, q, lif->index, devcmd_timeout);
+	err = ionic_dev_cmd_adminq_init(idev, qcq, lif->index, devcmd_timeout);
 	if (err) {
 		DBG2("%s :: lif adminq initiation failed\n", __FUNCTION__);
 		return err;
@@ -800,7 +803,6 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 	switch (opcode) {
 	case CMD_OPCODE_NOP:
 		return "CMD_OPCODE_NOP";
-
 	case CMD_OPCODE_IDENTIFY:
 		return "CMD_OPCODE_IDENTIFY";
 	case CMD_OPCODE_INIT:
@@ -811,7 +813,6 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 		return "CMD_OPCODE_GETATTR";
 	case CMD_OPCODE_SETATTR:
 		return "CMD_OPCODE_SETATTR";
-
 	case CMD_OPCODE_PORT_IDENTIFY:
 		return "CMD_OPCODE_PORT_IDENTIFY";
 	case CMD_OPCODE_PORT_INIT:
@@ -822,7 +823,6 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 		return "CMD_OPCODE_PORT_GETATTR";
 	case CMD_OPCODE_PORT_SETATTR:
 		return "CMD_OPCODE_PORT_SETATTR";
-
 	case CMD_OPCODE_LIF_IDENTIFY:
 		return "CMD_OPCODE_LIF_IDENTIFY";
 	case CMD_OPCODE_LIF_INIT:
@@ -833,19 +833,16 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 		return "CMD_OPCODE_LIF_GETATTR";
 	case CMD_OPCODE_LIF_SETATTR:
 		return "CMD_OPCODE_LIF_SETATTR";
-
 	case CMD_OPCODE_RX_MODE_SET:
 		return "CMD_OPCODE_RX_MODE_SET";
 	case CMD_OPCODE_RX_FILTER_ADD:
 		return "CMD_OPCODE_RX_FILTER_ADD";
 	case CMD_OPCODE_RX_FILTER_DEL:
 		return "CMD_OPCODE_RX_FILTER_DEL";
-
 	case CMD_OPCODE_Q_INIT:
 		return "CMD_OPCODE_Q_INIT";
 	case CMD_OPCODE_Q_CONTROL:
 		return "CMD_OPCODE_Q_CONTROL";
-
 	case CMD_OPCODE_RDMA_RESET_LIF:
 		return "CMD_OPCODE_RDMA_RESET_LIF";
 	case CMD_OPCODE_RDMA_CREATE_EQ:
@@ -854,7 +851,6 @@ static const char *ionic_opcode_to_str(enum cmd_opcode opcode)
 		return "CMD_OPCODE_RDMA_CREATE_CQ";
 	case CMD_OPCODE_RDMA_CREATE_ADMINQ:
 		return "CMD_OPCODE_RDMA_CREATE_ADMINQ";
-
 	case CMD_OPCODE_FW_DOWNLOAD:
 		return "CMD_OPCODE_FW_DOWNLOAD";
 	case CMD_OPCODE_FW_CONTROL:
@@ -978,6 +974,7 @@ static int ionic_lif_notifyq_init(struct lif *lif, struct qcq *qcq)
 static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 {
 	struct queue *q = &qcq->q;
+	struct cq *cq = &qcq->cq;
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct ionic_admin_ctx ctx = {
 		.cmd.q_init = {
@@ -989,6 +986,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 			.pid = q->pid,
 			.ring_size = ilog2(q->num_descs),
 			.ring_base = q->base_pa,
+			.cq_ring_base = cq->base_pa,
 		},
 	};
 
@@ -1009,6 +1007,7 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 {
 	struct queue *q = &qcq->q;
+	struct cq *cq = &qcq->cq;
 	struct ionic_dev *idev = &lif->ionic->idev;
 	struct ionic_admin_ctx ctx = {
 		.cmd.q_init = {
@@ -1020,6 +1019,7 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 			.pid = q->pid,
 			.ring_size = ilog2(q->num_descs),
 			.ring_base = q->base_pa,
+			.cq_ring_base = cq->base_pa,
 		},
 	};
 

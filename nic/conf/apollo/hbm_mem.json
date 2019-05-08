@@ -70,6 +70,10 @@
             "size" : "32768K"
         },
         {
+            "name": "fwupdate",
+            "size": "128K"
+        },
+        {
             "name": "lif_stats",
             "size": "1024K",
             "reset": true

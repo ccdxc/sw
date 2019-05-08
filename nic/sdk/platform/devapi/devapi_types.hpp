@@ -102,7 +102,7 @@ typedef struct port_status_s {
     uint32_t       id;
     uint32_t       speed;
     uint8_t        status;
-    uint8_t        rsvd[55];
+    uint8_t        rsvd[51];
     xcvr_status_t  xcvr;
 } __PACK__ port_status_t;
 

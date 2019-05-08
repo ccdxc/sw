@@ -38,7 +38,7 @@
 #include "adminq.hpp"
 #include "edmaq.hpp"
 
-// struct ev_loop * EthLif::loop = NULL;
+#define HOST_ADDR(lif, addr)            ((1ULL << 63) | (lif << 52) | (addr))
 
 // ----------------------------------------------------------------------------
 // Mac address to string
@@ -108,6 +108,8 @@ EthLif::opcode_to_str(cmd_opcode_t opcode)
         CASE(CMD_OPCODE_RDMA_CREATE_EQ);
         CASE(CMD_OPCODE_RDMA_CREATE_CQ);
         CASE(CMD_OPCODE_RDMA_CREATE_ADMINQ);
+        CASE(CMD_OPCODE_FW_DOWNLOAD);
+        CASE(CMD_OPCODE_FW_CONTROL);
         default: return "ADMINCMD_UNKNOWN";
     }
 }
@@ -199,9 +201,9 @@ EthLif::EthLif(devapi *dev_api,
                  spec->uplink_port_num);
 
     // Stats
-    lif_stats_addr = pd->mem_start_addr(MEM_REGION_LIF_STATS_NAME);
-    if (lif_stats_addr == INVALID_MEM_ADDRESS) {
-        NIC_LOG_ERR("{}: Failed to allocate stats region",
+    lif_stats_addr = pd->mp_->start_addr(MEM_REGION_LIF_STATS_NAME);
+    if (lif_stats_addr == INVALID_MEM_ADDRESS || lif_stats_addr == 0) {
+        NIC_LOG_ERR("{}: Failed to locate stats region",
             hal_lif_info_.name);
         throw;
     }
@@ -221,21 +223,33 @@ EthLif::EthLif(devapi *dev_api,
     }
 #endif
 
+    // Lif Config
+    lif_config_addr = pd->nicmgr_mem_alloc(sizeof(union lif_config));
+    host_lif_config_addr = 0;
+    lif_config = (union lif_config *)MEM_MAP(lif_config_addr,
+                                        sizeof(union lif_config), 0);
+    if (lif_config == NULL) {
+        NIC_LOG_ERR("{}: Failed to map lif config!", hal_lif_info_.name);
+        throw;
+    }
+    memset(lif_config, 0, sizeof(union lif_config));
+
+    NIC_LOG_INFO("{}: lif_config_addr {:#x}", hal_lif_info_.name,
+        lif_config_addr);
+
     // Lif Status
     lif_status_addr = pd->nicmgr_mem_alloc(sizeof(struct lif_status));
     host_lif_status_addr = 0;
-    // TODO: mmap instead of calloc
-    lif_status = (struct lif_status *)calloc(1, sizeof(struct lif_status));
-    // lif_status = (struct lif_status *)pal_mem_map(lif_status_addr, sizeof(struct lif_status), 0);
+    lif_status = (struct lif_status *)MEM_MAP(lif_status_addr,
+                                        sizeof(struct lif_status), 0);
     if (lif_status == NULL) {
-        NIC_LOG_ERR("{}: Failed to map notify block!", hal_lif_info_.name);
+        NIC_LOG_ERR("{}: Failed to map lif status!", hal_lif_info_.name);
         throw;
     }
-    MEM_SET(lif_status_addr, 0, sizeof(struct lif_status), 0);
-    // memset(lif_status, 0, sizeof(struct lif_status));
+    memset(lif_status, 0, sizeof(struct lif_status));
 
-    NIC_LOG_INFO("{}: lif_status_addr {:#x}",
-        hal_lif_info_.name, lif_status_addr);
+    NIC_LOG_INFO("{}: lif_status_addr {:#x}", hal_lif_info_.name,
+        lif_status_addr);
 
     // NotifyQ
     notify_enabled = 0;
@@ -251,14 +265,14 @@ EthLif::EthLif(devapi *dev_api,
     NIC_LOG_INFO("{}: notify_ring_base {:#x}", hal_lif_info_.name, notify_ring_base);
 
     // EdmaQ
-    edma_buf_base = pd->nicmgr_mem_alloc(4096);
-    if (edma_buf_base == 0) {
+    edma_buf_addr = pd->nicmgr_mem_alloc(4096);
+    if (edma_buf_addr == 0) {
         NIC_LOG_ERR("{}: Failed to allocate edma buffer!",
             hal_lif_info_.name);
         throw;
     }
 
-    NIC_LOG_INFO("{}: edma_buf_base {:#x}", hal_lif_info_.name, edma_buf_base);
+    NIC_LOG_INFO("{}: edma_buf_addr {:#x}", hal_lif_info_.name, edma_buf_addr);
 
     edmaq = new EdmaQ(
         hal_lif_info_.name,
@@ -267,6 +281,7 @@ EthLif::EthLif(devapi *dev_api,
         ETH_EDMAQ_QTYPE, ETH_EDMAQ_QID, ETH_EDMAQ_RING_SIZE, EV_A
     );
 
+    // AdminQ
     adminq = new AdminQ(hal_lif_info_.name,
         pd,
         hal_lif_info_.lif_id,
@@ -274,6 +289,30 @@ EthLif::EthLif(devapi *dev_api,
         ETH_ADMINQ_RESP_QTYPE, ETH_ADMINQ_RESP_QID, ETH_ADMINQ_RESP_RING_SIZE,
         AdminCmdHandler, this, EV_A
     );
+
+    // Firmware Update
+    fw_buf_addr = pd->mp_->start_addr(MEM_REGION_FWUPDATE_NAME);
+    if (fw_buf_addr == INVALID_MEM_ADDRESS || fw_buf_addr == 0) {
+        NIC_LOG_ERR("{}: Failed to locate fwupdate region base",
+            hal_lif_info_.name);
+        throw;
+    }
+
+    fw_buf_size = pd->mp_->size(MEM_REGION_FWUPDATE_NAME);
+    if (fw_buf_size == 0) {
+        NIC_LOG_ERR("{}: Failed to locate fwupdate region size",
+            hal_lif_info_.name);
+    };
+
+    NIC_LOG_INFO("{}: fw_buf_addr {:#x} fw_buf_size {}", hal_lif_info_.name,
+        fw_buf_addr, fw_buf_size);
+
+    // TODO: enhance mpartition library to get region size
+    fw_buf = (uint8_t *)MEM_MAP(fw_buf_addr, fw_buf_size, 0);
+    if (fw_buf == NULL) {
+        NIC_LOG_ERR("{}: Failed to map firmware buffer", hal_lif_info_.name);
+        throw;
+    };
 
     state = LIF_STATE_CREATED;
     active_q_ref_cnt = 0;
@@ -413,6 +452,13 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     }
 
     if (cmd->info_pa) {
+        NIC_LOG_INFO("{}: host_lif_info_addr {:#x}",
+                    hal_lif_info_.name, cmd->info_pa);
+
+        host_lif_config_addr = cmd->info_pa + offsetof(struct lif_info, config);
+        NIC_LOG_INFO("{}: host_lif_config_addr {:#x}",
+                    hal_lif_info_.name, host_lif_config_addr);
+
         host_lif_status_addr = cmd->info_pa + offsetof(struct lif_info, status);
         NIC_LOG_INFO("{}: host_lif_status_addr {:#x}",
                     hal_lif_info_.name, host_lif_status_addr);
@@ -423,7 +469,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
         // starts a non-repeating timer to update stats. the timer is reset when
         // stats update is complete.
-        evutil_timer_start(EV_A_ &stats_timer, &EthLif::StatsUpdate, this, 0.2, 0.0);
+        evutil_timer_start(EV_A_ &stats_timer, &EthLif::StatsUpdate, this, 0.2, 0.2);
     }
 
     // Init the status block
@@ -610,112 +656,6 @@ EthLif::EdmaProxy(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
     return edmaq->Post(opcode, from, to, size, ctx);
 }
 
-status_code_t
-EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
-{
-    int64_t addr, nicmgr_qstate_addr;
-    struct q_init_cmd *cmd = (struct q_init_cmd *)req;
-    struct q_init_comp *comp = (struct q_init_comp *)resp;
-
-    NIC_LOG_DEBUG("{}: {}: "
-        "type {} index {} ring_base {:#x} ring_size {} intr_index {} flags {}{}",
-        hal_lif_info_.name,
-        opcode_to_str((cmd_opcode_t)cmd->opcode),
-        cmd->type,
-        cmd->index,
-        cmd->ring_base,
-        cmd->ring_size,
-        cmd->intr_index,
-        (cmd->flags & IONIC_QINIT_F_IRQ) ? 'I' : '-',
-        (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
-
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
-        NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
-        return (IONIC_RC_ERROR);
-    }
-
-    if (cmd->index >= spec->adminq_count) {
-        NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, cmd->index);
-        return (IONIC_RC_EQID);
-    }
-
-    if ((cmd->flags & IONIC_QINIT_F_IRQ) && cmd->intr_index >= spec->intr_count) {
-        NIC_LOG_ERR("{}: bad intr {}", hal_lif_info_.name, cmd->intr_index);
-        return (IONIC_RC_ERROR);
-    }
-
-    if (cmd->ring_size < 2 || cmd->ring_size > 16) {
-        NIC_LOG_ERR("{}: bad ring size {}", hal_lif_info_.name, cmd->ring_size);
-        return (IONIC_RC_ERROR);
-    }
-
-    if (cmd->ring_base & ~BIT_MASK(52)) {
-        NIC_LOG_ERR("{}: bad ring base {:#x}", hal_lif_info_.name, cmd->ring_base);
-        return (IONIC_RC_EINVAL);
-    }
-
-    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_ADMIN,
-                cmd->index);
-    if (addr < 0) {
-        NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
-            hal_lif_info_.name, cmd->index);
-        return (IONIC_RC_ERROR);
-    }
-
-    nicmgr_qstate_addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id,
-        ETH_ADMINQ_REQ_QTYPE, ETH_ADMINQ_REQ_QID);
-    if (nicmgr_qstate_addr < 0) {
-        NIC_LOG_ERR("{}: Failed to get request qstate address for ADMIN qid {}",
-            hal_lif_info_.name, cmd->index);
-        return (IONIC_RC_ERROR);
-    }
-
-    uint8_t off;
-    admin_qstate_t qstate = {0};
-    if (pd->get_pc_offset("txdma_stage0.bin", "adminq_stage0", &off, NULL) < 0) {
-        NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: adminq_stage0");
-        return (IONIC_RC_ERROR);
-    }
-    qstate.pc_offset = off;
-    qstate.cos_sel = 0;
-    qstate.cosA = ctl_cosA;
-    qstate.cosB = ctl_cosB;
-    qstate.host = 1;
-    qstate.total = 1;
-    qstate.pid = cmd->pid;
-    qstate.p_index0 = 0;
-    qstate.c_index0 = 0;
-    qstate.comp_index = 0;
-    qstate.ci_fetch = 0;
-    qstate.sta.color = 1;
-    qstate.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
-    qstate.cfg.intr_enable = (cmd->flags & IONIC_QINIT_F_IRQ) ? 1 : 0;
-    qstate.cfg.host_queue = spec->host_dev;
-    if (spec->host_dev) {
-        qstate.ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->ring_base);
-        qstate.cq_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->cq_ring_base);
-    } else {
-        qstate.ring_base = cmd->ring_base;
-        qstate.cq_ring_base = cmd->cq_ring_base;
-    }
-    qstate.ring_size = cmd->ring_size;
-    if (cmd->flags & IONIC_QINIT_F_IRQ)
-        qstate.intr_assert_index = res->intr_base + cmd->intr_index;
-    qstate.nicmgr_qstate_addr = nicmgr_qstate_addr;
-
-    WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
-
-    PAL_barrier();
-    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
-
-    comp->hw_index = cmd->index;
-    comp->hw_type = ETH_HW_QTYPE_ADMIN;
-
-    NIC_LOG_DEBUG("{}: qid {} qtype {}", hal_lif_info_.name, comp->hw_index, comp->hw_type);
-
-    return (IONIC_RC_SUCCESS);
-}
-
 void
 EthLif::AdminCmdHandler(void *obj,
     void *req, void *req_data, void *resp, void *resp_data)
@@ -785,6 +725,14 @@ EthLif::CmdHandler(void *req, void *req_data,
         status = _CmdRDMACreateAdminQ(req, req_data, resp, resp_data);
         break;
 
+    case CMD_OPCODE_FW_DOWNLOAD:
+        status = _CmdFwDownload(req, req_data, resp, resp_data);
+        break;
+
+    case CMD_OPCODE_FW_CONTROL:
+        status = _CmdFwControl(req, req_data, resp, resp_data);
+        break;
+
     default:
         NIC_LOG_ERR("{}: Unknown Opcode {}", hal_lif_info_.name, cmd->cmd.opcode);
         status = IONIC_RC_EOPCODE;
@@ -805,6 +753,146 @@ EthLif::CmdProxyHandler(void *req, void *req_data,
 {
     // Allow all commands to be proxied for now
     return CmdHandler(req, req_data, resp, resp_data);
+}
+
+status_code_t
+EthLif::_CmdFwDownload(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct fw_download_cmd *cmd = (struct fw_download_cmd *)req;
+    FILE *file;
+    int err;
+    status_code_t status = IONIC_RC_SUCCESS;
+    uint32_t transfer_off = 0, transfer_sz = 0;
+    bool posted = false;
+
+    NIC_LOG_INFO("{}: {} addr {:#x} offset {:#x} length {}",
+        hal_lif_info_.name,
+        opcode_to_str((cmd_opcode_t)cmd->opcode),
+        cmd->addr, cmd->offset, cmd->length);
+
+    if (cmd->addr == 0) {
+        NIC_LOG_ERR("{}: Invalid chunk address {:#x}!",
+            hal_lif_info_.name, cmd->addr);
+        return (IONIC_RC_EINVAL);
+    }
+
+    if (cmd->addr & ~BIT_MASK(52)) {
+        NIC_LOG_ERR("{}: bad addr {:#x}", hal_lif_info_.name, cmd->addr);
+        return (IONIC_RC_EINVAL);
+    }
+
+    if (cmd->offset + cmd->length > FW_MAX_SZ) {
+        NIC_LOG_ERR("{}: Invalid chunk offset {} or length {}!",
+            hal_lif_info_.name, cmd->offset, cmd->length);
+        return (IONIC_RC_EINVAL);
+    }
+
+    struct edmaq_ctx ctx = {
+        .cb = NULL,
+        .obj = edmaq
+    };
+
+    while (transfer_off < cmd->length) {
+        transfer_sz = min(cmd->length - transfer_off, EDMAQ_MAX_TRANSFER_SZ);
+        posted = edmaq->Post(
+            spec->host_dev ? EDMA_OPCODE_HOST_TO_LOCAL : EDMA_OPCODE_LOCAL_TO_LOCAL,
+            cmd->addr + transfer_off,
+            fw_buf_addr + transfer_off,
+            transfer_sz,
+            &ctx
+        );
+        if (posted) {
+            // NIC_LOG_INFO("{}: Queued transfer offset {:#x} size {} src {:#x} dst {:#x}",
+            //     hal_lif_info_.name, transfer_off, transfer_sz,
+            //     cmd->addr + transfer_off, fw_buf_addr + transfer_off);
+            transfer_off += transfer_sz;
+        } else {
+            NIC_LOG_INFO("{}: Waiting for transfers to complete ...",
+                hal_lif_info_.name);
+            usleep(1000);
+        }
+        // Check for completions
+        EdmaQ::Poll(edmaq);
+    };
+
+    /* cleanup update partition before starting download */
+    if (cmd->offset == 0) {
+        system("rm -r /update/*");
+    }
+
+    file = fopen(FW_FILEPATH, "ab+");
+    if (file == NULL) {
+        NIC_LOG_ERR("{}: Failed to open firmware file", hal_lif_info_.name);
+        status = IONIC_RC_EIO;
+        goto err_out;
+    }
+
+    err = fseek(file, cmd->offset, SEEK_SET);
+    if (err) {
+        NIC_LOG_ERR("{}: Failed to seek offset {}, {}", hal_lif_info_.name,
+            cmd->offset, strerror(errno));
+        status = IONIC_RC_EIO;
+        goto err_out;
+    }
+
+    err = fwrite((const void *)fw_buf, sizeof(fw_buf[0]), cmd->length, file);
+    if (err != (int)cmd->length) {
+        NIC_LOG_ERR("{}: Failed to write chunk, {}", hal_lif_info_.name,
+            strerror(errno));
+        status = IONIC_RC_EIO;
+        goto err_out;
+    }
+
+err_out:
+    fclose(file);
+
+    return (status);
+}
+
+status_code_t
+EthLif::_CmdFwControl(void *req, void *req_data, void *resp, void *resp_data)
+{
+    struct fw_control_cmd *cmd = (struct fw_control_cmd *)req;
+    status_code_t status = IONIC_RC_SUCCESS;
+    int err;
+    char buf[512] = {0};
+
+    switch (cmd->oper) {
+
+    case IONIC_FW_RESET:
+        NIC_LOG_INFO("{}: IONIC_FW_RESET", hal_lif_info_.name);
+        break;
+
+    case IONIC_FW_INSTALL:
+        NIC_LOG_INFO("{}: IONIC_FW_INSTALL starting", hal_lif_info_.name);
+        snprintf(buf, sizeof(buf), "/nic/tools/fwupdate -p %s -i all",
+            FW_FILEPATH);
+        err = system(buf);
+        if (err) {
+            NIC_LOG_ERR("{}: Failed to install firmware", hal_lif_info_.name);
+            status = IONIC_RC_ERROR;
+        }
+        //remove(FW_FILEPATH);
+        NIC_LOG_INFO("{}: IONIC_FW_INSTALL done!", hal_lif_info_.name);
+        break;
+
+    case IONIC_FW_ACTIVATE:
+        NIC_LOG_INFO("{}: IONIC_FW_ACTIVATE starting", hal_lif_info_.name);
+        err = system("/nic/tools/fwupdate -s altfw");
+        if (err) {
+            NIC_LOG_ERR("{}: Failed to activate firmware", hal_lif_info_.name);
+            status = IONIC_RC_ERROR;
+        }
+        NIC_LOG_INFO("{}: IONIC_FW_ACTIVATE done!", hal_lif_info_.name);
+        break;
+
+    default:
+        NIC_LOG_ERR("{}: Unknown operation {}", hal_lif_info_.name, cmd->oper);
+        status = IONIC_RC_EOPCODE;
+        break;
+    }
+
+    return (status);
 }
 
 #if 0
@@ -918,13 +1006,17 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
     eth_tx_qstate_t qstate = {0};
 
     NIC_LOG_DEBUG("{}: {}: "
-        "type {} index {} cos {} ring_base {:#x} ring_size {} intr_index {} flags {}{}{}",
+        "type {} index {} cos {} "
+        "ring_base {:#x} cq_ring_base {:#x} sg_ring_base {:#x} ring_size {}"
+        " intr_index {} flags {}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,
         cmd->index,
         cmd->cos,
         cmd->ring_base,
+        cmd->cq_ring_base,
+        cmd->sg_ring_base,
         cmd->ring_size,
         cmd->intr_index,
         (cmd->flags & IONIC_QINIT_F_SG) ? 'S' : '-',
@@ -951,8 +1043,19 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (cmd->ring_base & ~BIT_MASK(52)) {
+    if (cmd->ring_base == 0 || cmd->ring_base & ~BIT_MASK(52)) {
         NIC_LOG_ERR("{}: bad ring base {:#x}", hal_lif_info_.name, cmd->ring_base);
+        return (IONIC_RC_EINVAL);
+    }
+
+    if (cmd->cq_ring_base == 0 || cmd->cq_ring_base & ~BIT_MASK(52)) {
+        NIC_LOG_ERR("{}: bad cq ring base {:#x}", hal_lif_info_.name, cmd->cq_ring_base);
+        return (IONIC_RC_EINVAL);
+    }
+
+    if ((cmd->flags & IONIC_QINIT_F_SG) &&
+        (cmd->sg_ring_base == 0 || cmd->sg_ring_base & ~BIT_MASK(52))) {
+        NIC_LOG_ERR("{}: bad sg ring base {:#x}", hal_lif_info_.name, cmd->sg_ring_base);
         return (IONIC_RC_EINVAL);
     }
 
@@ -1043,13 +1146,17 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
     eth_rx_qstate_t qstate = {0};
 
     NIC_LOG_DEBUG("{}: {}: "
-        "type {} index {} cos {} ring_base {:#x} ring_size {} intr_index {} flags {}{}{}",
+        "type {} index {} cos {} "
+        "ring_base {:#x} cq_ring_base {:#x} sg_ring_base {:#x} ring_size {}"
+        " intr_index {} flags {}{}{}",
         hal_lif_info_.name,
         opcode_to_str((cmd_opcode_t)cmd->opcode),
         cmd->type,
         cmd->index,
         cmd->cos,
         cmd->ring_base,
+        cmd->cq_ring_base,
+        cmd->sg_ring_base,
         cmd->ring_size,
         cmd->intr_index,
         (cmd->flags & IONIC_QINIT_F_SG) ? 'S' : '-',
@@ -1076,8 +1183,19 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (cmd->ring_base & ~BIT_MASK(52)) {
+    if (cmd->ring_base == 0 || cmd->ring_base & ~BIT_MASK(52)) {
         NIC_LOG_ERR("{}: bad ring base {:#x}", hal_lif_info_.name, cmd->ring_base);
+        return (IONIC_RC_EINVAL);
+    }
+
+    if (cmd->cq_ring_base == 0 || cmd->cq_ring_base & ~BIT_MASK(52)) {
+        NIC_LOG_ERR("{}: bad cq ring base {:#x}", hal_lif_info_.name, cmd->cq_ring_base);
+        return (IONIC_RC_EINVAL);
+    }
+
+    if ((cmd->flags & IONIC_QINIT_F_SG) &&
+        (cmd->sg_ring_base == 0 || cmd->sg_ring_base & ~BIT_MASK(52))) {
+        NIC_LOG_ERR("{}: bad sg ring base {:#x}", hal_lif_info_.name, cmd->sg_ring_base);
         return (IONIC_RC_EINVAL);
     }
 
@@ -1190,7 +1308,7 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
         return (IONIC_RC_ERROR);
     }
 
-    if (cmd->ring_base & ~BIT_MASK(52)) {
+    if (cmd->ring_base == 0 || cmd->ring_base & ~BIT_MASK(52)) {
         NIC_LOG_ERR("{}: bad ring base {:#x}", hal_lif_info_.name, cmd->ring_base);
         return (IONIC_RC_EINVAL);
     }
@@ -1270,6 +1388,117 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
         usleep(1000 * 1000);
     }
 #endif
+
+    return (IONIC_RC_SUCCESS);
+}
+
+status_code_t
+EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
+{
+    int64_t addr, nicmgr_qstate_addr;
+    struct q_init_cmd *cmd = (struct q_init_cmd *)req;
+    struct q_init_comp *comp = (struct q_init_comp *)resp;
+
+    NIC_LOG_DEBUG("{}: {}: "
+        "type {} index {} ring_base {:#x} ring_size {} intr_index {} flags {}{}",
+        hal_lif_info_.name,
+        opcode_to_str((cmd_opcode_t)cmd->opcode),
+        cmd->type,
+        cmd->index,
+        cmd->ring_base,
+        cmd->ring_size,
+        cmd->intr_index,
+        (cmd->flags & IONIC_QINIT_F_IRQ) ? 'I' : '-',
+        (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
+
+    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+        NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
+        return (IONIC_RC_ERROR);
+    }
+
+    if (cmd->index >= spec->adminq_count) {
+        NIC_LOG_ERR("{}: bad qid {}", hal_lif_info_.name, cmd->index);
+        return (IONIC_RC_EQID);
+    }
+
+    if ((cmd->flags & IONIC_QINIT_F_IRQ) && cmd->intr_index >= spec->intr_count) {
+        NIC_LOG_ERR("{}: bad intr {}", hal_lif_info_.name, cmd->intr_index);
+        return (IONIC_RC_ERROR);
+    }
+
+    if (cmd->ring_size < 2 || cmd->ring_size > 16) {
+        NIC_LOG_ERR("{}: bad ring size {}", hal_lif_info_.name, cmd->ring_size);
+        return (IONIC_RC_ERROR);
+    }
+
+    if (cmd->ring_base == 0 || cmd->ring_base & ~BIT_MASK(52)) {
+        NIC_LOG_ERR("{}: bad ring base {:#x}", hal_lif_info_.name, cmd->ring_base);
+        return (IONIC_RC_EINVAL);
+    }
+
+    if (cmd->cq_ring_base == 0 || cmd->cq_ring_base & ~BIT_MASK(52)) {
+        NIC_LOG_ERR("{}: bad cq ring base {:#x}", hal_lif_info_.name, cmd->cq_ring_base);
+        return (IONIC_RC_EINVAL);
+    }
+
+    addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id, ETH_HW_QTYPE_ADMIN,
+                cmd->index);
+    if (addr < 0) {
+        NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
+            hal_lif_info_.name, cmd->index);
+        return (IONIC_RC_ERROR);
+    }
+
+    nicmgr_qstate_addr = pd->lm_->get_lif_qstate_addr(hal_lif_info_.lif_id,
+        ETH_ADMINQ_REQ_QTYPE, ETH_ADMINQ_REQ_QID);
+    if (nicmgr_qstate_addr < 0) {
+        NIC_LOG_ERR("{}: Failed to get request qstate address for ADMIN qid {}",
+            hal_lif_info_.name, cmd->index);
+        return (IONIC_RC_ERROR);
+    }
+
+    uint8_t off;
+    admin_qstate_t qstate = {0};
+    if (pd->get_pc_offset("txdma_stage0.bin", "adminq_stage0", &off, NULL) < 0) {
+        NIC_LOG_ERR("Failed to get PC offset of program: txdma_stage0.bin label: adminq_stage0");
+        return (IONIC_RC_ERROR);
+    }
+    qstate.pc_offset = off;
+    qstate.cos_sel = 0;
+    qstate.cosA = ctl_cosA;
+    qstate.cosB = ctl_cosB;
+    qstate.host = 1;
+    qstate.total = 1;
+    qstate.pid = cmd->pid;
+    qstate.p_index0 = 0;
+    qstate.c_index0 = 0;
+    qstate.comp_index = 0;
+    qstate.ci_fetch = 0;
+    qstate.sta.color = 1;
+    qstate.cfg.enable = (cmd->flags & IONIC_QINIT_F_ENA) ? 1 : 0;
+    qstate.cfg.intr_enable = (cmd->flags & IONIC_QINIT_F_IRQ) ? 1 : 0;
+    qstate.cfg.host_queue = spec->host_dev;
+    if (spec->host_dev) {
+        qstate.ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->ring_base);
+        qstate.cq_ring_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->cq_ring_base);
+    } else {
+        qstate.ring_base = cmd->ring_base;
+        qstate.cq_ring_base = cmd->cq_ring_base;
+    }
+    qstate.ring_size = cmd->ring_size;
+    if (cmd->flags & IONIC_QINIT_F_IRQ)
+        qstate.intr_assert_index = res->intr_base + cmd->intr_index;
+    qstate.nicmgr_qstate_addr = nicmgr_qstate_addr;
+
+    WRITE_MEM(addr, (uint8_t *)&qstate, sizeof(qstate), 0);
+
+    PAL_barrier();
+    p4plus_invalidate_cache(addr, sizeof(qstate), P4PLUS_CACHE_INVALIDATE_TXDMA);
+
+    comp->hw_index = cmd->index;
+    comp->hw_type = ETH_HW_QTYPE_ADMIN;
+
+    NIC_LOG_DEBUG("{}: qid {} qtype {}", hal_lif_info_.name, comp->hw_index, comp->hw_type);
 
     return (IONIC_RC_SUCCESS);
 }
@@ -1738,7 +1967,6 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
 status_code_t
 EthLif::RssConfig(void *req, void *req_data, void *resp, void *resp_data)
 {
-    uint64_t rss_indir_base = 0;
     struct lif_setattr_cmd *cmd = (struct lif_setattr_cmd *)req;
     //struct lif_setattr_comp *comp = (struct lif_setattr_comp *)resp;
 
@@ -1750,22 +1978,16 @@ EthLif::RssConfig(void *req, void *req_data, void *resp, void *resp_data)
     rss_type = cmd->rss.types;
     memcpy(rss_key, cmd->rss.key, IONIC_RSS_HASH_KEY_SIZE);
 
-    if (spec->host_dev) {
-        rss_indir_base = HOST_ADDR(hal_lif_info_.lif_id, cmd->rss.addr);
-    } else {
-        rss_indir_base = cmd->rss.addr;
-    }
-
     // Get indirection table from host
     edmaq->Post(
         spec->host_dev ? EDMA_OPCODE_HOST_TO_LOCAL : EDMA_OPCODE_LOCAL_TO_LOCAL,
-        rss_indir_base,
-        edma_buf_base,
+        cmd->rss.addr,
+        edma_buf_addr,
         RSS_IND_TBL_SIZE,
         NULL
     );
 
-    READ_MEM(edma_buf_base, rss_indir, RSS_IND_TBL_SIZE, 0);
+    READ_MEM(edma_buf_addr, rss_indir, RSS_IND_TBL_SIZE, 0);
 
     NIC_LOG_DEBUG("{}: {}: type {:#x} key {} table {}",
         hal_lif_info_.name,
@@ -2082,8 +2304,8 @@ void
 EthLif::LinkEventHandler(port_status_t *evd)
 {
     if (spec->uplink_port_num != evd->id) {
-        NIC_LOG_WARN("{}: Uplink port number not matching status_port: {}. up_port: {}",
-                     hal_lif_info_.name, evd->id, spec->uplink_port_num);
+        // NIC_LOG_WARN("{}: Uplink port number not matching status_port: {}. up_port: {}",
+        //              hal_lif_info_.name, evd->id, spec->uplink_port_num);
         return;
     }
 

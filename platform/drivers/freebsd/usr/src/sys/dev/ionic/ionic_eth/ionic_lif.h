@@ -424,6 +424,8 @@ int ionic_set_multi(struct lif* lif);
 int ionic_set_mac(struct net_device *netdev);
 extern int ionic_lif_reinit(struct lif *lif);
 
+int ionic_firmware_update(struct lif *lif, const void *const fw_data, size_t fw_sz);
+
 extern int ionic_devcmd_timeout;
 extern int ionic_rx_stride;
 extern int ionic_tx_stride;

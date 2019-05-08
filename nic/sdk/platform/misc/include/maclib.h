@@ -26,7 +26,7 @@ static inline int is_zero_mac_addr(const mac_t *addr)
 
 static inline int is_multicast_mac_addr(const mac_t *addr)
 {
-    return (0x01 & *(const uint8_t *)addr);
+    return (0x01 & ((const uint8_t *)addr)[5]);
 }
 
 static inline int is_broadcast_mac_addr(const mac_t *addr)

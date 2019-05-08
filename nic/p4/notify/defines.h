@@ -16,7 +16,7 @@
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, \
     p_index0, c_index0, host_pindex, \
     rsvd1, \
-    enable, host_queue, intr_enable, rsvd2, \
+    enable, host_queue, intr_enable, debug, rsvd2, \
     ring_base, ring_size, \
     host_ring_base, host_ring_size, host_intr_assert_index
 
@@ -27,6 +27,7 @@
     modify_field(notify_qstate.enable, enable); \
     modify_field(notify_qstate.host_queue, host_queue); \
     modify_field(notify_qstate.intr_enable, intr_enable); \
+    modify_field(notify_qstate.debug, debug); \
     modify_field(notify_qstate.rsvd2, rsvd2); \
     modify_field(notify_qstate.ring_base, ring_base); \
     modify_field(notify_qstate.ring_size, ring_size); \

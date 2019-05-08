@@ -6,6 +6,10 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <boost/lexical_cast.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 #include "nic/include/adminq.h"
 #include "nic/include/edmaq.h"
 #include "nic/include/eth_common.h"
@@ -19,7 +23,6 @@
 
 #include "third-party/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
-
 
 typedef struct {
     uint64_t base;
@@ -455,7 +458,7 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                    "host=0x%0x\ntotal=0x%0x\n"
                    "pid=0x%0x\n"
                    "p_index0=0x%0x\nc_index0=0x%0x\nhost_pindex=0x%0x\n"
-                   "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\n"
+                   "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                    "ring_base=0x%0lx\nring_size=0x%0x\n"
                    "host_ring_base=0x%0lx\nhost_ring_size=0x%0x\nhost_intr_assert_index=0x%0x\n",
                    qstate_notifyq.pc_offset, qstate_notifyq.rsvd0, qstate_notifyq.cosA,
@@ -463,7 +466,8 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                    qstate_notifyq.host, qstate_notifyq.total, qstate_notifyq.pid,
                    qstate_notifyq.p_index0, qstate_notifyq.c_index0, qstate_notifyq.host_pindex,
                    qstate_notifyq.cfg.enable, qstate_notifyq.cfg.host_queue,
-                   qstate_notifyq.cfg.intr_enable, qstate_notifyq.ring_base,
+                   qstate_notifyq.cfg.intr_enable, qstate_notifyq.cfg.debug,
+                   qstate_notifyq.ring_base,
                    qstate_notifyq.ring_size, qstate_notifyq.host_ring_base,
                    qstate_notifyq.host_ring_size, qstate_notifyq.host_intr_assert_index);
         }
@@ -477,15 +481,15 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                    "pid=0x%0x\n"
                    "p_index0=0x%0x\nc_index0=0x%0x\ncomp_index=0x%0x\n"
                    "color=0x%0x\n"
-                   "enable=0x%0x\nintr_enable=0x%0x\n"
+                   "enable=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                    "ring_base=0x%0lx\nring_size=0x%0x\ncq_ring_base=0x%0lx\n"
                    "intr_assert_index=0x%0x\n",
                    qstate_edmaq.pc_offset, qstate_edmaq.rsvd0, qstate_edmaq.cosA,
                    qstate_edmaq.cosB, qstate_edmaq.cos_sel, qstate_edmaq.eval_last,
                    qstate_edmaq.host, qstate_edmaq.total, qstate_edmaq.pid, qstate_edmaq.p_index0,
                    qstate_edmaq.c_index0, qstate_edmaq.comp_index, qstate_edmaq.sta.color,
-                   qstate_edmaq.cfg.enable, qstate_edmaq.cfg.intr_enable, qstate_edmaq.ring_base,
-                   qstate_edmaq.ring_size, qstate_edmaq.cq_ring_base,
+                   qstate_edmaq.cfg.enable, qstate_edmaq.cfg.intr_enable, qstate_edmaq.cfg.debug,
+                   qstate_edmaq.ring_base, qstate_edmaq.ring_size, qstate_edmaq.cq_ring_base,
                    qstate_edmaq.intr_assert_index);
         }
         if (qid == 2) {
@@ -537,14 +541,82 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 }
 
 void
+eth_debug(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t enable)
+{
+    struct edma_cfg_qstate qstate_edmaq = {0};
+    struct notify_cfg_qstate qstate_notifyq = {0};
+    queue_info_t qinfo[8] = {0};
+
+    if (!get_lif_qstate(lif, qinfo)) {
+        printf("Failed to get qinfo for lif %u\n", lif);
+        return;
+    }
+
+    if (qinfo[qtype].size == 0) {
+        printf("Invalid type %u for lif %u\n", qtype, lif);
+        return;
+    }
+
+    if (qid >= qinfo[qtype].length) {
+        printf("Invalid qid %u for lif %u qtype %u\n", qid, lif, qtype);
+        return;
+    }
+
+    uint64_t addr = qinfo[qtype].base + qid * qinfo[qtype].size;
+    printf("\naddr: 0x%lx\n\n", addr);
+
+    switch (qtype) {
+        case 7:
+        if (qid == 0) {
+            sdk::lib::pal_mem_read(addr + offsetof(struct notify_qstate, cfg),
+                (uint8_t *)&qstate_notifyq, sizeof(qstate_notifyq));
+            qstate_notifyq.debug = enable;
+            sdk::lib::pal_mem_write(addr + offsetof(struct notify_qstate, cfg),
+                (uint8_t *)&qstate_notifyq, sizeof(qstate_notifyq));
+        }
+        if (qid == 1) {
+            sdk::lib::pal_mem_read(addr + offsetof(struct edma_qstate, cfg),
+                (uint8_t *)&qstate_edmaq, sizeof(qstate_edmaq));
+            qstate_edmaq.debug = enable;
+            sdk::lib::pal_mem_write(addr + offsetof(struct edma_qstate, cfg),
+                (uint8_t *)&qstate_edmaq, sizeof(qstate_edmaq));
+        }
+    }
+}
+
+void
 eth_stats(uint16_t lif)
 {
     struct lif_stats stats;
-    std::string hal_cfg_path_ = std::string(std::getenv("HAL_CONFIG_PATH")) + "/";
+
+    std::string hal_cfg_path_;
+    if (std::getenv("HAL_CONFIG_PATH") == NULL) {
+        hal_cfg_path_ = "/nic/conf";
+    } else {
+        hal_cfg_path_ = std::string(std::getenv("HAL_CONFIG_PATH"));
+    }
+
 #ifdef APOLLO
     std::string mpart_json = hal_cfg_path_ + "/apollo/hbm_mem.json";
 #else
-    std::string mpart_json = hal_cfg_path_ + "/iris/hbm_mem.json";
+    std::string mpart_json;
+    boost::property_tree::ptree spec;
+    boost::property_tree::read_json("/sysconfig/config0/device.conf", spec);
+
+    enum ForwardingMode {
+        FORWARDING_MODE_NONE       = 0,
+        FORWARDING_MODE_CLASSIC    = 1,    // classic forwarding
+        FORWARDING_MODE_HOSTPIN    = 2,    // smartnic hostpin mode
+        FORWARDING_MODE_SWITCH     = 3,    // smartnic switch mode
+    };
+
+    int fw_mode = spec.get<int>("forwarding-mode");
+    if ((fw_mode == FORWARDING_MODE_HOSTPIN) ||
+        (fw_mode == FORWARDING_MODE_SWITCH)) {
+        mpart_json = hal_cfg_path_ + "/iris/hbm_mem.json";
+    } else if (fw_mode == FORWARDING_MODE_CLASSIC) {
+        mpart_json = hal_cfg_path_ + "/iris/hbm_classic_mem.json";
+    }
 #endif
     sdk::platform::utils::mpartition *mp_ = mpartition::factory(mpart_json.c_str());
     assert(mp_);
@@ -650,41 +722,73 @@ eth_stats(uint16_t lif)
 }
 
 void
-port_info(uint64_t addr)
+port_config(uint64_t addr)
 {
-    uint8_t *buf = (uint8_t *)calloc(1, sizeof(struct port_info));
+    uint8_t *buf = (uint8_t *)calloc(1, sizeof(union port_config));
     assert(buf != NULL);
-    sdk::lib::pal_mem_read(addr, buf, sizeof(struct port_info));
-    struct port_info *info = (struct port_info *)buf;
+    sdk::lib::pal_mem_read(addr, buf, sizeof(union port_config));
+    union port_config *config = (union port_config *)buf;
 
     printf("\n");
     printf("port_config:\n");
-    printf("  speed: %u\n", info->config.speed);
-    printf("  mtu: %u\n", info->config.mtu);
-    printf("  state: %u\n", info->config.state);
-    printf("  an_enable: %u\n", info->config.an_enable);
-    printf("  fec_type: %u\n", info->config.fec_type);
-    printf("  pause_type: %u\n", info->config.pause_type);
-    printf("  loopback_mode: %u\n", info->config.loopback_mode);
+    printf("  speed: %u\n", config->speed);
+    printf("  mtu: %u\n", config->mtu);
+    printf("  state: %u\n", config->state);
+    printf("  an_enable: %u\n", config->an_enable);
+    printf("  fec_type: %u\n", config->fec_type);
+    printf("  pause_type: %u\n", config->pause_type);
+    printf("  loopback_mode: %u\n", config->loopback_mode);
+    printf("\n");
+
+    free(buf);
+}
+
+void
+port_status(uint64_t addr)
+{
+    uint8_t *buf = (uint8_t *)calloc(1, sizeof(struct port_status));
+    assert(buf != NULL);
+    sdk::lib::pal_mem_read(addr, buf, sizeof(struct port_status));
+    struct port_status *status = (struct port_status *)buf;
 
     printf("\n");
     printf("port_status:\n");
-    printf("  speed: %u\n", info->status.speed);
-    printf("  id: %u\n", info->status.id);
-    printf("  status: %u\n", info->status.status);
+    printf("  speed: %u\n", status->speed);
+    printf("  id: %u\n", status->id);
+    printf("  status: %u\n", status->status);
     printf("  xcvr:\n");
-    printf("    state: %u\n", info->status.xcvr.state);
-    printf("    phy: %u\n", info->status.xcvr.phy);
-    printf("    pid: %u\n", info->status.xcvr.pid);
+    printf("    state: %u\n", status->xcvr.state);
+    printf("    phy: %u\n", status->xcvr.phy);
+    printf("    pid: %u\n", status->xcvr.pid);
     printf("    sprom:\n");
-    for (uint32_t i = 0; i < sizeof(info->status.xcvr.sprom) / 16; i++) {
+    for (uint32_t i = 0; i < sizeof(status->xcvr.sprom) / 16; i++) {
         printf("      ");
         for (uint32_t j = 0; j < 16; j++) {
-            printf("%02x ", info->status.xcvr.sprom[(i * 16) + j]);
+            printf("%02x ", status->xcvr.sprom[(i * 16) + j]);
         }
         printf("\n");
     }
 
+    printf("\n");
+
+    free(buf);
+}
+
+void
+lif_status(uint64_t addr)
+{
+    uint8_t *buf = (uint8_t *)calloc(1, sizeof(struct lif_status));
+    assert(buf != NULL);
+    sdk::lib::pal_mem_read(addr, buf, sizeof(struct lif_status));
+    struct lif_status *status = (struct lif_status *)buf;
+
+    printf("\n");
+    printf("lif_status:\n");
+    printf("  eid: %lu\n", status->eid);
+    printf("  port_num: %u\n", status->port_num);
+    printf("  link_status: %u\n", status->link_status);
+    printf("  link_speed: %u\n", status->link_speed);
+    printf("  link_flap_count: %u\n", status->link_flap_count);
     printf("\n");
 
     free(buf);
@@ -718,6 +822,7 @@ usage()
     printf("Usage:\n");
     printf("   qinfo          <lif>\n");
     printf("   qstate         <lif> <qtype> <qid>\n");
+    printf("   debug          <lif> <qtype> <qid>\n");
     printf("   nvme_qstate    <lif> <qtype> <qid>\n");
     printf("   qpoll          <lif> <qtype>\n");
     printf("   stats          <lif>\n");
@@ -727,7 +832,9 @@ usage()
     printf("   bzero          <addr> <size_in_bytes>\n");
     printf("   find           <addr> <size_in_bytes> <pattern>\n");
     printf("   nfind          <addr> <size_in_bytes> <pattern>\n");
-    printf("   port_info      <addr>\n");
+    printf("   port_config    <addr>\n");
+    printf("   port_status    <addr>\n");
+    printf("   lif_status     <addr>\n");
     exit(1);
 }
 
@@ -762,6 +869,15 @@ main(int argc, char **argv)
         uint8_t qtype = std::strtoul(argv[3], NULL, 0);
         uint32_t qid = std::strtoul(argv[4], NULL, 0);
         eth_qstate(lif, qtype, qid);
+    } else if (strcmp(argv[1], "debug") == 0) {
+        if (argc != 6) {
+            usage();
+        }
+        uint16_t lif = std::strtoul(argv[2], NULL, 0);
+        uint8_t qtype = std::strtoul(argv[3], NULL, 0);
+        uint32_t qid = std::strtoul(argv[4], NULL, 0);
+        uint8_t enable = std::strtoul(argv[4], NULL, 0);
+        eth_debug(lif, qtype, qid, enable);
     } else if (strcmp(argv[1], "nvme_qstate") == 0) {
         if (argc != 5) {
             usage();
@@ -875,12 +991,24 @@ main(int argc, char **argv)
         }
         printf("Pattern 0x%x not found in region 0x%lx - 0x%lx\n", pattern, addr, addr + size);
         return -1;
-    } else if (strcmp(argv[1], "port_info") == 0) {
+    } else if (strcmp(argv[1], "port_config") == 0) {
         if (argc != 3) {
             usage();
         }
         uint64_t addr = strtoul(argv[2], NULL, 16);
-        port_info(addr);
+        port_config(addr);
+    } else if (strcmp(argv[1], "port_status") == 0) {
+        if (argc != 3) {
+            usage();
+        }
+        uint64_t addr = strtoul(argv[2], NULL, 16);
+        port_status(addr);
+    } else if (strcmp(argv[1], "lif_status") == 0) {
+        if (argc != 3) {
+            usage();
+        }
+        uint64_t addr = strtoul(argv[2], NULL, 16);
+        lif_status(addr);
     } else {
         usage();
     }

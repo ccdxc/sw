@@ -132,53 +132,16 @@ public:
     int p4pd_common_p4plus_rxdma_rss_params_table_entry_get(
             uint32_t hw_lif_id, eth_rx_rss_params_actiondata_t *data);
 #endif
+
     int eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type,
                         uint8_t *rss_key, uint8_t *rss_indir,
                         uint16_t num_queues);
-
-    mem_addr_t mem_start_addr(const char *region);
 
     /* RDMA routines */
     sdk_ret_t rdma_lif_init(uint32_t lif, uint32_t max_keys,
                             uint32_t max_ahs, uint32_t max_ptes,
                             uint64_t mem_bar_addr, uint32_t mem_bar_size);
 
-#if 0
-    int p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_add(
-        uint32_t idx,
-        uint8_t rdma_en_qtype_mask,
-        uint32_t pt_base_addr_page_id,
-        uint8_t log_num_pt_entries,
-        uint32_t cqcb_base_addr_hi,
-        uint32_t sqcb_base_addr_hi,
-        uint32_t rqcb_base_addr_hi,
-        uint8_t log_num_cq_entries,
-        uint32_t prefetch_pool_base_addr_page_id,
-        uint8_t log_num_prefetch_pool_entries,
-        uint8_t sq_qtype,
-        uint8_t rq_qtype,
-        uint8_t aq_qtype);
-    int p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_add(
-        uint32_t idx,
-        uint8_t rdma_en_qtype_mask,
-        uint32_t pt_base_addr_page_id,
-        uint32_t ah_base_addr_page_id,
-        uint8_t log_num_pt_entries,
-        uint32_t cqcb_base_addr_hi,
-        uint32_t sqcb_base_addr_hi,
-        uint32_t rqcb_base_addr_hi,
-        uint8_t log_num_cq_entries,
-        uint32_t prefetch_pool_base_addr_page_id,
-        uint8_t log_num_prefetch_pool_entries,
-        uint8_t sq_qtype,
-        uint8_t rq_qtype,
-        uint8_t aq_qtype,
-        uint64_t barmap_base_addr,
-        uint32_t barmap_size);
-
-    void rdma_manager_init(void);
-    uint64_t rdma_mem_alloc(uint32_t size);
-#endif
     uint64_t rdma_mem_bar_alloc(uint32_t size);
 
     void nicmgr_mem_init(void);
@@ -200,16 +163,6 @@ private:
     ~PdClient(){}
     void init(fwd_mode_t fwd_mode);
 
-#if 0
-    uint64_t rdma_hbm_base_;
-    std::unique_ptr<sdk::lib::BMAllocator> rdma_hbm_allocator_;
-    std::map<uint64_t, uint64_t> rdma_allocation_sizes_;
-
-    uint64_t rdma_hbm_bar_base_;
-    std::unique_ptr<sdk::lib::BMAllocator> rdma_hbm_bar_allocator_;
-    std::map<uint64_t, uint64_t> rdma_bar_allocation_sizes_;
-#endif
-
     rdmamgr *rdma_mgr_;
 
     uint64_t nicmgr_hbm_base_;
@@ -221,14 +174,6 @@ private:
     std::map<uint64_t, uint64_t> devcmd_allocation_sizes_;
 
     sdk::lib::indexer *intr_allocator;
-
-#if 0
-    sdk_ret_t p4pd_common_p4plus_rxdma_stage0_rdma_params_table_entry_get(
-        uint32_t idx, rx_stage0_load_rdma_params_actiondata_t *data);
-    int p4pd_common_p4plus_txdma_stage0_rdma_params_table_entry_get(
-        uint32_t idx, tx_stage0_lif_params_table_actiondata_t *data);
-#endif
-
 };
 
 #endif //__PD_CLIENT_HPP__

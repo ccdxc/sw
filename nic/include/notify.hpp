@@ -12,7 +12,8 @@ struct notify_sta_qstate {
 };
 
 struct notify_cfg_qstate {
-    uint8_t     rsvd2:5;
+    uint8_t     rsvd2:4;
+    uint8_t     debug:1;
     uint8_t     intr_enable:1;
     uint8_t     host_queue:1;
     uint8_t     enable:1;

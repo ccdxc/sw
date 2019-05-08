@@ -26,6 +26,10 @@ notify_fetch_desc:
   bcf             [c2], notify_spurious_db
   nop
 
+  seq             c7, d.debug, 1
+  phvwr.c7        p.p4_intr_global_debug_trace, 1
+  trace.c7        0x1
+
   // Compute descriptor fetch address
   add             _r_desc_addr, d.{ring_base}.dx, d.{c_index0}.hx, LG2_NOTIFY_EVENT_DESC_SIZE
 

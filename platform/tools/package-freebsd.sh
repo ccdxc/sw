@@ -142,6 +142,10 @@ sed -i "s/^\\(#define DR\\w*_VER\\w*\\s\\+\"\\).*\\(\"\\)\$/\1$VER\2/" \
 	"$GEN_DIR/sys/dev/ionic/ionic_eth/ionic.h"             \
 	"$SONIC_GEN_DIR/src/drv/linux/kernel/sonic.h"
 
+if [ -n "$FW_PACKAGE" ]; then
+  cp $TOP/nic/naples_fw.tar $GEN_DIR/sys/modules/ionic_fw/
+fi
+
 # Generate tarball of the prepared package
 cd "$GEN_DIR/.."
 tar -cJ --exclude=.git -f "$GEN_PKG" "$(basename "$GEN_DIR")"

@@ -458,6 +458,10 @@
             "size" : "32768K"
         },
         {
+            "name": "fwupdate",
+            "size": "128K"
+        },
+        {
             "name": "rdma-hbm-bar",
             "size" : "32768K",
             "cache": "p4plus-all"

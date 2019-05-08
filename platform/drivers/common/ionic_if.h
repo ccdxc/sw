@@ -383,7 +383,7 @@ union lif_config {
 		__le64 features;
 		__le32 queue_count[IONIC_QTYPE_MAX];
 	};
-	__le32 words[128];
+	__le32 words[64];
 };
 
 /**
@@ -1175,7 +1175,7 @@ struct port_status {
 	__le32 id;
 	__le32 speed;
 	u8     status;
-	u8     rsvd[55];
+	u8     rsvd[51];
 	struct xcvr_status  xcvr;
 };
 
@@ -1328,6 +1328,7 @@ struct lif_status {
 	__le16 link_status;
 	__le32 link_speed;		/* units of 1Mbps: eg 10000 = 10Gbps */
 	__le16 link_flap_count;
+	u8      rsvd2[46];
 };
 
 /**
@@ -1601,10 +1602,57 @@ struct rx_filter_del_cmd {
 	u8     rsvd;
 	__le16 lif_index;
 	__le32 filter_id;
-	__le32 rsvd2[14];
+	u8     rsvd2[56];
 };
 
 typedef struct admin_comp rx_filter_del_comp;
+
+/**
+ * struct fw_download_cmd - Firmware download command
+ * @opcode:    opcode
+ * @addr:      dma address of the firmware buffer
+ * @offset:    offset of the firmware buffer within the full image
+ * @length:    number of valid bytes in the firmware buffer
+ */
+struct fw_download_cmd {
+	u8     opcode;
+	u8     rsvd[3];
+	__le32 offset;
+	__le64 addr;
+	__le32 length;
+};
+
+typedef struct admin_comp fw_download_comp;
+
+enum fw_control_oper {
+	IONIC_FW_RESET = 0,		/* Reset firmare */
+	IONIC_FW_INSTALL = 1,	/* Install firmware */
+	IONIC_FW_ACTIVATE = 2,	/* Activate firmware */
+};
+
+/**
+ * struct fw_control_cmd - Firmware control command
+ * @opcode:    opcode
+ * @oper:      firmware control operation (enum fw_control_oper)
+ * @slot:      slot to activate
+ */
+struct fw_control_cmd {
+	u8  opcode;
+	u8  oper;
+	u8  slot;
+	u8  rsvd[61];
+};
+
+/**
+ * struct fw_control_comp - Firmware control copletion
+ * @opcode:    opcode
+ * @slot:      slot where the firmware was installed
+ */
+struct fw_control_comp {
+	u8  status;
+	u8  slot;
+	u8  rsvd[14];
+};
 
 /******************************************************************
  ******************* RDMA Commands ********************************
@@ -2045,6 +2093,7 @@ struct lif_stats {
  * struct lif_info - lif info structure
  */
 struct lif_info {
+	union lif_config config;
 	struct lif_status status;
 	struct lif_stats stats;
 };
@@ -2172,6 +2221,8 @@ union adminq_cmd {
 	struct rx_filter_del_cmd rx_filter_del;
 	struct rdma_reset_cmd rdma_reset;
 	struct rdma_queue_cmd rdma_queue;
+	struct fw_download_cmd fw_download;
+	struct fw_control_cmd fw_control;
 };
 
 union adminq_comp {
@@ -2181,6 +2232,7 @@ union adminq_comp {
 	struct lif_setattr_comp lif_setattr;
 	struct lif_getattr_comp lif_getattr;
 	struct rx_filter_add_comp rx_filter_add;
+	struct fw_control_comp fw_control;
 };
 
 #define IONIC_BARS_MAX				6

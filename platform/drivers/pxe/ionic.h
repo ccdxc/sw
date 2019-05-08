@@ -296,7 +296,7 @@ int ionic_dev_cmd_reset(struct ionic_dev *idev, unsigned long max_seconds);
 u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);
 void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
-int ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct queue *adminq,
+int ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
 				unsigned int lif_index, unsigned long max_seconds);
 unsigned int ionic_q_space_avail(struct queue *q);
 int ionic_dev_cmd_lif_reset(struct ionic_dev *idev, u32 index, unsigned long max_seconds);

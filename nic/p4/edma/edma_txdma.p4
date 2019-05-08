@@ -27,7 +27,8 @@ header_type edma_qstate {
         // cfg
         enable : 1;
         intr_enable : 1;
-        rsvd2 : 6;
+        debug : 1;
+        rsvd2 : 5;
 
         ring_base : 64;
         ring_size : 16;

@@ -153,10 +153,19 @@ private:
     // ROM
     uint64_t rom_mem_addr;
     uint32_t rom_mem_size;
-    // Port Status
-    struct port_info *port_info;
-    uint64_t port_info_addr;
+    // PCIe info
+    pciehdev_t *pdev;
+    // Port Info
     uint64_t host_port_info_addr;
+    // Port Config
+    union port_config *port_config;
+    uint64_t port_config_addr;
+    uint64_t host_port_config_addr;
+    // Port Status
+    struct port_status *port_status;
+    uint64_t port_status_addr;
+    uint64_t host_port_status_addr;
+    // Port Stats
     uint64_t port_stats_addr;
     uint64_t host_port_stats_addr;
     // Tasks

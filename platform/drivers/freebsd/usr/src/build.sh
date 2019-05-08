@@ -37,6 +37,13 @@ make_ext() {
 		"DEBUG_FLAGS=-g" "-C$1" || exit
 }
 
+# Set FW_BUILD to point to naples_fw.tar
+# Set FW_VERSION to actual firmware version
+if [ -n "$FW_BUILD" ]; then
+    cp $FW_BUILD/naples_fw.tar sys/modules/ionic_fw/
+    make_ext sys/modules/ionic_fw
+fi
+
 make_ext sys/modules/ionic
 make_ext sys/modules/ionic_rdma
 

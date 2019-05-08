@@ -16,6 +16,7 @@
 
 #define EDMAQ_COMP_POLL_US          (1000)
 #define EDMAQ_COMP_POLL_MAX         (10)
+#define EDMAQ_MAX_TRANSFER_SZ       (((1U << 14) - 1) & (~63U))
 
 typedef void (*edmaq_cb_t) (void *obj);
 
@@ -36,10 +37,11 @@ public:
 
     bool Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB);
     bool Reset();
+    bool Debug(bool enable);
 
     bool Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
         struct edmaq_ctx *ctx);
-    static void Poll(void *obj);
+    static bool Poll(void *obj);
 
 private:
     const char *name;
@@ -51,6 +53,7 @@ private:
     uint16_t ring_size;
 
     uint16_t head;
+    uint16_t tail;
     uint64_t ring_base;
     uint16_t comp_tail;
     uint64_t comp_base;

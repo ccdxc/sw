@@ -9,6 +9,9 @@
 
 #include "nic/sdk/lib/pal/pal.hpp"
 
+#define MEM_MAP(pa, sz, flags)   calloc(1, sz)
+#define MEM_UNMAP(va)            free(va)
+
 #define READ_MEM        sdk::lib::pal_mem_read
 #define WRITE_MEM       sdk::lib::pal_mem_write
 #define MEM_SET(pa, val, sz, flags) { \
@@ -48,6 +51,9 @@ static inline uint64_t READ_REG64(uint64_t addr)
 #else
 
 #include "nic/sdk/platform/pal/include/pal.h"
+
+#define MEM_MAP         pal_mem_map
+#define MEM_UNMAP       pal_mem_unmap
 
 #define READ_MEM        pal_mem_rd
 #define WRITE_MEM       pal_mem_wr

@@ -27,7 +27,8 @@ header_type notify_qstate {
         enable : 1;
         host_queue : 1;
         intr_enable : 1;
-        rsvd2 : 5;
+        debug : 1;
+        rsvd2 : 4;
 
         ring_base : 64;
         ring_size : 16;

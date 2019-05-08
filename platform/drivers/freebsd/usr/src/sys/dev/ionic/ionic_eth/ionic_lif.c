@@ -2935,6 +2935,129 @@ ionic_set_mac(struct net_device *netdev)
 }
 
 static int
+ionic_firmware_download(struct lif *lif, u64 addr, u32 offset, u32 length)
+{
+	int err;
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.fw_download = {
+			.opcode = CMD_OPCODE_FW_DOWNLOAD,
+			.offset = offset,
+			.addr = addr,
+			.length = length
+		}
+	};
+
+	err = ionic_adminq_post_wait(lif, &ctx);
+	if (err)
+		return err;
+
+	return (0);
+}
+
+static int
+ionic_firmware_install(struct lif *lif, u8 *slot)
+{
+	int err;
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.fw_control = {
+			.opcode = CMD_OPCODE_FW_CONTROL,
+			.oper = IONIC_FW_INSTALL
+		}
+	};
+
+	err = ionic_adminq_post_wait(lif, &ctx);
+	if (err)
+		return err;
+
+	*slot = ctx.comp.fw_control.slot;
+
+	return (0);
+}
+
+static int
+ionic_firmware_activate(struct lif *lif, u8 slot)
+{
+	int err;
+	struct ionic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.fw_control = {
+			.opcode = CMD_OPCODE_FW_CONTROL,
+			.oper = IONIC_FW_ACTIVATE,
+			.slot = slot
+		}
+	};
+
+	err = ionic_adminq_post_wait(lif, &ctx);
+	if (err)
+		return err;
+
+	return (0);
+}
+
+int
+ionic_firmware_update(struct lif *lif, const void *const fw_data, size_t fw_sz)
+{
+	struct ionic_dma_info fw_dma;
+	void *buf;
+	dma_addr_t buf_pa;
+	u32 buf_sz, copy_sz, offset;
+	u8 fw_slot;
+	int err;
+
+	buf_sz = (1 << 20);	// 1 MiB
+
+	/* Allocate DMA'ble bounce buffer for sending firmware to card */
+	if ((err = ionic_dma_alloc(lif->ionic, buf_sz, &fw_dma, BUS_DMA_NOWAIT))) {
+		IONIC_NETDEV_ERROR(lif->netdev, "failed to allocate firmware bounce buffer, err: %d\n", err);
+		return (ENOMEM);
+	}
+
+	buf = (void *)fw_dma.dma_vaddr;
+	if (!buf) {
+		IONIC_NETDEV_ERROR(lif->netdev, "failed to allocate firmware bounce buffer\n");
+		return (ENOMEM);
+	}
+
+	buf_pa = fw_dma.dma_paddr;
+	IONIC_NETDEV_INFO(lif->netdev, "firmware dma buffer address %lx\n", buf_pa);
+
+	offset = 0;
+	while (offset < fw_sz) {
+		copy_sz = min(buf_sz, fw_sz - offset);
+		bcopy(fw_data + offset, buf, copy_sz);
+		// IONIC_NETDEV_DEBUG(lif->netdev, "Sending offset %x size %u\n",
+		// 	offset, copy_sz);
+		if (ionic_firmware_download(lif, buf_pa, offset, copy_sz)) {
+			IONIC_NETDEV_ERROR(lif->netdev,
+				"firmware upload failed at offset %x addr %lx len %u\n",
+				offset, buf_pa, copy_sz);
+			err = EIO;
+			goto err_out_free_buf;
+		}
+		offset += copy_sz;
+	}
+
+	if (ionic_firmware_install(lif, &fw_slot)) {
+		IONIC_NETDEV_INFO(lif->netdev, "firmware install failed\n");
+		err = EIO;
+		goto err_out_free_buf;
+	}
+
+	if (ionic_firmware_activate(lif, fw_slot)) {
+		IONIC_NETDEV_INFO(lif->netdev, "firmware activate failed\n");
+		err = EIO;
+		goto err_out_free_buf;
+	}
+
+err_out_free_buf:
+	ionic_dma_free(lif->ionic, &fw_dma);
+
+	return (err);
+}
+
+static int
 ionic_lif_init(struct lif *lif)
 {
 	struct ionic_dev *idev = &lif->ionic->idev;

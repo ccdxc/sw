@@ -29,6 +29,7 @@ EdmaQ::EdmaQ(
     }
 
     head = 0;
+    tail = 0;
     ring_base = pd->nicmgr_mem_alloc((sizeof(struct edma_cmd_desc) * ring_size));
     if (ring_base == 0) {
         NIC_LOG_ERR("{}: Failed to allocate edma ring!", name);
@@ -57,6 +58,7 @@ EdmaQ::Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     edma_qstate_t qstate = {0};
 
     head = 0;
+    tail = 0;
     comp_tail = 0;
     exp_color = 1;
 
@@ -123,6 +125,30 @@ EdmaQ::Reset()
 }
 
 bool
+EdmaQ::Debug(bool enable)
+{
+    struct edma_cfg_qstate cfg = {0};
+
+    uint64_t addr = pd->lm_->get_lif_qstate_addr(lif, qtype, qid);
+    if (addr < 0) {
+        NIC_LOG_ERR("{}: Failed to get qstate address for edma queue",
+            name);
+        return false;
+    }
+
+    READ_MEM(addr + offsetof(struct edma_qstate, cfg),
+        (uint8_t *)&cfg, sizeof(cfg), 0);
+    cfg.debug = enable;
+    WRITE_MEM(addr + offsetof(struct edma_qstate, cfg),
+        (uint8_t *)&cfg, sizeof(cfg), 0);
+
+    p4plus_invalidate_cache(addr, sizeof(edma_qstate_t),
+        P4PLUS_CACHE_INVALIDATE_TXDMA);
+
+    return true;
+}
+
+bool
 EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
     struct edmaq_ctx *ctx)
 {
@@ -135,6 +161,12 @@ EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
         .dst_lif = lif,
         .dst_addr = to,
     };
+
+    // Is the ring full?
+    if (((head + 1) % ring_size) == tail) {
+        NIC_LOG_WARN("{}: EDMA queue full head {} tail {}", name, head, tail);
+        return false;
+    }
 
     if (ctx != NULL)
         pending[head] = *ctx;
@@ -179,21 +211,24 @@ EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
                 if (pending[comp.comp_index].cb) {
                     // Complete pending requests
                     pending[comp.comp_index].cb(pending[comp.comp_index].obj);
+                    memset(&pending[comp.comp_index], 0, sizeof(pending[comp.comp_index]));
                 }
                 comp_tail = (comp_tail + 1) % ring_size;
                 if (comp_tail == 0) {
                     exp_color = exp_color ? 0 : 1;
                 }
+                tail = (comp.comp_index + 1) % ring_size;
             }
-        } while(comp.comp_index != head);
+        } while (comp.comp_index != head);
     } else {
-        evutil_add_prepare(EV_A_ &prepare, &EdmaQ::Poll, this);
+        auto cb = [](void *obj) { EdmaQ::Poll(obj); };
+        evutil_add_prepare(EV_A_ &prepare, cb, this);
     }
 
     return true;
 }
 
-void
+bool
 EdmaQ::Poll(void *obj)
 {
     EdmaQ *edmaq = (EdmaQ *)obj;
@@ -202,13 +237,22 @@ EdmaQ::Poll(void *obj)
 
     READ_MEM(addr, (uint8_t *)&comp, sizeof(struct edma_comp_desc), 0);
     if (comp.color == edmaq->exp_color) {
-        if (edmaq->pending[comp.comp_index].cb != NULL) {
+        if (edmaq->pending[comp.comp_index].cb) {
             // Complete pending requests
             edmaq->pending[comp.comp_index].cb(edmaq->pending[comp.comp_index].obj);
+            memset(&edmaq->pending[comp.comp_index], 0, sizeof(edmaq->pending[comp.comp_index]));
         }
         edmaq->comp_tail = (edmaq->comp_tail + 1) % edmaq->ring_size;
         if (edmaq->comp_tail == 0) {
             edmaq->exp_color = edmaq->exp_color ? 0 : 1;
         }
+        edmaq->tail = (comp.comp_index + 1) % edmaq->ring_size;
+        if (edmaq->head == edmaq->tail) {   // Is the ring empty?
+            evutil_remove_prepare(edmaq->EV_A_ &edmaq->prepare);
+        }
+
+        return true;
     }
+
+    return false;
 }

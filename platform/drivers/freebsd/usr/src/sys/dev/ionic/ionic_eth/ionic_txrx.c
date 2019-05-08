@@ -44,6 +44,10 @@
 
 #include <sys/sockio.h>
 #include <sys/kdb.h>
+#include <sys/param.h>
+#include <sys/systm.h>
+#include <sys/linker.h>
+#include <sys/firmware.h>
 
 #include "ionic.h"
 #include "ionic_lif.h"
@@ -1623,6 +1627,8 @@ ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 	if (sb == NULL)
 		return (ENOMEM);
 
+	sbuf_printf(sb, "\n");
+
 	sbuf_printf(sb, " lif_status eid=0x%lx link_status=0x%x"
 		" link_speed=%d flap=0x%x\n",
 			lif_status->eid,
@@ -2213,6 +2219,32 @@ ionic_adminq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
 			&adminq->stats.comp_err, "Completions with error");
 }
 
+/*
+ * Firmware update
+ */
+static int
+ionic_firmware_update_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	const struct firmware *fw;
+	struct lif *lif;
+	int err = 0;
+
+	lif = oidp->oid_arg1;
+
+	if ((fw = firmware_get("ionic_fw")) == NULL) {
+		IONIC_NETDEV_ERROR(lif->netdev, "Could not find firmware image\n");
+		return (ENOENT);
+	} else {
+		IONIC_NETDEV_INFO(lif->netdev, "Installing firmware on card\n");
+	}
+
+	err = ionic_firmware_update(lif, fw->data, fw->datasize);
+
+	firmware_put(fw, FIRMWARE_UNLOAD);
+
+	return (0);
+}
+
 static void
 ionic_setup_device_stats(struct lif *lif)
 {
@@ -2255,6 +2287,10 @@ ionic_setup_device_stats(struct lif *lif)
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "reset",
 			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
 			ionic_lif_reset_sysctl, "I", "Reinit lif");
+
+	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "fw_update",
+			CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
+			ionic_firmware_update_sysctl, "I", "Firmware update");
 
 	ionic_setup_fw_stats(lif, ctx, child);
 	ionic_setup_mac_stats(lif, ctx, child);
@@ -2307,7 +2343,7 @@ ionic_setup_sysctls(struct lif *lif)
 		return;
 	}
 
-    ionic_setup_device_stats(lif);
+	ionic_setup_device_stats(lif);
 }
 
 

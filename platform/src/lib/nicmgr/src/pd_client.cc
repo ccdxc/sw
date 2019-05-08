@@ -27,14 +27,6 @@ using namespace sdk::platform::utils;
 
 const static char *kLif2QstateHBMLabel = "nicmgrqstate_map";
 
-#if 0
-const static char *kRdmaHBMLabel = "rdma";
-const static uint32_t kRdmaAllocUnit = 4096;
-
-const static char *kRdmaHBMBarLabel = "rdma-hbm-bar";
-const static uint32_t kRdmaBarAllocUnit = 8 * 1024 * 1024;
-#endif
-
 #ifdef APOLLO
 #define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MIN P4_APOLLO_RXDMA_TBL_ID_INDEX_MIN
 #define P4_COMMON_RXDMA_ACTIONS_TBL_ID_INDEX_MAX P4_APOLLO_RXDMA_TBL_ID_INDEX_MAX
@@ -46,10 +38,10 @@ const static uint32_t kRdmaBarAllocUnit = 8 * 1024 * 1024;
 #define P4_COMMON_TXDMA_ACTIONS_TBL_ID_TBLMAX P4_APOLLO_TXDMA_TBL_ID_TBLMAX
 #endif
 
-const static char *kNicmgrHBMLabel = "nicmgr";
+const static char *kNicmgrHBMLabel = MEM_REGION_NICMGR_NAME;
 const static uint32_t kNicmgrAllocUnit = 64;
 
-const static char *kDevcmdHBMLabel = "devcmd";
+const static char *kDevcmdHBMLabel = MEM_REGION_DEVCMD_NAME;
 const static uint32_t kDevcmdAllocUnit = 4096;
 
 #ifndef APOLLO
@@ -63,21 +55,6 @@ static uint8_t *memrev(uint8_t *block, size_t elnum)
         *t = tmp;
     }
     return block;
-}
-#endif
-
-#if 0
-static uint32_t
-roundup_to_pow_2(uint32_t x)
-{
-    uint32_t power = 1;
-
-    if (x == 1)
-        return (power << 1);
-
-    while(power < x)
-        power*=2;
-    return power;
 }
 #endif
 
@@ -228,91 +205,11 @@ PdClient::p4plus_txdma_init_tables()
     return 0;
 }
 
-#if 0
-void PdClient::rdma_manager_init (void)
-{
-    uint64_t hbm_addr = mp_->start_addr(kRdmaHBMLabel);
-    assert(hbm_addr > 0);
-
-    uint32_t size = mp_->size(kRdmaHBMLabel);
-    assert(size != 0);
-
-    uint32_t num_units = size / kRdmaAllocUnit;
-    if (hbm_addr & 0xFFF) {
-        // Not 4K aligned.
-        hbm_addr = (hbm_addr + 0xFFF) & ~0xFFFULL;
-        num_units--;
-    }
-
-    rdma_hbm_base_ = hbm_addr;
-    rdma_hbm_allocator_.reset(new sdk::lib::BMAllocator(num_units));
-
-    NIC_FUNC_DEBUG("rdma_hbm_base : {:#x}", rdma_hbm_base_);
-
-    hbm_addr = mp_->start_addr(kRdmaHBMBarLabel);
-    assert(hbm_addr > 0);
-
-    size = mp_->size(kRdmaHBMBarLabel);
-    assert(size != 0);
-
-    num_units = size / kRdmaBarAllocUnit;
-    if (hbm_addr & 0x7FFFFF) {
-        // Not 4K aligned.
-        hbm_addr = (hbm_addr + 0x7FFFFF) & ~0x7FFFFFULL;
-        num_units--;
-    }
-
-    rdma_hbm_bar_base_ = hbm_addr;
-    rdma_hbm_bar_allocator_.reset(new sdk::lib::BMAllocator(num_units));
-
-    NIC_FUNC_DEBUG("rdma_hbm_bar_base : {:#x}", rdma_hbm_bar_base_);
-
-}
-
-uint64_t PdClient::rdma_mem_alloc (uint32_t size)
-{
-    uint32_t alloc_units;
-
-    alloc_units = (size + kRdmaAllocUnit - 1) & ~(kRdmaAllocUnit-1);
-    alloc_units /= kRdmaAllocUnit;
-    int alloc_offset = rdma_hbm_allocator_->Alloc(alloc_units);
-
-    if (alloc_offset < 0) {
-        NIC_FUNC_ERR("Invalid alloc_offset {}", alloc_offset);
-        return 0;
-    }
-
-    rdma_allocation_sizes_[alloc_offset] = alloc_units;
-    alloc_offset *= kRdmaAllocUnit;
-    NIC_FUNC_DEBUG("size: {} alloc_offset: {} hbm_addr: {}",
-                    size, alloc_offset, rdma_hbm_base_ + alloc_offset);
-    return rdma_hbm_base_ + alloc_offset;
-}
-
-uint64_t PdClient::rdma_mem_bar_alloc (uint32_t size)
-{
-    uint32_t alloc_units;
-
-    alloc_units = (size + kRdmaBarAllocUnit - 1) & ~(kRdmaBarAllocUnit-1);
-    alloc_units /= kRdmaBarAllocUnit;
-    int alloc_offset = rdma_hbm_bar_allocator_->Alloc(alloc_units);
-
-    if (alloc_offset < 0) {
-        NIC_FUNC_ERR("Invalid alloc_offset {}", alloc_offset);
-        return 0;
-    }
-
-    rdma_bar_allocation_sizes_[alloc_offset] = alloc_units;
-    alloc_offset *= kRdmaBarAllocUnit;
-    NIC_FUNC_DEBUG("size: {} alloc_offset: {} hbm_addr: {:#x}",
-                    size, alloc_offset, rdma_hbm_bar_base_ + alloc_offset);
-    return rdma_hbm_bar_base_ + alloc_offset;
-}
-#endif
 uint64_t PdClient::rdma_mem_bar_alloc (uint32_t size)
 {
     return rdma_mgr_->rdma_mem_bar_alloc(size);
 }
+
 void PdClient::nicmgr_mem_init (void)
 {
     uint64_t hbm_addr = mp_->start_addr(kNicmgrHBMLabel);
@@ -1290,12 +1187,6 @@ PdClient::rdma_lif_init (uint32_t lif, uint32_t max_keys,
 
     return HAL_RET_OK;
 #endif
-}
-
-mem_addr_t
-PdClient::mem_start_addr (const char *region)
-{
-    return mp_->start_addr(region);
 }
 
 void

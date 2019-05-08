@@ -27,6 +27,9 @@ namespace utils {
 #define MEM_REGION_TX_SCHEDULER_NAME    "tx-scheduler"
 #define MEM_REGION_LIF_STATS_NAME       "lif_stats"
 #define MEM_REGION_MPU_TRACE_NAME       "mpu-trace"
+#define MEM_REGION_NICMGR_NAME          "nicmgr"
+#define MEM_REGION_DEVCMD_NAME          "devcmd"
+#define MEM_REGION_FWUPDATE_NAME        "fwupdate"
 
 /**
  * @brief Memory mpartition region
