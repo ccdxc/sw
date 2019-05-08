@@ -232,13 +232,6 @@ mirror_impl::read_hw(pds_mirror_session_key_t *key,
         info->spec.snap_len = mirror_data.erspan_action.truncate_len;
         info->spec.erspan_spec.src_ip.addr.v4_addr = mirror_data.erspan_action.sip;
         info->spec.erspan_spec.dst_ip.addr.v4_addr = mirror_data.erspan_action.dip;
-        // TODO as there is no field in HW for spanId,
-        // assume we are using mirror session id
-        info->spec.erspan_spec.span_id = key->id;
-        // TODO dscp no value n HW entry, assuming it is sending zero in paket.
-        info->spec.erspan_spec.dscp = 0;
-        //TODO how to extract vcn
-        //info->spec.erspan_spec.vcn.id =
         break;
 
     default:

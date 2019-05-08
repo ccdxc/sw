@@ -91,15 +91,9 @@ mirror_session_get (pds_mirror_session_key_t *key,
                     pds_mirror_session_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
-    pds_mirror_session_spec_t *spec;
 
-    spec = agent_state::state()->find_in_mirror_session_db(key);
-    if (spec == NULL) {
-        return SDK_RET_ENTRY_NOT_FOUND;
-    }
-    memcpy(&info->spec, spec, sizeof(pds_mirror_session_spec_t));
     if (!agent_state::state()->pds_mock_mode()) {
-        ret = pds_mirror_session_get(&spec->key, info);
+        ret = pds_mirror_session_get(key, info);
     } else {
         memset(&info->stats, 0, sizeof(info->stats));
         memset(&info->status, 0, sizeof(info->status));

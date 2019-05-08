@@ -22,7 +22,6 @@ mirror_session_api_to_proto_spec (pds::MirrorSessionSpec *proto_spec,
             pds_encap_to_proto_encap(proto_rspan->mutable_encap(),
                                      &api_spec->rspan_spec.encap);
             proto_rspan->set_interfaceid(api_spec->rspan_spec.interface);
-            proto_spec->set_allocated_rspanspec(proto_rspan);
         }
         break;
 
@@ -37,7 +36,6 @@ mirror_session_api_to_proto_spec (pds::MirrorSessionSpec *proto_spec,
             proto_erspan->set_dscp(api_spec->erspan_spec.dscp);
             proto_erspan->set_spanid(api_spec->erspan_spec.span_id);
             proto_erspan->set_vpcid(api_spec->erspan_spec.vpc.id);
-            proto_spec->set_allocated_erspanspec(proto_erspan);
         }
         break;
 
