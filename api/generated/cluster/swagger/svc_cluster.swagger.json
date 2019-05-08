@@ -4948,6 +4948,15 @@
         "capacity": {
           "type": "string",
           "title": "Capacity in bytes"
+        },
+        "percent-life-used-A": {
+          "type": "integer",
+          "format": "int32",
+          "title": "Used life in percentage"
+        },
+        "percent-life-used-B": {
+          "type": "integer",
+          "format": "int32"
         }
       },
       "title": "Storage device information"

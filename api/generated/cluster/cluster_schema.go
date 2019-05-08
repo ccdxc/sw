@@ -380,6 +380,10 @@ var typesMapCluster = map[string]*api.Struct{
 			"Vendor": api.Field{Name: "Vendor", CLITag: api.CLIInfo{ID: "vendor", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "vendor", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Capacity": api.Field{Name: "Capacity", CLITag: api.CLIInfo{ID: "capacity", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "capacity", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"TypeAPercentLifeUsed": api.Field{Name: "TypeAPercentLifeUsed", CLITag: api.CLIInfo{ID: "percent-life-used-A", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "percent-life-used-A", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
+
+			"TypeBPercentLifeUsed": api.Field{Name: "TypeBPercentLifeUsed", CLITag: api.CLIInfo{ID: "percent-life-used-B", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "percent-life-used-B", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_INT32"},
 		},
 	},
 	"cluster.StorageInfo": &api.Struct{

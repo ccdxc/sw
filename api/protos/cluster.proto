@@ -326,7 +326,7 @@ message MemInfo {
     // Type of Memory
     enum MemType {
         UNKNOWN = 0; // Unknown type
-        HBM     = 1; // High Bandwidth Memory (usedvin Naples-1)
+        HBM     = 1; // High Bandwidth Memory (used in Naples-1)
         DDR     = 2; // DDR SDRAM (used in Naples-2)
     }
     
@@ -348,7 +348,6 @@ message StorageInfo {
 
 // Storage device information
 message StorageDeviceInfo {
-
     // Serial Number
     string SerialNumber = 1 [(gogoproto.jsontag) = "serial-num,omitempty"];
 
@@ -361,6 +360,10 @@ message StorageDeviceInfo {
 
     // Capacity in bytes
     string Capacity     = 4 [(gogoproto.jsontag) = "capacity,omitempty"];
+
+    // Used life in percentage
+    int32 TypeAPercentLifeUsed     = 5 [(gogoproto.jsontag) = "percent-life-used-A,omitempty"];
+    int32 TypeBPercentLifeUsed     = 6 [(gogoproto.jsontag) = "percent-life-used-B,omitempty"];
 }
 
 // Network information

@@ -5,6 +5,7 @@ package state
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
@@ -19,6 +20,8 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 )
+
+const capriStoragePath = "/sys/bus/mmc/devices/mmc0:0001"
 
 func getRunningFirmwareName() (string, error) {
 	out, err := exec.Command("/bin/bash", "-c", "/nic/tools/fwupdate -r").Output()
@@ -293,10 +296,59 @@ func updateMemoryInfo() *cmd.MemInfo {
 	}
 }
 
+func getLifeUsed(hexStr string) int32 {
+	d, err := strconv.ParseInt(hexStr, 0, 32)
+	if err != nil {
+		log.Errorf("Not a Number. Err: %v", err)
+		return -1
+	}
+
+	return int32(d * 10)
+}
+
 // updateStorageInfo - update the storage information in SmartNIC
+// Currently this is heavily focused on eMMC for Capri. Changes will have to be made as we move forward.
 func updateStorageInfo() *cmd.StorageInfo {
-	log.Info("updating Storage Info in SmartNIC object")
-	return nil
+	storageSizePath := capriStoragePath + "/block/mmcblk0/size"
+	size, err := ioutil.ReadFile(storageSizePath)
+	if err != nil {
+		return nil
+	}
+
+	fmt.Printf("\nGot size : %s", string(size))
+	sizeBytes := strings.TrimSuffix(string(size), "\n")
+	if err != nil {
+		return nil
+	}
+
+	wearPath := capriStoragePath + "/life_time"
+	wearBytes, err := ioutil.ReadFile(wearPath)
+	if err != nil {
+		return nil
+	}
+	wearStr := strings.TrimSuffix(string(wearBytes), "\n")
+	wear := strings.Split(wearStr, " ")
+	wearTypeA := wear[0]
+	wearTypeB := wear[1]
+
+	serialPath := capriStoragePath + "/serial"
+	serialNumber, err := ioutil.ReadFile(serialPath)
+	if err != nil {
+		return nil
+	}
+	serialNumberStr := strings.TrimSuffix(string(serialNumber), "\n")
+
+	return &cmd.StorageInfo{
+		Devices: []cmd.StorageDeviceInfo{
+			{
+				SerialNumber:         serialNumberStr,
+				Type:                 "MMC",
+				Capacity:             fmt.Sprintf("%s Bytes", sizeBytes),
+				TypeAPercentLifeUsed: getLifeUsed(wearTypeA),
+				TypeBPercentLifeUsed: getLifeUsed(wearTypeB),
+			},
+		},
+	}
 }
 
 // UpdateNaplesHealth - queries sysmanager and gets the current health of Naples
