@@ -74,7 +74,7 @@ func TestWatcher(t *testing.T) {
 	defer apicl.Close()
 
 	cbs := &mockCbs{}
-	watcher := NewWatcher("watcher_test", apiSrvAddr, nil, logger, cbs.initiateWatchCb, cbs.processEventCb,
+	watcher := NewWatcher("watcher_test", apiSrvAddr, nil, logger, cbs.initiateWatchCb, cbs.processEventCb, nil,
 		&KindOptions{
 			Kind:    string(cluster.KindCluster),
 			Options: &api.ListWatchOptions{},
@@ -128,7 +128,7 @@ func TestStopStart(t *testing.T) {
 	defer apicl.Close()
 
 	cbs := &mockCbs{}
-	watcher := NewWatcher("watcher_test", apiSrvAddr, nil, logger, cbs.initiateWatchCb, cbs.processEventCb,
+	watcher := NewWatcher("watcher_test", apiSrvAddr, nil, logger, cbs.initiateWatchCb, cbs.processEventCb, nil,
 		&KindOptions{
 			Kind:    string(cluster.KindCluster),
 			Options: &api.ListWatchOptions{},

@@ -120,6 +120,7 @@ func (p *KeyMgrBasedProvider) getClientTLSConfig(serverName string) (*tls.Config
 		return nil, err
 	}
 	if tlsCertificate == nil {
+		log.Errorf("No certificate found for server %s and no default set", serverName)
 		return nil, fmt.Errorf("No client certificate found and no default set, serverName: %s", serverName)
 	}
 	return getTLSClientConfig(serverName, tlsCertificate, trustRoots), nil

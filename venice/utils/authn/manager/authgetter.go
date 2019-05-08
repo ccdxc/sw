@@ -303,7 +303,9 @@ func GetAuthGetter(name, apiServer string, rslver resolver.Interface, logger log
 			stopped:   false,
 		}
 		// start watcher
+		// Use a custom TLS client identity so that secret field TLS key is not zeroized by ApiServer on watch
 		gAuthGetter.watcher = watcher.NewWatcher(module, apiServer, rslver, logger, gAuthGetter.resetCacheCb, gAuthGetter.processEventCb,
+			[]rpckit.Option{rpckit.WithTLSClientIdentity("auth-watcher")},
 			&watcher.KindOptions{
 				Kind:    string(auth.KindUser),
 				Options: &api.ListWatchOptions{},

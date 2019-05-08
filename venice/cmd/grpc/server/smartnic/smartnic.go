@@ -56,9 +56,11 @@ var (
 	// which NIC health status is declared UNKNOWN by CMD
 	DeadInterval = 120 * time.Second
 
-	// Max time (in milliseconds) to complete the entire registration sequence,
-	// after which the server will cancel the request
-	nicRegTimeout = 3000 * time.Millisecond
+	// Max time to complete the entire registration sequence,
+	// after which the server will cancel the request.
+	// It includes the time neede to create/update the object
+	// in ApiServer.
+	nicRegTimeout = 30 * time.Second
 )
 
 func getNICCondition(nic *cluster.SmartNIC, condType cluster.SmartNICCondition_ConditionType) *cluster.SmartNICCondition {

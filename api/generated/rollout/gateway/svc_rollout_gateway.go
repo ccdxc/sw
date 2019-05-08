@@ -589,6 +589,7 @@ func (e *sRolloutV1GwService) CompleteRegistration(ctx context.Context,
 
 func (e *sRolloutV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (*adapterRolloutV1, error) {
 	var opts []rpckit.Option
+	opts = append(opts, rpckit.WithTLSClientIdentity(globals.APIGw))
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	} else {

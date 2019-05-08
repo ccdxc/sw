@@ -13,12 +13,11 @@ import (
 	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/auth"
 	evtsapi "github.com/pensando/sw/api/generated/events"
-	"github.com/pensando/sw/venice/globals"
+	apiutils "github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/authz"
 	authzgrpc "github.com/pensando/sw/venice/utils/authz/grpc"
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
-	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -55,7 +54,7 @@ func (fdr *Finder) GetEvent(ctx context.Context, r *evtsapi.GetEventRequest) (*e
 		return nil, status.Errorf(codes.Internal, "could not get the event")
 	}
 	// check if user is authorized to view the event
-	if ctxutils.GetPeerID(ctx) == globals.APIGw {
+	if apiutils.IsEventsReaderCtx(ctx) {
 		userMeta, ok := authzgrpcctx.UserMetaFromIncomingContext(ctx)
 		if !ok {
 			fdr.logger.Errorf("no user in grpc metadata")

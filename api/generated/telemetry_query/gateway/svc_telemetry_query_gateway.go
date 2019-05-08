@@ -198,6 +198,7 @@ func (e *sTelemetryV1GwService) CompleteRegistration(ctx context.Context,
 
 func (e *sTelemetryV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (*adapterTelemetryV1, error) {
 	var opts []rpckit.Option
+	opts = append(opts, rpckit.WithTLSClientIdentity(globals.APIGw))
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	} else {

@@ -23,8 +23,10 @@ import (
 )
 
 const (
+	// CMD connection parameters.
+	// This is typically a local, plaintext connection, but it may go through a proxy, so we want fairly long timeouts
 	defaultRetryInterval  = 500 * time.Millisecond
-	defaultConnTimeout    = 3 * time.Second
+	defaultConnTimeout    = 30 * time.Second
 	defaultConnMaxRetries = 5
 )
 

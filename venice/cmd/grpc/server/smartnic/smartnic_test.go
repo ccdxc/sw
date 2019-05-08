@@ -356,7 +356,7 @@ func verifySmartNICObj(t *testing.T, name string, exists bool, phase, host strin
 			return false, nil
 		}
 	}
-	AssertEventually(t, f, fmt.Sprintf("Failed to verify smartNIC object, name: %v, presence: %v, phase: %v", name, exists, phase), "50ms", "20s")
+	AssertEventually(t, f, fmt.Sprintf("Failed to verify smartNIC object, name: %v, presence: %v, phase: %v", name, exists, phase), "100ms", "20s")
 
 	// Cross-check the local (cached) copy
 	var nicState *cache.SmartNICState
@@ -390,7 +390,7 @@ func verifySmartNICObj(t *testing.T, name string, exists bool, phase, host strin
 			return true, nil
 		}
 	}
-	AssertEventually(t, g, fmt.Sprintf("ApiServer/StateMgr mismatch:\n%+v\n%+v\n", nicObj, nicState), "50ms", "20s")
+	AssertEventually(t, g, fmt.Sprintf("ApiServer/StateMgr mismatch:\n%+v\n%+v\n", nicObj, nicState), "100ms", "20s")
 }
 
 func verifyHostObj(t *testing.T, hostName, nicName string) {
@@ -415,7 +415,7 @@ func verifyHostObj(t *testing.T, hostName, nicName string) {
 		}
 		return false, nil
 	}
-	AssertEventually(t, f, fmt.Sprintf("Failed to verify Host object %s", hostName), "50ms", "20s")
+	AssertEventually(t, f, fmt.Sprintf("Failed to verify Host object %s", hostName), "100ms", "20s")
 }
 
 func verifyWatchAPIIsInvoked(t *testing.T, client grpc.SmartNICUpdatesClient, name, phase string) {
@@ -596,7 +596,9 @@ func doPhase1Exchange(t *testing.T, stream grpc.SmartNICRegistration_RegisterNIC
 // doRegisterNIC is a utility function that performs registration for the specified NIC
 // and returns the phase. It aborts in case of error.
 func doRegisterNIC(t *testing.T, client grpc.SmartNICRegistrationClient, mac, nicHostname string) *grpc.NICAdmissionResponse {
-	stream, err := client.RegisterNIC(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	stream, err := client.RegisterNIC(ctx)
 	AssertOk(t, err, "Error creating stream")
 	_, challengeResp, errResp := doPhase1Exchange(t, stream, mac, nicHostname, true, true)
 	Assert(t, errResp == nil, fmt.Sprintf("Server returned unexpected error: %+v", err))
@@ -687,6 +689,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 	for ii := range testCases {
 		host, err := createHost(testCases[ii].hostName, cmd.SmartNICID{MACAddress: testCases[ii].mac})
 		AssertOk(t, err, "Error creating Host object")
+		verifyHostObj(t, testCases[ii].hostName, "")
 		defer deleteHost(host.ObjectMeta)
 	}
 
@@ -702,7 +705,8 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			setClusterAutoAdmitNICs(t, tc.autoAdmit)
 
 			// register NIC call
-			stream, err := smartNICRegistrationRPCClient.RegisterNIC(context.Background())
+			ctx, cancel := context.WithCancel(context.Background())
+			stream, err := smartNICRegistrationRPCClient.RegisterNIC(ctx)
 			AssertOk(t, err, "Error creating stream")
 
 			expectChallenge := tc.expected == cmd.SmartNICStatus_ADMITTED.String() || tc.expected == cmd.SmartNICStatus_PENDING.String()
@@ -713,6 +717,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 			if !expectChallenge {
 				Assert(t, errResp != nil, "Server did not return expected error")
 				verifySmartNICObj(t, tc.mac, false, "", "")
+				cancel()
 				return
 			}
 
@@ -759,7 +764,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 					Nic: nic,
 				}
 
-				_, err := smartNICUpdatesRPCClient.UpdateNIC(context.Background(), req)
+				_, err := smartNICUpdatesRPCClient.UpdateNIC(ctx, req)
 				if err != nil {
 					t.Logf("Testcase: %s Failed to update NIC, mac: %s req: %+v err: %+v", tc.name, tc.mac, req.Nic, err)
 					return false, nil
@@ -816,6 +821,7 @@ func TestRegisterSmartNICByNaples(t *testing.T) {
 				return true, nil
 			}
 			AssertEventually(t, f6, fmt.Sprintf("Failed to verify deletion of Host object"))
+			cancel()
 		})
 	}
 }
@@ -830,10 +836,13 @@ func TestRegisterSmartNICTimeouts(t *testing.T) {
 	baseMac := "4444.4444.00"
 
 	// set server-side timeout to a small value to speed-up tests
+	origSrvTimeout := GetNICRegTimeout()
+	defer SetNICRegTimeout(origSrvTimeout)
+
 	srvTimeout := 1000
 	SetNICRegTimeout(time.Duration(srvTimeout) * time.Millisecond)
 
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 30; i++ {
 		mac := fmt.Sprintf("%s%02d", baseMac, i)
 		hostName := fmt.Sprintf("esxt-%d", i)
 		host, err := createHost(hostName, cmd.SmartNICID{MACAddress: mac})
@@ -1890,6 +1899,10 @@ func testTeardown() {
 }
 
 func TestMain(m *testing.M) {
+	// tune timeouts to speed-up tests
+	SetNICRegTimeout(5 * time.Second)
+	cache.SetAPIServerRPCTimeout(1 * time.Second)
+
 	// Run tests
 	rcode := m.Run()
 

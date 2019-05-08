@@ -23,10 +23,10 @@ import (
 	"github.com/pensando/sw/venice/utils/rpckit"
 )
 
-// Max time (in milliseconds) to complete the registration sequence,
-// after which the client will cancel the the request
+// Max time to complete the registration sequence, after which the client will cancel the the request.
+// We give plenty of time to CMD because it might be busy, whereas we are idle waiting for admission anyway.
 var (
-	nicRegTimeout = 5000 * time.Millisecond
+	nicRegTimeout = 30 * time.Second
 )
 
 // CmdClient is the client of CMD server running on Venice node

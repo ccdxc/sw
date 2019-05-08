@@ -1306,6 +1306,7 @@ func (e *sSecurityV1GwService) CompleteRegistration(ctx context.Context,
 
 func (e *sSecurityV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (*adapterSecurityV1, error) {
 	var opts []rpckit.Option
+	opts = append(opts, rpckit.WithTLSClientIdentity(globals.APIGw))
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	} else {

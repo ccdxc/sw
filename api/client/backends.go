@@ -9,8 +9,9 @@ import (
 )
 
 type options struct {
-	devMode    bool
-	serverName string
+	devMode        bool
+	serverName     string
+	clientIdentity string
 }
 
 // WithSetDevMode sets the DevMode for the client. true by default.
@@ -25,6 +26,13 @@ func WithSetDevMode(val bool) Option {
 func WithServerName(val string) Option {
 	return func(o *options) {
 		o.serverName = val
+	}
+}
+
+// WithClientIdentity supplies a custom identity to present to the server for authentication
+func WithClientIdentity(id string) Option {
+	return func(o *options) {
+		o.clientIdentity = id
 	}
 }
 
@@ -50,6 +58,9 @@ func NewGrpcUpstream(clientName, url string, logger log.Logger, opts ...Option) 
 	}
 	if o.serverName != "" {
 		rpcopts = append(rpcopts, rpckit.WithRemoteServerName(o.serverName))
+	}
+	if o.clientIdentity != "" {
+		rpcopts = append(rpcopts, rpckit.WithTLSClientIdentity(o.clientIdentity))
 	}
 
 	rpcopts = append(rpcopts, rpckit.WithMaxMsgSize(math.MaxInt32))

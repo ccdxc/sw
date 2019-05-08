@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
@@ -153,4 +154,19 @@ func MustGetObjectMetaVersion(obj runtime.Object) (*api.ObjectMeta, uint64) {
 		panic(fmt.Sprintf("unable to parse version string [%s](%s)", meta.ResourceVersion, err))
 	}
 	return meta, v
+}
+
+// IsSecretsReaderCtx returns true if the client context is allowed to access secrets
+func IsSecretsReaderCtx(ctx context.Context) bool {
+	return !ctxutils.IsAPIGwCtx(ctx)
+}
+
+// IsEventsReaderCtx returns true if the client context is allowed to access events
+func IsEventsReaderCtx(ctx context.Context) bool {
+	return ctxutils.IsAPIGwCtx(ctx)
+}
+
+// IsAuditsReaderCtx returns true if the client context is allowed to access audits
+func IsAuditsReaderCtx(ctx context.Context) bool {
+	return ctxutils.IsAPIGwCtx(ctx)
 }

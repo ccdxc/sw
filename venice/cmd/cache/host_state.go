@@ -127,11 +127,11 @@ func (sm *Statemgr) UpdateHost(host *cluster.Host, writeback bool) error {
 		ok := false
 		for i := 0; i < maxAPIServerWriteRetries; i++ {
 			ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
-			defer cancel()
 			_, err = sm.APIClient().Host().Update(ctx, hostObj)
 			if err == nil {
 				ok = true
 				log.Infof("Updated Host object in ApiServer: %+v", hostObj)
+				cancel()
 				break
 			}
 			log.Errorf("Error updating Host object %+v: %v", hostObj.ObjectMeta, err)
@@ -142,6 +142,7 @@ func (sm *Statemgr) UpdateHost(host *cluster.Host, writeback bool) error {
 				updObj.Status = hostObj.Status
 				hostObj = updObj
 			}
+			cancel()
 		}
 		if !ok {
 			log.Errorf("Error updating Host object %+v in ApiServer, retries exhausted", hostObj.ObjectMeta)

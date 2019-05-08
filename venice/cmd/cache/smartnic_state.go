@@ -6,19 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
-	"time"
 
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
-)
-
-const (
-	maxAPIServerWriteRetries = 10
-	apiServerRetryInterval   = 250 * time.Millisecond
-	apiServerRPCTimeout      = 4 * time.Second
 )
 
 // SmartNICState security policy state
@@ -128,12 +122,17 @@ func (sm *Statemgr) CreateSmartNIC(sn *cluster.SmartNIC, writeback bool) (*Smart
 	}
 
 	if writeback {
+		// For creates we want to use a generous timeout and a couple of retries because
+		// if we fail to create the SmartNIC object then we need to return an error to NMD
+		// and have it retry
 		f := func(ctx context.Context) (interface{}, error) {
-			return sm.APIClient().SmartNIC().Create(ctx, sn)
+			nic, err := sm.APIClient().SmartNIC().Create(ctx, sn)
+			return nic, err
 		}
-		_, err := utils.ExecuteWithRetry(f, apiServerRetryInterval, maxAPIServerWriteRetries)
-		if err != nil {
+		_, err := utils.ExecuteWithRetry(f, apiServerRPCTimeout, maxAPIServerWriteRetries)
+		if err != nil && !strings.Contains(err.Error(), "exists") {
 			log.Errorf("Error creating SmartNIC object %+v: %v", sn.ObjectMeta, err)
+			return nil, fmt.Errorf("Error creating SmartNIC object")
 		}
 	}
 
@@ -193,10 +192,10 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.SmartNIC, writeback bool) err
 		ok := false
 		for i := 0; i < maxAPIServerWriteRetries; i++ {
 			ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
-			defer cancel()
 			_, err = sm.APIClient().SmartNIC().Update(ctx, nicObj)
 			if err == nil {
 				ok = true
+				cancel()
 				log.Infof("Updated SmartNIC object in ApiServer: %+v", nicObj)
 				break
 			}
@@ -208,6 +207,7 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.SmartNIC, writeback bool) err
 				nicObj = updObj
 				// retain Status as that's what we are trying to update
 			}
+			cancel()
 		}
 		if !ok {
 			log.Errorf("Error updating SmartNIC object %+v in ApiServer, retries exhausted", nicObj.ObjectMeta)

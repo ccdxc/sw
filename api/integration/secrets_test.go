@@ -66,7 +66,7 @@ func TestSecretsTransformer(t *testing.T) {
 	AssertOk(t, err, "cannot create Npm grpc client")
 
 	// gRPC client emulating ApiGw -- should not see any secret either via direct access or watch
-	apiGwClient, err := client.NewGrpcUpstream(globals.APIGw, apiserverAddr, stlog)
+	apiGwClient, err := client.NewGrpcUpstream(globals.APIGw, apiserverAddr, stlog, client.WithClientIdentity(globals.APIGw))
 	AssertOk(t, err, "cannot create ApiGw grpc client")
 
 	// REST Client -- should not see any secret

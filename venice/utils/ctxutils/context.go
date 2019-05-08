@@ -7,9 +7,12 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"net"
+	"strings"
 
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/peer"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 /* 	Utilities to extract useful content from Go context
@@ -122,4 +125,9 @@ func MakeMockContext(addr net.Addr, cert *x509.Certificate) context.Context {
 	}
 
 	return peer.NewContext(context.Background(), peerCtx)
+}
+
+// IsAPIGwCtx returns true if the context identifies an API Gateway instance
+func IsAPIGwCtx(ctx context.Context) bool {
+	return strings.HasPrefix(GetPeerID(ctx), globals.APIGw)
 }

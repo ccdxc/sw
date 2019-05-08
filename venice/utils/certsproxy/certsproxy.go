@@ -32,14 +32,27 @@ type CertsProxy struct {
 }
 
 var (
-	connRetryInterval = 500 * time.Millisecond
+	connDialTimeout   = 30 * time.Second
+	connRetryInterval = 30 * time.Second
 	connMaxRetries    = 5
 )
 
 // Open a connection to CMD Endpoint with retries
 func (c *CertsProxy) getRPCClient() (*rpckit.RPCClient, error) {
+	// We need to set FailFast=false because we create a new connection for each RPC.
+	// With FailFast=true, if the connection is not ready, the RPC fails immediately,
+	// but connection establishment proceeds in the background until canceled.
+	// Connection establishment is expensive because of the TLS handshake, so we want
+	// the RPC layer to wait for the connection to be ready and not produce spurious
+	// failures.
+	// We also want to use a fairly long timeout because if we cancel the connection
+	// the goroutine that performs the handshake keeps working in the background.
+	// That slows us down, making it more likely that we will timeout again (producing
+	// more work) and never get to complete the handshake.
+	rpcOptions := []rpckit.Option{rpckit.WithFailFastDialOption(false), rpckit.WithDialTimeout(connDialTimeout)}
+	rpcOptions = append(rpcOptions, c.rpcClientOptions...)
 	for i := 0; i <= connMaxRetries; i++ {
-		rpcClient, err := rpckit.NewRPCClient("certsproxy", c.remoteURL, c.rpcClientOptions...)
+		rpcClient, err := rpckit.NewRPCClient("certsproxy", c.remoteURL, rpcOptions...)
 		if err == nil {
 			return rpcClient, nil
 		}

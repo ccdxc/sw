@@ -73,6 +73,7 @@ type Watcher struct {
 	processEventCb      ProcessEventCb
 	processEventTimeout time.Duration // processEvent is aborted after this timeout
 	inititateWatchCb    InitiateWatchCb
+	rpcOptions          []rpckit.Option
 }
 
 // initiateWatches watches on api server objects
@@ -122,10 +123,14 @@ func (w *Watcher) runWatcher(name, apiSrvURL string, rslver resolver.Interface) 
 	defer w.waitGrp.Done()
 
 	b := balancer.New(rslver)
+	grpcOpts := []rpckit.Option{rpckit.WithBalancer(b)}
+	if w.rpcOptions != nil {
+		grpcOpts = append(grpcOpts, w.rpcOptions...)
+	}
 	// loop forever
 	for {
 		// create a grpc client
-		apicl, err := apiclient.NewGrpcAPIClient(name, apiSrvURL, w.logger, rpckit.WithBalancer(b))
+		apicl, err := apiclient.NewGrpcAPIClient(name, apiSrvURL, w.logger, grpcOpts...)
 		if err != nil {
 			w.logger.WarnLog("method", "runWatcher", "msg", fmt.Sprintf("failed to connect to gRPC server [%s]", apiSrvURL))
 		} else {
@@ -177,7 +182,7 @@ func (w *Watcher) setStopFlag() {
 }
 
 // NewWatcher returns a Watcher for API server objects
-func NewWatcher(name, apiServer string, rslver resolver.Interface, l log.Logger, initiateWatchCb InitiateWatchCb, processEventCb ProcessEventCb, kinds ...*KindOptions) *Watcher {
+func NewWatcher(name, apiServer string, rslver resolver.Interface, l log.Logger, initiateWatchCb InitiateWatchCb, processEventCb ProcessEventCb, rpcOptions []rpckit.Option, kinds ...*KindOptions) *Watcher {
 	// create context and cancel
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 
@@ -193,6 +198,7 @@ func NewWatcher(name, apiServer string, rslver resolver.Interface, l log.Logger,
 		inititateWatchCb:    initiateWatchCb,
 		processEventCb:      processEventCb,
 		processEventTimeout: defProcessEventTimeout,
+		rpcOptions:          rpcOptions,
 	}
 	// setup wait group
 	watcher.waitGrp.Add(1)

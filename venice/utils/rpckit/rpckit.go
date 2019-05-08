@@ -10,6 +10,8 @@ import (
 	"expvar"
 	"fmt"
 	"net"
+	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -65,6 +67,9 @@ type options struct {
 	balancer          grpc.Balancer     // Load balance RPCs between available servers (client option)
 	remoteServerName  string            // The name of the server that client is connecting to (client option)
 	logger            log.Logger
+	tlsClientIdentity string         // Custom client identity passed to the TLS provider
+	rpcFailFast       *bool          // Explicit value for the connection-wide gRPC FailFast flag
+	customDialTimeout *time.Duration // Custom dial timeout for connection establishment -- use 0 for "no timeout"
 }
 
 // RPCServer contains RPC server state
@@ -161,6 +166,39 @@ func WithLogger(logger log.Logger) Option {
 	return func(o *options) {
 		o.logger = logger
 	}
+}
+
+// WithTLSClientIdentity is the custom identity passed to the TLS provider
+// By default all clients share the same identity
+func WithTLSClientIdentity(id string) Option {
+	return func(o *options) {
+		o.tlsClientIdentity = id
+	}
+}
+
+// WithFailFastDialOption supplies an explicit value for the gRPC FailFast.
+// It applies to all RPCs issued over the connection.
+// gRPC default is true
+// https://godoc.org/google.golang.org/grpc#FailFast
+func WithFailFastDialOption(ff bool) Option {
+	return func(o *options) {
+		o.rpcFailFast = new(bool)
+		(*o.rpcFailFast) = ff
+	}
+}
+
+// WithDialTimeout supplies an explicit value for the gRPC timeout
+// Use 0 for no timeout.
+func WithDialTimeout(to time.Duration) Option {
+	return func(o *options) {
+		o.customDialTimeout = new(time.Duration)
+		(*o.customDialTimeout) = to
+	}
+}
+
+func getDefaultTLSClientIdentity() string {
+	hostname, _ := os.Hostname()
+	return path.Base(os.Args[0]) + "-" + hostname
 }
 
 func defaultOptions(mysvcName, role string) *options {
@@ -402,7 +440,13 @@ func (factory *RPCClientFactory) NewRPCClient(mysvcName, remoteURL string, opts 
 
 	// Use default TLS provider unless user has passed in one
 	if rpcClient.options.customTLSProvider == false {
-		tlsProvider, err := GetDefaultTLSProvider(mysvcName)
+		var id string
+		if rpcClient.options.tlsClientIdentity != "" {
+			id = rpcClient.options.tlsClientIdentity
+		} else {
+			id = getDefaultTLSClientIdentity()
+		}
+		tlsProvider, err := GetDefaultTLSProvider(id)
 		if err != nil {
 			rpcClient.logger.Errorf("Failed to instantiate TLS provider. Service name: %s, remote URL: %v, Err: %v", mysvcName, remoteURL, err)
 			return nil, err
@@ -450,7 +494,17 @@ func (c *RPCClient) getDialOpts() ([]grpc.DialOption, error) {
 	} else {
 		grpcOpts = append(grpcOpts, grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(defaultMaxMsgSize), grpc.MaxCallSendMsgSize(defaultMaxMsgSize)))
 	}
-	grpcOpts = append(grpcOpts, grpc.WithBlock(), grpc.WithTimeout(time.Second*3),
+	if c.rpcFailFast != nil {
+		grpcOpts = append(grpcOpts, grpc.WithDefaultCallOptions(grpc.FailFast(*c.rpcFailFast)))
+	}
+	if c.customDialTimeout != nil {
+		if *(c.customDialTimeout) != 0 {
+			grpcOpts = append(grpcOpts, grpc.WithTimeout(*(c.customDialTimeout)))
+		}
+	} else {
+		grpcOpts = append(grpcOpts, grpc.WithTimeout(time.Second*6))
+	}
+	grpcOpts = append(grpcOpts, grpc.WithBlock(),
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{Time: clientKeepaliveTime}),
 		grpc.WithUnaryInterceptor(rpcClientUnaryInterceptor(c)),
 		grpc.WithStreamInterceptor(rpcClientStreamInterceptor(c)))

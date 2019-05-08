@@ -13,11 +13,10 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
-	"github.com/pensando/sw/venice/globals"
+	apiutils "github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/utils/authz"
 	authzgrpc "github.com/pensando/sw/venice/utils/authz/grpc"
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
-	"github.com/pensando/sw/venice/utils/ctxutils"
 )
 
 type auditHandler struct {
@@ -55,7 +54,7 @@ func (a *auditHandler) GetEvent(ctx context.Context, r *audit.EventRequest) (*au
 		return nil, status.Errorf(codes.Internal, "could not get the audit event")
 	}
 	// check if user is authorized to view the event
-	if ctxutils.GetPeerID(ctx) == globals.APIGw {
+	if apiutils.IsAuditsReaderCtx(ctx) {
 		userMeta, ok := authzgrpcctx.UserMetaFromIncomingContext(ctx)
 		if !ok {
 			a.fdr.logger.Errorf("no user in grpc metadata")

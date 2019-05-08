@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/watcher"
 )
 
@@ -158,7 +159,6 @@ func (kp *clusterKeyPair) processClusterEvent(evt *kvstore.WatchEvent, clusterOb
 // GetKeyPair returns a singleton implementation of KeyPair that reads certificate and private key from Cluster object. If
 // cert and key are absent in Cluster object then it falls back to using in-memory temporary self signed cert.
 func GetKeyPair(name, apiServer string, rslver resolver.Interface, l log.Logger) KeyPair {
-	// adding a suffix so that secret field TLS key is returned in cluster obj from API server on watch
 	module := name + authn.ModuleSuffix
 	if gKeyPair != nil {
 		gKeyPair.start(name, apiServer, rslver)
@@ -170,7 +170,9 @@ func GetKeyPair(name, apiServer string, rslver resolver.Interface, l log.Logger)
 			apiServerURL: apiServer,
 			resolver:     rslver,
 		}
+		// Use a custom TLS client identity so that secret field TLS key is not zeroized by ApiServer on watch
 		gKeyPair.watcher = watcher.NewWatcher(module, apiServer, rslver, l, gKeyPair.initiateWatchCb, gKeyPair.processEventCb,
+			[]rpckit.Option{rpckit.WithTLSClientIdentity("auth-watcher")},
 			&watcher.KindOptions{
 				Kind:    string(cluster.KindCluster),
 				Options: &api.ListWatchOptions{},

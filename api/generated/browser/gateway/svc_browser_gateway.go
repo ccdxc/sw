@@ -218,6 +218,7 @@ func (e *sBrowserV1GwService) CompleteRegistration(ctx context.Context,
 
 func (e *sBrowserV1GwService) newClient(ctx context.Context, grpcAddr string, rslvr resolver.Interface, devmode bool) (*adapterBrowserV1, error) {
 	var opts []rpckit.Option
+	opts = append(opts, rpckit.WithTLSClientIdentity(globals.APIGw))
 	if rslvr != nil {
 		opts = append(opts, rpckit.WithBalancer(balancer.New(rslvr)))
 	} else {

@@ -12,8 +12,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/ctxutils"
+	apiutils "github.com/pensando/sw/api/utils"
 )
 
 // secretValueTransformer is a storage transformer used to keep secrets safe in persistent storage
@@ -85,7 +84,7 @@ func (sst *secretValueTransformer) TransformFromStorage(ctx context.Context, sto
 	if len(storedData) == 0 {
 		return storedData, nil
 	}
-	if ctxutils.GetPeerID(ctx) == globals.APIGw {
+	if !apiutils.IsSecretsReaderCtx(ctx) {
 		return nil, nil
 	}
 	ciphertext, err := base64.StdEncoding.DecodeString(string(storedData))

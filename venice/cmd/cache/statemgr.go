@@ -4,10 +4,17 @@ package cache
 
 import (
 	"sync"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/memdb"
+)
+
+var (
+	// parameters for pushing updates to ApiServer
+	maxAPIServerWriteRetries = 10
+	apiServerRPCTimeout      = 10 * time.Second
 )
 
 // APIClientGetter is an interface that returns an API Client.

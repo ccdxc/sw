@@ -712,7 +712,7 @@ func TestNICReadmit(t *testing.T) {
 	refObj, err := tInfo.apiClient.ClusterV1().SmartNIC().Get(context.Background(), &meta)
 	AssertOk(t, err, "Error getting reference object")
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 6; i++ {
 		// De-admit NIC. NMD is supposed to receive a notification and go back to "pending" state.
 		setNICAdmitState(t, &meta, false)
 
@@ -780,7 +780,7 @@ func TestNICDecommissionFlow(t *testing.T) {
 	// Validate SmartNIC object is created in ApiServer and CMD local state
 	checkE2EState(t, nmd, pencluster.SmartNICStatus_PENDING.String())
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 6; i++ {
 		setNICAdmitState(t, &meta, true)
 		// check NIC is admitted in NMD
 		checkE2EState(t, nmd, pencluster.SmartNICStatus_ADMITTED.String())
@@ -986,6 +986,9 @@ func waitForTracer() {
 // TODO : This is work in progress.
 
 func TestMain(m *testing.M) {
+
+	// tune timeouts to speed-up tests
+	cache.SetAPIServerRPCTimeout(1 * time.Second)
 
 	flag.Parse()
 	log.Infof("#### TestMain num-Agents:%d #CPU: %d", *numNaples, gorun.NumCPU())
