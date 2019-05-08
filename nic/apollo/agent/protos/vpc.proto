@@ -45,6 +45,9 @@ message VPCSpec {
   // Virtual Router (VR) MAC address, any packets originated or routed in this
   // VPC carry this MAC as source MAC
   uint64         VirtualRouterMac = 7;
+  // encapped traffic coming with the specified encap from fabric side will be
+  // mapped to this VPC
+  types.Encap    FabricEncap      = 8;
 }
 
 // operational status of a VPC, if any
