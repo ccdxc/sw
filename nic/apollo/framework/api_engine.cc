@@ -568,10 +568,33 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
 
 sdk_ret_t
 api_engine::process_api(api_ctxt_t *api_ctxt) {
-    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_INIT),
-                      sdk::SDK_RET_INVALID_OP);
+    sdk_ret_t ret;
+    static pds_batch_params_t batch_params;
+
+    // if batching is disabled, every API call is batch of 1
+    if (batching_en_ == false) {
+        batch_params.epoch++;
+        ret = batch_begin(&batch_params);
+        if (unlikely(ret != SDK_RET_OK)) {
+            return ret;
+        }
+    }
+    if (batch_ctxt_.stage != API_BATCH_STAGE_INIT) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
+
     // stash this API so we can process it later
     batch_ctxt_.api_ctxts.push_back(*api_ctxt);
+
+    // end internal batching
+    if (batching_en_ == false) {
+        ret = batch_commit();
+        if (unlikely(ret != SDK_RET_OK)) {
+            // TODO: batch_abort() when abort starts working
+            //ret = batch_abort();
+            return ret;
+        }
+    }
     return SDK_RET_OK;
 }
 

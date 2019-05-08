@@ -13,6 +13,7 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/port.hpp"
 #include "nic/apollo/core/core.hpp"
@@ -178,6 +179,9 @@ pds_init (pds_init_params_t *params)
 
     // schedule all global timers
     core::schedule_timers(&api::g_pds_state, api::sysmon_cb);
+
+    // initialize api engine
+    api::g_api_engine.set_batching_en(params->batching_en);
 
     return SDK_RET_OK;
 }

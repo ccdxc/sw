@@ -133,6 +133,7 @@ init_pds (std::string cfg_file, std::string profile)
     init_params.pipeline  = "apollo";
     init_params.cfg_file  = cfg_file;
     init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
+    init_params.batching_en = true;
     if (!profile.empty()) {
         if (profile.compare("p1") == 0) {
             init_params.scale_profile = PDS_SCALE_PROFILE_P1;

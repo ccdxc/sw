@@ -132,11 +132,19 @@ public:
     sdk_ret_t batch_abort(void);
 
     /// \brief Wrapper function for processing all API calls
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t process_api(api_ctxt_t *api_ctxt);
 
+    /// \brief return the slab from where API params is allocated
+    /// \return slab pointer
     slab *api_params_slab(void) { return api_params_slab_; }
+
+    /// \brief set whether batching is enabled/not
+    void set_batching_en(bool batching_en) { batching_en_ = batching_en; }
+
+    /// \brief return true if batching is enabled or else false
+    /// \return true or false based on whether batching is enabled or not
+    bool batching_en(void) const { return batching_en_; }
 
 private:
 
@@ -258,6 +266,7 @@ private:
         // API_OP_UPDATE
         {API_OP_INVALID, API_OP_INVALID, API_OP_DELETE, API_OP_UPDATE },
     };
+    bool                batching_en_;
     api_batch_ctxt_t    batch_ctxt_;
     slab                *api_params_slab_;
 };
