@@ -1,5 +1,7 @@
 # /usr/bin/python3
 import pdb
+from scapy.layers.l2 import Dot1Q
+
 import apollo.config.objects.vpc as vpc
 import apollo.config.utils as utils
 
@@ -71,18 +73,36 @@ def GetExpectedPacket(testcase, args):
         return None
     return testcase.packets.Get(mirrorObj.SpanType + '_MIRROR_PKT_' + args.direction + '_' + str(args.id))
 
+def GetERSPANCos(testcase, inpkt, args):
+    pkt = testcase.packets.db[args.pktid].spktobj.spkt
+    return pkt[Dot1Q].prio
+
+def __is_erspan_truncate(basepktsize, truncatelen):
+    if truncatelen == 0 or (truncatelen >= (basepktsize - utils.ETHER_HDR_LEN)):
+        # No truncate
+        return 0
+    else:
+        # truncate
+        return 1
+
+def GetERSPANTruncate(testcase, inpkt, args):
+    mirrorObj = __get_mirror_object(testcase, args)
+    if not mirrorObj or mirrorObj.SpanType != 'ERSPAN':
+        return 0
+    basepkt = testcase.packets.Get(args.basepktid)
+    return __is_erspan_truncate(basepkt.size, mirrorObj.SnapLen)
+
 def GetERSPANPayloadSize(testcase, inpkt, args):
     mirrorObj = __get_mirror_object(testcase, args)
     if not mirrorObj or mirrorObj.SpanType != 'ERSPAN':
         return 0
     snaplen = mirrorObj.SnapLen
     basepkt = testcase.packets.Get(args.basepktid)
-    # TODO: mirror snaplen is not working. remove this once it works
-    snaplen = basepkt.size
-    if snaplen == 0 or basepkt.size < snaplen:
-        snaplen = basepkt.size
-    logger.info("GetErspanPayloadSize returning %d %d" % (basepkt.size, mirrorObj.SnapLen))
-    return snaplen
+    if __is_erspan_truncate(basepkt.size, snaplen):
+        plen = snaplen + utils.ETHER_HDR_LEN
+    else:
+        plen = basepkt.size
+    return plen
 
 def GetERSPANPayload(testcase, inpkt, args):
     mirrorObj = __get_mirror_object(testcase, args)
@@ -90,11 +110,9 @@ def GetERSPANPayload(testcase, inpkt, args):
         return []
     snaplen = mirrorObj.SnapLen
     basepkt = testcase.packets.Get(args.basepktid)
-    # TODO: mirror snaplen is not working. remove this once it works
-    snaplen = basepkt.size
     args.pktid = args.basepktid
-    args.end = snaplen
-    if snaplen == 0 or basepkt.size < snaplen:
+    if __is_erspan_truncate(basepkt.size, snaplen):
+        args.end = snaplen + utils.ETHER_HDR_LEN
+    else:
         args.end = basepkt.size
-    logger.info("GetErspanPayload returning %s size %d" % (args.pktid, args.end))
     return pktslicer.GetPacketSlice(testcase, basepkt, args)

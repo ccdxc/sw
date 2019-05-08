@@ -60,17 +60,20 @@ mirror:
       interface  : 285343745
       vlanid     : 60
 
-    - spantype   : 'RSPAN'
-      snaplen    : 128
-      interface  : 285343745
-      vlanid     : 70
-
-    # ERSPAN session to substrate vpc
+    # ERSPAN session to substrate vpc with truncate
     - spantype   : 'ERSPAN'
-      snaplen    : 128
+      snaplen    : 80
       dscp       : 0
       vpcid      : 1
       # TODO: Check why srcip is configurable. Until then hardcoding device ip
+      srcip      : '172.16.0.1'
+      dstip      : '172.16.0.3'
+
+    # ERSPAN session to substrate vpc without truncate
+    - spantype   : 'ERSPAN'
+      snaplen    : 200
+      dscp       : 0
+      vpcid      : 1
       srcip      : '172.16.0.1'
       dstip      : '172.16.0.3'
 

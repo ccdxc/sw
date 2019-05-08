@@ -151,8 +151,7 @@ packets:
                 gra       : 0x3
                 t         : 0
                 vlan      : ref://testcase/config/localmapping/VNIC/VlanId
-                # TODO: check 'cos' value
-                cos       : 7
+                cos       : callback://mirror/packets/GetERSPANCos/pktid=FROM_HOST_PKT
             payload :
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO70/data
 
@@ -172,6 +171,7 @@ packets:
             erspangre:
             erspan:
                 sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=1
+                t         : callback://mirror/packets/GetERSPANTruncate/basepktid=FROM_HOST_PKT,direction=RX,id=1
             payload :
                 data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=1
 
@@ -191,6 +191,7 @@ packets:
             erspangre:
             erspan:
                 sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=2
+                t         : callback://mirror/packets/GetERSPANTruncate/basepktid=FROM_HOST_PKT,direction=RX,id=2
             payload :
                 data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=2
 
@@ -210,6 +211,7 @@ packets:
             erspangre:
             erspan:
                 sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=3
+                t         : callback://mirror/packets/GetERSPANTruncate/basepktid=FROM_HOST_PKT,direction=RX,id=3
             payload :
                 data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=3
 
@@ -229,6 +231,7 @@ packets:
             erspangre:
             erspan:
                 sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=4
+                t         : callback://mirror/packets/GetERSPANTruncate/basepktid=FROM_HOST_PKT,direction=RX,id=4
             payload :
                 data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=4
 
@@ -248,6 +251,7 @@ packets:
             erspangre:
             erspan:
                 sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=5
+                t         : callback://mirror/packets/GetERSPANTruncate/basepktid=FROM_HOST_PKT,direction=RX,id=5
             payload :
                 data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=5
 
@@ -267,6 +271,7 @@ packets:
             erspangre:
             erspan:
                 sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=6
+                t         : callback://mirror/packets/GetERSPANTruncate/basepktid=FROM_HOST_PKT,direction=RX,id=6
             payload :
                 data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=6
 
@@ -286,6 +291,7 @@ packets:
             erspangre:
             erspan:
                 sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=7
+                t         : callback://mirror/packets/GetERSPANTruncate/basepktid=FROM_HOST_PKT,direction=RX,id=7
             payload :
                 data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=7
 
@@ -305,6 +311,7 @@ packets:
             erspangre:
             erspan:
                 sessionid : callback://mirror/packets/GetERSPANSessionId/direction=TX,id=8
+                t         : callback://mirror/packets/GetERSPANTruncate/basepktid=FROM_HOST_PKT,direction=RX,id=8
             payload :
                 data    : callback://mirror/packets/GetERSPANPayload/basepktid=FROM_HOST_PKT,direction=TX,id=8
 

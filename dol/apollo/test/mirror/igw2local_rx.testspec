@@ -155,9 +155,29 @@ packets:
                 gra       : 0x3
                 t         : 0
                 vlan      : ref://testcase/config/localmapping/VNIC/VlanId
-                cos       : 0
+                cos       : callback://mirror/packets/GetERSPANCos/pktid=TO_HOST_PKT
             payload :
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO70/data
+
+    - packet:
+        id          : ERSPAN_MIRROR_PKT_RX_7 # Expected RSPAN rx mirrored packet for session 7
+        clone       : ref://testcase/packets/id=ERSPAN_MIRROR_PKT_RX_BASE
+        payloadsize : callback://mirror/packets/GetERSPANPayloadSize/basepktid=TO_HOST_PKT,direction=RX,id=7
+        headers     :
+            erspaneth:
+                dst    : callback://mirror/packets/GetERSPANDstMac/direction=RX,id=7
+            erspanqtag:
+                vlan   : callback://mirror/packets/GetSPANVlanID/direction=RX,id=7
+            erspanipv4:
+                tos    : callback://mirror/packets/GetERSPANDscp/direction=RX,id=7
+                src    : callback://mirror/packets/GetERSPANSrcIP/direction=RX,id=7
+                dst    : callback://mirror/packets/GetERSPANDstIP/direction=RX,id=7
+            erspangre:
+            erspan:
+                sessionid : callback://mirror/packets/GetERSPANSessionId/direction=RX,id=7
+                t         : callback://mirror/packets/GetERSPANTruncate/basepktid=TO_HOST_PKT,direction=RX,id=7
+            payload :
+                data    : callback://mirror/packets/GetERSPANPayload/basepktid=TO_HOST_PKT,direction=RX,id=7
 
     - packet:
         id          : ERSPAN_MIRROR_PKT_RX_8 # Expected RSPAN rx mirrored packet for session 8
@@ -175,6 +195,7 @@ packets:
             erspangre:
             erspan:
                 sessionid : callback://mirror/packets/GetERSPANSessionId/direction=RX,id=8
+                t         : callback://mirror/packets/GetERSPANTruncate/basepktid=TO_HOST_PKT,direction=RX,id=8
             payload :
                 data    : callback://mirror/packets/GetERSPANPayload/basepktid=TO_HOST_PKT,direction=RX,id=8
 
