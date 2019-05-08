@@ -10,10 +10,10 @@
 #include <cinttypes>
 
 #include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
+// #include "platform/pciemgr/include/pciemgr.h"
 
 #include "spdlog/spdlog.h"
-#include "pciemgrd_impl.hpp"
+// #include "pciemgrd_impl.hpp"
 
 static std::shared_ptr<spdlog::logger> spdlogger;
 

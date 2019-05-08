@@ -20,7 +20,7 @@
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/fru/fru.hpp"
-#include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+#include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 
 #ifdef __aarch64__
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"

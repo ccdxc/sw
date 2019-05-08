@@ -10,11 +10,11 @@
 #include <cinttypes>
 #include <sys/types.h>
 
-#include "nic/sdk/platform/misc/include/misc.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
-#include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
-#include "nic/sdk/platform/pcieport/include/pcieport.h"
+#include "platform/misc/include/misc.h"
+#include "platform/pciemgrutils/include/pciesys.h"
+#include "platform/pciehdevices/include/pciehdevices.h"
+#include "platform/pciemgr/include/pciemgr.h"
+#include "platform/pcieport/include/pcieport.h"
 
 #include "pciemgrd_impl.hpp"
 

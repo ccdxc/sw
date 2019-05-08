@@ -15,7 +15,7 @@
 #include "nic/sdk/platform/pciemgrd/pciemgrd.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/pciemgr/pciemgr.hpp"
-#include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+#include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/core/core.hpp"
 

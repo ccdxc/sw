@@ -3,7 +3,7 @@
 
 #include "platform/src/lib/devapi_iris/devapi_iris.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
-#include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+#include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/lib/nicmgr/include/logger.hpp"
 
 pciemgr *pciemgr;

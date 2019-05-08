@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "nic/sdk/platform/capri/capri_state.hpp"
-#include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+#include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_if.h"

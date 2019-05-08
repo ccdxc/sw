@@ -14,7 +14,7 @@
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/nicmgr/nicmgr.hpp"
-#include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+#include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/core/core.hpp"

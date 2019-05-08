@@ -16,7 +16,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "nic/sdk/platform/evutils/include/evutils.h"
+#include "platform/evutils/include/evutils.h"
 
 #include "pmserver.h"
 #include "pciesvc_impl.h"

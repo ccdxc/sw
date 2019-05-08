@@ -5,7 +5,7 @@
 #ifndef __PCIEMGR_IF_HPP__
 #define __PCIEMGR_IF_HPP__
 
-#include "nic/sdk/platform/evutils/include/evutils.h"
+#include "platform/evutils/include/evutils.h"
 
 struct pciehdev_s;
 typedef struct pciehdev_s pciehdev_t;

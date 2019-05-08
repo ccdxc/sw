@@ -15,12 +15,12 @@
 #include <sys/time.h>
 
 #include "platform/pciehdevices/include/pci_ids.h"
-#include "nic/sdk/platform/pal/include/pal.h"
-#include "nic/sdk/platform/evutils/include/evutils.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciesys.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
-#include "nic/sdk/platform/pcieport/include/pcieport.h"
-#include "nic/sdk/lib/catalog/catalog.hpp"
+#include "platform/pal/include/pal.h"
+#include "platform/evutils/include/evutils.h"
+#include "platform/pciemgrutils/include/pciesys.h"
+#include "platform/pciemgr/include/pciemgr.h"
+#include "platform/pcieport/include/pcieport.h"
+#include "lib/catalog/catalog.hpp"
 
 #include "pciemgrd_impl.hpp"
 

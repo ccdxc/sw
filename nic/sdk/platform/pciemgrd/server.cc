@@ -9,17 +9,17 @@
 #include <unistd.h>
 #include <cinttypes>
 
-#include "nic/sdk/platform/evutils/include/evutils.h"
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
-#include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
-#include "nic/sdk/platform/pcieport/include/pcieport.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciehdev.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciehdev_impl.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciehcfg_impl.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciehbar_impl.h"
-#include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
-#include "platform/src/lib/pciemgr_if/include/pmserver.h"
+#include "platform/evutils/include/evutils.h"
+#include "platform/pciemgr/include/pciemgr.h"
+#include "platform/pciehdevices/include/pciehdevices.h"
+#include "platform/pcieport/include/pcieport.h"
+#include "platform/pciemgrutils/include/pciemgrutils.h"
+#include "platform/pciemgrutils/include/pciehdev.h"
+#include "platform/pciemgrutils/include/pciehdev_impl.h"
+#include "platform/pciemgrutils/include/pciehcfg_impl.h"
+#include "platform/pciemgrutils/include/pciehbar_impl.h"
+#include "platform/pciemgrd/pciemgrd_impl.hpp"
+#include "platform/pciemgr_if/include/pmserver.h"
 
 #ifdef IRIS
 #include "platform/src/app/pciemgrd/src/delphic.h"
@@ -201,7 +201,7 @@ server_loop(void)
     pciemgrenv_t *pme = pciemgrenv_get();
     int r = 0;
 
-    logger_init();
+    // logger_init();
     pciesys_loginfo("pciemgrd started\n");
 
 #ifdef IRIS

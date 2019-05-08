@@ -12,10 +12,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "nic/sdk/platform/pciemgr/include/pciemgr.h"
-#include "nic/sdk/platform/pciemgrutils/include/pciemgrutils.h"
-#include "nic/sdk/platform/pcieport/include/pcieport.h"
-#include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
+#include "platform/pciemgr/include/pciemgr.h"
+#include "platform/pciemgrutils/include/pciemgrutils.h"
+#include "platform/pcieport/include/pcieport.h"
+#include "platform/pciemgrd/pciemgrd_impl.hpp"
 
 /*****************************************************************
  * manage data file paths

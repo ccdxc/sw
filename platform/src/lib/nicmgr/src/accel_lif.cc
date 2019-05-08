@@ -23,7 +23,7 @@
 
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
-#include "platform/src/lib/pciemgr_if/include/pciemgr_if.hpp"
+#include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
 
 #include "logger.hpp"

@@ -457,6 +457,7 @@ main(int argc, char *argv[])
     } else if (pme->interactive) {
         r = cli_loop();
     } else {
+        logger_init();
         r = server_loop();
     }
 #endif
