@@ -32,17 +32,6 @@ const char *accel_ring_name_tbl[] = {
 
 static identity_t *sonic_get_identity(void);
 
-static uint32_t
-roundup_to_pow_2(uint32_t val)
-{
-	uint32_t roundup = 1;
-
-	while (roundup < val)
-		roundup <<= 1;
-
-	return roundup;
-}
-
 static inline uint64_t
 sonic_rmem_base_pa(void)
 {
@@ -73,16 +62,9 @@ sonic_rmem_offset_to_pgid(uint64_t offset)
 }
 
 static inline int
-sonic_rmem_page_order(size_t size)
+sonic_rmem_size_to_pages(size_t size)
 {
-	/*
-	 * bitmap_find_free_region() order indicates region size in power of 2.
-	 * So round up size to the nearest power of 2 if necessary.
-	 */
-	if (!is_power_of_2(size))
-		size = roundup_to_pow_2(size);
-
-	return (int)ilog2((size + PAGE_SIZE - 1) / PAGE_SIZE);
+	return (size + PAGE_SIZE - 1) / PAGE_SIZE;
 }
 
 static inline uint64_t
@@ -123,46 +105,43 @@ sonic_rmem_pgaddr_to_iomem(uint64_t pgaddr)
 	return sonic_rmem_pgid_to_iomem(sonic_rmem_pgaddr_to_pgid(pgaddr));
 }
 
-static uint64_t sonic_api_get_rmem(int order)
+static uint64_t sonic_api_get_rmem(int npages)
 {
 	struct sonic_dev *idev = sonic_get_idev();
 	uint64_t pgaddr = SONIC_RMEM_ADDR_INVALID;
-	int ret;
 
-	while (true) {
-		spin_lock(&idev->hbm_inuse_lock);
-		ret = bitmap_find_free_region(idev->hbm_inuse,
-					      idev->hbm_npages, order);
-		if (ret < 0) {
-			spin_unlock(&idev->hbm_inuse_lock);
-			OSAL_LOG_ERROR("rmem bitmap_find_free_region failed ret: %d",
-				       ret);
-			return SONIC_RMEM_ADDR_INVALID;
-		}
-		idev->hbm_nallocs += 1 << order;
-		spin_unlock(&idev->hbm_inuse_lock);
+	OSAL_ASSERT(npages);
+	spin_lock(&idev->hbm_inuse_lock);
 
-		/*
-		 * Note that rmem address 0 is a valid address but to get the
-		 * same common denomitator with kernel memory, we won't use
-		 * that address and won't bother with ever freeing it.
-		 */
-		pgaddr = sonic_rmem_pgid_to_pgaddr((uint32_t)ret);
-		if (sonic_rmem_addr_valid(pgaddr))
-			break;
+	if (idev->hbm_nfrees) {
+		OSAL_LOG_ERROR("rmem alloc cannot be used after free");
+		goto out;
+	}
+	if (npages > sonic_rmem_avail_pages_get()) {
+		OSAL_LOG_ERROR("rmem alloc npages %d exceeds avail %d",
+				npages, sonic_rmem_avail_pages_get());
+		goto out;
 	}
 
+	pgaddr = sonic_rmem_pgid_to_pgaddr(idev->hbm_nallocs);
+	OSAL_ASSERT(sonic_rmem_addr_valid(pgaddr));
+	idev->hbm_nallocs += npages;
+out:
+	spin_unlock(&idev->hbm_inuse_lock);
 	return pgaddr;
 }
 
-static void sonic_api_put_rmem(uint32_t pgid, int order)
+static void sonic_api_put_rmem(uint32_t pgid, int npages)
 {
 	struct sonic_dev *idev = sonic_get_idev();
 
-	OSAL_ASSERT(pgid < idev->hbm_npages);
+	OSAL_ASSERT((pgid + npages) <= idev->hbm_npages);
 	spin_lock(&idev->hbm_inuse_lock);
-	bitmap_release_region(idev->hbm_inuse, pgid, order);
-	idev->hbm_nallocs -= 1 << order;
+	if ((idev->hbm_nfrees + npages) > idev->hbm_nallocs) {
+		OSAL_LOG_ERROR("rmem free amount failure: nfrees %u npages %u nallocs %u",
+				idev->hbm_nfrees, npages, idev->hbm_nallocs);
+	} else
+		idev->hbm_nfrees += npages;
 	spin_unlock(&idev->hbm_inuse_lock);
 }
 
@@ -186,7 +165,9 @@ uint32_t sonic_rmem_page_size_get(void)
 
 uint64_t sonic_rmem_alloc(size_t size)
 {
-	return sonic_api_get_rmem(sonic_rmem_page_order(size));
+	if (!size)
+		return SONIC_RMEM_ADDR_INVALID;
+	return sonic_api_get_rmem(sonic_rmem_size_to_pages(size));
 }
 
 uint64_t sonic_rmem_calloc(size_t size)
@@ -200,9 +181,9 @@ uint64_t sonic_rmem_calloc(size_t size)
 
 void sonic_rmem_free(uint64_t pgaddr, size_t size)
 {
-	if (sonic_rmem_addr_valid(pgaddr))
+	if (sonic_rmem_addr_valid(pgaddr) && size)
 		sonic_api_put_rmem(sonic_rmem_pgaddr_to_pgid(pgaddr),
-				   sonic_rmem_page_order(size));
+				   sonic_rmem_size_to_pages(size));
 }
 
 void sonic_rmem_set(uint64_t pgaddr, uint8_t val, size_t size)

@@ -146,12 +146,6 @@ int sonic_napi(struct napi_struct *napi, int budget, sonic_cq_cb cb,
 	return work_done;
 }
 
-#ifdef __FreeBSD__
-#define DEV_CMD_DELAY_MS(n)  DELAY((n) * 1000)
-#else
-#define DEV_CMD_DELAY_MS(n)  msleep(n)
-#endif
-
 static int sonic_dev_cmd_wait(struct sonic_dev *idev, unsigned long max_seconds)
 {
 	unsigned long max_wait, start_time, duration;
@@ -172,7 +166,7 @@ try_again:
 		done = sonic_dev_cmd_done(idev);
 		if (done)
 			break;
-		DEV_CMD_DELAY_MS(10);
+		schedule_timeout_interruptible(HZ / 10);
 	} while (!done && time_before(jiffies, max_wait));
 	duration = jiffies - start_time;
 
@@ -197,7 +191,7 @@ try_again:
 				idev->dev_cmd->cmd.cmd.opcode,
 				sonic_error_to_str(err), err);
 
-			DEV_CMD_DELAY_MS(200);
+                        schedule_timeout_interruptible(HZ / 10);
 			iowrite32(0, &idev->dev_cmd->done);
 			iowrite32(1, &idev->dev_cmd_db->v);
 			goto try_again;

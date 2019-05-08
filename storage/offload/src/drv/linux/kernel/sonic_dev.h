@@ -250,11 +250,11 @@ struct sonic_dev {
 	struct intr_ctrl __iomem *intr_ctrl;
 	struct intr_status __iomem *intr_status;
 	spinlock_t hbm_inuse_lock; /* for hbm_inuse */
-	unsigned long *hbm_inuse;
 	void __iomem *hbm_iomem_vaddr;
 	dma_addr_t phy_hbm_pages;
 	uint32_t hbm_npages;
 	uint32_t hbm_nallocs;
+	uint32_t hbm_nfrees;
 #ifdef HAPS
 	union identity __iomem *ident;
 #endif

@@ -97,7 +97,6 @@ struct mem_pool_stack {
 
 struct mem_pool_config {
 	enum mem_pool_type mpc_type;	/* cpdc/crypto/sgl/etc pool */
-	uint32_t mpc_num_allocs;	/* total number of object allocs */
 	uint32_t mpc_num_objects;	/* total number of objects */
 	uint32_t mpc_num_vec_elems;	/* total number of vector elements */
 	uint32_t mpc_object_size;	/* size of an object */
@@ -323,12 +322,6 @@ static inline uint32_t
 mpool_get_object_pad_size(const struct mem_pool *mpool)
 {
 	return mpool->mp_config.mpc_pad_size;
-}
-
-static inline uint32_t
-mpool_get_object_num_allocs(const struct mem_pool *mpool)
-{
-	return mpool->mp_config.mpc_num_allocs;
 }
 
 /*

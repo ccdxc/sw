@@ -108,7 +108,6 @@ mpool_create_mem_objects(struct mem_pool *mpool)
 {
 	void *p;
 
-	mpool->mp_config.mpc_num_allocs = 0;
 	mpool->mp_config.mpc_page_size = 0;
 	if (mpool->mp_config.mpc_pool_size) {
 		p = mpool->mp_config.mpc_align_size != PNSO_MEM_ALIGN_NONE ?
@@ -116,7 +115,6 @@ mpool_create_mem_objects(struct mem_pool *mpool)
 				       mpool->mp_config.mpc_pool_size) :
 		    osal_alloc(mpool->mp_config.mpc_pool_size);
 		if (p) {
-			mpool->mp_config.mpc_num_allocs = 1;
 			return p;
 		}
 		OSAL_LOG_ERROR("failed to allocate mem objects for pool %s",
@@ -138,14 +136,9 @@ mpool_destroy_mem_objects(struct mem_pool *mpool)
 static void *
 mpool_create_rmem_objects(struct mem_pool *mpool)
 {
-	uint64_t first_rmem;
-	uint64_t curr_rmem;
-	uint64_t prev_rmem;
-	uint32_t total_size;
+	uint64_t rmem_addr;
 
-	mpool->mp_config.mpc_num_allocs = 0;
-	total_size = mpool->mp_config.mpc_pool_size;
-	if (total_size == 0)
+	if (mpool->mp_config.mpc_pool_size == 0)
 		return NULL;
 
 	/*
@@ -164,65 +157,26 @@ mpool_create_rmem_objects(struct mem_pool *mpool)
 		return NULL;
 	}
 
-	/*
-	 * rmem supports allocation of multiple pages, but it would do so in
-	 * power of 2 count, e.g., an allocation of 20 pages will end up taking
-	 * 32 pages. To avoid this, we loop and allocate each page individually.
-	 */
-	first_rmem = osal_rmem_addr_invalid_def();
-	prev_rmem  = first_rmem;
-	while (total_size) {
-		curr_rmem = osal_rmem_alloc(mpool->mp_config.mpc_page_size);
-		if (!osal_rmem_addr_valid(curr_rmem)) {
-			OSAL_LOG_ERROR("pool %s failed after %u allocs remaining size %u",
-				       mpool_get_type_str(
-					       mpool->mp_config.mpc_type),
-				       mpool->mp_config.mpc_num_allocs,
-				       total_size);
-			goto error;
-		}
-
-		mpool_void_ptr_check(curr_rmem);
-		if (!osal_rmem_addr_valid(first_rmem))
-			first_rmem = curr_rmem;
-
-		if (osal_rmem_addr_valid(prev_rmem) &&
-				((curr_rmem - mpool->mp_config.mpc_page_size) !=
-				 prev_rmem)) {
-			OSAL_LOG_ERROR("unexpected non-contiguous alloc curr_rmem 0x" PRIx64 " prev_rmem 0x" PRIx64,
-					curr_rmem, prev_rmem);
-
-			osal_rmem_free(curr_rmem,
-					mpool->mp_config.mpc_page_size);
-			goto error;
-		}
-		mpool->mp_config.mpc_num_allocs++;
-		prev_rmem = curr_rmem;
-		total_size = total_size > mpool->mp_config.mpc_page_size ?
-			     total_size - mpool->mp_config.mpc_page_size : 0;
+	rmem_addr = osal_rmem_alloc(mpool->mp_config.mpc_pool_size);
+	if (!osal_rmem_addr_valid(rmem_addr)) {
+		OSAL_LOG_ERROR("pool %s failed alloc size %u",
+				mpool_get_type_str(mpool->mp_config.mpc_type),
+				mpool->mp_config.mpc_pool_size);
+		return NULL;
 	}
 
-	return (void *)first_rmem;
-error:
-	while (mpool->mp_config.mpc_num_allocs--) {
-		osal_rmem_free(first_rmem, mpool->mp_config.mpc_page_size);
-		first_rmem += mpool->mp_config.mpc_page_size;
-	}
-	return NULL;
+	mpool_void_ptr_check(rmem_addr);
+	return (void *)rmem_addr;
 }
 
 static void
 mpool_destroy_rmem_objects(struct mem_pool *mpool)
 {
-	uint64_t rmem;
+	uint64_t rmem_addr;
 
 	if (mpool->mp_objects) {
-		OSAL_ASSERT(mpool->mp_config.mpc_num_allocs);
-		rmem = (uint64_t)mpool->mp_objects;
-		while (mpool->mp_config.mpc_num_allocs--) {
-			osal_rmem_free(rmem, mpool->mp_config.mpc_page_size);
-			rmem += mpool->mp_config.mpc_page_size;
-		}
+		rmem_addr = (uint64_t)mpool->mp_objects;
+		osal_rmem_free(rmem_addr, mpool->mp_config.mpc_pool_size);
 		mpool->mp_objects = NULL;
 	}
 }
@@ -324,10 +278,6 @@ mpool_create(enum mem_pool_type mpool_type, uint32_t num_objects,
 			       mpool->mp_config.mpc_vec_elem_size,
 			       mpool->mp_config.mpc_pad_size, align_size);
 
-#ifndef TEMP_DEBUG_TO_BE_REMOVED
-		if (!mpool_type_is_rmem(mpool_type))
-			memset(obj, 0, mpool->mp_config.mpc_vec_elem_size);
-#endif
 		obj += mpool->mp_config.mpc_vec_elem_size;
 	}
 	mpool->mp_stack.mps_top = mpool->mp_config.mpc_num_objects;
@@ -487,8 +437,6 @@ mpool_pprint(const struct mem_pool *mpool)
 			mpool->mp_config.mpc_pad_size);
 	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_pool_size",
 			mpool->mp_config.mpc_pool_size);
-	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_num_allocs",
-			mpool->mp_config.mpc_num_allocs);
 	OSAL_LOG_DEBUG("%-30s: %u", "mpool->mp_config.mpc_page_size",
 			mpool->mp_config.mpc_page_size);
 
