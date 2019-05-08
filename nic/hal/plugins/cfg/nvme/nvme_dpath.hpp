@@ -208,9 +208,6 @@ typedef struct nvme_sessxtstxcb_s {
 
 static_assert(sizeof(nvme_sessxtstxcb_t) == 64);
 
-#define MAX_SESSXTSRX_RINGS 2
-#define MAX_SESSXTSRX_HOST_RINGS 0
-
 #define nvme_sessxtsrxcb_t nvme_sessxtstxcb_t
 
 
@@ -248,9 +245,6 @@ typedef struct nvme_sessdgsttxcb_s {
 
 static_assert(sizeof(nvme_sessdgsttxcb_t) == 64);
 
-#define MAX_SESSDGSTRX_RINGS 2
-#define MAX_SESSDGSTRX_HOST_RINGS 0
-
 #define nvme_sessdgstrxcb_t nvme_sessdgsttxcb_t
 
 typedef struct nvme_resourcecb_s {
@@ -286,7 +280,7 @@ typedef struct nvme_resourcecb_s {
 
 
 typedef struct nvme_cmd_context_s {
-    uint8_t pad[2048];
+    uint8_t pad[4096];
 } nvme_cmd_context_t;
 
 typedef struct nvme_cmd_context_ring_entry_s {

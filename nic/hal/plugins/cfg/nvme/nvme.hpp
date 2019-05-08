@@ -51,8 +51,7 @@ hal_ret_t nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp);
 class NVMEManager {
  public:
   NVMEManager();
-  uint64_t MRStartAddress(const char *hbm_region_name);
-  uint64_t MRSize(const char *hbm_region_name);
+  uint64_t HbmAlloc(uint32_t size);
   uint64_t hbm_base_;
 
  protected:
