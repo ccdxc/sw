@@ -81,7 +81,7 @@ namespace impl {
 
 #define PDS_IMPL_FILL_REMOTE_VNIC_MAPPING_TX_APPDATA(data, nh_id, encap)     \
 {                                                                            \
-    (data)->nexthop_index = (nh_id);                                         \
+    (data)->nexthop_group_index = (nh_id);                                   \
     (data)->dst_slot_id_valid = 1;                                           \
     if ((encap)->type == PDS_ENCAP_TYPE_MPLSoUDP) {                          \
         (data)->dst_slot_id = (encap)->val.mpls_tag;                         \
@@ -113,12 +113,11 @@ namespace impl {
 }
 
 #define nat_action                action_u.nat_nat
-#define nh_tx_action              action_u.nexthop_tx_nexthop_info
-#define tep_tx_mpls_udp_action    action_u.tep_tx_mpls_udp_tep_tx
-#define tep_tx_vxlan_action       action_u.tep_tx_vxlan_tep_tx
-#define tep_tx_mpls_udp_action    action_u.tep_tx_mpls_udp_tep_tx
-#define tep_tx_vxlan_action       action_u.tep_tx_vxlan_tep_tx
-#define nh_tx_action              action_u.nexthop_tx_nexthop_info
+#define nh_action                 action_u.nexthop_nexthop_info
+#define tep_mpls_udp_action       action_u.tep_mpls_udp_tep
+#define tep_vxlan_action          action_u.tep_vxlan_tep
+#define tep_mpls_udp_action       action_u.tep_mpls_udp_tep
+#define tep_vxlan_action          action_u.tep_vxlan_tep
 
 mapping_impl *
 mapping_impl::factory(pds_mapping_spec_t *pds_mapping) {
@@ -173,8 +172,8 @@ mapping_impl::build(pds_mapping_key_t *key) {
     local_ip_mapping_appdata_t            local_ip_mapping_data;
     local_vnic_by_slot_rx_swkey_t         local_vnic_by_slot_rx_key;
     local_vnic_by_slot_rx_actiondata_t    local_vnic_by_slot_rx_data;
-    nexthop_tx_actiondata_t               nh_tx_data;
-    tep_tx_actiondata_t                   tep_tx_data;
+    nexthop_actiondata_t                  nh_data;
+    tep_actiondata_t                      tep_data;
     nat_actiondata_t                      nat_data;
     handle_t                              remote_vnic_tx_hdl;
 
@@ -203,34 +202,34 @@ mapping_impl::build(pds_mapping_key_t *key) {
     }
     remote_vnic_tx_hdl = api_params.handle;
 
-    ret = tep_impl_db()->nh_tx_tbl()->retrieve(
-              remote_vnic_mapping_tx_data.nexthop_index, &nh_tx_data);
+    ret = tep_impl_db()->nh_tbl()->retrieve(
+              remote_vnic_mapping_tx_data.nexthop_group_index, &nh_data);
     if (unlikely(ret != SDK_RET_OK)) {
         goto error;
     }
-    ret = tep_impl_db()->tep_tx_tbl()->retrieve(
-              nh_tx_data.action_u.nexthop_tx_nexthop_info.tep_index,
-              &tep_tx_data);
+    ret = tep_impl_db()->tep_tbl()->retrieve(
+              nh_data.action_u.nexthop_nexthop_info.tep_index,
+              &tep_data);
     if (unlikely(ret != SDK_RET_OK)) {
         goto error;
     }
 
-    if (tep_tx_data.action_id == TEP_TX_MPLS_UDP_TEP_TX_ID) {
-        if (tep_tx_data.tep_tx_mpls_udp_action.dipo == device->ip_addr()) {
+    if (tep_data.action_id == TEP_MPLS_UDP_TEP_ID) {
+        if (tep_data.tep_mpls_udp_action.dipo == device->ip_addr()) {
             local_mapping = true;
         }
-    } else if (tep_tx_data.action_id == TEP_TX_VXLAN_TEP_TX_ID) {
-        if (tep_tx_data.tep_tx_vxlan_action.dipo == device->ip_addr()) {
+    } else if (tep_data.action_id == TEP_VXLAN_TEP_ID) {
+        if (tep_data.tep_vxlan_action.dipo == device->ip_addr()) {
             local_mapping = true;
         }
     }
 
     if (local_mapping == false) {
-        if (tep_tx_data.action_id == TEP_TX_MPLS_UDP_TEP_TX_ID) {
+        if (tep_data.action_id == TEP_MPLS_UDP_TEP_ID) {
             remote_vnic_mapping_rx_key.vnic_metadata_src_slot_id =
                 remote_vnic_mapping_tx_data.dst_slot_id;
             remote_vnic_mapping_rx_key.ipv4_1_srcAddr =
-                tep_tx_data.tep_tx_mpls_udp_action.dipo;
+                tep_data.tep_mpls_udp_action.dipo;
             PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params,
                 &remote_vnic_mapping_rx_key, &remote_vnic_mapping_rx_data,
                 REMOTE_VNIC_MAPPING_RX_REMOTE_VNIC_MAPPING_RX_INFO_ID,
@@ -248,11 +247,11 @@ mapping_impl::build(pds_mapping_key_t *key) {
     // for local mappings, we have to look at more tables
     impl->is_local_ = true;
     impl->handle_.local_.overlay_ip_remote_vnic_tx_hdl_ = remote_vnic_tx_hdl;
-    if (tep_tx_data.action_id == TEP_TX_MPLS_UDP_TEP_TX_ID) {
+    if (tep_data.action_id == TEP_MPLS_UDP_TEP_ID) {
         local_vnic_by_slot_rx_key.mpls_dst_label =
             remote_vnic_mapping_tx_data.dst_slot_id;
         local_vnic_by_slot_rx_key.vxlan_1_vni = 0;
-    } else if (tep_tx_data.action_id == TEP_TX_VXLAN_TEP_TX_ID) {
+    } else if (tep_data.action_id == TEP_VXLAN_TEP_ID) {
         local_vnic_by_slot_rx_key.mpls_dst_label = 0;
         local_vnic_by_slot_rx_key.vxlan_1_vni =
             remote_vnic_mapping_tx_data.dst_slot_id;
@@ -878,17 +877,17 @@ mapping_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
 void
 mapping_impl::fill_mapping_spec_(
     remote_vnic_mapping_tx_appdata_t *remote_vnic_map_tx_data,
-    nexthop_tx_actiondata_t          *nh_tx_data,
-    tep_tx_actiondata_t              *tep_tx_data,
+    nexthop_actiondata_t             *nh_data,
+    tep_actiondata_t                 *tep_data,
     pds_mapping_spec_t               *spec) {
 
     spec->fabric_encap.val.value = remote_vnic_map_tx_data->dst_slot_id;
-    if (tep_tx_data->action_id  == TEP_TX_MPLS_UDP_TEP_TX_ID) {
+    if (tep_data->action_id  == TEP_MPLS_UDP_TEP_ID) {
         spec->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-        spec->tep.ip_addr = tep_tx_data->tep_tx_mpls_udp_action.dipo;
-    } else if (tep_tx_data->action_id  == TEP_TX_VXLAN_TEP_TX_ID) {
+        spec->tep.ip_addr = tep_data->tep_mpls_udp_action.dipo;
+    } else if (tep_data->action_id  == TEP_VXLAN_TEP_ID) {
         spec->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-        spec->tep.ip_addr = tep_tx_data->tep_tx_vxlan_action.dipo;
+        spec->tep.ip_addr = tep_data->tep_vxlan_action.dipo;
     }
 }
 
@@ -948,8 +947,8 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
     sdk_ret_t ret;
     remote_vnic_mapping_tx_swkey_t      remote_vnic_mapping_tx_key = { 0 };
     remote_vnic_mapping_tx_appdata_t    remote_vnic_mapping_tx_data = { 0 };
-    nexthop_tx_actiondata_t             nh_tx_data;
-    tep_tx_actiondata_t                 tep_tx_data;
+    nexthop_actiondata_t                nh_data;
+    tep_actiondata_t                    tep_data;
     remote_vnic_mapping_rx_swkey_t      remote_vnic_mapping_rx_key = { 0 };
     remote_vnic_mapping_rx_appdata_t    remote_vnic_mapping_rx_data = { 0 };
     sdk_table_api_params_t              tparams;
@@ -966,17 +965,17 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    nh_index = remote_vnic_mapping_tx_data.nexthop_index;
-    ret = tep_impl_db()->nh_tx_tbl()->retrieve(nh_index, &nh_tx_data);
+    nh_index = remote_vnic_mapping_tx_data.nexthop_group_index;
+    ret = tep_impl_db()->nh_tbl()->retrieve(nh_index, &nh_data);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    tep_index = nh_tx_data.action_u.nexthop_tx_nexthop_info.tep_index;
-    ret = tep_impl_db()->tep_tx_tbl()->retrieve(tep_index, &tep_tx_data);
+    tep_index = nh_data.action_u.nexthop_nexthop_info.tep_index;
+    ret = tep_impl_db()->tep_tbl()->retrieve(tep_index, &tep_data);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-    fill_mapping_spec_(&remote_vnic_mapping_tx_data, &nh_tx_data, &tep_tx_data,
+    fill_mapping_spec_(&remote_vnic_mapping_tx_data, &nh_data, &tep_data,
                        spec);
 
     if (is_local_) {
@@ -1045,7 +1044,7 @@ mapping_impl::tep_idx(pds_mapping_key_t *key) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     sdk_table_api_params_t api_params;
-    nexthop_tx_actiondata_t nh_tx_data;
+    nexthop_actiondata_t nh_data;
     remote_vnic_mapping_tx_swkey_t remote_vnic_mapping_tx_key;
     remote_vnic_mapping_tx_appdata_t remote_vnic_mapping_tx_data;
 
@@ -1067,14 +1066,14 @@ mapping_impl::tep_idx(pds_mapping_key_t *key) {
                       key->vpc.id, ipaddr2str(&key->ip_addr), ret);
         return PDS_TEP_IMPL_INVALID_INDEX;
     }
-    ret = tep_impl_db()->nh_tx_tbl()->retrieve(
-              remote_vnic_mapping_tx_data.nexthop_index, &nh_tx_data);
+    ret = tep_impl_db()->nh_tbl()->retrieve(
+              remote_vnic_mapping_tx_data.nexthop_group_index, &nh_data);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to read NH_TX table at index %u, err %u",
-                      remote_vnic_mapping_tx_data.nexthop_index, ret);
+                      remote_vnic_mapping_tx_data.nexthop_group_index, ret);
         return PDS_TEP_IMPL_INVALID_INDEX;
     }
-    return nh_tx_data.action_u.nexthop_tx_nexthop_info.tep_index;
+    return nh_data.action_u.nexthop_nexthop_info.tep_index;
 }
 
 /// \@}    // end of PDS_MAPPING_IMPL

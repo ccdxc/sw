@@ -62,6 +62,7 @@ header_type rewrite_metadata_t {
         dst_slot_id         : 24;
         mytep_ip            : 32;
         src_slot_id         : 20;
+        nexthop_index       : 12;
     }
 }
 
@@ -114,6 +115,8 @@ header_type scratch_metadata_t {
         session_stats_addr  : 34;
         hint_valid          : 1;
         cpu_flags           : 16;
+        nexthop_index       : 12;
+        num_nexthops        : 4;
 
         subnet_id           : 16;
         snat                : 1;

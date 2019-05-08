@@ -383,6 +383,8 @@ uint16_t g_local_vnic_tag = 100;
 uint32_t g_local_slot_id = 0x12345;
 uint32_t g_session_index = 0x31;
 
+uint16_t g_nexthop_group_index = 0x55;
+uint16_t g_nexthop_group_index2 = 0x33;
 uint16_t g_nexthop_index = 0x155;
 uint16_t g_nexthop_index2 = 0x333;
 uint16_t g_tep_index = 100;
@@ -393,6 +395,7 @@ uint32_t g_gw_dip = 0x0C0C0101;
 uint64_t g_gw_dmac = 0x001234567890;
 
 uint64_t g_vr_mac3 = 0x00C1C2C3C4C6ULL;
+uint64_t g_nexthop_group_index3 = 0x63;
 uint16_t g_nexthop_index3 = 0x363;
 uint16_t g_tep_index3 = 300;
 uint16_t g_ctag_vid3 = 101;
@@ -890,18 +893,35 @@ flow_init (void)
 }
 
 static void
-nexthop_tx_init (uint16_t nexthop_index, uint16_t tep_index, uint32_t slot_id)
+nexthop_group_init (uint16_t nexthop_group_index, uint16_t nexthop_index)
 {
-    nexthop_tx_actiondata_t data;
-    nexthop_tx_nexthop_info_t *nexthop_info =
-        &data.action_u.nexthop_tx_nexthop_info;
-    uint32_t tbl_id = P4TBL_ID_NEXTHOP_TX;
+    nexthop_group_actiondata_t data;
+    nexthop_group_nexthop_group_info_t *nexthop_group_info =
+        &data.action_u.nexthop_group_nexthop_group_info;
+    uint32_t tbl_id = P4TBL_ID_NEXTHOP_GROUP;
     uint32_t index;
 
     memset(&data, 0, sizeof(data));
+    index = nexthop_group_index;
+    data.action_id = NEXTHOP_GROUP_NEXTHOP_GROUP_INFO_ID;
+    nexthop_group_info->nexthop_index = nexthop_index;
+    nexthop_group_info->num_nexthops = 0;
 
+    entry_write(tbl_id, index, NULL, NULL, &data, false, 0);
+}
+
+static void
+nexthop_init (uint16_t nexthop_index, uint16_t tep_index, uint32_t slot_id)
+{
+    nexthop_actiondata_t data;
+    nexthop_nexthop_info_t *nexthop_info =
+        &data.action_u.nexthop_nexthop_info;
+    uint32_t tbl_id = P4TBL_ID_NEXTHOP;
+    uint32_t index;
+
+    memset(&data, 0, sizeof(data));
     index = nexthop_index;
-    data.action_id = NEXTHOP_TX_NEXTHOP_INFO_ID;
+    data.action_id = NEXTHOP_NEXTHOP_INFO_ID;
     nexthop_info->tep_index = tep_index;
     nexthop_info->encap_type = GW_ENCAP;
     nexthop_info->dst_slot_id = slot_id;
@@ -910,12 +930,12 @@ nexthop_tx_init (uint16_t nexthop_index, uint16_t tep_index, uint32_t slot_id)
 }
 
 static void
-tep_tx_init (uint16_t tep_index, uint8_t tunnel_type, uint32_t dip,
+tep_init (uint16_t tep_index, uint8_t tunnel_type, uint32_t dip,
              uint64_t dmac)
 {
-    tep_tx_actiondata_t data;
-    tep_tx_gre_tep_tx_t *tep_info = &data.action_u.tep_tx_gre_tep_tx;
-    uint32_t tbl_id = P4TBL_ID_TEP_TX;
+    tep_actiondata_t data;
+    tep_gre_tep_t *tep_info = &data.action_u.tep_gre_tep;
+    uint32_t tbl_id = P4TBL_ID_TEP;
     uint32_t index;
 
     memset(&data, 0, sizeof(data));
@@ -932,17 +952,20 @@ rewrite_init (void)
     // program the table constants
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
                                                  mytep_ip);
-    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX, mytep_ip);
-    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX, mytep_mac);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP, mytep_ip);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP, mytep_mac);
 
-    nexthop_tx_init(g_nexthop_index, g_tep_index, g_gw_slot_id);
-    tep_tx_init(g_tep_index, TEP_TX_MPLS_UDP_TEP_TX_ID, g_gw_dip, g_gw_dmac);
+    nexthop_group_init(g_nexthop_group_index, g_nexthop_index);
+    nexthop_init(g_nexthop_index, g_tep_index, g_gw_slot_id);
+    tep_init(g_tep_index, TEP_MPLS_UDP_TEP_ID, g_gw_dip, g_gw_dmac);
 
-    nexthop_tx_init(g_nexthop_index2, g_tep_index2, g_gw_slot_id2);
-    tep_tx_init(g_tep_index2, TEP_TX_VXLAN_TEP_TX_ID, g_gw_dip, g_gw_dmac);
+    nexthop_group_init(g_nexthop_group_index2, g_nexthop_index2);
+    nexthop_init(g_nexthop_index2, g_tep_index2, g_gw_slot_id2);
+    tep_init(g_tep_index2, TEP_VXLAN_TEP_ID, g_gw_dip, g_gw_dmac);
 
-    nexthop_tx_init(g_nexthop_index3, g_tep_index3, g_local_slot_id3);
-    tep_tx_init(g_tep_index3, TEP_TX_VXLAN_TEP_TX_ID, mytep_ip, mytep_mac);
+    nexthop_group_init(g_nexthop_group_index3, g_nexthop_index3);
+    nexthop_init(g_nexthop_index3, g_tep_index3, g_local_slot_id3);
+    tep_init(g_tep_index3, TEP_VXLAN_TEP_ID, mytep_ip, mytep_mac);
 }
 
 static void
@@ -995,7 +1018,7 @@ route_init (void)
     /* Program stage 2*/
     sw_entry.action_u.route_search_ipv4_retrieve.key0 =
             (g_layer1_dip2 & 0xFFFFFFFF);
-    sw_entry.action_u.route_search_ipv4_retrieve.data_ = g_nexthop_index;
+    sw_entry.action_u.route_search_ipv4_retrieve.data_ = g_nexthop_group_index;
     sw_entry.action_u.route_search_ipv4_retrieve.data0 = (0x8000 | g_vpc_id2);
 
     p4pd_apollo_txdma_raw_table_hwentry_query(P4_APOLLO_TXDMA_TBL_ID_ROUTE,
@@ -1117,7 +1140,7 @@ vxlan_mappings_init (void)
     key.txdma_to_p4e_header_vpc_id = g_vpc_id2;
     data.action_id = REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID;
     mapping_info->entry_valid = true;
-    mapping_info->nexthop_index = g_nexthop_index2;
+    mapping_info->nexthop_group_index = g_nexthop_group_index2;
     mapping_info->dst_slot_id_valid = true;
     mapping_info->dst_slot_id = g_gw_slot_id2;
     entry_write(tbl_id, 0, &key, NULL, &data, true,
@@ -1129,7 +1152,7 @@ vxlan_mappings_init (void)
     key.txdma_to_p4e_header_vpc_id = g_vpc_id2;
     data.action_id = REMOTE_VNIC_MAPPING_TX_REMOTE_VNIC_MAPPING_TX_INFO_ID;
     mapping_info->entry_valid = true;
-    mapping_info->nexthop_index = g_nexthop_index3;
+    mapping_info->nexthop_group_index = g_nexthop_group_index3;
     mapping_info->dst_slot_id_valid = true;
     mapping_info->dst_slot_id = g_local_slot_id3;
     entry_write(tbl_id, 0, &key, NULL, &data, true,

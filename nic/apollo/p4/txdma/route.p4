@@ -134,7 +134,7 @@ action res_handler() {
         modify_field(txdma_to_p4e_header.vpc_id, lpm_result & 0x7FFF);
     } else {
         // Set NHID in PHV from LPM result
-        modify_field(txdma_to_p4e_header.nexthop_index, lpm_result);
+        modify_field(txdma_to_p4e_header.nexthop_group_index, lpm_result);
         modify_field(txdma_to_p4e_header.vpc_id, p4_to_txdma_header.vpc_id);
     }
     // Disable further LPM stages.

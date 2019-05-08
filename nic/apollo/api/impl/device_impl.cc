@@ -44,7 +44,7 @@ device_impl::fill_spec_(pds_device_spec_t *spec) {
     sdk::asic::pd::asicpd_read_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
                                               &val);
     spec->device_ip_addr = (ipv4_addr_t)val;
-    sdk::asic::pd::asicpd_read_table_constant(P4TBL_ID_TEP_TX, &val);
+    sdk::asic::pd::asicpd_read_table_constant(P4TBL_ID_TEP, &val);
     MAC_UINT64_TO_ADDR(spec->device_mac_addr, val);
 }
 
@@ -89,17 +89,17 @@ device_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                         macaddr2str(device->mac()));
         sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX,
                                                      device->ip_addr());
-        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX,
+        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP,
                                                      device->ip_addr());
-        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX,
+        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP,
                                                      MAC_TO_UINT64(device->mac()));
         break;
 
     case API_OP_DELETE:
         PDS_TRACE_DEBUG("Cleaning up device config");
         sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_LOCAL_VNIC_BY_SLOT_RX, 0);
-        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP_TX, 0);
-        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP_TX, 0);
+        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_NEXTHOP, 0);
+        sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_TEP, 0);
         break;
 
     default:

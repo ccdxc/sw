@@ -235,12 +235,12 @@ header_type p4_to_txdma_header_t {
 
 header_type txdma_to_p4e_header_t {
     fields {
-        p4plus_app_id   : 4;
-        pad0            : 4;
-        pad1            : 6;
-        nexthop_index   : 10;
-        pad2            : 6;
-        vpc_id          : 10;
+        p4plus_app_id       : 4;
+        pad0                : 4;
+        pad1                : 6;
+        nexthop_group_index : 10;
+        pad2                : 6;
+        vpc_id              : 10;
     }
 }
 

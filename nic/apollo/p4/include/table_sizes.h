@@ -27,5 +27,6 @@
 #define CLASSIFIED_POLICER_TABLE_SIZE                       1024        // 1K
 
 // Rewrite tables
-#define NEXTHOP_TX_TABLE_SIZE                               1024        // 1K
+#define NEXTHOP_GROUP_TABLE_SIZE                            1024        // 1K
+#define NEXTHOP_TABLE_SIZE                                  4096        // 4K
 #define NAT_TABLE_SIZE                                      131072      // 128K

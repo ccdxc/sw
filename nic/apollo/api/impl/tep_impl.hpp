@@ -140,19 +140,19 @@ private:
 
     /**
      * @brief Populate specification with hardware information
-     * @param[in] nh_tx_data Nexthop table data
-     * @param[in] tep_tx_data TEP table data
+     * @param[in] nh_data Nexthop table data
+     * @param[in] tep_data TEP table data
      * @param[out] spec Specification
      */
-    void fill_spec_(nexthop_tx_actiondata_t *nh_tx_data,
-                    tep_tx_actiondata_t *tep_tx_data, pds_tep_spec_t *spec);
+    void fill_spec_(nexthop_actiondata_t *nh_data,
+                    tep_actiondata_t *tep_data, pds_tep_spec_t *spec);
 
     /**
      * @brief Populate status with hardware information
-     * @param[in] tep_tx_data TEP table data
+     * @param[in] tep_data TEP table data
      * @param[out] status Status
      */
-    void fill_status_(tep_tx_actiondata_t *tep_tx_data,
+    void fill_status_(tep_actiondata_t *tep_data,
                       pds_tep_status_t *status);
 
 private:

@@ -54,14 +54,14 @@ public:
     sdk_ret_t table_transaction_end(void);
 
 private:
-    directmap *tep_tx_tbl(void) { return tep_tx_tbl_; }
-    directmap *nh_tx_tbl(void) { return nh_tx_tbl_; }
+    directmap *tep_tbl(void) { return tep_tbl_; }
+    directmap *nh_tbl(void) { return nh_tbl_; }
     friend class tep_impl;       // tep_impl class is friend of tep_impl_state
     friend class mapping_impl;   // mapping_impl class is friend of tep_impl_state
 
 private:
-    directmap    *tep_tx_tbl_;  // directmap table for TEP_TX
-    directmap    *nh_tx_tbl_;   // directmap table for NH_TX
+    directmap    *tep_tbl_;     // directmap table for TEP
+    directmap    *nh_tbl_;      // directmap table for NH
 };
 
 ///   \@}    // end of PDS_TEP_IMPL_STATE

@@ -233,14 +233,14 @@ private:
    /**
      * @brief     Fill the table values to the spec
      * @param[in] remote_vnic_map_tx_data  REMOTE_VNIC_MAPPING_TX table data
-     * @param[in] nh_tx_data               NH_TX table data
-     * @param[in] tep_tx_data              TEP_TX table data
+     * @param[in] nh_data                  NH table data
+     * @param[in] tep_data                 TEP table data
      * @param[out] spec                    specification
      */
     void fill_mapping_spec_(
                 remote_vnic_mapping_tx_appdata_t *remote_vnic_map_tx_dta,
-                nexthop_tx_actiondata_t          *nh_tx_data,
-                tep_tx_actiondata_t              *tep_tx_data,
+                nexthop_actiondata_t             *nh_data,
+                tep_actiondata_t                 *tep_data,
                 pds_mapping_spec_t               *spec);
 
    /**

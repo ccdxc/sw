@@ -1,6 +1,40 @@
+/******************************************************************************
+ * Nexthop Group
+ *****************************************************************************/
+action nexthop_group_info(nexthop_index, num_nexthops) {
+    if (nexthop_index == 0) {
+        modify_field(rewrite_metadata.nexthop_index,
+                     txdma_to_p4e_header.nexthop_group_index);
+        // return
+    }
+
+    modify_field(scratch_metadata.num_nexthops, num_nexthops);
+    if (num_nexthops == 0) {
+        modify_field(scratch_metadata.nexthop_index, nexthop_index);
+    } else {
+        modify_field(scratch_metadata.nexthop_index, nexthop_index +
+            (p4e_apollo_i2e.entropy_hash % scratch_metadata.num_nexthops));
+    }
+    modify_field(rewrite_metadata.nexthop_index, scratch_metadata.nexthop_index);
+}
+
+@pragma stage 2
+table nexthop_group {
+    reads {
+        txdma_to_p4e_header.nexthop_group_index : exact;
+    }
+    actions {
+        nexthop_group_info;
+    }
+    size : NEXTHOP_GROUP_TABLE_SIZE;
+}
+
+/******************************************************************************
+ * Nexthop
+ *****************************************************************************/
 action nexthop_info(tep_index, snat_required, encap_type,
                     dst_slot_id, traffic_class) {
-    if (txdma_to_p4e_header.nexthop_index == 0) {
+    if (rewrite_metadata.nexthop_index == 0) {
         modify_field(control_metadata.p4e_drop_reason,
                      1 << P4E_DROP_INVALID_NEXTHOP);
         drop_packet();
@@ -17,18 +51,21 @@ action nexthop_info(tep_index, snat_required, encap_type,
     modify_field(rewrite_metadata.mytep_ip, scratch_metadata.mytep_ip);
 }
 
-@pragma stage 2
-table nexthop_tx {
+@pragma stage 3
+table nexthop {
     reads {
-        txdma_to_p4e_header.nexthop_index      : exact;
+        rewrite_metadata.nexthop_index  : exact;
     }
     actions {
         nexthop_info;
     }
-    size : NEXTHOP_TX_TABLE_SIZE;
+    size : NEXTHOP_TABLE_SIZE;
 }
 
-action gre_tep_tx(dipo, dmac) {
+/******************************************************************************
+ * Tunnel rewrite
+ *****************************************************************************/
+action gre_tep(dipo, dmac) {
     // remove headers
     remove_header(ethernet_1);
     remove_header(ctag_1);
@@ -80,7 +117,7 @@ action gre_tep_tx(dipo, dmac) {
     }
 }
 
-action mpls_udp_tep_tx(dipo, dmac) {
+action mpls_udp_tep(dipo, dmac) {
     // remove headers
     remove_header(ethernet_1);
     remove_header(ctag_1);
@@ -136,7 +173,7 @@ action mpls_udp_tep_tx(dipo, dmac) {
     }
 }
 
-action vxlan_tep_tx(dipo, dmac) {
+action vxlan_tep(dipo, dmac) {
     // remove headers
     remove_header(ctag_1);
 
@@ -182,19 +219,22 @@ action vxlan_tep_tx(dipo, dmac) {
     }
 }
 
-@pragma stage 3
-table tep_tx {
+@pragma stage 4
+table tep {
     reads {
         rewrite_metadata.tep_index  : exact;
     }
     actions {
-        gre_tep_tx;
-        mpls_udp_tep_tx;
-        vxlan_tep_tx;
+        gre_tep;
+        mpls_udp_tep;
+        vxlan_tep;
     }
     size : TEP_TABLE_SIZE;
 }
 
+/******************************************************************************
+ * NAT rewrite
+ *****************************************************************************/
 action nat(nat_ip) {
     if (nat_metadata.snat_required == TRUE) {
         // SNAT only in Tx direction
@@ -218,7 +258,7 @@ action nat(nat_ip) {
     }
 }
 
-@pragma stage 3
+@pragma stage 4
 @pragma hbm_table
 table nat {
     reads {
@@ -232,8 +272,9 @@ table nat {
 
 control rewrite {
     if (control_metadata.direction == TX_FROM_HOST) {
-        apply(nexthop_tx);
-        apply(tep_tx);
+        apply(nexthop_group);
+        apply(nexthop);
+        apply(tep);
     }
     apply(nat);
 }

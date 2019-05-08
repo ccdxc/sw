@@ -1,16 +1,16 @@
 #include "egress.h"
 #include "EGRESS_p.h"
-#include "EGRESS_nexthop_tx_k.h"
+#include "EGRESS_nexthop_k.h"
 #include "apollo.h"
 
-struct nexthop_tx_k_    k;
-struct nexthop_tx_d     d;
-struct phv_             p;
+struct nexthop_k_   k;
+struct nexthop_d    d;
+struct phv_         p;
 
 %%
 
 nexthop_info:
-    seq         c1, k.txdma_to_p4e_header_nexthop_index, r0
+    seq         c1, k.rewrite_metadata_nexthop_index, r0
     bcf         [c1], nexthop_invalid
     phvwr.!c1   p.rewrite_metadata_tep_index, d.nexthop_info_d.tep_index
     phvwr       p.nat_metadata_snat_required, d.nexthop_info_d.snat_required
@@ -29,6 +29,6 @@ nexthop_invalid:
 /*****************************************************************************/
 .align
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
-nexthop_tx_error:
+nexthop_error:
     phvwr.e         p.capri_intrinsic_drop, 1
     nop
