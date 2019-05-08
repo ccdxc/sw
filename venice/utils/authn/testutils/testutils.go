@@ -176,8 +176,10 @@ func MustCreateUserWithCtx(ctx context.Context, apicl apiclient.Services, userna
 
 // DeleteUser deletes an user
 func DeleteUser(apicl apiclient.Services, username, tenant string) error {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
 	// delete user object in api server
-	_, err := apicl.AuthV1().User().Delete(context.Background(), &api.ObjectMeta{Name: username, Tenant: tenant})
+	_, err := apicl.AuthV1().User().Delete(ctx, &api.ObjectMeta{Name: username, Tenant: tenant})
 	return err
 }
 
@@ -204,6 +206,8 @@ func MustCreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local,
 
 // CreateAuthenticationPolicyWithOrder creates an authentication policy
 func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap, radius *auth.Radius, order []string, tokenExpiry string) (*auth.AuthenticationPolicy, error) {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
 	// authn policy object
 	policy := &auth.AuthenticationPolicy{
 		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
@@ -225,7 +229,7 @@ func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.L
 	var err error
 	var createdPolicy *auth.AuthenticationPolicy
 	if !testutils.CheckEventually(func() (bool, interface{}) {
-		createdPolicy, err = apicl.AuthV1().AuthenticationPolicy().Create(context.Background(), policy)
+		createdPolicy, err = apicl.AuthV1().AuthenticationPolicy().Create(ctx, policy)
 		// 409 is returned when authpolicy already exists. 401 when auth is already bootstrapped.
 		if err == nil || strings.HasPrefix(err.Error(), "Status:(409)") || strings.HasPrefix(err.Error(), "Status:(401)") {
 			return true, nil
@@ -240,8 +244,10 @@ func CreateAuthenticationPolicyWithOrder(apicl apiclient.Services, local *auth.L
 
 // DeleteAuthenticationPolicy deletes an authentication policy
 func DeleteAuthenticationPolicy(apicl apiclient.Services) error {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
 	// delete authentication policy object in api server
-	_, err := apicl.AuthV1().AuthenticationPolicy().Delete(context.Background(), &api.ObjectMeta{Name: "AuthenticationPolicy"})
+	_, err := apicl.AuthV1().AuthenticationPolicy().Delete(ctx, &api.ObjectMeta{Name: "AuthenticationPolicy"})
 	if err != nil {
 		log.Errorf("Error deleting AuthenticationPolicy: %v", err)
 		return err
@@ -274,12 +280,14 @@ func MustDeleteVersion(apicl apiclient.Services, version string) {
 
 // DeleteVersion deletes a version
 func DeleteVersion(apicl apiclient.Services, version string) error {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
 	// delete version object in api server
-	_, err := apicl.ClusterV1().Version().Delete(context.Background(), &api.ObjectMeta{Name: version})
+	_, err := apicl.ClusterV1().Version().Delete(ctx, &api.ObjectMeta{Name: version})
 	if err != nil {
 		return err
 	}
-	deletedVersion, err := apicl.ClusterV1().Version().Get(context.Background(), &api.ObjectMeta{Name: version})
+	deletedVersion, err := apicl.ClusterV1().Version().Get(ctx, &api.ObjectMeta{Name: version})
 	if err == nil {
 		log.Errorf("Error deleting version, found [%#v]", deletedVersion)
 		return fmt.Errorf("deleted version still exists")
@@ -290,6 +298,8 @@ func DeleteVersion(apicl apiclient.Services, version string) error {
 
 // CreateVersion creates a version
 func CreateVersion(apicl apiclient.Services, name string) (*cluster.Version, error) {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
 	version := &cluster.Version{
 		TypeMeta: api.TypeMeta{Kind: "Version"},
 		ObjectMeta: api.ObjectMeta{
@@ -299,7 +309,7 @@ func CreateVersion(apicl apiclient.Services, name string) (*cluster.Version, err
 	var err error
 	var createdVersion *cluster.Version
 	if !testutils.CheckEventually(func() (bool, interface{}) {
-		createdVersion, err = apicl.ClusterV1().Version().Create(context.Background(), version)
+		createdVersion, err = apicl.ClusterV1().Version().Create(ctx, version)
 		if (err == nil) || strings.Contains(err.Error(), "AlreadyExists") {
 			return true, nil
 		}
@@ -313,6 +323,8 @@ func CreateVersion(apicl apiclient.Services, name string) (*cluster.Version, err
 
 // CreateTenant creates a tenant
 func CreateTenant(apicl apiclient.Services, name string) (*cluster.Tenant, error) {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
 	tenant := &cluster.Tenant{
 		TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
 		ObjectMeta: api.ObjectMeta{
@@ -323,7 +335,7 @@ func CreateTenant(apicl apiclient.Services, name string) (*cluster.Tenant, error
 	var err error
 	var createdTenant *cluster.Tenant
 	if !testutils.CheckEventually(func() (bool, interface{}) {
-		createdTenant, err = apicl.ClusterV1().Tenant().Create(context.Background(), tenant)
+		createdTenant, err = apicl.ClusterV1().Tenant().Create(ctx, tenant)
 		// 412 is returned when tenant and default roles already exist. 401 when auth is already bootstrapped.
 		if err == nil || strings.HasPrefix(err.Error(), "Status:(412)") || strings.HasPrefix(err.Error(), "Status:(401)") {
 			return true, nil
@@ -347,12 +359,24 @@ func MustCreateTenant(apicl apiclient.Services, name string) *cluster.Tenant {
 
 // DeleteTenant deletes a tenant
 func DeleteTenant(apicl apiclient.Services, tenant string) error {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
+	// delete all alerts belonging to default alert policy
+	alertPolicies, _ := apicl.MonitoringV1().Alert().List(ctx,
+		&api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}, FieldSelector: "status.reason.alert-policy-id=default-event-based-alerts"})
+	for _, ap := range alertPolicies {
+		apicl.MonitoringV1().Alert().Delete(ctx, &ap.ObjectMeta)
+	}
+
+	// delete default alert policy
+	apicl.MonitoringV1().AlertPolicy().Delete(ctx, &api.ObjectMeta{Tenant: tenant, Name: "default-event-based-alerts"})
+
 	// delete tenant object in api server
-	_, err := apicl.ClusterV1().Tenant().Delete(context.Background(), &api.ObjectMeta{Name: tenant})
+	_, err := apicl.ClusterV1().Tenant().Delete(ctx, &api.ObjectMeta{Name: tenant})
 	if err != nil {
 		return err
 	}
-	deletedTenant, err := apicl.ClusterV1().Tenant().Get(context.Background(), &api.ObjectMeta{Name: tenant})
+	deletedTenant, err := apicl.ClusterV1().Tenant().Get(ctx, &api.ObjectMeta{Name: tenant})
 	if err == nil {
 		log.Errorf("Error deleting tenant, found [%#v]", deletedTenant)
 		return fmt.Errorf("deleted tenant still exists")
@@ -406,8 +430,10 @@ func MustCreateRoleWithCtx(ctx context.Context, apicl apiclient.Services, name, 
 
 // DeleteRole deletes a role
 func DeleteRole(apicl apiclient.Services, name, tenant string) error {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
 	// delete role binding object in api server
-	_, err := apicl.AuthV1().Role().Delete(context.Background(), &api.ObjectMeta{Name: name, Tenant: tenant})
+	_, err := apicl.AuthV1().Role().Delete(ctx, &api.ObjectMeta{Name: name, Tenant: tenant})
 	return err
 }
 
@@ -521,8 +547,10 @@ func MustUpdateRoleBindingWithCtx(ctx context.Context, apicl apiclient.Services,
 
 // DeleteRoleBinding deletes a role binding
 func DeleteRoleBinding(apicl apiclient.Services, name, tenant string) error {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
 	// delete role binding object in api server
-	_, err := apicl.AuthV1().RoleBinding().Delete(context.Background(), &api.ObjectMeta{Name: name, Tenant: tenant})
+	_, err := apicl.AuthV1().RoleBinding().Delete(ctx, &api.ObjectMeta{Name: name, Tenant: tenant})
 	return err
 }
 
@@ -535,10 +563,12 @@ func MustDeleteRoleBinding(apicl apiclient.Services, name, tenant string) {
 
 // SetAuthBootstrapFlag sets bootstrap flag in the cluster object
 func SetAuthBootstrapFlag(apicl apiclient.Services) (*cluster.Cluster, error) {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
 	var clusterObj *cluster.Cluster
 	var err error
 	if !testutils.CheckEventually(func() (bool, interface{}) {
-		clusterObj, err = apicl.ClusterV1().Cluster().AuthBootstrapComplete(context.Background(), &cluster.ClusterAuthBootstrapRequest{})
+		clusterObj, err = apicl.ClusterV1().Cluster().AuthBootstrapComplete(ctx, &cluster.ClusterAuthBootstrapRequest{})
 		// 401 when auth is already bootstrapped.
 		if err == nil || strings.HasPrefix(err.Error(), "Status:(401)") {
 			return true, nil
@@ -562,6 +592,8 @@ func MustSetAuthBootstrapFlag(apicl apiclient.Services) *cluster.Cluster {
 
 // CreateCluster creates a test cluster object
 func CreateCluster(apicl apiclient.Services) (*cluster.Cluster, error) {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
 	clusterObj := &cluster.Cluster{
 		TypeMeta: api.TypeMeta{Kind: string(cluster.KindCluster)},
 		ObjectMeta: api.ObjectMeta{
@@ -571,7 +603,7 @@ func CreateCluster(apicl apiclient.Services) (*cluster.Cluster, error) {
 	var err error
 	var createdCluster *cluster.Cluster
 	if !testutils.CheckEventually(func() (bool, interface{}) {
-		createdCluster, err = apicl.ClusterV1().Cluster().Create(context.Background(), clusterObj)
+		createdCluster, err = apicl.ClusterV1().Cluster().Create(ctx, clusterObj)
 		if (err == nil) || strings.Contains(err.Error(), "AlreadyExists") {
 			return true, nil
 		}
@@ -594,12 +626,14 @@ func MustCreateCluster(apicl apiclient.Services) *cluster.Cluster {
 
 // DeleteCluster deletes a cluster object
 func DeleteCluster(apicl apiclient.Services) error {
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
 	// delete cluster object in api server
-	_, err := apicl.ClusterV1().Cluster().Delete(context.Background(), &api.ObjectMeta{})
+	_, err := apicl.ClusterV1().Cluster().Delete(ctx, &api.ObjectMeta{})
 	if err != nil {
 		return err
 	}
-	deletedCluster, err := apicl.ClusterV1().Cluster().Get(context.Background(), &api.ObjectMeta{})
+	deletedCluster, err := apicl.ClusterV1().Cluster().Get(ctx, &api.ObjectMeta{})
 	if err == nil {
 		log.Errorf("Error deleting cluster, found [%#v]", deletedCluster)
 		return fmt.Errorf("deleted cluster still exists")

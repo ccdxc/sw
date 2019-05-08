@@ -11,16 +11,17 @@ import (
 	"github.com/gogo/protobuf/types"
 	"github.com/satori/go.uuid"
 
-	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/network"
-	"github.com/pensando/sw/api/generated/security"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/fields"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
+	"github.com/pensando/sw/events/generated/eventattrs"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
@@ -279,6 +280,49 @@ func (cl *clusterHooks) createDefaultRoles(ctx context.Context, kv kvstore.Inter
 	return r, true, nil
 }
 
+// createDefaultAlertPolicy creates a default alert policy (ies) for the user. This is mainly to make the life easy for the user.
+// so, we do not manage the life cycle of these objects. User can update/delete these objects as like any other objects that were created by user.
+func (cl *clusterHooks) createDefaultAlertPolicy(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	r, ok := i.(cluster.Tenant)
+	if !ok {
+		cl.logger.ErrorLog("method", "createDefaultAlertPolicy", "msg", fmt.Sprintf("API server hook to create default alert policy called for invalid object type [%#v]", i))
+		return i, true, errors.New("invalid input type")
+	}
+	cl.logger.DebugLog("method", "createDefaultAlertPolicy", "msg", fmt.Sprintf("API server hook called to create default alert policy for tenant [%v]", r.Name))
+
+	apiServer := apisrvpkg.MustGetAPIServer()
+	ts, _ := types.TimestampProto(time.Now())
+
+	// create event based alert policy that converts CRITICAL events to CRITICAL alerts
+	alertPolicy := &monitoring.AlertPolicy{}
+
+	// meta
+	alertPolicy.Defaults("all")
+	alertPolicy.APIVersion = apiServer.GetVersion()
+	alertPolicy.Name = "default-event-based-alerts"
+	alertPolicy.UUID = uuid.NewV4().String()
+	alertPolicy.CreationTime = api.Timestamp{Timestamp: *ts}
+	alertPolicy.ModTime = api.Timestamp{Timestamp: *ts}
+	alertPolicy.Tenant = r.GetName()
+	alertPolicy.Namespace = r.GetNamespace()
+	alertPolicy.GenerationID = "1"
+	alertPolicy.SelfLink = alertPolicy.MakeURI("configs", alertPolicy.APIVersion, string(apiclient.GroupMonitoring))
+
+	// spec
+	alertPolicy.Spec.Resource = "Event"
+	alertPolicy.Spec.Severity = eventattrs.Severity_CRITICAL.String()
+	alertPolicy.Spec.Enable = true
+	alertPolicy.Spec.Requirements = []*fields.Requirement{
+		{Key: "severity", Operator: "equals", Values: []string{eventattrs.Severity_CRITICAL.String()}},
+	}
+
+	if err := txn.Create(alertPolicy.MakeKey(string(apiclient.GroupMonitoring)), alertPolicy); err != nil {
+		return r, true, err
+	}
+
+	return r, true, nil
+}
+
 // deleteDefaultRoles is a pre-commit hook for tenant delete operation that deletes default roles when a tenant is deleted
 func (cl *clusterHooks) deleteDefaultRoles(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	r, ok := i.(cluster.Tenant)
@@ -518,6 +562,7 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultRoles)
 	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createFirewallProfile)
 	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultVirtualRouter)
+	svc.GetCrudService("Tenant", apiintf.CreateOper).WithPreCommitHook(r.createDefaultAlertPolicy)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultRoles)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteFirewallProfile)
 	svc.GetCrudService("Tenant", apiintf.DeleteOper).WithPreCommitHook(r.deleteDefaultVirtualRouter)

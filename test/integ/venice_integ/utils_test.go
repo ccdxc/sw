@@ -43,16 +43,23 @@ func (it *veniceIntegSuite) getTenant(tenantName string) (*cluster.Tenant, error
 
 // deleteTenant deletes a tenant using REST api
 func (it *veniceIntegSuite) deleteTenant(tenantName string) (*cluster.Tenant, error) {
-	// build network object
-	meta := api.ObjectMeta{
-		Name: tenantName,
-	}
 	ctx, err := it.loggedInCtx()
 	if err != nil {
 		return nil, err
 	}
+
+	// delete all alerts belonging to default alert policy
+	alertPolicies, _ := it.restClient.MonitoringV1().Alert().List(ctx,
+		&api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenantName}, FieldSelector: "status.reason.alert-policy-id=default-event-based-alerts"})
+	for _, ap := range alertPolicies {
+		it.restClient.MonitoringV1().Alert().Delete(ctx, &ap.ObjectMeta)
+	}
+
+	// delete default alert policy
+	it.restClient.MonitoringV1().AlertPolicy().Delete(ctx, &api.ObjectMeta{Tenant: tenantName, Name: "default-event-based-alerts"})
+
 	// delete it
-	return it.restClient.ClusterV1().Tenant().Delete(ctx, &meta)
+	return it.restClient.ClusterV1().Tenant().Delete(ctx, &api.ObjectMeta{Name: tenantName})
 }
 
 // createNetwork creates a network using REST api

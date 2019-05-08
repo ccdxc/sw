@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
@@ -255,6 +256,79 @@ func TestTenantObject(t *testing.T) {
 	}
 }
 
+func TestCreateDefaultAlertPolicy(t *testing.T) {
+	tests := []struct {
+		name     string
+		oper     apiintf.APIOperType
+		in       interface{}
+		out      interface{}
+		txnEmpty bool
+		result   bool
+		err      bool
+	}{
+		{
+			name: "invalid input object for create tenant",
+			oper: apiintf.CreateOper,
+			in: struct {
+				Test string
+			}{"testing"},
+			out: struct {
+				Test string
+			}{"testing"},
+			txnEmpty: true,
+			result:   true,
+			err:      true,
+		},
+		{
+			name: "create default alert policy for tenant",
+			oper: apiintf.CreateOper,
+			in: cluster.Tenant{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testtenant",
+					Name:   "testtenant",
+				},
+			},
+			out: cluster.Tenant{
+				TypeMeta: api.TypeMeta{Kind: string(cluster.KindTenant)},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testtenant",
+					Name:   "testtenant",
+				},
+			},
+			txnEmpty: false,
+			result:   true,
+			err:      false,
+		},
+	}
+
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
+	logConfig := log.GetDefaultConfig("TestClusterHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	clusterHooks := &clusterHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		txn := kvs.NewTxn()
+		out, ok, err := clusterHooks.createDefaultAlertPolicy(ctx, kvs, txn, "", test.oper, false, test.in)
+		fmt.Println(err)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, test.err == (err != nil), fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.out, out), fmt.Sprintf("[%v] test failed, expected returned obj [%#v], got [%#v]", test.name, test.out, out))
+		Assert(t, test.txnEmpty == txn.IsEmpty(), fmt.Sprintf("[%v] test failed, expected txn empty to be [%v], got [%v]", test.name, test.txnEmpty, txn.IsEmpty()))
+	}
+}
+
 func TestCreateDefaultRoles(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -322,7 +396,8 @@ func TestCreateDefaultRoles(t *testing.T) {
 		},
 	}
 
-	ctx := context.TODO()
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
 	logConfig := log.GetDefaultConfig("TestClusterHooks")
 	l := log.GetNewLogger(logConfig)
 	storecfg := store.Config{
@@ -415,7 +490,8 @@ func TestDeleteDefaultRoles(t *testing.T) {
 		},
 	}
 
-	ctx := context.TODO()
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
 	logConfig := log.GetDefaultConfig("TestClusterHooks")
 	l := log.GetNewLogger(logConfig)
 	storecfg := store.Config{
@@ -612,7 +688,8 @@ func TestCheckAuthBootstrapFlag(t *testing.T) {
 		logger: l,
 	}
 	for _, test := range tests {
-		ctx := context.TODO()
+		ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+		defer cancelFunc()
 		txn := kvs.NewTxn()
 		kvs.Delete(ctx, clusterKey, nil)
 		if test.existing != nil {
@@ -698,7 +775,8 @@ func TestSetAuthBootstrapFlag(t *testing.T) {
 		logger: l,
 	}
 	for _, test := range tests {
-		ctx := context.TODO()
+		ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+		defer cancelFunc()
 		txn := kvs.NewTxn()
 		kvs.Delete(ctx, clusterKey, nil)
 		if test.existing != nil {
@@ -828,7 +906,8 @@ func TestPopulateExistingTLSConfig(t *testing.T) {
 		logger: l,
 	}
 	for _, test := range tests {
-		ctx := context.TODO()
+		ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+		defer cancelFunc()
 		txn := kvs.NewTxn()
 		kvs.Delete(ctx, clusterKey, nil)
 		if test.existing != nil {
@@ -976,7 +1055,8 @@ jkyfA7bgnrfYqr+pv2Y+319JpMCr6t+e+vLafbU=
 		logger: l,
 	}
 	for _, test := range tests {
-		ctx := context.TODO()
+		ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+		defer cancelFunc()
 		txn := kvs.NewTxn()
 		kvs.Delete(ctx, clusterKey, nil)
 		if test.existing != nil {
@@ -998,7 +1078,8 @@ func TestDefaultFirewallProfile(t *testing.T) {
 	// Good one.
 	txn := &mocks.FakeTxn{}
 	kvs := &mocks.FakeKvStore{}
-	ctx := context.TODO()
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
 	logConfig := log.GetDefaultConfig("TestClusterHooks")
 	l := log.GetNewLogger(logConfig)
 	clusterHooks := &clusterHooks{
@@ -1041,7 +1122,8 @@ func TestDefaultVirtualRouter(t *testing.T) {
 	// Good one.
 	txn := &mocks.FakeTxn{}
 	kvs := &mocks.FakeKvStore{}
-	ctx := context.TODO()
+	ctx, cancelFunc := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancelFunc()
 	logConfig := log.GetDefaultConfig("TestClusterHooks")
 	l := log.GetNewLogger(logConfig)
 	clusterHooks := &clusterHooks{

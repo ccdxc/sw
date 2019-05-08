@@ -76,8 +76,7 @@ func TestEvents(t *testing.T) {
 	// create recorder events directory
 	recorderEventsDir, err := ioutil.TempDir("", "")
 	AssertOk(t, err, "failed to create recorder events directory")
-	fmt.Println("****** recorder events dir: ", recorderEventsDir)
-	//defer os.RemoveAll(recorderEventsDir)
+	defer os.RemoveAll(recorderEventsDir)
 
 	// create recorder
 	evtsRecorder, err := recorder.NewRecorder(&recorder.Config{
@@ -782,7 +781,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 					func() (bool, interface{}) {
 						statusCode, _ := httpClient.Req(reqMethod, url, rr.requestBody, &resp)
 						if statusCode != rr.expStatusCode || len(resp.GetItems()) != rr.expResponse.numEvents {
-							return false, fmt.Sprintf("failed to get expected events for %#v", *rr.requestBody)
+							return false, fmt.Sprintf("failed to get expected events for {%s}: %#v", rr.name, *rr.requestBody)
 						}
 
 						return true, nil
@@ -897,8 +896,9 @@ func TestEventsAlertEngine(t *testing.T) {
 			{Key: "count", Operator: "gte", Values: []string{"5"}},
 			{Key: "count", Operator: "lt", Values: []string{"7"}},
 			{Key: "severity", Operator: "equals", Values: []string{
-				eventattrs.Severity_INFO.String(),
-				eventattrs.Severity_WARN.String()}},
+				eventattrs.Severity_DEBUG.String(),
+				eventattrs.Severity_WARN.String(),
+				eventattrs.Severity_INFO.String()}},
 		}, []string{})
 
 	alertPolicy2, err = apiClient.MonitoringV1().AlertPolicy().Create(context.Background(), alertPolicy2)
@@ -1066,7 +1066,7 @@ func TestEventsAlertEngine(t *testing.T) {
 					return true, nil
 				}
 
-				return false, fmt.Sprintf("expected: %v, obtained: %v", test.selector, alerts)
+				return false, fmt.Sprintf("expected: %v, obtained: %v", test, alerts)
 			}, "did not receive the expected alert", string("200ms"), string("20s"))
 		}
 	}()
