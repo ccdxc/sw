@@ -19,6 +19,7 @@ var _ kvstore.Interface
 type AuthV1UserInterface interface {
 	Create(ctx context.Context, in *User) (*User, error)
 	Update(ctx context.Context, in *User) (*User, error)
+	UpdateStatus(ctx context.Context, in *User) (*User, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*User, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*User, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*User, error)
@@ -33,6 +34,7 @@ type AuthV1UserInterface interface {
 type AuthV1AuthenticationPolicyInterface interface {
 	Create(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error)
 	Update(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error)
+	UpdateStatus(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*AuthenticationPolicy, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*AuthenticationPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*AuthenticationPolicy, error)
@@ -46,6 +48,7 @@ type AuthV1AuthenticationPolicyInterface interface {
 type AuthV1RoleInterface interface {
 	Create(ctx context.Context, in *Role) (*Role, error)
 	Update(ctx context.Context, in *Role) (*Role, error)
+	UpdateStatus(ctx context.Context, in *Role) (*Role, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Role, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Role, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Role, error)
@@ -57,6 +60,7 @@ type AuthV1RoleInterface interface {
 type AuthV1RoleBindingInterface interface {
 	Create(ctx context.Context, in *RoleBinding) (*RoleBinding, error)
 	Update(ctx context.Context, in *RoleBinding) (*RoleBinding, error)
+	UpdateStatus(ctx context.Context, in *RoleBinding) (*RoleBinding, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*RoleBinding, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*RoleBinding, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*RoleBinding, error)

@@ -133,7 +133,7 @@ func (m *VirtualRouter) References(tenant string, path string, resp map[string]a
 	}
 }
 
-func (m *VirtualRouter) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *VirtualRouter) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -146,7 +146,7 @@ func (m *VirtualRouter) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -163,7 +163,7 @@ func (m *VirtualRouterSpec) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *VirtualRouterSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *VirtualRouterSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -176,7 +176,7 @@ func (m *VirtualRouterStatus) References(tenant string, path string, resp map[st
 
 }
 
-func (m *VirtualRouterStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *VirtualRouterStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

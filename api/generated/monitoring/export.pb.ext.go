@@ -282,7 +282,7 @@ func (m *AuthConfig) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *AuthConfig) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AuthConfig) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapExport["AuthConfig"][ver]; ok {
 		for _, v := range vs {
@@ -310,8 +310,9 @@ func (m *ExportConfig) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *ExportConfig) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ExportConfig) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Credentials != nil {
 		{
 			dlmtr := "."
@@ -319,7 +320,7 @@ func (m *ExportConfig) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Credentials"
-			if errs := m.Credentials.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Credentials.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -352,7 +353,7 @@ func (m *ExternalCred) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *ExternalCred) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ExternalCred) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapExport["ExternalCred"][ver]; ok {
 		for _, v := range vs {
@@ -380,7 +381,7 @@ func (m *PrivacyConfig) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *PrivacyConfig) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PrivacyConfig) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapExport["PrivacyConfig"][ver]; ok {
 		for _, v := range vs {
@@ -408,8 +409,9 @@ func (m *SNMPTrapServer) References(tenant string, path string, resp map[string]
 
 }
 
-func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.AuthConfig != nil {
 		{
 			dlmtr := "."
@@ -417,11 +419,12 @@ func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "AuthConfig"
-			if errs := m.AuthConfig.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.AuthConfig.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
 	}
+
 	if m.PrivacyConfig != nil {
 		{
 			dlmtr := "."
@@ -429,7 +432,7 @@ func (m *SNMPTrapServer) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "PrivacyConfig"
-			if errs := m.PrivacyConfig.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.PrivacyConfig.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -468,7 +471,7 @@ func (m *SyslogExportConfig) References(tenant string, path string, resp map[str
 
 }
 
-func (m *SyslogExportConfig) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SyslogExportConfig) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapExport["SyslogExportConfig"][ver]; ok {
 		for _, v := range vs {

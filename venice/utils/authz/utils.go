@@ -150,7 +150,7 @@ func ValidateOperation(op *auth.Operation) (Operation, error) {
 	if res == nil || reflect.ValueOf(res).IsNil() {
 		return nil, fmt.Errorf("resource not specified")
 	}
-	if err := k8serrors.NewAggregate(op.Validate("all", "", true)); err != nil {
+	if err := k8serrors.NewAggregate(op.Validate("all", "", true, false)); err != nil {
 		return nil, err
 	}
 	if err := ValidateResource(res.Tenant, res.Group, res.Kind, res.Name); err != nil {

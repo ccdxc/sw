@@ -78,7 +78,7 @@ func TestMessageWith(t *testing.T) {
 	stx := mocks.ObjStorageTransformer{}
 	m = m.WithStorageTransformer(&stx)
 	singletonAPISrv.runstate.running = true
-	m.Validate(nil, "", true)
+	m.Validate(nil, "", true, false)
 	var kv kvstore.Interface
 	if f.ValidateCalled != 1 {
 		t.Errorf("Expecting 1 validation found %d", f.ValidateCalled)

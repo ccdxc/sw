@@ -256,8 +256,12 @@ func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn
 }
 
 // validateAuthenticatorConfig hook is to validate that authenticators specified in AuthenticatorOrder are defined
-func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignStatus bool) []error {
+func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
 	s.logger.DebugLog("msg", "AuthHook called to validate authenticator config")
+	if ignoreSpec {
+		// Only spec fields are validated
+		return nil
+	}
 	var ret []error
 	r, ok := i.(auth.AuthenticationPolicy)
 	if !ok {
@@ -314,8 +318,12 @@ func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, tx
 }
 
 // validateRolePerms is hook to validate that resource kind and group is valid in permission and a role in non default tenant doesn't contain permissions to other tenants
-func (s *authHooks) validateRolePerms(i interface{}, ver string, ignStatus bool) []error {
+func (s *authHooks) validateRolePerms(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
 	s.logger.DebugLog("msg", "AuthHook called to validate role")
+	if ignoreSpec {
+		// only spec is validated in this hook
+		return nil
+	}
 	r, ok := i.(auth.Role)
 	if !ok {
 		return []error{errInvalidInputType}
@@ -399,8 +407,12 @@ func (s *authHooks) returnUser(ctx context.Context, kvs kvstore.Interface, prefi
 }
 
 // validatePassword is a hook to check user password against password policy
-func (s *authHooks) validatePassword(i interface{}, ver string, ignStatus bool) []error {
+func (s *authHooks) validatePassword(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
 	s.logger.DebugLog("msg", "AuthHook called to validate password")
+	if ignoreSpec {
+		// only spec is validated in this hook
+		return nil
+	}
 	pc := password.NewPolicyChecker()
 	switch obj := i.(type) {
 	case auth.User:

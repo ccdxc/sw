@@ -1327,8 +1327,9 @@ func (m *ApplyDiscountReq) References(tenant string, path string, resp map[strin
 
 }
 
-func (m *ApplyDiscountReq) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ApplyDiscountReq) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	return ret
 }
 
@@ -1355,7 +1356,7 @@ func (m *AutoMsgBookWatchHelper) References(tenant string, path string, resp map
 	}
 }
 
-func (m *AutoMsgBookWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgBookWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -1363,7 +1364,7 @@ func (m *AutoMsgBookWatchHelper) Validate(ver, path string, ignoreStatus bool) [
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1396,8 +1397,9 @@ func (m *AutoMsgBookWatchHelper_WatchEvent) References(tenant string, path strin
 	}
 }
 
-func (m *AutoMsgBookWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgBookWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -1405,7 +1407,7 @@ func (m *AutoMsgBookWatchHelper_WatchEvent) Validate(ver, path string, ignoreSta
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -1425,7 +1427,7 @@ func (m *AutoMsgCouponWatchHelper) References(tenant string, path string, resp m
 
 }
 
-func (m *AutoMsgCouponWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgCouponWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -1433,7 +1435,7 @@ func (m *AutoMsgCouponWatchHelper) Validate(ver, path string, ignoreStatus bool)
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1454,8 +1456,9 @@ func (m *AutoMsgCouponWatchHelper_WatchEvent) References(tenant string, path str
 
 }
 
-func (m *AutoMsgCouponWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgCouponWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -1463,7 +1466,7 @@ func (m *AutoMsgCouponWatchHelper_WatchEvent) Validate(ver, path string, ignoreS
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -1496,7 +1499,7 @@ func (m *AutoMsgCustomerWatchHelper) References(tenant string, path string, resp
 	}
 }
 
-func (m *AutoMsgCustomerWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgCustomerWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -1504,7 +1507,7 @@ func (m *AutoMsgCustomerWatchHelper) Validate(ver, path string, ignoreStatus boo
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1537,8 +1540,9 @@ func (m *AutoMsgCustomerWatchHelper_WatchEvent) References(tenant string, path s
 	}
 }
 
-func (m *AutoMsgCustomerWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgCustomerWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -1546,7 +1550,7 @@ func (m *AutoMsgCustomerWatchHelper_WatchEvent) Validate(ver, path string, ignor
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -1579,7 +1583,7 @@ func (m *AutoMsgOrderWatchHelper) References(tenant string, path string, resp ma
 	}
 }
 
-func (m *AutoMsgOrderWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgOrderWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -1587,7 +1591,7 @@ func (m *AutoMsgOrderWatchHelper) Validate(ver, path string, ignoreStatus bool) 
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1620,8 +1624,9 @@ func (m *AutoMsgOrderWatchHelper_WatchEvent) References(tenant string, path stri
 	}
 }
 
-func (m *AutoMsgOrderWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgOrderWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -1629,7 +1634,7 @@ func (m *AutoMsgOrderWatchHelper_WatchEvent) Validate(ver, path string, ignoreSt
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -1649,7 +1654,7 @@ func (m *AutoMsgPublisherWatchHelper) References(tenant string, path string, res
 
 }
 
-func (m *AutoMsgPublisherWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgPublisherWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -1657,7 +1662,7 @@ func (m *AutoMsgPublisherWatchHelper) Validate(ver, path string, ignoreStatus bo
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1678,8 +1683,9 @@ func (m *AutoMsgPublisherWatchHelper_WatchEvent) References(tenant string, path 
 
 }
 
-func (m *AutoMsgPublisherWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgPublisherWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -1687,7 +1693,7 @@ func (m *AutoMsgPublisherWatchHelper_WatchEvent) Validate(ver, path string, igno
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -1707,7 +1713,7 @@ func (m *AutoMsgStoreWatchHelper) References(tenant string, path string, resp ma
 
 }
 
-func (m *AutoMsgStoreWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgStoreWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -1715,7 +1721,7 @@ func (m *AutoMsgStoreWatchHelper) Validate(ver, path string, ignoreStatus bool) 
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1736,8 +1742,9 @@ func (m *AutoMsgStoreWatchHelper_WatchEvent) References(tenant string, path stri
 
 }
 
-func (m *AutoMsgStoreWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgStoreWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -1745,7 +1752,7 @@ func (m *AutoMsgStoreWatchHelper_WatchEvent) Validate(ver, path string, ignoreSt
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -1775,7 +1782,7 @@ func (m *Book) References(tenant string, path string, resp map[string]apiintf.Re
 	}
 }
 
-func (m *Book) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Book) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -1791,7 +1798,19 @@ func (m *Book) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1802,7 +1821,7 @@ func (m *Book) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1821,7 +1840,7 @@ func (m *BookEdition) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *BookEdition) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *BookEdition) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapExample["BookEdition"][ver]; ok {
 		for _, v := range vs {
@@ -1860,7 +1879,7 @@ func (m *BookList) References(tenant string, path string, resp map[string]apiint
 	}
 }
 
-func (m *BookList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *BookList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -1868,7 +1887,7 @@ func (m *BookList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1889,7 +1908,7 @@ func (m *BookReview) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *BookReview) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *BookReview) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1923,7 +1942,7 @@ func (m *BookSpec) References(tenant string, path string, resp map[string]apiint
 	}
 }
 
-func (m *BookSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *BookSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Editions {
 		dlmtr := "."
@@ -1931,7 +1950,7 @@ func (m *BookSpec) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEditions[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1967,7 +1986,7 @@ func (m *BookStatus) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *BookStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *BookStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1980,8 +1999,9 @@ func (m *Coupon) References(tenant string, path string, resp map[string]apiintf.
 
 }
 
-func (m *Coupon) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Coupon) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	return ret
 }
 
@@ -1995,7 +2015,7 @@ func (m *CouponList) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *CouponList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CouponList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -2003,7 +2023,7 @@ func (m *CouponList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2024,7 +2044,7 @@ func (m *CouponSpec) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *CouponSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CouponSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -2047,7 +2067,7 @@ func (m *Customer) References(tenant string, path string, resp map[string]apiint
 	}
 }
 
-func (m *Customer) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Customer) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -2063,7 +2083,19 @@ func (m *Customer) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2074,7 +2106,7 @@ func (m *Customer) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2106,7 +2138,7 @@ func (m *CustomerList) References(tenant string, path string, resp map[string]ap
 	}
 }
 
-func (m *CustomerList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CustomerList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -2114,7 +2146,7 @@ func (m *CustomerList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2135,7 +2167,7 @@ func (m *CustomerPersonalInfo) References(tenant string, path string, resp map[s
 
 }
 
-func (m *CustomerPersonalInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CustomerPersonalInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -2148,7 +2180,7 @@ func (m *CustomerSpec) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *CustomerSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CustomerSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapExample["CustomerSpec"][ver]; ok {
 		for _, v := range vs {
@@ -2195,7 +2227,7 @@ func (m *CustomerStatus) References(tenant string, path string, resp map[string]
 	}
 }
 
-func (m *CustomerStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CustomerStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -2228,7 +2260,7 @@ func (m *Order) References(tenant string, path string, resp map[string]apiintf.R
 	}
 }
 
-func (m *Order) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Order) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -2244,7 +2276,19 @@ func (m *Order) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2255,10 +2299,11 @@ func (m *Order) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -2266,7 +2311,7 @@ func (m *Order) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2308,7 +2353,7 @@ func (m *OrderItem) References(tenant string, path string, resp map[string]apiin
 	}
 }
 
-func (m *OrderItem) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *OrderItem) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapExample["OrderItem"][ver]; ok {
 		for _, v := range vs {
@@ -2347,7 +2392,7 @@ func (m *OrderList) References(tenant string, path string, resp map[string]apiin
 	}
 }
 
-func (m *OrderList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *OrderList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -2355,7 +2400,7 @@ func (m *OrderList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2389,7 +2434,7 @@ func (m *OrderSpec) References(tenant string, path string, resp map[string]apiin
 	}
 }
 
-func (m *OrderSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *OrderSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Order {
 		dlmtr := "."
@@ -2397,7 +2442,7 @@ func (m *OrderSpec) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sOrder[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2431,7 +2476,7 @@ func (m *OrderStatus) References(tenant string, path string, resp map[string]api
 	}
 }
 
-func (m *OrderStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *OrderStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Filled {
 		dlmtr := "."
@@ -2439,7 +2484,7 @@ func (m *OrderStatus) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sFilled[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2475,8 +2520,9 @@ func (m *OutageRequest) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *OutageRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *OutageRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	return ret
 }
 
@@ -2490,7 +2536,7 @@ func (m *Publisher) References(tenant string, path string, resp map[string]apiin
 
 }
 
-func (m *Publisher) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Publisher) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -2506,7 +2552,19 @@ func (m *Publisher) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2517,7 +2575,7 @@ func (m *Publisher) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2536,7 +2594,7 @@ func (m *PublisherList) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *PublisherList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PublisherList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -2544,7 +2602,7 @@ func (m *PublisherList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2565,7 +2623,7 @@ func (m *PublisherSpec) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *PublisherSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PublisherSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapExample["PublisherSpec"][ver]; ok {
 		for _, v := range vs {
@@ -2591,7 +2649,7 @@ func (m *PublisherStatus) References(tenant string, path string, resp map[string
 
 }
 
-func (m *PublisherStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PublisherStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -2604,8 +2662,9 @@ func (m *RestockRequest) References(tenant string, path string, resp map[string]
 
 }
 
-func (m *RestockRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RestockRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	return ret
 }
 
@@ -2619,8 +2678,9 @@ func (m *RestockResponse) References(tenant string, path string, resp map[string
 
 }
 
-func (m *RestockResponse) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RestockResponse) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	return ret
 }
 
@@ -2634,7 +2694,7 @@ func (m *Store) References(tenant string, path string, resp map[string]apiintf.R
 
 }
 
-func (m *Store) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Store) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -2650,7 +2710,7 @@ func (m *Store) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2667,7 +2727,7 @@ func (m *StoreList) References(tenant string, path string, resp map[string]apiin
 
 }
 
-func (m *StoreList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *StoreList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -2675,7 +2735,7 @@ func (m *StoreList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -2696,7 +2756,7 @@ func (m *StoreSpec) References(tenant string, path string, resp map[string]apiin
 
 }
 
-func (m *StoreSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *StoreSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -2709,7 +2769,7 @@ func (m *StoreStatus) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *StoreStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *StoreStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -2722,7 +2782,7 @@ func (m *UnusedMessage) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *UnusedMessage) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *UnusedMessage) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

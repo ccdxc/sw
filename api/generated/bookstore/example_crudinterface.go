@@ -25,6 +25,7 @@ const KindStore ObjKind = "Store"
 type BookstoreV1OrderInterface interface {
 	Create(ctx context.Context, in *Order) (*Order, error)
 	Update(ctx context.Context, in *Order) (*Order, error)
+	UpdateStatus(ctx context.Context, in *Order) (*Order, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Order, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Order, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Order, error)
@@ -38,6 +39,7 @@ type BookstoreV1OrderInterface interface {
 type BookstoreV1BookInterface interface {
 	Create(ctx context.Context, in *Book) (*Book, error)
 	Update(ctx context.Context, in *Book) (*Book, error)
+	UpdateStatus(ctx context.Context, in *Book) (*Book, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Book, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Book, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Book, error)
@@ -50,6 +52,7 @@ type BookstoreV1BookInterface interface {
 type BookstoreV1PublisherInterface interface {
 	Create(ctx context.Context, in *Publisher) (*Publisher, error)
 	Update(ctx context.Context, in *Publisher) (*Publisher, error)
+	UpdateStatus(ctx context.Context, in *Publisher) (*Publisher, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Publisher, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Publisher, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Publisher, error)
@@ -61,6 +64,7 @@ type BookstoreV1PublisherInterface interface {
 type BookstoreV1StoreInterface interface {
 	Create(ctx context.Context, in *Store) (*Store, error)
 	Update(ctx context.Context, in *Store) (*Store, error)
+	UpdateStatus(ctx context.Context, in *Store) (*Store, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Store, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Store, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Store, error)
@@ -73,6 +77,7 @@ type BookstoreV1StoreInterface interface {
 type BookstoreV1CouponInterface interface {
 	Create(ctx context.Context, in *Coupon) (*Coupon, error)
 	Update(ctx context.Context, in *Coupon) (*Coupon, error)
+	UpdateStatus(ctx context.Context, in *Coupon) (*Coupon, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Coupon, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Coupon, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Coupon, error)
@@ -84,6 +89,7 @@ type BookstoreV1CouponInterface interface {
 type BookstoreV1CustomerInterface interface {
 	Create(ctx context.Context, in *Customer) (*Customer, error)
 	Update(ctx context.Context, in *Customer) (*Customer, error)
+	UpdateStatus(ctx context.Context, in *Customer) (*Customer, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Customer, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Customer, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Customer, error)

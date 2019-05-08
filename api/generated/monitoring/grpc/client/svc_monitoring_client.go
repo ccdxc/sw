@@ -816,6 +816,16 @@ func (a *grpcObjMonitoringV1EventPolicy) Update(ctx context.Context, in *monitor
 	return a.client.AutoUpdateEventPolicy(nctx, in)
 }
 
+func (a *grpcObjMonitoringV1EventPolicy) UpdateStatus(ctx context.Context, in *monitoring.EventPolicy) (*monitoring.EventPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "EventPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateEventPolicy(nctx, in)
+}
+
 func (a *grpcObjMonitoringV1EventPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.EventPolicy, error) {
 	a.logger.DebugLog("msg", "received call", "object", "EventPolicy", "oper", "get")
 	if objMeta == nil {
@@ -912,6 +922,10 @@ func (a *restObjMonitoringV1EventPolicy) Update(ctx context.Context, in *monitor
 	return a.endpoints.AutoUpdateEventPolicy(ctx, in)
 }
 
+func (a *restObjMonitoringV1EventPolicy) UpdateStatus(ctx context.Context, in *monitoring.EventPolicy) (*monitoring.EventPolicy, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjMonitoringV1EventPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.EventPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -991,6 +1005,16 @@ func (a *grpcObjMonitoringV1StatsPolicy) Update(ctx context.Context, in *monitor
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateStatsPolicy(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1StatsPolicy) UpdateStatus(ctx context.Context, in *monitoring.StatsPolicy) (*monitoring.StatsPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateStatsPolicy(nctx, in)
 }
 
@@ -1090,6 +1114,10 @@ func (a *restObjMonitoringV1StatsPolicy) Update(ctx context.Context, in *monitor
 	return a.endpoints.AutoUpdateStatsPolicy(ctx, in)
 }
 
+func (a *restObjMonitoringV1StatsPolicy) UpdateStatus(ctx context.Context, in *monitoring.StatsPolicy) (*monitoring.StatsPolicy, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjMonitoringV1StatsPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.StatsPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1169,6 +1197,16 @@ func (a *grpcObjMonitoringV1FwlogPolicy) Update(ctx context.Context, in *monitor
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateFwlogPolicy(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1FwlogPolicy) UpdateStatus(ctx context.Context, in *monitoring.FwlogPolicy) (*monitoring.FwlogPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FwlogPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateFwlogPolicy(nctx, in)
 }
 
@@ -1268,6 +1306,10 @@ func (a *restObjMonitoringV1FwlogPolicy) Update(ctx context.Context, in *monitor
 	return a.endpoints.AutoUpdateFwlogPolicy(ctx, in)
 }
 
+func (a *restObjMonitoringV1FwlogPolicy) UpdateStatus(ctx context.Context, in *monitoring.FwlogPolicy) (*monitoring.FwlogPolicy, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjMonitoringV1FwlogPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.FwlogPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1347,6 +1389,16 @@ func (a *grpcObjMonitoringV1FlowExportPolicy) Update(ctx context.Context, in *mo
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateFlowExportPolicy(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1FlowExportPolicy) UpdateStatus(ctx context.Context, in *monitoring.FlowExportPolicy) (*monitoring.FlowExportPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FlowExportPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateFlowExportPolicy(nctx, in)
 }
 
@@ -1446,6 +1498,10 @@ func (a *restObjMonitoringV1FlowExportPolicy) Update(ctx context.Context, in *mo
 	return a.endpoints.AutoUpdateFlowExportPolicy(ctx, in)
 }
 
+func (a *restObjMonitoringV1FlowExportPolicy) UpdateStatus(ctx context.Context, in *monitoring.FlowExportPolicy) (*monitoring.FlowExportPolicy, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjMonitoringV1FlowExportPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.FlowExportPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1525,6 +1581,16 @@ func (a *grpcObjMonitoringV1Alert) Update(ctx context.Context, in *monitoring.Al
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateAlert(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1Alert) UpdateStatus(ctx context.Context, in *monitoring.Alert) (*monitoring.Alert, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Alert", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateAlert(nctx, in)
 }
 
@@ -1624,6 +1690,10 @@ func (a *restObjMonitoringV1Alert) Update(ctx context.Context, in *monitoring.Al
 	return a.endpoints.AutoUpdateAlert(ctx, in)
 }
 
+func (a *restObjMonitoringV1Alert) UpdateStatus(ctx context.Context, in *monitoring.Alert) (*monitoring.Alert, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjMonitoringV1Alert) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.Alert, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1703,6 +1773,16 @@ func (a *grpcObjMonitoringV1AlertPolicy) Update(ctx context.Context, in *monitor
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateAlertPolicy(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1AlertPolicy) UpdateStatus(ctx context.Context, in *monitoring.AlertPolicy) (*monitoring.AlertPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AlertPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateAlertPolicy(nctx, in)
 }
 
@@ -1802,6 +1882,10 @@ func (a *restObjMonitoringV1AlertPolicy) Update(ctx context.Context, in *monitor
 	return a.endpoints.AutoUpdateAlertPolicy(ctx, in)
 }
 
+func (a *restObjMonitoringV1AlertPolicy) UpdateStatus(ctx context.Context, in *monitoring.AlertPolicy) (*monitoring.AlertPolicy, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjMonitoringV1AlertPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.AlertPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1881,6 +1965,16 @@ func (a *grpcObjMonitoringV1AlertDestination) Update(ctx context.Context, in *mo
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateAlertDestination(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1AlertDestination) UpdateStatus(ctx context.Context, in *monitoring.AlertDestination) (*monitoring.AlertDestination, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AlertDestination", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateAlertDestination(nctx, in)
 }
 
@@ -1980,6 +2074,10 @@ func (a *restObjMonitoringV1AlertDestination) Update(ctx context.Context, in *mo
 	return a.endpoints.AutoUpdateAlertDestination(ctx, in)
 }
 
+func (a *restObjMonitoringV1AlertDestination) UpdateStatus(ctx context.Context, in *monitoring.AlertDestination) (*monitoring.AlertDestination, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjMonitoringV1AlertDestination) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.AlertDestination, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -2059,6 +2157,16 @@ func (a *grpcObjMonitoringV1MirrorSession) Update(ctx context.Context, in *monit
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateMirrorSession(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1MirrorSession) UpdateStatus(ctx context.Context, in *monitoring.MirrorSession) (*monitoring.MirrorSession, error) {
+	a.logger.DebugLog("msg", "received call", "object", "MirrorSession", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateMirrorSession(nctx, in)
 }
 
@@ -2158,6 +2266,10 @@ func (a *restObjMonitoringV1MirrorSession) Update(ctx context.Context, in *monit
 	return a.endpoints.AutoUpdateMirrorSession(ctx, in)
 }
 
+func (a *restObjMonitoringV1MirrorSession) UpdateStatus(ctx context.Context, in *monitoring.MirrorSession) (*monitoring.MirrorSession, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjMonitoringV1MirrorSession) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.MirrorSession, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -2237,6 +2349,16 @@ func (a *grpcObjMonitoringV1TroubleshootingSession) Update(ctx context.Context, 
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateTroubleshootingSession(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1TroubleshootingSession) UpdateStatus(ctx context.Context, in *monitoring.TroubleshootingSession) (*monitoring.TroubleshootingSession, error) {
+	a.logger.DebugLog("msg", "received call", "object", "TroubleshootingSession", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateTroubleshootingSession(nctx, in)
 }
 
@@ -2336,6 +2458,10 @@ func (a *restObjMonitoringV1TroubleshootingSession) Update(ctx context.Context, 
 	return a.endpoints.AutoUpdateTroubleshootingSession(ctx, in)
 }
 
+func (a *restObjMonitoringV1TroubleshootingSession) UpdateStatus(ctx context.Context, in *monitoring.TroubleshootingSession) (*monitoring.TroubleshootingSession, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjMonitoringV1TroubleshootingSession) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TroubleshootingSession, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -2415,6 +2541,16 @@ func (a *grpcObjMonitoringV1TechSupportRequest) Update(ctx context.Context, in *
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateTechSupportRequest(nctx, in)
+}
+
+func (a *grpcObjMonitoringV1TechSupportRequest) UpdateStatus(ctx context.Context, in *monitoring.TechSupportRequest) (*monitoring.TechSupportRequest, error) {
+	a.logger.DebugLog("msg", "received call", "object", "TechSupportRequest", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateTechSupportRequest(nctx, in)
 }
 
@@ -2512,6 +2648,10 @@ func (a *restObjMonitoringV1TechSupportRequest) Update(ctx context.Context, in *
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.AutoUpdateTechSupportRequest(ctx, in)
+}
+
+func (a *restObjMonitoringV1TechSupportRequest) UpdateStatus(ctx context.Context, in *monitoring.TechSupportRequest) (*monitoring.TechSupportRequest, error) {
+	return nil, errors.New("not supported for REST")
 }
 
 func (a *restObjMonitoringV1TechSupportRequest) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TechSupportRequest, error) {

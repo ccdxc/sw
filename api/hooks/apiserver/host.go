@@ -135,7 +135,7 @@ func (cl *clusterHooks) validateHostSmartNICs(host *cluster.Host) []error {
 }
 
 // Validate the Host config
-func (cl *clusterHooks) validateHostConfig(i interface{}, ver string, ignStatus bool) []error {
+func (cl *clusterHooks) validateHostConfig(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
 	var err []error
 	obj, ok := i.(cluster.Host)
 	if !ok {
@@ -154,6 +154,10 @@ func (cl *clusterHooks) validateHostConfig(i interface{}, ver string, ignStatus 
 	}
 	if obj.Namespace != "" {
 		err = append(err, cl.errInvalidNamespaceConfig())
+	}
+
+	if ignoreSpec {
+		return err
 	}
 
 	// validate the SmartNIC IDs

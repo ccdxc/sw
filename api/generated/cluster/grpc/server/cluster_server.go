@@ -229,9 +229,9 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(cluster.Cluster)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(cluster.Cluster)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(cluster.Cluster)
 			r.Normalize()
@@ -499,9 +499,9 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(cluster.ClusterAuthBootstrapRequest)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(cluster.ClusterAuthBootstrapRequest)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(cluster.ClusterAuthBootstrapRequest)
 			r.Normalize()
@@ -699,9 +699,9 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(cluster.Host)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(cluster.Host)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(cluster.Host)
 			r.Normalize()
@@ -983,9 +983,9 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(cluster.Node)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(cluster.Node)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(cluster.Node)
 			r.Normalize()
@@ -1261,9 +1261,9 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(cluster.UpdateTLSConfigRequest)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(cluster.UpdateTLSConfigRequest)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(cluster.UpdateTLSConfigRequest)
 			r.Normalize()
@@ -1458,9 +1458,9 @@ func (s *sclusterClusterBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(cluster.Version)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(cluster.Version)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(cluster.Version)
 			r.Normalize()

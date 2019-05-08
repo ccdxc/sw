@@ -169,8 +169,9 @@ func (m *BrowseRequest) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *BrowseRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *BrowseRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if vs, ok := validatorMapBrowser["BrowseRequest"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
@@ -199,15 +200,16 @@ func (m *BrowseResponse) References(tenant string, path string, resp map[string]
 
 }
 
-func (m *BrowseResponse) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *BrowseResponse) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	for k, v := range m.Objects {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sObjects[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -229,7 +231,7 @@ func (m *Object) References(tenant string, path string, resp map[string]apiintf.
 
 }
 
-func (m *Object) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Object) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Links {
 		dlmtr := "."
@@ -237,10 +239,11 @@ func (m *Object) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sLinks[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if vs, ok := validatorMapBrowser["Object"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
@@ -274,7 +277,7 @@ func (m *Object_URIs) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *Object_URIs) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Object_URIs) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

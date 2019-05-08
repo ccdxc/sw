@@ -291,7 +291,7 @@ func (m *Rollout) References(tenant string, path string, resp map[string]apiintf
 
 }
 
-func (m *Rollout) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Rollout) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -307,7 +307,19 @@ func (m *Rollout) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -318,10 +330,11 @@ func (m *Rollout) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -329,7 +342,7 @@ func (m *Rollout) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -350,7 +363,7 @@ func (m *RolloutAction) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *RolloutAction) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RolloutAction) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -366,7 +379,19 @@ func (m *RolloutAction) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -377,10 +402,11 @@ func (m *RolloutAction) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -388,7 +414,7 @@ func (m *RolloutAction) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -409,7 +435,7 @@ func (m *RolloutActionStatus) References(tenant string, path string, resp map[st
 
 }
 
-func (m *RolloutActionStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RolloutActionStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapRollout["RolloutActionStatus"][ver]; ok {
 		for _, v := range vs {
@@ -437,7 +463,7 @@ func (m *RolloutPhase) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *RolloutPhase) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RolloutPhase) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapRollout["RolloutPhase"][ver]; ok {
 		for _, v := range vs {
@@ -465,7 +491,7 @@ func (m *RolloutSpec) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *RolloutSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RolloutSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.OrderConstraints {
 		dlmtr := "."
@@ -473,7 +499,7 @@ func (m *RolloutSpec) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sOrderConstraints[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -511,7 +537,7 @@ func (m *RolloutStatus) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *RolloutStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RolloutStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.ControllerNodesStatus {
 		dlmtr := "."
@@ -519,7 +545,7 @@ func (m *RolloutStatus) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sControllerNodesStatus[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -529,7 +555,7 @@ func (m *RolloutStatus) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sControllerServicesStatus[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -539,7 +565,7 @@ func (m *RolloutStatus) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sSmartNICsStatus[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}

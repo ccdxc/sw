@@ -232,9 +232,9 @@ func (s *smonitoringTroubleshootingBackend) regMsgsFunc(l log.Logger, scheme *ru
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(monitoring.TroubleshootingSession)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(monitoring.TroubleshootingSession)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(monitoring.TroubleshootingSession)
 			r.Normalize()

@@ -216,7 +216,7 @@ func (m *Bucket) References(tenant string, path string, resp map[string]apiintf.
 
 }
 
-func (m *Bucket) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Bucket) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -232,7 +232,7 @@ func (m *Bucket) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -249,7 +249,7 @@ func (m *BucketSpec) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *BucketSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *BucketSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -262,7 +262,7 @@ func (m *BucketStatus) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *BucketStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *BucketStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -298,7 +298,7 @@ func (m *Object) References(tenant string, path string, resp map[string]apiintf.
 	}
 }
 
-func (m *Object) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Object) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	{
@@ -307,7 +307,7 @@ func (m *Object) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -324,7 +324,7 @@ func (m *ObjectSpec) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *ObjectSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ObjectSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -337,7 +337,7 @@ func (m *ObjectStatus) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *ObjectStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ObjectStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -350,7 +350,7 @@ func (m *StreamChunk) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *StreamChunk) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *StreamChunk) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

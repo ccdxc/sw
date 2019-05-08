@@ -727,7 +727,7 @@ func (m *CPUInfo) References(tenant string, path string, resp map[string]apiintf
 
 }
 
-func (m *CPUInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CPUInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -740,7 +740,7 @@ func (m *Cluster) References(tenant string, path string, resp map[string]apiintf
 
 }
 
-func (m *Cluster) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Cluster) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -756,7 +756,7 @@ func (m *Cluster) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -773,8 +773,9 @@ func (m *ClusterAuthBootstrapRequest) References(tenant string, path string, res
 
 }
 
-func (m *ClusterAuthBootstrapRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ClusterAuthBootstrapRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	return ret
 }
 
@@ -788,7 +789,7 @@ func (m *ClusterSpec) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *ClusterSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ClusterSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -801,7 +802,7 @@ func (m *ClusterStatus) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *ClusterStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ClusterStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -814,7 +815,7 @@ func (m *DockerInfo) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *DockerInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *DockerInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -827,7 +828,7 @@ func (m *Host) References(tenant string, path string, resp map[string]apiintf.Re
 
 }
 
-func (m *Host) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Host) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -843,7 +844,19 @@ func (m *Host) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -854,7 +867,7 @@ func (m *Host) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -873,7 +886,7 @@ func (m *HostSpec) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *HostSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *HostSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.SmartNICs {
 		dlmtr := "."
@@ -881,7 +894,7 @@ func (m *HostSpec) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sSmartNICs[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -901,7 +914,7 @@ func (m *HostStatus) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *HostStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *HostStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -914,7 +927,7 @@ func (m *InterfaceInfo) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *InterfaceInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *InterfaceInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapCluster["InterfaceInfo"][ver]; ok {
 		for _, v := range vs {
@@ -940,7 +953,7 @@ func (m *MemInfo) References(tenant string, path string, resp map[string]apiintf
 
 }
 
-func (m *MemInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MemInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapCluster["MemInfo"][ver]; ok {
 		for _, v := range vs {
@@ -968,7 +981,7 @@ func (m *NetworkInfo) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *NetworkInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *NetworkInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Interfaces {
 		dlmtr := "."
@@ -976,7 +989,7 @@ func (m *NetworkInfo) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sInterfaces[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -996,7 +1009,7 @@ func (m *Node) References(tenant string, path string, resp map[string]apiintf.Re
 
 }
 
-func (m *Node) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Node) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -1012,10 +1025,11 @@ func (m *Node) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -1023,7 +1037,7 @@ func (m *Node) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1042,7 +1056,7 @@ func (m *NodeCondition) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *NodeCondition) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *NodeCondition) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapCluster["NodeCondition"][ver]; ok {
 		for _, v := range vs {
@@ -1072,8 +1086,9 @@ func (m *NodeInfo) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *NodeInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *NodeInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.MemoryInfo != nil {
 		{
 			dlmtr := "."
@@ -1081,11 +1096,12 @@ func (m *NodeInfo) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "MemoryInfo"
-			if errs := m.MemoryInfo.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.MemoryInfo.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
 	}
+
 	if m.NetworkInfo != nil {
 		{
 			dlmtr := "."
@@ -1093,7 +1109,7 @@ func (m *NodeInfo) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "NetworkInfo"
-			if errs := m.NetworkInfo.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.NetworkInfo.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -1117,7 +1133,7 @@ func (m *NodeSpec) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *NodeSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *NodeSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1130,7 +1146,7 @@ func (m *NodeStatus) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *NodeStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *NodeStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Conditions {
 		dlmtr := "."
@@ -1138,7 +1154,7 @@ func (m *NodeStatus) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sConditions[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1173,7 +1189,7 @@ func (m *OsInfo) References(tenant string, path string, resp map[string]apiintf.
 
 }
 
-func (m *OsInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *OsInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1186,7 +1202,7 @@ func (m *SmartNICID) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *SmartNICID) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SmartNICID) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapCluster["SmartNICID"][ver]; ok {
 		for _, v := range vs {
@@ -1212,7 +1228,7 @@ func (m *StorageDeviceInfo) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *StorageDeviceInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *StorageDeviceInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1225,7 +1241,7 @@ func (m *StorageInfo) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *StorageInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *StorageInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1238,8 +1254,9 @@ func (m *UpdateTLSConfigRequest) References(tenant string, path string, resp map
 
 }
 
-func (m *UpdateTLSConfigRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *UpdateTLSConfigRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	return ret
 }
 
@@ -1253,7 +1270,7 @@ func (m *Version) References(tenant string, path string, resp map[string]apiintf
 
 }
 
-func (m *Version) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Version) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -1269,7 +1286,7 @@ func (m *Version) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1286,7 +1303,7 @@ func (m *VersionSpec) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *VersionSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *VersionSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1299,7 +1316,7 @@ func (m *VersionStatus) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *VersionStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *VersionStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

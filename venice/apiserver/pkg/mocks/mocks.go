@@ -464,7 +464,7 @@ func (m *FakeMessage) Normalize(i interface{}) interface{} {
 }
 
 // Validate is a mock method for testing
-func (m *FakeMessage) Validate(i interface{}, ver string, ignoreStatus bool) []error {
+func (m *FakeMessage) Validate(i interface{}, ver string, ignoreStatus bool, ignoreSpec bool) []error {
 	if m.ValidateRslt {
 		return nil
 	}
@@ -493,7 +493,7 @@ func (m *FakeMessage) TransformCb(from, to string, i interface{}) interface{} {
 }
 
 // ValidateFunc is a mock method for testing
-func (m *FakeMessage) ValidateFunc(i interface{}, ver string, ignstatus bool) []error {
+func (m *FakeMessage) ValidateFunc(i interface{}, ver string, ignstatus, ignoreSpec bool) []error {
 	m.ValidateCalled++
 	return nil
 }

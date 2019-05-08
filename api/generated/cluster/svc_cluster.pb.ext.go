@@ -505,7 +505,7 @@ func (m *AutoMsgClusterWatchHelper) References(tenant string, path string, resp 
 
 }
 
-func (m *AutoMsgClusterWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgClusterWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -513,7 +513,7 @@ func (m *AutoMsgClusterWatchHelper) Validate(ver, path string, ignoreStatus bool
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -534,8 +534,9 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) References(tenant string, path st
 
 }
 
-func (m *AutoMsgClusterWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgClusterWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -543,7 +544,7 @@ func (m *AutoMsgClusterWatchHelper_WatchEvent) Validate(ver, path string, ignore
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -563,7 +564,7 @@ func (m *AutoMsgHostWatchHelper) References(tenant string, path string, resp map
 
 }
 
-func (m *AutoMsgHostWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgHostWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -571,7 +572,7 @@ func (m *AutoMsgHostWatchHelper) Validate(ver, path string, ignoreStatus bool) [
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -592,8 +593,9 @@ func (m *AutoMsgHostWatchHelper_WatchEvent) References(tenant string, path strin
 
 }
 
-func (m *AutoMsgHostWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgHostWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -601,7 +603,7 @@ func (m *AutoMsgHostWatchHelper_WatchEvent) Validate(ver, path string, ignoreSta
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -621,7 +623,7 @@ func (m *AutoMsgNodeWatchHelper) References(tenant string, path string, resp map
 
 }
 
-func (m *AutoMsgNodeWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgNodeWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -629,7 +631,7 @@ func (m *AutoMsgNodeWatchHelper) Validate(ver, path string, ignoreStatus bool) [
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -650,8 +652,9 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) References(tenant string, path strin
 
 }
 
-func (m *AutoMsgNodeWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgNodeWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -659,7 +662,7 @@ func (m *AutoMsgNodeWatchHelper_WatchEvent) Validate(ver, path string, ignoreSta
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -679,7 +682,7 @@ func (m *AutoMsgSmartNICWatchHelper) References(tenant string, path string, resp
 
 }
 
-func (m *AutoMsgSmartNICWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgSmartNICWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -687,7 +690,7 @@ func (m *AutoMsgSmartNICWatchHelper) Validate(ver, path string, ignoreStatus boo
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -708,8 +711,9 @@ func (m *AutoMsgSmartNICWatchHelper_WatchEvent) References(tenant string, path s
 
 }
 
-func (m *AutoMsgSmartNICWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgSmartNICWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -717,7 +721,7 @@ func (m *AutoMsgSmartNICWatchHelper_WatchEvent) Validate(ver, path string, ignor
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -737,7 +741,7 @@ func (m *AutoMsgTenantWatchHelper) References(tenant string, path string, resp m
 
 }
 
-func (m *AutoMsgTenantWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgTenantWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -745,7 +749,7 @@ func (m *AutoMsgTenantWatchHelper) Validate(ver, path string, ignoreStatus bool)
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -766,8 +770,9 @@ func (m *AutoMsgTenantWatchHelper_WatchEvent) References(tenant string, path str
 
 }
 
-func (m *AutoMsgTenantWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgTenantWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -775,7 +780,7 @@ func (m *AutoMsgTenantWatchHelper_WatchEvent) Validate(ver, path string, ignoreS
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -795,7 +800,7 @@ func (m *AutoMsgVersionWatchHelper) References(tenant string, path string, resp 
 
 }
 
-func (m *AutoMsgVersionWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgVersionWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -803,7 +808,7 @@ func (m *AutoMsgVersionWatchHelper) Validate(ver, path string, ignoreStatus bool
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -824,8 +829,9 @@ func (m *AutoMsgVersionWatchHelper_WatchEvent) References(tenant string, path st
 
 }
 
-func (m *AutoMsgVersionWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgVersionWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -833,7 +839,7 @@ func (m *AutoMsgVersionWatchHelper_WatchEvent) Validate(ver, path string, ignore
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -853,7 +859,7 @@ func (m *ClusterList) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *ClusterList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ClusterList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -861,7 +867,7 @@ func (m *ClusterList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -882,7 +888,7 @@ func (m *HostList) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *HostList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *HostList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -890,7 +896,7 @@ func (m *HostList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -911,7 +917,7 @@ func (m *NodeList) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *NodeList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *NodeList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -919,7 +925,7 @@ func (m *NodeList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -940,7 +946,7 @@ func (m *SmartNICList) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *SmartNICList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SmartNICList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -948,7 +954,7 @@ func (m *SmartNICList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -969,7 +975,7 @@ func (m *TenantList) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *TenantList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TenantList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -977,7 +983,7 @@ func (m *TenantList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -998,7 +1004,7 @@ func (m *VersionList) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *VersionList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *VersionList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -1006,7 +1012,7 @@ func (m *VersionList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}

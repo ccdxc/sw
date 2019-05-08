@@ -228,9 +228,9 @@ func (s *sworkloadEndpointBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(workload.Endpoint)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(workload.Endpoint)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(workload.Endpoint)
 			r.Normalize()

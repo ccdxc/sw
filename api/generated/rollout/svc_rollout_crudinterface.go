@@ -19,6 +19,7 @@ var _ kvstore.Interface
 type RolloutV1RolloutInterface interface {
 	Create(ctx context.Context, in *Rollout) (*Rollout, error)
 	Update(ctx context.Context, in *Rollout) (*Rollout, error)
+	UpdateStatus(ctx context.Context, in *Rollout) (*Rollout, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Rollout, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Rollout, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Rollout, error)
@@ -31,6 +32,7 @@ type RolloutV1RolloutInterface interface {
 type RolloutV1RolloutActionInterface interface {
 	Create(ctx context.Context, in *RolloutAction) (*RolloutAction, error)
 	Update(ctx context.Context, in *RolloutAction) (*RolloutAction, error)
+	UpdateStatus(ctx context.Context, in *RolloutAction) (*RolloutAction, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*RolloutAction, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*RolloutAction, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*RolloutAction, error)

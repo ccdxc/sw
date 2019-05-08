@@ -630,7 +630,7 @@ func (m *Category) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *Category) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Category) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -643,7 +643,7 @@ func (m *CategoryAggregation) References(tenant string, path string, resp map[st
 
 }
 
-func (m *CategoryAggregation) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CategoryAggregation) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -656,7 +656,7 @@ func (m *CategoryPreview) References(tenant string, path string, resp map[string
 
 }
 
-func (m *CategoryPreview) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CategoryPreview) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -669,8 +669,9 @@ func (m *ConfigEntry) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *ConfigEntry) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ConfigEntry) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	return ret
 }
 
@@ -684,7 +685,7 @@ func (m *Entry) References(tenant string, path string, resp map[string]apiintf.R
 
 }
 
-func (m *Entry) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Entry) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -697,7 +698,7 @@ func (m *EntryList) References(tenant string, path string, resp map[string]apiin
 
 }
 
-func (m *EntryList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *EntryList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -710,7 +711,7 @@ func (m *Error) References(tenant string, path string, resp map[string]apiintf.R
 
 }
 
-func (m *Error) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Error) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -723,7 +724,7 @@ func (m *Kind) References(tenant string, path string, resp map[string]apiintf.Re
 
 }
 
-func (m *Kind) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Kind) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -736,7 +737,7 @@ func (m *KindAggregation) References(tenant string, path string, resp map[string
 
 }
 
-func (m *KindAggregation) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *KindAggregation) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -749,7 +750,7 @@ func (m *KindPreview) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *KindPreview) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *KindPreview) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -775,7 +776,7 @@ func (m *PolicyMatchEntries) References(tenant string, path string, resp map[str
 	}
 }
 
-func (m *PolicyMatchEntries) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PolicyMatchEntries) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Entries {
 		dlmtr := "."
@@ -783,7 +784,7 @@ func (m *PolicyMatchEntries) Validate(ver, path string, ignoreStatus bool) []err
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEntries[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -816,8 +817,9 @@ func (m *PolicyMatchEntry) References(tenant string, path string, resp map[strin
 	}
 }
 
-func (m *PolicyMatchEntry) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PolicyMatchEntry) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Rule != nil {
 		{
 			dlmtr := "."
@@ -825,7 +827,7 @@ func (m *PolicyMatchEntry) Validate(ver, path string, ignoreStatus bool) []error
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Rule"
-			if errs := m.Rule.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Rule.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -845,7 +847,7 @@ func (m *PolicySearchRequest) References(tenant string, path string, resp map[st
 
 }
 
-func (m *PolicySearchRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PolicySearchRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -871,7 +873,7 @@ func (m *PolicySearchResponse) References(tenant string, path string, resp map[s
 	}
 }
 
-func (m *PolicySearchResponse) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PolicySearchResponse) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Results {
 		dlmtr := "."
@@ -879,7 +881,7 @@ func (m *PolicySearchResponse) Validate(ver, path string, ignoreStatus bool) []e
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sResults[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -915,8 +917,9 @@ func (m *SearchQuery) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *SearchQuery) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SearchQuery) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Fields != nil {
 		{
 			dlmtr := "."
@@ -924,11 +927,12 @@ func (m *SearchQuery) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Fields"
-			if errs := m.Fields.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Fields.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
 	}
+
 	if m.Labels != nil {
 		{
 			dlmtr := "."
@@ -936,7 +940,7 @@ func (m *SearchQuery) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Labels"
-			if errs := m.Labels.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Labels.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -947,7 +951,7 @@ func (m *SearchQuery) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sTexts[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -997,8 +1001,9 @@ func (m *SearchRequest) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *SearchRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SearchRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Query != nil {
 		{
 			dlmtr := "."
@@ -1006,7 +1011,7 @@ func (m *SearchRequest) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Query"
-			if errs := m.Query.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Query.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -1043,7 +1048,7 @@ func (m *SearchResponse) References(tenant string, path string, resp map[string]
 
 }
 
-func (m *SearchResponse) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SearchResponse) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1056,7 +1061,7 @@ func (m *TenantAggregation) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *TenantAggregation) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TenantAggregation) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1069,7 +1074,7 @@ func (m *TenantPreview) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *TenantPreview) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TenantPreview) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1082,7 +1087,7 @@ func (m *TextRequirement) References(tenant string, path string, resp map[string
 
 }
 
-func (m *TextRequirement) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TextRequirement) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapSearch["TextRequirement"][ver]; ok {
 		for _, v := range vs {

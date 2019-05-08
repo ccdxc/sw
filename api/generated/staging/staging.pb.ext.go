@@ -405,7 +405,7 @@ func (m *Buffer) References(tenant string, path string, resp map[string]apiintf.
 	}
 }
 
-func (m *Buffer) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Buffer) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -418,10 +418,11 @@ func (m *Buffer) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -429,7 +430,7 @@ func (m *Buffer) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -448,7 +449,7 @@ func (m *BufferSpec) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *BufferSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *BufferSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -461,7 +462,7 @@ func (m *BufferStatus) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *BufferStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *BufferStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapStaging["BufferStatus"][ver]; ok {
 		for _, v := range vs {
@@ -512,7 +513,7 @@ func (m *ClearAction) References(tenant string, path string, resp map[string]api
 	}
 }
 
-func (m *ClearAction) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ClearAction) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -525,10 +526,11 @@ func (m *ClearAction) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -536,7 +538,7 @@ func (m *ClearAction) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -555,7 +557,7 @@ func (m *ClearActionSpec) References(tenant string, path string, resp map[string
 
 }
 
-func (m *ClearActionSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ClearActionSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -568,7 +570,7 @@ func (m *ClearActionStatus) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *ClearActionStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ClearActionStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapStaging["ClearActionStatus"][ver]; ok {
 		for _, v := range vs {
@@ -619,7 +621,7 @@ func (m *CommitAction) References(tenant string, path string, resp map[string]ap
 	}
 }
 
-func (m *CommitAction) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CommitAction) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -632,10 +634,11 @@ func (m *CommitAction) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -643,7 +646,7 @@ func (m *CommitAction) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -662,7 +665,7 @@ func (m *CommitActionSpec) References(tenant string, path string, resp map[strin
 
 }
 
-func (m *CommitActionSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CommitActionSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -675,7 +678,7 @@ func (m *CommitActionStatus) References(tenant string, path string, resp map[str
 
 }
 
-func (m *CommitActionStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *CommitActionStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapStaging["CommitActionStatus"][ver]; ok {
 		for _, v := range vs {
@@ -703,7 +706,7 @@ func (m *Item) References(tenant string, path string, resp map[string]apiintf.Re
 
 }
 
-func (m *Item) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Item) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -716,7 +719,7 @@ func (m *ItemId) References(tenant string, path string, resp map[string]apiintf.
 
 }
 
-func (m *ItemId) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ItemId) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -729,7 +732,7 @@ func (m *ValidationError) References(tenant string, path string, resp map[string
 
 }
 
-func (m *ValidationError) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ValidationError) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

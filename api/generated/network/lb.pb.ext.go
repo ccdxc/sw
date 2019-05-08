@@ -131,7 +131,7 @@ func (m *HealthCheckSpec) References(tenant string, path string, resp map[string
 
 }
 
-func (m *HealthCheckSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *HealthCheckSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -167,7 +167,7 @@ func (m *LbPolicy) References(tenant string, path string, resp map[string]apiint
 	}
 }
 
-func (m *LbPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *LbPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -180,7 +180,7 @@ func (m *LbPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -197,7 +197,7 @@ func (m *LbPolicySpec) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *LbPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *LbPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -210,7 +210,7 @@ func (m *LbPolicyStatus) References(tenant string, path string, resp map[string]
 
 }
 
-func (m *LbPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *LbPolicyStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

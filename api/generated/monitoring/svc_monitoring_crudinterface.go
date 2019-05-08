@@ -19,6 +19,7 @@ var _ kvstore.Interface
 type MonitoringV1EventPolicyInterface interface {
 	Create(ctx context.Context, in *EventPolicy) (*EventPolicy, error)
 	Update(ctx context.Context, in *EventPolicy) (*EventPolicy, error)
+	UpdateStatus(ctx context.Context, in *EventPolicy) (*EventPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*EventPolicy, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*EventPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*EventPolicy, error)
@@ -30,6 +31,7 @@ type MonitoringV1EventPolicyInterface interface {
 type MonitoringV1StatsPolicyInterface interface {
 	Create(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error)
 	Update(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error)
+	UpdateStatus(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*StatsPolicy, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*StatsPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*StatsPolicy, error)
@@ -41,6 +43,7 @@ type MonitoringV1StatsPolicyInterface interface {
 type MonitoringV1FwlogPolicyInterface interface {
 	Create(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error)
 	Update(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error)
+	UpdateStatus(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*FwlogPolicy, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*FwlogPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*FwlogPolicy, error)
@@ -52,6 +55,7 @@ type MonitoringV1FwlogPolicyInterface interface {
 type MonitoringV1FlowExportPolicyInterface interface {
 	Create(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error)
 	Update(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error)
+	UpdateStatus(ctx context.Context, in *FlowExportPolicy) (*FlowExportPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*FlowExportPolicy, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*FlowExportPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*FlowExportPolicy, error)
@@ -63,6 +67,7 @@ type MonitoringV1FlowExportPolicyInterface interface {
 type MonitoringV1AlertInterface interface {
 	Create(ctx context.Context, in *Alert) (*Alert, error)
 	Update(ctx context.Context, in *Alert) (*Alert, error)
+	UpdateStatus(ctx context.Context, in *Alert) (*Alert, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Alert, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Alert, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Alert, error)
@@ -74,6 +79,7 @@ type MonitoringV1AlertInterface interface {
 type MonitoringV1AlertPolicyInterface interface {
 	Create(ctx context.Context, in *AlertPolicy) (*AlertPolicy, error)
 	Update(ctx context.Context, in *AlertPolicy) (*AlertPolicy, error)
+	UpdateStatus(ctx context.Context, in *AlertPolicy) (*AlertPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*AlertPolicy, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*AlertPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*AlertPolicy, error)
@@ -85,6 +91,7 @@ type MonitoringV1AlertPolicyInterface interface {
 type MonitoringV1AlertDestinationInterface interface {
 	Create(ctx context.Context, in *AlertDestination) (*AlertDestination, error)
 	Update(ctx context.Context, in *AlertDestination) (*AlertDestination, error)
+	UpdateStatus(ctx context.Context, in *AlertDestination) (*AlertDestination, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*AlertDestination, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*AlertDestination, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*AlertDestination, error)
@@ -96,6 +103,7 @@ type MonitoringV1AlertDestinationInterface interface {
 type MonitoringV1MirrorSessionInterface interface {
 	Create(ctx context.Context, in *MirrorSession) (*MirrorSession, error)
 	Update(ctx context.Context, in *MirrorSession) (*MirrorSession, error)
+	UpdateStatus(ctx context.Context, in *MirrorSession) (*MirrorSession, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*MirrorSession, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*MirrorSession, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*MirrorSession, error)
@@ -107,6 +115,7 @@ type MonitoringV1MirrorSessionInterface interface {
 type MonitoringV1TroubleshootingSessionInterface interface {
 	Create(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error)
 	Update(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error)
+	UpdateStatus(ctx context.Context, in *TroubleshootingSession) (*TroubleshootingSession, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*TroubleshootingSession, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*TroubleshootingSession, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*TroubleshootingSession, error)
@@ -118,6 +127,7 @@ type MonitoringV1TroubleshootingSessionInterface interface {
 type MonitoringV1TechSupportRequestInterface interface {
 	Create(ctx context.Context, in *TechSupportRequest) (*TechSupportRequest, error)
 	Update(ctx context.Context, in *TechSupportRequest) (*TechSupportRequest, error)
+	UpdateStatus(ctx context.Context, in *TechSupportRequest) (*TechSupportRequest, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*TechSupportRequest, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*TechSupportRequest, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*TechSupportRequest, error)

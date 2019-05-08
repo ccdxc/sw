@@ -285,7 +285,7 @@ func (m *ALG) References(tenant string, path string, resp map[string]apiintf.Ref
 
 }
 
-func (m *ALG) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ALG) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Msrpc {
 		dlmtr := "."
@@ -293,7 +293,7 @@ func (m *ALG) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sMsrpc[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -303,7 +303,7 @@ func (m *ALG) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sSunrpc[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -368,7 +368,7 @@ func (m *App) References(tenant string, path string, resp map[string]apiintf.Ref
 	}
 }
 
-func (m *App) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *App) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -381,7 +381,19 @@ func (m *App) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -392,7 +404,7 @@ func (m *App) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -411,8 +423,9 @@ func (m *AppSpec) References(tenant string, path string, resp map[string]apiintf
 
 }
 
-func (m *AppSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AppSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.ALG != nil {
 		{
 			dlmtr := "."
@@ -420,7 +433,7 @@ func (m *AppSpec) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "ALG"
-			if errs := m.ALG.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.ALG.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -453,7 +466,7 @@ func (m *AppStatus) References(tenant string, path string, resp map[string]apiin
 
 }
 
-func (m *AppStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AppStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -466,7 +479,7 @@ func (m *Dns) References(tenant string, path string, resp map[string]apiintf.Ref
 
 }
 
-func (m *Dns) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Dns) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -479,7 +492,7 @@ func (m *Ftp) References(tenant string, path string, resp map[string]apiintf.Ref
 
 }
 
-func (m *Ftp) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Ftp) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -492,7 +505,7 @@ func (m *Icmp) References(tenant string, path string, resp map[string]apiintf.Re
 
 }
 
-func (m *Icmp) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Icmp) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -505,7 +518,7 @@ func (m *Msrpc) References(tenant string, path string, resp map[string]apiintf.R
 
 }
 
-func (m *Msrpc) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Msrpc) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapApp["Msrpc"][ver]; ok {
 		for _, v := range vs {
@@ -531,7 +544,7 @@ func (m *Sunrpc) References(tenant string, path string, resp map[string]apiintf.
 
 }
 
-func (m *Sunrpc) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Sunrpc) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapApp["Sunrpc"][ver]; ok {
 		for _, v := range vs {

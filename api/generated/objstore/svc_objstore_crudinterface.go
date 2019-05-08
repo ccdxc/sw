@@ -19,6 +19,7 @@ var _ kvstore.Interface
 type ObjstoreV1BucketInterface interface {
 	Create(ctx context.Context, in *Bucket) (*Bucket, error)
 	Update(ctx context.Context, in *Bucket) (*Bucket, error)
+	UpdateStatus(ctx context.Context, in *Bucket) (*Bucket, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Bucket, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Bucket, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Bucket, error)
@@ -30,6 +31,7 @@ type ObjstoreV1BucketInterface interface {
 type ObjstoreV1ObjectInterface interface {
 	Create(ctx context.Context, in *Object) (*Object, error)
 	Update(ctx context.Context, in *Object) (*Object, error)
+	UpdateStatus(ctx context.Context, in *Object) (*Object, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Object, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Object, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Object, error)

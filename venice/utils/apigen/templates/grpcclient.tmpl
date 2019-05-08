@@ -87,6 +87,16 @@ func (a *grpcObj{{$srvname}}{{.}}) Update(ctx context.Context, in *{{$pkgname}}.
 	return a.client.AutoUpdate{{.}}(nctx, in)
 }
 
+func (a *grpcObj{{$srvname}}{{.}}) UpdateStatus(ctx context.Context, in *{{$pkgname}}.{{.}}) (*{{$pkgname}}.{{.}}, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{{.}}", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "{{$version}}")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdate{{.}}(nctx, in)
+}
+
 func (a *grpcObj{{$srvname}}{{.}}) Get(ctx context.Context, objMeta *api.ObjectMeta) (*{{$pkgname}}.{{.}}, error) {
 	a.logger.DebugLog("msg", "received call", "object", "{{.}}", "oper", "get")
 	if objMeta == nil {
@@ -191,6 +201,10 @@ func (a *restObj{{$srvname}}{{.}}) Update(ctx context.Context, in *{{$pkgname}}.
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.AutoUpdate{{.}}(ctx, in)
+}
+
+func (a *restObj{{$srvname}}{{.}}) UpdateStatus(ctx context.Context, in *{{$pkgname}}.{{.}}) (*{{$pkgname}}.{{.}}, error) {
+	return nil, errors.New("not supported for REST")
 }
 
 func (a *restObj{{$srvname}}{{.}}) Get(ctx context.Context, objMeta *api.ObjectMeta) (*{{$pkgname}}.{{.}}, error) {

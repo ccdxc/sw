@@ -133,7 +133,7 @@ func (m *Network) References(tenant string, path string, resp map[string]apiintf
 	}
 }
 
-func (m *Network) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Network) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -146,7 +146,7 @@ func (m *Network) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -163,7 +163,7 @@ func (m *NetworkSpec) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *NetworkSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *NetworkSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -176,7 +176,7 @@ func (m *NetworkStatus) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *NetworkStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *NetworkStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

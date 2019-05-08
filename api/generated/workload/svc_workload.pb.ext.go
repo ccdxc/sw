@@ -188,7 +188,7 @@ func (m *AutoMsgEndpointWatchHelper) References(tenant string, path string, resp
 
 }
 
-func (m *AutoMsgEndpointWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgEndpointWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -196,7 +196,7 @@ func (m *AutoMsgEndpointWatchHelper) Validate(ver, path string, ignoreStatus boo
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -217,8 +217,9 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) References(tenant string, path s
 
 }
 
-func (m *AutoMsgEndpointWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgEndpointWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -226,7 +227,7 @@ func (m *AutoMsgEndpointWatchHelper_WatchEvent) Validate(ver, path string, ignor
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -259,7 +260,7 @@ func (m *AutoMsgWorkloadWatchHelper) References(tenant string, path string, resp
 	}
 }
 
-func (m *AutoMsgWorkloadWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgWorkloadWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -267,7 +268,7 @@ func (m *AutoMsgWorkloadWatchHelper) Validate(ver, path string, ignoreStatus boo
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -300,8 +301,9 @@ func (m *AutoMsgWorkloadWatchHelper_WatchEvent) References(tenant string, path s
 	}
 }
 
-func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -309,7 +311,7 @@ func (m *AutoMsgWorkloadWatchHelper_WatchEvent) Validate(ver, path string, ignor
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -329,7 +331,7 @@ func (m *EndpointList) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *EndpointList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *EndpointList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -337,7 +339,7 @@ func (m *EndpointList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -371,7 +373,7 @@ func (m *WorkloadList) References(tenant string, path string, resp map[string]ap
 	}
 }
 
-func (m *WorkloadList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *WorkloadList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -379,7 +381,7 @@ func (m *WorkloadList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}

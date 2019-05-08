@@ -50,8 +50,9 @@ message PublisherSpec {
 }
 
 message PublisherStatus {
-  // Empty
+  string Status = 1 [(gogoproto.jsontag) = "status"];
 }
+
 message Book {
   api.TypeMeta T = 1  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
   api.ObjectMeta O = 2  [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,inline"];

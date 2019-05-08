@@ -386,7 +386,7 @@ func (m *PingPktStats) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *PingPktStats) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PingPktStats) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -399,7 +399,7 @@ func (m *PingStats) References(tenant string, path string, resp map[string]apiin
 
 }
 
-func (m *PingStats) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PingStats) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -412,7 +412,7 @@ func (m *TimeWindow) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *TimeWindow) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TimeWindow) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -425,7 +425,7 @@ func (m *TraceRouteInfo) References(tenant string, path string, resp map[string]
 
 }
 
-func (m *TraceRouteInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TraceRouteInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -461,7 +461,7 @@ func (m *TroubleshootingSession) References(tenant string, path string, resp map
 	}
 }
 
-func (m *TroubleshootingSession) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TroubleshootingSession) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -474,7 +474,19 @@ func (m *TroubleshootingSession) Validate(ver, path string, ignoreStatus bool) [
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -485,10 +497,11 @@ func (m *TroubleshootingSession) Validate(ver, path string, ignoreStatus bool) [
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -496,7 +509,7 @@ func (m *TroubleshootingSession) Validate(ver, path string, ignoreStatus bool) [
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -517,7 +530,7 @@ func (m *TroubleshootingSessionSpec) References(tenant string, path string, resp
 
 }
 
-func (m *TroubleshootingSessionSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TroubleshootingSessionSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	{
@@ -526,7 +539,7 @@ func (m *TroubleshootingSessionSpec) Validate(ver, path string, ignoreStatus boo
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "FlowSelector"
-		if errs := m.FlowSelector.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.FlowSelector.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -543,7 +556,7 @@ func (m *TroubleshootingSessionStatus) References(tenant string, path string, re
 
 }
 
-func (m *TroubleshootingSessionStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TroubleshootingSessionStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapTroubleshooting["TroubleshootingSessionStatus"][ver]; ok {
 		for _, v := range vs {
@@ -571,7 +584,7 @@ func (m *TsAuditTrail) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *TsAuditTrail) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TsAuditTrail) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -584,7 +597,7 @@ func (m *TsFlowCounters) References(tenant string, path string, resp map[string]
 
 }
 
-func (m *TsFlowCounters) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TsFlowCounters) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -597,7 +610,7 @@ func (m *TsFlowLogs) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *TsFlowLogs) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TsFlowLogs) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -636,7 +649,7 @@ func (m *TsPolicy) References(tenant string, path string, resp map[string]apiint
 	}
 }
 
-func (m *TsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TsPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.InRules {
 		dlmtr := "."
@@ -644,7 +657,7 @@ func (m *TsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sInRules[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -654,7 +667,7 @@ func (m *TsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sOutRules[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -707,7 +720,7 @@ func (m *TsReport) References(tenant string, path string, resp map[string]apiint
 	}
 }
 
-func (m *TsReport) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TsReport) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Alerts {
 		dlmtr := "."
@@ -715,7 +728,7 @@ func (m *TsReport) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sAlerts[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -725,10 +738,11 @@ func (m *TsReport) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if m.MirrorStatus != nil {
 		{
 			dlmtr := "."
@@ -736,7 +750,7 @@ func (m *TsReport) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "MirrorStatus"
-			if errs := m.MirrorStatus.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.MirrorStatus.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -747,7 +761,7 @@ func (m *TsReport) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sPolicies[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -781,7 +795,7 @@ func (m *TsResult) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *TsResult) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TsResult) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -794,7 +808,7 @@ func (m *TsStats) References(tenant string, path string, resp map[string]apiintf
 
 }
 
-func (m *TsStats) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TsStats) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

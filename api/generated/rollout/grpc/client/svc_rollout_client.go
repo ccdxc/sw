@@ -230,6 +230,16 @@ func (a *grpcObjRolloutV1Rollout) Update(ctx context.Context, in *rollout.Rollou
 	return a.client.AutoUpdateRollout(nctx, in)
 }
 
+func (a *grpcObjRolloutV1Rollout) UpdateStatus(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Rollout", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateRollout(nctx, in)
+}
+
 func (a *grpcObjRolloutV1Rollout) Get(ctx context.Context, objMeta *api.ObjectMeta) (*rollout.Rollout, error) {
 	a.logger.DebugLog("msg", "received call", "object", "Rollout", "oper", "get")
 	if objMeta == nil {
@@ -335,6 +345,10 @@ func (a *restObjRolloutV1Rollout) Update(ctx context.Context, in *rollout.Rollou
 	return a.endpoints.AutoUpdateRollout(ctx, in)
 }
 
+func (a *restObjRolloutV1Rollout) UpdateStatus(ctx context.Context, in *rollout.Rollout) (*rollout.Rollout, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjRolloutV1Rollout) Get(ctx context.Context, objMeta *api.ObjectMeta) (*rollout.Rollout, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -418,6 +432,16 @@ func (a *grpcObjRolloutV1RolloutAction) Update(ctx context.Context, in *rollout.
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateRolloutAction(nctx, in)
+}
+
+func (a *grpcObjRolloutV1RolloutAction) UpdateStatus(ctx context.Context, in *rollout.RolloutAction) (*rollout.RolloutAction, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RolloutAction", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateRolloutAction(nctx, in)
 }
 
@@ -515,6 +539,10 @@ func (a *restObjRolloutV1RolloutAction) Update(ctx context.Context, in *rollout.
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.AutoUpdateRolloutAction(ctx, in)
+}
+
+func (a *restObjRolloutV1RolloutAction) UpdateStatus(ctx context.Context, in *rollout.RolloutAction) (*rollout.RolloutAction, error) {
+	return nil, errors.New("not supported for REST")
 }
 
 func (a *restObjRolloutV1RolloutAction) Get(ctx context.Context, objMeta *api.ObjectMeta) (*rollout.RolloutAction, error) {

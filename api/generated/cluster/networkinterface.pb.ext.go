@@ -186,7 +186,7 @@ func (m *NetworkInterface) References(tenant string, path string, resp map[strin
 
 }
 
-func (m *NetworkInterface) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *NetworkInterface) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -202,10 +202,11 @@ func (m *NetworkInterface) Validate(ver, path string, ignoreStatus bool) []error
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -213,7 +214,7 @@ func (m *NetworkInterface) Validate(ver, path string, ignoreStatus bool) []error
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -232,7 +233,7 @@ func (m *NetworkInterfaceHostStatus) References(tenant string, path string, resp
 
 }
 
-func (m *NetworkInterfaceHostStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *NetworkInterfaceHostStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -245,7 +246,7 @@ func (m *NetworkInterfaceSpec) References(tenant string, path string, resp map[s
 
 }
 
-func (m *NetworkInterfaceSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *NetworkInterfaceSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -258,7 +259,7 @@ func (m *NetworkInterfaceStatus) References(tenant string, path string, resp map
 
 }
 
-func (m *NetworkInterfaceStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *NetworkInterfaceStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapNetworkinterface["NetworkInterfaceStatus"][ver]; ok {
 		for _, v := range vs {
@@ -288,7 +289,7 @@ func (m *NetworkInterfaceUplinkStatus) References(tenant string, path string, re
 
 }
 
-func (m *NetworkInterfaceUplinkStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *NetworkInterfaceUplinkStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

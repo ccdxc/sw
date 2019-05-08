@@ -137,7 +137,7 @@ func (m *Event) References(tenant string, path string, resp map[string]apiintf.R
 
 }
 
-func (m *Event) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Event) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	{
@@ -146,10 +146,11 @@ func (m *Event) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "EventAttributes"
-		if errs := m.EventAttributes.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.EventAttributes.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	return ret
 }
 
@@ -165,7 +166,7 @@ func (m *EventAttributes) References(tenant string, path string, resp map[string
 
 }
 
-func (m *EventAttributes) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *EventAttributes) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapEvents["EventAttributes"][ver]; ok {
 		for _, v := range vs {
@@ -195,7 +196,7 @@ func (m *EventList) References(tenant string, path string, resp map[string]apiin
 
 }
 
-func (m *EventList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *EventList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -203,7 +204,7 @@ func (m *EventList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -224,7 +225,7 @@ func (m *EventSource) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *EventSource) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *EventSource) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

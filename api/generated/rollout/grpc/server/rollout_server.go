@@ -228,9 +228,9 @@ func (s *srolloutRolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(rollout.Rollout)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(rollout.Rollout)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(rollout.Rollout)
 			r.Normalize()
@@ -507,9 +507,9 @@ func (s *srolloutRolloutBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(rollout.RolloutAction)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(rollout.RolloutAction)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(rollout.RolloutAction)
 			r.Normalize()

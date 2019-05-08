@@ -205,7 +205,7 @@ func (s *Selector) PrintSQL() (string, error) {
 
 // Validate validates the selector.
 // Dummy function to help compile .ext.go files that include Selector.
-func (s *Selector) Validate(ver, path string, ignoreStatus bool) []error {
+func (s *Selector) Validate(ver, path string, ignoreStatus, ignoreSpec bool) []error {
 	return nil
 }
 

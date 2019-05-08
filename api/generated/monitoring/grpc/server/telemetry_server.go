@@ -228,9 +228,9 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(monitoring.FlowExportPolicy)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(monitoring.FlowExportPolicy)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(monitoring.FlowExportPolicy)
 			r.Normalize()
@@ -509,9 +509,9 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(monitoring.FwlogPolicy)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(monitoring.FwlogPolicy)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(monitoring.FwlogPolicy)
 			r.Normalize()
@@ -790,9 +790,9 @@ func (s *smonitoringTelemetryBackend) regMsgsFunc(l log.Logger, scheme *runtime.
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(monitoring.StatsPolicy)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(monitoring.StatsPolicy)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(monitoring.StatsPolicy)
 			r.Normalize()

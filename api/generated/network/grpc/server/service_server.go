@@ -228,9 +228,9 @@ func (s *snetworkServiceBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(network.Service)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(network.Service)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(network.Service)
 			r.Normalize()

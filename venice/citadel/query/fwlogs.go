@@ -48,7 +48,7 @@ func (q *Server) validateFwlogsQueryList(ql *telemetry_query.FwlogsQueryList) er
 	}
 
 	// TODO: remove hardcoded versioning
-	errors := ql.Validate("v1", "", true)
+	errors := ql.Validate("v1", "", true, false)
 	for _, e := range errors {
 		errs = append(errs, e.Error())
 	}

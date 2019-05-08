@@ -545,6 +545,16 @@ func (a *grpcObjClusterV1Cluster) Update(ctx context.Context, in *cluster.Cluste
 	return a.client.AutoUpdateCluster(nctx, in)
 }
 
+func (a *grpcObjClusterV1Cluster) UpdateStatus(ctx context.Context, in *cluster.Cluster) (*cluster.Cluster, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Cluster", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateCluster(nctx, in)
+}
+
 func (a *grpcObjClusterV1Cluster) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Cluster, error) {
 	a.logger.DebugLog("msg", "received call", "object", "Cluster", "oper", "get")
 	if objMeta == nil {
@@ -659,6 +669,10 @@ func (a *restObjClusterV1Cluster) Update(ctx context.Context, in *cluster.Cluste
 	return a.endpoints.AutoUpdateCluster(ctx, in)
 }
 
+func (a *restObjClusterV1Cluster) UpdateStatus(ctx context.Context, in *cluster.Cluster) (*cluster.Cluster, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjClusterV1Cluster) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Cluster, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -748,6 +762,16 @@ func (a *grpcObjClusterV1Node) Update(ctx context.Context, in *cluster.Node) (*c
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateNode(nctx, in)
+}
+
+func (a *grpcObjClusterV1Node) UpdateStatus(ctx context.Context, in *cluster.Node) (*cluster.Node, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Node", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateNode(nctx, in)
 }
 
@@ -847,6 +871,10 @@ func (a *restObjClusterV1Node) Update(ctx context.Context, in *cluster.Node) (*c
 	return a.endpoints.AutoUpdateNode(ctx, in)
 }
 
+func (a *restObjClusterV1Node) UpdateStatus(ctx context.Context, in *cluster.Node) (*cluster.Node, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjClusterV1Node) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Node, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -923,6 +951,16 @@ func (a *grpcObjClusterV1Host) Update(ctx context.Context, in *cluster.Host) (*c
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateHost(nctx, in)
+}
+
+func (a *grpcObjClusterV1Host) UpdateStatus(ctx context.Context, in *cluster.Host) (*cluster.Host, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Host", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateHost(nctx, in)
 }
 
@@ -1022,6 +1060,10 @@ func (a *restObjClusterV1Host) Update(ctx context.Context, in *cluster.Host) (*c
 	return a.endpoints.AutoUpdateHost(ctx, in)
 }
 
+func (a *restObjClusterV1Host) UpdateStatus(ctx context.Context, in *cluster.Host) (*cluster.Host, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjClusterV1Host) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Host, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1098,6 +1140,16 @@ func (a *grpcObjClusterV1SmartNIC) Update(ctx context.Context, in *cluster.Smart
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateSmartNIC(nctx, in)
+}
+
+func (a *grpcObjClusterV1SmartNIC) UpdateStatus(ctx context.Context, in *cluster.SmartNIC) (*cluster.SmartNIC, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SmartNIC", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateSmartNIC(nctx, in)
 }
 
@@ -1197,6 +1249,10 @@ func (a *restObjClusterV1SmartNIC) Update(ctx context.Context, in *cluster.Smart
 	return a.endpoints.AutoUpdateSmartNIC(ctx, in)
 }
 
+func (a *restObjClusterV1SmartNIC) UpdateStatus(ctx context.Context, in *cluster.SmartNIC) (*cluster.SmartNIC, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjClusterV1SmartNIC) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.SmartNIC, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1273,6 +1329,16 @@ func (a *grpcObjClusterV1Tenant) Update(ctx context.Context, in *cluster.Tenant)
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateTenant(nctx, in)
+}
+
+func (a *grpcObjClusterV1Tenant) UpdateStatus(ctx context.Context, in *cluster.Tenant) (*cluster.Tenant, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Tenant", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateTenant(nctx, in)
 }
 
@@ -1372,6 +1438,10 @@ func (a *restObjClusterV1Tenant) Update(ctx context.Context, in *cluster.Tenant)
 	return a.endpoints.AutoUpdateTenant(ctx, in)
 }
 
+func (a *restObjClusterV1Tenant) UpdateStatus(ctx context.Context, in *cluster.Tenant) (*cluster.Tenant, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjClusterV1Tenant) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Tenant, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1448,6 +1518,16 @@ func (a *grpcObjClusterV1Version) Update(ctx context.Context, in *cluster.Versio
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateVersion(nctx, in)
+}
+
+func (a *grpcObjClusterV1Version) UpdateStatus(ctx context.Context, in *cluster.Version) (*cluster.Version, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Version", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateVersion(nctx, in)
 }
 
@@ -1545,6 +1625,10 @@ func (a *restObjClusterV1Version) Update(ctx context.Context, in *cluster.Versio
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.AutoUpdateVersion(ctx, in)
+}
+
+func (a *restObjClusterV1Version) UpdateStatus(ctx context.Context, in *cluster.Version) (*cluster.Version, error) {
+	return nil, errors.New("not supported for REST")
 }
 
 func (a *restObjClusterV1Version) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Version, error) {

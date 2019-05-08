@@ -29,7 +29,11 @@ type securityHooks struct {
 // Specifying `AttachTenant` should mandatorily have `FromIPAddress` and `ToIPAddresses`
 // For `FromIPAddresses` and `ToIPAddresses` cannot be empty. If the intent is to allow all. Enforce a mandatory `any` keyword.
 // func (s *securityHooks) validateSGPolicy(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
-func (s *securityHooks) validateSGPolicy(i interface{}, ver string, ignoreStatus bool) []error {
+func (s *securityHooks) validateSGPolicy(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
+	if ignoreSpec {
+		// only spec is validated in the hook
+		return nil
+	}
 	sgp, ok := i.(security.SGPolicy)
 	ret := []error{}
 	if !ok {
@@ -199,7 +203,11 @@ func (s *securityHooks) validateIPAddresses(addresses []string) error {
 }
 
 // validateApp validates contents of app
-func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus bool) []error {
+func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
+	if ignoreSpec {
+		// only spec is validated in this hook
+		return nil
+	}
 	ret := []error{}
 	protocolNameValidate := func(protoNames []string, checkProto string, matchType string) bool {
 		switch matchType {

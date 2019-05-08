@@ -316,10 +316,10 @@ func (m *MessageHdlr) Normalize(i interface{}) interface{} {
 }
 
 // Validate is a wrapper around the validater function registered.
-func (m *MessageHdlr) Validate(i interface{}, ver string, ignoreStatus bool) []error {
+func (m *MessageHdlr) Validate(i interface{}, ver string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for _, fn := range m.validater {
-		if errs := fn(i, ver, ignoreStatus); errs != nil {
+		if errs := fn(i, ver, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}

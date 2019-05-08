@@ -65,6 +65,19 @@ func (mr *MockNetworkV1NetworkInterfaceMockRecorder) Update(ctx, in interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockNetworkV1NetworkInterface)(nil).Update), ctx, in)
 }
 
+// UpdateStatus mocks base method
+func (m *MockNetworkV1NetworkInterface) UpdateStatus(ctx context.Context, in *network.Network) (*network.Network, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*network.Network)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockNetworkV1NetworkInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1NetworkInterface)(nil).UpdateStatus), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockNetworkV1NetworkInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Network, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -176,6 +189,19 @@ func (m *MockNetworkV1ServiceInterface) Update(ctx context.Context, in *network.
 // Update indicates an expected call of Update
 func (mr *MockNetworkV1ServiceInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockNetworkV1ServiceInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockNetworkV1ServiceInterface) UpdateStatus(ctx context.Context, in *network.Service) (*network.Service, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*network.Service)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockNetworkV1ServiceInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1ServiceInterface)(nil).UpdateStatus), ctx, in)
 }
 
 // Get mocks base method
@@ -291,6 +317,19 @@ func (mr *MockNetworkV1LbPolicyInterfaceMockRecorder) Update(ctx, in interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockNetworkV1LbPolicyInterface)(nil).Update), ctx, in)
 }
 
+// UpdateStatus mocks base method
+func (m *MockNetworkV1LbPolicyInterface) UpdateStatus(ctx context.Context, in *network.LbPolicy) (*network.LbPolicy, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*network.LbPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockNetworkV1LbPolicyInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1LbPolicyInterface)(nil).UpdateStatus), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockNetworkV1LbPolicyInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.LbPolicy, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -402,6 +441,19 @@ func (m *MockNetworkV1VirtualRouterInterface) Update(ctx context.Context, in *ne
 // Update indicates an expected call of Update
 func (mr *MockNetworkV1VirtualRouterInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockNetworkV1VirtualRouterInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockNetworkV1VirtualRouterInterface) UpdateStatus(ctx context.Context, in *network.VirtualRouter) (*network.VirtualRouter, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*network.VirtualRouter)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockNetworkV1VirtualRouterInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockNetworkV1VirtualRouterInterface)(nil).UpdateStatus), ctx, in)
 }
 
 // Get mocks base method

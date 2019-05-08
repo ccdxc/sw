@@ -575,6 +575,16 @@ func (a *grpcObjBookstoreV1Order) Update(ctx context.Context, in *bookstore.Orde
 	return a.client.AutoUpdateOrder(nctx, in)
 }
 
+func (a *grpcObjBookstoreV1Order) UpdateStatus(ctx context.Context, in *bookstore.Order) (*bookstore.Order, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Order", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateOrder(nctx, in)
+}
+
 func (a *grpcObjBookstoreV1Order) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Order, error) {
 	a.logger.DebugLog("msg", "received call", "object", "Order", "oper", "get")
 	if objMeta == nil {
@@ -689,6 +699,10 @@ func (a *restObjBookstoreV1Order) Update(ctx context.Context, in *bookstore.Orde
 	return a.endpoints.AutoUpdateOrder(ctx, in)
 }
 
+func (a *restObjBookstoreV1Order) UpdateStatus(ctx context.Context, in *bookstore.Order) (*bookstore.Order, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjBookstoreV1Order) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Order, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -778,6 +792,16 @@ func (a *grpcObjBookstoreV1Book) Update(ctx context.Context, in *bookstore.Book)
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateBook(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Book) UpdateStatus(ctx context.Context, in *bookstore.Book) (*bookstore.Book, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Book", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateBook(nctx, in)
 }
 
@@ -886,6 +910,10 @@ func (a *restObjBookstoreV1Book) Update(ctx context.Context, in *bookstore.Book)
 	return a.endpoints.AutoUpdateBook(ctx, in)
 }
 
+func (a *restObjBookstoreV1Book) UpdateStatus(ctx context.Context, in *bookstore.Book) (*bookstore.Book, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjBookstoreV1Book) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Book, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -969,6 +997,16 @@ func (a *grpcObjBookstoreV1Publisher) Update(ctx context.Context, in *bookstore.
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdatePublisher(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Publisher) UpdateStatus(ctx context.Context, in *bookstore.Publisher) (*bookstore.Publisher, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Publisher", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdatePublisher(nctx, in)
 }
 
@@ -1068,6 +1106,10 @@ func (a *restObjBookstoreV1Publisher) Update(ctx context.Context, in *bookstore.
 	return a.endpoints.AutoUpdatePublisher(ctx, in)
 }
 
+func (a *restObjBookstoreV1Publisher) UpdateStatus(ctx context.Context, in *bookstore.Publisher) (*bookstore.Publisher, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjBookstoreV1Publisher) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Publisher, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1144,6 +1186,16 @@ func (a *grpcObjBookstoreV1Store) Update(ctx context.Context, in *bookstore.Stor
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateStore(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Store) UpdateStatus(ctx context.Context, in *bookstore.Store) (*bookstore.Store, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Store", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateStore(nctx, in)
 }
 
@@ -1252,6 +1304,10 @@ func (a *restObjBookstoreV1Store) Update(ctx context.Context, in *bookstore.Stor
 	return a.endpoints.AutoUpdateStore(ctx, in)
 }
 
+func (a *restObjBookstoreV1Store) UpdateStatus(ctx context.Context, in *bookstore.Store) (*bookstore.Store, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjBookstoreV1Store) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Store, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1335,6 +1391,16 @@ func (a *grpcObjBookstoreV1Coupon) Update(ctx context.Context, in *bookstore.Cou
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateCoupon(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Coupon) UpdateStatus(ctx context.Context, in *bookstore.Coupon) (*bookstore.Coupon, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Coupon", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateCoupon(nctx, in)
 }
 
@@ -1434,6 +1500,10 @@ func (a *restObjBookstoreV1Coupon) Update(ctx context.Context, in *bookstore.Cou
 	return a.endpoints.AutoUpdateCoupon(ctx, in)
 }
 
+func (a *restObjBookstoreV1Coupon) UpdateStatus(ctx context.Context, in *bookstore.Coupon) (*bookstore.Coupon, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjBookstoreV1Coupon) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Coupon, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1510,6 +1580,16 @@ func (a *grpcObjBookstoreV1Customer) Update(ctx context.Context, in *bookstore.C
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateCustomer(nctx, in)
+}
+
+func (a *grpcObjBookstoreV1Customer) UpdateStatus(ctx context.Context, in *bookstore.Customer) (*bookstore.Customer, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Customer", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateCustomer(nctx, in)
 }
 
@@ -1607,6 +1687,10 @@ func (a *restObjBookstoreV1Customer) Update(ctx context.Context, in *bookstore.C
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.AutoUpdateCustomer(ctx, in)
+}
+
+func (a *restObjBookstoreV1Customer) UpdateStatus(ctx context.Context, in *bookstore.Customer) (*bookstore.Customer, error) {
+	return nil, errors.New("not supported for REST")
 }
 
 func (a *restObjBookstoreV1Customer) Get(ctx context.Context, objMeta *api.ObjectMeta) (*bookstore.Customer, error) {

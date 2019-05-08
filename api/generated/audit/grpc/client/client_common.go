@@ -19,8 +19,7 @@ func dummyBefore(ctx context.Context, md *metadata.MD) context.Context {
 	return ctx
 }
 
-func addVersion(ctx context.Context, version string) context.Context {
-	pairs := []string{apiserver.RequestParamVersion, version}
+func addPairsToMd(ctx context.Context, pairs []string) context.Context {
 	inmd, ok := metadata.FromOutgoingContext(ctx)
 	var outmd metadata.MD
 	if ok {
@@ -29,4 +28,14 @@ func addVersion(ctx context.Context, version string) context.Context {
 		outmd = metadata.Pairs(pairs...)
 	}
 	return metadata.NewOutgoingContext(ctx, outmd)
+}
+
+func addVersion(ctx context.Context, version string) context.Context {
+	pairs := []string{apiserver.RequestParamVersion, version}
+	return addPairsToMd(ctx, pairs)
+}
+
+func addStatusUpd(ctx context.Context) context.Context {
+	pairs := []string{apiserver.RequestParamUpdateStatus, "true"}
+	return addPairsToMd(ctx, pairs)
 }

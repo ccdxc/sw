@@ -19,6 +19,7 @@ var _ kvstore.Interface
 type StagingV1BufferInterface interface {
 	Create(ctx context.Context, in *Buffer) (*Buffer, error)
 	Update(ctx context.Context, in *Buffer) (*Buffer, error)
+	UpdateStatus(ctx context.Context, in *Buffer) (*Buffer, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Buffer, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Buffer, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Buffer, error)

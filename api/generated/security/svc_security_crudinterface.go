@@ -19,6 +19,7 @@ var _ kvstore.Interface
 type SecurityV1SecurityGroupInterface interface {
 	Create(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error)
 	Update(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error)
+	UpdateStatus(ctx context.Context, in *SecurityGroup) (*SecurityGroup, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*SecurityGroup, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*SecurityGroup, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*SecurityGroup, error)
@@ -30,6 +31,7 @@ type SecurityV1SecurityGroupInterface interface {
 type SecurityV1SGPolicyInterface interface {
 	Create(ctx context.Context, in *SGPolicy) (*SGPolicy, error)
 	Update(ctx context.Context, in *SGPolicy) (*SGPolicy, error)
+	UpdateStatus(ctx context.Context, in *SGPolicy) (*SGPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*SGPolicy, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*SGPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*SGPolicy, error)
@@ -41,6 +43,7 @@ type SecurityV1SGPolicyInterface interface {
 type SecurityV1AppInterface interface {
 	Create(ctx context.Context, in *App) (*App, error)
 	Update(ctx context.Context, in *App) (*App, error)
+	UpdateStatus(ctx context.Context, in *App) (*App, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*App, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*App, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*App, error)
@@ -52,6 +55,7 @@ type SecurityV1AppInterface interface {
 type SecurityV1FirewallProfileInterface interface {
 	Create(ctx context.Context, in *FirewallProfile) (*FirewallProfile, error)
 	Update(ctx context.Context, in *FirewallProfile) (*FirewallProfile, error)
+	UpdateStatus(ctx context.Context, in *FirewallProfile) (*FirewallProfile, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*FirewallProfile, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*FirewallProfile, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*FirewallProfile, error)
@@ -63,6 +67,7 @@ type SecurityV1FirewallProfileInterface interface {
 type SecurityV1CertificateInterface interface {
 	Create(ctx context.Context, in *Certificate) (*Certificate, error)
 	Update(ctx context.Context, in *Certificate) (*Certificate, error)
+	UpdateStatus(ctx context.Context, in *Certificate) (*Certificate, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Certificate, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Certificate, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Certificate, error)
@@ -74,6 +79,7 @@ type SecurityV1CertificateInterface interface {
 type SecurityV1TrafficEncryptionPolicyInterface interface {
 	Create(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
 	Update(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
+	UpdateStatus(ctx context.Context, in *TrafficEncryptionPolicy) (*TrafficEncryptionPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*TrafficEncryptionPolicy, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*TrafficEncryptionPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*TrafficEncryptionPolicy, error)

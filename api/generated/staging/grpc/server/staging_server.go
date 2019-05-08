@@ -228,9 +228,9 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(staging.Buffer)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(staging.Buffer)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(staging.Buffer)
 			r.Normalize()
@@ -509,9 +509,9 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(staging.ClearAction)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(staging.ClearAction)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(staging.ClearAction)
 			r.Normalize()
@@ -790,9 +790,9 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(staging.CommitAction)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(staging.CommitAction)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(staging.CommitAction)
 			r.Normalize()

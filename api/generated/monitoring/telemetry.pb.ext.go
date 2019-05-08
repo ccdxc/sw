@@ -343,7 +343,7 @@ func (m *FlowExportPolicy) References(tenant string, path string, resp map[strin
 	}
 }
 
-func (m *FlowExportPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FlowExportPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -356,7 +356,19 @@ func (m *FlowExportPolicy) Validate(ver, path string, ignoreStatus bool) []error
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -367,7 +379,7 @@ func (m *FlowExportPolicy) Validate(ver, path string, ignoreStatus bool) []error
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -386,7 +398,7 @@ func (m *FlowExportPolicySpec) References(tenant string, path string, resp map[s
 
 }
 
-func (m *FlowExportPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FlowExportPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Exports {
 		dlmtr := "."
@@ -394,7 +406,7 @@ func (m *FlowExportPolicySpec) Validate(ver, path string, ignoreStatus bool) []e
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sExports[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -404,7 +416,7 @@ func (m *FlowExportPolicySpec) Validate(ver, path string, ignoreStatus bool) []e
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sMatchRules[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -444,7 +456,7 @@ func (m *FlowExportPolicyStatus) References(tenant string, path string, resp map
 
 }
 
-func (m *FlowExportPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FlowExportPolicyStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -480,7 +492,7 @@ func (m *FwlogPolicy) References(tenant string, path string, resp map[string]api
 	}
 }
 
-func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -493,7 +505,19 @@ func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -504,7 +528,7 @@ func (m *FwlogPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -523,8 +547,9 @@ func (m *FwlogPolicySpec) References(tenant string, path string, resp map[string
 
 }
 
-func (m *FwlogPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FwlogPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Config != nil {
 		{
 			dlmtr := "."
@@ -532,7 +557,7 @@ func (m *FwlogPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Config"
-			if errs := m.Config.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Config.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -543,7 +568,7 @@ func (m *FwlogPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sTargets[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -586,7 +611,7 @@ func (m *FwlogPolicyStatus) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *FwlogPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FwlogPolicyStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -622,7 +647,7 @@ func (m *StatsPolicy) References(tenant string, path string, resp map[string]api
 	}
 }
 
-func (m *StatsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *StatsPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -635,7 +660,19 @@ func (m *StatsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -646,7 +683,7 @@ func (m *StatsPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -665,7 +702,7 @@ func (m *StatsPolicySpec) References(tenant string, path string, resp map[string
 
 }
 
-func (m *StatsPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *StatsPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapTelemetry["StatsPolicySpec"][ver]; ok {
 		for _, v := range vs {
@@ -691,7 +728,7 @@ func (m *StatsPolicyStatus) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *StatsPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *StatsPolicyStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

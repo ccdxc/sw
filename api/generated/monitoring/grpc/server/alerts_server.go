@@ -228,9 +228,9 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(monitoring.Alert)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(monitoring.Alert)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(monitoring.Alert)
 			r.Normalize()
@@ -507,9 +507,9 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(monitoring.AlertDestination)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(monitoring.AlertDestination)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(monitoring.AlertDestination)
 			r.Normalize()
@@ -788,9 +788,9 @@ func (s *smonitoringAlertsBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(monitoring.AlertPolicy)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(monitoring.AlertPolicy)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(monitoring.AlertPolicy)
 			r.Normalize()

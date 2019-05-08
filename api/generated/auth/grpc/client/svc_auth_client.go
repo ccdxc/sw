@@ -441,6 +441,16 @@ func (a *grpcObjAuthV1User) Update(ctx context.Context, in *auth.User) (*auth.Us
 	return a.client.AutoUpdateUser(nctx, in)
 }
 
+func (a *grpcObjAuthV1User) UpdateStatus(ctx context.Context, in *auth.User) (*auth.User, error) {
+	a.logger.DebugLog("msg", "received call", "object", "User", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateUser(nctx, in)
+}
+
 func (a *grpcObjAuthV1User) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.User, error) {
 	a.logger.DebugLog("msg", "received call", "object", "User", "oper", "get")
 	if objMeta == nil {
@@ -564,6 +574,10 @@ func (a *restObjAuthV1User) Update(ctx context.Context, in *auth.User) (*auth.Us
 	return a.endpoints.AutoUpdateUser(ctx, in)
 }
 
+func (a *restObjAuthV1User) UpdateStatus(ctx context.Context, in *auth.User) (*auth.User, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjAuthV1User) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.User, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -662,6 +676,16 @@ func (a *grpcObjAuthV1AuthenticationPolicy) Update(ctx context.Context, in *auth
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateAuthenticationPolicy(nctx, in)
+}
+
+func (a *grpcObjAuthV1AuthenticationPolicy) UpdateStatus(ctx context.Context, in *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "AuthenticationPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateAuthenticationPolicy(nctx, in)
 }
 
@@ -779,6 +803,10 @@ func (a *restObjAuthV1AuthenticationPolicy) Update(ctx context.Context, in *auth
 	return a.endpoints.AutoUpdateAuthenticationPolicy(ctx, in)
 }
 
+func (a *restObjAuthV1AuthenticationPolicy) UpdateStatus(ctx context.Context, in *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjAuthV1AuthenticationPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.AuthenticationPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -868,6 +896,16 @@ func (a *grpcObjAuthV1Role) Update(ctx context.Context, in *auth.Role) (*auth.Ro
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateRole(nctx, in)
+}
+
+func (a *grpcObjAuthV1Role) UpdateStatus(ctx context.Context, in *auth.Role) (*auth.Role, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Role", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateRole(nctx, in)
 }
 
@@ -967,6 +1005,10 @@ func (a *restObjAuthV1Role) Update(ctx context.Context, in *auth.Role) (*auth.Ro
 	return a.endpoints.AutoUpdateRole(ctx, in)
 }
 
+func (a *restObjAuthV1Role) UpdateStatus(ctx context.Context, in *auth.Role) (*auth.Role, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjAuthV1Role) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.Role, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1046,6 +1088,16 @@ func (a *grpcObjAuthV1RoleBinding) Update(ctx context.Context, in *auth.RoleBind
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateRoleBinding(nctx, in)
+}
+
+func (a *grpcObjAuthV1RoleBinding) UpdateStatus(ctx context.Context, in *auth.RoleBinding) (*auth.RoleBinding, error) {
+	a.logger.DebugLog("msg", "received call", "object", "RoleBinding", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateRoleBinding(nctx, in)
 }
 
@@ -1143,6 +1195,10 @@ func (a *restObjAuthV1RoleBinding) Update(ctx context.Context, in *auth.RoleBind
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.AutoUpdateRoleBinding(ctx, in)
+}
+
+func (a *restObjAuthV1RoleBinding) UpdateStatus(ctx context.Context, in *auth.RoleBinding) (*auth.RoleBinding, error) {
+	return nil, errors.New("not supported for REST")
 }
 
 func (a *restObjAuthV1RoleBinding) Get(ctx context.Context, objMeta *api.ObjectMeta) (*auth.RoleBinding, error) {

@@ -19,6 +19,7 @@ var _ kvstore.Interface
 type ClusterV1ClusterInterface interface {
 	Create(ctx context.Context, in *Cluster) (*Cluster, error)
 	Update(ctx context.Context, in *Cluster) (*Cluster, error)
+	UpdateStatus(ctx context.Context, in *Cluster) (*Cluster, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Cluster, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Cluster, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Cluster, error)
@@ -32,6 +33,7 @@ type ClusterV1ClusterInterface interface {
 type ClusterV1NodeInterface interface {
 	Create(ctx context.Context, in *Node) (*Node, error)
 	Update(ctx context.Context, in *Node) (*Node, error)
+	UpdateStatus(ctx context.Context, in *Node) (*Node, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Node, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Node, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Node, error)
@@ -43,6 +45,7 @@ type ClusterV1NodeInterface interface {
 type ClusterV1HostInterface interface {
 	Create(ctx context.Context, in *Host) (*Host, error)
 	Update(ctx context.Context, in *Host) (*Host, error)
+	UpdateStatus(ctx context.Context, in *Host) (*Host, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Host, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Host, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Host, error)
@@ -54,6 +57,7 @@ type ClusterV1HostInterface interface {
 type ClusterV1SmartNICInterface interface {
 	Create(ctx context.Context, in *SmartNIC) (*SmartNIC, error)
 	Update(ctx context.Context, in *SmartNIC) (*SmartNIC, error)
+	UpdateStatus(ctx context.Context, in *SmartNIC) (*SmartNIC, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*SmartNIC, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*SmartNIC, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*SmartNIC, error)
@@ -65,6 +69,7 @@ type ClusterV1SmartNICInterface interface {
 type ClusterV1TenantInterface interface {
 	Create(ctx context.Context, in *Tenant) (*Tenant, error)
 	Update(ctx context.Context, in *Tenant) (*Tenant, error)
+	UpdateStatus(ctx context.Context, in *Tenant) (*Tenant, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Tenant, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Tenant, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Tenant, error)
@@ -76,6 +81,7 @@ type ClusterV1TenantInterface interface {
 type ClusterV1VersionInterface interface {
 	Create(ctx context.Context, in *Version) (*Version, error)
 	Update(ctx context.Context, in *Version) (*Version, error)
+	UpdateStatus(ctx context.Context, in *Version) (*Version, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Version, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Version, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Version, error)

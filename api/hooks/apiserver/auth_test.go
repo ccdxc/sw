@@ -394,7 +394,7 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 	logConfig := log.GetDefaultConfig("TestAuthHooks")
 	r.logger = log.GetNewLogger(logConfig)
 	for _, test := range tests {
-		errs := r.validateAuthenticatorConfig(test.in, "", false)
+		errs := r.validateAuthenticatorConfig(test.in, "", false, false)
 		SortErrors(errs)
 		SortErrors(test.errs)
 		Assert(t, len(errs) == len(test.errs), fmt.Sprintf("[%s] test failed, expected errors [%#v], got [%#v]", test.name, test.errs, errs))
@@ -643,7 +643,7 @@ func TestValidateRolePerms(t *testing.T) {
 	logConfig := log.GetDefaultConfig("TestAuthHooks")
 	r.logger = log.GetNewLogger(logConfig)
 	for _, test := range tests {
-		err := r.validateRolePerms(test.in, "", false)
+		err := r.validateRolePerms(test.in, "", false, false)
 
 		Assert(t, func() bool {
 			if err == nil {
@@ -1248,7 +1248,7 @@ func TestValidatePassword(t *testing.T) {
 	logConfig := log.GetDefaultConfig("TestAuthHooks")
 	r.logger = log.GetNewLogger(logConfig)
 	for _, test := range tests {
-		errs := r.validatePassword(test.in, "", false)
+		errs := r.validatePassword(test.in, "", false, false)
 		SortErrors(errs)
 		SortErrors(test.errors)
 		Assert(t, reflect.DeepEqual(errs, test.errors), fmt.Sprintf("%s test failed, expected errors [%v], got [%v]", test.name, test.errors, errs))

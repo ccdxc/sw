@@ -180,7 +180,7 @@ func (m *{{$msgname}}) References(tenant string, path string, resp map[string]ap
         }{{end}}{{end}}
 }
 
-func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error {{if isSpecStatusMessage $msg}}
 	{{if isTenanted $msg}}{{if isNamespaced $msg}}{{else}}
 	if m.Namespace != "default" {
@@ -198,23 +198,40 @@ func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%s{{$fldk}}[%v]", path, dlmtr, k)
-		 if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		 if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			 ret = append(ret, errs...)
 		 }
-	} {{else}}{{/*<4>*/}}{{if isSpecStatusMessage $msg}}{{/*<5>*/}}{{if strEq $fldk "Status"}}{{/*<6>*/}}
+	} {{else}}{{/*<4>*/}}
+	{{if isSpecStatusMessage $msg}}{{/*<+5>*/}}
+		{{if strEq $fldk "Status"}}{{/*<+6>*/}}
 	if !ignoreStatus {
-		{{if $fldv.Pointer}}{{/*<7>*/}}if  m.{{$fldk}} != nil {
-				{{end}}{{/*<7>*/}}
+			{{if $fldv.Pointer}}{{/*<+7>*/}}
+			if  m.{{$fldk}} != nil {
+				{{end}}{{/*<-7>*/}}
 				dlmtr := "."
 				if path == "" {
 					dlmtr = ""
 				}
 				npath := path + dlmtr + "{{$fldk}}"
-				if errs := m.{{$fldk}}.Validate(ver, npath, ignoreStatus); errs != nil {
+				if errs := m.{{$fldk}}.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
-			}{{if $fldv.Pointer}}{{/*<8>*/}}
-		}{{end}}{{/*<8>*/}}
-	}{{else}}{{/*<7>*/}}
+			}{{if $fldv.Pointer}}{{/*<+7>*/}}
+		}{{end}}{{/*<-7>*/}}
+	}{{else}}{{/*<-6>*/}} {{if strEq $fldk "Spec"}}{{/*<+6>*/}}
+	if !ignoreSpec {
+		{{if $fldv.Pointer}}{{/*<+7>*/}}
+        if  m.{{$fldk}} != nil {
+		{{end}}{{/*<-7>*/}}
+        	dlmtr := "."
+        	if path == "" {
+        		dlmtr = ""
+        	}
+        	npath := path + dlmtr + "{{$fldk}}"
+        	if errs := m.{{$fldk}}.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+        		ret = append(ret, errs...)
+        	}{{if $fldv.Pointer}}{{/*<+7>*/}}
+        }{{end}}{{/*<-7>*/}}
+        } {{end}}
 	{{if $fldv.Pointer}}{{/*<9>*/}}if m.{{$fldk}} != nil { {{end}}{{/*<9>*/}}
 	{
 		dlmtr := "."
@@ -222,11 +239,11 @@ func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "{{$fldk}}"
-		if errs := m.{{$fldk}}.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.{{$fldk}}.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
-	}{{if $fldv.Pointer}}{{/*<10>*/}}
-	}{{end}}{{/*<10>*/}}{{end}}{{/*<6>*/}}{{else}}{{if strEq $fldk "ObjectMeta"}}{{else}}{{/*<5>*/}}
+	}{{if $fldv.Pointer}}{{/*<+6>*/}}
+	}{{end}}{{/*<-6>*/}}{{end}}{{/*<-5>*/}}{{else}}{{if strEq $fldk "ObjectMeta"}}{{else}}{{/*<5>*/}}
 	{{if $fldv.Pointer}}{{/*<11>*/}}if  m.{{$fldk}} != nil { {{end}}{{/*<11>*/}}
 	{
 			dlmtr := "."
@@ -234,7 +251,7 @@ func (m *{{$msgname}}) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "{{$fldk}}"
-			if errs := m.{{$fldk}}.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.{{$fldk}}.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}{{if $fldv.Pointer}}{{/*<12>*/}}

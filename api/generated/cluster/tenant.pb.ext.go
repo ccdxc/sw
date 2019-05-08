@@ -110,7 +110,7 @@ func (m *Tenant) References(tenant string, path string, resp map[string]apiintf.
 
 }
 
-func (m *Tenant) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Tenant) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -126,7 +126,7 @@ func (m *Tenant) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -143,7 +143,7 @@ func (m *TenantSpec) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *TenantSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TenantSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -156,7 +156,7 @@ func (m *TenantStatus) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *TenantStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TenantStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

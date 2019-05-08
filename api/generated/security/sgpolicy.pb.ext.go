@@ -201,7 +201,7 @@ func (m *ProtoPort) References(tenant string, path string, resp map[string]apiin
 
 }
 
-func (m *ProtoPort) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ProtoPort) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -247,7 +247,7 @@ func (m *SGPolicy) References(tenant string, path string, resp map[string]apiint
 	}
 }
 
-func (m *SGPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SGPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -260,7 +260,19 @@ func (m *SGPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -271,7 +283,7 @@ func (m *SGPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -290,7 +302,7 @@ func (m *SGPolicyPropagationStatus) References(tenant string, path string, resp 
 
 }
 
-func (m *SGPolicyPropagationStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SGPolicyPropagationStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -338,7 +350,7 @@ func (m *SGPolicySpec) References(tenant string, path string, resp map[string]ap
 	}
 }
 
-func (m *SGPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SGPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Rules {
 		dlmtr := "."
@@ -346,7 +358,7 @@ func (m *SGPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sRules[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -366,7 +378,7 @@ func (m *SGPolicyStatus) References(tenant string, path string, resp map[string]
 
 }
 
-func (m *SGPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SGPolicyStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -445,7 +457,7 @@ func (m *SGRule) References(tenant string, path string, resp map[string]apiintf.
 	}
 }
 
-func (m *SGRule) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SGRule) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapSgpolicy["SGRule"][ver]; ok {
 		for _, v := range vs {

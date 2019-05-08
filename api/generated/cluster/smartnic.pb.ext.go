@@ -288,7 +288,7 @@ func (m *BiosInfo) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *BiosInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *BiosInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -301,7 +301,7 @@ func (m *IPConfig) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *IPConfig) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *IPConfig) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -314,7 +314,7 @@ func (m *MacRange) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *MacRange) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MacRange) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapSmartnic["MacRange"][ver]; ok {
 		for _, v := range vs {
@@ -340,7 +340,7 @@ func (m *SmartNIC) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -356,7 +356,19 @@ func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -367,10 +379,11 @@ func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -378,7 +391,7 @@ func (m *SmartNIC) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -399,7 +412,7 @@ func (m *SmartNICCondition) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *SmartNICCondition) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SmartNICCondition) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapSmartnic["SmartNICCondition"][ver]; ok {
 		for _, v := range vs {
@@ -429,8 +442,9 @@ func (m *SmartNICInfo) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *SmartNICInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SmartNICInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.MemoryInfo != nil {
 		{
 			dlmtr := "."
@@ -438,7 +452,7 @@ func (m *SmartNICInfo) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "MemoryInfo"
-			if errs := m.MemoryInfo.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.MemoryInfo.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -458,7 +472,7 @@ func (m *SmartNICSpec) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *SmartNICSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SmartNICSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapSmartnic["SmartNICSpec"][ver]; ok {
 		for _, v := range vs {
@@ -488,7 +502,7 @@ func (m *SmartNICStatus) References(tenant string, path string, resp map[string]
 
 }
 
-func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Conditions {
 		dlmtr := "."
@@ -496,10 +510,11 @@ func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sConditions[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if m.SystemInfo != nil {
 		{
 			dlmtr := "."
@@ -507,7 +522,7 @@ func (m *SmartNICStatus) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "SystemInfo"
-			if errs := m.SystemInfo.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.SystemInfo.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}

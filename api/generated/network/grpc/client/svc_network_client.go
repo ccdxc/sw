@@ -366,6 +366,16 @@ func (a *grpcObjNetworkV1Network) Update(ctx context.Context, in *network.Networ
 	return a.client.AutoUpdateNetwork(nctx, in)
 }
 
+func (a *grpcObjNetworkV1Network) UpdateStatus(ctx context.Context, in *network.Network) (*network.Network, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Network", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateNetwork(nctx, in)
+}
+
 func (a *grpcObjNetworkV1Network) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Network, error) {
 	a.logger.DebugLog("msg", "received call", "object", "Network", "oper", "get")
 	if objMeta == nil {
@@ -462,6 +472,10 @@ func (a *restObjNetworkV1Network) Update(ctx context.Context, in *network.Networ
 	return a.endpoints.AutoUpdateNetwork(ctx, in)
 }
 
+func (a *restObjNetworkV1Network) UpdateStatus(ctx context.Context, in *network.Network) (*network.Network, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjNetworkV1Network) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Network, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -541,6 +555,16 @@ func (a *grpcObjNetworkV1Service) Update(ctx context.Context, in *network.Servic
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateService(nctx, in)
+}
+
+func (a *grpcObjNetworkV1Service) UpdateStatus(ctx context.Context, in *network.Service) (*network.Service, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Service", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateService(nctx, in)
 }
 
@@ -640,6 +664,10 @@ func (a *restObjNetworkV1Service) Update(ctx context.Context, in *network.Servic
 	return a.endpoints.AutoUpdateService(ctx, in)
 }
 
+func (a *restObjNetworkV1Service) UpdateStatus(ctx context.Context, in *network.Service) (*network.Service, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjNetworkV1Service) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.Service, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -719,6 +747,16 @@ func (a *grpcObjNetworkV1LbPolicy) Update(ctx context.Context, in *network.LbPol
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateLbPolicy(nctx, in)
+}
+
+func (a *grpcObjNetworkV1LbPolicy) UpdateStatus(ctx context.Context, in *network.LbPolicy) (*network.LbPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "LbPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateLbPolicy(nctx, in)
 }
 
@@ -818,6 +856,10 @@ func (a *restObjNetworkV1LbPolicy) Update(ctx context.Context, in *network.LbPol
 	return a.endpoints.AutoUpdateLbPolicy(ctx, in)
 }
 
+func (a *restObjNetworkV1LbPolicy) UpdateStatus(ctx context.Context, in *network.LbPolicy) (*network.LbPolicy, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjNetworkV1LbPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.LbPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -897,6 +939,16 @@ func (a *grpcObjNetworkV1VirtualRouter) Update(ctx context.Context, in *network.
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateVirtualRouter(nctx, in)
+}
+
+func (a *grpcObjNetworkV1VirtualRouter) UpdateStatus(ctx context.Context, in *network.VirtualRouter) (*network.VirtualRouter, error) {
+	a.logger.DebugLog("msg", "received call", "object", "VirtualRouter", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateVirtualRouter(nctx, in)
 }
 
@@ -994,6 +1046,10 @@ func (a *restObjNetworkV1VirtualRouter) Update(ctx context.Context, in *network.
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.AutoUpdateVirtualRouter(ctx, in)
+}
+
+func (a *restObjNetworkV1VirtualRouter) UpdateStatus(ctx context.Context, in *network.VirtualRouter) (*network.VirtualRouter, error) {
+	return nil, errors.New("not supported for REST")
 }
 
 func (a *restObjNetworkV1VirtualRouter) Get(ctx context.Context, objMeta *api.ObjectMeta) (*network.VirtualRouter, error) {

@@ -216,6 +216,16 @@ func (a *grpcObjObjstoreV1Bucket) Update(ctx context.Context, in *objstore.Bucke
 	return a.client.AutoUpdateBucket(nctx, in)
 }
 
+func (a *grpcObjObjstoreV1Bucket) UpdateStatus(ctx context.Context, in *objstore.Bucket) (*objstore.Bucket, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Bucket", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateBucket(nctx, in)
+}
+
 func (a *grpcObjObjstoreV1Bucket) Get(ctx context.Context, objMeta *api.ObjectMeta) (*objstore.Bucket, error) {
 	a.logger.DebugLog("msg", "received call", "object", "Bucket", "oper", "get")
 	if objMeta == nil {
@@ -312,6 +322,10 @@ func (a *restObjObjstoreV1Bucket) Update(ctx context.Context, in *objstore.Bucke
 	return a.endpoints.AutoUpdateBucket(ctx, in)
 }
 
+func (a *restObjObjstoreV1Bucket) UpdateStatus(ctx context.Context, in *objstore.Bucket) (*objstore.Bucket, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjObjstoreV1Bucket) Get(ctx context.Context, objMeta *api.ObjectMeta) (*objstore.Bucket, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -388,6 +402,16 @@ func (a *grpcObjObjstoreV1Object) Update(ctx context.Context, in *objstore.Objec
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateObject(nctx, in)
+}
+
+func (a *grpcObjObjstoreV1Object) UpdateStatus(ctx context.Context, in *objstore.Object) (*objstore.Object, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Object", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateObject(nctx, in)
 }
 
@@ -485,6 +509,10 @@ func (a *restObjObjstoreV1Object) Update(ctx context.Context, in *objstore.Objec
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.AutoUpdateObject(ctx, in)
+}
+
+func (a *restObjObjstoreV1Object) UpdateStatus(ctx context.Context, in *objstore.Object) (*objstore.Object, error) {
+	return nil, errors.New("not supported for REST")
 }
 
 func (a *restObjObjstoreV1Object) Get(ctx context.Context, objMeta *api.ObjectMeta) (*objstore.Object, error) {

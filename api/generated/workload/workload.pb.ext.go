@@ -197,7 +197,7 @@ func (m *Workload) References(tenant string, path string, resp map[string]apiint
 	}
 }
 
-func (m *Workload) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Workload) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -210,7 +210,19 @@ func (m *Workload) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -221,7 +233,7 @@ func (m *Workload) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -240,7 +252,7 @@ func (m *WorkloadIntfSpec) References(tenant string, path string, resp map[strin
 
 }
 
-func (m *WorkloadIntfSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *WorkloadIntfSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapWorkload["WorkloadIntfSpec"][ver]; ok {
 		for _, v := range vs {
@@ -266,7 +278,7 @@ func (m *WorkloadIntfStatus) References(tenant string, path string, resp map[str
 
 }
 
-func (m *WorkloadIntfStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *WorkloadIntfStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -300,7 +312,7 @@ func (m *WorkloadSpec) References(tenant string, path string, resp map[string]ap
 	}
 }
 
-func (m *WorkloadSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *WorkloadSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Interfaces {
 		dlmtr := "."
@@ -308,7 +320,7 @@ func (m *WorkloadSpec) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sInterfaces[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -341,7 +353,7 @@ func (m *WorkloadStatus) References(tenant string, path string, resp map[string]
 
 }
 
-func (m *WorkloadStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *WorkloadStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

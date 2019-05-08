@@ -188,7 +188,7 @@ func (m *AutoMsgRolloutActionWatchHelper) References(tenant string, path string,
 
 }
 
-func (m *AutoMsgRolloutActionWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgRolloutActionWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -196,7 +196,7 @@ func (m *AutoMsgRolloutActionWatchHelper) Validate(ver, path string, ignoreStatu
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -217,8 +217,9 @@ func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) References(tenant string, p
 
 }
 
-func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -226,7 +227,7 @@ func (m *AutoMsgRolloutActionWatchHelper_WatchEvent) Validate(ver, path string, 
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -246,7 +247,7 @@ func (m *AutoMsgRolloutWatchHelper) References(tenant string, path string, resp 
 
 }
 
-func (m *AutoMsgRolloutWatchHelper) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgRolloutWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Events {
 		dlmtr := "."
@@ -254,7 +255,7 @@ func (m *AutoMsgRolloutWatchHelper) Validate(ver, path string, ignoreStatus bool
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -275,8 +276,9 @@ func (m *AutoMsgRolloutWatchHelper_WatchEvent) References(tenant string, path st
 
 }
 
-func (m *AutoMsgRolloutWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AutoMsgRolloutWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Object != nil {
 		{
 			dlmtr := "."
@@ -284,7 +286,7 @@ func (m *AutoMsgRolloutWatchHelper_WatchEvent) Validate(ver, path string, ignore
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -304,7 +306,7 @@ func (m *RolloutActionList) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *RolloutActionList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RolloutActionList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -312,7 +314,7 @@ func (m *RolloutActionList) Validate(ver, path string, ignoreStatus bool) []erro
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -333,7 +335,7 @@ func (m *RolloutList) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *RolloutList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RolloutList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Items {
 		dlmtr := "."
@@ -341,7 +343,7 @@ func (m *RolloutList) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}

@@ -152,7 +152,7 @@ func (m *IPsecProtocolSpec) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *IPsecProtocolSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *IPsecProtocolSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -165,7 +165,7 @@ func (m *TLSProtocolSpec) References(tenant string, path string, resp map[string
 
 }
 
-func (m *TLSProtocolSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TLSProtocolSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -201,7 +201,7 @@ func (m *TrafficEncryptionPolicy) References(tenant string, path string, resp ma
 	}
 }
 
-func (m *TrafficEncryptionPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TrafficEncryptionPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -214,7 +214,7 @@ func (m *TrafficEncryptionPolicy) Validate(ver, path string, ignoreStatus bool) 
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -231,7 +231,7 @@ func (m *TrafficEncryptionPolicySpec) References(tenant string, path string, res
 
 }
 
-func (m *TrafficEncryptionPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TrafficEncryptionPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -244,7 +244,7 @@ func (m *TrafficEncryptionPolicyStatus) References(tenant string, path string, r
 
 }
 
-func (m *TrafficEncryptionPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TrafficEncryptionPolicyStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

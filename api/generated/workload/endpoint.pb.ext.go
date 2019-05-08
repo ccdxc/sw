@@ -140,7 +140,7 @@ func (m *Endpoint) References(tenant string, path string, resp map[string]apiint
 	}
 }
 
-func (m *Endpoint) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Endpoint) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -153,10 +153,11 @@ func (m *Endpoint) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -164,7 +165,7 @@ func (m *Endpoint) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -183,7 +184,7 @@ func (m *EndpointSpec) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *EndpointSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *EndpointSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -196,7 +197,7 @@ func (m *EndpointStatus) References(tenant string, path string, resp map[string]
 
 }
 
-func (m *EndpointStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *EndpointStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapEndpoint["EndpointStatus"][ver]; ok {
 		for _, v := range vs {

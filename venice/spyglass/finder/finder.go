@@ -282,7 +282,7 @@ func (fdr *Finder) Query(ctx context.Context, in *search.SearchRequest) (*search
 	fdr.logger.Infof("Search request: {%+v}", *in)
 
 	// Validate search params
-	if errs := in.Validate("", "", true); errs != nil {
+	if errs := in.Validate("", "", true, false); errs != nil {
 		sr.Error = &search.Error{
 			Type:   grpccode.InvalidArgument.String(),
 			Reason: ErrInvalidParams.Error(),

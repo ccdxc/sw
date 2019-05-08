@@ -383,6 +383,34 @@ func TestCrudOps(t *testing.T) {
 		}
 	}
 
+	{ // -- UpdateStatus via REST - should fail --//
+		pub.Status.Status = "test update status"
+		if _, err := restcl.BookstoreV1().Publisher().UpdateStatus(ctx, &pub); err == nil {
+			t.Fatal("status update should have failed")
+		}
+	}
+	{ // -- UpdateStatus via gRPC --//
+		oldSpec := pub.Spec
+		pub.Spec.Address = "Should not be updated"
+		pub.Status.Status = "test update status"
+		if ret, err := apicl.BookstoreV1().Publisher().UpdateStatus(ctx, &pub); err != nil {
+			t.Fatalf("failed to update status publisher(%s)", err)
+		} else {
+			if validateObjectSpec(&pub, ret) {
+				t.Fatalf("updated object [Add] should not match \n\t[%+v]\n\t[%+v]", pub, ret)
+			}
+			if ret.Status.Status != "test update status" {
+				t.Fatalf("returned object does not have expected status [%v]", ret.Status.Status)
+			}
+			if !reflect.DeepEqual(oldSpec, ret.Spec) {
+				t.Fatalf("Spec was changed in updateStatus call[%+v]/[%+v]", oldSpec, ret.Spec)
+			}
+			evp := *ret
+			pExpectWatchEvents = recordWatchEvent(&pExpectWatchEvents, &evp, kvstore.Updated)
+		}
+		pub.Spec = oldSpec
+	}
+
 	{ // --- Delete Resource via gRPC --- //
 		meta := api.ObjectMeta{Name: "Sahara"}
 		ret, err := apicl.BookstoreV1().Publisher().Delete(ctx, &meta)

@@ -33,6 +33,8 @@ const (
 	RequestParamStagingBufferID = "staging-buffer-id"
 	// RequestParamsRequestURI carries the URI for the request
 	RequestParamsRequestURI = "req-uri"
+	// RequestParamUpdateStatus flags the request for a status only update
+	RequestParamUpdateStatus = "req-status-only"
 )
 
 const (
@@ -138,7 +140,7 @@ type NormalizerFunc func(i interface{}) interface{}
 
 // ValidateFunc is a function the validates the message. returns nil on success and error
 //  when validation fails.
-type ValidateFunc func(i interface{}, ver string, ignoreStatus bool) []error
+type ValidateFunc func(i interface{}, ver string, ignoreStatus bool, ignoreSpec bool) []error
 
 // PreCommitFunc is the registered function that is desired to be invoked before commit
 // (the KV store operation). Multiple precommitFuncs could be registered. All registered funcs
@@ -307,7 +309,7 @@ type MessageAction interface {
 	// Normalize normalizes the object if registered.
 	Normalize(i interface{}) interface{}
 	// Validate validates the message by invoking the custom validation function registered.
-	Validate(i interface{}, ver string, ignoreStatus bool) []error
+	Validate(i interface{}, ver string, ignoreStatus bool, ignoreSpec bool) []error
 	// CreateUUID creates uuid when the object is first created
 	CreateUUID(i interface{}) (interface{}, error)
 	// WriteCreationTime writes the creation time of the object to now

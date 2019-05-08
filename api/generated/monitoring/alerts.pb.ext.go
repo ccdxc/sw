@@ -499,7 +499,7 @@ func (m *Alert) References(tenant string, path string, resp map[string]apiintf.R
 	}
 }
 
-func (m *Alert) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Alert) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -512,7 +512,19 @@ func (m *Alert) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -523,10 +535,11 @@ func (m *Alert) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -534,7 +547,7 @@ func (m *Alert) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -578,7 +591,7 @@ func (m *AlertDestination) References(tenant string, path string, resp map[strin
 	}
 }
 
-func (m *AlertDestination) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AlertDestination) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -591,7 +604,19 @@ func (m *AlertDestination) Validate(ver, path string, ignoreStatus bool) []error
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -602,7 +627,7 @@ func (m *AlertDestination) Validate(ver, path string, ignoreStatus bool) []error
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -621,8 +646,9 @@ func (m *AlertDestinationSpec) References(tenant string, path string, resp map[s
 
 }
 
-func (m *AlertDestinationSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AlertDestinationSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.SNMPExport != nil {
 		{
 			dlmtr := "."
@@ -630,11 +656,12 @@ func (m *AlertDestinationSpec) Validate(ver, path string, ignoreStatus bool) []e
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "SNMPExport"
-			if errs := m.SNMPExport.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.SNMPExport.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
 	}
+
 	if m.Selector != nil {
 		{
 			dlmtr := "."
@@ -642,11 +669,12 @@ func (m *AlertDestinationSpec) Validate(ver, path string, ignoreStatus bool) []e
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Selector"
-			if errs := m.Selector.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Selector.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
 	}
+
 	if m.SyslogExport != nil {
 		{
 			dlmtr := "."
@@ -654,7 +682,7 @@ func (m *AlertDestinationSpec) Validate(ver, path string, ignoreStatus bool) []e
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "SyslogExport"
-			if errs := m.SyslogExport.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.SyslogExport.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -682,7 +710,7 @@ func (m *AlertDestinationStatus) References(tenant string, path string, resp map
 
 }
 
-func (m *AlertDestinationStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AlertDestinationStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -728,7 +756,7 @@ func (m *AlertPolicy) References(tenant string, path string, resp map[string]api
 	}
 }
 
-func (m *AlertPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AlertPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -741,7 +769,19 @@ func (m *AlertPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -752,7 +792,7 @@ func (m *AlertPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -793,7 +833,7 @@ func (m *AlertPolicySpec) References(tenant string, path string, resp map[string
 	}
 }
 
-func (m *AlertPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AlertPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Requirements {
 		dlmtr := "."
@@ -801,7 +841,7 @@ func (m *AlertPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sRequirements[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -837,7 +877,7 @@ func (m *AlertPolicyStatus) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *AlertPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AlertPolicyStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -871,7 +911,7 @@ func (m *AlertReason) References(tenant string, path string, resp map[string]api
 	}
 }
 
-func (m *AlertReason) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AlertReason) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.MatchedRequirements {
 		dlmtr := "."
@@ -879,7 +919,7 @@ func (m *AlertReason) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sMatchedRequirements[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -900,7 +940,7 @@ func (m *AlertSource) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *AlertSource) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AlertSource) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -913,7 +953,7 @@ func (m *AlertSpec) References(tenant string, path string, resp map[string]apiin
 
 }
 
-func (m *AlertSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AlertSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapAlerts["AlertSpec"][ver]; ok {
 		for _, v := range vs {
@@ -951,7 +991,7 @@ func (m *AlertStatus) References(tenant string, path string, resp map[string]api
 	}
 }
 
-func (m *AlertStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AlertStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	{
@@ -960,7 +1000,7 @@ func (m *AlertStatus) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Reason"
-		if errs := m.Reason.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Reason.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -992,7 +1032,7 @@ func (m *AuditInfo) References(tenant string, path string, resp map[string]apiin
 
 }
 
-func (m *AuditInfo) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AuditInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1005,7 +1045,7 @@ func (m *EmailExport) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *EmailExport) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *EmailExport) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1018,8 +1058,9 @@ func (m *MatchedRequirement) References(tenant string, path string, resp map[str
 
 }
 
-func (m *MatchedRequirement) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MatchedRequirement) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Requirement != nil {
 		{
 			dlmtr := "."
@@ -1027,7 +1068,7 @@ func (m *MatchedRequirement) Validate(ver, path string, ignoreStatus bool) []err
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Requirement"
-			if errs := m.Requirement.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Requirement.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -1047,7 +1088,7 @@ func (m *SNMPExport) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *SNMPExport) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SNMPExport) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.SNMPTrapServers {
 		dlmtr := "."
@@ -1055,7 +1096,7 @@ func (m *SNMPExport) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sSNMPTrapServers[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1076,8 +1117,9 @@ func (m *SyslogExport) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *SyslogExport) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SyslogExport) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Config != nil {
 		{
 			dlmtr := "."
@@ -1085,7 +1127,7 @@ func (m *SyslogExport) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Config"
-			if errs := m.Config.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Config.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -1096,7 +1138,7 @@ func (m *SyslogExport) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sTargets[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}

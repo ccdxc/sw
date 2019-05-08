@@ -154,7 +154,7 @@ func (m *EventPolicy) References(tenant string, path string, resp map[string]api
 	}
 }
 
-func (m *EventPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *EventPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -167,7 +167,19 @@ func (m *EventPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -178,7 +190,7 @@ func (m *EventPolicy) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -197,8 +209,9 @@ func (m *EventPolicySpec) References(tenant string, path string, resp map[string
 
 }
 
-func (m *EventPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *EventPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Selector != nil {
 		{
 			dlmtr := "."
@@ -206,11 +219,12 @@ func (m *EventPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Selector"
-			if errs := m.Selector.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Selector.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
 	}
+
 	if m.SyslogConfig != nil {
 		{
 			dlmtr := "."
@@ -218,7 +232,7 @@ func (m *EventPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "SyslogConfig"
-			if errs := m.SyslogConfig.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.SyslogConfig.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -229,7 +243,7 @@ func (m *EventPolicySpec) Validate(ver, path string, ignoreStatus bool) []error 
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sTargets[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -273,7 +287,7 @@ func (m *EventPolicyStatus) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *EventPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *EventPolicyStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

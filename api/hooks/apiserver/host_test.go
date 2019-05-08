@@ -44,11 +44,11 @@ func TestHostObjectValidation(t *testing.T) {
 	}
 
 	// Negative testcases
-	err := hooks.validateHostConfig(nil, "", false)
+	err := hooks.validateHostConfig(nil, "", false, false)
 	Assert(t, len(err) > 0, "validateHostConfig did not return error with nil object")
-	err = hooks.validateHostConfig(cluster.Cluster{}, "", false)
+	err = hooks.validateHostConfig(cluster.Cluster{}, "", false, false)
 	Assert(t, len(err) > 0, "validateHostConfig did not return error with invalid object")
-	err = hooks.validateHostConfig(cluster.Host{}, "", false)
+	err = hooks.validateHostConfig(cluster.Host{}, "", false, false)
 	Assert(t, len(err) > 0, "validateHostConfig did not return error with empty object")
 
 	// Testcases for various host configs
@@ -145,7 +145,7 @@ func TestHostObjectValidation(t *testing.T) {
 	// Execute the host config testcases
 	for c, tc := range hostTestcases {
 		t.Run(tc.obj.Name, func(t *testing.T) {
-			err := hooks.validateHostConfig(*tc.obj, "", true)
+			err := hooks.validateHostConfig(*tc.obj, "", true, false)
 			Assert(t, len(err) == len(tc.err), fmt.Sprintf("Testcase %d: expected and actual errors mismatch. Have: %d, want: %d", c, len(err), len(tc.err)))
 			for i := 0; i < len(tc.err); i++ {
 				Assert(t, tc.err[i].Error() == err[i].Error(),

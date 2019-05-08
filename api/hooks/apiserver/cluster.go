@@ -45,7 +45,7 @@ func (cl *clusterHooks) errInvalidNamespaceConfig() error {
 }
 
 // Validate the Node config
-func (cl *clusterHooks) validateNodeConfig(i interface{}, ver string, ignStatus bool) []error {
+func (cl *clusterHooks) validateNodeConfig(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
 	var err []error
 	obj, ok := i.(cluster.Node)
 	if !ok {
@@ -61,7 +61,7 @@ func (cl *clusterHooks) validateNodeConfig(i interface{}, ver string, ignStatus 
 }
 
 // Validate the Cluster config
-func (cl *clusterHooks) validateClusterConfig(i interface{}, ver string, ignStatus bool) []error {
+func (cl *clusterHooks) validateClusterConfig(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
 	var err []error
 	obj, ok := i.(cluster.Cluster)
 	if !ok {
@@ -219,7 +219,7 @@ func (cl *clusterHooks) deleteDefaultVirtualRouter(ctx context.Context, kv kvsto
 }
 
 // Validate the tenant object
-func (cl *clusterHooks) validateTenant(i interface{}, ver string, ignStatus bool) []error {
+func (cl *clusterHooks) validateTenant(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
 	r, ok := i.(cluster.Tenant)
 	if !ok {
 		return []error{errors.New("invalid intput type")}

@@ -228,9 +228,9 @@ func (s *sclusterTenantBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(cluster.Tenant)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(cluster.Tenant)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(cluster.Tenant)
 			r.Normalize()

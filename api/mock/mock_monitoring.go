@@ -65,6 +65,19 @@ func (mr *MockMonitoringV1EventPolicyInterfaceMockRecorder) Update(ctx, in inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1EventPolicyInterface)(nil).Update), ctx, in)
 }
 
+// UpdateStatus mocks base method
+func (m *MockMonitoringV1EventPolicyInterface) UpdateStatus(ctx context.Context, in *monitoring.EventPolicy) (*monitoring.EventPolicy, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*monitoring.EventPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockMonitoringV1EventPolicyInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1EventPolicyInterface)(nil).UpdateStatus), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockMonitoringV1EventPolicyInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.EventPolicy, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -176,6 +189,19 @@ func (m *MockMonitoringV1StatsPolicyInterface) Update(ctx context.Context, in *m
 // Update indicates an expected call of Update
 func (mr *MockMonitoringV1StatsPolicyInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1StatsPolicyInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockMonitoringV1StatsPolicyInterface) UpdateStatus(ctx context.Context, in *monitoring.StatsPolicy) (*monitoring.StatsPolicy, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*monitoring.StatsPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockMonitoringV1StatsPolicyInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1StatsPolicyInterface)(nil).UpdateStatus), ctx, in)
 }
 
 // Get mocks base method
@@ -291,6 +317,19 @@ func (mr *MockMonitoringV1FwlogPolicyInterfaceMockRecorder) Update(ctx, in inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1FwlogPolicyInterface)(nil).Update), ctx, in)
 }
 
+// UpdateStatus mocks base method
+func (m *MockMonitoringV1FwlogPolicyInterface) UpdateStatus(ctx context.Context, in *monitoring.FwlogPolicy) (*monitoring.FwlogPolicy, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*monitoring.FwlogPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockMonitoringV1FwlogPolicyInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1FwlogPolicyInterface)(nil).UpdateStatus), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockMonitoringV1FwlogPolicyInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.FwlogPolicy, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -402,6 +441,19 @@ func (m *MockMonitoringV1FlowExportPolicyInterface) Update(ctx context.Context, 
 // Update indicates an expected call of Update
 func (mr *MockMonitoringV1FlowExportPolicyInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1FlowExportPolicyInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockMonitoringV1FlowExportPolicyInterface) UpdateStatus(ctx context.Context, in *monitoring.FlowExportPolicy) (*monitoring.FlowExportPolicy, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*monitoring.FlowExportPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockMonitoringV1FlowExportPolicyInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1FlowExportPolicyInterface)(nil).UpdateStatus), ctx, in)
 }
 
 // Get mocks base method
@@ -517,6 +569,19 @@ func (mr *MockMonitoringV1AlertInterfaceMockRecorder) Update(ctx, in interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1AlertInterface)(nil).Update), ctx, in)
 }
 
+// UpdateStatus mocks base method
+func (m *MockMonitoringV1AlertInterface) UpdateStatus(ctx context.Context, in *monitoring.Alert) (*monitoring.Alert, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*monitoring.Alert)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockMonitoringV1AlertInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1AlertInterface)(nil).UpdateStatus), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockMonitoringV1AlertInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.Alert, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -628,6 +693,19 @@ func (m *MockMonitoringV1AlertPolicyInterface) Update(ctx context.Context, in *m
 // Update indicates an expected call of Update
 func (mr *MockMonitoringV1AlertPolicyInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1AlertPolicyInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockMonitoringV1AlertPolicyInterface) UpdateStatus(ctx context.Context, in *monitoring.AlertPolicy) (*monitoring.AlertPolicy, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*monitoring.AlertPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockMonitoringV1AlertPolicyInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1AlertPolicyInterface)(nil).UpdateStatus), ctx, in)
 }
 
 // Get mocks base method
@@ -743,6 +821,19 @@ func (mr *MockMonitoringV1AlertDestinationInterfaceMockRecorder) Update(ctx, in 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1AlertDestinationInterface)(nil).Update), ctx, in)
 }
 
+// UpdateStatus mocks base method
+func (m *MockMonitoringV1AlertDestinationInterface) UpdateStatus(ctx context.Context, in *monitoring.AlertDestination) (*monitoring.AlertDestination, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*monitoring.AlertDestination)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockMonitoringV1AlertDestinationInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1AlertDestinationInterface)(nil).UpdateStatus), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockMonitoringV1AlertDestinationInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.AlertDestination, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -854,6 +945,19 @@ func (m *MockMonitoringV1MirrorSessionInterface) Update(ctx context.Context, in 
 // Update indicates an expected call of Update
 func (mr *MockMonitoringV1MirrorSessionInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1MirrorSessionInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockMonitoringV1MirrorSessionInterface) UpdateStatus(ctx context.Context, in *monitoring.MirrorSession) (*monitoring.MirrorSession, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*monitoring.MirrorSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockMonitoringV1MirrorSessionInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1MirrorSessionInterface)(nil).UpdateStatus), ctx, in)
 }
 
 // Get mocks base method
@@ -969,6 +1073,19 @@ func (mr *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder) Update(ct
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1TroubleshootingSessionInterface)(nil).Update), ctx, in)
 }
 
+// UpdateStatus mocks base method
+func (m *MockMonitoringV1TroubleshootingSessionInterface) UpdateStatus(ctx context.Context, in *monitoring.TroubleshootingSession) (*monitoring.TroubleshootingSession, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*monitoring.TroubleshootingSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockMonitoringV1TroubleshootingSessionInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1TroubleshootingSessionInterface)(nil).UpdateStatus), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockMonitoringV1TroubleshootingSessionInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.TroubleshootingSession, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -1080,6 +1197,19 @@ func (m *MockMonitoringV1TechSupportRequestInterface) Update(ctx context.Context
 // Update indicates an expected call of Update
 func (mr *MockMonitoringV1TechSupportRequestInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockMonitoringV1TechSupportRequestInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockMonitoringV1TechSupportRequestInterface) UpdateStatus(ctx context.Context, in *monitoring.TechSupportRequest) (*monitoring.TechSupportRequest, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*monitoring.TechSupportRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockMonitoringV1TechSupportRequestInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockMonitoringV1TechSupportRequestInterface)(nil).UpdateStatus), ctx, in)
 }
 
 // Get mocks base method

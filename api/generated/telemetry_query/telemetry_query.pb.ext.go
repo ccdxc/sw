@@ -363,7 +363,7 @@ func (m *Fwlog) References(tenant string, path string, resp map[string]apiintf.R
 
 }
 
-func (m *Fwlog) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Fwlog) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapTelemetry_query["Fwlog"][ver]; ok {
 		for _, v := range vs {
@@ -393,7 +393,7 @@ func (m *FwlogsQueryList) References(tenant string, path string, resp map[string
 
 }
 
-func (m *FwlogsQueryList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FwlogsQueryList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Queries {
 		dlmtr := "."
@@ -401,7 +401,7 @@ func (m *FwlogsQueryList) Validate(ver, path string, ignoreStatus bool) []error 
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sQueries[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -422,7 +422,7 @@ func (m *FwlogsQueryResponse) References(tenant string, path string, resp map[st
 
 }
 
-func (m *FwlogsQueryResponse) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FwlogsQueryResponse) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Results {
 		dlmtr := "."
@@ -430,7 +430,7 @@ func (m *FwlogsQueryResponse) Validate(ver, path string, ignoreStatus bool) []er
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sResults[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -451,7 +451,7 @@ func (m *FwlogsQueryResult) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *FwlogsQueryResult) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FwlogsQueryResult) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Logs {
 		dlmtr := "."
@@ -459,7 +459,7 @@ func (m *FwlogsQueryResult) Validate(ver, path string, ignoreStatus bool) []erro
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sLogs[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -480,8 +480,9 @@ func (m *FwlogsQuerySpec) References(tenant string, path string, resp map[string
 
 }
 
-func (m *FwlogsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *FwlogsQuerySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Pagination != nil {
 		{
 			dlmtr := "."
@@ -489,7 +490,7 @@ func (m *FwlogsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error 
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Pagination"
-			if errs := m.Pagination.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Pagination.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -532,7 +533,7 @@ func (m *MetricsQueryList) References(tenant string, path string, resp map[strin
 
 }
 
-func (m *MetricsQueryList) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MetricsQueryList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Queries {
 		dlmtr := "."
@@ -540,7 +541,7 @@ func (m *MetricsQueryList) Validate(ver, path string, ignoreStatus bool) []error
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sQueries[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -561,7 +562,7 @@ func (m *MetricsQueryResponse) References(tenant string, path string, resp map[s
 
 }
 
-func (m *MetricsQueryResponse) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MetricsQueryResponse) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -574,7 +575,7 @@ func (m *MetricsQueryResult) References(tenant string, path string, resp map[str
 
 }
 
-func (m *MetricsQueryResult) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MetricsQueryResult) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -587,8 +588,9 @@ func (m *MetricsQuerySpec) References(tenant string, path string, resp map[strin
 
 }
 
-func (m *MetricsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MetricsQuerySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Pagination != nil {
 		{
 			dlmtr := "."
@@ -596,11 +598,12 @@ func (m *MetricsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Pagination"
-			if errs := m.Pagination.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Pagination.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
 	}
+
 	if m.Selector != nil {
 		{
 			dlmtr := "."
@@ -608,7 +611,7 @@ func (m *MetricsQuerySpec) Validate(ver, path string, ignoreStatus bool) []error
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Selector"
-			if errs := m.Selector.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Selector.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -649,7 +652,7 @@ func (m *PaginationSpec) References(tenant string, path string, resp map[string]
 
 }
 
-func (m *PaginationSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PaginationSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapTelemetry_query["PaginationSpec"][ver]; ok {
 		for _, v := range vs {
@@ -675,7 +678,7 @@ func (m *ResultSeries) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *ResultSeries) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ResultSeries) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

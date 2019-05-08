@@ -228,9 +228,9 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(auth.AuthenticationPolicy)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(auth.AuthenticationPolicy)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(auth.AuthenticationPolicy)
 			r.Normalize()
@@ -508,9 +508,9 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(auth.PasswordChangeRequest)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(auth.PasswordChangeRequest)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(auth.PasswordChangeRequest)
 			r.Normalize()
@@ -697,9 +697,9 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(auth.PasswordResetRequest)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(auth.PasswordResetRequest)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(auth.PasswordResetRequest)
 			r.Normalize()
@@ -899,9 +899,9 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(auth.Role)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(auth.Role)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(auth.Role)
 			r.Normalize()
@@ -1178,9 +1178,9 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(auth.RoleBinding)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(auth.RoleBinding)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(auth.RoleBinding)
 			r.Normalize()
@@ -1452,9 +1452,9 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(auth.SubjectAccessReviewRequest)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(auth.SubjectAccessReviewRequest)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(auth.SubjectAccessReviewRequest)
 			r.Normalize()
@@ -1650,9 +1650,9 @@ func (s *sauthAuthBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(auth.User)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(auth.User)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(auth.User)
 			r.Normalize()

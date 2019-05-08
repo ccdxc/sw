@@ -111,7 +111,7 @@ func TestCreateNewOrderId(t *testing.T) {
 		t.Errorf("expecting to fail")
 	}
 	s.processDelBook(ctx, apiintf.DeleteOper, book, false)
-	errs := s.validateOrder(order, "v1", false)
+	errs := s.validateOrder(order, "v1", false, false)
 	if errs != nil {
 		t.Errorf("expecting validation to pass")
 	}

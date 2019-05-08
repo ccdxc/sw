@@ -217,9 +217,9 @@ func (s *sbrowserBrowserBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(browser.BrowseRequest)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(browser.BrowseRequest)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(browser.BrowseRequest)
 			r.Normalize()

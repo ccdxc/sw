@@ -19,6 +19,7 @@ var _ kvstore.Interface
 type WorkloadV1EndpointInterface interface {
 	Create(ctx context.Context, in *Endpoint) (*Endpoint, error)
 	Update(ctx context.Context, in *Endpoint) (*Endpoint, error)
+	UpdateStatus(ctx context.Context, in *Endpoint) (*Endpoint, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Endpoint, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Endpoint, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Endpoint, error)
@@ -30,6 +31,7 @@ type WorkloadV1EndpointInterface interface {
 type WorkloadV1WorkloadInterface interface {
 	Create(ctx context.Context, in *Workload) (*Workload, error)
 	Update(ctx context.Context, in *Workload) (*Workload, error)
+	UpdateStatus(ctx context.Context, in *Workload) (*Workload, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Workload, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Workload, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Workload, error)

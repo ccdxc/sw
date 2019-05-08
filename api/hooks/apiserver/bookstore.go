@@ -124,7 +124,11 @@ func (s *bookstoreHooks) processClearDiscountAction(ctx context.Context, kv kvst
 }
 
 // This hook is to validate that all the items in the order are valid books.
-func (s *bookstoreHooks) validateOrder(i interface{}, ver string, ignStatus bool) []error {
+func (s *bookstoreHooks) validateOrder(i interface{}, ver string, ignStatus, ignoreSpec bool) []error {
+	if ignoreSpec {
+		// only spec is validated in this hook
+		return nil
+	}
 	r := i.(bookstore.Order)
 	for _, oi := range r.Spec.Order {
 		s.logger.InfoLog("msg", "Validating Book in order", "book", oi.ISBNId)

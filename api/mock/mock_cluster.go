@@ -65,6 +65,19 @@ func (mr *MockClusterV1ClusterInterfaceMockRecorder) Update(ctx, in interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterV1ClusterInterface)(nil).Update), ctx, in)
 }
 
+// UpdateStatus mocks base method
+func (m *MockClusterV1ClusterInterface) UpdateStatus(ctx context.Context, in *cluster.Cluster) (*cluster.Cluster, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*cluster.Cluster)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockClusterV1ClusterInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1ClusterInterface)(nil).UpdateStatus), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockClusterV1ClusterInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Cluster, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -204,6 +217,19 @@ func (mr *MockClusterV1NodeInterfaceMockRecorder) Update(ctx, in interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterV1NodeInterface)(nil).Update), ctx, in)
 }
 
+// UpdateStatus mocks base method
+func (m *MockClusterV1NodeInterface) UpdateStatus(ctx context.Context, in *cluster.Node) (*cluster.Node, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*cluster.Node)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockClusterV1NodeInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1NodeInterface)(nil).UpdateStatus), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockClusterV1NodeInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Node, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -315,6 +341,19 @@ func (m *MockClusterV1HostInterface) Update(ctx context.Context, in *cluster.Hos
 // Update indicates an expected call of Update
 func (mr *MockClusterV1HostInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterV1HostInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockClusterV1HostInterface) UpdateStatus(ctx context.Context, in *cluster.Host) (*cluster.Host, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*cluster.Host)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockClusterV1HostInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1HostInterface)(nil).UpdateStatus), ctx, in)
 }
 
 // Get mocks base method
@@ -430,6 +469,19 @@ func (mr *MockClusterV1SmartNICInterfaceMockRecorder) Update(ctx, in interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterV1SmartNICInterface)(nil).Update), ctx, in)
 }
 
+// UpdateStatus mocks base method
+func (m *MockClusterV1SmartNICInterface) UpdateStatus(ctx context.Context, in *cluster.SmartNIC) (*cluster.SmartNIC, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*cluster.SmartNIC)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockClusterV1SmartNICInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1SmartNICInterface)(nil).UpdateStatus), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockClusterV1SmartNICInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.SmartNIC, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -543,6 +595,19 @@ func (mr *MockClusterV1TenantInterfaceMockRecorder) Update(ctx, in interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterV1TenantInterface)(nil).Update), ctx, in)
 }
 
+// UpdateStatus mocks base method
+func (m *MockClusterV1TenantInterface) UpdateStatus(ctx context.Context, in *cluster.Tenant) (*cluster.Tenant, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*cluster.Tenant)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockClusterV1TenantInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1TenantInterface)(nil).UpdateStatus), ctx, in)
+}
+
 // Get mocks base method
 func (m *MockClusterV1TenantInterface) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cluster.Tenant, error) {
 	ret := m.ctrl.Call(m, "Get", ctx, objMeta)
@@ -654,6 +719,19 @@ func (m *MockClusterV1VersionInterface) Update(ctx context.Context, in *cluster.
 // Update indicates an expected call of Update
 func (mr *MockClusterV1VersionInterfaceMockRecorder) Update(ctx, in interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterV1VersionInterface)(nil).Update), ctx, in)
+}
+
+// UpdateStatus mocks base method
+func (m *MockClusterV1VersionInterface) UpdateStatus(ctx context.Context, in *cluster.Version) (*cluster.Version, error) {
+	ret := m.ctrl.Call(m, "UpdateStatus", ctx, in)
+	ret0, _ := ret[0].(*cluster.Version)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateStatus indicates an expected call of UpdateStatus
+func (mr *MockClusterV1VersionInterfaceMockRecorder) UpdateStatus(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatus", reflect.TypeOf((*MockClusterV1VersionInterface)(nil).UpdateStatus), ctx, in)
 }
 
 // Get mocks base method

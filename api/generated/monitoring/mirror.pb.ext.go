@@ -325,7 +325,7 @@ func (m *AppProtoSelector) References(tenant string, path string, resp map[strin
 
 }
 
-func (m *AppProtoSelector) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AppProtoSelector) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapMirror["AppProtoSelector"][ver]; ok {
 		for _, v := range vs {
@@ -351,8 +351,9 @@ func (m *MatchRule) References(tenant string, path string, resp map[string]apiin
 
 }
 
-func (m *MatchRule) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MatchRule) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.AppProtoSel != nil {
 		{
 			dlmtr := "."
@@ -360,11 +361,12 @@ func (m *MatchRule) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "AppProtoSel"
-			if errs := m.AppProtoSel.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.AppProtoSel.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
 	}
+
 	if m.Dst != nil {
 		{
 			dlmtr := "."
@@ -372,11 +374,12 @@ func (m *MatchRule) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Dst"
-			if errs := m.Dst.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Dst.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
 	}
+
 	if m.Src != nil {
 		{
 			dlmtr := "."
@@ -384,7 +387,7 @@ func (m *MatchRule) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Src"
-			if errs := m.Src.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Src.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -412,7 +415,7 @@ func (m *MatchSelector) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *MatchSelector) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MatchSelector) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapMirror["MatchSelector"][ver]; ok {
 		for _, v := range vs {
@@ -438,8 +441,9 @@ func (m *MirrorCollector) References(tenant string, path string, resp map[string
 
 }
 
-func (m *MirrorCollector) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MirrorCollector) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.ExportCfg != nil {
 		{
 			dlmtr := "."
@@ -447,7 +451,7 @@ func (m *MirrorCollector) Validate(ver, path string, ignoreStatus bool) []error 
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "ExportCfg"
-			if errs := m.ExportCfg.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.ExportCfg.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -505,7 +509,7 @@ func (m *MirrorSession) References(tenant string, path string, resp map[string]a
 	}
 }
 
-func (m *MirrorSession) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MirrorSession) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -518,7 +522,19 @@ func (m *MirrorSession) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -529,10 +545,11 @@ func (m *MirrorSession) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -540,7 +557,7 @@ func (m *MirrorSession) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -561,7 +578,7 @@ func (m *MirrorSessionSpec) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Collectors {
 		dlmtr := "."
@@ -569,7 +586,7 @@ func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool) []erro
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sCollectors[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -579,7 +596,7 @@ func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool) []erro
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sMatchRules[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -590,7 +607,7 @@ func (m *MirrorSessionSpec) Validate(ver, path string, ignoreStatus bool) []erro
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "StopConditions"
-		if errs := m.StopConditions.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.StopConditions.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -634,7 +651,7 @@ func (m *MirrorSessionStatus) References(tenant string, path string, resp map[st
 
 }
 
-func (m *MirrorSessionStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MirrorSessionStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapMirror["MirrorSessionStatus"][ver]; ok {
 		for _, v := range vs {
@@ -662,7 +679,7 @@ func (m *MirrorStartConditions) References(tenant string, path string, resp map[
 
 }
 
-func (m *MirrorStartConditions) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MirrorStartConditions) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -675,7 +692,7 @@ func (m *MirrorStopConditions) References(tenant string, path string, resp map[s
 
 }
 
-func (m *MirrorStopConditions) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *MirrorStopConditions) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapMirror["MirrorStopConditions"][ver]; ok {
 		for _, v := range vs {

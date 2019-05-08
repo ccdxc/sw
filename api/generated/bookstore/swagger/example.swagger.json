@@ -3197,7 +3197,12 @@
       }
     },
     "bookstorePublisherStatus": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        }
+      }
     },
     "bookstoreRestockRequest": {
       "type": "object",

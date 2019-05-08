@@ -216,6 +216,16 @@ func (a *grpcObjWorkloadV1Endpoint) Update(ctx context.Context, in *workload.End
 	return a.client.AutoUpdateEndpoint(nctx, in)
 }
 
+func (a *grpcObjWorkloadV1Endpoint) UpdateStatus(ctx context.Context, in *workload.Endpoint) (*workload.Endpoint, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateEndpoint(nctx, in)
+}
+
 func (a *grpcObjWorkloadV1Endpoint) Get(ctx context.Context, objMeta *api.ObjectMeta) (*workload.Endpoint, error) {
 	a.logger.DebugLog("msg", "received call", "object", "Endpoint", "oper", "get")
 	if objMeta == nil {
@@ -312,6 +322,10 @@ func (a *restObjWorkloadV1Endpoint) Update(ctx context.Context, in *workload.End
 	return a.endpoints.AutoUpdateEndpoint(ctx, in)
 }
 
+func (a *restObjWorkloadV1Endpoint) UpdateStatus(ctx context.Context, in *workload.Endpoint) (*workload.Endpoint, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjWorkloadV1Endpoint) Get(ctx context.Context, objMeta *api.ObjectMeta) (*workload.Endpoint, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -391,6 +405,16 @@ func (a *grpcObjWorkloadV1Workload) Update(ctx context.Context, in *workload.Wor
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateWorkload(nctx, in)
+}
+
+func (a *grpcObjWorkloadV1Workload) UpdateStatus(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Workload", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateWorkload(nctx, in)
 }
 
@@ -488,6 +512,10 @@ func (a *restObjWorkloadV1Workload) Update(ctx context.Context, in *workload.Wor
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.AutoUpdateWorkload(ctx, in)
+}
+
+func (a *restObjWorkloadV1Workload) UpdateStatus(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	return nil, errors.New("not supported for REST")
 }
 
 func (a *restObjWorkloadV1Workload) Get(ctx context.Context, objMeta *api.ObjectMeta) (*workload.Workload, error) {

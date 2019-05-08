@@ -187,7 +187,7 @@ func (m *MethodHdlr) MakeURI(i interface{}) (string, error) {
 }
 
 // updateStagingBuffer updates the staging buffer
-func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid string, kv apiintf.OverlayInterface, orig, i interface{}, oper apiintf.APIOperType, updateSpec bool) (interface{}, error) {
+func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid string, kv apiintf.OverlayInterface, orig, i interface{}, oper apiintf.APIOperType, updateSpec, updateStatus bool) (interface{}, error) {
 	if !singletonAPISrv.getRunState() {
 		if _, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPISrvInitRestore); !ok {
 			return nil, errShuttingDown.makeError(nil, []string{}, "")
@@ -221,14 +221,22 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 			l.ErrorLog("msg", "Unable to update self link", "oper", "Create", "error", err)
 			return nil, errInternalError.makeError(i, []string{"Unable to update self link"}, "")
 		}
-		if updateSpec {
+		switch {
+		case updateSpec:
 			updateFn := m.requestType.GetUpdateSpecFunc()
 			nobj, err := updateFn(ctx, i)(nil)
 			if err != nil {
 				return nil, errKVStoreOperation.makeError(i, []string{errors.Wrap(err, "Unable to update object").Error()}, "")
 			}
 			obj = nobj
-		} else {
+		case updateStatus:
+			updateFn := m.requestType.GetUpdateStatusFunc()
+			nobj, err := updateFn(i)(nil)
+			if err != nil {
+				return nil, errKVStoreOperation.makeError(i, []string{errors.Wrap(err, "Unable to update object").Error()}, "")
+			}
+			obj = nobj
+		default:
 			updateFn := m.requestType.GetUpdateMetaFunc()
 			nobj, err := updateFn(ctx, i, true)(nil)
 			if err != nil {
@@ -236,6 +244,7 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 			}
 			obj = nobj
 		}
+
 		err = kv.CreatePrimary(ctx, svcName, methName, uri, key, origObj, obj)
 		if err != nil {
 			return nil, errKVStoreOperation.makeError(i, []string{err.Error()}, "")
@@ -253,7 +262,8 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 			return nil, errInternalError.makeError(i, []string{"Unable to update self link"}, "")
 		}
 
-		if updateSpec {
+		switch {
+		case updateSpec:
 			updateFn := m.requestType.GetUpdateSpecFunc()
 			var nobj runtime.Object
 			nobj, err = updateFn(ctx, i)(obj)
@@ -263,7 +273,17 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 				err = kv.UpdatePrimary(ctx, svcName, methName, uri, key, "", origObj, nobj, updateFn(ctx, obj))
 			}
 			obj = nobj
-		} else {
+		case updateStatus:
+			updateFn := m.requestType.GetUpdateStatusFunc()
+			var nobj runtime.Object
+			nobj, err = updateFn(i)(obj)
+			if err != nil {
+				err = errKVStoreOperation.makeError(i, []string{errors.Wrap(err, "Unable to update object").Error()}, "")
+			} else {
+				err = kv.UpdatePrimary(ctx, svcName, methName, uri, key, "", origObj, nobj, updateFn(obj))
+			}
+			obj = nobj
+		default:
 			updateFn := m.requestType.GetUpdateMetaFunc()
 			ometa := obj.(runtime.ObjectMetaAccessor).GetObjectMeta()
 			var nobj runtime.Object
@@ -275,6 +295,7 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 			}
 			obj = nobj
 		}
+
 		if err != nil {
 			err = errKVStoreOperation.makeError(i, []string{err.Error()}, "")
 		}
@@ -313,7 +334,7 @@ func (m *MethodHdlr) updateStagingBuffer(ctx context.Context, tenant, buffid str
 }
 
 // updateKvStore handles updating the KV store either via a transaction or without as needed.
-func (m *MethodHdlr) retrieveFromKvStore(ctx context.Context, i interface{}, oper apiintf.APIOperType, kvs kvstore.Interface, txn kvstore.Txn, reqs apiintf.RequirementSet, updateSpec bool) (interface{}, error) {
+func (m *MethodHdlr) retrieveFromKvStore(ctx context.Context, i interface{}, oper apiintf.APIOperType, kvs kvstore.Interface, txn kvstore.Txn, reqs apiintf.RequirementSet, updateSpec, updateStatus bool) (interface{}, error) {
 	if !singletonAPISrv.getRunState() {
 		if _, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPISrvInitRestore); !ok {
 			return nil, errShuttingDown.makeError(nil, []string{}, "")
@@ -385,6 +406,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		URI             string
 		key             string
 		updateSpec      bool
+		updateStatus    bool
 		reqs            apiintf.RequirementSet
 		localBuffer     bool
 	)
@@ -411,6 +433,14 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 	if _, ok := md[apiserver.RequestParamReplaceStatusField]; ok {
 		updateSpec = true
 	}
+	if _, ok = md[apiserver.RequestParamUpdateStatus]; ok {
+		updateStatus = true
+	}
+	if updateSpec && updateStatus {
+		l.ErrorLog("msg", "both updateSpec and updateStatus are set", "service", m.svcPrefix, "method", m.name, "version", m.version)
+		return nil, errInternalError.makeError(nil, []string{"invalid options in metadata"}, "")
+	}
+
 	var bufid string
 	if bufids, ok := md[apiserver.RequestParamStagingBufferID]; ok && len(bufids) == 1 {
 		bufid = bufids[0]
@@ -438,7 +468,7 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 
 	// mapOper handles HTTP and gRPC oper types.
 	oper := m.mapOper(md)
-	l.DebugLog("version", ver, "operation", oper, "methodOper", m.oper, "updateSpec", updateSpec)
+	l.DebugLog("version", ver, "operation", oper, "methodOper", m.oper, "updateSpec", updateSpec, "updateStatus", updateStatus)
 	// If this is a dry run then transform from storage before using the object
 	if dryRun {
 		i, err = m.requestType.TransformFromStorage(context.Background(), oper, i)
@@ -485,9 +515,9 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 
 	// Validate the request.
 	if oper == apiintf.CreateOper || oper == apiintf.UpdateOper {
-		errs := m.requestType.Validate(i, singletonAPISrv.version, updateSpec)
+		errs := m.requestType.Validate(i, singletonAPISrv.version, updateSpec, updateStatus)
 		if errs != nil {
-			l.Errorf("msg: request validation failed. Error: %v, updateSpec: %v", errs, updateSpec)
+			l.Errorf("msg: request validation failed. Error: %v, updateSpec: %v updateStatus: %v", errs, updateSpec, updateStatus)
 			str := []string{}
 			for _, err = range errs {
 				str = append(str, err.Error())
@@ -628,14 +658,14 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 		}
 
 		if bufid != "" || localBuffer {
-			resp, err = m.updateStagingBuffer(ctx, tenant, bufid, ov, orig, i, oper, updateSpec)
+			resp, err = m.updateStagingBuffer(ctx, tenant, bufid, ov, orig, i, oper, updateSpec, updateStatus)
 			if err != nil {
 				return nil, err
 			}
 
 		} else {
 			// only for get and list operations
-			resp, err = m.retrieveFromKvStore(ctx, i, oper, kv, txn, reqs, updateSpec)
+			resp, err = m.retrieveFromKvStore(ctx, i, oper, kv, txn, reqs, updateSpec, updateStatus)
 			if err != nil {
 				// already in makeError() format
 				return nil, err

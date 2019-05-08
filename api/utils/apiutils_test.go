@@ -26,7 +26,7 @@ func TestObjectMetaValidation(t *testing.T) {
 	}
 	for _, c := range goodNames {
 		meta.Name = c
-		if err := meta.Validate("", "", false); len(err) != 0 {
+		if err := meta.Validate("", "", false, false); len(err) != 0 {
 			t.Fatalf("expecting to succeed [%v](%s)", c, err)
 		}
 	}
@@ -37,7 +37,7 @@ func TestObjectMetaValidation(t *testing.T) {
 	}
 	for _, c := range badNames {
 		meta.Name = c
-		if err := meta.Validate("", "", false); len(err) == 0 {
+		if err := meta.Validate("", "", false, false); len(err) == 0 {
 			t.Fatalf("expecting to fail [%v](%s)", c, err)
 		}
 	}

@@ -961,7 +961,7 @@ func (m *AuthenticationPolicy) References(tenant string, path string, resp map[s
 
 }
 
-func (m *AuthenticationPolicy) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AuthenticationPolicy) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -977,7 +977,19 @@ func (m *AuthenticationPolicy) Validate(ver, path string, ignoreStatus bool) []e
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -988,10 +1000,11 @@ func (m *AuthenticationPolicy) Validate(ver, path string, ignoreStatus bool) []e
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -999,7 +1012,7 @@ func (m *AuthenticationPolicy) Validate(ver, path string, ignoreStatus bool) []e
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1020,7 +1033,7 @@ func (m *AuthenticationPolicySpec) References(tenant string, path string, resp m
 
 }
 
-func (m *AuthenticationPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AuthenticationPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	{
@@ -1029,7 +1042,7 @@ func (m *AuthenticationPolicySpec) Validate(ver, path string, ignoreStatus bool)
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Authenticators"
-		if errs := m.Authenticators.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Authenticators.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1059,7 +1072,7 @@ func (m *AuthenticationPolicyStatus) References(tenant string, path string, resp
 
 }
 
-func (m *AuthenticationPolicyStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *AuthenticationPolicyStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.LdapServers {
 		dlmtr := "."
@@ -1067,7 +1080,7 @@ func (m *AuthenticationPolicyStatus) Validate(ver, path string, ignoreStatus boo
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sLdapServers[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1077,7 +1090,7 @@ func (m *AuthenticationPolicyStatus) Validate(ver, path string, ignoreStatus boo
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sRadiusServers[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1104,8 +1117,9 @@ func (m *Authenticators) References(tenant string, path string, resp map[string]
 
 }
 
-func (m *Authenticators) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Authenticators) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Radius != nil {
 		{
 			dlmtr := "."
@@ -1113,7 +1127,7 @@ func (m *Authenticators) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Radius"
-			if errs := m.Radius.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Radius.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -1150,7 +1164,7 @@ func (m *Ldap) References(tenant string, path string, resp map[string]apiintf.Re
 
 }
 
-func (m *Ldap) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Ldap) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1163,7 +1177,7 @@ func (m *LdapAttributeMapping) References(tenant string, path string, resp map[s
 
 }
 
-func (m *LdapAttributeMapping) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *LdapAttributeMapping) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1176,7 +1190,7 @@ func (m *LdapServer) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *LdapServer) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *LdapServer) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1189,7 +1203,7 @@ func (m *LdapServerStatus) References(tenant string, path string, resp map[strin
 
 }
 
-func (m *LdapServerStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *LdapServerStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapAuth["LdapServerStatus"][ver]; ok {
 		for _, v := range vs {
@@ -1217,7 +1231,7 @@ func (m *Local) References(tenant string, path string, resp map[string]apiintf.R
 
 }
 
-func (m *Local) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Local) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1230,7 +1244,7 @@ func (m *Operation) References(tenant string, path string, resp map[string]apiin
 
 }
 
-func (m *Operation) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Operation) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapAuth["Operation"][ver]; ok {
 		for _, v := range vs {
@@ -1258,8 +1272,9 @@ func (m *OperationStatus) References(tenant string, path string, resp map[string
 
 }
 
-func (m *OperationStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *OperationStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Operation != nil {
 		{
 			dlmtr := "."
@@ -1267,7 +1282,7 @@ func (m *OperationStatus) Validate(ver, path string, ignoreStatus bool) []error 
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Operation"
-			if errs := m.Operation.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Operation.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -1287,8 +1302,9 @@ func (m *PasswordChangeRequest) References(tenant string, path string, resp map[
 
 }
 
-func (m *PasswordChangeRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PasswordChangeRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if vs, ok := validatorMapAuth["PasswordChangeRequest"][ver]; ok {
 		for _, v := range vs {
 			if err := v(path, m); err != nil {
@@ -1315,7 +1331,7 @@ func (m *PasswordCredential) References(tenant string, path string, resp map[str
 
 }
 
-func (m *PasswordCredential) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PasswordCredential) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1328,8 +1344,9 @@ func (m *PasswordResetRequest) References(tenant string, path string, resp map[s
 
 }
 
-func (m *PasswordResetRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *PasswordResetRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	return ret
 }
 
@@ -1343,7 +1360,7 @@ func (m *Permission) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *Permission) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Permission) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapAuth["Permission"][ver]; ok {
 		for _, v := range vs {
@@ -1373,7 +1390,7 @@ func (m *Radius) References(tenant string, path string, resp map[string]apiintf.
 
 }
 
-func (m *Radius) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Radius) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Servers {
 		dlmtr := "."
@@ -1381,7 +1398,7 @@ func (m *Radius) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sServers[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1402,7 +1419,7 @@ func (m *RadiusServer) References(tenant string, path string, resp map[string]ap
 
 }
 
-func (m *RadiusServer) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RadiusServer) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapAuth["RadiusServer"][ver]; ok {
 		for _, v := range vs {
@@ -1430,8 +1447,9 @@ func (m *RadiusServerStatus) References(tenant string, path string, resp map[str
 
 }
 
-func (m *RadiusServerStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RadiusServerStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Server != nil {
 		{
 			dlmtr := "."
@@ -1439,7 +1457,7 @@ func (m *RadiusServerStatus) Validate(ver, path string, ignoreStatus bool) []err
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Server"
-			if errs := m.Server.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Server.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -1474,7 +1492,7 @@ func (m *Resource) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *Resource) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Resource) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1510,7 +1528,7 @@ func (m *Role) References(tenant string, path string, resp map[string]apiintf.Re
 	}
 }
 
-func (m *Role) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Role) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -1523,7 +1541,19 @@ func (m *Role) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1534,7 +1564,7 @@ func (m *Role) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1586,7 +1616,7 @@ func (m *RoleBinding) References(tenant string, path string, resp map[string]api
 	}
 }
 
-func (m *RoleBinding) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RoleBinding) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -1599,7 +1629,7 @@ func (m *RoleBinding) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1659,7 +1689,7 @@ func (m *RoleBindingSpec) References(tenant string, path string, resp map[string
 	}
 }
 
-func (m *RoleBindingSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RoleBindingSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1672,7 +1702,7 @@ func (m *RoleBindingStatus) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *RoleBindingStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RoleBindingStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1685,7 +1715,7 @@ func (m *RoleSpec) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *RoleSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RoleSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.Permissions {
 		dlmtr := "."
@@ -1693,7 +1723,7 @@ func (m *RoleSpec) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sPermissions[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1713,7 +1743,7 @@ func (m *RoleStatus) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *RoleStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *RoleStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1726,15 +1756,16 @@ func (m *SubjectAccessReviewRequest) References(tenant string, path string, resp
 
 }
 
-func (m *SubjectAccessReviewRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SubjectAccessReviewRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	for k, v := range m.Operations {
 		dlmtr := "."
 		if path == "" {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sOperations[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1757,7 +1788,7 @@ func (m *TLSOptions) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *TLSOptions) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TLSOptions) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -1793,7 +1824,7 @@ func (m *User) References(tenant string, path string, resp map[string]apiintf.Re
 	}
 }
 
-func (m *User) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *User) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -1806,7 +1837,19 @@ func (m *User) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1817,10 +1860,11 @@ func (m *User) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -1828,7 +1872,7 @@ func (m *User) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -1849,7 +1893,7 @@ func (m *UserSpec) References(tenant string, path string, resp map[string]apiint
 
 }
 
-func (m *UserSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *UserSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapAuth["UserSpec"][ver]; ok {
 		for _, v := range vs {
@@ -1877,7 +1921,7 @@ func (m *UserStatus) References(tenant string, path string, resp map[string]apii
 
 }
 
-func (m *UserStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *UserStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.AccessReview {
 		dlmtr := "."
@@ -1885,7 +1929,7 @@ func (m *UserStatus) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sAccessReview[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}

@@ -19,6 +19,7 @@ var _ kvstore.Interface
 type NetworkV1NetworkInterface interface {
 	Create(ctx context.Context, in *Network) (*Network, error)
 	Update(ctx context.Context, in *Network) (*Network, error)
+	UpdateStatus(ctx context.Context, in *Network) (*Network, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Network, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Network, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Network, error)
@@ -30,6 +31,7 @@ type NetworkV1NetworkInterface interface {
 type NetworkV1ServiceInterface interface {
 	Create(ctx context.Context, in *Service) (*Service, error)
 	Update(ctx context.Context, in *Service) (*Service, error)
+	UpdateStatus(ctx context.Context, in *Service) (*Service, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*Service, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*Service, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Service, error)
@@ -41,6 +43,7 @@ type NetworkV1ServiceInterface interface {
 type NetworkV1LbPolicyInterface interface {
 	Create(ctx context.Context, in *LbPolicy) (*LbPolicy, error)
 	Update(ctx context.Context, in *LbPolicy) (*LbPolicy, error)
+	UpdateStatus(ctx context.Context, in *LbPolicy) (*LbPolicy, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*LbPolicy, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*LbPolicy, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*LbPolicy, error)
@@ -52,6 +55,7 @@ type NetworkV1LbPolicyInterface interface {
 type NetworkV1VirtualRouterInterface interface {
 	Create(ctx context.Context, in *VirtualRouter) (*VirtualRouter, error)
 	Update(ctx context.Context, in *VirtualRouter) (*VirtualRouter, error)
+	UpdateStatus(ctx context.Context, in *VirtualRouter) (*VirtualRouter, error)
 	Get(ctx context.Context, objMeta *api.ObjectMeta) (*VirtualRouter, error)
 	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*VirtualRouter, error)
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*VirtualRouter, error)

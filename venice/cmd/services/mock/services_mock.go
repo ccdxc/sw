@@ -589,6 +589,12 @@ func (c *Cluster) Update(ctx context.Context, in *cmd.Cluster) (*cmd.Cluster, er
 	return &c.DummyCluster, nil
 }
 
+// UpdateStatus mocks cluster UpdateStatus
+func (c *Cluster) UpdateStatus(ctx context.Context, in *cmd.Cluster) (*cmd.Cluster, error) {
+	c.DummyCluster = *in
+	return &c.DummyCluster, nil
+}
+
 // Get mocks cluster Get
 func (c *Cluster) Get(ctx context.Context, objMeta *api.ObjectMeta) (*cmd.Cluster, error) {
 	if objMeta.Name == c.DummyCluster.Name && objMeta.Tenant == c.DummyCluster.Tenant {

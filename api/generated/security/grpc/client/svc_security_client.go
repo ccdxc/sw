@@ -516,6 +516,16 @@ func (a *grpcObjSecurityV1SecurityGroup) Update(ctx context.Context, in *securit
 	return a.client.AutoUpdateSecurityGroup(nctx, in)
 }
 
+func (a *grpcObjSecurityV1SecurityGroup) UpdateStatus(ctx context.Context, in *security.SecurityGroup) (*security.SecurityGroup, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SecurityGroup", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
+	return a.client.AutoUpdateSecurityGroup(nctx, in)
+}
+
 func (a *grpcObjSecurityV1SecurityGroup) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.SecurityGroup, error) {
 	a.logger.DebugLog("msg", "received call", "object", "SecurityGroup", "oper", "get")
 	if objMeta == nil {
@@ -612,6 +622,10 @@ func (a *restObjSecurityV1SecurityGroup) Update(ctx context.Context, in *securit
 	return a.endpoints.AutoUpdateSecurityGroup(ctx, in)
 }
 
+func (a *restObjSecurityV1SecurityGroup) UpdateStatus(ctx context.Context, in *security.SecurityGroup) (*security.SecurityGroup, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjSecurityV1SecurityGroup) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.SecurityGroup, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -691,6 +705,16 @@ func (a *grpcObjSecurityV1SGPolicy) Update(ctx context.Context, in *security.SGP
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateSGPolicy(nctx, in)
+}
+
+func (a *grpcObjSecurityV1SGPolicy) UpdateStatus(ctx context.Context, in *security.SGPolicy) (*security.SGPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "SGPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateSGPolicy(nctx, in)
 }
 
@@ -790,6 +814,10 @@ func (a *restObjSecurityV1SGPolicy) Update(ctx context.Context, in *security.SGP
 	return a.endpoints.AutoUpdateSGPolicy(ctx, in)
 }
 
+func (a *restObjSecurityV1SGPolicy) UpdateStatus(ctx context.Context, in *security.SGPolicy) (*security.SGPolicy, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjSecurityV1SGPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.SGPolicy, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -869,6 +897,16 @@ func (a *grpcObjSecurityV1App) Update(ctx context.Context, in *security.App) (*s
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateApp(nctx, in)
+}
+
+func (a *grpcObjSecurityV1App) UpdateStatus(ctx context.Context, in *security.App) (*security.App, error) {
+	a.logger.DebugLog("msg", "received call", "object", "App", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateApp(nctx, in)
 }
 
@@ -968,6 +1006,10 @@ func (a *restObjSecurityV1App) Update(ctx context.Context, in *security.App) (*s
 	return a.endpoints.AutoUpdateApp(ctx, in)
 }
 
+func (a *restObjSecurityV1App) UpdateStatus(ctx context.Context, in *security.App) (*security.App, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjSecurityV1App) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.App, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1047,6 +1089,16 @@ func (a *grpcObjSecurityV1FirewallProfile) Update(ctx context.Context, in *secur
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateFirewallProfile(nctx, in)
+}
+
+func (a *grpcObjSecurityV1FirewallProfile) UpdateStatus(ctx context.Context, in *security.FirewallProfile) (*security.FirewallProfile, error) {
+	a.logger.DebugLog("msg", "received call", "object", "FirewallProfile", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateFirewallProfile(nctx, in)
 }
 
@@ -1146,6 +1198,10 @@ func (a *restObjSecurityV1FirewallProfile) Update(ctx context.Context, in *secur
 	return a.endpoints.AutoUpdateFirewallProfile(ctx, in)
 }
 
+func (a *restObjSecurityV1FirewallProfile) UpdateStatus(ctx context.Context, in *security.FirewallProfile) (*security.FirewallProfile, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjSecurityV1FirewallProfile) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.FirewallProfile, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1225,6 +1281,16 @@ func (a *grpcObjSecurityV1Certificate) Update(ctx context.Context, in *security.
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateCertificate(nctx, in)
+}
+
+func (a *grpcObjSecurityV1Certificate) UpdateStatus(ctx context.Context, in *security.Certificate) (*security.Certificate, error) {
+	a.logger.DebugLog("msg", "received call", "object", "Certificate", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateCertificate(nctx, in)
 }
 
@@ -1324,6 +1390,10 @@ func (a *restObjSecurityV1Certificate) Update(ctx context.Context, in *security.
 	return a.endpoints.AutoUpdateCertificate(ctx, in)
 }
 
+func (a *restObjSecurityV1Certificate) UpdateStatus(ctx context.Context, in *security.Certificate) (*security.Certificate, error) {
+	return nil, errors.New("not supported for REST")
+}
+
 func (a *restObjSecurityV1Certificate) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.Certificate, error) {
 	if objMeta == nil {
 		return nil, errors.New("invalid input")
@@ -1403,6 +1473,16 @@ func (a *grpcObjSecurityV1TrafficEncryptionPolicy) Update(ctx context.Context, i
 		return nil, errors.New("invalid input")
 	}
 	nctx := addVersion(ctx, "v1")
+	return a.client.AutoUpdateTrafficEncryptionPolicy(nctx, in)
+}
+
+func (a *grpcObjSecurityV1TrafficEncryptionPolicy) UpdateStatus(ctx context.Context, in *security.TrafficEncryptionPolicy) (*security.TrafficEncryptionPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "TrafficEncryptionPolicy", "oper", "update")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	nctx = addStatusUpd(nctx)
 	return a.client.AutoUpdateTrafficEncryptionPolicy(nctx, in)
 }
 
@@ -1500,6 +1580,10 @@ func (a *restObjSecurityV1TrafficEncryptionPolicy) Update(ctx context.Context, i
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.AutoUpdateTrafficEncryptionPolicy(ctx, in)
+}
+
+func (a *restObjSecurityV1TrafficEncryptionPolicy) UpdateStatus(ctx context.Context, in *security.TrafficEncryptionPolicy) (*security.TrafficEncryptionPolicy, error) {
+	return nil, errors.New("not supported for REST")
 }
 
 func (a *restObjSecurityV1TrafficEncryptionPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*security.TrafficEncryptionPolicy, error) {

@@ -195,7 +195,7 @@ func (m *TechSupportNodeResult) References(tenant string, path string, resp map[
 
 }
 
-func (m *TechSupportNodeResult) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TechSupportNodeResult) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapTechsupport["TechSupportNodeResult"][ver]; ok {
 		for _, v := range vs {
@@ -223,7 +223,7 @@ func (m *TechSupportRequest) References(tenant string, path string, resp map[str
 
 }
 
-func (m *TechSupportRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TechSupportRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Tenant != "" {
@@ -239,7 +239,19 @@ func (m *TechSupportRequest) Validate(ver, path string, ignoreStatus bool) []err
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -250,10 +262,11 @@ func (m *TechSupportRequest) Validate(ver, path string, ignoreStatus bool) []err
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
+
 	if !ignoreStatus {
 
 		dlmtr := "."
@@ -261,7 +274,7 @@ func (m *TechSupportRequest) Validate(ver, path string, ignoreStatus bool) []err
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Status"
-		if errs := m.Status.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Status.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -282,8 +295,9 @@ func (m *TechSupportRequestSpec) References(tenant string, path string, resp map
 
 }
 
-func (m *TechSupportRequestSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TechSupportRequestSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.CollectionSelector != nil {
 		{
 			dlmtr := "."
@@ -291,11 +305,12 @@ func (m *TechSupportRequestSpec) Validate(ver, path string, ignoreStatus bool) [
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "CollectionSelector"
-			if errs := m.CollectionSelector.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.CollectionSelector.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
 	}
+
 	if m.NodeSelector != nil {
 		{
 			dlmtr := "."
@@ -303,7 +318,7 @@ func (m *TechSupportRequestSpec) Validate(ver, path string, ignoreStatus bool) [
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "NodeSelector"
-			if errs := m.NodeSelector.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.NodeSelector.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -327,8 +342,9 @@ func (m *TechSupportRequestSpec_NodeSelectorSpec) References(tenant string, path
 
 }
 
-func (m *TechSupportRequestSpec_NodeSelectorSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TechSupportRequestSpec_NodeSelectorSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.Labels != nil {
 		{
 			dlmtr := "."
@@ -336,7 +352,7 @@ func (m *TechSupportRequestSpec_NodeSelectorSpec) Validate(ver, path string, ign
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "Labels"
-			if errs := m.Labels.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.Labels.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -356,7 +372,7 @@ func (m *TechSupportRequestStatus) References(tenant string, path string, resp m
 
 }
 
-func (m *TechSupportRequestStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TechSupportRequestStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	for k, v := range m.ControllerNodeResults {
 		dlmtr := "."
@@ -364,7 +380,7 @@ func (m *TechSupportRequestStatus) Validate(ver, path string, ignoreStatus bool)
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sControllerNodeResults[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -374,7 +390,7 @@ func (m *TechSupportRequestStatus) Validate(ver, path string, ignoreStatus bool)
 			dlmtr = ""
 		}
 		npath := fmt.Sprintf("%s%sSmartNICNodeResults[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}

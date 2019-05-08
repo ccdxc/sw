@@ -202,7 +202,7 @@ func (m *Service) References(tenant string, path string, resp map[string]apiintf
 	}
 }
 
-func (m *Service) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Service) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -215,7 +215,19 @@ func (m *Service) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -226,7 +238,7 @@ func (m *Service) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -245,8 +257,9 @@ func (m *ServiceSpec) References(tenant string, path string, resp map[string]api
 
 }
 
-func (m *ServiceSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ServiceSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.TLSServerPolicy != nil {
 		{
 			dlmtr := "."
@@ -254,7 +267,7 @@ func (m *ServiceSpec) Validate(ver, path string, ignoreStatus bool) []error {
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "TLSServerPolicy"
-			if errs := m.TLSServerPolicy.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.TLSServerPolicy.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -274,7 +287,7 @@ func (m *ServiceStatus) References(tenant string, path string, resp map[string]a
 
 }
 
-func (m *ServiceStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ServiceStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -287,7 +300,7 @@ func (m *TLSClientPolicySpec) References(tenant string, path string, resp map[st
 
 }
 
-func (m *TLSClientPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TLSClientPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -300,7 +313,7 @@ func (m *TLSServerPolicySpec) References(tenant string, path string, resp map[st
 
 }
 
-func (m *TLSServerPolicySpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *TLSServerPolicySpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if vs, ok := validatorMapService["TLSServerPolicySpec"][ver]; ok {
 		for _, v := range vs {

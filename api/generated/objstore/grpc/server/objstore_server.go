@@ -228,9 +228,9 @@ func (s *sobjstoreObjstoreBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(objstore.Bucket)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(objstore.Bucket)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(objstore.Bucket)
 			r.Normalize()
@@ -509,9 +509,9 @@ func (s *sobjstoreObjstoreBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(objstore.Object)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(objstore.Object)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(objstore.Object)
 			r.Normalize()

@@ -228,9 +228,9 @@ func (s *ssecurityFwprofileBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sc
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(security.FirewallProfile)
 			return &r
-		}).WithValidate(func(i interface{}, ver string, ignoreStatus bool) []error {
+		}).WithValidate(func(i interface{}, ver string, ignoreStatus, ignoreSpec bool) []error {
 			r := i.(security.FirewallProfile)
-			return r.Validate(ver, "", ignoreStatus)
+			return r.Validate(ver, "", ignoreStatus, ignoreSpec)
 		}).WithNormalizer(func(i interface{}) interface{} {
 			r := i.(security.FirewallProfile)
 			r.Normalize()

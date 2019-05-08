@@ -83,7 +83,7 @@ func (m *ListWatchOptions) Defaults(ver string) bool {
 }
 
 // Validate validates the object
-func (t *TypeMeta) Validate(ver, path string, ignoreStatus bool) []error {
+func (t *TypeMeta) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	return nil
 }
 
@@ -91,7 +91,7 @@ func (t *TypeMeta) Validate(ver, path string, ignoreStatus bool) []error {
 func (t *TypeMeta) Normalize() {}
 
 // Validate validates the object
-func (l *ListMeta) Validate(ver, path string, ignoreStatus bool) []error {
+func (l *ListMeta) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	return nil
 }
 
@@ -99,7 +99,7 @@ func (l *ListMeta) Validate(ver, path string, ignoreStatus bool) []error {
 func (l *ListMeta) Normalize() {}
 
 // Validate validates the object
-func (o *ObjectMeta) Validate(ver, path string, ignoreStatus bool) []error {
+func (o *ObjectMeta) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if len(o.Name) > MaxNameLen {
 		ret = append(ret, fmt.Errorf("%s.Name too long(max 64 chars)", path))
@@ -133,7 +133,7 @@ func (o *ObjectMeta) Validate(ver, path string, ignoreStatus bool) []error {
 func (o *ObjectMeta) Normalize() {}
 
 // Validate validates the object
-func (m *ObjectRef) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ObjectRef) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	return nil
 }
 
@@ -141,7 +141,7 @@ func (m *ObjectRef) Validate(ver, path string, ignoreStatus bool) []error {
 func (m *ObjectRef) Normalize() {}
 
 // Validate validates the object
-func (m *ListWatchOptions) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *ListWatchOptions) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	if len(m.ObjectMeta.Name) > MaxNameLen {
 		ret = append(ret, fmt.Errorf("%s.Name too long(max 64)", path))
@@ -180,7 +180,7 @@ func (m *ListWatchOptions) Validate(ver, path string, ignoreStatus bool) []error
 func (m *ListWatchOptions) Normalize() {}
 
 // Validate validates the object
-func (t *WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
+func (t *WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	return nil
 }
 
@@ -188,7 +188,7 @@ func (t *WatchEvent) Validate(ver, path string, ignoreStatus bool) []error {
 func (t *WatchEvent) Normalize() {}
 
 // Validate validates the object
-func (t *WatchEventList) Validate(ver, path string, ignoreStatus bool) []error {
+func (t *WatchEventList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	return nil
 }
 
@@ -196,7 +196,7 @@ func (t *WatchEventList) Validate(ver, path string, ignoreStatus bool) []error {
 func (t *WatchEventList) Normalize() {}
 
 // Validate validates the object
-func (m *Status) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *Status) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	return nil
 }
 

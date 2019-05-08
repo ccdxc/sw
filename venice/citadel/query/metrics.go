@@ -37,7 +37,7 @@ func (q *Server) validateMetricsQueryList(ql *telemetry_query.MetricsQueryList) 
 				errorStrings = append(errorStrings, qsStrings...)
 			}
 		}
-		errs := ql.Validate("v1", "", true)
+		errs := ql.Validate("v1", "", true, false)
 		for _, e := range errs {
 			errorStrings = append(errorStrings, e.Error())
 		}

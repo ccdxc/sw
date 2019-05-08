@@ -238,7 +238,7 @@ func (r *Requirement) Print() string {
 
 // Validate validates the requirement.
 // Dummy function to help compile .ext.go files that include Requirement.
-func (r *Requirement) Validate(ver, path string, ignoreStatus bool) []error {
+func (r *Requirement) Validate(ver, path string, ignoreStatus, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }
@@ -257,7 +257,7 @@ func (s *Selector) Print() string {
 
 // Validate validates the selector.
 // Dummy function to help compile .ext.go files that include Selector.
-func (s *Selector) Validate(ver, path string, ignoreStatus bool) []error {
+func (s *Selector) Validate(ver, path string, ignoreStatus, ignoreSpec bool) []error {
 	return nil
 }
 

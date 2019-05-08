@@ -133,7 +133,7 @@ func (m *SecurityGroup) References(tenant string, path string, resp map[string]a
 	}
 }
 
-func (m *SecurityGroup) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SecurityGroup) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	if m.Namespace != "default" {
@@ -146,7 +146,19 @@ func (m *SecurityGroup) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "ObjectMeta"
-		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.ObjectMeta.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+
+	if !ignoreSpec {
+
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := path + dlmtr + "Spec"
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -157,7 +169,7 @@ func (m *SecurityGroup) Validate(ver, path string, ignoreStatus bool) []error {
 			dlmtr = ""
 		}
 		npath := path + dlmtr + "Spec"
-		if errs := m.Spec.Validate(ver, npath, ignoreStatus); errs != nil {
+		if errs := m.Spec.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 			ret = append(ret, errs...)
 		}
 	}
@@ -176,8 +188,9 @@ func (m *SecurityGroupSpec) References(tenant string, path string, resp map[stri
 
 }
 
-func (m *SecurityGroupSpec) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SecurityGroupSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+
 	if m.WorkloadSelector != nil {
 		{
 			dlmtr := "."
@@ -185,7 +198,7 @@ func (m *SecurityGroupSpec) Validate(ver, path string, ignoreStatus bool) []erro
 				dlmtr = ""
 			}
 			npath := path + dlmtr + "WorkloadSelector"
-			if errs := m.WorkloadSelector.Validate(ver, npath, ignoreStatus); errs != nil {
+			if errs := m.WorkloadSelector.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
 				ret = append(ret, errs...)
 			}
 		}
@@ -205,7 +218,7 @@ func (m *SecurityGroupStatus) References(tenant string, path string, resp map[st
 
 }
 
-func (m *SecurityGroupStatus) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *SecurityGroupStatus) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

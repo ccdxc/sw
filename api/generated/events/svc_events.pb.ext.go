@@ -50,7 +50,7 @@ func (m *GetEventRequest) References(tenant string, path string, resp map[string
 
 }
 
-func (m *GetEventRequest) Validate(ver, path string, ignoreStatus bool) []error {
+func (m *GetEventRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 	return ret
 }

@@ -88,7 +88,7 @@ func TestNodeObject(t *testing.T) {
 	// Execute the node config testcases
 	for _, tc := range nodeTestcases {
 		t.Run(tc.obj.Name, func(t *testing.T) {
-			err := cl.validateNodeConfig(tc.obj, "", true)
+			err := cl.validateNodeConfig(tc.obj, "", true, false)
 			if len(err) != len(tc.err) {
 				t.Errorf("Expected errors: [%d] actual errors: [%+v]", len(tc.err), len(err))
 			}
@@ -169,7 +169,7 @@ func TestClusterObject(t *testing.T) {
 	// Execute the node config testcases
 	for _, tc := range clusterTestcases {
 		t.Run(tc.obj.Name, func(t *testing.T) {
-			err := cl.validateClusterConfig(tc.obj, "", true)
+			err := cl.validateClusterConfig(tc.obj, "", true, false)
 			if len(err) != len(tc.err) {
 				t.Errorf("Expected errors: [%d] actual errors: [%+v]", len(tc.err), len(err))
 			}
@@ -1113,11 +1113,11 @@ func TestValidateTenant(t *testing.T) {
 			Name: "default",
 		},
 	}
-	errs := clusterHooks.validateTenant(tenant1, "v1", false)
+	errs := clusterHooks.validateTenant(tenant1, "v1", false, false)
 	if errs != nil {
 		t.Errorf("Expecting validate to succeed (%s)", errs)
 	}
-	errs = clusterHooks.validateTenant(tenant2, "v1", false)
+	errs = clusterHooks.validateTenant(tenant2, "v1", false, false)
 	if errs != nil {
 		t.Errorf("Expecting validate to succeed (%s)", errs)
 	}
@@ -1125,11 +1125,11 @@ func TestValidateTenant(t *testing.T) {
 	config.AllowMultiTenant = false
 	go a.Run(config)
 	a.WaitRunning()
-	errs = clusterHooks.validateTenant(tenant1, "v1", false)
+	errs = clusterHooks.validateTenant(tenant1, "v1", false, false)
 	if errs == nil || len(errs) == 0 {
 		t.Errorf("Expecting validate to fail")
 	}
-	errs = clusterHooks.validateTenant(tenant2, "v1", false)
+	errs = clusterHooks.validateTenant(tenant2, "v1", false, false)
 	if errs != nil {
 		t.Errorf("Expecting validate to succeed (%s)", errs)
 	}
