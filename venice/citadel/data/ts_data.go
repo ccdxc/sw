@@ -115,7 +115,7 @@ func (dn *DNode) ReadDatabases(ctx context.Context, req *tproto.DatabaseReq) (*t
 func (dn *DNode) PointsWrite(ctx context.Context, req *tproto.PointsWriteReq) (*tproto.StatusResp, error) {
 	var resp tproto.StatusResp
 
-	dn.logger.Infof("%s Received PointsWrite req %+v", dn.nodeUUID, req)
+	dn.logger.Debugf("%s Received PointsWrite req %+v", dn.nodeUUID, req)
 
 	// check if datanode is already stopped
 	if dn.isStopped {
@@ -160,6 +160,8 @@ func (dn *DNode) PointsWrite(ctx context.Context, req *tproto.PointsWriteReq) (*
 		resp.Status = err.Error()
 		return &resp, err
 	}
+
+	dn.logger.Infof("shard %v replica %v wrote %d points", req.ShardID, req.ReplicaID, len(points))
 
 	// replicate to all secondaries
 	err = dn.replicatePoints(ctx, req, shard)
