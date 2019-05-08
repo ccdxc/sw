@@ -2,6 +2,9 @@ package services
 
 import (
 	"path"
+	"strconv"
+
+	"github.com/pensando/sw/venice/utils/log"
 
 	"github.com/pensando/sw/api"
 	protos "github.com/pensando/sw/venice/cmd/types/protos"
@@ -544,6 +547,19 @@ var k8sModules = map[string]protos.Module{
 							Name: globals.Collector,
 							Port: runtime.MustUint32(globals.CollectorRPCPort),
 						},
+					},
+					ReadinessProbe: &protos.ModuleSpec_Submodule_Probe{
+						Path: "/healthz",
+						Port: func() int32 {
+							p, err := strconv.Atoi(globals.CitadelHTTPPort)
+							if err != nil {
+								log.Fatalf("failed to parse %v port %v", globals.Citadel, globals.CitadelHTTPPort)
+							}
+							return int32(p)
+						}(),
+						InitialDelaySeconds: 5,
+						Scheme:              "HTTP",
+						PeriodSeconds:       10,
 					},
 				},
 			},

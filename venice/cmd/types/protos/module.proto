@@ -64,8 +64,25 @@ message ModuleSpec {
         // Args specify the arguments for the submodule.
         repeated string Args = 5;
 
+        // Probe defines the attributes of a readiness/liveness of this container
+        message Probe {
+            // Path to access on the HTTP server
+            string Path               = 1;
+            // Port is the port number to access on the container
+            int32 Port                = 2;
+            // Scheme to use for connecting to the host
+            string Scheme             = 3;
+            // InitialDelaySeconds is the number of seconds after the container has started before liveness probes are initiated
+            int32 InitialDelaySeconds = 4;
+            // PeriodSeconds is how often (in seconds) to perform the probe
+            int32 PeriodSeconds       = 5;
+        }
+
+        // ReadinessProbe specifies URL for periodic probe of container service readiness
+        Probe ReadinessProbe = 6;
+
         // EnvVars specify the environment variables for this submodule.
-        map<string, string> EnvVars = 6;
+        map<string, string> EnvVars = 7;
     }
 
     // Submodules contains the list of submodules for this module.
