@@ -237,7 +237,6 @@ int roce_ud_header_unpack(void *buf, struct ib_ud_header *header)
 
 	ib_unpack(udp_table, ARRAY_SIZE(udp_table),
 		  buf, &header->udp);
-	buf += IB_UDP_BYTES;
 	header->udp_present = 1;
 
 	return 0;

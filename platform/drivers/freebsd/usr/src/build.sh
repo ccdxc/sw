@@ -35,6 +35,9 @@ make_ext() {
 		"DEBUG_FLAGS=-g" "-C$1" clean cleandepend || exit
 	make "-m$OS_DIR/share/mk" "SYSDIR=$OS_DIR/sys" \
 		"DEBUG_FLAGS=-g" "-C$1" || exit
+	# uncomment for static analysys with clang
+	# make "-m$OS_DIR/share/mk" "SYSDIR=$OS_DIR/sys" \
+	# 	"DEBUG_FLAGS=-g" "-C$1" analyze
 }
 
 # Set FW_BUILD to point to naples_fw.tar

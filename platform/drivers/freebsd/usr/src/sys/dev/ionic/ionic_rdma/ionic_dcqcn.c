@@ -779,7 +779,8 @@ int ionic_dcqcn_init(struct ionic_ibdev *dev, int prof_count)
 	}
 
 out:
-	dev->dcqcn->profiles_count = prof_i;
+	if (dev->dcqcn)
+		dev->dcqcn->profiles_count = prof_i;
 
 	if (!prof_i) {
 		pr_warn("ionic_rdma: dcqcn disabled\n");

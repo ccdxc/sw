@@ -8,7 +8,11 @@
 
 #include <linux/version.h>
 #include <linux/netdevice.h>
+#include <rdma/ib_pack.h>
 #include <rdma/ib_verbs.h>
+
+/* marks code inserted to silence false positive warnings */
+#define IONIC_STATIC_ANALYSIS_HINTS_NOT_FOR_UPSTREAM 1
 
 #if defined(OFA_KERNEL)
 #include "ionic_kcompat_ofa.h"

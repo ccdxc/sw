@@ -37,7 +37,12 @@
 #include <linux/sysfs.h>
 #include <linux/delay.h>
 #include <linux/etherdevice.h>
+#include <rdma/ib_pack.h>
 #include <rdma/ib_verbs.h>
+#include <ionic_kpicompat.h>
+
+/* marks code inserted to silence false positive warnings */
+#define IONIC_STATIC_ANALYSYS_HINTS_NOT_FOR_UPSTREAM 1
 
 #define rdma_ah_attr ib_ah_attr
 #define rdma_ah_read_grh(attr) (&(attr)->grh)

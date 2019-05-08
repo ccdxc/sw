@@ -323,7 +323,7 @@ static inline int to_ionic_qp_state(enum ib_qp_state state)
 	case IB_QPS_ERR:
 		return IONIC_QPS_ERR;
 	default:
-		return -EINVAL;
+		return 0;
 	}
 }
 

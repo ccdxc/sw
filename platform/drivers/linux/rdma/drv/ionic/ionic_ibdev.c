@@ -13,6 +13,7 @@
 #include <rdma/ib_addr.h>
 #include <rdma/ib_cache.h>
 #include <rdma/ib_mad.h>
+#include <rdma/ib_pack.h>
 #include <rdma/ib_user_verbs.h>
 
 #include "ionic_fw.h"
@@ -1142,8 +1143,6 @@ static int ionic_init_hw_stats(struct ionic_ibdev *dev)
 
 	dma_unmap_single(dev->hwdev, stats_dma, PAGE_SIZE, DMA_FROM_DEVICE);
 
-	rc = -EINVAL;
-
 	/* normalize and count the number of stats */
 	stats_count = PAGE_SIZE / sizeof(*dev->stats);
 	for (stat_i = 0; stat_i < stats_count; ++stat_i) {
@@ -1468,7 +1467,7 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
 	struct ionic_ctx *ctx;
 	struct ionic_ctx_req req;
-	struct ionic_ctx_resp resp = {};
+	struct ionic_ctx_resp resp = {0};
 	phys_addr_t db_phys = 0;
 	int rc;
 
@@ -2069,7 +2068,7 @@ static struct ib_ah *ionic_create_ah(struct ib_pd *ibpd,
 	struct ionic_ctx *ctx = to_ionic_ctx_uobj(ibpd->uobject);
 	struct ionic_pd *pd = to_ionic_pd(ibpd);
 	struct ionic_ah *ah;
-	struct ionic_ah_resp resp = {};
+	struct ionic_ah_resp resp = {0};
 	gfp_t gfp = GFP_ATOMIC;
 	int rc;
 #ifndef HAVE_CREATE_AH_FLAGS
@@ -2862,7 +2861,7 @@ static struct ib_cq *ionic_create_cq(struct ib_device *ibdev,
 	struct ionic_ibdev *dev = to_ionic_ibdev(ibdev);
 	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 	struct ionic_cq *cq;
-	struct ionic_tbl_buf buf;
+	struct ionic_tbl_buf buf = {0};
 	int rc;
 
 	cq = __ionic_create_cq(dev, &buf, attr, ibctx, udata);
@@ -3354,7 +3353,6 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 	struct ionic_v1_cqe *cqe;
 	u32 qtf, qid;
 	u8 type;
-	u16 old_prod;
 	bool peek;
 	int rc = 0, npolled = 0;
 	unsigned long irqflags;
@@ -3374,8 +3372,6 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 		return 0;
 
 	spin_lock_irqsave(&cq->lock, irqflags);
-
-	old_prod = cq->q.prod;
 
 	/* poll already indicated work completions for send queue */
 
@@ -4285,7 +4281,7 @@ static struct ib_qp *ionic_create_qp(struct ib_pd *ibpd,
 	struct ionic_cq *cq;
 	struct ionic_qp_req req;
 	struct ionic_qp_resp resp = {0};
-	struct ionic_tbl_buf sq_buf, rq_buf;
+	struct ionic_tbl_buf sq_buf = {0}, rq_buf = {0};
 	unsigned long irqflags;
 	int rc;
 
@@ -5692,7 +5688,7 @@ static struct ib_srq *ionic_create_srq(struct ib_pd *ibpd,
 	struct ionic_cq *cq;
 	struct ionic_srq_req req;
 	struct ionic_srq_resp resp = {0};
-	struct ionic_tbl_buf rq_buf;
+	struct ionic_tbl_buf rq_buf = {0};
 	unsigned long irqflags;
 	int rc;
 
@@ -6053,11 +6049,11 @@ static bool ionic_next_eqe(struct ionic_eq *eq, struct ionic_v1_eqe *eqe)
 
 	rmb();
 
-	*eqe = *qeqe;
-
 	dev_dbg(&eq->dev->ibdev.dev, "poll eq prod %u\n", eq->q.prod);
 	print_hex_dump_debug("eqe ", DUMP_PREFIX_OFFSET, 16, 1,
-			     eqe, BIT(eq->q.stride_log2), true);
+			     qeqe, BIT(eq->q.stride_log2), true);
+
+	*eqe = *qeqe;
 
 	return true;
 }
@@ -6320,7 +6316,7 @@ static struct ionic_cq *ionic_create_rdma_admincq(struct ionic_ibdev *dev,
 						  int comp_vector)
 {
 	struct ionic_cq *cq;
-	struct ionic_tbl_buf buf;
+	struct ionic_tbl_buf buf = {0};
 	struct ib_cq_init_attr attr = {
 		.cqe = ionic_aq_depth,
 		.comp_vector = comp_vector,
