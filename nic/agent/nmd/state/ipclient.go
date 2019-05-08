@@ -504,8 +504,8 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 
 	// Persist HAL Configuration
 	if !c.isMock {
-		systemMAC := parseSystemMAC(c.nmdState.config.Spec.NetworkMode)
-		if err := c.nmdState.PersistHALConfiguration(c.nmdState.config.Spec.NaplesProfile, systemMAC); err != nil {
+		mgmtIfMAC := parseMgmtIfMAC(c.nmdState.config.Spec.NetworkMode)
+		if err := c.nmdState.PersistHALConfiguration(c.nmdState.config.Spec.NaplesProfile, mgmtIfMAC); err != nil {
 			log.Infof("NIC mode: %v feature profile: %v", c.nmdState.config.Spec.Mode, c.nmdState.config.Spec.NaplesProfile)
 			return err
 		}
@@ -880,7 +880,7 @@ func (c *IPClient) hasControllerChanged(controllers []string) (mustUpdate bool) 
 	return
 }
 
-func parseSystemMAC(mgmtNetwork string) (systemMac uint64) {
+func parseMgmtIfMAC(mgmtNetwork string) (mgmtIfMAC uint64) {
 	switch mgmtNetwork {
 	case nmd.NetworkMode_INBAND.String():
 		mgmtLink, err := netlink.LinkByName("bond0")
@@ -888,7 +888,7 @@ func parseSystemMAC(mgmtNetwork string) (systemMac uint64) {
 			log.Errorf("Could not find system mac on interface bond0. Err: %v", err)
 			return
 		}
-		systemMac = macToUint64(mgmtLink.Attrs().HardwareAddr)
+		mgmtIfMAC = macToUint64(mgmtLink.Attrs().HardwareAddr)
 		return
 	case nmd.NetworkMode_OOB.String():
 		mgmtLink, err := netlink.LinkByName("oob_mnic0")
@@ -896,7 +896,7 @@ func parseSystemMAC(mgmtNetwork string) (systemMac uint64) {
 			log.Errorf("Could not find system mac on interface oob_mnic0. Err: %v", err)
 			return
 		}
-		systemMac = macToUint64(mgmtLink.Attrs().HardwareAddr)
+		mgmtIfMAC = macToUint64(mgmtLink.Attrs().HardwareAddr)
 		return
 	default:
 		return

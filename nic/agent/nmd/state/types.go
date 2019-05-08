@@ -212,7 +212,7 @@ func (n *NMD) GetIPClient() *IPClient {
 }
 
 //PersistHALConfiguration updates feature profile
-func (n *NMD) PersistHALConfiguration(profileName string, systemMAC uint64) (err error) {
+func (n *NMD) PersistHALConfiguration(profileName string, mgmtIfMAC uint64) (err error) {
 	if n.config.Spec.Mode == nmd.MgmtMode_HOST.String() {
 		fwdMode := device.ForwardingMode_FORWARDING_MODE_CLASSIC
 		var featureProfile device.FeatureProfile
@@ -248,11 +248,11 @@ func (n *NMD) PersistHALConfiguration(profileName string, systemMAC uint64) (err
 			defaultPortAdmin = device.PortAdminState_PORT_ADMIN_STATE_ENABLE.String()
 		}
 
-		err = n.PersistDeviceSpec(fwdMode, featureProfile, defaultPortAdmin, systemMAC)
+		err = n.PersistDeviceSpec(fwdMode, featureProfile, defaultPortAdmin, mgmtIfMAC)
 		return
 	}
 
-	err = n.PersistDeviceSpec(device.ForwardingMode_FORWARDING_MODE_HOSTPIN, device.FeatureProfile_FEATURE_PROFILE_NONE, device.PortAdminState_PORT_ADMIN_STATE_ENABLE.String(), systemMAC)
+	err = n.PersistDeviceSpec(device.ForwardingMode_FORWARDING_MODE_HOSTPIN, device.FeatureProfile_FEATURE_PROFILE_NONE, device.PortAdminState_PORT_ADMIN_STATE_ENABLE.String(), mgmtIfMAC)
 	return
 }
 
@@ -291,14 +291,14 @@ func (n *NMD) UpdateCurrentManagementMode() {
 }
 
 // PersistDeviceSpec accepts forwarding mode and feature profile and persists this in device.conf
-func (n *NMD) PersistDeviceSpec(fwdMode device.ForwardingMode, featureProfile device.FeatureProfile, defaultPortAdmin string, systemMAC uint64) (err error) {
+func (n *NMD) PersistDeviceSpec(fwdMode device.ForwardingMode, featureProfile device.FeatureProfile, defaultPortAdmin string, mgmtIfMAC uint64) (err error) {
 	log.Infof("Setting forwarding mode to : %v", fwdMode)
 	log.Infof("Setting default port admin to : %v", defaultPortAdmin)
 	deviceSpec := device.SystemSpec{
 		FwdMode:          fwdMode,
 		FeatureProfile:   featureProfile,
 		PortAdminState:   defaultPortAdmin,
-		SystemMacAddress: systemMAC,
+		MgmtIfMac:        mgmtIfMAC,
 	}
 
 	// Create the /sysconfig/config0 if it doesn't exist. Needed for non naples nmd test environments

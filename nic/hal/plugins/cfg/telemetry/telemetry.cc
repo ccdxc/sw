@@ -26,7 +26,7 @@ using hal::pd::pd_drop_monitor_rule_delete_args_t;
 using hal::pd::pd_drop_monitor_rule_get_args_t;
 using hal::drop_monitor_rule_t;
 
-extern uint64_t g_system_mac_addr;
+extern uint64_t g_mgmt_if_mac;
 namespace hal {
 
 // Global structs
@@ -301,12 +301,12 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
         return HAL_RET_INVALID_ARG;
     }
     /* MAC SA. Use mac from device.conf only if it is set. Else derive the smac via ep l2seg */
-    if (g_system_mac_addr == 0) {
-	    mac = ep_get_rmac(ep, cfg.l2seg);
-	    memcpy(cfg.src_mac, mac, sizeof(mac_addr_t));
+    if (g_mgmt_if_mac == 0) {
+        mac = ep_get_rmac(ep, cfg.l2seg);
+        memcpy(cfg.src_mac, mac, sizeof(mac_addr_t));
     } else {
-	    MAC_UINT64_TO_ADDR(smac, g_system_mac_addr)
-	    memcpy(cfg.src_mac, mac, sizeof(mac_addr_t));
+        MAC_UINT64_TO_ADDR(smac, g_mgmt_if_mac);
+        memcpy(cfg.src_mac, mac, sizeof(mac_addr_t));
     }
     
     /* Encap comes from the l2seg */

@@ -12,7 +12,7 @@
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
 
-uint64_t g_system_mac_addr;
+uint64_t g_mgmt_if_mac;
 
 namespace hal {
 
@@ -670,9 +670,10 @@ hal_device_cfg_init (device_cfg_t *device_cfg)
         device_cfg->admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
     }
     try {
-        g_system_mac_addr = prop_tree.get<std::uint64_t>("system-mac-address");
+        g_mgmt_if_mac = prop_tree.get<std::uint64_t>("mgmt-if-mac");
     } catch (std::exception const &e) {
-	HAL_TRACE_DEBUG("No System mac address specified");
+        g_mgmt_if_mac = 0;
+	HAL_TRACE_DEBUG("No Mgmt If MAC address specified");
     }
     return HAL_RET_OK;
 }
