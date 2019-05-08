@@ -295,10 +295,10 @@ func (n *NMD) PersistDeviceSpec(fwdMode device.ForwardingMode, featureProfile de
 	log.Infof("Setting forwarding mode to : %v", fwdMode)
 	log.Infof("Setting default port admin to : %v", defaultPortAdmin)
 	deviceSpec := device.SystemSpec{
-		FwdMode:          fwdMode,
-		FeatureProfile:   featureProfile,
-		PortAdminState:   defaultPortAdmin,
-		MgmtIfMac:        mgmtIfMAC,
+		FwdMode:        fwdMode,
+		FeatureProfile: featureProfile,
+		PortAdminState: defaultPortAdmin,
+		MgmtIfMac:      mgmtIfMAC,
 	}
 
 	// Create the /sysconfig/config0 if it doesn't exist. Needed for non naples nmd test environments
