@@ -47,6 +47,7 @@ extern "C" {
 #include "pal_mem.h"
 #include "pal_reg.h"
 #include "pal_mm.h"
+#include "pal_watchdog.h"
 #include "pal_int.h"
 
 int pal_get_env(void);
