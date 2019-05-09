@@ -21,11 +21,6 @@
 
 #define PDS_MAX_VNIC 1024
 
-/// \brief VNIC key
-typedef struct pds_vnic_key_s {
-    pds_vnic_id_t id;    ///< Unique VNIC ID (in the range 0 to 1024)
-} __PACK__ pds_vnic_key_t;
-
 /// \brief VNIC specification
 typedef struct pds_vnic_spec_s {
     pds_vnic_key_t key;                ///< vnic's key

@@ -21,12 +21,6 @@
 
 #define PDS_MAX_MIRROR_SESSION    8
 
-/// \brief    mirror session key
-typedef struct pds_mirror_session_key_s {
-    ///< unique mirror session id in the range [1-8]
-    pds_mirror_session_id_t id;
-} __PACK__ pds_mirror_session_key_t;
-
 ///< \brief    RSPAN configuration
 typedef struct pds_rspan_spec_s {
     pds_ifindex_t interface;    ///< outgoing interface

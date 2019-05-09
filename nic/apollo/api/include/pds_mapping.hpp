@@ -11,7 +11,6 @@
 #ifndef __INCLUDE_API_PDS_MAPPING_HPP__
 #define __INCLUDE_API_PDS_MAPPING_HPP__
 
-#include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
@@ -20,12 +19,6 @@
 
 /// \defgroup PDS_MAPPING Mapping API
 /// @{
-
-/// \brief    mapping key
-typedef struct pds_mapping_key_s {
-    pds_vpc_key_t vpc;    ///< VPC this IP belongs to
-    ip_addr_t ip_addr;    ///< IP address of the mapping
-} __PACK__ pds_mapping_key_t;
 
 /// \brief    local mapping specification
 typedef struct pds_local_mapping_spec_s {

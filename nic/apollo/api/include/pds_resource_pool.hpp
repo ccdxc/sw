@@ -16,12 +16,6 @@
 /// \defgroup PDS_RESOURCE_POOL Resource pool API
 /// @{
 
-/// \brief Resource pool key
-typedef struct pds_rsrc_pool_key_s {
-    pds_rsrc_pool_id_t id;    ///< Resource pool ID
-} __PACK__ pds_rsrc_pool_key_t;
-
-
 /// \brief Traffic class type
 typedef enum pds_traffic_class_type_s {
     PDS_TRAFFIC_CLASS_AGGR_TX    = 0,    ///< all traffic from vnic

@@ -24,12 +24,6 @@
 // TODO: we have to confirm this number !!!
 #define PDS_MAX_SUBNET (5 * PDS_MAX_VPC)
 
-/// \brief Subnet key
-/// \remark subnet id is not scoped under a vpc, it is globally unique id
-typedef struct pds_subnet_key_s {
-    pds_subnet_id_t id;    ///< Subnet ID
-} __PACK__ pds_subnet_key_t;
-
 /// \brief Subnet specification
 typedef struct pds_subnet_spec_s {
     pds_subnet_key_t key;                    ///< key

@@ -172,8 +172,8 @@ private:
 private:
     pds_subnet_key_t key_;                    ///< subnet key
     pds_vpc_key_t vpc_;                       ///< vpc of this subnet
-    pds_route_table_key_t v4_route_table_;    ///< route table id
-    pds_route_table_key_t v6_route_table_;    ///< route table id
+    pds_route_table_key_t v4_route_table_;    ///< IPv4 route table id
+    pds_route_table_key_t v6_route_table_;    ///< IPv6 route table id
     pds_policy_key_t ing_v4_policy_;          ///< ingress IPv4 policy id
     pds_policy_key_t ing_v6_policy_;          ///< ingress IPv6 policy id
     pds_policy_key_t egr_v4_policy_;          ///< ingress IPv4 policy id

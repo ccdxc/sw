@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <sys/types.h>
+#include "nic/sdk/include/sdk/ip.hpp"
 
 /// \defgroup PDS_BASE Base enums and macros
 /// @{
@@ -95,5 +96,56 @@ pdsencap2str (pds_encap_t encap)
     }
     return buf;
 }
+
+/// \brief    VPC key
+typedef struct pds_vpc_key_s {
+    pds_vpc_id_t id;    ///< VPC ID
+} __PACK__ pds_vpc_key_t;
+
+/// \brief    subnet key
+/// \remark subnet id is not scoped under a vpc, it is globally unique id
+typedef struct pds_subnet_key_s {
+    pds_subnet_id_t id;    ///< Subnet ID
+} __PACK__ pds_subnet_key_t;
+
+/// \brief    TEP key
+typedef struct pds_tep_key_s {
+    ipv4_addr_t ip_addr;    ///< TEP IP address
+} __PACK__ pds_tep_key_t;
+
+/// \brief VNIC key
+typedef struct pds_vnic_key_s {
+    pds_vnic_id_t id;    ///< Unique VNIC ID (in the range 0 to 1024)
+} __PACK__ pds_vnic_key_t;
+
+/// \brief    mapping key
+typedef struct pds_mapping_key_s {
+    pds_vpc_key_t vpc;    ///< VPC this IP belongs to
+    ip_addr_t ip_addr;    ///< IP address of the mapping
+} __PACK__ pds_mapping_key_t;
+
+/// \brief    route table key
+/// \remark
+///  - Route table id is not scoped under vpc, it is unique on
+//     the device (across VPCs and IPv4/IPv6 route tables)
+typedef struct pds_route_table_key_s {
+    pds_route_table_id_t    id;    ///< route table id
+} __PACK__ pds_route_table_key_t;
+
+/// \brief    policy key
+typedef struct pds_policy_key_s {
+    pds_policy_id_t    id;    ///< Unique ID for the policy
+} __PACK__ pds_policy_key_t;
+
+/// \brief    mirror session key
+typedef struct pds_mirror_session_key_s {
+    ///< unique mirror session id in the range [1-8]
+    pds_mirror_session_id_t id;
+} __PACK__ pds_mirror_session_key_t;
+
+/// \brief    resource pool key
+typedef struct pds_rsc_pool_key_s {
+    pds_rsc_pool_id_t id;    ///< Resource pool ID
+} __PACK__ pds_rsc_pool_key_t;
 
 #endif    // __INCLUDE_API_PDS_HPP__

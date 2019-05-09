@@ -55,20 +55,43 @@ vpc_entry::init_config(api_ctxt_t *api_ctxt) {
     PDS_TRACE_DEBUG("Intializing vpc %u, type %u, v4 pfx %s, v6 pfx %s",
                     spec->key.id, spec->type, ipv4pfx2str(&spec->v4_pfx),
                     ippfx2str(&spec->v6_pfx));
-    memcpy(&this->key_, &spec->key, sizeof(pds_vpc_key_t));
-    this->type_ = spec->type;
+    memcpy(&key_, &spec->key, sizeof(pds_vpc_key_t));
+    type_ = spec->type;
+    memcpy(&vr_mac_, &spec->vr_mac, sizeof(mac_addr_t));
+    fabric_encap_ = spec->fabric_encap;
+    v4_route_table_.id = spec->v4_route_table.id;
+    v6_route_table_.id = spec->v6_route_table.id;
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 vpc_entry::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
+    vpc_entry *vpc_orig = (vpc_entry *)orig_obj;
 
-    if (vpc_db()->vpc_idxr()->alloc((uint32_t *)&idx) !=
-        sdk::lib::indexer::SUCCESS) {
-        return sdk::SDK_RET_NO_RESOURCE;
+    switch (obj_ctxt->api_op) {
+    case API_OP_CREATE:
+        if (vpc_db()->vpc_idxr()->alloc((uint32_t *)&idx) !=
+                sdk::lib::indexer::SUCCESS) {
+            return sdk::SDK_RET_NO_RESOURCE;
+        }
+        hw_id_ = idx & 0xFFFF;
+        break;
+
+    case API_OP_UPDATE:
+        // update doesn't require any new resources, we will update and
+        // activate the existing entry
+        if (unlikely(type_ != vpc_orig->type())) {
+            PDS_TRACE_ERR("Failed to update vpc %u type %u to %u, VPC type "
+                          "is immutable", key_.id, vpc_orig->type(), type_);
+            return SDK_RET_INVALID_ARG;
+        }
+        break;
+
+    case API_OP_DELETE:
+    default:
+        return SDK_RET_INVALID_ARG;
     }
-    hw_id_ = idx & 0xFFFF;
     return SDK_RET_OK;
 }
 

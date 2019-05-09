@@ -166,9 +166,13 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_vpc_key_t key_;        ///< vpc key
-    pds_vpc_type_t type_;      ///< vpc type
-    ht_ctxt_t ht_ctxt_;        ///< hash table context
+    pds_vpc_key_t key_;                       ///< vpc key
+    pds_vpc_type_t type_;                     ///< vpc type
+    mac_addr_t vr_mac_;                       ///< virtual router MAC
+    pds_encap_t fabric_encap_;                ///< fabric encap information
+    pds_route_table_key_t v4_route_table_;    ///< IPv4 route table id
+    pds_route_table_key_t v6_route_table_;    ///< IPv6 route table id
+    ht_ctxt_t ht_ctxt_;                       ///< hash table context
 
     // P4 datapath specific state
     uint16_t hw_id_;           ///< hardware id

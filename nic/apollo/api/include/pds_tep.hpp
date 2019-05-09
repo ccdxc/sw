@@ -29,11 +29,6 @@ typedef enum pds_tep_type_e {
                                   ///< workloads
 } pds_tep_type_t;
 
-/// \brief TEP key
-typedef struct pds_tep_key_s {
-    ipv4_addr_t ip_addr;    ///< TEP IP address
-} __PACK__ pds_tep_key_t;
-
 /// \brief TEP specification
 typedef struct pds_tep_spec_s {
     pds_tep_key_t key;      ///< Key

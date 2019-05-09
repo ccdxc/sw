@@ -173,7 +173,8 @@ api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
             SDK_ASSERT(octxt.api_op != API_OP_INVALID);
             if (octxt.cloned_obj == NULL) {
                 // XXX-ADD-XXX-UPD in same batch, no need to clone yet, just
-                // re-init the object with new config
+                // re-init the object with new config and continue with de-duped
+                // operation as ADD
                 octxt.api_params = api_ctxt->api_params;
                 ret = api_obj->init_config(api_ctxt);
                 SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
@@ -184,6 +185,8 @@ api_engine::pre_process_update_(api_ctxt_t *api_ctxt) {
                 SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);
             }
         } else {
+            // UPD-XXX scenario, update operation is seen 1st time on this
+            // object in this batch
             obj_ctxt.api_op = API_OP_UPDATE;
             obj_ctxt.obj_id = api_ctxt->obj_id;
             obj_ctxt.cloned_obj = api_obj->clone(api_ctxt);
@@ -262,7 +265,7 @@ api_engine::reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
     case API_OP_CREATE:
         ret = api_obj->reserve_resources(api_obj, obj_ctxt);
-        obj_ctxt->rsvd_rscs = 1;
+        obj_ctxt->rsvd_rscs = 1;   // TODO: why do we need this ?
         break;
 
     case API_OP_DELETE:

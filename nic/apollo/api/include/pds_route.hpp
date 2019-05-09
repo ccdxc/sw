@@ -41,14 +41,6 @@ typedef struct pds_route_s {
     };
 } __PACK__ pds_route_t;
 
-/// \brief route table key
-/// \remark
-///  - Route table id is not scoped under vpc, it is unique on
-//     the device (across VPCs and IPv4/IPv6 route tables)
-typedef struct pds_route_table_key_s {
-    pds_route_table_id_t    id;    ///< route table id
-} __PACK__ pds_route_table_key_t;
-
 /// \brief route table configuration
 typedef struct pds_route_table_spec_s    pds_route_table_spec_t;
 struct pds_route_table_spec_s {

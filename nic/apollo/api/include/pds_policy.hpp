@@ -30,11 +30,6 @@ typedef enum rule_dir_e {
     RULE_DIR_EGRESS  = 1,    ///< Egress direction
 } rule_dir_t;
 
-/// \brief    policy key
-typedef struct pds_policy_key_s {
-    pds_policy_id_t    id;    ///< Unique ID for the policy
-} __PACK__ pds_policy_key_t;
-
 /// \brief    rule L3 match criteria
 typedef struct rule_l3_match_s {
     uint8_t        ip_proto;    ///< IP protocol
