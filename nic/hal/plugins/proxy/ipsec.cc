@@ -45,7 +45,7 @@ update_host_flow_fwding_info(fte::ctx_t&ctx, proxy_flow_info_t* pfi)
           ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
            (ctx.direction() == hal::FLOW_DIR_FROM_DMA)) ||
           ((ctx.role() ==  hal::FLOW_ROLE_INITIATOR) &&
-           (ctx.direction() == FLOW_DIR_FROM_UPLINK) && (flow_key.proto != IPPROTO_ESP) && !is_local_dest ) ||   //temporary - only
+           (ctx.direction() == FLOW_DIR_FROM_UPLINK) && (flow_key.proto != IPPROTO_ESP) && !is_local_dest  && !ctx.cpu_rxhdr()) ||   //temporary - only
           ((ctx.role() ==  hal::FLOW_ROLE_RESPONDER) &&
            (ctx.direction() == FLOW_DIR_FROM_UPLINK) && (flow_key.proto == IPPROTO_ESP))
         ) {

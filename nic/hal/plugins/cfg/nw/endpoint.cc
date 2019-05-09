@@ -2248,6 +2248,39 @@ endpoint_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     return ret;
 }
 
+typedef struct ep_session_delete_args_ {
+    hal_handle_t     ep_handle;
+    dllist_ctxt_t    session_list;
+} ep_session_delete_args_t;
+
+static void
+ep_session_delete_cb(void *timer, uint32_t timer_id, void *ctxt)
+{
+    ep_session_delete_args_t       *args = (ep_session_delete_args_t *)ctxt;
+    hal_ret_t                       ret = HAL_RET_OK;
+
+    HAL_TRACE_VERBOSE("Ep Session delete walk cb");
+    // delete all sessions
+    dllist_ctxt_t  *curr = NULL, *next = NULL;
+    dllist_for_each_safe(curr, next, &args->session_list) {
+        hal_handle_id_list_entry_t  *entry =
+            dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        session_t *session = hal::find_session_by_handle(entry->handle_id);
+        if (session) {
+            ret = fte::session_delete_async(session, true);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Couldnt delete session with handle: {}", entry->handle_id);
+            }
+        }
+        // Remove from list
+        dllist_del(&entry->dllist_ctxt);
+        g_hal_state->hal_handle_id_list_entry_slab()->free(entry);
+    }
+
+    HAL_FREE(HAL_MEM_ALLOC_EP_SESS_DELETE_CTXT, args);
+    return;
+}
+
 //------------------------------------------------------------------------------
 // Update PI DBs as vrf_delete_del_cb() was a succcess
 //      a. Delete from vrf id hash table
@@ -2277,6 +2310,27 @@ endpoint_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to del ep from db, err : {}", ret);
         goto end;
+    }
+
+    if (!dllist_empty(&ep->session_list_head)) {
+        ep_session_delete_args_t    *ctxt = NULL;
+        void                        *ep_timer = NULL;
+
+        ctxt = (ep_session_delete_args_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP_SESS_DELETE_CTXT,
+                                       sizeof(ep_session_delete_args_t));
+        SDK_ASSERT(ctxt != NULL);
+
+        sdk::lib::dllist_move(&ctxt->session_list, &ep->session_list_head);
+     
+        ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_DELETE,
+                                 EP_UPDATE_SESSION_TIMER,
+                                 (void *)ctxt,
+                                 ep_session_delete_cb, false);
+
+        if (!ep_timer) {
+            HAL_TRACE_ERR("Failed to schedule the timer for the ep session delete");
+            return HAL_RET_ERR;
+        }
     }
 
     hal_handle_free(hal_handle);
