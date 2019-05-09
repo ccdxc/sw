@@ -9,11 +9,11 @@ def Teardown(infra, module):
 
 def TestCaseSetup(tc):
     iterelem = tc.module.iterator.Get()
-    logger.info("NVME Proxy TestCaseSetup() Iterator @ ", iterelem)
+    logger.info("NVME TestCaseSetup() Iterator @ ", iterelem)
     return
 
 def TestCaseTrigger(tc):
-    logger.info("NVME Proxy TestCaseTrigger() Implementation.")
+    logger.info("NVME TestCaseTrigger() Implementation.")
     return
 
 def TestCaseVerify(tc):

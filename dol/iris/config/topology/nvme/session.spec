@@ -1,6 +1,6 @@
 # Flow generation configuration template.
 meta:
-    id: SESSION_NVME_PROXY
+    id: SESSION_NVME
 
 proto: tcp
 

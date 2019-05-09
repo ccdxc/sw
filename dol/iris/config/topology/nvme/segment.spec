@@ -1,6 +1,6 @@
 # Segment Configuration Spec
 meta:
-    id: SEGMENT_NVME_PROXY
+    id: SEGMENT_NVME
 
 type        : tenant
 native      : False

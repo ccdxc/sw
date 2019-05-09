@@ -1,0 +1,11 @@
+# Rdma Buffer Template
+meta:
+    id      : NVME_BUFFER
+    package : factory.objects.nvme
+    module  : buffer
+    objname : NvmeBufferObject
+
+address : None
+size    : None
+data    : None
+offset  : None

@@ -1,0 +1,31 @@
+# Feature Test Modules List
+feature:
+    id          : nvme
+    sub         : nvme
+    package     : test.nvme
+    module      : nvme
+    enable      : True
+    ignore      : False
+
+modules:
+    - module:
+        name    : NVME_NOP
+        enable  : True
+        package : test.nvme
+        module  : nvme_nop
+        spec    : nvme_nop.testspec
+        ignore  : False
+    - module:
+        name    : NVME_WRITE_1_LBA
+        enable  : True
+        package : test.nvme
+        module  : nvme_write_1_lba
+        spec    : nvme_write_1_lba.testspec
+        ignore  : False
+    - module:
+        name    : NVME_WRITE_10_LBA
+        enable  : True
+        package : test.nvme
+        module  : nvme_write_10_lba
+        spec    : nvme_write_10_lba.testspec
+        ignore  : False

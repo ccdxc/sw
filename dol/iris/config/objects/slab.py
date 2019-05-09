@@ -15,7 +15,7 @@ import rdma_pb2                 as rdma_pb2
 from infra.common.glopts import GlobalOptions
 
 class SlabObject(base.ConfigObjectBase):
-    def __init__(self, lif, size, isPrivileged = False):
+    def __init__(self, lif, size, isPrivileged = False, page_size=4096):
         super().__init__()
         self.lif = lif
         if isPrivileged is True:
@@ -24,7 +24,7 @@ class SlabObject(base.ConfigObjectBase):
         else:
             self.id = self.lif.GetSlabid()
             self.GID("SLAB%04d" % self.id)
-        self.page_size = 4096
+        self.page_size = page_size
         if size > 0:
             self.size = size
         else:
@@ -76,16 +76,18 @@ class SlabObjectHelper:
     def __init__(self):
         self.slabs = []
 
-    def Generate(self, lif, spec):
-        count = spec.count
+    def Generate2(self, lif, count, size, page_size):
         # RTL run needs unique slabs
         if (GlobalOptions.rtl):
             count = 1000
-        logger.info("Creating %d Slabs. for LIF:%s" %\
-                       (count, lif.GID()))
+        logger.info("Creating %d Slabs. for LIF:%s  Size: %d Page size: %d" %\
+                       (count, lif.GID(), size, page_size))
         for slab_id in range(count):
-            slab = SlabObject(lif, spec.size)
+            slab = SlabObject(lif, size, False, page_size)
             self.slabs.append(slab)
+
+    def Generate(self, lif, spec):
+        self.Generate2(lif, spec.count, spec.size, spec.page_size)
 
     def AddSlab(self, slab):
         self.slabs.append(slab)

@@ -36,10 +36,16 @@ class NvmeSessionObject(base.ConfigObjectBase):
         self.cq_id = None
         self.sq = None
         self.cq = None
+        self.ns = None
+        self.host_page_size = None
+        self.mtu = 4096
 
     def Configure(self):
         nvme_lif = self.session.initiator.ep.intf.lif.nvme_lif
+        self.lif = nvme_lif
         self.nsid = nvme_lif.GetNextNsid()
+        self.ns = nvme_lif.GetNs(self.nsid)
+        assert self.ns != 0
 
         #for DOL purpose, map session to a sq/cq.
         #more than one session can map to same sq/cq

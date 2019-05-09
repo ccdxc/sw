@@ -17,48 +17,91 @@ class NvmeBufferObject(base.FactoryObjectBase):
         super().__init__()
         self.data = []
         self.size = 0
-        self.offset = 0
-        self.segments = []
-        self.address = 0
-        self.phy_address = 0
-        self.slab_id = None
+        self.slabs = []
+        self.phy_pages = []
+        self.prp1 = 0
+        self.prp2 = 0
+        self.nlb = 0
 
     def Init(self, spec):
         super().Init(spec)
         if (GlobalOptions.dryrun): return
 
-        if hasattr(spec.fields, 'segments'):
-            for segment in spec.fields.segments:
-                skip_bytes = segment.skip if hasattr(segment, 'skip') else 0
-                offset = segment.offset if hasattr(segment, 'offset') else 0
-                self.size += (segment.size - skip_bytes) if hasattr(segment, 'size') else 0
-                self.data += segment.data[offset:len(segment.data)-skip_bytes] if (hasattr(segment,'data') and segment.data) else []
-                #handle segment.offset 
+        if hasattr(spec.fields, 'session'):
+            nvme_session = spec.fields.session
+        else:
+            logger.error("Error!! nvme session needs to be specified for the buffer")
+            exit
 
-        #self.size = spec.fields.size if hasattr(spec.fields, 'size') else 0
-        #self.data = spec.fields.data if hasattr(spec.fields, 'data') else [] 
-        # Offset of the data
-        self.slab_id = spec.fields.slab
+        self.size = spec.fields.size if hasattr(spec.fields, 'size') else 0 
         self.offset = spec.fields.offset if hasattr(spec.fields, 'offset') else 0 
-        self.address = spec.fields.slab.address if spec.fields.slab else 0
-        self.address += self.offset
-        if self.address:
-            self.mem_handle = resmgr.MemHandle(self.address,
-                                              resmgr.HostMemoryAllocator.v2p(self.address))
-            self.phy_address = resmgr.HostMemoryAllocator.v2p(self.address)
-        logger.info("Creating Nvme Buffer @0x%x = phy_address: 0x%x size: %d offset: %d " %
-                       (self.address, self.phy_address, self.size, self.offset))
+        self.data = spec.fields.data if hasattr(spec.fields, 'data') else 0 
+        self.page_size = nvme_session.lif.spec.host_page_size
+        assert self.page_size > 0
+        assert self.size % nvme_session.ns.lba_size == 0
+
+        logger.info("Creating Nvme Buffer: lba_size: %d size: %d page_size: %d offset: %d" 
+                    % (nvme_session.ns.lba_size, self.size, self.page_size, self.offset))
+
+        self.num_pages = (int) (self.size / self.page_size)
+        if (self.size % self.page_size):
+            self.num_pages += 1
+        
+        for i in range(self.num_pages):
+           slab = nvme_session.lif.GetNextSlab()
+           self.slabs.append(slab)
+           logger.info("Slab with address 0x%x allocated" % (slab.address))
+           phy_address = resmgr.HostMemoryAllocator.v2p(slab.address)
+           self.phy_pages.append(phy_address)
+           logger.info("Physical page list[%d]: 0x%x" % (i, self.phy_pages[i])) 
+        assert(self.num_pages == len(self.slabs))
+       
+        self.prp1 = self.phy_pages[0]
+
+        if self.num_pages == 2:
+           self.prp2 = self.phy_pages[1]
+        #prepare PRP list page
+        elif self.num_pages > 2:
+           prp_slab = nvme_session.lif.GetNextSlab()
+           #self.slabs.append(prp_slab)
+           logger.info("Slab with address 0x%x allocated for PRP list" % (prp_slab.address))
+           self.prp2 = resmgr.HostMemoryAllocator.v2p(prp_slab.address)
+           mem_handle = resmgr.MemHandle(prp_slab.address,
+                                         resmgr.HostMemoryAllocator.v2p(prp_slab.address))
+           data = []
+           for i in range(1, len(self.phy_pages)):
+               data += self.phy_pages[i].to_bytes(8, 'little')
+           print ("%s" % (data))
+           resmgr.HostMemoryAllocator.write(mem_handle, bytes(data))
+
+        self.nlb = (int)(self.size / nvme_session.ns.lba_size)
+            
+    def min (x, y):
+        if x > y: 
+            return x
+        else:
+            return y
 
     def Write(self):
         """
         Writes the buffer to address "self.address"
         :return:
         """
-        if self.address and self.data:
-            logger.info("Writing Buffer @0x%x = size: %d offset: %d " %
-                       (self.address, self.size, self.offset))
-            resmgr.HostMemoryAllocator.write(self.mem_handle,
-                                bytes(self.data[:self.size]))
+        if self.data:
+            page_offset = self.offset
+            data_begin = 0
+            assert(self.num_pages == len(self.slabs))
+            for i in range(self.num_pages):
+                page_bytes = min(self.page_size, (self.size - data_begin)) - page_offset
+                start_addr = self.slabs[i].address + page_offset
+                page_offset = 0
+                mem_handle = resmgr.MemHandle(start_addr,
+                                              resmgr.HostMemoryAllocator.v2p(start_addr))
+                resmgr.HostMemoryAllocator.write(mem_handle,
+                                                 (bytes(self.data))[data_begin:data_begin+page_bytes])
+                logger.info("Writing Buffer[%d] @0x%x = size: %d " %
+                            (i, start_addr, page_bytes))
+                data_begin += page_bytes
         else:
             logger.info("Warning:!! buffer is not bound to an address, Write is ignored !!")
 
@@ -67,12 +110,7 @@ class NvmeBufferObject(base.FactoryObjectBase):
         Reads a Buffer from address "self.address"
         :return:
         """
-        if self.address:
-            self.data = resmgr.HostMemoryAllocator.read(self.mem_handle, self.size)
-            logger.info("Read Buffer @0x%x = size: %d offset: %d crc(data): 0x%x" %
-                       (self.address, self.size, self.offset, binascii.crc32(self.data)))
-        else:
-            logger.info("Warning:!! buffer is not bound to an address, Read is ignored !!")
+        logger.info("Warning:!! buffer is not bound to an address, Read is ignored !!")
 
     def __eq__(self, other):
         # self: Expected, other: Actual

@@ -19,7 +19,7 @@ import model_sim.src.model_wrap as model_wrap
 from infra.common.glopts import GlobalOptions
 
 class NvmeNsObject(base.ConfigObjectBase):
-    def __init__(self, lif, ns_id, size, lba_size, crypto_key):
+    def __init__(self, lif, ns_id, size, lba_size, key_type, key_size, key):
         super().__init__()
         self.Clone(Store.templates.Get('NVME_NS'))
         self.lif = lif  
@@ -33,7 +33,7 @@ class NvmeNsObject(base.ConfigObjectBase):
         self.backend_nsid = None
         self.session_list = []
         self.crypto_key = CryptoKeyHelper.main()
-        self.crypto_key.update(crypto_key.key_type, crypto_key.key_size, crypto_key.key)
+        self.crypto_key.Update(key_type, key_size, key)
         return
 
     def Show(self):
@@ -89,20 +89,20 @@ class NsObjectHelper:
             if (ns_id%2 == 0):
                 lba_size = 4096
 
-                crypto_key.key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
-                crypto_key.key_size = 16
+                key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
+                key_size = 16
                 # For AES-XTS barco needs 2 keys; key 2 should be located at key1 + 32  and referred by a single
                 # key descriptor index
-                crypto_key.key = b'\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+                key = b'\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
 
             else:
                 lba_size = 512
 
-                crypto_key.key_type = types_pb2.CRYPTO_KEY_TYPE_AES256
-                crypto_key.key_size = 32
-                crypto_key.key = b'\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22'
+                key_type = types_pb2.CRYPTO_KEY_TYPE_AES256
+                key_size = 32
+                key = b'\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22'
 
-            ns = NvmeNsObject(lif, ns_id, size, lba_size, crypto_key)
+            ns = NvmeNsObject(lif, ns_id, size, lba_size, key_type, key_size, key)
             self.ns_list.append(ns)
 
     def Configure(self):
@@ -112,3 +112,6 @@ class NsObjectHelper:
 
     def SessionAttach(self, nsid, nvme_sess):
         self.ns_list[nsid-1].SessionAttach(nvme_sess)
+
+    def GetNs(self, nsid):
+        return (self.ns_list[nsid-1])

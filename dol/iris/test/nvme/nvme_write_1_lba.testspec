@@ -1,0 +1,79 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=NVME_SESSION
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : callback://nvme/nvme/GetDataSize/nlb=1
+        template    : ref://factory/packets/id=PAYLOAD
+        headers     :
+            payload:
+                data    : pattern-random://0/255/1
+
+    - packet:
+        id          : EXP_PKT_BASE # Expected Base packet
+        payloadsize : callback://nvme/nvme/GetPktPayloadSize/basepkt=BASE_PKT,pkt_id=0
+        template    : callback://nvme/nvme/PickPktTemplate/v4=ETH_IPV4_TCP,v6=ETH_IPV6_TCP
+        headers     :
+            # Add all possible headers, the final headers will be selected
+            # based on the Flow.
+            eth:
+                src     : ref://testcase/config/nvmesession/session/initiator/ep/macaddr
+                dst     : ref://testcase/config/nvmesession/session/responder/ep/macaddr
+            ipv4:
+                src     : ref://testcase/config/nvmesession/session/initiator/addr
+                dst     : ref://testcase/config/nvmesession/session/responder/addr
+                ttl     : 64
+            ipv6:
+                src     : ref://testcase/config/nvmesession/session/initiator/addr
+                dst     : ref://testcase/config/nvmesession/session/responder/addr
+                hlim    : 64
+            tcp:
+                sport   : ref://testcase/config/nvmesession/session/iflow/sport
+                dport   : ref://testcase/config/nvmesession/session/iflow/dport
+                seq     : callback://nvme/tcp/GetSeqNum
+                ack     : callback://nvme/tcp/GetAckNum
+            payload:
+                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+
+buffers:
+    - buffer:
+        id      : BUF
+        template: ref://factory/templates/id=NVME_BUFFER
+        fields:
+           #slab is auto created
+           session   : ref://testcase/config/nvmesession
+           offset    : 0
+           size      : ref://testcase/packets/id=BASE_PKT/size
+           data      : ref://testcase/packets/id=BASE_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC
+        template: ref://factory/templates/id=DESC_NVME_SQ
+        fields:
+            opc     :   1   #WRITE
+            cid     :   1
+            nsid    :   ref://testcase/config/nvmesession/nsid
+            psdt    :   0 # PRPs
+            #nlb     :   1
+            #prp1    :   ref://testcase/buffers/id=BUF/address
+            #prp2    :   0
+            #prps and nlb field will be auto-derived
+            data    :   ref://testcase/buffers/id=BUF
+            write:
+                slba    :   100
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC
+            ring    : ref://testcase/config/nvmesession/sq/rings/id=SQ
+
+    doorbell:
+        object: ref://testcase/config/nvmesession/sq/rings/id=SQ/doorbell
+        fields:
+            upd : 0x9 # PI from DB data and DB_SCHED_EVAL
+
+expect:
