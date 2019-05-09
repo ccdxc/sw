@@ -536,6 +536,7 @@ tm_is_high_perf_q (tm_q_t q)
 void
 capri_tm_dump_${fn}_regs (void)
 {
+#if 0
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     stringstream data;
@@ -546,6 +547,7 @@ capri_tm_dump_${fn}_regs (void)
     ${trace_register(inst_name)}
 //:: #endfor
     SDK_TRACE_DEBUG("%s", data.str().c_str());
+#endif
 }
 //:: #endfor
 //::
@@ -582,11 +584,8 @@ capri_tm_uplink_iq_no_drop_update (tm_port_t port,
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
     cap_pbchbm_csr_t &hbm_csr = pbc_csr.hbm;
-    uint32_t hbm_context;
-    uint32_t num_hbm_contexts_per_port;
     cpp_int no_drop_val;
 
-    num_hbm_contexts_per_port = tm_cfg_profile()->num_qs[TM_PORT_TYPE_UPLINK];
     switch(port) {
 //:: for p in range(TM_PORTS):
 //::    pinfo = port_info[p]
@@ -594,17 +593,14 @@ capri_tm_uplink_iq_no_drop_update (tm_port_t port,
         case ${pinfo["enum"]}:
             {
                 if (port_supports_hbm_contexts(port)) {
-                    hbm_context =
-                           iq + (num_hbm_contexts_per_port * ${pinfo["enum"]});
-
                     // per port no_drop config in hbm
                     hbm_csr.hbm_port_${p}.cfg_hbm_context.read();
                     no_drop_val =
                             hbm_csr.hbm_port_${p}.cfg_hbm_context.no_drop();
                     if (no_drop == true) {
-                        no_drop_val |= (1 << hbm_context);
+                        no_drop_val |= (1 << iq);
                     } else {
-                        no_drop_val &= ~(1 << hbm_context);
+                        no_drop_val &= ~(1 << iq);
                     }
                     hbm_csr.hbm_port_${p}.cfg_hbm_context.no_drop(no_drop_val);
                     if (tm_sw_cfg_write_enabled()) {
@@ -1676,7 +1672,7 @@ iq_disabled (tm_port_t port, uint32_t iq)
 }
 
 static sdk_ret_t
-capri_tm_program_pbc_buffers (capri_tm_buf_cfg_t *buf_cfg)
+capri_tm_program_pbc_buffers1 (capri_tm_buf_cfg_t *buf_cfg)
 {
     sdk_ret_t ret = sdk::SDK_RET_OK;
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
@@ -1689,7 +1685,143 @@ capri_tm_program_pbc_buffers (capri_tm_buf_cfg_t *buf_cfg)
     stringstream data;
     data << hex << endl;
     // Program the buffers
-//:: for p in range(TM_PORTS):
+//:: for p in range(0, TM_PORTS/3):
+//::    pinfo = port_info[p]
+    port_type = capri_tm_get_port_type(${pinfo["enum"]});
+//::    for pg in range(port_info[p]["pgs"]):
+    reserved_min = 0;
+    headroom = 0;
+    xon_threshold = 0;
+    if (!iq_disabled(${pinfo["enum"]}, ${pg})) {
+        if (tm_asic_profile()->port[port_type].uses_credits &&
+            tm_asic_profile()->port[port_type].recirc_q != ${pg}) {
+            reserved_min = buf_cfg->chunks_per_q[port_type];
+
+            if (tm_is_high_perf_q(${pg})) {
+                reserved_min *= 2;
+            }
+            reserved_min = reserved_min +
+                cells_to_chunks(bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type])) + 2;
+            headroom = 0;
+        } else {
+            reserved_min = buf_cfg->chunks_per_q[port_type];
+            headroom = cells_to_chunks(tm_asic_profile()->port[port_type].headroom_cells);
+        }
+    }
+
+    if (headroom) {
+        SDK_ASSERT(chunks_to_cells(reserved_min) >=
+                   bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type]));
+        xon_threshold = chunks_to_cells(reserved_min) -
+            bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type]);
+    }
+
+    if (port_type == TM_PORT_TYPE_DMA) {
+        // Based on asic config
+        xon_threshold = 13;
+    }
+
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.read();
+    /* Update the PG parameters */
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.reserved_min(reserved_min);
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.headroom(headroom);
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.xon_threshold(xon_threshold);
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.low_limit(0);
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.alpha(0);
+
+    if (tm_sw_init_enabled()) {
+        ${trace_register("pbc_csr.port_" + str(p) + ".cfg_account_pg_" + str(pg))}
+        pbc_csr.port_${p}.cfg_account_pg_${pg}.write();
+    }
+//::    #endfor
+//:: #endfor
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    return ret;
+}
+
+static sdk_ret_t
+capri_tm_program_pbc_buffers2 (capri_tm_buf_cfg_t *buf_cfg)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    uint32_t reserved_min;
+    uint32_t headroom;
+    uint32_t xon_threshold;
+    tm_port_type_e port_type;
+
+    stringstream data;
+    data << hex << endl;
+    // Program the buffers
+//:: for p in range(TM_PORTS/3, (2*TM_PORTS)/3):
+//::    pinfo = port_info[p]
+    port_type = capri_tm_get_port_type(${pinfo["enum"]});
+//::    for pg in range(port_info[p]["pgs"]):
+    reserved_min = 0;
+    headroom = 0;
+    xon_threshold = 0;
+    if (!iq_disabled(${pinfo["enum"]}, ${pg})) {
+        if (tm_asic_profile()->port[port_type].uses_credits &&
+            tm_asic_profile()->port[port_type].recirc_q != ${pg}) {
+            reserved_min = buf_cfg->chunks_per_q[port_type];
+
+            if (tm_is_high_perf_q(${pg})) {
+                reserved_min *= 2;
+            }
+            reserved_min = reserved_min +
+                cells_to_chunks(bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type])) + 2;
+            headroom = 0;
+        } else {
+            reserved_min = buf_cfg->chunks_per_q[port_type];
+            headroom = cells_to_chunks(tm_asic_profile()->port[port_type].headroom_cells);
+        }
+    }
+
+    if (headroom) {
+        SDK_ASSERT(chunks_to_cells(reserved_min) >=
+                   bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type]));
+        xon_threshold = chunks_to_cells(reserved_min) -
+            bytes_to_cells(tm_cfg_profile()->jumbo_mtu[port_type]);
+    }
+
+    if (port_type == TM_PORT_TYPE_DMA) {
+        // Based on asic config
+        xon_threshold = 13;
+    }
+
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.read();
+    /* Update the PG parameters */
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.reserved_min(reserved_min);
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.headroom(headroom);
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.xon_threshold(xon_threshold);
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.low_limit(0);
+    pbc_csr.port_${p}.cfg_account_pg_${pg}.alpha(0);
+
+    if (tm_sw_init_enabled()) {
+        ${trace_register("pbc_csr.port_" + str(p) + ".cfg_account_pg_" + str(pg))}
+        pbc_csr.port_${p}.cfg_account_pg_${pg}.write();
+    }
+//::    #endfor
+//:: #endfor
+    SDK_TRACE_DEBUG("%s", data.str().c_str());
+    return ret;
+}
+
+static sdk_ret_t
+capri_tm_program_pbc_buffers3 (capri_tm_buf_cfg_t *buf_cfg)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    uint32_t reserved_min;
+    uint32_t headroom;
+    uint32_t xon_threshold;
+    tm_port_type_e port_type;
+
+    stringstream data;
+    data << hex << endl;
+    // Program the buffers
+//:: for p in range((2*TM_PORTS)/3, TM_PORTS):
 //::    pinfo = port_info[p]
     port_type = capri_tm_get_port_type(${pinfo["enum"]});
 //::    for pg in range(port_info[p]["pgs"]):
@@ -2065,6 +2197,22 @@ capri_tm_program_hbm_buffers (capri_tm_buf_cfg_t *buf_cfg)
     SDK_TRACE_DEBUG("%s", data.str().c_str());
 
     return ret;
+}
+
+static sdk_ret_t
+capri_tm_program_pbc_buffers (capri_tm_buf_cfg_t *buf_cfg)
+{
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+
+    ret = capri_tm_program_pbc_buffers1(buf_cfg);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    ret = capri_tm_program_pbc_buffers2(buf_cfg);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    return capri_tm_program_pbc_buffers3(buf_cfg);
 }
 
 static sdk_ret_t
