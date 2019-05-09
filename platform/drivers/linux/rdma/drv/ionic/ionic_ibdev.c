@@ -831,6 +831,7 @@ cq_next:
 
 	if (old_prod != cq->q.prod) {
 		ionic_admin_reset_wdog(dev);
+		cq->q.cons = cq->q.prod;
 		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
 				 ionic_queue_dbell_val(&cq->q));
 		queue_work(ionic_evt_workq, &dev->admin_work);
