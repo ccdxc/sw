@@ -43,7 +43,7 @@ parser.add_argument('--username', dest='username',
 parser.add_argument('--password', dest='password',
                     default="pen123", help='Naples Password.')
 parser.add_argument('--timeout', dest='timeout',
-                    default=60, help='Naples Password.')
+                    default=120, help='Naples Password.')
 parser.add_argument('--image', dest='image',
                     default=None, help='Naples Image.')
 parser.add_argument('--drivers-pkg', dest='drivers_pkg',
