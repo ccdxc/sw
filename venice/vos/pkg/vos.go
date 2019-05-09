@@ -36,6 +36,10 @@ const (
 	metaContentType  = "content-type"
 )
 
+var (
+	maxCreateBucketRetries = 1200
+)
+
 type instance struct {
 	sync.RWMutex
 	ctx        context.Context
@@ -90,11 +94,24 @@ func (i *instance) createDefaultBuckets(client vos.BackendClient) error {
 	log.Infof("creating default buckets in minio")
 	defer i.Unlock()
 	i.Lock()
-	for _, n := range objstore.Buckets_name {
-		name := "default." + strings.ToLower(n)
-		if err := i.createBucket(name); err != nil {
-			return err
+	loop := true
+	retryCount := 0
+	var err error
+	for loop && retryCount < maxCreateBucketRetries {
+		loop = false
+		for _, n := range objstore.Buckets_name {
+			name := "default." + strings.ToLower(n)
+			if err = i.createBucket(name); err != nil {
+				loop = true
+			}
 		}
+		if loop {
+			time.Sleep(100 * time.Millisecond)
+			retryCount++
+		}
+	}
+	if retryCount >= maxCreateBucketRetries {
+		return errors.Wrap(err, "failed after max retries")
 	}
 	return nil
 }
@@ -141,6 +158,7 @@ func (i *instance) Watch(ctx context.Context, path, peer string, handleFn apiint
 func New(ctx context.Context, args []string) error {
 	os.Setenv("MINIO_ACCESS_KEY", minioKey)
 	os.Setenv("MINIO_SECRET_KEY", minioSecret)
+	os.Setenv("MINIO_HTTP_TRACE", "/tmp/minio.log")
 	log.Infof("minio env: %+v", os.Environ())
 	log.Infof("minio args:  %+v", args)
 	go minio.Main(args)
@@ -190,9 +208,14 @@ func New(ctx context.Context, args []string) error {
 		return errors.Wrap(err, "failed to start http listener")
 	}
 
+	// For simplicity all nodes in the cluster check if the default buckets exist,
+	//  if not, try to create the buckets. all nodes in the cluster try this till
+	//  all default buckets are created. A little inefficient but simple and a rare
+	//  operation (only on a create of a new cluster)
 	err = inst.createDefaultBuckets(client)
 	if err != nil {
-		return errors.Wrap(err, "create buckets")
+		log.Errorf("Failed to create buckets (%+v)", err)
+		return errors.Wrap(err, "failed to create buckets")
 	}
 	// Register all plugins
 	plugins.RegisterPlugins(inst)

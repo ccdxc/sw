@@ -4,11 +4,16 @@ package objstoreinteg
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
+	"reflect"
+	"testing"
 
 	. "gopkg.in/check.v1"
 
@@ -25,15 +30,6 @@ import (
 	"github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
-
-	"testing"
-
-	"context"
-	"io/ioutil"
-	"reflect"
-
-	"net/http"
-
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -89,7 +85,7 @@ func (it *objstoreIntegSuite) SetUpSuite(c *C) {
 	csrSigner := func(csr *x509.CertificateRequest) (*x509.Certificate, error) {
 		return certs.SignCSRwithCA(csr, caCert, caKey, certs.WithValidityDays(1))
 	}
-	err = credentials.GenVosHTTPSAuth(it.authDir, csrSigner, append([]*x509.Certificate{caCert}, trustRoots[0]))
+	err = credentials.GenVosHTTPSAuth("localhost", it.authDir, csrSigner, append([]*x509.Certificate{caCert}, trustRoots[0]), trustRoots)
 	c.Assert(err, IsNil)
 
 	it.tlsConfig = &tls.Config{

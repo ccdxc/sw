@@ -61,11 +61,18 @@ var eventsVolume = protos.ModuleSpec_Volume{
 	MountPath: globals.EventsDir,
 }
 
-// objstoreVolume is a reusable volume definition for Pensando object store.
-var objstoreVolume = protos.ModuleSpec_Volume{
+// objstoreVolume1 is a reusable volume definition for Pensando object store.
+var objstoreVolume1 = protos.ModuleSpec_Volume{
 	Name:      "disk1",
-	HostPath:  "/minio/disk1",
+	HostPath:  "/data/minio/disk1",
 	MountPath: "/disk1",
+}
+
+// objstoreVolume2 is a reusable volume definition for Pensando object store.
+var objstoreVolume2 = protos.ModuleSpec_Volume{
+	Name:      "disk2",
+	HostPath:  "/data/minio/disk2",
+	MountPath: "/disk2",
 }
 
 // citadelDbVolume is a reusable volume definition for citadel.
@@ -475,7 +482,7 @@ var k8sModules = map[string]protos.Module{
 			Name: globals.Vos,
 		},
 		Spec: protos.ModuleSpec{
-			Type:      protos.ModuleSpec_Deployment,
+			Type:      protos.ModuleSpec_DaemonSet,
 			NumCopies: 1,
 			Submodules: []protos.ModuleSpec_Submodule{
 				{
@@ -497,11 +504,13 @@ var k8sModules = map[string]protos.Module{
 					},
 					Args: []string{
 						"-resolver-urls", "$RESOLVER_URLS",
+						"-cluster-nodes", "$QUORUM_NODES",
 					},
 				},
 			},
 			Volumes: []protos.ModuleSpec_Volume{
-				objstoreVolume,
+				objstoreVolume1,
+				objstoreVolume2,
 				logVolume,
 				eventsVolume,
 				protos.ModuleSpec_Volume{
@@ -510,6 +519,7 @@ var k8sModules = map[string]protos.Module{
 					MountPath: "/root/.minio/certs",
 				},
 			},
+			RestrictNodes: "$QUORUM_NODES",
 		},
 	},
 	// citadel
