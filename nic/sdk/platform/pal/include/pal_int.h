@@ -28,10 +28,6 @@ struct mapping_info {
  * n_mappings:		Number of mappings in mapping_info
  * enable_mask:		Bits to enable/disable the interrupt(s)
  * csr_paddr:		Physical address of the CSR
- * root_enable_mask:	Mask for checking whether the interrupt is one we
- *			can handle
- * root_csr_paddr:	Physical of the address of the register for checking
- *			whether the interrupt is one we can handle
  * have_int_enable:	True of the end function should re-enable the IRQ
  * devname:		Name of the /dev/uio<n> file
  * uio_dir_fd:		File descriptor of the /sys/class/uio directory
@@ -44,8 +40,6 @@ struct pal_int {
 	unsigned		n_mappings;
 	uint32_t 		enable_mask;
 	uint64_t		csr_paddr;
-	uint32_t		root_enable_mask;
-	uint64_t		root_csr_paddr;
 	uint8_t			have_int_enable;
 	char			devname[256];
 	int			uio_dir_fd;

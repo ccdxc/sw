@@ -5,6 +5,12 @@
  * details
  */
 
+/*
+ * Debug flag. If defined, all open()s will print the name of the file
+ * if they failed
+ */
+#undef PRINT_OPEN_PATHNAME
+
 #include <ctype.h>
 #include <dirent.h>
 #include <endian.h>
@@ -31,10 +37,14 @@
 #define SYSFS_UIO_DIR		"/sys/class/uio"
 #define DEV_TEMPLATE		"/dev/uio"
 
-#define	ROOT_CSR_PADDR 		"/proc/device-tree/soc/%s/root_csr_paddr"
-#define	ROOT_ENABLE_MASK	"/proc/device-tree/soc/%s/root_enable_mask"
-#define	CSR_PADDR 		"/proc/device-tree/soc/%s/csr_paddr"
+#define	ENABLE_CSR_PADDR 	"/proc/device-tree/soc/%s/enable_csr_paddr"
 #define	ENABLE_MASK 		"/proc/device-tree/soc/%s/enable_mask"
+
+/*
+ * Indicate that a write should be used to explicitly indicate end of interrupt 
+ * processing.
+ */
+#define EXPLICIT_WRITE_FOR_EOI
 
 /*
  * Normal CSRs
@@ -71,26 +81,21 @@ struct root_csr {
 
 static int page_size;
 
-/*
- * Enable the interrupt for the UIO device corresponding to the pal_int.
- *
- * Returns 0 on sucess, -1 on failure
- */
-static int enable_intr(struct pal_int *pal_int)
+#ifdef PRINT_OPEN_PATHNAME
+#define print_open_pathname(rc, name)	__print_open_pathname(rc, name, \
+	__FILE__, __LINE__)
+
+static void __print_open_pathname(int rc, const char *name, const char *file,
+	unsigned line)
 {
-	paddr_t csr_enable_set;
-	uint32_t enable_value;
-
-	if (!pal_int->have_int_enable)
-		return 0;
-
-	csr_enable_set = pal_int->csr_paddr + offsetof(struct csr, enable_set);
-
-	enable_value = pal_int->enable_mask;
-	enable_value = 0x3ffff;
-	pal_reg_wr32(csr_enable_set, enable_value);
-	return 0;
+	if (rc == -1)
+		printf("%s:%u: open(%s) failed\n", file, line, name);
 }
+#else
+static void print_open_pathname(int rc, const char *name)
+{
+}
+#endif
 
 /*
  * Using vsnprintf, print a formatted string into a buffer. Does the checks
@@ -244,6 +249,7 @@ static int __enable_mask_get(const char *path, uint32_t *enable_mask)
 	int fd;
 
 	fd = open(path, O_RDONLY);
+	print_open_pathname(fd, path);
 	if (fd == -1)
 		return -1;
 
@@ -276,17 +282,6 @@ static int enable_mask_get(const char *name, uint32_t *enable_mask)
 	return rc;
 }
 
-static int root_enable_mask_get(const char *name,
-	uint32_t *enable_mask)
-{
-	char buf[1024];
-	int rc;
-
-	print_to_buffer(buf, sizeof(buf), ROOT_ENABLE_MASK, name);
-	rc = __enable_mask_get(buf, enable_mask);
-	return rc;
-}
-
 /*
  * Read the physical address of the CSR with which we want to enable/disable
  */
@@ -296,6 +291,7 @@ static int __csr_paddr_get(const char *path, uint64_t *csr_paddr)
 	int fd;
 
 	fd = open(path, O_RDONLY);
+	print_open_pathname(fd, path);
 	if (fd == -1)
 		return -1;
 
@@ -318,35 +314,19 @@ static int csr_paddr_get(const char *name, uint64_t *paddr)
 {
 	char buf[1024];
 
-	print_to_buffer(buf, sizeof(buf), CSR_PADDR, name);
+	print_to_buffer(buf, sizeof(buf), ENABLE_CSR_PADDR, name);
 	return __csr_paddr_get(buf, paddr);
 }
 
-static int root_csr_paddr_get(const char *name, uint64_t *paddr)
-{
-	char buf[1024];
-	int rc;
-
-	print_to_buffer(buf, sizeof(buf), ROOT_CSR_PADDR, name);
-	rc =__csr_paddr_get(buf, paddr);
-	return rc;
-}
-
 static int get_device_info(const char *name, uint32_t *enable_mask,
-	uint32_t *root_enable_mask, paddr_t *csr_paddr, paddr_t *root_csr_paddr)
+	paddr_t *csr_paddr)
 {
 	int rc;
 
 	rc = enable_mask_get(name, enable_mask);
 	if (rc < 0)
 		return rc;
-	rc = root_enable_mask_get(name, root_enable_mask);
-	if (rc < 0)
-		return rc;
 	rc = csr_paddr_get(name, csr_paddr);
-	if (rc < 0)
-		return rc;
-	rc = root_csr_paddr_get(name, root_csr_paddr);
 	if (rc < 0)
 		return rc;
 	return 0;
@@ -392,7 +372,8 @@ static int try_open_int(struct pal_int *pal_int, const char *d_name,
 		return -1;
 	}
 
-	fd = open(pal_int->devname, O_RDONLY);
+	fd = open(pal_int->devname, O_RDWR);
+	print_open_pathname(fd, pal_int->devname);
 	if (fd == -1)
 		return -1;
 
@@ -448,6 +429,7 @@ static int try_open_int_msi(struct pal_int *pal_int, const char *d_name,
 		return -1;
 	}
 	fd = open(pal_int->devname, O_RDONLY);
+	print_open_pathname(fd, pal_int->devname);
 	if (fd == -1)
 		return -1;
 
@@ -473,6 +455,7 @@ static int pal_int_open_common(struct pal_int *pal_int, const char *name,
 
 	/* Open the directory in sysfs containing all of the UIO directories */
 	pal_int->uio_dir_fd = open(SYSFS_UIO_DIR, O_RDONLY);
+	print_open_pathname(pal_int->uio_dir_fd, SYSFS_UIO_DIR);
 	if (pal_int->uio_dir_fd < 0)
 		return -1;
 
@@ -545,8 +528,7 @@ int pal_int_open(struct pal_int *pal_int, const char *name)
 		return -1;
 
 	rc = get_device_info(name, &pal_int->enable_mask,
-		&pal_int->root_enable_mask, &pal_int->csr_paddr,
-		&pal_int->root_csr_paddr);
+		&pal_int->csr_paddr);
 	if (rc < 0)
 		goto close_fd;
 	pal_int->have_int_enable = true;
@@ -606,6 +588,10 @@ int pal_int_close(struct pal_int *pal_int)
 	return rc;
 }
 
+/*
+ * This is called to wait for the next interrupt and, when one happens, to
+ * return the cummulative number of interrupts seen so far.
+ */
 int pal_int_start(struct pal_int *pal_int)
 {
 	uint32_t count;
@@ -623,9 +609,26 @@ int pal_int_start(struct pal_int *pal_int)
 	return count;
 }
 
+/*
+ * This indicates that the processing started by a call to pal_int_start() is
+ * done and that the application is finished with the current interrupt.
+ */
 int pal_int_end(struct pal_int *pal_int)
 {
-	enable_intr(pal_int);
+#ifdef EXPLICIT_WRITE_FOR_EOI
+	ssize_t zrc;
+	uint32_t irq_on;
+
+	irq_on = 1;
+	zrc = write(pal_int->fd, &irq_on, sizeof(irq_on));
+	if (zrc == -1)
+		return -1;
+	if ((size_t)zrc != sizeof(irq_on)) {
+		errno = EIO;
+		return -1;
+	}
+#endif
+
 	return 0;
 }
 
