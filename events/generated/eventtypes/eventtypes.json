@@ -1,0 +1,143 @@
+{
+ "Cluster": [
+  {
+   "Name": "AUDITING_FAILED",
+   "Severity": "CRITICAL",
+   "Desc": "Writing of AuditEvent failed"
+  },
+  {
+   "Name": "AUTO_GENERATED_TLS_CERT",
+   "Severity": "WARN",
+   "Desc": "Auto generated certificate is being used for API Gateway TLS"
+  },
+  {
+   "Name": "ELECTION_CANCELLED",
+   "Severity": "WARN",
+   "Desc": "Leader election cancelled"
+  },
+  {
+   "Name": "ELECTION_NOTIFICATION_FAILED",
+   "Severity": "WARN",
+   "Desc": "Failed to send leader election notification"
+  },
+  {
+   "Name": "ELECTION_STARTED",
+   "Severity": "INFO",
+   "Desc": "Leader election started in the cluster"
+  },
+  {
+   "Name": "ELECTION_STOPPED",
+   "Severity": "WARN",
+   "Desc": "Leader election stopped"
+  },
+  {
+   "Name": "HOST_SMART_NIC_SPEC_CONFLICT",
+   "Severity": "WARN",
+   "Desc": "The system has detected a conflict between the SmartNIC specifications of different Host objects"
+  },
+  {
+   "Name": "LEADER_CHANGED",
+   "Severity": "INFO",
+   "Desc": "Leader changed in the election"
+  },
+  {
+   "Name": "LEADER_ELECTED",
+   "Severity": "INFO",
+   "Desc": "Leader elected for the cluster"
+  },
+  {
+   "Name": "LEADER_LOST",
+   "Severity": "INFO",
+   "Desc": "Node lost leadership during the election"
+  },
+  {
+   "Name": "LOGIN_FAILED",
+   "Severity": "INFO",
+   "Desc": "User login failed"
+  },
+  {
+   "Name": "NIC_ADMITTED",
+   "Severity": "INFO",
+   "Desc": "NIC admitted to the cluster"
+  },
+  {
+   "Name": "NIC_HEALTHY",
+   "Severity": "INFO",
+   "Desc": "NIC health transitioned to 'true'"
+  },
+  {
+   "Name": "NIC_HEALTH_UNKNOWN",
+   "Severity": "WARN",
+   "Desc": "NIC health transitioned to 'unknown'"
+  },
+  {
+   "Name": "NIC_REJECTED",
+   "Severity": "WARN",
+   "Desc": "A SmartNIC admission request was rejected"
+  },
+  {
+   "Name": "NIC_UNHEALTHY",
+   "Severity": "WARN",
+   "Desc": "NIC health transitioned to 'false'"
+  },
+  {
+   "Name": "NODE_DISJOINED",
+   "Severity": "WARN",
+   "Desc": "Node disjoined from the cluster"
+  },
+  {
+   "Name": "NODE_JOINED",
+   "Severity": "INFO",
+   "Desc": "Node joined the cluster"
+  }
+ ],
+ "Network": [
+  {
+   "Name": "LINK_DOWN",
+   "Severity": "WARN",
+   "Desc": "Port link status is down"
+  },
+  {
+   "Name": "LINK_UP",
+   "Severity": "INFO",
+   "Desc": "Port is linked up"
+  }
+ ],
+ "System": [
+  {
+   "Name": "NAPLES_SERVICE_STOPPED",
+   "Severity": "CRITICAL",
+   "Desc": "Naples service stopped"
+  },
+  {
+   "Name": "SERVICE_PENDING",
+   "Severity": "DEBUG",
+   "Desc": "Service pending"
+  },
+  {
+   "Name": "SERVICE_RUNNING",
+   "Severity": "DEBUG",
+   "Desc": "Service running"
+  },
+  {
+   "Name": "SERVICE_STARTED",
+   "Severity": "DEBUG",
+   "Desc": "Service started"
+  },
+  {
+   "Name": "SERVICE_STOPPED",
+   "Severity": "WARN",
+   "Desc": "Service stopped"
+  },
+  {
+   "Name": "SERVICE_UNRESPONSIVE",
+   "Severity": "CRITICAL",
+   "Desc": "Service unresponsive due to lack of system resources"
+  },
+  {
+   "Name": "SYSTEM_COLDBOOT",
+   "Severity": "WARN",
+   "Desc": "System cold booted"
+  }
+ ]
+}

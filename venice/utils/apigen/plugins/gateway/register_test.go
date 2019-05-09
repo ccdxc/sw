@@ -11,13 +11,14 @@ import (
 
 	govldtr "github.com/asaskevich/govalidator"
 	"github.com/gogo/protobuf/proto"
-	descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
+	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	gogoplugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	_ "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/apigen/plugins/common"
+	"github.com/pensando/sw/venice/utils/testutils"
 )
 
 func TestDbPathGet(t *testing.T) {
@@ -2024,6 +2025,67 @@ func TestGetEumStrMap(t *testing.T) {
 			t.Errorf("expecting result [%v] got [%v]", c.exp, ret)
 		}
 	}
+}
+
+func TestGetEventTypes(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		enum_type:<
+			name:"EventTypes"
+			value:<
+				name:"TYPE1"
+				number:0
+				options:<[eventtypes.severity]:INFO [eventtypes.category]:Cluster [eventtypes.desc]:"Type 1" > 
+			>
+			value:<
+				name:"TYPE2"
+				number:0
+				options:<[eventtypes.severity]:INFO [eventtypes.category]:Cluster [eventtypes.desc]:"Type 2" > 
+			>
+			value:<
+				name:"TYPE3"
+				number:0
+				options:<[eventtypes.severity]:WARN [eventtypes.category]:System [eventtypes.desc]:"Type 3" > 
+			>
+			value:<
+				name:"TYPE4"
+				number:0
+				options:<[eventtypes.severity]:DEBUG [eventtypes.category]:Network [eventtypes.desc]:"Type 4" > 
+			>
+		>
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+
+	eTypes, err := getEventTypes(file)
+	testutils.AssertOk(t, err, "failed to get event types from the proto")
+
+	expectedResponse := []*EventType{
+		{EType: "TYPE1", Severity: "INFO", Category: "Cluster", Desc: "Type 1"},
+		{EType: "TYPE2", Severity: "INFO", Category: "Cluster", Desc: "Type 2"},
+		{EType: "TYPE3", Severity: "WARN", Category: "System", Desc: "Type 3"},
+		{EType: "TYPE4", Severity: "DEBUG", Category: "Network", Desc: "Type 4"},
+	}
+	testutils.Assert(t, reflect.DeepEqual(eTypes, expectedResponse), "plugin did not generate expected event types")
 }
 
 func TestGetEumNormalizedMap(t *testing.T) {

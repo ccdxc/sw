@@ -2496,6 +2496,24 @@ func getEventTypes(file *descriptor.File) ([]*EventType, error) {
 	return ets, nil
 }
 
+// genEventTypesJSON retuns the JSON string of event types grouped by category
+func genEventTypesJSON() (string, error) {
+	evtsByCategory := eventtypes.GetEventsByCategory()
+	if len(evtsByCategory) > 0 {
+		ret, err := json.MarshalIndent(evtsByCategory, "", " ")
+		if err != nil {
+			glog.V(1).Infof("Failed to marshal event types")
+			return "", err
+		}
+
+		str := string(ret[:])
+		glog.V(1).Infof("Generated eventtypes.json %v", str)
+		return str, nil
+	}
+
+	return "{}", nil
+}
+
 func getFileCategory(m *descriptor.Message) (string, error) {
 	if ext, err := reg.GetExtension("venice.fileCategory", m.File); err == nil {
 		return ext.(string), nil
@@ -2833,6 +2851,7 @@ func init() {
 	reg.RegisterFunc("getRelPath", getRelPath)
 	reg.RegisterFunc("getMsgMap", getMsgMap)
 	reg.RegisterFunc("getEventTypes", getEventTypes)
+	reg.RegisterFunc("genEventTypesJSON", genEventTypesJSON)
 	reg.RegisterFunc("getFileCategory", getFileCategory)
 	reg.RegisterFunc("isSvcWatch", isSvcWatch)
 	reg.RegisterFunc("getAPIOperType", getAPIOperType)

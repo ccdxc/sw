@@ -7,6 +7,8 @@ Input file: github.com/pensando/sw/events/protos/eventtypes.proto
 
 package eventtypes
 
+import "sort"
+
 // EventTypeAttributes attributes belong to each event type
 type EventTypeAttributes struct {
 	EType    string
@@ -15,8 +17,18 @@ type EventTypeAttributes struct {
 	Desc     string
 }
 
+// EventDetails contains all the attributes of an events
+type EventDetails struct {
+	Name     string `json:name`
+	Severity string `json:severity`
+	Desc     string `json:desc`
+}
+
 // map containing the list of all event types and it's associated attributes
 var eventTypes map[EventType]*EventTypeAttributes
+
+// map containing the list of all events grouped by category
+var eventTypesByCategory map[string][]*EventDetails
 
 func init() {
 	eventTypes = map[EventType]*EventTypeAttributes{}
@@ -191,4 +203,24 @@ func GetEventTypeAttrs(eType EventType) *EventTypeAttributes {
 	}
 
 	return nil
+}
+
+func GetEventsByCategory() map[string][]*EventDetails {
+	var eTypes []string
+	for _, eType := range eventTypes {
+		eTypes = append(eTypes, eType.EType)
+	}
+	sort.Strings(eTypes)
+
+	eventTypesByCategory = map[string][]*EventDetails{}
+	for _, eTypeStr := range eTypes {
+		eType, ok := EventType_value[eTypeStr]
+		if ok {
+			eAttrs := eventTypes[EventType(eType)]
+			eventTypesByCategory[eAttrs.Category] = append(eventTypesByCategory[eAttrs.Category],
+				&EventDetails{Name: eAttrs.EType, Desc: eAttrs.Desc, Severity: eAttrs.Severity})
+		}
+	}
+
+	return eventTypesByCategory
 }

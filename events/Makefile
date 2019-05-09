@@ -4,6 +4,6 @@ geneventtypes:
 	${GOPATH}/src/github.com/pensando/sw/tools/scripts/geneventtypes.sh protos
 
 clean:
-	@rm -rf generated/eventtypes/*.go generated/eventattrs/*.pb.go
+	@rm -rf generated/eventtypes generated/eventattrs/*.pb.go
 
 gen-clean: clean

@@ -3,3 +3,6 @@ templates:
   - template: "eventtypes.tmpl"
     outputpath: "{FILE}.go"
     once: true
+  - template: "eventtypes_json.tmpl"
+    outputpath: "eventtypes.json"
+    once: true
