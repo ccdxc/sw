@@ -114,7 +114,7 @@ Eth::Eth(devapi *dev_api,
         NIC_LOG_ERR("{}: Failed to map register region", spec->name);
         throw;
     }
-    devcmd = (union dev_cmd_regs *)regs + offsetof(union dev_regs, devcmd);
+    devcmd = &regs->devcmd;
 
     // Init Device registers
     regs->info.signature = IONIC_DEV_INFO_SIGNATURE;
