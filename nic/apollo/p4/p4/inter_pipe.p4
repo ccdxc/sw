@@ -35,8 +35,7 @@ action ingress_to_rxdma() {
         modify_field(p4_to_txdma_header.payload_len,
                      capri_p4_intrinsic.packet_len + APOLLO_I2E_HDR_SZ);
         modify_field(predicate_header.direction, control_metadata.direction);
-        if ((control_metadata.direction == RX_FROM_SWITCH) or
-            (p4_to_txdma_header.lpm_addr == 0)) {
+        if (p4_to_txdma_header.lpm_addr == 0) {
             modify_field(predicate_header.lpm_bypass, TRUE);
         }
     }

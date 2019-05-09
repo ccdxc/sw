@@ -51,8 +51,7 @@ ingress_to_rxdma:
     phvwr           p.p4_to_rxdma_header_table3_valid, TRUE
     phvwr           p.p4_to_rxdma_header_direction, k.control_metadata_direction
     phvwr           p.p4_to_txdma_header_payload_len, r1
-    seq             c1, k.control_metadata_direction, RX_FROM_SWITCH
-    seq.!c1         c1, k.p4_to_txdma_header_lpm_addr, r0
+    seq             c1, k.p4_to_txdma_header_lpm_addr, r0
     phvwr.c1        p.predicate_header_lpm_bypass, TRUE
     phvwr.e         p.service_header_valid, FALSE
     phvwr           p.predicate_header_direction, k.control_metadata_direction

@@ -97,9 +97,11 @@ action local_vnic_info_tx(local_vnic_tag, vpc_id,
 
 action local_vnic_info_rx(local_vnic_tag, vpc_id,
                           epoch1_valid, epoch1, skip_src_dst_check1,
-                          sacl_v4addr1, sacl_v6addr1, resource_group1,
+                          lpm_v4addr1, lpm_v6addr1, sacl_v4addr1, sacl_v6addr1,
+                          resource_group1,
                           epoch2_valid, epoch2, skip_src_dst_check2,
-                          sacl_v4addr2, sacl_v6addr2, resource_group2) {
+                          lpm_v4addr2, lpm_v6addr2, sacl_v4addr2, sacl_v6addr2,
+                          resource_group2) {
 
     // if c1 indicate miss, drop
     //  modify_field(control_metadata.p4i_drop_reason,
@@ -116,9 +118,11 @@ action local_vnic_info_rx(local_vnic_tag, vpc_id,
     modify_field(vnic_metadata.src_slot_id, mpls_src.label);
     modify_field(control_metadata.tunneled_packet, TRUE);
     local_vnic_info_common(RX_FROM_SWITCH, 0, local_vnic_tag, vpc_id,
-                           epoch1_valid, epoch1, skip_src_dst_check1, 0, 0,
+                           epoch1_valid, epoch1, skip_src_dst_check1,
+                           lpm_v4addr1, lpm_v6addr1,
                            sacl_v4addr1, sacl_v6addr1, resource_group1, 0,
-                           epoch2_valid, epoch2, skip_src_dst_check2, 0, 0,
+                           epoch2_valid, epoch2, skip_src_dst_check2,
+                           lpm_v4addr2, lpm_v6addr2,
                            sacl_v4addr2, sacl_v6addr2, resource_group2, 0);
 }
 

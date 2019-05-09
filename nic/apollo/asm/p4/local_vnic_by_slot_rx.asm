@@ -34,9 +34,11 @@ __use_epoch1:
 
     phvwr           p.vnic_metadata_skip_src_dst_check, DATA.skip_src_dst_check1
     phvwr           p.policer_metadata_resource_group, DATA.resource_group1
-    add             r1, DATA.sacl_v4addr1_sbit10_ebit33, \
-                        DATA.sacl_v4addr1_sbit0_ebit9, 24
-    phvwr           p.p4_to_rxdma_header_sacl_base_addr, r1
+    add             r1, DATA.lpm_v4addr1_sbit10_ebit33, \
+                        DATA.lpm_v4addr1_sbit0_ebit9, 24
+    phvwr           p.p4_to_txdma_header_lpm_addr, r1
+    phvwr           p.control_metadata_lpm_v6addr, DATA.lpm_v6addr1
+    phvwr           p.p4_to_rxdma_header_sacl_base_addr, DATA.sacl_v4addr1
     phvwr.e         p.control_metadata_sacl_v6addr, DATA.sacl_v6addr1
     phvwr           p.service_header_epoch, DATA.epoch1
 __use_epoch2:
@@ -44,6 +46,8 @@ __use_epoch2:
     phvwr.!c3       p.control_metadata_p4i_drop_reason[P4I_DROP_VNIC_INFO_RX_MISS], 1
     phvwr           p.vnic_metadata_skip_src_dst_check, DATA.skip_src_dst_check2
     phvwr           p.policer_metadata_resource_group, DATA.resource_group2
+    phvwr           p.p4_to_txdma_header_lpm_addr, DATA.lpm_v4addr2
+    phvwr           p.control_metadata_lpm_v6addr, DATA.lpm_v6addr2
     phvwr           p.p4_to_rxdma_header_sacl_base_addr, DATA.sacl_v4addr2
     phvwr.e         p.control_metadata_sacl_v6addr, DATA.sacl_v6addr2
     phvwr           p.service_header_epoch, DATA.epoch2
