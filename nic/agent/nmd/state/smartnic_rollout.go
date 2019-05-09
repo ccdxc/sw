@@ -35,6 +35,22 @@ func (n *NMD) DeleteSmartNICRollout(sro *protos.SmartNICRollout) error {
 	return nil
 }
 
+// GetSmartNICRolloutStatus returns RolloutStatus
+func (n *NMD) GetSmartNICRolloutStatus() protos.SmartNICRolloutStatusUpdate {
+	n.Lock()
+	defer n.Unlock()
+	// for deep copy
+	opStatus := make([]protos.SmartNICOpStatus, len(n.opStatus))
+	copy(opStatus, n.opStatus)
+
+	return protos.SmartNICRolloutStatusUpdate{
+		ObjectMeta: n.objectMeta,
+		Status: protos.SmartNICRolloutStatus{
+			OpStatus: opStatus,
+		},
+	}
+}
+
 // === helper routines
 
 // new/update request came from venice
@@ -134,7 +150,7 @@ func (n *NMD) issueNextPendingOp() {
 	}
 }
 
-// UpgSuccessful is called after upgrade is succesful. Reply to venice
+// UpgSuccessful is called after upgrade is successful. Reply to venice
 func (n *NMD) UpgSuccessful() {
 	log.Infof("UpgSuccessful  got called")
 	n.Lock()

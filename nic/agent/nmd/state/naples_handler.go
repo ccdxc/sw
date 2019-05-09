@@ -142,7 +142,7 @@ func (n *NMD) StartManagedMode() error {
 	err := n.initTLSProvider()
 	if err != nil {
 		n.modeChange.Unlock()
-		return fmt.Errorf("Error initializing TLS provider: %v", err)
+		return fmt.Errorf("error initializing TLS provider: %v", err)
 	}
 
 	// Set Registration in progress flag
@@ -444,7 +444,7 @@ func (n *NMD) GetPlatformCertificate(nic *cmd.SmartNIC) ([]byte, error) {
 func (n *NMD) GenChallengeResponse(nic *cmd.SmartNIC, challenge []byte) ([]byte, []byte, error) {
 	signer, err := n.platform.GetPlatformSigner(nic)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Error getting platform signer: %v", err)
+		return nil, nil, fmt.Errorf("error getting platform signer: %v", err)
 	}
 	return certs.GeneratePoPChallengeResponse(signer, challenge)
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/objstore/client"
+	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 )

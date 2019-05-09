@@ -391,7 +391,7 @@ func (n *NMD) NaplesProfileGetHandler(r *http.Request) (interface{}, error) {
 
 // NaplesProfileDeleteHandler deletes a napels pr
 func (n *NMD) NaplesProfileDeleteHandler(r *http.Request) (interface{}, error) {
-	profileName, _ := mux.Vars(r)["ProfileName"]
+	profileName := mux.Vars(r)["ProfileName"]
 
 	for i, p := range n.profiles {
 		if profileName == p.Name {
@@ -431,6 +431,13 @@ func (n *NMD) NaplesRolloutHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Naples Rollout Config Response: %+v", resp)
 
 	return resp, nil
+}
+
+// NaplesRolloutGetHandler is the REST handler for Naples Rollout Config GET operation
+func (n *NMD) NaplesRolloutGetHandler(r *http.Request) (interface{}, error) {
+	st := n.GetSmartNICRolloutStatus()
+	log.Debugf("Naples Rollout Get Response: %+v", st)
+	return st, nil
 }
 
 // NaplesFileUploadHandler is the REST handler for Naples File Upload POST operation
@@ -531,6 +538,8 @@ func (n *NMD) StartRestServer() error {
 	t2.HandleFunc(NaplesInfoURL, httputils.MakeHTTPHandler(n.NaplesInfoGetHandler))
 	t2.HandleFunc(CmdEXECUrl, n.NaplesCmdExecHandler)
 	t2.HandleFunc(NaplesVersionURL, httputils.MakeHTTPHandler(NaplesVersionGetHandler))
+	t1.HandleFunc(RolloutURL, httputils.MakeHTTPHandler(n.NaplesRolloutGetHandler))
+
 	t2.HandleFunc("/api/{*}", unknownAction)
 	t2.HandleFunc("/debug/pprof/", pprof.Index)
 	t2.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)

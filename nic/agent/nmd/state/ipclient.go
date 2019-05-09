@@ -381,8 +381,8 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 			// TODO : Remove Auto-admit
 			c.nmdState.config.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
 
+			c.nmdState.Add(1)
 			go func() {
-				c.nmdState.Add(1)
 				defer c.nmdState.Done()
 
 				err := c.nmdState.StartManagedMode()
@@ -452,8 +452,8 @@ func (c *IPClient) updateNaplesStatus(controllers []string) error {
 			// TODO : Remove Auto-admit
 			c.nmdState.config.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
 
+			c.nmdState.Add(1)
 			go func() {
-				c.nmdState.Add(1)
 				defer c.nmdState.Done()
 
 				err := c.nmdState.StartManagedMode()
@@ -671,7 +671,6 @@ func (c *IPClient) doStaticIPConfig() error {
 		return err
 	}
 
-	//runCmd("usr/sbin/rdate 10.7.100.2")
 	return nil
 }
 

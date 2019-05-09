@@ -71,7 +71,7 @@ type mockAgent struct {
 }
 
 // RegisterNMD registers NMD with PlatformAgent
-func (m *mockAgent) RegisterNMD(nmd nmdapi.NmdPlatformAPI) error {
+func (m *mockAgent) RegisterNMD(nmdapi nmdapi.NmdPlatformAPI) error {
 	return nil
 }
 
