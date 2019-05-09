@@ -9,6 +9,8 @@ import iris.config.resmgr       as resmgr
 
 from infra.common.logging   import logger
 from infra.factory.store    import FactoryStore
+import types_pb2            as types_pb2
+from iris.config.objects.crypto_keys import CryptoKeyHelper
 
 import iris.config.hal.api           as halapi
 
@@ -17,7 +19,7 @@ import model_sim.src.model_wrap as model_wrap
 from infra.common.glopts import GlobalOptions
 
 class NvmeNsObject(base.ConfigObjectBase):
-    def __init__(self, lif, ns_id, size, lba_size):
+    def __init__(self, lif, ns_id, size, lba_size, crypto_key):
         super().__init__()
         self.Clone(Store.templates.Get('NVME_NS'))
         self.lif = lif  
@@ -30,6 +32,8 @@ class NvmeNsObject(base.ConfigObjectBase):
         self.nscb_addr = None
         self.backend_nsid = None
         self.session_list = []
+        self.crypto_key = CryptoKeyHelper.main()
+        self.crypto_key.update(crypto_key.key_type, crypto_key.key_size, crypto_key.key)
         return
 
     def Show(self):
@@ -39,6 +43,8 @@ class NvmeNsObject(base.ConfigObjectBase):
         logger.info("   - size : %dlbas  lba_size: %d max_sess: %d nscb_addr: 0x%x" \
                      %(self.size, self.lba_size, self.max_sess,
                        self.nscb_addr if self.nscb_addr is not None else 0))
+        logger.info("   - key_type : %d key_size: %d keyindex: %d" \
+                     %(self.crypto_key.key_type, self.crypto_key.key_size, self.crypto_key.keyindex))
         return
     
     def PrepareHALRequestSpec(self, req_spec):
@@ -54,6 +60,7 @@ class NvmeNsObject(base.ConfigObjectBase):
         req_spec.size = self.size
         req_spec.lba_size = self.lba_size
         req_spec.max_sess = self.max_sess
+        req_spec.key_index = self.crypto_key.keyindex
         return
 
     def ProcessHALResponse(self, req_spec, resp_spec):
@@ -78,9 +85,24 @@ class NsObjectHelper:
             # size is ns_id * 128 number of LBAs
             size = ns_id * 128
             #lba_size is 512B for odd ns_id and 4096B for even ns_id
-            lba_size = 512 if ns_id%2 else 4096
+            #256 bit crypto key for odd ns_id and 128 bit for even ns_id
+            if (ns_id%2 == 0):
+                lba_size = 4096
 
-            ns = NvmeNsObject(lif, ns_id, size, lba_size)
+                crypto_key.key_type = types_pb2.CRYPTO_KEY_TYPE_AES128
+                crypto_key.key_size = 16
+                # For AES-XTS barco needs 2 keys; key 2 should be located at key1 + 32  and referred by a single
+                # key descriptor index
+                crypto_key.key = b'\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+
+            else:
+                lba_size = 512
+
+                crypto_key.key_type = types_pb2.CRYPTO_KEY_TYPE_AES256
+                crypto_key.key_size = 32
+                crypto_key.key = b'\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22\x22'
+
+            ns = NvmeNsObject(lif, ns_id, size, lba_size, crypto_key)
             self.ns_list.append(ns)
 
     def Configure(self):
