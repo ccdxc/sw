@@ -370,6 +370,7 @@ static const struct debugfs_reg32 intr_ctrl_regs[] = {
 int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 {
 	struct device *dev = lif->ionic->dev;
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct dentry *qcq_dentry, *q_dentry, *cq_dentry, *intr_dentry;
 	struct dentry *stats_dentry;
 	struct queue *q = &qcq->q;
@@ -510,7 +511,7 @@ int ionic_debugfs_add_qcq(struct lif *lif, struct qcq *qcq)
 			return -ENOMEM;
 		intr_ctrl_regset->regs = intr_ctrl_regs;
 		intr_ctrl_regset->nregs = ARRAY_SIZE(intr_ctrl_regs);
-		intr_ctrl_regset->base = intr->ctrl;
+		intr_ctrl_regset->base = &idev->intr_ctrl[intr->index];
 
 		debugfs_create_regset32("intr_ctrl", 0400, intr_dentry,
 					intr_ctrl_regset);

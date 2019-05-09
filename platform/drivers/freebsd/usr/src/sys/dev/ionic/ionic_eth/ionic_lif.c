@@ -196,6 +196,7 @@ ionic_read_notify_block(struct lif* lif)
 static void
 ionic_hw_open(struct lif *lif)
 {
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct rxque *rxq;
 	struct txque *txq;
 	unsigned int i;
@@ -206,7 +207,8 @@ ionic_hw_open(struct lif *lif)
 		ionic_rx_fill(rxq);
 		IONIC_RX_UNLOCK(rxq);
 		ionic_rxq_enable(rxq);
-		ionic_intr_mask(&rxq->intr, false);
+		ionic_intr_mask(idev->intr_ctrl, rxq->intr.index,
+				IONIC_INTR_MASK_CLEAR);
 	}
 
 	for (i = 0; i < lif->ntxqs; i++) {
@@ -241,6 +243,7 @@ int
 ionic_stop(struct net_device *netdev)
 {
 	struct lif *lif = netdev_priv(netdev);
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct rxque *rxq;
 	struct txque *txq;
 	unsigned int i;
@@ -260,7 +263,8 @@ ionic_stop(struct net_device *netdev)
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
 		ionic_rxq_disable(rxq);
-		ionic_intr_mask(&rxq->intr, true);
+		ionic_intr_mask(idev->intr_ctrl, rxq->intr.index,
+				IONIC_INTR_MASK_SET);
 	}
 
 	for (i = 0; i < lif->ntxqs; i++) {
@@ -353,6 +357,7 @@ static irqreturn_t
 ionic_adminq_isr(int irq, void *data)
 {
 	struct adminq* adminq = data;
+	struct ionic_dev *idev = &adminq->lif->ionic->idev;
 	int processed;
 
 	KASSERT(adminq, ("adminq == NULL"));
@@ -361,10 +366,10 @@ ionic_adminq_isr(int irq, void *data)
 
 	processed = ionic_adminq_clean(adminq, adminq->num_descs);
 
-	IONIC_QUE_INFO(adminq, "processed %d/%d\n", processed,
-		ionic_intr_credits(&adminq->intr));
+	IONIC_QUE_INFO(adminq, "processed %d\n", processed);
 
-	ionic_intr_return_credits(&adminq->intr, processed, true, true);
+	ionic_intr_credits(idev->intr_ctrl, adminq->intr.index,
+			   processed, IONIC_INTR_CRED_REARM);
 	IONIC_ADMIN_UNLOCK(adminq);
 
 	KASSERT(processed, ("nothing processed in adminq"));
@@ -993,6 +998,7 @@ ionic_dev_intr_unreserve(struct lif *lif, struct intr *intr)
 static int
 ionic_setup_intr(struct lif *lif, struct intr* intr)
 {
+	struct ionic_dev *idev = &lif->ionic->idev;
 	int error, irq;
 
 	/* Setup interrupt */
@@ -1017,7 +1023,8 @@ ionic_setup_intr(struct lif *lif, struct intr* intr)
 	}
 
 	intr->vector = irq;
-	ionic_intr_mask_on_assertion(intr);
+	ionic_intr_mask_assert(idev->intr_ctrl, intr->index,
+			       IONIC_INTR_MASK_SET);
 
 	return (0);
 }
@@ -1669,7 +1676,9 @@ ionic_qcqs_free(struct lif *lif)
 static void
 ionic_setup_intr_coal(struct lif* lif)
 {
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct identity *ident = &lif->ionic->ident;
+	struct rxque* rxq;
 	u32 rx_coal;
 	u32 tx_coal;
 	unsigned int i;
@@ -1687,8 +1696,11 @@ ionic_setup_intr_coal(struct lif* lif)
 		return;
 	}
 
-	for (i = 0; i < lif->nrxqs; i++)
-		ionic_intr_coal_set(&lif->rxqs[i]->intr, rx_coal);
+	for (i = 0; i < lif->nrxqs; i++) {
+		rxq = lif->rxqs[i];
+		ionic_intr_coal_init(idev->intr_ctrl, rxq->intr.index,
+				     rx_coal);
+	}
 }
 
 static void
@@ -2042,25 +2054,29 @@ ionic_lif_rss_free(struct lif *lif)
 static void
 ionic_lif_adminq_deinit(struct lif *lif)
 {
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct adminq *adminq = lif->adminq;
 
 	if (adminq->intr.index == INTR_INDEX_NOT_ASSIGNED)
 		return;
 
 	/* Only mask adminQ interrupt, don't disable it. */
-	ionic_intr_mask(&adminq->intr, true);
+	ionic_intr_mask(idev->intr_ctrl, adminq->intr.index,
+			IONIC_INTR_MASK_SET);
 }
 
 static void
 ionic_lif_notifyq_deinit(struct lif *lif)
 {
 
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct notifyq *notifyq = lif->notifyq;
 
 	if (notifyq == NULL)
 		return;
 
-	ionic_intr_mask(&notifyq->intr, true);
+	ionic_intr_mask(idev->intr_ctrl, notifyq->intr.index,
+			IONIC_INTR_MASK_SET);
 
 	if (notifyq->taskq) {
 		taskqueue_drain(notifyq->taskq, &notifyq->task);
@@ -2090,12 +2106,14 @@ ionic_lif_txqs_deinit(struct lif *lif)
 static void
 ionic_lif_rxqs_deinit(struct lif *lif)
 {
+	struct ionic_dev *idev = &lif->ionic->idev;
 	unsigned int i;
 	struct rxque* rxq;
 
 	for (i = 0; i < lif->nrxqs; i++) {
 		rxq = lif->rxqs[i];
-		ionic_intr_mask(&rxq->intr, true);
+		ionic_intr_mask(idev->intr_ctrl, rxq->intr.index,
+				IONIC_INTR_MASK_SET);
 		ionic_rxq_disable(rxq);
 
 		IONIC_RX_LOCK(rxq);
@@ -2183,8 +2201,10 @@ ionic_lif_adminq_init(struct lif *lif)
 
 	adminq->hw_type = comp.hw_type;
 	adminq->hw_index = comp.hw_index;
+	adminq->dbval = IONIC_DBELL_QID(adminq->hw_index);
 
-	ionic_intr_mask(&adminq->intr, false);
+	ionic_intr_mask(idev->intr_ctrl, adminq->intr.index,
+			IONIC_INTR_MASK_CLEAR);
 
 	return (err);
 }
@@ -2283,6 +2303,7 @@ static void
 ionic_notifyq_task_handler(void *arg, int pendindg)
 {
 	struct notifyq* notifyq = arg;
+	struct ionic_dev* idev = &notifyq->lif->ionic->idev;
 	int processed;
 
 	IONIC_QUE_INFO(notifyq, "Enter\n");
@@ -2293,7 +2314,8 @@ ionic_notifyq_task_handler(void *arg, int pendindg)
 
 	IONIC_QUE_INFO(notifyq, "processed %d\n", processed);
 
-	ionic_intr_return_credits(&notifyq->intr, processed, true, true);
+	ionic_intr_credits(idev->intr_ctrl, notifyq->intr.index,
+			   processed, IONIC_INTR_CRED_REARM);
 }
 
 static irqreturn_t
@@ -2309,6 +2331,7 @@ ionic_notifyq_isr(int irq, void *data)
 
 static int ionic_lif_notifyq_init(struct lif *lif, struct notifyq *notifyq)
 {
+	struct ionic_dev *idev = &lif->ionic->idev;
 	int err;
 
 	struct ionic_admin_ctx ctx = {
@@ -2337,7 +2360,8 @@ static int ionic_lif_notifyq_init(struct lif *lif, struct notifyq *notifyq)
 	notifyq->hw_type = ctx.comp.q_init.hw_type;
 	notifyq->hw_index = ctx.comp.q_init.hw_index;
 
-	ionic_intr_mask(&notifyq->intr, false);
+	ionic_intr_mask(idev->intr_ctrl, notifyq->intr.index,
+			IONIC_INTR_MASK_CLEAR);
 
 	return 0;
 }
@@ -2425,6 +2449,7 @@ ionic_lif_txq_init(struct lif *lif, struct txque *txq)
 
 	txq->hw_type = ctx.comp.q_init.hw_type;
 	txq->hw_index = ctx.comp.q_init.hw_index;
+	txq->dbval = IONIC_DBELL_QID(txq->hw_index);
 
 	return (0);
 }
@@ -2446,22 +2471,18 @@ ionic_lif_txqs_init(struct lif *lif)
 
 void ionic_tx_ring_doorbell(struct txque *txq, int index)
 {
-	struct doorbell *db;
-
-	db = txq->lif->kern_dbpage + txq->hw_type;
-
-	ionic_ring_doorbell(db, txq->hw_index, index);
+	ionic_dbell_ring(txq->lif->kern_dbpage,
+			 txq->hw_type,
+			 txq->dbval | index);
 }
 
  /*******************************  RX side. ******************************/
 static void
 ionic_rx_ring_doorbell(struct rxque *rxq, int index)
 {
-	struct doorbell *db;
-
-	db = rxq->lif->kern_dbpage + rxq->hw_type;
-
-	ionic_ring_doorbell(db, rxq->hw_index, index);
+	ionic_dbell_ring(rxq->lif->kern_dbpage,
+			 rxq->hw_type,
+			 rxq->dbval | index);
 }
 
 void
@@ -2635,6 +2656,7 @@ ionic_lif_rxq_init(struct lif *lif, struct rxque *rxq)
 
 	rxq->hw_type = ctx.comp.q_init.hw_type;
 	rxq->hw_index = ctx.comp.q_init.hw_index;
+	rxq->dbval = IONIC_DBELL_QID(rxq->hw_index);
 
 	return err;
 }

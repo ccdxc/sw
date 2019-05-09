@@ -42,6 +42,7 @@
 
 #include <rdma/ionic-abi.h>
 #include <ionic_api.h>
+#include <ionic_regs.h>
 
 #include "ionic_fw.h"
 #include "ionic_ibdebug.h"
@@ -105,8 +106,8 @@ struct ionic_ibdev {
 
 	u32			dbid;
 	phys_addr_t		xxx_dbpage_phys;
-	u64		__iomem *dbpage;
-	u32		__iomem *intr_ctrl;
+	u64			__iomem *dbpage;
+	struct ionic_intr	__iomem *intr_ctrl;
 
 	u16			rdma_version;
 	u8			qp_opcodes;
@@ -500,60 +501,6 @@ static inline u32 ionic_obj_dbid(struct ionic_ibdev *dev,
 				 struct ib_uobject *uobj)
 {
 	return ionic_ctx_dbid(dev, to_ionic_ctx_uobj(uobj));
-}
-
-enum ionic_intr_bits {
-	/* register set */
-	IONIC_INTR_REGS_PER		= 8, /* eight registers per intr */
-	IONIC_INTR_REG_COALESCE_INIT	= 0, /* coalesce timer reset value */
-	IONIC_INTR_REG_MASK		= 1, /* mask interrupts */
-	IONIC_INTR_REG_CREDITS		= 2, /* update credits */
-	IONIC_INTR_REG_MASK_ASSERT	= 3, /* mask interrupts on assert */
-	IONIC_INTR_REG_COALESCE		= 4, /* coalesce timer */
-
-	/* mask (and mask-on-assert) values */
-	IONIC_INTR_MASK_CLEAR		= 0u, /* unmask interrupts */
-	IONIC_INTR_MASK_SET		= 1u, /* mask interrupts */
-
-	/* credits values */
-	IONIC_INTR_CRED_UNMASK		= 0x10000u, /* unmask interrupts */
-	IONIC_INTR_CRED_RESET_COALESCE	= 0x20000u, /* reset coalesce timer */
-};
-
-static inline void ionic_intr_coalesce_init(struct ionic_ibdev *dev,
-					    int intr, u32 usec)
-{
-	intr *= IONIC_INTR_REGS_PER;
-	intr += IONIC_INTR_REG_COALESCE_INIT;
-
-	iowrite32(usec, &dev->intr_ctrl[intr]);
-}
-
-static inline void ionic_intr_mask(struct ionic_ibdev *dev,
-				   int intr, u32 mask)
-{
-	intr *= IONIC_INTR_REGS_PER;
-	intr += IONIC_INTR_REG_MASK;
-
-	iowrite32(mask, &dev->intr_ctrl[intr]);
-}
-
-static inline void ionic_intr_credits(struct ionic_ibdev *dev,
-				      int intr, u32 cred)
-{
-	intr *= IONIC_INTR_REGS_PER;
-	intr += IONIC_INTR_REG_CREDITS;
-
-	iowrite32(cred, &dev->intr_ctrl[intr]);
-}
-
-static inline void ionic_intr_mask_assert(struct ionic_ibdev *dev,
-					  int intr, u32 mask)
-{
-	intr *= IONIC_INTR_REGS_PER;
-	intr += IONIC_INTR_REG_MASK_ASSERT;
-
-	iowrite32(mask, &dev->intr_ctrl[intr]);
 }
 
 static inline bool ionic_ibop_is_local(enum ib_wr_opcode op)

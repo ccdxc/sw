@@ -9,6 +9,7 @@
 #include <linux/types.h>
 
 #include <ionic_if.h>
+#include <ionic_regs.h>
 
 /** IONIC_API_VERSION - Version number of this interface.
  *
@@ -169,7 +170,8 @@ void ionic_api_put_cmb(struct lif *lif, u32 pgid, int order);
  * kernel space for this lif.  For user space, use ionic_api_get_dbid to
  * allocate a doorbell id for exclusive use by a process.
  */
-void ionic_api_kernel_dbpage(struct lif *lif, u32 __iomem **intr_ctrl,
+void ionic_api_kernel_dbpage(struct lif *lif,
+			     struct ionic_intr __iomem **intr_ctrl,
 			     u32 *dbid, u64 __iomem **dbpage,
 			     phys_addr_t *xxx_dbpage_phys);
 

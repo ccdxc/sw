@@ -435,7 +435,9 @@ static int ionic_set_coalesce(struct net_device *netdev,
 			      struct ethtool_coalesce *coalesce)
 {
 	struct lif *lif = netdev_priv(netdev);
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct identity *ident = &lif->ionic->ident;
+	struct qcq *qcq;
 	u32 tx_coal, rx_coal;
 	unsigned int i;
 
@@ -474,14 +476,22 @@ static int ionic_set_coalesce(struct net_device *netdev,
 		return -ERANGE;
 
 	if (coalesce->tx_coalesce_usecs != lif->tx_coalesce_usecs) {
-		for (i = 0; i < lif->nxqs; i++)
-			ionic_intr_coal_set(&lif->txqcqs[i].qcq->intr, tx_coal);
+		for (i = 0; i < lif->nxqs; i++) {
+			qcq = lif->txqcqs[i].qcq;
+			ionic_intr_coal_init(idev->intr_ctrl,
+					     qcq->intr.index,
+					     tx_coal);
+		}
 		lif->tx_coalesce_usecs = coalesce->tx_coalesce_usecs;
 	}
 
 	if (coalesce->rx_coalesce_usecs != lif->rx_coalesce_usecs) {
-		for (i = 0; i < lif->nxqs; i++)
-			ionic_intr_coal_set(&lif->rxqcqs[i].qcq->intr, rx_coal);
+		for (i = 0; i < lif->nxqs; i++) {
+			qcq = lif->rxqcqs[i].qcq;
+			ionic_intr_coal_init(idev->intr_ctrl,
+					     qcq->intr.index,
+					     rx_coal);
+		}
 		lif->rx_coalesce_usecs = coalesce->rx_coalesce_usecs;
 	}
 

@@ -307,7 +307,7 @@ void ionic_dbgfs_rm_dev(struct ionic_ibdev *dev)
 static int ionic_eq_info_show(struct seq_file *s, void *v)
 {
 	struct ionic_eq *eq = s->private;
-	u32 __iomem *intr;
+	struct ionic_intr __iomem *intr;
 
 	seq_printf(s, "eqid:\t%u\n", eq->eqid);
 	seq_printf(s, "intr:\t%u\n", eq->intr);
@@ -319,17 +319,17 @@ static int ionic_eq_info_show(struct seq_file *s, void *v)
 	seq_printf(s, "name:\t%s\n", eq->name);
 
 	/* interrupt control readback */
-	intr = &eq->dev->intr_ctrl[eq->intr * IONIC_INTR_REGS_PER];
+	intr = &eq->dev->intr_ctrl[eq->intr];
 	seq_printf(s, "intr_coalesce_init:\t%#x\n",
-		   ioread32(&intr[IONIC_INTR_REG_COALESCE_INIT]));
+		   ioread32(&intr->coal_init));
 	seq_printf(s, "intr_mask:\t%#x\n",
-		   ioread32(&intr[IONIC_INTR_REG_MASK]));
+		   ioread32(&intr->mask));
 	seq_printf(s, "intr_credits:\t%#x\n",
-		   ioread32(&intr[IONIC_INTR_REG_CREDITS]));
+		   ioread32(&intr->credits));
 	seq_printf(s, "intr_mask_assert:\t%#x\n",
-		   ioread32(&intr[IONIC_INTR_REG_MASK_ASSERT]));
+		   ioread32(&intr->mask_assert));
 	seq_printf(s, "intr_coalesce:\t%#x\n",
-		   ioread32(&intr[IONIC_INTR_REG_COALESCE]));
+		   ioread32(&intr->coal));
 
 	return 0;
 }

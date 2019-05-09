@@ -493,7 +493,7 @@ void ionic_dbgfs_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq)
 	struct sysctl_ctx_list *ctx;
 	struct sysctl_oid_list *parent;
 	struct sysctl_oid *oidp;
-	u32 __iomem *intr;
+	struct ionic_intr __iomem *intr;
 
 	eq->debug = NULL;
 
@@ -524,16 +524,16 @@ void ionic_dbgfs_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq)
 	ionic_int(ctx, parent, &eq->irq, "irq", "EQ IRQ");
 	ionic_string(ctx, parent, eq->name, "name", "EQ ISR Name");
 
-	intr = &eq->dev->intr_ctrl[eq->intr * IONIC_INTR_REGS_PER];
-	ionic_ioread32(ctx, parent, &intr[IONIC_INTR_REG_COALESCE_INIT],
+	intr = &eq->dev->intr_ctrl[eq->intr];
+	ionic_ioread32(ctx, parent, &intr->coal_init,
 		       "intr_coalesce_init", "Read Intr Coal Init");
-	ionic_ioread32(ctx, parent, &intr[IONIC_INTR_REG_MASK],
+	ionic_ioread32(ctx, parent, &intr->mask,
 		       "intr_mask", "Read Intr Mask");
-	ionic_ioread32(ctx, parent, &intr[IONIC_INTR_REG_CREDITS],
+	ionic_ioread32(ctx, parent, &intr->credits,
 		       "intr_credits", "Read Intr Credits");
-	ionic_ioread32(ctx, parent, &intr[IONIC_INTR_REG_MASK_ASSERT],
+	ionic_ioread32(ctx, parent, &intr->mask_assert,
 		       "intr_mask_assert", "Read Intr Mask Assert");
-	ionic_ioread32(ctx, parent, &intr[IONIC_INTR_REG_COALESCE],
+	ionic_ioread32(ctx, parent, &intr->coal,
 		       "intr_coalesce", "Read Intr Coalesce");
 }
 

@@ -98,6 +98,7 @@ static int ionic_qcq_enable(struct qcq *qcq)
 	struct queue *q = &qcq->q;
 	struct lif *lif = q->lif;
 	struct device *dev = lif->ionic->dev;
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_control = {
@@ -112,12 +113,13 @@ static int ionic_qcq_enable(struct qcq *qcq)
 	dev_dbg(dev, "q_enable.index %d q_enable.qtype %d\n",
 		ctx.cmd.q_control.index, ctx.cmd.q_control.type);
 
-	if (qcq->intr.index != INTR_INDEX_NOT_ASSIGNED) {
+	if (qcq->flags & QCQ_F_INTR) {
 		irq_set_affinity_hint(qcq->intr.vector,
 				      &qcq->intr.affinity_mask);
 		napi_enable(&qcq->napi);
-		ionic_intr_clean(&qcq->intr);
-		ionic_intr_mask(&qcq->intr, false);
+		ionic_intr_clean(idev->intr_ctrl, qcq->intr.index);
+		ionic_intr_mask(idev->intr_ctrl, qcq->intr.index,
+				IONIC_INTR_MASK_CLEAR);
 	}
 
 	return ionic_adminq_post_wait(lif, &ctx);
@@ -128,6 +130,7 @@ static int ionic_qcq_disable(struct qcq *qcq)
 	struct queue *q = &qcq->q;
 	struct lif *lif = q->lif;
 	struct device *dev = lif->ionic->dev;
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct ionic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.q_control = {
@@ -142,8 +145,9 @@ static int ionic_qcq_disable(struct qcq *qcq)
 	dev_dbg(dev, "q_disable.index %d q_disable.qtype %d\n",
 		ctx.cmd.q_control.index, ctx.cmd.q_control.type);
 
-	if (qcq->intr.index != INTR_INDEX_NOT_ASSIGNED) {
-		ionic_intr_mask(&qcq->intr, true);
+	if (qcq->flags & QCQ_F_INTR) {
+		ionic_intr_mask(idev->intr_ctrl, qcq->intr.index,
+				IONIC_INTR_MASK_SET);
 		synchronize_irq(qcq->intr.vector);
 		irq_set_affinity_hint(qcq->intr.vector, NULL);
 		napi_disable(&qcq->napi);
@@ -460,14 +464,15 @@ static bool ionic_notifyq_service(struct cq *cq, struct cq_info *cq_info)
 
 static int ionic_notifyq_clean(struct lif *lif, int budget)
 {
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct cq *cq = &lif->notifyqcq->cq;
-	int work_done;
+	u32 work_done;
 
 	work_done = ionic_cq_service(cq, budget, ionic_notifyq_service,
 				     NULL, NULL);
 	if (work_done)
-		ionic_intr_return_credits(cq->bound_intr, work_done,
-					  false, true);
+		ionic_intr_credits(idev->intr_ctrl, cq->bound_intr->index,
+				   work_done, IONIC_INTR_CRED_RESET_COALESCE);
 
 	/* If we ran out of budget, there are more events
 	 * to process and napi will reschedule us soon
@@ -1247,8 +1252,13 @@ static int ionic_intr_remaining(struct ionic *ionic)
 
 static void ionic_link_qcq_interrupts(struct qcq *src_qcq, struct qcq *n_qcq)
 {
+	if (WARN_ON(n_qcq->flags & QCQ_F_INTR)) {
+		ionic_intr_free(n_qcq->cq.lif, n_qcq->intr.index);
+		n_qcq->flags &= ~QCQ_F_INTR;
+	}
+
 	n_qcq->intr.vector = src_qcq->intr.vector;
-	n_qcq->intr.ctrl = src_qcq->intr.ctrl;
+	n_qcq->intr.index = src_qcq->intr.index;
 }
 
 static int ionic_qcq_alloc(struct lif *lif, unsigned int type,
@@ -1325,7 +1335,8 @@ static int ionic_qcq_alloc(struct lif *lif, unsigned int type,
 			goto err_out_free_intr;
 		}
 		new->intr.vector = err;
-		ionic_intr_mask_on_assertion(&new->intr);
+		ionic_intr_mask_assert(idev->intr_ctrl, new->intr.index,
+				       IONIC_INTR_MASK_SET);
 
 		new->intr.cpu = new->intr.index % num_online_cpus();
 		if (cpu_online(new->intr.cpu))
@@ -1964,6 +1975,7 @@ static int ionic_lif_rss_deinit(struct lif *lif)
 static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 {
 	struct device *dev = lif->ionic->dev;
+	struct ionic_dev *idev = &lif->ionic->idev;
 
 	if (!qcq)
 		return;
@@ -1973,8 +1985,9 @@ static void ionic_lif_qcq_deinit(struct lif *lif, struct qcq *qcq)
 	if (!(qcq->flags & QCQ_F_INITED))
 		return;
 
-	if (qcq->intr.index != INTR_INDEX_NOT_ASSIGNED) {
-		ionic_intr_mask(&qcq->intr, true);
+	if (qcq->flags & QCQ_F_INTR) {
+		ionic_intr_mask(idev->intr_ctrl, qcq->intr.index,
+				IONIC_INTR_MASK_SET);
 		synchronize_irq(qcq->intr.vector);
 		devm_free_irq(dev, qcq->intr.vector, &qcq->napi);
 		netif_napi_del(&qcq->napi);
@@ -2058,11 +2071,10 @@ static int ionic_lif_adminq_init(struct lif *lif)
 
 	q->hw_type = comp.hw_type;
 	q->hw_index = comp.hw_index;
-	q->db = ionic_db_map(lif, q);
+	q->dbval = IONIC_DBELL_QID(q->hw_index);
 
 	dev_dbg(dev, "adminq->hw_type %d\n", q->hw_type);
 	dev_dbg(dev, "adminq->hw_index %d\n", q->hw_index);
-	dev_dbg(dev, "adminq->db %p\n", q->db);
 
 	netif_napi_add(lif->netdev, napi, ionic_adminq_napi,
 		       NAPI_POLL_WEIGHT);
@@ -2077,7 +2089,8 @@ static int ionic_lif_adminq_init(struct lif *lif)
 	napi_enable(napi);
 
 	if (qcq->flags & QCQ_F_INTR)
-		ionic_intr_mask(&qcq->intr, false);
+		ionic_intr_mask(idev->intr_ctrl, qcq->intr.index,
+				IONIC_INTR_MASK_CLEAR);
 
 	qcq->flags |= QCQ_F_INITED;
 
@@ -2122,11 +2135,10 @@ int ionic_lif_notifyq_init(struct lif *lif)
 
 	q->hw_type = ctx.comp.q_init.hw_type;
 	q->hw_index = ctx.comp.q_init.hw_index;
-	q->db = NULL;
+	q->dbval = IONIC_DBELL_QID(q->hw_index);
 
 	dev_dbg(dev, "notifyq->hw_type %d\n", q->hw_type);
 	dev_dbg(dev, "notifyq->hw_index %d\n", q->hw_index);
-	dev_dbg(dev, "notifyq->db %p\n", q->db);
 
 	/* preset the callback info */
 	q->info[0].cb_arg = lif;
@@ -2370,11 +2382,10 @@ static int ionic_lif_txq_init(struct lif *lif, struct qcq *qcq)
 
 	q->hw_type = ctx.comp.q_init.hw_type;
 	q->hw_index = ctx.comp.q_init.hw_index;
-	q->db = ionic_db_map(lif, q);
+	q->dbval = IONIC_DBELL_QID(q->hw_index);
 
 	dev_dbg(dev, "txq->hw_type %d\n", q->hw_type);
 	dev_dbg(dev, "txq->hw_index %d\n", q->hw_index);
-	dev_dbg(dev, "txq->db %p\n", q->db);
 
 	qcq->flags |= QCQ_F_INITED;
 
@@ -2440,11 +2451,10 @@ static int ionic_lif_rxq_init(struct lif *lif, struct qcq *qcq)
 
 	q->hw_type = ctx.comp.q_init.hw_type;
 	q->hw_index = ctx.comp.q_init.hw_index;
-	q->db = ionic_db_map(lif, q);
+	q->dbval = IONIC_DBELL_QID(q->hw_index);
 
 	dev_dbg(dev, "rxq->hw_type %d\n", q->hw_type);
 	dev_dbg(dev, "rxq->hw_index %d\n", q->hw_index);
-	dev_dbg(dev, "rxq->db %p\n", q->db);
 
 	netif_napi_add(lif->netdev, napi, ionic_rx_napi,
 		       NAPI_POLL_WEIGHT);

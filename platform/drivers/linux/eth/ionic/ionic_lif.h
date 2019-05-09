@@ -149,7 +149,7 @@ struct lif {
 	unsigned int index;
 	unsigned int hw_index;
 	unsigned int kern_pid;
-	struct doorbell __iomem *kern_dbpage;
+	u64 __iomem *kern_dbpage;
 	spinlock_t adminq_lock;
 	struct qcq *adminqcq;
 	struct qcq *notifyqcq;

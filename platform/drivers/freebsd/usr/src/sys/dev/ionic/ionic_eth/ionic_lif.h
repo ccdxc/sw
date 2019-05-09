@@ -111,6 +111,7 @@ struct adminq {
 	unsigned int type;
 	unsigned int hw_index;
 	unsigned int hw_type;
+	u64 dbval;
 
 	bus_dma_tag_t buf_tag;
 	struct ionic_dma_info cmd_dma; 		/* DMA ring for command and completion. */
@@ -183,6 +184,7 @@ struct rxque {
 	unsigned int type;
 	unsigned int hw_index;
 	unsigned int hw_type;
+	u64 dbval;
 
 	struct ionic_rx_buf *rxbuf; /* S/w rx buffer descriptors. */
 	bus_dma_tag_t buf_tag;
@@ -233,6 +235,7 @@ struct txque {
 	unsigned int type;
 	unsigned int hw_index;
 	unsigned int hw_type;
+	u64 dbval;
 
 	struct ionic_tx_buf *txbuf;		/* S/w rx buffer descriptors. */
 	bus_dma_tag_t buf_tag;
@@ -282,7 +285,7 @@ struct lif {
 	unsigned int hw_index;
 
 	unsigned int kern_pid;
-	struct doorbell __iomem *kern_dbpage;
+	u64 __iomem *kern_dbpage;
 
 	struct workqueue_struct *adminq_wq;
 	struct adminq *adminq;

@@ -180,16 +180,17 @@ void ionic_api_put_cmb(struct lif *lif, u32 pgid, int order)
 }
 EXPORT_SYMBOL_GPL(ionic_api_put_cmb);
 
-void ionic_api_kernel_dbpage(struct lif *lif, u32 __iomem **intr_ctrl,
+void ionic_api_kernel_dbpage(struct lif *lif,
+			     struct ionic_intr __iomem **intr_ctrl,
 			     u32 *dbid, u64 __iomem **dbpage,
 			     phys_addr_t *xxx_dbpage_phys)
 {
 	int dbpage_num;
 
-	*intr_ctrl = (void __iomem *)lif->ionic->idev.intr_ctrl;
+	*intr_ctrl = lif->ionic->idev.intr_ctrl;
 
 	*dbid = lif->kern_pid;
-	*dbpage = (void __iomem *)lif->kern_dbpage;
+	*dbpage = lif->kern_dbpage;
 
 	/* XXX remove when rdma drops xxx_kdbid workaround */
 	dbpage_num = ionic_db_page_num(lif->ionic, lif->index, 0);
@@ -281,11 +282,11 @@ static int SBD_put(struct ionic_dev *idev, void *src, size_t len)
 
 static void ionic_adminq_ring_doorbell(struct adminq *adminq, int index)
 {
-	struct doorbell *db;
-
 	IONIC_NETDEV_INFO(adminq->lif->netdev, "ring doorbell for index: %d\n", index);
-	db = adminq->lif->kern_dbpage + adminq->hw_type;
-	ionic_ring_doorbell(db, adminq->hw_index, index);
+
+	ionic_dbell_ring(adminq->lif->kern_dbpage,
+			 adminq->hw_type,
+			 adminq->dbval | index);
 }
 
 static bool ionic_adminq_avail(struct adminq *adminq, int want)

@@ -352,72 +352,10 @@ int ionic_db_page_num(struct ionic *ionic, int lif_id, int pid)
 int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 		    unsigned long index)
 {
+	ionic_intr_clean(idev->intr_ctrl, index);
 	intr->index = index;
-	intr->ctrl = idev->intr_ctrl + index;
 
 	return 0;
-}
-
-void ionic_intr_mask_on_assertion(struct intr *intr)
-{
-	struct intr_ctrl ctrl = {
-		.mask_on_assert = 1,
-	};
-
-	KASSERT(intr->ctrl, ("%s intr->ctrl is NULL", intr->name));
-	iowrite32(*(u32 *)intr_to_mask_on_assert(&ctrl),
-		  intr_to_mask_on_assert(intr->ctrl));
-}
-
-void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
-			       bool unmask, bool reset_timer)
-{
-	struct intr_ctrl ctrl = {
-		.int_credits = credits,
-	};
-
-	ctrl.flags |= unmask ? INTR_F_UNMASK : 0;
-	ctrl.flags |= reset_timer ? INTR_F_TIMER_RESET : 0;
-
-	KASSERT(intr->ctrl, ("%s intr->ctrl is NULL", intr->name));
-	iowrite32(*(u32 *)intr_to_credits(&ctrl),
-		  intr_to_credits(intr->ctrl));
-}
-
-void ionic_intr_mask(struct intr *intr, bool mask)
-{
-	struct intr_ctrl ctrl = {
-		.mask = mask ? 1 : 0,
-	};
-
-	iowrite32(*(u32 *)intr_to_mask(&ctrl),
-		  intr_to_mask(intr->ctrl));
-	(void)ioread32(intr_to_mask(intr->ctrl)); /* flush write */
-}
-
-void ionic_intr_coal_set(struct intr *intr, u32 intr_coal)
-{
-	struct intr_ctrl ctrl = {
-		.coalescing_init = intr_coal > INTR_CTRL_COAL_MAX ?
-			INTR_CTRL_COAL_MAX : intr_coal,
-	};
-
-	KASSERT(intr->ctrl, ("%s intr->ctrl is NULL", intr->name));
-
-	iowrite32(*(u32 *)intr_to_coal(&ctrl), intr_to_coal(intr->ctrl));
-	(void)ioread32(intr_to_coal(intr->ctrl)); /* flush write */
-}
-
-void ionic_ring_doorbell(struct doorbell *db_addr, uint32_t qid, uint16_t p_index)
-{
-	struct doorbell db_data = {
-		.qid_lo = qid,
-		.qid_hi = qid >> 8,
-		.ring = 0,
-		.p_index = p_index,
-	};
-
-	writeq(*(u64 *)&db_data, db_addr);
 }
 
 int ionic_desc_avail(int ndescs, int head, int tail) 

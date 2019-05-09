@@ -31,7 +31,7 @@
 #include <linux/printk.h>
 
 #ifndef print_hex_dump_debug
-#define print_hex_dump_debug(...) 			\
+#define print_hex_dump_debug(...)			\
 		print_hex_dump(NULL, __VA_ARGS__)
 #endif
 

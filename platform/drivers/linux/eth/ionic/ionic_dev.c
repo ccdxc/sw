@@ -349,77 +349,16 @@ char *ionic_dev_asic_name(u8 asic_type)
 	}
 }
 
-struct doorbell __iomem *ionic_db_map(struct lif *lif, struct queue *q)
-{
-	return lif->kern_dbpage + q->hw_type;
-}
-
 int ionic_db_page_num(struct lif *lif, int pid)
 {
 	return (lif->hw_index * lif->dbid_count) + pid;
 }
 
-void ionic_intr_clean(struct intr *intr)
-{
-	u32 credits;
-
-	/* clear the credits by writing the current value back */
-	credits = 0xffff & ioread32(intr_to_credits(intr->ctrl));
-	ionic_intr_return_credits(intr, credits, false, true);
-}
-
 void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 		    unsigned long index)
 {
+	ionic_intr_clean(idev->intr_ctrl, index);
 	intr->index = index;
-	intr->ctrl = idev->intr_ctrl + index;
-	ionic_intr_clean(intr);
-}
-
-void ionic_intr_mask_on_assertion(struct intr *intr)
-{
-	struct intr_ctrl ctrl = {
-		.mask_on_assert = 1,
-	};
-
-	iowrite32(*(u32 *)intr_to_mask_on_assert(&ctrl),
-		  intr_to_mask_on_assert(intr->ctrl));
-}
-
-void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
-			       bool unmask, bool reset_timer)
-{
-	struct intr_ctrl ctrl = {
-		.int_credits = credits,
-	};
-
-	ctrl.flags |= unmask ? INTR_F_UNMASK : 0;
-	ctrl.flags |= reset_timer ? INTR_F_TIMER_RESET : 0;
-
-	iowrite32(*(u32 *)intr_to_credits(&ctrl),
-		  intr_to_credits(intr->ctrl));
-}
-
-void ionic_intr_mask(struct intr *intr, bool mask)
-{
-	struct intr_ctrl ctrl = {
-		.mask = mask ? 1 : 0,
-	};
-
-	iowrite32(*(u32 *)intr_to_mask(&ctrl),
-		  intr_to_mask(intr->ctrl));
-	(void)ioread32(intr_to_mask(intr->ctrl)); /* flush write */
-}
-
-void ionic_intr_coal_set(struct intr *intr, u32 intr_coal)
-{
-	struct intr_ctrl ctrl = {
-		.coalescing_init = intr_coal > INTR_CTRL_COAL_MAX ?
-			INTR_CTRL_COAL_MAX : intr_coal,
-	};
-
-	iowrite32(*(u32 *)intr_to_coal(&ctrl), intr_to_coal(intr->ctrl));
-	(void)ioread32(intr_to_coal(intr->ctrl)); /* flush write */
 }
 
 int ionic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
@@ -571,24 +510,19 @@ void ionic_q_post(struct queue *q, bool ring_doorbell, desc_cb cb,
 		  void *cb_arg)
 {
 	struct device *dev = q->lif->ionic->dev;
+	struct lif *lif = q->lif;
 
 	q->head->cb = cb;
 	q->head->cb_arg = cb_arg;
 	q->head = q->head->next;
 
-	dev_dbg(dev, "lif=%d qname=%s qid=%d p_index=%d ringdb=%d q->db=0x%08llx\n",
-		q->lif->index, q->name, q->hw_index, q->head->index,
-		ring_doorbell, virt_to_phys(q->db));
-	if (ring_doorbell) {
-		struct doorbell db = {
-			.qid_lo = q->hw_index,
-			.qid_hi = q->hw_index >> 8,
-			.ring = 0,
-			.p_index = q->head->index,
-		};
+	dev_dbg(dev, "lif=%d qname=%s qid=%d qtype=%d p_index=%d ringdb=%d\n",
+		q->lif->index, q->name, q->hw_type, q->hw_index,
+		q->head->index, ring_doorbell);
 
-		writeq(*(u64 *)&db, q->db);
-	}
+	if (ring_doorbell)
+		ionic_dbell_ring(lif->kern_dbpage, q->hw_type,
+				 q->dbval | q->head->index);
 }
 
 void ionic_q_rewind(struct queue *q, struct desc_info *start)

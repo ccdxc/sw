@@ -526,6 +526,7 @@ ionic_queue_isr(int irq, void *data)
 {
 	struct rxque* rxq = data;
 	struct txque* txq = rxq->lif->txqs[rxq->index];
+	struct ionic_dev *idev = &rxq->lif->ionic->idev;
 	struct rx_stats* rxstats = &rxq->stats;
 	int work_done, tx_work;
 
@@ -533,7 +534,8 @@ ionic_queue_isr(int irq, void *data)
 	KASSERT((rxq->intr.index != INTR_INDEX_NOT_ASSIGNED),
 		("%s has no interrupt resource", rxq->name));
 
-	ionic_intr_mask(&rxq->intr, true);
+	ionic_intr_mask(idev->intr_ctrl, rxq->intr.index,
+			IONIC_INTR_MASK_SET);
 	IONIC_RX_LOCK(rxq);
 	IONIC_RX_TRACE(rxq, "[%ld]comp index: %d head: %d tail: %d\n",
 		rxstats->isr_count, rxq->comp_index, rxq->head_index, rxq->tail_index);
@@ -542,8 +544,7 @@ ionic_queue_isr(int irq, void *data)
 	/* Fill the receive ring. */
 	if ((rxq->num_descs - rxq->descs) >= ionic_rx_fill_threshold)
 		ionic_rx_fill(rxq);
-	IONIC_RX_TRACE(rxq, "processed: %d packets, h/w credits: %d\n",
-		work_done, ionic_intr_credits(&rxq->intr));
+	IONIC_RX_TRACE(rxq, "processed: %d packets\n", work_done);
 	IONIC_RX_UNLOCK(rxq);
 
 	IONIC_TX_LOCK(txq);
@@ -551,7 +552,8 @@ ionic_queue_isr(int irq, void *data)
 	IONIC_TX_TRACE(txq, "processed: %d packets\n", tx_work);
 	IONIC_TX_UNLOCK(txq);
 
-	ionic_intr_return_credits(&rxq->intr, work_done + tx_work, false, false);
+	ionic_intr_credits(idev->intr_ctrl, rxq->intr.index,
+			   work_done + tx_work, 0);
 
 	taskqueue_enqueue(rxq->taskq, &rxq->task);
 
@@ -566,6 +568,7 @@ ionic_queue_task_handler(void *arg, int pendindg)
 {
 	struct rxque* rxq = arg;
 	struct txque* txq = rxq->lif->txqs[rxq->index];
+	struct ionic_dev *idev = &rxq->lif->ionic->idev;
 	int work_done, tx_work;
 
 	KASSERT(rxq, ("task handler called with rxq == NULL"));
@@ -589,7 +592,8 @@ ionic_queue_task_handler(void *arg, int pendindg)
 	IONIC_TX_TRACE(txq, "processed %d packets\n", tx_work);
 	IONIC_TX_UNLOCK(txq);
 
-	ionic_intr_return_credits(&rxq->intr, work_done + tx_work, true, true);
+	ionic_intr_credits(idev->intr_ctrl, rxq->intr.index,
+			   (work_done + tx_work), IONIC_INTR_CRED_REARM);
 }
 
 /*
@@ -668,6 +672,7 @@ static irqreturn_t
 ionic_legacy_isr(int irq, void *data)
 {
 	struct lif *lif = data;
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct ifnet *ifp;
 	struct adminq* adminq;
 	struct notifyq* notifyq;
@@ -679,10 +684,10 @@ ionic_legacy_isr(int irq, void *data)
 	ifp = lif->netdev;
 	adminq = lif->adminq;
 	notifyq = lif->notifyq;
-	status = *(uint64_t *)lif->ionic->idev.intr_status;
+	status = readq(idev->intr_status);
 
 	IONIC_NETDEV_INFO(lif->netdev, "legacy INTR status(%p): 0x%lx\n",
-		lif->ionic->idev.intr_status, status);
+		idev->intr_status, status);
 
 	if (status == 0) {
 		/* Invoked for no reason. */
@@ -692,16 +697,20 @@ ionic_legacy_isr(int irq, void *data)
 
 	if (status & (1 << adminq->intr.index)) {
 		IONIC_ADMIN_LOCK(adminq);
-		ionic_intr_mask(&adminq->intr, true);
+		ionic_intr_mask(idev->intr_ctrl, adminq->intr.index,
+				IONIC_INTR_MASK_SET);
 		work_done = ionic_adminq_clean(adminq, adminq->num_descs);
-		ionic_intr_return_credits(&adminq->intr, work_done, true, true);
+		ionic_intr_credits(idev->intr_ctrl, adminq->intr.index,
+				   work_done, IONIC_INTR_CRED_REARM);
 		IONIC_ADMIN_UNLOCK(adminq);
 	}
 
 	if (status & (1 << notifyq->intr.index)) {
-		ionic_intr_mask(&notifyq->intr, true);
+		ionic_intr_mask(idev->intr_ctrl, notifyq->intr.index,
+				IONIC_INTR_MASK_SET);
 		work_done = ionic_notifyq_clean(notifyq);
-		ionic_intr_return_credits(&notifyq->intr, work_done, true, true);
+		ionic_intr_credits(idev->intr_ctrl, notifyq->intr.index,
+				   work_done, IONIC_INTR_CRED_REARM);
 	}
 
 	for (i = 0; i < lif->nrxqs; i++) {
@@ -710,22 +719,24 @@ ionic_legacy_isr(int irq, void *data)
 
 		KASSERT((rxq->intr.index != INTR_INDEX_NOT_ASSIGNED),
 			("%s has no interrupt resource", rxq->name));
-		IONIC_QUE_INFO(rxq, "Interrupt source index:%d credits:%d\n",
-			rxq->intr.index, ionic_intr_credits(&rxq->intr));
+		IONIC_QUE_INFO(rxq, "Interrupt source index:%d\n",
+			rxq->intr.index);
 
 		if ((status & (1 << rxq->intr.index)) == 0)
 			continue;
 
 		IONIC_RX_LOCK(rxq);
-		ionic_intr_mask(&rxq->intr, true);
+		ionic_intr_mask(idev->intr_ctrl, rxq->intr.index,
+				IONIC_INTR_MASK_SET);
 		work_done = ionic_rx_clean(rxq, rxq->num_descs);
 		IONIC_RX_UNLOCK(rxq);
-		
+
 		IONIC_TX_LOCK(txq);
 		work_done += ionic_tx_clean(txq, txq->num_descs);
 		IONIC_TX_UNLOCK(txq);
 
-		ionic_intr_return_credits(&rxq->intr, work_done, true, true);
+		ionic_intr_credits(idev->intr_ctrl, rxq->intr.index,
+				   work_done, IONIC_INTR_CRED_REARM);
 	}
 
 	return (IRQ_HANDLED);
@@ -1190,13 +1201,15 @@ ionic_start_xmit_locked(struct ifnet* ifp, struct txque* txq)
 {
 	struct mbuf *m;
 	struct lif *lif = ifp->if_softc;
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct intr *intr = &lif->rxqs[txq->index]->intr;
 	struct tx_stats *stats;
 	int err, work_done;
 
 	stats = &txq->stats;
 	work_done = ionic_tx_clean(txq, txq->num_descs);
-	ionic_intr_return_credits(intr, work_done, false, false);
+	ionic_intr_credits(idev->intr_ctrl, intr->index,
+			   work_done, IONIC_INTR_CRED_REARM);
 
 	while ((m = drbr_peek(ifp, txq->br)) != NULL) {
 		if ((err = ionic_xmit(ifp, txq, &m)) != 0) {
@@ -1394,7 +1407,9 @@ static int
 ionic_intr_coal_handler(SYSCTL_HANDLER_ARGS)
 {
 	struct lif* lif = oidp->oid_arg1;
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct identity *ident = &lif->ionic->ident;
+	struct rxque *rxq;
 	u32 rx_coal, coalesce_usecs;
 	unsigned int i;
 	int error;
@@ -1421,8 +1436,11 @@ ionic_intr_coal_handler(SYSCTL_HANDLER_ARGS)
 
 	if (coalesce_usecs != lif->rx_coalesce_usecs) {
 		lif->rx_coalesce_usecs = coalesce_usecs;
-		for (i = 0; i < lif->nrxqs; i++)
-			ionic_intr_coal_set(&lif->rxqs[i]->intr, rx_coal);
+		for (i = 0; i < lif->nrxqs; i++) {
+			rxq = lif->rxqs[i];
+			ionic_intr_coal_init(idev->intr_ctrl, rxq->intr.index,
+					     rx_coal);
+		}
 	}
 
 	IONIC_NETDEV_INFO(lif->netdev, "Exit Intr coal: %d\n", coalesce_usecs);
@@ -1502,14 +1520,18 @@ ionic_vlan_sysctl(SYSCTL_HANDLER_ARGS)
 static int
 ionic_intr_sysctl(SYSCTL_HANDLER_ARGS)
 {
+	struct ionic_dev *idev;
 	struct lif *lif;
 	struct rxque *rxq;
 	struct adminq *adminq;
 	struct notifyq* notifyq;
+	struct ionic_intr __iomem *intr;
 	struct sbuf *sb;
+	u32 mask_val, cred_val;
 	int i, err;
 
 	lif = oidp->oid_arg1;
+	idev = &lif->ionic->idev;
 	adminq = lif->adminq;
 	notifyq = lif->notifyq;
 
@@ -1521,18 +1543,35 @@ ionic_intr_sysctl(SYSCTL_HANDLER_ARGS)
         if (sb == NULL)
                 return (ENOMEM);
 
+	intr = &idev->intr_ctrl[adminq->intr.index];
+	mask_val = ioread32(&intr->mask);
+	cred_val = ioread32(&intr->credits);
+
 	sbuf_printf(sb, "\n%s intr: %s credits: %d\n",
-		adminq->name, adminq->intr.ctrl->mask ? "masked" : "unmasked",
-		adminq->intr.ctrl->int_credits);
+		adminq->name,
+		mask_val ? "masked" : "unmasked",
+		cred_val & IONIC_INTR_CRED_COUNT);
+
+	intr = &idev->intr_ctrl[notifyq->intr.index];
+	mask_val = ioread32(&intr->mask);
+	cred_val = ioread32(&intr->credits);
+
 	sbuf_printf(sb, "%s intr: %s credits: %d\n",
-		notifyq->name, notifyq->intr.ctrl->mask ? "masked" : "unmasked",
-		notifyq->intr.ctrl->int_credits);
+		notifyq->name,
+		mask_val ? "masked" : "unmasked",
+		cred_val & IONIC_INTR_CRED_COUNT);
 
 	for (i = 0; i < lif->ntxqs ; i++) {
 		rxq = lif->rxqs[i];
+
+		intr = &idev->intr_ctrl[rxq->intr.index];
+		mask_val = ioread32(&intr->mask);
+		cred_val = ioread32(&intr->credits);
+
 		sbuf_printf(sb, "%s intr: %s credits: %d\n",
-			rxq->name, rxq->intr.ctrl->mask ? "masked" : "unmasked",
-			rxq->intr.ctrl->int_credits);
+			rxq->name,
+			mask_val ? "masked" : "unmasked",
+			cred_val & IONIC_INTR_CRED_COUNT);
 	}
 
         err = sbuf_finish(sb);

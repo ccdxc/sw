@@ -35,13 +35,12 @@
 #define IONIC_QUEUE_H
 
 #include <linux/io.h>
+#include <ionic_regs.h>
 
 #define IONIC_MAX_DEPTH		0xffff
 #define IONIC_MAX_CQ_DEPTH	0xffff
-#define IONIC_QID_MASK		((1ull << 24) - 1)
-#define IONIC_DBELL_QID_SHIFT	24
-#define IONIC_DBELL_RING_ARM	(1ull << 16)
-#define IONIC_DBELL_RING_ARM_SOLICITED	(1ull << 17)
+#define IONIC_CQ_RING_ARM	IONIC_DBELL_RING_1
+#define IONIC_CQ_RING_SOL	IONIC_DBELL_RING_2
 
 /** struct ionic_queue - Ring buffer used between device and driver.
  * @size:	Size of the buffer, in bytes.
@@ -219,7 +218,7 @@ static inline void ionic_queue_consume(struct ionic_queue *q)
 static inline void ionic_queue_dbell_init(struct ionic_queue *q,
 					  u32 qid)
 {
-	q->dbell = ((u64)qid & IONIC_QID_MASK) << IONIC_DBELL_QID_SHIFT;
+	q->dbell = IONIC_DBELL_QID(qid);
 }
 
 /** ionic_queue_dbell_val - Get current doorbell update value.
@@ -228,16 +227,6 @@ static inline void ionic_queue_dbell_init(struct ionic_queue *q,
 static inline u64 ionic_queue_dbell_val(struct ionic_queue *q)
 {
 	return q->dbell | q->prod;
-}
-
-/** ionic_dbell_ring - Write the doorbell value to register.
- * @dbreg:	Doorbell register.
- * @val:	Doorbell value from queue.
- */
-static inline void ionic_dbell_ring(u64 __iomem *dbreg, u64 val)
-{
-	/* XXX should be iowrite64, but waiting on Logan's patch lib/iomap.c */
-	writeq(val, dbreg);
 }
 
 #endif /* IONIC_QUEUE_H */

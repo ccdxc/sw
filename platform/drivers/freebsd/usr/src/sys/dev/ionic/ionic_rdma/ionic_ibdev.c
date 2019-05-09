@@ -864,14 +864,14 @@ cq_next:
 	if (old_prod != cq->q.prod) {
 		ionic_admin_reset_wdog(dev);
 		cq->q.cons = cq->q.prod;
-		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
+		ionic_dbell_ring(dev->dbpage, dev->cq_qtype,
 				 ionic_queue_dbell_val(&cq->q));
 		queue_work(ionic_evt_workq, &dev->admin_work);
 	} else if (!dev->admin_armed) {
 		dev->admin_armed = true;
 		cq->arm_any_prod = ionic_queue_next(&cq->q, cq->arm_any_prod);
-		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
-				 cq->q.dbell | IONIC_DBELL_RING_ARM |
+		ionic_dbell_ring(dev->dbpage, dev->cq_qtype,
+				 cq->q.dbell | IONIC_CQ_RING_ARM |
 				 cq->arm_any_prod);
 		queue_work(ionic_evt_workq, &dev->admin_work);
 	}
@@ -906,7 +906,7 @@ cq_next:
 	}
 
 	if (old_prod != aq->q.prod && ionic_xxx_aq_dbell)
-		ionic_dbell_ring(&dev->dbpage[dev->aq_qtype],
+		ionic_dbell_ring(dev->dbpage, dev->aq_qtype,
 				 ionic_queue_dbell_val(&aq->q));
 }
 
@@ -3266,7 +3266,7 @@ static void ionic_reserve_sync_cq(struct ionic_ibdev *dev, struct ionic_cq *cq)
 		cq->reserve += ionic_queue_length(&cq->q);
 		cq->q.cons = cq->q.prod;
 
-		ionic_dbell_ring(&dev->dbpage[dev->cq_qtype],
+		ionic_dbell_ring(dev->dbpage, dev->cq_qtype,
 				 ionic_queue_dbell_val(&cq->q));
 	}
 }
@@ -3467,15 +3467,15 @@ static int ionic_req_notify_cq(struct ib_cq *ibcq,
 
 	if (flags & IB_CQ_SOLICITED) {
 		cq->arm_sol_prod = ionic_queue_next(&cq->q, cq->arm_sol_prod);
-		dbell_val |= cq->arm_sol_prod | IONIC_DBELL_RING_ARM_SOLICITED;
+		dbell_val |= cq->arm_sol_prod | IONIC_CQ_RING_SOL;
 	} else {
 		cq->arm_any_prod = ionic_queue_next(&cq->q, cq->arm_any_prod);
-		dbell_val |= cq->arm_any_prod | IONIC_DBELL_RING_ARM;
+		dbell_val |= cq->arm_any_prod | IONIC_CQ_RING_ARM;
 	}
 
 	ionic_reserve_sync_cq(dev, cq);
 
-	ionic_dbell_ring(&dev->dbpage[dev->cq_qtype], dbell_val);
+	ionic_dbell_ring(dev->dbpage, dev->cq_qtype, dbell_val);
 
 	/* IB_CQ_REPORT_MISSED_EVENTS:
 	 *
@@ -5279,7 +5279,7 @@ static void ionic_post_send_cmb(struct ionic_ibdev *dev, struct ionic_qp *qp)
 		pos = ionic_queue_next(&qp->sq, pos);
 
 		if (ionic_xxx_qp_dbell)
-			ionic_dbell_ring(&dev->dbpage[dev->sq_qtype],
+			ionic_dbell_ring(dev->dbpage, dev->sq_qtype,
 					 qp->sq.dbell | pos);
 	}
 
@@ -5309,7 +5309,7 @@ static void ionic_post_recv_cmb(struct ionic_ibdev *dev, struct ionic_qp *qp)
 
 		pos = 0;
 
-		ionic_dbell_ring(&dev->dbpage[dev->rq_qtype],
+		ionic_dbell_ring(dev->dbpage, dev->rq_qtype,
 				 qp->rq.dbell | pos);
 	}
 
@@ -5322,7 +5322,7 @@ static void ionic_post_recv_cmb(struct ionic_ibdev *dev, struct ionic_qp *qp)
 
 		pos = end;
 
-		ionic_dbell_ring(&dev->dbpage[dev->rq_qtype],
+		ionic_dbell_ring(dev->dbpage, dev->rq_qtype,
 				 qp->rq.dbell | pos);
 	}
 
@@ -5455,7 +5455,7 @@ out:
 		if (qp->sq_cmb_ptr)
 			ionic_post_send_cmb(dev, qp);
 		else if (ionic_xxx_qp_dbell)
-			ionic_dbell_ring(&dev->dbpage[dev->sq_qtype],
+			ionic_dbell_ring(dev->dbpage, dev->sq_qtype,
 					 ionic_queue_dbell_val(&qp->sq));
 	}
 
@@ -5533,7 +5533,7 @@ out:
 		if (qp->rq_cmb_ptr)
 			ionic_post_recv_cmb(dev, qp);
 		else
-			ionic_dbell_ring(&dev->dbpage[dev->rq_qtype],
+			ionic_dbell_ring(dev->dbpage, dev->rq_qtype,
 					 ionic_queue_dbell_val(&qp->rq));
 	}
 
@@ -5963,7 +5963,7 @@ static u16 ionic_poll_eq(struct ionic_eq *eq, u16 budget)
 	}
 
 	if (old_prod != eq->q.prod)
-		ionic_dbell_ring(&dev->dbpage[dev->eq_qtype],
+		ionic_dbell_ring(dev->dbpage, dev->eq_qtype,
 				 ionic_queue_dbell_val(&eq->q));
 
 	return npolled;
@@ -5972,7 +5972,7 @@ static u16 ionic_poll_eq(struct ionic_eq *eq, u16 budget)
 static void ionic_poll_eq_work(struct work_struct *work)
 {
 	struct ionic_eq *eq = container_of(work, struct ionic_eq, work);
-	int npolled;
+	u32 npolled;
 
 	if (unlikely(!eq->enable) || WARN_ON(eq->armed))
 		return;
@@ -5980,18 +5980,19 @@ static void ionic_poll_eq_work(struct work_struct *work)
 	npolled = ionic_poll_eq(eq, ionic_eq_work_budget);
 
 	if (npolled) {
-		ionic_intr_credits(eq->dev, eq->intr, npolled);
+		ionic_intr_credits(eq->dev->intr_ctrl, eq->intr, npolled, 0);
 		queue_work(ionic_evt_workq, &eq->work);
 	} else {
 		xchg(&eq->armed, true);
-		ionic_intr_credits(eq->dev, eq->intr, IONIC_INTR_CRED_UNMASK);
+		ionic_intr_credits(eq->dev->intr_ctrl, eq->intr,
+				   0, IONIC_INTR_CRED_UNMASK);
 	}
 }
 
 static irqreturn_t ionic_poll_eq_isr(int irq, void *eqptr)
 {
 	struct ionic_eq *eq = eqptr;
-	u16 npolled;
+	u32 npolled;
 	bool was_armed;
 
 	was_armed = xchg(&eq->armed, false);
@@ -6001,7 +6002,7 @@ static irqreturn_t ionic_poll_eq_isr(int irq, void *eqptr)
 
 	npolled = ionic_poll_eq(eq, ionic_eq_isr_budget);
 
-	ionic_intr_credits(eq->dev, eq->intr, npolled);
+	ionic_intr_credits(eq->dev->intr_ctrl, eq->intr, npolled, 0);
 	queue_work(ionic_evt_workq, &eq->work);
 
 	return IRQ_HANDLED;
@@ -6103,10 +6104,10 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev, int eqid)
 	snprintf(eq->name, sizeof(eq->name), "%s-%d-%d",
 		 DRIVER_SHORTNAME, dev->lif_id, eq->eqid);
 
-	ionic_intr_mask(dev, eq->intr, IONIC_INTR_MASK_SET);
-	ionic_intr_mask_assert(dev, eq->intr, IONIC_INTR_MASK_SET);
-	ionic_intr_coalesce_init(dev, eq->intr, 0);
-	ionic_intr_credits(dev, eq->intr, 0);
+	ionic_intr_mask(dev->intr_ctrl, eq->intr, IONIC_INTR_MASK_SET);
+	ionic_intr_mask_assert(dev->intr_ctrl, eq->intr, IONIC_INTR_MASK_SET);
+	ionic_intr_coal_init(dev->intr_ctrl, eq->intr, 0);
+	ionic_intr_clean(dev->intr_ctrl, eq->intr);
 
 	eq->enable = true;
 
@@ -6119,7 +6120,7 @@ static struct ionic_eq *ionic_create_eq(struct ionic_ibdev *dev, int eqid)
 	if (rc)
 		goto err_cmd;
 
-	ionic_intr_mask(dev, eq->intr, IONIC_INTR_MASK_CLEAR);
+	ionic_intr_mask(dev->intr_ctrl, eq->intr, IONIC_INTR_MASK_CLEAR);
 
 	ionic_dbgfs_add_eq(dev, eq);
 

@@ -9,6 +9,7 @@
 
 #include "ionic_if.h"
 #include "ionic_api.h"
+#include "ionic_regs.h"
 
 #define IONIC_MIN_MTU			ETH_MIN_MTU
 #define IONIC_MAX_MTU			9194
@@ -27,6 +28,8 @@ struct ionic_dev_bar {
 static inline void ionic_struct_size_checks(void)
 {
 	/* Registers */
+	BUILD_BUG_ON(sizeof(struct ionic_intr) != 32);
+
 	BUILD_BUG_ON(sizeof(struct doorbell) != 8);
 	BUILD_BUG_ON(sizeof(struct intr_ctrl) != 32);
 	BUILD_BUG_ON(sizeof(struct intr_status) != 8);
@@ -116,11 +119,11 @@ struct ionic_dev {
 	union dev_info_regs __iomem *dev_info_regs;
 	union dev_cmd_regs __iomem *dev_cmd_regs;
 
-	struct doorbell __iomem *db_pages;
+	u64 __iomem *db_pages;
 	dma_addr_t phy_db_pages;
 
-	struct intr_ctrl __iomem *intr_ctrl;
-	struct intr_status __iomem *intr_status;
+	struct ionic_intr __iomem *intr_ctrl;
+	u64 __iomem *intr_status;
 	u8 *msix_cfg_base;
 
 	struct mutex cmb_inuse_lock; /* for cmb_inuse */
@@ -169,6 +172,7 @@ struct queue {
 	unsigned int type;
 	unsigned int hw_index;
 	unsigned int hw_type;
+	u64 dbval;
 	void *base;
 	void *sg_base;
 	dma_addr_t base_pa;
@@ -179,7 +183,6 @@ struct queue {
 	unsigned int num_descs;
 	unsigned int desc_size;
 	unsigned int sg_desc_size;
-	struct doorbell __iomem *db;
 	void *nop_desc;
 	unsigned int pid;
 	u64 dbell_count;
@@ -195,7 +198,6 @@ struct intr {
 	char name[INTR_NAME_MAX_SZ];
 	unsigned int index;
 	unsigned int vector;
-	struct intr_ctrl __iomem *ctrl;
 	u64 rearm_count;
 	unsigned int cpu;
 	cpumask_t affinity_mask;
@@ -249,17 +251,10 @@ void ionic_dev_cmd_adminq_init(struct ionic_dev *idev, struct qcq *qcq,
 	u16 lif_index, u16 intr_index);
 
 char *ionic_dev_asic_name(u8 asic_type);
-struct doorbell __iomem *ionic_db_map(struct lif *lif, struct queue *q);
 int ionic_db_page_num(struct lif *lif, int pid);
 
-void ionic_intr_clean(struct intr *intr);
 void ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 		     unsigned long index);
-void ionic_intr_mask_on_assertion(struct intr *intr);
-void ionic_intr_return_credits(struct intr *intr, unsigned int credits,
-			       bool unmask, bool reset_timer);
-void ionic_intr_mask(struct intr *intr, bool mask);
-void ionic_intr_coal_set(struct intr *intr, u32 coal_usecs);
 int ionic_cq_init(struct lif *lif, struct cq *cq, struct intr *intr,
 		  unsigned int num_descs, size_t desc_size);
 void ionic_cq_map(struct cq *cq, void *base, dma_addr_t base_pa);
