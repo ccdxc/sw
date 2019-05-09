@@ -104,6 +104,14 @@ public:
         return security_policy_root_addr_;
     }
 
+    /**
+     * @brief     free h/w resources used by this object, if any
+     *            (this API is invoked during object deletes)
+     * @param[in] api_obj    api object holding the resources
+     * @return    SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t nuke_resources(api_base *api_obj) override;
+
 private:
     /**< @brief    constructor */
     security_policy_impl() {

@@ -11,6 +11,7 @@
 #include <getopt.h>
 #include <gtest/gtest.h>
 #include <stdio.h>
+#include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
@@ -24,6 +25,7 @@ namespace api_test {
 
 // Globals
 char *g_cfg_file = NULL;
+uint16_t g_num_policy = PDS_MAX_POLICY; // can overwrite using cmd line
 static pds_epoch_t g_batch_epoch = 1; // PDS_EPOCH_INVALID;
 
 //----------------------------------------------------------------------------
@@ -41,7 +43,7 @@ protected:
         params.cfg_file = api_test::g_cfg_file;
         params.enable_fte = false;
         pds_test_base::SetUpTestCase(params);
-
+        g_trace_level = sdk::lib::SDK_TRACE_LEVEL_INFO;
         pds_batch_params_t batch_params = {0};
         vpc_util vpc_obj(1, "10.0.0.0/8");
 
@@ -54,6 +56,7 @@ protected:
         pds_batch_params_t batch_params = {0};
         vpc_util vpc_obj(1, "10.0.0.0/8");
 
+        g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
         batch_params.epoch = ++g_batch_epoch;
         ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
         ASSERT_TRUE(vpc_obj.del() == sdk::SDK_RET_OK);
@@ -92,7 +95,7 @@ policy_seed_stepper_init(policy_seed_stepper_t *seed, uint32_t id,
 TEST_F(policy, policy_workflow_1) {
     pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
-    uint32_t num_policy = PDS_MAX_POLICY;
+    uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
 
     // setup
@@ -116,7 +119,7 @@ TEST_F(policy, policy_workflow_1) {
 TEST_F(policy, policy_workflow_2) {
     pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
-    uint32_t num_policy = PDS_MAX_POLICY;
+    uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
 
     // setup
@@ -181,6 +184,11 @@ TEST_F(policy, policy_workflow_3) {
     ASSERT_TRUE(policy_util::many_delete(&seed2, num_policy) == sdk::SDK_RET_OK);
     ASSERT_TRUE(policy_util::many_delete(&seed3, num_policy + 1) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(policy_util::many_read(&seed2, num_policy,
+                                       sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(policy_util::many_read(&seed3, num_policy,
+                                       sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+
 }
 
 /// \brief Create and delete max policies in two batches
@@ -190,7 +198,7 @@ TEST_F(policy, policy_workflow_3) {
 TEST_F(policy, policy_workflow_4) {
     pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
-    uint32_t num_policy = PDS_MAX_POLICY;
+    uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
 
     // setup
@@ -265,7 +273,7 @@ TEST_F(policy, policy_workflow_5) {
 TEST_F(policy, policy_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
-    uint32_t num_policy = PDS_MAX_POLICY;
+    uint32_t num_policy = g_num_policy;
     uint32_t policy_id = 1;
 
     // setup
@@ -399,13 +407,16 @@ policy_test_options_parse (int argc, char **argv)
     int oc;
     struct option longopts[] = {{"config", required_argument, NULL, 'c'},
                                 {"help", no_argument, NULL, 'h'},
+                                {"num_policy", required_argument, NULL, 'n'},
                                 {0, 0, 0, 0}};
 
-    while ((oc = getopt_long(argc, argv, ":hc:", longopts, NULL)) != -1) {
+    while ((oc = getopt_long(argc, argv, ":hc:n:", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
             api_test::g_cfg_file = optarg;
             break;
+        case 'n':
+            api_test::g_num_policy = atoi(optarg);
         default:    // ignore all other options
             break;
         }

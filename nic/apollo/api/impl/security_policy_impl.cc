@@ -23,11 +23,6 @@ namespace impl {
  * @{
  */
 
-/**
- * @brief    factory method to allocate & initialize security policy impl instance
- * @param[in] spec    security policy spec
- * @return    new instance of security policy or NULL, in case of error
- */
 security_policy_impl *
 security_policy_impl::factory(pds_policy_spec_t *spec) {
     security_policy_impl    *impl;
@@ -40,23 +35,12 @@ security_policy_impl::factory(pds_policy_spec_t *spec) {
     return impl;
 }
 
-/**
- * @brief    release all the s/w state associated with the given
- *           security policy impl instance, if any, and free the memory
- * @param[in] impl security policy impl instance to be freed
- */
 void
 security_policy_impl::destroy(security_policy_impl *impl) {
     impl->~security_policy_impl();
     SDK_FREE(SDK_MEM_ALLOC_PDS_SECURITY_POLICY_IMPL, impl);
 }
 
-/**
- * @brief    allocate/reserve h/w resources for this object
- * @param[in] orig_obj    old version of the unmodified object
- * @param[in] obj_ctxt    transient state associated with this API
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 security_policy_impl::reserve_resources(api_base *orig_obj,
                                         obj_ctxt_t *obj_ctxt) {
@@ -79,10 +63,6 @@ security_policy_impl::reserve_resources(api_base *orig_obj,
     return SDK_RET_OK;
 }
 
-/**
- * @brief     free h/w resources used by this object, if any
- * @return    SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 security_policy_impl::release_resources(api_base *api_obj) {
     uint32_t    policy_block_id;
@@ -102,12 +82,11 @@ security_policy_impl::release_resources(api_base *api_obj) {
     return SDK_RET_OK;
 }
 
-/**
- * @brief    program all h/w tables relevant to this object except stage 0
- *           table(s), if any
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
+sdk_ret_t
+security_policy_impl::nuke_resources(api_base *api_obj) {
+    return this->release_resources(api_obj);
+}
+
 sdk_ret_t
 security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     sdk_ret_t            ret;
@@ -134,39 +113,17 @@ security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     return ret;
 }
 
-/**
- * @brief    cleanup all h/w tables relevant to this object except stage 0
- *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 security_policy_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_OK;
 }
 
-/**
- * @brief    update all h/w tables relevant to this object except stage 0
- *           table(s), if any, by updating packed entries with latest epoch#
- * @param[in] orig_obj    old version of the unmodified object
- * @param[in] curr_obj    cloned and updated version of the object
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 security_policy_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                                 obj_ctxt_t *obj_ctxt) {
     return sdk::SDK_RET_INVALID_OP;
 }
 
-/**
- * @brief    activate the epoch in the dataplane by programming stage 0
- *           tables, if any
- * @param[in] epoch       epoch being activated
- * @param[in] api_op      api operation
- * @param[in] obj_ctxt    transient state associated with this API
- * @return   SDK_RET_OK on success, failure status code on error
- */
 sdk_ret_t
 security_policy_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
                                   api_op_t api_op, obj_ctxt_t *obj_ctxt)

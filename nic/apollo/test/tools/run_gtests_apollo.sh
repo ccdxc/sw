@@ -42,6 +42,8 @@ $GDB apollo_route_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/a
 [[ $? -ne 0 ]] && echo "apollo_route_test failed!" && exit 1
 $GDB apollo_mapping_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_mapping_test.xml"
 [[ $? -ne 0 ]] && echo "apollo_mapping_test failed!" && exit 1
+$GDB apollo_policy_test -c hal.json -n 1024 --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_policy_test.xml"
+[[ $? -ne 0 ]] && echo "apollo_policy_test failed!" && exit 1
 $GDB apollo_mirror_session_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_mirror_session_test.xml"
 [[ $? -ne 0 ]] && echo "apollo_mirror_session_test failed!" && exit 1
 #valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json

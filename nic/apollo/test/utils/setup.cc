@@ -13,6 +13,7 @@
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 
+
 /// Callback invoked for debug traces
 ///
 /// This is sample implementation, hence doesn't check whether
@@ -28,6 +29,10 @@ trace_cb (sdk_trace_level_e trace_level, const char *format, ...)
     struct timespec tp_;
 
     if (trace_level == sdk::lib::SDK_TRACE_LEVEL_NONE) {
+        return 0;
+    }
+
+    if (trace_level > g_trace_level) {
         return 0;
     }
 

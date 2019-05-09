@@ -12,6 +12,9 @@
 #define __PDS_BASE_TEST_HPP__
 
 #include <gtest/gtest.h>
+#include "nic/sdk/lib/logger/logger.hpp"
+
+sdk_trace_level_e g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
 
 typedef struct test_case_params_t_ {
     const char  *cfg_file;
