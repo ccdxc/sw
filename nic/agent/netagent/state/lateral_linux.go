@@ -31,7 +31,12 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 	var epIfType, epIf string
 	var objectName = fmt.Sprintf("_internal-%s", destIP)
 
-	var sMAC, dMAC string
+	if na.isCollectorKnown(objectName, mgmtIP, destIP, tunnelOp) {
+		log.Infof("The collector %s is known.", destIP)
+		return nil
+	}
+
+	var dMAC string
 	epIP := destIP
 	mgmtLink := getMgmtLink(mgmtIP)
 	if mgmtLink == nil {
@@ -74,7 +79,6 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 
 	time.Sleep(time.Second * 3)
 
-	sMAC = mgmtLink.Attrs().HardwareAddr.String()
 	for i := 0; i < 3; i++ {
 		d, ok := na.ArpCache.Cache.Load(destIP)
 		if !ok {
@@ -87,11 +91,6 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 	if len(dMAC) == 0 {
 		log.Errorf("Failed to find resolve MAC for %s", destIP)
 		return fmt.Errorf("failed to find resolve MAC for %s", destIP)
-	}
-
-	if na.isCollectorKnown(objectName, mgmtIP, epIP, dMAC, sMAC, tunnelOp) {
-		log.Infof("The collector %s is known.", epIP)
-		return nil
 	}
 
 	nw := &netproto.Network{
@@ -171,6 +170,11 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 // TODO clean this up. Currently this is in NetAgent as there is no control plane which does this.
 func (na *Nagent) DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error {
 	log.Infof("Deleting Lateral NetAgent objects. MgmtIP: %v DestIP: %v TunnelOp: %v", mgmtIP, destIP, tunnelOp)
+	var objectName = fmt.Sprintf("_internal-%s", destIP)
+	if na.isCollectorKnown(objectName, mgmtIP, destIP, tunnelOp) {
+		log.Infof("The collector %s is known.", destIP)
+		return nil
+	}
 
 	// This will keep it symmetric to CreateLateralNetAgentObjects. This is valid only on real NAPLES
 	mgmtLink := getMgmtLink(mgmtIP)
@@ -179,7 +183,6 @@ func (na *Nagent) DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 		return nil
 	}
 
-	var objectName = fmt.Sprintf("_internal-%s", destIP)
 	log.Infof("Deleting objects: %v", objectName)
 
 	if tunnelOp {
@@ -280,9 +283,9 @@ func (na *Nagent) resolveWithDeadline(ctx context.Context, IP net.IP) string {
 	}
 }
 
-func (na *Nagent) isCollectorKnown(netagentCreatedEPName, mgmtIP, destIP, destMAC, srcMAC string, createTunnel bool) (known bool) {
+func (na *Nagent) isCollectorKnown(netagentCreatedEPName, mgmtIP, destIP string, createTunnel bool) (known bool) {
 	// Find EP
-	log.Infof("Testing for known collector with Name: %v MgmtIP: %v DestIP: %v DestMAC: %v SrcMAC: %v, TunnelOp: %v", netagentCreatedEPName, mgmtIP, destIP, destMAC, srcMAC, createTunnel)
+	log.Infof("Testing for known collector with Name: %v MgmtIP: %v DestIP: %v, TunnelOp: %v", netagentCreatedEPName, mgmtIP, destIP, createTunnel)
 	for _, ep := range na.ListEndpoint() {
 		epIP, _, _ := net.ParseCIDR(ep.Spec.IPv4Address)
 		if epIP.String() == destIP {

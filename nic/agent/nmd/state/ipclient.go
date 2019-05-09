@@ -248,6 +248,7 @@ func readAndParseLease(leaseFile string) ([]string, error) {
 }
 
 func (c *IPClient) updateDelphiNaplesObject() error {
+	var mgmtIP string
 	// Set up appropriate mode
 	var naplesMode delphiProto.NaplesStatus_Mode
 
@@ -284,11 +285,20 @@ func (c *IPClient) updateDelphiNaplesObject() error {
 		transitionPhase = 0
 	}
 
+	// For static case write only the IP in mgmt IP and not the subnet
+	if !c.isDynamic {
+		ip, _, _ := net.ParseCIDR(c.nmdState.config.Status.IPConfig.IPAddress)
+		mgmtIP = ip.String()
+
+	} else {
+		mgmtIP = c.nmdState.config.Status.IPConfig.IPAddress
+	}
+
 	naplesStatus := delphiProto.NaplesStatus{
 		Controllers:     c.nmdState.config.Status.Controllers,
 		NaplesMode:      naplesMode,
 		TransitionPhase: transitionPhase,
-		MgmtIP:          c.nmdState.config.Status.IPConfig.IPAddress,
+		MgmtIP:          mgmtIP,
 		Hostname:        c.nmdState.config.Spec.Hostname,
 		SmartNicName:    c.nmdState.config.Status.SmartNicName,
 		Fru: &delphiProto.NaplesFru{

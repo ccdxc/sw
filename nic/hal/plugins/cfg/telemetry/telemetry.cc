@@ -306,7 +306,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
         memcpy(cfg.src_mac, mac, sizeof(mac_addr_t));
     } else {
         MAC_UINT64_TO_ADDR(smac, g_mgmt_if_mac);
-        memcpy(cfg.src_mac, mac, sizeof(mac_addr_t));
+        memcpy(cfg.src_mac, smac, sizeof(mac_addr_t));
     }
     
     /* Encap comes from the l2seg */
