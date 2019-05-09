@@ -307,8 +307,10 @@ func (na *Nagent) isCollectorKnown(netagentCreatedEPName, mgmtIP, destIP, destMA
 					},
 				}
 
-				// Create tunnel
-				if createTunnel {
+				// Create tunnel. Check if a tunnel already exists
+				_, err := na.FindTunnel(tun.ObjectMeta)
+
+				if createTunnel && err != nil {
 					log.Infof("Creating internal tunnel")
 					if err := na.CreateTunnel(tun); err != nil {
 						log.Errorf("Failed to create tunnel. Err: %v", err)
@@ -316,7 +318,6 @@ func (na *Nagent) isCollectorKnown(netagentCreatedEPName, mgmtIP, destIP, destMA
 						return
 					}
 				}
-				known = true
 			}
 			return
 		}
