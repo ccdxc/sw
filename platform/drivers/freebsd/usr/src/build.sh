@@ -74,6 +74,5 @@ if [ -e /usr/local/bin/aclocal ]; then
     ./autogen.sh || exit
     ./configure || exit
     make || exit
-    make install || exit
     cd -
 fi

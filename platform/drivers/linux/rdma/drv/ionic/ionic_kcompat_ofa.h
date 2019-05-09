@@ -47,9 +47,9 @@
  *
  *
  * This compatibility support is fragile, because ofed can be bugfixed by
- * vendor with no minor version chage, but then ofed compat_version hash can
+ * vendor with no minor version change, but then ofed compat_version hash can
  * still change, breaking compatibility.  To resolve the new hash to compat
- * ofed configuration, add one more line like following, to this file:
+ * ofed configuration, add one more line like the following, to this file:
  *
  *	#define OFA_COMPAT_xxxxyyy		MLNX_OFED_4_5
  */
@@ -69,6 +69,7 @@
 #define MLNX_OFED_4_2__5_0		1
 
 /* MLNX_OFED_LINUX-4.5-1.0.1.0-debian9.0-x86_64 */
+/* MLNX_OFED_LINUX-4.5-1.0.1.0-ubuntu18.04-x86_64 */
 #define OFA_COMPAT_b4fdfac		MLNX_OFED_4_5
 
 #define MLNX_OFED_4_5__support		1
