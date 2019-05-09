@@ -24,6 +24,9 @@ public:
     // OnUpgApppCreate gets called when UpgApp object is created
     virtual delphi::error OnUpgAppCreate(delphi::objects::UpgAppPtr app);
 
+    // OnUpgApppDelete gets called when UpgApp object is created
+    virtual delphi::error OnUpgAppDelete(delphi::objects::UpgAppPtr app);
+
     virtual void OnMountComplete(void);
 };
 typedef std::shared_ptr<UpgAppRegReact> UpgAppRegReactPtr;

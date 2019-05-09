@@ -31,6 +31,8 @@ bool test::HostUpPause;
 bool test::LinkUpPause;
 bool test::PostLinkUpPause;
 
+bool test::UnRegisterWithUpgrade;
+
 int main(int argc, char **argv) {
 
     remove("/run/testupgapp.success");
@@ -82,6 +84,8 @@ int main(int argc, char **argv) {
             test::LinkUpPause = true;
         } else if (strcmp(argv[1], "postlinkuppause") == 0) {
             test::PostLinkUpPause = true;
+        } else if (strcmp(argv[1], "unregupgapp") == 0) {
+            test::UnRegisterWithUpgrade = true;
         } else {
             cout << "Unknown flag " << argv[1];
         }
@@ -99,6 +103,11 @@ int main(int argc, char **argv) {
     // start a timer to create an object
     exupgsvc->createTimer.set<TestUpgSvc, &TestUpgSvc::createTimerHandler>(exupgsvc.get());
     exupgsvc->createTimer.start(305, 0);
+
+    if (test::UnRegisterWithUpgrade) {
+        exupgsvc->createTimer.set<TestUpgSvc, &TestUpgSvc::unRegUpgTimerHandler>(exupgsvc.get());
+        exupgsvc->createTimer.start(3, 0);
+    }
 
     // run the main loop
     return sdk->MainLoop();

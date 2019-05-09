@@ -187,6 +187,26 @@ void UpgStateReqReact::RegisterUpgApp() {
     //UPG_LOG_DEBUG("Returning after creating UpgApp");
 }
 
+bool UpgStateReqReact::DelUpgAppObj(void) {
+    delphi::objects::UpgAppPtr app = make_shared<delphi::objects::UpgApp>();
+    app->set_key(svcName_);
+
+    delphi::BaseObjectPtr obj = sdk_->FindObject(app);
+
+    delphi::objects::UpgAppPtr appptr = static_pointer_cast<delphi::objects::UpgApp>(obj);
+
+    if (appptr != NULL) {
+        // delete it from the database
+        sdk_->DeleteObject(appptr);
+        return true;
+    }
+    return false;
+}
+
+bool UpgStateReqReact::UnRegisterUpgApp() {
+    return DelUpgAppObj();
+}
+
 void UpgStateReqReact::OnMountComplete(void) {
     RegisterUpgApp();
     //UPG_LOG_DEBUG("UpgStateReqReact OnMountComplete called");

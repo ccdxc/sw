@@ -25,4 +25,9 @@ TestUpgSvc::TestUpgSvc(delphi::SdkPtr sk, string name) {
 void TestUpgSvc::createTimerHandler(ev::timer &watcher, int revents) {
     upgsdk_->SendAppRespSuccess();
 }
+
+void TestUpgSvc::unRegUpgTimerHandler(ev::timer &watcher, int revents) {
+    UPG_LOG_DEBUG("TestUpgSvc Unregistering.");
+    upgsdk_->UnRegUpg();
+}
 } // namespace test 

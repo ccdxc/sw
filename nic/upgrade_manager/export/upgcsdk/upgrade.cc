@@ -270,4 +270,8 @@ UpgSdk::UpgSdk(delphi::SdkPtr sk, UpgHandlerPtr uh, string name, SvcRole isRoleA
     InitStateMachineVector();
 }
 
+bool UpgSdk::UnRegUpg() {
+    return upgReqReactPtr_->UnRegisterUpgApp();
+}
+
 } // namespace upgrade

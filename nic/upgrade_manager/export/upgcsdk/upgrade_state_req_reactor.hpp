@@ -22,8 +22,11 @@ class UpgStateReqReact : public delphi::objects::UpgStateReqReactor {
 
     delphi::objects::UpgAppPtr FindUpgAppPtr(void);
     delphi::objects::UpgAppPtr CreateUpgAppObj(void);
+    bool DelUpgAppObj(void);
     void RegisterUpgApp(void);
 public:
+    bool UnRegisterUpgApp();
+
     //This constructor is used only for upgrade_sdkclib_test
     UpgStateReqReact(delphi::SdkPtr sk, string name = "test") {
         sdk_ = sk;

@@ -55,6 +55,22 @@ void UpgReqReact::RegNewApp(string name) {
     }
 }
 
+void UpgReqReact::UnRegNewApp(string name) {
+    if (appRegMap_[name] == true) {
+        UPG_LOG_DEBUG("App registered. UnRegistering {} now.", name);
+        appRegMap_[name] = false;
+
+        unordered_map<string, bool>::iterator it = appRegMap_.find(name);
+        if (it != appRegMap_.end()) {
+            appRegMap_.erase(it);
+            UPG_LOG_DEBUG("App {} unregistered.", name);
+        }
+        upgMetric_->NumRegApps()->Set(appRegMap_.size());
+    } else {
+        UPG_LOG_DEBUG("App {} not registered.", name);
+    }
+}
+
 UpgReqStateType UpgReqReact::GetState(void) {
     return findUpgStateReq()->upgreqstate();
 }

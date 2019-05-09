@@ -36,6 +36,8 @@ extern bool HostUpPause;
 extern bool LinkUpPause;
 extern bool PostLinkUpPause;
 
+extern bool UnRegisterWithUpgrade;
+
 // TestUpgSvc is the service object for test upgrade service 
 class TestUpgSvc : public delphi::Service, public enable_shared_from_this<TestUpgSvc> {
 private:
@@ -53,6 +55,7 @@ public:
     // timer for creating a dummy object
     ev::timer          createTimer;
     void createTimerHandler(ev::timer &watcher, int revents);
+    void unRegUpgTimerHandler(ev::timer &watcher, int revents);
 
     void OnMountComplete(void) {
         UPG_LOG_DEBUG("TestUpgSvc OnMountComplete called! Nothing to be done.");

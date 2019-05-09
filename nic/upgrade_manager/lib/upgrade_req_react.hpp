@@ -86,6 +86,7 @@ public:
     delphi::error StartUpgrade();
     delphi::error AbortUpgrade();
     void RegNewApp(string name);
+    void UnRegNewApp(string name);
     void CreateUpgradeMetrics(void);
 };
 typedef std::shared_ptr<UpgReqReact> UpgReqReactPtr;

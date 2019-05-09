@@ -16,6 +16,12 @@ delphi::error UpgAppRegReact::OnUpgAppCreate(delphi::objects::UpgAppPtr app) {
     return delphi::error::OK();
 }
 
+delphi::error UpgAppRegReact::OnUpgAppDelete(delphi::objects::UpgAppPtr app) {
+    UPG_LOG_DEBUG("UpgAppRegReact::OnUpgAppDelete called for {}", app->key());
+    upgMgr_->UnRegNewApp(app->key());
+    return delphi::error::OK();
+}
+
 void UpgAppRegReact::OnMountComplete(void) {
     UPG_LOG_DEBUG("UpgAppRegReact OnMountComplete called");
 

@@ -55,6 +55,8 @@ public:
     delphi::error GetUpgradeStatus(vector<string>& retStr);
 
     bool IsUpgradeInProgress(void);
+
+    bool UnRegUpg();
 };
 typedef std::shared_ptr<UpgSdk> UpgSdkPtr;
 
