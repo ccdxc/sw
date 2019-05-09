@@ -48,17 +48,9 @@ define _ionic_qe_posted
 	set $_cons = $_q->cons
 	set $_idx = $arg1
 
-	set $arg2 = 0
-	if ($_cons < $_prod)
-		if ($_cons < $_idx && $_idx <= $_prod)
-			set $arg2 = 1
-		end
-	end
-	if ($_prod < $_cons)
-		if ($_idx <= $_prod || $_cons < $_idx)
-			set $arg2 = 1
-		end
-	end
+	# producer is farther ahead of consumer than index is from consumer
+	set $arg2 = (($_idx - $_cons) & $_q->mask) <			\
+				(($_prod - $_cons) & $_q->mask)
 end
 
 # Args: res
@@ -74,8 +66,8 @@ end
 define _ionic_umem_print
 	set $umem = (struct ib_umem *)$arg0
 	printf "            umem "
-	printf "pgs %5d  maps %4d  size %8d  iova %p  pid %7d\n",	\
-		$umem->npages, $umem->nmap, $umem->length,		\
+	printf "pgs %5d  size %8d  iova %p  pid %7d\n",			\
+		$umem->npages, $umem->length,				\
 		(void *)$umem->address, $umem->pid
 end
 
@@ -516,12 +508,12 @@ define ionic_ibdev_list_all
 		ionic_mr_list $ibd
 		ionic_qp_list $ibd
 		ionic_cq_list $ibd
-		ionic_eq_list $ibd
 		_ionic_ibdev_next $ibd
 	end
 end
 document ionic_ibdev_list_all
-Print a list of the current IONIC RDMA devices, MRs, QPs, CQs, and EQs.
+Print a list of the current IONIC RDMA devices, MRs, QPs, and CQs.
+Use ionic_eq_list to see the EQs.
 Usage: ionic_ibdev_list_all
 end
 
@@ -554,8 +546,6 @@ end
 
 define _ionic_cqe_print_admin
 	set $_cqe = $arg0
-	set $_cq = $arg1
-	set $_cqe_aq = (struct ionic_aq *)$arg2
 	__be16tole $_cqe->admin.cmd_idx $_cmd_idx
 
 	__indent
@@ -567,8 +557,8 @@ end
 
 define _ionic_cqe_print_recv
 	set $_cqe = $arg0
-	set $_cq = $arg1
-	set $_cqe_qp = $arg2
+	set $_cqe_qp = $arg1
+	set $_is_posted = $arg2
 	_ionic_cqe_flags $_cqe $_flags
 	__be32tole $_cqe->status_length $_st_len
 	__be32tole $_cqe->recv.src_qpn_op $_src_qpn_op
@@ -583,6 +573,7 @@ define _ionic_cqe_print_recv
 	_ionic_cqe_print_flags $_cqe
 
 	if ($_flags & 0x2)
+		# Error
 		output (enum ionic_status)$_st_len
 	else
 		printf "\n"
@@ -614,7 +605,6 @@ define _ionic_cqe_print_recv
 	end
 	printf "\n"
 
-	_ionic_cqe_posted &$_cq->q $_cqe $_is_posted
 	if ($_is_posted == 1)
 		set $_meta = &$_cqe_qp->rq_meta[$_cqe->recv.wqe_id]
 
@@ -625,8 +615,8 @@ end
 
 define _ionic_cqe_print_send_msn
 	set $_cqe = $arg0
-	set $_cq = $arg1
-	set $_cqe_qp = $arg2
+	set $_cqe_qp = $arg1
+	set $_is_posted = $arg2
 	__be32tole $_cqe->send.msg_msn $_cqe_msn
 	set $_cqe_seq = $_cqe_msn & $_cqe_qp->sq.mask
 
@@ -635,7 +625,6 @@ define _ionic_cqe_print_send_msn
 	_ionic_cqe_print_flags $_cqe
 	printf "\n"
 
-	_ionic_cqe_posted &$_cq->q $_cqe $_is_posted
 	if ($_is_posted == 1)
 		_ionic_cqe_flags $_cqe $_flags
 		if (($_flags & 2) == 0)
@@ -653,8 +642,8 @@ end
 
 define _ionic_cqe_print_send_npg
 	set $_cqe = $arg0
-	set $_cq = $arg1
-	set $_cqe_qp = $arg2
+	set $_cqe_qp = $arg1
+	set $_is_posted = $arg2
 
 	set $_cqe_idx = $_cqe->send.npg_wqe_id & $_cqe_qp->sq.mask
 
@@ -663,7 +652,6 @@ define _ionic_cqe_print_send_npg
 	_ionic_cqe_print_flags $_cqe
 	printf "\n"
 
-	_ionic_cqe_posted &$_cq->q $_cqe $_is_posted
 	if ($_is_posted == 1)
 		set $_meta = &$_cqe_qp->sq_meta[$_cqe_idx]
 
@@ -674,43 +662,41 @@ end
 
 define ionic_cqe_print
 	set $_cqe = (struct ionic_v1_cqe *)$arg0
-	set $_cq = (struct ionic_cq *)$arg1
-	set $_cqe_qp = (struct ionic_qp *)$arg2
+	set $_cqe_qp = (struct ionic_qp *)$arg1
+	set $_is_posted = $arg2
 
 	_ionic_cqe_type $_cqe $_type
 	if ($_type == IONIC_V1_CQE_TYPE_ADMIN)
-		_ionic_cqe_print_admin $_cqe $_cq $_cqe_qp
+		_ionic_cqe_print_admin $_cqe
 	end
 	if ($_type == IONIC_V1_CQE_TYPE_RECV)
-		_ionic_cqe_print_recv $_cqe $_cq $_cqe_qp
+		_ionic_cqe_print_recv $_cqe $_cqe_qp $_is_posted
 	end
 	if ($_type == IONIC_V1_CQE_TYPE_SEND_MSN)
-		_ionic_cqe_print_send_msn $_cqe $_cq $_cqe_qp
+		_ionic_cqe_print_send_msn $_cqe $_cqe_qp $_is_posted
 	end
 	if ($_type == IONIC_V1_CQE_TYPE_SEND_NPG)
-		_ionic_cqe_print_send_npg $_cqe $_cq $_cqe_qp
+		_ionic_cqe_print_send_npg $_cqe $_cqe_qp $_is_posted
 	end
 end
 document ionic_cqe_print
 Print information about the given CQE.
-Usage: ionic_cqe_print [cqe] [qp]
+The is_posted flag controls whether queue entry metadata is decoded.
+Usage: ionic_cqe_print [cqe] [qp] [is_posted]
 end
 
 define _ionic_cq_dump_kernel
 	set $_cq = $arg0
 	set $_max = $_cq->q.mask + 1
+	set $_cq_qp = 0
 
 	_ib_to_ionic_dev $_cq->ibcq.device $_cq_ibd
 	if ($_cq_ibd->admincq == $_cq)
-		# This is the admin CQ; use the admin QP
-		set $_cq_qp = $_cq_ibd->admincq
-		set $_cq_aq = (struct ionic_aq *)$_cq_qp
+		# This is the admin CQ
 		printf "  link:  aq%-4d  (struct ionic_aq *)%p\n",	\
-			$_cq_aq->aqid, $_cq_aq
+			$_cq_ibd->adminq.aqid, $_cq_ibd->adminq
 	else
 		# Search for the matching QP
-		set $_cq_qp = 0
-
 		_ionic_qp_first $_cq_ibd $_cq_qp_tmp
 		while ($_cq_qp_tmp != 0)
 			set $_cq_qp_tmp_scq = $_cq_qp_tmp->ibqp.send_cq
@@ -741,8 +727,15 @@ define _ionic_cq_dump_kernel
 			end
 		else
 			set $_skip = 0
-			printf "  %4d  %p\n", $_i, $_cqe
-			ionic_cqe_print $_cqe $_cq $_cq_qp
+
+			_ionic_cqe_posted &$_cq->q $_cqe $_is_posted
+			printf "  %4d  %p", $_i, $_cqe
+			if ($_is_posted)
+				printf "  [posted]"
+			end
+			printf "\n"
+
+			ionic_cqe_print $_cqe $_cq_qp $_is_posted
 		end
 		set $_i = $_i + 1
 	end
@@ -813,6 +806,7 @@ end
 define ionic_rqe_print
 	set $_qp = (struct ionic_qp *)$arg0
 	set $_wqe = (struct ionic_v1_wqe *)$arg1
+	set $_is_posted = $arg2
 	__be32tole $_wqe->base.imm_data_key $_len
 
 	__indent
@@ -820,7 +814,6 @@ define ionic_rqe_print
 	_ionic_wqe_print_flags $_wqe->base.flags
 	printf "\n"
 
-	_ionic_wqe_posted &$_qp->rq $_wqe $_is_posted
 	if ($_is_posted == 1)
 		set $_meta = $_qp->rq_meta[$_wqe->base.wqe_id]
 
@@ -843,7 +836,8 @@ define ionic_rqe_print
 end
 document ionic_rqe_print
 Print information about the given receive WQE.
-Usage: ionic_rqe_print [qp] [rqe]
+The is_posted flag controls whether queue entry metadata is decoded.
+Usage: ionic_rqe_print [qp] [rqe] [is_posted]
 end
 
 define _ionic_wqe_print_send
@@ -946,9 +940,9 @@ end
 define ionic_sqe_print
 	set $_qp = (struct ionic_qp *)$arg0
 	set $_wqe = (struct ionic_v1_wqe *)$arg1
+	set $_is_posted = $arg2
 	set $_op = $_wqe->base.op
 
-	_ionic_wqe_posted &$_qp->sq $_wqe $_is_posted
 	if ($_is_posted == 1)
 		set $_meta = $_qp->sq_meta[$_wqe->base.wqe_id]
 
@@ -994,8 +988,9 @@ define ionic_sqe_print
 end
 document ionic_sqe_print
 Print information about the given send WQE.
+The is_posted flag controls whether queue entry metadata is decoded.
 TODO: ATOMIC, BIND_MW
-Usage: ionic_sqe_print [qp] [sqe]
+Usage: ionic_sqe_print [qp] [sqe] [is_posted]
 end
 
 define _ionic_rq_dump_kernel
@@ -1020,8 +1015,15 @@ define _ionic_rq_dump_kernel
 			end
 		else
 			set $_skip = 0
-			printf "  %4d  %p\n", $_i, $_wqe
-			ionic_rqe_print $_qp $_wqe
+
+			_ionic_wqe_posted &$_qp->rq $_wqe $_is_posted
+			printf "  %4d  %p", $_i, $_wqe
+			if ($_is_posted)
+				printf "  [posted]"
+			end
+			printf "\n"
+
+			ionic_rqe_print $_qp $_wqe $_is_posted
 		end
 		set $_i = $_i + 1
 	end
@@ -1049,8 +1051,15 @@ define _ionic_sq_dump_kernel
 			end
 		else
 			set $_skip = 0
-			printf "  %4d  %p\n", $_i, $_wqe
-			ionic_sqe_print $_qp $_wqe
+
+			_ionic_wqe_posted &$_qp->sq $_wqe $_is_posted
+			printf "  %4d  %p", $_i, $_wqe
+			if ($_is_posted)
+				printf "  [posted]"
+			end
+			printf "\n"
+
+			ionic_sqe_print $_qp $_wqe $_is_posted
 		end
 		set $_i = $_i + 1
 	end
@@ -1093,6 +1102,7 @@ define ionic_qp_dump
 end
 document ionic_qp_dump
 Print information about each WQE in the given QP's RQ and SQ.
+Use ionic_sq_dump or ionic_rq_dump to dump only a single queue.
 Usage: ionic_qp_dump [qp]
 end
 
