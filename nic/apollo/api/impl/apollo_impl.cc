@@ -97,8 +97,8 @@ apollo_impl::sort_mpu_programs_(std::vector<std::string>& programs) {
  * @param[in] program information
  */
 uint32_t
-apollo_impl::rxdma_symbols_init_ (void **p4plus_symbols,
-                                  platform_type_t platform_type)
+apollo_impl::rxdma_symbols_init_(void **p4plus_symbols,
+                                 platform_type_t platform_type)
 {
     uint32_t    i = 0;
 
@@ -109,8 +109,7 @@ apollo_impl::rxdma_symbols_init_ (void **p4plus_symbols,
         (sdk::p4::p4_param_info_t *)(*p4plus_symbols);
 
     symbols[i].name = MEM_REGION_LIF_STATS_BASE;
-    symbols[i].val = api::g_pds_state.mempartition()->
-                     start_addr(MEM_REGION_LIF_STATS_NAME);
+    symbols[i].val = api::g_pds_state.mempartition()->start_addr(MEM_REGION_LIF_STATS_NAME);
     i++;
     SDK_ASSERT(i <= RXDMA_SYMBOLS_MAX);
 
@@ -122,8 +121,8 @@ apollo_impl::rxdma_symbols_init_ (void **p4plus_symbols,
  * @param[in] program information
  */
 uint32_t
-apollo_impl::txdma_symbols_init_ (void **p4plus_symbols,
-                                  platform_type_t platform_type)
+apollo_impl::txdma_symbols_init_(void **p4plus_symbols,
+                                 platform_type_t platform_type)
 {
     uint32_t    i = 0;
 
@@ -134,8 +133,7 @@ apollo_impl::txdma_symbols_init_ (void **p4plus_symbols,
         (sdk::p4::p4_param_info_t *)(*p4plus_symbols);
 
     symbols[i].name = MEM_REGION_LIF_STATS_BASE;
-    symbols[i].val = api::g_pds_state.mempartition()->
-                     start_addr(MEM_REGION_LIF_STATS_NAME);
+    symbols[i].val = api::g_pds_state.mempartition()->start_addr(MEM_REGION_LIF_STATS_NAME);
     i++;
     SDK_ASSERT(i <= TXDMA_SYMBOLS_MAX);
 
@@ -303,7 +301,7 @@ apollo_impl::key_native_init_(void) {
     ret = apollo_impl_db()->key_native_tbl()->insert(
         &key, &mask, &data, &apollo_impl_db()->key_native_tbl_idx_[idx++]);
 
-    // check overflow 
+    // check overflow
     SDK_ASSERT(idx <= MAX_KEY_NATIVE_TBL_ENTRIES);
     return ret;
 }
@@ -468,7 +466,8 @@ apollo_impl::stats_init_(void) {
  */
 sdk_ret_t
 apollo_impl::table_init_(void) {
-    sdk_ret_t    ret;
+    sdk_ret_t     ret;
+    mem_addr_t    addr;
 
     ret = key_native_init_();
     if (ret != SDK_RET_OK) {
@@ -479,7 +478,18 @@ apollo_impl::table_init_(void) {
         return ret;
     }
     ret = ingress_to_rxdma_init_();
-    return ret;
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // program session stats table base address as table constant
+    // of session table
+    addr = api::g_pds_state.mempartition()->start_addr("session_stats");
+    // reset bit 31 (saves one asm instruction)
+    addr &= ~((uint64_t)1 << 31);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION, addr);
+
+    return SDK_RET_OK;
 }
 
 /**
