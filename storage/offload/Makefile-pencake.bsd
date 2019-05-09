@@ -31,7 +31,7 @@ device_if.h bus_if.h vnode_if.h pci_if.h
 CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include -I${SRCTOP}/sys/compat/linuxkpi/common/include/linux -I${SRCTOP}/sys/sys
 INCDIRS = include src/osal src/test src/drv/linux/kernel src/common third-party/libyaml/include
 CFLAGS+= $(INCDIRS:%=-I$(PWD)/%)
-CFLAGS+= -DHAPS -D__KERNEL__
+CFLAGS+= -D__KERNEL__
 
 .include <bsd.kmod.mk>
 

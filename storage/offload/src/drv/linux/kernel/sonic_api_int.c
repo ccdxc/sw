@@ -37,7 +37,7 @@ sonic_rmem_base_pa(void)
 {
 	identity_t *ident = sonic_get_identity();
 
-	return ident->dev.cm_base_pa;
+	return ident->dev.base.cm_base_pa;
 }
 
 static inline void __iomem *
@@ -209,16 +209,16 @@ void sonic_rmem_write(uint64_t pgaddr, const void *src, size_t size)
 
 static identity_t *sonic_get_identity(void)
 {
-	return sonic_get_lif()->sonic->ident;
+	return &sonic_get_lif()->sonic->ident;
 }
 
 unsigned int
 sonic_get_lif_id(struct sonic *sonic, uint32_t idx)
 {
-	identity_t *ident = sonic->ident;
+	identity_t *ident = &sonic->ident;
 
-	OSAL_ASSERT(ident && (idx < ident->dev.num_lifs));
-	return ident->dev.lif_tbl[idx].hw_lif_id;
+	OSAL_ASSERT(ident && (idx < ident->dev.base.nlifs));
+	return ident->lif.base.hw_index;
 }
 
 uint64_t
@@ -226,14 +226,14 @@ sonic_get_lif_local_dbaddr(void)
 {
 	identity_t *ident = sonic_get_identity();
 
-	return ident->dev.lif_tbl[0].hw_lif_local_dbaddr;
+	return ident->lif.base.hw_lif_local_dbaddr;
 }
 
 bool
 sonic_validate_crypto_key_idx(uint32_t user_key_idx, uint32_t *ret_keys_max)
 {
 	identity_t *ident = sonic_get_identity();
-	*ret_keys_max = ident->dev.lif_tbl[0].num_crypto_keys_max;
+	*ret_keys_max = ident->lif.base.num_crypto_keys_max;
 	return user_key_idx < *ret_keys_max;
 }
 
@@ -242,7 +242,7 @@ sonic_get_crypto_key_idx(uint32_t user_key_idx)
 {
 	identity_t *ident = sonic_get_identity();
 
-	return ident->dev.lif_tbl[0].hw_key_idx_base + user_key_idx;
+	return ident->lif.base.crypto_key_idx_base + user_key_idx;
 }
 
 uint64_t
@@ -251,11 +251,11 @@ sonic_get_intr_assert_addr(uint32_t intr_idx)
 	identity_t *ident = sonic_get_identity();
 
 	OSAL_LOG_DEBUG("intr_assert_addr=0x%llx, intr_idx=0x%llx, intr_assert_stride=0x%llx",
-		       (unsigned long long) ident->dev.intr_assert_addr,
+		       (unsigned long long) ident->dev.base.intr_assert_addr,
 		       (unsigned long long) intr_idx,
-		       (unsigned long long) ident->dev.intr_assert_stride);
-	return ident->dev.intr_assert_addr +
-		((uint64_t)intr_idx * ident->dev.intr_assert_stride);
+		       (unsigned long long) ident->dev.base.intr_assert_stride);
+	return ident->dev.base.intr_assert_addr +
+		((uint64_t)intr_idx * ident->dev.base.intr_assert_stride);
 }
 
 uint32_t
@@ -263,7 +263,7 @@ sonic_get_intr_assert_data(void)
 {
 	identity_t *ident = sonic_get_identity();
 
-	return ident->dev.intr_assert_data;
+	return ident->dev.base.intr_assert_data;
 }
 
 uint64_t
@@ -414,15 +414,15 @@ uint64_t sonic_hostpa_to_devpa(uint64_t hostpa)
 {
 	identity_t *ident = sonic_get_identity();
 
-	OSAL_ASSERT((hostpa & ident->dev.lif_tbl[0].hw_host_mask) == 0);
-	return hostpa | ident->dev.lif_tbl[0].hw_host_prefix;
+	OSAL_ASSERT((hostpa & ident->lif.base.hw_host_mask) == 0);
+	return hostpa | ident->lif.base.hw_host_prefix;
 }
 
 uint64_t sonic_devpa_to_hostpa(uint64_t devpa)
 {
 	identity_t *ident = sonic_get_identity();
 
-	return devpa & ~ident->dev.lif_tbl[0].hw_host_mask;
+	return devpa & ~ident->lif.base.hw_host_mask;
 }
 
 uint64_t

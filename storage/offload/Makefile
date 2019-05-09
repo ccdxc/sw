@@ -129,7 +129,6 @@ sonic-sim: sonic-sim-var modules-compile
 sonic-var: $(eval obj-m += $(SONIC).o) 
 sonic-var: $(eval ccflags-y += $(SONIC_INCDIRS:%=-I$(PWD)/%))
 sonic-var: $(eval ccflags-y += -I$(KERN_DIR)/include/linux)
-sonic-var: $(eval ccflags-y += -DHAPS)
 sonic-var: $(eval ccflags-y += -DNDEBUG)
 ifdef ENABLE_PNSO_SONIC_TEST
 sonic-var: $(eval ccflags-y += -DENABLE_PNSO_SONIC_TEST)

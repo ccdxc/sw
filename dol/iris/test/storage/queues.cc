@@ -607,9 +607,12 @@ int lifs_setup() {
       if (nicmgr_if::nicmgr_if_reset()) {
           return -1;
       }
-      if (nicmgr_if::nicmgr_if_identify(&seq_lif, &nicmgr_num_seq_queues,
-                                        nicmgr_accel_ring_tbl,
-                                        sizeof(nicmgr_accel_ring_tbl))) {
+      if (nicmgr_if::nicmgr_if_identify()) {
+          return -1;
+      }
+      if (nicmgr_if::nicmgr_if_lif_identify(&seq_lif, &nicmgr_num_seq_queues,
+                                            nicmgr_accel_ring_tbl,
+                                            sizeof(nicmgr_accel_ring_tbl))) {
           return -1;
       }
       if (nicmgr_num_seq_queues < num_seq_queues) {

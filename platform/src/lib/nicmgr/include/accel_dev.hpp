@@ -17,7 +17,16 @@
 #include "device.hpp"
 #include "pd_client.hpp"
 #include "adminq.hpp"
-#include "accel_if.h"
+#include "nic/include/accel_dev_if.h"
+
+#define ACCEL_DEV_PAGE_SIZE             4096
+#define ACCEL_DEV_PAGE_MASK             (ACCEL_DEV_PAGE_SIZE - 1)
+
+#define ACCEL_DEV_ADDR_ALIGN(addr, sz)  \
+    (((addr) + ((uint64_t)(sz) - 1)) & ~((uint64_t)(sz) - 1))
+
+#define ACCEL_DEV_PAGE_ALIGN(addr)      \
+    ACCEL_DEV_ADDR_ALIGN(addr, ACCEL_DEV_PAGE_SIZE)
 
 /*
  * Default publish interval fraction
@@ -85,9 +94,9 @@ public:
     PdClient *PdClientGet(void) { return pd; }
     devapi *DevApiGet(void) { return dev_api; }
     uint64_t DevcmdPageGet(void) { return devcmd_mem_addr; }
-    uint64_t DevcmddbPageGet(void) { return devcmddb_mem_addr; }
-
-    accel_dev_cmd_regs_t        *devcmd;
+    uint32_t CryptoKeyIdxBaseGet(void) { return crypto_key_idx_base; }
+    uint32_t NumCryptoKeysMaxGet(void) { return num_crypto_keys_max; }
+    uint32_t NumLifsGet(void) { return lif_vec.size(); }
 
     static struct accel_devspec *ParseConfig(boost::property_tree::ptree::value_type node);
 
@@ -103,12 +112,14 @@ private:
     // HAL Info
     devapi                      *dev_api;
     // Resources
-    std::map<uint64_t, AccelLif *> lif_map;
+    std::vector<AccelLif *>     lif_vec;
     uint32_t                    lif_base;
     uint32_t                    intr_base;
     // Devcmd
+    uint64_t                    regs_mem_addr;
     uint64_t                    devcmd_mem_addr;
-    uint64_t                    devcmddb_mem_addr;
+    dev_regs_t                  *regs;
+    dev_cmd_regs_t              *devcmd;
     // CMB
     uint64_t                    cmb_mem_addr;
     uint32_t                    cmb_mem_size;
@@ -117,6 +128,7 @@ private:
     uint32_t                    num_crypto_keys_max;
     bool                        delphi_mounted;
 
+    void _DevInfoRegsInit(void);
     bool _CreateHostDevice(void);
     void _DestroyHostDevice(void);
 
@@ -124,7 +136,7 @@ private:
     static void _DevcmdPoll(void *obj);
 
     accel_status_code_t
-    _AdminCmdHandler(uint64_t lif_id, void *req, void *req_data,
+    _AdminCmdHandler(uint32_t lif_index, void *req, void *req_data,
                      void *resp, void *resp_data);
     accel_status_code_t
     _DevcmdReset(void *req, void *req_data, void *resp, void *resp_data);
@@ -145,7 +157,7 @@ private:
     void _MetricsInit(void);
     void _MetricsFini(void);
 
-    AccelLif *_LifFind(uint64_t lif_id);
+    AccelLif *_LifFind(uint32_t lif_index);
 };
 
 #endif

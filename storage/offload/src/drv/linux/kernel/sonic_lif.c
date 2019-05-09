@@ -18,7 +18,10 @@
 #define PNSO_INIT_LIF_RESET(lif) SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "reset", \
 		CTLTYPE_U8 | CTLFLAG_RW, lif, lif->index, \
 		sonic_sysctl_lif_reset_handler, "CU", "LIF reset control");
+#define NETDEV_IFNAME	if_xname
 #include <linux/printk.h>
+#else
+#define NETDEV_IFNAME	name
 #endif
 #include "pnso_stats.h"
 
@@ -209,12 +212,12 @@ static int sonic_notifyq_clean(struct lif *lif, int budget)
 static bool sonic_adminq_service(struct cq *cq, struct cq_info *cq_info,
 				 void *cb_arg)
 {
-	struct admin_cpl *comp = cq_info->cq_desc;
+	struct admin_cpl *cpl = cq_info->cq_desc;
 
-	if (comp->color != cq->done_color)
+	if (!color_match(cpl->color, cq->done_color))
 		return false;
 
-	sonic_q_service(cq->bound_q, cq_info, comp->cpl_index);
+	sonic_q_service(cq->bound_q, cq_info, cpl->cpl_index);
 
 	return true;
 }
@@ -764,7 +767,7 @@ static void sonic_qcq_free(struct lif *lif, struct qcq *qcq)
 
 static unsigned int sonic_pid_get(struct lif *lif, unsigned int page)
 {
-	unsigned int ndbpgs_per_lif = lif->sonic->ident->dev.db_pages_per_lif;
+	unsigned int ndbpgs_per_lif = lif->sonic->ident.dev.base.ndbpgs_per_lif;
 
 	BUG_ON(ndbpgs_per_lif < page + 1);
 
@@ -823,7 +826,7 @@ static void sonic_qcqs_free(struct lif *lif)
 static int
 sonic_lif_per_core_seq_q_count(struct lif *lif)
 {
-	int q_count = lif->sonic->ident->dev.seq_queues_per_lif;
+	int q_count = lif->sonic->ident.lif.base.queue_count[STORAGE_SEQ_QTYPE_SQ];
 	return q_count / lif->sonic->num_per_core_resources;
 }
 
@@ -869,6 +872,8 @@ static int sonic_lif_alloc(struct sonic *sonic, unsigned int index)
 #else
 	//INIT_LIST_HEAD(&lif->dummy_netdev.napi_list);
 #endif
+	strlcpy(lif->dummy_netdev.NETDEV_IFNAME, DRV_NAME,
+		sizeof(lif->dummy_netdev.NETDEV_IFNAME));
 	lif->sonic = sonic;
 	lif->index = index;
 	lif->lif_id = sonic_get_lif_id(sonic, index);
@@ -907,7 +912,7 @@ int sonic_lifs_alloc(struct sonic *sonic)
 
 	INIT_LIST_HEAD(&sonic->lifs);
 
-	for (i = 0; i < sonic->ident->dev.num_lifs; i++) {
+	for (i = 0; i < sonic->ident.dev.base.nlifs; i++) {
 		err = sonic_lif_alloc(sonic, i);
 		if (err)
 			return err;
@@ -929,7 +934,7 @@ static int sonic_lif_hang_notify(struct lif *lif)
 {
 	struct sonic_dev *idev = &lif->sonic->idev;
 
-	sonic_dev_cmd_hang_notify(idev, lif->lif_id);
+	sonic_dev_cmd_hang_notify(idev, lif->index);
 	return sonic_dev_cmd_wait_check(idev, devcmd_timeout);
 }
 
@@ -1269,18 +1274,18 @@ static int sonic_lif_adminq_init(struct lif *lif)
 	struct qcq *qcq = lif->adminqcq;
 	struct queue *q = &qcq->q;
 	struct napi_struct *napi = &qcq->napi;
-	struct adminq_init_cpl comp;
+	struct adminq_init_cpl cpl;
 	int err;
 
-	sonic_dev_cmd_adminq_init(idev, q, 0, lif->index, 0);
+	sonic_dev_cmd_adminq_init(idev, qcq, lif->index, 0);
 	err = sonic_dev_cmd_wait_check(idev, devcmd_timeout);
 	if (err)
 		return err;
 
-	sonic_dev_cmd_comp(idev, &comp);
+	sonic_dev_cmd_cpl(idev, &cpl);
 	q->pc_res = NULL;
-	q->qid = comp.qid;
-	q->qtype = comp.qtype;
+	q->qid = cpl.qid;
+	q->qtype = cpl.qtype;
 	q->qgroup = (storage_seq_qgroup_t)STORAGE_SEQ_QTYPE_ADMIN;
 	q->db = sonic_db_map(idev, q);
 
@@ -1297,6 +1302,7 @@ static int sonic_lif_adminq_init(struct lif *lif)
 
 	/* Enabling interrupts on adminq from here on... */
 	napi_enable(napi);
+        sonic_intr_clean(&lif->adminqcq->intr);
 	sonic_intr_mask(&lif->adminqcq->intr, false);
 
 	return sonic_debugfs_add_qcq(lif, qcq);
@@ -1306,10 +1312,9 @@ static int sonic_lif_adminq_reinit(struct lif *lif)
 {
 	struct sonic_dev *idev = &lif->sonic->idev;
 	struct qcq *qcq = lif->adminqcq;
-	struct queue *q = &qcq->q;
 	int err;
 
-	sonic_dev_cmd_adminq_init(idev, q, 0, lif->index, 0);
+	sonic_dev_cmd_adminq_init(idev, qcq, lif->index, 0);
 	err = sonic_dev_cmd_wait_check(idev, devcmd_timeout);
 	if (err)
 		return err;
@@ -1321,31 +1326,52 @@ static int sonic_lif_adminq_reinit(struct lif *lif)
 	return 0;
 }
 
+static int sonic_lif_set_netdev_info(struct lif *lif)
+{
+	struct sonic_admin_ctx ctx = {
+		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
+		.cmd.lif_setattr = {
+			.opcode = CMD_OPCODE_LIF_SETATTR,
+			.lif_index = lif->index,
+			.attr = ACCEL_LIF_ATTR_NAME,
+		},
+	};
+
+	strlcpy(ctx.cmd.lif_setattr.name, lif->dummy_netdev.NETDEV_IFNAME,
+		sizeof(ctx.cmd.lif_setattr.name));
+	OSAL_LOG_INFO("NETDEV_CHANGENAME %s %s",
+		lif->name, ctx.cmd.lif_setattr.name);
+
+	return sonic_adminq_post_wait(lif, &ctx);
+}
+
 static int sonic_lif_cmd_notifyq_init(struct lif *lif)
 {
 	struct qcq *qcq = lif->notifyqcq;
 	struct queue *q = &qcq->q;
+	struct cq *cq = &qcq->cq;
 	int err;
 
 	struct sonic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.notifyq_init.opcode = CMD_OPCODE_NOTIFYQ_INIT,
+		.cmd.notifyq_init.lif_index = lif->index,
 		.cmd.notifyq_init.index = q->qid,
 		.cmd.notifyq_init.pid = q->pid,
 		.cmd.notifyq_init.intr_index = lif->adminqcq->intr.index,
-		.cmd.notifyq_init.lif_index = lif->index,
 		.cmd.notifyq_init.ring_size = ilog2(q->num_descs),
 		.cmd.notifyq_init.ring_base = q->base_pa,
 		.cmd.notifyq_init.notify_size = 0,
 		.cmd.notifyq_init.notify_base = 0,
+		.cmd.notifyq_init.cq_ring_base = cq->base_pa,
 	};
 
 	err = sonic_adminq_post_wait(lif, &ctx);
 	if (err)
 		return err;
 
-	q->qid = ctx.comp.notifyq_init.qid;
-	q->qtype = ctx.comp.notifyq_init.qtype;
+	q->qid = ctx.cpl.notifyq_init.qid;
+	q->qtype = ctx.cpl.notifyq_init.qtype;
         return 0;
 }
 
@@ -1751,8 +1777,8 @@ static int sonic_ev_intr_init(struct per_core_resource *res, int ev_count)
 	err = 0;
 	sonic_intr_mask(&res->intr, true);
 	sonic_intr_mask_on_assertion(&res->intr);
+        sonic_intr_clean(&res->intr);
 	sonic_intr_coal_set(&res->intr, 0);
-	sonic_intr_return_credits(&res->intr, 0, false, false);
 	err = per_core_resource_request_irq(res);
 	if (err) {
 		OSAL_LOG_ERROR("Failed to request irq");
@@ -1773,7 +1799,7 @@ sonic_lif_per_core_resources_init(struct lif *lif)
 
 	OSAL_LOG_INFO("Init per-core-resources, %u seq_queues_per_lif, "
 		 "%u num_per_core_resources, %u pc_q_count",
-		 lif->sonic->ident->dev.seq_queues_per_lif,
+		 lif->sonic->ident.lif.base.queue_count[STORAGE_SEQ_QTYPE_SQ],
 		 lif->sonic->num_per_core_resources, pc_q_count);
 
 	spin_lock_init(&lif->res.lock);
@@ -1831,7 +1857,7 @@ sonic_lif_per_core_resources_reinit(struct lif *lif)
 
 	OSAL_LOG_DEBUG("Reinit per-core-resources, %u seq_queues_per_lif, "
 		 "%u num_per_core_resources, %u pc_q_count",
-		 lif->sonic->ident->dev.seq_queues_per_lif,
+		 lif->sonic->ident.lif.base.queue_count[STORAGE_SEQ_QTYPE_SQ],
 		 lif->sonic->num_per_core_resources, pc_q_count);
 
 	LIF_FOR_EACH_PC_RES(lif, i, res) {
@@ -1850,6 +1876,9 @@ sonic_lif_per_core_resources_reinit(struct lif *lif)
 		err = sonic_crypto_statusqs_reinit(res);
 		if (err)
 			goto done;
+
+		sonic_intr_clean(&res->intr);
+		sonic_intr_mask(&res->intr, false);
 	}
 done:
 	return err;
@@ -1925,6 +1954,10 @@ static int sonic_lif_init(struct lif *lif)
 		goto err_out_adminq_deinit;
 
 	err = sonic_lif_notifyq_init(lif);
+	if (err)
+		goto err_out_adminq_deinit;
+
+	err = sonic_lif_set_netdev_info(lif);
 	if (err)
 		goto err_out_adminq_deinit;
 
@@ -2060,8 +2093,8 @@ void sonic_lifs_unregister(struct sonic *sonic)
 int sonic_lifs_size(struct sonic *sonic)
 {
 	int err;
-	identity_t *ident = sonic->ident;
-	unsigned int nintrs, dev_nintrs = ident->dev.num_intrs;
+	identity_t *ident = &sonic->ident;
+	unsigned int nintrs, dev_nintrs = ident->dev.base.nintrs;
 
 	sonic->num_per_core_resources = core_count; /* module param */
 	nintrs = core_count + 1; /* 1 for adminq */
@@ -2341,6 +2374,7 @@ sonic_lif_seq_q_legacy_init(struct queue *q)
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.seq_queue_init = {
 			.opcode = CMD_OPCODE_SEQ_QUEUE_INIT,
+			.lif_index = lif->index,
 			.index = q->qid,
 			.pid = q->pid,
 			.qgroup = q->qgroup,
@@ -2368,8 +2402,8 @@ sonic_lif_seq_q_legacy_init(struct queue *q)
 	if (err)
 		return err;
 
-	q->qid = ctx.comp.seq_queue_init.qid;
-	q->qtype = ctx.comp.seq_queue_init.qtype;
+	q->qid = ctx.cpl.seq_queue_init.qid;
+	q->qtype = ctx.cpl.seq_queue_init.qtype;
 	q->db = sonic_db_map(q->idev, q);
 
 	OSAL_LOG_INFO("seq_q->qid %d", q->qid);
@@ -2387,7 +2421,8 @@ sonic_lif_seq_q_legacy_control(struct queue *q, uint16_t opcode)
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.seq_queue_control = {
 			.opcode = opcode,
-			.qid = q->qid,
+			.lif_index = lif->index,
+			.index = q->qid,
 			.qtype = STORAGE_SEQ_QTYPE_SQ,
 		},
 	};
@@ -2396,8 +2431,8 @@ sonic_lif_seq_q_legacy_control(struct queue *q, uint16_t opcode)
 	OSAL_ASSERT((opcode == CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE) ||
 		    (opcode == CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE));
 
-	OSAL_LOG_INFO("seq_q_control.qid %d",
-			ctx.cmd.seq_queue_control.qid);
+	OSAL_LOG_INFO("seq_q_control.index %d",
+			ctx.cmd.seq_queue_control.index);
 	OSAL_LOG_INFO("seq_q_control.opcode %d",
 			ctx.cmd.seq_queue_control.opcode);
 
@@ -2416,12 +2451,14 @@ static int
 sonic_lif_seq_q_batch_control(struct seq_queue_batch *batch,
 			      void *cb_arg)
 {
+	struct lif *lif = batch->lif;
 	enum cmd_opcode opcode = *((enum cmd_opcode *)cb_arg);
 	struct sonic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.seq_queue_batch_control = {
 			.opcode = opcode,
-			.qid = batch->base_qid,
+			.lif_index = lif->index,
+			.index = batch->base_qid,
 			.qtype = STORAGE_SEQ_QTYPE_SQ,
 			.num_queues = batch->num_queues,
 		},
@@ -2431,8 +2468,8 @@ sonic_lif_seq_q_batch_control(struct seq_queue_batch *batch,
 	OSAL_ASSERT((opcode == CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE) ||
 		    (opcode == CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE));
 
-	OSAL_LOG_INFO("seq_q_batch_control.qid %d",
-			ctx.cmd.seq_queue_batch_control.qid);
+	OSAL_LOG_INFO("seq_q_batch_control.index %d",
+			ctx.cmd.seq_queue_batch_control.index);
 	OSAL_LOG_INFO("seq_q_batch_control.num_queues %d",
 			ctx.cmd.seq_queue_batch_control.num_queues);
 	OSAL_LOG_INFO("seq_q_control.opcode %d",
@@ -2453,10 +2490,12 @@ static int
 sonic_lif_seq_q_batch_init(struct seq_queue_batch *batch,
 			   void *cb_arg)
 {
+	struct lif *lif = batch->lif;
 	struct sonic_admin_ctx ctx = {
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.seq_queue_batch_init = {
 			.opcode = CMD_OPCODE_SEQ_QUEUE_BATCH_INIT,
+			.lif_index = lif->index,
 			.index = batch->base_qid,
 			.num_queues = batch->num_queues,
 			.pid = batch->pid,
@@ -2498,6 +2537,7 @@ sonic_lif_seq_q_init_complete(struct lif *lif)
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.seq_queue_init_complete = {
 			.opcode = CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE,
+			.lif_index = lif->index,
 		},
 	};
 	int err;

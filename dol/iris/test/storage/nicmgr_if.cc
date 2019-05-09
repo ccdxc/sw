@@ -16,14 +16,7 @@
 
 #define ACCEL_DEV_CMD_ENUMERATE
 #include "accel_dev.hpp"
-#include "accel_if.h"
 #include "dev.hpp"
-
-/*
- * Size of accel_dev_cmd_regs_t's cmd/cpl area without the data portion.
- */
-#define DEV_CMDREGS_CMDCPL_SIZE         \
-    (offsetof(accel_dev_cmd_regs_t, cpl) + sizeof(dev_cmd_cpl_t))
 
 using namespace sdk::platform::utils;
 using namespace utils;
@@ -43,11 +36,11 @@ namespace nicmgr_if {
 static DeviceManager *devmgr;
 static AccelDev     *accel_dev;
 static dp_mem_t     *accel_devcmdpa_buf;
-static dp_mem_t     *accel_devcmddbpa_buf;
+static dp_mem_t     *accel_devcmdpa_done;
 static dp_mem_t     *accel_devcmdpa_cmdcpl;
 static uint64_t     nicmgr_accel_lif_id;
 
-static accel_dev_cmd_regs_t *nicmgr_if_push(dev_cmd_t& cmd);
+static dev_cmd_regs_t *nicmgr_if_push(dev_cmd_t& cmd);
 
 
 static int
@@ -97,14 +90,15 @@ nicmgr_if_init(void)
     accel_devcmdpa_buf = new dp_mem_t((uint8_t *)accel_dev->DevcmdPageGet(),
                                       1, ACCEL_DEV_PAGE_SIZE,
                                       DP_MEM_TYPE_HBM, DP_MEM_ALLOC_NO_FILL);
-    accel_devcmddbpa_buf = new dp_mem_t((uint8_t *)accel_dev->DevcmddbPageGet(),
-                                        1, sizeof(dev_cmd_db_t),
-                                        DP_MEM_TYPE_HBM, DP_MEM_ALLOC_NO_FILL);
+    accel_devcmdpa_done =
+           accel_devcmdpa_buf->fragment_find(0, offsetof(dev_cmd_regs_t, done) +
+                                             sizeof(uint32_t));
     accel_devcmdpa_cmdcpl =
-           accel_devcmdpa_buf->fragment_find(0, DEV_CMDREGS_CMDCPL_SIZE);
+           accel_devcmdpa_buf->fragment_find(offsetof(dev_cmd_regs_t, cpl),
+                                             sizeof(dev_cmd_cpl_t));
 
-    printf("%s accel_devcmd_page 0x%lx accel_devcmddb_page 0x%lx\n",
-           __FUNCTION__, accel_devcmdpa_buf->pa(), accel_devcmddbpa_buf->pa());
+    printf("%s accel_devcmd_page 0x%lx\n",
+           __FUNCTION__, accel_devcmdpa_buf->pa());
     return 0;
 }
 
@@ -128,59 +122,94 @@ nicmgr_if_fini(void)
 
 
 int
-nicmgr_if_identify(uint64_t *ret_seq_lif,
-                   uint32_t *ret_seq_queues_per_lif,
-                   accel_ring_t *ret_accel_ring_tbl,
-                   uint32_t accel_ring_tbl_size)
+nicmgr_if_identify(void)
 {
-    accel_dev_cmd_regs_t  *dev_cmd;
-    identity_t      *identity;
-    identify_cpl_t  *cpl;
-    dev_cmd_t       cmd = {0};
+    dev_cmd_regs_t      *dev_cmd;
+    dev_identity_t      *identity;
+    dev_identify_cpl_t  *cpl;
+    dev_cmd_t           cmd = {0};
 
-    *ret_seq_lif = 0;
-    *ret_seq_queues_per_lif = 0;
-
-    cmd.identify.opcode = CMD_OPCODE_IDENTIFY;
-    cmd.identify.ver = IDENTITY_VERSION_1;
+    cmd.dev_identify.opcode = CMD_OPCODE_IDENTIFY;
+    cmd.dev_identify.type = ACCEL_DEV_TYPE_BASE;
+    cmd.dev_identify.ver = IDENTITY_VERSION_1;
     dev_cmd = nicmgr_if_push(cmd);
     if (dev_cmd) {
 
         /*
          * Read the full result buffer including the data portion.
          */
-        dev_cmd = (accel_dev_cmd_regs_t *)accel_devcmdpa_buf->read_thru();
-        cpl = &dev_cmd->cpl.identify;
+        dev_cmd = (dev_cmd_regs_t *)accel_devcmdpa_buf->read_thru();
+        cpl = &dev_cmd->cpl.dev_identify;
         if (cpl->ver != IDENTITY_VERSION_1) {
             printf("%s unsupported identity version %u\n",
                    __FUNCTION__, cpl->ver);
             return -1;
         }
-        identity = (identity_t *)dev_cmd->data;
-        printf("%s num_lifs %u hw_lif_id 0x%lx db_pages_per_lif %u "
-               "admin_queues_per_lif %u seq_queues_per_lif %u\n", __FUNCTION__,
-               identity->dev.num_lifs, identity->dev.lif_tbl[0].hw_lif_id,
-               identity->dev.db_pages_per_lif, identity->dev.admin_queues_per_lif,
-               identity->dev.seq_queues_per_lif);
-        if (!identity->dev.num_lifs || !identity->dev.db_pages_per_lif) {
+        identity = (dev_identity_t *)dev_cmd->data;
+        printf("%s nlifs %u nintrs %u ndbpgs_per_lif %u\n", __FUNCTION__,
+               identity->base.nlifs, identity->base.nintrs,
+               identity->base.ndbpgs_per_lif);
+        if (!identity->base.nlifs || !identity->base.ndbpgs_per_lif) {
             printf("%s num_lifs or db_pages_per_lif ERROR\n", __FUNCTION__);
             return -1;
         }
+        return 0;
+    }
 
-        nicmgr_accel_lif_id = identity->dev.lif_tbl[0].hw_lif_id;
+    return -1;
+}
+
+
+int
+nicmgr_if_lif_identify(uint64_t *ret_seq_lif,
+                       uint32_t *ret_seq_queues_per_lif,
+                       accel_ring_t *ret_accel_ring_tbl,
+                       uint32_t accel_ring_tbl_size)
+{
+    dev_cmd_regs_t      *dev_cmd;
+    lif_identity_t      *identity;
+    lif_identify_cpl_t  *cpl;
+    dev_cmd_t           cmd = {0};
+
+    *ret_seq_lif = 0;
+    *ret_seq_queues_per_lif = 0;
+
+    cmd.lif_identify.opcode = CMD_OPCODE_LIF_IDENTIFY;
+    cmd.lif_identify.type = ACCEL_LIF_TYPE_BASE;
+    cmd.lif_identify.ver = IDENTITY_VERSION_1;
+    cmd.lif_identify.lif_index = 0;
+    dev_cmd = nicmgr_if_push(cmd);
+    if (dev_cmd) {
+
+        /*
+         * Read the full result buffer including the data portion.
+         */
+        dev_cmd = (dev_cmd_regs_t *)accel_devcmdpa_buf->read_thru();
+        cpl = &dev_cmd->cpl.lif_identify;
+        if (cpl->ver != IDENTITY_VERSION_1) {
+            printf("%s unsupported identity version %u\n",
+                   __FUNCTION__, cpl->ver);
+            return -1;
+        }
+        identity = (lif_identity_t *)dev_cmd->data;
+        nicmgr_accel_lif_id = identity->base.hw_index;
+        *ret_seq_lif = nicmgr_accel_lif_id;
+        *ret_seq_queues_per_lif = identity->base.queue_count[ACCEL_LOGICAL_QTYPE_SQ];
+
+        printf("%s hw_index 0x%lx seq_queues_per_lif %u\n", __FUNCTION__,
+               nicmgr_accel_lif_id, *ret_seq_queues_per_lif);
+
         if (ret_accel_ring_tbl) {
-            if (accel_ring_tbl_size < sizeof(identity->dev.accel_ring_tbl)) {
+            if (accel_ring_tbl_size < sizeof(identity->base.accel_ring_tbl)) {
                 printf("%s accel_ring_tbl_size %u less than required size %d\n",
                        __FUNCTION__, accel_ring_tbl_size,
-                      (int) sizeof(identity->dev.accel_ring_tbl));
+                      (int) sizeof(identity->base.accel_ring_tbl));
                 return -1;
             }
-            memcpy(ret_accel_ring_tbl, identity->dev.accel_ring_tbl,
+            memcpy(ret_accel_ring_tbl, identity->base.accel_ring_tbl,
                    accel_ring_tbl_size);
         }
 
-        *ret_seq_lif = nicmgr_accel_lif_id;
-        *ret_seq_queues_per_lif = identity->dev.seq_queues_per_lif;
         return 0;
     }
 
@@ -193,7 +222,7 @@ nicmgr_if_reset(void)
 {
     dev_cmd_t   cmd = {0};
 
-    cmd.reset.opcode = CMD_OPCODE_RESET;
+    cmd.dev_reset.opcode = CMD_OPCODE_RESET;
     return nicmgr_if_push(cmd) ? 0 : -1;
 }
 
@@ -204,7 +233,7 @@ nicmgr_if_lif_init(uint64_t seq_lif)
     dev_cmd_t   cmd = {0};
 
     cmd.lif_init.opcode = CMD_OPCODE_LIF_INIT;
-    cmd.lif_init.index = seq_lif;
+    cmd.lif_init.lif_index = 0;
     return nicmgr_if_push(cmd) ? 0 : -1;
 }
 
@@ -215,7 +244,7 @@ nicmgr_if_lif_reset(uint64_t seq_lif)
     dev_cmd_t   cmd = {0};
 
     cmd.lif_reset.opcode = CMD_OPCODE_LIF_RESET;
-    cmd.lif_reset.index = seq_lif;
+    cmd.lif_init.lif_index = 0;
     return nicmgr_if_push(cmd) ? 0 : -1;
 }
 
@@ -228,8 +257,8 @@ nicmgr_if_admin_queue_init(uint64_t seq_lif,
     dev_cmd_t   cmd = {0};
 
     cmd.adminq_init.opcode = CMD_OPCODE_ADMINQ_INIT;
+    cmd.adminq_init.lif_index = 0;
     cmd.adminq_init.index = 0;
-    cmd.adminq_init.lif_index = seq_lif;
     cmd.adminq_init.ring_size = log2_num_entries;
     cmd.adminq_init.ring_base = base_addr;
     return nicmgr_if_push(cmd) ? 0 : -1;
@@ -249,6 +278,7 @@ nicmgr_if_seq_queue_init(uint64_t lif,
     dev_cmd_t   cmd = {0};
 
     cmd.seq_q_init.opcode = CMD_OPCODE_SEQ_QUEUE_INIT;
+    cmd.seq_q_init.lif_index = 0;
     cmd.seq_q_init.index = qid;
     cmd.seq_q_init.qgroup = qgroup;
     cmd.seq_q_init.enable = true;
@@ -257,7 +287,6 @@ nicmgr_if_seq_queue_init(uint64_t lif,
     cmd.seq_q_init.entry_size = log2_entry_size;
     cmd.seq_q_init.wring_size = log2_num_entries;
     cmd.seq_q_init.wring_base = base_addr;
-    cmd.seq_q_init.dol_req_devcmd_done = true;
     return nicmgr_if_push(cmd) ? 0 : -1;
 }
 
@@ -268,43 +297,46 @@ nicmgr_if_seq_queue_init_complete(void)
     dev_cmd_t   cmd = {0};
 
     cmd.seq_q_init_complete.opcode = CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE;
+    cmd.seq_q_init_complete.lif_index = 0;
     return nicmgr_if_push(cmd) ? 0 : -1;
 }
 
 
-static accel_dev_cmd_regs_t *
+static dev_cmd_regs_t *
 nicmgr_if_push(dev_cmd_t& cmd)
 {
-    accel_dev_cmd_regs_t  *dev_cmd;
+    volatile dev_cmd_regs_t  *dev_cmd;
+    dev_cmd_cpl_t   *dev_cpl;
     bool            cmd_complete = false;
 
     accel_devcmdpa_buf->clear();
-    dev_cmd = (accel_dev_cmd_regs_t *)accel_devcmdpa_buf->read();
+    dev_cmd = (dev_cmd_regs_t *)accel_devcmdpa_buf->read();
 
     while (!cmd_complete) {
-        dev_cmd->signature = DEV_CMD_SIGNATURE;
+        dev_cmd->doorbell = true;
         dev_cmd->done = false;
-        memcpy(&dev_cmd->cmd, &cmd, sizeof(dev_cmd->cmd));
-        accel_devcmdpa_buf->fragment_find(0, DEV_CMDREGS_CMDCPL_SIZE)->write_thru();
+        memcpy((void *)&dev_cmd->cmd, &cmd, sizeof(dev_cmd->cmd));
+        accel_devcmdpa_buf->fragment_find(0, 
+                            offsetof(dev_cmd_regs_t, cmd) +
+                            sizeof(dev_cmd_t))->write_thru();
 
         /*
          * Sending command thru devcmdpa so ring its doorbell.
          *
          * Note: we don't have a way to trigger Accel timer so just go
          * directly to its DevcmdHandler.
-        dev_cmd_db = (dev_cmd_db_t *)accel_devcmddbpa_buf->read();
-        dev_cmd_db->v = true;
-        accel_devcmddbpa_buf->write_thru();
          */
         accel_dev->DevcmdHandler();
 
-        dev_cmd = (accel_dev_cmd_regs_t *)accel_devcmdpa_cmdcpl->read_thru();
+        accel_devcmdpa_done->read_thru();
         if (!dev_cmd->done) {
             printf("%s command %u failed done %u\n", __FUNCTION__,
                    dev_cmd->cmd.nop.opcode, dev_cmd->done);
             return nullptr;
         }
-        switch (dev_cmd->cpl.status) {
+
+        dev_cpl = (dev_cmd_cpl_t *)accel_devcmdpa_cmdcpl->read_thru();
+        switch (dev_cpl->status) {
 
         case ACCEL_RC_EAGAIN:
             usleep(10000);
@@ -316,12 +348,12 @@ nicmgr_if_push(dev_cmd_t& cmd)
 
         default:
             printf("%s command %u failed status %u\n", __FUNCTION__,
-                   dev_cmd->cmd.nop.opcode, dev_cmd->cpl.status);
+                   dev_cmd->cmd.nop.opcode, dev_cpl->status);
             return nullptr;
         }
     }
 
-    return dev_cmd;
+    return (dev_cmd_regs_t *)dev_cmd;
 }
 
 }  // namespace nicmgr_if

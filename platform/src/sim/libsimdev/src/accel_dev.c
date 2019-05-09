@@ -40,6 +40,10 @@ typedef struct accelparams_s {
     u_int64_t devcmddb_pa;
 } accelparams_t;
 
+static dev_regs_t dev_regs = {
+    .info.base.signature = ACCEL_DEV_CMD_SIGNATURE,
+};
+
 static simdev_t *current_sd;
 
 static int
@@ -62,37 +66,6 @@ accel_cmb_base(simdev_t *sd)
     accelparams_t *ep = sd->priv;
     return ep->cmb_base;
 }
-
-/*
- * ================================================================
- * dev_cmd regs
- * ----------------------------------------------------------------
- */
-
-struct dev_cmd_regs {
-    u_int32_t signature;
-    u_int32_t done;
-    u_int32_t cmd[16];
-    u_int32_t comp[4];
-    uint8_t data[2048] __attribute__((aligned (2048)));
-};
-
-_Static_assert(sizeof(struct dev_cmd_regs) == 4096,
-                "Devcmd region should be 4K bytes");
-_Static_assert((offsetof(struct dev_cmd_regs, cmd)  % 4) == 0,
-                "Devcmd cmd field should be word-aligned");
-_Static_assert(sizeof(((struct dev_cmd_regs*)0)->cmd) == 64,
-                "Devcmd cmd field should be 64 bytes");
-_Static_assert((offsetof(struct dev_cmd_regs, comp) % 4) == 0,
-                "Devcmd comp field should be word-aligned");
-_Static_assert(sizeof(((struct dev_cmd_regs*)0)->comp) == 16,
-                "Devcmd comp field should be 16 bytes");
-_Static_assert((offsetof(struct dev_cmd_regs, data) % 4) == 0,
-                "Devcmd data region should be word-aligned");
-
-static struct dev_cmd_regs dev_cmd_regs = {
-    .signature = DEV_CMD_SIGNATURE,
-};
 
 /*
  * ================================================================
@@ -123,7 +96,7 @@ static int
 bar_devcmd_rd(int bar, int reg,
               u_int64_t offset, u_int8_t size, u_int64_t *valp)
 {
-    if (offset + size > sizeof(dev_cmd_regs)) {
+    if (offset + size > sizeof(dev_regs)) {
         simdev_error("devcmd_rd: invalid offset 0x%"PRIx64" size 0x%x\n",
                      offset, size);
         return -1;
@@ -139,7 +112,7 @@ static int
 bar_devcmd_wr(int bar, int reg,
               u_int64_t offset, u_int8_t size, u_int64_t val)
 {
-    if (offset + size >= sizeof(dev_cmd_regs)) {
+    if (offset + size >= sizeof(dev_regs)) {
         simdev_error("devcmd_rd: invalid offset 0x%"PRIx64" size 0x%x\n",
                      offset, size);
         return -1;
@@ -652,12 +625,13 @@ accel_init(simdev_t *sd, const char *devparams)
 
     enum storage_seq_qtype {
         STORAGE_SEQ_QTYPE_SQ        = 0,
-        STORAGE_SEQ_QTYPE_UNUSED    = 1,
+        STORAGE_SEQ_QTYPE_NOTIFY    = 1,
         STORAGE_SEQ_QTYPE_ADMIN     = 2,
         STORAGE_SEQ_QTYPE_MAX
     };
 
     ep->upd[STORAGE_SEQ_QTYPE_SQ] = 0xb;
+    ep->upd[STORAGE_SEQ_QTYPE_NOTIFY] = 0xb;
     ep->upd[STORAGE_SEQ_QTYPE_ADMIN] = 0xb;
 
     simdev_set_lif(ep->lif);

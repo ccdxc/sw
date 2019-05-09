@@ -89,8 +89,7 @@ struct sonic {
 	struct dentry *dentry;
 	struct sonic_dev_bar bars[SONIC_BARS_MAX];
 	unsigned int num_bars;
-	union identity *ident;
-	dma_addr_t ident_pa;
+	struct identity ident;
 	struct list_head lifs;
 	unsigned int num_per_core_resources;
 	unsigned int nintrs;
@@ -130,7 +129,7 @@ struct sonic {
 struct sonic_admin_ctx {
   struct completion work;
   union adminq_cmd cmd;
-  union adminq_cpl comp;
+  union adminq_cpl cpl;
 
 #ifndef ADMINQ
   struct list_head list;
@@ -148,7 +147,6 @@ int sonic_dev_cmd_wait_check(struct sonic_dev *idev, unsigned long max_seconds);
 int sonic_set_dma_mask(struct sonic *sonic);
 int sonic_setup(struct sonic *sonic);
 int sonic_identify(struct sonic *sonic);
-void sonic_forget_identity(struct sonic *sonic);
 int sonic_reset(struct sonic *sonic);
 int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx);
 

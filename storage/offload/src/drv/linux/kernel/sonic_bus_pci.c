@@ -204,7 +204,7 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 
 	err = sonic_map_bars(sonic);
 	if (err)
-		goto err_out_unmap_bars;
+		goto err_out_pci_clear_master;
 
 	/* Discover sonic dev resources
 	 */
@@ -218,19 +218,19 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	err = sonic_reset(sonic);
 	if (err) {
 		OSAL_LOG_ERROR("Cannot reset device, aborting");
-		goto err_out_unmap_bars;
+		goto err_out_teardown;
 	}
 
 	err = sonic_identify(sonic);
 	if (err) {
 		OSAL_LOG_ERROR("Cannot identify device, aborting");
-		goto err_out_unmap_bars;
+		goto err_out_teardown;
 	}
 
-	OSAL_LOG_INFO("ASIC %s rev 0x%X serial num %s fw version %s",
-		 sonic_dev_asic_name(sonic->ident->dev.asic_type),
-		 sonic->ident->dev.asic_rev, sonic->ident->dev.serial_num,
-		 sonic->ident->dev.fw_version);
+	OSAL_LOG_INFO("ASIC %s rev 0x%X serial num %s fw status %u fw version %s",
+		 sonic_dev_asic_name(sonic->ident.info.asic_type),
+		 sonic->ident.info.asic_rev, sonic->ident.info.serial_num,
+		 sonic->ident.info.fw_status, sonic->ident.info.fw_version);
 
 	/* Allocate and init LIFs, creating a netdev per LIF
 	 */
@@ -238,19 +238,19 @@ static int sonic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	err = sonic_lifs_size(sonic);
 	if (err) {
 		OSAL_LOG_ERROR("Cannot size LIFs, aborting, err=%d", err);
-		goto err_out_forget_identity;
+		goto err_out_teardown;
 	}
 
 	err = sonic_lifs_alloc(sonic);
 	if (err) {
 		OSAL_LOG_ERROR("Cannot allocate LIFs, aborting, err=%d", err);
-		goto err_out_free_lifs;
+		goto err_out_free_irqs;
 	}
 
 	err = sonic_lifs_init(sonic);
 	if (err) {
 		OSAL_LOG_ERROR("Cannot init LIFs, aborting, err=%d", err);
-		goto err_out_deinit_lifs;
+		goto err_out_free_lifs;
 	}
 
 	err = sonic_lifs_register(sonic);
@@ -265,12 +265,15 @@ err_out_deinit_lifs:
 	sonic_lifs_deinit(sonic);
 err_out_free_lifs:
 	sonic_lifs_free(sonic);
+err_out_free_irqs:
 	sonic_bus_free_irq_vectors(sonic);
-err_out_forget_identity:
-	sonic_forget_identity(sonic);
+err_out_teardown:
+	sonic_dev_teardown(sonic);
 err_out_unmap_bars:
 	sonic_unmap_bars(sonic);
 	pci_release_regions(pdev);
+err_out_pci_clear_master:
+	pci_clear_master(pdev);
 err_out_disable_device:
 #ifndef __FreeBSD__
 	pci_disable_device(pdev);
@@ -293,7 +296,7 @@ static void sonic_remove(struct pci_dev *pdev)
 		sonic_lifs_deinit(sonic);
 		sonic_lifs_free(sonic);
 		sonic_bus_free_irq_vectors(sonic);
-		sonic_forget_identity(sonic);
+		sonic_dev_teardown(sonic);
 		sonic_unmap_bars(sonic);
 		pci_release_regions(pdev);
 #ifndef __FreeBSD__

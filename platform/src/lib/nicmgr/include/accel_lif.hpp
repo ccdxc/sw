@@ -163,7 +163,10 @@ typedef enum {
     ACCEL_LIF_EV_CREATE,
     ACCEL_LIF_EV_DESTROY,
     ACCEL_LIF_EV_HAL_UP,
+    ACCEL_LIF_EV_IDENTIFY,
     ACCEL_LIF_EV_INIT,
+    ACCEL_LIF_EV_SETATTR,
+    ACCEL_LIF_EV_GETATTR,
     ACCEL_LIF_EV_RESET,
     ACCEL_LIF_EV_RESET_DESTROY,
     ACCEL_LIF_EV_WAIT_SEQ_QUEUE_QUIESCE,
@@ -192,7 +195,10 @@ typedef enum {
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_CREATE),                   \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_DESTROY),                  \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_HAL_UP),                   \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_IDENTIFY),                 \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_INIT),                     \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_SETATTR),                  \
+    ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_GETATTR),                  \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_RESET),                    \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_RESET_DESTROY),            \
     ACCEL_DEV_INDEX_STRINGIFY(ACCEL_LIF_EV_WAIT_SEQ_QUEUE_QUIESCE),   \
@@ -258,6 +264,7 @@ typedef struct eth_lif_res_s {
     uint64_t intr_base;
     uint64_t cmb_mem_addr;
     uint64_t cmb_mem_size;
+    uint32_t index;
 } accel_lif_res_t;
 
 /**
@@ -282,7 +289,6 @@ public:
     uint32_t SeqCreatedCountGet(void) { return seq_created_count; }
     const accel_ring_t *AccelRingTableGet(void) { return accel_ring_tbl; }
 
-    accel_dev_cmd_regs_t              *devcmd;
     lif_info_t                  hal_lif_info_;
 
     friend void AdminCmdHandler(void *obj, void *req, void *req_data,
@@ -304,6 +310,9 @@ public:
     accel_lif_event_t accel_lif_hal_up_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_ring_info_get_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_init_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_setattr_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_getattr_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_identify_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_reset_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_seq_quiesce_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_rgroup_quiesce_action(accel_lif_event_t event);
@@ -333,9 +342,13 @@ private:
     PdClient                    *pd;
     // HAL Info
     devapi                      *dev_api;
+    uint32_t                    index;
     uint8_t                     cosA, cosB, ctl_cosA, ctl_cosB;
+
     // Resources
     uint32_t                    intr_base;
+    uint32_t                    crypto_key_idx_base;
+    uint32_t                    num_crypto_keys_max;
     // CMB
     uint64_t                    cmb_qinfo_addr;
     uint64_t                    cmb_rmetrics_addr;

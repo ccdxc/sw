@@ -177,6 +177,11 @@ static accel_lif_state_event_t  lif_pre_init_ev_table[] = {
         ACCEL_LIF_ST_POST_INIT,
     },
     {
+        ACCEL_LIF_EV_IDENTIFY,
+        &AccelLif::accel_lif_identify_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_RESET,
         &AccelLif::accel_lif_null_action,
         ACCEL_LIF_ST_SAME,
@@ -208,6 +213,21 @@ static accel_lif_state_event_t  lif_post_init_ev_table[] = {
         ACCEL_LIF_ST_SAME,
     },
     {
+        ACCEL_LIF_EV_IDENTIFY,
+        &AccelLif::accel_lif_identify_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_SETATTR,
+        &AccelLif::accel_lif_setattr_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_GETATTR,
+        &AccelLif::accel_lif_getattr_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_RESET,
         &AccelLif::accel_lif_reset_action,
         ACCEL_LIF_ST_SEQ_QUEUE_RESET,
@@ -236,6 +256,11 @@ static accel_lif_state_event_t  lif_seq_reset_ev_table[] = {
     {
         ACCEL_LIF_EV_ANY,
         &AccelLif::accel_lif_reject_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_GETATTR,
+        &AccelLif::accel_lif_getattr_action,
         ACCEL_LIF_ST_SAME,
     },
     {
@@ -377,6 +402,21 @@ static accel_lif_state_event_t  lif_seq_pre_init_ev_table[] = {
         ACCEL_LIF_ST_POST_INIT,
     },
     {
+        ACCEL_LIF_EV_IDENTIFY,
+        &AccelLif::accel_lif_identify_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_SETATTR,
+        &AccelLif::accel_lif_setattr_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_GETATTR,
+        &AccelLif::accel_lif_getattr_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_INIT,
         &AccelLif::accel_lif_null_action,
         ACCEL_LIF_ST_POST_INIT_POST_RESET,
@@ -423,6 +463,11 @@ static accel_lif_state_event_t  lif_post_init_post_reset_ev_table[] = {
         ACCEL_LIF_ST_SEQ_QUEUE_PRE_INIT,
     },
     {
+        ACCEL_LIF_EV_GETATTR,
+        &AccelLif::accel_lif_getattr_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_RESET_DESTROY,
         &AccelLif::accel_lif_null_action,
         ACCEL_LIF_ST_SEQ_QUEUE_PRE_INIT,
@@ -452,6 +497,16 @@ static accel_lif_state_event_t  lif_seq_init_ev_table[] = {
         ACCEL_LIF_EV_RESET,
         &AccelLif::accel_lif_reset_action,
         ACCEL_LIF_ST_SEQ_QUEUE_RESET,
+    },
+    {
+        ACCEL_LIF_EV_SETATTR,
+        &AccelLif::accel_lif_setattr_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_GETATTR,
+        &AccelLif::accel_lif_getattr_action,
+        ACCEL_LIF_ST_SAME,
     },
     {
         ACCEL_LIF_EV_RESET_DESTROY,
@@ -530,6 +585,16 @@ static accel_lif_state_event_t  lif_idle_ev_table[] = {
         ACCEL_LIF_ST_SEQ_QUEUE_RESET,
     },
     {
+        ACCEL_LIF_EV_SETATTR,
+        &AccelLif::accel_lif_setattr_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
+        ACCEL_LIF_EV_GETATTR,
+        &AccelLif::accel_lif_getattr_action,
+        ACCEL_LIF_ST_SAME,
+    },
+    {
         ACCEL_LIF_EV_RESET_DESTROY,
         &AccelLif::accel_lif_reset_action,
         ACCEL_LIF_ST_SEQ_QUEUE_RESET,
@@ -603,7 +668,10 @@ typedef std::map<uint32_t,accel_lif_event_t> opcode2event_map_t;
 
 static const opcode2event_map_t opcode2event_map = {
     {CMD_OPCODE_NOP,                     ACCEL_LIF_EV_NULL},
+    {CMD_OPCODE_LIF_IDENTIFY,            ACCEL_LIF_EV_IDENTIFY},
     {CMD_OPCODE_LIF_INIT,                ACCEL_LIF_EV_INIT},
+    {CMD_OPCODE_LIF_SETATTR,             ACCEL_LIF_EV_SETATTR},
+    {CMD_OPCODE_LIF_GETATTR,             ACCEL_LIF_EV_GETATTR},
     {CMD_OPCODE_LIF_RESET,               ACCEL_LIF_EV_RESET},
     {CMD_OPCODE_ADMINQ_INIT,             ACCEL_LIF_EV_ADMINQ_INIT},
     {CMD_OPCODE_NOTIFYQ_INIT,            ACCEL_LIF_EV_NOTIFYQ_INIT},
@@ -614,7 +682,6 @@ static const opcode2event_map_t opcode2event_map = {
     {CMD_OPCODE_SEQ_QUEUE_BATCH_ENABLE,  ACCEL_LIF_EV_SEQ_QUEUE_BATCH_ENABLE},
     {CMD_OPCODE_SEQ_QUEUE_BATCH_DISABLE, ACCEL_LIF_EV_SEQ_QUEUE_BATCH_DISABLE},
     {CMD_OPCODE_SEQ_QUEUE_INIT_COMPLETE, ACCEL_LIF_EV_SEQ_QUEUE_INIT_COMPLETE},
-    {CMD_OPCODE_SEQ_QUEUE_DUMP,          ACCEL_LIF_EV_NULL},
     {CMD_OPCODE_CRYPTO_KEY_UPDATE,       ACCEL_LIF_EV_CRYPTO_KEY_UPDATE},
     {CMD_OPCODE_HANG_NOTIFY,             ACCEL_LIF_EV_HANG_NOTIFY},
 };
@@ -705,8 +772,24 @@ AccelLif::AccelLif(AccelDev& accel_dev,
     lif_name = spec->name + std::string("/lif") +
                std::to_string(hal_lif_info_.lif_id);
     strncpy0(hal_lif_info_.name, lif_name.c_str(), sizeof(hal_lif_info_.name));
-    intr_base = lif_res.intr_base;
 
+    /*
+     * Partion out crypto key space
+     */
+    index = lif_res.index;
+    if (index >= spec->lif_count) {
+        NIC_LOG_ERR("{}: invalid index relative to lif_count {}",
+                    LifNameGet(), index, spec->lif_count);
+        throw;
+    }
+    intr_base = lif_res.intr_base;
+    num_crypto_keys_max = accel_dev.NumCryptoKeysMaxGet() / spec->lif_count;
+    if (!num_crypto_keys_max) {
+        NIC_LOG_ERR("{}: no space available for crypto keys", LifNameGet());
+        throw;
+    }
+    crypto_key_idx_base = accel_dev.CryptoKeyIdxBaseGet() +
+                          (index * num_crypto_keys_max);
     /*
      * If multiple accel LIFs are supported in the future, make an
      * allocator for allocating PAL memory for qinfo/rmetrics below.
@@ -805,9 +888,7 @@ AccelLif::CmdHandler(void *req,
         fsm_ctx.devcmd.status = ACCEL_RC_EOPCODE;
     }
 
-    cpl->cpl.status = fsm_ctx.devcmd.status;
-    cpl->cpl.rsvd = 0xff;
-
+    cpl->status = fsm_ctx.devcmd.status;
     NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", LifNameGet(),
                   accel_dev_opcode_str(cmd->cmd.opcode), fsm_ctx.devcmd.status);
     return fsm_ctx.devcmd.status;
@@ -979,6 +1060,103 @@ AccelLif::accel_lif_ring_info_get_action(accel_lif_event_t event)
             fsm_ctx.devcmd.status = ACCEL_RC_ERROR;
         }
     }
+    return ACCEL_LIF_EV_NULL;
+}
+
+accel_lif_event_t
+AccelLif::accel_lif_setattr_action(accel_lif_event_t event)
+{
+    lif_setattr_cmd_t  *cmd = (lif_setattr_cmd_t *)fsm_ctx.devcmd.req;
+
+    ACCEL_LIF_FSM_LOG();
+    switch (cmd->attr) {
+
+    case ACCEL_LIF_ATTR_NAME:
+        ACCEL_LIF_DEVAPI_CHECK(ACCEL_RC_ERROR, ACCEL_LIF_EV_NULL);
+
+        /*
+         * Note: this->lif_name must remains fixed as it was used as rgroup ID
+         * and for log tracing purposes. Only the HAL lif name should change.
+         */
+        strncpy0(hal_lif_info_.name, cmd->name, sizeof(hal_lif_info_.name));
+        dev_api->lif_upd_name(LifIdGet(), hal_lif_info_.name);
+        NIC_LOG_DEBUG("{}: HAL name changed to {}",
+                      LifNameGet(), hal_lif_info_.name);
+        break;
+
+    default:
+        NIC_LOG_ERR("{}: unknown ATTR {}", LifNameGet(), cmd->attr);
+        fsm_ctx.devcmd.status = ACCEL_RC_EINVAL;
+        break;
+    }
+
+    return ACCEL_LIF_EV_NULL;
+}
+
+accel_lif_event_t
+AccelLif::accel_lif_getattr_action(accel_lif_event_t event)
+{
+    lif_getattr_cmd_t  *cmd = (lif_getattr_cmd_t *)fsm_ctx.devcmd.req;
+
+    ACCEL_LIF_FSM_LOG();
+    switch (cmd->attr) {
+
+    case ACCEL_LIF_ATTR_NAME:
+
+        // Really a nop as there's not enough space in cpl to return name.
+        break;
+
+    default:
+        NIC_LOG_ERR("{}: unknown ATTR {}", LifNameGet(), cmd->attr);
+        fsm_ctx.devcmd.status = ACCEL_RC_EINVAL;
+        break;
+    }
+
+    return ACCEL_LIF_EV_NULL;
+}
+
+accel_lif_event_t
+AccelLif::accel_lif_identify_action(accel_lif_event_t event)
+{
+    lif_identify_cmd_t  *cmd = (lif_identify_cmd_t *)fsm_ctx.devcmd.req;
+    lif_identity_t      *rsp = (lif_identity_t *)fsm_ctx.devcmd.resp_data;
+    lif_identify_cpl_t  *cpl = (lif_identify_cpl_t *)fsm_ctx.devcmd.resp;
+
+    ACCEL_LIF_FSM_LOG();
+
+    if (cmd->type >= ACCEL_LIF_TYPE_MAX) {
+        NIC_LOG_ERR("{}: bad lif type {}", LifNameGet(), cmd->type);
+        fsm_ctx.devcmd.status = ACCEL_RC_EINVAL;
+        return ACCEL_LIF_EV_NULL;
+    }
+    if (cmd->ver != IDENTITY_VERSION_1) {
+        NIC_LOG_ERR("{}: unsupported version {}", LifNameGet(), cmd->ver);
+        fsm_ctx.devcmd.status = ACCEL_RC_EVERSION;
+        return ACCEL_LIF_EV_NULL;
+    }
+    memset(&rsp->base, 0, sizeof(rsp->base));
+
+    rsp->base.version = IDENTITY_VERSION_1;
+    rsp->base.hw_index = LifIdGet();
+    rsp->base.hw_lif_local_dbaddr =
+              ACCEL_LIF_LOCAL_DBADDR_SET(rsp->base.hw_index, STORAGE_SEQ_QTYPE_SQ);
+    rsp->base.hw_host_prefix = ACCEL_PHYS_ADDR_HOST_SET(1) |
+                               ACCEL_PHYS_ADDR_LIF_SET(rsp->base.hw_index);
+    rsp->base.hw_host_mask = ACCEL_PHYS_ADDR_HOST_SET(ACCEL_PHYS_ADDR_HOST_MASK) |
+                             ACCEL_PHYS_ADDR_LIF_SET(ACCEL_PHYS_ADDR_LIF_MASK);
+    rsp->base.crypto_key_idx_base = crypto_key_idx_base;
+    rsp->base.num_crypto_keys_max = num_crypto_keys_max;
+    rsp->base.queue_count[ACCEL_LOGICAL_QTYPE_SQ] = seq_created_count;
+    rsp->base.queue_count[ACCEL_LOGICAL_QTYPE_NOTIFYQ] = 1;
+    rsp->base.queue_count[ACCEL_LOGICAL_QTYPE_ADMINQ] = 1;
+
+    memcpy(rsp->base.accel_ring_tbl, accel_ring_tbl,
+           sizeof(rsp->base.accel_ring_tbl));
+    cpl->ver = IDENTITY_VERSION_1;
+
+    NIC_LOG_DEBUG("{} local_dbaddr {:#x} host_prefix {:#x} host_mask {:#x}",
+                  LifNameGet(), rsp->base.hw_lif_local_dbaddr,
+                  rsp->base.hw_host_prefix, rsp->base.hw_host_mask);
     return ACCEL_LIF_EV_NULL;
 }
 
@@ -1248,12 +1426,13 @@ AccelLif::accel_lif_adminq_init_action(accel_lif_event_t event)
 {
     adminq_init_cmd_t   *cmd = (adminq_init_cmd_t *)fsm_ctx.devcmd.req;
     adminq_init_cpl_t   *cpl = (adminq_init_cpl_t *)fsm_ctx.devcmd.resp;
-    admin_qstate_t      qstate;
+    admin_qstate_t      qstate = {0};
     int64_t             addr, nicmgr_qstate_addr;
 
     ACCEL_LIF_FSM_LOG();
-    NIC_LOG_DEBUG("{}: queue_index {} ring_base {:#x} ring_size {} "
-                  "intr_index {}",  LifNameGet(), cmd->index, cmd->ring_base,
+    NIC_LOG_DEBUG("{}: queue_index {} ring_base {:#x} cq_ring_base {:#x} "
+                  "ring_size {} intr_index {}",  LifNameGet(), cmd->index,
+                  cmd->ring_base, cmd->cq_ring_base,
                   cmd->ring_size, cmd->intr_index);
 
     if (cmd->index >= spec->adminq_count) {
@@ -1298,26 +1477,24 @@ AccelLif::accel_lif_adminq_init_action(accel_lif_event_t event)
         return ACCEL_LIF_EV_NULL;
     }
     qstate.pc_offset = off;
-    qstate.cos_sel = 0;
     qstate.cosA = ctl_cosA;
     qstate.cosB = ctl_cosB;
     qstate.host = 1;
     qstate.total = 1;
     qstate.pid = cmd->pid;
-    qstate.p_index0 = 0;
-    qstate.c_index0 = 0;
-    qstate.comp_index = 0;
-    qstate.ci_fetch = 0;
     qstate.sta.color = 1;
     qstate.cfg.enable = 1;
     qstate.cfg.host_queue = ACCEL_PHYS_ADDR_HOST_GET(cmd->ring_base);
     qstate.cfg.intr_enable = 1;
     qstate.ring_base = cmd->ring_base;
+    qstate.cq_ring_base = cmd->cq_ring_base;
     if (qstate.cfg.host_queue && !ACCEL_PHYS_ADDR_LIF_GET(cmd->ring_base)) {
         qstate.ring_base |= ACCEL_PHYS_ADDR_LIF_SET(LifIdGet());
     }
+    if (qstate.cfg.host_queue && !ACCEL_PHYS_ADDR_LIF_GET(cmd->cq_ring_base)) {
+        qstate.cq_ring_base |= ACCEL_PHYS_ADDR_LIF_SET(LifIdGet());
+    }
     qstate.ring_size = cmd->ring_size;
-    qstate.cq_ring_base = roundup(qstate.ring_base + (64 << cmd->ring_size), 4096);
     qstate.intr_assert_index = intr_base + cmd->intr_index;
     qstate.nicmgr_qstate_addr = nicmgr_qstate_addr;
 
@@ -1346,8 +1523,9 @@ AccelLif::accel_lif_notifyq_init_action(accel_lif_event_t event)
     notifyq_init_cpl_t  *cpl = (notifyq_init_cpl_t *)fsm_ctx.devcmd.resp;
 
     ACCEL_LIF_FSM_LOG();
-    NIC_LOG_DEBUG("{}: queue_index {} ring_base {:#x} ring_size {} "
-                  "intr_index {}",  LifNameGet(), cmd->index, cmd->ring_base,
+    NIC_LOG_DEBUG("{}: queue_index {} ring_base {:#x} cq_ring_base {:#x} "
+                  "ring_size {} intr_index {}",  LifNameGet(), cmd->index,
+                  cmd->ring_base, cmd->cq_ring_base,
                   cmd->ring_size, cmd->intr_index);
 
     if (cmd->index > ACCEL_NOTIFYQ_TX_QID) {
@@ -1466,8 +1644,8 @@ AccelLif::accel_lif_seq_queue_control_action(accel_lif_event_t event)
 
     ACCEL_LIF_FSM_LOG();
     enable_sense = event == ACCEL_LIF_EV_SEQ_QUEUE_ENABLE;
-    NIC_LOG_DEBUG("{}: qtype {} qid {} enable {}", LifNameGet(),
-                  cmd->qtype, cmd->qid, enable_sense);
+    NIC_LOG_DEBUG("{}: qtype {} index {} enable {}", LifNameGet(),
+                  cmd->qtype, cmd->index, enable_sense);
 
     fsm_ctx.devcmd.status = _DevcmdSeqQueueSingleControl(cmd, enable_sense);
     return ACCEL_LIF_EV_NULL;
@@ -1484,12 +1662,12 @@ AccelLif::accel_lif_seq_queue_batch_control_action(accel_lif_event_t event)
 
     enable_sense = event == ACCEL_LIF_EV_SEQ_QUEUE_BATCH_ENABLE;
     ACCEL_LIF_FSM_LOG();
-    NIC_LOG_DEBUG("{}: qtype {} qid {} mum_queues {} enable {}",
-                  LifNameGet(), batch_cmd->qtype, batch_cmd->qid,
+    NIC_LOG_DEBUG("{}: qtype {} index {} mum_queues {} enable {}",
+                  LifNameGet(), batch_cmd->qtype, batch_cmd->index,
                   batch_cmd->num_queues, enable_sense);
     cmd.opcode = enable_sense ? CMD_OPCODE_SEQ_QUEUE_ENABLE :
                                 CMD_OPCODE_SEQ_QUEUE_DISABLE;
-    cmd.qid = batch_cmd->qid;
+    cmd.index = batch_cmd->index;
     cmd.qtype = batch_cmd->qtype;
 
     for (i = 0; i < batch_cmd->num_queues; i++) {
@@ -1498,7 +1676,7 @@ AccelLif::accel_lif_seq_queue_batch_control_action(accel_lif_event_t event)
         if (fsm_ctx.devcmd.status != ACCEL_RC_SUCCESS) {
             break;
         }
-        cmd.qid++;
+        cmd.index++;
     }
 
     return ACCEL_LIF_EV_NULL;
@@ -1797,16 +1975,16 @@ AccelLif::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
     value = enable;
     switch (cmd->qtype) {
     case STORAGE_SEQ_QTYPE_SQ:
-        if (cmd->qid >= seq_created_count) {
-            NIC_LOG_ERR("{}: qtype {} qid {} exceeds count {}", LifNameGet(),
-                        cmd->qtype, cmd->qid, seq_created_count);
+        if (cmd->index >= seq_created_count) {
+            NIC_LOG_ERR("{}: qtype {} index {} exceeds count {}", LifNameGet(),
+                        cmd->qtype, cmd->index, seq_created_count);
             return ACCEL_RC_EQID;
         }
         qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(), cmd->qtype,
-                                                   cmd->qid);
+                                                   cmd->index);
         if (qstate_addr < 0) {
-            NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
-                        LifNameGet(), cmd->qid);
+            NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN index {}",
+                        LifNameGet(), cmd->index);
             return ACCEL_RC_ERROR;
         }
         WRITE_MEM(qstate_addr + offsetof(storage_seq_qstate_t, enable),
@@ -1816,16 +1994,16 @@ AccelLif::_DevcmdSeqQueueSingleControl(const seq_queue_control_cmd_t *cmd,
                                 P4PLUS_CACHE_INVALIDATE_TXDMA);
         break;
     case STORAGE_SEQ_QTYPE_ADMIN:
-        if (cmd->qid >= spec->adminq_count) {
-            NIC_LOG_ERR("{}: qtype {} qid {} exceeds count {}", LifNameGet(),
-                        cmd->qtype, cmd->qid, spec->adminq_count);
+        if (cmd->index >= spec->adminq_count) {
+            NIC_LOG_ERR("{}: qtype {} index {} exceeds count {}", LifNameGet(),
+                        cmd->qtype, cmd->index, spec->adminq_count);
             return ACCEL_RC_EQID;
         }
         qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(), cmd->qtype,
-                                                   cmd->qid);
+                                                   cmd->index);
         if (qstate_addr < 0) {
-            NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
-                        LifNameGet(), cmd->qid);
+            NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN index {}",
+                        LifNameGet(), cmd->index);
             return ACCEL_RC_ERROR;
         }
         admin_cfg.enable = enable;
@@ -2418,7 +2596,6 @@ NotifyQ::TxQInit(const notifyq_init_cmd_t *cmd,
 {
     notify_qstate_t     qstate = {0};
     uint64_t            qstate_addr;
-    uint64_t            host_ring_base;
     uint32_t            alloc_size;
     uint8_t             pc_offs;
 
@@ -2476,21 +2653,13 @@ NotifyQ::TxQInit(const notifyq_init_cmd_t *cmd,
     qstate.ring_base = tx_ring_base;
     qstate.ring_size = cmd->ring_size;
 
-    /*
-     * NotifyQ in host follows qcq structure where the host ring space
-     * consists of an (unused) cmd ring and a completion ring. When
-     * posting from FW to host, events are posted into the completion
-     * area, hence host_ring_base is adjusted to point beyond the cmd area.
-     */
-    host_ring_base = cmd->ring_base;
+    qstate.host_ring_base = cmd->cq_ring_base;
     if (host_dev) {
-        host_ring_base |= ACCEL_PHYS_ADDR_HOST_SET(1) |
-                          ACCEL_PHYS_ADDR_LIF_SET(lif_id);
+        qstate.host_ring_base |= ACCEL_PHYS_ADDR_HOST_SET(1) |
+                                 ACCEL_PHYS_ADDR_LIF_SET(lif_id);
     }
-    qstate.host_ring_base = roundup(host_ring_base + alloc_size, 4096);
-    NIC_LOG_DEBUG("{}: NOTIFYQ tx qstate {:#x} host_ring_base {:#x} "
-                  "adjusted base {:#x}", name, qstate_addr,
-                  host_ring_base, qstate.host_ring_base);
+    NIC_LOG_DEBUG("{}: NOTIFYQ tx qstate {:#x} host_ring_base {:#x} ",
+                  name, qstate_addr, qstate.host_ring_base);
 
     qstate.host_ring_size = cmd->ring_size;
     qstate.host_intr_assert_index = intr_base + cmd->intr_index;

@@ -25,156 +25,12 @@
 
 #pragma pack(push, 1)
 
-union dev_cmd {
-	u32 words[16];
-	struct admin_cmd cmd;
-	struct reset_cmd reset;
-	struct nop_cmd nop;
-	struct identify_cmd identify;
-	struct lif_init_cmd lif_init;
-	struct lif_reset_cmd lif_reset;
-	struct adminq_init_cmd adminq_init;
-	struct hang_notify_cmd hang_notify;
-};
-
-union dev_cmd_cpl {
-	u32 words[4];
-	u8 status;
-	struct admin_cpl comp;
-	struct reset_cpl reset;
-	struct nop_cpl nop;
-	struct identify_cpl identify;
-	struct lif_init_cpl lif_init;
-	struct adminq_init_cpl adminq_init;
-	struct hang_notify_cpl hang_notify;
-};
-
-struct dev_cmd_regs {
-	u32 signature;
-	u32 done;
-	union dev_cmd cmd;
-	union dev_cmd_cpl comp;
-};
-
-struct dev_cmd_db {
-	u32 v;
-};
-
 #define SONIC_BARS_MAX		6
 
 struct sonic_dev_bar {
 	void __iomem *vaddr;
 	dma_addr_t bus_addr;
 	unsigned long len;
-};
-
-/**
- * struct doorbell - Doorbell register layout
- * @p_index: Producer index
- * @ring:    Selects the specific ring of the queue to update.
- *           Type-specific meaning:
- *              ring=0: Default producer/consumer queue.
- *              ring=1: (CQ, EQ) Re-Arm queue.  RDMA CQs
- *              send events to EQs when armed.  EQs send
- *              interrupts when armed.
- * @qid:     The queue id selects the queue destination for the
- *           producer index and flags.
- */
-struct doorbell {
-	u16 p_index;
-	u8 ring:3;
-	u8 rsvd:5;
-	u8 qid_lo;
-	u16 qid_hi;
-	u16 rsvd2;
-};
-
-#define INTR_CTRL_REGS_MAX	64
-#define INTR_CTRL_COAL_MAX	0x3F
-
-/**
- * struct intr_ctrl - Interrupt control register
- * @coalescing_init:  Coalescing timer initial value, in
- *                    device units.  Use @identity->intr_coal_mult
- *                    and @identity->intr_coal_div to convert from
- *                    usecs to device units:
- *
- *                      coal_init = coal_usecs * coal_mutl / coal_div
- *
- *                    When an interrupt is sent the interrupt
- *                    coalescing timer current value
- *                    (@coalescing_curr) is initialized with this
- *                    value and begins counting down.  No more
- *                    interrupts are sent until the coalescing
- *                    timer reaches 0.  When @coalescing_init=0
- *                    interrupt coalescing is effectively disabled
- *                    and every interrupt assert results in an
- *                    interrupt.  Reset value: 0.
- * @mask:             Interrupt mask.  When @mask=1 the interrupt
- *                    resource will not send an interrupt.  When
- *                    @mask=0 the interrupt resource will send an
- *                    interrupt if an interrupt event is pending
- *                    or on the next interrupt assertion event.
- *                    Reset value: 1.
- * @int_credits:      Interrupt credits.  This register indicates
- *                    how many interrupt events the hardware has
- *                    sent.  When written by software this
- *                    register atomically decrements @int_credits
- *                    by the value written.  When @int_credits
- *                    becomes 0 then the "pending interrupt" bit
- *                    in the Interrupt Status register is cleared
- *                    by the hardware and any pending but unsent
- *                    interrupts are cleared.
- *                    The upper 2 bits are special flags:
- *                       Bits 0-15: Interrupt Events -- Interrupt
- *                       event count.
- *                       Bit 16: @unmask -- When this bit is
- *                       written with a 1 the interrupt resource
- *                       will set mask=0.
- *                       Bit 17: @coal_timer_reset -- When this
- *                       bit is written with a 1 the
- *                       @coalescing_curr will be reloaded with
- *                       @coalescing_init to reset the coalescing
- *                       timer.
- * @mask_on_assert:   Automatically mask on assertion.  When
- *                    @mask_on_assert=1 the interrupt resource
- *                    will set @mask=1 whenever an interrupt is
- *                    sent.  When using interrupts in Legacy
- *                    Interrupt mode the driver must select
- *                    @mask_on_assert=0 for proper interrupt
- *                    operation.
- * @coalescing_curr:  Coalescing timer current value, in
- *                    microseconds.  When this value reaches 0
- *                    the interrupt resource is again eligible to
- *                    send an interrupt.  If an interrupt event
- *                    is already pending when @coalescing_curr
- *                    reaches 0 the pending interrupt will be
- *                    sent, otherwise an interrupt will be sent
- *                    on the next interrupt assertion event.
- */
-struct intr_ctrl {
-	u32 coalescing_init:6;
-	u32 rsvd:26;
-	u32 mask:1;
-	u32 rsvd2:31;
-	u32 int_credits:16;
-	u32 unmask:1;
-	u32 coal_timer_reset:1;
-	u32 rsvd3:14;
-	u32 mask_on_assert:1;
-	u32 rsvd4:31;
-	u32 coalescing_curr:6;
-	u32 rsvd5:26;
-	u32 rsvd6[3];
-};
-
-#define intr_to_coal(intr_ctrl)			(void *)((u8 *)(intr_ctrl) + 0)
-#define intr_to_mask(intr_ctrl)			(void *)((u8 *)(intr_ctrl) + 4)
-#define intr_to_credits(intr_ctrl)		(void *)((u8 *)(intr_ctrl) + 8)
-#define intr_to_mask_on_assert(intr_ctrl)	(void *)((u8 *)(intr_ctrl) + 12)
-
-struct intr_status {
-	u32 status[2];
 };
 
 #define INTR_INDEX_NOT_ASSIGNED		(-1)
@@ -194,19 +50,27 @@ static inline void sonic_struct_size_checks(void)
 	BUILD_BUG_ON(sizeof(struct doorbell) != 8);
 	BUILD_BUG_ON(sizeof(struct intr_ctrl) != 32);
 	BUILD_BUG_ON(sizeof(struct intr_status) != 8);
+	BUILD_BUG_ON(sizeof(union dev_regs) != 4096);
+	BUILD_BUG_ON(sizeof(union dev_info_regs) != 2048);
+	BUILD_BUG_ON(sizeof(union dev_cmd_regs) != 2048);
 	BUILD_BUG_ON(sizeof(struct admin_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct admin_cpl) != 16);
 	BUILD_BUG_ON(sizeof(struct nop_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct nop_cpl) != 16);
-	BUILD_BUG_ON(sizeof(struct reset_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct reset_cpl) != 16);
+	BUILD_BUG_ON(sizeof(struct dev_reset_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct dev_reset_cpl) != 16);
 	BUILD_BUG_ON(sizeof(struct hang_notify_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct hang_notify_cpl) != 16);
-	BUILD_BUG_ON(sizeof(struct identify_cmd) != 64);
-	BUILD_BUG_ON(sizeof(struct identify_cpl) != 16);
-	BUILD_BUG_ON(sizeof(union identity) != 4096);
+	BUILD_BUG_ON(sizeof(struct dev_identify_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct dev_identify_cpl) != 16);
+	BUILD_BUG_ON(sizeof(struct lif_identify_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct lif_identify_cpl) != 16);
 	BUILD_BUG_ON(sizeof(struct lif_init_cmd) != 64);
 	BUILD_BUG_ON(sizeof(struct lif_init_cpl) != 16);
+	BUILD_BUG_ON(sizeof(struct lif_setattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct lif_setattr_cpl) != 16);
+	BUILD_BUG_ON(sizeof(struct lif_getattr_cmd) != 64);
+	BUILD_BUG_ON(sizeof(struct lif_getattr_cpl) != 16);
 	BUILD_BUG_ON(sizeof(struct lif_reset_cmd) != 64);
 	BUILD_BUG_ON(sizeof(lif_reset_cpl_t) != 16);
 	BUILD_BUG_ON(sizeof(struct seq_queue_init_cmd) != 64);
@@ -243,8 +107,8 @@ struct sonic_accel_ring {
 };
 
 struct sonic_dev {
-	struct dev_cmd_regs __iomem *dev_cmd;
-	struct dev_cmd_db __iomem *dev_cmd_db;
+	union dev_info_regs __iomem *dev_info;
+	union dev_cmd_regs __iomem *dev_cmd;
 	struct doorbell __iomem *db_pages;
 	dma_addr_t phy_db_pages;
 	struct intr_ctrl __iomem *intr_ctrl;
@@ -255,9 +119,6 @@ struct sonic_dev {
 	uint32_t hbm_npages;
 	uint32_t hbm_nallocs;
 	uint32_t hbm_nfrees;
-#ifdef HAPS
-	union identity __iomem *ident;
-#endif
 	struct sonic_accel_ring ring_tbl[ACCEL_RING_ID_MAX];
 };
 
@@ -271,6 +132,7 @@ struct cq_info {
 struct queue;
 struct admin_desc_info;
 struct sonic_ev_list;
+struct qcq;
 
 typedef void (*admin_desc_cb)(struct queue *q, struct admin_desc_info *desc_info,
 			struct cq_info *cq_info, void *cb_arg);
@@ -391,20 +253,21 @@ struct cq {
 
 int sonic_dev_setup(struct sonic_dev *idev, struct sonic_dev_bar bars[],
 		    unsigned int num_bars);
+void sonic_dev_teardown(struct sonic *ionic);
 
 union dev_cmd; //Need to remove it
 void sonic_dev_cmd_go(struct sonic_dev *idev, union dev_cmd *cmd);
 u8 sonic_dev_cmd_status(struct sonic_dev *idev);
 bool sonic_dev_cmd_done(struct sonic_dev *idev);
-void sonic_dev_cmd_comp(struct sonic_dev *idev, void *mem);
+void sonic_dev_cmd_cpl(struct sonic_dev *idev, void *mem);
 void sonic_dev_cmd_reset(struct sonic_dev *idev);
-void sonic_dev_cmd_hang_notify(struct sonic_dev *idev, uint32_t lif_id);
-void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver, dma_addr_t addr);
-void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 index);
-void sonic_dev_cmd_lif_reset(struct sonic_dev *idev, u32 index);
-void sonic_dev_cmd_adminq_init(struct sonic_dev *idev, struct queue *adminq,
-			       unsigned int index, unsigned int lif_index,
-			       unsigned int intr_index);
+void sonic_dev_cmd_hang_notify(struct sonic_dev *idev, uint32_t lif_index);
+void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver);
+void sonic_dev_cmd_lif_identify(struct sonic_dev *idev, u16 ver);
+void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 lif_index);
+void sonic_dev_cmd_lif_reset(struct sonic_dev *idev, u32 lif_index);
+void sonic_dev_cmd_adminq_init(struct sonic_dev *idev, struct qcq *qcq,
+			       unsigned int lif_index, unsigned int intr_index);
 int sonic_crypto_key_index_update(const void *key1,
 				  const void *key2,
 				  uint32_t key_size,
@@ -415,6 +278,7 @@ struct doorbell __iomem *sonic_db_map(struct sonic_dev *idev, struct queue *q);
 
 int sonic_intr_init(struct sonic_dev *idev, struct intr *intr,
 		    unsigned long index);
+void sonic_intr_clean(struct intr *intr);
 void sonic_intr_mask_on_assertion(struct intr *intr);
 void sonic_intr_return_credits(struct intr *intr, unsigned int credits,
 			       bool unmask, bool reset_timer);

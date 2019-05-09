@@ -11,23 +11,11 @@
 #include <linux/slab.h>
 
 #include "osal.h"
+#include "sonic.h"
 #include "sonic_dev.h"
+#include "sonic_lif.h"
 #include "sonic_api_int.h"
 #include "osal_mem.h"
-
-/* BAR0 resources
- */
-
-#define BAR0_SIZE			0x8000
-
-#define BAR0_DEV_CMD_REGS_OFFSET	0x0000
-#define BAR0_DEV_CMD_DB_OFFSET		0x1000
-#define BAR0_INTR_STATUS_OFFSET		0x2000
-#define BAR0_INTR_CTRL_OFFSET		0x3000
-
-#define DEV_CMD_DONE			0x00000001
-
-#define ASIC_TYPE_CAPRI			0
 
 int sonic_dev_setup(struct sonic_dev *idev, struct sonic_dev_bar bars[],
 		    unsigned int num_bars)
@@ -35,43 +23,41 @@ int sonic_dev_setup(struct sonic_dev *idev, struct sonic_dev_bar bars[],
 	struct sonic_dev_bar *bar = &bars[0];
 	u32 sig;
 
-	/* BAR0 resources
-	 */
-
-	if (num_bars < 1 || bar->len != BAR0_SIZE) {
-		OSAL_LOG_ERROR("Bar size mismatch exp %d actual %ld", BAR0_SIZE, bar->len);
+	/* BAR0: dev_cmd and interrupts */
+	if (num_bars < 1) {
+		OSAL_LOG_ERROR("No bars found, aborting");
 		return -EFAULT;
 	}
 
+	if (bar->len < BAR0_SIZE) {
+		OSAL_LOG_ERROR("Resource bar size %lu less than minimum %d, aborting",
+			 bar->len, BAR0_SIZE);
+		return -EFAULT;
+	}
+
+	idev->dev_info = bar->vaddr + BAR0_DEV_INFO_REGS_OFFSET;
 	idev->dev_cmd = bar->vaddr + BAR0_DEV_CMD_REGS_OFFSET;
-	idev->dev_cmd_db = bar->vaddr + BAR0_DEV_CMD_DB_OFFSET;
 	idev->intr_status = bar->vaddr + BAR0_INTR_STATUS_OFFSET;
 	idev->intr_ctrl = bar->vaddr + BAR0_INTR_CTRL_OFFSET;
-#ifdef HAPS
-	idev->ident = bar->vaddr + 0x800;
-#endif
 
-	sig = ioread32(&idev->dev_cmd->signature);
-	if (sig != DEV_CMD_SIGNATURE) {
-		OSAL_LOG_ERROR("Dev cmd Sig mismatch exp %u actual %u", DEV_CMD_SIGNATURE, sig);
+	sig = ioread32(&idev->dev_info->base.signature);
+	if (sig != ACCEL_DEV_CMD_SIGNATURE) {
+		OSAL_LOG_ERROR("Dev cmd Sig mismatch exp 0x%x actual 0x%x",
+				ACCEL_DEV_CMD_SIGNATURE, sig);
 		return -EFAULT;
 	}
 
-	/* BAR1 resources
-	 */
-
+	/* BAR1: doorbells */
 	bar++;
 	if (num_bars < 2) {
-		OSAL_LOG_ERROR("Num Bars mismatch");
+		OSAL_LOG_ERROR("Doorbell bar missing, aborting");
 		return -EFAULT;
 	}
 
 	idev->db_pages = bar->vaddr;
 	idev->phy_db_pages = bar->bus_addr;
 
-	/* BAR2 resources
-	*/
-
+	/* BAR2: controller memory mapping */
 	spin_lock_init(&idev->hbm_inuse_lock);
 
 	bar++;
@@ -90,9 +76,18 @@ int sonic_dev_setup(struct sonic_dev *idev, struct sonic_dev_bar bars[],
 	return 0;
 }
 
+void sonic_dev_teardown(struct sonic *sonic)
+{
+	struct sonic_dev *idev = &sonic->idev;
+
+	idev->phy_hbm_pages = 0;
+	idev->hbm_iomem_vaddr = NULL;
+	idev->hbm_npages = 0;
+}
+
 u8 sonic_dev_cmd_status(struct sonic_dev *idev)
 {
-	return ioread8(&idev->dev_cmd->comp.status);
+	return ioread8(&idev->dev_cmd->cpl.status);
 }
 
 bool sonic_dev_cmd_done(struct sonic_dev *idev)
@@ -100,13 +95,13 @@ bool sonic_dev_cmd_done(struct sonic_dev *idev)
 	return ioread32(&idev->dev_cmd->done) & DEV_CMD_DONE;
 }
 
-void sonic_dev_cmd_comp(struct sonic_dev *idev, void *mem)
+void sonic_dev_cmd_cpl(struct sonic_dev *idev, void *mem)
 {
-	union dev_cmd_cpl *comp = mem;
+	union dev_cmd_cpl *cpl = mem;
 	unsigned int i;
 
-	for (i = 0; i < ARRAY_SIZE(comp->words); i++)
-		comp->words[i] = ioread32(&idev->dev_cmd->comp.words[i]);
+	for (i = 0; i < ARRAY_SIZE(cpl->words); i++)
+		cpl->words[i] = ioread32(&idev->dev_cmd->cpl.words[i]);
 }
 
 void sonic_dev_cmd_go(struct sonic_dev *idev, union dev_cmd *cmd)
@@ -116,31 +111,36 @@ void sonic_dev_cmd_go(struct sonic_dev *idev, union dev_cmd *cmd)
 	for (i = 0; i < ARRAY_SIZE(cmd->words); i++)
 		iowrite32(cmd->words[i], &idev->dev_cmd->cmd.words[i]);
 	iowrite32(0, &idev->dev_cmd->done);
-	iowrite32(1, &idev->dev_cmd_db->v);
+	iowrite32(1, &idev->dev_cmd->doorbell);
 }
 
 void sonic_dev_cmd_reset(struct sonic_dev *idev)
 {
 	union dev_cmd cmd = {
-		.reset.opcode = CMD_OPCODE_RESET,
+		.dev_reset.opcode = CMD_OPCODE_RESET,
+		.dev_reset.type = ACCEL_DEV_TYPE_BASE,
 	};
 
 	sonic_dev_cmd_go(idev, &cmd);
 }
 
-void sonic_dev_cmd_adminq_init(struct sonic_dev *idev, struct queue *adminq,
-			       unsigned int index, unsigned int lif_index,
-			       unsigned int intr_index)
+void sonic_dev_cmd_adminq_init(struct sonic_dev *idev, struct qcq *qcq,
+			       unsigned int lif_index, unsigned int intr_index)
 {
+	struct queue *q = &qcq->q;
+	struct cq *cq = &qcq->cq;
+
 	union dev_cmd cmd = {
 		.adminq_init.opcode = CMD_OPCODE_ADMINQ_INIT,
-		.adminq_init.index = adminq->qid,
-		.adminq_init.pid = adminq->pid,
+		.adminq_init.index = q->qid,
+		.adminq_init.pid = q->pid,
 		.adminq_init.intr_index = intr_index,
 		.adminq_init.lif_index = lif_index,
-		.adminq_init.ring_size = ilog2(adminq->num_descs),
+		.adminq_init.ring_size = ilog2(q->num_descs),
 		.adminq_init.ring_base =
-			(dma_addr_t) sonic_hostpa_to_devpa(adminq->base_pa),
+			(dma_addr_t) sonic_hostpa_to_devpa(q->base_pa),
+		.adminq_init.cq_ring_base =
+			(dma_addr_t) sonic_hostpa_to_devpa(cq->base_pa),
 	};
 
 	//printk(KERN_ERR "adminq_init.pid %d\n", cmd.adminq_init.pid);
@@ -153,14 +153,14 @@ void sonic_dev_cmd_adminq_init(struct sonic_dev *idev, struct queue *adminq,
 }
 
 void sonic_dev_cmd_hang_notify(struct sonic_dev *idev,
-			       uint32_t lif_id)
+			       uint32_t lif_index)
 {
 	union dev_cmd cmd = {
 		.hang_notify.opcode = CMD_OPCODE_HANG_NOTIFY,
-		.hang_notify.lif_index = lif_id,
+		.hang_notify.lif_index = lif_index,
 	};
 
-	OSAL_LOG_INFO("hang_notify lif_id %u", lif_id);
+	OSAL_LOG_INFO("hang_notify lif_index %u", lif_index);
 	sonic_dev_cmd_go(idev, &cmd);
 }
 
@@ -184,11 +184,21 @@ struct doorbell __iomem *sonic_db_map(struct sonic_dev *idev, struct queue *q)
 	return db;
 }
 
+void sonic_intr_clean(struct intr *intr)
+{
+	u32 credits;
+
+	/* clear the credits by writing the current value back */
+	credits = 0xffff & ioread32(intr_to_credits(intr->ctrl));
+	sonic_intr_return_credits(intr, credits, false, true);
+}
+
 int sonic_intr_init(struct sonic_dev *idev, struct intr *intr,
 		    unsigned long index)
 {
 	intr->index = index;
 	intr->ctrl = idev->intr_ctrl + index;
+	sonic_intr_clean(intr);
 
 	return 0;
 }
@@ -208,9 +218,10 @@ void sonic_intr_return_credits(struct intr *intr, unsigned int credits,
 {
 	struct intr_ctrl ctrl = {
 		.int_credits = credits,
-		.unmask = unmask,
-		.coal_timer_reset = reset_timer,
 	};
+
+	ctrl.flags |= unmask ? INTR_F_UNMASK : 0;
+	ctrl.flags |= reset_timer ? INTR_F_TIMER_RESET : 0;
 
 	iowrite32(*(u32 *)intr_to_credits(&ctrl),
 		  intr_to_credits(intr->ctrl));

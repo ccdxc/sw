@@ -143,19 +143,13 @@ add_accel(int argc, char *argv[])
     snprintf(pres.pfres.name, sizeof(pres.pfres.name), "accel%d", instance++);
     pres.pfres.intrc = 4;
     pres.pfres.intrdmask = 1;
-    pres.pfres.accel.devcmdpa = 0x13e000000;   /* XXX */
-    pres.pfres.accel.devcmddbpa = pres.pfres.accel.devcmdpa + 0x1000; /* XXX */
+    pres.pfres.accel.devregspa = 0x13e000000; /* XXX */
+    pres.pfres.accel.devregssz = 0x1000;      /* XXX */
     pres.pfres.cmbprefetch = 1;
 
     getopt_reset(4, 2);
-    while ((opt = getopt(argc, argv, "c:C:d:D:i:I:l:L:N:p:r:R:")) != -1) {
+    while ((opt = getopt(argc, argv, "c:C:i:I:l:L:N:p:r:R:")) != -1) {
         switch (opt) {
-        case 'd':
-            pres.pfres.accel.devcmdpa = strtoull(optarg, NULL, 0);
-            break;
-        case 'D':
-            pres.pfres.accel.devcmddbpa = strtoull(optarg, NULL, 0);
-        break;
         default:
             if (parse_common_pres_opt(opt, &pres) < 0) {
                 fprintf(stderr, "bad argument: %c\n", opt);

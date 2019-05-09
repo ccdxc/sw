@@ -28,11 +28,9 @@ struct pciehdev_s;
 typedef struct pciehdev_s pciehdev_t;
 
 typedef struct pciehdev_accelres_s {
-    u_int64_t devcmdpa;         /* devcmd region physical address */
-    u_int32_t devcmdsz;         /* devcmd region size */
-    u_int32_t devcmd_stride;    /* VF: stride between devcmdpa regions */
-    u_int64_t devcmddbpa;       /* devcmd doorbell physical address */
-    u_int32_t devcmddb_stride;  /* VF: stride between devcmddbpa regions */
+    u_int64_t devregspa;        /* dev info/cmd region physical address */
+    u_int32_t devregssz;        /* dev info/cmd region size */
+    u_int32_t devregs_stride;   /* VF: stride between dev info/cmd regions */
 } pciehdev_accelres_t;
 
 typedef struct pciehdev_ethres_s {

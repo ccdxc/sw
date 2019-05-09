@@ -33,10 +33,8 @@ MODULE_VERSION(sonic, 1);
 #endif
 
 unsigned int devcmd_timeout = 30;
-#ifdef HAPS
 module_param(devcmd_timeout, uint, 0);
 MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
-#endif
 
 unsigned int core_count = SONIC_DEFAULT_CORES;
 module_param(core_count, uint, 0444);
@@ -94,13 +92,13 @@ static const char *sonic_opcode_to_str(enum cmd_opcode opcode)
 
 int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 {
-	if (ctx->comp.cpl.status) {
-		if (ctx->comp.cpl.status == ACCEL_RC_EOPCODE)
+	if (ctx->cpl.status) {
+		if (ctx->cpl.status == ACCEL_RC_EOPCODE)
 		       return SONIC_DEVCMD_UNKNOWN;
 
 		OSAL_LOG_ERROR("(%d) %s failed: %d", ctx->cmd.cmd.opcode,
 				sonic_opcode_to_str(ctx->cmd.cmd.opcode),
-				ctx->comp.cpl.status);
+				ctx->cpl.status);
 		return SONIC_DEVCMD_ERROR;
 	}
 
@@ -193,7 +191,7 @@ try_again:
 
                         schedule_timeout_interruptible(HZ / 10);
 			iowrite32(0, &idev->dev_cmd->done);
-			iowrite32(1, &idev->dev_cmd_db->v);
+			iowrite32(1, &idev->dev_cmd->doorbell);
 			goto try_again;
 		}
 
@@ -344,7 +342,7 @@ static void sonic_dev_cmd_work(struct work_struct *work)
 	if (err)
 		goto err_out;
 
-	sonic_dev_cmd_comp(&sonic->idev, &ctx->comp);
+	sonic_dev_cmd_cpl(&sonic->idev, &ctx->cpl);
 
 	if (ctx->side_data) {
 		err = SBD_get(&sonic->idev, ctx->side_data, ctx->side_data_len);
@@ -352,15 +350,15 @@ static void sonic_dev_cmd_work(struct work_struct *work)
 			goto err_out;
 	}
 
-	OSAL_LOG_DEBUG("comp admin dev command:");
+	OSAL_LOG_DEBUG("cpl admin dev command:");
 	if (g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
-		print_hex_dump_debug("sonic: comp ", DUMP_PREFIX_OFFSET, 16, 1,
-						 &ctx->comp, sizeof(ctx->comp), true);
+		print_hex_dump_debug("sonic: cpl ", DUMP_PREFIX_OFFSET, 16, 1,
+						 &ctx->cpl, sizeof(ctx->cpl), true);
 	}
 
 err_out:
 	if (WARN_ON(err))
-		memset(&ctx->comp, 0xAB, sizeof(ctx->comp));
+		memset(&ctx->cpl, 0xAB, sizeof(ctx->cpl));
 
 	complete_all(&ctx->work);
 
@@ -387,31 +385,13 @@ int sonic_setup(struct sonic *sonic)
 
 int sonic_identify(struct sonic *sonic)
 {
-	struct device *dev = sonic->dev;
 	struct sonic_dev *idev = &sonic->idev;
-	union identity *ident;
+	struct identity *ident = &sonic->ident;
 	struct sonic_accel_ring *ring;
-	dma_addr_t ident_pa;
-	int err;
-#ifdef HAPS
+	uint32_t *wp;
+	unsigned int nwords;
 	unsigned int i;
-#endif
-
-#ifndef __FreeBSD__
-	ident = devm_kzalloc(dev, sizeof(*ident), GFP_KERNEL | GFP_DMA);
-#else
-	/*
-	 * KPI doesn't support GFP_DMA and we don't need for our hardware,
-	 * should be removed in Linux also.
-	 */
-	ident = devm_kzalloc(dev, sizeof(*ident), GFP_KERNEL);
-#endif
-	if (!ident)
-		return -ENOMEM;
-	ident_pa = dma_map_single(dev, ident, sizeof(*ident),
-				  DMA_BIDIRECTIONAL);
-	if (dma_mapping_error(dev, ident_pa))
-		return -EIO;
+	int err;
 
 #ifndef __FreeBSD__
 	ident->drv.os_type = OS_TYPE_LINUX;
@@ -434,29 +414,40 @@ int sonic_identify(struct sonic *sonic)
 	strncpy(ident->drv.driver_ver_str, DRV_VERSION,
 		sizeof(ident->drv.driver_ver_str) - 1);
 
-#ifdef HAPS
-	for (i = 0; i < 512; i++)
-		iowrite32(idev->ident->words[i], &ident->words[i]);
-#endif
+	nwords = min(ARRAY_SIZE(ident->drv.words),
+		     ARRAY_SIZE(idev->dev_cmd->data));
+	for (i = 0; i < nwords; i++)
+		iowrite32(ident->drv.words[i], &idev->dev_cmd->data[i]);
 
-	sonic_dev_cmd_identify(idev, IDENTITY_VERSION_1, ident_pa);
-
+	sonic_dev_cmd_identify(idev, IDENTITY_VERSION_1);
 	err = sonic_dev_cmd_wait_check(idev, devcmd_timeout);
 	if (err)
-		goto err_out_unmap;
+		goto err_out;
 
-#ifdef HAPS
-	for (i = 0; i < 512; i++)
-		ident->words[i] = ioread32(&idev->ident->words[i]);
-#endif
+	nwords = min(ARRAY_SIZE(ident->dev.words),
+		     ARRAY_SIZE(idev->dev_cmd->data));
+	for (i = 0; i < nwords; i++)
+		ident->dev.words[i] = ioread32(&idev->dev_cmd->data[i]);
 
-	sonic->ident = ident;
-	sonic->ident_pa = ident_pa;
+	sonic_dev_cmd_lif_identify(idev, IDENTITY_VERSION_1);
+	err = sonic_dev_cmd_wait_check(idev, devcmd_timeout);
+	if (err)
+		goto err_out;
+
+	nwords = min(ARRAY_SIZE(ident->lif.words),
+		     ARRAY_SIZE(idev->dev_cmd->data));
+	for (i = 0; i < nwords; i++)
+		ident->lif.words[i] = ioread32(&idev->dev_cmd->data[i]);
+
+	nwords = sizeof(ident->info) / sizeof(uint32_t);
+	wp = (uint32_t *)&ident->info;
+	for (i = 0; i < nwords; i++)
+		wp[i] = ioread32(&idev->dev_info->words[i]);
 
 	for (i = 0, ring = idev->ring_tbl;
 	     i < ACCEL_RING_ID_MAX;
 	     i++, ring++) {
-		ring->accel_ring = ident->dev.accel_ring_tbl[i];
+		ring->accel_ring = ident->lif.base.accel_ring_tbl[i];
 		ring->accel_ring.ring_id = i;
 		ring->name = sonic_accel_ring_name_get(i);
 		osal_atomic_init(&ring->descs_inuse, 0);
@@ -464,19 +455,12 @@ int sonic_identify(struct sonic *sonic)
 
 	err = sonic_debugfs_add_ident(sonic);
 	if (err)
-		goto err_out_unmap;
+		goto err_out;
 
 	return 0;
 
-err_out_unmap:
-	dma_unmap_single(dev, ident_pa, sizeof(*ident), DMA_BIDIRECTIONAL);
+err_out:
 	return err;
-}
-
-void sonic_forget_identity(struct sonic *sonic)
-{
-	dma_unmap_single(sonic->dev, sonic->ident_pa,
-			 sizeof(*sonic->ident), DMA_BIDIRECTIONAL);
 }
 
 int sonic_reset(struct sonic *sonic)
@@ -523,16 +507,16 @@ static void sonic_api_adminq_cb(struct queue *q, struct admin_desc_info *desc_in
 				struct cq_info *cq_info, void *cb_arg)
 {
 	struct sonic_admin_ctx *ctx = cb_arg;
-	struct admin_cpl *comp = (struct admin_cpl *) cq_info->cq_desc;
+	struct admin_cpl *cpl = (struct admin_cpl *) cq_info->cq_desc;
 
-	if (WARN_ON(comp->cpl_index != desc_info->index)) {
-		OSAL_LOG_ERROR("cpl_index  %u comp 0x" PRIx64 " desc_info_index %u desc_info 0x" PRIx64,
-				comp->cpl_index, (uint64_t)comp, desc_info->index, (uint64_t)desc_info);
-		ctx->comp.cpl.status = -1;
+	if (WARN_ON(cpl->cpl_index != desc_info->index)) {
+		OSAL_LOG_ERROR("cpl_index  %u cpl 0x" PRIx64 " desc_info_index %u desc_info 0x" PRIx64,
+				cpl->cpl_index, (uint64_t)cpl, desc_info->index, (uint64_t)desc_info);
+		ctx->cpl.status = -1;
 		dynamic_hex_dump("sonic: desc ", DUMP_PREFIX_OFFSET, 16, 1,
 			desc_info, sizeof(*desc_info), true);
-		dynamic_hex_dump("sonic: comp ", DUMP_PREFIX_OFFSET, 16, 1,
-			comp, sizeof(*comp), true);
+		dynamic_hex_dump("sonic: cpl ", DUMP_PREFIX_OFFSET, 16, 1,
+			cpl, sizeof(*cpl), true);
 		dynamic_hex_dump("sonic: cmd ", DUMP_PREFIX_OFFSET, 16, 1,
 			&ctx->cmd, sizeof(ctx->cmd), true);
 		/* Completion with error. */
@@ -540,12 +524,12 @@ static void sonic_api_adminq_cb(struct queue *q, struct admin_desc_info *desc_in
 		return;
 	}
 
-	memcpy(&ctx->comp, comp, sizeof(*comp));
+	memcpy(&ctx->cpl, cpl, sizeof(*cpl));
 
-	OSAL_LOG_DEBUG("comp admin queue command:");
+	OSAL_LOG_DEBUG("cpl admin queue command:");
 	if (g_osal_log_level >= OSAL_LOG_LEVEL_DEBUG) {
-		dynamic_hex_dump("sonic: comp ", DUMP_PREFIX_OFFSET, 16, 1,
-				&ctx->comp, sizeof(ctx->comp), true);
+		dynamic_hex_dump("sonic: cpl ", DUMP_PREFIX_OFFSET, 16, 1,
+				&ctx->cpl, sizeof(ctx->cpl), true);
 	}
 
 	complete_all(&ctx->work);
@@ -582,32 +566,43 @@ err_out:
 	return err;
 }
 
-void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver, dma_addr_t addr)
+void sonic_dev_cmd_identify(struct sonic_dev *idev, u16 ver)
 {
 	union dev_cmd cmd = {
-		.identify.opcode = CMD_OPCODE_IDENTIFY,
-		.identify.ver = ver,
-		.identify.addr = addr,
+		.dev_identify.opcode = CMD_OPCODE_IDENTIFY,
+		.dev_identify.ver = ver,
+		.dev_identify.type = ACCEL_DEV_TYPE_BASE,
 	};
 
 	sonic_dev_cmd_go(idev, &cmd);
 }
 
-void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 index)
+void sonic_dev_cmd_lif_identify(struct sonic_dev *idev, u16 ver)
+{
+	union dev_cmd cmd = {
+		.lif_identify.opcode = CMD_OPCODE_LIF_IDENTIFY,
+		.lif_identify.ver = ver,
+		.lif_identify.type = ACCEL_LIF_TYPE_BASE,
+	};
+
+	sonic_dev_cmd_go(idev, &cmd);
+}
+
+void sonic_dev_cmd_lif_init(struct sonic_dev *idev, u32 lif_index)
 {
 	union dev_cmd cmd = {
 		.lif_init.opcode = CMD_OPCODE_LIF_INIT,
-		.lif_init.index = index,
+		.lif_init.lif_index = lif_index,
 	};
 
 	sonic_dev_cmd_go(idev, &cmd);
 }
 
-void sonic_dev_cmd_lif_reset(struct sonic_dev *idev, u32 index)
+void sonic_dev_cmd_lif_reset(struct sonic_dev *idev, u32 lif_index)
 {
 	union dev_cmd cmd = {
 		.lif_reset.opcode = CMD_OPCODE_LIF_RESET,
-		.lif_reset.index = index,
+		.lif_reset.lif_index = lif_index,
 	};
 
 	sonic_dev_cmd_go(idev, &cmd);
@@ -624,6 +619,7 @@ int sonic_crypto_key_index_update(const void *key1,
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx0.work),
 		.cmd.crypto_key_update = {
 			.opcode = CMD_OPCODE_CRYPTO_KEY_UPDATE,
+			.lif_index = lif->index,
 			.key_index = key_index,
 			.key_size = key_size,
 			.key_part = CMD_CRYPTO_KEY_PART0,
@@ -633,6 +629,7 @@ int sonic_crypto_key_index_update(const void *key1,
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx1.work),
 		.cmd.crypto_key_update = {
 			.opcode = CMD_OPCODE_CRYPTO_KEY_UPDATE,
+			.lif_index = lif->index,
 			.key_index = key_index,
 			.key_size = key_size,
 			.key_part = CMD_CRYPTO_KEY_PART1,
