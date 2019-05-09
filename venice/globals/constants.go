@@ -36,6 +36,7 @@ const (
 	CommonConfigDir                      = ConfigDir + "/shared/common"
 	EtcdConfigDir                        = ConfigDir + "/" + Etcd
 	NtpConfigDir                         = ConfigDir + "/" + Ntp
+	ElasticConfigDir                     = ConfigDir + "/" + ElasticSearch
 	KubernetesConfigDir                  = ConfigDir + "/kubernetes"
 	KubernetesAPIServerConfigDir         = KubernetesConfigDir + "/" + KubeAPIServer
 	KubernetesControllerManagerConfigDir = KubernetesConfigDir + "/" + KubeControllerManager

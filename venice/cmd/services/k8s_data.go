@@ -244,18 +244,6 @@ var k8sModules = map[string]protos.Module{
 			Submodules: []protos.ModuleSpec_Submodule{
 				{
 					Name: globals.ElasticSearch,
-					// TODO
-					// Because of https://github.com/kubernetes/kubernetes/pull/48986
-					// we cant have environment variables with special chars in kube
-					// So commenting out the code below and have a special Elastic image with
-					// these options as part of Dockerfile.
-					// Once we upgrade to latest kube, we can use official elastic image
-					// and pass the first 2 environment variables explicitly below
-					EnvVars: map[string]string{
-						//"cluster.name":           "pen-elasticcluster",
-						//"xpack.security.enabled": "false",
-						"ES_JAVA_OPTS": "-Xms1g -Xmx1g",
-					},
 					Services: []protos.ModuleSpec_Submodule_Service{
 						{
 							Name: globals.ElasticSearch,

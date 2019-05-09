@@ -13,10 +13,10 @@ const (
 	FilebeatFieldsFile = "/etc/pensando/" + Filebeat + "/logging_fields.yml"
 
 	// ElasticDiscoveryConfigFile is used by Elastic for Node discovery
-	ElasticDiscoveryConfigFile = "/etc/pensando/" + ElasticSearch + "/elastic-discovery/unicast_hosts.txt"
+	ElasticDiscoveryConfigFile = ElasticConfigDir + "/elastic-discovery/unicast_hosts.txt"
 
 	// ElasticMgmtConfigFile is used by Elastic for binding to MgmtAddr and publishing to peers
-	ElasticMgmtConfigFile = "/etc/pensando/" + ElasticSearch + "/mgmt_env.sh"
+	ElasticMgmtConfigFile = ElasticConfigDir + "/mgmt_env.sh"
 
 	// ElasticDataVolumeDir is used by Elastic for storing indexed data
 	ElasticDataVolumeDir = "/var/lib/pensando/" + ElasticSearch + "/elasticsearch/data"
