@@ -111,6 +111,11 @@
 #define CAPRI_HBM_REG_QOS_DSCP_COS_MAP     "qos-dscp-cos-map"
 #define CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS "tcp_proxy_per_flow_stats"
 #define CAPRI_HBM_REG_NWSEC_RULE_STATS            "nwsec_rule_stats"
+#define CAPRI_HBM_REG_NVME                        "nvme"
+#define CAPRI_HBM_NVME_TX_NMDPR_RING_BASE         CAPRI_HBM_REG_NMDPR_BIG_TX
+#define CAPRI_HBM_NVME_RX_NMDPR_RING_BASE         CAPRI_HBM_REG_NMDPR_BIG_RX
+
+
 
 #define CAPRI_NUM_SEMAPHORES            512
 
@@ -194,4 +199,25 @@
 #define LIF_STATS_BASE                  "lif_stats_base"
 
 #define QOS_DSCP_COS_MAP_BASE           "qos_dscp_cos_map_addr"
+
+#define NVME_NSCB_BASE                  "nvme_nscb_base"
+#define NVME_CMD_CONTEXT_BASE           "nvme_cmd_context_base"
+#define NVME_CMD_CONTEXT_RING_BASE      "nvme_cmd_context_ring_base"
+#define NVME_TX_RESOURCECB              "nvme_tx_resourcecb_addr"
+#define NVME_RX_RESOURCECB              "nvme_rx_resourcecb_addr"
+#define NVME_TXSESSPRODCB_BASE          "nvme_txsessprodcb_base"
+#define NVME_RXSESSPRODCB_BASE          "nvme_rxsessprodcb_base"
+#define NVME_TX_AOL_BASE                "nvme_tx_aol_base"
+#define NVME_TX_AOL_RING_BASE           "nvme_tx_aol_ring_base"
+#define NVME_RX_AOL_BASE                "nvme_rx_aol_base"
+#define NVME_RX_AOL_RING_BASE           "nvme_rx_aol_ring_base"
+#define NVME_TX_SESS_XTSQ_BASE          "nvme_tx_sess_xtsq_base"
+#define NVME_TX_SESS_DGSTQ_BASE         "nvme_tx_sess_dgstq_base"
+#define NVME_RX_SESS_XTSQ_BASE          "nvme_rx_sess_xtsq_base"
+#define NVME_RX_SESS_DGSTQ_BASE         "nvme_rx_sess_dgstq_base"
+#define NVME_ACTIVE_SESSION_BITMAP      "nvme_active_session_bitmap"
+#define NVME_TX_NMDPR_RING_BASE         TNMDPR_BIG_TABLE_BASE
+#define NVME_RX_NMDPR_RING_BASE         RNMDPR_BIG_TABLE_BASE
+
+
 #endif    // __CAPRI_HBM_HPP__

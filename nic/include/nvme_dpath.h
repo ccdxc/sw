@@ -2,18 +2,8 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
-#ifndef _NVME_DPATH_HPP_
-#define _NVME_DPATH_HPP_
-
-#include "nic/include/base.hpp"
-#include <memory>
-#include <map>
-#include "nic/hal/plugins/cfg/nw/interface.hpp"
-#include "gen/proto/nvme.pb.h"
-#include "nic/include/hal.hpp"
-#include "lib/bm_allocator/bm_allocator.hpp"
-
-namespace hal {
+#ifndef _NVME_DPATH_H
+#define _NVME_DPATH_H
 
 #define HOSTMEM_PAGE_SIZE  (1 << 12)  //4096 Bytes
 #define MAX_LIFS           2048
@@ -208,6 +198,9 @@ typedef struct nvme_sessxtstxcb_s {
 
 static_assert(sizeof(nvme_sessxtstxcb_t) == 64);
 
+#define MAX_SESSXTSRX_RINGS 2
+#define MAX_SESSXTSRX_HOST_RINGS 0
+
 #define nvme_sessxtsrxcb_t nvme_sessxtstxcb_t
 
 
@@ -245,6 +238,9 @@ typedef struct nvme_sessdgsttxcb_s {
 
 static_assert(sizeof(nvme_sessdgsttxcb_t) == 64);
 
+#define MAX_SESSDGSTRX_RINGS 2
+#define MAX_SESSDGSTRX_HOST_RINGS 0
+
 #define nvme_sessdgstrxcb_t nvme_sessdgsttxcb_t
 
 typedef struct nvme_resourcecb_s {
@@ -280,7 +276,7 @@ typedef struct nvme_resourcecb_s {
 
 
 typedef struct nvme_cmd_context_s {
-    uint8_t pad[4096];
+    uint8_t pad[2048];
 } nvme_cmd_context_t;
 
 typedef struct nvme_cmd_context_ring_entry_s {
@@ -296,6 +292,77 @@ typedef struct nvme_aol_ring_entry_s {
 } nvme_aol_ring_entry_t;
 
 
-}  // namespace hal
+#define NVME_TX_SESS_XTSQ_DEPTH 64
+#define NVME_TX_SESS_XTSQ_ENTRY_SIZE sizeof(nvme_cmd_context_ring_entry_t)
+#define NVME_TX_SESS_XTSQ_SIZE NVME_TX_SESS_XTSQ_DEPTH * NVME_TX_SESS_XTSQ_ENTRY_SIZE
+#define NVME_TX_SESS_DGSTQ_DEPTH 64
+#define NVME_TX_SESS_DGSTQ_ENTRY_SIZE sizeof(nvme_cmd_context_ring_entry_t)
+#define NVME_TX_SESS_DGSTQ_SIZE NVME_TX_SESS_DGSTQ_DEPTH * NVME_TX_SESS_DGSTQ_ENTRY_SIZE
+#define NVME_RX_SESS_XTSQ_DEPTH 64
+#define NVME_RX_SESS_XTSQ_ENTRY_SIZE sizeof(nvme_cmd_context_ring_entry_t)
+#define NVME_RX_SESS_XTSQ_SIZE NVME_RX_SESS_XTSQ_DEPTH * NVME_RX_SESS_XTSQ_ENTRY_SIZE
+#define NVME_RX_SESS_DGSTQ_DEPTH 64
+#define NVME_RX_SESS_DGSTQ_ENTRY_SIZE sizeof(nvme_cmd_context_ring_entry_t)
+#define NVME_RX_SESS_DGSTQ_SIZE NVME_RX_SESS_DGSTQ_DEPTH * NVME_RX_SESS_DGSTQ_ENTRY_SIZE
 
-#endif // _NVME_DPATH_HPP_
+//HBM organization of NVME data path tables
+
+typedef enum nvme_dpath_ds_type_s {
+    NVME_TYPE_NSCB = 0,
+    NVME_TYPE_CMD_CONTEXT,
+    NVME_TYPE_CMD_CONTEXT_RING,
+    NVME_TYPE_TX_RESOURCECB,
+    NVME_TYPE_RX_RESOURCECB,
+    NVME_TYPE_TX_SESSPRODCB,
+    NVME_TYPE_RX_SESSPRODCB,
+    NVME_TYPE_TX_AOL,
+    NVME_TYPE_TX_AOL_RING,
+    NVME_TYPE_RX_AOL,
+    NVME_TYPE_RX_AOL_RING,
+    NVME_TYPE_TX_SESS_XTSQ,
+    NVME_TYPE_TX_SESS_DGSTQ,
+    NVME_TYPE_RX_SESS_XTSQ,
+    NVME_TYPE_RX_SESS_DGSTQ,
+    NVME_TYPE_MAX
+} nvme_dpath_ds_type_t;
+     
+typedef struct nvme_hbm_alloc_info_s {
+    int type;
+    int size;
+    int num_entries;
+} nvme_hbm_alloc_info_t;
+    
+static nvme_hbm_alloc_info_t nvme_hbm_alloc_table[] = {
+    {NVME_TYPE_NSCB, 512, sizeof(nvme_nscb_t)},
+    {NVME_TYPE_CMD_CONTEXT, 512, sizeof(nvme_cmd_context_t)},
+    {NVME_TYPE_CMD_CONTEXT_RING, 512, sizeof(nvme_cmd_context_ring_entry_t)},
+    {NVME_TYPE_TX_RESOURCECB, 1, sizeof(nvme_resourcecb_t)},
+    {NVME_TYPE_RX_RESOURCECB, 1, sizeof(nvme_resourcecb_t)},
+    {NVME_TYPE_TX_SESSPRODCB, 512, sizeof(nvme_txsessprodcb_t)},
+    {NVME_TYPE_RX_SESSPRODCB, 512, sizeof(nvme_rxsessprodcb_t)},
+    {NVME_TYPE_TX_AOL, 512, sizeof(nvme_aol_t)},
+    {NVME_TYPE_TX_AOL_RING, 512, sizeof(nvme_aol_ring_entry_t)},
+    {NVME_TYPE_RX_AOL, 512, sizeof(nvme_aol_t)},
+    {NVME_TYPE_RX_AOL_RING, 512, sizeof(nvme_aol_ring_entry_t)},
+    {NVME_TYPE_TX_SESS_XTSQ, 512, NVME_TX_SESS_XTSQ_DEPTH * NVME_TX_SESS_XTSQ_ENTRY_SIZE},
+    {NVME_TYPE_TX_SESS_DGSTQ, 512, NVME_TX_SESS_DGSTQ_DEPTH * NVME_TX_SESS_DGSTQ_ENTRY_SIZE},
+    {NVME_TYPE_RX_SESS_XTSQ, 512, NVME_RX_SESS_XTSQ_DEPTH * NVME_RX_SESS_XTSQ_ENTRY_SIZE},
+    {NVME_TYPE_RX_SESS_DGSTQ, 512, NVME_RX_SESS_DGSTQ_DEPTH * NVME_RX_SESS_DGSTQ_ENTRY_SIZE},
+};
+
+static inline int nvme_hbm_offset(int type) {
+    int i;
+    int offset = 0;
+    for (i = 0; i < type; i++) {
+        assert(i == nvme_hbm_alloc_table[i].type);
+        offset += nvme_hbm_alloc_table[i].size * nvme_hbm_alloc_table[i].num_entries;
+    }
+    return (offset);
+}
+
+static inline int nvme_hbm_resource_max(int type) {
+    assert(type < NVME_TYPE_MAX);
+    return (nvme_hbm_alloc_table[type].size);
+}
+
+#endif // _NVME_DPATH_H
