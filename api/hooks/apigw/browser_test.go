@@ -18,6 +18,50 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
+func TestBrowserPreCallHooks_EmptyURI(t *testing.T) {
+	ctx := context.Background()
+
+	mdata := map[string]string{
+		apiserver.RequestParamsRequestURI: "",
+	}
+	md := metadata.New(mdata)
+	ctx = metadata.NewOutgoingContext(ctx, md)
+	req := &browser.BrowseRequest{}
+	req.Defaults("v1")
+	h := browserHooks{logger: log.GetNewLogger(log.GetDefaultConfig("browserAPIGwHooks"))}
+	sch := runtime.GetDefaultScheme()
+	paths := map[string][]api.PathsMap{
+		"test.Object": {
+			{Key: "/testgrp/testobj/{Name}", URI: "/configs/testgrp/{version}/testobj/{Name}"},
+		},
+	}
+	sch.AddPaths(paths)
+
+	_, _, _, err := h.refereesPreCallHook(ctx, req)
+	Assert(t, err != nil, "getURI expected to fail, but passed", nil)
+}
+
+func TestBrowserPreCallHooks_NoURIMap(t *testing.T) {
+	ctx := context.Background()
+
+	mdata := map[string]string{}
+	md := metadata.New(mdata)
+	ctx = metadata.NewOutgoingContext(ctx, md)
+	req := &browser.BrowseRequest{}
+	req.Defaults("v1")
+	h := browserHooks{logger: log.GetNewLogger(log.GetDefaultConfig("browserAPIGwHooks"))}
+	sch := runtime.GetDefaultScheme()
+	paths := map[string][]api.PathsMap{
+		"test.Object": {
+			{Key: "/testgrp/testobj/{Name}", URI: "/configs/testgrp/{version}/testobj/{Name}"},
+		},
+	}
+	sch.AddPaths(paths)
+
+	_, _, _, err := h.refereesPreCallHook(ctx, req)
+	Assert(t, err != nil, "getURI expected to fail, but passed", nil)
+}
+
 func TestBrowserPreCallHooks(t *testing.T) {
 	ctx := context.Background()
 

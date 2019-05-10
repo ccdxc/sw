@@ -63,6 +63,24 @@ func (b *objstoreHooks) addObjDownloadOps(ctx context.Context, in interface{}) (
 	return nctx, in, nil
 }
 
+func (b *objstoreHooks) addObjDownloadFileByPrefixOps(ctx context.Context, in interface{}) (context.Context, interface{}, error) {
+	user, ok := apigwpkg.UserFromContext(ctx)
+	if !ok || user == nil {
+		b.logger.Errorf("no user present in context passed to addObjDownloadFileByPrefixOps authz hook")
+		return ctx, in, apigwpkg.ErrNoUserInContext
+	}
+
+	// Downloads are allowed only for the default tenat now.
+	resource := authz.NewResource(globals.DefaultTenant, string(apiclient.GroupObjstore), "", string(objstore.Buckets_images), "")
+	// get existing operations from context
+	operations, _ := apigwpkg.OperationsFromContext(ctx)
+	// append requested operation
+	operations = append(operations, authz.NewOperation(resource, auth.Permission_Read.String()))
+
+	nctx := apigwpkg.NewContextWithOperations(ctx, operations...)
+	return nctx, in, nil
+}
+
 // userContext is a pre-call hook to set user and permissions in grpc metadata in outgoing context
 func (b *objstoreHooks) userContext(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
 	b.logger.DebugLog("msg", "APIGw userContext pre-call hook called for Objstore userContext")
@@ -92,6 +110,12 @@ func registerObjstoreHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	}
 	prof.AddPreAuthZHook(r.addObjDownloadOps)
 	prof.SetAuditLevel(audit.Level_Basic.String())
+
+	prof, err = svc.GetServiceProfile("DownloadFileByPrefix")
+	if err != nil {
+		return err
+	}
+	prof.AddPreAuthZHook(r.addObjDownloadFileByPrefixOps)
 	prof, err = svc.GetCrudServiceProfile("Object", apiintf.ListOper)
 	if err != nil {
 		return err

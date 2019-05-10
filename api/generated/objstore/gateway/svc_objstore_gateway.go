@@ -471,11 +471,30 @@ func (a adapterObjstoreV1) DownloadFile(oldctx oldcontext.Context, in *objstore.
 	}
 	return ret.(objstore.ObjstoreV1_DownloadFileClient), err
 }
+func (a adapterObjstoreV1) DownloadFileByPrefix(oldctx oldcontext.Context, in *objstore.Object, options ...grpc.CallOption) (objstore.ObjstoreV1_DownloadFileByPrefixClient, error) {
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("DownloadFileByPrefix")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*objstore.Object)
+		return a.service.DownloadFileByPrefix(ctx, in)
+	}
+	apiutils.SetVar(ctx, apiutils.CtxKeyAPIGwBinStreamReq, true)
+	ret, err := a.gw.HandleRequest(ctx, in, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(objstore.ObjstoreV1_DownloadFileByPrefixClient), err
+}
 
 func (e *sObjstoreV1GwService) setupSvcProfile() {
 	e.defSvcProf = apigwpkg.NewServiceProfile(nil, "", "", apiintf.UnknownOper)
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
+
+	e.svcProf["AutoAddObject"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Object", "", apiintf.CreateOper)
 
 	e.svcProf["AutoDeleteObject"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Object", "", apiintf.DeleteOper)
 
@@ -486,6 +505,8 @@ func (e *sObjstoreV1GwService) setupSvcProfile() {
 	e.svcProf["AutoWatchObject"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgObjectWatchHelper", "", apiintf.WatchOper)
 
 	e.svcProf["DownloadFile"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
+
+	e.svcProf["DownloadFileByPrefix"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
 	e.svcProf["_RProxy_"+"/"+"uploads/images"] = apigwpkg.NewServiceProfile(e.defSvcProf, "", "", apiintf.UnknownOper)
 }
 

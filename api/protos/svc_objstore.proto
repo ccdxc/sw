@@ -22,7 +22,7 @@ service ObjstoreV1 {
 
     option (venice.apiRestService) = {
         Object: "Object"
-        Method: [ "get", "list", "delete", "watch" ]
+        Method: [ "get", "post", "list", "delete", "watch" ]
     };
 
     option (venice.proxyPrefix) = {
@@ -38,6 +38,13 @@ service ObjstoreV1 {
                 // path for default tenant
                 get: "/downloads/{O.Namespace}/{O.Name}"
             }
+        };
+        option (venice.methodSrvBinaryStream) = true;
+    }
+
+    rpc DownloadFileByPrefix(Object) returns (stream StreamChunk) {
+        option (google.api.http) = {
+            get: "/downloads/all/tenant/{O.Tenant}/{O.Namespace}/{O.Name}"
         };
         option (venice.methodSrvBinaryStream) = true;
     }

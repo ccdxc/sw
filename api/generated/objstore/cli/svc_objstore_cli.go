@@ -83,7 +83,23 @@ func restDeleteObject(hostname, token string, obj interface{}) error {
 }
 
 func restPostObject(hostname, token string, obj interface{}) error {
-	return fmt.Errorf("create operation not supported for Object object")
+
+	restcl, err := apiclient.NewRestAPIClient(hostname)
+	if err != nil {
+		return fmt.Errorf("cannot create REST client")
+	}
+	defer restcl.Close()
+	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
+
+	if v, ok := obj.(*objstore.Object); ok {
+		nv, err := restcl.ObjstoreV1().Object().Create(loginCtx, v)
+		if err != nil {
+			return err
+		}
+		*v = *nv
+	}
+	return nil
+
 }
 
 func restPutObject(hostname, token string, obj interface{}) error {
@@ -96,6 +112,7 @@ func init() {
 		return
 	}
 
+	cl.AddRestPostFunc("objstore.Object", "v1", restPostObject)
 	cl.AddRestDeleteFunc("objstore.Object", "v1", restDeleteObject)
 
 	cl.AddRestGetFunc("objstore.Object", "v1", restGetObject)

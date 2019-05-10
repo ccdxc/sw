@@ -20,6 +20,19 @@ export class Objstorev1Service extends AbstractService {
     return this.constructor.name;
   }
 
+  public GetDownloadFileByPrefix(O_Namespace,O_Name, queryParam: any = null):Observable<{body: IObjstoreStreamChunk | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/objstore/v1/downloads/all/tenant/{O.Tenant}/{O.Namespace}/{O.Name}';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Namespace}', O_Namespace);
+    url = url.replace('{O.Name}', O_Name);
+    const opts = {
+      eventID: 'GetDownloadFileByPrefix',
+      objType: 'ObjstoreStreamChunk',
+      isStaging: false,
+    }
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IObjstoreStreamChunk | Error, statusCode: number}>;
+  }
+  
   public GetDownloadFile(O_Namespace,O_Name, queryParam: any = null):Observable<{body: IObjstoreStreamChunk | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/objstore/v1/downloads/tenant/{O.Tenant}/{O.Namespace}/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
@@ -56,6 +69,22 @@ export class Objstorev1Service extends AbstractService {
       isStaging: false,
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IObjstoreObjectList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create Object object */
+  public AddObject(O_Namespace, body: IObjstoreObject, trimObject: boolean = true):Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/objstore/v1/tenant/{O.Tenant}/{O.Namespace}/objects';
+    url = url.replace('{O.Tenant}', this['O_Tenant']);
+    url = url.replace('{O.Namespace}', O_Namespace);
+    const opts = {
+      eventID: 'AddObject',
+      objType: 'ObjstoreObject',
+      isStaging: false,
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ObjstoreObject(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Object object */
@@ -121,6 +150,21 @@ export class Objstorev1Service extends AbstractService {
       isStaging: false,
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IObjstoreObjectList | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Create Object object */
+  public AddObject_1(O_Namespace, body: IObjstoreObject, trimObject: boolean = true):Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/objstore/v1/{O.Namespace}/objects';
+    url = url.replace('{O.Namespace}', O_Namespace);
+    const opts = {
+      eventID: 'AddObject_1',
+      objType: 'ObjstoreObject',
+      isStaging: false,
+    }
+    if (trimObject) {
+      body = TrimDefaultsAndEmptyFields(body, new ObjstoreObject(body))
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}>;
   }
   
   /** Get Object object */

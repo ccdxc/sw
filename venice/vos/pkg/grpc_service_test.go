@@ -465,6 +465,51 @@ func (f *fakeDownloadFileServer) SendMsg(m interface{}) error { return nil }
 // RecvMsg implements a mock interface
 func (f *fakeDownloadFileServer) RecvMsg(m interface{}) error { return nil }
 
+func TestListFileByPrefix(t *testing.T) {
+	fb := &mockBackend{}
+	inst := &instance{}
+	inst.Init(fb)
+
+	objCh := make(chan minioclient.ObjectInfo)
+	fb.listObjFn = func() <-chan minioclient.ObjectInfo {
+		return objCh
+	}
+
+	httphdr := http.Header{}
+	objs := []minioclient.ObjectInfo{
+		{
+			ETag:     "abcdef",
+			Key:      "file1",
+			Metadata: httphdr,
+		},
+	}
+	go func() {
+		for _, v := range objs {
+			objCh <- v
+		}
+		close(objCh)
+	}()
+
+	ctx := context.Background()
+	srv := grpcBackend{client: fb, instance: inst}
+	fso := &fakeStoreObj{}
+	fb.fObj = fso
+	_, err := srv.ListObjectsByPrefix(ctx, "default", "images", "ba")
+	Assert(t, err == nil, "List by prefix did not work")
+
+	_, err = srv.ListObjectsByPrefix(ctx, "", "", "ba")
+	Assert(t, err != nil, "List by prefix worked")
+
+	cbFunc1 := func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
+		return nil
+	}
+	inst.RegisterCb("images", vos.PreOp, vos.List, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.List, cbFunc1)
+
+	_, err = srv.ListObjectsByPrefix(ctx, "default", "images", "ba")
+	Assert(t, err == nil, "List by prefix didn't work")
+}
+
 func TestDownloadFile(t *testing.T) {
 	fb := &mockBackend{}
 	inst := &instance{}
@@ -533,4 +578,61 @@ func TestDownloadFile(t *testing.T) {
 	cbErr1 = nil
 	err = srv.DownloadFile(obj, ffs)
 	Assert(t, err != nil, "DownloadFile should have failed")
+}
+
+func TestDownloadFileByPrefix(t *testing.T) {
+	fb := &mockBackend{}
+	inst := &instance{}
+	inst.Init(fb)
+
+	ctx := context.Background()
+	obj := &objstore.Object{
+		ObjectMeta: api.ObjectMeta{
+			Name:      "testobj",
+			Namespace: "images",
+		},
+	}
+	ffs := &fakeDownloadFileServer{ctx: ctx}
+	var cbErr1, cbErr2 error
+	var cbcalled1, cbcalled2 int
+	// Add plugin funcs
+	cbFunc1 := func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
+		cbcalled1++
+		return cbErr1
+	}
+	cbFunc2 := func(ctx context.Context, oper vos.ObjectOper, in *objstore.Object, client vos.BackendClient) error {
+		cbcalled2++
+		return cbErr2
+	}
+	inst.RegisterCb("images", vos.PreOp, vos.Download, cbFunc1)
+	inst.RegisterCb("images", vos.PostOp, vos.Download, cbFunc2)
+	srv := grpcBackend{client: fb, instance: inst}
+	fso := &fakeStoreObj{}
+	fb.fObj = fso
+	fb.retErr = errors.New("some error")
+	err := srv.DownloadFile(obj, ffs)
+	Assert(t, err != nil, "expecting download to error out")
+	fb.retErr = nil
+	cnt := 0
+	testStr := []byte("aabababababababaabababababaababababababaabababababa")
+	readErr := io.EOF
+	fso.readFn = func(in []byte) (int, error) {
+		in = testStr
+		var err error
+		if cnt == 3 {
+			err = readErr
+		}
+
+		if cnt > 3 {
+			return 0, io.EOF
+		}
+		cnt++
+		return len(testStr), err
+	}
+	err = srv.DownloadFileByPrefix(obj, ffs)
+	Assert(t, err != nil, "DownloadFile Worked")
+
+	obj.ObjectMeta.Namespace = "badbad"
+	err = srv.DownloadFileByPrefix(obj, ffs)
+	Assert(t, err != nil, "DownloadFile Worked with bad namespace")
 }

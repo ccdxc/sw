@@ -558,7 +558,7 @@ func (a *restObjObjstoreV1Object) Watch(ctx context.Context, options *api.ListWa
 func (a *restObjObjstoreV1Object) Allowed(oper apiintf.APIOperType) bool {
 	switch oper {
 	case apiintf.CreateOper:
-		return false
+		return true
 	case apiintf.UpdateOper:
 		return false
 	case apiintf.GetOper:

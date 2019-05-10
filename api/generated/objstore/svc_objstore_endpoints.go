@@ -76,6 +76,7 @@ type EndpointsObjstoreV1RestClient struct {
 	AutoWatchObjectEndpoint        endpoint.Endpoint
 	AutoWatchSvcObjstoreV1Endpoint endpoint.Endpoint
 	DownloadFileEndpoint           endpoint.Endpoint
+	DownloadFileByPrefixEndpoint   endpoint.Endpoint
 }
 
 // MiddlewareObjstoreV1Server adds middle ware to the server
@@ -256,6 +257,9 @@ func (e EndpointsObjstoreV1Client) AutoWatchObject(ctx context.Context, in *api.
 
 func (e EndpointsObjstoreV1Client) DownloadFile(ctx context.Context, in *Object) (ObjstoreV1_DownloadFileClient, error) {
 	return e.Client.DownloadFile(ctx, in)
+}
+func (e EndpointsObjstoreV1Client) DownloadFileByPrefix(ctx context.Context, in *Object) (ObjstoreV1_DownloadFileByPrefixClient, error) {
+	return e.Client.DownloadFileByPrefix(ctx, in)
 }
 
 // AutoAddBucket implementation on server Endpoint
@@ -519,6 +523,9 @@ func MakeAutoWatchObjectEndpoint(s ServiceObjstoreV1Server, logger log.Logger) f
 func (e EndpointsObjstoreV1Server) DownloadFile(in *Object, stream ObjstoreV1_DownloadFileServer) error {
 	return errors.New("not implemented")
 }
+func (e EndpointsObjstoreV1Server) DownloadFileByPrefix(in *Object, stream ObjstoreV1_DownloadFileByPrefixServer) error {
+	return errors.New("not implemented")
+}
 
 // MakeObjstoreV1ServerEndpoints creates server endpoints
 func MakeObjstoreV1ServerEndpoints(s ServiceObjstoreV1Server, logger log.Logger) EndpointsObjstoreV1Server {
@@ -756,6 +763,19 @@ func (m loggingObjstoreV1MiddlewareClient) DownloadFile(ctx context.Context, in 
 	resp, err = m.next.DownloadFile(ctx, in)
 	return
 }
+func (m loggingObjstoreV1MiddlewareClient) DownloadFileByPrefix(ctx context.Context, in *Object) (resp ObjstoreV1_DownloadFileByPrefixClient, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "ObjstoreV1", "method", "DownloadFileByPrefix", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.DownloadFileByPrefix(ctx, in)
+	return
+}
 
 func (m loggingObjstoreV1MiddlewareServer) AutoAddBucket(ctx context.Context, in Bucket) (resp Bucket, err error) {
 	defer func(begin time.Time) {
@@ -932,6 +952,9 @@ func (m loggingObjstoreV1MiddlewareServer) AutoWatchObject(in *api.ListWatchOpti
 func (m loggingObjstoreV1MiddlewareServer) DownloadFile(in *Object, stream ObjstoreV1_DownloadFileServer) error {
 	return errors.New("not implemented")
 }
+func (m loggingObjstoreV1MiddlewareServer) DownloadFileByPrefix(in *Object, stream ObjstoreV1_DownloadFileByPrefixServer) error {
+	return errors.New("not implemented")
+}
 
 func (r *EndpointsObjstoreV1RestClient) updateHTTPHeader(ctx context.Context, header *http.Header) {
 	val, ok := loginctx.AuthzHeaderFromContext(ctx)
@@ -964,8 +987,7 @@ func makeURIObjstoreV1AutoAddBucketCreateOper(in *Bucket) string {
 
 //
 func makeURIObjstoreV1AutoAddObjectCreateOper(in *Object) string {
-	return ""
-
+	return fmt.Sprint("/objstore/v1", "/tenant/", in.Tenant, "/", in.Namespace, "/objects")
 }
 
 //
@@ -1105,7 +1127,24 @@ func (r *EndpointsObjstoreV1RestClient) AutoWatchBucket(ctx context.Context, opt
 
 // AutoAddObject CRUD method for Object
 func (r *EndpointsObjstoreV1RestClient) AutoAddObject(ctx context.Context, in *Object) (*Object, error) {
-	return nil, errors.New("not allowed")
+	path := makeURIObjstoreV1AutoAddObjectCreateOper(in)
+	if r.bufferId != "" {
+		path = strings.Replace(path, "/configs", "/staging/"+r.bufferId, 1)
+	}
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	httpresp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer httpresp.Body.Close()
+	ret, err := decodeHTTPrespObjstoreV1AutoAddObject(ctx, httpresp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Object), nil
 }
 
 // AutoUpdateObject CRUD method for Object
@@ -1228,6 +1267,10 @@ func (r *EndpointsObjstoreV1RestClient) AutoWatchObject(ctx context.Context, opt
 }
 
 func (r *EndpointsObjstoreV1RestClient) ObjstoreV1DownloadFileEndpoint(ctx context.Context, in *Object) (*StreamChunk, error) {
+	return nil, errors.New("not allowed")
+}
+
+func (r *EndpointsObjstoreV1RestClient) ObjstoreV1DownloadFileByPrefixEndpoint(ctx context.Context, in *Object) (*StreamChunk, error) {
 	return nil, errors.New("not allowed")
 }
 

@@ -473,6 +473,7 @@
             ],
             "RestMethods": [
               "get",
+              "post",
               "list",
               "delete",
               "watch"

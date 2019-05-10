@@ -312,6 +312,9 @@ func (s *grpcServerObjstoreV1) AutoWatchObject(in *api.ListWatchOptions, stream 
 func (s *grpcServerObjstoreV1) DownloadFile(in *Object, stream ObjstoreV1_DownloadFileServer) error {
 	return s.Endpoints.DownloadFile(in, stream)
 }
+func (s *grpcServerObjstoreV1) DownloadFileByPrefix(in *Object, stream ObjstoreV1_DownloadFileByPrefixServer) error {
+	return s.Endpoints.DownloadFileByPrefix(in, stream)
+}
 
 func encodeHTTPBucketList(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
