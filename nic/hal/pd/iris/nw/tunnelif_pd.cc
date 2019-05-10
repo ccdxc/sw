@@ -858,11 +858,11 @@ pd_tunnelif_form_data (pd_tnnl_rw_entry_key_t *tnnl_rw_key,
 
         /* MAC SA. Use mac from device.conf only if it is set. Else derive the smac via rtep ep */
 	if (g_mgmt_if_mac == 0) {
-		mac = ep_get_rmac(rtep_ep, l2seg);
-		memcpy(tnnl_rw_key->mac_sa, mac, sizeof(mac_addr_t));
+            mac = ep_get_rmac(rtep_ep, l2seg);
+            memcpy(tnnl_rw_key->mac_sa, mac, sizeof(mac_addr_t));
 	} else {
-		MAC_UINT64_TO_ADDR(smac, g_mgmt_if_mac)
-		memcpy(tnnl_rw_key->mac_sa, smac, sizeof(mac_addr_t));
+            MAC_UINT64_TO_ADDR(smac, g_mgmt_if_mac)
+            memcpy(tnnl_rw_key->mac_sa, smac, sizeof(mac_addr_t));
 	}
 
         /* Populate vxlan encap params */

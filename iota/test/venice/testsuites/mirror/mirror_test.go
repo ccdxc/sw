@@ -16,13 +16,6 @@ var _ = Describe("mirror tests", func() {
 	})
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
-
-		// delete test policy if its left over. we can ignore the error here
-		//ts.model.SGPolicy("test-policy").Delete()
-		//ts.model.DefaultSGPolicy().Delete()
-
-		// recreate default allow policy
-		//Expect(ts.model.DefaultSGPolicy().Restore()).ShouldNot(HaveOccurred())
 	})
 	Context("Mirror tests", func() {
 		It("Mirror packets to collector and check TCPDUMP", func() {
@@ -31,16 +24,31 @@ var _ = Describe("mirror tests", func() {
 			}
 
 			// add permit rules for workload pairs
-                        collector := ts.model.Workloads().Any(1)
+                        collector := ts.model.Workloads().Any(2)
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().ExcludeWorkloads(collector).Any(1)
-			spc := ts.model.NewMirrorSession("test-mirror").AddRulesForWorkloadPairs(workloadPairs, "icmp/0/0")
-			spc.AddCollector(collector, "udp/4545")
-                        Expect(spc.Commit()).Should(Succeed())
+			msc := ts.model.NewMirrorSession("test-mirror").AddRulesForWorkloadPairs(workloadPairs, "icmp/0/0")
+			msc.AddCollector(collector, "udp/4545", 0)
+                        Expect(msc.Commit()).Should(Succeed())
 
-			// verify TCP connection works between workload pairs
+			// TODO: verify we receive mirror packets at the collector
 			Eventually(func() error {
 				return ts.model.Action().TCPSession(workloadPairs, 8000)
 			}).Should(Succeed())
+
+                        // Clear collectors
+			msc.ClearCollectors()
+
+                        // Update the collector
+			msc.AddCollector(collector, "udp/4545", 1)
+                        Expect(msc.Commit()).Should(Succeed())
+
+			// TODO: verify we receive mirror packets at the updated collector
+			Eventually(func() error {
+				return ts.model.Action().TCPSession(workloadPairs, 8000)
+			}).Should(Succeed())
+
+                        // Delete the Mirror session
+                        Expect(msc.Delete()).Should(Succeed())
 
 		})
 	})

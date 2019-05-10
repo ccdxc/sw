@@ -47,7 +47,7 @@ func (sm *SysModel) NewMirrorSession(name string) *MirrorSessionCollection {
 }
 
 // AddCollector adds a collector to the mirrorsession
-func (msp *MirrorSessionCollection) AddCollector(wc *WorkloadCollection, transport string) *MirrorSessionCollection {
+func (msp *MirrorSessionCollection) AddCollector(wc *WorkloadCollection, transport string, wlnum int) *MirrorSessionCollection {
 	if msp.err != nil {
 		return msp
 	}
@@ -57,14 +57,25 @@ func (msp *MirrorSessionCollection) AddCollector(wc *WorkloadCollection, transpo
         collector := monitoring.MirrorCollector{
                 Type: "ERSPAN",
                 ExportCfg: &monitoring.ExportConfig{
-                        Destination: strings.Split(wc.workloads[0].iotaWorkload.IpPrefix, "/")[0],
-                        //Destination: "192.168.69.74",
+                        Destination: strings.Split(wc.workloads[wlnum].iotaWorkload.IpPrefix, "/")[0],
                         Transport: transport,
                 },
         }
                 
 	for _, sess := range msp.sessions {
                 sess.veniceMirrorSess.Spec.Collectors = append(sess.veniceMirrorSess.Spec.Collectors, collector)
+	}
+
+	return msp
+}
+
+// ClearCollectors adds a collector to the mirrorsession
+func (msp *MirrorSessionCollection) ClearCollectors() *MirrorSessionCollection {
+	if msp.err != nil {
+		return msp
+	}
+	for _, sess := range msp.sessions {
+                sess.veniceMirrorSess.Spec.Collectors = nil
 	}
 
 	return msp
@@ -86,7 +97,7 @@ func (msp *MirrorSessionCollection) Commit() error {
 			}
 		}
 
-		log.Debugf("Created sessicy: %#v", sess.veniceMirrorSess)
+		log.Debugf("Created session: %#v", sess.veniceMirrorSess)
 
 		sess.sm.msessions[sess.veniceMirrorSess.Name] = sess
 	}
@@ -136,7 +147,7 @@ func (msp *MirrorSessionCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCo
 	return msp
 }
 
-// Delete deletes all sessions in the collection
+// Deletes all sessions in the collection
 func (msc *MirrorSessionCollection) Delete() error {
 	if msc.err != nil {
 		return msc.err
@@ -152,5 +163,15 @@ func (msc *MirrorSessionCollection) Delete() error {
 	}
 
 	return nil
+}
+
+// MirrorSessions returns all Mirror Sessions in the model
+func (sm *SysModel) MirrorSessions() *MirrorSessionCollection {
+	msc := MirrorSessionCollection{}
+	for _, sess:= range msc.sessions {
+		msc.sessions = append(msc.sessions, sess)
+	}
+
+	return &msc
 }
 
