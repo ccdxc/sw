@@ -8,7 +8,6 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"fmt"
 	"net"
 	"os"
 	"path"
@@ -17,18 +16,16 @@ import (
 
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 const (
 	// These file names need to match those in github.com/minio/minio/cmd/config-dir.go
-	httpsKeyFileName            = "private.key"
-	httpsCertFileName           = "public.crt"
-	httpsCaCertFileNameTemplate = "public%d.crt"
+	httpsCertFileName = "public.crt"
+	httpsKeyFileName  = "private.key"
 )
 
 // GenVosHTTPSAuth generates the credentials for Minio backend to authenticate itself to clients.
-func GenVosHTTPSAuth(node, dir string, csrSigner certs.CSRSigner, caTrustChain, trustRoots []*x509.Certificate) error {
+func GenVosHTTPSAuth(dir string, csrSigner certs.CSRSigner, caTrustChain []*x509.Certificate) error {
 	if csrSigner == nil {
 		return errors.New("Cannot generate VOS credentials without a CSR signer")
 	}
@@ -37,7 +34,8 @@ func GenVosHTTPSAuth(node, dir string, csrSigner certs.CSRSigner, caTrustChain, 
 	if err != nil {
 		return errors.Wrapf(err, "error generating private key")
 	}
-	csr, err := certs.CreateCSR(privateKey, &pkix.Name{CommonName: node}, []string{node, globals.Vos}, []net.IP{})
+	name := globals.Vos
+	csr, err := certs.CreateCSR(privateKey, &pkix.Name{CommonName: name}, []string{}, []net.IP{})
 	if err != nil {
 		return errors.Wrapf(err, "error generating csr")
 	}
@@ -46,9 +44,8 @@ func GenVosHTTPSAuth(node, dir string, csrSigner certs.CSRSigner, caTrustChain, 
 		return errors.Wrapf(err, "error generating certificate")
 	}
 
-	caDir := path.Join(dir, "CAs")
 	perm := os.FileMode(0700)
-	err = os.MkdirAll(caDir, perm)
+	err = os.MkdirAll(dir, perm)
 	if err != nil {
 		return errors.Wrapf(err, "Error creating directory: %v with permissions: %v", dir, perm)
 	}
@@ -65,21 +62,12 @@ func GenVosHTTPSAuth(node, dir string, csrSigner certs.CSRSigner, caTrustChain, 
 		return err
 	}
 
-	caCertsPathTemplate := path.Join(caDir, httpsCaCertFileNameTemplate)
-	for i, trustRoot := range trustRoots {
-		filePath := fmt.Sprintf(caCertsPathTemplate, i+1)
-		err = certs.SaveCertificate(filePath, trustRoot)
-		if err != nil {
-			log.Errorf("Error storing trust root %s: %v", filePath, err)
-		}
-	}
-
 	return nil
 }
 
 // GenVosAuth generate credentials for Vos instances backed by Minio
-func GenVosAuth(node string, csrSigner certs.CSRSigner, caTrustChain, trustRoots []*x509.Certificate) error {
-	err := GenVosHTTPSAuth(node, globals.VosHTTPSAuthDir, csrSigner, caTrustChain, trustRoots)
+func GenVosAuth(csrSigner certs.CSRSigner, caTrustChain []*x509.Certificate) error {
+	err := GenVosHTTPSAuth(globals.VosHTTPSAuthDir, csrSigner, caTrustChain)
 	if err != nil {
 		return errors.Wrapf(err, "Error generating VOS node credentials")
 	}

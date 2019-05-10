@@ -126,7 +126,6 @@ func TestCreateBuckets(t *testing.T) {
 		}
 		return makeErr
 	}
-	maxCreateBucketRetries = 1
 	inst := &instance{}
 	inst.Init(fb)
 	err := inst.createDefaultBuckets(fb)

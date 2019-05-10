@@ -14,12 +14,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"sort"
-	"strings"
-
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/venice/globals"
 
 	"github.com/pensando/sw/venice/utils/log"
 
@@ -199,8 +193,17 @@ func statFile(ctx context.Context, filename string) (*objstore.Object, error) {
 	return resp, nil
 }
 
-func testObjCUDOps() func() {
-	return func() {
+var _ = Describe("Objstore Write and read test", func() {
+	BeforeEach(func() {
+		// Close if there is an existing client and reestablish a client connection.
+		// This temporarily worksaround the issue that the resolution of the destination URI happens
+		// in the objstore client at the time of creation of the client. Test could have changed the
+		// location of the objstore.
+		err := ts.tu.SetupObjstoreClient()
+		Expect(err).Should(BeNil(), "failed to create objstore client")
+	})
+
+	It("Exercise objstore Upload/Dowload", func() {
 		filename := "e2etest.file"
 		metadata := map[string]string{
 			"Version":     "v1.3.2",
@@ -213,16 +216,8 @@ func testObjCUDOps() func() {
 		h.Write(buf)
 		hash := h.Sum(nil)
 		ctx := ts.tu.NewLoggedInContext(context.Background())
-		apigwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
-		restClient, err := apiclient.NewRestAPIClient(apigwAddr)
-		Expect(err).To(BeNil())
-		var wr int
-		Eventually(func() error {
-			var err error
-			wr, err = uploadFile(ctx, filename, metadata, buf)
-			return err
-		}, 90, 1).Should(BeNil(), fmt.Sprintf("failed to upload file (%s)", err))
-
+		wr, err := uploadFile(ctx, filename, metadata, buf)
+		Expect(err).Should(BeNil(), "Failed to upload file")
 		rhash, rd, err := downloadFile(filename)
 		Expect(err).Should(BeNil(), "Failed to download file")
 		Expect(hash).Should(Equal(rhash), "uploaded and downloaded hashes do not match")
@@ -237,93 +232,6 @@ func testObjCUDOps() func() {
 					Fail(fmt.Sprintf("did not match [%v] got[%v] want[%v] in labels", k, v1, v))
 				}
 			}
-		}
-		objMeta := api.ObjectMeta{
-			Name:      "e2etest.file",
-			Tenant:    "default",
-			Namespace: "images",
-		}
-		obj, err := restClient.ObjstoreV1().Object().Get(ctx, &objMeta)
-		Expect(err).To(BeNil())
-		for k, v := range metadata {
-			if v1, ok := obj.Labels[k]; !ok {
-				Fail(fmt.Sprintf("did not find [%v] in labels [%+v]", k, resp))
-			} else {
-				if v1 != v {
-					Fail(fmt.Sprintf("did not match [%v] got[%v] want[%v] in labels", k, v1, v))
-				}
-			}
-		}
-		_, err = restClient.ObjstoreV1().Object().Delete(ctx, &objMeta)
-		Expect(err).To(BeNil())
-		_, err = restClient.ObjstoreV1().Object().Get(ctx, &objMeta)
-		Expect(err).ShouldNot(BeNil())
-	}
-}
-
-var _ = Describe("Objstore Write and read test", func() {
-	getVosNodes := func() []string {
-		var ret []string
-		out := strings.Split(ts.tu.LocalCommandOutput("kubectl get pods -o wide --no-headers | grep pen-vos "), "\n")
-		for _, line := range out {
-			fields := strings.Fields(line)
-			if len(fields) == 7 {
-				ret = append(ret, fields[6])
-			}
-		}
-		sort.Strings(ret)
-		return ret
-	}
-	nodeid := 0
-	var vosNodes []string
-
-	killVosServerOnNode := func(node string) {
-		ip := ts.tu.NameToIPMap[node]
-		ts.tu.KillContainerOnNodeByName(ip, "pen-vos")
-	}
-
-	BeforeEach(func() {
-		if ts.tu.NumQuorumNodes < 3 {
-			Skip("No in distributed mode, skipping cluster tests")
-			return
-		}
-		Eventually(func() string {
-			vosNodes = getVosNodes()
-			if len(vosNodes) != ts.tu.NumQuorumNodes {
-				return fmt.Sprintf("expecting %d vos nodes, %d active", ts.tu.NumQuorumNodes, len(vosNodes))
-			}
-			return ""
-		}, 30, 1).Should(BeEmpty(), fmt.Sprintf("Did not find Vos nodes on all Quorum nodes, found (%d)", len(vosNodes)))
-		// Close if there is an existing client and reestablish a client connection.
-		// This temporarily worksaround the issue that the resolution of the destination URI happens
-		// in the objstore client at the time of creation of the client. Test could have changed the
-		// location of the objstore.
-		err := ts.tu.SetupObjstoreClient()
-		Expect(err).Should(BeNil(), "failed to create objstore client")
-	})
-
-	It("Exercise objstore Upload/Download", testObjCUDOps())
-
-	It("Restart VOS backends and check CUD operations", func() {
-		//
-		// BeforeEach(func() {
-		//
-		// })
-
-		for nodeid < ts.tu.NumQuorumNodes {
-			// restart
-			By(fmt.Sprintf("Trying CUD ops on Object store after restart of node id [%d]", nodeid))
-			Expect(len(vosNodes)).To(BeNumerically(">", nodeid), "invalid numnber of vos nodes")
-			killVosServerOnNode(vosNodes[nodeid])
-			Eventually(func() string {
-				vosNodes = getVosNodes()
-				if len(vosNodes) != ts.tu.NumQuorumNodes {
-					return fmt.Sprintf("expecting %d vos nodes, %d active", ts.tu.NumQuorumNodes, len(vosNodes))
-				}
-				return ""
-			}, 30, 1).Should(BeEmpty(), fmt.Sprintf("Did not find Vos nodes on all Quorum nodes, found (%d)", len(vosNodes)))
-			testObjCUDOps()()
-			nodeid++
 		}
 	})
 

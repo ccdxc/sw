@@ -103,9 +103,6 @@ message ModuleSpec {
 
     // Volumes contains the list of volumes for this module.
     repeated Volume Volumes = 4[(gogoproto.nullable) = false,  (gogoproto.jsontag) = ",inline"];
-
-    // RestrictNodes specifies the nodes to constrain the module to
-    string RestrictNodes = 5;
 }
 
 message ModuleStatus {

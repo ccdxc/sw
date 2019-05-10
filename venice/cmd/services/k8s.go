@@ -362,12 +362,6 @@ func populateDynamicArgs(args []string) []string {
 				servers = append(servers, fmt.Sprintf("%s:%s", jj, globals.CMDResolverPort))
 			}
 			arg = strings.Join(servers, ",")
-		case strings.Compare(arg, "$QUORUM_NODES") == 0:
-			qservers := make([]string, 0)
-			for _, jj := range env.QuorumNodes {
-				qservers = append(qservers, fmt.Sprintf("%s", jj))
-			}
-			arg = strings.Join(qservers, ",")
 		}
 		result = append(result, arg)
 	}
@@ -445,27 +439,6 @@ func createDaemonSetObject(module *protos.Module) *clientTypes.DaemonSet {
 			},
 		},
 	}
-	// convert to a node affinity/anti-affinity specification
-	//  only $QUORUM_NODES defined for now.
-	if module.Spec.RestrictNodes == "$QUORUM_NODES" {
-		qnodes := []string{}
-		for _, jj := range env.QuorumNodes {
-			qnodes = append(qnodes, fmt.Sprintf("%s", jj))
-		}
-		dsConfig.Spec.Template.Spec.Affinity = &v1.Affinity{
-			NodeAffinity: &v1.NodeAffinity{
-				RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
-					NodeSelectorTerms: []v1.NodeSelectorTerm{
-						{
-							MatchExpressions: []v1.NodeSelectorRequirement{
-								{Key: "kubernetes.io/hostname", Operator: "In", Values: qnodes},
-							},
-						},
-					},
-				},
-			},
-		}
-	}
 	return dsConfig
 }
 
@@ -508,27 +481,6 @@ func createDeploymentObject(module *protos.Module) *clientTypes.Deployment {
 				},
 			},
 		},
-	}
-	// convert to a node affinity/anti-affinity specification
-	//  only $QUORUM_NODES defined for now.
-	if module.Spec.RestrictNodes == "$QUORUM_NODES" {
-		qnodes := []string{}
-		for _, jj := range env.QuorumNodes {
-			qnodes = append(qnodes, fmt.Sprintf("%s", jj))
-		}
-		dConfig.Spec.Template.Spec.Affinity = &v1.Affinity{
-			NodeAffinity: &v1.NodeAffinity{
-				RequiredDuringSchedulingIgnoredDuringExecution: &v1.NodeSelector{
-					NodeSelectorTerms: []v1.NodeSelectorTerm{
-						{
-							MatchExpressions: []v1.NodeSelectorRequirement{
-								{Key: "kubernetes.io/hostname", Operator: "In", Values: qnodes},
-							},
-						},
-					},
-				},
-			},
-		}
 	}
 	return dConfig
 }
@@ -726,7 +678,7 @@ func upgradeDeployment(client k8sclient.Interface, module *protos.Module) error 
 		d, err := client.Extensions().Deployments(defaultNS).Update(dConfig)
 		if err == nil {
 			log.Infof("Updated Deployment Spec %+v", d)
-			// Wait for service deployment to be complete
+			//Wait for service deployment to be complete
 			for ii := 0; ii < maxIters; ii++ {
 				cd, _ := client.Extensions().Deployments(defaultNS).Get(module.Name, metav1.GetOptions{})
 				log.Infof("ReadyReplicas %+v AvailableReplicas %+v", cd.Status.ReadyReplicas, cd.Status.AvailableReplicas)
