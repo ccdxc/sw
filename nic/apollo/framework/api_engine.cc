@@ -352,19 +352,36 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+api_engine::add_deps_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 api_engine::program_config_stage_(void) {
     sdk_ret_t    ret;
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
                       sdk::SDK_RET_INVALID_ARG);
 
+    PDS_TRACE_INFO("Starting object dependency evaluation phase");
+    // walk over all the dirty objects and make a list of objects that are
+    // effected because of each dirty object
+    batch_ctxt_.stage = API_BATCH_STAGE_OBJ_DEPENDENCY;
+    for (auto it = batch_ctxt_.dirty_obj_list.begin();
+         it != batch_ctxt_.dirty_obj_list.end(); ++it) {
+        ret = add_deps_(*it, &batch_ctxt_.dirty_obj_map[*it]);
+        if (ret != SDK_RET_OK) {
+            goto error;
+        }
+    }
+    PDS_TRACE_INFO("Finished object dependency evaluation phase");
+
     PDS_TRACE_INFO("Starting resource reservation phase");
     // walk over all the dirty objects and reserve resources, if needed
     batch_ctxt_.stage = API_BATCH_STAGE_RESERVE_RESOURCES;
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
          it != batch_ctxt_.dirty_obj_list.end(); ++it) {
-        ret = reserve_resources_(it->first,
-                                 &batch_ctxt_.dirty_obj_map[it->first]);
+        ret = reserve_resources_(*it, &batch_ctxt_.dirty_obj_map[*it]);
         if (ret != SDK_RET_OK) {
             goto error;
         }
@@ -376,14 +393,12 @@ api_engine::program_config_stage_(void) {
     batch_ctxt_.stage = API_BATCH_STAGE_PROGRAM_CONFIG;
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
          it != batch_ctxt_.dirty_obj_list.end(); ++it) {
-        ret = program_config_(it->first,
-                              &batch_ctxt_.dirty_obj_map[it->first]);
+        ret = program_config_(*it, &batch_ctxt_.dirty_obj_map[*it]);
         if (ret != SDK_RET_OK) {
             goto error;
         }
     }
     PDS_TRACE_INFO("Finished program config phase");
-
     return SDK_RET_OK;
 
 error:
@@ -485,8 +500,8 @@ api_engine::activate_config_stage_(void) {
     for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
              it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
         next_it++;
-        octxt = batch_ctxt_.dirty_obj_map[it->first];
-        ret = activate_config_(it, it->first, &octxt);
+        octxt = batch_ctxt_.dirty_obj_map[*it];
+        ret = activate_config_(it, *it, &octxt);
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     return SDK_RET_OK;
@@ -703,8 +718,8 @@ api_engine::batch_abort(void) {
     for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
          it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
         next_it++;
-        octxt = batch_ctxt_.dirty_obj_map[it->first];
-        ret = rollback_config_(it, it->first, &octxt);
+        octxt = batch_ctxt_.dirty_obj_map[*it];
+        ret = rollback_config_(it, *it, &octxt);
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     PDS_TRACE_INFO("Finished rollback config stage");

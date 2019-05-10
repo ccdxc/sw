@@ -38,6 +38,7 @@ typedef enum api_batch_stage_e {
     API_BATCH_STAGE_NONE,                 ///< Invalid stage
     API_BATCH_STAGE_INIT,                 ///< Initialization stage
     API_BATCH_STAGE_PRE_PROCESS,          ///< Pre-processing stage
+    API_BATCH_STAGE_OBJ_DEPENDENCY,       ///< Dependency resolution stage
     API_BATCH_STAGE_RESERVE_RESOURCES,    ///< Reserve resources, if any
     API_BATCH_STAGE_PROGRAM_CONFIG,       ///< Table programming stage
     API_BATCH_STAGE_CONFIG_ACTIVATE,      ///< Epoch activation stage
@@ -84,8 +85,8 @@ struct obj_ctxt_s {
     }
 };
 
-typedef unordered_map<api_base *, obj_ctxt_t>      dirty_obj_map_t;
-typedef list<std::pair<api_base *, obj_ctxt_t>>    dirty_obj_list_t;
+typedef unordered_map<api_base *, obj_ctxt_t> dirty_obj_map_t;
+typedef list<api_base *> dirty_obj_list_t;
 
 /// \brief Batch context, which is a list of all API contexts
 typedef struct api_batch_ctxt_s {
@@ -190,6 +191,13 @@ private:
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
 
+    /// \brief Add objects that are dependent on given object to dependent
+    ///        object list
+    /// \param[in] api_obj API object being processed
+    /// \param[in] obj_ctxt Transient information maintained to process the API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t add_deps_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
+
     /// \brief Activate configuration by switching to new epoch
     /// If object has effected any stage 0 datapath table(s), switch to new
     /// epoch in this stage NOTE: NO failures must happen in this stage
@@ -241,7 +249,7 @@ private:
     void add_to_dirty_list_(api_base *api_obj, obj_ctxt_t obj_ctxt) {
         api_obj->set_in_dirty_list();
         batch_ctxt_.dirty_obj_map[api_obj] = obj_ctxt;
-        batch_ctxt_.dirty_obj_list.push_back(std::make_pair(api_obj, obj_ctxt));
+        batch_ctxt_.dirty_obj_list.push_back(api_obj);
     }
 
     /// \brief Del given api object from dirty list of the API batch
