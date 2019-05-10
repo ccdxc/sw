@@ -19,7 +19,7 @@ func MactoStr(mac uint64) string {
 	bytes[4] = byte((mac >> 32) & 0xFF)
 	bytes[5] = byte((mac >> 40) & 0xFF)
 
-	macStr := fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x", bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0])
+	macStr := fmt.Sprintf("%02x%02x.%02x%02x.%02x%02x", bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0])
 
 	return macStr
 }

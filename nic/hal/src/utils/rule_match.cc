@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // {C} Copyright 2018 Pensando Systems Inc. All rights reserved
 //
 // configuration handlers for types::RuleMatch
@@ -474,6 +474,7 @@ init_rule_data(rule_data_t *rule_data, void *usr_data, void *ctr)
     memset(rule_data, 0, sizeof(rule_data_t));
     ref_init(&rule_data->ref_cnt, [] (const ref_t *ref) {
         rule_data_t *data = container_of(ref, rule_data_t, ref_cnt);
+        HAL_TRACE_VERBOSE("Freeing rule data");
         ref_dec((acl::ref_t *)data->ctr);
         ref_dec((acl::ref_t *)data->user_data);
         g_hal_state->rule_data_slab()->free(data);
