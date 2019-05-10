@@ -14,6 +14,7 @@
 
 #include "gen/proto/nwsec.pb.h"
 #include "gen/proto/kh.pb.h"
+#include "nic/sdk/lib/indexer/indexer.hpp"
 
 #define HAL_NWSEC_INVALID_SG_ID        uint32_t (~0)
 using sdk::lib::ht_ctxt_t;

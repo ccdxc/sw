@@ -160,7 +160,7 @@ export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
                                ${NIC_SDK_SOLIBS} \
                                pal agent_api delphisdk haldelphi halsysmgr \
                                nicmgrproto sdkcapri_asicrw_if commonproto haldelphiutils \
-							   ftestatsproto dropstatsproto
+							   ftestatsproto dropstatsproto rulestatsproto
 
 export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                                ${NIC_THIRDPARTY_SSL_LDLIBS} \

@@ -384,27 +384,61 @@ end:
 //
 
 hal_ret_t
-init_rule_ctr(rule_cfg_t *cfg, rule_ctr_t *ctr)
+init_rule_ctr(rule_cfg_t *cfg, rule_ctr_t *ctr, rule_key_t rule_key)
 {
+    hal_ret_t  ret = HAL_RET_OK;
+
     memset(ctr, 0, sizeof(rule_ctr_t));
     ctr->ht_ctxt.reset();
     
     ctr->rule_cfg = cfg;
+    ctr->rule_key = rule_key;
+    if (cfg->rule_ctr_cb) {
+        // If there is a callback set, rule lib
+        // doesnt allocate the rule_ctr_data
+        ret = cfg->rule_ctr_cb(ctr, true);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Fail to allocate rule stats for rule key: {}", ctr->rule_key);
+            return ret;
+        }
+    } else {
+        // Cleanup the rule_ctr_data
+        ctr->rule_stats = (rule_ctr_data_t* )g_hal_state->rule_ctr_data_slab()->alloc();
+        if (ctr->rule_stats == NULL) {
+            return HAL_RET_OOM;
+        }
+    }
+    HAL_TRACE_VERBOSE("Alloc Rule ctr with pointer {:#x} stats {:#x} key: {}",
+                      (uint64_t)ctr, (uint64_t)ctr->rule_stats, ctr->rule_key);
     ref_init(&ctr->ref_count, [] (const ref_t *ref) {
         rule_ctr_t *ctr = container_of(ref, rule_ctr_t, ref_count);
 
-        HAL_TRACE_DEBUG("Free rule ctr with pointer {:#x} key: {}", (uint64_t)ctr, ctr->rule_key);
+        HAL_TRACE_VERBOSE("Free rule ctr with pointer {:#x} stats {:#x} key: {}", 
+                        (uint64_t)ctr, (uint64_t)ctr->rule_stats, ctr->rule_key);
         rule_cfg_t *cfg = ctr->rule_cfg;
+        if (ctr->rule_stats) {
+            if (cfg->rule_ctr_cb) {
+                // If there is a callback set, rule lib
+                // doesnt allocate the rule_ctr_data. 
+                // Invoke the callback to cleanup
+                cfg->rule_ctr_cb(ctr, false);
+            } else {
+                // Cleanup the rule_ctr_data
+                g_hal_state->rule_ctr_data_slab()->free(ctr->rule_stats);
+            }
+        }
         cfg->rule_ctr_ht->remove(&ctr->rule_key);
         g_hal_state->rule_ctr_slab()->free(ctr);
     });
+
     return HAL_RET_OK;
 }
 
 rule_ctr_t *
 alloc_init_rule_ctr(rule_cfg_t *cfg, rule_key_t rule_key)
 {
-    rule_ctr_t *ctr;
+    hal_ret_t   ret = HAL_RET_OK;
+    rule_ctr_t *ctr = NULL;
 
     ctr = (rule_ctr_t *)cfg->rule_ctr_ht->lookup((void *) &rule_key);
     if (ctr != NULL) {
@@ -417,8 +451,13 @@ alloc_init_rule_ctr(rule_cfg_t *cfg, rule_key_t rule_key)
     if (ctr == NULL) {
         return NULL;
     }
-    init_rule_ctr(cfg, ctr);
-    ctr->rule_key = rule_key;
+
+    ret = init_rule_ctr(cfg, ctr, rule_key);
+    if (ret != HAL_RET_OK) {
+        g_hal_state->rule_ctr_slab()->free(ctr);
+        return NULL;
+    }
+
     cfg->rule_ctr_ht->insert(ctr, &ctr->ht_ctxt);
     return ctr;
 }
@@ -523,7 +562,7 @@ rule_lib_delete(const char *name)
 }
 
 const acl_ctx_t  *
-rule_lib_init(const char *name, acl_config_t *cfg)
+rule_lib_init(const char *name, acl_config_t *cfg, rule_lib_cb_t *rule_cb)
 {
     
     rule_cfg_t  *rcfg = NULL;
@@ -541,6 +580,10 @@ rule_lib_init(const char *name, acl_config_t *cfg)
                                rule_ctr_compute_hash_func,
                                rule_ctr_compare_key_func);
     SDK_ASSERT_RETURN((rcfg->rule_ctr_ht != NULL), NULL);
+
+    if (rule_cb != NULL) {
+        rcfg->rule_ctr_cb = rule_cb->rule_ctr_cb;
+    }
 
     // Rule cfg is not maintained as part of hal_state. rule lib data is not expected to persistent
     // Each plugin has to recreate the rules.

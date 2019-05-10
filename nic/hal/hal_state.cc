@@ -615,6 +615,12 @@ hal_cfg_db::init_vss(hal_cfg_t *hal_cfg)
                        .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
     SDK_ASSERT_RETURN((slab != NULL), false);
 
+    slab = register_slab(HAL_SLAB_RULE_CTR_DATA,
+                         slab_args={.name="rule_ctr_data",
+                        .size=sizeof(hal::rule_ctr_data_t), .num_elements=1024,
+                       .thread_safe=true, .grow_on_demand=true, .zero_on_alloc=true});
+    SDK_ASSERT_RETURN((slab != NULL), false);
+
     slab = register_slab(HAL_SLAB_PROXY,
                          slab_args={.name="proxy",
                         .size=sizeof(hal::proxy_t), .num_elements=HAL_MAX_PROXY,

@@ -1,0 +1,17 @@
+syntax = "proto3";
+package rulestats;
+
+import "delphi.proto";
+
+message ruleMetrics {
+    // External
+    option (delphi.datapath_metrics) = true;
+    fixed64        Key          = 1;     // Rule Key
+
+    delphi.Counter tcp_hits     = 2;     // Number of TCP packets that hit the rule
+    delphi.Counter udp_hits     = 3;     // Number of UDP packets that hit the rule
+    delphi.Counter icmp_hits    = 4;     // Number of ICMP packets that hit the rule
+    delphi.Counter esp_hits     = 5;     // Number of ESP packets that hit the rule
+    delphi.Counter other_hits   = 6;     // Number of other packets that hit the rule
+    delphi.Counter total_hits   = 7;     // Number of total hits that hit the rule
+}

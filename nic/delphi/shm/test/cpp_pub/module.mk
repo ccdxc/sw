@@ -6,7 +6,7 @@ MODULE_PIPELINE = iris
 MODULE_ARCH     = x86_64 
 MODULE_INCS     = ${BLD_GEN_DIR}/proto
 MODULE_SOLIBS   = delphisdk halproto upgradeproto nicmgrproto pciemgrproto \
-		  ftestatsproto commonproto sdkpal logger dropstatsproto
+		  ftestatsproto commonproto sdkpal logger dropstatsproto rulestatsproto
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev dl
 MODULE_ARLIBS   = delphishm
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cc)

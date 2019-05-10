@@ -123,7 +123,8 @@ typedef enum hal_slab_e {
     HAL_SLAB_OIF_LIST                        = 112,
     HAL_SLAB_SNAKE_TEST                      = 113,
     HAL_SLAB_PORT_TIMER_CTXT                 = 114,
-    HAL_SLAB_PI_MAX                          = 115,  // NOTE: MUST be last PI slab id
+    HAL_SLAB_RULE_CTR_DATA                   = 115,
+    HAL_SLAB_PI_MAX                          = 116,  // NOTE: MUST be last PI slab id
 
     // PD Slabs
     HAL_SLAB_PD_MIN                          = 1000,

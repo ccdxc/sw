@@ -5,6 +5,8 @@
 #include "gen/hal/svc/session_svc_gen.hpp"
 #include "gen/proto/nwsec.pb.h"
 
+#define HAL_NWSEC_MAX_RULES 65535
+
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
@@ -13,6 +15,8 @@ using nwsec::SecurityProfileSpec;
 using nwsec::SecurityProfileResponse;
 using nwsec::NormalizationAction;
 using nwsec::SecurityProfileStatus;
+
+sdk::lib::indexer *g_rule_stats_indexer;
 
 namespace hal {
 namespace plugins {
@@ -155,6 +159,10 @@ svc_reg (ServerBuilder *server_builder, hal::hal_feature_set_t feature_set)
 hal_ret_t
 sfwcfg_init (hal_cfg_t *hal_cfg)
 {
+    // Rule Stats Indexer init
+    g_rule_stats_indexer = sdk::lib::indexer::factory(HAL_NWSEC_MAX_RULES, true);
+    SDK_ASSERT(g_rule_stats_indexer != NULL);
+
     svc_reg((ServerBuilder *)hal_cfg->server_builder, hal_cfg->features);
     sfw_init_security_profile(hal_cfg);
     return HAL_RET_OK;

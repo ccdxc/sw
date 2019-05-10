@@ -395,15 +395,15 @@
         },
         {
             "name": "app-redir-rawc",
-            "size": "2048K"
+            "size": "256K"
         },
         {
             "name": "app-redir-proxyr",
-            "size": "2048K"
+            "size": "1K"
         },
         {
             "name": "app-redir-proxyc",
-            "size": "2048K"
+            "size": "1K"
         },
         {
             "_comment": "hash depth = 1024",
@@ -521,6 +521,11 @@
             "name": "tcp_proxy_per_flow_stats",
             "size": "8192K",
             "reset": true
-        }
+        },
+        {
+            "name": "nwsec_rule_stats",
+            "size": "8192K",
+            "reset": true
+        } 
     ]
 }

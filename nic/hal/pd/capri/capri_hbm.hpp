@@ -110,6 +110,7 @@
 #define CAPRI_HBM_REG_P4_HWERR_STATS        "p4_hwerr_stats"
 #define CAPRI_HBM_REG_QOS_DSCP_COS_MAP     "qos-dscp-cos-map"
 #define CAPRI_HBM_REG_TCP_PROXY_PER_FLOW_STATS "tcp_proxy_per_flow_stats"
+#define CAPRI_HBM_REG_NWSEC_RULE_STATS            "nwsec_rule_stats"
 
 #define CAPRI_NUM_SEMAPHORES            512
 

@@ -16,9 +16,16 @@
 #include <google/protobuf/util/json_util.h>
 #include <fcntl.h>
 #include <malloc.h>
+#include "nic/sdk/platform/capri/capri_hbm_rw.hpp"
+#include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/include/sdk/types.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "gen/proto/rulestats/rulestats.delphi.hpp"
 
-
+#define NWSEC_RULE_STATS_SHIFT         6
 #define SESSION_MAX_INACTIVITY_TIMEOUT 0xFFFFFFFF
+
+extern sdk::lib::indexer *g_rule_stats_indexer;
 
 namespace hal {
 
@@ -87,6 +94,42 @@ trim_mem_usage (const char *opn)
     malloc_stats();
     close(fd);
 #endif
+}
+
+hal_ret_t
+rule_stats_cb (rule_ctr_t *ctr, bool add) 
+{
+    sdk::lib::indexer::status rs;
+    sdk::types::mem_addr_t vaddr, start_addr;
+    uint32_t idx;
+
+    if (add) {
+        start_addr = get_mem_addr(CAPRI_HBM_REG_NWSEC_RULE_STATS);
+        SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
+
+        rs = g_rule_stats_indexer->alloc(&idx);
+        SDK_ASSERT_RETURN((rs == sdk::lib::indexer::SUCCESS), HAL_RET_OOM);
+
+        start_addr += idx * (1 << NWSEC_RULE_STATS_SHIFT);
+        auto rule_metrics_ptr = delphi::objects::ruleMetrics::NewruleMetrics(ctr->rule_key, start_addr);
+        SDK_ASSERT(rule_metrics_ptr != NULL);
+
+        sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(start_addr, &vaddr);
+        SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
+
+        ctr->rule_stats = (rule_ctr_data_t *)vaddr;
+        ctr->stats_idx = idx;
+        bzero(ctr->rule_stats, sizeof(rule_ctr_data_t));
+    } else {
+        auto rule_metrics_ptr = delphi::objects::ruleMetrics::Find(ctr->rule_key);
+        if (rule_metrics_ptr != NULL) {
+            rule_metrics_ptr->Delete(); 
+        }
+        g_rule_stats_indexer->free(ctr->stats_idx);
+        ctr->rule_stats = NULL;
+    }
+
+    return HAL_RET_OK;
 }
 
 static inline void
@@ -1406,6 +1449,7 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
     const char                        *ctx_name = NULL;
     dhl_entry_t                       dhl_entry = { 0 };
     cfg_op_ctxt_t                     cfg_ctxt = { 0 };
+    rule_lib_cb_t                     cb;
 
     HAL_TRACE_DEBUG("---------------------- API Start ---------------------");
 
@@ -1461,7 +1505,12 @@ securitypolicy_create(nwsec::SecurityPolicySpec&      spec,
     // Create lib acl ctx
     ctx_name = nwsec_acl_ctx_name(nwsec_policy->key.vrf_id);
     HAL_TRACE_DEBUG("Creating acl ctx {}", ctx_name);
-    app_ctxt.acl_ctx= hal::rule_lib_init(ctx_name, &nwsec_rule_config_glbl);
+    cb.rule_ctr_cb = rule_stats_cb;
+    if (hal::is_platform_type_hw()) {
+        app_ctxt.acl_ctx= hal::rule_lib_init(ctx_name, &nwsec_rule_config_glbl, &cb);
+    } else {
+        app_ctxt.acl_ctx= hal::rule_lib_init(ctx_name, &nwsec_rule_config_glbl);
+    }
 
     // Fill nwsec group in the dense rules  with rule id as index.
     // This will be used in comparison and find between insert / delete
@@ -1897,10 +1946,10 @@ security_policy_spec_build (nwsec_policy_t               *policy,
 
         rule_ctr_t *ctr = rule_ctr_get(fn_ctx->rcfg, rulelist->rule_id);
         if (ctr) {
-            rule_stats->set_num_hits(ctr->total_hits);
-            rule_stats->set_num_tcp_hits(ctr->tcp_hits);
-            rule_stats->set_num_udp_hits(ctr->udp_hits);
-            rule_stats->set_num_icmp_hits(ctr->icmp_hits);
+            rule_stats->set_num_hits(ctr->rule_stats->total_hits);
+            rule_stats->set_num_tcp_hits(ctr->rule_stats->tcp_hits);
+            rule_stats->set_num_udp_hits(ctr->rule_stats->udp_hits);
+            rule_stats->set_num_icmp_hits(ctr->rule_stats->icmp_hits);
         }
 
         dllist_for_each_safe(curr, next, &rulelist->head) {
