@@ -493,46 +493,69 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_1) {
 
 /// \brief Create more than max number of v4/v6 route tables supported
 /// [ Create SetMax+1] - Read
-TEST_F(route_test, DISABLED_v4v6_route_table_workflow_neg_2) {
+TEST_F(route_test, v4v6_route_table_workflow_neg_2) {
     pds_batch_params_t batch_params = {0};
     pds_route_table_id_t first_v4_route_table_id = 22222;
     pds_route_table_id_t first_v6_route_table_id = 11111;
 
-    // trigger - test route tables with zero routes
+    // trigger - test MAX+1 v4 route tables with zero routes
+    // using max + 2 as max+1 is reserved to handle update
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table + 1,
+    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table + 2,
         first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
         IP_AF_IPV4, 0) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table + 1,
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+
+    // trigger - test MAX+1 v6 route tables with zero routes
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table + 2,
         first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
         IP_AF_IPV6, 0) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
-    // trigger - test route tables with max routes
+    // trigger - test MAX+1 v4 route tables with max routes
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table + 1,
+    ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table + 2,
         first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
         IP_AF_IPV4, k_max_route_per_tbl) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table + 1,
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+
+    // trigger - test MAX+1 v6 route tables with max routes
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table + 2,
         first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
         IP_AF_IPV6, k_max_route_per_tbl) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
-    // trigger - test route tables with max+1 routes
+#if 0
+    // TODO: move this input validation testcase to agent test
+    // as hal should not catch this and will only assert
+    // trigger - test max v4 route tables with MAX+1 routes
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(route_table_util::many_create(k_max_v4_route_table,
         first_v4_route_table_id, k_first_v4_pfx_str, k_first_nh_ip_str,
         IP_AF_IPV4, k_max_route_per_tbl+1) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+
+    // trigger - test max v6 route tables with MAX+1 routes
+    batch_params.epoch = ++g_batch_epoch;
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
         first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
         IP_AF_IPV6, k_max_route_per_tbl+1) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+#endif
 }
 
 /// \brief Read and delete non existing v4/v6 route tables and routes
