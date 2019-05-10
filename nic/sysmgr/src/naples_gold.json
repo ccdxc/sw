@@ -1,0 +1,80 @@
+[
+    {
+        "name": "delphi",
+        "command": "/nic/bin/delphi_hub",
+        "dependencies": [],
+        "flags": [],
+        "timeout": 30.0
+    },
+    {
+        "name": "pciemgrd",
+        "command": "/platform/bin/pciemgrd -d",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            }],
+        "flags": [],
+        "timeout": 30.0
+    },
+    {
+        "name": "nicmgr",
+        "command": "/bin/sh /platform/tools/start-nicmgr-haps.sh",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                "kind": "service",
+                "service-name": "pciemgrd"
+            }],
+        "flags": [],
+        "timeout": 30.0
+    },
+    {
+        "name": "hal",
+        "command": "/bin/sh /nic/tools/start-hal-haps.sh",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                "kind": "service",
+                "service-name": "nicmgr"
+            }],
+        "flags": [],
+        "timeout": 30.0
+    },
+    {
+        "name": "netagent",
+        "command": "/nic/bin/netagent -datapath hal",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                "kind": "service",
+                "service-name": "hal"
+            }],
+        "flags": ["restartable", "save_stdout_on_crash"],
+        "timeout": 0.0
+    },
+    {
+        "name": "sysmond",
+        "command": "/platform/bin/sysmond",
+        "dependencies": [
+            {
+                "kind": "service",
+                "service-name": "delphi"
+            },
+            {
+                "kind": "service",
+                "service-name": "hal"
+            }],
+        "flags": [],
+        "timeout": 30.0
+    }
+]

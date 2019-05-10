@@ -89,7 +89,13 @@ insmod $PLATFORM_DIR/drivers/mnet.ko &> /var/log/pensando/mnet_load.log
 # start sysmgr
 rm -f *.log
 rm -f agent.log* /tmp/*.db
-$NIC_DIR/bin/sysmgr /nic/conf/sysmgr.json &
+
+if [ -z "$GOLDFW" ]; then
+    $NIC_DIR/bin/sysmgr /nic/conf/sysmgr.json &
+else
+    $NIC_DIR/bin/sysmgr /nic/conf/sysmgr_gold.json &
+fi
+
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - Sysmgr failed to start!" && exit 1
 
 # start HAL
