@@ -582,7 +582,11 @@ ionic_queue_task_handler(void *arg, int pendindg)
 	 * Process all Rx frames.
 	 */
 	work_done = ionic_rx_clean(rxq, rxq->num_descs);
+	/* Fill the receive ring. */
+	if ((rxq->num_descs - rxq->descs) >= ionic_rx_fill_threshold)
+		ionic_rx_fill(rxq);
 	IONIC_RX_TRACE(rxq, "processed %d packets\n", work_done);
+	/* Flush LRO only in the end of task handler. */
 	tcp_lro_flush_all(&rxq->lro);
 	IONIC_RX_UNLOCK(rxq);
 
