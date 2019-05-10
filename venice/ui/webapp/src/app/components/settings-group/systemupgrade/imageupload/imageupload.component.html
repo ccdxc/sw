@@ -2,38 +2,37 @@
   <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel" [expanded]="false">
     <mat-expansion-panel-header class="imageupload-expansionpanel-header">
       <mat-panel-title class="imageupload-summary-panel-header">
-        Upload 
+        Upload
       </mat-panel-title>
     </mat-expansion-panel-header>
     <div class="imageupload-summary-panel-content">
-      <div class="imageupload-fileupload-info-div">File type is *.tgz and maximum file size is 10G
+      <div class="imageupload-fileupload-info-div">File type is *.tar and maximum file size is 10G.
+        <span class="imageupload-fileupload-progress-span" *ngIf="fileUploadProgress">
+          {{fileUploadProgress >0 ? this.fileUploadProgress + '% uploaded': ''}} {{fileUploadProgress >=100 ? ' Saving file': ''}} 
+        </span>
       </div>
       <p-fileUpload name="file" url="/objstore/v1/uploads/images/" (onUpload)="onUpload($event)"
-        (onError)="onError($event)"  (onBeforeSend)="onBeforeSend($event)" accept=".tgz" maxFileSize="1000000000000">
+        (onError)="onError($event)" (onBeforeSend)="onBeforeSend($event)" accept=".tar" maxFileSize="1000000000000"
+        (onProgress)="onUploadProgress($event)">
         <ng-template pTemplate="content">
           <ul *ngIf="uploadedFiles.length">
             <li *ngFor="let file of uploadedFiles">{{file.name}} - {{file.size}} bytes</li>
           </ul>
+
         </ng-template>
       </p-fileUpload>
     </div>
   </mat-expansion-panel>
-  <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel imageupload-panel-table" [expanded]="true" [hideToggle]="false">
-    <mat-expansion-panel-header class="imageupload-expansionpanel-header">
-        <mat-panel-title class="imageupload-summary-panel-header">
-          Uploaded Image
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-    <app-tableviewedit fxLayout="column" class="imageupload-table" 
-        [data]="dataObjects"
-        [cols]="cols"
-        [virtualRowHeight]="48"
-        [sortField]="startingSortField" 
-        [sortOrder]="startingSortOrder" 
-        [tableLoading]="loading"
-        [captionTemplate]="captionTemplate" 
-        [bodyTemplate]="bodyTemplate"
-        [actionTemplate]="actionTemplate">
+  <mat-expansion-panel fxFlex="auto" fxLayout="column" class="global-mat-expansion-panel imageupload-panel-table"
+    [expanded]="true" [hideToggle]="false">
+    <mat-expansion-panel-header fxFlex="none" class="imageupload-expansionpanel-header">
+      <mat-panel-title class="imageupload-summary-panel-header">
+        Uploaded Image
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <app-tableviewedit fxFlex="auto" fxLayout="column" class="imageupload-table" [data]="dataObjects" [cols]="cols"
+      [virtualRowHeight]="48" [sortField]="startingSortField" [sortOrder]="startingSortOrder" [tableLoading]="loading"
+      [captionTemplate]="captionTemplate" [bodyTemplate]="bodyTemplate" [actionTemplate]="actionTemplate">
     </app-tableviewedit>
   </mat-expansion-panel>
 
@@ -66,10 +65,8 @@
 </ng-template>
 
 <ng-template #actionTemplate let-rowData>
-  <div
-    class="global-column-action-icon-container"
-    fxLayout="row" fxLayoutGap="5px">
-    <mat-icon matTooltip="Delete image" class="global-table-action-icon"
-      (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+    <mat-icon matTooltip="Delete image" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">
+      delete</mat-icon>
   </div>
 </ng-template>

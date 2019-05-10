@@ -76,9 +76,20 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
     this._controllerService.setToolbarData(this.buildToolbarData());
   }
 
+  isSearchResultAvailable(): boolean {
+    return ( !!this.getSearchResultPayload() );
+  }
   private buildToolbarData(): ToolbarData {
     const toolbarData: ToolbarData = {
-      breadcrumb: [{ label: 'Search Results', url: '' }]
+      breadcrumb: [{ label: 'Search Results', url: '' }],
+      buttons: [
+          {
+            cssClass: 'global-button-primary searchresult-toolbar-button',
+            text: 'EXPORT',
+            callback: () => { this.export(); },
+            computeClass: () => this.isSearchResultAvailable() ? '' : 'global-button-disabled',
+          }
+      ]
     };
     // add a dropdown in toolbar if there are search-result data.
     if (this.categories && this.categories.length >= 0) {
@@ -99,8 +110,29 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
     return toolbarData;
   }
 
+  export() {
+    const data = this.getSearchResultPayload();
+    if (!data) {
+      return;
+    }
+    const exportObj = {
+      result: this.categories,
+      request: data.searchrequest,
+      searchstring: data.searchstring
+    };
+    const datastr = (new Date()).toISOString();
+    const fieldName = 'searchresult-dataset_' + datastr + '.json';
+    Utility.exportContent(JSON.stringify(exportObj, null, 2), 'text/json;charset=utf-8;', fieldName);
+    Utility.getInstance().getControllerService().invokeInfoToaster('Data exported', 'Please find ' + fieldName + ' in your download folder');
+  }
+
   onLayoutDropDownChange(sbutton: any) {
     this.layoutGrid = (sbutton.model === SearchresultComponent.LAYOUT_GRID);
+  }
+
+  getSearchResultPayload(): SearchResultPayload {
+    const data: SearchResultPayload = this._controllerService.LoginUserInfo[SearchUtil.LAST_SEARCH_DATA];
+    return data;
   }
 
   /**
@@ -116,7 +148,7 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
     this.categories = [];
 
     if (this._controllerService.LoginUserInfo) {
-      const data: SearchResultPayload = this._controllerService.LoginUserInfo[SearchUtil.LAST_SEARCH_DATA];
+      const data: SearchResultPayload = this.getSearchResultPayload();
       if (!data) {
         return;
       }

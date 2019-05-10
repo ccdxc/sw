@@ -16,6 +16,15 @@ import { required } from '@sdk/v1/utils/validators';
 import { Utility } from '@common/Utility';
 import { RolloutImageLabel } from '../index';
 
+export interface RolloutImageOption extends SelectItem {
+  model?: RolloutImageLabel;
+}
+
+ export enum EnumRolloutOptions {
+  'naplesonly' = 'NAPLES Only',
+  'veniceonly' = 'Venice Only',
+  'both' = 'Both NAPLES and Venice'
+}
 
 @Component({
   selector: 'app-newrollout',
@@ -26,6 +35,11 @@ import { RolloutImageLabel } from '../index';
 })
 export class NewrolloutComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit , OnChanges {
 
+  // Make sure the follow parameter values match above EnumRolloutOptions.keys
+  public static ROLLOUTTYPE_NIC_ONLY = 'naplesonly';
+  public static ROLLOUTTYPE_NODE_ONLY = 'veniceonly';
+  public static ROLLOUTTYPE_BOTH_NIC_NODE = 'both';
+
   @ViewChild('orderConstraintsLabelRepeater') ocLabelRepeater: RepeaterComponent;
 
   newRollout: RolloutRollout;
@@ -33,7 +47,10 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   oldToolbarData: ToolbarData;
   strategyOptions: SelectItem[] = Utility.convertEnumToSelectItem(RolloutRolloutSpec.propInfo['strategy'].enum);
   upgradetypeOptions: SelectItem[] = Utility.convertEnumToSelectItem(RolloutRolloutSpec.propInfo['upgrade-type'].enum);
-  rolloutImageOptions: SelectItem[] = [];
+  rolloutImageOptions: RolloutImageOption[] = [];
+
+  rolloutNicNodeTypes: SelectItem [] = Utility.convertEnumToSelectItem(EnumRolloutOptions);
+  selectedRolloutNicNodeTypes: string = NewrolloutComponent.ROLLOUTTYPE_BOTH_NIC_NODE;
 
   orderConstraintslabelData: RepeaterData[] = [];
   orderConstraintslabelFormArray = new FormArray([]);
@@ -76,7 +93,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       }
     ];
     if (!this.newRollout) {
-     // below ngChange() should initialize rolloutData.  
+     // below ngChange() should initialize rolloutData.
      this.initRolloutData() ;
     }
   }
@@ -90,12 +107,19 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       myrollout.spec['scheduled-start-time'] = new Date(myrollout.spec['scheduled-start-time']);
       this.newRollout = new RolloutRollout(myrollout);
       this.newRollout.$formGroup.get(['meta', 'name']).disable();
+      if (this.newRollout.spec['smartnics-only']) {
+        this.selectedRolloutNicNodeTypes = NewrolloutComponent.ROLLOUTTYPE_NIC_ONLY;
+      } else {
+        // Figure out if it is   NewrolloutComponent.ROLLOUTTYPE_NODE_ONLY or NewrolloutComponent.ROLLOUTTYPE_BOTH_NIC_NODE
+        this.selectedRolloutNicNodeTypes = this.newRollout.spec['smartnic-must-match-constraint'] ? NewrolloutComponent.ROLLOUTTYPE_BOTH_NIC_NODE : NewrolloutComponent.ROLLOUTTYPE_NODE_ONLY;
+      }
     }
     if (this.newRollout.$formGroup.validator) {
       this.newRollout.$formGroup.get(['meta', 'name']).setValidators([required, this.isRolloutNameValid(this.existingRollouts), this.newRollout.$formGroup.validator]);
     } else {
       this.newRollout.$formGroup.get(['meta', 'name']).setValidators([required, this.isRolloutNameValid(this.existingRollouts)]);
     }
+    this.newRollout.$formGroup.get(['spec', 'duration']).disable(); // TODO: Disable duration for this release 2019-05-02
   }
 
   ngAfterViewInit() {
@@ -133,6 +157,9 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     if (!this.newRollout || !this.newRollout.$formGroup) {
       return false;
     }
+    if (Utility.isEmpty(this.newRollout.$formGroup.get(['meta', 'name']).value)) {
+      return false;
+    }
     const hasFormGroupError = Utility.getAllFormgroupErrors(this.newRollout.$formGroup);
     return hasFormGroupError === null;
   }
@@ -151,7 +178,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
         const imageLabel: RolloutImageLabel = image.meta.labels as RolloutImageLabel;
         if (imageLabel) {
           // rollout.spec.version is a string, so we set the selectedItem.value to string.
-          const selectedItem = {
+          const selectedItem: RolloutImageOption = {
              label: imageLabel.Version,
              value: imageLabel.Version,
              model: imageLabel   // we need .model in getImageVersionData() api
@@ -174,7 +201,22 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   buildRollout(): IRolloutRollout {
     const rollout: IRolloutRollout = this.newRollout.getFormGroupValues();
     rollout.meta.name = (rollout.meta.name) ? rollout.meta.name : this.newRollout.meta.name;
-    rollout.spec['order-constraints'] = Utility.convertRepeaterValuesToSearchExpression(this.ocLabelRepeater);
+    if (this.selectedRolloutNicNodeTypes === NewrolloutComponent.ROLLOUTTYPE_NODE_ONLY) {
+      rollout.spec['max-nic-failures-before-abort'] = null;
+      rollout.spec['order-constraints'] = [];
+      rollout.spec['smartnic-must-match-constraint'] = false;
+      rollout.spec['smartnics-only'] = false;
+    } else if (this.selectedRolloutNicNodeTypes === NewrolloutComponent.ROLLOUTTYPE_NIC_ONLY) {
+      rollout.spec['smartnics-only'] = true;
+      if (rollout.spec['smartnic-must-match-constraint']) {
+        rollout.spec['order-constraints'] = Utility.convertRepeaterValuesToSearchExpression(this.ocLabelRepeater);
+      } else {
+        rollout.spec['order-constraints'] = [];
+      }
+      rollout.spec['max-parallel'] = null;
+    } else {
+      rollout.spec['smartnics-only'] = false;
+    }
     return rollout;
   }
 
@@ -257,10 +299,45 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   }
 
   getImageVersionData(version: string): RolloutImageLabel {
-    const targets = this.rolloutImageOptions.filter( selectItem => {
+    const targets: RolloutImageOption[] = this.rolloutImageOptions.filter( selectItem => {
        return  (selectItem.value === version);
     });
-    return (targets && targets.length > 0) ? targets[0]['model'] : null;
+    return (targets && targets.length > 0) ? targets[0].model : null;
+  }
+
+  /**
+   * This API serves html template
+   */
+  onNicNodeTypeChange($event) {
+    this.selectedRolloutNicNodeTypes = $event.value;
+  }
+
+  /**
+   * This API serves html template
+   */
+  onNICsConstraintsChange($event) {
+    // debug. console.log(this.getClassName() + '.onNICsConstraintsChange()' + event);
+  }
+
+  /**
+   * This API serves html template
+   */
+  isToShowNodeDiv(): boolean {
+    return (this.selectedRolloutNicNodeTypes !== NewrolloutComponent.ROLLOUTTYPE_NIC_ONLY);
+  }
+
+  /**
+   * This API serves html template
+   */
+  isToShowNicDiv(): boolean {
+    return (this.selectedRolloutNicNodeTypes !== NewrolloutComponent.ROLLOUTTYPE_NODE_ONLY);
+  }
+
+  /**
+   * This API serves html template
+   */
+  isToShowNicOrderDiv(): boolean {
+    return this.newRollout.$formGroup.get(['spec', 'smartnic-must-match-constraint']).value;
   }
 
 

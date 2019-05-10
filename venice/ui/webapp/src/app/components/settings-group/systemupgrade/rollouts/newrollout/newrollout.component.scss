@@ -69,7 +69,7 @@ $vertical-gutter: 5px;
 }
 
 .newrollout-text.newrollout-text-upgradetype {
-    margin-left:30px;
+  margin-left: 30px;
 }
 
 .newrollout-and {
@@ -113,13 +113,37 @@ $vertical-gutter: 5px;
   margin: 20px;
   @include primary-font(18px, #676763, 500);
 }
+
 .newrollout-edit-button {
   width: 100px;
 }
 
 .newrollout-calendar {
-  margin-left:10px;
+  margin-left: 10px;
 }
+
 .newrollout-calendar > input.ui-inputtext {
-  width:170px;  // line up the calendar widget
+  width: 170px;  // line up the calendar widget
+}
+
+.newrollout-dropdown-label {
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.newrollout-dropdown-div {
+  position: relative;
+  height: 25px;
+}
+
+.newrollout-select-button-div {
+  margin: 0px 0px 10px 20px;
+}
+
+.newrollout-select-button-div .ui-selectbutton .ui-button.ui-state-active {
+  background: #97b8df;
+}
+
+.newrollout-select-button-div .ui-selectbutton .ui-button {
+  margin-right: 5px;
 }

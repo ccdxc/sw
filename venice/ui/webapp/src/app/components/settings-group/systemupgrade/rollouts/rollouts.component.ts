@@ -6,11 +6,12 @@ import {Icon} from '@app/models/frontend/shared/icon.interface';
 import {ControllerService} from '@app/services/controller.service';
 import {ObjstoreService} from '@app/services/generated/objstore.service';
 import {RolloutService} from '@app/services/generated/rollout.service';
-import {IApiStatus, IRolloutRollout, RolloutRollout} from '@sdk/v1/models/generated/rollout';
+import {IApiStatus, IRolloutRollout, RolloutRollout, RolloutRolloutStatus_state} from '@sdk/v1/models/generated/rollout';
 import { IObjstoreObject, ObjstoreObject, IObjstoreObjectList, ObjstoreObjectList } from '@sdk/v1/models/generated/objstore';
 import {Observable} from 'rxjs';
 import {Router} from '@angular/router';
 import {HttpEventUtility} from '@common/HttpEventUtility';
+import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
 
 /**
  * This component let user manage Venice Rollouts.
@@ -27,7 +28,10 @@ import {HttpEventUtility} from '@common/HttpEventUtility';
 })
 export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, RolloutRollout> {
   dataObjects: ReadonlyArray<RolloutRollout>;
-  isTabComponent: boolean = false;
+  pendingRollouts: RolloutRollout[] = [];
+  pastRollouts: RolloutRollout[] = [];
+
+  isTabComponent: boolean = true;
   disableTableWhenRowExpanded: boolean = true;
   selectedRollOut: RolloutRollout;
   rolloutImages: IObjstoreObjectList ;
@@ -59,6 +63,8 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
     {field: 'status.state', header: 'State', class: '', sortable: true, width: 20},
   ];
 
+  tabIndex: number = 0;
+
   constructor(protected controllerService: ControllerService,
               protected cdr: ChangeDetectorRef,
               protected rolloutService: RolloutService,
@@ -73,6 +79,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
 
 
   postNgInit() {
+    this.setDefaultToolbar();
     this.getRollouts();
     this.getRolloutImages();
   }
@@ -83,10 +90,24 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
     const subscription = this.rolloutService.WatchRollout().subscribe(
       response => {
         this.rolloutsEventUtility.processEvents(response);
+        this.setDefaultToolbar();
+        this.splitRollouts();
       },
       this.controllerService.restErrorHandler('Failed to get Rollouts info')
     );
     this.subscriptions.push(subscription);
+  }
+
+  splitRollouts() {
+    this.pendingRollouts.length = 0;
+    this.pastRollouts.length = 0;
+    for  (let i = 0; i < this.dataObjects.length; i++) {
+      if (this.dataObjects[i].status.state === RolloutRolloutStatus_state.PROGRESSING) {
+        this.pendingRollouts.push(this.dataObjects[i]);
+      } else {
+        this.pastRollouts.push(this.dataObjects[i]);
+      }
+    }
   }
 
   getRolloutImages() {
@@ -102,7 +123,12 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
   }
 
   setDefaultToolbar() {
-    this.controllerService.setToolbarData({
+    this.controllerService.setToolbarData(this.buildToolbarData());
+  }
+
+  buildToolbarData(): ToolbarData {
+    const toolbarData: ToolbarData = {
+      breadcrumb: [{label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade'}],
       buttons: [
         {
           cssClass: 'global-button-primary rollouts-button',
@@ -111,22 +137,40 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
           callback: () => {
             this.invokeUploadImageUI();
           }
-        },
+        }
+      ]
+    };
+    if (this.isToBuildCreateButton()) {
+      toolbarData.buttons.push(
         {
           cssClass: 'global-button-primary rollouts-button',
           text: 'CREATE ROLLOUT',
-          computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+          computeClass: () => this.shouldEnableButtons && this.tabIndex < 1  ? '' : 'global-button-disabled',
           callback: () => {
             this.createNewObject();
           }
-        },
-      ],
-      breadcrumb: [{label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade'}]
-    });
+        }
+      );
+    }
+    return toolbarData;
+  }
+
+  isToBuildCreateButton(): boolean {
+    const isBuild = true;
+    for  (let i = 0; i < this.dataObjects.length; i++) {
+      if (this.dataObjects[i].status.state === RolloutRolloutStatus_state.PROGRESSING) {
+        return false;
+      }
+    }
+    return isBuild;
   }
 
   deleteRecord(object: RolloutRollout): Observable<{ body: IRolloutRollout | IApiStatus | Error, statusCode: number }> {
     return this.rolloutService.DeleteRollout(object.meta.name);
+  }
+
+  postDeleteRecord () {
+    this.splitRollouts();
   }
 
   generateDeleteConfirmMsg(object: IRolloutRollout) {
@@ -164,6 +208,19 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
       default:
         return value;
     }
+  }
+
+  selectedIndexChangeEvent(event) {
+    // console.log('tab' + event);
+    this.tabIndex = event;
+  }
+
+  dump(obj): string {
+    return JSON.stringify(obj, null, 1);
+  }
+
+  isToDisablePastTab(): boolean {
+    return (this.creatingMode);
   }
 
 }

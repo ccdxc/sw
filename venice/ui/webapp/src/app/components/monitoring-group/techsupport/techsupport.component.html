@@ -1,24 +1,16 @@
 <app-pagebody class="techsupportrequests" header="Tech Support" [icon]="bodyicon">
-  <app-tableviewedit fxLayout="column" class="techsupportrequests-widget"
-                     [creatingMode]="creatingMode"
-                     [showRowExpand]="showRowExpand"
-                     [data]="dataObjects"
-                     [cols]="cols"
-                     [virtualRowHeight]="48"
-                     [expandedRowData]="expandedRowData"
-                     [captionTemplate]="captionTemplate"
-                     [bodyTemplate]="bodyTemplate"
-                     [actionTemplate]="actionTemplate"
-                     [createTemplate]="createTemplate"
-                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+  <app-tableviewedit fxLayout="column" class="techsupportrequests-widget" [creatingMode]="creatingMode"
+    [showRowExpand]="showRowExpand" [data]="dataObjects" [cols]="cols" [virtualRowHeight]="48"
+    [expandedRowData]="expandedRowData" [captionTemplate]="captionTemplate" [bodyTemplate]="bodyTemplate"
+    [actionTemplate]="actionTemplate" [createTemplate]="createTemplate"
+    (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
   </app-tableviewedit>
 
 </app-pagebody>
 
 <ng-template #createTemplate>
-  <app-newtechsupport (formClose)="creationFormClose()" fxFlex="none"
-                      [existingTechSupportRequest]='dataObjects'
-  ></app-newtechsupport>
+  <app-newtechsupport (formClose)="creationFormClose()" fxFlex="none" [existingTechSupportRequest]='dataObjects'>
+  </app-newtechsupport>
 </ng-template>
 
 <ng-template #captionTemplate let-count="count">
@@ -33,16 +25,28 @@
     </ng-container>
     <ng-container *ngSwitchCase="'status.status'">
       <div *ngIf="!isTechsupportCompleted(rowData, col)" [innerHTML]="displayColumn(rowData, col)"></div>
-      <div *ngIf="isTechsupportCompleted(rowData, col)" >
+      <div *ngIf="isTechsupportCompleted(rowData, col)" fxLayout="column" >
+        <div fxLayout="row" > Success </div> 
+        <!--  download all ts output files in one bundle  -->
+        <div fxLayout="row" >
+          <a class="techsupportrequests-download-file-link" href="{{rowData['techsupportdownload']['bundleAll']}}"
+            [matTooltip]="'Download all files'">Download all files</a>
+        </div> 
+        <!-- TODO: once there are 100s download links, listing links is not good UX. Change UI later.-->
+        <div fxLayout="row" >
           <div *ngFor="let v of rowData['techsupportdownload']['nicNodes']">
-              <a class="techsupportrequests-button-category-kind-entry-link"
-                     href = "{{v.url}}" [matTooltip]="'Download NIC file ' + v.name " >{{v.name}}</a>
+            <a class="techsupportrequests-download-file-link" href="{{v.url}}"
+              [matTooltip]="'Download NIC file ' + v.name ">{{v.name}}</a>
           </div>
-          <div *ngFor="let v of rowData['techsupportdownload']['controlnodes']">
-              <a class="techsupportrequests-button-category-kind-entry-link"
-                     href = "{{v.url}}" [matTooltip]="'Download Controller file ' + v.name "  >{{v.name}}</a>
-          </div>
-      </div>            
+        </div>
+        <div fxLayout="row" >
+            <div *ngFor="let v of rowData['techsupportdownload']['controlnodes']">
+                <a class="techsupportrequests-download-file-link" href="{{v.url}}"
+                  [matTooltip]="'Download Controller file ' + v.name ">{{v.name}}</a>
+            </div>
+        </div>
+        
+      </div>
     </ng-container>
     <ng-container *ngSwitchDefault>
       <div [innerHTML]="displayColumn(rowData, col)">

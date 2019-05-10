@@ -20,3 +20,13 @@ $vertical-gutter: 5px;
 .imageupload-panel-table {
   margin-top:10px;
 }
+
+.imageupload-panel-table .mat-expansion-panel-content,
+.imageupload-panel-table .mat-expansion-panel-content .mat-expansion-panel-body  {
+  height : 100%;
+}
+
+.imageupload-fileupload-progress-span {
+  color:#8cafda;
+  margin-left:30px;
+}

@@ -1,36 +1,57 @@
 <app-pagebody [icon]="bodyicon" header="Rollouts Overview">
-  <app-tableviewedit fxLayout="column" style="height: 100%"
-                     [creatingMode]="creatingMode"
-                     [showRowExpand]="showRowExpand"
-                     [data]="dataObjects"
-                     [cols]="cols"
-                     [expandedRowData]="expandedRowData"
-                     [captionTemplate]="captionTemplate"
-                     [bodyTemplate]="bodyTemplate"
-                     [expandTemplate]="expandTemplate"
-                     [createTemplate]="createTemplate"
-                     [actionTemplate]="actionTemplate"
-                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
-  </app-tableviewedit>
+
+  <mat-tab-group  fxFlex [disableRipple]="true" (selectedIndexChange)="selectedIndexChangeEvent($event)">
+    <mat-tab label="PENDING">
+      <app-tableviewedit fxLayout="column" style="height: 100%" 
+      [creatingMode]="creatingMode"
+        [showRowExpand]="showRowExpand" 
+        [data]="pendingRollouts"
+        [cols]="cols"
+        [expandedRowData]="expandedRowData"
+        [captionTemplate]="captionTemplate_pending" 
+        [bodyTemplate]="bodyTemplate" 
+        [expandTemplate]="expandTemplate"
+        [actionTemplate]="actionTemplatePending" 
+        [createTemplate]="createTemplate"
+        (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+      </app-tableviewedit>
+    </mat-tab>
+    <mat-tab label="PAST"  [disabled]="isToDisablePastTab()">
+      <app-tableviewedit fxLayout="column" style="height: 100%" 
+          [data]="pastRollouts" 
+          [cols]="cols" 
+          [captionTemplate]="captionTemplate_past" 
+          [bodyTemplate]="bodyTemplate"       
+          [actionTemplate]="actionTemplatePast"
+        >      
+        </app-tableviewedit>
+    </mat-tab>
+  </mat-tab-group> 
 </app-pagebody>
 
 <ng-template #createTemplate>
   <app-newrollout (formClose)="creationFormClose()" fxFlex="none" [existingRollouts]="dataObjects"
-                   [rolloutImages]="rolloutImages"></app-newrollout>
+    [rolloutImages]="rolloutImages"></app-newrollout>
 </ng-template>
 
 <!-- TABLE HEADER -->
-<ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Rollouts" [total]="dataObjects.length" [icon]="" width="250px">
+<ng-template #captionTemplate_pending let-count="count">
+  <app-tableheader title="Rollouts" [total]="pendingRollouts.length" [icon]="" width="250px">
+  </app-tableheader>
+</ng-template>
+
+<ng-template #captionTemplate_past let-count="count">
+  <app-tableheader title="Rollouts" [total]="pastRollouts.length" [icon]="" width="250px">
   </app-tableheader>
 </ng-template>
 
 <!-- TABLE BODY -->
 <ng-template #bodyTemplate let-rowData let-col="col">
-  <div >
+  <div>
     <ng-container [ngSwitch]="col.field">
       <ng-container *ngSwitchCase="'meta.name'">
-          <a routerLink="./{{rowData.meta.name}}" [matTooltip]="'Click to monitor rollout status'">{{rowData.meta.name}}</a>
+        <a routerLink="./{{rowData.meta.name}}"
+          [matTooltip]="'Click to monitor rollout status'">{{rowData.meta.name}}</a>
       </ng-container>
       <ng-container *ngSwitchCase="'meta.mod-time'">
         {{rowData.meta['mod-time'] | PrettyDate }}
@@ -49,21 +70,29 @@
 </ng-template>
 
 <!-- TABLE ACTION -->
-<ng-template #actionTemplate let-rowData>
+<ng-template #actionTemplatePending let-rowData>
 
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-<!-- comment out this block as back-end has limit support on update rollout()
+    <!-- comment out this block as back-end has limit support on update rollout() 
     <mat-icon matTooltip="Edit rollout" class="global-table-action-icon"
               (click)="expandRowRequest($event, rowData)">edit
     </mat-icon> -->
-    <mat-icon matTooltip="Delete rollout" class="global-table-action-icon"
-              (click)="onDeleteRecord($event, rowData)">delete
+    <mat-icon matTooltip="Delete rollout" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">
+      delete
     </mat-icon>
   </div>
 </ng-template>
 
+<ng-template #actionTemplatePast let-rowData>
+    <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">     
+      <mat-icon matTooltip="Delete rollout" class="global-table-action-icon" (click)="onDeleteRecord($event, rowData)">
+        delete
+      </mat-icon>
+    </div>
+  </ng-template>
+
 <ng-template #expandTemplate let-rowData let-columns="columns">
-    <app-newrollout (formClose)="closeRowExpand()"  [selectedRolloutData]="rowData"  [isInline]="true"
-          [rolloutImages]="rolloutImages"></app-newrollout>
+  <app-newrollout (formClose)="closeRowExpand()" [selectedRolloutData]="rowData" [isInline]="true"
+    [rolloutImages]="rolloutImages"></app-newrollout>
 </ng-template>
 

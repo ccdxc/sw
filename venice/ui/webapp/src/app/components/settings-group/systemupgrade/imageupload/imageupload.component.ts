@@ -3,7 +3,7 @@ import { Animations } from '@app/animations';
 import { Observable } from 'rxjs';
 
 import { ControllerService } from '@app/services/controller.service';
-import { TableCol, TablevieweditAbstract} from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { TableCol, TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { ObjstoreService } from '@app/services/generated/objstore.service';
 import { IApiStatus, IObjstoreObject, ObjstoreObject, IObjstoreObjectList, ObjstoreObjectList } from '@sdk/v1/models/generated/objstore';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
@@ -34,6 +34,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   loading: boolean = false;
 
   uploadedFiles: any[] = [];
+  fileUploadProgress: number = 0;
 
   bodyIcon: Icon = {
     margin: {
@@ -47,15 +48,15 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   startingSortOrder: number = -1;
 
   cols: TableCol[] = [
-    { field: 'meta.name', header: 'Name', class: 'imageupload-column-common imageupload-column-who', sortable: false, width: 10 },
+    { field: 'meta.name', header: 'Name', class: 'imageupload-column-common imageupload-column-who', sortable: true, width: 10 },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'imageupload-column-common imageupload-column-date', sortable: true, width: 10 },
     { field: 'meta.mod-time', header: 'Mod Time', class: 'imageupload-column-common imageupload-column-date', sortable: true, width: 10 },
     { field: 'status.size', header: 'File Size (bytes)', class: 'imageupload-column-common imageupload-column-filesize', sortable: true, width: 15 },
-    { field: 'meta.labels.Version', header: 'Version', class: 'imageupload-column-common imageupload-column-version', sortable: false, width: 15 },
+    { field: 'meta.labels.Version', header: 'Version', class: 'imageupload-column-common imageupload-column-version', sortable: true, width: 15 },
     { field: 'meta.labels', header: 'Details', class: 'imageupload-column-common imageupload-column-labels', sortable: false, width: 40 },
   ];
 
-  constructor(protected controllerService: ControllerService,  private objstoreService: ObjstoreService,
+  constructor(protected controllerService: ControllerService, private objstoreService: ObjstoreService,
     protected cdr: ChangeDetectorRef,
   ) {
     super(controllerService, cdr);
@@ -78,13 +79,13 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   }
 
   /** Override parent API as watchRolloutImages() is not working. */
-  postDeleteRecord () {
+  postDeleteRecord() {
     this.refreshImages();
   }
 
   /** TODO: delete me once watchRolloutImages() is working */
   refreshImages() {
-   this.getRolloutImages();
+    this.getRolloutImages();
   }
 
   /** TODO: This function is not working yet. */
@@ -103,16 +104,21 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     const sub = this.objstoreService.ListObject(Utility.ROLLOUT_IMGAGE_NAMESPACE).subscribe(
       (response) => {
         const rolloutImages: IObjstoreObjectList = response.body as IObjstoreObjectList;
-        const entries = [];
-        rolloutImages.items.forEach(image => {
+        if (rolloutImages.items) {
+          const entries = [];
+          rolloutImages.items.forEach(image => {
             entries.push(image);
-        });
-        this.dataObjects = entries;
+          });
+          this.dataObjects = entries;
+        } else {
+          this.controllerService.invokeErrorToaster('Failed to get rollout images', 'rolloutImages.items is empty. Please contact administrator');
+        }
       },
       (error) => {
         this.controllerService.invokeRESTErrorToaster('Failed to fetch rollout images.', error);
       }
     );
+    this.subscriptions.push(sub);
   }
 
   onBeforeSend($event) {
@@ -129,20 +135,22 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     const filenames = this.getFilesNames(files);
     this.controllerService.invokeInfoToaster('Upload succeeded', 'Uploaded files: ' + filenames.join(',') + '. System will validate uploaded files.');
     this.refreshImages();
+    this.fileUploadProgress = 0;
   }
 
-   /**
-   * This API serves html template
-   */
+  /**
+  * This API serves html template
+  */
   onError(event) {
     const files = event.files;
     const filenames = this.getFilesNames(files);
     this.controllerService.invokeErrorToaster('Upload failed', 'Involved files: ' + filenames.join(','));
+    this.fileUploadProgress = 0;
   }
 
   getFilesNames(files: any[]): string[] {
-    const filenames: string [] = [];
-    for (const  file of files) {
+    const filenames: string[] = [];
+    for (const file of files) {
       this.uploadedFiles.push(file);
       filenames.push(file.name);
     }
@@ -154,7 +162,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   }
 
   deleteRecord(object: IObjstoreObject): Observable<{ body: IObjstoreObject | IApiStatus | Error, statusCode: number }> {
-    return this.objstoreService.DeleteObject(Utility.ROLLOUT_IMGAGE_NAMESPACE, object.meta.name );
+    return this.objstoreService.DeleteObject(Utility.ROLLOUT_IMGAGE_NAMESPACE, object.meta.name);
   }
 
   generateDeleteConfirmMsg(object: IObjstoreObject) {
@@ -173,5 +181,9 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
       default:
         return JSON.stringify(value, null, 2);
     }
+  }
+
+  onUploadProgress($event) {
+    this.fileUploadProgress = $event.progress;
   }
 }

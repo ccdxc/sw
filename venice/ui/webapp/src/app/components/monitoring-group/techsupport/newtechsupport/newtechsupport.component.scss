@@ -30,20 +30,6 @@ $vertical-gutter: 5px;
   margin: 0px $horizontal-gutter;
 }
 
-/* .newtechsupport-toggle {
-    margin: 10px;
-    @include global-mat-toggle(rgb(209, 209, 208), rgb(103, 103, 99), rgb(211, 226, 246), rgb(101, 169, 227));
-} */
-
-/* .newtechsupport-format {
-    margin-left: 48px;
-    margin-top: 5px;
-    @include global-mat-radio(12px);
-} */
-
-/* .newtechsupport-credential-radio {
-    @include global-mat-radio(12px);
-} */
 
 .newtechsupport-name,
 .newtechsupport-verbosity,
@@ -93,12 +79,13 @@ $vertical-gutter: 5px;
   margin-left: 2 * $horizontal-gutter;
 }
 
-.newtechsupport-plist-div .ui-picklist-filter-icon {
-  right: 1em !important;
+.newtechsupport-plist-div .ui-picklist-filter-icon {  
+  margin-top: -0.5em !important;
 }
 
 .newtechsupport-plist-div .ui-picklist .ui-picklist-filter-container .ui-picklist-filter{
-  text-indent: 0em !important;
+  text-indent: 0.25em !important;
+  padding: .125em .2em;
 }
 
 .newtechsupport-naple-description{
@@ -109,3 +96,12 @@ $vertical-gutter: 5px;
 .newtechsupport-plist-item{
   margin-left: $horizontal-gutter;
 }
+
+.newtechsupport-plist-div .ui-picklist .ui-picklist-caption {
+  padding: .125em .2em;
+}
+
+.newtechsupport-plist-div .ui-picklist .ui-picklist-filter-container { 
+  padding: .25em .25em;
+}
+

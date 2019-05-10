@@ -5,6 +5,7 @@ import { SearchSuggestion, CompileSearchInputStringResult, SearchGrammarItem, Se
 
 export class SearchUtil {
   public static LAST_SEARCH_DATA = 'last_search_data';
+  public static SEARCH_MAX_RESULT: number = 500;
 
   public static EVENT_KEY_ENTER = 13;
   public static EVENT_KEY_LEFT = 37;

@@ -9,6 +9,7 @@ import { ObjstoreService } from '@app/services/generated/objstore.service';
  import { SharedModule } from '@app/components/shared//shared.module';
  import { MaterialdesignModule } from '@lib/materialdesign.module';
  import { PrimengModule } from '@lib/primeng.module';
+ import { FlexLayoutModule } from '@angular/flex-layout';
 
 
 @NgModule({
@@ -19,7 +20,8 @@ import { ObjstoreService } from '@app/services/generated/objstore.service';
 
     PrimengModule,
     MaterialdesignModule,
-    SharedModule
+    SharedModule,
+    FlexLayoutModule
   ],
   providers: [
     ObjstoreService

@@ -40,6 +40,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   showMissingScreen: boolean;
 
   loading: boolean = false;
+  tabIndex: number = 0;
 
   bodyicon: any = {
     margin: {
@@ -79,7 +80,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
         buttons: [
           {
             cssClass: 'global-button-primary rolloutstatus-toolbar-button',
-            text: 'SUSPEND ROLLOUT',
+            text: 'STOP ROLLOUT',
             callback: () => {
               this.onSuspendRollout();
             }

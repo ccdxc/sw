@@ -154,6 +154,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
       nicNodes: [],
       controlnodes: []
     };
+    downloadObj['bundleAll'] = this.buildTSBundleAllDownloadHelper(tsName, instanceId);
     if (smartNICNodeResults) {
         downloadObj['nicNodes'] = this.buildTSDownloadHelper(smartNICNodeResults, instanceId, tsName);
     }
@@ -161,6 +162,16 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
       downloadObj['controlnodes'] = this.buildTSDownloadHelper(ctrlrNnodeResults, instanceId, tsName);
     }
     rowData[TechsupportComponent.TS_DOWNLOAD] = downloadObj;
+  }
+
+  /**
+   * Per disussion with back-end (Barun). All-in-one download link will look like
+   * https://10.7.100.24:10001/objstore/v1/downloads/all/@tenant/default/techsupport/@tsname.zip
+   * https://10.7.100.24:10001/objstore/v1/downloads/all/tenant/default/techsupport/ts-1.zip  (tenant = default , tsname = ts-1)
+   */
+  buildTSBundleAllDownloadHelper(tsName: string, instanceId: string): string {
+    const instantIDprefix = (instanceId.split('-').length > 0) ? instanceId.split('-')[0] : instanceId; // "instance-id": "c7b8c234-a453-4594-b98f-0890ddcf4cbf", we want c7b8c234
+    return '/objstore/v1/downloads/all/tenant/' + Utility.getInstance().getTenant() + '/techsupport/' + tsName + '-' + instantIDprefix + '.zip';
   }
 
   buildTSDownloadHelper(results, instanceId: string, tsName: string): any {

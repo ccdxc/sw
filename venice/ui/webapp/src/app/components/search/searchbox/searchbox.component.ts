@@ -89,6 +89,7 @@ import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/genera
 })
 export class SearchboxComponent extends CommonComponent implements OnInit, OnDestroy {
 
+
   // widget properties
   searchVeniceApplication: any;
   noSearchSuggestion: String = 'no search suggestion';
@@ -339,7 +340,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
     // encode special characters like MAC string 0242.c0a8.1c02
     const texts = (typeof searched === 'string') ? [SearchUtil.searchEncodeText(searched)] : SearchUtil.searchEncodeText(searched);
     return {
-      'max-results': 50,
+      'max-results': SearchUtil.SEARCH_MAX_RESULT,
       'query': {
         'texts': [
           {
@@ -357,7 +358,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
    */
   protected buildComplexSearchPayload(list: any[], searched: string): any {
     let payload = {
-      'max-results': 50,
+      'max-results': SearchUtil.SEARCH_MAX_RESULT,
       'query': {
       }
     };
@@ -774,7 +775,7 @@ export class SearchboxComponent extends CommonComponent implements OnInit, OnDes
 
   protected buildSearchPayloadWithSuggestion(search: any, selection: SearchSuggestion, querytype: string): any {
     const obj = {
-      'max-results': 50,
+      'max-results': SearchUtil.SEARCH_MAX_RESULT,
       'query': {}
     };
     obj.query[querytype] = [

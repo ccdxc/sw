@@ -167,6 +167,9 @@ export class NewtechsupportComponent extends BaseComponent implements OnInit, Af
    * This API control whether to enable [save tech-support button]
    */
   computeButtonClass() {
+    if (Utility.isEmpty(this.newTechsupport.$formGroup.get(['meta', 'name']).value)) {
+      return 'global-button-disabled';
+    }
     if (this.newTechsupport.$formGroup.valid) {
       return '';
     } else {
