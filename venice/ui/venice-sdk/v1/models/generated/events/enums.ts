@@ -25,6 +25,36 @@ export enum EventsEvent_severity {
     'DEBUG' = "DEBUG",
 }
 
+export enum EventsEvent_type {
+    'AUDITING_FAILED' = "AUDITING_FAILED",
+    'AUTO_GENERATED_TLS_CERT' = "AUTO_GENERATED_TLS_CERT",
+    'ELECTION_CANCELLED' = "ELECTION_CANCELLED",
+    'ELECTION_NOTIFICATION_FAILED' = "ELECTION_NOTIFICATION_FAILED",
+    'ELECTION_STARTED' = "ELECTION_STARTED",
+    'ELECTION_STOPPED' = "ELECTION_STOPPED",
+    'HOST_SMART_NIC_SPEC_CONFLICT' = "HOST_SMART_NIC_SPEC_CONFLICT",
+    'LEADER_CHANGED' = "LEADER_CHANGED",
+    'LEADER_ELECTED' = "LEADER_ELECTED",
+    'LEADER_LOST' = "LEADER_LOST",
+    'LOGIN_FAILED' = "LOGIN_FAILED",
+    'NIC_ADMITTED' = "NIC_ADMITTED",
+    'NIC_HEALTHY' = "NIC_HEALTHY",
+    'NIC_HEALTH_UNKNOWN' = "NIC_HEALTH_UNKNOWN",
+    'NIC_REJECTED' = "NIC_REJECTED",
+    'NIC_UNHEALTHY' = "NIC_UNHEALTHY",
+    'NODE_DISJOINED' = "NODE_DISJOINED",
+    'NODE_JOINED' = "NODE_JOINED",
+    'LINK_DOWN' = "LINK_DOWN",
+    'LINK_UP' = "LINK_UP",
+    'NAPLES_SERVICE_STOPPED' = "NAPLES_SERVICE_STOPPED",
+    'SERVICE_PENDING' = "SERVICE_PENDING",
+    'SERVICE_RUNNING' = "SERVICE_RUNNING",
+    'SERVICE_STARTED' = "SERVICE_STARTED",
+    'SERVICE_STOPPED' = "SERVICE_STOPPED",
+    'SERVICE_UNRESPONSIVE' = "SERVICE_UNRESPONSIVE",
+    'SYSTEM_COLDBOOT' = "SYSTEM_COLDBOOT",
+}
+
 export enum EventsEvent_category {
     'Cluster' = "Cluster",
     'Network' = "Network",
@@ -90,6 +120,7 @@ export class AllEnums {
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
     EventsEvent_severity = EventsEvent_severity;
+    EventsEvent_type = EventsEvent_type;
     EventsEvent_category = EventsEvent_category;
     EventsEventAttributes_severity = EventsEventAttributes_severity;
     EventsEventAttributes_category = EventsEventAttributes_category;

@@ -9,6 +9,7 @@ import { BaseModel, PropInfoItem } from './base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
 import { EventsEvent_severity,  } from './enums';
+import { EventsEvent_type,  } from './enums';
 import { EventsEvent_category,  } from './enums';
 import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
 import { EventsEventSource, IEventsEventSource } from './events-event-source.model';
@@ -18,7 +19,7 @@ export interface IEventsEvent {
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
     'severity'?: EventsEvent_severity;
-    'type'?: string;
+    'type'?: EventsEvent_type;
     'message'?: string;
     'category'?: EventsEvent_category;
     'object-ref'?: IApiObjectRef;
@@ -32,7 +33,7 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
     'severity': EventsEvent_severity = null;
-    'type': string = null;
+    'type': EventsEvent_type = null;
     'message': string = null;
     'category': EventsEvent_category = null;
     'object-ref': ApiObjectRef = null;
@@ -58,6 +59,7 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
             type: 'string'
         },
         'type': {
+            enum: EventsEvent_type,
             required: false,
             type: 'string'
         },
@@ -147,7 +149,7 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && EventsEvent.hasDefaultValue('type')) {
-            this['type'] = EventsEvent.propInfo['type'].default;
+            this['type'] = <EventsEvent_type>  EventsEvent.propInfo['type'].default;
         } else {
             this['type'] = null
         }
@@ -193,7 +195,7 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
                 'api-version': CustomFormControl(new FormControl(this['api-version']), EventsEvent.propInfo['api-version']),
                 'meta': CustomFormGroup(this['meta'].$formGroup, EventsEvent.propInfo['meta'].required),
                 'severity': CustomFormControl(new FormControl(this['severity'], [enumValidator(EventsEvent_severity), ]), EventsEvent.propInfo['severity']),
-                'type': CustomFormControl(new FormControl(this['type']), EventsEvent.propInfo['type']),
+                'type': CustomFormControl(new FormControl(this['type'], [enumValidator(EventsEvent_type), ]), EventsEvent.propInfo['type']),
                 'message': CustomFormControl(new FormControl(this['message']), EventsEvent.propInfo['message']),
                 'category': CustomFormControl(new FormControl(this['category'], [enumValidator(EventsEvent_category), ]), EventsEvent.propInfo['category']),
                 'object-ref': CustomFormGroup(this['object-ref'].$formGroup, EventsEvent.propInfo['object-ref'].required),

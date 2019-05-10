@@ -29,7 +29,7 @@ import { WhitespaceTrimDirective } from '@app/components/shared/directives/white
 import { TableheaderComponent } from '@app/components/shared/tableheader/tableheader.component';
 import { BehaviorSubject } from 'rxjs';
 import { Utility } from '@app/common/Utility';
-import { EventsEvent, EventsEventAttributes_severity, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
+import { EventsEvent, EventsEventAttributes_severity, ApiListWatchOptions_sort_order, EventsEvent_type } from '@sdk/v1/models/generated/events';
 import { Eventsv1Service } from '@sdk/v1/services/generated/eventsv1.service';
 import { By } from '@angular/platform-browser';
 import { TestingUtility } from '@app/common/TestingUtility';
@@ -69,7 +69,7 @@ describe('AlertseventsComponent', () => {
   poll1.push(genEvent(
     '2018-08-20T19:09:04.777255798Z',
     '2018-08-20T19:09:02.777255798Z',
-    'INFO', 'ServiceRunning', 'Service pen-evtsmgr running on node1',
+    'INFO', EventsEvent_type.AUDITING_FAILED, 'Service pen-evtsmgr running on node1',
     { component: 'pen-evtsmgr', 'node-name': 'node1' }, 1));
 
   let component: AlertseventsComponent;

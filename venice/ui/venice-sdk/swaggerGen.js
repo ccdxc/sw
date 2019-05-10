@@ -13,6 +13,19 @@ const version = 'v1';
 const genModelFolder = path.join(__dirname, 'v1/', 'models/generated/');
 const genServiceFolder = path.join(__dirname, 'v1/', 'services/generated/');
 
+handlebars.registerHelper('toJSON', function (obj) {
+  return JSON.stringify(obj, null, 1);
+});
+handlebars.registerHelper('ifeq', function (a, b, options) {
+  if (a == b) { return options.fn(this); }
+  return options.inverse(this);
+});
+
+handlebars.registerHelper('ifnoteq', function (a, b, options) {
+  if (a != b) { return options.fn(this); }
+  return options.inverse(this);
+});
+
 if (fs.existsSync(genModelFolder)){
   // Delete all contents
   rmdir.sync(genModelFolder);
@@ -45,6 +58,19 @@ generatedApiFiles.forEach( (generatedApiFile) => {
         config = genConfig(version, folderName, generatedApi+'/'+generatedApiFile+'/swagger/'+ swaggerFile, true);
       } else {
         config = genConfig(version, folderName, generatedApi+'/'+generatedApiFile+'/swagger/'+ swaggerFile);
+      }
+      if (generatedApiFile === 'events') {
+        config.swagger.swaggerTSGeneratorOptions.swaggerFileHook = (swagger) => {
+          eventTypes = [];
+          const eventPath = path.join(__dirname, '../../../events/generated/eventtypes/eventtypes.json');
+          const events = JSON.parse(fs.readFileSync(eventPath, 'utf8').trim());
+          Object.keys(events).forEach((cat) => {
+            events[cat].forEach( (entry) => {
+              eventTypes.push(entry.Name);
+            });
+          });
+          swagger.definitions.eventsEvent.properties.type.enum =  eventTypes;
+        }
       }
       swaggerTSGenerator.generateTSFiles(config.swagger.swaggerFile, config.swagger.swaggerTSGeneratorOptions);
     })
@@ -98,60 +124,83 @@ Object.keys(manifest).forEach( (category) => {
   }
 });
 
-Object.keys(data).forEach( (version) => {
-  const template = readAndCompileTemplateFile('generate-cat-kind-ts.hbs');
-  const result = template(data[version]);
-  const outputFileName = version + '/models/generated/category-mapping.model.ts';
-  swaggerTSGenerator.utils.ensureFile(outputFileName, result);
-  swaggerTSGenerator.utils.log(`generated ${outputFileName}`);
-})
 
-const delimiter = '_';
-const authPath = path.join(__dirname, '../../../api/generated/auth/swagger/svc_auth.swagger.json');
-const authSwagger = JSON.parse(fs.readFileSync(authPath, 'utf8').trim());
-const permActions = authSwagger.definitions.authPermission.properties.actions.enum
-const permEnum = [];
-Object.keys(manifest).forEach( (category) => {
-  if (category === "bookstore") {
-    // Skipping the bookstore exampe
-    return;
-  }
-  const internalServices = manifest[category]["Svcs"];
-  // We assume only one internal service
-  const serviceData = internalServices[Object.keys(internalServices)[0]];
-  // permActions.forEach( (action) => {
-  //   permEnum.push(_.toLower(category) + "apigroup" + delimiter + _.toLower(action));
-  // })
+generateCatKind(data);
+generateEventTypesFile(data);
+generateUIPermissionsFile(manifest, data);
 
-  serviceData.Messages.forEach( (kind) => {
-    permActions.forEach( (action) => {
-      permEnum.push( _.toLower(category) + _.toLower(kind) + delimiter + _.toLower(action));
-    });
-  });
-});
-const addCustomKind = (kind) => {
-  permActions.forEach( (action) => {
-    permEnum.push( _.toLower(kind) + delimiter + _.toLower(action));
-  });
-}
-permEnum.push('auditevent' + delimiter + 'read');
-permEnum.push('eventsevent' + delimiter + 'read');
-permEnum.push('search' + delimiter + 'read');
-permEnum.push('metricsquery' + delimiter + 'read');
-permEnum.push('fwlogsquery' + delimiter + 'read');
 
-Object.keys(data).forEach( (version) => {
-  const template = readAndCompileTemplateFile('generate-permissions-enum-ts.hbs');
-  const result = template(permEnum);
-  const outputFileName = version + '/models/generated/UI-permissions-enum.ts';
-  swaggerTSGenerator.utils.ensureFile(outputFileName, result);
-  swaggerTSGenerator.utils.log(`generated ${outputFileName}`);
-});
+
+
 
 function readAndCompileTemplateFile(templateFileName) {
   let templateSource = fs.readFileSync(path.resolve(__dirname, "templates", templateFileName), 'utf8');
   let template = handlebars.compile(templateSource);
   return template;
+}
+
+function generateCatKind(versionData) {
+  Object.keys(versionData).forEach( (version) => {
+    const template = readAndCompileTemplateFile('generate-cat-kind-ts.hbs');
+    const result = template(versionData[version]);
+    const outputFileName = version + '/models/generated/category-mapping.model.ts';
+    swaggerTSGenerator.utils.ensureFile(outputFileName, result);
+    swaggerTSGenerator.utils.log(`generated ${outputFileName}`);
+  });
+
+}
+
+function generateEventTypesFile(versionData) {
+  Object.keys(versionData).forEach( (version) => {
+    const eventPath = path.join(__dirname, '../../../events/generated/eventtypes/eventtypes.json');
+    const events = JSON.parse(fs.readFileSync(eventPath, 'utf8').trim());
+    const template = readAndCompileTemplateFile('generate-eventtypes-ts.hbs');
+    const result = template(events);
+    const outputFileName = version + '/models/generated/eventtypes.ts';
+    swaggerTSGenerator.utils.ensureFile(outputFileName, result);
+    swaggerTSGenerator.utils.log(`generated ${outputFileName}`);
+  });
+}
+
+function generateUIPermissionsFile(manifestData, versionData) {
+  const delimiter = '_';
+  const authPath = path.join(__dirname, '../../../api/generated/auth/swagger/svc_auth.swagger.json');
+  const authSwagger = JSON.parse(fs.readFileSync(authPath, 'utf8').trim());
+  const permActions = authSwagger.definitions.authPermission.properties.actions.enum
+  const permEnum = [];
+  Object.keys(manifestData).forEach( (category) => {
+    if (category === "bookstore") {
+      // Skipping the bookstore exampe
+      return;
+    }
+    const internalServices = manifestData[category]["Svcs"];
+    // We assume only one internal service
+    const serviceData = internalServices[Object.keys(internalServices)[0]];
+
+    serviceData.Messages.forEach( (kind) => {
+      permActions.forEach( (action) => {
+        permEnum.push( _.toLower(category) + _.toLower(kind) + delimiter + _.toLower(action));
+      });
+    });
+  });
+  const addCustomKind = (kind) => {
+    permActions.forEach( (action) => {
+      permEnum.push( _.toLower(kind) + delimiter + _.toLower(action));
+    });
+  }
+  permEnum.push('auditevent' + delimiter + 'read');
+  permEnum.push('eventsevent' + delimiter + 'read');
+  permEnum.push('search' + delimiter + 'read');
+  permEnum.push('metricsquery' + delimiter + 'read');
+  permEnum.push('fwlogsquery' + delimiter + 'read');
+
+  Object.keys(versionData).forEach( (version) => {
+    const template = readAndCompileTemplateFile('generate-permissions-enum-ts.hbs');
+    const result = template(permEnum);
+    const outputFileName = version + '/models/generated/UI-permissions-enum.ts';
+    swaggerTSGenerator.utils.ensureFile(outputFileName, result);
+    swaggerTSGenerator.utils.log(`generated ${outputFileName}`);
+  });
 }
 
 function genConfig(version, folderName, swaggerFile, isSearch = false) {

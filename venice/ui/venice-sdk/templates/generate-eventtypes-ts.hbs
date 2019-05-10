@@ -1,0 +1,34 @@
+import { EventsEvent_severity } from "./events";
+
+interface EventType {
+  Name: string,
+  Severity: EventsEvent_severity,
+  Desc: string,
+}
+
+export const categoryToEventType: { [cat: string]: string[] } = {
+  {{#each this}}
+  {{@key}}: [
+  {{#each this}}
+    '{{this.Name}}',
+  {{/each}}
+  ],
+  {{/each}}
+}
+
+export const eventTypes: { [name: string]: EventType } = {
+  {{#each this}}
+  {{#each this}}
+  '{{this.Name}}' : {
+      {{#each this}}
+      {{#ifeq @key 'Severity'}}
+      "Severity": EventsEvent_severity.{{this}},
+      {{/ifeq}}
+      {{#ifnoteq @key 'Severity'}}
+      "{{@key}}": "{{this}}",
+      {{/ifnoteq}}
+      {{/each}}
+  },
+  {{/each}}
+  {{/each}}
+};
