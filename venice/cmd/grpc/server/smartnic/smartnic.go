@@ -445,6 +445,9 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			nicObj.Status = naplesNIC.Status
 			// clear out host pairing so that it will be recomputed
 			nicObj.Status.Host = ""
+			// clear out conditions as we will only accept them from health updates
+			nicObj.Status.Conditions = nil
+
 			// mark as admitted or pending based on current value of Spec.Admit
 			if nicObj.Spec.Admit == true {
 				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_ADMITTED.String()
@@ -456,7 +459,6 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 			} else {
 				nicObj.Status.AdmissionPhase = cluster.SmartNICStatus_PENDING.String()
 				nicObj.Status.AdmissionPhaseReason = "SmartNIC waiting for manual admission"
-				nicObj.Status.Conditions = nil
 			}
 		}
 
