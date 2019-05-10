@@ -110,8 +110,6 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
             entries.push(image);
           });
           this.dataObjects = entries;
-        } else {
-          this.controllerService.invokeErrorToaster('Failed to get rollout images', 'rolloutImages.items is empty. Please contact administrator');
         }
       },
       (error) => {
