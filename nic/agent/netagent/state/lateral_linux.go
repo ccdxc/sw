@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -171,10 +172,6 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 func (na *Nagent) DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error {
 	log.Infof("Deleting Lateral NetAgent objects. MgmtIP: %v DestIP: %v TunnelOp: %v", mgmtIP, destIP, tunnelOp)
 	var objectName = fmt.Sprintf("_internal-%s", destIP)
-	if na.isCollectorKnown(objectName, mgmtIP, destIP, tunnelOp) {
-		log.Infof("The collector %s is known.", destIP)
-		return nil
-	}
 
 	// This will keep it symmetric to CreateLateralNetAgentObjects. This is valid only on real NAPLES
 	mgmtLink := getMgmtLink(mgmtIP)
@@ -183,23 +180,24 @@ func (na *Nagent) DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 		return nil
 	}
 
-	log.Infof("Deleting objects: %v", objectName)
-
 	if tunnelOp {
 		err := na.DeleteTunnel("default", "default", objectName)
-		if err != nil {
+		if err != nil && err != errors.New("tunnel not found") {
 			log.Errorf("Failed to delete the tunnel %v. Err: %v", objectName, err)
 			return fmt.Errorf("failed to delete the tunnel %v. Err: %v", objectName, err)
 		}
 	}
 
 	for _, ep := range na.ListEndpoint() {
-		if ep.Spec.IPv4Address == fmt.Sprintf("%s/32", destIP) {
+		if ep.Spec.IPv4Address == fmt.Sprintf("%s/32", destIP) && ep.Name == objectName {
 			// Lateral objects and not created by Venice
 			if ep.Spec.NetworkName == objectName {
+				log.Infof("Deleting Endpoint: %v", objectName)
 				if err := na.DeleteEndpoint("default", "default", objectName); err != nil {
 					log.Errorf("Failed to delete the endpoint %v. Err: %v", objectName, err)
 				}
+
+				log.Infof("Deleting Network: %v", objectName)
 				if err := na.DeleteNetwork("default", "default", objectName); err != nil {
 					log.Errorf("Failed to delete the network %v. Err: %v", objectName, err)
 				}
