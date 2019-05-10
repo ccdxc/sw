@@ -171,6 +171,7 @@ func (na *Nagent) CreateLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 // TODO clean this up. Currently this is in NetAgent as there is no control plane which does this.
 func (na *Nagent) DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp bool) error {
 	log.Infof("Deleting Lateral NetAgent objects. MgmtIP: %v DestIP: %v TunnelOp: %v", mgmtIP, destIP, tunnelOp)
+	var tunnelKnown bool
 	var objectName = fmt.Sprintf("_internal-%s", destIP)
 
 	// This will keep it symmetric to CreateLateralNetAgentObjects. This is valid only on real NAPLES
@@ -180,7 +181,14 @@ func (na *Nagent) DeleteLateralNetAgentObjects(mgmtIP, destIP string, tunnelOp b
 		return nil
 	}
 
-	if tunnelOp {
+	for _, t := range na.ListTunnel() {
+		if t.Name == objectName {
+			tunnelKnown = true
+		}
+	}
+
+	if tunnelOp && tunnelKnown {
+		// Attempt deletion and error out only if the tunnel is known
 		err := na.DeleteTunnel("default", "default", objectName)
 		if err != nil && err != errors.New("tunnel not found") {
 			log.Errorf("Failed to delete the tunnel %v. Err: %v", objectName, err)
@@ -281,47 +289,54 @@ func (na *Nagent) resolveWithDeadline(ctx context.Context, IP net.IP) string {
 	}
 }
 
-func (na *Nagent) isCollectorKnown(netagentCreatedEPName, mgmtIP, destIP string, createTunnel bool) (known bool) {
+func (na *Nagent) isCollectorKnown(lateralObjName, mgmtIP, destIP string, createTunnel bool) bool {
 	// Find EP
-	log.Infof("Testing for known collector with Name: %v MgmtIP: %v DestIP: %v, TunnelOp: %v", netagentCreatedEPName, mgmtIP, destIP, createTunnel)
+	log.Infof("Testing for known collector with Name: %v MgmtIP: %v DestIP: %v, TunnelOp: %v", lateralObjName, mgmtIP, destIP, createTunnel)
+	var existingEPName string
+	var tunnelKnown bool
+
 	for _, ep := range na.ListEndpoint() {
 		epIP, _, _ := net.ParseCIDR(ep.Spec.IPv4Address)
 		if epIP.String() == destIP {
-			known = true
-			// Collector known -> This can either be venice created or a agent created
-			switch ep.Name {
-			case netagentCreatedEPName:
-				return
-			default:
-				tun := &netproto.Tunnel{
-					TypeMeta: api.TypeMeta{Kind: "Tunnel"},
-					ObjectMeta: api.ObjectMeta{
-						Tenant:    "default",
-						Namespace: "default",
-						Name:      netagentCreatedEPName,
-					},
-					Spec: netproto.TunnelSpec{
-						Type:        "GRE",
-						AdminStatus: "UP",
-						Src:         mgmtIP,
-						Dst:         destIP,
-					},
-				}
-
-				// Create tunnel. Check if a tunnel already exists
-				_, err := na.FindTunnel(tun.ObjectMeta)
-
-				if createTunnel && err != nil {
-					log.Infof("Creating internal tunnel")
-					if err := na.CreateTunnel(tun); err != nil {
-						log.Errorf("Failed to create tunnel. Err: %v", err)
-						known = false
-						return
-					}
-				}
-			}
-			return
+			existingEPName = ep.Name
 		}
 	}
-	return
+
+	for _, t := range na.ListTunnel() {
+		if t.Spec.Dst == destIP {
+			tunnelKnown = true
+		}
+	}
+
+	tun := &netproto.Tunnel{
+		TypeMeta: api.TypeMeta{Kind: "Tunnel"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      lateralObjName,
+		},
+		Spec: netproto.TunnelSpec{
+			Type:        "GRE",
+			AdminStatus: "UP",
+			Src:         mgmtIP,
+			Dst:         destIP,
+		},
+	}
+
+	switch existingEPName {
+	default:
+		// NetAgent Laterally created ep
+		if !tunnelKnown && createTunnel {
+			// Create the backing tunnel
+			log.Infof("NetAgent created lateral EP, but tunnel missing. Creating it instead. Tunnel: %v", tun)
+			if err := na.CreateTunnel(tun); err != nil {
+				log.Errorf("Failed to create tunnel. Err: %v", err)
+				return false
+			}
+		}
+		return true
+	case "":
+		// Mark the collector unknown
+		return false
+	}
 }
