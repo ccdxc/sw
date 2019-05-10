@@ -404,9 +404,10 @@ populate_port_get_response_spec (port_args_t *port_args,
         spec->set_port_speed(
                 linkmgr::sdk_port_speed_to_port_speed_spec(
                                           port_args->port_speed));
+        // user configured admin_state
         spec->set_admin_state(
                 linkmgr::sdk_port_admin_st_to_port_admin_st_spec
-                                          (port_args->admin_state));
+                                          (port_args->user_admin_state));
         spec->set_fec_type(
                 linkmgr::sdk_port_fec_type_to_port_fec_type_spec
                                           (port_args->fec_type));
@@ -420,7 +421,9 @@ populate_port_get_response_spec (port_args_t *port_args,
         spec->set_mac_ch(port_args->mac_ch);
         spec->set_num_lanes(port_args->num_lanes);
         spec->set_mtu(port_args->mtu);
-        spec->set_auto_neg_enable(port_args->auto_neg_enable);
+
+        // user configured AN
+        spec->set_auto_neg_enable(port_args->auto_neg_cfg);
         spec->set_debounce_time(port_args->debounce_time);
 
         // populate oper status
@@ -437,6 +440,7 @@ populate_port_get_response_spec (port_args_t *port_args,
         link_status->set_port_speed(
                 linkmgr::sdk_port_speed_to_port_speed_spec(
                                           port_args->port_speed));
+        link_status->set_auto_neg_enable(port_args->auto_neg_enable);
 
         // transceiver status
         xcvr_status->set_port(port_args->xcvr_event_info.phy_port);
