@@ -20,7 +20,7 @@ export interface RolloutImageOption extends SelectItem {
   model?: RolloutImageLabel;
 }
 
- export enum EnumRolloutOptions {
+export enum EnumRolloutOptions {
   'naplesonly' = 'NAPLES Only',
   'veniceonly' = 'Venice Only',
   'both' = 'Both NAPLES and Venice'
@@ -33,12 +33,14 @@ export interface RolloutImageOption extends SelectItem {
   animations: [Animations],
   encapsulation: ViewEncapsulation.None,
 })
-export class NewrolloutComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit , OnChanges {
+export class NewrolloutComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit, OnChanges {
 
   // Make sure the follow parameter values match above EnumRolloutOptions.keys
   public static ROLLOUTTYPE_NIC_ONLY = 'naplesonly';
   public static ROLLOUTTYPE_NODE_ONLY = 'veniceonly';
   public static ROLLOUTTYPE_BOTH_NIC_NODE = 'both';
+
+  public static ROLLOUT_METADATA_JSON = 'metadata.json';
 
   @ViewChild('orderConstraintsLabelRepeater') ocLabelRepeater: RepeaterComponent;
 
@@ -49,7 +51,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   upgradetypeOptions: SelectItem[] = Utility.convertEnumToSelectItem(RolloutRolloutSpec.propInfo['upgrade-type'].enum);
   rolloutImageOptions: RolloutImageOption[] = [];
 
-  rolloutNicNodeTypes: SelectItem [] = Utility.convertEnumToSelectItem(EnumRolloutOptions);
+  rolloutNicNodeTypes: SelectItem[] = Utility.convertEnumToSelectItem(EnumRolloutOptions);
   selectedRolloutNicNodeTypes: string = NewrolloutComponent.ROLLOUTTYPE_BOTH_NIC_NODE;
 
   orderConstraintslabelData: RepeaterData[] = [];
@@ -58,7 +60,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   @Input() isInline: boolean = false;
   @Input() selectedRolloutData: IRolloutRollout;
   @Input() existingRollouts: RolloutRollout[] = [];
-  @Input() rolloutImages: IObjstoreObjectList ;
+  @Input() rolloutImages: IObjstoreObjectList;
 
   @Output() formClose: EventEmitter<any> = new EventEmitter();
 
@@ -93,8 +95,8 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       }
     ];
     if (!this.newRollout) {
-     // below ngChange() should initialize rolloutData.
-     this.initRolloutData() ;
+      // below ngChange() should initialize rolloutData.
+      this.initRolloutData();
     }
   }
 
@@ -107,6 +109,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       myrollout.spec['scheduled-start-time'] = new Date(myrollout.spec['scheduled-start-time']);
       this.newRollout = new RolloutRollout(myrollout);
       this.newRollout.$formGroup.get(['meta', 'name']).disable();
+      this.newRollout.$formGroup.get(['spec', 'version']).disable(); // disable version until version options are available.
       if (this.newRollout.spec['smartnics-only']) {
         this.selectedRolloutNicNodeTypes = NewrolloutComponent.ROLLOUTTYPE_NIC_ONLY;
       } else {
@@ -171,24 +174,48 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   }
 
   ngOnChanges(changes: SimpleChanges) {
-      this.initRolloutData();
-      const selectedVersion = this.newRollout.spec.version;
-      this.rolloutImageOptions.length = 0;
-      this.rolloutImages.items.forEach(image => {
-        const imageLabel: RolloutImageLabel = image.meta.labels as RolloutImageLabel;
-        if (imageLabel) {
-          // rollout.spec.version is a string, so we set the selectedItem.value to string.
-          const selectedItem: RolloutImageOption = {
-             label: imageLabel.Version,
-             value: imageLabel.Version,
-             model: imageLabel   // we need .model in getImageVersionData() api
-          };
-          this.rolloutImageOptions.push(selectedItem);
-        }
-      });
-      this.computeVersionDescription(selectedVersion);
+    this.initRolloutData();
+    this.populateRolloutVersions();
   }
 
+
+  /**
+   * Per back-end process, once user uploads a "bundle.tar" to Venice.
+   *  https://venice:port/objstore/v1/tenant/default/images/objects result will contain
+   *  [{
+   *   "kind": "Object",
+   *   "meta": {
+   *     "name": "Bundle/0.10.0-130_img/metadata.json", // we are only interested in meta.name.endsWith('metadata.json')
+   *     "generation-id": "",
+   *     "labels": {
+   *       "Releasedata": "",
+   *       "Version": "0.10.0-130"   // get this version
+   *    },
+   * ...
+   * ]
+   */
+  populateRolloutVersions() {
+    const selectedVersion = this.newRollout.spec.version;
+    this.rolloutImageOptions.length = 0;
+    if (this.rolloutImages && this.rolloutImages.items) {
+      this.rolloutImages.items.forEach(image => {
+        if (image.meta.name.endsWith(NewrolloutComponent.ROLLOUT_METADATA_JSON)) {
+          const imageLabel: RolloutImageLabel = image.meta.labels as RolloutImageLabel;
+          if (imageLabel) {
+            // rollout.spec.version is a string, so we set the selectedItem.value to string.
+            const selectedItem: RolloutImageOption = {
+              label: imageLabel.Version,
+              value: imageLabel.Version,
+              model: imageLabel // we need .model in getImageVersionData() api
+            };
+            this.rolloutImageOptions.push(selectedItem);
+          }
+        }
+      });
+      this.newRollout.$formGroup.get(['spec', 'version']).enable(); // enable version dropdown
+    }
+    this.computeVersionDescription(selectedVersion);
+  }
 
   addRollout() {
     this._saveRollout();
@@ -281,26 +308,26 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
 
   computeVersionDescription(selectedVersion: string) {
     const rolloutImageLabel = this.getImageVersionData(selectedVersion);
-    this.versiondescription =  rolloutImageLabel ?  this.buildVersionDisplay(rolloutImageLabel) : '';
+    this.versiondescription = rolloutImageLabel ? this.buildVersionDisplay(rolloutImageLabel) : '';
   }
 
   buildVersionDisplay(rolloutImageLabel: RolloutImageLabel): string {
     let result = '';
-     if (rolloutImageLabel.Description) {
-       result += rolloutImageLabel.Description;
-     }
-     if  (rolloutImageLabel.Releasedate) {
+    if (rolloutImageLabel.Description) {
+      result += rolloutImageLabel.Description;
+    }
+    if (rolloutImageLabel.Releasedate) {
       result += ' Release: ' + rolloutImageLabel.Releasedate;
-     }
-     if (rolloutImageLabel.Environment) {
+    }
+    if (rolloutImageLabel.Environment) {
       result += ' Env: ' + rolloutImageLabel.Environment;
-     }
-     return result;
+    }
+    return result;
   }
 
   getImageVersionData(version: string): RolloutImageLabel {
-    const targets: RolloutImageOption[] = this.rolloutImageOptions.filter( selectItem => {
-       return  (selectItem.value === version);
+    const targets: RolloutImageOption[] = this.rolloutImageOptions.filter(selectItem => {
+      return (selectItem.value === version);
     });
     return (targets && targets.length > 0) ? targets[0].model : null;
   }
