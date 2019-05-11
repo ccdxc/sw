@@ -13,6 +13,7 @@
 
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/apollo/framework/api_base.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
 // default drop/blackhole nexthop (dataplane drops pkts when this nh is hit)
@@ -31,7 +32,7 @@ class tep_impl;
 class mapping_impl;
 
 /// \brief    state maintained for teps
-class tep_impl_state : public obj_base {
+class tep_impl_state : public state_base {
 public:
     // constructor
     tep_impl_state(pds_state *state);

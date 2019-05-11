@@ -12,8 +12,9 @@
 #define __APOLLO_IMPL_STATEHPP__
 
 #include "nic/sdk/lib/table/tcam/tcam.hpp"
-#include "nic/apollo/framework/obj_base.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/sdk/lib/table/tcam/tcam.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
@@ -30,7 +31,7 @@ class apollo_impl;
 #define MAX_KEY_TUNNELED_TBL_ENTRIES 3
 
 /// \brief    pipeline global state
-class apollo_impl_state : public obj_base {
+class apollo_impl_state : public state_base {
 public:
     // constructor
     apollo_impl_state(pds_state *state);

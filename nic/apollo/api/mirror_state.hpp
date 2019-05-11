@@ -15,16 +15,17 @@
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/mirror.hpp"
 
 namespace api {
 
- /// \defgroup PDS_MIRROR_SESSION_STATE - mirror session state functionality
- /// \ingroup PDS_MIRROR
- /// @{
+/// \defgroup PDS_MIRROR_SESSION_STATE - mirror session state functionality
+/// \ingroup PDS_MIRROR
+/// @{
 
 /// \brief    state maintained for mirror sessions
-class mirror_session_state : public obj_base {
+class mirror_session_state : public state_base {
 public:
 
     /// \brief    constructor

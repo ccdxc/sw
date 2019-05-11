@@ -12,6 +12,7 @@
 #define __MIRROR_IMPL_STATE_HPP__
 
 #include "nic/apollo/framework/api_base.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
@@ -25,7 +26,7 @@ namespace impl {
 class mirror_impl;
 
 /// \brief    state maintained for mirror sessions
-class mirror_impl_state : public obj_base {
+class mirror_impl_state : public state_base {
 public:
     ///< constructor
     mirror_impl_state(pds_state *state);

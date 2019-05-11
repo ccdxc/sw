@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/sdk/lib/indexer/indexer.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/vpc.hpp"
 
 namespace api {
@@ -23,7 +24,7 @@ namespace api {
 /// @{
 
 /// \brief    state maintained for vpcs
-class vpc_state : public obj_base {
+class vpc_state : public state_base {
 public:
     /// \brief constructor
     vpc_state();

@@ -268,7 +268,7 @@ private:
         batch_ctxt_.dirty_obj_list.push_back(api_obj);
     }
 
-    /// \brief Del given api object from dirty list of the API batch
+    /// \brief Delete given api object from dirty list of the API batch
     /// \param[in] it iterator position of api obj to be deleted
     /// \param[in] api_obj API object being processed
     void del_from_dirty_list_(dirty_obj_list_t::iterator it,
@@ -281,7 +281,7 @@ private:
     /// \brief Add given api object to dependent/puppet object list if its not
     //         in the dirty object list and dependent object list already
     /// \param[in] api_obj API object being processed
-    sdk_ret_t add_dep_obj_(api_base *api_obj, api_op_t api_op) {
+    sdk_ret_t add_to_deps_list_(api_base *api_obj, api_op_t api_op) {
         if (api_obj->in_dirty_list()) {
             return SDK_RET_OK;
         }
@@ -291,6 +291,16 @@ private:
         api_obj->set_in_deps_list();
         batch_ctxt_.dep_obj_map[api_obj] = api_op;
         batch_ctxt_.dep_obj_list.push_back(api_obj);
+    }
+
+    /// \brief Delete given api object from dependent/puppet object list
+    /// \param[in] it iterator position of api obj to be deleted
+    /// \param[in] api_obj API object being processed
+    void del_from_deps_list_(dirty_obj_list_t::iterator it,
+                             api_base *api_obj) {
+        batch_ctxt_.dep_obj_list.erase(it);
+        batch_ctxt_.dep_obj_map.erase(api_obj);
+        api_obj->clear_in_deps_list();
     }
 
 private:

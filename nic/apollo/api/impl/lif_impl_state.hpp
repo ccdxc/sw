@@ -13,6 +13,7 @@
 
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/sdk/lib/ht/ht.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
 
@@ -27,7 +28,7 @@ namespace impl {
 class lif_impl;
 
 ///< \brief    state maintained for lifs
-class lif_impl_state : public obj_base {
+class lif_impl_state : public state_base {
 public:
     ///< \brief    constructor
     lif_impl_state(pds_state *state);

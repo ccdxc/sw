@@ -13,6 +13,7 @@
 
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/device.hpp"
 
 namespace api {
@@ -22,7 +23,7 @@ namespace api {
 /// @{
 
 /// \brief    state maintained for devices
-class device_state : public obj_base {
+class device_state : public state_base {
 public:
     /// \brief    constructor
     device_state() {

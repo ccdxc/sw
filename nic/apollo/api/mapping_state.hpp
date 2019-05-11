@@ -10,6 +10,7 @@
 #define __MAPPING_STATE_HPP__
 
 #include "nic/sdk/lib/slab/slab.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/mapping.hpp"
 
 namespace api {
@@ -23,7 +24,7 @@ namespace api {
 /**
  * @brief    state maintained for MAPPINGs
  */
-class mapping_state : public obj_base {
+class mapping_state : public state_base {
 public:
     /**
      * @brief    constructor

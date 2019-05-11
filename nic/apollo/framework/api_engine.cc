@@ -35,7 +35,7 @@ api_params_slab (void)
 
 sdk_ret_t
 obj_ctxt_t::add_dep_obj(api_base *api_obj, api_op_t api_op) {
-    g_api_engine.add_dep_obj_(api_obj, api_op);
+    g_api_engine.add_to_deps_list_(api_obj, api_op);
 }
 
 api_op_t

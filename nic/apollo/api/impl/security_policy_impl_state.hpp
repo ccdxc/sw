@@ -11,6 +11,7 @@
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/sdk/lib/table/hash/hash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
@@ -29,7 +30,7 @@ class security_policy_impl;
 /**
  * @brief    state maintained for security policies
  */
-class security_policy_impl_state : public obj_base {
+class security_policy_impl_state : public state_base {
 public:
     /**< @brief    constructor */
     security_policy_impl_state(pds_state *state);

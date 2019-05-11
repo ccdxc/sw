@@ -11,6 +11,7 @@
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
 #include "nic/sdk/lib/table/hash/hash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
 namespace api {
@@ -28,7 +29,7 @@ class route_table_impl;
 /**
  * @brief    state maintained for route tables
  */
-class route_table_impl_state : public obj_base {
+class route_table_impl_state : public state_base {
 public:
     /**< @brief    constructor */
     route_table_impl_state(pds_state *state);

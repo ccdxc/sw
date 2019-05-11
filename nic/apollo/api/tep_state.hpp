@@ -13,6 +13,7 @@
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/tep.hpp"
 
 namespace api {
@@ -26,7 +27,7 @@ namespace api {
 /**
  * @brief    state maintained for teps
  */
-class tep_state : public obj_base {
+class tep_state : public state_base {
 public:
     /**
      * @brief    constructor

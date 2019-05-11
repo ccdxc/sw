@@ -11,6 +11,7 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/sdk/lib/ht/ht.hpp"
+#include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/policy.hpp"
 
 namespace api {
@@ -24,7 +25,7 @@ namespace api {
 /**
  * @brief    state maintained for security policies
  */
-class policy_state : public obj_base {
+class policy_state : public state_base {
 public:
     /**
      * @brief    constructor
