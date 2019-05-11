@@ -140,8 +140,17 @@ public:
     /// \brief Clone this object and return cloned object
     /// \param[in]    api_ctxt API context carrying object related configuration
     /// \return       new object instance of current object
+    // TODO: at this is point, clone is not really a clone, it just gets a new
+    //       instance of the object
     virtual api_base *clone(api_ctxt_t *api_ctxt) {
         return factory(api_ctxt);
+    }
+
+    /// \brief Clone this object and return cloned object
+    /// \param[in] obj_ctxt Transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) {
+        return SDK_RET_INVALID_OP;
     }
 
     /// \brief Mark the object as dirty
@@ -152,6 +161,15 @@ public:
 
     /// \brief Clear the dirty bit on this object
     void clear_in_dirty_list(void) { in_dirty_list_ = false; }
+
+    /// \brief Mark the object as dependent object
+    void set_in_deps_list(void) { in_deps_list_ = true; }
+
+    /// \brief Returns true if the object is in dependent list
+    bool in_deps_list(void) const { return in_deps_list_; }
+
+    /// \brief Clear the dependent object bit on this object
+    void clear_in_deps_list(void) { in_deps_list_ = false; }
 
     /// \brief Return true if this is 'stateless' object
     bool stateless(void) { return stateless_; }
@@ -167,11 +185,12 @@ public:
 
 protected:
     bool in_dirty_list_;    ///< True if object is in the dirty list
+    bool in_deps_list_;     ///< True if object is in dependent object list
     bool stateless_;        ///< True this object doesn't go into any dbs
 } __PACK__;
 
 }    // namespace api
 
 using api::api_base;
- 
+
 #endif    // __FRAMEWORK_API_BASE_HPP__

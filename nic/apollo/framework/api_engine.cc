@@ -33,6 +33,11 @@ api_params_slab (void)
     return g_api_engine.api_params_slab();
 }
 
+sdk_ret_t
+obj_ctxt_t::add_dep_obj(api_base *api_obj, api_op_t api_op) {
+    g_api_engine.add_dep_obj_(api_obj, api_op);
+}
+
 api_op_t
 api_engine::api_op_(api_op_t old_op, api_op_t new_op) {
     return dedup_api_op_[old_op][new_op];
@@ -353,6 +358,14 @@ api_engine::program_config_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 api_engine::add_deps_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
+    if (obj_ctxt->api_op != API_OP_UPDATE) {
+        // currently we need to add object dependencies only when a object is
+        // updated, however, it is possible in future that add or delete of
+        // an object might impact other objects as well ... current assumption
+        // is that it is handled in the agent when such a case arises
+        return SDK_RET_OK;
+    }
+    api_obj->add_deps(obj_ctxt);
     return SDK_RET_OK;
 }
 

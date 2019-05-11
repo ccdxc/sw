@@ -54,13 +54,17 @@ typedef enum api_batch_stage_e {
 ///   we should return the api_params_t memory back to slab
 typedef struct obj_ctxt_s obj_ctxt_t;
 struct obj_ctxt_s {
-    api_op_t      api_op;         ///< De-duped/compressed API opcode
-    obj_id_t      obj_id;         ///< Object identifier
-    api_params_t  *api_params;    ///< API specific parameters
-    api_base      *cloned_obj;    ///< Cloned object, for UPD processing
-    void          *cb_ctxt;       ///< Object handlers can save & free state
-                                  ///< across callbacks here and is opaque to
-                                  ///< the api engine
+    api_op_t        api_op;         ///< De-duped/compressed API opcode
+    obj_id_t        obj_id;         ///< Object identifier
+    api_params_t    *api_params;    ///< API specific parameters
+    api_base        *cloned_obj;    ///< Cloned object, for UPD processing
+
+    ///< Object handlers can save arbitrary state across callbacks here and it
+    ///< is opaque to the api engine
+    struct {
+        void        *cb_ctxt;
+        uint64_t    upd_bmap;
+    };
     uint8_t rsvd_rscs:1;          ///< True if resource reservation stage is done
     uint8_t hw_dirty:1;           ///< True if hw entries are updated,
                                   ///< but not yet activated
@@ -83,10 +87,20 @@ struct obj_ctxt_s {
         }
         return false;
     }
+    sdk_ret_t add_dep_obj(api_base *obj, api_op_t api_op);
 };
 
+// objects on which add/del/upd API calls are issued are put in a dirty
+// list/map by API framework to de-dup potentially multiple API operations
+// issued by caller in same batch ... these are called master objects
 typedef unordered_map<api_base *, obj_ctxt_t> dirty_obj_map_t;
 typedef list<api_base *> dirty_obj_list_t;
+
+// objects affected (i.e. dirtied) by add/del/upd operations on other objects
+// (aka. master objects) are called puppet/dependent objects and are maintained
+// separately; normally these objects need to be either reprogrammed or deleted
+typedef unordered_map<api_base *, api_op_t> dep_obj_map_t;
+typedef list<api_base *> dep_obj_list_t;
 
 /// \brief Batch context, which is a list of all API contexts
 typedef struct api_batch_ctxt_s {
@@ -102,6 +116,8 @@ typedef struct api_batch_ctxt_s {
     // another)
     dirty_obj_map_t     dirty_obj_map;     ///< dirty object map
     dirty_obj_list_t    dirty_obj_list;    ///< dirty object list
+    dep_obj_map_t       dep_obj_map;       ///< dependent object map
+    dep_obj_list_t      dep_obj_list;      ///< dependent object list
 } api_batch_ctxt_t;
 
 /// \brief Encapsulation for all API processing framework
@@ -262,7 +278,24 @@ private:
         api_obj->clear_in_dirty_list();
     }
 
+    /// \brief Add given api object to dependent/puppet object list if its not
+    //         in the dirty object list and dependent object list already
+    /// \param[in] api_obj API object being processed
+    sdk_ret_t add_dep_obj_(api_base *api_obj, api_op_t api_op) {
+        if (api_obj->in_dirty_list()) {
+            return SDK_RET_OK;
+        }
+        if (api_obj->in_deps_list()) {
+            return SDK_RET_OK;
+        }
+        api_obj->set_in_deps_list();
+        batch_ctxt_.dep_obj_map[api_obj] = api_op;
+        batch_ctxt_.dep_obj_list.push_back(api_obj);
+    }
+
 private:
+    friend obj_ctxt_t;
+
     /// \brief API operation de-dup matrix
     api_op_t dedup_api_op_[API_OP_INVALID][API_OP_INVALID] = {
         // API_OP_NONE
