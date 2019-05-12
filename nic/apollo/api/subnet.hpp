@@ -108,7 +108,15 @@ public:
                                 obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          initiate delay deletion of this object
+    /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t delay_delete(void) override;
+
+    /// \brief          add all objects that may be affected if this object is
+    ///                 updated to framework's object dependency list
+    /// \param[in]      obj_ctxt    transient state associated with this API
+    ///                             processing
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
@@ -144,7 +152,13 @@ public:
         return false;
     }
 
+    /// \brief          return router mac of this subnet
+    /// \return         virtual router (VR) mac of this subnet
     mac_addr_t &vr_mac(void) { return vr_mac_; }
+
+    /// \brief          return the subnet key/id
+    /// \return         key/id of the subnet
+    pds_subnet_key_t key(void) const { return key_; }
 
     /// \brief          return h/w index for this subnet
     /// \return         h/w table index for this subnet

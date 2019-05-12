@@ -59,6 +59,11 @@ vnic_state::vnic_find(pds_vnic_key_t *vnic_key) const {
     return (vnic_entry *)(vnic_ht_->lookup(vnic_key));
 }
 
+sdk_ret_t
+vnic_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
+    return vnic_ht_->walk(walk_cb, ctxt);
+}
+
 /// \@}
 
 }    // namespace api

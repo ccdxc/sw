@@ -73,6 +73,12 @@ public:
      */
     vnic_entry *vnic_find(pds_vnic_key_t *vnic_key) const;
 
+    /// \brief API to walk all the db elements
+    /// \param[in] walk_cb    callback to be invoked for every node
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t walk(state_walk_cb_t walk_cb, void *ctxt) override;
+
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
 private:

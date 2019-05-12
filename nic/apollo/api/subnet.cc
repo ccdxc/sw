@@ -146,4 +146,22 @@ subnet_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_SUBNET, this);
 }
 
+static bool
+vnic_upd_walk_cb_(void *api_obj, void *ctxt) {
+    vnic_entry *vnic = (vnic_entry *)api_obj;
+    subnet_entry *subnet = (subnet_entry *)ctxt;
+
+    if (vnic->subnet().id == subnet->key().id) {
+        // TODO: !!
+        //fwork::add_deps(vnic);
+    }
+    return false;
+}
+
+sdk_ret_t
+subnet_entry::add_deps(obj_ctxt_t *obj_ctxt) {
+    vnic_db()->walk(vnic_upd_walk_cb_, this);
+    return SDK_RET_ERR;
+}
+
 }    // namespace api
