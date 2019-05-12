@@ -31,7 +31,7 @@ public:
     impl_base() {}
 
     /// \brief Destructor */
-    ~impl_base() {}
+    virtual ~impl_base() {}
 
     /// \brief One time init function that must be called during bring up
     ///
@@ -169,5 +169,5 @@ private:
 }    // namespace api
 
 using api::impl::impl_base;
- 
+
 #endif    // __FRAMEWORK_IMPL_BASE_HPP__

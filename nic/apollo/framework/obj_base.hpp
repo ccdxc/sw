@@ -15,6 +15,12 @@ namespace api {
 
 /// \brief Base class for all objects
 class obj_base {
+public:
+    /// \brief constructor
+    obj_base(){};
+
+    /// \brief destructor
+    virtual ~obj_base() {};
 };
 
 }    // namespace api

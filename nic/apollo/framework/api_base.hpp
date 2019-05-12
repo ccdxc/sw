@@ -30,7 +30,7 @@ public:
     };
 
      /// \brief Destructor
-    ~api_base(){};
+    virtual ~api_base(){};
 
     /// \brief Factory method to instantiate an object
     /// \param[in] api_ctxt API context carrying object related configuration

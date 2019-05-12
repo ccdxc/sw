@@ -291,6 +291,7 @@ private:
         api_obj->set_in_deps_list();
         batch_ctxt_.dep_obj_map[api_obj] = api_op;
         batch_ctxt_.dep_obj_list.push_back(api_obj);
+        return SDK_RET_OK;
     }
 
     /// \brief Delete given api object from dependent/puppet object list
