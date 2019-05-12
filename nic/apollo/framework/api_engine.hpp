@@ -87,7 +87,10 @@ struct obj_ctxt_s {
         }
         return false;
     }
-    sdk_ret_t add_dep_obj(api_base *obj, api_op_t api_op);
+    /// \brief    add the given api object to dependency list, if it is not
+    ///           already present in the list and recursively add the objects
+    ///           that get effected if this object is updated
+    sdk_ret_t add_deps(api_base *obj, api_op_t api_op);
 };
 
 // objects on which add/del/upd API calls are issued are put in a dirty
@@ -281,12 +284,13 @@ private:
     /// \brief Add given api object to dependent/puppet object list if its not
     //         in the dirty object list and dependent object list already
     /// \param[in] api_obj API object being processed
+    /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t add_to_deps_list_(api_base *api_obj, api_op_t api_op) {
         if (api_obj->in_dirty_list()) {
-            return SDK_RET_OK;
+            return SDK_RET_ENTRY_EXISTS;
         }
         if (api_obj->in_deps_list()) {
-            return SDK_RET_OK;
+            return SDK_RET_ENTRY_EXISTS;
         }
         api_obj->set_in_deps_list();
         batch_ctxt_.dep_obj_map[api_obj] = api_op;

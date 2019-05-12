@@ -18,6 +18,11 @@
 
 namespace api {
 
+typedef struct subnet_update_ctxt_s {
+    subnet_entry *subnet;
+    obj_ctxt_t *obj_ctxt;
+} __PACK__ subnet_update_ctxt_t;
+
 subnet_entry::subnet_entry() {
     // SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     v4_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
@@ -149,19 +154,22 @@ subnet_entry::delay_delete(void) {
 static bool
 vnic_upd_walk_cb_(void *api_obj, void *ctxt) {
     vnic_entry *vnic = (vnic_entry *)api_obj;
-    subnet_entry *subnet = (subnet_entry *)ctxt;
+    subnet_update_ctxt_t *upd_ctxt = (subnet_update_ctxt_t *)ctxt;
+    obj_ctxt_t *obj_ctxt = upd_ctxt->obj_ctxt;
 
-    if (vnic->subnet().id == subnet->key().id) {
-        // TODO: !!
-        //fwork::add_deps(vnic);
+    if (vnic->subnet().id == upd_ctxt->subnet->key().id) {
+        obj_ctxt->add_deps(vnic, API_OP_UPDATE);
     }
     return false;
 }
 
 sdk_ret_t
 subnet_entry::add_deps(obj_ctxt_t *obj_ctxt) {
-    vnic_db()->walk(vnic_upd_walk_cb_, this);
-    return SDK_RET_ERR;
+    subnet_update_ctxt_t upd_ctxt = { 0 };
+
+    upd_ctxt.subnet = this;
+    upd_ctxt.obj_ctxt = obj_ctxt;
+    return vnic_db()->walk(vnic_upd_walk_cb_, &upd_ctxt);
 }
 
 }    // namespace api

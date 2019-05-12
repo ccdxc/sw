@@ -34,8 +34,14 @@ api_params_slab (void)
 }
 
 sdk_ret_t
-obj_ctxt_t::add_dep_obj(api_base *api_obj, api_op_t api_op) {
-    return g_api_engine.add_to_deps_list_(api_obj, api_op);
+obj_ctxt_t::add_deps(api_base *api_obj, api_op_t api_op) {
+    sdk_ret_t ret;
+
+    ret = g_api_engine.add_to_deps_list_(api_obj, api_op);
+    if (ret == SDK_RET_OK) {
+        api_obj->add_deps(this);
+    }
+    return SDK_RET_OK;
 }
 
 api_op_t
