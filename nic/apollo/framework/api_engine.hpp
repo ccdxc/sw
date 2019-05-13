@@ -201,6 +201,13 @@ private:
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t pre_process_api_(api_ctxt_t *api_ctxt);
 
+    /// \brief Allocate any sw & hw resources for the given object and operation
+    ///
+    /// \param[in] api_obj API object being processed
+    /// \param[in] obj_ctxt Transient information maintained to process the API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
+
     /// \brief Process given object from the dirty list
     /// This is done by doing add/update of corresponding h/w entries, based
     /// on accumulated configuration without activating the epoch
@@ -241,24 +248,23 @@ private:
 
     /// \brief Pre-process all API calls in a given batch
     /// Form a dirty list of effected obejcts as a result
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t pre_process_stage_(void);
 
-    /// \brief Allocate any sw & hw resources for the given object and operation
-    ///
-    /// \param[in] api_obj API object being processed
-    /// \param[in] obj_ctxt Transient information maintained to process the API
+    /// \brief compute list of affected objects that need to reprogrammed
+    ///        because of API operations on dirty list objects
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t reserve_resources_(api_base *api_obj, obj_ctxt_t *obj_ctxt);
+    sdk_ret_t obj_dependency_computation_stage_(void);
+
+    /// \brief reserve all needed resources for programming the config
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t resource_reservation_stage_(void);
 
     /// \brief Datapath table update stage
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t program_config_stage_(void);
 
     /// \brief Final epoch activation stage
-    ///
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_config_stage_(void);
 

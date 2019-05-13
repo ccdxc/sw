@@ -77,6 +77,19 @@ public:
         return sdk::SDK_RET_INVALID_OP;
     }
 
+    /// \brief re-program config in the hardware
+    /// re-program all hardware tables relevant to this object except stage 0
+    /// table(s), if any and this reprogramming must be based on existing state
+    /// and any of the state present in the dirty object list (like clone
+    /// objects etc.)
+    /// \param[in] api_op API operation
+    /// \return #SDK_RET_OK on success, failure status code on error
+    /// NOTE: this method is called when an object is in the dependent/puppet
+    ///       object list
+    virtual sdk_ret_t reprogram_config(api_op_t api_op) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
+
     /// \brief Free hardware resources used by this object, if any
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t release_resources(void) {
@@ -112,6 +125,18 @@ public:
         return sdk::SDK_RET_INVALID_OP;
     }
 
+    /// \brief re-activate config in the hardware
+    /// re-activate all hardware stage 0 tables relevant to this object, if any
+    /// and this reactivation must be based on existing state and any of the
+    /// state present in the dirty object list (like clone objects etc.)
+    /// \param[in] api_op API operation
+    /// \return #SDK_RET_OK on success, failure status code on error
+    /// NOTE: this method is called when an object is in the dependent/puppet
+    ///       object list
+    virtual sdk_ret_t reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
+        return sdk::SDK_RET_INVALID_OP;
+    }
+
     /// \brief Update software database with new object
     /// This method is called on new object that needs to replace the
     /// old version of the object in the DBs
@@ -136,6 +161,16 @@ public:
     /// \remark
     ///   - TODO: skip_dirty is on shaky ground, will try to get rid of it later
     static api_base *find_obj(api_ctxt_t *api_ctxt, bool skip_dirty=false);
+
+    /// \brief Find an object based on the object id & key information
+    /// \param[in] obj_id    object id
+    /// \param[in] key       pointer to the key of the object
+    /// \remark
+    ///   - This API will try to find the object from the dirty list and
+    ///     dependency list and return that first (potentially a cloned obj),
+    ///     if its not in these lists the original object from db will be
+    ///     returned as-is
+    /// static api_base *find_obj(api_obj_id_t obj_id, void *key);
 
     /// \brief Clone this object and return cloned object
     /// \param[in]    api_ctxt API context carrying object related configuration

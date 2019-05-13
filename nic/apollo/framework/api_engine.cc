@@ -371,18 +371,40 @@ api_engine::add_deps_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // is that it is handled in the agent when such a case arises
         return SDK_RET_OK;
     }
-    api_obj->add_deps(obj_ctxt);
-    return SDK_RET_OK;
+    return api_obj->add_deps(obj_ctxt);
 }
 
 sdk_ret_t
-api_engine::program_config_stage_(void) {
+api_engine::resource_reservation_stage_(void)
+{
     sdk_ret_t    ret;
 
     SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_PRE_PROCESS),
                       sdk::SDK_RET_INVALID_ARG);
+    // walk over all the dirty objects and reserve resources, if needed
+    batch_ctxt_.stage = API_BATCH_STAGE_RESERVE_RESOURCES;
+    for (auto it = batch_ctxt_.dirty_obj_list.begin();
+         it != batch_ctxt_.dirty_obj_list.end(); ++it) {
+        ret = reserve_resources_(*it, &batch_ctxt_.dirty_obj_map[*it]);
+        if (ret != SDK_RET_OK) {
+            goto error;
+        }
+    }
+    return SDK_RET_OK;
 
-    PDS_TRACE_INFO("Starting object dependency evaluation phase");
+error:
+
+    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+    return ret;
+}
+
+sdk_ret_t
+api_engine::obj_dependency_computation_stage_(void)
+{
+    sdk_ret_t    ret;
+
+    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_RESERVE_RESOURCES),
+                      sdk::SDK_RET_INVALID_ARG);
     // walk over all the dirty objects and make a list of objects that are
     // effected because of each dirty object
     batch_ctxt_.stage = API_BATCH_STAGE_OBJ_DEPENDENCY;
@@ -393,22 +415,22 @@ api_engine::program_config_stage_(void) {
             goto error;
         }
     }
-    PDS_TRACE_INFO("Finished object dependency evaluation phase");
+    return SDK_RET_OK;
 
-    PDS_TRACE_INFO("Starting resource reservation phase");
-    // walk over all the dirty objects and reserve resources, if needed
-    batch_ctxt_.stage = API_BATCH_STAGE_RESERVE_RESOURCES;
-    for (auto it = batch_ctxt_.dirty_obj_list.begin();
-         it != batch_ctxt_.dirty_obj_list.end(); ++it) {
-        ret = reserve_resources_(*it, &batch_ctxt_.dirty_obj_map[*it]);
-        if (ret != SDK_RET_OK) {
-            goto error;
-        }
-    }
-    PDS_TRACE_INFO("Finished resource reservation phase");
+error:
+
+    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+    return ret;
+}
+
+sdk_ret_t
+api_engine::program_config_stage_(void) {
+    sdk_ret_t    ret;
+
+    SDK_ASSERT_RETURN((batch_ctxt_.stage == API_BATCH_STAGE_OBJ_DEPENDENCY),
+                      sdk::SDK_RET_INVALID_ARG);
 
     // walk over all the dirty objects and program hw, if any
-    PDS_TRACE_INFO("Starting program config phase");
     batch_ctxt_.stage = API_BATCH_STAGE_PROGRAM_CONFIG;
     for (auto it = batch_ctxt_.dirty_obj_list.begin();
          it != batch_ctxt_.dirty_obj_list.end(); ++it) {
@@ -417,7 +439,15 @@ api_engine::program_config_stage_(void) {
             goto error;
         }
     }
-    PDS_TRACE_INFO("Finished program config phase");
+
+    // walk over all the dependent objects and reprogram hw, if any
+    for (auto it = batch_ctxt_.dep_obj_list.begin();
+         it != batch_ctxt_.dep_obj_list.end(); ++it) {
+        ret = (*it)->reprogram_config(batch_ctxt_.dep_obj_map[*it]);
+        if (ret != SDK_RET_OK) {
+            goto error;
+        }
+    }
     return SDK_RET_OK;
 
 error:
@@ -515,6 +545,7 @@ api_engine::activate_config_stage_(void) {
     obj_ctxt_t                    octxt;
     dirty_obj_list_t::iterator    next_it;
 
+    // walk over all the dirty objects and activate their config in hw, if any
     batch_ctxt_.stage = API_BATCH_STAGE_CONFIG_ACTIVATE;
     for (auto it = batch_ctxt_.dirty_obj_list.begin(), next_it = it;
              it != batch_ctxt_.dirty_obj_list.end(); it = next_it) {
@@ -523,7 +554,22 @@ api_engine::activate_config_stage_(void) {
         ret = activate_config_(it, *it, &octxt);
         SDK_ASSERT(ret == SDK_RET_OK);
     }
+
+    // walk over all the dependent objects & re-activate their config hw, if any
+    for (auto it = batch_ctxt_.dep_obj_list.begin();
+         it != batch_ctxt_.dep_obj_list.end(); ++it) {
+        ret = (*it)->reactivate_config(batch_ctxt_.epoch,
+                                       batch_ctxt_.dep_obj_map[*it]);
+        if (ret != SDK_RET_OK) {
+            goto error;
+        }
+    }
     return SDK_RET_OK;
+
+error:
+
+    batch_ctxt_.stage = API_BATCH_STAGE_ABORT;
+    return ret;
 }
 
 sdk_ret_t
@@ -661,16 +707,37 @@ api_engine::batch_commit(void) {
     if (ret != SDK_RET_OK) {
         return ret;
     }
+    PDS_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
+                   batch_ctxt_.dirty_obj_list.size(),
+                   batch_ctxt_.dirty_obj_map.size());
 
     // start table mgmt. lib transaction
     impl_base::pipeline_impl()->table_transaction_begin();
 
+    PDS_TRACE_INFO("Starting resource reservation phase");
+    ret = resource_reservation_stage_();
+    PDS_TRACE_INFO("Finished resource reservation phase");
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // walk over the dirty object list and compute the (aka. puppet) objects
+    // that could be effected because of dirty list objects
+    PDS_TRACE_INFO("Starting object dependency computation stage for epoch %u",
+                   batch_ctxt_.epoch);
+    ret = obj_dependency_computation_stage_();
+    PDS_TRACE_INFO("Finished object dependency computation stage for epoch %u",
+                   batch_ctxt_.epoch);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    PDS_TRACE_INFO("Dependency object list size %u, map size %u",
+                   batch_ctxt_.dep_obj_list.size(),
+                   batch_ctxt_.dep_obj_map.size());
+
     // walk over the dirty object list, performe the de-duped operation on
     // each object including allocating resources and h/w programming (with the
     // exception of stage 0 programming
-    PDS_TRACE_INFO("Dirty object list size %u, Dirty object map size %u",
-                   batch_ctxt_.dirty_obj_list.size(),
-                   batch_ctxt_.dirty_obj_map.size());
     PDS_TRACE_INFO("Starting program config stage for epoch %u",
                    batch_ctxt_.epoch);
     ret = program_config_stage_();
