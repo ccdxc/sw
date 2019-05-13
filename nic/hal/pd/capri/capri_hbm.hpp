@@ -215,7 +215,10 @@
 #define NVME_TX_SESS_DGSTQ_BASE         "nvme_tx_sess_dgstq_base"
 #define NVME_RX_SESS_XTSQ_BASE          "nvme_rx_sess_xtsq_base"
 #define NVME_RX_SESS_DGSTQ_BASE         "nvme_rx_sess_dgstq_base"
-#define NVME_ACTIVE_SESSION_BITMAP      "nvme_active_session_bitmap"
+#define NVME_TX_XTS_AOL_ARRAY_BASE      "nvme_tx_xts_aol_array_base"
+#define NVME_TX_XTS_IV_ARRAY_BASE       "nvme_tx_xts_iv_array_base"
+#define NVME_RX_XTS_AOL_ARRAY_BASE      "nvme_rx_xts_aol_array_base"
+#define NVME_RX_XTS_IV_ARRAY_BASE       "nvme_rx_xts_iv_array_base"
 #define NVME_TX_NMDPR_RING_BASE         TNMDPR_BIG_TABLE_BASE
 #define NVME_RX_NMDPR_RING_BASE         RNMDPR_BIG_TABLE_BASE
 

@@ -49,6 +49,10 @@ typedef struct nvme_global_info_s {
     uint64_t rx_nmdpr_ring_size;
     uint64_t tx_resourcecb_addr;
     uint64_t rx_resourcecb_addr;
+    uint64_t tx_xts_aol_array_addr;
+    uint64_t tx_xts_iv_array_addr;
+    uint64_t rx_xts_aol_array_addr;
+    uint64_t rx_xts_iv_array_addr;
 
     //tuning params
     uint16_t sess_q_depth;
@@ -208,7 +212,7 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     SDK_ASSERT(max_cmd_context <= nvme_hbm_resource_max(NVME_TYPE_CMD_CONTEXT));
     SDK_ASSERT(tx_max_aol <= nvme_hbm_resource_max(NVME_TYPE_TX_AOL));
     SDK_ASSERT(rx_max_aol <= nvme_hbm_resource_max(NVME_TYPE_RX_AOL));
-    SDK_ASSERT(nvme_hbm_offset(NVME_TYPE_MAX) <= nvme_manager()->MRSize(CAPRI_HBM_REG_NVME));
+    SDK_ASSERT(nvme_hbm_offset(NVME_TYPE_MAX) <= (int)nvme_manager()->MRSize(CAPRI_HBM_REG_NVME));
 
     memset(&g_nvme_global_info, 0, sizeof(g_nvme_global_info));
 
@@ -264,6 +268,18 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     //rx aol ring
     g_nvme_global_info.rx_aol_ring_base = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RX_AOL_RING); 
 
+    //tx aol ring
+    g_nvme_global_info.tx_xts_aol_array_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_TX_XTS_AOL_ARRAY); 
+
+    //tx iv ring
+    g_nvme_global_info.tx_xts_iv_array_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_TX_XTS_IV_ARRAY); 
+
+    //rx aol ring
+    g_nvme_global_info.rx_xts_aol_array_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RX_XTS_AOL_ARRAY); 
+
+    //rx iv ring
+    g_nvme_global_info.rx_xts_iv_array_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RX_XTS_IV_ARRAY); 
+
     HAL_TRACE_DEBUG("nscb_base_addr: {:#x} "
                     "txsessprodcb_base: {:#x}, "
                     "tx_sess_xtsq_base: {:#x}, "
@@ -289,14 +305,20 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
                     "g_nvme_ns_info: {:#x}, " 
                     "cmd_context_ring_base: {:#x}, total_size: {}, "
                     "tx_aol_page_base: {:#x}, tx_aol_ring_base: {:#x}, "
-                    "rx_aol_page_base: {:#x}, rx_aol_ring_base: {:#x}",
+                    "rx_aol_page_base: {:#x}, rx_aol_ring_base: {:#x}, "
+                    "tx_xts_aol_array_addr: {:#x}, tx_xts_iv_array_addr : {:#x}, "
+                    "rx_xts_aol_array_addr: {:#x}, rx_xts_iv_array_addr : {:#x}",
                     g_nvme_global_info.cmd_context_page_base,
                     (uint64_t)g_nvme_ns_info,
                     g_nvme_global_info.cmd_context_ring_base, total_size,
                     g_nvme_global_info.tx_aol_page_base, 
                     g_nvme_global_info.tx_aol_ring_base,
                     g_nvme_global_info.rx_aol_page_base, 
-                    g_nvme_global_info.rx_aol_ring_base);
+                    g_nvme_global_info.rx_aol_ring_base,
+                    g_nvme_global_info.tx_xts_aol_array_addr, 
+                    g_nvme_global_info.tx_xts_iv_array_addr, 
+                    g_nvme_global_info.rx_xts_aol_array_addr, 
+                    g_nvme_global_info.rx_xts_iv_array_addr);
 
     //Fill the ring with cmd context page addresses
     for (index = 0; index < max_cmd_context; index++) {

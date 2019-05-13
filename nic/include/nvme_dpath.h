@@ -5,6 +5,8 @@
 #ifndef _NVME_DPATH_H
 #define _NVME_DPATH_H
 
+#include "nic/sdk/platform/capri/capri_common.hpp"
+
 #define HOSTMEM_PAGE_SIZE  (1 << 12)  //4096 Bytes
 #define MAX_LIFS           2048
 
@@ -287,6 +289,10 @@ typedef struct nvme_aol_s {
     uint8_t pad[128];
 } nvme_aol_t;
 
+typedef struct nvme_iv_s {
+    uint8_t pad[16];
+} nvme_iv_t;
+
 typedef struct nvme_aol_ring_entry_s {
     uint16_t id;
 } nvme_aol_ring_entry_t;
@@ -323,6 +329,10 @@ typedef enum nvme_dpath_ds_type_s {
     NVME_TYPE_TX_SESS_DGSTQ,
     NVME_TYPE_RX_SESS_XTSQ,
     NVME_TYPE_RX_SESS_DGSTQ,
+    NVME_TYPE_TX_XTS_AOL_ARRAY,
+    NVME_TYPE_TX_XTS_IV_ARRAY,
+    NVME_TYPE_RX_XTS_AOL_ARRAY,
+    NVME_TYPE_RX_XTS_IV_ARRAY,
     NVME_TYPE_MAX
 } nvme_dpath_ds_type_t;
      
@@ -348,6 +358,11 @@ static nvme_hbm_alloc_info_t nvme_hbm_alloc_table[] = {
     {NVME_TYPE_TX_SESS_DGSTQ, 512, NVME_TX_SESS_DGSTQ_DEPTH * NVME_TX_SESS_DGSTQ_ENTRY_SIZE},
     {NVME_TYPE_RX_SESS_XTSQ, 512, NVME_RX_SESS_XTSQ_DEPTH * NVME_RX_SESS_XTSQ_ENTRY_SIZE},
     {NVME_TYPE_RX_SESS_DGSTQ, 512, NVME_RX_SESS_DGSTQ_DEPTH * NVME_RX_SESS_DGSTQ_ENTRY_SIZE},
+    //XXX: Dividing the resources by 16 for now. 
+    {NVME_TYPE_TX_XTS_AOL_ARRAY, CAPRI_BARCO_XTS_RING_SLOTS/16, sizeof(nvme_aol_t)},
+    {NVME_TYPE_TX_XTS_IV_ARRAY, CAPRI_BARCO_XTS_RING_SLOTS/16, sizeof(nvme_iv_t)},
+    {NVME_TYPE_RX_XTS_AOL_ARRAY, CAPRI_BARCO_XTS_RING_SLOTS/16, sizeof(nvme_aol_t)},
+    {NVME_TYPE_RX_XTS_IV_ARRAY, CAPRI_BARCO_XTS_RING_SLOTS/16, sizeof(nvme_iv_t)},
 };
 
 static inline int nvme_hbm_offset(int type) {
