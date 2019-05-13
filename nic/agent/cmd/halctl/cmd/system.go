@@ -24,6 +24,23 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 )
 
+// BlueColor    = "\033[1;34m%s\033[0m"
+
+const (
+	// RedColor string in red
+	RedColor = "\u001b[31m%s\u001b[0m"
+	// GreenColor string in green
+	GreenColor = "\u001b[32m%s\u001b[0m"
+	// YellowColor string in yellow
+	YellowColor = "\u001b[33m%s\u001b[0m"
+	// BlueColor string in blue
+	BlueColor = "\u001b[34m%s\u001b[0m"
+	// MagentaColor string in magenta
+	MagentaColor = "\u001b[35m%s\u001b[0m"
+	// CyanColor string in cyan
+	CyanColor = "\u001b[36m%s\u001b[0m"
+)
+
 var systemShowCmd = &cobra.Command{
 	Use:   "system",
 	Short: "show system information",
@@ -40,9 +57,46 @@ var systemClockShowCmd = &cobra.Command{
 
 var systemStatsShowCmd = &cobra.Command{
 	Use:   "statistics",
-	Short: "show system statistics [fte | fte-txrx | table | api | pb | pb_det | intf | all] (Default: all)",
-	Long:  "show system statistics [fte | fte-txrx | table | api | pb | pb_det | intf | all] (Default: all)",
+	Short: "show system statistics [fte | fte-txrx | table | api | pb | intf | all] (Default: all)",
+	Long:  "show system statistics [fte | fte-txrx | table | api | pb | intf | all] (Default: all)",
 	Run:   systemStatsShowCmdHandler,
+}
+
+var systesPbStatsShowCmd = &cobra.Command{
+	Use:   "pb",
+	Short: "show system statistics pb",
+	Long:  "show system statistics pb",
+	Run:   systemPbStatsShowCmdHandler,
+}
+
+var systesPbQueueStatsShowCmd = &cobra.Command{
+	Use:   "queue",
+	Short: "show system statistics pb queue",
+	Long:  "show system statistics pb queue",
+	Run:   systemPbQueueStatsShowCmdHandler,
+}
+
+/*
+var systesPbIQStatsShowCmd = &cobra.Command{
+	Use:   "iq",
+	Short: "show system statistics pb iq",
+	Long:  "show system statistics pb iq",
+	Run:   systemPbIQStatsShowCmdHandler,
+}
+
+var systesPbOQStatsShowCmd = &cobra.Command{
+	Use:   "oq",
+	Short: "show system statistics pb oq",
+	Long:  "show system statistics pb oq",
+	Run:   systemPbOQStatsShowCmdHandler,
+}
+*/
+
+var systesPbDetailStatsShowCmd = &cobra.Command{
+	Use:   "detail",
+	Short: "show system statistics pb detail",
+	Long:  "show system statistics pb detail",
+	Run:   systemPbDetailStatsShowCmdHandler,
 }
 
 var systemDropStatsShowCmd = &cobra.Command{
@@ -101,6 +155,13 @@ func init() {
 	systemShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	threadShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	queueStatsCmd.PersistentFlags().Uint32Var(&portNum, "port", 0, "Port number")
+
+	// PB Stats
+	systemStatsShowCmd.AddCommand(systesPbStatsShowCmd)
+	systesPbStatsShowCmd.AddCommand(systesPbDetailStatsShowCmd)
+	systesPbStatsShowCmd.AddCommand(systesPbQueueStatsShowCmd)
+	// systesPbStatsShowCmd.AddCommand(systesPbIQStatsShowCmd)
+	// systesPbStatsShowCmd.AddCommand(systesPbOQStatsShowCmd)
 }
 
 func handleSystemQueueStatsCmd(cmd *cobra.Command, args []string, inputQueue bool, outputQueue bool) {
@@ -445,6 +506,7 @@ func systemPbDropStatsShowPortEntry(entry *halproto.PacketBufferPortStats) {
 
 // InputQueueInfo defines the input queue details
 type InputQueueInfo struct {
+	queueIndex      uint32
 	bufferOccupancy uint32
 	peakOccupancy   uint32
 	portMonitor     uint64
@@ -453,6 +515,7 @@ type InputQueueInfo struct {
 
 // OutputQueueInfo defines the output queue details
 type OutputQueueInfo struct {
+	queueIndex  uint32
 	queueDepth  uint32
 	portMonitor uint64
 	valid       bool
@@ -580,6 +643,642 @@ func systemPbOccupancyOqCountersPopulate(portStats *halproto.PacketBufferPortSta
 	}
 }
 
+// DmaPort dma port
+const DmaPort = 9
+
+// P4igPort P4 ingress port
+const P4igPort = 11
+
+// P4egPort P4 egress port
+const P4egPort = 10
+
+// UplinkPort0 uplink 0
+const UplinkPort0 = 0
+
+// UplinkPort1 uplink 1
+const UplinkPort1 = 1
+
+// UplinkPortOob uplink oob
+const UplinkPortOob = 8
+
+func printTxRxQueueNumbers(inputQueueInfo [][]InputQueueInfo,
+	outputQueueInfo [][]OutputQueueInfo) {
+	fmt.Print(strings.Repeat(" ", 11))
+	fmt.Printf("%c", 65372) // Vert. bar
+	// Print TX IQ numbers
+	for i := 0; i < 8; i++ {
+		if i == 0 {
+			fmt.Print(strings.Repeat(" ", 13))
+		}
+		fmt.Printf("%-12d", inputQueueInfo[DmaPort][i].queueIndex)
+	}
+	fmt.Print(strings.Repeat(" ", 4))
+	fmt.Printf("%c", 65372) // Vert. bar
+	for i := 0; i < 8; i++ {
+		if i == 0 {
+			fmt.Print(strings.Repeat(" ", 13))
+		}
+		fmt.Printf("%-12d", outputQueueInfo[DmaPort][i].queueIndex)
+	}
+	fmt.Print(strings.Repeat(" ", 4))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+// IqQueueStatsToStr ingress queue stats to string
+func IqQueueStatsToStr(inputQueueInfo InputQueueInfo) string {
+	return fmt.Sprintf("%d, %d, %d",
+		inputQueueInfo.peakOccupancy,
+		inputQueueInfo.bufferOccupancy,
+		inputQueueInfo.portMonitor)
+
+}
+
+// OqQueueStatsToStr output queue stats to string
+func OqQueueStatsToStr(outputQueueInfo OutputQueueInfo) string {
+	return fmt.Sprintf("%d, %d",
+		outputQueueInfo.queueDepth,
+		outputQueueInfo.portMonitor)
+}
+
+func printTxRxQueueStats(inputQueueInfo [][]InputQueueInfo,
+	outputQueueInfo [][]OutputQueueInfo,
+	stat int) {
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 2))
+	for i := 0; i < 8; i++ {
+		if stat == 0 {
+			fmt.Printf("%12d",
+				inputQueueInfo[DmaPort][i].peakOccupancy)
+		} else if stat == 1 {
+			fmt.Printf("%12d",
+				inputQueueInfo[DmaPort][i].bufferOccupancy)
+		} else {
+			fmt.Printf("%12d",
+				inputQueueInfo[DmaPort][i].portMonitor)
+		}
+	}
+	fmt.Print(strings.Repeat(" ", 17))
+	fmt.Print(strings.Repeat(" ", 2))
+	for i := 0; i < 8; i++ {
+		if stat == 0 {
+			fmt.Printf("%12d",
+				outputQueueInfo[DmaPort][i].queueDepth)
+		} else if stat == 1 {
+			fmt.Printf("%12d",
+				outputQueueInfo[DmaPort][i].portMonitor)
+		} else {
+			fmt.Print(strings.Repeat(" ", 12))
+		}
+	}
+	fmt.Print(strings.Repeat(" ", 15))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+func printOutP4StatsBatch(p4igOQueueInfo []OutputQueueInfo,
+	p4egOQueueInfo []OutputQueueInfo,
+	line int) {
+	startIdx := line * 4
+	endIdx := (line * 4) + 4 - 1
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 1))
+	fmt.Printf("%2d - %2d", startIdx, endIdx)
+	fmt.Printf(" %c", 9679) // Circle
+	fmt.Printf(" %c ", leftArrow())
+	for i := startIdx; i <= endIdx; i++ {
+		if i == endIdx {
+			fmt.Printf("%-14s", OqQueueStatsToStr(p4igOQueueInfo[i]))
+		} else {
+			fmt.Printf("%-14s : ", OqQueueStatsToStr(p4igOQueueInfo[i]))
+		}
+	}
+	fmt.Print(strings.Repeat(" ", 93))
+	for i := startIdx; i <= endIdx; i++ {
+		if i == endIdx {
+			fmt.Printf("%14s", OqQueueStatsToStr(p4egOQueueInfo[i]))
+		} else {
+			fmt.Printf("%14s : ", OqQueueStatsToStr(p4egOQueueInfo[i]))
+		}
+	}
+	fmt.Printf(" %c ", rightArrow())
+	fmt.Printf("%c ", 9679) // Circle
+	fmt.Printf("%2d - %2d", startIdx, endIdx)
+	fmt.Print(strings.Repeat(" ", 2))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+func printInP4StatsBatch(p4igIQueueInfo []InputQueueInfo,
+	p4egIQueueInfo []InputQueueInfo,
+	line int) {
+	startIdx := line * 4
+	endIdx := (line * 4) + 4 - 1
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 1))
+	fmt.Printf("%2d - %2d", startIdx, endIdx)
+	fmt.Printf(" %c", 9679) // Circle
+	fmt.Printf(" %c ", rightArrow())
+	for i := startIdx; i <= endIdx; i++ {
+		if i == endIdx {
+			fmt.Printf("%-21s", IqQueueStatsToStr(p4igIQueueInfo[i]))
+		} else {
+			fmt.Printf("%-21s : ", IqQueueStatsToStr(p4igIQueueInfo[i]))
+		}
+	}
+	fmt.Print(strings.Repeat(" ", 37))
+	for i := startIdx; i <= endIdx; i++ {
+		if i == endIdx {
+			fmt.Printf("%21s", IqQueueStatsToStr(p4egIQueueInfo[i]))
+		} else {
+			fmt.Printf("%21s : ", IqQueueStatsToStr(p4egIQueueInfo[i]))
+		}
+	}
+	fmt.Printf(" %c ", leftArrow())
+	fmt.Printf("%c ", 9679) // Circle
+	fmt.Printf("%2d - %2d", startIdx, endIdx)
+	fmt.Print(strings.Repeat(" ", 2))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+func printOutP4Stats(p4igOQueueInfo OutputQueueInfo,
+	p4egOQueueInfo OutputQueueInfo) {
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 5))
+	fmt.Printf("%2d", p4igOQueueInfo.queueIndex)
+	fmt.Printf(" %c", 9679) // Circle
+	fmt.Printf(" %c  %-23s", leftArrow(), OqQueueStatsToStr(p4igOQueueInfo))
+	fmt.Print(strings.Repeat(" ", 177))
+	fmt.Printf("%23s %c ", OqQueueStatsToStr(p4egOQueueInfo), rightArrow()) // -> arrow
+	fmt.Printf("%c ", 9679)                                                 // Circle
+	fmt.Printf("%-2d", p4egOQueueInfo.queueIndex)
+	fmt.Print(strings.Repeat(" ", 5))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+func printInP4Stats(p4igOQueueInfo InputQueueInfo,
+	p4egOQueueInfo InputQueueInfo) {
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 5))
+	fmt.Printf("%2d", p4igOQueueInfo.queueIndex)
+	fmt.Printf(" %c", 9679) // Circle
+	fmt.Printf(" %c  %-23s", rightArrow(), IqQueueStatsToStr(p4igOQueueInfo))
+	fmt.Print(strings.Repeat(" ", 177))
+	fmt.Printf("%23s %c ", IqQueueStatsToStr(p4egOQueueInfo), leftArrow()) // <- arrow
+	fmt.Printf("%c ", 9679)                                                // Circle
+	fmt.Printf("%-2d", p4egOQueueInfo.queueIndex)
+	fmt.Print(strings.Repeat(" ", 5))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+func printUplinkQueues() {
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c", 65372) // Vert. bar
+	for i := 0; i < 3; i++ {
+		fmt.Printf("%23s", "0 - 3")
+		fmt.Printf("%23s", "4 - 7")
+		fmt.Printf("%14s", "0 - 3")
+		fmt.Printf("%14s", "4 - 7")
+		fmt.Print(strings.Repeat(" ", 2))
+	}
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+func printUplinkLine() {
+	fmt.Print(strings.Repeat(" ", 1))
+	fmt.Print(strings.Repeat("-", 10))
+	fmt.Print(strings.Repeat(" ", 1))
+	for i := 0; i < 3; i++ {
+		fmt.Print(strings.Repeat("-", 21))
+		fmt.Printf("%c", 9679) // Circle
+		fmt.Print(strings.Repeat("-", 22))
+		fmt.Printf("%c", 9679) // Circle
+		fmt.Print(strings.Repeat("-", 13))
+		fmt.Printf("%c", 9679) // Circle
+		fmt.Print(strings.Repeat("-", 13))
+		fmt.Printf("%c", 9679) // Circle
+		if i != 2 {
+			fmt.Print(strings.Repeat("-", 2))
+			fmt.Printf("%c", 65372) // Vert. bar
+		}
+	}
+	fmt.Print(strings.Repeat("-", 2))
+	fmt.Print(strings.Repeat(" ", 1))
+	fmt.Println(strings.Repeat("-", 11))
+}
+
+func printUplinkArrows() {
+	fmt.Print(strings.Repeat(" ", 12))
+	for i := 0; i < 3; i++ {
+		fmt.Print(strings.Repeat(" ", 21))
+		fmt.Printf("%c", upArrow())
+		fmt.Print(strings.Repeat(" ", 22))
+		fmt.Printf("%c", upArrow())
+		fmt.Print(strings.Repeat(" ", 13))
+		fmt.Printf("%c", downArrow())
+		fmt.Print(strings.Repeat(" ", 13))
+		fmt.Printf("%c", downArrow())
+		fmt.Print(strings.Repeat(" ", 4))
+	}
+	fmt.Println()
+}
+
+func printUplinkStats(inputQueueInfo [][]InputQueueInfo,
+	outputQueueInfo [][]OutputQueueInfo,
+	stat int) {
+	idx1 := stat
+	idx2 := stat + 4
+	fmt.Print(strings.Repeat(" ", 12))
+	port := 0
+	for i := 0; i < 3; i++ {
+		if i == 0 {
+			port = UplinkPort0
+		} else if i == 1 {
+			port = UplinkPort1
+		} else {
+			port = UplinkPortOob
+		}
+		fmt.Printf("%22s", IqQueueStatsToStr(inputQueueInfo[port][idx1]))
+		fmt.Printf("%23s", IqQueueStatsToStr(inputQueueInfo[port][idx2]))
+		fmt.Printf("%14s", OqQueueStatsToStr(outputQueueInfo[port][idx1]))
+		fmt.Printf("%14s", OqQueueStatsToStr(outputQueueInfo[port][idx2]))
+		fmt.Print(strings.Repeat(" ", 4))
+	}
+	fmt.Println()
+}
+
+func printBlankQueueLine() {
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 228))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+func printQueueUplinkNumbers() {
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c", 65372) // Vert. bar
+	for i := 0; i < 3; i++ {
+		fmt.Print("<")
+		fmt.Print(strings.Repeat("-", 31))
+		if i == 0 {
+			fmt.Printf(GreenColor, " Uplink 0 ")
+		} else if i == 1 {
+			fmt.Printf(GreenColor, " Uplink 1 ")
+		} else {
+			fmt.Printf(GreenColor, " Uplink 8 ")
+		}
+		fmt.Print(strings.Repeat("-", 32))
+		fmt.Print(">")
+		fmt.Print(strings.Repeat(" ", 1))
+	}
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+}
+
+func systemPbDisplayQueueData(inputQueueInfo [][]InputQueueInfo,
+	outputQueueInfo [][]OutputQueueInfo) {
+	fmt.Println()
+
+	fmt.Println("Queue Stats")
+	fmt.Println("-----------")
+	fmt.Println("InQueue Format : Peak Occupancy, Buffer Occupancy, Port Monitor")
+	fmt.Println("OutQueue Format: Queue depth, Port Monitor")
+	fmt.Println()
+
+	// P4+ block
+	fmt.Print(" ")
+	fmt.Print(strings.Repeat(" ", 11))
+	fmt.Println(strings.Repeat("-", 230))
+	// 2nd line
+	fmt.Print(strings.Repeat(" ", 11))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 53))
+	fmt.Printf(YellowColor, "TX-DMA")
+	fmt.Print(strings.Repeat(" ", 54))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 53))
+	fmt.Printf(YellowColor, "RX-DMA")
+	fmt.Print(strings.Repeat(" ", 54))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+	// 3rd line
+	printTxRxQueueNumbers(inputQueueInfo, outputQueueInfo)
+	// 4th line
+	fmt.Print(" ")
+	fmt.Print(strings.Repeat("-", 10))
+	fmt.Print(" ")
+	fmt.Print(strings.Repeat("-", 14))
+	for i := 0; i < 8; i++ {
+		fmt.Printf("%c", 9679) // Circle
+		fmt.Print(strings.Repeat("-", 11))
+	}
+	fmt.Print(strings.Repeat("-", 4))
+	fmt.Print(strings.Repeat("-", 15))
+	for i := 0; i < 8; i++ {
+		fmt.Printf("%c", 9679) // Circle
+		fmt.Print(strings.Repeat("-", 11))
+	}
+	fmt.Print(strings.Repeat("-", 4))
+	fmt.Print(" ")
+	fmt.Print(strings.Repeat("-", 10))
+	fmt.Println()
+	// 5th line - Arrows
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Printf(MagentaColor, " P4-ING ")
+	fmt.Print(strings.Repeat(" ", 1))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 13))
+	for i := 0; i < 8; i++ {
+		fmt.Printf("%c", downArrow())
+		fmt.Print(strings.Repeat(" ", 11))
+	}
+	fmt.Print(strings.Repeat(" ", 4))
+	fmt.Print(strings.Repeat(" ", 15))
+	for i := 0; i < 8; i++ {
+		fmt.Printf("%0c", upArrow())
+		fmt.Print(strings.Repeat(" ", 11))
+	}
+	fmt.Print(strings.Repeat(" ", 4))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Printf(MagentaColor, " P4-EGR ")
+	fmt.Print(strings.Repeat(" ", 1))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+	// 6th line - TX, RX Stats
+	printTxRxQueueStats(inputQueueInfo, outputQueueInfo, 0)
+	printTxRxQueueStats(inputQueueInfo, outputQueueInfo, 1)
+	printTxRxQueueStats(inputQueueInfo, outputQueueInfo, 2)
+	// 7th line
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 228))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+	// 8 - 15 line
+	for i := 0; i < 8; i++ {
+		printOutP4StatsBatch(outputQueueInfo[P4igPort],
+			outputQueueInfo[P4egPort], i)
+	}
+
+	// 16th line
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 107))
+	fmt.Printf(RedColor, "Packet Buffer")
+	fmt.Print(strings.Repeat(" ", 108))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+	// 17 - 23 line
+	for i := 0; i < 8; i++ {
+		printInP4StatsBatch(inputQueueInfo[P4igPort],
+			inputQueueInfo[P4egPort], i)
+	}
+	// 24th line
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 228))
+	fmt.Printf("%c", 65372) // Vert. bar
+	fmt.Print(strings.Repeat(" ", 9))
+	fmt.Printf("%c\n", 65372) // Vert. bar
+	// 25th & 26 line
+	printBlankQueueLine()
+	printBlankQueueLine()
+	// 27 Uplink numbers
+	printQueueUplinkNumbers()
+	// 28th line
+	printUplinkQueues()
+	// 29th line
+	printUplinkLine()
+	// 30th line
+	printUplinkArrows()
+	// 31th line
+	printUplinkStats(inputQueueInfo, outputQueueInfo, 0)
+	printUplinkStats(inputQueueInfo, outputQueueInfo, 1)
+	printUplinkStats(inputQueueInfo, outputQueueInfo, 2)
+	printUplinkStats(inputQueueInfo, outputQueueInfo, 3)
+
+}
+
+func systemPbQueueCountersPopulate(portStats *halproto.PacketBufferPortStats,
+	inputQueueInfo [][]InputQueueInfo,
+	outputQueueInfo [][]OutputQueueInfo) {
+	portNum := portStats.GetPacketBufferPort().GetPortNum()
+	// fmt.Printf("Processing port number %d\n", portNum)
+
+	for i, inputQueueStats := range portStats.GetQosQueueStats().GetInputQueueStats() {
+		inputQueueIndex := inputQueueStats.GetInputQueueIdx()
+		bufferOccupancy := inputQueueStats.GetBufferOccupancy()
+		peakOccupancy := inputQueueStats.GetPeakOccupancy()
+		portMonitor := inputQueueStats.GetPortMonitor()
+		/*
+			if bufferOccupancy == 0 && peakOccupancy == 0 && portMonitor == 0 {
+				continue
+			}*/
+		/*
+			fmt.Printf("Populating IQ entry %d QI: %d, BO: %d, PO: %d, PM: %d\n",
+			           i, inputQueueIndex, bufferOccupancy, peakOccupancy, portMonitor)
+		*/
+		inputQueueInfo[portNum][i].valid = true
+		inputQueueInfo[portNum][i].queueIndex = inputQueueIndex
+		inputQueueInfo[portNum][i].bufferOccupancy = bufferOccupancy
+		inputQueueInfo[portNum][i].peakOccupancy = peakOccupancy
+		inputQueueInfo[portNum][i].portMonitor = portMonitor
+	}
+	for i, outputQueueStats := range portStats.GetQosQueueStats().GetOutputQueueStats() {
+		outputQueueIndex := outputQueueStats.GetOutputQueueIdx()
+		outputQueueDepth := outputQueueStats.GetQueueDepth()
+		portMonitor := outputQueueStats.GetPortMonitor()
+		/*
+			if outputQueueDepth == 0 && portMonitor == 0 {
+				continue
+			}*/
+		/*
+			fmt.Printf("Populating OQ for entry %d QI: %d, QD: %d, PM: %d\n",
+			           i, outputQueueIndex, outputQueueDepth, portMonitor)
+		*/
+		outputQueueInfo[portNum][i].valid = true
+		outputQueueInfo[portNum][i].queueIndex = outputQueueIndex
+		outputQueueInfo[portNum][i].queueDepth = outputQueueDepth
+		outputQueueInfo[portNum][i].portMonitor = portMonitor
+	}
+}
+
+func systemPbQueueStatsShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+
+	client := halproto.NewSystemClient(c)
+
+	// HAL call
+	var empty *halproto.Empty
+	resp, err := client.SystemGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Getting System Stats failed. %v\n", err)
+		return
+	}
+
+	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.GetApiStatus())
+		return
+	}
+
+	inputQueueInfo := make([][]InputQueueInfo, 12)
+	for i := range inputQueueInfo {
+		inputQueueInfo[i] = make([]InputQueueInfo, 32)
+	}
+
+	outputQueueInfo := make([][]OutputQueueInfo, 12)
+	for i := range outputQueueInfo {
+		outputQueueInfo[i] = make([]OutputQueueInfo, 32)
+	}
+
+	for _, entry := range resp.GetStats().GetPacketBufferStats().PortStats {
+		systemPbQueueCountersPopulate(entry, inputQueueInfo, outputQueueInfo)
+	}
+
+	// Only for testing in container when hal is not running
+	/*
+		// -------------------------------------------------------------------
+		inputQueueInfo := make([][]InputQueueInfo, 12)
+		for i := range inputQueueInfo {
+			inputQueueInfo[i] = make([]InputQueueInfo, 32)
+		}
+		outputQueueInfo := make([][]OutputQueueInfo, 12)
+		for i := range outputQueueInfo {
+			outputQueueInfo[i] = make([]OutputQueueInfo, 32)
+		}
+
+		for i := range inputQueueInfo {
+			for j := range inputQueueInfo[i] {
+				inputQueueInfo[i][j].valid = true
+			}
+		}
+		for i := range outputQueueInfo {
+			for j := range outputQueueInfo[i] {
+				outputQueueInfo[i][j].valid = true
+			}
+		}
+
+		// -------------------------------------------------------------------
+	*/
+
+	systemPbDisplayQueueData(inputQueueInfo, outputQueueInfo)
+}
+
+func systemPbDetailStatsShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+
+	client := halproto.NewSystemClient(c)
+
+	// HAL call
+	var empty *halproto.Empty
+	resp, err := client.SystemGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Getting System Stats failed. %v\n", err)
+		return
+	}
+
+	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.GetApiStatus())
+		return
+	}
+
+	inputQueueInfo := make([][]InputQueueInfo, 12)
+	for i := range inputQueueInfo {
+		inputQueueInfo[i] = make([]InputQueueInfo, 32)
+	}
+
+	outputQueueInfo := make([][]OutputQueueInfo, 12)
+	for i := range outputQueueInfo {
+		outputQueueInfo[i] = make([]OutputQueueInfo, 32)
+	}
+
+	for _, entry := range resp.GetStats().GetPacketBufferStats().PortStats {
+		systemPbOccupancyOqCountersPopulate(entry, inputQueueInfo, outputQueueInfo)
+	}
+
+	systemPbOccupancyCountersShow(inputQueueInfo)
+	systemPbOqCountersShow(outputQueueInfo)
+}
+
+func systemPbStatsShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+
+	client := halproto.NewSystemClient(c)
+
+	// HAL call
+	var empty *halproto.Empty
+	resp, err := client.SystemGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Getting System Stats failed. %v\n", err)
+		return
+	}
+
+	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.GetApiStatus())
+		return
+	}
+
+	var dmaIn uint32
+	var dmaOut uint32
+	var ingIn uint32
+	var ingOut uint32
+	var egrIn uint32
+	var egrOut uint32
+	uplinkIn := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
+	uplinkOut := []uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}
+
+	for _, entry := range resp.GetStats().GetPacketBufferStats().PortStats {
+		if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_DMA {
+			dmaIn = entry.GetBufferStats().GetSopCountIn()
+			dmaOut = entry.GetBufferStats().GetSopCountOut()
+		} else if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_P4IG {
+			ingIn = entry.GetBufferStats().GetSopCountIn()
+			ingOut = entry.GetBufferStats().GetSopCountOut()
+		} else if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_P4EG {
+			egrIn = entry.GetBufferStats().GetSopCountIn()
+			egrOut = entry.GetBufferStats().GetSopCountOut()
+		} else if entry.GetPacketBufferPort().GetPortType() == halproto.PacketBufferPortType_PACKET_BUFFER_PORT_TYPE_UPLINK {
+			uplinkIn[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountIn()
+			uplinkOut[entry.GetPacketBufferPort().GetPortNum()] = entry.GetBufferStats().GetSopCountOut()
+		}
+	}
+
+	pbStatsShow(dmaIn, dmaOut,
+		ingIn, ingOut,
+		egrIn, egrOut,
+		uplinkIn, uplinkOut)
+}
+
 func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	// Connect to HAL
 	c, err := utils.CreateNewGRPCClient()
@@ -594,7 +1293,6 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	fte := false
 	api := false
 	pb := false
-	pbDet := false
 	intf := false
 	fteTxRx := false
 
@@ -607,8 +1305,6 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 			api = true
 		} else if strings.Compare(args[0], "pb") == 0 {
 			pb = true
-		} else if strings.Compare(args[0], "pb_det") == 0 {
-			pbDet = true
 		} else if strings.Compare(args[0], "intf") == 0 {
 			intf = true
 		} else if strings.Compare(args[0], "fte-txrx") == 0 {
@@ -724,25 +1420,6 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 			uplinkIn, uplinkOut)
 
 	}
-
-	if pbDet {
-		inputQueueInfo := make([][]InputQueueInfo, 12)
-		for i := range inputQueueInfo {
-			inputQueueInfo[i] = make([]InputQueueInfo, 32)
-		}
-
-		outputQueueInfo := make([][]OutputQueueInfo, 12)
-		for i := range outputQueueInfo {
-			outputQueueInfo[i] = make([]OutputQueueInfo, 32)
-		}
-
-		for _, entry := range resp.GetStats().GetPacketBufferStats().PortStats {
-			systemPbOccupancyOqCountersPopulate(entry, inputQueueInfo, outputQueueInfo)
-		}
-
-		systemPbOccupancyCountersShow(inputQueueInfo)
-		systemPbOqCountersShow(outputQueueInfo)
-	}
 }
 
 func systemClockShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -786,12 +1463,12 @@ func rightArrow() uint32 {
 	// return 10145
 }
 
-func upArrow() uint32 {
+func downArrow() uint32 {
 	return 8595
 	// return 11014
 }
 
-func downArrow() uint32 {
+func upArrow() uint32 {
 	return 8593
 	// return 11015
 }
@@ -941,10 +1618,10 @@ func printUplinkNum() {
 	fmt.Print(strings.Repeat(" ", 5))
 	fmt.Print(strings.Repeat(" ", 10))
 
-	fmt.Printf("%c 0 %c", downArrow(), upArrow()) // Up arrow,  Down arrow
+	fmt.Printf("%c 0 %c", upArrow(), downArrow()) // Up arrow,  Down arrow
 	for i := 1; i < 9; i++ {
 		fmt.Print(strings.Repeat(" ", 8))
-		fmt.Printf("%c %d %c", downArrow(), i, upArrow()) // Up arrow,  Down arrow
+		fmt.Printf("%c %d %c", upArrow(), i, downArrow()) // Up arrow,  Down arrow
 	}
 	fmt.Println()
 }
@@ -1088,9 +1765,9 @@ func printDMAStats(dmaIn uint32, dmaOut uint32) {
 	fmt.Print(strings.Repeat(" ", 3))
 	fmt.Printf("%c", 65372) // Vert. bar
 	fmt.Print(strings.Repeat(" ", 25))
-	fmt.Printf("%5d %c", dmaIn, upArrow()) // Down arrow
+	fmt.Printf("%5d %c", dmaIn, downArrow()) // Down arrow
 	fmt.Print(strings.Repeat(" ", 58))
-	fmt.Printf("%5d %c", dmaOut, downArrow()) // Up arrow
+	fmt.Printf("%5d %c", dmaOut, upArrow()) // Up arrow
 	fmt.Print(strings.Repeat(" ", 30))
 	fmt.Printf("%c", 65372) // Vert. bar
 	fmt.Print(strings.Repeat(" ", 3))
