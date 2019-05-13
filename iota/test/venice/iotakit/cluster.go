@@ -88,7 +88,7 @@ func (tb *TestBed) CheckIotaClusterHealth() error {
 }
 
 // MakeVeniceCluster inits the venice cluster
-func (tb *TestBed) MakeVeniceCluster() error {
+func (tb *TestBed) MakeVeniceCluster(ctx context.Context) error {
 	// get CMD URL URL
 	var veniceCmdURL []string
 	for _, node := range tb.Nodes {
@@ -122,7 +122,7 @@ func (tb *TestBed) MakeVeniceCluster() error {
 	// ask iota server to make cluster
 	log.Debugf("Making cluster with params: %+v", makeCluster)
 	cfgClient := iota.NewConfigMgmtApiClient(tb.iotaClient.Client)
-	resp, err := cfgClient.MakeCluster(context.Background(), &makeCluster)
+	resp, err := cfgClient.MakeCluster(ctx, &makeCluster)
 	if err != nil {
 		log.Errorf("Error initing venice cluster. Err: %v", err)
 		return err

@@ -10,14 +10,15 @@ import (
 	"time"
 
 	"github.com/onsi/ginkgo"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
-	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/workload"
 	loginctx "github.com/pensando/sw/api/login/context"
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -31,12 +32,17 @@ import (
 
 const maxVeniceUpWait = 300
 
-// VeniceLoggedInCtx returns loggedin context for venice
-func (tb *TestBed) VeniceLoggedInCtx() (context.Context, error) {
-	if tb.veniceLoggedinCtx != nil {
-		return tb.veniceLoggedinCtx, nil
+// VeniceLoggedInCtx returns loggedin context for venice taking a context
+func (tb *TestBed) VeniceLoggedInCtx(ctx context.Context) (context.Context, error) {
+	var err error
+
+	if tb.authToken == "" {
+		_, err = tb.VeniceNodeLoggedInCtx(tb.GetVeniceURL()[0])
 	}
-	return tb.VeniceNodeLoggedInCtx(tb.GetVeniceURL()[0])
+	if err != nil {
+		return nil, err
+	}
+	return loginctx.NewContextWithAuthzHeader(ctx, tb.authToken), nil
 }
 
 // VeniceNodeLoggedInCtx logs in to a specified node and returns loggedin context
@@ -60,14 +66,19 @@ func (tb *TestBed) VeniceNodeLoggedInCtx(nodeURL string) (context.Context, error
 		log.Errorf("Error logging into Venice URL %v. Err: %v", nodeURL, err)
 		return nil, err
 	}
-	tb.veniceLoggedinCtx = ctx
+	authToken, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if ok {
+		tb.authToken = authToken
+	} else {
+		return nil, fmt.Errorf("auth token not available in logged-in context")
+	}
 
 	return ctx, nil
 }
 
 // GetAuthorizationHeader gets and returns the authorization header from login context
 func (tb *TestBed) GetAuthorizationHeader() (string, error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return "", err
 	}
@@ -115,15 +126,15 @@ func (tb *TestBed) VeniceNodeRestClient(nodeURL string) (apiclient.Services, err
 }
 
 // WaitForVeniceClusterUp wait for venice cluster to come up
-func (tb *TestBed) WaitForVeniceClusterUp() error {
+func (tb *TestBed) WaitForVeniceClusterUp(ctx context.Context) error {
 	// wait for cluster to come up
 	for i := 0; i < maxVeniceUpWait; i++ {
 		restcls, err := tb.VeniceRestClient()
 		if err == nil {
-			ctx, err := tb.VeniceLoggedInCtx()
+			ctx2, err := tb.VeniceLoggedInCtx(ctx)
 			if err == nil {
 				for _, restcl := range restcls {
-					_, err = restcl.ClusterV1().Cluster().Get(ctx, &api.ObjectMeta{Name: "iota-cluster"})
+					_, err = restcl.ClusterV1().Cluster().Get(ctx2, &api.ObjectMeta{Name: "iota-cluster"})
 					if err == nil {
 						return nil
 					}
@@ -132,6 +143,9 @@ func (tb *TestBed) WaitForVeniceClusterUp() error {
 		}
 
 		time.Sleep(time.Second)
+		if e := ctx.Err(); e != nil {
+			return e
+		}
 	}
 
 	// if we reached here, it means we werent able to connect to Venice API GW
@@ -139,7 +153,7 @@ func (tb *TestBed) WaitForVeniceClusterUp() error {
 }
 
 // InitVeniceConfig initializes base configuration for venice
-func (tb *TestBed) InitVeniceConfig() error {
+func (tb *TestBed) InitVeniceConfig(ctx context.Context) error {
 	// base configs
 	cfgMsg := &iota.InitConfigMsg{
 		ApiResponse:    &iota.IotaAPIResponse{},
@@ -150,7 +164,7 @@ func (tb *TestBed) InitVeniceConfig() error {
 
 	// Push base configs
 	cfgClient := iota.NewConfigMgmtApiClient(tb.iotaClient.Client)
-	cfgInitResp, err := cfgClient.InitCfgService(context.Background(), cfgMsg)
+	cfgInitResp, err := cfgClient.InitCfgService(ctx, cfgMsg)
 	if err != nil || cfgInitResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 		log.Errorf("Config service Init failed. API Status: %v , Err: %v", cfgInitResp.ApiResponse.ApiStatus, err)
 		return fmt.Errorf("Config service init failed")
@@ -165,6 +179,9 @@ func (tb *TestBed) InitVeniceConfig() error {
 			break
 		}
 		time.Sleep(time.Second)
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
 	}
 	if err != nil {
 		log.Errorf("Setting up Auth failed. Err: %v", err)
@@ -174,7 +191,7 @@ func (tb *TestBed) InitVeniceConfig() error {
 	log.Infof("Auth setup complete...")
 
 	// wait for venice cluster to come up
-	return tb.WaitForVeniceClusterUp()
+	return tb.WaitForVeniceClusterUp(ctx)
 }
 
 // SetupAuth bootstraps default tenant, authentication policy, local user and super admin role
@@ -239,7 +256,7 @@ func (tb *TestBed) SetupAuth(userID, password string) error {
 
 // CreateHost creates host object in venice
 func (tb *TestBed) CreateHost(host *cluster.Host) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -265,7 +282,7 @@ func (tb *TestBed) CreateHost(host *cluster.Host) error {
 
 // ListHost gets all hosts from venice cluster
 func (tb *TestBed) ListHost() (objs []*cluster.Host, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +305,7 @@ func (tb *TestBed) ListHost() (objs []*cluster.Host, err error) {
 
 //DeleteHost deletes host object
 func (tb *TestBed) DeleteHost(wrkld *cluster.Host) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -308,7 +325,7 @@ func (tb *TestBed) DeleteHost(wrkld *cluster.Host) error {
 
 // CreateWorkload creates workload
 func (tb *TestBed) CreateWorkload(wrkld *workload.Workload) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -333,7 +350,7 @@ func (tb *TestBed) CreateWorkload(wrkld *workload.Workload) error {
 
 // GetWorkload returns venice workload by object meta
 func (tb *TestBed) GetWorkload(meta *api.ObjectMeta) (w *workload.Workload, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +371,7 @@ func (tb *TestBed) GetWorkload(meta *api.ObjectMeta) (w *workload.Workload, err 
 
 //DeleteWorkload deletes workload
 func (tb *TestBed) DeleteWorkload(wrkld *workload.Workload) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -374,7 +391,7 @@ func (tb *TestBed) DeleteWorkload(wrkld *workload.Workload) error {
 
 // ListWorkload gets all workloads from venice cluster
 func (tb *TestBed) ListWorkload() (objs []*workload.Workload, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -397,7 +414,7 @@ func (tb *TestBed) ListWorkload() (objs []*workload.Workload, err error) {
 
 // CreateMirrorSession creates Mirror policy
 func (tb *TestBed) CreateMirrorSession(msp *monitoring.MirrorSession) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -423,7 +440,7 @@ func (tb *TestBed) CreateMirrorSession(msp *monitoring.MirrorSession) error {
 
 // UpdateMirrorSession updates an Mirror policy
 func (tb *TestBed) UpdateMirrorSession(msp *monitoring.MirrorSession) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -443,7 +460,7 @@ func (tb *TestBed) UpdateMirrorSession(msp *monitoring.MirrorSession) error {
 
 // GetMirrorSession gets MirrorSession from venice cluster
 func (tb *TestBed) GetMirrorSession(meta *api.ObjectMeta) (msp *monitoring.MirrorSession, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -464,7 +481,7 @@ func (tb *TestBed) GetMirrorSession(meta *api.ObjectMeta) (msp *monitoring.Mirro
 
 // ListMirrorSession gets all MirrorPolicies from venice cluster
 func (tb *TestBed) ListMirrorSession() (objs []*monitoring.MirrorSession, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -487,7 +504,7 @@ func (tb *TestBed) ListMirrorSession() (objs []*monitoring.MirrorSession, err er
 
 // DeleteMirrorSession deletes Mirror policy
 func (tb *TestBed) DeleteMirrorSession(msp *monitoring.MirrorSession) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -508,7 +525,7 @@ func (tb *TestBed) DeleteMirrorSession(msp *monitoring.MirrorSession) error {
 
 // CreateSGPolicy creates SG policy
 func (tb *TestBed) CreateSGPolicy(sgp *security.SGPolicy) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -534,7 +551,7 @@ func (tb *TestBed) CreateSGPolicy(sgp *security.SGPolicy) error {
 
 // UpdateSGPolicy updates an SG policy
 func (tb *TestBed) UpdateSGPolicy(sgp *security.SGPolicy) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -554,7 +571,7 @@ func (tb *TestBed) UpdateSGPolicy(sgp *security.SGPolicy) error {
 
 // GetSGPolicy gets SGPolicy from venice cluster
 func (tb *TestBed) GetSGPolicy(meta *api.ObjectMeta) (sgp *security.SGPolicy, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -575,7 +592,7 @@ func (tb *TestBed) GetSGPolicy(meta *api.ObjectMeta) (sgp *security.SGPolicy, er
 
 // ListSGPolicy gets all SGPolicies from venice cluster
 func (tb *TestBed) ListSGPolicy() (objs []*security.SGPolicy, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -598,7 +615,7 @@ func (tb *TestBed) ListSGPolicy() (objs []*security.SGPolicy, err error) {
 
 // DeleteSGPolicy deletes SG policy
 func (tb *TestBed) DeleteSGPolicy(sgp *security.SGPolicy) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -619,7 +636,7 @@ func (tb *TestBed) DeleteSGPolicy(sgp *security.SGPolicy) error {
 
 // GetCluster gets the venice cluster object
 func (tb *TestBed) GetCluster() (cl *cluster.Cluster, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -640,7 +657,7 @@ func (tb *TestBed) GetCluster() (cl *cluster.Cluster, err error) {
 
 // GetClusterWithRestClient gets the venice cluster object
 func (tb *TestBed) GetClusterWithRestClient(restcl apiclient.Services) (cl *cluster.Cluster, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -649,7 +666,7 @@ func (tb *TestBed) GetClusterWithRestClient(restcl apiclient.Services) (cl *clus
 
 // GetVeniceNode gets venice node state from venice cluster
 func (tb *TestBed) GetVeniceNode(name string) (n *cluster.Node, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -676,7 +693,7 @@ func (tb *TestBed) GetVeniceNode(name string) (n *cluster.Node, err error) {
 
 // GetSmartNIC returns venice smartnic object
 func (tb *TestBed) GetSmartNIC(name string) (sn *cluster.SmartNIC, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -701,7 +718,7 @@ func (tb *TestBed) GetSmartNIC(name string) (sn *cluster.SmartNIC, err error) {
 
 // ListSmartNIC gets a list of smartnics
 func (tb *TestBed) ListSmartNIC() (snl []*cluster.SmartNIC, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -761,7 +778,7 @@ func (tb *TestBed) GetSmartNICByName(snicName string) (sn *cluster.SmartNIC, err
 
 // GetEndpoint returns the endpoint
 func (tb *TestBed) GetEndpoint(meta *api.ObjectMeta) (ep *workload.Endpoint, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -781,7 +798,7 @@ func (tb *TestBed) GetEndpoint(meta *api.ObjectMeta) (ep *workload.Endpoint, err
 
 // ListEndpoints returns list of endpoints known to Venice
 func (tb *TestBed) ListEndpoints(tenant string) (eps []*workload.Endpoint, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -803,7 +820,7 @@ func (tb *TestBed) ListEndpoints(tenant string) (eps []*workload.Endpoint, err e
 
 // UpdateFirewallProfile updates firewall profile
 func (tb *TestBed) UpdateFirewallProfile(fwp *security.FirewallProfile) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -829,7 +846,7 @@ func (tb *TestBed) UpdateFirewallProfile(fwp *security.FirewallProfile) error {
 
 // ListFirewallProfile gets all fw profile apps from venice cluster
 func (tb *TestBed) ListFirewallProfile() (objs []*security.FirewallProfile, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -852,7 +869,7 @@ func (tb *TestBed) ListFirewallProfile() (objs []*security.FirewallProfile, err 
 
 // DeleteFirewallProfile deletes FirewallProfile object
 func (tb *TestBed) DeleteFirewallProfile(fwprofile *security.FirewallProfile) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -873,7 +890,7 @@ func (tb *TestBed) DeleteFirewallProfile(fwprofile *security.FirewallProfile) er
 
 // CreateApp creates an app in venice
 func (tb *TestBed) CreateApp(app *security.App) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -899,7 +916,7 @@ func (tb *TestBed) CreateApp(app *security.App) error {
 
 // ListApp gets all apps from venice cluster
 func (tb *TestBed) ListApp() (objs []*security.App, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -922,7 +939,7 @@ func (tb *TestBed) ListApp() (objs []*security.App, err error) {
 
 // DeleteApp deletes App object
 func (tb *TestBed) DeleteApp(app *security.App) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -943,7 +960,7 @@ func (tb *TestBed) DeleteApp(app *security.App) error {
 
 // CreateNetwork creates an Network in venice
 func (tb *TestBed) CreateNetwork(obj *network.Network) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}
@@ -964,7 +981,7 @@ func (tb *TestBed) CreateNetwork(obj *network.Network) error {
 
 // ListNetwork gets all networks from venice cluster
 func (tb *TestBed) ListNetwork() (objs []*network.Network, err error) {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -987,7 +1004,7 @@ func (tb *TestBed) ListNetwork() (objs []*network.Network, err error) {
 
 // DeleteNetwork deletes Network object
 func (tb *TestBed) DeleteNetwork(net *network.Network) error {
-	ctx, err := tb.VeniceLoggedInCtx()
+	ctx, err := tb.VeniceLoggedInCtx(context.TODO())
 	if err != nil {
 		return err
 	}

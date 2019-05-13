@@ -55,7 +55,7 @@ func (tr *Trigger) AddBackgroundCommand(command, entity, node string) error {
 	return nil
 }
 
-// Run runs trigger commands serially within a node but, parallely across nodes
+// Run runs trigger commands serially within a node but, parallelly across nodes
 func (tr *Trigger) Run() ([]*iota.Command, error) {
 	trigMsg := &iota.TriggerMsg{
 		TriggerOp:   iota.TriggerOp_EXEC_CMDS,
@@ -80,7 +80,7 @@ func (tr *Trigger) Run() ([]*iota.Command, error) {
 	return triggerResp.Commands, nil
 }
 
-// RunParallel runs all commands parallely
+// RunParallel runs all commands parallelly
 func (tr *Trigger) RunParallel() ([]*iota.Command, error) {
 	trigMsg := &iota.TriggerMsg{
 		TriggerOp:   iota.TriggerOp_EXEC_CMDS,

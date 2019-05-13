@@ -31,7 +31,7 @@ var _ = Describe("fwlog tests", func() {
 		Expect(err).Should(BeNil())
 		tclient = tmc
 
-		ctx, err := ts.tb.VeniceLoggedInCtx()
+		ctx, err := ts.tb.VeniceLoggedInCtx(context.TODO())
 		Expect(err).Should(BeNil())
 		loggedInCtx = ctx
 

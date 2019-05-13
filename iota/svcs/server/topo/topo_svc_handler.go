@@ -167,7 +167,7 @@ func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMs
 
 		err := pool.Wait()
 		if err != nil {
-			log.Errorf("Error executing boot_naples_v2.py script. Err: %v", err)
+			log.Errorf("Error executing boot_naples_v2.py script. Err: %s", err)
 			stdout, _ := exec.Command("sh", "-c", "tail -n 100 *upgrade.log").CombinedOutput()
 			fmt.Println(stdout)
 			return nil, err

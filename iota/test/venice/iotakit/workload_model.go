@@ -80,7 +80,7 @@ func (sm *SysModel) createWorkload(wtype iota.WorkloadType, wimage, name string,
 		Spec: workload.WorkloadSpec{
 			HostName: host.veniceHost.Name,
 			Interfaces: []workload.WorkloadIntfSpec{
-				workload.WorkloadIntfSpec{
+				{
 					ExternalVlan: subnet.vlan,
 					MicroSegVlan: usegVlan,
 					MACAddress:   priMac,
@@ -199,9 +199,9 @@ func (wc *WorkloadCollection) Error() error {
 
 // Any returns subset of workloads
 func (wc *WorkloadCollection) Any(num int) *WorkloadCollection {
-        if wc.err != nil {
-            return wc
-        }
+	if wc.err != nil {
+		return wc
+	}
 
 	newWc := WorkloadCollection{workloads: []*Workload{}}
 	tmpArry := make([]*Workload, len(wc.workloads))
@@ -335,12 +335,12 @@ func (wpc *WorkloadPairCollection) ExcludeWorkloads(wc *WorkloadCollection) *Wor
 	newCollection := WorkloadPairCollection{}
 
 	for _, pair := range wpc.pairs {
-                for _, w := range wc.workloads {
-		    if pair.first.iotaWorkload.WorkloadName != w.iotaWorkload.WorkloadName && 
-                        pair.second.iotaWorkload.WorkloadName != w.iotaWorkload.WorkloadName {
-			newCollection.pairs = append(newCollection.pairs, pair)
-		    }
-                }
+		for _, w := range wc.workloads {
+			if pair.first.iotaWorkload.WorkloadName != w.iotaWorkload.WorkloadName &&
+				pair.second.iotaWorkload.WorkloadName != w.iotaWorkload.WorkloadName {
+				newCollection.pairs = append(newCollection.pairs, pair)
+			}
+		}
 	}
 
 	return &newCollection

@@ -97,7 +97,7 @@ func (ms *mockIotaServer) AddNodes(ctx context.Context, req *iota.NodeMsg) (*iot
 	log.Debugf("AddNodes(): Received Request Msg: %v", req)
 
 	// wait for venice to come up
-	err := ms.tb.WaitForVeniceClusterUp()
+	err := ms.tb.WaitForVeniceClusterUp(ctx)
 	if err != nil {
 		return req, err
 	}

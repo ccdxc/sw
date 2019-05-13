@@ -28,19 +28,19 @@ const defaultNumNetworks = 2
 
 // SysModel represents a model of the system under test
 type SysModel struct {
-	hosts          map[string]*Host       // hosts
-	naples         map[string]*Naples     // Naples instances
-	workloads      map[string]*Workload   // workloads
-	subnets        []*Network             // subnets
-	sgpolicies     map[string]*SGPolicy   // security policies
+	hosts          map[string]*Host          // hosts
+	naples         map[string]*Naples        // Naples instances
+	workloads      map[string]*Workload      // workloads
+	subnets        []*Network                // subnets
+	sgpolicies     map[string]*SGPolicy      // security policies
 	msessions      map[string]*MirrorSession // mirror sessions
-	veniceNodes    map[string]*VeniceNode // Venice nodes
-	fakeHosts      map[string]*Host       // simulated hosts
-	fakeNaples     map[string]*Naples     // simulated Naples instances
-	fakeWorkloads  map[string]*Workload   // simulated workloads
-	fakeSubnets    map[string]*Network    // simulated subnets
-	fakeApps       map[string]*App        // simulated apps
-	fakeSGPolicies map[string]*SGPolicy   // simulated security policies
+	veniceNodes    map[string]*VeniceNode    // Venice nodes
+	fakeHosts      map[string]*Host          // simulated hosts
+	fakeNaples     map[string]*Naples        // simulated Naples instances
+	fakeWorkloads  map[string]*Workload      // simulated workloads
+	fakeSubnets    map[string]*Network       // simulated subnets
+	fakeApps       map[string]*App           // simulated apps
+	fakeSGPolicies map[string]*SGPolicy      // simulated security policies
 
 	tb *TestBed // testbed
 

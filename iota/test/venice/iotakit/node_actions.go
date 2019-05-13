@@ -251,7 +251,7 @@ func (act *ActionCtx) PortFlap(npc *NaplesCollection) error {
 	return nil
 }
 
-// GetNaplesEndpoints returns a map of map[<mac-adress>]<vlan> indexed by naples name
+// GetNaplesEndpoints returns a map of map[<mac-address>]<vlan> indexed by naples name
 func (act *ActionCtx) GetNaplesEndpoints(npc *NaplesCollection) (map[string]map[string]struct {
 	Local bool
 	Vlan  int

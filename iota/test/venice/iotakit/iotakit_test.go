@@ -21,7 +21,7 @@ func newModel(t *testing.T) *SysModel {
 	tb, err := NewTestBed("3Venice_3NaplesSim", *testbedParams)
 	AssertOk(t, err, "Error creating testbed")
 
-	err = tb.SetupConfig()
+	err = tb.SetupConfig(context.TODO())
 	AssertOk(t, err, "Error initing venice cluster")
 
 	model, err := NewSysModel(tb)
@@ -42,7 +42,7 @@ func TestSetupTestbed(t *testing.T) {
 	tb, err := NewTestBed("3Venice_3NaplesSim", *testbedParams)
 	AssertOk(t, err, "Error creating testbed")
 
-	err = tb.SetupConfig()
+	err = tb.SetupConfig(context.TODO())
 	AssertOk(t, err, "Error initing venice cluster")
 
 	model, err := NewSysModel(tb)

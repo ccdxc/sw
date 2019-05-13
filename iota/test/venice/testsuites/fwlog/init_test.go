@@ -3,6 +3,7 @@
 package fwlog_test
 
 import (
+	"context"
 	"flag"
 	"os"
 
@@ -52,7 +53,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// make cluster & setup auth
-	err = tb.SetupConfig()
+	err = tb.SetupConfig(context.TODO())
 	Expect(err).ShouldNot(HaveOccurred())
 
 	model, err := iotakit.NewSysModel(tb)

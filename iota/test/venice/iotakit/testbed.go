@@ -14,10 +14,9 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"golang.org/x/sync/errgroup"
-
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -92,7 +91,7 @@ type TestBed struct {
 	hasNaplesSim         bool                       // has Naples sim nodes in the topology
 	hasNaplesHW          bool                       // testbed has Naples HW in the topology
 	allocatedVlans       []uint32                   // VLANs allocated for this testbed
-	veniceLoggedinCtx    context.Context            // venice logged in context
+	authToken            string                     // authToken obtained after logging in
 	veniceRestClient     []apiclient.Services       // Venice REST API client
 	unallocatedInstances []*InstanceParams          // currently unallocated instances
 	testResult           map[string]bool            // test result
@@ -875,20 +874,20 @@ func (tb *TestBed) setupNaplesMode() error {
 }
 
 // SetupConfig sets up the venice cluster and basic config (like auth etc)
-func (tb *TestBed) SetupConfig() error {
+func (tb *TestBed) SetupConfig(ctx context.Context) error {
 	if tb.skipSetup {
 		return nil
 	}
 
 	// make venice cluster
-	err := tb.MakeVeniceCluster()
+	err := tb.MakeVeniceCluster(ctx)
 	if err != nil {
 		log.Errorf("Error creating venice cluster. Err: %v", err)
 		return err
 	}
 
 	// setup auth and wait for venice cluster to come up
-	err = tb.InitVeniceConfig()
+	err = tb.InitVeniceConfig(ctx)
 	if err != nil {
 		log.Errorf("Error configuring cluster. Err: %v", err)
 		return err
@@ -1068,8 +1067,10 @@ func InitSuite(topoName, paramsFile string, scale, scaleData bool) (*TestBed, *S
 		return nil, nil, err
 	}
 
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Minute)
+	defer cancel()
 	// make cluster & setup auth
-	err = tb.SetupConfig()
+	err = tb.SetupConfig(ctx)
 	if err != nil {
 		tb.CollectLogs()
 		return nil, nil, err

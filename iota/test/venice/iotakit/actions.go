@@ -158,6 +158,9 @@ func (act *ActionCtx) VerifyPolicyStatus(spc *SGPolicyCollection) error {
 	if spc.err != nil {
 		return spc.err
 	}
+	if len(act.model.naples) == 0 {
+		return nil
+	}
 
 	for _, pol := range spc.policies {
 		pstat, err := act.model.tb.GetSGPolicy(&pol.venicePolicy.ObjectMeta)

@@ -7,11 +7,12 @@ import (
 	"math/rand"
 	"strings"
 
+	"github.com/willf/bitset"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/willf/bitset"
 )
 
 // Host represents a host where workload are running

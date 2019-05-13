@@ -12,7 +12,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// MirrorSession represents mirrorsession 
+// MirrorSession represents mirrorsession
 type MirrorSession struct {
 	veniceMirrorSess *monitoring.MirrorSession
 	sm               *SysModel // pointer back to the model
@@ -54,16 +54,16 @@ func (msp *MirrorSessionCollection) AddCollector(wc *WorkloadCollection, transpo
 	if wc.err != nil {
 		return &MirrorSessionCollection{err: wc.err}
 	}
-        collector := monitoring.MirrorCollector{
-                Type: "ERSPAN",
-                ExportCfg: &monitoring.ExportConfig{
-                        Destination: strings.Split(wc.workloads[wlnum].iotaWorkload.IpPrefix, "/")[0],
-                        Transport: transport,
-                },
-        }
-                
+	collector := monitoring.MirrorCollector{
+		Type: "ERSPAN",
+		ExportCfg: &monitoring.ExportConfig{
+			Destination: strings.Split(wc.workloads[wlnum].iotaWorkload.IpPrefix, "/")[0],
+			Transport:   transport,
+		},
+	}
+
 	for _, sess := range msp.sessions {
-                sess.veniceMirrorSess.Spec.Collectors = append(sess.veniceMirrorSess.Spec.Collectors, collector)
+		sess.veniceMirrorSess.Spec.Collectors = append(sess.veniceMirrorSess.Spec.Collectors, collector)
 	}
 
 	return msp
@@ -75,7 +75,7 @@ func (msp *MirrorSessionCollection) ClearCollectors() *MirrorSessionCollection {
 		return msp
 	}
 	for _, sess := range msp.sessions {
-                sess.veniceMirrorSess.Spec.Collectors = nil
+		sess.veniceMirrorSess.Spec.Collectors = nil
 	}
 
 	return msp
@@ -110,12 +110,12 @@ func (msp *MirrorSessionCollection) AddRule(fromIP, toIP, port string) *MirrorSe
 	if msp.err != nil {
 		return msp
 	}
-	
+
 	// build the rule
 	rule := monitoring.MatchRule{
-		Src: &monitoring.MatchSelector{IPAddresses: []string{fromIP}},
-		Dst: &monitoring.MatchSelector{IPAddresses: []string{toIP}},
-                AppProtoSel: &monitoring.AppProtoSelector{ProtoPorts: []string{port}},
+		Src:         &monitoring.MatchSelector{IPAddresses: []string{fromIP}},
+		Dst:         &monitoring.MatchSelector{IPAddresses: []string{toIP}},
+		AppProtoSel: &monitoring.AppProtoSelector{ProtoPorts: []string{port}},
 	}
 
 	for _, sess := range msp.sessions {
@@ -168,10 +168,9 @@ func (msc *MirrorSessionCollection) Delete() error {
 // MirrorSessions returns all Mirror Sessions in the model
 func (sm *SysModel) MirrorSessions() *MirrorSessionCollection {
 	msc := MirrorSessionCollection{}
-	for _, sess:= range msc.sessions {
+	for _, sess := range msc.sessions {
 		msc.sessions = append(msc.sessions, sess)
 	}
 
 	return &msc
 }
-
