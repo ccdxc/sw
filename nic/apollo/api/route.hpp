@@ -132,10 +132,16 @@ public:
     virtual sdk_ret_t update_db(api_base *orig_obj,
                                 obj_ctxt_t *obj_ctxt) override;
 
-    /**
-     * @brief    initiate delay deletion of this object
-     */
+    /**< @brief    initiate delay deletion of this object */
     virtual sdk_ret_t delay_delete(void) override;
+
+    /**
+     * @brief    compute all the objects depending on this object and add to
+     *           framework's dependency list
+     * @param[in] obj_ctxt    transient state associated with this API
+     * @return   SDK_RET_OK on success, failure status code on error
+     */
+    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
 
     /**< @brief    return stringified key of the object (for debugging) */
     virtual string key2str(void) const override {
@@ -176,6 +182,10 @@ public:
         }
         return false;
     }
+
+    /// \brief          return the route table key/id
+    /// \return         key/id of the route table
+    pds_route_table_key_t key(void) const { return key_; }
 
     /**
      * @brief return address family of this routing table

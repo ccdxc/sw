@@ -106,7 +106,6 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     vpc_entry                 *vpc;
 
     spec = &obj_ctxt->api_params->route_table_spec;
-
     // allocate memory for the library to build route table
     rtable =
         (route_table_t *)
@@ -205,16 +204,9 @@ route_table_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
         // to other routing table(s) or deleted (agent is expected to
         // ensure this), there is no need to program any tables during
         // activation stage
-        break;
-
     case api::API_OP_UPDATE:
-         // TODO:
-         // need to walk all vnics AND subnets to see which of them are using
-         // this routing table and then walk all the vnics that are part of the
-         // vpcs and subnets and write new epoch data
-        return SDK_RET_ERR;
-        break;
-
+        // affected objects like affected vpc, subnet and vnic objects
+        // are in the dependent object list by now and will be reprogrammed
     default:
         break;
     }

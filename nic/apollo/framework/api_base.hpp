@@ -181,7 +181,8 @@ public:
         return factory(api_ctxt);
     }
 
-    /// \brief Clone this object and return cloned object
+    /// \brief compute all the objects depending on this object and add to
+    ///        framework's dependency list
     /// \param[in] obj_ctxt Transient state associated with this API
     /// \return #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) {

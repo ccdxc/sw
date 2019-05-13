@@ -371,6 +371,7 @@ api_engine::add_deps_(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
         // is that it is handled in the agent when such a case arises
         return SDK_RET_OK;
     }
+    // NOTE: we are invoking this method on the original unmodified object
     return api_obj->add_deps(obj_ctxt);
 }
 

@@ -22,6 +22,11 @@ namespace api {
 /// \@ingroup PDS_ROUTE
 /// \@{
 
+typedef struct route_table_update_ctxt_s {
+    route_table *rtable;
+    obj_ctxt_t *obj_ctxt;
+} __PACK__ route_table_update_ctxt_t;
+
 route_table::route_table() {
     //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     ht_ctxt_.reset();
@@ -62,7 +67,7 @@ route_table::destroy(route_table *rtable) {
 sdk_ret_t
 route_table::init_config(api_ctxt_t *api_ctxt) {
     pds_route_table_spec_t    *spec;
-    
+
     spec = &api_ctxt->api_params->route_table_spec;
     memcpy(&this->key_, &spec->key, sizeof(pds_route_table_key_t));
     this->af_ = spec->af;
@@ -124,6 +129,27 @@ route_table::del_from_db(void) {
 sdk_ret_t
 route_table::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_ROUTE_TABLE, this);
+}
+
+static bool
+subnet_upd_walk_cb_(void *api_obj, void *ctxt) {
+    subnet_entry *subnet = (subnet_entry *)api_obj;
+    route_table_update_ctxt_t *upd_ctxt = (route_table_update_ctxt_t *)ctxt;
+
+    if ((subnet->v4_route_table().id == upd_ctxt->rtable->key().id) ||
+        (subnet->v6_route_table().id == upd_ctxt->rtable->key().id)) {
+        upd_ctxt->obj_ctxt->add_deps(subnet, API_OP_UPDATE);
+    }
+    return false;
+}
+
+sdk_ret_t
+route_table::add_deps(obj_ctxt_t *obj_ctxt) {
+    route_table_update_ctxt_t upd_ctxt = { 0 };
+
+    upd_ctxt.rtable = this;
+    upd_ctxt.obj_ctxt = obj_ctxt;
+    return subnet_db()->walk(subnet_upd_walk_cb_, &upd_ctxt);
 }
 
 /// \@}    // end of PDS_ROUTE_TABLE

@@ -155,10 +155,9 @@ static bool
 vnic_upd_walk_cb_(void *api_obj, void *ctxt) {
     vnic_entry *vnic = (vnic_entry *)api_obj;
     subnet_update_ctxt_t *upd_ctxt = (subnet_update_ctxt_t *)ctxt;
-    obj_ctxt_t *obj_ctxt = upd_ctxt->obj_ctxt;
 
     if (vnic->subnet().id == upd_ctxt->subnet->key().id) {
-        obj_ctxt->add_deps(vnic, API_OP_UPDATE);
+        upd_ctxt->obj_ctxt->add_deps(vnic, API_OP_UPDATE);
     }
     return false;
 }
