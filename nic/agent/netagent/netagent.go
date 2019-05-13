@@ -252,11 +252,13 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.NaplesStatus) {
 			log.Infof("NPM client {%+v} is running", npmClient)
 			ag.NpmClient = npmClient
 
-			ag.TroubleShoot.TsClient, err = tsctrler.NewTsClient(ag.TroubleShoot.TroubleShootingAgent, globals.Tsm, ag.ResolverClient)
-			if err != nil {
-				log.Errorf("Error creating TroubleShooting client. Err: %v", err)
+			if ag.TroubleShoot != nil {
+				ag.TroubleShoot.TsClient, err = tsctrler.NewTsClient(ag.TroubleShoot.TroubleShootingAgent, globals.Tsm, ag.ResolverClient)
+				if err != nil {
+					log.Errorf("Error creating TroubleShooting client. Err: %v", err)
+				}
+				log.Infof("TroubleShooting client {%+v} is running", ag.TroubleShoot.TroubleShootingAgent)
 			}
-			log.Infof("TroubleShooting client {%+v} is running", ag.TroubleShoot.TroubleShootingAgent)
 
 			if ag.Tmagent != nil { // tmagent was enableds
 				if err := ag.Tmagent.NewTpClient(ag.NetworkAgent.NodeUUID, ag.ResolverClient); err != nil {

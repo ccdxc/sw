@@ -9,6 +9,9 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/pensando/sw/events/generated/eventtypes"
+	"github.com/pensando/sw/venice/utils/events/recorder"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -76,27 +79,21 @@ func (pm *PolicyManager) Stop() {
 
 // HandleEvents handles policy events
 func (pm *PolicyManager) HandleEvents() error {
-	var err error
-
 	ctx, cancel := context.WithCancel(context.Background())
 	pm.cancel = cancel
 
 	defer pm.cancel()
 
 	for {
-		if pm.apiClient, err = pm.initAPIGrpcClient(globals.APIServer, maxRetry); err != nil {
-			pmLog.Fatalf("failed to init api grpc client, error: %s", err)
-		}
+		pm.apiClient = pm.initAPIGrpcClient(globals.APIServer)
 		pmLog.Infof("connected to {%s}", globals.APIServer)
 
-		if pm.metricClient, err = pm.initMetricGrpcClient(globals.Collector, maxRetry); err != nil {
-			pmLog.Fatalf("failed to init metric grpc client, error: %s", err)
-		}
+		pm.metricClient = pm.initMetricGrpcClient(globals.Collector)
 		pmLog.Infof("connected to {%s}", globals.Collector)
 
 		pm.processEvents(ctx)
 
-		// close rpc services
+		// close rpc service
 		pm.apiClient.Close()
 
 		// context canceled, return
@@ -109,37 +106,42 @@ func (pm *PolicyManager) HandleEvents() error {
 }
 
 // init api grpc client
-func (pm *PolicyManager) initAPIGrpcClient(serviceName string, retry int) (apiclient.Services, error) {
-	for i := 0; i < retry; i++ {
-		// create a grpc client
-		client, apiErr := apiclient.NewGrpcAPIClient(globals.Tpm, serviceName, vLog.WithContext("pkg", "TPM-GRPC-API"),
-			rpckit.WithBalancer(balancer.New(pm.nsClient)))
-		if apiErr == nil {
-			return client, nil
+func (pm *PolicyManager) initAPIGrpcClient(serviceName string) apiclient.Services {
+	for {
+		for i := 0; i < maxRetry; i++ {
+			// create a grpc client
+			client, apiErr := apiclient.NewGrpcAPIClient(globals.Tpm, serviceName, vLog.WithContext("pkg", "TPM-GRPC-API"),
+				rpckit.WithBalancer(balancer.New(pm.nsClient)))
+			if apiErr == nil {
+				return client
+			}
+			pmLog.Warnf("failed to connect to {%s}, error: %s, retry", serviceName, apiErr)
+			time.Sleep(2 * time.Second)
 		}
-		pmLog.Warnf("failed to connect to {%s}, error: %s, retry", serviceName, apiErr)
-		time.Sleep(2 * time.Second)
+
+		// log event
+		recorder.Event(eventtypes.SERVICE_UNRESPONSIVE, globals.Tpm+" failed to connect to "+serviceName, nil)
 	}
-	return nil, fmt.Errorf("failed to connect to {%s}, exhausted all attempts(%d)", serviceName, retry)
 }
 
 // init metric grpc client
-func (pm *PolicyManager) initMetricGrpcClient(serviceName string, retry int) (metric.MetricApiClient, error) {
-	for i := 0; i < retry; i++ {
-		// create a grpc client
-		client, err := rpckit.NewRPCClient(globals.Tpm, serviceName,
-			rpckit.WithBalancer(balancer.New(pm.nsClient)))
-		if err != nil {
-			pmLog.ErrorLog("msg", "Failed to connect to gRPC server", "URL", serviceName, "error", err)
-			// return nil, err
-		} else {
-			return metric.NewMetricApiClient(client.ClientConn), nil
+func (pm *PolicyManager) initMetricGrpcClient(serviceName string) metric.MetricApiClient {
+	for {
+		for i := 0; i < maxRetry; i++ {
+			// create a grpc client
+			client, err := rpckit.NewRPCClient(globals.Tpm, serviceName,
+				rpckit.WithBalancer(balancer.New(pm.nsClient)))
+			if err == nil {
+				return metric.NewMetricApiClient(client.ClientConn)
+			}
+
+			pmLog.Warnf("failed to connect to {%s}, error: %s, retry", serviceName, err)
+			time.Sleep(2 * time.Second)
 		}
 
-		pmLog.Warnf("failed to connect to {%s}, error: %s, retry", serviceName, err)
-		time.Sleep(2 * time.Second)
+		// log event
+		recorder.Event(eventtypes.SERVICE_UNRESPONSIVE, globals.Tpm+" failed to connect to "+serviceName, nil)
 	}
-	return nil, fmt.Errorf("failed to connect to {%s}, exhausted all attempts(%d)", serviceName, retry)
 }
 
 // processEvents watch & process telemetry policy events
@@ -314,6 +316,7 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 
 	switch eventType {
 	case kvstore.Created:
+		// Todo: not required
 		// create stats policy
 		statsPolicy := &telemetry.StatsPolicy{
 			ObjectMeta: api.ObjectMeta{
@@ -344,6 +347,7 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 	case kvstore.Updated: // no-op
 
 	case kvstore.Deleted:
+		// Todo: not required
 		// delete stats policy
 		objMeta := &api.ObjectMeta{
 			Name:   tenant.GetName(),

@@ -9,7 +9,7 @@ import (
 )
 
 // NewFwEventGen generates fwlogs
-func NewFwEventGen(ctx context.Context, num int) chan *halproto.FWEvent {
+func NewFwEventGen(ctx context.Context, num int, vrf uint64) chan *halproto.FWEvent {
 	protKey := func() int32 {
 		for k := range halproto.IPProtocol_name {
 			if k != 0 {
@@ -32,6 +32,7 @@ func NewFwEventGen(ctx context.Context, num int) chan *halproto.FWEvent {
 	go func() {
 		for i := 0; i < num; i++ {
 			ev := &halproto.FWEvent{
+				SourceVrf:  uint64(rand.Int31n(100)),
 				Flowaction: halproto.FlowLogEventType_FLOW_LOG_EVENT_TYPE_CREATE,
 				Sipv4:      uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
 				Dipv4:      uint32(rand.Int31n(200) + rand.Int31n(200)<<8 + rand.Int31n(200)<<16 + rand.Int31n(200)<<24),
@@ -42,6 +43,12 @@ func NewFwEventGen(ctx context.Context, num int) chan *halproto.FWEvent {
 				Direction:  uint32(rand.Int31n(2) + 1),
 				RuleId:     uint64(rand.Int63n(5000)),
 				SessionId:  uint64(rand.Int63n(5000)),
+			}
+
+			// set vrf
+			if vrf != 0 {
+				ev.SourceVrf = vrf
+				ev.DestVrf = vrf
 			}
 
 			if ev.IpProt == halproto.IPProtocol_IPPROTO_ICMP {
@@ -63,6 +70,6 @@ func NewFwEventGen(ctx context.Context, num int) chan *halproto.FWEvent {
 }
 
 // Cmd generates the command to trigger fw events in the specified naple
-func Cmd(num int) string {
-	return fmt.Sprintf("curl -s -X POST http://127.0.0.1:9257/fwlog?num=%d", num)
+func Cmd(num int, vrf int) string {
+	return fmt.Sprintf("curl -s -X POST http://127.0.0.1:9257/fwlog?\"num=%d&vrf=%d\"", num, vrf)
 }

@@ -60,7 +60,10 @@ func NewBsd(network, raddr string, priority Priority, tag string, opts ...BOptio
 
 // Close closes the underlying client connection to the syslog server
 func (w *bsd) Close() error {
-	return w.sw.Close()
+	if w.sw != nil {
+		w.sw.Close()
+	}
+	return nil
 }
 
 // Emerg logs a message with severity LOG_EMERG

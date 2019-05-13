@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 	"reflect"
 	"strings"
@@ -53,7 +54,6 @@ func parseRfc3164(ch chan []byte) (syslogparser.LogParts, error) {
 }
 
 func parseRfc5424(ch chan []byte) (syslogparser.LogParts, error) {
-
 	select {
 	case buff := <-ch:
 		p := rfc5424.NewParser(buff)
@@ -86,7 +86,6 @@ func startSyslogServer(proto string, ch chan []byte) (string, func(), error) {
 				log.Infof("udp syslog server %s ready", l.LocalAddr().String())
 				n, _, err := l.ReadFrom(buff)
 				if err != nil {
-
 					for _, s := range []string{"closed network connection", "EOF"} {
 						if strings.Contains(err.Error(), s) {
 							log.Infof("read %s from udp socket", s)
@@ -242,7 +241,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
@@ -271,7 +270,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
@@ -301,7 +300,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
@@ -314,7 +313,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 							Transport:   "tcp/10001",
 						},
 						{
-							Destination: "registry.test.pensando.io",
+							Destination: "localhost",
 							Transport:   "tcp/15001",
 						},
 						{
@@ -344,7 +343,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
@@ -357,7 +356,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 							Transport:   "tcp/10001",
 						},
 						{
-							Destination: "registry.test.pensando.io",
+							Destination: "localhost",
 							Transport:   "tcp/15001",
 						},
 						{
@@ -378,7 +377,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{},
 				Spec: monitoring.FwlogPolicySpec{
@@ -405,7 +404,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
@@ -425,7 +424,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
@@ -456,7 +455,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
@@ -487,7 +486,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
@@ -518,7 +517,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			fail: true,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
@@ -548,7 +547,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			fail: false,
 			policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Namespace: globals.DefaultNamespace,
@@ -561,7 +560,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 							Transport:   "tcp/10001",
 						},
 						{
-							Destination: "registry.test.pensando.io",
+							Destination: "localhost",
 							Transport:   "tcp/15001",
 						},
 					},
@@ -581,6 +580,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			t.Logf("test [%s], error:%s", p.name, err)
 			Assert(t, err != nil, "didn't fail to create fwlog export for [%s], policy: %+v", p.name, p.policy)
 		} else {
+			t.Logf("test [%s]", p.name)
 			AssertOk(t, err, "failed to create fwlog export for [%s], policy: %+v", p.name, p.policy)
 			//list
 			l, err := ps.ListFwlogPolicy(ctx)
@@ -597,6 +597,8 @@ func TestValidateFwlogPolicy(t *testing.T) {
 			err = ps.DeleteFwlogPolicy(ctx, p.policy)
 			AssertOk(t, err, "failed to delete fwlog export for [%s], policy: %+v", p.name, p.policy)
 
+			_, err = ps.Debug(&http.Request{})
+			AssertOk(t, err, "failed to get debug")
 		}
 	}
 }
@@ -613,7 +615,7 @@ func TestFwPolicyOps(t *testing.T) {
 
 		genPolicy[i] = &tpmprotos.FwlogPolicy{
 			TypeMeta: api.TypeMeta{
-				Kind: "fwLogPolicy",
+				Kind: "FwlogPolicy",
 			},
 			ObjectMeta: api.ObjectMeta{
 				Namespace: globals.DefaultNamespace,
@@ -746,7 +748,7 @@ func TestProcessFWEvent(t *testing.T) {
 
 	fwPolicy1 := &tpmprotos.FwlogPolicy{
 		TypeMeta: api.TypeMeta{
-			Kind: "fwLogPolicy",
+			Kind: "FwlogPolicy",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Namespace: globals.DefaultNamespace,
@@ -772,7 +774,7 @@ func TestProcessFWEvent(t *testing.T) {
 	}
 	fwPolicy2 := &tpmprotos.FwlogPolicy{
 		TypeMeta: api.TypeMeta{
-			Kind: "fwLogPolicy",
+			Kind: "FwlogPolicy",
 		},
 		ObjectMeta: api.ObjectMeta{
 			Namespace: globals.DefaultNamespace,
@@ -923,7 +925,7 @@ func TestPolicyUpdate(t *testing.T) {
 			EventType: api.EventType_CreateEvent,
 			Policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Name: "policy1",
@@ -949,7 +951,7 @@ func TestPolicyUpdate(t *testing.T) {
 			EventType: api.EventType_CreateEvent,
 			Policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Name: "policy2",
@@ -978,7 +980,7 @@ func TestPolicyUpdate(t *testing.T) {
 			EventType: api.EventType_UpdateEvent,
 			Policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Name: "policy2",
@@ -1003,7 +1005,7 @@ func TestPolicyUpdate(t *testing.T) {
 			EventType: api.EventType_DeleteEvent,
 			Policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Name: "policy1",
@@ -1028,7 +1030,7 @@ func TestPolicyUpdate(t *testing.T) {
 			EventType: api.EventType_UpdateEvent,
 			Policy: &tpmprotos.FwlogPolicy{
 				TypeMeta: api.TypeMeta{
-					Kind: "fwLogPolicy",
+					Kind: "FwlogPolicy",
 				},
 				ObjectMeta: api.ObjectMeta{
 					Name: "policy2",

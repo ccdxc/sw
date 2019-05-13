@@ -58,8 +58,10 @@ func (f *fwgen) numLogsHandler(r *http.Request) (interface{}, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid num-logs in %s, %s", numStr, err)
 		}
+		vrf := r.URL.Query().Get("vrf")
+		vrfid, _ := strconv.Atoi(vrf)
 
-		ch := fwevent.NewFwEventGen(r.Context(), numLogs)
+		ch := fwevent.NewFwEventGen(r.Context(), numLogs, uint64(vrfid))
 		idx := 0
 		for ev := range ch {
 			if err := f.ipcList[idx].Write(ev); err != nil {

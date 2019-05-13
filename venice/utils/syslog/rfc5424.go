@@ -148,7 +148,10 @@ func (w *rfc5424) connect() (net.Conn, error) {
 func (w *rfc5424) Close() error {
 	w.Lock()
 	defer w.Unlock()
-	return w.conn.Close()
+	if w.conn != nil {
+		w.conn.Close()
+	}
+	return nil
 }
 
 // Emerg logs a message with severity LOG_EMERG

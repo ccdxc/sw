@@ -53,6 +53,16 @@ type fwlogCollector struct {
 	filter      uint32
 	format      string
 	syslogFd    syslog.Writer
+	txCount     uint64
+	txErr       uint64
+}
+
+func (f *fwlogCollector) String() string {
+	if f != nil {
+		return fmt.Sprintf("vrf:%d format:%v proto:%v destination:%v port:%v fd:%v txCount:%d txErr:%d",
+			f.vrf, f.format, f.proto, f.destination, f.port, f.syslogFd != nil, f.txCount, f.txErr)
+	}
+	return ""
 }
 
 // NewTpAgent creates new telemetry policy agent state
@@ -108,15 +118,16 @@ func (s *PolicyState) connectSyslog() error {
 		defer s.wg.Done()
 		for {
 			select {
-			case <-time.After(time.Second):
+			case <-time.After(time.Second * 2):
 				s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
 
 					if c, ok := v.(*fwlogCollector); ok {
 						c.Lock()
 						if c.syslogFd == nil {
 							// reconnect to collector that was never connected or had write error
-							err := s.newSyslog(c)
-							log.Infof("reconnect to collector %s:%s:%s, err:%v", c.proto, c.destination, c.port, err)
+							if err := s.newSyslog(c); err != nil {
+								log.Warnf("failed to connect to collector %s:%s:%s, err:%v", c.proto, c.destination, c.port, err)
+							}
 						}
 						c.Unlock()
 					} else {
@@ -139,7 +150,19 @@ func (s *PolicyState) connectSyslog() error {
 // create a hash key to flatten collector config
 func (s *PolicyState) getCollectorKey(vrf uint64, policy *tpmprotos.FwlogPolicy, m monitoring.ExportConfig) string {
 	// keys that requires new connection to collector
-	return fmt.Sprintf("%d:%s:%s:%s:%s:%s:%s", vrf, policy.ObjectMeta.Name, policy.Spec.Format, policy.Spec.Filter, policy.Spec.Config.FacilityOverride, m.Destination, m.Transport)
+	key := []string{fmt.Sprintf("%d", vrf),
+		policy.ObjectMeta.Name,
+		policy.Spec.Format,
+	}
+
+	key = append(key, policy.Spec.Filter...)
+	if policy.Spec.Config != nil {
+		key = append(key, policy.Spec.Config.FacilityOverride)
+	}
+	key = append(key, m.Destination, m.Transport)
+
+	return strings.Join(key, ":")
+
 }
 
 // get vrf from netagent
@@ -166,6 +189,7 @@ func (s *PolicyState) getvrf(tenant, namespace, vrfName string) (uint64, error) 
 				}
 			}
 		}
+		log.Warnf("failed to GET from %s, %v", reqURL, err)
 		time.Sleep(time.Millisecond * 100)
 	}
 
@@ -188,6 +212,7 @@ func (s *PolicyState) newSyslog(c *fwlogCollector) error {
 			return err
 		}
 		c.syslogFd = fd
+		log.Infof("connected to syslog %v %v://%v:%v", c.format, c.proto, c.destination, c.port)
 
 	case monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String():
 		fd, err := syslog.NewRfc5424(strings.ToLower(c.proto), fmt.Sprintf("%s:%s", c.destination, c.port), facility, s.hostName, s.appName)
@@ -195,6 +220,7 @@ func (s *PolicyState) newSyslog(c *fwlogCollector) error {
 			return err
 		}
 		c.syslogFd = fd
+		log.Infof("connected to syslog %v %v://%v:%v", c.format, c.proto, c.destination, c.port)
 
 	default:
 		return fmt.Errorf("invalid syslog format %v", c.format)
@@ -222,6 +248,10 @@ func (s *PolicyState) validateFwLogPolicy(p *tpmprotos.FwlogPolicy) error {
 		p.Namespace = globals.DefaultNamespace
 	}
 
+	if p.Spec.VrfName == "" {
+		p.Spec.VrfName = globals.DefaultVrf
+	}
+
 	if len(p.Spec.Targets) == 0 {
 		return fmt.Errorf("no collectors configured")
 	}
@@ -234,8 +264,7 @@ func (s *PolicyState) validateFwLogPolicy(p *tpmprotos.FwlogPolicy) error {
 		netIP := net.ParseIP(c.Destination)
 		if netIP == nil {
 			// treat it as hostname and resolve
-			_, err := net.LookupHost(c.Destination)
-			if err != nil {
+			if _, err := net.LookupHost(c.Destination); err != nil {
 				return fmt.Errorf("failed to resolve name {%s}, error: %s", c.Destination, err)
 			}
 		}
@@ -260,6 +289,7 @@ func (s *PolicyState) validateFwLogPolicy(p *tpmprotos.FwlogPolicy) error {
 		if uint(port) > uint(^uint16(0)) {
 			return fmt.Errorf("invalid port (> %d) in %+v", ^uint16(0), c)
 		}
+
 		k := s.getCollectorKey(0, p, c)
 		if _, ok := numColl[k]; ok {
 			return fmt.Errorf("duplicate collector config %+v", c)
@@ -348,7 +378,10 @@ func (s *PolicyState) deleteCollectors(vrf uint64) error {
 
 // CreateFwlogPolicy is the POST() entry point
 func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) (err error) {
+	log.Infof("process fwlog policy %+v", p)
+
 	if err = s.validateFwLogPolicy(p); err != nil {
+		log.Errorf("fwlog policy validation failed, %v", err)
 		return err
 	}
 
@@ -359,7 +392,9 @@ func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 
 	vrf, err := s.getvrf(p.Tenant, p.Namespace, p.Spec.VrfName)
 	if err != nil {
-		return fmt.Errorf("failed to get vrf for %s/%s, %s", p.Tenant, p.Namespace, err)
+		msg := fmt.Errorf("failed to get vrf for %s/%s/%s, %s", p.Tenant, p.Namespace, p.Spec.VrfName, err)
+		log.Errorf("%v", msg)
+		return msg
 	}
 
 	filter := s.getFilter(p.Spec.Filter)
@@ -370,10 +405,13 @@ func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 			vrf:         vrf,
 			filter:      filter,
 			format:      p.Spec.Format,
-			facility:    syslog.Priority(monitoring.SyslogFacility_value[p.Spec.Config.FacilityOverride]),
 			destination: target.Destination,
 			proto:       transport[0],
 			port:        transport[1],
+		}
+
+		if p.Spec.Config != nil {
+			fwcollector.facility = syslog.Priority(monitoring.SyslogFacility_value[p.Spec.Config.FacilityOverride])
 		}
 
 		// we 'll keep the config & connect from the goroutine to avoid blocking
@@ -382,14 +420,19 @@ func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 
 	if err := s.emstore.Write(p); err != nil {
 		s.DeleteFwlogPolicy(ctx, p)
-		return fmt.Errorf("failed to save policy, %s", err)
+		msg := fmt.Errorf("failed to save policy, %s", err)
+		log.Errorf("%v", msg)
+		return msg
 	}
 
+	log.Infof("created %+v", p)
 	return nil
 }
 
 // UpdateFwlogPolicy is the PUT entry point
 func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+	log.Infof("update fwlog policy %+v", p)
+
 	if err := s.validateFwLogPolicy(p); err != nil {
 		return err
 	}
@@ -412,10 +455,13 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 			vrf:         vrf,
 			filter:      filter,
 			format:      p.Spec.Format,
-			facility:    syslog.Priority(monitoring.SyslogFacility_value[p.Spec.Config.FacilityOverride]),
 			destination: target.Destination,
 			proto:       transport[0],
 			port:        transport[1],
+		}
+
+		if p.Spec.Config != nil {
+			newCollector[key].facility = syslog.Priority(monitoring.SyslogFacility_value[p.Spec.Config.FacilityOverride])
 		}
 	}
 
@@ -458,6 +504,7 @@ func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 
 // DeleteFwlogPolicy is the DELETE entry point
 func (s *PolicyState) DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+	log.Infof("delete fwlog policy %+v", p)
 	// set default
 	if p.Tenant == "" {
 		p.Tenant = globals.DefaultTenant
@@ -467,18 +514,24 @@ func (s *PolicyState) DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		p.Namespace = globals.DefaultNamespace
 	}
 
-	if _, err := s.emstore.Read(p); err != nil {
+	obj, err := s.emstore.Read(p)
+	if err != nil {
 		return fmt.Errorf("policy %s doesn't exist", p.Name)
 	}
 
-	vrf, err := s.getvrf(p.Tenant, p.Namespace, p.Spec.VrfName)
+	sp, ok := obj.(*tpmprotos.FwlogPolicy)
+	if !ok {
+		return fmt.Errorf("invalid fwlog policy %+v in db", obj)
+	}
+
+	vrf, err := s.getvrf(sp.Tenant, sp.Namespace, sp.Spec.VrfName)
 	if err != nil {
-		return fmt.Errorf("failed to get vrf for %s/%s", p.Tenant, p.Namespace)
+		return fmt.Errorf("failed to get vrf for %s/%s", sp.Tenant, sp.Namespace)
 	}
 
 	delList := map[string]bool{}
-	for _, target := range p.Spec.Targets {
-		key := s.getCollectorKey(vrf, p, target)
+	for _, target := range sp.Spec.Targets {
+		key := s.getCollectorKey(vrf, sp, target)
 		delList[key] = true
 	}
 
@@ -500,7 +553,7 @@ func (s *PolicyState) DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogP
 		s.fwLogCollectors.Delete(k)
 	}
 
-	s.emstore.Delete(p)
+	s.emstore.Delete(sp)
 	return nil
 }
 
@@ -523,11 +576,12 @@ func (s *PolicyState) ListFwlogPolicy(tx context.Context) ([]*tpmprotos.FwlogPol
 
 	objList, err := s.emstore.List(&tpmprotos.FwlogPolicy{
 		TypeMeta: api.TypeMeta{
-			Kind: "fwLogPolicy",
+			Kind: "FwlogPolicy",
 		},
 	})
 
 	if err != nil {
+		log.Errorf("failed to list FwlogPolicy, %v", err)
 		return fwlogPol, nil
 	}
 
@@ -551,12 +605,16 @@ func (s *PolicyState) sendFwLog(c *fwlogCollector, data map[string]string) {
 				"firewall@Pensando": data,
 			},
 		}); err != nil {
+			c.txErr++
+			log.Debugf("failed to send to %v://%v:%v, %v", c.proto, c.destination, c.port, err)
 			s.closeSyslog(c)
 		}
+		c.txCount++
 	} else {
 		d, err := json.Marshal(data)
 		if err != nil {
-			log.Errorf("marshal error [%v] %s", data, err)
+			c.txErr++
+			log.Debugf("marshal error [%v] %s", data, err)
 			return
 		}
 
@@ -564,8 +622,11 @@ func (s *PolicyState) sendFwLog(c *fwlogCollector, data map[string]string) {
 			MsgID: data["rule-id"], // set rule-id
 			Msg:   string(d),
 		}); err != nil {
+			c.txErr++
+			log.Debugf("failed to send to %v://%v:%v, %v", c.proto, c.destination, c.port, err)
 			s.closeSyslog(c)
 		}
+		c.txCount++
 	}
 }
 
@@ -599,15 +660,49 @@ func (s *PolicyState) ListFlowExportPolicy(tx context.Context) ([]*tpmprotos.Flo
 
 // Debug is the debug entry point from REST
 func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
-
 	ipcInfo := map[string]string{}
 	for i, ipc := range s.ipc {
 		ipcInfo[fmt.Sprintf("ipc-%d", i)] = ipc.String()
-	}
-	return map[string]interface{}{
-		"tsdb": tsdb.Debug(),
-		"shm":  s.shm.String(),
-		"ipc":  ipcInfo,
-	}, nil
 
+	}
+
+	dbgState := map[string]interface{}{
+		"tsdb": tsdb.Debug(),
+		"ipc":  ipcInfo,
+	}
+
+	if s.shm != nil {
+		dbgState["shm"] = s.shm.String()
+	}
+
+	if fwpol, err := s.emstore.List(
+		&tpmprotos.FwlogPolicy{
+			TypeMeta: api.TypeMeta{
+				Kind: "FwlogPolicy",
+			},
+		}); err == nil {
+		dbgState["fwLogPolicy"] = fwpol
+	}
+
+	if flowExp, err := s.emstore.List(
+		&tpmprotos.FlowExportPolicy{
+			TypeMeta: api.TypeMeta{
+				Kind: "flowExportPolicy",
+			},
+		}); err == nil {
+		dbgState["flowExportPolicy"] = flowExp
+	}
+
+	var collectors []string
+	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
+		if col, ok := v.(*fwlogCollector); ok {
+			col.Lock()
+			s := col.String()
+			col.Unlock()
+			collectors = append(collectors, s)
+		}
+		return true
+	})
+	dbgState["fwlog-collectors"] = collectors
+	return dbgState, nil
 }

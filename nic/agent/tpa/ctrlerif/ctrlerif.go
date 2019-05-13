@@ -78,7 +78,7 @@ func (w *watchChan) watchStatsPolicy(ctx context.Context, cl tpmproto.StatsPolic
 	for ctx.Err() == nil {
 		event, err := cl.Recv()
 		if err != nil {
-			log.Errorf("received error in stats policy stream, error:%s", err)
+			log.Errorf("stop watching stats policy, error:%s", err)
 			return
 		}
 		w.statsChan <- event
@@ -94,9 +94,8 @@ func (w *watchChan) watchFwlogPolicy(ctx context.Context, cl tpmproto.FwlogPolic
 	for ctx.Err() == nil {
 		event, err := cl.Recv()
 		if err != nil {
-			log.Errorf("received error in fwlog policy stream, error:%s", err)
+			log.Errorf("stop watching fwlog policy, error:%s", err)
 			return
-
 		}
 		w.fwlogChan <- event
 	}
@@ -111,7 +110,7 @@ func (w *watchChan) watchFlowExpPolicy(ctx context.Context, cl tpmproto.FlowExpo
 	for ctx.Err() == nil {
 		event, err := cl.Recv()
 		if err != nil {
-			log.Errorf("received error in flow export policy stream, error:%s", err)
+			log.Errorf("stop watching flow export policy, error:%s", err)
 			return
 		}
 		w.flowExpChan <- event
@@ -138,6 +137,15 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 		wc.wg.Wait()
 	}()
 
+	fwlogClient := tpmproto.NewFwlogPolicyApiClient(client.rpcClient.ClientConn)
+	fwlogPolicyStream, err := fwlogClient.WatchFwlogPolicy(ctx, &api.ObjectMeta{})
+	if err != nil {
+		log.Errorf("Error watching fwlog policy: Err: %v", err)
+		return err
+	}
+	wc.wg.Add(1)
+	go wc.watchFwlogPolicy(ctx, fwlogPolicyStream)
+
 	flowExpClient := tpmproto.NewFlowExportPolicyApiClient(client.rpcClient.ClientConn)
 	flowPolicyStream, err := flowExpClient.WatchFlowExportPolicy(ctx, &api.ObjectMeta{})
 	if err != nil {
@@ -155,15 +163,6 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 	}
 	wc.wg.Add(1)
 	go wc.watchStatsPolicy(ctx, statsPolicyStream)
-
-	fwlogClient := tpmproto.NewFwlogPolicyApiClient(client.rpcClient.ClientConn)
-	fwlogPolicyStream, err := fwlogClient.WatchFwlogPolicy(ctx, &api.ObjectMeta{})
-	if err != nil {
-		log.Errorf("Error watching fw log policy: Err: %v", err)
-		return err
-	}
-	wc.wg.Add(1)
-	go wc.watchFwlogPolicy(ctx, fwlogPolicyStream)
 
 	for {
 		select {
@@ -184,11 +183,17 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 			log.Infof("received policy(%s) %+v", event.EventType, event.Policy)
 			switch event.EventType {
 			case api.EventType_CreateEvent:
-				client.state.CreateFwlogPolicy(ctx, event.Policy)
+				if err := client.state.CreateFwlogPolicy(ctx, event.Policy); err != nil {
+					log.Errorf("create fwlog policy failed %s", err)
+				}
 			case api.EventType_UpdateEvent:
-				client.state.UpdateFwlogPolicy(ctx, event.Policy)
+				if err := client.state.UpdateFwlogPolicy(ctx, event.Policy); err != nil {
+					log.Errorf("update fwlog policy failed %s", err)
+				}
 			case api.EventType_DeleteEvent:
-				client.state.DeleteFwlogPolicy(ctx, event.Policy)
+				if err := client.state.DeleteFwlogPolicy(ctx, event.Policy); err != nil {
+					log.Errorf("delete fwlog policy failed %s", err)
+				}
 			}
 
 		case event, ok := <-wc.flowExpChan:
@@ -200,11 +205,17 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 
 			switch event.EventType {
 			case api.EventType_CreateEvent:
-				client.state.CreateFlowExportPolicy(ctx, event.Policy)
+				if err := client.state.CreateFlowExportPolicy(ctx, event.Policy); err != nil {
+					log.Errorf("create flow export policy failed %s", err)
+				}
 			case api.EventType_UpdateEvent:
-				client.state.UpdateFlowExportPolicy(ctx, event.Policy)
+				if err := client.state.UpdateFlowExportPolicy(ctx, event.Policy); err != nil {
+					log.Errorf("update flow export policy failed %s", err)
+				}
 			case api.EventType_DeleteEvent:
-				client.state.DeleteFlowExportPolicy(ctx, event.Policy)
+				if err := client.state.DeleteFlowExportPolicy(ctx, event.Policy); err != nil {
+					log.Errorf("delete flow export policy failed %s", err)
+				}
 			}
 
 		case <-client.watchCtx.Done():

@@ -8,7 +8,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	"strings"
 	"time"
 
 	"reflect"
@@ -515,27 +514,6 @@ func TestProcessTenant(t *testing.T) {
 
 	err = pa.processTenants(parentCtx, kvstore.Deleted, tenant)
 	tu.AssertOk(t, err, "processTenant delete failed")
-}
-
-func TestClientRetry(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	retry := 2
-	r := mockresolver.New()
-	pa, err := NewPolicyManager(listenURL, r)
-	tu.AssertOk(t, err, "failed to create policy manager")
-
-	_, err = pa.initAPIGrpcClient("rpc-server", retry)
-	tu.Assert(t, err != nil, "failed to test grpc cient")
-	tu.Assert(t, strings.Contains(err.Error(), fmt.Sprintf("exhausted all attempts(%d)", retry)),
-		fmt.Sprintf("failed to match error message, got :%s", err))
-
-	_, err = pa.initMetricGrpcClient("rpc-server", retry)
-	tu.Assert(t, err != nil, "failed to test grpc cient")
-	tu.Assert(t, strings.Contains(err.Error(), fmt.Sprintf("exhausted all attempts(%d)", retry)),
-		fmt.Sprintf("failed to match error message, got :%s", err))
-
 }
 
 func TestMain(m *testing.M) {

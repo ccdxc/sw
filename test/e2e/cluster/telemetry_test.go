@@ -355,7 +355,7 @@ var _ = Describe("telemetry tests", func() {
 
 			for _, naple := range ts.tu.NaplesNodes {
 				By(fmt.Sprintf("trigger fwlog in NIC container %s", naple))
-				st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naple, fwevent.Cmd(100)))
+				st := ts.tu.LocalCommandOutput(fmt.Sprintf("docker exec %s %s", naple, fwevent.Cmd(100, 65)))
 				Expect(st == "null").Should(BeTrue())
 			}
 			time.Sleep(time.Second)
