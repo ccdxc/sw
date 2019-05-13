@@ -72,8 +72,8 @@ TUNABLE_INT("hw.ionic.max_queues", &ionic_max_queues);
 SYSCTL_INT(_hw_ionic, OID_AUTO, max_queues, CTLFLAG_RDTUN,
     &ionic_max_queues, 0, "Number of Queues");
 
-/* XXX: 40 seconds for now. */
-int ionic_devcmd_timeout = 40;
+/* XXX: 60 seconds for firmware update */
+int ionic_devcmd_timeout = 60;
 TUNABLE_INT("hw.ionic.devcmd_timeout", &ionic_devcmd_timeout);
 SYSCTL_INT(_hw_ionic, OID_AUTO, devcmd_timeout, CTLFLAG_RWTUN,
     &ionic_devcmd_timeout, 0, "Timeout in seconds for devcmd");
@@ -150,6 +150,14 @@ int ionic_rx_sg_size = 0;
 TUNABLE_INT("hw.ionic.rx_sg_size", &ionic_rx_sg_size);
 SYSCTL_INT(_hw_ionic, OID_AUTO, rx_sg_size, CTLFLAG_RDTUN,
     &ionic_rx_sg_size, 0, "Rx scatter-gather buffer size, disabled by default.");
+
+/*
+ * Firmware version for update.
+ */
+static char ionic_fw_update_ver[IONIC_DEVINFO_FWVERS_BUFLEN + 1];
+TUNABLE_STR("hw.ionic.fw_update_ver", ionic_fw_update_ver, sizeof(ionic_fw_update_ver));
+SYSCTL_STRING(_hw_ionic, OID_AUTO, fw_update_ver, CTLFLAG_RWTUN,
+    ionic_fw_update_ver, 0, "Fimrware version that need to be programmed.");
 
 static inline bool
 ionic_is_rx_tcp(uint8_t pkt_type)
@@ -2266,26 +2274,55 @@ ionic_adminq_sysctl(struct lif *lif, struct sysctl_ctx_list *ctx,
  * Firmware update
  */
 static int
-ionic_firmware_update_sysctl(SYSCTL_HANDLER_ARGS)
+ionic_firmware_update2(struct lif *lif)
 {
 	const struct firmware *fw;
-	struct lif *lif;
-	int err = 0;
+	struct ionic_dev *idev = &lif->ionic->idev;
+	unsigned long time;
+	int err;
 
-	lif = oidp->oid_arg1;
+	if (strcmp(ionic_fw_update_ver, "") == 0) {
+		if_printf(lif->netdev, "Update firmware version number not provided\n");
+		return (0);
+	}
 
+	if (strncmp(ionic_fw_update_ver, idev->dev_info.fw_version, sizeof(ionic_fw_update_ver)) == 0) {
+		if_printf(lif->netdev, "No need to update fimware, its alreday on %s\n", ionic_fw_update_ver);
+		return (0);
+	}
+
+	time = jiffies;
 	if ((fw = firmware_get("ionic_fw")) == NULL) {
 		IONIC_NETDEV_ERROR(lif->netdev, "Could not find firmware image\n");
 		return (ENOENT);
 	} else {
-		IONIC_NETDEV_INFO(lif->netdev, "Installing firmware on card\n");
+		if_printf(lif->netdev, "Updating firmware %s ->%s\n", idev->dev_info.fw_version,
+			ionic_fw_update_ver);
 	}
 
 	err = ionic_firmware_update(lif, fw->data, fw->datasize);
+	if (err) {
+		IONIC_NETDEV_ERROR(lif->netdev, "Firmware update version: %s failed\n", ionic_fw_update_ver);
+	}
 
+	if_printf(lif->netdev, "firmware update took %ld secs\n", (jiffies - time)/HZ);
 	firmware_put(fw, FIRMWARE_UNLOAD);
 
 	return (0);
+}
+
+static int
+ionic_firmware_update_sysctl(SYSCTL_HANDLER_ARGS)
+{
+	struct lif *lif;
+	int error, reset;
+
+	lif = oidp->oid_arg1;
+	error = sysctl_handle_int(oidp, &reset, 0, req);
+	if ((error) || (req->newptr == NULL))
+		return (error);
+
+	return ionic_firmware_update2(lif);
 }
 
 static void
@@ -2294,11 +2331,21 @@ ionic_setup_device_stats(struct lif *lif)
 	struct sysctl_ctx_list *ctx = &lif->sysctl_ctx;
 	struct sysctl_oid *tree = lif->sysctl_ifnet;
 	struct sysctl_oid_list *child = SYSCTL_CHILDREN(tree);
+	struct ionic_dev *idev = &lif->ionic->idev;
 	struct sysctl_oid *queue_node;
 	struct sysctl_oid_list *queue_list;
 	char namebuf[QUEUE_NAME_LEN];
 	int i;
 
+	SYSCTL_ADD_STRING(ctx, child, OID_AUTO, "fw_version", CTLFLAG_RD,
+			idev->dev_info.fw_version, sizeof(idev->dev_info.fw_version),
+			"Running firmware version");
+	SYSCTL_ADD_STRING(ctx, child, OID_AUTO, "serial_no", CTLFLAG_RD,
+			idev->dev_info.serial_num, sizeof(idev->dev_info.serial_num),
+			"Card serial number");
+	SYSCTL_ADD_STRING(ctx, child, OID_AUTO, "fw_version", CTLFLAG_RD,
+			idev->dev_info.fw_version, sizeof(idev->dev_info.fw_version),
+			"Running firmware version");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "numq", CTLFLAG_RD,
 			&lif->ntxqs, 0, "Number of Tx/Rx queue pairs");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "hw_capabilities", CTLFLAG_RD,
@@ -2330,9 +2377,8 @@ ionic_setup_device_stats(struct lif *lif)
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "reset",
 			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
 			ionic_lif_reset_sysctl, "I", "Reinit lif");
-
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "fw_update",
-			CTLTYPE_INT | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
+			CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_SKIP, lif, 0,
 			ionic_firmware_update_sysctl, "I", "Firmware update");
 
 	ionic_setup_fw_stats(lif, ctx, child);
