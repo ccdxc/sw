@@ -58,8 +58,9 @@ public:
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief          reprogram all h/w tables relevant to this object except
-    ///                 stage 0 table(s), if any
+    /// \brief          reprogram all h/w tables relevant to this object and
+    ///                 dependent on other objects except stage 0 table(s),
+    ///                 if any
     /// \param[in] api_op    API operation
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t reprogram_config(api_op_t api_op) override;
@@ -167,6 +168,10 @@ public:
         }
         return false;
     }
+
+    /// \brief     return the key/id of this vnic
+    /// \return    key/id of the vnic object
+    pds_vnic_key_t key(void) const { return key_; }
 
     /// \brief     return impl instance of this vnic object
     /// \return    impl instance of the vnic object

@@ -65,7 +65,7 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vnic_spec_t *spec = &api_ctxt->api_params->vnic_spec;
 
     memcpy(&this->key_, &spec->key, sizeof(pds_vnic_key_t));
-    this->subnet_ =  spec->subnet;
+    this->subnet_ = spec->subnet;
     this->fabric_encap_ = spec->fabric_encap;
     return SDK_RET_OK;
 }
@@ -93,7 +93,9 @@ vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 vnic_entry::reprogram_config(api_op_t api_op) {
-    return SDK_RET_INVALID_OP;
+    PDS_TRACE_DEBUG("Reprogramming vnic %u, subnet %u, fabric encap %s, ",
+                    key_.id, subnet_.id, pdsencap2str(fabric_encap_));
+    return impl_->reprogram_hw(this, api_op);
 }
 
 sdk_ret_t
@@ -126,7 +128,9 @@ vnic_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 
 sdk_ret_t
 vnic_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
-    return SDK_RET_INVALID_OP;
+    PDS_TRACE_DEBUG("Reactivating vnic %u, subnet %u, fabric encap %s, ",
+                    key_.id, subnet_.id, pdsencap2str(fabric_encap_));
+    return impl_->reactivate_hw(this, epoch, api_op);
 }
 
 sdk_ret_t

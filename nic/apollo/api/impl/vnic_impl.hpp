@@ -81,6 +81,18 @@ public:
     virtual sdk_ret_t program_hw(api_base *api_obj,
                                  obj_ctxt_t *obj_ctxt) override;
 
+    /// \brief re-program config in the hardware
+    /// re-program all hardware tables relevant to this object except stage 0
+    /// table(s), if any and this reprogramming must be based on existing state
+    /// and any of the state present in the dirty object list (like clone
+    /// objects etc.)
+    /// \param[in] api_obj API object being activated
+    /// \param[in] api_op API operation
+    /// \return #SDK_RET_OK on success, failure status code on error
+    /// NOTE: this method is called when an object is in the dependent/puppet
+    ///       object list
+    virtual sdk_ret_t reprogram_hw(api_base *api_obj, api_op_t api_op) override;
+
     /**
      * @brief    cleanup all h/w tables relevant to this object except stage 0
      *           table(s), if any, by updating packed entries with latest epoch#
@@ -112,6 +124,18 @@ public:
                                   pds_epoch_t epoch,
                                   api_op_t api_op,
                                   obj_ctxt_t *obj_ctxt) override;
+
+    /// \brief re-activate config in the hardware stage 0 tables relevant to
+    ///        this object, if any, this reactivation must be based on existing
+    ///        state and any of the state present in the dirty object list
+    ///        (like clone objects etc.) only and not directly on db objects
+    // \param[in] api_obj API object being activated
+    /// \param[in] api_op API operation
+    /// \return #SDK_RET_OK on success, failure status code on error
+    /// NOTE: this method is called when an object is in the dependent/puppet
+    ///       object list
+    virtual sdk_ret_t reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
+                                    api_op_t api_op) override;
 
     /**
      * @brief read spec, statistics and status from hw tables

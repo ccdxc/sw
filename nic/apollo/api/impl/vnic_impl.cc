@@ -198,6 +198,35 @@ vnic_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     return SDK_RET_OK;
 }
 
+// TODO: when epoch support is added to these tables, we should pick
+//       old epoch contents and override them !!!
+sdk_ret_t
+vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
+    sdk_ret_t ret;
+    pds_subnet_key_t subnet_key;
+    vnic_entry *vnic = (vnic_entry *)api_obj;
+    subnet_entry *subnet;
+    egress_local_vnic_info_actiondata_t egress_vnic_data = { 0 };
+
+    subnet_key = vnic->subnet();
+    subnet = (subnet_entry *)api_base::find_obj(OBJ_ID_SUBNET, &subnet_key);
+
+    // read EGRESS_LOCAL_VNIC_INFO table entry of this vnic
+    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->retrieve(
+              hw_id_, &egress_vnic_data);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to read EGRESS_LOCAL_VNIC_INFO table for "
+                      "vnic %u, err %u", vnic->key().id, ret);
+        return ret;
+    }
+    // update fields dependent on other objects and reprogram
+    sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_action.vr_mac,
+                     subnet->vr_mac(), ETH_ADDR_LEN);
+    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->update(hw_id_,
+                                                               &egress_vnic_data);
+    return ret;
+}
+
 sdk_ret_t
 vnic_impl::cleanup_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     // TODO:
@@ -530,6 +559,11 @@ vnic_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     return ret;
 }
 
+sdk_ret_t
+vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
+                         api_op_t api_op) {
+    return SDK_RET_INVALID_OP;
+}
 void
 vnic_impl::fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
                             vnic_rx_stats_actiondata_t *rx_stats,

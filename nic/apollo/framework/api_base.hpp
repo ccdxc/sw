@@ -170,7 +170,7 @@ public:
     ///     dependency list and return that first (potentially a cloned obj),
     ///     if its not in these lists the original object from db will be
     ///     returned as-is
-    /// static api_base *find_obj(api_obj_id_t obj_id, void *key);
+    static api_base *find_obj(obj_id_t obj_id, void *key);
 
     /// \brief Clone this object and return cloned object
     /// \param[in]    api_ctxt API context carrying object related configuration

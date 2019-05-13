@@ -145,6 +145,12 @@ api_base::find_obj(api_ctxt_t *api_ctxt, bool ignore_dirty) {
     return NULL;
 }
 
+api_base *
+api_base::find_obj(obj_id_t obj_id, void *key) {
+    SDK_ASSERT(FALSE);
+    return NULL;
+}
+
 bool
 api_base::stateless(obj_id_t obj_id) {
     switch (obj_id) {
