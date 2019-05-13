@@ -907,3 +907,147 @@ func TestRemoteEndpointOnNonExistentRemoteTunnel(t *testing.T) {
 	_, err = ag.CreateEndpoint(epinfo)
 	Assert(t, err != nil, "remote ep creates on non-existent tunnels should fail")
 }
+
+func TestEndpointCreateInvalidIPAddress(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+			NodeUUID:     "remote",
+			MacAddress:   "4242.4242.4242",
+			IPv4Address:  "A.B.C.D",
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	Assert(t, err != nil, "ep creates with invalid IP Address must fail")
+}
+
+func TestEndpointCreateCIDRIP(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+			NodeUUID:     "remote",
+			MacAddress:   "4242.4242.4242",
+			IPv4Address:  "10.1.1.1/24",
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	AssertOk(t, err, "ep creates with CIDR ipv4 addresses must succeed")
+}
+
+func TestEndpointCreateIP(t *testing.T) {
+	// create netagent
+	ag, _, _ := createNetAgent(t)
+	Assert(t, ag != nil, "Failed to create agent %#v", ag)
+	defer ag.Stop()
+
+	// network message
+	nt := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "default",
+			Namespace: "default",
+		},
+		Spec: netproto.NetworkSpec{
+			IPv4Subnet:  "10.1.1.0/24",
+			IPv4Gateway: "10.1.1.254",
+		},
+	}
+
+	// make create network call
+	err := ag.CreateNetwork(&nt)
+	AssertOk(t, err, "Error creating network")
+
+	// endpoint message
+	epinfo := &netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Name:      "testEndpoint",
+			Namespace: "default",
+		},
+		Spec: netproto.EndpointSpec{
+			EndpointUUID: "testEndpointUUID",
+			WorkloadUUID: "testWorkloadUUID",
+			NetworkName:  "default",
+			NodeUUID:     "remote",
+			MacAddress:   "4242.4242.4242",
+			IPv4Address:  "10.1.1.1",
+		},
+	}
+
+	// create the endpoint
+	_, err = ag.CreateEndpoint(epinfo)
+	AssertOk(t, err, "ep creates with CIDR ipv4 addresses must succeed")
+	foundEP, err := ag.FindEndpoint(epinfo.ObjectMeta)
+	AssertOk(t, err, "Failed to find the endpoint. Err: %v", err)
+	AssertEquals(t, "10.1.1.1/32", foundEP.Spec.IPv4Address, "Endpoints specifying just the IP Addresses must have a /32 prefix")
+}

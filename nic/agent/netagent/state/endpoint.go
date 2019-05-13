@@ -5,6 +5,7 @@ package state
 import (
 	"errors"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 
@@ -115,6 +116,20 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) (*types.IntfInfo, error)
 		}
 
 		sgs = append(sgs, sg)
+	}
+
+	// Validate EP IP.
+	if len(ep.Spec.IPv4Address) > 0 {
+		// Parse as CIDR
+		if _, _, err := net.ParseCIDR(ep.Spec.IPv4Address); err != nil {
+			// Try parsing as IP
+			if len(net.ParseIP(ep.Spec.IPv4Address)) == 0 {
+				log.Errorf("Endpoint IP Addresses %v invalid. Must either be a CIDR or IP", ep.Spec.IPv4Address)
+				return nil, fmt.Errorf("endpoint IP Addresses %v invalid. Must either be a CIDR or IP", ep.Spec.IPv4Address)
+			}
+			// Slap a /32 if not specified
+			ep.Spec.IPv4Address = fmt.Sprintf("%s/32", ep.Spec.IPv4Address)
+		}
 	}
 
 	// call the datapath
@@ -237,6 +252,20 @@ func (na *Nagent) UpdateEndpoint(ep *netproto.Endpoint) error {
 		}
 
 		sgs = append(sgs, sg)
+	}
+
+	// Validate EP IP.
+	if len(ep.Spec.IPv4Address) > 0 {
+		// Parse as CIDR
+		if _, _, err := net.ParseCIDR(ep.Spec.IPv4Address); err != nil {
+			// Try parsing as IP
+			if len(net.ParseIP(ep.Spec.IPv4Address)) == 0 {
+				log.Errorf("Endpoint IP Addresses %v invalid. Must either be a CIDR or IP", ep.Spec.IPv4Address)
+				return fmt.Errorf("endpoint IP Addresses %v invalid. Must either be a CIDR or IP", ep.Spec.IPv4Address)
+			}
+			// Slap a /32 if not specified
+			ep.Spec.IPv4Address = fmt.Sprintf("%s/32", ep.Spec.IPv4Address)
+		}
 	}
 
 	// save the enic id in the ep status for deletions
