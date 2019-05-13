@@ -42,6 +42,9 @@ route_table_impl::destroy(route_table_impl *impl) {
     SDK_FREE(SDK_MEM_ALLOC_PDS_ROUTE_TABLE_IMPL, impl);
 }
 
+// NOTE: reserve_resources() logic is same for both API_OP_CREATE and
+//       API_OP_UPDATE as update doesn't reuse any of the existing resources
+//       for this object
 sdk_ret_t
 route_table_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t                  lpm_block_id;

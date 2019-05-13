@@ -60,6 +60,15 @@ public:
         return SDK_RET_OK;
     }
 
+    /// \brief          reprogram all h/w tables relevant to this object except
+    ///                 stage 0 table(s), if any
+    /// \param[in] api_op    API operation
+    /// \return         SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t reprogram_config(api_op_t api_op) override {
+        // no hardware programming required for subnet config
+        return SDK_RET_OK;
+    }
+
     /// \brief          free h/w resources used by this object, if any
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t release_resources(void) override;
@@ -82,14 +91,28 @@ public:
     virtual sdk_ret_t update_config(api_base *orig_obj,
                                     obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief          activate the epoch in the dataplane by programming
-    ///                 stage 0 tables, if any
     /// \param[in]      epoch       epoch being activated
     /// \param[in]      api_op      api operation
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
-                                      obj_ctxt_t *obj_ctxt) override;
+                                      obj_ctxt_t *obj_ctxt) override {
+        // no h/w programming required for subnet config, so nothing to activate
+        return SDK_RET_OK;
+    }
+
+    /// \brief re-activate config in the hardware stage 0 tables relevant to
+    ///        this object, if any, this reactivation must be based on existing
+    ///        state and any of the state present in the dirty object list
+    ///        (like clone objects etc.) only and not directly on db objects
+    /// \param[in] api_op API operation
+    /// \return #SDK_RET_OK on success, failure status code on error
+    /// NOTE: this method is called when an object is in the dependent/puppet
+    ///       object list
+    virtual sdk_ret_t reactivate_config(pds_epoch_t epoch,
+                                        api_op_t api_op) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief          add given subnet to the database
     /// \return         SDK_RET_OK on success, failure status code on error

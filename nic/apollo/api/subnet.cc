@@ -118,15 +118,6 @@ subnet_entry::update_config(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
-subnet_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
-                              obj_ctxt_t *obj_ctxt) {
-    // there is no h/w programming for subnet config, so nothing to activate
-    PDS_TRACE_DEBUG("Activated subnet api op %u, subnet %u", api_op,
-                    key_.id);
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 subnet_entry::update_db(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     // nothing to update on subnet, so no updates supported
     return sdk::SDK_RET_INVALID_OP;

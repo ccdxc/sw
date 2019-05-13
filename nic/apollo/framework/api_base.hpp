@@ -125,10 +125,10 @@ public:
         return sdk::SDK_RET_INVALID_OP;
     }
 
-    /// \brief re-activate config in the hardware
-    /// re-activate all hardware stage 0 tables relevant to this object, if any
-    /// and this reactivation must be based on existing state and any of the
-    /// state present in the dirty object list (like clone objects etc.)
+    /// \brief re-activate config in the hardware stage 0 tables relevant to
+    ///        this object, if any, this reactivation must be based on existing
+    ///        state and any of the state present in the dirty object list
+    ///        (like clone objects etc.) only and not directly on db objects
     /// \param[in] api_op API operation
     /// \return #SDK_RET_OK on success, failure status code on error
     /// NOTE: this method is called when an object is in the dependent/puppet

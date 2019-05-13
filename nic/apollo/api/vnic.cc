@@ -92,6 +92,11 @@ vnic_entry::program_config(obj_ctxt_t *obj_ctxt) {
 }
 
 sdk_ret_t
+vnic_entry::reprogram_config(api_op_t api_op) {
+    return SDK_RET_INVALID_OP;
+}
+
+sdk_ret_t
 vnic_entry::release_resources(void) {
     return impl_->release_resources(this);
 }
@@ -117,6 +122,11 @@ vnic_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Activating vnic %u config", key_.id);
     return impl_->activate_hw(this, epoch, api_op, obj_ctxt);
+}
+
+sdk_ret_t
+vnic_entry::reactivate_config(pds_epoch_t epoch, api_op_t api_op) {
+    return SDK_RET_INVALID_OP;
 }
 
 sdk_ret_t
