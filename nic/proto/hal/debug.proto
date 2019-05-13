@@ -690,8 +690,17 @@ message SchedulerActiveQResponseMsg {
   repeated SchedulerActiveQResponse response = 1;
 }
 
-message PacketBufferSpec {
+message PacketBufferPause {
   bool pause = 1;
+}
+
+message PacketBufferSpan {
+  uint32 span_threshold = 1; // SPAN queue threshold
+}
+
+message PacketBufferSpec {
+  PacketBufferPause pause = 1;
+  PacketBufferSpan span = 2;
 }
 
 message PacketBufferRequest {

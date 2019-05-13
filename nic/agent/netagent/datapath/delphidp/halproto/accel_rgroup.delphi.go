@@ -230,6 +230,8 @@ It has these top-level messages:
 	SchedulerActiveQRequestMsg
 	SchedulerActiveQResponse
 	SchedulerActiveQResponseMsg
+	PacketBufferPause
+	PacketBufferSpan
 	PacketBufferSpec
 	PacketBufferRequest
 	PacketBufferRequestMsg

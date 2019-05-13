@@ -522,8 +522,15 @@ DebugServiceImpl::PacketBufferUpdate(ServerContext *context,
     HAL_TRACE_DEBUG("Rcvd Packet Buffer Update Request");
 
     PacketBufferRequest request = req->request(0);
-    hal::packet_buffer_update(&request, rsp->add_response());
+    const PacketBufferSpec &spec = request.spec();
 
+    if (spec.has_pause()) {
+        hal::packet_buffer_update(&request, rsp->add_response());
+    }
+
+    if (spec.has_span()) {
+        hal::span_threshold_update(spec.span().span_threshold());
+    }
     return Status::OK;
 }
 

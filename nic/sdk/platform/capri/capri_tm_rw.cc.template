@@ -156,7 +156,7 @@ populate_asic_profile (capri_tm_asic_profile_t *asic_profile)
     asic_profile->hbm_fifo_alloc_units = CAPRI_TM_HBM_FIFO_ALLOC_SIZE;
     asic_profile->hbm_fifo_control_scale_factor = 50;
     asic_profile->cpu_copy_tail_drop_threshold = 900;
-    asic_profile->span_tail_drop_threshold = 900;
+    asic_profile->span_tail_drop_threshold = 100;
 
     asic_profile->port[TM_PORT_TYPE_UPLINK].reserved_mtus = 0;
     asic_profile->port[TM_PORT_TYPE_UPLINK].headroom_cells = 100;
@@ -4598,6 +4598,18 @@ capri_tm_get_port_mon_in (int chip_id,
 
     cap_pb_read_port_mon_in(chip_id, inst_id, cur_address, count);
     return count.convert_to<uint64_t>();
+}
+
+// set the span queue threshold
+sdk_ret_t
+capri_tm_set_span_threshold (uint32_t span_threshold)
+{
+    cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
+    cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
+    pbc_csr.cfg_tail_drop.read();
+    pbc_csr.cfg_tail_drop.span_threshold(span_threshold);
+    pbc_csr.cfg_tail_drop.write();
+    return SDK_RET_OK;
 }
 
 } // namespace capri

@@ -33,6 +33,7 @@ var (
 	regData             uint32
 	regInstance         uint32
 	platPbPause         string
+	spanThreshold       uint32
 	xcvrValid           string
 	tcpProxyMss         uint32
 	tcpProxyCwndInitial uint32
@@ -219,7 +220,7 @@ func init() {
 	regShowCmd.Flags().Uint32Var(&regInstance, "instance", 0, "Specify register instance")
 
 	pbPlatDebugCmd.Flags().StringVar(&platPbPause, "pause", "", "Enable or Disable packet-buffer pause using enable | disable")
-	pbPlatDebugCmd.MarkFlagRequired("pause")
+	pbPlatDebugCmd.Flags().Uint32Var(&spanThreshold, "span-threshold", 900, "Span queue threshold")
 
 	// debug transceiver
 	debugCmd.AddCommand(xcvrDebugCmd)
@@ -237,21 +238,35 @@ func pbPlatDebugCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	defer c.Close()
 
-	pause := false
 	client := halproto.NewDebugClient(c)
 
-	if strings.Compare(platPbPause, "enable") == 0 {
-		pause = true
-	} else if strings.Compare(platPbPause, "disable") == 0 {
-		pause = false
-	} else {
-		fmt.Printf("Invalid argument. Refer to help string\n")
-		return
+	var pauseMsg *halproto.PacketBufferPause
+	if cmd.Flags().Changed("pause") == true {
+		pause := false
+		if strings.Compare(platPbPause, "enable") == 0 {
+			pause = true
+		} else if strings.Compare(platPbPause, "disable") == 0 {
+			pause = false
+		} else {
+			fmt.Printf("Invalid argument. Refer to help string\n")
+			return
+		}
+		pauseMsg = &halproto.PacketBufferPause{
+			Pause: pause,
+		}
+	}
+
+	var spanMsg *halproto.PacketBufferSpan
+	if cmd.Flags().Changed("span-threshold") == true {
+		spanMsg = &halproto.PacketBufferSpan{
+			SpanThreshold: spanThreshold,
+		}
 	}
 
 	req := &halproto.PacketBufferRequest{
 		Spec: &halproto.PacketBufferSpec{
-			Pause: pause,
+			Pause: pauseMsg,
+			Span:  spanMsg,
 		},
 	}
 
@@ -269,8 +284,6 @@ func pbPlatDebugCmdHandler(cmd *cobra.Command, args []string) {
 	for _, resp := range respMsg.Response {
 		if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 			fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
-		} else {
-			fmt.Printf("Pause set to: %t\n", pause)
 		}
 	}
 }

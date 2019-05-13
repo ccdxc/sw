@@ -987,4 +987,17 @@ xcvr_valid_check_enable (bool enable)
     return pd::xcvr_valid_check_enable(enable);
 }
 
+hal_ret_t
+span_threshold_update (uint32_t span_threshold)
+{
+    hal_ret_t                           ret = HAL_RET_OK;
+    pd::pd_func_args_t                  pd_func_args = {0};
+    pd::pd_span_threshold_update_args_t span_threshold_args;
+
+    span_threshold_args.span_threshold = span_threshold;
+    pd_func_args.pd_span_threshold_update = &span_threshold_args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_SPAN_THRESHOLD_UPDATE, &pd_func_args);
+    return ret;
+}
+
 }    // namespace hal

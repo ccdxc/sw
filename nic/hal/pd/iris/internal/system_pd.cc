@@ -898,7 +898,19 @@ pd_system_drop_stats_get (pd_func_args_t *pd_func_args)
         HAL_TRACE_ERR("Failed to get packet buffer stats, err : {}", ret);
     }
 #endif
-         
+
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+pd_span_threshold_update (pd_func_args_t *pd_func_args)
+{
+    pd_span_threshold_update_args_t *args = pd_func_args->pd_span_threshold_update;
+
+    if(capri_tm_set_span_threshold(args->span_threshold) != SDK_RET_OK) {
+        HAL_TRACE_ERR("Failed to set span queue threshold");
+        return HAL_RET_ERR;
+    }
     return HAL_RET_OK;
 }
 

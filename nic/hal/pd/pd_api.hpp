@@ -2988,12 +2988,16 @@ typedef struct pd_packet_buffer_update_args_s {
     bool       pause;
 } __PACK__ pd_packet_buffer_update_args_t;
 
+// span threshold
+typedef struct pd_span_threshold_update_args_s {
+    uint32_t span_threshold;
+} __PACK__ pd_span_threshold_update_args_t;
+
 // slab
 typedef struct pd_get_slab_args_s {
     hal_slab_t slab_id;
     sdk::lib::slab *slab;
 } __PACK__ pd_get_slab_args_t;
-
 
 // quiesce
 typedef struct pd_quiesce_start_args_s {
@@ -3378,7 +3382,8 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_WRING_GET_BASE_ADDR,      303, "PD_FUNC_ID_WRING_GET_BASE_ADDR")               \
     ENTRY(PD_FUNC_ID_FLOW_HASH_GET,            304, "PD_FUNC_ID_FLOW_HASH_GET")\
     ENTRY(PD_FUNC_ID_SYSTEM_DROP_STATS_GET,    305, "PD_FUNC_ID_SYSTEM_DROP_STATS_GET")\
-    ENTRY(PD_FUNC_ID_MAX,                      306, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_SPAN_THRESHOLD_UPDATE,    306, "PD_FUNC_ID_SPAN_THRESHOLD_UPDATE") \
+    ENTRY(PD_FUNC_ID_MAX,                      307, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3766,6 +3771,7 @@ typedef struct pd_func_args_s {
 
         // packet buffer
         PD_UNION_ARGS_FIELD(pd_packet_buffer_update);
+        PD_UNION_ARGS_FIELD(pd_span_threshold_update);
 
         // slab
         PD_UNION_ARGS_FIELD(pd_get_slab);
@@ -4223,6 +4229,7 @@ PD_FUNCP_TYPEDEF(pd_clock_detail_get);
 
 //packet buffer
 PD_FUNCP_TYPEDEF(pd_packet_buffer_update);
+PD_FUNCP_TYPEDEF(pd_span_threshold_update);
 
 // slab
 PD_FUNCP_TYPEDEF(pd_get_slab);

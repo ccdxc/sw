@@ -75,6 +75,7 @@ using debug::HbmCacheResponseMsg;
 using debug::SchedulerStatsResponse;
 using debug::SchedulerStatsResponseMsg;
 using debug::PacketBufferRequest;
+using debug::PacketBufferSpec;
 using debug::PacketBufferRequestMsg;
 using debug::PacketBufferResponse;
 using debug::PacketBufferResponseMsg;
@@ -171,4 +172,3 @@ public:
 };
 
 #endif  // __DEBUG_SVC_HPP__
-

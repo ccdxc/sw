@@ -114,6 +114,8 @@ packet_buffer_update(debug::PacketBufferRequest *req, debug::PacketBufferRespons
 
 // enable/disable transceiver valid checks for links
 hal_ret_t xcvr_valid_check_enable(bool enable);
+// set span queue threshold
+hal_ret_t span_threshold_update(uint32_t span_threshold);
 
 }    // namespace hal
 

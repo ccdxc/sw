@@ -445,6 +445,7 @@ hal_pd_load_symbols (void)
 
     // packet buffer
     PD_FUNC_LOAD(PD_FUNC_ID_PACKET_BUFFER_UPDATE, pd_packet_buffer_update);
+    PD_FUNC_LOAD(PD_FUNC_ID_SPAN_THRESHOLD_UPDATE, pd_span_threshold_update);
 
     // gft
     PD_FUNC_LOAD(PD_FUNC_ID_GFT_EXACT_MATCH_PROFILE_CREATE,
