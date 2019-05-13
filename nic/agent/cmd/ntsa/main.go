@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"path/filepath"
-	"time"
 
 	"github.com/pensando/sw/api/generated/cluster"
 
@@ -81,8 +80,6 @@ func (s *service) handleNaplesObjectUpdates(obj *delphiProto.NaplesStatus) {
 		tsmClient := tsa.NewTSMClient(obj.Hostname, obj.Fru.MacStr, string(cluster.KindSmartNIC), s.configFile, controllers)
 		s.tsmClient = tsmClient
 
-		// TODO : Delete the sleep. This is a workaround while we debug the race condition in RPC-Kit
-		time.Sleep(2 * time.Second)
 		if s.tsmClient != nil {
 			go s.tsmClient.Start()
 		} else {
@@ -95,8 +92,6 @@ func (s *service) handleNaplesObjectUpdates(obj *delphiProto.NaplesStatus) {
 		tsmClient := tsa.NewTSMClient("naples-tsa", obj.Fru.MacStr, string(cluster.KindSmartNIC), s.configFile, nil)
 		s.tsmClient = tsmClient
 
-		// TODO : Delete the sleep. This is a workaround while we debug the race condition in RPC-Kit
-		time.Sleep(2 * time.Second)
 		if s.tsmClient != nil {
 			go s.tsmClient.Start()
 		} else {
@@ -145,8 +140,6 @@ func main() {
 	tsmClient := tsa.NewTSMClient("naples-tsa", "NA", string(cluster.KindSmartNIC), delphiService.configFile, nil)
 	delphiService.tsmClient = tsmClient
 
-	// TODO : Delete the sleep. This is a workaround while we debug the race condition in RPC-Kit
-	time.Sleep(2 * time.Second)
 	if delphiService.tsmClient != nil {
 		go delphiService.tsmClient.Start()
 	} else {

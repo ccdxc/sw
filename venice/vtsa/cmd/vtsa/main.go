@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils/k8s"
@@ -57,8 +56,6 @@ func main() {
 	// Plugging in default values when the agent is created.
 	tsmClient := tsa.NewTSMClient(hostname, "NA", string(cluster.KindNode), *configFile, controllers)
 
-	// TODO : Delete the sleep. This is a workaround while we debug the race condition in RPC-Kit
-	time.Sleep(2 * time.Second)
 	go tsmClient.Start()
 
 	log.Info("Started Venice TSA")
