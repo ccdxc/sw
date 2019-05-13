@@ -33,6 +33,18 @@ pds_impl_state::init(pds_state *state) {
     return SDK_RET_OK;
 }
 
+void
+pds_impl_state::destroy(pds_impl_state *impl_state) {
+    delete impl_state->apollo_impl_db_;
+    delete impl_state->lif_impl_db_;
+    delete impl_state->tep_impl_db_;
+    delete impl_state->vnic_impl_db_;
+    delete impl_state->mapping_impl_db_;
+    delete impl_state->route_table_impl_db_;
+    delete impl_state->security_policy_impl_db_;
+    delete impl_state->mirror_impl_db_;
+}
+
 pds_impl_state::pds_impl_state() {
     apollo_impl_db_ = NULL;
     lif_impl_db_ = NULL;
@@ -45,14 +57,6 @@ pds_impl_state::pds_impl_state() {
 }
 
 pds_impl_state::~pds_impl_state() {
-    delete apollo_impl_db_;
-    delete lif_impl_db_;
-    delete tep_impl_db_;
-    delete vnic_impl_db_;
-    delete mapping_impl_db_;
-    delete route_table_impl_db_;
-    delete security_policy_impl_db_;
-    delete mirror_impl_db_;
 }
 
 /// \@}    // end of PDS_IMPL_STATE

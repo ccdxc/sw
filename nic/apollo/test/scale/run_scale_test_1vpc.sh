@@ -14,7 +14,7 @@ export PATH=${PATH}:${BUILD_DIR}/bin
 $GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_1vpc.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml"
 
 # Valgrind with XML output
-#valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
+#valgrind --track-origins=yes --xml=yes --xml-file=out.xml apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_1vpc.json
 
 # Valgrind with text output
-#valgrind --track-origins=yes apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json
+#valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg_1vpc.json

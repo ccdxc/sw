@@ -369,3 +369,7 @@ jobd/iota/venice-bm:jobd/firmware jobd/venice-image
 jobd/iota/venice-sim:jobd/naples-sim jobd/venice-image
 	${MAKE} -j 1 -C ${GOPATH}/src/github.com/pensando/sw/iota
 	cd ${IOTADIR} && ./iota.py --testsuite venice --skip-firmware-upgrade
+
+.PHONY: jobd/apollo/gtests-valgrind
+jobd/apollo/gtests-valgrind: ${JOBD_PREREQS}
+	${NICDIR}/tools/run_gtests_valgrind_apollo.sh ${COVERAGE_OPTS}

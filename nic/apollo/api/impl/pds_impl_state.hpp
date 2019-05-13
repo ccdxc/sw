@@ -38,6 +38,7 @@ enum {
 class pds_impl_state {
 public:
     sdk_ret_t init(pds_state *state);
+    static void destroy(pds_impl_state *impl_state);
     pds_impl_state();
     ~pds_impl_state();
     apollo_impl_state *apollo_impl_db(void) { return apollo_impl_db_; }

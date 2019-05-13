@@ -192,6 +192,7 @@ apollo_impl::destroy(apollo_impl *impl) {
     for (i = P4I_DROP_REASON_MIN; i <= P4I_DROP_REASON_MAX; i++) {
         apollo_impl_db()->ingress_drop_stats_tbl()->remove(i);
     }
+    api::impl::pds_impl_state::destroy(&api::impl::g_pds_impl_state);
     p4pd_cleanup();
 }
 
