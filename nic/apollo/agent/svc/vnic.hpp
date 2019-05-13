@@ -20,6 +20,8 @@ class VnicSvcImpl final : public VnicSvc::Service {
 public:
     Status VnicCreate(ServerContext *context, const pds::VnicRequest *req,
                       pds::VnicResponse *rsp) override;
+    Status VnicUpdate(ServerContext *context, const pds::VnicRequest *req,
+                      pds::VnicResponse *rsp) override;
     Status VnicDelete(ServerContext *context,
                       const pds::VnicDeleteRequest *proto_req,
                       pds::VnicDeleteResponse *proto_rsp) override;

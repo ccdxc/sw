@@ -20,6 +20,8 @@ class VPCSvcImpl final : public VPCSvc::Service {
 public:
     Status VPCCreate(ServerContext *context, const pds::VPCRequest *req,
                      pds::VPCResponse *rsp) override;
+    Status VPCUpdate(ServerContext *context, const pds::VPCRequest *req,
+                     pds::VPCResponse *rsp) override;
     Status VPCDelete(ServerContext *context,
                      const pds::VPCDeleteRequest *proto_req,
                      pds::VPCDeleteResponse *proto_rsp) override;

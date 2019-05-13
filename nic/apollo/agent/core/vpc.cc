@@ -56,6 +56,61 @@ vpc_create (pds_vpc_key_t *key, pds_vpc_spec_t *spec)
     return SDK_RET_OK;
 }
 
+static inline sdk_ret_t
+vpc_update_validate (pds_vpc_key_t *key, pds_vpc_spec_t *spec)
+{
+    pds_vpc_spec_t *existing_spec;
+ 
+    if ((existing_spec = agent_state::state()->find_in_vpc_db(key)) == NULL) {
+        PDS_TRACE_ERR("Failed to update vpc {}, vpc doesn't exist", spec->key.id);
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+
+    if (existing_spec->type != spec->type) {
+        PDS_TRACE_ERR("Failed to update vpc {}, cannot modify type", spec->key.id);
+        return SDK_RET_ERR;
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_update (pds_vpc_key_t *key, pds_vpc_spec_t *spec)
+{
+    sdk_ret_t ret;
+
+    if ((ret = vpc_update_validate(key, spec)) != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to update vpc {}, err {}", spec->key.id, ret);
+        return ret;
+    }
+
+    if (!agent_state::state()->pds_mock_mode()) {
+        if ((ret = pds_vpc_update(spec)) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to update vpc {}, err {}", spec->key.id, ret);
+            return ret;
+        }
+    }
+
+    if (agent_state::state()->del_from_vpc_db(key) == false) {
+        PDS_TRACE_ERR("Failed to delete vpc {} from db", key->id);
+    }
+
+    if ((ret = agent_state::state()->add_to_vpc_db(key, spec)) != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to add vpc {} to db, err {}", spec->key.id, ret);
+        return ret;
+    }
+
+    if (spec->type == PDS_VPC_TYPE_SUBSTRATE) {
+        agent_state::state()->substrate_vpc_id_reset();
+    }
+
+    if (spec->type == PDS_VPC_TYPE_SUBSTRATE) {
+        agent_state::state()->substrate_vpc_id_set(spec->key.id);
+    }
+
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 vpc_delete (pds_vpc_key_t *key)
 {

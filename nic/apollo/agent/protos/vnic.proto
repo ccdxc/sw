@@ -13,6 +13,7 @@ import "types.proto";
 
 service VnicSvc {
   rpc VnicCreate (VnicRequest) returns (VnicResponse) {}
+  rpc VnicUpdate (VnicRequest) returns (VnicResponse) {}
   rpc VnicGet (VnicGetRequest) returns (VnicGetResponse) {}
   rpc VnicDelete (VnicDeleteRequest) returns (VnicDeleteResponse) {}
 }

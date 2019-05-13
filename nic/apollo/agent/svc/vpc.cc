@@ -59,6 +59,37 @@ VPCSvcImpl::VPCCreate(ServerContext *context,
 }
 
 Status
+VPCSvcImpl::VPCUpdate(ServerContext *context,
+                      const pds::VPCRequest *proto_req,
+                      pds::VPCResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_vpc_key_t key = {0};
+    pds_vpc_spec_t *api_spec = {0};
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        api_spec = (pds_vpc_spec_t *)
+                    core::agent_state::state()->vpc_slab()->alloc();
+        if (api_spec == NULL) {
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            break;
+        }
+        auto proto_spec = proto_req->request(i);
+        key.id = proto_spec.id();
+        pds_agent_vpc_api_spec_fill(api_spec, proto_spec);
+        ret = core::vpc_update(&key, api_spec);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != sdk::SDK_RET_OK) {
+            break;
+        }
+    }
+    return Status::OK;
+}
+
+Status
 VPCSvcImpl::VPCDelete(ServerContext *context,
                       const pds::VPCDeleteRequest *proto_req,
                       pds::VPCDeleteResponse *proto_rsp) {

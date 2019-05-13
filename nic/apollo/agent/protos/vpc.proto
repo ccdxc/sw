@@ -13,6 +13,7 @@ import "types.proto";
 
 service VPCSvc {
   rpc VPCCreate (VPCRequest) returns (VPCResponse) {}
+  rpc VPCUpdate (VPCRequest) returns (VPCResponse) {}
   rpc VPCGet (VPCGetRequest) returns (VPCGetResponse) {}
   rpc VPCDelete (VPCDeleteRequest) returns (VPCDeleteResponse) {}
 }

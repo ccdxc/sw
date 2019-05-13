@@ -13,6 +13,7 @@ import "types.proto";
 
 service SubnetSvc {
   rpc SubnetCreate (SubnetRequest) returns (SubnetResponse) {}
+  rpc SubnetUpdate (SubnetRequest) returns (SubnetResponse) {}
   rpc SubnetGet (SubnetGetRequest) returns (SubnetGetResponse) {}
   rpc SubnetDelete (SubnetDeleteRequest) returns (SubnetDeleteResponse) {}
 }

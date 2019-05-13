@@ -17,6 +17,7 @@ typedef struct vnic_db_cb_ctxt_s {
 } vnic_db_cb_ctxt_t;
 
 sdk_ret_t vnic_create(pds_vnic_key_t *key, pds_vnic_spec_t *spec);
+sdk_ret_t vnic_update(pds_vnic_key_t *key, pds_vnic_spec_t *spec);
 sdk_ret_t vnic_delete(pds_vnic_key_t *key);
 sdk_ret_t vnic_get(pds_vnic_key_t *key, pds_vnic_info_t *info);
 sdk_ret_t vnic_get_all(vnic_get_cb_t vnic_get_cb, void *ctxt);

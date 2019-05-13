@@ -607,4 +607,58 @@ ip_addr_is_greaterthan (ip_addr_t *ip_addr1, ip_addr_t *ip_addr2)
     }
 }
 
+// Returns true if ip_prefix1 lies within ip_prefix2
+static inline bool
+ip_prefix_within_prefix (ip_prefix_t *ip_prefix1, ip_prefix_t *ip_prefix2)
+{
+    ip_addr_t ip1_hi, ip1_lo;
+    ip_addr_t ip2_hi, ip2_lo;
+
+    if (!ip_prefix1 || !ip_prefix2) {
+        return false;
+    }
+    if (ip_prefix_is_equal(ip_prefix1, ip_prefix2)) {
+        return true;
+    }
+
+    ip_prefix_ip_low(ip_prefix1, &ip1_lo);
+    ip_prefix_ip_high(ip_prefix1, &ip1_hi);
+    ip_prefix_ip_low(ip_prefix2, &ip2_lo);
+    ip_prefix_ip_high(ip_prefix2, &ip2_hi);
+    if ((IPADDR_EQ(&ip2_lo, &ip1_lo) ||
+         IPADDR_LT(&ip2_lo, &ip1_lo)) &&
+         (IPADDR_EQ(&ip2_hi, &ip1_hi) ||
+          IPADDR_GT(&ip2_hi, &ip1_hi))) {
+        return true;
+    }
+    return false;
+}
+
+// Returns true if ip_prefix1 lies within ip_prefix2
+static inline bool
+ipv4_prefix_within_prefix (ipv4_prefix_t *ip_prefix1, ipv4_prefix_t *ip_prefix2)
+{
+    ip_addr_t ip1_hi, ip1_lo;
+    ip_addr_t ip2_hi, ip2_lo;
+
+    if (!ip_prefix1 || !ip_prefix2) {
+        return false;
+    }
+    if (ipv4_prefix_is_equal(ip_prefix1, ip_prefix2)) {
+        return true;
+    }
+
+    ipv4_prefix_ip_low(ip_prefix1, &ip1_lo);
+    ipv4_prefix_ip_high(ip_prefix1, &ip1_hi);
+    ipv4_prefix_ip_low(ip_prefix2, &ip2_lo);
+    ipv4_prefix_ip_high(ip_prefix2, &ip2_hi);
+    if ((IPADDR_EQ(&ip2_lo, &ip1_lo) ||
+         IPADDR_LT(&ip2_lo, &ip1_lo)) &&
+         (IPADDR_EQ(&ip2_hi, &ip1_hi) ||
+          IPADDR_GT(&ip2_hi, &ip1_hi))) {
+        return true;
+    }
+    return false;
+}
+
 #endif    // __IP_HPP__

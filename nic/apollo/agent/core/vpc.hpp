@@ -17,6 +17,7 @@ typedef struct vpc_db_cb_ctxt_s {
 } vpc_db_cb_ctxt_t;
 
 sdk_ret_t vpc_create(pds_vpc_key_t *key, pds_vpc_spec_t *spec);
+sdk_ret_t vpc_update(pds_vpc_key_t *key, pds_vpc_spec_t *spec);
 sdk_ret_t vpc_delete(pds_vpc_key_t *key);
 sdk_ret_t vpc_get(pds_vpc_key_t *key, pds_vpc_info_t *info);
 sdk_ret_t vpc_get_all(vpc_get_cb_t vpc_get_cb, void *ctxt);

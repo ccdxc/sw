@@ -82,6 +82,41 @@ VnicSvcImpl::VnicCreate(ServerContext *context,
 }
 
 Status
+VnicSvcImpl::VnicUpdate(ServerContext *context,
+                        const pds::VnicRequest *proto_req,
+                        pds::VnicResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_vnic_key_t key = {0};
+    pds_vnic_spec_t *api_spec = NULL;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        api_spec = (pds_vnic_spec_t *)
+                    core::agent_state::state()->vnic_slab()->alloc();
+        if (api_spec == NULL) {
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            break;
+        }
+        auto request = proto_req->request(i);
+        key.id = request.vnicid();
+        ret = pds_vnic_proto_spec_to_api_spec(api_spec, request);
+        if (ret != SDK_RET_OK) {
+            core::agent_state::state()->vnic_slab()->free(api_spec);
+            break;
+        }
+        ret = core::vnic_update(&key, api_spec);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != sdk::SDK_RET_OK) {
+            break;
+        }
+    }
+    return Status::OK;
+}
+
+Status
 VnicSvcImpl::VnicDelete(ServerContext *context,
                         const pds::VnicDeleteRequest *proto_req,
                         pds::VnicDeleteResponse *proto_rsp) {
