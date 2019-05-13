@@ -9,6 +9,8 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"github.com/satori/go.uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
@@ -129,7 +131,7 @@ func (a *alertEngineImpl) ProcessEvents(eventList *evtsapi.EventList) {
 			ap.Spec.Requirements = reqs
 
 			if err := a.runPolicy(ap, evt); err != nil {
-				a.logger.Errorf("failed to run policy: %v on event: %v, err: %v", ap.GetUUID(), evt.GetUUID(), err)
+				a.logger.Errorf("failed to run policy: %v on event: %v, err: %v", ap.GetName(), evt.GetMessage(), err)
 			}
 		}
 	}
@@ -195,6 +197,10 @@ func (a *alertEngineImpl) runPolicy(ap *monitoring.AlertPolicy, evt *evtsapi.Eve
 		created, err := a.createAlert(ap, evt, reqWithObservedVal)
 		if err != nil {
 			a.logger.Errorf("failed to create alert for event: %v, err: %v", evt.GetUUID(), err)
+			// TODO: @Yuva, figure out if there are better ways to handle this case
+			if errStatus, ok := status.FromError(err); ok && errStatus.Code() == codes.InvalidArgument && errStatus.Message() == "Request validation failed" {
+				return nil
+			}
 		}
 
 		if created {

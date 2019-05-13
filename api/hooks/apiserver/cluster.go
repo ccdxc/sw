@@ -304,7 +304,7 @@ func (cl *clusterHooks) createDefaultAlertPolicy(ctx context.Context, kv kvstore
 	alertPolicy.CreationTime = api.Timestamp{Timestamp: *ts}
 	alertPolicy.ModTime = api.Timestamp{Timestamp: *ts}
 	alertPolicy.Tenant = r.GetName()
-	alertPolicy.Namespace = r.GetNamespace()
+	alertPolicy.Namespace = globals.DefaultNamespace
 	alertPolicy.GenerationID = "1"
 	alertPolicy.SelfLink = alertPolicy.MakeURI("configs", alertPolicy.APIVersion, string(apiclient.GroupMonitoring))
 
