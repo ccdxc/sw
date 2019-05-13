@@ -253,6 +253,8 @@ Eth::factory(enum DeviceType type, devapi *dev_api,
         vf_spec->name = vf_spec->name + "_vf_" + std::to_string(dev);
         // Keeping the mac for VF as 0
         vf_spec->mac_addr = 0;
+        // limit 1 lif per VF
+        vf_spec->lif_count = 1;
         // XXX no rdma on VFs for now
         vf_spec->enable_rdma = 0;
         dev_obj = new Eth(dev_api, vf_spec, pd_client, EV_A);
