@@ -56,13 +56,14 @@ class TestBundle:
         if GlobalOptions.testbundles and self.__spec.meta.name not in  GlobalOptions.testbundles:
             Logger.info("Skipping Testbundle: %s due to cmdline filter." % self.__spec.meta.name)
             return True
-        if store.GetTopology().ValidateNics(self.__spec.meta.nics) != True and not GlobalOptions.dryrun:
+        if not self.__parent.IsBitw() and store.GetTopology().ValidateNics(self.__spec.meta.nics) != True and not GlobalOptions.dryrun:
             Logger.info("Skipping Testbundle: %s due to Incompatible NICs." % self.__spec.meta.name)
             return True
         return False
 
     def __load_bundle(self):
-        fullpath = "%s/iota/test/iris/testbundles/%s" % (api.GetTopDir(), self.__bunfile)
+        pkg_base = self.__parent.GetPackages()[0].replace(".", "/")
+        fullpath = "%s/%s/testbundles/%s" % (api.GetTopDir(), pkg_base, self.__bunfile)
         Logger.debug("Importing Testbundle %s" % fullpath)
         self.__spec = self.__read_spec(fullpath)
         return

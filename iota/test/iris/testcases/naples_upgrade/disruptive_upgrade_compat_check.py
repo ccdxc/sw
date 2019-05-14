@@ -2,7 +2,6 @@
 import time
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
-import iota.protos.pygen.types_pb2 as types_pb2
 import iota.test.iris.testcases.naples_upgrade.upgradedefs as upgradedefs
 import iota.test.iris.testcases.naples_upgrade.common as common
 

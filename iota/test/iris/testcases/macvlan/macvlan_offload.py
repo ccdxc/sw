@@ -2,8 +2,8 @@
 import pdb
 import time
 import iota.harness.api as api
-import iota.protos.pygen.types_pb2 as types_pb2
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
+import iota.protos.pygen.iota_types_pb2 as types_pb2
 
 macvlan_test_script = 'macvlans.sh'
 linux_test_dir = api.GetTopDir() + '/platform/drivers/linux/eth/ionic/tests/'
@@ -69,4 +69,3 @@ def Verify(tc):
         if cmd.exit_code != 0:
             result = api.types.status.FAILURE
     return result
-

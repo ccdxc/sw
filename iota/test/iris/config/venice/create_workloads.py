@@ -4,7 +4,6 @@ import pdb
 
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
-import iota.protos.pygen.types_pb2 as types_pb2
 
 def Main(tc):
     generated_configs = api.GetVeniceConfigs()

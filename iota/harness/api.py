@@ -8,7 +8,7 @@ from collections import defaultdict
 
 from iota.harness.infra.utils.logger import Logger as Logger
 
-import iota.protos.pygen.types_pb2 as types_pb2
+import iota.protos.pygen.iota_types_pb2 as types_pb2
 import iota.protos.pygen.cfg_svc_pb2 as cfg_svc
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 

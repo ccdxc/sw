@@ -14,7 +14,7 @@ import iota.harness.infra.store as store
 import iota.harness.infra.resmgr as resmgr
 
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
-import iota.protos.pygen.types_pb2 as types_pb2
+import iota.protos.pygen.iota_types_pb2 as types_pb2
 
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 from iota.harness.infra.utils.logger import Logger as Logger
@@ -181,7 +181,17 @@ class _Testbed:
                 #if instance.NodeOs == "esx":
                 #    cmd.extend([ "%s/iota/scripts/boot_naples.py" % GlobalOptions.topdir ])
                 #else:
+
                 cmd.extend([ "%s/iota/scripts/boot_naples_v2.py" % GlobalOptions.topdir ])
+
+                if self.curr_ts.GetNicMode() == "bitw":
+                    if (instance.NicMgmtIP == "" or instance.NicMgmtIP == None):
+                        Logger.error("Nic Management IP not specified for : %s, mandatory for bump in wire mode" % instance.NodeMgmtIP)
+                        sys.exit(1)
+                    else:
+                        cmd.extend(["--naples-only-setup"])
+
+
                 cmd.extend(["--console-ip", instance.NicConsoleIP])
                 cmd.extend(["--mnic-ip", instance.NicIntMgmtIP])
                 cmd.extend(["--oob-ip", instance.NicMgmtIP])

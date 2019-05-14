@@ -63,7 +63,7 @@ parser.add_argument('--host-username', dest='host_username',
 parser.add_argument('--host-password', dest='host_password',
                     default="docker", help='Host Password.')
 parser.add_argument('--mode', dest='mode', default='hostpin',
-                    choices=["classic", "hostpin"],
+                    choices=["classic", "hostpin", "bitw"],
                     help='Naples mode - hostpin / classic.')
 parser.add_argument('--cimc-username', dest='cimc_username',
                     default="admin", help='CIMC Username')
@@ -83,6 +83,8 @@ parser.add_argument('--oob-ip', dest='oob_ip',
                     default=None, help='Oob IP.')
 parser.add_argument('--skip-driver-install', dest='skip_driver_install',
                     action='store_true', help='Skips host driver install')
+parser.add_argument('--naples-only-setup', dest="naples_only_setup",
+                    action='store_true', help='Setup only naples')
 parser.add_argument('--esx-script', dest='esx_script',
                     default="", help='ESX start up script')
 
@@ -722,6 +724,72 @@ def AtExitCleanup():
     global naples
     naples.Close()
 
+
+def NaplesOnlySetup():
+
+    global naples
+    naples = NaplesManagement(ipaddr = GlobalOptions.oob_ip, username='root', password='pen123')
+
+    global host
+    host = HostManagement(GlobalOptions.host_ip)
+
+    def doNaplesReboot():
+        naples.Connect()
+
+        naples.Reboot()
+
+        #Naples would have rebooted to, login again.
+        naples.Connect()
+
+        #Start agent
+        naples.SendlineExpect("/nic/tools/start-agent.sh", "#")
+
+        time.sleep(60)
+
+
+    if GlobalOptions.only_init == True:
+        return
+
+    if GlobalOptions.only_mode_change == True:
+        # Case 3: Only INIT option.
+        doNaplesReboot()
+        return
+
+
+    #First do a reset as naples may be in screwed up state.
+    try:
+        naples.Connect()
+        if not host.IsSSHUP():
+            raise Exception("Host not up.")
+    except:
+        #Do Reset only if we can't connect to naples.
+        IpmiReset()
+        time.sleep(10)
+        naples.Connect()
+        naples.InitForUpgrade(goldfw = True)
+        #Do a reset again as old fw might lock up host boot
+        IpmiReset()
+        host.WaitForSsh()
+
+    host.SetNaples(naples)
+
+    # Connect to Naples console.
+    naples.Connect()
+
+    #Read Naples Gold FW version.
+    naples.ReadGoldFwVersion()
+
+    # Case 1: Main firmware upgrade.
+    naples.InitForUpgrade(goldfw = True)
+    #OOb is present and up install right away,
+    naples.RebootGoldFw()
+    naples.InstallMainFirmware()
+    if not IsNaplesGoldFWLatest():
+        naples.InstallGoldFirmware()
+
+    doNaplesReboot()
+
+
 # This function is used for 3 cases.
 # 1) Full firmware upgrade
 # 2) Change mode from Classic <--> Hostpin
@@ -780,6 +848,7 @@ def Main():
     if GlobalOptions.only_mode_change:
         # Case 2: Only change mode, reboot and install drivers
         #naples.InitForUpgrade(goldfw = False)
+        naples.Reboot()
         naples.Close()
     else:
         # Case 1: Main firmware upgrade.
@@ -828,7 +897,10 @@ def Main():
 if __name__ == '__main__':
     atexit.register(AtExitCleanup)
     try:
-        Main()
+        if GlobalOptions.naples_only_setup:
+            NaplesOnlySetup()
+        else:
+            Main()
     except bootNaplesException as ex:
         sys.stderr.write(str(ex))
         sys.exit(1)

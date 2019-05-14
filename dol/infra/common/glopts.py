@@ -13,7 +13,7 @@ parser.add_argument('--debug', dest='debug',
                     action='store_true', help='Enable Debug Mode')
 parser.add_argument('--verbose', dest='verbose',
                     action='store_true', help='Enable Verbose Mode')
-parser.add_argument('--pkglist', dest='pkglist', default=None, 
+parser.add_argument('--pkglist', dest='pkglist', default=None,
                     help='Run only the tests in package list')
 parser.add_argument('--config-only', dest='cfgonly',
                     action='store_true', help='Test HAL Config Only')
@@ -99,14 +99,17 @@ parser.add_argument('--naplescontainer', dest='naples_container', action='store_
                     help='Nic running(hal,model) inside container.')
 
 
-GlobalOptions = parser.parse_args()
+GlobalOptions = None
+def ParseArgs():
+    global GlobalOptions
+    GlobalOptions = parser.parse_args()
 
 def ValidateGlopts():
     if GlobalOptions.topology is None or GlobalOptions.feature is None:
         print("Error: Manadatory args 'topo' and 'feature' are missing.")
         print("Usage: ./main.py --topo <topology-name> --feature <feature1,feature2...>")
         sys.exit(1)
-    
+
     if GlobalOptions.tcid is not None:
         tcid_range_list = GlobalOptions.tcid.split(',')
         tcid_list = []

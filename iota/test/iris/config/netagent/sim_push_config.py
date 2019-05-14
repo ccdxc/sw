@@ -10,7 +10,6 @@ import iota.test.iris.config.netagent.api as netagent_api
 import iota.harness.api as api
 import iota.test.iris.config.netagent.api as agent_api
 
-import iota.protos.pygen.types_pb2 as types_pb2
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 
 

@@ -16,7 +16,7 @@ import iota.harness.api as api
 import iota.harness.infra.testcase as testcase
 
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
-import iota.protos.pygen.types_pb2 as types_pb2
+import iota.protos.pygen.iota_types_pb2 as types_pb2
 
 def formatMac(mac: str) -> str:
     mac = re.sub('[.:-]', '', mac).lower()  # remove delimiters and convert to lower case
@@ -89,7 +89,11 @@ class Node(object):
         if role != 'auto':
             return topo_pb2.PersonalityType.Value(role)
 
+        if getattr(self.__inst.Resource, "DataNicType", None):
+            return topo_pb2.PERSONALITY_NAPLES_BITW
+
         nic_type = self.__inst.Resource.NICType
+
         role = GetNodePersonalityByNicType(nic_type)
         if role == None:
             os.system("cp /warmd.json '%s/iota/logs" % GlobalOptions.topdir)
@@ -100,6 +104,8 @@ class Node(object):
 
     def GetNicType(self):
         if getattr(self.__inst, "Resource", None):
+            if getattr(self.__inst.Resource, "DataNicType", None):
+                return self.__inst.Resource.DataNicType
             return getattr(self.__inst.Resource, "NICType", "")
         #Simenv does not have nic type
         return ""
@@ -122,8 +128,14 @@ class Node(object):
         return self.__role == topo_pb2.PERSONALITY_NAPLES_SIM
     def IsNaplesHw(self):
         return self.__role == topo_pb2.PERSONALITY_NAPLES
+    def IsNaplesHwWithBumpInTheWire(self):
+        return self.__role == topo_pb2.PERSONALITY_NAPLES_BITW
+    def IsNaplesHwWithBumpInTheWirePerf(self):
+        return self.__role == topo_pb2.PERSONALITY_NAPLES_BITW_PERF
+
     def IsNaples(self):
-        return self.IsNaplesSim() or self.IsNaplesHw()
+        return self.IsNaplesSim() or self.IsNaplesHw() or self.IsNaplesHwWithBumpInTheWire()
+
     def IsMellanox(self):
         return self.__role == topo_pb2.PERSONALITY_MELLANOX
     def IsBroadcom(self):
@@ -203,7 +215,7 @@ class Node(object):
                 else:
                     peer_msg.ip_address = str(n.MgmtIpAddress())
         else:
-            if self.IsThirdParty():
+            if self.IsThirdParty() and not self.IsNaplesHwWithBumpInTheWire():
                 msg.third_party_nic_config.nic_type = self.GetNicType()
             else:
                 msg.naples_config.nic_type = self.GetNicType()
@@ -222,6 +234,11 @@ class Node(object):
 
                 msg.naples_config.naples_username = "root"
                 msg.naples_config.naples_password = "pen123"
+
+            if self.IsNaplesHwWithBumpInTheWire() or self.IsNaplesHwWithBumpInTheWirePerf():
+                #make sure to use actual management
+                msg.naples_config.naples_ip_address = self.__nic_mgmt_ip
+                msg.naples_config.nic_type = self.GetNicType()
 
             host_entity = msg.entities.add()
             host_entity.type = topo_pb2.ENTITY_TYPE_HOST

@@ -7,7 +7,7 @@
 syntax = "proto3";
 package iotamodel;
 
-import "types.proto";
+import "iota_types.proto";
 
 // ---------------------------- Config API ----------------------------
 // Config Management Service

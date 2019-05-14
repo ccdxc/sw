@@ -2,7 +2,7 @@
 import pdb
 import os
 import iota.harness.api as api
-import iota.protos.pygen.types_pb2 as types_pb2
+import iota.protos.pygen.iota_types_pb2 as types_pb2
 import iota.test.iris.testcases.penctl.common as common
 
 

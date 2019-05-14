@@ -6,8 +6,8 @@ import json
 import subprocess
 import threading
 import iota.harness.api as api
-import iota.protos.pygen.types_pb2 as types_pb2
 import iota.test.iris.testcases.naples_upgrade.common as common
+import iota.protos.pygen.iota_types_pb2 as types_pb2
 
 def __installNaplesFwLatestImage(node, img):
 

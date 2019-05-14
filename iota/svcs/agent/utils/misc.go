@@ -364,7 +364,25 @@ var GetIntfsMatchingPrefix = func(prefix string) []string {
 	return ret
 }
 
-// GetIntfsMatchingDevicePrefix get intfs matching device prefix
+//IsInterfaceUp check whether interface is up
+func IsInterfaceUp(name string) (bool, error) {
+
+	intfs, _ := net.Interfaces()
+	for _, intf := range intfs {
+		if intf.Name == name {
+			cmd := []string{"ip", "link", "show", name, "|", "grep", "\"state UP\""}
+			exitCode, _, _ := RunCmd(cmd, 0, false, true, nil)
+			if exitCode == 0 {
+				return true, nil
+			}
+			return false, nil
+
+		}
+	}
+	return false, errors.New("Interface not found")
+}
+
+// GetIntfsMatchingDevicePrefixLinux get intfs matching device prefix
 func GetIntfsMatchingDevicePrefixLinux(devicePrefix string) ([]string, error) {
 	hostIntfs := []string{}
 

@@ -73,8 +73,15 @@ class TestSuite:
     def GetSetups(self):
         return self.__setups
 
+    def GetPacakges(self):
+        return self.__spec.packages
+
     def IsConfigOnly(self):
        return getattr(self.__spec.meta, "cfgonly", False)
+
+    def IsBitw(self):
+       return getattr(self.__spec.meta, "nicmode", None) == "bitw"
+
 
     def DoConfig(self):
         return self.__setup_config()

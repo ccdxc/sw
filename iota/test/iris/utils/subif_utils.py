@@ -5,7 +5,6 @@ import ipaddress
 import iota.harness.infra.utils.utils as utils
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
-import iota.protos.pygen.types_pb2 as types_pb2
 import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.resmgr as resmgr
 import iota.test.iris.config.netagent.hw_push_config as hw_config

@@ -3,7 +3,6 @@ import json
 import time
 import iota.harness.api as api
 import iota.protos.pygen.cfg_svc_pb2 as cfg_svc_pb2
-import iota.protos.pygen.types_pb2 as types_pb2
 
 json_object = {
     "kind": "Cluster",

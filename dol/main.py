@@ -28,7 +28,9 @@ for path in paths:
 
 # This import will parse all the command line options.
 import infra.common.glopts as glopts
+glopts.ParseArgs()
 glopts.ValidateGlopts()
+from infra.common.logging import logger
 
 import infra.common.loader as loader
 import infra.factory.factory as factory
@@ -61,7 +63,7 @@ def Main():
     pipeline.GenerateConfig()
 
     if glopts.GlobalOptions.e2e:
-        #Start E2E 
+        #Start E2E
         cfg_file = ws_top + '/nic/' + glopts.GlobalOptions.cfgjson
         e2e.Start(cfg_file)
 
@@ -70,10 +72,10 @@ def Main():
         return 0
 
     status = pipeline.Main()
-    
+
     if glopts.GlobalOptions.e2e:
         e2e.Stop()
-   
+
     if glopts.GlobalOptions.savepcap:
         PacketCollector.Write()
 
@@ -86,4 +88,3 @@ if __name__ == '__main__':
     timeprofiler.TotalTimeProfiler.Stop()
     timeprofiler.Show()
     sys.exit(status)
-

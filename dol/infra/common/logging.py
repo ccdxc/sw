@@ -4,7 +4,7 @@ import datetime
 import pdb
 import sys
 import inspect
-import threading 
+import threading
 
 import infra.common.defs as defs
 
@@ -50,7 +50,7 @@ class LoggerSink:
             pfx = prefixes[level]
             if pfx in text: return True
         return False
-    
+
     def write(self, text):
         #pdb.set_trace()
         #text = text.replace('\n', ' ')
@@ -58,7 +58,7 @@ class LoggerSink:
         self.log(text)
         return
 
-    def log(self, text): 
+    def log(self, text):
         #if not self.__is_logger_print(text):
         #    return
         self.lock.acquire()
@@ -78,12 +78,19 @@ StdoutLoggerSink = LoggerSink(stdout = True)
 sys.stdout = StdoutLoggerSink
 sys.stderr = StdoutLoggerSink
 
-start_level = levels.INFO
-if GlobalOptions.debug:
-    start_level = levels.DEBUG
 
-if GlobalOptions.verbose:
-    start_level = levels.VERBOSE
+start_level = levels.INFO
+
+def getDebugLevel():
+    global start_level
+    if GlobalOptions.debug:
+        start_level = levels.DEBUG
+
+    if GlobalOptions.verbose:
+        start_level = levels.VERBOSE
+
+    return start_level
+
 
 class Logger:
     def __init__(self, stdout=True, level=start_level, logfile=None):
@@ -147,7 +154,7 @@ class Logger:
             text = text + "  " * indent
         for a in args:
             text = text + str(a) + " "
-        
+
         text = text.replace('\n', ' ')
         text = text + "\n"
         return text
@@ -178,7 +185,7 @@ class Logger:
 
     def log(self, level, *args, **kwargs):
         return self.__log(*args, **kwargs, level=level)
-   
+
     def SetLoggingLevel(self, level):
         self.level = level
 
@@ -208,4 +215,4 @@ class Logger:
         logger.debug("END: %s()  Status:%d" % (inspect.stack()[1][3], status))
         return
 
-logger = Logger(level = start_level)
+logger = Logger(level = getDebugLevel())

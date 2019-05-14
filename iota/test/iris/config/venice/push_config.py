@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.protos.pygen.cfg_svc_pb2 as cfg_svc_pb2
-import iota.protos.pygen.types_pb2 as types_pb2
 
 def Main(tc):
     generated_configs = api.GetVeniceConfigs()

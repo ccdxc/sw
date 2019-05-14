@@ -2,8 +2,8 @@
 import json
 import time
 import iota.harness.api as api
+import iota.protos.pygen.iota_types_pb2 as types_pb2
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
-import iota.protos.pygen.types_pb2 as types_pb2
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.iris.config.netagent.hw_push_config as cfg_api
 import iota.test.iris.config.netagent.hw_push_config as hw_config

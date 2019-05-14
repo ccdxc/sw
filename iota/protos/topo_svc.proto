@@ -7,7 +7,7 @@
 syntax = "proto3";
 package iotamodel;
 
-import "types.proto";
+import "iota_types.proto";
 
 // ---------------------------- Topology API ----------------------------
 
@@ -87,12 +87,15 @@ enum PersonalityType {
     PERSONALITY_NAPLES_SIM_WITH_QEMU    = 3;
     // Naples Hardware
     PERSONALITY_NAPLES                  = 4;
-    PERSONALITY_THIRD_PARTY_NIC         = 5;
-    PERSONALITY_MELLANOX                = 6;
-    PERSONALITY_BROADCOM                = 7;
-    PERSONALITY_INTEL                   = 8;
+    PERSONALITY_NAPLES_BITW             = 5;
+    //Naples BITW model to run on one host for performance
+    PERSONALITY_NAPLES_BITW_PERF        = 6;
+    PERSONALITY_THIRD_PARTY_NIC         = 7;
+    PERSONALITY_MELLANOX                = 8;
+    PERSONALITY_BROADCOM                = 9;
+    PERSONALITY_INTEL                   = 10;
     // Node just run commands
-    PERSONALITY_COMMAND_NODE            = 9;
+    PERSONALITY_COMMAND_NODE            = 11;
 }
 
 enum EntityType {
@@ -199,6 +202,7 @@ message NaplesConfig {
 
     // Nic type
     string nic_type              = 9;
+
 }
 
 message ThirdPartyNicConfig {
