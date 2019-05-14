@@ -8,6 +8,7 @@
 #include "gen/proto/eventtypes.pb.h"
 
 #include "eventlogger.hpp"
+#include "fault_watcher.hpp"
 #include "service_watcher.hpp"
 #include "timer_watcher.hpp"
 #include "utils.hpp"
@@ -170,6 +171,9 @@ void Service::on_child(pid_t pid)
 
     delphi_sdk->QueueUpdate(obj);
 
+    if (this->spec->flags & PANIC_ON_FAILURE) {
+        FaultLoop::getInstance()->set_fault("Process died");
+    }
 }
 
 void Service::on_timer()
@@ -178,6 +182,9 @@ void Service::on_timer()
     this->timer_watcher->stop();
 
     logger->info("System in fault mode");
+    if (this->spec->flags & PANIC_ON_FAILURE) {
+        FaultLoop::getInstance()->set_fault("Process missed heartbeat");
+    }
     auto obj = std::make_shared<delphi::objects::SysmgrSystemStatus>();
     obj->set_state(::sysmgr::Fault);
     delphi_sdk->QueueUpdate(obj);

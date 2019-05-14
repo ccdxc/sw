@@ -12,6 +12,7 @@
 #include "delphi_service.hpp"
 #include "service_factory.hpp"
 #include "utils.hpp"
+#include "watchdog.hpp"
 
 delphi::SdkPtr delphi_sdk = std::make_shared<delphi::Sdk>();
 
@@ -21,6 +22,7 @@ main(int argc, char *argv[])
     ev::default_loop loop;
     ServiceFactoryPtr service_factory = ServiceFactory::getInstance();
     DelphiServicePtr svc = DelphiService::create(delphi_sdk);
+    WatchdogPtr watchdog = Watchdog::create();
 
     if (argc < 2) {
        fprintf(stderr, "Please use %s <CONFIG_FILE>\n`", argv[0]);

@@ -25,11 +25,13 @@ static int flags_from_obj(pt::ptree obj)
    
    for (auto flag: obj.get_child("flags")) {
        if (boost::iequals(flag.second.data(), "restartable")) {
-	   flags |= RESTARTABLE;
+           flags |= RESTARTABLE;
        } else if (boost::iequals(flag.second.data(), "save_stdout_on_crash")) {
-	   flags |= COPY_STDOUT_ON_CRASH;
+           flags |= COPY_STDOUT_ON_CRASH;
+       } else if (boost::iequals(flag.second.data(), "critical")) {
+           flags |= PANIC_ON_FAILURE;
        } else {
-	   throw std::runtime_error("Unknown flag: " + flag.second.data());
+           throw std::runtime_error("Unknown flag: " + flag.second.data());
        }
    }
    return flags;
@@ -41,12 +43,12 @@ static ServiceSpecDepPtr dependency_from_obj(pt::ptree obj)
 
     if (obj.get<std::string>("kind") == "service")
     {
-	dependency->kind = SERVICE_SPEC_DEP_SERVICE;
-	dependency->service_name = obj.get<std::string>("service-name");
+        dependency->kind = SERVICE_SPEC_DEP_SERVICE;
+        dependency->service_name = obj.get<std::string>("service-name");
     }
     else
     {
-	throw std::runtime_error("Unknown dependency kind: " + obj.data());
+        throw std::runtime_error("Unknown dependency kind: " + obj.data());
     }
 
     return dependency;
@@ -81,7 +83,7 @@ ServiceFactoryPtr ServiceFactory::getInstance()
 {
     if (instance != nullptr)
     {
-	return instance;
+        return instance;
     }
 
     instance = std::make_shared<ServiceFactory>();
@@ -104,7 +106,7 @@ void ServiceFactory::load_config(std::string path)
 
     for (auto obj: root)
     {
-	ConfigLoop::getInstance()->queue_config(spec_from_obj(obj.second));
+        ConfigLoop::getInstance()->queue_config(spec_from_obj(obj.second));
     }
 }
 

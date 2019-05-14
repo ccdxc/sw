@@ -39,6 +39,7 @@ extern "C" {
 #endif
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include "pal_types.h"
 #include "pal_locks.h"

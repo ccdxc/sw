@@ -14,7 +14,7 @@
                 "kind": "service",
                 "service-name": "delphi"
             }],
-        "flags": [],
+        "flags": ["critical"],
         "timeout": 30.0
     },
     {
@@ -155,19 +155,19 @@
         "timeout": 30.0
     },
     {
-    	"name": "pen-techsupport",
-	"command": "/nic/bin/ntsa -config /nic/conf/naples-tsa.json",
-    	"dependencies": [
-		{
-			"kind": "service",
-			"service-name": "delphi"
-		},
+        "name": "pen-techsupport",
+        "command": "/nic/bin/ntsa -config /nic/conf/naples-tsa.json",
+        "dependencies": [
                 {
-                	"kind": "service",
-                	"service-name": "hal"
-            	}
-	],
-	"flags": ["restartable", "save_stdout_on_crash"],
-	"timeout": 30.0
+                        "kind": "service",
+                        "service-name": "delphi"
+                },
+                {
+                        "kind": "service",
+                        "service-name": "hal"
+                }
+        ],
+        "flags": ["restartable", "save_stdout_on_crash"],
+        "timeout": 30.0
     }
 ]

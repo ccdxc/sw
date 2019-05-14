@@ -25,6 +25,7 @@ static int wdtfd = -1;
 static pal_watchdog_action_t gwdt = NO_WDT;
 
 int pal_watchdog_init(pal_watchdog_action_t wdttype) {
+#ifdef __aarch64__
     int fd = -1;
     uint32_t data;
     int timeout;
@@ -77,10 +78,12 @@ int pal_watchdog_init(pal_watchdog_action_t wdttype) {
 
     wdtfd = fd;
     gwdt = wdttype;
+#endif
     return 0;
 }
 
 int pal_watchdog_kick() {
+#ifdef __aarch64__
     int fd = -1;
     int timeout;
     //no watchdog initialized
@@ -95,10 +98,12 @@ int pal_watchdog_kick() {
         wdtfd = -1;
         return -1;
     }
+#endif
     return 0;
 }
 
 int pal_watchdog_stop() {
+#ifdef __aarch64__
     int fd = -1;
     uint32_t data;
     static const char V = 'V';
@@ -125,5 +130,6 @@ int pal_watchdog_stop() {
     }
     close(fd);
     wdtfd = -1;
+#endif
     return 0;
 }
