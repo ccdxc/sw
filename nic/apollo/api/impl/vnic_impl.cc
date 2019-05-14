@@ -219,6 +219,7 @@ vnic_impl::reprogram_hw(api_base *api_obj, api_op_t api_op) {
                       "vnic %u, err %u", vnic->key().id, ret);
         return ret;
     }
+
     // update fields dependent on other objects and reprogram
     sdk::lib::memrev(egress_vnic_data.egress_local_vnic_info_action.vr_mac,
                      subnet->vr_mac(), ETH_ADDR_LEN);
@@ -322,8 +323,9 @@ vnic_impl::activate_vnic_by_vlan_tx_table_create_(pds_epoch_t epoch,
 
     // assert to support only dot1q encap for host
     SDK_ASSERT(spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q);
-    ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->
-        insert_atid(&vnic_by_vlan_data, spec->vnic_encap.val.vlan_tag);
+    ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->insert_atid(
+                                                           &vnic_by_vlan_data,
+                                                           spec->vnic_encap.val.vlan_tag);
 
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Programming of LOCAL_VNIC_BY_VLAN_TX table failed, "
@@ -559,11 +561,142 @@ vnic_impl::activate_hw(api_base *api_obj, pds_epoch_t epoch,
     return ret;
 }
 
+// TODO: when epoch support is added to these tables, we should pick
+//       old epoch contents and override them !!!
 sdk_ret_t
 vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
                          api_op_t api_op) {
-    return SDK_RET_INVALID_OP;
+    sdk_ret_t ret;
+    mem_addr_t addr;
+    subnet_entry *subnet;
+    pds_subnet_key_t subnet_key;
+    pds_policy_key_t policy_key;
+    pds_route_table_key_t route_table_key;
+    policy *ing_v4_policy, *ing_v6_policy;
+    policy *egr_v4_policy, *egr_v6_policy;
+    vnic_entry *vnic = (vnic_entry *)api_obj;
+    route_table *v4_route_table, *v6_route_table;
+    egress_local_vnic_info_actiondata_t egress_vnic_data = { 0 };
+    local_vnic_by_vlan_tx_actiondata_t vnic_by_vlan_data = { 0 };
+    local_vnic_by_slot_rx_swkey_t vnic_by_slot_key = { 0 };
+    local_vnic_by_slot_rx_actiondata_t vnic_by_slot_data = { 0 };
+
+    // read EGRESS_LOCAL_VNIC_INFO table entry of this vnic
+    ret = vnic_impl_db()->egress_local_vnic_info_tbl()->retrieve(
+              hw_id_, &egress_vnic_data);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to read EGRESS_LOCAL_VNIC_INFO table for "
+                      "vnic %u, err %u", vnic->key().id, ret);
+        return ret;
+    }
+
+    // then read LOCAL_VNIC_BY_VLAN_TX table using the wire vlan id
+    ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->retrieve(
+              egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id,
+              &vnic_by_vlan_data);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to read LOCAL_VNIC_BY_VLAN_TX table for "
+                      "vnic %u, err %u", vnic->key().id, ret);
+        return ret;
+    }
+
+    // and update all the data dependent on other objects
+    subnet_key = vnic->subnet();
+    subnet = (subnet_entry *)api_base::find_obj(OBJ_ID_SUBNET, &subnet_key);
+    route_table_key = subnet->v4_route_table();
+    v4_route_table = (route_table *)api_base::find_obj(OBJ_ID_ROUTE_TABLE,
+                                                       &route_table_key);
+    route_table_key = subnet->v6_route_table();
+    if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
+        v6_route_table = (route_table *)api_base::find_obj(OBJ_ID_ROUTE_TABLE,
+                                                           &route_table_key);
+    } else {
+        v6_route_table = NULL;
+    }
+    policy_key = subnet->ing_v4_policy();
+    ing_v4_policy = (policy *)api_base::find_obj(OBJ_ID_POLICY, &policy_key);
+    policy_key = subnet->ing_v6_policy();
+    ing_v6_policy = (policy *)api_base::find_obj(OBJ_ID_POLICY, &policy_key);
+    policy_key = subnet->egr_v4_policy();
+    egr_v4_policy = (policy *)api_base::find_obj(OBJ_ID_POLICY, &policy_key);
+    policy_key = subnet->egr_v6_policy();
+    egr_v6_policy = (policy *)api_base::find_obj(OBJ_ID_POLICY, &policy_key);
+    if (v4_route_table) {
+        addr =
+            ((impl::route_table_impl *)(v4_route_table->impl()))->lpm_root_addr();
+        PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v4addr1,
+                                addr, 5);
+    }
+    if (v6_route_table) {
+        addr =
+            ((impl::route_table_impl *)(v6_route_table->impl()))->lpm_root_addr();
+        PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.lpm_v6addr1,
+                                addr, 5);
+    }
+
+    // program security policy block's base address
+    if (egr_v4_policy) {
+        addr = ((impl::security_policy_impl *)(egr_v4_policy->impl()))->security_policy_root_addr();
+        PDS_TRACE_DEBUG("Egress IPv4 policy root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v4addr1,
+                                addr, 5);
+    }
+    if (egr_v6_policy) {
+        addr = ((impl::security_policy_impl *)(egr_v6_policy->impl()))->security_policy_root_addr();
+        PDS_TRACE_DEBUG("Egress IPv6 policy root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_vlan_data.local_vnic_by_vlan_tx_info.sacl_v6addr1,
+                                addr, 5);
+    }
+    // NOTE: ideally we should update portion of data that has min. epoch number
+    vnic_by_vlan_data.local_vnic_by_vlan_tx_info.epoch1 = epoch;
+    ret = vnic_impl_db()->local_vnic_by_vlan_tx_tbl()->update(
+              egress_vnic_data.egress_local_vnic_info_action.overlay_vlan_id,
+              &vnic_by_vlan_data);
+
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Programming of LOCAL_VNIC_BY_VLAN_TX table failed, "
+                      "epoch %u, vnic %s , err %u", epoch,
+                      vnic->key2str().c_str(), ret);
+        return ret;
+    }
+
+    // now, read LOCAL_VNIC_BY_SLOT_RX table, this is to get encap type
+    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->retrieve(
+                                            vnic_by_slot_hash_idx_,
+                                            &vnic_by_slot_key,
+                                            &vnic_by_slot_data);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to read LOCAL_VNIC_BY_SLOT_RX table for "
+                      "vnic %u, err %u", vnic->key().id, ret);
+        return ret;
+    }
+    // program security policy block's base address
+    if (ing_v4_policy) {
+        addr = ((impl::security_policy_impl *)(ing_v4_policy->impl()))->security_policy_root_addr();
+        PDS_TRACE_DEBUG("Ingress IPv4 policy root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v4addr1,
+                                addr, 5);
+    }
+    if (ing_v6_policy) {
+        addr = ((impl::security_policy_impl *)(ing_v6_policy->impl()))->security_policy_root_addr();
+        PDS_TRACE_DEBUG("Ingress IPv6 policy root addr 0x%llx", addr);
+        MEM_ADDR_TO_P4_MEM_ADDR(vnic_by_slot_data.local_vnic_by_slot_rx_info.sacl_v6addr1,
+                                addr, 5);
+    }
+    // NOTE: ideally we should update portion of data that has min. epoch number
+    vnic_by_slot_data.local_vnic_by_slot_rx_info.epoch1 = epoch;
+    ret = vnic_impl_db()->local_vnic_by_slot_rx_tbl()->update(vnic_by_slot_hash_idx_,
+                                                              &vnic_by_slot_data);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Programming of LOCAL_VNIC_BY_SLOT_RX table failed, "
+                      "epoch %u, vnic %s , err %u", epoch,
+                       vnic->key2str().c_str(), ret);
+    }
+    return ret;
 }
+
 void
 vnic_impl::fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
                             vnic_rx_stats_actiondata_t *rx_stats,
@@ -577,11 +710,12 @@ vnic_impl::fill_vnic_stats_(vnic_tx_stats_actiondata_t *tx_stats,
 }
 
 void
-vnic_impl::fill_vnic_spec_(egress_local_vnic_info_actiondata_t *egress_vnic_data,
-                           local_vnic_by_vlan_tx_actiondata_t  *vnic_by_vlan_data,
-                           local_vnic_by_slot_rx_swkey_t       *vnic_by_slot_key,
-                           local_vnic_by_slot_rx_actiondata_t  *vnic_by_slot_data,
-                           pds_vnic_spec_t *spec) {
+vnic_impl::fill_vnic_spec_(
+               egress_local_vnic_info_actiondata_t *egress_vnic_data,
+               local_vnic_by_vlan_tx_actiondata_t  *vnic_by_vlan_data,
+               local_vnic_by_slot_rx_swkey_t       *vnic_by_slot_key,
+               local_vnic_by_slot_rx_actiondata_t  *vnic_by_slot_data,
+               pds_vnic_spec_t *spec) {
     // from EGRESS_LOCAL_VNIC_INFO table
     sdk::lib::memrev(
         spec->mac_addr,
