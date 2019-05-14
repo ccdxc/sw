@@ -119,7 +119,7 @@ vpc_util_object_stepper(pds_vpc_key_t start_key, std::string start_pfxstr,
             return sdk::SDK_RET_INVALID_OP;
         }
         if (rv != expected_result) {
-            return rv;
+            return sdk::SDK_RET_ERR;
         }
         ip_prefix_ip_next(&ip_pfx, &ipaddr_next);
         addr = ipaddr_next.addr.v4_addr;

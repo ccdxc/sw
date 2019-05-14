@@ -47,6 +47,9 @@ mirror_impl::build(pds_mirror_session_key_t *key) {
     uint32_t hw_id = key->id - 1;
     mirror_actiondata_t mirror_data = { 0 };
 
+    if (hw_id > (PDS_MAX_MIRROR_SESSION - 1)) {
+        return NULL;
+    }
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_MIRROR, hw_id, NULL, NULL,
                                        &mirror_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -208,8 +211,13 @@ mirror_impl::read_hw(pds_mirror_session_key_t *key,
                      pds_mirror_session_info_t *info) {
     p4pd_error_t p4pd_ret;
     mirror_actiondata_t mirror_data;
+    uint16_t hw_id;
 
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_MIRROR, key->id-1, NULL, NULL,
+    hw_id = key->id-1;
+    if ((mirror_impl_db()->session_bmap_ & (1 << hw_id)) == 0) {
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_MIRROR, hw_id, NULL, NULL,
                                       &mirror_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to read mirror session %u at idx %u", key->id);

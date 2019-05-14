@@ -223,7 +223,7 @@ subnet_util_object_stepper (subnet_util_stepper_seed_t *init_seed,
             return sdk::SDK_RET_INVALID_OP;
         }
         if (rv != expected_result) {
-            return rv;
+            return sdk::SDK_RET_ERR;
         }
         subnet_util_stepper_seed_increment(&seed, width);
     }

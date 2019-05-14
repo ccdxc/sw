@@ -228,7 +228,7 @@ mapping_util_object_stepper (
             }
 
             if (rv != expected_result) {
-                return rv;
+                return sdk::SDK_RET_ERR;
             }
 
             // Increment to next mapping i.e. next vnic ip

@@ -106,7 +106,7 @@ mirror_session::program_config(obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 mirror_session::nuke_resources_(void) {
-    return impl_->nuke_resources(this);
+    return (impl_ != NULL) ? (impl_->nuke_resources(this)) : SDK_RET_OK;
 }
 
 sdk_ret_t

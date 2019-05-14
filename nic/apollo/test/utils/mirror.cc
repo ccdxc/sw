@@ -60,6 +60,40 @@ mirror_session_util::read(pds_mirror_session_info_t *info, bool compare_spec) {
         return rv;
 
     if (compare_spec) {
+        // validate mirror session type
+        if (info->spec.type != this->type) {
+            return sdk::SDK_RET_ERR;
+        }
+        // validate snap_len
+        if (info->spec.snap_len != this->snap_len) {
+            return sdk::SDK_RET_ERR;
+        }
+        if (info->spec.type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
+            // validate rspan spec
+            if (info->spec.rspan_spec.interface !=
+                this->rspan_spec.interface) {
+                return sdk::SDK_RET_ERR;
+            }
+            if (info->spec.rspan_spec.encap.type !=
+                this->rspan_spec.encap.type) {
+                return sdk::SDK_RET_ERR;
+            }
+            if (info->spec.rspan_spec.encap.val.vlan_tag !=
+                this->rspan_spec.encap.val.vlan_tag) {
+                return sdk::SDK_RET_ERR;
+            }
+
+        } else if (info->spec.type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
+            // validate erspan spec
+            if (info->spec.erspan_spec.src_ip.addr.v4_addr !=
+                this->erspan_spec.src_ip.addr.v4_addr) {
+                return sdk::SDK_RET_ERR;
+            }
+            if (info->spec.erspan_spec.dst_ip.addr.v4_addr !=
+                this->erspan_spec.dst_ip.addr.v4_addr) {
+                return sdk::SDK_RET_ERR;
+            }
+        }
 
     }
     return sdk::SDK_RET_OK;
@@ -103,14 +137,14 @@ mirror_session_util_object_stepper(mirror_session_stepper_seed_t *seed,
             rv = ms_obj.del();
             break;
         case OP_MANY_READ:
-            rv = ms_obj.read(&info, TRUE);
+            rv = ms_obj.read(&info, FALSE);
             break;
         default:
             return sdk::SDK_RET_INVALID_OP;
         }
 
         if (rv != expected_result)
-            return rv;
+            return sdk::SDK_RET_ERR;
 
         if (local_seed.type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
             if (local_seed.encap.type == PDS_ENCAP_TYPE_DOT1Q)
@@ -121,8 +155,6 @@ mirror_session_util_object_stepper(mirror_session_stepper_seed_t *seed,
             }
         } else if (local_seed.type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
             local_seed.span_id++;
-            local_seed.dst_ip.addr.v4_addr += 1;
-            local_seed.src_ip.addr.v4_addr += 1;
             local_seed.dscp++;
         }
     }

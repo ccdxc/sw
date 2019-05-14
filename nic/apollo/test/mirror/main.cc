@@ -17,11 +17,17 @@
 #include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"
+#include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/mirror.hpp"
 
 const char *g_cfg_file = "hal.json";
 static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
-constexpr int k_max_mirror_sessions = PDS_MAX_MIRROR_SESSION;
+constexpr int k_max_mirror_sessions = PDS_MAX_MIRROR_SESSION/2;
+constexpr int k_base_ms_rspan = 1;
+constexpr int k_base_ms_erspan = 5;
+const std::string g_device_ip("91.0.0.1");
+const std::string g_gateway_ip("90.0.0.2");
+const std::string g_device_macaddr("00:00:01:02:0a:0b");
 
 namespace api_test {
 
@@ -42,24 +48,34 @@ protected:
         pds_test_base::SetUpTestCase(params);
 
         pds_batch_params_t batch_params = {0};
-        vpc_util vpc_obj(1, "10.0.0.0/8");
+        vpc_util vpc_obj(PDS_VPC_TYPE_SUBSTRATE, 1, "10.0.0.0/8");
         subnet_util subnet_obj(1, 1, "10.1.0.0/16");
+        pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
+        tep_util tep_obj("10.1.1.1", PDS_TEP_TYPE_WORKLOAD, encap, true);
+        device_util device_obj(g_device_ip, g_device_macaddr, g_gateway_ip);
 
         batch_params.epoch = ++g_batch_epoch;
         ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
         ASSERT_TRUE(vpc_obj.create() == sdk::SDK_RET_OK);
         ASSERT_TRUE(subnet_obj.create() == sdk::SDK_RET_OK);
+        ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
+        ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
     }
     static void TearDownTestCase() {
         pds_batch_params_t batch_params = {0};
-        vpc_util vpc_obj(1, "10.0.0.0/8");
+        vpc_util vpc_obj(PDS_VPC_TYPE_SUBSTRATE, 1, "10.0.0.0/8");
         subnet_util subnet_obj(1, 1, "10.1.0.0/16");
+        pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
+        tep_util tep_obj("10.1.1.1", PDS_TEP_TYPE_WORKLOAD, encap, true);
+        device_util device_obj(g_device_ip, g_device_macaddr, g_gateway_ip);
 
         batch_params.epoch = ++g_batch_epoch;
         ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
         ASSERT_TRUE(vpc_obj.del() == sdk::SDK_RET_OK);
         ASSERT_TRUE(subnet_obj.del() == sdk::SDK_RET_OK);
+        ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_OK);
+        ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
         pds_test_base::TearDownTestCase();
@@ -99,72 +115,47 @@ mirror_session_stepper_seed_init (int seed_base,
 /// The operation should be de-duped by framework and is
 /// a NO-OP from hardware perspective
 /// [ Create SetMax, Delete SetMax ] - Read
-TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_1) {
+TEST_F(mirror_session_test, mirror_session_workflow_1) {
     pds_batch_params_t batch_params = {0};
-    mirror_session_stepper_seed_t seed = {};
+    mirror_session_stepper_seed_t seed_rspan = {};
+    mirror_session_stepper_seed_t seed_erspan = {};
 
-    mirror_session_stepper_seed_init(1, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed);
+    mirror_session_stepper_seed_init(k_base_ms_rspan,
+                                     PDS_MIRROR_SESSION_TYPE_RSPAN, &seed_rspan);
+    mirror_session_stepper_seed_init(k_base_ms_erspan,
+                                     PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed_erspan);
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(mirror_session_util::many_create(
-        &seed, k_max_mirror_sessions) == sdk::SDK_RET_OK);
+        &seed_rspan, k_max_mirror_sessions) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_create(
+        &seed_erspan, k_max_mirror_sessions) == sdk::SDK_RET_OK);
     ASSERT_TRUE(mirror_session_util::many_delete(
-        &seed, k_max_mirror_sessions) == sdk::SDK_RET_OK);
+       &seed_rspan, k_max_mirror_sessions) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_delete(
+       &seed_erspan, k_max_mirror_sessions) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(mirror_session_util::many_read(
-        &seed, k_max_mirror_sessions, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
+        &seed_rspan, k_max_mirror_sessions, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
         sdk::SDK_RET_OK);
-}
-
-/// \brief Create, delete and create max mirror sessions in the same batch
-/// Create and delete should be de-deduped by framework and subsequent create
-/// should result in successful creation
-/// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
-TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_2) {
-    pds_batch_params_t batch_params = {0};
-    mirror_session_stepper_seed_t seed = {};
-
-    mirror_session_stepper_seed_init(1, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed);
-
-    // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(mirror_session_util::many_create(
-        &seed, k_max_mirror_sessions) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(mirror_session_util::many_delete(
-        &seed, k_max_mirror_sessions) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(mirror_session_util::many_create(
-        &seed, k_max_mirror_sessions) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
     ASSERT_TRUE(mirror_session_util::many_read(
-        &seed, k_max_mirror_sessions, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(mirror_session_util::many_delete(
-        &seed, k_max_mirror_sessions) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-
-    ASSERT_TRUE(mirror_session_util::many_read(
-        &seed, k_max_mirror_sessions, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
+        &seed_erspan, k_max_mirror_sessions, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
         sdk::SDK_RET_OK);
 }
 
 /// \brief Create, delete some and create another set of nodes in the same batch
 /// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
-TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_3) {
+TEST_F(mirror_session_test, mirror_session_workflow_3) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
     mirror_session_stepper_seed_t seed2 = {};
     mirror_session_stepper_seed_t seed3 = {};
     uint32_t num_mirror_sessions = 2;
 
-    mirror_session_stepper_seed_init(1, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed1);
+    mirror_session_stepper_seed_init(1, PDS_MIRROR_SESSION_TYPE_RSPAN, &seed1);
     mirror_session_stepper_seed_init(3, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed2);
     mirror_session_stepper_seed_init(5, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed3);
 
@@ -210,36 +201,49 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_3) {
 /// The hardware should create and delete mirror sessions correctly.
 /// Validate using reads at each batch end
 /// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
-TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_4) {
+TEST_F(mirror_session_test, mirror_session_workflow_4) {
     pds_batch_params_t batch_params = {0};
-    mirror_session_stepper_seed_t seed = {};
+    mirror_session_stepper_seed_t seed_rspan = {};
+    mirror_session_stepper_seed_t seed_erspan = {};
 
-    mirror_session_stepper_seed_init(1, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed);
+    mirror_session_stepper_seed_init(k_base_ms_rspan,
+                                     PDS_MIRROR_SESSION_TYPE_RSPAN, &seed_rspan);
+    mirror_session_stepper_seed_init(k_base_ms_erspan,
+                                     PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed_erspan);
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(mirror_session_util::many_create(
-        &seed, k_max_mirror_sessions) == sdk::SDK_RET_OK);
+        &seed_rspan, k_max_mirror_sessions) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_create(
+        &seed_erspan, k_max_mirror_sessions) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(mirror_session_util::many_read(
-        &seed, k_max_mirror_sessions, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed_rspan, k_max_mirror_sessions, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_read(
+        &seed_erspan, k_max_mirror_sessions, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(mirror_session_util::many_delete(
-        &seed, k_max_mirror_sessions) == sdk::SDK_RET_OK);
+        &seed_rspan, k_max_mirror_sessions) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_delete(
+        &seed_erspan, k_max_mirror_sessions) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(mirror_session_util::many_read(
-        &seed, k_max_mirror_sessions, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
+        &seed_rspan, k_max_mirror_sessions, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
+        sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_read(
+        &seed_erspan, k_max_mirror_sessions, sdk::SDK_RET_ENTRY_NOT_FOUND) ==
         sdk::SDK_RET_OK);
 }
 
 /// \brief Create and delete mix and match of mirror sessions in two batches
 /// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
-TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_5) {
+TEST_F(mirror_session_test, mirror_session_workflow_5) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
     mirror_session_stepper_seed_t seed2 = {};
@@ -247,7 +251,7 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_5) {
     uint32_t num_mirror_sessions = 2;
 
     mirror_session_stepper_seed_init(1, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed1);
-    mirror_session_stepper_seed_init(3, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed2);
+    mirror_session_stepper_seed_init(3, PDS_MIRROR_SESSION_TYPE_RSPAN, &seed2);
     mirror_session_stepper_seed_init(5, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed3);
 
     // trigger
@@ -299,88 +303,125 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_5) {
 
 /// \brief Create maximum number of mirror sessions in two batches
 /// [ Create SetMax ] - [ Create SetMax ] - Read
-TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_1) {
+TEST_F(mirror_session_test, mirror_session_workflow_neg_1) {
     pds_batch_params_t batch_params = {0};
-    mirror_session_stepper_seed_t seed = {};
+    mirror_session_stepper_seed_t seed_rspan = {};
+    mirror_session_stepper_seed_t seed_erspan = {};
 
-    mirror_session_stepper_seed_init(1, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed);
+    mirror_session_stepper_seed_init(k_base_ms_rspan,
+                                     PDS_MIRROR_SESSION_TYPE_RSPAN, &seed_rspan);
+    mirror_session_stepper_seed_init(k_base_ms_erspan,
+                                     PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed_erspan);
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(mirror_session_util::many_create(&seed,
+    ASSERT_TRUE(mirror_session_util::many_create(&seed_rspan,
+        k_max_mirror_sessions) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_create(&seed_erspan,
         k_max_mirror_sessions) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(mirror_session_util::many_read(
-        &seed, k_max_mirror_sessions, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed_rspan, k_max_mirror_sessions, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_read(
+        &seed_erspan, k_max_mirror_sessions, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(mirror_session_util::many_create(&seed,
+    ASSERT_TRUE(mirror_session_util::many_create(&seed_rspan,
         k_max_mirror_sessions) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_INVALID_OP);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_create(&seed_erspan,
+        k_max_mirror_sessions) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(mirror_session_util::many_read(
-        &seed, k_max_mirror_sessions, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        &seed_rspan, k_max_mirror_sessions, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_read(
+        &seed_erspan, k_max_mirror_sessions, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
 
     // cleanup
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(mirror_session_util::many_delete(&seed,
+    ASSERT_TRUE(mirror_session_util::many_delete(&seed_rspan,
+        k_max_mirror_sessions) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_delete(&seed_erspan,
         k_max_mirror_sessions) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
-    ASSERT_TRUE(mirror_session_util::many_read(&seed, k_max_mirror_sessions,
+    ASSERT_TRUE(mirror_session_util::many_read(&seed_rspan, k_max_mirror_sessions,
+        sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_read(&seed_erspan, k_max_mirror_sessions,
         sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create more than maximum number of mirror sessions supported.
 /// [ Create SetMax+1] - Read
-TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_2) {
+TEST_F(mirror_session_test, mirror_session_workflow_neg_2) {
     pds_batch_params_t batch_params = {0};
-    mirror_session_stepper_seed_t seed = {};
+    mirror_session_stepper_seed_t seed_rspan = {};
+    mirror_session_stepper_seed_t seed_erspan = {};
 
-    mirror_session_stepper_seed_init(1, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed);
+    mirror_session_stepper_seed_init(k_base_ms_rspan,
+                                     PDS_MIRROR_SESSION_TYPE_RSPAN, &seed_rspan);
+    mirror_session_stepper_seed_init(k_base_ms_erspan,
+                                     PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed_erspan);
+
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(mirror_session_util::many_create(
-        &seed, k_max_mirror_sessions + 1) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
+        &seed_rspan, k_max_mirror_sessions) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_create(
+        &seed_erspan, k_max_mirror_sessions+1) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_INVALID_ARG);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(mirror_session_util::many_read(
-        &seed, k_max_mirror_sessions + 1,
+        &seed_rspan, k_max_mirror_sessions,
+        sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_read(
+        &seed_erspan, k_max_mirror_sessions,
         sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
 /// \brief Read of a non-existing mirror session should return entry not found.
 /// Read NonEx
-TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_3a) {
-    mirror_session_stepper_seed_t seed = {};
+TEST_F(mirror_session_test, mirror_session_workflow_neg_3a) {
+    mirror_session_stepper_seed_t seed_rspan = {};
+    mirror_session_stepper_seed_t seed_erspan = {};
 
-    mirror_session_stepper_seed_init(1, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed);
+    mirror_session_stepper_seed_init(k_base_ms_rspan,
+                                     PDS_MIRROR_SESSION_TYPE_RSPAN, &seed_rspan);
+    mirror_session_stepper_seed_init(k_base_ms_erspan,
+                                     PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed_erspan);
 
     // trigger
-    ASSERT_TRUE(mirror_session_util::many_read(&seed, k_max_mirror_sessions,
+    ASSERT_TRUE(mirror_session_util::many_read(&seed_rspan, k_max_mirror_sessions,
+        sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_read(&seed_erspan, k_max_mirror_sessions,
         sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
 }
 
-/// \brief Deletion of a non-existing mirror sessions should fail.
-/// [Delete NonEx]
-TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_3b) {
+/// \brief Deletion of invalid  mirror sessions should fail.
+/// [Delete Invalid]
+TEST_F(mirror_session_test, mirror_session_workflow_neg_3b) {
     pds_batch_params_t batch_params = {0};
-    mirror_session_stepper_seed_t seed = {};
+    mirror_session_stepper_seed_t seed_rspan = {};
+    mirror_session_stepper_seed_t seed_erspan = {};
 
-    mirror_session_stepper_seed_init(1, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed);
+    mirror_session_stepper_seed_init(k_base_ms_rspan+8,
+                                     PDS_MIRROR_SESSION_TYPE_RSPAN, &seed_rspan);
+    mirror_session_stepper_seed_init(k_base_ms_erspan+8,
+                                     PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed_erspan);
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(mirror_session_util::many_delete(&seed,
+    ASSERT_TRUE(mirror_session_util::many_delete(&seed_rspan,
+        k_max_mirror_sessions) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(mirror_session_util::many_delete(&seed_erspan,
         k_max_mirror_sessions) == sdk::SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
@@ -388,14 +429,14 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_3b) {
 
 /// \brief Invalid batch shouldn't affect entries of previous batch
 /// [ Create Set1 ] - [Delete Set1, Set2 ] - Read
-TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_4) {
+TEST_F(mirror_session_test, mirror_session_workflow_neg_4) {
     pds_batch_params_t batch_params = {0};
     mirror_session_stepper_seed_t seed1 = {};
     mirror_session_stepper_seed_t seed2 = {};
     uint32_t num_mirror_sessions = 2;
 
-    mirror_session_stepper_seed_init(1, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed1);
-    mirror_session_stepper_seed_init(3, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed2);
+    mirror_session_stepper_seed_init(1, PDS_MIRROR_SESSION_TYPE_RSPAN, &seed1);
+    mirror_session_stepper_seed_init(9, PDS_MIRROR_SESSION_TYPE_ERSPAN, &seed2);
 
     // trigger
     batch_params.epoch = ++g_batch_epoch;
@@ -413,7 +454,8 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_4) {
         sdk::SDK_RET_OK);
     ASSERT_TRUE(mirror_session_util::many_delete(&seed2, num_mirror_sessions) ==
         sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_ENTRY_NOT_FOUND);
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(mirror_session_util::many_read(
         &seed1, num_mirror_sessions, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
@@ -425,8 +467,7 @@ TEST_F(mirror_session_test, DISABLED_mirror_session_workflow_neg_4) {
     ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
     ASSERT_TRUE(mirror_session_util::many_delete(&seed1, num_mirror_sessions) ==
         sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     ASSERT_TRUE(mirror_session_util::many_read(&seed1, num_mirror_sessions,
         sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);

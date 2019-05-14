@@ -63,7 +63,7 @@ tep_util_object_stepper(std::string ip_str, pds_tep_type_t type,
             return sdk::SDK_RET_INVALID_OP;
         }
         if (rv != expected_result) {
-            return rv;
+            return sdk::SDK_RET_ERR;
         }
         // Increment IPv4 address by 1 for next TEP
         ip_addr.addr.v4_addr += 1;

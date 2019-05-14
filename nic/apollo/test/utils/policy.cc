@@ -195,7 +195,7 @@ policy_util_object_stepper (policy_seed_stepper_t *seed, uint32_t num_objs,
             return sdk::SDK_RET_INVALID_OP;
         }
         if (rv != expected_result) {
-            return rv;
+            return sdk::SDK_RET_ERR;
         }
 
         ip_prefix_ip_next(&ip_pfx, &ipaddr);
