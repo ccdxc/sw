@@ -153,19 +153,19 @@ struct capri_intrinsic_ring_t {
     k.{CAT7(_kp, _, _kf1, ..., _kp, _, _kfn)}
 
 #define CAPRI_PHV_RANGE(_pp, _pf1, _pfn) \
-    p.{CAT9(common., _pp, _, _pf1, ..., common., _pp, _, _pfn)}
+    p.{CAT7(_pp, _, _pf1, ..., _pp, _, _pfn)}
 
 #define CAPRI_KEY_FIELD(_kp, _kf) \
     k.CAT3(_kp, _, _kf)
 
 #define CAPRI_PHV_FIELD(_pp, _pf) \
-    p.CAT4(common., _pp, _, _pf)
+    p.CAT3(_pp, _, _pf)
 
 #define CAPRI_SET_FIELD2(_pp, _pf, _src) \
-    phvwr   p.CAT4(common., _pp, _, _pf), _src
+    phvwr   p.CAT3(_pp, _, _pf), _src
 
 #define CAPRI_SET_FIELD2_C(_pp, _pf, _src, _c_flag) \
-    phvwr._c_flag   p.CAT4(common., _pp, _, _pf), _src 
+    phvwr._c_flag   p.CAT3(_pp, _, _pf), _src 
 
 #define CAPRI_SET_FIELD_RANGE2(_pp, _pf1, _pfn, _src_range) \
     phvwr   CAPRI_PHV_RANGE(_pp, _pf1, _pfn), _src_range
@@ -208,74 +208,86 @@ struct capri_intrinsic_ring_t {
     phvwrpi.!_c _base_r, offsetof(INTRINSIC_RAW_K_T, table_pc), sizeof(INTRINSIC_RAW_K_T.table_pc), _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     phvwrp      _base_r, offsetof(INTRINSIC_RAW_K_T, table_addr), sizeof(INTRINSIC_RAW_K_T.table_addr), _table_addr_r;
 
+#define CAPRI_NEXT_TABLE0_SET_SIZE(_lock_en, _table_read_size) \
+    phvwr     p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size))
+
 #define CAPRI_NEXT_TABLE0_READ_PC(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
-    phvwrpair p.{common.common_te0_phv_table_lock_en...common.common_te0_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te0_phv_table_addr, _table_addr_r; \
-    phvwri    p.common.common_te0_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common_te0_phv_table_addr, _table_addr_r; \
+    phvwri    p.common_te0_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_0_VALID(1);
 
 #define CAPRI_NEXT_TABLE0_READ_PC_E(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
-    phvwrpair p.{common.common_te0_phv_table_lock_en...common.common_te0_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te0_phv_table_addr, _table_addr_r; \
-    phvwri.e  p.common.common_te0_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common_te0_phv_table_addr, _table_addr_r; \
+    phvwri.e  p.common_te0_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_0_VALID(1);
 
 #define CAPRI_NEXT_TABLE0_C_READ_PC_E(_lock_en1, _table_read_size1, _table_addr1_r, _lock_en2, _table_read_size2, _table_addr2_r, _table_pc, _c) \
-    phvwrpair._c p.{common.common_te0_phv_table_lock_en...common.common_te0_phv_table_raw_table_size}, ((_lock_en1 << 3)|(_table_read_size1)), p.common.common_te0_phv_table_addr, _table_addr1_r; \
-    phvwrpair.!_c p.{common.common_te0_phv_table_lock_en...common.common_te0_phv_table_raw_table_size}, ((_lock_en2 << 3)|(_table_read_size2)), p.common.common_te0_phv_table_addr, _table_addr2_r; \
-    phvwri.e  p.common.common_te0_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair._c p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, ((_lock_en1 << 3)|(_table_read_size1)), p.common_te0_phv_table_addr, _table_addr1_r; \
+    phvwrpair.!_c p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, ((_lock_en2 << 3)|(_table_read_size2)), p.common_te0_phv_table_addr, _table_addr2_r; \
+    phvwri.e  p.common_te0_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_0_VALID(1);
 
 #define CAPRI_NEXT_TABLE0_READ_PC_C(_lock_en, _table_read_size, _table_pc1, _table_pc2, _table_addr_r, _c) \
-    phvwrpair p.{common.common_te0_phv_table_lock_en...common.common_te0_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te0_phv_table_addr, _table_addr_r; \
-    phvwri._c   p.common.common_te0_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
-    phvwri.!_c  p.common.common_te0_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common_te0_phv_table_addr, _table_addr_r; \
+    phvwri._c   p.common_te0_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwri.!_c  p.common_te0_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_0_VALID(1);
 
 #define CAPRI_NEXT_TABLE0_READ_PC_CE(_lock_en, _table_read_size, _table_pc1, _table_pc2, _table_addr_r, _c) \
-    phvwrpair p.{common.common_te0_phv_table_lock_en...common.common_te0_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te0_phv_table_addr, _table_addr_r; \
-    phvwri._c.e   p.common.common_te0_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
-    phvwri.!_c.e  p.common.common_te0_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair p.{common_te0_phv_table_lock_en...common_te0_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common_te0_phv_table_addr, _table_addr_r; \
+    phvwri._c.e   p.common_te0_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwri.!_c.e  p.common_te0_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_0_VALID(1);
 
+#define CAPRI_NEXT_TABLE1_SET_SIZE(_lock_en, _table_read_size) \
+    phvwr     p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size))
+
 #define CAPRI_NEXT_TABLE1_READ_PC(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
-    phvwrpair p.{common.common_te1_phv_table_lock_en...common.common_te1_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te1_phv_table_addr, _table_addr_r; \
-    phvwri    p.common.common_te1_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common_te1_phv_table_addr, _table_addr_r; \
+    phvwri    p.common_te1_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_1_VALID(1);
 
 #define CAPRI_NEXT_TABLE1_READ_PC_E(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
-    phvwrpair p.{common.common_te1_phv_table_lock_en...common.common_te1_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te1_phv_table_addr, _table_addr_r; \
-    phvwri.e  p.common.common_te1_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common_te1_phv_table_addr, _table_addr_r; \
+    phvwri.e  p.common_te1_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_1_VALID(1);
 
 #define CAPRI_NEXT_TABLE1_READ_PC_C(_lock_en, _table_read_size, _table_pc1, _table_pc2, _table_addr_r, _c) \
-    phvwrpair p.{common.common_te1_phv_table_lock_en...common.common_te1_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te1_phv_table_addr, _table_addr_r; \
-    phvwri._c   p.common.common_te1_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
-    phvwri.!_c  p.common.common_te1_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common_te1_phv_table_addr, _table_addr_r; \
+    phvwri._c   p.common_te1_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwri.!_c  p.common_te1_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_1_VALID(1);
 
 #define CAPRI_NEXT_TABLE1_READ_PC_CE(_lock_en, _table_read_size, _table_pc1, _table_pc2, _table_addr_r, _c) \
-    phvwrpair p.{common.common_te1_phv_table_lock_en...common.common_te1_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te1_phv_table_addr, _table_addr_r; \
-    phvwri._c.e   p.common.common_te1_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
-    phvwri.!_c.e  p.common.common_te1_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair p.{common_te1_phv_table_lock_en...common_te1_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common_te1_phv_table_addr, _table_addr_r; \
+    phvwri._c.e   p.common_te1_phv_table_pc, _table_pc1[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwri.!_c.e  p.common_te1_phv_table_pc, _table_pc2[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_1_VALID(1);
 
+#define CAPRI_NEXT_TABLE2_SET_SIZE(_lock_en, _table_read_size) \
+    phvwr     p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size))
+
 #define CAPRI_NEXT_TABLE2_READ_PC(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
-    phvwrpair p.{common.common_te2_phv_table_lock_en...common.common_te2_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te2_phv_table_addr, _table_addr_r; \
-    phvwri    p.common.common_te2_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common_te2_phv_table_addr, _table_addr_r; \
+    phvwri    p.common_te2_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_2_VALID(1);
 
 #define CAPRI_NEXT_TABLE2_READ_PC_E(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
-    phvwrpair p.{common.common_te2_phv_table_lock_en...common.common_te2_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te2_phv_table_addr, _table_addr_r; \
-    phvwri.e  p.common.common_te2_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair p.{common_te2_phv_table_lock_en...common_te2_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common_te2_phv_table_addr, _table_addr_r; \
+    phvwri.e  p.common_te2_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_2_VALID(1);
 
+#define CAPRI_NEXT_TABLE3_SET_SIZE(_lock_en, _table_read_size) \
+    phvwr     p.{common_te3_phv_table_lock_en...common_te3_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size))
+
 #define CAPRI_NEXT_TABLE3_READ_PC(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
-    phvwrpair p.{common.common_te3_phv_table_lock_en...common.common_te3_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te3_phv_table_addr, _table_addr_r; \
-    phvwri    p.common.common_te3_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair p.{common_te3_phv_table_lock_en...common_te3_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common_te3_phv_table_addr, _table_addr_r; \
+    phvwri    p.common_te3_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_3_VALID(1);
 
 #define CAPRI_NEXT_TABLE3_READ_PC_E(_lock_en, _table_read_size, _table_pc, _table_addr_r) \
-    phvwrpair p.{common.common_te3_phv_table_lock_en...common.common_te3_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common.common_te3_phv_table_addr, _table_addr_r; \
-    phvwri.e  p.common.common_te3_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
+    phvwrpair p.{common_te3_phv_table_lock_en...common_te3_phv_table_raw_table_size}, ((_lock_en << 3)|(_table_read_size)), p.common_te3_phv_table_addr, _table_addr_r; \
+    phvwri.e  p.common_te3_phv_table_pc, _table_pc[33:CAPRI_RAW_TABLE_PC_SHIFT]; \
     CAPRI_SET_TABLE_3_VALID(1);
 
 #define CAPRI_NEXT_TABLE_I_READ(_base_r, _lock_en, _table_read_size, _table_pc_r, _table_addr_r) \
@@ -320,37 +332,37 @@ struct capri_intrinsic_ring_t {
     phvwrp  _base_r, offsetof(INTRINSIC_RAW_K_T, table_addr), sizeof(INTRINSIC_RAW_K_T.table_addr), _table_addr_r;
      
 #define CAPRI_SET_TABLE_0_VALID(_vld) \
-    phvwri   p.common.app_header_table0_valid, _vld;
+    phvwri   p.app_header_table0_valid, _vld;
 #define CAPRI_SET_TABLE_1_VALID(_vld) \
-    phvwri   p.common.app_header_table1_valid, _vld;
+    phvwri   p.app_header_table1_valid, _vld;
 #define CAPRI_SET_TABLE_2_VALID(_vld) \
-    phvwri   p.common.app_header_table2_valid, _vld;
+    phvwri   p.app_header_table2_valid, _vld;
 #define CAPRI_SET_TABLE_3_VALID(_vld) \
-    phvwri   p.common.app_header_table3_valid, _vld;
+    phvwri   p.app_header_table3_valid, _vld;
     
 #define CAPRI_SET_TABLE_0_1_VALID(_vld0, _vld1) \
-    phvwri   p.{common.app_header_table0_valid...common.app_header_table1_valid}, ((_vld0 << 1) | (_vld1));
+    phvwri   p.{app_header_table0_valid...app_header_table1_valid}, ((_vld0 << 1) | (_vld1));
 
 #define CAPRI_SET_TABLE_2_3_VALID(_vld2, _vld3) \
-    phvwri   p.{common.app_header_table2_valid...common.app_header_table3_valid}, ((_vld2 << 1) | (_vld3));
+    phvwri   p.{app_header_table2_valid...app_header_table3_valid}, ((_vld2 << 1) | (_vld3));
 
 #define CAPRI_SET_TABLE_0_VALID_C(_c, _vld) \
-    phvwri._c    p.common.app_header_table0_valid, _vld;
+    phvwri._c    p.app_header_table0_valid, _vld;
 #define CAPRI_SET_TABLE_1_VALID_C(_c, _vld) \
-    phvwri._c    p.common.app_header_table1_valid, _vld;
+    phvwri._c    p.app_header_table1_valid, _vld;
 #define CAPRI_SET_TABLE_2_VALID_C(_c, _vld) \
-    phvwri._c    p.common.app_header_table2_valid, _vld;
+    phvwri._c    p.app_header_table2_valid, _vld;
 #define CAPRI_SET_TABLE_3_VALID_C(_c, _vld) \
-    phvwri._c    p.common.app_header_table3_valid, _vld;
+    phvwri._c    p.app_header_table3_valid, _vld;
 
 #define CAPRI_SET_TABLE_0_VALID_CE(_c, _vld) \
-    phvwri._c.e  p.common.app_header_table0_valid, _vld;
+    phvwri._c.e  p.app_header_table0_valid, _vld;
 #define CAPRI_SET_TABLE_1_VALID_CE(_c, _vld) \
-    phvwri._c.e  p.common.app_header_table1_valid, _vld;
+    phvwri._c.e  p.app_header_table1_valid, _vld;
 #define CAPRI_SET_TABLE_2_VALID_CE(_c, _vld) \
-    phvwri._c.e  p.common.app_header_table2_valid, _vld;
+    phvwri._c.e  p.app_header_table2_valid, _vld;
 #define CAPRI_SET_TABLE_3_VALID_CE(_c, _vld) \
-    phvwri._c.e  p.common.app_header_table3_valid, _vld;
+    phvwri._c.e  p.app_header_table3_valid, _vld;
     
 #define CAPRI_SET_ALL_TABLES_VALID(_vld) \
     CAPRI_SET_TABLE_0_VALID(_vld); \
@@ -402,27 +414,27 @@ _table_i_valid_c:;
     br      _tbl_id_r[1:0]; \
     nop; \
     .brcase 0; \
-        add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te0_phv_table_addr); \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data); \
-        phvwr   p.common.common_t0_s2s_s2s_data, r0; \
+        add  _k_base_r, 0, offsetof(struct _phv_name, common_te0_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_t0_s2s_s2s_data); \
+        phvwr   p.common_t0_s2s_s2s_data, r0; \
         b _next; \
         CAPRI_SET_TABLE_0_VALID(1);  \
     .brcase 1; \
-        add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te1_phv_table_addr); \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
-        phvwr   p.common.common_t1_s2s_s2s_data, r0; \
+        add  _k_base_r, 0, offsetof(struct _phv_name, common_te1_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_t1_s2s_s2s_data); \
+        phvwr   p.common_t1_s2s_s2s_data, r0; \
         b _next; \
         CAPRI_SET_TABLE_1_VALID(1);  \
     .brcase 2; \
-        add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te2_phv_table_addr); \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data); \
-        phvwr   p.common.common_t2_s2s_s2s_data, r0; \
+        add  _k_base_r, 0, offsetof(struct _phv_name, common_te2_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_t2_s2s_s2s_data); \
+        phvwr   p.common_t2_s2s_s2s_data, r0; \
         b _next; \
         CAPRI_SET_TABLE_2_VALID(1);  \
     .brcase 3; \
-        add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te3_phv_table_addr); \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data); \
-        phvwr   p.common.common_t3_s2s_s2s_data, r0; \
+        add  _k_base_r, 0, offsetof(struct _phv_name, common_te3_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_t3_s2s_s2s_data); \
+        phvwr   p.common_t3_s2s_s2s_data, r0; \
         b _next; \
         CAPRI_SET_TABLE_3_VALID(1);  \
     .brend; \
@@ -433,43 +445,43 @@ _next:;
     br      _tbl_id_r[1:0]; \
     nop; \
     .brcase 0; \
-        add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te0_phv_table_addr); \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data); \
-        phvwr   p.common.common_t0_s2s_s2s_data, r0; \
+        add  _k_base_r, 0, offsetof(struct _phv_name, common_te0_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_t0_s2s_s2s_data); \
+        phvwr   p.common_t0_s2s_s2s_data, r0; \
         b _next2; \
         CAPRI_SET_TABLE_0_VALID(1);  \
     .brcase 1; \
-        add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te1_phv_table_addr); \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
-        phvwr   p.common.common_t1_s2s_s2s_data, r0; \
+        add  _k_base_r, 0, offsetof(struct _phv_name, common_te1_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_t1_s2s_s2s_data); \
+        phvwr   p.common_t1_s2s_s2s_data, r0; \
         b _next2; \
         CAPRI_SET_TABLE_1_VALID(1);  \
     .brcase 2; \
-        add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te2_phv_table_addr); \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data); \
-        phvwr   p.common.common_t2_s2s_s2s_data, r0; \
+        add  _k_base_r, 0, offsetof(struct _phv_name, common_te2_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_t2_s2s_s2s_data); \
+        phvwr   p.common_t2_s2s_s2s_data, r0; \
         b _next2; \
         CAPRI_SET_TABLE_2_VALID(1);  \
     .brcase 3; \
-        add  _k_base_r, 0, offsetof(struct _phv_name, common.common_te3_phv_table_addr); \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data); \
-        phvwr   p.common.common_t3_s2s_s2s_data, r0; \
+        add  _k_base_r, 0, offsetof(struct _phv_name, common_te3_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_t3_s2s_s2s_data); \
+        phvwr   p.common_t3_s2s_s2s_data, r0; \
         b _next2; \
         CAPRI_SET_TABLE_3_VALID(1);  \
     .brend; \
 _next2:;
      
 #define CAPRI_GET_TABLE_0_K_NO_VALID(_phv_name, _k_base_r) \
-    add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te0_phv_table_addr);
+    add     _k_base_r, 0, offsetof(struct _phv_name, common_te0_phv_table_addr);
 
 #define CAPRI_GET_TABLE_1_K_NO_VALID(_phv_name, _k_base_r) \
-    add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te1_phv_table_addr);
+    add     _k_base_r, 0, offsetof(struct _phv_name, common_te1_phv_table_addr);
 
 #define CAPRI_GET_TABLE_2_K_NO_VALID(_phv_name, _k_base_r) \
-    add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te2_phv_table_addr);
+    add     _k_base_r, 0, offsetof(struct _phv_name, common_te2_phv_table_addr);
 
 #define CAPRI_GET_TABLE_3_K_NO_VALID(_phv_name, _k_base_r) \
-    add     _k_base_r, 0, offsetof(struct _phv_name, common.common_te3_phv_table_addr);
+    add     _k_base_r, 0, offsetof(struct _phv_name, common_te3_phv_table_addr);
    
 #define CAPRI_GET_TABLE_0_K(_phv_name, _k_base_r) \
     CAPRI_GET_TABLE_0_K_NO_VALID(_phv_name, _k_base_r) \
@@ -488,7 +500,7 @@ _next2:;
     CAPRI_SET_TABLE_3_VALID(1); 
 
 #define CAPRI_GET_TABLE_0_OR_1_K_NO_VALID(_phv_name, _k_base_r, _cf) \
-    cmov    _k_base_r, _cf, offsetof(struct _phv_name, common.common_te0_phv_table_addr), offsetof(struct _phv_name, common.common_te1_phv_table_addr);
+    cmov    _k_base_r, _cf, offsetof(struct _phv_name, common_te0_phv_table_addr), offsetof(struct _phv_name, common_te1_phv_table_addr);
 
 #define CAPRI_GET_TABLE_0_OR_1_K(_phv_name, _k_base_r, _cf) \
     CAPRI_GET_TABLE_0_OR_1_K_NO_VALID(_phv_name, _k_base_r, _cf) \
@@ -496,29 +508,29 @@ _next2:;
     CAPRI_SET_TABLE_1_VALID_C(!_cf, 1);
 
 #define CAPRI_GET_TABLE_0_ARG_NO_RESET(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common_t0_s2s_s2s_data);
 #define CAPRI_GET_TABLE_1_ARG_NO_RESET(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t1_s2s_s2s_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common_t1_s2s_s2s_data);
 #define CAPRI_GET_TABLE_2_ARG_NO_RESET(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common_t2_s2s_s2s_data);
 #define CAPRI_GET_TABLE_3_ARG_NO_RESET(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, common_t3_s2s_s2s_data);
 
 #define CAPRI_GET_TABLE_0_OR_1_ARG_NO_RESET(_phv_name, _arg_base_r, _cf) \
-    cmov    _arg_base_r, _cf, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data), offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
+    cmov    _arg_base_r, _cf, offsetof(struct _phv_name, common_t0_s2s_s2s_data), offsetof(struct _phv_name, common_t1_s2s_s2s_data); \
 
 
 #define CAPRI_RESET_TABLE_0_ARG() \
-    phvwr   p.common.common_t0_s2s_s2s_data, r0; \
+    phvwr   p.common_t0_s2s_s2s_data, r0; \
 
 #define CAPRI_RESET_TABLE_1_ARG() \
-    phvwr   p.common.common_t1_s2s_s2s_data, r0; \
+    phvwr   p.common_t1_s2s_s2s_data, r0; \
 
 #define CAPRI_RESET_TABLE_2_ARG() \
-    phvwr   p.common.common_t2_s2s_s2s_data, r0; \
+    phvwr   p.common_t2_s2s_s2s_data, r0; \
 
 #define CAPRI_RESET_TABLE_3_ARG() \
-    phvwr   p.common.common_t3_s2s_s2s_data, r0; \
+    phvwr   p.common_t3_s2s_s2s_data, r0; \
 
 #define CAPRI_GET_TABLE_0_ARG(_phv_name, _arg_base_r) \
     CAPRI_GET_TABLE_0_ARG_NO_RESET(_phv_name, _arg_base_r) \
@@ -538,8 +550,8 @@ _next2:;
 
 #define CAPRI_GET_TABLE_0_OR_1_ARG(_phv_name, _arg_base_r, _cf) \
     CAPRI_GET_TABLE_0_OR_1_ARG_NO_RESET(_phv_name, _arg_base_r, _cf) \
-    phvwr._cf   p.common.common_t0_s2s_s2s_data, r0; \
-    phvwr.!_cf   p.common.common_t1_s2s_s2s_data, r0
+    phvwr._cf   p.common_t0_s2s_s2s_data, r0; \
+    phvwr.!_cf   p.common_t1_s2s_s2s_data, r0
 
 #define CAPRI_RESET_TABLE_0_AND_1_ARG() \
     CAPRI_RESET_TABLE_0_ARG(); \
@@ -550,21 +562,21 @@ _next2:;
     br      _tbl_id_r[1:0]; \
     nop; \
     .brcase 0; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t0_s2s_s2s_data); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_t0_s2s_s2s_data); \
         b _I_ARG_next; \
-        phvwr    p.common.common_t0_s2s_s2s_data, r0; \
+        phvwr    p.common_t0_s2s_s2s_data, r0; \
     .brcase 1; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t1_s2s_s2s_data); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_t1_s2s_s2s_data); \
         b _I_ARG_next; \
-        phvwr    p.common.common_t1_s2s_s2s_data, r0; \
+        phvwr    p.common_t1_s2s_s2s_data, r0; \
     .brcase 2; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t2_s2s_s2s_data); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_t2_s2s_s2s_data); \
         b _I_ARG_next; \
-        phvwr    p.common.common_t2_s2s_s2s_data, r0; \
+        phvwr    p.common_t2_s2s_s2s_data, r0; \
     .brcase 3; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_t3_s2s_s2s_data); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_t3_s2s_s2s_data); \
         b _I_ARG_next; \
-        phvwr    p.common.common_t3_s2s_s2s_data, r0; \
+        phvwr    p.common_t3_s2s_s2s_data, r0; \
     .brend; \
 _I_ARG_next:;
 
@@ -575,45 +587,45 @@ _I_ARG_next:;
     .brcase 0; \
         CAPRI_SET_TABLE_0_VALID(1); \
         b _I_K_next; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_te0_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_te0_phv_table_addr); \
     .brcase 1; \
         CAPRI_SET_TABLE_1_VALID(1); \
         b _I_K_next; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_te1_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_te1_phv_table_addr); \
     .brcase 2; \
         CAPRI_SET_TABLE_2_VALID(1); \
         b _I_K_next; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_te2_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_te2_phv_table_addr); \
     .brcase 3; \
         CAPRI_SET_TABLE_3_VALID(1); \
         b _I_K_next; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.common_te3_phv_table_addr); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, common_te3_phv_table_addr); \
     .brend; \
 _I_K_next:;
 
 #define CAPRI_GET_STAGE_0_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_0_to_stage_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, to_stage_0_to_stage_data);
 
 #define CAPRI_GET_STAGE_1_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_1_to_stage_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, to_stage_1_to_stage_data);
 
 #define CAPRI_GET_STAGE_2_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_2_to_stage_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, to_stage_2_to_stage_data);
 
 #define CAPRI_GET_STAGE_3_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_3_to_stage_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, to_stage_3_to_stage_data);
 
 #define CAPRI_GET_STAGE_4_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_4_to_stage_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, to_stage_4_to_stage_data);
 
 #define CAPRI_GET_STAGE_5_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_5_to_stage_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, to_stage_5_to_stage_data);
 
 #define CAPRI_GET_STAGE_6_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_6_to_stage_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, to_stage_6_to_stage_data);
 
 #define CAPRI_GET_STAGE_7_ARG(_phv_name, _arg_base_r) \
-    add     _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_7_to_stage_data);
+    add     _arg_base_r, 0, offsetof(struct _phv_name, to_stage_7_to_stage_data);
 
 # Info on spr_mpuid
 # bits 6-2 represente pipe+stage, we care about stage only (bits 4:2)
@@ -633,28 +645,28 @@ _I_K_next:;
     nop; \
     .brcase 0; \
         b _STAGE_K_next; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_1_to_stage_data); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, to_stage_1_to_stage_data); \
     .brcase 1; \
         b _STAGE_K_next; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_2_to_stage_data); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, to_stage_2_to_stage_data); \
     .brcase 2; \
         b _STAGE_K_next; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_3_to_stage_data); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, to_stage_3_to_stage_data); \
     .brcase 3; \
         b _STAGE_K_next; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_4_to_stage_data); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, to_stage_4_to_stage_data); \
     .brcase 4; \
         b _STAGE_K_next; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_5_to_stage_data); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, to_stage_5_to_stage_data); \
     .brcase 5; \
         b _STAGE_K_next; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_6_to_stage_data); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, to_stage_6_to_stage_data); \
     .brcase 6; \
         b _STAGE_K_next; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_7_to_stage_data); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, to_stage_7_to_stage_data); \
     .brcase 7; \
         b _STAGE_K_next; \
-        add _arg_base_r, 0, offsetof(struct _phv_name, common.to_stage_0_to_stage_data); \
+        add _arg_base_r, 0, offsetof(struct _phv_name, to_stage_0_to_stage_data); \
     .brend; \
 _STAGE_K_next:;
 
@@ -811,12 +823,12 @@ struct capri_dma_cmd_mem2mem_t {
 #define DMA_SWITCH_TO_NEXT_FLIT_BITS (DMA_CMD_SIZE_BITS * NUM_DMA_CMDS_PER_FLIT * 2 - DMA_CMD_SIZE_BITS)
 
 #define RXDMA_DMA_CMD_PTR_SET_C(_flit_id, _index, _cf) \
-    phvwr._cf   p.common.p4_rxdma_intr_dma_cmd_ptr, ((_flit_id * NUM_DMA_CMDS_PER_FLIT) + _index);
+    phvwr._cf   p.p4_rxdma_intr_dma_cmd_ptr, ((_flit_id * NUM_DMA_CMDS_PER_FLIT) + _index);
 #define RXDMA_DMA_CMD_PTR_SET(_flit_id, _index) \
     RXDMA_DMA_CMD_PTR_SET_C(_flit_id, _index, c0); \
 
 #define TXDMA_DMA_CMD_PTR_SET(_flit_id, _index) \
-    phvwr       p.common.p4_txdma_intr_dma_cmd_ptr, (_flit_id * NUM_DMA_CMDS_PER_FLIT + _index)
+    phvwr       p.p4_txdma_intr_dma_cmd_ptr, (_flit_id * NUM_DMA_CMDS_PER_FLIT + _index)
 
 #define DMA_CMD_I_BASE_GET(_base_r, _tmp_r, _flit_id, _index) \
     srl         _base_r, _index, LOG_NUM_DMA_CMDS_PER_FLIT; \
@@ -869,6 +881,8 @@ addi.e   _base_r, r0,(((_index) >> LOG_NUM_DMA_CMDS_PER_FLIT) << LOG_NUM_BITS_PE
         (((offsetof(p, _field) / 512 + 1) * 512 - offsetof(p, _field) \
                                          + (offsetof(p, _field) / 512) * 512) >> 3)
 
+#define DMA_CMD_BASE_GET(_base_r, _field) \
+    addi    _base_r, r0, offsetof(p, CAT3(_field, _, dma_cmd_type))
 // Phv2Mem DMA: Specify the address of the start and end fields in the PHV
 //              and the destination address
 #define DMA_PHV2MEM_SETUP(_base_r, _cf, _start, _end, _addr)        \

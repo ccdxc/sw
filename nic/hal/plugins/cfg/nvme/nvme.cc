@@ -130,6 +130,23 @@ nvme_hbm_write (uint64_t dst_addr, void *src_addr, uint16_t size)
     return (HAL_RET_OK);
 }
 
+hal_ret_t 
+nvme_hbm_read (uint64_t src_addr, void *dst_addr, uint16_t size)
+{
+    pd::pd_capri_hbm_write_mem_args_t args = {0};
+    pd::pd_func_args_t          pd_func_args = {0};
+    args.addr = src_addr;
+    args.buf = (uint8_t *)dst_addr;
+    args.size = size;
+    pd_func_args.pd_capri_hbm_write_mem = &args;
+    pd::hal_pd_call(pd::PD_FUNC_ID_HBM_READ, &pd_func_args);
+
+    HAL_TRACE_DEBUG("Reading from: {:#x} to: {:#x} of size: {}",
+                    src_addr, dst_addr, size);
+    return (HAL_RET_OK);
+}
+
+
 static uint8_t *
 memrev (uint8_t *block, size_t elnum)
 {
@@ -383,6 +400,7 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     tx_resourcecb.page_ring_pi = 0;
     tx_resourcecb.page_ring_proxy_ci = 0;
 
+    memrev((uint8_t*)&tx_resourcecb, sizeof(nvme_resourcecb_t));
     nvme_hbm_write(g_nvme_global_info.tx_resourcecb_addr, (void *)&tx_resourcecb, sizeof(nvme_resourcecb_t));
 
     //Setup rx_resourcecb
@@ -404,6 +422,7 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     rx_resourcecb.page_ring_pi = 0;
     rx_resourcecb.page_ring_proxy_ci = 0;
 
+    memrev((uint8_t*)&rx_resourcecb, sizeof(nvme_resourcecb_t));
     nvme_hbm_write(g_nvme_global_info.rx_resourcecb_addr, (void *)&rx_resourcecb, sizeof(nvme_resourcecb_t));
 
     rsp->set_api_status(types::API_STATUS_OK);
@@ -598,10 +617,11 @@ nvme_sq_create (NvmeSqSpec& spec, NvmeSqResponse *rsp)
 
 
     HAL_TRACE_DEBUG("Inputs: sq_num: {} sq_wqe_size: {} num_sq_wqes: {} "
-                    "base_addr: {} cq_num: {}",
+                    "base_addr: {} cq_num: {} lif_ns_start: {}",
                     spec.sq_num(),
                     spec.sq_wqe_size(), spec.num_sq_wqes(), 
-                    spec.base_addr(), spec.cq_num());
+                    spec.base_addr(), spec.cq_num(),
+                    g_nvme_lif_info[lif].ns_start);
 
     SDK_ASSERT(lif < MAX_LIFS);
     SDK_ASSERT(spec.sq_num() < g_nvme_lif_info[lif].max_sq);
@@ -622,7 +642,7 @@ nvme_sq_create (NvmeSqSpec& spec, NvmeSqResponse *rsp)
     sqcb.log_num_wqes = log2(num_sq_wqes);
     sqcb.log_host_page_size = g_nvme_lif_info[lif].log_host_page_size;
     sqcb.cq_id = spec.cq_num();
-
+    sqcb.lif_ns_start = g_nvme_lif_info[lif].ns_start;
     get_program_offset((char *)"txdma_stage0.bin", 
                        (char *)"nvme_sq_stage0",
                        &offset);
@@ -732,8 +752,7 @@ nvme_ns_create (NvmeNsSpec& spec, NvmeNsResponse *rsp)
     nscb.backend_ns_id = spec.backend_nsid();
     nscb.ns_size = spec.size(); //size in LBAs
     nscb.log_lba_size = log2(spec.lba_size());
-    nscb.sess_prodcb_table_addr = g_nvme_global_info.txsessprodcb_base + 
-        (g_nvme_lif_info[lif].sess_start + g_nvme_lif_info[lif].cur_sess) * sizeof(nvme_txsessprodcb_t);
+    nscb.sess_prodcb_start = (g_nvme_lif_info[lif].sess_start + g_nvme_lif_info[lif].cur_sess);
 
     //update global ns info
     g_nsid = g_nvme_lif_info[lif].ns_start + spec.nsid() - 1;
@@ -771,6 +790,43 @@ nvme_ns_create (NvmeNsSpec& spec, NvmeNsResponse *rsp)
     return (HAL_RET_OK);
 }
 
+static hal_ret_t
+nvme_ns_update_session_id (uint32_t lif, uint32_t nsid, uint16_t sess_id)
+{
+    nvme_ns_info_t *ns_info_p;
+    uint64_t       nscb_addr;
+    uint32_t       g_nsid;
+    nvme_nscb_t    nscb;
+    uint8_t        bit_index, byte_index;
+
+    SDK_ASSERT(lif < MAX_LIFS);
+    SDK_ASSERT(nsid <= g_nvme_lif_info[lif].max_ns);
+
+    g_nsid = g_nvme_lif_info[lif].ns_start + nsid - 1;
+    SDK_ASSERT(g_nsid <= g_nvme_global_info.max_ns);
+
+    SDK_ASSERT(sess_id < 256); //XXX
+
+    ns_info_p = &g_nvme_ns_info[g_nsid];
+    SDK_ASSERT(sess_id < ns_info_p->max_sess);
+
+    nscb_addr = g_nvme_lif_info[lif].nscb_base_addr + (nsid - 1) * sizeof(nvme_nscb_t);
+
+    nvme_hbm_read(nscb_addr, (void *)&nscb, sizeof(nvme_nscb_t));
+    // Convert data after reading from HBM
+    memrev((uint8_t*)&nscb, sizeof(nvme_nscb_t));
+
+    byte_index = sess_id / 8; //Byte number
+    bit_index  = sess_id % 8; //Bit in Byte
+    nscb.valid_session_bitmap[byte_index] |= (1 << bit_index);
+
+    // Convert data before writting to HBM
+    memrev((uint8_t*)&nscb, sizeof(nvme_nscb_t));
+    nvme_hbm_write(nscb_addr, (void *)&nscb, sizeof(nvme_nscb_t));
+
+    return (HAL_RET_OK);
+}
+
 hal_ret_t
 nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
 {
@@ -783,7 +839,9 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     uint64_t      rxsessprodcb_addr;
     uint64_t      rx_sess_xtsq_base;
     uint64_t      rx_sess_dgstq_base;
-    uint32_t      sess_id;
+    uint32_t      ns_sess_id; //NS local
+    uint32_t      lif_sess_id; //LIF local
+    uint32_t      g_sess_id; //Global
     uint32_t      sesq_qid;
     uint32_t      serq_qid;
     uint64_t      sesq_base;
@@ -879,32 +937,39 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     rsp->set_rx_serq_num_entries(serq_size);
 
     //global session id
-    sess_id = ns_info_p->sess_start + ns_info_p->cur_sess++;
-    SDK_ASSERT(sess_id < g_nvme_global_info.max_sess);
+    ns_sess_id = ns_info_p->cur_sess++;
+    g_sess_id = ns_info_p->sess_start + ns_sess_id;
+    SDK_ASSERT(g_sess_id >= g_nvme_lif_info[lif].sess_start);
+    lif_sess_id = g_sess_id - g_nvme_lif_info[lif].sess_start;
+    SDK_ASSERT(g_sess_id < g_nvme_global_info.max_sess);
 
+    HAL_TRACE_DEBUG("NS Local session id: {}, LIF local session id: {}, Global session id: {}",
+                    ns_sess_id, lif_sess_id, g_sess_id);
     //LIF local session id
-    rsp->set_sess_id(sess_id - g_nvme_lif_info[lif].sess_start);
+    rsp->set_sess_id(lif_sess_id);
 
-    txsessprodcb_addr = g_nvme_global_info.txsessprodcb_base + sess_id * sizeof(nvme_txsessprodcb_t);
+    txsessprodcb_addr = g_nvme_global_info.txsessprodcb_base + g_sess_id * sizeof(nvme_txsessprodcb_t);
     memset(&txsessprodcb, 0, sizeof(nvme_txsessprodcb_t));
     rsp->set_txsessprodcb_addr(txsessprodcb_addr);
 
     // Get Tx Sess XTSQ base address
-    tx_sess_xtsq_base = g_nvme_global_info.tx_sess_xtsq_base + sess_id * NVME_TX_SESS_XTSQ_SIZE;
+    tx_sess_xtsq_base = g_nvme_global_info.tx_sess_xtsq_base + g_sess_id * NVME_TX_SESS_XTSQ_SIZE;
     txsessprodcb.xts_q_base_addr = tx_sess_xtsq_base;
     txsessprodcb.xts_q_pi = 0;
     txsessprodcb.xts_q_ci = 0;
     txsessprodcb.log_num_xts_q_entries = log2(NVME_TX_SESS_XTSQ_DEPTH);
+    txsessprodcb.xts_qid = lif_sess_id;
     SDK_ASSERT((NVME_TX_SESS_XTSQ_DEPTH & (NVME_TX_SESS_XTSQ_DEPTH - 1)) == 0);
     rsp->set_tx_xtsq_base(tx_sess_xtsq_base);
     rsp->set_tx_xtsq_num_entries(NVME_TX_SESS_XTSQ_DEPTH);
 
     // Get Tx Sess DGSTQ base address
-    tx_sess_dgstq_base = g_nvme_global_info.tx_sess_dgstq_base + sess_id * NVME_TX_SESS_DGSTQ_SIZE;
+    tx_sess_dgstq_base = g_nvme_global_info.tx_sess_dgstq_base + g_sess_id * NVME_TX_SESS_DGSTQ_SIZE;
     txsessprodcb.dgst_q_base_addr = tx_sess_dgstq_base;
     txsessprodcb.dgst_q_pi = 0;
     txsessprodcb.dgst_q_ci = 0;
     txsessprodcb.log_num_dgst_q_entries = log2(NVME_TX_SESS_DGSTQ_DEPTH);
+    txsessprodcb.dgst_qid = lif_sess_id;
     txsessprodcb.tcp_q_base_addr = sesq_base;
     txsessprodcb.tcp_q_pi = 0;
     txsessprodcb.tcp_q_ci = 0;
@@ -923,16 +988,17 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     nvme_hbm_write(txsessprodcb_addr, (void *)&txsessprodcb, sizeof(nvme_txsessprodcb_t));
 
 
-    rxsessprodcb_addr = g_nvme_global_info.rxsessprodcb_base + sess_id * sizeof(nvme_rxsessprodcb_t);
+    rxsessprodcb_addr = g_nvme_global_info.rxsessprodcb_base + g_sess_id * sizeof(nvme_rxsessprodcb_t);
     memset(&rxsessprodcb, 0, sizeof(nvme_rxsessprodcb_t));
     rsp->set_rxsessprodcb_addr(rxsessprodcb_addr);
 
     // Get Rx Sess XTSQ base address
-    rx_sess_xtsq_base = g_nvme_global_info.rx_sess_xtsq_base + sess_id * NVME_RX_SESS_XTSQ_SIZE;
+    rx_sess_xtsq_base = g_nvme_global_info.rx_sess_xtsq_base + g_sess_id * NVME_RX_SESS_XTSQ_SIZE;
     rxsessprodcb.xts_q_base_addr = rx_sess_xtsq_base;
     rxsessprodcb.xts_q_pi = 0;
     rxsessprodcb.xts_q_ci = 0;
     rxsessprodcb.log_num_xts_q_entries = log2(NVME_RX_SESS_XTSQ_DEPTH);
+    rxsessprodcb.xts_qid = lif_sess_id;
     rxsessprodcb.tcp_q_base_addr = serq_base;
     rxsessprodcb.tcp_q_pi = 0;
     rxsessprodcb.tcp_q_ci = 0;
@@ -942,11 +1008,12 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     rsp->set_rx_xtsq_num_entries(NVME_RX_SESS_XTSQ_DEPTH);
 
     // Get Rx Sess DGSTQ base address
-    rx_sess_dgstq_base = g_nvme_global_info.rx_sess_dgstq_base + sess_id * NVME_RX_SESS_DGSTQ_SIZE;
+    rx_sess_dgstq_base = g_nvme_global_info.rx_sess_dgstq_base + g_sess_id * NVME_RX_SESS_DGSTQ_SIZE;
     rxsessprodcb.dgst_q_base_addr = rx_sess_dgstq_base;
     rxsessprodcb.dgst_q_pi = 0;
     rxsessprodcb.dgst_q_ci = 0;
     rxsessprodcb.log_num_dgst_q_entries = log2(NVME_RX_SESS_DGSTQ_DEPTH);
+    rxsessprodcb.dgst_qid = lif_sess_id;
     SDK_ASSERT((NVME_RX_SESS_DGSTQ_DEPTH & (NVME_RX_SESS_DGSTQ_DEPTH - 1)) == 0);
     rsp->set_rx_dgstq_base(rx_sess_dgstq_base);
     rsp->set_rx_dgstq_num_entries(NVME_RX_SESS_DGSTQ_DEPTH);
@@ -962,7 +1029,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     //Setup session xts tx
     nvme_sessxtstxcb_t sessxtstxcb;
     uint64_t sessxtstxcb_addr;
-    sessxtstxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_XTSQ, sess_id);
+    sessxtstxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_XTSQ, g_sess_id);
     memset(&sessxtstxcb, 0, sizeof(nvme_sessxtstxcb_t));
 
     sessxtstxcb.ring_header.total_rings = MAX_SESSXTSTX_RINGS;
@@ -989,7 +1056,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     //Setup session dgst tx
     nvme_sessdgsttxcb_t sessdgsttxcb;
     uint64_t sessdgsttxcb_addr;
-    sessdgsttxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_DGSTQ, sess_id);
+    sessdgsttxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_TX_SESS_DGSTQ, g_sess_id);
     memset(&sessdgsttxcb, 0, sizeof(nvme_sessdgsttxcb_t));
 
     sessdgsttxcb.ring_header.total_rings = MAX_SESSDGSTTX_RINGS;
@@ -1013,7 +1080,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     //Setup session xts rx
     nvme_sessxtsrxcb_t sessxtsrxcb;
     uint64_t sessxtsrxcb_addr;
-    sessxtsrxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_XTSQ, sess_id);
+    sessxtsrxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_XTSQ, g_sess_id);
     memset(&sessxtsrxcb, 0, sizeof(nvme_sessxtsrxcb_t));
 
     sessxtsrxcb.ring_header.total_rings = MAX_SESSXTSRX_RINGS;
@@ -1040,7 +1107,7 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     //Setup session dgst rx
     nvme_sessdgstrxcb_t sessdgstrxcb;
     uint64_t sessdgstrxcb_addr;
-    sessdgstrxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_DGSTQ, sess_id);
+    sessdgstrxcb_addr = lif_manager()->get_lif_qstate_addr(lif, NVME_QTYPE_RX_SESS_DGSTQ, g_sess_id);
     memset(&sessdgstrxcb, 0, sizeof(nvme_sessdgstrxcb_t));
 
     sessdgstrxcb.ring_header.total_rings = MAX_SESSDGSTRX_RINGS;
@@ -1060,6 +1127,9 @@ nvme_sess_create (NvmeSessSpec& spec, NvmeSessResponse *rsp)
     memrev((uint8_t*)&sessdgstrxcb, sizeof(nvme_sessdgstrxcb_t));
     nvme_hbm_write(sessdgstrxcb_addr, (void *)&sessdgstrxcb, sizeof(nvme_sessdgstrxcb_t));
 
+
+    //update NSCB active session bitmap
+    nvme_ns_update_session_id(lif, spec.nsid(), ns_sess_id);
 
     rsp->set_api_status(types::API_STATUS_OK);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");

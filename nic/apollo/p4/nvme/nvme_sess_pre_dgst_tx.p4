@@ -44,7 +44,7 @@
 
 #define tx_table_s1_t0_action nvme_sesspredgst_tx_sess_wqe_process
 
-#define tx_table_s2_t0_action nvme_sesspredgst_tx_nvme_wqe_process
+#define tx_table_s2_t0_action nvme_sesspredgst_tx_cmd_ctxt_process
 
 #define tx_table_s3_t0_action nvme_sesspredgst_tx_dgstcb_process
 
@@ -83,7 +83,7 @@ header_type nvme_sesspredgst_tx_to_stage_sess_wqe_info_t {
     }
 }
 
-header_type nvme_sesspredgst_tx_to_stage_nvme_wqe_info_t {
+header_type nvme_sesspredgst_tx_to_stage_cmd_ctxt_info_t {
     fields {
         pad                              :  128;
     }
@@ -113,13 +113,13 @@ header_type nvme_sesspredgst_tx_cb_to_sess_wqe_t {
     }
 }
 
-header_type nvme_sesspredgst_tx_sess_wqe_to_nvme_wqe_t {
+header_type nvme_sesspredgst_tx_sess_wqe_to_cmd_ctxt_t {
     fields {
         pad                 : 160;
     }
 }
 
-header_type nvme_sesspredgst_tx_nvme_wqe_to_dgstcb_t {
+header_type nvme_sesspredgst_tx_cmd_ctxt_to_dgstcb_t {
     fields {
         pad                 : 160;
     }
@@ -152,7 +152,7 @@ metadata sessdgsttxcb_t sessdgsttxcb_d;
 metadata sess_wqe_t sess_wqe_d;
 
 @pragma scratch_metadata
-metadata nvme_wqe_t nvme_wqe_d;
+metadata cmd_context_t cmd_ctxt_d;
 
 @pragma scratch_metadata
 metadata dgstcb_t dgstcb_d;
@@ -176,9 +176,9 @@ metadata nvme_sesspredgst_tx_to_stage_sess_wqe_info_t to_s1_info_scr;
 
 //To-Stage-2
 @pragma pa_header_union ingress to_stage_2
-metadata nvme_sesspredgst_tx_to_stage_nvme_wqe_info_t to_s2_info;
+metadata nvme_sesspredgst_tx_to_stage_cmd_ctxt_info_t to_s2_info;
 @pragma scratch_metadata
-metadata nvme_sesspredgst_tx_to_stage_nvme_wqe_info_t to_s2_info_scr;
+metadata nvme_sesspredgst_tx_to_stage_cmd_ctxt_info_t to_s2_info_scr;
 
 //To-Stage-3
 @pragma pa_header_union ingress to_stage_3
@@ -201,19 +201,19 @@ metadata nvme_sesspredgst_tx_to_stage_hdgst_ddgst_info_t to_s5_info_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_cb_to_sess_wqe_info t0_s2s_sess_wqe_to_nvme_wqe_info t0_s2s_nvme_wqe_to_dgstcb_info t0_s2s_dgstcb_to_writeback_info t0_s2s_writeback_to_hdgst_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_cb_to_sess_wqe_info t0_s2s_sess_wqe_to_cmd_ctxt_info t0_s2s_cmd_ctxt_to_dgstcb_info t0_s2s_dgstcb_to_writeback_info t0_s2s_writeback_to_hdgst_info
 
 metadata nvme_sesspredgst_tx_cb_to_sess_wqe_t t0_s2s_cb_to_sess_wqe_info;
 @pragma scratch_metadata
 metadata nvme_sesspredgst_tx_cb_to_sess_wqe_t t0_s2s_cb_to_sess_wqe_info_scr;
 
-metadata nvme_sesspredgst_tx_sess_wqe_to_nvme_wqe_t t0_s2s_sess_wqe_to_nvme_wqe_info;
+metadata nvme_sesspredgst_tx_sess_wqe_to_cmd_ctxt_t t0_s2s_sess_wqe_to_cmd_ctxt_info;
 @pragma scratch_metadata
-metadata nvme_sesspredgst_tx_sess_wqe_to_nvme_wqe_t t0_s2s_sess_wqe_to_nvme_wqe_info_scr;
+metadata nvme_sesspredgst_tx_sess_wqe_to_cmd_ctxt_t t0_s2s_sess_wqe_to_cmd_ctxt_info_scr;
 
-metadata nvme_sesspredgst_tx_nvme_wqe_to_dgstcb_t t0_s2s_nvme_wqe_to_dgstcb_info;
+metadata nvme_sesspredgst_tx_cmd_ctxt_to_dgstcb_t t0_s2s_cmd_ctxt_to_dgstcb_info;
 @pragma scratch_metadata
-metadata nvme_sesspredgst_tx_nvme_wqe_to_dgstcb_t t0_s2s_nvme_wqe_to_dgstcb_info_scr;
+metadata nvme_sesspredgst_tx_cmd_ctxt_to_dgstcb_t t0_s2s_cmd_ctxt_to_dgstcb_info_scr;
 
 metadata nvme_sesspredgst_tx_dgstcb_to_writeback_t t0_s2s_dgstcb_to_writeback_info;
 @pragma scratch_metadata
@@ -287,7 +287,7 @@ action nvme_sesspredgst_tx_sess_wqe_process (SESS_WQE_PARAMS) {
     GENERATE_SESS_WQE_D
 }
 
-action nvme_sesspredgst_tx_nvme_wqe_process (NVME_WQE_PARAMS) {
+action nvme_sesspredgst_tx_cmd_ctxt_process (CMD_CTXT_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -295,10 +295,10 @@ action nvme_sesspredgst_tx_nvme_wqe_process (NVME_WQE_PARAMS) {
     modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage
-    modify_field(t0_s2s_sess_wqe_to_nvme_wqe_info_scr.pad, t0_s2s_sess_wqe_to_nvme_wqe_info.pad);
+    modify_field(t0_s2s_sess_wqe_to_cmd_ctxt_info_scr.pad, t0_s2s_sess_wqe_to_cmd_ctxt_info.pad);
 
     // D-vector
-    GENERATE_NVME_WQE_D
+    GENERATE_CMD_CTXT_D
 }
 
 action nvme_sesspredgst_tx_dgstcb_process (DGSTCB_PARAMS) {
@@ -310,7 +310,7 @@ action nvme_sesspredgst_tx_dgstcb_process (DGSTCB_PARAMS) {
     modify_field(to_s3_info_scr.pad, to_s3_info.pad);
     
     // stage to stage
-    modify_field(t0_s2s_nvme_wqe_to_dgstcb_info_scr.pad, t0_s2s_nvme_wqe_to_dgstcb_info.pad);
+    modify_field(t0_s2s_cmd_ctxt_to_dgstcb_info_scr.pad, t0_s2s_cmd_ctxt_to_dgstcb_info.pad);
 
     // D-vector
     GENERATE_DGSTCB_D

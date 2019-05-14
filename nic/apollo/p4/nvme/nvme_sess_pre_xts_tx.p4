@@ -45,7 +45,7 @@
 #define tx_table_s1_t0_action nvme_sessprexts_tx_sess_wqe_process
 #define tx_table_s1_t1_action nvme_sessprexts_tx_xtscb_process
 
-#define tx_table_s2_t0_action nvme_sessprexts_tx_nvme_wqe_process
+#define tx_table_s2_t0_action nvme_sessprexts_tx_cmd_ctxt_process
 
 #define tx_table_s3_t0_action nvme_sessprexts_tx_cb_writeback_process
 
@@ -82,7 +82,7 @@ header_type nvme_sessprexts_tx_to_stage_sess_wqe_info_t {
     }
 }
 
-header_type nvme_sessprexts_tx_to_stage_nvme_wqe_info_t {
+header_type nvme_sessprexts_tx_to_stage_cmd_ctxt_info_t {
     fields {
         pad                              :  128;
     }
@@ -112,13 +112,13 @@ header_type nvme_sessprexts_tx_cb_to_xtscb_t {
     }
 }
 
-header_type nvme_sessprexts_tx_sess_wqe_to_nvme_wqe_t {
+header_type nvme_sessprexts_tx_sess_wqe_to_cmd_ctxt_t {
     fields {
         pad                 : 160;
     }
 }
 
-header_type nvme_sessprexts_tx_nvme_wqe_to_writeback_t {
+header_type nvme_sessprexts_tx_cmd_ctxt_to_writeback_t {
     fields {
         pad                 : 160;
     }
@@ -148,7 +148,7 @@ metadata sess_wqe_t sess_wqe_d;
 metadata xtscb_t xtscb_d;
 
 @pragma scratch_metadata
-metadata nvme_wqe_t nvme_wqe_d;
+metadata cmd_context_t cmd_ctxt_d;
 
 /**** global header unions ****/
 
@@ -169,9 +169,9 @@ metadata nvme_sessprexts_tx_to_stage_sess_wqe_info_t to_s1_info_scr;
 
 //To-Stage-2
 @pragma pa_header_union ingress to_stage_2
-metadata nvme_sessprexts_tx_to_stage_nvme_wqe_info_t to_s2_info;
+metadata nvme_sessprexts_tx_to_stage_cmd_ctxt_info_t to_s2_info;
 @pragma scratch_metadata
-metadata nvme_sessprexts_tx_to_stage_nvme_wqe_info_t to_s2_info_scr;
+metadata nvme_sessprexts_tx_to_stage_cmd_ctxt_info_t to_s2_info_scr;
 
 //To-Stage-3
 @pragma pa_header_union ingress to_stage_3
@@ -188,19 +188,19 @@ metadata nvme_sessprexts_tx_to_stage_ip_op_desc_info_t to_s4_info_scr;
 /**** stage to stage header unions ****/
 
 //Table-0
-@pragma pa_header_union ingress common_t0_s2s t0_s2s_cb_to_sess_wqe_info t0_s2s_sess_wqe_to_nvme_wqe_info t0_s2s_nvme_wqe_to_writeback_info t0_s2s_writeback_to_ip_desc_info
+@pragma pa_header_union ingress common_t0_s2s t0_s2s_cb_to_sess_wqe_info t0_s2s_sess_wqe_to_cmd_ctxt_info t0_s2s_cmd_ctxt_to_writeback_info t0_s2s_writeback_to_ip_desc_info
 
 metadata nvme_sessprexts_tx_cb_to_sess_wqe_t t0_s2s_cb_to_sess_wqe_info;
 @pragma scratch_metadata
 metadata nvme_sessprexts_tx_cb_to_sess_wqe_t t0_s2s_cb_to_sess_wqe_info_scr;
 
-metadata nvme_sessprexts_tx_sess_wqe_to_nvme_wqe_t t0_s2s_sess_wqe_to_nvme_wqe_info;
+metadata nvme_sessprexts_tx_sess_wqe_to_cmd_ctxt_t t0_s2s_sess_wqe_to_cmd_ctxt_info;
 @pragma scratch_metadata
-metadata nvme_sessprexts_tx_sess_wqe_to_nvme_wqe_t t0_s2s_sess_wqe_to_nvme_wqe_info_scr;
+metadata nvme_sessprexts_tx_sess_wqe_to_cmd_ctxt_t t0_s2s_sess_wqe_to_cmd_ctxt_info_scr;
 
-metadata nvme_sessprexts_tx_nvme_wqe_to_writeback_t t0_s2s_nvme_wqe_to_writeback_info;
+metadata nvme_sessprexts_tx_cmd_ctxt_to_writeback_t t0_s2s_cmd_ctxt_to_writeback_info;
 @pragma scratch_metadata
-metadata nvme_sessprexts_tx_nvme_wqe_to_writeback_t t0_s2s_nvme_wqe_to_writeback_info_scr;
+metadata nvme_sessprexts_tx_cmd_ctxt_to_writeback_t t0_s2s_cmd_ctxt_to_writeback_info_scr;
 
 metadata nvme_sessprexts_tx_writeback_to_ip_desc_t t0_s2s_writeback_to_ip_desc_info;
 @pragma scratch_metadata
@@ -297,7 +297,7 @@ action nvme_sessprexts_tx_xtscb_process (XTSCB_PARAMS) {
     GENERATE_XTSCB_D
 }
 
-action nvme_sessprexts_tx_nvme_wqe_process (NVME_WQE_PARAMS) {
+action nvme_sessprexts_tx_cmd_ctxt_process (CMD_CTXT_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -305,10 +305,10 @@ action nvme_sessprexts_tx_nvme_wqe_process (NVME_WQE_PARAMS) {
     modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage
-    modify_field(t0_s2s_sess_wqe_to_nvme_wqe_info_scr.pad, t0_s2s_sess_wqe_to_nvme_wqe_info.pad);
+    modify_field(t0_s2s_sess_wqe_to_cmd_ctxt_info_scr.pad, t0_s2s_sess_wqe_to_cmd_ctxt_info.pad);
 
     // D-vector
-    GENERATE_NVME_WQE_D
+    GENERATE_CMD_CTXT_D
 }
 
 action nvme_sessprexts_tx_cb_writeback_process () {
@@ -319,7 +319,7 @@ action nvme_sessprexts_tx_cb_writeback_process () {
     modify_field(to_s3_info_scr.pad, to_s3_info.pad);
     
     // stage to stage
-    modify_field(t0_s2s_nvme_wqe_to_writeback_info_scr.pad, t0_s2s_nvme_wqe_to_writeback_info.pad);
+    modify_field(t0_s2s_cmd_ctxt_to_writeback_info_scr.pad, t0_s2s_cmd_ctxt_to_writeback_info.pad);
 }
 
 

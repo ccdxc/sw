@@ -56,10 +56,13 @@ typedef struct qstate_intrinsic_s {
 //64 Bytes
 typedef struct nvme_sqcb_s {
 
-    uint8_t  pad2[28];
+    uint8_t  pad[37];
 
-    uint32_t pad: 25;
-    uint32_t cq_id:24;
+    uint32_t lif_ns_start: 16;
+    uint32_t cq_id:16;
+    uint32_t rsvd0: 7;
+    uint32_t busy: 1;
+    uint32_t ring_empty_sched_eval_done: 1;
     uint32_t log_num_wqes:5;
     uint32_t log_wqe_size:5;
     uint32_t log_host_page_size:5;
@@ -100,10 +103,10 @@ typedef struct nvme_cqcb_s {
 } PACKED nvme_cqcb_t;
 
 typedef struct nvme_nscb_s {
-    uint8_t  pad[10];
+    uint8_t valid_session_bitmap[32];
+    uint8_t  pad[13];
 
-    uint64_t rsvd2: 6;
-    uint64_t sess_prodcb_table_addr: 34;
+    uint64_t sess_prodcb_start: 16;
 
     uint64_t num_outstanding_req:11;
 
@@ -117,7 +120,6 @@ typedef struct nvme_nscb_s {
     uint64_t ns_active:1;
     uint64_t ns_valid:1;
     uint64_t ns_size;
-    uint8_t valid_session_bitmap[32];
 } PACKED nvme_nscb_t;
 
 static_assert(sizeof(nvme_nscb_t) == 64);
@@ -141,13 +143,13 @@ typedef struct nvme_txsessprodcb_s {
     uint64_t log_num_tcp_q_entries: 5;
     uint64_t tcp_q_base_addr: 34;
 
-    uint64_t rsvd3: 16;
+    uint64_t dgst_qid: 16;
     uint64_t dgst_q_choke_counter: 8;
     uint64_t rsvd2: 1;
     uint64_t log_num_dgst_q_entries: 5;
     uint64_t dgst_q_base_addr: 34;
 
-    uint64_t rsvd1: 16;
+    uint64_t xts_qid: 16;
     uint64_t xts_q_choke_counter: 8;
     uint64_t rsvd0: 1;
     uint64_t log_num_xts_q_entries: 5;
@@ -187,7 +189,8 @@ typedef struct nvme_sessxtstxcb_s {
     uint64_t rsvd1: 7;
     uint64_t r0_busy: 1;   
 
-    uint64_t rsvd0: 4;
+    uint64_t rsvd0: 3;
+    uint64_t ring_empty_sched_eval_done: 1;
     uint64_t log_lba_size: 5;
     uint64_t log_num_entries: 5;
     uint64_t base_addr: 34;

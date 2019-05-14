@@ -45,16 +45,16 @@
 #define tx_table_s1_t0_action nvme_req_tx_sqe_process
 
 #define tx_table_s2_t0_action nvme_req_tx_nscb_process
-#define tx_table_s2_t1_action nvme_req_tx_sqe_prp_process
 
 #define tx_table_s3_t0_action nvme_req_tx_sess_bitmap0_process
 #define tx_table_s3_t1_action nvme_req_tx_sess_bitmap1_process
+#define tx_table_s3_t2_action nvme_req_tx_sqe_prp_process
 
 #define tx_table_s4_t0_action nvme_req_tx_sess_select_process
 #define tx_table_s4_t1_action nvme_req_tx_resourcecb_process
 
 #define tx_table_s5_t0_action nvme_req_tx_sessprodcb_process
-#define tx_table_s5_t1_action nvme_req_tx_metapage_fetch_process
+#define tx_table_s5_t1_action nvme_req_tx_cmdid_fetch_process
 
 #define tx_table_s6_t0_action nvme_req_tx_sqcb_writeback_process
 
@@ -86,7 +86,8 @@ header_type phv_global_common_t {
 
 header_type nvme_req_tx_to_stage_sqe_info_t {
     fields {
-        pad                              :  128;
+        lif_ns_start                     :  16;
+        pad                              :  112;
     }
 }
 
@@ -138,13 +139,13 @@ header_type nvme_req_tx_sqe_to_nscb_t {
     }
 }
 
-header_type nvme_req_tx_sqe_to_sqe_prp_t {
+header_type nvme_req_tx_nscb_to_sess_bitmap_t {
     fields {
         pad                 : 160;
     }
 }
 
-header_type nvme_req_tx_nscb_to_sess_bitmap_t {
+header_type nvme_req_tx_nscb_to_sqe_prp_t {
     fields {
         pad                 : 160;
     }
@@ -168,7 +169,7 @@ header_type nvme_req_tx_sess_select_to_sessprodcb_t {
     }
 }
 
-header_type nvme_req_tx_resourcecb_to_metapage_fetch_t {
+header_type nvme_req_tx_resourcecb_to_cmdid_fetch_t {
     fields {
         pad                 : 160;
     }
@@ -198,10 +199,16 @@ metadata nvme_sqe_t nvme_sqe_d;
 metadata nscb_t nscb_d;
 
 @pragma scratch_metadata
+metadata ptr64_t sqe_prp_list_d;
+
+@pragma scratch_metadata
 metadata sessprodcb_t sessprodcb_d;
 
 @pragma scratch_metadata
 metadata resourcecb_t resourcecb_d;
+
+@pragma scratch_metadata
+metadata cmdid_ring_entry_t cmdid_ring_entry_d;
 
 @pragma scratch_metadata
 metadata sq_statscb_t sq_statscb_d;
@@ -289,10 +296,7 @@ metadata nvme_req_tx_sessprodcb_to_sqcb_writeback_t t0_s2s_sessprodcb_to_sqcb_wr
 metadata nvme_req_tx_sessprodcb_to_sqcb_writeback_t t0_s2s_sessprodcb_to_sqcb_writeback_info_scr;
 
 //Table-1
-@pragma pa_header_union ingress common_t1_s2s t1_s2s_sqe_to_sqe_prp_info t1_s2s_sqcb_writeback_to_sq_statscb_info t1_s2s_nscb_to_sess_bitmap_info t1_s2s_sess_bitmap_to_resourcecb_info t1_s2s_resourcecb_to_metapage_fetch_info
-metadata nvme_req_tx_sqe_to_sqe_prp_t t1_s2s_sqe_to_sqe_prp_info;
-@pragma scratch_metadata
-metadata nvme_req_tx_sqe_to_sqe_prp_t t1_s2s_sqe_to_sqe_prp_info_scr;
+@pragma pa_header_union ingress common_t1_s2s t1_s2s_sqcb_writeback_to_sq_statscb_info t1_s2s_nscb_to_sess_bitmap_info t1_s2s_sess_bitmap_to_resourcecb_info t1_s2s_resourcecb_to_cmdid_fetch_info
 
 metadata nvme_req_tx_sqcb_writeback_to_sq_statscb_t t1_s2s_sqcb_writeback_to_sq_statscb_info;
 @pragma scratch_metadata
@@ -306,18 +310,22 @@ metadata nvme_req_tx_sess_bitmap_to_resourcecb_t t1_s2s_sess_bitmap_to_resourcec
 @pragma scratch_metadata
 metadata nvme_req_tx_sess_bitmap_to_resourcecb_t t1_s2s_sess_bitmap_to_resourcecb_info_scr;
 
-metadata nvme_req_tx_resourcecb_to_metapage_fetch_t t1_s2s_resourcecb_to_metapage_fetch_info;
+metadata nvme_req_tx_resourcecb_to_cmdid_fetch_t t1_s2s_resourcecb_to_cmdid_fetch_info;
 @pragma scratch_metadata
-metadata nvme_req_tx_resourcecb_to_metapage_fetch_t t1_s2s_resourcecb_to_metapage_fetch_info_scr;
-
+metadata nvme_req_tx_resourcecb_to_cmdid_fetch_t t1_s2s_resourcecb_to_cmdid_fetch_info_scr;
 
 //Table-2
+@pragma pa_header_union ingress common_t2_s2s t2_s2s_nscb_to_sqe_prp_info 
+
+metadata nvme_req_tx_nscb_to_sqe_prp_t t2_s2s_nscb_to_sqe_prp_info;
+@pragma scratch_metadata
+metadata nvme_req_tx_nscb_to_sqe_prp_t t2_s2s_nscb_to_sqe_prp_info_scr;
 
 /**** PHV Layout ****/
 @pragma dont_trim
-metadata nvme_wqe_t wqe;
+metadata cmd_context_t cmd_ctxt;
 @pragma dont_trim
-metadata doorbell_data_t session_db;
+metadata data64_t session_db;
 @pragma dont_trim
 metadata index16_t data_cindex;
 @pragma dont_trim
@@ -393,6 +401,7 @@ action nvme_req_tx_sqe_process (NVME_SQE_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s1_info_scr.lif_ns_start, to_s1_info.lif_ns_start);
     modify_field(to_s1_info_scr.pad, to_s1_info.pad);
     
     // stage to stage
@@ -416,18 +425,18 @@ action nvme_req_tx_nscb_process (NSCB_PARAMS) {
     GENERATE_NSCB_D
 }
 
-action nvme_req_tx_sqe_prp_process (NSCB_PARAMS) {
+action nvme_req_tx_sqe_prp_process (SQE_PRP_LIST_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
     // to stage
-    modify_field(to_s2_info_scr.pad, to_s2_info.pad);
+    modify_field(to_s3_info_scr.pad, to_s3_info.pad);
     
     // stage to stage
-    modify_field(t1_s2s_sqe_to_sqe_prp_info_scr.pad, t1_s2s_sqe_to_sqe_prp_info.pad);
+    modify_field(t2_s2s_nscb_to_sqe_prp_info_scr.pad, t2_s2s_nscb_to_sqe_prp_info.pad);
 
     // D-vector
-    GENERATE_NSCB_D
+    GENERATE_SQE_PRP_LIST_D
 }
 
 
@@ -493,7 +502,7 @@ action nvme_req_tx_sessprodcb_process (SESSPRODCB_PARAMS) {
     GENERATE_SESSPRODCB_D
 }
 
-action nvme_req_tx_metapage_fetch_process () {
+action nvme_req_tx_cmdid_fetch_process (CMDID_RING_ENTRY_PARAMS) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -501,10 +510,13 @@ action nvme_req_tx_metapage_fetch_process () {
     modify_field(to_s5_info_scr.pad, to_s5_info.pad);
     
     // stage to stage
-    modify_field(t1_s2s_resourcecb_to_metapage_fetch_info_scr.pad, t1_s2s_resourcecb_to_metapage_fetch_info.pad);
+    modify_field(t1_s2s_resourcecb_to_cmdid_fetch_info_scr.pad, t1_s2s_resourcecb_to_cmdid_fetch_info.pad);
+
+    // D-vector
+    GENERATE_CMDID_RING_ENTRY_D
 }
 
-action nvme_req_tx_sqcb_writeback_process () {
+action nvme_req_tx_sqcb_writeback_process (SQCB_PARAMS_NON_STG0) {
     // from ki global
     GENERATE_GLOBAL_K
 
@@ -513,6 +525,9 @@ action nvme_req_tx_sqcb_writeback_process () {
     
     // stage to stage
     modify_field(t0_s2s_sessprodcb_to_sqcb_writeback_info_scr.pad, t0_s2s_sessprodcb_to_sqcb_writeback_info.pad);
+
+    // D-vector
+    GENERATE_SQCB_D_NON_STG0
 }
 
 action nvme_req_tx_sq_statscb_process (SQ_STATSCB_PARAMS) {

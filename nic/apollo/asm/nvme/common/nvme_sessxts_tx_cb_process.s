@@ -7,6 +7,7 @@
 %%
     .param  nvme_sessprexts_tx_cb_process
     .param  nvme_sesspostxts_tx_cb_process
+    .param  nvme_sessxts_tx_empty_ring_process
 
 .align
 nvme_sessxts_tx_cb_process:
@@ -24,7 +25,6 @@ nvme_sessxts_tx_cb_process:
         nop     //BD Slot
 
     .brcase     MAX_SESSXTS_TX_RINGS
-        nop.e
-        nop     //Exit Slot
-
+        j       nvme_sessxts_tx_empty_ring_process
+        nop         //BD Slot
     .brend
