@@ -1,5 +1,6 @@
-#define LPM_STAGE_FANOUT_64B 8
-#define LPM_STAGE_FANOUT_32B 16
+#define LPM_STAGE_FANOUT_32B     16
+#define LPM_STAGE_FANOUT_64B     8
+#define LPM_STAGE_FANOUT_128B    4
 
 #ifdef action_keys32b
 action action_keys32b(key0, key1, key2, key3, key4, key5, key6, key7,
@@ -259,6 +260,7 @@ action action_keys64b(key0, key1, key2, key3, key4, key5, key6) {
     }
 }
 #endif
+
 #ifdef action_data64b
 action action_data64b(data_, key0, data0, key1, data1, key2, data2) {
 
@@ -292,6 +294,59 @@ action action_data64b(data_, key0, data0, key1, data1, key2, data2) {
 }
 #endif
 
+#ifdef action_keys128b
+action action_keys128b(key0, key1, key2) {
+
+    modify_field(key_field128b, key0);
+    modify_field(key_field128b, key1);
+    modify_field(key_field128b, key2);
+
+    if (key >= key1) {
+        if (key >= key2) {
+            modify_field(next_addr, curr_addr + \
+                         ((curr_addr - base_addr) * LPM_STAGE_FANOUT_128B) + \
+                         (LPM_B04_OFFSET));
+        }
+        else {
+            modify_field(next_addr, curr_addr + \
+                         ((curr_addr - base_addr) * LPM_STAGE_FANOUT_128B) + \
+                         (LPM_B03_OFFSET));
+        }
+    }
+    else {
+        if (key >= key0) {
+            modify_field(next_addr, curr_addr + \
+                         ((curr_addr - base_addr) * LPM_STAGE_FANOUT_128B) + \
+                         (LPM_B02_OFFSET));
+        }
+        else {
+            modify_field(next_addr, curr_addr + \
+                         ((curr_addr - base_addr) * LPM_STAGE_FANOUT_128B) + \
+                         (LPM_B01_OFFSET));
+        }
+    }
+}
+#endif
+
+#ifdef action_data128b
+action action_data128b(data_, key0, data0) {
+
+    modify_field(dat_field128b, data_);
+    modify_field(key_field128b, key0);
+    modify_field(dat_field128b, data0);
+
+    if (key >= key0) {
+        modify_field(lpm_result, data0);
+    }
+    else {
+        modify_field(lpm_result, data_);
+    }
+
+    // Handle Result.
+    res_handler();
+}
+#endif
+
 @pragma stage stage_num
 @pragma hbm_table
 @pragma raw_index_table
@@ -311,6 +366,12 @@ table table_name {
 #endif
 #ifdef action_data64b
         action_data64b;
+#endif
+#ifdef action_keys128b
+        action_keys128b;
+#endif
+#ifdef action_data128b
+        action_data128b;
 #endif
     }
 }

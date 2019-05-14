@@ -58,24 +58,48 @@ create_rules(std::string pfx, uint16_t num_rules,
                              num_rules * sizeof(rule_t));
     extract_ip_pfx((char *)pfx.c_str(), &ip_pfx);
     for (uint32_t i = 0; i < num_rules; i++) {
-        if (stateful_rules-- < PDS_MAX_RULES_PER_SECURITY_POLICY) {
-            (*rules)[i].stateful = true;
-            (*rules)[i].match.l4_match.sport_range.port_lo = 0;
-            (*rules)[i].match.l4_match.sport_range.port_hi = 65535;
-            (*rules)[i].match.l4_match.dport_range.port_lo = 0;
-            (*rules)[i].match.l4_match.dport_range.port_hi = 65535;
+        if (ip_pfx.addr.af == IP_AF_IPV4) {
+            if (stateful_rules-- < PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY) {
+                (*rules)[i].stateful = true;
+                (*rules)[i].match.l4_match.sport_range.port_lo = 0;
+                (*rules)[i].match.l4_match.sport_range.port_hi = 65535;
+                (*rules)[i].match.l4_match.dport_range.port_lo = 0;
+                (*rules)[i].match.l4_match.dport_range.port_hi = 65535;
+            }
+            else {
+                (*rules)[i].stateful = false;
+                (*rules)[i].match.l4_match.icmp_type = 1;
+                (*rules)[i].match.l4_match.icmp_code = 1;
+            }
+            (*rules)[i].match.l3_match.ip_proto = 1;
+            str2ipv4pfx((char*)pfx.c_str(),
+                        &(*rules)[i].match.l3_match.ip_pfx);
+            ip_pfx.addr.addr.v4_addr += 1;
+            pfx = ippfx2str(&ip_pfx);
+        } else {
+            if (stateful_rules-- < PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY) {
+                (*rules)[i].stateful = true;
+                (*rules)[i].match.l4_match.sport_range.port_lo = 0;
+                (*rules)[i].match.l4_match.sport_range.port_hi = 65535;
+                (*rules)[i].match.l4_match.dport_range.port_lo = 0;
+                (*rules)[i].match.l4_match.dport_range.port_hi = 65535;
+            }
+            else {
+                (*rules)[i].stateful = false;
+                (*rules)[i].match.l4_match.icmp_type = 1;
+                (*rules)[i].match.l4_match.icmp_code = 1;
+            }
+            (*rules)[i].match.l3_match.ip_proto = 1;
+            str2ipv6pfx((char*)pfx.c_str(),
+                        &(*rules)[i].match.l3_match.ip_pfx);
+            for (uint8_t byte = IP6_ADDR8_LEN - 1; byte >= 0 ; byte--) {
+                // keep adding one until there is no rollover
+                if ((++(ip_pfx.addr.addr.v6_addr.addr8[byte]))) {
+                    break;
+                }
+            }
+            pfx = ippfx2str(&ip_pfx);
         }
-        else {
-            (*rules)[i].stateful = false;
-            (*rules)[i].match.l4_match.icmp_type = 1;
-            (*rules)[i].match.l4_match.icmp_code = 1;
-        }
-        (*rules)[i].match.l3_match.ip_proto = 1;
-        str2ipv4pfx((char*)pfx.c_str(),
-                    &(*rules)[i].match.l3_match.ip_pfx);
-        // TODO:only IPv4 support available
-        ip_pfx.addr.addr.v4_addr += 1;
-        pfx = ippfx2str(&ip_pfx);
         (*rules)[i].action_data.fw_action.action = SECURITY_RULE_ACTION_ALLOW;
     }
 }

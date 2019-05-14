@@ -29,28 +29,28 @@ security_policy_impl_state::security_policy_impl_state(pds_state *state) {
      * is not updated in any given batch
      */
     egr_v4_idxr_ =
-        indexer::factory(PDS_MAX_RULES_PER_SECURITY_POLICY + 1);
+        indexer::factory(PDS_MAX_SECURITY_POLICY + 1);
     SDK_ASSERT(egr_v4_idxr_ != NULL);
     egr_v4_region_addr_ =
         state->mempartition()->start_addr("sacl_egress_v4");
     egr_v4_table_size_ =
         state->mempartition()->block_size("sacl_egress_v4");
     ing_v4_idxr_ =
-        indexer::factory(PDS_MAX_RULES_PER_SECURITY_POLICY + 1);
+        indexer::factory(PDS_MAX_SECURITY_POLICY + 1);
     SDK_ASSERT(ing_v4_idxr_ != NULL);
     ing_v4_region_addr_ =
         state->mempartition()->start_addr("sacl_ingress_v4");
     ing_v4_table_size_ =
         state->mempartition()->block_size("sacl_ingress_v4");
     egr_v6_idxr_ =
-        indexer::factory(PDS_MAX_RULES_PER_SECURITY_POLICY + 1);
+        indexer::factory(PDS_MAX_SECURITY_POLICY + 1);
     SDK_ASSERT(egr_v6_idxr_ != NULL);
     egr_v6_region_addr_ =
         state->mempartition()->start_addr("sacl_egress_v6");
     egr_v6_table_size_ =
         state->mempartition()->block_size("sacl_egress_v6");
     ing_v6_idxr_ =
-        indexer::factory(PDS_MAX_RULES_PER_SECURITY_POLICY + 1);
+        indexer::factory(PDS_MAX_SECURITY_POLICY + 1);
     SDK_ASSERT(ing_v6_idxr_ != NULL);
     ing_v6_region_addr_ =
         state->mempartition()->start_addr("sacl_ingress_v6");

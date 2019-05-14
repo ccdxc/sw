@@ -19,7 +19,6 @@ init_config:
 
 service_header_done:
     seq             c1, k.key_metadata_ktype, KEY_TYPE_IPV6
-    phvwr.c1        p.p4_to_rxdma_header_sacl_bypass, 1 //TODO
     phvwr.c1        p.p4_to_txdma_header_lpm_addr, k.control_metadata_lpm_v6addr
     phvwr.c1        p.p4_to_rxdma_header_sacl_base_addr, \
                         k.control_metadata_sacl_v6addr

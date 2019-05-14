@@ -234,7 +234,9 @@ rfc_compute_p0_classes (rfc_ctxt_t *rfc_ctxt)
 
     ret = rfc_compute_p0_itree_classes(rfc_ctxt, &rfc_ctxt->pfx_tree,
                                        rfc_p0_pfx_tree_inode_eq_cb,
-                                       SACL_IPV4_TREE_MAX_NODES);
+                                       rfc_ctxt->policy->af == IP_AF_IPV4 ?
+                                       SACL_IPV4_TREE_MAX_NODES:
+                                       SACL_IPV6_TREE_MAX_NODES);
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -315,6 +317,10 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
 {
     sdk_ret_t     ret;
     rfc_ctxt_t    rfc_ctxt;
+
+    if (policy->num_rules > policy->max_rules) {
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
 
     /**< allocate memory for all the RFC itree tables */
     ret = rfc_ctxt_init(&rfc_ctxt, policy, rfc_tree_root_addr, mem_size);

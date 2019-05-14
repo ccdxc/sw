@@ -25,7 +25,7 @@ namespace api_test {
 
 // Globals
 char *g_cfg_file = NULL;
-uint16_t g_num_policy = PDS_MAX_POLICY; // can overwrite using cmd line
+uint16_t g_num_policy = PDS_MAX_SECURITY_POLICY; // can overwrite using cmd line
 static pds_epoch_t g_batch_epoch = 1; // PDS_EPOCH_INVALID;
 
 //----------------------------------------------------------------------------
@@ -78,13 +78,15 @@ policy_seed_stepper_init(policy_seed_stepper_t *seed, uint32_t id,
                          uint32_t stateless_rules, rule_dir_t dir,
                          policy_type_t type, uint8_t af, std::string pfx)
 {
-    SDK_ASSERT(stateless_rules < PDS_MAX_RULES_PER_SECURITY_POLICY);
+    uint32_t max_rules = (af==IP_AF_IPV4)? PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY:
+                                           PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY;
+    SDK_ASSERT(stateless_rules < max_rules);
     seed->id = id;
-    seed->num_rules = PDS_MAX_RULES_PER_SECURITY_POLICY;
+    seed->num_rules = max_rules;
     seed->direction = dir;
     seed->type = type;
     seed->af = af;
-    seed->stateful_rules = PDS_MAX_RULES_PER_SECURITY_POLICY - stateless_rules;
+    seed->stateful_rules = max_rules - stateless_rules;
     seed->pfx = pfx;
 }
 
@@ -309,7 +311,7 @@ TEST_F(policy, policy_workflow_neg_1) {
 TEST_F(policy, policy_workflow_neg_2) {
     pds_batch_params_t batch_params = {0};
     policy_seed_stepper_t seed;
-    uint32_t num_policy = PDS_MAX_POLICY + 1;
+    uint32_t num_policy = PDS_MAX_SECURITY_POLICY + 3;
     uint32_t policy_id = 1;
 
     // setup

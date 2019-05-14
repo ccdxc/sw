@@ -36,7 +36,7 @@ tree_base_addr_size (mem_addr_t rfc_block_base_addr, itree_type_t tree_type,
 {
     switch (tree_type) {
     case ITREE_TYPE_IPV4_ACL:
-        *tree_base_addr = rfc_block_base_addr + SACL_IPV4_TABLE_OFFSET;
+        *tree_base_addr = rfc_block_base_addr + SACL_IP_TABLE_OFFSET;
         *tree_size = SACL_IPV4_TABLE_SIZE;
         break;
 
@@ -51,7 +51,7 @@ tree_base_addr_size (mem_addr_t rfc_block_base_addr, itree_type_t tree_type,
         break;
 
     case ITREE_TYPE_IPV6_ACL:
-        *tree_base_addr = rfc_block_base_addr + SACL_IPV6_TABLE_OFFSET;
+        *tree_base_addr = rfc_block_base_addr + SACL_IP_TABLE_OFFSET;
         *tree_size = SACL_IPV6_TABLE_SIZE;
         break;
 
@@ -135,14 +135,25 @@ rfc_build_lpm_trees (rfc_ctxt_t *rfc_ctxt,
     }
 
     /**< build LPM tree for the prefix portion of the rules */
-    itable.tree_type =
-        (rfc_ctxt->policy->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4_ACL : ITREE_TYPE_IPV6_ACL;
-    itable.num_intervals = rfc_ctxt->pfx_tree.num_intervals;
-    tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
-                        &tree_base_addr, &tree_size);
-    ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->pfx_tree,
-                             tree_base_addr, tree_size,
-                             SACL_IPV4_TREE_MAX_NODES >> 1);
+
+    if (rfc_ctxt->policy->af == IP_AF_IPV4) {
+        itable.tree_type = ITREE_TYPE_IPV4_ACL;
+        itable.num_intervals = rfc_ctxt->pfx_tree.num_intervals;
+        tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
+                            &tree_base_addr, &tree_size);
+        ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->pfx_tree,
+                                 tree_base_addr, tree_size,
+                                 SACL_IPV4_TREE_MAX_NODES >> 1);
+    } else {
+        itable.tree_type = ITREE_TYPE_IPV6_ACL;
+        itable.num_intervals = rfc_ctxt->pfx_tree.num_intervals;
+        tree_base_addr_size(rfc_tree_root_addr, itable.tree_type,
+                            &tree_base_addr, &tree_size);
+        ret = rfc_build_lpm_tree(&itable, &rfc_ctxt->pfx_tree,
+                                 tree_base_addr, tree_size,
+                                 SACL_IPV6_TREE_MAX_NODES >> 1);
+    }
+
     if (ret != SDK_RET_OK) {
         goto cleanup;
     }

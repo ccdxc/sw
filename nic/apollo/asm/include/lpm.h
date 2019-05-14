@@ -250,8 +250,65 @@ lessthan1_64b_:
     cmov        res_reg,    c1,             data64b(_), data64b(0)
     //then res_reg = nh_
     //else res_reg = nh0
+#endif
+#ifdef action_keys128b
+/*********************************************************************************/
+/*               Non Terminal Action for 128b Keys                               */
+/*********************************************************************************/
+.align
+action_keys128b:
+    slt        c1,         keyhi,          keys128bhi(1) //if keyhi < keys128bhi[1]
+    seq        c2,         keyhi,          keys128bhi(1) //if keyhi== keys128bhi[1]
+    slt.c2     c2,         keylo,          keys128blo(1) //if keylo < keys128blo[1]
+    bcf        [c1|c2],    lessthan1_128b                //then goto lessthan1
+    slt        c1,         keyhi,          keys128bhi(2) //if keyhi < keys128bhi[2]
+    seq        c2,         keyhi,          keys128bhi(2) //if keyhi== keys128bhi[2]
+    slt.c2     c2,         keylo,          keys128blo(2) //if keylo < keys128blo[2]
+    bcf        [c1|c2],    lessthan2_128b                //then goto lessthan2
+ge2_128b:
+    sub        r1,         curr_addr,      base_addr
+    add        r1,         LPM_B04_OFFSET, r1,           LPM_LOG2_FANOUT128
+    add.e      r1,         r1,             base_addr
+    phvwr      next_addr,  r1                            //next_addr = r1
+    // Total 12 instructions; 0 branch delay slot waste
+lessthan2_128b:
+    add        r1,         LPM_B03_OFFSET, r1,           LPM_LOG2_FANOUT128
+    add.e      r1,         r1,             base_addr
+    phvwr      next_addr,  r1                            //next_addr = r1
+    // Total 12 instructions; 0 branch delay slot waste
+lessthan1_128b:
+    slt        c1,         keyhi,          keys128bhi(0) //if keyhi < keys128bhi[0]
+    seq        c2,         keyhi,          keys128bhi(0) //if keyhi== keys128bhi[0]
+    slt.c2     c2,         keylo,          keys128blo(0) //if keylo < keys128blo[0]
+    bcf        [c1|c2],    lessthan0_128b                //then goto lessthan0
+    sub        r1,         curr_addr,      base_addr
+    add        r1,         LPM_B02_OFFSET, r1,           LPM_LOG2_FANOUT128
+    add.e      r1,         r1,             base_addr
+    phvwr      next_addr,  r1                            //next_addr = r1
+    // Total 13 instructions; 1 branch delay slot waste
+lessthan0_128b:
+    add        r1,         LPM_B01_OFFSET, r1,          LPM_LOG2_FANOUT128
+    add.e      r1,         r1,             base_addr
+    phvwr      next_addr,  r1                           //next_addr = r1
+    // Total 13 instructions; 1 branch delay slot waste
 
 #endif
+#ifdef action_data128b
+/*********************************************************************************/
+/*                 Terminal Action for 128b Keys                                 */
+/*********************************************************************************/
+.align
+action_data128b:
+    slt        c1,         keyhi,          keys128bhi_(0) //if keyhi<keys128bhi_[0]
+    seq        c2,         keyhi,          keys128bhi_(0) //if keyhi==keys128bhi_[0]
+    slt.c2     c2,         keylo,          keys128blo_(0) //if keylo<keys128blo_[0]
+    setcf      c1,         [c1|c2]
+    b          res_handler
+    cmov       res_reg,    c1,             data128b(_), data128b(0)
+    //then res_reg = nh_
+    //else res_reg = nh0
+#endif
+
 /*****************************************************************************/
 /* error function                                                            */
 /*****************************************************************************/

@@ -25,8 +25,8 @@ sacl_sport_lpm_s0:
                         k.p4_to_rxdma_header_flow_proto, 16
     phvwr           p.sacl_metadata_proto_dport, r1
     add             r1, r0, sacl_sport_base_addr
-    add             r2, r1, SACL_IPV4_TABLE_OFFSET
-    phvwr           p.sacl_metadata_ipv4_table_addr, r2
+    add             r2, r1, SACL_IP_TABLE_OFFSET
+    phvwr           p.sacl_metadata_ip_table_addr, r2
     add             r2, r1, SACL_PROTO_DPORT_TABLE_OFFSET
     phvwr           p.sacl_metadata_proto_dport_table_addr, r2
 

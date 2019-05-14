@@ -55,7 +55,8 @@ typedef struct test_params_s {
     };
     // policy config
     struct {
-        uint32_t num_rules;
+        uint32_t num_ipv4_rules;
+        uint32_t num_ipv6_rules;
         bool stateful;
     };
     // vpc config
@@ -563,6 +564,8 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
         pds_subnet.v4_route_table.id = route_table_id++;
         pds_subnet.egr_v4_policy.id = policy_id;
         pds_subnet.ing_v4_policy.id = policy_id + (num_subnets * num_vpcs);
+        pds_subnet.egr_v6_policy.id = policy_id + (num_subnets * num_vpcs) * 2;
+        pds_subnet.ing_v6_policy.id = policy_id + (num_subnets * num_vpcs) * 3;
         policy_id++;
 #ifdef TEST_GRPC_APP
         rv = create_subnet_grpc(&pds_subnet);
@@ -719,14 +722,24 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                         SECURITY_RULE_ACTION_ALLOW;
                     rule->stateful = g_test_params.stateful;
                     rule->match.l3_match.ip_proto = 17;    // UDP
+                    rule->match.l3_match.ip_pfx.addr.af = policy.af;
                     rule->match.l4_match.sport_range.port_lo = 100;
                     rule->match.l4_match.sport_range.port_hi = 10000;
-                    rule->match.l3_match.ip_pfx = g_test_params.vpc_pfx;
                     if (idx < (num_rules - 3)) {
-                        rule->match.l3_match.ip_pfx.addr.addr.v4_addr =
-                            rule->match.l3_match.ip_pfx.addr.addr.v4_addr |
-                            ((j - 1) << 14) | ((k + 2) << 4);
-                        rule->match.l3_match.ip_pfx.len = 28;
+                        if (policy.af == IP_AF_IPV4) {
+                            rule->match.l3_match.ip_pfx = g_test_params.vpc_pfx;
+                            rule->match.l3_match.ip_pfx.addr.addr.v4_addr =
+                                    rule->match.l3_match.ip_pfx.addr.addr.v4_addr |
+                                    ((j - 1) << 14) | ((k + 2) << 4);
+                            rule->match.l3_match.ip_pfx.len = 28;
+                        }
+                        else {
+                            rule->match.l3_match.ip_pfx = g_test_params.v6_vpc_pfx;
+                            rule->match.l3_match.ip_pfx.addr.addr.v6_addr.addr32[3] =
+                                    rule->match.l3_match.ip_pfx.addr.addr.v6_addr.addr32[3] |
+                                    htonl(((j - 1) << 14) | ((k + 2) << 4));
+                            rule->match.l3_match.ip_pfx.len = 124;
+                        }
                         rule->match.l4_match.dport_range.port_lo = dport_base;
                         rule->match.l4_match.dport_range.port_hi =
                             dport_base + step - 1;
@@ -745,8 +758,16 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                         idx++;
                     } else {
                         // catch-all policy for LPM routes + UDP
-                        rule->match.l3_match.ip_pfx.addr.addr.v4_addr = (0xC << 28);
-                        rule->match.l3_match.ip_pfx.len = 8;
+                        if (policy.af == IP_AF_IPV4) {
+                            rule->match.l3_match.ip_pfx.addr.addr.v4_addr = (0xC << 28);
+                            rule->match.l3_match.ip_pfx.len = 8;
+                        } else {
+                            rule->match.l3_match.ip_pfx.addr.addr.v6_addr.addr32[0] = htonl(0x20210000);
+                            rule->match.l3_match.ip_pfx.addr.addr.v6_addr.addr32[1] = htonl(0x00000000);
+                            rule->match.l3_match.ip_pfx.addr.addr.v6_addr.addr32[2] = htonl(0xF1D0D1D0);
+                            rule->match.l3_match.ip_pfx.addr.addr.v6_addr.addr32[3] = htonl(0x00000000);
+                            rule->match.l3_match.ip_pfx.len = 96;
+                        }
                         rule->match.l4_match.dport_range.port_lo = 1000;
                         rule->match.l4_match.dport_range.port_hi = 20000;
                         done = true;
@@ -894,9 +915,13 @@ create_objects (void)
                 pfxstr = obj.second.get<std::string>("v6-prefix-start");
                 assert(str2ipv6pfx((char *)pfxstr.c_str(), &g_test_params.v6_route_pfx) == 0);
             } else if (kind == "security-policy") {
-                g_test_params.num_rules = std::stol(obj.second.get<std::string>("count"));
-                if (g_test_params.num_rules < 4) {
-                    printf("Number of rules in the policy table must be >= 4\n");
+                g_test_params.num_ipv4_rules = std::stol(obj.second.get<std::string>("v4-count"));
+                if (g_test_params.num_ipv4_rules < 4) {
+                    printf("Number of IPv4 rules in the policy table must be >= 4\n");
+                }
+                g_test_params.num_ipv6_rules = std::stol(obj.second.get<std::string>("v6-count"));
+                if (g_test_params.num_ipv6_rules < 4) {
+                    printf("Number of IPv6 rules in the policy table must be >= 4\n");
                 }
                 if (!obj.second.get<std::string>("stateful").compare("true")) {
                     g_test_params.stateful = true;
@@ -988,30 +1013,30 @@ create_objects (void)
     // create security policies
     ret = create_security_policy(g_test_params.num_vpcs,
                                  g_test_params.num_subnets,
-                                 g_test_params.num_rules, IP_AF_IPV4, false);
+                                 g_test_params.num_ipv4_rules, IP_AF_IPV4, false);
     if (ret != SDK_RET_OK) {
         return ret;
     }
     ret = create_security_policy(g_test_params.num_vpcs,
                                  g_test_params.num_subnets,
-                                 g_test_params.num_rules, IP_AF_IPV4, true);
+                                 g_test_params.num_ipv4_rules, IP_AF_IPV4, true);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-#if 0
+
     ret = create_security_policy(g_test_params.num_vpcs,
                                  g_test_params.num_subnets,
-                                 g_test_params.num_rules, IP_AF_IPV6, false);
+                                 g_test_params.num_ipv6_rules, IP_AF_IPV6, false);
     if (ret != SDK_RET_OK) {
         return ret;
     }
     ret = create_security_policy(g_test_params.num_vpcs,
                                  g_test_params.num_subnets,
-                                 g_test_params.num_rules, IP_AF_IPV6, true);
+                                 g_test_params.num_ipv6_rules, IP_AF_IPV6, true);
     if (ret != SDK_RET_OK) {
         return ret;
     }
-#endif
+
     // create vpcs and subnets
     ret = create_vpcs(g_test_params.num_vpcs, &g_test_params.vpc_pfx,
                       g_test_params.num_subnets);

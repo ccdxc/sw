@@ -1032,13 +1032,14 @@ route_init (void)
 static void
 sacl_init (void)
 {
+    uint32_t len;
     uint64_t data;
     uint8_t c_data[64];
     uint16_t start_bit;
     uint64_t sacl_base_addr = get_mem_addr(JSACLV4BASE);
+    sacl_ip_actiondata_t sacl_ip;
+    cache_line_t cache_line;
 
-    uint64_t sacl_ip_addr =
-        sacl_base_addr + SACL_IPV4_TABLE_OFFSET + (64 + (16 * 64));
     uint64_t sacl_sport_addr =
         sacl_base_addr + SACL_SPORT_TABLE_OFFSET + (64);
     uint64_t sacl_proto_dport_addr =
@@ -1049,16 +1050,43 @@ sacl_init (void)
     uint64_t sacl_p2_addr =
         sacl_base_addr + SACL_P2_TABLE_OFFSET + (g_sacl_p1_class_id << 6);
 
-    sacl_ip_data_actiondata_t sacl_ip;
     memset(&sacl_ip, 0xFF, sizeof(sacl_ip));
-    sacl_ip.action_u.sacl_ip_data_match_ipv4_retrieve.key0 =
+
+    /* Program stage 0*/
+    sacl_ip.action_id = SACL_IP_MATCH_IPV4_ID;
+    p4pd_apollo_rxdma_raw_table_hwentry_query(P4_APOLLO_RXDMA_TBL_ID_SACL_IP,
+                                              SACL_IP_MATCH_IPV4_ID,
+                                              &len);
+    p4pd_apollo_rxdma_entry_pack(P4_APOLLO_RXDMA_TBL_ID_SACL_IP,
+                                 SACL_IP_MATCH_IPV4_ID,
+                                 &sacl_ip, cache_line.packed_entry);
+    cache_line.action_pc = sdk::asic::pd::asicpd_get_action_pc(
+                                P4_APOLLO_RXDMA_TBL_ID_SACL_IP,
+                                SACL_IP_MATCH_IPV4_ID);
+    sdk::asic::asic_mem_write(sacl_base_addr + SACL_IP_TABLE_OFFSET,
+                              (uint8_t *)&cache_line, sizeof(cache_line));
+
+    /* Program stage 1*/
+    sdk::asic::asic_mem_write(sacl_base_addr + SACL_IP_TABLE_OFFSET + 64,
+                              (uint8_t *)&cache_line, sizeof(cache_line));
+
+    /* Program stage 2*/
+    sacl_ip.action_id = SACL_IP_MATCH_IPV4_RETRIEVE_ID;
+    sacl_ip.action_u.sacl_ip_match_ipv4_retrieve.key0 =
         (g_layer1_dip & 0xFFFF0000);
-    sacl_ip.action_u.sacl_ip_data_match_ipv4_retrieve.data0 =
+    sacl_ip.action_u.sacl_ip_match_ipv4_retrieve.data0 =
         g_sacl_ip_class_id;
-    p4pd_apollo_rxdma_entry_pack(P4_APOLLO_RXDMA_TBL_ID_SACL_IP_DATA,
-                                 SACL_IP_DATA_MATCH_IPV4_RETRIEVE_ID,
-                                 &sacl_ip, c_data);
-    sdk::asic::asic_mem_write(sacl_ip_addr, (uint8_t *)&c_data, sizeof(c_data));
+    p4pd_apollo_rxdma_raw_table_hwentry_query(P4_APOLLO_RXDMA_TBL_ID_SACL_IP,
+                                              SACL_IP_MATCH_IPV4_RETRIEVE_ID,
+                                              &len);
+    p4pd_apollo_rxdma_entry_pack(P4_APOLLO_RXDMA_TBL_ID_SACL_IP,
+                                 SACL_IP_MATCH_IPV4_RETRIEVE_ID,
+                                 &sacl_ip, cache_line.packed_entry);
+    cache_line.action_pc = sdk::asic::pd::asicpd_get_action_pc(
+                                P4_APOLLO_RXDMA_TBL_ID_SACL_IP,
+                                SACL_IP_MATCH_IPV4_RETRIEVE_ID);
+    sdk::asic::asic_mem_write(sacl_base_addr + SACL_IP_TABLE_OFFSET + (64 + (16 * 64)),
+                              (uint8_t *)&cache_line, sizeof(cache_line));
 
     data = -1;
     data &= ~((uint64_t)0xFFFF);

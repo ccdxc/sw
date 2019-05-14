@@ -19,10 +19,9 @@
 /// \defgroup PDS_POLICY Policy API
 /// @{
 
-#define PDS_MAX_SECURITY_POLICY                  1024
-#define PDS_MAX_RULES_PER_SECURITY_POLICY        1023
-
-#define PDS_MAX_POLICY        PDS_MAX_SECURITY_POLICY
+#define PDS_MAX_SECURITY_POLICY                  1023
+#define PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY   1023
+#define PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY     15
 
 /// \brief    rule direction
 typedef enum rule_dir_e {

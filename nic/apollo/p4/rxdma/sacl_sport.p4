@@ -22,8 +22,8 @@ action sacl_sport_lpm_s0(key0, key1, key2, key3, key4, key5, key6, key7, key8,
                          key17, key18, key19, key20, key21, key22, key23,
                          key24, key25, key26, key27, key28, key29, key30) {
     // Form the address for ipv4 lookup
-    modify_field(sacl_metadata.ipv4_table_addr,
-        p4_to_rxdma_header.sacl_base_addr + SACL_IPV4_TABLE_OFFSET);
+    modify_field(sacl_metadata.ip_table_addr,
+        p4_to_rxdma_header.sacl_base_addr + SACL_IP_TABLE_OFFSET);
     // Form the address for dport+proto lookup
     modify_field(sacl_metadata.proto_dport_table_addr,
         p4_to_rxdma_header.sacl_base_addr + SACL_PROTO_DPORT_TABLE_OFFSET);

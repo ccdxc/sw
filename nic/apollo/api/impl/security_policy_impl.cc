@@ -99,7 +99,8 @@ security_policy_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     policy.policy_type = spec->policy_type;
     policy.af = spec->af;
     policy.direction = spec->direction;
-    policy.max_rules = PDS_MAX_RULES_PER_SECURITY_POLICY;
+    policy.max_rules = (policy.af ==IP_AF_IPV4)? PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY:
+                                                 PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY;
     policy.num_rules = spec->num_rules;
     policy.rules = spec->rules;
     PDS_TRACE_DEBUG("Processing security policy %u",

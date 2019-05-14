@@ -128,7 +128,9 @@ rfc_ctxt_init (rfc_ctxt_t *rfc_ctxt, policy_t *policy,
     }
     new (&rfc_ctxt->pfx_tree.rfc_table.cbm_map) cbm_map_t();
     rfc_ctxt->pfx_tree.rfc_table.max_classes =
-        SACL_IPV4_TREE_MAX_CLASSES;
+            (policy->af == IP_AF_IPV4) ?
+            SACL_IPV4_TREE_MAX_CLASSES:
+            SACL_IPV6_TREE_MAX_CLASSES;
 
     rfc_ctxt->port_tree.itable.nodes =
         (inode_t *)malloc(sizeof(inode_t) * num_nodes);

@@ -6,7 +6,7 @@ header_type sacl_metadata_t {
         pad0                        : 6;
         sport_table_addr            : 34;
         pad1                        : 6;
-        ipv4_table_addr             : 34;
+        ip_table_addr               : 34;
         pad2                        : 6;
         proto_dport_table_addr      : 34;
         pad3                        : 6;
@@ -21,7 +21,7 @@ header_type sacl_metadata_t {
         pad5                        : 30;
         ip                          : 128;
         pad6                        : 6;
-        ipv4_table_addr_next        : 34;
+        ip_table_addr_next          : 34;
         pad7                        : 6;
         proto_dport_table_addr_next : 34;
         pad8                        : 8;

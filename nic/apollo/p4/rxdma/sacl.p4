@@ -404,9 +404,9 @@ control sacl {
          */
         apply(sacl_sport_lpm_s0);
         apply(sacl_sport_lpm_s1);
-        apply(sacl_ip_keys);
-        apply(sacl_ip_keys1);
-        apply(sacl_ip_data);
+        apply(sacl_ip1);
+        apply(sacl_ip2);
+        apply(sacl_ip);
         apply(sacl_proto_dport_keys);
         apply(sacl_proto_dport_keys1);
         apply(sacl_proto_dport_data);

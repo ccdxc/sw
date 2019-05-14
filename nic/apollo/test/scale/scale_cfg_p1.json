@@ -25,7 +25,8 @@
         {
             "_comment_" : "security policy parameters here are per subnet per direction",
             "kind" : "security-policy",
-            "count" : "4",
+            "v4-count" : "4",
+            "v6-count" : "4",
             "stateful" : "false"
         },
         {
