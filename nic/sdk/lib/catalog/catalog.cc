@@ -713,7 +713,8 @@ catalog::factory(std::string catalog_file_path, std::string catalog_file_name, p
             }
             else {
                 SDK_TRACE_ERR("part-id from FRU is empty. Please program the correct FRU");
-                return NULL;
+                SDK_TRACE_ERR("Using default catalog.");
+                catalog_file_name = "/catalog_hw_68-0003.json";
             }
         }
         else if (platform == platform_type_t::PLATFORM_TYPE_SIM ||
@@ -729,7 +730,12 @@ catalog::factory(std::string catalog_file_path, std::string catalog_file_name, p
     if (access(catalog_file.c_str(), R_OK) < 0) {
         SDK_TRACE_ERR("config file %s has no read permissions",
                       catalog_file.c_str());
-        return NULL;
+        catalog_file = catalog_file_path + "/catalog_hw_68-0003.json";
+        if (access(catalog_file.c_str(), R_OK) < 0) {
+            SDK_TRACE_ERR("default config file %s has no read permissions",
+                         catalog_file.c_str());
+            return NULL;
+        }
     }
 
     mem = SDK_CALLOC(sdk::SDK_MEM_ALLOC_CATALOG, sizeof(catalog));
