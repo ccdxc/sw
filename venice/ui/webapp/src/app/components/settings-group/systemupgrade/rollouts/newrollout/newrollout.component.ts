@@ -36,9 +36,9 @@ export enum EnumRolloutOptions {
 export class NewrolloutComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit, OnChanges {
 
   // Make sure the follow parameter values match above EnumRolloutOptions.keys
-  public static ROLLOUTTYPE_NIC_ONLY = 'naplesonly';
-  public static ROLLOUTTYPE_NODE_ONLY = 'veniceonly';
-  public static ROLLOUTTYPE_BOTH_NIC_NODE = 'both';
+  public static ROLLOUTTYPE_NAPLES_ONLY = 'naplesonly';
+  public static ROLLOUTTYPE_VENICE_ONLY = 'veniceonly';
+  public static ROLLOUTTYPE_BOTH_NAPLES_VENICE = 'both';
 
   public static ROLLOUT_METADATA_JSON = 'metadata.json';
 
@@ -52,7 +52,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   rolloutImageOptions: RolloutImageOption[] = [];
 
   rolloutNicNodeTypes: SelectItem[] = Utility.convertEnumToSelectItem(EnumRolloutOptions);
-  selectedRolloutNicNodeTypes: string = NewrolloutComponent.ROLLOUTTYPE_BOTH_NIC_NODE;
+  selectedRolloutNicNodeTypes: string = NewrolloutComponent.ROLLOUTTYPE_BOTH_NAPLES_VENICE;
 
   orderConstraintslabelData: RepeaterData[] = [];
   orderConstraintslabelFormArray = new FormArray([]);
@@ -111,10 +111,10 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       this.newRollout.$formGroup.get(['meta', 'name']).disable();
       this.newRollout.$formGroup.get(['spec', 'version']).disable(); // disable version until version options are available.
       if (this.newRollout.spec['smartnics-only']) {
-        this.selectedRolloutNicNodeTypes = NewrolloutComponent.ROLLOUTTYPE_NIC_ONLY;
+        this.selectedRolloutNicNodeTypes = NewrolloutComponent.ROLLOUTTYPE_NAPLES_ONLY;
       } else {
         // Figure out if it is   NewrolloutComponent.ROLLOUTTYPE_NODE_ONLY or NewrolloutComponent.ROLLOUTTYPE_BOTH_NIC_NODE
-        this.selectedRolloutNicNodeTypes = this.newRollout.spec['smartnic-must-match-constraint'] ? NewrolloutComponent.ROLLOUTTYPE_BOTH_NIC_NODE : NewrolloutComponent.ROLLOUTTYPE_NODE_ONLY;
+        this.selectedRolloutNicNodeTypes = this.newRollout.spec['smartnic-must-match-constraint'] ? NewrolloutComponent.ROLLOUTTYPE_BOTH_NAPLES_VENICE : NewrolloutComponent.ROLLOUTTYPE_VENICE_ONLY;
       }
     }
     if (this.newRollout.$formGroup.validator) {
@@ -228,12 +228,12 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   buildRollout(): IRolloutRollout {
     const rollout: IRolloutRollout = this.newRollout.getFormGroupValues();
     rollout.meta.name = (rollout.meta.name) ? rollout.meta.name : this.newRollout.meta.name;
-    if (this.selectedRolloutNicNodeTypes === NewrolloutComponent.ROLLOUTTYPE_NODE_ONLY) {
+    if (this.selectedRolloutNicNodeTypes === NewrolloutComponent.ROLLOUTTYPE_VENICE_ONLY) {
       rollout.spec['max-nic-failures-before-abort'] = null;
       rollout.spec['order-constraints'] = [];
-      rollout.spec['smartnic-must-match-constraint'] = false;
+      rollout.spec['smartnic-must-match-constraint'] = true; // This is what Vinod (back-end) wants.
       rollout.spec['smartnics-only'] = false;
-    } else if (this.selectedRolloutNicNodeTypes === NewrolloutComponent.ROLLOUTTYPE_NIC_ONLY) {
+    } else if (this.selectedRolloutNicNodeTypes === NewrolloutComponent.ROLLOUTTYPE_NAPLES_ONLY) {
       rollout.spec['smartnics-only'] = true;
       if (rollout.spec['smartnic-must-match-constraint']) {
         rollout.spec['order-constraints'] = Utility.convertRepeaterValuesToSearchExpression(this.ocLabelRepeater);
@@ -350,14 +350,14 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
    * This API serves html template
    */
   isToShowNodeDiv(): boolean {
-    return (this.selectedRolloutNicNodeTypes !== NewrolloutComponent.ROLLOUTTYPE_NIC_ONLY);
+    return (this.selectedRolloutNicNodeTypes !== NewrolloutComponent.ROLLOUTTYPE_NAPLES_ONLY);
   }
 
   /**
    * This API serves html template
    */
   isToShowNicDiv(): boolean {
-    return (this.selectedRolloutNicNodeTypes !== NewrolloutComponent.ROLLOUTTYPE_NODE_ONLY);
+    return (this.selectedRolloutNicNodeTypes !== NewrolloutComponent.ROLLOUTTYPE_VENICE_ONLY);
   }
 
   /**
