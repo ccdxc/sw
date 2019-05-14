@@ -219,6 +219,10 @@
 #define NVME_TX_XTS_IV_ARRAY_BASE       "nvme_tx_xts_iv_array_base"
 #define NVME_RX_XTS_AOL_ARRAY_BASE      "nvme_rx_xts_aol_array_base"
 #define NVME_RX_XTS_IV_ARRAY_BASE       "nvme_rx_xts_iv_array_base"
+#define NVME_TX_HWXTSCB                 "nvme_tx_hwxtscb_addr"
+#define NVME_RX_HWXTSCB                 "nvme_rx_hwxtscb_addr"
+#define NVME_TX_HWDGSTCB                "nvme_tx_hwdgstcb_addr"
+#define NVME_RX_HWDGSTCB                "nvme_rx_hwdgstcb_addr"
 #define NVME_TX_NMDPR_RING_BASE         TNMDPR_BIG_TABLE_BASE
 #define NVME_RX_NMDPR_RING_BASE         RNMDPR_BIG_TABLE_BASE
 

@@ -18,6 +18,7 @@
 #include "nic/include/nvme_dpath.h"
 #include "nic/hal/src/internal/wring.hpp"
 #include "nic/hal/pd/capri/capri_hbm.hpp"
+#include "nic/hal/pd/capri/capri_barco_rings.hpp"
 
 namespace hal {
 
@@ -49,6 +50,10 @@ typedef struct nvme_global_info_s {
     uint64_t rx_nmdpr_ring_size;
     uint64_t tx_resourcecb_addr;
     uint64_t rx_resourcecb_addr;
+    uint64_t tx_hwxtscb_addr;
+    uint64_t rx_hwxtscb_addr;
+    uint64_t tx_hwdgstcb_addr;
+    uint64_t rx_hwdgstcb_addr;
     uint64_t tx_xts_aol_array_addr;
     uint64_t tx_xts_iv_array_addr;
     uint64_t rx_xts_aol_array_addr;
@@ -267,6 +272,18 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
     //rx_resourcecb
     g_nvme_global_info.rx_resourcecb_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RX_RESOURCECB);
 
+    //tx_hwxtscb
+    g_nvme_global_info.tx_hwxtscb_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_TX_HWXTSCB);
+
+    //rx_hwxtscb
+    g_nvme_global_info.rx_hwxtscb_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RX_HWXTSCB);
+
+    //tx_hwdgstcb
+    g_nvme_global_info.tx_hwdgstcb_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_TX_HWDGSTCB);
+
+    //rx_hwdgstcb
+    g_nvme_global_info.rx_hwdgstcb_addr = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_RX_HWDGSTCB);
+
     //cmd context page
     g_nvme_global_info.cmd_context_page_base = nvme_hbm_start + nvme_hbm_offset(NVME_TYPE_CMD_CONTEXT); 
 
@@ -302,20 +319,28 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
                     "tx_sess_xtsq_base: {:#x}, "
                     "tx_sess_dgstq_base: {:#x}, "
                     "tx_resourcecb_addr: {:#x}, "
+                    "tx_hwxtscb_addr: {:#x}, "
+                    "tx_hwdgstcb_addr: {:#x}, "
                     "rxsessprodcb_base: {:#x}, "
                     "rx_sess_xtsq_base: {:#x}, "
                     "rx_sess_dgstq_base: {:#x}, "
                     "rx_resourcecb_addr: {:#x}, "
+                    "rx_hwxtscb_addr: {:#x}, "
+                    "rx_hwdgstcb_addr: {:#x}, "
                     "sess_bitmap_addr: {:#x}\n",
                     g_nvme_global_info.nscb_base_addr, 
                     g_nvme_global_info.txsessprodcb_base,
                     g_nvme_global_info.tx_sess_xtsq_base,
                     g_nvme_global_info.tx_sess_dgstq_base,
                     g_nvme_global_info.tx_resourcecb_addr,
+                    g_nvme_global_info.tx_hwxtscb_addr,
+                    g_nvme_global_info.tx_hwdgstcb_addr,
                     g_nvme_global_info.rxsessprodcb_base,
                     g_nvme_global_info.rx_sess_xtsq_base,
                     g_nvme_global_info.rx_sess_dgstq_base,
                     g_nvme_global_info.rx_resourcecb_addr,
+                    g_nvme_global_info.rx_hwxtscb_addr,
+                    g_nvme_global_info.rx_hwdgstcb_addr,
                     g_nvme_global_info.sess_bitmap_addr);
 
     HAL_TRACE_DEBUG("cmd_context_page_base: {:#x}, "
@@ -424,6 +449,61 @@ nvme_enable (NvmeEnableRequest& spec, NvmeEnableResponse *rsp)
 
     memrev((uint8_t*)&rx_resourcecb, sizeof(nvme_resourcecb_t));
     nvme_hbm_write(g_nvme_global_info.rx_resourcecb_addr, (void *)&rx_resourcecb, sizeof(nvme_resourcecb_t));
+
+    //Setup Tx HW/Barco XTS CB
+    nvme_tx_hwxtscb_t tx_hwxtscb;
+
+    memset(&tx_hwxtscb, 0, sizeof(nvme_tx_hwxtscb_t));
+    tx_hwxtscb.ring_log_sz = log2(CAPRI_BARCO_XTS_RING_SLOTS);
+    tx_hwxtscb.ring_ci = 0;
+    tx_hwxtscb.ring_pi = 0;
+    tx_hwxtscb.ring_proxy_ci = 0;
+    tx_hwxtscb.ring_choke_counter = 0;
+
+    memrev((uint8_t*)&tx_hwxtscb, sizeof(nvme_tx_hwxtscb_t));
+    nvme_hbm_write(g_nvme_global_info.tx_hwxtscb_addr, (void *)&tx_hwxtscb, sizeof(nvme_tx_hwxtscb_t));
+
+
+    //Setup Rx HW/Barco XTS CB
+    nvme_rx_hwxtscb_t rx_hwxtscb;
+
+    memset(&rx_hwxtscb, 0, sizeof(nvme_rx_hwxtscb_t));
+    rx_hwxtscb.ring_log_sz = log2(CAPRI_BARCO_XTS_RING_SLOTS);
+    rx_hwxtscb.ring_ci = 0;
+    rx_hwxtscb.ring_pi = 0;
+    rx_hwxtscb.ring_proxy_ci = 0;
+    rx_hwxtscb.ring_choke_counter = 0;
+
+    memrev((uint8_t*)&rx_hwxtscb, sizeof(nvme_rx_hwxtscb_t));
+    nvme_hbm_write(g_nvme_global_info.rx_hwxtscb_addr, (void *)&rx_hwxtscb, sizeof(nvme_rx_hwxtscb_t));
+
+    //Setup Tx HW DGST(Compression Engine/CP) CB
+    nvme_tx_hwdgstcb_t tx_hwdgstcb;
+
+    memset(&tx_hwdgstcb, 0, sizeof(nvme_tx_hwdgstcb_t));
+    tx_hwdgstcb.ring_log_sz = log2(BARCO_CRYPTO_CP_RING_SIZE);
+    tx_hwdgstcb.ring_ci = 0;
+    tx_hwdgstcb.ring_pi = 0;
+    tx_hwdgstcb.ring_proxy_ci = 0;
+    tx_hwdgstcb.ring_choke_counter = 0;
+
+    memrev((uint8_t*)&tx_hwdgstcb, sizeof(nvme_tx_hwdgstcb_t));
+    nvme_hbm_write(g_nvme_global_info.tx_hwdgstcb_addr, (void *)&tx_hwdgstcb, sizeof(nvme_tx_hwdgstcb_t));
+
+
+    //Setup Rx HW DGST(Decompression Engine/DC) CB
+    nvme_rx_hwdgstcb_t rx_hwdgstcb;
+
+    memset(&rx_hwdgstcb, 0, sizeof(nvme_rx_hwdgstcb_t));
+    rx_hwdgstcb.ring_log_sz = log2(BARCO_CRYPTO_DC_RING_SIZE);
+    rx_hwdgstcb.ring_ci = 0;
+    rx_hwdgstcb.ring_pi = 0;
+    rx_hwdgstcb.ring_proxy_ci = 0;
+    rx_hwdgstcb.ring_choke_counter = 0;
+
+    memrev((uint8_t*)&rx_hwdgstcb, sizeof(nvme_rx_hwdgstcb_t));
+    nvme_hbm_write(g_nvme_global_info.rx_hwdgstcb_addr, (void *)&rx_hwdgstcb, sizeof(nvme_rx_hwdgstcb_t));
+
 
     rsp->set_api_status(types::API_STATUS_OK);
     HAL_TRACE_DEBUG("----------------------- API End ------------------------");

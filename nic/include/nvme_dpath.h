@@ -300,6 +300,44 @@ typedef struct nvme_aol_ring_entry_s {
     uint16_t id;
 } nvme_aol_ring_entry_t;
 
+typedef struct nvme_tx_hwxtscb_s {
+ 
+        uint8_t  pad[56];
+
+        // hw ring towards HW(BARCO) Encrypt XTS Engine
+        uint64_t ring_choke_counter: 8;
+        uint64_t ring_rsvd: 3;
+        uint64_t ring_log_sz: 5;
+        uint64_t ring_ci: 16;
+        uint64_t ring_proxy_ci: 16;
+        uint64_t ring_pi: 16;
+   
+} nvme_tx_hwxtscb_t;
+
+static_assert(sizeof(nvme_tx_hwxtscb_t) == 64);
+
+// hw ring towards HW(BARCO) Decrypt XTS Engine
+#define nvme_rx_hwxtscb_t nvme_tx_hwxtscb_t
+
+
+typedef struct nvme_tx_hwdgstcb_s {
+ 
+        uint8_t  pad[56];
+
+        // hw ring towards HW(BARCO) Tx CRC32 Digest/Compress Engine
+        uint64_t ring_choke_counter: 8;
+        uint64_t ring_rsvd: 3;
+        uint64_t ring_log_sz: 5;
+        uint64_t ring_ci: 16;
+        uint64_t ring_proxy_ci: 16;
+        uint64_t ring_pi: 16;
+   
+} nvme_tx_hwdgstcb_t;
+
+static_assert(sizeof(nvme_tx_hwdgstcb_t) == 64);
+
+// hw ring towards HW(BARCO) Rx CRC32 Digest/Compress Engine
+#define nvme_rx_hwdgstcb_t nvme_tx_hwdgstcb_t
 
 #define NVME_TX_SESS_XTSQ_DEPTH 64
 #define NVME_TX_SESS_XTSQ_ENTRY_SIZE sizeof(nvme_cmd_context_ring_entry_t)
@@ -324,6 +362,10 @@ typedef enum nvme_dpath_ds_type_s {
     NVME_TYPE_RX_RESOURCECB,
     NVME_TYPE_TX_SESSPRODCB,
     NVME_TYPE_RX_SESSPRODCB,
+    NVME_TYPE_TX_HWXTSCB,
+    NVME_TYPE_RX_HWXTSCB,
+    NVME_TYPE_TX_HWDGSTCB,
+    NVME_TYPE_RX_HWDGSTCB,
     NVME_TYPE_TX_AOL,
     NVME_TYPE_TX_AOL_RING,
     NVME_TYPE_RX_AOL,
@@ -353,6 +395,10 @@ static nvme_hbm_alloc_info_t nvme_hbm_alloc_table[] = {
     {NVME_TYPE_RX_RESOURCECB, 1, sizeof(nvme_resourcecb_t)},
     {NVME_TYPE_TX_SESSPRODCB, 512, sizeof(nvme_txsessprodcb_t)},
     {NVME_TYPE_RX_SESSPRODCB, 512, sizeof(nvme_rxsessprodcb_t)},
+    {NVME_TYPE_TX_HWXTSCB, 1, sizeof(nvme_tx_hwxtscb_t)},
+    {NVME_TYPE_RX_HWXTSCB, 1, sizeof(nvme_rx_hwxtscb_t)},
+    {NVME_TYPE_TX_HWDGSTCB, 1, sizeof(nvme_tx_hwdgstcb_t)},
+    {NVME_TYPE_RX_HWDGSTCB, 1, sizeof(nvme_rx_hwdgstcb_t)},
     {NVME_TYPE_TX_AOL, 512, sizeof(nvme_aol_t)},
     {NVME_TYPE_TX_AOL_RING, 512, sizeof(nvme_aol_ring_entry_t)},
     {NVME_TYPE_RX_AOL, 512, sizeof(nvme_aol_t)},

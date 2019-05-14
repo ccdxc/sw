@@ -15,7 +15,7 @@ namespace pd {
 
 #define IPSEC_N2H_GLOBAL_STATS_OFFSET 512
 
-#define P4PLUS_SYMBOLS_MAX 81
+#define P4PLUS_SYMBOLS_MAX 85
 
 uint32_t
 common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type)
@@ -379,6 +379,22 @@ common_p4plus_symbols_init (void **p4plus_symbols, platform_type_t platform_type
 
     symbols[i].name = NVME_RX_XTS_IV_ARRAY_BASE;
     symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_RX_XTS_IV_ARRAY); 
+    i++;
+
+    symbols[i].name = NVME_TX_HWXTSCB;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_TX_HWXTSCB); 
+    i++;
+
+    symbols[i].name = NVME_RX_HWXTSCB;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_RX_HWXTSCB); 
+    i++;
+
+    symbols[i].name = NVME_TX_HWDGSTCB;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_TX_HWDGSTCB); 
+    i++;
+
+    symbols[i].name = NVME_RX_HWDGSTCB;
+    symbols[i].val = get_mem_addr(CAPRI_HBM_REG_NVME) + nvme_hbm_offset(NVME_TYPE_RX_HWDGSTCB); 
     i++;
 
     symbols[i].name = NVME_TX_NMDPR_RING_BASE;
