@@ -41,13 +41,6 @@ func (e *searchHooks) operations(ctx context.Context, in interface{}) (context.C
 		}
 		resource := authz.NewResource(obj.Tenant, string(apiclient.GroupSecurity), string(security.KindSGPolicy), obj.Namespace, obj.SGPolicy)
 		operations = append(operations, authz.NewOperation(resource, auth.Permission_Read.String()))
-		resource = authz.NewResource(
-			obj.Tenant,
-			"",
-			auth.Permission_Search.String(),
-			"",
-			"")
-		operations = append(operations, authz.NewOperation(resource, auth.Permission_Read.String()))
 	case *search.SearchRequest:
 		resource := authz.NewResource(
 			user.Tenant,
@@ -109,8 +102,7 @@ func (e *searchHooks) registerSearchHooks(svc apigw.APIGatewayService) error {
 
 func registerSearchHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	gw := apigwpkg.MustGetAPIGateway()
-	grpcaddr := globals.APIServer
-	grpcaddr = gw.GetAPIServerAddr(grpcaddr)
+	grpcaddr := gw.GetAPIServerAddr(globals.APIServer)
 	r := &searchHooks{
 		permissionGetter: rbac.GetPermissionGetter(globals.APIGw, grpcaddr, gw.GetResolver()),
 		logger:           l,

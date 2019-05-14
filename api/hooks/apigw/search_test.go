@@ -82,10 +82,6 @@ func TestSearchOperationsHook(t *testing.T) {
 					string(apiclient.GroupSecurity), string(security.KindSGPolicy),
 					"default", "testSGPolicy"),
 					auth.Permission_Read.String()),
-				authz.NewOperation(authz.NewResource("testTenant",
-					"", auth.Permission_Search.String(),
-					"", ""),
-					auth.Permission_Read.String()),
 			},
 			out: &search.PolicySearchRequest{
 				Tenant:    "testTenant",
@@ -117,10 +113,6 @@ func TestSearchOperationsHook(t *testing.T) {
 				authz.NewOperation(authz.NewResource("testTenant",
 					string(apiclient.GroupSecurity), string(security.KindSGPolicy),
 					"default", "testSGPolicy"),
-					auth.Permission_Read.String()),
-				authz.NewOperation(authz.NewResource("testTenant",
-					"", auth.Permission_Search.String(),
-					"", ""),
 					auth.Permission_Read.String()),
 			},
 			out: &search.PolicySearchRequest{
