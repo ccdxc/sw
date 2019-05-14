@@ -1030,7 +1030,7 @@ func TestHalIPAddr(t *testing.T) {
 	_, _, err := convertToHalIPAddr("nonExistingHost")
 	tu.Assert(t, err != nil, fmt.Sprintf("invalid ip didn't fail"))
 
-	_, _, err = convertToHalIPAddr("jobd.pensando.io")
+	_, _, err = convertToHalIPAddr("google.com")
 	tu.AssertOk(t, err, fmt.Sprintf("failed to look up hostname"))
 
 	_, _, err = convertToHalIPAddr("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
