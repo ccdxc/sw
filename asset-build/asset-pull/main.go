@@ -20,6 +20,13 @@ func main() {
 	app.Usage = "asset downloader for pensando software team"
 	app.ArgsUsage = "[name] [version] [filename to save]"
 	app.Action = action
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:   "assets-server, a",
+			Value:  asset.Endpoint,
+			EnvVar: "ASSETS_HOST",
+		},
+	}
 
 	if err := app.Run(os.Args); err != nil {
 		logrus.Errorf("Error: %v: please see `%s help`", err, os.Args[0])
@@ -38,7 +45,7 @@ func action(ctx *cli.Context) error {
 		}
 	}
 
-	mc, err := minio.New(asset.Endpoint, asset.AccessKeyID, asset.SecretAccessKey, false)
+	mc, err := minio.New(ctx.GlobalString("assets-server"), asset.AccessKeyID, asset.SecretAccessKey, false)
 	if err != nil {
 		return err
 	}

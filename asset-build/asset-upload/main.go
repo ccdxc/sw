@@ -25,6 +25,16 @@ func main() {
 			Name:  "force, f",
 			Usage: "push over an existing version",
 		},
+		cli.StringFlag{
+			Name:   "assets-server-colo, ac",
+			Value:  asset.EndpointColo,
+			EnvVar: "ASSETS_HOST_COLO",
+		},
+		cli.StringFlag{
+			Name:   "assets-server-hq, ah",
+			Value:  asset.EndpointHQ,
+			EnvVar: "ASSETS_HOST_HQ",
+		},
 	}
 
 	app.Action = action
@@ -45,8 +55,16 @@ func action(ctx *cli.Context) error {
 			return errors.New("invalid empty argument")
 		}
 	}
+	for _, ep := range []string{ctx.GlobalString("assets-server-colo"), ctx.GlobalString("assets-server-hq")} {
+		if err := upload(ctx.Args()[0], ctx.Args()[1], ctx.Args()[2], ep, ctx.Bool("force")); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-	mc, err := minio.New(asset.Endpoint, asset.AccessKeyID, asset.SecretAccessKey, false)
+func upload(name, version, filename, endpoint string, force bool) error {
+	mc, err := minio.New(endpoint, asset.AccessKeyID, asset.SecretAccessKey, false)
 	if err != nil {
 		return err
 	}
@@ -59,10 +77,9 @@ func action(ctx *cli.Context) error {
 		}
 	}
 
-	name, version, filename := ctx.Args()[0], ctx.Args()[1], ctx.Args()[2]
 	assetPath := path.Join(name, version, "asset.tgz")
 
-	if !ctx.Bool("force") {
+	if !force {
 		doneCh := make(chan struct{})
 		list := mc.ListObjects(asset.RootBucket, assetPath, false, doneCh)
 		_, ok := <-list
@@ -83,7 +100,7 @@ func action(ctx *cli.Context) error {
 	}
 	defer f.Close()
 
-	logrus.Infof("Uploading %f MB, please be patient...", float64(fi.Size())/float64(1024*1024))
+	logrus.Infof("Uploading %f MB to %s, please be patient...", float64(fi.Size())/float64(1024*1024), endpoint)
 
 	n, err := mc.PutObject(asset.RootBucket, assetPath, f, -1, minio.PutObjectOptions{NumThreads: uint(runtime.NumCPU() * 2)})
 	if err != nil {
