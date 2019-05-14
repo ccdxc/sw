@@ -59,8 +59,9 @@ req_rx_sqcb1_write_back_process:
     bbeq           CAPRI_KEY_FIELD(IN_TO_S_P, sge_opt), 1, update_qstate
     tblwr          d.rexmit_psn, K_REXMIT_PSN // BD-Slot
 
-    tblwr          d.rrqwqe_cur_sge_id, K_CUR_SGE_ID
-    tblwr          d.rrqwqe_cur_sge_offset, K_CUR_SGE_OFFSET
+    seq            c4, K_GLOBAL_FLAG(_read_resp), 1
+    tblwr.c4       d.rrqwqe_cur_sge_id, K_CUR_SGE_ID
+    tblwr.c4       d.rrqwqe_cur_sge_offset, K_CUR_SGE_OFFSET
 
 update_qstate:
     phvwr          CAPRI_PHV_FIELD(TO_S6_P, state), d.state

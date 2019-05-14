@@ -234,7 +234,7 @@ read:
     j.c2           req_rx_rrqwqe_base_sge_opt_process
     phvwr.c5  CAPRI_PHV_FIELD(SQCB1_WRITE_BACK_P, post_cq), 1 // Branch Delay Slot
 
-    IS_ANY_FLAG_SET(c2, r5, (REQ_RX_FLAG_ONLY|REQ_RX_FLAG_FIRST))
+    seq            c2, K_CUR_SGE_ID, 0
     j.c2           req_rx_rrqwqe_base_sge_process
 
     add            r3, d.read.wqe_sge_list_addr, K_CUR_SGE_ID, LOG_SIZEOF_SGE_T // Branch Delay Slot
