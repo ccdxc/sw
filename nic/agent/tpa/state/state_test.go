@@ -840,7 +840,7 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 	policyPrefix := "mockflow"
 	pol := &tpmprotos.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
-		ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s", policyPrefix), Tenant: "default", Namespace: "default"},
+		ObjectMeta: api.ObjectMeta{Name: policyPrefix, Tenant: "default", Namespace: "default"},
 
 		Spec: tpmprotos.FlowExportPolicySpec{
 			Interval: "15s",
@@ -1027,7 +1027,7 @@ func TestNetagentInfo(t *testing.T) {
 }
 
 func TestHalIPAddr(t *testing.T) {
-	_, _, err := convertToHalIPAddr("test")
+	_, _, err := convertToHalIPAddr("nonExistingHost")
 	tu.Assert(t, err != nil, fmt.Sprintf("invalid ip didn't fail"))
 
 	_, _, err = convertToHalIPAddr("jobd.pensando.io")

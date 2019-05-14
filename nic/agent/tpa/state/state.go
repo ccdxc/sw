@@ -29,7 +29,6 @@ import (
 const (
 	flowExportPolicyID      = "flowExportPolicyId"
 	maxFlowExportCollectors = 16
-	defaultDbgSock          = "/var/run/pensando/tpa.sock"
 )
 
 // PolicyState keeps the agent state
@@ -81,7 +80,7 @@ func (s *PolicyState) Close() {
 }
 
 func (s *PolicyState) validateMeta(p *tpmprotos.FlowExportPolicy) error {
-	if len(strings.TrimSpace(p.Name)) == 0 || len(strings.TrimSpace(p.Kind)) == 0 {
+	if strings.TrimSpace(p.Name) == "" || strings.TrimSpace(p.Kind) == "" {
 		return fmt.Errorf("name/kind can't be empty")
 	}
 
@@ -709,7 +708,7 @@ func (p *policyDb) createFlowMonitorRule(ctx context.Context) (err error) {
 	return nil
 }
 
-func (p *policyDb) readFlowMonitorTable() (*types.FlowMonitorTable, error) {
+func (p *policyDb) readFlowMonitorTable() *types.FlowMonitorTable {
 	fmObj := &types.FlowMonitorTable{
 		TypeMeta:  api.TypeMeta{Kind: "tpaFlowMonitorTable"},
 		FlowRules: map[string]*types.FlowMonitorData{},
@@ -718,16 +717,16 @@ func (p *policyDb) readFlowMonitorTable() (*types.FlowMonitorTable, error) {
 	obj, err := p.state.store.Read(fmObj)
 	if err != nil {
 		log.Warnf("failed to read FlowMonitor table, %s", err)
-		return fmObj, nil
+		return fmObj
 	}
 
 	dbObj, ok := obj.(*types.FlowMonitorTable)
-	if ok != true {
+	if !ok {
 		log.Errorf("invalid flow monitor object in db for %+v", fmObj.ObjectMeta)
-		return fmObj, nil
+		return fmObj
 	}
 
-	return dbObj, nil
+	return dbObj
 }
 
 func (p *policyDb) writeFlowMonitorTable() (err error) {
@@ -750,7 +749,7 @@ func (p *policyDb) readCollectorTable() (*types.CollectorTable, error) {
 	}
 
 	dbObj, ok := obj.(*types.CollectorTable)
-	if ok != true {
+	if !ok {
 		log.Errorf("invalid collector object in db for %+v", collObj.ObjectMeta)
 		return collObj, nil
 	}
@@ -775,7 +774,7 @@ func (p *policyDb) readFlowExportPolicyTable(tpmPolicy *tpmprotos.FlowExportPoli
 	}
 
 	flowObj, ok := obj.(*types.FlowExportPolicyTable)
-	if ok != true {
+	if !ok {
 		return nil, fmt.Errorf("invalid collector object in db")
 	}
 
@@ -829,7 +828,7 @@ func (s *PolicyState) createPolicyContext(p *tpmprotos.FlowExportPolicy) (*polic
 	policyCtx.collectorTable, _ = policyCtx.readCollectorTable()
 
 	// read flowmonitor object
-	policyCtx.flowMonitorTable, _ = policyCtx.readFlowMonitorTable()
+	policyCtx.flowMonitorTable = policyCtx.readFlowMonitorTable()
 
 	// get vrf
 	vrf, err := s.getVrfID(p.Tenant, p.Namespace, p.Spec.VrfName)
