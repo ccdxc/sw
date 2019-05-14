@@ -84,8 +84,6 @@ int pal_watchdog_init(pal_watchdog_action_t wdttype) {
 
 int pal_watchdog_kick() {
 #ifdef __aarch64__
-    int fd = -1;
-    int timeout;
     //no watchdog initialized
     if (gwdt == NO_WDT) {
         return 0;
@@ -104,7 +102,6 @@ int pal_watchdog_kick() {
 
 int pal_watchdog_stop() {
 #ifdef __aarch64__
-    int fd = -1;
     uint32_t data;
     static const char V = 'V';
     //no watchdog initialized
@@ -128,7 +125,7 @@ int pal_watchdog_stop() {
             return -1;
         }
     }
-    close(fd);
+    close(wdtfd);
     wdtfd = -1;
 #endif
     return 0;
