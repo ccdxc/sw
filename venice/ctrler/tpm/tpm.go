@@ -20,7 +20,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/tpm/rpcserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
-	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
+	"github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	vLog "github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
@@ -228,13 +228,19 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 			pm.processStatsPolicy(event.Type, polObj)
 
 		case *telemetry.FlowExportPolicy:
-			pm.processExportPolicy(event.Type, polObj)
+			if err := pm.processExportPolicy(event.Type, polObj); err != nil {
+				pmLog.Errorf("failed to process flow export policy, %v", err)
+			}
 
 		case *telemetry.FwlogPolicy:
-			pm.processFwlogPolicy(event.Type, polObj)
+			if err := pm.processFwlogPolicy(event.Type, polObj); err != nil {
+				pmLog.Errorf("failed to process fwlog policy, %v", err)
+			}
 
 		case *cluster.Tenant:
-			pm.processTenants(ctx, event.Type, polObj)
+			if err := pm.processTenants(ctx, event.Type, polObj); err != nil {
+				pmLog.Errorf("failed to process tenant, %v", err)
+			}
 
 		default:
 			pmLog.Errorf("invalid event type received from {%s}, %+v", watchList[id], event)

@@ -1619,7 +1619,7 @@ func TestMatchRule(t *testing.T) {
         "match-rules": [
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/120"
                     ]
                 },
@@ -1636,7 +1636,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/120"
                     ]
                 },
@@ -1653,7 +1653,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/550"
                     ]
                 },
@@ -1670,7 +1670,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/550"
                     ]
                 },
@@ -1687,7 +1687,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/65535"
                     ]
                 },
@@ -1704,7 +1704,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/65535"
                     ]
                 },
@@ -1721,7 +1721,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/0"
                     ]
                 },
@@ -1738,7 +1738,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/0"
                     ]
                 },
@@ -1755,7 +1755,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/120"
                     ]
                 },
@@ -1772,7 +1772,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/120"
                     ]
                 },
@@ -1789,7 +1789,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/550"
                     ]
                 },
@@ -1806,7 +1806,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/550"
                     ]
                 },
@@ -1823,7 +1823,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/65535"
                     ]
                 },
@@ -1840,7 +1840,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/65535"
                     ]
                 },
@@ -1857,7 +1857,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/0"
                     ]
                 },
@@ -1874,7 +1874,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/0"
                     ]
                 },
@@ -1891,7 +1891,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/120"
                     ]
                 },
@@ -1908,7 +1908,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/120"
                     ]
                 },
@@ -1925,7 +1925,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/550"
                     ]
                 },
@@ -1942,7 +1942,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/550"
                     ]
                 },
@@ -1959,7 +1959,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/65535"
                     ]
                 },
@@ -1976,7 +1976,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/65535"
                     ]
                 },
@@ -1993,7 +1993,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/0"
                     ]
                 },
@@ -2010,7 +2010,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/0"
                     ]
                 },
@@ -2027,7 +2027,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/120"
                     ]
                 },
@@ -2044,7 +2044,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/120"
                     ]
                 },
@@ -2061,7 +2061,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/550"
                     ]
                 },
@@ -2078,7 +2078,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/550"
                     ]
                 },
@@ -2095,7 +2095,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/65535"
                     ]
                 },
@@ -2112,7 +2112,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/65535"
                     ]
                 },
@@ -2129,7 +2129,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/0"
                     ]
                 },
@@ -2146,7 +2146,7 @@ func TestMatchRule(t *testing.T) {
             },
             {
                 "app-protocol-selectors": {
-                    "ports": [
+                    "proto-ports": [
                         "TCP/0"
                     ]
                 },
