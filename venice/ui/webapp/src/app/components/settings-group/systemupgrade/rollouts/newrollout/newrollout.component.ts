@@ -244,7 +244,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     } else {
       rollout.spec['smartnics-only'] = false;
     }
-    return rollout;
+     return rollout;
   }
 
   _saveRollout() {
@@ -262,7 +262,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
        handler = this.rolloutService.AddRollout(rollout);
     }
     */
-    handler = this.rolloutService.DoRollout(rollout);
+    handler = this.rolloutService.DoRollout(rollout, null, false); // TODO: For now, add trimObject parameter as false because rollout.spec["scheduled-start-time"] got trimmed.
     const sub = handler.subscribe(
       (response) => {
         if (this.isInline) {

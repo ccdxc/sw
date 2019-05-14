@@ -8,7 +8,7 @@
     <div class="imageupload-summary-panel-content">
       <div class="imageupload-fileupload-info-div">File type is *.tar and maximum file size is 10G.
         <span class="imageupload-fileupload-progress-span" *ngIf="fileUploadProgress">
-          {{fileUploadProgress >0 ? this.fileUploadProgress + '% uploaded': ''}} {{fileUploadProgress >=100 ? ' Saving file': ''}} 
+          {{fileUploadProgress >0 ? this.fileUploadProgress + '% uploaded.': ''}} {{fileUploadProgress >=100 ? ' Saving file': ''}} 
         </span>
       </div>
       <p-fileUpload name="file" url="/objstore/v1/uploads/images/" (onUpload)="onUpload($event)"

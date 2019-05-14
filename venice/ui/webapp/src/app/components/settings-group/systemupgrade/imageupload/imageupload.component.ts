@@ -142,7 +142,7 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   onError(event) {
     const files = event.files;
     const filenames = this.getFilesNames(files);
-    this.controllerService.invokeErrorToaster('Upload failed', 'Involved files: ' + filenames.join(','));
+    this.controllerService.invokeErrorToaster('Upload failed', 'Involved files: ' + filenames.join(',') + '\n' + JSON.stringify(event.error));
     this.fileUploadProgress = 0;
   }
 

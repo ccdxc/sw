@@ -129,16 +129,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
   buildToolbarData(): ToolbarData {
     const toolbarData: ToolbarData = {
       breadcrumb: [{label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade'}],
-      buttons: [
-        {
-          cssClass: 'global-button-primary rollouts-button',
-          text: 'ROLLOUT IMAGES',
-          computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
-          callback: () => {
-            this.invokeUploadImageUI();
-          }
-        }
-      ]
+      buttons: []
     };
     if (this.isToBuildCreateButton()) {
       toolbarData.buttons.push(
@@ -152,6 +143,16 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
         }
       );
     }
+    toolbarData.buttons.push(
+      {
+        cssClass: 'global-button-primary rollouts-button',
+        text: 'ROLLOUT IMAGES',
+        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+        callback: () => {
+          this.invokeUploadImageUI();
+        }
+      }
+    );
     return toolbarData;
   }
 
