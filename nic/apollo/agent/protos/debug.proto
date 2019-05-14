@@ -22,6 +22,9 @@ service DebugSvc {
   rpc LlcStatsGet (types.Empty) returns (LlcStatsGetResponse) {}
   rpc PbStatsGet (types.Empty) returns (PbStatsGetResponse) {}
   rpc FlowClear (types.Empty) returns (types.Empty) {}
+  rpc MemTrackGet(MemTrackGetRequest) returns (MemTrackGetResponse) {}
+  rpc SlabGet(SlabGetRequest) returns (SlabGetResponse) {}
+  rpc HeapGet(types.Empty) returns (HeapGetResponse) {}
 }
 
 enum TraceLevel {
@@ -236,4 +239,88 @@ message PacketBufferStats {
 message PbStatsGetResponse {
   types.ApiStatus   ApiStatus = 1;
   PacketBufferStats PbStats   = 2;
+}
+
+message MemTrackSpec {
+  uint32 AllocId = 1; // allocation id stats are requested for (0xFFFFFFFF for all)
+}
+
+// operational status of memory tracker object
+message MemTrackStatus {
+}
+
+// stats per memory tracker object
+message MemTrackStats {
+  uint32 NumAllocs = 1; // number of allocations with alloc_id
+  uint32 NumFrees  = 2; // number of frees with alloc_id
+}
+
+// MemTrackGetRequest is request msg with allocation id that info is requested for
+message MemTrackGetRequest {
+  MemTrackSpec Spec = 1; // qualifiers
+}
+
+// MemTrackGetResponse captures debug information per allocation id
+message MemTrackGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  MemTrackSpec    Spec      = 2; // spec (aka. identifier of mem track object)
+  MemTrackStatus  Status    = 3; // oper status, if any
+  MemTrackStats   Stats     = 4; // statistics
+}
+
+// SlabSpec identifies a slab
+message SlabSpec {
+  string Name             = 1; // name of the slab
+  uint32 Id               = 2; // slab identifier
+  uint32 ElementSize      = 3; // size of each element
+  uint32 ElementsPerBlock = 4; // # of elements per block
+  bool   ThreadSafe       = 5; // thread safe allocation/free, if TRUE
+  bool   GrowOnDemand     = 6; // grow the slab on demand, if TRUE
+  bool   DelayDelete      = 7; // delay delete each element, if TRUE, instead of freeing immediately
+  bool   ZeroOnAllocation = 8; // zero allocated mem. if TRUE
+  uint32 RawBlockSize     = 9; // raw block size
+}
+
+// operational status of slab, if any
+message SlabStatus {
+}
+
+// per slab statistics
+message SlabStats {
+  uint32 NumElementsInUse = 1; // number of elements in use
+  uint32 NumAllocs        = 2; // number of alloc operations
+  uint32 NumFrees         = 3; // number of free operations
+  uint32 NumAllocErrors   = 4; // number of alloc errors
+  uint32 NumBlocks        = 5; // number of blocks allocated
+}
+
+// SlabGetRequest is GET request per slab
+message SlabGetRequest {
+  uint32 Id = 1; // slab identifier
+}
+
+// SlabGetResponse captures all information about a slab
+message SlabGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  SlabSpec        Spec      = 2; // slab attributes
+  SlabStatus      Status    = 3; // operational status of the slab
+  SlabStats       Stats     = 4; // stats of the slab
+}
+
+message HeapStats {
+  uint32 NumArenaBytesAlloc   = 1;
+  uint32 NumFreeBlocks        = 2;
+  uint32 NumFastBinFreeBlocks = 3;
+  uint32 NumMmapBlocksAlloc   = 4;
+  uint32 NumMmapBytesAlloc    = 5;
+  uint32 MaxBlocksAlloc       = 6;
+  uint32 NumFastBinFreeBytes  = 7;
+  uint32 NumBytesAlloc        = 8;
+  uint32 NumFreeBytes         = 9;
+  uint32 ReleasableFreeBytes  = 10;
+}
+
+message HeapGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  HeapStats       Stats     = 2;    
 }

@@ -47,6 +47,8 @@ public:
                      Empty *rsp) override;
     Status TraceFlush(ServerContext *context, const Empty *req,
                       Empty *rsp) override;
+    Status HeapGet(ServerContext *context, const Empty *req,
+                   pds::HeapGetResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_DEBUG_HPP__

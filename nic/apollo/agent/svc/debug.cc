@@ -10,6 +10,7 @@
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/debug.hpp"
 #include "nic/apollo/agent/trace.hpp"
+#include <malloc.h>
 
 Status
 DebugSvcImpl::ClockFrequencyUpdate(ServerContext *context,
@@ -352,5 +353,28 @@ Status
 DebugSvcImpl::TraceFlush(ServerContext *context, const Empty *req,
                          Empty *rsp) {
     core::flush_logs();
+    return Status::OK;
+}
+
+Status
+DebugSvcImpl::HeapGet(ServerContext *context, const Empty *req,
+                      pds::HeapGetResponse *rsp) {
+    auto stats = rsp->mutable_stats();
+
+    struct mallinfo minfo = {0};
+    minfo = mallinfo();
+
+    stats->set_numarenabytesalloc(minfo.arena);
+    stats->set_numfreeblocks(minfo.ordblks);
+    stats->set_numfastbinfreeblocks(minfo.smblks);
+    stats->set_nummmapblocksalloc(minfo.hblks);
+    stats->set_nummmapbytesalloc(minfo.hblkhd);
+    stats->set_maxblocksalloc(minfo.usmblks);
+    stats->set_numfastbinfreebytes(minfo.fsmblks);
+    stats->set_numbytesalloc(minfo.uordblks);
+    stats->set_numfreebytes(minfo.fordblks);
+    stats->set_releasablefreebytes(minfo.keepcost);
+    rsp->set_apistatus(sdk_ret_to_api_status(SDK_RET_OK));
+
     return Status::OK;
 }
