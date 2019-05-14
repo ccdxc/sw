@@ -36,7 +36,7 @@ cd /
 ifconfig lo up
 
 # start memtun
-/platform/bin/memtun &
+[ -f /sysconfig/config0/memtun_enable ] && (/platform/bin/memtun &)
 
 # if not already present, create a cache file recording the firmware inventory
 # at boot-time.  will be preserved across a live-update, and so always
