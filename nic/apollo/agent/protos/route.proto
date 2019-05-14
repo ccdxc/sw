@@ -13,6 +13,7 @@ import "types.proto";
 
 service RouteSvc {
   rpc RouteTableCreate (RouteTableRequest) returns (RouteTableResponse) {}
+  rpc RouteTableUpdate (RouteTableRequest) returns (RouteTableResponse) {}
   rpc RouteTableGet (RouteTableGetRequest) returns (RouteTableGetResponse) {}
   rpc RouteTableDelete (RouteTableDeleteRequest) returns (RouteTableDeleteResponse) {}
 }

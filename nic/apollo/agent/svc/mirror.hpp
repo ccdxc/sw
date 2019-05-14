@@ -21,6 +21,9 @@ public:
     Status MirrorSessionCreate(ServerContext *context,
                                const pds::MirrorSessionRequest *req,
                                pds::MirrorSessionResponse *rsp) override;
+    Status MirrorSessionUpdate(ServerContext *context,
+                               const pds::MirrorSessionRequest *req,
+                               pds::MirrorSessionResponse *rsp) override;
     Status MirrorSessionDelete(ServerContext *context,
                                const pds::MirrorSessionDeleteRequest *proto_req,
                                pds::MirrorSessionDeleteResponse *proto_rsp) override;

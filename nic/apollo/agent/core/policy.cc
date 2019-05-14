@@ -43,6 +43,44 @@ policy_create (pds_policy_key_t *key, pds_policy_spec_t *spec)
     return SDK_RET_OK;
 }
 
+static inline sdk_ret_t
+policy_update_validate (pds_policy_spec_t *spec)
+{
+    // TODO
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+policy_update (pds_policy_key_t *key, pds_policy_spec_t *spec)
+{
+    sdk_ret_t ret;
+
+    if (agent_state::state()->find_in_policy_db(key) == NULL) {
+        PDS_TRACE_ERR("Failed to update policy {}, policy doesn't exist",
+                      spec->key.id);
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+    if ((ret = policy_update_validate(spec)) != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to update policy {}, err {}", spec->key.id, ret);
+        return ret;
+    }
+    if (!agent_state::state()->pds_mock_mode()) {
+        if ((ret = pds_policy_update(spec)) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to update policy {}, err {}",
+                          spec->key.id, ret);
+            return ret;
+        }
+    }
+    if (agent_state::state()->del_from_policy_db(key) == false) {
+        PDS_TRACE_ERR("Failed to delete policy {} from db", key->id);
+    }
+    if ((ret = agent_state::state()->add_to_policy_db(key, spec)) != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to add policy {} to db, err {}", spec->key.id, ret);
+        return ret;
+    }
+    return SDK_RET_OK;
+}
+
 #if 0
 sdk_ret_t
 policy_delete (pds_policy_key_t *key)

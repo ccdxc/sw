@@ -12,41 +12,50 @@
 #include "nic/apollo/framework/api_engine.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/impl/mirror_impl.hpp"
+#include "nic/apollo/api/obj_api.hpp"
 
-sdk_ret_t
-pds_mirror_session_create (_In_ pds_mirror_session_spec_t *spec)
+static sdk_ret_t
+pds_mirror_session_api_handle (api::api_op_t op,
+                               pds_mirror_session_key_t *key,
+                               pds_mirror_session_spec_t *spec)
 {
-    api_ctxt_t    api_ctxt;
-    sdk_ret_t     rv;
+    sdk_ret_t rv;
+    api_ctxt_t api_ctxt;
 
-    api_ctxt.api_params = api_params_alloc(api::OBJ_ID_MIRROR_SESSION,
-                                           api::API_OP_CREATE);
-    if (likely(api_ctxt.api_params != NULL)) {
-        api_ctxt.api_op = api::API_OP_CREATE;
-        api_ctxt.obj_id = api::OBJ_ID_MIRROR_SESSION;
-        api_ctxt.api_params->mirror_session_spec = *spec;
-        rv = api::g_api_engine.process_api(&api_ctxt);
+    if ((rv = pds_obj_api_validate(op, key, spec)) != SDK_RET_OK) {
         return rv;
+    }
+
+    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_MIRROR_SESSION, op);
+    if (likely(api_ctxt.api_params != NULL)) {
+        api_ctxt.api_op = op;
+        api_ctxt.obj_id = api::OBJ_ID_MIRROR_SESSION;
+        if (op == api::API_OP_DELETE) {
+            api_ctxt.api_params->mirror_session_key = *key;
+        } else {
+            api_ctxt.api_params->mirror_session_spec = *spec;
+        }
+        return (api::g_api_engine.process_api(&api_ctxt));
     }
     return SDK_RET_OOM;
 }
 
 sdk_ret_t
+pds_mirror_session_create (_In_ pds_mirror_session_spec_t *spec)
+{
+    return (pds_mirror_session_api_handle(api::API_OP_CREATE, NULL, spec));
+}
+
+sdk_ret_t
+pds_mirror_session_update (_In_ pds_mirror_session_spec_t *spec)
+{
+    return (pds_mirror_session_api_handle(api::API_OP_UPDATE, NULL, spec));
+}
+
+sdk_ret_t
 pds_mirror_session_delete (_In_ pds_mirror_session_key_t *key)
 {
-    api_ctxt_t    api_ctxt;
-    sdk_ret_t     rv;
-
-    api_ctxt.api_params = api_params_alloc(api::OBJ_ID_MIRROR_SESSION,
-                                           api::API_OP_DELETE);
-    if (likely(api_ctxt.api_params != NULL)) {
-        api_ctxt.api_op = api::API_OP_DELETE;
-        api_ctxt.obj_id = api::OBJ_ID_MIRROR_SESSION;
-        api_ctxt.api_params->mirror_session_key = *key;
-        rv = api::g_api_engine.process_api(&api_ctxt);
-        return rv;
-    }
-    return SDK_RET_OOM;
+    return (pds_mirror_session_api_handle(api::API_OP_DELETE, key, NULL));
 }
 
 static inline mirror_session *

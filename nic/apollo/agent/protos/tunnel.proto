@@ -13,6 +13,7 @@ import "types.proto";
 
 service TunnelSvc {
   rpc TunnelCreate (TunnelRequest) returns (TunnelResponse) {}
+  rpc TunnelUpdate (TunnelRequest) returns (TunnelResponse) {}
   rpc TunnelGet (TunnelGetRequest) returns (TunnelGetResponse) {}
   rpc TunnelDelete (TunnelDeleteRequest) returns (TunnelDeleteResponse) {}
 }

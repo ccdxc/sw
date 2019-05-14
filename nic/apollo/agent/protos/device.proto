@@ -13,6 +13,7 @@ import "types.proto";
 
 service DeviceSvc {
   rpc DeviceCreate (DeviceRequest) returns (DeviceResponse) {}
+  rpc DeviceUpdate (DeviceRequest) returns (DeviceResponse) {}
   rpc DeviceGet (types.Empty) returns (DeviceGetResponse) {}
   rpc DeviceDelete (types.Empty) returns (DeviceDeleteResponse) {}
 }

@@ -12,6 +12,7 @@ import "types.proto";
 
 service MirrorSvc {
   rpc MirrorSessionCreate (MirrorSessionRequest) returns (MirrorSessionResponse) {}
+  rpc MirrorSessionUpdate (MirrorSessionRequest) returns (MirrorSessionResponse) {}
   rpc MirrorSessionGet (MirrorSessionGetRequest) returns (MirrorSessionGetResponse) {}
   rpc MirrorSessionDelete (MirrorSessionDeleteRequest) returns (MirrorSessionDeleteResponse) {}
 }

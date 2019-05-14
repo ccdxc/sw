@@ -19,6 +19,8 @@ typedef struct mirror_session_db_cb_ctxt_s {
 
 sdk_ret_t mirror_session_create(pds_mirror_session_key_t *key,
                                 pds_mirror_session_spec_t *spec);
+sdk_ret_t mirror_session_update(pds_mirror_session_key_t *key,
+                                pds_mirror_session_spec_t *spec);
 sdk_ret_t mirror_session_delete(pds_mirror_session_key_t *key);
 sdk_ret_t mirror_session_get(pds_mirror_session_key_t *key,
                              pds_mirror_session_info_t *info);

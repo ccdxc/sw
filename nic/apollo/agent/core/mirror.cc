@@ -65,6 +65,67 @@ mirror_session_create (pds_mirror_session_key_t *key,
     return SDK_RET_OK;
 }
 
+static inline sdk_ret_t
+mirror_session_update_validate (pds_mirror_session_spec_t *spec)
+{
+    if (spec->key.id > PDS_MAX_MIRROR_SESSION) {
+        PDS_TRACE_ERR("Mirror session id {} is more than supported value {}",
+                      spec->key.id, PDS_MAX_MIRROR_SESSION);
+        return SDK_RET_INVALID_ARG;
+    }
+    if (spec->type > PDS_MIRROR_SESSION_TYPE_MAX) {
+        PDS_TRACE_ERR("Unknown mirror session type {} in mirror session {}",
+                      spec->type, spec->key.id);
+        return SDK_RET_INVALID_ARG;
+    }
+    if (spec->type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
+        // check if VPC exists, if mirror session type is ERSPAN
+        if (agent_state::state()->find_in_vpc_db(&spec->erspan_spec.vpc) == NULL) {
+            PDS_TRACE_ERR("Failed to create erspan mirror session {}, "
+                          "vpc {} not found", spec->key.id,
+                          spec->erspan_spec.vpc.id);
+            return sdk::SDK_RET_ENTRY_NOT_FOUND;
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+mirror_session_update (pds_mirror_session_key_t *key,
+                       pds_mirror_session_spec_t *spec)
+{
+    sdk_ret_t ret;
+
+    if (agent_state::state()->find_in_mirror_session_db(key) == NULL) {
+        PDS_TRACE_ERR("Failed to update mirror session {}, mirror session with "
+                      "that id doesn't exist", spec->key.id);
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+    if ((ret = mirror_session_update_validate(spec)) != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to update mirror session {}, err {}",
+                      spec->key.id, ret);
+        return ret;
+    }
+    if (!agent_state::state()->pds_mock_mode()) {
+        if ((ret = pds_mirror_session_update(spec)) != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to update mirror session {}, err {}",
+                          spec->key.id, ret);
+            return ret;
+        }
+    }
+    if (agent_state::state()->del_from_mirror_session_db(key) == false) {
+        PDS_TRACE_ERR("Failed to delete mirror session {} from db, err {}",
+                      spec->key.id, ret);
+    }
+    if (agent_state::state()->add_to_mirror_session_db(key, spec) !=
+            SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to add mirror session {} to db, err {}",
+                      spec->key.id, ret);
+        return SDK_RET_ERR;
+    }
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 mirror_session_delete (pds_mirror_session_key_t *key)
 {

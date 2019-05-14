@@ -20,6 +20,8 @@ class DeviceSvcImpl final : public DeviceSvc::Service {
 public:
     Status DeviceCreate(ServerContext *context, const pds::DeviceRequest *req,
                         pds::DeviceResponse *rsp) override;
+    Status DeviceUpdate(ServerContext *context, const pds::DeviceRequest *req,
+                        pds::DeviceResponse *rsp) override;
     Status DeviceDelete(ServerContext *context,
                         const types::Empty *empty,
                         pds::DeviceDeleteResponse *proto_rsp) override;

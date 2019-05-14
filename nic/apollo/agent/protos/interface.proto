@@ -12,6 +12,7 @@ import "types.proto";
 
 service IfSvc {
   rpc InterfaceCreate (InterfaceRequest) returns (InterfaceResponse) {}
+  rpc InterfaceUpdate (InterfaceRequest) returns (InterfaceResponse) {}
   rpc InterfaceDelete (InterfaceDeleteRequest) returns (InterfaceDeleteResponse) {}
   rpc InterfaceGet (InterfaceGetRequest) returns (InterfaceGetResponse) {}
 }

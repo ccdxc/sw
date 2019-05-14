@@ -13,6 +13,7 @@ import "types.proto";
 
 service SecurityPolicySvc {
   rpc SecurityPolicyCreate (SecurityPolicyRequest) returns (SecurityPolicyResponse) {}
+  rpc SecurityPolicyUpdate (SecurityPolicyRequest) returns (SecurityPolicyResponse) {}
   rpc SecurityPolicyGet (SecurityPolicyGetRequest) returns (SecurityPolicyGetResponse) {}
   rpc SecurityPolicyDelete (SecurityPolicyDeleteRequest) returns (SecurityPolicyDeleteResponse) {}
 }

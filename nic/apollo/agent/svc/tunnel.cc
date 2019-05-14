@@ -131,6 +131,36 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
     return Status::OK;
 }
 
+// Update Tunnel Object
+Status
+TunnelSvcImpl::TunnelUpdate(ServerContext *context,
+                            const pds::TunnelRequest *proto_req,
+                            pds::TunnelResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_tep_spec_t *api_spec = NULL;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        api_spec = (pds_tep_spec_t *)
+                    core::agent_state::state()->tep_slab()->alloc();
+        if (api_spec == NULL) {
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            break;
+        }
+        auto request = proto_req->request(i);
+        tep_proto_spec_to_api_spec(api_spec, request);
+        ret = core::tep_update(request.id(), api_spec);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != sdk::SDK_RET_OK) {
+            break;
+        }
+    }
+    return Status::OK;
+}
+
 Status
 TunnelSvcImpl::TunnelDelete(ServerContext *context,
                             const pds::TunnelDeleteRequest *proto_req,

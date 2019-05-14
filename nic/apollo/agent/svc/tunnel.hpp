@@ -20,6 +20,8 @@ class TunnelSvcImpl final : public TunnelSvc::Service {
 public:
     Status TunnelCreate(ServerContext *context, const pds::TunnelRequest *req,
                         pds::TunnelResponse *rsp) override;
+    Status TunnelUpdate(ServerContext *context, const pds::TunnelRequest *req,
+                        pds::TunnelResponse *rsp) override;
     Status TunnelDelete(ServerContext *context,
                         const pds::TunnelDeleteRequest *proto_req,
                         pds::TunnelDeleteResponse *proto_rsp) override;

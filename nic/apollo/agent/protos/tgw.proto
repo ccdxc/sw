@@ -13,6 +13,7 @@ import "types.proto";
 
 service TGwSvc {
   rpc TGwCreate (TGwRequest) returns (TGwResponse) {}
+  rpc TGwUpdate (TGwRequest) returns (TGwResponse) {}
   rpc TGwGet (TGwGetRequest) returns (TGwGetResponse) {}
   rpc TGwDelete (TGwDeleteRequest) returns (TGwDeleteResponse) {}
 }

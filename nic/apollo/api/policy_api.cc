@@ -76,6 +76,18 @@ pds_policy_create (pds_policy_spec_t *spec)
 }
 
 /**
+ * @brief update a security policy
+ *
+ * @param[in] spec security policy spec
+ * @return #SDK_RET_OK on success, failure status code on error
+ */
+sdk_ret_t
+pds_policy_update (pds_policy_spec_t *spec)
+{
+    return pds_policy_api_handle(api::API_OP_UPDATE, NULL, spec);
+}
+
+/**
  * @brief delete given security policy
  *
  * @param[in] key    security policy key

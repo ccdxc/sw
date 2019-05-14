@@ -139,6 +139,11 @@ typedef struct pds_policy_info_s {
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_create(pds_policy_spec_t *policy);
 
+/// \brief    update policy
+/// \param[in] policy    policy information
+/// \return    #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_policy_update(pds_policy_spec_t *policy);
+
 /// \brief    read policy, base address of the tree stored in HBM is read
 /// \param[in] key    policy key
 /// \return    #SDK_RET_OK on success, failure status code on error

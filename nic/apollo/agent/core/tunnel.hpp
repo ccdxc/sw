@@ -17,6 +17,7 @@ typedef struct tep_db_cb_ctxt_s {
 } tep_db_cb_ctxt_t;
 
 sdk_ret_t tep_create(uint32_t key, pds_tep_spec_t *spec);
+sdk_ret_t tep_update(uint32_t key, pds_tep_spec_t *spec);
 sdk_ret_t tep_delete(uint32_t key);
 sdk_ret_t tep_get(uint32_t key, pds_tep_info_t *info);
 sdk_ret_t tep_get_all(tep_get_cb_t tep_get_cb, void *ctxt);

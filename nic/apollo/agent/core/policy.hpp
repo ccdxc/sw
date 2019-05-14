@@ -17,6 +17,7 @@ typedef struct policy_db_cb_ctxt_s {
 } policy_db_cb_ctxt_t;
 
 sdk_ret_t policy_create(pds_policy_key_t *key, pds_policy_spec_t *spec);
+sdk_ret_t policy_update(pds_policy_key_t *key, pds_policy_spec_t *spec);
 sdk_ret_t policy_delete(pds_policy_key_t *key);
 sdk_ret_t policy_get(pds_policy_key_t *key, pds_policy_info_t *info);
 sdk_ret_t policy_get_all(policy_get_cb_t policy_get_cb, void *ctxt);

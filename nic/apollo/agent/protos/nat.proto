@@ -12,6 +12,7 @@ import "types.proto";
 
 service NatSvc {
   rpc NatPolicyCreate (NatPolicyRequest) returns (NatPolicyResponse) {}
+  rpc NatPolicyUpdate (NatPolicyRequest) returns (NatPolicyResponse) {}
   rpc NatPolicyGet (NatPolicyGetRequest) returns (NatPolicyGetResponse) {}
   rpc NatPolicyDelete (NatPolicyDeleteRequest) returns (NatPolicyDeleteResponse) {}
 }

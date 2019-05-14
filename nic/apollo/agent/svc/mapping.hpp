@@ -20,6 +20,8 @@ class MappingSvcImpl final : public MappingSvc::Service {
 public:
     Status MappingCreate(ServerContext *context, const pds::MappingRequest *req,
                          pds::MappingResponse *rsp) override;
+    Status MappingUpdate(ServerContext *context, const pds::MappingRequest *req,
+                         pds::MappingResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_MAPPING_HPP__

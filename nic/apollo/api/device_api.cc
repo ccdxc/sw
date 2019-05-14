@@ -13,21 +13,43 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/device.hpp"
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
+#include "nic/apollo/api/obj_api.hpp"
+
+static sdk_ret_t
+pds_device_api_handle (api::api_op_t op,
+                       pds_device_spec_t *spec)
+{
+    sdk_ret_t rv;
+    api_ctxt_t api_ctxt;
+
+    api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_DEVICE, op);
+    if (likely(api_ctxt.api_params != NULL)) {
+        api_ctxt.api_op = op;
+        api_ctxt.obj_id = api::OBJ_ID_DEVICE;
+        if (op != api::API_OP_DELETE) {
+            api_ctxt.api_params->device_spec = *spec;
+        }
+        return (api::g_api_engine.process_api(&api_ctxt));
+    }
+    return SDK_RET_OOM;
+}
 
 sdk_ret_t
 pds_device_create (pds_device_spec_t *device)
 {
-    api_ctxt_t api_ctxt;
+    return (pds_device_api_handle(api::API_OP_CREATE, device));
+}
 
-    api_ctxt.api_params =
-        api::api_params_alloc(api::OBJ_ID_DEVICE, api::API_OP_CREATE);
-    if (likely(api_ctxt.api_params != NULL)) {
-        api_ctxt.api_op = api::API_OP_CREATE;
-        api_ctxt.obj_id = api::OBJ_ID_DEVICE;
-        api_ctxt.api_params->device_spec = *device;
-        return api::g_api_engine.process_api(&api_ctxt);
-    }
-    return sdk::SDK_RET_OOM;
+sdk_ret_t
+pds_device_update (pds_device_spec_t *device)
+{
+    return (pds_device_api_handle(api::API_OP_UPDATE, device));
+}
+
+sdk_ret_t
+pds_device_delete (void)
+{
+    return (pds_device_api_handle(api::API_OP_DELETE, NULL));
 }
 
 static inline void
@@ -56,19 +78,4 @@ pds_device_read (pds_device_info_t *info)
 
     impl = dynamic_cast<api::impl::device_impl*>(entry->impl());
     return impl->read_hw(info);
-}
-
-sdk_ret_t
-pds_device_delete (void)
-{
-    api_ctxt_t api_ctxt;
-
-    api_ctxt.api_params =
-        api::api_params_alloc(api::OBJ_ID_DEVICE, api::API_OP_DELETE);
-    if (likely(api_ctxt.api_params != NULL)) {
-        api_ctxt.api_op = api::API_OP_DELETE;
-        api_ctxt.obj_id = api::OBJ_ID_DEVICE;
-        return api::g_api_engine.process_api(&api_ctxt);
-    }
-    return sdk::SDK_RET_OOM;
 }

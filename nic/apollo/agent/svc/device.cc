@@ -80,6 +80,30 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
 }
 
 Status
+DeviceSvcImpl::DeviceUpdate(ServerContext *context,
+                            const pds::DeviceRequest *proto_req,
+                            pds::DeviceResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_device_spec_t *api_spec = NULL;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    api_spec = core::agent_state::state()->device();
+    if (api_spec == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+        return Status::OK;
+    }
+    pds_agent_device_api_spec_fill(proto_req->request(), api_spec);
+    if (!core::agent_state::state()->pds_mock_mode()) {
+        ret = pds_device_update(api_spec);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+}
+
+Status
 DeviceSvcImpl::DeviceDelete(ServerContext *context,
                             const types::Empty *empty,
                             pds::DeviceDeleteResponse *proto_rsp) {

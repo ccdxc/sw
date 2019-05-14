@@ -12,6 +12,7 @@ import "types.proto";
 
 service L4LbSvc {
   rpc L4LbPolicyCreate (L4LbPolicyRequest) returns (L4LbPolicyResponse) {}
+  rpc L4LbPolicyUpdate (L4LbPolicyRequest) returns (L4LbPolicyResponse) {}
   rpc L4LbPolicyGet (L4LbPolicyGetRequest) returns (L4LbPolicyGetResponse) {}
   rpc L4LbPolicyDelete (L4LbPolicyDeleteRequest) returns (L4LbPolicyDeleteResponse) {}
 }

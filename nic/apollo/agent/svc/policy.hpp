@@ -21,6 +21,9 @@ public:
     Status SecurityPolicyCreate(ServerContext *context,
                                 const pds::SecurityPolicyRequest *req,
                                 pds::SecurityPolicyResponse *rsp) override;
+    Status SecurityPolicyUpdate(ServerContext *context,
+                                const pds::SecurityPolicyRequest *req,
+                                pds::SecurityPolicyResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_POLICY_HPP__

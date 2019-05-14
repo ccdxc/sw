@@ -13,8 +13,6 @@ static inline sdk_ret_t
 subnet_create_validate (pds_subnet_spec_t *spec)
 {
     pds_vpc_spec_t *vpc_spec;
-    ip_addr_t vpc_ip_hi, vpc_ip_lo;
-    ip_addr_t subnet_ip_hi, subnet_ip_lo;
     mac_addr_t zero_mac = {0};
 
     // verify VPC exists
@@ -76,8 +74,6 @@ static inline sdk_ret_t
 subnet_update_validate (pds_subnet_spec_t *spec)
 {
     pds_vpc_spec_t *vpc_spec;
-    ip_addr_t vpc_ip_hi, vpc_ip_lo;
-    ip_addr_t subnet_ip_hi, subnet_ip_lo;
     mac_addr_t zero_mac = {0};
 
     // verify VPC exists

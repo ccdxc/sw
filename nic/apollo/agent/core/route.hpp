@@ -10,6 +10,7 @@
 namespace core {
 
 sdk_ret_t route_table_create(pds_route_table_key_t *key, pds_route_table_spec_t *spec);
+sdk_ret_t route_table_update(pds_route_table_key_t *key, pds_route_table_spec_t *spec);
 sdk_ret_t route_table_delete(pds_route_table_key_t *key);
 
 }    // namespace core

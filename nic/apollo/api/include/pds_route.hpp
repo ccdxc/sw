@@ -94,6 +94,11 @@ typedef struct pds_route_table_info_s {
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_route_table_create(pds_route_table_spec_t *spec);
 
+/// \brief update route table
+/// \param[in] spec route table configuration
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_route_table_update(pds_route_table_spec_t *spec);
+
 /// \brief delete route table
 /// \param[in] key key
 /// \return #SDK_RET_OK on success, failure status code on error

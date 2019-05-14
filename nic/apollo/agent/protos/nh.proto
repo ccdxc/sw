@@ -14,9 +14,11 @@ import "types.proto";
 
 service NhSvc {
   rpc NexthopCreate (NexthopRequest) returns (NexthopResponse) {}
+  rpc NexthopUpdate (NexthopRequest) returns (NexthopResponse) {}
   rpc NexthopGet (NexthopGetRequest) returns (NexthopGetResponse) {}
   rpc NexthopDelete (NexthopDeleteRequest) returns (NexthopDeleteResponse) {}
   rpc NhGroupCreate (NhGroupRequest) returns (NhGroupResponse) {}
+  rpc NhGroupUpdate (NhGroupRequest) returns (NhGroupResponse) {}
   rpc NhGroupGet (NhGroupGetRequest) returns (NhGroupGetResponse) {}
   rpc NhGroupDelete (NhGroupDeleteRequest) returns (NhGroupDeleteResponse) {}
 }

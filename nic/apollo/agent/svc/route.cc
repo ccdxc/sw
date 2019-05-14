@@ -93,6 +93,40 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
 }
 
 Status
+RouteSvcImpl::RouteTableUpdate(ServerContext *context,
+                               const pds::RouteTableRequest *proto_req,
+                               pds::RouteTableResponse *proto_rsp) {
+    sdk_ret_t ret = sdk::SDK_RET_OK;
+    pds_route_table_key_t key = {0};
+    pds_route_table_spec_t *api_spec;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::OK;
+    }
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        api_spec = (pds_route_table_spec_t *)
+                    core::agent_state::state()->route_table_slab()->alloc();
+        if (api_spec == NULL) {
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OUT_OF_MEM);
+            break;
+        }
+        auto request = proto_req->request(i);
+        key.id = request.id();
+        ret = pds_agent_route_table_api_spec_fill(api_spec, request);
+        if (unlikely(ret != SDK_RET_OK)) {
+            return Status::CANCELLED;
+        }
+        ret = core::route_table_update(&key, api_spec);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        if (ret != sdk::SDK_RET_OK) {
+            break;
+        }
+    }
+    return Status::OK;
+}
+
+Status
 RouteSvcImpl::RouteTableDelete(ServerContext *context,
                                const pds::RouteTableDeleteRequest *proto_req,
                                pds::RouteTableDeleteResponse *proto_rsp) {
