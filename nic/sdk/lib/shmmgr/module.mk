@@ -2,4 +2,5 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libshmmgr.so
+MODULE_SOLIBS   = utils
 include ${MKDEFS}/post.mk

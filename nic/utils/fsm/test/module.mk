@@ -4,7 +4,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = fsm_test.gtest
 MODULE_PIPELINE = gft iris
 MODULE_SOLIBS   = fsm trace logger thread hal_mock \
-                  mtrack list twheel slab \
+                  list twheel slab \
                   shmmgr haltestutils haltrace
 MODULE_LDLIBS   = rt
 MODULE_ARCH     = x86_64

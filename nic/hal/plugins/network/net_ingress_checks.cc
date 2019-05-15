@@ -109,6 +109,7 @@ update_src_if(fte::ctx_t&ctx)
     }
 
     sif = ep_get_pinned_uplink(ctx.dep());
+
     SDK_ASSERT_RETURN(sif, HAL_RET_IF_NOT_FOUND);
 
     // Drop the packet if the pkt src_if is not the expected if

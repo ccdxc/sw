@@ -1,13 +1,13 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved
 
-#ifndef __HAL_MTRACK_HPP__
-#define __HAL_MTRACK_HPP__
-
-#include "nic/include/base.hpp"
-#include "nic/sdk/include/sdk/lock.hpp"
-#include "nic/include/hal_mem.hpp"
-
-namespace hal {
+#ifndef __SDK_MTRACK_HPP__
+#define __SDK_MTRACK_HPP__
+    
+#include <map>
+#include "lib/logger/logger.hpp"
+#include "include/sdk/lock.hpp"
+using namespace std;
+namespace sdk {
 namespace utils {
 
 // info stored by memory tracker per allocation id
@@ -114,7 +114,7 @@ public:
         } else {
             // this can happen if mtrack is enabled on the fly and some memory
             // allocations happened before that and are now being freed
-            HAL_TRACE_ERR("Freed mem {:#x} with alloc id {} without mtrack info",
+            SDK_TRACE_ERR("Freed mem {:#x} with alloc id {} without mtrack info",
                           ptr, alloc_id);
         }
         SDK_SPINLOCK_UNLOCK(&mtrack_map_slock_);
@@ -146,10 +146,9 @@ private:
     bool              enabled_;
 };
 
-extern mem_mgr g_hal_mem_mgr;
 
 }    // namespace utils
-}    // namespace hal
+}    // namespace sdk
 
-#endif    // __HAL_MTRACK_HPP__
+#endif    // __SDK_MTRACK_HPP__
 

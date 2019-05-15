@@ -12,8 +12,8 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/lock.hpp"
 
-#define offsetof(type, member)       __builtin_offsetof(type, member)
-#define containerof(ptr, type, member)    ((type *)(((char *)(ptr)) - offsetof(type, member)))
+#define offsetofv1(type, member)       __builtin_offsetof(type, member)
+#define containerof(ptr, type, member)    ((type *)(((char *)(ptr)) - offsetofv1(type, member)))
 
 //------------------------------------------------------------------------------
 // NOTE:
