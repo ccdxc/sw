@@ -95,7 +95,10 @@ table flow_ohash {
     size : FLOW_OHASH_TABLE_SIZE;
 }
 
-action session_info(drop, iflow_tcp_state, rflow_tcp_state) {
+action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
+                    iflow_tcp_win_sz, iflow_tcp_win_scale, rflow_tcp_state,
+                    rflow_tcp_seq_num, rflow_tcp_ack_num, rflow_tcp_win_sz,
+                    rflow_tcp_win_scale, drop) {
     if (control_metadata.session_index == 0) {
         if (p4_to_rxdma_header.sacl_base_addr == 0) {
             modify_field(p4_to_rxdma_header.sacl_bypass, TRUE);
@@ -106,7 +109,7 @@ action session_info(drop, iflow_tcp_state, rflow_tcp_state) {
     modify_field(p4_to_rxdma_header.sacl_bypass, TRUE);
     modify_field(scratch_metadata.session_stats_addr,
                  scratch_metadata.session_stats_addr +
-                 (control_metadata.session_index * 8 * 8));
+                 (control_metadata.session_index * 8 * 4));
     modify_field(scratch_metadata.flag, drop);
     modify_field(scratch_metadata.in_bytes, capri_p4_intrinsic.packet_len);
     if (drop == TRUE) {
@@ -118,8 +121,16 @@ action session_info(drop, iflow_tcp_state, rflow_tcp_state) {
         modify_field(scratch_metadata.tcp_flags, tcp.flags);
         if (control_metadata.flow_role == TCP_FLOW_INITIATOR) {
             modify_field(scratch_metadata.tcp_state, iflow_tcp_state);
+            modify_field(scratch_metadata.tcp_seq_num, iflow_tcp_seq_num);
+            modify_field(scratch_metadata.tcp_ack_num, iflow_tcp_ack_num);
+            modify_field(scratch_metadata.tcp_win_sz, iflow_tcp_win_sz);
+            modify_field(scratch_metadata.tcp_win_scale, iflow_tcp_win_scale);
         } else {
             modify_field(scratch_metadata.tcp_state, rflow_tcp_state);
+            modify_field(scratch_metadata.tcp_seq_num, rflow_tcp_seq_num);
+            modify_field(scratch_metadata.tcp_ack_num, rflow_tcp_ack_num);
+            modify_field(scratch_metadata.tcp_win_sz, rflow_tcp_win_sz);
+            modify_field(scratch_metadata.tcp_win_scale, rflow_tcp_win_scale);
         }
     }
 }

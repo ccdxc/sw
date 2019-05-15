@@ -19,21 +19,19 @@ session_info:
     phvwr.c3        p.p4_to_rxdma_header_sacl_bypass, 1
     seq             c1, r5, r0
     nop.c1.e
-    add             r5, r5, k.control_metadata_session_index, 6
+    add             r5, r5, k.control_metadata_session_index, 5
     seq             c1, k.control_metadata_flow_role, TCP_FLOW_RESPONDER
-    add.c1          r5, r5, 32
+    add.c1          r5, r5, 16
     add             r7, r0, k.capri_p4_intrinsic_packet_len
     addi            r1, r0, 0x1000001
     or              r7, r7, r1, 32
-    bbeq            d.session_info_d.drop, TRUE, session_info_drop
     addi            r6, r0, CAPRI_MEM_SEM_ATOMIC_ADD_START
+    bbeq            d.session_info_d.drop, TRUE, session_info_drop
     or              r7, r7, r5[32:27], 58
     add.e           r6, r6, r5[26:0]
     memwr.dx        r6, r7
 
 session_info_drop:
-    add             r5, r5, 16
-    or              r7, r7, r5[32:27], 58
     add             r6, r6, r5[26:0]
     memwr.dx        r6, r7
     phvwr.e         p.control_metadata_p4i_drop_reason[P4I_DROP_FLOW_HIT], 1

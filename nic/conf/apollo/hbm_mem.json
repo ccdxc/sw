@@ -206,14 +206,14 @@
         },
         {
             "name": "session",
-            "size": "64M",
+            "size": "256M",
             "cache": "p4ig",
-            "_comment": "8M * 8B"
+            "_comment": "8M * 32B"
         },
         {
             "name": "session_stats",
-            "size": "512M",
-            "_comment": "8M * 32B * 2"
+            "size": "256M",
+            "_comment": "8M * 16B * 2"
         },
         {
             "name": "udp_flow_overflow0",
@@ -241,7 +241,7 @@
         },
         {
             "name": "qos-hbm-fifo",
-            "size": "262144K"
+            "size": "256M"
         },
         {
             "name": "tx-scheduler",

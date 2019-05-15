@@ -111,6 +111,11 @@ header_type scratch_metadata_t {
         drop_stats_pad      : 88;
         drop_stats_pkts     : 40;
         tcp_state           : 4;
+        tcp_seq_num         : 32;
+        tcp_ack_num         : 32;
+        tcp_win_sz          : 16;
+        tcp_win_scale       : 4;
+        last_seen_timestamp : 48;
         tcp_flags           : 8;
         session_stats_addr  : 34;
         hint_valid          : 1;
