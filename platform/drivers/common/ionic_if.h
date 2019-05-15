@@ -115,9 +115,9 @@ enum status_code {
 
 enum notifyq_opcode {
 	EVENT_OPCODE_LINK_CHANGE	= 1,
-	EVENT_OPCODE_RESET			= 2,
+	EVENT_OPCODE_RESET		= 2,
 	EVENT_OPCODE_HEARTBEAT		= 3,
-	EVENT_OPCODE_LOG			= 4,
+	EVENT_OPCODE_LOG		= 4,
 };
 
 /**
@@ -722,19 +722,20 @@ struct txq_desc {
 	};
 };
 
-static inline __le64 encode_txq_desc_cmd(u8 opcode, u8 flags,
-					 u8 nsge, __le64 addr) {
-	__le64 cmd;
+static inline u64 encode_txq_desc_cmd(u8 opcode, u8 flags,
+					 u8 nsge, u64 addr) {
+	u64 cmd;
 
 	cmd = (opcode & IONIC_TXQ_DESC_OPCODE_MASK) << IONIC_TXQ_DESC_OPCODE_SHIFT;
 	cmd |= (flags & IONIC_TXQ_DESC_FLAGS_MASK) << IONIC_TXQ_DESC_FLAGS_SHIFT;
 	cmd |= (nsge & IONIC_TXQ_DESC_NSGE_MASK) << IONIC_TXQ_DESC_NSGE_SHIFT;
 	cmd |= (addr & IONIC_TXQ_DESC_ADDR_MASK) << IONIC_TXQ_DESC_ADDR_SHIFT;
+
 	return cmd;
 };
 
-static inline void decode_txq_desc_cmd(__le64 cmd, u8 *opcode, u8 *flags,
-				       u8 *nsge, __le64 *addr) {
+static inline void decode_txq_desc_cmd(u64 cmd, u8 *opcode, u8 *flags,
+				       u8 *nsge, u64 *addr) {
 	*opcode = (cmd >> IONIC_TXQ_DESC_OPCODE_SHIFT) & IONIC_TXQ_DESC_OPCODE_MASK;
 	*flags = (cmd >> IONIC_TXQ_DESC_FLAGS_SHIFT) & IONIC_TXQ_DESC_FLAGS_MASK;
 	*nsge = (cmd >> IONIC_TXQ_DESC_NSGE_SHIFT) & IONIC_TXQ_DESC_NSGE_MASK;
@@ -2162,7 +2163,7 @@ union dev_info_regs {
 #define IONIC_DEVINFO_FWVERS_BUFLEN 32
 #define IONIC_DEVINFO_SERIAL_BUFLEN 32
 	struct {
-		__le32 signature;
+		u32    signature;
 		u8     version;
 		u8     asic_type;
 		u8     asic_rev;
@@ -2171,7 +2172,7 @@ union dev_info_regs {
 		char   fw_version[IONIC_DEVINFO_FWVERS_BUFLEN];
 		char   serial_num[IONIC_DEVINFO_SERIAL_BUFLEN];
 	};
-	__le32 words[512];
+	u32 words[512];
 };
 
 /**
@@ -2186,14 +2187,14 @@ union dev_info_regs {
  */
 union dev_cmd_regs {
 	struct {
-		__le32                doorbell;
-		__le32                done;
+		u32                   doorbell;
+		u32                   done;
 		union dev_cmd         cmd;
 		union dev_cmd_comp    comp;
 		u8                    rsvd[48];
-		__le32                data[478];
+		u32                   data[478];
 	};
-	__le32 words[512];
+	u32 words[512];
 };
 
 /**
@@ -2235,20 +2236,20 @@ union adminq_comp {
 	struct fw_control_comp fw_control;
 };
 
-#define IONIC_BARS_MAX				6
-#define IONIC_PCI_BAR_DBELL			1
+#define IONIC_BARS_MAX			6
+#define IONIC_PCI_BAR_DBELL		1
 
 /* BAR0 */
-#define BAR0_SIZE							0x8000
+#define BAR0_SIZE			0x8000
 
-#define BAR0_DEV_INFO_REGS_OFFSET			0x0000
-#define BAR0_DEV_CMD_REGS_OFFSET			0x0800
-#define BAR0_DEV_CMD_DATA_REGS_OFFSET		0x0c00
-#define BAR0_INTR_STATUS_OFFSET				0x1000
-#define BAR0_INTR_CTRL_OFFSET				0x2000
-#define DEV_CMD_DONE						0x00000001
+#define BAR0_DEV_INFO_REGS_OFFSET	0x0000
+#define BAR0_DEV_CMD_REGS_OFFSET	0x0800
+#define BAR0_DEV_CMD_DATA_REGS_OFFSET	0x0c00
+#define BAR0_INTR_STATUS_OFFSET		0x1000
+#define BAR0_INTR_CTRL_OFFSET		0x2000
+#define DEV_CMD_DONE			0x00000001
 
-#define ASIC_TYPE_CAPRI						0
+#define ASIC_TYPE_CAPRI			0
 
 /**
  * struct doorbell - Doorbell register layout
@@ -2263,11 +2264,11 @@ union adminq_comp {
  *           producer index and flags.
  */
 struct doorbell {
-	u16 p_index;
-	u8 ring;
-	u8 qid_lo;
-	u16 qid_hi;
-	u16 rsvd2;
+	__le16 p_index;
+	u8     ring;
+	u8     qid_lo;
+	__le16 qid_hi;
+	u16    rsvd2;
 };
 
 /**
@@ -2347,10 +2348,14 @@ struct intr_ctrl {
 #define INTR_CTRL_REGS_MAX	2048
 #define INTR_CTRL_COAL_MAX	0x3F
 
-#define intr_to_coal(intr_ctrl)			(void *)((u8 *)(intr_ctrl) + 0)
-#define intr_to_mask(intr_ctrl)			(void *)((u8 *)(intr_ctrl) + 4)
-#define intr_to_credits(intr_ctrl)		(void *)((u8 *)(intr_ctrl) + 8)
-#define intr_to_mask_on_assert(intr_ctrl)	(void *)((u8 *)(intr_ctrl) + 12)
+#define intr_to_coal(intr_ctrl)		\
+		((void __iomem *)&(intr_ctrl)->coalescing_init)
+#define intr_to_mask(intr_ctrl)		\
+		((void __iomem *)&(intr_ctrl)->mask)
+#define intr_to_credits(intr_ctrl)	\
+		((void __iomem *)&(intr_ctrl)->int_credits)
+#define intr_to_mask_on_assert(intr_ctrl)\
+		((void __iomem *)&(intr_ctrl)->mask_on_assert)
 
 struct intr_status {
 	u32 status[2];

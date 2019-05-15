@@ -12,7 +12,7 @@ void ionic_rx_fill(struct queue *q);
 void ionic_rx_empty(struct queue *q);
 int ionic_rx_napi(struct napi_struct *napi, int budget);
 #ifndef HAVE_NDO_SELECT_QUEUE_SB_DEV
-u16 ionic_select_queue(struct net_device *dev, struct sk_buff *skb,
+u16 ionic_select_queue(struct net_device *netdev, struct sk_buff *skb,
 			void *accel_priv, select_queue_fallback_t fallback);
 #endif
 netdev_tx_t ionic_start_xmit(struct sk_buff *skb, struct net_device *netdev);

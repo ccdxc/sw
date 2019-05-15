@@ -255,7 +255,7 @@ struct lif *ionic_netdev_lif(struct net_device *netdev);
 static inline void debug_stats_txq_post(struct qcq *qcq,
 					struct txq_desc *desc, bool dbell)
 {
-	u8 num_sg_elems = ((desc->cmd >> IONIC_TXQ_DESC_NSGE_SHIFT)
+	u8 num_sg_elems = ((le64_to_cpu(desc->cmd) >> IONIC_TXQ_DESC_NSGE_SHIFT)
 						& IONIC_TXQ_DESC_NSGE_MASK);
 	u8 sg_cntr_idx;
 

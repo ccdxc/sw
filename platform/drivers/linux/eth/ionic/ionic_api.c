@@ -206,7 +206,7 @@ static void ionic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 	struct admin_comp *comp = cq_info->cq_desc;
 	struct device *dev = &q->lif->netdev->dev;
 
-	if (WARN_ON(comp->comp_index != desc_info->index))
+	if (WARN_ON(le16_to_cpu(comp->comp_index) != desc_info->index))
 		return;
 
 	memcpy(&ctx->comp, comp, sizeof(*comp));

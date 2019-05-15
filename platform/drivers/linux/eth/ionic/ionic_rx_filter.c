@@ -24,7 +24,7 @@ int ionic_rx_filter_del(struct lif *lif, struct rx_filter *f)
 		.work = COMPLETION_INITIALIZER_ONSTACK(ctx.work),
 		.cmd.rx_filter_del = {
 			.opcode = CMD_OPCODE_RX_FILTER_DEL,
-			.filter_id = f->filter_id,
+			.filter_id = cpu_to_le32(f->filter_id),
 		},
 	};
 
@@ -71,22 +71,22 @@ int ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
 		return -ENOMEM;
 
 	f->flow_id = flow_id;
-	f->filter_id = ctx->comp.rx_filter_add.filter_id;
+	f->filter_id = le32_to_cpu(ctx->comp.rx_filter_add.filter_id);
 	f->rxq_index = rxq_index;
 	memcpy(&f->cmd, &ctx->cmd, sizeof(f->cmd));
 
 	INIT_HLIST_NODE(&f->by_hash);
 	INIT_HLIST_NODE(&f->by_id);
 
-	switch (f->cmd.match) {
+	switch (le16_to_cpu(f->cmd.match)) {
 	case RX_FILTER_MATCH_VLAN:
-		key = f->cmd.vlan.vlan & RX_FILTER_HLISTS_MASK;
+		key = le16_to_cpu(f->cmd.vlan.vlan) & RX_FILTER_HLISTS_MASK;
 		break;
 	case RX_FILTER_MATCH_MAC:
 		key = *(u32 *)f->cmd.mac.addr & RX_FILTER_HLISTS_MASK;
 		break;
 	case RX_FILTER_MATCH_MAC_VLAN:
-		key = f->cmd.mac_vlan.vlan & RX_FILTER_HLISTS_MASK;
+		key = le16_to_cpu(f->cmd.mac_vlan.vlan) & RX_FILTER_HLISTS_MASK;
 		break;
 	default:
 		return -ENOTSUPP;
@@ -113,9 +113,9 @@ struct rx_filter *ionic_rx_filter_by_vlan(struct lif *lif, u16 vid)
 	struct rx_filter *f;
 
 	hlist_for_each_entry(f, head, by_hash) {
-		if (f->cmd.match != RX_FILTER_MATCH_VLAN)
+		if (le16_to_cpu(f->cmd.match) != RX_FILTER_MATCH_VLAN)
 			continue;
-		if (f->cmd.vlan.vlan == vid)
+		if (le16_to_cpu(f->cmd.vlan.vlan) == vid)
 			return f;
 	}
 
@@ -129,7 +129,7 @@ struct rx_filter *ionic_rx_filter_by_addr(struct lif *lif, const u8 *addr)
 	struct rx_filter *f;
 
 	hlist_for_each_entry(f, head, by_hash) {
-		if (f->cmd.match != RX_FILTER_MATCH_MAC)
+		if (le16_to_cpu(f->cmd.match) != RX_FILTER_MATCH_MAC)
 			continue;
 		if (memcmp(addr, f->cmd.mac.addr, ETH_ALEN) == 0)
 			return f;

@@ -10,6 +10,7 @@
 #include <linux/interrupt.h>
 
 #include "ionic.h"
+#include "ionic_bus.h"
 #include "ionic_lif.h"
 #include "ionic_debugfs.h"
 

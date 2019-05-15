@@ -9,6 +9,7 @@
 
 #include "ionic.h"
 #include "ionic_lif.h"
+#include "ionic_txrx.h"
 
 static inline void ionic_txq_post(struct queue *q, bool ring_dbell,
 	   desc_cb cb_func, void *cb_arg)
@@ -49,24 +50,27 @@ static bool ionic_rx_copybreak(struct queue *q, struct desc_info *desc_info,
 	struct rxq_desc *desc = desc_info->desc;
 	struct rxq_comp *comp = cq_info->cq_desc;
 	struct sk_buff *new_skb;
+	u16 clen, dlen;
 
-	if (comp->len > q->lif->rx_copybreak) {
-		dma_unmap_single(dev, (dma_addr_t)desc->addr,
-				 desc->len, DMA_FROM_DEVICE);
+	clen = le16_to_cpu(comp->len);
+	dlen = le16_to_cpu(desc->len);
+	if (clen > q->lif->rx_copybreak) {
+		dma_unmap_single(dev, (dma_addr_t)le64_to_cpu(desc->addr),
+				 dlen, DMA_FROM_DEVICE);
 		return false;
 	}
 
-	new_skb = netdev_alloc_skb_ip_align(netdev, comp->len);
+	new_skb = netdev_alloc_skb_ip_align(netdev, clen);
 	if (!new_skb) {
-		dma_unmap_single(dev, (dma_addr_t)desc->addr,
-				 desc->len, DMA_FROM_DEVICE);
+		dma_unmap_single(dev, (dma_addr_t)le64_to_cpu(desc->addr),
+				 dlen, DMA_FROM_DEVICE);
 		return false;
 	}
 
-	dma_sync_single_for_cpu(dev, (dma_addr_t)desc->addr, comp->len,
-		DMA_FROM_DEVICE);
+	dma_sync_single_for_cpu(dev, (dma_addr_t)le64_to_cpu(desc->addr),
+				clen, DMA_FROM_DEVICE);
 
-	memcpy(new_skb->data, (*skb)->data, comp->len);
+	memcpy(new_skb->data, (*skb)->data, clen);
 
 	ionic_rx_recycle(q, desc_info, *skb);
 	*skb = new_skb;
@@ -101,22 +105,22 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	}
 
 #ifdef CSUM_DEBUG
-	if (comp->len > netdev->mtu + VLAN_ETH_HLEN) {
+	if (le16_to_cpu(comp->len) > netdev->mtu + VLAN_ETH_HLEN) {
 		netdev_warn(netdev, "RX PKT TOO LARGE!  comp->len %d\n",
-			    comp->len);
+			    le16_to_cpu(comp->len));
 		ionic_rx_recycle(q, desc_info, skb);
 		return;
 	}
 #endif
 
 	stats->pkts++;
-	stats->bytes += comp->len;
+	stats->bytes += le16_to_cpu(comp->len);
 
 	ionic_rx_copybreak(q, desc_info, cq_info, &skb);
 
 	//prefetch(skb->data - NET_IP_ALIGN);
 
-	skb_put(skb, comp->len);
+	skb_put(skb, le16_to_cpu(comp->len));
 	skb->protocol = eth_type_trans(skb, netdev);
 #ifdef CSUM_DEBUG
 	csum = ip_compute_csum(skb->data, skb->len);
@@ -132,13 +136,15 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 		switch (comp->pkt_type_color & IONIC_RXQ_COMP_PKT_TYPE_MASK) {
 		case PKT_TYPE_IPV4:
 		case PKT_TYPE_IPV6:
-			skb_set_hash(skb, comp->rss_hash, PKT_HASH_TYPE_L3);
+			skb_set_hash(skb, le32_to_cpu(comp->rss_hash),
+				     PKT_HASH_TYPE_L3);
 			break;
 		case PKT_TYPE_IPV4_TCP:
 		case PKT_TYPE_IPV6_TCP:
 		case PKT_TYPE_IPV4_UDP:
 		case PKT_TYPE_IPV6_UDP:
-			skb_set_hash(skb, comp->rss_hash, PKT_HASH_TYPE_L4);
+			skb_set_hash(skb, le32_to_cpu(comp->rss_hash),
+				     PKT_HASH_TYPE_L4);
 			break;
 		}
 	}
@@ -146,7 +152,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	if (netdev->features & NETIF_F_RXCSUM) {
 		if (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_CALC) {
 			skb->ip_summed = CHECKSUM_COMPLETE;
-			skb->csum = comp->csum;
+			skb->csum = (__wsum)le16_to_cpu(comp->csum);
 			stats->csum_complete++;
 #ifdef CSUM_DEBUG
 			if (skb->csum != (u16)~csum)
@@ -167,7 +173,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
 	if (netdev->features & NETIF_F_HW_VLAN_CTAG_RX) {
 		if (comp->csum_flags & IONIC_RXQ_COMP_CSUM_F_VLAN)
 			__vlan_hwaccel_put_tag(skb, htons(ETH_P_8021Q),
-					       comp->vlan_tci);
+					       le16_to_cpu(comp->vlan_tci));
 	}
 
 	napi_gro_receive(&qcq->napi, skb);
@@ -180,7 +186,7 @@ static bool ionic_rx_service(struct cq *cq, struct cq_info *cq_info)
 	if (!color_match(comp->pkt_type_color, cq->done_color))
 		return false;
 
-	ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
+	ionic_q_service(cq->bound_q, cq_info, le16_to_cpu(comp->comp_index));
 
 	return true;
 }
@@ -204,7 +210,7 @@ static bool ionic_tx_service(struct cq *cq, struct cq_info *cq_info)
 	if (!color_match(comp->color, cq->done_color))
 		return false;
 
-	ionic_q_service(cq->bound_q, cq_info, comp->comp_index);
+	ionic_q_service(cq->bound_q, cq_info, le16_to_cpu(comp->comp_index));
 
 	return true;
 }
@@ -278,8 +284,8 @@ void ionic_rx_fill(struct queue *q)
 			return;
 
 		desc = q->head->desc;
-		desc->addr = dma_addr;
-		desc->len = len;
+		desc->addr = cpu_to_le64(dma_addr);
+		desc->len = cpu_to_le16(len);
 		desc->opcode = RXQ_DESC_OPCODE_SIMPLE;
 
 		ring_doorbell = ((q->head->index + 1) &
@@ -311,11 +317,12 @@ void ionic_rx_refill(struct queue *q)
 		if (!skb)
 			return;
 
-		ionic_rx_skb_free(q, cur->cb_arg, desc->len, desc->addr);
+		ionic_rx_skb_free(q, cur->cb_arg, le16_to_cpu(desc->len),
+				  le64_to_cpu(desc->addr));
 
 		cur->cb_arg = skb;
-		desc->addr = dma_addr;
-		desc->len = len;
+		desc->addr = cpu_to_le64(dma_addr);
+		desc->len = cpu_to_le16(len);
 
 		cur = cur->next;
 	}
@@ -329,7 +336,8 @@ void ionic_rx_empty(struct queue *q)
 	while (cur != q->head) {
 		desc = cur->desc;
 
-		ionic_rx_skb_free(q, cur->cb_arg, desc->len, desc->addr);
+		ionic_rx_skb_free(q, cur->cb_arg, le16_to_cpu(desc->len),
+				  le64_to_cpu(desc->addr));
 		cur->cb_arg = NULL;
 
 		cur = cur->next;
@@ -391,17 +399,19 @@ static void ionic_tx_clean(struct queue *q, struct desc_info *desc_info,
 	struct txq_sg_elem *elem = sg_desc->elems;
 	struct tx_stats *stats = q_to_tx_stats(q);
 	struct sk_buff *skb = cb_arg;
+	u8 opcode, flags, nsge;
 	u16 queue_index;
 	unsigned int i;
-	__le64 addr;
-	u8 opcode, flags, nsge;
+	u64 addr;
 
-	decode_txq_desc_cmd(desc->cmd, &opcode, &flags, &nsge, &addr);
+	decode_txq_desc_cmd(le64_to_cpu(desc->cmd),
+			    &opcode, &flags, &nsge, &addr);
 
-	dma_unmap_page(dev, (dma_addr_t)addr, desc->len, DMA_TO_DEVICE);
+	dma_unmap_page(dev, (dma_addr_t)addr,
+		       le16_to_cpu(desc->len), DMA_TO_DEVICE);
 	for (i = 0; i < nsge; i++, elem++)
-		dma_unmap_page(dev, (dma_addr_t)elem->addr,
-			       elem->len, DMA_TO_DEVICE);
+		dma_unmap_page(dev, (dma_addr_t)le64_to_cpu(elem->addr),
+			       le16_to_cpu(elem->len), DMA_TO_DEVICE);
 
 	if (skb) {
 		queue_index = skb_get_queue_mapping(skb);
@@ -461,18 +471,19 @@ static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
 			      bool start, bool done)
 {
 	u8 flags = 0;
+	u64 cmd;
 
 	flags |= has_vlan ? IONIC_TXQ_DESC_FLAG_VLAN : 0;
 	flags |= outer_csum ? IONIC_TXQ_DESC_FLAG_ENCAP : 0;
 	flags |= start ? IONIC_TXQ_DESC_FLAG_TSO_SOT : 0;
 	flags |= done ? IONIC_TXQ_DESC_FLAG_TSO_EOT : 0;
 
-	desc->cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_TSO,
-					flags, nsge, addr);
-	desc->len = len;
-	desc->vlan_tci = vlan_tci;
-	desc->hdr_len = hdrlen;
-	desc->mss = mss;
+	cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_TSO, flags, nsge, addr);
+	desc->cmd = cpu_to_le64(cmd);
+	desc->len = cpu_to_le16(len);
+	desc->vlan_tci = cpu_to_le16(vlan_tci);
+	desc->hdr_len = cpu_to_le16(hdrlen);
+	desc->mss = cpu_to_le16(mss);
 
 	if (done) {
 		skb_tx_timestamp(skb);
@@ -589,11 +600,12 @@ static int ionic_tx_tso(struct queue *q, struct sk_buff *skb)
 			if (frag_left > 0) {
 				len = min(frag_left, left);
 				frag_left -= len;
-				elem->addr = ionic_tx_map_frag(q, frag,
-							       offset, len);
+				elem->addr = cpu_to_le64(
+						ionic_tx_map_frag(q, frag,
+								  offset, len));
 				if (!elem->addr)
 					goto err_out_abort;
-				elem->len = len;
+				elem->len = cpu_to_le16(len);
 				elem++;
 				desc_nsge++;
 				left -= len;
@@ -663,6 +675,7 @@ static int ionic_tx_calc_csum(struct queue *q, struct sk_buff *skb)
 	u8 flags = 0;
 	bool encap = skb->encapsulation;
 	bool has_vlan = !!skb_vlan_tag_present(skb);
+	u64 cmd;
 
 	addr = ionic_tx_map_single(q, skb->data, skb_headlen(skb));
 	if (!addr)
@@ -671,12 +684,13 @@ static int ionic_tx_calc_csum(struct queue *q, struct sk_buff *skb)
 	flags |= has_vlan ? IONIC_TXQ_DESC_FLAG_VLAN : 0;
 	flags |= encap ? IONIC_TXQ_DESC_FLAG_ENCAP : 0;
 
-	desc->cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_CSUM_PARTIAL,
-					flags, skb_shinfo(skb)->nr_frags, addr);
-	desc->len = skb_headlen(skb);
-	desc->vlan_tci = skb_vlan_tag_get(skb);
-	desc->csum_start = skb_checksum_start_offset(skb);
-	desc->csum_offset = skb->csum_offset;
+	cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_CSUM_PARTIAL,
+				  flags, skb_shinfo(skb)->nr_frags, addr);
+	desc->cmd = cpu_to_le64(cmd);
+	desc->len = cpu_to_le16(skb_headlen(skb));
+	desc->vlan_tci = cpu_to_le16(skb_vlan_tag_get(skb));
+	desc->csum_start = cpu_to_le16(skb_checksum_start_offset(skb));
+	desc->csum_offset = cpu_to_le16(skb->csum_offset);
 
 #ifdef HAVE_CSUM_NOT_INET
 	if (skb->csum_not_inet)
@@ -696,6 +710,7 @@ static int ionic_tx_calc_no_csum(struct queue *q, struct sk_buff *skb)
 	u8 flags = 0;
 	bool encap = skb->encapsulation;
 	bool has_vlan = !!skb_vlan_tag_present(skb);
+	u64 cmd;
 
 	addr = ionic_tx_map_single(q, skb->data, skb_headlen(skb));
 	if (!addr)
@@ -704,10 +719,11 @@ static int ionic_tx_calc_no_csum(struct queue *q, struct sk_buff *skb)
 	flags |= has_vlan ? IONIC_TXQ_DESC_FLAG_VLAN : 0;
 	flags |= encap ? IONIC_TXQ_DESC_FLAG_ENCAP : 0;
 
-	desc->cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_CSUM_NONE,
-					flags, skb_shinfo(skb)->nr_frags, addr);
-	desc->len = skb_headlen(skb);
-	desc->vlan_tci = skb_vlan_tag_get(skb);
+	cmd = encode_txq_desc_cmd(IONIC_TXQ_DESC_OPCODE_CSUM_NONE,
+				  flags, skb_shinfo(skb)->nr_frags, addr);
+	desc->cmd = cpu_to_le64(cmd);
+	desc->len = cpu_to_le16(skb_headlen(skb));
+	desc->vlan_tci = cpu_to_le16(skb_vlan_tag_get(skb));
 
 	stats->no_csum++;
 
@@ -720,16 +736,18 @@ static int ionic_tx_skb_frags(struct queue *q, struct sk_buff *skb)
 	unsigned int len_left = skb->len - skb_headlen(skb);
 	struct txq_sg_desc *sg_desc = q->head->sg_desc;
 	struct txq_sg_elem *elem = sg_desc->elems;
-	skb_frag_t *frag;
 	dma_addr_t dma_addr;
+	skb_frag_t *frag;
+	u16 len;
 
 	for (frag = skb_shinfo(skb)->frags; len_left; frag++, elem++) {
-		elem->len = skb_frag_size(frag);
-		dma_addr = ionic_tx_map_frag(q, frag, 0, elem->len);
+		len = skb_frag_size(frag);
+		elem->len = cpu_to_le16(len);
+		dma_addr = ionic_tx_map_frag(q, frag, 0, len);
 		if (!dma_addr)
 			return -ENOMEM;
-		elem->addr = dma_addr;
-		len_left -= elem->len;
+		elem->addr = cpu_to_le64(dma_addr);
+		len_left -= len;
 		stats->frags++;
 	}
 

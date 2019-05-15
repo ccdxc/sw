@@ -226,7 +226,7 @@ void ionic_dev_teardown(struct ionic *ionic);
 void ionic_dev_cmd_go(struct ionic_dev *idev, union dev_cmd *cmd);
 u8 ionic_dev_cmd_status(struct ionic_dev *idev);
 bool ionic_dev_cmd_done(struct ionic_dev *idev);
-void ionic_dev_cmd_comp(struct ionic_dev *idev, void *mem);
+void ionic_dev_cmd_comp(struct ionic_dev *idev, union dev_cmd_comp *comp);
 
 void ionic_dev_cmd_identify(struct ionic_dev *idev, u8 ver);
 void ionic_dev_cmd_init(struct ionic_dev *idev);

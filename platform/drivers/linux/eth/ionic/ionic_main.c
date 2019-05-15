@@ -208,6 +208,7 @@ int ionic_dev_cmd_wait(struct ionic *ionic, unsigned long max_seconds)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	unsigned long max_wait, start_time, duration;
+	int opcode;
 	int done;
 	int err;
 
@@ -227,16 +228,15 @@ try_again:
 	} while (!done && time_before(jiffies, max_wait));
 	duration = jiffies - start_time;
 
+	opcode = idev->dev_cmd_regs->cmd.cmd.opcode;
 	dev_dbg(ionic->dev,
 		 "DEVCMD %s (%d) done=%d took %ld secs (%ld jiffies)\n",
-		 ionic_opcode_to_str(idev->dev_cmd_regs->cmd.cmd.opcode),
-		 idev->dev_cmd_regs->cmd.cmd.opcode,
+		 ionic_opcode_to_str(opcode), opcode,
 		 done, duration/HZ, duration);
 
 	if (!done && !time_before(jiffies, max_wait)) {
 		dev_warn(ionic->dev, "DEVCMD %s (%d) timeout after %ld secs\n",
-			 ionic_opcode_to_str(idev->dev_cmd_regs->cmd.cmd.opcode),
-			 idev->dev_cmd_regs->cmd.cmd.opcode, max_seconds);
+			 ionic_opcode_to_str(opcode), opcode, max_seconds);
 		return -ETIMEDOUT;
 	}
 
@@ -244,8 +244,7 @@ try_again:
 	if (err) {
 		if (err == IONIC_RC_EAGAIN && !time_after(jiffies, max_wait)) {
 			dev_err(ionic->dev, "DEV_CMD %s (%d) error, %s (%d) retrying...\n",
-				ionic_opcode_to_str(idev->dev_cmd_regs->cmd.cmd.opcode),
-				idev->dev_cmd_regs->cmd.cmd.opcode,
+				ionic_opcode_to_str(opcode), opcode,
 				ionic_error_to_str(err), err);
 
 			msleep(1000);
@@ -255,8 +254,7 @@ try_again:
 		}
 
 		dev_err(ionic->dev, "DEV_CMD %s (%d) error, %s (%d) failed\n",
-			ionic_opcode_to_str(idev->dev_cmd_regs->cmd.cmd.opcode),
-			idev->dev_cmd_regs->cmd.cmd.opcode,
+			ionic_opcode_to_str(opcode), opcode,
 			ionic_error_to_str(err), err);
 
 		return -EIO;
@@ -292,19 +290,18 @@ int ionic_setup(struct ionic *ionic)
 
 int ionic_identify(struct ionic *ionic)
 {
-	struct ionic_dev *idev = &ionic->idev;
 	struct identity *ident = &ionic->ident;
+	struct ionic_dev *idev = &ionic->idev;
+	size_t sz;
 	int err;
-	unsigned int i;
-	unsigned int nwords;
 
 	memset(ident, 0, sizeof(*ident));
 
-	ident->drv.os_type = IONIC_OS_TYPE_LINUX;
+	ident->drv.os_type = cpu_to_le32(IONIC_OS_TYPE_LINUX);
 	ident->drv.os_dist = 0;
 	strncpy(ident->drv.os_dist_str, utsname()->release,
 		sizeof(ident->drv.os_dist_str) - 1);
-	ident->drv.kernel_ver = LINUX_VERSION_CODE;
+	ident->drv.kernel_ver = cpu_to_le32(LINUX_VERSION_CODE);
 	strncpy(ident->drv.kernel_ver_str, utsname()->version,
 		sizeof(ident->drv.kernel_ver_str) - 1);
 	strncpy(ident->drv.driver_ver_str, DRV_VERSION,
@@ -312,18 +309,14 @@ int ionic_identify(struct ionic *ionic)
 
 	mutex_lock(&ionic->dev_cmd_lock);
 
-	nwords = min(ARRAY_SIZE(ident->drv.words),
-		     ARRAY_SIZE(idev->dev_cmd_regs->data));
-	for (i = 0; i < nwords; i++)
-		iowrite32(ident->drv.words[i], &idev->dev_cmd_regs->data[i]);
+	sz = min(sizeof(ident->drv), sizeof(idev->dev_cmd_regs->data));
+	memcpy_toio(&idev->dev_cmd_regs->data, &ident->drv, sz);
 
 	ionic_dev_cmd_identify(idev, IONIC_IDENTITY_VERSION_1);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	if (!err) {
-		nwords = min(ARRAY_SIZE(ident->dev.words),
-			     ARRAY_SIZE(idev->dev_cmd_regs->data));
-		for (i = 0; i < nwords; i++)
-			ident->dev.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
+		sz = min(sizeof(ident->dev), sizeof(idev->dev_cmd_regs->data));
+		memcpy_fromio(&ident->dev, &idev->dev_cmd_regs->data, sz);
 	}
 
 	mutex_unlock(&ionic->dev_cmd_lock);
@@ -369,21 +362,18 @@ int ionic_reset(struct ionic *ionic)
 
 int ionic_port_identify(struct ionic *ionic)
 {
-	struct ionic_dev *idev = &ionic->idev;
 	struct identity *ident = &ionic->ident;
+	struct ionic_dev *idev = &ionic->idev;
+	size_t sz;
 	int err;
-	unsigned int i;
-	unsigned int nwords;
 
 	mutex_lock(&ionic->dev_cmd_lock);
 
 	ionic_dev_cmd_port_identify(idev);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 	if (!err) {
-		nwords = min(ARRAY_SIZE(ident->port.words),
-			     ARRAY_SIZE(idev->dev_cmd_regs->data));
-		for (i = 0; i < nwords; i++)
-			ident->port.words[i] = ioread32(&idev->dev_cmd_regs->data[i]);
+		sz = min(sizeof(ident->port), sizeof(idev->dev_cmd_regs->data));
+		memcpy_fromio(&ident->port, &idev->dev_cmd_regs->data, sz);
 	}
 
 	mutex_unlock(&ionic->dev_cmd_lock);
@@ -401,31 +391,28 @@ int ionic_port_identify(struct ionic *ionic)
 
 int ionic_port_init(struct ionic *ionic)
 {
-	struct ionic_dev *idev = &ionic->idev;
 	struct identity *ident = &ionic->ident;
+	struct ionic_dev *idev = &ionic->idev;
+	size_t sz;
 	int err;
-	unsigned int i;
-	unsigned int nwords;
 
 	if (idev->port_info)
 		return 0;
 
 	idev->port_info_sz = ALIGN(sizeof(*idev->port_info), PAGE_SIZE);
 	idev->port_info = dma_alloc_coherent(ionic->dev, idev->port_info_sz,
-					      &idev->port_info_pa,
-					      GFP_KERNEL);
+					     &idev->port_info_pa,
+					     GFP_KERNEL);
 	if (!idev->port_info) {
 		dev_err(ionic->dev, "Failed to allocate port info, aborting\n");
 		return -ENOMEM;
 	}
 
+	sz = min(sizeof(ident->port.config), sizeof(idev->dev_cmd_regs->data));
+
 	mutex_lock(&ionic->dev_cmd_lock);
 
-	nwords = min(ARRAY_SIZE(ident->port.config.words),
-					ARRAY_SIZE(idev->dev_cmd_regs->data));
-	for (i = 0; i < nwords; i++)
-		iowrite32(ident->port.config.words[i], &idev->dev_cmd_regs->data[i]);
-
+	memcpy_toio(&idev->dev_cmd_regs->data, &ident->port.config, sz);
 	ionic_dev_cmd_port_init(idev);
 	err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
 
@@ -461,7 +448,7 @@ int ionic_port_reset(struct ionic *ionic)
 	idev->port_info = NULL;
 	idev->port_info_pa = 0;
 
-	return 0;
+	return err;
 }
 
 static int __init ionic_init_module(void)

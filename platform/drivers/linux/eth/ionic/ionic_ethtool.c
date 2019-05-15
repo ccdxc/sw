@@ -128,7 +128,7 @@ static int ionic_get_link_ksettings(struct net_device *netdev,
 		}
 	}
 
-	switch (idev->port_info->status.xcvr.pid) {
+	switch (le16_to_cpu(idev->port_info->status.xcvr.pid)) {
 		/* Copper */
 	case XCVR_PID_QSFP_100G_CR4:
 		ethtool_link_ksettings_add_link_mode(ks, supported,
@@ -287,12 +287,12 @@ fake_port_type++;
 		ks->base.port = PORT_OTHER;
 	}
 
-	ks->base.speed = lif->info->status.link_speed;
+	ks->base.speed = le32_to_cpu(lif->info->status.link_speed);
 
 	if (idev->port_info->config.an_enable)
 		ks->base.autoneg = AUTONEG_ENABLE;
 
-	if (lif->info->status.link_status)
+	if (le16_to_cpu(lif->info->status.link_status))
 		ks->base.duplex = DUPLEX_FULL;
 	else
 		ks->base.duplex = DUPLEX_UNKNOWN;
@@ -324,8 +324,8 @@ static int ionic_set_link_ksettings(struct net_device *netdev,
 	}
 
 	/* set speed */
-	if (ks->base.speed != idev->port_info->config.speed) {
-		idev->port_info->config.speed = ks->base.speed;
+	if (ks->base.speed != le32_to_cpu(idev->port_info->config.speed)) {
+		idev->port_info->config.speed = cpu_to_le32(ks->base.speed);
 		mutex_lock(&ionic->dev_cmd_lock);
 		ionic_dev_cmd_port_speed(idev, ks->base.speed);
 		err = ionic_dev_cmd_wait(ionic, devcmd_timeout);
@@ -467,10 +467,12 @@ static int ionic_set_coalesce(struct net_device *netdev,
 		return -EIO;
 
 	/* Convert from usecs to device units */
-	tx_coal = coalesce->tx_coalesce_usecs * ident->dev.intr_coal_mult /
-		  ident->dev.intr_coal_div;
-	rx_coal = coalesce->rx_coalesce_usecs * ident->dev.intr_coal_mult /
-		  ident->dev.intr_coal_div;
+	tx_coal = coalesce->tx_coalesce_usecs *
+		  le32_to_cpu(ident->dev.intr_coal_mult) /
+		  le32_to_cpu(ident->dev.intr_coal_div);
+	rx_coal = coalesce->rx_coalesce_usecs *
+		  le32_to_cpu(ident->dev.intr_coal_mult) /
+		  le32_to_cpu(ident->dev.intr_coal_div);
 
 	if (tx_coal > INTR_CTRL_COAL_MAX || rx_coal > INTR_CTRL_COAL_MAX)
 		return -ERANGE;
@@ -626,7 +628,7 @@ static u32 ionic_get_rxfh_indir_size(struct net_device *netdev)
 {
 	struct lif *lif = netdev_priv(netdev);
 
-	return lif->ionic->ident.lif.eth.rss_ind_tbl_sz;
+	return le16_to_cpu(lif->ionic->ident.lif.eth.rss_ind_tbl_sz);
 }
 
 static u32 ionic_get_rxfh_key_size(struct net_device *netdev)
@@ -642,11 +644,13 @@ static int ionic_get_rxfh(struct net_device *netdev, u32 *indir, u8 *key)
 #endif
 {
 	struct lif *lif = netdev_priv(netdev);
-	unsigned int i;
+	unsigned int i, tbl_sz;
 
-	if (indir)
-		for (i = 0; i < lif->ionic->ident.lif.eth.rss_ind_tbl_sz; i++)
+	if (indir) {
+		tbl_sz = le16_to_cpu(lif->ionic->ident.lif.eth.rss_ind_tbl_sz);
+		for (i = 0; i < tbl_sz; i++)
 			indir[i] = lif->rss_ind_tbl[i];
+	}
 
 	if (key)
 		memcpy(key, lif->rss_hash_key, IONIC_RSS_HASH_KEY_SIZE);

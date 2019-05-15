@@ -7,6 +7,7 @@
 #include <linux/pci.h>
 
 #include "ionic.h"
+#include "ionic_bus.h"
 #include "ionic_lif.h"
 #include "ionic_debugfs.h"
 
@@ -124,7 +125,7 @@ static void ionic_unmap_bars(struct ionic *ionic)
 		if (bars[i].vaddr) {
 			iounmap(bars[i].vaddr);
 			bars[i].bus_addr = 0;
-			bars[i].vaddr = 0;
+			bars[i].vaddr = NULL;
 			bars[i].len = 0;
 		}
 	}
