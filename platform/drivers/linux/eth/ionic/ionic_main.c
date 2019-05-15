@@ -455,7 +455,7 @@ static int __init ionic_init_module(void)
 {
 	ionic_struct_size_checks();
 	ionic_debugfs_create();
-	pr_info("%s, ver %s\n", DRV_DESCRIPTION, DRV_VERSION);
+	pr_info("%s %s, ver %s\n", DRV_NAME, DRV_DESCRIPTION, DRV_VERSION);
 	return ionic_bus_register_driver();
 }
 

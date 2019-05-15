@@ -7,7 +7,6 @@
 void ionic_rx_flush(struct cq *cq);
 void ionic_tx_flush(struct cq *cq);
 
-void ionic_rx_refill(struct queue *q);
 void ionic_rx_fill(struct queue *q);
 void ionic_rx_empty(struct queue *q);
 int ionic_rx_napi(struct napi_struct *napi, int budget);

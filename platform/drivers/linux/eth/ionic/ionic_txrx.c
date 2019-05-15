@@ -300,34 +300,6 @@ static void ionic_rx_fill_cb(void *arg)
 	ionic_rx_fill(arg);
 }
 
-void ionic_rx_refill(struct queue *q)
-{
-	struct net_device *netdev = q->lif->netdev;
-	struct desc_info *cur = q->tail;
-	struct rxq_desc *desc;
-	struct sk_buff *skb;
-	unsigned int len = netdev->mtu + VLAN_ETH_HLEN;
-	dma_addr_t dma_addr;
-
-	while (cur != q->head) {
-
-		desc = cur->desc;
-
-		skb = ionic_rx_skb_alloc(q, len, &dma_addr);
-		if (!skb)
-			return;
-
-		ionic_rx_skb_free(q, cur->cb_arg, le16_to_cpu(desc->len),
-				  le64_to_cpu(desc->addr));
-
-		cur->cb_arg = skb;
-		desc->addr = cpu_to_le64(dma_addr);
-		desc->len = cpu_to_le16(len);
-
-		cur = cur->next;
-	}
-}
-
 void ionic_rx_empty(struct queue *q)
 {
 	struct desc_info *cur = q->tail;

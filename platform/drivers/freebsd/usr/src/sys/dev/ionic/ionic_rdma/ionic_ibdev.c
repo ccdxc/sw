@@ -7114,7 +7114,7 @@ static int __init ionic_mod_init(void)
 {
 	int rc;
 
-	pr_info("%s v%s : %s\n", DRIVER_NAME, DRIVER_VERSION, DRIVER_DESCRIPTION);
+	pr_info("%s ver %s : %s\n", DRIVER_NAME, DRIVER_VERSION, DRIVER_DESCRIPTION);
 
 	ionic_validate_spec();
 
