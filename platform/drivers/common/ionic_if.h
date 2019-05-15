@@ -1318,7 +1318,7 @@ struct port_getattr_comp {
 /**
  * struct lif_status - Lif status register
  * @eid:             most recent NotifyQ event id
- * @link_status      link up/down
+ * @link_status      port status (enum port_oper_status)
  * @link_speed:      speed of link in Mbps
  * @link_flap_count: number of times link status changes
  */

@@ -896,7 +896,7 @@ ionic_reinit_vlan(struct lif *lif)
 		bit = i % 8;
 		if (lif->vlan_bitmap[index] & BIT(bit)) {
 			if (ionic_lif_vlan(lif, i, true))
-				IONIC_NETDEV_ERROR(lif->netdev, "VLAN: %d re-registeration failed\n", i);
+				IONIC_NETDEV_ERROR(lif->netdev, "VLAN: %d re-registration failed\n", i);
 		}
 	}
 }
@@ -993,7 +993,7 @@ ionic_dev_intr_unreserve(struct lif *lif, struct intr *intr)
 }
 
 /*
- * Handle OS level interupt setup.
+ * Handle OS level interrupt setup.
  */
 static int
 ionic_setup_intr(struct lif *lif, struct intr* intr)
@@ -1269,7 +1269,7 @@ ionic_rxque_alloc(struct lif *lif, unsigned int qnum,
 	IONIC_QUE_INFO(rxq, "cmd base pa: 0x%lx size: 0x%x comp size: 0x%x total size: 0x%x\n",
 		rxq->cmd_ring_pa, cmd_ring_size, comp_ring_size, total_size);
 	/*
-	 * We assume that competion ring is next to command ring.
+	 * We assume that completion ring is next to command ring.
 	 */
 	rxq->comp_ring_pa = rxq->cmd_ring_pa + ALIGN(cmd_ring_size, PAGE_SIZE);
 	rxq->comp_ring = (struct rxq_comp *)(rxq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE));
@@ -1418,7 +1418,7 @@ ionic_txque_alloc(struct lif *lif, unsigned int qnum,
 	txq->sg_ring = (struct txq_sg_desc *)(txq->cmd_dma.dma_vaddr + ALIGN(cmd_ring_size, PAGE_SIZE) +
 			ALIGN(comp_ring_size, PAGE_SIZE));
 
-	/* Allocate buffere ring. */
+	/* Allocate buffer ring. */
 	txq->br = buf_ring_alloc(4096, M_IONIC, M_WAITOK, &txq->tx_mtx);
 	if (txq->br == NULL) {
 		IONIC_QUE_ERROR(txq, "failed to allocated buffer ring\n");
@@ -1836,7 +1836,7 @@ ionic_lif_alloc(struct ionic *ionic, unsigned int index)
 
 	ionic_setup_intr_coal(lif);
 
-	/* All queues are initilaised, setup legacy interrupts now. */
+	/* All queues are initialised, setup legacy interrupts now. */
 	if (ionic_enable_msix == 0) {
 		err = ionic_setup_legacy_intr(lif);
 		if (err) {
@@ -2095,7 +2095,7 @@ ionic_lif_txqs_deinit(struct lif *lif)
 
 		/*
 		 * RxQ deinit may schedule the task for tx clean but its not guaranteed,
-		 * do explict clean here.
+		 * do explicit clean here.
 		 */	
 		IONIC_TX_LOCK(txq);
 		ionic_tx_clean(txq, txq->num_descs);
@@ -2905,7 +2905,7 @@ ionic_station_add(struct lif *lif)
 		return err;
 
 	if (!is_zero_ether_addr(lif->dev_addr)) {
-		IONIC_NETDEV_ADDR_INFO(netdev, lif->dev_addr, "deleting station MAC addr");
+		IONIC_NETDEV_ADDR_INFO(lif->netdev, lif->dev_addr, "deleting station MAC addr");
 		ionic_addr_del(lif->netdev, lif->dev_addr);
 	}
 	memcpy(lif->dev_addr, ctx.comp.lif_getattr.mac,

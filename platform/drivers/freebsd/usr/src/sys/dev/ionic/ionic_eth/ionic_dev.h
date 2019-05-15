@@ -212,4 +212,119 @@ int ionic_intr_init(struct ionic_dev *idev, struct intr *intr,
 
 int ionic_desc_avail(int ndescs, int head, int tail);
 
+static const char
+*port_oper_status_str(enum port_oper_status status)
+{
+
+	switch (status) {
+	case PORT_OPER_STATUS_NONE:
+		return "PORT_OPER_STATUS_NONE";
+	case PORT_OPER_STATUS_UP:
+		return "PORT_OPER_STATUS_UP";
+	case PORT_OPER_STATUS_DOWN:
+		return "PORT_OPER_STATUS_DOWN";
+	default:
+		return "PORT_OPER_STATUS_UNKNOWN";
+	}
+}
+
+static const char
+*port_admin_state_str(enum PortAdminState state)
+{
+
+	switch (state) {
+	case PORT_ADMIN_STATE_NONE:
+		return "PORT_ADMIN_STATE_NONE";
+	case PORT_ADMIN_STATE_DOWN:
+		return "PORT_ADMIN_STATE_DOWN";
+	case PORT_ADMIN_STATE_UP:
+		return "PORT_ADMIN_STATE_UP";
+	default:
+		return "PORT_ADMIN_STATE_UNKNOWN";
+	}
+}
+
+static const char
+*port_fec_type_str(enum port_fec_type type)
+{
+
+	switch (type) {
+	case PORT_FEC_TYPE_NONE:
+		return "PORT_FEC_TYPE_NONE";
+	case PORT_FEC_TYPE_FC:
+		return "PORT_FEC_TYPE_FC";
+	case PORT_FEC_TYPE_RS:
+		return "PORT_FEC_TYPE_RS";
+	default:
+		return "PORT_FEC_TYPE_UNKNOWN";
+	}
+}
+
+static const char
+*port_pause_type_str(enum port_pause_type type)
+{
+
+	switch (type) {
+	case PORT_PAUSE_TYPE_NONE:
+		return "PORT_PAUSE_TYPE_NONE";
+	case PORT_PAUSE_TYPE_LINK:
+		return "PORT_PAUSE_TYPE_LINK";
+	case PORT_PAUSE_TYPE_PFC:
+		return "PORT_PAUSE_TYPE_PFC";
+	default:
+		return "PORT_PAUSE_TYPE_UNKNOWN";
+	}
+}
+
+static const char
+*port_loopback_mode_str(enum port_loopback_mode mode)
+{
+
+	switch (mode) {
+	case PORT_LOOPBACK_MODE_NONE:
+		return "PORT_LOOPBACK_MODE_NONE";
+	case PORT_LOOPBACK_MODE_MAC:
+		return "PORT_LOOPBACK_MODE_MAC";
+	case PORT_LOOPBACK_MODE_PHY:
+		return "PORT_LOOPBACK_MODE_PHY";
+	default:
+		return "PORT_LOOPBACK_MODE_UNKNOWN";
+	}
+}
+
+static const char
+*xcvr_state_str(enum xcvr_state state)
+{
+
+	switch (state) {
+	case XCVR_STATE_REMOVED:
+		return "XCVR_STATE_REMOVED";
+	case XCVR_STATE_INSERTED:
+		return "XCVR_STATE_INSERTED";
+	case XCVR_STATE_PENDING:
+		return "XCVR_STATE_PENDING";
+	case XCVR_STATE_SPROM_READ:
+		return "XCVR_STATE_SPROM_READ";
+	case XCVR_STATE_SPROM_READ_ERR:
+		return "XCVR_STATE_SPROM_READ_ERR";
+	default:
+		return "XCVR_STATE_UNKNOWN";
+	}
+}
+
+static const char
+*phy_type_str(enum phy_type type)
+{
+
+	switch (type) {
+	case PHY_TYPE_NONE:
+		return "PHY_TYPE_NONE";
+	case PHY_TYPE_COPPER:
+		return "PHY_TYPE_COPPER";
+	case PHY_TYPE_FIBER:
+		return "PHY_TYPE_FIBER";
+	default:
+		return "PHY_TYPE_UNKNOWN";
+	}
+}
 #endif /* _IONIC_DEV_H_ */

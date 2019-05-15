@@ -420,7 +420,7 @@ ionic_rx_input(struct rxque *rxq, struct ionic_rx_buf *rxbuf,
 }
 
 /*
- * Allocat mbuf for receive path.
+ * Allocate mbuf for receive path.
  */
 int
 ionic_rx_mbuf_alloc(struct rxque *rxq, int index, int len)
@@ -1527,7 +1527,7 @@ ionic_vlan_sysctl(SYSCTL_HANDLER_ARGS)
 }
 
 /*
- * Dump perQ intetrrupt status.
+ * Dump perQ interrupt status.
  */
 static int
 ionic_intr_sysctl(SYSCTL_HANDLER_ARGS)
@@ -1648,7 +1648,7 @@ ionic_flow_ctrl_sysctl(SYSCTL_HANDLER_ARGS)
  * Print various media details.
  */
 static int
-ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
+ionic_media_status_sysctl(SYSCTL_HANDLER_ARGS)
 {
 	struct lif* lif;
 	struct lif_status *lif_status;
@@ -1680,30 +1680,32 @@ ionic_media_sysctl(SYSCTL_HANDLER_ARGS)
 
 	sbuf_printf(sb, "\n");
 
-	sbuf_printf(sb, " lif_status eid=0x%lx link_status=0x%x"
-		" link_speed=%d flap=0x%x\n",
+	sbuf_printf(sb, " lif_status eid=%ld link_status=%s"
+		" link_speed=%dMpbps flap=%d\n",
 			lif_status->eid,
-			lif_status->link_status,
+			port_oper_status_str(lif_status->link_status),
 			lif_status->link_speed,
 			lif_status->link_flap_count);
 
-	sbuf_printf(sb, "  port_status id=0x%x status=0x%x speed=0%d\n",
+	sbuf_printf(sb, "  port_status id=%d status=%s speed=%dMbps\n",
 			port_status->id,
-			port_status->status,
+			port_oper_status_str(port_status->status),
 			port_status->speed);
 
-	sbuf_printf(sb, "  port_config state=0x%x speed=%d mtu=%d an_enable=0x%x"
-		" fec_type=0x%x pause_type=0x%x loopback_mode=0x%x\n",
-			port_config->state,
+	sbuf_printf(sb, "  port_config state=%s speed=%dMbps mtu=%d AN %s"
+		" fec_type=%s pause_type=%s loopback_mode=%s\n",
+			port_admin_state_str(port_config->state),
 			port_config->speed,
 			port_config->mtu,
-			port_config->an_enable,
-			port_config->fec_type,
-			port_config->pause_type,
-			port_config->loopback_mode);
+			port_config->an_enable ? "enabled" : "disabled",
+			port_fec_type_str(port_config->fec_type),
+			port_pause_type_str(port_config->pause_type),
+			port_loopback_mode_str(port_config->loopback_mode));
 
-	sbuf_printf(sb, "  xcvr_status state=0x%x phy=0x%x pid=0x%x\n",
-			xcvr->state, xcvr->phy, xcvr->pid);
+	sbuf_printf(sb, "  xcvr_status state=%s phy=%s pid=0x%x\n",
+			xcvr_state_str(xcvr->state),
+			phy_type_str(xcvr->phy),
+			xcvr->pid);
 
 	switch (xcvr->pid) {
 	case XCVR_PID_QSFP_100G_CR4:
@@ -2099,7 +2101,7 @@ ionic_setup_mac_stats(struct lif *lif, struct sysctl_ctx_list *ctx,
 			&stats->frames_rx_8192b_9215b, "");
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_other", CTLFLAG_RD,
 			&stats->frames_rx_other, "");
-	/* Trasnmit stats. */
+	/* Transmit stats. */
 	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_ok", CTLFLAG_RD,
 			&stats->frames_tx_ok, "");
 
@@ -2343,9 +2345,6 @@ ionic_setup_device_stats(struct lif *lif)
 	SYSCTL_ADD_STRING(ctx, child, OID_AUTO, "serial_no", CTLFLAG_RD,
 			idev->dev_info.serial_num, sizeof(idev->dev_info.serial_num),
 			"Card serial number");
-	SYSCTL_ADD_STRING(ctx, child, OID_AUTO, "fw_version", CTLFLAG_RD,
-			idev->dev_info.fw_version, sizeof(idev->dev_info.fw_version),
-			"Running firmware version");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "numq", CTLFLAG_RD,
 			&lif->ntxqs, 0, "Number of Tx/Rx queue pairs");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "hw_capabilities", CTLFLAG_RD,
@@ -2366,7 +2365,7 @@ ionic_setup_device_stats(struct lif *lif)
 			ionic_vlan_sysctl, "A", "Print vlan filter list");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "media_status",
 			CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
-			ionic_media_sysctl, "A", "Miscellenious media details");
+			ionic_media_status_sysctl, "A", "Miscellaneous media details");
 	SYSCTL_ADD_PROC(ctx, child, OID_AUTO, "intr_status",
 			CTLTYPE_STRING | CTLFLAG_RD | CTLFLAG_SKIP, lif, 0,
 			ionic_intr_sysctl, "A", "Interrupt details");
