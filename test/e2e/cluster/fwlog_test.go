@@ -41,6 +41,14 @@ var _ = Describe("fwlog policy tests", func() {
 		syslogCollectors := []testCollector{}
 
 		AfterEach(func() {
+			By("cleanup fwlog policy")
+			ctx := ts.tu.NewLoggedInContext(context.Background())
+			if testFwSpecList, err := fwlogClient.List(ctx, &api.ListWatchOptions{}); err == nil {
+				for i := range testFwSpecList {
+					By(fmt.Sprintf("delete %v", testFwSpecList[i].ObjectMeta))
+					fwlogClient.Delete(ctx, &testFwSpecList[i].ObjectMeta)
+				}
+			}
 			cancel()
 			syslogCollectors = []testCollector{}
 		})
@@ -100,13 +108,11 @@ var _ = Describe("fwlog policy tests", func() {
 			// delete all
 			By("cleanup fwlog policy")
 			ctx := ts.tu.NewLoggedInContext(context.Background())
-			for i := range testFwSpecList {
-				objMeta := &api.ObjectMeta{
-					Name:      fmt.Sprintf("fwpolicy-%d", i),
-					Tenant:    globals.DefaultTenant,
-					Namespace: globals.DefaultNamespace,
+			if testFwSpecList, err := fwlogClient.List(ctx, &api.ListWatchOptions{}); err == nil {
+				for i := range testFwSpecList {
+					By(fmt.Sprintf("delete %v", testFwSpecList[i].ObjectMeta))
+					fwlogClient.Delete(ctx, &testFwSpecList[i].ObjectMeta)
 				}
-				fwlogClient.Delete(ctx, objMeta)
 			}
 		})
 
@@ -343,6 +349,453 @@ var _ = Describe("fwlog policy tests", func() {
 					Namespace: globals.DefaultNamespace,
 				}
 				fwlogClient.Delete(ctx, objMeta)
+			}
+		})
+
+		// validate policy
+		It("validate fwlog policy", func() {
+			testFwPolicy := []struct {
+				name   string
+				fail   bool
+				policy *monitoring.FwlogPolicy
+			}{
+				{
+					name: "no name",
+					fail: true,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Tenant:    globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							Targets: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp/10001",
+								},
+								{
+									Destination: "test.pensando.iox",
+									Transport:   "tcp/15001",
+								},
+							},
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+							},
+						},
+					},
+				},
+				{
+					name: "invalid dns",
+					fail: true,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							Targets: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp/10001",
+								},
+								{
+									Destination: "test.pensando.iox",
+									Transport:   "tcp/15001",
+								},
+							},
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+							},
+						},
+					},
+				},
+				{
+					name: "too many collectors",
+					fail: true,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							Targets: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp/10001",
+								},
+								{
+									Destination: "localhost",
+									Transport:   "tcp/15001",
+								},
+								{
+									Destination: "192.168.100.1",
+									Transport:   "udp/10001",
+								},
+								{
+									Destination: "192.168.100.2",
+									Transport:   "udp/10002",
+								},
+								{
+									Destination: "192.168.100.1",
+									Transport:   "tcp/10001",
+								},
+							},
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+							},
+						},
+					},
+				},
+
+				{
+					name: "duplicate collectors",
+					fail: true,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							Targets: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp/10001",
+								},
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp/10001",
+								},
+							},
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+							},
+						},
+					},
+				},
+				{
+					name: "invalid destination",
+					fail: true,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Name:   "fwlog-invalid-dest",
+							Tenant: globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							Targets: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp/10001",
+								},
+								{
+									Destination: "",
+									Transport:   "tcp/10001",
+								},
+							},
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+							},
+						},
+					},
+				},
+				{
+					name: "invalid target",
+					fail: true,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Tenant:    globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+							},
+						},
+					},
+				},
+
+				{
+					name: "no port in collector",
+					fail: true,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							Targets: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp/10001",
+								},
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp",
+								},
+							},
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+							},
+						},
+					},
+				},
+
+				{
+					name: "invalid proto",
+					fail: true,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							Targets: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.11",
+									Transport:   "ip/10001",
+								},
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp/10001",
+								},
+							},
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+							},
+						},
+					},
+				},
+
+				{
+					name: "invalid port",
+					fail: true,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							Targets: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp/10001",
+								},
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp/abcd",
+								},
+							},
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+							},
+						},
+					},
+				},
+
+				{
+					name: "invalid port",
+					fail: true,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							Targets: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp/10001",
+								},
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp/65536",
+								},
+							},
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+							},
+						},
+					},
+				},
+				{
+					name: "duplicate collector",
+					fail: true,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							Targets: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.12",
+									Transport:   "tcp/10001",
+								},
+								{
+									Destination: "192.168.100.12",
+									Transport:   "tcp/10001",
+								},
+							},
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+							},
+						},
+					},
+				},
+				{
+					name: "no collectors",
+					fail: true,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+							},
+						},
+					},
+				},
+				{
+					name: "invalid override",
+					fail: true,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							Targets: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.12",
+									Transport:   "tcp/10001",
+								},
+							},
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: "test-override",
+							},
+						},
+					},
+				},
+				{
+					name: "create policy",
+					fail: false,
+					policy: &monitoring.FwlogPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "fwLogPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      "fwlog" + globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+						Spec: monitoring.FwlogPolicySpec{
+							VrfName: globals.DefaultVrf,
+							Targets: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.11",
+									Transport:   "tcp/10001",
+								},
+								{
+									Destination: "localhost",
+									Transport:   "tcp/15001",
+								},
+							},
+							Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+							Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+							Config: &monitoring.SyslogExportConfig{
+								FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+							},
+						},
+					},
+				},
+			}
+
+			ctx := ts.tu.NewLoggedInContext(context.Background())
+			for i := range testFwPolicy {
+				_, err := fwlogClient.Create(ctx, testFwPolicy[i].policy)
+				if testFwPolicy[i].fail == true {
+					By(fmt.Sprintf("test [%v] returned %v", testFwPolicy[i].name, err))
+					Expect(err).ShouldNot(BeNil())
+				} else {
+					By(fmt.Sprintf("test [%v] returned %v", testFwPolicy[i].name, err))
+					Expect(err).Should(BeNil())
+				}
 			}
 		})
 	})

@@ -9,6 +9,7 @@ import (
 func registerMonitoringHooks(svc apiserver.Service, l log.Logger) {
 	registerAlertHooks(svc, l)
 	registerMirrorSessionHooks(svc, l)
+	registerFwlogPolicyHooks(svc, l)
 }
 
 func init() {

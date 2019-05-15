@@ -73,7 +73,9 @@ func NewPolicyManager(listenURL string, nsClient resolver.Interface) (*PolicyMan
 
 // Stop shutdown policy watch
 func (pm *PolicyManager) Stop() {
-	pm.rpcServer.Stop()
+	if pm.rpcServer != nil {
+		pm.rpcServer.Stop()
+	}
 	pm.cancel()
 }
 

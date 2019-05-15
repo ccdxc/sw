@@ -188,7 +188,13 @@ func (s *PolicyState) validatePolicy(p *tpmprotos.FlowExportPolicy) (map[types.C
 			return nil, fmt.Errorf("destination can't be empty")
 		}
 
-		netIP := net.ParseIP(dest)
+		netIP, _, err := net.ParseCIDR(dest)
+		if err == nil {
+			dest = netIP.String()
+		} else {
+			netIP = net.ParseIP(dest)
+		}
+
 		if netIP == nil {
 			// treat it as hostname and resolve
 			s, err := net.LookupHost(dest)

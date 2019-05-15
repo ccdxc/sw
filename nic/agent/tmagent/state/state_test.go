@@ -260,7 +260,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "FWLOG-RFC3164",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -290,7 +290,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "FWLOG-RFC3164",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -332,7 +332,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "FWLOG-RFC3164",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -356,10 +356,6 @@ func TestValidateFwlogPolicy(t *testing.T) {
 							Transport:   "tcp/10001",
 						},
 						{
-							Destination: "localhost",
-							Transport:   "tcp/15001",
-						},
-						{
 							Destination: "192.168.100.11",
 							Transport:   "tcp/10001",
 						},
@@ -367,7 +363,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "FWLOG-RFC3164",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -394,7 +390,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "FWLOG-RFC3164",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -413,7 +409,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "FWLOG-RFC3164",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -444,7 +440,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "FWLOG-RFC3164",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -475,7 +471,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "FWLOG-RFC3164",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -506,7 +502,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "FWLOG-RFC3164",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -537,7 +533,83 @@ func TestValidateFwlogPolicy(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "FWLOG-RFC3164",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+					},
+				},
+			},
+		},
+		{
+			name: "duplicate collector",
+			fail: true,
+			policy: &tpmprotos.FwlogPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "FwlogPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      globals.DefaultTenant,
+				},
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.100.12",
+							Transport:   "tcp/10001",
+						},
+						{
+							Destination: "192.168.100.12",
+							Transport:   "tcp/10001",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+					},
+				},
+			},
+		},
+		{
+			name: "no collectors",
+			fail: true,
+			policy: &tpmprotos.FwlogPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "FwlogPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      globals.DefaultTenant,
+				},
+				Spec: monitoring.FwlogPolicySpec{
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
+					},
+				},
+			},
+		},
+		{
+			name: "invalid override",
+			fail: true,
+			policy: &tpmprotos.FwlogPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "FwlogPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      globals.DefaultTenant,
+				},
+				Spec: monitoring.FwlogPolicySpec{
+					Targets: []monitoring.ExportConfig{
+						{
+							Destination: "192.168.100.12",
+							Transport:   "tcp/10001",
+						},
+					},
+					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
+					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
+					Config: &monitoring.SyslogExportConfig{
+						FacilityOverride: "test-override",
 					},
 				},
 			},
@@ -567,7 +639,7 @@ func TestValidateFwlogPolicy(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "FWLOG-RFC3164",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -633,7 +705,7 @@ func TestFwPolicyOps(t *testing.T) {
 				Format: monitoring.MonitoringExportFormat_name[int32(i%2)],
 				Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_REJECT.String()},
 				Config: &monitoring.SyslogExportConfig{
-					FacilityOverride: "FWLOG-RFC3164",
+					FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 				},
 			},
 		}
@@ -768,7 +840,7 @@ func TestProcessFWEvent(t *testing.T) {
 			Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 			Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 			Config: &monitoring.SyslogExportConfig{
-				FacilityOverride: "FWLOG-RFC3164",
+				FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 			},
 		},
 	}
@@ -794,7 +866,7 @@ func TestProcessFWEvent(t *testing.T) {
 			Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
 			Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 			Config: &monitoring.SyslogExportConfig{
-				FacilityOverride: "FWLOG-RFC5424",
+				FacilityOverride: monitoring.SyslogFacility_LOG_LOCAL0.String(),
 			},
 		},
 	}
@@ -940,7 +1012,7 @@ func TestPolicyUpdate(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "test",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -970,7 +1042,7 @@ func TestPolicyUpdate(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_DENY.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "test",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -995,7 +1067,7 @@ func TestPolicyUpdate(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_REJECT.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "test",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -1020,7 +1092,7 @@ func TestPolicyUpdate(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_BSD.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALL.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "test",
+						FacilityOverride: monitoring.SyslogFacility_LOG_USER.String(),
 					},
 				},
 			},
@@ -1049,7 +1121,7 @@ func TestPolicyUpdate(t *testing.T) {
 					Format: monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(),
 					Filter: []string{monitoring.FwlogFilter_FIREWALL_ACTION_ALLOW.String()},
 					Config: &monitoring.SyslogExportConfig{
-						FacilityOverride: "test-changed",
+						FacilityOverride: monitoring.SyslogFacility_LOG_LOCAL0.String(),
 					},
 				},
 			},

@@ -55,7 +55,7 @@ const (
 
 // net.Dial timeout
 const (
-	Timeout = 10 * time.Second
+	Timeout = 4 * time.Second
 )
 
 // Message represents the syslog message

@@ -12,6 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/ctrler/tpm"
+
 	"github.com/pensando/sw/nic/agent/ipc"
 
 	"github.com/pensando/sw/api"
@@ -163,7 +165,6 @@ func (s *PolicyState) getCollectorKey(vrf uint64, policy *tpmprotos.FwlogPolicy,
 	key = append(key, m.Destination, m.Transport)
 
 	return strings.Join(key, ":")
-
 }
 
 // get vrf from netagent
@@ -236,10 +237,90 @@ func (s *PolicyState) closeSyslog(c *fwlogCollector) {
 	}
 }
 
+// ValidateFwLogPolicy validates policy, called from api-server for pre-commit
+func ValidateFwLogPolicy(s *monitoring.FwlogPolicySpec) error {
+	if _, ok := monitoring.MonitoringExportFormat_value[s.Format]; !ok {
+		return fmt.Errorf("invalid format %v", s.Format)
+	}
+
+	for _, f := range s.Filter {
+		if _, ok := monitoring.FwlogFilter_value[f]; !ok {
+			return fmt.Errorf("invalid filter %v", f)
+		}
+	}
+
+	if s.Config != nil {
+		if _, ok := monitoring.SyslogFacility_value[s.Config.FacilityOverride]; !ok {
+			return fmt.Errorf("invalid facility override %v", s.Config.FacilityOverride)
+		}
+
+		if s.Config.Prefix != "" {
+			return fmt.Errorf("prefix is not allowed in firewall log")
+		}
+	}
+
+	if len(s.Targets) == 0 {
+		return fmt.Errorf("no collectors configured")
+	}
+
+	if len(s.Targets) > tpm.MaxCollectorPerPolicy {
+		return fmt.Errorf("cannot configure more than %v collectors", tpm.MaxCollectorPerPolicy)
+	}
+
+	collectors := map[string]bool{}
+	for _, c := range s.Targets {
+		if key, err := json.Marshal(c); err == nil {
+			ks := string(key)
+			if _, ok := collectors[ks]; ok {
+				return fmt.Errorf("found duplicate collector %v %v", c.Destination, c.Transport)
+			}
+			collectors[ks] = true
+
+		}
+
+		if c.Destination == "" {
+			return fmt.Errorf("cannot configure empty collector")
+		}
+
+		netIP, _, err := net.ParseCIDR(c.Destination)
+		if err != nil {
+			netIP = net.ParseIP(c.Destination)
+		}
+
+		if netIP == nil {
+			// treat it as hostname and resolve
+			if _, err := net.LookupHost(c.Destination); err != nil {
+				return fmt.Errorf("failed to resolve name %s, error: %v", c.Destination, err)
+			}
+		}
+
+		tr := strings.Split(c.Transport, "/")
+		if len(tr) != 2 {
+			return fmt.Errorf("invalid protocol/port in %s", c.Transport)
+		}
+
+		if _, ok := map[string]bool{
+			"tcp": true,
+			"udp": true,
+		}[strings.ToLower(tr[0])]; !ok {
+			return fmt.Errorf("invalid protocol %v", tr[0])
+		}
+
+		port, err := strconv.Atoi(tr[1])
+		if err != nil {
+			return fmt.Errorf("invalid port %v", tr[1])
+		}
+
+		if uint(port) > uint(^uint16(0)) {
+			return fmt.Errorf("invalid port %v (> %d)", port, ^uint16(0))
+		}
+	}
+
+	return nil
+}
+
 // validate policy, can be received from REST/venice
 func (s *PolicyState) validateFwLogPolicy(p *tpmprotos.FwlogPolicy) error {
-	numColl := make(map[string]bool)
-
 	// set default
 	if p.Tenant == "" {
 		p.Tenant = globals.DefaultTenant
@@ -253,56 +334,7 @@ func (s *PolicyState) validateFwLogPolicy(p *tpmprotos.FwlogPolicy) error {
 		p.Spec.VrfName = globals.DefaultVrf
 	}
 
-	if len(p.Spec.Targets) == 0 {
-		return fmt.Errorf("no collectors configured")
-	}
-
-	for _, c := range p.Spec.Targets {
-		if c.Destination == "" {
-			return fmt.Errorf("destination can't be empty")
-		}
-
-		netIP := net.ParseIP(c.Destination)
-		if netIP == nil {
-			// treat it as hostname and resolve
-			if _, err := net.LookupHost(c.Destination); err != nil {
-				return fmt.Errorf("failed to resolve name {%s}, error: %s", c.Destination, err)
-			}
-		}
-
-		tr := strings.Split(c.Transport, "/")
-		if len(tr) != 2 {
-			return fmt.Errorf("invalid protocol/port in %s", c.Transport)
-		}
-
-		if _, ok := map[string]bool{
-			"tcp": true,
-			"udp": true,
-		}[strings.ToLower(tr[0])]; !ok {
-			return fmt.Errorf("invalid protocol in %+v", c)
-		}
-
-		port, err := strconv.Atoi(tr[1])
-		if err != nil {
-			return fmt.Errorf("invalid port in %+v", c)
-		}
-
-		if uint(port) > uint(^uint16(0)) {
-			return fmt.Errorf("invalid port (> %d) in %+v", ^uint16(0), c)
-		}
-
-		k := s.getCollectorKey(0, p, c)
-		if _, ok := numColl[k]; ok {
-			return fmt.Errorf("duplicate collector config %+v", c)
-		}
-		numColl[k] = true
-	}
-
-	if len(numColl) > maxCollectorsInVrf {
-		return fmt.Errorf("too many collectors(%d) in %s", len(numColl), p.Name)
-	}
-
-	return nil
+	return ValidateFwLogPolicy(&p.Spec)
 }
 
 // get bitmap for the firewall action
