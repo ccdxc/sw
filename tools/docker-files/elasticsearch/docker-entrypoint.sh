@@ -28,12 +28,18 @@ echo "export ES_JAVA_OPTS=\"$heap_opts\"" >> /usr/share/elasticsearch/mgmt_env.s
 echo "Sourcing mgmt_env.sh..."
 source /usr/share/elasticsearch/mgmt_env.sh
 
-# Keeping this for debuggability to catch race conditions if any
 env discovery.zen.minimum_master_nodes=$ELASTIC_MIN_MASTERS env
-env network.host=$PENS_MGMT_IP env
-env network.bind_host=$PENS_MGMT_IP env
-env network.publish_host=$PENS_MGMT_IP env
-env http.publish_host=$PENS_MGMT_IP env
 
-# set network.host from PENS_MGMT_IP and launch elastic's entry script
-env network.host=$PENS_MGMT_IP network.publish_host=$PENS_MGMT_IP network.bind_host=$PENS_MGMT_IP http.publish_host=$PENS_MGMT_IP discovery.zen.minimum_master_nodes=$ELASTIC_MIN_MASTERS /usr/local/bin/docker-entrypoint.sh
+if [[ ! -z "$PENS_MGMT_IP" ]]
+then
+    # Keeping this for debuggability to catch race conditions if any
+    env network.host=$PENS_MGMT_IP env
+    env network.bind_host=$PENS_MGMT_IP env
+    env network.publish_host=$PENS_MGMT_IP env
+    env http.publish_host=$PENS_MGMT_IP env
+
+    # set network.host from PENS_MGMT_IP and launch elastic's entry script
+    env network.host=$PENS_MGMT_IP network.publish_host=$PENS_MGMT_IP network.bind_host=$PENS_MGMT_IP http.publish_host=$PENS_MGMT_IP discovery.zen.minimum_master_nodes=$ELASTIC_MIN_MASTERS /usr/local/bin/docker-entrypoint.sh
+else
+    env discovery.zen.minimum_master_nodes=$ELASTIC_MIN_MASTERS /usr/local/bin/docker-entrypoint.sh
+fi
