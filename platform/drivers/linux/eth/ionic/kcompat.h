@@ -6191,4 +6191,10 @@ static inline int _kc_macvlan_release_l2fw_offload(struct net_device *dev)
 #define DISABLE_LINK_AG_SUPPORT
 #endif
 
+/*****************************************************************************/
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5,1,0))
+#else
+#define HAVE_NETDEV_XMIT_MORE
+#endif
+
 #endif /* _KCOMPAT_H_ */

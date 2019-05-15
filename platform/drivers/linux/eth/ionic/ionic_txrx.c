@@ -12,7 +12,7 @@
 #include "ionic_txrx.h"
 
 static inline void ionic_txq_post(struct queue *q, bool ring_dbell,
-	   desc_cb cb_func, void *cb_arg)
+				  desc_cb cb_func, void *cb_arg)
 {
 	DEBUG_STATS_TXQ_POST(q_to_qcq(q), q->head->desc, ring_dbell);
 
@@ -20,7 +20,7 @@ static inline void ionic_txq_post(struct queue *q, bool ring_dbell,
 }
 
 static inline void ionic_rxq_post(struct queue *q, bool ring_dbell,
-	   desc_cb cb_func, void *cb_arg)
+				  desc_cb cb_func, void *cb_arg)
 {
 	ionic_q_post(q, ring_dbell, cb_func, cb_arg);
 
@@ -43,7 +43,7 @@ static void ionic_rx_recycle(struct queue *q, struct desc_info *desc_info,
 }
 
 static bool ionic_rx_copybreak(struct queue *q, struct desc_info *desc_info,
-	struct cq_info *cq_info, struct sk_buff **skb)
+			       struct cq_info *cq_info, struct sk_buff **skb)
 {
 	struct net_device *netdev = q->lif->netdev;
 	struct device *dev = q->lif->ionic->dev;
@@ -459,7 +459,9 @@ static void ionic_tx_tso_post(struct queue *q, struct txq_desc *desc,
 
 	if (done) {
 		skb_tx_timestamp(skb);
-#ifdef HAVE_SKB_XMIT_MORE
+#ifdef HAVE_NETDEV_XMIT_MORE
+		ionic_txq_post(q, !netdev_xmit_more(), ionic_tx_clean, skb);
+#elif defined HAVE_SKB_XMIT_MORE
 		ionic_txq_post(q, !skb->xmit_more, ionic_tx_clean, skb);
 #else
 		ionic_txq_post(q, true, ionic_tx_clean, skb);
@@ -746,7 +748,9 @@ static int ionic_tx(struct queue *q, struct sk_buff *skb)
 	stats->pkts++;
 	stats->bytes += skb->len;
 
-#ifdef HAVE_SKB_XMIT_MORE
+#ifdef HAVE_NETDEV_XMIT_MORE
+	ionic_txq_post(q, !netdev_xmit_more(), ionic_tx_clean, skb);
+#elif defined HAVE_SKB_XMIT_MORE
 	ionic_txq_post(q, !skb->xmit_more, ionic_tx_clean, skb);
 #else
 	ionic_txq_post(q, true, ionic_tx_clean, skb);
