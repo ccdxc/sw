@@ -81,6 +81,8 @@ parser.add_argument('--mnic-ip', dest='mnic_ip',
                     default="169.254.0.1", help='Mnic IP.')
 parser.add_argument('--oob-ip', dest='oob_ip',
                     default=None, help='Oob IP.')
+parser.add_argument('--naples-mem-size', dest='mem_size',
+                    default=None, help='Naples memory size')
 parser.add_argument('--skip-driver-install', dest='skip_driver_install',
                     action='store_true', help='Skips host driver install')
 parser.add_argument('--naples-only-setup', dest="naples_only_setup",
@@ -146,6 +148,7 @@ class _errCodes(Enum):
     NAPLES_REBOOT_FAILED               = 109
     NAPLES_FW_INSTALL_FROM_HOST_FAILED = 110
     NAPLES_TELNET_CLEARLINE_FAILED     = 111
+    NAPLES_MEMORY_SIZE_INCOMPATIBLE    = 112
 
     #Entity errors
     ENTITY_COPY_FAILED               = 300
@@ -393,6 +396,22 @@ class NaplesManagement(EntityManagement):
             raise Exception(msg)
 
         self.Login()
+
+    def _getMemorySize(self):
+        mem_check_cmd = '''cat /proc/iomem | grep "System RAM" | grep "200000000" | cut  -d'-' -f 1'''
+        try:
+            self.SendlineExpect(mem_check_cmd, "200000000" + '\r\n' + '#', timeout = 1)
+            return "8G"
+        except:
+            return "4G"
+
+
+    @_exceptionWrapper(_errCodes.NAPLES_MEMORY_SIZE_INCOMPATIBLE, "Memroy size check failed")
+    def CheckMemorySize(self, size):
+        if self._getMemorySize().lower() != size.lower():
+            msg = "Memory size check failed %s %d" % (GlobalOptions.console_ip, GlobalOptions.console_port)
+            raise Exception(msg)
+
 
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Login Failed")
     def Login(self):
@@ -741,6 +760,9 @@ def NaplesOnlySetup():
         #Naples would have rebooted to, login again.
         naples.Connect()
 
+        if GlobalOptions.mem_size:
+            naples.CheckMemorySize(GlobalOptions.mem_size)
+
         #Start agent
         naples.SendlineExpect("/nic/tools/start-agent.sh", "#")
 
@@ -776,6 +798,9 @@ def NaplesOnlySetup():
     # Connect to Naples console.
     naples.Connect()
 
+    if GlobalOptions.mem_size:
+        naples.CheckMemorySize(GlobalOptions.mem_size)
+
     #Read Naples Gold FW version.
     naples.ReadGoldFwVersion()
 
@@ -807,6 +832,7 @@ def Main():
         host = HostManagement(GlobalOptions.host_ip)
 
     host.SetNaples(naples)
+
     # Reset the setup:
     # If the previous run left it in bad state, we may not get ssh or console.
     if GlobalOptions.only_mode_change == False and GlobalOptions.only_init == False:

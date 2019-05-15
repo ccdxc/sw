@@ -191,6 +191,8 @@ class _Testbed:
                     else:
                         cmd.extend(["--naples-only-setup"])
 
+                    mem_size = getattr(instance, "NicMemorySize", "8g")
+                    cmd.extend(["--naples-mem-size", mem_size])
 
                 cmd.extend(["--console-ip", instance.NicConsoleIP])
                 cmd.extend(["--mnic-ip", instance.NicIntMgmtIP])

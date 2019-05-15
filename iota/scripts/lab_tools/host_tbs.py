@@ -5,10 +5,11 @@ import os
 top_dir = os.path.dirname(sys.argv[0])
 sys.path.insert(0,'%s' % top_dir)
 sys.path.insert(0,'../../')
+import nic
 import harness.infra.utils.parser as par
 import re
 from threading import Thread
-from multiprocessing.dummy import Pool as ThreadPool 
+from multiprocessing.dummy import Pool as ThreadPool
 
 POS_HOSTNAME = 0
 POS_OS = 1
@@ -59,8 +60,8 @@ def __get_naples_in_tb(json_file):
     insts = __get_testbed_object(json_file)
     for inst in insts:
         if inst.Resource.NICType == "pensando":
-            ret_list.append((inst.NodeMgmtIP, inst.NodeOs))
-    __print (ret_list)
+            ret_list.append(inst)
+    #__print (ret_list)
     return ret_list
 
 def __get_tb_naples_map(tb_json_map):
@@ -86,7 +87,7 @@ def __run_cmd(tbs_naples_map, command, ostorunon):
                 osname   = naples[POS_OS]
                 if ostorunon and osname in ostorunon:
                     tasks.append((hostname, "python host_script.py --hostname %s --command \"%s\"\n" % (hostname, command )))
-    
+
         results = []
         if run_parallel:
             pool = ThreadPool(len(tasks))
@@ -95,7 +96,7 @@ def __run_cmd(tbs_naples_map, command, ostorunon):
             for task in tasks:
                 results.append(__os_run(task))
         return results
-    
+
     def __print_results(results):
         print ("\n------------------------------------\n")
         for result in results:
@@ -107,6 +108,33 @@ def __run_cmd(tbs_naples_map, command, ostorunon):
     results = __build_and_run_commands(tbs_naples_map, command)
     __print_results( results)
     return results
+
+
+def __print_tb_naples_memory(tbs_naples_map):
+    four_g = 0
+    eight_g = 0
+    mem_map = {}
+    failed = []
+    for tb in tbs_naples_map:
+        for naples in tbs_naples_map[tb]:
+            try:
+                naplesObj = nic.Naples(naples.NicConsoleIP, int(naples.NicConsolePort))
+            except:
+                failed.append(naples)
+                continue
+            mem_size = naplesObj.GetMemorySize()
+            if mem_size == "8G":
+                eight_g += 1
+            else:
+                four_g += 1
+            mem_map[naples.NodeMgmtIP] = mem_size
+
+    for entry in mem_map:
+        print("Naples {} : {}".format(entry, mem_map[entry]))
+    print("Total 4G : ", four_g)
+    print("Total 8G : ", eight_g)
+    for fail in failed:
+        print("Failed : {} ({} {})".format(fail.NodeMgmtIP, naples.NicConsoleIP, naples.NicConsolePort))
 
 import argparse
 parser = argparse.ArgumentParser(description='Testbeds check script')
@@ -126,10 +154,11 @@ def Main():
     tbs_json_map = __get_tb_json_map(tbs)
     tbs_naples_map = __get_tb_naples_map(tbs_json_map)
     # Now here construct command to run where frequency.json is enabled
-    __run_cmd(tbs_naples_map,GlobalOptions.command, GlobalOptions.os_types.split(','))
+    __print_tb_naples_memory(tbs_naples_map)
+    #__run_cmd(tbs_naples_map,GlobalOptions.command, GlobalOptions.os_types.split(','))
 
 if __name__ == '__main__':
-    try: 
+    try:
         Main()
     except Exception as ex:
         sys.stderr.write(str(ex))

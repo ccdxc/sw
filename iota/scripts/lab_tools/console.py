@@ -25,19 +25,23 @@ class Console(object):
         self.oob_ip = None
         #self.__enable_dhcp_on_oob()
         #self.oob_ip = self.__get_oob_ip()
-        return 
-    
+        return
+
     def __spawn(self, command):
         print (command)
         hdl = pexpect.spawn(command)
         hdl.timeout = TIMEOUT
         hdl.logfile = sys.stdout
         return hdl
-    
+
     def __sendline_expect(self, line, expect, hdl, timeout = TIMEOUT):
         hdl.sendline(line)
         return hdl.expect_exact(expect, timeout)
-    
+
+    def SendlineExpect(self, line, expect, timeout = TIMEOUT):
+        self.hdl.sendline(line)
+        return self.hdl.expect_exact(expect, timeout)
+
     def __login(self, dhl):
         midx = self.__sendline_expect("", ["#", "capri login:", "capri-gold login:"], hdl = self.hdl, timeout = 120)
         if midx == 0: return
@@ -49,20 +53,20 @@ class Console(object):
     def __get_handle(self):
         self.hdl = self.__spawn("telnet %s %d" % (self.console_ip, self.console_port))
         self.__login(self.hdl)
-        return self.hdl 
-    
+        return self.hdl
+
     def __run_cmd(self, cmd):
         if self.hdl == None or not self.hdl.isalive():
             self.hdl = self.__get_handle()
         self.hdl.sendline(cmd)
         self.hdl.expect("#")
-        return 
+        return
 
     def __enable_dhcp_on_oob(self):
         cmd = "dhclient oob_mnic0 &"
         self.__run_cmd(cmd)
         return True
-    
+
     def __get_output(self, command):
         self.__run_cmd(command)
         return self.hdl.before
@@ -76,7 +80,7 @@ class Console(object):
         x = re.findall(ifconfig_regexp, output)
         if len(x) > 0:
             return x[0]
-        return None 
+        return None
 
     def __str__(self):
         return "[%s]" % self.console_ip
@@ -84,18 +88,19 @@ class Console(object):
     @property
     def __log_pfx(self):
         return "[%s][%s]" % (str(datetime.now()), str(self))
-    
+
     def __clear_line(self):
         print("%sClearing Console Server Line" % self.__log_pfx)
         hdl = self.__spawn("telnet %s -l %s" % (self.console_ip, self.console_svr_username))
         hdl.expect_exact("Password:")
         self.__sendline_expect(self.console_svr_password, "#", hdl = hdl)
 
-        for i in range(2):
-            time.sleep(5)
+        for i in range(3):
             self.__sendline_expect("clear line %d" % (self.console_port - 2000), "[confirm]", hdl = hdl)
             self.__sendline_expect("", " [OK]", hdl = hdl)
+            time.sleep(1)
         hdl.close()
+        time.sleep(1)
 
     def EnableDhcpOnOob(self):
         return self.__enable_dhcp_on_oob()
@@ -104,9 +109,7 @@ class Console(object):
         return self.__get_oob_ip()
 
     def RunCmdGetOp(self, cmd):
-        return self.__get_output(cmd) 
-    
+        return self.__get_output(cmd)
+
     def RunCmd(self, cmd):
-        return self.__run_cmd(cmd) 
-
-
+        return self.__run_cmd(cmd)

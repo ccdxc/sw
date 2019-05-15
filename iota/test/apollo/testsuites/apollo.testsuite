@@ -10,7 +10,7 @@ packages:
     - iota.test.apollo
 
 images:
-    naples: nic/naples_fw.tar
+    naples: nic/naples_fw_apollo.tar
 
 setup:
     topology: test/apollo/topologies/2Naples_Switch/classic_baremetal.topology
