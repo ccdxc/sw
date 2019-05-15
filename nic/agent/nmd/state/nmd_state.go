@@ -440,6 +440,22 @@ func (n *NMD) NaplesRolloutGetHandler(r *http.Request) (interface{}, error) {
 	return st, nil
 }
 
+// NaplesRolloutDeleteHandler is the REST handler for Naples Rollout Config GET operation
+func (n *NMD) NaplesRolloutDeleteHandler(r *http.Request) (interface{}, error) {
+	resp := NaplesConfigResp{}
+	ioutil.ReadAll(r.Body)
+
+	log.Infof("Naples Rollout Delete Request")
+	err := n.DeleteSmartNICRollout(&roprotos.SmartNICRollout{})
+
+	if err != nil {
+		resp.ErrorMsg = err.Error()
+		return resp, err
+	}
+	log.Infof("Naples Rollout Delete Response: %+v", resp)
+	return resp, nil
+}
+
 // NaplesFileUploadHandler is the REST handler for Naples File Upload POST operation
 func NaplesFileUploadHandler(w http.ResponseWriter, r *http.Request) {
 	// parse and validate file and post parameters
@@ -553,7 +569,9 @@ func (n *NMD) StartRestServer() error {
 	t2.HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
 	t2.HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 
-	router.Methods("DELETE").Subrouter().HandleFunc(CoresURL+"{*}", httputils.MakeHTTPHandler(NaplesCoreDeleteHandler))
+	t3 := router.Methods("DELETE").Subrouter()
+	t3.HandleFunc(CoresURL+"{*}", httputils.MakeHTTPHandler(NaplesCoreDeleteHandler))
+	t3.HandleFunc(RolloutURL, httputils.MakeHTTPHandler(n.NaplesRolloutDeleteHandler))
 
 	router.PathPrefix(MonitoringURL + "logs/").Handler(http.StripPrefix(MonitoringURL+"logs/", http.FileServer(http.Dir(globals.PenCtlLogDir))))
 	router.PathPrefix(MonitoringURL + "obfl/").Handler(http.StripPrefix(MonitoringURL+"obfl/", http.FileServer(http.Dir(globals.ObflLogDir))))
