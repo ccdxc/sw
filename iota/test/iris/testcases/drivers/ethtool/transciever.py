@@ -9,12 +9,12 @@ def Setup(tc):
     api.Logger.info("Driver/Device Info: Tranciever Data")
     tc.nodes = api.GetNaplesHostnames()
     tc.os = api.GetNodeOs(tc.nodes[0])
-    
-    return api.types.status.SUCCESS 
+
+    return api.types.status.SUCCESS
 
 def Trigger(tc):
-    req = api.Trigger_CreateExecuteCommandsRequest(serial = True) 
-    
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+
     for n in tc.nodes:
         intfs = api.GetNaplesHostInterfaces(n)
         for i in intfs:
@@ -23,20 +23,20 @@ def Trigger(tc):
                 api.Trigger_AddHostCommand(req, n, "ethtool -m %s" % i)
             elif tc.os == 'freebsd':
                 # iota passes interface name in a form of "ionic0". BSD sysctl wants "ionic.0".
-                i =i[:len(i)-1] + '.' + i[len(i)-1:] 
+                i =i[:len(i)-1] + '.' + i[len(i)-1:]
                 api.Trigger_AddHostCommand(req, n, "sysctl dev.%s.media_status" % i)
             else:
                 return api.types.status.FAILURE
 
     tc.resp = api.Trigger(req)
-    
+
     if tc.resp == None:
         return api.types.status.FAILURE
-    
-    for cmd in tc.resp.commands: 
+
+    for cmd in tc.resp.commands:
         if cmd.exit_code != 0:
-            api.Logger.error("Failed to get EEPROM data")
-            api.Logger.print(cmd.stderr)
+            api.Logger.error("Failed to get EEPROM data (is there a cable plugged in?)")
+            api.Logger.info(cmd.stderr)
             return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
@@ -52,7 +52,7 @@ def Verify(tc):
         # is EXIT code !0?
         if cmd.exit_code != 0:
             return api.types.status.FAILURE
-    
+
         # does the output have any non-ASCII characters?
         for c in cmd.stdout:
             if  ord (c) not in range (32,127) and ord (c) not in [9,10,13]:

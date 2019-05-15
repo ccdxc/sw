@@ -5,15 +5,20 @@ meta:
     targetcount : 25
 
 testcases:
-    -   name    : info 
+    -   name    : info
         testcase: testcases.drivers.ethtool.info
         enable  : True
         args    :
             type         : remote_only
 
-    -   name    : transciever 
+    -   name    : transciever
         testcase: testcases.drivers.ethtool.transciever
         enable  : True
         args    :
             type         : remote_only
 
+    -   name    : privflags
+        testcase: testcases.drivers.ethtool.privflags
+        enable  : True
+        args    :
+            type         : remote_only
