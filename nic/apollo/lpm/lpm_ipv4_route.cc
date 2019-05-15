@@ -161,7 +161,7 @@ lpm_ipv4_route_write_last_stage_table (mem_addr_t addr, uint8_t *bytes)
  * key size is 4 bytes for IPv4 route
  */
 uint32_t
-lpm_ipv4_route_key_size ()
+lpm_ipv4_route_key_size (void)
 {
     return LPM_IPV4_ROUTE_KEY_SIZE;
 }

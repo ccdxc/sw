@@ -1,45 +1,46 @@
 //
-// {C} Copyright 2018 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// vpc entry handling
+/// meter entry handling
 ///
 //----------------------------------------------------------------------------
 
-#ifndef __API_VPC_HPP__
-#define __API_VPC_HPP__
+#ifndef __API_METER_HPP__
+#define __API_METER_HPP__
 
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
-#include "nic/apollo/api/include/pds_vpc.hpp"
+#include "nic/apollo/framework/impl_base.hpp"
+#include "nic/apollo/api/include/pds_meter.hpp"
 
 namespace api {
 
 // forward declaration
-class vpc_state;
+class meter_state;
 
-/// \defgroup PDS_VPC_ENTRY - vpc entry functionality
-/// \ingroup PDS_VPC
+/// \defgroup PDS_METER_ENTRY - meter entry functionality
+/// \ingroup PDS_METER
 /// @{
 
-/// \brief    vpc entry
-class vpc_entry : public api_base {
+/// \brief    meter entry
+class meter_entry : public api_base {
 public:
-    /// \brief          factory method to allocate and initialize a vpc entry
-    /// \param[in]      spec    vpc information
-    /// \return         new instance of vpc or NULL, in case of error
-    static vpc_entry *factory(pds_vpc_spec_t *spec);
+    /// \brief          factory method to allocate and initialize a meter entry
+    /// \param[in]      spec    meter information
+    /// \return         new instance of meter or NULL, in case of error
+    static meter_entry *factory(pds_meter_spec_t *spec);
 
-    /// \brief          release all the s/w state associate with the given vpc,
-    ///                 if any, and free the memory
-    /// \param[in]      vpc     vpc to be freed
+    /// \brief          release all the s/w state associate with the given
+    ///                 meter, if any, and free the memory
+    /// \param[in]      meter     meter to be freed
     /// \NOTE: h/w entries should have been cleaned up (by calling
     ///        impl->cleanup_hw() before calling this
-    static void destroy(vpc_entry *vpc);
+    static void destroy(meter_entry *meter);
 
-    /// \brief          initialize vpc entry with the given config
+    /// \brief          initialize meter entry with the given config
     /// \param[in]      api_ctxt API context carrying the configuration
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
@@ -59,10 +60,7 @@ public:
     ///                 stage 0 table(s), if any
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override {
-        // no programming is done for this object, hence this is a no-op
-        return SDK_RET_OK;
-    }
+    virtual sdk_ret_t program_config(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          cleanup all h/w tables relevant to this object except
     ///                 stage 0 table(s), if any, by updating packed entries
@@ -70,7 +68,9 @@ public:
     /// \param[in]      obj_ctxt    transient state associated with this API
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
-        // no programming is done for this object, hence this is a no-op
+        // there is no need cleanup in either the rollback case or
+        // route table delete case, we simply have to free the resources in
+        // either case
         return SDK_RET_OK;
     }
 
@@ -92,12 +92,11 @@ public:
     virtual sdk_ret_t activate_config(pds_epoch_t epoch, api_op_t api_op,
                                       obj_ctxt_t *obj_ctxt) override;
 
-    /// \brief          add given vpc to the database
+    /// \brief          add given meter to the database
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t add_to_db(void) override;
 
-    /// \brief          delete given vpc from the database
-    ///
+    /// \brief          delete given meter from the database
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t del_from_db(void) override;
 
@@ -114,51 +113,55 @@ public:
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "vpc-" + std::to_string(key_.id);
+        return "meter-" + std::to_string(key_);
     }
 
-    /// \brief          helper function to get key given vpc entry
-    /// \param          entry    pointer to vpc instance
-    /// \return         pointer to the vpc instance's key
-    static void *vpc_key_func_get(void *entry) {
-        vpc_entry *vpc = (vpc_entry *)entry;
-        return (void *)&(vpc->key_);
+    /// \brief          helper function to get key given meter entry
+    /// \param          entry    pointer to meter instance
+    /// \return         pointer to the meter instance's key
+    static void *meter_key_func_get(void *entry) {
+        meter_entry *meter = (meter_entry *)entry;
+        return (void *)&(meter->key_);
     }
 
-    /// \brief          helper function to compute hash value for given vpc id
-    /// \param[in]      key        vpc's key
+    /// \brief          helper function to compute hash for given meter key
+    /// \param[in]      key        meter's key
     /// \param[in]      ht_size    hash table size
     /// \return         hash value
-    static uint32_t vpc_hash_func_compute(void *key, uint32_t ht_size) {
-        return hash_algo::fnv_hash(key, sizeof(pds_vpc_key_t)) % ht_size;
+    static uint32_t meter_hash_func_compute(void *key, uint32_t ht_size) {
+        return hash_algo::fnv_hash(key, sizeof(pds_meter_key_t)) % ht_size;
     }
 
-    /// \brief          helper function to compare two vpc keys
-    /// \param[in]      key1        pointer to vpc's key
-    /// \param[in]      key2        pointer to vpc's key
+    /// \brief          helper function to compare two meter keys
+    /// \param[in]      key1        pointer to meter's key
+    /// \param[in]      key2        pointer to meter's key
     /// \return         0 if keys are same or else non-zero value
-    static bool vpc_key_func_compare(void *key1, void *key2) {
+    static bool meter_key_func_compare(void *key1, void *key2) {
         SDK_ASSERT((key1 != NULL) && (key2 != NULL));
-        if (!memcmp(key1, key2, sizeof(pds_vpc_key_t))) {
+        if (!memcmp(key1, key2, sizeof(pds_meter_key_t))) {
             return true;
         }
         return false;
     }
 
-    /// \brief          return the type of VPC
-    /// \return         PDS_VPC_TYPE_SUBSTRATE or PDS_VPC_TYPE_TENANT
-    pds_vpc_type_t type(void) const { return type_; }
+    /// \brief          return the meter entry's key/id
+    /// \return         key/id of the meter entry
+    pds_meter_key_t key(void) const { return key_; }
 
-    /// \brief          return h/w index for this vpc
-    /// \return         h/w table index for this vpc
-    uint16_t hw_id(void) { return hw_id_; }
+    /// \brief return address family of this meter entry
+    /// \return IP_AF_IPV4, if meter entry is IPv4 or else IP_AF_IPV6
+    uint8_t af(void) const { return af_; }
+
+    /// \brief     return impl instance of this meter entry object
+    /// \return    impl instance of the meter entry object
+    impl_base *impl(void) { return impl_; }
 
 private:
     /// \brief constructor
-    vpc_entry();
+    meter_entry();
 
     /// \brief destructor
-    ~vpc_entry();
+    ~meter_entry();
 
     /// \brief    free h/w resources used by this object, if any
     ///           (this API is invoked during object deletes)
@@ -166,24 +169,18 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_vpc_key_t key_;                       ///< vpc key
-    pds_vpc_type_t type_;                     ///< vpc type
-    mac_addr_t vr_mac_;                       ///< virtual router MAC
-    pds_encap_t fabric_encap_;                ///< fabric encap information
-    pds_route_table_key_t v4_route_table_;    ///< IPv4 route table id
-    pds_route_table_key_t v6_route_table_;    ///< IPv6 route table id
-    ht_ctxt_t ht_ctxt_;                       ///< hash table context
+    pds_meter_key_t key_;        ///< meter key
+    uint8_t af_;                 ///< IP_AF_IPV4 or IP_AF_IPV6
+    ht_ctxt_t ht_ctxt_;          ///< hash table context
+    impl_base *impl_;            ///< impl object instance
 
-    // P4 datapath specific state
-    uint16_t hw_id_;           ///< hardware id
-
-    friend class vpc_state;    ///< vpc_state is friend of vpc_entry
+    friend class meter_state;    ///< meter_state is friend of meter_entry
 } __PACK__;
 
-/// \@}    // end of PDS_VPC_ENTRY
+/// \@}    // end of PDS_METER_ENTRY
 
 }    // namespace api
 
-using api::vpc_entry;
+using api::meter_entry;
 
-#endif    // __API_VPC_HPP__
+#endif    // __API_METER_HPP__

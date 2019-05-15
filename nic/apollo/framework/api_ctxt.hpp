@@ -23,6 +23,8 @@
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
+#include "nic/apollo/api/include/pds_meter.hpp"
+#include "nic/apollo/api/include/pds_tag.hpp"
 
 namespace api {
 
@@ -45,6 +47,10 @@ typedef union api_params_u {
     pds_policy_spec_t            policy_spec;
     pds_mirror_session_key_t     mirror_session_key;
     pds_mirror_session_spec_t    mirror_session_spec;
+    pds_meter_key_t              meter_key;
+    pds_meter_spec_t             meter_spec;
+    pds_tag_key_t                tag_key;
+    pds_tag_spec_t               tag_spec;
 } api_params_t;
 
 /// \brief Per API context maintained by framework while processing
@@ -71,6 +77,7 @@ api_params_free (api_params_t *api_params, obj_id_t obj_id, api_op_t api_op)
             if (api_params->route_table_spec.routes) {
                 SDK_FREE(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
                          api_params->route_table_spec.routes);
+                api_params->route_table_spec.routes = NULL;
             }
         }
         break;
@@ -80,6 +87,27 @@ api_params_free (api_params_t *api_params, obj_id_t obj_id, api_op_t api_op)
             if (api_params->policy_spec.rules) {
                 SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY,
                          api_params->policy_spec.rules);
+                api_params->policy_spec.rules = NULL;
+            }
+        }
+        break;
+
+    case api::OBJ_ID_METER:
+        if ((api_op == api::API_OP_CREATE) || (api_op == api::API_OP_UPDATE)) {
+            if (api_params->meter_spec.prefixes) {
+                SDK_FREE(PDS_MEM_ALLOC_METER,
+                         api_params->meter_spec.prefixes);
+                api_params->meter_spec.prefixes = NULL;
+            }
+        }
+        break;
+
+    case api::OBJ_ID_TAG:
+        if ((api_op == api::API_OP_CREATE) || (api_op == api::API_OP_UPDATE)) {
+            if (api_params->tag_spec.prefixes) {
+                SDK_FREE(PDS_MEM_ALLOC_TAG,
+                         api_params->tag_spec.prefixes);
+                api_params->tag_spec.prefixes = NULL;
             }
         }
         break;

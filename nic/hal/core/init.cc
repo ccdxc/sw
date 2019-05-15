@@ -558,9 +558,10 @@ hal_logger_init (hal_cfg_t *hal_cfg)
     }
     hal::utils::trace_init("hal", hal_cfg->control_cores_mask,
                            hal_cfg->sync_mode_logging, logfile.c_str(),
-	                   5 << 20, // 50MB
-	                   10,    // 10 files
-                           getenv("DISABLE_LOGGING")?(::utils::trace_none):(::utils::trace_debug));
+                           5 << 20, // 50MB
+                           10,      // 10 files
+                           getenv("DISABLE_LOGGING") ? (::utils::trace_none) :
+                                                       (::utils::trace_debug));
 
     return HAL_RET_OK;
 }

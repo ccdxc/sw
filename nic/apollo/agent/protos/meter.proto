@@ -1,0 +1,108 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for metering policy
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+service MeterSvc {
+  rpc MeterCreate (MeterRequest) returns (MeterResponse) {}
+  rpc MeterGet (MeterGetRequest) returns (MeterGetResponse) {}
+  rpc MeterDelete (MeterDeleteRequest) returns (MeterDeleteResponse) {}
+}
+
+// packet policer
+message PacketPolicerSpec {
+  // packets per second
+  uint32 PacketsPerSecond = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // number/burst of packets to absorb
+  uint32 Burst            = 2 [(gogoproto.moretags) = "meta:mandatory"];
+}
+
+// byte policer
+message BytePolicerSpec {
+  // bytes per second
+  uint64 BytesPerSecond = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // number/burst of bytes to absorb
+  uint64 Burst          = 2 [(gogoproto.moretags) = "meta:mandatory"];
+}
+
+// meter policy specification
+// NOTE: any time a meter specification changes, client is expected to send
+//       full new meter specification (i.e., no incremental add/del/upd of
+//       prefixes in the metering policy is supported)
+message MeterSpec {
+  // unique meter policy id
+  uint32                  Id         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // IP address family
+  types.IPAF              AF         = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // list of prefixes to apply this metering policy to
+  repeated types.IPPrefix Prefix     = 3;
+  // policer configuration, one of the following must be set
+  // if bytes/packets are zero in the following policer specs,
+  // only accounting will be performed
+  oneof Policer {
+    // packets per second (pps) policer
+    PacketPolicerSpec     PPSPolicer = 4;
+    // bytes per second (bps) policer
+    BytePolicerSpec       BPSPolicer = 5;
+  }
+}
+
+// operational status of the meter, if any
+message MeterStatus {
+}
+
+// stats of the meter, if any
+message MeterStats {
+}
+
+// meter policy object
+message Meter {
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  MeterSpec     Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  MeterStatus   Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  MeterStats    Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// meter table create and update request
+message MeterRequest {
+  // batched request
+  repeated MeterSpec Request = 1;
+}
+
+// meter table create and update response
+message MeterResponse {
+  types.ApiStatus      ApiStatus = 1;
+  repeated MeterStatus Response  = 2;
+}
+
+// meter table get request
+message MeterGetRequest {
+  // batched request
+  repeated uint32 Id = 1;
+}
+
+// meter table get response
+message MeterGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  repeated Meter  Response  = 2;
+}
+
+// meter table delete request
+message MeterDeleteRequest {
+  // batched request
+  repeated uint32 Id = 1;
+}
+
+// meter table delete response
+message MeterDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1;
+}

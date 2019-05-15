@@ -31,9 +31,9 @@ public:
     /// \brief destructor
     ~route_table_state();
 
-     /// \brief  allocate memory required for a route table instance
-     /// \return pointer to the allocated route table instance, NULL if no
-     ///           memory
+    /// \brief  allocate memory required for a route table instance
+    /// \return pointer to the allocated route table instance, NULL if no
+    ///         memory
     route_table *alloc(void);
 
     /// \brief    insert given route table instance into the route table db
@@ -54,13 +54,13 @@ public:
     /// \return   SDK_RET_OK on success, failure status code on error
     sdk_ret_t update(route_table *curr_table, route_table *new_table);
 
-    /// \brief      free route table instance back to slab
-    /// \param[in]  route_table   pointer to the allocated route table instance
+    /// \brief     free     route table instance back to slab
+    /// \param[in] table    pointer to the allocated route table instance
     void free(route_table *table);
 
     /// \brief     lookup a route table in database given the key
-    /// \param[in] route_table_key route table key
-    route_table *find(pds_route_table_key_t *route_table_key) const;
+    /// \param[in] key route table key
+    route_table *find(pds_route_table_key_t *key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 

@@ -19,7 +19,6 @@ static sdk_ret_t
 pds_device_api_handle (api::api_op_t op,
                        pds_device_spec_t *spec)
 {
-    sdk_ret_t rv;
     api_ctxt_t api_ctxt;
 
     api_ctxt.api_params = api::api_params_alloc(api::OBJ_ID_DEVICE, op);

@@ -24,6 +24,8 @@
 #include "nic/apollo/api/policy_state.hpp"
 #include "nic/apollo/api/if_state.hpp"
 #include "nic/apollo/api/mirror_state.hpp"
+#include "nic/apollo/api/meter_state.hpp"
+#include "nic/apollo/api/tag_state.hpp"
 
 using std::string;
 //using sdk::platform::capri::LIFManager;
@@ -81,7 +83,11 @@ public:
     route_table_state *route_table_db(void) { return &route_table_db_; }
     policy_state *policy_db(void) { return &poicy_db_; }
     if_state *if_db(void) { return &if_db_; }
-    mirror_session_state *mirror_session_db(void) { return &mirror_session_db_; }
+    mirror_session_state *mirror_session_db(void) {
+        return &mirror_session_db_;
+    }
+    meter_state *meter_db(void) { return &meter_db_; }
+    tag_state *tag_db(void) { return &tag_db_; }
 
 private:
     string                  cfg_path_;
@@ -105,6 +111,8 @@ private:
     policy_state            poicy_db_;
     if_state                if_db_;
     mirror_session_state    mirror_session_db_;
+    meter_state             meter_db_;
+    tag_state               tag_db_;
 };
 extern pds_state g_pds_state;
 
@@ -172,6 +180,18 @@ static inline mirror_session_state *
 mirror_session_db (void)
 {
     return api::g_pds_state.mirror_session_db();
+}
+
+static inline meter_state *
+meter_db (void)
+{
+    return api::g_pds_state.meter_db();
+}
+
+static inline tag_state *
+tag_db (void)
+{
+    return api::g_pds_state.tag_db();
 }
 
 #endif    /** __PDS_STATE_HPP__ */

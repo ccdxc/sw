@@ -1,0 +1,83 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for (service) tag mapping
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+service TagSvc {
+  rpc TagCreate (TagRequest) returns (TagResponse) {}
+  rpc TagGet (TagGetRequest) returns (TagGetResponse) {}
+  rpc TagDelete (TagDeleteRequest) returns (TagDeleteResponse) {}
+}
+
+// (service) tag policy specification
+// NOTE: any time a tag specification changes, client is expected to send
+//       full new tag specification (i.e., no incremental add/del/upd of
+//       prefixes in the tag policy is supported)
+message TagSpec {
+  // unique tag policy id
+  uint32                  Id         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // IP address family
+  types.IPAF              AF         = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // list of prefixes that map to this tag
+  repeated types.IPPrefix Prefix     = 3;
+}
+
+// operational status of the tag, if any
+message TagStatus {
+}
+
+// stats of the tag, if any
+message TagStats {
+}
+
+// tag policy object
+message Tag {
+  meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
+  meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
+  TagSpec       Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  TagStatus     Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  TagStats      Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
+}
+
+// tag table create and update request
+message TagRequest {
+  // batched request
+  repeated TagSpec Request = 1;
+}
+
+// tag table create and update response
+message TagResponse {
+  types.ApiStatus    ApiStatus = 1;
+  repeated TagStatus Response  = 2;
+}
+
+// tag table get request
+message TagGetRequest {
+  // batched request
+  repeated uint32 Id = 1;
+}
+
+// tag table get response
+message TagGetResponse {
+  types.ApiStatus ApiStatus = 1;
+  repeated Tag    Response  = 2;
+}
+
+// tag table delete request
+message TagDeleteRequest {
+  // batched request
+  repeated uint32 Id = 1;
+}
+
+// tag table delete response
+message TagDeleteResponse {
+  repeated types.ApiStatus ApiStatus = 1;
+}
