@@ -8,5 +8,4 @@ MODULE_SRCS     = ${MODULE_SRC_DIR}/linkmgr_src.cc \
                   ${MODULE_SRC_DIR}/linkmgr_debug_svc.cc \
                   ${MODULE_SRC_DIR}/linkmgr_state.cc \
                   ${MODULE_SRC_DIR}/linkmgr_utils.cc
-MODULE_SOLIBS   = hal_mem
 include ${MKDEFS}/post.mk

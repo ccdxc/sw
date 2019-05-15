@@ -710,7 +710,7 @@ nwsec_rule_init (nwsec_rule_t *rule)
     // Slab free will be called when the ref count drops to zero
     ref_init(&rule->ref_count, [] (const ref_t * ref) {
         nwsec_rule_t * rule = container_of(ref, nwsec_rule_t, ref_count);
-        if (rule->fw_rule_action.alg == nwsec::APP_SVC_SUN_RPC || 
+        if (rule->fw_rule_action.alg == nwsec::APP_SVC_SUN_RPC ||
             rule->fw_rule_action.alg == nwsec::APP_SVC_MSFT_RPC) {
             union hal::alg_options::opt_ *opt = &rule->fw_rule_action.app_options.opt;
 

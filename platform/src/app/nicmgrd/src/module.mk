@@ -7,7 +7,7 @@ MODULE_PREREQS  := nicmgr.proto delphi.proto
 MODULE_SOLIBS   := nicmgr mnet \
                     pciemgr_if \
                     intrutils pal misc evutils \
-                    ${NIC_SDK_SOLIBS} trace bm_allocator \
+                    ${NIC_SDK_SOLIBS} trace mtrack bm_allocator \
                     commonproto nicmgrproto halproto \
                     delphisdk \
                     upgrade upgrade_app upgradeutils \

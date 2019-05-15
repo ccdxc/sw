@@ -83,7 +83,6 @@ nic/build/aarch64/iris/lib/libpenctlproto.so                         /nic/lib/
 nic/build/aarch64/iris/lib/libcommonproto.so                         /nic/lib/
 nic/build/aarch64/iris/lib/libproto.so                               /nic/lib/
 nic/build/aarch64/iris/lib/libsdkp4loader.so                         /nic/lib/
-nic/build/aarch64/iris/lib/libhal_mem.so                            /nic/lib/
 
 nic/hal/third-party/lkl/export/aarch64/lib/liblkl.so                 /nic/lib/
 nic/sdk/third-party/asic/capri/model/capsim-master/gen/aarch64/lib/libmpuobj.so      /nic/lib/

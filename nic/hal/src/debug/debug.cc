@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 
 #include "nic/include/base.hpp"
-#include "nic/sdk/lib/utils/mtrack.hpp"
+#include "nic/include/mtrack.hpp"
 #include "nic/hal/src/debug/debug.hpp"
 #include "lib/slab/slab.hpp"
 #include "nic/sdk/lib/catalog/catalog.hpp"
@@ -14,11 +14,6 @@
 #include "nic/sdk/asic/pd/pd.hpp"
 
 using sdk::lib::slab;
-namespace sdk {
-namespace lib {
-extern sdk::lib::twheel *g_twheel;
-}    // lib
-}    // sdk
 
 namespace hal {
 
@@ -36,7 +31,7 @@ max_mpu_per_stage (void)
 
 bool
 mtrack_map_walk_cb (void *ctxt, uint32_t alloc_id,
-                    sdk::utils::mtrack_info_t *minfo)
+                    utils::mtrack_info_t *minfo)
 {
     debug::MemTrackGetResponse       *response;
     debug::MemTrackGetResponseMsg    *rsp;
@@ -63,8 +58,7 @@ hal_ret_t
 mtrack_get (debug::MemTrackGetRequest& req,
             debug::MemTrackGetResponseMsg *rsp)
 {
-    g_hal_mem_mgr.walk(rsp, mtrack_map_walk_cb);
-    sdk::utils::g_sdk_mem_mgr.walk(rsp, mtrack_map_walk_cb);
+    utils::g_hal_mem_mgr.walk(rsp, mtrack_map_walk_cb);
     return HAL_RET_OK;
 }
 
@@ -141,13 +135,10 @@ slab_get_from_req (debug::SlabGetRequest& req, debug::SlabGetResponseMsg *rsp)
                 ret = set_slab_response(s, rsp);
             }
         }
-        // Sdk slabs
-        set_slab_response(sdk::lib::g_twheel->get_slab(), rsp);
     } else {
         HAL_TRACE_ERR("Unexpected slab id {}", slab_id);
         ret = HAL_RET_INVALID_ARG;
     }
-    
 
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to get slab for slab id {}", i ? i : slab_id);

@@ -9,7 +9,7 @@ MODULE_SOLIBS   = ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   sdkcapri_asicrw_if \
                   ${NIC_SDK_SOLIBS} \
                   pdcommon core fte_mock agent_api \
-                  bm_allocator bitmap trace  \
+                  bm_allocator bitmap trace mtrack \
                   pdcapri sdkcapri sdkp4 sdkp4utils haldelphiutils \
                   sdkasicpd asicpd hal_mock hal_lib haltrace \
                   ${NIC_LINKMGR_SOLIBS}

@@ -2096,6 +2096,4 @@ hal_cfg_db::register_slab(hal_slab_t slab_id, hal_slab_args_t& slab_args) {
     return slabs_[slab_id];
 }
 
-
 }    // namespace hal
-

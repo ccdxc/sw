@@ -34,7 +34,7 @@ mem_hash_main_table::factory(sdk::table::properties_t *props) {
     ret = table->init_(props);
     if (ret != SDK_RET_OK) {
         table->~mem_hash_main_table();
-        SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_MAIN_TABLE, mem);
+        SDK_FREE(SDK_MEM_ALLOC_mem_HASH_MAIN_TABLE, mem);
     }
 
     return table;
@@ -68,7 +68,7 @@ void
 mem_hash_main_table::destroy_(mem_hash_main_table *table) {
     mem_hash_hint_table::destroy_(table->hint_table_);
     mem_hash_base_table::destroy_(table);
-    SDK_FREE(SDK_MEM_ALLOC_MEM_HASH_MAIN_TABLE, table);
+    SDK_FREE(SDK_MEM_ALLOC_mem_HASH_MAIN_TABLE, table);
 }
 
 //---------------------------------------------------------------------------

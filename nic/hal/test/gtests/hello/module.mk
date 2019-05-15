@@ -7,7 +7,7 @@ MODULE_SOLIBS   = ${NIC_${PIPELINE}_P4PD_SOLIBS} \
                   sdkcapri_asicrw_if \
                   ${NIC_SDK_SOLIBS} \
                   pdcommon core fte_mock agent_api \
-                  bm_allocator bitmap trace  \
+                  bm_allocator bitmap trace mtrack \
                   pdcapri sdkcapri sdkp4 sdkp4utils \
                   asicpd hal_mock pack_bytes haltrace
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \

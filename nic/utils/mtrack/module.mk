@@ -1,7 +1,4 @@
 # {C} Copyright 2018 Pensando Systems Inc. All rights reserved
-
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = libhal_mem.so
-MODULE_PIPELINE = iris gft
-MODULE_SRCS     = ${MODULE_SRC_DIR}/hal_mem.cc
+MODULE_TARGET = libmtrack.so
 include ${MKDEFS}/post.mk

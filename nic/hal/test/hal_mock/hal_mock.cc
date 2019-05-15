@@ -14,7 +14,6 @@ thread                 *g_hal_threads[HAL_THREAD_ID_MAX];
 thread_local thread    *t_curr_thread;
 hal_state              *g_hal_state;
 bool                    g_delay_delete = false;
-sdk::utils::mem_mgr      g_hal_mem_mgr;
 
 sdk::lib::thread *
 hal_get_thread (uint32_t thread_id)

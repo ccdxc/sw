@@ -17,7 +17,7 @@ MODULE_SOLIBS   = storage_hal_if storage_nicmgr_if storage_qstate_if \
                   nicmgr mnet \
                   pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp cfgspace \
                   intrutils pal misc evutils \
-                  ${NIC_SDK_SOLIBS} trace bm_allocator \
+                  ${NIC_SDK_SOLIBS} trace mtrack bm_allocator \
                   commonproto nicmgrproto halproto \
                   delphisdk \
                   upgrade upgrade_app upgradeutils \

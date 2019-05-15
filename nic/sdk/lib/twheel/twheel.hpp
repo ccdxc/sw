@@ -69,7 +69,6 @@ public:
         return false;
     }
     uint32_t num_entries(void) const { return num_entries_; }
-    slab *   get_slab(void) { return twentry_slab_; };
 
 private:
 

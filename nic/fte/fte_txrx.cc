@@ -733,10 +733,10 @@ void inst_t::process_arq()
         ret = ctx_->init(cpu_rxhdr, pkt, pkt_len, copied_pkt, iflow_, rflow_, feature_state_, num_features_);
         if (ret != HAL_RET_OK) {
             if (ret == HAL_RET_FTE_SPAN) {
-                HAL_TRACE_VERBOSE("fte: done processing span packet");
+                HAL_TRACE_DEBUG("fte: done processing span packet");
                 continue;
             } else if (ret == HAL_RET_RETRANSMISSION) {
-                HAL_TRACE_VERBOSE("fte: retransmission packet");
+                HAL_TRACE_DEBUG("fte: retransmission packet");
                 goto send; 
             } else {
                 HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
@@ -750,13 +750,13 @@ void inst_t::process_arq()
         }
         ret = ctx_->process();
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("fte: failed to process, ret={}", ret);
+            HAL_TRACE_ERR("fte: failied to process, ret={}", ret);
 
-            /*
-             * We'll set the drop in this error case, so the cpupkt resources
-             * can be reclaimed in 'send_queued_pkts' below.
-             */
-	        ctx_->set_drop();
+	    /*
+	     * We'll set the drop in this error case, so the cpupkt resources
+	     * can be reclaimed in 'send_queued_pkts' below.
+	     */
+	    ctx_->set_drop();
         }
 
 send:

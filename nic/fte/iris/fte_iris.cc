@@ -803,11 +803,14 @@ ctx_t::update_flow_table()
 
 end:
     if (!ipc_logging_disable()) {
-        /* Add flow logging only for initiator flows */
-        uint8_t istage = 0;
+        uint8_t istage = 0, rstage = 0;
         add_flow_logging(key_, session_handle, &iflow_log_[istage]);
         if (++istage <= istage_)
             add_flow_logging(key_, session_handle, &iflow_log_[istage]);
+
+        add_flow_logging(rkey_, session_handle, &rflow_log_[rstage]);
+        if (++rstage <= rstage_)
+            add_flow_logging(rkey_, session_handle, &rflow_log_[rstage]);
     }
 
     return ret;

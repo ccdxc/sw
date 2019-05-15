@@ -2,5 +2,4 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libutils.so
-MODULE_SOLIBS	= logger
 include ${MKDEFS}/post.mk

@@ -10,7 +10,7 @@ MODULE_SOLIBS = pal sdkfru linkmgr_test_utils bm_allocator \
                 linkmgr_src sdklinkmgr haltrace \
                 linkmgr_libsrc sdklinkmgrcsr  \
                 haldelphiutils \
-                logger thread twheel sdkpal catalog utils trace
+                logger thread twheel sdkpal catalog utils mtrack trace
 MODULE_LDLIBS = ${NIC_HAL_ALL_LDLIBS}
 MODULE_FLAGS  = -pthread -rdynamic
 MODULE_ARCH   = x86_64

@@ -5,7 +5,7 @@ MODULE_ARCH     = x86_64
 MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/tcp-server-v6.cc
 MODULE_SOLIBS   = e2e_driver trace host_mem bm_allocator \
-                  logger model_client halproto  \
+                  logger model_client halproto mtrack \
                   sdkplatformutils shmmgr
 MODULE_LDLIBS   = zmq pthread z m rt Judy dl ev \
                   ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
