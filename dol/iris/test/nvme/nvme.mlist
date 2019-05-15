@@ -9,13 +9,6 @@ feature:
 
 modules:
     - module:
-        name    : NVME_NOP
-        enable  : True
-        package : test.nvme
-        module  : nvme_nop
-        spec    : nvme_nop.testspec
-        ignore  : False
-    - module:
         name    : NVME_WRITE_1_LBA
         enable  : True
         package : test.nvme

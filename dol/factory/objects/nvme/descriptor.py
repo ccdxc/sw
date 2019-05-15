@@ -193,7 +193,7 @@ class NvmeSqDescriptorObject(base.FactoryObjectBase):
 
         logger.info("desc_size = %d" %(len(self.desc)))
 
-        resmgr.HostMemoryAllocator.write(self.mem_handle, bytes(desc))
+        resmgr.HostMemoryAllocator.write(self.mem_handle, bytes(self.desc))
 
     def Read(self):
         """

@@ -3,6 +3,7 @@
 
 #include "capri.h"
 
+#define LOG_NUM_PRP_BYTES       3   //2^3 = 8
 //ring pindex/cindex
 #define SQ_P_INDEX              d.{pi_0}.hx
 #define SQ_C_INDEX              d.{ci_0}.hx
@@ -19,7 +20,11 @@
 #define LOG_NSCB_SIZE           6   //2^6 = 64
 #define LOG_TXSESSPRODCB_SIZE   6   //2^6 = 64
 
-#define LOG_CMDID_RING_ENTRY_SIZE   1   //2^1 = 2
+#define LOG_CMDID_SIZE              1   //2^1 = 2
+#define LOG_CMDID_RING_ENTRY_SIZE   LOG_CMDID_SIZE
+#define LOG_CMD_CTXT_SIZE           11  //2^11=2K
+
+#define LOG_SESSXTS_Q_ENTRY_SIZE    LOG_CMDID_SIZE
 
 //rings, their ids and priorities
 //sq
@@ -65,4 +70,9 @@
 
 //dma cmd ptrs
 #define NVME_REQ_TX_DMA_CMD_PTR (PHV_FIELD_START_OFFSET(wqe_dma_dma_cmd_type)/16)
+
+//command context offsets
+#define NVME_CMD_CTXT_PRP_LIST_OFFSET   32
+
+
 #endif //__NVME_COMMON_H

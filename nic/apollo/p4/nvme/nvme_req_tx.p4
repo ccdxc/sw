@@ -93,7 +93,12 @@ header_type nvme_req_tx_to_stage_sqe_info_t {
 
 header_type nvme_req_tx_to_stage_nscb_info_t {
     fields {
-        pad                              :  128;
+        log_host_page_size  :    5;
+        rsvd0               :    3;
+        opc                 :    8;
+        slba                :   64;
+        nlb                 :   16;
+        pad                 :   32;
     }
 }
 
@@ -111,7 +116,14 @@ header_type nvme_req_tx_to_stage_sess_select_info_t {
 
 header_type nvme_req_tx_to_stage_sessprodcb_info_t {
     fields {
-        pad                              :  128;
+        prp1_dma_valid                   : 1;
+        prp2_dma_valid                   : 1;
+        prp3_dma_valid                   : 1;
+        rsvd0                            : 5;
+        prp1_dma_bytes                   : 8;
+        prp2_dma_bytes                   : 16;
+        prp3_dma_bytes                   : 16;
+        pad                              : 80;
     }
 }
 
@@ -135,7 +147,9 @@ header_type nvme_req_tx_sqcb_to_sqe_t {
 
 header_type nvme_req_tx_sqe_to_nscb_t {
     fields {
-        pad                 : 160;
+        dptr1               :   64;
+        dptr2               :   64;
+        pad                 :   32;
     }
 }
 
@@ -147,7 +161,8 @@ header_type nvme_req_tx_nscb_to_sess_bitmap_t {
 
 header_type nvme_req_tx_nscb_to_sqe_prp_t {
     fields {
-        pad                 : 160;
+        prp3_dma_bytes                   : 16;
+        pad                 : 144;
     }
 }
 
@@ -416,9 +431,15 @@ action nvme_req_tx_nscb_process (NSCB_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s2_info_scr.rsvd0, to_s2_info.rsvd0);
+    modify_field(to_s2_info_scr.opc, to_s2_info.opc);
+    modify_field(to_s2_info_scr.slba, to_s2_info.slba);
+    modify_field(to_s2_info_scr.nlb, to_s2_info.nlb);
     modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage
+    modify_field(t0_s2s_sqe_to_nscb_info_scr.dptr1, t0_s2s_sqe_to_nscb_info.dptr1);
+    modify_field(t0_s2s_sqe_to_nscb_info_scr.dptr2, t0_s2s_sqe_to_nscb_info.dptr2);
     modify_field(t0_s2s_sqe_to_nscb_info_scr.pad, t0_s2s_sqe_to_nscb_info.pad);
 
     // D-vector
@@ -493,6 +514,13 @@ action nvme_req_tx_sessprodcb_process (SESSPRODCB_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s5_info_scr.prp1_dma_valid, to_s5_info.prp1_dma_valid);
+    modify_field(to_s5_info_scr.prp2_dma_valid, to_s5_info.prp2_dma_valid);
+    modify_field(to_s5_info_scr.prp3_dma_valid, to_s5_info.prp3_dma_valid);
+    modify_field(to_s5_info_scr.rsvd0, to_s5_info.rsvd0);
+    modify_field(to_s5_info_scr.prp1_dma_bytes, to_s5_info.prp1_dma_bytes);
+    modify_field(to_s5_info_scr.prp2_dma_bytes, to_s5_info.prp2_dma_bytes);
+    modify_field(to_s5_info_scr.prp3_dma_bytes, to_s5_info.prp3_dma_bytes);
     modify_field(to_s5_info_scr.pad, to_s5_info.pad);
     
     // stage to stage
@@ -507,6 +535,13 @@ action nvme_req_tx_cmdid_fetch_process (CMDID_RING_ENTRY_PARAMS) {
     GENERATE_GLOBAL_K
 
     // to stage
+    modify_field(to_s5_info_scr.prp1_dma_valid, to_s5_info.prp1_dma_valid);
+    modify_field(to_s5_info_scr.prp2_dma_valid, to_s5_info.prp2_dma_valid);
+    modify_field(to_s5_info_scr.prp3_dma_valid, to_s5_info.prp3_dma_valid);
+    modify_field(to_s5_info_scr.rsvd0, to_s5_info.rsvd0);
+    modify_field(to_s5_info_scr.prp1_dma_bytes, to_s5_info.prp1_dma_bytes);
+    modify_field(to_s5_info_scr.prp2_dma_bytes, to_s5_info.prp2_dma_bytes);
+    modify_field(to_s5_info_scr.prp3_dma_bytes, to_s5_info.prp3_dma_bytes);
     modify_field(to_s5_info_scr.pad, to_s5_info.pad);
     
     // stage to stage

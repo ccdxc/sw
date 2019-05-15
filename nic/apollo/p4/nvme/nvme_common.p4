@@ -186,7 +186,7 @@ header_type nscb_t {
         
         //Session Info
         num_sessions                    : 11; //1-based
-        rr_session_id_served            : 10; //0-based
+        rr_session_id_to_be_served      : 10; //0-based
 
         // Stats/Accounting
         num_outstanding_req             : 11; //1-based
@@ -201,7 +201,7 @@ header_type nscb_t {
 
 #define NSCB_PARAMS                                                      \
 ns_size, ns_valid, ns_active, rsvd0, log_lba_size, backend_ns_id,        \
-num_sessions, rr_session_id_served,\
+num_sessions, rr_session_id_to_be_served,\
 num_outstanding_req, sess_prodcb_start, pad, \
 valid_session_bitmap
 
@@ -213,7 +213,7 @@ valid_session_bitmap
     modify_field(nscb_d.log_lba_size, log_lba_size);                     \
     modify_field(nscb_d.backend_ns_id, backend_ns_id);                   \
     modify_field(nscb_d.num_sessions, num_sessions);                     \
-    modify_field(nscb_d.rr_session_id_served, rr_session_id_served);     \
+    modify_field(nscb_d.rr_session_id_to_be_served, rr_session_id_to_be_served);\
     modify_field(nscb_d.num_outstanding_req, num_outstanding_req);       \
     modify_field(nscb_d.sess_prodcb_start, sess_prodcb_start); \
     modify_field(nscb_d.pad, pad);                                       \

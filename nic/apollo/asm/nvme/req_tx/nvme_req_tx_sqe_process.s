@@ -21,8 +21,12 @@ nvme_req_tx_sqe_process:
     phvwrpair   p.{cmd_ctxt_lif...cmd_ctxt_sq_id}, K_GLOBAL_LIF_QID, \
                 p.{cmd_ctxt_session_id...cmd_ctxt_pad}, r0
 
+    phvwr       p.to_s2_info_opc, d.opc
+    phvwr       p.{to_s2_info_slba...to_s2_info_nlb}, d.{slba...nlb}
    
-
+    phvwrpair   p.t0_s2s_sqe_to_nscb_info_dptr1, d.dptr1, \
+                p.t0_s2s_sqe_to_nscb_info_dptr2, d.dptr2
+   
     //calculate nscb address = 
     //  nscb_base + ((lif_ns_start + nsid -1) << sizeof(nscb))
     addui   r2, r0, hiword(nvme_nscb_base)

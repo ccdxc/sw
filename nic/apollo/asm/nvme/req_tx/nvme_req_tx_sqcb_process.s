@@ -39,6 +39,7 @@ nvme_req_tx_sqcb_process:
         add         r1, d.sq_base_addr, r1
 
         phvwr       p.to_s1_info_lif_ns_start, d.lif_ns_start
+        phvwr       p.to_s2_info_log_host_page_size, d.log_host_page_size
 
         CAPRI_NEXT_TABLE0_READ_PC_E(CAPRI_TABLE_LOCK_DIS,
                                     CAPRI_TABLE_SIZE_512_BITS,
