@@ -924,7 +924,14 @@ int sonic_lifs_alloc(struct sonic *sonic)
 static int sonic_lif_reset(struct lif *lif)
 {
 	struct sonic_dev *idev = &lif->sonic->idev;
+#if 0
+	struct per_core_resource *res;
+	uint32_t i;
 
+	LIF_FOR_EACH_PC_RES(lif, i, res) {
+		sonic_flush_ev_list(res);
+	}
+#endif
 	sonic_dev_cmd_lif_reset(idev, lif->index);
 	lif->flags &= ~LIF_F_INITED;
 	return sonic_dev_cmd_wait_check(idev, devcmd_timeout);

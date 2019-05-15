@@ -343,6 +343,7 @@ void chn_notify_caller(struct service_chain *chain);
 bool chn_is_poll_done(struct service_chain *chain);
 
 pnso_error_t chn_poller(void *poll_ctx);
+pnso_error_t chn_poll_timeout(void *poll_ctx);
 
 void chn_pprint_chain(const struct service_chain *chain);
 

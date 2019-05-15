@@ -1381,7 +1381,13 @@ static pnso_error_t run_testcase_svc_chain(struct request_context *req_ctx,
 					osal_virt_to_phy(svc->u.crypto.iv_data);
 			}
 			break;
+		case PNSO_SVC_TYPE_DECOMPRESS:
+		case PNSO_SVC_TYPE_HASH:
+		case PNSO_SVC_TYPE_CHKSUM:
+			break;
 		default:
+			PNSO_LOG_ERROR("Invalid svc_type %u\n",
+				       req_ctx->svc_req.svc[i].svc_type);
 			break;
 		}
 		i++;
@@ -2999,8 +3005,8 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 		cur_ts = osal_get_clock_nsec();
 
 		/* Batch completion */
-		batch_ctx = worker_queue_dequeue(worker_ctx->complete_q);
-		if (batch_ctx) {
+		if (worker_ctx->pending_batch_count &&
+		    (batch_ctx = worker_queue_dequeue(worker_ctx->complete_q))) {
 			PNSO_LOG_DEBUG("DEBUG: batch completed, batch_count %llu\n",
 				(unsigned long long) batch_completion_count+1);
 			last_active_ts = cur_ts;
@@ -3061,7 +3067,7 @@ static pnso_error_t pnso_test_run_testcase(const struct test_desc *desc,
 					PNSO_LOG_ERROR("Fail batch submission, worker %u, batch_count %llu\n",
 						worker_id, (unsigned long long) batch_submit_count+1);
 					fail_count++;
-					_worker_queue_enqueue(ctx->batch_ctx_freelist, batch_ctx);
+					worker_queue_enqueue(ctx->batch_ctx_freelist, batch_ctx);
 				}
 			}
 		} else if (osal_clock_delta(cur_ts, worker_ctx->last_active_ts) >

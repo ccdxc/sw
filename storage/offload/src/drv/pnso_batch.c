@@ -495,6 +495,7 @@ static struct batch_info *poll_ctx_to_batch(void *poll_ctx)
 }
 
 pnso_error_t bat_poller(void *pnso_poll_ctx);
+pnso_error_t bat_poll_timeout(void *pnso_poll_ctx);
 
 pnso_error_t
 bat_poller(void *poll_ctx)
@@ -530,6 +531,46 @@ bat_poller(void *poll_ctx)
 		 */
 		read_write_result_all_chains(batch_info);
 	}
+
+	/* save caller's cb and context ahead of destroy */
+	cb = batch_info->bi_req_cb;
+	cb_ctx =  batch_info->bi_req_cb_ctx;
+
+	deinit_batch(batch_info);
+
+	if (cb) {
+		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 "err: %d",
+				(uint64_t) cb_ctx, err);
+
+		cb(cb_ctx, NULL);
+	}
+
+out:
+	OSAL_LOG_DEBUG("exit! err: %d", err);
+	return err;
+}
+
+pnso_error_t
+bat_poll_timeout(void *poll_ctx)
+{
+	pnso_error_t err = EINVAL;
+	struct batch_info *batch_info = poll_ctx_to_batch(poll_ctx);
+	completion_cb_t	cb;
+	void *cb_ctx;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
+
+	if (!batch_info) {
+		OSAL_LOG_ERROR("invalid batch poll context 0x" PRIx64 "during timeout! err: %d",
+			       (uint64_t) poll_ctx, err);
+		goto out;
+	}
+	PPRINT_BATCH_INFO(batch_info);
+
+	err = ETIMEDOUT;
+	read_write_error_result_all_chains(batch_info, err);
 
 	/* save caller's cb and context ahead of destroy */
 	cb = batch_info->bi_req_cb;

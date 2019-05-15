@@ -78,6 +78,7 @@ pnso_error_t bat_flush_batch(struct request_params *req_params);
 void bat_destroy_batch(void);
 
 pnso_error_t bat_poller(void *poll_ctx);
+pnso_error_t bat_poll_timeout(void *poll_ctx);
 
 #ifdef __cplusplus
 }

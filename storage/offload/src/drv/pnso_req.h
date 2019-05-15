@@ -54,6 +54,7 @@ void req_pprint_request(const struct pnso_service_request *req);
 void req_pprint_result(const struct pnso_service_result *res);
 
 pnso_error_t pnso_request_poller(void *poll_ctx);
+pnso_error_t pnso_request_poll_timeout(void *poll_ctx);
 
 #ifdef __cplusplus
 }

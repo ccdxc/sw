@@ -24,10 +24,19 @@
 #define evid_to_db_va(evl, id) (volatile struct sonic_db_data *)(evl->db_base + (sizeof(struct sonic_db_data) * (id)))
 #define db_va_to_evid(evl, addr) (((void *)(addr) - evl->db_base) / sizeof(struct sonic_db_data))
 
+#define SONIC_ISR_MAX_IDLE_COUNT 10000
+#define SONIC_EV_WORK_POLLER_TIMEOUT (100 * OSAL_NSEC_PER_MSEC)
+#define SONIC_EV_IDLE_WORK_JIFFIES 1
+#define SONIC_EV_EXPIRED_WORK_MSEC 2000
+#define SONIC_EV_EXPIRED_WORK_JIFFIES (msecs_to_jiffies(SONIC_EV_EXPIRED_WORK_MSEC))
+#define SONIC_EV_WORK_EXPIRED_TIMEOUT (SONIC_EV_EXPIRED_WORK_MSEC * OSAL_NSEC_PER_MSEC)
+#define SONIC_EV_REINIT_TIMEOUT (2 * SONIC_EV_WORK_EXPIRED_TIMEOUT)
+
 static int sonic_get_evid(struct sonic_event_list *evl, u32 *evid)
 {
 	unsigned long irqflags;
 	u32 id;
+	int was_set;
 
 	if (!evl)
 		return -EINVAL;
@@ -49,23 +58,48 @@ static int sonic_get_evid(struct sonic_event_list *evl, u32 *evid)
 	return -ENOMEM;
 
 found:
-	set_bit(id, evl->inuse_evid_bmp);
+	//set_bit(id, evl->inuse_evid_bmp);
+	was_set = test_and_set_bit(id, evl->inuse_evid_bmp);
+	if (!was_set)
+		evl->inuse_count++;
+
 	evl->next_evid = id + 1;
 
 	spin_unlock_irqrestore(&evl->inuse_lock, irqflags);
+
+	if (was_set)
+		return -EINVAL;
 
 	*evid = id;
 
 	return 0;
 }
 
-static void sonic_put_evid(struct sonic_event_list *evl, u32 evid)
+static int sonic_put_evid(struct sonic_event_list *evl, u32 evid)
 {
 	unsigned long irqflags;
+	int was_set;
 
 	spin_lock_irqsave(&evl->inuse_lock, irqflags);
-	clear_bit(evid, evl->inuse_evid_bmp);
+	//clear_bit(evid, evl->inuse_evid_bmp);
+	was_set = test_and_clear_bit(evid, evl->inuse_evid_bmp);
+	if (was_set)
+		evl->inuse_count--;
 	spin_unlock_irqrestore(&evl->inuse_lock, irqflags);
+
+	return was_set ? 0 : -EINVAL;
+}
+
+static int sonic_get_evid_count(struct sonic_event_list *evl)
+{
+	unsigned long irqflags;
+	int ret;
+
+	spin_lock_irqsave(&evl->inuse_lock, irqflags);
+	ret = evl->inuse_count;
+	spin_unlock_irqrestore(&evl->inuse_lock, irqflags);
+
+	return ret;
 }
 
 static inline volatile struct sonic_db_data *
@@ -86,13 +120,24 @@ sonic_intr_db_primed_usr_data_put(volatile struct sonic_db_data *db_data)
 }
 
 static inline bool
-sonic_intr_db_fired_chk(struct sonic_event_list *evl,
-			uint32_t id,
+sonic_intr_db_fired_chk(volatile struct sonic_db_data *db_data,
 			uint32_t *fired_val)
 {
-	volatile struct sonic_db_data *db_data = evid_to_db_va(evl, id);
 	*fired_val = db_data->fired;
-	return db_data->fired == sonic_intr_get_fire_data32();
+	return *fired_val == sonic_intr_get_fire_data32();
+}
+
+static inline bool
+sonic_intr_db_expired_chk(volatile struct sonic_db_data *db_data, uint64_t cur_ts)
+{
+	if (sonic_lif_reset_ctl_pending(sonic_get_lif()))
+		return true;
+
+	if (cur_ts) {
+		return (osal_clock_delta(cur_ts, db_data->timestamp) > SONIC_EV_WORK_EXPIRED_TIMEOUT);
+	}
+
+	return false;
 }
 
 static inline void
@@ -110,16 +155,14 @@ sonic_intr_ev_clr(struct sonic_event_list *evl,
 		  uint32_t id)
 {
 	sonic_intr_db_fired_clr(evl, id);
-	sonic_put_evid(evl, id);
+	if (sonic_put_evid(evl, id) != 0)
+		OSAL_LOG_ERROR("Unable to clear event id %u", id);
 }
-
-#define SONIC_ISR_MAX_IDLE_COUNT 10000
-#define SONIC_EV_WORK_POLLER_TIMEOUT (100 * OSAL_NSEC_PER_MSEC)
-#define SONIC_EV_IDLE_WORK_JIFFIES 1
 
 static int
 sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
-		   struct sonic_work_data *work, int *used_count)
+		   struct sonic_work_data *work, int *used_count,
+		   uint64_t cur_ts)
 {
 	volatile struct sonic_db_data *db_data;
 	uint32_t id, first_id, next_id, wrap_size;
@@ -151,18 +194,38 @@ sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
 		}
 		next_id = id + 1;
 		db_data = sonic_intr_db_primed_usr_data_get(evl, id, &usr_data);
-		if (usr_data && sonic_intr_db_fired_chk(evl, id, &fired)) {
-
-			//OSAL_LOG_DEBUG("found ev id %d with data 0x%llx",
-			//		id, (unsigned long long) *data);
-			work->ev_data[found].evid = id;
-			work->ev_data[found].data = usr_data;
-			sonic_intr_db_primed_usr_data_put(db_data);
-			if (!found_zero_data) {
-				/* Start at next_id next time */
-				evl->next_used_evid = next_id;
+		if (usr_data) {
+			if (sonic_intr_db_fired_chk(db_data, &fired)) {
+				//OSAL_LOG_DEBUG("found ev id %d with data 0x%llx",
+				//		id, (unsigned long long) *data);
+				work->ev_data[found].evid = id;
+				work->ev_data[found].data = usr_data;
+				work->ev_data[found].expired = false;
+				sonic_intr_db_primed_usr_data_put(db_data);
+				if (!found_zero_data) {
+					/* Start at next_id next time */
+					evl->next_used_evid = next_id;
+				}
+				found++;
+				work->found_work = true;
+			} else if (sonic_intr_db_expired_chk(db_data, cur_ts)) {
+				work->ev_data[found].evid = id;
+				work->ev_data[found].data = usr_data;
+				work->ev_data[found].expired = true;
+				sonic_intr_db_primed_usr_data_put(db_data);
+				if (!found_zero_data) {
+					/* Start at next_id next time */
+					evl->next_used_evid = next_id;
+				}
+				found++;
+				work->found_expired = true;
+			} else {
+				if (!found_zero_data) {
+					/* Start at this id next time */
+					evl->next_used_evid = id;
+				}
+				found_zero_data++;
 			}
-			found++;
 		} else {
 			if (!found_zero_data) {
 				/* Start at this id next time */
@@ -176,8 +239,9 @@ sonic_poll_ev_list(struct sonic_event_list *evl, int budget,
 
 	work->ev_count = found;
 	if (found) {
-		work->found_work = true;
 		evl->idle_count = 0;
+		if (work->found_work)
+			work->reinit_ts = cur_ts;
 	} else {
 		if (evl->idle_count++ == SONIC_ISR_MAX_IDLE_COUNT)
 			OSAL_LOG_CRITICAL("sonic_async_ev_isr stuck in idle loop!");
@@ -216,8 +280,9 @@ static void sonic_ev_idle_handler(struct work_struct *work)
 	}
 
 	real_swd->found_work = false;
+	real_swd->found_expired = false;
 	npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, real_swd,
-				     &used_count);
+				     &used_count, osal_get_clock_nsec());
 	if (used_count) {
 		if (npolled)
 			evl->work_data.timestamp = 0;
@@ -226,6 +291,9 @@ static void sonic_ev_idle_handler(struct work_struct *work)
 		/* Unmask */
 		xchg(&evl->armed, true);
 		sonic_intr_mask(&evl->pc_res->intr, false);
+
+		queue_delayed_work(evl->wq, &evl->idle_work,
+				   SONIC_EV_EXPIRED_WORK_JIFFIES);
 	}
 }
 
@@ -242,6 +310,7 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	uint32_t i;
 	int used_count = 0;
 	int npolled = 0;
+	pnso_error_t err;
 
 	if (!evl->enable)
 		return;
@@ -256,13 +325,27 @@ static void sonic_ev_work_handler(struct work_struct *work)
 			continue;
 
 		/* poll status */
-		if (pnso_request_poller((void *) evd->data) != EBUSY) {
+#if 0
+		if (!evd->expired) {
+#endif
+			err = pnso_request_poller((void *) evd->data);
+			if (err != EBUSY) {
+				evd->data = 0;
+				sonic_intr_ev_clr(evl, evd->evid);
+				complete_count++;
+				if (err != ETIMEDOUT)
+					swd->reinit_ts = cur_ts;
+			} else {
+				incomplete_count++;
+			}
+#if 0
+		} else {
+			pnso_request_poll_timeout((void *) evd->data);
 			evd->data = 0;
 			sonic_intr_ev_clr(evl, evd->evid);
 			complete_count++;
-		} else {
-			incomplete_count++;
 		}
+#endif
 	}
 
 	//if (complete_count == 0 || incomplete_count > 0 ||
@@ -273,6 +356,8 @@ static void sonic_ev_work_handler(struct work_struct *work)
 
 	if (complete_count || !swd->timestamp)
 		swd->timestamp = cur_ts;
+	if (!swd->reinit_ts)
+		swd->reinit_ts = cur_ts;
 
 	if (incomplete_count) {
 		if ((cur_ts - swd->timestamp) > SONIC_EV_WORK_POLLER_TIMEOUT) {
@@ -281,7 +366,12 @@ static void sonic_ev_work_handler(struct work_struct *work)
 			for (i = 0; i < swd->ev_count; i++) {
 				evd = &swd->ev_data[i];
 				if (evd->data) {
-					pnso_request_poller((void *)evd->data);
+					err = pnso_request_poller((void *)evd->data);
+					if (err == EBUSY) {
+						pnso_request_poll_timeout((void *)evd->data);
+					} else if (err != ETIMEDOUT) {
+						swd->reinit_ts = cur_ts;
+					}
 					evd->data = 0;
 					sonic_intr_ev_clr(evl, evd->evid);
 				}
@@ -300,10 +390,10 @@ static void sonic_ev_work_handler(struct work_struct *work)
 	}
 
 	/* Try to get more work */
-	if (!swd->found_work) {
+	if (!swd->ev_count) {
 		/* No credits to return */
 		npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET,
-				&evl->work_data, &used_count);
+				&evl->work_data, &used_count, cur_ts);
 		if (npolled) {
 			swd->timestamp = 0; /* start fresh */
 			queue_work(evl->wq, &swd->work);
@@ -314,16 +404,16 @@ static void sonic_ev_work_handler(struct work_struct *work)
 			/* Just unmask in hopes our isr kicks in */
 			xchg(&evl->armed, true);
 			sonic_intr_mask(&evl->pc_res->intr, false);
-			if (used_count) {
-				/* plan B */
-				queue_delayed_work(evl->wq, &evl->idle_work,
-						   SONIC_EV_IDLE_WORK_JIFFIES);
-			}
+
+			/* plan B */
+			queue_delayed_work(evl->wq, &evl->idle_work,
+					   used_count ? SONIC_EV_IDLE_WORK_JIFFIES :
+					   SONIC_EV_EXPIRED_WORK_JIFFIES);
 		}
 	} else {
 		prev_ev_count = swd->ev_count;
 		npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET,
-				&evl->work_data, &used_count);
+				&evl->work_data, &used_count, cur_ts);
 		if (npolled) {
 			/* Return credits, but don't unmask */
 			sonic_intr_return_credits(&evl->pc_res->intr,
@@ -335,15 +425,24 @@ static void sonic_ev_work_handler(struct work_struct *work)
 			xchg(&evl->armed, true);
 			sonic_intr_return_credits(&evl->pc_res->intr,
 					prev_ev_count, true, false);
-			if (used_count) {
-				/* plan B */
-				queue_delayed_work(evl->wq, &evl->idle_work,
-						   SONIC_EV_IDLE_WORK_JIFFIES);
-			}
+
+			/* plan B */
+			queue_delayed_work(evl->wq, &evl->idle_work,
+					   used_count ? SONIC_EV_IDLE_WORK_JIFFIES :
+					   SONIC_EV_EXPIRED_WORK_JIFFIES);
 		}
 	}
 
 done:
+#if 0
+	if ((cur_ts - swd->reinit_ts) > SONIC_EV_REINIT_TIMEOUT) {
+		if (sonic_error_reset_recovery_en_get()) {
+			OSAL_LOG_WARN("Async work handler initiating sonic lif reset");
+			sonic_lif_reset_ctl_start(sonic_get_lif());
+		}
+	}
+#endif
+
 	OSAL_LOG_DEBUG("... exit sonic_ev_work_handler workid %u, %u complete, %u incomplete, %u npolled",
 		       work_id, complete_count, incomplete_count, npolled);
 }
@@ -366,8 +465,9 @@ irqreturn_t sonic_async_ev_isr(int irq, void *evlptr)
 	}
 
 	evl->work_data.found_work = false;
+	evl->work_data.found_expired = false;
 	npolled = sonic_poll_ev_list(evl, SONIC_ASYNC_BUDGET, &evl->work_data,
-			&used_count);
+				     &used_count, 0);
 	if (used_count) {
 		evl->work_data.timestamp = 0;
 		queue_work(evl->wq, &evl->work_data.work);
@@ -391,7 +491,10 @@ uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res,
 	volatile struct sonic_db_data *db_data;
 	uint32_t evid;
 
-	if (!evl || !evl->db_base) {
+	if (sonic_lif_reset_ctl_pending(pc_res->lif))
+		return 0;
+
+	if (!evl || !evl->db_base || !evl->enable) {
 		OSAL_LOG_WARN("Invalid evl");
 		return 0;
 	}
@@ -404,6 +507,7 @@ uint64_t sonic_intr_get_db_addr(struct per_core_resource *pc_res,
 	OSAL_LOG_DEBUG("Successfully allocated evid %u", evid);
 
 	db_data = evid_to_db_va(evl, evid);
+	db_data->timestamp = osal_get_clock_nsec();
 	db_data->usr_data = usr_data;
 	db_data->primed = sonic_intr_get_fire_data32();
 	return sonic_hostpa_to_devpa((uint64_t) evid_to_db_pa(evl, evid) +
@@ -422,6 +526,41 @@ void sonic_intr_put_db_addr(struct per_core_resource *pc_res, uint64_t addr)
 	evid = db_pa_to_evid(evl, sonic_devpa_to_hostpa(addr));
 	if (evid < evl->size_ev_bmp) {
 		sonic_intr_ev_clr(evl, evid);
+	}
+}
+
+/* Assumes lif reset in progress */
+void sonic_flush_ev_list(struct per_core_resource *pc_res)
+{
+	struct delayed_work dwork;
+	uint64_t start_ns;
+
+	if (!pc_res->evl)
+		return;
+
+	if (!sonic_lif_reset_ctl_pending(pc_res->lif)) {
+		OSAL_LOG_WARN("Cannot flush async event list unless LIF reset is in progress");
+		return;
+	}
+
+	if (sonic_get_evid_count(pc_res->evl) > 0) {
+		OSAL_LOG_WARN("Flushing async event list");
+
+		/* trigger a flush of timed out entries */
+		INIT_DELAYED_WORK(&dwork, sonic_ev_idle_handler);
+		queue_delayed_work(pc_res->evl->wq, &dwork,
+				   SONIC_EV_IDLE_WORK_JIFFIES);
+
+		/* wait for all events to be timed out */
+		start_ns = osal_get_clock_nsec();
+		while (sonic_get_evid_count(pc_res->evl) > 0) {
+			if ((osal_get_clock_nsec() - start_ns) >
+			    SONIC_EV_REINIT_TIMEOUT) {
+				OSAL_LOG_ERROR("Exceeded timeout for flushing ev_list");
+				break;
+			}
+			msleep(10);
+		}
 	}
 }
 

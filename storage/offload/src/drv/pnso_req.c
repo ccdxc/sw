@@ -1098,5 +1098,32 @@ out:
 	OSAL_LOG_DEBUG("exit! err: %d", err);
 	return err;
 }
-
 OSAL_EXPORT_SYMBOL(pnso_request_poller);
+
+pnso_error_t
+pnso_request_poll_timeout(void *poll_ctx)
+{
+	pnso_error_t err = EINVAL;
+	bool is_chain, is_batch;
+
+	if (!poll_ctx) {
+		OSAL_LOG_ERROR("invalid poll context during timeout! poll_ctx: 0x" PRIx64 " err: %d",
+				(uint64_t) poll_ctx, err);
+		goto out;
+	}
+
+	is_chain = is_batch = false;
+	get_poll_context_type(poll_ctx, &is_chain, &is_batch);
+
+	if ((is_chain && is_batch) || (!is_chain && !is_batch)) {
+		OSAL_LOG_ERROR("invalid poll context type during timeout! poll_ctx: 0x" PRIx64 " err: %d",
+				(uint64_t) poll_ctx, err);
+		goto out;
+	}
+
+	err = is_chain ? chn_poll_timeout(poll_ctx) : bat_poll_timeout(poll_ctx);
+out:
+	OSAL_LOG_DEBUG("exit! err: %d", err);
+	return err;
+}
+OSAL_EXPORT_SYMBOL(pnso_request_poll_timeout);

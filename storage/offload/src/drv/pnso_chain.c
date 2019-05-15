@@ -311,6 +311,7 @@ static struct service_chain *poll_ctx_to_chain(void *poll_ctx)
 }
 
 pnso_error_t chn_poller(void *pnso_poll_ctx);
+pnso_error_t chn_poll_timeout(void *pnso_poll_ctx);
 
 pnso_error_t
 chn_poller(void *poll_ctx)
@@ -346,6 +347,49 @@ chn_poller(void *poll_ctx)
 		chn_read_write_result(chain);
 		chn_update_overall_result(chain);
 	}
+
+	/* save caller's cb and context ahead of destroy */
+	cb = chain->sc_req_cb;
+	cb_ctx =  chain->sc_req_cb_ctx;
+
+	chn_destroy_chain(chain);
+
+	if (cb) {
+		OSAL_LOG_DEBUG("invoking caller's cb ctx: 0x" PRIx64 " res: 0x" PRIx64 " err: %d",
+				(uint64_t) cb_ctx, (uint64_t) res, err);
+
+		cb(cb_ctx, res);
+	}
+
+out:
+	OSAL_LOG_DEBUG("exit! err: %d", err);
+	return err;
+}
+
+pnso_error_t
+chn_poll_timeout(void *poll_ctx)
+{
+	pnso_error_t err = EINVAL;
+	struct service_chain *chain = poll_ctx_to_chain(poll_ctx);
+	struct pnso_service_result *res;
+	completion_cb_t	cb;
+	void *cb_ctx;
+
+	OSAL_LOG_DEBUG("enter ...");
+
+	OSAL_LOG_DEBUG("core_id: %u", osal_get_coreid());
+
+	if (!chain) {
+		OSAL_LOG_ERROR("invalid chain poll context 0x" PRIx64 "during timeout! err: %d",
+			       (uint64_t) poll_ctx, err);
+		goto out;
+	}
+	PPRINT_CHAIN(chain);
+
+	res = chain->sc_res;
+
+	err = ETIMEDOUT;
+	res->err = err;
 
 	/* save caller's cb and context ahead of destroy */
 	cb = chain->sc_req_cb;

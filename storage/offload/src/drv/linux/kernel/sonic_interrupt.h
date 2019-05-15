@@ -24,11 +24,13 @@ struct sonic_event_list;
 
 struct sonic_event_data {
 	int evid;
+	bool expired;
 	uint64_t data;
 };
 
 
 struct sonic_db_data {
+	uint64_t timestamp;
 	uint64_t usr_data;
 	uint32_t fired;		/* 'fired' must immediately */
 	uint32_t primed;	/* precede 'primed' */
@@ -39,8 +41,10 @@ struct sonic_work_data {
 	struct sonic_event_list *evl;
 	struct sonic_event_data ev_data[SONIC_ASYNC_BUDGET];
 	uint64_t timestamp;
+	uint64_t reinit_ts;
 	uint32_t ev_count;
 	bool found_work;
+	bool found_expired;
 };
 
 struct sonic_event_list {
@@ -57,6 +61,7 @@ struct sonic_event_list {
 	struct delayed_work idle_work;
 
 	spinlock_t inuse_lock;
+	int inuse_count;
 	int next_evid;
 	int next_used_evid;
 	int size_ev_bmp;
@@ -69,6 +74,7 @@ struct sonic_event_list {
 int sonic_create_ev_list(struct per_core_resource *pc_res, uint32_t ev_count);
 void sonic_destroy_ev_list(struct per_core_resource *pc_res);
 void sonic_disable_ev_list(struct per_core_resource *pc_res);
+void sonic_flush_ev_list(struct per_core_resource *pc_res);
 irqreturn_t sonic_async_ev_isr(int irq, void *evlptr);
 void sonic_pprint_ev_list(struct sonic_event_list *evl);
 
