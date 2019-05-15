@@ -19,8 +19,8 @@ header_type adminq_qstate {
         p_index0 : 16;
         c_index0 : 16;
         comp_index : 16;
-        ci_fetch   : 16;
-        ci_miss    : 16;
+        ci_fetch : 16;
+        ci_miss : 16;
 
         // sta
         color : 1;
@@ -31,7 +31,8 @@ header_type adminq_qstate {
         enable : 1;
         host_queue : 1;
         intr_enable : 1;
-        rsvd2 : 5;
+        debug : 1;
+        rsvd2 : 4;
 
         ring_base : 64;
         ring_size : 16;
@@ -90,7 +91,8 @@ header_type nicmgr_qstate {
         // cfg
         enable : 1;
         intr_enable : 1;
-        rsvd2 : 6;
+        debug : 1;
+        rsvd2 : 5;
 
         ring_base : 64;
         ring_size : 16;

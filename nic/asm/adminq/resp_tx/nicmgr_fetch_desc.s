@@ -24,7 +24,10 @@ nicmgr_fetch_desc:
   bcf             [c1], nicmgr_queue_disabled
   seq             c2, d.ci_fetch, d.p_index0
   bcf             [c2], nicmgr_spurious_db
-  nop
+
+  seq             c7, d.debug, 1
+  phvwr.c7        p.p4_intr_global_debug_trace, 1
+  trace.c7        0x1
 
   // Compute the descriptor fetch address
   add             _r_desc_addr, d.{ring_base}.dx, d.{ci_fetch}.hx, LG2_NICMGR_RESP_DESC_SIZE

@@ -18,7 +18,7 @@
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, \
     p_index0, c_index0, comp_index, ci_fetch, \
     color, spec_miss, rsvd1, \
-    enable, host_queue, intr_enable, rsvd2, \
+    enable, host_queue, intr_enable, debug, rsvd2, \
     ring_base, ring_size, cq_ring_base, intr_assert_index, \
     nicmgr_qstate_addr
 
@@ -30,6 +30,7 @@
     modify_field(adminq_qstate.enable, enable); \
     modify_field(adminq_qstate.host_queue, host_queue); \
     modify_field(adminq_qstate.intr_enable, intr_enable); \
+    modify_field(adminq_qstate.debug, debug); \
     modify_field(adminq_qstate.rsvd2, rsvd2); \
     modify_field(adminq_qstate.ring_base, ring_base); \
     modify_field(adminq_qstate.ring_size, ring_size); \
@@ -41,7 +42,7 @@
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, \
     p_index0, c_index0, comp_index, ci_fetch, \
     color, rsvd1, \
-    enable, intr_enable, rsvd2, \
+    enable, intr_enable, debug, rsvd2, \
     ring_base, ring_size, cq_ring_base, intr_assert_index
 
 #define MODIFY_NICMGR_QSTATE \
@@ -50,6 +51,7 @@
     modify_field(nicmgr_qstate.rsvd1, rsvd1); \
     modify_field(nicmgr_qstate.enable, enable); \
     modify_field(nicmgr_qstate.intr_enable, intr_enable); \
+    modify_field(nicmgr_qstate.debug, debug); \
     modify_field(nicmgr_qstate.rsvd2, rsvd2); \
     modify_field(nicmgr_qstate.ring_base, ring_base); \
     modify_field(nicmgr_qstate.ring_size, ring_size); \

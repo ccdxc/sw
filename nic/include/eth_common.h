@@ -14,7 +14,8 @@ struct eth_tx_sta_qstate {
 };
 
 struct eth_tx_cfg_qstate {
-    uint8_t     rsvd2:4;
+    uint8_t     rsvd2:3;
+    uint8_t     debug:1;
     uint8_t     intr_enable:1;
     uint8_t     cpu_queue:1;
     uint8_t     host_queue:1;
@@ -64,7 +65,8 @@ struct eth_rx_sta_qstate {
 };
 
 struct eth_rx_cfg_qstate {
-    uint8_t     rsvd2:4;
+    uint8_t     rsvd2:3;
+    uint8_t     debug:1;
     uint8_t     intr_enable:1;
     uint8_t     cpu_queue:1;
     uint8_t     host_queue:1;

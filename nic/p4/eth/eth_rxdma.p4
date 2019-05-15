@@ -61,7 +61,8 @@ header_type eth_rx_qstate_d {
         host_queue : 1;
         cpu_queue : 1;
         intr_enable : 1;
-        rsvd2 : 4;
+        debug : 1;
+        rsvd2 : 3;
 
         ring_base : 64;
         ring_size : 16;

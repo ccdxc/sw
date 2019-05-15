@@ -13,7 +13,8 @@ struct admin_sta_qstate {
 };
 
 struct admin_cfg_qstate {
-    uint8_t     rsvd2:5;
+    uint8_t     rsvd2:4;
+    uint8_t     debug:1;
     uint8_t     intr_enable:1;
     uint8_t     host_queue:1;
     uint8_t     enable:1;
@@ -59,7 +60,8 @@ struct admin_nicmgr_sta_qstate {
 };
 
 struct admin_nicmgr_cfg_qstate {
-    uint8_t     rsvd2:6;
+    uint8_t     rsvd2:5;
+    uint8_t     debug:1;
     uint8_t     intr_enable:1;
     uint8_t     enable:1;
 };

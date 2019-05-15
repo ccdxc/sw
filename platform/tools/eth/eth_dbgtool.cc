@@ -23,6 +23,7 @@
 
 #include "third-party/asic/capri/model/cap_top/cap_top_csr_defines.h"
 #include "third-party/asic/capri/model/cap_top/csr_defines/cap_wa_c_hdr.h"
+#include "third-party/asic/capri/model/cap_top/csr_defines/cap_pics_c_hdr.h"
 
 typedef struct {
     uint64_t base;
@@ -127,7 +128,7 @@ nvme_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                "p_index0=0x%0x\nc_index0=0x%0x\n"
                "comp_index=0x%0x\nci_fetch=0x%0x\n"
                "color=0x%0x\n"
-               "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\n"
+               "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                "ring_base=0x%0lx\nring_size=0x%0x\n"
                "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
                "nicmgr_qstate_addr=0x%0lx\n",
@@ -136,6 +137,7 @@ nvme_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                qstate_ethaq.pid, qstate_ethaq.p_index0, qstate_ethaq.c_index0,
                qstate_ethaq.comp_index, qstate_ethaq.ci_fetch, qstate_ethaq.sta.color,
                qstate_ethaq.cfg.enable, qstate_ethaq.cfg.host_queue, qstate_ethaq.cfg.intr_enable,
+               qstate_ethaq.cfg.debug,
                qstate_ethaq.ring_base, qstate_ethaq.ring_size, qstate_ethaq.cq_ring_base,
                qstate_ethaq.intr_assert_index, qstate_ethaq.nicmgr_qstate_addr);
        break; 
@@ -150,7 +152,7 @@ nvme_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                "p_index0=0x%0x\nc_index0=0x%0x\n"
                "comp_index=0x%0x\nci_fetch=0x%0x\n"
                "color=0x%0x\n"
-               "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\n"
+               "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                "ring_base=0x%0lx\nring_size=0x%0x\n"
                "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
                "nicmgr_qstate_addr=0x%0lx\n",
@@ -159,6 +161,7 @@ nvme_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                qstate_ethaq.pid, qstate_ethaq.p_index0, qstate_ethaq.c_index0,
                qstate_ethaq.comp_index, qstate_ethaq.ci_fetch, qstate_ethaq.sta.color,
                qstate_ethaq.cfg.enable, qstate_ethaq.cfg.host_queue, qstate_ethaq.cfg.intr_enable,
+               qstate_ethaq.cfg.debug,
                qstate_ethaq.ring_base, qstate_ethaq.ring_size, qstate_ethaq.cq_ring_base,
                qstate_ethaq.intr_assert_index, qstate_ethaq.nicmgr_qstate_addr); 
        break;
@@ -174,14 +177,15 @@ nvme_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                 "p_index0=0x%0x\nc_index0=0x%0x\n"
                 "comp_index=0x%0x\nci_fetch=0x%0x\n"
                 "color=0x%0x\n"
-                "enable=0x%0x\nintr_enable=0x%0x\n"
+                "enable=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                 "ring_base=0x%0lx\nring_size=0x%0x\n"
                 "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n",
                 qstate_req.pc_offset, qstate_req.rsvd0, qstate_req.cosA, qstate_req.cosB,
                 qstate_req.cos_sel, qstate_req.eval_last, qstate_req.host, qstate_req.total,
                 qstate_req.pid, qstate_req.p_index0, qstate_req.c_index0, qstate_req.comp_index,
                 qstate_req.ci_fetch, qstate_req.sta.color, qstate_req.cfg.enable,
-                qstate_req.cfg.intr_enable, qstate_req.ring_base, qstate_req.ring_size,
+                qstate_req.cfg.intr_enable, qstate_req.cfg.debug,
+                qstate_req.ring_base, qstate_req.ring_size,
                 qstate_req.cq_ring_base, qstate_req.intr_assert_index);
         }
         if (qid == 1) {
@@ -195,14 +199,15 @@ nvme_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                 "p_index0=0x%0x\nc_index0=0x%0x\n"
                 "comp_index=0x%0x\nci_fetch=0x%0x\n"
                 "color=0x%0x\n"
-                "enable=0x%0x\nintr_enable=0x%0x\n"
+                "enable=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                 "ring_base=0x%0lx\nring_size=0x%0x\n"
                 "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n",
                 qstate_resp.pc_offset, qstate_resp.rsvd0, qstate_resp.cosA, qstate_resp.cosB,
                 qstate_resp.cos_sel, qstate_resp.eval_last, qstate_resp.host, qstate_resp.total,
                 qstate_resp.pid, qstate_resp.p_index0, qstate_resp.c_index0, qstate_resp.comp_index,
                 qstate_resp.ci_fetch, qstate_resp.sta.color, qstate_resp.cfg.enable,
-                qstate_resp.cfg.intr_enable, qstate_resp.ring_base, qstate_resp.ring_size,
+                qstate_resp.cfg.intr_enable, qstate_resp.cfg.debug,
+                qstate_resp.ring_base, qstate_resp.ring_size,
                 qstate_resp.cq_ring_base, qstate_resp.intr_assert_index);
         }
  
@@ -215,7 +220,7 @@ nvme_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                    "host=0x%0x\ntotal=0x%0x\n"
                    "pid=0x%0x\n"
                    "p_index0=0x%0x\nc_index0=0x%0x\nhost_pindex=0x%0x\n"
-                   "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\n"
+                   "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                    "ring_base=0x%0lx\nring_size=0x%0x\n"
                    "host_ring_base=0x%0lx\nhost_ring_size=0x%0x\nhost_intr_assert_index=0x%0x\n",
                    qstate_notifyq.pc_offset, qstate_notifyq.rsvd0, qstate_notifyq.cosA,
@@ -223,7 +228,8 @@ nvme_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                    qstate_notifyq.host, qstate_notifyq.total, qstate_notifyq.pid,
                    qstate_notifyq.p_index0, qstate_notifyq.c_index0, qstate_notifyq.host_pindex,
                    qstate_notifyq.cfg.enable, qstate_notifyq.cfg.host_queue,
-                   qstate_notifyq.cfg.intr_enable, qstate_notifyq.ring_base,
+                   qstate_notifyq.cfg.intr_enable, qstate_notifyq.cfg.debug,
+                   qstate_notifyq.ring_base,
                    qstate_notifyq.ring_size, qstate_notifyq.host_ring_base,
                    qstate_notifyq.host_ring_size, qstate_notifyq.host_intr_assert_index);
         }
@@ -237,14 +243,16 @@ nvme_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                    "pid=0x%0x\n"
                    "p_index0=0x%0x\nc_index0=0x%0x\ncomp_index=0x%0x\n"
                    "color=0x%0x\n"
-                   "enable=0x%0x\nintr_enable=0x%0x\n"
+                   "enable=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                    "ring_base=0x%0lx\nring_size=0x%0x\ncq_ring_base=0x%0lx\n"
                    "intr_assert_index=0x%0x\n",
                    qstate_edmaq.pc_offset, qstate_edmaq.rsvd0, qstate_edmaq.cosA,
                    qstate_edmaq.cosB, qstate_edmaq.cos_sel, qstate_edmaq.eval_last,
                    qstate_edmaq.host, qstate_edmaq.total, qstate_edmaq.pid, qstate_edmaq.p_index0,
                    qstate_edmaq.c_index0, qstate_edmaq.comp_index, qstate_edmaq.sta.color,
-                   qstate_edmaq.cfg.enable, qstate_edmaq.cfg.intr_enable, qstate_edmaq.ring_base,
+                   qstate_edmaq.cfg.enable, qstate_edmaq.cfg.intr_enable,
+                   qstate_edmaq.cfg.debug,
+                   qstate_edmaq.ring_base,
                    qstate_edmaq.ring_size, qstate_edmaq.cq_ring_base,
                    qstate_edmaq.intr_assert_index);
         }
@@ -386,7 +394,7 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                "pid=0x%0x\n"
                "p_index0=0x%0x\nc_index0=0x%0x\ncomp_index=0x%0x\n"
                "color=0x%0x\n"
-               "enable=0x%0x\nhost_queue=0x%0x\ncpu_queue=0x%0x\nintr_enable=0x%0x\n"
+               "enable=0x%0x\nhost_queue=0x%0x\ncpu_queue=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                "ring_base=0x%0lx\nring_size=0x%0x\n"
                "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
                "sg_ring_base=0x%0lx\n",
@@ -395,7 +403,8 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                qstate_ethrx.pid, qstate_ethrx.p_index0, qstate_ethrx.c_index0,
                qstate_ethrx.comp_index, qstate_ethrx.sta.color, qstate_ethrx.cfg.enable,
                qstate_ethrx.cfg.host_queue, qstate_ethrx.cfg.cpu_queue,
-               qstate_ethrx.cfg.intr_enable, qstate_ethrx.ring_base,
+               qstate_ethrx.cfg.intr_enable, qstate_ethrx.cfg.debug,
+               qstate_ethrx.ring_base,
                qstate_ethrx.ring_size, qstate_ethrx.cq_ring_base, qstate_ethrx.intr_assert_index,
                qstate_ethrx.sg_ring_base);
         break;
@@ -410,7 +419,7 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                "p_index0=0x%0x\nc_index0=0x%0x\n"
                "comp_index=0x%0x\nci_fetch=0x%0x\nci_miss=0x%0x\n"
                "color=0x%0x\nspec_miss=0x%0x\n"
-               "enable=0x%0x\nhost_queue=0x%0x\ncpu_queue=0x%0x\nintr_enable=0x%0x\n"
+               "enable=0x%0x\nhost_queue=0x%0x\ncpu_queue=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                "ring_base=0x%0lx\nring_size=0x%0x\n"
                "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
                "sg_ring_base=0x%0lx\n"
@@ -421,7 +430,8 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                qstate_ethtx.comp_index, qstate_ethtx.ci_fetch, qstate_ethtx.ci_miss,
                qstate_ethtx.sta.color, qstate_ethtx.sta.spec_miss, qstate_ethtx.cfg.enable,
                qstate_ethtx.cfg.host_queue, qstate_ethtx.cfg.cpu_queue,
-               qstate_ethtx.cfg.intr_enable, qstate_ethtx.ring_base,
+               qstate_ethtx.cfg.intr_enable, qstate_ethtx.cfg.debug,
+               qstate_ethtx.ring_base,
                qstate_ethtx.ring_size, qstate_ethtx.cq_ring_base, qstate_ethtx.intr_assert_index,
                qstate_ethtx.sg_ring_base, qstate_ethtx.spurious_db_cnt);
         break;
@@ -436,7 +446,7 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                "p_index0=0x%0x\nc_index0=0x%0x\n"
                "comp_index=0x%0x\nci_fetch=0x%0x\n"
                "color=0x%0x\n"
-               "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\n"
+               "enable=0x%0x\nhost_queue=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                "ring_base=0x%0lx\nring_size=0x%0x\n"
                "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n"
                "nicmgr_qstate_addr=0x%0lx\n",
@@ -445,6 +455,7 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                qstate_ethaq.pid, qstate_ethaq.p_index0, qstate_ethaq.c_index0,
                qstate_ethaq.comp_index, qstate_ethaq.ci_fetch, qstate_ethaq.sta.color,
                qstate_ethaq.cfg.enable, qstate_ethaq.cfg.host_queue, qstate_ethaq.cfg.intr_enable,
+               qstate_ethaq.cfg.debug,
                qstate_ethaq.ring_base, qstate_ethaq.ring_size, qstate_ethaq.cq_ring_base,
                qstate_ethaq.intr_assert_index, qstate_ethaq.nicmgr_qstate_addr);
         break;
@@ -503,14 +514,15 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                 "p_index0=0x%0x\nc_index0=0x%0x\n"
                 "comp_index=0x%0x\nci_fetch=0x%0x\n"
                 "color=0x%0x\n"
-                "enable=0x%0x\nintr_enable=0x%0x\n"
+                "enable=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                 "ring_base=0x%0lx\nring_size=0x%0x\n"
                 "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n",
                 qstate_req.pc_offset, qstate_req.rsvd0, qstate_req.cosA, qstate_req.cosB,
                 qstate_req.cos_sel, qstate_req.eval_last, qstate_req.host, qstate_req.total,
                 qstate_req.pid, qstate_req.p_index0, qstate_req.c_index0, qstate_req.comp_index,
                 qstate_req.ci_fetch, qstate_req.sta.color, qstate_req.cfg.enable,
-                qstate_req.cfg.intr_enable, qstate_req.ring_base, qstate_req.ring_size,
+                qstate_req.cfg.intr_enable, qstate_req.cfg.debug,
+                qstate_req.ring_base, qstate_req.ring_size,
                 qstate_req.cq_ring_base, qstate_req.intr_assert_index);
         }
         if (qid == 3) {
@@ -524,14 +536,15 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                 "p_index0=0x%0x\nc_index0=0x%0x\n"
                 "comp_index=0x%0x\nci_fetch=0x%0x\n"
                 "color=0x%0x\n"
-                "enable=0x%0x\nintr_enable=0x%0x\n"
+                "enable=0x%0x\nintr_enable=0x%0x\ndebug=0x%0x\n"
                 "ring_base=0x%0lx\nring_size=0x%0x\n"
                 "cq_ring_base=0x%0lx\nintr_assert_index=0x%0x\n",
                 qstate_resp.pc_offset, qstate_resp.rsvd0, qstate_resp.cosA, qstate_resp.cosB,
                 qstate_resp.cos_sel, qstate_resp.eval_last, qstate_resp.host, qstate_resp.total,
                 qstate_resp.pid, qstate_resp.p_index0, qstate_resp.c_index0, qstate_resp.comp_index,
                 qstate_resp.ci_fetch, qstate_resp.sta.color, qstate_resp.cfg.enable,
-                qstate_resp.cfg.intr_enable, qstate_resp.ring_base, qstate_resp.ring_size,
+                qstate_resp.cfg.intr_enable, qstate_resp.cfg.debug,
+                qstate_resp.ring_base, qstate_resp.ring_size,
                 qstate_resp.cq_ring_base, qstate_resp.intr_assert_index);
         }
         break;
@@ -543,8 +556,13 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 void
 eth_debug(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t enable)
 {
+    struct eth_rx_cfg_qstate qstate_ethrx = {0};
+    struct eth_tx_cfg_qstate qstate_ethtx = {0};
+    struct admin_cfg_qstate qstate_aq = {0};
     struct edma_cfg_qstate qstate_edmaq = {0};
     struct notify_cfg_qstate qstate_notifyq = {0};
+    struct admin_nicmgr_cfg_qstate qstate_req = {0};
+    struct admin_nicmgr_cfg_qstate qstate_resp = {0};
     queue_info_t qinfo[8] = {0};
 
     if (!get_lif_qstate(lif, qinfo)) {
@@ -566,6 +584,27 @@ eth_debug(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t enable)
     printf("\naddr: 0x%lx\n\n", addr);
 
     switch (qtype) {
+        case 0:
+            sdk::lib::pal_mem_read(addr + offsetof(eth_rx_qstate_t, cfg),
+                (uint8_t *)&qstate_ethrx, sizeof(qstate_ethrx));
+            qstate_ethrx.debug = enable;
+            sdk::lib::pal_mem_write(addr + offsetof(eth_rx_qstate_t, cfg),
+                (uint8_t *)&qstate_ethrx, sizeof(qstate_ethrx));
+            break;
+        case 1:
+            sdk::lib::pal_mem_read(addr + offsetof(eth_tx_qstate_t, cfg),
+                (uint8_t *)&qstate_ethtx, sizeof(qstate_ethtx));
+            qstate_ethtx.debug = enable;
+            sdk::lib::pal_mem_write(addr + offsetof(eth_tx_qstate_t, cfg),
+                (uint8_t *)&qstate_ethtx, sizeof(qstate_ethtx));
+            break;
+        case 2:
+            sdk::lib::pal_mem_read(addr + offsetof(admin_qstate_t, cfg),
+                (uint8_t *)&qstate_aq, sizeof(qstate_aq));
+            qstate_aq.debug = enable;
+            sdk::lib::pal_mem_write(addr + offsetof(admin_qstate_t, cfg),
+                (uint8_t *)&qstate_aq, sizeof(qstate_aq));
+            break;
         case 7:
         if (qid == 0) {
             sdk::lib::pal_mem_read(addr + offsetof(struct notify_qstate, cfg),
@@ -581,7 +620,31 @@ eth_debug(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t enable)
             sdk::lib::pal_mem_write(addr + offsetof(struct edma_qstate, cfg),
                 (uint8_t *)&qstate_edmaq, sizeof(qstate_edmaq));
         }
+        if (qid == 2) {
+            sdk::lib::pal_mem_read(addr + offsetof(nicmgr_req_qstate_t, cfg),
+                (uint8_t *)&qstate_req, sizeof(qstate_req));
+            qstate_req.debug = enable;
+            sdk::lib::pal_mem_write(addr + offsetof(nicmgr_req_qstate_t, cfg),
+                (uint8_t *)&qstate_req, sizeof(qstate_req));
+        }
+        if (qid == 3) {
+            sdk::lib::pal_mem_read(addr + offsetof(nicmgr_resp_qstate_t, cfg),
+                (uint8_t *)&qstate_resp, sizeof(qstate_resp));
+            qstate_resp.debug = enable;
+            sdk::lib::pal_mem_write(addr + offsetof(nicmgr_resp_qstate_t, cfg),
+                (uint8_t *)&qstate_resp, sizeof(qstate_resp));
+        }
     }
+
+    uint32_t val = 0x1;
+    sdk::lib::pal_reg_write(CAP_ADDR_BASE_RPC_PICS_OFFSET + \
+        CAP_PICS_CSR_PICC_BYTE_OFFSET + \
+        CAP_PICC_CSR_DHS_CACHE_INVALIDATE_BYTE_OFFSET, &val, 1);
+    sdk::lib::pal_reg_write(CAP_ADDR_BASE_TPC_PICS_OFFSET + \
+        CAP_PICS_CSR_PICC_BYTE_OFFSET + \
+        CAP_PICC_CSR_DHS_CACHE_INVALIDATE_BYTE_OFFSET, &val, 1);
+
+    eth_qstate(lif, qtype, qid);
 }
 
 void
@@ -876,7 +939,7 @@ main(int argc, char **argv)
         uint16_t lif = std::strtoul(argv[2], NULL, 0);
         uint8_t qtype = std::strtoul(argv[3], NULL, 0);
         uint32_t qid = std::strtoul(argv[4], NULL, 0);
-        uint8_t enable = std::strtoul(argv[4], NULL, 0);
+        uint8_t enable = std::strtoul(argv[5], NULL, 0);
         eth_debug(lif, qtype, qid, enable);
     } else if (strcmp(argv[1], "nvme_qstate") == 0) {
         if (argc != 5) {

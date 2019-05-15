@@ -71,10 +71,10 @@ header_type eth_tx_qstate_d {
         total : 4;
         pid : 16;
 
-        p_index0   : 16;
-        c_index0   : 16;
+        p_index0 : 16;
+        c_index0 : 16;
         comp_index : 16;
-        ci_fetch   : 16;
+        ci_fetch : 16;
         ci_miss : 16;
 
         // sta
@@ -87,7 +87,8 @@ header_type eth_tx_qstate_d {
         host_queue : 1;
         cpu_queue : 1;
         intr_enable : 1;
-        rsvd2 : 4;
+        debug : 1;
+        rsvd2 : 3;
 
         ring_base : 64;
         ring_size : 16;

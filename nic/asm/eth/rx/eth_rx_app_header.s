@@ -23,6 +23,10 @@ eth_rx_app_header:
   tblwr.l.f       d.rsvd1, 0
   // !!! No table updates after this point !!!
 
+  seq             c7, d.debug, 1
+  phvwr.c7        p.p4_intr_global_debug_trace, 1
+  trace.c7        0x1
+
   // Save all required information from APP header
   phvwr           p.eth_rx_global_lif, k.p4_intr_global_lif
   phvwr           p.eth_rx_global_qstate_addr, k.p4_rxdma_intr_qstate_addr

@@ -56,7 +56,7 @@
     pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, \
     p_index0, c_index0, comp_index, \
     color, rsvd1, \
-    enable, host_queue, cpu_queue, intr_enable, rsvd2, \
+    enable, host_queue, cpu_queue, intr_enable, debug, rsvd2, \
     ring_base, ring_size, cq_ring_base, intr_assert_index, \
     sg_ring_base
 
@@ -69,6 +69,7 @@
     modify_field(eth_rx_qstate.host_queue, host_queue); \
     modify_field(eth_rx_qstate.cpu_queue, cpu_queue); \
     modify_field(eth_rx_qstate.intr_enable, intr_enable); \
+    modify_field(eth_rx_qstate.debug, debug); \
     modify_field(eth_rx_qstate.rsvd2, rsvd2); \
     modify_field(eth_rx_qstate.ring_base, ring_base); \
     modify_field(eth_rx_qstate.ring_size, ring_size); \
@@ -139,7 +140,7 @@
         pc, rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, \
         p_index0, c_index0, comp_index, ci_fetch, ci_miss, \
         color, spec_miss, rsvd1, \
-        enable, host_queue, cpu_queue, intr_enable, rsvd2, \
+        enable, host_queue, cpu_queue, intr_enable, debug, rsvd2, \
         ring_base, ring_size, cq_ring_base, intr_assert_index, \
         sg_ring_base, \
         tso_hdr_addr, tso_hdr_len, tso_ipid_delta, tso_seq_delta, \
@@ -157,6 +158,7 @@
     modify_field(eth_tx_qstate.host_queue, host_queue); \
     modify_field(eth_tx_qstate.cpu_queue, cpu_queue); \
     modify_field(eth_tx_qstate.intr_enable, intr_enable); \
+    modify_field(eth_tx_qstate.debug, debug); \
     modify_field(eth_tx_qstate.rsvd2, rsvd2); \
     modify_field(eth_tx_qstate.ring_base, ring_base); \
     modify_field(eth_tx_qstate.ring_size, ring_size); \

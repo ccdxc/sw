@@ -564,7 +564,7 @@ capmon_asic_display_tx_sched()
     CAPMON_REPORT(" Clear=%u", asic->clears);
     CAPMON_REPORT(" PB XOFF:");
     for (cos = 0; cos < 16; cos++) {
-        CAPMON_REPORT(" %x%%", asic->xoff[cos]);
+        CAPMON_REPORT(" %u%%", asic->xoff[cos]);
     }
     CAPMON_REPORT("\n");
     CAPMON_REPORT(" PHVs:");

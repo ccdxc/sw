@@ -24,7 +24,6 @@ notify_fetch_desc:
   bcf             [c1], notify_queue_disabled
   seq             c2, d.p_index0, d.c_index0
   bcf             [c2], notify_spurious_db
-  nop
 
   seq             c7, d.debug, 1
   phvwr.c7        p.p4_intr_global_debug_trace, 1

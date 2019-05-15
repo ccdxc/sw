@@ -1117,8 +1117,8 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 
     if (spec->uplink_port_num == 0) {
         port_status->id = 0;
-        port_status->speed = 1000;
-        port_status->status = 1;
+        port_status->speed = IONIC_SPEED_1G;
+        port_status->status = PORT_OPER_STATUS_UP;
     } else {
         // Update port config
         rs = dev_api->port_get_config(spec->uplink_port_num,
