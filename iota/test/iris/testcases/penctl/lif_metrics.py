@@ -11,6 +11,7 @@ def Setup(tc):
 
     tc.node_intfs = {}
     for node in tc.nodes:
+        return api.types.status.SUCCESS if api.GetNodeOs(node) in ["esx"] else api.types.status.FAILURE
         tc.node_intfs[node] = interface.GetNodeInterface(node)
 
     ret = interface.ConfigureInterfaces(tc)
@@ -23,6 +24,7 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.nodes:
+        return api.types.status.SUCCESS if api.GetNodeOs(n) in ["esx"] else api.types.status.FAILURE
         if api.IsNaplesNode(n):
             common.AddPenctlCommand(req, n, "show metrics lif > metrics_lif.out.before")
 
@@ -40,6 +42,8 @@ def Trigger(tc):
     return api.types.status.SUCCESS
 
 def Verify(tc):
+    for node in tc.nodes:
+        return api.types.status.SUCCESS if api.GetNodeOs(node) in ["esx"] else api.types.status.FAILURE
     if tc.lif_metrics_new is None:
         return api.types.status.FAILURE
 
