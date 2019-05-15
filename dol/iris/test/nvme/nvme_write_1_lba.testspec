@@ -35,7 +35,7 @@ packets:
                 seq     : callback://nvme/tcp/GetSeqNum
                 ack     : callback://nvme/tcp/GetAckNum
             payload:
-                data    : ref://testcase/packets/id=BASE_PKT/rawbytes
+                data    : callback://nvme/nvme/encrypt_lba/pktid=BASE_PKT,lba_num=1
 
 buffers:
     - buffer:
