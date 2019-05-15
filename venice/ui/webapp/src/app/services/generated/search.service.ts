@@ -10,7 +10,7 @@ import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
 import { UIConfigsService } from '../uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { never } from 'rxjs';
+import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 
 @Injectable()
@@ -51,21 +51,21 @@ export class SearchService extends Searchv1Service {
 
     const key = this.convertEventID(opts);
     if (!this.uiconfigsService.isAuthorized(key)) {
-      return never();
+      return NEVER;
     }
     const isOnline = !this.isToMockData() || forceReal;
     return this.serviceUtility.invokeAJAX(method, url, payload, opts.eventID, isOnline);
   }
 
   convertEventID(opts: MethodOpts): UIRolePermissions {
-    let key:string;
+    let key: string;
     if (opts.eventID.includes('Policy')) {
       key = 'securitysgpolicy' + '_' + 'read';
     } else {
       key = 'search' + '_' + 'read';
     }
     // All event operations are reads, even posts.
-    return UIRolePermissions[key]
+    return UIRolePermissions[key];
   }
 
   /**

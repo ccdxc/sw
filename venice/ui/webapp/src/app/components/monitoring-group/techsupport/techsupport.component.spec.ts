@@ -80,11 +80,11 @@ describe('TechsupportComponent', () => {
   });
 
   describe('RBAC', () => {
-    let testHelper = new TestTablevieweditRBAC('monitoringtechsupportrequest');
+    const testHelper = new TestTablevieweditRBAC('monitoringtechsupportrequest');
     testHelper.skipEdit = true;
 
     beforeEach(() => {
-      const service = TestBed.get(MonitoringService)
+      const service = TestBed.get(MonitoringService);
       spyOn(service, 'WatchTechSupportRequest').and.returnValue(
         TestingUtility.createWatchEvents([new MonitoringTechSupportRequest()])
       );

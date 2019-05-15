@@ -1392,17 +1392,17 @@ export class Utility {
     let ret;
     Object.keys(CategoryMapping).some( (cat) => {
       return Object.keys(CategoryMapping[cat]).some( (kind) => {
-        const actions = CategoryMapping[cat][kind].actions.map( a => a.toLowerCase())
+        const actions = CategoryMapping[cat][kind].actions.map( a => a.toLowerCase());
         if (actions.includes(methodName.toLowerCase())) {
           ret = {
             category: cat,
             kind: kind,
-          }
+          };
           return true;
         }
         return false;
       });
-    })
+    });
     return ret;
   }
 

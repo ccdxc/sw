@@ -12,7 +12,7 @@ import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
 import { UIConfigsService } from '../uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { never } from 'rxjs';
+import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 
 @Injectable()
@@ -53,7 +53,7 @@ export class EventsService extends Eventsv1Service {
 
     const key = this.convertEventID(opts);
     if (!this.uiconfigsService.isAuthorized(key)) {
-      return never();
+      return NEVER;
     }
     const isOnline = !this.isToMockData() || forceReal;
     return this.serviceUtility.invokeAJAX(method, url, payload, opts.eventID, isOnline);
@@ -62,7 +62,7 @@ export class EventsService extends Eventsv1Service {
   convertEventID(opts) {
     // All event operations are reads, even posts.
     const key = 'eventsevent' + '_' + 'read';
-    return UIRolePermissions[key]
+    return UIRolePermissions[key];
   }
 
   /**

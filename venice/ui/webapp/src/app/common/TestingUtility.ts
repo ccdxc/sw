@@ -14,16 +14,16 @@ export class TestingUtility {
   fixture: ComponentFixture<any>;
 
   public static createWatchEvents(obj: any[]) {
-    const events = []
+    const events = [];
     obj.forEach( (o) => {
       events.push({
         type: 'Created',
         object: o
-      })
-    })
+      });
+    });
     return new BehaviorSubject({
       events: events
-    })
+    });
   }
 
   public static updateRoleGuards() {
@@ -54,7 +54,7 @@ export class TestingUtility {
   public static removePermissions(permissions: UIRolePermissions[]) {
     const serviceAny = TestBed.get(UIConfigsService) as any;
     permissions.forEach((p) => {
-      delete serviceAny.uiPermissions[p]
+      delete serviceAny.uiPermissions[p];
     });
   }
 

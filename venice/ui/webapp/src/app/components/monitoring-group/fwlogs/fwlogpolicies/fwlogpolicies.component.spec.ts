@@ -70,10 +70,10 @@ describe('FwlogpoliciesComponent', () => {
   });
 
   describe('RBAC', () => {
-    let testHelper = new TestTablevieweditRBAC('monitoringfwlogpolicy');
+    const testHelper = new TestTablevieweditRBAC('monitoringfwlogpolicy');
 
     beforeEach(() => {
-      const service = TestBed.get(MonitoringService)
+      const service = TestBed.get(MonitoringService);
       spyOn(service, 'WatchFwlogPolicy').and.returnValue(
         TestingUtility.createWatchEvents([new MonitoringFwlogPolicy()])
       );

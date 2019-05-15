@@ -29,12 +29,12 @@ import { AuthService } from '@app/services/auth.service';
 import { TestingUtility } from '@app/common/TestingUtility';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { TelemetryqueryService } from '@app/services/generated/telemetryquery.service';
- 
- 
+
+
 describe('fwlogsComponent', () => {
    let component: FwlogsComponent;
    let fixture: ComponentFixture<FwlogsComponent>;
- 
+
    beforeEach(async(() => {
      TestBed.configureTestingModule({
        declarations: [
@@ -69,12 +69,12 @@ describe('fwlogsComponent', () => {
      })
        .compileComponents();
    }));
- 
+
    beforeEach(() => {
      fixture = TestBed.createComponent(FwlogsComponent);
      component = fixture.componentInstance;
    });
- 
+
    it('should create', () => {
      fixture.detectChanges();
      expect(component).toBeTruthy();
@@ -85,9 +85,9 @@ describe('fwlogsComponent', () => {
 
       beforeEach(() => {
         TestingUtility.removeAllPermissions();
-        const controllerService = TestBed.get(ControllerService)
+        const controllerService = TestBed.get(ControllerService);
         toolbarSpy = spyOn(controllerService, 'setToolbarData');
-      })
+      });
 
     it('Admin user', () => {
       TestingUtility.setAllPermissions();
@@ -108,6 +108,6 @@ describe('fwlogsComponent', () => {
 
       expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(2);
     });
-  })
+  });
  });
- 
+

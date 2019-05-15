@@ -124,7 +124,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
     }
   }
 
-  getVersion(){
+  getVersion() {
     this.versionEventUtility = new HttpEventUtility<ClusterVersion>(ClusterVersion, true);
     this.versionArray = this.versionEventUtility.array as ReadonlyArray<ClusterVersion>;
     const subscription = this.clusterService.WatchVersion().subscribe(
@@ -134,7 +134,7 @@ export class AppcontentComponent extends CommonComponent implements OnInit, OnDe
           this.version = this.versionArray[0];
         }
       },
-    )
+    );
     this.subscriptions.push(subscription);
   }
 

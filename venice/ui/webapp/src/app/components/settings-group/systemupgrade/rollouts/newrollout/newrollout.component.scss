@@ -76,12 +76,12 @@ $vertical-gutter: 5px;
   color: #6ba0e5;
   display: inline-block;
 
-  > span:hover {
+  >span:hover {
     text-decoration: underline;
     cursor: pointer;
   }
 
-  > mat-icon:hover {
+  >mat-icon:hover {
     cursor: pointer;
   }
 }
@@ -96,7 +96,7 @@ $vertical-gutter: 5px;
 }
 
 /** customize calendar's internal input */
-.newrollout-calendar > input.ui-inputtext {
+.newrollout-calendar>input.ui-inputtext {
   padding: 5px !important;
 }
 
@@ -122,8 +122,8 @@ $vertical-gutter: 5px;
   margin-left: 10px;
 }
 
-.newrollout-calendar > input.ui-inputtext {
-  width: 170px;  // line up the calendar widget
+.newrollout-calendar>input.ui-inputtext {
+  width: 170px; // line up the calendar widget
 }
 
 .newrollout-dropdown-label {

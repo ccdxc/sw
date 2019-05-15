@@ -256,13 +256,13 @@ describe('HostsComponent', () => {
           host1, host2, host3
         ])
       );
-  
+
       spyOn(service, 'WatchSmartNIC').and.returnValue(
         TestingUtility.createWatchEvents([
           naple1
         ])
       );
-    })
+    });
 
     it('naples read permission', () => {
       TestingUtility.addPermissions(

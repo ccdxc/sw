@@ -42,7 +42,7 @@
                  *ngIf="currentEventSeverityFilter != null">All</div> -->
             <div class="global-button global-alert-critical alertsevents-main-menu-number "
                  [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'CRITICAL' ? 'alertsevents-disabled' : ''"
-                 (click)="onEventNumberClick($event, 'CRITICAL')"  [matTooltip]="'Critical Events'"
+                 (click)="onEventNumberClick($event, 'CRITICAL')" [matTooltip]="'Critical Events'"
                  *ngIf="eventNumbers.CRITICAL>0 && eventNumbers.CRITICAL !== events.length">
               {{ eventNumbers.CRITICAL }}</div>
             <div class="global-button global-alert-warning alertsevents-main-menu-number "
@@ -55,13 +55,13 @@
                  (click)="onEventNumberClick($event, 'INFO')" [matTooltip]="'Infomational Events'"
                  *ngIf="eventNumbers.INFO>0 && eventNumbers.INFO !== events.length">
               {{ eventNumbers.INFO }}</div>
-              <p-checkbox name="Show Debug Events"
-                          styleClass="alertsevents-checkbox"
-                          labelStyleClass="alertsevents-checkbox-label"
-                          binary="true"
-                          label="Show Debug Events"
-                          [(ngModel)]="showDebugEvents"
-                          (onChange)="filterEvents()"></p-checkbox>
+            <p-checkbox name="Show Debug Events"
+                        styleClass="alertsevents-checkbox"
+                        labelStyleClass="alertsevents-checkbox-label"
+                        binary="true"
+                        label="Show Debug Events"
+                        [(ngModel)]="showDebugEvents"
+                        (onChange)="filterEvents()"></p-checkbox>
           </app-tableheader>
         </ng-template>
         <!-- Table Header -->
@@ -148,17 +148,17 @@
                  *ngIf="currentAlertSeverityFilter != null">All</div> -->
             <div class="global-button global-alert-critical alertsevents-main-menu-number "
                  [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'CRITICAL' ? 'alertsevents-disabled' : ''"
-                 (click)="onAlertNumberClick('CRITICAL')"   [matTooltip]="'Critical Alerts'"
+                 (click)="onAlertNumberClick('CRITICAL')" [matTooltip]="'Critical Alerts'"
                  *ngIf="alertNumbers.CRITICAL>0 && alertNumbers.CRITICAL !== alerts.length">
               {{ alertNumbers.CRITICAL }}</div>
             <div class="global-button global-alert-warning alertsevents-main-menu-number "
                  [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'WARN' ? 'alertsevents-disabled' : ''"
-                 (click)="onAlertNumberClick('WARN')"   [matTooltip]="'Warning Alerts'"
+                 (click)="onAlertNumberClick('WARN')" [matTooltip]="'Warning Alerts'"
                  *ngIf="alertNumbers.WARN>0 && alertNumbers.WARN !== alerts.length">
               {{ alertNumbers.WARN }}</div>
             <div class="global-button global-alert-info alertsevents-main-menu-number "
                  [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'INFO' ? 'alertsevents-disabled' : ''"
-                 (click)="onAlertNumberClick('INFO')"   [matTooltip]="'Infomational Alerts'"
+                 (click)="onAlertNumberClick('INFO')" [matTooltip]="'Infomational Alerts'"
                  *ngIf="alertNumbers.INFO>0 && alertNumbers.INFO !== alerts.length">
               {{ alertNumbers.INFO }}</div>
           </app-tableheader>

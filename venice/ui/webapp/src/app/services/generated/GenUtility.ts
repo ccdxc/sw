@@ -43,35 +43,35 @@ export class GenServiceUtility {
   convertEventID(opts: MethodOpts): UIRolePermissions {
     let action;
     if (opts.eventID.startsWith('Watch')) {
-      action = "read"
-      opts.objType = opts.objType.replace('AutoMsg', '')
-      opts.objType = opts.objType.replace('WatchHelper', '')
+      action = 'read';
+      opts.objType = opts.objType.replace('AutoMsg', '');
+      opts.objType = opts.objType.replace('WatchHelper', '');
     } else if (opts.eventID.startsWith('List')) {
-      action = "read"
-      opts.objType = opts.objType.replace('List', '')
+      action = 'read';
+      opts.objType = opts.objType.replace('List', '');
     } else if (opts.eventID.startsWith('Get')) {
-      action = "read"
+      action = 'read';
     } else if (opts.eventID.startsWith('Update')) {
-      action = "update"
+      action = 'update';
     } else if (opts.eventID.startsWith('Delete')) {
       if (opts.isStaging) {
-        action = 'clear'
+        action = 'clear';
       } else {
-        action = "delete"
+        action = 'delete';
       }
     } else if (opts.eventID.startsWith('Add')) {
       if (opts.isStaging) {
-        action = 'commit'
+        action = 'commit';
       } else {
-        action = 'create'
+        action = 'create';
       }
     } else {
       const catKind = Utility.actionMethodNameToObject(opts.eventID);
-      action = 'create'
+      action = 'create';
       opts.objType = catKind.category + catKind.kind;
     }
     const key = opts.objType.toLowerCase() + '_' + action;
-    return UIRolePermissions[key]
+    return UIRolePermissions[key];
   }
 
 

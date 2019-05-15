@@ -69,7 +69,7 @@ describe('FlowexportpolicyComponent', () => {
   });
 
   describe('RBAC', () => {
-    let testHelper = new TestTablevieweditRBAC('monitoringflowexportpolicy');
+    const testHelper = new TestTablevieweditRBAC('monitoringflowexportpolicy');
 
     beforeEach(() => {
       component.dataObjects = [new MonitoringFlowExportPolicy()];

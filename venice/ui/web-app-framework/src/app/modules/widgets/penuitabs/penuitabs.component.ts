@@ -68,7 +68,7 @@ export class PenuitabsComponent implements OnInit, OnDestroy, AfterContentInit {
   }
 
   ngAfterContentInit() {
-    if (this.tabItems.length === 0) {
+    if (this.tabItems == null || this.tabItems.length === 0) {
       throw new Error('No Penuitab components were given');
     }
     this.tabItems.forEach((tabContainer) => {

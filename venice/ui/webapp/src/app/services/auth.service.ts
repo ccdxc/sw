@@ -68,13 +68,13 @@ export class AuthService extends AbstractService {
     return boolUseRealData;
   }
 
-  /** 
+  /**
    * Methods that are always accessible to a user are copied from authv1.service.ts.
    * This is so UIConfigService can call them without causing a circular dependency.
    */
 
   /** Get User object */
-  public GetUser(O_Name, queryParam: any = null, stagingID: string = ""):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public GetUser(O_Name, queryParam: any = null, stagingID: string = ''): Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -82,15 +82,15 @@ export class AuthService extends AbstractService {
       eventID: 'GetUser',
       objType: 'AuthUser',
       isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
+    };
+    if (stagingID != null && stagingID.length !== 0) {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}>;
   }
 
-  public IsAuthorized(O_Name, body: IAuthSubjectAccessReviewRequest, stagingID: string = "", trimObject: boolean = true):Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
+  public IsAuthorized(O_Name, body: IAuthSubjectAccessReviewRequest, stagingID: string = '', trimObject: boolean = true): Observable<{body: IAuthUser | IApiStatus | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/configs/auth/v1/tenant/{O.Tenant}/users/{O.Name}/IsAuthorized';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
     url = url.replace('{O.Name}', O_Name);
@@ -98,8 +98,8 @@ export class AuthService extends AbstractService {
       eventID: 'IsAuthorized',
       objType: 'AuthUser',
       isStaging: false,
-    }
-    if (stagingID != null && stagingID.length != 0) {
+    };
+    if (stagingID != null && stagingID.length !== 0) {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }

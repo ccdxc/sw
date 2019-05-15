@@ -27,7 +27,7 @@ USER node
 RUN mkdir /home/node/.npm-global
 ENV PATH=/home/node/.npm-global/bin:$PATH
 ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
-RUN npm install -g @angular/cli@1.7.3
+RUN npm install -g @angular/cli@7.0.4
 # Install spectacle-docs for venice docs generation
 RUN npm install -g spectacle-docs
 RUN ng -v

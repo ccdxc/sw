@@ -371,7 +371,7 @@ export class AlertseventsComponent extends BaseComponent implements OnInit, OnDe
       }
       this.eventsTotalCount = this.filteredEvents.length;
 
-      if (this.currentEventSeverityFilter != null) { 
+      if (this.currentEventSeverityFilter != null) {
         this.filteredEvents = this.filteredEvents.filter(item => item.severity === this.currentEventSeverityFilter);
       }
 

@@ -9,7 +9,8 @@
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label">Name:</div>
-          <div class="rolloutstatus-summary-panel-content-value">{{selectedRollout?.meta.name}} </div>
+          <div class="rolloutstatus-summary-panel-content-value">{{selectedRollout?.meta.name}}
+          </div>
         </div>
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label">Created on:</div>
@@ -32,7 +33,8 @@
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label"> Version: </div>
-          <div class="rolloutstatus-summary-panel-content-value"> {{selectedRollout?.spec.version }}</div>
+          <div class="rolloutstatus-summary-panel-content-value"> {{selectedRollout?.spec.version }}
+          </div>
         </div>
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label">Duration: </div>
@@ -43,7 +45,8 @@
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label"> Strategy: </div>
-          <div class="rolloutstatus-summary-panel-content-value"> {{selectedRollout?.spec.strategy }}</div>
+          <div class="rolloutstatus-summary-panel-content-value">
+            {{selectedRollout?.spec.strategy }}</div>
         </div>
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label">Upgrade Type: </div>
@@ -53,18 +56,22 @@
       </div>
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
         <div fxFlex="50" fxLayout="row">
-          <div class="rolloutstatus-summary-panel-content-label"> Max Node Updated In Parallel: </div>
-          <div class="rolloutstatus-summary-panel-content-value"> {{selectedRollout?.spec["max-parallel"] }}</div>
+          <div class="rolloutstatus-summary-panel-content-label"> Max Node Updated In Parallel:
+          </div>
+          <div class="rolloutstatus-summary-panel-content-value">
+            {{selectedRollout?.spec["max-parallel"] }}</div>
         </div>
         <div fxFlex="50" fxLayout="row">
-          <div class="rolloutstatus-summary-panel-content-label">Abort If Number Of NIC Failure: </div>
+          <div class="rolloutstatus-summary-panel-content-label">Abort If Number Of NIC Failure:
+          </div>
           <div class="rolloutstatus-summary-panel-content-value">
             {{selectedRollout?.spec["max-nic-failures-before-abort"] }}</div>
         </div>
       </div>
     </div>
   </mat-expansion-panel>
-  <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel" [expanded]="true" [hideToggle]="true">
+  <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel" [expanded]="true"
+                       [hideToggle]="true">
     <mat-expansion-panel-header class="rolloutstatus-expansionpanel-header">
       <mat-panel-title class="rolloutstatus-summary-panel-header">
         Status
@@ -74,11 +81,13 @@
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label">State:</div>
-          <div class="rolloutstatus-summary-panel-content-value">{{selectedRollout?.status.state}} </div>
+          <div class="rolloutstatus-summary-panel-content-value">{{selectedRollout?.status.state}}
+          </div>
         </div>
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label">Previous Version:</div>
-          <div class="rolloutstatus-summary-panel-content-value">{{selectedRollout?.status["prev-version"] }}</div>
+          <div class="rolloutstatus-summary-panel-content-value">
+            {{selectedRollout?.status["prev-version"] }}</div>
         </div>
       </div>
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
@@ -102,28 +111,30 @@
     </div>
 
   </mat-expansion-panel>
-  <mat-tab-group fxFlex [disableRipple]="true" (selectedIndexChange)="selectedIndexChangeEvent($event)">
+  <mat-tab-group fxFlex [disableRipple]="true"
+                 (selectedIndexChange)="selectedIndexChangeEvent($event)">
     <mat-tab label="CONTROLLER NODES">
       <ng-container
-        *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['controller-nodes-status'], tablename:'Controller Nodes'}">
+                    *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['controller-nodes-status'], tablename:'Controller Nodes'}">
       </ng-container>
     </mat-tab>
     <mat-tab label="CONTROLLER SERVICES">
       <ng-container
-        *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['controller-services-status'], tablename:'Controller Services'}">
+                    *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['controller-services-status'], tablename:'Controller Services'}">
       </ng-container>
     </mat-tab>
     <mat-tab label="SMART NICS">
       <ng-container
-        *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['smartnics-status'], tablename:'Smart NICS'}">
+                    *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['smartnics-status'], tablename:'Smart NICS'}">
       </ng-container>
     </mat-tab>
   </mat-tab-group>
 
   <!-- Deletion screen overlay displays when the policy we are viewing is deleted -->
   <!-- Missing screen overlay displays when the policy does not exist-->
-  <div #overlay *ngIf="showDeletionScreen || showMissingScreen" fxLayout="row" fxLayoutAlign="center stretch"
-    class="rolloutstatus-overlay">
+  <div #overlay *ngIf="showDeletionScreen || showMissingScreen" fxLayout="row"
+       fxLayoutAlign="center stretch"
+       class="rolloutstatus-overlay">
     <div fxFlex="50%" fxLayout="column" class="rolloutstatus-overlay-content">
       <div fxFlex='20%'></div>
       <div *ngIf="showDeletionScreen" fxFlex='15%' class="rolloutstatus-deleted-policy"></div>
@@ -137,9 +148,9 @@
       <div fxFlex="5%"></div>
       <div fxFlex="none" fxLayout="row" fxLayoutAlign="center stretch" fxLayoutGap="40px">
         <button fxFlex="none" class="global-button-primary rolloutstatus-overlay-button"
-          routerLink="../">ROLLOUTS</button>
+                routerLink="../">ROLLOUTS</button>
         <button fxFlex="none" class="global-button-primary rolloutstatus-overlay-button"
-          (click)="routeToHomepage()">HOMEPAGE</button>
+                (click)="routeToHomepage()">HOMEPAGE</button>
       </div>
     </div>
   </div>
@@ -147,19 +158,22 @@
 
 <ng-template #statusTable let-data="data" , let-tablename="tablename">
   <app-lazyrender [data]="data" [rows]="36" [virtualRowHeight]="56">
-    <p-table #eventTable class="global-primeng-table-lazyload" [columns]="statusCols" dataKey="name" [responsive]="true"
-      sortField="name" [sortOrder]='-1' [loading]="loading" [resizableColumns]="true">
+    <p-table #eventTable class="global-primeng-table-lazyload" [columns]="statusCols" dataKey="name"
+             [responsive]="true"
+             sortField="name" [sortOrder]='-1' [loading]="loading" [resizableColumns]="true">
       <!-- Table Caption -->
       <ng-template pTemplate="caption">
-        <app-tableheader title="{{tablename}}" [count]="data?.length" [total]="data?.length" width="250px">
+        <app-tableheader title="{{tablename}}" [count]="data?.length" [total]="data?.length"
+                         width="250px">
           <div fxFlex></div>
         </app-tableheader>
       </ng-template>
       <!-- Table Header -->
       <ng-template pTemplate="header" let-columns>
         <tr>
-          <th *ngFor="let col of statusCols; let last = last" [pSortableColumn]="col.sortable? col.field : ''"
-            [class]="col.class" [style.width]="col.width + '%'">
+          <th *ngFor="let col of statusCols; let last = last"
+              [pSortableColumn]="col.sortable? col.field : ''"
+              [class]="col.class" [style.width]="col.width + '%'">
             <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
             </app-sorticon>
           </th>
@@ -168,7 +182,8 @@
       <!-- Table Body -->
       <ng-template pTemplate="body" let-rowData>
         <tr class="rolloutstatus-tablerow">
-          <td *ngFor="let col of statusCols" [ngSwitch]="col.field" [class]="col.class" [style.width]="col.width + '%'">
+          <td *ngFor="let col of statusCols" [ngSwitch]="col.field" [class]="col.class"
+              [style.width]="col.width + '%'">
             <div *ngSwitchCase="'start-time'" class="rolloutstatus-date-row">
               {{rowData['start-time'] | PrettyDate }}
             </div>

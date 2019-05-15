@@ -77,7 +77,7 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
         text: 'ADD FIREWALL LOG POLICY',
         computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
         callback: () => { this.createNewObject(); }
-      }]
+      }];
     }
     this.controllerService.setToolbarData({
       buttons: buttons,

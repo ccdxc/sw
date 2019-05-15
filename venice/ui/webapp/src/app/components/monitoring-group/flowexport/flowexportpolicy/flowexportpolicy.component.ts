@@ -52,7 +52,7 @@ export class FlowexportpolicyComponent extends TablevieweditAbstract<IMonitoring
         text: 'ADD FlOW EXPORT',
         computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
         callback: () => { this.createNewObject(); }
-      }]
+      }];
     }
     this.controllerService.setToolbarData({
       buttons: buttons,

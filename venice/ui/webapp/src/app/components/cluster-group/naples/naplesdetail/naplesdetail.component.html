@@ -21,7 +21,8 @@
       </ng-container>
     </div>
   </div>
-  <div *roleGuard="{opt: ['monitoringAlert_read', 'eventsevent_read']}" fxFlex class="naplesdetail-alertsevents-container">
+  <div *roleGuard="{opt: ['monitoringAlert_read', 'eventsevent_read']}" fxFlex
+       class="naplesdetail-alertsevents-container">
     <app-shared-alertsevents [selector]="alertseventsSelector"></app-shared-alertsevents>
   </div>
   <!-- Deletion screen overlay displays when the policy we are viewing is deleted -->

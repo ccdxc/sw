@@ -9,8 +9,7 @@ import { environment } from '../../../environments/environment';
 import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
 import { UIConfigsService } from '../uiconfigs.service';
-import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { never } from 'rxjs';
+import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 
 
@@ -53,7 +52,7 @@ export class AuthService extends Authv1Service {
 
     const key = this.serviceUtility.convertEventID(opts);
     if (!this.uiconfigsService.isAuthorized(key)) {
-      return never();
+      return NEVER;
     }
     const isOnline = !this.isToMockData() || forceReal;
     return this.serviceUtility.invokeAJAX(method, url, payload, opts.eventID, isOnline);

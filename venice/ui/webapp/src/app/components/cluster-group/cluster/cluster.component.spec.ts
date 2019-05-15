@@ -151,7 +151,7 @@ describe('ClusterComponent', () => {
 
       beforeEach(() => {
         TestingUtility.removeAllPermissions();
-        const controllerService = TestBed.get(ControllerService)
+        const controllerService = TestBed.get(ControllerService);
         toolbarSpy = spyOn(controllerService, 'setToolbarData');
       });
 
@@ -164,7 +164,7 @@ describe('ClusterComponent', () => {
       it('cert option no access', () => {
         fixture.detectChanges();
         expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
-      })
+      });
 
       it('nodes table', () => {
         TestingUtility.addPermissions([UIRolePermissions.clusternode_read]);
@@ -190,7 +190,7 @@ describe('ClusterComponent', () => {
         TestingUtility.updateRoleGuards();
         fixture.detectChanges();
 
-        // metrics should be hidden 
+        // metrics should be hidden
         cards = fixture.debugElement.queryAll(By.css('app-herocard'));
         expect(cards.length).toBe(0);
 
@@ -198,7 +198,7 @@ describe('ClusterComponent', () => {
         TestingUtility.updateRoleGuards();
         fixture.detectChanges();
 
-        // metrics should be hidden 
+        // metrics should be hidden
         cards = fixture.debugElement.queryAll(By.css('app-herocard'));
         expect(cards.length).toBe(0);
 
@@ -207,7 +207,7 @@ describe('ClusterComponent', () => {
         TestingUtility.updateRoleGuards();
         fixture.detectChanges();
 
-        // metrics should be hidden 
+        // metrics should be hidden
         cards = fixture.debugElement.queryAll(By.css('app-herocard'));
         expect(cards.length).toBe(0);
 
@@ -240,7 +240,7 @@ describe('ClusterComponent', () => {
 
         // alerts only
         expect(fixture.debugElement.queryAll(By.css('app-shared-alertsevents')).length).toBe(1, 'alertsevents table should be present');
-      })
+      });
   });
 
 

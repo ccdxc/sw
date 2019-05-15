@@ -8,7 +8,7 @@
   <div fxFlex="none" fxLayout="row">
     <div fxFlex fxLayout="row wrap" class="cluster-card-container">
       <ng-container *ngTemplateOutlet="nodeTable"></ng-container>
-        <ng-container  *roleGuard="{req: ['metricsquery_read', 'clusterNode_read']}">
+      <ng-container *roleGuard="{req: ['metricsquery_read', 'clusterNode_read']}">
 
         <ng-container *ngFor="let cardData of heroCards">
           <app-herocard fxFlex="nogrow"
@@ -28,7 +28,8 @@
       </ng-container>
     </div>
   </div>
-  <div *roleGuard="{opt: ['monitoringAlert_read', 'eventsevent_read']}" fxFlex class="cluster-alertsevents-container">
+  <div *roleGuard="{opt: ['monitoringAlert_read', 'eventsevent_read']}" fxFlex
+       class="cluster-alertsevents-container">
     <app-shared-alertsevents></app-shared-alertsevents>
   </div>
 </app-pagebody>
@@ -45,9 +46,9 @@
       </div>
       <ng-container *ngFor="let node of nodes">
         <div routerLink="./{{node.meta.name}}" fxFlex="none" fxLayout="column"
-            class="cluster-node-container">
+             class="cluster-node-container">
           <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="5px"
-              class="cluster-node-name">
+               class="cluster-node-name">
             <div fxFlex="none" class="cluster-node-status"></div>
             <span class="cluster-node-name" fxFlex="none">{{ node.meta.name }}</span>
             <mat-icon fxFlex="none" *ngIf="cluster.status.leader === node.meta.name"
@@ -56,25 +57,25 @@
           <div fxLayout="row">
             <div fxFlex="none" fxLayout="column">
               <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
-                  fxLayoutAlign="start center">
+                   fxLayoutAlign="start center">
                 <div>Quorum Node:</div>
               </div>
             </div>
             <div fxFlex fxLayout="column">
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
-                  class="cluster-node-value">
+                   class="cluster-node-value">
                 <div class="cluster-node-quorum">{{ node.status.quorum }}</div>
               </div>
             </div>
             <div fxFlex="none" fxLayout="column">
               <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
-                  fxLayoutAlign="start center">
+                   fxLayoutAlign="start center">
                 <div>Phase:</div>
               </div>
             </div>
             <div fxFlex fxLayout="column">
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
-                  class="cluster-node-value">
+                   class="cluster-node-value">
                 <div class="cluster-node-phase">{{ phaseEnum[node.status.phase] }}</div>
               </div>
             </div>

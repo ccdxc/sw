@@ -36,9 +36,11 @@
 
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon *roleGuard="'monitoringalertdestination_update'" matTooltip="Edit destination" class="global-table-action-icon"
+    <mat-icon *roleGuard="'monitoringalertdestination_update'" matTooltip="Edit destination"
+              class="global-table-action-icon"
               (click)="expandRowRequest($event, rowData)">edit</mat-icon>
-    <mat-icon *roleGuard="'monitoringalertdestination_delete'" matTooltip="Delete destination" class="global-table-action-icon"
+    <mat-icon *roleGuard="'monitoringalertdestination_delete'" matTooltip="Delete destination"
+              class="global-table-action-icon"
               (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
 </ng-template>

@@ -87,9 +87,9 @@ describe('AlertseventspageComponent', () => {
 
       beforeEach(() => {
         TestingUtility.removeAllPermissions();
-        const controllerService = TestBed.get(ControllerService)
+        const controllerService = TestBed.get(ControllerService);
         toolbarSpy = spyOn(controllerService, 'setToolbarData');
-      })
+      });
 
     it('Admin user', () => {
       TestingUtility.setAllPermissions();
@@ -146,5 +146,5 @@ describe('AlertseventspageComponent', () => {
 
       expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
     });
-  })
+  });
 });

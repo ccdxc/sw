@@ -74,7 +74,7 @@ export class EventpolicyComponent extends TablevieweditAbstract<IMonitoringEvent
         text: 'ADD EVENT POLICY',
         computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
         callback: () => { this.createNewObject(); }
-      }]
+      }];
     }
     this.controllerService.setToolbarData({
       buttons: buttons,

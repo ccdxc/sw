@@ -133,7 +133,7 @@ describe('NaplesComponent', () => {
     const service = TestBed.get(ClusterService);
     spyOn(service, 'WatchSmartNIC').and.returnValue(
       TestingUtility.createWatchEvents([naples1, naples2, naples3])
-    )
+    );
   });
 
   it('should populate table', () => {

@@ -32,17 +32,17 @@ export class TestTablevieweditRBAC {
    */
   runTests() {
       let toolbarSpy: jasmine.Spy;
-  
+
       beforeEach(() => {
         TestingUtility.removeAllPermissions();
-        const controllerService = TestBed.get(ControllerService)
+        const controllerService = TestBed.get(ControllerService);
         toolbarSpy = spyOn(controllerService, 'setToolbarData');
-      })
-  
+      });
+
       it('Admin user', () => {
         TestingUtility.setAllPermissions();
         this.fixture.detectChanges();
-  
+
         // create button
         expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
         const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
@@ -58,11 +58,11 @@ export class TestTablevieweditRBAC {
           expect(actionButtons[0].nativeElement.textContent).toBe('delete');
         }
       });
-  
+
       it('create access only', () => {
         TestingUtility.addPermissions([UIRolePermissions[this.permissonBase + '_create']]);
         this.fixture.detectChanges();
-  
+
         // create button
         expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
 
@@ -70,14 +70,14 @@ export class TestTablevieweditRBAC {
         const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
         expect(actionButtons.length).toBe(0);
       });
-  
+
       it('edit access only', () => {
         if (this.skipEdit) {
           return;
         }
         TestingUtility.addPermissions([UIRolePermissions[this.permissonBase + '_update']]);
         this.fixture.detectChanges();
-  
+
         // create button
         expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
         // edit button not present
@@ -85,11 +85,11 @@ export class TestTablevieweditRBAC {
         expect(actionButtons.length).toBe(1);
         expect(actionButtons[0].nativeElement.textContent).toBe('edit');
       });
-  
+
       it('delete access only', () => {
         TestingUtility.addPermissions([UIRolePermissions[this.permissonBase + '_delete']]);
         this.fixture.detectChanges();
-  
+
         // create button
         expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
         // edit button not present
@@ -100,7 +100,7 @@ export class TestTablevieweditRBAC {
 
       it('no access', () => {
         this.fixture.detectChanges();
-  
+
         // create button
         expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
         // edit and delete button not present

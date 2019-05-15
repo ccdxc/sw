@@ -72,7 +72,7 @@ describe('DestinationpolicyComponent', () => {
   });
 
   describe('RBAC', () => {
-    let testHelper = new TestTablevieweditRBAC('monitoringalertdestination');
+    const testHelper = new TestTablevieweditRBAC('monitoringalertdestination');
 
     beforeEach(() => {
       component.isActiveTab = true;

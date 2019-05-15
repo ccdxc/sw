@@ -98,7 +98,7 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
         cssClass: 'global-button-primary cluster-toolbar-button',
         text: 'UPDATE TLS',
         callback: () => { this.certMode =  !this.certMode; },
-      }]
+      }];
     }
 
     this._controllerService.setToolbarData({

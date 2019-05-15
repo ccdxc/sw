@@ -90,13 +90,13 @@ export class FwlogsComponent extends TableviewAbstract<ITelemetry_queryFwlog, Te
           text: 'REFRESH',
           callback: () => { this.getFwlogs(); },
         },
-      ]
+      ];
       if (this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringfwlogpolicy_read)) {
         buttons.push({
           cssClass: 'global-button-primary fwlogs-button',
           text: 'FIREWALL LOG POLICIES',
           callback: () => { this.controllerService.navigate(['/monitoring', 'fwlogs', 'fwlogpolicies']); }
-        })
+        });
       }
     this.controllerService.setToolbarData({
       buttons: buttons,

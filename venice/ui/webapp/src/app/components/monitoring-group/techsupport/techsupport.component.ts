@@ -77,7 +77,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
           text: 'ADD TECH-SUPPORT REQUEST',
           computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
           callback: () => { this.createNewObject(); }
-      }]
+      }];
     }
     this.controllerService.setToolbarData({
       buttons: buttons,

@@ -1,19 +1,22 @@
 <div [style.width]="'100%'" fxLayout="column">
   <div fxFlex="auto" fxLayout="row" fxLayoutAlign="center start" class="newrollout-container">
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
-    <div fxFlex="auto" fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'" fxLayoutAlign="start stretch"
-      class="newrollout-content">
+    <div fxFlex="auto" fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
+         fxLayoutAlign="start stretch"
+         class="newrollout-content">
       <div fxFlex fxLayout="column">
         <div fxFlex="auto" class="newrollout-select-button-div" fxLayout="row">
-              <p-selectButton [options]="rolloutNicNodeTypes" [(ngModel)]="selectedRolloutNicNodeTypes"
-                (onChange)="onNicNodeTypeChange($event)">
-              </p-selectButton>
+          <p-selectButton [options]="rolloutNicNodeTypes" [(ngModel)]="selectedRolloutNicNodeTypes"
+                          (onChange)="onNicNodeTypeChange($event)">
+          </p-selectButton>
         </div>
         <div fxFlex fxLayout="column" [formGroup]="newRollout.$formGroup">
           <div fxFlex="nogrow" fxLayout="row" class="newrollout-row" formGroupName="meta">
             <!-- meta row-->
-            <input fxFlex="300px" formControlName="name" appErrorTooltip class="newrollout-input-common"
-              matspellcheck="false" type="text" pInputText placeholder="Unique Rollout Name...">
+            <input fxFlex="300px" formControlName="name" appErrorTooltip
+                   class="newrollout-input-common"
+                   matspellcheck="false" type="text" pInputText
+                   placeholder="Unique Rollout Name...">
           </div>
           <ng-container *ngTemplateOutlet="divider"></ng-container>
           <div fxFlex="noshrink" fxLayout="row" class="newrollout-row" formGroupName="spec">
@@ -21,12 +24,15 @@
             <div fxFlex fxLayout="column">
               <div fxFlex="auto" fxLayout="row">
                 <div fxFlex="nogrow" class="newrollout-text">Version:</div>
-                <p-dropdown class="newrollout-dropdown" fxFlex="300px" appErrorTooltip formControlName="version"
-                  styleClass="newrollout-font, newrollout-input-common" [options]="rolloutImageOptions"
-                  placeholder="version" (onChange)="onVersionChange($event)">
+                <p-dropdown class="newrollout-dropdown" fxFlex="300px" appErrorTooltip
+                            formControlName="version"
+                            styleClass="newrollout-font, newrollout-input-common"
+                            [options]="rolloutImageOptions"
+                            placeholder="version" (onChange)="onVersionChange($event)">
                   <ng-template let-version pTemplate="item">
                     <div class="ui-helper-clearfix newrollout-dropdown-div">
-                      <div class="newrollout-dropdown-label">{{version.label}} - {{version.model.Description}}</div>
+                      <div class="newrollout-dropdown-label">{{version.label}} -
+                        {{version.model.Description}}</div>
                     </div>
                   </ng-template>
                 </p-dropdown>
@@ -39,51 +45,65 @@
                 <input fxFlex="200px" formControlName="duration" appErrorTooltip class="newrollout-input-common"
                   matspellcheck="false" type="text" pInputText placeholder="Until completion"> -->
                 <div fxFlex="nogrow" class="newrollout-text">Schedule:</div>
-                <p-calendar fxFlex="200px" [showTime]="true" hourFormat="24" formControlName="scheduled-start-time"
-                  appendTo="body" [showIcon]="true"
-                  styleClass="newrollout-font, newrollout-input-common newrollout-calendar"></p-calendar>
+                <p-calendar fxFlex="200px" [showTime]="true" hourFormat="24"
+                            formControlName="scheduled-start-time"
+                            appendTo="body" [showIcon]="true"
+                            styleClass="newrollout-font, newrollout-input-common newrollout-calendar">
+                </p-calendar>
               </div>
-             
+
               <div fxFlex></div>
               <div fxFlex="auto" fxLayout="row">
                 <div fxFlex="nogrow" class="newrollout-text">Strategy:</div>
-                <p-dropdown class="newrollout-dropdown" fxFlex="200px" appErrorTooltip formControlName="strategy"
-                  styleClass="newrollout-font, newrollout-input-common" [options]="strategyOptions"></p-dropdown>
-                <div fxFlex="nogrow" class="newrollout-text  newrollout-text-upgradetype">Upgrade Type:</div>
-                <p-dropdown class="newrollout-dropdown" fxFlex="200px" appErrorTooltip formControlName="upgrade-type"
-                  styleClass="newrollout-font, newrollout-input-common" [options]="upgradetypeOptions"></p-dropdown>
+                <p-dropdown class="newrollout-dropdown" fxFlex="200px" appErrorTooltip
+                            formControlName="strategy"
+                            styleClass="newrollout-font, newrollout-input-common"
+                            [options]="strategyOptions"></p-dropdown>
+                <div fxFlex="nogrow" class="newrollout-text  newrollout-text-upgradetype">Upgrade
+                  Type:</div>
+                <p-dropdown class="newrollout-dropdown" fxFlex="200px" appErrorTooltip
+                            formControlName="upgrade-type"
+                            styleClass="newrollout-font, newrollout-input-common"
+                            [options]="upgradetypeOptions"></p-dropdown>
 
               </div>
 
               <ng-container *ngTemplateOutlet="divider"></ng-container>
-              
 
-              <div fxFlex="auto" class="newrollout-maxnode-div" fxLayout="row" *ngIf="isToShowNodeDiv()">
+
+              <div fxFlex="auto" class="newrollout-maxnode-div" fxLayout="row"
+                   *ngIf="isToShowNodeDiv()">
                 <div fxFlex="nogrow" class="newrollout-text">Max Nodes In Parallel:</div>
-                <input fxFlex="200px" formControlName="max-parallel" appErrorTooltip class="newrollout-input-common"
-                  matspellcheck="false" type="number" pInputText placeholder="Max nodes to upgrade" min='1' max='10'>
+                <input fxFlex="200px" formControlName="max-parallel" appErrorTooltip
+                       class="newrollout-input-common"
+                       matspellcheck="false" type="number" pInputText
+                       placeholder="Max nodes to upgrade" min='1' max='10'>
               </div>
               <div fxFlex></div>
-              <div  fxFlex fxLayout="column" class="newrollout-nic-div"  *ngIf="isToShowNicDiv()">
-                
+              <div fxFlex fxLayout="column" class="newrollout-nic-div" *ngIf="isToShowNicDiv()">
+
                 <div fxFlex="auto" class="newrollout-maxnic-div" fxLayout="row">
                   <div fxFlex="nogrow" class="newrollout-text">Max Allowed NICs Failure :</div>
-                  <input fxFlex="200px" formControlName="max-nic-failures-before-abort" appErrorTooltip
-                    class="newrollout-input-common" matspellcheck="false" type="number" pInputText
-                    placeholder="Max NIC Failures Allowed." min='1' max='2000'>
+                  <input fxFlex="200px" formControlName="max-nic-failures-before-abort"
+                         appErrorTooltip
+                         class="newrollout-input-common" matspellcheck="false" type="number"
+                         pInputText
+                         placeholder="Max NIC Failures Allowed." min='1' max='2000'>
 
                 </div>
 
                 <div fxFlex></div>
                 <div fxFlex="auto" class="newrollout-NicConstraints-div" fxLayout="row">
                   <mat-slide-toggle formControlName="smartnic-must-match-constraint" fxFlex='30px'
-                    class="newrollout-toggle newrollout-fieldtitle" (change)="onNICsConstraintsChange($event)"></mat-slide-toggle>
+                                    class="newrollout-toggle newrollout-fieldtitle"
+                                    (change)="onNICsConstraintsChange($event)"></mat-slide-toggle>
                   <div fxFlex="nogrow" class="newrollout-text">Must match NICs Constraints?</div>
                 </div>
-                <div fxFlex="auto" class="newrollout-NicOrder-div" fxLayout="row" *ngIf="isToShowNicOrderDiv()">
+                <div fxFlex="auto" class="newrollout-NicOrder-div" fxLayout="row"
+                     *ngIf="isToShowNicOrderDiv()">
                   <div fxFlex="nogrow" class="newrollout-text">Set upgrade order by labels:</div>
                   <app-repeater #orderConstraintsLabelRepeater [data]="orderConstraintslabelData"
-                    [formArray]="orderConstraintslabelFormArray">
+                                [formArray]="orderConstraintslabelFormArray">
                   </app-repeater>
                 </div>
               </div>
@@ -92,17 +112,17 @@
           <div fxFlex="20px"></div>
           <!-- Buffer, creating as a div so there are no hiccups in the animation-->
         </div>
-        
+
       </div>
       <div *ngIf="isInline" class="newrollout-buttoncontainer" fxFlex="nogrow" fxLayout="row wrap"
-        fxLayoutAlign="start start">
+           fxLayoutAlign="start start">
         <div fxFlex="nogrow">
           <span (click)="updateRollout()"
-            class="global-button-primary newrollout-edit-button newrollout-save">SAVE</span>
+                class="global-button-primary newrollout-edit-button newrollout-save">SAVE</span>
         </div>
         <div fxFlex="nogrow">
           <span (click)="cancelRollout()"
-            class="global-button-neutral newrollout-edit-button  newrollout-cancel">CANCEL</span>
+                class="global-button-neutral newrollout-edit-button  newrollout-cancel">CANCEL</span>
         </div>
       </div>
     </div>

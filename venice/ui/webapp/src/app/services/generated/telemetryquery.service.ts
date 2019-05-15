@@ -9,7 +9,7 @@ import { Utility } from '../../common/Utility';
 import { GenServiceUtility } from './GenUtility';
 import { UIConfigsService } from '../uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { never } from 'rxjs';
+import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 
 
@@ -54,7 +54,7 @@ export class TelemetryqueryService extends Telemetry_queryv1Service {
 
     const key = this.convertEventID(opts);
     if (!this.uiconfigsService.isAuthorized(key)) {
-      return never();
+      return NEVER;
     }
     const isOnline = !this.isToMockData() || forceReal;
     return this.serviceUtility.invokeAJAX(method, url, payload, opts.eventID, isOnline);
@@ -67,7 +67,7 @@ export class TelemetryqueryService extends Telemetry_queryv1Service {
     } else if (opts.eventID.includes('Metrics')) {
       key = 'metricsquery' + '_' + 'read';
     }
-    return UIRolePermissions[key]
+    return UIRolePermissions[key];
   }
 
 

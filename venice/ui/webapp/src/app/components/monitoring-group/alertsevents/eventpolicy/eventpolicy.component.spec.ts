@@ -70,10 +70,10 @@ describe('EventpolicyComponent', () => {
   });
 
   describe('RBAC', () => {
-    let testHelper = new TestTablevieweditRBAC('monitoringeventpolicy');
+    const testHelper = new TestTablevieweditRBAC('monitoringeventpolicy');
 
     beforeEach(() => {
-      const service = TestBed.get(MonitoringService)
+      const service = TestBed.get(MonitoringService);
       spyOn(service, 'WatchEventPolicy').and.returnValue(
         TestingUtility.createWatchEvents([new MonitoringEventPolicy()])
       );
