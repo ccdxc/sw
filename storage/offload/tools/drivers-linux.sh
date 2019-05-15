@@ -34,20 +34,6 @@ TOP=$(readlink -f "$(dirname "$0")/../../..")
 : ${GEN_DIR:="$TOP/storage/gen/storage-offload"}
 : ${GEN_PKG:="$GEN_DIR.tar.xz"}
 
-# Package will identify version of sources
-report_version() {
-  cd "$1"
-  echo -n 'HEAD: '
-  git log --oneline -n1 HEAD
-  echo -n '@{u}: '
-  git log --oneline -n1 @{u}
-  echo '### commits not upstream ###'
-  git log --oneline @{u}..
-  echo '### git status ###'
-  git status -uno
-  cd - > /dev/null
-}
-
 # Always start clean
 rm -rf "$GEN_DIR"
 mkdir -p "$GEN_DIR"
@@ -67,7 +53,6 @@ rsync -r --delete --delete-excluded --copy-links \
   --exclude="tags" \
   --exclude="tools/" \
   "$DRIVERS_SRC/" "$GEN_DIR"
-report_version "$DRIVERS_SRC" > "$GEN_DIR/version.drivers"
 
 # Set version string
 if [ -n "$SW_VERSION" ] ; then

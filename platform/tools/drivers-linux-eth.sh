@@ -28,24 +28,6 @@ TOP=$(readlink -f "$(dirname "$0")/../..")
 : ${GEN_DIR:="$TOP/platform/gen/drivers-linux-eth"}
 : ${GEN_PKG:="$GEN_DIR.tar.xz"}
 
-# Package will identify version of sources
-report_version() {
-  cd "$1"
-  if ! git status &> /dev/null ; then
-    echo 'Unable to identify version from git'
-  else
-    echo -n 'HEAD: '
-    git log --oneline -n1 HEAD
-    echo -n '@{u}: '
-    git log --oneline -n1 @{u}
-    echo '### commits not upstream ###'
-    git log --oneline @{u}..
-    echo '### git status ###'
-    git status -uno
-    cd - > /dev/null
-  fi
-}
-
 # Always start clean
 rm -rf "$GEN_DIR"
 mkdir -p "$GEN_DIR"
@@ -56,7 +38,6 @@ rsync -r --delete --delete-excluded \
 
 # Copy linux driver sources to gen dir
 mkdir -p "$GEN_DIR/drivers"
-report_version "$DRIVERS_SRC" > "$GEN_DIR/version.drivers"
 rsync -r --delete --delete-excluded --copy-links \
   --exclude=".git/" \
   --exclude=".cache.mk" \

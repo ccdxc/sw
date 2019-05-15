@@ -50,24 +50,6 @@ RDMA="$TOP/platform/src/third-party/rdma"
 : ${COMMON_GEN_DIR:="$GEN_DIR/common/"}
 : ${GEN_PKG:="$GEN_DIR.tar.xz"}
 
-# Package will identify version of sources
-report_version() {
-  cd "$1"
-  if ! git status &> /dev/null ; then
-    echo 'Unable to identify version from git'
-  else
-    echo -n 'HEAD: '
-    git log --oneline -n1 HEAD
-    echo -n '@{u}: '
-    git log --oneline -n1 @{u}
-    echo '### commits not upstream ###'
-    git log --oneline @{u}..
-    echo '### git status ###'
-    git status -uno
-    cd - > /dev/null
-  fi
-}
-
 # Always start clean
 rm -rf "$GEN_DIR"
 mkdir -p "$GEN_DIR"
@@ -82,7 +64,6 @@ rsync -r --delete --delete-excluded \
   "$GEN_DIR/"
 
 # Copy linux driver sources to gen dir
-report_version "$DRIVERS_SRC" > "$GEN_DIR/version.drivers"
 rsync -r --delete --delete-excluded --copy-links \
   --exclude=".git/" \
   --exclude=".cache.mk" \
@@ -108,7 +89,6 @@ rsync -r --copy-links \
   "$COMMON_SRC/" "$COMMON_GEN_DIR"
 
 # Copy rdma-core sources to gen dir
-report_version "$RDMACORE_SRC" > "$GEN_DIR/version.rdma-core"
 rsync -r --delete --delete-excluded --copy-links \
   --exclude=".git/" \
   --exclude="build/" \
@@ -125,7 +105,6 @@ ln -s "../../../drivers/rdma/drv/ionic/uapi/rdma/ionic-abi.h" \
 rsync -r "$KRPING_SRC/" "$GEN_DIR/krping"
 
 # Copy perftest sources to gen dir
-report_version "$PERFTEST_SRC" > "$GEN_DIR/version.perftest"
 rsync -r --delete --delete-excluded \
   --exclude=".git/" \
   --exclude="*.a" \
@@ -150,7 +129,6 @@ rsync -r --delete --delete-excluded \
   "$PERFTEST_SRC/" "$GEN_DIR/perftest"
 
 # Copy qperf sources to gen dir
-report_version "$QPERF_SRC" > "$GEN_DIR/version.qperf"
 rsync -r --delete --delete-excluded \
   --exclude=".git/" \
   --exclude="ChangeLog" \

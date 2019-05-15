@@ -18,27 +18,12 @@ RDMA="$TOP/platform/src/third-party/rdma"
 : ${GEN_PKG:=${GEN_DIR}.tar.xz}
 : ${GEN_ETH_PKG:=${GEN_ETH_DIR}.tar.xz}
 
-# Package will identify version of sources
-report_version() {
-  cd "$1"
-  echo -n 'HEAD: '
-  git log --oneline -n1 HEAD
-  echo -n '@{u}: '
-  git log --oneline -n1 @{u}
-  echo '### commits not upstream ###'
-  git log --oneline @{u}..
-  echo '### git status ###'
-  git status -uno
-  cd - > /dev/null
-}
-
 # Always start clean
 rm -fr "$GEN_DIR"
 mkdir -p "$GEN_DIR"
 mkdir -p "$SONIC_GEN_DIR"
 
 # Copy BSD driver sources to gen dir
-report_version "$DRIVERS_SRC" > "$GEN_DIR/version.drivers"
 rsync -r --delete --delete-excluded --copy-links \
   --exclude=".git/" \
   --exclude=".cache.mk" \
@@ -106,7 +91,6 @@ rsync -r --delete --delete-excluded \
   "$PERFTEST_SRC/" "$GEN_DIR/perftest"
 
 # Copy qperf sources to gen dir
-report_version "$QPERF_SRC" > "$GEN_DIR/version.qperf"
 rsync -r --delete --delete-excluded \
   --exclude=".git/" \
   --exclude="ChangeLog" \
