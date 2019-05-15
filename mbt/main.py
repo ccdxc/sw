@@ -20,15 +20,17 @@ for path in paths:
     print("Adding Path: %s" % fullpath)
     sys.path.insert(0, fullpath)
 
+import threading
+import infra.common.glopts as glopts
+glopts.ParseArgs()
+glopts.ValidateGlopts()
 import infra.common.parser  as parser
 import infra.common.objects as objects
-import threading
-from infra.common.glopts import GlobalOptions
 
 # If the random seed is set as a command line argument, set it into the
 # environment variables now, so that the same seed is used everywhere.
-if GlobalOptions.mbtrandomseed:
-    os.environ['MBT_RANDOM_SEED'] = GlobalOptions.mbtrandomseed
+if glopts.GlobalOptions.mbtrandomseed:
+    os.environ['MBT_RANDOM_SEED'] = glopts.GlobalOptions.mbtrandomseed
 else:
     os.environ['MBT_RANDOM_SEED'] = str(random.randint(1,10000000))
 
@@ -75,7 +77,7 @@ def start_zmq_server():
         socket.send_string ("Proceed")
 
 # Create a thread for zmq signaling with DOL
-if GlobalOptions.mbt:
+if glopts.GlobalOptions.mbt:
     threading.Thread(target=start_zmq_server).start()
 
 
@@ -115,7 +117,7 @@ def mbt_hal_init():
     (api, req_msg_type) = config_mgr.get_api_stub('L2Segment', config_mgr.ConfigObjectMeta.CREATE)
     init.infra_l2seg_init(api, req_msg_type)
 
-if GlobalOptions.mbt:
+if glopts.GlobalOptions.mbt:
     # This is blocking.
     grpc_proxy.serve(hal_proto_gen.proxyServer)
 
