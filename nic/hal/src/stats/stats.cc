@@ -18,6 +18,7 @@ namespace hal {
 static thread_local void *t_stats_timer;
 
 #define HAL_STATS_COLLECTION_INTVL            (1 * TIME_MSECS_PER_SEC)
+#define HAL_STATS_START_INTVL                 (120 * TIME_MSECS_PER_SEC)    // 2 minutes
 
 static void
 hal_update_drop_stats (SystemResponse *rsp) {
@@ -151,6 +152,21 @@ hal_global_stats_init (void)
     delphi::objects::EgressDropMetrics::CreateTable(); 
 }
 
+static void
+stats_timer_start (void *timer, uint32_t timer_id, void *ctxt)
+{
+    t_stats_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_STATS,
+                                             HAL_STATS_COLLECTION_INTVL,
+                                             (void *)0,    // ctxt
+                                             stats_timer_cb, true);
+    if (!t_stats_timer) {
+        HAL_TRACE_ERR("Failed to start periodic stats timer");
+        return;
+    }
+    HAL_TRACE_DEBUG("Started periodic stats timer with {} ms interval",
+                    HAL_STATS_COLLECTION_INTVL);
+}
+
 //------------------------------------------------------------------------------
 // stats module initialization callback
 //------------------------------------------------------------------------------
@@ -169,19 +185,13 @@ hal_stats_init (hal_cfg_t *hal_cfg)
         pthread_yield();
     }
 
-    t_stats_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_STATS,
-                                             HAL_STATS_COLLECTION_INTVL,
-                                             (void *)0,    // ctxt
-                                             stats_timer_cb, true);
-    if (!t_stats_timer) {
-        HAL_TRACE_ERR("Failed to start periodic stats timer");
-        return HAL_RET_ERR;
-    }
-    HAL_TRACE_DEBUG("Started periodic stats timer with {} ms interval",
-                    HAL_STATS_COLLECTION_INTVL);
-
+    // start a delay timer to make sure ports are created by netagent
+    // before collecting stats
+    sdk::lib::timer_schedule(HAL_TIMER_ID_STATS,
+                             HAL_STATS_START_INTVL,
+                             (void *)0,    // ctxt
+                             stats_timer_start, false);
     hal_global_stats_init();
-
     return HAL_RET_OK;
 }
 
