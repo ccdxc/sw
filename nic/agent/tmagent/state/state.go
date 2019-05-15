@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -703,6 +704,7 @@ func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
 		}
 		return true
 	})
+	sort.Slice(collectors, func(i, j int) bool { return strings.Compare(collectors[i], collectors[j]) < 0 })
 	dbgState["fwlog-collectors"] = collectors
 	return dbgState, nil
 }
