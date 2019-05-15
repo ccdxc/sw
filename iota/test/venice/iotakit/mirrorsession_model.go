@@ -47,52 +47,53 @@ func (sm *SysModel) NewMirrorSession(name string) *MirrorSessionCollection {
 }
 
 // AddCollector adds a collector to the mirrorsession
-func (msp *MirrorSessionCollection) AddCollector(wc *WorkloadCollection, transport string, wlnum int) *MirrorSessionCollection {
-	if msp.err != nil {
-		return msp
+func (msc *MirrorSessionCollection) AddCollector(wc *WorkloadCollection, transport string, wlnum int) *MirrorSessionCollection {
+	if msc.err != nil {
+		return msc
 	}
 	if wc.err != nil {
 		return &MirrorSessionCollection{err: wc.err}
 	}
-	collector := monitoring.MirrorCollector{
-		Type: "ERSPAN",
-		ExportCfg: &monitoring.ExportConfig{
-			Destination: strings.Split(wc.workloads[wlnum].iotaWorkload.IpPrefix, "/")[0],
-			Transport:   transport,
-		},
+        collector := monitoring.MirrorCollector{
+                Type: "ERSPAN",
+                ExportCfg: &monitoring.ExportConfig{
+                        Destination: strings.Split(wc.workloads[wlnum].iotaWorkload.IpPrefix, "/")[0],
+                        Transport: transport,
+                },
+        }
+                
+	for _, sess := range msc.sessions {
+                sess.veniceMirrorSess.Spec.Collectors = append(sess.veniceMirrorSess.Spec.Collectors, collector)
 	}
 
-	for _, sess := range msp.sessions {
-		sess.veniceMirrorSess.Spec.Collectors = append(sess.veniceMirrorSess.Spec.Collectors, collector)
-	}
-
-	return msp
+	return msc
 }
 
 // ClearCollectors adds a collector to the mirrorsession
-func (msp *MirrorSessionCollection) ClearCollectors() *MirrorSessionCollection {
-	if msp.err != nil {
-		return msp
-	}
-	for _, sess := range msp.sessions {
-		sess.veniceMirrorSess.Spec.Collectors = nil
+func (msc *MirrorSessionCollection) ClearCollectors() *MirrorSessionCollection {
+	if msc.err != nil {
+		return msc
 	}
 
-	return msp
+	for _, sess := range msc.sessions {
+                sess.veniceMirrorSess.Spec.Collectors = nil
+	}
+
+	return msc
 }
 
 // Commit writes the mirrorsession to venice
-func (msp *MirrorSessionCollection) Commit() error {
-	if msp.err != nil {
-		return msp.err
+func (msc *MirrorSessionCollection) Commit() error {
+	if msc.err != nil {
+		return msc.err
 	}
-	for _, sess := range msp.sessions {
+	for _, sess := range msc.sessions {
 		err := sess.sm.tb.CreateMirrorSession(sess.veniceMirrorSess)
 		if err != nil {
 			// try updating it
 			err = sess.sm.tb.UpdateMirrorSession(sess.veniceMirrorSess)
 			if err != nil {
-				msp.err = err
+				msc.err = err
 				return err
 			}
 		}
@@ -106,9 +107,9 @@ func (msp *MirrorSessionCollection) Commit() error {
 }
 
 // AddRule adds a rule to the mirrorsession
-func (msp *MirrorSessionCollection) AddRule(fromIP, toIP, port string) *MirrorSessionCollection {
-	if msp.err != nil {
-		return msp
+func (msc *MirrorSessionCollection) AddRule(fromIP, toIP, port string) *MirrorSessionCollection {
+	if msc.err != nil {
+		return msc
 	}
 
 	// build the rule
@@ -118,17 +119,17 @@ func (msp *MirrorSessionCollection) AddRule(fromIP, toIP, port string) *MirrorSe
 		AppProtoSel: &monitoring.AppProtoSelector{ProtoPorts: []string{port}},
 	}
 
-	for _, sess := range msp.sessions {
+	for _, sess := range msc.sessions {
 		sess.veniceMirrorSess.Spec.MatchRules = append(sess.veniceMirrorSess.Spec.MatchRules, rule)
 	}
 
-	return msp
+	return msc
 }
 
 // AddRulesForWorkloadPairs adds rule for each workload pair into the sessions
-func (msp *MirrorSessionCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCollection, port string) *MirrorSessionCollection {
-	if msp.err != nil {
-		return msp
+func (msc *MirrorSessionCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCollection, port string) *MirrorSessionCollection {
+	if msc.err != nil {
+		return msc
 	}
 	if wpc.err != nil {
 		return &MirrorSessionCollection{err: wpc.err}
@@ -138,13 +139,13 @@ func (msp *MirrorSessionCollection) AddRulesForWorkloadPairs(wpc *WorkloadPairCo
 	for _, wpair := range wpc.pairs {
 		fromIP := strings.Split(wpair.second.iotaWorkload.IpPrefix, "/")[0]
 		toIP := strings.Split(wpair.first.iotaWorkload.IpPrefix, "/")[0]
-		nmsp := msp.AddRule(fromIP, toIP, port)
-		if nmsp.err != nil {
-			return nmsp
+		nmsc := msc.AddRule(fromIP, toIP, port)
+		if nmsc.err != nil {
+			return nmsc
 		}
 	}
 
-	return msp
+	return msc
 }
 
 // Deletes all sessions in the collection
