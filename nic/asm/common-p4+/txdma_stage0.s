@@ -61,6 +61,7 @@ struct phv_ p;
     .param      nvme_sessxts_rx_cb_process
     .param      nvme_sessdgst_rx_cb_process
 #endif
+    .param      tcp_qtype1_process
     
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -247,7 +248,7 @@ storage_seq_stage0:
 
 .align
 tcp_ooq_rx2tx_stage0:
-    j tcp_ooq_load_qstate
+    j tcp_qtype1_process
     nop
 
 #ifndef GFT

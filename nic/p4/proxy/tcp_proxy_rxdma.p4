@@ -372,6 +372,7 @@ header_type tcp_fc_d_t {
         high_thresh3            : 16;
         high_thresh4            : 16;
         rcv_wnd                 : 32;
+        read_notify_addr        : 32;
         rcv_scale               : 8;
         cpu_id                  : 8;
         cum_pkt_size            : 32;
@@ -433,6 +434,7 @@ header_type to_stage_1_phv_t {
         rcv_wnd_adv             : 16;
         serq_cidx               : 12;
         ip_dsfield              : 8;
+        window_update           : 1;
     }
 }
 
@@ -860,7 +862,7 @@ action read_tx2rx(rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, rx_ts,
         snd_wnd, serq_pidx, num_dup_acks, dup_acks_rcvd, pure_acks_rcvd, cc_flags, quick, \
         flag, state, parsed_state, rcv_wscale, \
         alloc_descr_L, dont_send_ack_L, unused_flags_L, \
-        limited_transmit, pending
+        limited_transmit, pending, window_update
 
 #define TCP_RX_CB_D \
     modify_field(tcp_rx_d.ooq_not_empty, ooq_not_empty); \
@@ -913,6 +915,7 @@ action tcp_rx(TCP_RX_CB_PARAMS) {
         modify_field(to_s1_scratch.rcv_wnd_adv, to_s1.rcv_wnd_adv);
         modify_field(to_s1_scratch.serq_cidx, to_s1.serq_cidx);
         modify_field(to_s1_scratch.ip_dsfield, to_s1.ip_dsfield);
+        modify_field(to_s1_scratch.window_update, to_s1.window_update);
     }
 
     if (rcv_wscale == 1) {
@@ -1128,7 +1131,7 @@ action ooo_qbase_alloc(qbase)
 action tcp_fc(
         consumer_ring_slots_mask, consumer_ring_slots,
         high_thresh1, high_thresh2, high_thresh3, high_thresh4,
-        rcv_wnd, rcv_wup, rcv_scale, cpu_id,
+        rcv_wnd, read_notify_addr, rcv_wup, rcv_scale, cpu_id,
         cum_pkt_size, avg_pkt_size_shift, num_pkts, rcv_mss) {
     // k + i for stage 5
 
@@ -1150,6 +1153,7 @@ action tcp_fc(
     modify_field(tcp_fc_d.high_thresh3, high_thresh3);
     modify_field(tcp_fc_d.high_thresh4, high_thresh4);
     modify_field(tcp_fc_d.rcv_wnd, rcv_wnd);
+    modify_field(tcp_fc_d.read_notify_addr, read_notify_addr);
     modify_field(tcp_fc_d.rcv_wup, rcv_wup);
     modify_field(tcp_fc_d.rcv_scale, rcv_scale);
     modify_field(tcp_fc_d.cpu_id, cpu_id);

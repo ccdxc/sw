@@ -24,6 +24,9 @@ struct s1_t0_tcp_rx_d d;
 #define c_dont_send_ack c_launch_ooq
 
 tcp_rx_win_upd_process_start:
+    seq             c1, k.to_s1_window_update, 1
+    phvwr.c1        p.rx2tx_extra_pending_dup_ack_send, 1
+    phvwr.c1        p.rx2tx_extra_dup_rcv_nxt, d.u.tcp_rx_d.rcv_nxt
     seq             c1, d.u.tcp_rx_d.ooq_not_empty, 1
     seq             c2, k.common_phv_ooq_tx2rx_last_ooo_pkt, 1
 

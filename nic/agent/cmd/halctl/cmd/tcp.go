@@ -393,6 +393,7 @@ func showTCPCb(resp *halproto.TcpCbGetResponse, yamlOut bool) {
 		fmt.Printf("%-30s : %-6d\n", "rto_backoff", spec.RtoBackoff)
 		fmt.Printf("%-30s : %-6d\n", "zero_window_sent", spec.ZeroWindowSent)
 		fmt.Printf("%-30s : %-6d\n", "srtt_us", spec.SrttUs)
+		fmt.Printf("%-30s : %-6d\n", "tx_window_update_pi", spec.TxWindowUpdatePi)
 		fmt.Printf("%s\n\n", strings.Repeat("-", 80))
 	}
 }
@@ -451,6 +452,8 @@ func showTCPStats(resp *halproto.TcpCbGetResponse, yamlOut bool) {
 		fmt.Printf("%-30s : %-6d\n", "idle_timeout_deadline", stats.IdleDeadline)
 		fmt.Printf("%-30s : %-6d\n", "window_full_cnt", stats.WindowFullCnt)
 		fmt.Printf("%-30s : %-6d\n", "retx_cnt", stats.RetxCnt)
+		fmt.Printf("%-30s : %-6d\n", "window_update_pi", stats.WindowUpdatePi)
+		fmt.Printf("%-30s : %-6d\n", "window_update_ci", stats.WindowUpdateCi)
 		fmt.Printf("%s\n\n", strings.Repeat("-", 80))
 	}
 }

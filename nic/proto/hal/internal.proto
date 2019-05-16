@@ -431,6 +431,7 @@ message TcpCbSpec {
   uint32                srtt_us                    = 58;
   bool                  sack_perm                  = 59;
   bool                  timestamps                 = 60;
+  uint32                tx_window_update_pi        = 61;
 }
 
 // TcpCbRequestMsg is batched add or modify tcpcb request
@@ -536,6 +537,8 @@ message TcpCbStats {
   uint32                ooq_rx2tx_pi               = 10032;
   uint32                ooq_rx2tx_ci               = 10033;
   uint32                retx_cnt                   = 10034;
+  uint32                window_update_pi           = 10035;
+  uint32                window_update_ci           = 10036;
 }
 
 // TcpCbGetResponse captures all the information about a tcpcb

@@ -267,6 +267,18 @@ p4pd_add_or_del_tcp_rx_tcp_cc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
     return ret;
 }
 
+uint64_t tcpcb_pd_read_notify_addr_get(uint32_t qid)
+{
+    uint64_t addr;
+
+    addr = lif_manager()->get_lif_qstate_addr(SERVICE_LIF_TCP_PROXY, 0,
+            qid) + (P4PD_TCPCB_STAGE_ENTRY_OFFSET * P4PD_HWID_TCP_TX_TCP_RETX);
+    // offsetof does not work on bitfields
+    //addr += offsetof(s3_t0_tcp_tx_retx_d, read_notify_bytes);
+    addr += 32;
+
+    return addr;
+}
 
 hal_ret_t
 p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
@@ -281,6 +293,11 @@ p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
 
     if(!del) {
         data.u.tcp_fc_d.rcv_wnd = htonl(tcpcb_pd->tcpcb->rcv_wnd);
+        if (tcpcb_pd->tcpcb->bypass_tls) {
+            data.u.tcp_fc_d.read_notify_addr = htonl(tcpcb_pd_read_notify_addr_get(tcpcb_pd->tcpcb->other_qid));
+        } else {
+            data.u.tcp_fc_d.read_notify_addr = 0;
+        }
         data.u.tcp_fc_d.rcv_scale = tcpcb_pd->tcpcb->rcv_wscale;
         data.u.tcp_fc_d.cpu_id = tcpcb_pd->tcpcb->cpu_id;
         data.u.tcp_fc_d.rcv_wup = htonl(tcpcb_pd->tcpcb->rcv_wup);
@@ -299,6 +316,8 @@ p4pd_add_or_del_tcp_rx_tcp_fc_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         data.u.tcp_fc_d.rcv_mss = htons(tcpcb_pd->tcpcb->rcv_mss);
     }
 
+    HAL_TRACE_DEBUG("Received read_notify_addr: {}", htonl(data.u.tcp_fc_d.read_notify_addr));
+    HAL_TRACE_DEBUG("Received read_notify_addr: {}", data.u.tcp_fc_d.read_notify_addr);
     HAL_TRACE_DEBUG("Received rcv_wnd: {}", htonl(data.u.tcp_fc_d.rcv_wnd));
     HAL_TRACE_DEBUG("Received rcv_scale {}", data.u.tcp_fc_d.rcv_scale);
     HAL_TRACE_DEBUG("Received rcv_wup {:#x}", data.u.tcp_fc_d.rcv_wup);
@@ -1018,6 +1037,9 @@ p4pd_get_tcp_ooo_rx2tx_entry(pd_tcpcb_t* tcpcb_pd)
 
     tcpcb_pd->tcpcb->ooq_rx2tx_pi = data.u.load_stage0_d.pi_0;
     tcpcb_pd->tcpcb->ooq_rx2tx_ci = data.u.load_stage0_d.ci_0;
+    tcpcb_pd->tcpcb->window_update_pi = data.u.load_stage0_d.pi_1;
+    tcpcb_pd->tcpcb->window_update_ci = data.u.load_stage0_d.ci_1;
+
     tcpcb_pd->tcpcb->ooo_rx2tx_qbase = htonll(data.u.load_stage0_d.ooo_rx2tx_qbase);
 
     return ret;
@@ -1155,6 +1177,17 @@ p4pd_add_or_del_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd, bool del)
         }
         HAL_TRACE_DEBUG("gc_base: {:#x}", gc_base);
         data.gc_base = htonll(gc_base);
+        if (tcpcb_pd->tcpcb->bypass_tls) {
+            // Used by window update logic to wakeup proxy peer TCP segment queue
+            data.consumer_qid = htons(tcpcb_pd->tcpcb->other_qid);
+        } else {
+            // Not used
+            data.consumer_qid = 0;
+        }
+	data.read_notify_bytes = 0;
+	data.read_notify_bytes_local = 0;
+
+        HAL_TRACE_DEBUG("consumer_qid: {:#x}", data.consumer_qid);
     }
 
     if(!p4plus_hbm_write(hwid,  (uint8_t *)&data, sizeof(data),
@@ -1413,6 +1446,9 @@ p4pd_get_tcp_tx_tcp_retx_entry(pd_tcpcb_t* tcpcb_pd)
     tcpcb_pd->tcpcb->retx_snd_una = ntohl(data.retx_snd_una);
     tcpcb_pd->tcpcb->tx_ring_pi = ntohs(data.tx_ring_pi);
     tcpcb_pd->tcpcb->partial_pkt_ack_cnt = ntohl(data.partial_pkt_ack_cnt);
+    tcpcb_pd->tcpcb->tx_window_update_pi = ntohl(data.tx_window_update_pi);
+    tcpcb_pd->tcpcb->read_notify_bytes = ntohl(data.read_notify_bytes);
+    tcpcb_pd->tcpcb->read_notify_bytes_local = ntohl(data.read_notify_bytes_local);
 
     return HAL_RET_OK;
 }

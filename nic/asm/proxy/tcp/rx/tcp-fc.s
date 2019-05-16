@@ -155,6 +155,17 @@ flow_fc_process_done:
     phvwr       p.rx2tx_extra_rcv_wnd, r4
     tblwr       d.rcv_wup, k.to_s5_rcv_nxt
 
+    /* We are advertizing zero window. Subscribe for application
+    * read notification so that we can generate window update. Wait
+    * for 5 descriptors to be freed for now. Need to tune this 
+    * further */
+    add         r2, r0, d.read_notify_addr
+    seq         c1, r0, r2
+    memwr.h.!c1 r2, 0       // d.read_notify_addr invalid/not set?
+
+    seq.!c1     c2, r0, r4
+    memwr.h.c2  r2, 5
+
     seq         c1, k.common_phv_ooo_rcv, 1
     seq         c2, k.common_phv_ooq_tx2rx_win_upd, 1
     seq.!c2     c2, k.common_phv_ooq_tx2rx_last_ooo_pkt, 1

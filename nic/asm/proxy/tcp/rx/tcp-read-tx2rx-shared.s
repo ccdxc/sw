@@ -124,6 +124,7 @@ flow_terminate:
     nop
 
 tcp_rx_tx2rx_win_upd:
+    phvwr           p.to_s1_window_update, 1
     phvwr           p.common_phv_ooq_tx2rx_pkt, 1
     phvwr           p.common_phv_ooq_tx2rx_win_upd, 1
     CAPRI_NEXT_TABLE_READ_OFFSET_e(0, TABLE_LOCK_EN,

@@ -18,6 +18,7 @@ struct s1_t0_ooq_tcp_tx_process_next_descr_addr_d d;
 tcp_ooq_txdma_process_next_descr_addr:
     CAPRI_CLEAR_TABLE_VALID(0)
     CAPRI_OPERAND_DEBUG(d.descr_addr)
+
 tcp_ooq_txdma_dma_cmds:
     phvwri          p.{p4_intr_global_tm_iport...p4_intr_global_tm_oport}, \
                         (TM_PORT_DMA << 4) | TM_PORT_DMA
@@ -36,11 +37,13 @@ tcp_ooq_txdma_dma_cmds:
                         P4PLUS_TCP_PROXY_BASE_HDR_SZ + P4PLUS_TCP_PROXY_OOQ_HDR_SZ)
 
     seq             c1, k.common_phv_all_ooq_done, 1
-    b.c1            tcp_ooq_txdma_win_upd_dma
+    b.c1            tcp_ooq_txdma_win_upd_mem2pkt_dma
     nop
+    CAPRI_CLEAR_TABLE_VALID(0)
     nop.e
     nop
-tcp_ooq_txdma_win_upd_dma:
+
+tcp_ooq_txdma_win_upd_mem2pkt_dma:
     phvwr           p.tcp_app_header_dma_cmd_eop, 0
     CAPRI_DMA_CMD_PHV2PKT_SETUP2(intrinsic2_dma_cmd, p4_intr_global_tm_iport,
                                 p4_intr_packet_len,
@@ -53,6 +56,31 @@ tcp_ooq_txdma_win_upd_dma:
                         P4PLUS_TCP_PROXY_BASE_HDR_SZ)
 
     phvwr           p.feedback_type_entry, TCP_TX2RX_FEEDBACK_LAST_OOO_PKT
+    CAPRI_DMA_CMD_PHV2PKT_SETUP_STOP(feedback_dma_cmd, feedback_type_entry, feedback_type_entry)
+    nop.e
+    nop
+
+/* Flow control window update trigger. Application( peer tcp session in case of bypass proxy )
+ * has read the data and rang the doorbell. We are in the context of the right TCP session.
+ * However an acknodlegement can not be triggered now since the receive window calculation
+ * has to be done, and that should be done in rxdma. Setup a pseudo pkt and enqueue it to wakeup 
+ * rxdma.
+ */
+    .align
+tcp_ooq_txdma_win_upd_phv2pkt_dma:
+    CAPRI_CLEAR_TABLE_VALID(0)
+    phvwr           p.tcp_app_hdr_from_ooq_txdma, 1
+    CAPRI_DMA_CMD_PHV2PKT_SETUP2(intrinsic2_dma_cmd, p4_intr_global_tm_iport,
+                                p4_intr_packet_len,
+                                intr_rxdma2_qid, intr_rxdma2_rxdma_rsv)
+    phvwr           p.intr_rxdma2_qid, k.common_phv_fid
+    phvwr           p.intr_rxdma2_rx_splitter_offset, \
+                    (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ + \
+                    P4PLUS_TCP_PROXY_BASE_HDR_SZ + 1)
+    CAPRI_DMA_CMD_PHV2PKT_SETUP(tcp_app_hdr1_dma_cmd, tcp_app_hdr_p4plus_app_id, tcp_app_hdr_prev_echo_ts)
+    
+
+    phvwr           p.feedback_type_entry, TCP_TX2RX_FEEDBACK_WIN_UPD
     CAPRI_DMA_CMD_PHV2PKT_SETUP_STOP(feedback_dma_cmd, feedback_type_entry, feedback_type_entry)
     nop.e
     nop

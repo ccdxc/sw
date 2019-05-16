@@ -77,6 +77,7 @@ header_type ooq_tcp_txdma_qstate_d_t {
         action_id                   : 8;
         CAPRI_QSTATE_HEADER_COMMON
         CAPRI_QSTATE_HEADER_RING(0)
+        CAPRI_QSTATE_HEADER_RING(1)
         ooq_work_in_progress        : 8;
         ooo_rx2tx_qbase             : 64;
         ooo_rx2tx_free_pi_addr      : 64;
@@ -213,6 +214,8 @@ metadata cap_phv_intr_rxdma_t intr_rxdma;
 @pragma dont_trim
 metadata cap_phv_intr_rxdma_t intr_rxdma2;
 @pragma dont_trim
+metadata p4_to_p4plus_tcp_proxy_base_header_t tcp_app_hdr;
+@pragma dont_trim
 metadata ring_entry_t ooq_slot;
 @pragma dont_trim
 metadata semaphore_ci_t ooq_free_pi;
@@ -239,6 +242,8 @@ metadata dma_cmd_phv2pkt_t intrinsic2;      // dma cmd 5
 @pragma dont_trim
 metadata dma_cmd_mem2pkt_t tcp_app_header2; // dma cmd 6
 @pragma dont_trim
+metadata dma_cmd_phv2pkt_t tcp_app_hdr1;     // dma cmd 8
+@pragma dont_trim
 metadata dma_cmd_phv2pkt_t feedback;        // dma cmd 7
 
 
@@ -250,7 +255,7 @@ metadata dma_cmd_phv2pkt_t feedback;        // dma cmd 7
  *****************************************************************************/
 
 #define STAGE0_PARAMS \
-    rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, \
+    rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid, pi_0, ci_0, pi_1, ci_1, \
     ooq_work_in_progress, ooo_rx2tx_qbase, ooo_rx2tx_free_pi_addr, \
     curr_ooo_qbase, ooo_rx2tx_producer_ci_addr, curr_ooq_num_entries, \
     curr_ooq_trim, curr_index
@@ -267,6 +272,8 @@ metadata dma_cmd_phv2pkt_t feedback;        // dma cmd 7
  \
     modify_field(ooq_tcp_txdma_qstate_d.pi_0, pi_0); \
     modify_field(ooq_tcp_txdma_qstate_d.ci_0, ci_0); \
+    modify_field(ooq_tcp_txdma_qstate_d.pi_1, pi_1); \
+    modify_field(ooq_tcp_txdma_qstate_d.ci_1, ci_1); \
  \
     modify_field(ooq_tcp_txdma_qstate_d.ooq_work_in_progress, ooq_work_in_progress); \
     modify_field(ooq_tcp_txdma_qstate_d.ooo_rx2tx_qbase, ooo_rx2tx_qbase); \

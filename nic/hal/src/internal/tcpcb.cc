@@ -513,6 +513,7 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_spec()->set_timestamps(rtcpcb.timestamps);
     rsp->mutable_spec()->set_cb_base(rtcpcb.cb_base);
     rsp->mutable_spec()->set_cb_base_qtype1(rtcpcb.cb_base_qtype1);
+    rsp->mutable_spec()->set_tx_window_update_pi(rtcpcb.tx_window_update_pi);
 
     // fill operational state of this TCP CB
     rsp->mutable_status()->set_tcpcb_handle(tcpcb->hal_handle);
@@ -570,6 +571,8 @@ tcpcb_get (TcpCbGetRequest& req, TcpCbGetResponseMsg *resp)
     rsp->mutable_stats()->set_cc_flags(rtcpcb.cc_flags);
     rsp->mutable_stats()->set_window_full_cnt(rtcpcb.window_full_cnt);
     rsp->mutable_stats()->set_retx_cnt(rtcpcb.retx_cnt);
+    rsp->mutable_stats()->set_window_update_pi(rtcpcb.window_update_pi);
+    rsp->mutable_stats()->set_window_update_ci(rtcpcb.window_update_ci);
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;

@@ -73,6 +73,10 @@ rsvd, cosA, cosB, cos_sel, eval_last, host, total, pid\
         partial_pkt_ack_cnt             : 32                    ;\
         tx_ring_pi                      : 16                    ;\
         last_snd_wnd                    : 16                    ;\
+        tx_window_update_pi             : 16                    ;\
+        consumer_qid                    : 16                    ;\
+        read_notify_bytes               : 16                    ;\
+        read_notify_bytes_local         : 16                    ;\
         tx_rst_sent                     : 1                     ;\
 
 #define TCB_XMIT_SHARED_STATE \
@@ -121,6 +125,10 @@ last_ack,\
 partial_pkt_ack_cnt,\
 tx_ring_pi,\
 last_snd_wnd,\
+tx_window_update_pi,\
+consumer_qid,\
+read_notify_bytes,\
+read_notify_bytes_local,\
 tx_rst_sent
 
 #define XMIT_SHARED_PARAMS \
@@ -145,6 +153,10 @@ tcp_opt_flags
     modify_field(retx_d.partial_pkt_ack_cnt, partial_pkt_ack_cnt); \
     modify_field(retx_d.tx_ring_pi, tx_ring_pi); \
     modify_field(retx_d.last_snd_wnd, last_snd_wnd); \
+    modify_field(retx_d.tx_window_update_pi, tx_window_update_pi); \
+    modify_field(retx_d.consumer_qid, consumer_qid); \
+    modify_field(retx_d.read_notify_bytes, read_notify_bytes); \
+    modify_field(retx_d.read_notify_bytes_local, read_notify_bytes_local); \
     modify_field(retx_d.tx_rst_sent, tx_rst_sent); \
 
 #define GENERATE_XMIT_SHARED_D \

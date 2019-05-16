@@ -6,6 +6,8 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "INGRESS_s0_t0_ooq_tcp_tx_k.h"
+#include "nic/p4/common/defines.h"
+#include "tcp-phv.h"
 
 struct phv_ p;
 struct s0_t0_ooq_tcp_tx_k_ k;
@@ -16,9 +18,42 @@ struct s0_t0_ooq_tcp_tx_load_stage0_d d;
     .param          tcp_ooq_txdma_load_rx2tx_slot
     .param          tcp_ooq_txdma_process_next_descr_addr
     .param          tcp_ooq_free_queue
+    .param          tcp_ooq_txdma_win_upd_phv2pkt_dma
+
+tcp_qtype1_process:
+    CAPRI_OPERAND_DEBUG(r7)
+    .brbegin
+       // priorities are 0 (highest) to 7 (lowest)
+       brpri		r7[1:0], [0,1]
+       nop
+          .brcase 0
+             b tcp_ooq_load_qstate            // prio 1
+             nop
+          .brcase 1
+             b tcp_trigger_window_update      // prio 0
+             nop
+          .brcase 2
+             b tcp_ooq_load_qstate_do_nothing // prio 2
+             nop
+    .brend
+
+tcp_trigger_window_update:
+    tblwr.f         d.{ci_1}.hx, d.{pi_1}.hx
+
+    phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
+                        p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
+    phvwri          p.{p4_intr_global_tm_iport...p4_intr_global_tm_oport}, (TM_PORT_DMA << 4) | TM_PORT_DMA
+    phvwri          p.p4_txdma_intr_dma_cmd_ptr, TCP_PHV_OOQ_TXDMA_COMMANDS_START
+    CAPRI_NEXT_TABLE_READ_NO_TABLE_LKUP(0, tcp_ooq_txdma_win_upd_phv2pkt_dma)
+
+    addi            r4, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, TCP_OOO_RX2TX_QTYPE, LIF_TCP)
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA_NOP(k.p4_txdma_intr_qid)
+
+    memwr.dx.e        r4, r3
+    nop
+
 tcp_ooq_load_qstate:
-    seq             c1, d.pi_0, d.ci_0
-    b.c1            tcp_ooq_load_qstate_do_nothing
     phvwrpair       p.common_phv_fid, k.p4_txdma_intr_qid, \
                         p.common_phv_qstate_addr, k.p4_txdma_intr_qstate_addr
     seq             c1, d.ooq_work_in_progress, 0

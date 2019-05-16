@@ -165,6 +165,11 @@ typedef struct tcpcb_s {
     ht_ctxt_t             hal_handle_ht_ctxt;      // hal handle based hash table ctxt
     uint16_t              other_qid;
     uint16_t              zero_window_sent;
+    uint16_t              tx_window_update_pi;
+    uint32_t              read_notify_bytes;
+    uint32_t              read_notify_bytes_local;
+    uint32_t              window_update_pi;
+    uint32_t              window_update_ci;
 } __PACK__ tcpcb_t;
 
 // max. number of TCP CBs supported  (TODO: we can take this from cfg file)

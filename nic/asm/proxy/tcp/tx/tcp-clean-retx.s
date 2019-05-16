@@ -55,6 +55,7 @@ tcp_retx_calc_num_pkts_freed_start:
     // r4 = total bytes freed (minimum = len1)
     // r5 = number of descriptors freed (minimum 1)
     // r6 = num pkts in retx queue that can be freed
+
     add             r5, r0, 1
     add             r4, r0, k.t0_s2s_clean_retx_len1
     add             r6, r0, k.t0_s2s_clean_retx_num_retx_pkts
@@ -114,7 +115,9 @@ tcp_retx_calc_num_pkts_freed_start:
     b.!c1           tcp_retx_calc_num_pkts_freed_done
     sub.!c1         r4, r4, k.t0_s2s_clean_retx_len8
     add.c1          r5, r5, 1
+
 tcp_retx_calc_num_pkts_freed_done:
+
 
     seq             c1, k.common_phv_fin, 1
     tbladd          d.retx_snd_una, r4
@@ -149,8 +152,41 @@ tcp_retx_cleanup_sesq:
     // write new sesq retx ci into TCP producer (TLS for example)
     add             r1, r0, d.sesq_ci_addr
     memwr.h         r1, r2
-tcp_retx_cleanup_sesq_end:
 
+tcp_retx_cleanup_sesq_end:
+    // First check if a read notification has been requested by the receive 
+    // window management logic
+    seq             c1, r0, d.read_notify_bytes
+
+    // No read notification requested.
+    b.c1            window_update_check_done
+    tblwr.c1        d.read_notify_bytes_local, r0
+
+    // Read notification requested, update local counter and see if we have
+    // read and freed read_notify_bytes descriptors.
+    tbladd.!c1      d.read_notify_bytes_local, r5
+    sle             c1, d.read_notify_bytes, d.read_notify_bytes_local
+
+    // We haven't read read_notify_bytes descriptors. Leave the local counter
+    // updated and move on. If the queue is empty no point waiting, just go
+    // ahead and ring the doorbell.
+    seq.!c1         c1, r2, k.to_s3_clean_retx_pi
+    b.!c1           window_update_check_done
+
+    // We have freed read_notify_bytes, clear local counter and ring
+    // consumer txdma doorbell to initiate window update.
+    tblwr.c1        d.read_notify_bytes_local, r0
+
+    add             r2, r0, d.consumer_qid
+    addi            r2, r0, CAPRI_DOORBELL_ADDR(0, DB_IDX_UPD_PIDX_SET,
+                        DB_SCHED_UPD_EVAL, TCP_OOO_RX2TX_QTYPE, LIF_TCP)
+    tbladd          d.tx_window_update_pi, 1
+    /* data will be in r3 */
+    CAPRI_RING_DOORBELL_DATA(0, d.consumer_qid, TCP_WINDOW_UPDATE_EVENT_RING,
+                             d.tx_window_update_pi)
+    memwr.dx        r2, r3
+
+window_update_check_done:
     /*
      * if we have more work to do, free descriptor and continue
      * otherwise, set clean_retx_ci to current clean_retx_pi
