@@ -23,7 +23,6 @@ for path in paths:
 import threading
 import infra.common.glopts as glopts
 glopts.ParseArgs()
-glopts.ValidateGlopts()
 import infra.common.parser  as parser
 import infra.common.objects as objects
 
