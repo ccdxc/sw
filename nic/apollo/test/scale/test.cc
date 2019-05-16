@@ -283,7 +283,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
 
     // ensure a max. of 32 IPs per VNIC
     SDK_ASSERT(num_vpcs * num_subnets * num_vnics * num_ip_per_vnic <=
-               (32 * 1024));
+               (32 * PDS_MAX_VNIC));
     // create local vnic IP mappings first
     for (uint32_t i = 1; i <= num_vpcs; i++) {
         for (uint32_t j = 1; j <= num_subnets; j++) {
@@ -482,7 +482,7 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
     pds_vnic_spec_t pds_vnic;
     uint16_t vnic_key = 1;
 
-    SDK_ASSERT(num_vpcs * num_subnets * num_vnics <= 1024);
+    SDK_ASSERT(num_vpcs * num_subnets * num_vnics <= PDS_MAX_VNIC);
     for (uint32_t i = 1; i <= (uint64_t)num_vpcs; i++) {
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
@@ -588,7 +588,7 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ip_pfx, uint32_t num_subnets)
     sdk_ret_t rv;
     pds_vpc_spec_t pds_vpc;
 
-    SDK_ASSERT(num_vpcs <= 1024);
+    SDK_ASSERT(num_vpcs <= PDS_MAX_VPC);
     for (uint32_t i = 1; i <= num_vpcs; i++) {
         memset(&pds_vpc, 0, sizeof(pds_vpc));
         pds_vpc.type = PDS_VPC_TYPE_TENANT;

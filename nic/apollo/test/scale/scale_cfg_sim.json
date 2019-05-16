@@ -40,7 +40,7 @@
         {
             "_comment_" : "per vpc, per subnet vnic scale",
             "kind" : "vnic",
-            "count" : "256",
+            "count" : "64",
             "vlan-start" : "1"
         },
         {

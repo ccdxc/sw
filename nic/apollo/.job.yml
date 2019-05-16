@@ -1,14 +1,14 @@
 ---
 version: 2.0
 targets:
-  apollo/gtest:
-    commands: ["make", "PIPELINE=apollo", "jobd/apollo/gtest"]
-    owners: ["email:jcruz@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-apollo-x86
+  #apollo/gtest:
+    #commands: ["make", "PIPELINE=apollo", "jobd/apollo/gtest"]
+    #owners: ["email:jcruz@pensando.io"]
+    #area:
+    #sub-area:
+    #feature:
+    #build-dependencies:
+    #- build-apollo-x86
 
   apollo/aarch64build:
     commands: ["make", "PIPELINE=apollo", "ARCH=aarch64", "PLATFORM=hw"]
@@ -17,14 +17,14 @@ targets:
     sub-area:
     feature:
 
-  apollo/dol/mplsoudp:
-    commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/mplsoudp"]
-    owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-apollo-x86
+  #apollo/dol/mplsoudp:
+    #commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/mplsoudp"]
+    #owners: ["email:kalyanbade@pensando.io", "email:hareesh@pensando.io"]
+    #area:
+    #sub-area:
+    #feature:
+    #build-dependencies:
+    #- build-apollo-x86
 
   apollo/dol/vxlan:
     commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/vxlan"]
@@ -35,14 +35,14 @@ targets:
     build-dependencies:
     - build-apollo-x86
 
-  apollo/dol/lpm:
-    commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/lpm"]
-    owners: ["email:param@pensando.io"]
-    area:
-    sub-area:
-    feature:
-    build-dependencies:
-    - build-apollo-x86
+  #apollo/dol/lpm:
+  #commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/lpm"]
+  #  owners: ["email:param@pensando.io"]
+  #  area:
+  #  sub-area:
+  #  feature:
+  #  build-dependencies:
+  #  - build-apollo-x86
 
   apollo/dol/rfc:
     commands: ["make", "PIPELINE=apollo", "jobd/dol/apollo/rfc"]

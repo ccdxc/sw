@@ -157,17 +157,17 @@ jobd/dol/gft: ${JOBD_PREREQS}
 #jobd/dol/agent/up2up: ${JOBD_PREREQS}
 #	${NICDIR}/run.py ${COVERAGE_OPTS} --topo agentup2up --feature agentup2up
 
-.PHONY: jobd/dol/apollo/mplsoudp
-jobd/dol/apollo/mplsoudp: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mplsoudp --feature networking
+#.PHONY: jobd/dol/apollo/mplsoudp
+#jobd/dol/apollo/mplsoudp: ${JOBD_PREREQS}
+	#${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mplsoudp --feature networking
 
 .PHONY: jobd/dol/apollo/vxlan
 jobd/dol/apollo/vxlan: ${JOBD_PREREQS}
 	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo vxlan --feature networking
 
-.PHONY: jobd/dol/apollo/lpm
-jobd/dol/apollo/lpm: ${JOBD_PREREQS}
-	${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mplsoudp --feature lpm
+#.PHONY: jobd/dol/apollo/lpm
+#jobd/dol/apollo/lpm: ${JOBD_PREREQS}
+	#${NICDIR}/apollo/tools/rundol.sh --pipeline apollo --topo mplsoudp --feature lpm
 
 .PHONY: jobd/dol/apollo/rfc
 jobd/dol/apollo/rfc: ${JOBD_PREREQS}
@@ -224,12 +224,12 @@ jobd/mbt/alg: ${JOBD_PREREQS}
 jobd/gft/gtest: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --gft_gtest
 
-.PHONY: jobd/apollo/gtest
-jobd/apollo/gtest: ${JOBD_PREREQS}
-	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_gtest
-	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_test > apollo_scale_test.log.txt
-	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_vxlan_test > apollo_scale_vxlan_test.log.txt
-	${NICDIR}/apollo/test/tools/run_gtests_apollo.sh ${COVERAGE_OPTS}
+#.PHONY: jobd/apollo/gtest
+#jobd/apollo/gtest: ${JOBD_PREREQS}
+	#${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_gtest
+	#${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_test > apollo_scale_test.log.txt
+	#${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_vxlan_test > apollo_scale_vxlan_test.log.txt
+	#${NICDIR}/apollo/test/tools/run_gtests_apollo.sh ${COVERAGE_OPTS}
 
 .PHONY: jobd/storage
 jobd/storage: ${JOBD_PREREQS}

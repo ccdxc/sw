@@ -21,8 +21,7 @@
 /// \defgroup PDS_SUBNET Subnet API
 /// @{
 
-// TODO: we have to confirm this number !!!
-#define PDS_MAX_SUBNET (5 * PDS_MAX_VPC)
+#define PDS_MAX_SUBNET    64
 
 /// \brief Subnet specification
 typedef struct pds_subnet_spec_s {

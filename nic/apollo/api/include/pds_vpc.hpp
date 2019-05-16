@@ -19,7 +19,7 @@
 /// @{
 
 #define PDS_VPC_ID_INVALID 0         ///< Invalid substrate ID
-#define PDS_MAX_VPC 1024             ///< Max VPC
+#define PDS_MAX_VPC 64               ///< Max VPC
 
 /// \brief VPC type
 typedef enum pds_vpc_type_e {
