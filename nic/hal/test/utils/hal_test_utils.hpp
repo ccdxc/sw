@@ -4,14 +4,14 @@
 #include "nic/hal/hal_trace.hpp"
 #include "nic/include/hal_mem.hpp"
 #include "nic/include/base.hpp"
-#include "nic/utils/mtrack/mtrack.hpp"
+#include "nic/sdk/lib/utils/mtrack.hpp"
 #include "lib/slab/slab.hpp"
 
 using hal::hal_slab_t;
 using sdk::lib::slab_id_t;
 using sdk::lib::slab;
-using hal::utils::mem_mgr;
-using hal::utils::mtrack_info_t;
+using sdk::utils::mem_mgr;
+using sdk::utils::mtrack_info_t;
 
 typedef struct slab_stats_s {
     hal_slab_t  slab_id;

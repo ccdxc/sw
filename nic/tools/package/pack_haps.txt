@@ -157,6 +157,7 @@ nic/build/aarch64/iris/lib/liblfq.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libpciemgrd.so                           /nic/lib/
 nic/build/aarch64/iris/lib/libdropstatsproto.so                     /nic/lib/
 nic/build/aarch64/iris/lib/librulestatsproto.so                     /nic/lib/
+nic/build/aarch64/iris/lib/libhal_mem.so                            /nic/lib/
 
 #test binaries
 nic/build/aarch64/iris/lib/libfte_base_test.so                       /nic/lib/

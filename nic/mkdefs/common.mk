@@ -30,8 +30,8 @@ export NIC_COMMON_LDLIBS            := pthread z m rt Judy dl ev ${NIC_COMMON_LD
 
 export NIC_COMMON_FLAGS := -pthread -rdynamic
 
-export NIC_SDK_SOLIBS   := list slab shmmgr mmgr sdkpal sdkfru \
-    ht indexer logger thread utils periodic twheel directmap \
+export NIC_SDK_SOLIBS   := utils list slab shmmgr mmgr sdkpal sdkfru \
+    ht indexer logger thread periodic twheel directmap \
     hash hbmhash tcam timerfd catalog sdkplatformutils sdkcapri \
     sdkp4loader sdkasicrw lif_mgr
 
@@ -71,8 +71,8 @@ export NIC_HAL_PLUGIN_SOLIBS := plugin_classic \
                                 isc_dhcp
 
 
-export NIC_HAL_UTILS_SOLIBS := bitmap block_list nat eventmgr \
-    trace mtrack fsm bm_allocator
+export NIC_HAL_UTILS_SOLIBS := utils bitmap block_list nat eventmgr \
+    trace fsm bm_allocator
 
 export NIC_HAL_PD_SOLIBS_x86_64 := model_client
 export NIC_HAL_PD_SOLIBS_aarch64 :=
@@ -160,7 +160,7 @@ export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
                                ${NIC_SDK_SOLIBS} \
                                pal agent_api delphisdk haldelphi halsysmgr \
                                nicmgrproto sdkcapri_asicrw_if commonproto haldelphiutils \
-							   ftestatsproto dropstatsproto rulestatsproto
+							   ftestatsproto dropstatsproto rulestatsproto hal_mem
 
 export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                                ${NIC_THIRDPARTY_SSL_LDLIBS} \

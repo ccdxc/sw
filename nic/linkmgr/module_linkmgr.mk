@@ -4,11 +4,11 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET = linkmgr.bin
 MODULE_PIPELINE = iris gft
 MODULE_SRCS   = ${MODULE_SRC_DIR}/main.cc
-MODULE_SOLIBS = pal sdkfru linkmgr_src sdklinkmgr linkmgr_libsrc hal_lib \
+MODULE_SOLIBS = pal sdkfru utils linkmgr_src sdklinkmgr linkmgr_libsrc hal_lib \
                 sdklinkmgrcsr linkmgrdelphi haltrace \
-                trace logger thread catalog sdkpal halproto mtrack ht \
-                sdklinkmgr timerfd twheel periodic utils slab shmmgr list \
-                haldelphiutils sdkcapri_asicrw_if
+                trace logger thread catalog sdkpal halproto  ht \
+                sdklinkmgr timerfd twheel periodic slab shmmgr list \
+                haldelphiutils sdkcapri_asicrw_if 
 MODULE_LDLIBS = pthread z dl m rt Judy ev :libprotobuf.so.14 sknobs \
                 grpc++ grpc++_reflection ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
                 grpc++_unsecure grpc_unsecure AAPL

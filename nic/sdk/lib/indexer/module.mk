@@ -2,4 +2,5 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = libindexer.so
 MODULE_FLAGS  = -O3
+MODULE_SOLIBS = utils
 include ${MKDEFS}/post.mk

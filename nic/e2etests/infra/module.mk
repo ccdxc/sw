@@ -6,7 +6,7 @@ MODULE_PIPELINE = iris
 MODULE_SRCS     = ${MODULE_SRC_DIR}/hntap_main.cc
 MODULE_SOLIBS   = hntap_lib e2etest_lib e2e_driver \
                   trace host_mem bm_allocator \
-                  logger model_client halproto mtrack \
+                  logger model_client halproto  \
                   sdkplatformutils shmmgr
 MODULE_LDLIBS   = zmq pthread z m rt Judy dl ev \
                   ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \

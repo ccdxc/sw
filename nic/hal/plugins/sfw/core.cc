@@ -128,21 +128,8 @@ net_sfw_check_security_policy(ctx_t &ctx, net_sfw_match_result_t *match_rslt)
 
     sep = ctx.sep();
     dep = ctx.dep();
-    if (!sep) {
-        HAL_TRACE_DEBUG("sep not known");
-    } else {
-        HAL_TRACE_DEBUG("sg count {}", sep->sgs.sg_id_cnt);
-    }
-
-    if (!dep) {
-        HAL_TRACE_DEBUG("dep not known");
-    } else {
-        HAL_TRACE_DEBUG("sg count {}", dep->sgs.sg_id_cnt);
-    }
-
 
     if (((!sep) || (!dep)) || (sep && dep && sep->sgs.sg_id_cnt == 0 && dep->sgs.sg_id_cnt == 0)) {
-        HAL_TRACE_DEBUG("Classify the packet");
         ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
         if (ret != HAL_RET_OK) {
             goto end_match;
@@ -346,7 +333,7 @@ sfw_exec(ctx_t& ctx)
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR && !ctx.existing_session()) {
         expected_flow_t *expected_flow = lookup_expected_flow(ctx.key());
         if (expected_flow) {
-            HAL_TRACE_DEBUG("Found expected alg flow - invoking handler...");
+            HAL_TRACE_VERBOSE("Found expected alg flow - invoking handler...");
             ret = expected_flow->handler(ctx, expected_flow);
             flow_update_t flowupd = {type: FLOWUPD_AGING_INFO};
             flowupd.aging_info.idle_timeout = sfw_info->idle_timeout;
@@ -370,7 +357,7 @@ sfw_exec(ctx_t& ctx)
                 sfw_info->idle_timeout = match_rslt.idle_timeout;
                 memcpy(&sfw_info->alg_opts, &match_rslt.alg_opts, sizeof(alg_opts));
                 sfw_info->sfw_done = true;
-                HAL_TRACE_DEBUG("Match result: {}", match_rslt);
+                HAL_TRACE_VERBOSE("Match result: {}", match_rslt);
                 if (match_rslt.sfw_action == nwsec::SECURITY_RULE_ACTION_REJECT &&
                     ctx.valid_rflow()) {
                     // Register completion handler to send a reject packet out

@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 
 using hal::g_hal_state;
-using hal::utils::g_hal_mem_mgr;
+using hal::g_hal_mem_mgr;
 
 // slab test utility
 void
