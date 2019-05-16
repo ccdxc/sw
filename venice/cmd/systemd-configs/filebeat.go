@@ -88,12 +88,9 @@ setup.template.settings:
   index.number_of_shards: 6
   index.number_of_replicas: 2
 #================================ Logging =====================================
-#output.console:
-#    pretty: true
-
 logging:
     to_files: true
-    level: info
+    level: warning
     selectors: ["*"]
     files:
         path: /tmp/log/filebeat
