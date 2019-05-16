@@ -19,6 +19,58 @@
 #include "adminq.hpp"
 #include "nic/include/accel_dev_if.h"
 
+#ifdef ELBA
+#include "elb_top_csr_defines.h"
+#include "elb_wa_csr_define.h"
+#include "elb_ms_csr_define.h"
+#include "nic/hal/pd/elba/elba_cpdc.hpp"
+#include "nic/hal/pd/elba/elba_barco_crypto.hpp"
+#include "nic/hal/pd/elba/elba_hbm.hpp"
+
+// Temporarily using CHIPID since VER is not yet exported from model
+#define HW_CHIP_VER_CSR                 (ELB_ADDR_BASE_MS_MS_OFFSET + \
+                                         ELB_MS_CSR_STA_TAP_CHIPID_BYTE_ADDRESS)
+#ifdef __aarch64__
+#define HW_DB_ADDR_LOCAL_CSR            (ELB_ADDR_BASE_DB_WA_OFFSET + \
+                                         ELB_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS)
+#else
+#define HW_DB_ADDR_LOCAL_CSR            ELB_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS
+#endif  // __aarch64__
+// Temporarily set ASIC type/rev to 0 since VER is not yet exported from model
+#define HW_ASIC_TYPE_GET(ver)           ((ver) & 0)
+#define HW_ASIC_REV_GET(ver)            ((ver) & 0)
+#define CPDC_INT_ERR_LOG_MASK           ELBA_CPDC_INT_ERR_LOG_MASK
+#define CPDC_INT_ECC_LOG_MASK           ELBA_CPDC_INT_ECC_LOG_MASK
+#define CPDC_AXI_ERR_W0_LOG_MASK        ELBA_CPDC_AXI_ERR_W0_LOG_MASK
+#define CPDC_AXI_ERR_W1_LOG_MASK        ELBA_CPDC_AXI_ERR_W1_LOG_MASK
+#define CRYPTO_SYM_ERR_UNRECOV_MASK     ELBA_BARCO_SYM_ERR_UNRECOV_MASK
+#else
+#include "cap_top_csr_defines.h"
+#include "cap_pics_c_hdr.h"
+#include "cap_wa_c_hdr.h"
+#include "cap_ms_c_hdr.h"
+#include "nic/hal/pd/capri/capri_cpdc.hpp"
+#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
+#include "nic/hal/pd/capri/capri_hbm.hpp"
+
+#define HW_CHIP_VER_CSR                 (CAP_ADDR_BASE_MS_MS_OFFSET + \
+                                         CAP_MS_CSR_STA_VER_BYTE_ADDRESS)
+#ifdef __aarch64__
+#define HW_DB_ADDR_LOCAL_CSR            (CAP_ADDR_BASE_DB_WA_OFFSET + \
+                                         CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS)
+#else
+#define HW_DB_ADDR_LOCAL_CSR            CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS
+#endif // __aarch64__
+#define HW_ASIC_TYPE_GET(ver)           CAP_MS_CSR_STA_VER_CHIP_TYPE_GET(ver)
+#define HW_ASIC_REV_GET(ver)            CAP_MS_CSR_STA_VER_CHIP_VERSION_GET(ver)
+#define CPDC_INT_ERR_LOG_MASK           CAPRI_CPDC_INT_ERR_LOG_MASK
+#define CPDC_INT_ECC_LOG_MASK           CAPRI_CPDC_INT_ECC_LOG_MASK
+#define CPDC_AXI_ERR_W0_LOG_MASK        CAPRI_CPDC_AXI_ERR_W0_LOG_MASK
+#define CPDC_AXI_ERR_W1_LOG_MASK        CAPRI_CPDC_AXI_ERR_W1_LOG_MASK
+#define CRYPTO_SYM_ERR_UNRECOV_MASK     CAPRI_BARCO_SYM_ERR_UNRECOV_MASK
+#endif // ELBA
+
+                        ;
 #define ACCEL_DEV_PAGE_SIZE             4096
 #define ACCEL_DEV_PAGE_MASK             (ACCEL_DEV_PAGE_SIZE - 1)
 

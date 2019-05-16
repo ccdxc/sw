@@ -45,6 +45,16 @@ namespace pd {
         reg_val.name[sizeof(reg_val.name)-1] = '\0';                        \
     } while (false)
 
+/*
+ * Read and write back (to clear) a 32-bit register (if it had non-zero value)
+ */
+#define ACCEL_CFG_NAMED_RD_CLR32(cfg, reg_val)                              \
+    do {                                                                    \
+        ACCEL_CFG_NAMED_READ32(cfg, reg_val);                               \
+        if (reg_val.val) {                                                  \
+            ACCEL_CFG_WRITE32(cfg, 0);                                      \
+        }                                                                   \
+    } while (false)
 
 /*
  * Read a config 64-bit register
@@ -836,6 +846,9 @@ accel_ring_cp_t::misc_get(uint32_t ring_handle,
     misc.sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
+    /*
+     * Note that some registers require clearing after read
+     */
     ACCEL_CFG_NAMED_READ32(cp_cfg_glb,             misc.reg_val[0]);
     ACCEL_CFG_NAMED_READ32(cp_cfg_dist,            misc.reg_val[1]);
     ACCEL_CFG_NAMED_READ32(cp_cfg_host,            misc.reg_val[2]);
@@ -851,11 +864,11 @@ accel_ring_cp_t::misc_get(uint32_t ring_handle,
     ACCEL_CFG_NAMED_READ32(cp_cfg_axi_timeout,     misc.reg_val[12]);
 
     ACCEL_CFG_NAMED_READ32(cp_sta_q_cp_idx_early,  misc.reg_val[13]);
-    ACCEL_CFG_NAMED_READ32(cp_int_ecc_error,       misc.reg_val[14]);
-    ACCEL_CFG_NAMED_READ32(cp_int_axi_error_w0,    misc.reg_val[15]);
-    ACCEL_CFG_NAMED_READ32(cp_int_axi_error_w1,    misc.reg_val[16]);
-    ACCEL_CFG_NAMED_READ32(cp_int_ueng_error_w0,   misc.reg_val[17]);
-    ACCEL_CFG_NAMED_READ32(cp_int_ueng_error_w1,   misc.reg_val[18]);
+    ACCEL_CFG_NAMED_RD_CLR32(cp_int_ecc_error,     misc.reg_val[14]);
+    ACCEL_CFG_NAMED_RD_CLR32(cp_int_axi_error_w0,  misc.reg_val[15]);
+    ACCEL_CFG_NAMED_RD_CLR32(cp_int_axi_error_w1,  misc.reg_val[16]);
+    ACCEL_CFG_NAMED_RD_CLR32(cp_int_ueng_error_w0, misc.reg_val[17]);
+    ACCEL_CFG_NAMED_RD_CLR32(cp_int_ueng_error_w1, misc.reg_val[18]);
     ACCEL_CFG_NAMED_READ32(cp_sta_ecc_error,       misc.reg_val[19]);
     ACCEL_CFG_NAMED_READ32(cp_sta_bist_done_pass,  misc.reg_val[20]);
     ACCEL_CFG_NAMED_READ32(cp_sta_bist_done_fail,  misc.reg_val[21]);
@@ -1135,6 +1148,9 @@ accel_ring_dc_t::misc_get(uint32_t ring_handle,
     misc.sub_ring = ACCEL_SUB_RING0;
     SUB_RING_VALIDATE_RETURN(sub_ring);
 
+    /*
+     * Note that some registers require clearing after read
+     */
     ACCEL_CFG_NAMED_READ32(dc_cfg_glb,             misc.reg_val[0]);
     ACCEL_CFG_NAMED_READ32(dc_cfg_dist,            misc.reg_val[1]);
     ACCEL_CFG_NAMED_READ32(dc_cfg_host,            misc.reg_val[2]);
@@ -1150,11 +1166,11 @@ accel_ring_dc_t::misc_get(uint32_t ring_handle,
     ACCEL_CFG_NAMED_READ32(dc_cfg_axi_timeout,     misc.reg_val[12]);
 
     ACCEL_CFG_NAMED_READ32(dc_sta_q_cp_idx_early,  misc.reg_val[13]);
-    ACCEL_CFG_NAMED_READ32(dc_int_ecc_error,       misc.reg_val[14]);
-    ACCEL_CFG_NAMED_READ32(dc_int_axi_error_w0,    misc.reg_val[15]);
-    ACCEL_CFG_NAMED_READ32(dc_int_axi_error_w1,    misc.reg_val[16]);
-    ACCEL_CFG_NAMED_READ32(dc_int_ueng_error_w0,   misc.reg_val[17]);
-    ACCEL_CFG_NAMED_READ32(dc_int_ueng_error_w1,   misc.reg_val[18]);
+    ACCEL_CFG_NAMED_RD_CLR32(dc_int_ecc_error,     misc.reg_val[14]);
+    ACCEL_CFG_NAMED_RD_CLR32(dc_int_axi_error_w0,  misc.reg_val[15]);
+    ACCEL_CFG_NAMED_RD_CLR32(dc_int_axi_error_w1,  misc.reg_val[16]);
+    ACCEL_CFG_NAMED_RD_CLR32(dc_int_ueng_error_w0, misc.reg_val[17]);
+    ACCEL_CFG_NAMED_RD_CLR32(dc_int_ueng_error_w1, misc.reg_val[18]);
     ACCEL_CFG_NAMED_READ32(dc_sta_ecc_error,       misc.reg_val[19]);
     ACCEL_CFG_NAMED_READ32(dc_sta_bist_done_pass,  misc.reg_val[20]);
     ACCEL_CFG_NAMED_READ32(dc_sta_bist_done_fail,  misc.reg_val[21]);

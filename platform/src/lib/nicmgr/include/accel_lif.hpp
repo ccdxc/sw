@@ -2,6 +2,7 @@
 #define __ACCEL_LIF_HPP__
 
 #include <map>
+#include "accel_lif_utils.hpp"
 
 /*
  * Queue info
@@ -44,7 +45,6 @@
 /*
  * Local doorbell address formation
  */
-#define DB_ADDR_BASE_LOCAL              0x8800000
 #define ACCEL_LIF_DBADDR_UPD            0x0b
 #define DB_UPD_SHFT                     17
 #define DB_LIF_SHFT                     6
@@ -56,16 +56,14 @@
     ((uint64_t)(ACCEL_LIF_DBADDR_UPD) << DB_UPD_SHFT))
 
 #define ACCEL_LIF_LOCAL_DBADDR_SET(lif, qtype)          \
-    (ACCEL_LIF_DBADDR_SET(lif, qtype) | DB_ADDR_BASE_LOCAL)
+    (ACCEL_LIF_DBADDR_SET(lif, qtype) | HW_DB_ADDR_LOCAL_CSR)
 
 #define ACCEL_LIF_DBDATA_SET(qid, pndx)                 \
     (((uint64_t)(qid) << DB_QID_SHFT) | (pndx))
 
-namespace AccelLifUtils {
-class NotifyQ;
-}
-
 class AccelLif;
+
+extern std::vector<std::pair<const std::string,uint32_t>> accel_ring_vec;
 
 /**
  * Accelerator device ring group ring info
@@ -115,14 +113,6 @@ typedef struct {
     uint64_t    qgroup;
     uint64_t    core_id;
 } __attribute__((packed)) seq_queue_info_metrics_t;
-
-/**
- * Generic timestamp and expiry interval
- */
-typedef struct {
-    uint64_t    timestamp;
-    uint64_t    expiry;
-} accel_timestamp_t;
 
 /**
  * LIF State Machine
@@ -250,7 +240,7 @@ typedef struct {
     accel_lif_state_t       state;
     accel_lif_state_t       enter_state;
     accel_lif_devcmd_ctx_t  devcmd;
-    accel_timestamp_t       ts;
+    AccelLifUtils::accel_timestamp_t ts;
     uint32_t                quiesce_qid;
     uint32_t                reset_destroy : 1,
                             info_dump     : 1;
@@ -301,6 +291,7 @@ public:
                              const accel_rgroup_rmetrics_rsp_t& metrics);
     friend void accel_rgroup_rmisc_rsp_cb(void *user_ctx,
                              const accel_rgroup_rmisc_rsp_t& misc);
+    friend void AccelLifUtils::HwMonitor::ErrPoll(void *obj);
 
     accel_lif_event_t accel_lif_null_action(accel_lif_event_t event);
     accel_lif_event_t accel_lif_eagain_action(accel_lif_event_t event);
@@ -346,6 +337,7 @@ private:
     uint8_t                     cosA, cosB, ctl_cosA, ctl_cosB;
 
     // Resources
+    AccelLifUtils::DetectionLogControl hang_detect_log;
     uint32_t                    intr_base;
     uint32_t                    crypto_key_idx_base;
     uint32_t                    num_crypto_keys_max;
@@ -360,6 +352,7 @@ private:
     accel_lif_fsm_ctx_t         fsm_ctx;
 
     EV_P;
+    AccelLifUtils::HwMonitor    *hw_mon;
 
     // HW rings
     accel_ring_t                accel_ring_tbl[ACCEL_RING_ID_MAX];
@@ -406,53 +399,5 @@ private:
                               const storage_seq_qstate_t& qstate);
     void accel_lif_state_machine(accel_lif_event_t event);
 };
-
-/**
- * FW-Driver notify queue
- */
-namespace AccelLifUtils {
-
-class NotifyQ {
-public:
-    NotifyQ(const std::string& name,
-            PdClient *pd,
-            uint64_t lif_id,
-            uint32_t tx_qtype,
-            uint32_t tx_qid,
-            uint64_t intr_base,
-            uint8_t  ctl_cosA,
-            uint8_t  ctl_cosB,
-            bool host_dev = true);
-
-    bool TxQInit(const notifyq_init_cmd_t *init_cmd,
-                 uint32_t desc_size);
-    bool TxQPost(void *desc);
-    bool TxQReset(void);
-
-private:
-    const std::string&  name;
-    PdClient            *pd;
-
-    uint64_t            lif_id;
-    uint32_t            tx_qtype;
-    uint32_t            tx_qid;
-    uint32_t            intr_base;
-    uint8_t             ctl_cosA;
-    uint8_t             ctl_cosB;
-    bool                host_dev;
-
-    /*
-     * NotifyQ in host follows qcq structure where the host ring space
-     * consists of a command (Rx) ring and a completion (Tx) ring.
-     * Only the completion (Tx) ring is used in the FW-to-host direction.
-     */
-    uint64_t            tx_ring_base;
-    uint32_t            tx_ring_size;
-    uint32_t            tx_alloc_size;
-    uint32_t            tx_desc_size;
-    uint32_t            tx_head;
-};
-
-} // AccelLifUtils
 
 #endif

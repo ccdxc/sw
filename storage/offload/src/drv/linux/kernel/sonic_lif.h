@@ -66,6 +66,7 @@ enum deferred_work_type {
 struct deferred_work {
 	struct list_head list;
 	enum deferred_work_type type;
+	u16 reset_code;
 	u8 dont_free;
 };
 

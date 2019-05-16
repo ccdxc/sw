@@ -854,11 +854,21 @@ typedef struct notifyq_event {
 } notifyq_event_t;
 
 /**
+ * enum reset_code - mask of reset reasons
+ */
+enum reset_code {
+	ACCEL_LIF_RESET_CODE_VOID       = 0,
+	ACCEL_LIF_RESET_CODE_CP         = 1 << 0,
+	ACCEL_LIF_RESET_CODE_DC         = 1 << 1,
+	ACCEL_LIF_RESET_CODE_ENCR	= 1 << 2,
+	ACCEL_LIF_RESET_CODE_DECR	= 1 << 3,
+};
+
+/**
  * struct reset_event
  * @eid:		event number
  * @ecode:		event code = EVENT_OPCODE_RESET
- * @reset_code:		reset type
- * @state:		0=pending, 1=complete, 2=error
+ * @reset_code:		see enum reset_code
  *
  * Sent when the NIC or some subsystem is going to be or
  * has been reset.
@@ -866,8 +876,7 @@ typedef struct notifyq_event {
 typedef struct reset_event {
 	__le64      eid;
 	__le16      ecode;
-	uint8_t     reset_code;
-	uint8_t     state;
+	__le16      reset_code;
 	uint8_t     rsvd[52];
 } reset_event_t;
 

@@ -16,7 +16,6 @@
 
 #include "nic/include/base.hpp"
 #include "nic/include/notify.hpp"
-#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
 
 #include "gen/proto/nicmgr/accel_metrics.pb.h"
 #include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
@@ -50,6 +49,9 @@ using namespace nicmgr;
 #define ACCEL_DEV_RING_OP_QUIESCE_TIME_US       1000000
 #define ACCEL_DEV_ALL_RINGS_MAX_QUIESCE_TIME_US (10 * ACCEL_DEV_RING_OP_QUIESCE_TIME_US)
 
+// Hang notify log control
+#define HANG_DETECT_LOG_SUPPRESS_US             (5 * 60 * 1000000)
+
 /*
  * rounded up log2
  */
@@ -64,31 +66,7 @@ log_2(uint32_t x)
   return log;
 }
 
-static inline uint64_t
-timestamp(void)
-{
-    struct timeval tv;
-
-    gettimeofday(&tv, NULL);
-    return (tv.tv_sec * 1000000 + tv.tv_usec);
-}
-
-static inline void
-time_expiry_set(accel_timestamp_t& ts,
-                uint64_t expiry)
-{
-    ts.timestamp = timestamp();
-    ts.expiry = expiry;
-}
-
-static inline bool
-time_expiry_check(const accel_timestamp_t& ts)
-{
-    return (ts.expiry == 0) ||
-           ((timestamp() - ts.timestamp) > ts.expiry);
-}
-
-static std::vector<std::pair<const std::string,uint32_t>> accel_ring_vec = {
+std::vector<std::pair<const std::string,uint32_t>> accel_ring_vec = {
     {"cp",      ACCEL_RING_CP},
     {"cp_hot",  ACCEL_RING_CP_HOT},
     {"dc",      ACCEL_RING_DC},
@@ -759,12 +737,15 @@ AccelLif::AccelLif(AccelDev& accel_dev,
     spec(accel_dev.DevSpecGet()),
     pd(accel_dev.PdClientGet()),
     dev_api(accel_dev.DevApiGet()),
+    hang_detect_log(HANG_DETECT_LOG_SUPPRESS_US),
     seq_created_count(0),
     seq_qid_init_high(0),
+    EV_A(EV_A),
+    hw_mon(nullptr),
+    adminq(nullptr),
+    notifyq(nullptr),
     event_id(0)
 {
-
-    this->loop = loop;
     accel_lif_state_machine_build();
 
     memset(&hal_lif_info_, 0, sizeof(hal_lif_info_));
@@ -831,6 +812,16 @@ AccelLif::~AccelLif()
     fsm_ctx.devcmd.status = ACCEL_RC_EAGAIN;
     while (fsm_ctx.devcmd.status == ACCEL_RC_EAGAIN) {
         accel_lif_state_machine(ACCEL_LIF_EV_DESTROY);
+    }
+
+    if (hw_mon) {
+        delete hw_mon;
+    }
+    if (notifyq) {
+        delete notifyq;
+    }
+    if (adminq) {
+        delete adminq;
     }
 }
 
@@ -1006,6 +997,12 @@ AccelLif::accel_lif_create_action(accel_lif_event_t event)
                         AdminCmdHandler, this, EV_A);
     if (!adminq) {
         NIC_LOG_ERR("{}: Failed to create AdminQ", LifNameGet());
+        throw;
+    }
+
+    hw_mon = new AccelLifUtils::HwMonitor(*this, loop);
+    if (!hw_mon) {
+        NIC_LOG_ERR("{}: Failed to create HwMonitor", LifNameGet());
         throw;
     }
     return ACCEL_LIF_EV_NULL;
@@ -1204,6 +1201,11 @@ AccelLif::accel_lif_reset_action(accel_lif_event_t event)
     ACCEL_LIF_FSM_LOG();
     fsm_ctx.reset_destroy = (event == ACCEL_LIF_EV_RESET_DESTROY) ||
                             (event == ACCEL_LIF_EV_DESTROY);
+    /*
+     * Stop any HW monitor
+     */
+    hw_mon->ErrPollStop();
+
     // Disable all sequencer queues
     for (qid = 0; qid < seq_created_count; qid++) {
         qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(),
@@ -1238,7 +1240,8 @@ AccelLif::accel_lif_reset_action(accel_lif_event_t event)
                                 P4PLUS_CACHE_INVALIDATE_TXDMA);
     }
 
-    time_expiry_set(fsm_ctx.ts, ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US);
+    AccelLifUtils::time_expiry_set(fsm_ctx.ts,
+                                   ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US);
     fsm_ctx.quiesce_qid = 0;
     fsm_ctx.devcmd.status = ACCEL_RC_EAGAIN;
     return ACCEL_LIF_EV_WAIT_SEQ_QUEUE_QUIESCE;
@@ -1261,7 +1264,7 @@ AccelLif::accel_lif_seq_quiesce_action(accel_lif_event_t event)
                    offsetof(storage_seq_qstate_t, p_ndx)) > 0, "");
 
     fsm_ctx.devcmd.status = ACCEL_RC_EAGAIN;
-    if (!time_expiry_check(fsm_ctx.ts)) {
+    if (!AccelLifUtils::time_expiry_check(fsm_ctx.ts)) {
 
         while (seq_qid_init_high &&
                (fsm_ctx.quiesce_qid <= seq_qid_init_high)) {
@@ -1315,9 +1318,8 @@ AccelLif::accel_lif_seq_quiesce_action(accel_lif_event_t event)
         expiry = max_pendings ?
                  (uint64_t)max_pendings * ACCEL_DEV_RING_OP_QUIESCE_TIME_US :
                  ACCEL_DEV_RING_OP_QUIESCE_TIME_US;
-        time_expiry_set(fsm_ctx.ts,
-                        std::min(expiry,
-                                 (uint64_t)ACCEL_DEV_ALL_RINGS_MAX_QUIESCE_TIME_US));
+        AccelLifUtils::time_expiry_set(fsm_ctx.ts,
+             std::min(expiry, (uint64_t)ACCEL_DEV_ALL_RINGS_MAX_QUIESCE_TIME_US));
         return ACCEL_LIF_EV_WAIT_RGROUP_QUIESCE;
     }
 
@@ -1335,7 +1337,7 @@ AccelLif::accel_lif_rgroup_quiesce_action(accel_lif_event_t event)
     fsm_ctx.devcmd.status = ACCEL_RC_EAGAIN;
     quiesce_time = platform_is_hw(pd->platform_) ?
                    ACCEL_DEV_RING_OP_QUIESCE_TIME_US : 0;
-    if (!time_expiry_check(fsm_ctx.ts)) {
+    if (!AccelLifUtils::time_expiry_check(fsm_ctx.ts)) {
         ret_val = accel_rgroup_rindices_get();
         if (ret_val == 0) {
 
@@ -1349,15 +1351,15 @@ AccelLif::accel_lif_rgroup_quiesce_action(accel_lif_event_t event)
             }
 
             NIC_LOG_DEBUG("{}: all rings quiesced", LifNameGet());
-            time_expiry_set(fsm_ctx.ts, quiesce_time);
+            AccelLifUtils::time_expiry_set(fsm_ctx.ts, quiesce_time);
 
         } else {
             NIC_LOG_ERR("{}: unable to wait for rings to quiesce", LifNameGet());
-            time_expiry_set(fsm_ctx.ts, 0);
+            AccelLifUtils::time_expiry_set(fsm_ctx.ts, 0);
         }
 
     } else {
-        time_expiry_set(fsm_ctx.ts, quiesce_time);
+        AccelLifUtils::time_expiry_set(fsm_ctx.ts, quiesce_time);
     }
 
     fsm_ctx.devcmd.status = ACCEL_RC_SUCCESS;
@@ -1372,7 +1374,7 @@ AccelLif::accel_lif_rgroup_reset_action(accel_lif_event_t event)
     ACCEL_LIF_FSM_VERBOSE_LOG();
 
     fsm_ctx.devcmd.status = ACCEL_RC_EAGAIN;
-    if (!time_expiry_check(fsm_ctx.ts)) {
+    if (!AccelLifUtils::time_expiry_check(fsm_ctx.ts)) {
         return ACCEL_LIF_EV_NULL;
     }
 
@@ -1622,6 +1624,11 @@ AccelLif::accel_lif_seq_queue_init_cpl_action(accel_lif_event_t event)
 {
     ACCEL_LIF_FSM_LOG();
 
+    /*
+     * Start HW monitor for errors
+     */
+    hw_mon->ErrPollStart();
+
 #ifdef ACCEL_LIF_NOTIFYQ_POST_TESTING
     if (notifyq) {
         log_event_t log_ev = {0};
@@ -1691,54 +1698,60 @@ AccelLif::accel_lif_hang_notify_action(accel_lif_event_t event)
     uint32_t                qid;
 
     ACCEL_LIF_FSM_LOG();
+    hang_detect_log.Enter();
+    if (hang_detect_log.Request()) {
 
-    /*
-     * Dump everything about HW rings to log, to be collected by show-tech-support
-     */
-    fsm_ctx.info_dump = true;
-    accel_rgroup_rindices_get();
-    accel_rgroup_rmisc_get();
-    accel_rgroup_rmetrics_get();
-    fsm_ctx.info_dump = false;
+        /*
+         * Dump everything about HW rings to log, to be collected by 
+         * show-tech-support
+         */
+        fsm_ctx.info_dump = true;
+        accel_rgroup_rindices_get();
+        accel_rgroup_rmisc_get();
+        accel_rgroup_rmetrics_get();
+        fsm_ctx.info_dump = false;
 
-    /*
-     * Dump sequencer queue states
-     */
-    NIC_LOG_DEBUG("{}: seq_created_count {}", LifNameGet(), seq_created_count);
-    for (qid = 0; qid < seq_created_count; qid++) {
-        qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(),
-                                                   STORAGE_SEQ_QTYPE_SQ, qid);
-        if (qstate_addr < 0) {
-            NIC_LOG_ERR("{}: Failed to get qstate address for SEQ qid {}",
-                        LifNameGet(), qid);
-            continue;
+        /*
+         * Dump sequencer queue states
+         */
+        NIC_LOG_DEBUG("{}: seq_created_count {}",
+                      LifNameGet(), seq_created_count);
+        for (qid = 0; qid < seq_created_count; qid++) {
+            qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(),
+                                                  STORAGE_SEQ_QTYPE_SQ, qid);
+            if (qstate_addr < 0) {
+                NIC_LOG_ERR("{}: Failed to get qstate address for SEQ qid {}",
+                            LifNameGet(), qid);
+                continue;
+            }
+            READ_MEM(qstate_addr, (uint8_t *)&seq_qstate,
+                     sizeof(seq_qstate), 0);
+            NIC_LOG_DEBUG("    seq_queue {}: pndx {} c_ndx {} enable {} abort {}",
+                          qid, seq_qstate.p_ndx, seq_qstate.c_ndx,
+                          seq_qstate.enable, seq_qstate.abort);
         }
-        READ_MEM(qstate_addr, (uint8_t *)&seq_qstate, sizeof(seq_qstate), 0);
 
-        NIC_LOG_DEBUG("    seq_queue {}: pndx {} c_ndx {} enable {} abort {}",
-                      qid, seq_qstate.p_ndx, seq_qstate.c_ndx,
-                      seq_qstate.enable, seq_qstate.abort);
-    }
-
-    /*
-     * Dump admin queue states
-     */
-    NIC_LOG_DEBUG("{}: adminq_count {}", LifNameGet(), spec->adminq_count);
-    for (qid = 0; qid < spec->adminq_count; qid++) {
-        qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(),
+        /*
+         * Dump admin queue states
+         */
+        NIC_LOG_DEBUG("{}: adminq_count {}", LifNameGet(), spec->adminq_count);
+        for (qid = 0; qid < spec->adminq_count; qid++) {
+            qstate_addr = pd->lm_->get_lif_qstate_addr(LifIdGet(),
                                                    STORAGE_SEQ_QTYPE_ADMIN, qid);
-        if (qstate_addr < 0) {
-            NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
-                        LifNameGet(), qid);
-            continue;
+            if (qstate_addr < 0) {
+                NIC_LOG_ERR("{}: Failed to get qstate address for ADMIN qid {}",
+                            LifNameGet(), qid);
+                continue;
+            }
+            READ_MEM(qstate_addr, (uint8_t *)&admin_qstate,
+                     sizeof(admin_qstate), 0);
+            NIC_LOG_DEBUG("    admin_queue {}: pndx {} c_ndx {} comp {} intr {}",
+                          qid, admin_qstate.p_index0, admin_qstate.c_index0,
+                          admin_qstate.comp_index, admin_qstate.intr_assert_index);
         }
-        READ_MEM(qstate_addr, (uint8_t *)&admin_qstate, sizeof(admin_qstate), 0);
-
-        NIC_LOG_DEBUG("    admin_queue {}: pndx {} c_ndx {} comp {} intr {}",
-                      qid, admin_qstate.p_index0, admin_qstate.c_index0,
-                      admin_qstate.comp_index, admin_qstate.intr_assert_index);
     }
 
+    hang_detect_log.Leave();
     return ACCEL_LIF_EV_NULL;
 }
 
@@ -2561,172 +2574,4 @@ lif_event_str(accel_lif_event_t event)
     return "unknown_event";
 }
 
-
-/**
- * FW-Driver notify queue
- */
-namespace AccelLifUtils {
-
-NotifyQ::NotifyQ(const std::string& name,
-                 PdClient *pd,
-                 uint64_t lif_id,
-                 uint32_t tx_qtype,
-                 uint32_t tx_qid,
-                 uint64_t intr_base,
-                 uint8_t  ctl_cosA,
-                 uint8_t  ctl_cosB,
-                 bool host_dev) :
-    name(name),
-    pd(pd),
-    lif_id(lif_id),
-    tx_qtype(tx_qtype),
-    tx_qid(tx_qid),
-    intr_base(intr_base),
-    ctl_cosA(ctl_cosA),
-    ctl_cosB(ctl_cosB),
-    host_dev(host_dev),
-    tx_ring_size(0),
-    tx_alloc_size(0)
-{
-}
-
-bool
-NotifyQ::TxQInit(const notifyq_init_cmd_t *cmd,
-                 uint32_t desc_size)
-{
-    notify_qstate_t     qstate = {0};
-    uint64_t            qstate_addr;
-    uint32_t            alloc_size;
-    uint8_t             pc_offs;
-
-    NIC_LOG_DEBUG("{}: NOTIFYQ desc_size {}", name, desc_size);
-
-    /*
-     * Ensure sizes are a power of 2
-     */
-    if (!is_power_of_2(desc_size)) {
-        NIC_LOG_ERR("{}: desc_size {} not a power of 2", name, desc_size);
-        return false;
-    }
-
-    tx_ring_size = 1 << cmd->ring_size;
-    alloc_size = desc_size << cmd->ring_size;
-    if (tx_alloc_size) {
-        if (tx_alloc_size < alloc_size) {
-            NIC_LOG_ERR("{}: alloc_size {} exceeds previous allocation {}",
-                        name, alloc_size, tx_alloc_size);
-            return false;
-        }
-    } else {
-        tx_ring_base = pd->nicmgr_mem_alloc(alloc_size);
-        if (tx_ring_base == 0) {
-            NIC_LOG_ERR("{}: Failed NOTIFYQ allocate tx queue size {}",
-                        name, alloc_size);
-            return false;
-        }
-        tx_alloc_size = alloc_size;
-        NIC_LOG_DEBUG("{}: NOTIFYQ tx queue address {:#x}", name, tx_ring_base);
-    }
-
-    tx_desc_size = desc_size;
-    tx_head = 0;
-
-    qstate_addr = pd->lm_->get_lif_qstate_addr(lif_id, tx_qtype, tx_qid);
-    if (qstate_addr < 0) {
-        NIC_LOG_ERR("{}: Failed NOTIFYQ get qstate address", name);
-        return false;
-    }
-
-    if (pd->get_pc_offset("txdma_stage0.bin", "notify_stage0",
-                          &pc_offs, NULL) < 0) {
-        NIC_LOG_ERR("Failed to resolve program: txdma_stage0.bin notify_stage0");
-        return false;
-    }
-
-    qstate.pc_offset = pc_offs;
-    qstate.cosA = ctl_cosA;
-    qstate.cosB = ctl_cosB;
-    qstate.total = 1;
-    qstate.cfg.enable = 1;
-    qstate.cfg.host_queue = host_dev;
-    qstate.cfg.intr_enable = 1;
-    qstate.ring_base = tx_ring_base;
-    qstate.ring_size = cmd->ring_size;
-
-    qstate.host_ring_base = cmd->cq_ring_base;
-    if (host_dev) {
-        qstate.host_ring_base |= ACCEL_PHYS_ADDR_HOST_SET(1) |
-                                 ACCEL_PHYS_ADDR_LIF_SET(lif_id);
-    }
-    NIC_LOG_DEBUG("{}: NOTIFYQ tx qstate {:#x} host_ring_base {:#x} ",
-                  name, qstate_addr, qstate.host_ring_base);
-
-    qstate.host_ring_size = cmd->ring_size;
-    qstate.host_intr_assert_index = intr_base + cmd->intr_index;
-    WRITE_MEM(qstate_addr, (uint8_t *)&qstate, sizeof(qstate), 0);
-    PAL_barrier();
-    p4plus_invalidate_cache(qstate_addr, sizeof(qstate),
-                            P4PLUS_CACHE_INVALIDATE_TXDMA);
-    return true;
-}
-
-bool
-NotifyQ::TxQPost(void *desc)
-{
-    uint64_t tx_db_addr;
-    uint64_t tx_db_data;
-    uint64_t desc_addr;
-
-    if (!tx_ring_base || !tx_ring_size) {
-        NIC_LOG_DEBUG("{}: Failed NOTIFYQ not yet initialized", name);
-        return false;
-    }
-
-    desc_addr = tx_ring_base + (tx_desc_size * tx_head);
-    WRITE_MEM(desc_addr, (uint8_t *)desc, tx_desc_size, 0);
-
-    tx_db_addr =
-#ifdef __aarch64__
-                CAP_ADDR_BASE_DB_WA_OFFSET +
-#endif
-                CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS +
-                ACCEL_LIF_DBADDR_SET(lif_id, tx_qtype);
-
-    tx_head = (tx_head + 1) & (tx_ring_size - 1);
-    tx_db_data = ACCEL_LIF_DBDATA_SET(tx_qid, tx_head);
-    NIC_LOG_DEBUG("{}: NOTIFYQ tx_db_addr {:#x} tx_db_data {:#x}",
-                  name, tx_db_addr, tx_db_data);
-    PAL_barrier();
-    WRITE_DB64(tx_db_addr, tx_db_data);
-
-    return true;
-}
-
-bool
-NotifyQ::TxQReset(void)
-{
-    uint64_t                    qstate_addr;
-    struct notify_cfg_qstate    cfg = {0};
-    uint8_t                     pc_offs = 0;
-
-    qstate_addr = pd->lm_->get_lif_qstate_addr(lif_id, tx_qtype, tx_qid);
-    if (qstate_addr < 0) {
-        NIC_LOG_ERR("{}: Failed NOTIFYQ get qstate address", name);
-        return false;
-    }
-    NIC_LOG_DEBUG("{}: NOTIFYQ resetting qstate {:#x}", name, qstate_addr);
-
-    WRITE_MEM(qstate_addr + offsetof(notify_qstate_t, pc_offset), &pc_offs,
-              sizeof(pc_offs), 0);
-    WRITE_MEM(qstate_addr + offsetof(notify_qstate_t, cfg), (uint8_t *)&cfg,
-              sizeof(cfg), 0);
-    PAL_barrier();
-    p4plus_invalidate_cache(qstate_addr, sizeof(notify_qstate_t),
-                            P4PLUS_CACHE_INVALIDATE_TXDMA);
-    tx_head = 0;
-
-    return true;
-}
-
-} // namespace AccelLifUtils
 

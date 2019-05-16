@@ -107,6 +107,8 @@ static void sonic_lif_deferred_work(struct work_struct *work)
 		switch (w->type) {
 		case DW_TYPE_RESET:
 			OSAL_LOG_DEBUG("Deferred RESET");
+			if (sonic_error_reset_recovery_en_get())
+				sonic_lif_reset_ctl_start(lif);
 			break;
                 default:
 			break;
@@ -171,10 +173,10 @@ static bool sonic_notifyq_service(struct cq *cq, struct cq_info *cq_info, void *
 	case EVENT_OPCODE_RESET:
 		OSAL_LOG_DEBUG("Notifyq EVENT_OPCODE_RESET eid=" PRIu64,
 			    cpl->event.eid);
-		OSAL_LOG_DEBUG("reset_code=%d state=%d",
-			    cpl->reset.reset_code,
-			    cpl->reset.state);
+		OSAL_LOG_DEBUG("reset_code=%d",
+			    cpl->reset.reset_code);
 		lif->reset_ctl.work.type = DW_TYPE_RESET;
+		lif->reset_ctl.work.reset_code = cpl->reset.reset_code;
 		sonic_lif_deferred_enqueue(&lif->deferred,
 					   &lif->reset_ctl.work);
 		break;

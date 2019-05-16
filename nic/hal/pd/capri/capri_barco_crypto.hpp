@@ -411,6 +411,12 @@ typedef struct capri_barco_asym_key_desc_s {
  * Barco Symmetric Crypto Error encoding.
  * Based on Table 8. in Pensando_CryotoDMA_1.18.pdf.
  */
+#define CAPRI_BARCO_SYM_ERR_PUSH_LEN_ERR       (1 << 15)
+#define CAPRI_BARCO_SYM_ERR_ZERO_PUSH_ERR      (1 << 14)
+#define CAPRI_BARCO_SYM_ERR_BUS_PUSH_ERR       (1 << 13)
+#define CAPRI_BARCO_SYM_ERR_ZERO_FETCH_ERR     (1 << 12)
+#define CAPRI_BARCO_SYM_ERR_BUS_FETCH_ERR      (1 << 11)
+#define CAPRI_BARCO_SYM_ERR_DMA_OVFL_ERR       (1 << 10)
 #define CAPRI_BARCO_SYM_ERR_BUS_ERR            (1 << 9)
 #define CAPRI_BARCO_SYM_ERR_GEN_PUSH_ERR       (1 << 8)
 #define CAPRI_BARCO_SYM_ERR_GEN_FETCH_ERR      (1 << 7)
@@ -421,6 +427,25 @@ typedef struct capri_barco_asym_key_desc_s {
 #define CAPRI_BARCO_SYM_ERR_BUS_AXI_BUS_RESP   (1 << 2)
 #define CAPRI_BARCO_SYM_ERR_BUS_WRONG_KEYTYPE  (1 << 1)
 #define CAPRI_BARCO_SYM_ERR_BUS_KEYTYPE_RANGE  (1 << 0)
+
+#define CAPRI_BARCO_SYM_ERR_UNRECOV_MASK       \
+    (CAPRI_BARCO_SYM_ERR_PUSH_LEN_ERR      |   \
+     CAPRI_BARCO_SYM_ERR_ZERO_PUSH_ERR     |   \
+     CAPRI_BARCO_SYM_ERR_BUS_PUSH_ERR      |   \
+     CAPRI_BARCO_SYM_ERR_ZERO_FETCH_ERR    |   \
+     CAPRI_BARCO_SYM_ERR_BUS_FETCH_ERR     |   \
+     CAPRI_BARCO_SYM_ERR_DMA_OVFL_ERR      |   \
+     CAPRI_BARCO_SYM_ERR_BUS_ERR           |   \
+     CAPRI_BARCO_SYM_ERR_BUS_UNSUP_MODE    |   \
+     CAPRI_BARCO_SYM_ERR_BUS_BAD_CMD       |   \
+     CAPRI_BARCO_SYM_ERR_BUS_UNK_STATE     |   \
+     CAPRI_BARCO_SYM_ERR_BUS_AXI_BUS_RESP  |   \
+     CAPRI_BARCO_SYM_ERR_BUS_WRONG_KEYTYPE |   \
+     CAPRI_BARCO_SYM_ERR_BUS_KEYTYPE_RANGE)
+
+#define CAPRI_BARCO_SYM_ERR_RECOVERABLE        \
+    (CAPRI_BARCO_SYM_ERR_GEN_PUSH_ERR      |   \
+     CAPRI_BARCO_SYM_ERR_GEN_FETCH_ERR)
 
 }    // namespace pd
 }    // namespace hal

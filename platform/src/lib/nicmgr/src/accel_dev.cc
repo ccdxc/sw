@@ -11,15 +11,7 @@
 #include <sstream>
 #include <sys/time.h>
 
-#include "cap_top_csr_defines.h"
-#include "cap_pics_c_hdr.h"
-#include "cap_wa_c_hdr.h"
-#include "cap_ms_c_hdr.h"
-
 #include "nic/include/base.hpp"
-#include "nic/hal/pd/capri/capri_barco_crypto.hpp"
-#include "nic/hal/pd/capri/capri_hbm.hpp"
-
 #include "gen/proto/nicmgr/accel_metrics.pb.h"
 #include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 
@@ -101,13 +93,12 @@ AccelDev::AccelDev(devapi *dapi,
     spec((accel_devspec_t *)dev_spec),
     pd(pd_client),
     dev_api(dapi),
-    delphi_mounted(false)
+    delphi_mounted(false),
+    EV_A(EV_A)
 {
     accel_lif_res_t     lif_res;
     sdk_ret_t           ret = SDK_RET_OK;
     uint32_t            num_keys_max;
-
-    this->loop = loop;
 
     // Allocate lifs
     // lif_base = pd->lm_->LIFRangeAlloc(-1, spec->lif_count);
@@ -230,6 +221,7 @@ AccelDev::AccelDev(devapi *dapi,
     lif_vec.push_back(lif);
 
     _MetricsInit();
+    memset(&devcmd_timer, 0, sizeof(devcmd_timer));
     evutil_timer_start(EV_A_ &devcmd_timer, &AccelDev::_DevcmdPoll, this, 0.0, 0.01);
 }
 
@@ -369,14 +361,13 @@ AccelDev::_DestroyHostDevice(void)
 void
 AccelDev::_DevInfoRegsInit(void)
 {
-    const uint32_t sta_ver = READ_REG32(CAP_ADDR_BASE_MS_MS_OFFSET +
-                                        CAP_MS_CSR_STA_VER_BYTE_ADDRESS);
+    const uint32_t sta_ver = READ_REG32(HW_CHIP_VER_CSR);
     std::string sn;
 
     regs->info.base.signature = ACCEL_DEV_CMD_SIGNATURE;
     regs->info.base.version = 0x1;
-    regs->info.base.asic_type = sta_ver & 0xf;
-    regs->info.base.asic_rev  = (sta_ver >> 4) & 0xfff;
+    regs->info.base.asic_type = HW_ASIC_TYPE_GET(sta_ver);
+    regs->info.base.asic_rev  = HW_ASIC_REV_GET(sta_ver);
     if (platform_is_hw(pd->platform_)) {
         sdk::platform::readFruKey(SERIALNUMBER_KEY, sn);
         strncpy0(regs->info.base.serial_num, sn.c_str(),
