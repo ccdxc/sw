@@ -252,6 +252,9 @@ func (na *Nagent) DeleteNetwork(tn, namespace, name string) error {
 }
 
 func (na *Nagent) validateDuplicateNetworks(vrfName, prefix string, vlanID uint32) (err error) {
+	if vlanID == types.UntaggedVLAN {
+		return
+	}
 	for _, net := range na.ListNetwork() {
 		if net.Spec.VrfName == vrfName {
 			switch {
@@ -259,7 +262,7 @@ func (na *Nagent) validateDuplicateNetworks(vrfName, prefix string, vlanID uint3
 			//case len(net.Spec.IPv4Subnet) != 0 && net.Spec.IPv4Subnet == prefix:
 			//	err = fmt.Errorf("found an existing network %v with prefix %v", net.Name, prefix)
 			//	return
-			// Dup VLANs
+			// Dup VLANs Untagged VLANs are OK.
 			case net.Spec.VlanID != 0 && net.Spec.VlanID == vlanID:
 				err = fmt.Errorf("found an existing network %v with vlan-id %v", net.Name, vlanID)
 				return
