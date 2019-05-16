@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from '@app/components/shared/shared.module';
@@ -11,7 +12,7 @@ describe('GuidesearchComponent', () => {
   let component: GuidesearchComponent;
   let fixture: ComponentFixture<GuidesearchComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [ GuidesearchComponent ],
       imports: [
@@ -20,9 +21,8 @@ describe('GuidesearchComponent', () => {
         WidgetsModule,
         PrimengModule
       ]
-    })
-    .compileComponents();
-  }));
+    });
+    });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(GuidesearchComponent);

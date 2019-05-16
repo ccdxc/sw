@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { SgpoliciesComponent } from './sgpolicies.component';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -30,7 +31,7 @@ describe('SgpoliciesComponent', () => {
   let policy2;
   let testingUtility: TestingUtility;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [SgpoliciesComponent, RouterLinkStubDirective],
       imports: [
@@ -51,9 +52,8 @@ describe('SgpoliciesComponent', () => {
         AuthService,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SgpoliciesComponent);

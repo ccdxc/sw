@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { NewdestinationComponent } from './newdestination.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -24,8 +25,8 @@ describe('NewdestinationComponent', () => {
   let component: NewdestinationComponent;
   let fixture: ComponentFixture<NewdestinationComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [NewdestinationComponent],
       imports: [
         FormsModule,
@@ -50,9 +51,8 @@ describe('NewdestinationComponent', () => {
         MonitoringService,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NewdestinationComponent);

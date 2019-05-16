@@ -13007,6 +13007,15 @@
         "double-bits": "^1.1.0"
       }
     },
+    "ng-bullet": {
+      "version": "1.0.3",
+      "resolved": "https://registry.npmjs.org/ng-bullet/-/ng-bullet-1.0.3.tgz",
+      "integrity": "sha512-qacsE/w/pLlBxebort1rkrE2B4Vc3idutcpe7tYiHVarz0V6Q5SN8E3d6NUp4UFBMOucpHlCpaASp7qEOsxM1Q==",
+      "dev": true,
+      "requires": {
+        "tslib": "^1.9.0"
+      }
+    },
     "ng2-charts": {
       "version": "1.6.0",
       "resolved": "https://registry.npmjs.org/ng2-charts/-/ng2-charts-1.6.0.tgz",

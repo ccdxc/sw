@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { WidgetsModule } from 'web-app-framework';
 
 import { DsbdwidgetheaderComponent } from './dsbdwidgetheader.component';
@@ -9,16 +10,15 @@ describe('DsbdwidgetheaderComponent', () => {
   let component: DsbdwidgetheaderComponent;
   let fixture: ComponentFixture<DsbdwidgetheaderComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [DsbdwidgetheaderComponent, PrettyDatePipe],
       imports: [
         WidgetsModule,
         MaterialdesignModule
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(DsbdwidgetheaderComponent);

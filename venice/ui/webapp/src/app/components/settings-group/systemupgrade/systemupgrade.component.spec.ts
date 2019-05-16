@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { SharedModule } from '@app/components/shared/shared.module';
@@ -20,8 +21,8 @@ describe('SystemupgradeComponent', () => {
   let component: SystemupgradeComponent;
   let fixture: ComponentFixture<SystemupgradeComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [ SystemupgradeComponent ],
       imports: [
         MaterialdesignModule,
@@ -41,9 +42,8 @@ describe('SystemupgradeComponent', () => {
         ConfirmationService,
         MatIconRegistry,
       ]
-    })
-    .compileComponents();
-  }));
+    });
+    });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SystemupgradeComponent);

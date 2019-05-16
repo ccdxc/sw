@@ -1,4 +1,4 @@
-import { inject, TestBed, getTestBed, fakeAsync, tick, discardPeriodicTasks } from '@angular/core/testing';
+import { inject, TestBed, getTestBed, tick, fakeAsync } from '@angular/core/testing';
 
 import { AbstractService } from './abstract.service';
 import { HttpTestingController, HttpClientTestingModule } from '@angular/common/http/testing';

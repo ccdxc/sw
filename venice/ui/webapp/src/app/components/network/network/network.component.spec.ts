@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { NetworkComponent } from './network.component';
 
@@ -6,12 +7,11 @@ describe('NetworkComponent', () => {
   let component: NetworkComponent;
   let fixture: ComponentFixture<NetworkComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [NetworkComponent]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NetworkComponent);

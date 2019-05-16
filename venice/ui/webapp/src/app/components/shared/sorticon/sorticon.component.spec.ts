@@ -1,5 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
@@ -18,8 +19,8 @@ describe('SorticonComponent', () => {
   let component: SorticonComponent;
   let fixture: ComponentFixture<SorticonComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [SorticonComponent],
       imports: [
         RouterTestingModule,
@@ -33,9 +34,8 @@ describe('SorticonComponent', () => {
           useClass: MockTable
         },
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SorticonComponent);

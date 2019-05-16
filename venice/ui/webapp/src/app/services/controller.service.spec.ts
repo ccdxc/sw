@@ -1,5 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { inject, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { MatIconRegistry } from '@angular/material';
 import { RouterTestingModule } from '@angular/router/testing';
 

@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 
@@ -16,8 +17,8 @@ describe('BaseComponent', () => {
   let component: BaseComponent;
   let fixture: ComponentFixture<BaseComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [BaseComponent],
       imports: [
         RouterTestingModule,
@@ -33,9 +34,8 @@ describe('BaseComponent', () => {
         MessageService,
         AuthService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(BaseComponent);

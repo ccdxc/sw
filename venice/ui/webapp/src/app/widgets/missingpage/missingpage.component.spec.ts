@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { MissingpageComponent } from './missingpage.component';
 import { ControllerService } from '@app/services/controller.service';
@@ -14,8 +15,8 @@ describe('MissingpageComponent', () => {
   let component: MissingpageComponent;
   let fixture: ComponentFixture<MissingpageComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [MissingpageComponent],
       imports: [
         SharedModule,
@@ -29,9 +30,8 @@ describe('MissingpageComponent', () => {
         MatIconRegistry,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(MissingpageComponent);

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { ComponentFixture, TestBed, async } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { LabelselectorComponent } from './labelselector.component';
@@ -9,13 +10,12 @@ describe('LabelselectorComponent', () => {
   let component: LabelselectorComponent;
   let fixture: ComponentFixture<LabelselectorComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [LabelselectorComponent],
       imports: [CommonModule, MaterialdesignModule, ReactiveFormsModule]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(LabelselectorComponent);

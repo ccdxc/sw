@@ -1,4 +1,5 @@
-import { TestBed, async, inject } from '@angular/core/testing';
+import { TestBed,  inject } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Router, RouterStateSnapshot } from '@angular/router';
 import { AuthGuard } from '@app/services/authguard.service';
@@ -44,7 +45,7 @@ describe('AuthGuardService', () => {
   it('check route guarding',
 
     // inject your guard service AND Router
-    async(inject([
+    inject([
       AuthGuard,
       Router,
       AuthService
@@ -68,5 +69,5 @@ describe('AuthGuardService', () => {
         // Routing should be allowed now
         expect(authGuard.canActivate(null, state)).toBeTruthy();
       })
-    ));
+    );
 });

@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { NeweventpolicyComponent } from './neweventpolicy.component';
 import { MonitoringGroupModule } from '@app/components/monitoring-group/monitoring-group.module';
@@ -21,8 +22,8 @@ describe('NeweventpolicyComponent', () => {
   let component: NeweventpolicyComponent;
   let fixture: ComponentFixture<NeweventpolicyComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [NeweventpolicyComponent],
       imports: [
         MonitoringGroupModule,
@@ -44,9 +45,8 @@ describe('NeweventpolicyComponent', () => {
         MonitoringService,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NeweventpolicyComponent);

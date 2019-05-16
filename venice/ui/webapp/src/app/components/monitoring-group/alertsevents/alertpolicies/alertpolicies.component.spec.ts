@@ -2,7 +2,8 @@
  Angular imports
  ------------------*/
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -36,8 +37,8 @@ describe('AlertpoliciesComponent', () => {
   let component: AlertpoliciesComponent;
   let fixture: ComponentFixture<AlertpoliciesComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [AlertpoliciesComponent,
         EventalertpolicyComponent,
         MetricpolicyComponent,
@@ -69,9 +70,8 @@ describe('AlertpoliciesComponent', () => {
         MatIconRegistry,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AlertpoliciesComponent);

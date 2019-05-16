@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 
 import { ModalheaderComponent } from './modalheader.component';
@@ -7,13 +8,12 @@ describe('ModalheaderComponent', () => {
   let component: ModalheaderComponent;
   let fixture: ComponentFixture<ModalheaderComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [ModalheaderComponent],
       imports: [MaterialdesignModule, ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ModalheaderComponent);

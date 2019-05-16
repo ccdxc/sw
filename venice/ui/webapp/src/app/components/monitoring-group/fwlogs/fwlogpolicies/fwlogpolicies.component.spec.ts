@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { FwlogpoliciesComponent } from './fwlogpolicies.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -29,7 +30,7 @@ describe('FwlogpoliciesComponent', () => {
   let component: FwlogpoliciesComponent;
   let fixture: ComponentFixture<FwlogpoliciesComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [FwlogpoliciesComponent, NewfwlogpolicyComponent],
       imports: [
@@ -55,9 +56,8 @@ describe('FwlogpoliciesComponent', () => {
         MonitoringService,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(FwlogpoliciesComponent);

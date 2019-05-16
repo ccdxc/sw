@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { ObjectpolicyComponent } from './objectpolicy.component';
 
@@ -6,12 +7,11 @@ describe('ObjectpolicyComponent', () => {
   let component: ObjectpolicyComponent;
   let fixture: ComponentFixture<ObjectpolicyComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [ObjectpolicyComponent]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ObjectpolicyComponent);

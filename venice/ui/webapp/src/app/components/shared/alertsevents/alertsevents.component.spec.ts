@@ -3,7 +3,8 @@
  ------------------*/
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
-import { async, ComponentFixture, TestBed, fakeAsync, tick, discardPeriodicTasks } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -77,8 +78,8 @@ describe('AlertseventsComponent', () => {
   let eventsService: EventsService;
   let uiconfigService: UIConfigsService;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [
         AlertseventsComponent,
         LazyrenderComponent,
@@ -117,9 +118,8 @@ describe('AlertseventsComponent', () => {
         MonitoringService,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     eventsService = TestBed.get(EventsService);

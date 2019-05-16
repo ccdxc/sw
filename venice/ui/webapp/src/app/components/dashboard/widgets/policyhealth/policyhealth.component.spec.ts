@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { PrimengModule } from '@app/lib/primeng.module';
 
 import { PolicyhealthComponent } from './policyhealth.component';
@@ -12,8 +13,8 @@ describe('PolicyhealthComponent', () => {
   let component: PolicyhealthComponent;
   let fixture: ComponentFixture<PolicyhealthComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [PolicyhealthComponent],
       imports: [
         PrimengModule,
@@ -23,9 +24,8 @@ describe('PolicyhealthComponent', () => {
         NoopAnimationsModule,
         SharedModule
       ],
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(PolicyhealthComponent);

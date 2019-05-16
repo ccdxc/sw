@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { EventpolicyComponent } from './eventpolicy.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -29,8 +30,8 @@ describe('EventpolicyComponent', () => {
   let component: EventpolicyComponent;
   let fixture: ComponentFixture<EventpolicyComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [EventpolicyComponent, NeweventpolicyComponent],
       imports: [
         FormsModule,
@@ -55,9 +56,8 @@ describe('EventpolicyComponent', () => {
         MonitoringService,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(EventpolicyComponent);

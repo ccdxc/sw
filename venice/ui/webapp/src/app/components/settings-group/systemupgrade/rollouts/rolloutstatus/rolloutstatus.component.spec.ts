@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { SharedModule } from '@app/components/shared/shared.module';
@@ -24,7 +25,7 @@ describe('RolloutstatusComponent', () => {
   let component: RolloutstatusComponent;
   let fixture: ComponentFixture<RolloutstatusComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [ RolloutstatusComponent ],
       imports: [
@@ -49,9 +50,8 @@ describe('RolloutstatusComponent', () => {
         RolloutService,
         AuthService
       ]
-    })
-    .compileComponents();
-  }));
+    });
+    });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(RolloutstatusComponent);

@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { NewfwlogpolicyComponent } from './newfwlogpolicy.component';
 import { MonitoringGroupModule } from '@app/components/monitoring-group/monitoring-group.module';
@@ -23,7 +24,7 @@ describe('NewfwlogpolicyComponent', () => {
   let component: NewfwlogpolicyComponent;
   let fixture: ComponentFixture<NewfwlogpolicyComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [NewfwlogpolicyComponent],
       imports: [
@@ -47,9 +48,8 @@ describe('NewfwlogpolicyComponent', () => {
         MonitoringService,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NewfwlogpolicyComponent);

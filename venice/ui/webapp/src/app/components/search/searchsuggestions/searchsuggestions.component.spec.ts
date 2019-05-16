@@ -1,7 +1,8 @@
 /**-----
  Angular imports
  ------------------*/
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { By } from '@angular/platform-browser';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -33,7 +34,7 @@ describe('SearchsuggestionsComponent', () => {
   let component: SearchsuggestionsComponent;
   let fixture: ComponentFixture<SearchsuggestionsComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [SearchsuggestionsComponent, DummyComponent],
       imports: [
@@ -54,9 +55,8 @@ describe('SearchsuggestionsComponent', () => {
         MatIconRegistry,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SearchsuggestionsComponent);

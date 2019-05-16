@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { Component } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
@@ -36,7 +37,7 @@ describe('SearchboxComponent', () => {
   let component: SearchboxComponent;
   let fixture: ComponentFixture<SearchboxComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [
         SearchboxComponent,
@@ -70,9 +71,8 @@ describe('SearchboxComponent', () => {
         MessageService,
         SearchService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SearchboxComponent);

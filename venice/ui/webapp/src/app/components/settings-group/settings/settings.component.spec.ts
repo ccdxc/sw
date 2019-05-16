@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { FormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -24,32 +25,30 @@ describe('SettingsComponent', () => {
   let component: SettingsComponent;
   let fixture: ComponentFixture<SettingsComponent>;
 
-  beforeEach(
-    async(() => {
-      TestBed.configureTestingModule({
-        imports: [
-          RouterTestingModule.withRoutes([
-            { path: 'login', component: DummyComponent }
-          ]),
-          NoopAnimationsModule,
-          RouterTestingModule,
-          CoreModule,
-          FormsModule,
-          MaterialdesignModule,
-        ],
-        providers: [
-          AuthService,
-          ControllerService,
-          ConfirmationService,
-          LogService,
-          LogPublishersService,
-          MatIconRegistry,
-          MessageService
-        ],
-        declarations: [SettingsComponent, DummyComponent]
-      }).compileComponents();
-    })
-  );
+  configureTestSuite(() => {
+    TestBed.configureTestingModule({
+      imports: [
+        RouterTestingModule.withRoutes([
+          { path: 'login', component: DummyComponent }
+        ]),
+        NoopAnimationsModule,
+        RouterTestingModule,
+        CoreModule,
+        FormsModule,
+        MaterialdesignModule,
+      ],
+      providers: [
+        AuthService,
+        ControllerService,
+        ConfirmationService,
+        LogService,
+        LogPublishersService,
+        MatIconRegistry,
+        MessageService
+      ],
+      declarations: [SettingsComponent, DummyComponent]
+    });
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SettingsComponent);

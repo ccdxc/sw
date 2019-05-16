@@ -1,7 +1,8 @@
 /* ---------------------------------------------------
     Angular JS libraries
 ----------------------------------------------------- */
-import { async, TestBed } from '@angular/core/testing';
+import {  TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { RouterTestingModule } from '@angular/router/testing';
 /* ---------------------------------------------------
     Venice App libraries
@@ -38,8 +39,8 @@ class TestModule { }
 describe('WorkloadModalComponent', () => {
   let component: WorkloadModalComponent;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       imports: [
         CommonModule,
         PrimengModule,
@@ -58,9 +59,8 @@ describe('WorkloadModalComponent', () => {
         MatDialog,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     const dialog = TestBed.get(MatDialog);

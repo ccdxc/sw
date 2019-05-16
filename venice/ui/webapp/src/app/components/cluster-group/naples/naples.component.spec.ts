@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { NaplesComponent } from './naples.component';
 import { Component } from '@angular/core';
@@ -95,8 +96,8 @@ describe('NaplesComponent', () => {
     }
   };
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [
         NaplesComponent,
         DummyComponent
@@ -123,9 +124,8 @@ describe('NaplesComponent', () => {
         MetricsqueryService,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NaplesComponent);

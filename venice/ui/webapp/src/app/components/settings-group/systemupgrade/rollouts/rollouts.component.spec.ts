@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {NoopAnimationsModule} from '@angular/platform-browser/animations';
@@ -29,7 +30,7 @@ describe('RolloutsComponent', () => {
   let component: RolloutsComponent;
   let fixture: ComponentFixture<RolloutsComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [ RolloutsComponent, NewrolloutComponent ],
       imports: [
@@ -57,9 +58,8 @@ describe('RolloutsComponent', () => {
         StagingService,
         ObjstoreService
       ]
-    })
-    .compileComponents();
-  }));
+    });
+    });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(RolloutsComponent);

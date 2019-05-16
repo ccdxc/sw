@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { NewflowexportpolicyComponent } from './newflowexportpolicy.component';
 import { MonitoringGroupModule } from '@app/components/monitoring-group/monitoring-group.module';
@@ -22,8 +23,8 @@ describe('NewflowexportComponent', () => {
   let component: NewflowexportpolicyComponent;
   let fixture: ComponentFixture<NewflowexportpolicyComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [NewflowexportpolicyComponent],
       imports: [
         MonitoringGroupModule,
@@ -45,9 +46,8 @@ describe('NewflowexportComponent', () => {
         MonitoringService,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NewflowexportpolicyComponent);

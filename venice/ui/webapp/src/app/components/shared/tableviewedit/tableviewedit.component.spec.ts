@@ -1,6 +1,7 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ChangeDetectorRef, Component, Input } from '@angular/core';
-import { async, ComponentFixture, TestBed, fakeAsync, tick, discardPeriodicTasks } from '@angular/core/testing';
+import {  ComponentFixture, TestBed, fakeAsync, tick, discardPeriodicTasks } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { MatIconRegistry } from '@angular/material';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -261,8 +262,8 @@ describe('TablevieweditComponent', () => {
 
 
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [
         DummyComponent,
         TablevieweditHTMLComponent,
@@ -285,9 +286,8 @@ describe('TablevieweditComponent', () => {
         MessageService,
         ChangeDetectorRef
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(DummyComponent);

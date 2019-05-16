@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { MatchruleComponent } from './matchrule.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
@@ -19,7 +20,7 @@ describe('MatchruleComponent', () => {
   let component: MatchruleComponent;
   let fixture: ComponentFixture<MatchruleComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [MatchruleComponent],
       imports: [
@@ -40,9 +41,8 @@ describe('MatchruleComponent', () => {
         MessageService,
         AuthService,
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(MatchruleComponent);

@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { AlertlistitemComponent } from './alertlistitem.component';
 import { SharedModule } from '@app/components/shared//shared.module';
@@ -7,16 +8,15 @@ describe('AlertlistitemComponent', () => {
   let component: AlertlistitemComponent;
   let fixture: ComponentFixture<AlertlistitemComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [AlertlistitemComponent],
       imports: [
         // Other modules...
         SharedModule
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AlertlistitemComponent);

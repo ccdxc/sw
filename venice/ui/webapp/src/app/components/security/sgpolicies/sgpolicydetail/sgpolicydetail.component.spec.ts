@@ -3,7 +3,8 @@ import { DebugElement, Component, Directive, Input } from '@angular/core';
 /**-----
  Angular imports
  ------------------*/
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
 import { By } from '@angular/platform-browser';
@@ -232,7 +233,7 @@ describe('SgpolicydetailComponent', () => {
     return fixture.debugElement.queryAll(By.css('.sgpolicy-overlay-button'));
   }
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [SgpolicydetailComponent, RouterLinkStubDirective],
       imports: [
@@ -261,9 +262,8 @@ describe('SgpolicydetailComponent', () => {
           useClass: MockActivatedRoute
         }
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SgpolicydetailComponent);

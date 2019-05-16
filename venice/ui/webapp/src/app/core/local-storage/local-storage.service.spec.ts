@@ -1,4 +1,5 @@
 import { TestBed, inject } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { LocalStorageService } from './local-storage.service';
 import { ControllerService } from '@app/services/controller.service';

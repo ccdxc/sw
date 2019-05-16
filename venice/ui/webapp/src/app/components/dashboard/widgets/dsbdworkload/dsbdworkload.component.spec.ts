@@ -1,6 +1,7 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { RouterTestingModule } from '@angular/router/testing';
 import { DsbdwidgetheaderComponent } from '@app/components/shared/dsbdwidgetheader/dsbdwidgetheader.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
@@ -25,8 +26,8 @@ describe('DsbdworkloadComponent', () => {
   let component: DsbdworkloadComponent;
   let fixture: ComponentFixture<DsbdworkloadComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [DsbdworkloadComponent, DsbdwidgetheaderComponent, DummyComponent, PrettyDatePipe],
       imports: [
         RouterTestingModule.withRoutes([
@@ -45,9 +46,8 @@ describe('DsbdworkloadComponent', () => {
         WorkloadService,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(DsbdworkloadComponent);

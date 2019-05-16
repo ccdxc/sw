@@ -1,7 +1,8 @@
 /**-----
  Angular imports
  ------------------*/
-import { async, ComponentFixture, TestBed, inject } from '@angular/core/testing';
+import {  ComponentFixture, TestBed, inject } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
@@ -153,8 +154,8 @@ describe('WorkloadComponent', () => {
   });
 
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [WorkloadComponent,
         WorkloadwidgetComponent,
         DummyComponent
@@ -187,10 +188,9 @@ describe('WorkloadComponent', () => {
         MessageService,
         AuthService
       ]
-    })
-      .compileComponents();
+    });
 
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(WorkloadComponent);

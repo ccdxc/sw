@@ -6,7 +6,8 @@
  * and we will fix this test once the patch is released.
  * - Jeff and Rohan
 
-import { async, ComponentFixture, TestBed, inject } from '@angular/core/testing';
+import {  ComponentFixture, TestBed, inject } from '@angular/core/testing'
+import { configureTestSuite } from 'ng-bullet';;
 import { WidgetsModule } from 'web-app-framework';
 import { ControllerService } from '@app/services/controller.service';
 import { ConfirmationService } from 'primeng/primeng'
@@ -57,8 +58,8 @@ describe('WorkloadwidgetComponent', () => {
   let componentService: WorkloadService;
   let spy: any;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [ WorkloadwidgetComponent, DummyComponent],
       imports: [
         RouterTestingModule.withRoutes([
@@ -77,8 +78,7 @@ describe('WorkloadwidgetComponent', () => {
         { provide: WorkloadService, useClass: MockWorkloadService }
       ]
     })
-    .compileComponents();
-  }));
+    });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(WorkloadwidgetComponent);

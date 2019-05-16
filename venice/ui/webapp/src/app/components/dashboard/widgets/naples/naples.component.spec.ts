@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { PrimengModule } from '@app/lib/primeng.module';
 
 import { NaplesComponent } from './naples.component';
@@ -20,8 +21,8 @@ describe('NaplesComponent', () => {
   let component: NaplesComponent;
   let fixture: ComponentFixture<NaplesComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [NaplesComponent],
       imports: [
         PrimengModule,
@@ -41,9 +42,8 @@ describe('NaplesComponent', () => {
         LogPublishersService,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NaplesComponent);

@@ -2,6 +2,7 @@
  Angular imports
  ------------------*/
 import { TestBed, inject, getTestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 

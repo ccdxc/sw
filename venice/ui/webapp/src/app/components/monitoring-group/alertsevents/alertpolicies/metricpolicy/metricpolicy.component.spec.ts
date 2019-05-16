@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { MetricpolicyComponent } from './metricpolicy.component';
 
@@ -6,12 +7,11 @@ describe('MetricpolicyComponent', () => {
   let component: MetricpolicyComponent;
   let fixture: ComponentFixture<MetricpolicyComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [MetricpolicyComponent]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(MetricpolicyComponent);

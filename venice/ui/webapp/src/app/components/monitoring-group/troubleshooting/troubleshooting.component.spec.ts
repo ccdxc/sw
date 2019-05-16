@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { TroubleshootingComponent } from './troubleshooting.component';
 
@@ -6,12 +7,11 @@ describe('TroubleshootingComponent', () => {
   let component: TroubleshootingComponent;
   let fixture: ComponentFixture<TroubleshootingComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [TroubleshootingComponent]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(TroubleshootingComponent);

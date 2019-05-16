@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 
 import { SharedModule } from '@app/components/shared/shared.module';
@@ -22,7 +23,7 @@ describe('RadiusComponent', () => {
   let component: RadiusComponent;
   let fixture: ComponentFixture<RadiusComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [RadiusComponent],
       imports: [
@@ -43,9 +44,8 @@ describe('RadiusComponent', () => {
         MatIconRegistry,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(RadiusComponent);

@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { WidgetsModule } from 'web-app-framework';
 import { PrimengModule } from '@app/lib/primeng.module';
 
@@ -23,8 +24,8 @@ describe('SystemcapacitywidgetComponent', () => {
   let component: SystemcapacitywidgetComponent;
   let fixture: ComponentFixture<SystemcapacitywidgetComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [SystemcapacitywidgetComponent],
       imports: [
         WidgetsModule,
@@ -46,9 +47,8 @@ describe('SystemcapacitywidgetComponent', () => {
         MessageService,
         AuthService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SystemcapacitywidgetComponent);

@@ -1,7 +1,8 @@
 /* ---------------------------------------------------
     Angular JS libraries
 ----------------------------------------------------- */
-import { async, TestBed } from '@angular/core/testing';
+import {  TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { RouterTestingModule } from '@angular/router/testing';
 /* ---------------------------------------------------
     Venice App libraries
@@ -34,8 +35,8 @@ class TestModule { }
 describe('IdleWarningComponent', () => {
   let component: IdleWarningComponent;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       imports: [
         PrimengModule,
         MaterialdesignModule,
@@ -52,9 +53,8 @@ describe('IdleWarningComponent', () => {
         MatDialog,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     // fixture = TestBed.createComponent(IdleWarningComponent);

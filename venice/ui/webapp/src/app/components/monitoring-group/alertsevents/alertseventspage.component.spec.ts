@@ -3,7 +3,8 @@
  ------------------*/
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -39,8 +40,8 @@ describe('AlertseventspageComponent', () => {
   let component: AlertseventspageComponent;
   let fixture: ComponentFixture<AlertseventspageComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [AlertseventspageComponent, DummyComponent],
       imports: [
         RouterTestingModule.withRoutes([
@@ -68,9 +69,8 @@ describe('AlertseventspageComponent', () => {
         MessageService,
         AuthService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AlertseventspageComponent);

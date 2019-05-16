@@ -1,7 +1,8 @@
 /* ---------------------------------------------------
     Angular JS libraries
 ----------------------------------------------------- */
-import { async, ComponentFixture, TestBed, inject } from '@angular/core/testing';
+import {  ComponentFixture, TestBed, inject } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
@@ -28,8 +29,8 @@ describe('ToolbarComponent', () => {
   let component: ToolbarComponent;
   let fixture: ComponentFixture<ToolbarComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [ToolbarComponent],
       imports: [
         PrimengModule,
@@ -46,9 +47,8 @@ describe('ToolbarComponent', () => {
         MatIconRegistry,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ToolbarComponent);

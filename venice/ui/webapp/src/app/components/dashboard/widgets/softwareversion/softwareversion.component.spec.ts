@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { WidgetsModule } from 'web-app-framework';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
@@ -11,17 +12,16 @@ describe('SoftwareversionComponent', () => {
   let component: SoftwareversionComponent;
   let fixture: ComponentFixture<SoftwareversionComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [SoftwareversionComponent, DsbdwidgetheaderComponent, PrettyDatePipe],
       imports: [
         WidgetsModule,
         PrimengModule,
         MaterialdesignModule,
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SoftwareversionComponent);

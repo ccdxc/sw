@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { ControllerService } from '@app/services/controller.service';
 import { ConfirmationService } from 'primeng/primeng';
@@ -129,8 +130,8 @@ describe('NaplesdetailComponent', () => {
     return fixture.debugElement.queryAll(By.css('.naplesdetail-overlay-button'));
   }
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [NaplesdetailComponent, RouterLinkStubDirective],
       imports: [
         RouterTestingModule,
@@ -161,9 +162,8 @@ describe('NaplesdetailComponent', () => {
         },
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NaplesdetailComponent);

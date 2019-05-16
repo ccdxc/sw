@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { BasecardComponent } from './basecard.component';
 import { WidgetsModule } from 'web-app-framework';
@@ -18,8 +19,8 @@ describe('HerocardComponent', () => {
   let component: BasecardComponent;
   let fixture: ComponentFixture<BasecardComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [
         BasecardComponent,
         DsbdwidgetheaderComponent,
@@ -34,8 +35,7 @@ describe('HerocardComponent', () => {
       providers: [
         { provide: Router, useValue: mockRouter },
       ]
-    }).compileComponents();
-  }));
+    }); });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(BasecardComponent);

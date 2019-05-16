@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { FieldselectorComponent } from './fieldselector.component';
 import { WidgetsModule } from 'web-app-framework';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -8,8 +9,8 @@ describe('FieldselectorComponent', () => {
   let component: FieldselectorComponent;
   let fixture: ComponentFixture<FieldselectorComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [FieldselectorComponent],
       imports: [
         WidgetsModule,
@@ -17,9 +18,8 @@ describe('FieldselectorComponent', () => {
         ReactiveFormsModule,
         NoopAnimationsModule
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(FieldselectorComponent);

@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { MonitoringGroupComponent } from './monitoring-group.component';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -13,7 +14,7 @@ describe('MonitoringGroupComponent', () => {
   let component: MonitoringGroupComponent;
   let fixture: ComponentFixture<MonitoringGroupComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [MonitoringGroupComponent],
       imports: [
@@ -27,9 +28,8 @@ describe('MonitoringGroupComponent', () => {
         MatIconRegistry,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(MonitoringGroupComponent);

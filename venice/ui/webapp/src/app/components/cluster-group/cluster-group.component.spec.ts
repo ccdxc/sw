@@ -1,7 +1,8 @@
 /**-----
  Angular imports
  ------------------*/
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
@@ -30,8 +31,8 @@ describe('ClusterGroupComponent', () => {
   let component: ClusterGroupComponent;
   let fixture: ComponentFixture<ClusterGroupComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [
         ClusterGroupComponent,
         DummyComponent
@@ -50,9 +51,8 @@ describe('ClusterGroupComponent', () => {
         MatIconRegistry,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ClusterGroupComponent);

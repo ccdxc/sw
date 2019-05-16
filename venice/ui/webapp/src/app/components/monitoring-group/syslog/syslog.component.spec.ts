@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { SyslogComponent } from './syslog.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
@@ -19,7 +20,7 @@ describe('SyslogComponent', () => {
   let component: SyslogComponent;
   let fixture: ComponentFixture<SyslogComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [SyslogComponent],
       imports: [
@@ -40,9 +41,8 @@ describe('SyslogComponent', () => {
         AuthService,
         MessageService,
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SyslogComponent);

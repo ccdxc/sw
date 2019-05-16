@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { ComponentFixture, TestBed, async } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { MatIconRegistry } from '@angular/material';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ControllerService } from '@app/services/controller.service';
@@ -19,7 +20,7 @@ describe('SecurityComponent', () => {
   let component: SecurityComponent;
   let fixture: ComponentFixture<SecurityComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [SecurityComponent, DummyComponent],
       imports: [
@@ -35,9 +36,8 @@ describe('SecurityComponent', () => {
         MatIconRegistry,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SecurityComponent);

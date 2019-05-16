@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { NodedetailComponent } from './nodedetail.component';
 import { ControllerService } from '@app/services/controller.service';
@@ -48,8 +49,8 @@ describe('NodedetailComponent', () => {
   let component: NodedetailComponent;
   let fixture: ComponentFixture<NodedetailComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [NodedetailComponent, RouterLinkStubDirective],
       imports: [
         RouterTestingModule,
@@ -80,9 +81,8 @@ describe('NodedetailComponent', () => {
         },
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NodedetailComponent);

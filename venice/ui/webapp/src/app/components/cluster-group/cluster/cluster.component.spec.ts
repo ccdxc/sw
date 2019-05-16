@@ -1,7 +1,8 @@
 /**-----
  Angular imports
  ------------------*/
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { By } from '@angular/platform-browser';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -45,8 +46,8 @@ describe('ClusterComponent', () => {
   let component: ClusterComponent;
   let fixture: ComponentFixture<ClusterComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [
         ClusterComponent,
         DummyComponent,
@@ -81,9 +82,8 @@ describe('ClusterComponent', () => {
         MessageService,
         AuthService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ClusterComponent);

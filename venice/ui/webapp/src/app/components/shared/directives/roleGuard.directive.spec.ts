@@ -3,7 +3,8 @@
  ------------------*/
  import { HttpClientTestingModule } from '@angular/common/http/testing';
  import { Component, ViewContainerRef } from '@angular/core';
- import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+ import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
  import { RouterTestingModule } from '@angular/router/testing';
  /**-----
   Venice web-app imports
@@ -60,8 +61,8 @@ describe('roleGuard directive', () => {
   let uiConfigs: UIConfigsService;
   let controllerService: ControllerService;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [
         DummyComponent,
         RoleGuardDirective
@@ -80,9 +81,8 @@ describe('roleGuard directive', () => {
         ViewContainerRef,
         AuthService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     uiConfigs = TestBed.get(UIConfigsService);

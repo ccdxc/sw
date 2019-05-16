@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed, async } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { AuthpolicyComponent } from './authpolicy.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
@@ -81,7 +82,7 @@ describe('AuthpolicyComponent', () => {
   let component: AuthpolicyComponent;
   let fixture: ComponentFixture<AuthpolicyComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [
         AuthpolicyComponent,
@@ -110,9 +111,8 @@ describe('AuthpolicyComponent', () => {
         { provide: AuthServiceGen, useClass: MockAuthService },
         MatIconRegistry,
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AuthpolicyComponent);

@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -21,7 +22,7 @@ describe('AuthpolicybaseComponent', () => {
   let component: AuthpolicybaseComponent;
   let fixture: ComponentFixture<AuthpolicybaseComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [AuthpolicybaseComponent],
       imports: [
@@ -42,9 +43,8 @@ describe('AuthpolicybaseComponent', () => {
         MatIconRegistry,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AuthpolicybaseComponent);

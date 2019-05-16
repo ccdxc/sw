@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -23,7 +24,7 @@ describe('LdapComponent', () => {
   let component: LdapComponent;
   let fixture: ComponentFixture<LdapComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [LdapComponent],
       imports: [
@@ -44,9 +45,8 @@ describe('LdapComponent', () => {
         MatIconRegistry,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(LdapComponent);

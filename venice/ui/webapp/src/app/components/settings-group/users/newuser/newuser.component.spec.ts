@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -28,8 +29,8 @@ describe('NewuserComponent', () => {
   let component: NewuserComponent;
   let fixture: ComponentFixture<NewuserComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [NewuserComponent, UsersComponent, NewroleComponent, NewrolebindingComponent],
       imports: [
         FormsModule,
@@ -54,9 +55,8 @@ describe('NewuserComponent', () => {
         MessageService,
         StagingService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NewuserComponent);

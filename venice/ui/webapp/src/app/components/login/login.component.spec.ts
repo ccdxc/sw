@@ -1,5 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { FormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -19,8 +20,8 @@ describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [LoginComponent],
       imports: [
         RouterTestingModule,
@@ -39,9 +40,8 @@ describe('LoginComponent', () => {
         MessageService,
         AuthServiceGen
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(LoginComponent);

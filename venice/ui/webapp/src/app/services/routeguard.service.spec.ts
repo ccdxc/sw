@@ -1,5 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, inject, TestBed } from '@angular/core/testing';
+import {  inject, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ControllerService } from '@app/services/controller.service';
@@ -26,9 +27,8 @@ describe('RouteGuardService', () => {
   let routeGuard: RouteGuard;
   let uiConfig: MockUIConfigService;
 
-  // async beforeEach
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       imports: [
         RouterTestingModule,
         HttpClientTestingModule
@@ -42,9 +42,8 @@ describe('RouteGuardService', () => {
         LogPublishersService,
         AuthService
       ],
-    })
-      .compileComponents(); // compile template and css
-  }));
+    });
+  });
 
   // synchronous beforeEach
   beforeEach(() => {
@@ -54,7 +53,7 @@ describe('RouteGuardService', () => {
 
   it('check route guarding',
     // inject your guard service AND Router
-    async(inject([
+    inject([
       Router,
     ],
       (
@@ -84,6 +83,6 @@ describe('RouteGuardService', () => {
         // Routing should be allowed now
         expect(routeGuard.canActivateChild(route, null)).toBeTruthy();
       })
-    ));
+    );
 
 });

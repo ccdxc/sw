@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -27,8 +28,8 @@ describe('NewrolebindingComponent', () => {
   let component: NewrolebindingComponent;
   let fixture: ComponentFixture<NewrolebindingComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [NewrolebindingComponent, NewroleComponent, UsersComponent, NewuserComponent, NewrolebindingComponent],
       imports: [
         FormsModule,
@@ -52,9 +53,8 @@ describe('NewrolebindingComponent', () => {
         MessageService,
         StagingService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NewrolebindingComponent);

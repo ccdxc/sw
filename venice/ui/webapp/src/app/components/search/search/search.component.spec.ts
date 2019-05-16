@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -19,7 +20,7 @@ describe('SearchComponent', () => {
   let component: SearchComponent;
   let fixture: ComponentFixture<SearchComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [ SearchComponent ,
         SearchsuggestionsComponent,
@@ -33,9 +34,8 @@ describe('SearchComponent', () => {
         PrimengModule,
         MaterialdesignModule
       ]
-    })
-    .compileComponents();
-  }));
+    });
+    });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SearchComponent);

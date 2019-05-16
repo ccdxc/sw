@@ -1,7 +1,8 @@
 /* ---------------------------------------------------
     Angular JS libraries
 ----------------------------------------------------- */
-import { TestBed, async } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FormsModule } from '@angular/forms';
 import { OverlayContainer } from '@angular/cdk/overlay';
@@ -55,7 +56,7 @@ import { MessageService } from './services/message.service';
 
 
 describe('AppcontentComponent', () => {
-  beforeEach(() => {
+    configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [
         AppcontentComponent,
@@ -100,14 +101,13 @@ describe('AppcontentComponent', () => {
       ],
     });
 
-    TestBed.compileComponents();
-  });
+    });
 
-  it('should create the app', async(() => {
+  it('should create the app', () => {
     const fixture = TestBed.createComponent(AppcontentComponent);
     const app = fixture.debugElement.componentInstance;
     expect(app).toBeTruthy();
-  }));
+  });
 
 
 });

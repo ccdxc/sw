@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
 import { SharedModule } from '@app/components/shared/shared.module';
@@ -21,7 +22,7 @@ describe('ImageuploadComponent', () => {
   let component: ImageuploadComponent;
   let fixture: ComponentFixture<ImageuploadComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [ ImageuploadComponent ],
       imports: [
@@ -43,9 +44,8 @@ describe('ImageuploadComponent', () => {
         MatIconRegistry,
         ObjstoreService
       ]
-    })
-    .compileComponents();
-  }));
+    });
+    });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ImageuploadComponent);

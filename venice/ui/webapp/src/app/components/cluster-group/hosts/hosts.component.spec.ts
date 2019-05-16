@@ -1,4 +1,5 @@
-import {async, ComponentFixture, fakeAsync, TestBed, tick} from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import {HostsComponent} from './hosts.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
@@ -161,8 +162,8 @@ describe('HostsComponent', () => {
     }
   };
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
+  configureTestSuite(() => {
+     TestBed.configureTestingModule({
       declarations: [HostsComponent, RouterLinkStubDirective],
       imports: [
         FormsModule,
@@ -185,9 +186,8 @@ describe('HostsComponent', () => {
         ClusterService,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(HostsComponent);

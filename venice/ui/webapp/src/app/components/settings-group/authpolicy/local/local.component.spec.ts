@@ -1,4 +1,5 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {  ComponentFixture, TestBed } from '@angular/core/testing';
+import { configureTestSuite } from 'ng-bullet';
 
 import { SharedModule } from '@app/components/shared/shared.module';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -23,7 +24,7 @@ describe('LocalComponent', () => {
   let component: LocalComponent;
   let fixture: ComponentFixture<LocalComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [LocalComponent],
       imports: [
@@ -44,9 +45,8 @@ describe('LocalComponent', () => {
         MatIconRegistry,
         MessageService
       ]
-    })
-      .compileComponents();
-  }));
+    });
+      });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(LocalComponent);
