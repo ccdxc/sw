@@ -46,6 +46,8 @@ message VnicSpec {
   // switch vnic is router/bridge/appliance sitting behind the VLAN of this VNIC
   // and can have many MACs in the same VLAN, so SMAC check will be disabled
   bool        SwitchVnic            = 11;
+  // metering policy to apply for traffic coming in and going out of this vnic
+  uint32      MeterId               = 12;
 }
 
 // operational status of Vnic, if any

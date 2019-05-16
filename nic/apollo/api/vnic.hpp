@@ -181,6 +181,10 @@ public:
     /// \return    key of the subnet this vnic belongs to
     pds_subnet_key_t subnet(void) { return subnet_; }
 
+    /// \brief     return meter policy of this vnic
+    /// \return    key of the meter policy being applied
+    pds_meter_key_t meter(void) { return meter_; }
+
     /// \brief     return fabric encap information of vnic
     /// \return    fabric encap type and value
     pds_encap_t fabric_encap(void) { return fabric_encap_; }
@@ -200,6 +204,7 @@ private:
 private:
     pds_vnic_key_t    key_;              ///< vnic key
     pds_subnet_key_t  subnet_;           ///< subnet of this vnic
+    pds_meter_key_t   meter_;            ///< metering policy
     pds_encap_t       fabric_encap_;     ///< fabric encap information
     ht_ctxt_t         ht_ctxt_;          ///< hash table context
     impl_base         *impl_;            ///< impl object instance

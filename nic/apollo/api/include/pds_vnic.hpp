@@ -33,6 +33,8 @@ typedef struct pds_vnic_spec_s {
     bool src_dst_check;                ///< tRUE if src/dst check is enabled
     uint8_t tx_mirror_session_bmap;    ///< Tx mirror sessions, if any
     uint8_t rx_mirror_session_bmap;    ///< Rx mirror sessions, if any
+    pds_meter_key_t meter;             ///< Metering policy to apply on
+                                       ///< Tx and Rx traffic
 } __PACK__ pds_vnic_spec_t;
 
 /// \brief VNIC status
