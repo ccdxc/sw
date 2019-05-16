@@ -17,6 +17,20 @@
 
 namespace api_test {
 
+#define POLICY_MANY_CREATE(seed)                                        \
+    ASSERT_TRUE(policy_util::many_create(seed) == sdk::SDK_RET_OK)
+
+#define POLICY_MANY_READ(seed, expected_res)                            \
+    ASSERT_TRUE(policy_util::many_read(seed, expected_res) == sdk::SDK_RET_OK)
+
+#define POLICY_MANY_UPDATE(seed)                                        \
+    ASSERT_TRUE(policy_util::many_update(seed) == sdk::SDK_RET_OK)
+
+#define POLICY_MANY_DELETE(seed)                                        \
+    ASSERT_TRUE(policy_util::many_delete(seed) == sdk::SDK_RET_OK)
+
+#define POLICY_SEED_INIT policy_util::stepper_seed_init
+
 typedef struct policy_seed_stepper_s {
     pds_policy_id_t id;
     uint16_t num_rules;
@@ -26,6 +40,7 @@ typedef struct policy_seed_stepper_s {
     policy_type_t type;
     uint8_t af;
     std::string pfx;
+    uint32_t num_policy;
 } policy_seed_stepper_t;
 
 /// Policy test utility class
@@ -69,7 +84,7 @@ public:
     /// \brief Update the policy
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(pds_policy_spec_t *spec);
+    sdk_ret_t update();
 
     /// \brief Delete policy
     ///
@@ -80,26 +95,34 @@ public:
 
     /// \brief Create many policies
     ///
-    /// \param[in] num_policy number of policies to create
-    /// \param[in] vpc_id VPC id
-    /// \param[in] pfxstr policy prefix (cidr) in string form
+    /// \param[in] seed seed for the policy
     /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(policy_seed_stepper_t *seed,
-                                 uint32_t num_policy);
+    static sdk_ret_t many_create(policy_seed_stepper_t *seed);
+
+    /// \brief Create many policies
+    ///
+    /// \param[in] seed seed for the policy
+    /// \return #SDK_RET_OK on success, failure status code on error
+    static sdk_ret_t many_update(policy_seed_stepper_t *seed);
 
     /// \brief Read many policies
     ///
+    /// \param[in] seed seed for the policy
     /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_read(policy_seed_stepper_t *seed, uint32_t num_policy,
+    static sdk_ret_t many_read(policy_seed_stepper_t *seed,
                                sdk::sdk_ret_t expected_res = sdk::SDK_RET_OK);
 
     /// \brief Delete multiple policies
     /// Delete "num_policy" policy starting from id
     ///
-    /// \param[in] num_policy number of VPCs to be deleted
+    /// \param[in] seed seed for the policies to be deleted
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(policy_seed_stepper_t *seed,
-                                 uint32_t num_policy);
+    static sdk_ret_t many_delete(policy_seed_stepper_t *seed);
+
+    static void stepper_seed_init(policy_seed_stepper_t *seed, uint32_t id,
+                                  uint32_t stateless_rules, rule_dir_t dir,
+                                  policy_type_t type, uint8_t af,
+                                  std::string pfx, uint32_t num_policy);
 
 private:
     void __init();

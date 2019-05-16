@@ -47,20 +47,18 @@ protected:
         pds_batch_params_t batch_params = {0};
         vpc_util vpc_obj(1, "10.0.0.0/8");
 
-        batch_params.epoch = ++g_batch_epoch;
-        ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+        BATCH_START();
         ASSERT_TRUE(vpc_obj.create() == sdk::SDK_RET_OK);
-        ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+        BATCH_COMMIT();
     }
     static void TearDownTestCase() {
         pds_batch_params_t batch_params = {0};
         vpc_util vpc_obj(1, "10.0.0.0/8");
 
         g_trace_level = sdk::lib::SDK_TRACE_LEVEL_DEBUG;
-        batch_params.epoch = ++g_batch_epoch;
-        ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+        BATCH_START();
         ASSERT_TRUE(vpc_obj.del() == sdk::SDK_RET_OK);
-        ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+        BATCH_COMMIT();
 
         pds_test_base::TearDownTestCase();
     }
@@ -73,23 +71,6 @@ protected:
 /// \defgroup SUBNET_TEST
 /// @{
 
-static inline void
-policy_seed_stepper_init(policy_seed_stepper_t *seed, uint32_t id,
-                         uint32_t stateless_rules, rule_dir_t dir,
-                         policy_type_t type, uint8_t af, std::string pfx)
-{
-    uint32_t max_rules = (af==IP_AF_IPV4)? PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY:
-                                           PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY;
-    SDK_ASSERT(stateless_rules < max_rules);
-    seed->id = id;
-    seed->num_rules = max_rules;
-    seed->direction = dir;
-    seed->type = type;
-    seed->af = af;
-    seed->stateful_rules = max_rules - stateless_rules;
-    seed->pfx = pfx;
-}
-
 /// \brief Create and delete maximum policies in the same batch
 /// The operation should be de-duped by framework and is a NO-OP
 /// from hardware perspective
@@ -101,17 +82,15 @@ TEST_F(policy, policy_workflow_1) {
     uint32_t policy_id = 1;
 
     // setup
-    policy_seed_stepper_init(&seed, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16");
-
+    POLICY_SEED_INIT(&seed, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
     // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed, num_policy,
-                                       sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed);
+    POLICY_MANY_DELETE(&seed);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Create, delete and create max policies in the same batch
@@ -125,23 +104,24 @@ TEST_F(policy, policy_workflow_2) {
     uint32_t policy_id = 1;
 
     // setup
-    policy_seed_stepper_init(&seed, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16");
+    POLICY_SEED_INIT(&seed, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
 
     // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed, num_policy) == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed);
+    POLICY_MANY_DELETE(&seed);
+    POLICY_MANY_CREATE(&seed);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
 
     // teardown
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Create Set1, Set2, Delete Set1, Create Set3 in same batch
@@ -155,42 +135,41 @@ TEST_F(policy, policy_workflow_3) {
     uint32_t policy_id = 1;
 
     // setup
-    policy_seed_stepper_init(&seed1, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4,"10.0.0.1/16");
+    POLICY_SEED_INIT(&seed1, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4,"10.0.0.1/16",
+                     num_policy);
 
     policy_id += num_policy;
-    policy_seed_stepper_init(&seed2, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4,"11.0.0.1/16");
+    POLICY_SEED_INIT(&seed2, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4,"11.0.0.1/16",
+                     num_policy);
 
     policy_id += num_policy;
-    policy_seed_stepper_init(&seed3, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16");
+    POLICY_SEED_INIT(&seed3, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16",
+                     num_policy + 1);
 
     // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed1, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed2, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed1, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed3, num_policy + 1) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed1, num_policy,
-                                       sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed1);
+    POLICY_MANY_CREATE(&seed2);
+    POLICY_MANY_DELETE(&seed1);
+    POLICY_MANY_CREATE(&seed3);
+    BATCH_COMMIT();
 
-    ASSERT_TRUE(policy_util::many_read(&seed2, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed3, num_policy + 1) == sdk::SDK_RET_OK);
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+
+    POLICY_MANY_READ(&seed2, sdk::SDK_RET_OK);
+    POLICY_MANY_READ(&seed3, sdk::SDK_RET_OK);
 
     // teardown
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed2, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed3, num_policy + 1) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed2, num_policy,
-                                       sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed3, num_policy,
-                                       sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed2);
+    POLICY_MANY_DELETE(&seed3);
+    BATCH_COMMIT();
 
+    POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    POLICY_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Create and delete max policies in two batches
@@ -204,24 +183,22 @@ TEST_F(policy, policy_workflow_4) {
     uint32_t policy_id = 1;
 
     // setup
-    policy_seed_stepper_init(&seed, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16");
+    POLICY_SEED_INIT(&seed, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
 
     // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed, num_policy) == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
 
     // teardown
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed);
+    BATCH_COMMIT();
 
-    ASSERT_TRUE(policy_util::many_read(&seed, num_policy,
-                                       sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Create and delete mix and match of policies in two batches
@@ -233,41 +210,255 @@ TEST_F(policy, policy_workflow_5) {
     uint32_t policy_id = 1;
 
     // setup
-    policy_seed_stepper_init(&seed1, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16");
+    POLICY_SEED_INIT(&seed1, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
 
     policy_id += num_policy;
-    policy_seed_stepper_init(&seed2, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16");
+    POLICY_SEED_INIT(&seed2, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                     num_policy);
 
     policy_id += num_policy;
-    policy_seed_stepper_init(&seed3, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16");
+    POLICY_SEED_INIT(&seed3, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16",
+                     num_policy + 1);
 
     // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed1, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed2, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed2, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed1, num_policy) == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed1);
+    POLICY_MANY_CREATE(&seed2);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
+    POLICY_MANY_READ(&seed2, sdk::SDK_RET_OK);
 
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed1, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed3, num_policy + 1) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed1, num_policy,
-                                       sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed3, num_policy + 1) == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed1);
+    POLICY_MANY_CREATE(&seed3);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    POLICY_MANY_READ(&seed3, sdk::SDK_RET_OK);
 
     // teardown
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed2, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed3, num_policy + 1) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed2);
+    POLICY_MANY_DELETE(&seed3);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    POLICY_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
+
+/// \brief Create, update and delete maximum number of policies
+/// [ Create SetMax, Update SetMax - Update SetMax - Delete SetMax ] - Read
+TEST_F(policy, policy_workflow_6) {
+    pds_batch_params_t batch_params = {0};
+    policy_seed_stepper_t seed, seed1, seed2;
+    uint32_t num_policy = g_num_policy;
+    uint32_t policy_id = 1;
+
+    // setup
+    POLICY_SEED_INIT(&seed, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
+    POLICY_SEED_INIT(&seed1, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                     num_policy);
+    POLICY_SEED_INIT(&seed2, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16",
+                     num_policy);
+
+    // trigger
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed);
+    POLICY_MANY_UPDATE(&seed1);
+    POLICY_MANY_UPDATE(&seed2);
+    POLICY_MANY_DELETE(&seed2);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+
+    // teardown
+}
+
+/// \brief Create, update and delete maximum number of policies
+/// [ Create SetMax - Delete SetMax - Create SetMax - Update SetMax -
+///   Update SetMax] - Read
+TEST_F(policy, policy_workflow_7) {
+    pds_batch_params_t batch_params = {0};
+    policy_seed_stepper_t seed, seed1, seed2;
+    uint32_t num_policy = g_num_policy;
+    uint32_t policy_id = 1;
+
+    // setup
+    POLICY_SEED_INIT(&seed, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
+    POLICY_SEED_INIT(&seed1, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                     num_policy);
+    POLICY_SEED_INIT(&seed2, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16",
+                     num_policy);
+
+    // trigger
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed);
+    POLICY_MANY_DELETE(&seed);
+    POLICY_MANY_CREATE(&seed);
+    POLICY_MANY_UPDATE(&seed1);
+    POLICY_MANY_UPDATE(&seed2);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed2, sdk::SDK_RET_OK);
+
+    // teardown
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed2);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Create, update and delete maximum policies in multiple batches
+/// [ Create SetMax, Update SetMax ] - Read - [ Update SetMax ] - Read -
+///   [ Delete SetMax ] - Read
+TEST_F(policy, DISABLED_policy_workflow_8) {
+    pds_batch_params_t batch_params = {0};
+    policy_seed_stepper_t seed, seed1, seed2;
+    uint32_t num_policy = g_num_policy;
+    uint32_t policy_id = 1;
+
+    // setup
+    POLICY_SEED_INIT(&seed, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
+    POLICY_SEED_INIT(&seed1, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                     num_policy);
+    POLICY_SEED_INIT(&seed2, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16",
+                     num_policy);
+
+    // trigger
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed);
+    POLICY_MANY_UPDATE(&seed1);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
+
+    BATCH_START();
+    POLICY_MANY_UPDATE(&seed2);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed2, sdk::SDK_RET_OK);
+
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed2);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+
+    // teardown
+}
+
+/// \brief Create, update and delete maximum policies in multiple batches
+/// [ Create SetMax ] - Read - [ Update SetMax Delete SetMax ] - Read
+TEST_F(policy, policy_workflow_9) {
+    pds_batch_params_t batch_params = {0};
+    policy_seed_stepper_t seed, seed1, seed2;
+    uint32_t num_policy = g_num_policy;
+    uint32_t policy_id = 1;
+
+    // setup
+    POLICY_SEED_INIT(&seed, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
+    POLICY_SEED_INIT(&seed1, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                     num_policy);
+    POLICY_SEED_INIT(&seed2, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "12.0.0.1/16",
+                     num_policy);
+
+    // trigger
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
+
+    BATCH_START();
+    POLICY_MANY_UPDATE(&seed1);
+    POLICY_MANY_DELETE(&seed1);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+
+    // teardown
+}
+
+/// \brief Create, update and delete a set of policies in multiple batches
+/// [ Create Set1, Set2 Set3 - Delete Set1 - Update Set2 ] - Read -
+/// [ Update Set3 - Delete Set2 - Create Set4] - Read
+TEST_F(policy, DISABLED_policy_workflow_10) {
+    pds_batch_params_t batch_params = {0};
+    policy_seed_stepper_t seed1, seed2, seed3, seed4, seed2_new, seed3_new;
+    uint32_t num_policy = 341;
+    uint32_t policy_id = 1;
+
+    // setup
+    POLICY_SEED_INIT(&seed1, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
+
+    policy_id += num_policy;
+    POLICY_SEED_INIT(&seed2, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "13.0.0.1/16",
+                     num_policy);
+    POLICY_SEED_INIT(&seed2_new, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "14.0.0.1/16",
+                     num_policy);
+
+    policy_id += num_policy;
+    POLICY_SEED_INIT(&seed3, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "17.0.0.1/16",
+                     num_policy + 1);
+    POLICY_SEED_INIT(&seed3_new, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "18.0.0.1/16",
+                     num_policy + 1);
+
+    policy_id += num_policy;
+    POLICY_SEED_INIT(&seed4, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "21.0.0.1/16",
+                     num_policy);
+    // trigger
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed1);
+    POLICY_MANY_CREATE(&seed2);
+    POLICY_MANY_CREATE(&seed3);
+    POLICY_MANY_DELETE(&seed1);
+    POLICY_MANY_UPDATE(&seed2_new);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    POLICY_MANY_READ(&seed2_new, sdk::SDK_RET_OK);
+    POLICY_MANY_READ(&seed3, sdk::SDK_RET_OK);
+
+    BATCH_START();
+    POLICY_MANY_UPDATE(&seed3_new);
+    POLICY_MANY_DELETE(&seed2_new);
+    POLICY_MANY_CREATE(&seed4);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    POLICY_MANY_READ(&seed3_new, sdk::SDK_RET_OK);
+    POLICY_MANY_READ(&seed4, sdk::SDK_RET_OK);
+
+    // teardown
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed3_new);
+    POLICY_MANY_DELETE(&seed4);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed3_new, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    POLICY_MANY_READ(&seed4, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Create maximum number of policies in two batches
@@ -279,28 +470,30 @@ TEST_F(policy, policy_workflow_neg_1) {
     uint32_t policy_id = 1;
 
     // setup
-    policy_seed_stepper_init(&seed, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16");
+    POLICY_SEED_INIT(&seed, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
 
     // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed, num_policy) == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed);
+    BATCH_COMMIT();
 
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed, num_policy) == sdk::SDK_RET_OK);
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
+
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed);
+    BATCH_COMMIT_FAIL();
+    BATCH_ABORT();
+
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
 
     // teardown
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Create more than maximum number of policies supported.
@@ -315,17 +508,17 @@ TEST_F(policy, policy_workflow_neg_2) {
     uint32_t policy_id = 1;
 
     // setup
-    policy_seed_stepper_init(&seed, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16");
+    POLICY_SEED_INIT(&seed, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
 
     // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed, num_policy,
-                                       sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed);
+    BATCH_COMMIT_FAIL();
+    BATCH_ABORT();
+
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief Read of a non-existing policy should return entry not found.
@@ -336,17 +529,15 @@ TEST_F(policy, policy_workflow_neg_3) {
     uint32_t policy_id = 1;
 
     // setup
-    policy_seed_stepper_init(&seed, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16");
+    POLICY_SEED_INIT(&seed, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16", 1);
 
-    ASSERT_TRUE(policy_util::many_read(&seed, 1,
-                                       sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed, 1) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed);
+    BATCH_COMMIT_FAIL();
+    BATCH_ABORT();
 }
 
 /// \brief Invalid batch shouldn't affect entries of previous batch
@@ -358,35 +549,225 @@ TEST_F(policy, policy_workflow_neg_4) {
     uint32_t policy_id = 1;
 
     // setup
-    policy_seed_stepper_init(&seed1, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16");
+    POLICY_SEED_INIT(&seed1, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
 
     policy_id += num_policy;
-    policy_seed_stepper_init(&seed2, policy_id, 512, RULE_DIR_INGRESS,
-                             POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16");
+    POLICY_SEED_INIT(&seed2, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                     num_policy);
 
     // trigger
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_create(&seed1, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed1, num_policy) == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed1);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
 
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed1, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed2, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed2, num_policy,
-                                       sdk::SDK_RET_ENTRY_NOT_FOUND) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_read(&seed1, num_policy) == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed1);
+    POLICY_MANY_DELETE(&seed2);
+    BATCH_COMMIT_FAIL();
+    BATCH_ABORT();
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
+    POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
     // teardown
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(policy_util::many_delete(&seed1, num_policy) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed1);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Create maximum number of policies. Delete and update in the next
+/// batch.
+/// [ Create SetMax ] - Read - [ Delete SetMax - Update SetMax ] - Read
+TEST_F(policy, DISABLED_policy_workflow_neg_5) {
+    pds_batch_params_t batch_params = {0};
+    policy_seed_stepper_t seed, seed1;
+    uint32_t num_policy = g_num_policy;
+    uint32_t policy_id = 1;
+
+    // setup
+    POLICY_SEED_INIT(&seed, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
+    POLICY_SEED_INIT(&seed1, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                     num_policy);
+
+    // trigger
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
+
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed);
+    POLICY_MANY_UPDATE(&seed1);
+    BATCH_COMMIT_FAIL();
+    BATCH_ABORT();
+
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
+
+    // teardown
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Update non existing policies
+/// [ Update SetMax ] - Read
+TEST_F(policy, policy_workflow_neg_6) {
+    pds_batch_params_t batch_params = {0};
+    policy_seed_stepper_t seed, seed1;
+    uint32_t num_policy = g_num_policy;
+    uint32_t policy_id = 1;
+
+    // setup
+    POLICY_SEED_INIT(&seed, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
+    POLICY_SEED_INIT(&seed1, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                     num_policy);
+
+    // trigger
+    BATCH_START();
+    POLICY_MANY_UPDATE(&seed);
+    BATCH_COMMIT_FAIL();
+    BATCH_ABORT();
+
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+
+    // teardown
+}
+
+/// \brief Create maximum number of policies. Update maximum number plus one
+/// policy in the next batch.
+/// [ Create SetMax ] - Read - [ Update SetMax + 1 ] - Read
+TEST_F(policy, DISABLED_policy_workflow_neg_7) {
+    pds_batch_params_t batch_params = {0};
+    policy_seed_stepper_t seed, seed1;
+    uint32_t num_policy = g_num_policy;
+    uint32_t policy_id = 1;
+
+    // setup
+    POLICY_SEED_INIT(&seed, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
+    POLICY_SEED_INIT(&seed1, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16",
+                     num_policy + 1);
+
+    // trigger
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_OK);
+
+    BATCH_START();
+    POLICY_MANY_UPDATE(&seed1);
+    BATCH_COMMIT_FAIL();
+    BATCH_ABORT();
+
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+
+    // teardown
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Create a set of policies. Update the existing set and a non-existing
+/// set of policies in the next batch.
+/// [ Create Set1 ] - Read - [ Update Set1 - Update Set2 ] - Read
+TEST_F(policy, policy_workflow_neg_8) {
+    pds_batch_params_t batch_params = {0};
+    policy_seed_stepper_t seed1, seed1_new, seed2;
+    uint32_t num_policy = 341;
+    uint32_t policy_id = 1;
+
+    // setup
+    POLICY_SEED_INIT(&seed1, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
+    POLICY_SEED_INIT(&seed1_new, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
+
+    policy_id += num_policy;
+    POLICY_SEED_INIT(&seed2, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "13.0.0.1/16",
+                     num_policy);
+
+    // trigger
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed1);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
+
+    BATCH_START();
+    POLICY_MANY_UPDATE(&seed1_new);
+    POLICY_MANY_UPDATE(&seed2);
+    BATCH_COMMIT_FAIL();
+    BATCH_ABORT();
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
+    POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+
+    // teardown
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed1);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+}
+
+/// \brief Create a set of policies. Delete the existing set and update a
+/// non-existing set of policies in the next batch.
+/// [ Create Set1 ] - Read - [ Delete Set1 - Update Set2 ] - Read
+TEST_F(policy, policy_workflow_neg_9) {
+    pds_batch_params_t batch_params = {0};
+    policy_seed_stepper_t seed1, seed2, seed3, seed4, seed2_new, seed3_new;
+    uint32_t num_policy = 341;
+    uint32_t policy_id = 1;
+
+    // setup
+    POLICY_SEED_INIT(&seed1, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.1/16",
+                     num_policy);
+    policy_id += num_policy;
+    POLICY_SEED_INIT(&seed2, policy_id, 512, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV4, "13.0.0.1/16",
+                     num_policy);
+
+    // trigger
+    BATCH_START();
+    POLICY_MANY_CREATE(&seed1);
+    BATCH_COMMIT();
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
+
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed1);
+    POLICY_MANY_UPDATE(&seed2);
+    BATCH_COMMIT_FAIL();
+    BATCH_ABORT();
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_OK);
+    POLICY_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+
+    // teardown
+    BATCH_START();
+    POLICY_MANY_DELETE(&seed1);
+    BATCH_COMMIT();
+
+    POLICY_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// @}

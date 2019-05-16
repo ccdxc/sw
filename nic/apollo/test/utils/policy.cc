@@ -156,6 +156,23 @@ policy_util::read(pds_policy_info_t *info, bool compare_spec)
 }
 
 sdk::sdk_ret_t
+policy_util::update()
+{
+    pds_policy_spec_t spec = {};
+
+    spec.key.id = this->id;
+    spec.num_rules = this->num_rules;
+    create_rules(this->pfx, this->num_rules, &(this->rules),
+                 this->stateful_rules);
+    spec.rules = this->rules;
+    spec.direction = this->direction;
+    spec.policy_type = this->type;
+    spec.af = this->af;
+    return (pds_policy_update(&spec));
+}
+
+
+sdk::sdk_ret_t
 policy_util::del()
 {
     pds_policy_key_t policy_key = {};
@@ -163,9 +180,29 @@ policy_util::del()
     return (pds_policy_delete(&policy_key));
 }
 
+void
+policy_util::stepper_seed_init(policy_seed_stepper_t *seed, uint32_t id,
+                               uint32_t stateless_rules, rule_dir_t dir,
+                               policy_type_t type, uint8_t af, std::string pfx,
+                               uint32_t num_policy)
+{
+    uint32_t max_rules = ((af == IP_AF_IPV4) ?
+                                PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY :
+                                PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY);
+    SDK_ASSERT(stateless_rules < max_rules);
+    seed->id = id;
+    seed->num_rules = max_rules;
+    seed->direction = dir;
+    seed->type = type;
+    seed->af = af;
+    seed->stateful_rules = max_rules - stateless_rules;
+    seed->pfx = pfx;
+    seed->num_policy = num_policy;
+}
+
 static inline sdk::sdk_ret_t
-policy_util_object_stepper (policy_seed_stepper_t *seed, uint32_t num_objs,
-                            utils_op_t op, sdk_ret_t expected_result)
+policy_util_object_stepper (policy_seed_stepper_t *seed, utils_op_t op,
+                            sdk_ret_t expected_result)
 {
     uint32_t init_id;
     std::string init_pfx = seed->pfx;
@@ -173,23 +210,27 @@ policy_util_object_stepper (policy_seed_stepper_t *seed, uint32_t num_objs,
     pds_policy_info_t info = {};
     ip_prefix_t ip_pfx;
     ip_addr_t ipaddr;
+    uint32_t num_policy = seed->num_policy;
 
     extract_ip_pfx((char *)seed->pfx.c_str(), &ip_pfx);
     if (seed->id == 0) seed->id = 1;
-    num_objs += seed->id;
+    num_policy += seed->id;
     init_id = seed->id;
-    for (uint32_t idx = init_id; idx < num_objs; idx++) {
+    for (uint32_t idx = init_id; idx < num_policy; idx++) {
         seed->id = idx;
         policy_util policy_obj(seed);
         switch (op) {
         case OP_MANY_CREATE:
             rv = policy_obj.create();
             break;
-        case OP_MANY_DELETE:
-            rv = policy_obj.del();
-            break;
         case OP_MANY_READ:
             rv = policy_obj.read(&info);
+            break;
+        case OP_MANY_UPDATE:
+            rv = policy_obj.update();
+            break;
+        case OP_MANY_DELETE:
+            rv = policy_obj.del();
             break;
         default:
             return sdk::SDK_RET_INVALID_OP;
@@ -209,26 +250,28 @@ policy_util_object_stepper (policy_seed_stepper_t *seed, uint32_t num_objs,
 }
 
 sdk::sdk_ret_t
-policy_util::many_create(policy_seed_stepper_t *seed,
-                         uint32_t num_policy)
+policy_util::many_create(policy_seed_stepper_t *seed)
 {
-    return (policy_util_object_stepper(seed, num_policy,
-                                       OP_MANY_CREATE, sdk::SDK_RET_OK));
+    return (policy_util_object_stepper(seed, OP_MANY_CREATE, sdk::SDK_RET_OK));
 }
 
 sdk::sdk_ret_t
-policy_util::many_read(policy_seed_stepper_t *seed, uint32_t num_policy,
+policy_util::many_read(policy_seed_stepper_t *seed,
                        sdk::sdk_ret_t expected_result)
 {
-    return (policy_util_object_stepper(seed, num_policy,
-                                       OP_MANY_READ, expected_result));
+    return (policy_util_object_stepper(seed, OP_MANY_READ, expected_result));
 }
 
 sdk::sdk_ret_t
-policy_util::many_delete(policy_seed_stepper_t *seed, uint32_t num_policy)
+policy_util::many_update(policy_seed_stepper_t *seed)
 {
-    return (policy_util_object_stepper(seed, num_policy,
-                                       OP_MANY_DELETE, sdk::SDK_RET_OK));
+    return (policy_util_object_stepper(seed, OP_MANY_UPDATE, sdk::SDK_RET_OK));
+}
+
+sdk::sdk_ret_t
+policy_util::many_delete(policy_seed_stepper_t *seed)
+{
+    return (policy_util_object_stepper(seed, OP_MANY_DELETE, sdk::SDK_RET_OK));
 }
 
 ostream& operator << (ostream& os, policy_util& obj)
