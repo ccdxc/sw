@@ -1,6 +1,12 @@
 import iota.harness.api as api
 import yaml
 
+OS_TYPE_LINUX = "linux"
+OS_TYPE_BSD   = "freebsd"
+
+LinuxDriverPath   = api.HOST_NAPLES_DIR + "/drivers-linux-eth/drivers/eth/ionic/ionic.ko"
+FreeBSDDriverPath = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth/sys/modules/ionic/ionic.ko"
+
 # Get memory slab information in a given node
 def GetMemorySlabInNaples(node_name):
    mem_slab = {}
@@ -181,3 +187,83 @@ def GetIPAddress(node, interface):
     api.Trigger_AddNaplesCommand(req, node, cmd)
     resp = api.Trigger(req)
     return resp.commands[0].stdout.strip("\n")
+
+def LoadDriver (os_type, node):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    
+    if os_type == OS_TYPE_LINUX:
+        api.Trigger_AddHostCommand(req, node, "insmod " + LinuxDriverPath)
+    elif os_type == OS_TYPE_BSD:
+        api.Trigger_AddHostCommand(req, node, "kldload " + FreeBSDDriverPath)
+    else:
+        api.Logger.info("Unknown os_type - %s" % os_type)
+        return api.types.status.FAILURE
+
+    resp = api.Trigger(req)
+    if resp is None:
+        return api.types.status.FAILURE
+    
+    for cmd in resp.commands:
+        if cmd.exit_code != 0:
+            if os_type == OS_TYPE_LINUX:
+                if cmd.stdout.find("File exists") != -1:
+                    api.Logger.info("Load Driver Failed")
+                    api.PrintCommandResults(cmd)
+                    return api.types.status.FAILURE
+            elif os_type == OS_TYPE_BSD:
+                if cmd.stdout.find("already loaded") != -1:
+                    api.Logger.info("Load Driver Failed")
+                    api.PrintCommandResults(cmd)
+                    return api.types.status.FAILURE
+                else:
+                    api.Logger.info("Driver was already loaded. Unload is expected to fail")
+            else:
+                api.Logger.info("Unknown os_type - %s" % os_type)
+                return api.types.status.FAILURE
+    
+    return api.types.status.SUCCESS
+
+
+def UnloadDriver (os_type, node, whichdriver = "all" ):
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True) 
+
+    if os_type == None or node == None:
+        api.Logger.info("Undefined parameters in Unload Driver")
+        return api.types.status.FAILURE
+
+    if os_type == OS_TYPE_LINUX:
+        command = "rmmod"
+    elif os_type == OS_TYPE_BSD:
+        command = "kldunload"
+    else: 
+        api.Logger.info("Unknown os_type - %s" % os_type)
+        return api.types.status.FAILURE
+
+    if whichdriver == "eth":
+        api.Trigger_AddHostCommand(req, node, "%s ionic" % command)
+    elif whichdriver == "rdma":
+        api.Trigger_AddHostCommand(req, node, "%s ionic_rdma" % command)
+    else:
+        api.Trigger_AddHostCommand(req, node, "%s ionic_rdma" % command)
+        api.Trigger_AddHostCommand(req, node, "%s ionic" % command)
+
+    resp = api.Trigger(req)
+    if resp is None:
+        return api.types.status.FAILURE
+    
+    for cmd in resp.commands:
+        if cmd.exit_code != 0:
+            if os_type == OS_TYPE_LINUX:
+                if cmd.stdout.find("is not currently loaded") != -1:
+                    api.Logger.info("Unload Driver Failed")
+                    api.PrintCommandResults(cmd)
+                    return api.types.status.FAILURE
+            elif os_type == OS_TYPE_BSD:
+                if cmd.stdout.find("can't find file") != -1:
+                    api.Logger.info("Unload Driver Failed")
+                    api.PrintCommandResults(cmd)
+                    return api.types.status.FAILURE
+                else:
+                    api.Logger.info("Driver was NOT loaded. Unload is expected to fail")
+            
+    return api.types.status.SUCCESS

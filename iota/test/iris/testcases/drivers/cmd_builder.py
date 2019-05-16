@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import iota.test.iris.utils.naples  as naples
+import iota.test.iris.utils.naples_host as host
 import iota.harness.api as api
 
 symmetric_key = "6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A"
@@ -140,8 +141,8 @@ def bsd_ethtool_ring_size_cmd(node, intf,ring_type, size):
     else:
         args['hw.ionic.rx_descs'] = size
     if api.IsNaplesNode(node):
-        cmds = naples.RemoveIonicDriverCommands(os_type = naples.OS_TYPE_BSD)
-        cmds.extend(naples.InsertIonicDriverCommands(os_type = naples.OS_TYPE_BSD, **args))
+        host.UnloadDriver(host.OS_TYPE_BSD, node)
+        cmds = naples.InsertIonicDriverCommands(os_type = host.OS_TYPE_BSD, **args)
         return cmds
     return " " #.join(["ethtool", "-G", ring_type,  str(size)])
 
@@ -152,8 +153,8 @@ def bsd_ethtool_queue_size_cmd(node, intf,queue_type, size):
     else:
         args['hw.ionic.max_queues'] = size
     if api.IsNaplesNode(node):
-        cmds = naples.RemoveIonicDriverCommands(os_type = naples.OS_TYPE_BSD)
-        cmds.extend(naples.InsertIonicDriverCommands(os_type = naples.OS_TYPE_BSD, **args))
+        host.UnloadDriver(host.OS_TYPE_BSD, node)
+        cmds = naples.InsertIonicDriverCommands(os_type = host.OS_TYPE_BSD, **args)
         return cmds
     return " " #.join(["ethtool", "-L", intf, queue_type,  str(size)])
 
@@ -161,8 +162,8 @@ def bsd_ethtool_rx_sg_size_cmd(node, intf, size):
     args = { }
     args['hw.ionic.rx_sg_size'] = size
     if api.IsNaplesNode(node):
-        cmds = naples.RemoveIonicDriverCommands(os_type = naples.OS_TYPE_BSD)
-        cmds.extend(naples.InsertIonicDriverCommands(os_type = naples.OS_TYPE_BSD, **args))
+        host.UnloadDriver(host.OS_TYPE_BSD, node)
+        cmds = naples.InsertIonicDriverCommands(os_type = host.OS_TYPE_BSD, **args)
         return cmds
     return " "
 
