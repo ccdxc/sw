@@ -234,7 +234,7 @@ capri_hbm_cache_program_region (mpartition_region_t *reg,
             g_capri_state_pd->mempartition()->addr(reg->start_offset) >> 6);
         pics_csr.picc.filter_addr_lo_s.data[filter_idx].write();
 
-        assert((reg->size & 0x3F) == 0);
+        assert((reg->size >= 64) && ((reg->size & 0x3F) == 0));
         pics_csr.picc.filter_addr_hi_s.data[filter_idx].read();
         pics_csr.picc.filter_addr_hi_s.data[filter_idx].value(
             (g_capri_state_pd->mempartition()->addr(reg->start_offset) +
@@ -254,8 +254,8 @@ capri_hbm_cache_program_region (mpartition_region_t *reg,
             g_capri_state_pd->mempartition()->addr(reg->start_offset) >> 6);
         pics_csr.picc.filter_addr_lo_m.data[filter_idx].write();
 
+        assert((reg->size >= 64) && ((reg->size & 0x3F) == 0));
         pics_csr.picc.filter_addr_hi_m.data[filter_idx].read();
-        assert((reg->size & 0x3F) == 0);
         pics_csr.picc.filter_addr_hi_m.data[filter_idx].value(
             (g_capri_state_pd->mempartition()->addr(reg->start_offset) +
              (reg->size - 64)) >> 6);
@@ -278,17 +278,20 @@ capri_hbm_cache_program_db (mpartition_region_t *reg,
     cap_wa_csr_t & wa_csr = CAP_BLK_REG_MODEL_ACCESS(cap_wa_csr_t, 0, 0);
 
     wa_csr.filter_addr_lo.data[filter_idx].read();
-    wa_csr.filter_addr_lo.data[filter_idx].value(g_capri_state_pd->mempartition()->addr(reg->start_offset) >> 6); //28 MSB bits only
+    wa_csr.filter_addr_lo.data[filter_idx].value(
+        g_capri_state_pd->mempartition()->addr(reg->start_offset) >> 6);
     wa_csr.filter_addr_lo.data[filter_idx].write();
 
+    assert((reg->size >= 64) && ((reg->size & 0x3F) == 0));
     wa_csr.filter_addr_hi.data[filter_idx].read();
     wa_csr.filter_addr_hi.data[filter_idx].value(
         (g_capri_state_pd->mempartition()->addr(reg->start_offset) +
-             (reg->size)) >> 6);
+         (reg->size - 64)) >> 6);
     wa_csr.filter_addr_hi.data[filter_idx].write();
 
     wa_csr.filter_addr_ctl.value[filter_idx].read();
-    // set Valid + CacheEnable + Invalidate&Fill (has ASIC bug so dont enable this Invalidate&Fill) + Invalidate+Send
+    // set Valid + CacheEnable + Invalidate&Fill (has ASIC bug so don't enable
+    // this Invalidate&Fill) + Invalidate+Send
     wa_csr.filter_addr_ctl.value[filter_idx].value(0xd);
     wa_csr.filter_addr_ctl.value[filter_idx].write();
 
@@ -297,23 +300,25 @@ capri_hbm_cache_program_db (mpartition_region_t *reg,
 
 sdk_ret_t
 capri_hbm_cache_program_pcie (mpartition_region_t *reg,
-                            uint32_t filter_idx)
+                              uint32_t filter_idx)
 {
     cap_pxb_csr_t & pxb_csr = CAP_BLK_REG_MODEL_ACCESS(cap_pxb_csr_t, 0, 0);
 
     pxb_csr.filter_addr_lo.data[filter_idx].read();
     pxb_csr.filter_addr_lo.data[filter_idx].value(
-        g_capri_state_pd->mempartition()->addr(reg->start_offset) >> 6); //28 MSB bits only
+        g_capri_state_pd->mempartition()->addr(reg->start_offset) >> 6);
     pxb_csr.filter_addr_lo.data[filter_idx].write();
 
+    assert((reg->size >= 64) && ((reg->size & 0x3F) == 0));
     pxb_csr.filter_addr_hi.data[filter_idx].read();
     pxb_csr.filter_addr_hi.data[filter_idx].value(
         (g_capri_state_pd->mempartition()->addr(reg->start_offset) +
-             (reg->size)) >> 6);
+         (reg->size - 64)) >> 6);
     pxb_csr.filter_addr_hi.data[filter_idx].write();
 
     pxb_csr.filter_addr_ctl.value[filter_idx].read();
-    // set Valid + CacheEnable + Invalidate&Fill (has ASIC bug so dont enable this Invalidate&Fill) + Invalidate+Send
+    // set Valid + CacheEnable + Invalidate&Fill (has ASIC bug so don't enable
+    // this Invalidate&Fill) + Invalidate+Send
     pxb_csr.filter_addr_ctl.value[filter_idx].value(0xd);
     pxb_csr.filter_addr_ctl.value[filter_idx].write();
 
@@ -324,6 +329,8 @@ sdk_ret_t
 capri_hbm_cache_regions_init (void)
 {
     mpartition_region_t *reg;
+    mpartition_region_t p4ig_reg;
+    mpartition_region_t p4eg_reg;
     uint32_t            p4ig_filter_idx = 0;
     uint32_t            p4eg_filter_idx = 0;
     uint32_t            p4plus_txdma_filter_idx = 0;
@@ -331,6 +338,8 @@ capri_hbm_cache_regions_init (void)
     uint32_t            p4plus_pcie_filter_idx = 0;
     uint32_t            p4plus_db_filter_idx = 0;
 
+    memset(&p4ig_reg, 0, sizeof(p4ig_reg));
+    memset(&p4eg_reg, 0, sizeof(p4eg_reg));
     for (int i = 0; i < g_capri_state_pd->mempartition()->num_regions(); i++) {
         reg = g_capri_state_pd->mempartition()->region(i);
         if (is_region_cache_pipe_none(reg)) {
@@ -338,21 +347,45 @@ capri_hbm_cache_regions_init (void)
         }
 
         if (is_region_cache_pipe_p4_ig(reg)) {
-            SDK_TRACE_DEBUG("Programming %s to P4IG cache(region 1), "
-                            "start=%lx size=%u index=%u", reg->mem_reg_name,
-                            g_capri_state_pd->mempartition()->addr(reg->start_offset),
-                            reg->size, p4ig_filter_idx);
-            capri_hbm_cache_program_region(reg, 1, p4ig_filter_idx, 1, 0);
-            p4ig_filter_idx++;
+            if ((p4ig_reg.start_offset == 0) ||
+                ((p4ig_reg.start_offset + p4ig_reg.size) != (reg->start_offset))) {
+                SDK_TRACE_DEBUG("Programming %s to P4IG cache(region 1), "
+                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                g_capri_state_pd->mempartition()->addr(reg->start_offset),
+                                reg->size, p4ig_filter_idx);
+                p4ig_reg.start_offset = reg->start_offset;
+                p4ig_reg.size = reg->size;
+                capri_hbm_cache_program_region(&p4ig_reg, 1, p4ig_filter_idx, 1, 0);
+                p4ig_filter_idx++;
+            } else {
+                p4ig_reg.size += reg->size;
+                SDK_TRACE_DEBUG("Programming %s to P4IG cache(region 1) (merge), "
+                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                g_capri_state_pd->mempartition()->addr(p4ig_reg.start_offset),
+                                p4ig_reg.size, p4ig_filter_idx - 1);
+                capri_hbm_cache_program_region(&p4ig_reg, 1, p4ig_filter_idx - 1, 1, 0);
+            }
         }
 
         if (is_region_cache_pipe_p4_eg(reg)) {
-            SDK_TRACE_DEBUG("Programming %s to P4EG cache(region 2), "
-                            "start=%lx size=%u index=%u", reg->mem_reg_name,
-                            g_capri_state_pd->mempartition()->addr(reg->start_offset),
-                            reg->size, p4eg_filter_idx);
-            capri_hbm_cache_program_region(reg, 2, p4eg_filter_idx, 1, 0);
-            p4eg_filter_idx++;
+            if ((p4eg_reg.start_offset == 0) ||
+                ((p4eg_reg.start_offset + p4eg_reg.size) != (reg->start_offset))) {
+                SDK_TRACE_DEBUG("Programming %s to P4EG cache(region 2), "
+                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                g_capri_state_pd->mempartition()->addr(reg->start_offset),
+                                reg->size, p4eg_filter_idx);
+                p4eg_reg.start_offset = reg->start_offset;
+                p4eg_reg.size = reg->size;
+                capri_hbm_cache_program_region(&p4eg_reg, 2, p4eg_filter_idx, 1, 0);
+                p4eg_filter_idx++;
+            } else {
+                p4eg_reg.size += reg->size;
+                SDK_TRACE_DEBUG("Programming %s to P4EG cache(region 2) (merge), "
+                                "start=%lx size=%u index=%u", reg->mem_reg_name,
+                                g_capri_state_pd->mempartition()->addr(p4eg_reg.start_offset),
+                                p4eg_reg.size, p4eg_filter_idx - 1);
+                capri_hbm_cache_program_region(&p4eg_reg, 2, p4eg_filter_idx - 1, 1, 0);
+            }
         }
 
         if (is_region_cache_pipe_p4plus_txdma(reg)) {

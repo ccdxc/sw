@@ -26,7 +26,7 @@ spkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 urpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
         IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
-        UDP(sport=0xC08A, dport=6635, chksum=0) / MPLS(label=200, s=1) / \
+        UDP(sport=0xE4E7, dport=6635, chksum=0) / MPLS(label=200, s=1) / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 grpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
@@ -57,7 +57,7 @@ spkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 rpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
         IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
-        UDP(sport=0xC9A8, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
+        UDP(sport=0xC1AF, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
         Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='10.10.1.2', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload
@@ -104,7 +104,7 @@ spkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 rpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
         IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
-        UDP(sport=0xC9A8, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
+        UDP(sport=0xC1AF, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
         Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='10.10.1.2', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678) / payload
@@ -133,7 +133,7 @@ spkt =  Ether(src='00:00:00:40:08:01', dst='00:00:F1:D0:D1:D0') / \
 
 rpkt =  Ether(src='00:02:01:00:00:01', dst='00:02:0b:0a:0d:0e') / \
         IP(src='1.0.0.2', dst='1.0.0.5', id=0, ttl=64, chksum=0x7873) / \
-        UDP(sport=0xCBE7, dport=0x19EB, chksum=0) / \
+        UDP(sport=0xC6EF, dport=0x19EB, chksum=0) / \
         MPLS(label=1, s=0) / \
         MPLS(label=0, s=1) / \
         IP( src='2.0.0.1', dst='192.0.2.1') / \
@@ -165,7 +165,7 @@ spkt =  Ether(src='00:00:00:40:08:01', dst='00:00:F1:D0:D1:D0') / \
 
 rpkt =  Ether(src='00:02:01:00:00:01', dst='00:02:0b:0a:0d:0e') / \
         IP(src='1.0.0.2', dst='1.0.0.3', id=0, ttl=64, chksum=0x7875) / \
-        UDP(sport=0xEC3B, dport=0x19EB, chksum=0) / \
+        UDP(sport=0xF68B, dport=0x19EB, chksum=0) / \
         MPLS(label=1, s=0) / \
         MPLS(label=1025, s=1) / \
         IP( src='2.0.0.1', dst='2.0.32.1') / \
@@ -181,7 +181,7 @@ spkt =  Ether(src='00:00:00:40:08:01', dst='00:00:F1:D0:D1:D0') / \
 
 rpkt =  Ether(src='00:02:01:00:00:01', dst='00:02:0b:0a:0d:0e') / \
         IP(src='1.0.0.2', dst='1.0.0.5', id=0, ttl=64, chksum=0x785F) / \
-        UDP(sport=0xDDDE, dport=0x19EB, chksum=0) / \
+        UDP(sport=0xD96F, dport=0x19EB, chksum=0) / \
         MPLS(label=1, s=0) / \
         MPLS(label=0, s=1) / \
         IPv6( src='2019::0200:0001', dst='2021::f1d0:d1d0:c000:0201') / \

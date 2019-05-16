@@ -9,12 +9,14 @@ header_type capri_deparser_len_t {
 
 header_type key_metadata_t {
     fields {
-        ktype               : 4;
+        ktype               : 2;
         src                 : 128;
         dst                 : 128;
         proto               : 8;
         dport               : 16;
         sport               : 16;
+        ipv4_src            : 32;
+        ipv4_dst            : 32;
     }
 }
 
@@ -96,8 +98,8 @@ header_type scratch_metadata_t {
         vnic_mapping_hash   : 11;
         vnic_mapping_hint   : 18;
         ipv4_src            : 32;
-        flow_hash           : 8;
-        flow_hint           : 24;
+        flow_hash           : 9;
+        flow_hint           : 22;
         in_packets          : 64;
         in_bytes            : 64;
         class_id            : 8;

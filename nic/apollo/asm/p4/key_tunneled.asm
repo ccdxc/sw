@@ -17,6 +17,8 @@ tunneled_ipv4_packet:
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV4
     phvwr           p.key_metadata_src, k.ipv4_2_srcAddr
     phvwr           p.key_metadata_dst, k.ipv4_2_dstAddr
+    phvwr           p.key_metadata_ipv4_src, k.ipv4_2_srcAddr
+    phvwr           p.key_metadata_ipv4_dst, k.ipv4_2_dstAddr
     phvwr.e         p.key_metadata_proto, k.ipv4_2_protocol
     phvwr           p.control_metadata_mapping_lkp_addr, k.ipv4_2_dstAddr
 

@@ -194,15 +194,27 @@
         },
         {
             "name": "flow",
-            "size": "1G",
+            "size": "512M",
             "cache": "p4ig",
-            "_comment": "16M * 64B"
+            "_comment": "8M * 64B"
         },
         {
             "name": "flow_ohash",
-            "size": "640M",
+            "size": "256M",
             "cache": "p4ig",
-            "_comment": "10M * 64B"
+            "_comment": "4M * 64B"
+        },
+        {
+            "name": "ipv4_flow",
+            "size": "256M",
+            "cache": "p4ig",
+            "_comment": "8M * 32B"
+        },
+        {
+            "name": "ipv4_flow_ohash",
+            "size": "128M",
+            "cache": "p4ig",
+            "_comment": "4M * 32B"
         },
         {
             "name": "session",

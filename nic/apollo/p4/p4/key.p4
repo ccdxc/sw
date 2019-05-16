@@ -5,6 +5,8 @@ action native_ipv4_packet() {
     modify_field(key_metadata.ktype, KEY_TYPE_IPV4);
     modify_field(key_metadata.src, ipv4_1.srcAddr);
     modify_field(key_metadata.dst, ipv4_1.dstAddr);
+    modify_field(key_metadata.ipv4_src, ipv4_1.srcAddr);
+    modify_field(key_metadata.ipv4_dst, ipv4_1.dstAddr);
     if (udp_1.valid == TRUE) {
         modify_field(key_metadata.sport, udp_1.srcPort);
         modify_field(key_metadata.dport, udp_1.dstPort);
@@ -40,6 +42,8 @@ action tunneled_ipv4_packet() {
     modify_field(key_metadata.ktype, KEY_TYPE_IPV4);
     modify_field(key_metadata.src, ipv4_2.srcAddr);
     modify_field(key_metadata.dst, ipv4_2.dstAddr);
+    modify_field(key_metadata.ipv4_src, ipv4_2.srcAddr);
+    modify_field(key_metadata.ipv4_dst, ipv4_2.dstAddr);
     modify_field(key_metadata.proto, ipv4_2.protocol);
     modify_field(control_metadata.mapping_lkp_addr, ipv4_2.dstAddr);
 }

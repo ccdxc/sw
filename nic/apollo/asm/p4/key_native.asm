@@ -17,6 +17,8 @@ native_ipv4_packet:
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV4
     phvwr           p.key_metadata_src, k.ipv4_1_srcAddr
     phvwr           p.key_metadata_dst, k.ipv4_1_dstAddr
+    phvwr           p.key_metadata_ipv4_src, k.ipv4_1_srcAddr
+    phvwr           p.key_metadata_ipv4_dst, k.ipv4_1_dstAddr
     seq             c1, k.udp_1_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_1_srcPort
     phvwr.c1        p.key_metadata_dport, k.udp_1_dstPort

@@ -39,9 +39,8 @@
 
 #define EPOCH 0xb055
 #define ROUTE_LPM_MEM_SIZE (64 + (16 * 64) + (16 * 16 * 64))
-#define SACL_LPM_MEM_SIZE                                                     \
-    (SACL_SPORT_TABLE_SIZE + SACL_IPV4_TABLE_SIZE +                          \
-     SACL_PROTO_DPORT_TABLE_SIZE)
+#define SACL_LPM_MEM_SIZE  \
+    (SACL_SPORT_TABLE_SIZE + SACL_IPV4_TABLE_SIZE + SACL_PROTO_DPORT_TABLE_SIZE)
 
 using namespace sdk::platform::utils;
 using namespace sdk::platform::capri;
@@ -106,7 +105,7 @@ uint8_t g_rcv_pkt1[] = {
     0xBB, 0xCC, 0xDD, 0xEE, 0x08, 0x00, 0x45, 0x00,
     0x00, 0x7C, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
     0xA2, 0x98, 0x64, 0x65, 0x66, 0x67, 0x0C, 0x0C,
-    0x01, 0x01, 0xC0, 0x8A, 0x19, 0xEB, 0x00, 0x68,
+    0x01, 0x01, 0xE4, 0xE7, 0x19, 0xEB, 0x00, 0x68,
     0x00, 0x00, 0x00, 0x0C, 0x81, 0x00, 0x45, 0x00,
     0x00, 0x5C, 0x00, 0x01, 0x00, 0x00, 0x40, 0x06,
     0x63, 0x85, 0x0B, 0x0B, 0x01, 0x01, 0x0A, 0x0A,
@@ -182,7 +181,7 @@ uint8_t g_rcv_pkt3[] = {
     0xBB, 0xCC, 0xDD, 0xEE, 0x08, 0x00, 0x45, 0x00,
     0x00, 0x8E, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
     0xA2, 0x86, 0x64, 0x65, 0x66, 0x67, 0x0C, 0x0C,
-    0x01, 0x01, 0xC9, 0xA8, 0x12, 0xB5, 0x00, 0x7A,
+    0x01, 0x01, 0xC1, 0xAF, 0x12, 0xB5, 0x00, 0x7A,
     0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0xAB, 0xCD,
     0xEF, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
     0x00, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0x08, 0x00,
@@ -320,7 +319,7 @@ uint8_t g_rcv_pkt6[] = {
     0xBB, 0xCC, 0xDD, 0xEE, 0x08, 0x00, 0x45, 0x00,
     0x00, 0x8E, 0x00, 0x00, 0x00, 0x00, 0x40, 0x11,
     0xA2, 0x86, 0x64, 0x65, 0x66, 0x67, 0x0C, 0x0C,
-    0x01, 0x01, 0xC9, 0xA8, 0x12, 0xB5, 0x00, 0x7A,
+    0x01, 0x01, 0xC1, 0xAF, 0x12, 0xB5, 0x00, 0x7A,
     0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0xAB, 0xCD,
     0xEF, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
     0x00, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0x08, 0x00,
@@ -798,21 +797,21 @@ mappings_init (void)
 static void
 flow_tx_hash_init ()
 {
-    flow_swkey_t key;
-    flow_actiondata_t data;
-    flow_flow_hash_t *flow_hash_info = &data.action_u.flow_flow_hash;
-    uint32_t tbl_id = P4TBL_ID_FLOW;
+    ipv4_flow_swkey_t key;
+    ipv4_flow_actiondata_t data;
+    ipv4_flow_ipv4_flow_hash_t *flow_hash_info =
+        &data.action_u.ipv4_flow_ipv4_flow_hash;
+    uint32_t tbl_id = P4TBL_ID_IPV4_FLOW;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.key_metadata_ktype = KEY_TYPE_IPV4;
     key.vnic_metadata_local_vnic_tag = g_local_vnic_tag;
-    memcpy(key.key_metadata_src, &g_layer1_sip, 4);
-    memcpy(key.key_metadata_dst, &g_layer1_dip, 4);
+    key.key_metadata_ipv4_src = g_layer1_sip;
+    key.key_metadata_ipv4_dst = g_layer1_dip;
     key.key_metadata_proto = g_layer1_proto;
     key.key_metadata_sport = g_layer1_sport;
     key.key_metadata_dport = g_layer1_dport;
-    data.action_id = FLOW_FLOW_HASH_ID;
+    data.action_id = IPV4_FLOW_IPV4_FLOW_HASH_ID;
     flow_hash_info->entry_valid = true;
     flow_hash_info->session_index = g_session_index;
 
@@ -835,21 +834,21 @@ static void
 flow_rx_hash_init ()
 {
 #ifdef FLOW_RX_HIT
-    flow_swkey_t key;
-    flow_actiondata_t data;
-    flow_flow_hash_t *flow_hash_info = &data.action_u.flow_flow_hash;
-    uint32_t tbl_id = P4TBL_ID_FLOW;
+    ipv4_flow_swkey_t key;
+    ipv4_flow_actiondata_t data;
+    ipv4_flow_ipv4_flow_hash_t *flow_hash_info =
+        &data.action_u.ipv4_flow_ipv4_flow_hash;
+    uint32_t tbl_id = P4TBL_ID_IPV4__FLOW;
 
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-    key.key_metadata_ktype = KEY_TYPE_IPV4;
     key.vnic_metadata_local_vnic_tag = g_local_vnic_tag;
-    memcpy(key.key_metadata_src, &g_layer1_dip, 4);
-    memcpy(key.key_metadata_dst, &g_layer1_sip, 4);
+    key.key_metadata_ipv4_src = g_layer1_dip;
+    key.key_metadata_ipv4_dst = g_layer1_sip;
     key.key_metadata_proto = g_layer1_proto;
     key.key_metadata_sport = g_layer1_dport;
     key.key_metadata_dport = g_layer1_sport;
-    data.action_id = FLOW_FLOW_HASH_ID;
+    data.action_id = IPV4_FLOW_IPV4_FLOW_HASH_ID;
     flow_hash_info->entry_valid = true;
     flow_hash_info->session_index = g_session_index + 1;
 
@@ -1445,7 +1444,7 @@ TEST_F(apollo_test, test1)
         memcpy(ipkt.data(), g_snd_pkt1, sizeof(g_snd_pkt1));
         epkt.resize(sizeof(g_rcv_pkt1));
         memcpy(epkt.data(), g_rcv_pkt1, sizeof(g_rcv_pkt1));
-        std::cout << "Testing Host to Switch (MPLSoUDP)" << std::endl;
+        std::cout << "[TCID=" << tcid << "] Testing Host to Switch (MPLSoUDP)" << std::endl;
         for (i = 0; i < tcscale; i++) {
             testcase_begin(tcid, i + 1);
             step_network_pkt(ipkt, TM_PORT_UPLINK_0);
@@ -1464,7 +1463,7 @@ TEST_F(apollo_test, test1)
         memcpy(ipkt.data(), g_snd_pkt2, sizeof(g_snd_pkt2));
         epkt.resize(sizeof(g_rcv_pkt2));
         memcpy(epkt.data(), g_rcv_pkt2, sizeof(g_rcv_pkt2));
-        std::cout << "Testing Switch to Host (MPLSoUDP)" << std::endl;
+        std::cout << "[TCID=" << tcid << "] Testing Switch to Host (MPLSoUDP)" << std::endl;
         for (i = 0; i < tcscale; i++) {
             testcase_begin(tcid, i + 1);
             step_network_pkt(ipkt, TM_PORT_UPLINK_1);
@@ -1483,7 +1482,7 @@ TEST_F(apollo_test, test1)
         memcpy(ipkt.data(), g_snd_pkt3, sizeof(g_snd_pkt3));
         epkt.resize(sizeof(g_rcv_pkt3));
         memcpy(epkt.data(), g_rcv_pkt3, sizeof(g_rcv_pkt3));
-        std::cout << "Testing Host to Switch (VxLAN)" << std::endl;
+        std::cout << "[TCID=" << tcid << "] Testing Host to Switch (VxLAN)" << std::endl;
         for (i = 0; i < tcscale; i++) {
             testcase_begin(tcid, i + 1);
             step_network_pkt(ipkt, TM_PORT_UPLINK_0);
@@ -1502,7 +1501,7 @@ TEST_F(apollo_test, test1)
         memcpy(ipkt.data(), g_snd_pkt4, sizeof(g_snd_pkt4));
         epkt.resize(sizeof(g_rcv_pkt4));
         memcpy(epkt.data(), g_rcv_pkt4, sizeof(g_rcv_pkt4));
-        std::cout << "Testing Switch to Host (VxLAN)" << std::endl;
+        std::cout << "[TCID=" << tcid << "] Testing Switch to Host (VxLAN)" << std::endl;
         for (i = 0; i < tcscale; i++) {
             testcase_begin(tcid, i + 1);
             step_network_pkt(ipkt, TM_PORT_UPLINK_1);
@@ -1523,7 +1522,7 @@ TEST_F(apollo_test, test1)
         memcpy(epkt.data(), g_rcv_pkt5, sizeof(g_rcv_pkt5));
         mpkt.resize(sizeof(g_span_pkt5));
         memcpy(mpkt.data(), g_span_pkt5, sizeof(g_span_pkt5));
-        std::cout << "Testing Host to Host (VxLAN) + Tx Mirror" << std::endl;
+        std::cout << "[TCID=" << tcid << "] Testing Host to Host (VxLAN) + Tx Mirror" << std::endl;
         for (i = 0; i < tcscale; i++) {
             testcase_begin(tcid, i + 1);
             step_network_pkt(ipkt, TM_PORT_UPLINK_0);
@@ -1547,7 +1546,7 @@ TEST_F(apollo_test, test1)
         memcpy(epkt.data(), g_rcv_pkt6, sizeof(g_rcv_pkt6));
         mpkt.resize(sizeof(g_span_pkt6));
         memcpy(mpkt.data(), g_span_pkt6, sizeof(g_span_pkt6));
-        std::cout << "Testing Host to Switch (VxLAN) + Rx Mirror" << std::endl;
+        std::cout << "[TCID=" << tcid << "] Testing Host to Switch (VxLAN) + Rx Mirror" << std::endl;
         for (i = 0; i < tcscale; i++) {
             testcase_begin(tcid, i + 1);
             step_network_pkt(ipkt, TM_PORT_UPLINK_0);
