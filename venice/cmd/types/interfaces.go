@@ -203,6 +203,14 @@ type K8sPodEventObserver interface {
 	OnNotifyK8sPodEvent(K8sPodEvent) error
 }
 
+// K8sPodEventObserverFunc is a function that implements K8sPodEventObserver interface
+type K8sPodEventObserverFunc func(K8sPodEvent) error
+
+// OnNotifyK8sPodEvent implements method for K8sPodEventObserver interface
+func (f K8sPodEventObserverFunc) OnNotifyK8sPodEvent(e K8sPodEvent) error {
+	return f(e)
+}
+
 // K8sService is the interface for managing nodes/controllers deployed through K8s.
 type K8sService interface {
 	Register(K8sPodEventObserver)

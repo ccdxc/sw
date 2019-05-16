@@ -73,6 +73,7 @@ import (
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/debug"
+	diagmock "github.com/pensando/sw/venice/utils/diagnostics/mock"
 	"github.com/pensando/sw/venice/utils/elastic"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/curator"
 	"github.com/pensando/sw/venice/utils/events"
@@ -321,7 +322,8 @@ func (it *veniceIntegSuite) launchCMDServer() {
 		cmdsvc.WithSystemdSvcMasterOption(s),
 		cmdsvc.WithConfigsMasterOption(&mock.Configs{}),
 		cmdsvc.WithCfgWatcherMasterOption(cw),
-		cmdsvc.WithElasticCuratorSvcrOption(esmock.NewMockCurator()))
+		cmdsvc.WithElasticCuratorSvcrOption(esmock.NewMockCurator()),
+		cmdsvc.WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()))
 	cw.Start()
 
 	// start CMD auth server

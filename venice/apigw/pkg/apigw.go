@@ -35,6 +35,7 @@ import (
 	"github.com/pensando/sw/api/errors"
 	auditapi "github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
+	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/api/login"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/apigw"
@@ -49,6 +50,8 @@ import (
 	authzmgr "github.com/pensando/sw/venice/utils/authz/manager"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
+	"github.com/pensando/sw/venice/utils/diagnostics"
+	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	vErrors "github.com/pensando/sw/venice/utils/errors"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/gzipserver"
@@ -80,10 +83,10 @@ type apiGw struct {
 	authzMgr        authz.Authorizer
 	bootstrapper    bootstrapper.Bootstrapper
 	rslver          resolver.Interface
-	sharedResolver  bool // whether resolver is passed in config and hence possibly shared with other components.
-	// expected to be true only in integ tests
-	auditor audit.Auditor
-	keypair cert.KeyPair
+	sharedResolver  bool // whether resolver is passed in config and hence possibly shared with other components; expected to be true only in integ tests
+	auditor         audit.Auditor
+	keypair         cert.KeyPair
+	moduleWatcher   module.Watcher
 }
 
 // Singleton API Gateway Object with init gaurded by the Once.
@@ -426,6 +429,7 @@ Loop:
 	}
 	a.logger.Infof("cleaned up DoneCh")
 
+	a.moduleWatcher = module.GetWatcher(fmt.Sprintf("%s-%s", utils.GetHostname(), globals.APIGw), grpcaddr, a.rslver, a.logger, a.moduleChangeCb)
 	a.authGetter = authnmgr.GetAuthGetter(globals.APIGw, grpcaddr, a.rslver, a.logger)
 	a.permGetter = rbac.GetPermissionGetter(globals.APIGw, grpcaddr, a.rslver)
 	// create authentication manager
@@ -514,6 +518,7 @@ func (a *apiGw) Stop() {
 	a.authzMgr.Stop()
 	a.auditor.Shutdown()
 	a.keypair.Stop()
+	a.moduleWatcher.Stop()
 	if !a.sharedResolver && a.rslver != nil {
 		a.rslver.Stop()
 	}
@@ -830,6 +835,11 @@ func (a *apiGw) audit(eventID string, user *auth.User, reqObj interface{}, resOb
 		}
 	}
 	return nil
+}
+
+func (a *apiGw) moduleChangeCb(diagmod *diagapi.Module) {
+	a.logger.ResetFilter(diagnostics.GetLogFilter(diagmod.Spec.LogLevel))
+	a.logger.InfoLog("method", "moduleChangeCb", "msg", "setting log level", "moduleLogLevel", diagmod.Spec.LogLevel)
 }
 
 // RProxyHandler handles reverse proxy paths

@@ -12,6 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/cmd/credentials"
 	"github.com/pensando/sw/venice/cmd/env"
@@ -22,6 +23,7 @@ import (
 	k8stypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/elastic/curator"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -65,6 +67,7 @@ type masterService struct {
 	resolverSvcObserver *resolverServiceObserver
 	cfgWatcherSvc       types.CfgWatcherService
 	esCuratorSvc        curator.Interface
+	diagModuleSvc       module.Updater
 	isLeader            bool
 	enabled             bool
 	configs             configs.Interface
@@ -153,6 +156,13 @@ func WithElasticCuratorSvcrOption(curSvc curator.Interface) MasterOption {
 	}
 }
 
+// WithDiagModuleUpdaterSvcOption to pass a specific module.Updater implementation
+func WithDiagModuleUpdaterSvcOption(diagModuleSvc module.Updater) MasterOption {
+	return func(m *masterService) {
+		m.diagModuleSvc = diagModuleSvc
+	}
+}
+
 // resolver observer that observes service instances and creates event accordingly.
 type resolverServiceObserver struct{}
 
@@ -217,6 +227,10 @@ func NewMasterService(options ...MasterOption) types.MasterService {
 		}
 	}
 
+	if m.diagModuleSvc == nil {
+		m.diagModuleSvc = module.GetUpdater(globals.Cmd, globals.APIServer, env.ResolverClient, env.Logger.WithContext("submodule", "diagnostics"))
+	}
+
 	m.leaderSvc.Register(&m)
 	m.sysSvc.Register(&m)
 	m.cfgWatcherSvc.SetNodeEventHandler(m.handleNodeEvent)
@@ -268,6 +282,44 @@ func (m *masterService) startLeaderServices() error {
 		}
 	}
 
+	// setup diagnostics
+	m.diagModuleSvc.Start()
+	var observer types.K8sPodEventObserverFunc
+	observer = func(e types.K8sPodEvent) error {
+		if e.Pod.Status.HostIP == "" {
+			// pod is not yet assigned to a node, skip creating module
+			log.Debugf("pod: %v not yet assigned to node: %v", e.Pod.Name, e.Pod.Spec.NodeName)
+			return nil
+		}
+		var diagModules []*diagapi.Module
+		for _, container := range e.Pod.Spec.Containers {
+			diagmod := &diagapi.Module{}
+			diagmod.Defaults("all")
+			diagmod.Name = fmt.Sprintf("%s-%s", e.Pod.Spec.NodeName, container.Name)
+			diagmod.Status.Service = e.Pod.Name
+			diagmod.Status.Module = container.Name
+			diagmod.Status.Category = diagapi.ModuleStatus_Venice.String()
+			diagmod.Status.Node = e.Pod.Spec.NodeName
+			diagModules = append(diagModules, diagmod)
+			log.Debugf("pod: %v, node: %v", e.Pod.Name, e.Pod.Spec.NodeName)
+			log.Debugf("pod: %v, HostIP from status : %v", e.Pod.Name, e.Pod.Status.HostIP)
+		}
+		switch e.Type {
+		case types.K8sPodAdded:
+			for _, diagmod := range diagModules {
+				m.diagModuleSvc.Enqueue(diagmod, module.Create)
+				log.Infof("creating diagnostic module: %+v", *diagmod)
+			}
+		case types.K8sPodModified:
+			for _, diagmod := range diagModules {
+				m.diagModuleSvc.Enqueue(diagmod, module.Update)
+				log.Infof("updating diagnostic module: %+v", *diagmod)
+			}
+		}
+		return nil
+	}
+	m.k8sSvc.Register(observer)
+
 	// observe pod events and record events accordingly
 	m.resolverSvc.Register(m.resolverSvcObserver)
 	// should only be running on leader node
@@ -313,6 +365,7 @@ func (m *masterService) Stop() {
 	m.enabled = false
 	m.stopLeaderServices()
 	m.k8sSvc.Stop()
+	m.diagModuleSvc.Stop()
 	m.resolverSvc.Stop()
 
 	// Stop elastic curator service

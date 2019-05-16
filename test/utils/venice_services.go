@@ -24,6 +24,7 @@ import (
 	"github.com/pensando/sw/venice/utils/audit"
 	auditmgr "github.com/pensando/sw/venice/utils/audit/manager"
 	authntestutils "github.com/pensando/sw/venice/utils/authn/testutils"
+	diagmock "github.com/pensando/sw/venice/utils/diagnostics/mock"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/exporters"
@@ -199,7 +200,10 @@ func StartSpyglass(service, apiServerAddr string, mr resolver.Interface, cache s
 	case "finder": // create finder
 		log.Info("starting finder ...")
 		ctx := context.Background()
-		fdr, err := finder.NewFinder(ctx, "localhost:0", mr, cache, logger, finder.WithElasticClient(esClient))
+		fdr, err := finder.NewFinder(ctx, "localhost:0", mr, cache, logger,
+			finder.WithElasticClient(esClient),
+			finder.WithModuleWatcher(diagmock.GetModuleWatcher()),
+			finder.WithDiagnosticsService(diagmock.GetDiagnosticsService()))
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to create finder, err: %v", err)
 		}

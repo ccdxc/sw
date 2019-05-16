@@ -56,6 +56,11 @@
    "Desc": "User login failed"
   },
   {
+   "Name": "MODULE_CREATION_FAILED",
+   "Severity": "WARN",
+   "Desc": "Module creation for diagnostics failed"
+  },
+  {
    "Name": "NIC_ADMITTED",
    "Severity": "INFO",
    "Desc": "NIC admitted to the cluster"

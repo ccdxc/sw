@@ -1,0 +1,26 @@
+//---------------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for debug actions served by any grpc service created by rpckit.
+//---------------------------------------------------------------------------------------
+
+syntax = "proto3";
+package protos;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/protos/module.proto";
+
+service Diagnostics {
+    rpc Debug(diagnostics.DiagnosticsRequest) returns (diagnostics.DiagnosticsResponse) {};
+}
+
+message Log {
+     map<string,string> Log = 1 [(gogoproto.jsontag) = "log,omitempty"];
+}
+
+message Logs {
+    repeated Log Logs = 1 [(gogoproto.jsontag) = "logs"];
+}

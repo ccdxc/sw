@@ -57,6 +57,10 @@ enum EventTypes {
                                          (severity) = WARN,
                                          (desc)     = "Node disjoined from the cluster"];
 
+    // ------------------------------- Diagnostic events ----------------------------- //
+    MODULE_CREATION_FAILED          = 24 [(category) = Cluster,
+                                         (severity)  = WARN,
+                                         (desc)      = "Module creation for diagnostics failed"];
 
     // -------------------------------- Host/NIC events -------------------------- //
     NIC_ADMITTED                    = 100 [(category) = Cluster,

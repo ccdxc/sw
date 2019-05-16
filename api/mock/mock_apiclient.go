@@ -12,6 +12,7 @@ import (
 	auth "github.com/pensando/sw/api/generated/auth"
 	bookstore "github.com/pensando/sw/api/generated/bookstore"
 	cluster "github.com/pensando/sw/api/generated/cluster"
+	diagnostics "github.com/pensando/sw/api/generated/diagnostics"
 	monitoring "github.com/pensando/sw/api/generated/monitoring"
 	network "github.com/pensando/sw/api/generated/network"
 	objstore "github.com/pensando/sw/api/generated/objstore"
@@ -90,6 +91,18 @@ func (m *MockServices) ClusterV1() cluster.ClusterV1Interface {
 // ClusterV1 indicates an expected call of ClusterV1
 func (mr *MockServicesMockRecorder) ClusterV1() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClusterV1", reflect.TypeOf((*MockServices)(nil).ClusterV1))
+}
+
+// DiagnosticsV1 mocks base method
+func (m *MockServices) DiagnosticsV1() diagnostics.DiagnosticsV1Interface {
+	ret := m.ctrl.Call(m, "DiagnosticsV1")
+	ret0, _ := ret[0].(diagnostics.DiagnosticsV1Interface)
+	return ret0
+}
+
+// DiagnosticsV1 indicates an expected call of DiagnosticsV1
+func (mr *MockServicesMockRecorder) DiagnosticsV1() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DiagnosticsV1", reflect.TypeOf((*MockServices)(nil).DiagnosticsV1))
 }
 
 // MonitoringV1 mocks base method

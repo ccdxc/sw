@@ -15,6 +15,10 @@
       "description": "Cluster API reference",
       "path": "/swagger/cluster"
     },
+    "diagnostics": {
+      "description": "Diagnostics API reference",
+      "path": "/swagger/diagnostics"
+    },
     "events": {
       "description": "Events API reference",
       "path": "/swagger/events"

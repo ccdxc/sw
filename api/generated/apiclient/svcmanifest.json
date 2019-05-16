@@ -257,6 +257,35 @@
       "tenant.proto"
     ]
   },
+  "diagnostics": {
+    "Svcs": {
+      "DiagnosticsV1": {
+        "Version": "v1",
+        "Messages": [
+          "Module"
+        ],
+        "Properties": {
+          "Module": {
+            "Scopes": [
+              "cluster"
+            ],
+            "RestMethods": [
+              "get",
+              "put",
+              "list",
+              "watch"
+            ],
+            "Actions": [
+              "Debug"
+            ]
+          }
+        }
+      }
+    },
+    "Files": [
+      "svc_diagnostics.proto"
+    ]
+  },
   "monitoring": {
     "Svcs": {
       "MonitoringV1": {

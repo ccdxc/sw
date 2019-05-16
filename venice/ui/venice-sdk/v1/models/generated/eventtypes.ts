@@ -19,6 +19,7 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'LEADER_ELECTED',
     'LEADER_LOST',
     'LOGIN_FAILED',
+    'MODULE_CREATION_FAILED',
     'NIC_ADMITTED',
     'NIC_HEALTHY',
     'NIC_HEALTH_UNKNOWN',
@@ -97,6 +98,11 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "LOGIN_FAILED",
       "Severity": EventsEvent_severity.INFO,
       "Desc": "User login failed",
+  },
+  'MODULE_CREATION_FAILED' : {
+      "Name": "MODULE_CREATION_FAILED",
+      "Severity": EventsEvent_severity.WARN,
+      "Desc": "Module creation for diagnostics failed",
   },
   'NIC_ADMITTED' : {
       "Name": "NIC_ADMITTED",

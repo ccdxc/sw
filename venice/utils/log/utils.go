@@ -40,7 +40,27 @@ func stackTrace() kitlog.Valuer {
 // newLogger is a internal utility function that
 // allocates a new logger object
 func newLogger(config *Config) *kitLogger {
+	l := newKitLogLogger(config)
 
+	// Some iota test code assumes that logfile is created as soon as the process starts.
+	// Hence create it
+	if config.LogToFile {
+		if err := os.MkdirAll(filepath.Dir(config.FileCfg.Filename), os.ModePerm); err != nil {
+			fmt.Printf("Failed to create directory %s for logfile %s err: %v", filepath.Dir(config.FileCfg.Filename), config.FileCfg.Filename, err)
+		} else {
+			logFile, err := os.OpenFile(config.FileCfg.Filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+			if err != nil {
+				fmt.Printf("Failed to open logfile: %s err: %v", config.FileCfg.Filename, err)
+			} else {
+				logFile.Close()
+			}
+		}
+	}
+	return &kitLogger{logger: l, config: *config}
+}
+
+// newKitLogLogger is an internal utility function that creates kitlog.Logger given the config
+func newKitLogLogger(config *Config) kitlog.Logger {
 	// Init stdout io writer if enabled
 	var stdoutWr io.Writer
 	if config.LogToStdout {
@@ -107,22 +127,7 @@ func newLogger(config *Config) *kitLogger {
 
 	// Configure log filter
 	l = kitlevel.NewFilter(l, getFilterOption(config.Filter))
-
-	// Some iota test code assumes that logfile is created as soon as the process starts.
-	// Hence create it
-	if config.LogToFile {
-		if err := os.MkdirAll(filepath.Dir(config.FileCfg.Filename), os.ModePerm); err != nil {
-			fmt.Printf("Failed to create directory %s for logfile %s err: %v", filepath.Dir(config.FileCfg.Filename), config.FileCfg.Filename, err)
-		} else {
-			logFile, err := os.OpenFile(config.FileCfg.Filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-			if err != nil {
-				fmt.Printf("Failed to open logfile: %s err: %v", config.FileCfg.Filename, err)
-			} else {
-				logFile.Close()
-			}
-		}
-	}
-	return &kitLogger{logger: l, config: *config}
+	return l
 }
 
 // getFilterOption returns the filter function based on filter type.

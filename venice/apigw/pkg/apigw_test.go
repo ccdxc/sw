@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"sort"
 	"strings"
@@ -27,6 +28,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
@@ -1154,6 +1156,40 @@ func TestAudit(t *testing.T) {
 			Assert(t, len(bufStr) == 0, fmt.Sprintf("[%s] test failed, no audit log expected", test.name))
 		}
 	}
+}
+
+func TestModuleChangeCb(t *testing.T) {
+	_ = MustGetAPIGateway()
+
+	a := singletonAPIGw
+	logConfig := log.GetDefaultConfig("TestApiGw")
+	l := log.GetNewLogger(logConfig)
+	a.logger = l
+	modObj := &diagnostics.Module{}
+	modObj.Defaults("all")
+	modObj.Spec.LogLevel = diagnostics.ModuleSpec_Debug.String()
+
+	old := os.Stdout // backup real stdout
+	r, w, err := os.Pipe()
+	AssertOk(t, err, "error creating stdout pipe")
+	os.Stdout = w
+
+	a.moduleChangeCb(modObj)
+	a.logger.DebugLog("msg", "test moduleChangeCb")
+
+	outCh := make(chan string)
+
+	go func() {
+		var buf bytes.Buffer
+		io.Copy(&buf, r)
+		outCh <- buf.String()
+	}()
+
+	w.Close()
+	os.Stdout = old // restoring the real stdout
+	out := <-outCh
+
+	Assert(t, strings.Contains(out, "level=debug"), "debug log level should be set in {%s}", out)
 }
 
 type mockAddr struct{}

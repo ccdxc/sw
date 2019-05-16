@@ -87,6 +87,12 @@ func init() {
 		Category: "Cluster",
 		Desc:     "Node disjoined from the cluster"}
 
+	eventTypes[MODULE_CREATION_FAILED] = &EventTypeAttributes{
+		EType:    "MODULE_CREATION_FAILED",
+		Severity: "WARN",
+		Category: "Cluster",
+		Desc:     "Module creation for diagnostics failed"}
+
 	eventTypes[NIC_ADMITTED] = &EventTypeAttributes{
 		EType:    "NIC_ADMITTED",
 		Severity: "INFO",

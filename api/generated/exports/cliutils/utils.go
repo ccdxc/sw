@@ -16,6 +16,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/browser/cli"
 	// blank import to pull in cluster service into cli utils
 	_ "github.com/pensando/sw/api/generated/cluster/cli"
+	// blank import to pull in diagnostics service into cli utils
+	_ "github.com/pensando/sw/api/generated/diagnostics/cli"
 	// blank import to pull in events service into cli utils
 	_ "github.com/pensando/sw/api/generated/events/cli"
 	// blank import to pull in monitoring service into cli utils

@@ -66,6 +66,7 @@ type Controller interface {
 	SmartNIC() SmartNICAPI                               // return SmartNIC API interface
 	Tenant() TenantAPI                                   // return Tenant API interface
 	Version() VersionAPI                                 // return Version API interface
+	Module() ModuleAPI                                   // return Module API interface
 	EventPolicy() EventPolicyAPI                         // return EventPolicy API interface
 	StatsPolicy() StatsPolicyAPI                         // return StatsPolicy API interface
 	FwlogPolicy() FwlogPolicyAPI                         // return FwlogPolicy API interface

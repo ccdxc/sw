@@ -63,6 +63,12 @@ func (l *kitLogger) SetFilter(filter FilterType) Logger {
 	return l
 }
 
+func (l *kitLogger) ResetFilter(filter FilterType) Logger {
+	l.config.Filter = filter
+	l.logger = newKitLogLogger(&l.config)
+	return l
+}
+
 // The following logger APIs do not use the default singleton logger
 // and works on the new instantiated logger.
 

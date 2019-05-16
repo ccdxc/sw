@@ -51,6 +51,8 @@ type Logger interface {
 	WithContext(pairs ...string) Logger
 	SetOutput(w io.Writer) Logger
 	SetFilter(f FilterType) Logger
+	// ResetFilter resets log level for an existing logger unlike SetFilter which adds to existing filters
+	ResetFilter(f FilterType) Logger
 
 	V(l int) bool
 }

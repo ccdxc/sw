@@ -37,6 +37,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
+	diagmock "github.com/pensando/sw/venice/utils/diagnostics/mock"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/curator"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
@@ -153,7 +154,8 @@ func createCMD(m *testing.M) (*rpckit.RPCServer, error) {
 		WithSystemdSvcMasterOption(s),
 		WithConfigsMasterOption(&mock.Configs{}),
 		WithCfgWatcherMasterOption(cw),
-		WithElasticCuratorSvcrOption(esmock.NewMockCurator()))
+		WithElasticCuratorSvcrOption(esmock.NewMockCurator()),
+		WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()))
 	cw.Start()
 
 	// start the rpc server

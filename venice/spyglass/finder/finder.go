@@ -22,6 +22,7 @@ import (
 	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
+	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	monapi "github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/search"
@@ -34,6 +35,9 @@ import (
 	authzgrpc "github.com/pensando/sw/venice/utils/authz/grpc"
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
 	"github.com/pensando/sw/venice/utils/ctxutils"
+	"github.com/pensando/sw/venice/utils/diagnostics"
+	"github.com/pensando/sw/venice/utils/diagnostics/module"
+	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
 	"github.com/pensando/sw/venice/utils/elastic"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
@@ -66,12 +70,28 @@ type Finder struct {
 	finderAddr    string
 	rpcServer     *rpckit.RPCServer
 	cache         cache.Interface
+	diagSvc       diagnostics.Service
+	moduleWatcher module.Watcher
 }
 
 // WithElasticClient passes a custom client for Elastic
 func WithElasticClient(esClient elastic.ESClient) Option {
 	return func(fdr *Finder) {
 		fdr.elasticClient = esClient
+	}
+}
+
+// WithModuleWatcher passes a custom module watcher
+func WithModuleWatcher(moduleWatcher module.Watcher) Option {
+	return func(fdr *Finder) {
+		fdr.moduleWatcher = moduleWatcher
+	}
+}
+
+// WithDiagnosticsService passes a custom diagnostics service
+func WithDiagnosticsService(diagSvc diagnostics.Service) Option {
+	return func(fdr *Finder) {
+		fdr.diagSvc = diagSvc
 	}
 }
 
@@ -120,14 +140,21 @@ func (fdr *Finder) Start() error {
 		fdr.elasticClient = result.(elastic.ESClient)
 	}
 
+	if fdr.moduleWatcher == nil {
+		// start module watcher
+		fdr.moduleWatcher = module.GetWatcher(fmt.Sprintf("%s-%s", utils.GetHostname(), globals.Spyglass), globals.APIServer, fdr.rsr, fdr.logger, fdr.moduleChangeCb)
+	}
+
 	return nil
 }
 
 // Stop finder service
 func (fdr *Finder) Stop() {
 	fdr.logger.Debug("Stopping finder")
+	fdr.diagSvc.Stop()
 	fdr.stopRPCServer()
 	fdr.elasticClient.Close()
+	fdr.moduleWatcher.Stop()
 	fdr.logger.Info("Stopped finder")
 }
 
@@ -989,6 +1016,12 @@ func (fdr *Finder) startRPCServer(serverName, listenURL string) error {
 	// Register audit handler
 	audit.RegisterAuditV1Server(rpcServer.GrpcServer, newAuditHandler(fdr))
 
+	// Register diagnostics handler
+	if fdr.diagSvc == nil {
+		fdr.diagSvc = diagsvc.GetDiagnosticsServiceWithDefaults(globals.Spyglass, utils.GetHostname(), diagapi.ModuleStatus_Venice, fdr.rsr, fdr.logger)
+	}
+	diagnostics.RegisterService(rpcServer.GrpcServer, fdr.diagSvc)
+
 	rpcServer.Start()
 	fdr.rpcServer = rpcServer
 	fdr.logger.Infof("Started finder rpcserver at: %s", fdr.rpcServer.GetListenURL())
@@ -1000,6 +1033,11 @@ func (fdr *Finder) stopRPCServer() error {
 
 	// stop the rpc server
 	return fdr.rpcServer.Stop()
+}
+
+func (fdr *Finder) moduleChangeCb(diagmod *diagapi.Module) {
+	fdr.logger.ResetFilter(diagnostics.GetLogFilter(diagmod.Spec.LogLevel))
+	fdr.logger.InfoLog("method", "moduleChangeCb", "msg", "setting log level", "moduleLogLevel", diagmod.Spec.LogLevel)
 }
 
 // GetListenURL returns the listen URL for the server

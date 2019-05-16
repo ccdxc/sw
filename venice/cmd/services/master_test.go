@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/server/options"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types"
+	diagmock "github.com/pensando/sw/venice/utils/diagnostics/mock"
 	esmock "github.com/pensando/sw/venice/utils/elastic/mock/curator"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/testutils"
@@ -26,7 +27,8 @@ func setupMaster(t *testing.T) (*mock.LeaderService, types.SystemdService, *mock
 		WithCfgWatcherMasterOption(&cw),
 		WithK8sSvcMasterOption(&mock.K8sService{}),
 		WithResolverSvcMasterOption(mock.NewResolverService()),
-		WithElasticCuratorSvcrOption(esmock.NewMockCurator()))
+		WithElasticCuratorSvcrOption(esmock.NewMockCurator()),
+		WithDiagModuleUpdaterSvcOption(diagmock.GetModuleUpdater()))
 
 	return l, s, &cw, m
 }

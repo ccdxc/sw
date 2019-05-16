@@ -1,0 +1,103 @@
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
+
+syntax = "proto3";
+
+// Service name
+package diagnostics;
+
+import "google/api/annotations.proto";
+import  public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+// Module contains configuration to collect diagnostics information about a process and collected diagnostics
+message Module {
+    option (venice.objectPrefix) = {Collection: "modules"};
+
+    api.TypeMeta T      = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O    = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta, omitempty"];
+
+    ModuleSpec Spec     = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec, omitempty"];
+
+    ModuleStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status, omitempty"];
+}
+
+// ModuleSpec contains configuration to collect diagnostics information about a process
+message ModuleSpec {
+    // LoggingLevel defines various logging levels for each module
+    enum LoggingLevel {
+        Info  = 0;
+        Warn  = 1;
+        Error = 2;
+        Debug = 3;
+    }
+
+    // LogLevel is the logging level of this module. Default is Info.
+    string LogLevel      = 1 [(venice.check) = "StrEnum(ModuleSpec.LoggingLevel)", (gogoproto.jsontag) = "log-level,omitempty"];
+
+    // EnableTrace enables traces for a module. Default is false.
+    bool EnableTrace     = 2 [(gogoproto.jsontag) = "enable-trace,omitempty"];
+
+    // Args are command line arguments passed to the module
+    repeated string Args = 3 [(gogoproto.jsontag) = "args,omitempty"];
+}
+
+// ModuleStatus contains collected diagnostics of a process
+message ModuleStatus {
+    // CategoryType defines whether process is part of Venice(controller) or Naples(io) subsystem
+    enum CategoryType {
+        Venice = 0;
+        Naples = 1;
+    }
+
+    // Node on which this process is running
+    string Node              = 1 [(gogoproto.jsontag) = "node,omitempty"];
+
+    // Module is the name of the process/container
+    string Module            = 2 [(gogoproto.jsontag) = "module,omitempty"];
+
+    // Category specifies whether process is part of Venice(controller) or Naples(io) subsystem
+    string Category          = 3 [(venice.check) = "StrEnum(ModuleStatus.CategoryType)", (gogoproto.jsontag) = "category,omitempty"];
+
+    // Last start time
+    api.Timestamp LastStart  = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "last-start,omitempty"];
+
+    // Number of times process got restarted. zero if never restarted
+    int32 RestartCount       = 5 [(gogoproto.jsontag) = "restart-count,omitempty"];
+
+    // Arbitrary string, json, backtrace, etc. offering clues for restart
+    string LastRestartReason = 6 [(gogoproto.jsontag) = "last-restart-reason,omitempty"];
+
+    // Service is the name of the service/pod this process is part of
+    string Service           = 7 [(gogoproto.jsontag) = "service,omitempty"];
+
+    // Ports on which this process is listening
+    repeated int32 Ports     = 8 [(gogoproto.jsontag) = "ports,omitempty"];
+}
+
+// DiagnosticsRequest sends a diagnostics request to the service
+message DiagnosticsRequest {
+    // Type of diagnostic query
+    enum QueryType {
+        Log     = 0;
+        Profile = 1;
+    }
+
+    api.TypeMeta T                 = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
+
+    api.ObjectMeta O               = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+
+    // Query is type of diagnostic information requested like Profile, Log. This string is service specific and meaning is assigned by the service
+    string Query                   = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "query,omitempty"];
+
+    // Parameters to be passed for a diagnostic query
+    map<string, string> Parameters = 4 [(gogoproto.jsontag) = "parameters,omitempty"];
+
+    option (venice.objectPrefix) = {Collection: "modules", Path: "/{O.Tenant}"};
+}
+
+// DiagnosticsResponse contains the response returned by service for the diagnostics query
+message DiagnosticsResponse {
+    api.Any Object = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "diagnostics,omitempty"];
+}

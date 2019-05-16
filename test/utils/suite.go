@@ -25,7 +25,9 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/api/generated/search"
+	loginctx "github.com/pensando/sw/api/login/context"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authn/testutils"
 	"github.com/pensando/sw/venice/utils/balancer"
@@ -543,9 +545,8 @@ func (tu *TestUtils) VIPCommandOutput(command string) string {
 	return strings.TrimSpace(string(out))
 }
 
-// DebugStats fills the statsStruct with the debug stats of serviceName by issuing a REST request to restPort
-//	here it assumes that the service is served using a resolver
-func (tu *TestUtils) DebugStats(serviceName string, restPort string, statsStruct interface{}) {
+// GetNodeForService returns name of one of the node on which the service is running
+func (tu *TestUtils) GetNodeForService(serviceName string) string {
 	instList := tu.resolver.Lookup(serviceName)
 	try := 0
 	for len(instList.Items) == 0 && try < 20 {
@@ -557,9 +558,13 @@ func (tu *TestUtils) DebugStats(serviceName string, restPort string, statsStruct
 	if try >= 20 {
 		ginkgo.Fail(fmt.Sprintf("resolver lookup for service:%s is empty after %d tries", serviceName, try))
 	}
-	node := instList.Items[0].Node
+	return instList.Items[0].Node
+}
 
-	tu.DebugStatsOnNode(node, restPort, statsStruct)
+// DebugStats fills the statsStruct with the debug stats of serviceName by issuing a REST request to restPort
+//	here it assumes that the service is served using a resolver
+func (tu *TestUtils) DebugStats(serviceName string, restPort string, statsStruct interface{}) {
+	tu.DebugStatsOnNode(tu.GetNodeForService(serviceName), restPort, statsStruct)
 }
 
 // DebugStatsOnNode posts a REST request to specified port and fills the statsStruct with debug stats
@@ -583,6 +588,28 @@ func (tu *TestUtils) NewLoggedInContext(ctx context.Context) context.Context {
 // Search sends a search query to API Gateway
 func (tu *TestUtils) Search(ctx context.Context, query *search.SearchRequest, resp interface{}) error {
 	return Search(ctx, tu.APIGwAddr, query, resp)
+}
+
+// Debug performs a Debug  action to fetch debug logs, profile etc.
+func (tu *TestUtils) Debug(ctx context.Context, req *diagnostics.DiagnosticsRequest, resp interface{}) (string, error) {
+	debugURL := fmt.Sprintf("https://%s/configs/diagnostics/v1/modules/%s/Debug", tu.APIGwAddr, req.Name)
+	restcl := netutils.NewHTTPClient()
+	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	// get authz header
+	authzHeader, ok := loginctx.AuthzHeaderFromContext(ctx)
+	if !ok {
+		return "", fmt.Errorf("no authorizaton header in context")
+	}
+	restcl.SetHeader("Authorization", authzHeader)
+	_, err := restcl.Req("POST", debugURL, req, &resp)
+	if err != nil {
+		return "", err
+	}
+	dataBytes, err := json.Marshal(resp)
+	if err != nil {
+		return "", err
+	}
+	return string(dataBytes), nil
 }
 
 // populates all the venice modules with it's metadata

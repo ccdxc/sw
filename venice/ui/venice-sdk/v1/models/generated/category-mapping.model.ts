@@ -8,6 +8,7 @@ import { ClusterHost } from './cluster';
 import { ClusterSmartNIC } from './cluster';
 import { ClusterTenant } from './cluster';
 import { ClusterVersion } from './cluster';
+import { DiagnosticsModule } from './diagnostics';
 import { MonitoringEventPolicy } from './monitoring';
 import { MonitoringStatsPolicy } from './monitoring';
 import { MonitoringFwlogPolicy } from './monitoring';
@@ -100,6 +101,13 @@ export const CategoryMapping: CatMap  = {
       instance: new ClusterVersion(),
       scopes: [ 'cluster', ] ,
       actions:  [] ,
+    },
+  },
+  "Diagnostics" : {
+    "Module" : {
+      instance: new DiagnosticsModule(),
+      scopes: [ 'cluster', ] ,
+      actions:  [ 'Debug', ] ,
     },
   },
   "Monitoring" : {

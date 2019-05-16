@@ -15,6 +15,8 @@ import (
 	_ "github.com/pensando/sw/api/generated/browser/gateway"
 	// blank import to pull in cluster service into api gateway
 	_ "github.com/pensando/sw/api/generated/cluster/gateway"
+	// blank import to pull in diagnostics service into api gateway
+	_ "github.com/pensando/sw/api/generated/diagnostics/gateway"
 	// blank import to pull in events service into api gateway
 	_ "github.com/pensando/sw/api/generated/events/gateway"
 	// blank import to pull in monitoring service into api gateway

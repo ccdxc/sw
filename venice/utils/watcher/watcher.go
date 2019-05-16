@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -221,14 +222,20 @@ func (w *Watcher) watch(ctx context.Context, apicl apiclient.Services, kind *Kin
 		if kind.Options == nil {
 			kind.Options = &api.ListWatchOptions{}
 		}
-		// cluster watcher
+		// user watcher
 		watcher, err = apicl.AuthV1().User().Watch(ctx, kind.Options)
 	case string(auth.KindAuthenticationPolicy):
 		if kind.Options == nil {
 			kind.Options = &api.ListWatchOptions{}
 		}
-		// cluster watcher
+		// authentication policy watcher
 		watcher, err = apicl.AuthV1().AuthenticationPolicy().Watch(ctx, kind.Options)
+	case string(diagnostics.KindModule):
+		if kind.Options == nil {
+			kind.Options = &api.ListWatchOptions{}
+		}
+		// module watcher
+		watcher, err = apicl.DiagnosticsV1().Module().Watch(ctx, kind.Options)
 	default:
 		return nil, fmt.Errorf("unsupported kind: %s", kind)
 	}

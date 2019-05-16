@@ -72,6 +72,11 @@ func SetFilter(filter FilterType) Logger {
 	return singleton
 }
 
+// ResetFilter resets the log filter for the default logger
+func ResetFilter(filter FilterType) Logger {
+	return singleton.ResetFilter(filter)
+}
+
 // Fatal logs error messages with panic for non-recoverable cases
 func Fatal(args ...interface{}) {
 	kitlevel.Error(getDefaultInstance().logger).Log("msg", fmt.Sprint(args...))
