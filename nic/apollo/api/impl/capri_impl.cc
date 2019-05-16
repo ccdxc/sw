@@ -196,7 +196,7 @@ capri_impl::get_system_temperature (pds_system_temperature_t *temp) {
     // read the temperatures
     rv = sdk::platform::sensor::read_temperatures(&temperature);
     if (rv == 0) {
-        temp->dietemp = temperature.dietemp;
+        temp->dietemp = temperature.dietemp/1000;
         temp->localtemp = temperature.localtemp/1000;
         temp->hbmtemp = temperature.hbmtemp;
     } else {

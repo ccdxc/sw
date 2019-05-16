@@ -217,4 +217,16 @@ pds_af_proto_spec_to_api_spec (uint8_t *af, const types::IPAF &addrfamily)
     return SDK_RET_OK;
 }
 
+static inline types::IPAF
+pds_af_api_spec_to_proto_spec (uint8_t af)
+{
+    if (af == IP_AF_IPV4) {
+        return types::IP_AF_INET;
+    } else if (af == IP_AF_IPV6) {
+        return types::IP_AF_INET6;
+    } else {
+        return types::IP_AF_NONE;
+    }
+}
+
 #endif    // __AGENT_SVC_UTIL_HPP__

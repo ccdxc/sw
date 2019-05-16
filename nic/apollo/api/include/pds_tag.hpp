@@ -80,10 +80,21 @@ typedef struct pds_tag_info_s {
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_tag_create(pds_tag_spec_t *spec);
 
+/// \brief update tag
+/// \param[in] spec tag configuration
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_tag_update(pds_tag_spec_t *spec);
+
 /// \brief delete tag
 /// \param[in] key key
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_tag_delete(pds_tag_key_t *key);
+
+/// \brief read meter
+/// \param[in] key key
+/// \param[out] info meter information
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_tag_read(pds_tag_key_t *key, pds_tag_info_t *info);
 
 /// \@}
 

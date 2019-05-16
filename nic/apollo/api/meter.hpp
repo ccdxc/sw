@@ -113,7 +113,7 @@ public:
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "meter-" + std::to_string((uint32_t)key_);
+        return "meter-" + std::to_string(key_.id);
     }
 
     /// \brief          helper function to get key given meter entry

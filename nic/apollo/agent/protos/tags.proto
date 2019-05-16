@@ -13,6 +13,7 @@ import "types.proto";
 
 service TagSvc {
   rpc TagCreate (TagRequest) returns (TagResponse) {}
+  rpc TagUpdate (TagRequest) returns (TagResponse) {}
   rpc TagGet (TagGetRequest) returns (TagGetResponse) {}
   rpc TagDelete (TagDeleteRequest) returns (TagDeleteResponse) {}
 }

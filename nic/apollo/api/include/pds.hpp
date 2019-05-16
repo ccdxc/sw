@@ -39,8 +39,8 @@ typedef uint32_t pds_policy_id_t;
 typedef uint16_t pds_lif_key_t;
 typedef uint32_t pds_ifindex_t;
 typedef uint32_t pds_mirror_session_id_t;
-typedef uint32_t pds_meter_key_t;
-typedef uint32_t pds_tag_key_t;
+typedef uint32_t pds_meter_id_t;
+typedef uint32_t pds_tag_id_t;
 
 /// \brief Encapsulation type
 typedef enum pds_encap_type_e {
@@ -119,6 +119,16 @@ typedef struct pds_tep_key_s {
 typedef struct pds_vnic_key_s {
     pds_vnic_id_t id;    ///< Unique VNIC ID (in the range 0 to 1024)
 } __PACK__ pds_vnic_key_t;
+
+/// \brief Meter key
+typedef struct pds_meter_key_s {
+    pds_meter_id_t id;    ///< Unique meter ID
+} __PACK__ pds_meter_key_t;
+
+/// \brief Tag key
+typedef struct pds_tag_key_s {
+    pds_tag_id_t id;    ///< Unique tag ID
+} __PACK__ pds_tag_key_t;
 
 /// \brief    mapping key
 typedef struct pds_mapping_key_s {

@@ -15,6 +15,8 @@
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
+#include "nic/apollo/api/include/pds_meter.hpp"
+#include "nic/apollo/api/include/pds_tag.hpp"
 
 using std::unordered_map;
 using std::make_pair;
@@ -25,6 +27,8 @@ namespace core {
 typedef sdk::sdk_ret_t (*vpc_walk_cb_t)(pds_vpc_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*subnet_walk_cb_t)(pds_subnet_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*vnic_walk_cb_t)(pds_vnic_spec_t *spec, void *ctxt);
+typedef sdk::sdk_ret_t (*meter_walk_cb_t)(pds_meter_spec_t *spec, void *ctxt);
+typedef sdk::sdk_ret_t (*tag_walk_cb_t)(pds_tag_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*tep_walk_cb_t)(pds_tep_spec_t *spec, void *ctxt);
 typedef sdk::sdk_ret_t (*mirror_session_walk_cb_t)(pds_mirror_session_spec_t *spec,
                                                    void *ctxt);
@@ -37,6 +41,8 @@ typedef enum slab_id_e {
     SLAB_ID_SUBNET,
     SLAB_ID_TEP,
     SLAB_ID_VNIC,
+    SLAB_ID_METER,
+    SLAB_ID_TAG,
     SLAB_ID_ROUTE,
     SLAB_ID_POLICY,
     SLAB_ID_MIRROR,
@@ -47,6 +53,8 @@ typedef unordered_map<uint32_t, pds_vpc_spec_t *> vpc_db_t;
 typedef unordered_map<uint32_t, pds_subnet_spec_t *> subnet_db_t;
 typedef unordered_map<uint32_t, pds_tep_spec_t *> tep_db_t;
 typedef unordered_map<uint32_t, pds_vnic_spec_t *> vnic_db_t;
+typedef unordered_map<uint32_t, pds_meter_spec_t *> meter_db_t;
+typedef unordered_map<uint32_t, pds_tag_spec_t *> tag_db_t;
 typedef unordered_map<uint32_t, pds_route_table_spec_t *> route_table_db_t;
 typedef unordered_map<uint32_t, pds_policy_spec_t*> policy_db_t;
 typedef unordered_map<uint32_t, pds_mirror_session_spec_t *> mirror_session_db_t;
@@ -64,6 +72,8 @@ public:
     vpc_db_t *vpc_map(void) { return vpc_map_; }
     subnet_db_t *subnet_map(void) { return subnet_map_; }
     vnic_db_t *vnic_map(void) { return vnic_map_; }
+    meter_db_t *meter_map(void) { return meter_map_; }
+    tag_db_t *tag_map(void) { return tag_map_; }
     route_table_db_t *route_table_map(void) { return route_table_map_; }
     policy_db_t *policy_map(void) { return policy_map_; }
     pds_vpc_id_t substrate_vpc_id(void) { return substrate_vpc_id_; }
@@ -83,6 +93,12 @@ public:
     }
     slab_ptr_t vnic_slab(void) const {
         return slabs_[SLAB_ID_VNIC];
+    }
+    slab_ptr_t meter_slab(void) const {
+        return slabs_[SLAB_ID_METER];
+    }
+    slab_ptr_t tag_slab(void) const {
+        return slabs_[SLAB_ID_TAG];
     }
     slab_ptr_t route_table_slab(void) const {
         return slabs_[SLAB_ID_ROUTE];
@@ -105,6 +121,8 @@ private:
     pds_vpc_id_t substrate_vpc_id_;
     subnet_db_t *subnet_map_;
     vnic_db_t *vnic_map_;
+    meter_db_t *meter_map_;
+    tag_db_t *tag_map_;
     route_table_db_t *route_table_map_;
     policy_db_t *policy_map_;
     pds_device_spec_t device_;
@@ -149,6 +167,20 @@ public:
     bool del_from_vnic_db(pds_vnic_key_t *key);
     slab_ptr_t vnic_slab(void) const { return cfg_db_->vnic_slab(); }
 
+    pds_meter_spec_t *find_in_meter_db(pds_meter_key_t *key);
+    sdk_ret_t add_to_meter_db(pds_meter_key_t *key,
+                              pds_meter_spec_t *spec);
+    sdk_ret_t meter_db_walk(meter_walk_cb_t cb, void *ctxt);
+    bool del_from_meter_db(pds_meter_key_t *key);
+    slab_ptr_t meter_slab(void) const { return cfg_db_->meter_slab(); }
+
+    pds_tag_spec_t *find_in_tag_db(pds_tag_key_t *key);
+    sdk_ret_t add_to_tag_db(pds_tag_key_t *key,
+                            pds_tag_spec_t *spec);
+    sdk_ret_t tag_db_walk(tag_walk_cb_t cb, void *ctxt);
+    bool del_from_tag_db(pds_tag_key_t *key);
+    slab_ptr_t tag_slab(void) const { return cfg_db_->tag_slab(); }
+
     pds_route_table_spec_t *find_in_route_table_db(pds_route_table_key_t *key);
     sdk_ret_t add_to_route_table_db(pds_route_table_key_t *key,
                                     pds_route_table_spec_t *spec);
@@ -190,6 +222,8 @@ private:
     vpc_db_t *vpc_map(void) const { return cfg_db_->vpc_map();  }
     subnet_db_t *subnet_map(void) const { return cfg_db_->subnet_map();  }
     vnic_db_t *vnic_map(void) const { return cfg_db_->vnic_map();  }
+    meter_db_t *meter_map(void) const { return cfg_db_->meter_map();  }
+    tag_db_t *tag_map(void) const { return cfg_db_->tag_map();  }
     route_table_db_t *route_table_map(void) const { return
         cfg_db_->route_table_map();
     }
