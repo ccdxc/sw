@@ -9,6 +9,11 @@ import iota.test.apollo.config.init as init
 #Following come from dol/infra
 import infra.common.defs as defs
 import infra.common.utils as utils
+import infra.common.glopts as glopts
+class GlobalOptions: pass
+glopts.GlobalOptions = GlobalOptions()
+glopts.GlobalOptions.debug = True
+glopts.GlobalOptions.verbose = True
 import infra.common.parser as parser
 import infra.common.timeprofiler as timeprofiler
 
