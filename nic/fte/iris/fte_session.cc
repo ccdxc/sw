@@ -312,7 +312,7 @@ session_is_feature_enabled(hal::session_t *session, const char *feature)
     uint16_t                   num_features;
 
     if (session == NULL || feature == NULL) {
-        HAL_TRACE_ERR("Invalid argumet session: {:p} feature: {:p}",
+        HAL_TRACE_ERR("Invalid argumet session: {:#x} feature: {:#x}",
                        (void *)session, (void *)feature);
         goto end;
     }

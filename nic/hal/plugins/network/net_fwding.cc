@@ -57,7 +57,7 @@ update_rewrite_info(fte::ctx_t&ctx)
 
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_REWRITE};
 
-    HAL_TRACE_DEBUG("Source L2Seg: {:p} Dest L2Seg: {:p}", (void *)ctx.sl2seg(), (void *)ctx.dl2seg()); 
+    HAL_TRACE_VERBOSE("Source L2Seg: {:#x} Dest L2Seg: {:#x}", (void *)ctx.sl2seg(), (void *)ctx.dl2seg()); 
     // smac rewrite for routed pkts
     if (ctx.sl2seg() && ctx.dl2seg() && (ctx.sl2seg() != ctx.dl2seg())) {
         dmac = hal::ep_get_mac_addr(ctx.dep());

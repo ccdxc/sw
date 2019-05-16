@@ -269,7 +269,7 @@ inst_t::inst_t(uint8_t fte_id) :
     } else { 
         sdk::types::mem_addr_t vaddr;
         sdk::types::mem_addr_t start_addr = get_mem_addr(CAPRI_HBM_REG_PER_FTE_STATS);
-        HAL_TRACE_DEBUG("Start address: {:p}", (void *)start_addr);
+        HAL_TRACE_VERBOSE("Start address: {:#x}", (void *)start_addr);
         SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
         
         bzero((void *)&stats_, sizeof(fte_stats_t));
@@ -284,7 +284,7 @@ inst_t::inst_t(uint8_t fte_id) :
         SDK_ASSERT(fte_lifq_stats != NULL);
 
         sdk::lib::pal_ret_t pal_ret = sdk::lib::pal_physical_addr_to_virtual_addr(start_addr, &vaddr);
-        HAL_TRACE_DEBUG("Pal ret: {}", pal_ret);
+        HAL_TRACE_VERBOSE("Pal ret: {}", pal_ret);
         SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
         stats_.fte_hbm_stats = (fte_hbm_stats_t *)vaddr;
     } 
@@ -397,9 +397,6 @@ inst_t::softq_enqueue(softq_fn_t fn, void *data)
 {
     sdk::lib::thread *curr_thread = hal::hal_get_current_thread();
 
-    //HAL_TRACE_DEBUG("fte: softq enqueue fte.{} fn={:p} data={:p}",
-    //                id_, (void*)fn, data);
-
     // try indefinatly until queued successfully
     while(softq_->enqueue((void *)fn, data) == false) {
         if (curr_thread->can_yield()) {
@@ -424,7 +421,6 @@ void inst_t::process_softq()
         stats_.fte_hbm_stats->qstats.softq_req++;
         compute_cps();
 
-        //HAL_TRACE_DEBUG("fte: softq dequeue fn={:p} data={:p} softq_req={}", op, data, stats_.softq_req);
         (*(softq_fn_t)op)(data);
         npkt++;
     }
@@ -690,7 +686,7 @@ void inst_t::process_arq()
      */
     if (bypass_fte_) {
 
-        HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:p}\n", pkt);
+        HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:#x}\n", pkt);
 
         update_rx_stats(cpu_rxhdr, pkt_len);
         if (pkt) {
@@ -812,7 +808,7 @@ void inst_t::process_arq_new ()
             cpu_rxhdr = cpupkt_batch.pkts[npkt].cpu_rxhdr;
             copied_pkt = cpupkt_batch.pkts[npkt].copied_pkt;
 
-            HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:p}\n", pkt);
+            HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:#x}\n", pkt);
 
             if (pkt) {
 
@@ -855,7 +851,7 @@ void inst_t::process_arq_new ()
         copied_pkt = cpupkt_batch.pkts[npkt].copied_pkt;
         drop_pkt = false;
 
-        HAL_TRACE_DEBUG("npkt {} pkt_len {}, pkt {:p}", npkt, pkt_len, pkt);
+        HAL_TRACE_VERBOSE("npkt {} pkt_len {}, pkt {:#x}", npkt, pkt_len, pkt);
 
         do {
 

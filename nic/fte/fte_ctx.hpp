@@ -616,7 +616,7 @@ public:
     // flow is not getting installed.
     hal_ret_t register_completion_handler(completion_handler_t handler) {
         feature_state_[feature_id_].completion_handler = handler;
-        HAL_TRACE_DEBUG("fte: feature={} queued completion handler {:p}",
+        HAL_TRACE_VERBOSE("fte: feature={} queued completion handler {:#x}",
                          feature_name_, (void*)handler);
         return HAL_RET_OK;
     }
@@ -699,7 +699,7 @@ public:
 
         dllist_reset(&state->session_feature_lentry);
 
-        HAL_TRACE_DEBUG("fte: feature={} register session state {:p}",
+        HAL_TRACE_VERBOSE("fte: feature={} register session state {:#x}",
                         feature_name_, (void*)state);
         feature_state_[feature_id_].session_state = state;
         return HAL_RET_OK;

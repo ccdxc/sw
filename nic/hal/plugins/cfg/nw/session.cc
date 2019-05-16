@@ -1379,7 +1379,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     *session = {};
 
     session->fte_id = fte::fte_id();
-    HAL_TRACE_DEBUG("Creating session {:p} with a rflow :{}", (void *)session, (args->valid_rflow) ? "valid" : "not valid");
+    HAL_TRACE_VERBOSE("Creating session {:#x} with a rflow :{}", (void *)session, (args->valid_rflow) ? "valid" : "not valid");
 
     dllist_reset(&session->feature_list_head);
     session->vrf_handle = args->vrf->hal_handle;
@@ -2200,7 +2200,7 @@ session_age_cb (void *entry, void *ctxt)
                 return false;
             }
 #if SESSION_AGE_DEBUG
-            HAL_TRACE_DEBUG("UDP Session: {} num_del_sess: {} session_list: {:p}",
+            HAL_TRACE_DEBUG("UDP Session: {} num_del_sess: {} session_list: {:#x}",
                     session->hal_handle, args->num_del_sess[session->fte_id],
                     (void *)args->session_list[session->fte_id]);
 #endif
@@ -2355,7 +2355,7 @@ session_init (hal_cfg_t *hal_cfg)
     } else {
         sdk::types::mem_addr_t vaddr;
         sdk::types::mem_addr_t start_addr = get_mem_addr(CAPRI_HBM_REG_SESSION_SUMMARY_STATS);
-        HAL_TRACE_DEBUG("Start addr: {:p}", start_addr);
+        HAL_TRACE_VERBOSE("Start addr: {:#x}", start_addr);
         SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
 
         for (uint32_t fte = 0; fte < hal::g_hal_cfg.num_data_cores; fte++) {    

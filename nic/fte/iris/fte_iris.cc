@@ -292,7 +292,7 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
         uint16_t id = feature_id(state->feature_name);
         if (id <= num_features_) {
             feature_state_[id].session_state = state;
-            HAL_TRACE_DEBUG("fte: feature={} restored session state {:p}",
+            HAL_TRACE_VERBOSE("fte: feature={} restored session state {:#x}",
                             state->feature_name, (void*)state);
         }
     }
@@ -1026,7 +1026,7 @@ ctx_t::queue_txpkt(uint8_t *pkt, size_t pkt_len,
     pkt_info->cb = cb;
 
     HAL_TRACE_DEBUG("fte: feature={} queued txpkt lkp_inst={} src_lif={} vlan={} "
-                    "dest_lifq={} ring={} wring={} pkt={:p} len={}",
+                    "dest_lifq={} ring={} wring={} pkt={:#x} len={}",
                     feature_name_,
                     pkt_info->p4plus_header.lkp_inst,
                     pkt_info->cpu_header.src_lif,
@@ -1081,7 +1081,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
 
     for (int i = 0; i < txpkt_cnt_; i++) {
         txpkt_info_t *pkt_info = &txpkts_[i];
-        HAL_TRACE_DEBUG("fte:: txpkt slif={} pkt={:p} len={}",
+        HAL_TRACE_VERBOSE("fte:: txpkt slif={} pkt={:#x} len={}",
                         pkt_info->cpu_header.src_lif,
                         pkt_info->pkt, pkt_info->pkt_len);
         if ( istage_ > 0 ){
@@ -1124,7 +1124,7 @@ ctx_t::send_queued_pkts(hal::pd::cpupkt_ctxt_t* arm_ctx)
         incr_inst_fte_tx_stats(pkt_info->pkt_len);
         // Issue a callback to free the packet
         if (pkt_info->cb) {
-	    HAL_TRACE_DEBUG(" packet buffer/cpu_rx header {:#x} {:#x}", (long)cpu_rxhdr_, (long)pkt_);
+	    HAL_TRACE_VERBOSE(" packet buffer/cpu_rx header {:#x} {:#x}", (long)cpu_rxhdr_, (long)pkt_);
             pkt_info->cb(pkt_info->pkt);
         }
     }
@@ -1146,7 +1146,7 @@ ctx_t::send_queued_pkts_new (hal::pd::cpupkt_ctxt_t* arm_ctx)
 
     for (int i = 0; i < txpkt_cnt_; i++) {
         txpkt_info_t *pkt_info = &txpkts_[i];
-        HAL_TRACE_DEBUG("fte:: txpkt slif={} pkt={:p} len={}",
+        HAL_TRACE_DEBUG("fte:: txpkt slif={} pkt={:#x} len={}",
                         pkt_info->cpu_header.src_lif,
                         pkt_info->pkt, pkt_info->pkt_len);
 

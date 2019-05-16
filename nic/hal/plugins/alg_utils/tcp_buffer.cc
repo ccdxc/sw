@@ -32,7 +32,7 @@ tcp_buffer_t::factory (uint32_t seq_start, void *handler_ctx, data_handler_t han
     entry->data_handler_ = handler;
     entry->handler_ctx_ = handler_ctx;
 
-    HAL_TRACE_DEBUG("Init TCP buffer with seq_start: {} data handler: {:p} handle_ctx: {:p}",
+    HAL_TRACE_DEBUG("Init TCP buffer with seq_start: {} data handler: {:#x} handle_ctx: {:#x}",
                      entry->cur_seq_, (void *)entry->data_handler_, (void *)entry->handler_ctx_);
 
     return entry;
@@ -218,7 +218,6 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
     // Invoke handler if we havent already
     if (data_handler_invoked == false && (segments_[0].start == cur_seq_) &&
         (segments_[0].end - segments_[0].start) > reassembled_payload) {
-        HAL_TRACE_DEBUG("Data handler invoked");
         size_t processed = data_handler_(handler_ctx_, buff_, segments_[0].end - segments_[0].start);
 
         SDK_ASSERT_RETURN(processed <= (segments_[0].end - segments_[0].start), HAL_RET_INVALID_ARG);

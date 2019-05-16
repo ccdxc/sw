@@ -317,7 +317,6 @@ static void sunrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
         if (l4_sess->isCtrl == false) {
             l4_alg_status_t  *ctrl_sess =  g_rpc_state->get_ctrl_l4sess(\
                                                  l4_sess->app_session);
-            HAL_TRACE_DEBUG("Ctrl l4 session: {:p}", (void *)ctrl_sess);
             incr_data_sess((rpc_info_t *)ctrl_sess->info);
         }
     }
@@ -667,7 +666,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
     uint32_t              payload_offset = 0;
     uint8_t               rc = 0;
 
-    HAL_TRACE_DEBUG("In alg_sunrpc_exec {:p}", (void *)l4_sess);
+    HAL_TRACE_DEBUG("In alg_sunrpc_exec {:#x}", (void *)l4_sess);
     payload_offset = ctx.cpu_rxhdr()->payload_offset;
     if (sfw_info->alg_proto == nwsec::APP_SVC_SUN_RPC &&
         (!ctx.existing_session())) {

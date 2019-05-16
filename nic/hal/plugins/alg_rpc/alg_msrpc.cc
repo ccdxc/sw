@@ -680,7 +680,6 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
                  * to Expected flow
                  */
                 exp_flow->info = l4_sess->info;
-                HAL_TRACE_DEBUG("Setting expected flow {:p}", (void *)exp_flow);
                 l4_sess->info = (rpc_info_t *)g_rpc_state->alg_info_slab()->alloc();
                 SDK_ASSERT(l4_sess->info != NULL);
             }
@@ -700,7 +699,6 @@ static void msrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
                 g_rpc_state->move_expflow_to_l4sess(l4_sess->app_session, l4_sess);
                 memset(l4_sess->info, 0, sizeof(rpc_info_t));
                 l4_sess->alg = nwsec::APP_SVC_MSFT_RPC;
-                HAL_TRACE_DEBUG("Move expected flow to l4 session");
             }
         }
     }
@@ -769,7 +767,7 @@ size_t parse_msrpc_cn_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
     uint32_t                 pgm_offset = 0;
     rpc_info_t              *rpc_info = (rpc_info_t *)l4_sess->info;
 
-    HAL_TRACE_DEBUG("In parse_msrpc_cn_control_flow {:p}", (void *)ctxt);
+    HAL_TRACE_DEBUG("In parse_msrpc_cn_control_flow {:#x}", (void *)ctxt);
 
     if (pkt_len < (rpc_msg_offset + sizeof(msrpc_cn_common_hdr_t))) {
         HAL_TRACE_ERR("Cannot process further -- packet len: {} is smaller than expected: {}",
@@ -1015,7 +1013,7 @@ hal_ret_t alg_msrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
     app_session_t        *app_sess = NULL;
     uint8_t               rc = 0;
 
-    HAL_TRACE_DEBUG("In alg_msrpc_exec {:p}", (void *)l4_sess);
+    HAL_TRACE_DEBUG("In alg_msrpc_exec {:#x}", (void *)l4_sess);
     if (sfw_info->alg_proto == nwsec::APP_SVC_MSFT_RPC &&
         (!ctx.existing_session())) {
         /*

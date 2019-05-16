@@ -210,7 +210,7 @@ void rtsp_app_sess_cleanup_hdlr(alg_utils::app_session_t *app_sess) {
     }
 
     if (app_sess->oper != NULL) {
-        HAL_TRACE_DEBUG("Freeing Slab pointer {:p}", (void *)app_sess->oper);
+        HAL_TRACE_VERBOSE("Freeing Slab pointer {:#x}", (void *)app_sess->oper);
         g_rtsp_state->alg_info_slab()->free((rtsp_session_t *)app_sess->oper);
     }
 }

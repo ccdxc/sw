@@ -485,9 +485,7 @@ hal_ret_t expected_flow_handler(fte::ctx_t &ctx, expected_flow_t *wentry) {
     l4_alg_status_t *entry = NULL;
     ftp_info_t      *ftp_info = NULL;
 
-    HAL_TRACE_DEBUG("ALG_FTP: expected_flow_handler");
     entry = (l4_alg_status_t *)wentry;
-    HAL_TRACE_DEBUG("Entry: {:p}", (void *)entry);
     ftp_info = (ftp_info_t *)entry->info;
     if (entry->isCtrl != true && sfw_info != NULL) {
         sfw_info->skip_sfw = ftp_info->skip_sfw;

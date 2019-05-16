@@ -200,7 +200,6 @@ static void tftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
             exp_flow->info = tftp_info;
             exp_flow->idle_timeout = l4_sess->idle_timeout; 
             exp_flow->sess_hdl = l4_sess->sess_hdl;
-            HAL_TRACE_DEBUG("Setting expected flow {:p}", (void *)exp_flow);
         } else { /* Data session */
             /*
              * Data session flow has been installed sucessfully
@@ -210,7 +209,6 @@ static void tftp_completion_hdlr (fte::ctx_t& ctx, bool status) {
             g_tftp_state->move_expflow_to_l4sess(l4_sess->app_session, l4_sess);
             tftp_info = (tftp_info_t *)l4_sess->info;
             if (tftp_info) tftp_info->callback = NULL;
-            HAL_TRACE_DEBUG("Move expected flow to l4 session");
         }
     }
 }
