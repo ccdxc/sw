@@ -120,8 +120,8 @@ func TestUpdateFilterWithObjects(t *testing.T) {
 	nicJSON := []byte(`{"kind":"SmartNIC","api-version":"v1","meta":{"name":"4444.4444.0002","generation-id":"10","resource-version":"114790","uuid":"ec38f54d-c4d5-4709-9860-26f6fe24dfb1","creation-time":"2018-12-19T23:56:41.743152915Z","mod-time":"2018-12-20T17:59:19.218143088Z","self-link":"/configs/cluster/v1/smartnics/4444.4444.0002"},"spec":{"admit":true,"hostname":"naples1-host-new","mgmt-mode":"NETWORK"},"status":{"admission-phase":"ADMITTED","conditions":[{"type":"HEALTHY","status":"TRUE","last-transition-time":"2018-12-20T17:59:18Z"}],"serial-num":"0x0123456789ABCDEFghijk","primary-mac":"4444.4444.0002"}}`)
 
 	// create identical but independent instances of the NIC object to start from
-	var nicObj, nicObjCopy, updateObj, unhealthyNICObj cluster.SmartNIC
-	for _, obj := range []*cluster.SmartNIC{&nicObj, &nicObjCopy, &updateObj, &unhealthyNICObj} {
+	var nicObj, nicObjCopy, updateObj, unhealthyNICObj, noCondObj1, noCondObj2 cluster.SmartNIC
+	for _, obj := range []*cluster.SmartNIC{&nicObj, &nicObjCopy, &updateObj, &unhealthyNICObj, &noCondObj1, &noCondObj2} {
 		err := json.Unmarshal(nicJSON, obj)
 		AssertOk(t, err, "Error unmarshaling nicJSON")
 	}
@@ -156,6 +156,10 @@ func TestUpdateFilterWithObjects(t *testing.T) {
 		},
 	}
 
+	// noCondObj do not have conditions
+	noCondObj1.Status.Conditions = nil
+	noCondObj2.Status.Conditions = []cluster.SmartNICCondition{}
+
 	tcs := []filterUpdateTestcase{
 		// full object update cases
 		{nicObj, nicObjCopy, nil, nil, true},                                  // identical, no update
@@ -163,10 +167,13 @@ func TestUpdateFilterWithObjects(t *testing.T) {
 		{nicObj, updateObj, []string{"LastTransitionTime"}, nil, true},        // LastTransitionTime is different but ignored
 		{nicObj, unhealthyNICObj, []string{"LastTransitionTime"}, nil, false}, // health status is different, need to update
 		// delta update cases
-		{nicObj, cluster.SmartNIC{}, nil, nil, true},                               // empty update
-		{nicObj, healthyUpdateDelta, nil, nil, false},                              // LastTransitionTime is different and not ignored
-		{nicObj, healthyUpdateDelta, []string{"LastTransitionTime"}, nil, true},    // LastTransitionTime is different but ignored
-		{nicObj, unhealthyUpdateDelta, []string{"LastTransitionTime"}, nil, false}, // health status is different, need to update
+		{nicObj, cluster.SmartNIC{}, nil, nil, true},                                               // empty update
+		{nicObj, healthyUpdateDelta, nil, nil, false},                                              // LastTransitionTime is different and not ignored
+		{nicObj, healthyUpdateDelta, []string{"LastTransitionTime"}, nil, true},                    // LastTransitionTime is different but ignored
+		{nicObj, healthyUpdateDelta, []string{"LastTransitionTime"}, []string{"Conditions"}, true}, // LastTransitionTime is different but ignored
+		{nicObj, unhealthyUpdateDelta, []string{"LastTransitionTime"}, nil, false},                 // health status is different, need to update
+		{nicObj, noCondObj1, []string{"LastTransitionTime"}, []string{"Conditions"}, false},        // Conditions is empty (zero value) but forced
+		{nicObj, noCondObj2, []string{"LastTransitionTime"}, []string{"Conditions"}, false},        // Conditions is empty (zero value) but forced
 	}
 
 	for i, tc := range tcs {

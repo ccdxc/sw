@@ -220,7 +220,7 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 	nicName := updObj.Name
 
 	// decide whether to send to ApiServer or not before we make any adjustment
-	updateAPIServer := !runtime.FilterUpdate(refObj.Status, updObj.Status, []string{"LastTransitionTime"}, nil)
+	updateAPIServer := !runtime.FilterUpdate(refObj.Status, updObj.Status, []string{"LastTransitionTime"}, []string{"Conditions"})
 
 	refHealthCond := getNICCondition(refObj, cluster.SmartNICCondition_HEALTHY)
 	updHealthCond := getNICCondition(updObj, cluster.SmartNICCondition_HEALTHY)
