@@ -525,7 +525,7 @@ class HostManagement(EntityManagement):
         if copy_fw:
             self.CopyIN(GlobalOptions.image, entity_dir = HOST_NAPLES_DIR, naples_dir = "/data")
 
-        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/naples_fw.tar")
+        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /data/%s"%os.path.basename(GlobalOptions.image))
         if mount_data:
             self.RunNaplesCmd("sync && sync && sync")
             self.RunNaplesCmd("umount /data/")
@@ -679,7 +679,7 @@ class EsxHostManagement(HostManagement):
                     entity_dir = HOST_ESX_NAPLES_IMAGES_DIR,
                     naples_dir = "/tmp")
 
-        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /tmp/naples_fw.tar")
+        self.RunNaplesCmd("/nic/tools/sysupdate.sh -p /tmp/%s"%os.path.basename(GlobalOptions.image))
         if mount_data:
             self.RunNaplesCmd("sync && sync && sync")
             self.RunNaplesCmd("umount /data/")
@@ -921,6 +921,7 @@ def Main():
         host.InstallMainFirmware(mount_data = False, copy_fw = False)
 
 if __name__ == '__main__':
+    start_time = time.time()
     atexit.register(AtExitCleanup)
     try:
         if GlobalOptions.naples_only_setup:
@@ -930,3 +931,5 @@ if __name__ == '__main__':
     except bootNaplesException as ex:
         sys.stderr.write(str(ex))
         sys.exit(1)
+    elapsed_time = time.strftime("Naples Upgrade/boot time : %H:%M:%S", time.gmtime(time.time() - start_time))
+    print(elapsed_time + "\n")
