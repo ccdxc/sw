@@ -266,7 +266,7 @@ inst_t::inst_t(uint8_t fte_id) :
         // with delphi until that is done
         stats_.fte_hbm_stats = (fte_hbm_stats_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, sizeof(fte_hbm_stats_t));
         SDK_ASSERT(stats_.fte_hbm_stats != NULL);
-    } else { 
+    } else if (hal::g_hal_state->forwarding_mode() == hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED) { 
         sdk::types::mem_addr_t vaddr;
         sdk::types::mem_addr_t start_addr = get_mem_addr(CAPRI_HBM_REG_PER_FTE_STATS);
         HAL_TRACE_VERBOSE("Start address: {:#x}", (void *)start_addr);

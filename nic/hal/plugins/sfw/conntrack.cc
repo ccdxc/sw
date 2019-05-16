@@ -138,8 +138,10 @@ process_tcp_close(fte::ctx_t& ctx)
     tcp_flags = cpu_rxhdr->tcp_flags;
     if (tcp_flags & TCP_FLAG_FIN) {
         state = session::FLOW_TCP_STATE_FIN_RCVD;
+        incr_global_session_tcp_fin_seen_stats(fte::fte_id());
     } else if (tcp_flags & TCP_FLAG_RST) {
         state = session::FLOW_TCP_STATE_RESET;
+        incr_global_session_tcp_rst_seen_stats(fte::fte_id());
     }
 
     HAL_TRACE_DEBUG("Received {} for session with key: {}", state, ctx.key());
@@ -213,6 +215,7 @@ process_tcp_syn(fte::ctx_t& ctx)
 
     tcp_flags = cpu_rxhdr->tcp_flags;
     if (tcp_flags & TCP_FLAG_SYN) {
+        incr_global_session_tcp_syn_seen_stats(fte::fte_id());
         // Start TCP connection setup timer
         // if we have a session
         ctx.register_completion_handler(start_tcp_cxnsetup_timer);
