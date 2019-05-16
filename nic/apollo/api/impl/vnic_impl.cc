@@ -728,8 +728,12 @@ vnic_impl::fill_vnic_spec_(
         egress_vnic_data->egress_local_vnic_info_action.subnet_id;
     // from VNIC_BY_VLAN_TX table
     spec->vpc.id = vnic_by_vlan_data->local_vnic_by_vlan_tx_info.vpc_id;
+    // TODO: check read of local_vnic_by_vlan_tx_info.skip_src_dst_check1
     spec->src_dst_check =
         vnic_by_vlan_data->local_vnic_by_vlan_tx_info.skip_src_dst_check1 == true
+            ? false : true;
+    spec->src_dst_check =
+        vnic_by_slot_data->local_vnic_by_slot_rx_info.skip_src_dst_check1 == true
             ? false : true;
     spec->rsc_pool_id =
         vnic_by_vlan_data->local_vnic_by_vlan_tx_info.resource_group1;

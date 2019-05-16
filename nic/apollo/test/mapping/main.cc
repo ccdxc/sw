@@ -60,9 +60,6 @@ const std::string g_device_macaddr("00:00:01:02:0a:0b");
 // Mapping test class
 //----------------------------------------------------------------------------
 
-static inline void vnic_stepper_seed_init(int seed_base, uint64_t seed_mac,
-                                          vnic_stepper_seed_t *seed);
-
 class mapping_test : public pds_test_base {
 protected:
     mapping_test() {}
@@ -143,9 +140,8 @@ protected:
             ip_pfx.addr = ipaddr;
             subnet_cidr = ippfx2str(&ip_pfx);
         }
-        vnic_stepper_seed_init(vnic_stepper, vnic_stepper_mac, &seed);
-        ASSERT_TRUE(vnic_util::many_create(&seed, num_vnics) ==
-                    sdk::SDK_RET_OK);
+        VNIC_SEED_INIT(vnic_stepper, num_vnics, vnic_stepper_mac, &seed);
+        VNIC_MANY_CREATE(&seed);
         ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
         subnet_key.id = api_test::g_subnet_id;
@@ -164,8 +160,7 @@ protected:
         ASSERT_TRUE(tep_util::many_read(num_teps, api_test::g_tep_cidr_v4,
                                         PDS_TEP_TYPE_WORKLOAD,
                                         encap) == sdk::SDK_RET_OK);
-        ASSERT_TRUE(vnic_util::many_read(&seed, num_vnics, sdk::SDK_RET_OK) ==
-                    sdk::SDK_RET_OK);
+        VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
     }
     static void TearDownTestCase() {
 #if 0
@@ -246,18 +241,6 @@ protected:
 /// @{
 
 /// --------------------------- IPv4 MAPPINGS -----------------------
-
-static inline void
-vnic_stepper_seed_init (int seed_base, uint64_t seed_mac,
-                        vnic_stepper_seed_t *seed)
-{
-    seed->id = seed_base;
-    seed->vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
-    seed->vnic_encap.val.vlan_tag = seed_base;
-    seed->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-    seed->fabric_encap.val.mpls_tag = seed_base;
-    seed->mac_u64 = seed_mac;
-}
 
 static void
 local_mapping_stepper_seed_init (local_mapping_stepper_seed_t *seed,
