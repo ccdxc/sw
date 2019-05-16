@@ -17,6 +17,21 @@
 
 namespace api_test {
 
+#define SUBNET_MANY_CREATE(seed)                                        \
+    ASSERT_TRUE(subnet_util::many_create(seed) == sdk::SDK_RET_OK)
+
+#define SUBNET_MANY_READ(seed, expected_res)                            \
+    ASSERT_TRUE(subnet_util::many_read(                                 \
+                             seed,expected_res) == sdk::SDK_RET_OK)
+
+#define SUBNET_MANY_UPDATE(seed)                                        \
+    ASSERT_TRUE(subnet_util::many_update(seed) == sdk::SDK_RET_OK)
+
+#define SUBNET_MANY_DELETE(seed)                                        \
+    ASSERT_TRUE(subnet_util::many_delete(seed) == sdk::SDK_RET_OK)
+
+#define SUBNET_SEED_INIT subnet_util::stepper_seed_init
+
 typedef struct subnet_util_stepper_seed_s {
     pds_subnet_key_t key;
     pds_vpc_key_t vpc;
@@ -30,6 +45,7 @@ typedef struct subnet_util_stepper_seed_s {
     pds_policy_key_t ing_v6_policy;
     pds_policy_key_t egr_v4_policy;
     pds_policy_key_t egr_v6_policy;
+    uint32_t num_subnets;
 } subnet_util_stepper_seed_t;
 
 /// Subnet test utility class
@@ -75,7 +91,7 @@ public:
     /// \brief Update the subnet
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(pds_subnet_spec_t *spec);
+    sdk_ret_t update();
 
     /// \brief Delete subnet
     ///
@@ -89,8 +105,7 @@ public:
     /// \param[in] seed subnet seed
     /// \param[in] num_subnet number of subnets to create
     /// \return #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_create(subnet_util_stepper_seed_t *seed,
-                                 uint32_t num_subnet);
+    static sdk_ret_t many_create(subnet_util_stepper_seed_t *seed);
 
     /// \brief Read many subnets
     ///
@@ -99,7 +114,6 @@ public:
     /// \param[in] expected_res expected result after read operation
     /// \return #SDK_RET_OK on success, failure status code on error
     static sdk_ret_t many_read(subnet_util_stepper_seed_t *seed,
-                               uint32_t num_subnets,
                                sdk::sdk_ret_t expected_res = sdk::SDK_RET_OK);
 
     /// \brief Update multiple subnets
@@ -108,8 +122,7 @@ public:
     /// \param[in] seed subnet seed
     /// \param[in] num_subnet number of subnets to update
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_update(subnet_util_stepper_seed_t *seed,
-                                 uint32_t num_subnets);
+    static sdk_ret_t many_update(subnet_util_stepper_seed_t *seed);
 
     /// \brief Delete multiple subnets
     /// Delete "num_subnets" subnets starting from id
@@ -117,13 +130,13 @@ public:
     /// \param[in] seed subnet seed
     /// \param[in] num_subnet number of subnets to delete
     /// \returns #SDK_RET_OK on success, failure status code on error
-    static sdk_ret_t many_delete(subnet_util_stepper_seed_t *seed,
-                                 uint32_t num_subnets);
+    static sdk_ret_t many_delete(subnet_util_stepper_seed_t *seed);
 
     static sdk_ret_t stepper_seed_init(subnet_util_stepper_seed_t *seed,
                                        pds_subnet_key_t key,
                                        pds_vpc_key_t vpc_key,
-                                       std::string subnet_start_addr);
+                                       std::string subnet_start_addr,
+                                       int num_subnets);
 
 private:
     void __init();

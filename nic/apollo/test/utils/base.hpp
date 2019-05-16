@@ -22,6 +22,19 @@ typedef struct test_case_params_t_ {
     std::string profile;
 } test_case_params_t;
 
+#define BATCH_START()                                                   \
+    batch_params.epoch = ++g_batch_epoch;                               \
+    ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK)
+
+#define BATCH_COMMIT()                                                  \
+    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK)
+
+#define BATCH_COMMIT_FAIL()                                             \
+    ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK)
+
+#define BATCH_ABORT()                                                   \
+    ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
+
 /// Base class for all gtests. Implements init and teardown routines common
 /// to all test cases
 class pds_test_base : public ::testing::Test {

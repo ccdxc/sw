@@ -141,6 +141,37 @@ subnet_util::read(pds_subnet_info_t *info, bool compare_spec)
 }
 
 sdk::sdk_ret_t
+subnet_util::update()
+{
+    pds_subnet_spec_t spec;
+
+    memset(&spec, 0, sizeof(pds_subnet_spec_t));
+    spec.vpc.id = this->vpc.id;
+    spec.key.id = this->id;
+    spec.v4_pfx.len = this->pfx.len;
+    spec.v4_pfx.v4_addr = this->pfx.addr.addr.v4_addr;;
+    // Set the subnets IP (virtual router interface IP)
+    if (!vr_ip.empty()) {
+        extract_ipv4_addr(this->vr_ip.c_str(), &spec.v4_vr_ip);
+    }
+    // Derive mac address from vr_ip if it has not been configured
+    if (vr_mac.empty()) {
+        MAC_UINT64_TO_ADDR(spec.vr_mac,
+                       (uint64_t)spec.v4_vr_ip);
+    } else {
+        mac_str_to_addr((char *)vr_mac.c_str(), spec.vr_mac);
+    }
+    spec.v4_route_table.id = this->v4_route_table.id;
+    spec.v6_route_table.id = this->v6_route_table.id;
+    spec.ing_v4_policy.id = this->ing_v4_policy.id;
+    spec.ing_v6_policy.id = this->ing_v6_policy.id;
+    spec.egr_v4_policy.id = this->egr_v4_policy.id;
+    spec.egr_v6_policy.id = this->egr_v6_policy.id;
+
+    return (pds_subnet_update(&spec));
+}
+
+sdk::sdk_ret_t
 subnet_util::del() {
     pds_subnet_key_t subnet_key = {};
     subnet_key.id = this->id;
@@ -166,7 +197,8 @@ subnet_util_stepper_seed_increment (subnet_util_stepper_seed_t *seed, int width)
 sdk::sdk_ret_t
 subnet_util::stepper_seed_init(subnet_util_stepper_seed_t *seed,
                                pds_subnet_key_t start_key,
-                               pds_vpc_key_t vpc_key, std::string start_pfxstr)
+                               pds_vpc_key_t vpc_key, std::string start_pfxstr,
+                               int num_subnets)
 {
     if (seed == NULL) {
         cout << "seed is NULL";
@@ -185,14 +217,19 @@ subnet_util::stepper_seed_init(subnet_util_stepper_seed_t *seed,
     seed->egr_v6_policy.id = start_key.id + 3072;
     seed->cidr_str = start_pfxstr;
     SDK_ASSERT(str2ipv4pfx((char *)start_pfxstr.c_str(), &seed->pfx) == 0);
+    seed->num_subnets = num_subnets;
 
     return sdk::SDK_RET_OK;
 }
 
+static inline void
+subnet_util_pfx_update(subnet_util obj)
+{
+
+}
 
 static inline sdk::sdk_ret_t
 subnet_util_object_stepper (subnet_util_stepper_seed_t *init_seed,
-                            uint32_t num_objs,
                             utils_op_t op, sdk_ret_t expected_result)
 {
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
@@ -200,9 +237,11 @@ subnet_util_object_stepper (subnet_util_stepper_seed_t *init_seed,
     pds_subnet_info_t info = {};
     uint32_t start_key = init_seed->key.id;
     uint32_t width = 1;
+    uint32_t num_objs = init_seed->num_subnets;
 
     subnet_util::stepper_seed_init(&seed, init_seed->key, init_seed->vpc,
-                                   ippfx2str(&init_seed->pfx));
+                                   ippfx2str(&init_seed->pfx),
+                                   init_seed->num_subnets);
     for (uint32_t idx = start_key;
          idx < start_key + num_objs; idx = idx + width) {
         subnet_util subnet_obj(&seed);
@@ -214,7 +253,7 @@ subnet_util_object_stepper (subnet_util_stepper_seed_t *init_seed,
             rv = subnet_obj.read(&info, TRUE);
             break;
         case OP_MANY_UPDATE:
-            // SDK_ASSERT((rv = subnet_obj.update()) == sdk::SDK_RET_OK);
+            SDK_ASSERT((rv = subnet_obj.update()) == sdk::SDK_RET_OK);
             break;
         case OP_MANY_DELETE:
             rv = subnet_obj.del();
@@ -232,31 +271,24 @@ subnet_util_object_stepper (subnet_util_stepper_seed_t *init_seed,
 }
 
 sdk::sdk_ret_t
-subnet_util::many_create(subnet_util_stepper_seed_t *seed,
-                         uint32_t num_subnets) {
-    return (subnet_util_object_stepper(seed, num_subnets, OP_MANY_CREATE,
-                                       sdk::SDK_RET_OK));
+subnet_util::many_create(subnet_util_stepper_seed_t *seed) {
+    return (subnet_util_object_stepper(seed, OP_MANY_CREATE, sdk::SDK_RET_OK));
 }
 
 sdk::sdk_ret_t
-subnet_util::many_read(subnet_util_stepper_seed_t *seed, uint32_t num_subnets,
+subnet_util::many_read(subnet_util_stepper_seed_t *seed,
                        sdk::sdk_ret_t expected_result) {
-    return (subnet_util_object_stepper(seed, num_subnets, OP_MANY_READ,
-                                       expected_result));
+    return (subnet_util_object_stepper(seed, OP_MANY_READ, expected_result));
 }
 
 sdk::sdk_ret_t
-subnet_util::many_update(subnet_util_stepper_seed_t *seed,
-                         uint32_t num_subnets) {
-    return (subnet_util_object_stepper(seed, num_subnets, OP_MANY_UPDATE,
-                                       sdk::SDK_RET_OK));
+subnet_util::many_update(subnet_util_stepper_seed_t *seed) {
+    return (subnet_util_object_stepper(seed, OP_MANY_UPDATE, sdk::SDK_RET_OK));
 }
 
 sdk::sdk_ret_t
-subnet_util::many_delete(subnet_util_stepper_seed_t *seed,
-                         uint32_t num_subnets) {
-    return (subnet_util_object_stepper(seed, num_subnets,
-                                       OP_MANY_DELETE, sdk::SDK_RET_OK));
+subnet_util::many_delete(subnet_util_stepper_seed_t *seed) {
+    return (subnet_util_object_stepper(seed, OP_MANY_DELETE, sdk::SDK_RET_OK));
 }
 
 ostream& operator << (ostream& os, subnet_util& obj)

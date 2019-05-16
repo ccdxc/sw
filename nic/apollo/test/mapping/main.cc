@@ -134,10 +134,9 @@ protected:
         subnet_key.id = api_test::g_subnet_id;
         vpc_key.id = api_test::g_vpc_id;
         for (uint16_t idx = 0; idx < PDS_MAX_VPC; idx++) {
-            subnet_util::stepper_seed_init(
-                &subnet_seed, subnet_key, vpc_key, subnet_cidr);
-            ASSERT_TRUE(subnet_util::many_create(
-                    &subnet_seed, 1) == sdk ::SDK_RET_OK);
+            SUBNET_SEED_INIT(
+                &subnet_seed, subnet_key, vpc_key, subnet_cidr, 1);
+            SUBNET_MANY_CREATE(&subnet_seed);
             subnet_key.id += 1;
             vpc_key.id += 1;
             ip_prefix_ip_next(&ip_pfx, &ipaddr);
@@ -154,10 +153,9 @@ protected:
         ASSERT_TRUE(vpc_util::many_read(vpc_key, PDS_MAX_VPC,
                                         sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
         for (uint16_t idx = 0; idx < PDS_MAX_VPC; idx++) {
-            subnet_util::stepper_seed_init(
-                &subnet_seed, subnet_key, vpc_key, subnet_cidr);
-            ASSERT_TRUE(subnet_util::many_read(
-                    &subnet_seed, 1, sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+            SUBNET_SEED_INIT(
+                &subnet_seed, subnet_key, vpc_key, subnet_cidr, 1);
+            SUBNET_MANY_READ(&subnet_seed, sdk::SDK_RET_OK);
             subnet_key.id += 1;
             vpc_key.id += 1;
         }
