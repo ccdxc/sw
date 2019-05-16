@@ -2,7 +2,7 @@ TPADIR := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/restap
 TMAGENTDIR := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/restapi/tmagent
 SRC := $(shell ls *.proto)
 DEST := $(SRC:%.proto=%.pb.go)
-NICFILES := ${TPADIR}/tpm_api.go ${TPADIR}/tpm_api_test.go ${TMAGENTDIR}/tpm_api.go ${TMAGENTDIR}/tpm_api_test.go
+NICFILES := ${TPADIR}/tpm_api.go ${TPADIR}/tpm_api_test.go ${TMAGENTDIR}/tpm_api.go ${TMAGENTDIR}/tpm_api_test.go 
 
 TMPLATEDIR := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/templates/restapi/tmagent
 APIROUTES := $(shell grep "Add.*MetricsAPIRoutes[ ]*(.*)" ../generated/restapi/tmagent/*.go | cut -d ' ' -f4 | sed -e 's/Add//' | sed -e 's/APIRoutes.*$$//g')
@@ -11,7 +11,7 @@ SRCFILE := register.go
 
 .PHONY: gen-tmagent
 
-default: ${DEST} ${NICFILES} gen-tmagent
+default: ${DEST} ${NICFILES} gen-tmagent gen-restserver
 
 %.pb.go: %.proto Makefile
 	protoc -I/usr/local/include -I. -I../../../../vendor -I${GOPATH}/src \
@@ -23,7 +23,7 @@ default: ${DEST} ${NICFILES} gen-tmagent
 	sed -i.bak_ '/import monitoring "."/d' $@
 	sed -i.bak_ 's/import monitoring2.*/import monitoring "github.com\/pensando\/sw\/api\/generated\/monitoring"/g' $@
 	sed -i.bak_ 's/monitoring2/monitoring/g' $@
-	rm -f ${TMAGENTDIR}/*.bak_
+	rm -f *.bak_
 	goimports -local "github.com/pensando/sw" -w ${TMAGENTDIR}/*.go
 
 ${TPADIR}/%_api.go ${TPADIR}/%_api_test.go: %.proto
@@ -34,16 +34,24 @@ ${TPADIR}/%_api.go ${TPADIR}/%_api_test.go: %.proto
 	-I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	-I../../../../vendor/github.com/gogo/protobuf/protobuf \
 	--grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/templates/restapi/tpagent/rest.yml,log_dir=${TPADIR}/tmp,logtostderr=false,v=7:${TPADIR} *.proto
-	goimports -local "github.com/pensando/sw" -w ${TPADIR}/$*_api.go ${TPADIR}/$*_api_test.go
+	goimports -local "github.com/pensando/sw" -w ${TPADIR}/*.go 
+
+gen-restserver:
+	 protoc -I/usr/local/include -I. -I../../../../vendor -I${GOPATH}/src \
+        -I${GOPATH}/src/github.com/pensando/sw/api/protos/ \
+        -I../../../../vendor/github.com/pensando/grpc-gateway/third_party \
+        -I${GOPATH}/src/github.com/pensando/sw/api/protos \
+        -I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
+        -I../../../../vendor/github.com/gogo/protobuf/protobuf \
+        --grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/templates/restapi/tmagent/rest.yml,log_dir=${TMAGENTDIR}/tmp,logtostderr=false,v=7:${TMAGENTDIR} *.proto 
+	rm -f ${TMAGENTDIR}/tpm_apigen.go
+	goimports -local "github.com/pensando/sw" -w ${TMAGENTDIR}/*.go 
 
 ${TMAGENTDIR}/tpm_api.go:${TPADIR}/tpm_api.go
 	cp $< $@
 
-
 ${TMAGENTDIR}/tpm_api_test.go:${TPADIR}/tpm_api_test.go
 	cp $< $@
-	rm -f ${TMAGENTDIR}/test/*.bak_
-
 
 # create .proto file and translate it using templates
 gen-tmagent:
@@ -56,11 +64,13 @@ gen-tmagent:
 	-I../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
 	--grpc-gateway_out=templates=${TMPLATEDIR}/register.yml,log_dir=${TMAGENTDIR}/tmp,logtostderr=false,v=7:${TMAGENTDIR} ${PROTOFILE}
 	sed -i.bak_ -e '/^$$/d' ${TMAGENTDIR}/${SRCFILE}
-	rm -f *.bak_
-	goimports -local "github.com/pensando/sw" -w ${TMAGENTDIR}/${SRCFILE}
+	rm -f ${TMAGENTDIR}/*.bak_
+	goimports -local "github.com/pensando/sw" -w ${TMAGENTDIR}/*.go
 
 clean:
 	rm -f *.pb.go
 	rm -f ${NICFILES}
+	rm -f ${TPADIR}/*_api.go ${TPADIR}/*_api_test.go
+	rm -f ${TMAGENTDIR}/restapi.go ${TMAGENTDIR}/restapi_test.go
 
 gen-clean: clean
