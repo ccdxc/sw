@@ -287,7 +287,10 @@ func (c *IPClient) updateDelphiNaplesObject() error {
 
 	// For static case write only the IP in mgmt IP and not the subnet
 	if !c.isDynamic {
-		ip, _, _ := net.ParseCIDR(c.nmdState.config.Status.IPConfig.IPAddress)
+		ip, _, err := net.ParseCIDR(c.nmdState.config.Status.IPConfig.IPAddress)
+		if err != nil {
+			log.Errorf("failed to parse addr %v, %v", c.nmdState.config.Status.IPConfig.IPAddress, err)
+		}
 		mgmtIP = ip.String()
 
 	} else {
@@ -782,7 +785,11 @@ func (c *IPClient) Start() error {
 		// DHCP configuration mode can be added to mock mode in future.
 		log.Info("IPClient in MOCK Mode. Calling Update Naples Status directly.")
 		// Hardcoding "1.1.1.1" as it is Mock mode and it will be ignored anyway
-		c.updateNaplesStatusIP("1.1.1.1", "", nil)
+		if c.nmdState.config.Spec.IPConfig != nil && c.nmdState.config.Spec.IPConfig.IPAddress != "" {
+			c.updateNaplesStatusIP(c.nmdState.config.Spec.IPConfig.IPAddress, "", nil)
+		} else {
+			c.updateNaplesStatusIP("1.1.1.1", "", nil)
+		}
 		return c.updateNaplesStatus(c.nmdState.config.Spec.Controllers)
 	}
 
