@@ -70,7 +70,7 @@ public:
     }
 
     /**< @brief    return security policy table's size */
-    mem_addr_t security_policy_table_size(uint8_t af, rule_dir_t dir) const {
+    uint32_t security_policy_table_size(uint8_t af, rule_dir_t dir) const {
         if (af == IP_AF_IPV4) {
             if (dir == RULE_DIR_INGRESS) {
                 return ing_v4_table_size_;

@@ -180,7 +180,7 @@ private:
     friend class vpc_state;    ///< vpc_state is friend of vpc_entry
 } __PACK__;
 
-/// \@}    // end of PDS_VPC_ENTRY
+/// \@}
 
 }    // namespace api
 

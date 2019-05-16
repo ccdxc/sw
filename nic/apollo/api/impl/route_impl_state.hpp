@@ -55,7 +55,7 @@ public:
     mem_addr_t v4_region_addr(void) const { return v4_region_addr_; }
 
     /**< @brief    return per v4 lpm table's size */
-    mem_addr_t v4_table_size(void) const { return v4_table_size_; }
+    uint32_t v4_table_size(void) const { return v4_table_size_; }
 
     /**< @brief    return number of v4 routes per table */
     uint32_t v4_max_routes(void) const { return v4_max_routes_; }
@@ -64,7 +64,7 @@ public:
     mem_addr_t v6_region_addr(void) const { return v6_region_addr_; }
 
     /**< @brief    return per v6 lpm table's size */
-    mem_addr_t v6_table_size(void) const { return v6_table_size_; }
+    uint32_t v6_table_size(void) const { return v6_table_size_; }
 
     /**< @brief    return number of v6 routes per table */
     uint32_t v6_max_routes(void) const { return v6_max_routes_; }
