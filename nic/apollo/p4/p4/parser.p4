@@ -535,6 +535,7 @@ parser deparse_ingress {
     extract(capri_intrinsic);
     extract(capri_p4_intrinsic);
     extract(capri_rxdma_intrinsic);
+    extract(capri_txdma_intrinsic);
 
     extract(p4_to_rxdma_header);
     extract(predicate_header);
@@ -546,6 +547,7 @@ parser deparse_ingress {
     // splitter offset here for classic nic app
     extract(p4_to_arm);
 
+    extract(txdma_to_p4e_header);
     extract(p4_to_txdma_header);
     extract(p4i_apollo_i2e);
 

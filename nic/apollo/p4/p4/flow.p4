@@ -1,15 +1,20 @@
 /*****************************************************************************/
 /* Policy (IPv6 and non-IP)                                                  */
 /*****************************************************************************/
-@pragma capi appdatafields session_index flow_role
+@pragma capi appdatafields session_index nexthop_group_index flow_role
 @pragma capi hwfields_access_api
-action flow_hash(entry_valid, session_index, flow_role,
+action flow_hash(entry_valid, session_index, nexthop_group_index, flow_role,
                  hash1, hint1, hash2, hint2, hash3, hint3, hash4, hint4,
                  more_hashes, more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(service_header.flow_done, TRUE);
         modify_field(control_metadata.session_index, session_index);
+        if (nexthop_group_index != 0) {
+            modify_field(txdma_to_p4e_header.nexthop_group_index,
+                         nexthop_group_index);
+            modify_field(control_metadata.fastpath, TRUE);
+        }
         modify_field(control_metadata.flow_role, flow_role);
         modify_field(p4i_apollo_i2e.entropy_hash, scratch_metadata.flow_hash);
 
@@ -98,14 +103,20 @@ table flow_ohash {
 /*****************************************************************************/
 /* Policy (IPv4)                                                             */
 /*****************************************************************************/
-@pragma capi appdatafields session_index flow_role
+@pragma capi appdatafields session_index nexthop_group_index flow_role
 @pragma capi hwfields_access_api
-action ipv4_flow_hash(entry_valid, session_index, flow_role,
-                      hash1, hint1, hash2, hint2, more_hashes, more_hints) {
+action ipv4_flow_hash(entry_valid, session_index, nexthop_group_index,
+                      flow_role, hash1, hint1, hash2, hint2,
+                      more_hashes, more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(service_header.flow_done, TRUE);
         modify_field(control_metadata.session_index, session_index);
+        if (nexthop_group_index != 0) {
+            modify_field(txdma_to_p4e_header.nexthop_group_index,
+                         nexthop_group_index);
+            modify_field(control_metadata.fastpath, TRUE);
+        }
         modify_field(control_metadata.flow_role, flow_role);
         modify_field(p4i_apollo_i2e.entropy_hash, scratch_metadata.flow_hash);
 

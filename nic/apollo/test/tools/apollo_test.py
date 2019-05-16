@@ -6,7 +6,6 @@ import socket
 sys.path.insert(0, '../dol')
 sys.path.insert(0, '../dol/third_party')
 from infra.penscapy.penscapy import *
-from infra.factory.scapyfactory import IcrcHeaderBuilder
 from scapy.contrib.mpls import MPLS
 
 def dump_pkt(pkt):
@@ -117,6 +116,21 @@ mpkt = Ether(dst='00:0E:0E:0E:0E:0E', src='00:E1:E2:E3:E4:E5') / \
 dump_pkt(spkt)
 dump_pkt(rpkt)
 dump_pkt(mpkt)
+
+payload = 'abcdefghijlkmnopqrstuvwzxyabcdefghijlkmnopqrstuvwzxy'
+spkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        Dot1Q(vlan=100) / \
+        IP(dst='10.100.100.100', src='11.11.1.1') / \
+        TCP(sport=0x1234, dport=0x5678) / payload
+rpkt = Ether(dst='00:12:34:56:78:90', src='00:AA:BB:CC:DD:EE') / \
+        IP(dst='12.12.1.1', src='100.101.102.103', id=0, ttl=64) / \
+        UDP(sport=0xF349, dport=4789, chksum=0) / VXLAN(vni=0xABCDEF) / \
+        Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
+        IP(dst='10.100.100.100', src='11.11.1.1') / \
+        TCP(sport=0x1234, dport=0x5678) / payload
+dump_pkt(spkt)
+dump_pkt(rpkt)
+exit(0)
 
 ###############################################################################
 # end golden/main.cc

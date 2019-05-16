@@ -15,8 +15,7 @@ flow_hash:
     phvwr       p.p4i_apollo_i2e_entropy_hash, r1
     bcf         [c1], label_flow_hit
     // Check hash1 and hint1
-    or          r7, d.flow_hash_d.hash1_sbit6_ebit8, d.flow_hash_d.hash1_sbit0_ebit5, 3
-    seq         c1, r1[FLOW_HASH_MSB], r7
+    seq         c1, r1[FLOW_HASH_MSB], d.flow_hash_d.hash1
     sne         c2, d.flow_hash_d.hint1, r0
     bcf         [c1&c2], label_flow_hash_hit
     add         r2, r0, d.flow_hash_d.hint1
@@ -45,6 +44,11 @@ label_flow_miss:
     phvwr       p.service_header_flow_done, TRUE
 
 label_flow_hit:
+    or          r7, d.flow_hash_d.nexthop_group_index_sbit7_ebit9, \
+                    d.flow_hash_d.nexthop_group_index_sbit0_ebit6, 3
+    sne         c1, r7, r0
+    phvwr.c1    p.txdma_to_p4e_header_nexthop_group_index, r7
+    phvwr.c1    p.control_metadata_fastpath, TRUE
     phvwr.e     p.control_metadata_session_index, d.flow_hash_d.session_index
     phvwr       p.service_header_flow_done, TRUE
 
