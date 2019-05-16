@@ -120,7 +120,7 @@ public:
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "tag-" + std::to_string(key_);
+        return "tag-" + std::to_string((uint32_t)key_);
     }
 
     /// \brief          helper function to get key given tag entry
