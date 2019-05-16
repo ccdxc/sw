@@ -154,18 +154,50 @@
         },
         {
             "name": "lpm_v4",
-            "_comment": "(1024+1) * (64 + 16 * 64 + 16 * 16 * 64)",
-            "size": "18M",
+            "_comment": "(64+1) * (64 + 16 * 64 + 16 * 16 * 64)",
+            "size": "2M",
             "block_size": "17472B",
-            "max_elements": "1K",
+            "max_elements": "65",
             "cache": "p4plus-txdma"
         },
         {
             "name": "lpm_v6",
-            "_comment": "(1024+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64)",
-            "size": "37M",
+            "_comment": "(64+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64)",
+            "size": "3M",
             "block_size": "37440B",
-            "max_elements": "1K",
+            "max_elements": "65",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "meter_lpm_v4",
+            "_comment": "(64+1) * (64 + 16 * 64 + 16 * 16 * 64)",
+            "size": "2M",
+            "block_size": "17472B",
+            "max_elements": "65",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "meter_lpm_v6",
+            "_comment": "(64+1) * (64 + 4 * 64 + 4^2  * 64 + 4^3 * 64 + 4^4 * 64 + 4^5 * 64)",
+            "size": "6M",
+            "block_size": "87360",
+            "max_elements": "65",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "tag_lpm_v4",
+            "_comment": "(1+1) * (64 + 16 * 64 + 16^2 * 64 + 16^3 * 64 + 16^4 * 64)",
+            "size": "8947840B",
+            "block_size": "4473920B",
+            "max_elements": "2",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "tag_lpm_v6",
+            "_comment": "(1+1) * (64 + 4 * 64 + 4^2  * 64 + 4^3 * 64 + 4^4 * 64 + 4^5 * 64 + 4^6 *64 + 4^7 * 64 + 4^8 * 64)",
+            "size": "11184768B",
+            "block_size": "5592384B",
+            "max_elements": "2",
             "cache": "p4plus-txdma"
         },
         {
