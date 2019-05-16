@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
@@ -15,7 +17,7 @@ import (
 
 func main() {
 	app := cli.NewApp()
-	app.Version = ""
+	app.Version = "2019-05-16"
 	app.Email = "erikh@pensando.io"
 	app.Usage = "asset uploader for pensando software team"
 	app.ArgsUsage = "[name] [version] [filename to upload]"
@@ -55,15 +57,43 @@ func action(ctx *cli.Context) error {
 			return errors.New("invalid empty argument")
 		}
 	}
+
+	name, version, filename := ctx.Args()[0], ctx.Args()[1], ctx.Args()[2]
+	fi, err := os.Stat(filename)
+	if err != nil {
+		return err
+	}
+
+	size := fi.Size()
+	if !fi.Mode().IsRegular() {
+		var err error
+		filename, size, err = mktemp(filename)
+		if err != nil {
+			return err
+		}
+		defer os.Remove(filename)
+	}
+
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
 	for _, ep := range []string{ctx.GlobalString("assets-server-colo"), ctx.GlobalString("assets-server-hq")} {
-		if err := upload(ctx.Args()[0], ctx.Args()[1], ctx.Args()[2], ep, ctx.Bool("force")); err != nil {
+		logrus.Infof("Uploading %f MB to %s, please be patient...", float64(size)/float64(1024*1024), ep)
+
+		if _, err := f.Seek(0, io.SeekStart); err != nil {
+			return err
+		}
+		if err := upload(name, version, ep, f, ctx.Bool("force")); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func upload(name, version, filename, endpoint string, force bool) error {
+func upload(name, version, endpoint string, reader io.Reader, force bool) error {
 	mc, err := minio.New(endpoint, asset.AccessKeyID, asset.SecretAccessKey, false)
 	if err != nil {
 		return err
@@ -89,24 +119,28 @@ func upload(name, version, filename, endpoint string, force bool) error {
 		close(doneCh)
 	}
 
-	fi, err := os.Stat(filename)
-	if err != nil {
-		return err
-	}
-
-	f, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	logrus.Infof("Uploading %f MB to %s, please be patient...", float64(fi.Size())/float64(1024*1024), endpoint)
-
-	n, err := mc.PutObject(asset.RootBucket, assetPath, f, -1, minio.PutObjectOptions{NumThreads: uint(runtime.NumCPU() * 2)})
+	n, err := mc.PutObject(asset.RootBucket, assetPath, reader, -1, minio.PutObjectOptions{NumThreads: uint(runtime.NumCPU() * 2)})
 	if err != nil {
 		return err
 	}
 
 	logrus.Infof("%d bytes uploaded!", n)
 	return nil
+}
+
+func mktemp(filename string) (string, int64, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return "", 0, err
+	}
+	defer f.Close()
+
+	tmp, err := ioutil.TempFile("", "assets-upload")
+	if err != nil {
+		return "", 0, err
+	}
+	defer tmp.Close()
+
+	size, err := io.Copy(tmp, f)
+	return tmp.Name(), size, err
 }
