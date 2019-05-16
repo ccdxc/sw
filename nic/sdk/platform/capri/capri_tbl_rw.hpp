@@ -163,6 +163,7 @@ uint8_t capri_get_action_pc(uint32_t tableid, uint8_t actionid);
 bool p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                              p4plus_cache_action_t action);
 
+void capri_table_csr_cache_inval_init(void);
 
 } // namespace capri
 } // namespace platform

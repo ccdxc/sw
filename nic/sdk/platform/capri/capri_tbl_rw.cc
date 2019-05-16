@@ -787,7 +787,7 @@ capri_p4plus_shadow_init (void)
     return CAPRI_OK;
 }
 
-static void
+void
 capri_table_csr_cache_inval_init(void)
 {
     csr_cache_inval_ingress_va =

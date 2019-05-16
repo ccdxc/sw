@@ -22,6 +22,7 @@
 #include <gen/p4gen/apollo/include/p4pd.h>
 #include <nic/p4/common/defines.h>
 #include <nic/sdk/platform/capri/capri_p4.hpp>
+#include <nic/sdk/platform/capri/capri_tbl_rw.hpp>
 #include <nic/sdk/asic/pd/pd.hpp>
 #include "flow_prog_hw.h"
 
@@ -90,6 +91,8 @@ initialize_pds(void)
 
     ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
     SDK_ASSERT(ret == SDK_RET_OK);
+
+    capri::capri_table_csr_cache_inval_init();
 
     return 0;
 }
