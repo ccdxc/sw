@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifndef __TIME_PROFILE_HPP__
+#define __TIME_PROFILE_HPP__
+
 namespace sdk {
 namespace utils {
 namespace time_profile {
@@ -31,6 +34,7 @@ public:
 
 #define TIME_PROFILE_FUNCTION_ENUMS(__handler) \
         __handler(TABLE_LIB_MEMHASH_INSERT) \
+        __handler(TABLE_LIB_FTL_INSERT) \
         __handler(P4PD_HWKEY_HWMASK_BUILD) \
         __handler(P4PD_ENTRY_READ) \
         __handler(ASICPD_HBM_TABLE_ENTRY_READ) \
@@ -56,9 +60,11 @@ typedef enum time_profile_id_s {
 } time_profile_id_t;
 
 extern time_profile_info time_profile_db[];
+extern bool time_profile_enable;
 
 void print();
 
+#define time_profile_enable(v) time_profile_enable = v;
 #define time_profile_begin(_id) \
         sdk::utils::time_profile::time_profile_db[_id].start()
 #define time_profile_end(_id) \
@@ -68,6 +74,7 @@ void print();
 #define time_profile_print() \
         sdk::utils::time_profile::print();
 #else
+#define time_profile_enable(v)
 #define time_profile_begin(_id)
 #define time_profile_end(_id)
 #define time_profile_total(_id) 0lu
@@ -77,3 +84,5 @@ void print();
 } // namespace time_profile
 } // namespace utils
 } // namespace sdk
+
+#endif // __TIME_PROFILE_HPP__

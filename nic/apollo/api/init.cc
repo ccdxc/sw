@@ -158,6 +158,11 @@ pds_init (pds_init_params_t *params)
     api::asic_global_config_init(params, &asic_cfg);
     SDK_ASSERT(impl_base::init(params, &asic_cfg) == SDK_RET_OK);
 
+    // Ignore the threads if it is a slave initialization
+    if (sdk::asic::is_slave_init()) {
+        return SDK_RET_OK;
+    }
+
     // spin periodic thread. have to be before linkmgr init
     core::thread_periodic_spawn(&api::g_pds_state);
 
@@ -200,9 +205,11 @@ pds_teardown (void)
     // 5. bring asic down (scheduler etc.)
     // 6. kill FTE threads and other other threads
     // 7. flush all logs
-    core::threads_stop();
-    sdk::linkmgr::linkmgr_threads_stop();
-    impl_base::destroy();
+    if (!sdk::asic::is_slave_init()) {
+        core::threads_stop();
+        sdk::linkmgr::linkmgr_threads_stop();
+        impl_base::destroy();
+    }
     api::pds_state::destroy(&api::g_pds_state);
     return SDK_RET_OK;
 }

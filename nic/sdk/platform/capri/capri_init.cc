@@ -452,6 +452,11 @@ capri_init (capri_cfg_t *cfg)
         return SDK_RET_ERR;
     }
 
+    // Skip the remaining for the slave initialization
+    if (sdk::asic::is_slave_init()) {
+        goto end;
+    }
+
     ret = capri_hbm_regions_init(cfg);
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Capri HBM region init failure, err : %d", ret);
@@ -499,6 +504,7 @@ capri_init (capri_cfg_t *cfg)
     ret = capri_prd_init();
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "Capri PRD init failure, err : %d", ret);
+end:
     if (cfg->completion_func) {
         cfg->completion_func(sdk::SDK_STATUS_ASIC_INIT_DONE);
     }
@@ -512,6 +518,22 @@ capri_init (capri_cfg_t *cfg)
 
 namespace sdk {
 namespace asic {
+
+static bool slave_init;
+
+__attribute__((constructor)) void asic_slave_init_(void) {
+    if (getenv("ASIC_SLAVE_INIT")) {
+        slave_init = true;
+    } else {
+        slave_init = false;
+    }
+}
+
+bool
+is_slave_init (void)
+{
+    return slave_init;
+}
 
 //------------------------------------------------------------------------------
 // perform all the CAPRI specific initialization

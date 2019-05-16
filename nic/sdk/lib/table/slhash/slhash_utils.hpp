@@ -4,7 +4,7 @@
 #ifndef __SLHASH_UTILS_HPP__
 #define __SLHASH_UTILS_HPP__
 
-#ifndef PERF
+#ifndef PERF_DBG
 #define SLHASH_TRACES_ENABLED 1
 #endif
 

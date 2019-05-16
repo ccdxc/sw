@@ -73,6 +73,8 @@ typedef struct asic_hbm_bw_s {
     asic_bw_t avg;
 } asic_hbm_bw_t;
 
+bool is_slave_init(void);
+
 }    // namespace asic
 }    // namespace sdk
 

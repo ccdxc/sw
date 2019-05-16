@@ -6,7 +6,7 @@
 class collision: public MemHashGtestBase {
 };
 
-#ifndef PERF
+#ifndef PERF_DBG
 TEST_F(collision, insert_full_mesh) {
     sdk_ret_t rs;
     rs = InsertWithHash(1, H5_MAX_HINTS, MAX_RECIRCS);

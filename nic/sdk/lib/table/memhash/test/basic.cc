@@ -7,7 +7,7 @@
 class basic: public MemHashGtestBase {
 };
 
-#ifndef PERF
+#ifndef PERF_DBG
 TEST_F(basic, insert)
 {
     sdk_ret_t rs;

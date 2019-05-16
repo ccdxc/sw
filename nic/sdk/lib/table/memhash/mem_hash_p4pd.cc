@@ -9,7 +9,7 @@
 #include "mem_hash_p4pd.hpp"
 #include "mem_hash_utils.hpp"
 
-#ifdef MEMHASH_PERF_ENABLE
+#ifdef MEMHASH_PERF_DBG_ENABLE
 #define MEMHASH_P4PD_SET_DISABLE true
 #define MEMHASH_P4PD_GET_DISABLE true
 #define MEMHASH_P4PD_KEY_BUILD_DISABLE true

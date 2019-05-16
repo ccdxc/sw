@@ -80,7 +80,7 @@ mem_hash_hint_table::destroy_(mem_hash_hint_table *table)
 //---------------------------------------------------------------------------
 sdk_ret_t
 mem_hash_hint_table::alloc_(mem_hash_api_context *ctx) {
-#ifdef PERF
+#ifdef PERF_DBG
     static uint32_t hint_index = 1;
     ctx->hint = hint_index++;
     return SDK_RET_OK;

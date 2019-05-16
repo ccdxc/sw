@@ -46,7 +46,7 @@ h5_genkey ()
     key.dport = dport++;
     src++;
     dst++;
-#ifdef PERF
+#ifdef PERF_DBG
     key.src[12] = src >> 24 & 0xFF;
     key.src[13] = src >> 16 & 0xFF;
     key.src[14] = src >> 8 & 0xFF;

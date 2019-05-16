@@ -52,7 +52,7 @@ protected:
         params.max_recircs = MAX_RECIRCS;
         params.key2str = h5_key2str;
         params.appdata2str = h5_appdata2str;
-#ifdef PERF
+#ifdef PERF_DBG
         params.entry_trace_en = false;
 #else
         params.entry_trace_en = true;
@@ -126,7 +126,7 @@ private:
 
         for (i = 0; i < count; i++) {
             entry = h5_gen_cache_entry(NULL, &params, false);
-#ifdef PERF
+#ifdef PERF_DBG
             params.hash_32b = count % (1024*256);
             params.hash_valid = true;
 #endif
@@ -329,7 +329,7 @@ protected:
     }
 
     void PrintStats() {
-#ifndef PERF
+#ifndef PERF_DBG
         mtable_count = mem_hash_mock_get_valid_count(MEM_HASH_P4TBL_ID_H5);
         htable_count = mem_hash_mock_get_valid_count(MEM_HASH_P4TBL_ID_H5_OHASH);
 
@@ -349,7 +349,7 @@ protected:
     }
 
     sdk_ret_t ValidateStats() {
-#ifndef PERF
+#ifndef PERF_DBG
         PrintStats();
         EXPECT_TRUE(api_stats.insert >= api_stats.remove);
         EXPECT_EQ(mtable_count + htable_count, table_stats.entries);

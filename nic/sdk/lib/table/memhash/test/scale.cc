@@ -6,7 +6,7 @@
 class scale: public MemHashGtestBase {
 };
 
-#ifndef PERF
+#ifndef PERF_DBG
 TEST_F(scale, num1K) {
     sdk_ret_t rs;
     rs = Insert(1024, sdk::SDK_RET_OK);

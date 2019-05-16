@@ -7,7 +7,7 @@
 class txn: public MemHashGtestBase {
 };
 
-#ifndef PERF
+#ifndef PERF_DBG
 TEST_F(txn, start_end)
 {
     sdk_ret_t rs;

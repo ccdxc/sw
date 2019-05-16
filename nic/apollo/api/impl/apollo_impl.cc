@@ -578,6 +578,14 @@ apollo_impl::pipeline_init(void) {
     p4pd_ret = p4pluspd_txdma_init(&p4pd_txdma_cfg);
     SDK_ASSERT(p4pd_ret == P4PD_SUCCESS);
 
+    ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
+    SDK_ASSERT(ret == SDK_RET_OK);
+
+    // Skip the remaining if it is a slave initialization
+    if (sdk::asic::is_slave_init()) {
+        return SDK_RET_OK;
+    }
+
     ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = p4plus_table_init_();
@@ -587,8 +595,6 @@ apollo_impl::pipeline_init(void) {
     ret = sdk::asic::pd::asicpd_program_table_mpu_pc();
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = sdk::asic::pd::asicpd_deparser_init();
-    SDK_ASSERT(ret == SDK_RET_OK);
-    ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
     SDK_ASSERT(ret == SDK_RET_OK);
 
     g_pds_impl_state.init(&api::g_pds_state);

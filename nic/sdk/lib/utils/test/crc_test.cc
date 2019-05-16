@@ -2,6 +2,7 @@
 
 #include "lib/utils/crc_fast.hpp"
 #include "lib/utils/crc_fast.cc"
+#include "lib/utils/time_profile.cc"
 #include "string.h"
 
 int main()

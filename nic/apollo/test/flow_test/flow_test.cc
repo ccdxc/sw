@@ -175,9 +175,9 @@ TEST_F(flow_gtest, DISABLED_p4pd_actiondata_appdata_get) {
 static void
 flow_test_time_profile_print() {
     printf("%-42s = %012ld\n", "TOTAL_FLOW_CREATE",
-           time_profile_total(sdk::utils::time_profile::TABLE_LIB_MEMHASH_INSERT));
+           time_profile_total(sdk::utils::time_profile::TABLE_LIB_FTL_INSERT));
     printf("%-42s = %012ld\n", "FTL_INSERT(ftl only)",
-           time_profile_total(sdk::utils::time_profile::TABLE_LIB_MEMHASH_INSERT) -
+           time_profile_total(sdk::utils::time_profile::TABLE_LIB_FTL_INSERT) -
            time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_READ) -
            time_profile_total(sdk::utils::time_profile::P4PD_ENTRY_INSTALL) -
            time_profile_total(sdk::utils::time_profile::COMPUTE_CRC));

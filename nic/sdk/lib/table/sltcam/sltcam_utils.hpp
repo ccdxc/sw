@@ -4,7 +4,7 @@
 #ifndef __SLTCAM_UTILS_HPP__
 #define __SLTCAM_UTILS_HPP__
 
-#ifndef PERF
+#ifndef PERF_DBG
 #define SLTCAM_TRACES_ENABLED 1
 #endif
 

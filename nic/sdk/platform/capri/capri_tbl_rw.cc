@@ -170,9 +170,6 @@ get_sram_shadow_for_table (uint32_t tableid, int gress)
     return NULL;
 }
 
-/* HBM base address in System memory map; Cached once at the init time */
-static uint64_t hbm_mem_base_addr;
-
 /* Store action pc for every action of the table. */
 static uint64_t capri_action_asm_base[P4TBL_ID_MAX][P4TBL_MAX_ACTIONS];
 static uint64_t capri_action_rxdma_asm_base[P4TBL_ID_MAX][P4TBL_MAX_ACTIONS];
@@ -247,6 +244,9 @@ capri_program_hbm_table_base_addr (int tableid, int stage_tableid, char *tablena
                         tablename, start_offset, va, size);
         p4pd_hbm_table_address_set(tableid, start_offset, va);
     }
+
+    if (sdk::asic::is_slave_init())
+        return;
 
     /* Program table base address into capri TE */
     cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
@@ -815,6 +815,14 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
     // !!!!!!
     /* 1. Create shadow memory and init to zero */
 
+    /* Initialize the CSR cache invalidate memories */
+    capri_table_csr_cache_inval_init();
+
+    // Skip the remaining in slave initialization
+    if (sdk::asic::is_slave_init()) {
+        return CAPRI_OK;
+    }
+
     ret = capri_p4_shadow_init();
     if (ret != CAPRI_OK) {
         return ret;
@@ -828,8 +836,6 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
     /* Initialize stage id registers for p4p */
     capri_p4p_stage_id_init();
 
-    hbm_mem_base_addr = get_mem_addr(MEM_REGION_P4_PROGRAM_NAME);
-
     capri_mpu_icache_invalidate();
 
     /* Initialize tcam memories */
@@ -838,8 +844,6 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
     /* Initialize sram memories */
     capri_sram_memory_init(capri_cfg);
 
-    /* Initialize the CSR cache invalidate memories */
-    capri_table_csr_cache_inval_init();
     return (CAPRI_OK);
 }
 

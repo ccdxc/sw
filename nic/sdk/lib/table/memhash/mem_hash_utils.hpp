@@ -4,11 +4,11 @@
 #ifndef __MEM_HASH_UTILS_HPP__
 #define __MEM_HASH_UTILS_HPP__
 
-#ifndef PERF
+#ifndef PERF_DBG
 #define MEMHASH_P4PD_STATS_ENABLE
 #define MEMHASH_TRACES_ENABLE
 #else
-#define MEMHASH_PERF_ENABLE
+#define MEMHASH_PERF_DBG_ENABLE
 #endif
 
 #ifdef MEMHASH_TRACES_ENABLE

@@ -14,6 +14,7 @@ namespace utils {
 namespace time_profile {
 
 time_profile_info time_profile_db[TIME_PROFILE_ID_MAX];
+bool time_profile_enable = false;
 
 static const char *time_profile_str_list[] = {
     TIME_PROFILE_FUNCTION_ENUMS(HANDLER_GENERATE_STRING)
@@ -33,13 +34,17 @@ timespec_diff(struct timespec *before, struct timespec *after) {
 
 void
 time_profile_info::start() {
-    clock_gettime(CLOCK_REALTIME, &before_);
+    if (time_profile_enable) {
+        clock_gettime(CLOCK_REALTIME, &before_);
+    }
 }
 
 void
 time_profile_info::stop() {
-    clock_gettime(CLOCK_REALTIME, &after_);
-    total_ += timespec_diff(&before_, &after_);
+    if (time_profile_enable) {
+        clock_gettime(CLOCK_REALTIME, &after_);
+        total_ += timespec_diff(&before_, &after_);
+    }
 }
 
 uint64_t
