@@ -157,7 +157,7 @@
             "_comment": "(64+1) * (64 + 16 * 64 + 16 * 16 * 64)",
             "size": "2M",
             "block_size": "17472B",
-            "max_elements": "65",
+            "max_elements": "1K",
             "cache": "p4plus-txdma"
         },
         {
@@ -165,64 +165,66 @@
             "_comment": "(64+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64)",
             "size": "3M",
             "block_size": "37440B",
-            "max_elements": "65",
+            "max_elements": "1K",
             "cache": "p4plus-txdma"
         },
         {
-            "name": "meter_lpm_v4",
+            "name": "meter_v4",
             "_comment": "(64+1) * (64 + 16 * 64 + 16 * 16 * 64)",
             "size": "2M",
             "block_size": "17472B",
-            "max_elements": "65",
-            "cache": "p4plus-txdma"
+            "max_elements": "1K",
+            "cache": "p4plus-rxdma"
         },
         {
-            "name": "meter_lpm_v6",
+            "name": "meter_v6",
             "_comment": "(64+1) * (64 + 4 * 64 + 4^2  * 64 + 4^3 * 64 + 4^4 * 64 + 4^5 * 64)",
             "size": "6M",
             "block_size": "87360",
-            "max_elements": "65",
-            "cache": "p4plus-txdma"
+            "max_elements": "1K",
+            "cache": "p4plus-rxdma"
         },
         {
             "name": "tag_lpm_v4",
             "_comment": "(1+1) * (64 + 16 * 64 + 16^2 * 64 + 16^3 * 64 + 16^4 * 64)",
             "size": "8947840B",
             "block_size": "4473920B",
-            "max_elements": "2",
-            "cache": "p4plus-txdma"
+            "max_elements": "256K",
+            "cache": "p4plus-rxdma"
         },
         {
             "name": "tag_lpm_v6",
             "_comment": "(1+1) * (64 + 4 * 64 + 4^2  * 64 + 4^3 * 64 + 4^4 * 64 + 4^5 * 64 + 4^6 *64 + 4^7 * 64)",
             "size": "2796160B",
             "block_size": "1398080B",
-            "max_elements": "2",
-            "cache": "p4plus-txdma"
-        },
-        {
-            "name": "sacl_egress_v4",
-            "size": "264M",
-            "block_size": "264K",
+            "max_elements": "16K",
             "cache": "p4plus-rxdma"
         },
         {
-            "name": "sacl_ingress_v4",
-            "size": "264M",
-            "block_size": "264K",
-            "cache": "p4plus-rxdma"
+            "name": "sacl_v4",
+            "_comment": "LPM tables:17472 + 17472 + 17472 + 2112 = 54528",
+            "_comment": "RFC-C1:(((2^17 + 2^18) * 64)/51) + (2^20 * 64)/46 = round64(493450) + round64(1458890) = 493504 + 1458944 = 1952448",
+            "_comment": "RFC-C2:(((2^17 + 2^15) * 64)/51) + (2^20 * 64)/46 = round64(205604) + round64(1458890) = 205632 + 1458944 = 1664576",
+            "_comment": "RFC-C3:(((2^17 + 2^15) * 64)/51) + (2^20 * 64)/46 = round64(205604) + round64(1458890) = 205632 + 1458944 = 1664576",
+            "_comment": "RFC-C4:(((2^14 + 2^15) * 64)/51) + (2^20 * 64)/46 = round64(61682) + round64(1458890) = 61696 + 1458944 = 1520640",
+            "_comment": "Total:54528 + 1952448 + 1664576 + 1664576 + 1520640 = 6856768 = 6697K",
+            "_comment": "((64 * 2) + 1) * 6697K",
+            "size": "863913K",
+            "block_size": "6697K",
+            "cache": "p4plus-all"
         },
         {
-            "name": "sacl_egress_v6",
-            "size": "330M",
-            "block_size": "330K",
-            "cache": "p4plus-rxdma"
-        },
-        {
-            "name": "sacl_ingress_v6",
-            "size": "330M",
-            "block_size": "330K",
-            "cache": "p4plus-rxdma"
+            "name": "sacl_v6",
+            "_comment": "LPM tables:87360 (SIP)+ 87360 (DIP) + 17472 (port+dport) + 2112 (sport) = 194304",
+            "_comment": "RFC-C1:(((2^17 + 2^18) * 64)/51) + (2^20 * 64)/46 = round64(493450) + round64(1458890) = 493504 + 1458944 = 1952448",
+            "_comment": "RFC-C2:(((2^17 + 2^15) * 64)/51) + (2^20 * 64)/46 = round64(205604) + round64(1458890) = 205632 + 1458944 = 1664576",
+            "_comment": "RFC-C3:(((2^17 + 2^15) * 64)/51) + (2^20 * 64)/46 = round64(205604) + round64(1458890) = 205632 + 1458944 = 1664576",
+            "_comment": "RFC-C4:(((2^14 + 2^15) * 64)/51) + (2^20 * 64)/46 = round64(61682) + round64(1458890) = 61696 + 1458944 = 1520640",
+            "_comment": "Total:194304 + 1952448 + 1664576 + 1664576 + 1520640 = 6996544 = 6833K",
+            "_comment": "((64 * 2) + 1) * 6833K",
+            "size": "881457K",
+            "block_size": "6833K",
+            "cache": "p4plus-all"
         },
         {
             "name": "flow",
