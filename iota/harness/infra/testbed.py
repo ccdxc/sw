@@ -200,7 +200,12 @@ class _Testbed:
                 cmd.extend(["--console-port", instance.NicConsolePort])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
                 cmd.extend(["--cimc-ip", instance.NodeCimcIP])
-                cmd.extend(["--image", "%s/nic/naples_fw.tar" % GlobalOptions.topdir])
+                images = self.curr_ts.GetImages()
+                nap_img = getattr(images, 'naples', None)
+                if nap_img is None:
+                    Logger.error("Naples image not specified in testsuite")
+                    sys.exit(1)
+                cmd.extend(["--image", "%s/%s" % (GlobalOptions.topdir, nap_img)])
                 cmd.extend(["--mode", "%s" % api.GetNicMode()])
                 if instance.NodeOs == "esx":
                     cmd.extend(["--esx-script", ESX_CTRL_VM_BRINGUP_SCRIPT])
