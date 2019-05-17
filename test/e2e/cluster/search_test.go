@@ -15,7 +15,6 @@ import (
 	testutils "github.com/pensando/sw/test/utils"
 
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 type queryTestCase struct {
@@ -74,7 +73,7 @@ var _ = Describe("Search test", func() {
 		}
 		testQueries(testCases)
 
-		log.Info("Restarting spyglass...")
+		By("Restarting spyglass...")
 		_, err := ts.tu.KillContainer(globals.Spyglass)
 		Expect(err).To(BeNil())
 
@@ -148,19 +147,19 @@ func deleteDummyObj() {
 }
 
 func testQueries(testCases []*queryTestCase) {
-	log.Info("Executing Queries...")
+	By("Executing Queries...")
 	Eventually(func() bool {
 		for i, tc := range testCases {
 			resp := tc.resp
 
 			err := ts.tu.Search(ts.loggedInCtx, tc.query, resp)
 			if err != tc.expErr {
-				log.Errorf("Test Case %d: Expected err %v, actual err was %d", i, tc.expErr, err)
+				By(fmt.Sprintf("Test Case %d: Expected err %v, actual err was %d", i, tc.expErr, err))
 				return false
 			}
 
 			if err := tc.resultCheck(resp, *tc); err != nil {
-				log.Errorf("Test Case %d %s", i, err)
+				By(fmt.Sprintf("Test Case %d %s", i, err))
 				return false
 			}
 
