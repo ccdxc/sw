@@ -19,6 +19,8 @@
 #include "nic/apollo/agent/svc/policy.hpp"
 #include "nic/apollo/agent/svc/mirror.hpp"
 #include "nic/apollo/agent/svc/debug.hpp"
+#include "nic/apollo/agent/svc/meter.hpp"
+#include "nic/apollo/agent/svc/tag.hpp"
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/test/flow_test/flow_test.hpp"
@@ -48,6 +50,8 @@ svc_reg (void)
     PortSvcImpl           port_svc;
     SecurityPolicySvcImpl policy_svc;
     MirrorSvcImpl         mirror_svc;
+    MeterSvcImpl          meter_svc;
+    TagSvcImpl            tag_svc;
 
     // do gRPC initialization
     grpc_init();
@@ -72,6 +76,8 @@ svc_reg (void)
     server_builder->RegisterService(&port_svc);
     server_builder->RegisterService(&mirror_svc);
     server_builder->RegisterService(&debug_svc);
+    server_builder->RegisterService(&meter_svc);
+    server_builder->RegisterService(&tag_svc);
 
     PDS_TRACE_INFO("gRPC server listening on ... {}",
                    g_grpc_server_addr.c_str());

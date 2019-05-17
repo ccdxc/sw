@@ -6,6 +6,7 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/tag.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
+#include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/tag.hpp"
 
 // build Tag api spec from proto buf spec
@@ -130,23 +131,6 @@ TagSvcImpl::TagDelete(ServerContext *context,
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;
-}
-
-// Populate proto buf spec from tag API spec
-static inline void
-tag_api_spec_to_proto_spec (const pds_tag_spec_t *api_spec,
-                            pds::TagSpec *proto_spec)
-{
-    proto_spec->set_id(api_spec->key.id);
-    proto_spec->set_af(pds_af_api_spec_to_proto_spec(api_spec->af));
-    for (uint32_t i = 0; i < api_spec->num_rules; i ++) {
-        auto rule = proto_spec->add_rules();
-        rule->set_tag(api_spec->rules[i].tag);
-        for (uint32_t j = 0; j < api_spec->rules[i].num_prefixes; j ++) {
-            ippfx_api_spec_to_proto_spec(
-                    rule->add_prefix(), &api_spec->rules[i].prefixes[j]);
-        }
-    }
 }
 
 // Populate proto buf status from tag API status

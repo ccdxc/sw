@@ -45,6 +45,12 @@ api_base::factory(api_ctxt_t *api_ctxt) {
     case OBJ_ID_MIRROR_SESSION:
         return mirror_session::factory(&api_ctxt->api_params->mirror_session_spec);
 
+    case OBJ_ID_METER:
+        return meter_entry::factory(&api_ctxt->api_params->meter_spec);
+
+    case OBJ_ID_TAG:
+        return tag_entry::factory(&api_ctxt->api_params->tag_spec);
+
     default:
         break;
     }

@@ -96,6 +96,20 @@ typedef struct test_params_s {
         uint8_t rspan_bmap;
         uint8_t erspan_bmap;
     };
+    // metering config
+    struct {
+        uint32_t num_meter;
+        uint32_t meter_scale;
+        pds_meter_type_t meter_type;
+        uint64_t pps_bps;
+        uint64_t burst;
+    };
+    // tags config
+    struct {
+        uint32_t num_tags;
+        uint32_t tags_v4_scale;
+        uint32_t tags_v6_scale;
+    };
 } test_params_t;
 test_params_t g_test_params = { 0 };
 
@@ -108,6 +122,21 @@ test_params_t g_test_params = { 0 };
 
 #define PDS_SUBNET_ID(vpc_num, num_subnets_per_vpc, subnet_num)    \
             (((vpc_num) * (num_subnets_per_vpc)) + subnet_num)
+
+static void
+meter_str_to_type (std::string meter_type_str,
+                   pds_meter_type_t *meter_type)
+{
+    if (meter_type_str == "pps") {
+        *meter_type = PDS_METER_TYPE_PPS_POLICER;
+    } else if (meter_type_str == "bps") {
+        *meter_type = PDS_METER_TYPE_BPS_POLICER;
+    } else if (meter_type_str == "account") {
+        *meter_type = PDS_METER_TYPE_ACCOUNTING;
+    } else {
+        *meter_type = PDS_METER_TYPE_NONE;
+    }
+}
 
 //----------------------------------------------------------------------------
 // create route tables
@@ -628,6 +657,140 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ip_pfx, uint32_t num_subnets)
 }
 
 sdk_ret_t
+create_tags (uint32_t num_tags, uint32_t scale, uint32_t ip_af)
+{
+    sdk_ret_t ret;
+    pds_tag_spec_t pds_tag;
+    uint32_t num_prefixes = 4;
+    // unique IDs across tags
+    static pds_tag_id_t id = 0;
+    static uint32_t tag_pfx_count = 0;
+    static uint32_t tag_value = 0;
+
+    memset(&pds_tag, 0, sizeof(pds_tag));
+    pds_tag.af = ip_af;
+    pds_tag.num_rules = scale/4;
+    pds_tag.rules =
+            (pds_tag_rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_TAG,
+                            (pds_tag.num_rules * sizeof(pds_tag_rule_t)));
+    for (uint32_t i = 0; i < num_tags; i++) {
+        pds_tag.key.id = id++;
+        for (uint32_t rule = 0; rule < pds_tag.num_rules; rule++) {
+            pds_tag_rule_t *api_rule_spec = &pds_tag.rules[rule];
+            api_rule_spec->tag = tag_value++;
+            ip_prefix_t *prefixes =
+                    (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
+                                   (num_prefixes * sizeof(ip_prefix_t)));
+            memset(prefixes, 0, num_prefixes * sizeof(ip_prefix_t));
+            api_rule_spec->num_prefixes = num_prefixes;
+            api_rule_spec->prefixes = prefixes;
+            for (uint32_t pfx = 0;
+                    pfx < api_rule_spec->num_prefixes; pfx++) {
+                prefixes[pfx].len = 24;
+                prefixes[pfx].addr.af = IP_AF_IPV4;
+                prefixes[pfx].addr.addr.v4_addr =
+                              ((0xC << 28) | (tag_pfx_count++ << 8));
+            }
+        }
+#ifdef TEST_GRPC_APP
+        ret = create_tag_grpc(&pds_tag);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+#else
+        ret = pds_tag_create(&pds_tag);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+#endif
+    }
+#ifdef TEST_GRPC_APP
+    // Batching: push leftover objects
+    ret = create_tag_grpc(NULL);
+    if (ret != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return ret;
+    }
+#endif
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_meter (uint32_t num_meter, uint32_t meter_scale, pds_meter_type_t type,
+              uint64_t pps_bps, uint64_t burst, uint32_t ip_af)
+{
+    sdk_ret_t ret;
+    pds_meter_spec_t pds_meter;
+    pds_meter_id_t id = 0;
+    static uint32_t meter_pfx_count = 0;
+    uint32_t num_prefixes = 1;
+
+    memset(&pds_meter, 0, sizeof(pds_meter_spec_t));
+    pds_meter.rules =
+            (pds_meter_rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
+                            (meter_scale * sizeof(pds_meter_rule_t)));
+    pds_meter.af = ip_af;
+    pds_meter.num_rules = meter_scale;
+    for (uint32_t i = 0; i < num_meter; i++) {
+        pds_meter.key.id = id++;
+        for (uint32_t rule = 0; rule < pds_meter.num_rules; rule++) {
+            pds_meter.rules[rule].type = type;
+            switch (type) {
+            case PDS_METER_TYPE_PPS_POLICER:
+                pds_meter.rules[rule].pps = pps_bps;
+                pds_meter.rules[rule].pkt_burst = burst;
+                break;
+
+            case PDS_METER_TYPE_BPS_POLICER:
+                pds_meter.rules[rule].bps = pps_bps;
+                pds_meter.rules[rule].byte_burst = burst;
+                break;
+
+            case PDS_METER_TYPE_ACCOUNTING:
+                break;
+
+            case PDS_METER_TYPE_NONE:
+            default:
+                break;
+            }
+            ip_prefix_t *prefixes =
+                    (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
+                                   (num_prefixes * sizeof(ip_prefix_t)));
+            memset(prefixes, 0, num_prefixes * sizeof(ip_prefix_t));
+            pds_meter.rules[rule].num_prefixes = num_prefixes;
+            pds_meter.rules[rule].prefixes = prefixes;
+            for (uint32_t pfx = 0;
+                    pfx < pds_meter.rules[rule].num_prefixes; pfx++) {
+                prefixes[pfx].len = 24;
+                prefixes[pfx].addr.af = IP_AF_IPV4;
+                prefixes[pfx].addr.addr.v4_addr =
+                              ((0xC << 28) | (meter_pfx_count++ << 8));
+            }
+        }
+#ifdef TEST_GRPC_APP
+        ret = create_meter_grpc(&pds_meter);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+#else
+        ret = pds_meter_create(&pds_meter);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+#endif
+    }
+#ifdef TEST_GRPC_APP
+    // Batching: push leftover objects
+    ret = create_meter_grpc(NULL);
+    if (ret != SDK_RET_OK) {
+        SDK_ASSERT(0);
+        return ret;
+    }
+#endif
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
 {
     sdk_ret_t      rv;
@@ -973,6 +1136,16 @@ create_objects (void)
                         //g_test_params.erspan_bmap |= (1 << i);
                     }
                 }
+            } else if (kind == "metering") {
+                g_test_params.num_meter = std::stol(obj.second.get<std::string>("count"));
+                g_test_params.meter_scale = std::stol(obj.second.get<std::string>("scale"));
+                meter_str_to_type(obj.second.get<std::string>("type"), &g_test_params.meter_type);
+                g_test_params.pps_bps = std::stol(obj.second.get<std::string>("pps_bps"));
+                g_test_params.burst = std::stol(obj.second.get<std::string>("burst"));
+            } else if (kind == "tags") {
+                g_test_params.num_tags = std::stol(obj.second.get<std::string>("count"));
+                g_test_params.tags_v4_scale = std::stol(obj.second.get<std::string>("v4_scale"));
+                g_test_params.tags_v6_scale = std::stol(obj.second.get<std::string>("v6_scale"));
             }
         }
     } catch (std::exception const &e) {
@@ -996,6 +1169,29 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
+
+    // create v4 tags
+    ret = create_tags(g_test_params.num_tags/2, g_test_params.tags_v4_scale,
+                      IP_AF_IPV4);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // create v6 tags
+    ret = create_tags(g_test_params.num_tags/2, g_test_params.tags_v6_scale,
+                      IP_AF_IPV6);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // create meter
+    ret = create_meter(g_test_params.num_meter, g_test_params.meter_scale,
+                       g_test_params.meter_type, g_test_params.pps_bps,
+                       g_test_params.burst, IP_AF_IPV4);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
     // create TEPs including MyTEP
     ret = create_teps(g_test_params.num_teps + 1, &g_test_params.tep_pfx);
     if (ret != SDK_RET_OK) {
@@ -1043,6 +1239,7 @@ create_objects (void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
+
     // create RSPAN mirror sessions
     if (g_test_params.mirror_en && (g_test_params.num_rspan > 0)) {
         ret = create_rspan_mirror_sessions(g_test_params.num_rspan);

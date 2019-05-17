@@ -6,12 +6,13 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/meter.hpp"
 #include "nic/apollo/agent/svc/util.hpp"
+#include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/meter.hpp"
 
 // build Meter api spec from proto buf spec
 static inline sdk_ret_t
 pds_meter_proto_spec_to_api_spec (pds_meter_spec_t *api_spec,
-                                 const pds::MeterSpec &proto_spec)
+                                  const pds::MeterSpec &proto_spec)
 {
     sdk_ret_t ret;
 
@@ -21,28 +22,38 @@ pds_meter_proto_spec_to_api_spec (pds_meter_spec_t *api_spec,
         return SDK_RET_INVALID_ARG;
     }
 
-#if 0
-    if (proto_spec.has_ppspolicer()) {
-        api_spec->info.type = PDS_METER_TYPE_PPS_POLICER;
-        api_spec->info.pps = proto_spec.ppspolicer().packetspersecond();
-        api_spec->info.pkt_burst = proto_spec.ppspolicer().burst();
-    } else if (proto_spec.has_bpspolicer()) {
-        api_spec->info.type = PDS_METER_TYPE_BPS_POLICER;
-        api_spec->info.bps = proto_spec.bpspolicer().bytespersecond();
-        api_spec->info.byte_burst = proto_spec.bpspolicer().burst();
-    } else {
-        PDS_TRACE_ERR("Meter %d spec should have one of BPS and PPS Policer", api_spec->key.id);
-        return SDK_RET_INVALID_ARG;
-    }
+    api_spec->num_rules = proto_spec.rules_size();
+    api_spec->rules =
+        (pds_meter_rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
+                        api_spec->num_rules * sizeof(pds_meter_rule_t));
+    for (uint32_t rule = 0; rule < api_spec->num_rules; rule++) {
+        const pds::MeterRuleSpec &proto_rule_spec = proto_spec.rules(rule);
+        pds_meter_rule_t *api_rule_spec = &api_spec->rules[rule];
+        if (proto_rule_spec.has_ppspolicer()) {
+            api_rule_spec->type = PDS_METER_TYPE_PPS_POLICER;
+            api_rule_spec->pps =
+                            proto_rule_spec.ppspolicer().packetspersecond();
+            api_rule_spec->pkt_burst = proto_rule_spec.ppspolicer().burst();
+        } else if (proto_rule_spec.has_bpspolicer()) {
+            api_rule_spec->type = PDS_METER_TYPE_BPS_POLICER;
+            api_rule_spec->bps =
+                            proto_rule_spec.bpspolicer().bytespersecond();
+            api_rule_spec->byte_burst = proto_rule_spec.bpspolicer().burst();
+        } else {
+            PDS_TRACE_ERR("Meter %d spec should have one of "
+                          "BPS and PPS Policer", api_spec->key.id);
+            return SDK_RET_INVALID_ARG;
+        }
 
-    api_spec->num_prefixes = proto_spec.prefix_size();
-    api_spec->prefixes = (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
-                                                   api_spec->num_prefixes * sizeof(ip_prefix_t));
-    for (int i = 0; i < proto_spec.prefix_size(); i ++) {
-        ippfx_proto_spec_to_api_spec(
-                    &api_spec->prefixes[i], proto_spec.prefix(i));
+        api_rule_spec->num_prefixes = proto_rule_spec.prefix_size();
+        api_rule_spec->prefixes =
+                 (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
+                            api_rule_spec->num_prefixes * sizeof(ip_prefix_t));
+        for (int pfx = 0; pfx < proto_rule_spec.prefix_size(); pfx++) {
+            ippfx_proto_spec_to_api_spec(
+                    &api_rule_spec->prefixes[pfx], proto_rule_spec.prefix(pfx));
+        }
     }
-#endif
     return SDK_RET_OK;
 }
 
@@ -133,30 +144,6 @@ MeterSvcImpl::MeterDelete(ServerContext *context,
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
     }
     return Status::OK;
-}
-
-// Populate proto buf spec from meter API spec
-static inline void
-meter_api_spec_to_proto_spec (const pds_meter_spec_t *api_spec,
-                              pds::MeterSpec *proto_spec)
-{
-    proto_spec->set_id(api_spec->key.id);
-    proto_spec->set_af(pds_af_api_spec_to_proto_spec(api_spec->af));
-#if 0
-    if (api_spec->info.type == PDS_METER_TYPE_PPS_POLICER) {
-        auto policer = proto_spec->mutable_ppspolicer();
-        policer->set_packetspersecond(api_spec->info.pps);
-        policer->set_burst(api_spec->info.pkt_burst);
-    } else if (api_spec->info.type == PDS_METER_TYPE_BPS_POLICER) {
-        auto policer = proto_spec->mutable_bpspolicer();
-        policer->set_bytespersecond(api_spec->info.bps);
-        policer->set_burst(api_spec->info.byte_burst);
-    }
-    for (uint32_t i = 0; i < api_spec->num_prefixes; i ++) {
-        ippfx_api_spec_to_proto_spec(
-                    proto_spec->add_prefix(), &api_spec->prefixes[i]);
-    }
-#endif
 }
 
 // Populate proto buf status from meter API status

@@ -20,6 +20,7 @@
 #include "nic/apollo/agent/test/scale/utils.hpp"
 #include "nic/apollo/agent/test/scale/app.hpp"
 #include "nic/apollo/test/scale/test.hpp"
+#include "nic/apollo/agent/svc/specs.hpp"
 
 using std::string;
 
@@ -35,6 +36,8 @@ std::unique_ptr<pds::DeviceSvc::Stub>            g_device_stub_;
 std::unique_ptr<pds::BatchSvc::Stub>             g_batch_stub_;
 std::unique_ptr<pds::SecurityPolicySvc::Stub>    g_policy_stub_;
 std::unique_ptr<pds::MirrorSvc::Stub>            g_mirror_stub_;
+std::unique_ptr<pds::MeterSvc::Stub>             g_meter_stub_;
+std::unique_ptr<pds::TagSvc::Stub>               g_tag_stub_;
 
 RouteTableRequest        g_route_table_req;
 SecurityPolicyRequest    g_policy_req;
@@ -44,6 +47,8 @@ SubnetRequest            g_subnet_req;
 VPCRequest               g_vpc_req;
 TunnelRequest            g_tunnel_req;
 MirrorSessionRequest     g_mirror_session_req;
+MeterRequest             g_meter_req;
+TagRequest               g_tag_req;
 
 #define APP_GRPC_BATCH_COUNT    5000
 
@@ -185,6 +190,50 @@ create_vpc_grpc (pds_vpc_spec_t *vpc)
         g_vpc_req.clear_request();
     }
 
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_tag_grpc (pds_tag_spec_t *pds_tag)
+{
+    ClientContext context;
+    TagResponse   response;
+    Status        ret_status;
+
+    if (pds_tag != NULL) {
+        pds::TagSpec *spec = g_tag_req.add_request();
+        tag_api_spec_to_proto_spec(pds_tag, spec);
+    }
+    if ((g_tag_req.request_size() >= APP_GRPC_BATCH_COUNT) || !pds_tag) {
+        ret_status = g_tag_stub_->TagCreate(&context, g_tag_req, &response);
+        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_tag_req.clear_request();
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+create_meter_grpc (pds_meter_spec_t *pds_meter)
+{
+    ClientContext context;
+    MeterResponse response;
+    Status        ret_status;
+
+    if (pds_meter != NULL) {
+        MeterSpec *spec = g_meter_req.add_request();
+        meter_api_spec_to_proto_spec(pds_meter, spec);
+    }
+    if ((g_meter_req.request_size() >= APP_GRPC_BATCH_COUNT) || !pds_meter) {
+        ret_status = g_meter_stub_->MeterCreate(&context, g_meter_req, &response);
+        if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+            printf("%s failed!\n", __FUNCTION__);
+            return SDK_RET_ERR;
+        }
+        g_meter_req.clear_request();
+    }
     return SDK_RET_OK;
 }
 
@@ -339,6 +388,8 @@ test_app_init (void)
     g_device_stub_ = pds::DeviceSvc::NewStub(channel);
     g_batch_stub_ = pds::BatchSvc::NewStub(channel);
     g_mirror_stub_ = pds::MirrorSvc::NewStub(channel);
+    g_meter_stub_ = pds::MeterSvc::NewStub(channel);
+    g_tag_stub_ = pds::TagSvc::NewStub(channel);
 
     return;
 }

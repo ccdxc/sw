@@ -17,6 +17,8 @@
 #include "gen/proto/tunnel.grpc.pb.h"
 #include "gen/proto/vnic.grpc.pb.h"
 #include "gen/proto/mirror.grpc.pb.h"
+#include "gen/proto/meter.grpc.pb.h"
+#include "gen/proto/tags.grpc.pb.h"
 #include "gen/proto/types.grpc.pb.h"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
@@ -28,6 +30,9 @@
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
+#include "nic/apollo/api/include/pds_meter.hpp"
+#include "nic/apollo/api/include/pds_tag.hpp"
+#include "nic/apollo/agent/svc/specs.hpp"
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -75,55 +80,13 @@ using pds::MirrorSession;
 using pds::MirrorSessionRequest;
 using pds::MirrorSessionResponse;
 using pds::MirrorSessionSpec;
-
-//----------------------------------------------------------------------------
-// convert HAL IP address to spec
-//----------------------------------------------------------------------------
-static void
-ip_addr_to_spec (types::IPAddress *ip_addr_spec,
-                 ip_addr_t *ip_addr)
-{
-    if (ip_addr->af == IP_AF_IPV4) {
-        ip_addr_spec->set_af(types::IP_AF_INET);
-        ip_addr_spec->set_v4addr(ip_addr->addr.v4_addr);
-    } else if (ip_addr->af == IP_AF_IPV6) {
-        ip_addr_spec->set_af(types::IP_AF_INET6);
-        ip_addr_spec->set_v6addr(ip_addr->addr.v6_addr.addr8, IP6_ADDR8_LEN);
-    }
-}
-
-//----------------------------------------------------------------------------
-// convert IP prefix to IPPrefix proto spec
-//----------------------------------------------------------------------------
-static void
-ip_pfx_to_spec (types::IPPrefix *ip_pfx_spec,
-                ip_prefix_t *ip_pfx)
-{
-    ip_pfx_spec->set_len(ip_pfx->len);
-    ip_addr_to_spec(ip_pfx_spec->mutable_addr(), &ip_pfx->addr);
-}
-
-//----------------------------------------------------------------------------
-// convert HAL IPv4 address to spec
-//----------------------------------------------------------------------------
-static void
-ipv4_addr_to_spec (types::IPAddress *ip_addr_spec,
-                   ipv4_addr_t *ipv4_addr)
-{
-    ip_addr_spec->set_af(types::IP_AF_INET);
-    ip_addr_spec->set_v4addr(*ipv4_addr);
-}
-
-//----------------------------------------------------------------------------
-// convert IPv4 prefix to IPPrefix proto spec
-//----------------------------------------------------------------------------
-static void
-ipv4_pfx_to_spec (types::IPPrefix *ip_pfx_spec,
-                ipv4_prefix_t *ip_pfx)
-{
-    ip_pfx_spec->set_len(ip_pfx->len);
-    ipv4_addr_to_spec(ip_pfx_spec->mutable_addr(), &ip_pfx->v4_addr);
-}
+using pds::MeterRequest;
+using pds::MeterResponse;
+using pds::MeterSpec;
+using pds::MeterRuleSpec;
+using pds::TagRequest;
+using pds::TagResponse;
+using pds::TagSpec;
 
 static void
 pds_encap_to_proto_encap (types::Encap *encap_spec, pds_encap_t *encap)
