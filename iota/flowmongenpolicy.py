@@ -36,13 +36,13 @@ flowmonpolicy_template = {
     ]
 }
 
-def get_verif(dst_ip, src_ip, protocol, port, collector, result):
+def get_verif(dst_ip, src_ip, protocol, port, collector):
     verif = {}
     verif['dst_ip'] = dst_ip
     verif['src_ip'] = src_ip
     verif['protocol'] = protocol
     verif['port'] = port
-    verif['result'] = result
+    verif['result'] = "flowmon"
     verif['collector'] = collector
     return verif
 
@@ -61,8 +61,8 @@ def get_app_proto(protocol, dport):
         else:
             proto_str = str(protocol).upper() + '/' + str(dport)
     app = {}
-    app['ports'] = []
-    app['ports'].append(proto_str)
+    app['proto-ports'] = []
+    app['proto-ports'].append(proto_str)
     return app
 
 def get_destination(dst_ip, protocol, port):

@@ -65,8 +65,8 @@ def get_app_proto(protocol, dport):
         else:
             proto_str = str(protocol).upper() + '/' + str(dport)
     app = {}
-    app['ports'] = []
-    app['ports'].append(proto_str)
+    app['proto-ports'] = []
+    app['proto-ports'].append(proto_str)
     return app
 
 def get_destination(dst_ip, protocol, port):

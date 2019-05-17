@@ -1,58 +1,66 @@
 [
     {
+        "protocol": "icmp", 
         "src_ip": "192.168.100.101", 
+        "result": "flowmon", 
         "dst_ip": "192.168.100.0/24", 
-        "protocol": "icmp", 
-        "port": "120", 
-        "result": "flowmon"
+        "collector": "flowmon", 
+        "port": "120"
     }, 
     {
+        "protocol": "icmp", 
         "src_ip": "192.168.100.0/24", 
+        "result": "flowmon", 
         "dst_ip": "192.168.100.101", 
-        "protocol": "icmp", 
-        "port": "120", 
-        "result": "flowmon"
+        "collector": "flowmon", 
+        "port": "120"
     }, 
     {
+        "protocol": "icmp", 
         "src_ip": "192.168.100.102", 
+        "result": "flowmon", 
         "dst_ip": "192.168.100.0/24", 
-        "protocol": "icmp", 
-        "port": "120", 
-        "result": "flowmon"
+        "collector": "flowmon", 
+        "port": "120"
     }, 
     {
+        "protocol": "icmp", 
         "src_ip": "192.168.100.0/24", 
+        "result": "flowmon", 
         "dst_ip": "192.168.100.102", 
-        "protocol": "icmp", 
-        "port": "120", 
-        "result": "flowmon"
+        "collector": "flowmon", 
+        "port": "120"
     }, 
     {
+        "protocol": "icmp", 
         "src_ip": "192.168.100.103", 
+        "result": "flowmon", 
         "dst_ip": "192.168.100.0/24", 
-        "protocol": "icmp", 
-        "port": "120", 
-        "result": "flowmon"
+        "collector": "flowmon", 
+        "port": "120"
     }, 
     {
+        "protocol": "icmp", 
         "src_ip": "192.168.100.0/24", 
+        "result": "flowmon", 
         "dst_ip": "192.168.100.103", 
-        "protocol": "icmp", 
-        "port": "120", 
-        "result": "flowmon"
+        "collector": "flowmon", 
+        "port": "120"
     }, 
     {
+        "protocol": "icmp", 
         "src_ip": "192.168.100.104", 
+        "result": "flowmon", 
         "dst_ip": "192.168.100.0/24", 
-        "protocol": "icmp", 
-        "port": "120", 
-        "result": "flowmon"
+        "collector": "flowmon", 
+        "port": "120"
     }, 
     {
-        "src_ip": "192.168.100.0/24", 
-        "dst_ip": "192.168.100.104", 
         "protocol": "icmp", 
-        "port": "120", 
-        "result": "flowmon"
+        "src_ip": "192.168.100.0/24", 
+        "result": "flowmon", 
+        "dst_ip": "192.168.100.104", 
+        "collector": "flowmon", 
+        "port": "120"
     }
 ]

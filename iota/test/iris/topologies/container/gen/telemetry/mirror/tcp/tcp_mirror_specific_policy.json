@@ -25,7 +25,7 @@
                             ]
                         }, 
                         "app-protocol-selectors": {
-                            "ports": [
+                            "proto-ports": [
                                 "TCP/120"
                             ]
                         }
@@ -42,7 +42,7 @@
                             ]
                         }, 
                         "app-protocol-selectors": {
-                            "ports": [
+                            "proto-ports": [
                                 "TCP/120"
                             ]
                         }
@@ -59,7 +59,7 @@
                             ]
                         }, 
                         "app-protocol-selectors": {
-                            "ports": [
+                            "proto-ports": [
                                 "TCP/120"
                             ]
                         }
@@ -76,7 +76,7 @@
                             ]
                         }, 
                         "app-protocol-selectors": {
-                            "ports": [
+                            "proto-ports": [
                                 "TCP/120"
                             ]
                         }
@@ -93,7 +93,7 @@
                             ]
                         }, 
                         "app-protocol-selectors": {
-                            "ports": [
+                            "proto-ports": [
                                 "TCP/120"
                             ]
                         }
@@ -110,7 +110,7 @@
                             ]
                         }, 
                         "app-protocol-selectors": {
-                            "ports": [
+                            "proto-ports": [
                                 "TCP/120"
                             ]
                         }
@@ -127,7 +127,7 @@
                             ]
                         }, 
                         "app-protocol-selectors": {
-                            "ports": [
+                            "proto-ports": [
                                 "TCP/120"
                             ]
                         }
@@ -144,7 +144,7 @@
                             ]
                         }, 
                         "app-protocol-selectors": {
-                            "ports": [
+                            "proto-ports": [
                                 "TCP/120"
                             ]
                         }
@@ -161,7 +161,7 @@
                             ]
                         }, 
                         "app-protocol-selectors": {
-                            "ports": [
+                            "proto-ports": [
                                 "TCP/120"
                             ]
                         }
@@ -178,7 +178,7 @@
                             ]
                         }, 
                         "app-protocol-selectors": {
-                            "ports": [
+                            "proto-ports": [
                                 "TCP/120"
                             ]
                         }
@@ -195,7 +195,7 @@
                             ]
                         }, 
                         "app-protocol-selectors": {
-                            "ports": [
+                            "proto-ports": [
                                 "TCP/120"
                             ]
                         }
@@ -212,7 +212,7 @@
                             ]
                         }, 
                         "app-protocol-selectors": {
-                            "ports": [
+                            "proto-ports": [
                                 "TCP/120"
                             ]
                         }
