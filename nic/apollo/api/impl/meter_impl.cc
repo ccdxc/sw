@@ -46,18 +46,28 @@ meter_impl::destroy(meter_impl *impl) {
 sdk_ret_t
 meter_impl::reserve_resources(api_base *orig_obj, obj_ctxt_t *obj_ctxt) {
     uint32_t lpm_block_id;
-    pds_meter_spec_t *spec;
-
-    spec = &obj_ctxt->api_params->meter_spec;
+    pds_meter_spec_t *spec = &obj_ctxt->api_params->meter_spec;
 
     // allocate free lpm slab for this meter table
-    if (meter_impl_db()->idxr(spec->af)->alloc(&lpm_block_id) !=
+    if (meter_impl_db()->lpm_idxr(spec->af)->alloc(&lpm_block_id) !=
             sdk::lib::indexer::SUCCESS) {
+        PDS_TRACE_ERR("Failed to allocate LPM block for meter %u",
+                      spec->key.id);
         return sdk::SDK_RET_NO_RESOURCE;
     }
     lpm_root_addr_ =
         meter_impl_db()->region_addr(spec->af) +
             meter_impl_db()->table_size(spec->af) * lpm_block_id;
+
+    // allocate all the policer indices as well
+    if (meter_impl_db()->policer_idxr()->alloc_block(&policer_idx_,
+                                                     spec->num_rules) !=
+            sdk::lib::indexer::SUCCESS) {
+        PDS_TRACE_ERR("Failed to allocate %u policers for meter %u",
+                      spec->num_rules, spec->key.id);
+        return sdk::SDK_RET_NO_RESOURCE;
+    }
+    num_policers_ = spec->num_rules;
     return SDK_RET_OK;
 }
 
@@ -71,7 +81,13 @@ meter_impl::release_resources(api_base *api_obj) {
         lpm_block_id =
             (lpm_root_addr_ - meter_impl_db()->region_addr(meter->af()))/
                 meter_impl_db()->table_size(meter->af());
-        meter_impl_db()->idxr(meter->af())->free(lpm_block_id);
+        meter_impl_db()->lpm_idxr(meter->af())->free(lpm_block_id);
+        // free all the policers allocated for this policy
+        if (policer_idx_ != 0xFFFFFFFF) {
+            for (uint32_t i = 0; i < num_policers_; i++) {
+                meter_impl_db()->policer_idxr()->free(policer_idx_ + i);
+            }
+        }
     }
     return SDK_RET_OK;
 }
@@ -90,12 +106,18 @@ meter_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     route_table_t       *rtable;
     vpc_entry           *vpc;
     meter_entry         *meter;
-    uint32_t            num_prefixes;
+    uint32_t            n = 0, policer_id, num_prefixes;
 
     spec = &obj_ctxt->api_params->meter_spec;
     // allocate memory for the library to build route table
     for (uint32_t i = 0, num_prefixes = 0; i < spec->num_rules; i++) {
         num_prefixes += spec->rules[i].num_prefixes;
+    }
+    if (num_prefixes > PDS_MAX_PREFIX_PER_METER) {
+        PDS_TRACE_ERR("No. of prefixes per meter %u exceed max. supported %u",
+                      num_prefixes, PDS_MAX_PREFIX_PER_METER);
+        return SDK_RET_INVALID_ARG;
+
     }
     rtable =
         (route_table_t *)
@@ -109,9 +131,13 @@ meter_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     rtable->default_nhid = PDS_RESERVED_METER_HW_ID;
     rtable->max_routes = meter_impl_db()->max_prefixes(rtable->af);
     rtable->num_routes = num_prefixes;
-    for (uint32_t i = 0; i < rtable->num_routes; i++) {
-        // TODO: fill policer id here !!!
-        //rtable->routes[i].prefix = spec->prefixes[i];
+    for (uint32_t i = 0; i < spec->num_rules; i++) {
+        // TODO: program the policer here when table is available !!!
+        for (uint32_t j = 0; j < spec->rules[i].num_prefixes; j++) {
+            rtable->routes[n].prefix = spec->rules[i].prefixes[j];
+            rtable->routes[n].nhid = policer_idx_ + i;
+            n++;
+        }
     }
     ret = lpm_tree_create(rtable, lpm_root_addr_,
                           meter_impl_db()->table_size(spec->af));

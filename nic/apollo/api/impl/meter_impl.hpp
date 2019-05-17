@@ -106,6 +106,8 @@ private:
     /**< @brief    constructor */
     meter_impl() {
         lpm_root_addr_ = 0xFFFFFFFFFFFFFFFFUL;
+        policer_idx_ = 0xFFFFFFFF;
+        num_policers_ = 0;
     }
 
     /**< @brief    destructor */
@@ -114,6 +116,8 @@ private:
 private:
     /**< P4 datapath specific state */
     mem_addr_t    lpm_root_addr_;      /**< LPM tree's root node address */
+    uint32_t      policer_idx_;        /**< starting policer index */
+    uint32_t      num_policers_;       /**< number of policers allocated */
 } __PACK__;
 
 /** @} */    // end of PDS_METER_IMPL

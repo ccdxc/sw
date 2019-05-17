@@ -22,21 +22,23 @@ meter_impl_state::meter_impl_state(pds_state *state) {
      * meter tables (with the assumption that more than one meter table
      * is not updated in any given batch
      */
-    v4_idxr_ = indexer::factory(PDS_MAX_METER + 1);
-    SDK_ASSERT(v4_idxr_ != NULL);
-    v6_idxr_ = indexer::factory(PDS_MAX_METER + 1);
-    SDK_ASSERT(v6_idxr_ != NULL);
-    v4_region_addr_ = state->mempartition()->start_addr("meter_v4");
-    v4_table_size_ = state->mempartition()->block_size("meter_v4");
-    v4_max_prefixes_ = state->mempartition()->max_elements("meter_v4") - 1;
-    v6_region_addr_ = state->mempartition()->start_addr("meter_v6");
-    v6_table_size_ = state->mempartition()->block_size("meter_v6");
-    v6_max_prefixes_ = state->mempartition()->max_elements("meter_v6") - 1;
+    v4_lpm_idxr_ = indexer::factory(PDS_MAX_METER + 1);
+    SDK_ASSERT(v4_lpm_idxr_ != NULL);
+    v6_lpm_idxr_ = indexer::factory(PDS_MAX_METER + 1);
+    SDK_ASSERT(v6_lpm_idxr_ != NULL);
+    v4_lpm_region_addr_ = state->mempartition()->start_addr("meter_v4");
+    v4_lpm_table_size_ = state->mempartition()->block_size("meter_v4");
+    v4_lpm_max_prefixes_ = state->mempartition()->max_elements("meter_v4") - 1;
+    v6_lpm_region_addr_ = state->mempartition()->start_addr("meter_v6");
+    v6_lpm_table_size_ = state->mempartition()->block_size("meter_v6");
+    v6_lpm_max_prefixes_ = state->mempartition()->max_elements("meter_v6") - 1;
+    policer_idxr_ = indexer::factory(PDS_MAX_METER_POLICER);
 }
 
 meter_impl_state::~meter_impl_state() {
-    indexer::destroy(v4_idxr_);
-    indexer::destroy(v6_idxr_);
+    indexer::destroy(v4_lpm_idxr_);
+    indexer::destroy(v6_lpm_idxr_);
+    indexer::destroy(policer_idxr_);
 }
 
 sdk_ret_t
