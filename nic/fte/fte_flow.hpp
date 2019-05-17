@@ -251,6 +251,15 @@ public:
         return info;
     }
 
+    hal_ret_t set_skip_sfw_reval_info() {
+        valid_.skip_sfw_reval_info = true;
+        return HAL_RET_OK;
+    }
+
+    bool valid_skip_sfw_reval_info() const {
+        return valid_.skip_sfw_reval_info;
+    }
+
     hal_ret_t set_aging_info(const aging_info_t& aging_info) {
         aging_info_ = aging_info;
         valid_.aging_info = true;
@@ -298,6 +307,7 @@ private:
         uint16_t export_info:1;
         uint16_t aging_info:1;
         uint16_t l2_info:1;
+        uint16_t skip_sfw_reval_info:1;
      } valid_;
 
     hal::flow_key_t           key_;                 // flow's key

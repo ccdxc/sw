@@ -344,6 +344,7 @@ typedef struct session_cfg_s {
     uint8_t             tcp_ts_option:1;
     uint8_t             tcp_sack_perm_option:1;
     uint8_t             conn_track_en:1;          // enable connection tracking
+    uint8_t             skip_sfw_reval:1;         // skip firewall reval
 
     session_id_t        session_id;               // unique session id
     uint32_t            idle_timeout;             // Session idle timeout
@@ -381,6 +382,7 @@ struct session_s {
     sdk_spinlock_t      slock;                    // lock to protect this structure
     uint8_t             fte_id:4;                 // FTE that created this session
     uint8_t             conn_track_en:1;          // enable connection tracking
+    uint8_t             skip_sfw_reval:1;         // do not reeval session
     flow_t              *iflow;                   // initiator flow
     flow_t              *rflow;                   // responder flow, if any
     hal_handle_t        vrf_handle;               // src vrf handle

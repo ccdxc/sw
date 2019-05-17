@@ -480,6 +480,12 @@ ctx_t::update_flow(const flow_update_t& flowupd,
             LOG_FLOW_UPDATE(aging_info);
         }
         break;
+    case FLOWUPD_SKIP_SFW_REVAL_INFO:
+        ret = flow->set_skip_sfw_reval_info();
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_VERBOSE("Unable to set skip sfw reval info");
+        }
+        break;
     }
 
     if (ret == HAL_RET_OK)  {

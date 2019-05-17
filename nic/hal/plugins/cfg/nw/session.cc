@@ -1457,6 +1457,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     session->hal_handle = hal_alloc_handle();
     session->conn_track_en = args->session->conn_track_en;
     session->idle_timeout = args->session->idle_timeout;
+    session->skip_sfw_reval = args->session->skip_sfw_reval;
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_create_args_init(&pd_session_args);
@@ -2787,7 +2788,7 @@ session_eval_matching_session (session_match_t  *match)
         session_match_t *match = (session_match_t *) ctxt;
         dllist_ctxt_t   *list_head = match->session_list;
 
-        if (check_session_match(match, session)) {
+        if (!session->skip_sfw_reval && check_session_match(match, session)) {
             hal_handle_id_list_entry_t *list_entry = (hal_handle_id_list_entry_t *)g_hal_state->
                     hal_handle_id_list_entry_slab()->alloc();
             if (list_entry == NULL) {

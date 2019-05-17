@@ -197,6 +197,8 @@ protected:
 
     // Will be called at the beginning of all test cases in this class
     static void SetUpTestCase() {
+        //setenv("HAL_CONFIG_PATH", "/nic/conf", 1);
+        //fte_base_test::SetUpTestCase("hal_hw.json");
         fte_base_test::SetUpTestCase();
 
         // Create a topo
@@ -768,6 +770,121 @@ TEST_F(nwsec_policy_test, test5)
     });
 #if 0    
 
+    svc_reg(std::string("0.0.0.0:") + std::string("50054"), hal::HAL_FEATURE_SET_IRIS);
+    hal::hal_wait();
+#endif
+
+
+    // There is a leak of HAL_SLAB_HANDLE_ID_LIST_ENTRY for adding
+    //post = hal_test_utils_collect_slab_stats();
+    //hal_test_utils_check_slab_leak(pre, post, &is_leak);
+    //ASSERT_TRUE(is_leak == false);
+}
+
+//Verify policy reeval
+TEST_F(nwsec_policy_test, test6) {
+    hal_ret_t                               ret;
+    SecurityPolicySpec                      pol_spec;
+    SecurityPolicyResponse                  res;
+    SecurityRule                           *rule_spec, rule_spec2;
+    SecurityPolicyDeleteRequest             pol_del_req;
+    SecurityPolicyDeleteResponse            pol_del_rsp;
+    hal_handle_t                            sess_hdl = 0, skip_sess_hdl = 0;
+    hal::session_t                          *session = NULL;
+
+    hal::vrf_t *vrf = hal::vrf_lookup_by_handle(nwsec_policy_test::vrfh);
+    pol_spec.mutable_key_or_handle()->mutable_security_policy_key()->set_security_policy_id(11);
+    pol_spec.mutable_key_or_handle()->mutable_security_policy_key()->mutable_vrf_id_or_handle()->set_vrf_id(vrf->vrf_id);
+    rule_spec = pol_spec.add_rule();
+
+    // Create nwsec
+    rule_spec->set_rule_id(1);
+    rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_ALLOW);
+    types::RuleMatch *match = rule_spec->mutable_match();
+    match->set_protocol(types::IPPROTO_TCP);
+
+    types::IPAddressObj *dst_addr = match->add_dst_address();
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0A000002);
+    types::IPAddressObj *src_addr = match->add_src_address();
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0A000001);
+
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securitypolicy_create(pol_spec, &res);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+    uint64_t policy_handle = res.policy_status().key_or_handle().security_policy_handle();
+
+    Tins::TCP tcp = Tins::TCP(100,101);
+    ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, nwsec_policy_test::server_eph, nwsec_policy_test::client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    session = ctx_.session();
+    HAL_TRACE_DEBUG("skip reval: {}", session->skip_sfw_reval);
+    if (session) {
+        sess_hdl = ctx_.session()->hal_handle;
+        HAL_TRACE_DEBUG("hal ses hanlde : {}", sess_hdl);
+    }
+
+    tcp = Tins::TCP(200,201);
+    ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, nwsec_policy_test::server_eph, nwsec_policy_test::client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    session = ctx_.session();
+    if (session) {
+        ctx_.session()->skip_sfw_reval = 1;
+        skip_sess_hdl = ctx_.session()->hal_handle;
+    }
+    
+
+    pol_spec.clear_rule();
+    rule_spec = pol_spec.add_rule();
+    // Update nwsec
+    rule_spec->set_rule_id(10);
+    rule_spec->mutable_action()->set_sec_action(nwsec::SecurityAction::SECURITY_RULE_ACTION_DENY);
+    match = rule_spec->mutable_match();
+
+    match->set_protocol(types::IPPROTO_TCP);
+    dst_addr = match->add_dst_address();
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    dst_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0A000002);
+    src_addr = match->add_src_address();
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_ip_af(types::IPAddressFamily::IP_AF_INET);
+    src_addr->mutable_address()->mutable_prefix()->mutable_ipv4_subnet()->mutable_address()->set_v4_addr(0x0A000001);
+
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securitypolicy_update(pol_spec, &res);
+    hal::hal_cfg_db_close();
+    ASSERT_TRUE(ret == HAL_RET_OK);
+
+    
+    sleep(2);
+    HAL_TRACE_DEBUG("hal sess handle: {}", sess_hdl);
+    session = hal::find_session_by_handle(sess_hdl); 
+    EXPECT_TRUE(session == NULL);
+    session = hal::find_session_by_handle(skip_sess_hdl); 
+    EXPECT_TRUE(session != NULL);
+
+    tcp = Tins::TCP(100,101);
+    ret = inject_ipv4_pkt(fte::FLOW_MISS_LIFQ, nwsec_policy_test::server_eph, nwsec_policy_test::client_eph, tcp);
+    EXPECT_EQ(ret, HAL_RET_OK);
+    if (ctx_.session()) {
+        sess_hdl = ctx_.session()->hal_handle;
+    }
+    
+    // Delete policy
+    pol_del_req.mutable_key_or_handle()->set_security_policy_handle(policy_handle);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securitypolicy_delete(pol_del_req, &pol_del_rsp);
+    hal::hal_cfg_db_close();
+    EXPECT_TRUE(ret == HAL_RET_OK);
+    sleep(2);
+    HAL_TRACE_DEBUG("hal sess handle: {}", sess_hdl);
+    session = hal::find_session_by_handle(sess_hdl); 
+    EXPECT_TRUE(session != NULL);
+    session = hal::find_session_by_handle(skip_sess_hdl); 
+    EXPECT_TRUE(session != NULL);
+#if 0
     svc_reg(std::string("0.0.0.0:") + std::string("50054"), hal::HAL_FEATURE_SET_IRIS);
     hal::hal_wait();
 #endif

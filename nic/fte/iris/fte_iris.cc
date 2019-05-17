@@ -633,6 +633,9 @@ ctx_t::update_flow_table()
         if (is_proxy_enabled()) {
             iflow_attrs.is_proxy_en = 1;
         }
+        if (iflow->valid_skip_sfw_reval_info()) {
+            session_cfg.skip_sfw_reval = 1;
+        }
 
         HAL_TRACE_DEBUG("fte::update_flow_table: iflow.{} key={} lkp_inst={} "
                         "lkp_vrf={} action={} smac_rw={} dmac-rw={} "

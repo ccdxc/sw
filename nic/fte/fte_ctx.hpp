@@ -31,21 +31,22 @@ DEFINE_ENUM(pipeline_event_t, FTE_PIPELINE_EVENT_ENTRIES)
 #undef FTE_PIPELINE_EVENT_ENTRIES
 
 // Flow update codes
-#define FTE_FLOW_UPDATE_CODES(ENTRY)                                    \
-    ENTRY(FLOWUPD_ACTION,        0, "update flow action (allow/deny)")  \
-    ENTRY(FLOWUPD_HEADER_REWRITE,1, "modify the header")                \
-    ENTRY(FLOWUPD_HEADER_PUSH,   2, "push header")                      \
-    ENTRY(FLOWUPD_HEADER_POP,    3, "pop header")                       \
-    ENTRY(FLOWUPD_FLOW_STATE,    4,  "connection tracking state")       \
-    ENTRY(FLOWUPD_FWDING_INFO,   5, "fwding info")                      \
-    ENTRY(FLOWUPD_LKP_INFO,      6, "flow lookup update")               \
-    ENTRY(FLOWUPD_MCAST_COPY,    7, "flow mcast copy update")           \
-    ENTRY(FLOWUPD_INGRESS_INFO,  8, "ingress info")                     \
-    ENTRY(FLOWUPD_MIRROR_INFO,   9, "mirror info")                      \
-    ENTRY(FLOWUPD_QOS_INFO,      10, "qos info")                        \
-    ENTRY(FLOWUPD_EXPORT_INFO,   11, "export info")                      \
-    ENTRY(FLOWUPD_LKP_KEY,       12, "flow key")                        \
-    ENTRY(FLOWUPD_AGING_INFO,    13, "Session Aging info")              \
+#define FTE_FLOW_UPDATE_CODES(ENTRY)                                            \
+    ENTRY(FLOWUPD_ACTION,               0, "update flow action (allow/deny)")   \
+    ENTRY(FLOWUPD_HEADER_REWRITE,       1, "modify the header")                 \
+    ENTRY(FLOWUPD_HEADER_PUSH,          2, "push header")                       \
+    ENTRY(FLOWUPD_HEADER_POP,           3, "pop header")                        \
+    ENTRY(FLOWUPD_FLOW_STATE,           4,  "connection tracking state")        \
+    ENTRY(FLOWUPD_FWDING_INFO,          5, "fwding info")                       \
+    ENTRY(FLOWUPD_LKP_INFO,             6, "flow lookup update")                \
+    ENTRY(FLOWUPD_MCAST_COPY,           7, "flow mcast copy update")            \
+    ENTRY(FLOWUPD_INGRESS_INFO,         8, "ingress info")                      \
+    ENTRY(FLOWUPD_MIRROR_INFO,          9, "mirror info")                       \
+    ENTRY(FLOWUPD_QOS_INFO,             10, "qos info")                         \
+    ENTRY(FLOWUPD_EXPORT_INFO,          11, "export info")                      \
+    ENTRY(FLOWUPD_LKP_KEY,              12, "flow key")                         \
+    ENTRY(FLOWUPD_AGING_INFO,           13, "Session Aging info")               \
+    ENTRY(FLOWUPD_SKIP_SFW_REVAL_INFO,  14, "Skip firewall reval")              \
 
 DEFINE_ENUM(flow_update_type_t, FTE_FLOW_UPDATE_CODES)
 #undef FTE_FLOW_UPDATE_CODES
