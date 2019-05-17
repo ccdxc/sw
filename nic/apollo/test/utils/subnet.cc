@@ -201,7 +201,7 @@ subnet_util::stepper_seed_init(subnet_util_stepper_seed_t *seed,
                                int num_subnets)
 {
     if (seed == NULL) {
-        cout << "seed is NULL";
+        cout << "subnet seed is NULL";
         return sdk::SDK_RET_ERR;
     }
 

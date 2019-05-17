@@ -255,8 +255,8 @@ TEST_F(subnet, subnet_workflow_6) {
 
     // setup
     SUBNET_SEED_INIT(&seed1, key, vpc_key, start_addr1, num_subnets);
-    SUBNET_SEED_INIT(&seed2, key, vpc_key, start_addr1, num_subnets);
-    SUBNET_SEED_INIT(&seed3, key, vpc_key, start_addr1, num_subnets);
+    SUBNET_SEED_INIT(&seed2, key, vpc_key, start_addr2, num_subnets);
+    SUBNET_SEED_INIT(&seed3, key, vpc_key, start_addr3, num_subnets);
 
     // trigger
     BATCH_START();

@@ -93,6 +93,7 @@ protected:
         std::string nr_cidr = "100.0.0.1/16";
         ip_prefix_t ip_pfx, rt_pfx, nr_pfx;
         ip_addr_t ipaddr, rt_addr, nr_addr;
+        vpc_stepper_seed_t vpc_seed;
         subnet_util_stepper_seed_t subnet_seed;
 
         vpc_key.id = api_test::g_vpc_id;
@@ -107,9 +108,9 @@ protected:
         batch_params.epoch = ++api_test::g_batch_epoch;
         ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
         ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-        ASSERT_TRUE(vpc_util::many_create(vpc_key, api_test::g_vpc_cidr_v4,
-                                          PDS_MAX_VPC, PDS_VPC_TYPE_TENANT) ==
-                    sdk::SDK_RET_OK);
+        VPC_SEED_INIT(&vpc_seed, vpc_key, PDS_VPC_TYPE_TENANT,
+                      api_test::g_vpc_cidr_v4, PDS_MAX_VPC);
+        VPC_MANY_CREATE(&vpc_seed);
         ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
         ASSERT_TRUE(tep_util::many_create(num_teps, api_test::g_tep_cidr_v4,
                                           PDS_TEP_TYPE_WORKLOAD,
@@ -146,8 +147,7 @@ protected:
 
         subnet_key.id = api_test::g_subnet_id;
         vpc_key.id = api_test::g_vpc_id;
-        ASSERT_TRUE(vpc_util::many_read(vpc_key, PDS_MAX_VPC,
-                                        sdk::SDK_RET_OK) == sdk::SDK_RET_OK);
+        VPC_MANY_READ(&vpc_seed, sdk::SDK_RET_OK);
         for (uint16_t idx = 0; idx < PDS_MAX_VPC; idx++) {
             SUBNET_SEED_INIT(
                 &subnet_seed, subnet_key, vpc_key, subnet_cidr, 1);
