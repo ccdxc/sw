@@ -263,24 +263,24 @@
             "size": "128K"
         },
         {
-            "_comment": "4K Objs of (2048 + 128)",
+            "_comment": "4K Objs of (2048 + 128), unused in Classic mode (hence invalid size)",
             "name": "small-tx-objs",
-            "size": "8704K"
+            "size": "1K"
         },
         {
-            "_comment": "4K Objs of (2048 + 128)",
+            "_comment": "4K Objs of (2048 + 128), unused in Classic mode (hence invalid size)",
             "name": "small-rx-objs",
-            "size": "8704K"
+            "size": "1K"
         },
         {
-            "_comment": "4K Objs of (9216 + 128)",
+            "_comment": "4K Objs of (9216 + 128), unused in Classic mode (hence invalid size)",
             "name": "big-tx-objs",
-            "size": "74752K"
+            "size": "1K"
         },
         {
-            "_comment": "4K Objs of (9216 + 128)",
+            "_comment": "4K Objs of (9216 + 128), unused in Classic mode (hence invalid size)",
             "name": "big-rx-objs",
-            "size": "74752K"
+            "size": "1K"
         },
         {
             "name": "key-mem",
