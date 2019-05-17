@@ -150,11 +150,14 @@ pds_flow_program_hw (pds_flow_params_t *key,
                  * but remote entry failed */
                 pool_put_index(session_index_pool,
                                (key[i-1].entry.session_index - 1));
+                /*TODO - Delete is resulting in crash, so comment for now */
+#if 0
                 if (PREDICT_FALSE(0 != ftl_remove(table,
                                                   &key[i-1].entry,
                                                   key[i-1].hash))) {
                     counter[FLOW_PROG_COUNTER_FLOW_DELETE_FAILED]++;
                 }
+#endif
             } else {
                 /* Skip remote flow entry as local entry failed */
                 i++;

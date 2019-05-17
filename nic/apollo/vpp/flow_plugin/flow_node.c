@@ -39,7 +39,8 @@ pds_flow_prog_lock (void)
 {
     pds_flow_main_t *fm = &pds_flow_main;
 
-    clib_atomic_test_and_set (fm->flow_prog_lock);
+    while (clib_atomic_test_and_set (fm->flow_prog_lock))
+        ;
 }
 
 void
