@@ -8,28 +8,23 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 
 namespace api_test {
 
-pds_encap_t default_encap = {PDS_ENCAP_TYPE_VXLAN, 0};
-
-tep_util::tep_util() {
-    this->ip_str = "0.0.0.0";
-    this->type = PDS_TEP_TYPE_NONE;
-    this->nat = false;
-}
-
-tep_util::tep_util(std::string ip_str) {
-    this->ip_str = ip_str;
-    this->type = PDS_TEP_TYPE_NONE;
-    this->nat = false;
-}
-
 tep_util::tep_util(std::string ip_str, pds_tep_type_t type,
                    pds_encap_t encap, bool nat) {
-    this->ip_str = ip_str;
+    extract_ip_addr(ip_str.c_str(), &this->ip_addr);
+    this->type = type;
+    this->encap = encap;
+    this->nat = nat;
+}
+
+tep_util::tep_util(ip_addr_t ip_addr, pds_tep_type_t type,
+                   pds_encap_t encap, bool nat) {
+    this->ip_addr = ip_addr;
     this->type = type;
     this->encap = encap;
     this->nat = nat;
@@ -38,16 +33,13 @@ tep_util::tep_util(std::string ip_str, pds_tep_type_t type,
 tep_util::~tep_util() {}
 
 static inline sdk::sdk_ret_t
-tep_util_object_stepper(std::string ip_str, pds_tep_type_t type,
-                        pds_encap_t encap, uint32_t num_tep, utils_op_t op,
+tep_util_object_stepper(tep_stepper_seed_t *seed, utils_op_t op,
                         sdk_ret_t expected_result = sdk::SDK_RET_OK) {
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
-    ip_addr_t ip_addr;
+    ip_addr_t ip_addr = seed->ip_addr;
 
-    extract_ip_addr(ip_str.c_str(), &ip_addr);
-
-    for (uint32_t idx = 1; idx <= num_tep; ++idx) {
-        tep_util tep_obj(ipaddr2str(&ip_addr), type, encap);
+    for (uint32_t idx = 1; idx <= seed->num_tep; ++idx) {
+        tep_util tep_obj(ip_addr, seed->type, seed->encap, seed->nat);
         switch (op) {
         case OP_MANY_CREATE:
             rv = tep_obj.create();
@@ -55,6 +47,9 @@ tep_util_object_stepper(std::string ip_str, pds_tep_type_t type,
         case OP_MANY_READ:
             pds_tep_info_t info;
             rv = tep_obj.read(&info);
+            break;
+        case OP_MANY_UPDATE:
+            rv = tep_obj.update();
             break;
         case OP_MANY_DELETE:
             rv = tep_obj.del();
@@ -75,30 +70,28 @@ tep_util_object_stepper(std::string ip_str, pds_tep_type_t type,
 sdk::sdk_ret_t
 tep_util::create() {
     pds_tep_spec_t spec;
-    ip_prefix_t ip_pfx;
 
-    SDK_ASSERT(str2ipv4pfx((char *)this->ip_str.c_str(), &ip_pfx) == 0);
     memset(&spec, 0, sizeof(pds_tep_spec_t));
     spec.type = this->type;
     spec.encap = this->encap;
-    spec.key.ip_addr = ip_pfx.addr.addr.v4_addr;
+    spec.nat = this->nat;
+    spec.key.ip_addr = this->ip_addr.addr.v4_addr;
     return (pds_tep_create(&spec));
 }
 
 sdk::sdk_ret_t
-tep_util::many_create(uint32_t num_tep, std::string pfxstr,
-                      pds_tep_type_t type, pds_encap_t encap) {
-    return (tep_util_object_stepper(pfxstr, type, encap,
-                                    num_tep, OP_MANY_CREATE));
+tep_util::many_create(tep_stepper_seed_t *seed) {
+    return (tep_util_object_stepper(seed, OP_MANY_CREATE));
 }
 
 static inline void
 debug_dump_tep_spec (pds_tep_spec_t *spec)
 {
     printf("Spec data : \n");
-    printf("Key IPv4 address 0x%x ", spec->key.ip_addr);
-    printf("TEP Type %d", spec->type);
-    printf("Encap Type %d", spec->encap.type);
+    printf("Key IPv4 address %s", ipv4addr2str(spec->key.ip_addr));
+    printf(", TEP Type %d", spec->type);
+    printf(", Encap %s", pdsencap2str(spec->encap));
+    printf(", NAT %d", spec->nat);
     printf("\n");
     return;
 }
@@ -107,8 +100,8 @@ static inline void
 debug_dump_tep_status (pds_tep_status_t *status)
 {
     printf("Status data : \n");
-    printf("NH id %d HW id %d ", status->nh_id, status->hw_id);
-    printf("Outer Dest Mac 0x%x:%x:%x:%x:%x:%x", status->dmac[0],
+    printf("NH id %d, HW id %d", status->nh_id, status->hw_id);
+    printf(", Outer Dest Mac 0x%x:%x:%x:%x:%x:%x", status->dmac[0],
            status->dmac[1], status->dmac[2], status->dmac[3], status->dmac[4],
            status->dmac[5]);
     printf("\n");
@@ -136,12 +129,10 @@ sdk::sdk_ret_t
 tep_util::read(pds_tep_info_t *info, bool compare_spec) {
     sdk_ret_t rv;
     pds_tep_key_t key;
-    ip_addr_t ip_addr;
 
-    extract_ip_addr(this->ip_str.c_str(), &ip_addr);
     memset(&key, 0, sizeof(pds_tep_key_t));
     memset(info, 0, sizeof(pds_tep_info_t));
-    key.ip_addr = ip_addr.addr.v4_addr;
+    key.ip_addr = this->ip_addr.addr.v4_addr;
 
     if ((rv = pds_tep_read(&key, info)) != sdk::SDK_RET_OK)
         return rv;
@@ -149,34 +140,18 @@ tep_util::read(pds_tep_info_t *info, bool compare_spec) {
     if (compare_spec) {
         // dump for debug
         debug_dump_tep_info(info);
-        // validate tep ip
-        if (ip_addr.addr.v4_addr != info->spec.key.ip_addr) {
+        // validate TEP ip
+        if (this->ip_addr.addr.v4_addr != info->spec.key.ip_addr) {
             return sdk::SDK_RET_ERR;
         }
-        // validate tep type
+        // validate TEP type
         if (this->type != info->spec.type) {
             return sdk::SDK_RET_ERR;
         }
-        // validate tep encap type
-        if (this->encap.type != info->spec.encap.type) {
+        // validate TEP encap
+        if (!api::pdsencap_isequal(&this->encap,
+                                   &info->spec.encap)) {
             return sdk::SDK_RET_ERR;
-        }
-        // validate tep encap value
-        switch (this->encap.type) {
-        case PDS_ENCAP_TYPE_MPLSoUDP:
-            // validate dst slot id
-            if (this->encap.val.mpls_tag != info->spec.encap.val.mpls_tag) {
-                return sdk::SDK_RET_ERR;
-            }
-            break;
-        case PDS_ENCAP_TYPE_VXLAN:
-            // validate vni
-            if (this->encap.val.vnid != info->spec.encap.val.vnid) {
-                return sdk::SDK_RET_ERR;
-            }
-            break;
-        default:
-            break;
         }
         // validate NAT
         if (this->nat != info->spec.nat) {
@@ -188,28 +163,50 @@ tep_util::read(pds_tep_info_t *info, bool compare_spec) {
 }
 
 sdk::sdk_ret_t
-tep_util::many_read(uint32_t num_tep, std::string pfxstr, pds_tep_type_t type,
-                    pds_encap_t encap, sdk_ret_t expected_result) {
-    return (tep_util_object_stepper(pfxstr, type, encap, num_tep, OP_MANY_READ,
-                                    expected_result));
+tep_util::many_read(tep_stepper_seed_t *seed, sdk_ret_t expected_result) {
+    return (tep_util_object_stepper(seed, OP_MANY_READ, expected_result));
+}
+
+sdk::sdk_ret_t
+tep_util::update() {
+    pds_tep_spec_t spec;
+
+    memset(&spec, 0, sizeof(pds_tep_spec_t));
+    spec.type = this->type;
+    spec.encap = this->encap;
+    spec.nat = this->nat;
+    spec.key.ip_addr = this->ip_addr.addr.v4_addr;
+    return (pds_tep_update(&spec));
+}
+
+sdk::sdk_ret_t
+tep_util::many_update(tep_stepper_seed_t *seed) {
+    return (tep_util_object_stepper(seed, OP_MANY_UPDATE));
 }
 
 sdk::sdk_ret_t
 tep_util::del() {
     pds_tep_key_t pds_tep_key;
-    ip_prefix_t ip_pfx;
 
-    SDK_ASSERT(str2ipv4pfx((char *)this->ip_str.c_str(), &ip_pfx) == 0);
     memset(&pds_tep_key, 0, sizeof(pds_tep_key));
-    pds_tep_key.ip_addr = ip_pfx.addr.addr.v4_addr;
+    pds_tep_key.ip_addr = this->ip_addr.addr.v4_addr;
     return (pds_tep_delete(&pds_tep_key));
 }
 
 sdk::sdk_ret_t
-tep_util::many_delete(uint32_t num_tep, std::string pfxstr,
-                      pds_tep_type_t type, pds_encap_t encap) {
-    return (tep_util_object_stepper(pfxstr, type, encap,
-                                    num_tep, OP_MANY_DELETE));
+tep_util::many_delete(tep_stepper_seed_t *seed) {
+    return (tep_util_object_stepper(seed, OP_MANY_DELETE));
+}
+
+void
+tep_util::tep_stepper_seed_init(uint32_t num_tep, std::string ip_str,
+                                pds_tep_type_t type, pds_encap_t encap,
+                                bool nat, tep_stepper_seed_t *seed) {
+    extract_ip_addr(ip_str.c_str(), &seed->ip_addr);
+    seed->num_tep = num_tep;
+    seed->type = type;
+    seed->encap = encap;
+    seed->nat = nat;
 }
 
 }    // namespace api_test

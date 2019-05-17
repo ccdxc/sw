@@ -85,7 +85,7 @@ protected:
         pds_vpc_info_t vpc_info = {0};
         pds_subnet_info_t sub_info = {0};
         pds_tep_info_t tep_info = {0};
-        vnic_stepper_seed_t seed;
+        vnic_stepper_seed_t vnic_seed = {};
         pds_batch_params_t batch_params = {0};
         pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
         std::string subnet_cidr = api_test::g_subnet_cidr_v4;
@@ -95,6 +95,7 @@ protected:
         ip_addr_t ipaddr, rt_addr, nr_addr;
         vpc_stepper_seed_t vpc_seed;
         subnet_util_stepper_seed_t subnet_seed;
+        tep_stepper_seed_t tep_seed = {};
 
         vpc_key.id = api_test::g_vpc_id;
         subnet_key.id = api_test::g_subnet_id;
@@ -105,16 +106,15 @@ protected:
         device_util device_obj(g_device_ip, g_device_macaddr, g_gateway_ip);
         tep_util tep_obj(api_test::g_device_ip, PDS_TEP_TYPE_WORKLOAD, encap);
 
-        batch_params.epoch = ++api_test::g_batch_epoch;
-        ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+        BATCH_START();
         ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
         VPC_SEED_INIT(&vpc_seed, vpc_key, PDS_VPC_TYPE_TENANT,
                       api_test::g_vpc_cidr_v4, PDS_MAX_VPC);
         VPC_MANY_CREATE(&vpc_seed);
-        ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
-        ASSERT_TRUE(tep_util::many_create(num_teps, api_test::g_tep_cidr_v4,
-                                          PDS_TEP_TYPE_WORKLOAD,
-                                          encap) == sdk::SDK_RET_OK);
+        TEP_CREATE(tep_obj);
+        TEP_SEED_INIT(num_teps, api_test::g_tep_cidr_v4, PDS_TEP_TYPE_WORKLOAD,
+                      encap, FALSE, &tep_seed);
+        TEP_MANY_CREATE(&tep_seed);
         for (uint16_t idx = 0; idx < num_teps; idx++) {
             route_table_util rt_obj(rt_id_v4 + idx, nr_cidr, rt_ip, IP_AF_IPV4,
                                     1);
@@ -141,9 +141,9 @@ protected:
             ip_pfx.addr = ipaddr;
             subnet_cidr = ippfx2str(&ip_pfx);
         }
-        VNIC_SEED_INIT(vnic_stepper, num_vnics, vnic_stepper_mac, &seed);
-        VNIC_MANY_CREATE(&seed);
-        ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+        VNIC_SEED_INIT(vnic_stepper, num_vnics, vnic_stepper_mac, &vnic_seed);
+        VNIC_MANY_CREATE(&vnic_seed);
+        BATCH_COMMIT();
 
         subnet_key.id = api_test::g_subnet_id;
         vpc_key.id = api_test::g_vpc_id;
@@ -156,11 +156,9 @@ protected:
             vpc_key.id += 1;
         }
         ASSERT_TRUE(device_obj.read(&dev_info, false) == sdk::SDK_RET_OK);
-        ASSERT_TRUE(tep_obj.read(&tep_info) == sdk::SDK_RET_OK);
-        ASSERT_TRUE(tep_util::many_read(num_teps, api_test::g_tep_cidr_v4,
-                                        PDS_TEP_TYPE_WORKLOAD,
-                                        encap) == sdk::SDK_RET_OK);
-        VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
+        TEP_READ(tep_obj, &tep_info);
+        TEP_MANY_READ(&tep_seed);
+        VNIC_MANY_READ(&vnic_seed, sdk::SDK_RET_OK);
     }
     static void TearDownTestCase() {
 #if 0

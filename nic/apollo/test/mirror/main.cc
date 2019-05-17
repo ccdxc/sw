@@ -54,13 +54,12 @@ protected:
         tep_util tep_obj("10.1.1.1", PDS_TEP_TYPE_WORKLOAD, encap, true);
         device_util device_obj(g_device_ip, g_device_macaddr, g_gateway_ip);
 
-        batch_params.epoch = ++g_batch_epoch;
-        ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+        BATCH_START();
         ASSERT_TRUE(vpc_obj.create() == sdk::SDK_RET_OK);
         ASSERT_TRUE(subnet_obj.create() == sdk::SDK_RET_OK);
-        ASSERT_TRUE(tep_obj.create() == sdk::SDK_RET_OK);
+        TEP_CREATE(tep_obj);
         ASSERT_TRUE(device_obj.create() == sdk::SDK_RET_OK);
-        ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+        BATCH_COMMIT();
     }
     static void TearDownTestCase() {
         pds_batch_params_t batch_params = {0};
@@ -70,13 +69,12 @@ protected:
         tep_util tep_obj("10.1.1.1", PDS_TEP_TYPE_WORKLOAD, encap, true);
         device_util device_obj(g_device_ip, g_device_macaddr, g_gateway_ip);
 
-        batch_params.epoch = ++g_batch_epoch;
-        ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+        BATCH_START();
         ASSERT_TRUE(vpc_obj.del() == sdk::SDK_RET_OK);
         ASSERT_TRUE(subnet_obj.del() == sdk::SDK_RET_OK);
-        ASSERT_TRUE(tep_obj.del() == sdk::SDK_RET_OK);
+        TEP_DELETE(tep_obj);
         ASSERT_TRUE(device_obj.del() == sdk::SDK_RET_OK);
-        ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+        BATCH_COMMIT();
 
         pds_test_base::TearDownTestCase();
     }

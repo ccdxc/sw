@@ -49,24 +49,27 @@ protected:
 
         pds_batch_params_t batch_params = {0};
         pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
+        tep_stepper_seed_t tep_seed = {};
 
-        batch_params.epoch = ++g_batch_epoch;
-        ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
+        TEP_SEED_INIT(PDS_MAX_TEP, k_first_nh_ip_str, PDS_TEP_TYPE_WORKLOAD,
+                      encap, TRUE, &tep_seed);
+
+        BATCH_START();
         // create max TEPs which can be used as NHs for routes
-        ASSERT_TRUE(tep_util::many_create(
-            PDS_MAX_TEP - 1, k_first_nh_ip_str, PDS_TEP_TYPE_WORKLOAD,
-            encap) == sdk::SDK_RET_OK);
-        ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+        TEP_MANY_CREATE(&tep_seed);
+        BATCH_COMMIT();
     }
     static void TearDownTestCase() {
         pds_batch_params_t batch_params = {0};
         pds_encap_t encap = {PDS_ENCAP_TYPE_MPLSoUDP, 0};
+        tep_stepper_seed_t tep_seed = {};
 
-        batch_params.epoch = ++g_batch_epoch;
-        ASSERT_TRUE(pds_batch_start(&batch_params) == sdk::SDK_RET_OK);
-        ASSERT_TRUE(tep_util::many_delete(PDS_MAX_TEP - 1, k_first_nh_ip_str,
-            PDS_TEP_TYPE_WORKLOAD, encap) == sdk::SDK_RET_OK);
-        ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
+        TEP_SEED_INIT(PDS_MAX_TEP, k_first_nh_ip_str, PDS_TEP_TYPE_WORKLOAD,
+                      encap, TRUE, &tep_seed);
+
+        BATCH_START();
+        TEP_MANY_DELETE(&tep_seed);
+        BATCH_COMMIT();
 
         pds_test_base::TearDownTestCase();
     }

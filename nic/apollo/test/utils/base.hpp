@@ -32,6 +32,9 @@ typedef struct test_case_params_t_ {
 #define BATCH_COMMIT_FAIL()                                             \
     ASSERT_TRUE(pds_batch_commit() != sdk::SDK_RET_OK)
 
+#define BATCH_COMMIT_FAILURE(exp_reason)                                \
+    ASSERT_TRUE(pds_batch_commit() == exp_reason)
+
 #define BATCH_ABORT()                                                   \
     ASSERT_TRUE(pds_batch_abort() == sdk::SDK_RET_OK);
 

@@ -224,12 +224,12 @@ jobd/mbt/alg: ${JOBD_PREREQS}
 jobd/gft/gtest: ${JOBD_PREREQS}
 	${NICDIR}/run.py ${COVERAGE_OPTS} --gft_gtest
 
-#.PHONY: jobd/apollo/gtest
-#jobd/apollo/gtest: ${JOBD_PREREQS}
+.PHONY: jobd/apollo/gtest
+jobd/apollo/gtest: ${JOBD_PREREQS}
 	#${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_gtest
 	#${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_test > apollo_scale_test.log.txt
 	#${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_vxlan_test > apollo_scale_vxlan_test.log.txt
-	#${NICDIR}/apollo/test/tools/run_gtests_apollo.sh ${COVERAGE_OPTS}
+	${NICDIR}/apollo/test/tools/run_gtests_apollo.sh ${COVERAGE_OPTS}
 
 .PHONY: jobd/storage
 jobd/storage: ${JOBD_PREREQS}
