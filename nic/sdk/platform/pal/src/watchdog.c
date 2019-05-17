@@ -21,8 +21,10 @@
 #define HW_WATCHDOG_TIMEOUT 5
 #define SW_WATCHDOG_TIMEOUT 60
 
+#ifdef __aarch64__
 static int wdtfd = -1;
 static pal_watchdog_action_t gwdt = NO_WDT;
+#endif
 
 int pal_watchdog_init(pal_watchdog_action_t wdttype) {
 #ifdef __aarch64__
