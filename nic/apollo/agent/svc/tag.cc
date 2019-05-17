@@ -21,15 +21,25 @@ pds_tag_proto_spec_to_api_spec (pds_tag_spec_t *api_spec,
         return SDK_RET_INVALID_ARG;
     }
 
-#if 0
-    api_spec->num_prefixes = proto_spec.prefix_size();
-    api_spec->prefixes = (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
-                                                   api_spec->num_prefixes * sizeof(ip_prefix_t));
-    for (int i = 0; i < proto_spec.prefix_size(); i ++) {
-        ippfx_proto_spec_to_api_spec(
-                    &api_spec->prefixes[i], proto_spec.prefix(i));
+    api_spec->num_rules = proto_spec.rules_size();
+    api_spec->rules = (pds_tag_rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_TAG,
+                                                   api_spec->num_rules *
+                                                   sizeof(pds_tag_rule_t));
+    for (int i = 0; i < proto_spec.rules_size(); i ++) {
+        auto proto_rule = proto_spec.rules(i);
+
+        api_spec->rules[i].tag = proto_rule.tag();
+        api_spec->rules[i].num_prefixes = proto_rule.prefix_size();
+        api_spec->rules[i].prefixes = (ip_prefix_t *)SDK_MALLOC(
+                                                 PDS_MEM_ALLOC_ID_TAG,
+                                                 api_spec->rules[i].num_prefixes *
+                                                 sizeof(ip_prefix_t));
+        for (int j = 0; j < proto_rule.prefix_size(); j ++) {
+            ippfx_proto_spec_to_api_spec(
+                        &api_spec->rules[i].prefixes[j], proto_rule.prefix(j));
+        }
     }
-#endif
+
     return SDK_RET_OK;
 }
 
@@ -129,12 +139,14 @@ tag_api_spec_to_proto_spec (const pds_tag_spec_t *api_spec,
 {
     proto_spec->set_id(api_spec->key.id);
     proto_spec->set_af(pds_af_api_spec_to_proto_spec(api_spec->af));
-#if 0
-    for (uint32_t i = 0; i < api_spec->num_prefixes; i ++) {
-        ippfx_api_spec_to_proto_spec(
-                    proto_spec->add_prefix(), &api_spec->prefixes[i]);
+    for (uint32_t i = 0; i < api_spec->num_rules; i ++) {
+        auto rule = proto_spec->add_rules();
+        rule->set_tag(api_spec->rules[i].tag);
+        for (uint32_t j = 0; j < api_spec->rules[i].num_prefixes; j ++) {
+            ippfx_api_spec_to_proto_spec(
+                    rule->add_prefix(), &api_spec->rules[i].prefixes[j]);
+        }
     }
-#endif
 }
 
 // Populate proto buf status from tag API status
