@@ -93,15 +93,18 @@ api_params_free (api_params_t *api_params, obj_id_t obj_id, api_op_t api_op)
         break;
 
     case api::OBJ_ID_METER:
-#if 0
         if ((api_op == api::API_OP_CREATE) || (api_op == api::API_OP_UPDATE)) {
-            if (api_params->meter_spec.prefixes) {
+            if (api_params->meter_spec.rules) {
+                for (uint32_t i = 0; i < api_params->meter_spec.num_rules;
+                     i++) {
+                    SDK_FREE(PDS_MEM_ALLOC_ID_METER,
+                             api_params->meter_spec.rules[i].prefixes);
+                }
                 SDK_FREE(PDS_MEM_ALLOC_METER,
-                         api_params->meter_spec.prefixes);
-                api_params->meter_spec.prefixes = NULL;
+                         api_params->meter_spec.rules);
+                api_params->meter_spec.rules = NULL;
             }
         }
-#endif
         break;
 
     case api::OBJ_ID_TAG:

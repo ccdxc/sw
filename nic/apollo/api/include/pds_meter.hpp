@@ -62,8 +62,11 @@ struct pds_meter_spec_s {
     // destructor
     ~pds_meter_spec_s() {
         if (rules) {
-            // TODO
+            for (uint32_t i = 0; i < num_rules; i++) {
+                SDK_FREE(PDS_MEM_ALLOC_ID_METER, rules[i].prefixes);
+            }
         }
+        SDK_FREE(PDS_MEM_ALLOC_ID_METER, rules);
     }
 
     // assignment operator
@@ -89,7 +92,7 @@ struct pds_meter_spec_s {
             }
             rules[i].num_prefixes = spec.rules[i].num_prefixes;
             rules[i].prefixes =
-                (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER_RULE,
+                (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
                                           rules[i].num_prefixes * sizeof(ip_prefix_t));
             memcpy(rules[i].prefixes, spec.rules[i].prefixes,
                    rules[i].num_prefixes * sizeof(ip_prefix_t));
