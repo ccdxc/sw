@@ -97,7 +97,7 @@
         },
         {
             "name": "nicmgrqstate_map",
-            "size": "32768K",
+            "size": "65536K",
             "cache": "p4plus-all"
         },
         {

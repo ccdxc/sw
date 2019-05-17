@@ -76,7 +76,7 @@
             "intr_count" : 256,
             "pcie" : {
                 "port" : 0,
-                "total_vfs" : 2,
+                "total_vfs" : 0,
                 "oprom": "uefi"
             },
             "network" : {
@@ -95,7 +95,7 @@
             "intr_count" : 256,
             "pcie" : {
                 "port" : 0,
-                "total_vfs" : 2,
+                "total_vfs" : 0,
                 "oprom": "uefi"
             },
             "network" : {
