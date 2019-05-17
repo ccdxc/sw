@@ -182,8 +182,14 @@ public:
     pds_subnet_key_t subnet(void) { return subnet_; }
 
     /// \brief     return meter policy of this vnic
+    /// \param[in] af    IP address family
     /// \return    key of the meter policy being applied
-    pds_meter_key_t meter(void) { return meter_; }
+    pds_meter_key_t meter(uint8_t af) {
+        if (af == IP_AF_IPV4) {
+            return v4_meter_;
+        }
+        return v6_meter_;
+    }
 
     /// \brief     return fabric encap information of vnic
     /// \return    fabric encap type and value
@@ -204,7 +210,8 @@ private:
 private:
     pds_vnic_key_t    key_;              ///< vnic key
     pds_subnet_key_t  subnet_;           ///< subnet of this vnic
-    pds_meter_key_t   meter_;            ///< metering policy
+    pds_meter_key_t   v4_meter_;         ///< IPv4 metering policy
+    pds_meter_key_t   v6_meter_;         ///< IPv6 metering policy
     pds_encap_t       fabric_encap_;     ///< fabric encap information
     ht_ctxt_t         ht_ctxt_;          ///< hash table context
     impl_base         *impl_;            ///< impl object instance

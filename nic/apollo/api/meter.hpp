@@ -69,7 +69,7 @@ public:
     /// \return         SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_config(obj_ctxt_t *obj_ctxt) override {
         // there is no need cleanup in either the rollback case or
-        // route table delete case, we simply have to free the resources in
+        // meter delete case, we simply have to free the resources in
         // either case
         return SDK_RET_OK;
     }
@@ -110,6 +110,12 @@ public:
 
     /// \brief          initiate delay deletion of this object
     virtual sdk_ret_t delay_delete(void) override;
+
+    /// \brief    compute all the objects depending on this object and add to
+    ///           framework's dependency list
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return   SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t add_deps(obj_ctxt_t *obj_ctxt) override;
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
