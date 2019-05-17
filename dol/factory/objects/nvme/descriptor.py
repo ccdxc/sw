@@ -21,29 +21,29 @@ class NvmeSqDescriptor(Packet):
         BitField("fuse", 0, 2),
         BitField("rsvd0", 0, 4),
         BitField("psdt", 0, 2),
-        ShortField("cid", 0),
+        XLEShortField("cid", 0),
     
         #dword 1
-        IntField("nsid", 0),
+        XLEIntField("nsid", 0),
     
         #dword 2-3
-        IntField("rsvd2", 0),
-        IntField("rsvd3", 0),
+        XLEIntField("rsvd2", 0),
+        XLEIntField("rsvd3", 0),
 
         #dword 4-5
-        XLongField("mptr", 0),
+        XLELongField("mptr", 0),
 
         #dword 6-9
-        XLongField("prp1", 0),
-        XLongField("prp2", 0),
+        XLELongField("prp1", 0),
+        XLELongField("prp2", 0),
 
         #dword 10-15
-        IntField("cdw10", 0),
-        IntField("cdw11", 0),
-        IntField("cdw12", 0),
-        IntField("cdw13", 0),
-        IntField("cdw14", 0),
-        IntField("cdw15", 0),
+        XLEIntField("cdw10", 0),
+        XLEIntField("cdw11", 0),
+        XLEIntField("cdw12", 0),
+        XLEIntField("cdw13", 0),
+        XLEIntField("cdw14", 0),
+        XLEIntField("cdw15", 0),
     ]
 
 #40B
@@ -54,31 +54,31 @@ class NvmeSqDescriptorBase(Packet):
         BitField("fuse", 0, 2),
         BitField("rsvd0", 0, 4),
         BitField("psdt", 0, 2),
-        ShortField("cid", 0),
+        XLEShortField("cid", 0),
     
         #dword 1
-        IntField("nsid", 0),
+        XLEIntField("nsid", 0),
     
         #dword 2-3
-        IntField("rsvd2", 0),
-        IntField("rsvd3", 0),
+        XLEIntField("rsvd2", 0),
+        XLEIntField("rsvd3", 0),
 
         #dword 4-5
-        XLongField("mptr", 0),
+        XLELongField("mptr", 0),
 
         #dword 6-9
-        XLongField("prp1", 0),
-        XLongField("prp2", 0),
+        XLELongField("prp1", 0),
+        XLELongField("prp2", 0),
     ]
 
 #24B
 class NvmeSqDescriptorWrite(Packet):
     fields_desc = [
         #dword 10-11
-        LongField("slba", 0),
+        XLELongField("slba", 0),
 
         #dword 12
-        BitField("nlb", 0, 16),
+        XLEShortField("nlb", 0),
         BitField("rsvd12", 0, 10),
         BitField("prinfo", 0, 4),
         BitField("fua", 0, 1),
@@ -89,11 +89,11 @@ class NvmeSqDescriptorWrite(Packet):
         BitField("rsvd13", 0, 24),
 
         #dword 14
-        BitField("ilbrt", 0, 32),
+        XLEIntField("ilbrt", 0),
 
         #dword 15
-        BitField("lbat", 0, 16),
-        BitField("lbatm", 0, 16),
+        XLEShortField("lbat", 0),
+        XLEShortField("lbatm", 0),
     ]
 
 #16B
@@ -149,9 +149,19 @@ NVME_OPC_WRITE_ZEROES = 4
 class NvmeSqDescriptorObject(base.FactoryObjectBase):
     def __init__(self):
         super().__init__()
+        self.nvme_session = None
+        self.prp1 = 0
+        self.prp2 = 0
+        self.nlb = 0
 
     def Init(self, spec):
         super().Init(spec)
+
+        if hasattr(spec.fields, 'session'):
+            self.nvme_session = spec.fields.session
+        else:
+            logger.error("Error!! nvme session needs to be specified for the buffer")
+            exit
 
     def Write(self):
         """
@@ -168,15 +178,78 @@ class NvmeSqDescriptorObject(base.FactoryObjectBase):
                 logger.error("Error!! nvme buffer needs to be specified for the descriptor")
                 return
 
-            prp1 = data_buffer.prp1
-            prp2 = data_buffer.prp2
-            nlb  = data_buffer.nlb
+            self.prp1 = data_buffer.phy_pages[0]
+    
+            num_pages = data_buffer.num_pages
+
+            if num_pages == 2:
+               self.prp2 = data_buffer.phy_pages[1]
+            #prepare PRP list page
+            elif num_pages > 2:
+
+               if hasattr(self.spec.fields, "prp2_offset"):
+                   prp2_offset = self.spec.fields.prp2_offset
+                   assert prp2_offset < data_buffer.page_size - 8
+               else:
+                   prp2_offset = 0
+
+               prp2_entries = (data_buffer.page_size - prp2_offset) / 8
+
+               prp2_begin = 1
+               prp2_end = (int) (min(prp2_entries, num_pages-1))
+
+               logger.info("PRP2 begin: %d, PRP2 end: %d, PRP2 offset: %d, prp2_entries: %d" %
+                           (prp2_begin, prp2_end, prp2_offset, prp2_entries))
+
+               prp3_required = 0
+               #prp3 required
+               if prp2_end < num_pages - 1:
+
+                  prp3_required = 1
+
+                  prp2_end -=1
+
+                  prp3_begin = (int) (prp2_end + 1)
+                  prp3_entries = num_pages - prp2_end - 1
+                  prp3_end = (int) (num_pages - 1)
+                  assert prp3_end > prp3_begin
+                  prp3_offset = 0
+     
+                  logger.info("PRP3 begin: %d, PRP3 end: %d, PRP3 offset: %d, prp3_entries: %d" %
+                              (prp3_begin, prp3_end, prp3_offset, prp3_entries))
+
+                  prp3_slab = self.nvme_session.lif.GetNextSlab()
+                  logger.info("Slab with address 0x%x allocated for PRP3 list" % (prp3_slab.address))
+                  self.prp3 = resmgr.HostMemoryAllocator.v2p(prp3_slab.address)
+                  data = []
+                  for i in range(prp3_begin, prp3_end+1):
+                      data += data_buffer.phy_pages[i].to_bytes(8, 'little')
+                  print ("%s" % (data))
+                  mem_handle = resmgr.MemHandle(prp3_slab.address + prp3_offset,
+                                                resmgr.HostMemoryAllocator.v2p(prp3_slab.address + prp3_offset))
+                  resmgr.HostMemoryAllocator.write(mem_handle, bytes(data))
+
+               prp2_slab = self.nvme_session.lif.GetNextSlab()
+               logger.info("Slab with address 0x%x allocated for PRP2 list" % (prp2_slab.address))
+               self.prp2 = resmgr.HostMemoryAllocator.v2p(prp2_slab.address + prp2_offset)
+               data = []
+               for i in range(prp2_begin, prp2_end+1):
+                   data += data_buffer.phy_pages[i].to_bytes(8, 'little')
+               print ("%s" % (data))
+               if prp3_required:
+                   data += resmgr.HostMemoryAllocator.v2p(prp3_slab.address).to_bytes(8, "little")
+               print ("%s" % (data))
+               mem_handle = resmgr.MemHandle(prp2_slab.address + prp2_offset,
+                                             resmgr.HostMemoryAllocator.v2p(prp2_slab.address + prp2_offset))
+               resmgr.HostMemoryAllocator.write(mem_handle, bytes(data))
+    
+        self.nlb = (int)(data_buffer.size / self.nvme_session.ns.lba_size)
 
         desc = NvmeSqDescriptorBase(opc=self.spec.fields.opc,
                                     cid=self.spec.fields.cid,
                                     nsid=self.spec.fields.nsid,
-                                    prp1=prp1, 
-                                    prp2=prp2)
+                                    prp1=self.prp1, 
+                                    prp2=self.prp2)
 
         logger.ShowScapyObject(desc)
 
@@ -185,7 +258,7 @@ class NvmeSqDescriptorObject(base.FactoryObjectBase):
         if hasattr(self.spec.fields, 'write'):
             slba = self.spec.fields.write.slba if hasattr(self.spec.fields.write, 'slba') else 0
             write = NvmeSqDescriptorWrite(slba=slba,
-                                          nlb=nlb)
+                                          nlb=self.nlb)
 
             self.desc = self.desc / write
 

@@ -32,11 +32,8 @@ descriptors:
             cid     :   1
             nsid    :   ref://testcase/config/nvmesession/nsid
             psdt    :   0 # PRPs
-            #nlb     :   1
-            #prp1    :   ref://testcase/buffers/id=BUF/address
-            #prp2    :   0
-            #prps and nlb field will be auto-derived
             data    :   ref://testcase/buffers/id=BUF
+            prp2_offset :  callback://nvme/nvme/GetPrp2Offset/nentries=9
             write:
                 slba    :   100
 

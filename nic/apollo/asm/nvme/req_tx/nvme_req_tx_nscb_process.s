@@ -102,7 +102,7 @@ sess_found:
     //logic to download prps
 
     //calculate prp1_offset
-    add         r1, r0, k.t0_s2s_sqe_to_nscb_info_dptr1
+    add         r1, r0, k.t0_s2s_sqe_to_nscb_info_prp1
     mincr       r1, k.to_s2_info_log_host_page_size, r0
 
     // add it to nlb * lba_size
@@ -126,7 +126,7 @@ sess_found:
     // since number of prps are more than 2, we have at least one prp list, 
     
     //calculate prp2_offset
-    add         r1, r0, k.t0_s2s_sqe_to_nscb_info_dptr2
+    add         r1, r0, k.t0_s2s_sqe_to_nscb_info_prp2
     mincr       r1, k.to_s2_info_log_host_page_size, r0
     
     //subtract from host page size
@@ -141,16 +141,19 @@ sess_found:
     sle         c1, r4, r2
     bcf         [c1], two_dmas
     // only prp1 is valid in base cmd
-    phvwr       p.prp1_ptr, k.t0_s2s_sqe_to_nscb_info_dptr1 //BD Slot
+    phvwr       p.prp1_ptr, k.t0_s2s_sqe_to_nscb_info_prp1 //BD Slot
 
 three_dmas:
     sub         r2, r2, 1, LOG_NUM_PRP_BYTES
     sub         r4, r4, r2
 
+    DMA_CMD_BASE_GET(DMA_CMD_BASE, prp2_src_dma)
+    DMA_HOST_MEM2MEM_SRC_SETUP(DMA_CMD_BASE, r2, k.t0_s2s_sqe_to_nscb_info_prp2)
+
     //use table 2 to read the last ptr in the prp list, which points to
     //the rest of the prps
     phvwr       p.t2_s2s_nscb_to_sqe_prp_info_prp3_dma_bytes, r4
-    add         r6, r2, k.t0_s2s_sqe_to_nscb_info_dptr2
+    add         r6, r2, k.t0_s2s_sqe_to_nscb_info_prp2
     CAPRI_NEXT_TABLE2_READ_PC(CAPRI_TABLE_LOCK_DIS,
                               CAPRI_TABLE_SIZE_64_BITS,
                               nvme_req_tx_sqe_prp_process,
@@ -164,7 +167,7 @@ three_dmas:
     
 two_dmas:
     DMA_CMD_BASE_GET(DMA_CMD_BASE, prp2_src_dma)
-    DMA_HOST_MEM2MEM_SRC_SETUP(DMA_CMD_BASE, r4, k.t0_s2s_sqe_to_nscb_info_dptr2)
+    DMA_HOST_MEM2MEM_SRC_SETUP(DMA_CMD_BASE, r4, k.t0_s2s_sqe_to_nscb_info_prp2)
     phvwr.e     p.to_s5_info_prp1_dma_bytes, 8
     // prp1_dma_valid = 1, prp2_dma_valid = 1, prp3_dma_valid = 0
     phvwrpair   p.{to_s5_info_prp1_dma_valid...to_s5_info_prp3_dma_valid}, 6, \
@@ -175,8 +178,8 @@ one_dma:
     // if only one prp dma command needed, always copy prp1/prp2, 
     // anyway num_prps field in cmd_ctxt going to guide whether prp2 is valid
     // or not
-    phvwrpair.e p.prp1_ptr, k.t0_s2s_sqe_to_nscb_info_dptr1, \
-                p.prp2_ptr, k.t0_s2s_sqe_to_nscb_info_dptr2
+    phvwrpair.e p.prp1_ptr, k.t0_s2s_sqe_to_nscb_info_prp1, \
+                p.prp2_ptr, k.t0_s2s_sqe_to_nscb_info_prp2
     // prp1_dma_valid = 1, prp2_dma_valid = 0, prp3_dma_valid = 0
     phvwrpair   p.{to_s5_info_prp1_dma_valid...to_s5_info_prp3_dma_valid}, 4, \
                 p.to_s5_info_prp1_dma_bytes, r4     //Exit Slot

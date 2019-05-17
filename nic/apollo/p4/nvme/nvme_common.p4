@@ -26,8 +26,8 @@ header_type nvme_sqe_t {
     mptr	: 64;	// Metadata pointer
 
     // NVME command Dwords 6,7,8 & 9 form the data pointer (PRP or SGL)
-    dptr1	: 64;	// PRP1 or address of SGL
-    dptr2	: 64;	// PRP2 or size/type/sub_type in SGL
+    prp1	: 64;	// PRP1 or address of SGL
+    prp2	: 64;	// PRP2 or size/type/sub_type in SGL
 
     // NVME command Dwords 10 and 11 
     slba	: 64;	// Starting LBA (for Read/Write) commands
@@ -52,7 +52,7 @@ header_type nvme_sqe_t {
 }
 
 #define NVME_SQE_PARAMS \
-opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3, mptr, dptr1, dptr2, slba, \
+opc, fuse, rsvd0, psdt, cid, nsid, rsvd2, rsvd3, mptr, prp1, prp2, slba, \
 nlb, rsvd12, prinfo, fua, lr, dsm, rsvd13, dw14, dw15
 
 #define GENERATE_NVME_SQE_D \
@@ -65,8 +65,8 @@ nlb, rsvd12, prinfo, fua, lr, dsm, rsvd13, dw14, dw15
     modify_field(nvme_sqe_d.rsvd2, rsvd2);\
     modify_field(nvme_sqe_d.rsvd3, rsvd3);\
     modify_field(nvme_sqe_d.mptr, mptr);\
-    modify_field(nvme_sqe_d.dptr1, dptr1);\
-    modify_field(nvme_sqe_d.dptr2, dptr2);\
+    modify_field(nvme_sqe_d.prp1, prp1);\
+    modify_field(nvme_sqe_d.prp2, prp2);\
     modify_field(nvme_sqe_d.slba, slba);\
     modify_field(nvme_sqe_d.nlb, nlb);\
     modify_field(nvme_sqe_d.rsvd12, rsvd12);\

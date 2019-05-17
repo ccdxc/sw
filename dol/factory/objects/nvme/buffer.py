@@ -19,9 +19,6 @@ class NvmeBufferObject(base.FactoryObjectBase):
         self.size = 0
         self.slabs = []
         self.phy_pages = []
-        self.prp1 = 0
-        self.prp2 = 0
-        self.nlb = 0
 
     def Init(self, spec):
         super().Init(spec)
@@ -56,26 +53,6 @@ class NvmeBufferObject(base.FactoryObjectBase):
            logger.info("Physical page list[%d]: 0x%x" % (i, self.phy_pages[i])) 
         assert(self.num_pages == len(self.slabs))
        
-        self.prp1 = self.phy_pages[0]
-
-        if self.num_pages == 2:
-           self.prp2 = self.phy_pages[1]
-        #prepare PRP list page
-        elif self.num_pages > 2:
-           prp_slab = nvme_session.lif.GetNextSlab()
-           #self.slabs.append(prp_slab)
-           logger.info("Slab with address 0x%x allocated for PRP list" % (prp_slab.address))
-           self.prp2 = resmgr.HostMemoryAllocator.v2p(prp_slab.address)
-           mem_handle = resmgr.MemHandle(prp_slab.address,
-                                         resmgr.HostMemoryAllocator.v2p(prp_slab.address))
-           data = []
-           for i in range(1, len(self.phy_pages)):
-               data += self.phy_pages[i].to_bytes(8, 'little')
-           print ("%s" % (data))
-           resmgr.HostMemoryAllocator.write(mem_handle, bytes(data))
-
-        self.nlb = (int)(self.size / nvme_session.ns.lba_size)
-            
     def min (x, y):
         if x > y: 
             return x

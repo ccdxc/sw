@@ -22,17 +22,18 @@ nvme_req_tx_sqe_process:
                 p.{cmd_ctxt_session_id...cmd_ctxt_pad}, r0
 
     phvwr       p.to_s2_info_opc, d.opc
-    phvwr       p.{to_s2_info_slba...to_s2_info_nlb}, d.{slba...nlb}
+    phvwr       p.to_s2_info_slba, d.{slba}.dx
+    phvwr       p.to_s2_info_nlb, d.{nlb}.hx
    
-    phvwrpair   p.t0_s2s_sqe_to_nscb_info_dptr1, d.dptr1, \
-                p.t0_s2s_sqe_to_nscb_info_dptr2, d.dptr2
+    phvwr       p.t0_s2s_sqe_to_nscb_info_prp1, d.{prp1}.dx
+    phvwr       p.t0_s2s_sqe_to_nscb_info_prp2, d.{prp2}.dx
    
     //calculate nscb address = 
     //  nscb_base + ((lif_ns_start + nsid -1) << sizeof(nscb))
     addui   r2, r0, hiword(nvme_nscb_base)
     addi    r2, r2, loword(nvme_nscb_base)
     // make nsid 0-based
-    sub     r1, d.nsid, 1
+    sub     r1, d.{nsid}.wx, 1
     add     r1, r1, k.to_s1_info_lif_ns_start
     add     r1, r2, r1, LOG_NSCB_SIZE
 

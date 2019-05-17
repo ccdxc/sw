@@ -147,8 +147,8 @@ header_type nvme_req_tx_sqcb_to_sqe_t {
 
 header_type nvme_req_tx_sqe_to_nscb_t {
     fields {
-        dptr1               :   64;
-        dptr2               :   64;
+        prp1               :   64;
+        prp2               :   64;
         pad                 :   32;
     }
 }
@@ -438,8 +438,8 @@ action nvme_req_tx_nscb_process (NSCB_PARAMS) {
     modify_field(to_s2_info_scr.pad, to_s2_info.pad);
     
     // stage to stage
-    modify_field(t0_s2s_sqe_to_nscb_info_scr.dptr1, t0_s2s_sqe_to_nscb_info.dptr1);
-    modify_field(t0_s2s_sqe_to_nscb_info_scr.dptr2, t0_s2s_sqe_to_nscb_info.dptr2);
+    modify_field(t0_s2s_sqe_to_nscb_info_scr.prp1, t0_s2s_sqe_to_nscb_info.prp1);
+    modify_field(t0_s2s_sqe_to_nscb_info_scr.prp2, t0_s2s_sqe_to_nscb_info.prp2);
     modify_field(t0_s2s_sqe_to_nscb_info_scr.pad, t0_s2s_sqe_to_nscb_info.pad);
 
     // D-vector

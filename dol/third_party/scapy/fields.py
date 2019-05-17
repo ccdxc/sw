@@ -327,6 +327,13 @@ class XIntField(IntField):
     def i2repr(self, pkt, x):
         return lhex(self.i2h(pkt, x))
 
+class XLEIntField(LEIntField, XIntField):
+    def i2repr(self, pkt, x):
+        return XIntField.i2repr(self, pkt, x)
+
+class XLEShortField(LEShortField, XShortField):
+    def i2repr(self, pkt, x):
+        return XShortField.i2repr(self, pkt, x)
 
 class LongField(Field):
     def __init__(self, name, default):
@@ -339,6 +346,10 @@ class LELongField(Field):
 class XLongField(LongField):
     def i2repr(self, pkt, x):
         return lhex(self.i2h(pkt, x))
+
+class XLELongField(LELongField, XLongField):
+    def i2repr(self, pkt, x):
+        return XLongField.i2repr(self, pkt, x)
 
 class IEEEFloatField(Field):
     def __init__(self, name, default):

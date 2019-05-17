@@ -15,6 +15,9 @@ import os
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 
+def GetPrp2Offset (tc, pkt, args):
+    return (tc.config.nvmesession.lif.spec.host_page_size) - args.nentries * 8
+
 def GetDataSize (tc, pkt, args):
     return (tc.config.nvmesession.ns.lba_size) * args.nlb
 
