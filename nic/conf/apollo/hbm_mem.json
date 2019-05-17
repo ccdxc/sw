@@ -80,7 +80,8 @@
         },
         {
             "name": "rss_indir_table",
-            "size": "1024K"
+            "size": "1024K",
+            "cache": "p4plus-rxdma"
         },
         {
             "name": "lif2qstate_map",

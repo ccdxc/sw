@@ -163,6 +163,7 @@ pd_adjust_perf_status_t asic_pd_adjust_perf(int chip_id, int inst_id,
                                             pd_adjust_perf_type_t perf_type);
 void asic_pd_set_half_clock(int chip_id, int inst_id);
 sdk_ret_t asic_pd_unravel_hbm_intrs(bool *iscattrip);
+sdk_ret_t asicpd_toeplitz_init(void);
 
 }    // namespace pd
 }    // namespace asic

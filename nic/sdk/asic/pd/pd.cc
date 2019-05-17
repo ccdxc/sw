@@ -9,6 +9,10 @@
 #include "asic/pd/pd.hpp"
 #include "lib/utils/time_profile.hpp"
 #include "platform/utils/mpartition.hpp"
+#include "platform/capri/capri_toeplitz.hpp"
+#ifdef APOLLO
+#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
+#endif
 
 using namespace sdk::platform::capri;
 
@@ -728,6 +732,18 @@ void asic_pd_set_half_clock(int chip_id, int inst_id)
 sdk_ret_t asic_pd_unravel_hbm_intrs(bool *iscattrip)
 {
     return capri_unravel_hbm_intrs(iscattrip);
+}
+
+sdk_ret_t asicpd_toeplitz_init(void)
+{
+#ifdef APOLLO
+     p4pd_table_properties_t tbl_ctx;
+     // p4pd_global_table_properties_get(P4_COMMON_RXDMA_ACTIONS_TBL_ID_ETH_RX_RSS_INDIR,
+     p4pd_global_table_properties_get(P4_APOLLO_RXDMA_TBL_ID_ETH_RX_RSS_INDIR,
+                                      &tbl_ctx);
+     sdk::platform::capri::capri_toeplitz_init(tbl_ctx.stage, tbl_ctx.stage_tableid);
+#endif
+     return SDK_RET_OK;
 }
 
 }    // namespace pd

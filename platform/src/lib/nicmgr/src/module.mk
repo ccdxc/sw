@@ -6,8 +6,6 @@ MODULE_TARGET   := libnicmgr.so
 MODULE_PIPELINE := iris gft
 MODULE_INCS     := ${MODULE_SRC_DIR}/../include \
                    ${BLD_PROTOGEN_DIR}/ \
-                   ${BLD_P4GEN_DIR}/common_rxdma_actions/include  \
-                   ${BLD_P4GEN_DIR}/common_txdma_actions/include \
                    ${TOPDIR}/nic/sdk/platform/devapi
 MODULE_SRCS     := $(shell find ${MODULE_SRC_DIR} -type f -name '*.cc' \
                    ! -name '*apollo*')

@@ -7,7 +7,7 @@
 #include <memory>
 #include "nic/sdk/platform/rdmamgr/rdmamgr.hpp"
 #include "nic/sdk/lib/bm_allocator/bm_allocator.hpp"
-#include "common_rxdma_actions_p4pd.h"
+#include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
 
 namespace iris {
 

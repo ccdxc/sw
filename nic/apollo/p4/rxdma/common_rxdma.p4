@@ -20,11 +20,8 @@ metadata cap_phv_intr_p4_t     capri_p4_intr_scratch;
 @pragma scratch_metadata
 metadata cap_phv_intr_rxdma_t  capri_rxdma_intr_scratch;
 
-@pragma dont_trim
 @pragma scratch_metadata
 metadata p4_2_p4plus_app_header_t scratch_app;
-
-@pragma dont_trim
 @pragma scratch_metadata
 metadata p4_2_p4plus_ext_app_header_t scratch_ext_app;
 
@@ -974,12 +971,204 @@ table common_p4plus_stage0_app_header_table_ext_offset_64 {
     }
 }
 
+// d-vector for rss_params table
+header_type eth_rx_rss_params {
+    fields {
+        rss_type : 8;
+        rss_key : 320;
+    }
+}
+
+@pragma scratch_metadata
+metadata eth_rx_rss_params eth_rx_rss_params_scratch;
+
+header_type p4_to_p4plus_classic_nic_header_ext_t {
+    fields {
+        p4plus_app_id       : 4;
+        table0_valid        : 1;
+        table1_valid        : 1;
+        table2_valid        : 1;
+        table3_valid        : 1;
+        flow_id             : 24;
+        vlan_pcp            : 3;
+        vlan_dei            : 1;
+        vlan_vid            : 12;
+        packet_len          : 16;
+        csum                : 16;
+        csum_ip_bad         : 1;
+        csum_ip_ok          : 1;
+        csum_udp_bad        : 1;
+        csum_udp_ok         : 1;
+        csum_tcp_bad        : 1;
+        csum_tcp_ok         : 1;
+        vlan_valid          : 1;
+        pad                 : 1;
+        l2_pkt_type         : 2;
+        pkt_type            : 6;
+        l4_sport            : 16;
+        l4_dport            : 16;
+        ip_sa               : 128;
+        ip_da               : 128;
+    }
+}
+
+@pragma pa_header_union ingress app_header
+metadata p4_to_p4plus_classic_nic_header_ext_t p4_to_p4plus;
+@pragma scratch_metadata
+metadata p4_to_p4plus_classic_nic_header_ext_t p4_to_p4plus_scratch;
+
+action eth_rx_rss_params(rss_type, rss_key)
+{
+    // --- For K+I generation
+
+    // K: From Intrinsic & RXDMA headers
+    modify_field(capri_rxdma_intr_scratch.qstate_addr, capri_rxdma_intr.qstate_addr);
+
+    // I: From APP header
+    modify_field(p4_to_p4plus_scratch.p4plus_app_id, p4_to_p4plus.p4plus_app_id);
+    modify_field(p4_to_p4plus_scratch.table0_valid, p4_to_p4plus.table0_valid);
+    modify_field(p4_to_p4plus_scratch.table1_valid, p4_to_p4plus.table1_valid);
+    modify_field(p4_to_p4plus_scratch.table2_valid, p4_to_p4plus.table2_valid);
+    modify_field(p4_to_p4plus_scratch.table3_valid, p4_to_p4plus.table3_valid);
+
+    modify_field(p4_to_p4plus_scratch.pkt_type, p4_to_p4plus.pkt_type);
+    modify_field(p4_to_p4plus_scratch.l4_sport, p4_to_p4plus.l4_sport);
+    modify_field(p4_to_p4plus_scratch.l4_dport, p4_to_p4plus.l4_dport);
+    modify_field(p4_to_p4plus_scratch.ip_sa, p4_to_p4plus.ip_sa);
+    modify_field(p4_to_p4plus_scratch.ip_da, p4_to_p4plus.ip_da);
+
+    // --- D-struct generation
+    modify_field(eth_rx_rss_params_scratch.rss_type, rss_type);
+    modify_field(eth_rx_rss_params_scratch.rss_key, rss_key);
+}
+
+@pragma stage 0
+table eth_rx_rss_params {
+    reads {
+        capri_intr.lif : exact;
+    }
+    actions {
+        eth_rx_rss_params;
+    }
+    size : LIF_TABLE_SIZE;
+}
+
+// RSS Input Parts
+header_type toeplitz_input0_t {
+    fields {
+        data : 128;
+    }
+}
+
+header_type toeplitz_input1_t {
+    fields {
+        data : 128;
+    }
+}
+
+header_type toeplitz_input2_t {
+    fields {
+        data : 32;
+        data2 : 8;
+    }
+}
+
+// RSS Key Parts
+header_type toeplitz_key0_t {
+    fields {
+        data : 128;
+    }
+}
+
+header_type toeplitz_key1_t {
+    fields {
+        data : 128;
+    }
+}
+
+header_type toeplitz_key2_t {
+    fields {
+        data : 128;          // last 34 bits are qstate addr
+    }
+}
+
+// Input Parts
+@pragma pa_header_union ingress to_stage_2          // Flit 2
+metadata toeplitz_input0_t toeplitz_input0;
+
+@pragma pa_header_union ingress to_stage_3          // Flit 2
+metadata toeplitz_input1_t toeplitz_input1;
+
+@pragma pa_header_union ingress to_stage_6          // Flit 3
+metadata toeplitz_input2_t toeplitz_input2;
+
+// Key Parts
+@pragma pa_header_union ingress to_stage_4          // Flit 2
+metadata toeplitz_key0_t toeplitz_key0;
+
+@pragma pa_header_union ingress to_stage_5          // Flit 2
+metadata toeplitz_key1_t toeplitz_key1;
+
+@pragma pa_header_union ingress to_stage_7          // Flit 3
+metadata toeplitz_key2_t toeplitz_key2;
+
+// K-vector for rss indirection table
+@pragma scratch_metadata
+metadata toeplitz_key2_t toeplitz_key2_scratch;
+
+// D-vector for rss indirection table
+header_type eth_rx_rss_indir {
+    fields {
+        enable : 8;
+        qid : 8;
+    }
+}
+
+@pragma scratch_metadata
+metadata eth_rx_rss_indir eth_rx_rss_indir_scratch;
+
+action eth_rx_rss_indir(enable, qid) {
+    // For D-struct generation
+    modify_field(eth_rx_rss_indir_scratch.enable, enable);
+    modify_field(eth_rx_rss_indir_scratch.qid, qid);
+}
+
+@pragma stage 1
+@pragma hbm_table
+@pragma hash_type 4
+@pragma toeplitz_key toeplitz_input0.data toeplitz_input1.data toeplitz_input2.data
+@pragma toeplitz_seed toeplitz_key0.data toeplitz_key1.data toeplitz_key2.data
+table eth_rx_rss_indir {
+    reads {
+        // Flit 2
+        toeplitz_input0.data      : exact;
+        toeplitz_input1.data      : exact;
+        toeplitz_key0.data        : exact;
+        toeplitz_key1.data        : exact;
+        // Flit 3
+        toeplitz_input2.data      : exact;
+        toeplitz_key2.data        : exact;
+    }
+    actions {
+        eth_rx_rss_indir;
+    }
+    size : 128;
+}
 
 control common_p4plus_stage0 {
-    if (app_header.table0_valid == 1) {
-        apply(common_p4plus_stage0_app_header_table_ext_offset_64);
-        apply(common_p4plus_stage0_app_header_table_offset_64);
-    } else {
-        apply(common_p4plus_stage0_app_header_table);
+    apply(common_p4plus_stage0_app_header_table);
+
+    if (app_header.app_type == P4PLUS_APPTYPE_CLASSIC_NIC) {
+        apply(eth_rx_rss_params);
+    }
+
+    if(app_header.table0_valid == 0) {
+        if(app_header.table1_valid == 0) {
+            if(app_header.table2_valid == 0) {
+                if(app_header.table3_valid == 0) {
+                    apply(eth_rx_rss_indir);
+                }
+            }
+        }
     }
 }

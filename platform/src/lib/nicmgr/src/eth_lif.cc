@@ -383,7 +383,6 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         }
     }
 
-#ifndef APOLLO
     int ret;
     // Reset RSS configuration
     rss_type = LIF_RSS_TYPE_NONE;
@@ -395,7 +394,6 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_DEBUG("{}: Unable to program hw for RSS HASH", ret);
         return (IONIC_RC_ERROR);
     }
-#endif
 
     // Clear PC to drop all traffic
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
@@ -469,7 +467,7 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
 
         // starts a non-repeating timer to update stats. the timer is reset when
         // stats update is complete.
-        evutil_timer_start(EV_A_ &stats_timer, &EthLif::StatsUpdate, this, 0.2, 0.2);
+        evutil_timer_start(EV_A_ &stats_timer, &EthLif::StatsUpdate, this, 0.0, 0.2);
     }
 
     // Init the status block
@@ -578,7 +576,6 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
     FreeUpVlanFilters();
     FreeUpMacVlanFilters();
 
-#ifndef APOLLO
     int ret;
     // Reset RSS configuration
     rss_type = LIF_RSS_TYPE_NONE;
@@ -590,7 +587,6 @@ EthLif::Reset(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_DEBUG("{}: Unable to program hw for RSS HASH", ret);
         return (IONIC_RC_ERROR);
     }
-#endif
 
     // Clear PC to drop all traffic
     for (uint32_t qid = 0; qid < spec->rxq_count; qid++) {
@@ -2003,7 +1999,6 @@ EthLif::RssConfig(void *req, void *req_data, void *resp, void *resp_data)
         }
     }
 
-#ifndef APOLLO
     int ret;
     ret = pd->eth_program_rss(hal_lif_info_.lif_id, rss_type, rss_key, rss_indir,
                               spec->rxq_count);
@@ -2011,7 +2006,6 @@ EthLif::RssConfig(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_DEBUG("{}: Unable to program hw for RSS HASH", ret);
         return (IONIC_RC_ERROR);
     }
-#endif
 
     return IONIC_RC_SUCCESS;
 }
@@ -2559,7 +2553,7 @@ EthLif::StatsUpdateComplete(void *obj)
 {
     EthLif *eth = (EthLif *)obj;
 
-    evutil_timer_again(eth->loop, &eth->stats_timer);
+    // evutil_timer_again(eth->loop, &eth->stats_timer);
 }
 
 int

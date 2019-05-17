@@ -16,14 +16,20 @@
 #include "platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/platform/rdmamgr/rdmamgr.hpp"
+#include "nic/sdk/asic/rw/asicrw.hpp"
 #include "platform/utils/mpartition.hpp"
 
 #ifndef APOLLO
 #include "gen/platform/mem_regions.hpp"
-#include "common_rxdma_actions_p4pd.h"
-#include "common_rxdma_actions_p4pd_table.h"
-#include "common_txdma_actions_p4pd.h"
-#include "common_txdma_actions_p4pd_table.h"
+#include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd.h"
+#include "gen/p4gen/common_rxdma_actions/include/common_rxdma_actions_p4pd_table.h"
+#include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd.h"
+#include "gen/p4gen/common_txdma_actions/include/common_txdma_actions_p4pd_table.h"
+#else
+#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd.h"
+#include "gen/p4gen/apollo_rxdma/include/apollo_rxdma_p4pd_table.h"
+#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd.h"
+#include "gen/p4gen/apollo_txdma/include/apollo_txdma_p4pd_table.h"
 #endif
 
 // Maximum number of queue per LIF
@@ -120,7 +126,6 @@ public:
     int p4plus_txdma_init_tables();
     int pd_state_init();
 
-#ifndef APOLLO
     int p4pd_common_p4plus_rxdma_rss_params_table_entry_add(
             uint32_t hw_lif_id, uint8_t rss_type, uint8_t *rss_key);
     int p4pd_common_p4plus_rxdma_rdma_params_table_entry_get(
@@ -131,7 +136,6 @@ public:
             uint32_t hw_lif_id, uint8_t index, eth_rx_rss_indir_actiondata_t *data);
     int p4pd_common_p4plus_rxdma_rss_params_table_entry_get(
             uint32_t hw_lif_id, eth_rx_rss_params_actiondata_t *data);
-#endif
 
     int eth_program_rss(uint32_t hw_lif_id, uint16_t rss_type,
                         uint8_t *rss_key, uint8_t *rss_indir,

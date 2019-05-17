@@ -505,10 +505,9 @@ apollo_impl::p4plus_table_init_(void) {
     p4pd_table_properties_t tbl_ctx_txdma_act_ext;
     p4plus_prog_t prog;
 
+
     p4pd_global_table_properties_get(P4_APOLLO_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE,
                                      &tbl_ctx_apphdr);
-    p4pd_global_table_properties_get(P4_APOLLO_RXDMA_TBL_ID_COMMON_P4PLUS_STAGE0_APP_HEADER_TABLE_OFFSET_64,
-                                     &tbl_ctx_apphdr_off);
     memset(&prog, 0, sizeof(prog));
     prog.stageid = tbl_ctx_apphdr.stage;
     prog.stage_tableid = tbl_ctx_apphdr.stage_tableid;
@@ -528,15 +527,6 @@ apollo_impl::p4plus_table_init_(void) {
     prog.pipe = P4_PIPELINE_TXDMA;
     sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
 
-    p4pd_global_table_properties_get(P4_APOLLO_TXDMA_TBL_ID_TX_TABLE_S0_T1,
-                                     &tbl_ctx_txdma_act_ext);
-    memset(&prog, 0, sizeof(prog));
-    prog.stageid = tbl_ctx_txdma_act_ext.stage;
-    prog.stage_tableid = tbl_ctx_txdma_act_ext.stage_tableid;
-    prog.control = "apollo_txdma";
-    prog.prog_name = "txdma_stage0_ext.bin";
-    prog.pipe = P4_PIPELINE_TXDMA;
-    sdk::platform::capri::capri_p4plus_table_init(&prog, api::g_pds_state.platform_type());
     return SDK_RET_OK;
 }
 
@@ -587,6 +577,8 @@ apollo_impl::pipeline_init(void) {
     }
 
     ret = sdk::asic::pd::asicpd_p4plus_table_mpu_base_init(&p4pd_cfg);
+    SDK_ASSERT(ret == SDK_RET_OK);
+    ret = sdk::asic::pd::asicpd_toeplitz_init();
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = p4plus_table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
