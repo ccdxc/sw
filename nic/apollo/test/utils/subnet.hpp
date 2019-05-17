@@ -22,7 +22,7 @@ namespace api_test {
 
 #define SUBNET_MANY_READ(seed, expected_res)                            \
     ASSERT_TRUE(subnet_util::many_read(                                 \
-                             seed,expected_res) == sdk::SDK_RET_OK)
+        seed, expected_res) == sdk::SDK_RET_OK)
 
 #define SUBNET_MANY_UPDATE(seed)                                        \
     ASSERT_TRUE(subnet_util::many_update(seed) == sdk::SDK_RET_OK)

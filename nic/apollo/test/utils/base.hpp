@@ -61,4 +61,4 @@ protected:
     static void TearDownTestCase(void);
 };
 
-#endif // end define __PDS_BASE_TEST_HPP__
+#endif  // __PDS_BASE_TEST_HPP__
