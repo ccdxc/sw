@@ -52,7 +52,7 @@ ionic_pci_query(struct ionic_en_priv_data *priv_data)             // IN
         status = vmk_DeviceGetRegistrationData(en_dev->vmk_device,
                                                (vmk_AddrCookie *) &en_dev->pci_device);
         if (status != VMK_OK) {
-                ionic_err("vmk_DeviceGetRegistrationData() failed, status: %s",
+                ionic_en_err("vmk_DeviceGetRegistrationData() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -60,7 +60,7 @@ ionic_pci_query(struct ionic_en_priv_data *priv_data)             // IN
         status = vmk_PCIQueryDeviceID(en_dev->pci_device,
                                       &en_dev->pci_device_id);
         if (status != VMK_OK) {
-                ionic_err("vmk_PCIQueryDeviceID() failed, status: %s",
+                ionic_en_err("vmk_PCIQueryDeviceID() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -68,7 +68,7 @@ ionic_pci_query(struct ionic_en_priv_data *priv_data)             // IN
         status = vmk_PCIQueryDeviceAddr(en_dev->pci_device,
                                         &en_dev->sbdf);
         if (status != VMK_OK) {
-                ionic_err("vmk_PCIQueryDeviceAddr() failed, status: %s",
+                ionic_en_err("vmk_PCIQueryDeviceAddr() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -77,7 +77,7 @@ ionic_pci_query(struct ionic_en_priv_data *priv_data)             // IN
                                          IONIC_BARS_MAX,
                                          &en_dev->pci_resources[0]);
         if (status != VMK_OK) {
-                ionic_err("vmk_PCIQueryIOResources() failed, status: %s",
+                ionic_en_err("vmk_PCIQueryIOResources() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -87,7 +87,7 @@ ionic_pci_query(struct ionic_en_priv_data *priv_data)             // IN
                                          ARRAY_SIZE(dev_tbl),
                                          &en_dev->dev_entry);
         if (status != VMK_OK) {
-                ionic_err("ionic_PciDevEntryGet() failed, status: %s",
+                ionic_en_err("ionic_PciDevEntryGet() failed, status: %s",
                           vmk_StatusToString(status));
         } 
 
@@ -130,13 +130,13 @@ ionic_bars_check(struct ionic_en_priv_data *priv_data,            // IN
 	if (!(flags & PCI_DEVICE_ID_PENSANDO_IONIC_ETH_PF) &&
 	    !(en_dev->pci_resources[IONIC_BAR0].flags &
 	    VMK_PCI_BAR_FLAGS_MEM_64_BITS)) {
-                ionic_err("Missing BAR 0, exiting...");
+                ionic_en_err("Missing BAR 0, exiting...");
                 return VMK_NOT_FOUND;
 	}
 
         if (!(en_dev->pci_resources[IONIC_BAR1].flags &
 	    VMK_PCI_BAR_FLAGS_MEM_64_BITS)) {
-                ionic_err("Missing BAR 1, exiting...");
+                ionic_en_err("Missing BAR 1, exiting...");
                 return VMK_NOT_FOUND;
 	}
 
@@ -175,7 +175,7 @@ ionic_bars_map(struct ionic_en_priv_data *priv_data)              // IN
                                       NULL,
                                       &en_dev->bars[IONIC_BAR0]);
         if (status != VMK_OK) {
-                ionic_err("vmk_PCIMapIOResource() failed for BAR 0, "
+                ionic_en_err("vmk_PCIMapIOResource() failed for BAR 0, "
                           "status: %s", vmk_StatusToString(status));
                 return status;
         }
@@ -191,7 +191,7 @@ ionic_bars_map(struct ionic_en_priv_data *priv_data)              // IN
                                       NULL,
                                       &en_dev->bars[IONIC_BAR1]);
         if (status != VMK_OK) {
-                ionic_err("vmk_PCIMapIOResource() failed for BAR 1, "
+                ionic_en_err("vmk_PCIMapIOResource() failed for BAR 1, "
                           "status: %s", vmk_StatusToString(status));
                 goto map_bar1_err;
         }
@@ -208,7 +208,7 @@ map_bar1_err:
                                          en_dev->pci_device,
                                          IONIC_BAR0);
         if (status1 != VMK_OK) {
-                ionic_err("vmk_PCIUnmapIOResource() failed with BAR 0, "
+                ionic_en_err("vmk_PCIUnmapIOResource() failed with BAR 0, "
                           "status: %s", vmk_StatusToString(status));
         }
         
@@ -245,7 +245,7 @@ ionic_bars_unmap(struct ionic_en_priv_data *priv_data)                 // IN
                                         en_dev->pci_device,
                                         IONIC_BAR0);
         if (status != VMK_OK) {
-                ionic_err("vmk_PCIUnmapIOResource() failed with BAR 0, "
+                ionic_en_err("vmk_PCIUnmapIOResource() failed with BAR 0, "
                           "status: %s", vmk_StatusToString(status));
         }
         
@@ -253,7 +253,7 @@ ionic_bars_unmap(struct ionic_en_priv_data *priv_data)                 // IN
                                         en_dev->pci_device,
                                         IONIC_BAR1);
         if (status != VMK_OK) {
-                ionic_err("vmk_PCIUnmapIOResource() failed with BAR 1, "
+                ionic_en_err("vmk_PCIUnmapIOResource() failed with BAR 1, "
                           "status: %s", vmk_StatusToString(status));
         }
 }
@@ -288,14 +288,14 @@ ionic_pci_start(struct ionic_en_priv_data *priv_data)             // IN
         status = ionic_bars_check(priv_data,
                                   en_dev->dev_entry.flags);
         if (status != VMK_OK) {
-                ionic_err("ionic_bars_check() failed, status: %s",
+                ionic_en_err("ionic_bars_check() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
 
         status = ionic_bars_map(priv_data);
         if (status != VMK_OK) {
-                ionic_err("ionic_bars_map() failed, status: %s",
+                ionic_en_err("ionic_bars_map() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -303,7 +303,7 @@ ionic_pci_start(struct ionic_en_priv_data *priv_data)             // IN
         status = ionic_pci_bus_master_enable(priv_data->module_id,
                                              en_dev->pci_device);
         if (status != VMK_OK) {
-                ionic_err("ionic_pci_bus_master_enable() failed, status: %s",
+                ionic_en_err("ionic_pci_bus_master_enable() failed, status: %s",
                           vmk_StatusToString(status));
                 goto bus_master_err;
         }

@@ -8,7 +8,10 @@
  * Implement functions that used for work queue
  */
 
-#include "ionic.h"
+#include "ionic_log.h"
+#include "ionic_locks.h"
+#include "ionic_work_queue.h"
+#include "ionic_memory.h"
 
 /*
  ******************************************************************************

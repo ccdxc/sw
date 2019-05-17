@@ -8,7 +8,7 @@
  * Implement hash related functions
  */
 
-#include "ionic.h"
+#include "ionic_log.h"
 
 /*
  *******************************************************************************

@@ -50,7 +50,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
         IONIC_EN_SHARED_AREA_END_READ(uplink_handle);
 
         if (comp->len > mtu + IONIC_EN_ETH_HLEN + IONIC_EN_VLAN_HLEN) {
-                ionic_err("RX PKT TOO LARGE!  comp->len %d\n", comp->len);
+                ionic_en_err("RX PKT TOO LARGE!  comp->len %d\n", comp->len);
                 ionic_rx_recycle(q, desc_info, pkt);
                 return;
         }
@@ -69,7 +69,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
                                  dma_addr);
 
         if (status != VMK_OK) {
-                ionic_err("rx clean, ionic_dma_unmap() failed");
+                ionic_en_err("rx clean, ionic_dma_unmap() failed");
                 VMK_ASSERT(0);
                 return;
         }
@@ -134,7 +134,7 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
         status = vmk_NetPollRxPktQueue(qcq->netpoll,
                                        pkt);
         if (status != VMK_OK) {
-                ionic_err("vmk_NetPollRxPktQueue() failed, status: %s",
+                ionic_en_err("vmk_NetPollRxPktQueue() failed, status: %s",
                           vmk_StatusToString(status));
                 ionic_en_pkt_release(pkt, NULL);
                 VMK_ASSERT(0);
@@ -188,7 +188,7 @@ ionic_rx_pkt_alloc(struct queue *q,
                                      sge->addr,
                                      sge->length);
         if (VMK_UNLIKELY(!(*dma_addr))) {
-                ionic_err("ionic_dma_map_ma() failed");
+                ionic_en_err("ionic_dma_map_ma() failed");
                 stats->dma_map_err++;
                 ionic_en_pkt_release(new_pkt, NULL);
                 new_pkt = NULL;
@@ -218,7 +218,7 @@ ionic_rx_pkt_free(struct queue *q,
         if (VMK_LIKELY(status == VMK_OK)) {
                 ionic_en_pkt_release(pkt, NULL);
         } else {
-                ionic_err("ionic_dma_unmap() failed, status: %s",
+                ionic_en_err("ionic_dma_unmap() failed, status: %s",
                           vmk_StatusToString(status));
         }
 }
@@ -292,7 +292,7 @@ void ionic_rx_refill(struct queue *q)
 
                 pkt = ionic_rx_pkt_alloc(q, len, &dma_addr);
                 if (VMK_UNLIKELY(!pkt)) {
-                        ionic_warn("Queue index: %d, ionic_rx_pkt_alloc()"
+                        ionic_en_warn("Queue index: %d, ionic_rx_pkt_alloc()"
                                    "failed", q->index);
                         break;
                 }
@@ -346,7 +346,7 @@ static dma_addr_t ionic_tx_map_single(struct queue *q, vmk_VA data, size_t len)
                                     data,
                                     len);
         if (VMK_UNLIKELY(!dma_addr)) {
-                ionic_err("ionic_dma_map_va() failed,  DMA single map "
+                ionic_en_err("ionic_dma_map_va() failed,  DMA single map "
                           "failed on %s!\n",
                           q->name);
                 stats->dma_map_err++;
@@ -373,7 +373,7 @@ static dma_addr_t ionic_tx_map_frag(struct queue *q,
                                     (vmk_MA) sg_elem->addr + offset,
                                     len);
         if (VMK_UNLIKELY(!dma_addr)) {
-                ionic_err("ionic_dma_map_ma() failed,  DMA frag map "
+                ionic_en_err("ionic_dma_map_ma() failed,  DMA frag map "
                           "failed on %s!\n",
                           q->name);
                 stats->dma_map_err++;
@@ -400,7 +400,7 @@ ionic_tx_unmap_frag(struct queue *q,
                                  len,
                                  ioa);
         if (VMK_UNLIKELY(status != VMK_OK)) {
-                ionic_err("ionic_dma_unmap() failed, status: %s",
+                ionic_en_err("ionic_dma_unmap() failed, status: %s",
                           vmk_StatusToString(status));
         }
 
@@ -489,7 +489,7 @@ ionic_tx_netpoll(vmk_AddrCookie priv,
                 poll_again = VMK_FALSE;
         }
 
-//        ionic_err("ionic_tx_netpoll(), ring_idx: %d, work_done: %d",
+//        ionic_en_err("ionic_tx_netpoll(), ring_idx: %d, work_done: %d",
 //                  ((struct qcq*)qcq)->ring_idx, polled);
 
         return poll_again;
@@ -511,7 +511,7 @@ ionic_rx_netpoll(vmk_AddrCookie priv,
                 poll_again = VMK_FALSE;
         }
 
-//        ionic_err("ionic_rx_netpoll(), ring_idx: %d, work_done: %d",
+//        ionic_en_err("ionic_rx_netpoll(), ring_idx: %d, work_done: %d",
 //                  ((struct qcq*)qcq)->ring_idx, polled);
 
         return poll_again;
@@ -725,7 +725,7 @@ ionic_tx_calc_csum(struct queue *q,
                                    vmk_PktFrameMappedPointerGet(pkt),
                                    ctx->mapped_len);
         if (VMK_UNLIKELY(!addr)) {
-                ionic_err("ionic_tx_map_single() failed, status:"
+                ionic_en_err("ionic_tx_map_single() failed, status:"
                           " VMK_DMA_MAPPING_FAILED");
                 return VMK_DMA_MAPPING_FAILED;
         }
@@ -771,7 +771,7 @@ ionic_tx_calc_no_csum(struct queue *q,
                                    vmk_PktFrameMappedPointerGet(pkt),
                                    ctx->mapped_len);
         if (VMK_UNLIKELY(!addr)) {
-                ionic_err("ionic_tx_map_single() failed, status:"
+                ionic_en_err("ionic_tx_map_single() failed, status:"
                           " VMK_DMA_MAPPING_FAILED");
                 return VMK_DMA_MAPPING_FAILED;
         }
@@ -817,7 +817,7 @@ static int ionic_tx_pkt_frags(struct queue *q,
         for (i = 1; len_left; i++, elem++) {
                 sg_elem = vmk_PktSgElemGet(pkt, i);
                 if (VMK_UNLIKELY(!sg_elem)) {
-                        ionic_err("vmk_PktSgElemGet() for index: %d failed", i);
+                        ionic_en_err("vmk_PktSgElemGet() for index: %d failed", i);
                         status = VMK_FAILURE;
                         stats->dma_map_err++;
                         goto map_err;
@@ -825,7 +825,7 @@ static int ionic_tx_pkt_frags(struct queue *q,
 
                 dma_addr = ionic_tx_map_frag(q, sg_elem, 0, sg_elem->length);
                 if (VMK_UNLIKELY(!dma_addr)) {
-                        ionic_err("ionic_tx_map_frag() failed, status: "
+                        ionic_en_err("ionic_tx_map_frag() failed, status: "
                                   "VMK_NO_MEMORY");
                         status = VMK_DMA_MAPPING_FAILED;
                         stats->dma_map_err++;
@@ -864,14 +864,14 @@ ionic_tx(struct queue *q,
         if (ctx->offload_flags & IONIC_TX_CSO) {
                 status  = ionic_tx_calc_csum(q, pkt, ctx);
                 if (status != VMK_OK) {
-                        ionic_err("ionic_tx_calc_csum() failed, status: %s",
+                        ionic_en_err("ionic_tx_calc_csum() failed, status: %s",
                                   vmk_StatusToString(status));
                         return status;
                 }
         } else {
                 status = ionic_tx_calc_no_csum(q, pkt, ctx);
                 if (status != VMK_OK) {
-                        ionic_err("ionic_tx_calc_no_csum() failed, "
+                        ionic_en_err("ionic_tx_calc_no_csum() failed, "
                                   "status: %s", vmk_StatusToString(status));
                         return status;
                 }
@@ -879,7 +879,7 @@ ionic_tx(struct queue *q,
 
         status = ionic_tx_pkt_frags(q, pkt, ctx);
         if (status != VMK_OK) {
-                ionic_err("ionic_tx_pkt_frags() failed, status: %s",
+                ionic_en_err("ionic_tx_pkt_frags() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -912,7 +912,7 @@ ionic_pkt_header_parse(vmk_PktHandle *pkt,
                                                           &l4_hdr_entry,
                                                           NULL);
                         if (status != VMK_OK) {
-                                ionic_err("vmk_PktHeaderEncapL4Find() failed, "
+                                ionic_en_err("vmk_PktHeaderEncapL4Find() failed, "
                                           "status: %s",
                                           vmk_StatusToString(status));
                                 return status;
@@ -922,7 +922,7 @@ ionic_pkt_header_parse(vmk_PktHandle *pkt,
                                                           &l3_hdr_entry,
                                                           NULL);
                         if (status != VMK_OK) {
-                                ionic_err("vmk_PktHeaderEncapL3Find() failed, "
+                                ionic_en_err("vmk_PktHeaderEncapL3Find() failed, "
                                           "status: %s",
                                           vmk_StatusToString(status));
                                 return status;
@@ -933,7 +933,7 @@ ionic_pkt_header_parse(vmk_PktHandle *pkt,
                                                      &l4_hdr_entry,
                                                      NULL);
                         if (status != VMK_OK) {
-                                ionic_err("vmk_PktHeaderL4Find() failed, "
+                                ionic_en_err("vmk_PktHeaderL4Find() failed, "
                                           "status: %s",
                                           vmk_StatusToString(status));
                                 return status;
@@ -943,7 +943,7 @@ ionic_pkt_header_parse(vmk_PktHandle *pkt,
                                                      &l3_hdr_entry,
                                                      NULL);
                         if (status != VMK_OK) {
-                                ionic_err("vmk_PktHeaderL3Find() failed, "
+                                ionic_en_err("vmk_PktHeaderL3Find() failed, "
                                           "status: %s",
                                           vmk_StatusToString(status));
                                 return status;
@@ -958,7 +958,7 @@ ionic_pkt_header_parse(vmk_PktHandle *pkt,
                 */ 
                if (VMK_UNLIKELY(l4_hdr_entry->nextHdrOffset >
                                 IONIC_MAX_TX_BUF_SIZE)) {
-                        ionic_err("Drop over-sized TSO header, size: %d",
+                        ionic_en_err("Drop over-sized TSO header, size: %d",
                                   l4_hdr_entry->nextHdrOffset);
                         return status;
                 }
@@ -970,7 +970,7 @@ ionic_pkt_header_parse(vmk_PktHandle *pkt,
                                    vmk_offsetof(vmk_UDPHdr, checksum);
                 if (VMK_UNLIKELY(l4_hdr_entry->offset + ctx->csum_offset >
                                  IONIC_MAX_CSUM_OFFSET)) {
-                        ionic_err("Drop over-sized CSO header, size: %d",
+                        ionic_en_err("Drop over-sized CSO header, size: %d",
                                   l4_hdr_entry->offset + ctx->csum_offset);
                         return status;
                 }
@@ -1023,7 +1023,7 @@ linearize:
 
         status = vmk_PktCopy(orig_pkt, &flat_pkt);
         if (VMK_UNLIKELY(status != VMK_OK)) {
-                ionic_err("Failed to linearize non-TSO pkt");
+                ionic_en_err("Failed to linearize non-TSO pkt");
                 *num_tx_descs = 0;
                 goto out;
         }
@@ -1056,7 +1056,7 @@ ionic_start_xmit(vmk_PktHandle *pkt,
 
         if (ionic_en_is_queue_stop(uplink_handle,
                                    tx_ring->shared_q_data_idx)) {
-                ionic_info("Queue: %d is not available",
+                ionic_en_info("Queue: %d is not available",
                            tx_ring->shared_q_data_idx);
                 return VMK_BUSY;
         }
@@ -1067,7 +1067,7 @@ ionic_start_xmit(vmk_PktHandle *pkt,
                                        &ndescs,
                                        &ctx);
         if (status != VMK_OK) {
-                ionic_err("ionic_tx_descs_needed() failed, status: %s",
+                ionic_en_err("ionic_tx_descs_needed() failed, status: %s",
                           vmk_StatusToString(status));
                 goto err_out_drop;
         }
@@ -1105,7 +1105,7 @@ ionic_start_xmit(vmk_PktHandle *pkt,
         status = ionic_pkt_header_parse(pkt,
                                         &ctx);
         if (status != VMK_OK) {
-                ionic_err("ionic_pkt_header_parse() failed, status: %s",
+                ionic_en_err("ionic_pkt_header_parse() failed, status: %s",
                           vmk_StatusToString(status));
                 goto err_out_drop;
         }
@@ -1120,7 +1120,7 @@ ionic_start_xmit(vmk_PktHandle *pkt,
         }
         //TODO: improve logging
         if (status != VMK_OK) {
-                ionic_err("ionic_tx() failed, status: %s",
+                ionic_en_err("ionic_tx() failed, status: %s",
                           vmk_StatusToString(status));
                 goto err_out_drop;
         }
@@ -1289,7 +1289,7 @@ ionic_en_rx_ring_init(vmk_uint32 ring_idx,
 
         status = ionic_qcq_enable(rx_ring->rxqcq);
         if (status != VMK_OK) {
-                ionic_err("ionic_qcq_enable() failed, status: %s",
+                ionic_en_err("ionic_qcq_enable() failed, status: %s",
                           vmk_StatusToString(status));
         }
 
@@ -1377,7 +1377,7 @@ ionic_en_rx_rss_init(struct ionic_en_priv_data *priv_data,
         rx_rss_ring = &uplink_handle->rx_rss_ring;
         num_attached_rings = uplink_handle->rx_rings_per_rss_queue;
 
-        ionic_dbg("ionic_en_rx_rss_ring_init() called");
+        ionic_en_dbg("ionic_en_rx_rss_ring_init() called");
 
         /* We only have one rx rss ring */
         rx_rss_ring->ring_idx              = 0;
@@ -1388,7 +1388,7 @@ ionic_en_rx_rss_init(struct ionic_en_priv_data *priv_data,
         for (i = 0; i < num_attached_rings; i++) {
                 attached_rx_ring_idx = uplink_handle->max_rx_normal_queues + i;
  
-                ionic_dbg("INIT rx rss, ring_idx: %d, shared_q_idx: %d, "
+                ionic_en_dbg("INIT rx rss, ring_idx: %d, shared_q_idx: %d, "
                           "attached rx ring idx: %d",
                           i, rx_rss_ring->shared_q_data_idx,
                           attached_rx_ring_idx);
@@ -1398,7 +1398,7 @@ ionic_en_rx_rss_init(struct ionic_en_priv_data *priv_data,
                                                priv_data,
                                                lif);
                 if (status != VMK_OK) {
-                        ionic_err("ionic_en_rx_ring_init() failed, status: %s",
+                        ionic_en_err("ionic_en_rx_ring_init() failed, status: %s",
                                   vmk_StatusToString(status));
                         goto rx_ring_err;
                 }
@@ -1464,7 +1464,7 @@ ionic_en_rx_rss_deinit(struct ionic_en_priv_data *priv_data,
         for (i = 0; i < num_attached_rings; i++) {
                 attached_rx_ring_idx = uplink_handle->max_rx_normal_queues + i;
  
-                ionic_dbg("DEINIT rx rss, ring_idx: %d, shared_q_idx: %d"
+                ionic_en_dbg("DEINIT rx rss, ring_idx: %d, shared_q_idx: %d"
                           "attached rx ring idx: %d",
                           i, rx_rss_ring->shared_q_data_idx,
                           attached_rx_ring_idx);

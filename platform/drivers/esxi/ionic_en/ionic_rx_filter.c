@@ -32,7 +32,7 @@ ionic_rx_filter_del(struct lif *lif, struct rx_filter *f)
 					 "ionic_admin_ctx.work",
 					 &ctx.work);
 	if (status != VMK_OK) {
-		ionic_err("ionic_completion_create() failed, status: %s",
+		ionic_en_err("ionic_completion_create() failed, status: %s",
 			  vmk_StatusToString(status));
 		return status;
 	}
@@ -40,12 +40,12 @@ ionic_rx_filter_del(struct lif *lif, struct rx_filter *f)
         status  = ionic_adminq_post_wait(lif, &ctx);
         ionic_completion_destroy(&ctx.work);
 	if (status != VMK_OK) {
-                ionic_err("ionic_adminq_post_wait() failed, status: %s",
+                ionic_en_err("ionic_adminq_post_wait() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
 
-	ionic_info("rx_filter del (id %d)\n",
+	ionic_en_info("rx_filter del (id %d)\n",
 		   ctx.cmd.rx_filter_del.filter_id);
 
         return status;
@@ -89,7 +89,7 @@ ionic_rx_filters_init(struct lif *lif)
                                        IONIC_LOCK_RANK_HIGH,
                                        &lif->rx_filters.lock);
         if (status != VMK_OK) {
-                ionic_err("ionic_spinlock_create() failed, status: %s",
+                ionic_en_err("ionic_spinlock_create() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -108,7 +108,7 @@ ionic_rx_filters_init(struct lif *lif)
         status = vmk_HashAlloc(&hash_props,
                                &lif->rx_filters.by_hash);
         if (status != VMK_OK) {
-                ionic_err("vmk_HashAlloc() failed, status: %s",
+                ionic_en_err("vmk_HashAlloc() failed, status: %s",
                           vmk_StatusToString(status));
                 goto by_hash_err;
         }
@@ -129,14 +129,14 @@ ionic_rx_filters_hash_tables_destroy(struct rx_filters *rx_filters)     // IN
         vmk_SpinlockLock(rx_filters->lock);
         status = vmk_HashDeleteAll(rx_filters->by_hash);
         if (status != VMK_OK) {
-                ionic_err("vmk_HashDeleteAll() failed, status: %s",
+                ionic_en_err("vmk_HashDeleteAll() failed, status: %s",
                           vmk_StatusToString(status));
         }
         vmk_SpinlockUnlock(rx_filters->lock);
 
         status = vmk_HashRelease(rx_filters->by_hash);
         if (status != VMK_OK) {
-                ionic_err("vmk_HashRelease() failed, status: %s",
+                ionic_en_err("vmk_HashRelease() failed, status: %s",
                           vmk_StatusToString(status));
         }
 
@@ -155,9 +155,9 @@ void ionic_rx_filters_deinit(struct lif *lif)
                                     ionic_hash_table_free_filter_iterator,
                                     addr_cookie);
         if (status == VMK_OK) {
-                ionic_info("vmk_HashKeyIterate() returns %d elements", cnt);
+                ionic_en_info("vmk_HashKeyIterate() returns %d elements", cnt);
         } else {
-                ionic_err("vmk_HashKeyIterate() failed, status: %s",
+                ionic_en_err("vmk_HashKeyIterate() failed, status: %s",
                           vmk_StatusToString(status));
         }
 
@@ -180,7 +180,7 @@ ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
                               sizeof(struct rx_filter));
         if (VMK_UNLIKELY(f == NULL)) {
                 status = VMK_NO_MEMORY;
-                ionic_err("ionic_heap_zalloc() failed, status: %s",
+                ionic_en_err("ionic_heap_zalloc() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -202,7 +202,7 @@ ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
                         key = f->cmd.mac_vlan.vlan & RX_FILTER_HLISTS_MASK;
                         break;
                 default:
-                        ionic_err("Unsupported filter command, %d", f->cmd.match);
+                        ionic_en_err("Unsupported filter command, %d", f->cmd.match);
                         return VMK_NOT_SUPPORTED;
         }
 
@@ -212,7 +212,7 @@ ionic_rx_filter_save(struct lif *lif, u32 flow_id, u16 rxq_index,
                                    (vmk_HashKey) (vmk_uint64) key,
                                    (vmk_HashValue) f);
         if (status != VMK_OK) {
-                ionic_err("vmk_HashKeyInsert() failed, status: %s",
+                ionic_en_err("vmk_HashKeyInsert() failed, status: %s",
                           vmk_StatusToString(status));
                 goto by_hash_insert_err;
         }

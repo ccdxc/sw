@@ -34,6 +34,7 @@
 #include "ionic_en_mq.h"
 #include "ionic_api.h"
 
+#define IONIC_DRV_NAME        "ionic_en"
 #define DRV_DESCRIPTION       "Pensando Ethernet NIC Driver"
 #define DRV_VERSION           "0.8"
 #define DRV_REL_DATE          "Mar-31-2019"
@@ -49,6 +50,41 @@
 #define MIN_NUM_RX_DESC       128
 #define MAX_NUM_RX_DESC       1024 * 8
 
+#define ionic_en_err(fmt, args...)                                    \
+   vmk_LogLevel(VMK_LOG_URGENCY_ALERT,                                \
+                ionic_driver.log_component,                           \
+                (IONIC_LOG_LEVEL_ERR),                                \
+                "<%s> %s: " fmt "\n",                                 \
+                ionic_verbosity_Levels[IONIC_LOG_LEVEL_ERR],          \
+                __FUNCTION__,                                         \
+                ##args)
+
+#define ionic_en_warn(fmt, args...)                                   \
+   vmk_LogLevel(VMK_LOG_URGENCY_WARNING,                              \
+                ionic_driver.log_component,                           \
+                (IONIC_LOG_LEVEL_WARN),                               \
+                "<%s> %s: " fmt "\n",                                 \
+                ionic_verbosity_Levels[IONIC_LOG_LEVEL_WARN],         \
+                __FUNCTION__,                                         \
+                ##args)
+
+#define ionic_en_info(fmt, args...)                                   \
+   vmk_LogLevel(VMK_LOG_URGENCY_NORMAL,                               \
+                ionic_driver.log_component,                           \
+                (IONIC_LOG_LEVEL_INFO),                               \
+                "<%s> %s: " fmt "\n",                                 \
+                ionic_verbosity_Levels[IONIC_LOG_LEVEL_INFO],         \
+                __FUNCTION__,                                         \
+                ##args)
+
+#define ionic_en_dbg(fmt, args...)                                    \
+   vmk_LogLevel(VMK_LOG_URGENCY_DEBUG,                                \
+                ionic_driver.log_component,                           \
+                (IONIC_LOG_LEVEL_DBG),                                \
+                "<%s> %s: " fmt "\n",                                 \
+                ionic_verbosity_Levels[IONIC_LOG_LEVEL_DBG],          \
+                __FUNCTION__,                                         \
+                ##args)
 
 extern unsigned int ntxq_descs;
 extern unsigned int nrxq_descs;

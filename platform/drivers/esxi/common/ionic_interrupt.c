@@ -8,7 +8,8 @@
  * Implement interrupt related APIs 
  */
 
-#include "ionic.h"
+#include "ionic_log.h"
+#include "ionic_memory.h"
 
 /*
  ******************************************************************************

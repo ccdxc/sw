@@ -56,6 +56,7 @@ ionic_is_eth_addr_equal(vmk_EthAddress addr1,
 void
 ionic_hex_dump(char *desc,
                void *addr,
-               vmk_uint32 len);
+               vmk_uint32 len,
+               vmk_LogComponent log_comp);
 
 #endif /* End of _IONIC_UTILITIES_H_ */

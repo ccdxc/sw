@@ -8,8 +8,10 @@
  * Implement completion related functions 
  */
 
-#include "ionic.h"
-
+#include "ionic_log.h"
+#include "ionic_completion.h"
+#include "ionic_locks.h"
+#include "ionic_utilities.h"
 //static vmk_uint32 compl_counter = 0;
 
 /*

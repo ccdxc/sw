@@ -8,7 +8,8 @@
  * Implement all lock related functions
  */
 
-#include "ionic.h"
+#include "ionic_log.h"
+#include "ionic_locks.h"
 
 /*
  ******************************************************************************

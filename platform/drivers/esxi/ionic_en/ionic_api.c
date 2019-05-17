@@ -17,7 +17,8 @@ static void ionic_api_adminq_cb(struct queue *q, struct desc_info *desc_info,
 
         ionic_hex_dump("comp admin queue command",
                        &ctx->comp,
-                       sizeof(ctx->comp));
+                       sizeof(ctx->comp),
+                       ionic_driver.log_component);
 
         ionic_complete(&ctx->work);
 }
@@ -38,7 +39,8 @@ ionic_api_adminq_post(struct lif *lif, struct ionic_admin_ctx *ctx)
 
         ionic_hex_dump("post admin queue command",
                        &ctx->cmd,
-                       sizeof(ctx->cmd));
+                       sizeof(ctx->cmd),
+                       ionic_driver.log_component);
 
         ionic_q_post(adminq, true, ionic_api_adminq_cb, ctx);
 

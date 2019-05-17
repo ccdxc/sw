@@ -28,7 +28,7 @@ VMK_ReturnStatus ionic_dev_setup(struct ionic *ionic)
 
         sig = ionic_readl_raw((vmk_VA)&idev->dev_info->signature);
         if (sig != IONIC_DEV_INFO_SIGNATURE) {
-            ionic_err("Incompatible firmware signature %x", sig);
+            ionic_en_err("Incompatible firmware signature %x", sig);
             return VMK_BAD_ADDR_RANGE;
         }
 
@@ -53,7 +53,7 @@ VMK_ReturnStatus ionic_dev_setup(struct ionic *ionic)
                                     VMK_MUTEX_UNRANKED,
                                     &idev->cmb_inuse_lock);
         if (status != VMK_OK) {
-                ionic_err("ionic_mutex_create() faild, status: %s",
+                ionic_en_err("ionic_mutex_create() faild, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }

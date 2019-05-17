@@ -99,7 +99,7 @@ static VMK_ReturnStatus
 ionic_en_priv_stats_len_get(vmk_AddrCookie driver_data,
                             vmk_ByteCount *length)
 {
-        ionic_dbg("ionic_en_priv_stats_len_get() called");
+        ionic_en_dbg("ionic_en_priv_stats_len_get() called");
         *length = IONIC_EN_MAX_BUF_SIZE_PRIV_STATS;
 
         return VMK_OK;
@@ -118,7 +118,7 @@ ionic_en_priv_stats_get(vmk_AddrCookie driver_data,
                 (struct ionic_en_priv_data *) driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_dbg("ionic_en_priv_stats_get() called");
+        ionic_en_dbg("ionic_en_priv_stats_get() called");
 
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
@@ -182,7 +182,7 @@ ionic_en_queue_get_rss_params(vmk_AddrCookie driver_data,
         struct lif *lif;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_dbg("ionic_en_queue_get_rss_params() called");
+        ionic_en_dbg("ionic_en_queue_get_rss_params() called");
 
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
@@ -206,20 +206,20 @@ ionic_en_queue_init_rss_state(vmk_AddrCookie driver_data,
         struct ionic_en_priv_data *priv_data =
                 (struct ionic_en_priv_data *) driver_data.ptr;
 
-        ionic_dbg("ionic_en_queue_init_rss_state() called");
+        ionic_en_dbg("ionic_en_queue_init_rss_state() called");
 
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
 
         if (rss_hash_key->keySize > IONIC_RSS_HASH_KEY_SIZE) {
-                ionic_err("RSS hash key size(%d) is not valid,"
+                ionic_en_err("RSS hash key size(%d) is not valid,"
                           " it should be less or equal to (%d).",
                           rss_hash_key->keySize, IONIC_RSS_HASH_KEY_SIZE);
                 return VMK_BAD_PARAM;
         }
 
         if (rss_ind_tbl->tableSize > lif->ionic->ident.lif.eth.rss_ind_tbl_sz) {
-                ionic_err("RSS indirection table size(%d) is not valid,"
+                ionic_en_err("RSS indirection table size(%d) is not valid,"
                           " it should be less or equal to (%d).",
                           rss_ind_tbl->tableSize, lif->ionic->ident.lif.eth.rss_ind_tbl_sz);
                 return VMK_BAD_PARAM;
@@ -243,7 +243,7 @@ ionic_en_queue_init_rss_state(vmk_AddrCookie driver_data,
 
 	status = ionic_lif_rss_config(lif, lif->rss_types, NULL, NULL);
 	if (status != VMK_OK) {
-                ionic_err("ionic_lif_rss_config() failed, status: %s",
+                ionic_en_err("ionic_lif_rss_config() failed, status: %s",
                           vmk_StatusToString(status));
 		return status;
         }
@@ -261,13 +261,13 @@ ionic_en_queue_update_rss_table(vmk_AddrCookie driver_data,
         struct ionic_en_priv_data *priv_data =
                  (struct ionic_en_priv_data *) driver_data.ptr;
 
-        ionic_dbg("ionic_en_queue_update_rss_table() called");
+        ionic_en_dbg("ionic_en_queue_update_rss_table() called");
 
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
 
         if (rss_ind_tbl->tableSize > lif->ionic->ident.lif.eth.rss_ind_tbl_sz){
-                ionic_err("RSS indirection talbe sie(%d) is not valid,"
+                ionic_en_err("RSS indirection talbe sie(%d) is not valid,"
                           " it should be less or equal to (%d).",
                           rss_ind_tbl->tableSize, lif->ionic->ident.lif.eth.rss_ind_tbl_sz);
                 return VMK_BAD_PARAM;
@@ -282,7 +282,7 @@ ionic_en_queue_update_rss_table(vmk_AddrCookie driver_data,
 
 	status = ionic_lif_rss_config(lif, lif->rss_types, NULL, NULL);
 	if (status != VMK_OK) {
-                ionic_err("ionic_lif_rss_config() failed, status: %s",
+                ionic_en_err("ionic_lif_rss_config() failed, status: %s",
                           vmk_StatusToString(status));
 		return status;
         }
@@ -299,7 +299,7 @@ ionic_en_queue_get_rss_table(vmk_AddrCookie driver_data,
         struct ionic_en_priv_data *priv_data =
                  (struct ionic_en_priv_data *) driver_data.ptr;
 
-        ionic_dbg("ionic_en_queue_get_rss_table() called");
+        ionic_en_dbg("ionic_en_queue_get_rss_table() called");
 
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
@@ -331,7 +331,7 @@ ionic_en_uplink_pause_params_get(vmk_AddrCookie driver_data,
         struct ionic *ionic = &priv_data->ionic;
         struct ionic_dev *idev = &ionic->en_dev.idev;
 
-        ionic_dbg("ionic_en_uplink_pause_params_get() called");
+        ionic_en_dbg("ionic_en_uplink_pause_params_get() called");
 
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
@@ -361,7 +361,7 @@ ionic_en_uplink_pause_params_set(vmk_AddrCookie driver_data,
         struct ionic *ionic = &priv_data->ionic;
         struct ionic_dev *idev = &ionic->en_dev.idev;
 
-        ionic_dbg("ionic_en_uplink_pause_params_set() called");
+        ionic_en_dbg("ionic_en_uplink_pause_params_set() called");
 
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
                              struct lif, list);
@@ -379,7 +379,7 @@ ionic_en_uplink_pause_params_set(vmk_AddrCookie driver_data,
         status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
         vmk_MutexUnlock(ionic->dev_cmd_lock);
         if (status != VMK_OK) {
-                ionic_err("ionic_dev_cmd_port_autoneg() failed, status: %s",
+                ionic_en_err("ionic_dev_cmd_port_autoneg() failed, status: %s",
                                 vmk_StatusToString(status));
         }
 
@@ -388,7 +388,7 @@ ionic_en_uplink_pause_params_set(vmk_AddrCookie driver_data,
         status = ionic_dev_cmd_wait_check(idev, HZ * devcmd_timeout);
         vmk_MutexUnlock(ionic->dev_cmd_lock);
         if (status != VMK_OK) {
-                ionic_err("ionic_dev_cmd_port_pause() failed, status: %s",
+                ionic_en_err("ionic_dev_cmd_port_pause() failed, status: %s",
                                 vmk_StatusToString(status));
         }
 
@@ -595,7 +595,7 @@ ionic_en_uplink_link_state_update(struct ionic_en_uplink_handle *uplink_handle) 
 
         if (vmk_Memcmp(&shared_data->link, &link_info, sizeof(vmk_LinkStatus))) {
                 is_update_needed = VMK_TRUE;
-                ionic_info("%s: Link state: %s speed: %u MBPS,"
+                ionic_en_info("%s: Link state: %s speed: %u MBPS,"
                            " Shared Link state: %s speed: %u MBPS",
                            vmk_NameToString(&uplink_handle->uplink_name),
                            link_info.state == VMK_LINK_STATE_UP ?
@@ -611,7 +611,7 @@ ionic_en_uplink_link_state_update(struct ionic_en_uplink_handle *uplink_handle) 
 
         if (is_update_needed) {
                 vmk_UplinkUpdateLinkState(uplink_handle->uplink_dev, &link_info);
-                ionic_info("%s: Changed Shared Link state: %s speed: %u MBPS",
+                ionic_en_info("%s: Changed Shared Link state: %s speed: %u MBPS",
                            vmk_NameToString(&uplink_handle->uplink_name),
                            shared_data->link.state == VMK_LINK_STATE_UP ?
                            "UP" : "DOWN",
@@ -691,13 +691,13 @@ ionic_en_link_status_set(vmk_AddrCookie driver_data,              // IN
                 (struct ionic_en_priv_data *) driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_dbg("ionic_en_link_status_set() called");
+        ionic_en_dbg("ionic_en_link_status_set() called");
 
         VMK_ASSERT(priv_data != NULL);
         VMK_ASSERT(uplink_handle != NULL);
 
         if (!link_info) {
-                ionic_err("link_info is not valid");
+                ionic_en_err("link_info is not valid");
                 return VMK_FAILURE;
         }
 
@@ -712,7 +712,7 @@ ionic_en_link_status_set(vmk_AddrCookie driver_data,              // IN
                    sizeof(vmk_LinkStatus));
         vmk_SpinlockUnlock(uplink_handle->link_status_lock);
 
-        ionic_info("Current link state: %s , expected link state: %s ",
+        ionic_en_info("Current link state: %s , expected link state: %s ",
                    (curr_link_info.state == VMK_LINK_STATE_UP) ?
                    "UP" : "DOWN",
                    (link_info->state == VMK_LINK_STATE_UP) ?
@@ -723,7 +723,7 @@ ionic_en_link_status_set(vmk_AddrCookie driver_data,              // IN
                 case VMK_LINK_STATE_DOWN:
                         status = ionic_en_uplink_quiesce_io(driver_data);
                         if (status != VMK_OK) {
-                                ionic_err("ionic_en_UplinkQuiesceIO failed: %s",
+                                ionic_en_err("ionic_en_UplinkQuiesceIO failed: %s",
                                           vmk_StatusToString(status));
                         }
 
@@ -732,14 +732,14 @@ ionic_en_link_status_set(vmk_AddrCookie driver_data,              // IN
 //                        ionic_en_uplink_quiesce_io(priv_data);
                         status = ionic_en_uplink_start_io(driver_data);
                          if (status != VMK_OK) {
-                                ionic_err("ionic_en_UplinkStartIO failed: %s",
+                                ionic_en_err("ionic_en_UplinkStartIO failed: %s",
                                           vmk_StatusToString(status));
                         }
 
                         vmk_WorldForceWakeup(uplink_handle->link_check_world);
                         break;
                 default:
-                        ionic_warn("Unknown link state=0x%x", link_info->state);
+                        ionic_en_warn("Unknown link state=0x%x", link_info->state);
                         status = VMK_BAD_PARAM;
                         break;
         }
@@ -789,12 +789,12 @@ ionic_en_get_tx_ring_from_qid(struct ionic_en_uplink_handle *uplink_handle,   //
                 if (cond1 && cond2 && cond3 && cond4) {
                         tx_ring = &(uplink_handle->tx_rings[tx_ring_idx]);
                 } else {
-                        ionic_err("Failed at validating tx qid mapping, q_type: %u, "
+                        ionic_en_err("Failed at validating tx qid mapping, q_type: %u, "
                                   "shared_q_data_idx: %u, tx_ring_idx: %u, ",
                                   q_type, shared_q_data_idx, tx_ring_idx);
                 }
         } else {
-                ionic_dbg("Invalid uplink qid, shared_q_data_idx: %u,"
+                ionic_en_dbg("Invalid uplink qid, shared_q_data_idx: %u,"
                           "q_type: %u, tx_ring_idx: %u",
                           shared_q_data_idx, q_type, tx_ring_idx);
         }
@@ -857,7 +857,7 @@ ionic_en_uplink_tx(vmk_AddrCookie driver_data,                    // IN
         tx_ring = ionic_en_get_tx_ring_from_qid(uplink_handle,
                                                 vmk_qid);
         if (VMK_UNLIKELY(!tx_ring)) {
-                ionic_dbg("ionic_en_get_tx_ring_from_qid() failed.");
+                ionic_en_dbg("ionic_en_get_tx_ring_from_qid() failed.");
                 goto tx_ring_err;
         }
 
@@ -926,7 +926,7 @@ ionic_en_uplink_mtu_set(vmk_AddrCookie driver_data,               // IN
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
         if (uplink_handle->is_mgmt_nic) {
-                ionic_warn("MTU of mnic shouldn't be changed.");
+                ionic_en_warn("MTU of mnic shouldn't be changed.");
                 return VMK_FAILURE;
         }
 
@@ -943,26 +943,26 @@ ionic_en_uplink_mtu_set(vmk_AddrCookie driver_data,               // IN
                 },
         };
 
-        ionic_dbg("ionic_en_uplink_mtu_set() called");
+        ionic_en_dbg("ionic_en_uplink_mtu_set() called");
 
         IONIC_EN_SHARED_AREA_BEGIN_READ(uplink_handle);
         cur_mtu = uplink_handle->uplink_shared_data.mtu;
         IONIC_EN_SHARED_AREA_END_READ(uplink_handle);
 
         if (new_mtu > IONIC_MAX_MTU || new_mtu < IONIC_MIN_MTU) {
-                ionic_warn("Invalid MTU size: %d", new_mtu);
+                ionic_en_warn("Invalid MTU size: %d", new_mtu);
                 status = VMK_BAD_PARAM;
                 goto out;
         }
 
         if (cur_mtu == new_mtu) {
-                ionic_warn("New MTU value: %d is the same as current"
+                ionic_en_warn("New MTU value: %d is the same as current"
                            " MTU value: %d",
                            new_mtu, cur_mtu);
                 goto out;
         }
 
-        ionic_info("Current MTU: %d, new MTU: %d", cur_mtu, new_mtu);
+        ionic_en_info("Current MTU: %d, new MTU: %d", cur_mtu, new_mtu);
 
         ionic_en_uplink_quiesce_io(driver_data);
 
@@ -972,7 +972,7 @@ ionic_en_uplink_mtu_set(vmk_AddrCookie driver_data,               // IN
 					 "ionic_admin_ctx.work",
 					 &ctx.work);
 	if (status != VMK_OK) {
-		ionic_err("ionic_completion_create() failed, status: %s",
+		ionic_en_err("ionic_completion_create() failed, status: %s",
 			  vmk_StatusToString(status));
 		goto change_mtu_err;
 	}
@@ -981,7 +981,7 @@ ionic_en_uplink_mtu_set(vmk_AddrCookie driver_data,               // IN
         status = ionic_adminq_post_wait(lif, &ctx);
         ionic_completion_destroy(&ctx.work);
 	if (status != VMK_OK) {
-                ionic_err("ionic_adminq_post_wait() failed, status: %s",
+                ionic_en_err("ionic_adminq_post_wait() failed, status: %s",
                           vmk_StatusToString(status));
                 goto change_mtu_err;
         }
@@ -1034,7 +1034,7 @@ ionic_en_uplink_state_set(vmk_AddrCookie driver_data,             // IN
                 (struct ionic_en_priv_data *) driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_dbg("ionic_en_uplink_state_set() called");
+        ionic_en_dbg("ionic_en_uplink_state_set() called");
 
         cur_state = uplink_handle->prev_state;
 
@@ -1051,7 +1051,7 @@ ionic_en_uplink_state_set(vmk_AddrCookie driver_data,             // IN
 
         status = ionic_set_rx_mode(lif, new_state);
         if (status != VMK_OK) {
-                ionic_err("ionic_set_rx_mode() failed, status: %s",
+                ionic_en_err("ionic_set_rx_mode() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -1206,7 +1206,7 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                 (struct ionic_en_priv_data *) driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_dbg("ionic_en_uplink_associate() called");
+        ionic_en_dbg("ionic_en_uplink_associate() called");
 
         uplink_handle->uplink_dev = uplink;
         uplink_name = vmk_UplinkNameGet(uplink);
@@ -1219,7 +1219,7 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                              struct lif, list);
         status = ionic_lif_set_uplink_info(lif);
         if (status != VMK_OK) {
-                ionic_err("ionic_lif_set_uplink_info() failed, status: %s",
+                ionic_en_err("ionic_lif_set_uplink_info() failed, status: %s",
                           vmk_StatusToString(status));
         }
 
@@ -1227,7 +1227,7 @@ ionic_en_uplink_associate(vmk_AddrCookie driver_data,             // IN
                                        priv_data,
                                        &ionic_driver.uplink_dev_list);
         if (status != VMK_OK) {
-                ionic_err("ionic_device_list_add() failed, status: %s",
+                ionic_en_err("ionic_device_list_add() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -1367,7 +1367,7 @@ ionic_en_uplink_disassociate(vmk_AddrCookie driver_data)          // IN
                 (struct ionic_en_priv_data *) driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_dbg("ionic_en_uplink_disassociate() called");
+        ionic_en_dbg("ionic_en_uplink_disassociate() called");
 
         uplink_name = vmk_UplinkNameGet(uplink_handle->uplink_dev);
 
@@ -1375,7 +1375,7 @@ ionic_en_uplink_disassociate(vmk_AddrCookie driver_data)          // IN
                                           &ionic_driver.uplink_dev_list,
                                           NULL);
         if (status != VMK_OK) {
-                ionic_err("ionic_device_list_remove() failed, status: %s",
+                ionic_en_err("ionic_device_list_remove() failed, status: %s",
                           vmk_StatusToString(status));
         }
 
@@ -1411,7 +1411,7 @@ VMK_ReturnStatus
 ionic_en_uplink_cap_enable(vmk_AddrCookie driver_data,            // IN
                            vmk_UplinkCap cap)                     // IN
 {
-        ionic_info("ionic_en_uplink_cap_enable() called, "
+        ionic_en_info("ionic_en_uplink_cap_enable() called, "
                    "cap: %d is enabled.", cap);
 
         return VMK_OK;
@@ -1442,7 +1442,7 @@ VMK_ReturnStatus
 ionic_en_uplink_cap_disable(vmk_AddrCookie driver_data,           // IN
                             vmk_UplinkCap cap)                    // IN
 {
-        ionic_info("ionic_en_uplink_cap_disable() called, "
+        ionic_en_info("ionic_en_uplink_cap_disable() called, "
                    "cap: %d is disabled.", cap);
         return VMK_OK;
 }
@@ -1472,7 +1472,7 @@ ionic_link_check_world(void *data)                                // IN
         VMK_ReturnStatus status = VMK_OK;
         struct ionic_en_uplink_handle *uplink_handle = data;
 
-        ionic_dbg("ionic_link_check_world() called");
+        ionic_en_dbg("ionic_link_check_world() called");
 
         while (status != VMK_DEATH_PENDING) {
                 status = vmk_WorldWait(VMK_EVENT_NONE,
@@ -1521,11 +1521,11 @@ ionic_en_uplink_start_io(vmk_AddrCookie driver_data)              // IN
                 (struct ionic_en_priv_data *) driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_dbg("ionic_en_uplink_start_io() called");
+        ionic_en_dbg("ionic_en_uplink_start_io() called");
 
         vmk_SemaLock(&uplink_handle->status_binary_sema);
         if (uplink_handle->is_started) {
-                ionic_dbg("Uplink is already started");
+                ionic_en_dbg("Uplink is already started");
                 status = VMK_OK;
                 goto out;
         }
@@ -1537,7 +1537,7 @@ ionic_en_uplink_start_io(vmk_AddrCookie driver_data)              // IN
         status = ionic_open(lif);
         //vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         if (status != VMK_OK) {
-                ionic_err("ionic_open() failed, status: %s",
+                ionic_en_err("ionic_open() failed, status: %s",
                           vmk_StatusToString(status));
                 goto out;
         }
@@ -1554,7 +1554,7 @@ ionic_en_uplink_start_io(vmk_AddrCookie driver_data)              // IN
         status = vmk_WorldCreate(&world_props,
                                  &uplink_handle->link_check_world);
         if (status != VMK_OK) {
-                ionic_err("vmk_WorldCreate() failed, status: %s",
+                ionic_en_err("vmk_WorldCreate() failed, status: %s",
                           vmk_StatusToString(status));
                 goto world_create_err;
         }
@@ -1606,12 +1606,12 @@ ionic_en_uplink_quiesce_io(vmk_AddrCookie driver_data)            // IN
                 (struct ionic_en_priv_data *) driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_dbg("ionic_en_uplink_quiesce_io() called");
+        ionic_en_dbg("ionic_en_uplink_quiesce_io() called");
 
         vmk_SemaLock(&uplink_handle->status_binary_sema);
         uplink_handle->is_ready_notify_linkup = VMK_FALSE;
         if (!uplink_handle->is_started) {
-                ionic_dbg("Uplink is already stopped");
+                ionic_en_dbg("Uplink is already stopped");
                 vmk_SemaUnlock(&uplink_handle->status_binary_sema);
                 return VMK_OK;
         }
@@ -1623,7 +1623,7 @@ ionic_en_uplink_quiesce_io(vmk_AddrCookie driver_data)            // IN
         status = ionic_stop(lif);
         //vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         if (status != VMK_OK) {
-                ionic_err("ionic_stop() failed, status: %s",
+                ionic_en_err("ionic_stop() failed, status: %s",
                           vmk_StatusToString(status));
         }
 
@@ -1664,18 +1664,18 @@ VMK_ReturnStatus
 ionic_en_uplink_reset(vmk_AddrCookie driver_data)                 // IN
 {
         VMK_ReturnStatus status;
-        ionic_dbg("ionic_en_uplink_reset() called");
+        ionic_en_dbg("ionic_en_uplink_reset() called");
 
         status = ionic_en_uplink_quiesce_io(driver_data);
         if (status != VMK_OK) {
-                ionic_err("ionic_en_uplink_quiesce_io() failed, status: %s",
+                ionic_en_err("ionic_en_uplink_quiesce_io() failed, status: %s",
                           vmk_StatusToString(status));
                 return VMK_FAILURE;
         }
 
         status = ionic_en_uplink_start_io(driver_data);
         if (status != VMK_OK) {
-                ionic_err("ionic_en_uplink_start_io() failed, status: %s",
+                ionic_en_err("ionic_en_uplink_start_io() failed, status: %s",
                           vmk_StatusToString(status));
         }
 
@@ -1715,7 +1715,7 @@ ionic_en_uplink_driver_info_init(struct ionic_en_priv_data *priv_data,  // IN
         status = vmk_NameInitialize(&driver_info->driver, IONIC_DRV_NAME);
 
         if (status != VMK_OK) {
-                ionic_err("vmk_NameInitialize() failed, status: %s",
+                ionic_en_err("vmk_NameInitialize() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -1723,7 +1723,7 @@ ionic_en_uplink_driver_info_init(struct ionic_en_priv_data *priv_data,  // IN
         status = vmk_NameInitialize(&driver_info->version, DRV_VERSION);
 
         if (status != VMK_OK) {
-                ionic_err("vmk_NameInitialize() failed, status: %s",
+                ionic_en_err("vmk_NameInitialize() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -1731,7 +1731,7 @@ ionic_en_uplink_driver_info_init(struct ionic_en_priv_data *priv_data,  // IN
         status = vmk_NameInitialize(&driver_info->moduleInterface, "Native");
 
         if (status != VMK_OK) {
-                ionic_err("vmk_NameInitialize() failed, status: %s",
+                ionic_en_err("vmk_NameInitialize() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -1780,7 +1780,7 @@ ionic_en_uplink_locks_init(struct ionic_en_uplink_handle *uplink_handle)  // IN
                                        IONIC_LOCK_RANK_NORMAL,
                                        &uplink_handle->share_data_write_lock);
         if (status != VMK_OK) {
-                ionic_err("ionic_spinlock_create() failed, status: %s",
+                ionic_en_err("ionic_spinlock_create() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -1793,7 +1793,7 @@ ionic_en_uplink_locks_init(struct ionic_en_uplink_handle *uplink_handle)  // IN
                                        IONIC_LOCK_RANK_NORMAL,
                                        &uplink_handle->link_status_lock);
         if (status != VMK_OK) {
-                ionic_err("ionic_spinlock_create() failed, status: %s",
+                ionic_en_err("ionic_spinlock_create() failed, status: %s",
                           vmk_StatusToString(status));
                 goto link_status_lock_err;
         }
@@ -1806,7 +1806,7 @@ ionic_en_uplink_locks_init(struct ionic_en_uplink_handle *uplink_handle)  // IN
                                        IONIC_LOCK_RANK_NORMAL,
                                        &uplink_handle->admin_status_lock);
         if (status != VMK_OK) {
-                ionic_err("ionic_spinlock_create() failed, status: %s",
+                ionic_en_err("ionic_spinlock_create() failed, status: %s",
                           vmk_StatusToString(status));
                 goto admin_status_lock_err;
         }
@@ -1815,7 +1815,7 @@ ionic_en_uplink_locks_init(struct ionic_en_uplink_handle *uplink_handle)  // IN
                                           "vlan_filter_binary_sema",
                                           &uplink_handle->vlan_filter_binary_sema);
         if (status != VMK_OK) {
-                ionic_err("ionic_binary_sema_create() failed, status: %s",
+                ionic_en_err("ionic_binary_sema_create() failed, status: %s",
                           vmk_StatusToString(status));
                 goto filter_seme_create_err;
         }
@@ -1824,7 +1824,7 @@ ionic_en_uplink_locks_init(struct ionic_en_uplink_handle *uplink_handle)  // IN
                                           "status_binary_sema",
                                           &uplink_handle->status_binary_sema);
         if (status != VMK_OK) {
-                ionic_err("ionic_binary_sema_create() failed, status: %s",
+                ionic_en_err("ionic_binary_sema_create() failed, status: %s",
                           vmk_StatusToString(status));
                 goto start_flag_seam_create_err;
         }
@@ -1833,7 +1833,7 @@ ionic_en_uplink_locks_init(struct ionic_en_uplink_handle *uplink_handle)  // IN
                                           "mq_binary_sema",
                                           &uplink_handle->mq_binary_sema);
         if (status != VMK_OK) {
-                ionic_err("ionic_binary_sema_create() failed, status: %s",
+                ionic_en_err("ionic_binary_sema_create() failed, status: %s",
                           vmk_StatusToString(status));
                 goto mq_seam_create_err;
         }
@@ -1842,7 +1842,7 @@ ionic_en_uplink_locks_init(struct ionic_en_uplink_handle *uplink_handle)  // IN
                                           "stats_binary_sema",
                                           &uplink_handle->stats_binary_sema);
         if (status != VMK_OK) {
-                ionic_err("ionic_binary_sema_create() failed, status: %s",
+                ionic_en_err("ionic_binary_sema_create() failed, status: %s",
                           vmk_StatusToString(status));
                 goto stats_seam_create_err;
         }
@@ -1851,7 +1851,7 @@ ionic_en_uplink_locks_init(struct ionic_en_uplink_handle *uplink_handle)  // IN
                                           "coal_binary_sema",
                                           &uplink_handle->coal_binary_sema);
         if (status != VMK_OK) {
-                ionic_err("ionic_binary_sema_create() failed, status: %s",
+                ionic_en_err("ionic_binary_sema_create() failed, status: %s",
                           vmk_StatusToString(status));
                 goto coal_seam_create_err;
         }
@@ -1954,7 +1954,7 @@ ionic_en_uplink_default_coal_params_set(struct ionic_en_priv_data *priv_data) //
         status = ionic_en_uplink_coal_params_set(driver_data,
                                                  params);
         if (status != VMK_OK) {
-                ionic_err("ionic_en_uplink_coal_params_set() failed, "
+                ionic_en_err("ionic_en_uplink_coal_params_set() failed, "
                           "status: %s", vmk_StatusToString(status));
                 params->txUsecs = 0;
                 params->rxUsecs = 0;
@@ -2046,7 +2046,7 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
         vmk_UplinkSharedData *uplink_shared_data = &uplink_handle->uplink_shared_data;
         vmk_UplinkSharedQueueInfo *uplink_q_info = &uplink_handle->uplink_q_info;
 
-        ionic_dbg("ionic_en_uplink_init() called");
+        ionic_en_dbg("ionic_en_uplink_init() called");
 
         VMK_ASSERT(uplink_handle->is_init == VMK_FALSE);
 
@@ -2077,14 +2077,14 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
         status = ionic_en_uplink_driver_info_init(priv_data,
                                                   &uplink_shared_data->driverInfo);
         if (status != VMK_OK) {
-                ionic_err("ionic_en_uplink_driver_info_init() failed, "
+                ionic_en_err("ionic_en_uplink_driver_info_init() failed, "
                           "status: %s", vmk_StatusToString(status));
                 return status;
         }
 
         status = ionic_en_uplink_locks_init(uplink_handle);
         if (status != VMK_OK) {
-                ionic_err("ionic_en_uplink_locks_init() failed, status: %s",
+                ionic_en_err("ionic_en_uplink_locks_init() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -2149,7 +2149,7 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
                                                          uplink_q_info->maxTxQueues +
                                                          uplink_q_info->maxRxQueues);
         if (uplink_q_info->activeQueues == NULL) {
-                ionic_err("vmk_BitVectorAlloc() failed, status: VMK_NO_MEMORY");
+                ionic_en_err("vmk_BitVectorAlloc() failed, status: VMK_NO_MEMORY");
                 status = VMK_NO_MEMORY;
                 goto bit_vec_alloc_error;
         }
@@ -2190,7 +2190,7 @@ ionic_en_uplink_init(struct ionic_en_priv_data *priv_data)         // IN
 
         status = ionic_en_default_q_alloc(priv_data);
         if (status != VMK_OK) {
-                ionic_err("ionic_en_default_q_alloc() failed, status: %s",
+                ionic_en_err("ionic_en_default_q_alloc() failed, status: %s",
                           vmk_StatusToString(status));
                 goto default_q_err;
         }
@@ -2245,7 +2245,7 @@ ionic_en_uplink_cleanup(struct ionic_en_priv_data *priv_data)     // IN
                    0,
                    sizeof(struct ionic_en_uplink_handle));
 
-        ionic_info("ionic_en_uplink_cleanup() completed!");
+        ionic_en_info("ionic_en_uplink_cleanup() completed!");
 }
 
 
@@ -2326,12 +2326,12 @@ ionic_en_vlan_filter_enable(vmk_AddrCookie driver_data)                    //IN
 {
         VMK_ReturnStatus status;
 
-        ionic_dbg("ionic_en_vlan_filter_enable() called");
+        ionic_en_dbg("ionic_en_vlan_filter_enable() called");
 
         status = ionic_en_vlan_filter_enable_disable(driver_data,
                                                      ionic_vlan_rx_add_vid);
         if (status != VMK_OK) {
-                ionic_err("ionic_en_vlan_filter_enable_disable() failed, "
+                ionic_en_err("ionic_en_vlan_filter_enable_disable() failed, "
                           "status: %s", vmk_StatusToString(status));
         }
 
@@ -2364,12 +2364,12 @@ ionic_en_vlan_filter_disable(vmk_AddrCookie driver_data)          // IN
 {
         VMK_ReturnStatus status;
 
-        ionic_dbg("ionic_en_vlan_filter_disable() called");
+        ionic_en_dbg("ionic_en_vlan_filter_disable() called");
 
         status = ionic_en_vlan_filter_enable_disable(driver_data,
                                                      ionic_vlan_rx_kill_vid);
         if (status != VMK_OK) {
-                ionic_err("ionic_en_vlan_filter_enable_disable() failed, "
+                ionic_en_err("ionic_en_vlan_filter_enable_disable() failed, "
                           "status: %s", vmk_StatusToString(status));
         }
 
@@ -2405,7 +2405,7 @@ ionic_en_vlan_filter_bitmap_get(vmk_AddrCookie driver_data,       // IN
         struct ionic_en_priv_data *priv_data = (struct ionic_en_priv_data *)driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_dbg("ionic_en_vlan_filter_bitmap_get() called");
+        ionic_en_dbg("ionic_en_vlan_filter_bitmap_get() called");
 
         VMK_ASSERT(bitmap);
 
@@ -2451,7 +2451,7 @@ ionic_en_vlan_filter_bitmap_set(vmk_AddrCookie driver_data,       // IN
         struct ionic_en_priv_data *priv_data = (struct ionic_en_priv_data *)driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_dbg("ionic_en_vlan_filter_bitmap_set() called");
+        ionic_en_dbg("ionic_en_vlan_filter_bitmap_set() called");
         // Can't hold a spin lock here
 //        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         lif = VMK_LIST_ENTRY(vmk_ListFirst(&priv_data->ionic.lifs),
@@ -2465,7 +2465,7 @@ ionic_en_vlan_filter_bitmap_set(vmk_AddrCookie driver_data,       // IN
                 cond2 = vmk_VLANBitmapGet(bitmap,
                                           vlan_id);
 
-                ionic_info("con1: %d, con2: %d, vlanid: %d",
+                ionic_en_info("con1: %d, con2: %d, vlanid: %d",
                            cond1, cond2, vlan_id);
 
                 if (cond1 == cond2) {
@@ -2477,7 +2477,7 @@ ionic_en_vlan_filter_bitmap_set(vmk_AddrCookie driver_data,       // IN
                 }
 
                 if (status != VMK_OK) {
-                        ionic_err("Config vlan failed, status: %s",
+                        ionic_en_err("Config vlan failed, status: %s",
                                   vmk_StatusToString(status));
                         break;
                 }
@@ -2538,7 +2538,7 @@ ionic_en_vlan_filter_add_remove(vmk_AddrCookie driver_data,
          * we add it just for having additional protection */
         VMK_ASSERT(start_id >= end_id);
 
-        ionic_dbg("ionic_en_vlan_filter_add_remove() called");
+        ionic_en_dbg("ionic_en_vlan_filter_add_remove() called");
 
         // Can't hold a spin lock here
 //        vmk_SpinlockLock(priv_data->ionic.lifs_lock);
@@ -2561,14 +2561,14 @@ ionic_en_vlan_filter_add_remove(vmk_AddrCookie driver_data,
         }
 
         if (status != VMK_OK) {
-                ionic_err("vlan_op1() failed, status: %s",
+                ionic_en_err("vlan_op1() failed, status: %s",
                           vmk_StatusToString(status));
 
                 for (vlan_id = vlan_id - 1; vlan_id >= start_id; vlan_id--) {
                         status1 = vlan_op2(lif,
                                            vlan_id);
                         if (status1 != VMK_OK) {
-                                ionic_err("vlan_op2() failed, status: %s",
+                                ionic_en_err("vlan_op2() failed, status: %s",
                                           vmk_StatusToString(status));
                         }
 
@@ -2613,7 +2613,7 @@ ionic_en_vlan_filter_add(vmk_AddrCookie driver_data,              // IN
 {
         VMK_ReturnStatus status;
 
-        ionic_dbg("ionic_en_vlan_filter_add() called");
+        ionic_en_dbg("ionic_en_vlan_filter_add() called");
 
         status = ionic_en_vlan_filter_add_remove(driver_data,
                                                  start_id,
@@ -2623,7 +2623,7 @@ ionic_en_vlan_filter_add(vmk_AddrCookie driver_data,              // IN
                                                  vmk_VLANBitmapSet,
                                                  vmk_VLANBitmapClr);
         if (status != VMK_OK) {
-                ionic_err("ionic_en_vlan_filter_add_remove() failed, "
+                ionic_en_err("ionic_en_vlan_filter_add_remove() failed, "
                           "status: %s", vmk_StatusToString(status));
         }
 
@@ -2660,7 +2660,7 @@ ionic_en_vlan_filter_remove(vmk_AddrCookie driver_data,           // IN
 {
         VMK_ReturnStatus status;
 
-        ionic_dbg("ionic_en_vlan_filter_remove() called");
+        ionic_en_dbg("ionic_en_vlan_filter_remove() called");
 
         status = ionic_en_vlan_filter_add_remove(driver_data,
                                                  start_id,
@@ -2670,7 +2670,7 @@ ionic_en_vlan_filter_remove(vmk_AddrCookie driver_data,           // IN
                                                  vmk_VLANBitmapClr,
                                                  vmk_VLANBitmapSet);
         if (status != VMK_OK) {
-                ionic_err("ionic_en_vlan_filter_add_remove() failed, "
+                ionic_en_err("ionic_en_vlan_filter_add_remove() failed, "
                           "status: %s", vmk_StatusToString(status));
         }
 
@@ -2716,7 +2716,7 @@ ionic_en_netpoll_create(vmk_NetPoll *netpoll,                           // OUT
 
         status = vmk_ServiceGetID(VMK_SERVICE_ACCT_NAME_NET, &service_id);
         if (status != VMK_OK) {
-                ionic_err("vmk_ServiceGetID() failed, status: %s",
+                ionic_en_err("vmk_ServiceGetID() failed, status: %s",
                           vmk_StatusToString(status));
                 return status;
         }
@@ -2744,7 +2744,7 @@ ionic_en_netpoll_create(vmk_NetPoll *netpoll,                           // OUT
                                    ionic_driver.module_id,
                                    netpoll);
         if (status != VMK_OK) {
-                ionic_err("vmk_NetPollCreate() failed, status: %s",
+                ionic_en_err("vmk_NetPollCreate() failed, status: %s",
                           vmk_StatusToString(status));
         }
 
@@ -2786,7 +2786,7 @@ ionic_en_uplink_coal_params_get(vmk_AddrCookie driver_data,             // IN
                 (struct ionic_en_priv_data *) driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_dbg("ionic_en_uplink_coal_params_get() called");
+        ionic_en_dbg("ionic_en_uplink_coal_params_get() called");
 
         VMK_ASSERT(params);
 
@@ -2834,7 +2834,7 @@ ionic_en_uplink_coal_params_set(vmk_AddrCookie driver_data,             // IN
                 (struct ionic_en_priv_data *) driver_data.ptr;
         struct ionic_en_uplink_handle *uplink_handle = &priv_data->uplink_handle;
 
-        ionic_dbg("ionic_en_uplink_coal_params_set() called");
+        ionic_en_dbg("ionic_en_uplink_coal_params_set() called");
 
         VMK_ASSERT(params);
 

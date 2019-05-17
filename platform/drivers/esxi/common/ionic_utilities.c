@@ -8,7 +8,8 @@
  * Implement utilities functions 
  */
 
-#include "ionic.h"
+#include "ionic_log.h"
+#include "ionic_utilities.h"
 
 /*
  ******************************************************************************
@@ -172,10 +173,10 @@ ionic_is_eth_addr_zero(vmk_EthAddress addr)                       // IN
  *    Hexdumping a given range of memory 
  *
  *  Parameters:
- *     desc - IN (Description of this dumping object)
- *     addr - IN (starting  address to dump)
- *     len  - IN (Length of this memory)
- *
+ *     desc     - IN (Description of this dumping object)
+ *     addr     - IN (starting  address to dump)
+ *     len      - IN (Length of this memory)
+ *     log_comp - IN (Log component to be used)
  *  Results:
  *     None 
  *
@@ -188,7 +189,8 @@ ionic_is_eth_addr_zero(vmk_EthAddress addr)                       // IN
 void
 ionic_hex_dump(char *desc,                                         // IN
                void *addr,                                         // IN
-               vmk_uint32 len)                                     // IN
+               vmk_uint32 len,                                     // IN
+               vmk_LogComponent log_comp)                          // IN
 {
         vmk_uint32 i, offset;
         vmk_ByteCount out_len;
@@ -196,15 +198,15 @@ ionic_hex_dump(char *desc,                                         // IN
         char hexdump[IONIC_HEX_DUMP_SIZE];
 
         if (desc != NULL) {
-                ionic_print ("%s, len: %d", desc, len);
+                ionic_dump (log_comp, "%s, len: %d", desc, len);
         }
 
         if (len == 0) {
-                ionic_print("Length is zero\n");
+                ionic_dump(log_comp, "Length is zero\n");
                 return;
         }
         if (len < 0) {
-                ionic_print("Length is negative: %i\n",len);
+                ionic_dump(log_comp, "Length is negative: %i\n",len);
                 return;
         }
 
@@ -216,7 +218,7 @@ ionic_hex_dump(char *desc,                                         // IN
 
         for (i = 0; i < len; i++) {
                 if ((i % 16) == 0 && i != 0) {
-                        ionic_print ("%s", hexdump);
+                        ionic_dump (log_comp, "%s", hexdump);
                         vmk_Memset(hexdump, 0, offset);
                         offset = 0;
                 }
@@ -230,7 +232,7 @@ ionic_hex_dump(char *desc,                                         // IN
                 offset += out_len;                         
 
                 if (i == len - 1) {
-                        ionic_print ("%s", hexdump);
+                        ionic_dump (log_comp, "%s", hexdump);
                 }
 
         }

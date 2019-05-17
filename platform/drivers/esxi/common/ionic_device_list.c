@@ -8,7 +8,9 @@
  * Implement functions for  maintaining device list(be used by mgmt interface)
  */
 
-#include "ionic.h"
+#include "ionic_log.h"
+#include "ionic_device_list.h"
+#include "ionic_locks.h"
 
 /*
  ******************************************************************************
