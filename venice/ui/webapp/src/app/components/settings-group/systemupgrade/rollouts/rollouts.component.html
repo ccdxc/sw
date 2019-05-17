@@ -1,8 +1,9 @@
-<app-pagebody [icon]="bodyicon" header="Rollouts Overview">
+<app-pagebody [icon]="bodyicon" header="Rollouts Overview" class="rollouts">
 
   <mat-tab-group fxFlex [disableRipple]="true"
                  (selectedIndexChange)="selectedIndexChangeEvent($event)">
-    <mat-tab label="PENDING">
+    <mat-tab
+             label="PENDING {{ (pendingRollouts && pendingRollouts.length >0)?  ' (' +  pendingRollouts.length + ')' : '' }}">
       <app-tableviewedit fxLayout="column" style="height: 100%"
                          [creatingMode]="creatingMode"
                          [showRowExpand]="showRowExpand"
@@ -17,7 +18,8 @@
                          (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
       </app-tableviewedit>
     </mat-tab>
-    <mat-tab label="PAST" [disabled]="isToDisablePastTab()">
+    <mat-tab label="PAST {{ (pastRollouts && pastRollouts.length >0)? ' (' +  pastRollouts.length + ')' : '' }}"
+             [disabled]="isToDisablePastTab()">
       <app-tableviewedit fxLayout="column" style="height: 100%"
                          [data]="pastRollouts"
                          [cols]="cols"

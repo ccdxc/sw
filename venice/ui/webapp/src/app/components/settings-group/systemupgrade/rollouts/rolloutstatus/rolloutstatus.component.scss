@@ -94,3 +94,12 @@
 
   word-break: break-all !important;
 }
+
+// VS-285 (rollout.status table not able ajust size. Rows are hidden)
+.rolloutstatus-table-div {
+  height: 100%;
+}
+
+.rolloutstatus-table-div .lazyrender-container {
+  min-height: 150px;
+}

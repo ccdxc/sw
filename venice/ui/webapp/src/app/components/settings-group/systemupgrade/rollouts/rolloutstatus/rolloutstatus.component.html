@@ -1,8 +1,8 @@
-<app-pagebody [icon]="bodyicon" header="Rollout Status">
+<app-pagebody [icon]="bodyicon" header="Rollout Status" class="rolloutstatus">
   <mat-expansion-panel fxFlex="none" class="global-mat-expansion-panel" [expanded]="true">
     <mat-expansion-panel-header class="rolloutstatus-expansionpanel-header">
       <mat-panel-title class="rolloutstatus-summary-panel-header">
-        Settings
+        Settings ({{ getRolloutVeniceNaplesType()}})
       </mat-panel-title>
     </mat-expansion-panel-header>
     <div class="rolloutstatus-summary-panel-content">
@@ -36,11 +36,13 @@
           <div class="rolloutstatus-summary-panel-content-value"> {{selectedRollout?.spec.version }}
           </div>
         </div>
+        <!-- comment out duration until backend supports it
         <div fxFlex="50" fxLayout="row">
           <div class="rolloutstatus-summary-panel-content-label">Duration: </div>
           <div class="rolloutstatus-summary-panel-content-value">
             {{selectedRollout?.spec.duration }}</div>
         </div>
+         -->
       </div>
       <div fxLayout="row" class="rolloutstatus-summary-panel-content-row">
         <div fxFlex="50" fxLayout="row">
@@ -113,19 +115,19 @@
   </mat-expansion-panel>
   <mat-tab-group fxFlex [disableRipple]="true"
                  (selectedIndexChange)="selectedIndexChangeEvent($event)">
-    <mat-tab label="CONTROLLER NODES">
+    <mat-tab label="CONTROLLER NODES" *ngIf="!isNaplesOnly()">
       <ng-container
                     *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['controller-nodes-status'], tablename:'Controller Nodes'}">
       </ng-container>
     </mat-tab>
-    <mat-tab label="CONTROLLER SERVICES">
+    <mat-tab label="CONTROLLER SERVICES" *ngIf="!isNaplesOnly()">
       <ng-container
                     *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['controller-services-status'], tablename:'Controller Services'}">
       </ng-container>
     </mat-tab>
-    <mat-tab label="SMART NICS">
+    <mat-tab label="NAPLES" *ngIf="!isVeniceOnly()">
       <ng-container
-                    *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['smartnics-status'], tablename:'Smart NICS'}">
+                    *ngTemplateOutlet="statusTable; context:{data:selectedRollout?.status['smartnics-status'], tablename:'NAPLES'}">
       </ng-container>
     </mat-tab>
   </mat-tab-group>
@@ -157,46 +159,49 @@
 </app-pagebody>
 
 <ng-template #statusTable let-data="data" , let-tablename="tablename">
-  <app-lazyrender [data]="data" [rows]="36" [virtualRowHeight]="56">
-    <p-table #eventTable class="global-primeng-table-lazyload" [columns]="statusCols" dataKey="name"
-             [responsive]="true"
-             sortField="name" [sortOrder]='-1' [loading]="loading" [resizableColumns]="true">
-      <!-- Table Caption -->
-      <ng-template pTemplate="caption">
-        <app-tableheader title="{{tablename}}" [count]="data?.length" [total]="data?.length"
-                         width="250px">
-          <div fxFlex></div>
-        </app-tableheader>
-      </ng-template>
-      <!-- Table Header -->
-      <ng-template pTemplate="header" let-columns>
-        <tr>
-          <th *ngFor="let col of statusCols; let last = last"
-              [pSortableColumn]="col.sortable? col.field : ''"
-              [class]="col.class" [style.width]="col.width + '%'">
-            <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
-            </app-sorticon>
-          </th>
-        </tr>
-      </ng-template>
-      <!-- Table Body -->
-      <ng-template pTemplate="body" let-rowData>
-        <tr class="rolloutstatus-tablerow">
-          <td *ngFor="let col of statusCols" [ngSwitch]="col.field" [class]="col.class"
-              [style.width]="col.width + '%'">
-            <div *ngSwitchCase="'start-time'" class="rolloutstatus-date-row">
-              {{rowData['start-time'] | PrettyDate }}
-            </div>
-            <div *ngSwitchCase="'end-time'" class="rolloutstatus-date-row">
-              {{rowData['end-time'] | PrettyDate }}
-            </div>
-            <ng-container *ngSwitchDefault>
-              {{displayColumn(rowData, col)}}
-            </ng-container>
-          </td>
-        </tr>
-      </ng-template>
+  <div fxFlex class="rolloutstatus-table-div">
+    <app-lazyrender [data]="data" [rows]="36" [virtualRowHeight]="56">
+      <p-table #eventTable class="global-primeng-table-lazyload" [columns]="statusCols"
+               dataKey="name"
+               [responsive]="true" sortField="name" [sortOrder]='-1' [loading]="loading"
+               [resizableColumns]="true">
+        <!-- Table Caption -->
+        <ng-template pTemplate="caption">
+          <app-tableheader title="{{tablename}}" [count]="data?.length" [total]="data?.length"
+                           width="250px">
+            <div fxFlex></div>
+          </app-tableheader>
+        </ng-template>
+        <!-- Table Header -->
+        <ng-template pTemplate="header" let-columns>
+          <tr>
+            <th *ngFor="let col of statusCols; let last = last"
+                [pSortableColumn]="col.sortable? col.field : ''"
+                [class]="col.class" [style.width]="col.width + '%'">
+              <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
+              </app-sorticon>
+            </th>
+          </tr>
+        </ng-template>
+        <!-- Table Body -->
+        <ng-template pTemplate="body" let-rowData>
+          <tr class="rolloutstatus-tablerow">
+            <td *ngFor="let col of statusCols" [ngSwitch]="col.field" [class]="col.class"
+                [style.width]="col.width + '%'">
+              <div *ngSwitchCase="'start-time'" class="rolloutstatus-date-row">
+                {{rowData['start-time'] | PrettyDate }}
+              </div>
+              <div *ngSwitchCase="'end-time'" class="rolloutstatus-date-row">
+                {{rowData['end-time'] | PrettyDate }}
+              </div>
+              <ng-container *ngSwitchDefault>
+                {{displayColumn(rowData, col)}}
+              </ng-container>
+            </td>
+          </tr>
+        </ng-template>
 
-    </p-table>
-  </app-lazyrender>
+      </p-table>
+    </app-lazyrender>
+  </div>
 </ng-template>

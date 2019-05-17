@@ -14,17 +14,10 @@ import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs';
 import { required } from '@sdk/v1/utils/validators';
 import { Utility } from '@common/Utility';
-import { RolloutImageLabel } from '../index';
+import { RolloutImageLabel, EnumRolloutOptions, RolloutImageOption } from '../index';
+import { RolloutUtil} from '../RolloutUtil';
 
-export interface RolloutImageOption extends SelectItem {
-  model?: RolloutImageLabel;
-}
 
-export enum EnumRolloutOptions {
-  'naplesonly' = 'NAPLES Only',
-  'veniceonly' = 'Venice Only',
-  'both' = 'Both NAPLES and Venice'
-}
 
 @Component({
   selector: 'app-newrollout',
@@ -34,14 +27,6 @@ export enum EnumRolloutOptions {
   encapsulation: ViewEncapsulation.None,
 })
 export class NewrolloutComponent extends BaseComponent implements OnInit, OnDestroy, AfterViewInit, OnChanges {
-
-  // Make sure the follow parameter values match above EnumRolloutOptions.keys
-  public static ROLLOUTTYPE_NAPLES_ONLY = 'naplesonly';
-  public static ROLLOUTTYPE_VENICE_ONLY = 'veniceonly';
-  public static ROLLOUTTYPE_BOTH_NAPLES_VENICE = 'both';
-
-  public static ROLLOUT_METADATA_JSON = 'metadata.json';
-
   @ViewChild('orderConstraintsLabelRepeater') ocLabelRepeater: RepeaterComponent;
 
   newRollout: RolloutRollout;
@@ -52,10 +37,12 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   rolloutImageOptions: RolloutImageOption[] = [];
 
   rolloutNicNodeTypes: SelectItem[] = Utility.convertEnumToSelectItem(EnumRolloutOptions);
-  selectedRolloutNicNodeTypes: string = NewrolloutComponent.ROLLOUTTYPE_BOTH_NAPLES_VENICE;
+  selectedRolloutNicNodeTypes: string = RolloutUtil.ROLLOUTTYPE_BOTH_NAPLES_VENICE;
 
   orderConstraintslabelData: RepeaterData[] = [];
   orderConstraintslabelFormArray = new FormArray([]);
+
+  minDate: Date;
 
   @Input() isInline: boolean = false;
   @Input() selectedRolloutData: IRolloutRollout;
@@ -63,6 +50,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   @Input() rolloutImages: IObjstoreObjectList;
 
   @Output() formClose: EventEmitter<any> = new EventEmitter();
+
 
   versiondescription: string = '';
 
@@ -98,6 +86,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       // below ngChange() should initialize rolloutData.
       this.initRolloutData();
     }
+    this.minDate = new Date();
   }
 
   initRolloutData() {
@@ -110,20 +99,19 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       this.newRollout = new RolloutRollout(myrollout);
       this.newRollout.$formGroup.get(['meta', 'name']).disable();
       this.newRollout.$formGroup.get(['spec', 'version']).disable(); // disable version until version options are available.
-      if (this.newRollout.spec['smartnics-only']) {
-        this.selectedRolloutNicNodeTypes = NewrolloutComponent.ROLLOUTTYPE_NAPLES_ONLY;
-      } else {
-        // Figure out if it is   NewrolloutComponent.ROLLOUTTYPE_NODE_ONLY or NewrolloutComponent.ROLLOUTTYPE_BOTH_NIC_NODE
-        this.selectedRolloutNicNodeTypes = this.newRollout.spec['smartnic-must-match-constraint'] ? NewrolloutComponent.ROLLOUTTYPE_BOTH_NAPLES_VENICE : NewrolloutComponent.ROLLOUTTYPE_VENICE_ONLY;
-      }
+      this. selectedRolloutNicNodeTypes  = RolloutUtil.getRolloutNaplesVeniceType(this.newRollout);
     }
+    // set validators. TODO: 2019-05-15 wait for server set validator in rollout.proto
     if (this.newRollout.$formGroup.validator) {
       this.newRollout.$formGroup.get(['meta', 'name']).setValidators([required, this.isRolloutNameValid(this.existingRollouts), this.newRollout.$formGroup.validator]);
     } else {
       this.newRollout.$formGroup.get(['meta', 'name']).setValidators([required, this.isRolloutNameValid(this.existingRollouts)]);
+      this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).setValidators([required, this.isRolloutScheduleTimeValid()]);
+      this.newRollout.$formGroup.get(['spec', 'version']).setValidators([required]);
     }
     this.newRollout.$formGroup.get(['spec', 'duration']).disable(); // TODO: Disable duration for this release 2019-05-02
   }
+
 
   ngAfterViewInit() {
     if (!this.isInline) {
@@ -152,6 +140,12 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     }
   }
 
+  isRolloutScheduleTimeValid(): ValidatorFn {
+    const greateThan = 1;
+    const now = new Date();
+    return Utility.dateValidator( now, greateThan, 'schedule-time',  'Can not schedule rollout to the past' );
+  }
+
   isRolloutNameValid(existingRollouts: RolloutRollout[]): ValidatorFn {
     return Utility.isModelNameUniqueValidator(existingRollouts, 'rollout-name');
   }
@@ -161,6 +155,12 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       return false;
     }
     if (Utility.isEmpty(this.newRollout.$formGroup.get(['meta', 'name']).value)) {
+      return false;
+    }
+    if (Utility.isEmpty(this.newRollout.$formGroup.get(['spec', 'version']).value)) {
+      return false;
+    }
+    if (Utility.isEmpty(this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).value)) {
       return false;
     }
     const hasFormGroupError = Utility.getAllFormgroupErrors(this.newRollout.$formGroup);
@@ -199,7 +199,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
     this.rolloutImageOptions.length = 0;
     if (this.rolloutImages && this.rolloutImages.items) {
       this.rolloutImages.items.forEach(image => {
-        if (image.meta.name.endsWith(NewrolloutComponent.ROLLOUT_METADATA_JSON)) {
+        if (image.meta.name.endsWith(RolloutUtil.ROLLOUT_METADATA_JSON)) {
           const imageLabel: RolloutImageLabel = image.meta.labels as RolloutImageLabel;
           if (imageLabel) {
             // rollout.spec.version is a string, so we set the selectedItem.value to string.
@@ -228,12 +228,12 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   buildRollout(): IRolloutRollout {
     const rollout: IRolloutRollout = this.newRollout.getFormGroupValues();
     rollout.meta.name = (rollout.meta.name) ? rollout.meta.name : this.newRollout.meta.name;
-    if (this.selectedRolloutNicNodeTypes === NewrolloutComponent.ROLLOUTTYPE_VENICE_ONLY) {
+    if (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_VENICE_ONLY) {
       rollout.spec['max-nic-failures-before-abort'] = null;
       rollout.spec['order-constraints'] = [];
       rollout.spec['smartnic-must-match-constraint'] = true; // This is what Vinod (back-end) wants.
       rollout.spec['smartnics-only'] = false;
-    } else if (this.selectedRolloutNicNodeTypes === NewrolloutComponent.ROLLOUTTYPE_NAPLES_ONLY) {
+    } else if (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_NAPLES_ONLY) {
       rollout.spec['smartnics-only'] = true;
       if (rollout.spec['smartnic-must-match-constraint']) {
         rollout.spec['order-constraints'] = Utility.convertRepeaterValuesToSearchExpression(this.ocLabelRepeater);
@@ -350,14 +350,14 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
    * This API serves html template
    */
   isToShowNodeDiv(): boolean {
-    return (this.selectedRolloutNicNodeTypes !== NewrolloutComponent.ROLLOUTTYPE_NAPLES_ONLY);
+    return (this.selectedRolloutNicNodeTypes !== RolloutUtil.ROLLOUTTYPE_NAPLES_ONLY);
   }
 
   /**
    * This API serves html template
    */
   isToShowNicDiv(): boolean {
-    return (this.selectedRolloutNicNodeTypes !== NewrolloutComponent.ROLLOUTTYPE_VENICE_ONLY);
+    return (this.selectedRolloutNicNodeTypes !== RolloutUtil.ROLLOUTTYPE_VENICE_ONLY);
   }
 
   /**

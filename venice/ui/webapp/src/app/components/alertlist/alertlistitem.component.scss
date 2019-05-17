@@ -49,7 +49,8 @@
 }
 
 .alertlistitem-display-text-bold {
-  height: 34px;
+  min-height: 34px;
+  /** https://pensando.atlassian.net/browse/VS-296  alert.desc can be very long */
   font-size: 15px;
   font-weight: 700;
   font-style: normal;

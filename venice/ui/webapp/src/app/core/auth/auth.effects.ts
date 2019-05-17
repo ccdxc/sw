@@ -36,7 +36,7 @@ export class AuthEffects {
     return this.actions$.pipe(
       ofType(AUTH_LOGIN),
       tap(action => {
-        this._authService.login(action.payload).subscribe(
+        const sub = this._authService.login(action.payload).subscribe(
           data => {
             const userData = data;
             const isAuthOK = (data) ? true : false;
@@ -56,7 +56,22 @@ export class AuthEffects {
             this.onLoginFailure(err);
           }
         );
-      })
+        // VS-302.  In case Login request is sent and no server response return.
+        const timeoutHandle = setTimeout(() => {
+                try {
+                  if (!this._controllerService.isUserLogin()) {
+                    if (sub) { sub.unsubscribe(); }
+                    this.onLoginFailure('Request Timeout. Failed to login after 60 seconds');
+                  } else {
+                    clearTimeout(timeoutHandle);
+                  }
+                } catch (error) {
+                  console.error('auth.effects.ts login() timeout wait too long ', error);
+                  if (sub) { sub.unsubscribe(); }
+                  if (timeoutHandle) { clearTimeout(timeoutHandle); }
+                }
+              }, 60000);
+            })
     );
   }
 

@@ -10,12 +10,15 @@ import { RolloutService } from '@app/services/generated/rollout.service';
 import { Utility } from '@common/Utility';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { IApiStatus, IRolloutRollout, RolloutRollout, RolloutRolloutSpec } from '@sdk/v1/models/generated/rollout';
+import { IApiStatus, IRolloutRollout, RolloutRollout, RolloutRolloutSpec, RolloutRolloutStatus_state } from '@sdk/v1/models/generated/rollout';
 import { TableCol } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
+import { RolloutUtil} from '../RolloutUtil';
+import { EnumRolloutOptions } from '../';
 
 /**
  * This component let user monitor a rollout status.
- * User can suspend an in-progress Rollout
+ * User can STOP an in-progress Rollout
  */
 @Component({
   selector: 'app-rolloutstatus',
@@ -28,6 +31,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   subscriptions = [];
   selectedRolloutId: string;
   selectedRollout: RolloutRollout;
+  selectedRolloutNicNodeTypes: string = RolloutUtil.ROLLOUTTYPE_BOTH_NAPLES_VENICE;
 
   // Holds all policy objects
   rollouts: ReadonlyArray<RolloutRollout>;
@@ -76,21 +80,36 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
       this.showMissingScreen = false;
 
       this.getRolloutDetail();
-      this._controllerService.setToolbarData({
-        buttons: [
-          {
-            cssClass: 'global-button-primary rolloutstatus-toolbar-button',
-            text: 'STOP ROLLOUT',
-            callback: () => {
-              this.onSuspendRollout();
-            }
-          },
-        ],
-        breadcrumb: [
-          { label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade/rollouts' },
-          { label: id, url: Utility.getBaseUIUrl() + 'settings/upgrade/rollouts/' + id }]
-      });
+      this.setDefaultToolbar(this.selectedRolloutId);
     });
+  }
+
+
+
+  setDefaultToolbar(id: string) {
+    const toolbarData: ToolbarData =  {
+      breadcrumb: [
+        { label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade/rollouts' },
+        { label: id, url: Utility.getBaseUIUrl() + 'settings/upgrade/rollouts/' + id }],
+      buttons: []
+    };
+    this._controllerService.setToolbarData(toolbarData);
+  }
+
+  addToolbarButton() {
+    const toolbarData: ToolbarData = this._controllerService.getToolbarData();
+    if (this.selectedRollout && this.selectedRollout.status.state === RolloutRolloutStatus_state.PROGRESSING) {
+      toolbarData.buttons.push(
+        {
+          cssClass: 'global-button-primary rolloutstatus-toolbar-button',
+          text: 'STOP ROLLOUT',
+          callback: () => {
+            this.onStopRollout();
+          }
+        }
+      );
+      this._controllerService.setToolbarData(toolbarData);
+    }
   }
 
   /**
@@ -109,7 +128,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   }
 
 
-  suspendRollout() {
+  stopRollout() {
     this.selectedRollout.spec.suspend = true;
     const rollout = this.selectedRollout.getModelValues();
     const sub = this.rolloutService.DoRollout(rollout).subscribe(
@@ -122,13 +141,13 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     this.subscriptions.push(sub);
   }
 
-  onSuspendRollout() {
+  onStopRollout() {
     this._controllerService.invokeConfirm({
-      header: 'Are you sure to suspend current rollout?',
+      header: 'Are you sure you want to stop current rollout?',
       message: 'This action cannot be reversed',
-      acceptLabel: 'Suspend',
+      acceptLabel: 'Stop',
       accept: () => {
-        this.suspendRollout();
+        this.stopRollout();
       }
     });
   }
@@ -168,6 +187,8 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
           this.showMissingScreen = false;
           // Set sgpolicyrules
           this.selectedRollout = this.rollouts[0];
+          this.addToolbarButton();
+          this.selectedRolloutNicNodeTypes  = RolloutUtil.getRolloutNaplesVeniceType(this.selectedRollout);
         } else {
           // Must have received a delete event.
           this.showDeletionScreen = true;
@@ -193,6 +214,22 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
       default:
         return Array.isArray(value) ? JSON.stringify(value, null, 2) : value;
     }
+  }
+
+  isVeniceOnly(): boolean {
+    return (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_VENICE_ONLY);
+  }
+
+  isNaplesOnly(): boolean {
+    return (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_NAPLES_ONLY);
+  }
+
+  isVeniceNaples(): boolean {
+    return (this.selectedRolloutNicNodeTypes === RolloutUtil.ROLLOUTTYPE_BOTH_NAPLES_VENICE);
+  }
+
+  getRolloutVeniceNaplesType(): string {
+      return EnumRolloutOptions[this.selectedRolloutNicNodeTypes];
   }
 
 }

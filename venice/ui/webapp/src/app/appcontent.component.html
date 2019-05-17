@@ -61,7 +61,8 @@
         <mat-sidenav #rightSideNav opened="false" mode="over" position="end"
                      [ngSwitch]="whichRightSideNav()"
                      class="app-shell-right-sidenav">
-          <div *ngSwitchCase="'notifications'">
+          <div *ngSwitchCase="'notifications'" style="width:100%">
+            <!-- VS-240. when there is no alert -->
             <ng-container *ngTemplateOutlet="sideNavNotification; "></ng-container>
           </div>
           <ng-container *ngSwitchCase="'settings'">

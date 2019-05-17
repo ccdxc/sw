@@ -10,6 +10,8 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { Utility } from '@app/common/Utility';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { AUTH_KEY } from '@app/core';
+import { RolloutUtil} from '@app/components/settings-group/systemupgrade/rollouts/RolloutUtil';
+import { RolloutImageLabel, RolloutImageOption } from '@app/components/settings-group/systemupgrade/rollouts/';
 
 /**
  * This component let user upload Venice rollout images and manage existing images.
@@ -67,14 +69,20 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
   }
   setDefaultToolbar(): void {
     this.controllerService.setToolbarData({
+      // TODO: delete the refresh button when  watchRolloutImages() is working.  For now, make a refresh button for VS-307
       buttons: [
+          {
+            cssClass: 'global-button-primary imageupload-toolbar-button imageupload-toolbar-button-refresh',
+            text: 'Refresh',
+            callback: () => { this.refreshImages(); },
+          }
       ],
       breadcrumb: [{ label: 'System Upgrade', url: Utility.getBaseUIUrl() + 'settings/upgrade' }, { label: 'Images', url: '' }]
     });
   }
 
   postNgInit() {
-    // this.watchRolloutImages();
+    // this.watchRolloutImages(); // This will fail and trigger "sign out" toaster. Asking Sanjay to look into ws.
     this.getRolloutImages();
   }
 
@@ -100,15 +108,43 @@ export class ImageuploadComponent extends TablevieweditAbstract<IObjstoreObject,
     this.subscriptions.push(sub);
   }
 
+  /**
+   * 2019-05-15.
+   * Once a bundle.tar is uploaded, back-end will un-tar it. Un-taring will have a matadata.json
+   * We want take labels out fo metadata.json and add to bundle.tar
+   * The image list table will only display bundle.tar
+   */
+
   getRolloutImages() {
     const sub = this.objstoreService.ListObject(Utility.ROLLOUT_IMGAGE_NAMESPACE).subscribe(
       (response) => {
+        let metaImage: ObjstoreObject = null;
+        let bundleTarImage: ObjstoreObject = null;
         const rolloutImages: IObjstoreObjectList = response.body as IObjstoreObjectList;
         if (rolloutImages.items) {
           const entries = [];
-          rolloutImages.items.forEach(image => {
-            entries.push(image);
+          rolloutImages.items.forEach((image: ObjstoreObject) => {
+            if (image.meta.name.endsWith(RolloutUtil.ROLLOUT_METADATA_JSON)) {
+              metaImage = image;
+            } else if (image.meta.name.endsWith(RolloutUtil.ROLLOUT_BUNDLE_TAR)) {
+              bundleTarImage = image;
+              entries.push(bundleTarImage);
+            }
           });
+          if (bundleTarImage) {  // process only when bundle.tar is available.
+            const metaImageLabel: RolloutImageLabel = metaImage.meta.labels as RolloutImageLabel;
+            let bundletarImageLabel: RolloutImageLabel = bundleTarImage.meta.labels as RolloutImageLabel;
+            if (metaImageLabel ) {
+              bundletarImageLabel = Utility.getLodash().cloneDeep(metaImageLabel);
+            } else {
+              const badLabels: RolloutImageLabel = {
+                Version: '',
+                Description: 'It does not look like a valid image'
+              };
+              bundletarImageLabel = badLabels;
+            }
+            bundleTarImage.meta.labels = bundletarImageLabel;
+          }
           this.dataObjects = entries;
         }
       },
