@@ -133,11 +133,6 @@ hal_smart_nic_acl_config_init (void)
     AclSelector   *match;
     AclActionInfo *action;
 
-    if (g_hal_state->forwarding_mode() != HAL_FORWARDING_MODE_SMART_SWITCH) {
-        HAL_TRACE_DEBUG("Skipping smart nic acls");
-        return HAL_RET_OK;
-    }
-
     // Drop IP fragmented packets
     spec.Clear();
     match = spec.mutable_match();
@@ -340,7 +335,8 @@ hal_acl_config_init (void)
 
     hal::hal_cfg_db_open(CFG_OP_WRITE);
 
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_SWITCH) {
+    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_SWITCH ||
+        g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
         ret = hal_smart_nic_acl_config_init();
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error creating smart nic acl entries ret {}", ret);

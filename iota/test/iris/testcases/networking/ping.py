@@ -76,7 +76,10 @@ def Verify(tc):
         api.Logger.info("Ping Results for %s" % (tc.cmd_cookies[cookie_idx]))
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0:
-            result = api.types.status.FAILURE
+            if api.GetNicMode() == 'hostpin' and tc.iterators.pktsize > 1024:
+                result = api.types.status.SUCCESS
+            else: 
+                result = api.types.status.FAILURE
         cookie_idx += 1
     return result
 
