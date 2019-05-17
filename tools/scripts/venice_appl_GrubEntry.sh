@@ -10,12 +10,17 @@ MV=/bin/mv
 
 GRUBFILE=/boot/grub2/grub.cfg
 
-while getopts ":adv:g:" arg; do
+while getopts ":oAdv:g:p:u:" arg; do
   case $arg in
-    a) OP="add";;
-    d) OP="del";;
-    v) VERSION=$OPTARG;;
-    g) GRUBFILE=$OPTARG;;
+    A) OP="add";;   # add a given version in the grubfile
+    u) OP="doupgrade";   # Given a directory as its argument, do the upgrade of image (except reboot)
+        SRCPATH=$OPTARG;;
+    p) OP="preupgrade";   # Given a directory as its argument, do all the pre-upgrade check
+        SRCPATH=$OPTARG;;
+    d) OP="del";;   # delete a given version from the grubfile (as well as images)
+    o) OP="only";; # keep only the currently specified default in the grubfile
+    v) VERSION=$OPTARG;; # used for add and delete operations
+    g) GRUBFILE=$OPTARG;;   # to override the default grub file
   esac
 done
 
@@ -25,15 +30,20 @@ then
     exit 1
 fi
 
-if [ -z "$VERSION" ]
+if [ "${OP}" == "del" -a -z "$VERSION" ]
 then
-    echo VERSION  must be specified with -v option
+    echo VERSION  must be specified with -d option
+    exit 1
+fi
+if [ "${OP}" == "add" -a -z "$VERSION" ]
+then
+    echo VERSION  must be specified with -A option
     exit 1
 fi
 
 if [ -z "$OP" ]
 then
-    echo Operation  must be specified - Either -a or -d option must be specified
+    echo Operation  must be specified
     exit 1
 fi
 
@@ -76,8 +86,7 @@ function setDefaultBootEntry() {
 }
 
 function getCurBootVersion() {
-    local VER=$1
-    local GRUBFILE=$2
+    local GRUBFILE=$1
     entry=$(grep 'default=' ${GRUBFILE} | cut -d= -f2)
     if [ -z "$entry" ]
     then
@@ -131,7 +140,7 @@ function doDelImage() {
     TMPFILE=`mktemp /tmp/veniceGrubTool.XXXXXX` || exit 10
     cp $GRUBFILE $TMPFILE
 
-    curBootVersion=$(getCurBootVersion $VER $GRUBFILE)
+    curBootVersion=$(getCurBootVersion $GRUBFILE)
 
     delMenuEntryVersion $VER $TMPFILE
 
@@ -154,9 +163,69 @@ function doDelImage() {
     $RM -fr /run/initramfs/live/OS-${VER}
 }
 
+function keepOnlyCurrentDefaultImage() {
+    curBootVersion=$(getCurBootVersion $GRUBFILE)
+    for v in $(grep menuentry ${GRUBFILE}  | grep -v ${curBootVersion} | awk '{print $2}')
+    do
+        echo doDelImage $v $GRUBFILE
+        doDelImage $v $GRUBFILE
+    done
+}
+
+function doPreUpgrade() {
+    if [ ! -d "${SRCPATH}" ]
+    then
+        echo "Cant read directory ${SRCPATH}"
+        exit 14
+    fi
+    cd ${SRCPATH}
+    if [ ! -f venice.tgz -o ! -f naples_fw.tar -o ! -f venice_appl_os.tgz -o ! -f metadata.json ]
+    then
+        echo "Cant find all the files required. Only see $(ls)"
+        exit 15
+    fi
+    VER=$(eval echo $(cat metadata.json | jq '.Bundle.Version'))
+    if [ -z "$VER" ]
+    then
+        echo "Cant find bundle version in metadata"
+        exit 16
+    fi
+
+    tar zxvf venice_appl_os.tgz
+
+    diskused=$(du -kxc initrd0.img naples_fw.tar squashfs.img vmlinuz0 venice.tgz | grep total| cut -f1)
+    diskavail=$(df -k --output=avail /run/initramfs/live  | grep -v Ava)
+    if [ -z "$diskavail" -o -z "$diskused" ]
+    then
+        echo "Unable to determine free space available or disk space used"
+        exit 17
+    fi
+
+    if [ $diskavail -lt $((diskused + 10)) ]
+    then
+        echo "Not enough free disk space to install image"
+        exit 18
+    fi
+}
+
+function doUpgrade() {
+    DEST=/run/initramfs/live/OS-$VER
+    mkdir -p $DEST
+    cd $SRCPATH
+    tar zxvf venice_appl_os.tgz
+    for i in initrd0.img naples_fw.tar squashfs.img vmlinuz0 venice.tgz
+    do
+        cp $SRCPATH/$i $DEST
+    done
+    doAddImage $VER $GRUBFILE
+}
+
 
 case $OP in
 "add") doAddImage $VERSION $GRUBFILE;;
 "del") doDelImage $VERSION $GRUBFILE;;
+"only") keepOnlyCurrentDefaultImage;;
+"preupgrade") doPreUpgrade ;;
+"doupgrade") doPreUpgrade; keepOnlyCurrentDefaultImage; doUpgrade;;
 esac
 

@@ -48,14 +48,10 @@ chmod +x ./INSTALL.sh ; \
 ./INSTALL.sh --clean-only; "
 fi
 
-sshpass -p${PASS} ${SSH} root@${IP} "mkdir -p /run/initramfs/live/OS-${VER}; cd /run/initramfs/live/OS-${VER} ; \
-curl -O http://pxe/builds/hourly/${VER}/src/github.com/pensando/sw/bin/venice-install/squashfs.img ; \
-curl -O http://pxe/builds/hourly/${VER}/src/github.com/pensando/sw/bin/venice-install/vmlinuz0; \
-curl -O http://pxe/builds/hourly/${VER}/src/github.com/pensando/sw/bin/venice-install/initrd0.img; \
-curl -O http://pxe/builds/hourly/${VER}/src/github.com/pensando/sw/bin/venice.tgz; \
-curl -O http://pxe/builds/hourly/${VER}/src/github.com/pensando/sw/nic/naples_fw.tar; \
-curl -O http://pxe/builds/hourly/${VER}/src/github.com/pensando/sw/tools/docker-files/vinstall/PEN-VERSION ;\
-cd /tmp; \
-curl -O http://pxe/kickstart/veniceTempInstall/venice_appl_GrubEntry.sh ; \
-chmod +x venice_appl_GrubEntry.sh ; \
-./venice_appl_GrubEntry.sh -a -v ${VER} && echo Successfull installed OS version ${VER}. Reboot to take effect; "
+sshpass -p${PASS} ${SSH} root@${IP} "rm -fr /data/installtmp ; mkdir -p /data/installtmp && cd /data/installtmp; \
+curl -O http://pxe/builds/hourly/${VER}/src/github.com/pensando/sw/bin/bundle/bundle.tar; \
+tar xvf bundle.tar ; \
+echo rm bundle.tar ; \
+curl -o /tmp/venice_appl_GrubEntry.sh http://pxe/kickstart/veniceTempInstall/venice_appl_GrubEntry.sh ; \
+chmod +x /tmp/venice_appl_GrubEntry.sh ; \
+/tmp/venice_appl_GrubEntry.sh -p /data/installtmp && /tmp/venice_appl_GrubEntry.sh -u /data/installtmp && echo Successfull installed OS version ${VER}. Reboot to take effect; "

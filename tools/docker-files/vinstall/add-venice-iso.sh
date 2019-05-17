@@ -48,6 +48,8 @@ for i in etc/ usr/
 do
     cp -fa /pen/$i .
 done
+curl -sLo /pen/usr/local/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+chmod +x /pen/usr/local/bin/jq
 
 systemctl --root=/t2 enable docker
 systemctl --root=/t2 enable penservice
