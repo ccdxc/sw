@@ -36,6 +36,10 @@ const (
 	metaContentType  = "content-type"
 )
 
+var (
+	maxCreateBucketRetries = 1200
+)
+
 type instance struct {
 	sync.RWMutex
 	ctx        context.Context
@@ -90,11 +94,24 @@ func (i *instance) createDefaultBuckets(client vos.BackendClient) error {
 	log.Infof("creating default buckets in minio")
 	defer i.Unlock()
 	i.Lock()
-	for _, n := range objstore.Buckets_name {
-		name := "default." + strings.ToLower(n)
-		if err := i.createBucket(name); err != nil {
-			return err
+	loop := true
+	retryCount := 0
+	var err error
+	for loop && retryCount < maxCreateBucketRetries {
+		loop = false
+		for _, n := range objstore.Buckets_name {
+			name := "default." + strings.ToLower(n)
+			if err = i.createBucket(name); err != nil {
+				loop = true
+			}
 		}
+		if loop {
+			time.Sleep(500 * time.Millisecond)
+			retryCount++
+		}
+	}
+	if retryCount >= maxCreateBucketRetries {
+		return errors.Wrap(err, "failed after max retries")
 	}
 	return nil
 }
@@ -109,18 +126,18 @@ func (i *instance) createBucket(bucket string) error {
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("MakeBucket operation[%s]", bucket))
 		}
-		if _, ok := i.watcherMap[bucket]; !ok {
-			watcher := &storeWatcher{bucket: bucket, client: i.client, watchPrefixes: i.pfxWatcher}
-			i.watcherMap[bucket] = watcher
-			i.wg.Add(1)
-			go watcher.Watch(i.ctx, func() {
-				i.Lock()
-				bucket := bucket
-				delete(i.watcherMap, bucket)
-				i.Unlock()
-				i.wg.Done()
-			})
-		}
+	}
+	if _, ok := i.watcherMap[bucket]; !ok {
+		watcher := &storeWatcher{bucket: bucket, client: i.client, watchPrefixes: i.pfxWatcher}
+		i.watcherMap[bucket] = watcher
+		i.wg.Add(1)
+		go watcher.Watch(i.ctx, func() {
+			i.Lock()
+			bucket := bucket
+			delete(i.watcherMap, bucket)
+			i.Unlock()
+			i.wg.Done()
+		})
 	}
 	return nil
 }
@@ -147,8 +164,14 @@ func New(ctx context.Context, args []string) error {
 
 	time.Sleep(2 * time.Second)
 	inst := &instance{}
+	url := ""
+	hostname, err := os.Hostname()
+	if err != nil {
+		url = "localhost:" + globals.VosMinioPort
+	} else {
+		url = hostname + ":" + globals.VosMinioPort
+	}
 
-	url := "localhost:" + globals.VosMinioPort
 	log.Infof("connecting to minio at [%v]", url)
 
 	mclient, err := minioclient.New(url, minioKey, minioSecret, true)
@@ -190,9 +213,14 @@ func New(ctx context.Context, args []string) error {
 		return errors.Wrap(err, "failed to start http listener")
 	}
 
+	// For simplicity all nodes in the cluster check if the default buckets exist,
+	//  if not, try to create the buckets. all nodes in the cluster try this till
+	//  all default buckets are created. A little inefficient but simple and a rare
+	//  operation (only on a create of a new cluster)
 	err = inst.createDefaultBuckets(client)
 	if err != nil {
-		return errors.Wrap(err, "create buckets")
+		log.Errorf("Failed to create buckets (%+v)", err)
+		return errors.Wrap(err, "failed to create buckets")
 	}
 	// Register all plugins
 	plugins.RegisterPlugins(inst)

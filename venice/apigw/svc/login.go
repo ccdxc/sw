@@ -328,7 +328,6 @@ func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI str
 	auditor := apiGateway.GetAuditor()
 	eventID := uuid.NewV4().String()
 	creationTime, _ := types.TimestampProto(time.Now())
-	apiGateway.WaitRunning()
 	addr, err := apiGateway.GetAddr()
 	if err != nil {
 		s.logger.ErrorLog("method", "audit", "msg", "error getting API Gateway IP address", "error", err)

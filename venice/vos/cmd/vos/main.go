@@ -5,12 +5,14 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
-
-	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/vos/pkg"
 )
@@ -22,6 +24,7 @@ func main() {
 	var (
 		nsURLs = flag.String("resolver-urls", ":"+globals.CMDResolverPort,
 			"comma separated list of resolver URLs of the form 'ip:port'")
+		clusterNodes    = flag.String("cluster-nodes", "", "comma seperated list of cluster nodes")
 		logFile         = flag.String("logfile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Vos)), "redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		debugFlag       = flag.Bool("debug", false, "enable debug mode")
@@ -50,9 +53,24 @@ func main() {
 	log.SetConfig(logConfig)
 
 	log.Infof("resolver-urls %+v", nsURLs)
+	log.Infof("cluster-nodes %v", *clusterNodes)
 	log.Infof("starting object store with args : {%+v}", os.Args)
-
-	args := []string{pkgName, "server", "--address", fmt.Sprintf(":%s", globals.VosMinioPort), "/disk1"}
+	nodes := strings.Split(*clusterNodes, ",")
+	sort.Strings(nodes)
+	endpoints := []string{}
+	for _, h := range nodes {
+		endpoints = append(endpoints, fmt.Sprintf("https://%s:%s/disk1", h, globals.VosMinioPort))
+		endpoints = append(endpoints, fmt.Sprintf("https://%s:%s/disk2", h, globals.VosMinioPort))
+	}
+	localNode := k8s.GetPodIP()
+	args := []string{}
+	if len(nodes) > 1 {
+		args = []string{pkgName, "server", "--address", fmt.Sprintf("%s:%s", localNode, globals.VosMinioPort)}
+		args = append(args, endpoints...)
+	} else {
+		args = []string{pkgName, "server", "--address", fmt.Sprintf("%s:%s", localNode, globals.VosMinioPort), "/disk1"}
+	}
+	log.Infof("args for starting Minio %v", args)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// init obj store
