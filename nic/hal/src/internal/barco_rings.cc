@@ -33,6 +33,19 @@ hal_ret_t   get_opaque_tag_addr(GetOpaqueTagAddrRequest& request,
     return ret;
 }
 
+hal_ret_t barco_get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr)
+{
+    hal_ret_t           ret = HAL_RET_OK;
+    pd::pd_func_args_t  pd_func_args = {0};
+
+    pd::pd_get_opaque_tag_addr_args_t args;
+    args.ring_type = ring_type;
+    args.addr = addr;
+    pd_func_args.pd_get_opaque_tag_addr = &args;
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_OPAQUE_TAG_ADDR, &pd_func_args);
+    return ret;
+}
+
 hal_ret_t barco_get_req_descr_entry(BarcoGetReqDescrEntryRequest& request,
 				BarcoGetReqDescrEntryResponseMsg *response_msg)
 {

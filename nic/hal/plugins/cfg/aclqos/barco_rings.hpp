@@ -54,6 +54,7 @@ typedef struct barco_asym_descr_s {
     uint32_t                barco_status;
 } barco_asym_descr_t;
 
+hal_ret_t barco_get_opaque_tag_addr(types::BarcoRings ring_type, uint64_t* addr);
 
 }    // namespace hal
 #endif  /* __BARCO_RINGS_HPP__*/

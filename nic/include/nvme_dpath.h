@@ -217,7 +217,7 @@ static_assert(sizeof(nvme_sessxtstxcb_t) == 64);
 
 typedef struct nvme_sessdgsttxcb_s {
 
-    uint8_t pad[38];
+    uint8_t pad[30];
 
     uint64_t rsvd4: 7;
     uint64_t wb_r1_busy: 1;
@@ -231,9 +231,16 @@ typedef struct nvme_sessdgsttxcb_s {
     uint64_t rsvd1: 7;
     uint64_t r0_busy: 1;   
 
+    //Ring 1
     uint64_t rsvd0: 9;
     uint64_t log_num_entries: 5;
     uint64_t base_addr: 34;
+    
+    //Input Queue from Transport(TCP) Layer
+    //Associated with Ring 0
+    uint64_t rsvd5: 25;
+    uint64_t rx_q_log_num_entries: 5;
+    uint64_t rx_q_base_addr: 34;
     
     qstate_ring_t           rings[MAX_SESSDGSTTX_RINGS];
 
@@ -302,15 +309,15 @@ typedef struct nvme_aol_ring_entry_s {
 
 typedef struct nvme_tx_hwxtscb_s {
  
-        uint8_t  pad[56];
+        uint8_t  pad[50];
 
         // hw ring towards HW(BARCO) Encrypt XTS Engine
         uint64_t ring_choke_counter: 8;
-        uint64_t ring_rsvd: 3;
+        uint64_t ring_rsvd: 1;
         uint64_t ring_log_sz: 5;
-        uint64_t ring_ci: 16;
-        uint64_t ring_proxy_ci: 16;
-        uint64_t ring_pi: 16;
+        uint64_t ring_base_addr: 34;
+        uint32_t ring_pi;
+        uint32_t ring_ci;
    
 } nvme_tx_hwxtscb_t;
 
@@ -322,15 +329,15 @@ static_assert(sizeof(nvme_tx_hwxtscb_t) == 64);
 
 typedef struct nvme_tx_hwdgstcb_s {
  
-        uint8_t  pad[56];
+        uint8_t  pad[50];
 
         // hw ring towards HW(BARCO) Tx CRC32 Digest/Compress Engine
         uint64_t ring_choke_counter: 8;
-        uint64_t ring_rsvd: 3;
+        uint64_t ring_rsvd: 1;
         uint64_t ring_log_sz: 5;
-        uint64_t ring_ci: 16;
-        uint64_t ring_proxy_ci: 16;
-        uint64_t ring_pi: 16;
+        uint64_t ring_base_addr: 34;
+        uint32_t ring_pi;
+        uint32_t ring_ci;
    
 } nvme_tx_hwdgstcb_t;
 
@@ -362,10 +369,6 @@ typedef enum nvme_dpath_ds_type_s {
     NVME_TYPE_RX_RESOURCECB,
     NVME_TYPE_TX_SESSPRODCB,
     NVME_TYPE_RX_SESSPRODCB,
-    NVME_TYPE_TX_HWXTSCB,
-    NVME_TYPE_RX_HWXTSCB,
-    NVME_TYPE_TX_HWDGSTCB,
-    NVME_TYPE_RX_HWDGSTCB,
     NVME_TYPE_TX_AOL,
     NVME_TYPE_TX_AOL_RING,
     NVME_TYPE_RX_AOL,
@@ -395,10 +398,6 @@ static nvme_hbm_alloc_info_t nvme_hbm_alloc_table[] = {
     {NVME_TYPE_RX_RESOURCECB, 1, sizeof(nvme_resourcecb_t)},
     {NVME_TYPE_TX_SESSPRODCB, 512, sizeof(nvme_txsessprodcb_t)},
     {NVME_TYPE_RX_SESSPRODCB, 512, sizeof(nvme_rxsessprodcb_t)},
-    {NVME_TYPE_TX_HWXTSCB, 1, sizeof(nvme_tx_hwxtscb_t)},
-    {NVME_TYPE_RX_HWXTSCB, 1, sizeof(nvme_rx_hwxtscb_t)},
-    {NVME_TYPE_TX_HWDGSTCB, 1, sizeof(nvme_tx_hwdgstcb_t)},
-    {NVME_TYPE_RX_HWDGSTCB, 1, sizeof(nvme_rx_hwdgstcb_t)},
     {NVME_TYPE_TX_AOL, 512, sizeof(nvme_aol_t)},
     {NVME_TYPE_TX_AOL_RING, 512, sizeof(nvme_aol_ring_entry_t)},
     {NVME_TYPE_RX_AOL, 512, sizeof(nvme_aol_t)},
