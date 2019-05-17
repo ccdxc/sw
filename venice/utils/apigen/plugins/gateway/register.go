@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -386,6 +387,227 @@ func getSvcParams(s *descriptor.Service) (ServiceParams, error) {
 	return params, nil
 }
 
+var (
+	_ = flag.String("S_prefix", "", "prefix for the generation (passed via proto params")
+	_ = flag.String("S_path", "", "root path for generation (passed via proto params")
+)
+
+func getGenParamsPrefix() (string, error) {
+	f := flag.CommandLine.Lookup("S_prefix")
+	if f == nil {
+		return "", errors.New("not found")
+	}
+	if f.Value.String() == "" {
+		return "", errors.New("not set")
+	}
+	return f.Value.String(), nil
+}
+
+func getGenParamsPath() (string, error) {
+	f := flag.CommandLine.Lookup("S_path")
+	if f == nil {
+		return "", errors.New("not found")
+	}
+	if f.Value.String() == "" {
+		return "", errors.New("not set")
+	}
+	return f.Value.String(), nil
+}
+
+func parseMetricsManifest(raw []byte) map[string]bool {
+	manifest := make(map[string]bool)
+	lines := bytes.Split(raw, []byte("\n"))
+	for _, line := range lines {
+		fields := bytes.Fields(line)
+		if len(fields) == 1 && string(fields[0]) != "" {
+			manifest[string(fields[0])] = true
+		}
+	}
+	return manifest
+}
+
+func hasMetricsInFile(file *descriptor.File) (bool, error) {
+	for _, m := range file.Messages {
+		_, err := reg.GetExtension("venice.metricInfo", m)
+		if err == nil {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func genMetricsManifest(desc *descriptor.File, path string) (string, error) {
+	var manifest map[string]bool
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		glog.V(1).Infof("manifest [%s] not found", path)
+		manifest = make(map[string]bool)
+	} else {
+		raw, err := ioutil.ReadFile(path)
+		if err != nil {
+			glog.V(1).Infof("Reading Manifest failed (%s)", err)
+			return "", err
+		}
+		manifest = parseMetricsManifest(raw)
+	}
+	retStr := ""
+	file := filepath.Base(*desc.Name)
+	// retStr = fmt.Sprintf("got file [%v]\n", *desc.Name)
+	if ok, _ := hasMetricsInFile(desc); ok {
+		// retStr = retStr + fmt.Sprintf("Has metrics is true")
+		manifest[file] = true
+	}
+	keys := []string{}
+	for k := range manifest {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		retStr = fmt.Sprintf("%s%s\n", retStr, k)
+	}
+	return retStr, nil
+}
+
+type fileMetricOptions struct {
+	FileName string             `json:",omitempty"`
+	Package  string             `json:",omitempty"`
+	Prefix   string             `json:",omitempty"`
+	Messages []msgMetricOptions `json:",omitempty"`
+}
+
+type fieldMetricOptions struct {
+	Name          string   `json:",omitempty"`
+	DisplayName   string   `json:",omitempty"`
+	Description   string   `json:",omitempty"`
+	Units         string   `json:",omitempty"`
+	ScaleMin      int32    `json:",omitempty"`
+	ScaleMax      int32    `json:",omitempty"`
+	BaseType      string   `json:",omitempty"`
+	AllowedValues []string `json:",omitempty"`
+}
+
+type msgMetricOptions struct {
+	Name        string               `json:",omitempty"`
+	Description string               `json:",omitempty"`
+	DisplayName string               `json:",omitempty"`
+	Fields      []fieldMetricOptions `json:",omitempty"`
+}
+
+func mapScalarTypes(in gogoproto.FieldDescriptorProto_Type) string {
+	switch in {
+	case gogoproto.FieldDescriptorProto_TYPE_DOUBLE, gogoproto.FieldDescriptorProto_TYPE_FLOAT:
+		return "float"
+	case gogoproto.FieldDescriptorProto_TYPE_INT32, gogoproto.FieldDescriptorProto_TYPE_SFIXED32:
+		return "int32"
+	case gogoproto.FieldDescriptorProto_TYPE_UINT32, gogoproto.FieldDescriptorProto_TYPE_FIXED32:
+		return "uint32"
+	case gogoproto.FieldDescriptorProto_TYPE_INT64, gogoproto.FieldDescriptorProto_TYPE_SFIXED64:
+		return "int64"
+	case gogoproto.FieldDescriptorProto_TYPE_UINT64, gogoproto.FieldDescriptorProto_TYPE_FIXED64:
+		return "uint64"
+	case gogoproto.FieldDescriptorProto_TYPE_STRING:
+		return "string"
+	case gogoproto.FieldDescriptorProto_TYPE_BOOL:
+		return "bool"
+	case gogoproto.FieldDescriptorProto_TYPE_ENUM:
+		return "enum"
+	default:
+		return "unknown"
+	}
+}
+
+func getFieldMetricOptions(f *descriptor.Field) (fieldMetricOptions, bool) {
+	ret := fieldMetricOptions{}
+	i, err := reg.GetExtension("venice.metricsField", f)
+	if err == nil {
+		o := i.(*venice.MetricFieldInfo)
+		ret.Name = *f.Name
+		ret.DisplayName = o.DisplayName
+		ret.Description = o.Description
+		ret.Units = o.Units.String()
+		ret.ScaleMax = o.ScaleMax
+		ret.ScaleMin = o.ScaleMin
+		if isScalarType(f.Type.String()) {
+			ret.BaseType = mapScalarTypes(*f.Type)
+			switch *f.Type {
+			case gogoproto.FieldDescriptorProto_TYPE_ENUM:
+				en, err := f.Message.File.Reg.LookupEnum("", *f.TypeName)
+				if err != nil {
+					glog.Fatalf("failed to get enum [%v] (%s)", *f.TypeName, err)
+				}
+				for _, v := range en.Value {
+					ret.AllowedValues = append(ret.AllowedValues, fmt.Sprintf("%d", v.GetNumber()))
+				}
+			case gogoproto.FieldDescriptorProto_TYPE_STRING:
+				if profile, err := common.GenerateVeniceCheckFieldProfile(f, f.Message.File.Reg); err == nil {
+					if profile != nil && len(profile.Enum) > 0 {
+						if strs, ok := profile.Enum["all"]; ok {
+							ret.AllowedValues = strs
+						}
+					}
+				}
+			}
+		} else {
+			switch f.GetTypeName() {
+			case ".delphi.Counter":
+				ret.BaseType = "Counter"
+			case ".delphi.Gauge":
+				ret.BaseType = "Gauge"
+			default:
+				ret.BaseType = f.GetTypeName()
+			}
+		}
+		return ret, true
+	}
+	return ret, false
+}
+
+func getMsgMetricOptions(m *descriptor.Message) (msgMetricOptions, bool) {
+	ret := msgMetricOptions{}
+	i, err := reg.GetExtension("venice.metricInfo", m)
+	if err == nil {
+		om := i.(*venice.MetricInfo)
+		ret.Name = *m.Name
+		ret.Description = om.Description
+		ret.DisplayName = om.DisplayName
+		for _, f := range m.Fields {
+			fopts, ok := getFieldMetricOptions(f)
+			if ok {
+				ret.Fields = append(ret.Fields, fopts)
+			}
+		}
+		return ret, true
+	}
+	return ret, false
+}
+
+func getFileMetricsOptions(f *descriptor.File) (fileMetricOptions, bool) {
+	ret := fileMetricOptions{}
+	ret.FileName = *f.Name
+	ret.Package = f.GoPkg.Name
+
+	for _, m := range f.Messages {
+		mopts, ok := getMsgMetricOptions(m)
+		if ok {
+			ret.Messages = append(ret.Messages, mopts)
+		}
+	}
+	return ret, true
+}
+
+func genFileMetricsJSON(f *descriptor.File, prefix string) (string, error) {
+	fopts, ok := getFileMetricsOptions(f)
+	if !ok {
+		return "", errors.New("failed to generate metrics json")
+	}
+	fopts.Prefix = prefix
+	ret, err := json.MarshalIndent(fopts, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(ret), nil
+}
+
 func getPenctlParentCmdOptions(m *descriptor.Message) ([]PenctlCmdOpts, error) {
 	var penctlCmdOpts []PenctlCmdOpts
 	i, _ := reg.GetExtension("venice.penctlParentCmd", m)
@@ -394,6 +616,23 @@ func getPenctlParentCmdOptions(m *descriptor.Message) ([]PenctlCmdOpts, error) {
 		penctlCmdOpt.Cmd = r.Cmd
 		penctlCmdOpt.RootCmd = r.RootCmd
 		penctlCmdOpt.HelpStr = r.HelpStr
+		if penctlCmdOpt.HelpStr == "" {
+			// generate the help string from options defined on the fields
+			if mopts, ok := getMsgMetricOptions(m); ok {
+				penctlCmdOpt.HelpStr = fmt.Sprintf("%s\\n%s\\n", mopts.DisplayName, mopts.Description)
+			}
+		}
+		if mopts, ok := getMsgMetricOptions(m); ok {
+			if !strings.HasSuffix(penctlCmdOpt.HelpStr, "\n") {
+				penctlCmdOpt.HelpStr = penctlCmdOpt.HelpStr + "\\n"
+			}
+			for _, fld := range mopts.Fields {
+				if fld.Description != "" {
+					penctlCmdOpt.HelpStr = fmt.Sprintf("%s%s\t: %s\\n", penctlCmdOpt.HelpStr, fld.Name, fld.Description)
+				}
+			}
+		}
+
 		penctlCmdOpts = append(penctlCmdOpts, penctlCmdOpt)
 	}
 	return penctlCmdOpts, nil
@@ -406,6 +645,22 @@ func getPenctlCmdOptions(m *descriptor.Message) (PenctlCmdOpts, error) {
 	penctlCmdOpts.Cmd = r.Cmd
 	penctlCmdOpts.RootCmd = r.RootCmd
 	penctlCmdOpts.HelpStr = r.HelpStr
+	if penctlCmdOpts.HelpStr == "" {
+		// generate the help string from options defined on the fields
+		if mopts, ok := getMsgMetricOptions(m); ok {
+			penctlCmdOpts.HelpStr = fmt.Sprintf("%s\\n%s\\n", mopts.DisplayName, mopts.Description)
+		}
+	}
+	if mopts, ok := getMsgMetricOptions(m); ok {
+		if !strings.HasSuffix(penctlCmdOpts.HelpStr, "\n") {
+			penctlCmdOpts.HelpStr = penctlCmdOpts.HelpStr + "\\n"
+		}
+		for _, fld := range mopts.Fields {
+			if fld.Description != "" {
+				penctlCmdOpts.HelpStr = fmt.Sprintf("%s%s\t: %s\\n", penctlCmdOpts.HelpStr, fld.Name, fld.Description)
+			}
+		}
+	}
 	return penctlCmdOpts, nil
 }
 
@@ -2880,6 +3135,10 @@ func init() {
 	reg.RegisterFunc("isSrvBinStream", isSrvBinStream)
 	reg.RegisterFunc("getNormalizedEnum", getNormalizedEnum)
 	reg.RegisterFunc("getNormalizedEnumName", getNormalizedEnumName)
+	reg.RegisterFunc("genFileMetricsJSON", genFileMetricsJSON)
+	reg.RegisterFunc("getGenParamsPrefix", getGenParamsPrefix)
+	reg.RegisterFunc("getGenParamsPath", getGenParamsPath)
+	reg.RegisterFunc("genMetricsManifest", genMetricsManifest)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

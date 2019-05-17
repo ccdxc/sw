@@ -144,6 +144,22 @@ func parseProxyEndpoint(val interface{}) (interface{}, error) {
 	return c, nil
 }
 
+func parseMetricInfo(val interface{}) (interface{}, error) {
+	c, ok := val.(*venice.MetricInfo)
+	if !ok {
+		return nil, errInvalidOption
+	}
+	return c, nil
+}
+
+func parseMetricFieldInfo(val interface{}) (interface{}, error) {
+	c, ok := val.(*venice.MetricFieldInfo)
+	if !ok {
+		return nil, errInvalidOption
+	}
+	return c, nil
+}
+
 // CheckArgs defines a function to check args for validators
 type CheckArgs func(string) bool
 
@@ -566,6 +582,39 @@ func ParseValidator(in string) (ValidateField, error) {
 	return ret, nil
 }
 
+// GenerateVeniceCheckFieldProfile returns the field validators profile.
+func GenerateVeniceCheckFieldProfile(field *descriptor.Field, registry *descriptor.Registry) (*FieldProfile, error) {
+	r, err := reg.GetExtension("venice.check", field)
+	if err == nil {
+		// We have some options specified
+		profile := FieldProfile{}
+		profile.Init()
+		for _, v := range r.([]string) {
+			fldv, err := ParseValidator(v)
+			if err != nil {
+				return nil, err
+			}
+			fn, ok := ValidatorProfileMap[fldv.Fn]
+			if !ok {
+				glog.Fatalf("Did not find entry in profile map for %v", fldv.Fn)
+			}
+			ver := fldv.Ver
+			if ver == "" || ver == "*" {
+				ver = "all"
+			}
+			err = fn(field, registry, ver, fldv.Args, &profile)
+			if err != nil {
+				glog.Fatalf("cannot parse validator (%s)", err)
+			}
+			if fldv.AllowEmpty {
+				profile.Required[ver] = false
+			}
+		}
+		return &profile, nil
+	}
+	return nil, nil
+}
+
 // Defaults is defaults specified by field.
 type Defaults struct {
 	Repeated bool
@@ -865,4 +914,6 @@ func RegisterOptionParsers() {
 	reg.RegisterOptionParser("venice.methodActionObject", parseStringOptions)
 	reg.RegisterOptionParser("venice.forceDoc", parseBoolOptions)
 	reg.RegisterOptionParser("venice.mutable", parseBoolOptions)
+	reg.RegisterOptionParser("venice.metricInfo", parseMetricInfo)
+	reg.RegisterOptionParser("venice.metricsField", parseMetricFieldInfo)
 }

@@ -13,6 +13,6 @@ MODULE_INCS         = ${MODULE_DIR} \
 MODULE_LDLIBS       = pthread
 MODULE_POSTGEN_MK   = module_protolib.mk
 MODULE_PREREQS      = protoc-gen-delphi.gobin
-MODULE_SRCS         = ${TOPDIR}/venice/utils/apigen/annotations/penctl.proto
+MODULE_SRCS         = ${TOPDIR}/venice/utils/apigen/annotations/penctl.proto ${TOPDIR}/venice/utils/apigen/annotations/metrics_annotations.proto
 
 include ${MKDEFS}/post.mk

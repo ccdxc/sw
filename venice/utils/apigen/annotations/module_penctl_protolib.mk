@@ -9,5 +9,5 @@ MODULE_INCS     = /usr/local/include \
 MODULE_FLAGS    = -O3
 MODULE_EXCLUDE_FLAGS = -O2
 MODULE_PREREQS  = penctl.proto
-MODULE_SRCS     = ${BLD_PROTOGEN_DIR}/penctl.pb.cc
+MODULE_SRCS     = ${BLD_PROTOGEN_DIR}/penctl.pb.cc ${BLD_PROTOGEN_DIR}/metrics_annotations.pb.cc
 include ${MKDEFS}/post.mk

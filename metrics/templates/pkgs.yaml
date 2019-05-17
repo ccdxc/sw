@@ -1,0 +1,4 @@
+basepath: "github.com/pensando/sw/metrics/templates"
+templates:
+- template: "metrics_files.tmpl"
+  outputpath: "metrics_files"

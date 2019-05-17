@@ -410,7 +410,7 @@ func messageFinalizer(obj *genswagger.SwaggerSchemaObject, message *descriptor.M
 		if common.GetJSONTag(f) == "-" {
 			continue
 		}
-		profile, err := generateVeniceCheckFieldProfile(f, reg)
+		profile, err := common.GenerateVeniceCheckFieldProfile(f, reg)
 		if err == nil && profile != nil {
 			// TODO: Use swagger version instead of all
 			if profile.Required["all"] {
@@ -443,41 +443,9 @@ func messageFinalizer(obj *genswagger.SwaggerSchemaObject, message *descriptor.M
 	return nil
 }
 
-func generateVeniceCheckFieldProfile(field *descriptor.Field, reg *descriptor.Registry) (*common.FieldProfile, error) {
-	r, err := gwplugins.GetExtension("venice.check", field)
-	if err == nil {
-		// We have some options specified
-		profile := common.FieldProfile{}
-		profile.Init()
-		for _, v := range r.([]string) {
-			fldv, err := common.ParseValidator(v)
-			if err != nil {
-				return nil, err
-			}
-			fn, ok := common.ValidatorProfileMap[fldv.Fn]
-			if !ok {
-				glog.Fatalf("Did not find entry in profile map for %v", fldv.Fn)
-			}
-			ver := fldv.Ver
-			if ver == "" || ver == "*" {
-				ver = "all"
-			}
-			err = fn(field, reg, ver, fldv.Args, &profile)
-			if err != nil {
-				glog.Fatalf("cannot parse validator (%s)", err)
-			}
-			if fldv.AllowEmpty {
-				profile.Required[ver] = false
-			}
-		}
-		return &profile, nil
-	}
-	return nil, nil
-}
-
 func fieldFinalizer(obj *genswagger.SwaggerSchemaObject, field *descriptor.Field, reg *descriptor.Registry) error {
 	glog.V(1).Infof("called Field Finalizer for %v", *field.Name)
-	profile, err := generateVeniceCheckFieldProfile(field, reg)
+	profile, err := common.GenerateVeniceCheckFieldProfile(field, reg)
 	// TODO: Use swagger version instead of all
 	if err == nil && profile != nil {
 		if len(profile.Enum) > 0 {

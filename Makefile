@@ -29,7 +29,8 @@ venice/utils/authn/radius                      \
 venice/ctrler/rollout/rpcserver/protos \
 venice/utils/objstore/client/mock \
 venice/citadel/broker/mock \
-venice/utils/diagnostics/protos
+venice/utils/diagnostics/protos \
+metrics
 
 # Vendored packages to be installed before generation
 TO_PREGEN_INSTALL := ./vendor/github.com/gogo/protobuf/protoc-gen-gofast \

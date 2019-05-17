@@ -10,6 +10,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	gogoplugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
+	googapi "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	gwplugins "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins"
@@ -105,6 +106,136 @@ func TestParsers(t *testing.T) {
 		}
 		if _, err := parseRestServiceOption(&dummyval1); err == nil {
 			t.Errorf("parseStringOptions passed")
+		}
+	}
+	{
+		in := &googapi.HttpRule{Body: "test body"}
+		out, err := parseGoogleAPIHTTP(in)
+		if err != nil {
+			t.Fatalf("parseStringSliceOptions failed (%s)", err)
+		}
+		if !reflect.DeepEqual(out.(*googapi.HttpRule), in) {
+			t.Errorf("parseGoogleAPIHTTP returned value wrong [%v]", out)
+		}
+		if _, err := parseRestServiceOption(&dummyval1); err == nil {
+			t.Errorf("parseGoogleAPIHTTP passed")
+		}
+	}
+	{
+		in := &venice.PenCtlCmd{Cmd: "XYZ", HelpStr: "Test strr", RootCmd: " Root cmd"}
+		out, err := parsePenctlCmd(in)
+		if err != nil {
+			t.Fatalf("parsePenctlCmd failed (%s)", err)
+		}
+		if !reflect.DeepEqual(out.(*venice.PenCtlCmd), in) {
+			t.Errorf("parsePenctlCmd returned value wrong [%v]", out)
+		}
+		if _, err := parseRestServiceOption(&dummyval1); err == nil {
+			t.Errorf("parsePenctlCmd passed")
+		}
+	}
+	{
+		in := []*venice.PenCtlCmd{{Cmd: "XYZ", HelpStr: "Test strr", RootCmd: " Root cmd"}}
+		out, err := parsePenctlParentCmd(in)
+		if err != nil {
+			t.Fatalf("parsePenctlParentCmd failed (%s)", err)
+		}
+		if !reflect.DeepEqual(out.([]*venice.PenCtlCmd), in) {
+			t.Errorf("parsePenctlParentCmd returned value wrong [%v]", out)
+		}
+		if _, err := parseRestServiceOption(&dummyval1); err == nil {
+			t.Errorf("parsePenctlParentCmd passed")
+		}
+	}
+	{
+		in := []*venice.RestEndpoint{{Object: "TestObj", Pattern: "TestPattern", Prefix: "TestPrefix"}}
+		out, err := parseNaplesRestService(in)
+		if err != nil {
+			t.Fatalf("parseNaplesRestService failed (%s)", err)
+		}
+		if !reflect.DeepEqual(out.([]*venice.RestEndpoint), in) {
+			t.Errorf("parseNaplesRestService returned value wrong [%v]", out)
+		}
+		if _, err := parseRestServiceOption(&dummyval1); err == nil {
+			t.Errorf("parseNaplesRestService passed")
+		}
+	}
+	{
+		in := []*venice.ActionEndpoint{{Action: "TestActon", Request: "Test Request", Response: "Test Response"}}
+		out, err := parseAPIActions(in)
+		if err != nil {
+			t.Fatalf("parseAPIActions failed (%s)", err)
+		}
+		if !reflect.DeepEqual(out.([]*venice.ActionEndpoint), in) {
+			t.Errorf("parseAPIActions returned value wrong [%v]", out)
+		}
+		if _, err := parseRestServiceOption(&dummyval1); err == nil {
+			t.Errorf("parseAPIActions passed")
+		}
+	}
+	{
+		in := &venice.ObjectPrefix{Path: "TestPath"}
+		out, err := parseObjectPrefix(in)
+		if err != nil {
+			t.Fatalf("parseObjectPrefix failed (%s)", err)
+		}
+		if !reflect.DeepEqual(out.(*venice.ObjectPrefix), in) {
+			t.Errorf("parseObjectPrefix returned value wrong [%v]", out)
+		}
+		if _, err := parseRestServiceOption(&dummyval1); err == nil {
+			t.Errorf("parseObjectPrefix passed")
+		}
+	}
+	{
+		in := []*venice.ProxyEndpoint{{Path: "TestPath"}}
+		out, err := parseProxyEndpoint(in)
+		if err != nil {
+			t.Fatalf("parseProxyEndpoint failed (%s)", err)
+		}
+		if !reflect.DeepEqual(out.([]*venice.ProxyEndpoint), in) {
+			t.Errorf("parseProxyEndpoint returned value wrong [%v]", out)
+		}
+		if _, err := parseRestServiceOption(&dummyval1); err == nil {
+			t.Errorf("parseProxyEndpoint passed")
+		}
+	}
+	{
+		in := []*venice.ProxyEndpoint{{Path: "TestPath"}}
+		out, err := parseProxyEndpoint(in)
+		if err != nil {
+			t.Fatalf("parseProxyEndpoint failed (%s)", err)
+		}
+		if !reflect.DeepEqual(out.([]*venice.ProxyEndpoint), in) {
+			t.Errorf("parseProxyEndpoint returned value wrong [%v]", out)
+		}
+		if _, err := parseRestServiceOption(&dummyval1); err == nil {
+			t.Errorf("parseProxyEndpoint passed")
+		}
+	}
+	{
+		in := &venice.MetricInfo{DisplayName: "Display Name", Description: "Test"}
+		out, err := parseMetricInfo(in)
+		if err != nil {
+			t.Fatalf("parseMetricInfo failed (%s)", err)
+		}
+		if !reflect.DeepEqual(out.(*venice.MetricInfo), in) {
+			t.Errorf("parseMetricInfo returned value wrong [%v]", out)
+		}
+		if _, err := parseRestServiceOption(&dummyval1); err == nil {
+			t.Errorf("parseMetricInfo passed")
+		}
+	}
+	{
+		in := &venice.MetricFieldInfo{DisplayName: "Display Name", Description: "Test"}
+		out, err := parseMetricFieldInfo(in)
+		if err != nil {
+			t.Fatalf("parseMetricFieldInfo failed (%s)", err)
+		}
+		if !reflect.DeepEqual(out.(*venice.MetricFieldInfo), in) {
+			t.Errorf("parseMetricFieldInfo returned value wrong [%v]", out)
+		}
+		if _, err := parseRestServiceOption(&dummyval1); err == nil {
+			t.Errorf("parseMetricFieldInfo passed")
 		}
 	}
 }

@@ -3,6 +3,7 @@ package accel_metrics;
 
 import "delphi.proto";
 import "penctl.proto";
+import "metrics_annotations.proto";
 
 message AccelMetricsPenctlRootCmd {
     option (venice.penctlParentCmd) = {
@@ -16,23 +17,22 @@ message AccelPfInfo {
         Cmd:     "device_info",
         HelpStr: "Device information:\\n"
                  " Key index - logical interface ID\\n"
-                 "\\n\\nValue Description:\\n\\n"
-                 "HwLifId         : hardware logical interface ID\\n"
-                 "NumSeqQueues    : number of sequencer queues available\\n"
-                 "CryptoKeyIdxBase: crypto key base index\\n"
-                 "NumCryptoKeysMax: maximum number of crypto keys allowed\\n"
-                 "IntrBase        : CPU interrupt base\\n"
-                 "IntrCount       : CPU interrupt vectors available",
+                 "\\n\\nValue Description:\\n\\n",
         RootCmd: "sonic"
+    };
+    option (venice.metricInfo) = {
+        DisplayName: "Device information",
+        Description: "Key index - logical interface ID"
     };
     delphi.ObjectMeta   Meta                 = 1;
     string              Key                  = 2;
-    uint64              HwLifId              = 3;
-    uint32              NumSeqQueues         = 4;
-    uint32              CryptoKeyIdxBase     = 5;
-    uint32              NumCryptoKeysMax     = 6;
-    uint32              IntrBase             = 7;
-    uint32              IntrCount            = 8;
+
+    uint64              HwLifId              = 3 [(venice.metricsField) = {DisplayName: "HwLifId" Description:"hardware logical interface ID", Units: ID}];
+    uint32              NumSeqQueues         = 4 [(venice.metricsField) = {DisplayName: "NumSeqQueues" Description:"number of sequencer queues available" }];
+    uint32              CryptoKeyIdxBase     = 5 [(venice.metricsField) = {DisplayName: "CryptoKeyIdxBase" Description:"crypto key base index" }] ;
+    uint32              NumCryptoKeysMax     = 6 [(venice.metricsField) = {DisplayName: "NumCryptoKeysMax" Description:"maximum number of crypto keys allowed" }];
+    uint32              IntrBase             = 7 [(venice.metricsField) = {DisplayName: "IntrBase" Description:"CPU interrupt base" }];
+    uint32              IntrCount            = 8 [(venice.metricsField) = {DisplayName: "IntrCount" Description:"CPU interrupt vectors available" }];
 }
     
 message AccelSeqQueueKey {
@@ -52,22 +52,23 @@ message AccelSeqQueueInfoMetrics {
         Cmd:     "sequencer_info",
         HelpStr: "Sequencer queues information:\\n"
                  " Key indices - LifId: logical interface ID, QId: queue ID\\n"
-                 "\\n\\nValue Description:\\n\\n"
-                 "QStateAddr: queue state memory address\\n"
-                 "QGroup    : queue group\\n"
-                 "            0 - compress/decompress\\n"
-                 "            1 - compress/decompress status\\n"
-                 "            2 - crypto\\n"
-                 "            3 - crypto status\\n"
-                 "CoreId    : CPU core ID (not available currently)",
+                 "\\n\\nValue Description:\\n\\n",
         RootCmd: "sonic"
     };
+    option (venice.metricInfo) = {
+        DisplayName: "Sequencer queues information",
+        Description: "Key indices are - LifID and QId"
+    };
     option (delphi.datapath_metrics) = true;
-    AccelSeqQueueKey    Key                  = 1;
+    AccelSeqQueueKey    Key                  = 1 [(venice.metricsField) = {DisplayName: "Key indices" Description:"", Units: ID}];
 
-    delphi.Counter      QStateAddr           = 2;
-    delphi.Counter      QGroup               = 3;
-    delphi.Counter      CoreId               = 4;
+    delphi.Counter      QStateAddr           = 2 [(venice.metricsField) = {DisplayName: "QStateAdd" Description:"queue state memory address"}];
+    delphi.Counter      QGroup               = 3 [(venice.metricsField) = {DisplayName: "QGroup" Description:"queue group\\n"
+                                                                                                   "           : 0 - compress/decompress\\n"
+                                                                                                   "           : 1 - compress/decompress status\\n"
+                                                                                                   "           : 2 - crypto\\n"
+                                                                                                   "           : 3 - crypto status\\n"}];
+    delphi.Counter      CoreId               = 4 [(venice.metricsField) = {DisplayName: "CoreId" Description:"CPU core ID (not available currently"}];
 }
 
 message AccelSeqQueueMetrics {
@@ -75,50 +76,35 @@ message AccelSeqQueueMetrics {
         Cmd:     "sequencer_metrics",
         HelpStr: "Metrics for sequencer queues:\\n"
                  " Key indices - LifId: logical interface ID, QId: queue ID\\n"
-                 "\\n\\nValue Description:\\n\\n"
-                 "InterruptsRaised : CPU interrupts raised\\n"
-                 "NextDBsRung      : chaining doorbells rung\\n"
-                 "SeqDescsProcessed: sequencer descriptors processed\\n"
-                 "SeqDescsAborted  : sequencer descriptors aborted (due to reset)\\n"
-                 "StatusPdmaXfers  : status descriptors copied\\n"
-                 "HwDescXfers      : descriptors transferred to hardware\\n"
-                 "HwBatchErrors    : hardware batch (length) errors\\n"
-                 "HwOpErrors       : hardware operation errors\\n"
-                 "AolUpdateReqs    : AOL list updates requested\\n"
-                 "SglUpdateReqs    : scatter/gather list updates requested\\n"
-                 "SglPdmaXfers     : payload DMA transfers executed\\n"
-                 "SglPdmaErrors    : payload DMA errors encountered\\n"
-                 "SglPadOnlyXfers  : pad-data-only DMA transfers executed\\n"
-                 "SglPadOnlyErrors : pad-data-only DMA errors encountered\\n"
-                 "AltDescsTaken    : alternate (bypass-onfail) descriptors executed\\n"
-                 "AltBufsTaken     : alternate buffers taken\\n"
-                 "LenUpdateReqs    : length updates requested\\n"
-                 "CpHeaderUpdates  : compression header updates requested\\n"
-                 "SeqHwBytes       : bytes processed",
+                 "\\n\\nValue Description:\\n\\n",
         RootCmd: "sonic"
     };
     option (delphi.datapath_metrics) = true;
-    AccelSeqQueueKey    Key                  = 1;
+    option (venice.metricInfo) = {
+        DisplayName: "Metrics for sequencer queues",
+        Description: "Key indices are - LifID and QId"
+    };
+    AccelSeqQueueKey    Key                  = 1 [(venice.metricsField) = {DisplayName: "Key indices" Description:"", Units: ID}];
 
-    delphi.Counter InterruptsRaised          = 2;
-    delphi.Counter NextDBsRung               = 3;
-    delphi.Counter SeqDescsProcessed         = 4;
-    delphi.Counter SeqDescsAborted           = 5;
-    delphi.Counter StatusPdmaXfers           = 6;
-    delphi.Counter HwDescXfers               = 7;
-    delphi.Counter HwBatchErrors             = 8;
-    delphi.Counter HwOpErrors                = 9;
-    delphi.Counter AolUpdateReqs             = 10;
-    delphi.Counter SglUpdateReqs             = 11;
-    delphi.Counter SglPdmaXfers              = 12;
-    delphi.Counter SglPdmaErrors             = 13;
-    delphi.Counter SglPadOnlyXfers           = 14;
-    delphi.Counter SglPadOnlyErrors          = 15;
-    delphi.Counter AltDescsTaken             = 16;
-    delphi.Counter AltBufsTaken              = 17;
-    delphi.Counter LenUpdateReqs             = 18;
-    delphi.Counter CpHeaderUpdates           = 19;
-    delphi.Counter SeqHwBytes                = 20;
+    delphi.Counter InterruptsRaised          = 2 [(venice.metricsField) = {DisplayName: "InterruptsRaised" Description:"CPU interrupts raised"}];
+    delphi.Counter NextDBsRung               = 3 [(venice.metricsField) = {DisplayName: "NextDBsRung" Description:"chaining doorbells rung"}];
+    delphi.Counter SeqDescsProcessed         = 4 [(venice.metricsField) = {DisplayName: "SeqDescsProcessed" Description:"sequencer descriptors processed"}];
+    delphi.Counter SeqDescsAborted           = 5 [(venice.metricsField) = {DisplayName: "SeqDescsAborted" Description:"sequencer descriptors aborted (due to reset)"}];
+    delphi.Counter StatusPdmaXfers           = 6 [(venice.metricsField) = {DisplayName: "StatusPdmaXfers" Description:"status descriptors copied"}];
+    delphi.Counter HwDescXfers               = 7 [(venice.metricsField) = {DisplayName: "HwDescXfers" Description:"descriptors transferred to hardware"}];
+    delphi.Counter HwBatchErrors             = 8 [(venice.metricsField) = {DisplayName: "HwBatchErrors" Description:"hardware batch (length) errors"}];
+    delphi.Counter HwOpErrors                = 9 [(venice.metricsField) = {DisplayName: "HwOpErrors" Description:"hardware operation errors"}];
+    delphi.Counter AolUpdateReqs             = 10 [(venice.metricsField) = {DisplayName: "AolUpdateReqs" Description:"AOL list updates requested"}];
+    delphi.Counter SglUpdateReqs             = 11 [(venice.metricsField) = {DisplayName: "AolUpdateReqs" Description:"scatter/gather list updates requested"}];
+    delphi.Counter SglPdmaXfers              = 12 [(venice.metricsField) = {DisplayName: "SglUpdateReqs" Description:"payload DMA transfers executed"}];
+    delphi.Counter SglPdmaErrors             = 13 [(venice.metricsField) = {DisplayName: "SglPdmaXfers" Description:"payload DMA errors encountered"}];
+    delphi.Counter SglPadOnlyXfers           = 14 [(venice.metricsField) = {DisplayName: "SglPdmaErrors" Description:"pad-data-only DMA transfers executed"}];
+    delphi.Counter SglPadOnlyErrors          = 15 [(venice.metricsField) = {DisplayName: "SglPadOnlyXfers" Description:"pad-data-only DMA errors encountered"}];
+    delphi.Counter AltDescsTaken             = 16 [(venice.metricsField) = {DisplayName: "AltDescsTaken" Description:"alternate (bypass-onfail) descriptors executed"}];
+    delphi.Counter AltBufsTaken              = 17 [(venice.metricsField) = {DisplayName: "AltBufsTaken" Description:"alternate buffers taken"}];
+    delphi.Counter LenUpdateReqs             = 18 [(venice.metricsField) = {DisplayName: "LenUpdateReqs" Description:"length updates requested"}];
+    delphi.Counter CpHeaderUpdates           = 19 [(venice.metricsField) = {DisplayName: "CpHeaderUpdates" Description:"compression header updates requested"}];
+    delphi.Counter SeqHwBytes                = 20 [(venice.metricsField) = {DisplayName: "SeqHwBytes" Description:"bytes processed"}];
 }
 
 message AccelHwRingKey {
@@ -149,12 +135,16 @@ message AccelHwRingMetrics {
         RootCmd: "sonic"
     };
     option (delphi.datapath_metrics) = true;
-    AccelHwRingKey      Key                  = 1;
+    option (venice.metricInfo) = {
+        DisplayName: "Metrics for hardware rings",
+        Description: "Key indices - RId: ring ID, SubRId: sub-ring ID"
+    };
+    AccelHwRingKey      Key                  = 1 [(venice.metricsField) = {DisplayName: "Key indices" Description:"", Units: ID}];
 
-    delphi.Counter      PIndex               = 2;
-    delphi.Counter      CIndex               = 3;
-    delphi.Counter      InputBytes           = 4;
-    delphi.Counter      OutputBytes          = 5;
-    delphi.Counter      SoftResets           = 6;
+    delphi.Counter      PIndex               = 2 [(venice.metricsField) = {DisplayName: "PIndex" Description:"ring producer index", Units: ID}];
+    delphi.Counter      CIndex               = 3 [(venice.metricsField) = {DisplayName: "CIndex" Description:"ring consumer index", Units: ID}];
+    delphi.Counter      InputBytes           = 4 [(venice.metricsField) = {DisplayName: "InputBytes" Description:"total input bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)", Units: Bytes}];
+    delphi.Counter      OutputBytes          = 5 [(venice.metricsField) = {DisplayName: "OutputBytes" Description:"total output bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)", Units: Bytes}];
+    delphi.Counter      SoftResets           = 6 [(venice.metricsField) = {DisplayName: "SoftResets" Description:"number of soft resets executed"}];
 }
 

@@ -3,6 +3,8 @@ package plugin
 import (
 	"encoding/json"
 	"errors"
+	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -595,6 +597,14 @@ func TestGetTypes(t *testing.T) {
 	tag = common.GetJSONTag(fld)
 	if tag != "" {
 		t.Errorf("failed to get JSON tag")
+	}
+
+	tag, err = getJSONTagByName(msg, "embedded_msg")
+	if err != nil {
+		t.Fatalf("expecting to succeed")
+	}
+	if tag != "metadata" {
+		t.Fatalf("unexpected output [%v]", tag)
 	}
 }
 
@@ -3705,4 +3715,312 @@ func TestSplitSvcObj(t *testing.T) {
 	if svcObj := splitSvcObj("examplemsg1"); svcObj.Svc != "" {
 		t.Fatalf("able to find svc and obj %+v", svcObj)
 	}
+}
+
+func TestGetMetricsJSON(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+			name: 'example.proto'
+			package: 'example'
+			syntax: 'proto3'
+			message_type <
+				name: 'msg1'
+				options:<[venice.metricInfo]: {DisplayName: "TestMetricsJSON" Description:"Msg1Metrics is a test metric"}>
+				field <
+					name: 'field1'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.delphi.Counter'
+					number: 1
+					options:<[venice.metricsField]: {DisplayName: "Field1Counter" Description:"Field1 is a counter" Units: Count ScaleMin: 0}>
+				>
+				field <
+					name: 'field2'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.delphi.Gauge'
+					number: 2
+					options:<[venice.metricsField]: {DisplayName: "Field2Gauge" Description:"Field2 is a gauge" Units: Bytes ScaleMax: 1000}>
+				>
+				field <
+					name: 'field3'
+					label: LABEL_OPTIONAL
+					type: TYPE_STRING
+					number: 3
+					options:<[venice.metricsField]: {DisplayName: "Field3string" Description:"Field3 is a string"}>
+				>
+				field <
+					name: 'field4'
+					label: LABEL_OPTIONAL
+					type: TYPE_INT32
+					number: 4
+					options:<[venice.metricsField]: {DisplayName: "Field4int32" Description:"Field4 is a int32"}>
+				>
+				field <
+					name: 'field5'
+					label: LABEL_OPTIONAL
+					type: TYPE_INT64
+					number: 5
+					options:<[venice.metricsField]: {DisplayName: "Field5int64" Description:"Field5 is a int64"}>
+				>
+				field <
+					name: 'field6'
+					label: LABEL_OPTIONAL
+					type: TYPE_BOOL
+					number: 6
+					options:<[venice.metricsField]: {DisplayName: "Field6bool" Description:"Field6 is a bool"}>
+				>
+				field <
+					name: 'field7'
+					label: LABEL_OPTIONAL
+					type: TYPE_STRING
+					number: 7
+					options:<[venice.check]: "StrEnum(msg1.Enum1)" [venice.metricsField]: {DisplayName: "Field7stringEnum" Description:"Field7 is a string Enum"}>
+				>
+				field <
+					name: 'field8'
+					label: LABEL_OPTIONAL
+					type: TYPE_ENUM
+					type_name: '.example.msg1.Enum1'
+					number: 8
+					options:<[venice.metricsField]: {DisplayName: "Field8stringEnum" Description:"Field8 is a string Enum"}>
+				>
+				enum_type <
+					name: "Enum1"
+					value <name: "value1", number: 0>
+					value <name: "value2", number: 1>
+				>
+			>
+			message_type <
+				name: 'msg2'
+				field <
+					name: 'T'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.api.TypeMeta'
+					number: 1
+				>
+			>
+			source_code_info:<
+				location:<path:4 path:0 path:4 path: 0 path:2 path:0 leading_comments:"val1 comments\n ui-hint: hint1" >
+				location:<path:4 path:0 path:4 path: 0 path:2 path:1 leading_comments:"val2 comments\n ui-hint: hint2" >
+			>
+			`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+	retJSON, err := genFileMetricsJSON(file, "testfile")
+	fmt.Printf("Return is \n %v", retJSON)
+	got := fileMetricOptions{}
+	err = json.Unmarshal([]byte(retJSON), &got)
+	if err != nil {
+		t.Fatalf("failed to unmarshal json (%s)", err)
+	}
+	exp := fileMetricOptions{
+		FileName: "example.proto",
+		Package:  "example",
+		Prefix:   "testfile",
+		Messages: []msgMetricOptions{
+			{
+				Name:        "msg1",
+				Description: "Msg1Metrics is a test metric",
+				DisplayName: "TestMetricsJSON",
+				Fields: []fieldMetricOptions{
+					{
+						Name:        "field1",
+						DisplayName: "Field1Counter",
+						Description: "Field1 is a counter",
+						Units:       "Count",
+						ScaleMin:    0,
+						ScaleMax:    0,
+						BaseType:    "Counter",
+					},
+					{
+						Name:        "field2",
+						DisplayName: "Field2Gauge",
+						Description: "Field2 is a gauge",
+						Units:       "Bytes",
+						ScaleMin:    0,
+						ScaleMax:    1000,
+						BaseType:    "Gauge",
+					},
+					{
+						Name:        "field3",
+						DisplayName: "Field3string",
+						Description: "Field3 is a string",
+						Units:       "Count",
+						ScaleMin:    0,
+						ScaleMax:    0,
+						BaseType:    "string",
+					},
+					{
+						Name:        "field4",
+						DisplayName: "Field4int32",
+						Description: "Field4 is a int32",
+						Units:       "Count",
+						ScaleMin:    0,
+						ScaleMax:    0,
+						BaseType:    "int32",
+					},
+					{
+						Name:        "field5",
+						DisplayName: "Field5int64",
+						Description: "Field5 is a int64",
+						Units:       "Count",
+						ScaleMin:    0,
+						ScaleMax:    0,
+						BaseType:    "int64",
+					},
+					{
+						Name:        "field6",
+						DisplayName: "Field6bool",
+						Description: "Field6 is a bool",
+						Units:       "Count",
+						ScaleMin:    0,
+						ScaleMax:    0,
+						BaseType:    "bool",
+					},
+					{
+						Name:        "field7",
+						DisplayName: "Field7stringEnum",
+						Description: "Field7 is a string Enum",
+						Units:       "Count",
+						ScaleMin:    0,
+						ScaleMax:    0,
+						BaseType:    "string",
+						AllowedValues: []string{
+							"value1",
+							"value2",
+						},
+					},
+					{
+						Name:        "field8",
+						DisplayName: "Field8stringEnum",
+						Description: "Field8 is a string Enum",
+						Units:       "Count",
+						ScaleMin:    0,
+						ScaleMax:    0,
+						BaseType:    "enum",
+						AllowedValues: []string{
+							"0",
+							"1",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(got, exp) {
+		t.Fatal("Response did not match")
+	}
+}
+
+func TestGenParamPrefix(t *testing.T) {
+	flag.Parse()
+	_, err := getGenParamsPrefix()
+	if err == nil {
+		t.Fatalf("should have returned error, but succeeded")
+	}
+	err = flag.CommandLine.Set("S_prefix", "testValue")
+	if err != nil {
+		t.Fatalf("could not set flag (%s)", err)
+	}
+	v, err := getGenParamsPrefix()
+	if err != nil {
+		t.Fatalf("should have suceeded, but failed with error (%s)", err)
+	}
+	if v != "testValue" {
+		t.Fatalf("unexpected value [%v]", v)
+	}
+}
+
+func TestGenMetricsManifest(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example1.proto'
+		package: 'example'
+		syntax: 'proto3'
+		message_type <
+				name: 'msg1'
+				options:<[venice.metricInfo]: {DisplayName: "TestMetricsJSON" Description:"Msg1Metrics is a test metric"}>
+				field <
+					name: 'field1'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.delphi.Counter'
+					number: 1
+					options:<[venice.metricsField]: {DisplayName: "Field1Counter" Description:"Field1 is a counter" Units: Count ScaleMin: 0}>
+				>
+		>
+		`,
+		`
+		name: 'example2.proto'
+		package: 'example'
+		syntax: 'proto3'
+		options:<[venice.fileApiServerBacked]: false>
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example1.proto", "example2.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed (%s)", err)
+	}
+	file1, err := r.LookupFile("example1.proto")
+	if err != nil {
+		t.Fatalf("Could not find file in request")
+	}
+	file2, err := r.LookupFile("example2.proto")
+	if err != nil {
+		t.Fatalf("Could not find file in request")
+	}
+	filepath := "/nonexistent/filenameXXXX"
+	manifest, err := genMetricsManifest(file1, filepath)
+	// Was empty file so we need to have a PkgManifest with single element.
+	if err != nil {
+		t.Errorf("genManifest failed (%s)", err)
+	}
+	files := strings.Split(manifest, "\n")
+	if len(files) != 2 {
+		t.Fatalf("expecting 1 entry found %d", len(manifest))
+	}
+	if files[0] != "example1.proto" && files[1] != "" {
+		t.Fatalf("unexpected output [%v]", manifest)
+	}
+
+	// file without metric defined
+	manifest, err = genMetricsManifest(file2, filepath)
+	// Was empty file so we need to have a PkgManifest with single element.
+	if err != nil {
+		t.Errorf("genManifest failed (%s)", err)
+	}
+	files = strings.Split(manifest, "\n")
+	if len(files) != 1 {
+		t.Fatalf("expecting 1 entry found %d [%v]", len(files), files)
+	}
+	if files[0] != "" {
+		t.Fatalf("unexpected output [%v]", manifest)
+	}
+
 }

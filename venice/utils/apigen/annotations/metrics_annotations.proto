@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package venice;
+
+import "google/protobuf/descriptor.proto";
+
+enum MetricUnitType {
+    Count       = 0;
+    Percentage  = 1;
+    Bytes       = 2;
+    ID          = 3;
+}
+
+message MetricInfo {
+    string DisplayName  = 1;
+    string Description  = 2;
+    // defines what fields in the message are used to identify the metric measurement.
+    string KeyFields    = 3;
+}
+
+message MetricFieldInfo {
+    string DisplayName      = 1;
+    string Description      = 2;
+    MetricUnitType Units    = 3;
+    int32 ScaleMin          = 4;
+    int32 ScaleMax          = 5;
+}
+
+extend google.protobuf.MessageOptions {
+    MetricInfo metricInfo = 90001;
+};
+
+extend google.protobuf.FieldOptions {
+    MetricFieldInfo metricsField = 91001;
+};

@@ -1,0 +1,284 @@
+{
+  "FileName": "accel_metrics.proto",
+  "Package": "accel_metrics",
+  "Prefix": "nicmgr",
+  "Messages": [
+    {
+      "Name": "AccelHwRingMetrics",
+      "Description": "Key indices - RId: ring ID, SubRId: sub-ring ID",
+      "DisplayName": "Metrics for hardware rings",
+      "Fields": [
+        {
+          "Name": "Key",
+          "DisplayName": "Key indices",
+          "Units": "ID",
+          "BaseType": ".accel_metrics.AccelHwRingKey"
+        },
+        {
+          "Name": "PIndex",
+          "DisplayName": "PIndex",
+          "Description": "ring producer index",
+          "Units": "ID",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "CIndex",
+          "DisplayName": "CIndex",
+          "Description": "ring consumer index",
+          "Units": "ID",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "InputBytes",
+          "DisplayName": "InputBytes",
+          "Description": "total input bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)",
+          "Units": "Bytes",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "OutputBytes",
+          "DisplayName": "OutputBytes",
+          "Description": "total output bytes (not available for cp_hot, dc_hot, xts_enc/dec, gcm_enc/dec)",
+          "Units": "Bytes",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "SoftResets",
+          "DisplayName": "SoftResets",
+          "Description": "number of soft resets executed",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ]
+    },
+    {
+      "Name": "AccelPfInfo",
+      "Description": "Key index - logical interface ID",
+      "DisplayName": "Device information",
+      "Fields": [
+        {
+          "Name": "HwLifId",
+          "DisplayName": "HwLifId",
+          "Description": "hardware logical interface ID",
+          "Units": "ID",
+          "BaseType": "uint64"
+        },
+        {
+          "Name": "NumSeqQueues",
+          "DisplayName": "NumSeqQueues",
+          "Description": "number of sequencer queues available",
+          "Units": "Count",
+          "BaseType": "uint32"
+        },
+        {
+          "Name": "CryptoKeyIdxBase",
+          "DisplayName": "CryptoKeyIdxBase",
+          "Description": "crypto key base index",
+          "Units": "Count",
+          "BaseType": "uint32"
+        },
+        {
+          "Name": "NumCryptoKeysMax",
+          "DisplayName": "NumCryptoKeysMax",
+          "Description": "maximum number of crypto keys allowed",
+          "Units": "Count",
+          "BaseType": "uint32"
+        },
+        {
+          "Name": "IntrBase",
+          "DisplayName": "IntrBase",
+          "Description": "CPU interrupt base",
+          "Units": "Count",
+          "BaseType": "uint32"
+        },
+        {
+          "Name": "IntrCount",
+          "DisplayName": "IntrCount",
+          "Description": "CPU interrupt vectors available",
+          "Units": "Count",
+          "BaseType": "uint32"
+        }
+      ]
+    },
+    {
+      "Name": "AccelSeqQueueInfoMetrics",
+      "Description": "Key indices are - LifID and QId",
+      "DisplayName": "Sequencer queues information",
+      "Fields": [
+        {
+          "Name": "Key",
+          "DisplayName": "Key indices",
+          "Units": "ID",
+          "BaseType": ".accel_metrics.AccelSeqQueueKey"
+        },
+        {
+          "Name": "QStateAddr",
+          "DisplayName": "QStateAdd",
+          "Description": "queue state memory address",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "QGroup",
+          "DisplayName": "QGroup",
+          "Description": "queue group\\n           : 0 - compress/decompress\\n           : 1 - compress/decompress status\\n           : 2 - crypto\\n           : 3 - crypto status\\n",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "CoreId",
+          "DisplayName": "CoreId",
+          "Description": "CPU core ID (not available currently",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ]
+    },
+    {
+      "Name": "AccelSeqQueueMetrics",
+      "Description": "Key indices are - LifID and QId",
+      "DisplayName": "Metrics for sequencer queues",
+      "Fields": [
+        {
+          "Name": "Key",
+          "DisplayName": "Key indices",
+          "Units": "ID",
+          "BaseType": ".accel_metrics.AccelSeqQueueKey"
+        },
+        {
+          "Name": "InterruptsRaised",
+          "DisplayName": "InterruptsRaised",
+          "Description": "CPU interrupts raised",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "NextDBsRung",
+          "DisplayName": "NextDBsRung",
+          "Description": "chaining doorbells rung",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "SeqDescsProcessed",
+          "DisplayName": "SeqDescsProcessed",
+          "Description": "sequencer descriptors processed",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "SeqDescsAborted",
+          "DisplayName": "SeqDescsAborted",
+          "Description": "sequencer descriptors aborted (due to reset)",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "StatusPdmaXfers",
+          "DisplayName": "StatusPdmaXfers",
+          "Description": "status descriptors copied",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "HwDescXfers",
+          "DisplayName": "HwDescXfers",
+          "Description": "descriptors transferred to hardware",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "HwBatchErrors",
+          "DisplayName": "HwBatchErrors",
+          "Description": "hardware batch (length) errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "HwOpErrors",
+          "DisplayName": "HwOpErrors",
+          "Description": "hardware operation errors",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "AolUpdateReqs",
+          "DisplayName": "AolUpdateReqs",
+          "Description": "AOL list updates requested",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "SglUpdateReqs",
+          "DisplayName": "AolUpdateReqs",
+          "Description": "scatter/gather list updates requested",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "SglPdmaXfers",
+          "DisplayName": "SglUpdateReqs",
+          "Description": "payload DMA transfers executed",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "SglPdmaErrors",
+          "DisplayName": "SglPdmaXfers",
+          "Description": "payload DMA errors encountered",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "SglPadOnlyXfers",
+          "DisplayName": "SglPdmaErrors",
+          "Description": "pad-data-only DMA transfers executed",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "SglPadOnlyErrors",
+          "DisplayName": "SglPadOnlyXfers",
+          "Description": "pad-data-only DMA errors encountered",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "AltDescsTaken",
+          "DisplayName": "AltDescsTaken",
+          "Description": "alternate (bypass-onfail) descriptors executed",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "AltBufsTaken",
+          "DisplayName": "AltBufsTaken",
+          "Description": "alternate buffers taken",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "LenUpdateReqs",
+          "DisplayName": "LenUpdateReqs",
+          "Description": "length updates requested",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "CpHeaderUpdates",
+          "DisplayName": "CpHeaderUpdates",
+          "Description": "compression header updates requested",
+          "Units": "Count",
+          "BaseType": "Counter"
+        },
+        {
+          "Name": "SeqHwBytes",
+          "DisplayName": "SeqHwBytes",
+          "Description": "bytes processed",
+          "Units": "Count",
+          "BaseType": "Counter"
+        }
+      ]
+    }
+  ]
+}
