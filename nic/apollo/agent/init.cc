@@ -9,7 +9,12 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 namespace core {
+
+#define DEVICE_CONF_FILE    "/sysconfig/config0/device.conf"
 
 // number of trace files to keep
 #define TRACE_NUM_FILES                        5
@@ -189,6 +194,24 @@ logger_init (void)
 }
 
 //------------------------------------------------------------------------------
+// Get device profile from device.conf
+//------------------------------------------------------------------------------
+static inline std::string
+device_profile_read (void)
+{
+    boost::property_tree::ptree pt;
+
+    PDS_TRACE_DEBUG("Read device profile...");
+    try {
+        std::ifstream json_cfg(DEVICE_CONF_FILE);
+        read_json(json_cfg, pt);
+        return pt.get<std::string>("profile", "default");
+    } catch (...) {
+        return std::string("default");
+    }
+}
+
+//------------------------------------------------------------------------------
 // initialize the agent
 //------------------------------------------------------------------------------
 sdk_ret_t
@@ -199,6 +222,10 @@ agent_init (std::string cfg_file, std::string profile)
     // initialize the logger instance
     logger_init();
 
+    // Read device profile
+    profile = device_profile_read();
+
+    PDS_TRACE_DEBUG("Read device profile");
     // initialize PDS library
     ret = init_pds(cfg_file, profile);
 

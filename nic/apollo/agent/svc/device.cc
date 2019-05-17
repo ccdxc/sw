@@ -7,6 +7,11 @@
 #include "nic/apollo/agent/svc/util.hpp"
 #include "nic/apollo/agent/svc/device.hpp"
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
+#define DEVICE_CONF_FILE "/sysconfig/config0/device.conf"
+ 
 // Populate proto buf spec from device API spec
 static inline void
 device_api_spec_to_proto_spec (const pds_device_spec_t *api_spec,
@@ -79,6 +84,36 @@ DeviceSvcImpl::DeviceCreate(ServerContext *context,
     return Status::OK;
 }
 
+static inline sdk_ret_t
+device_profile_update (pds::DeviceProfile profile)
+{
+    boost::property_tree::ptree pt, output;
+    boost::property_tree::ptree::iterator pos;
+
+    if (profile == pds::DEVICE_PROFILE_DEFAULT) {
+        output.put("profile", "default");
+    } else if (profile == pds::DEVICE_PROFILE_P1) {
+        output.put("profile", "p1");
+    }
+
+    output.put("port-admin-state", "PORT_ADMIN_STATE_ENABLE");
+
+    try {
+        // Copy existing data from device.conf
+        std::ifstream json_cfg(DEVICE_CONF_FILE);
+        read_json(json_cfg, pt);
+
+        for (pos = pt.begin(); pos != pt.end();) {
+            output.put(pos->first.data(), pos->second.data());
+            ++pos;
+        }
+    } catch (...) {} 
+
+    boost::property_tree::write_json(DEVICE_CONF_FILE, output);
+
+    return SDK_RET_OK;
+}
+
 Status
 DeviceSvcImpl::DeviceUpdate(ServerContext *context,
                             const pds::DeviceRequest *proto_req,
@@ -99,6 +134,11 @@ DeviceSvcImpl::DeviceUpdate(ServerContext *context,
     if (!core::agent_state::state()->pds_mock_mode()) {
         ret = pds_device_update(api_spec);
     }
+
+    // Update device.conf with profile
+    auto profile = proto_req->request().profile();
+    ret = device_profile_update(profile);
+
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }
