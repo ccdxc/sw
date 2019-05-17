@@ -34,26 +34,32 @@ message BytePolicerSpec {
   uint64 Burst          = 2 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
+// meter rule
+message MeterRuleSpec {
+  // list of prefixes to apply this metering policy to
+  repeated types.IPPrefix Prefix     = 1;
+  // policer configuration, one of the following must be set
+  // if bytes/packets are zero in the following policer specs,
+  // only accounting will be performed
+  oneof Policer {
+    // packets per second (pps) policer
+    PacketPolicerSpec     PPSPolicer = 2;
+    // bytes per second (bps) policer
+    BytePolicerSpec       BPSPolicer = 3;
+  }
+}
+
 // meter policy specification
 // NOTE: any time a meter specification changes, client is expected to send
 //       full new meter specification (i.e., no incremental add/del/upd of
 //       prefixes in the metering policy is supported)
 message MeterSpec {
   // unique meter policy id
-  uint32                  Id         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  uint32                 Id    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IP address family
-  types.IPAF              AF         = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  // list of prefixes to apply this metering policy to
-  repeated types.IPPrefix Prefix     = 3;
-  // policer configuration, one of the following must be set
-  // if bytes/packets are zero in the following policer specs,
-  // only accounting will be performed
-  oneof Policer {
-    // packets per second (pps) policer
-    PacketPolicerSpec     PPSPolicer = 4;
-    // bytes per second (bps) policer
-    BytePolicerSpec       BPSPolicer = 5;
-  }
+  types.IPAF             AF    = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // meter rules
+  repeated MeterRuleSpec rules = 3;
 }
 
 // operational status of the meter, if any

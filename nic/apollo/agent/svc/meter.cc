@@ -19,8 +19,9 @@ pds_meter_proto_spec_to_api_spec (pds_meter_spec_t *api_spec,
     ret = pds_af_proto_spec_to_api_spec(&api_spec->af, proto_spec.af());
     if (ret != SDK_RET_OK) {
         return SDK_RET_INVALID_ARG;
-    } 
+    }
 
+#if 0
     if (proto_spec.has_ppspolicer()) {
         api_spec->info.type = PDS_METER_TYPE_PPS_POLICER;
         api_spec->info.pps = proto_spec.ppspolicer().packetspersecond();
@@ -41,6 +42,7 @@ pds_meter_proto_spec_to_api_spec (pds_meter_spec_t *api_spec,
         ippfx_proto_spec_to_api_spec(
                     &api_spec->prefixes[i], proto_spec.prefix(i));
     }
+#endif
     return SDK_RET_OK;
 }
 
@@ -140,6 +142,7 @@ meter_api_spec_to_proto_spec (const pds_meter_spec_t *api_spec,
 {
     proto_spec->set_id(api_spec->key.id);
     proto_spec->set_af(pds_af_api_spec_to_proto_spec(api_spec->af));
+#if 0
     if (api_spec->info.type == PDS_METER_TYPE_PPS_POLICER) {
         auto policer = proto_spec->mutable_ppspolicer();
         policer->set_packetspersecond(api_spec->info.pps);
@@ -153,6 +156,7 @@ meter_api_spec_to_proto_spec (const pds_meter_spec_t *api_spec,
         ippfx_api_spec_to_proto_spec(
                     proto_spec->add_prefix(), &api_spec->prefixes[i]);
     }
+#endif
 }
 
 // Populate proto buf status from meter API status
