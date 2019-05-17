@@ -29,8 +29,8 @@ typedef enum pds_meter_type_e {
     PDS_METER_TYPE_ACCOUNTING  = 3,    ///< no policing, just counting
 } pds_meter_type_t;
 
-/// \brief meter specific attributes
-typedef struct pds_meter_attr_s {
+/// \brief meter rule
+typedef struct pds_meter_rule_s {
     pds_meter_type_t    type;    ///< meter type
     union {
         // packets per second (pps) policer info
@@ -44,24 +44,25 @@ typedef struct pds_meter_attr_s {
             uint64_t    byte_burst;
         };
     };
-} __PACK__ pds_meter_attr_t;
+    uint32_t            num_prefixes;    ///< number of prefixes in the list
+    ip_prefix_t         *prefixes;       ///< prefixes using this meter
+} __PACK__ pds_meter_rule_t;
 
 /// \brief metering configuration
 typedef struct pds_meter_spec_s    pds_meter_spec_t;
 struct pds_meter_spec_s {
     pds_meter_key_t     key;             ///< key
     uint8_t             af;              ///< address family - v4 or v6
-    pds_meter_attr_t    info;            ///< meter action + data
-    uint32_t            num_prefixes;    ///< number of prefixes in the list
-    ip_prefix_t         *prefixes;       ///< prefixes using this meter
+    uint32_t            num_rules;       ///< number of metering rules in this policy
+    pds_meter_rule_t    *rules;          ///< metering rules
 
     // constructor
-    pds_meter_spec_s() { prefixes = NULL; }
+    pds_meter_spec_s() { rules = NULL; }
 
     // destructor
     ~pds_meter_spec_s() {
-        if (prefixes) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_METER, prefixes);
+        if (rules) {
+            // TODO
         }
     }
 
@@ -73,15 +74,26 @@ struct pds_meter_spec_s {
         }
         key = spec.key;
         af = spec.af;
-        info = spec.info;
-        num_prefixes = spec.num_prefixes;
-        if (prefixes) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_METER, prefixes);
+        num_rules = spec.num_rules;
+        rules = (pds_meter_rule_t *)
+                    SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
+                               num_rules * sizeof(pds_meter_rule_t));
+        for (uint32_t i = 0; i < num_rules; i++) {
+            rules[i].type = spec.rules[i].type;
+            if (rules[i].type == PDS_METER_TYPE_PPS_POLICER) {
+                rules[i].pps = spec.rules[i].pps;
+                rules[i].pkt_burst = spec.rules[i].pkt_burst;
+            } else if (rules[i].type == PDS_METER_TYPE_BPS_POLICER) {
+                rules[i].bps = spec.rules[i].bps;
+                rules[i].byte_burst = spec.rules[i].byte_burst;
+            }
+            rules[i].num_prefixes = spec.rules[i].num_prefixes;
+            rules[i].prefixes =
+                (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER_RULE,
+                                          rules[i].num_prefixes * sizeof(ip_prefix_t));
+            memcpy(rules[i].prefixes, spec.rules[i].prefixes,
+                   rules[i].num_prefixes * sizeof(ip_prefix_t));
         }
-        prefixes =
-            (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
-                                      num_prefixes * sizeof(ip_prefix_t));
-        memcpy(prefixes, spec.prefixes, num_prefixes * sizeof(ip_prefix_t));
         return *this;
     }
 } __PACK__;

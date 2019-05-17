@@ -90,24 +90,28 @@ meter_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     route_table_t       *rtable;
     vpc_entry           *vpc;
     meter_entry         *meter;
+    uint32_t            num_prefixes;
 
     spec = &obj_ctxt->api_params->meter_spec;
     // allocate memory for the library to build route table
+    for (uint32_t i = 0, num_prefixes = 0; i < spec->num_rules; i++) {
+        num_prefixes += spec->rules[i].num_prefixes;
+    }
     rtable =
         (route_table_t *)
             SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
                        sizeof(route_table_t) +
-                           (spec->num_prefixes * sizeof(route_t)));
+                           (num_prefixes * sizeof(route_t)));
     if (rtable == NULL) {
         return sdk::SDK_RET_OOM;
     }
     rtable->af = spec->af;
     rtable->default_nhid = PDS_RESERVED_METER_HW_ID;
     rtable->max_routes = meter_impl_db()->max_prefixes(rtable->af);
-    rtable->num_routes = spec->num_prefixes;
+    rtable->num_routes = num_prefixes;
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
-        rtable->routes[i].prefix = spec->prefixes[i];
         // TODO: fill policer id here !!!
+        //rtable->routes[i].prefix = spec->prefixes[i];
     }
     ret = lpm_tree_create(rtable, lpm_root_addr_,
                           meter_impl_db()->table_size(spec->af));
