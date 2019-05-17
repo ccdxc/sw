@@ -2364,7 +2364,7 @@ session_init (hal_cfg_t *hal_cfg)
                                    (sizeof(session_stats_t)*hal::g_hal_cfg.num_data_cores));
         SDK_ASSERT(g_session_stats != NULL);
          
-    } else if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED) {
+    } else {
         sdk::types::mem_addr_t vaddr;
         sdk::types::mem_addr_t start_addr = get_mem_addr(CAPRI_HBM_REG_SESSION_SUMMARY_STATS);
         HAL_TRACE_VERBOSE("Start addr: {:#x}", start_addr);
@@ -2373,7 +2373,7 @@ session_init (hal_cfg_t *hal_cfg)
         for (uint32_t fte = 0; fte < hal::g_hal_cfg.num_data_cores; fte++) {
              //Register with Delphi
              auto session_global_stats =
-                 delphi::objects::SessionSummaryMetrics::NewSessionSummaryMetrics(fte, start_addr);
+                   delphi::objects::SessionSummaryMetrics::NewSessionSummaryMetrics(fte, start_addr);
              SDK_ASSERT(session_global_stats != NULL);
     
              sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(start_addr, &vaddr);
