@@ -18,17 +18,25 @@ service TagSvc {
   rpc TagDelete (TagDeleteRequest) returns (TagDeleteResponse) {}
 }
 
+// tag policy rule
+message TagRuleSpec {
+  // list of prefixes that map to this tag
+  repeated types.IPPrefix Prefix = 1;
+  // tag value for above set of prefixes
+  uint32                  tag    = 2 [(gogoproto.moretags) = "meta:range:0-16384"];
+}
+
 // (service) tag policy specification
 // NOTE: any time a tag specification changes, client is expected to send
 //       full new tag specification (i.e., no incremental add/del/upd of
 //       prefixes in the tag policy is supported)
 message TagSpec {
   // unique tag policy id
-  uint32                  Id         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  uint32                  Id = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IP address family
-  types.IPAF              AF         = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  // list of prefixes that map to this tag
-  repeated types.IPPrefix Prefix     = 3;
+  types.IPAF              AF = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // tag policy rules
+  repeated TagRuleSpec rules = 3;
 }
 
 // operational status of the tag, if any

@@ -21,22 +21,32 @@
 #define PDS_MAX_TAG                 64
 #define PDS_MAX_PREFIX_PER_TAG      1023
 
+/// \brief tag policy rule
+typedef struct pds_tag_rule_s {
+    uint32_t       tag;             ///< tag value
+    uint32_t       num_prefixes;    ///< number of prefixes in this tag
+    ip_prefix_t    *prefixes;       ///< prefixes of this tag rule
+} __PACK__ pds_tag_rule_t;
+
 /// \brief tag configuration
 typedef struct pds_tag_spec_s    pds_tag_spec_t;
 struct pds_tag_spec_s {
     pds_tag_key_t     key;             ///< key
     uint8_t           af;              ///< address family - v4 or v6
-    uint32_t          num_prefixes;    ///< number of prefixes in the list
-    ip_prefix_t       *prefixes;       ///< prefixes using this tag
+    uint32_t          num_rules;       ///< number of tag policy rules
+    pds_tag_rule_t    *rules;          ///< metering rules
 
     // constructor
-    pds_tag_spec_s() { prefixes = NULL; }
+    pds_tag_spec_s() { rules = NULL; }
 
     // destructor
     ~pds_tag_spec_s() {
-        if (prefixes) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_TAG, prefixes);
+        if (rules) {
+            for (uint32_t i = 0; i < num_rules; i++) {
+                SDK_FREE(PDS_MEM_ALLOC_ID_TAG, rules[i].prefixes);
+            }
         }
+        SDK_FREE(PDS_MEM_ALLOC_ID_TAG, rules);
     }
 
     // assignment operator
@@ -47,14 +57,25 @@ struct pds_tag_spec_s {
         }
         key = spec.key;
         af = spec.af;
-        num_prefixes = spec.num_prefixes;
-        if (prefixes) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_TAG, prefixes);
+        if (rules) {
+            for (uint32_t i = 0; i < num_rules; i++) {
+                SDK_FREE(PDS_MEM_ALLOC_ID_TAG, rules[i].prefixes);
+            }
+            SDK_FREE(PDS_MEM_ALLOC_ID_TAG, rules);
         }
-        prefixes =
-            (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_TAG,
-                                      num_prefixes * sizeof(ip_prefix_t));
-        memcpy(prefixes, spec.prefixes, num_prefixes * sizeof(ip_prefix_t));
+        num_rules = spec.num_rules;
+        rules = (pds_tag_rule_t *)
+                    SDK_MALLOC(PDS_MEM_ALLOC_ID_TAG,
+                               num_rules * sizeof(pds_tag_rule_t));
+        for (uint32_t i = 0; i < num_rules; i++) {
+            rules[i].tag = spec.rules[i].tag;
+            rules[i].num_prefixes = spec.rules[i].num_prefixes;
+            rules[i].prefixes =
+                (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_TAG,
+                                          rules[i].num_prefixes * sizeof(ip_prefix_t));
+            memcpy(rules[i].prefixes, spec.rules[i].prefixes,
+                   rules[i].num_prefixes * sizeof(ip_prefix_t));
+        }
         return *this;
     }
 } __PACK__;

@@ -19,8 +19,9 @@ pds_tag_proto_spec_to_api_spec (pds_tag_spec_t *api_spec,
     ret = pds_af_proto_spec_to_api_spec(&api_spec->af, proto_spec.af());
     if (ret != SDK_RET_OK) {
         return SDK_RET_INVALID_ARG;
-    } 
+    }
 
+#if 0
     api_spec->num_prefixes = proto_spec.prefix_size();
     api_spec->prefixes = (ip_prefix_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
                                                    api_spec->num_prefixes * sizeof(ip_prefix_t));
@@ -28,6 +29,7 @@ pds_tag_proto_spec_to_api_spec (pds_tag_spec_t *api_spec,
         ippfx_proto_spec_to_api_spec(
                     &api_spec->prefixes[i], proto_spec.prefix(i));
     }
+#endif
     return SDK_RET_OK;
 }
 
@@ -127,10 +129,12 @@ tag_api_spec_to_proto_spec (const pds_tag_spec_t *api_spec,
 {
     proto_spec->set_id(api_spec->key.id);
     proto_spec->set_af(pds_af_api_spec_to_proto_spec(api_spec->af));
+#if 0
     for (uint32_t i = 0; i < api_spec->num_prefixes; i ++) {
         ippfx_api_spec_to_proto_spec(
                     proto_spec->add_prefix(), &api_spec->prefixes[i]);
     }
+#endif
 }
 
 // Populate proto buf status from tag API status

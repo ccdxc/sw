@@ -109,10 +109,13 @@ api_params_free (api_params_t *api_params, obj_id_t obj_id, api_op_t api_op)
 
     case api::OBJ_ID_TAG:
         if ((api_op == api::API_OP_CREATE) || (api_op == api::API_OP_UPDATE)) {
-            if (api_params->tag_spec.prefixes) {
-                SDK_FREE(PDS_MEM_ALLOC_TAG,
-                         api_params->tag_spec.prefixes);
-                api_params->tag_spec.prefixes = NULL;
+            if (api_params->tag_spec.rules) {
+                for (uint32_t i = 0; i < api_params->tag_spec.num_rules; i++) {
+                    SDK_FREE(PDS_MEM_ALLOC_ID_TAG,
+                             api_params->tag_spec.rules[i].prefixes);
+                }
+                SDK_FREE(PDS_MEM_ALLOC_TAG, api_params->tag_spec.rules);
+                api_params->tag_spec.rules = NULL;
             }
         }
         break;

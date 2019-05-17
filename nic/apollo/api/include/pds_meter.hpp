@@ -77,6 +77,12 @@ struct pds_meter_spec_s {
         }
         key = spec.key;
         af = spec.af;
+        if (rules) {
+            for (uint32_t i = 0; i < num_rules; i++) {
+                SDK_FREE(PDS_MEM_ALLOC_ID_METER, rules[i].prefixes);
+            }
+            SDK_FREE(PDS_MEM_ALLOC_ID_METER, rules);
+        }
         num_rules = spec.num_rules;
         rules = (pds_meter_rule_t *)
                     SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
