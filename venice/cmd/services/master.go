@@ -707,9 +707,8 @@ func (m *masterService) handleSmartNICEvent(et kvstore.WatchEventType, evtNIC *c
 			// try to continue
 		}
 
-		// Update current NIC state, preserving local-cache Status
+		// Update current NIC state
 		nic := evtNIC
-		nic.Status = oldNIC.Status
 		err = env.StateMgr.UpdateSmartNIC(nic, false)
 		if err != nil {
 			log.Errorf("Error updating smartnic {%+v} in StateMgr. Err: %v", evtNIC, err)
