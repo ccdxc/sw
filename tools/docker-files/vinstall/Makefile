@@ -30,4 +30,5 @@ venice-iso:
 	docker run --rm --privileged  -v ${CURDIR}:/pen \
 		-v ${TOPDIR}/bin:/venice-bin \
 		-v ${TOPDIR}/nic:/nic \
+		-v ${TOPDIR}/tools:/tools \
 		registry.test.pensando.io:5000/pens-vinstall:v0.1  /pen/add-venice-iso.sh

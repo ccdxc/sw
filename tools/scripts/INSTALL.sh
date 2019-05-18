@@ -84,6 +84,8 @@ elasticSysctl
 disableNTP
 clockSettings
 
+${SUDO} mkdir -p /data /run/initramfs/live /usr/local/bin
+
 for i in tars/pen* ; do docker load -i  $i; done
 docker run --rm --name pen-install -v /var/log/pensando:/host/var/log/pensando -v /var/lib/pensando:/host/var/lib/pensando -v /usr/pensando/bin:/host/usr/pensando/bin -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /etc/pensando:/host/etc/pensando pen-install -c /initscript
 

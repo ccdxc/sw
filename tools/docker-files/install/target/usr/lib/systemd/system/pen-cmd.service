@@ -15,6 +15,7 @@ ExecStart=/usr/pensando/bin/systemd-docker \
     -v /usr/lib/systemd/system:/host/usr/lib/systemd/system -v /var/run/dbus:/var/run/dbus \
     -v /run/systemd:/run/systemd  -v /etc/systemd/system:/etc/systemd/system \
     -v /etc/pensando:/etc/pensando -v /var/lib/pensando:/var/lib/pensando \
+    -v /data:/data -v /usr/local/bin:/usr/local/bin -v /run/initramfs/live:/run/initramfs/live \
     -v /sys/fs/cgroup:/sys/fs/cgroup:ro -v /var/log/pensando:/var/log/pensando  \
     ${PEN_CMD}
 

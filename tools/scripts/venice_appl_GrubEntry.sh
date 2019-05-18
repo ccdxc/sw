@@ -8,7 +8,7 @@ set -e
 RM=/bin/rm
 MV=/bin/mv
 
-GRUBFILE=/boot/grub2/grub.cfg
+GRUBFILE=/run/initramfs/live/boot/grub2/grub.cfg
 
 while getopts ":oAdv:g:p:u:" arg; do
   case $arg in
@@ -33,18 +33,18 @@ fi
 if [ "${OP}" == "del" -a -z "$VERSION" ]
 then
     echo VERSION  must be specified with -d option
-    exit 1
+    exit 2
 fi
 if [ "${OP}" == "add" -a -z "$VERSION" ]
 then
     echo VERSION  must be specified with -A option
-    exit 1
+    exit 3
 fi
 
 if [ -z "$OP" ]
 then
     echo Operation  must be specified
-    exit 1
+    exit 4
 fi
 
 function getBootUUID() {
@@ -52,7 +52,7 @@ function getBootUUID() {
     if [ -z "$UUID" ]
     then
         echo Boot partition not found or labelled correctly. Please check installation
-        exit 3
+        exit 5
     fi
 }
 
@@ -76,7 +76,7 @@ function setDefaultBootEntry() {
     if [ "${entryNum}" == "" ]
     then
         echo Version must be specified.
-        exit 1
+        exit 6
     fi
 
     entryNum=$((entryNum - 1))
@@ -91,14 +91,14 @@ function getCurBootVersion() {
     if [ -z "$entry" ]
     then
         echo "Default entry not found in grub file. Exiting"
-        exit 12
+        exit 7
     fi
     entry=$((entry + 1))
     version=$(grep menuentry ${GRUBFILE}  | sed -n "${entry}p" | awk '{print $2}')
     if [ -z "$version" ]
     then
         echo "unable to determine the currently booted version in grub"
-        exit 13
+        exit 8
     fi
     echo $version
 }
@@ -115,7 +115,7 @@ function doAddImage() {
     if [ ! -d /run/initramfs/live/OS-${VER} ]
     then
         echo OS version $VERis not installed.
-        exit 2
+        exit 9
     fi
     addMenuEntry $VER $GRUBFILE
     setDefaultBootEntry $VER $GRUBFILE
@@ -127,7 +127,7 @@ function delMenuEntryVersion() {
     if [ -z "$(grep menuentry $GRUBFILE | grep $VER)" ]
     then
         echo Version $VER not found in file $GRUBFILE
-        exit 14
+        exit 10
     fi
     sed -i "/${VER}/,/}/d" $GRUBFILE
 }
@@ -194,7 +194,7 @@ function doPreUpgrade() {
     tar zxvf venice_appl_os.tgz
 
     diskused=$(du -kxc initrd0.img naples_fw.tar squashfs.img vmlinuz0 venice.tgz | grep total| cut -f1)
-    diskavail=$(df -k --output=avail /run/initramfs/live  | grep -v Ava)
+    diskavail=$(df -kP /run/initramfs/live  | grep  /run/initramfs/live |  awk '{print $4};')
     if [ -z "$diskavail" -o -z "$diskused" ]
     then
         echo "Unable to determine free space available or disk space used"
@@ -229,3 +229,4 @@ case $OP in
 "doupgrade") doPreUpgrade; keepOnlyCurrentDefaultImage; doUpgrade;;
 esac
 
+exit 0

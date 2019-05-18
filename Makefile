@@ -518,8 +518,7 @@ venice-iso:
 	$(MAKE) -C tools/docker-files/vinstall venice-iso
 
 bundle-image:
-	cp -f tools/scripts/venice_appl_GrubEntry.sh bin/venice-install
-	cd bin/venice-install && tar -cvf - initrd0.img  squashfs.img  vmlinuz0 -C ../../tools/scripts venice_appl_GrubEntry.sh | gzip -1 -c > venice_appl_os.tgz
+	cd bin/venice-install && tar -cvf - initrd0.img  squashfs.img  vmlinuz0  | gzip -1 -c > venice_appl_os.tgz
 	mkdir -p bin/bundle
 	@ #bundle.py creates metadata.json for the bundle image
 	@tools/scripts/bundle.py -v ${BUNDLE_VERSION}  -d ${BUILD_DATE}
