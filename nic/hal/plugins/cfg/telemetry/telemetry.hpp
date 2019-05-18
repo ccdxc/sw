@@ -102,6 +102,9 @@ DEFINE_ENUM(export_formats_en, EXPORT_FORMATS)
 #define MAX_COLLECTORS              16
 #define MAX_COLLECTORS_PER_FLOW     4
 
+typedef struct telemetry_active_port_get_cb_ctxt_t_ {
+    if_t *hal_if;
+} telemetry_active_port_get_cb_ctxt_t;
 
 // New reason codes must be added here and in the corresponding PD
 typedef struct drop_reason_codes_s {

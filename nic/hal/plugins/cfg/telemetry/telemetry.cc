@@ -27,6 +27,9 @@ using hal::pd::pd_drop_monitor_rule_get_args_t;
 using hal::drop_monitor_rule_t;
 
 extern uint64_t g_mgmt_if_mac;
+// Cache the current dest if mirror sessions are using
+hal::if_t *g_telemetry_mirror_dest_if = NULL;
+
 namespace hal {
 
 // Global structs
@@ -37,6 +40,69 @@ hal_ret_t
 mirror_session_update (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
 {
     return HAL_RET_OK;
+}
+
+static bool
+telemetry_active_port_get_cb (void *ht_entry, void *ctxt)
+{
+    hal_handle_id_ht_entry_t *entry = (hal_handle_id_ht_entry_t *)ht_entry;
+    if_t                     *hal_if = NULL;
+    telemetry_active_port_get_cb_ctxt_t *tctxt = 
+                (telemetry_active_port_get_cb_ctxt_t *) ctxt;
+
+    hal_if = (if_t *) hal_handle_get_obj(entry->handle_id);
+    if ((hal_if->if_type == intf::IF_TYPE_UPLINK) &&
+        !hal_if->is_oob_management &&
+        (hal_if->if_op_status == intf::IF_STATUS_UP)) {
+            tctxt->hal_if = hal_if;
+            return true;
+    }
+    return false;
+}
+
+// Find uplink which is with oper status up
+if_t *
+telemetry_get_active_uplink (void)
+{
+    telemetry_active_port_get_cb_ctxt_t ctxt = {0};
+    
+    g_hal_state->if_id_ht()->walk(telemetry_active_port_get_cb, &ctxt);
+    return ctxt.hal_if;
+}
+
+static if_t *
+telemetry_pick_dest_if (if_t *dest_if)
+{
+    // No change to dest_if for sim mode
+    if (hal::is_platform_type_sim()) {
+        return dest_if;
+    }
+
+    // Use the cached dest_if if we have one already for uplinks
+    if (g_telemetry_mirror_dest_if &&
+        (dest_if->if_type == intf::IF_TYPE_UPLINK)) {
+        dest_if = g_telemetry_mirror_dest_if;
+    }
+    if (!g_telemetry_mirror_dest_if &&
+            (dest_if->if_type == intf::IF_TYPE_UPLINK) &&
+            !dest_if->is_oob_management &&
+            (dest_if->if_op_status != intf::IF_STATUS_UP)) {
+        HAL_TRACE_DEBUG("Uplink is down, choosing new dest-if");
+        if_t *new_dest_if = telemetry_get_active_uplink();
+        if (new_dest_if) {
+            dest_if = new_dest_if;
+            HAL_TRACE_DEBUG("New dest-if id {}", dest_if->if_id);
+        } else {
+            HAL_TRACE_DEBUG("Did not find an active uplink!");
+        }
+        g_telemetry_mirror_dest_if = dest_if;
+    }
+    if (!g_telemetry_mirror_dest_if &&
+        (dest_if->if_type == intf::IF_TYPE_UPLINK)) {
+        g_telemetry_mirror_dest_if = dest_if;
+    }
+
+    return dest_if;
 }
 
 hal_ret_t
@@ -117,7 +183,10 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
                           ipaddr2str(&dst_addr));
             return HAL_RET_INVALID_ARG;
         }
-        session.dest_if = dest_if;
+        HAL_TRACE_DEBUG("Dest IF type {}, op_status {}, id {}", dest_if->if_type,
+                                        dest_if->if_op_status, dest_if->if_id);
+        auto ndest_if = telemetry_pick_dest_if(dest_if);
+        session.dest_if = ndest_if;
         auto ift = find_if_by_handle(ep->gre_if_handle);
         if (ift == NULL) {
             HAL_TRACE_ERR("Could not find ERSPAN tunnel dest if {}",
