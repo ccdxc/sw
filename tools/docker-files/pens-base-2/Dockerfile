@@ -3,5 +3,5 @@
 # includes libtool which is needed by keymgr for PKCS#11 backend
 FROM alpine:3.8
 RUN apk update
-RUN apk add libtool
+RUN apk add libtool blkid
 
