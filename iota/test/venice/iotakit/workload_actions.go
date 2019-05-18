@@ -29,39 +29,35 @@ func (act *ActionCtx) PingAndCapturePackets(wpc *WorkloadPairCollection, wc *Wor
 		return wc.Error()
 	}
         
-        // Add ping command
 	cmds := []*iota.Command{}
-	var pairNames []string
-	for _, pair := range wpc.pairs {
-		pairNames = append(pairNames, fmt.Sprintf("%s -> %s; ", pair.second.iotaWorkload.WorkloadName, pair.first.iotaWorkload.WorkloadName))
-		ipAddr := strings.Split(pair.second.iotaWorkload.IpPrefix, "/")[0]
-		cmd := iota.Command{
-			Mode:       iota.CommandMode_COMMAND_BACKGROUND,
-			Command:    fmt.Sprintf("ping -c 5 -i 1 %v", ipAddr),
-			EntityName: pair.first.iotaWorkload.WorkloadName,
-			NodeName:   pair.first.iotaWorkload.NodeName,
-		}
-		cmds = append(cmds, &cmd)
-	}
-
         // Add tcpdump command
         cmd := iota.Command{
                 Mode:       iota.CommandMode_COMMAND_BACKGROUND,
-                Command:    fmt.Sprintf("tcpdump -nni %v ip proto gre", wc.workloads[wlnum].iotaWorkload.Interface),
+                Command:    fmt.Sprintf("tcpdump -x -nni %v ip proto gre", wc.workloads[wlnum].iotaWorkload.Interface),
                 EntityName: wc.workloads[wlnum].iotaWorkload.WorkloadName,
                 NodeName:   wc.workloads[wlnum].iotaWorkload.NodeName,
         }
         cmds = append(cmds, &cmd)
 
+        // Add ping command
+	var pairNames []string
+	for _, pair := range wpc.pairs {
+		pairNames = append(pairNames, fmt.Sprintf("%s -> %s; ", pair.second.iotaWorkload.WorkloadName, pair.first.iotaWorkload.WorkloadName))
+		ipAddr := strings.Split(pair.first.iotaWorkload.IpPrefix, "/")[0]
+		cmd := iota.Command{
+			Mode:       iota.CommandMode_COMMAND_FOREGROUND,
+			Command:    fmt.Sprintf("ping -c 20 -i 0.2 %v", ipAddr),
+			EntityName: pair.second.iotaWorkload.WorkloadName,
+			NodeName:   pair.second.iotaWorkload.NodeName,
+		}
+		cmds = append(cmds, &cmd)
+	}
+
 	log.Infof("Testing ping between workloads %v ", pairNames)
 	log.Infof("Collecting tcpdump on %#v interface %v", wc.workloads[wlnum].iotaWorkload.WorkloadName,
                                                             wc.workloads[wlnum].iotaWorkload.Interface)
 
-	trmode := iota.TriggerMode_TRIGGER_PARALLEL
-	if !act.model.tb.HasNaplesSim() {
-		trmode = iota.TriggerMode_TRIGGER_NODE_PARALLEL
-	}
-
+	trmode := iota.TriggerMode_TRIGGER_SERIAL
 	trigMsg := &iota.TriggerMsg{
 		TriggerOp:   iota.TriggerOp_EXEC_CMDS,
 		TriggerMode: trmode,
@@ -76,11 +72,20 @@ func (act *ActionCtx) PingAndCapturePackets(wpc *WorkloadPairCollection, wc *Wor
 		return fmt.Errorf("Failed to trigger a ping. API Status: %+v | Err: %v", triggerResp.ApiResponse, err)
 	}
 
-	//log.Debugf("Got ping Trigger resp: %+v", triggerResp)
-	for _, cmdResp := range triggerResp.Commands {
+	log.Infof("Terminate commands")
+	trig := act.model.tb.NewTrigger()
+        stopResp, err := trig.StopCommands(triggerResp.Commands)
+	if err != nil {
+		log.Errorf("Error stopping ping and tcpdump cmds. Err: %v. trig: %+v, resp: %+v", err, stopResp)
+		return fmt.Errorf("Error stopping ping and tcpdump cmds. Err: %v", err)
+	}
+
+	for _, cmdResp := range stopResp {
+		//log.Infof("Dumping command in stopResponse: %v stdout: %v stderr: %v", cmdResp.Command, cmdResp.Stdout, cmdResp.Stderr)
                 if strings.Contains(cmdResp.Command, "tcpdump") {
+		    //log.Infof("tcpdump stdout: %v stderr: %v", cmdResp.Stdout, cmdResp.Stderr)
                     if !strings.Contains(cmdResp.Stdout, "GREv0, length") {
-			log.Errorf("PingCapture trigger failed. Resp: %#v", cmdResp)
+			log.Errorf("PingCapture trigger failed. Did not find GRE pkts in tcpdump! Resp: %#v", cmdResp)
 			return fmt.Errorf("PingCapture trigger failed on %s. code %v, Out: %v, StdErr: %v", cmdResp.EntityName, cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
                     }
                 }

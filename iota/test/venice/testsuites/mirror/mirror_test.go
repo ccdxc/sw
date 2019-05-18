@@ -30,9 +30,7 @@ var _ = Describe("mirror tests", func() {
 			msc.AddCollector(collector, "udp/4545", 0)
                         Expect(msc.Commit()).Should(Succeed())
 
-			// TODO: verify we receive mirror packets at the collector
 			Eventually(func() error {
-				// return ts.model.Action().TCPSession(workloadPairs, 8000)
     			        aerr := ts.model.Action().PingAndCapturePackets(workloadPairs, collector, 0)
     			        if aerr != nil {
     				        return aerr
@@ -47,9 +45,7 @@ var _ = Describe("mirror tests", func() {
 			msc.AddCollector(collector, "udp/4545", 1)
                         Expect(msc.Commit()).Should(Succeed())
 
-			// TODO: verify we receive mirror packets at the updated collector
 			Eventually(func() error {
-				// return ts.model.Action().TCPSession(workloadPairs, 8000)
     			        aerr := ts.model.Action().PingAndCapturePackets(workloadPairs, collector, 1)
 			        if aerr != nil {
 				    return aerr

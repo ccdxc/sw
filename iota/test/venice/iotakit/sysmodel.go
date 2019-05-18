@@ -237,6 +237,7 @@ func (sm *SysModel) SetupDefaultConfig(scale, scaleData bool) error {
 			for _, gwrk := range getResp.Workloads {
 				if gwrk.WorkloadName == wrk.iotaWorkload.WorkloadName {
 					wrk.iotaWorkload.MgmtIp = gwrk.MgmtIp
+                                        wrk.iotaWorkload.Interface = gwrk.GetInterface()
 					found = true
 				}
 			}
