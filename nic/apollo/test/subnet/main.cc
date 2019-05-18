@@ -26,7 +26,8 @@ namespace api_test {
 
 // Globals
 char *g_cfg_file = NULL;
-constexpr int k_max_subnet = PDS_MAX_SUBNET;
+constexpr uint32_t k_max_subnet = PDS_MAX_SUBNET;
+constexpr pds_vpc_key_t k_vpc_key = {.id = 1};
 
 //----------------------------------------------------------------------------
 // Subnet test class
@@ -43,17 +44,14 @@ protected:
         params.cfg_file = api_test::g_cfg_file;
         params.enable_fte = false;
         pds_test_base::SetUpTestCase(params);
-
-        pds_batch_params_t batch_params = {0};
-        vpc_util vpc_obj(1, "10.0.0.0/8");
+        vpc_util vpc_obj(k_vpc_key.id, "10.0.0.0/8");
 
         batch_start();
         ASSERT_TRUE(vpc_obj.create() == sdk::SDK_RET_OK);
         batch_commit();
     }
     static void TearDownTestCase() {
-        pds_batch_params_t batch_params = {0};
-        vpc_util vpc_obj(1, "10.0.0.0/8");
+        vpc_util vpc_obj(k_vpc_key.id, "10.0.0.0/8");
 
         batch_start();
         ASSERT_TRUE(vpc_obj.del() == sdk::SDK_RET_OK);
@@ -75,11 +73,9 @@ protected:
 /// from hardware perspective
 TEST_F(subnet, subnet_workflow_1) {
     pds_subnet_key_t key = {.id = 1};
-    std::string start_addr = "10.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
     subnet_util_stepper_seed_t seed = {0};
 
-    SUBNET_SEED_INIT(&seed, key, vpc_key, start_addr, k_max_subnet);
+    SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
     workflow_1<subnet_util, subnet_util_stepper_seed_t>(&seed);
 }
 
@@ -88,11 +84,9 @@ TEST_F(subnet, subnet_workflow_1) {
 /// should result in successful creation
 TEST_F(subnet, subnet_workflow_2) {
     pds_subnet_key_t key = {.id = 1};
-    pds_vpc_key_t vpc_key = {.id = 1};
-    std::string start_addr = "10.0.0.0/16";
     subnet_util_stepper_seed_t seed = {0};
 
-    SUBNET_SEED_INIT(&seed, key, vpc_key, start_addr, k_max_subnet);
+    SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
     workflow_2<subnet_util, subnet_util_stepper_seed_t>(&seed);
 }
 
@@ -101,592 +95,182 @@ TEST_F(subnet, subnet_workflow_2) {
 /// in the hardware
 TEST_F(subnet, subnet_workflow_3) {
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
-    std::string start_addr1 = "10.0.0.0/16";
-    std::string start_addr2 = "30.0.0.0/16";
-    std::string start_addr3 = "60.0.0.0/16";
-    uint32_t num_subnets = 20;
-    pds_vpc_key_t vpc_key = {.id = 1};
     subnet_util_stepper_seed_t seed1, seed2, seed3;
 
-    SUBNET_SEED_INIT(&seed1, key1, vpc_key, start_addr1, num_subnets);
-    SUBNET_SEED_INIT(&seed2, key2, vpc_key, start_addr2, num_subnets);
-    SUBNET_SEED_INIT(&seed3, key3, vpc_key, start_addr3, num_subnets);
+    SUBNET_SEED_INIT(&seed1, key1, k_vpc_key, "10.0.0.0/16", 20);
+    SUBNET_SEED_INIT(&seed2, key2, k_vpc_key, "30.0.0.0/16", 20);
+    SUBNET_SEED_INIT(&seed3, key3, k_vpc_key, "60.0.0.0/16", 20);
     workflow_3<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
 /// \brief Create and delete max subnets in two batches
 /// The hardware should create and delete subnet correctly. Validate using reads
 /// at each batch end
-/// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
 TEST_F(subnet, subnet_workflow_4) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {.id = 1};
-    std::string start_addr = "10.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
     subnet_util_stepper_seed_t seed = {};
-    uint32_t num_subnets = k_max_subnet;
 
-    // setup
-    SUBNET_SEED_INIT(&seed, key, vpc_key, start_addr, num_subnets);
-
-    // trigger
-    batch_start();
-    SUBNET_MANY_CREATE(&seed);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    batch_start();
-    SUBNET_MANY_DELETE(&seed);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
+    SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
+    workflow_4<subnet_util, subnet_util_stepper_seed_t>(&seed);
 }
 
 /// \brief Create and delete mix and match of subnets in two batches
-/// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
 TEST_F(subnet, subnet_workflow_5) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
-    std::string start_addr1 = "10.0.0.0/16";
-    std::string start_addr2 = "30.0.0.0/16";
-    std::string start_addr3 = "60.0.0.0/16";
-    uint32_t num_subnets = 20;
-    pds_vpc_key_t vpc_key = {.id = 1};
     subnet_util_stepper_seed_t seed1, seed2, seed3;
 
-    // setup
-    SUBNET_SEED_INIT(&seed1, key1, vpc_key, start_addr1, num_subnets);
-    SUBNET_SEED_INIT(&seed2, key2, vpc_key, start_addr2, num_subnets);
-    SUBNET_SEED_INIT(&seed3, key3, vpc_key, start_addr3, num_subnets);
-
-    // trigger
-    batch_start();
-    SUBNET_MANY_CREATE(&seed1);
-    SUBNET_MANY_CREATE(&seed2);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_OK);
-    SUBNET_MANY_READ(&seed2, sdk::SDK_RET_OK);
-
-    batch_start();
-    SUBNET_MANY_DELETE(&seed1);
-    SUBNET_MANY_CREATE(&seed3);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    SUBNET_MANY_READ(&seed2, sdk::SDK_RET_OK);
-    SUBNET_MANY_READ(&seed3, sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_start();
-    SUBNET_MANY_DELETE(&seed2);
-    SUBNET_MANY_DELETE(&seed3);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    SUBNET_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    SUBNET_SEED_INIT(&seed1, key1, k_vpc_key, "10.0.0.0/16", 20);
+    SUBNET_SEED_INIT(&seed2, key2, k_vpc_key, "30.0.0.0/16", 20);
+    SUBNET_SEED_INIT(&seed3, key3, k_vpc_key, "60.0.0.0/16", 20);
+    workflow_5<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
 /// \brief Create, Update and delete maximum subnets in single batch
-/// [ Create SetMax, Update SetMax - Update SetMax - Delete SetMax ] - Read
 TEST_F(subnet, subnet_workflow_6) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {.id = 1};
-    std::string start_addr1 = "10.0.0.0/16";
-    std::string start_addr2 = "11.0.0.0/16";
-    std::string start_addr3 = "12.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
     subnet_util_stepper_seed_t seed1, seed2, seed3;
-    uint32_t num_subnets = k_max_subnet;
 
-    // setup
-    SUBNET_SEED_INIT(&seed1, key, vpc_key, start_addr1, num_subnets);
-    SUBNET_SEED_INIT(&seed2, key, vpc_key, start_addr2, num_subnets);
-    SUBNET_SEED_INIT(&seed3, key, vpc_key, start_addr3, num_subnets);
-
-    // trigger
-    batch_start();
-    SUBNET_MANY_CREATE(&seed1);
-    SUBNET_MANY_UPDATE(&seed2);
-    SUBNET_MANY_UPDATE(&seed3);
-    SUBNET_MANY_DELETE(&seed3);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
+    SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
+    SUBNET_SEED_INIT(&seed2, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
+    SUBNET_SEED_INIT(&seed3, key, k_vpc_key, "12.0.0.0/16", k_max_subnet);
+    workflow_6<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
 /// \brief Create, delete, create and update maximum subnets in single batch
-/// [ Create SetMax - Delete SetMax - Create SetMax - Update SetMax -
-//    Update SetMax ] - Read
 TEST_F(subnet, subnet_workflow_7) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {.id = 1};
-    std::string start_addr1 = "10.0.0.0/16";
-    std::string start_addr2 = "11.0.0.0/16";
-    std::string start_addr3 = "12.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
     subnet_util_stepper_seed_t seed1, seed2, seed3;
-    uint32_t num_subnets = k_max_subnet;
 
-    // setup
-    SUBNET_SEED_INIT(&seed1, key, vpc_key, start_addr1, num_subnets);
-    SUBNET_SEED_INIT(&seed2, key, vpc_key, start_addr2, num_subnets);
-    SUBNET_SEED_INIT(&seed3, key, vpc_key, start_addr3, num_subnets);
-
-    // trigger
-    batch_start();
-    SUBNET_MANY_CREATE(&seed1);
-    SUBNET_MANY_DELETE(&seed2);
-    SUBNET_MANY_CREATE(&seed1);
-    SUBNET_MANY_UPDATE(&seed2);
-    SUBNET_MANY_UPDATE(&seed3);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed3, sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_start();
-    SUBNET_MANY_DELETE(&seed3);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
+    SUBNET_SEED_INIT(&seed2, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
+    SUBNET_SEED_INIT(&seed3, key, k_vpc_key, "12.0.0.0/16", k_max_subnet);
+    workflow_7<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
 /// \brief Create, Update and delete maximum subnets in single batch
-/// [ Create SetMax, Update SetMax ] - Read - [ Update SetMax ] - Read -
-/// [ Delete SetMax ] - Read
 TEST_F(subnet, DISABLED_subnet_workflow_8) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {.id = 1};
-    std::string start_addr1 = "10.0.0.0/16";
-    std::string start_addr2 = "11.0.0.0/16";
-    std::string start_addr3 = "12.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
     subnet_util_stepper_seed_t seed1, seed2, seed3;
-    uint32_t num_subnets = k_max_subnet;
 
-    // setup
-    SUBNET_SEED_INIT(&seed1, key, vpc_key, start_addr1, num_subnets);
-    SUBNET_SEED_INIT(&seed2, key, vpc_key, start_addr2, num_subnets);
-    SUBNET_SEED_INIT(&seed3, key, vpc_key, start_addr3, num_subnets);
-
-    // trigger
-    batch_start();
-    SUBNET_MANY_CREATE(&seed1);
-    SUBNET_MANY_UPDATE(&seed2);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed2, sdk::SDK_RET_OK);
-
-    batch_start();
-    SUBNET_MANY_UPDATE(&seed3);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed3, sdk::SDK_RET_OK);
-
-    batch_start();
-    SUBNET_MANY_DELETE(&seed3);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
+    SUBNET_SEED_INIT(&seed2, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
+    SUBNET_SEED_INIT(&seed3, key, k_vpc_key, "12.0.0.0/16", k_max_subnet);
+    workflow_8<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
 /// \brief Create, Update and delete maximum subnets in single batch
-/// [ Create SetMax ] - Read - [ Update SetMax Delete SetMax ] - Read
 TEST_F(subnet, subnet_workflow_9) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {.id = 1};
-    std::string start_addr1 = "10.0.0.0/16";
-    std::string start_addr2 = "11.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
     subnet_util_stepper_seed_t seed1, seed2;
-    uint32_t num_subnets = k_max_subnet;
 
-    // setup
-    SUBNET_SEED_INIT(&seed1, key, vpc_key, start_addr1, num_subnets);
-    SUBNET_SEED_INIT(&seed2, key, vpc_key, start_addr2, num_subnets);
-
-    // trigger
-    batch_start();
-    SUBNET_MANY_CREATE(&seed1);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    batch_start();
-    SUBNET_MANY_UPDATE(&seed2);
-    SUBNET_MANY_DELETE(&seed2);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
+    SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
+    SUBNET_SEED_INIT(&seed2, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
+    workflow_9<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2);
 }
 
 /// \brief Create, Update and delete maximum subnets in single batch
-/// [ Create Set1, Set2 Set3 - Delete Set1 - Update Set2 ] - Read -
-/// [ Update Set3 - Delete Set2 - Create Set4] - Read
 TEST_F(subnet, DISABLED_subnet_workflow_10) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70},
                      key4 = {.id = 100};
-    std::string start_addr1 = "10.0.0.0/16";
-    std::string start_addr2 = "40.0.0.0/16";
-    std::string start_addr2_new = "140.0.0.0/16";
-    std::string start_addr3 = "70.0.0.0/16";
-    std::string start_addr3_new = "170.0.0.0/16";
-    std::string start_addr4 = "100.0.0.0/16";
-    uint32_t num_subnets = 20;
-    pds_vpc_key_t vpc_key = {.id = 1};
-    subnet_util_stepper_seed_t seed1, seed2, seed3, seed4, seed2_new, seed3_new;
+    subnet_util_stepper_seed_t seed1, seed2, seed3, seed4, seed2A, seed3A;
 
-    // setup
-    SUBNET_SEED_INIT(&seed1, key1, vpc_key, start_addr1, num_subnets);
-    SUBNET_SEED_INIT(&seed2, key2, vpc_key, start_addr2, num_subnets);
-    SUBNET_SEED_INIT(&seed2_new, key2, vpc_key, start_addr2_new, num_subnets);
-    SUBNET_SEED_INIT(&seed3, key3, vpc_key, start_addr3, num_subnets);
-    SUBNET_SEED_INIT(&seed3_new, key3, vpc_key, start_addr3_new, num_subnets);
-    SUBNET_SEED_INIT(&seed4, key4, vpc_key, start_addr4, num_subnets);
-
-    // trigger
-    batch_start();
-    SUBNET_MANY_CREATE(&seed1);
-    SUBNET_MANY_CREATE(&seed2);
-    SUBNET_MANY_CREATE(&seed3);
-    SUBNET_MANY_DELETE(&seed1);
-    SUBNET_MANY_UPDATE(&seed2_new);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    SUBNET_MANY_READ(&seed2_new, sdk::SDK_RET_OK);
-    SUBNET_MANY_READ(&seed3, sdk::SDK_RET_OK);
-
-    batch_start();
-    SUBNET_MANY_UPDATE(&seed3_new);
-    SUBNET_MANY_DELETE(&seed2_new);
-    SUBNET_MANY_CREATE(&seed4);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed3_new, sdk::SDK_RET_OK);
-    SUBNET_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    SUBNET_MANY_READ(&seed4, sdk::SDK_RET_OK);
-
-    //cleanup
-    batch_start();
-    SUBNET_MANY_DELETE(&seed4);
-    SUBNET_MANY_DELETE(&seed3_new);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed4, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    SUBNET_MANY_READ(&seed3_new, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    SUBNET_SEED_INIT(&seed1, key1, k_vpc_key, "10.0.0.0/16", 20);
+    SUBNET_SEED_INIT(&seed2, key2, k_vpc_key, "40.0.0.0/16", 20);
+    SUBNET_SEED_INIT(&seed2A, key2, k_vpc_key, "140.0.0.0/16", 20);
+    SUBNET_SEED_INIT(&seed3, key3, k_vpc_key, "70.0.0.0/16", 20);
+    SUBNET_SEED_INIT(&seed3A, key3, k_vpc_key, "170.0.0.0/16", 20);
+    SUBNET_SEED_INIT(&seed4, key4, k_vpc_key, "100.0.0.0/16", 20);
+    workflow_10<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2,
+                                                         &seed2A, &seed3,
+                                                         &seed3A, &seed4);
 }
 
 /// \brief Create maximum number of subnets in two batches
-/// [ Create SetMax ] - [ Create SetMax ] - Read
 TEST_F(subnet, subnet_workflow_neg_1) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {.id = 1};
-    std::string start_addr = "10.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
     subnet_util_stepper_seed_t seed;
-    uint32_t num_subnets = k_max_subnet;
 
-    // setup
-    SUBNET_SEED_INIT(&seed, key, vpc_key, start_addr, num_subnets);
-
-    // trigger
-    batch_start();
-    SUBNET_MANY_CREATE(&seed);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    batch_start();
-    SUBNET_MANY_CREATE(&seed);
-    batch_commit_fail();
-    batch_abort();
-
-    SUBNET_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_start();
-    SUBNET_MANY_DELETE(&seed);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
+    workflow_neg_1<subnet_util, subnet_util_stepper_seed_t>(&seed);
 }
 
-/// \brief Create more than maximum number of subnets supported.
-/// [ Create SetMax+1] - Read
+/// \brief Create more than maximum number of subnets supported
 TEST_F(subnet, subnet_workflow_neg_2) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {.id = 1};
-    std::string start_addr = "10.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
     subnet_util_stepper_seed_t seed;
-    uint32_t num_subnets = k_max_subnet + 1;
 
-    // setup
-    SUBNET_SEED_INIT(&seed, key, vpc_key, start_addr, num_subnets);
-
-    // trigger
-    batch_start();
-    SUBNET_MANY_CREATE(&seed);
-    batch_commit_fail();
-    batch_abort();
-
-    SUBNET_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet + 1);
+    workflow_neg_2<subnet_util, subnet_util_stepper_seed_t>(&seed);
 }
 
-/// \brief Read of a non-existing subnet should return entry not found.
-/// Read NonEx
-TEST_F(subnet, subnet_workflow_neg_3a) {
+/// \brief Read and delete non existing subnets
+TEST_F(subnet, subnet_workflow_neg_3) {
     pds_subnet_key_t key = {.id = 1};
     subnet_util_stepper_seed_t seed;
-    pds_vpc_key_t vpc_key;
-    std::string start_addr = "0.0.0.0";
-    uint32_t num_subnets = k_max_subnet;
 
-    // setup
-    SUBNET_SEED_INIT(&seed, key, vpc_key, start_addr, num_subnets);
-
-    // trigger
-    SUBNET_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
-}
-
-/// \brief Deletion of a non-existing subnet should fail.
-/// [Delete NonEx]
-TEST_F(subnet, subnet_workflow_neg_3b) {
-    pds_batch_params_t batch_params = {0};
-    pds_subnet_key_t key = {.id = 1};
-    std::string start_addr = "10.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
-    subnet_util_stepper_seed_t seed;
-    int num_subnets = k_max_subnet;
-
-    // setup
-    SUBNET_SEED_INIT(&seed, key, vpc_key, start_addr, num_subnets);
-
-    // trigger
-    batch_start();
-    SUBNET_MANY_DELETE(&seed);
-    batch_commit_fail();
-    batch_abort();
+    SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
+    workflow_neg_3<subnet_util, subnet_util_stepper_seed_t>(&seed);
 }
 
 /// \brief Invalid batch shouldn't affect entries of previous batch
-/// [ Create Set1 ] - [Delete Set1, Set2 ] - Read
 TEST_F(subnet, subnet_workflow_neg_4) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    std::string start_addr1 = "10.0.0.0/16";
-    std::string start_addr2 = "40.0.0.0/16";
-    uint32_t num_subnets = 20;
-    pds_vpc_key_t vpc_key = {.id = 1};
     subnet_util_stepper_seed_t seed1, seed2;
 
-    // setup
-    SUBNET_SEED_INIT(&seed1, key1, vpc_key, start_addr1, num_subnets);
-    SUBNET_SEED_INIT(&seed2, key2, vpc_key, start_addr2, num_subnets);
-
-    // trigger
-    batch_start();
-    SUBNET_MANY_CREATE(&seed1);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    batch_start();
-    SUBNET_MANY_DELETE(&seed1);
-    SUBNET_MANY_DELETE(&seed2);
-    batch_commit_fail();
-    batch_abort();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_OK);
-    SUBNET_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
-    batch_start();
-    SUBNET_MANY_DELETE(&seed1);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    SUBNET_SEED_INIT(&seed1, key1, k_vpc_key, "10.0.0.0/16", 20);
+    SUBNET_SEED_INIT(&seed2, key2, k_vpc_key, "40.0.0.0/16", 20);
+    workflow_neg_4<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2);
 }
 
 /// \brief Invalid batch shouldn't affect entries of previous batch
-/// [ Create SetMax ] - Read - [ Delete SetMax - Update SetMax ] - Read
 TEST_F(subnet, DISABLED_subnet_workflow_neg_5) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {.id = 1};
-    std::string start_addr1 = "10.0.0.0/16";
-    std::string start_addr2 = "11.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
-    subnet_util_stepper_seed_t seed1, seed1_new;
-    uint32_t num_subnets = k_max_subnet;
+    subnet_util_stepper_seed_t seed1, seed1A;
 
-    // setup
-    SUBNET_SEED_INIT(&seed1, key, vpc_key, start_addr1, num_subnets);
-    SUBNET_SEED_INIT(&seed1_new, key, vpc_key, start_addr2, num_subnets);
-
-    batch_start();
-    SUBNET_MANY_CREATE(&seed1);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    batch_start();
-    SUBNET_MANY_DELETE(&seed1);
-    SUBNET_MANY_UPDATE(&seed1_new);
-    batch_commit_fail();
-    batch_abort();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_start();
-    SUBNET_MANY_DELETE(&seed1);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
+    SUBNET_SEED_INIT(&seed1A, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
+    workflow_neg_5<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed1A);
 }
 
 /// \brief Invalid batch shouldn't affect entries of previous batch
-/// [ Update SetMax ] - Read
 TEST_F(subnet, subnet_workflow_neg_6) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {.id = 1};
-    std::string start_addr = "10.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
     subnet_util_stepper_seed_t seed;
-    uint32_t num_subnets = k_max_subnet;
 
-    // setup
-    SUBNET_SEED_INIT(&seed, key, vpc_key, start_addr, num_subnets);
-
-    batch_start();
-    SUBNET_MANY_UPDATE(&seed);
-    batch_commit_fail();
-    batch_abort();
-
-    SUBNET_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
+    workflow_neg_6<subnet_util, subnet_util_stepper_seed_t>(&seed);
 }
 
 /// \brief Invalid batch shouldn't affect entries of previous batch
-/// [ Create SetMax ] - Read - [ Update SetMax + 1 ] - Read
 TEST_F(subnet, DISABLED_subnet_workflow_neg_7) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key = {.id = 1};
-    std::string start_addr1 = "10.0.0.0/16";
-    std::string start_addr2 = "11.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
-    subnet_util_stepper_seed_t seed1, seed1_new;
-    uint32_t num_subnets = k_max_subnet;
+    subnet_util_stepper_seed_t seed1, seed1A;
 
-    // setup
-    SUBNET_SEED_INIT(&seed1, key, vpc_key, start_addr1, num_subnets);
-    num_subnets = k_max_subnet + 1;
-    SUBNET_SEED_INIT(&seed1_new, key, vpc_key, start_addr2, num_subnets);
-
-    batch_start();
-    SUBNET_MANY_CREATE(&seed1);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    batch_start();
-    SUBNET_MANY_UPDATE(&seed1_new);
-    batch_commit_fail();
-    batch_abort();
-
-    SUBNET_MANY_READ(&seed1_new, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
-    batch_start();
-    SUBNET_MANY_DELETE(&seed1);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
+    SUBNET_SEED_INIT(&seed1A, key, k_vpc_key, "11.0.0.0/16", k_max_subnet + 1);
+    workflow_neg_7<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed1A);
 }
 
 /// \brief Invalid batch shouldn't affect entries of previous batch
-/// [ Create Set1 ] - Read - [ Update Set1 - Update Set2 ] - Read
 TEST_F(subnet, subnet_workflow_neg_8) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    std::string start_addr1 = "10.0.0.0/16";
-    std::string start_addr2 = "11.0.0.0/16";
-    std::string start_addr3 = "12.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
-    subnet_util_stepper_seed_t seed1, seed1_new, seed2;
-    uint32_t num_subnets = 20;
+    subnet_util_stepper_seed_t seed1, seed1A, seed2;
 
-    // setup
-    SUBNET_SEED_INIT(&seed1, key1, vpc_key, start_addr1, num_subnets);
-    SUBNET_SEED_INIT(&seed1_new, key1, vpc_key, start_addr2, num_subnets);
-    SUBNET_SEED_INIT(&seed2, key2, vpc_key, start_addr3, num_subnets);
-
-    batch_start();
-    SUBNET_MANY_CREATE(&seed1);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    batch_start();
-    SUBNET_MANY_UPDATE(&seed1_new);
-    SUBNET_MANY_UPDATE(&seed2);
-    batch_commit_fail();
-    batch_abort();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_start();
-    SUBNET_MANY_DELETE(&seed1);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    SUBNET_SEED_INIT(&seed1, key1, k_vpc_key, "10.0.0.0/16", 20);
+    SUBNET_SEED_INIT(&seed1A, key1, k_vpc_key, "11.0.0.0/16", 20);
+    SUBNET_SEED_INIT(&seed2, key2, k_vpc_key, "12.0.0.0/16", 20);
+    workflow_neg_8<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed1A,
+                                                            &seed2);
 }
 
 /// \brief Invalid batch shouldn't affect entries of previous batch
-/// [ Create Set1 ] - Read - [ Delete Set1 - Update Set2 ] - Read
 TEST_F(subnet, subnet_workflow_neg_9) {
-    pds_batch_params_t batch_params = {0};
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    std::string start_addr1 = "10.0.0.0/16";
-    std::string start_addr2 = "11.0.0.0/16";
-    pds_vpc_key_t vpc_key = {.id = 1};
     subnet_util_stepper_seed_t seed1, seed2;
-    uint32_t num_subnets = 20;
 
-    // setup
-    SUBNET_SEED_INIT(&seed1, key1, vpc_key, start_addr1, num_subnets);
-    SUBNET_SEED_INIT(&seed2, key2, vpc_key, start_addr2, num_subnets);
-
-    batch_start();
-    SUBNET_MANY_CREATE(&seed1);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    batch_start();
-    SUBNET_MANY_DELETE(&seed1);
-    SUBNET_MANY_UPDATE(&seed2);
-    batch_commit_fail();
-    batch_abort();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    // cleanup
-    batch_start();
-    SUBNET_MANY_DELETE(&seed1);
-    batch_commit();
-
-    SUBNET_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    SUBNET_SEED_INIT(&seed1, key1, k_vpc_key, "10.0.0.0/16", 20);
+    SUBNET_SEED_INIT(&seed2, key2, k_vpc_key, "11.0.0.0/16", 20);
+    workflow_neg_9<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2);
 }
 
 /// \brief Subnet workflow corner case 4
