@@ -725,16 +725,16 @@ create_meter (uint32_t num_meter, uint32_t meter_scale, pds_meter_type_t type,
 {
     sdk_ret_t ret;
     pds_meter_spec_t pds_meter;
-    pds_meter_id_t id = 0;
+    static pds_meter_id_t id = 0;
     static uint32_t meter_pfx_count = 0;
-    uint32_t num_prefixes = 1;
+    uint32_t num_prefixes = 16;
 
     memset(&pds_meter, 0, sizeof(pds_meter_spec_t));
     pds_meter.rules =
             (pds_meter_rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
                             (meter_scale * sizeof(pds_meter_rule_t)));
     pds_meter.af = ip_af;
-    pds_meter.num_rules = meter_scale;
+    pds_meter.num_rules = meter_scale/16;
     for (uint32_t i = 0; i < num_meter; i++) {
         pds_meter.key.id = id++;
         for (uint32_t rule = 0; rule < pds_meter.num_rules; rule++) {
@@ -1188,10 +1188,18 @@ create_objects (void)
         return ret;
     }
 
-    // create meter
+    // create v4 meter
     ret = create_meter(g_test_params.num_meter, g_test_params.meter_scale,
                        g_test_params.meter_type, g_test_params.pps_bps,
                        g_test_params.burst, IP_AF_IPV4);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // create v6 meter
+    ret = create_meter(g_test_params.num_meter, g_test_params.meter_scale,
+                       g_test_params.meter_type, g_test_params.pps_bps,
+                       g_test_params.burst, IP_AF_IPV6);
     if (ret != SDK_RET_OK) {
         return ret;
     }

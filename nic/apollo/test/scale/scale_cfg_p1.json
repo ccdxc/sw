@@ -57,6 +57,20 @@
             "erspan" : "4"
         },
         {
+            "kind" : "metering",
+            "count" : "64",
+            "scale" : "1023",
+            "type" : "pps",
+            "pps_bps" : "102400",
+            "burst" : "3276800"
+        },
+        {
+            "kind" : "tags",
+            "count" : "2",
+            "v4_scale" : "4095",
+            "v6_scale" : "4095"
+        },
+        {
             "kind" : "flows",
             "num_tcp": "0",
             "num_udp": "524288",

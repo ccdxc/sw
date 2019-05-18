@@ -517,6 +517,60 @@ public:
         return SDK_RET_OK;
     }
 
+    sdk_ret_t get_v4flow_stats(sdk_table_api_stats_t *api_stats,
+                               sdk_table_stats_t *table_stats) {
+        return v4table->stats_get(api_stats, table_stats);
+    }
+
+    sdk_ret_t get_v6flow_stats(sdk_table_api_stats_t *api_stats,
+                               sdk_table_stats_t *table_stats) {
+        return v6table->stats_get(api_stats, table_stats);
+    }
+
+    void print_flow_stats(sdk_table_api_stats_t *api_stats,
+                          sdk_table_stats_t *table_stats) {
+        SDK_TRACE_DEBUG(
+                "insert %u, insert_duplicate %u, insert_fail %u, "
+                "remove %u, remove_not_found %u, remove_fail %u, "
+                "update %u, update_fail %u, "
+                "get %u, get_fail %u, "
+                "reserve %u, reserver_fail %u, "
+                "release %u, release_fail %u, "
+                "entries %u, collisions %u",
+                api_stats->insert,
+                api_stats->insert_duplicate,
+                api_stats->insert_fail,
+                api_stats->remove,
+                api_stats->remove_not_found,
+                api_stats->remove_fail,
+                api_stats->update,
+                api_stats->update_fail,
+                api_stats->get,
+                api_stats->get_fail,
+                api_stats->reserve,
+                api_stats->reserve_fail,
+                api_stats->release,
+                api_stats->release_fail,
+                table_stats->entries,
+                table_stats->collisions);
+    }
+
+    sdk_ret_t dump_flow_stats(void) {
+        sdk_table_api_stats_t api_stats;
+        sdk_table_stats_t table_stats;
+
+        memset(&api_stats, 0, sizeof(sdk_table_api_stats_t));
+        memset(&table_stats, 0, sizeof(sdk_table_stats_t));
+        get_v4flow_stats(&api_stats, &table_stats);
+        print_flow_stats(&api_stats, &table_stats);
+
+        memset(&api_stats, 0, sizeof(sdk_table_api_stats_t));
+        memset(&table_stats, 0, sizeof(sdk_table_stats_t));
+        get_v6flow_stats(&api_stats, &table_stats);
+        print_flow_stats(&api_stats, &table_stats);
+        return SDK_RET_OK;
+    }
+
     sdk_ret_t create_flows_all_protos_(bool ipv6) {
         if (cfg_params.num_tcp) {
             auto ret = create_flows_one_proto_(cfg_params.num_tcp, IP_PROTO_TCP, ipv6);
@@ -573,6 +627,7 @@ public:
                 return ret;
             }
         }
+        dump_flow_stats();
         return SDK_RET_OK;
     }
 };
