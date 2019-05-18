@@ -65,7 +65,7 @@ func GetConfigProperty(name string) string {
 	return getConfigProperty("", name)
 }
 
-func getConfigProperty(confFile string, name string) string {
+func getConfigProperty(confFile, name string) string {
 	m := readCustomConfigFile(confFile)
 	log.Infof("Returning %s for property %s", m.Properties[name], name)
 	return m.Properties[name]
