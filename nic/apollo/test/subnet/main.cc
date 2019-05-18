@@ -68,111 +68,103 @@ protected:
 /// \defgroup SUBNET_TEST
 /// @{
 
-/// \brief Create and delete maximum subnets in the same batch
-/// The operation should be de-duped by framework and is a NO-OP
-/// from hardware perspective
+/// \brief Subnet WF_1
 TEST_F(subnet, subnet_workflow_1) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_util_stepper_seed_t seed = {0};
+    subnet_stepper_seed_t seed = {0};
 
     SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
-    workflow_1<subnet_util, subnet_util_stepper_seed_t>(&seed);
+    workflow_1<subnet_util, subnet_stepper_seed_t>(&seed);
 }
 
-/// \brief Create, delete and create max subnets in the same batch
-/// Create and delete should be de-deduped by framework and subsequent create
-/// should result in successful creation
+/// \brief Subnet WF_2
 TEST_F(subnet, subnet_workflow_2) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_util_stepper_seed_t seed = {0};
+    subnet_stepper_seed_t seed = {0};
 
     SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
-    workflow_2<subnet_util, subnet_util_stepper_seed_t>(&seed);
+    workflow_2<subnet_util, subnet_stepper_seed_t>(&seed);
 }
 
-/// \brief Create Set1, Set2, Delete Set1, Create Set3 in same batch
-/// The set1 subnet should be de-duped and set2 and set3 should be programmed
-/// in the hardware
+/// \brief Subnet WF_3
 TEST_F(subnet, subnet_workflow_3) {
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
-    subnet_util_stepper_seed_t seed1, seed2, seed3;
+    subnet_stepper_seed_t seed1, seed2, seed3;
 
     SUBNET_SEED_INIT(&seed1, key1, k_vpc_key, "10.0.0.0/16", 20);
     SUBNET_SEED_INIT(&seed2, key2, k_vpc_key, "30.0.0.0/16", 20);
     SUBNET_SEED_INIT(&seed3, key3, k_vpc_key, "60.0.0.0/16", 20);
-    workflow_3<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2, &seed3);
+    workflow_3<subnet_util, subnet_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create and delete max subnets in two batches
-/// The hardware should create and delete subnet correctly. Validate using reads
-/// at each batch end
+/// \brief Subnet WF_4
 TEST_F(subnet, subnet_workflow_4) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_util_stepper_seed_t seed = {};
+    subnet_stepper_seed_t seed = {};
 
     SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
-    workflow_4<subnet_util, subnet_util_stepper_seed_t>(&seed);
+    workflow_4<subnet_util, subnet_stepper_seed_t>(&seed);
 }
 
-/// \brief Create and delete mix and match of subnets in two batches
+/// \brief Subnet WF_5
 TEST_F(subnet, subnet_workflow_5) {
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
-    subnet_util_stepper_seed_t seed1, seed2, seed3;
+    subnet_stepper_seed_t seed1, seed2, seed3;
 
     SUBNET_SEED_INIT(&seed1, key1, k_vpc_key, "10.0.0.0/16", 20);
     SUBNET_SEED_INIT(&seed2, key2, k_vpc_key, "30.0.0.0/16", 20);
     SUBNET_SEED_INIT(&seed3, key3, k_vpc_key, "60.0.0.0/16", 20);
-    workflow_5<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2, &seed3);
+    workflow_5<subnet_util, subnet_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create, Update and delete maximum subnets in single batch
+/// \brief Subnet WF_6
 TEST_F(subnet, subnet_workflow_6) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_util_stepper_seed_t seed1, seed2, seed3;
+    subnet_stepper_seed_t seed1, seed2, seed3;
 
     SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
     SUBNET_SEED_INIT(&seed2, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
     SUBNET_SEED_INIT(&seed3, key, k_vpc_key, "12.0.0.0/16", k_max_subnet);
-    workflow_6<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2, &seed3);
+    workflow_6<subnet_util, subnet_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create, delete, create and update maximum subnets in single batch
+/// \brief Subnet WF_7
 TEST_F(subnet, subnet_workflow_7) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_util_stepper_seed_t seed1, seed2, seed3;
+    subnet_stepper_seed_t seed1, seed2, seed3;
 
     SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
     SUBNET_SEED_INIT(&seed2, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
     SUBNET_SEED_INIT(&seed3, key, k_vpc_key, "12.0.0.0/16", k_max_subnet);
-    workflow_7<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2, &seed3);
+    workflow_7<subnet_util, subnet_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create, Update and delete maximum subnets in single batch
+/// \brief Subnet WF_8
 TEST_F(subnet, DISABLED_subnet_workflow_8) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_util_stepper_seed_t seed1, seed2, seed3;
+    subnet_stepper_seed_t seed1, seed2, seed3;
 
     SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
     SUBNET_SEED_INIT(&seed2, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
     SUBNET_SEED_INIT(&seed3, key, k_vpc_key, "12.0.0.0/16", k_max_subnet);
-    workflow_8<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2, &seed3);
+    workflow_8<subnet_util, subnet_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create, Update and delete maximum subnets in single batch
+/// \brief Subnet WF_9
 TEST_F(subnet, subnet_workflow_9) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_util_stepper_seed_t seed1, seed2;
+    subnet_stepper_seed_t seed1, seed2;
 
     SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
     SUBNET_SEED_INIT(&seed2, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
-    workflow_9<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2);
+    workflow_9<subnet_util, subnet_stepper_seed_t>(&seed1, &seed2);
 }
 
-/// \brief Create, Update and delete maximum subnets in single batch
+/// \brief Subnet WF_10
 TEST_F(subnet, DISABLED_subnet_workflow_10) {
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70},
                      key4 = {.id = 100};
-    subnet_util_stepper_seed_t seed1, seed2, seed3, seed4, seed2A, seed3A;
+    subnet_stepper_seed_t seed1, seed2, seed3, seed4, seed2A, seed3A;
 
     SUBNET_SEED_INIT(&seed1, key1, k_vpc_key, "10.0.0.0/16", 20);
     SUBNET_SEED_INIT(&seed2, key2, k_vpc_key, "40.0.0.0/16", 20);
@@ -180,103 +172,96 @@ TEST_F(subnet, DISABLED_subnet_workflow_10) {
     SUBNET_SEED_INIT(&seed3, key3, k_vpc_key, "70.0.0.0/16", 20);
     SUBNET_SEED_INIT(&seed3A, key3, k_vpc_key, "170.0.0.0/16", 20);
     SUBNET_SEED_INIT(&seed4, key4, k_vpc_key, "100.0.0.0/16", 20);
-    workflow_10<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2,
-                                                         &seed2A, &seed3,
-                                                         &seed3A, &seed4);
+    workflow_10<subnet_util, subnet_stepper_seed_t>(
+        &seed1, &seed2, &seed2A, &seed3, &seed3A, &seed4);
 }
 
-/// \brief Create maximum number of subnets in two batches
+/// \brief Subnet WF_N_1
 TEST_F(subnet, subnet_workflow_neg_1) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_util_stepper_seed_t seed;
+    subnet_stepper_seed_t seed;
 
     SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
-    workflow_neg_1<subnet_util, subnet_util_stepper_seed_t>(&seed);
+    workflow_neg_1<subnet_util, subnet_stepper_seed_t>(&seed);
 }
 
-/// \brief Create more than maximum number of subnets supported
+/// \brief Subnet WF_N_2
 TEST_F(subnet, subnet_workflow_neg_2) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_util_stepper_seed_t seed;
+    subnet_stepper_seed_t seed;
 
     SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet + 1);
-    workflow_neg_2<subnet_util, subnet_util_stepper_seed_t>(&seed);
+    workflow_neg_2<subnet_util, subnet_stepper_seed_t>(&seed);
 }
 
-/// \brief Read and delete non existing subnets
+/// \brief Subnet WF_N_3
 TEST_F(subnet, subnet_workflow_neg_3) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_util_stepper_seed_t seed;
+    subnet_stepper_seed_t seed;
 
     SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
-    workflow_neg_3<subnet_util, subnet_util_stepper_seed_t>(&seed);
+    workflow_neg_3<subnet_util, subnet_stepper_seed_t>(&seed);
 }
 
-/// \brief Invalid batch shouldn't affect entries of previous batch
+/// \brief Subnet WF_N_4
 TEST_F(subnet, subnet_workflow_neg_4) {
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    subnet_util_stepper_seed_t seed1, seed2;
+    subnet_stepper_seed_t seed1, seed2;
 
     SUBNET_SEED_INIT(&seed1, key1, k_vpc_key, "10.0.0.0/16", 20);
     SUBNET_SEED_INIT(&seed2, key2, k_vpc_key, "40.0.0.0/16", 20);
-    workflow_neg_4<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2);
+    workflow_neg_4<subnet_util, subnet_stepper_seed_t>(&seed1, &seed2);
 }
 
-/// \brief Invalid batch shouldn't affect entries of previous batch
+/// \brief Subnet WF_N_5
 TEST_F(subnet, DISABLED_subnet_workflow_neg_5) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_util_stepper_seed_t seed1, seed1A;
+    subnet_stepper_seed_t seed1, seed1A;
 
     SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
     SUBNET_SEED_INIT(&seed1A, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
-    workflow_neg_5<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed1A);
+    workflow_neg_5<subnet_util, subnet_stepper_seed_t>(&seed1, &seed1A);
 }
 
-/// \brief Invalid batch shouldn't affect entries of previous batch
+/// \brief Subnet WF_N_6
 TEST_F(subnet, subnet_workflow_neg_6) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_util_stepper_seed_t seed;
+    subnet_stepper_seed_t seed;
 
     SUBNET_SEED_INIT(&seed, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
-    workflow_neg_6<subnet_util, subnet_util_stepper_seed_t>(&seed);
+    workflow_neg_6<subnet_util, subnet_stepper_seed_t>(&seed);
 }
 
-/// \brief Invalid batch shouldn't affect entries of previous batch
+/// \brief Subnet WF_N_7
 TEST_F(subnet, DISABLED_subnet_workflow_neg_7) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_util_stepper_seed_t seed1, seed1A;
+    subnet_stepper_seed_t seed1, seed1A;
 
     SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
     SUBNET_SEED_INIT(&seed1A, key, k_vpc_key, "11.0.0.0/16", k_max_subnet + 1);
-    workflow_neg_7<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed1A);
+    workflow_neg_7<subnet_util, subnet_stepper_seed_t>(&seed1, &seed1A);
 }
 
-/// \brief Invalid batch shouldn't affect entries of previous batch
+/// \brief Subnet WF_N_8
 TEST_F(subnet, subnet_workflow_neg_8) {
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    subnet_util_stepper_seed_t seed1, seed1A, seed2;
+    subnet_stepper_seed_t seed1, seed1A, seed2;
 
     SUBNET_SEED_INIT(&seed1, key1, k_vpc_key, "10.0.0.0/16", 20);
     SUBNET_SEED_INIT(&seed1A, key1, k_vpc_key, "11.0.0.0/16", 20);
     SUBNET_SEED_INIT(&seed2, key2, k_vpc_key, "12.0.0.0/16", 20);
-    workflow_neg_8<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed1A,
-                                                            &seed2);
+    workflow_neg_8<subnet_util, subnet_stepper_seed_t>(&seed1, &seed1A, &seed2);
 }
 
-/// \brief Invalid batch shouldn't affect entries of previous batch
+/// \brief Subnet WF_N_9
 TEST_F(subnet, subnet_workflow_neg_9) {
     pds_subnet_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    subnet_util_stepper_seed_t seed1, seed2;
+    subnet_stepper_seed_t seed1, seed2;
 
     SUBNET_SEED_INIT(&seed1, key1, k_vpc_key, "10.0.0.0/16", 20);
     SUBNET_SEED_INIT(&seed2, key2, k_vpc_key, "11.0.0.0/16", 20);
-    workflow_neg_9<subnet_util, subnet_util_stepper_seed_t>(&seed1, &seed2);
+    workflow_neg_9<subnet_util, subnet_stepper_seed_t>(&seed1, &seed2);
 }
-
-/// \brief Subnet workflow corner case 4
-///
-/// [ Create SetCorner ] - Read
-TEST_F(subnet, subnet_workflow_corner_case_4) {}
 
 /// @}
 

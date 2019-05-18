@@ -21,8 +21,8 @@ namespace api_test {
     ASSERT_TRUE(class_T::many_read(seed) == sdk::SDK_RET_OK)
 
 #define MANY_READ_FAIL(seed, exp_result)                            \
-    ASSERT_TRUE(class_T::many_read(seed,                            \
-                                   exp_result) == sdk::SDK_RET_OK)
+    ASSERT_TRUE(class_T::many_read(                                 \
+        seed, exp_result) == sdk::SDK_RET_OK)
 
 #define MANY_UPDATE(seed)                                           \
     ASSERT_TRUE(class_T::many_update(seed) == sdk::SDK_RET_OK)
@@ -135,7 +135,7 @@ inline void workflow_5(seed_T *seed1, seed_T *seed2, seed_T *seed3) {
     MANY_READ_FAIL(seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-// WF_6: [ Create SetMax - Update SetMax - Update SetMax - Delete SetMax ] 
+// WF_6: [ Create SetMax - Update SetMax - Update SetMax - Delete SetMax ]
 //       - Read
 template <typename class_T, typename seed_T>
 inline void workflow_6(seed_T *seed1, seed_T *seed2, seed_T *seed3) {
@@ -244,7 +244,7 @@ inline void workflow_10(seed_T *seed1, seed_T *seed2, seed_T *seed2A,
     MANY_READ_FAIL(seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
     MANY_READ(seed4);
 
-    //cleanup
+    // cleanup
     batch_start();
     MANY_DELETE(seed4);
     MANY_DELETE(seed3A);
@@ -304,7 +304,7 @@ inline void workflow_neg_3(seed_T *seed) {
     batch_abort();
 }
 
-// WF_N_4: [ Create Set1 ] - [ Delete Set1, Set2 ] - Read
+// WF_N_4: [ Create Set1 ] - Read - [ Delete Set1, Set2 ] - Read
 template <typename class_T, typename seed_T>
 inline void workflow_neg_4(seed_T *seed1, seed_T *seed2) {
     // trigger
@@ -334,6 +334,7 @@ inline void workflow_neg_4(seed_T *seed1, seed_T *seed2) {
 // WF_N_5: [ Create SetMax ] - Read - [ Delete SetMax - Update SetMax ] - Read
 template <typename class_T, typename seed_T>
 inline void workflow_neg_5(seed_T *seed1, seed_T *seed1A) {
+    // trigger
     batch_start();
     MANY_CREATE(seed1);
     batch_commit();
@@ -359,6 +360,7 @@ inline void workflow_neg_5(seed_T *seed1, seed_T *seed1A) {
 // WF_N_6: [ Update SetMax ] - Read
 template <typename class_T, typename seed_T>
 inline void workflow_neg_6(seed_T *seed) {
+    // trigger
     batch_start();
     MANY_UPDATE(seed);
     batch_commit_fail();
@@ -370,6 +372,7 @@ inline void workflow_neg_6(seed_T *seed) {
 // WF_N_7: [ Create SetMax ] - Read - [ Update SetMax + 1 ] - Read
 template <typename class_T, typename seed_T>
 inline void workflow_neg_7(seed_T *seed1, seed_T *seed1A) {
+    // trigger
     batch_start();
     MANY_CREATE(seed1);
     batch_commit();
@@ -394,6 +397,7 @@ inline void workflow_neg_7(seed_T *seed1, seed_T *seed1A) {
 // WF_N_8: [ Create Set1 ] - Read - [ Update Set1 - Update Set2 ] - Read
 template <typename class_T, typename seed_T>
 inline void workflow_neg_8(seed_T *seed1, seed_T *seed1A, seed_T *seed2) {
+    // trigger
     batch_start();
     MANY_CREATE(seed1);
     batch_commit();
@@ -419,6 +423,7 @@ inline void workflow_neg_8(seed_T *seed1, seed_T *seed1A, seed_T *seed2) {
 // WF_N_9: [ Create Set1 ] - Read - [ Delete Set1 - Update Set2 ] - Read
 template <typename class_T, typename seed_T>
 inline void workflow_neg_9(seed_T *seed1, seed_T *seed2) {
+    // trigger
     batch_start();
     MANY_CREATE(seed1);
     batch_commit();
@@ -443,4 +448,4 @@ inline void workflow_neg_9(seed_T *seed1, seed_T *seed2) {
 
 }    // end namespace
 
-#endif    // __TEST_UTILSWORKFLOW_HPP__
+#endif    // __TEST_UTILS_WORKFLOW_HPP__

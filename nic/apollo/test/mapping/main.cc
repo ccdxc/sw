@@ -94,7 +94,7 @@ protected:
         ip_prefix_t ip_pfx, rt_pfx, nr_pfx;
         ip_addr_t ipaddr, rt_addr, nr_addr;
         vpc_stepper_seed_t vpc_seed;
-        subnet_util_stepper_seed_t subnet_seed;
+        subnet_stepper_seed_t subnet_seed;
         tep_stepper_seed_t tep_seed = {};
 
         vpc_key.id = api_test::g_vpc_id;

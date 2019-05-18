@@ -29,7 +29,7 @@ subnet_util::subnet_util(pds_vpc_id_t vpc_id, pds_subnet_id_t id,
     this->cidr_str = cidr_str;
 }
 
-subnet_util::subnet_util(subnet_util_stepper_seed_t *seed) {
+subnet_util::subnet_util(subnet_stepper_seed_t *seed) {
     __init();
     this->vpc.id = seed->vpc.id;
     this->id = seed->key.id;
@@ -179,7 +179,7 @@ subnet_util::del() {
 }
 
 static inline void
-subnet_util_stepper_seed_increment (subnet_util_stepper_seed_t *seed, int width)
+subnet_stepper_seed_increment (subnet_stepper_seed_t *seed, int width)
 {
     ip_addr_t ipaddr = {0};
 
@@ -195,7 +195,7 @@ subnet_util_stepper_seed_increment (subnet_util_stepper_seed_t *seed, int width)
 }
 
 sdk::sdk_ret_t
-subnet_util::stepper_seed_init(subnet_util_stepper_seed_t *seed,
+subnet_util::stepper_seed_init(subnet_stepper_seed_t *seed,
                                pds_subnet_key_t start_key,
                                pds_vpc_key_t vpc_key, std::string start_pfxstr,
                                int num_subnets)
@@ -229,11 +229,11 @@ subnet_util_pfx_update(subnet_util obj)
 }
 
 static inline sdk::sdk_ret_t
-subnet_util_object_stepper (subnet_util_stepper_seed_t *init_seed,
+subnet_util_object_stepper (subnet_stepper_seed_t *init_seed,
                             utils_op_t op, sdk_ret_t expected_result)
 {
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
-    subnet_util_stepper_seed_t seed = {0};
+    subnet_stepper_seed_t seed = {0};
     pds_subnet_info_t info = {};
     uint32_t start_key = init_seed->key.id;
     uint32_t width = 1;
@@ -264,30 +264,30 @@ subnet_util_object_stepper (subnet_util_stepper_seed_t *init_seed,
         if (rv != expected_result) {
             return sdk::SDK_RET_ERR;
         }
-        subnet_util_stepper_seed_increment(&seed, width);
+        subnet_stepper_seed_increment(&seed, width);
     }
 
     return sdk::SDK_RET_OK;
 }
 
 sdk::sdk_ret_t
-subnet_util::many_create(subnet_util_stepper_seed_t *seed) {
+subnet_util::many_create(subnet_stepper_seed_t *seed) {
     return (subnet_util_object_stepper(seed, OP_MANY_CREATE, sdk::SDK_RET_OK));
 }
 
 sdk::sdk_ret_t
-subnet_util::many_read(subnet_util_stepper_seed_t *seed,
+subnet_util::many_read(subnet_stepper_seed_t *seed,
                        sdk::sdk_ret_t expected_result) {
     return (subnet_util_object_stepper(seed, OP_MANY_READ, expected_result));
 }
 
 sdk::sdk_ret_t
-subnet_util::many_update(subnet_util_stepper_seed_t *seed) {
+subnet_util::many_update(subnet_stepper_seed_t *seed) {
     return (subnet_util_object_stepper(seed, OP_MANY_UPDATE, sdk::SDK_RET_OK));
 }
 
 sdk::sdk_ret_t
-subnet_util::many_delete(subnet_util_stepper_seed_t *seed) {
+subnet_util::many_delete(subnet_stepper_seed_t *seed) {
     return (subnet_util_object_stepper(seed, OP_MANY_DELETE, sdk::SDK_RET_OK));
 }
 
