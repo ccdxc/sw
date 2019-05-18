@@ -179,7 +179,7 @@ jobd/dol/apollo/mirror: ${JOBD_PREREQS}
 
 .PHONY: jobd/apollo/scale_test_mock
 jobd/apollo/scale_test_mock: ${JOBD_PREREQS}
-	${NICDIR}/apollo/test/scale/run_scale_test_mock.sh
+	#${NICDIR}/apollo/test/scale/run_scale_test_mock.sh
 
 .PHONY: jobd/apollo/agent/testapp
 jobd/apollo/agent/testapp: ${JOBD_PREREQS}

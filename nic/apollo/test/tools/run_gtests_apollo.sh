@@ -26,9 +26,9 @@ trap finish EXIT
 export PATH=${PATH}:${BUILD_DIR}/bin
 
 # gtests
-echo "Running scale test"
-$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" > apollo_scale_test.log.txt
-[[ $? -ne 0 ]] && echo "apollo_scale_test failed!" && exit 1
+#echo "Running scale test"
+#$GDB apollo_scale_test -c hal.json -i ${NICDIR}/apollo/test/scale/scale_cfg.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_scale_test.xml" > apollo_scale_test.log.txt
+#[[ $? -ne 0 ]] && echo "apollo_scale_test failed!" && exit 1
 echo "Running devic test"
 $GDB apollo_device_test -c hal.json --gtest_output="xml:${GEN_TEST_RESULTS_DIR}/apollo_device_test.xml" > apollo_device_test.log.txt
 [[ $? -ne 0 ]] && echo "apollo_device_test failed!" && exit 1

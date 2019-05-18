@@ -13,6 +13,8 @@
 #include <gtest/gtest.h>
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/utils/batch.hpp"
+#include "nic/apollo/test/utils/workflow.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
 
 using std::cerr;
@@ -54,650 +56,201 @@ protected:
 /// \defgroup VPC_TEST
 /// @{
 
-/// \brief Create and delete VPCs in the same batch
-/// The operation should be de-duped by framework and is
-/// a NO-OP from hardware perspective
-/// [ Create SetMax, Delete SetMax ] - Read
+/// \brief VPC WF_1
 TEST_F(vpc, vpc_workflow_1) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key = {.id = 1};
     vpc_stepper_seed_t seed;
-    std::string start_pfx = "10.0.0.0/16";
 
-    // setup
-    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, start_pfx, k_max_vpc);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed);
-    VPC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
+    workflow_1<vpc_util, vpc_stepper_seed_t>(&seed);
 }
 
-/// \brief Create, delete and create max VPCs in the same batch
-/// Create and delete should be de-deduped by framework and subsequent create
-/// should result in successful creation
-/// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
+/// \brief VPC WF_2
 TEST_F(vpc, vpc_workflow_2) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key = {.id = 1};
-    std::string start_pfx = "10.0.0.0/16";
     vpc_stepper_seed_t seed;
 
-    // setup
-    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, start_pfx, k_max_vpc);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed);
-    VPC_MANY_DELETE(&seed);
-    VPC_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VPC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
+    workflow_2<vpc_util, vpc_stepper_seed_t>(&seed);
 }
 
-/// \brief Create Set1, Set2, Delete Set1, Create Set3 in same batch
-/// The set1 vpc should be de-duped and set2 and set3 should be programmed
-/// in the hardware
-/// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
+/// \brief VPC WF_3
 TEST_F(vpc, vpc_workflow_3) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
-    std::string start_pfx1 = "10.0.0.0/16";
-    std::string start_pfx2 = "30.0.0.0/16";
-    std::string start_pfx3 = "60.0.0.0/16";
-    uint32_t num_vpcs = 20;
     vpc_stepper_seed_t seed1, seed2, seed3;
 
-    // setup
-    VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, start_pfx1, num_vpcs);
-    VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, start_pfx2, num_vpcs);
-    VPC_SEED_INIT(&seed3, key3, PDS_VPC_TYPE_TENANT, start_pfx3, num_vpcs);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed1);
-    VPC_MANY_CREATE(&seed2);
-    VPC_MANY_DELETE(&seed1);
-    VPC_MANY_CREATE(&seed3);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VPC_MANY_READ(&seed2, sdk::SDK_RET_OK);
-    VPC_MANY_READ(&seed3, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VPC_MANY_DELETE(&seed2);
-    VPC_MANY_DELETE(&seed3);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VPC_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", 20);
+    VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, "30.0.0.0/16", 20);
+    VPC_SEED_INIT(&seed3, key3, PDS_VPC_TYPE_TENANT, "60.0.0.0/16", 20);
+    workflow_3<vpc_util, vpc_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create and delete VPC in two batches
-/// The hardware should create and delete VPC correctly. Validate using reads
-/// at each batch end
-/// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
+/// \brief VPC WF_4
 TEST_F(vpc, vpc_workflow_4) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key = {.id = 1};
-    std::string start_pfx = "10.0.0.0/16";
     vpc_stepper_seed_t seed;
 
-    // setup
-    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, start_pfx, k_max_vpc);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VPC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
+    workflow_4<vpc_util, vpc_stepper_seed_t>(&seed);
 }
 
-/// \brief Create and delete mix and match of VPC in two batches
-/// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
+/// \brief VPC WF_5
 TEST_F(vpc, vpc_workflow_5) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
-    std::string start_pfx1 = "10.0.0.0/16";
-    std::string start_pfx2 = "40.0.0.0/16";
-    std::string start_pfx3 = "70.0.0.0/16";
-    uint32_t num_vpcs = 20;
     vpc_stepper_seed_t seed1, seed2, seed3;
 
-    // setup
-    VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, start_pfx1, num_vpcs);
-    VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, start_pfx2, num_vpcs);
-    VPC_SEED_INIT(&seed3, key3, PDS_VPC_TYPE_TENANT, start_pfx3, num_vpcs);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed1);
-    VPC_MANY_CREATE(&seed2);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-    VPC_MANY_READ(&seed2, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VPC_MANY_DELETE(&seed1);
-    VPC_MANY_CREATE(&seed3);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VPC_MANY_READ(&seed2, sdk::SDK_RET_OK);
-    VPC_MANY_READ(&seed3, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VPC_MANY_DELETE(&seed2);
-    VPC_MANY_DELETE(&seed3);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VPC_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", 20);
+    VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, "40.0.0.0/16", 20);
+    VPC_SEED_INIT(&seed3, key3, PDS_VPC_TYPE_TENANT, "70.0.0.0/16", 20);
+    workflow_5<vpc_util, vpc_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create, update and delete maximum number of vpcs
-/// [ Create SetMax, Update SetMax - Update SetMax - Delete SetMax ] - Read
+/// \brief VPC WF_6
 TEST_F(vpc, vpc_workflow_6) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key = {.id = 1};
-    std::string start_pfx = "10.0.0.0/16";
-    vpc_stepper_seed_t seed;
+    vpc_stepper_seed_t seed1, seed2, seed3;
 
-    // setup
-    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, start_pfx, k_max_vpc);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed);
-    VPC_MANY_UPDATE(&seed);
-    VPC_MANY_UPDATE(&seed);
-    VPC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
+    VPC_SEED_INIT(&seed1, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
+    VPC_SEED_INIT(&seed2, key, PDS_VPC_TYPE_TENANT, "11.0.0.0/16", k_max_vpc);
+    VPC_SEED_INIT(&seed3, key, PDS_VPC_TYPE_TENANT, "12.0.0.0/16", k_max_vpc);
+    workflow_6<vpc_util, vpc_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create, update and delete maximum number of vpcs
-/// [ Create SetMax - Delete SetMax - Create SetMax - Update SetMax -
-///   Update SetMax] - Read
+/// \brief VPC WF_7
 TEST_F(vpc, vpc_workflow_7) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key = {.id = 1};
-    std::string start_pfx1 = "10.0.0.0/16";
-    std::string start_pfx2 = "11.0.0.0/16";
-    std::string start_pfx3 = "12.0.0.0/16";
     vpc_stepper_seed_t seed1, seed2, seed3;
 
-    // setup
-    VPC_SEED_INIT(&seed1, key, PDS_VPC_TYPE_TENANT, start_pfx1, k_max_vpc);
-    VPC_SEED_INIT(&seed2, key, PDS_VPC_TYPE_TENANT, start_pfx2, k_max_vpc);
-    VPC_SEED_INIT(&seed3, key, PDS_VPC_TYPE_TENANT, start_pfx3, k_max_vpc);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed1);
-    VPC_MANY_DELETE(&seed1);
-    VPC_MANY_CREATE(&seed1);
-    VPC_MANY_UPDATE(&seed2);
-    VPC_MANY_UPDATE(&seed3);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed3, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VPC_MANY_DELETE(&seed3);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VPC_SEED_INIT(&seed1, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
+    VPC_SEED_INIT(&seed2, key, PDS_VPC_TYPE_TENANT, "11.0.0.0/16", k_max_vpc);
+    VPC_SEED_INIT(&seed3, key, PDS_VPC_TYPE_TENANT, "12.0.0.0/16", k_max_vpc);
+    workflow_7<vpc_util, vpc_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create, update and delete maximum number of vpcs
-/// [ Create SetMax, Update SetMax ] - Read - [ Update SetMax ] - Read -
-///   [ Delete SetMax ] - Read
+/// \brief VPC WF_8
 TEST_F(vpc, DISABLED_vpc_workflow_8) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key = {.id = 1};
-    std::string start_pfx1 = "10.0.0.0/16";
-    std::string start_pfx2 = "11.0.0.0/16";
-    std::string start_pfx3 = "12.0.0.0/16";
     vpc_stepper_seed_t seed1, seed2, seed3;
 
-    // setup
-    VPC_SEED_INIT(&seed1, key, PDS_VPC_TYPE_TENANT, start_pfx1, k_max_vpc);
-    VPC_SEED_INIT(&seed2, key, PDS_VPC_TYPE_TENANT, start_pfx2, k_max_vpc);
-    VPC_SEED_INIT(&seed3, key, PDS_VPC_TYPE_TENANT, start_pfx3, k_max_vpc);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed1);
-    VPC_MANY_UPDATE(&seed2);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed2, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VPC_MANY_UPDATE(&seed3);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed3, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VPC_MANY_DELETE(&seed3);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    // cleanup
+    VPC_SEED_INIT(&seed1, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
+    VPC_SEED_INIT(&seed2, key, PDS_VPC_TYPE_TENANT, "11.0.0.0/16", k_max_vpc);
+    VPC_SEED_INIT(&seed3, key, PDS_VPC_TYPE_TENANT, "12.0.0.0/16", k_max_vpc);
+    workflow_8<vpc_util, vpc_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create, update and delete maximum number of vpcs
-/// [ Create SetMax ] - Read - [ Update SetMax Delete SetMax ] - Read
+/// \brief VPC WF_9
 TEST_F(vpc, vpc_workflow_9) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key = {.id = 1};
-    std::string start_pfx1 = "10.0.0.0/16";
-    std::string start_pfx2 = "11.0.0.0/16";
     vpc_stepper_seed_t seed1, seed2;
 
-    // setup
-    VPC_SEED_INIT(&seed1, key, PDS_VPC_TYPE_TENANT, start_pfx1, k_max_vpc);
-    VPC_SEED_INIT(&seed2, key, PDS_VPC_TYPE_TENANT, start_pfx2, k_max_vpc);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed1);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VPC_MANY_UPDATE(&seed2);
-    VPC_MANY_DELETE(&seed2);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
+    VPC_SEED_INIT(&seed1, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
+    VPC_SEED_INIT(&seed2, key, PDS_VPC_TYPE_TENANT, "11.0.0.0/16", k_max_vpc);
+    workflow_9<vpc_util, vpc_stepper_seed_t>(&seed1, &seed2);
 }
 
-/// \brief Create, update and delete maximum number of vpcs
-/// [ Create Set1, Set2 Set3 - Delete Set1 - Update Set2 ] - Read -
-/// [ Update Set3 - Delete Set2 - Create Set4] - Read
+/// \brief VPC WF_10
 TEST_F(vpc, DISABLED_vpc_workflow_10) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70},
-                  key4 = {.id = 100};
-    std::string start_pfx1 = "10.0.0.0/16";
-    std::string start_pfx2 = "11.0.0.0/16";
-    std::string start_pfx2_new = "12.0.0.0/16";
-    std::string start_pfx3 = "13.0.0.0/16";
-    std::string start_pfx3_new = "14.0.0.0/16";
-    std::string start_pfx4 = "15.0.0.0/16";
-    vpc_stepper_seed_t seed1, seed2, seed3, seed4, seed2_new, seed3_new;
-    uint32_t num_vpcs = 20;
+                     key4 = {.id = 100};
+    vpc_stepper_seed_t seed1, seed2, seed3, seed4, seed2A, seed3A;
 
-    // setup
-    VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, start_pfx1, num_vpcs);
-    VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, start_pfx2, num_vpcs);
-    VPC_SEED_INIT(&seed2_new, key2, PDS_VPC_TYPE_TENANT, start_pfx2, num_vpcs);
-    VPC_SEED_INIT(&seed3, key3, PDS_VPC_TYPE_TENANT, start_pfx3, num_vpcs);
-    VPC_SEED_INIT(&seed3_new, key3, PDS_VPC_TYPE_TENANT, start_pfx3, num_vpcs);
-    VPC_SEED_INIT(&seed4, key4, PDS_VPC_TYPE_TENANT, start_pfx4, num_vpcs);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed1);
-    VPC_MANY_CREATE(&seed2);
-    VPC_MANY_CREATE(&seed3);
-    VPC_MANY_DELETE(&seed1);
-    VPC_MANY_UPDATE(&seed2_new);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VPC_MANY_READ(&seed2, sdk::SDK_RET_OK);
-    VPC_MANY_READ(&seed2_new, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VPC_MANY_UPDATE(&seed3_new);
-    VPC_MANY_DELETE(&seed2);
-    VPC_MANY_CREATE(&seed4);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed3_new, sdk::SDK_RET_OK);
-    VPC_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VPC_MANY_READ(&seed4, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VPC_MANY_DELETE(&seed3);
-    VPC_MANY_DELETE(&seed4);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VPC_MANY_READ(&seed4, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", 20);
+    VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, "11.0.0.0/16", 20);
+    VPC_SEED_INIT(&seed2A, key2, PDS_VPC_TYPE_TENANT, "12.0.0.0/16", 20);
+    VPC_SEED_INIT(&seed3, key3, PDS_VPC_TYPE_TENANT, "13.0.0.0/16", 20);
+    VPC_SEED_INIT(&seed3A, key3, PDS_VPC_TYPE_TENANT, "14.0.0.0/16", 20);
+    VPC_SEED_INIT(&seed4, key4, PDS_VPC_TYPE_TENANT, "15.0.0.0/16", 20);
+    workflow_10<vpc_util, vpc_stepper_seed_t>(
+        &seed1, &seed2, &seed2A, &seed3, &seed3A, &seed4);
 }
 
-/// \brief Create maximum number of VPCs in two batches
-/// [ Create SetMax ] - [ Create SetMax ] - Read
+/// \brief VPC WF_N_1
 TEST_F(vpc, vpc_workflow_neg_1) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key = {.id = 1};
-    std::string start_pfx = "10.0.0.0/16";
     vpc_stepper_seed_t seed;
 
-    // setup
-    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, start_pfx, k_max_vpc);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VPC_MANY_CREATE(&seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VPC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
+    workflow_neg_1<vpc_util, vpc_stepper_seed_t>(&seed);
 }
 
-/// \brief Create more than maximum number of VPCs supported.
-/// [ Create SetMax+1] - Read
+/// \brief VPC WF_N_2
 TEST_F(vpc, vpc_workflow_neg_2) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key = {.id = 1};
-    std::string start_pfx = "10.0.0.0/16";
     vpc_stepper_seed_t seed;
 
-    // setup
-    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, start_pfx, k_max_vpc + 1);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc+1);
+    workflow_neg_2<vpc_util, vpc_stepper_seed_t>(&seed);
 }
 
-/// \brief Read of a non-existing VPC should return entry not found.
-/// Read NonEx
-TEST_F(vpc, vpc_workflow_neg_3a) {
+/// \brief VPC WF_N_3
+TEST_F(vpc, vpc_workflow_neg_3) {
     pds_vpc_key_t key = {.id = 1};
     vpc_stepper_seed_t seed;
 
-    // setup
     VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, "0.0.0.0/0", k_max_vpc);
-
-    // trigger
-    VPC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    workflow_neg_3<vpc_util, vpc_stepper_seed_t>(&seed);
 }
 
-/// \brief Deletion of a non-existing VPCs should fail.
-/// [Delete NonEx]
-TEST_F(vpc, vpc_workflow_neg_3b) {
-    pds_batch_params_t batch_params = {0};
-    pds_vpc_key_t key = {.id = 1};
-    vpc_stepper_seed_t seed;
-
-    // setup
-    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, "0.0.0.0/0", k_max_vpc);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_DELETE(&seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-}
-
-/// \brief Invalid batch shouldn't affect entries of previous batch
-/// [ Create Set1 ] - [Delete Set1, Set2 ] - Read
+/// \brief VPC WF_N_4
 TEST_F(vpc, vpc_workflow_neg_4) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    std::string start_pfx1 = "10.0.0.0/16";
-    std::string start_pfx2 = "40.0.0.0/16";
-    uint32_t num_vpcs = 20;
     vpc_stepper_seed_t seed1, seed2;
 
-    // setup
-    VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, start_pfx1, k_max_vpc);
-    VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, start_pfx2, k_max_vpc);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed1);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VPC_MANY_DELETE(&seed1);
-    VPC_MANY_DELETE(&seed2);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VPC_MANY_DELETE(&seed1);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", 20);
+    VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, "40.0.0.0/16", 20);
+    workflow_neg_4<vpc_util, vpc_stepper_seed_t>(&seed1, &seed2);
 }
 
-/// \brief Create maximum number of policies. Delete and update in the next
-/// batch.
-/// [ Create SetMax ] - Read - [ Delete SetMax - Update SetMax ] - Read
+/// \brief VPC WF_N_5
 TEST_F(vpc, DISABLED_vpc_workflow_neg_5) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key = {.id = 1};
-    std::string start_pfx = "10.0.0.0/16";
-    std::string start_pfx_new = "11.0.0.0/16";
-    vpc_stepper_seed_t seed, seed_new;
+    vpc_stepper_seed_t seed1, seed1A;
 
-    // setup
-    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, start_pfx, k_max_vpc);
-    VPC_SEED_INIT(&seed_new, key, PDS_VPC_TYPE_TENANT, start_pfx_new,
-                  k_max_vpc);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VPC_MANY_DELETE(&seed);
-    VPC_MANY_UPDATE(&seed_new);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VPC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VPC_SEED_INIT(&seed1, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
+    VPC_SEED_INIT(&seed1A, key, PDS_VPC_TYPE_TENANT, "11.0.0.0/16", k_max_vpc);
+    workflow_neg_5<vpc_util, vpc_stepper_seed_t>(&seed1, &seed1A);
 }
 
-/// \brief Create maximum number of policies. Delete and update in the next
-/// batch.
-/// [ Update SetMax ] - Read
+/// \brief VPC WF_N_6
 TEST_F(vpc, vpc_workflow_neg_6) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key = {.id = 1};
-    std::string start_pfx = "10.0.0.0/16";
     vpc_stepper_seed_t seed;
 
-    // setup
-    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, start_pfx, k_max_vpc);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_UPDATE(&seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
+    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
+    workflow_neg_6<vpc_util, vpc_stepper_seed_t>(&seed);
 }
 
-/// \brief Create maximum number of policies. Delete and update in the next
-/// batch.
-/// [ Create SetMax ] - Read - [ Update SetMax + 1 ] - Read
+/// \brief VPC WF_N_7
 TEST_F(vpc, vpc_workflow_neg_7) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key = {.id = 1};
-    std::string start_pfx = "10.0.0.0/16";
-    std::string start_pfx_new = "11.0.0.0/16";
-    vpc_stepper_seed_t seed, seed_new;
+    vpc_stepper_seed_t seed1, seed1A;
 
-    // setup
-    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, start_pfx, k_max_vpc);
-    VPC_SEED_INIT(&seed_new, key, PDS_VPC_TYPE_TENANT, start_pfx_new,
+    VPC_SEED_INIT(&seed1, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
+    VPC_SEED_INIT(&seed1A, key, PDS_VPC_TYPE_TENANT, "11.0.0.0/16",
                   k_max_vpc + 1);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VPC_MANY_UPDATE(&seed_new);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    // cleanup
-    BATCH_START();
-    VPC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    workflow_neg_7<vpc_util, vpc_stepper_seed_t>(&seed1, &seed1A);
 }
 
-/// \brief Create maximum number of policies. Delete and update in the next
-/// batch.
-/// [ Create Set1 ] - Read - [ Update Set1 - Update Set2 ] - Read
+/// \brief VPC WF_N_8
 TEST_F(vpc, vpc_workflow_neg_8) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    std::string start_pfx1 = "10.0.0.0/16";
-    std::string start_pfx2 = "11.0.0.0/16";
-    std::string start_pfx1_new = "12.0.0.0/16";
-    vpc_stepper_seed_t seed1, seed2, seed1_new;
-    uint32_t num_vpcs = 20;
+    vpc_stepper_seed_t seed1, seed1A, seed2;
 
-    // setup
-    VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, start_pfx1, num_vpcs);
-    VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, start_pfx2, num_vpcs);
-    VPC_SEED_INIT(&seed1_new, key1, PDS_VPC_TYPE_TENANT, start_pfx1_new,
-                  num_vpcs);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed1);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VPC_MANY_UPDATE(&seed1_new);
-    VPC_MANY_UPDATE(&seed2);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VPC_MANY_DELETE(&seed1);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", 20);
+    VPC_SEED_INIT(&seed1A, key1, PDS_VPC_TYPE_TENANT, "11.0.0.0/16", 20);
+    VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, "12.0.0.0/16", 20);
+    workflow_neg_8<vpc_util, vpc_stepper_seed_t>(&seed1, &seed1A, &seed2);
 }
 
-/// \brief Create maximum number of policies. Delete and update in the next
-/// batch.
-/// [ Create Set1 ] - Read - [ Delete Set1 - Update Set2 ] - Read
+/// \brief VPC WF_N_9
 TEST_F(vpc, vpc_workflow_neg_9) {
-    pds_batch_params_t batch_params = {0};
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40};
-    std::string start_pfx1 = "10.0.0.0/16";
-    std::string start_pfx2 = "11.0.0.0/16";
     vpc_stepper_seed_t seed1, seed2;
-    uint32_t num_vpcs = 20;
 
-    // setup
-    VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, start_pfx1, num_vpcs);
-    VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, start_pfx2, num_vpcs);
-
-    // trigger
-    BATCH_START();
-    VPC_MANY_CREATE(&seed1);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VPC_MANY_DELETE(&seed1);
-    VPC_MANY_UPDATE(&seed2);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VPC_MANY_DELETE(&seed1);
-    BATCH_COMMIT();
-
-    VPC_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", 20);
+    VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, "11.0.0.0/16", 20);
+    workflow_neg_9<vpc_util, vpc_stepper_seed_t>(&seed1, &seed2);
 }
-
-/// \brief Create a VPC with an id which is not within the range.
-TEST_F(vpc, vpc_workflow_corner_case) {}
 
 /// @}
 
