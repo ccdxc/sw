@@ -126,7 +126,7 @@ meter_get (pds_meter_key_t *key, pds_meter_info_t *info)
     if (spec == NULL) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-    memcpy(&info->spec, spec, sizeof(pds_meter_spec_t));
+    info->spec = *spec;
     if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_meter_read(key, info);
     } else {

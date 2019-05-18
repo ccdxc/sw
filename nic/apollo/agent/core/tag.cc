@@ -126,7 +126,7 @@ tag_get (pds_tag_key_t *key, pds_tag_info_t *info)
     if (spec == NULL) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-    memcpy(&info->spec, spec, sizeof(pds_tag_spec_t));
+    info->spec = *spec;
     if (!agent_state::state()->pds_mock_mode()) {
         ret = pds_tag_read(key, info);
     } else {
