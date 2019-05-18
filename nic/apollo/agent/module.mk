@@ -4,7 +4,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = agent.bin
 MODULE_PIPELINE = apollo
 MODULE_INCS     = ${MODULE_GEN_DIR}
-MODULE_SOLIBS   = pdsproto trace svc pdsapi memhash ftl pdsagentcore \
+MODULE_SOLIBS   = pdsproto trace svc pdsapi memhash ftl ftlv4 pdsagentcore \
                   ${NIC_APOLLO_NICMGR_LIBS}
 
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \

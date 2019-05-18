@@ -48,7 +48,7 @@ copy_files() {
         cp -r /usr/local/go $DST/
     fi
 
-    miscd='nic/upgrade_manager/meta nic/utils/trace nic/utils/ftl '
+    miscd='nic/upgrade_manager/meta nic/utils/trace nic/utils/ftl nic/utils/ftlv4 '
 
     pack_debug='nic/debug_cli nic/tools/p4ctl '
 

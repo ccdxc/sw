@@ -17,6 +17,7 @@
 #include "include/sdk/ip.hpp"
 #include "include/sdk/table.hpp"
 #include "nic/utils/ftl/ftl.hpp"
+#include "nic/utils/ftlv4/ftlv4.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -25,6 +26,7 @@
 #include "gen/p4gen/apollo/include/p4pd.h"
 
 using sdk::table::ftl;
+using sdk::table::ftlv4;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
@@ -104,7 +106,8 @@ typedef struct cfg_params_s {
 
 class flow_test {
 private:
-    ftl *table;
+    ftl *v6table;
+    ftlv4 *v4table;
     vpc_epdb_t epdb[MAX_VPCS];
     uint32_t session_index;
     uint32_t hash;
@@ -114,7 +117,8 @@ private:
     uint16_t dport;
     sdk_table_api_params_t params;
     sdk_table_factory_params_t factory_params;
-    ftl_entry_t entry;
+    ftl_entry_t v6entry;
+    ftlv4_entry_t v4entry;
     vpc_ep_pair_t ep_pairs[MAX_EP_PAIRS_PER_VPC];
     cfg_params_t cfg_params;
     bool with_hash;
@@ -188,20 +192,30 @@ private:
     }
 
 
-    sdk_ret_t insert_(ftl_entry_t *entry) {
+    sdk_ret_t insert_(ftl_entry_t *v6entry) {
         memset(&params, 0, sizeof(params));
-        params.entry = entry;
+        params.entry = v6entry;
         if (with_hash) {
             params.hash_valid = true;
             params.hash_32b = hash++;
         }
-        return table->insert(&params);
+        return v6table->insert(&params);
+    }
+
+    sdk_ret_t insert_(ftlv4_entry_t *v4entry) {
+        memset(&params, 0, sizeof(params));
+        params.entry = v4entry;
+        if (with_hash) {
+            params.hash_valid = true;
+            params.hash_32b = hash++;
+        }
+        return v4table->insert(&params);
     }
 
     sdk_ret_t remove_(ftl_entry_t *key) {
         sdk_table_api_params_t params = { 0 };
         params.key = key;
-        return table->remove(&params);
+        return v6table->remove(&params);
     }
 
     void add_local_ep_(uint32_t vpc_id, uint32_t ipaddr) {
@@ -268,14 +282,22 @@ private:
 public:
     flow_test(bool w = false) {
         memset(&factory_params, 0, sizeof(factory_params));
-
         factory_params.table_id = P4TBL_ID_FLOW;
-        factory_params.num_hints = 5;
+        factory_params.num_hints = 4;
         factory_params.max_recircs = 8;
         factory_params.key2str = flow_key2str;
         factory_params.appdata2str = flow_appdata2str;
-        table = ftl::factory(&factory_params);
-        assert(table);
+        v6table = ftl::factory(&factory_params);
+        assert(v6table);
+
+        memset(&factory_params, 0, sizeof(factory_params));
+        factory_params.table_id = P4TBL_ID_IPV4_FLOW;
+        factory_params.num_hints = 2;
+        factory_params.max_recircs = 8;
+        factory_params.key2str = NULL;
+        factory_params.appdata2str = NULL;
+        v4table = ftlv4::factory(&factory_params);
+        assert(v4table);
 
         memset(epdb, 0, sizeof(epdb));
         memset(&cfg_params, 0, sizeof(cfg_params_t));
@@ -325,7 +347,8 @@ public:
     }
 
     ~flow_test() {
-        ftl::destroy(table);
+        ftl::destroy(v6table);
+        ftlv4::destroy(v4table);
     }
 
     void add_local_ep(uint32_t vpc_id, ip_addr_t ipaddr) {
@@ -380,20 +403,48 @@ public:
         return;
     }
 
+    sdk_ret_t create_flow(uint32_t vpc, uint8_t *sip, uint8_t *dip,
+                          uint8_t proto, uint16_t sport, uint16_t dport) {
+        memset(&v6entry, 0, sizeof(ftl_entry_t));
+        v6entry.ktype = 2;
+        v6entry.local_vnic_tag = vpc - 1;
+        v6entry.sport = sport;
+        v6entry.dport = dport;
+        v6entry.proto = proto;
+        sdk::lib::memrev(v6entry.src, sip, sizeof(ipv6_addr_t));
+        sdk::lib::memrev(v6entry.dst, dip, sizeof(ipv6_addr_t));
+        v6entry.session_index = session_index++;
+        auto ret = insert_(&v6entry);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        return SDK_RET_OK;
+    }
+
+    sdk_ret_t create_flow(uint32_t vpc, uint32_t sip, uint32_t dip,
+                          uint8_t proto, uint16_t sport, uint16_t dport) {
+        memset(&v4entry, 0, sizeof(ftlv4_entry_t));
+        v4entry.local_vnic_tag = vpc - 1;
+        v4entry.sport = sport;
+        v4entry.dport = dport;
+        v4entry.proto = proto;
+        v4entry.src = sip;
+        v4entry.dst = dip;
+        v4entry.session_index = session_index++;
+        auto ret = insert_(&v4entry);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        return SDK_RET_OK;
+    }
+
+
     sdk_ret_t create_flows_one_proto_(uint32_t count, uint8_t proto, bool ipv6) {
         uint16_t local_port = 0, remote_port = 0;
-        sdk_ret_t ret = SDK_RET_OK;
         uint32_t i = 0;
         uint16_t fwd_sport = 0, fwd_dport = 0;
         uint16_t rev_sport = 0, rev_dport = 0;
         uint32_t nflows = 0;
-
-        memset(&entry, 0, sizeof(ftl_entry_t));
-        if (ipv6) {
-            entry.ktype = 2;
-        } else {
-            entry.ktype = 1;
-        }
 
         for (uint32_t vpc = 1; vpc < MAX_VPCS; vpc++) {
             generate_ep_pairs(vpc, ipv6);
@@ -402,7 +453,6 @@ public:
                     for (auto rp = cfg_params.dport_lo; rp <= cfg_params.dport_hi; rp++) {
                         local_port = lp;
                         remote_port = rp;
-
                         if (ep_pairs[i].valid == 0) {
                             break;
                         }
@@ -415,22 +465,19 @@ public:
                             fwd_dport = rev_sport = remote_port;
                         }
 
-                        // Local to Remote Flow
-                        entry.local_vnic_tag = vpc - 1;
-                        entry.sport = fwd_sport;
-                        entry.dport = fwd_dport;
-                        entry.proto = proto;
                         if (ipv6) {
-                            sdk::lib::memrev(entry.src, ep_pairs[i].lip6.addr8, sizeof(ipv6_addr_t));
-                            sdk::lib::memrev(entry.dst, ep_pairs[i].rip6.addr8, sizeof(ipv6_addr_t));
+                            auto ret = create_flow(vpc, ep_pairs[i].lip6.addr8,
+                                                   ep_pairs[i].rip6.addr8, proto,
+                                                   fwd_sport, fwd_dport);
+                            if (ret != SDK_RET_OK) {
+                                return ret;
+                            }
                         } else {
-                            memcpy(&(entry.src), &ep_pairs[i].lip, sizeof(uint32_t));
-                            memcpy(&(entry.dst), &ep_pairs[i].rip, sizeof(uint32_t));
-                        }
-                        entry.session_index = session_index++;
-                        ret = insert_(&entry);
-                        if (ret != SDK_RET_OK) {
-                            return ret;
+                            auto ret = create_flow(vpc, ep_pairs[i].lip, ep_pairs[i].rip,
+                                                   proto, fwd_sport, fwd_dport);
+                            if (ret != SDK_RET_OK) {
+                                return ret;
+                            }
                         }
 
                         nflows++;
@@ -439,19 +486,19 @@ public:
                         }
 #if 0 // Only create local to remote flows for now.
                         // Remote to Local Flow
-                        entry.vnic_metadata_local_vnic_tag = vpc - 1;
-                        entry.key_metadata_sport = rev_sport;
-                        entry.key_metadata_dport = rev_dport;
-                        entry.key_metadata_proto = proto;
+                        v6entry.vnic_metadata_local_vnic_tag = vpc - 1;
+                        v6entry.key_metadata_sport = rev_sport;
+                        v6entry.key_metadata_dport = rev_dport;
+                        v6entry.key_metadata_proto = proto;
                         if (ipv6) {
-                            memcpy(&(entry.key_metadata_src), &ep_pairs[i].rip6, sizeof(ipv6_addr_t));
-                            memcpy(&(entry.key_metadata_dst), &ep_pairs[i].lip6, sizeof(ipv6_addr_t));
+                            memcpy(&(v6entry.key_metadata_src), &ep_pairs[i].rip6, sizeof(ipv6_addr_t));
+                            memcpy(&(v6entry.key_metadata_dst), &ep_pairs[i].lip6, sizeof(ipv6_addr_t));
                         } else {
-                            memcpy(&(entry.key_metadata_src), &ep_pairs[i].rip, sizeof(uint32_t));
-                            memcpy(&(entry.key_metadata_dst), &ep_pairs[i].lip, sizeof(uint32_t));
+                            memcpy(&(v6entry.key_metadata_src), &ep_pairs[i].rip, sizeof(uint32_t));
+                            memcpy(&(v6entry.key_metadata_dst), &ep_pairs[i].lip, sizeof(uint32_t));
                         }
                         swappdata.session_index = session_index++;
-                        ret = insert_(&entry, &swappdata);
+                        ret = insert_(&v6entry, &swappdata);
                         if (ret != SDK_RET_OK) {
                             return ret;
                         }
