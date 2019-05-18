@@ -10,7 +10,6 @@
 #define __METER_IMPL_STATEHPP__
 
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
-#include "nic/sdk/lib/table/hash/hash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"

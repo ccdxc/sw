@@ -45,8 +45,8 @@ struct pds_tag_spec_s {
             for (uint32_t i = 0; i < num_rules; i++) {
                 SDK_FREE(PDS_MEM_ALLOC_ID_TAG, rules[i].prefixes);
             }
+            SDK_FREE(PDS_MEM_ALLOC_ID_TAG, rules);
         }
-        SDK_FREE(PDS_MEM_ALLOC_ID_TAG, rules);
     }
 
     // assignment operator

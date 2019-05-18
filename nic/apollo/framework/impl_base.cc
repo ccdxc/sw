@@ -19,6 +19,8 @@
 #include "nic/apollo/api/impl/route_impl.hpp"
 #include "nic/apollo/api/impl/mirror_impl.hpp"
 #include "nic/apollo/api/impl/security_policy_impl.hpp"
+#include "nic/apollo/api/impl/meter_impl.hpp"
+#include "nic/apollo/api/impl/tag_impl.hpp"
 
 namespace api {
 namespace impl {
@@ -87,6 +89,12 @@ impl_base::factory(impl_obj_id_t obj_id, void *args) {
 
     case IMPL_OBJ_ID_MIRROR_SESSION:
         return mirror_impl::factory((pds_mirror_session_spec_t *)args);
+
+    case IMPL_OBJ_ID_METER:
+        return meter_impl::factory((pds_meter_spec_t *)args);
+
+    case IMPL_OBJ_ID_TAG:
+        return tag_impl::factory((pds_tag_spec_t *)args);
 
     default:
         break;

@@ -106,11 +106,11 @@ meter_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
     route_table_t       *rtable;
     vpc_entry           *vpc;
     meter_entry         *meter;
-    uint32_t            n = 0, policer_id, num_prefixes;
+    uint32_t            n = 0, policer_id, num_prefixes = 0;
 
     spec = &obj_ctxt->api_params->meter_spec;
     // allocate memory for the library to build route table
-    for (uint32_t i = 0, num_prefixes = 0; i < spec->num_rules; i++) {
+    for (uint32_t i = 0; i < spec->num_rules; i++) {
         num_prefixes += spec->rules[i].num_prefixes;
     }
     if (num_prefixes > PDS_MAX_PREFIX_PER_METER) {
@@ -139,13 +139,16 @@ meter_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             n++;
         }
     }
+#if 0
     ret = lpm_tree_create(rtable, lpm_root_addr_,
                           meter_impl_db()->table_size(spec->af));
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to build LPM meter table, err : %u", ret);
     }
+#endif
     SDK_FREE(PDS_MEM_ALLOC_ID_METER, rtable);
-    return ret;
+    //return ret;
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

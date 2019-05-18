@@ -185,7 +185,7 @@
             "cache": "p4plus-rxdma"
         },
         {
-            "name": "tag_lpm_v4",
+            "name": "tag_v4",
             "_comment": "(1+1) * (64 + 16 * 64 + 16^2 * 64 + 16^3 * 64 + 16^4 * 64)",
             "size": "8947840B",
             "block_size": "4473920B",
@@ -193,7 +193,7 @@
             "cache": "p4plus-rxdma"
         },
         {
-            "name": "tag_lpm_v6",
+            "name": "tag_v6",
             "_comment": "(1+1) * (64 + 4 * 64 + 4^2  * 64 + 4^3 * 64 + 4^4 * 64 + 4^5 * 64 + 4^6 *64 + 4^7 * 64)",
             "size": "2796160B",
             "block_size": "1398080B",

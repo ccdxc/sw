@@ -667,6 +667,10 @@ create_tags (uint32_t num_tags, uint32_t scale, uint32_t ip_af)
     static uint32_t tag_pfx_count = 0;
     static uint32_t tag_value = 0;
 
+    if (num_tags == 0) {
+        return SDK_RET_OK;
+    }
+
     memset(&pds_tag, 0, sizeof(pds_tag));
     pds_tag.af = ip_af;
     pds_tag.num_rules = scale/4;

@@ -67,8 +67,8 @@
         {
             "kind" : "tags",
             "count" : "2",
-            "v4_scale" : "4096",
-            "v6_scale" : "4096"
+            "v4_scale" : "4095",
+            "v6_scale" : "4095"
         },
         {
             "kind" : "flows",
