@@ -162,7 +162,6 @@ nic/tools/speed_change.sh                                            /nic/tools/
 
 # platform modules, scripts etc.
 nic/tools/fwupdate                                                   /nic/tools/
-nic/build/$ARCH/$PIPELINE/bin/pciemgrd-gold                          /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/capview                                /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/captrace                               /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/eth_dbgtool                            /nic/bin/

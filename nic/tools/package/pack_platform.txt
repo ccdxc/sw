@@ -19,7 +19,6 @@ nic/build/aarch64/iris/bin/palmem                                               
 nic/build/aarch64/iris/bin/asicerrord                                           /platform/bin/
 nic/build/aarch64/iris/bin/cpmem                                                /platform/bin/
 nic/build/aarch64/iris/bin/pali2c                                               /platform/bin/
-nic/build/aarch64/iris/bin/pciemgrd-gold                                        /platform/bin/
 nic/build/aarch64/iris/bin/palmm                                                /platform/bin/
 nic/build/aarch64/iris/bin/capmon                                               /platform/bin/
 nic/build/aarch64/iris/bin/sysmond                                              /platform/bin/

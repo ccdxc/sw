@@ -24,7 +24,7 @@
 #include "platform/evutils/include/evutils.h"
 #include "platform/pciemgr/include/pciemgr.h"
 #include "platform/pcieport/include/pcieport.h"
-
+#include "nic/sdk/platform/pciemgrd/pciemgrd_impl.hpp"
 #include "pciemgrd_impl.hpp"
 
 /******************************************************************/
@@ -859,9 +859,8 @@ sighand(int s)
 }
 
 int
-cli_loop(void)
+cli_loop(pciemgrenv_t *pme)
 {
-    pciemgrenv_t *pme = pciemgrenv_get();
     char *line, prompt[32], *av[16];
     int r, port, ac;
 

@@ -184,7 +184,7 @@ dev_evhandler(const pciehdev_eventdata_t *evd)
 static void
 update_stats(void *arg)
 {
-    pciemgrenv_t *pme = pciemgrenv_get();
+    pciemgrenv_t *pme = (pciemgrenv_t *)arg;
 
     for (int port = 0; port < PCIEPORT_NPORTS; port++) {
         if (pme->enabled_ports & (1 << port)) {
@@ -196,9 +196,8 @@ update_stats(void *arg)
 #endif
 
 int
-server_loop(void)
+server_loop(pciemgrenv_t *pme)
 {
-    pciemgrenv_t *pme = pciemgrenv_get();
     int r = 0;
 
     // logger_init();
@@ -238,7 +237,8 @@ server_loop(void)
 #ifdef __aarch64__
     // initialize stats timer to update stats to delphi
     static evutil_timer stats_timer;
-    evutil_timer_start(EV_DEFAULT_ &stats_timer, update_stats, NULL, 10.0, 10.0);
+    evutil_timer_start(EV_DEFAULT_
+                       &stats_timer, update_stats, pme, 10.0, 10.0);
 #endif
 #endif
 

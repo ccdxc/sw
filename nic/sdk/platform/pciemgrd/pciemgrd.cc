@@ -25,9 +25,7 @@
 #include "pciemgrd_impl.hpp"
 
 #ifdef IRIS
-#ifndef PCIEMGRD_GOLD
 #include "platform/src/app/pciemgrd/src/delphic.h"
-#endif
 #endif
 
 static pciemgrenv_t pciemgrenv;
@@ -56,10 +54,8 @@ port_evhandler(pcieport_event_t *ev, void *arg)
                         ev->port, ev->hostup.gen, ev->hostup.width);
         pciehw_event_hostup(ev->port, ev->hostup.gen, ev->hostup.width);
 #ifdef IRIS
-#ifndef PCIEMGRD_GOLD
         delphi_update_pcie_port_status(ev->port, pciemgr::Up,
                                        ev->hostup.gen, ev->hostup.width);
-#endif
 #endif
         break;
     }
@@ -70,9 +66,7 @@ port_evhandler(pcieport_event_t *ev, void *arg)
         pciesys_loginfo("port%d: hostdn\n", ev->port);
         pciehw_event_hostdn(ev->port);
 #ifdef IRIS
-#ifndef PCIEMGRD_GOLD
         delphi_update_pcie_port_status(ev->port, pciemgr::Down);
-#endif
 #endif
         break;
     }
@@ -85,10 +79,8 @@ port_evhandler(pcieport_event_t *ev, void *arg)
     case PCIEPORT_EVENT_FAULT: {
         pciesys_logerror("port%d: fault %s\n", ev->port, ev->fault.reason);
 #ifdef IRIS
-#ifndef PCIEMGRD_GOLD
         delphi_update_pcie_port_status(ev->port,
                                        pciemgr::Fault, 0, 0, ev->fault.reason);
-#endif
 #endif
         break;
     }
@@ -121,10 +113,8 @@ open_hostports(void)
                 goto close_error_out;
             }
 #ifdef IRIS
-#ifndef PCIEMGRD_GOLD
             /* initialize delphi port status object */
             delphi_update_pcie_port_status(port, pciemgr::Down);
-#endif
 #endif
         }
     }
@@ -271,14 +261,12 @@ pciemgrd_params(pciemgrenv_t *pme)
     pme->poll_port = pciemgrd_param_ull("PCIE_POLL_PORT", pme->poll_port);
     pme->poll_dev = pciemgrd_param_ull("PCIE_POLL_DEV", pme->poll_dev);
 
-#ifndef PCIEMGRD_GOLD
     if (pme->params.restart) {
         if (upgrade_state_restore() < 0) {
             pciesys_logerror("restore failed, forcing full init\n");
             pme->params.initmode = FORCE_INIT;
         }
     }
-#endif /* PCIEMGRD_GOLD */
 }
 
 void
@@ -292,7 +280,6 @@ pciemgrd_catalog_defaults(pciemgrenv_t *pme)
     params->subvendorid = params->vendorid;
     params->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100_4GB;
 
-#ifndef PCIEMGRD_GOLD
 #ifdef __aarch64__
     sdk::lib::catalog *catalog = sdk::lib::catalog::factory();
     if (catalog != NULL) {
@@ -305,7 +292,6 @@ pciemgrd_catalog_defaults(pciemgrenv_t *pme)
         pciesys_logerror("no catalog\n");
     }
 #endif /* __aarch64__ */
-#endif /* PCIEMGRD_GOLD */
 }
 
 void
@@ -342,20 +328,15 @@ pciemgrd_start()
     params->fake_bios_scan = 1;         /* simulate bios scan to set bdf's */
 #endif
 
-#ifndef PCIEMGRD_GOLD
     if (upgrade_in_progress()) {
         params->restart = 1;
         params->initmode = INHERIT_OK;
     }
-#endif
 
-    /*
-     * Get the catalog defaults.
-     * For testing, cmdline args can override below if desired.
-     */
+    /* Get the catalog defaults. */
     pciemgrd_catalog_defaults(pme);
 
-    r = server_loop();
+    r = server_loop(pme);
 
     exit(r < 0 ? 1 : 0);
 }
