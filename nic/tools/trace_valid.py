@@ -19,7 +19,7 @@ excluded_files = ["capri_tm_rw.template.cc",
 
 return_status = 0
 enable_pattern_check = True         # Checks for invalid patterns in trace strings
-invalid_patterns = ["{\d+"]         # Invalid patterns in trace strings
+invalid_patterns = ["{\d+", "{#"]         # Invalid patterns in trace strings
 
 #------------------------------------------------------------------------------
 # validate all traces
@@ -39,6 +39,8 @@ def trace_valid():
                 data = f.read().replace('\n', '$%*#')
                 validate_trace(fullpath, data, "HAL_TRACE_DEBUG")
                 validate_trace(fullpath, data, "HAL_TRACE_ERR")
+                validate_trace(fullpath, data, "HAL_TRACE_DEBUG2")
+                validate_trace(fullpath, data, "HAL_TRACE_ERR2")
                 validate_trace(fullpath, data, "HAL_TRACE_WARN")
                 validate_trace(fullpath, data, "HAL_TRACE_INFO")
                 validate_trace(fullpath, data, "NIC_LOG_INFO")
@@ -92,6 +94,7 @@ def validate_trace(filename, data, trace_func):
             print error_reason + " at: " + filename + ": "+ str(f_before.count("$%*#") + 1) + ": "+ full_trace
             #print "Invalid trace at: " + filename + ": "+ str(f_before.count("$%*#") + 1) + ": "+ full_trace + \
             #      " :: match: " + str(matched) + ", num_parantheses: " + str(num_pairs) + ", num_args: " + str(num_args)
+
 
 #------------------------------------------------------------------------------
 # Filter out fmts having unwanted patterns like {:x}, {1:x} etc.

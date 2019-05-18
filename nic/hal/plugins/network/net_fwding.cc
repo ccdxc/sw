@@ -57,7 +57,7 @@ update_rewrite_info(fte::ctx_t&ctx)
 
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_HEADER_REWRITE};
 
-    HAL_TRACE_VERBOSE("Source L2Seg: {:#x} Dest L2Seg: {:#x}", (void *)ctx.sl2seg(), (void *)ctx.dl2seg()); 
+    HAL_TRACE_VERBOSE("Source L2Seg: {:p} Dest L2Seg: {:p}", (void *)ctx.sl2seg(), (void *)ctx.dl2seg());
     // smac rewrite for routed pkts
     if (ctx.sl2seg() && ctx.dl2seg() && (ctx.sl2seg() != ctx.dl2seg())) {
         dmac = hal::ep_get_mac_addr(ctx.dep());
@@ -177,7 +177,7 @@ update_fwding_info(fte::ctx_t&ctx)
              }
         }
     }
-    
+
     /* Get dest-if based on the l2seg information for IPFIX pkts */
     if (ctx.cpu_rxhdr() && (ctx.cpu_rxhdr()->src_lif == HAL_LIF_CPU) &&
         (ctx.cpu_rxhdr()->src_app_id == P4PLUS_APPTYPE_TELEMETRY)) {
@@ -223,8 +223,8 @@ update_flow(fte::ctx_t&ctx)
     // DOLs still expect the ICMP Neighbor
     // solicitation to be dropped because it
     // runs in smart swithc. Hence the check
-    if (is_broadcast(ctx) || 
-        (hal::g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED && 
+    if (is_broadcast(ctx) ||
+        (hal::g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
          is_multicast_dmac(ctx))) {
         ctx.set_ignore_session_create(true);
         ret = HAL_RET_OK;

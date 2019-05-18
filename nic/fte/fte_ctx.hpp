@@ -533,7 +533,9 @@ public:
     bool drop() const { return drop_; }
     void set_drop() {
         drop_ = true;
-        HAL_TRACE_DEBUG("fte::set_drop feature={}", feature_name_);
+        // name seems to be null sometimes.
+        // HAL_TRACE_DEBUG("fte::set_drop feature={}", feature_name_);
+        HAL_TRACE_DEBUG("fte::set_drop feature_id: {}", feature_id_);
     }
 
 
@@ -617,7 +619,7 @@ public:
     // flow is not getting installed.
     hal_ret_t register_completion_handler(completion_handler_t handler) {
         feature_state_[feature_id_].completion_handler = handler;
-        HAL_TRACE_VERBOSE("fte: feature={} queued completion handler {:#x}",
+        HAL_TRACE_VERBOSE("fte: feature={} queued completion handler {:p}",
                          feature_name_, (void*)handler);
         return HAL_RET_OK;
     }
@@ -648,7 +650,7 @@ public:
     }
 
     bool ignore_session_create() const { return ignore_session_create_; }
-    void set_ignore_session_create(bool val) { 
+    void set_ignore_session_create(bool val) {
         ignore_session_create_ = val;
         ipc_logging_disable_ = val;
     }
@@ -700,7 +702,7 @@ public:
 
         dllist_reset(&state->session_feature_lentry);
 
-        HAL_TRACE_VERBOSE("fte: feature={} register session state {:#x}",
+        HAL_TRACE_VERBOSE("fte: feature={} register session state {:p}",
                         feature_name_, (void*)state);
         feature_state_[feature_id_].session_state = state;
         return HAL_RET_OK;

@@ -13,7 +13,7 @@ namespace hal {
 namespace pd {
 
 //#define HAL_TRACE_DEBUG2(fmt, ...)
-//#define HAL_TRACE_ERR2(fmt, ...) 
+//#define HAL_TRACE_ERR2(fmt, ...)
 
 #define HAL_TRACE_DEBUG2 HAL_TRACE_DEBUG
 #define HAL_TRACE_ERR2   HAL_TRACE_ERR
@@ -89,7 +89,7 @@ static inline bool is_cpu_zero_copy_enabled (void)
 /*
  * Given a physical-address of the descriptor, check whether its an Rx descriptor (descriptor
  * allocated by P4 and received by us), using the address comparison with the regions configured
- * for the descriptor pools, and return the corresponding virtual address that we've mapped to 
+ * for the descriptor pools, and return the corresponding virtual address that we've mapped to
  * this process.
  */
 static inline bool
@@ -165,7 +165,7 @@ is_virtaddr_cpu_rx_dpr_page (cpupkt_hw_id_t page_addr, int tg_cpu_id, cpupkt_hw_
      * get the corresponding virtual-address of the page which we can access
      * directly.
      */
-    HAL_TRACE_DEBUG2("CPU-RX-DPR virt-obj-base-addr {:#x} size {} KB",
+    HAL_TRACE_DEBUG2("CPU-RX-DPR virt-obj-base-addr {:p} size {} KB",
 		    meta->virt_obj_base_addr[0], (meta->num_slots * meta->obj_size)/1024);
     if (page_addr >= (uint64_t)meta->virt_obj_base_addr[0] &&
 	page_addr <= ((uint64_t) meta->virt_obj_base_addr[0] + (meta->num_slots * meta->obj_size))) {
@@ -199,7 +199,7 @@ cpupkt_update_slot_addr (cpupkt_qinst_info_t* qinst_info)
     /*
      * Update the virtual PC-index addr for direct access into the memory.
      */
-    qinst_info->virt_pc_index_addr = qinst_info->virt_base_addr + 
+    qinst_info->virt_pc_index_addr = qinst_info->virt_base_addr +
             (slot_index * qinst_info->queue_info->wring_meta->slot_size_in_bytes);
 
     HAL_TRACE_DEBUG2("updated pc_index queue: type: {} id: {}, index: {} virt-idx-addr: {:#x} addr: {:#x}: valid_bit_value: {:#x}",
@@ -297,7 +297,7 @@ pd_cpupkt_free_rx_descrs (uint64_t *descr_addrs, pd_descr_aol_t **virt_addrs,
 	if (is_cpu_zero_copy_enabled()) {
 	    *slot_virt_addr = value;
 
-	    HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} virt-slot: {:#x} ci: {} descr: {:#x}, value: {#x}",
+	    HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} virt-slot: {:#x} ci: {} descr: {:#x}, value: {:#x}",
 			    tg_cpu_id, slot_addr, *slot_virt_addr,
 			    cpu_rx_dpr_cindex, descr_addrs[npkt], value);
 	} else {
@@ -306,7 +306,7 @@ pd_cpupkt_free_rx_descrs (uint64_t *descr_addrs, pd_descr_aol_t **virt_addrs,
 	        HAL_TRACE_ERR2("Failed to program descr to slot");
 		return HAL_RET_HW_FAIL;
 	    }
-	    HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}, value: {#x}",
+	    HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}, value: {:#x}",
 			    tg_cpu_id, slot_addr, cpu_rx_dpr_cindex, descr_addrs[npkt], value);
 	}
 	cpu_rx_dpr_cindex++;
@@ -364,7 +364,7 @@ pd_cpupkt_free_rx_descr (cpupkt_hw_id_t descr_addr)
     if (is_cpu_zero_copy_enabled()) {
         *slot_virt_addr = value;
 
-	HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} virt-slot: {:#x} ci: {} descr: {:#x}, value: {#x}",
+	HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} virt-slot: {:#x} ci: {} descr: {:#x}, value: {:#x}",
 			 tg_cpu_id, slot_addr, *slot_virt_addr,
 			 cpu_rx_dpr_cindex, descr_addr, value);
 
@@ -374,7 +374,7 @@ pd_cpupkt_free_rx_descr (cpupkt_hw_id_t descr_addr)
             HAL_TRACE_ERR2("Failed to program descr to slot");
 	    return HAL_RET_HW_FAIL;
 	}
-	HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}, value: {#x}",
+	HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}, value: {:#x}",
 			 tg_cpu_id, slot_addr, cpu_rx_dpr_cindex, descr_addr, value);
     }
     cpu_rx_dpr_cindex++;
@@ -382,8 +382,8 @@ pd_cpupkt_free_rx_descr (cpupkt_hw_id_t descr_addr)
 
     /*
      * Ensure the programming of the descriptor/senq-queue is completed with a
-     * memory barrier, before ringing the txdma doorbell.   
-     */   
+     * memory barrier, before ringing the txdma doorbell.
+     */
     PAL_barrier();
 
     /*
@@ -450,7 +450,7 @@ pd_cpupkt_free_tx_descr (cpupkt_hw_id_t descr_addr, pd_descr_aol_t *descr)
     }
 
     value = htonll(descr_addr);
-    HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}, value: {#x}",
+    HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}, value: {:#x}",
         tg_cpu_id, slot_addr, cpu_tx_descr_cindex, descr_addr, value);
     if (asic_mem_write(slot_addr, (uint8_t *)&value, sizeof(uint64_t),
                        ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
@@ -460,8 +460,8 @@ pd_cpupkt_free_tx_descr (cpupkt_hw_id_t descr_addr, pd_descr_aol_t *descr)
 
     /*
      * Ensure the programming of the descriptor/senq-queue is completed with a
-     * memory barrier, before ringing the txdma doorbell.   
-     */   
+     * memory barrier, before ringing the txdma doorbell.
+     */
     PAL_barrier();
 
     cpu_tx_descr_cindex++;
@@ -516,7 +516,7 @@ pd_cpupkt_free_tx_descrs (uint64_t *descr_addrs, pd_descr_aol_t **virt_addrs,
 	}
 
 	value = htonll(descr_addr);
-	HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}, value: {#x}",
+	HAL_TRACE_DEBUG2("cpu-id: {} update cpudr: slot: {:#x} ci: {} descr: {:#x}, value: {:#x}",
 			tg_cpu_id, slot_addr, cpu_tx_descr_cindex, descr_addr, value);
 	if (asic_mem_write(slot_addr, (uint8_t *)&value, sizeof(uint64_t),
 			   ASIC_WRITE_MODE_WRITE_THRU) != sdk::SDK_RET_OK) {
@@ -1188,7 +1188,7 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
 	do {
 	    qinst_info->ctr.poll_count++;
 	    more_pkt = false;
-	    
+
 	    /*
 	     * If zero-copy enabled, we'll read the slot directly without the
 	     * asic_mem_read() API overhead.
@@ -1209,7 +1209,7 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
 	    if (!is_valid_slot_value(qinst_info, value, &descr_addrs[pktcount])) {
 	        continue;
 	    }
-	    
+
 	    HAL_TRACE_DEBUG2("Rcvd valid data (count {}): queue: {}, qid: {} pc_index: {}, "
 			    "addr: {:#x}, value: {:#x}, descr_addr: {:#x}", pktcount,
 			    ctxt->rx.queue[i].type, qinst_info->queue_id,
@@ -1326,7 +1326,7 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
     }
 
     for (npkt = 0; npkt < rxq_pkt_count; npkt++) {
-  
+
         /*
 	 * Lets get the packet header/data from the descriptor we've received.
 	 */
@@ -1363,7 +1363,7 @@ pd_cpupkt_poll_receive_new (pd_func_args_t *pd_func_args)
 		   }
 	       }
 	   } else {
-	     
+
 	       /*
 		* Free the descriptor to GC.
 		*/
@@ -1404,8 +1404,8 @@ cpupkt_descr_free (cpupkt_hw_id_t descr_addr)
 
     /*
      * Ensure the programming of the descriptor/senq-queue is completed with a
-     * memory barrier, before ringing the txdma doorbell.   
-     */   
+     * memory barrier, before ringing the txdma doorbell.
+     */
     PAL_barrier();
 
     // ring doorbell
@@ -1570,8 +1570,8 @@ cpupkt_program_descr (uint32_t qid, cpupkt_hw_id_t page_addr, int offset, size_t
 
         /*
 	 * Ensure the programming of the descriptor/senq-queue is completed with a
-	 * memory barrier, before ringing the txdma doorbell.   
-	 */   
+	 * memory barrier, before ringing the txdma doorbell.
+	 */
         PAL_barrier();
     }
 
@@ -1735,9 +1735,9 @@ pd_cpupkt_send (pd_func_args_t *pd_func_args)
         phy_page_addr -= sizeof(p4_to_p4plus_cpu_pkt_t);
         rx_dpr_offset = (uint64_t)(sizeof(p4_to_p4plus_cpu_pkt_t) - (sizeof(cpu_to_p4plus_header_t)
 								     + sizeof(p4plus_to_p4_header_t)));
-        write_addr = page_addr + rx_dpr_offset; 
+        write_addr = page_addr + rx_dpr_offset;
     }
-    
+
     if (!page_addr) {
 
         // This is a CPU-originated packet. Allocate a page and descr for the pkt
@@ -1750,7 +1750,7 @@ pd_cpupkt_send (pd_func_args_t *pd_func_args)
 	    HAL_TRACE_ERR2("failed to allocate page for the packet, err: {}", ret);
 	    goto cleanup;
 	}
-	HAL_TRACE_DEBUG2("Allocated page at address {#x}", page_addr);
+	HAL_TRACE_DEBUG2("Allocated page at address {:#x}", page_addr);
 	write_addr = page_addr;
     }
 
@@ -1856,8 +1856,8 @@ pd_cpupkt_send (pd_func_args_t *pd_func_args)
 
     /*
      * Ensure the programming of the descriptor/senq-queue is completed with a
-     * memory barrier, before ringing the txdma doorbell.   
-     */   
+     * memory barrier, before ringing the txdma doorbell.
+     */
     PAL_barrier();
 
     // Ring doorbell
@@ -1867,7 +1867,7 @@ pd_cpupkt_send (pd_func_args_t *pd_func_args)
     d_args.qid = qid;
     d_args.ring_number = ring_number;
     d_args.flags = DB_IDX_UPD_PIDX_SET | DB_SCHED_UPD_SET;
-    d_args.pidx = (qinst_info.ctr.send_pkts + 1) % CPU_PINDEX_MAX; 
+    d_args.pidx = (qinst_info.ctr.send_pkts + 1) % CPU_PINDEX_MAX;
     pd_func_args1.pd_cpupkt_program_send_ring_doorbell = &d_args;
     ret = pd_cpupkt_program_send_ring_doorbell(&pd_func_args1);
     if(ret != HAL_RET_OK) {
@@ -1965,9 +1965,9 @@ pd_cpupkt_send_new (pd_func_args_t *pd_func_args)
 	    phy_page_addr -= sizeof(p4_to_p4plus_cpu_pkt_t);
 	    rx_dpr_offset = (uint64_t)(sizeof(p4_to_p4plus_cpu_pkt_t) - (sizeof(cpu_to_p4plus_header_t)
 								     + sizeof(p4plus_to_p4_header_t)));
-	    write_addr = page_addr + rx_dpr_offset; 
+	    write_addr = page_addr + rx_dpr_offset;
 	}
-	
+
 	if (!page_addr) {
 
 	    // This is a CPU-originated packet. Allocate a page and descr for the pkt
@@ -1980,7 +1980,7 @@ pd_cpupkt_send_new (pd_func_args_t *pd_func_args)
 		HAL_TRACE_ERR2("failed to allocate page for the packet, err: {}", ret);
 		goto cleanup;
 	    }
-	    HAL_TRACE_DEBUG2("Allocated page at address {#x}", page_addr);
+	    HAL_TRACE_DEBUG2("Allocated page at address {:#x}", page_addr);
 	    write_addr = page_addr;
 	}
 
@@ -1992,14 +1992,14 @@ pd_cpupkt_send_new (pd_func_args_t *pd_func_args)
 	    cpu_header->l2_offset += (sizeof(cpu_to_p4plus_header_t) +
 				      sizeof(p4plus_to_p4_header_t) +
 				      L2HDR_DOT1Q_OFFSET);
-	    
+
 	    cpu_header->flags |= CPU_TO_P4PLUS_FLAGS_FREE_BUFFER;
-	    
+
 	    write_len = sizeof(cpu_to_p4plus_header_t);
 	    total_len += write_len;
-	    
+
 	    if (no_copy) {
-	      
+
 	        /*
 		 * The 'write_addr' is the virtual address of the page offset where
 		 * we want to Write the cpu-to-p4plus header directly at.
@@ -2023,9 +2023,9 @@ pd_cpupkt_send_new (pd_func_args_t *pd_func_args)
 	    write_len = sizeof(p4plus_to_p4_header_t);
 	    pd_swizzle_header ((uint8_t *)p4_header, sizeof(p4plus_to_p4_header_t));
 	    total_len += write_len;
-	    
+
 	    if (no_copy) {
-	      
+
 	        /*
 		 * The 'write_addr' is the virtual address of the page offset where
 		 * we want to Write the p4plus-to-p4 header directly at.
@@ -2043,12 +2043,12 @@ pd_cpupkt_send_new (pd_func_args_t *pd_func_args)
 		  goto cleanup;
 		}
 	    }
-	    
+
 	    write_addr += write_len;
 	}
-	
+
 	if (no_copy) {
-	  
+
 	    /*
 	     * Zero-copy case, data is as-is that came in the Rx path. We just update the length.
 	     */
@@ -2066,9 +2066,9 @@ pd_cpupkt_send_new (pd_func_args_t *pd_func_args)
 		goto cleanup;
 	    }
 	}
-	
+
 	HAL_TRACE_DEBUG2("total pkt len: {} to page at addr: {:#x}", total_len, page_addr);
-	
+
 	ret = cpupkt_program_descr(qid, page_addr, no_copy ? rx_dpr_offset : 0, total_len,
 				   &descr_addr, no_copy, phy_page_addr);
 	if(ret != HAL_RET_OK) {
@@ -2091,8 +2091,8 @@ pd_cpupkt_send_new (pd_func_args_t *pd_func_args)
 
     /*
      * Ensure the programming of the descriptor/senq-queue is completed with a
-     * memory barrier, before ringing the txdma doorbell.   
-     */   
+     * memory barrier, before ringing the txdma doorbell.
+     */
     PAL_barrier();
 
     // Ring doorbell
@@ -2102,7 +2102,7 @@ pd_cpupkt_send_new (pd_func_args_t *pd_func_args)
     d_args.qid = qid;
     d_args.ring_number = ring_number;
     d_args.flags = DB_IDX_UPD_PIDX_SET | DB_SCHED_UPD_SET;
-    d_args.pidx = (qinst_info->ctr.send_pkts + send_pkts) % CPU_PINDEX_MAX; 
+    d_args.pidx = (qinst_info->ctr.send_pkts + send_pkts) % CPU_PINDEX_MAX;
     pd_func_args1.pd_cpupkt_program_send_ring_doorbell = &d_args;
     ret = pd_cpupkt_program_send_ring_doorbell(&pd_func_args1);
     if(ret != HAL_RET_OK) {

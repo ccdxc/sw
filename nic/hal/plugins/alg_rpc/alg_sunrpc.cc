@@ -19,7 +19,7 @@
 #define RPC_REPLY               1
 #define BUF_SZ                  128
 #define CALL_HDR_SZ             24
-#define ACCEPTED_REPLYHDR_SZ    12 
+#define ACCEPTED_REPLYHDR_SZ    12
 
 typedef struct rp__list rpcblist;
 
@@ -30,7 +30,7 @@ namespace alg_rpc {
 using namespace hal::plugins::alg_utils;
 using namespace hal::plugins::sfw;
 
-uint32_t __parse_rpcb_res_hdr(const uint8_t *pkt, uint32_t dlen, char *uaddr, 
+uint32_t __parse_rpcb_res_hdr(const uint8_t *pkt, uint32_t dlen, char *uaddr,
                               rpc_info_t *rpc_info) {
     uint32_t len = 0, offset = 0;
 
@@ -133,7 +133,7 @@ uint32_t __parse_callit_req(const uint8_t *pkt, uint32_t dlen,
                     struct rmtcallargs *msg, rpc_info_t *rpc_info) {
     uint32_t offset = 0;
 
-    if (dlen < (3*WORD_BYTES)) { 
+    if (dlen < (3*WORD_BYTES)) {
         incr_parse_error(rpc_info);
         HAL_TRACE_ERR("Packet len {} is smaller than rmtcall arg {}",
                       dlen, (3*WORD_BYTES));
@@ -218,7 +218,7 @@ uint32_t __parse_reply_hdr(const uint8_t *pkt, uint32_t dlen,
 }
 
 uint32_t __parse_rpc_msg(const uint8_t *pkt, uint32_t payload_offset,
-                         uint32_t dlen, struct rpc_msg *msg, 
+                         uint32_t dlen, struct rpc_msg *msg,
                          rpc_info_t *rpc_info) {
     uint32_t offset = 0, hdr_offset = 0;
 
@@ -325,7 +325,7 @@ static void sunrpc_completion_hdlr (fte::ctx_t& ctx, bool status) {
 size_t process_sunrpc_data_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
     fte::ctx_t        *ctx = (fte::ctx_t *)ctxt;
     l4_alg_status_t   *exp_flow = (l4_alg_status_t *)alg_status(
-                                              ctx->feature_session_state()); 
+                                              ctx->feature_session_state());
     hal_ret_t          ret = HAL_RET_OK;
     l4_alg_status_t   *l4_sess = NULL;
 
@@ -403,7 +403,7 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
     }
 
     pgm_offset = __parse_rpc_msg(pkt, (ctx->key().proto==IP_PROTO_TCP)?\
-                                 (rpc_msg_offset+WORD_BYTES):rpc_msg_offset, 
+                                 (rpc_msg_offset+WORD_BYTES):rpc_msg_offset,
                                  pkt_len, &rpc_msg, rpc_info);
     if (!pgm_offset) {
         return pkt_len;
@@ -431,7 +431,7 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                 HAL_TRACE_ERR("Packet len execeeded the Max ALG Fragmented packet sz");
                 incr_max_pkt_sz(rpc_info);
                 reset_rpc_info(rpc_info);
-                return 0; 
+                return 0;
             }
             return pkt_len;
         } else {
@@ -559,7 +559,7 @@ size_t  parse_sunrpc_control_flow(void *ctxt, uint8_t *pkt, size_t pkt_len) {
                 // Insert an ALG entry for the DIP, Dport
                 timeout = get_is_programid_allowed(rpc_info);
                 if (rpc_info->dport && timeout != -1)
-                    insert_rpc_expflow(*ctx, l4_sess, process_sunrpc_data_flow, 
+                    insert_rpc_expflow(*ctx, l4_sess, process_sunrpc_data_flow,
                                        (uint32_t)timeout);
             }
             break;
@@ -666,7 +666,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
     uint32_t              payload_offset = 0;
     uint8_t               rc = 0;
 
-    HAL_TRACE_DEBUG("In alg_sunrpc_exec {:#x}", (void *)l4_sess);
+    HAL_TRACE_DEBUG("In alg_sunrpc_exec {:p}", (void *)l4_sess);
     payload_offset = ctx.cpu_rxhdr()->payload_offset;
     if (sfw_info->alg_proto == nwsec::APP_SVC_SUN_RPC &&
         (!ctx.existing_session())) {
@@ -696,7 +696,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
              */
             if (ctx.key().proto == IP_PROTO_UDP) {
                 uint8_t *pkt = ctx.pkt();
-                rc  = parse_sunrpc_control_flow(&ctx, &pkt[payload_offset], 
+                rc  = parse_sunrpc_control_flow(&ctx, &pkt[payload_offset],
                                             (ctx.pkt_len()-payload_offset));
                 if (!rc) {
                     HAL_TRACE_ERR("SUN RPC ALG parse for UDP frame failed");
@@ -734,7 +734,7 @@ hal_ret_t alg_sunrpc_exec(fte::ctx_t& ctx, sfw_info_t *sfw_info,
                 l4_sess->tcpbuf[DIR_RFLOW] = tcp_buffer_t::factory(
                                                htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
                                                NULL, parse_sunrpc_control_flow);
-            } 
+            }
             /*
              * This will only be executed for control channel packets that
              * would lead to opening up pinholes for FTP data sessions.

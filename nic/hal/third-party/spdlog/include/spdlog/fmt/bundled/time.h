@@ -25,6 +25,7 @@ void format(BasicFormatter<char, ArgFormatter> &f,
     while (*end && *end != '}')
         ++end;
     if (*end != '}') {
+        print_stacktrace();
         FMT_THROW(FormatError("missing '}' in format string"));
         assert(0);
     }

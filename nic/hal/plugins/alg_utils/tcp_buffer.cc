@@ -32,7 +32,7 @@ tcp_buffer_t::factory (uint32_t seq_start, void *handler_ctx, data_handler_t han
     entry->data_handler_ = handler;
     entry->handler_ctx_ = handler_ctx;
 
-    HAL_TRACE_DEBUG("Init TCP buffer with seq_start: {} data handler: {:#x} handle_ctx: {:#x}",
+    HAL_TRACE_DEBUG("Init TCP buffer with seq_start: {} data handler: {:p} handle_ctx: {:p}",
                      entry->cur_seq_, (void *)entry->data_handler_, (void *)entry->handler_ctx_);
 
     return entry;
@@ -57,7 +57,7 @@ void tcp_buffer_t::free ()
 // Helper to insert the segment given the FTE context and data handler
 //------------------------------------------------------------------------
 hal_ret_t
-tcp_buffer_t::insert_segment (fte::ctx_t &ctx, data_handler_t handler) 
+tcp_buffer_t::insert_segment (fte::ctx_t &ctx, data_handler_t handler)
 {
     uint32_t payload_len = (ctx.pkt_len() - ctx.cpu_rxhdr()->payload_offset);
     uint32_t seq = htonl(ctx.cpu_rxhdr()->tcp_seq_num);
@@ -65,7 +65,7 @@ tcp_buffer_t::insert_segment (fte::ctx_t &ctx, data_handler_t handler)
 
     handler_ctx_ = (void *)std::addressof(ctx);
     data_handler_ = handler;
-    HAL_TRACE_DEBUG("Packet len: {} payload offset: {} data handler: {}", ctx.pkt_len(), 
+    HAL_TRACE_DEBUG("Packet len: {} payload offset: {} data handler: {}", ctx.pkt_len(),
                                 ctx.cpu_rxhdr()->payload_offset, (void *)data_handler_);
     HAL_TRACE_DEBUG("seq: {} curr_seq: {} payload_len: {}", seq, cur_seq_, payload_len);
     return insert_segment(seq, &pkt[ctx.cpu_rxhdr()->payload_offset], payload_len);
@@ -145,7 +145,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
             if (seq_diff < free_buff_size_) {
                 HAL_TRACE_ERR("alg_utils::payload execeeds the max buffer size - truncating");
                 end = seq + (free_buff_size_ - seq_diff);
-                payload_len = (end - seq);     
+                payload_len = (end - seq);
             } else {
                 HAL_TRACE_ERR("alg_utils::payload execeeds the max buffer size - bailing");
             }
@@ -242,7 +242,7 @@ tcp_buffer_t::insert_segment (uint32_t seq, uint8_t *payload, size_t payload_len
             free_buff_size_ += processed;
         }
     }
-  
+
 
     return HAL_RET_OK;
 }

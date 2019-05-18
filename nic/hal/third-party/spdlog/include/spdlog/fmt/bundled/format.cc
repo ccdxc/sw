@@ -26,6 +26,7 @@
  */
 
 #include "format.h"
+#include "stacktrace.h"
 
 #include <string.h>
 
@@ -509,6 +510,7 @@ const uint64_t fmt::internal::BasicData<T>::POWERS_OF_10_64[] = {
 FMT_FUNC void fmt::internal::report_unknown_type(char code, const char *type) {
   (void)type;
   if (std::isprint(static_cast<unsigned char>(code))) {
+    print_stacktrace();
     FMT_THROW(fmt::FormatError(
         fmt::format("unknown format code '{}' for {}", code, type)));
   }

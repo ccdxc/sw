@@ -266,15 +266,15 @@ inst_t::inst_t(uint8_t fte_id) :
         // with delphi until that is done
         stats_.fte_hbm_stats = (fte_hbm_stats_t *)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE, sizeof(fte_hbm_stats_t));
         SDK_ASSERT(stats_.fte_hbm_stats != NULL);
-    } else { 
+    } else {
         sdk::types::mem_addr_t vaddr;
         sdk::types::mem_addr_t start_addr = get_mem_addr(CAPRI_HBM_REG_PER_FTE_STATS);
-        HAL_TRACE_VERBOSE("Start address: {:#x}", (void *)start_addr);
+        HAL_TRACE_VERBOSE("Start address: {:p}", (void *)start_addr);
         SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
-        
+
         bzero((void *)&stats_, sizeof(fte_stats_t));
         start_addr += fte_id << FTE_EXPORT_STATS_SIZE;
-  
+
         // Register with Delphi with the physical address
         auto fte_cps_stats =
                delphi::objects::FteCPSMetrics::NewFteCPSMetrics(id_, start_addr);
@@ -288,7 +288,7 @@ inst_t::inst_t(uint8_t fte_id) :
         HAL_TRACE_VERBOSE("Pal ret: {}", pal_ret);
         SDK_ASSERT(pal_ret == sdk::lib::PAL_RET_OK);
         stats_.fte_hbm_stats = (fte_hbm_stats_t *)vaddr;
-    } 
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -544,7 +544,7 @@ void incr_fte_retransmit_packets(void)
      sdk::timestamp_to_nsecs(&temp_ts, &time_diff);
 
      if (time_diff > TIME_NSECS_PER_SEC) {
-         stats_.fte_hbm_stats->cpsstats.cps = t_rx_pkts; 
+         stats_.fte_hbm_stats->cpsstats.cps = t_rx_pkts;
          t_old_ts = t_cur_ts;
          t_rx_pkts = 1;
      } else if (time_diff == TIME_NSECS_PER_SEC) {
@@ -555,7 +555,7 @@ void incr_fte_retransmit_packets(void)
      }
 
      // Record the Max. CPS we've done
-     if (stats_.fte_hbm_stats->cpsstats.cps > stats_.fte_hbm_stats->cpsstats.cps_hwm) 
+     if (stats_.fte_hbm_stats->cpsstats.cps > stats_.fte_hbm_stats->cpsstats.cps_hwm)
          stats_.fte_hbm_stats->cpsstats.cps_hwm = stats_.fte_hbm_stats->cpsstats.cps;
 
  }
@@ -576,7 +576,7 @@ void incr_fte_retransmit_packets(void)
      sdk::timestamp_to_nsecs(&temp_ts, &time_diff);
 
      if (time_diff > TIME_NSECS_PER_SEC) {
-         stats_.fte_hbm_stats->cpsstats.cps = t_rx_pkts; 
+         stats_.fte_hbm_stats->cpsstats.cps = t_rx_pkts;
          t_old_ts = t_cur_ts;
          t_rx_pkts = pktcount;
      } else if (time_diff == TIME_NSECS_PER_SEC) {
@@ -588,7 +588,7 @@ void incr_fte_retransmit_packets(void)
      }
 
      // Record the Max. CPS we've done
-     if (stats_.fte_hbm_stats->cpsstats.cps > stats_.fte_hbm_stats->cpsstats.cps_hwm) 
+     if (stats_.fte_hbm_stats->cpsstats.cps > stats_.fte_hbm_stats->cpsstats.cps_hwm)
          stats_.fte_hbm_stats->cpsstats.cps_hwm = stats_.fte_hbm_stats->cpsstats.cps;
 
  }
@@ -687,7 +687,7 @@ void inst_t::process_arq()
      */
     if (bypass_fte_) {
 
-        HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:#x}\n", pkt);
+        HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:p}\n", pkt);
 
         update_rx_stats(cpu_rxhdr, pkt_len);
         if (pkt) {
@@ -734,7 +734,7 @@ void inst_t::process_arq()
                 continue;
             } else if (ret == HAL_RET_RETRANSMISSION) {
                 HAL_TRACE_VERBOSE("fte: retransmission packet");
-                goto send; 
+                goto send;
             } else {
                 HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
                 break;
@@ -809,7 +809,7 @@ void inst_t::process_arq_new ()
             cpu_rxhdr = cpupkt_batch.pkts[npkt].cpu_rxhdr;
             copied_pkt = cpupkt_batch.pkts[npkt].copied_pkt;
 
-            HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:#x}\n", pkt);
+            HAL_TRACE_DEBUG("CPU-PMD: Bypassing FTE processing!! pkt={:p}\n", pkt);
 
             if (pkt) {
 
@@ -852,7 +852,7 @@ void inst_t::process_arq_new ()
         copied_pkt = cpupkt_batch.pkts[npkt].copied_pkt;
         drop_pkt = false;
 
-        HAL_TRACE_VERBOSE("npkt {} pkt_len {}, pkt {:#x}", npkt, pkt_len, pkt);
+        HAL_TRACE_VERBOSE("npkt {} pkt_len {}, pkt {:p}", npkt, pkt_len, pkt);
 
         do {
 

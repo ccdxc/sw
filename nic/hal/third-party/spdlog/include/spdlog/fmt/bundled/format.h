@@ -28,6 +28,7 @@
 #ifndef FMT_FORMAT_H_
 #define FMT_FORMAT_H_
 
+#include "stacktrace.h"
 #include <cassert>
 #include <clocale>
 #include <cmath>
@@ -3078,6 +3079,7 @@ void BasicWriter<Char>::write_str(
     {
         if (!str_value)
         {
+            print_stacktrace();
             FMT_THROW(FormatError("string pointer is null"));
         }
     }
@@ -4113,6 +4115,7 @@ inline void require_numeric_argument(const Arg &arg, char spec)
 {
     if (arg.type > Arg::LAST_NUMERIC_TYPE)
     {
+        print_stacktrace();
         std::string message =
             fmt::format("format specifier '{}' requires numeric argument", spec);
         FMT_THROW(fmt::FormatError(message));
@@ -4368,6 +4371,7 @@ const Char *BasicFormatter<Char, ArgFormatter>::format(
     }
 
     if (*s++ != '}') {
+        print_stacktrace();
         FMT_THROW(FormatError("missing '}' in format string"));
         assert(0);
     }

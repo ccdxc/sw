@@ -147,7 +147,7 @@ fte::pipeline_action_t alg_rtsp_session_delete_cb(fte::ctx_t &ctx) {
             // Mark this entry for deletion so we cleanup
             // when we clean up the data sessions
             if (ctrl_l4_sess)
-                ctrl_l4_sess->entry.deleting = true; 
+                ctrl_l4_sess->entry.deleting = true;
             return fte::PIPELINE_END;
         } else {
             /*
@@ -166,7 +166,7 @@ fte::pipeline_action_t alg_rtsp_session_delete_cb(fte::ctx_t &ctx) {
      * Cleanup the data session that is getting timed out
      */
     g_rtsp_state->cleanup_l4_sess(l4_sess);
-    if (app_sess->ctrl_app_sess != NULL && 
+    if (app_sess->ctrl_app_sess != NULL &&
         (get_num_data_sessions(l4_sess->app_session->ctrl_app_sess) == 1)) {
         alg_utils::l4_alg_status_t   *ctrl_l4_sess = (alg_utils::l4_alg_status_t *)dllist_entry(\
                      app_sess->ctrl_app_sess->l4_sess_lhead.next, alg_utils::l4_alg_status_t, l4_sess_lentry);
@@ -210,7 +210,7 @@ void rtsp_app_sess_cleanup_hdlr(alg_utils::app_session_t *app_sess) {
     }
 
     if (app_sess->oper != NULL) {
-        HAL_TRACE_VERBOSE("Freeing Slab pointer {:#x}", (void *)app_sess->oper);
+        HAL_TRACE_VERBOSE("Freeing Slab pointer {:p}", (void *)app_sess->oper);
         g_rtsp_state->alg_info_slab()->free((rtsp_session_t *)app_sess->oper);
     }
 }
@@ -255,7 +255,7 @@ expected_flow_handler(fte::ctx_t &ctx, alg_utils::expected_flow_t *entry)
  * Adds expected flows for all the src/dst port pairs in the transport spec
  */
 static inline hal_ret_t
-add_expected_flows(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess, 
+add_expected_flows(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess,
                    alg_utils::l4_alg_status_t *l4_sess, rtsp_transport_t *spec)
 {
     hal_ret_t ret;
@@ -288,7 +288,7 @@ add_expected_flows(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess,
         exp_flow->alg =  nwsec::APP_SVC_RTSP;
         exp_flow->info = rtsp_sess;
         exp_flow->sess_hdl = HAL_HANDLE_INVALID;
-        
+
     }
 
     return HAL_RET_OK;
@@ -298,7 +298,7 @@ add_expected_flows(fte::ctx_t &ctx, alg_utils::app_session_t *app_sess,
  * Returns app_session of the specified key (creates if it doesn't exist)
  */
 static inline alg_utils::app_session_t *
-get_rtsp_session(const rtsp_session_key_t &key, 
+get_rtsp_session(const rtsp_session_key_t &key,
                 alg_utils::app_session_t *ctrl_app_sess)
 {
     dllist_ctxt_t   *lentry, *next;
@@ -307,7 +307,7 @@ get_rtsp_session(const rtsp_session_key_t &key,
     rtsp_session_t *rtsp_sess;
 
     if (ctrl_app_sess == NULL) {
-        HAL_TRACE_ERR("Control app session cannot be null"); 
+        HAL_TRACE_ERR("Control app session cannot be null");
         return NULL;
     }
 
@@ -315,7 +315,7 @@ get_rtsp_session(const rtsp_session_key_t &key,
     {
         alg_utils::app_session_t *rtsp_app_sess = dllist_entry(lentry,
                        alg_utils::app_session_t, app_sess_lentry);
-             
+
         if (!memcmp(rtsp_app_sess->oper, &key, sizeof(rtsp_session_key_t))) {
             return rtsp_app_sess;
         }
@@ -340,7 +340,7 @@ process_req_message(fte::ctx_t& ctx, alg_utils::app_session_t *app_sess,
 {
     switch (msg->req.method) {
     case RTSP_METHOD_TEARDOWN:
-        // TODO(Pavithra) We need to support handling single URI 
+        // TODO(Pavithra) We need to support handling single URI
         // teardown from the client.
         g_rtsp_state->cleanup_app_session(app_sess);
         break;
@@ -430,7 +430,7 @@ process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len)
 
         if (!rtsp_parse_msg((const char*)payload, pkt_len, &offset, &msg)) {
             ERR("failed to parse message");
-            incr_parse_error(ctrl_sess); 
+            incr_parse_error(ctrl_sess);
             return pkt_len;
         }
 
@@ -455,7 +455,7 @@ process_control_message(void *ctxt, uint8_t *payload, size_t pkt_len)
         }
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("RTSP Processing failure");
-        }   
+        }
     }
     return pkt_len;
 }
@@ -484,21 +484,21 @@ static void rtsp_completion_hdlr (fte::ctx_t& ctx, bool status) {
                 l4_sess->tcpbuf[DIR_RFLOW] = alg_utils::tcp_buffer_t::factory(
                                           htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
                                           NULL, process_control_message);
-            } 
+            }
             /*
              * This will only be executed for control channel packets that
              * would lead to opening up pinholes for RTSP data sessions.
              */
             uint8_t buff = ctx.is_flow_swapped()?1:0;
             if ((ctx.pkt_len() > payload_offset) && l4_sess->tcpbuf[buff])
-                l4_sess->tcpbuf[buff]->insert_segment(ctx, process_control_message); 
+                l4_sess->tcpbuf[buff]->insert_segment(ctx, process_control_message);
         } else {
             /*
              * Data session flow has been installed sucessfully
              * Cleanup expected flow from the exp flow table and app
              * session list and move it to l4 session list
              */
-            g_rtsp_state->move_expflow_to_l4sess(l4_sess->app_session, l4_sess); 
+            g_rtsp_state->move_expflow_to_l4sess(l4_sess->app_session, l4_sess);
             l4_sess->alg = nwsec::APP_SVC_RTSP;
         }
     }
@@ -529,7 +529,7 @@ rtsp_new_control_session(fte::ctx_t &ctx)
         rtsp_info = (rtsp_session_t *)g_rtsp_state->alg_info_slab()->alloc();
         SDK_ASSERT(rtsp_info != NULL);
 
-        app_sess->oper = rtsp_info; 
+        app_sess->oper = rtsp_info;
         rtsp_info->sess_key.vrf_id = ctx.key().svrf_id;
         rtsp_info->sess_key.ip.af = (ctx.key().flow_type == hal::FLOW_TYPE_V6) ?
             IP_AF_IPV6 : IP_AF_IPV4;
@@ -543,7 +543,7 @@ rtsp_new_control_session(fte::ctx_t &ctx)
         if ((ctx.cpu_rxhdr()->tcp_flags & (TCP_FLAG_SYN)) == TCP_FLAG_SYN) {
             //Setup TCP buffer for IFLOW
             l4_sess->tcpbuf[DIR_IFLOW] = alg_utils::tcp_buffer_t::factory(
-                                      htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1, 
+                                      htonl(ctx.cpu_rxhdr()->tcp_seq_num)+1,
                                       NULL, process_control_message);
         }
 
@@ -580,7 +580,7 @@ fte::pipeline_action_t alg_rtsp_exec(fte::ctx_t &ctx)
 
     if (sfw_info->alg_proto == nwsec::APP_SVC_RTSP && !ctx.existing_session()) {
         ret = rtsp_new_control_session(ctx);
-    } else if (ctx.feature_session_state() && 
+    } else if (ctx.feature_session_state() &&
                (!ctx.existing_session() || ctx.alg_cflow())) {
         // parse the packet in the completion handler
         // Register the completion handler only for new sessions

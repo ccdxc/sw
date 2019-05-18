@@ -441,7 +441,7 @@ static inline void
 del_session_from_db (ep_t *sep, ep_t *dep, session_t *session)
 {
     HAL_TRACE_DEBUG("Entering DEL session from DB:{}", session->hal_handle);
- 
+
     if (sep == NULL) {
        sep = find_ep_by_handle(session->sep_handle);
     }
@@ -483,7 +483,7 @@ session_aging_timeout (session_t *session,
     if (session->idle_timeout != HAL_MAX_INACTIVTY_TIMEOUT) {
         return ((uint64_t)(session->idle_timeout * TIME_NSECS_PER_SEC));
     }
-    
+
     vrf = vrf_lookup_by_handle(session->vrf_handle);
     if (vrf != NULL && vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
         nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
@@ -679,7 +679,7 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
 }
 
 static void
-flow_state_to_flow_stats_response (flow_stats_t *flow_stats, 
+flow_state_to_flow_stats_response (flow_stats_t *flow_stats,
                                    flow_state_t *flow_state,
                                    FlowStats *stats)
 {
@@ -714,7 +714,7 @@ session_state_to_session_get_response (session_t *session,
     age = TIME_DIFF(ctime_ns, create_ns) / TIME_NSECS_PER_SEC;
     response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
- 
+
     response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_last_packet_seen_time(session_state->iflow_state.last_pkt_ts);
 
@@ -807,7 +807,7 @@ session_state_to_session_get_response (session_t *session,
         response->mutable_spec()->mutable_peer_initiator_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
 
-        flow_state_to_flow_stats_response(&session->iflow->assoc_flow->stats, 
+        flow_state_to_flow_stats_response(&session->iflow->assoc_flow->stats,
                 &session_state->iflow_aug_state,
                 response->mutable_stats()->mutable_peer_initiator_flow_stats());
 
@@ -824,7 +824,7 @@ session_state_to_session_get_response (session_t *session,
         response->mutable_spec()->mutable_peer_responder_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_flow_age(age);
 
-        flow_state_to_flow_stats_response(&session->rflow->assoc_flow->stats, 
+        flow_state_to_flow_stats_response(&session->rflow->assoc_flow->stats,
                 &session_state->rflow_aug_state,
                 response->mutable_stats()->mutable_peer_responder_flow_stats());
 
@@ -1004,8 +1004,8 @@ session_get (SessionGetRequest& req, SessionGetResponseMsg *response)
         if (session_matches_filter(session, filter)) {
             system_get_fill_rsp(session, rsp->add_response());
         }
-        return false; 
-    }; 
+        return false;
+    };
 
     if (req.has_session_filter()) {
         ctxt.filter = req.mutable_session_filter();
@@ -1113,7 +1113,7 @@ session_get_stream (SessionGetRequest& req, grpc::ServerWriter<session::SessionG
             }
         }
         return false;
-    }; 
+    };
 
     if (req.has_session_filter()) {
         session_get_stream_filter_t ctxt = {0};
@@ -1178,7 +1178,7 @@ session_get_all_stream(grpc::ServerWriter<session::SessionGetResponseMsg> *write
         sget.msg.Clear();
         sget.count = 0;
     }
-    
+
     return hal_sdk_ret_to_hal_ret(ret);
 }
 
@@ -1391,7 +1391,7 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     *session = {};
 
     session->fte_id = fte::fte_id();
-    HAL_TRACE_VERBOSE("Creating session {:#x} with a rflow :{}", (void *)session, (args->valid_rflow) ? "valid" : "not valid");
+    HAL_TRACE_VERBOSE("Creating session {:p} with a rflow :{}", (void *)session, (args->valid_rflow) ? "valid" : "not valid");
 
     dllist_reset(&session->feature_list_head);
     session->vrf_handle = args->vrf->hal_handle;
@@ -1529,7 +1529,7 @@ session_update(const session_args_t *args, session_t *session)
 
     if (session->fte_id != fte::fte_id()) {
         HAL_TRACE_ERR("session fte_id {} current fte_id {}", session->fte_id, fte::fte_id());
-        return HAL_RET_OK; 
+        return HAL_RET_OK;
     }
 
     session->idle_timeout = args->session->idle_timeout;
@@ -1635,7 +1635,7 @@ typedef struct tcptkle_timer_ctx_ {
 #define BUILD_TCP_SEND_TIMESTAMP 0x01
 #define BUILD_TCP_SEND_RST       0x02
 #define BUILD_TCP_SEND_FIN       0x04
- 
+
 static uint32_t
 build_tcp_packet (hal::flow_t *flow, session_t *session,
                   flow_state_t state,
@@ -1782,7 +1782,7 @@ build_tcp_packet (hal::flow_t *flow, session_t *session,
     tcp_hdr->dport = htons(key.dport);
     tcp_hdr->seq = htonl((setrst)?state.tcp_seq_num:(state.tcp_seq_num-1));
     tcp_hdr->ack_seq = htonl(state.tcp_ack_num);
-    tcp_option_len = (send_tcp_ts)?(TCP_TS_OPTION_LEN/4):0; 
+    tcp_option_len = (send_tcp_ts)?(TCP_TS_OPTION_LEN/4):0;
     tcp_hdr->doff = (5 + tcp_option_len);    // TCP header size in words
     tcp_hdr->res1 = 0;
     tcp_hdr->cwr = 0;
@@ -1944,12 +1944,12 @@ tcp_tickle_timeout_cb (void *timer, uint32_t timer_id, void *timer_ctxt)
      * of the IFLOW hence the count on the iflow packets would need to more than
      * what we saw before sending the tickle. If both IFLOW & RFLOW were aged, then
      * we would generate tickles on both direction, in that case we would need to make
-     * sure the packet count is > (1+prev-packet-count) as tickle would also have 
+     * sure the packet count is > (1+prev-packet-count) as tickle would also have
      * incremented the packet count and we should rely on that.
      */
-    if ((ctx->aged_flow == SESSION_AGED_IFLOW && 
+    if ((ctx->aged_flow == SESSION_AGED_IFLOW &&
         (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
-         session_state.iflow_state.packets < (ctx->session_state.iflow_state.packets + 1)) || 
+         session_state.iflow_state.packets < (ctx->session_state.iflow_state.packets + 1)) ||
         (ctx->aged_flow == SESSION_AGED_BOTH &&
         (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) &&
          session_state.iflow_state.packets <= (ctx->session_state.iflow_state.packets + 1))) {
@@ -2014,7 +2014,7 @@ build_and_send_tcp_pkt (void *data)
     // Set the timestamp option if needed
     send_ts = ctxt->session_state.tcp_ts_option;
     if (send_ts)
-        flags |= BUILD_TCP_SEND_TIMESTAMP;   
+        flags |= BUILD_TCP_SEND_TIMESTAMP;
 
 
     if (ctxt->num_tickles <= MAX_TCP_TICKLES) {
@@ -2036,18 +2036,18 @@ build_and_send_tcp_pkt (void *data)
         if ((ctxt->aged_flow == SESSION_AGED_RFLOW ||
              ctxt->aged_flow == SESSION_AGED_BOTH)) {
             sz = build_tcp_packet(session->iflow, session,
-                             ctxt->session_state.iflow_state, &cpu_header, &p4plus_header, 
+                             ctxt->session_state.iflow_state, &cpu_header, &p4plus_header,
                              pkt, flags);
             // There was some issue with packet construction
             // bail out
-            if (!sz) goto triggerdelete; 
+            if (!sz) goto triggerdelete;
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
             SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_tickles_sent, 1);
         }
 
 #if SESSION_AGE_DEBUG
         HAL_TRACE_DEBUG("Sending another tickle and starting timer {} iflow stats: {} rflow stats {}",
-                         session->hal_handle, session->iflow->stats.num_tcp_tickles_sent, 
+                         session->hal_handle, session->iflow->stats.num_tcp_tickles_sent,
                          (session->rflow)?session->rflow->stats.num_tcp_tickles_sent:0);
 #endif
 
@@ -2062,7 +2062,7 @@ build_and_send_tcp_pkt (void *data)
                                               (void *)ctxt,
                                               tcp_tickle_timeout_cb, false);
          return;
-    } 
+    }
     // Send TCP RST to the flow if there is no response
     if (ctxt->aged_flow == SESSION_AGED_IFLOW ||
         ctxt->aged_flow == SESSION_AGED_BOTH) {
@@ -2072,7 +2072,7 @@ build_and_send_tcp_pkt (void *data)
                               pkt, flags);
         if (sz)  {
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
-            SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_rst_sent, 1); 
+            SDK_ATOMIC_INC_UINT64(&session->iflow->stats.num_tcp_rst_sent, 1);
         }
     }
     if (ctxt->aged_flow == SESSION_AGED_RFLOW ||
@@ -2158,7 +2158,7 @@ session_age_cb (void *entry, void *ctxt)
     if (session == NULL || session->hal_handle == HAL_HANDLE_INVALID) {
         return false;
     }
- 
+
     // Check if its a TCP flow with connection tracking enabled.
     // And connection tracking timer is not NULL. This means the session
     // is one of connection establishment or connection close phase. Disable
@@ -2167,7 +2167,7 @@ session_age_cb (void *entry, void *ctxt)
     if (session->iflow->config.key.proto == IPPROTO_TCP &&
         session->conn_track_en &&
         session->tcp_cxntrack_timer != NULL) {
-#if SESSION_AGE_DEBUG 
+#if SESSION_AGE_DEBUG
         HAL_TRACE_DEBUG("Session connection tracking timer is on for {} -- bailing aging",
                         session->hal_handle);
 #endif
@@ -2185,7 +2185,7 @@ session_age_cb (void *entry, void *ctxt)
          *  seconds. We send 3 tickles (keepalives) before we send out TCP RST
          *  and proceed to delete the session
          */
-        if ((session->iflow->config.key.proto == IPPROTO_TCP) && 
+        if ((session->iflow->config.key.proto == IPPROTO_TCP) &&
             (session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED)) {
             tklectx = (tcptkle_timer_ctx_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_TIMER_CTXT,
                                                      sizeof(tcptkle_timer_ctx_t));
@@ -2202,7 +2202,7 @@ session_age_cb (void *entry, void *ctxt)
             if (args->num_ctx[session->fte_id] == HAL_SESSIONS_TO_SCAN_PER_INTVL)
                 return true;
         } else {
-            /* 
+            /*
              * Dont delete UDP sessions if one flow ages and other remains
              * For TCP, the only reason why we get here is because we want to
              * cleanup for cases where we could have missed TCP Close in FTE
@@ -2213,7 +2213,7 @@ session_age_cb (void *entry, void *ctxt)
                 return false;
             }
 #if SESSION_AGE_DEBUG
-            HAL_TRACE_DEBUG("UDP Session: {} num_del_sess: {} session_list: {:#x}",
+            HAL_TRACE_DEBUG("UDP Session: {} num_del_sess: {} session_list: {:p}",
                     session->hal_handle, args->num_del_sess[session->fte_id],
                     (void *)args->session_list[session->fte_id]);
 #endif
@@ -2223,7 +2223,7 @@ session_age_cb (void *entry, void *ctxt)
 
             // Stop processing if we have reached the maximum limit per FTE
             // We will process the rest in the next round
-            if (args->num_del_sess[session->fte_id] == HAL_SESSIONS_TO_SCAN_PER_INTVL) 
+            if (args->num_del_sess[session->fte_id] == HAL_SESSIONS_TO_SCAN_PER_INTVL)
                 return true;
 
             HAL_SESSION_STATS_PTR(session->fte_id)->aged_sessions += 1;
@@ -2299,7 +2299,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
         bucket = (bucket + 1)%g_hal_state->session_hal_handle_ht()->num_buckets();
     }
 #if SESSION_AGE_DEBUG
-    HAL_TRACE_DEBUG("Num sessions: {} bucket {} buckets {} max buckets {}", num_sessions, bucket, bucket_no, g_hal_state->session_hal_handle_ht()->num_buckets()); 
+    HAL_TRACE_DEBUG("Num sessions: {} bucket {} buckets {} max buckets {}", num_sessions, bucket, bucket_no, g_hal_state->session_hal_handle_ht()->num_buckets());
 #endif
 
     //Check if there are pending requests that need to be queued to FTE threads
@@ -2311,7 +2311,7 @@ session_age_walk_cb (void *timer, uint32_t timer_id, void *ctxt)
                                           HAL_MEM_ALLOC_SESS_TIMER_CTXT_PER_FTE,
                                           sizeof(tcptkle_timer_ctx_t*)*HAL_MAX_SESSION_PER_ENQ);
             SDK_ASSERT(tctx_list != NULL);
-            for (uint8_t idx=0; (idx < HAL_MAX_SESSION_PER_ENQ && idx < args.num_ctx[fte_id]); 
+            for (uint8_t idx=0; (idx < HAL_MAX_SESSION_PER_ENQ && idx < args.num_ctx[fte_id]);
                  idx++, ctxt_num++, args.num_ctx[fte_id]--) {
                 tctx_list[idx] = args.tctx_list[fte_id][ctxt_num];
             }
@@ -2364,11 +2364,11 @@ session_init (hal_cfg_t *hal_cfg)
         g_session_stats = (session_stats_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESSION_STATS,
                                    (sizeof(session_stats_t)*hal::g_hal_cfg.num_data_cores));
         SDK_ASSERT(g_session_stats != NULL);
-         
+
     } else {
         sdk::types::mem_addr_t vaddr;
         sdk::types::mem_addr_t start_addr = get_mem_addr(CAPRI_HBM_REG_SESSION_SUMMARY_STATS);
-        HAL_TRACE_VERBOSE("Start addr: {:#x}", start_addr);
+        HAL_TRACE_VERBOSE("Start addr: {:p}", start_addr);
         SDK_ASSERT(start_addr != INVALID_MEM_ADDRESS);
 
         for (uint32_t fte = 0; fte < hal::g_hal_cfg.num_data_cores; fte++) {
@@ -2376,7 +2376,7 @@ session_init (hal_cfg_t *hal_cfg)
              auto session_global_stats =
                    delphi::objects::SessionSummaryMetrics::NewSessionSummaryMetrics(fte, start_addr);
              SDK_ASSERT(session_global_stats != NULL);
-    
+
              sdk::lib::pal_ret_t ret = sdk::lib::pal_physical_addr_to_virtual_addr(start_addr, &vaddr);
              SDK_ASSERT(ret == sdk::lib::PAL_RET_OK);
 
@@ -2386,7 +2386,7 @@ session_init (hal_cfg_t *hal_cfg)
              start_addr += 1 << HAL_SESSION_STATS_SHIFT;
         }
     }
-     
+
     g_hal_state->oper_db()->set_max_data_threads(hal_cfg->num_data_cores);
 
     // wait until the periodic thread is ready
@@ -2572,14 +2572,14 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
         return;
     }
 
-    HAL_TRACE_DEBUG("Session handle: {} IFlow State: {}", 
+    HAL_TRACE_DEBUG("Session handle: {} IFlow State: {}",
                      session_handle, state.iflow_state.state);
 
     session->tcp_cxntrack_timer = NULL;
 
     // If we havent received bidir FIN by now then we go ahead and cleanup
     // the session
-    if (state.iflow_state.state != session::FLOW_TCP_STATE_BIDIR_FIN_RCVD && 
+    if (state.iflow_state.state != session::FLOW_TCP_STATE_BIDIR_FIN_RCVD &&
         state.rflow_state.state != session::FLOW_TCP_STATE_BIDIR_FIN_RCVD) {
         tcp_close_cb(timer, timer_id, (void *)(session->hal_handle));
     }
@@ -2603,7 +2603,7 @@ schedule_tcp_half_closed_timer (session_t *session)
     }
 
     timeout = get_tcp_timeout(session, TCP_HALF_CLOSED_TIMEOUT);
-    if (timeout == HAL_MAX_INACTIVTY_TIMEOUT) { 
+    if (timeout == HAL_MAX_INACTIVTY_TIMEOUT) {
         // No timeout configured so we bail out
         return HAL_RET_OK;
     }
@@ -2782,7 +2782,7 @@ session_eval_matching_session (session_match_t  *match)
 {
     // Close the config db to avoid any deadlocks with FTE
     hal::hal_cfg_db_close();
-    
+
     auto walk_func = [](void *entry, void *ctxt) {
         hal::session_t  *session = (session_t *)entry;
         session_match_t *match = (session_match_t *) ctxt;
@@ -2892,7 +2892,7 @@ system_fte_stats_get(SystemResponse *rsp)
     for (uint32_t i = 0; i < hal::g_hal_cfg.num_data_cores; i++) {
         per_fte_stats = fte::fte_stats_get(i);
         fte_stats = fte_global_stats->add_fte_stats_info();
- 
+
         if (per_fte_stats.fte_hbm_stats) {
             fte_stats->set_conn_per_second(per_fte_stats.fte_hbm_stats->cpsstats.cps);
             fte_stats->set_max_conn_per_sec(per_fte_stats.fte_hbm_stats->cpsstats.cps_hwm);
@@ -2924,7 +2924,7 @@ system_fte_stats_get(SystemResponse *rsp)
              for (uint8_t idx=0; idx<HAL_RET_ERR; idx++) {
                  if (std::strcmp(HAL_RET_ENTRIES_str((hal_ret_t)idx), "unknown")) {
                      FTEError   *fte_err = feature_stat->add_drop_reason();
-        
+
                      fte_err->set_count(per_fte_stats.feature_stats[feature].drop_reason[idx]);
                      fte_err->set_fte_error(HAL_RET_ENTRIES_str((hal_ret_t)idx));
                 }
@@ -2977,7 +2977,7 @@ system_session_summary_get(SystemResponse *rsp)
 }
 
 /*
- * TCP FIN context used to send 
+ * TCP FIN context used to send
  * out TCP FIN in case of Upgrade.
  */
 typedef struct tcpfin_args_ {
@@ -2990,7 +2990,7 @@ typedef struct tcpfin_args_ {
 /*
  * Send out FIN on IFLOW and/or RFLOW if SEP or DEP is local
  */
-void 
+void
 session_send_tcp_fin (void *data) {
     tcpfin_args_t               *tcpfin = (tcpfin_args_t *)data;
     bool                        local_src = tcpfin->local_src;
@@ -3005,7 +3005,7 @@ session_send_tcp_fin (void *data) {
 
     session = hal::find_session_by_handle(tcpfin->session_handle);
     if (session == NULL) {
-        HAL_TRACE_ERR("Cant find the session for handle {} -- bailing", 
+        HAL_TRACE_ERR("Cant find the session for handle {} -- bailing",
                       tcpfin->session_handle);
         return;
     }
@@ -3015,16 +3015,16 @@ session_send_tcp_fin (void *data) {
     if (session_state.tcp_ts_option)
         flags |= BUILD_TCP_SEND_TIMESTAMP;
 
-    if (local_dst && 
+    if (local_dst &&
         session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) {
         sz = build_tcp_packet(session->iflow, session,
                               session_state.iflow_state, &cpu_header, &p4plus_header,
                               pkt, flags);
-        if (sz) 
+        if (sz)
             fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
     }
 
-    if (local_src && 
+    if (local_src &&
         session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) {
         sz = build_tcp_packet(session->rflow, session,
                               session_state.rflow_state, &cpu_header, &p4plus_header,
@@ -3050,13 +3050,13 @@ session_handle_upgrade (void)
         hal_ret_t                   ret = HAL_RET_OK;
         pd::pd_func_args_t          pd_func_args = {0};
         tcpfin_args_t              *finargs = NULL;
-        
-        if (session->sep_handle != HAL_HANDLE_INVALID) 
+
+        if (session->sep_handle != HAL_HANDLE_INVALID)
             sep = find_ep_by_handle(session->sep_handle);
 
         if (session->dep_handle != HAL_HANDLE_INVALID)
             dep = find_ep_by_handle(session->dep_handle);
- 
+
         src_is_local = (sep && (sep->ep_flags & EP_FLAGS_LOCAL));
         dst_is_local = (dep && (dep->ep_flags & EP_FLAGS_LOCAL));
 
@@ -3078,7 +3078,7 @@ session_handle_upgrade (void)
 
             finargs->session_handle = session->hal_handle;
             finargs->local_src = src_is_local;
-            finargs->local_dst = dst_is_local; 
+            finargs->local_dst = dst_is_local;
             ret = fte::fte_softq_enqueue(session->fte_id,
                                          session_send_tcp_fin,
                                          (void *)finargs);
@@ -3087,7 +3087,7 @@ session_handle_upgrade (void)
                                         session->hal_handle);
             }
         }
-         
+
         return false;
     };
 
@@ -3103,7 +3103,7 @@ hal_ret_t session_flow_hash_get(FlowHashGetRequest& req,
     pd::pd_func_args_t          pd_func_args = {0};
     hal_ret_t                   ret = HAL_RET_OK;
 
-    extract_flow_key_from_spec(req.flow_key().src_vrf_id(), &args.key, req.flow_key()); 
+    extract_flow_key_from_spec(req.flow_key().src_vrf_id(), &args.key, req.flow_key());
 
     HAL_TRACE_DEBUG("Flow key: {}", args.key);
     args.key.dir = (req.flow_direction() == types::FLOW_DIRECTION_FROM_UPLINK)?FLOW_DIR_FROM_UPLINK:FLOW_DIR_FROM_DMA;
