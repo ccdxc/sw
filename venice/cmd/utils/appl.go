@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// IsRunningonVeniceAppl returns true when running on Venice Appliance
+// IsRunningOnVeniceAppl returns true when running on Venice Appliance
 // 	In case of Appliance, we own the OS code as well and hence during upgrade
 //	we upgrade OS in addition to venice application code.
 func IsRunningOnVeniceAppl() bool {
