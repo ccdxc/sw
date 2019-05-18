@@ -40,7 +40,7 @@ func init() {
 	deviceShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 
 	updateCmd.AddCommand(deviceUpdateCmd)
-	deviceUpdateCmd.Flags().StringVar(&deviceProfile, "profile", "default", "Specify device profile (Ex: default, p1)")
+	deviceUpdateCmd.Flags().StringVar(&deviceProfile, "profile", "default", "Specify device profile (Ex: default, p1, p2)")
 	deviceUpdateCmd.MarkFlagRequired("profile")
 }
 
@@ -59,7 +59,7 @@ func deviceUpdateCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	if isValidDeviceProfile(deviceProfile) == false {
-		fmt.Printf("Invalid device profile specified. Must be one of default and p1\n")
+		fmt.Printf("Invalid device profile specified. Must be one of default, p1 & p2\n")
 		return
 	}
 
@@ -109,6 +109,8 @@ func isValidDeviceProfile(str string) bool {
 		return true
 	} else if strings.Compare(str, "p1") == 0 {
 		return true
+	} else if strings.Compare(str, "p2") == 0 {
+		return true
 	}
 
 	return false
@@ -121,6 +123,8 @@ func inputToDeviceProfile(str string) pds.DeviceProfile {
 		return pds.DeviceProfile_DEVICE_PROFILE_DEFAULT
 	} else if strings.Compare(str, "p1") == 0 {
 		return pds.DeviceProfile_DEVICE_PROFILE_P1
+	} else if strings.Compare(str, "p2") == 0 {
+		return pds.DeviceProfile_DEVICE_PROFILE_P2
 	} else {
 		return pds.DeviceProfile_DEVICE_PROFILE_DEFAULT
 	}

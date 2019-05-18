@@ -85,6 +85,8 @@ pds_test_base::SetUpTestCase(test_case_params_t &params)
     if (!params.profile.empty()) {
         if (params.profile.compare("p1") == 0) {
             init_params.scale_profile = PDS_SCALE_PROFILE_P1;
+        } else if (params.profile.compare("p2") == 0) {
+            init_params.scale_profile = PDS_SCALE_PROFILE_P2;
         }
     }
     init_params.batching_en = true;

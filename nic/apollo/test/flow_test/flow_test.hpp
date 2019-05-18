@@ -131,6 +131,8 @@ private:
             return "scale_cfg.json";
         } else if (p == PDS_SCALE_PROFILE_P1) {
             return "scale_cfg_p1.json";
+        } else if (p == PDS_SCALE_PROFILE_P2) {
+            return "scale_cfg_p2.json";
         } else {
             assert(0);
         }

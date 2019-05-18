@@ -51,10 +51,10 @@ typedef struct pds_meter_rule_s {
 /// \brief metering configuration
 typedef struct pds_meter_spec_s    pds_meter_spec_t;
 struct pds_meter_spec_s {
-    pds_meter_key_t     key;             ///< key
-    uint8_t             af;              ///< address family - v4 or v6
-    uint32_t            num_rules;       ///< number of metering rules in this policy
-    pds_meter_rule_t    *rules;          ///< metering rules
+    pds_meter_key_t     key;          ///< key
+    uint8_t             af;           ///< address family - v4 or v6
+    uint32_t            num_rules;    ///< number of metering rules in this policy
+    pds_meter_rule_t    *rules;       ///< metering rules
 
     // constructor
     pds_meter_spec_s() { rules = NULL; }

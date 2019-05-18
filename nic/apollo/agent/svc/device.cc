@@ -11,7 +11,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #define DEVICE_CONF_FILE "/sysconfig/config0/device.conf"
- 
+
 // Populate proto buf spec from device API spec
 static inline void
 device_api_spec_to_proto_spec (const pds_device_spec_t *api_spec,
@@ -94,8 +94,9 @@ device_profile_update (pds::DeviceProfile profile)
         output.put("profile", "default");
     } else if (profile == pds::DEVICE_PROFILE_P1) {
         output.put("profile", "p1");
+    } else if (profile == pds::DEVICE_PROFILE_P2) {
+        output.put("profile", "p2");
     }
-
     output.put("port-admin-state", "PORT_ADMIN_STATE_ENABLE");
 
     try {
@@ -107,7 +108,7 @@ device_profile_update (pds::DeviceProfile profile)
             output.put(pos->first.data(), pos->second.data());
             ++pos;
         }
-    } catch (...) {} 
+    } catch (...) {}
 
     boost::property_tree::write_json(DEVICE_CONF_FILE, output);
 

@@ -138,6 +138,10 @@ pds_init (pds_init_params_t *params)
         mem_json =
             api::g_pds_state.cfg_path() + "/" + params->pipeline +
             "/hbm_mem_p1.json";
+    } else if (params->scale_profile == PDS_SCALE_PROFILE_P2) {
+        mem_json =
+            api::g_pds_state.cfg_path() + "/" + params->pipeline +
+            "/hbm_mem_p2.json";
     } else {
         PDS_TRACE_ERR("Unknown scale profile %u, aborting ...",
                       params->scale_profile);

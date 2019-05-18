@@ -142,6 +142,8 @@ init_pds (std::string cfg_file, std::string profile)
     if (!profile.empty()) {
         if (profile.compare("p1") == 0) {
             init_params.scale_profile = PDS_SCALE_PROFILE_P1;
+        } else if (profile.compare("p2") == 0) {
+            init_params.scale_profile = PDS_SCALE_PROFILE_P2;
         }
     }
     ret = pds_init(&init_params);
