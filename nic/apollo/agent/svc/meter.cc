@@ -40,9 +40,7 @@ pds_meter_proto_spec_to_api_spec (pds_meter_spec_t *api_spec,
                             proto_rule_spec.bpspolicer().bytespersecond();
             api_rule_spec->byte_burst = proto_rule_spec.bpspolicer().burst();
         } else {
-            PDS_TRACE_ERR("Meter %d spec should have one of "
-                          "BPS and PPS Policer", api_spec->key.id);
-            return SDK_RET_INVALID_ARG;
+            api_rule_spec->type = PDS_METER_TYPE_ACCOUNTING;
         }
 
         api_rule_spec->num_prefixes = proto_rule_spec.prefix_size();
