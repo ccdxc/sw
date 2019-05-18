@@ -49,11 +49,11 @@ do
     cp -fa /pen/$i .
 done
 
-curl -sLo /pen/usr/local/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
-chmod +x /pen/usr/local/bin/jq
+curl -sLo /t2/usr/local/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+chmod +x /t2/usr/local/bin/jq
 
-cp /tools/scripts/venice_appl_GrubEntry.sh /pen/usr/local/bin/venice_appl_GrubEntry.sh
-chmod +x /pen/usr/local/bin/venice_appl_GrubEntry.sh
+cp /tools/scripts/venice_appl_GrubEntry.sh /t2/usr/local/bin/venice_appl_GrubEntry.sh
+chmod +x /t2/usr/local/bin/venice_appl_GrubEntry.sh
 
 systemctl --root=/t2 enable docker
 systemctl --root=/t2 enable penservice
