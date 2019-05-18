@@ -143,11 +143,12 @@ pds_init (pds_init_params_t *params)
             api::g_pds_state.cfg_path() + "/" + params->pipeline +
             "/hbm_mem_p2.json";
     } else {
-        PDS_TRACE_ERR("Unknown scale profile %u, aborting ...",
+        PDS_TRACE_ERR("Unknown profile %u, aborting ...",
                       params->scale_profile);
         return SDK_RET_INVALID_ARG;
     }
     api::g_pds_state.set_scale_profile(params->scale_profile);
+    PDS_TRACE_INFO("Initializing PDS with profile %u", params->scale_profile);
 
     // check if the memory carving configuration file exists
     if (access(mem_json.c_str(), R_OK) < 0) {

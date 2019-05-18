@@ -224,10 +224,11 @@ agent_init (std::string cfg_file, std::string profile)
     // initialize the logger instance
     logger_init();
 
-    // Read device profile
-    profile = device_profile_read();
+    // read device profile, if it exists
+    if (profile.empty()) {
+        profile = device_profile_read();
+    }
 
-    PDS_TRACE_DEBUG("Read device profile");
     // initialize PDS library
     ret = init_pds(cfg_file, profile);
 

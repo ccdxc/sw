@@ -180,7 +180,7 @@
             "name": "meter_v6",
             "_comment": "(64+1) * (64 + 4 * 64 + 4^2  * 64 + 4^3 * 64 + 4^4 * 64 + 4^5 * 64)",
             "size": "6M",
-            "block_size": "87360",
+            "block_size": "87360B",
             "max_elements": "1K",
             "cache": "p4plus-rxdma"
         },
