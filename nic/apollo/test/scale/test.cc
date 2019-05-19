@@ -729,6 +729,10 @@ create_meter (uint32_t num_meter, uint32_t meter_scale, pds_meter_type_t type,
     static uint32_t meter_pfx_count = 0;
     uint32_t num_prefixes = 16;
 
+    if (num_meter == 0) {
+        return SDK_RET_OK;
+    }
+
     memset(&pds_meter, 0, sizeof(pds_meter_spec_t));
     pds_meter.rules =
             (pds_meter_rule_t *)SDK_MALLOC(PDS_MEM_ALLOC_ID_METER,
