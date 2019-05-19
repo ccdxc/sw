@@ -138,16 +138,16 @@ inline void workflow_5(seed_T *seed1, seed_T *seed2, seed_T *seed3) {
 // WF_6: [ Create SetMax - Update SetMax - Update SetMax - Delete SetMax ]
 //       - Read
 template <typename class_T, typename seed_T>
-inline void workflow_6(seed_T *seed1, seed_T *seed2, seed_T *seed3) {
+inline void workflow_6(seed_T *seed1, seed_T *seed1A, seed_T *seed1B) {
     // trigger
     batch_start();
     MANY_CREATE(seed1);
-    MANY_UPDATE(seed2);
-    MANY_UPDATE(seed3);
-    MANY_DELETE(seed3);
+    MANY_UPDATE(seed1A);
+    MANY_UPDATE(seed1B);
+    MANY_DELETE(seed1B);
     batch_commit();
 
-    MANY_READ_FAIL(seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    MANY_READ_FAIL(seed1B, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 // WF_7: [ Create SetMax - Delete SetMax - Create SetMax - Update SetMax -
@@ -385,8 +385,6 @@ inline void workflow_neg_7(seed_T *seed1, seed_T *seed1A) {
     batch_abort();
 
     MANY_READ(seed1);
-    // TODO: looks wrong, entry should be found, right?
-    // MANY_READ_FAIL(seed1A, sdk::SDK_RET_ENTRY_NOT_FOUND);
 
     // cleanup
     batch_start();

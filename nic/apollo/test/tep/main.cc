@@ -11,6 +11,8 @@
 #include <getopt.h>
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/utils/batch.hpp"
+#include "nic/apollo/test/utils/workflow.hpp"
 #include "nic/apollo/test/utils/tep.hpp"
 
 using std::cerr;
@@ -55,612 +57,230 @@ protected:
 /// \defgroup TEP
 /// @{
 
-/// \brief Create and delete maximum TEPs in the same batch
-/// The operation should be de-duped by framework and is a NO-OP
-/// from hardware perspective
-/// [ Create SetMax - Delete SetMax ] - Read
+/// \brief TEP WF_1
 TEST_F(tep_test, tep_workflow1) {
-    pds_batch_params_t batch_params = {0};
     tep_stepper_seed_t seed = {};
 
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
                   k_mplsoudp_encap, k_nat, &seed);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seed);
-    TEP_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    workflow_1<tep_util, tep_stepper_seed_t>(&seed);
 }
 
-/// \brief Create, delete and create max TEPs in the same batch
-/// Create and delete should be de-deduped by framework and subsequent
-/// create should result in successful creation
-/// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
+/// \brief TEP WF_2
 TEST_F(tep_test, tep_workflow2) {
-    pds_batch_params_t batch_params = {0};
     tep_stepper_seed_t seed = {};
 
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
                   k_mplsoudp_encap, k_nat, &seed);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seed);
-    TEP_MANY_DELETE(&seed);
-    TEP_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ(&seed);
-
-    // cleanup
-    BATCH_START();
-    TEP_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    workflow_2<tep_util, tep_stepper_seed_t>(&seed);
 }
 
-/// \brief Create, delete some and create another set of TEPs in the same batch
-/// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
+/// \brief TEP WF_3
 TEST_F(tep_test, tep_workflow3) {
-    pds_batch_params_t batch_params = {0};
-    tep_stepper_seed_t seedA = {}, seedB = {}, seedC = {};
+    tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
     TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedA);
+                  k_mplsoudp_encap, k_nat, &seed1);
     TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedB);
+                  k_mplsoudp_encap, k_nat, &seed2);
     TEP_SEED_INIT(30, "30.30.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedC);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seedA);
-    TEP_MANY_CREATE(&seedB);
-    TEP_MANY_DELETE(&seedA);
-    TEP_MANY_CREATE(&seedC);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seedA, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    TEP_MANY_READ(&seedB);
-    TEP_MANY_READ(&seedC);
-
-    // cleanup
-    BATCH_START();
-    TEP_MANY_DELETE(&seedB);
-    TEP_MANY_DELETE(&seedC);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seedB, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    TEP_MANY_READ_FAIL(&seedC, sdk::SDK_RET_ENTRY_NOT_FOUND);
+                  k_mplsoudp_encap, k_nat, &seed3);
+    workflow_3<tep_util, tep_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create and delete max TEPs in different batches
-/// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
+/// \brief TEP WF_4
 TEST_F(tep_test, tep_workflow4) {
-    pds_batch_params_t batch_params = {0};
     tep_stepper_seed_t seed = {};
 
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
                   k_mplsoudp_encap, k_nat, &seed);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ(&seed);
-
-    BATCH_START();
-    TEP_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    workflow_4<tep_util, tep_stepper_seed_t>(&seed);
 }
 
-/// \brief Create and delete mix and match of TEPs in different batches
-/// [ Create Set1, Set2 ] - Read - [Delete Set1 - Create Set3 ] - Read
+/// \brief TEP WF_5
 TEST_F(tep_test, tep_workflow5) {
-    pds_batch_params_t batch_params = {0};
-    tep_stepper_seed_t seedA = {}, seedB = {}, seedC = {};
+    tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
     TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedA);
+                  k_mplsoudp_encap, k_nat, &seed1);
     TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedB);
+                  k_mplsoudp_encap, k_nat, &seed2);
     TEP_SEED_INIT(30, "30.30.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedC);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seedA);
-    TEP_MANY_CREATE(&seedB);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ(&seedA);
-    TEP_MANY_READ(&seedB);
-
-    BATCH_START();
-    TEP_MANY_DELETE(&seedA);
-    TEP_MANY_CREATE(&seedC);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seedA, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    TEP_MANY_READ(&seedB);
-    TEP_MANY_READ(&seedC);
-
-    // cleanup
-    BATCH_START();
-    TEP_MANY_DELETE(&seedB);
-    TEP_MANY_DELETE(&seedC);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seedB, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    TEP_MANY_READ_FAIL(&seedC, sdk::SDK_RET_ENTRY_NOT_FOUND);
+                  k_mplsoudp_encap, k_nat, &seed3);
+    workflow_5<tep_util, tep_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create, update and delete maximum TEPs in the same batch
-/// The operation should be de-duped by framework and is a NO-OP
-/// from hardware perspective
-/// [ Create SetMax - Update SetMax - Update SetMax - Delete SetMax ] - Read
+/// \brief TEP WF_6
 TEST_F(tep_test, tep_workflow6) {
-    pds_batch_params_t batch_params = {0};
-    tep_stepper_seed_t seedA = {}, seedA1 = {}, seedA2 = {};
+    tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedA);
-    // seedA1 =  seedA + different encap
+                  k_mplsoudp_encap, k_nat, &seed1);
+    // seed1A =  seed1 + different encap
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_vxlan_encap, k_nat, &seedA1);
-    // seedA2 =  seedA1 + different tunnel type, encap, nat
+                  k_vxlan_encap, k_nat, &seed1A);
+    // seed1B =  seedA1 + different tunnel type, encap, nat
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seedA2);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seedA);
-    TEP_MANY_UPDATE(&seedA1);
-    TEP_MANY_UPDATE(&seedA2);
-    TEP_MANY_DELETE(&seedA2);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seedA2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+                  k_mplsoudp_encap, FALSE, &seed1B);
+    workflow_6<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
-/// \brief Create, delete, create, update, update max TEPs in the same batch
-/// Create and delete should be de-deduped by framework and subsequent
-/// create and double update should succeed
-/// [ Create Max - Delete Max - Create Max - Update Max - Update Max]
+/// \brief TEP WF_7
 TEST_F(tep_test, tep_workflow7) {
-    pds_batch_params_t batch_params = {0};
-    tep_stepper_seed_t seedA = {}, seedA1 = {}, seedA2 = {};
+    tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedA);
-    // seedA1 =  seedA + different encap
+                  k_mplsoudp_encap, k_nat, &seed1);
+    // seed1A =  seed1 + different encap
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_vxlan_encap, k_nat, &seedA1);
-    // seedA2 =  seedA1 + different tunnel type, encap, nat
+                  k_vxlan_encap, k_nat, &seed1A);
+    // seed1B =  seed1A + different tunnel type, encap, nat
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seedA2);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seedA);
-    TEP_MANY_DELETE(&seedA);
-    TEP_MANY_CREATE(&seedA);
-    TEP_MANY_UPDATE(&seedA1);
-    TEP_MANY_UPDATE(&seedA2);
-    BATCH_COMMIT();
-
-    // verify
-    TEP_MANY_READ(&seedA2);
-
-    // cleanup
-    BATCH_START();
-    TEP_MANY_DELETE(&seedA2);
-    BATCH_COMMIT();
-    TEP_MANY_READ_FAIL(&seedA2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+                  k_mplsoudp_encap, FALSE, &seed1B);
+    workflow_7<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
-/// \brief Create and update max TEPs in same batch
-/// [ Create Max - Update Max ] - Read - [ Update Max ] - Read - [ Delete Max ]
+/// \brief TEP WF_8
 TEST_F(tep_test, DISABLED_tep_workflow8) {
-    pds_batch_params_t batch_params = {0};
-    tep_stepper_seed_t seedA = {}, seedA1 = {}, seedA2 = {};
+    tep_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedA);
-    // seedA1 =  seedA + different encap
+                  k_mplsoudp_encap, k_nat, &seed1);
+    // seed1A =  seed1 + different encap
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_vxlan_encap, k_nat, &seedA1);
-    // seedA2 =  seedA1 + different tunnel type, encap, nat
+                  k_vxlan_encap, k_nat, &seed1A);
+    // seedA1B =  seed1A + different tunnel type, encap, nat
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seedA2);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seedA);
-    TEP_MANY_UPDATE(&seedA1);
-    BATCH_COMMIT();
-
-    // TODO: tunnel type will be lost with vxlan encap
-    TEP_MANY_READ(&seedA1);
-
-    BATCH_START();
-    TEP_MANY_UPDATE(&seedA2);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ(&seedA2);
-
-    BATCH_START();
-    TEP_MANY_DELETE(&seedA2);
-    BATCH_COMMIT();
-    TEP_MANY_READ_FAIL(&seedA2, sdk::SDK_RET_ENTRY_NOT_FOUND);
+                  k_mplsoudp_encap, FALSE, &seed1B);
+    workflow_8<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
-/// \brief Update and delete max TEPs in same batch
-/// [ Create SetMax ] - Read - [ Update SetMax - Delete SetMax ] - Read
+/// \brief TEP WF_9
 TEST_F(tep_test, tep_workflow9) {
-    pds_batch_params_t batch_params = {0};
-    tep_stepper_seed_t seedA = {}, seedA1 = {};
+    tep_stepper_seed_t seed1 = {}, seed1A = {};
 
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedA);
-    // seedA1 =  seedA + different tunnel type, encap, nat
+                  k_mplsoudp_encap, k_nat, &seed1);
+    // seed1A =  seed1 + different tunnel type, encap, nat
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_IGW,
-                  k_vxlan_encap, FALSE, &seedA1);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seedA);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ(&seedA);
-
-    BATCH_START();
-    TEP_MANY_UPDATE(&seedA1);
-    TEP_MANY_DELETE(&seedA1);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seedA1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+                  k_vxlan_encap, FALSE, &seed1A);
+    workflow_9<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
 }
 
-/// \brief Create, update and delete mix and match of TEPs in different batches
-/// [ Create Set1, Set2, Set3 - Delete Set1 - Update Set2 ] - Read
-/// - [ Update Set3 - Delete Set2 - Create Set4] - Read
+/// \brief TEP WF_10
 TEST_F(tep_test, DISABLED_tep_workflow10) {
-    pds_batch_params_t batch_params = {0};
-    tep_stepper_seed_t seedA = {}, seedB = {}, seedC = {}, seedD = {};
-    tep_stepper_seed_t seedB1 = {}, seedC1 = {};
+    tep_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {}, seed4 = {};
+    tep_stepper_seed_t seed2A = {}, seed3A = {};
 
     TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedA);
+                  k_mplsoudp_encap, k_nat, &seed1);
     TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedB);
+                  k_mplsoudp_encap, k_nat, &seed2);
     TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seedB1);
+                  k_mplsoudp_encap, FALSE, &seed2A);
     TEP_SEED_INIT(30, "30.30.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedC);
+                  k_mplsoudp_encap, k_nat, &seed3);
     TEP_SEED_INIT(30, "30.30.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, FALSE, &seedC1);
+                  k_mplsoudp_encap, FALSE, &seed3A);
     TEP_SEED_INIT(40, "40.40.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedD);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seedA);
-    TEP_MANY_CREATE(&seedB);
-    TEP_MANY_CREATE(&seedC);
-    TEP_MANY_DELETE(&seedA);
-    // update setB to different tunnel type and nat
-    TEP_MANY_UPDATE(&seedB1);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seedA, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    TEP_MANY_READ(&seedB1);
-    TEP_MANY_READ(&seedC);
-
-    BATCH_START();
-    // update setC to different nat
-    TEP_MANY_UPDATE(&seedC1);
-    TEP_MANY_DELETE(&seedB1);
-    TEP_MANY_CREATE(&seedD);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seedB1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    TEP_MANY_READ(&seedC1);
-    TEP_MANY_READ(&seedD);
-
-    // cleanup
-    BATCH_START();
-    TEP_MANY_DELETE(&seedC1);
-    TEP_MANY_DELETE(&seedD);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seedC1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    TEP_MANY_READ_FAIL(&seedD, sdk::SDK_RET_ENTRY_NOT_FOUND);
+                  k_mplsoudp_encap, k_nat, &seed4);
+    workflow_10<tep_util, tep_stepper_seed_t>(
+                &seed1, &seed2, &seed2A, &seed3, &seed3A, &seed4);
 }
 
-/// \brief Create maximum number of VPCs in two batches
-/// [ Create SetMax ] - [ Create SetMax ] - Read
+/// \brief TEP WF_N_1
 TEST_F(tep_test, tep_workflow_neg_1) {
-    pds_batch_params_t batch_params = {0};
     tep_stepper_seed_t seed = {};
 
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
                   k_mplsoudp_encap, k_nat, &seed);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ(&seed);
-
-    BATCH_START();
-    TEP_MANY_CREATE(&seed);
-    BATCH_COMMIT_FAILURE(sdk::SDK_RET_INVALID_OP);
-    BATCH_ABORT();
-
-    TEP_MANY_READ(&seed);
-
-    // cleanup
-    BATCH_START();
-    TEP_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    workflow_neg_1<tep_util, tep_stepper_seed_t>(&seed);
 }
 
-/// \brief Create more than maximum number of TEPs supported.
-/// [ Create SetMax+1 ] - Read
+/// \brief TEP WF_N_2
 TEST_F(tep_test, tep_workflow_neg_2) {
-    pds_batch_params_t batch_params = {0};
     tep_stepper_seed_t seed = {};
 
     TEP_SEED_INIT(k_max_tep + 2, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
                   k_mplsoudp_encap, k_nat, &seed);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seed);
-    BATCH_COMMIT_FAILURE(sdk::SDK_RET_NO_RESOURCE);
-    BATCH_ABORT();
-
-    TEP_MANY_READ_FAIL(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    workflow_neg_2<tep_util, tep_stepper_seed_t>(&seed);
 }
 
-/// \brief Read and delete non existing TEPs
-/// Read NonEx - [ Delete NonExMax ]
+/// \brief TEP WF_N_3
 TEST_F(tep_test, tep_workflow_neg_3) {
-    pds_batch_params_t batch_params = {0};
     tep_stepper_seed_t seed = {};
 
     TEP_SEED_INIT(k_max_tep, "150.150.1.1", PDS_TEP_TYPE_WORKLOAD,
                   k_mplsoudp_encap, k_nat, &seed);
-
-    // trigger
-    TEP_MANY_READ_FAIL(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_DELETE(&seed);
-    BATCH_COMMIT_FAILURE(sdk::SDK_RET_ENTRY_NOT_FOUND);
-    BATCH_ABORT();
+    workflow_neg_3<tep_util, tep_stepper_seed_t>(&seed);
 }
 
-/// \brief Invalid batch shouldn't affect entries of previous batch
-/// [ Create Set1 ] - [Delete Set1, Set2 ] - Read
+/// \brief TEP WF_N_4
 TEST_F(tep_test, tep_workflow_neg_4) {
-    pds_batch_params_t batch_params = {0};
-    tep_stepper_seed_t seedA = {}, seedB = {};
+    tep_stepper_seed_t seed1 = {}, seed2 = {};
 
     TEP_SEED_INIT(10, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedA);
+                  k_mplsoudp_encap, k_nat, &seed1);
     TEP_SEED_INIT(10, "60.60.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedB);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seedA);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ(&seedA);
-
-    BATCH_START();
-    TEP_MANY_DELETE(&seedA);
-    TEP_MANY_DELETE(&seedB);
-    BATCH_COMMIT_FAILURE(sdk::SDK_RET_ENTRY_NOT_FOUND);
-    BATCH_ABORT();
-
-    TEP_MANY_READ(&seedA);
-    TEP_MANY_READ_FAIL(&seedB, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
-    BATCH_START();
-    TEP_MANY_DELETE(&seedA);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seedA, sdk::SDK_RET_ENTRY_NOT_FOUND);
+                  k_mplsoudp_encap, k_nat, &seed2);
+    workflow_neg_4<tep_util, tep_stepper_seed_t>(&seed1, &seed2);
 }
 
-/// \brief TEP workflow corner case 4
-/// [ Create SetCorner ] - Read
-TEST_F(tep_test, tep_workflowcorner_case_4) {}
-
-/// \brief Update the deleted max TEPs in same batch
-/// [ Create SetMax ] - Read - [ Delete SetMax - Update SetMax ] - Read
+/// \brief TEP WF_N_5
 TEST_F(tep_test, DISABLED_tep_workflow_neg_5) {
-    pds_batch_params_t batch_params = {0};
-    tep_stepper_seed_t seed = {}, seed1 = {};
+    tep_stepper_seed_t seed1 = {}, seed1A = {};
 
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed);
-    // seed1 = seed + different tunnel type, nat
+                  k_mplsoudp_encap, k_nat, &seed1);
+    // seed1A = seed + different tunnel type, nat
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seed1);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ(&seed);
-
-    // delete and then update the TEPs in same batch
-    BATCH_START();
-    TEP_MANY_DELETE(&seed);
-    // update to different tunnel type, nat
-    TEP_MANY_UPDATE(&seed1);
-    BATCH_COMMIT_FAILURE(sdk::SDK_RET_ENTRY_NOT_FOUND);
-    BATCH_ABORT();
-    // TODO: Above batch commit crashes
-
-    TEP_MANY_READ(&seed);
-
-    // cleanup
-    BATCH_START();
-    TEP_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+                  k_mplsoudp_encap, FALSE, &seed1A);
+    workflow_neg_5<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
 }
 
-/// \brief Update and read non existing TEPs
-/// [ Update SetMax ] - Read
+/// \brief TEP WF_N_6
 TEST_F(tep_test, tep_workflow_neg_6) {
-    pds_batch_params_t batch_params = {0};
     tep_stepper_seed_t seed = {};
 
     TEP_SEED_INIT(k_max_tep, "150.150.1.1", PDS_TEP_TYPE_WORKLOAD,
                   k_mplsoudp_encap, k_nat, &seed);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_UPDATE(&seed);
-    BATCH_COMMIT_FAILURE(sdk::SDK_RET_ENTRY_NOT_FOUND);
-    BATCH_ABORT();
-
-    // trigger
-    TEP_MANY_READ_FAIL(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    workflow_neg_6<tep_util, tep_stepper_seed_t>(&seed);
 }
 
-/// \brief Create and then update max+1 TEPs in different batch
-/// [ Create SetMax ] - Read - [ Update SetMax + 1 ] - Read
+/// \brief TEP WF_N_7
 TEST_F(tep_test, tep_workflow_neg_7) {
-    pds_batch_params_t batch_params = {0};
-    tep_stepper_seed_t seed = {}, seed1 = {};
+    tep_stepper_seed_t seed1 = {}, seed1A = {};
 
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed);
-    // seed1 = seed + different tunnel type, nat
+                  k_mplsoudp_encap, k_nat, &seed1);
+    // seed1A = seed1 + different tunnel type, nat
     TEP_SEED_INIT(k_max_tep + 1, "50.50.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seed1);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ(&seed);
-
-    BATCH_START();
-    // update max+1 TEPs with different tunnel type, nat
-    TEP_MANY_UPDATE(&seed1);
-    BATCH_COMMIT_FAILURE(sdk::SDK_RET_ENTRY_NOT_FOUND);
-    BATCH_ABORT();
-
-    TEP_MANY_READ(&seed);
-
-    // cleanup
-    BATCH_START();
-    TEP_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+                  k_mplsoudp_encap, FALSE, &seed1A);
+    workflow_neg_7<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
 }
 
-/// \brief Update existing and non-existing TEPs in same batch
-/// [ Create Set1 ] - Read - [ Update Set1 - Update Set2 ] - Read
+/// \brief TEP WF_N_8
 TEST_F(tep_test, tep_workflow_neg_8) {
-    pds_batch_params_t batch_params = {0};
-    tep_stepper_seed_t seedA = {}, seedA1 = {}, seedB = {};
+    tep_stepper_seed_t seed1 = {}, seed1A = {}, seed2 = {};
 
     TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seedA);
+                  k_mplsoudp_encap, FALSE, &seed1);
     TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedA1);
+                  k_mplsoudp_encap, k_nat, &seed1A);
     TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedB);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seedA);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ(&seedA);
-
-    BATCH_START();
-    // update set1 to different tunnel type and nat
-    TEP_MANY_UPDATE(&seedA1);
-    // update set2 which does NOT exist
-    TEP_MANY_UPDATE(&seedB);
-    BATCH_COMMIT_FAILURE(sdk::SDK_RET_ENTRY_NOT_FOUND);
-    BATCH_ABORT();
-
-    // verify that set1 update is rolled back
-    TEP_MANY_READ(&seedA);
-    // verify that set2 stays non-existent
-    TEP_MANY_READ_FAIL(&seedB, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
-    BATCH_START();
-    TEP_MANY_DELETE(&seedA);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seedA, sdk::SDK_RET_ENTRY_NOT_FOUND);
+                  k_mplsoudp_encap, k_nat, &seed2);
+    workflow_neg_8<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed2);
 }
 
-/// \brief Delete existing and Update non-existing TEPs in same batch
-/// [ Create Set1 ] - Read - [ Delete Set1 - Update Set2 ] - Read
+/// \brief TEP WF_N_9
 TEST_F(tep_test, tep_workflow_neg_9) {
-    pds_batch_params_t batch_params = {0};
-    tep_stepper_seed_t seedA = {}, seedB = {};
+    tep_stepper_seed_t seed1 = {}, seed2 = {};
 
     TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_IGW,
-                  k_mplsoudp_encap, FALSE, &seedA);
+                  k_mplsoudp_encap, FALSE, &seed1);
     TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seedB);
-
-    // trigger
-    BATCH_START();
-    TEP_MANY_CREATE(&seedA);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ(&seedA);
-
-    BATCH_START();
-    TEP_MANY_DELETE(&seedA);
-    // update set2 which does NOT exist
-    TEP_MANY_UPDATE(&seedB);
-    BATCH_COMMIT_FAILURE(sdk::SDK_RET_ENTRY_NOT_FOUND);
-    BATCH_ABORT();
-
-    // verify that set1 deletion is rolled back
-    TEP_MANY_READ(&seedA);
-    // verify that set2 stays non-existent
-    TEP_MANY_READ_FAIL(&seedB, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
-    BATCH_START();
-    TEP_MANY_DELETE(&seedA);
-    BATCH_COMMIT();
-
-    TEP_MANY_READ_FAIL(&seedA, sdk::SDK_RET_ENTRY_NOT_FOUND);
+                  k_mplsoudp_encap, k_nat, &seed2);
+    workflow_neg_9<tep_util, tep_stepper_seed_t>(&seed1, &seed2);
 }
 
 /// @}

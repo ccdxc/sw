@@ -120,44 +120,44 @@ TEST_F(subnet, subnet_workflow_5) {
 /// \brief Subnet WF_6
 TEST_F(subnet, subnet_workflow_6) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_stepper_seed_t seed1, seed2, seed3;
+    subnet_stepper_seed_t seed1, seed1A, seed1B;
 
     SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
-    SUBNET_SEED_INIT(&seed2, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
-    SUBNET_SEED_INIT(&seed3, key, k_vpc_key, "12.0.0.0/16", k_max_subnet);
-    workflow_6<subnet_util, subnet_stepper_seed_t>(&seed1, &seed2, &seed3);
+    SUBNET_SEED_INIT(&seed1A, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
+    SUBNET_SEED_INIT(&seed1B, key, k_vpc_key, "12.0.0.0/16", k_max_subnet);
+    workflow_6<subnet_util, subnet_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
 /// \brief Subnet WF_7
 TEST_F(subnet, subnet_workflow_7) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_stepper_seed_t seed1, seed2, seed3;
+    subnet_stepper_seed_t seed1, seed1A, seed1B;
 
     SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
-    SUBNET_SEED_INIT(&seed2, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
-    SUBNET_SEED_INIT(&seed3, key, k_vpc_key, "12.0.0.0/16", k_max_subnet);
-    workflow_7<subnet_util, subnet_stepper_seed_t>(&seed1, &seed2, &seed3);
+    SUBNET_SEED_INIT(&seed1A, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
+    SUBNET_SEED_INIT(&seed1B, key, k_vpc_key, "12.0.0.0/16", k_max_subnet);
+    workflow_7<subnet_util, subnet_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
 /// \brief Subnet WF_8
 TEST_F(subnet, DISABLED_subnet_workflow_8) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_stepper_seed_t seed1, seed2, seed3;
+    subnet_stepper_seed_t seed1, seed1A, seed1B;
 
     SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
-    SUBNET_SEED_INIT(&seed2, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
-    SUBNET_SEED_INIT(&seed3, key, k_vpc_key, "12.0.0.0/16", k_max_subnet);
-    workflow_8<subnet_util, subnet_stepper_seed_t>(&seed1, &seed2, &seed3);
+    SUBNET_SEED_INIT(&seed1A, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
+    SUBNET_SEED_INIT(&seed1B, key, k_vpc_key, "12.0.0.0/16", k_max_subnet);
+    workflow_8<subnet_util, subnet_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
 /// \brief Subnet WF_9
 TEST_F(subnet, subnet_workflow_9) {
     pds_subnet_key_t key = {.id = 1};
-    subnet_stepper_seed_t seed1, seed2;
+    subnet_stepper_seed_t seed1, seed1A;
 
     SUBNET_SEED_INIT(&seed1, key, k_vpc_key, "10.0.0.0/16", k_max_subnet);
-    SUBNET_SEED_INIT(&seed2, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
-    workflow_9<subnet_util, subnet_stepper_seed_t>(&seed1, &seed2);
+    SUBNET_SEED_INIT(&seed1A, key, k_vpc_key, "11.0.0.0/16", k_max_subnet);
+    workflow_9<subnet_util, subnet_stepper_seed_t>(&seed1, &seed1A);
 }
 
 /// \brief Subnet WF_10
