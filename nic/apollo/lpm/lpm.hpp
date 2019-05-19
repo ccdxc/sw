@@ -20,6 +20,10 @@ typedef enum itree_type_e {
     ITREE_TYPE_IPV6,          /**< IPv6 route interval tree */
     ITREE_TYPE_PORT,          /**< tree with port as key */
     ITREE_TYPE_PROTO_PORT,    /**< tree with protocol + port as key */
+    ITREE_TYPE_METER_V4,      /**< IPv4 meter LPM interval tree */
+    ITREE_TYPE_METER_V6,      /**< IPv6 meter LPM interval tree */
+    ITREE_TYPE_TAG_V4,        /**< IPv4 tag LPM interval tree */
+    ITREE_TYPE_TAG_V6,        /**< IPv6 tag LPM interval tree */
     ITREE_TYPE_IPV4_ACL,      /**< IPv4 ACL interval tree */
     ITREE_TYPE_IPV6_ACL,      /**< IPv6 ACL interval tree */
 } itree_type_t;
@@ -58,6 +62,7 @@ typedef struct lpm_itable_s {
  * @brief    build interval tree based LPM tree at the given memory address
  *           based on the given route table
  * @param[in] route_table      pointer to the route configuration
+ * @param[in] type             type of LPM
  * @param[in] lpm_tree_root    pointer to the memory address at which tree
  *                             should be built
  * @param[in] lpm_mem_size     LPM memory block size provided (for error
@@ -68,6 +73,7 @@ typedef struct lpm_itable_s {
  *       in-place sorting on the given routing table
  */
 sdk_ret_t lpm_tree_create(route_table_t *route_table,
+                          itree_type_t type,
                           mem_addr_t lpm_tree_root_addr,
                           uint32_t lpm_mem_size);
 

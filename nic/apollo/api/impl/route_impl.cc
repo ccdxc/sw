@@ -181,7 +181,10 @@ route_table_impl::program_hw(api_base *api_obj, obj_ctxt_t *obj_ctxt) {
             break;
         }
     }
-    ret = lpm_tree_create(rtable, lpm_root_addr_,
+    ret = lpm_tree_create(rtable,
+                          (spec->af == IP_AF_IPV4) ? ITREE_TYPE_IPV4 :
+                                                     ITREE_TYPE_IPV6,
+                          lpm_root_addr_,
                           (spec->af == IP_AF_IPV4) ?
                           route_table_impl_db()->v4_table_size() :
                           route_table_impl_db()->v6_table_size());

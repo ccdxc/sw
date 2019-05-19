@@ -629,6 +629,7 @@ lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
 /**
  * @brief    build interval tree based LPM tree at the given memory address
  * @param[in] route_table           pointer to the route configuration
+ * @param[in] type                  type of LPM
  * @param[in] lpm_tree_root_addr    pointer to the memory address at which tree
  *                                  should be built
  * @param[in] lpm_mem_size          LPM memory block size provided (for error
@@ -639,7 +640,7 @@ lpm_build_tree (lpm_itable_t *itable, uint32_t default_nh, uint32_t max_routes,
  *       in-place sorting on the given routing table
  */
 sdk_ret_t
-lpm_tree_create (route_table_t *route_table,
+lpm_tree_create (route_table_t *route_table, itree_type_t type,
                  mem_addr_t lpm_tree_root_addr, uint32_t lpm_mem_size)
 {
     sdk_ret_t       ret;
@@ -663,11 +664,7 @@ lpm_tree_create (route_table_t *route_table,
     if (itable.nodes == NULL) {
         return sdk::SDK_RET_OOM;
     }
-    if (route_table->af == IP_AF_IPV4) {
-        itable.tree_type = ITREE_TYPE_IPV4;
-    } else {
-        itable.tree_type = ITREE_TYPE_IPV6;
-    }
+    itable.tree_type = type;
     ret = lpm_build_interval_table(route_table, &itable);
     if (unlikely(ret != SDK_RET_OK)) {
         goto cleanup;
