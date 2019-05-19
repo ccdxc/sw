@@ -6,6 +6,7 @@
  * @brief   This file contains meter datapath database handling
  */
 
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
 #include "nic/apollo/api/impl/meter_impl_state.hpp"
 
@@ -27,9 +28,11 @@ meter_impl_state::meter_impl_state(pds_state *state) {
     v6_lpm_idxr_ = indexer::factory(PDS_MAX_METER + 1);
     SDK_ASSERT(v6_lpm_idxr_ != NULL);
     v4_lpm_region_addr_ = state->mempartition()->start_addr("meter_v4");
+    SDK_ASSERT(v4_lpm_region_addr_ != INVALID_MEM_ADDRESS);
     v4_lpm_table_size_ = state->mempartition()->block_size("meter_v4");
     v4_lpm_max_prefixes_ = state->mempartition()->max_elements("meter_v4") - 1;
     v6_lpm_region_addr_ = state->mempartition()->start_addr("meter_v6");
+    SDK_ASSERT(v6_lpm_region_addr_ != INVALID_MEM_ADDRESS);
     v6_lpm_table_size_ = state->mempartition()->block_size("meter_v6");
     v6_lpm_max_prefixes_ = state->mempartition()->max_elements("meter_v6") - 1;
     policer_idxr_ = indexer::factory(PDS_MAX_METER_POLICER);

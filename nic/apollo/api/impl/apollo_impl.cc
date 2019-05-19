@@ -14,6 +14,7 @@
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/apollo_impl.hpp"
 #include "nic/apollo/api/impl/pds_impl_state.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
@@ -110,6 +111,7 @@ apollo_impl::rxdma_symbols_init_(void **p4plus_symbols,
 
     symbols[i].name = MEM_REGION_LIF_STATS_BASE;
     symbols[i].val = api::g_pds_state.mempartition()->start_addr(MEM_REGION_LIF_STATS_NAME);
+    SDK_ASSERT(symbols[i].val != INVALID_MEM_ADDRESS);
     i++;
     SDK_ASSERT(i <= RXDMA_SYMBOLS_MAX);
 
@@ -134,6 +136,7 @@ apollo_impl::txdma_symbols_init_(void **p4plus_symbols,
 
     symbols[i].name = MEM_REGION_LIF_STATS_BASE;
     symbols[i].val = api::g_pds_state.mempartition()->start_addr(MEM_REGION_LIF_STATS_NAME);
+    SDK_ASSERT(symbols[i].val != INVALID_MEM_ADDRESS);
     i++;
     SDK_ASSERT(i <= TXDMA_SYMBOLS_MAX);
 
@@ -486,6 +489,7 @@ apollo_impl::table_init_(void) {
     // program session stats table base address as table constant
     // of session table
     addr = api::g_pds_state.mempartition()->start_addr("session_stats");
+    SDK_ASSERT(addr != INVALID_MEM_ADDRESS);
     // reset bit 31 (saves one asm instruction)
     addr &= ~((uint64_t)1 << 31);
     sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION, addr);

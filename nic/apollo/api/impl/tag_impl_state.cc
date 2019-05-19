@@ -18,9 +18,11 @@ namespace impl {
 
 tag_impl_state::tag_impl_state(pds_state *state) {
     v4_lpm_region_addr_ = state->mempartition()->start_addr("tag_v4");
+    SDK_ASSERT(v4_lpm_region_addr_ != INVALID_MEM_ADDRESS);
     v4_lpm_table_size_ = state->mempartition()->block_size("tag_v4");
     v4_lpm_max_prefixes_ = state->mempartition()->max_elements("tag_v4") - 1;
     v6_lpm_region_addr_ = state->mempartition()->start_addr("tag_v6");
+    SDK_ASSERT(v6_lpm_region_addr_ != INVALID_MEM_ADDRESS);
     v6_lpm_table_size_ = state->mempartition()->block_size("tag_v6");
     v6_lpm_max_prefixes_ = state->mempartition()->max_elements("tag_v6") - 1;
 }

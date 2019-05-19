@@ -170,6 +170,34 @@
             "cache": "p4plus-txdma"
         },
         {
+            "name": "meter_v4",
+            "_comment": "dummy region - for meters use profile p2",
+            "size": "1K",
+            "block_size": "1B",
+            "max_elements": "1K"
+        },
+        {
+            "name": "meter_v6",
+            "_comment": "dummy region - for meters use profile p2",
+            "size": "1K",
+            "block_size": "1B",
+            "max_elements": "1K"
+        },
+        {
+            "name": "tag_v4",
+            "_comment": "dummy region - for tags use profile p2",
+            "size": "1K",
+            "block_size": "1B",
+            "max_elements": "1K"
+        },
+        {
+            "name": "tag_v6",
+            "_comment": "dummy region - for tags use profile p2",
+            "size": "1K",
+            "block_size": "1B",
+            "max_elements": "1K"
+        },
+        {
             "name": "sacl_egress_v4",
             "size": "264M",
             "block_size": "264K",
