@@ -11,6 +11,8 @@ struct phv_ p;
 %%
 
 local_vnic_info_tx:
+    bcf             [!c1], local_vnic_info_tx_error
+    phvwr.!c1       p.control_metadata_p4i_drop_reason[P4I_DROP_VNIC_INFO_TX_MISS], 1
     seq             c1, k.ethernet_1_srcAddr, r0
     bcf             [c1], local_vnic_info_tx_error
     phvwr.c1        p.control_metadata_p4i_drop_reason[P4I_DROP_SRC_MAC_ZERO], 1

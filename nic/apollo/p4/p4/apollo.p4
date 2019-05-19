@@ -19,7 +19,6 @@
 #include "key.p4"
 #include "mapping.p4"
 #include "nacl.p4"
-#include "resource_pool.p4"
 #include "inter_pipe.p4"
 
 action nop() {
@@ -49,7 +48,6 @@ control ingress {
     rvpath_check();
     nacl();
     flow_lookup();
-    ingress_resource_pool();
     ingress_stats();
     ingress_to_rxdma();
 }
@@ -64,7 +62,6 @@ control egress {
         remote_vnic_mapping_tx();
         egress_vnic_info();
         rewrite();
-        egress_resource_pool();
         egress_stats();
         egress_to_uplink();
     }

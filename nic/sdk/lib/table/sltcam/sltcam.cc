@@ -363,14 +363,17 @@ done:
 sdk_ret_t
 sltcam::get(sdk::table::sdk_table_api_params_t *params) {
 __label__ done;
+    auto ret = SDK_RET_OK;
     SLTCAM_API_BEGIN_();
 
     auto ctx = create_sltctx(sdk::table::SDK_TABLE_API_GET, params, &props_);
     SDK_ASSERT_RETURN(ctx, sdk::SDK_RET_OOM);
 
-    auto ret = find_(ctx);
-    if (ret != sdk::SDK_RET_OK) {
-        SLTCAM_TRACE_ERR_GOTO(done, "find, r:%d", ret);
+    if (ctx->tcam_index_valid == false) {
+        ret = find_(ctx);
+        if (ret != sdk::SDK_RET_OK) {
+            SLTCAM_TRACE_ERR_GOTO(done, "find, r:%d", ret);
+        }
     }
 
     ret = read_(ctx);

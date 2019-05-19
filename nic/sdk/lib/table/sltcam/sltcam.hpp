@@ -40,7 +40,7 @@ public:
                         sdk_table_stats_t *table_stats);
     sdk_ret_t txn_start();
     sdk_ret_t txn_end();
-    
+
     // DEV USAGE ONLY:
     // Api to check sanity of the internal state
     sdk_ret_t sanitize();
@@ -70,5 +70,7 @@ private:
 
 }    // namespace table
 }    // namespace sdk
+
+using sdk::table::sltcam;
 
 #endif    // __SDK_TCAM_HPP__

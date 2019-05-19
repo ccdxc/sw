@@ -1,4 +1,4 @@
-#define LOCAL_VNIC_BY_VLAN_TABLE_SIZE                       4096        // 4K
+#define LOCAL_VNIC_BY_VLAN_TABLE_SIZE                       64
 #define LOCAL_VNIC_BY_SLOT_TABLE_SIZE                       2048        // 2K
 #define LOCAL_VNIC_BY_SLOT_OTCAM_TABLE_SIZE                 512
 #define KEY_MAPPING_TABLE_SIZE                              64

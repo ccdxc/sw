@@ -19,6 +19,8 @@
 #include "nic/apollo/api/policy.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 
+using sdk::table::handle_t;
+
 namespace api {
 namespace impl {
 
@@ -243,9 +245,10 @@ private:
 private:
     /**< P4 datapath specific state */
     uint16_t    hw_id_;      /**< hardware id */
+    handle_t    local_vnic_by_vlan_tx_handle_;
     // TODO: if we have remove(key) API, we don't need to store this
     uint32_t    vnic_by_slot_hash_idx_;
-} __PACK__;
+};
 
 /** @} */    // end of PDS_VNIC_IMPL
 

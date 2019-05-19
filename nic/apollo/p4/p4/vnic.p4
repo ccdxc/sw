@@ -74,6 +74,11 @@ action local_vnic_info_tx(local_vnic_tag, vpc_id,
                           lpm_v4addr2, lpm_v6addr2, sacl_v4addr2, sacl_v6addr2,
                           resource_group2, overlay_mac2,
                           mirror_en, mirror_session) {
+    // if c1 indicate miss, drop
+    //  modify_field(control_metadata.p4i_drop_reason,
+    //               1 << P4I_DROP_VNIC_INFO_TX_MISS);
+    //  drop_packet();
+
     // validate source mac
     if (ethernet_1.srcAddr == 0) {
         modify_field(control_metadata.p4i_drop_reason,
@@ -129,7 +134,7 @@ action local_vnic_info_rx(local_vnic_tag, vpc_id,
 @pragma stage 0
 table local_vnic_by_vlan_tx {
     reads {
-        ctag_1.vid : exact;
+        ctag_1.vid : ternary;
     }
     actions {
         local_vnic_info_tx;

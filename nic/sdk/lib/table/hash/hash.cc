@@ -185,7 +185,6 @@ hash::insert(void *key, void *data, uint32_t *index, void *key_mask,
     // itr = hash_entry_map_.find(dleft_index);
     // if (itr == hash_entry_map_.end() && !direct_to_otcam) {
     if (he == NULL && !direct_to_otcam) {
-        SDK_TRACE_DEBUG("hash::%s: dleft Insert ", __FUNCTION__);
         // he = hash_entry::factory(key, swkey_len_, data,
         //                         swdata_len_, dleft_index);
         he = hash_entry_create(key, swkey_len_, data, swdata_len_,

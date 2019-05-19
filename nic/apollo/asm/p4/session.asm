@@ -15,7 +15,6 @@ session_info:
     seq             c1, k.control_metadata_session_index, r0
     seq             c2, k.p4_to_rxdma_header_sacl_base_addr, r0
     setcf           c3, [!c1 | c2]
-    nop.c1.e
     phvwr.c3        p.p4_to_rxdma_header_sacl_bypass, 1
     seq             c1, r5, r0
     nop.c1.e

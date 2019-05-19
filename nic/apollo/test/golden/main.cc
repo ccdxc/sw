@@ -686,6 +686,8 @@ key_tunneled_init (void)
 static void
 vnic_tx_init ()
 {
+    local_vnic_by_vlan_tx_swkey_t key;
+    local_vnic_by_vlan_tx_swkey_mask mask;
     local_vnic_by_vlan_tx_actiondata_t data;
     local_vnic_by_vlan_tx_local_vnic_info_tx_t *local_vnic_info =
         &data.action_u.local_vnic_by_vlan_tx_local_vnic_info_tx;
@@ -693,7 +695,11 @@ vnic_tx_init ()
     uint64_t lpm_hbm_addr;
     uint32_t tbl_id = P4TBL_ID_LOCAL_VNIC_BY_VLAN_TX;
 
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
+    key.ctag_1_vid = g_ctag_vid1;
+    mask.ctag_1_vid_mask = 0xFFFF;
     data.action_id = LOCAL_VNIC_BY_VLAN_TX_LOCAL_VNIC_INFO_TX_ID;
     local_vnic_info->vpc_id = g_vpc_id1;
     local_vnic_info->epoch1_valid = true;
@@ -711,12 +717,17 @@ vnic_tx_init ()
            sizeof(local_vnic_info->lpm_v4addr1));
     memcpy(local_vnic_info->lpm_v4addr2, &lpm_hbm_addr,
            sizeof(local_vnic_info->lpm_v4addr2));
+    entry_write(tbl_id, 0, &key, &mask, &data, false,
+                LOCAL_VNIC_BY_VLAN_TABLE_SIZE);
 
-    entry_write(tbl_id, g_ctag_vid1, NULL, NULL, &data, false, 0);
-
+    memset(&key, 0, sizeof(key));
+    memset(&mask, 0, sizeof(mask));
+    key.ctag_1_vid = g_ctag_vid2;
+    mask.ctag_1_vid_mask = 0xFFFF;
     local_vnic_info->mirror_en = true;
     local_vnic_info->mirror_session = (1 << g_mirror_session_id);
-    entry_write(tbl_id, g_ctag_vid2, NULL, NULL, &data, false, 0);
+    entry_write(tbl_id, 1, &key, &mask, &data, false,
+                LOCAL_VNIC_BY_VLAN_TABLE_SIZE);
 }
 
 static void
