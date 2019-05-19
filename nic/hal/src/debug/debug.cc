@@ -12,6 +12,11 @@
 #include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/hal/pd/asicpd/asic_pd_common.hpp"
 #include "nic/sdk/asic/pd/pd.hpp"
+#include "nic/fte/acl/list.hpp"
+#include "nic/fte/acl/itree.hpp"
+#include "nic/fte/acl/acl_ctx.hpp"
+
+
 
 using sdk::lib::slab;
 namespace sdk {
@@ -142,6 +147,11 @@ slab_get_from_req (debug::SlabGetRequest& req, debug::SlabGetResponseMsg *rsp)
             }
         }
         // Sdk slabs
+        set_slab_response(acl_ctx_t::get_slab(), rsp);
+        set_slab_response(acl::list_t::get_list_slab(), rsp);
+        set_slab_response(acl::list_t::get_list_item_slab(), rsp);
+        set_slab_response(acl::itree_t::get_itree_slab(), rsp);
+        set_slab_response(acl::itree_t::get_itree_node_slab(), rsp);
         set_slab_response(sdk::lib::g_twheel->get_slab(), rsp);
     } else {
         HAL_TRACE_ERR("Unexpected slab id {}", slab_id);

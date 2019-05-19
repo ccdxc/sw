@@ -114,7 +114,7 @@ rule_match_cleanup (rule_match_t *match)
 
 static inline hal_ret_t
 rule_match_dst_port_spec_extract (
-    const types::RuleMatch_L4PortAppInfo port_info, rule_match_app_t *app)
+    const types::RuleMatch_L4PortAppInfo &port_info, rule_match_app_t *app)
 {
     hal_ret_t ret;
 
@@ -130,7 +130,7 @@ rule_match_dst_port_spec_extract (
 
 static inline hal_ret_t
 rule_match_src_port_spec_extract (
-    const types::RuleMatch_L4PortAppInfo port_info, rule_match_app_t *app)
+    const types::RuleMatch_L4PortAppInfo &port_info, rule_match_app_t *app)
 {
     hal_ret_t ret;
 
@@ -144,11 +144,11 @@ rule_match_src_port_spec_extract (
 }
 
 static inline hal_ret_t
-rule_match_port_app_spec_extract (const types::RuleMatch_AppMatch spec,
+rule_match_port_app_spec_extract (const types::RuleMatch_AppMatch &spec,
                                   rule_match_app_t *app)
 {
     hal_ret_t ret;
-    const types::RuleMatch_L4PortAppInfo port_info = spec.port_info(); 
+    const types::RuleMatch_L4PortAppInfo &port_info = spec.port_info(); 
 
     if ((ret = rule_match_src_port_spec_extract(port_info, app)) != HAL_RET_OK)
         return ret;
@@ -160,10 +160,10 @@ rule_match_port_app_spec_extract (const types::RuleMatch_AppMatch spec,
 }
 
 static inline hal_ret_t
-rule_match_icmp_app_spec_extract (const types::RuleMatch_AppMatch spec,
+rule_match_icmp_app_spec_extract (const types::RuleMatch_AppMatch &spec,
                                   rule_match_app_t *app)
 {
-    const types::RuleMatch_ICMPAppInfo icmp_info = spec.icmp_info(); 
+    const types::RuleMatch_ICMPAppInfo &icmp_info = spec.icmp_info(); 
 
     app->icmp.icmp_type = icmp_info.icmp_type();
     app->icmp.icmp_code = icmp_info.icmp_code();
@@ -171,10 +171,10 @@ rule_match_icmp_app_spec_extract (const types::RuleMatch_AppMatch spec,
 }
 
 static inline hal_ret_t
-rule_match_esp_app_spec_extract (const types::RuleMatch_AppMatch spec,
+rule_match_esp_app_spec_extract (const types::RuleMatch_AppMatch &spec,
                                   rule_match_app_t *app)
 {
-    const types::RuleMatch_ESPInfo esp_info = spec.esp_info();
+    const types::RuleMatch_ESPInfo &esp_info = spec.esp_info();
     app->esp_spi = esp_info.spi();
     return HAL_RET_OK;
 } 
@@ -186,7 +186,7 @@ rule_match_app_spec_extract (const types::RuleMatch& spec, rule_match_t *match)
     hal_ret_t   ret;
 
     // walk the apps
-    const types::RuleMatch_AppMatch app = spec.app_match();
+    const types::RuleMatch_AppMatch &app = spec.app_match();
     if (app.App_case() == types::RuleMatch_AppMatch::kPortInfo) {
         match->app.app_type = APP_TCP_UDP;
         ret = rule_match_port_app_spec_extract(app, &match->app);

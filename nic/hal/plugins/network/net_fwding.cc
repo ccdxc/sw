@@ -153,7 +153,6 @@ update_fwding_info(fte::ctx_t&ctx)
     hal_ret_t ret;
     hal::if_t *dif = ctx.dif();
     hal::if_t *pinned_if;
-    hal::ep_t *dep = NULL;
     fte::flow_update_t flowupd = {type: fte::FLOWUPD_FWDING_INFO};
 
     if (dif && dif->if_type == intf::IF_TYPE_ENIC) {
@@ -199,7 +198,7 @@ update_fwding_info(fte::ctx_t&ctx)
                            &flowupd.fwding.dif, &flowupd.fwding.dl2seg);
         dif = flowupd.fwding.dif;
         if (ret != HAL_RET_OK){
-            HAL_TRACE_INFO("net_fwding: Route lookup failed ret={}", ret);
+            HAL_TRACE_ERR("net_fwding: Route lookup failed ret={}", ret);
             return ret;
         }
     }

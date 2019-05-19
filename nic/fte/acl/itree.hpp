@@ -33,6 +33,8 @@ public:
     // debug counters
     static uint32_t num_trees_in_use() { return itree_slab_->num_in_use();}
     static uint32_t num_nodes_in_use() { return itree_node_slab_->num_in_use();}
+    static slab*    get_itree_slab() { return itree_slab_; }
+    static slab*    get_itree_node_slab() { return itree_node_slab_; }
 
     int check() const;
     void dump() const;

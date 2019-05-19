@@ -23,7 +23,7 @@ get_nat_addr_from_pool(nat_pool_t       *nat_pool,
 
     ret = nat_pool_address_alloc(nat_pool, &addr_entry->tgt_ip_addr);
     if (ret != HAL_RET_OK) {
-	    HAL_TRACE_DEBUG("failed to alloc ip from nat pool:vrf {} pool id {}", nat_pool->key.vrf_id, nat_pool->key.pool_id);
+	    HAL_TRACE_ERR("failed to alloc ip from nat pool:vrf {} pool id {}", nat_pool->key.vrf_id, nat_pool->key.pool_id);
 	    return ret;
     }
     addr_entry->tgt_vrf_id = nat_pool->key.vrf_id;
@@ -31,7 +31,7 @@ get_nat_addr_from_pool(nat_pool_t       *nat_pool,
     ret = hal::utils::nat::addr_entry_add (key, nat_pool->key.vrf_id, addr_entry->tgt_ip_addr);
     if (ret != HAL_RET_OK) {
         //call nat pool free
-        HAL_TRACE_DEBUG("failed to add it to the db with error:{}", ret);
+        HAL_TRACE_ERR("failed to add it to the db with error:{}", ret);
         return ret;
     }
     //Add reverse mapping
@@ -39,7 +39,7 @@ get_nat_addr_from_pool(nat_pool_t       *nat_pool,
     memcpy(&rkey.ip_addr, &addr_entry->tgt_ip_addr, sizeof(ip_addr_t));
     ret = hal::utils::nat::addr_entry_add(&rkey, key->vrf_id, key->ip_addr);
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("failed to add the reverse map to the db with error:{}", ret);
+        HAL_TRACE_ERR("failed to add the reverse map to the db with error:{}", ret);
         return ret;
     }
     return ret;
@@ -88,7 +88,7 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
         const char *ctx_name = nat_acl_ctx_name(ctx.get_key().svrf_id);
         acl_ctx = acl::acl_get(ctx_name);
         if (acl_ctx == NULL) {
-            HAL_TRACE_DEBUG("nat::flow lookup failed to lookup acl_ctx {}", ctx_name);
+            HAL_TRACE_ERR("nat::flow lookup failed to lookup acl_ctx {}", ctx_name);
             ret = HAL_RET_ERR;
             goto fall_thro;
         }
@@ -118,7 +118,7 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
 
         ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
         if (ret != HAL_RET_OK) {
-            HAL_TRACE_DEBUG("nat::rule lookup failed ret={}", ret);
+            HAL_TRACE_ERR("nat::rule lookup failed ret={}", ret);
             goto fall_thro;
         }
 
@@ -133,11 +133,11 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
                 if (nat_pool) {
                     ret = get_nat_addr_from_pool(nat_pool, &src_addr_key, src_addr_entry);
                     if (ret != HAL_RET_OK) {
-                        HAL_TRACE_DEBUG("failed to allocate src nat ip");
+                        HAL_TRACE_ERR("failed to allocate src nat ip");
                         return ret;
                     }
                 } else {
-                    HAL_TRACE_DEBUG("unable to find src nat pool for the handle = {}", nat_cfg->action.src_nat_pool);
+                    HAL_TRACE_ERR("unable to find src nat pool for the handle = {}", nat_cfg->action.src_nat_pool);
                     return HAL_RET_ERR;
                 }
             }
@@ -148,17 +148,17 @@ update_iflow_from_nat_rules (fte::ctx_t& ctx)
                 if (nat_pool) {
                     ret = get_nat_addr_from_pool(nat_pool, &dst_addr_key, dst_addr_entry);
                     if (ret != HAL_RET_OK) {
-                        HAL_TRACE_DEBUG("failed to allocate dst nat ip");
+                        HAL_TRACE_ERR("failed to allocate dst nat ip");
                         return ret;
                     }
                 } else {
-                    HAL_TRACE_DEBUG("unable to find dst nat pool for the handle = {}", nat_cfg->action.dst_nat_pool);
+                    HAL_TRACE_ERR("unable to find dst nat pool for the handle = {}", nat_cfg->action.dst_nat_pool);
                     return HAL_RET_ERR;
                 }
             }
         }
         fall_thro:
-            HAL_TRACE_DEBUG("continue to process nat");
+            HAL_TRACE_VERBOSE("continue to process nat");
     }
 
     if (src_addr_entry) {

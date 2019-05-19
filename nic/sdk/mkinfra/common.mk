@@ -33,6 +33,9 @@ ifeq ($(PERF),1)
 endif
 
 COMMON_GXX_FLAGS		+= -DPIPELINE=${PIPELINE}
+ifneq ($(PIPELINE), apollo)
+	COMMON_GXX_FLAGS        += -DENABLE_SDK_MTRACK
+endif
 
 COMMON_GPP_FLAGS        := ${COMMON_GXX_FLAGS} --std=c++11
 COMMON_AR_FLAGS         := rcs

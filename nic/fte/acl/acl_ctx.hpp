@@ -30,6 +30,7 @@ public:
 
     // debug counters
     static uint32_t num_ctx_in_use() { return ctx_slab_->num_in_use();}
+    static slab* get_slab() { return ctx_slab_; }
 private:
     static slab *ctx_slab_; // slab for acl ctx 
     static acl_ctx_t* factory(const char *name, const acl_config_t *cfg);

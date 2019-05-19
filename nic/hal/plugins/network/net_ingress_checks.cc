@@ -120,7 +120,7 @@ update_src_if(fte::ctx_t&ctx)
 
     if (ctx.role() == hal::FLOW_ROLE_INITIATOR && ctx.cpu_rxhdr() &&
                     ctx.cpu_rxhdr()->src_lif != args.hw_lif_id) {
-        HAL_TRACE_DEBUG("Dropping for srclif mismatch.. {} {}", args.hw_lif_id, ctx.cpu_rxhdr()->src_lif);
+        HAL_TRACE_ERR("Dropping for srclif mismatch.. {} {}", args.hw_lif_id, ctx.cpu_rxhdr()->src_lif);
         ctx.set_drop();
         return HAL_RET_FTE_SRC_LIF_MISMATCH;
     }

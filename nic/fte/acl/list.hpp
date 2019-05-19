@@ -31,6 +31,8 @@ public:
     // debug counters
     static uint32_t num_lists_in_use() { return list_slab_->num_in_use(); }
     static uint32_t num_items_in_use() { return list_item_slab_->num_in_use(); }
+    static slab*    get_list_slab() { return list_slab_; }
+    static slab*    get_list_item_slab() { return list_item_slab_; }
 
 private:
     struct item_t {
