@@ -13,7 +13,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { SearchPolicySearchRequest } from '@sdk/v1/models/generated/search';
+import { SearchPolicySearchRequest, ISearchPolicyMatchEntry } from '@sdk/v1/models/generated/search';
 import { ISecuritySGRule, SecuritySGPolicy, SecuritySGRule_action_uihint } from '@sdk/v1/models/generated/security';
 import { Table } from 'primeng/table';
 import { TableCol } from '@app/components/shared/tableviewedit/tableviewedit.component';
@@ -380,7 +380,7 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
             this.searchErrorMessage = '';
             const entries = body.results[this.selectedPolicy.meta.name].entries;
             this.searchPolicyInvoked = true;
-            this.sgPolicyRules = this.addOrderRanking(entries.map(ele => ele.rule));
+            this.sgPolicyRules = this.addOrderRankingForQueries(entries);
           }
         } else {
           this.searchErrorMessage = 'No Matching Rule';
@@ -500,7 +500,20 @@ export class SgpolicydetailComponent extends BaseComponent implements OnInit, On
     return retRules;
   }
 
-  displayColumn(rowData: SecuritySGRuleWrapper, col): any {
+  addOrderRankingForQueries(rules: ISearchPolicyMatchEntry[]): ReadonlyArray<SecuritySGRuleWrapper[]> {
+    const retRules = [];
+    rules.forEach((rule, index) => {
+      retRules.push(
+        {
+          order: rule.index,
+          rule: rule.rule
+        }
+      );
+    });
+    return retRules;
+  }
+
+  displayColumn(rowData: SecuritySGRuleWrapper, col: TableCol): any {
     const fields = col.field.split('.');
     const value = Utility.getObjectValueByPropertyPath(rowData, fields);
     const column = col.field;
