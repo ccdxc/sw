@@ -46,7 +46,7 @@ func (s *RestServer) listFteCPSMetricsHandler(r *http.Request) (interface{}, err
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("FteCPSMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("FteCPSMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for FteCPSMetrics key %+v", temp.GetKey())
 			continue
@@ -80,7 +80,7 @@ func (s *RestServer) getFteCPSMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("FteCPSMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("FteCPSMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for FteCPSMetrics key %+v", m.GetKey())
 			continue
@@ -130,7 +130,7 @@ func (s *RestServer) listFteLifQMetricsHandler(r *http.Request) (interface{}, er
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("FteLifQMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("FteLifQMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for FteLifQMetrics key %+v", temp.GetKey())
 			continue
@@ -164,7 +164,7 @@ func (s *RestServer) getFteLifQMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("FteLifQMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("FteLifQMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for FteLifQMetrics key %+v", m.GetKey())
 			continue
@@ -214,7 +214,7 @@ func (s *RestServer) listSessionSummaryMetricsHandler(r *http.Request) (interfac
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("SessionSummaryMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("SessionSummaryMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for SessionSummaryMetrics key %+v", temp.GetKey())
 			continue
@@ -248,7 +248,7 @@ func (s *RestServer) getSessionSummaryMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("SessionSummaryMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("SessionSummaryMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for SessionSummaryMetrics key %+v", m.GetKey())
 			continue

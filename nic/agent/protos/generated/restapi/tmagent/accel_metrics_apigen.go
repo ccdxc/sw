@@ -46,7 +46,7 @@ func (s *RestServer) listAccelHwRingMetricsHandler(r *http.Request) (interface{}
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("AccelHwRingMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("AccelHwRingMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for AccelHwRingMetrics key %+v", temp.GetKey())
 			continue
@@ -80,7 +80,7 @@ func (s *RestServer) getAccelHwRingMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("AccelHwRingMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("AccelHwRingMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for AccelHwRingMetrics key %+v", m.GetKey())
 			continue
@@ -130,7 +130,7 @@ func (s *RestServer) listAccelSeqQueueInfoMetricsHandler(r *http.Request) (inter
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("AccelSeqQueueInfoMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("AccelSeqQueueInfoMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for AccelSeqQueueInfoMetrics key %+v", temp.GetKey())
 			continue
@@ -164,7 +164,7 @@ func (s *RestServer) getAccelSeqQueueInfoMetricsPoints() ([]*tsdb.Point, error) 
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("AccelSeqQueueInfoMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("AccelSeqQueueInfoMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for AccelSeqQueueInfoMetrics key %+v", m.GetKey())
 			continue
@@ -214,7 +214,7 @@ func (s *RestServer) listAccelSeqQueueMetricsHandler(r *http.Request) (interface
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("AccelSeqQueueMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("AccelSeqQueueMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for AccelSeqQueueMetrics key %+v", temp.GetKey())
 			continue
@@ -248,7 +248,7 @@ func (s *RestServer) getAccelSeqQueueMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("AccelSeqQueueMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("AccelSeqQueueMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for AccelSeqQueueMetrics key %+v", m.GetKey())
 			continue

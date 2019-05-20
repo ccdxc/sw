@@ -46,7 +46,7 @@ func (s *RestServer) listUpgradeMetricsHandler(r *http.Request) (interface{}, er
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("UpgradeMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("UpgradeMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for UpgradeMetrics key %+v", temp.GetKey())
 			continue
@@ -80,7 +80,7 @@ func (s *RestServer) getUpgradeMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("UpgradeMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("UpgradeMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for UpgradeMetrics key %+v", m.GetKey())
 			continue

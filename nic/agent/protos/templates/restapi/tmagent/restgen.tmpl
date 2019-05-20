@@ -45,7 +45,7 @@ import (
 				continue
 			}
 
-			objMeta := s.keyTranslator.GetObjectMeta("{{.GetName}}Key", temp.GetKey())
+			objMeta := s.GetObjectMeta("{{.GetName}}Key", temp.GetKey())
 			if objMeta == nil {
 				log.Errorf("failed to get objMeta for {{.GetName}} key %+v", temp.GetKey())
 				continue
@@ -79,7 +79,7 @@ import (
 			}
 
 			// translate key to meta
-			objMeta := s.keyTranslator.GetObjectMeta("{{.GetName}}Key", m.GetKey())
+			objMeta := s.GetObjectMeta("{{.GetName}}Key", m.GetKey())
 			if objMeta == nil {
 				log.Errorf("failed to get objMeta for {{.GetName}} key %+v", m.GetKey())
 				continue

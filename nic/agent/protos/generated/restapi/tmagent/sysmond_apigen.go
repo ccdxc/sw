@@ -46,7 +46,7 @@ func (s *RestServer) listAsicFrequencyMetricsHandler(r *http.Request) (interface
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("AsicFrequencyMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("AsicFrequencyMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for AsicFrequencyMetrics key %+v", temp.GetKey())
 			continue
@@ -80,7 +80,7 @@ func (s *RestServer) getAsicFrequencyMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("AsicFrequencyMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("AsicFrequencyMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for AsicFrequencyMetrics key %+v", m.GetKey())
 			continue
@@ -130,7 +130,7 @@ func (s *RestServer) listAsicPowerMetricsHandler(r *http.Request) (interface{}, 
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("AsicPowerMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("AsicPowerMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for AsicPowerMetrics key %+v", temp.GetKey())
 			continue
@@ -164,7 +164,7 @@ func (s *RestServer) getAsicPowerMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("AsicPowerMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("AsicPowerMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for AsicPowerMetrics key %+v", m.GetKey())
 			continue
@@ -214,7 +214,7 @@ func (s *RestServer) listAsicTemperatureMetricsHandler(r *http.Request) (interfa
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("AsicTemperatureMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("AsicTemperatureMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for AsicTemperatureMetrics key %+v", temp.GetKey())
 			continue
@@ -248,7 +248,7 @@ func (s *RestServer) getAsicTemperatureMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("AsicTemperatureMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("AsicTemperatureMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for AsicTemperatureMetrics key %+v", m.GetKey())
 			continue

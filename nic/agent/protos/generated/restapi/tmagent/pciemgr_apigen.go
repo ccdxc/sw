@@ -46,7 +46,7 @@ func (s *RestServer) listPcieMgrMetricsHandler(r *http.Request) (interface{}, er
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("PcieMgrMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("PcieMgrMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for PcieMgrMetrics key %+v", temp.GetKey())
 			continue
@@ -80,7 +80,7 @@ func (s *RestServer) getPcieMgrMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("PcieMgrMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("PcieMgrMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for PcieMgrMetrics key %+v", m.GetKey())
 			continue
@@ -130,7 +130,7 @@ func (s *RestServer) listPciePortMetricsHandler(r *http.Request) (interface{}, e
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("PciePortMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("PciePortMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for PciePortMetrics key %+v", temp.GetKey())
 			continue
@@ -164,7 +164,7 @@ func (s *RestServer) getPciePortMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("PciePortMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("PciePortMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for PciePortMetrics key %+v", m.GetKey())
 			continue

@@ -93,7 +93,82 @@ func (it *veniceIntegSuite) TestMetrics(c *C) {
 
 		return true, res
 
-	}, "failed to query metrics")
+	}, "failed to query metrics", "2s", "120s")
+}
+
+func (it *veniceIntegSuite) TestMetricsWithDefaultMeta(c *C) {
+	// metrics iterators don't work in OSX
+	if runtime.GOOS == "darwin" {
+		return
+	}
+
+	// don't set translator
+	iter, err := goproto.NewDropMetricsIterator()
+	AssertOk(c, err, "Error creating metrics iterator")
+
+	// create an entry
+	tmtr, err := iter.Create(3000)
+	AssertOk(c, err, "Error creating test metrics entry")
+
+	// set some values
+	tmtr.SetDropFlowHit(200)
+	tmtr.SetDropFlowMiss(300)
+
+	// query
+	apiGwAddr := "localhost:" + it.config.APIGatewayPort
+	tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)
+	AssertOk(c, err, "Error creating metrics client")
+
+	ctx, err := it.loggedInCtx()
+	AssertOk(c, err, "Error in logged in context")
+
+	fields := map[string]int{"DropFlowHit": 200, "DropFlowMiss": 300}
+
+	AssertEventually(c, func() (bool, interface{}) {
+		nodeQuery := &telemetry_query.MetricsQueryList{
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+			Queries: []*telemetry_query.MetricsQuerySpec{
+				{
+					TypeMeta: api.TypeMeta{
+						Kind: "DropMetrics",
+					},
+				},
+			},
+		}
+
+		res, err := tc.Metrics(ctx, nodeQuery)
+		if err != nil {
+			return false, err
+		}
+
+		if len(res.Results) == 0 || len(res.Results[0].Series) == 0 {
+			return false, res
+		}
+
+		for _, r := range res.Results[0].Series {
+			// get index
+			cIndex := map[string]int{}
+			for i, c := range r.Columns {
+				if _, ok := fields[c]; ok {
+					cIndex[c] = i
+				}
+			}
+
+			for _, t := range r.Values {
+				for k, v := range cIndex {
+					f := int(t[v].(float64))
+					if f != fields[k] {
+						it.logger.Errorf("received %v: %v", k, t[v])
+						return false, t[v]
+					}
+				}
+			}
+		}
+
+		return true, res
+
+	}, "failed to query metrics", "2s", "120s")
 }
 
 func (it *veniceIntegSuite) TestMetricsAuthz(c *C) {
@@ -189,5 +264,5 @@ func (it *veniceIntegSuite) TestMetricsAuthz(c *C) {
 
 		return true, res
 
-	}, "failed to query metrics")
+	}, "failed to query metrics", "2s", "120s")
 }

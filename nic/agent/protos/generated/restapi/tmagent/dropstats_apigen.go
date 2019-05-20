@@ -46,7 +46,7 @@ func (s *RestServer) listDropMetricsHandler(r *http.Request) (interface{}, error
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("DropMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("DropMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for DropMetrics key %+v", temp.GetKey())
 			continue
@@ -80,7 +80,7 @@ func (s *RestServer) getDropMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("DropMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("DropMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for DropMetrics key %+v", m.GetKey())
 			continue
@@ -130,7 +130,7 @@ func (s *RestServer) listEgressDropMetricsHandler(r *http.Request) (interface{},
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("EgressDropMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("EgressDropMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for EgressDropMetrics key %+v", temp.GetKey())
 			continue
@@ -164,7 +164,7 @@ func (s *RestServer) getEgressDropMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("EgressDropMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("EgressDropMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for EgressDropMetrics key %+v", m.GetKey())
 			continue

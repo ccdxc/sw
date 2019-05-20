@@ -46,7 +46,7 @@ func (s *RestServer) listLifMetricsHandler(r *http.Request) (interface{}, error)
 			continue
 		}
 
-		objMeta := s.keyTranslator.GetObjectMeta("LifMetricsKey", temp.GetKey())
+		objMeta := s.GetObjectMeta("LifMetricsKey", temp.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for LifMetrics key %+v", temp.GetKey())
 			continue
@@ -80,7 +80,7 @@ func (s *RestServer) getLifMetricsPoints() ([]*tsdb.Point, error) {
 		}
 
 		// translate key to meta
-		objMeta := s.keyTranslator.GetObjectMeta("LifMetricsKey", m.GetKey())
+		objMeta := s.GetObjectMeta("LifMetricsKey", m.GetKey())
 		if objMeta == nil {
 			log.Errorf("failed to get objMeta for LifMetrics key %+v", m.GetKey())
 			continue
