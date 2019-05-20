@@ -394,6 +394,7 @@ hal_ret_t enicif_clsc_l2seglist_change_update_oiflists(if_t *hal_if,
                                                        dllist_ctxt_t *l2seg_list,
                                                        bool add);
 hal_ret_t hal_if_repin_l2segs(if_t *uplink);
+hal_ret_t hal_if_repin_mirror_sessions(if_t *uplink);
 hal_ret_t if_port_oper_state_process_event(uint32_t fp_port_num, port_event_t event);
 const char*if_status_to_str(IfStatus status);
 sdk_ret_t port_event_timer_cb (void *timer, uint32_t timer_id, void *ctxt);

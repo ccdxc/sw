@@ -1912,6 +1912,16 @@ pd_mirror_session_create_args_init (pd_mirror_session_create_args_t *args)
     args->session = NULL;
 }
 
+typedef struct pd_mirror_session_update_args_s {
+    mirror_session_t *session;
+} __PACK__ pd_mirror_session_update_args_t;
+
+static inline void
+pd_mirror_session_update_args_init (pd_mirror_session_update_args_t *args)
+{
+    args->session = NULL;
+}
+
 typedef struct pd_mirror_session_delete_args_s {
     mirror_session_t *session;
 } __PACK__ pd_mirror_session_delete_args_t;
@@ -3383,7 +3393,8 @@ typedef struct pd_tcp_global_stats_get_args_s {
     ENTRY(PD_FUNC_ID_FLOW_HASH_GET,            304, "PD_FUNC_ID_FLOW_HASH_GET")\
     ENTRY(PD_FUNC_ID_SYSTEM_DROP_STATS_GET,    305, "PD_FUNC_ID_SYSTEM_DROP_STATS_GET")\
     ENTRY(PD_FUNC_ID_SPAN_THRESHOLD_UPDATE,    306, "PD_FUNC_ID_SPAN_THRESHOLD_UPDATE") \
-    ENTRY(PD_FUNC_ID_MAX,                      307, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_MIRROR_SESSION_UPDATE,    307, "PD_FUNC_ID_MIRROR_SESSION_UPDATE")\
+    ENTRY(PD_FUNC_ID_MAX,                      308, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3597,6 +3608,7 @@ typedef struct pd_func_args_s {
 
         // mirror session
         PD_UNION_ARGS_FIELD(pd_mirror_session_create);
+        PD_UNION_ARGS_FIELD(pd_mirror_session_update);
         PD_UNION_ARGS_FIELD(pd_mirror_session_delete);
         PD_UNION_ARGS_FIELD(pd_mirror_session_get);
 
@@ -4037,6 +4049,7 @@ PD_FUNCP_TYPEDEF(pd_wring_get_base_addr);
 
 // mirror session
 PD_FUNCP_TYPEDEF(pd_mirror_session_create);
+PD_FUNCP_TYPEDEF(pd_mirror_session_update);
 PD_FUNCP_TYPEDEF(pd_mirror_session_delete);
 PD_FUNCP_TYPEDEF(pd_mirror_session_get);
 

@@ -9,6 +9,7 @@
 #include "nic/hal/hal.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
 #include "nic/hal/plugins/cfg/nw/interface.hpp"
+#include "nic/hal/plugins/cfg/telemetry/telemetry.hpp"
 #include "nic/hal/plugins/cfg/nw/nh.hpp"
 #include "nic/hal/plugins/cfg/nw/filter.hpp"
 #include "nic/include/pd.hpp"
@@ -5087,9 +5088,31 @@ if_port_oper_state_process_event (uint32_t fp_port_num, port_event_t event)
         goto end;
     }
 
+    // Walk through mirror sessions for this uplink
+    ret = hal_if_repin_mirror_sessions(ctxt.hal_if);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to repin mirror sessions. ret: {}", ret);
+        goto end;
+    }
+
 end:
     // Release write lock
     g_hal_state->cfg_db()->wunlock();
+    return ret;
+}
+
+//-----------------------------------------------------------------------------
+// Re pin mirror sessions on the uplink
+//-----------------------------------------------------------------------------
+hal_ret_t
+hal_if_repin_mirror_sessions (if_t *uplink)
+{
+    hal_ret_t       ret = HAL_RET_OK;
+    
+    ret = telemetry_mirror_session_handle_repin(uplink);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("telemetry_mirror_session_handle_repin failed! ret: {}", ret);
+    }
     return ret;
 }
 

@@ -14,6 +14,7 @@
 #include "nic/hal/plugins/cfg/nw/vrf.hpp"
 
 using hal::pd::pd_mirror_session_create_args_t;
+using hal::pd::pd_mirror_session_update_args_t;
 using hal::pd::pd_mirror_session_delete_args_t;
 using hal::pd::pd_mirror_session_get_args_t;
 using hal::mirror_session_t;
@@ -27,20 +28,16 @@ using hal::pd::pd_drop_monitor_rule_get_args_t;
 using hal::drop_monitor_rule_t;
 
 extern uint64_t g_mgmt_if_mac;
-// Cache the current dest if mirror sessions are using
-hal::if_t *g_telemetry_mirror_dest_if = NULL;
-
 namespace hal {
 
 // Global structs
 acl::acl_config_t   flowmon_rule_config_glbl = { };
 flow_monitor_rule_t *flow_mon_rules[MAX_FLOW_MONITOR_RULES];
 
-hal_ret_t
-mirror_session_update (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
-{
-    return HAL_RET_OK;
-}
+// Cache the current dest if mirror sessions are using
+hal::if_t *g_telemetry_mirror_dest_if;
+hal::if_t *g_telemetry_mirror_session_dest_if[MAX_MIRROR_SESSION_DEST];
+int g_telemetry_mirror_dest_if_rc = 0;
 
 static bool
 telemetry_active_port_get_cb (void *ht_entry, void *ctxt)
@@ -70,6 +67,98 @@ telemetry_get_active_uplink (void)
     return ctxt.hal_if;
 }
 
+hal_ret_t
+mirror_session_update (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
+{
+    return HAL_RET_OK;
+}
+
+hal_ret_t
+mirror_session_update_uplink (if_t *uplink)
+{
+    hal_ret_t                       ret = HAL_RET_OK;
+    mirror_session_t                session;
+    pd::pd_func_args_t              pd_func_args = {0};
+    pd_mirror_session_update_args_t args;
+
+    args.session = &session;
+    pd_func_args.pd_mirror_session_update = &args;
+    
+    // Update all mirror sessions
+    for (int i = 0; i < MAX_FLOW_MONITOR_RULES; i++) {
+        args.session->id = i;
+        args.session->dest_if = uplink;
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_UPDATE, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Update failed for session id {}, ret {}", i, ret);
+        } else {
+            HAL_TRACE_DEBUG("Update Succeeded for session id {}", i);
+        }
+    }
+    return ret;
+}
+
+hal_ret_t
+telemetry_mirror_session_handle_repin (if_t *uplink)
+{
+    hal_ret_t   ret = HAL_RET_OK;
+    if_t        *dest_if = NULL;
+    
+    if (!g_telemetry_mirror_dest_if) {
+        // Nothing to be done
+        goto end;
+    }
+
+    HAL_TRACE_DEBUG("Existing uplink id {} New uplink id {}",
+                            g_telemetry_mirror_dest_if->if_id, uplink->if_id);
+    HAL_TRACE_DEBUG("Existing uplink oper {} New uplink oper {}",
+                            g_telemetry_mirror_dest_if->if_op_status,
+                            uplink->if_op_status);
+    // Check if the uplink is same ?
+    if (g_telemetry_mirror_dest_if->if_id != uplink->if_id) {
+        // If existing uplink is down and new uplink becomes active
+        // then we need to repin the uplink
+        if (g_telemetry_mirror_dest_if->if_op_status == intf::IF_STATUS_DOWN) {
+            if (uplink->if_op_status == intf::IF_STATUS_UP) {
+                dest_if = uplink;
+                // Repin to new uplink
+                ret = mirror_session_update_uplink(dest_if);
+                if (ret == HAL_RET_OK) {
+                    g_telemetry_mirror_dest_if = dest_if;
+                }
+                goto end;
+            }
+        }
+    } else {
+        // Uplinks are same. Check if the link is up or down ?
+        if (uplink->if_op_status == intf::IF_STATUS_DOWN) {
+            // Link went down. Need to pick a new active link
+            if_t *new_dest_if = telemetry_get_active_uplink();
+            if (new_dest_if) {
+                dest_if = new_dest_if;
+                HAL_TRACE_DEBUG("New dest-if id {}", dest_if->if_id);
+                // Repin to new uplink
+                ret = mirror_session_update_uplink(dest_if);
+                if (ret == HAL_RET_OK) {
+                    g_telemetry_mirror_dest_if = dest_if;
+                }
+                goto end;
+            } else {
+                HAL_TRACE_DEBUG("Did not find an active uplink!");
+                ret = HAL_RET_ERR;
+            }
+        }
+    }
+
+end:
+    if (g_telemetry_mirror_dest_if) {
+        HAL_TRACE_DEBUG("Global uplink id {}, oper {}, ret {}",
+                                g_telemetry_mirror_dest_if->if_id,
+                                g_telemetry_mirror_dest_if->if_op_status, ret);
+    }
+    return ret;
+}
+
 static if_t *
 telemetry_pick_dest_if (if_t *dest_if)
 {
@@ -82,6 +171,8 @@ telemetry_pick_dest_if (if_t *dest_if)
     if (g_telemetry_mirror_dest_if &&
         (dest_if->if_type == intf::IF_TYPE_UPLINK)) {
         dest_if = g_telemetry_mirror_dest_if;
+        g_telemetry_mirror_dest_if_rc++;
+        return dest_if;
     }
     if (!g_telemetry_mirror_dest_if &&
             (dest_if->if_type == intf::IF_TYPE_UPLINK) &&
@@ -96,10 +187,14 @@ telemetry_pick_dest_if (if_t *dest_if)
             HAL_TRACE_DEBUG("Did not find an active uplink!");
         }
         g_telemetry_mirror_dest_if = dest_if;
+        g_telemetry_mirror_dest_if_rc++;
+        return dest_if;
     }
     if (!g_telemetry_mirror_dest_if &&
         (dest_if->if_type == intf::IF_TYPE_UPLINK)) {
         g_telemetry_mirror_dest_if = dest_if;
+        g_telemetry_mirror_dest_if_rc++;
+        return dest_if;
     }
 
     return dest_if;
@@ -115,9 +210,13 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
     hal_ret_t ret;
     if_t *id;
 
-    HAL_TRACE_DEBUG("Mirror session ID {}/{}",
+    HAL_TRACE_DEBUG("Mirror session ID {}, snaplen {}",
                     spec.key_or_handle().mirrorsession_id(), spec.snaplen());
     mirrorsession_spec_dump(spec);
+    if (spec.key_or_handle().mirrorsession_id() >= MAX_MIRROR_SESSION_DEST) {
+        HAL_TRACE_DEBUG("Mirror session id is out of bounds!");
+        return HAL_RET_INVALID_ARG;
+    }
 
     // Eventually the CREATE API will differ from the Update API in the way it
     // is enabled. In a create invocation, the session is created only after all
@@ -185,8 +284,6 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
         }
         HAL_TRACE_DEBUG("Dest IF type {}, op_status {}, id {}", dest_if->if_type,
                                         dest_if->if_op_status, dest_if->if_id);
-        auto ndest_if = telemetry_pick_dest_if(dest_if);
-        session.dest_if = ndest_if;
         auto ift = find_if_by_handle(ep->gre_if_handle);
         if (ift == NULL) {
             HAL_TRACE_ERR("Could not find ERSPAN tunnel dest if {}",
@@ -204,6 +301,9 @@ mirror_session_create (MirrorSessionSpec &spec, MirrorSessionResponse *rsp)
         }
         session.mirror_destination_u.er_span_dest.tunnel_if = ift;
         session.type = hal::MIRROR_DEST_ERSPAN;
+        auto ndest_if = telemetry_pick_dest_if(dest_if);
+        session.dest_if = ndest_if;
+        g_telemetry_mirror_session_dest_if[session.id] = session.dest_if;
         break;
     }
     default: {
@@ -307,6 +407,16 @@ mirror_session_delete (MirrorSessionDeleteRequest &req, MirrorSessionDeleteRespo
             req.key_or_handle().mirrorsession_id());
     memset(&session, 0, sizeof(session));
     session.id = req.key_or_handle().mirrorsession_id();
+    // Adjust ref count if current mirror session was using the cached dest_if
+    // for uplinks
+    if (g_telemetry_mirror_session_dest_if[session.id] ==
+                                        g_telemetry_mirror_dest_if) {
+        g_telemetry_mirror_dest_if_rc--;
+        if (!g_telemetry_mirror_dest_if_rc) {
+            g_telemetry_mirror_dest_if = NULL;
+        }
+    }
+    // PD call to delete mirror session
     args.session = &session;
     pd_func_args.pd_mirror_session_delete = &args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_MIRROR_SESSION_DELETE, &pd_func_args);

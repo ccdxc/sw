@@ -23,11 +23,11 @@ char _deb_buf[TELEMETRY_EXPORT_BUFF_SIZE + 1];
 hal_ret_t
 pd_mirror_update_hw(uint32_t id, mirror_actiondata_t *action_data)
 {
-    hal_ret_t       ret = HAL_RET_OK;
-    sdk_ret_t       sdk_ret;
-    directmap       *session = NULL;
-    p4pd_error_t    p4_err;
-    char            buff[4096] = {0};
+    hal_ret_t           ret = HAL_RET_OK;
+    sdk_ret_t           sdk_ret;
+    directmap           *session = NULL;
+    p4pd_error_t        p4_err;
+    char                buff[4096] = {0};
 
     session = g_hal_state_pd->dm_table(P4TBL_ID_MIRROR);
     SDK_ASSERT_RETURN((session != NULL), HAL_RET_ERR);
@@ -47,9 +47,40 @@ pd_mirror_update_hw(uint32_t id, mirror_actiondata_t *action_data)
     return ret;
 }
 
+hal_ret_t
+pd_mirror_session_update (pd_func_args_t *pd_func_args)
+{
+    uint32_t                                dst_lport;
+    hal_ret_t                               ret = HAL_RET_OK;
+    p4pd_error_t                            pdret;
+    mirror_actiondata_t                     action_data;
+    pd_mirror_session_update_args_t         *args = pd_func_args->pd_mirror_session_update;
+
+    if ((args == NULL) || (args->session == NULL)) {
+        HAL_TRACE_ERR(" NULL argument");
+        return HAL_RET_INVALID_ARG;
+    }
+    SDK_ASSERT((args->session->id >= 0) && (args->session->id <= 7));
+
+    HAL_TRACE_DEBUG("Update call for session {}", args->session->id);
+    pdret = p4pd_entry_read(P4TBL_ID_MIRROR, args->session->id, NULL,
+                            NULL, (void *)&action_data);
+    if (pdret != P4PD_SUCCESS) {
+        HAL_TRACE_ERR("Session id {} read failed {}", args->session->id, pdret);
+        return HAL_RET_ERR;
+    }
+    // Update the dest_if
+    dst_lport = if_get_lport_id(args->session->dest_if);
+    if (action_data.action_id == MIRROR_ERSPAN_MIRROR_ID) {
+        action_data.action_u.mirror_erspan_mirror.dst_lport = dst_lport;
+        ret = pd_mirror_update_hw(args->session->id, &action_data);
+    }
+
+    return ret;
+}
 
 hal_ret_t
-pd_mirror_session_create(pd_func_args_t *pd_func_args)
+pd_mirror_session_create (pd_func_args_t *pd_func_args)
 {
     uint32_t dst_lport;
     pd_mirror_session_create_args_t *args = pd_func_args->pd_mirror_session_create;
