@@ -42,8 +42,5 @@ message SessionSummaryMetrics {
     delphi.Counter num_tcp_resets                = 9;  // Total Number of TCP Resets sent as a result of SFW Reject
     delphi.Counter num_icmp_errors               = 10;  // Total Number of ICMP Errors sent as a result of SFW Reject
     delphi.Counter num_tcp_cxnsetup_timeouts     = 11; // Total Number of sessions that timed out at connection setup
-    delphi.Counter num_session_create_errors     = 12; // Total Number of sessions that errored out during creation 
-    delphi.Counter num_tcp_syn_seen              = 13; // Total Number of TCP SYN seen 
-    delphi.Counter num_tcp_fin_seen              = 14; // Total Number of TCP FIN seen
-    delphi.Counter num_tcp_rst_seen              = 15; // Total Number of TCP RST seen
+    delphi.Counter num_session_create_errors     = 12; // Total Number of sessions that errored out during creation    
 }

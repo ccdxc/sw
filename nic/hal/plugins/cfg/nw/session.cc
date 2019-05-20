@@ -1333,18 +1333,6 @@ void incr_global_session_icmp_error_stats (uint8_t fte_id) {
     HAL_SESSION_STATS_PTR(fte_id)->num_icmp_error_sent += 1;
 }
 
-void incr_global_session_tcp_rst_seen_stats (uint8_t fte_id) {
-    HAL_SESSION_STATS_PTR(fte_id)->num_tcp_rst_seen += 1;
-}
-
-void incr_global_session_tcp_syn_seen_stats (uint8_t fte_id) {
-    HAL_SESSION_STATS_PTR(fte_id)->num_tcp_syn_seen += 1;
-}
-
-void incr_global_session_tcp_fin_seen_stats (uint8_t fte_id) {
-    HAL_SESSION_STATS_PTR(fte_id)->num_tcp_fin_seen += 1;
-}
-
 inline void
 update_global_session_stats (session_t *session, bool decr=false)
 {
@@ -2952,9 +2940,6 @@ system_session_summary_get(SystemResponse *rsp)
         session_summary.num_icmp_error_sent += HAL_SESSION_STATS_PTR(fte)->num_icmp_error_sent;
         session_summary.num_cxnsetup_timeout += HAL_SESSION_STATS_PTR(fte)->num_cxnsetup_timeout;
         session_summary.num_session_create_err += HAL_SESSION_STATS_PTR(fte)->num_session_create_err;
-        session_summary.num_tcp_syn_seen += HAL_SESSION_STATS_PTR(fte)->num_tcp_syn_seen;
-        session_summary.num_tcp_rst_seen += HAL_SESSION_STATS_PTR(fte)->num_tcp_rst_seen;
-        session_summary.num_tcp_fin_seen += HAL_SESSION_STATS_PTR(fte)->num_tcp_fin_seen;
     }
 
     session_stats = rsp->mutable_stats()->mutable_session_stats();
@@ -2969,9 +2954,6 @@ system_session_summary_get(SystemResponse *rsp)
     session_stats->set_num_icmp_error_sent(session_summary.num_icmp_error_sent);
     session_stats->set_num_connection_timeout_sessions(session_summary.num_cxnsetup_timeout);
     session_stats->set_num_session_create_errors(session_summary.num_session_create_err);
-    session_stats->set_num_tcp_syn_seen(session_summary.num_tcp_syn_seen);
-    session_stats->set_num_tcp_rst_seen(session_summary.num_tcp_rst_seen);
-    session_stats->set_num_tcp_fin_seen(session_summary.num_tcp_fin_seen);
 
     return HAL_RET_OK;
 }

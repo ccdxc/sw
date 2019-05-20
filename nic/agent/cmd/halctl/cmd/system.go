@@ -2086,9 +2086,6 @@ func sessionSummaryStatsShow(stats *halproto.Stats) {
 	fmt.Printf("%25s%25d\n", "TCP Resets on SFW Reject", sessstats.GetNumTcpResetSent())
 	fmt.Printf("%25s%25d\n", "ICMP Errors on SFW Reject", sessstats.GetNumIcmpErrorSent())
 	fmt.Printf("%25s%25d\n", "Session create failures", sessstats.GetNumSessionCreateErrors())
-	fmt.Printf("%25s%25d\n", "TCP Syn packets seen", sessstats.GetNumTcpSynSeen())
-	fmt.Printf("%25s%25d\n", "TCP Fin packets seen", sessstats.GetNumTcpFinSeen())
-	fmt.Printf("%25s%25d\n", "TCP Rst packets seen", sessstats.GetNumTcpRstSeen())
 }
 
 func apiStatsShowHeader() {

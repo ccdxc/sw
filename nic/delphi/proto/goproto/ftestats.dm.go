@@ -455,12 +455,6 @@ type SessionSummaryMetrics struct {
 
 	NumSessionCreateErrors metrics.Counter
 
-	NumTcpSynSeen metrics.Counter
-
-	NumTcpFinSeen metrics.Counter
-
-	NumTcpRstSeen metrics.Counter
-
 	// private state
 	metrics gometrics.Metrics
 }
@@ -494,12 +488,6 @@ func (mtr *SessionSummaryMetrics) Size() int {
 	sz += mtr.NumTcpCxnsetupTimeouts.Size()
 
 	sz += mtr.NumSessionCreateErrors.Size()
-
-	sz += mtr.NumTcpSynSeen.Size()
-
-	sz += mtr.NumTcpFinSeen.Size()
-
-	sz += mtr.NumTcpRstSeen.Size()
 
 	return sz
 }
@@ -542,15 +530,6 @@ func (mtr *SessionSummaryMetrics) Unmarshal() error {
 
 	mtr.NumSessionCreateErrors = mtr.metrics.GetCounter(offset)
 	offset += mtr.NumSessionCreateErrors.Size()
-
-	mtr.NumTcpSynSeen = mtr.metrics.GetCounter(offset)
-	offset += mtr.NumTcpSynSeen.Size()
-
-	mtr.NumTcpFinSeen = mtr.metrics.GetCounter(offset)
-	offset += mtr.NumTcpFinSeen.Size()
-
-	mtr.NumTcpRstSeen = mtr.metrics.GetCounter(offset)
-	offset += mtr.NumTcpRstSeen.Size()
 
 	return nil
 }
@@ -613,21 +592,6 @@ func (mtr *SessionSummaryMetrics) getOffset(fldName string) int {
 		return offset
 	}
 	offset += mtr.NumSessionCreateErrors.Size()
-
-	if fldName == "NumTcpSynSeen" {
-		return offset
-	}
-	offset += mtr.NumTcpSynSeen.Size()
-
-	if fldName == "NumTcpFinSeen" {
-		return offset
-	}
-	offset += mtr.NumTcpFinSeen.Size()
-
-	if fldName == "NumTcpRstSeen" {
-		return offset
-	}
-	offset += mtr.NumTcpRstSeen.Size()
 
 	return offset
 }
@@ -695,24 +659,6 @@ func (mtr *SessionSummaryMetrics) SetNumTcpCxnsetupTimeouts(val metrics.Counter)
 // SetNumSessionCreateErrors sets cunter in shared memory
 func (mtr *SessionSummaryMetrics) SetNumSessionCreateErrors(val metrics.Counter) error {
 	mtr.metrics.SetCounter(val, mtr.getOffset("NumSessionCreateErrors"))
-	return nil
-}
-
-// SetNumTcpSynSeen sets cunter in shared memory
-func (mtr *SessionSummaryMetrics) SetNumTcpSynSeen(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("NumTcpSynSeen"))
-	return nil
-}
-
-// SetNumTcpFinSeen sets cunter in shared memory
-func (mtr *SessionSummaryMetrics) SetNumTcpFinSeen(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("NumTcpFinSeen"))
-	return nil
-}
-
-// SetNumTcpRstSeen sets cunter in shared memory
-func (mtr *SessionSummaryMetrics) SetNumTcpRstSeen(val metrics.Counter) error {
-	mtr.metrics.SetCounter(val, mtr.getOffset("NumTcpRstSeen"))
 	return nil
 }
 

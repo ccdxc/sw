@@ -418,9 +418,6 @@ typedef struct session_stats_ {
     uint64_t    num_icmp_error_sent;       // no. of ICMP errors sent as a result of SFW Reject
     uint64_t    num_cxnsetup_timeout;      // no. of sessions that timed out at connection setup
     uint64_t    num_session_create_err;    // no. of session create errors
-    uint64_t    num_tcp_syn_seen;          // no. of TCP SYN seen
-    uint64_t    num_tcp_fin_seen;          // no. of TCP FIN seen
-    uint64_t    num_tcp_rst_seen;          // no. of TCP RST seen
 } __PACK__ session_stats_t;
 
 typedef struct session_get_ {
@@ -497,9 +494,6 @@ void incr_global_session_icmp_error_stats (uint8_t fte_id);
 hal_ret_t session_handle_upgrade (void);
 hal_ret_t session_flow_hash_get(FlowHashGetRequest& req,
                                 FlowHashGetResponseMsg *rsp);
-void incr_global_session_tcp_rst_seen_stats (uint8_t fte_id);
-void incr_global_session_tcp_syn_seen_stats (uint8_t fte_id);
-void incr_global_session_tcp_fin_seen_stats (uint8_t fte_id);
 
 }    // namespace hal
 
