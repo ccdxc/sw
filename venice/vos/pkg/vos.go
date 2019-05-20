@@ -102,6 +102,7 @@ func (i *instance) createDefaultBuckets(client vos.BackendClient) error {
 		for _, n := range objstore.Buckets_name {
 			name := "default." + strings.ToLower(n)
 			if err = i.createBucket(name); err != nil {
+				log.Errorf("create bucket [%v] failed retry [%d] (%s)", name, retryCount, err)
 				loop = true
 			}
 		}
