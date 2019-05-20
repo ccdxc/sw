@@ -2854,11 +2854,14 @@ int ionic_lifs_size(struct ionic *ionic)
 	ntxqs_per_lif = le32_to_cpu(lc->queue_count[IONIC_QTYPE_TXQ]);
 	nrxqs_per_lif = le32_to_cpu(lc->queue_count[IONIC_QTYPE_RXQ]);
 
+	if (max_slaves)
+		nslaves = min(max_slaves, nlifs - 1);
+	else
+		nslaves = nlifs - 1;
+
 	nxqs = min(ntxqs_per_lif, nrxqs_per_lif);
 	nxqs = min(nxqs, num_online_cpus());
 	neqs = min(neqs_per_lif, num_online_cpus());
-
-	nslaves = nlifs - 1;
 
 try_again:
 	/* interrupt usage:

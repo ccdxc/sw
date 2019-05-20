@@ -16,6 +16,10 @@ MODULE_AUTHOR("Pensando Systems, Inc");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(DRV_VERSION);
 
+unsigned int max_slaves = 0;
+module_param(max_slaves, uint, 0);
+MODULE_PARM_DESC(max_slaves, "Maximum number of slave lifs");
+
 unsigned int rx_copybreak = IONIC_RX_COPYBREAK_DEFAULT;
 module_param(rx_copybreak, uint, 0);
 MODULE_PARM_DESC(rx_copybreak,

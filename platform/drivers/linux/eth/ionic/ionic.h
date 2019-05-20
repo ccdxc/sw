@@ -25,6 +25,7 @@
 #define IONIC_SUBDEV_ID_NAPLES_100_8	0x4002
 
 
+extern unsigned int max_slaves;
 extern unsigned int rx_copybreak;
 extern unsigned int devcmd_timeout;
 
