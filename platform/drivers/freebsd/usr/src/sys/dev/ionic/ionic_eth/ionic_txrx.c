@@ -2289,7 +2289,7 @@ ionic_firmware_update2(struct lif *lif)
 	}
 
 	if (strncmp(ionic_fw_update_ver, idev->dev_info.fw_version, sizeof(ionic_fw_update_ver)) == 0) {
-		if_printf(lif->netdev, "No need to update fimware, its alreday on %s\n", ionic_fw_update_ver);
+		if_printf(lif->netdev, "No need to update firmware, its already on %s\n", ionic_fw_update_ver);
 		return (0);
 	}
 

@@ -59,6 +59,8 @@ static int ionic_lif_rss_deinit(struct lif *lif);
 static void ionic_media_status(struct ifnet *ifp, struct ifmediareq *ifmr);
 static int ionic_media_change(struct ifnet *ifp);
 
+static int ionic_set_features(struct lif *lif, uint32_t features);
+
 struct lif_addr_work {
 	struct work_struct work;
 	struct lif *lif;
@@ -2150,6 +2152,7 @@ ionic_lif_deinit(struct lif *lif)
 	ionic_lif_adminq_deinit(lif);
 
 	memset(lif->dev_addr, 0, ETHER_ADDR_LEN);
+
 	ionic_lif_reset(lif);
 }
 
@@ -3119,7 +3122,6 @@ ionic_lif_init(struct lif *lif)
 	if (err)
 		goto err_out_txqs_deinit;
 
-
 	err = ionic_lif_rss_init(lif);
 	if (err) {
 		IONIC_NETDEV_ERROR(lif->netdev, "ionic_lif_rss_init failed, error = %d\n", err);
@@ -3140,9 +3142,20 @@ ionic_lif_init(struct lif *lif)
 
 	ionic_read_notify_block(lif);
 
+	err = ionic_set_features(lif,
+				 ETH_HW_VLAN_TX_TAG
+				| ETH_HW_VLAN_RX_STRIP
+				| ETH_HW_VLAN_RX_FILTER
+				| ETH_HW_RX_HASH
+				| ETH_HW_TX_SG
+				| ETH_HW_TX_CSUM
+				| ETH_HW_RX_CSUM
+				| ETH_HW_TSO
+				| ETH_HW_TSO_IPV6);
+	if (err)
+		IONIC_NETDEV_ERROR(lif->netdev, "ionic_set_features failed, error = %d\n", err);
 
-
-	return 0;
+	return err;
 
 err_out_rss_deinit:
 	ionic_lif_rss_deinit(lif);
@@ -3198,7 +3211,7 @@ ionic_lif_reinit(struct lif *lif)
 
 	ionic_lif_deinit(lif);
 
-	/* LIF reset is alreday done by deinit. */
+	/* LIF reset is already done by deinit. */
 	
 	error = ionic_lif_init(lif);
 	if (error) {
@@ -3206,6 +3219,11 @@ ionic_lif_reinit(struct lif *lif)
 		return (error);
 	}
 
+	ionic_set_hw_features(lif, lif->hw_features);
+	/* Program the Rx mode. */
+	ionic_lif_rx_mode(lif, lif->rx_mode);
+
+	ionic_lif_set_netdev_info(lif);
 	/* Program the multicast list. */
 	for (i = 0; i < lif->num_mc_addrs; i++) {
 		mc = &lif->mc_addrs[i];
@@ -3240,11 +3258,6 @@ ionic_set_hw_features(struct lif *lif, uint32_t features)
 		},
 	};
 	int err;
-
-	if (features == lif->hw_features) {
-		IONIC_NETDEV_INFO(lif->netdev, "features unchanged\n");
-		return (0);
-	}
 
 	err = ionic_adminq_post_wait(lif, &ctx);
 	if (err)
@@ -3297,6 +3310,11 @@ ionic_set_features(struct lif *lif, uint32_t features)
 {
 	int err;
 
+	if (features == lif->hw_features) {
+		IONIC_NETDEV_INFO(lif->netdev, "features unchanged\n");
+		return (0);
+	}
+
 	err = ionic_set_hw_features(lif, features);
 	if (err)
 		return err;
@@ -3315,7 +3333,6 @@ static int
 ionic_lif_register(struct lif *lif)
 {
 	struct ifnet *ifp;
-	int err;
 	
 	ifp = lif->netdev;
 	
@@ -3328,20 +3345,6 @@ ionic_lif_register(struct lif *lif)
 	lif->registered = true;
 
 	ionic_setup_sysctls(lif);
-
-	err = ionic_set_features(lif,
-				 ETH_HW_VLAN_TX_TAG
-				| ETH_HW_VLAN_RX_STRIP
-				| ETH_HW_VLAN_RX_FILTER
-				| ETH_HW_RX_HASH
-				| ETH_HW_TX_SG
-				| ETH_HW_TX_CSUM
-				| ETH_HW_RX_CSUM
-				| ETH_HW_TSO
-				| ETH_HW_TSO_IPV6);
-
-	if (err)
-		return err;
 
 	return 0;
 }
