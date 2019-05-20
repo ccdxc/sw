@@ -8,6 +8,7 @@ testcases:
     -   name    : Memleak_Subifs
         testcase: testcases.subifs.memleak_subif
         stress  : False
+        ignore  : True
         args    :
             type: remote_only
             ipv4: True
@@ -16,6 +17,7 @@ testcases:
     -   name    : MacValidation_Subifs
         testcase: testcases.subifs.unimac_validation_subif
         stress  : False
+        ignore  : True
         args    :
             type: remote_only
             ipv4: True
@@ -24,6 +26,7 @@ testcases:
     -   name    : MacChange_Subifs
         testcase: testcases.subifs.unimac_change_subif
         stress  : False
+        ignore  : True
         iterators:
             ipaf : [ ipv4 ]
             type : simple
@@ -33,6 +36,7 @@ testcases:
     -   name    : Multiple_Subifs_Stress
         testcase: testcases.subifs.subif
         stress  : False
+        ignore  : True
         args    :
             type: remote_only
             loop_count: 3
