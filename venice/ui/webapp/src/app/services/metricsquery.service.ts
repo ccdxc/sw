@@ -89,6 +89,7 @@ export class MetricsqueryService extends TelemetryqueryServiceGen {
         this.processData(respBody);
         const currVal: ITelemetry_queryMetricsQueryResponse = poll.handler.value;
         const resValue: ITelemetry_queryMetricsQueryResponse = _.cloneDeep(currVal);
+        resValue.tenant = respBody.tenant;
 
         respBody.results.forEach((r, i) => {
           const options = pollingOptions[i];

@@ -1,0 +1,22 @@
+export interface MetricField {
+  name: string,
+  description?: string,
+  displayName: string,
+  units?: string,
+  baseType?: string,
+  scaleMin?: number,
+  scaleMax?: number,
+}
+
+export interface MetricMeasurement {
+  name: string,
+  description: string,
+  displayName: string,
+  fields: MetricField[],
+}
+
+export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
+  {{#each this}}
+  {{this.name}}: {{#toJSON this}}{{/toJSON}},
+  {{/each}}
+}

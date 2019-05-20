@@ -51,6 +51,15 @@ const routes: Routes = [
         loadChildren: '@app/components/monitoring-group/auditevents/auditevents.module#AuditeventsModule'
       }
     ]
+  },
+  {
+    path: 'telemetry',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/monitoring-group/telemetry/telemetry.module#TelemetryModule'
+      }
+    ]
   }
 ];
 

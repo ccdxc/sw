@@ -3,7 +3,7 @@ import { Directionality } from '@angular/cdk/bidi';
 import { Overlay } from '@angular/cdk/overlay';
 import { Platform } from '@angular/cdk/platform';
 import { ScrollDispatcher } from '@angular/cdk/scrolling';
-import { Directive, ElementRef, Inject, NgZone, Optional, ViewContainerRef, OnInit } from '@angular/core';
+import { Directive, ElementRef, Inject, NgZone, Optional, ViewContainerRef, OnInit, Input } from '@angular/core';
 import { NgControl } from '@angular/forms';
 import { MatTooltip, MatTooltipDefaultOptions, MAT_TOOLTIP_DEFAULT_OPTIONS, MAT_TOOLTIP_SCROLL_STRATEGY } from '@angular/material';
 import { HammerLoader, HAMMER_LOADER } from '@angular/platform-browser';
@@ -18,6 +18,9 @@ import { HammerLoader, HAMMER_LOADER } from '@angular/platform-browser';
   },
 })
 export class ErrorTooltipDirective extends MatTooltip implements OnInit {
+  tooltipDefaultClass: string = 'global-info-tooltip';
+  tooltipErrorClass: string = 'global-error-tooltip';
+
   constructor(protected control: NgControl,
     // Following imports are for MatTooltip
     _overlay: Overlay,
@@ -48,13 +51,17 @@ export class ErrorTooltipDirective extends MatTooltip implements OnInit {
       hammerLoader);
   }
 
+  // Description to show on hover. Overrides any message picked up from swagger.
+  @Input() appErrorTooltip: string;
+
   ngOnInit() {
   }
 
   // Overriding from MatTooltip
   get message() {
     if (!this.control) {
-      return;
+      this.tooltipClass = this.tooltipDefaultClass;
+      return this.appErrorTooltip;
     }
     if (this.control.touched && this.control.invalid && this.control.dirty) {
       const msgs = [];
@@ -67,12 +74,18 @@ export class ErrorTooltipDirective extends MatTooltip implements OnInit {
         }
       }
       this.tooltipClass = 'global-error-tooltip';
+      this.tooltipClass = this.tooltipErrorClass;
       return msgs.join('\n');
     }
 
+    if (this.appErrorTooltip != null) {
+      this.tooltipClass = this.tooltipDefaultClass;
+      return this.appErrorTooltip;
+    }
+    // Description from swagger
     const customControl: any = this.control.control;
     if (customControl != null && customControl._venice_sdk != null && customControl._venice_sdk.description != null) {
-      this.tooltipClass = 'global-info-tooltip';
+      this.tooltipClass = this.tooltipDefaultClass;
       return customControl._venice_sdk.description;
     }
   }

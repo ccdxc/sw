@@ -146,12 +146,7 @@ export class DashboardComponent extends BaseComponent implements OnInit, OnDestr
   }
 
   timeSeriesQuery(): MetricsPollingQuery {
-    const query: Telemetry_queryMetricsQuerySpec = MetricsUtility.timeSeriesQuery('Node');
-    const pollOptions: MetricsPollingOptions = {
-      timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
-      mergeFunction: MetricsUtility.timeSeriesQueryMerge
-    };
-    return { query: query, pollingOptions: pollOptions };
+    return MetricsUtility.timeSeriesQueryPolling('Node');
   }
 
   currentQuery(): MetricsPollingQuery {

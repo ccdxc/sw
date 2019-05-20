@@ -125,6 +125,15 @@ export const sideNavMenu: SideNavItem[] = [
         link: ['/monitoring', 'alertsevents']
       },
       {
+        label: 'Telemetry',
+        icon: {
+          cssClass: 'material-icons',
+          matIconName: 'insert_chart_outlined'
+        },
+        roleGuard: UIRolePermissions.metricsquery_read,
+        link: ['/monitoring', 'telemetry']
+      },
+      {
         label: 'Audit Events',
         icon: {
           cssClass: 'app-l-side-nav-monitoring-auditevents'

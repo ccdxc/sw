@@ -3,6 +3,7 @@ var path = require( 'path' );
 let handlebars = require('handlebars');
 var rmdir = require('rimraf');
 let _ = require('lodash');
+let customMetrics = require('./custom-metrics');
 
 var swaggerTSGenerator = require('@pensando/swagger-ts-generator/');
 
@@ -12,9 +13,10 @@ var swaggerTSGenerator = require('@pensando/swagger-ts-generator/');
 const version = 'v1';
 const genModelFolder = path.join(__dirname, 'v1/', 'models/generated/');
 const genServiceFolder = path.join(__dirname, 'v1/', 'services/generated/');
+const metricsFolder = path.join(__dirname, 'metrics/', 'generated/');
 
 handlebars.registerHelper('toJSON', function (obj) {
-  return JSON.stringify(obj, null, 1);
+  return JSON.stringify(obj, null, 2);
 });
 handlebars.registerHelper('ifeq', function (a, b, options) {
   if (a == b) { return options.fn(this); }
@@ -37,6 +39,12 @@ if (fs.existsSync(genServiceFolder)){
   rmdir.sync(genServiceFolder);
 }
 fs.mkdirSync(genServiceFolder);
+
+if (fs.existsSync(metricsFolder)){
+  // Delete all contents
+  rmdir.sync(metricsFolder);
+}
+fs.mkdirSync(metricsFolder);
 
 // Generating models and services
 // Path to generated api files
@@ -129,14 +137,69 @@ generateCatKind(data);
 generateEventTypesFile(data);
 generateUIPermissionsFile(manifest, data);
 
+generateMetricMetadata();
 
 
+// Recursively search under base for files with the given extension 
+function recFindByExt(base,ext,files,result) 
+{
+    files = files || fs.readdirSync(base) 
+    result = result || [] 
 
+    files.forEach( 
+        function (file) {
+            var newbase = path.join(base,file)
+            if ( fs.statSync(newbase).isDirectory() )
+            {
+                result = recFindByExt(newbase,ext,fs.readdirSync(newbase),result)
+            }
+            else
+            {
+                if ( file.substr(-1*(ext.length+1)) == '.' + ext )
+                {
+                    result.push(newbase)
+                } 
+            }
+        }
+    )
+    return result
+}
 
 function readAndCompileTemplateFile(templateFileName) {
   let templateSource = fs.readFileSync(path.resolve(__dirname, "templates", templateFileName), 'utf8');
   let template = handlebars.compile(templateSource);
   return template;
+}
+
+function generateMetricMetadata() {
+  files = recFindByExt('../../../metrics/generated/', 'json')
+  messages = [];
+  files.forEach( (f) => {
+    const metadata = JSON.parse(fs.readFileSync(f, 'utf8').trim());
+    // const prefix = metadata.prefix
+    metadata.Messages.forEach((m) => {
+      m = _.transform(m, function (result, val, key) {
+        result[_.camelCase(key)] = val;
+      });
+      m.fields = m.fields.map( (field) => {
+        if (field.DisplayName == null) {
+          field.DisplayName = field.Name;
+        }
+        return _.transform(field, function (result, val, key) {
+          result[_.camelCase(key)] = val;
+        });
+      });
+      messages.push(m);
+    });
+  });
+  customMetrics.metrics.forEach( (metric) => {
+    messages.push(metric);
+  })
+  const template = readAndCompileTemplateFile('generate-metrics-ts.hbs');
+  const result = template(messages);
+  const outputFileName = 'metrics/generated/metadata.ts';
+  swaggerTSGenerator.utils.ensureFile(outputFileName, result);
+  swaggerTSGenerator.utils.log(`generated ${outputFileName}`);
 }
 
 function generateCatKind(versionData) {
