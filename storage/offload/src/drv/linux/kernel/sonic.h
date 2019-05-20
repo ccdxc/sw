@@ -148,6 +148,8 @@ int sonic_set_dma_mask(struct sonic *sonic);
 int sonic_setup(struct sonic *sonic);
 int sonic_identify(struct sonic *sonic);
 int sonic_reset(struct sonic *sonic);
-int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx);
+int sonic_api_adminq_post(struct lif *lif,
+		struct sonic_admin_ctx *ctx,
+		struct admin_desc_info **desc_info);
 
 #endif /* _SONIC_H_ */

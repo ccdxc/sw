@@ -408,15 +408,19 @@ void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa)
 		cur->desc = base + (i * q->desc_size);
 }
 
-void sonic_q_post(struct queue *q, bool ring_doorbell, admin_desc_cb cb,
+struct admin_desc_info *
+sonic_q_post(struct queue *q, bool ring_doorbell, admin_desc_cb cb,
 		  void *cb_arg)
 {
-	q->admin_head->cb = cb;
-	q->admin_head->cb_arg = cb_arg;
-	q->admin_head = q->admin_head->next;
+	struct admin_desc_info *desc_info = q->admin_head;
+
+	desc_info->cb = cb;
+	desc_info->cb_arg = cb_arg;
+	q->admin_head = desc_info->next;
 
 	if (ring_doorbell)
 		sonic_q_ringdb(q, q->admin_head->index);
+	return desc_info;
 }
 
 void sonic_q_rewind(struct queue *q, struct admin_desc_info *start)

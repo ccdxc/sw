@@ -311,8 +311,8 @@ int sonic_q_init(struct lif *lif, struct sonic_dev *idev, struct queue *q,
 		 size_t desc_size, unsigned int pid);
 int sonic_q_reinit(struct queue *q);
 void sonic_q_map(struct queue *q, void *base, dma_addr_t base_pa);
-void sonic_q_post(struct queue *q, bool ring_doorbell, admin_desc_cb cb,
-		  void *cb_arg);
+struct admin_desc_info *sonic_q_post(struct queue *q, bool ring_doorbell,
+		admin_desc_cb cb, void *cb_arg);
 void sonic_q_rewind(struct queue *q, struct admin_desc_info *start);
 unsigned int sonic_q_space_avail(struct queue *q);
 bool sonic_q_has_space(struct queue *q, unsigned int want);

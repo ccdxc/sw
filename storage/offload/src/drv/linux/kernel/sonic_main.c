@@ -32,9 +32,10 @@ MODULE_VERSION(DRV_VERSION);
 MODULE_VERSION(sonic, 1);
 #endif
 
-unsigned int devcmd_timeout = 30;
+/* 60 seconds for firmware update */
+unsigned int devcmd_timeout = 60;
 module_param(devcmd_timeout, uint, 0);
-MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
+MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 60 secs)");
 
 unsigned int core_count = SONIC_DEFAULT_CORES;
 module_param(core_count, uint, 0444);
@@ -107,9 +108,10 @@ int sonic_adminq_check_err(struct lif *lif, struct sonic_admin_ctx *ctx)
 
 int sonic_adminq_post_wait(struct lif *lif, struct sonic_admin_ctx *ctx)
 {
+	struct admin_desc_info *desc_info;
 	int err, timeout;
 
-	err = sonic_api_adminq_post(lif, ctx);
+	err = sonic_api_adminq_post(lif, ctx, &desc_info);
 	if (err)
 		return err;
 
@@ -120,6 +122,7 @@ int sonic_adminq_post_wait(struct lif *lif, struct sonic_admin_ctx *ctx)
 	 */
 	if (timeout == 0) {
 		OSAL_LOG_ERROR("adminq post timeout");
+		desc_info->cb = NULL;
 		return ETIMEDOUT;
 	}
 
@@ -535,11 +538,15 @@ static void sonic_api_adminq_cb(struct queue *q, struct admin_desc_info *desc_in
 	complete_all(&ctx->work);
 }
 
-int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx)
+int
+sonic_api_adminq_post(struct lif *lif,
+		struct sonic_admin_ctx *ctx,
+		struct admin_desc_info **desc_info)
 {
 	struct queue *adminq = &lif->adminqcq->q;
 	int err = 0;
 
+	*desc_info = NULL;
 #ifndef __FreeBSD__
 	WARN_ON(in_interrupt());
 #endif
@@ -558,7 +565,7 @@ int sonic_api_adminq_post(struct lif *lif, struct sonic_admin_ctx *ctx)
 				 &ctx->cmd, sizeof(ctx->cmd), true);
 	}
 
-	sonic_q_post(adminq, true, sonic_api_adminq_cb, ctx);
+	*desc_info = sonic_q_post(adminq, true, sonic_api_adminq_cb, ctx);
 
 err_out:
 	spin_unlock(&lif->adminq_lock);
