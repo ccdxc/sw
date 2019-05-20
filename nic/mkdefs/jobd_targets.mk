@@ -11,7 +11,9 @@ jobd/package:
 	@if [ "x${JOB_ID}" = "x" ] || [ "x${IGNORE_BUILD_PIPELINE}" != "x" ]; then \
 		make package; \
 	else \
-	  tar -zxf /sw/build_$(PIPELINE)_x86.tar.gz -C /; \
+	  if [ -f /sw/build_$(PIPELINE)_x86.tar.gz ]; then \
+	    tar -zxf /sw/build_$(PIPELINE)_x86.tar.gz -C /; \
+	  fi \
 	fi
 
 .PHONY: ${JOBD_PREREQS}
@@ -226,9 +228,9 @@ jobd/gft/gtest: ${JOBD_PREREQS}
 
 .PHONY: jobd/apollo/gtest
 jobd/apollo/gtest: ${JOBD_PREREQS}
-	#${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_gtest
-	#${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_test > apollo_scale_test.log.txt
-	#${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_vxlan_test > apollo_scale_vxlan_test.log.txt
+	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_gtest
+	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_test > apollo_scale_test.log.txt
+	${NICDIR}/run.py ${COVERAGE_OPTS} --apollo_scale_vxlan_test > apollo_scale_vxlan_test.log.txt
 	${NICDIR}/apollo/test/tools/run_gtests_apollo.sh ${COVERAGE_OPTS}
 
 .PHONY: jobd/storage

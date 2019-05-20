@@ -526,6 +526,7 @@ def run_apollo_test(args):
 # Run Apollo Scale tests
 def run_apollo_scale_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
+    os.environ["SKIP_VERIFY"] = "1"
     os.chdir(nic_dir)
     cmd = ["build/x86_64/apollo/bin/apollo_scale_test",
            '-c', "hal.json",
@@ -537,6 +538,7 @@ def run_apollo_scale_test(args):
 # Run Apollo VXLAN Scale tests
 def run_apollo_vxlan_scale_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
+    os.environ["SKIP_VERIFY"] = "1"
     os.environ["APOLLO_TEST_TEP_ENCAP"] = "vxlan"
     os.chdir(nic_dir)
     cmd = ["build/x86_64/apollo/bin/apollo_scale_test",
