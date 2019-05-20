@@ -16,6 +16,7 @@ import (
 	"github.com/pensando/sw/api/generated/objstore"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/watchstream"
@@ -165,13 +166,7 @@ func New(ctx context.Context, args []string) error {
 
 	time.Sleep(2 * time.Second)
 	inst := &instance{}
-	url := ""
-	hostname, err := os.Hostname()
-	if err != nil {
-		url = "localhost:" + globals.VosMinioPort
-	} else {
-		url = hostname + ":" + globals.VosMinioPort
-	}
+	url := k8s.GetPodIP() + ":" + globals.VosMinioPort
 
 	log.Infof("connecting to minio at [%v]", url)
 
