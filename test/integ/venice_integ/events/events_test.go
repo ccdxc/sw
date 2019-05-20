@@ -1458,6 +1458,7 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    globals.DefaultTenant,
 			Namespace: globals.DefaultNamespace,
+			Name:      t.Name(),
 		},
 	}
 

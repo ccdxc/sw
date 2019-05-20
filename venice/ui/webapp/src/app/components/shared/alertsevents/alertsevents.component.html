@@ -96,6 +96,10 @@
                 <div style="display: inline; margin-left: 25px">
                   {{ severityEnum[rowData.severity] }} </div>
               </ng-container>
+              <ng-container *ngSwitchCase="'object-ref'">
+                <span *ngIf="rowData['object-ref'] != null" style="display: block">
+                  {{ rowData['object-ref'].kind }} : {{ rowData['object-ref'].name }} </span>
+              </ng-container>
               <ng-container *ngSwitchCase="'source'">
                 <span *ngIf="rowData.source != null" style="display: block">
                   {{ rowData.source['node-name'] }} : {{ rowData.source.component }} </span>

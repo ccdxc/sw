@@ -57,7 +57,8 @@ function genEvent(modTime, creationTime, severity, type, message, source, count)
     'type': type,
     'message': message,
     'object-ref': {
-      name: 'objRef'
+      kind: 'Node',
+      name: 'test-node-1'
     },
     'source': source,
     'count': count
@@ -180,6 +181,10 @@ describe('AlertseventsComponent', () => {
               expect(field.children[1].nativeElement.textContent)
                 .toContain(EventsEventAttributes_severity[rowData.severity],
                   'severity column did not match');
+            },
+            'object-ref': (field, rowData, rowIndex) => {
+              expect(field.nativeElement.textContent).toContain(
+                rowData['object-ref'].kind + ' : ' + rowData['object-ref'].name, 'object-ref column did not match');
             },
             'source': (field, rowData, rowIndex) => {
               expect(field.nativeElement.textContent).toContain(

@@ -15,12 +15,14 @@ import (
 	"google.golang.org/grpc/connectivity"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	evtsproxygrpc "github.com/pensando/sw/venice/evtsproxy/rpcserver/evtsproxyproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/events"
+	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -191,8 +193,15 @@ func (r *recorderImpl) Event(eventType eventtypes.EventType, message string, obj
 	var objRefKind string
 	var err error
 
-	// derive reference object details from the given object
+	if objRef == nil && !utils.IsEmpty(k8s.GetNodeName()) {
+		node := &cluster.Node{}
+		node.Defaults("all")
+		node.Name = k8s.GetNodeName()
+		objRef = node
+	}
+
 	if objRef != nil {
+		// derive reference object details from the given object
 		objRefMeta, err = runtime.GetObjectMeta(objRef)
 		if err != nil {
 			r.logger.Fatalf("{%s} failed to get the object meta from reference object, err: %v", r.id, err)

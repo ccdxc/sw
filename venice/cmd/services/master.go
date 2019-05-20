@@ -169,15 +169,19 @@ type resolverServiceObserver struct{}
 func (r *resolverServiceObserver) OnNotifyServiceInstance(e k8stypes.ServiceInstanceEvent) error {
 	log.Infof("received pod event: %v, instance {%v}", e.Type, e.GetInstance())
 	if e.GetInstance() != nil && !utils.IsEmpty(e.GetInstance().GetNode()) {
+		node := &cmd.Node{}
+		node.Defaults("all")
+		node.ObjectMeta.Name = e.GetInstance().GetNode()
+
 		switch e.Type {
 		case k8stypes.ServiceInstanceEvent_Added:
 			log.Infof("triggering event {%v} on service {%v:%v}", eventtypes.SERVICE_STARTED, e.GetInstance().GetService(), e.GetInstance().GetNode())
 			recorder.Event(eventtypes.SERVICE_STARTED,
-				fmt.Sprintf("Service %s started on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), nil)
+				fmt.Sprintf("Service %s started on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), node)
 		case k8stypes.ServiceInstanceEvent_Deleted:
 			log.Infof("triggering event {%v} on service {%v:%v}", eventtypes.SERVICE_STOPPED, e.GetInstance().GetService(), e.GetInstance().GetNode())
 			recorder.Event(eventtypes.SERVICE_STOPPED,
-				fmt.Sprintf("Service %s stopped on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), nil)
+				fmt.Sprintf("Service %s stopped on %s", e.GetInstance().GetService(), e.GetInstance().GetNode()), node)
 		}
 	}
 	return nil

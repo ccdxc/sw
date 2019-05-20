@@ -246,7 +246,7 @@ func (s *RPCServer) UpdateSmartNIC(updObj *cluster.SmartNIC) (*cluster.SmartNIC,
 		}
 
 		if evtType != -1 {
-			recorder.Event(evtType, msg, nil)
+			recorder.Event(evtType, msg, updObj)
 			log.Infof("Generated event, type: %v, msg: %s", evtType, msg)
 		}
 
@@ -482,7 +482,7 @@ func (s *RPCServer) RegisterNIC(stream grpc.SmartNICRegistration_RegisterNICServ
 
 		if nicObj.Status.AdmissionPhase == cluster.SmartNICStatus_REJECTED.String() {
 			recorder.Event(eventtypes.NIC_REJECTED,
-				fmt.Sprintf("Admission for SmartNIC %s was rejected, reason: %s", nicObj.Name, nicObj.Status.AdmissionPhaseReason), nil)
+				fmt.Sprintf("Admission for SmartNIC %s was rejected, reason: %s", nicObj.Name, nicObj.Status.AdmissionPhaseReason), nicObj)
 
 			return &grpc.RegisterNICResponse{
 				AdmissionResponse: &grpc.NICAdmissionResponse{
@@ -729,7 +729,7 @@ func (s *RPCServer) MonitorHealth() {
 									log.Errorf("Failed updating the NIC health status to unknown, nic: %s err: %s", nic.Name, err)
 								}
 								recorder.Event(eventtypes.NIC_HEALTH_UNKNOWN,
-									fmt.Sprintf("Healthy condition for SmartNIC %s is now %s", nic.Name, cluster.ConditionStatus_UNKNOWN.String()), nil)
+									fmt.Sprintf("Healthy condition for SmartNIC %s is now %s", nic.Name, cluster.ConditionStatus_UNKNOWN.String()), nicState.SmartNIC)
 							}
 							break
 						}
