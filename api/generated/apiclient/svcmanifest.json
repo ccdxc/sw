@@ -22,7 +22,8 @@
             ],
             "Actions": [
               "LdapConnectionCheck",
-              "LdapBindCheck"
+              "LdapBindCheck",
+              "TokenSecretGenerate"
             ]
           },
           "Role": {

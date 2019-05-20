@@ -511,6 +511,68 @@
         ]
       }
     },
+    "/configs/auth/v1/authn-policy/TokenSecretGenerate": {
+      "post": {
+        "operationId": "TokenSecretGenerate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/authAuthenticationPolicy"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/authTokenSecretRequest"
+            }
+          }
+        ],
+        "tags": [
+          "auth/v1"
+        ]
+      }
+    },
     "/configs/auth/v1/role-bindings": {
       "get": {
         "summary": "List RoleBinding objects",
@@ -6311,6 +6373,21 @@
           "description": "TrustedCerts defines the set of PEM encoded root certificate authorities that will be used when verifying server certificates."
         }
       }
+    },
+    "authTokenSecretRequest": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        }
+      },
+      "title": "TokenSecretRequest is to re-generate secret for token signing"
     },
     "authUser": {
       "type": "object",

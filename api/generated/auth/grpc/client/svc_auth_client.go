@@ -380,6 +380,20 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		).Endpoint()
 		lPasswordResetEndpoint = trace.ClientEndPoint("AuthV1:PasswordReset")(lPasswordResetEndpoint)
 	}
+	var lTokenSecretGenerateEndpoint endpoint.Endpoint
+	{
+		lTokenSecretGenerateEndpoint = grpctransport.NewClient(
+			conn,
+			"auth.AuthV1",
+			"TokenSecretGenerate",
+			auth.EncodeGrpcReqTokenSecretRequest,
+			auth.DecodeGrpcRespAuthenticationPolicy,
+			&auth.AuthenticationPolicy{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lTokenSecretGenerateEndpoint = trace.ClientEndPoint("AuthV1:TokenSecretGenerate")(lTokenSecretGenerateEndpoint)
+	}
 	return auth.EndpointsAuthV1Client{
 		Client: auth.NewAuthV1Client(conn),
 
@@ -408,6 +422,7 @@ func NewAuthV1(conn *grpc.ClientConn, logger log.Logger) auth.ServiceAuthV1Clien
 		LdapConnectionCheckEndpoint:            lLdapConnectionCheckEndpoint,
 		PasswordChangeEndpoint:                 lPasswordChangeEndpoint,
 		PasswordResetEndpoint:                  lPasswordResetEndpoint,
+		TokenSecretGenerateEndpoint:            lTokenSecretGenerateEndpoint,
 	}
 }
 
@@ -780,6 +795,15 @@ func (a *grpcObjAuthV1AuthenticationPolicy) LdapBindCheck(ctx context.Context, i
 	return a.client.LdapBindCheck(nctx, in)
 }
 
+func (a *grpcObjAuthV1AuthenticationPolicy) TokenSecretGenerate(ctx context.Context, in *auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{TokenSecretGenerate TokenSecretRequest AuthenticationPolicy}", "oper", "TokenSecretGenerate")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.TokenSecretGenerate(nctx, in)
+}
+
 func (a *grpcObjAuthV1AuthenticationPolicy) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
@@ -874,6 +898,12 @@ func (a *restObjAuthV1AuthenticationPolicy) LdapBindCheck(ctx context.Context, i
 		return nil, errors.New("invalid input")
 	}
 	return a.endpoints.LdapBindCheckAuthenticationPolicy(ctx, in)
+}
+func (a *restObjAuthV1AuthenticationPolicy) TokenSecretGenerate(ctx context.Context, in *auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.TokenSecretGenerateAuthenticationPolicy(ctx, in)
 }
 
 type grpcObjAuthV1Role struct {

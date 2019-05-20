@@ -448,6 +448,514 @@ func TestGenerateSecret(t *testing.T) {
 	}
 }
 
+func TestGenerateSecretAction(t *testing.T) {
+	tests := []struct {
+		name     string
+		in       interface{}
+		existing *auth.AuthenticationPolicy
+		out      auth.AuthenticationPolicy
+		result   bool
+		err      error
+	}{
+		{
+			name: "invalid input object",
+			in: struct {
+				Test string
+			}{"testing"},
+			result: true,
+			err:    fmt.Errorf("invalid input type"),
+		},
+		{
+			name: "valid generate secret request",
+			in:   auth.TokenSecretRequest{},
+			existing: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "1",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			out: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "2",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			result: false,
+			err:    nil,
+		},
+	}
+
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	authHooks := &authHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		txn := kvs.NewTxn()
+		var policyKey string
+		if test.existing != nil {
+			// encrypt password as it is stored as secret
+			if err := test.existing.ApplyStorageTransformer(ctx, true); err != nil {
+				t.Fatalf("[%s] test failed, error encrypting secret fields, Err: %v", test.name, err)
+			}
+			policyKey = test.existing.MakeKey("auth")
+			if err := kvs.Create(ctx, policyKey, test.existing); err != nil {
+				t.Fatalf("[%s] test failed, unable to populate kvstore with policy, Err: %v", test.name, err)
+			}
+		}
+		_, ok, err := authHooks.generateSecretAction(ctx, kvs, txn, policyKey, apiintf.CreateOper, false, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
+		if err == nil {
+			policy := &auth.AuthenticationPolicy{}
+			err = kvs.Get(ctx, policyKey, policy)
+			AssertOk(t, err, fmt.Sprintf("[%v] test failed", test.name))
+			err := policy.ApplyStorageTransformer(context.Background(), false)
+			AssertOk(t, err, fmt.Sprintf("[%v] test failed", test.name))
+			Assert(t, policy.Spec.Authenticators.Ldap.BindPassword == test.out.Spec.Authenticators.Ldap.BindPassword,
+				fmt.Sprintf("[%v] test failed, expected bind password [%s], got [%s]", test.name, test.out.Spec.Authenticators.Ldap.BindPassword, policy.Spec.Authenticators.Ldap.BindPassword))
+			Assert(t, len(policy.Spec.Authenticators.Radius.Servers) == len(test.out.Spec.Authenticators.Radius.Servers),
+				fmt.Sprintf("[%v] test failed, expected radius server count [%d], got [%d]", test.name, len(test.out.Spec.Authenticators.Radius.Servers), len(policy.Spec.Authenticators.Radius.Servers)))
+			for _, radius := range policy.Spec.Authenticators.Radius.Servers {
+				for _, expectedRadius := range test.out.Spec.Authenticators.Radius.Servers {
+					if radius.Url == expectedRadius.Url {
+						Assert(t, radius.Secret == expectedRadius.Secret,
+							fmt.Sprintf("[%v] test failed, expected radius [%s] secret [%s], got [%s]", test.name, radius.Url, expectedRadius.Secret, radius.Secret))
+					}
+				}
+			}
+			Assert(t, len(policy.Spec.Secret) == 128, fmt.Sprintf("[%v] test failed, expected secret length 128, got [%d]", test.name, len(policy.Spec.Secret)))
+		}
+		kvs.Delete(ctx, policyKey, nil)
+	}
+}
+
+func TestPopulateSecretsInAuthPolicy(t *testing.T) {
+	tests := []struct {
+		name     string
+		oper     apiintf.APIOperType
+		in       interface{}
+		existing *auth.AuthenticationPolicy
+		result   bool
+		out      auth.AuthenticationPolicy
+		err      error
+	}{
+		{
+			name: "invalid input object",
+			oper: apiintf.UpdateOper,
+			in: struct {
+				Test string
+			}{"testing"},
+			result: true,
+			err:    errInvalidInputType,
+		},
+		{
+			name: "update auth policy without secrets",
+			oper: apiintf.UpdateOper,
+			in: auth.AuthenticationPolicy{
+				TypeMeta:   api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812"},
+								{Url: "192.168.10.12:1812"},
+							},
+						},
+					},
+				},
+			},
+			existing: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "1",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			result: false,
+			out: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "2",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "update auth policy with secrets",
+			oper: apiintf.UpdateOper,
+			in: auth.AuthenticationPolicy{
+				TypeMeta:   api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: "newpassword",
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: "newpassword"},
+								{Url: "192.168.10.12:1812", Secret: "newpassword"},
+							},
+						},
+					},
+				},
+			},
+			existing: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "1",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			result: false,
+			out: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "2",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: "newpassword",
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: "newpassword"},
+								{Url: "192.168.10.12:1812", Secret: "newpassword"},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "update auth policy with some secrets",
+			oper: apiintf.UpdateOper,
+			in: auth.AuthenticationPolicy{
+				TypeMeta:   api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812"},
+								{Url: "192.168.10.12:1812", Secret: "newpassword"},
+							},
+						},
+					},
+				},
+			},
+			existing: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "1",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			result: false,
+			out: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "2",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: "newpassword"},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "remove a radius server",
+			oper: apiintf.UpdateOper,
+			in: auth.AuthenticationPolicy{
+				TypeMeta:   api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.12:1812", Secret: "newpassword"},
+							},
+						},
+					},
+				},
+			},
+			existing: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "1",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			result: false,
+			out: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "2",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.12:1812", Secret: "newpassword"},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "add a radius server",
+			oper: apiintf.UpdateOper,
+			in: auth.AuthenticationPolicy{
+				TypeMeta:   api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812"},
+								{Url: "192.168.10.12:1812"},
+								{Url: "192.168.10.13:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			existing: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "1",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			result: false,
+			out: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "2",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: testPassword},
+								{Url: "192.168.10.13:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "non-existent auth policy",
+			oper: apiintf.UpdateOper,
+			in: auth.AuthenticationPolicy{
+				TypeMeta:   api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.13:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			existing: nil,
+			result:   true,
+			err:      kvstore.NewKeyNotFoundError("", 0),
+		},
+	}
+
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+
+	authHooks := &authHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		txn := kvs.NewTxn()
+		var policyKey string
+		if test.existing != nil {
+			// encrypt password as it is stored as secret
+			if err := test.existing.ApplyStorageTransformer(ctx, true); err != nil {
+				t.Fatalf("[%s] test failed, error encrypting secret fields, Err: %v", test.name, err)
+			}
+			policyKey = test.existing.MakeKey("auth")
+			if err := kvs.Create(ctx, policyKey, test.existing); err != nil {
+				t.Fatalf("[%s] test failed, unable to populate kvstore with policy, Err: %v", test.name, err)
+			}
+		}
+		out, ok, err := authHooks.populateSecretsInAuthPolicy(ctx, kvs, txn, policyKey, test.oper, false, test.in)
+		Assert(t, test.result == ok, fmt.Sprintf("[%v] test failed", test.name))
+		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
+		if err == nil {
+			policy, _ := out.(auth.AuthenticationPolicy)
+			Assert(t, policy.Spec.Authenticators.Ldap.BindPassword == test.out.Spec.Authenticators.Ldap.BindPassword,
+				fmt.Sprintf("[%v] test failed, expected bind password [%s], got [%s]", test.name, test.out.Spec.Authenticators.Ldap.BindPassword, policy.Spec.Authenticators.Ldap.BindPassword))
+			Assert(t, len(policy.Spec.Authenticators.Radius.Servers) == len(test.out.Spec.Authenticators.Radius.Servers),
+				fmt.Sprintf("[%v] test failed, expected radius server count [%d], got [%d]", test.name, len(test.out.Spec.Authenticators.Radius.Servers), len(policy.Spec.Authenticators.Radius.Servers)))
+			for _, radius := range policy.Spec.Authenticators.Radius.Servers {
+				for _, expectedRadius := range test.out.Spec.Authenticators.Radius.Servers {
+					if radius.Url == expectedRadius.Url {
+						Assert(t, radius.Secret == expectedRadius.Secret,
+							fmt.Sprintf("[%v] test failed, expected radius [%s] secret [%s], got [%s]", test.name, radius.Url, expectedRadius.Secret, radius.Secret))
+					}
+				}
+			}
+		}
+		kvs.Delete(ctx, policyKey, nil)
+	}
+}
+
 func TestValidateRolePerms(t *testing.T) {
 	tests := []struct {
 		name string
@@ -676,7 +1184,7 @@ func TestChangePassword(t *testing.T) {
 			in: struct {
 				Test string
 			}{"testing"},
-			result: false,
+			result: true,
 			err:    errInvalidInputType,
 		},
 		{
@@ -716,7 +1224,7 @@ func TestChangePassword(t *testing.T) {
 					Type:     auth.UserSpec_Local.String(),
 				},
 			},
-			result: false,
+			result: true,
 			err:    errEmptyPassword,
 		},
 		{
@@ -736,7 +1244,7 @@ func TestChangePassword(t *testing.T) {
 					Type:     auth.UserSpec_Local.String(),
 				},
 			},
-			result: false,
+			result: true,
 			err:    errEmptyPassword,
 		},
 		{
@@ -756,7 +1264,7 @@ func TestChangePassword(t *testing.T) {
 					Type:     auth.UserSpec_Local.String(),
 				},
 			},
-			result: false,
+			result: true,
 			err:    errInvalidOldPassword,
 		},
 		{
@@ -776,7 +1284,7 @@ func TestChangePassword(t *testing.T) {
 					Type:     auth.UserSpec_External.String(),
 				},
 			},
-			result: false,
+			result: true,
 			err:    errExtUserPasswordChange,
 		},
 	}
@@ -851,7 +1359,7 @@ func TestResetPassword(t *testing.T) {
 			in: struct {
 				Test string
 			}{"testing"},
-			result: false,
+			result: true,
 			err:    errInvalidInputType,
 		},
 		{
@@ -891,7 +1399,7 @@ func TestResetPassword(t *testing.T) {
 					Type:     auth.UserSpec_External.String(),
 				},
 			},
-			result: false,
+			result: true,
 			err:    errExtUserPasswordChange,
 		},
 	}
@@ -1406,4 +1914,266 @@ func TestAdminRoleBindingCheck(t *testing.T) {
 		Assert(t, result == test.result, fmt.Sprintf("[%s] test failed, expected result [%v], got [%v]", test.name, test.result, result))
 		Assert(t, reflect.DeepEqual(out, test.out), fmt.Sprintf("[%s] test failed, expected obj [%v], got [%v]", test.name, test.out, out))
 	}
+}
+
+func TestReturnAuthPolicy(t *testing.T) {
+	tests := []struct {
+		name     string
+		in       interface{}
+		existing *auth.AuthenticationPolicy
+		out      auth.AuthenticationPolicy
+		err      error
+	}{
+		{
+			name: "existing auth policy",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "1",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			existing: &auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "1",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			out: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "2",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		}, {
+			name: "no existing auth policy",
+			in: auth.AuthenticationPolicy{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindAuthenticationPolicy)},
+				ObjectMeta: api.ObjectMeta{
+					GenerationID: "1",
+				},
+				Spec: auth.AuthenticationPolicySpec{
+					Authenticators: auth.Authenticators{
+						Ldap: &auth.Ldap{
+							BindPassword: testPassword,
+						},
+						Radius: &auth.Radius{
+							Servers: []*auth.RadiusServer{
+								{Url: "192.168.10.11:1812", Secret: testPassword},
+								{Url: "192.168.10.12:1812", Secret: testPassword},
+							},
+						},
+					},
+				},
+			},
+			err: kvstore.NewKeyNotFoundError("/venice/config/auth/authn-policy/Singleton", 0),
+		},
+	}
+
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+	authHooks := &authHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		var policyKey string
+		if test.existing != nil {
+			// encrypt password as it is stored as secret
+			if err := test.existing.ApplyStorageTransformer(ctx, true); err != nil {
+				t.Fatalf("[%s] test failed, error encrypting secret fields, Err: %v", test.name, err)
+			}
+			policyKey = test.existing.MakeKey("auth")
+			if err := kvs.Create(ctx, policyKey, test.existing); err != nil {
+				t.Fatalf("[%s] test failed, unable to populate kvstore with policy, Err: %v", test.name, err)
+			}
+		}
+
+		out, err := authHooks.returnAuthPolicy(ctx, kvs, "", nil, nil, test.in, apiintf.CreateOper)
+		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
+		if err == nil {
+			policy, _ := out.(auth.AuthenticationPolicy)
+			Assert(t, policy.Spec.Authenticators.Ldap.BindPassword == test.out.Spec.Authenticators.Ldap.BindPassword,
+				fmt.Sprintf("[%v] test failed, expected bind password [%s], got [%s]", test.name, test.out.Spec.Authenticators.Ldap.BindPassword, policy.Spec.Authenticators.Ldap.BindPassword))
+			Assert(t, len(policy.Spec.Authenticators.Radius.Servers) == len(test.out.Spec.Authenticators.Radius.Servers),
+				fmt.Sprintf("[%v] test failed, expected radius server count [%d], got [%d]", test.name, len(test.out.Spec.Authenticators.Radius.Servers), len(policy.Spec.Authenticators.Radius.Servers)))
+			for _, radius := range policy.Spec.Authenticators.Radius.Servers {
+				for _, expectedRadius := range test.out.Spec.Authenticators.Radius.Servers {
+					if radius.Url == expectedRadius.Url {
+						Assert(t, radius.Secret == expectedRadius.Secret,
+							fmt.Sprintf("[%v] test failed, expected radius [%s] secret [%s], got [%s]", test.name, radius.Url, expectedRadius.Secret, radius.Secret))
+					}
+				}
+			}
+		}
+		kvs.Delete(ctx, policyKey, nil)
+	}
+}
+
+func TestReturnUser(t *testing.T) {
+	hasher := password.GetPasswordHasher()
+	passwdhash, err := hasher.GetPasswordHash(testPassword)
+	if err != nil {
+		t.Fatalf("unable to hash old password: %v", err)
+	}
+	tests := []struct {
+		name     string
+		in       interface{}
+		existing *auth.User
+		out      auth.User
+		err      error
+	}{
+		{
+			name: "existing user",
+			in: auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:         testUser,
+					Tenant:       globals.DefaultTenant,
+					GenerationID: "1",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: passwdhash,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			existing: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:            testUser,
+					Tenant:          globals.DefaultTenant,
+					ResourceVersion: "1",
+					GenerationID:    "1",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: passwdhash,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			out: auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:            testUser,
+					Tenant:          globals.DefaultTenant,
+					ResourceVersion: "1",
+					GenerationID:    "1",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: passwdhash,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "non existent user",
+			in: auth.User{
+				TypeMeta: api.TypeMeta{Kind: string(auth.KindUser)},
+				ObjectMeta: api.ObjectMeta{
+					Name:         testUser,
+					Tenant:       globals.DefaultTenant,
+					GenerationID: "1",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: passwdhash,
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_External.String(),
+				},
+			},
+			err: kvstore.NewKeyNotFoundError("/venice/config/auth/users/default/test", 0),
+		},
+	}
+
+	logConfig := log.GetDefaultConfig("TestAuthHooks")
+	l := log.GetNewLogger(logConfig)
+	storecfg := store.Config{
+		Type:    store.KVStoreTypeMemkv,
+		Codec:   runtime.NewJSONCodec(runtime.NewScheme()),
+		Servers: []string{t.Name()},
+	}
+	kvs, err := store.New(storecfg)
+	if err != nil {
+		t.Fatalf("unable to create kvstore %s", err)
+	}
+
+	authHooks := &authHooks{
+		logger: l,
+	}
+	for _, test := range tests {
+		ctx := context.TODO()
+		var userKey string
+		if test.existing != nil {
+			// encrypt password as it is stored as secret
+			if err := test.existing.ApplyStorageTransformer(ctx, true); err != nil {
+				t.Fatalf("[%s] test failed, error encrypting password, Err: %v", test.name, err)
+			}
+			userKey = test.existing.MakeKey("auth")
+			if err := kvs.Create(ctx, userKey, test.existing); err != nil {
+				t.Fatalf("[%s] test failed, unable to populate kvstore with user, Err: %v", test.name, err)
+			}
+		}
+		out, err := authHooks.returnUser(ctx, kvs, "", nil, nil, test.in, apiintf.CreateOper)
+		Assert(t, reflect.DeepEqual(test.err, err), fmt.Sprintf("[%v] test failed, expected err [%v]. got [%v]", test.name, test.err, err))
+		if err == nil {
+			user, _ := out.(auth.User)
+			Assert(t, reflect.DeepEqual(user, test.out), fmt.Sprintf("[%v] test failed, expected user [%#v], got [%#v]", test.name, test.out, user))
+		}
+		kvs.Delete(ctx, userKey, nil)
+	}
+
 }

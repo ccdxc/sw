@@ -44,6 +44,7 @@ type ServiceAuthV1Client interface {
 	LdapConnectionCheck(ctx context.Context, t *AuthenticationPolicy) (*AuthenticationPolicy, error)
 	PasswordChange(ctx context.Context, t *PasswordChangeRequest) (*User, error)
 	PasswordReset(ctx context.Context, t *PasswordResetRequest) (*User, error)
+	TokenSecretGenerate(ctx context.Context, t *TokenSecretRequest) (*AuthenticationPolicy, error)
 
 	AutoWatchUser(ctx context.Context, in *api.ListWatchOptions) (AuthV1_AutoWatchUserClient, error)
 	AutoWatchAuthenticationPolicy(ctx context.Context, in *api.ListWatchOptions) (AuthV1_AutoWatchAuthenticationPolicyClient, error)
@@ -80,6 +81,7 @@ type ServiceAuthV1Server interface {
 	LdapConnectionCheck(ctx context.Context, t AuthenticationPolicy) (AuthenticationPolicy, error)
 	PasswordChange(ctx context.Context, t PasswordChangeRequest) (User, error)
 	PasswordReset(ctx context.Context, t PasswordResetRequest) (User, error)
+	TokenSecretGenerate(ctx context.Context, t TokenSecretRequest) (AuthenticationPolicy, error)
 
 	AutoWatchUser(in *api.ListWatchOptions, stream AuthV1_AutoWatchUserServer) error
 	AutoWatchAuthenticationPolicy(in *api.ListWatchOptions, stream AuthV1_AutoWatchAuthenticationPolicyServer) error

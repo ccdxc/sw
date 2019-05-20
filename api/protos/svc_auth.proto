@@ -68,6 +68,13 @@ service AuthV1 {
         Request: "AuthenticationPolicy"
         Response: "AuthenticationPolicy"
     };
+    // Action to generate secret for token signing
+    option (venice.apiAction) = {
+        Object: "AuthenticationPolicy"
+        Action: "TokenSecretGenerate"
+        Request: "TokenSecretRequest"
+        Response: "AuthenticationPolicy"
+    };
     option (venice.apiRestService) = {
         Object: "Role"
         Method: [ "get", "put", "delete", "post", "list", "watch" ]

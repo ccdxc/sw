@@ -34,6 +34,7 @@ The following Messages are defined.
   RoleStatus
   SubjectAccessReviewRequest
   TLSOptions
+  TokenSecretRequest
   User
   UserSpec
   UserStatus

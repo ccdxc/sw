@@ -176,6 +176,15 @@ func (m *SubjectAccessReviewRequest) MakeURI(cat, ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
+func (m *TokenSecretRequest) MakeKey(prefix string) string {
+	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "authn-policy", "/Singleton")
+}
+
+func (m *TokenSecretRequest) MakeURI(cat, ver, prefix string) string {
+	return fmt.Sprint("/", cat, "/", prefix, "/", ver, "/authn-policy")
+}
+
+// MakeKey generates a KV store key for the object
 func (m *User) MakeKey(prefix string) string {
 	return fmt.Sprint(globals.ConfigRootPrefix, "/", prefix, "/", "users/", m.Tenant, "/", m.Name)
 }
@@ -861,6 +870,27 @@ func (m *TLSOptions) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *TLSOptions) Defaults(ver string) bool {
+	return false
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *TokenSecretRequest) Clone(into interface{}) (interface{}, error) {
+	var out *TokenSecretRequest
+	var ok bool
+	if into == nil {
+		out = &TokenSecretRequest{}
+	} else {
+		out, ok = into.(*TokenSecretRequest)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*TokenSecretRequest))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *TokenSecretRequest) Defaults(ver string) bool {
 	return false
 }
 
@@ -1797,6 +1827,22 @@ func (m *TLSOptions) Normalize() {
 
 }
 
+func (m *TokenSecretRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *TokenSecretRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+
+	return ret
+}
+
+func (m *TokenSecretRequest) Normalize() {
+
+	m.ObjectMeta.Normalize()
+
+}
+
 func (m *User) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 	tenant = m.Tenant
@@ -1969,6 +2015,9 @@ func (m *AuthenticationPolicy) ApplyStorageTransformer(ctx context.Context, toSt
 	if err := m.Spec.ApplyStorageTransformer(ctx, toStorage); err != nil {
 		return err
 	}
+	if err := m.Status.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1995,12 +2044,89 @@ func (st *storageAuthenticationPolicyTransformer) TransformToStorage(ctx context
 }
 
 func (m *AuthenticationPolicySpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if err := m.Authenticators.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
 	if vs, ok := storageTransformersMapAuth["AuthenticationPolicySpec"]; ok {
 		for _, v := range vs {
 			if err := v(ctx, m, toStorage); err != nil {
 				return err
 			}
 		}
+	}
+	return nil
+}
+
+func (m *AuthenticationPolicyStatus) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.RadiusServers {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.RadiusServers[i] = &c
+	}
+	return nil
+}
+
+func (m *Authenticators) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Ldap == nil {
+		return nil
+	}
+	if err := m.Ldap.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+
+	if m.Radius == nil {
+		return nil
+	}
+	if err := m.Radius.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *Ldap) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if vs, ok := storageTransformersMapAuth["Ldap"]; ok {
+		for _, v := range vs {
+			if err := v(ctx, m, toStorage); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (m *Radius) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Servers {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Servers[i] = &c
+	}
+	return nil
+}
+
+func (m *RadiusServer) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if vs, ok := storageTransformersMapAuth["RadiusServer"]; ok {
+		for _, v := range vs {
+			if err := v(ctx, m, toStorage); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (m *RadiusServerStatus) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Server == nil {
+		return nil
+	}
+	if err := m.Server.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
 	}
 	return nil
 }
@@ -2054,6 +2180,7 @@ func init() {
 		&Role{},
 		&RoleBinding{},
 		&SubjectAccessReviewRequest{},
+		&TokenSecretRequest{},
 		&User{},
 	)
 
@@ -2243,6 +2370,50 @@ func init() {
 					data, err = AuthenticationPolicySpecSecretTx.TransformFromStorage(ctx, []byte(m.Secret))
 				}
 				m.Secret = []byte(data)
+
+				return err
+			})
+	}
+
+	{
+		LdapBindPasswordTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapAuth["Ldap"] = append(storageTransformersMapAuth["Ldap"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*Ldap)
+
+				if toStorage {
+					data, err = LdapBindPasswordTx.TransformToStorage(ctx, []byte(m.BindPassword))
+				} else {
+					data, err = LdapBindPasswordTx.TransformFromStorage(ctx, []byte(m.BindPassword))
+				}
+				m.BindPassword = string(data)
+
+				return err
+			})
+	}
+
+	{
+		RadiusServerSecretTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapAuth["RadiusServer"] = append(storageTransformersMapAuth["RadiusServer"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*RadiusServer)
+
+				if toStorage {
+					data, err = RadiusServerSecretTx.TransformToStorage(ctx, []byte(m.Secret))
+				} else {
+					data, err = RadiusServerSecretTx.TransformFromStorage(ctx, []byte(m.Secret))
+				}
+				m.Secret = string(data)
 
 				return err
 			})

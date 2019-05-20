@@ -477,8 +477,23 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 			return nil, errInternalError.makeError(i, []string{err.Error()}, "")
 		}
 	}
+	cloneObj := func(inObj interface{}) (interface{}, error) {
+		robj := m.requestType.GetRuntimeObject(inObj)
+		if robj == nil {
+			return nil, errInternalError.makeError(i, []string{"could not extract runtime object", ""}, "")
+		}
+		oobj, err := robj.Clone(nil)
+		if err != nil || oobj == nil {
+			l.ErrorLog("msg", "could not clone object", "error", err)
+			return nil, errInternalError.makeError(i, []string{fmt.Sprintf("could not clone object (%s)", err)}, "")
+		}
+		return reflect.Indirect(reflect.ValueOf(oobj)).Interface(), nil
+	}
 	if bufid != "" || localBuffer {
-		orig = i
+		orig, err = cloneObj(i)
+		if err != nil {
+			return nil, err
+		}
 	}
 	// Version transform if needed.
 	if singletonAPISrv.version != ver {
@@ -512,7 +527,6 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 
 	// Normalize the request message
 	i = m.requestType.Normalize(i)
-
 	// Validate the request.
 	if oper == apiintf.CreateOper || oper == apiintf.UpdateOper {
 		errs := m.requestType.Validate(i, singletonAPISrv.version, updateSpec, updateStatus)
@@ -572,7 +586,10 @@ func (m *MethodHdlr) HandleInvocation(ctx context.Context, i interface{}) (inter
 				return nil, errInternalError.makeError(i, []string{err.Error()}, URI)
 			}
 			localBuffer = true
-			orig = i
+			orig, err = cloneObj(i)
+			if err != nil {
+				return nil, err
+			}
 			kv = ov
 			reqs = ov.GetRequirements()
 			defer cache.DelOverlay(tenant, id)
@@ -784,7 +801,6 @@ func (m *MethodHdlr) mapOper(md metadata.MD) apiintf.APIOperType {
 		case "watch":
 			return apiintf.WatchOper
 		}
-		return ""
 	}
 	return m.oper
 }

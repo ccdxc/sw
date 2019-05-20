@@ -68,6 +68,7 @@ type EndpointsAuthV1Client struct {
 	LdapConnectionCheckEndpoint            endpoint.Endpoint
 	PasswordChangeEndpoint                 endpoint.Endpoint
 	PasswordResetEndpoint                  endpoint.Endpoint
+	TokenSecretGenerateEndpoint            endpoint.Endpoint
 }
 
 // EndpointsAuthV1RestClient is the REST client
@@ -107,6 +108,7 @@ type EndpointsAuthV1RestClient struct {
 	LdapConnectionCheckEndpoint            endpoint.Endpoint
 	PasswordChangeEndpoint                 endpoint.Endpoint
 	PasswordResetEndpoint                  endpoint.Endpoint
+	TokenSecretGenerateEndpoint            endpoint.Endpoint
 }
 
 // MiddlewareAuthV1Server adds middle ware to the server
@@ -141,6 +143,7 @@ type EndpointsAuthV1Server struct {
 	LdapConnectionCheckEndpoint            endpoint.Endpoint
 	PasswordChangeEndpoint                 endpoint.Endpoint
 	PasswordResetEndpoint                  endpoint.Endpoint
+	TokenSecretGenerateEndpoint            endpoint.Endpoint
 
 	watchHandlerUser                 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerAuthenticationPolicy func(options *api.ListWatchOptions, stream grpc.ServerStream) error
@@ -495,6 +498,20 @@ func (e EndpointsAuthV1Client) PasswordReset(ctx context.Context, in *PasswordRe
 
 type respAuthV1PasswordReset struct {
 	V   User
+	Err error
+}
+
+// TokenSecretGenerate is endpoint for TokenSecretGenerate
+func (e EndpointsAuthV1Client) TokenSecretGenerate(ctx context.Context, in *TokenSecretRequest) (*AuthenticationPolicy, error) {
+	resp, err := e.TokenSecretGenerateEndpoint(ctx, in)
+	if err != nil {
+		return &AuthenticationPolicy{}, err
+	}
+	return resp.(*AuthenticationPolicy), nil
+}
+
+type respAuthV1TokenSecretGenerate struct {
+	V   AuthenticationPolicy
 	Err error
 }
 
@@ -1072,6 +1089,28 @@ func MakeAuthV1PasswordResetEndpoint(s ServiceAuthV1Server, logger log.Logger) e
 	return trace.ServerEndpoint("AuthV1:PasswordReset")(f)
 }
 
+// TokenSecretGenerate implementation on server Endpoint
+func (e EndpointsAuthV1Server) TokenSecretGenerate(ctx context.Context, in TokenSecretRequest) (AuthenticationPolicy, error) {
+	resp, err := e.TokenSecretGenerateEndpoint(ctx, in)
+	if err != nil {
+		return AuthenticationPolicy{}, err
+	}
+	return *resp.(*AuthenticationPolicy), nil
+}
+
+// MakeAuthV1TokenSecretGenerateEndpoint creates  TokenSecretGenerate endpoints for the service
+func MakeAuthV1TokenSecretGenerateEndpoint(s ServiceAuthV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*TokenSecretRequest)
+		v, err := s.TokenSecretGenerate(ctx, *req)
+		return respAuthV1TokenSecretGenerate{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("AuthV1:TokenSecretGenerate")(f)
+}
+
 func (e EndpointsAuthV1Server) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) error {
 	return e.svcWatchHandlerAuthV1(in, stream)
 }
@@ -1166,6 +1205,7 @@ func MakeAuthV1ServerEndpoints(s ServiceAuthV1Server, logger log.Logger) Endpoin
 		LdapConnectionCheckEndpoint:            MakeAuthV1LdapConnectionCheckEndpoint(s, logger),
 		PasswordChangeEndpoint:                 MakeAuthV1PasswordChangeEndpoint(s, logger),
 		PasswordResetEndpoint:                  MakeAuthV1PasswordResetEndpoint(s, logger),
+		TokenSecretGenerateEndpoint:            MakeAuthV1TokenSecretGenerateEndpoint(s, logger),
 
 		watchHandlerUser:                 MakeAutoWatchUserEndpoint(s, logger),
 		watchHandlerAuthenticationPolicy: MakeAutoWatchAuthenticationPolicyEndpoint(s, logger),
@@ -1527,6 +1567,19 @@ func (m loggingAuthV1MiddlewareClient) PasswordReset(ctx context.Context, in *Pa
 		m.logger.Audit(ctx, "service", "AuthV1", "method", "PasswordReset", "result", rslt, "duration", time.Since(begin), "error", err)
 	}(time.Now())
 	resp, err = m.next.PasswordReset(ctx, in)
+	return
+}
+func (m loggingAuthV1MiddlewareClient) TokenSecretGenerate(ctx context.Context, in *TokenSecretRequest) (resp *AuthenticationPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "TokenSecretGenerate", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.TokenSecretGenerate(ctx, in)
 	return
 }
 
@@ -1922,6 +1975,19 @@ func (m loggingAuthV1MiddlewareServer) PasswordReset(ctx context.Context, in Pas
 	resp, err = m.next.PasswordReset(ctx, in)
 	return
 }
+func (m loggingAuthV1MiddlewareServer) TokenSecretGenerate(ctx context.Context, in TokenSecretRequest) (resp AuthenticationPolicy, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "AuthV1", "method", "TokenSecretGenerate", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.TokenSecretGenerate(ctx, in)
+	return
+}
 
 func (m loggingAuthV1MiddlewareServer) AutoWatchSvcAuthV1(in *api.ListWatchOptions, stream AuthV1_AutoWatchSvcAuthV1Server) (err error) {
 	defer func(begin time.Time) {
@@ -2164,6 +2230,11 @@ func makeURIAuthV1PasswordChangeCreateOper(in *PasswordChangeRequest) string {
 //
 func makeURIAuthV1PasswordResetCreateOper(in *PasswordResetRequest) string {
 	return fmt.Sprint("/configs/auth/v1", "/tenant/", in.Tenant, "/users/", in.Name, "/PasswordReset")
+}
+
+//
+func makeURIAuthV1TokenSecretGenerateCreateOper(in *TokenSecretRequest) string {
+	return fmt.Sprint("/configs/auth/v1", "/authn-policy/TokenSecretGenerate")
 }
 
 // AutoAddUser CRUD method for User
@@ -2547,6 +2618,27 @@ func (r *EndpointsAuthV1RestClient) LdapBindCheckAuthenticationPolicy(ctx contex
 	}
 	defer resp.Body.Close()
 	ret, err := decodeHTTPrespAuthV1LdapBindCheck(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*AuthenticationPolicy), err
+}
+
+func (r *EndpointsAuthV1RestClient) TokenSecretGenerateAuthenticationPolicy(ctx context.Context, in *TokenSecretRequest) (*AuthenticationPolicy, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIAuthV1TokenSecretGenerateCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespAuthV1TokenSecretGenerate(ctx, resp)
 	if err != nil {
 		return nil, err
 	}

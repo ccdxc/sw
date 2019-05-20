@@ -58,7 +58,7 @@ export const CategoryMapping: CatMap  = {
     "AuthenticationPolicy" : {
       instance: new AuthAuthenticationPolicy(),
       scopes: [ 'cluster', ] ,
-      actions:  [ 'LdapConnectionCheck',  'LdapBindCheck', ] ,
+      actions:  [ 'LdapConnectionCheck',  'LdapBindCheck',  'TokenSecretGenerate', ] ,
     },
     "Role" : {
       instance: new AuthRole(),

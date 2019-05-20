@@ -352,6 +352,27 @@ func TestMapOper(t *testing.T) {
 	if mhdlr.mapOper(md) != apiintf.WatchOper {
 		t.Errorf("Found wrong oper type")
 	}
+	md = metadata.Pairs(apisrv.RequestParamVersion, "v1", apisrv.RequestParamMethod, "create")
+	m.WithOper("")
+	if mhdlr.mapOper(md) != apiintf.CreateOper {
+		t.Errorf("Found wrong oper type")
+	}
+	md = metadata.Pairs(apisrv.RequestParamVersion, "v1", apisrv.RequestParamMethod, "update")
+	if mhdlr.mapOper(md) != apiintf.UpdateOper {
+		t.Errorf("Found wrong oper type")
+	}
+	md = metadata.Pairs(apisrv.RequestParamVersion, "v1", apisrv.RequestParamMethod, "get")
+	if mhdlr.mapOper(md) != apiintf.GetOper {
+		t.Errorf("Found wrong oper type")
+	}
+	md = metadata.Pairs(apisrv.RequestParamVersion, "v1", apisrv.RequestParamMethod, "delete")
+	if mhdlr.mapOper(md) != apiintf.DeleteOper {
+		t.Errorf("Found wrong oper type")
+	}
+	md = metadata.Pairs(apisrv.RequestParamVersion, "v1", apisrv.RequestParamMethod, "watch")
+	if mhdlr.mapOper(md) != apiintf.WatchOper {
+		t.Errorf("Found wrong oper type")
+	}
 }
 
 var cmpVer int64
@@ -409,7 +430,10 @@ func TestTxn(t *testing.T) {
 	md := metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "POST")
 	ctx := metadata.NewIncomingContext(context.Background(), md)
-	m.HandleInvocation(ctx, reqmsg)
+	_, err := m.HandleInvocation(ctx, reqmsg)
+	if err != nil {
+		t.Fatalf("failed handle invocation (%v)", apierrors.FromError(err))
+	}
 	if globFakeOverlay.CreatePrimaries != 1 {
 		t.Fatalf("Txn Write: expecting [1] saw [%d]", globFakeOverlay.CreatePrimaries)
 	}
@@ -430,7 +454,7 @@ func TestTxn(t *testing.T) {
 	md1 = metadata.Pairs(apisrv.RequestParamVersion, singletonAPISrv.version,
 		apisrv.RequestParamMethod, "PUT")
 	ctx1 = metadata.NewIncomingContext(context.Background(), md1)
-	_, err := m.HandleInvocation(ctx1, reqmsg)
+	_, err = m.HandleInvocation(ctx1, reqmsg)
 	if globFakeOverlay.UpdatePrimaries != 2 {
 		t.Fatalf("Txn Write: expecting [2] saw [%d]", globFakeOverlay.UpdatePrimaries)
 	}
@@ -522,6 +546,14 @@ func TestWithReferences(t *testing.T) {
 		return kvstore.TxnResponse{Succeeded: txnSuccess}, nil
 	}
 
+	robjcb := func(in interface{}) runtime.Object {
+		iobj := in.(apitest.TestObj)
+		riobj := &iobj
+		return riobj
+	}
+	req.WithGetRuntimeObject(robjcb)
+	resp.WithGetRuntimeObject(robjcb)
+
 	MustGetAPIServer()
 	singletonAPISrv.runstate.running = true
 	singletonAPISrv.config.IsDryRun = fakeIsDryRun
@@ -568,6 +600,7 @@ func TestWithReferences(t *testing.T) {
 		reqmsg.Clone(into)
 		return nil
 	}
+	req.RuntimeObj = &reqmsg
 	// Test with references
 	if _, err := m.HandleInvocation(ctx, reqmsg); err != nil {
 		t.Errorf("Expecting success but failed (%s)", err)

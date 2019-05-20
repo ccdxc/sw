@@ -102,7 +102,7 @@ func (s *authHooks) hashPassword(ctx context.Context, kv kvstore.Interface, txn 
 		cur := &auth.User{}
 		if err := kv.Get(ctx, key, cur); err != nil {
 			s.logger.ErrorLog("method", "hashPassword",
-				"msg", fmt.Sprintf("error getting user with key [%s] in API server hashPassword pre-commit hook for update cluster", key), "error", err)
+				"msg", fmt.Sprintf("error getting user with key [%s] in API server hashPassword pre-commit hook for update user", key), "error", err)
 			return r, true, err
 		}
 		// decrypt password as it is stored as secret. Cannot use passed in context because peer id in it is APIGw and transform returns empty password in that case
@@ -126,10 +126,10 @@ func (s *authHooks) changePassword(ctx context.Context, kv kvstore.Interface, tx
 	s.logger.DebugLog("msg", "AuthHook called to change password")
 	r, ok := i.(auth.PasswordChangeRequest)
 	if !ok {
-		return nil, false, errInvalidInputType
+		return nil, true, errInvalidInputType
 	}
 	if r.NewPassword == "" || r.OldPassword == "" {
-		return nil, false, errEmptyPassword
+		return nil, true, errEmptyPassword
 	}
 	cur := &auth.User{}
 	if err := kv.ConsistentUpdate(ctx, key, cur, func(oldObj runtime.Object) (runtime.Object, error) {
@@ -183,7 +183,7 @@ func (s *authHooks) changePassword(ctx context.Context, kv kvstore.Interface, tx
 		return userObj, nil
 	}); err != nil {
 		s.logger.Errorf("error changing password for user key [%s]: %v", key, err)
-		return nil, false, err
+		return nil, true, err
 	}
 	// The ConsistentUpdate op will happen at a later time due to overlay. Retrieve the current object and return so the ResponseWriter has a object to work on.
 	ret := auth.User{}
@@ -198,12 +198,12 @@ func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn
 	s.logger.DebugLog("msg", "AuthHook called to reset password")
 	in, ok := i.(auth.PasswordResetRequest)
 	if !ok {
-		return nil, false, errInvalidInputType
+		return nil, true, errInvalidInputType
 	}
 	genPasswd, err := password.CreatePassword()
 	if err != nil {
 		s.logger.ErrorLog("method", "resetPassword", "msg", "error generating password", "user", key, "error", err)
-		return nil, false, err
+		return nil, true, err
 	}
 	cur := &auth.User{}
 	if err := kv.ConsistentUpdate(ctx, key, cur, func(oldObj runtime.Object) (runtime.Object, error) {
@@ -245,7 +245,7 @@ func (s *authHooks) resetPassword(ctx context.Context, kv kvstore.Interface, txn
 		return userObj, nil
 	}); err != nil {
 		s.logger.Errorf("error resetting password for user key [%s]: %v", key, err)
-		return nil, false, err
+		return nil, true, err
 	}
 	// The ConsistentUpdate op will happen at a later time due to overlay. Retrieve the current object and return so the ResponseWriter has a object to work on.
 	ret := auth.User{}
@@ -300,7 +300,7 @@ func (s *authHooks) validateAuthenticatorConfig(i interface{}, ver string, ignSt
 	return ret
 }
 
-// generateSecret is a pre-commmit hook to generate secret when authentication policy is created or updated
+// generateSecret is a pre-commit hook to generate secret when authentication policy is created
 func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
 	s.logger.DebugLog("method", "generateSecret", "msg", "AuthHook called to generate JWT secret")
 	r, ok := i.(auth.AuthenticationPolicy)
@@ -314,6 +314,137 @@ func (s *authHooks) generateSecret(ctx context.Context, kv kvstore.Interface, tx
 	}
 	r.Spec.Secret = secret
 	s.logger.InfoLog("method", "generateSecret", "msg", "Generated JWT Secret")
+	return r, true, nil
+}
+
+// generateSecretAction is a pre-commit hook to generate secret for jwt token signing
+func (s *authHooks) generateSecretAction(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	s.logger.DebugLog("method", "generateSecretAction", "msg", "AuthHook called to generate JWT secret")
+	r, ok := i.(auth.TokenSecretRequest)
+	if !ok {
+		return i, true, errInvalidInputType
+	}
+	secret, err := authn.CreateSecret(128)
+	if err != nil {
+		s.logger.ErrorLog("method", "generateSecretAction", "msg", "error generating secret", "error", err)
+		return r, true, err
+	}
+	cur := &auth.AuthenticationPolicy{}
+	if err := kv.ConsistentUpdate(ctx, key, cur, func(oldObj runtime.Object) (runtime.Object, error) {
+		policyObj, ok := oldObj.(*auth.AuthenticationPolicy)
+		if !ok {
+			return oldObj, errors.New("invalid input type")
+		}
+		// decrypt secrets. Cannot use passed in context because peer id in it is APIGw and transform returns empty password in that case
+		if err := policyObj.ApplyStorageTransformer(context.Background(), false); err != nil {
+			s.logger.ErrorLog("method", "generateSecretAction", "msg", "decrypting secret fields failed", "error", err)
+			return policyObj, err
+		}
+		policyObj.Spec.Secret = secret
+		// encrypt token secret as it is stored as secret
+		if err := policyObj.ApplyStorageTransformer(ctx, true); err != nil {
+			s.logger.ErrorLog("method", "generateSecretAction", "msg", "error encrypting auth policy secret fields", "error", err)
+			return policyObj, err
+		}
+		genID, err := strconv.ParseInt(policyObj.GenerationID, 10, 64)
+		if err != nil {
+			s.logger.ErrorLog("method", "generateSecretAction", "msg", "error parsing generation ID", "error", err)
+			return policyObj, err
+		}
+		policyObj.GenerationID = fmt.Sprintf("%d", genID+1)
+		return policyObj, nil
+	}); err != nil {
+		s.logger.ErrorLog("method", "generateSecretAction", "msg", "error updating auth policy", "error", err)
+		return nil, true, err
+	}
+	policy := auth.AuthenticationPolicy{}
+	policy.Defaults("all")
+	s.logger.InfoLog("method", "generateSecretAction", "msg", "Generated JWT Secret")
+	return policy, false, nil
+}
+
+// populateSecretsInAuthPolicy is a pre-commit hook to fetch secrets when authentication policy is updated
+func (s *authHooks) populateSecretsInAuthPolicy(ctx context.Context, kv kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryRun bool, i interface{}) (interface{}, bool, error) {
+	s.logger.DebugLog("method", "populateSecretsInAuthPolicy", "msg", "AuthHook called to fetch existing auth policy secrets")
+	r, ok := i.(auth.AuthenticationPolicy)
+	if !ok {
+		return i, true, errInvalidInputType
+	}
+	switch oper {
+	case apiintf.UpdateOper:
+		cur := &auth.AuthenticationPolicy{}
+		if err := kv.ConsistentUpdate(ctx, key, cur, func(oldObj runtime.Object) (runtime.Object, error) {
+			policyObj, ok := oldObj.(*auth.AuthenticationPolicy)
+			if !ok {
+				return oldObj, errors.New("invalid input type")
+			}
+			// decrypt secrets. Cannot use passed in context because peer id in it is APIGw and transform returns empty password in that case
+			if err := policyObj.ApplyStorageTransformer(context.Background(), false); err != nil {
+				s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "decrypting secret fields failed", "error", err)
+				return policyObj, err
+			}
+			// copy spec from auth policy sent in request
+			cloneObj, err := r.Spec.Clone(nil)
+			if err != nil {
+				s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "cloning auth policy spec failed", "error", err)
+				return oldObj, err
+			}
+			policySpecCopy := *cloneObj.(*auth.AuthenticationPolicySpec)
+			if policySpecCopy.Authenticators.Ldap != nil && policyObj.Spec.Authenticators.Ldap != nil {
+				// set password only if user didn't send any
+				if policySpecCopy.Authenticators.Ldap.BindPassword == "" {
+					policySpecCopy.Authenticators.Ldap.BindPassword = policyObj.Spec.Authenticators.Ldap.BindPassword
+				}
+			}
+			if policySpecCopy.Authenticators.Radius != nil && policyObj.Spec.Authenticators.Radius != nil {
+				for _, server := range policySpecCopy.Authenticators.Radius.Servers {
+					for _, savedServer := range policyObj.Spec.Authenticators.Radius.Servers {
+						if server.Url == savedServer.Url {
+							// set secret only if user didn't send any
+							if server.Secret == "" {
+								server.Secret = savedServer.Secret
+							}
+							continue
+						}
+					}
+				}
+			}
+			// copy over jwt token signing secret
+			policySpecCopy.Secret = policyObj.Spec.Secret
+			policyObj.Spec = policySpecCopy
+			// update meta
+			policyObj.Name = r.Name
+			policyObj.Namespace = r.Namespace
+			policyObj.Labels = r.Labels
+			// encrypt token secret as it is stored as secret
+			if err := policyObj.ApplyStorageTransformer(ctx, true); err != nil {
+				s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "error encrypting auth policy secret fields", "error", err)
+				return policyObj, err
+			}
+			genID, err := strconv.ParseInt(policyObj.GenerationID, 10, 64)
+			if err != nil {
+				s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "error parsing generation ID", "error", err)
+				return policyObj, err
+			}
+			policyObj.GenerationID = fmt.Sprintf("%d", genID+1)
+			return policyObj, nil
+		}); err != nil {
+			s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "error updating auth policy", "error", err)
+			return nil, true, err
+		}
+		// Create a copy as cur is pointing to an object in API server cache.
+		ret, err := cur.Clone(nil)
+		if err != nil {
+			s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "error creating a copy of auth policy obj", "error", err)
+			return nil, true, err
+		}
+		policy := ret.(*auth.AuthenticationPolicy)
+		if err := policy.ApplyStorageTransformer(ctx, false); err != nil {
+			s.logger.ErrorLog("method", "populateSecretsInAuthPolicy", "msg", "decrypting secret fields failed", "error", err)
+			return nil, true, err
+		}
+		return *policy, false, nil
+	}
 	return r, true, nil
 }
 
@@ -460,6 +591,28 @@ func (s *authHooks) adminRoleBindingCheck(ctx context.Context, kv kvstore.Interf
 	return in, true, nil
 }
 
+func (s *authHooks) returnAuthPolicy(ctx context.Context, kvs kvstore.Interface, prefix string, in, old, resp interface{}, oper apiintf.APIOperType) (interface{}, error) {
+	ic := resp.(auth.AuthenticationPolicy)
+	key := ic.MakeKey("auth")
+	cur := auth.AuthenticationPolicy{}
+	if err := kvs.Get(ctx, key, &cur); err != nil {
+		s.logger.ErrorLog("method", "returnAuthPolicy", "msg", fmt.Sprintf("error getting auth policy with key [%s] in API server response writer hook for create/update auth policy", key), "error", err)
+		return nil, err
+	}
+	if err := cur.ApplyStorageTransformer(ctx, false); err != nil {
+		s.logger.ErrorLog("method", "returnAuthPolicy", "msg", "error applying storage transformer", "error", err)
+		return nil, err
+	}
+	// Create a copy as cur is pointing to an object in API server cache.
+	ret, err := cur.Clone(nil)
+	if err != nil {
+		s.logger.ErrorLog("method", "returnAuthPolicy", "msg", "error creating a copy of auth policy obj", "error", err)
+		return nil, err
+	}
+	policy := ret.(*auth.AuthenticationPolicy)
+	return *policy, nil
+}
+
 func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	r := authHooks{}
 	r.logger = logger.WithContext("Service", "AuthHooks")
@@ -467,7 +620,7 @@ func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	svc.GetCrudService("User", apiintf.CreateOper).WithPreCommitHook(r.hashPassword)
 	svc.GetCrudService("User", apiintf.UpdateOper).WithPreCommitHook(r.hashPassword)
 	svc.GetCrudService("AuthenticationPolicy", apiintf.CreateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
-	svc.GetCrudService("AuthenticationPolicy", apiintf.UpdateOper).WithPreCommitHook(r.generateSecret).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
+	svc.GetCrudService("AuthenticationPolicy", apiintf.UpdateOper).WithPreCommitHook(r.populateSecretsInAuthPolicy).GetRequestType().WithValidate(r.validateAuthenticatorConfig)
 	svc.GetCrudService("Role", apiintf.CreateOper).WithPreCommitHook(r.adminRoleCheck).GetRequestType().WithValidate(r.validateRolePerms)
 	svc.GetCrudService("Role", apiintf.UpdateOper).WithPreCommitHook(r.adminRoleCheck).GetRequestType().WithValidate(r.validateRolePerms)
 	svc.GetCrudService("Role", apiintf.DeleteOper).WithPreCommitHook(r.adminRoleCheck)
@@ -480,6 +633,8 @@ func registerAuthHooks(svc apiserver.Service, logger log.Logger) {
 	// hook to reset password
 	svc.GetMethod("PasswordReset").WithPreCommitHook(r.resetPassword)
 	svc.GetMethod("PasswordReset").WithResponseWriter(r.returnUser)
+	// hook to generate secret for jwt token signing
+	svc.GetMethod("TokenSecretGenerate").WithPreCommitHook(r.generateSecretAction).WithResponseWriter(r.returnAuthPolicy)
 }
 
 func init() {

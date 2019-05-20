@@ -49,6 +49,11 @@ type TestObj struct {
 	Counter int
 }
 
+// Clone satisfies the Runtime interface
+func (t *TestObj) Clone(in interface{}) (interface{}, error) {
+	return t, nil
+}
+
 // TestObjList is test list object
 type TestObjList struct {
 	api.TypeMeta

@@ -52,6 +52,7 @@ export * from './auth-role-spec.model';
 export * from './auth-role-status.model';
 export * from './auth-subject-access-review-request.model';
 export * from './auth-tls-options.model';
+export * from './auth-token-secret-request.model';
 export * from './auth-user.model';
 export * from './auth-user-list.model';
 export * from './auth-user-spec.model';

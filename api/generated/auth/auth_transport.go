@@ -935,6 +935,40 @@ func DecodeGrpcRespTLSOptions(ctx context.Context, response interface{}) (interf
 	return response, nil
 }
 
+func encodeHTTPTokenSecretRequest(ctx context.Context, req *http.Request, request interface{}) error {
+	return encodeHTTPRequest(ctx, req, request)
+}
+
+func decodeHTTPTokenSecretRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req TokenSecretRequest
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+// EncodeGrpcReqTokenSecretRequest encodes GRPC request
+func EncodeGrpcReqTokenSecretRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TokenSecretRequest)
+	return req, nil
+}
+
+// DecodeGrpcReqTokenSecretRequest decodes GRPC request
+func DecodeGrpcReqTokenSecretRequest(ctx context.Context, request interface{}) (interface{}, error) {
+	req := request.(*TokenSecretRequest)
+	return req, nil
+}
+
+// EncodeGrpcRespTokenSecretRequest encodes GRC response
+func EncodeGrpcRespTokenSecretRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
+// DecodeGrpcRespTokenSecretRequest decodes GRPC response
+func DecodeGrpcRespTokenSecretRequest(ctx context.Context, response interface{}) (interface{}, error) {
+	return response, nil
+}
+
 func encodeHTTPUser(ctx context.Context, req *http.Request, request interface{}) error {
 	return encodeHTTPRequest(ctx, req, request)
 }

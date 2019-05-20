@@ -50,6 +50,7 @@ type grpcServerAuthV1 struct {
 	LdapConnectionCheckHdlr            grpctransport.Handler
 	PasswordChangeHdlr                 grpctransport.Handler
 	PasswordResetHdlr                  grpctransport.Handler
+	TokenSecretGenerateHdlr            grpctransport.Handler
 }
 
 // MakeGRPCServerAuthV1 creates a GRPC server for AuthV1 service
@@ -233,6 +234,13 @@ func MakeGRPCServerAuthV1(ctx context.Context, endpoints EndpointsAuthV1Server, 
 			DecodeGrpcReqPasswordResetRequest,
 			EncodeGrpcRespUser,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("PasswordReset", logger)))...,
+		),
+
+		TokenSecretGenerateHdlr: grpctransport.NewServer(
+			endpoints.TokenSecretGenerateEndpoint,
+			DecodeGrpcReqTokenSecretRequest,
+			EncodeGrpcRespAuthenticationPolicy,
+			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("TokenSecretGenerate", logger)))...,
 		),
 	}
 }
@@ -683,6 +691,24 @@ func decodeHTTPrespAuthV1PasswordReset(_ context.Context, r *http.Response) (int
 		return nil, errorDecoder(r)
 	}
 	var resp User
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	return &resp, err
+}
+
+func (s *grpcServerAuthV1) TokenSecretGenerate(ctx oldcontext.Context, req *TokenSecretRequest) (*AuthenticationPolicy, error) {
+	_, resp, err := s.TokenSecretGenerateHdlr.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	r := resp.(respAuthV1TokenSecretGenerate).V
+	return &r, resp.(respAuthV1TokenSecretGenerate).Err
+}
+
+func decodeHTTPrespAuthV1TokenSecretGenerate(_ context.Context, r *http.Response) (interface{}, error) {
+	if r.StatusCode != http.StatusOK {
+		return nil, errorDecoder(r)
+	}
+	var resp AuthenticationPolicy
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }

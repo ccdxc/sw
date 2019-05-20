@@ -75,6 +75,7 @@ type eAuthV1Endpoints struct {
 	fnLdapConnectionCheck            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnPasswordChange                 func(ctx context.Context, t interface{}) (interface{}, error)
 	fnPasswordReset                  func(ctx context.Context, t interface{}) (interface{}, error)
+	fnTokenSecretGenerate            func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchUser                 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchAuthenticationPolicy func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
@@ -413,6 +414,11 @@ func (s *sauthSvc_authBackend) regSvcsFunc(ctx context.Context, logger log.Logge
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/tenant/", in.Tenant, "/users/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsAuthV1.fnTokenSecretGenerate = srv.AddMethod("TokenSecretGenerate",
+			apisrvpkg.NewMethod(srv, pkgMessages["auth.TokenSecretRequest"], pkgMessages["auth.AuthenticationPolicy"], "auth", "TokenSecretGenerate")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "auth/v1/authn-policy"), nil
 		}).HandleInvocation
 
 		s.endpointsAuthV1.fnAutoWatchUser = pkgMessages["auth.User"].WatchFromKv
@@ -1088,6 +1094,14 @@ func (e *eAuthV1Endpoints) PasswordReset(ctx context.Context, t auth.PasswordRes
 		return r.(auth.User), err
 	}
 	return auth.User{}, err
+
+}
+func (e *eAuthV1Endpoints) TokenSecretGenerate(ctx context.Context, t auth.TokenSecretRequest) (auth.AuthenticationPolicy, error) {
+	r, err := e.fnTokenSecretGenerate(ctx, t)
+	if err == nil {
+		return r.(auth.AuthenticationPolicy), err
+	}
+	return auth.AuthenticationPolicy{}, err
 
 }
 

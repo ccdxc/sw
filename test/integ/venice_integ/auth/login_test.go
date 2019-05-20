@@ -268,7 +268,8 @@ func TestAuthPolicy(t *testing.T) {
 			},
 			Spec: auth.AuthenticationPolicySpec{
 				Authenticators: auth.Authenticators{
-					Ldap:               &auth.Ldap{Enabled: false},
+					Ldap:               &auth.Ldap{Enabled: false, BindDN: getADConfig().BindDN, BindPassword: getADConfig().BindPassword},
+					Radius:             &auth.Radius{Enabled: false, Servers: []*auth.RadiusServer{{Url: getACSConfig().URL, Secret: getACSConfig().NasSecret}}},
 					Local:              &auth.Local{Enabled: true},
 					AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
 				},
@@ -280,19 +281,16 @@ func TestAuthPolicy(t *testing.T) {
 	Assert(t, policy.Name == "AuthenticationPolicy3", fmt.Sprintf("invalid auth policy name, [%s]", policy.Name))
 	Assert(t, policy.Spec.Secret == nil, fmt.Sprintf("Secret [%#v] should be removed from AuthenticationPolicy object", policy.Spec.Secret))
 	Assert(t, policy.Spec.TokenExpiry == "24h", fmt.Sprintf("expected token expiry to be [%s], got [%s]", "24h", policy.Spec.TokenExpiry))
-	AssertEventually(t, func() (bool, interface{}) {
-		policy, err = restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{})
-		return err != nil, nil
-	}, "User should need to login again after updating authentication policy")
-	// re-login as JWT secret is regenerated after update to authentication policy
-	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
-	AssertOk(t, err, "unable to get logged in context")
+	Assert(t, policy.Spec.Authenticators.Ldap.BindPassword == "", fmt.Sprintf("ldap bindpassword [%s] should be removed from AuthenticationPolicy object", policy.Spec.Authenticators.Ldap.BindPassword))
+	Assert(t, policy.Spec.Authenticators.Radius.Servers[0].Secret == "", fmt.Sprintf("radius secret [%s] should be removed from AuthenticationPolicy object", policy.Spec.Authenticators.Radius.Servers[0].Secret))
 	AssertEventually(t, func() (bool, interface{}) {
 		policy, err = restcl.AuthV1().AuthenticationPolicy().Get(ctx, &api.ObjectMeta{})
 		return err == nil, nil
 	}, "unable to fetch auth policy")
 	Assert(t, policy.Name == "AuthenticationPolicy3", "invalid auth policy name")
 	Assert(t, policy.Spec.Secret == nil, fmt.Sprintf("Secret [%#v] should be removed from AuthenticationPolicy object", policy.Spec.Secret))
+	Assert(t, policy.Spec.Authenticators.Ldap.BindPassword == "", fmt.Sprintf("ldap bindpassword [%s] should be removed from AuthenticationPolicy object", policy.Spec.Authenticators.Ldap.BindPassword))
+	Assert(t, policy.Spec.Authenticators.Radius.Servers[0].Secret == "", fmt.Sprintf("radius secret [%s] should be removed from AuthenticationPolicy object", policy.Spec.Authenticators.Radius.Servers[0].Secret))
 	// test DELETE AuthenticationPolicy
 	policy, err = restcl.AuthV1().AuthenticationPolicy().Delete(ctx, &api.ObjectMeta{Name: "AuthenticationPolicy3"})
 	Assert(t, err != nil, "AuthenticationPolicy can't be deleted", "100ms", "1s")
@@ -470,6 +468,38 @@ func TestLdapLogin(t *testing.T) {
 	Assert(t, logintime.Sub(currtime) < 30*time.Second, fmt.Sprintf("login time [%v] not within 30 seconds of current time [%v]", logintime, currtime))
 	Assert(t, user.Status.Authenticators[0] == auth.Authenticators_LDAP.String(),
 		fmt.Sprintf("expected authenticator [%s], got [%s]", auth.Authenticators_LDAP.String(), user.Status.Authenticators[0]))
+	// update auth policy with incorrect ldap bind password
+	var policy, npolicy *auth.AuthenticationPolicy
+	AssertEventually(t, func() (bool, interface{}) {
+		policy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Get(context.TODO(), &api.ObjectMeta{})
+		return err == nil, err
+	}, "unable to retrieve auth policy")
+	policy.Spec.Authenticators.Ldap.BindPassword = "incorrect"
+	AssertEventually(t, func() (bool, interface{}) {
+		npolicy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Update(context.TODO(), policy)
+		return err == nil, err
+	}, fmt.Sprintf("unable to update auth policy with incorrect bind password: %#v", *policy))
+	// login should fail
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = login.NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, ldapUserCred)
+		return err != nil, nil
+	}, "ldap user login should fail with incorrect bind password")
+	// update policy with correct bind password
+	npolicy.Spec.Authenticators.Ldap.BindPassword = config.BindPassword
+	AssertEventually(t, func() (bool, interface{}) {
+		policy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Update(context.TODO(), npolicy)
+		return err == nil, err
+	}, fmt.Sprintf("unable to update auth policy with correct bind password: %#v", *npolicy))
+	_, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, ldapUserCred)
+	AssertOk(t, err, "unable to get logged in context")
+	// don't supply bind password
+	policy.Spec.Authenticators.Ldap.BindPassword = ""
+	AssertEventually(t, func() (bool, interface{}) {
+		npolicy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Update(context.TODO(), policy)
+		return err == nil, err
+	}, fmt.Sprintf("unable to update auth policy with empty bind password: %#v", *policy))
+	_, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, ldapUserCred)
+	AssertOk(t, err, "unable to get logged in context")
 }
 
 func TestUsernameConflict(t *testing.T) {
@@ -697,6 +727,44 @@ func TestRadiusLogin(t *testing.T) {
 	Assert(t, logintime.Sub(currtime) < 30*time.Second, fmt.Sprintf("login time [%v] not within 30 seconds of current time [%v]", logintime, currtime))
 	Assert(t, user.Status.Authenticators[0] == auth.Authenticators_RADIUS.String(),
 		fmt.Sprintf("expected authenticator [%s], got [%s]", auth.Authenticators_RADIUS.String(), user.Status.Authenticators[0]))
+	// update auth policy with incorrect radius secret
+	var policy, npolicy *auth.AuthenticationPolicy
+	AssertEventually(t, func() (bool, interface{}) {
+		policy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Get(context.TODO(), &api.ObjectMeta{})
+		return err == nil, err
+	}, "unable to retrieve auth policy")
+	for _, srv := range policy.Spec.Authenticators.Radius.Servers {
+		srv.Secret = "incorrect"
+	}
+	AssertEventually(t, func() (bool, interface{}) {
+		npolicy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Update(context.TODO(), policy)
+		return err == nil, err
+	}, fmt.Sprintf("unable to update auth policy with incorrect radius secret: %#v", *policy))
+	// login should fail
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = login.NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, radiusUserCred)
+		return err != nil, nil
+	}, "radius user login should fail with incorrect secret")
+	// update policy with correct secret
+	for _, srv := range npolicy.Spec.Authenticators.Radius.Servers {
+		srv.Secret = config.NasSecret
+	}
+	AssertEventually(t, func() (bool, interface{}) {
+		policy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Update(context.TODO(), npolicy)
+		return err == nil, err
+	}, fmt.Sprintf("unable to update auth policy with correct radius secret: %#v", *npolicy))
+	_, err = NewLoggedInContextWithTimeout(context.TODO(), tinfo.apiGwAddr, radiusUserCred, 9*time.Second)
+	AssertOk(t, err, "unable to get logged in context")
+	// don't send secret while updating policy
+	for _, srv := range policy.Spec.Authenticators.Radius.Servers {
+		srv.Secret = ""
+	}
+	AssertEventually(t, func() (bool, interface{}) {
+		npolicy, err = tinfo.apicl.AuthV1().AuthenticationPolicy().Update(context.TODO(), policy)
+		return err == nil, err
+	}, fmt.Sprintf("unable to update auth policy with empty radius secret: %#v", *policy))
+	_, err = NewLoggedInContextWithTimeout(context.TODO(), tinfo.apiGwAddr, radiusUserCred, 9*time.Second)
+	AssertOk(t, err, "unable to get logged in context")
 }
 
 func TestPasswordChange(t *testing.T) {
@@ -951,4 +1019,40 @@ func TestChangeUserType(t *testing.T) {
 	user.Name = "extUser"
 	_, err = tinfo.restcl.AuthV1().User().Create(ctx, user)
 	Assert(t, err != nil, "expected external user creation to fail")
+}
+
+func TestTokenSecretGenerate(t *testing.T) {
+	userCred := &auth.PasswordCredential{
+		Username: testUser,
+		Password: testPassword,
+		Tenant:   globals.DefaultTenant,
+	}
+	// create tenant and admin user
+	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+		t.Fatalf("auth setup failed")
+	}
+	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
+	ctx, err := NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "unable to get logged in context")
+
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err := tinfo.restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: testUser, Tenant: globals.DefaultTenant})
+		return err == nil, err
+	}, "unable to retrieve user")
+	// generate secret
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.AuthV1().AuthenticationPolicy().TokenSecretGenerate(ctx, &auth.TokenSecretRequest{})
+		return err == nil, err
+	}, "unable to generated token signing secret")
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: testUser, Tenant: globals.DefaultTenant})
+		return err != nil, err
+	}, "user retrieval should fail")
+	// re-login
+	ctx, err = NewLoggedInContext(context.TODO(), tinfo.apiGwAddr, userCred)
+	AssertOk(t, err, "unable to get logged in context")
+	AssertEventually(t, func() (bool, interface{}) {
+		_, err = tinfo.restcl.AuthV1().User().Get(ctx, &api.ObjectMeta{Name: testUser, Tenant: globals.DefaultTenant})
+		return err == nil, err
+	}, "unable to retrieve user after re-login")
 }

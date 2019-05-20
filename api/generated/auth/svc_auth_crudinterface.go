@@ -42,6 +42,7 @@ type AuthV1AuthenticationPolicyInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 	LdapConnectionCheck(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error)
 	LdapBindCheck(ctx context.Context, in *AuthenticationPolicy) (*AuthenticationPolicy, error)
+	TokenSecretGenerate(ctx context.Context, in *TokenSecretRequest) (*AuthenticationPolicy, error)
 }
 
 // AuthV1RoleInterface exposes the CRUD methods for Role
