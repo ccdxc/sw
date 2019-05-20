@@ -33,8 +33,9 @@ tep_util::tep_util(ip_addr_t ip_addr, pds_tep_type_t type,
 tep_util::~tep_util() {}
 
 static inline sdk::sdk_ret_t
-tep_util_object_stepper(tep_stepper_seed_t *seed, utils_op_t op,
-                        sdk_ret_t expected_result = sdk::SDK_RET_OK) {
+tep_util_object_stepper (tep_stepper_seed_t *seed, utils_op_t op,
+                         sdk_ret_t expected_result = sdk::SDK_RET_OK)
+{
     sdk::sdk_ret_t rv = sdk::SDK_RET_OK;
     ip_addr_t ip_addr = seed->ip_addr;
 
@@ -68,7 +69,7 @@ tep_util_object_stepper(tep_stepper_seed_t *seed, utils_op_t op,
 }
 
 sdk::sdk_ret_t
-tep_util::create() {
+tep_util::create(void) const {
     pds_tep_spec_t spec;
 
     memset(&spec, 0, sizeof(pds_tep_spec_t));
@@ -126,7 +127,7 @@ debug_dump_tep_info (pds_tep_info_t *info)
 }
 
 sdk::sdk_ret_t
-tep_util::read(pds_tep_info_t *info, bool compare_spec) {
+tep_util::read(pds_tep_info_t *info, bool compare_spec) const {
     sdk_ret_t rv;
     pds_tep_key_t key;
 
@@ -168,7 +169,7 @@ tep_util::many_read(tep_stepper_seed_t *seed, sdk_ret_t expected_result) {
 }
 
 sdk::sdk_ret_t
-tep_util::update() {
+tep_util::update(void) const {
     pds_tep_spec_t spec;
 
     memset(&spec, 0, sizeof(pds_tep_spec_t));
@@ -185,7 +186,7 @@ tep_util::many_update(tep_stepper_seed_t *seed) {
 }
 
 sdk::sdk_ret_t
-tep_util::del() {
+tep_util::del(void) const {
     pds_tep_key_t pds_tep_key;
 
     memset(&pds_tep_key, 0, sizeof(pds_tep_key));

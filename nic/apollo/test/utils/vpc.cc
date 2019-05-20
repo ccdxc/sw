@@ -43,7 +43,7 @@ vpc_util::vpc_util(pds_vpc_type_t type, pds_vpc_id_t id, std::string cidr_str) {
 vpc_util::~vpc_util() {}
 
 sdk::sdk_ret_t
-vpc_util::create() {
+vpc_util::create(void) const {
     pds_vpc_spec_t spec;
     ip_prefix_t ip_pfx;
 
@@ -59,8 +59,7 @@ vpc_util::create() {
 }
 
 sdk::sdk_ret_t
-vpc_util::read(pds_vpc_info_t *info, bool compare_spec)
-{
+vpc_util::read(pds_vpc_info_t *info, bool compare_spec) const {
     sdk_ret_t rv;
     pds_vpc_key_t key;
 
@@ -80,8 +79,7 @@ vpc_util::read(pds_vpc_info_t *info, bool compare_spec)
 }
 
 sdk::sdk_ret_t
-vpc_util::update()
-{
+vpc_util::update(void) const {
     pds_vpc_spec_t spec;
     ip_prefix_t ip_pfx;
 
@@ -97,8 +95,9 @@ vpc_util::update()
 }
 
 sdk::sdk_ret_t
-vpc_util::del() {
+vpc_util::del(void) const {
     pds_vpc_key_t key = {};
+
     key.id = this->id;
     return (pds_vpc_delete(&key));
 }

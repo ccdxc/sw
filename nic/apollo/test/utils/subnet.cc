@@ -62,9 +62,8 @@ subnet_util::subnet_util(pds_vpc_id_t vpc_id, pds_subnet_id_t id,
 
 subnet_util::~subnet_util() {}
 
-
 sdk::sdk_ret_t
-subnet_util::create() {
+subnet_util::create(void) const {
     pds_subnet_spec_t spec;
 
     memset(&spec, 0, sizeof(pds_subnet_spec_t));
@@ -94,8 +93,7 @@ subnet_util::create() {
 }
 
 sdk::sdk_ret_t
-subnet_util::read(pds_subnet_info_t *info, bool compare_spec)
-{
+subnet_util::read(pds_subnet_info_t *info, bool compare_spec) const {
     sdk_ret_t rv;
     pds_subnet_key_t key;
     mac_addr_t vr_mac;
@@ -141,8 +139,7 @@ subnet_util::read(pds_subnet_info_t *info, bool compare_spec)
 }
 
 sdk::sdk_ret_t
-subnet_util::update()
-{
+subnet_util::update(void) const {
     pds_subnet_spec_t spec;
 
     memset(&spec, 0, sizeof(pds_subnet_spec_t));
@@ -172,8 +169,9 @@ subnet_util::update()
 }
 
 sdk::sdk_ret_t
-subnet_util::del() {
+subnet_util::del(void) const {
     pds_subnet_key_t subnet_key = {};
+
     subnet_key.id = this->id;
     return (pds_subnet_delete(&subnet_key));
 }

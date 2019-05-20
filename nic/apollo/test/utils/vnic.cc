@@ -56,7 +56,7 @@ vnic_util::vnic_util(pds_vpc_id_t vpc_id, pds_vnic_id_t vnic_id,
 vnic_util::~vnic_util() {}
 
 sdk::sdk_ret_t
-vnic_util::create(void) {
+vnic_util::create(void) const {
     pds_vnic_spec_t spec = {0};
 
     spec.vpc.id = vpc_id;
@@ -75,7 +75,7 @@ vnic_util::create(void) {
 }
 
 sdk::sdk_ret_t
-vnic_util::read(pds_vnic_info_t *info, bool compare_spec) {
+vnic_util::read(pds_vnic_info_t *info, bool compare_spec) const {
     sdk_ret_t rv;
     pds_vnic_key_t key;
 
@@ -119,7 +119,7 @@ vnic_util::read(pds_vnic_info_t *info, bool compare_spec) {
 }
 
 sdk::sdk_ret_t
-vnic_util::update(void) {
+vnic_util::update(void) const {
     pds_vnic_spec_t spec = {0};
 
     spec.vpc.id = vpc_id;
@@ -138,7 +138,7 @@ vnic_util::update(void) {
 }
 
 sdk::sdk_ret_t
-vnic_util::del(void) {
+vnic_util::del(void) const {
     pds_vnic_key_t key;
 
     key.id = vnic_id;
@@ -229,17 +229,48 @@ vnic_util::many_delete(vnic_stepper_seed_t *seed) {
     return (vnic_util_object_stepper(seed, OP_MANY_DELETE));
 }
 
+static inline void
+vnic_stepper_seed_populate_encap (uint32_t seed_base,
+                                  pds_encap_type_t encap_type,
+                                  pds_encap_t *encap)
+{
+    encap->type = encap_type;
+    // update encap value to seed base
+    switch (encap_type) {
+    case PDS_ENCAP_TYPE_DOT1Q:
+        encap->val.vlan_tag = seed_base;
+        break;
+    case PDS_ENCAP_TYPE_QINQ:
+        encap->val.qinq_tag.c_tag = seed_base;
+        encap->val.qinq_tag.s_tag = seed_base + 4096;
+        break;
+    case PDS_ENCAP_TYPE_MPLSoUDP:
+        encap->val.mpls_tag = seed_base;
+        break;
+    case PDS_ENCAP_TYPE_VXLAN:
+        encap->val.vnid = seed_base;
+        break;
+    default:
+        encap->val.value = seed_base;
+        break;
+    }
+}
+
 void
 vnic_util::vnic_stepper_seed_init(uint32_t seed_base, uint32_t num_vnics,
                                   uint64_t seed_mac,
+                                  pds_encap_type_t vnic_encap_type,
+                                  pds_encap_type_t fabric_encap_type,
+                                  bool src_dst_check,
                                   vnic_stepper_seed_t *seed) {
     seed->id = seed_base;
     seed->num_vnics = num_vnics;
-    seed->vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
-    seed->vnic_encap.val.vlan_tag = seed_base;
-    seed->fabric_encap.type = PDS_ENCAP_TYPE_MPLSoUDP;
-    seed->fabric_encap.val.mpls_tag = seed_base;
     seed->mac_u64 = seed_mac;
+    vnic_stepper_seed_populate_encap(seed_base, vnic_encap_type,
+                                     &seed->vnic_encap);
+    vnic_stepper_seed_populate_encap(seed_base, fabric_encap_type,
+                                     &seed->fabric_encap);
+    seed->src_dst_check = src_dst_check;
 }
 
 } // namespace api_test

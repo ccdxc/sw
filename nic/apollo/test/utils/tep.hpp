@@ -82,24 +82,24 @@ public:
     /// \brief Create TEP
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(void);
+    sdk_ret_t create(void) const;
 
     /// \brief Read TEP
     ///
     /// \param[in] compare_spec validation to be done or not
     /// \param[out] info tep information
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_tep_info_t *info, bool compare_spec=TRUE);
+    sdk_ret_t read(pds_tep_info_t *info, bool compare_spec=TRUE) const;
 
     /// \brief Update TEP
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update();
+    sdk_ret_t update(void) const;
 
     /// \brief Delete TEP
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del();
+    sdk_ret_t del(void) const;
 
     /// \brief Create multiple TEPs
     ///

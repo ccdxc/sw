@@ -58,24 +58,24 @@ public:
     /// \brief Create a VPC from VPC object
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create();
+    sdk_ret_t create(void) const;
 
     /// \brief Read VPC
     ///
     /// \param[in] compare_spec validation to be done or not
     /// \param[out] info vpc information
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_vpc_info_t *info, bool compare_spec=TRUE);
+    sdk_ret_t read(pds_vpc_info_t *info, bool compare_spec=TRUE) const;
 
     /// \brief Update the VPC
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update();
+    sdk_ret_t update(void) const;
 
     /// \brief Delete a VPC given its key
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del();
+    sdk_ret_t del(void) const;
 
     /// \brief Create many VPCs
     ///

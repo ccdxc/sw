@@ -79,26 +79,26 @@ public:
     /// \brief Create subnet
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create();
+    sdk_ret_t create(void) const;
 
     /// \brief Read subnet
     ///
     /// \param[in] compare_spec validation to be done or not
     /// \param[out] info subnet information
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_subnet_info_t *info, bool compare_spec=TRUE);
+    sdk_ret_t read(pds_subnet_info_t *info, bool compare_spec=TRUE) const;
 
     /// \brief Update the subnet
     ///
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update();
+    sdk_ret_t update(void) const;
 
     /// \brief Delete subnet
     ///
     /// \param[in] vpc_id VPC id
     /// \param[in] subnet_id subnet id
     /// \return #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del();
+    sdk_ret_t del(void) const;
 
     /// \brief Create many subnets
     ///

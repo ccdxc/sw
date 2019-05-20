@@ -13,18 +13,22 @@
 #include "nic/sdk/model_sim/include/lib_model_client.h"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/test/utils/base.hpp"
+#include "nic/apollo/test/utils/batch.hpp"
+#include "nic/apollo/test/utils/workflow.hpp"
 #include "nic/apollo/test/utils/vnic.hpp"
 #include "nic/apollo/test/utils/device.hpp"
 #include "nic/apollo/test/utils/vpc.hpp"
 #include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/subnet.hpp"
 
-const char *g_cfg_file = "hal.json";
-static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
+namespace api_test {
+
+static const char *g_cfg_file = "hal.json";
 constexpr uint32_t k_max_vnic = PDS_MAX_VNIC;
 constexpr uint64_t k_seed_mac = 0xa010101000000000;
-
-namespace api_test {
+constexpr bool k_src_dst_check = TRUE;
+static const vpc_util k_vpc_obj(1, "10.0.0.0/8");
+static const subnet_util k_subnet_obj(1, 1, "10.1.0.0/16");
 
 //----------------------------------------------------------------------------
 // VNIC test class
@@ -38,21 +42,20 @@ protected:
     virtual void TearDown() {}
     static void SetUpTestCase() {
         test_case_params_t params;
-        params.cfg_file = g_cfg_file;
+
+        params.cfg_file = api_test::g_cfg_file;
         params.enable_fte = false;
         pds_test_base::SetUpTestCase(params);
-
-        pds_batch_params_t batch_params = {0};
-        vpc_util vpc_obj(1, "10.0.0.0/8");
-        subnet_util subnet_obj(1, 1, "10.1.0.0/16");
-
-
-        BATCH_START();
-        ASSERT_TRUE(vpc_obj.create() == sdk::SDK_RET_OK);
-        ASSERT_TRUE(subnet_obj.create() == sdk::SDK_RET_OK);
-        BATCH_COMMIT();
+        batch_start();
+        ASSERT_TRUE(k_vpc_obj.create() == sdk::SDK_RET_OK);
+        ASSERT_TRUE(k_subnet_obj.create() == sdk::SDK_RET_OK);
+        batch_commit();
     }
     static void TearDownTestCase() {
+        batch_start();
+        ASSERT_TRUE(k_vpc_obj.del() == sdk::SDK_RET_OK);
+        ASSERT_TRUE(k_subnet_obj.del() == sdk::SDK_RET_OK);
+        batch_commit();
         pds_test_base::TearDownTestCase();
     }
 };
@@ -64,625 +67,221 @@ protected:
 /// \defgroup VNIC
 /// @{
 
-// update encap value to seed base
-static inline void
-vnic_stepper_update_seed_encap (uint32_t seed_base, pds_encap_type_t encap_type,
-                                pds_encap_t *encap)
-{
-    encap->type = encap_type;
-    switch (encap_type) {
-    case PDS_ENCAP_TYPE_DOT1Q:
-        encap->val.vlan_tag = seed_base;
-        break;
-    case PDS_ENCAP_TYPE_QINQ:
-        encap->val.qinq_tag.c_tag = seed_base;
-        encap->val.qinq_tag.s_tag = seed_base + 4096;
-        break;
-    case PDS_ENCAP_TYPE_MPLSoUDP:
-        encap->val.mpls_tag = seed_base;
-        break;
-    case PDS_ENCAP_TYPE_VXLAN:
-        encap->val.vnid = seed_base;
-        break;
-    default:
-        encap->val.value = seed_base;
-        break;
-    }
-}
-
-static inline void
-vnic_stepper_seed_change (vnic_stepper_seed_t *seed,
-                          pds_encap_type_t vnic_type=PDS_ENCAP_TYPE_DOT1Q,
-                          pds_encap_type_t fabric_type=PDS_ENCAP_TYPE_MPLSoUDP,
-                          bool src_dst_check=true)
-{
-    vnic_stepper_update_seed_encap(seed->id, vnic_type, &seed->vnic_encap);
-    vnic_stepper_update_seed_encap(seed->id, fabric_type, &seed->fabric_encap);
-    seed->mac_u64 = 0xb010101010101010;
-    seed->src_dst_check = src_dst_check;
-}
-
-/// \brief Create and delete max VNICs in the same batch
-/// The operation should be de-duped by framework and is
-/// a NO-OP from hardware perspective
-/// [ Create SetMax - Delete SetMax ] - Read
+/// \brief VNIC WF_1
 TEST_F(vnic_test, vnic_workflow_1) {
-    pds_batch_params_t batch_params = {0};
     vnic_stepper_seed_t seed = {};
 
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, &seed);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed);
-    VNIC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed);
+    workflow_1<vnic_util, vnic_stepper_seed_t>(&seed);
 }
 
-/// \brief Create, delete and create max VNICs in the same batch
-/// Create and delete should be de-deduped by framework and subsequent create
-/// should result in successful creation
-/// [ Create SetMax - Delete SetMax - Create SetMax ] - Read
+/// \brief VNIC WF_2
 TEST_F(vnic_test, vnic_workflow_2) {
-    pds_batch_params_t batch_params = {0};
     vnic_stepper_seed_t seed = {};
 
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, &seed);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed);
-    VNIC_MANY_DELETE(&seed);
-    VNIC_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed);
+    workflow_2<vnic_util, vnic_stepper_seed_t>(&seed);
 }
 
-/// \brief Create, delete some and create another set of TEPs in the same batch
-/// [ Create Set1, Set2 - Delete Set1 - Create Set3 ] - Read
+/// \brief VNIC WF_3
 TEST_F(vnic_test, vnic_workflow_3) {
-    pds_batch_params_t batch_params = {0};
-    vnic_stepper_seed_t seed1 = {};
-    vnic_stepper_seed_t seed2 = {};
-    vnic_stepper_seed_t seed3 = {};
-    uint32_t num_vnics = 20;
+    vnic_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
-    VNIC_SEED_INIT(10, num_vnics, k_seed_mac, &seed1);
-    VNIC_SEED_INIT(40, num_vnics, k_seed_mac, &seed2);
-    VNIC_SEED_INIT(70, num_vnics, k_seed_mac, &seed3);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed1);
-    VNIC_MANY_CREATE(&seed2);
-    VNIC_MANY_DELETE(&seed1);
-    VNIC_MANY_CREATE(&seed3);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VNIC_MANY_READ(&seed2, sdk::SDK_RET_OK);
-    VNIC_MANY_READ(&seed3, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed2);
-    VNIC_MANY_DELETE(&seed3);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VNIC_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(10, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
+    VNIC_SEED_INIT(40, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed2);
+    VNIC_SEED_INIT(70, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed3);
+    workflow_3<vnic_util, vnic_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create and delete VNIC in two batches
-/// The hardware should create and delete VNIC correctly. Validate using reads
-/// at each batch end
-/// [ Create SetMax ] - Read - [ Delete SetMax ] - Read
+/// \brief VNIC WF_4
 TEST_F(vnic_test, vnic_workflow_4) {
-    pds_batch_params_t batch_params = {0};
     vnic_stepper_seed_t seed = {};
 
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, &seed);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed);
+    workflow_4<vnic_util, vnic_stepper_seed_t>(&seed);
 }
 
-/// \brief Create and delete mix and match of VNIC in two batches
-/// [ Create Set1, Set2 ] - Read - [ Delete Set1 - Create Set3 ] - Read
+/// \brief VNIC WF_5
 TEST_F(vnic_test, vnic_workflow_5) {
-    pds_batch_params_t batch_params = {0};
-    vnic_stepper_seed_t seed1 = {};
-    vnic_stepper_seed_t seed2 = {};
-    vnic_stepper_seed_t seed3 = {};
-    uint32_t num_vnics = 20;
+    vnic_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {};
 
-    VNIC_SEED_INIT(10, num_vnics, k_seed_mac, &seed1);
-    VNIC_SEED_INIT(40, num_vnics, k_seed_mac, &seed2);
-    VNIC_SEED_INIT(70, num_vnics, k_seed_mac, &seed3);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed1);
-    VNIC_MANY_CREATE(&seed2);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-    VNIC_MANY_READ(&seed2, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed1);
-    VNIC_MANY_CREATE(&seed3);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VNIC_MANY_READ(&seed2, sdk::SDK_RET_OK);
-    VNIC_MANY_READ(&seed3, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed2);
-    VNIC_MANY_DELETE(&seed3);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VNIC_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(10, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
+    VNIC_SEED_INIT(40, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed2);
+    VNIC_SEED_INIT(70, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed3);
+    workflow_5<vnic_util, vnic_stepper_seed_t>(&seed1, &seed2, &seed3);
 }
 
-/// \brief Create, update and delete maximum VNICs in the same batch
-/// The operation should be de-duped by framework and is a NO-OP
-/// from hardware perspective
-/// [ Create SetMax - Update SetMax - Update SetMax - Delete SetMax ] - Read
+/// \brief VNIC WF_6
 TEST_F(vnic_test, vnic_workflow_6) {
-    pds_batch_params_t batch_params = {0};
-    vnic_stepper_seed_t seed = {};
+    vnic_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, &seed);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed);
-    // update vnic encap to qinq
-    vnic_stepper_seed_change(&seed, PDS_ENCAP_TYPE_QINQ);
-    VNIC_MANY_UPDATE(&seed);
-    // update vnic encap to dot1q & fabric to vxlan
-    vnic_stepper_seed_change(&seed, PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN);
-    VNIC_MANY_UPDATE(&seed);
-    VNIC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_QINQ,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1A);
+    VNIC_SEED_INIT(1, k_max_vnic, 0xb010101010101010, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_VXLAN, FALSE, &seed1B);
+    workflow_6<vnic_util, vnic_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
-/// \brief Create, delete, create, update, update max VNICs in the same batch
-/// Create and delete should be de-deduped by framework and subsequent
-/// create and double update should succeed
-/// [ Create Max - Delete Max - Create Max - Update Max - Update Max]
+/// \brief VNIC WF_7
 TEST_F(vnic_test, vnic_workflow_7) {
-    pds_batch_params_t batch_params = {0};
-    vnic_stepper_seed_t seed = {};
+    vnic_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, &seed);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed);
-    VNIC_MANY_DELETE(&seed);
-    VNIC_MANY_CREATE(&seed);
-    // update vnic encap to qinq
-    vnic_stepper_seed_change(&seed, PDS_ENCAP_TYPE_QINQ);
-    VNIC_MANY_UPDATE(&seed);
-    // update vnic encap to dot1q & fabric to vxlan
-    vnic_stepper_seed_change(&seed, PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN);
-    VNIC_MANY_UPDATE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_QINQ,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1A);
+    VNIC_SEED_INIT(1, k_max_vnic, 0xb010101010101010, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_VXLAN, FALSE, &seed1B);
+    workflow_7<vnic_util, vnic_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
-/// \brief Create and update max VNICs in same batch
-/// [ Create Max - Update Max ] - Read - [ Update Max ] - Read - [ Delete Max ]
+/// \brief VNIC WF_8
 TEST_F(vnic_test, DISABLED_vnic_workflow_8) {
-    pds_batch_params_t batch_params = {0};
-    vnic_stepper_seed_t seed = {};
+    vnic_stepper_seed_t seed1 = {}, seed1A = {}, seed1B = {};
 
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, &seed);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed);
-    // update fabric encap to vxlan
-    vnic_stepper_seed_change(&seed, PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN);
-    VNIC_MANY_UPDATE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    // update fabric encap back to mplsoudp
-    vnic_stepper_seed_change(&seed, PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_MPLSoUDP);
-    VNIC_MANY_UPDATE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_VXLAN, FALSE, &seed1A);
+    VNIC_SEED_INIT(1, k_max_vnic, 0xb010101010101010, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, FALSE, &seed1B);
+    workflow_8<vnic_util, vnic_stepper_seed_t>(&seed1, &seed1A, &seed1B);
 }
 
-/// \brief Update and delete max VNICs in same batch
-/// [ Create SetMax ] - Read - [ Update SetMax - Delete SetMax ] - Read
+/// \brief VNIC WF_9
 TEST_F(vnic_test, vnic_workflow_9) {
-    pds_batch_params_t batch_params = {0};
-    vnic_stepper_seed_t seed = {};
+    vnic_stepper_seed_t seed1 = {}, seed1A = {};
 
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, &seed);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    // update fabric encap to vxlan
-    vnic_stepper_seed_change(&seed, PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN);
-    VNIC_MANY_UPDATE(&seed);
-    VNIC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
+    VNIC_SEED_INIT(1, k_max_vnic, 0xb010101010101010, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_VXLAN, k_src_dst_check, &seed1A);
+    workflow_9<vnic_util, vnic_stepper_seed_t>(&seed1, &seed1A);
 }
 
-/// \brief Create, update and delete mix and match of VNICs in different batches
-/// [ Create Set1, Set2, Set3 - Delete Set1 - Update Set2 ] - Read
-/// - [ Update Set3 - Delete Set2 - Create Set4] - Read
+/// \brief VNIC WF_10
 TEST_F(vnic_test, DISABLED_vnic_workflow_10) {
-    pds_batch_params_t batch_params = {0};
-    vnic_stepper_seed_t seed1 = {};
-    vnic_stepper_seed_t seed2 = {};
-    vnic_stepper_seed_t seed3 = {};
-    vnic_stepper_seed_t seed4 = {};
-    uint32_t num_vnics = 20;
+    vnic_stepper_seed_t seed1 = {}, seed2 = {}, seed3 = {}, seed4 = {};
+    vnic_stepper_seed_t seed2A = {}, seed3A = {};
 
-    VNIC_SEED_INIT(10, num_vnics, k_seed_mac, &seed1);
-    VNIC_SEED_INIT(40, num_vnics, k_seed_mac, &seed2);
-    VNIC_SEED_INIT(70, num_vnics, k_seed_mac, &seed3);
-    VNIC_SEED_INIT(100, num_vnics, k_seed_mac, &seed4);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed1);
-    VNIC_MANY_CREATE(&seed2);
-    VNIC_MANY_CREATE(&seed3);
-    VNIC_MANY_DELETE(&seed1);
-    // update fabric encap to vxlan
-    vnic_stepper_seed_change(&seed2, PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN);
-    VNIC_MANY_UPDATE(&seed2);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VNIC_MANY_READ(&seed2, sdk::SDK_RET_OK);
-    VNIC_MANY_READ(&seed3, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    // update fabric encap to vxlan
-    vnic_stepper_seed_change(&seed3, PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN);
-    VNIC_MANY_UPDATE(&seed3);
-    VNIC_MANY_DELETE(&seed2);
-    VNIC_MANY_CREATE(&seed4);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VNIC_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VNIC_MANY_READ(&seed3, sdk::SDK_RET_OK);
-    VNIC_MANY_READ(&seed4, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed3);
-    VNIC_MANY_DELETE(&seed4);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed3, sdk::SDK_RET_ENTRY_NOT_FOUND);
-    VNIC_MANY_READ(&seed4, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(10, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
+    VNIC_SEED_INIT(40, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed2);
+    VNIC_SEED_INIT(40, 20, 0xb010101010101010, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_VXLAN, FALSE, &seed2A);
+    VNIC_SEED_INIT(70, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed3);
+    VNIC_SEED_INIT(70, 20, 0xb010101010101010, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_VXLAN, FALSE, &seed3A);
+    VNIC_SEED_INIT(100, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed4);
+    workflow_10<vnic_util, vnic_stepper_seed_t>(
+                &seed1, &seed2, &seed2A, &seed3, &seed3A, &seed4);
 }
 
-/// \brief Create maximum number of VNICs in two batches
-/// [ Create SetMax ] - [ Create SetMax ] - Read
+/// \brief VNIC WF_N_1
 TEST_F(vnic_test, vnic_workflow_neg_1) {
-    pds_batch_params_t batch_params = {0};
     vnic_stepper_seed_t seed = {};
 
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, &seed);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed);
+    workflow_neg_1<vnic_util, vnic_stepper_seed_t>(&seed);
 }
 
-/// \brief Create more than maximum number of VNICs supported.
-/// [ Create SetMax+1 ] - Read
+/// \brief VNIC WF_N_2
 TEST_F(vnic_test, DISABLED_vnic_workflow_neg_2) {
-    pds_batch_params_t batch_params = {0};
     vnic_stepper_seed_t seed = {};
 
-    VNIC_SEED_INIT(1, k_max_vnic+1, k_seed_mac, &seed);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(1, k_max_vnic+1, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed);
+    workflow_neg_2<vnic_util, vnic_stepper_seed_t>(&seed);
 }
 
-/// \brief Read of a non-existing VNIC should return entry not found.
-/// Read NonEx
-TEST_F(vnic_test, vnic_workflow_neg_3a) {
+/// \brief VNIC WF_N_3
+TEST_F(vnic_test, vnic_workflow_neg_3) {
     vnic_stepper_seed_t seed = {};
 
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, &seed);
-
-    // trigger
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed);
+    workflow_neg_3<vnic_util, vnic_stepper_seed_t>(&seed);
 }
 
-/// \brief Deletion of a non-existing VNICs should fail.
-/// [ Delete NonEx ]
-TEST_F(vnic_test, vnic_workflow_neg_3b) {
-    pds_batch_params_t batch_params = {0};
-    vnic_stepper_seed_t seed = {};
-
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, &seed);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-}
-
-/// \brief Invalid batch shouldn't affect entries of previous batch
-/// [ Create Set1 ] - [ Delete Set1, Set2 ] - Read
+/// \brief VNIC WF_N_4
 TEST_F(vnic_test, vnic_workflow_neg_4) {
-    pds_batch_params_t batch_params = {0};
-    vnic_stepper_seed_t seed1 = {};
-    vnic_stepper_seed_t seed2 = {};
-    uint32_t num_vnics = 20;
+    vnic_stepper_seed_t seed1 = {}, seed2 = {};
 
-    VNIC_SEED_INIT(10, num_vnics, k_seed_mac, &seed1);
-    VNIC_SEED_INIT(40, num_vnics, k_seed_mac, &seed2);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed1);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed1);
-    VNIC_MANY_DELETE(&seed2);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-    VNIC_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed1);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(10, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
+    VNIC_SEED_INIT(40, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed2);
+    workflow_neg_4<vnic_util, vnic_stepper_seed_t>(&seed1, &seed2);
 }
 
-/// \brief Create a VNICs with an id which is not within the range.
-TEST_F(vnic_test, vnic_workflow_corner_case_4) {}
-
-/// \brief Update the deleted max VNICs in same batch
-/// [ Create SetMax ] - Read - [ Delete SetMax - Update SetMax ] - Read
+/// \brief VNIC WF_N_5
 TEST_F(vnic_test, DISABLED_vnic_workflow_neg_5) {
-    pds_batch_params_t batch_params = {0};
-    vnic_stepper_seed_t seed = {};
+    vnic_stepper_seed_t seed1 = {}, seed1A = {};
 
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, &seed);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed);
-    // update fabric encap to vxlan
-    vnic_stepper_seed_change(&seed, PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN);
-    VNIC_MANY_UPDATE(&seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
+    VNIC_SEED_INIT(1, k_max_vnic, 0xb010101010101010, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_VXLAN, FALSE, &seed1A);
+    workflow_neg_5<vnic_util, vnic_stepper_seed_t>(&seed1, &seed1A);
 }
 
-// \brief Update and read non existing VNICs
-/// [ Update SetMax ] - Read
+/// \brief VNIC WF_N_6
 TEST_F(vnic_test, vnic_workflow_neg_6) {
-    pds_batch_params_t batch_params = {0};
     vnic_stepper_seed_t seed = {};
 
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, &seed);
-
-    // trigger
-    BATCH_START();
-    // update fabric encap to vxlan
-    vnic_stepper_seed_change(&seed, PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN);
-    VNIC_MANY_UPDATE(&seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_VXLAN, FALSE, &seed);
+    workflow_neg_6<vnic_util, vnic_stepper_seed_t>(&seed);
 }
 
-/// \brief Create and then update max+1 VNICs in different batch
-/// [ Create SetMax ] - Read - [ Update SetMax + 1 ] - Read
+/// \brief VNIC WF_N_7
 TEST_F(vnic_test, vnic_workflow_neg_7) {
-    pds_batch_params_t batch_params = {0};
-    vnic_stepper_seed_t seed = {}, new_seed = {};
+    vnic_stepper_seed_t seed1 = {}, seed1A = {};
 
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, &seed);
-    VNIC_SEED_INIT(1, k_max_vnic+1, k_seed_mac, &new_seed);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    // update fabric encap to vxlan
-    vnic_stepper_seed_change(&new_seed, PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN);
-    VNIC_MANY_UPDATE(&new_seed);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_OK);
-
-    // cleanup
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed);
-    BATCH_COMMIT();
-    VNIC_MANY_READ(&seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
+    VNIC_SEED_INIT(1, k_max_vnic+1, 0xb010101010101010, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_VXLAN, FALSE, &seed1A);
+    workflow_neg_7<vnic_util, vnic_stepper_seed_t>(&seed1, &seed1A);
 }
 
-/// \brief Update existing and non-existing VNICs in same batch
-/// [ Create Set1 ] - Read - [ Update Set1 - Update Set2 ] - Read
+/// \brief VNIC WF_N_8
 TEST_F(vnic_test, vnic_workflow_neg_8) {
-    pds_batch_params_t batch_params = {0};
-    vnic_stepper_seed_t seed1 = {}, new_seed1 = {};
-    vnic_stepper_seed_t seed2 = {};
-    uint32_t num_vnics = 20;
+    vnic_stepper_seed_t seed1 = {}, seed1A = {}, seed2 = {};
 
-    VNIC_SEED_INIT(10, num_vnics, k_seed_mac, &seed1);
-    VNIC_SEED_INIT(10, num_vnics, k_seed_mac, &new_seed1);
-    VNIC_SEED_INIT(40, num_vnics, k_seed_mac, &seed2);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed1);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    // update fabric encap to vxlan
-    vnic_stepper_seed_change(&new_seed1, PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN);
-    VNIC_MANY_UPDATE(&new_seed1);
-    // update fabric encap to vxlan
-    vnic_stepper_seed_change(&seed2, PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN);
-    VNIC_MANY_UPDATE(&seed2);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-    VNIC_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed1);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(10, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
+    VNIC_SEED_INIT(10, 20, 0xb010101010101010, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_VXLAN, FALSE, &seed1A);
+    VNIC_SEED_INIT(40, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_VXLAN, k_src_dst_check, &seed2);
+    workflow_neg_8<vnic_util, vnic_stepper_seed_t>(&seed1, &seed1A, &seed2);
 }
 
-/// \brief Delete existing and Update non-existing VNICs in same batch
-/// [ Create Set1 ] - Read - [ Delete Set1 - Update Set2 ] - Read
+/// \brief VNIC WF_N_9
 TEST_F(vnic_test, vnic_workflow_neg_9) {
-    pds_batch_params_t batch_params = {0};
-    vnic_stepper_seed_t seed1 = {};
-    vnic_stepper_seed_t seed2 = {};
-    uint32_t num_vnics = 20;
+    vnic_stepper_seed_t seed1 = {}, seed2 = {};
 
-    VNIC_SEED_INIT(10, num_vnics, k_seed_mac, &seed1);
-    VNIC_SEED_INIT(40, num_vnics, k_seed_mac, &seed2);
-
-    // trigger
-    BATCH_START();
-    VNIC_MANY_CREATE(&seed1);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed1);
-    // update fabric encap to vxlan
-    vnic_stepper_seed_change(&seed2, PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN);
-    VNIC_MANY_UPDATE(&seed2);
-    BATCH_COMMIT_FAIL();
-    BATCH_ABORT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_OK);
-    VNIC_MANY_READ(&seed2, sdk::SDK_RET_ENTRY_NOT_FOUND);
-
-    // cleanup
-    BATCH_START();
-    VNIC_MANY_DELETE(&seed1);
-    BATCH_COMMIT();
-
-    VNIC_MANY_READ(&seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
+    VNIC_SEED_INIT(10, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
+    VNIC_SEED_INIT(40, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
+                   PDS_ENCAP_TYPE_VXLAN, FALSE, &seed2);
+    workflow_neg_9<vnic_util, vnic_stepper_seed_t>(&seed1, &seed2);
 }
 
 /// @}
@@ -710,8 +309,8 @@ main (int argc, char **argv)
     while ((oc = getopt_long(argc, argv, "hc:", longopts, NULL)) != -1) {
         switch (oc) {
         case 'c':
-            g_cfg_file = optarg;
-            if (!g_cfg_file) {
+            api_test::g_cfg_file = optarg;
+            if (!api_test::g_cfg_file) {
                 fprintf(stderr, "HAL config file is not specified\n");
                 print_usage(argv);
                 exit(1);

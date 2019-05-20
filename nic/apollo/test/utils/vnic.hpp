@@ -61,6 +61,7 @@ public:
     /// \brief Parameterized constructor
     vnic_util(uint32_t vnic_id, pds_encap_t vnic_encap, pds_encap_t fabric_encap,
               uint64_t mac_u64, bool src_dst_check = false);
+
     /// \brief Parameterized constructor
     vnic_util(pds_vpc_id_t vpc_id, pds_vnic_id_t vnic_id,
               pds_subnet_id_t sub_id = -1, std::string vnic_mac = "",
@@ -72,22 +73,22 @@ public:
     /// \brief Create VNIC
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t create(void);
+    sdk_ret_t create(void) const;
 
     /// \brief Read VNIC info
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_vnic_info_t *info, bool compare_spec = true);
+    sdk_ret_t read(pds_vnic_info_t *info, bool compare_spec = true) const;
 
     /// \brief Update VNIC configuration
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t update(void);
+    sdk_ret_t update(void) const;
 
     /// \brief Delete VNIC
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t del(void);
+    sdk_ret_t del(void) const;
 
     /// \brief Create many VNICs for the given subnet and VPC
     ///
@@ -120,9 +121,15 @@ public:
     /// \param[in] seed_base vnic seed base
     /// \param[in] num_vnics number of vnics
     /// \param[in] seed_mac mac address
+    /// \param[in] vnic_encap_type vnic encap type
+    /// \param[in] fabric_encap_type fabric encap type
+    /// \param[in] src_dst_check source & destination check
     /// \param[out] seed vnic seed
     static void vnic_stepper_seed_init(uint32_t seed_base, uint32_t num_vnics,
                                        uint64_t seed_mac,
+                                       pds_encap_type_t vnic_encap_type,
+                                       pds_encap_type_t fabric_encap_type,
+                                       bool src_dst_check,
                                        vnic_stepper_seed_t *seed);
 };
 

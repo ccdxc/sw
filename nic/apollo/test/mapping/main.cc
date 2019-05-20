@@ -141,7 +141,9 @@ protected:
             ip_pfx.addr = ipaddr;
             subnet_cidr = ippfx2str(&ip_pfx);
         }
-        VNIC_SEED_INIT(vnic_stepper, num_vnics, vnic_stepper_mac, &vnic_seed);
+        VNIC_SEED_INIT(vnic_stepper, num_vnics, vnic_stepper_mac,
+                       PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_MPLSoUDP,
+                       TRUE, &vnic_seed);
         VNIC_MANY_CREATE(&vnic_seed);
         BATCH_COMMIT();
 
