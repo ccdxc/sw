@@ -793,8 +793,6 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	uint8_t *seq_status_desc;
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
 
-	struct lif *lif;
-
 	OSAL_LOG_DEBUG("enter ...");
 
 	chain_params = &svc_info->si_cpdc_chain;
@@ -803,14 +801,7 @@ hw_setup_cp_chain_params(struct service_info *svc_info,
 	seq_info = &svc_info->si_seq_info;
 	qtype = seq_info->sqi_qtype;
 
-	lif = sonic_get_lif();
-	if (!lif) {
-		OSAL_ASSERT(lif);
-		goto out;
-	}
-
-	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS,
-			&seq_spec->sqs_seq_status_q);
+	err = seq_get_statusq(svc_info, &seq_spec->sqs_seq_status_q);
 	if (err)
 		goto out;
 
@@ -899,20 +890,12 @@ hw_setup_cpdc_chain(struct service_info *svc_info,
 {
 	struct sequencer_info *seq_info;
 	struct sequencer_spec *seq_spec;
-	struct lif *lif;
 	uint32_t statusq_index;
 	pnso_error_t err;
 
 	seq_spec = &svc_info->si_cpdc_chain.ccp_seq_spec;
 	seq_info = &svc_info->si_seq_info;
-	lif = sonic_get_lif();
-	if (!lif) {
-		OSAL_LOG_ERROR("failed to obtain LIF");
-		return EPERM;
-	}
-
-	err = sonic_get_seq_statusq(lif, seq_info->sqi_status_qtype,
-				    &seq_spec->sqs_seq_status_q);
+	err = seq_get_statusq(svc_info, &seq_spec->sqs_seq_status_q);
 	if (err)
 		return err;
 
@@ -954,8 +937,6 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	uint8_t *seq_status_desc;
 	struct sonic_accel_ring *ring = svc_info->si_seq_info.sqi_ring;
 
-	struct lif *lif;
-
 	OSAL_LOG_DEBUG("enter ...");
 
 	chain_params = &svc_info->si_cpdc_chain;
@@ -964,14 +945,7 @@ hw_setup_cp_pad_chain_params(struct service_info *svc_info,
 	seq_info = &svc_info->si_seq_info;
 	qtype = seq_info->sqi_qtype;
 
-	lif = sonic_get_lif();
-	if (!lif) {
-		OSAL_ASSERT(lif);
-		goto out;
-	}
-
-	err = sonic_get_seq_statusq(lif, SONIC_QTYPE_CPDC_STATUS,
-			&seq_spec->sqs_seq_status_q);
+	err = seq_get_statusq(svc_info, &seq_spec->sqs_seq_status_q);
 	if (err) {
 		OSAL_LOG_ERROR("failed to obtain sequencer statusq err: %d",
 				err);
@@ -1146,20 +1120,12 @@ hw_setup_crypto_chain(struct service_info *svc_info,
 {
 	struct sequencer_info *seq_info;
 	struct sequencer_spec *seq_spec;
-	struct lif *lif;
 	uint32_t statusq_index;
 	pnso_error_t err;
 
 	seq_spec = &svc_info->si_crypto_chain.ccp_seq_spec;
 	seq_info = &svc_info->si_seq_info;
-	lif = sonic_get_lif();
-	if (!lif) {
-		OSAL_LOG_ERROR("failed to obtain LIF");
-		return EPERM;
-	}
-
-	err = sonic_get_seq_statusq(lif, seq_info->sqi_status_qtype,
-				    &seq_spec->sqs_seq_status_q);
+	err = seq_get_statusq(svc_info, &seq_spec->sqs_seq_status_q);
 	if (err)
 		return err;
 

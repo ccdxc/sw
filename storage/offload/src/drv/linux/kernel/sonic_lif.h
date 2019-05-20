@@ -174,7 +174,7 @@ int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type qtype,
 		struct queue **q);
 
 int sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type qtype,
-		struct queue **q);
+		struct queue **ret_q_hint);
 void sonic_put_seq_statusq(struct queue *q);
 
 uint32_t sonic_get_num_per_core_res(struct lif *lif);

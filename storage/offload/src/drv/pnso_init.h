@@ -7,6 +7,8 @@
 #define __PNSO_INIT_H__
 
 #include "sonic_dev.h"
+#include "pnso_cpdc.h"
+#include "pnso_crypto.h"
 
 #define INTERM_BUF_NOMINAL_PAGE_SIZE	4096
 #define INTERM_BUF_MIN_SIZE		8192
@@ -38,6 +40,10 @@
 #define MAX_CRYPTO_SGL_VEC_PER_REQ MAX_CRYPTO_VEC_PER_REQ
 #define MAX_CRYPTO_DESC_VEC_PER_REQ MAX_CRYPTO_VEC_PER_REQ
 
+/*
+ * 3 for nominal number of chained services (or number of simultaneous chains)
+ */
+#define MAX_SHARED_STATUS_PER_REQ 3
 
 /**
  * struct pc_res_init_params - used to initialize per core resources.
@@ -48,6 +54,14 @@ struct pc_res_init_params {
 	uint32_t rmem_page_size;
 	uint32_t max_seq_sq_descs;
 };
+
+/**
+ * struct shared_status_desc - allow for sharing of status descriptor space
+ */
+union shared_status_desc {
+	struct cpdc_status_desc cpdc_status;
+	struct crypto_status_desc crypto_status;
+} __attribute__((__packed__));
 
 extern uint64_t pad_buffer;
 

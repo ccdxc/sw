@@ -17,7 +17,6 @@
 #include "sonic_dev.h"
 
 #include "pnso_api.h"
-#include "pnso_init.h"
 
 /**
  * struct crypto_aol - represents set of address-offset-length (aol) of data
@@ -159,6 +158,11 @@ struct crypto_status_desc {
 	uint64_t csd_err;
 	uint64_t csd_cpl_data;
 } __attribute__((__packed__));
+
+/**
+ * Forward declarations
+ */
+struct pc_res_init_params;
 
 /**
  * crypto_init_accelerator() - creates and/or initializes internal data

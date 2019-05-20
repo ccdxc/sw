@@ -462,11 +462,11 @@ sonic_seq_q_batch_multiple(const struct queue *q)
 		break;
 
 	case STORAGE_SEQ_QGROUP_CPDC_STATUS:
-		multiple *= res->num_cpdc_status_qs;
+		multiple *= res->cpdc_statusq_track.num_queues;
 		break;
 
 	case STORAGE_SEQ_QGROUP_CRYPTO_STATUS:
-		multiple *= res->num_crypto_status_qs;
+		multiple *= res->crypto_statusq_track.num_queues;
 		break;
 
 	default:
@@ -848,8 +848,10 @@ static int sonic_lif_per_core_resources_alloc(struct lif *lif)
 		lif->res.pc_res[i] = res;
 		res->idx = i;
 		res->core_id = -1;
-                spin_lock_init(&res->seq_cpdc_statusq_lock);
-                spin_lock_init(&res->seq_crypto_statusq_lock);
+		res->cpdc_statusq_track.queues = &res->cpdc_seq_status_qs[0];
+		res->crypto_statusq_track.queues = &res->crypto_seq_status_qs[0];
+                spin_lock_init(&res->cpdc_statusq_track.lock);
+                spin_lock_init(&res->crypto_statusq_track.lock);
 	}
 
 	return 0;
@@ -1466,6 +1468,7 @@ static int
 sonic_seq_q_reinit(struct queue *q)
 {
 	q->pindex = 0;
+	q->ref_count = 0;
 	osal_atomic_init(&q->descs_inuse, 0);
 	return 0;
 }
@@ -1524,7 +1527,7 @@ sonic_cpdc_statusq_count_init(struct per_core_resource *res,
 	status_q_count = q_count - 2;
 	if (status_q_count > MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES)
 		status_q_count = MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES;
-	res->num_cpdc_status_qs = status_q_count;
+	res->cpdc_statusq_track.num_queues = status_q_count;
 	return 0;
 }
 
@@ -1588,7 +1591,7 @@ sonic_cpdc_statusqs_init(struct per_core_resource *res)
 	int err = 0;
 	int i;
 
-	for (i = 0; i < res->num_cpdc_status_qs; i++) {
+	for (i = 0; i < res->cpdc_statusq_track.num_queues; i++) {
 		err = get_seq_statusq_desc_count(&res->cpdc_seq_status_qs[i],
 					STORAGE_SEQ_QGROUP_CPDC_STATUS);
 		if (err)
@@ -1613,7 +1616,7 @@ sonic_cpdc_statusqs_reinit(struct per_core_resource *res)
 	int err = 0;
 	int i;
 
-	for (i = 0; i < res->num_cpdc_status_qs; i++) {
+	for (i = 0; i < res->cpdc_statusq_track.num_queues; i++) {
                 err = sonic_seq_q_reinit(&res->cpdc_seq_status_qs[i]);
 		if (err) {
 			OSAL_LOG_ERROR("sonic_seq_q_reinit failed for CPDC "
@@ -1622,6 +1625,9 @@ sonic_cpdc_statusqs_reinit(struct per_core_resource *res)
 		}
 	}
 
+	memset(&res->cpdc_statusq_track.bmp, 0,
+		sizeof(res->cpdc_statusq_track.bmp));
+	res->cpdc_statusq_track.next_free_id = 0;
 	return err;
 }
 
@@ -1637,7 +1643,7 @@ sonic_crypto_statusq_count_init(struct per_core_resource *res,
 	status_q_count = q_count - 2;
 	if (status_q_count > MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES)
 		status_q_count = MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES;
-	res->num_crypto_status_qs = status_q_count;
+	res->crypto_statusq_track.num_queues = status_q_count;
 	return 0;
 }
 
@@ -1703,7 +1709,7 @@ sonic_crypto_statusqs_init(struct per_core_resource *res)
 	int err = 0;
 	int i;
 
-	for (i = 0; i < res->num_crypto_status_qs; i++) {
+	for (i = 0; i < res->crypto_statusq_track.num_queues; i++) {
 		err = get_seq_statusq_desc_count(&res->crypto_seq_status_qs[i],
 					STORAGE_SEQ_QGROUP_CRYPTO_STATUS);
 		if (err)
@@ -1728,7 +1734,7 @@ sonic_crypto_statusqs_reinit(struct per_core_resource *res)
 	int err = 0;
 	int i;
 
-	for (i = 0; i < res->num_crypto_status_qs; i++) {
+	for (i = 0; i < res->crypto_statusq_track.num_queues; i++) {
                 err = sonic_seq_q_reinit(&res->crypto_seq_status_qs[i]);
 		if (err) {
 			OSAL_LOG_ERROR("sonic_seq_q_reinit failed for crypto "
@@ -1737,6 +1743,9 @@ sonic_crypto_statusqs_reinit(struct per_core_resource *res)
 		}
 	}
 
+	memset(&res->crypto_statusq_track.bmp, 0,
+		sizeof(res->crypto_statusq_track.bmp));
+	res->crypto_statusq_track.next_free_id = 0;
 	return err;
 }
 
@@ -2226,21 +2235,21 @@ int sonic_get_seq_sq(struct lif *lif, enum sonic_queue_type sonic_qtype,
 }
 
 static void
-sonic_pprint_bmp(struct per_core_resource *pcr, unsigned long *bmp, int max,
-		 spinlock_t *lock, const char *name)
+sonic_pprint_queue_tracking(struct queue_tracking *track,
+		 const char *name)
 {
 	int count = 0;
 	unsigned long id;
 
-	spin_lock(lock);
-	id = find_first_bit(bmp, max);
-	if (id < max) {
+	spin_lock(&track->lock);
+	id = find_first_bit(track->bmp, track->num_queues);
+	if (id < track->num_queues) {
 		do {
 			count++;
-			id = find_next_bit(bmp, max, id+1);
-		} while (id < max);
+			id = find_next_bit(track->bmp, track->num_queues, id+1);
+		} while (id < track->num_queues);
 	}
-	spin_unlock(lock);
+	spin_unlock(&track->lock);
 
 	OSAL_LOG_NOTICE("SONIC bmp %s has %d non-zero entries",
 			name, count);
@@ -2249,10 +2258,8 @@ sonic_pprint_bmp(struct per_core_resource *pcr, unsigned long *bmp, int max,
 void
 sonic_pprint_seq_bmps(struct per_core_resource *pcr)
 {
-	sonic_pprint_bmp(pcr, pcr->cpdc_seq_status_qs_bmp, pcr->num_cpdc_status_qs,
-			 &pcr->seq_cpdc_statusq_lock, "CPDC STATUS");
-	sonic_pprint_bmp(pcr, pcr->crypto_seq_status_qs_bmp, pcr->num_crypto_status_qs,
-			 &pcr->seq_crypto_statusq_lock, "CRYPTO STATUS");
+	sonic_pprint_queue_tracking(&pcr->cpdc_statusq_track, "CPDC STATUS");
+	sonic_pprint_queue_tracking(&pcr->crypto_statusq_track, "CPDC STATUS");
 }
 
 void sonic_pprint_ev_lists(void)
@@ -2270,76 +2277,73 @@ void sonic_pprint_ev_lists(void)
 }
 //EXPORT_SYMBOL(sonic_pprint_ev_lists);
 
-/* Return -1 if not found */
-static inline int
-sonic_find_next_zero_id(unsigned long *bmp, unsigned int max, spinlock_t *lock,
-			int *next_free_id)
+static inline struct queue *
+sonic_find_statusq(struct queue_tracking *track,
+		   struct queue *q_hint)
 {
+	struct queue *q;
 	int free_id;
 
-	spin_lock(lock);
+	spin_lock(&track->lock);
+	if (q_hint) {
+		q_hint->ref_count++;
+		spin_unlock(&track->lock);
+		return q_hint;
+	}
 
-	free_id = find_next_zero_bit(bmp, max, *next_free_id);
-	if (free_id < max)
+	free_id = find_next_zero_bit(track->bmp, track->num_queues,
+                                     track->next_free_id);
+	if (free_id < track->num_queues)
 		goto found;
 
-	free_id = find_first_zero_bit(bmp, *next_free_id);
-	if (free_id < *next_free_id)
+	free_id = find_first_zero_bit(track->bmp, track->next_free_id);
+	if (free_id < track->next_free_id)
 		goto found;
 
-	spin_unlock(lock);
-	return -1;
+	spin_unlock(&track->lock);
+	return NULL;
 
 found:
-	set_bit(free_id, bmp);
-	*next_free_id = free_id + 1;
-	spin_unlock(lock);
-	return free_id;
+	q = &track->queues[free_id];
+	OSAL_ASSERT(q->qpos == free_id);
+	q->ref_count = 1;
+	set_bit(free_id, track->bmp);
+	track->next_free_id = free_id + 1;
+	spin_unlock(&track->lock);
+	return q;
 }
 
+// 'ret_q_hint' is an in/out argument; when received with non-NULL it provides
+// a hint to facilitate status queue sharing.
 int
 sonic_get_seq_statusq(struct lif *lif, enum sonic_queue_type sonic_qtype,
-		struct queue **q)
+		struct queue **ret_q_hint)
 {
 	int err = -EAGAIN;
-	int free_qid = -1;
-	struct per_core_resource *pc_res = NULL;
-
-	*q = NULL;
+	struct per_core_resource *pc_res;
 
 	pc_res = sonic_get_per_core_res(lif);
 	if (pc_res == NULL)
 		return err;
 
-	//TODO - Change MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES to actual value
 	switch (sonic_qtype) {
 	case SONIC_QTYPE_CPDC_STATUS:
-		free_qid = sonic_find_next_zero_id(pc_res->cpdc_seq_status_qs_bmp,
-						   pc_res->num_cpdc_status_qs,
-						   &pc_res->seq_cpdc_statusq_lock,
-						   &pc_res->next_cpdc_statusq_id);
-		if (free_qid >= 0) {
-			*q = &pc_res->cpdc_seq_status_qs[free_qid];
-		}
+		*ret_q_hint = sonic_find_statusq(&pc_res->cpdc_statusq_track,
+						 *ret_q_hint);
 		break;
 	case SONIC_QTYPE_CRYPTO_STATUS:
-		free_qid = sonic_find_next_zero_id(pc_res->crypto_seq_status_qs_bmp,
-						   pc_res->num_crypto_status_qs,
-						   &pc_res->seq_crypto_statusq_lock,
-						   &pc_res->next_crypto_statusq_id);
-		if (free_qid >= 0) {
-			*q = &pc_res->crypto_seq_status_qs[free_qid];
-		}
+		*ret_q_hint = sonic_find_statusq(&pc_res->crypto_statusq_track,
+						 *ret_q_hint);
 		break;
 	default:
+		*ret_q_hint = NULL;
 		err = -EPERM;
 		break;
 	}
 
-	if (free_qid < 0)
+	if (*ret_q_hint == NULL)
 		return err;
 
-	OSAL_ASSERT((*q)->qpos == free_qid);
 	return 0;
 }
 
@@ -2347,31 +2351,27 @@ void
 sonic_put_seq_statusq(struct queue *q)
 {
 	struct per_core_resource *pc_res;
-	spinlock_t *lock;
-	unsigned long *bmp;
-	unsigned int max = 0;
+	struct queue_tracking *track = NULL;
 
 	if (q) {
 		pc_res = q->pc_res;
 		switch (q->qgroup) {
 		case STORAGE_SEQ_QGROUP_CPDC_STATUS:
-			bmp = pc_res->cpdc_seq_status_qs_bmp;
-			max = pc_res->num_cpdc_status_qs;
-			lock = &pc_res->seq_cpdc_statusq_lock;
+			track = &pc_res->cpdc_statusq_track;
 			break;
 		case STORAGE_SEQ_QGROUP_CRYPTO_STATUS:
-			bmp = pc_res->crypto_seq_status_qs_bmp;
-			max = pc_res->num_crypto_status_qs;
-			lock = &pc_res->seq_crypto_statusq_lock;
+			track = &pc_res->crypto_statusq_track;
 			break;
 		default:
 			return;
 			break;
 		}
 
-		spin_lock(lock);
-		clear_bit(q->qpos, bmp);
-		spin_unlock(lock);
+		spin_lock(&track->lock);
+		OSAL_ASSERT(q->ref_count);
+		if (--q->ref_count == 0)
+			clear_bit(q->qpos, track->bmp);
+		spin_unlock(&track->lock);
 	}
 }
 

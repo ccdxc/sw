@@ -341,6 +341,7 @@ static int sonic_q_list_init(struct queue *q)
 	unsigned int i;
 
 	q->admin_head = q->admin_tail = q->admin_info;
+	q->ref_count = 0;
 	osal_atomic_init(&q->descs_inuse, 0);
 
 	cur = q->admin_info;
@@ -455,16 +456,13 @@ static int sonic_seq_q_give(struct queue *q, uint32_t count)
 	switch (q->qgroup) {
 	case STORAGE_SEQ_QGROUP_CPDC:
 	case STORAGE_SEQ_QGROUP_CRYPTO:
+	case STORAGE_SEQ_QGROUP_CPDC_STATUS:
+	case STORAGE_SEQ_QGROUP_CRYPTO_STATUS:
 		err =  sonic_accounting_atomic_give(&q->descs_inuse,
 						    count);
 		break;
 
 	default:
-		/*
-		 * Not necessary to account for statusQ descs as the
-		 * queues themselves are managed with "get/put" and
-		 * each queue only posts 1 descriptor at a time.
-		 */
 		break;
 	}
 
@@ -482,16 +480,13 @@ static int sonic_seq_q_take(struct queue *q, uint32_t count)
 	switch (q->qgroup) {
 	case STORAGE_SEQ_QGROUP_CPDC:
 	case STORAGE_SEQ_QGROUP_CRYPTO:
+	case STORAGE_SEQ_QGROUP_CPDC_STATUS:
+	case STORAGE_SEQ_QGROUP_CRYPTO_STATUS:
 		err = sonic_accounting_atomic_take(&q->descs_inuse, count,
 						   q->num_descs);
 		break;
 
 	default:
-		/*
-		 * Not necessary to account for statusQ descs as the
-		 * queues themselves are managed with "get/put" and
-		 * each queue only posts 1 descriptor at a time.
-		 */
 		break;
 	}
 

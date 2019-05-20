@@ -501,6 +501,15 @@ chn_service_prev_svc_get(struct service_info *svc_info)
 }
 
 static inline bool
+chn_service_prev_svc_type_is_cpdc(const struct service_info *svc_info)
+{
+	struct service_info *svc_prev =
+		chn_service_prev_svc_get((struct service_info *)svc_info);
+
+	return svc_prev && chn_service_type_is_cpdc(svc_prev);
+}
+
+static inline bool
 chn_service_is_cp_padding_applic(const struct service_info *svc_info)
 {
 	return chn_service_type_is_cp(svc_info) &&

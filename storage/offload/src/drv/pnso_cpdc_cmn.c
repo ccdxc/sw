@@ -728,8 +728,13 @@ cpdc_update_service_info_src_sgl(struct service_info *svc_info)
 	 *
 	 * When a service is first in chain, there are no constraints
 	 * and it can use any types of SGL.
+	 *
+	 * Note also that if the parent service is not CP/DC, then
+	 * SGL modifications wouldn't be applicable so the current
+	 * service can also use any types of SGL.
 	 */
-	if (chn_service_is_starter(svc_info)) {
+	if (chn_service_is_starter(svc_info) ||
+	    !chn_service_prev_svc_type_is_cpdc(svc_info)) {
 		err = pc_res_sgl_packed_get(svc_info->si_pcr,
 				&svc_info->si_src_blist,
 				CPDC_SGL_TUPLE_LEN_MAX, MPOOL_TYPE_CPDC_SGL,

@@ -190,6 +190,9 @@ pnso_error_t seq_setup_crypto_chain(struct service_info *svc_info,
 			struct crypto_desc *desc);
 void seq_cleanup_crypto_chain(struct service_info *svc_info);
 
+pnso_error_t seq_get_statusq(struct service_info *svc_info,
+			struct queue **ret_statusq);
+
 #ifdef __cplusplus
 }
 #endif

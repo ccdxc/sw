@@ -236,6 +236,30 @@ pc_res_init(struct pc_res_init_params *pc_init, struct per_core_resource *pcr)
 	if (err)
 		goto out;
 
+	/*
+	 * Allocate shared mem_pool resources
+	 */
+	err = mpool_create(MPOOL_TYPE_SHARED_STATUS_DESC,
+		pc_init->max_seq_sq_descs * MAX_SHARED_STATUS_PER_REQ,
+		MPOOL_VEC_ELEM_SINGLE,
+		sizeof(union shared_status_desc),
+		PNSO_MEM_ALIGN_DESC,
+		&pcr->mpools[MPOOL_TYPE_SHARED_STATUS_DESC]);
+	if (err)
+		goto out;
+
+	err = mpool_create(MPOOL_TYPE_CHAIN_SGL_PDMA,
+		pc_init->max_seq_sq_descs,
+		MPOOL_VEC_ELEM_SINGLE,
+		sizeof(struct chain_sgl_pdma),
+		sizeof(struct chain_sgl_pdma),
+		&pcr->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
+	if (err)
+		goto out;
+
+	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_SHARED_STATUS_DESC]);
+	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
+
 	pas_init(&pcr->api_stats);
 
 out:
@@ -245,6 +269,9 @@ out:
 static void
 pc_res_deinit(struct per_core_resource *pcr)
 {
+	mpool_destroy(&pcr->mpools[MPOOL_TYPE_SHARED_STATUS_DESC]);
+	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
+
 	cpdc_deinit_accelerator(pcr);
 	crypto_deinit_accelerator(pcr);
 	pc_res_interm_buf_deinit(pcr);
@@ -291,17 +318,10 @@ pc_res_interm_buf_init(struct pc_res_init_params *pc_init,
 			   INTERM_BUF_NOMINAL_NUM_BUFS(),
 			   pc_init->pnso_init.block_size, PNSO_MEM_ALIGN_NONE,
 			   &pcr->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
-	if (!err)
-		err = mpool_create(MPOOL_TYPE_CHAIN_SGL_PDMA,
-			   pc_init->max_seq_sq_descs,
-			   MPOOL_VEC_ELEM_SINGLE,
-			   sizeof(struct chain_sgl_pdma),
-			   sizeof(struct chain_sgl_pdma),
-			   &pcr->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
-	if (!err) {
-		MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
-		MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
-	}
+	if (err)
+		goto out;
+
+	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
 out:
 	return err;
 }
@@ -310,7 +330,6 @@ static void
 pc_res_interm_buf_deinit(struct per_core_resource *pcr)
 {
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_RMEM_INTERM_BUF]);
-	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CHAIN_SGL_PDMA]);
 }
 
 

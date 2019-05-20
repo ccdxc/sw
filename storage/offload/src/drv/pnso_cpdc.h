@@ -14,7 +14,6 @@
 #include "sonic_dev.h"
 
 #include "pnso_api.h"
-#include "pnso_init.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -224,6 +223,11 @@ struct cpdc_status_desc {
 	uint64_t csd_integrity_data;
 	uint8_t  csd_sha[64];
 } __attribute__((__packed__));
+
+/**
+ * Forward declarations
+ */
+struct pc_res_init_params;
 
 /**
  * cpdc_init_accelerator() - creates and/or initializes internal data structures

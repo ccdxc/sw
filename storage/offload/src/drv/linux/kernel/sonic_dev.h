@@ -167,6 +167,7 @@ struct queue {
 	unsigned int pid;
 	unsigned int qpos;
 	unsigned int qtype;
+	unsigned int ref_count;
 	storage_seq_qgroup_t qgroup;
 
 	/*
@@ -194,12 +195,25 @@ struct seq_queue_batch {
 
 #define MAX_PER_CORE_CPDC_QUEUES 2
 #define MAX_PER_CORE_CRYPTO_QUEUES 2
-#define MAX_PER_QUEUE_STATUS_ENTRIES 2
+#define MAX_PER_QUEUE_STATUS_ENTRIES 4
 #define MAX_PER_QUEUE_SQ_ENTRIES 512
 #define MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES MAX_PER_QUEUE_SQ_ENTRIES
 #define MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES MAX_PER_QUEUE_SQ_ENTRIES
+#define MAX_PER_CORE_SEQ_STATUS_QUEUES			\
+	((MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES <		\
+	  MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES) ?	\
+	MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES :		\
+	MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES)
 #define SONIC_MAX_CORES (32 < OSAL_MAX_CORES ? 32 : OSAL_MAX_CORES)
 #define SONIC_DEFAULT_CORES (20 < OSAL_MAX_CORES ? 20 : OSAL_MAX_CORES)
+
+struct queue_tracking {
+	struct queue *queues;
+	DECLARE_BITMAP(bmp, MAX_PER_CORE_SEQ_STATUS_QUEUES);
+	spinlock_t lock;
+	unsigned int num_queues;
+	int next_free_id;
+};
 
 struct per_core_resource {
 	bool initialized;
@@ -209,19 +223,13 @@ struct per_core_resource {
 
 	struct queue cp_seq_q;
 	struct queue dc_seq_q;
-	int next_cpdc_statusq_id;
-	unsigned int num_cpdc_status_qs;
-	DECLARE_BITMAP(cpdc_seq_status_qs_bmp, MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES);
 	struct queue cpdc_seq_status_qs[MAX_PER_CORE_CPDC_SEQ_STATUS_QUEUES];
-	spinlock_t seq_cpdc_statusq_lock;
+	struct queue_tracking cpdc_statusq_track;
 
 	struct queue crypto_enc_seq_q;
 	struct queue crypto_dec_seq_q;
-	int next_crypto_statusq_id;
-	unsigned int num_crypto_status_qs;
-	DECLARE_BITMAP(crypto_seq_status_qs_bmp, MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES);
 	struct queue crypto_seq_status_qs[MAX_PER_CORE_CRYPTO_SEQ_STATUS_QUEUES];
-	spinlock_t seq_crypto_statusq_lock;
+	struct queue_tracking crypto_statusq_track;
 
   	struct intr intr;
 	struct sonic_event_list *evl; /* top half event list */

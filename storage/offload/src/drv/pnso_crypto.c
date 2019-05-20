@@ -25,7 +25,6 @@ deinit_mpools(struct per_core_resource *pcr)
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CRYPTO_AOL]);
-	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CRYPTO_STATUS_DESC]);
 	mpool_destroy(&pcr->mpools[MPOOL_TYPE_CRYPTO_DESC]);
 }
 
@@ -42,14 +41,6 @@ init_mpools(struct pc_res_init_params *pc_init,
 	mpool_type = MPOOL_TYPE_CRYPTO_DESC;
 	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
 				sizeof(struct crypto_desc), PNSO_MEM_ALIGN_DESC,
-				&pcr->mpools[mpool_type]);
-	if (err)
-		goto out;
-
-	mpool_type = MPOOL_TYPE_CRYPTO_STATUS_DESC;
-	err = mpool_create(mpool_type, num_objects, MPOOL_VEC_ELEM_SINGLE,
-				sizeof(struct crypto_status_desc),
-				sizeof(struct crypto_status_desc),
 				&pcr->mpools[mpool_type]);
 	if (err)
 		goto out;
@@ -93,7 +84,6 @@ init_mpools(struct pc_res_init_params *pc_init,
 		goto out;
 
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CRYPTO_DESC]);
-	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CRYPTO_STATUS_DESC]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CRYPTO_AOL]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_RMEM_INTERM_CRYPTO_STATUS]);
 	MPOOL_PPRINT(pcr->mpools[MPOOL_TYPE_CRYPTO_DESC_VECTOR]);
