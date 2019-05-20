@@ -113,4 +113,4 @@ image:
   work_dir: "/sw/nic"
 rebase: true
 logfiles:
-  - /usr/src/github.com/pensand/sw/nic/nic_sanity_logs.tar.gz
+  - /usr/src/github.com/pensando/sw/nic/nic_sanity_logs.tar.gz

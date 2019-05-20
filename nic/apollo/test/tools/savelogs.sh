@@ -18,4 +18,5 @@ tar cvzf ${NICDIR}/nic_sanity_logs.tar.gz -P --ignore-failed-read \
     ${NICDIR}/*log* \
     ${DOLDIR}/*log* \
     ${NICDIR}/conf/gen/mpu_prog_info.json \
+    ${NICDIR}/build/x86_64/apollo//gtest_results/valgrind_apollo_scale_test_1vpc.log \
     *.log.*
