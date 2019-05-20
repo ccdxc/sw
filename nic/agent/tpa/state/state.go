@@ -2,6 +2,7 @@ package state
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -11,11 +12,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/venice/ctrler/tpm"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	agstate "github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	tpmprotos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
+	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	"github.com/pensando/sw/nic/agent/tpa/state/types"
 	tstype "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
@@ -140,39 +144,127 @@ func parsePortProto(src string) (halproto.IPProtocol, uint32, error) {
 	return proto, uint32(port), nil
 }
 
+func validateFlowExportInterval(s string) (time.Duration, error) {
+
+	interval, err := time.ParseDuration(s)
+	if err != nil {
+		return interval, fmt.Errorf("invalid interval %s", s)
+	}
+
+	if interval < time.Second {
+		return interval, fmt.Errorf("too small interval %s", s)
+	}
+
+	if interval > 24*time.Hour {
+		return interval, fmt.Errorf("too large interval %s", s)
+	}
+
+	return interval, nil
+}
+
+func validateFlowExportFormat(s string) error {
+	if halproto.ExportFormat_name[int32(halproto.ExportFormat_IPFIX)] != strings.ToUpper(s) {
+		return fmt.Errorf("invalid format %s", s)
+	}
+	return nil
+}
+
+// ValidateFlowExportPolicy validates policy, called from api-server
+func ValidateFlowExportPolicy(p *monitoring.FlowExportPolicy) error {
+	spec := p.Spec
+
+	if _, err := validateFlowExportInterval(spec.Interval); err != nil {
+		return err
+	}
+
+	if err := validateFlowExportFormat(spec.Format); err != nil {
+		return err
+	}
+
+	if len(spec.MatchRules) == 0 {
+		return fmt.Errorf("no matchrules specified ")
+	}
+
+	data, err := json.Marshal(spec.MatchRules)
+	if err != nil {
+		return fmt.Errorf("failed to marshal, %v", err)
+	}
+
+	matchrules := []tsproto.MatchRule{}
+	if err := json.Unmarshal(data, &matchrules); err != nil {
+		return fmt.Errorf("failed to unmarshal, %v", err)
+	}
+
+	if err := utils.ValidateMatchRules(p.ObjectMeta, matchrules,
+		func(meta api.ObjectMeta) (*netproto.Endpoint, error) { return nil, nil }); err != nil {
+		return fmt.Errorf("error in match-rule, %v", err)
+	}
+
+	if len(spec.Exports) == 0 {
+		return fmt.Errorf("no collectors configured")
+	}
+
+	if len(spec.Exports) > tpm.MaxCollectorPerPolicy {
+		return fmt.Errorf("cannot configure more than %d collectors", tpm.MaxCollectorPerPolicy)
+	}
+
+	for _, export := range spec.Exports {
+		dest := export.Destination
+		if dest == "" {
+			return fmt.Errorf("destination is empty")
+		}
+
+		netIP, _, err := net.ParseCIDR(dest)
+		if err == nil {
+			dest = netIP.String()
+		} else {
+			netIP = net.ParseIP(dest)
+		}
+
+		if netIP == nil {
+			// treat it as hostname and resolve
+			s, err := net.LookupHost(dest)
+			if err != nil || len(s) == 0 {
+				return fmt.Errorf("failed to resolve name {%s}, error: %s", dest, err)
+			}
+		}
+
+		if _, _, err := parsePortProto(export.Transport); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *PolicyState) validatePolicy(p *tpmprotos.FlowExportPolicy) (map[types.CollectorKey]bool, error) {
 	if err := s.validateMeta(p); err != nil {
 		return nil, err
 	}
 	spec := p.Spec
 
-	interval, err := time.ParseDuration(spec.Interval)
+	interval, err := validateFlowExportInterval(spec.Interval)
 	if err != nil {
-		return nil, fmt.Errorf("invalid interval %s", spec.Interval)
+		return nil, err
 	}
-
-	if interval < time.Second {
-		return nil, fmt.Errorf("too small interval %s", spec.Interval)
-	}
-
-	if interval > 24*time.Hour {
-		return nil, fmt.Errorf("too large interval %s", spec.Interval)
-	}
-
-	if halproto.ExportFormat_name[int32(halproto.ExportFormat_IPFIX)] != strings.ToUpper(spec.Format) {
-		return nil, fmt.Errorf("invalid format %s", spec.Format)
+	if err := validateFlowExportFormat(spec.Format); err != nil {
+		return nil, err
 	}
 
 	if len(spec.MatchRules) == 0 {
-		return nil, fmt.Errorf("no matchrule in %s", p.Name)
+		return nil, fmt.Errorf("no matchrule specified")
 	}
 
-	if err := utils.ValidateMatchRule(p.ObjectMeta, spec.MatchRules, s.netAgent.FindEndpoint); err != nil {
-		return nil, fmt.Errorf("error in matchrule in %s, %s", p.Name, err)
+	if err := utils.ValidateMatchRules(p.ObjectMeta, spec.MatchRules, s.netAgent.FindEndpoint); err != nil {
+		return nil, fmt.Errorf("error in match-rule, %v", err)
 	}
 
 	if len(spec.Exports) == 0 {
-		return nil, fmt.Errorf("exports can't be empty")
+		return nil, fmt.Errorf("no collectors configured")
+	}
+
+	if len(spec.Exports) > tpm.MaxCollectorPerPolicy {
+		return nil, fmt.Errorf("cannot configure more than %d collectors", tpm.MaxCollectorPerPolicy)
 	}
 
 	// get vrf

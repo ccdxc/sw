@@ -18,11 +18,11 @@ import (
 // ErrInvalidFlowMonitorRule error code is returned when flow monitor rule is invalid
 var ErrInvalidFlowMonitorRule = errors.New("Flow monitor rule is incorrect")
 
-// ValidateMatchRule validates matchrules
+// ValidateMatchRules validates matchrules
 // If all rules in the spec pass sanity check, then return true.
 // sanity check include correctness of IPaddr string, mac addr string,
 // application selectors
-func ValidateMatchRule(objMeta api.ObjectMeta, matchRules []tsproto.MatchRule, findEndpoint func(api.ObjectMeta) (*netproto.Endpoint, error)) error {
+func ValidateMatchRules(objMeta api.ObjectMeta, matchRules []tsproto.MatchRule, findEndpoint func(api.ObjectMeta) (*netproto.Endpoint, error)) error {
 	for _, rule := range matchRules {
 		srcSelectors := rule.Src
 		destSelectors := rule.Dst

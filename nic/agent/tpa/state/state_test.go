@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pensando/sw/venice/globals"
+
 	"github.com/golang/mock/gomock"
 	"golang.org/x/net/context"
 
@@ -16,7 +18,7 @@ import (
 	agstate "github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/netagent/state/dependencies"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	tpmprotos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
+	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/nic/agent/protos/tsproto"
 	mockdatapath "github.com/pensando/sw/nic/agent/tpa/datapath"
 	"github.com/pensando/sw/nic/agent/tpa/state/types"
@@ -210,7 +212,7 @@ func TestFindNumExports(t *testing.T) {
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, s)
 
-	for i := 1; i <= 8; i++ {
+	for i := 1; i <= 9; i++ {
 		spec := tpmprotos.FlowExportPolicy{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%d", i), Tenant: "default", Namespace: "default"},
@@ -239,20 +241,16 @@ func TestFindNumExports(t *testing.T) {
 						Destination: fmt.Sprintf("192.168.4.%d", i+1),
 						Transport:   "TCP/1234",
 					},
-					{
-						Destination: fmt.Sprintf("192.168.4.%d", i),
-						Transport:   "TCP/1234",
-					},
 				},
 			},
 		}
 
 		err := s.CreateFlowExportPolicy(context.Background(), &spec)
 
-		if i <= 7 {
+		if i <= 8 {
 			tu.AssertOk(t, err, fmt.Sprintf("failed to find num exports, %s", err))
 		} else {
-			// > 8
+			// > 9
 			tu.Assert(t, err != nil, fmt.Sprintf("didn't fail for max collectors"))
 		}
 
@@ -262,10 +260,10 @@ func TestFindNumExports(t *testing.T) {
 		pctx.collectorTable, _ = pctx.readCollectorTable()
 		num := pctx.findNumCollectors()
 
-		if i <= 7 {
-			tu.Assert(t, num == 2*i+1, fmt.Sprintf("invalid num exports, require %d got %d", 2*i+1, num))
+		if i <= 8 {
+			tu.Assert(t, num == 2*i, fmt.Sprintf("invalid num exports, require %d got %d", 2*i, num))
 		} else {
-			tu.Assert(t, num == 2*(i-1)+1, fmt.Sprintf("invalid num exports, require %d got %d", 2*(i-1)+1, num))
+			tu.Assert(t, num == 2*(i-1), fmt.Sprintf("invalid num exports, require %d got %d", 2*(i-1), num))
 		}
 	}
 }
@@ -1343,14 +1341,6 @@ func TestPolicyOps(t *testing.T) {
 					Destination: fmt.Sprintf("192.168.3.12"),
 					Transport:   "UDP/1234",
 				},
-				{
-					Destination: fmt.Sprintf("192.168.3.13"),
-					Transport:   "UDP/1234",
-				},
-				{
-					Destination: fmt.Sprintf("192.168.3.14"),
-					Transport:   "UDP/1234",
-				},
 			},
 		},
 	}
@@ -1381,7 +1371,7 @@ func TestPolicyOps(t *testing.T) {
 		},
 	}
 
-	halMock.EXPECT().CollectorDelete(gomock.Any(), gomock.Any()).Return(collDelResp, nil).Times(4)
+	halMock.EXPECT().CollectorDelete(gomock.Any(), gomock.Any()).Return(collDelResp, nil).Times(3)
 	halMock.EXPECT().FlowMonitorRuleDelete(gomock.Any(), gomock.Any()).Return(flowDelResp, nil).Times(9)
 
 	err = s.DeleteFlowExportPolicy(context.Background(), pol)
@@ -1392,7 +1382,7 @@ func TestPolicyOps(t *testing.T) {
 	tu.Assert(t, err != nil, "deleted non-existing policy")
 
 	// rule overlap
-	halMock.EXPECT().CollectorCreate(gomock.Any(), gomock.Any()).Return(collResp, nil).Times(4)
+	halMock.EXPECT().CollectorCreate(gomock.Any(), gomock.Any()).Return(collResp, nil).Times(1)
 	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).Times(9)
 
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
@@ -1419,16 +1409,9 @@ func TestPolicyOps(t *testing.T) {
 				},
 			},
 			Exports: []monitoring.ExportConfig{
-				{
-					Destination: fmt.Sprintf("192.168.3.11"),
-					Transport:   "UDP/1234",
-				},
+
 				{
 					Destination: fmt.Sprintf("192.168.3.12"),
-					Transport:   "UDP/1234",
-				},
-				{
-					Destination: fmt.Sprintf("192.168.3.13"),
 					Transport:   "UDP/1234",
 				},
 				{
@@ -2258,4 +2241,308 @@ func TestMatchRule(t *testing.T) {
 	tu.Assert(t, len(pdebug.Collectors) == 0, "mismatch in collectors", pdebug.Collectors)
 	tu.Assert(t, len(dbgInfo.CollectorTable) == 0, "invalid collectors", dbgInfo.CollectorTable)
 	tu.Assert(t, len(dbgInfo.FlowRuleTable) == 0, "invalid num of flows", dbgInfo.FlowRuleTable)
+}
+
+func TestValidateFlowExportPolicy(t *testing.T) {
+	testFlowExpSpecList := []struct {
+		name   string
+		policy monitoring.FlowExportPolicy
+		fail   bool
+	}{
+		{
+			name: "invalid protocol",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      globals.DefaultTenant,
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval: "15s",
+					Format:   "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "IP/1234",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid interval",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      globals.DefaultTenant,
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval: "155",
+					Format:   "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "TCP/1234",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid format",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      globals.DefaultTenant,
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval: "15s",
+					Format:   "NETFLOW",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "TCP/1234",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "invalid match rule",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      globals.DefaultTenant,
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					Interval: "15s",
+					Format:   "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "TCP/1234",
+						},
+					},
+				},
+			},
+		},
+
+		{
+			name: "invalid collector",
+			fail: true,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      globals.DefaultTenant,
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval: "15s",
+					Format:   "IPFIX",
+				},
+			},
+		},
+
+		{
+			name: "valid policy",
+			fail: false,
+			policy: monitoring.FlowExportPolicy{
+				TypeMeta: api.TypeMeta{
+					Kind: "flowExportPolicy",
+				},
+				ObjectMeta: api.ObjectMeta{
+					Namespace: globals.DefaultNamespace,
+					Name:      globals.DefaultTenant,
+					Tenant:    globals.DefaultTenant,
+				},
+
+				Spec: monitoring.FlowExportPolicySpec{
+					MatchRules: []monitoring.MatchRule{
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.1"},
+							},
+
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.1.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1000"},
+							},
+						},
+
+						{
+							Src: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.1"},
+							},
+							Dst: &monitoring.MatchSelector{
+								IPAddresses: []string{"1.1.2.2"},
+							},
+							AppProtoSel: &monitoring.AppProtoSelector{
+								ProtoPorts: []string{"TCP/1010"},
+							},
+						},
+					},
+
+					Interval: "15s",
+					Format:   "IPFIX",
+					Exports: []monitoring.ExportConfig{
+						{
+							Destination: "10.1.1.100",
+							Transport:   "TCP/1234",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for i := range testFlowExpSpecList {
+		err := ValidateFlowExportPolicy(&testFlowExpSpecList[i].policy)
+
+		if testFlowExpSpecList[i].fail == true {
+			t.Logf(fmt.Sprintf("test [%v] returned %v", testFlowExpSpecList[i].name, err))
+			tu.Assert(t, err != nil, "test [%v] returned %v", testFlowExpSpecList[i].name, err)
+		} else {
+			t.Log(fmt.Sprintf("test [%v] returned %v", testFlowExpSpecList[i].name, err))
+			tu.AssertOk(t, err, "test [%v] returned %v", testFlowExpSpecList[i].name, err)
+		}
+	}
 }

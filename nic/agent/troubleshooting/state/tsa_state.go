@@ -1166,7 +1166,7 @@ func (tsa *Tagent) createPacketCaptureSessionProtoObjs(mirrorSession *tsproto.Mi
 	if len(mirrorSession.Spec.MatchRules) > 0 {
 		dropMonitor = false
 	}
-	if err := utils.ValidateMatchRule(mirrorSession.ObjectMeta, mirrorSession.Spec.MatchRules, nAgent.FindEndpoint); err != nil && !dropMonitor {
+	if err := utils.ValidateMatchRules(mirrorSession.ObjectMeta, mirrorSession.Spec.MatchRules, nAgent.FindEndpoint); err != nil && !dropMonitor {
 		// Rule santy check failed.
 		log.Errorf("Neither drop rule nor match selector rules specified in mirror spec, err:%s", err)
 		return nil, ErrInvalidMirrorSpec

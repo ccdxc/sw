@@ -4,26 +4,28 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
-	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/venice/ctrler/tpm"
-
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
+	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/globals"
 )
 
 var _ = Describe("flow export policy tests", func() {
 	Context("flow export policy CRUD tests", func() {
 		var flowExpClient monitoring.MonitoringV1FlowExportPolicyInterface
-		var ctx context.Context
 
 		AfterEach(func() {
+			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			ctx := ts.tu.NewLoggedInContext(pctx)
+
 			By("cleanup flow export policy")
 			if testFlowExpSpecList, err := flowExpClient.List(ctx, &api.ListWatchOptions{}); err == nil {
 				for i := range testFlowExpSpecList {
@@ -34,7 +36,10 @@ var _ = Describe("flow export policy tests", func() {
 		})
 
 		BeforeEach(func() {
-			ctx = ts.tu.NewLoggedInContext(context.Background())
+			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			ctx := ts.tu.NewLoggedInContext(pctx)
+
 			apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 			restSvc, err := apiclient.NewRestAPIClient(apiGwAddr)
 			Expect(err).ShouldNot(HaveOccurred())
@@ -51,6 +56,9 @@ var _ = Describe("flow export policy tests", func() {
 		})
 
 		It("Should create/update/delete flow export policy", func() {
+			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			ctx := ts.tu.NewLoggedInContext(pctx)
 
 			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxPolicyPerVrf)
 
@@ -222,6 +230,317 @@ var _ = Describe("flow export policy tests", func() {
 				}
 				return nil
 			}, 120, 2).Should(BeNil(), "failed to verify flow export policy")
+		})
+
+		It("validate flow export policy", func() {
+			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+			defer cancel()
+			ctx := ts.tu.NewLoggedInContext(pctx)
+
+			testFlowExpSpecList := []struct {
+				name   string
+				policy monitoring.FlowExportPolicy
+				fail   bool
+			}{
+				{
+					name: "empty collector",
+					fail: true,
+					policy: monitoring.FlowExportPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "flowExportPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+
+						Spec: monitoring.FlowExportPolicySpec{
+							MatchRules: []monitoring.MatchRule{
+								{
+									Src: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.1.1"},
+									},
+
+									Dst: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.1.2"},
+									},
+									AppProtoSel: &monitoring.AppProtoSelector{
+										ProtoPorts: []string{"TCP/1000"},
+									},
+								},
+
+								{
+									Src: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.2.1"},
+									},
+									Dst: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.2.2"},
+									},
+									AppProtoSel: &monitoring.AppProtoSelector{
+										ProtoPorts: []string{"TCP/1010"},
+									},
+								},
+							},
+
+							Interval: "15s",
+							Format:   "IPFIX",
+							Exports:  []monitoring.ExportConfig{},
+						},
+					},
+				},
+				{
+
+					name: "large interval",
+					fail: true,
+					policy: monitoring.FlowExportPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "flowExportPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+
+						Spec: monitoring.FlowExportPolicySpec{
+							MatchRules: []monitoring.MatchRule{
+								{
+									Src: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.1.1"},
+									},
+
+									Dst: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.1.2"},
+									},
+									AppProtoSel: &monitoring.AppProtoSelector{
+										ProtoPorts: []string{"TCP/1000"},
+									},
+								},
+
+								{
+									Src: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.2.1"},
+									},
+									Dst: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.2.2"},
+									},
+									AppProtoSel: &monitoring.AppProtoSelector{
+										ProtoPorts: []string{"TCP/1010"},
+									},
+								},
+							},
+
+							Interval: "25h",
+							Format:   "IPFIX",
+							Exports: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.1",
+									Transport:   "TCP/5055",
+								},
+							},
+						},
+					},
+				},
+				{
+
+					name: "small interval",
+					fail: true,
+					policy: monitoring.FlowExportPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "flowExportPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+
+						Spec: monitoring.FlowExportPolicySpec{
+							MatchRules: []monitoring.MatchRule{
+								{
+									Src: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.1.1"},
+									},
+
+									Dst: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.1.2"},
+									},
+									AppProtoSel: &monitoring.AppProtoSelector{
+										ProtoPorts: []string{"TCP/1000"},
+									},
+								},
+
+								{
+									Src: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.2.1"},
+									},
+									Dst: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.2.2"},
+									},
+									AppProtoSel: &monitoring.AppProtoSelector{
+										ProtoPorts: []string{"TCP/1010"},
+									},
+								},
+							},
+
+							Interval: "10ms",
+							Format:   "IPFIX",
+							Exports: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.1",
+									Transport:   "TCP/5055",
+								},
+							},
+						},
+					},
+				},
+
+				{
+
+					name: "invalid interval",
+					fail: true,
+					policy: monitoring.FlowExportPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "flowExportPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+
+						Spec: monitoring.FlowExportPolicySpec{
+							MatchRules: []monitoring.MatchRule{
+								{
+									Src: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.1.1"},
+									},
+
+									Dst: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.1.2"},
+									},
+									AppProtoSel: &monitoring.AppProtoSelector{
+										ProtoPorts: []string{"TCP/1000"},
+									},
+								},
+
+								{
+									Src: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.2.1"},
+									},
+									Dst: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.2.2"},
+									},
+									AppProtoSel: &monitoring.AppProtoSelector{
+										ProtoPorts: []string{"TCP/1010"},
+									},
+								},
+							},
+
+							Interval: "1000",
+							Format:   "IPFIX",
+							Exports: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.1",
+									Transport:   "TCP/5055",
+								},
+							},
+						},
+					},
+				},
+
+				{
+					name: "invalid format",
+					fail: true,
+					policy: monitoring.FlowExportPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "flowExportPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+
+						Spec: monitoring.FlowExportPolicySpec{
+							MatchRules: []monitoring.MatchRule{
+								{
+									Src: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.1.1"},
+									},
+
+									Dst: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.1.2"},
+									},
+									AppProtoSel: &monitoring.AppProtoSelector{
+										ProtoPorts: []string{"TCP/1000"},
+									},
+								},
+
+								{
+									Src: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.2.1"},
+									},
+									Dst: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.2.2"},
+									},
+									AppProtoSel: &monitoring.AppProtoSelector{
+										ProtoPorts: []string{"TCP/1010"},
+									},
+								},
+							},
+
+							Interval: "10s",
+							Format:   "NETFLOW",
+							Exports: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.1",
+									Transport:   "TCP/5055",
+								},
+							},
+						},
+					},
+				},
+
+				{
+					name: "no match-rule",
+					fail: true,
+					policy: monitoring.FlowExportPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "flowExportPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+
+						Spec: monitoring.FlowExportPolicySpec{
+							Interval: "10s",
+							Format:   "NETFLOW",
+							Exports: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.1",
+									Transport:   "TCP/5055",
+								},
+							},
+						},
+					},
+				},
+			}
+
+			for i := range testFlowExpSpecList {
+				_, err := flowExpClient.Create(ctx, &testFlowExpSpecList[i].policy)
+				if testFlowExpSpecList[i].fail == true {
+					By(fmt.Sprintf("test [%v] returned %v", testFlowExpSpecList[i].name, err))
+					Expect(err).ShouldNot(BeNil())
+				} else {
+					By(fmt.Sprintf("test [%v] returned %v", testFlowExpSpecList[i].name, err))
+					Expect(err).Should(BeNil())
+				}
+			}
+
 		})
 	})
 })
