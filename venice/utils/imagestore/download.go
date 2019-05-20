@@ -15,20 +15,22 @@ import (
 )
 
 const (
-	veniceImageName = "venice.tgz"
-	naplesImageName = "naples_fw.tar"
-	bucketName      = "images"
+	veniceImageName   = "venice.tgz"
+	naplesImageName   = "naples_fw.tar"
+	veniceOSImageName = "venice_appl_os.tgz"
+	metadataName      = "metadata.json"
+	bucketName        = "images"
 )
 
 // DownloadNaplesImage downloads naples image from minio
-func DownloadNaplesImage(ctx context.Context, resolver resolver.Interface, version string) error {
+func DownloadNaplesImage(ctx context.Context, resolver resolver.Interface, version string, destFileName string) error {
 	if version == "" {
 		log.Errorf("Version is needed to download a naples image from objstore")
 		return fmt.Errorf("Version is needed to download a naples image from objstore")
 	}
 
 	objectStoreFileName := "Naples/" + version + "_img/" + naplesImageName
-	return downloadImage(ctx, resolver, objectStoreFileName, "/update/naples_fw.tar")
+	return downloadImage(ctx, resolver, objectStoreFileName, destFileName)
 }
 
 // DownloadVeniceImage downloads a venice image from minio
@@ -40,7 +42,31 @@ func DownloadVeniceImage(ctx context.Context, resolver resolver.Interface, versi
 	}
 
 	objectStoreFileName := "Venice/" + version + "_img/" + veniceImageName
-	return downloadImage(ctx, resolver, objectStoreFileName, "venice.tgz")
+	return downloadImage(ctx, resolver, objectStoreFileName, veniceImageName)
+}
+
+// DownloadMetadataFile downloads a metadata.json from minio
+func DownloadMetadataFile(ctx context.Context, resolver resolver.Interface, version string) error {
+
+	if version == "" {
+		log.Errorf("Version is needed to download a metadata.json from objstore")
+		return fmt.Errorf("Version is needed to download a metadata.json from objstore")
+	}
+
+	objectStoreFileName := "Bundle/" + version + "_img/" + metadataName
+	return downloadImage(ctx, resolver, objectStoreFileName, metadataName)
+}
+
+// DownloadVeniceOSImage downloads a venice appliance OS image from minio
+func DownloadVeniceOSImage(ctx context.Context, resolver resolver.Interface, version string) error {
+
+	if version == "" {
+		log.Errorf("Version is needed to download a venice appliance image from objstore")
+		return fmt.Errorf("Version is needed to download a venice appliance image from objstore")
+	}
+
+	objectStoreFileName := "veniceOS/" + version + "_img/" + veniceOSImageName
+	return downloadImage(ctx, resolver, objectStoreFileName, veniceOSImageName)
 }
 
 func downloadImage(ctx context.Context, resolver resolver.Interface, name string, outFile string) error {

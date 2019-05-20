@@ -127,7 +127,7 @@ func (n *NMD) issueNextPendingOp() {
 		if err != nil {
 			log.Errorf("Failed to get naples version from objectstore %+v", err)
 		}
-		err = imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, naplesVersion)
+		err = imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, naplesVersion, "/update/naples_fw.tar")
 		if err != nil {
 			log.Errorf("Failed to download naples image from objectstore %+v", err)
 		}
@@ -142,7 +142,7 @@ func (n *NMD) issueNextPendingOp() {
 			log.Errorf("Failed to get naples version from objectstore %+v", err)
 			return
 		}
-		err = imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, naplesVersion)
+		err = imagestore.DownloadNaplesImage(context.Background(), n.resolverClient, naplesVersion, "/update/naples_fw.tar")
 		if err != nil {
 			log.Errorf("Failed to download naples image from objectstore %+v", err)
 			return

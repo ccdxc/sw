@@ -374,11 +374,12 @@
   version = "v0.2.0"
 
 [[projects]]
-  digest = "1:1943086ec3828283815b8bfe5e5cc5a63be6359946ffdc4b1349ce85a498aaff"
+  digest = "1:1bd41494cff9e2e1a525cbdc0c699218a7f8c2ab077b3ffefb8b20ac713a8af8"
   name = "github.com/coreos/go-systemd"
   packages = [
     "dbus",
     "journal",
+    "login1",
   ]
   pruneopts = "NUT"
   revision = "d2196463941895ee908e13531a23a39feb9e1243"
@@ -2601,6 +2602,7 @@
     "github.com/coreos/etcd/etcdserver/etcdserverpb",
     "github.com/coreos/etcd/integration",
     "github.com/coreos/go-systemd/dbus",
+    "github.com/coreos/go-systemd/login1",
     "github.com/cpuguy83/go-md2man",
     "github.com/davecgh/go-spew/spew",
     "github.com/deckarep/golang-set",

@@ -109,6 +109,19 @@ func GetVeniceRolloutVersion(ctx context.Context, resolver resolver.Interface, b
 	return versionMap["Venice"]["Version"], nil
 }
 
+// GetOSRolloutVersion gets Venice appliance OS image version for rollout
+func GetOSRolloutVersion(ctx context.Context, resolver resolver.Interface, bundleVersion string) (string, error) {
+
+	out := "/tmp/metadata.json"
+	err := downloadMetaFile(ctx, resolver, bundleVersion)
+	if err != nil {
+		return "", err
+	}
+	versionMap := processMetadataFile(out)
+	log.Infof("VersionMap [%v] VeniceOS version [%v]", versionMap, versionMap["veniceOS"]["Version"])
+	return versionMap["veniceOS"]["Version"], nil
+}
+
 func processMetadataFile(metadata string) map[string]map[string]string {
 	versionMap := make(map[string]map[string]string)
 

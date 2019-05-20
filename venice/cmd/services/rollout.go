@@ -126,7 +126,8 @@ func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 				veniceVersion, err = imagestore.GetVeniceRolloutVersion(context.TODO(), env.ResolverClient, opSpec.Version)
 				if err != nil {
 					log.Errorf("Failed to get veniceVersion from objectStore %+v", err)
-					continue
+					veniceVersion = opSpec.Version
+					//continue
 				}
 			}
 			cmdVersion := utils.GetGitVersion()

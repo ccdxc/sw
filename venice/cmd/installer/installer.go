@@ -12,6 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/coreos/go-systemd/login1"
+
+	"github.com/pensando/sw/venice/cmd/utils"
+
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/imagestore"
@@ -44,14 +48,105 @@ func copyFileContents(src, dst string) (err error) {
 
 const (
 	installerTmpDir       = globals.RuntimeDir + "/installer"
-	tmpImageFileName      = "venice.tgz"
+	veniceImageName       = "venice.tgz"
+	naplesImageName       = "naples_fw.tar"
+	veniceOSImageName     = "venice_appl_os.tgz"
+	metadataFileName      = "metadata.json"
 	installerMetaFileName = "venice-install.json"
-	maxIters              = 10
+	applInstallScriptName = "venice_appl_GrubEntry.sh"
+
+	maxIters = 10
 )
+
+var appliance bool
+
+// DownloadApplianceImages downloads an images(veniceOs and venice) from minio and returns error, if any
+func DownloadApplianceImages(version string) error {
+
+	osVersion, err := imagestore.GetOSRolloutVersion(context.Background(), env.ResolverClient, version)
+	if err != nil {
+		log.Errorf("Failed to obtain appliance os image %#v", err)
+		return err
+	}
+
+	if err := imagestore.DownloadVeniceOSImage(context.Background(), env.ResolverClient, osVersion); err != nil {
+		return fmt.Errorf("Error %s during os image download of version %s", err, osVersion)
+	}
+
+	if err := os.RemoveAll(installerTmpDir); err != nil {
+		return fmt.Errorf("Error %s during removeAll of %s", err, installerTmpDir)
+	}
+
+	if err := os.MkdirAll(installerTmpDir, 0700); err != nil {
+		return fmt.Errorf("Error %s during mkdirAll of %s", err, installerTmpDir)
+	}
+
+	if err := copyFileContents(veniceOSImageName, installerTmpDir+"/"+veniceOSImageName); err != nil {
+		return fmt.Errorf("Error %s during DownloadOSImage.copyFileContents", err)
+	}
+
+	veniceVersion, err := imagestore.GetVeniceRolloutVersion(context.Background(), env.ResolverClient, version)
+	if err != nil {
+		log.Errorf("Failed to obtain venice image %#v", err)
+		return err
+	}
+
+	if err := imagestore.DownloadVeniceImage(context.Background(), env.ResolverClient, veniceVersion); err != nil {
+		return fmt.Errorf("Error %s during image download of version %s", err, veniceVersion)
+	}
+
+	if err := copyFileContents(veniceImageName, installerTmpDir+"/"+veniceImageName); err != nil {
+		return fmt.Errorf("Error %s during DownloadOSImage.copyFileContents", err)
+	}
+	naplesVersion, err := imagestore.GetNaplesRolloutVersion(context.Background(), env.ResolverClient, version)
+	if err != nil {
+		log.Errorf("Failed to obtain naples image %#v", err)
+		return err
+	}
+
+	if err := imagestore.DownloadNaplesImage(context.Background(), env.ResolverClient, naplesVersion, naplesImageName); err != nil {
+		return fmt.Errorf("Error %s during image download of version %s", err, naplesVersion)
+	}
+
+	if err := copyFileContents(naplesImageName, installerTmpDir+"/"+naplesImageName); err != nil {
+		return fmt.Errorf("Error %s during DownloadOSImage.copyFileContents", err)
+	}
+
+	if err := imagestore.DownloadMetadataFile(context.Background(), env.ResolverClient, version); err != nil {
+		return fmt.Errorf("Error %s during image download of version %s", err, version)
+	}
+
+	if err := copyFileContents(metadataFileName, installerTmpDir+"/"+metadataFileName); err != nil {
+		return fmt.Errorf("Error %s during DownloadOSImage.copyFileContents", err)
+	}
+
+	return nil
+}
+
+// DoAppliancePreCheck upgrade appliance
+func DoAppliancePreCheck(version string) error {
+	err := DownloadApplianceImages(version)
+	if err != nil {
+		return fmt.Errorf("DownloadImage version %s returned %v", version, err)
+	}
+
+	log.Debugf("About to Preload image")
+	err = PreLoadVeniceOSImage()
+	if err != nil {
+		return fmt.Errorf("PreloadVeniceOSImage version %s returned  %v", version, err)
+	}
+	return nil
+}
 
 // PreCheck installation of given version
 func PreCheck(version string) error {
-	log.Debugf("About to download image")
+	log.Infof("About to download image")
+
+	if utils.IsRunningOnVeniceAppl() {
+		log.Infof("Performing appliance upgrade")
+		return DoAppliancePreCheck(version)
+	}
+
 	imageName, err := DownloadImage(version)
 	if err != nil {
 		return fmt.Errorf("DownloadImage version %s name %s returned %v", version, imageName, err)
@@ -74,7 +169,9 @@ func PreCheck(version string) error {
 // RunVersion is called after PreCheck to actually load and run a given version
 func RunVersion(version string) error {
 	// TODO: check the version as needed
-
+	if utils.IsRunningOnVeniceAppl() {
+		return LoadAndInstallVeniceOSImage()
+	}
 	err := LoadAndInstallImage()
 	Cleanup()
 	return err
@@ -99,10 +196,10 @@ func DownloadImage(version string) (string, error) {
 	if err := os.MkdirAll(installerTmpDir, 0700); err != nil {
 		return "", fmt.Errorf("Error %s during mkdirAll of %s", err, installerTmpDir)
 	}
-	if err := copyFileContents(tmpImageFileName, installerTmpDir+"/"+tmpImageFileName); err != nil {
+	if err := copyFileContents(veniceImageName, installerTmpDir+"/"+veniceImageName); err != nil {
 		return "", fmt.Errorf("Error %s during DownloadImage.copyFileContents", err)
 	}
-	return installerTmpDir + "/" + tmpImageFileName, nil
+	return installerTmpDir + "/" + veniceImageName, nil
 }
 
 // ExtractImage takes a locally downloaded image and extracts the contents
@@ -228,6 +325,40 @@ func PreLoadImage() error {
 		return err
 	}
 
+	return err
+}
+
+//PreLoadVeniceOSImage installs the venice appliance packages
+func PreLoadVeniceOSImage() error {
+
+	cmd := exec.Command(applInstallScriptName, "-p", installerTmpDir)
+	if err := cmd.Run(); err != nil {
+		errStr := fmt.Sprintf("Installation failed at running the script %#v with err %s", applInstallScriptName, err)
+		return errors.New(errStr)
+	}
+	return nil
+}
+
+// LoadAndInstallVeniceOSImage does the loading/installation of various components as mentioned in venice-install.json
+func LoadAndInstallVeniceOSImage() error {
+
+	var err error
+
+	cmd := exec.Command(applInstallScriptName, "-u", installerTmpDir)
+	if err = cmd.Run(); err != nil {
+		errStr := fmt.Sprintf("Installation failed at running the script %#v with err %s", applInstallScriptName, err)
+		return errors.New(errStr)
+	}
+	//Reboot OS
+
+	loginConnection, err := login1.New()
+	if err != nil {
+		errStr := fmt.Sprintf("Installation failed to reboot host with err %s", err)
+		return errors.New(errStr)
+	}
+	log.Errorf("Going to reboot...")
+	time.Sleep(10 * time.Second)
+	loginConnection.Reboot(false)
 	return err
 }
 
