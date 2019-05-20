@@ -291,7 +291,7 @@ inline void workflow_neg_2(seed_T *seed) {
     MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-// WF_N_3: Read NonEx - [ Delete NonExMax ]
+// WF_N_3: Read NonEx - [ Delete NonExMax ] - [ Update NonExMax ] - Read
 template <typename class_T, typename seed_T>
 inline void workflow_neg_3(seed_T *seed) {
     // trigger
@@ -302,6 +302,14 @@ inline void workflow_neg_3(seed_T *seed) {
     MANY_DELETE(seed);
     batch_commit_fail();
     batch_abort();
+
+    // trigger
+    batch_start();
+    MANY_UPDATE(seed);
+    batch_commit_fail();
+    batch_abort();
+
+    MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 // WF_N_4: [ Create Set1 ] - Read - [ Delete Set1, Set2 ] - Read
@@ -357,21 +365,9 @@ inline void workflow_neg_5(seed_T *seed1, seed_T *seed1A) {
     MANY_READ_FAIL(seed1, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
-// WF_N_6: [ Update SetMax ] - Read
-template <typename class_T, typename seed_T>
-inline void workflow_neg_6(seed_T *seed) {
-    // trigger
-    batch_start();
-    MANY_UPDATE(seed);
-    batch_commit_fail();
-    batch_abort();
-
-    MANY_READ_FAIL(seed, sdk::SDK_RET_ENTRY_NOT_FOUND);
-}
-
 // WF_N_7: [ Create SetMax ] - Read - [ Update SetMax + 1 ] - Read
 template <typename class_T, typename seed_T>
-inline void workflow_neg_7(seed_T *seed1, seed_T *seed1A) {
+inline void workflow_neg_6(seed_T *seed1, seed_T *seed1A) {
     // trigger
     batch_start();
     MANY_CREATE(seed1);
@@ -396,7 +392,7 @@ inline void workflow_neg_7(seed_T *seed1, seed_T *seed1A) {
 
 // WF_N_8: [ Create Set1 ] - Read - [ Update Set1 - Update Set2 ] - Read
 template <typename class_T, typename seed_T>
-inline void workflow_neg_8(seed_T *seed1, seed_T *seed1A, seed_T *seed2) {
+inline void workflow_neg_7(seed_T *seed1, seed_T *seed1A, seed_T *seed2) {
     // trigger
     batch_start();
     MANY_CREATE(seed1);
@@ -422,7 +418,7 @@ inline void workflow_neg_8(seed_T *seed1, seed_T *seed1A, seed_T *seed2) {
 
 // WF_N_9: [ Create Set1 ] - Read - [ Delete Set1 - Update Set2 ] - Read
 template <typename class_T, typename seed_T>
-inline void workflow_neg_9(seed_T *seed1, seed_T *seed2) {
+inline void workflow_neg_8(seed_T *seed1, seed_T *seed2) {
     // trigger
     batch_start();
     MANY_CREATE(seed1);

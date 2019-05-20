@@ -240,15 +240,6 @@ TEST_F(tep_test, DISABLED_tep_workflow_neg_5) {
 
 /// \brief TEP WF_N_6
 TEST_F(tep_test, tep_workflow_neg_6) {
-    tep_stepper_seed_t seed = {};
-
-    TEP_SEED_INIT(k_max_tep, "150.150.1.1", PDS_TEP_TYPE_WORKLOAD,
-                  k_mplsoudp_encap, k_nat, &seed);
-    workflow_neg_6<tep_util, tep_stepper_seed_t>(&seed);
-}
-
-/// \brief TEP WF_N_7
-TEST_F(tep_test, tep_workflow_neg_7) {
     tep_stepper_seed_t seed1 = {}, seed1A = {};
 
     TEP_SEED_INIT(k_max_tep, "50.50.1.1", PDS_TEP_TYPE_WORKLOAD,
@@ -256,11 +247,11 @@ TEST_F(tep_test, tep_workflow_neg_7) {
     // seed1A = seed1 + different tunnel type, nat
     TEP_SEED_INIT(k_max_tep + 1, "50.50.1.1", PDS_TEP_TYPE_IGW,
                   k_mplsoudp_encap, FALSE, &seed1A);
-    workflow_neg_7<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
+    workflow_neg_6<tep_util, tep_stepper_seed_t>(&seed1, &seed1A);
 }
 
-/// \brief TEP WF_N_8
-TEST_F(tep_test, tep_workflow_neg_8) {
+/// \brief TEP WF_N_7
+TEST_F(tep_test, tep_workflow_neg_7) {
     tep_stepper_seed_t seed1 = {}, seed1A = {}, seed2 = {};
 
     TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_IGW,
@@ -269,18 +260,18 @@ TEST_F(tep_test, tep_workflow_neg_8) {
                   k_mplsoudp_encap, k_nat, &seed1A);
     TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_WORKLOAD,
                   k_mplsoudp_encap, k_nat, &seed2);
-    workflow_neg_8<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed2);
+    workflow_neg_7<tep_util, tep_stepper_seed_t>(&seed1, &seed1A, &seed2);
 }
 
-/// \brief TEP WF_N_9
-TEST_F(tep_test, tep_workflow_neg_9) {
+/// \brief TEP WF_N_8
+TEST_F(tep_test, tep_workflow_neg_8) {
     tep_stepper_seed_t seed1 = {}, seed2 = {};
 
     TEP_SEED_INIT(10, "10.10.1.1", PDS_TEP_TYPE_IGW,
                   k_mplsoudp_encap, FALSE, &seed1);
     TEP_SEED_INIT(20, "20.20.1.1", PDS_TEP_TYPE_WORKLOAD,
                   k_mplsoudp_encap, k_nat, &seed2);
-    workflow_neg_9<tep_util, tep_stepper_seed_t>(&seed1, &seed2);
+    workflow_neg_8<tep_util, tep_stepper_seed_t>(&seed1, &seed2);
 }
 
 /// @}

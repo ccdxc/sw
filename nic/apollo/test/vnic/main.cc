@@ -242,26 +242,17 @@ TEST_F(vnic_test, DISABLED_vnic_workflow_neg_5) {
 
 /// \brief VNIC WF_N_6
 TEST_F(vnic_test, vnic_workflow_neg_6) {
-    vnic_stepper_seed_t seed = {};
-
-    VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
-                   PDS_ENCAP_TYPE_VXLAN, FALSE, &seed);
-    workflow_neg_6<vnic_util, vnic_stepper_seed_t>(&seed);
-}
-
-/// \brief VNIC WF_N_7
-TEST_F(vnic_test, vnic_workflow_neg_7) {
     vnic_stepper_seed_t seed1 = {}, seed1A = {};
 
     VNIC_SEED_INIT(1, k_max_vnic, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
                    PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
     VNIC_SEED_INIT(1, k_max_vnic+1, 0xb010101010101010, PDS_ENCAP_TYPE_DOT1Q,
                    PDS_ENCAP_TYPE_VXLAN, FALSE, &seed1A);
-    workflow_neg_7<vnic_util, vnic_stepper_seed_t>(&seed1, &seed1A);
+    workflow_neg_6<vnic_util, vnic_stepper_seed_t>(&seed1, &seed1A);
 }
 
-/// \brief VNIC WF_N_8
-TEST_F(vnic_test, vnic_workflow_neg_8) {
+/// \brief VNIC WF_N_7
+TEST_F(vnic_test, vnic_workflow_neg_7) {
     vnic_stepper_seed_t seed1 = {}, seed1A = {}, seed2 = {};
 
     VNIC_SEED_INIT(10, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
@@ -270,18 +261,18 @@ TEST_F(vnic_test, vnic_workflow_neg_8) {
                    PDS_ENCAP_TYPE_VXLAN, FALSE, &seed1A);
     VNIC_SEED_INIT(40, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
                    PDS_ENCAP_TYPE_VXLAN, k_src_dst_check, &seed2);
-    workflow_neg_8<vnic_util, vnic_stepper_seed_t>(&seed1, &seed1A, &seed2);
+    workflow_neg_7<vnic_util, vnic_stepper_seed_t>(&seed1, &seed1A, &seed2);
 }
 
-/// \brief VNIC WF_N_9
-TEST_F(vnic_test, vnic_workflow_neg_9) {
+/// \brief VNIC WF_N_8
+TEST_F(vnic_test, vnic_workflow_neg_8) {
     vnic_stepper_seed_t seed1 = {}, seed2 = {};
 
     VNIC_SEED_INIT(10, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
                    PDS_ENCAP_TYPE_MPLSoUDP, k_src_dst_check, &seed1);
     VNIC_SEED_INIT(40, 20, k_seed_mac, PDS_ENCAP_TYPE_DOT1Q,
                    PDS_ENCAP_TYPE_VXLAN, FALSE, &seed2);
-    workflow_neg_9<vnic_util, vnic_stepper_seed_t>(&seed1, &seed2);
+    workflow_neg_8<vnic_util, vnic_stepper_seed_t>(&seed1, &seed2);
 }
 
 /// @}

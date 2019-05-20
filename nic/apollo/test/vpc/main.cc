@@ -213,42 +213,33 @@ TEST_F(vpc, DISABLED_vpc_workflow_neg_5) {
 /// \brief VPC WF_N_6
 TEST_F(vpc, vpc_workflow_neg_6) {
     pds_vpc_key_t key = {.id = 1};
-    vpc_stepper_seed_t seed;
-
-    VPC_SEED_INIT(&seed, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
-    workflow_neg_6<vpc_util, vpc_stepper_seed_t>(&seed);
-}
-
-/// \brief VPC WF_N_7
-TEST_F(vpc, vpc_workflow_neg_7) {
-    pds_vpc_key_t key = {.id = 1};
     vpc_stepper_seed_t seed1, seed1A;
 
     VPC_SEED_INIT(&seed1, key, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", k_max_vpc);
     VPC_SEED_INIT(&seed1A, key, PDS_VPC_TYPE_TENANT, "11.0.0.0/16",
                   k_max_vpc + 1);
-    workflow_neg_7<vpc_util, vpc_stepper_seed_t>(&seed1, &seed1A);
+    workflow_neg_6<vpc_util, vpc_stepper_seed_t>(&seed1, &seed1A);
 }
 
-/// \brief VPC WF_N_8
-TEST_F(vpc, vpc_workflow_neg_8) {
+/// \brief VPC WF_N_7
+TEST_F(vpc, vpc_workflow_neg_7) {
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40};
     vpc_stepper_seed_t seed1, seed1A, seed2;
 
     VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", 20);
     VPC_SEED_INIT(&seed1A, key1, PDS_VPC_TYPE_TENANT, "11.0.0.0/16", 20);
     VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, "12.0.0.0/16", 20);
-    workflow_neg_8<vpc_util, vpc_stepper_seed_t>(&seed1, &seed1A, &seed2);
+    workflow_neg_7<vpc_util, vpc_stepper_seed_t>(&seed1, &seed1A, &seed2);
 }
 
-/// \brief VPC WF_N_9
-TEST_F(vpc, vpc_workflow_neg_9) {
+/// \brief VPC WF_N_8
+TEST_F(vpc, vpc_workflow_neg_8) {
     pds_vpc_key_t key1 = {.id = 10}, key2 = {.id = 40};
     vpc_stepper_seed_t seed1, seed2;
 
     VPC_SEED_INIT(&seed1, key1, PDS_VPC_TYPE_TENANT, "10.0.0.0/16", 20);
     VPC_SEED_INIT(&seed2, key2, PDS_VPC_TYPE_TENANT, "11.0.0.0/16", 20);
-    workflow_neg_9<vpc_util, vpc_stepper_seed_t>(&seed1, &seed2);
+    workflow_neg_8<vpc_util, vpc_stepper_seed_t>(&seed1, &seed2);
 }
 
 /// @}
