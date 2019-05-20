@@ -186,6 +186,18 @@ void ionic_dev_cmd_port_reset(struct ionic_dev *idev)
          ionic_dev_cmd_go(idev, &cmd);
 }
 
+void ionic_dev_cmd_port_state(struct ionic_dev *idev, u8 state)
+{
+        union dev_cmd cmd = {
+                .port_setattr.opcode = CMD_OPCODE_PORT_SETATTR,
+                .port_setattr.index = 0,
+                .port_setattr.attr = IONIC_PORT_ATTR_STATE,
+                .port_setattr.state = state,
+        };
+
+        ionic_dev_cmd_go(idev, &cmd);
+}
+
 void ionic_dev_cmd_port_speed(struct ionic_dev *idev, uint32_t speed)
 {
         union dev_cmd cmd = {

@@ -122,11 +122,21 @@ ionic_open(struct lif *lif)
         struct ionic_en_uplink_handle *uplink_handle;
         vmk_uint32 i, max_rx_normal_queues;
         vmk_uint32 shared_q_data_idx, max_rx_rss_queues;
+        struct ionic *ionic = lif->ionic;
 
-        priv_data = IONIC_CONTAINER_OF(lif->ionic,
+        priv_data = IONIC_CONTAINER_OF(ionic,
                                        struct ionic_en_priv_data,
                                        ionic);
         uplink_handle = lif->uplink_handle;
+
+        if (!uplink_handle->is_mgmt_nic) {
+                vmk_MutexLock(ionic->dev_cmd_lock);
+                ionic_dev_cmd_port_state(&ionic->en_dev.idev,
+                                         PORT_ADMIN_STATE_UP);
+                ionic_dev_cmd_wait_check(&ionic->en_dev.idev,
+                                         HZ * devcmd_timeout);
+                vmk_MutexUnlock(ionic->dev_cmd_lock);
+        }
 
         max_rx_normal_queues = uplink_handle->max_rx_normal_queues;
         for (i = 0; i < lif->nrxqcqs; i++) {
@@ -214,14 +224,26 @@ ionic_stop(struct lif *lif)
 {
         VMK_ReturnStatus status, status1 = VMK_OK;
         struct ionic_en_priv_data *priv_data;
+        struct ionic_en_uplink_handle *uplink_handle;
         vmk_uint32 i, max_rx_normal_queues;
         vmk_uint32 max_rx_rss_queues, shared_q_data_idx;
+        struct ionic *ionic = lif->ionic;
 
-        priv_data = IONIC_CONTAINER_OF(lif->ionic,
+        priv_data = IONIC_CONTAINER_OF(ionic,
                                        struct ionic_en_priv_data,
                                        ionic);
+        uplink_handle = lif->uplink_handle;
 
-        max_rx_normal_queues = priv_data->uplink_handle.max_rx_normal_queues;
+        if (!uplink_handle->is_mgmt_nic) {
+                vmk_MutexLock(ionic->dev_cmd_lock);
+                ionic_dev_cmd_port_state(&ionic->en_dev.idev,
+                                         PORT_ADMIN_STATE_DOWN);
+                ionic_dev_cmd_wait_check(&ionic->en_dev.idev,
+                                         HZ * devcmd_timeout);
+                vmk_MutexUnlock(ionic->dev_cmd_lock);
+        }
+
+        max_rx_normal_queues = uplink_handle->max_rx_normal_queues;
 
         for (i = 0; i < lif->nrxqcqs; i++) {
                 status = ionic_qcq_disable(lif->rxqcqs[i]);
@@ -234,7 +256,7 @@ ionic_stop(struct lif *lif)
                 }
         }
 
-        max_rx_rss_queues = priv_data->uplink_handle.max_rx_rss_queues;
+        max_rx_rss_queues = uplink_handle->max_rx_rss_queues;
 
 	for (i = 0; i < lif->ntxqcqs; i++) {
 		// TODO post NOP Tx desc and wait for its completion
@@ -272,7 +294,7 @@ ionic_stop(struct lif *lif)
                 ionic_tx_flush(&lif->txqcqs[i]->cq);
         }
 
-        if (!priv_data->uplink_handle.is_mgmt_nic) {
+        if (!uplink_handle->is_mgmt_nic) {
                 ionic_en_rx_rss_deinit(priv_data,
                                        lif);
         }

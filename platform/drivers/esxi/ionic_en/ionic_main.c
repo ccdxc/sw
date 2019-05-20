@@ -587,14 +587,14 @@ ionic_port_reset(struct ionic *ionic)
 	}
 
 	priv_data = IONIC_CONTAINER_OF(ionic,
-									struct ionic_en_priv_data,
-									ionic);
+                                       struct ionic_en_priv_data,
+                                       ionic);
 
 	ionic_dma_free(ionic_driver.heap_id,
-					priv_data->dma_engine_coherent,
-					idev->port_info_sz,
-					idev->port_info,
-					idev->port_info_pa);
+                       priv_data->dma_engine_coherent,
+		       idev->port_info_sz,
+                       idev->port_info,
+                       idev->port_info_pa);
 	idev->port_info_pa = 0;
 	idev->port_info = NULL;
 
