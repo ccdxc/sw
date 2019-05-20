@@ -93,7 +93,7 @@ subnet_util::create(void) const {
 }
 
 sdk::sdk_ret_t
-subnet_util::read(pds_subnet_info_t *info, bool compare_spec) const {
+subnet_util::read(pds_subnet_info_t *info) const {
     sdk_ret_t rv;
     pds_subnet_key_t key;
     mac_addr_t vr_mac;
@@ -101,40 +101,37 @@ subnet_util::read(pds_subnet_info_t *info, bool compare_spec) const {
     memset(&key, 0, sizeof(pds_subnet_key_t));
     memset(info, 0, sizeof(pds_subnet_info_t));
     key.id = this->id;
-    rv = pds_subnet_read(&key, info);
-    if (rv != sdk::SDK_RET_OK) {
+    if ((rv = pds_subnet_read(&key, info)) != sdk::SDK_RET_OK)
         return rv;
+
+    if (this->vpc.id &&
+        memcmp(&info->spec.vpc, &this->vpc, sizeof(pds_vpc_key_t)))
+        return sdk::SDK_RET_ERR;
+
+    if (info->spec.v4_route_table.id != this->v4_route_table.id)
+        return sdk::SDK_RET_ERR;
+
+    if (info->spec.v6_route_table.id != this->v6_route_table.id)
+        return sdk::SDK_RET_ERR;
+
+    if (info->spec.ing_v4_policy.id != this->ing_v4_policy.id)
+        return sdk::SDK_RET_ERR;
+
+    if (info->spec.ing_v6_policy.id != this->ing_v6_policy.id)
+        return sdk::SDK_RET_ERR;
+
+    if (info->spec.egr_v4_policy.id != this->egr_v4_policy.id)
+        return sdk::SDK_RET_ERR;
+
+    if (info->spec.egr_v6_policy.id != this->egr_v6_policy.id)
+        return sdk::SDK_RET_ERR;
+
+    if (strcmp(this->vr_mac.c_str(), "") != 0) {
+        mac_str_to_addr((char *)this->vr_mac.c_str(), vr_mac);
+        if (memcmp(&info->spec.vr_mac, &this->vr_mac, sizeof(mac_addr_t)))
+            return sdk::SDK_RET_ERR;
     }
-    if (compare_spec) {
-        if (this->vpc.id && memcmp(&info->spec.vpc, &this->vpc,
-                                   sizeof(pds_vpc_key_t))) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (info->spec.v4_route_table.id != this->v4_route_table.id) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (info->spec.v6_route_table.id != this->v6_route_table.id) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (info->spec.ing_v4_policy.id != this->ing_v4_policy.id) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (info->spec.ing_v6_policy.id != this->ing_v6_policy.id) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (info->spec.egr_v4_policy.id != this->egr_v4_policy.id) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (info->spec.egr_v6_policy.id != this->egr_v6_policy.id) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (strcmp(this->vr_mac.c_str(), "") != 0) {
-            mac_str_to_addr((char *)this->vr_mac.c_str(), vr_mac);
-            if(memcmp(&info->spec.vr_mac, &this->vr_mac, sizeof(mac_addr_t))) {
-                return sdk::SDK_RET_ERR;
-            }
-        }
-    }
+
     return sdk::SDK_RET_OK;
 }
 
@@ -248,7 +245,7 @@ subnet_util_object_stepper (subnet_stepper_seed_t *init_seed,
             SDK_ASSERT((rv = subnet_obj.create()) == sdk::SDK_RET_OK);
             break;
         case OP_MANY_READ:
-            rv = subnet_obj.read(&info, TRUE);
+            rv = subnet_obj.read(&info);
             break;
         case OP_MANY_UPDATE:
             SDK_ASSERT((rv = subnet_obj.update()) == sdk::SDK_RET_OK);

@@ -54,7 +54,7 @@ public:
 
     /// \brief Read remote IP mapping
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_remote_mapping_info_t *info, bool compare_spec = true);
+    sdk_ret_t read(pds_remote_mapping_info_t *info);
 
     /// \brief Update remote IP mapping
     /// \returns #SDK_RET_OK on success, failure status code on error

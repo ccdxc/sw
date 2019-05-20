@@ -58,7 +58,7 @@ public:
 
     /// \brief Read local IP mapping
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_local_mapping_info_t *info, bool compare_spec = true);
+    sdk_ret_t read(pds_local_mapping_info_t *info);
 
     /// \brief Update local IP mapping
     /// \returns #SDK_RET_OK on success, failure status code on error

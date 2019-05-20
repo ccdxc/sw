@@ -75,46 +75,42 @@ vnic_util::create(void) const {
 }
 
 sdk::sdk_ret_t
-vnic_util::read(pds_vnic_info_t *info, bool compare_spec) const {
+vnic_util::read(pds_vnic_info_t *info) const {
     sdk_ret_t rv;
     pds_vnic_key_t key;
 
     key.id = vnic_id;
     memset(info, 0, sizeof(*info));
-    rv = pds_vnic_read(&key, info);
-    if (rv != SDK_RET_OK) {
+    if ((rv = pds_vnic_read(&key, info)) != SDK_RET_OK)
         return rv;
+
+    mac_addr_t mac = {0};
+    if (vnic_id != info->spec.key.id)
+        return sdk::SDK_RET_ERR;
+
+    //SDK_ASSERT(vpc_id == info->spec.vpc.id);  //This is hw_id during read
+    //SDK_ASSERT(sub_id == info->spec.subnet.id); //This is hw_id during read
+    if (!api::pdsencap_isequal(&this->vnic_encap, &info->spec.vnic_encap))
+        return sdk::SDK_RET_ERR;
+
+    if (!api::pdsencap_isequal(&this->fabric_encap, &info->spec.fabric_encap))
+        return sdk::SDK_RET_ERR;
+
+    if (rsc_pool_id != info->spec.rsc_pool_id)
+        return sdk::SDK_RET_ERR;
+
+    if (this->src_dst_check != info->spec.src_dst_check)
+        return sdk::SDK_RET_ERR;
+
+    if (mac_u64 != 0) {
+        MAC_UINT64_TO_ADDR(mac, mac_u64);
+    } else if (!vnic_mac.empty()) {
+        mac_str_to_addr((char *)vnic_mac.c_str(), mac);
     }
-    if (compare_spec) {
-        mac_addr_t mac = {0};
-        if (vnic_id != info->spec.key.id) {
-            return sdk::SDK_RET_ERR;
-        }
-        //SDK_ASSERT(vpc_id == info->spec.vpc.id);  //This is hw_id during read
-        //SDK_ASSERT(sub_id == info->spec.subnet.id); //This is hw_id during read
-        if (!api::pdsencap_isequal(&this->vnic_encap,
-                                   &info->spec.vnic_encap)) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (!api::pdsencap_isequal(&this->fabric_encap,
-                                   &info->spec.fabric_encap)) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (rsc_pool_id != info->spec.rsc_pool_id) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (this->src_dst_check != info->spec.src_dst_check) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (mac_u64 != 0) {
-            MAC_UINT64_TO_ADDR(mac, mac_u64);
-        } else if (!vnic_mac.empty()) {
-            mac_str_to_addr((char *)vnic_mac.c_str(), mac);
-        }
-        if (memcmp(mac, info->spec.mac_addr, sizeof(mac))) {
-            return sdk::SDK_RET_ERR;
-        }
-    }
+
+    if (memcmp(mac, info->spec.mac_addr, sizeof(mac)))
+        return sdk::SDK_RET_ERR;
+
     return rv;
 }
 

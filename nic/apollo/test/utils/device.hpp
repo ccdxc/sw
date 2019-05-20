@@ -42,7 +42,7 @@ public:
     /// \brief Read device
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_device_info_t *info, bool compare_spec = false);
+    sdk_ret_t read(pds_device_info_t *info);
 
     /// \brief Update device
     ///

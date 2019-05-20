@@ -23,7 +23,6 @@ namespace api_test {
 
 // Globals
 char *g_cfg_file = NULL;
-static pds_epoch_t g_batch_epoch = PDS_EPOCH_INVALID;
 constexpr int k_max_tep = PDS_MAX_TEP;
 constexpr pds_encap_t k_mplsoudp_encap = {PDS_ENCAP_TYPE_MPLSoUDP, 11};
 constexpr pds_encap_t k_vxlan_encap = {PDS_ENCAP_TYPE_VXLAN, 22};

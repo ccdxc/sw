@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include <iostream>
+#include "nic/apollo/test/utils/utils.hpp"
 #include "nic/apollo/test/utils/device.hpp"
 
 namespace api_test {
@@ -47,36 +48,32 @@ device_util::create() {
 }
 
 sdk::sdk_ret_t
-device_util::read(pds_device_info_t *info,  bool compare_spec) {
+device_util::read(pds_device_info_t *info) {
     sdk_ret_t rv;
 
     memset(info, 0, sizeof(pds_device_info_t));
-    rv = pds_device_read(info);
-    if (rv != SDK_RET_OK) {
+    if ((rv = pds_device_read(info)) != sdk::SDK_RET_OK)
         return rv;
-    }
+
+    if (capri_mock_mode())
+        return sdk::SDK_RET_OK;
 
     std::cout << "Device IP : " << ipv4addr2str(info->spec.device_ip_addr)
               << " Device MAC : " << macaddr2str(info->spec.device_mac_addr)
               << " Gateway IP : " << ipv4addr2str(info->spec.gateway_ip_addr)
               << std::endl;
 
-    if (compare_spec) {
-        if (this->device_ip_str.compare(
-                ipv4addr2str(info->spec.device_ip_addr)) != 0) {
-            return SDK_RET_ERR;
-        }
+    if (this->device_ip_str.compare(
+            ipv4addr2str(info->spec.device_ip_addr)) != 0)
+        return SDK_RET_ERR;
 
-        if (this->mac_addr_str.compare(
-                macaddr2str(info->spec.device_mac_addr)) !=0) {
-            return SDK_RET_ERR;
-        }
+    if (this->mac_addr_str.compare(
+            macaddr2str(info->spec.device_mac_addr)) !=0)
+        return SDK_RET_ERR;
 
-        if (this->gateway_ip_str.compare(
-                ipv4addr2str(info->spec.gateway_ip_addr)) != 0) {
-            return SDK_RET_ERR;
-        }
-    }
+    if (this->gateway_ip_str.compare(
+            ipv4addr2str(info->spec.gateway_ip_addr)) != 0)
+        return SDK_RET_ERR;
 
     return sdk::SDK_RET_OK;
 }

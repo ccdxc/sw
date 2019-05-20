@@ -127,7 +127,7 @@ debug_dump_tep_info (pds_tep_info_t *info)
 }
 
 sdk::sdk_ret_t
-tep_util::read(pds_tep_info_t *info, bool compare_spec) const {
+tep_util::read(pds_tep_info_t *info) const {
     sdk_ret_t rv;
     pds_tep_key_t key;
 
@@ -138,27 +138,24 @@ tep_util::read(pds_tep_info_t *info, bool compare_spec) const {
     if ((rv = pds_tep_read(&key, info)) != sdk::SDK_RET_OK)
         return rv;
 
-    if (compare_spec) {
-        // dump for debug
-        debug_dump_tep_info(info);
-        // validate TEP ip
-        if (this->ip_addr.addr.v4_addr != info->spec.key.ip_addr) {
-            return sdk::SDK_RET_ERR;
-        }
-        // validate TEP type
-        if (this->type != info->spec.type) {
-            return sdk::SDK_RET_ERR;
-        }
-        // validate TEP encap
-        if (!api::pdsencap_isequal(&this->encap,
-                                   &info->spec.encap)) {
-            return sdk::SDK_RET_ERR;
-        }
-        // validate NAT
-        if (this->nat != info->spec.nat) {
-            return sdk::SDK_RET_ERR;
-        }
-    }
+    // dump for debug
+    debug_dump_tep_info(info);
+
+    // validate TEP ip
+    if (this->ip_addr.addr.v4_addr != info->spec.key.ip_addr)
+        return sdk::SDK_RET_ERR;
+
+    // validate TEP type
+    if (this->type != info->spec.type)
+        return sdk::SDK_RET_ERR;
+
+    // validate TEP encap
+    if (!api::pdsencap_isequal(&this->encap, &info->spec.encap))
+        return sdk::SDK_RET_ERR;
+
+    // validate NAT
+    if (this->nat != info->spec.nat)
+        return sdk::SDK_RET_ERR;
 
     return sdk::SDK_RET_OK;
 }

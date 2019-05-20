@@ -100,6 +100,22 @@ extract_ip_pfx (const char *str, ip_prefix_t *ip_pfx)
     }
 }
 
+// Returns true if mock_mode is enabled, otherwise false
+static inline bool
+capri_mock_mode (void)
+{
+    static bool input_check = FALSE;
+    static bool capri_mock_mode = TRUE;
+
+    if (!input_check) {
+        if (getenv("CAPRI_MOCK_MODE") == NULL)
+            capri_mock_mode = FALSE;
+        input_check = TRUE;
+    }
+
+    return capri_mock_mode;
+}
+
 /// \brief Packet send function
 ///
 /// \param tx_pkt          Packet to be trasnmited

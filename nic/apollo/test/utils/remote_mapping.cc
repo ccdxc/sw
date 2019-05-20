@@ -76,7 +76,7 @@ remote_mapping_util::create(void) {
 }
 
 sdk::sdk_ret_t
-remote_mapping_util::read(pds_remote_mapping_info_t *info, bool compare_spec) {
+remote_mapping_util::read(pds_remote_mapping_info_t *info) {
     // uint64_t mac1, mac2;
     sdk_ret_t rv = sdk::SDK_RET_OK;
     pds_mapping_key_t key = {0};
@@ -86,10 +86,12 @@ remote_mapping_util::read(pds_remote_mapping_info_t *info, bool compare_spec) {
     key.vpc.id = this->vpc_id;
     extract_ip_addr(this->vnic_ip.c_str(), &key.ip_addr);
     memset(info, 0, sizeof(*info));
-    rv = pds_remote_mapping_read(&key, info);
-    if (rv != SDK_RET_OK) {
+    if ((rv = pds_remote_mapping_read(&key, info) )!= sdk::SDK_RET_OK)
         return rv;
-    }
+
+    if (capri_mock_mode())
+        return SDK_RET_OK;
+
     std::cout << "Mapping info:"
               << "\n";
     std::cout << "HW: vpc id: " << info->spec.key.vpc.id
@@ -101,25 +103,24 @@ remote_mapping_util::read(pds_remote_mapping_info_t *info, bool compare_spec) {
     std::cout << "HW: mpls_tag: " << info->spec.fabric_encap.type
               << " SW: mpls_tag: " << this->mpls_tag << "\n";
 
-    if (compare_spec) {
-        // mac1 = MAC_TO_UINT64(mac);
-        // mac2 = MAC_TO_UINT64(info->spec.vnic_mac);
-        SDK_ASSERT(this->vpc_id == info->spec.key.vpc.id);
-        // SDK_ASSERT(this->sub_id == info->spec.subnet.id); // not stored in hw
-        // table
-        SDK_ASSERT(strcmp(this->vnic_ip.c_str(),
-                          ipaddr2str(&info->spec.key.ip_addr)) == 0);
-        if (this->encap_type == PDS_ENCAP_TYPE_MPLSoUDP) {
-            SDK_ASSERT(PDS_ENCAP_TYPE_MPLSoUDP == info->spec.fabric_encap.type);
-            SDK_ASSERT(this->mpls_tag == info->spec.fabric_encap.val.mpls_tag);
-        } else if (this->encap_type == PDS_ENCAP_TYPE_VXLAN) {
-            SDK_ASSERT(PDS_ENCAP_TYPE_VXLAN == info->spec.fabric_encap.type);
-            SDK_ASSERT(this->vxlan_id == info->spec.fabric_encap.val.vnid);
-        }
-        // SDK_ASSERT((mac1 == mac2) == 0); // not stored in hw table
-        SDK_ASSERT(strcmp(this->tep_ip.c_str(),
-                          ipv4addr2str(info->spec.tep.ip_addr)) == 0);
+    // mac1 = MAC_TO_UINT64(mac);
+    // mac2 = MAC_TO_UINT64(info->spec.vnic_mac);
+    SDK_ASSERT(this->vpc_id == info->spec.key.vpc.id);
+    // SDK_ASSERT(this->sub_id == info->spec.subnet.id); // not stored in hw
+    // table
+    SDK_ASSERT(strcmp(this->vnic_ip.c_str(),
+                      ipaddr2str(&info->spec.key.ip_addr)) == 0);
+    if (this->encap_type == PDS_ENCAP_TYPE_MPLSoUDP) {
+        SDK_ASSERT(PDS_ENCAP_TYPE_MPLSoUDP == info->spec.fabric_encap.type);
+        SDK_ASSERT(this->mpls_tag == info->spec.fabric_encap.val.mpls_tag);
+    } else if (this->encap_type == PDS_ENCAP_TYPE_VXLAN) {
+        SDK_ASSERT(PDS_ENCAP_TYPE_VXLAN == info->spec.fabric_encap.type);
+        SDK_ASSERT(this->vxlan_id == info->spec.fabric_encap.val.vnid);
     }
+    // SDK_ASSERT((mac1 == mac2) == 0); // not stored in hw table
+    SDK_ASSERT(strcmp(this->tep_ip.c_str(),
+                      ipv4addr2str(info->spec.tep.ip_addr)) == 0);
+
     return rv;
 }
 

@@ -121,7 +121,7 @@ policy_util::create()
 }
 
 sdk::sdk_ret_t
-policy_util::read(pds_policy_info_t *info, bool compare_spec)
+policy_util::read(pds_policy_info_t *info)
 {
     sdk_ret_t rv = sdk::SDK_RET_OK;
     pds_policy_key_t key;
@@ -129,29 +129,25 @@ policy_util::read(pds_policy_info_t *info, bool compare_spec)
 
     memset(&key, 0, sizeof(pds_policy_key_t));
     memset(info, 0, sizeof(pds_policy_info_t));
-    key.id = this->id;
-    rv = pds_policy_read(&key, info);
-    if (rv != sdk::SDK_RET_OK) {
-        return rv;
-    }
 
-    if (info->spec.af)
-        af = IP_AF_IPV6;
-    else
-        af = IP_AF_IPV4;
+    key.id = this->id;
+    if ((rv = pds_policy_read(&key, info)) != sdk::SDK_RET_OK)
+        return rv;
+
+    af = info->spec.af ? IP_AF_IPV6 : IP_AF_IPV4;
+
     std::cout << "key: " << info->spec.key.id << ", direction: "
         << info->spec.direction << ", af: " << af << "\n";
     std::cout << "pfx: " << this->pfx <<"\n";
 
-    if (compare_spec) {
-        SDK_ASSERT(info->spec.key.id == this->id);
-        //SDK_ASSERT(info->spec.num_rules == this->num_rules);
-        //SDK_ASSERT(memcmp(info->spec.rules, this->rules,
-        //num_rules * sizeof(rule_t)));
-        SDK_ASSERT(info->spec.direction == this->direction);
+    SDK_ASSERT(info->spec.key.id == this->id);
+    //SDK_ASSERT(info->spec.num_rules == this->num_rules);
+    //SDK_ASSERT(memcmp(info->spec.rules, this->rules,
+    //num_rules * sizeof(rule_t)));
+    SDK_ASSERT(info->spec.direction == this->direction);
         //SDK_ASSERT(info->spec.policy_type == this->type);
-        SDK_ASSERT(info->spec.af == this->af);
-    }
+    SDK_ASSERT(info->spec.af == this->af);
+
     return sdk::SDK_RET_OK;
 }
 

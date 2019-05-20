@@ -55,7 +55,7 @@ public:
     /// \brief Read mirror session info
     ///
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_mirror_session_info_t *info, bool compare_spec = true);
+    sdk_ret_t read(pds_mirror_session_info_t *info);
 
     /// \brief Update mirror session configuration
     ///

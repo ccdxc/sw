@@ -79,7 +79,7 @@ public:
     /// \param[in] compare_spec validation to be done or not
     /// \param[out] info policy information
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_policy_info_t *info, bool compare_spec=true);
+    sdk_ret_t read(pds_policy_info_t *info);
 
     /// \brief Update the policy
     ///

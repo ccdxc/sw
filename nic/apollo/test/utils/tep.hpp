@@ -89,7 +89,7 @@ public:
     /// \param[in] compare_spec validation to be done or not
     /// \param[out] info tep information
     /// \returns #SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read(pds_tep_info_t *info, bool compare_spec=TRUE) const;
+    sdk_ret_t read(pds_tep_info_t *info) const;
 
     /// \brief Update TEP
     ///

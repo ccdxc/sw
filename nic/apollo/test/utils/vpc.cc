@@ -59,22 +59,17 @@ vpc_util::create(void) const {
 }
 
 sdk::sdk_ret_t
-vpc_util::read(pds_vpc_info_t *info, bool compare_spec) const {
+vpc_util::read(pds_vpc_info_t *info) const {
     sdk_ret_t rv;
     pds_vpc_key_t key;
 
     memset(&key, 0, sizeof(pds_vpc_key_t));
     memset(info, 0, sizeof(pds_vpc_info_t));
-    key.id = this->id;
-    rv = pds_vpc_read(&key, info);
-    //cout << "vpc : key : " << key.id << ", id : " << info->spec.key.id << ", addr : "
-         //<< ipv4pfx2str(&info->spec.v4_pfx) << "\n";
-    if (rv != sdk::SDK_RET_OK) {
-        return rv;
-    }
-    if (compare_spec) {
 
-    }
+    key.id = this->id;
+    if ((rv = pds_vpc_read(&key, info)) != SDK_RET_OK)
+        return rv;
+
     return sdk::SDK_RET_OK;
 }
 
@@ -149,7 +144,7 @@ vpc_util_object_stepper (vpc_stepper_seed_t *init_seed,
             rv = vpc_obj.create();
             break;
         case OP_MANY_READ:
-            rv = vpc_obj.read(&info, TRUE);
+            rv = vpc_obj.read(&info);
             break;
         case OP_MANY_UPDATE:
             rv = vpc_obj.update();

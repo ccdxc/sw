@@ -48,7 +48,7 @@ mirror_session_util::create(void) {
 }
 
 sdk::sdk_ret_t
-mirror_session_util::read(pds_mirror_session_info_t *info, bool compare_spec) {
+mirror_session_util::read(pds_mirror_session_info_t *info) {
     sdk_ret_t rv;
     pds_mirror_session_key_t key;
 
@@ -59,43 +59,43 @@ mirror_session_util::read(pds_mirror_session_info_t *info, bool compare_spec) {
     if ((rv = pds_mirror_session_get(&key, info)) != sdk::SDK_RET_OK)
         return rv;
 
-    if (compare_spec) {
-        // validate mirror session type
-        if (info->spec.type != this->type) {
-            return sdk::SDK_RET_ERR;
-        }
-        // validate snap_len
-        if (info->spec.snap_len != this->snap_len) {
-            return sdk::SDK_RET_ERR;
-        }
-        if (info->spec.type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
-            // validate rspan spec
-            if (info->spec.rspan_spec.interface !=
-                this->rspan_spec.interface) {
-                return sdk::SDK_RET_ERR;
-            }
-            if (info->spec.rspan_spec.encap.type !=
-                this->rspan_spec.encap.type) {
-                return sdk::SDK_RET_ERR;
-            }
-            if (info->spec.rspan_spec.encap.val.vlan_tag !=
-                this->rspan_spec.encap.val.vlan_tag) {
-                return sdk::SDK_RET_ERR;
-            }
+    if (capri_mock_mode())
+        return sdk::SDK_RET_OK;
 
-        } else if (info->spec.type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
-            // validate erspan spec
-            if (info->spec.erspan_spec.src_ip.addr.v4_addr !=
-                this->erspan_spec.src_ip.addr.v4_addr) {
-                return sdk::SDK_RET_ERR;
-            }
-            if (info->spec.erspan_spec.dst_ip.addr.v4_addr !=
-                this->erspan_spec.dst_ip.addr.v4_addr) {
-                return sdk::SDK_RET_ERR;
-            }
-        }
-
+    // validate mirror session type
+    if (info->spec.type != this->type) {
+        return sdk::SDK_RET_ERR;
     }
+    // validate snap_len
+    if (info->spec.snap_len != this->snap_len) {
+        return sdk::SDK_RET_ERR;
+    }
+    if (info->spec.type == PDS_MIRROR_SESSION_TYPE_RSPAN) {
+        // validate rspan spec
+        if (info->spec.rspan_spec.interface !=
+            this->rspan_spec.interface) {
+            return sdk::SDK_RET_ERR;
+        }
+        if (info->spec.rspan_spec.encap.type !=
+            this->rspan_spec.encap.type) {
+            return sdk::SDK_RET_ERR;
+        }
+        if (info->spec.rspan_spec.encap.val.vlan_tag !=
+            this->rspan_spec.encap.val.vlan_tag) {
+            return sdk::SDK_RET_ERR;
+        }
+    } else if (info->spec.type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
+        // validate erspan spec
+        if (info->spec.erspan_spec.src_ip.addr.v4_addr !=
+            this->erspan_spec.src_ip.addr.v4_addr) {
+            return sdk::SDK_RET_ERR;
+        }
+        if (info->spec.erspan_spec.dst_ip.addr.v4_addr !=
+            this->erspan_spec.dst_ip.addr.v4_addr) {
+            return sdk::SDK_RET_ERR;
+        }
+    }
+
     return sdk::SDK_RET_OK;
 }
 
@@ -137,7 +137,7 @@ mirror_session_util_object_stepper(mirror_session_stepper_seed_t *seed,
             rv = ms_obj.del();
             break;
         case OP_MANY_READ:
-            rv = ms_obj.read(&info, FALSE);
+            rv = ms_obj.read(&info);
             break;
         default:
             return sdk::SDK_RET_INVALID_OP;

@@ -157,7 +157,7 @@ protected:
             subnet_key.id += 1;
             vpc_key.id += 1;
         }
-        ASSERT_TRUE(device_obj.read(&dev_info, false) == sdk::SDK_RET_OK);
+        ASSERT_TRUE(device_obj.read(&dev_info) == sdk::SDK_RET_OK);
         TEP_READ(tep_obj, &tep_info);
         TEP_MANY_READ(&tep_seed);
         VNIC_MANY_READ(&vnic_seed, sdk::SDK_RET_OK);
@@ -318,8 +318,8 @@ TEST_F(mapping_test, DISABLED_v4_dummy_mapping_test) {
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_OK);
 
     // Verify using read
-    ASSERT_TRUE(local_obj.read(&l_info, false) == sdk::SDK_RET_OK);
-    ASSERT_TRUE(rem_obj.read(&r_info, false) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(local_obj.read(&l_info) == sdk::SDK_RET_OK);
+    ASSERT_TRUE(rem_obj.read(&r_info) == sdk::SDK_RET_OK);
 }
 
 /// \brief Create and delete max local mappings in the same batch
