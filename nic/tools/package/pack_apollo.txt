@@ -75,6 +75,7 @@ nic/build/$ARCH/$PIPELINE/lib/librfc.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liblfq.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libnicmgr_apollo.so                 /nic/lib/
 
+# p4/asm specific libs
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/asm_bin/
 nic/build/$ARCH/$PIPELINE/bin/p4pasm/                             /nic/conf/$PIPELINE/p4plus_bin/
 nic/build/$ARCH/$PIPELINE/pgm_bin/                                /nic/conf/$PIPELINE/pgm_bin/
@@ -84,17 +85,17 @@ nic/build/$ARCH/$PIPELINE/pgm_bin/apollo_rxdma/                   /nic/conf/$PIP
 nic/build/$ARCH/$PIPELINE/bin/p4pasm_rxdma/                       /nic/conf/$PIPELINE/rxdma_asm/
 nic/build/$ARCH/$PIPELINE/pgm_bin/apollo_p4/                      /nic/conf/$PIPELINE/p4_bin/
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/p4_asm/
-nic/sdk/third-party/avago/build/$ARCH/bin/aapl                    /nic/bin/
-nic/sdk/third-party/avago/build/$ARCH/lib/aapl/C/libAAPL.so       /nic/lib/
-nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom               /nic/conf/fw/
-nic/debug_cli/images/$ARCH/$PIPELINE/p4ctl                        /nic/bin
-
 nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE/p4pd/capri_p4_table_map.json         /nic/conf/$PIPELINE/capri_p4_table_map.json
 nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_rxdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_rxdma_table_map.json
 nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE_txdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_txdma_table_map.json
 
-# DPDK/VPP/Deps binaries/libraries
-nic/build/$ARCH/$PIPELINE/lib/libnuma.so						 /nic/lib/libnuma.so.1
+# link specific libs
+nic/sdk/third-party/avago/build/$ARCH/bin/aapl                    /nic/bin/
+nic/sdk/third-party/avago/build/$ARCH/lib/aapl/C/libAAPL.so       /nic/lib/
+nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom               /nic/conf/fw/
+
+# python table debug cli specific
+nic/debug_cli/images/$ARCH/$PIPELINE/p4ctl                        /nic/bin
 
 # test binaries and libraries
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_test                      /nic/bin/
@@ -115,7 +116,6 @@ nic/apollo/test/scale/run_scale_test_hw.sh                        /nic/tools/
 nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_flow_test                 /nic/bin/
 nic/build/$ARCH/$PIPELINE/lib/libpdstestutils.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/pdsctl  	                          /nic/bin/
-
 nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest.so              /platform/lib/
 nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_without_main.so /platform/lib/
 
@@ -166,7 +166,7 @@ nic/conf/captrace/p4-all.json                                     /nic/conf/capt
 nic/conf/captrace/pipeline-all.json                               /nic/conf/captrace/
 nic/conf/captrace/sample-conf.json                                /nic/conf/captrace/
 
-# agent specific files (should move to pack_apollo_agent.txt ?)
+# agent specific files
 nic/apollo/tools/start-agent.sh                                   /nic/tools/
 nic/build/$ARCH/$PIPELINE/lib/libsvc.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsagentcore.so                  /nic/lib/
@@ -189,6 +189,7 @@ nic/sdk/third-party/vpp-pkg/$ARCH/bin/vpp                         /nic/bin/
 nic/sdk/third-party/vpp-pkg/$ARCH/lib/dpdk_plugin.so              /nic/lib/vpp_plugins/
 nic/apollo/tools/start-vpp.sh                                     /nic/tools/
 nic/apollo/vpp/conf/*                                             /nic/conf/vpp/
+nic/build/$ARCH/$PIPELINE/lib/libnuma.so						 /nic/lib/libnuma.so.1
 
 # cronjobs
 nic/conf/apollo/crontabs/root                                     /nic/conf/apollo/crontabs/

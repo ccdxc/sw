@@ -12,6 +12,7 @@
 
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/api/impl/apollo_impl_state.hpp"
+#if 0
 #include "nic/apollo/api/impl/device_impl.hpp"
 #include "nic/apollo/api/impl/tep_impl_state.hpp"
 #include "nic/apollo/api/impl/vnic_impl_state.hpp"
@@ -20,6 +21,8 @@
 #include "nic/apollo/api/impl/security_policy_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
 #include "nic/apollo/api/impl/mirror_impl_state.hpp"
+#include "nic/apollo/api/impl/meter_impl_state.hpp"
+#include "nic/apollo/api/impl/tag_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -55,6 +58,12 @@ public:
     mirror_impl_state *mirror_impl_db(void) {
         return mirror_impl_db_;
     }
+    meter_impl_state *meter_impl_db(void) {
+        return meter_impl_db_;
+    }
+    tag_impl_state *tag_impl_db(void) {
+        return tag_impl_db_;
+    }
 
 private:
     apollo_impl_state             *apollo_impl_db_;
@@ -65,6 +74,8 @@ private:
     route_table_impl_state        *route_table_impl_db_;
     security_policy_impl_state    *security_policy_impl_db_;
     mirror_impl_state             *mirror_impl_db_;
+    meter_impl_state              *meter_impl_db_;
+    tag_impl_state                *tag_impl_db_;
 };
 extern pds_impl_state g_pds_impl_state;
 
@@ -115,6 +126,21 @@ mirror_impl_db (void)
 {
     return g_pds_impl_state.mirror_impl_db();
 }
+
+#if 0
+static inline meter_impl_state *
+meter_impl_db (void)
+{
+    return g_pds_impl_state.meter_impl_db();
+}
+
+static inline tag_impl_state *
+tag_impl_db (void)
+{
+    return g_pds_impl_state.tag_impl_db();
+}
+#endif
+#endif
 
 /** * @} */    // end of PDS_IMPL_STATE
 

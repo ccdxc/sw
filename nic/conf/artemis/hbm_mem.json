@@ -1,0 +1,305 @@
+{
+    "regions": [
+         {
+            "_comment" : "cache coherent",
+            "name": "cpu-dr",
+            "size": "128K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-pr",
+            "size": "128K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-descriptor",
+            "size": "2048K",
+            "cc": "true"
+
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-page",
+            "size": "32768K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "arq-rx",
+            "size": "256K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "ascq",
+            "size": "256K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "asq",
+            "size": "256K",
+            "cc"     : "true"
+        },
+        {
+            "_comment" : "keep this to make cache coherent region order of 2 - currently 64MB from beg(hbm base) including this region",
+            "name" : "unused cache coherent",
+            "size" : "29696K",
+            "cc"      : "true"
+        },
+        {
+            "_comment" : "This reserved region is hardcoded to HBM base + 64MB(above cc regions)",
+            "_comment1" : "Used by memtun, pciemgr, and mputrace. Size is 64MB",
+            "_comment2" : "Refer sdk/platform/utils/mpart_rsvd.hpp",
+             "name": "reserved_common",
+             "size": "64M"
+        },
+        {
+            "name": "devcmd",
+            "size": "32768K"
+        },
+        {
+            "name": "nicmgrqstate_map",
+            "size": "32768K",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "nicmgr",
+            "size" : "32768K"
+        },
+        {
+            "name": "fwupdate",
+            "size": "128K"
+        },
+        {
+            "name": "lif_stats",
+            "size": "1024K",
+            "reset": true
+        },
+        {
+            "name": "rss_indir_table",
+            "size": "1024K"
+        },
+        {
+            "name": "lif2qstate_map",
+            "size": "4K",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "p4_program",
+            "size": "1024K"
+        },
+        {
+            "name": "rxdma_program",
+            "size": "1024K",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "txdma_program",
+            "size": "1024K",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "rxdma_to_txdma_buf",
+            "size": "10M",
+            "_comment": "1K buffers of size 10K"
+        },
+        {
+            "name": "rxdma_to_txdma_desc",
+            "size": "64K",
+            "_comment": "1K descriptors of size 64B"
+        },
+        {
+            "name": "local_ip_mapping",
+            "size": "16384K",
+            "cache": "p4ig",
+            "reset": true
+        },
+        {
+            "name": "remote_vnic_mapping_rx",
+            "size": "131072K",
+            "cache": "p4ig",
+            "reset": true
+        },
+        {
+            "name": "remote_vnic_mapping_rx_ohash",
+            "size": "16384K",
+            "cache": "p4ig",
+            "reset": true
+        },
+        {
+            "name": "local_ip_mapping_ohash",
+            "size": "2048K",
+            "cache": "p4ig",
+            "reset": true
+        },
+        {
+            "name": "remote_vnic_mapping_tx",
+            "size": "131072K",
+            "cache": "p4eg",
+            "reset": true
+        },
+        {
+            "name": "remote_vnic_mapping_tx_ohash",
+            "size": "16384K",
+            "cache": "p4eg",
+            "reset": true
+        },
+        {
+            "name": "nat",
+            "size": "131072K",
+            "cache": "p4eg"
+        },
+        {
+            "name": "lpm_v4",
+            "_comment": "(64+1) * (64 + 16 * 64 + 16 * 16 * 64)",
+            "size": "2M",
+            "block_size": "17472B",
+            "max_elements": "1K",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "lpm_v6",
+            "_comment": "(64+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64)",
+            "size": "3M",
+            "block_size": "37440B",
+            "max_elements": "1K",
+            "cache": "p4plus-txdma"
+        },
+        {
+            "name": "meter_v4",
+            "_comment": "(64+1) * (64 + 16 * 64 + 16 * 16 * 64)",
+            "size": "2M",
+            "block_size": "17472B",
+            "max_elements": "1K",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "meter_v6",
+            "_comment": "(64+1) * (64 + 4 * 64 + 4^2  * 64 + 4^3 * 64 + 4^4 * 64 + 4^5 * 64)",
+            "size": "6M",
+            "block_size": "87360B",
+            "max_elements": "1K",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "tag_v4",
+            "_comment": "(1+1) * (64 + 16 * 64 + 16^2 * 64 + 16^3 * 64 + 16^4 * 64)",
+            "size": "8947840B",
+            "block_size": "4473920B",
+            "max_elements": "256K",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "tag_v6",
+            "_comment": "(1+1) * (64 + 4 * 64 + 4^2  * 64 + 4^3 * 64 + 4^4 * 64 + 4^5 * 64 + 4^6 *64 + 4^7 * 64)",
+            "size": "2796160B",
+            "block_size": "1398080B",
+            "max_elements": "16K",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "sacl_v4",
+            "_comment": "LPM tables:17472 + 17472 + 17472 + 2112 = 54528",
+            "_comment": "RFC-C1:round64(2^17 * 64/51) + round64(2^18 * 64/51) + round64(2^20 * 64/46) = round64(164482) + round64(328965) + round64(1458888) = 164544 + 329024 + 1458944 = 1952512",
+            "_comment": "RFC-C2:round64(2^17 * 64/51) + round64(2^15 * 64/51) + round64(2^20 * 64/46) = round64(164482) + round64(41120) + round64(1458888) = 164544 + 41152 + 1458944  = 1664640",
+            "_comment": "RFC-C3:round64(2^17 * 64/51) + round64(2^15 * 64/51) + round64(2^20 * 64/46) = round64(164482) + round64(41120) + round64(1458888) = 164544 + 41152 + 1458944 = 1664640",
+            "_comment": "RFC-C4:round64(2^14 * 64/51) + round64(2^15 * 64/51) + round64(2^20 * 64/46) = round64(20560) + round64(41120) + round64(1458888) = 20608 + 41152 + 1458944 = 1520704",
+            "_comment": "Total: 54528 + 1952512 + 1664640 + 1664640 + 1520704 = 6857024 = 6697K",
+            "_comment": "((64 * 2) + 1) * 6697K",
+            "size": "863913K",
+            "block_size": "6697K",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "sacl_v6",
+            "_comment": "LPM tables:87360 (SIP)+ 87360 (DIP) + 17472 (port+dport) + 2112 (sport) = 194304",
+            "_comment": "RFC-C1:(((2^17 + 2^18) * 64)/51) + (2^20 * 64)/46 = round64(493450) + round64(1458890) = 493504 + 1458944 = 1952448",
+            "_comment": "RFC-C2:(((2^17 + 2^15) * 64)/51) + (2^20 * 64)/46 = round64(205604) + round64(1458890) = 205632 + 1458944 = 1664576",
+            "_comment": "RFC-C3:(((2^17 + 2^15) * 64)/51) + (2^20 * 64)/46 = round64(205604) + round64(1458890) = 205632 + 1458944 = 1664576",
+            "_comment": "RFC-C4:(((2^14 + 2^15) * 64)/51) + (2^20 * 64)/46 = round64(61682) + round64(1458890) = 61696 + 1458944 = 1520640",
+            "_comment": "Total:194304 + 1952448 + 1664576 + 1664576 + 1520640 = 6996544 = 6833K",
+            "_comment": "((64 * 2) + 1) * 6833K",
+            "size": "881457K",
+            "block_size": "6833K",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "flow",
+            "size": "512M",
+            "cache": "p4ig",
+            "_comment": "8M * 64B"
+        },
+        {
+            "name": "flow_ohash",
+            "size": "256M",
+            "cache": "p4ig",
+            "_comment": "4M * 64B"
+        },
+        {
+            "name": "ipv4_flow",
+            "size": "256M",
+            "cache": "p4ig",
+            "_comment": "8M * 32B"
+        },
+        {
+            "name": "ipv4_flow_ohash",
+            "size": "128M",
+            "cache": "p4ig",
+            "_comment": "4M * 32B"
+        },
+        {
+            "name": "session",
+            "size": "256M",
+            "cache": "p4ig",
+            "_comment": "8M * 32B"
+        },
+        {
+            "name": "session_stats",
+            "size": "256M",
+            "_comment": "8M * 16B * 2"
+        },
+        {
+            "name": "udp_flow_overflow0",
+            "size": "64K"
+        },
+        {
+            "name": "udp_flow_overflow1",
+            "size": "64K"
+        },
+        {
+            "name": "udp_flow_overflow2",
+            "size": "64K"
+        },
+        {
+            "name": "udp_flow_overflow3",
+            "size": "64K"
+        },
+        {
+            "name": "udp_flow_qid_update_virtual",
+            "size": "64K"
+        },
+        {
+            "name": "udp_flow_qid_update",
+            "size": "64K"
+        },
+        {
+            "name": "qos-hbm-fifo",
+            "size": "256M"
+        },
+        {
+            "name": "tx-scheduler",
+            "size": "2048K"
+        },
+        {
+            "_comment": "hash depth = 1024",
+            "_comment1": "data space = 1024 * 16 * 64 = 1024K",
+            "_comment1": "key space = 1024 * 64 = 64K",
+            "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
+            "name": "timers",
+            "size": "1088K"
+        }
+    ]
+}
