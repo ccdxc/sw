@@ -13,7 +13,7 @@
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/device.hpp"
-#include "nic/apollo/api/impl/device_impl.hpp"
+#include "nic/apollo/api/impl/apollo/device_impl.hpp"
 #include "gen/p4gen/apollo/include/p4pd.h"
 #include "nic/sdk/lib/utils/utils.hpp"
 

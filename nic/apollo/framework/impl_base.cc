@@ -12,7 +12,7 @@
 #include "nic/apollo/framework/impl.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
-#include "nic/apollo/api/impl/device_impl.hpp"    // TODO: think how to accomodate a new impl
+#include "nic/apollo/api/impl/apollo/device_impl.hpp"    // TODO: think how to accomodate a new impl
 #include "nic/apollo/api/impl/tep_impl.hpp"
 #include "nic/apollo/api/impl/vnic_impl.hpp"
 #include "nic/apollo/api/impl/mapping_impl.hpp"
