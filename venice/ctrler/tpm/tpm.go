@@ -311,37 +311,12 @@ func (pm *PolicyManager) processExportPolicy(eventType kvstore.WatchEventType, p
 	}
 }
 
-// GetDefaultStatsSpec returns the default stats policy spec that is used
-func GetDefaultStatsSpec() telemetry.StatsPolicySpec {
-	defaultStatsSpec := telemetry.StatsPolicySpec{}
-	defaultStatsSpec.Defaults("")
-	return defaultStatsSpec
-}
-
 // process tenants
 func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.WatchEventType, tenant *cluster.Tenant) error {
 	pmLog.Infof("process tenant event:{%v} {%#v} ", eventType, tenant)
 
 	switch eventType {
 	case kvstore.Created:
-		// Todo: not required
-		// create stats policy
-		statsPolicy := &telemetry.StatsPolicy{
-			ObjectMeta: api.ObjectMeta{
-				Name:      tenant.GetName(),
-				Tenant:    tenant.GetName(),
-				Namespace: globals.DefaultNamespace,
-			},
-			Spec: GetDefaultStatsSpec(),
-		}
-
-		if _, err := pm.apiClient.MonitoringV1().StatsPolicy().Get(ctx, &statsPolicy.ObjectMeta); err != nil {
-			if _, err := pm.apiClient.MonitoringV1().StatsPolicy().Create(ctx, statsPolicy); err != nil {
-				pmLog.Errorf("failed to create stats policy for tenant %s, error: %s", tenant.GetName(), err)
-				return err
-			}
-		}
-
 		// create database request
 		databaseReq := &metric.DatabaseReq{
 			DatabaseName: tenant.GetName(),
@@ -355,18 +330,6 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 	case kvstore.Updated: // no-op
 
 	case kvstore.Deleted:
-		// Todo: not required
-		// delete stats policy
-		objMeta := &api.ObjectMeta{
-			Name:   tenant.GetName(),
-			Tenant: tenant.GetName(),
-		}
-
-		if _, err := pm.apiClient.MonitoringV1().StatsPolicy().Delete(ctx, objMeta); err != nil {
-			pmLog.Errorf("failed to delete stats policy for tenant %s, error: %s", tenant.GetName(), err)
-			return err
-		}
-
 	default:
 		return fmt.Errorf("invalid tenant event type %s", eventType)
 	}

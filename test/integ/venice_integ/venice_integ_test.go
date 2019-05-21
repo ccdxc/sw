@@ -5,7 +5,6 @@ package veniceinteg
 import (
 	"flag"
 	"fmt"
-	"reflect"
 	"testing"
 	"time"
 
@@ -16,7 +15,6 @@ import (
 	_ "github.com/influxdata/influxdb/tsdb/index"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/orch"
 	"github.com/pensando/sw/venice/orch/simapi"
@@ -197,43 +195,4 @@ func (it *veniceIntegSuite) TestTenantWatch(c *C) {
 			}
 		}, fmt.Sprintf("failed to receive watch event for tenant %s ", tenantName))
 	}
-}
-
-// test tpm
-func (it *veniceIntegSuite) TestTelemetryPolicyMgr(c *C) {
-	tenantName := fmt.Sprintf("tenant100")
-	// create a tenant
-	_, err := it.createTenant(tenantName)
-	AssertOk(c, err, "Error creating tenant")
-
-	defer it.deleteTenant(tenantName)
-
-	AssertEventually(c, func() (bool, interface{}) {
-		tn, err := it.getTenant(tenantName)
-		return err == nil, tn
-	}, fmt.Sprintf("failed to find tenant %s ", tenantName))
-
-	AssertEventually(c, func() (bool, interface{}) {
-		sp, err := it.getStatsPolicy(tenantName)
-		if err == nil {
-			Assert(c, reflect.DeepEqual(sp.GetSpec(), tpm.GetDefaultStatsSpec()),
-				fmt.Sprintf("stats spec didn't match: got %+v, expectd %+v",
-					sp.GetSpec(), tpm.GetDefaultStatsSpec()))
-			return true, nil
-		}
-		return false, err
-	}, "failed to find stats policy")
-
-	_, err = it.deleteTenant(tenantName)
-	AssertOk(c, err, "Error deleting tenant")
-
-	AssertEventually(c, func() (bool, interface{}) {
-		_, err := it.getStatsPolicy(tenantName)
-		return err != nil, nil
-	}, "stats policy still found after deleting tenant", "500ms", it.pollTimeout())
-
-	AssertEventually(c, func() (bool, interface{}) {
-		_, err := it.getFwlogPolicy(tenantName)
-		return err != nil, nil
-	}, "fwlog policy still found after deleting tenant", "500ms", it.pollTimeout())
 }

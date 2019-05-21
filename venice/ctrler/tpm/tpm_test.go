@@ -6,6 +6,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/pensando/sw/venice/utils/memdb"
+
 	"github.com/golang/mock/gomock"
 
 	"time"
@@ -16,8 +18,6 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	telemetry "github.com/pensando/sw/api/generated/monitoring"
 	mockapi "github.com/pensando/sw/api/mock"
-	"github.com/pensando/sw/venice/citadel/collector/rpcserver/metric"
-	mockmetric "github.com/pensando/sw/venice/citadel/collector/rpcserver/metric/mock"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	mockkvs "github.com/pensando/sw/venice/utils/kvstore/mock"
 	vLog "github.com/pensando/sw/venice/utils/log"
@@ -43,6 +43,17 @@ func TestProcessStatsPolicy(t *testing.T) {
 	v, err := pa.policyDb.FindObject(pol.GetKind(), pol.GetObjectMeta())
 	tu.AssertOk(t, err, "stats policy not found")
 	tu.Assert(t, v == pol, "stats policy didn't match")
+
+	d := pa.Debug()
+	dbg, ok := d.(struct {
+		Policy  map[string]map[string]memdb.Object
+		Clients map[string]map[string]string
+	})
+	tu.Assert(t, ok == true, "got %T instead of dbg", d)
+	_, ok = dbg.Policy["StatsPolicy"]
+	tu.Assert(t, ok == true, "failed to find StatsPolicy in %+v", dbg.Policy)
+	_, ok = dbg.Policy["StatsPolicy"]["test1"]
+	tu.Assert(t, ok == true, "failed to find StatsPolicy in %+v", dbg.Policy)
 
 	// update
 	err = pa.processStatsPolicy(kvstore.Updated, pol)
@@ -449,71 +460,6 @@ func TestEventLoop(t *testing.T) {
 	err = pa.processEvents(nCtx)
 	tu.Assert(t, err != nil, "failed to test event error")
 
-}
-
-func TestProcessTenant(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	parentCtx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	r := mockresolver.New()
-	pa, err := NewPolicyManager(listenURL, r)
-	tu.AssertOk(t, err, "failed to create policy manager")
-
-	mapi := mockapi.NewMockServices(ctrl)
-	pa.apiClient = mapi
-
-	mMetric := mockmetric.NewMockMetricApiClient(ctrl)
-	pa.metricClient = mMetric
-
-	sV1 := &mockMonitoringV1{}
-	mSp := mockapi.NewMockMonitoringV1StatsPolicyInterface(ctrl)
-	mFp := mockapi.NewMockMonitoringV1FwlogPolicyInterface(ctrl)
-	mEvp := mockapi.NewMockMonitoringV1FlowExportPolicyInterface(ctrl)
-	sV1.mStat = mSp
-	sV1.mFw = mFp
-	sV1.mExp = mEvp
-
-	tenant := &cluster.Tenant{ObjectMeta: api.ObjectMeta{Name: "test-tenant"}}
-
-	// create failure
-	mapi.EXPECT().MonitoringV1().Return(sV1).Times(2)
-	mSp.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("no stats policy"))
-	mSp.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("mock stats error"))
-
-	err = pa.processTenants(parentCtx, kvstore.Created, tenant)
-	tu.Assert(t, err != nil, "failed to handle stats policy create error")
-
-	// create
-	mapi.EXPECT().MonitoringV1().Return(sV1).Times(2)
-	mSp.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil, nil)
-
-	expReq := &metric.DatabaseReq{
-		DatabaseName: tenant.GetName(),
-	}
-	mMetric.EXPECT().CreateDatabase(parentCtx, expReq).Times(1)
-
-	err = pa.processTenants(parentCtx, kvstore.Created, tenant)
-	tu.AssertOk(t, err, "processTenant create failed")
-
-	// update
-	err = pa.processTenants(parentCtx, kvstore.Updated, nil)
-	tu.AssertOk(t, err, "failed to porcess tenant update")
-
-	// delete failure
-	mapi.EXPECT().MonitoringV1().Return(sV1).Times(1)
-	mSp.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("stats policy error"))
-
-	err = pa.processTenants(parentCtx, kvstore.Deleted, tenant)
-	tu.Assert(t, err != nil, "failed to handle stats policy delete error")
-
-	// delete
-	mSp.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil, nil).Times(1)
-
-	err = pa.processTenants(parentCtx, kvstore.Deleted, tenant)
-	tu.AssertOk(t, err, "processTenant delete failed")
 }
 
 func TestMain(m *testing.M) {
